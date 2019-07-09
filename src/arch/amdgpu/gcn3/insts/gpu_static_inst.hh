@@ -63,17 +63,8 @@ namespace Gcn3ISA
             return isExecMask(opIdx);
         }
 
-        bool isScalarRegister(int opIdx) override { return false; }
-        bool isVectorRegister(int opIdx) override { return false; }
-        bool isSrcOperand(int opIdx) override { return false; }
-        bool isDstOperand(int opIdx) override { return false; }
+        void initOperandInfo() override { return; }
         int getOperandSize(int opIdx) override { return 0; }
-
-        int
-        getRegisterIndex(int opIdx, int num_scalar_regs) override
-        {
-            return 0;
-        }
 
         /**
           * Return the number of tokens needed by the coalescer. In GCN3 there

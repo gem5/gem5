@@ -56,6 +56,29 @@ namespace VegaISA
         } // if
     } // Inst_SOP2
 
+    void
+    Inst_SOP2::initOperandInfo()
+    {
+        int opNum = 0;
+
+        // Needed because can't take addr of bitfield
+        int reg = instData.SSRC0;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              isScalarReg(instData.SSRC0), false, false);
+        opNum++;
+
+        reg = instData.SSRC1;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              isScalarReg(instData.SSRC1), false, false);
+        opNum++;
+
+        reg = instData.SDST;
+        operands.emplace_back(reg, getOperandSize(opNum), false,
+                              isScalarReg(instData.SDST), false, false);
+
+        assert(operands.size() == getNumOperands());
+    }
+
     int
     Inst_SOP2::instSize() const
     {
@@ -98,54 +121,6 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
-    bool
-    Inst_SOP2::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            return isScalarReg(instData.SSRC0);
-          case 1:
-            return isScalarReg(instData.SSRC1);
-          case 2:
-            return isScalarReg(instData.SDST);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    bool
-    Inst_SOP2::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        // SOP2 instructions cannot access VGPRs
-        return false;
-    }
-
-    int
-    Inst_SOP2::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            return opSelectorToRegIdx(instData.SSRC0, num_scalar_regs);
-          case 1:
-            return opSelectorToRegIdx(instData.SSRC1, num_scalar_regs);
-          case 2:
-            return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return -1;
-        }
-    }
-
     // --- Inst_SOPK base class methods ---
 
     Inst_SOPK::Inst_SOPK(InFmt_SOPK *iFmt, const std::string &opcode)
@@ -168,6 +143,24 @@ namespace VegaISA
     Inst_SOPK::~Inst_SOPK()
     {
     } // ~Inst_SOPK
+
+    void
+    Inst_SOPK::initOperandInfo()
+    {
+        int opNum = 0;
+
+        // Needed because can't take addr of bitfield
+        int reg = instData.SIMM16;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              false, false, true);
+        opNum++;
+
+        reg = instData.SDST;
+        operands.emplace_back(reg, getOperandSize(opNum), false,
+                              isScalarReg(instData.SDST), false, false);
+
+        assert(operands.size() == getNumOperands());
+    }
 
     int
     Inst_SOPK::instSize() const
@@ -213,50 +206,6 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
-    bool
-    Inst_SOPK::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-              return false;
-          case 1:
-              return isScalarReg(instData.SDST);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    bool
-    Inst_SOPK::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        // SOPK instruction cannot access VGPRs
-        return false;
-    }
-
-    int
-    Inst_SOPK::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            return  -1;
-          case 1:
-            return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return -1;
-        }
-    }
-
     // --- Inst_SOP1 base class methods ---
 
     Inst_SOP1::Inst_SOP1(InFmt_SOP1 *iFmt, const std::string &opcode)
@@ -279,6 +228,26 @@ namespace VegaISA
     Inst_SOP1::~Inst_SOP1()
     {
     } // ~Inst_SOP1
+
+    void
+    Inst_SOP1::initOperandInfo()
+    {
+        int opNum = 0;
+
+        // Needed because can't take addr of bitfield
+        int reg = instData.SSRC0;
+        if (instData.OP != 0x1C) {
+            operands.emplace_back(reg, getOperandSize(opNum), true,
+                                  isScalarReg(instData.SSRC0), false, false);
+            opNum++;
+        }
+
+        reg = instData.SDST;
+        operands.emplace_back(reg, getOperandSize(opNum), false,
+                              isScalarReg(instData.SDST), false, false);
+
+        assert(operands.size() == getNumOperands());
+    }
 
     int
     Inst_SOP1::instSize() const
@@ -312,60 +281,6 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
-    bool
-    Inst_SOP1::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            if (instData.OP == 0x1C) {
-                // Special case for s_getpc, which has no source reg.
-                // Instead, it implicitly reads the PC.
-                return isScalarReg(instData.SDST);
-            }
-            return isScalarReg(instData.SSRC0);
-          case 1:
-              return isScalarReg(instData.SDST);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    bool
-    Inst_SOP1::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        // SOP1 instruction cannot access VGPRs
-        return false;
-    }
-
-    int
-    Inst_SOP1::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            if (instData.OP == 0x1C) {
-                // Special case for s_getpc, which has no source reg.
-                // Instead, it implicitly reads the PC.
-                return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
-            }
-            return opSelectorToRegIdx(instData.SSRC0, num_scalar_regs);
-          case 1:
-            return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return -1;
-        }
-    }
-
     // --- Inst_SOPC base class methods ---
 
     Inst_SOPC::Inst_SOPC(InFmt_SOPC *iFmt, const std::string &opcode)
@@ -388,6 +303,22 @@ namespace VegaISA
     Inst_SOPC::~Inst_SOPC()
     {
     } // ~Inst_SOPC
+
+    void
+    Inst_SOPC::initOperandInfo()
+    {
+        int opNum = 0;
+
+        // Needed because can't take addr of bitfield
+        int reg = instData.SSRC0;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              isScalarReg(instData.SSRC0), false, false);
+        opNum++;
+
+        reg = instData.SSRC1;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              isScalarReg(instData.SSRC1), false, false);
+    }
 
     int
     Inst_SOPC::instSize() const
@@ -430,52 +361,6 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
-    bool
-    Inst_SOPC::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-              // SSRC0 is always a scalar reg or a constant
-              return isScalarReg(instData.SSRC0);
-          case 1:
-              // SSRC1 is always a scalar reg or a constant
-              return isScalarReg(instData.SSRC1);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    bool
-    Inst_SOPC::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        // SOPC instructions cannot access VGPRs
-        return false;
-    }
-
-    int
-    Inst_SOPC::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            return opSelectorToRegIdx(instData.SSRC0, num_scalar_regs);
-          case 1:
-            return opSelectorToRegIdx(instData.SSRC1, num_scalar_regs);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return -1;
-        }
-    }
-
     // --- Inst_SOPP base class methods ---
 
     Inst_SOPP::Inst_SOPP(InFmt_SOPP *iFmt, const std::string &opcode)
@@ -490,6 +375,29 @@ namespace VegaISA
     Inst_SOPP::~Inst_SOPP()
     {
     } // ~Inst_SOPP
+
+    void
+    Inst_SOPP::initOperandInfo()
+    {
+        int opNum = 0;
+
+
+        if (numSrcRegOperands()) {
+            // Needed because can't take addr of bitfield
+            int reg = instData.SIMM16;
+            operands.emplace_back(reg, getOperandSize(opNum), true,
+                                  false, false, true);
+
+            opNum++;
+
+            if (readsVCC()) {
+                operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), true,
+                                      true, false, false);
+                opNum++;
+            }
+        }
+        assert(operands.size() == getNumOperands());
+    }
 
     int
     Inst_SOPP::instSize() const
@@ -551,39 +459,6 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
-    bool
-    Inst_SOPP::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        // SOPP instructions have a maximum of 1 operand,
-        // and it's always an immediate value
-        return false;
-    }
-
-    bool
-    Inst_SOPP::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        // SOPP instructions have a maximum of 1 operand,
-        // and it's always an immediate value
-        return false;
-    }
-
-    int
-    Inst_SOPP::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        // SOPP instructions have a maximum of 1 operand,
-        // and it's always an immediate value
-        return -1;
-    }
-
     // --- Inst_SMEM base class methods ---
 
     Inst_SMEM::Inst_SMEM(InFmt_SMEM *iFmt, const std::string &opcode)
@@ -605,6 +480,51 @@ namespace VegaISA
     Inst_SMEM::~Inst_SMEM()
     {
     } // ~Inst_SMEM
+
+    void
+    Inst_SMEM::initOperandInfo()
+    {
+        // Formats:
+        // 0 src + 0 dst
+        // 3 src + 0 dst
+        // 2 src + 1 dst
+        // 0 src + 1 dst
+        int opNum = 0;
+        // Needed because can't take addr of bitfield
+        int reg = 0;
+
+        if (numSrcRegOperands()) {
+            reg = instData.SDATA;
+            if (numSrcRegOperands() == getNumOperands()) {
+                operands.emplace_back(reg, getOperandSize(opNum), true,
+                                      isScalarReg(reg), false, false);
+                opNum++;
+            }
+
+            reg = instData.SBASE;
+            operands.emplace_back(reg, getOperandSize(opNum), true,
+                                  true, false, false);
+            opNum++;
+
+            reg = extData.OFFSET;
+            if (instData.IMM) {
+                operands.emplace_back(reg, getOperandSize(opNum), true,
+                                      false, false, true);
+            } else {
+                operands.emplace_back(reg, getOperandSize(opNum), true,
+                                      isScalarReg(reg), false, false);
+            }
+            opNum++;
+        }
+
+        if (numDstRegOperands()) {
+            reg = instData.SDATA;
+            operands.emplace_back(reg, getOperandSize(opNum), false,
+                                  isScalarReg(reg), false, false);
+        }
+
+        assert(operands.size() == getNumOperands());
+    }
 
     int
     Inst_SMEM::instSize() const
@@ -647,66 +567,6 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
-    bool
-    Inst_SMEM::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            // SBASE is always a scalar
-            return true;
-          case 1:
-            if (instData.IMM) {
-                return false;
-            } else {
-                return isScalarReg(extData.OFFSET);
-            }
-          case 2:
-            return isScalarReg(instData.SDATA);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    bool
-    Inst_SMEM::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        // SMEM instructions cannot access VGPRs
-        return false;
-    }
-
-    int
-    Inst_SMEM::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            // SBASE has an implied LSB of 0, so we need
-            // to shift by one to get the actual value
-            return opSelectorToRegIdx(instData.SBASE << 1, num_scalar_regs);
-          case 1:
-            if (instData.IMM) {
-              // operand is an immediate value, not a register
-              return -1;
-            } else {
-              return extData.OFFSET;
-            }
-          case 2:
-            return opSelectorToRegIdx(instData.SDATA, num_scalar_regs);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return -1;
-        }
-    }
-
     // --- Inst_VOP2 base class methods ---
 
     Inst_VOP2::Inst_VOP2(InFmt_VOP2 *iFmt, const std::string &opcode)
@@ -732,6 +592,44 @@ namespace VegaISA
     Inst_VOP2::~Inst_VOP2()
     {
     } // ~Inst_VOP2
+
+    void
+    Inst_VOP2::initOperandInfo()
+    {
+        int opNum = 0;
+
+        // Needed because can't take addr of bitfield
+        int reg = instData.SRC0;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              isScalarReg(reg), isVectorReg(reg), false);
+        opNum++;
+
+        reg = instData.VSRC1;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              false, true, false);
+        opNum++;
+
+        // VCC read
+        if (readsVCC()) {
+            operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), true,
+                                  true, false, false);
+            opNum++;
+        }
+
+        // VDST
+        reg = instData.VDST;
+        operands.emplace_back(reg, getOperandSize(opNum), false,
+                              false, true, false);
+        opNum++;
+
+        // VCC write
+        if (writesVCC()) {
+            operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), false,
+                                  true, false, false);
+        }
+
+        assert(operands.size() == getNumOperands());
+    }
 
     int
     Inst_VOP2::instSize() const
@@ -803,125 +701,6 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
-    bool
-    Inst_VOP2::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            // SRC0 may be a scalar or vector register, an
-            // inline constant, or a special HW register
-            return isScalarReg(instData.SRC0);
-          case 1:
-            // instData.VSRC1 is never a scalar reg
-            return false;
-          case 2:
-            if (readsVCC()) {
-                return true;
-            } else {
-                // instData.VDST is never a scalar reg
-                return false;
-            }
-          case 3:
-            // if a VOP2 instruction has more than 3 ops
-            // it must read from or write to VCC, and
-            // VCC is always in an SGPR
-            assert(readsVCC() || writesVCC());
-            if (readsVCC()) {
-                return false;
-            } else {
-                return true;
-            }
-          case 4:
-            // if a VOP2 instruction has more than 4 ops
-            // it must read from and write to VCC, and
-            // VCC is always in an SGPR
-            assert(writesVCC() && readsVCC());
-            return true;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    bool
-    Inst_VOP2::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            // SRC0 may be a scalar or vector register, an
-            // inline constant, or a special HW register
-            return isVectorReg(instData.SRC0);
-          case 1:
-            // instData.VSRC1 is always a vector reg
-            return true;
-          case 2:
-            if (readsVCC()) {
-                return false;
-            } else {
-                // instData.VDST is always a vector reg
-                return true;
-            }
-          case 3:
-            // if a VOP2 instruction has more than 3 ops
-            // it must read from or write to VCC, and
-            // VCC is always in an SGPR
-            assert(writesVCC() || readsVCC());
-            if (readsVCC()) {
-                return true;
-            } else {
-                return false;
-            }
-          case 4:
-            // if a VOP2 instruction has more than 4 ops
-            // it must read from and write to VCC, and
-            // VCC is always in an SGPR
-            assert(writesVCC() && readsVCC());
-            return false;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    int
-    Inst_VOP2::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            return opSelectorToRegIdx(instData.SRC0, num_scalar_regs);
-          case 1:
-            return instData.VSRC1;
-          case 2:
-            if (readsVCC()) {
-                return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
-            } else {
-                return instData.VDST;
-            }
-          case 3:
-            assert(writesVCC() || readsVCC());
-            if (readsVCC()) {
-                return instData.VDST;
-            } else {
-                return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
-            }
-          case 4:
-            assert(writesVCC() && readsVCC());
-            return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return -1;
-        }
-    }
-
     // --- Inst_VOP1 base class methods ---
 
     Inst_VOP1::Inst_VOP1(InFmt_VOP1 *iFmt, const std::string &opcode)
@@ -947,6 +726,28 @@ namespace VegaISA
     Inst_VOP1::~Inst_VOP1()
     {
     } // ~Inst_VOP1
+
+    void
+    Inst_VOP1::initOperandInfo()
+    {
+        int opNum = 0;
+        // Needed because can't take addr of bitfield
+        int reg = instData.SRC0;
+
+        if (numSrcRegOperands()) {
+            operands.emplace_back(reg, getOperandSize(opNum), true,
+                                  isScalarReg(reg), isVectorReg(reg), false);
+            opNum++;
+        }
+
+        if (numDstRegOperands()) {
+            reg = instData.VDST;
+            operands.emplace_back(reg, getOperandSize(opNum), false,
+                                  false, true, false);
+        }
+
+        assert(operands.size() == getNumOperands());
+    }
 
     int
     Inst_VOP1::instSize() const
@@ -992,59 +793,6 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
-    bool
-    Inst_VOP1::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-              return isScalarReg(instData.SRC0);
-          case 1:
-              // VDST is never a scalar reg
-              return false;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    bool
-    Inst_VOP1::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-              return isVectorReg(instData.SRC0);
-          case 1:
-              // VDST is always a vector reg
-              return true;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    int
-    Inst_VOP1::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            return opSelectorToRegIdx(instData.SRC0, num_scalar_regs);
-          case 1:
-            return instData.VDST;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return -1;
-        }
-    }
-
     // --- Inst_VOPC base class methods ---
 
     Inst_VOPC::Inst_VOPC(InFmt_VOPC *iFmt, const std::string &opcode)
@@ -1071,6 +819,29 @@ namespace VegaISA
     Inst_VOPC::~Inst_VOPC()
     {
     } // ~Inst_VOPC
+
+    void
+    Inst_VOPC::initOperandInfo()
+    {
+        int opNum = 0;
+
+        // Needed because can't take addr of bitfield
+        int reg = instData.SRC0;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              isScalarReg(reg), isVectorReg(reg), false);
+        opNum++;
+
+        reg = instData.VSRC1;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              false, true, false);
+        opNum++;
+
+        assert(writesVCC());
+        operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), false,
+                              true, false, false);
+
+        assert(operands.size() == getNumOperands());
+    }
 
     int
     Inst_VOPC::instSize() const
@@ -1109,68 +880,6 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
-    bool
-    Inst_VOPC::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            return isScalarReg(instData.SRC0);
-          case 1:
-            // VSRC1 is never a scalar register
-            return false;
-          case 2:
-            // VCC is always a scalar register
-            return true;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    bool
-    Inst_VOPC::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            return isVectorReg(instData.SRC0);
-          case 1:
-            // VSRC1 is never a scalar register
-            return true;
-          case 2:
-            // VCC is always a scalar register
-            return false;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    int
-    Inst_VOPC::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            return opSelectorToRegIdx(instData.SRC0, num_scalar_regs);
-          case 1:
-            return instData.VSRC1;
-          case 2:
-            // VCC
-            return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return -1;
-        }
-    }
-
     // --- Inst_VINTRP base class methods ---
 
     Inst_VINTRP::Inst_VINTRP(InFmt_VINTRP *iFmt, const std::string &opcode)
@@ -1206,6 +915,45 @@ namespace VegaISA
     Inst_VOP3A::~Inst_VOP3A()
     {
     } // ~Inst_VOP3A
+
+    void
+    Inst_VOP3A::initOperandInfo()
+    {
+        // Also takes care of bitfield addr issue
+        unsigned int srcs[3] = {extData.SRC0, extData.SRC1, extData.SRC2};
+
+        int opNum = 0;
+
+        int numSrc = numSrcRegOperands() - readsVCC();
+        int numDst = numDstRegOperands() - writesVCC();
+
+        for (opNum = 0; opNum < numSrc; opNum++) {
+            operands.emplace_back(srcs[opNum], getOperandSize(opNum), true,
+                                  isScalarReg(srcs[opNum]),
+                                  isVectorReg(srcs[opNum]), false);
+        }
+
+        if (readsVCC()) {
+            operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), true,
+                                  true, false, false);
+            opNum++;
+        }
+
+        if (numDst) {
+            // Needed because can't take addr of bitfield
+            int reg = instData.VDST;
+            operands.emplace_back(reg, getOperandSize(opNum), false,
+                                  sgprDst, !sgprDst, false);
+            opNum++;
+        }
+
+        if (writesVCC()) {
+            operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), false,
+                                  true, false, false);
+        }
+
+        assert(operands.size() == getNumOperands());
+    }
 
     int
     Inst_VOP3A::instSize() const
@@ -1271,224 +1019,6 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
-    bool
-    Inst_VOP3A::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            // SRC0 may be a scalar or vector register, an
-            // inline constant, or a special HW register
-            return isScalarReg(extData.SRC0);
-          case 1:
-            if (numSrcRegOperands() > 1) {
-                // if we have more than 1 source operand then
-                // op index 1 corresponds to SRC1. SRC1 may be
-                // a scalar or vector register, an inline
-                // constant, or a special HW register
-                return isScalarReg(extData.SRC1);
-            } else {
-                // if we only have 1 source operand, opIdx 1
-                // will be VDST, and VDST is only a scalar
-                // for v_cmp instructions
-                if (sgprDst)
-                    return true;
-                return false;
-            }
-          case 2:
-            if (numSrcRegOperands() > 2) {
-                // if we have more than 2 source operand then
-                // op index 2 corresponds to SRC2. SRC2 may be
-                // a scalar or vector register, an inline
-                // constant, or a special HW register
-                return isScalarReg(extData.SRC2);
-            } else if (numSrcRegOperands() == 2) {
-                // if we only have 2 source operands, opIdx 2
-                // will be VDST, and VDST is only a scalar
-                // for v_cmp instructions
-                if (sgprDst)
-                    return true;
-                return false;
-            } else {
-                // if this idx doesn't correspond to SRCX or
-                // VDST then it must be a VCC read or write,
-                // and VCC is always stored in an SGPR pair
-                assert(writesVCC() || readsVCC());
-                return true;
-            }
-          case 3:
-            if (numSrcRegOperands() == 3) {
-                // if we have 3 source operands, opIdx 3
-                // will be VDST, and VDST is only a scalar
-                // for v_cmp instructions
-                if (sgprDst)
-                    return true;
-                return false;
-            } else {
-                // if this idx doesn't correspond to VDST
-                // then it must be a VCC read or write, and
-                // and VCC is always stored in an SGPR pair
-                assert(writesVCC() || readsVCC());
-                return true;
-            }
-          case 4:
-            // if a VOP3 instruction has more than 4 ops
-            // it must read from and write to VCC, and
-            // VCC is always in an SGPR
-            assert(writesVCC() || readsVCC());
-            return true;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    bool
-    Inst_VOP3A::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            // SRC0 may be a scalar or vector register, an
-            // inline constant, or a special HW register
-            return isVectorReg(extData.SRC0);
-          case 1:
-            if (numSrcRegOperands() > 1) {
-                // if we have more than 1 source operand then
-                // op index 1 corresponds to SRC1. SRC1 may be
-                // a scalar or vector register, an inline
-                // constant, or a special HW register
-                return isVectorReg(extData.SRC1);
-            } else {
-                // if we only have 1 source operands, opIdx 1
-                // will be VDST, and VDST is a scalar for v_cmp
-                // instructions
-                if (sgprDst)
-                    return false;
-                return true;
-            }
-          case 2:
-            if (numSrcRegOperands() > 2) {
-                // if we have more than 2 source operand then
-                // op index 2 corresponds to SRC2. SRC2 may be
-                // a scalar or vector register, an inline
-                // constant, or a special HW register
-                return isVectorReg(extData.SRC2);
-            } else if (numSrcRegOperands() == 2) {
-                // if we only have 2 source operands, opIdx 2
-                // will be VDST, and VDST is a scalar for v_cmp
-                // instructions
-                if (sgprDst)
-                    return false;
-                return true;
-            } else {
-                // if this idx doesn't correspond to SRCX or
-                // VDST then it must be a VCC read or write,
-                // and VCC is never stored in a VGPR
-                assert(writesVCC() || readsVCC());
-                return false;
-            }
-          case 3:
-            if (numSrcRegOperands() == 3) {
-                // if we have 3 source operands, opIdx 3
-                // will be VDST, and VDST is a scalar for v_cmp
-                // instructions
-                if (sgprDst)
-                    return false;
-                return true;
-            } else {
-                // if this idx doesn't correspond to VDST
-                // then it must be a VCC read or write, and
-                // and VCC is never stored in a VGPR
-                assert(writesVCC() || readsVCC());
-                return false;
-            }
-          case 4:
-            // if a VOP3 instruction has more than 4 ops
-            // it must read from and write to VCC, and
-            // VCC is never stored in a VGPR
-            assert(writesVCC() || readsVCC());
-            return false;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    int
-    Inst_VOP3A::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            // SRC0
-            return opSelectorToRegIdx(extData.SRC0, num_scalar_regs);
-          case 1:
-            if (numSrcRegOperands() > 1) {
-                // if we have more than 1 source operand then
-                // op index 1 corresponds to SRC1
-                return opSelectorToRegIdx(extData.SRC1, num_scalar_regs);
-            } else {
-                // if we only have 1 source operand, opIdx 1
-                // will be VDST
-                if (sgprDst) {
-                    return opSelectorToRegIdx(instData.VDST, num_scalar_regs);
-                }
-                return instData.VDST;
-            }
-          case 2:
-            if (numSrcRegOperands() > 2) {
-                // if we have more than 2 source operand then
-                // op index 2 corresponds to SRC2. SRC2 may be
-                // a scalar or vector register, an inline
-                // constant, or a special HW register
-                return opSelectorToRegIdx(extData.SRC2, num_scalar_regs);
-            } else if (numSrcRegOperands() == 2) {
-                // if we only have 2 source operands, opIdx 2
-                // will be VDST, and VDST is always a vector
-                // reg
-                if (sgprDst) {
-                    return opSelectorToRegIdx(instData.VDST, num_scalar_regs);
-                }
-                return instData.VDST;
-            } else {
-                // if this idx doesn't correspond to SRCX or
-                // VDST then it must be a VCC read or write,
-                // and VCC is never stored in a VGPR
-                assert(writesVCC() || readsVCC());
-                return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
-            }
-          case 3:
-            if (numSrcRegOperands() == 3) {
-                // if we have 3 source operands then op
-                // idx 3 will correspond to VDST
-                if (sgprDst) {
-                    return opSelectorToRegIdx(instData.VDST, num_scalar_regs);
-                }
-                return instData.VDST;
-            } else {
-                // if this idx doesn't correspond to VDST
-                // then it must be a VCC read or write
-                assert(writesVCC() || readsVCC());
-                return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
-            }
-          case 4:
-            // if a VOP3 instruction has more than 4 ops
-            // it must read from and write to VCC
-            assert(writesVCC() || readsVCC());
-            return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return -1;
-        }
-    }
-
     // --- Inst_VOP3B base class methods ---
 
     Inst_VOP3B::Inst_VOP3B(InFmt_VOP3B *iFmt, const std::string &opcode)
@@ -1504,6 +1034,45 @@ namespace VegaISA
     Inst_VOP3B::~Inst_VOP3B()
     {
     } // ~Inst_VOP3B
+
+    void
+    Inst_VOP3B::initOperandInfo()
+    {
+        // Also takes care of bitfield addr issue
+        unsigned int srcs[3] = {extData.SRC0, extData.SRC1, extData.SRC2};
+
+        int opNum = 0;
+
+        int numSrc = numSrcRegOperands() - readsVCC();
+        int numDst = numDstRegOperands() - writesVCC();
+
+        for (opNum = 0; opNum < numSrc; opNum++) {
+            operands.emplace_back(srcs[opNum], getOperandSize(opNum), true,
+                                  isScalarReg(srcs[opNum]),
+                                  isVectorReg(srcs[opNum]), false);
+        }
+
+        if (readsVCC()) {
+            operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), true,
+                                  true, false, false);
+            opNum++;
+        }
+
+        if (numDst) {
+            // Needed because can't take addr of bitfield
+            int reg = instData.VDST;
+            operands.emplace_back(reg, getOperandSize(opNum), false,
+                                  false, true, false);
+            opNum++;
+        }
+
+        if (writesVCC()) {
+            operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), false,
+                                  true, false, false);
+        }
+
+        assert(operands.size() == getNumOperands());
+    }
 
     int
     Inst_VOP3B::instSize() const
@@ -1555,211 +1124,6 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
-    bool
-    Inst_VOP3B::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            // SRC0 may be a scalar or vector register, an
-            // inline constant, or a special HW register
-            return isScalarReg(extData.SRC0);
-          case 1:
-            if (numSrcRegOperands() > 1) {
-                // if we have more than 1 source operand then
-                // op index 1 corresponds to SRC1. SRC1 may be
-                // a scalar or vector register, an inline
-                // constant, or a special HW register
-                return isScalarReg(extData.SRC1);
-            } else {
-                // if we only have 1 source operand, opIdx 1
-                // will be VDST, and VDST is never a scalar
-                // reg
-                if (instData.VDST == REG_VCC_LO)
-                    return true;
-                return false;
-            }
-          case 2:
-            if (numSrcRegOperands() > 2) {
-                // if we have more than 2 source operand then
-                // op index 2 corresponds to SRC2. SRC2 may be
-                // a scalar or vector register, an inline
-                // constant, or a special HW register
-                return isScalarReg(extData.SRC2);
-            } else if (numSrcRegOperands() == 2) {
-                // if we only have 2 source operands, opIdx 2
-                // will be VDST, and VDST is never a scalar
-                // reg
-                if (instData.VDST == REG_VCC_LO)
-                    return true;
-                return false;
-            } else {
-                // if this idx doesn't correspond to SRCX or
-                // VDST then it must be a VCC read or write,
-                // and VCC is always stored in an SGPR pair
-                assert(writesVCC() || readsVCC());
-                return true;
-            }
-          case 3:
-            if (numSrcRegOperands() == 3) {
-                // if we have 3 source operands then op
-                // idx 3 will correspond to VDST, and VDST
-                // is never a scalar reg
-                if (instData.VDST == REG_VCC_LO)
-                    return true;
-                return false;
-            } else {
-                // if this idx doesn't correspond to VDST
-                // then it must be a VCC read or write, and
-                // and VCC is always stored in an SGPR pair
-                assert(writesVCC() || readsVCC());
-                return true;
-            }
-          case 4:
-            // if a VOP3 instruction has more than 4 ops
-            // it must read from and write to VCC, and
-            // VCC is always in an SGPR
-            assert(writesVCC() || readsVCC());
-            return true;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    bool
-    Inst_VOP3B::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            // SRC0 may be a scalar or vector register, an
-            // inline constant, or a special HW register
-            return isVectorReg(extData.SRC0);
-          case 1:
-            if (numSrcRegOperands() > 1) {
-                // if we have more than 1 source operand then
-                // op index 1 corresponds to SRC1. SRC1 may be
-                // a scalar or vector register, an inline
-                // constant, or a special HW register
-                return isVectorReg(extData.SRC1);
-            } else {
-                // if we only have 1 source operand, opIdx 1
-                // will be VDST, and VDST is always a vector
-                // reg
-                if (instData.VDST == REG_VCC_LO)
-                    return false;
-                return true;
-            }
-          case 2:
-            if (numSrcRegOperands() > 2) {
-                // if we have more than 2 source operand then
-                // op index 2 corresponds to SRC2. SRC2 may be
-                // a scalar or vector register, an inline
-                // constant, or a special HW register
-                return isVectorReg(extData.SRC2);
-            } else if (numSrcRegOperands() == 2) {
-                // if we only have 2 source operands, opIdx 2
-                // will be VDST, and VDST is always a vector
-                // reg
-                if (instData.VDST == REG_VCC_LO)
-                    return false;
-                return true;
-            } else {
-                // if this idx doesn't correspond to SRCX or
-                // VDST then it must be a VCC read or write,
-                // and VCC is never stored in a VGPR
-                assert(writesVCC() || readsVCC());
-                return false;
-            }
-          case 3:
-            if (numSrcRegOperands() == 3) {
-                // if we have 3 source operands then op
-                // idx 3 will correspond to VDST, and VDST
-                // is always a vector reg
-                if (instData.VDST == REG_VCC_LO)
-                    return false;
-                return true;
-            } else {
-                // if this idx doesn't correspond to VDST
-                // then it must be a VCC read or write, and
-                // and VCC is never stored in a VGPR
-                assert(writesVCC() || readsVCC());
-                return false;
-            }
-          case 4:
-            // if a VOP3 instruction has more than 4 ops
-            // it must read from and write to VCC, and
-            // VCC is never stored in a VGPR
-            assert(writesVCC() || readsVCC());
-            return false;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    int
-    Inst_VOP3B::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            // SRC0
-            return opSelectorToRegIdx(extData.SRC0, num_scalar_regs);
-          case 1:
-            if (numSrcRegOperands() > 1) {
-                // if we have more than 1 source operand then
-                // op index 1 corresponds to SRC1
-                return opSelectorToRegIdx(extData.SRC1, num_scalar_regs);
-            } else {
-                // if we only have 1 source operand, opIdx 1
-                // will be VDST
-                return instData.VDST;
-            }
-          case 2:
-            if (numSrcRegOperands() > 2) {
-                // if we have more than 2 source operand then
-                // op index 2 corresponds to SRC2
-                return opSelectorToRegIdx(extData.SRC2, num_scalar_regs);
-            } else if (numSrcRegOperands() == 2) {
-                // if we only have 2 source operands, opIdx 2
-                // will be VDST
-                return instData.VDST;
-            } else {
-                // if this idx doesn't correspond to SRCX or
-                // VDST then it must be a VCC read or write
-                assert(writesVCC() || readsVCC());
-                return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
-            }
-          case 3:
-            if (numSrcRegOperands() == 3) {
-                // if we have 3 source operands then op
-                // idx 3 will correspond to VDST
-                return instData.VDST;
-            } else {
-                // if this idx doesn't correspond to VDST
-                // then it must be a VCC read or write
-                assert(writesVCC() || readsVCC());
-                return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
-            }
-          case 4:
-            // if a VOP3 instruction has more than 4 ops
-            // it must read from and write to VCC
-            assert(writesVCC() || readsVCC());
-            return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return -1;
-        }
-    }
-
     // --- Inst_DS base class methods ---
 
     Inst_DS::Inst_DS(InFmt_DS *iFmt, const std::string &opcode)
@@ -1777,6 +1141,28 @@ namespace VegaISA
     Inst_DS::~Inst_DS()
     {
     } // ~Inst_DS
+
+    void
+    Inst_DS::initOperandInfo()
+    {
+        unsigned int srcs[3] = {extData.ADDR, extData.DATA0, extData.DATA1};
+
+        int opIdx = 0;
+
+        for (opIdx = 0; opIdx < numSrcRegOperands(); opIdx++){
+            operands.emplace_back(srcs[opIdx], getOperandSize(opIdx), true,
+                                  false, true, false);
+        }
+
+        if (numDstRegOperands()) {
+            // Needed because can't take addr of bitfield
+            int reg = extData.VDST;
+            operands.emplace_back(reg, getOperandSize(opIdx), false,
+                                  false, true, false);
+        }
+
+        assert(operands.size() == getNumOperands());
+    }
 
     int
     Inst_DS::instSize() const
@@ -1817,56 +1203,6 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
-    bool
-    Inst_DS::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        // DS instructions cannot access SGPRs
-        return false;
-    }
-
-    bool
-    Inst_DS::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        // DS instructions only access VGPRs
-        return true;
-    }
-
-    int
-    Inst_DS::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            return extData.ADDR;
-          case 1:
-            if (numSrcRegOperands() > 1) {
-                return extData.DATA0;
-            } else if (numDstRegOperands()) {
-                return extData.VDST;
-            }
-          case 2:
-            if (numSrcRegOperands() > 2) {
-                return extData.DATA1;
-            } else if (numDstRegOperands()) {
-                return extData.VDST;
-            }
-          case 3:
-            assert(numDstRegOperands());
-            return extData.VDST;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return -1;
-        }
-    }
-
     // --- Inst_MUBUF base class methods ---
 
     Inst_MUBUF::Inst_MUBUF(InFmt_MUBUF *iFmt, const std::string &opcode)
@@ -1889,6 +1225,52 @@ namespace VegaISA
     Inst_MUBUF::~Inst_MUBUF()
     {
     } // ~Inst_MUBUF
+
+    void
+    Inst_MUBUF::initOperandInfo()
+    {
+        // Currently there are three formats:
+        // 0 src + 0 dst
+        // 3 src + 1 dst
+        // 4 src + 0 dst
+        int opNum = 0;
+
+        // Needed because can't take addr of bitfield;
+        int reg = 0;
+
+        if (numSrcRegOperands()) {
+            if (numSrcRegOperands() == getNumOperands()) {
+                reg = extData.VDATA;
+                operands.emplace_back(reg, getOperandSize(opNum), true,
+                                      false, true, false);
+                opNum++;
+            }
+
+            reg = extData.VADDR;
+            operands.emplace_back(reg, getOperandSize(opNum), true,
+                                  false, true, false);
+            opNum++;
+
+            reg = extData.SRSRC;
+            operands.emplace_back(reg, getOperandSize(opNum), true,
+                                  true, false, false);
+            opNum++;
+
+            reg = extData.SOFFSET;
+            operands.emplace_back(reg, getOperandSize(opNum), true,
+                                  true, false, false);
+            opNum++;
+        }
+
+        // extData.VDATA moves in the reg list depending on the instruction
+        if (numDstRegOperands()) {
+            reg = extData.VDATA;
+            operands.emplace_back(reg, getOperandSize(opNum), false,
+                                  false, true, false);
+        }
+
+        assert(operands.size() == getNumOperands());
+    }
 
     int
     Inst_MUBUF::instSize() const
@@ -1914,70 +1296,6 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
-    bool
-    Inst_MUBUF::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            return false;
-          case 1:
-            return true;
-          case 2:
-            return true;
-          case 3:
-            return false;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    bool
-    Inst_MUBUF::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            return true;
-          case 1:
-            return false;
-          case 2:
-            return false;
-          case 3:
-            return true;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return false;
-        }
-    }
-
-    int
-    Inst_MUBUF::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-              return extData.VADDR;
-          case 1:
-              // SRSRC is always in units of 4 SGPRs
-              return extData.SRSRC * 4;
-          case 2:
-              return extData.SOFFSET;
-          case 3:
-            return extData.VDATA;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return -1;
-        }
-    }
-
     // --- Inst_MTBUF base class methods ---
 
     Inst_MTBUF::Inst_MTBUF(InFmt_MTBUF *iFmt, const std::string &opcode)
@@ -1995,12 +1313,54 @@ namespace VegaISA
 
         if (extData.SLC)
             setFlag(SystemCoherent);
-
     } // Inst_MTBUF
 
     Inst_MTBUF::~Inst_MTBUF()
     {
     } // ~Inst_MTBUF
+
+    void
+    Inst_MTBUF::initOperandInfo()
+    {
+        // Currently there are two formats:
+        // 3 src + 1 dst
+        // 4 src + 0 dst
+        int opNum = 0;
+
+        // Needed because can't take addr of bitfield
+        int reg = 0;
+
+        if (numSrcRegOperands() == getNumOperands()) {
+            reg = extData.VDATA;
+            operands.emplace_back(reg, getOperandSize(opNum), true,
+                                  false, true, false);
+            opNum++;
+        }
+
+        reg = extData.VADDR;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              false, true, false);
+        opNum++;
+
+        reg = extData.SRSRC;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              true, false, false);
+        opNum++;
+
+        reg = extData.SOFFSET;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              true, false, false);
+        opNum++;
+
+        // extData.VDATA moves in the reg list depending on the instruction
+        if (numDstRegOperands()) {
+            reg = extData.VDATA;
+            operands.emplace_back(reg, getOperandSize(opNum), false,
+                                  false, true, false);
+        }
+
+        assert(operands.size() == getNumOperands());
+    }
 
     int
     Inst_MTBUF::instSize() const
@@ -2031,6 +1391,52 @@ namespace VegaISA
     {
     } // ~Inst_MIMG
 
+    void
+    Inst_MIMG::initOperandInfo()
+    {
+        // Three formats:
+        // 1 dst + 2 src : s,s,d
+        // 0 dst + 3 src : s,s,s
+        // 1 dst + 3 src : s,s,s,d
+        int opNum = 0;
+
+        // Needed because can't take addr of bitfield
+        int reg = 0;
+
+        if (numSrcRegOperands() == getNumOperands()) {
+            reg = extData.VDATA;
+            operands.emplace_back(reg, getOperandSize(opNum), true,
+                                  false, true, false);
+            opNum++;
+        }
+
+        reg = extData.VADDR;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              false, true, false);
+        opNum++;
+
+        reg = extData.SRSRC;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              true, false, false);
+        opNum++;
+
+        if (getNumOperands() == 4) {
+            reg = extData.SSAMP;
+            operands.emplace_back(reg, getOperandSize(opNum), true,
+                                  true, false, false);
+            opNum++;
+        }
+
+        // extData.VDATA moves in the reg list depending on the instruction
+        if (numDstRegOperands()) {
+            reg = extData.VDATA;
+            operands.emplace_back(reg, getOperandSize(opNum), false,
+                                  false, true, false);
+        }
+
+        assert(operands.size() == getNumOperands());
+    }
+
     int
     Inst_MIMG::instSize() const
     {
@@ -2052,6 +1458,24 @@ namespace VegaISA
     Inst_EXP::~Inst_EXP()
     {
     } // ~Inst_EXP
+
+    void
+    Inst_EXP::initOperandInfo()
+    {
+        // Only 1 instruction, 1 format: 1 dst + 4 src
+        int opNum = 0;
+
+        // Avoids taking addr of bitfield
+        unsigned int srcs[4] = {extData.VSRC0, extData.VSRC1,
+                                extData.VSRC2, extData.VSRC3};
+
+        for (opNum = 0; opNum < 4; opNum++) {
+            operands.emplace_back(srcs[opNum], getOperandSize(opNum), true,
+                                  false, true, false);
+        }
+
+        //TODO: Add the dst operand, don't know what it is right now
+    }
 
     int
     Inst_EXP::instSize() const
@@ -2082,6 +1506,42 @@ namespace VegaISA
     {
     } // ~Inst_FLAT
 
+    void
+    Inst_FLAT::initOperandInfo()
+    {
+        //3 formats:
+        // 1 dst + 1 src (load)
+        // 0 dst + 2 src (store)
+        // 1 dst + 2 src (atomic)
+        int opNum = 0;
+
+        // Needed because can't take addr of bitfield
+        int reg = 0;
+
+        if (getNumOperands() > 2)
+            assert(isAtomic());
+
+        reg = extData.ADDR;
+        operands.emplace_back(reg, getOperandSize(opNum), true,
+                              false, true, false);
+        opNum++;
+
+        if (numSrcRegOperands() == 2) {
+            reg = extData.DATA;
+            operands.emplace_back(reg, getOperandSize(opNum), true,
+                                  false, true, false);
+            opNum++;
+        }
+
+        if (numDstRegOperands()) {
+            reg = extData.VDST;
+            operands.emplace_back(reg, getOperandSize(opNum), false,
+                                  false, true, false);
+        }
+
+        assert(operands.size() == getNumOperands());
+    }
+
     int
     Inst_FLAT::instSize() const
     {
@@ -2103,67 +1563,5 @@ namespace VegaISA
             dis_stream << ", v" << extData.DATA;
 
         disassembly = dis_stream.str();
-    }
-
-    bool
-    Inst_FLAT::isScalarRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        // if a FLAT instruction has more than two
-        // operands it must be an atomic
-        if (opIdx == 2)
-            assert(isAtomic());
-
-        // FLAT instructions cannot access SGPRs
-        return false;
-    }
-
-    bool
-    Inst_FLAT::isVectorRegister(int opIdx)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        // if a FLAT instruction has more than two
-        // operands it must be an atomic
-        if (opIdx == 2)
-            assert(isAtomic());
-
-        // FLAT instructions only access VGPRs
-        return true;
-    }
-
-    int
-    Inst_FLAT::getRegisterIndex(int opIdx, int num_scalar_regs)
-    {
-        assert(opIdx >= 0);
-        assert(opIdx < getNumOperands());
-
-        switch (opIdx) {
-          case 0:
-            return extData.ADDR;
-          case 1:
-            if (isStore()) {
-                return extData.DATA;
-            } else if (isLoad()) {
-                return extData.VDST;
-            } else if (isAtomic()) {
-                // For flat_atomic instructions,
-                // the DATA VGPR gives the source
-                return extData.DATA;
-            } else {
-                fatal("Unsupported flat instr type\n");
-            }
-          case 2:
-             // if a FLAT instruction has more than two
-             // operands it must be an atomic
-            assert(isAtomic());
-            return extData.VDST;
-          default:
-            fatal("Operand at idx %i does not exist\n", opIdx);
-            return -1;
-        }
     }
 } // namespace VegaISA

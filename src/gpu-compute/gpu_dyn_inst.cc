@@ -47,6 +47,7 @@ GPUDynInst::GPUDynInst(ComputeUnit *_cu, Wavefront *_wf,
       _staticInst(static_inst), _seqNum(instSeqNum),
       maxSrcVecRegOpSize(0), maxSrcScalarRegOpSize(0)
 {
+    _staticInst->initOperandInfo();
     statusVector.assign(TheGpuISA::NumVecElemPerVecReg, 0);
     tlbHitLevel.assign(computeUnit()->wfSize(), -1);
     // vector instructions can have up to 4 source/destination operands

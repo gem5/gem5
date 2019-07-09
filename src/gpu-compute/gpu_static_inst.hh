@@ -45,11 +45,13 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include "enums/GPUStaticInstFlags.hh"
 #include "enums/StorageClassType.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
 #include "gpu-compute/misc.hh"
+#include "gpu-compute/operand_info.hh"
 
 class BaseOperand;
 class BaseRegOperand;
@@ -74,19 +76,29 @@ class GPUStaticInst : public GPUStaticInstFlags
 
     virtual TheGpuISA::ScalarRegU32 srcLiteral() const { return 0; }
 
+    virtual void initOperandInfo() = 0;
     virtual void execute(GPUDynInstPtr gpuDynInst) = 0;
     virtual void generateDisassembly() = 0;
     const std::string& disassemble();
     virtual int getNumOperands() = 0;
-    virtual bool isScalarRegister(int operandIndex) = 0;
-    virtual bool isVectorRegister(int operandIndex) = 0;
-    virtual bool isSrcOperand(int operandIndex) = 0;
-    virtual bool isDstOperand(int operandIndex) = 0;
+    bool isScalarRegister(int operandIndex)
+    { return operands[operandIndex].isScalarReg(); }
+
+    bool isVectorRegister(int operandIndex)
+    { return operands[operandIndex].isVectorReg(); }
+
+    bool isSrcOperand(int operandIndex)
+    { return operands[operandIndex].isSrc(); }
+
+    bool isDstOperand(int operandIndex)
+    { return operands[operandIndex].isDst(); }
+
     virtual bool isFlatScratchRegister(int opIdx) = 0;
     virtual bool isExecMaskRegister(int opIdx) = 0;
     virtual int getOperandSize(int operandIndex) = 0;
 
-    virtual int getRegisterIndex(int operandIndex, int num_scalar_regs) = 0;
+    int getRegisterIndex(int operandIndex, int num_scalar_regs)
+    { return operands[operandIndex].registerIndex(num_scalar_regs); }
 
     virtual int numDstRegOperands() = 0;
     virtual int numSrcRegOperands() = 0;
@@ -261,6 +273,9 @@ class GPUStaticInst : public GPUStaticInstFlags
     std::string disassembly;
     int _instNum;
     int _instAddr;
+    std::vector<OperandInfo> operands;
+
+  private:
     int srcVecOperands;
     int dstVecOperands;
     int srcVecDWORDs;
@@ -297,22 +312,13 @@ class KernelLaunchStaticInst : public GPUStaticInst
         disassembly = _opcode;
     }
 
+    void initOperandInfo() override { return; }
     int getNumOperands() override { return 0; }
     bool isFlatScratchRegister(int opIdx) override { return false; }
     // return true if the Execute mask is explicitly used as a source
     // register operand
     bool isExecMaskRegister(int opIdx) override { return false; }
-    bool isScalarRegister(int operandIndex) override { return false; }
-    bool isVectorRegister(int operandIndex) override { return false; }
-    bool isSrcOperand(int operandIndex) override { return false; }
-    bool isDstOperand(int operandIndex) override { return false; }
     int getOperandSize(int operandIndex) override { return 0; }
-
-    int
-    getRegisterIndex(int operandIndex, int num_scalar_regs) override
-    {
-        return 0;
-    }
 
     int numDstRegOperands() override { return 0; }
     int numSrcRegOperands() override { return 0; }

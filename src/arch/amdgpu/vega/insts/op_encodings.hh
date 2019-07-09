@@ -77,9 +77,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         // first instruction DWORD
@@ -101,9 +99,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         // first instruction DWORD
@@ -125,9 +121,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         // first instruction DWORD
@@ -149,9 +143,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         // first instruction DWORD
@@ -173,9 +165,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         // first instruction DWORD
@@ -191,9 +181,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         /**
@@ -274,9 +262,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         // first instruction DWORD
@@ -298,9 +284,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         // first instruction DWORD
@@ -322,9 +306,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         // first instruction DWORD
@@ -359,9 +341,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         // first instruction DWORD
@@ -393,9 +373,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         // first instruction DWORD
@@ -416,9 +394,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         template<typename T>
@@ -516,9 +492,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         template<typename T>
@@ -723,6 +697,7 @@ namespace VegaISA
         ~Inst_MTBUF();
 
         int instSize() const override;
+        void initOperandInfo() override;
 
       protected:
         // first instruction DWORD
@@ -741,6 +716,7 @@ namespace VegaISA
         ~Inst_MIMG();
 
         int instSize() const override;
+        void initOperandInfo() override;
 
       protected:
         // first instruction DWORD
@@ -756,6 +732,7 @@ namespace VegaISA
         ~Inst_EXP();
 
         int instSize() const override;
+        void initOperandInfo() override;
 
       protected:
         // first instruction DWORD
@@ -773,9 +750,7 @@ namespace VegaISA
         int instSize() const override;
         void generateDisassembly() override;
 
-        bool isScalarRegister(int opIdx) override;
-        bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
+        void initOperandInfo() override;
 
       protected:
         template<typename T>
