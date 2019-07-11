@@ -220,7 +220,8 @@ CommMonitor::recvAtomic(PacketPtr pkt)
     if (expects_response)
         stats.updateRespStats(req_pkt_info, delay, true);
 
-    assert(pkt->isResponse());
+    // Some packets, such as WritebackDirty, don't need response.
+    assert(pkt->isResponse() || !expects_response);
     ProbePoints::PacketInfo resp_pkt_info(pkt);
     ppPktResp->notify(resp_pkt_info);
     return delay;
