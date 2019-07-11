@@ -268,40 +268,6 @@ GPUDynInst::executedAs()
     return _staticInst->executed_as;
 }
 
-bool
-GPUDynInst::hasVgprRawDependence(GPUDynInstPtr s)
-{
-    assert(s);
-    for (int i = 0; i < getNumOperands(); ++i) {
-        if (isVectorRegister(i) && isSrcOperand(i)) {
-            for (int j = 0; j < s->getNumOperands(); ++j) {
-                if (s->isVectorRegister(j) && s->isDstOperand(j)) {
-                    if (i == j)
-                        return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-bool
-GPUDynInst::hasSgprRawDependence(GPUDynInstPtr s)
-{
-    assert(s);
-    for (int i = 0; i < getNumOperands(); ++i) {
-        if (isScalarRegister(i) && isSrcOperand(i)) {
-            for (int j = 0; j < s->getNumOperands(); ++j) {
-                if (s->isScalarRegister(j) && s->isDstOperand(j)) {
-                    if (i == j)
-                        return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
 // Process a memory instruction and (if necessary) submit timing request
 void
 GPUDynInst::initiateAcc(GPUDynInstPtr gpuDynInst)

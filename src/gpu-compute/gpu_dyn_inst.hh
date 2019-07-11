@@ -101,9 +101,6 @@ class GPUDynInst : public GPUExecContext
     bool hasDestinationVgpr() const;
     bool hasSourceVgpr() const;
 
-    bool hasSgprRawDependence(GPUDynInstPtr s);
-    bool hasVgprRawDependence(GPUDynInstPtr s);
-
     // returns true if the string "opcodeStr" is found in the
     // opcode of the instruction
     bool isOpcode(const std::string& opcodeStr) const;
