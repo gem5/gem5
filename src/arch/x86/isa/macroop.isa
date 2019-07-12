@@ -226,8 +226,10 @@ let {{
 
                     if self.function_call:
                         flags.append("IsCall")
+                        flags.append("IsUncondControl")
                     if self.function_return:
                         flags.append("IsReturn")
+                        flags.append("IsUncondControl")
                 else:
                     flags.append("IsDelayedCommit")
 
