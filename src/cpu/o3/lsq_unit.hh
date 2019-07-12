@@ -667,6 +667,8 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
         ThreadContext *thread = cpu->tcBase(lsqID);
         PacketPtr main_pkt = new Packet(req->mainRequest(), MemCmd::ReadReq);
 
+        main_pkt->dataStatic(load_inst->memData);
+
         Cycles delay = req->handleIprRead(thread, main_pkt);
 
         WritebackEvent *wb = new WritebackEvent(load_inst, main_pkt, this);
