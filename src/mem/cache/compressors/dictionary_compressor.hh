@@ -127,6 +127,8 @@ class DictionaryCompressor : public BaseDictionaryCompressor
     class MaskedPattern;
     template <T value, T mask>
     class MaskedValuePattern;
+    template <T mask, int location>
+    class LocatedMaskedPattern;
     template <class RepT>
     class RepeatedValuePattern;
 
@@ -537,6 +539,40 @@ class DictionaryCompressor<T>::MaskedValuePattern
     {
         return MaskedPattern<mask>::decompress(
             DictionaryCompressor<T>::toDictionaryEntry(value));
+    }
+};
+
+/**
+ * A pattern that narrows the MaskedPattern by allowing a only single possible
+ * dictionary entry to be matched against.
+ *
+ * @tparam mask A mask containing the bits that must match.
+ * @tparam location The index of the single entry allowed to match.
+ */
+template <class T>
+template <T mask, int location>
+class DictionaryCompressor<T>::LocatedMaskedPattern
+    : public MaskedPattern<mask>
+{
+  public:
+    LocatedMaskedPattern(const int number,
+        const uint64_t code,
+        const uint64_t metadata_length,
+        const int match_location,
+        const DictionaryEntry bytes)
+      : MaskedPattern<mask>(number, code, metadata_length, match_location,
+            bytes)
+    {
+    }
+
+    static bool
+    isPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
+        const int match_location)
+    {
+        // Besides doing the regular masked pattern matching, the match
+        // location must match perfectly with this instance's
+        return (match_location == location) &&
+            MaskedPattern<mask>::isPattern(bytes, dict_bytes, match_location);
     }
 };
 

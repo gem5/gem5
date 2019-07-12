@@ -61,3 +61,10 @@ class CPack(BaseDictionaryCompressor):
     type = 'CPack'
     cxx_class = 'CPack'
     cxx_header = "mem/cache/compressors/cpack.hh"
+
+class FPCD(BaseDictionaryCompressor):
+    type = 'FPCD'
+    cxx_class = 'FPCD'
+    cxx_header = "mem/cache/compressors/fpcd.hh"
+
+    dictionary_size = 2
