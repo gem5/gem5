@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2011,2019 ARM Limited
+// Copyright (c) 2010-2011,2019-2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -182,6 +182,7 @@ let {{
                 self.instFlags.extend(["IsMemBarrier",
                                        "IsWriteBarrier",
                                        "IsReadBarrier"])
+                self.memFlags.append("Request::ACQUIRE")
 
             # Disambiguate the class name for different flavors of loads
             if self.flavor != "normal":
@@ -256,6 +257,7 @@ let {{
                 self.instFlags.extend(["IsMemBarrier",
                                        "IsWriteBarrier",
                                        "IsReadBarrier"])
+                self.memFlags.append("Request::ACQUIRE")
 
         def emit(self):
             # Address computation code

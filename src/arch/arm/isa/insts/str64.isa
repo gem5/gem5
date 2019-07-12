@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013,2017,2019 ARM Limited
+// Copyright (c) 2011-2013,2017,2019-2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -82,6 +82,8 @@ let {{
                 self.instFlags.extend(["IsMemBarrier",
                                        "IsWriteBarrier",
                                        "IsReadBarrier"])
+                self.memFlags.append("Request::RELEASE")
+
             if self.flavor in ("relex", "exclusive", "exp", "relexp"):
                 self.instFlags.append("IsStoreConditional")
                 self.memFlags.append("Request::LLSC")
