@@ -45,6 +45,7 @@
 #include "enums/StorageClassType.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_exec_context.hh"
+#include "gpu-compute/operand_info.hh"
 
 class GPUStaticInst;
 
@@ -89,7 +90,7 @@ class RegisterOperandInfo
     /**
      * The number of registers required to store this operand.
      */
-    int numRegisters() const { return numDWORDs / TheGpuISA::RegSizeDWORDs; }
+    int numRegisters() const { return numDWORDs / TheGpuISA::RegSizeDWords; }
     int operandIdx() const { return opIdx; }
     /**
      * We typically only need the first virtual register for the operand
@@ -117,65 +118,42 @@ class GPUDynInst : public GPUExecContext
     GPUDynInst(ComputeUnit *_cu, Wavefront *_wf, GPUStaticInst *static_inst,
                uint64_t instSeqNum);
     ~GPUDynInst();
-    void initOperandInfo();
     void execute(GPUDynInstPtr gpuDynInst);
 
-    const std::vector<RegisterOperandInfo>&
-    srcVecRegOperands() const
-    {
-        return srcVecRegOps;
-    }
-
-    const std::vector<RegisterOperandInfo>&
-    dstVecRegOperands() const
-    {
-        return dstVecRegOps;
-    }
-
-    const std::vector<RegisterOperandInfo>&
-    srcScalarRegOperands() const
-    {
-        return srcScalarRegOps;
-    }
-
-    const std::vector<RegisterOperandInfo>&
-    dstScalarRegOperands() const
-    {
-        return dstScalarRegOps;
-    }
-
-    int numSrcVecRegOperands() const;
-    int numDstVecRegOperands() const;
-    int maxSrcVecRegOperandSize() const;
-    int numSrcScalarRegOperands() const;
-    int numDstScalarRegOperands() const;
-    int maxSrcScalarRegOperandSize() const;
+    const std::vector<OperandInfo>& srcVecRegOperands() const;
+    const std::vector<OperandInfo>& dstVecRegOperands() const;
+    const std::vector<OperandInfo>& srcScalarRegOperands() const;
+    const std::vector<OperandInfo>& dstScalarRegOperands() const;
 
     int numSrcRegOperands();
     int numDstRegOperands();
-    int numSrcVecDWORDs();
-    int numDstVecDWORDs();
-    int numOpdDWORDs(int operandIdx);
-    int getNumOperands();
-    bool isVectorRegister(int operandIdx);
-    bool isScalarRegister(int operandIdx);
-    int getRegisterIndex(int operandIdx);
-    int getOperandSize(int operandIdx);
-    bool isDstOperand(int operandIdx);
-    bool isSrcOperand(int operandIdx);
 
-    bool hasDestinationSgpr() const;
+    int numSrcVecRegOperands() const;
+    int numDstVecRegOperands() const;
+    int maxSrcVecRegOperandSize();
+    int numSrcVecDWords();
+    int numDstVecDWords();
+
+    int numSrcScalarRegOperands() const;
+    int numDstScalarRegOperands() const;
+    int maxSrcScalarRegOperandSize();
+    int numSrcScalarDWords();
+    int numDstScalarDWords();
+
+    int maxOperandSize();
+
+    int getNumOperands() const;
+
     bool hasSourceSgpr() const;
-    bool hasDestinationVgpr() const;
+    bool hasDestinationSgpr() const;
     bool hasSourceVgpr() const;
+    bool hasDestinationVgpr() const;
 
     // returns true if the string "opcodeStr" is found in the
     // opcode of the instruction
     bool isOpcode(const std::string& opcodeStr) const;
     bool isOpcode(const std::string& opcodeStr,
                   const std::string& extStr) const;
-    // returns true if source operand at "index" is a vector register
-    bool srcIsVgpr(int index) const;
 
     const std::string &disassemble() const;
 
@@ -264,8 +242,8 @@ class GPUDynInst : public GPUExecContext
     bool writesSCC() const;
     bool readsVCC() const;
     bool writesVCC() const;
-    bool readsEXEC() const;
-    bool writesEXEC() const;
+    bool readsExec() const;
+    bool writesExec() const;
     bool readsMode() const;
     bool writesMode() const;
     bool ignoreExec() const;
@@ -509,12 +487,6 @@ class GPUDynInst : public GPUExecContext
     // hold each cache block address for the instruction and a vector
     // to hold the tick when the block arrives at certain hop points
     std::map<Addr, std::vector<Tick>> lineAddressTime;
-
-    // Operand info.
-    std::vector<RegisterOperandInfo> srcVecRegOps;
-    std::vector<RegisterOperandInfo> dstVecRegOps;
-    std::vector<RegisterOperandInfo> srcScalarRegOps;
-    std::vector<RegisterOperandInfo> dstScalarRegOps;
 };
 
 #endif // __GPU_DYN_INST_HH__

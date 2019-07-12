@@ -52,10 +52,10 @@
 #include "gpu-compute/gpu_dyn_inst.hh"
 #include "gpu-compute/misc.hh"
 #include "gpu-compute/operand_info.hh"
+#include "gpu-compute/wavefront.hh"
 
 class BaseOperand;
 class BaseRegOperand;
-class Wavefront;
 
 class GPUStaticInst : public GPUStaticInstFlags
 {
@@ -76,41 +76,33 @@ class GPUStaticInst : public GPUStaticInstFlags
 
     virtual TheGpuISA::ScalarRegU32 srcLiteral() const { return 0; }
 
+    void initDynOperandInfo(Wavefront *wf, ComputeUnit *cu);
+
     virtual void initOperandInfo() = 0;
     virtual void execute(GPUDynInstPtr gpuDynInst) = 0;
     virtual void generateDisassembly() = 0;
     const std::string& disassemble();
     virtual int getNumOperands() = 0;
-    bool isScalarRegister(int operandIndex)
-    { return operands[operandIndex].isScalarReg(); }
-
-    bool isVectorRegister(int operandIndex)
-    { return operands[operandIndex].isVectorReg(); }
-
-    bool isSrcOperand(int operandIndex)
-    { return operands[operandIndex].isSrc(); }
-
-    bool isDstOperand(int operandIndex)
-    { return operands[operandIndex].isDst(); }
-
     virtual bool isFlatScratchRegister(int opIdx) = 0;
     virtual bool isExecMaskRegister(int opIdx) = 0;
     virtual int getOperandSize(int operandIndex) = 0;
 
-    int getRegisterIndex(int operandIndex, int num_scalar_regs)
-    { return operands[operandIndex].registerIndex(num_scalar_regs); }
-
     virtual int numDstRegOperands() = 0;
     virtual int numSrcRegOperands() = 0;
 
-    virtual int coalescerTokenCount() const { return 0; }
-
-    int numDstVecOperands();
     int numSrcVecOperands();
-    int numDstVecDWORDs();
-    int numSrcVecDWORDs();
+    int numDstVecOperands();
+    int numSrcVecDWords();
+    int numDstVecDWords();
 
-    int numOpdDWORDs(int operandIdx);
+    int numSrcScalarOperands();
+    int numDstScalarOperands();
+    int numSrcScalarDWords();
+    int numDstScalarDWords();
+
+    int maxOperandSize();
+
+    virtual int coalescerTokenCount() const { return 0; }
 
     bool isALU() const { return _flags[ALU]; }
     bool isBranch() const { return _flags[Branch]; }
@@ -268,18 +260,58 @@ class GPUStaticInst : public GPUStaticInstFlags
     }
     const std::string& opcode() const { return _opcode; }
 
+    const std::vector<OperandInfo>& srcOperands() const { return srcOps; }
+    const std::vector<OperandInfo>& dstOperands() const { return dstOps; }
+
+    const std::vector<OperandInfo>&
+    srcVecRegOperands() const
+    {
+        return srcVecRegOps;
+    }
+
+    const std::vector<OperandInfo>&
+    dstVecRegOperands() const
+    {
+        return dstVecRegOps;
+    }
+
+    const std::vector<OperandInfo>&
+    srcScalarRegOperands() const
+    {
+        return srcScalarRegOps;
+    }
+
+    const std::vector<OperandInfo>&
+    dstScalarRegOperands() const
+    {
+        return dstScalarRegOps;
+    }
+
+    // These next 2 lines are used in initDynOperandInfo to let the lambda
+    // function work
+    typedef int (RegisterManager::*MapRegFn)(Wavefront *, int);
+    enum OpType { SRC_VEC, SRC_SCALAR, DST_VEC, DST_SCALAR };
+
   protected:
     const std::string _opcode;
     std::string disassembly;
     int _instNum;
     int _instAddr;
-    std::vector<OperandInfo> operands;
+    std::vector<OperandInfo> srcOps;
+    std::vector<OperandInfo> dstOps;
 
   private:
-    int srcVecOperands;
-    int dstVecOperands;
-    int srcVecDWORDs;
-    int dstVecDWORDs;
+    int srcVecDWords;
+    int dstVecDWords;
+    int srcScalarDWords;
+    int dstScalarDWords;
+    int maxOpSize;
+
+    std::vector<OperandInfo> srcVecRegOps;
+    std::vector<OperandInfo> dstVecRegOps;
+    std::vector<OperandInfo> srcScalarRegOps;
+    std::vector<OperandInfo> dstScalarRegOps;
+
     /**
      * Identifier of the immediate post-dominator instruction.
      */

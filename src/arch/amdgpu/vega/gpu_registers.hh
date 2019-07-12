@@ -168,11 +168,11 @@ namespace VegaISA
     typedef int64_t VecElemI64;
     typedef double VecElemF64;
 
-    const int DWORDSize = sizeof(VecElemU32);
+    const int DWordSize = sizeof(VecElemU32);
     /**
-     * Size of a single-precision register in DWORDs.
+     * Size of a single-precision register in DWords.
      */
-    const int RegSizeDWORDs = sizeof(VecElemU32) / DWORDSize;
+    const int RegSizeDWords = sizeof(VecElemU32) / DWordSize;
 
     // typedefs for the various sizes/types of vector regs
     using VecRegU8 = ::VecRegT<VecElemU8, NumVecElemPerVecReg, false>;

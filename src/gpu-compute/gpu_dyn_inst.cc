@@ -45,7 +45,7 @@ GPUDynInst::GPUDynInst(ComputeUnit *_cu, Wavefront *_wf,
     : GPUExecContext(_cu, _wf), scalarAddr(0), addr(computeUnit()->wfSize(),
       (Addr)0), numScalarReqs(0), isSaveRestore(false),
       _staticInst(static_inst), _seqNum(instSeqNum),
-      maxSrcVecRegOpSize(0), maxSrcScalarRegOpSize(0)
+      maxSrcVecRegOpSize(-1), maxSrcScalarRegOpSize(-1)
 {
     _staticInst->initOperandInfo();
     statusVector.assign(TheGpuISA::NumVecElemPerVecReg, 0);
@@ -83,108 +83,13 @@ GPUDynInst::GPUDynInst(ComputeUnit *_cu, Wavefront *_wf,
         wg_id = -1;
         wfSlotId = -1;
     }
-}
 
-void
-GPUDynInst::initOperandInfo()
-{
-    /**
-     * Generate and cache the operand to register mapping information. This
-     * prevents this info from being generated multiple times throughout
-     * the CU pipeline.
-     */
+
     DPRINTF(GPUInst, "%s: generating operand info for %d operands\n",
             disassemble(), getNumOperands());
 
-    for (int op_idx = 0; op_idx < getNumOperands(); ++op_idx) {
-        int virt_idx(-1);
-        int phys_idx(-1);
-        int op_num_dwords(-1);
+    _staticInst->initDynOperandInfo(wavefront(), computeUnit());
 
-        if (isVectorRegister(op_idx)) {
-            virt_idx = getRegisterIndex(op_idx);
-            op_num_dwords = numOpdDWORDs(op_idx);
-
-            if (isSrcOperand(op_idx)) {
-                std::vector<int> virt_indices;
-                std::vector<int> phys_indices;
-
-                if (op_num_dwords > maxSrcVecRegOpSize) {
-                    maxSrcVecRegOpSize = op_num_dwords;
-                }
-
-                for (int i = 0; i < op_num_dwords; ++i) {
-                    phys_idx = computeUnit()->registerManager->
-                        mapVgpr(wavefront(), virt_idx + i);
-                    virt_indices.push_back(virt_idx + i);
-                    phys_indices.push_back(phys_idx);
-                }
-                DPRINTF(GPUInst, "%s adding vector src (%d->%d) operand "
-                        "that uses %d registers.\n", disassemble(),
-                        virt_idx, computeUnit()->registerManager->
-                        mapVgpr(wavefront(), virt_idx), op_num_dwords);
-                srcVecRegOps.emplace_back(op_idx, op_num_dwords, virt_indices,
-                                          phys_indices);
-            } else {
-                assert(isDstOperand(op_idx));
-                std::vector<int> virt_indices;
-                std::vector<int> phys_indices;
-                for (int i = 0; i < op_num_dwords; ++i) {
-                    phys_idx = computeUnit()->registerManager->
-                        mapVgpr(wavefront(), virt_idx + i);
-                    virt_indices.push_back(virt_idx + i);
-                    phys_indices.push_back(phys_idx);
-                }
-                DPRINTF(GPUInst, "%s adding vector dst (%d->%d) operand "
-                        "that uses %d registers.\n", disassemble(),
-                        virt_idx, computeUnit()->registerManager->
-                        mapVgpr(wavefront(), virt_idx), op_num_dwords);
-                dstVecRegOps.emplace_back(op_idx, op_num_dwords, virt_indices,
-                                          phys_indices);
-            }
-        } else if (isScalarRegister(op_idx)) {
-            virt_idx = getRegisterIndex(op_idx);
-            op_num_dwords = numOpdDWORDs(op_idx);
-
-            if (isSrcOperand(op_idx)) {
-                std::vector<int> virt_indices;
-                std::vector<int> phys_indices;
-
-                if (op_num_dwords > maxSrcScalarRegOpSize) {
-                    maxSrcScalarRegOpSize = op_num_dwords;
-                }
-
-                for (int i = 0; i < op_num_dwords; ++i) {
-                    phys_idx = computeUnit()->registerManager->
-                        mapSgpr(wavefront(), virt_idx + i);
-                    virt_indices.push_back(virt_idx + i);
-                    phys_indices.push_back(phys_idx);
-                }
-                DPRINTF(GPUInst, "%s adding scalar src (%d->%d) operand "
-                        "that uses %d registers.\n", disassemble(),
-                        virt_idx, computeUnit()->registerManager->
-                        mapSgpr(wavefront(), virt_idx), op_num_dwords);
-                srcScalarRegOps.emplace_back(op_idx, op_num_dwords,
-                                             virt_indices, phys_indices);
-            } else {
-                assert(isDstOperand(op_idx));
-                std::vector<int> virt_indices;
-                std::vector<int> phys_indices;
-                for (int i = 0; i < op_num_dwords; ++i) {
-                    phys_idx = computeUnit()->registerManager->
-                        mapSgpr(wavefront(), virt_idx + i);
-                    virt_indices.push_back(virt_idx + i);
-                    phys_indices.push_back(phys_idx);
-                }
-                DPRINTF(GPUInst, "%s adding scalar dst (%d->%d) operand "
-                        "that uses %d registers.\n", disassemble(),
-                        virt_idx, computeUnit()->registerManager->
-                        mapSgpr(wavefront(), virt_idx), op_num_dwords);
-                dstScalarRegOps.emplace_back(op_idx, op_num_dwords,
-                                             virt_indices, phys_indices);
-            }
-        }
-    }
 }
 
 GPUDynInst::~GPUDynInst()
@@ -202,6 +107,30 @@ GPUDynInst::execute(GPUDynInstPtr gpuDynInst)
     _staticInst->execute(gpuDynInst);
 }
 
+const std::vector<OperandInfo>&
+GPUDynInst::srcVecRegOperands() const
+{
+    return _staticInst->srcVecRegOperands();
+}
+
+const std::vector<OperandInfo>&
+GPUDynInst::dstVecRegOperands() const
+{
+    return _staticInst->dstVecRegOperands();
+}
+
+const std::vector<OperandInfo>&
+GPUDynInst::srcScalarRegOperands() const
+{
+    return _staticInst->srcScalarRegOperands();
+}
+
+const std::vector<OperandInfo>&
+GPUDynInst::dstScalarRegOperands() const
+{
+    return _staticInst->dstScalarRegOperands();
+}
+
 int
 GPUDynInst::numSrcRegOperands()
 {
@@ -217,152 +146,113 @@ GPUDynInst::numDstRegOperands()
 int
 GPUDynInst::numSrcVecRegOperands() const
 {
-    return srcVecRegOps.size();
+    return _staticInst->numSrcVecOperands();
 }
 
 int
 GPUDynInst::numDstVecRegOperands() const
 {
-    return dstVecRegOps.size();
+    return _staticInst->numDstVecOperands();
 }
 
 int
-GPUDynInst::maxSrcVecRegOperandSize() const
+GPUDynInst::maxSrcVecRegOperandSize()
 {
+    if (maxSrcVecRegOpSize != -1)
+        return maxSrcVecRegOpSize;
+
+    maxSrcVecRegOpSize = 0;
+    for (const auto& srcVecOp : srcVecRegOperands())
+        if (srcVecOp.sizeInDWords() > maxSrcVecRegOpSize)
+            maxSrcVecRegOpSize = srcVecOp.sizeInDWords();
+
     return maxSrcVecRegOpSize;
+}
+
+int
+GPUDynInst::numSrcVecDWords()
+{
+    return _staticInst->numSrcVecDWords();
+}
+
+int
+GPUDynInst::numDstVecDWords()
+{
+    return _staticInst->numDstVecDWords();
 }
 
 int
 GPUDynInst::numSrcScalarRegOperands() const
 {
-    return srcScalarRegOps.size();
+    return _staticInst->numSrcScalarOperands();
 }
 
 int
 GPUDynInst::numDstScalarRegOperands() const
 {
-    return dstScalarRegOps.size();
+    return _staticInst->numDstScalarOperands();
 }
 
 int
-GPUDynInst::maxSrcScalarRegOperandSize() const
+GPUDynInst::maxSrcScalarRegOperandSize()
 {
+    if (maxSrcScalarRegOpSize != -1)
+        return maxSrcScalarRegOpSize;
+
+    maxSrcScalarRegOpSize = 0;
+    for (const auto& srcScOp : srcScalarRegOperands())
+        if (srcScOp.sizeInDWords() > maxSrcScalarRegOpSize)
+            maxSrcScalarRegOpSize = srcScOp.sizeInDWords();
+
     return maxSrcScalarRegOpSize;
 }
 
 int
-GPUDynInst::numSrcVecDWORDs()
+GPUDynInst::numSrcScalarDWords()
 {
-    return _staticInst->numSrcVecDWORDs();
+    return _staticInst->numSrcScalarDWords();
 }
 
 int
-GPUDynInst::numDstVecDWORDs()
+GPUDynInst::numDstScalarDWords()
 {
-    return _staticInst->numDstVecDWORDs();
+    return _staticInst->numDstScalarDWords();
 }
 
 int
-GPUDynInst::numOpdDWORDs(int operandIdx)
+GPUDynInst::maxOperandSize()
 {
-    return _staticInst->numOpdDWORDs(operandIdx);
+    return _staticInst->maxOperandSize();
 }
 
 int
-GPUDynInst::getNumOperands()
+GPUDynInst::getNumOperands() const
 {
     return _staticInst->getNumOperands();
 }
 
 bool
-GPUDynInst::isVectorRegister(int operandIdx)
-{
-    return _staticInst->isVectorRegister(operandIdx);
-}
-
-bool
-GPUDynInst::isScalarRegister(int operandIdx)
-{
-    return _staticInst->isScalarRegister(operandIdx);
-}
-
-int
-GPUDynInst::getRegisterIndex(int operandIdx)
-{
-    return _staticInst->getRegisterIndex(operandIdx, wf->reservedScalarRegs);
-}
-
-int
-GPUDynInst::getOperandSize(int operandIdx)
-{
-    return _staticInst->getOperandSize(operandIdx);
-}
-
-bool
-GPUDynInst::isDstOperand(int operandIdx)
-{
-    return _staticInst->isDstOperand(operandIdx);
-}
-
-bool
-GPUDynInst::isSrcOperand(int operandIdx)
-{
-    return _staticInst->isSrcOperand(operandIdx);
-}
-
-bool
-GPUDynInst::hasSourceSgpr() const
-{
-    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
-        if (_staticInst->isScalarRegister(i) && _staticInst->isSrcOperand(i)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool
 GPUDynInst::hasSourceVgpr() const
 {
-    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
-        if (_staticInst->isVectorRegister(i) && _staticInst->isSrcOperand(i)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool
-GPUDynInst::hasDestinationSgpr() const
-{
-    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
-        if (_staticInst->isScalarRegister(i) && _staticInst->isDstOperand(i)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool
-GPUDynInst::srcIsVgpr(int index) const
-{
-    assert(index >= 0 && index < _staticInst->getNumOperands());
-    if (_staticInst->isVectorRegister(index) &&
-        _staticInst->isSrcOperand(index)) {
-        return true;
-    }
-    return false;
+    return !srcVecRegOperands().empty();
 }
 
 bool
 GPUDynInst::hasDestinationVgpr() const
 {
-    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
-        if (_staticInst->isVectorRegister(i) && _staticInst->isDstOperand(i)) {
-            return true;
-        }
-    }
-    return false;
+    return !dstVecRegOperands().empty();
+}
+
+bool
+GPUDynInst::hasSourceSgpr() const
+{
+    return !srcScalarRegOperands().empty();
+}
+
+bool
+GPUDynInst::hasDestinationSgpr() const
+{
+    return !dstScalarRegOperands().empty();
 }
 
 bool
@@ -580,12 +470,20 @@ GPUDynInst::writesSCC() const
 bool
 GPUDynInst::readsVCC() const
 {
+    for (const auto& srcOp : _staticInst->srcOperands())
+        if (srcOp.isVcc())
+            return true;
+
     return _staticInst->readsVCC();
 }
 
 bool
 GPUDynInst::writesVCC() const
 {
+    for (const auto& dstOp : _staticInst->dstOperands())
+        if (dstOp.isVcc())
+            return true;
+
     return _staticInst->writesVCC();
 }
 
@@ -602,13 +500,13 @@ GPUDynInst::writesMode() const
 }
 
 bool
-GPUDynInst::readsEXEC() const
+GPUDynInst::readsExec() const
 {
     return _staticInst->readsEXEC();
 }
 
 bool
-GPUDynInst::writesEXEC() const
+GPUDynInst::writesExec() const
 {
     return _staticInst->writesEXEC();
 }
@@ -622,42 +520,40 @@ GPUDynInst::ignoreExec() const
 bool
 GPUDynInst::writesExecMask() const
 {
-    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
-        return _staticInst->isDstOperand(i) &&
-            _staticInst->isExecMaskRegister(i);
-    }
-    return false;
+    for (const auto& dstOp : _staticInst->dstOperands())
+        if (dstOp.isExec())
+            return true;
+
+    return _staticInst->writesEXEC();
 }
 
 bool
 GPUDynInst::readsExecMask() const
 {
-    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
-        return _staticInst->isSrcOperand(i) &&
-            _staticInst->isExecMaskRegister(i);
-    }
-    return false;
+    for (const auto& srcOp : _staticInst->srcOperands())
+        if (srcOp.isExec())
+            return true;
+
+    return _staticInst->readsEXEC();
 }
 
 bool
 GPUDynInst::writesFlatScratch() const
 {
-    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
-        if (_staticInst->isScalarRegister(i) && _staticInst->isDstOperand(i)) {
-            return _staticInst->isFlatScratchRegister(i);
-        }
-    }
+    for (const auto& dstScalarOp : dstScalarRegOperands())
+        if (dstScalarOp.isFlatScratch())
+            return true;
+
     return false;
 }
 
 bool
 GPUDynInst::readsFlatScratch() const
 {
-    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
-        if (_staticInst->isScalarRegister(i) && _staticInst->isSrcOperand(i)) {
-            return _staticInst->isFlatScratchRegister(i);
-        }
-    }
+    for (const auto& srcScalarOp : srcScalarRegOperands())
+        if (srcScalarOp.isFlatScratch())
+            return true;
+
     return false;
 }
 

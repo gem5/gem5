@@ -63,20 +63,21 @@ namespace VegaISA
 
         // Needed because can't take addr of bitfield
         int reg = instData.SSRC0;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               isScalarReg(instData.SSRC0), false, false);
         opNum++;
 
         reg = instData.SSRC1;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               isScalarReg(instData.SSRC1), false, false);
         opNum++;
 
         reg = instData.SDST;
-        operands.emplace_back(reg, getOperandSize(opNum), false,
+        dstOps.emplace_back(reg, getOperandSize(opNum), false,
                               isScalarReg(instData.SDST), false, false);
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -150,16 +151,26 @@ namespace VegaISA
         int opNum = 0;
 
         // Needed because can't take addr of bitfield
-        int reg = instData.SIMM16;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        int reg = instData.SDST;
+        if (numSrcRegOperands() == getNumOperands()) {
+            srcOps.emplace_back(reg, getOperandSize(opNum), true,
+                                isScalarReg(reg), false, false);
+            opNum++;
+        }
+
+        reg = instData.SIMM16;
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               false, false, true);
         opNum++;
 
-        reg = instData.SDST;
-        operands.emplace_back(reg, getOperandSize(opNum), false,
-                              isScalarReg(instData.SDST), false, false);
+        if (numDstRegOperands()) {
+            reg = instData.SDST;
+            dstOps.emplace_back(reg, getOperandSize(opNum), false,
+                                  isScalarReg(reg), false, false);
+        }
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -237,16 +248,17 @@ namespace VegaISA
         // Needed because can't take addr of bitfield
         int reg = instData.SSRC0;
         if (instData.OP != 0x1C) {
-            operands.emplace_back(reg, getOperandSize(opNum), true,
+            srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                   isScalarReg(instData.SSRC0), false, false);
             opNum++;
         }
 
         reg = instData.SDST;
-        operands.emplace_back(reg, getOperandSize(opNum), false,
+        dstOps.emplace_back(reg, getOperandSize(opNum), false,
                               isScalarReg(instData.SDST), false, false);
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -311,13 +323,14 @@ namespace VegaISA
 
         // Needed because can't take addr of bitfield
         int reg = instData.SSRC0;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               isScalarReg(instData.SSRC0), false, false);
         opNum++;
 
         reg = instData.SSRC1;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               isScalarReg(instData.SSRC1), false, false);
+
     }
 
     int
@@ -385,18 +398,19 @@ namespace VegaISA
         if (numSrcRegOperands()) {
             // Needed because can't take addr of bitfield
             int reg = instData.SIMM16;
-            operands.emplace_back(reg, getOperandSize(opNum), true,
+            srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                   false, false, true);
 
             opNum++;
 
             if (readsVCC()) {
-                operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), true,
+                srcOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), true,
                                       true, false, false);
                 opNum++;
             }
         }
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -496,22 +510,22 @@ namespace VegaISA
         if (numSrcRegOperands()) {
             reg = instData.SDATA;
             if (numSrcRegOperands() == getNumOperands()) {
-                operands.emplace_back(reg, getOperandSize(opNum), true,
+                srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                       isScalarReg(reg), false, false);
                 opNum++;
             }
 
             reg = instData.SBASE;
-            operands.emplace_back(reg, getOperandSize(opNum), true,
+            srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                   true, false, false);
             opNum++;
 
             reg = extData.OFFSET;
             if (instData.IMM) {
-                operands.emplace_back(reg, getOperandSize(opNum), true,
+                srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                       false, false, true);
             } else {
-                operands.emplace_back(reg, getOperandSize(opNum), true,
+                srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                       isScalarReg(reg), false, false);
             }
             opNum++;
@@ -519,11 +533,12 @@ namespace VegaISA
 
         if (numDstRegOperands()) {
             reg = instData.SDATA;
-            operands.emplace_back(reg, getOperandSize(opNum), false,
+            dstOps.emplace_back(reg, getOperandSize(opNum), false,
                                   isScalarReg(reg), false, false);
         }
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -600,35 +615,36 @@ namespace VegaISA
 
         // Needed because can't take addr of bitfield
         int reg = instData.SRC0;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               isScalarReg(reg), isVectorReg(reg), false);
         opNum++;
 
         reg = instData.VSRC1;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               false, true, false);
         opNum++;
 
         // VCC read
         if (readsVCC()) {
-            operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), true,
+            srcOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), true,
                                   true, false, false);
             opNum++;
         }
 
         // VDST
         reg = instData.VDST;
-        operands.emplace_back(reg, getOperandSize(opNum), false,
+        dstOps.emplace_back(reg, getOperandSize(opNum), false,
                               false, true, false);
         opNum++;
 
         // VCC write
         if (writesVCC()) {
-            operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), false,
+            dstOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), false,
                                   true, false, false);
         }
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -735,18 +751,19 @@ namespace VegaISA
         int reg = instData.SRC0;
 
         if (numSrcRegOperands()) {
-            operands.emplace_back(reg, getOperandSize(opNum), true,
+            srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                   isScalarReg(reg), isVectorReg(reg), false);
             opNum++;
         }
 
         if (numDstRegOperands()) {
             reg = instData.VDST;
-            operands.emplace_back(reg, getOperandSize(opNum), false,
+            dstOps.emplace_back(reg, getOperandSize(opNum), false,
                                   false, true, false);
         }
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -827,20 +844,21 @@ namespace VegaISA
 
         // Needed because can't take addr of bitfield
         int reg = instData.SRC0;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               isScalarReg(reg), isVectorReg(reg), false);
         opNum++;
 
         reg = instData.VSRC1;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               false, true, false);
         opNum++;
 
         assert(writesVCC());
-        operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), false,
+        dstOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), false,
                               true, false, false);
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -928,13 +946,13 @@ namespace VegaISA
         int numDst = numDstRegOperands() - writesVCC();
 
         for (opNum = 0; opNum < numSrc; opNum++) {
-            operands.emplace_back(srcs[opNum], getOperandSize(opNum), true,
+            srcOps.emplace_back(srcs[opNum], getOperandSize(opNum), true,
                                   isScalarReg(srcs[opNum]),
                                   isVectorReg(srcs[opNum]), false);
         }
 
         if (readsVCC()) {
-            operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), true,
+            srcOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), true,
                                   true, false, false);
             opNum++;
         }
@@ -942,17 +960,18 @@ namespace VegaISA
         if (numDst) {
             // Needed because can't take addr of bitfield
             int reg = instData.VDST;
-            operands.emplace_back(reg, getOperandSize(opNum), false,
+            dstOps.emplace_back(reg, getOperandSize(opNum), false,
                                   sgprDst, !sgprDst, false);
             opNum++;
         }
 
         if (writesVCC()) {
-            operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), false,
+            dstOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), false,
                                   true, false, false);
         }
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -1047,13 +1066,13 @@ namespace VegaISA
         int numDst = numDstRegOperands() - writesVCC();
 
         for (opNum = 0; opNum < numSrc; opNum++) {
-            operands.emplace_back(srcs[opNum], getOperandSize(opNum), true,
+            srcOps.emplace_back(srcs[opNum], getOperandSize(opNum), true,
                                   isScalarReg(srcs[opNum]),
                                   isVectorReg(srcs[opNum]), false);
         }
 
         if (readsVCC()) {
-            operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), true,
+            srcOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), true,
                                   true, false, false);
             opNum++;
         }
@@ -1061,17 +1080,18 @@ namespace VegaISA
         if (numDst) {
             // Needed because can't take addr of bitfield
             int reg = instData.VDST;
-            operands.emplace_back(reg, getOperandSize(opNum), false,
+            dstOps.emplace_back(reg, getOperandSize(opNum), false,
                                   false, true, false);
             opNum++;
         }
 
         if (writesVCC()) {
-            operands.emplace_back(REG_VCC_LO, getOperandSize(opNum), false,
+            dstOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), false,
                                   true, false, false);
         }
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -1150,18 +1170,19 @@ namespace VegaISA
         int opIdx = 0;
 
         for (opIdx = 0; opIdx < numSrcRegOperands(); opIdx++){
-            operands.emplace_back(srcs[opIdx], getOperandSize(opIdx), true,
+            srcOps.emplace_back(srcs[opIdx], getOperandSize(opIdx), true,
                                   false, true, false);
         }
 
         if (numDstRegOperands()) {
             // Needed because can't take addr of bitfield
             int reg = extData.VDST;
-            operands.emplace_back(reg, getOperandSize(opIdx), false,
+            dstOps.emplace_back(reg, getOperandSize(opIdx), false,
                                   false, true, false);
         }
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -1241,23 +1262,23 @@ namespace VegaISA
         if (numSrcRegOperands()) {
             if (numSrcRegOperands() == getNumOperands()) {
                 reg = extData.VDATA;
-                operands.emplace_back(reg, getOperandSize(opNum), true,
+                srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                       false, true, false);
                 opNum++;
             }
 
             reg = extData.VADDR;
-            operands.emplace_back(reg, getOperandSize(opNum), true,
+            srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                   false, true, false);
             opNum++;
 
             reg = extData.SRSRC;
-            operands.emplace_back(reg, getOperandSize(opNum), true,
+            srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                   true, false, false);
             opNum++;
 
             reg = extData.SOFFSET;
-            operands.emplace_back(reg, getOperandSize(opNum), true,
+            srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                   true, false, false);
             opNum++;
         }
@@ -1265,11 +1286,12 @@ namespace VegaISA
         // extData.VDATA moves in the reg list depending on the instruction
         if (numDstRegOperands()) {
             reg = extData.VDATA;
-            operands.emplace_back(reg, getOperandSize(opNum), false,
+            dstOps.emplace_back(reg, getOperandSize(opNum), false,
                                   false, true, false);
         }
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -1332,34 +1354,35 @@ namespace VegaISA
 
         if (numSrcRegOperands() == getNumOperands()) {
             reg = extData.VDATA;
-            operands.emplace_back(reg, getOperandSize(opNum), true,
+            srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                   false, true, false);
             opNum++;
         }
 
         reg = extData.VADDR;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               false, true, false);
         opNum++;
 
         reg = extData.SRSRC;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               true, false, false);
         opNum++;
 
         reg = extData.SOFFSET;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               true, false, false);
         opNum++;
 
         // extData.VDATA moves in the reg list depending on the instruction
         if (numDstRegOperands()) {
             reg = extData.VDATA;
-            operands.emplace_back(reg, getOperandSize(opNum), false,
+            dstOps.emplace_back(reg, getOperandSize(opNum), false,
                                   false, true, false);
         }
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -1405,24 +1428,24 @@ namespace VegaISA
 
         if (numSrcRegOperands() == getNumOperands()) {
             reg = extData.VDATA;
-            operands.emplace_back(reg, getOperandSize(opNum), true,
+            srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                   false, true, false);
             opNum++;
         }
 
         reg = extData.VADDR;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               false, true, false);
         opNum++;
 
         reg = extData.SRSRC;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               true, false, false);
         opNum++;
 
         if (getNumOperands() == 4) {
             reg = extData.SSAMP;
-            operands.emplace_back(reg, getOperandSize(opNum), true,
+            srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                   true, false, false);
             opNum++;
         }
@@ -1430,11 +1453,12 @@ namespace VegaISA
         // extData.VDATA moves in the reg list depending on the instruction
         if (numDstRegOperands()) {
             reg = extData.VDATA;
-            operands.emplace_back(reg, getOperandSize(opNum), false,
+            dstOps.emplace_back(reg, getOperandSize(opNum), false,
                                   false, true, false);
         }
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int
@@ -1470,7 +1494,7 @@ namespace VegaISA
                                 extData.VSRC2, extData.VSRC3};
 
         for (opNum = 0; opNum < 4; opNum++) {
-            operands.emplace_back(srcs[opNum], getOperandSize(opNum), true,
+            srcOps.emplace_back(srcs[opNum], getOperandSize(opNum), true,
                                   false, true, false);
         }
 
@@ -1522,24 +1546,25 @@ namespace VegaISA
             assert(isAtomic());
 
         reg = extData.ADDR;
-        operands.emplace_back(reg, getOperandSize(opNum), true,
+        srcOps.emplace_back(reg, getOperandSize(opNum), true,
                               false, true, false);
         opNum++;
 
         if (numSrcRegOperands() == 2) {
             reg = extData.DATA;
-            operands.emplace_back(reg, getOperandSize(opNum), true,
+            srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                   false, true, false);
             opNum++;
         }
 
         if (numDstRegOperands()) {
             reg = extData.VDST;
-            operands.emplace_back(reg, getOperandSize(opNum), false,
+            dstOps.emplace_back(reg, getOperandSize(opNum), false,
                                   false, true, false);
         }
 
-        assert(operands.size() == getNumOperands());
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
     }
 
     int

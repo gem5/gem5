@@ -44,7 +44,8 @@ class OperandInfo
     OperandInfo() = delete;
     OperandInfo(int opSelectorVal, int size, bool src, bool scalar_reg,
                 bool vector_reg, bool imm)
-        : _opSelectorVal(opSelectorVal), _size(size)
+        : _opSelectorVal(opSelectorVal), _size(size),
+          _numDWords(size <= 4 ? 1 : size / 4)
     {
         if (src)
             flags.set(SRC);
@@ -68,7 +69,14 @@ class OperandInfo
             flags.set(POS_CONST);
     }
 
+    int numRegisters() const { return _numDWords / TheGpuISA::RegSizeDWords; }
+    int sizeInDWords() const { return _numDWords; }
+
     int size() const { return _size; }
+    // Certain opIdx's get changed in calls to opSelectorToRegIdx
+    // This avoids that by returning the exact value
+    int rawRegisterIndex() const { return _opSelectorVal; }
+
     int
     registerIndex(int numScalarRegs) const
     {
@@ -87,6 +95,41 @@ class OperandInfo
     bool isVcc() const { return flags.isSet(VCC); }
     bool isExec() const { return flags.isSet(EXEC); }
     bool isFlatScratch() const { return flags.isSet(FLAT); }
+
+    void
+    setVirtToPhysMapping(std::vector<int> v, std::vector<int> p)
+    {
+        _virtIndices = v;
+        _physIndices = p;
+
+        assert(_virtIndices.size() == _physIndices.size());
+        assert(_numDWords == _physIndices.size());
+    }
+
+    /**
+     * We typically only need the first virtual register for the operand
+     * regardless of its size.
+     */
+    int virtIdx(int reg_num=0) const { return _virtIndices.at(reg_num); }
+    int physIdx(int reg_num=0) const { return _physIndices.at(reg_num); }
+
+    const std::vector<int>&
+    virtIndices() const
+    {
+        return _virtIndices;
+    }
+
+    const std::vector<int>&
+    physIndices() const
+    {
+        return _physIndices;
+    }
+
+    std::vector<int>&
+    bankReadCounts() const
+    {
+        return _bankReadCounts;
+    }
 
     typedef uint32_t FlagsType;
     typedef ::Flags<FlagsType> Flags;
@@ -128,7 +171,7 @@ class OperandInfo
     Flags flags;
 
     /**
-     * Index of the operand as used in registers.cc functions
+     * Value of the operand as used in registers.cc functions
      */
     const int _opSelectorVal;
 
@@ -136,6 +179,19 @@ class OperandInfo
      * Size of the operand in bytes
      */
     const int _size;
+
+    /**
+     * Size of operand in DWords
+     */
+    const int _numDWords;
+
+    std::vector<int> _virtIndices;
+    std::vector<int> _physIndices;
+
+    /**
+     * The number of reads this operand will make to each bank.
+     */
+    mutable std::vector<int> _bankReadCounts;
 };
 
 #endif // __GPU_COMPUTE_OPERAND_INFO_H__

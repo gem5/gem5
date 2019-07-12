@@ -57,63 +57,38 @@ VectorRegisterFile::VectorRegisterFile(const VectorRegisterFileParams &p)
 bool
 VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
 {
-    for (int i = 0; i < ii->getNumOperands(); ++i) {
-        if (ii->isVectorRegister(i) && ii->isSrcOperand(i)) {
-            int vgprIdx = ii->getRegisterIndex(i);
-
-            // determine number of registers
-            int nRegs =
-                ii->getOperandSize(i) <= 4 ? 1 : ii->getOperandSize(i) / 4;
-            for (int j = 0; j < nRegs; j++) {
-                int pVgpr = computeUnit->registerManager
-                    ->mapVgpr(w, vgprIdx + j);
-                if (regBusy(pVgpr)) {
-                    if (ii->isDstOperand(i)) {
-                        w->stats.numTimesBlockedDueWAXDependencies++;
-                    } else if (ii->isSrcOperand(i)) {
-                        DPRINTF(GPUVRF, "RAW stall: WV[%d]: %s: physReg[%d]\n",
-                                w->wfDynId, ii->disassemble(), pVgpr);
-                        w->stats.numTimesBlockedDueRAWDependencies++;
-                    }
-                    return false;
-                }
+    for (const auto& srcVecOp : ii->srcVecRegOperands()) {
+        for (const auto& physIdx : srcVecOp.physIndices()) {
+            if (regBusy(physIdx)) {
+                DPRINTF(GPUVRF, "RAW stall: WV[%d]: %s: physReg[%d]\n",
+                        w->wfDynId, ii->disassemble(), physIdx);
+                w->stats.numTimesBlockedDueRAWDependencies++;
+                return false;
             }
         }
     }
+
     return true;
 }
 
 void
 VectorRegisterFile::scheduleWriteOperands(Wavefront *w, GPUDynInstPtr ii)
 {
-    // iterate over all register destination operands
-    for (int i = 0; i < ii->getNumOperands(); ++i) {
-        if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
-            int vgprIdx = ii->getRegisterIndex(i);
-            int nRegs = ii->getOperandSize(i) <= 4 ? 1 :
-                ii->getOperandSize(i) / 4;
-
-            for (int j = 0; j < nRegs; ++j) {
-                int physReg = computeUnit->registerManager
-                    ->mapVgpr(w, vgprIdx + j);
-
-                // If instruction is atomic instruction and
-                // the atomics do not return value, then
-                // do not mark this reg as busy.
-                if (!(ii->isAtomic() && !ii->isAtomicRet())) {
-                    /**
-                     * if the instruction is a load with EXEC = 0, then
-                     * we do not mark the reg. we do this to avoid a
-                     * deadlock that can occur because a load reserves
-                     * its destination regs before checking its exec mask,
-                     * and in the case it is 0, it will not send/recv any
-                     * packets, and therefore it will never free its dest
-                     * reg(s).
-                     */
-                    if (!ii->isLoad() || (ii->isLoad()
-                        && ii->exec_mask.any())) {
-                        markReg(physReg, true);
-                    }
+    for (const auto& dstVecOp : ii->dstVecRegOperands()) {
+        for (const auto& physIdx : dstVecOp.physIndices()) {
+            // If the instruction is atomic instruciton and the atomics do
+            // not return value, then do not mark this reg as busy.
+            if (!(ii->isAtomic() && !ii->isAtomicRet())) {
+                /**
+                 * if the instruction is a load with EXEC = 0, then we do not
+                 * mark the reg. We do this to avoid a deadlock that can
+                 * occur because a load reserves its destination regs before
+                 * checking its exec mask, and in the cas it is 0, it will not
+                 * send/recv any packets, and therefore it will never free its
+                 * dst reg(s)
+                 */
+                if (!ii->isLoad() || (ii->isLoad() && ii->exec_mask.any())) {
+                    markReg(physIdx, true);
                 }
             }
         }
@@ -123,53 +98,42 @@ VectorRegisterFile::scheduleWriteOperands(Wavefront *w, GPUDynInstPtr ii)
 void
 VectorRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
 {
-    // increment count of number of DWORDs read from VRF
-    int DWORDs = ii->numSrcVecDWORDs();
-    stats.registerReads += (DWORDs * w->execMask().count());
+    // increment count of number of DWords read from VRF
+    int DWords = ii->numSrcVecDWords();
+    stats.registerReads += (DWords * w->execMask().count());
 
     uint64_t mask = w->execMask().to_ullong();
     int srams = w->execMask().size() / 4;
     for (int i = 0; i < srams; i++) {
         if (mask & 0xF) {
-            stats.sramReads += DWORDs;
+            stats.sramReads += DWords;
         }
         mask = mask >> 4;
     }
 
     if (!ii->isLoad()
         && !(ii->isAtomic() || ii->isMemSync())) {
-        int opSize = 4;
-        for (int i = 0; i < ii->getNumOperands(); i++) {
-            if (ii->getOperandSize(i) > opSize) {
-                opSize = ii->getOperandSize(i);
-            }
-        }
+        // TODO: compute proper delay
+        // For now, it is based on largest operand size
+        int opSize = ii->maxOperandSize();
         Cycles delay(opSize <= 4 ? computeUnit->spBypassLength()
             : computeUnit->dpBypassLength());
         Tick tickDelay = computeUnit->cyclesToTicks(delay);
 
-        for (int i = 0; i < ii->getNumOperands(); i++) {
-            if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
-                int vgprIdx = ii->getRegisterIndex(i);
-                int nRegs = ii->getOperandSize(i) <= 4 ? 1
-                    : ii->getOperandSize(i) / 4;
-                for (int j = 0; j < nRegs; j++) {
-                    int physReg = computeUnit->registerManager
-                        ->mapVgpr(w, vgprIdx + j);
-                    enqRegFreeEvent(physReg, tickDelay);
-                }
+        for (const auto& dstVecOp : ii->dstVecRegOperands()) {
+            for (const auto& physIdx : dstVecOp.physIndices()) {
+                enqRegFreeEvent(physIdx, tickDelay);
             }
         }
-
-        // increment count of number of DWORDs written to VRF
-        DWORDs = ii->numDstVecDWORDs();
-        stats.registerWrites += (DWORDs * w->execMask().count());
+        // increment count of number of DWords written to VRF
+        DWords = ii->numDstVecDWords();
+        stats.registerWrites += (DWords * w->execMask().count());
 
         mask = w->execMask().to_ullong();
         srams = w->execMask().size() / 4;
         for (int i = 0; i < srams; i++) {
             if (mask & 0xF) {
-                stats.sramWrites += DWORDs;
+                stats.sramWrites += DWords;
             }
             mask = mask >> 4;
         }
@@ -181,28 +145,20 @@ VectorRegisterFile::scheduleWriteOperandsFromLoad(
     Wavefront *w, GPUDynInstPtr ii)
 {
     assert(ii->isLoad() || ii->isAtomicRet());
-    for (int i = 0; i < ii->getNumOperands(); ++i) {
-        if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
-            int vgprIdx = ii->getRegisterIndex(i);
-            int nRegs = ii->getOperandSize(i) <= 4 ? 1 :
-                ii->getOperandSize(i) / 4;
-
-            for (int j = 0; j < nRegs; ++j) {
-                int physReg = computeUnit->registerManager
-                    ->mapVgpr(w, vgprIdx + j);
-                enqRegFreeEvent(physReg, computeUnit->clockPeriod());
-            }
+    for (const auto& dstVecOp : ii->dstVecRegOperands()) {
+        for (const auto& physIdx : dstVecOp.physIndices()) {
+            enqRegFreeEvent(physIdx, computeUnit->clockPeriod());
         }
     }
-    // increment count of number of DWORDs written to VRF
-    int DWORDs = ii->numDstVecDWORDs();
-    stats.registerWrites += (DWORDs * ii->exec_mask.count());
+    // increment count of number of DWords written to VRF
+    int DWords = ii->numDstVecDWords();
+    stats.registerWrites += (DWords * ii->exec_mask.count());
 
     uint64_t mask = ii->exec_mask.to_ullong();
     int srams = ii->exec_mask.size() / 4;
     for (int i = 0; i < srams; i++) {
         if (mask & 0xF) {
-            stats.sramWrites += DWORDs;
+            stats.sramWrites += DWords;
         }
         mask = mask >> 4;
     }
