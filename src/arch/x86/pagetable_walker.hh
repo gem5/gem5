@@ -111,6 +111,7 @@ namespace X86ISA
             bool timing;
             bool retrying;
             bool started;
+            bool squashed;
           public:
             WalkerState(Walker * _walker, BaseTLB::Translation *_translation,
                         const RequestPtr &_req, bool _isFunctional = false) :
@@ -118,7 +119,7 @@ namespace X86ISA
                 nextState(Ready), inflight(0),
                 translation(_translation),
                 functional(_isFunctional), timing(false),
-                retrying(false), started(false)
+                retrying(false), started(false), squashed(false)
             {
             }
             void initState(ThreadContext * _tc, BaseTLB::Mode _mode,
@@ -126,10 +127,12 @@ namespace X86ISA
             Fault startWalk();
             Fault startFunctional(Addr &addr, unsigned &logBytes);
             bool recvPacket(PacketPtr pkt);
+            unsigned numInflight() const;
             bool isRetrying();
             bool wasStarted();
             bool isTiming();
             void retry();
+            void squash();
             std::string name() const {return walker->name();}
 
           private:
