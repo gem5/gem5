@@ -49,7 +49,15 @@ class BDI(BaseCacheCompressor):
         "combinations of base and delta for the compressors. False if using" \
         "only the lowest possible delta size for each base size.");
 
-class CPack(BaseCacheCompressor):
+class DictionaryCompressor(BaseCacheCompressor):
+    type = 'DictionaryCompressor'
+    abstract = True
+    cxx_header = "mem/cache/compressors/dictionary_compressor.hh"
+
+    dictionary_size = Param.Int(Parent.cache_line_size,
+        "Number of dictionary entries")
+
+class CPack(DictionaryCompressor):
     type = 'CPack'
     cxx_class = 'CPack'
     cxx_header = "mem/cache/compressors/cpack.hh"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Inria
+ * Copyright (c) 2018-2019 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,14 +31,6 @@
 /** @file
  * Definition of CPack compression, from "C-Pack: A High-Performance
  * Microprocessor Cache Compression Algorithm".
- *
- * The dictionary is composed of 32-bit entries.
- *
- * The patterns are implemented as individual classes that have a checking
- * function isPattern(), to determine if the data fits the pattern, and a
- * decompress() function, which decompresses the contents of a pattern.
- * Every new pattern must inherit from the Pattern class and be added to the
- * patternFactory.
  */
 
 #ifndef __MEM_CACHE_COMPRESSORS_CPACK_HH__
@@ -48,23 +40,16 @@
 #include <cstdint>
 #include <map>
 #include <memory>
-#include <vector>
 
 #include "base/types.hh"
-#include "mem/cache/compressors/base.hh"
+#include "mem/cache/compressors/dictionary_compressor.hh"
 
 struct CPackParams;
 
-class CPack : public BaseCacheCompressor
+class CPack : public DictionaryCompressor
 {
   private:
-    /**
-     * Compression data for CPack. It consists of a vector of patterns.
-     */
-    class CompData;
-
     // Forward declaration of all possible patterns
-    class Pattern;
     class PatternZZZZ;
     class PatternXXXX;
     class PatternMMMM;
@@ -73,46 +58,14 @@ class CPack : public BaseCacheCompressor
     class PatternMMMX;
 
     /**
-     * Create a factory to determine if input matches a pattern. The if else
-     * chains are constructed by recursion. The patterns should be explored
-     * sorted by size for correct behaviour.
+     * The patterns proposed in the paper. Each letter represents a byte:
+     * Z is a null byte, M is a dictionary match, X is a new value.
+     * These are used as indexes to reference the pattern data. If a new
+     * pattern is added, it must be done before NUM_PATTERNS.
      */
-    template <class Head, class... Tail>
-    struct Factory
-    {
-        static std::unique_ptr<Pattern> getPattern(
-            const std::array<uint8_t, 4>& bytes,
-            const std::array<uint8_t, 4>& dict_bytes, const int match_location)
-        {
-            // If match this pattern, instantiate it. If a negative match
-            // location is used, the patterns that use the dictionary bytes
-            // must return false. This is used when there are no dictionary
-            // entries yet
-            if (Head::isPattern(bytes, dict_bytes, match_location)) {
-                return std::unique_ptr<Pattern>(
-                            new Head(bytes, match_location));
-            // Otherwise, go for next pattern
-            } else {
-                return Factory<Tail...>::getPattern(bytes, dict_bytes,
-                                                    match_location);
-            }
-        }
-    };
-
-    /**
-     * Specialization to end the recursion.
-     */
-    template <class Head>
-    struct Factory<Head>
-    {
-        static std::unique_ptr<Pattern> getPattern(
-            const std::array<uint8_t, 4>& bytes,
-            const std::array<uint8_t, 4>& dict_bytes, const int match_location)
-        {
-            // Instantiate last pattern. Should be the XXXX pattern.
-            return std::unique_ptr<Pattern>(new Head(bytes, match_location));
-        }
-    };
+    typedef enum {
+        ZZZZ, XXXX, MMMM, MMXX, ZZZX, MMMX, NUM_PATTERNS
+    } PatternNumber;
 
     /**
      * Convenience factory declaration. The templates must be organized by
@@ -121,55 +74,28 @@ class CPack : public BaseCacheCompressor
     using PatternFactory = Factory<PatternZZZZ, PatternMMMM, PatternZZZX,
                                    PatternMMMX, PatternMMXX, PatternXXXX>;
 
-    /**
-     * The dictionary.
-     */
-    std::vector<std::array<uint8_t, 4>> dictionary;
+    uint64_t getNumPatterns() const override { return NUM_PATTERNS; }
 
-    /**
-     * Dictionary size.
-     */
-    const std::size_t dictionarySize;
+    std::string
+    getName(int number) const override
+    {
+        static std::map<int, std::string> patternNames = {
+            {ZZZZ, "ZZZZ"}, {XXXX, "XXXX"}, {MMMM, "MMMM"},
+            {MMXX, "MMXX"}, {ZZZX, "ZZZX"}, {MMMX, "MMMX"}
+        };
 
-    /**
-     * Number of valid entries in the dictionary.
-     */
-    std::size_t numEntries;
+        return patternNames[number];
+    };
 
-    /**
-     * @defgroup CompressionStats Compression specific statistics.
-     * @{
-     */
+    std::unique_ptr<Pattern> getPattern(
+        const std::array<uint8_t, 4>& bytes,
+        const std::array<uint8_t, 4>& dict_bytes,
+        const int match_location) const override
+    {
+        return PatternFactory::getPattern(bytes, dict_bytes, match_location);
+    }
 
-    /**
-     * Number of data entries that were compressed to each pattern.
-     */
-    Stats::Vector patternStats;
-
-    /**
-     * @}
-     */
-
-    /**
-     * Compress data.
-     *
-     * @param data Data to be compressed.
-     * @return The pattern this data matches.
-     */
-    std::unique_ptr<Pattern> compressWord(const uint32_t data);
-
-    /**
-     * Decompress a word.
-     *
-     * @param pattern The pattern to be decompressed.
-     * @return The decompressed word.
-     */
-    uint32_t decompressWord(const Pattern* pattern);
-
-    /**
-     * Clear all dictionary entries.
-     */
-    void resetDictionary();
+    void addToDictionary(std::array<uint8_t, 4> data) override;
 
     /**
      * Apply compression.
@@ -181,14 +107,6 @@ class CPack : public BaseCacheCompressor
      */
     std::unique_ptr<BaseCacheCompressor::CompressionData> compress(
         const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat) override;
-
-    /**
-     * Decompress data.
-     *
-     * @param comp_data Compressed cache line.
-     * @param data The cache line to be decompressed.
-     */
-    void decompress(const CompressionData* comp_data, uint64_t* data) override;
 
   public:
     /** Convenience typedef. */
@@ -203,167 +121,9 @@ class CPack : public BaseCacheCompressor
      * Default destructor.
      */
     ~CPack() {};
-
-    /**
-     * Register local statistics.
-     */
-    void regStats() override;
 };
 
-/**
- * The compressed data is composed of multiple pattern entries. To add a new
- * pattern one should inherit from this class and implement isPattern() and
- * decompress. Then the new pattern must be added to the PatternFactory
- * declaration in crescent order of size (in the CPack class). The pattern
- * must be also added to the Name enum in the CPack::Pattern class before
- * NUM_PATTERNS.
- */
-class CPack::Pattern
-{
-  protected:
-
-    /**
-     * The patterns proposed in the paper. Each letter represents a byte:
-     * Z is a null byte, M is a dictionary match, X is a new value.
-     * These are used as indexes to reference the pattern data. If a new
-     * pattern is added, it must be done before NUM_PATTERNS.
-     */
-    typedef enum {
-        ZZZZ, XXXX, MMMM, MMXX, ZZZX, MMMX, NUM_PATTERNS
-    } PatternNumber;
-
-    /**
-     * Pattern enum number.
-     */
-    const PatternNumber patternNumber;
-
-    /**
-     * Code associated to the pattern.
-     */
-    const uint8_t code;
-
-    /**
-     * Length, in bits, of the code and match location.
-     */
-    const uint8_t length;
-
-    /**
-     * Number of unmatched bytes;
-     */
-    const uint8_t numUnmatchedBytes;
-
-    /**
-     * Index representing the the match location.
-     */
-    const int matchLocation;
-
-    /**
-     * Wether the pattern allocates a dictionary entry or not.
-     */
-    const bool allocate;
-
-    /**
-     * Get code of this pattern.
-     *
-     * @return The code.
-     */
-    uint8_t getCode() const { return code; }
-
-  public:
-    /**
-     * Default constructor.
-     *
-     * @param number Pattern number.
-     * @param code Code associated to this pattern.
-     * @param metadata_length Length, in bits, of the code and match location.
-     * @param num_unmatched_bytes Number of unmatched bytes.
-     * @param match_location Index of the match location.
-     */
-    Pattern(const PatternNumber number, const uint64_t code,
-            const uint64_t metadata_length, const uint64_t num_unmatched_bytes,
-            const int match_location, const bool allocate = true)
-        : patternNumber(number), code(code), length(metadata_length),
-          numUnmatchedBytes(num_unmatched_bytes),
-          matchLocation(match_location), allocate(allocate) {};
-
-    /**
-     * Default destructor.
-     */
-    virtual ~Pattern() = default;
-
-    /**
-     * Trick function to get the number of patterns.
-     *
-     * @return The number of defined patterns.
-     */
-    static uint64_t getNumPatterns() { return NUM_PATTERNS; };
-
-    /**
-     * Get enum number associated to this pattern.
-     *
-     * @return The pattern enum number.
-     */
-    PatternNumber getPatternNumber() const { return patternNumber; };
-
-    /**
-     * Get meta-name assigned to the given pattern.
-     *
-     * @param number The number of the pattern.
-     * @return The meta-name of the pattern.
-     */
-    static std::string getName(int number)
-    {
-        static std::map<PatternNumber, std::string> patternNames = {
-            {ZZZZ, "ZZZZ"}, {XXXX, "XXXX"}, {MMMM, "MMMM"},
-            {MMXX, "MMXX"}, {ZZZX, "ZZZX"}, {MMMX, "MMMX"}
-        };
-
-        return patternNames[(PatternNumber)number];
-    };
-
-    /**
-     * Get the index of the dictionary match location.
-     *
-     * @return The index of the match location.
-     */
-    uint8_t getMatchLocation() const { return matchLocation; }
-
-    /**
-     * Get size, in bits, of the pattern (excluding prefix). Corresponds to
-     * unmatched_data_size + code_length.
-     *
-     * @return The size.
-     */
-    std::size_t getSizeBits() const {
-        return numUnmatchedBytes*CHAR_BIT + length;
-    }
-
-    /**
-     * Determine if pattern allocates a dictionary entry.
-     *
-     * @return True if should allocate a dictionary entry.
-     */
-    bool shouldAllocate() const {
-        return allocate;
-    }
-
-    std::string print() const {
-        return csprintf("pattern %s (encoding %x, size %u bits)",
-                        getName(patternNumber), getCode(), getSizeBits());
-    }
-
-    /**
-     * Decompress the pattern. Each pattern has its own way of interpreting
-     * its data.
-     *
-     * @param dict_bytes The bytes in the corresponding matching entry.
-     * @return The decompressed pattern.
-     */
-    virtual std::array<uint8_t, 4> decompress(
-        const std::array<uint8_t, 4> dict_bytes) const = 0;
-};
-
-class CPack::PatternZZZZ : public Pattern
+class CPack::PatternZZZZ : public DictionaryCompressor::Pattern
 {
   public:
     PatternZZZZ(const std::array<uint8_t, 4> bytes, const int match_location)
@@ -384,7 +144,7 @@ class CPack::PatternZZZZ : public Pattern
     }
 };
 
-class CPack::PatternXXXX : public Pattern
+class CPack::PatternXXXX : public DictionaryCompressor::Pattern
 {
   private:
     /**
@@ -412,7 +172,7 @@ class CPack::PatternXXXX : public Pattern
     }
 };
 
-class CPack::PatternMMMM : public Pattern
+class CPack::PatternMMMM : public DictionaryCompressor::Pattern
 {
   public:
     PatternMMMM(const std::array<uint8_t, 4> bytes, const int match_location)
@@ -432,7 +192,7 @@ class CPack::PatternMMMM : public Pattern
     }
 };
 
-class CPack::PatternMMXX : public Pattern
+class CPack::PatternMMXX : public DictionaryCompressor::Pattern
 {
   private:
     /**
@@ -464,7 +224,7 @@ class CPack::PatternMMXX : public Pattern
     }
 };
 
-class CPack::PatternZZZX : public Pattern
+class CPack::PatternZZZX : public DictionaryCompressor::Pattern
 {
   private:
     /**
@@ -491,7 +251,7 @@ class CPack::PatternZZZX : public Pattern
     }
 };
 
-class CPack::PatternMMMX : public Pattern
+class CPack::PatternMMMX : public DictionaryCompressor::Pattern
 {
   private:
     /**
@@ -518,27 +278,6 @@ class CPack::PatternMMMX : public Pattern
     {
         return {byte, dict_bytes[1], dict_bytes[2], dict_bytes[3]};
     }
-};
-
-class CPack::CompData : public CompressionData
-{
-  public:
-    /**
-     * The patterns matched in the original line.
-     */
-    std::vector<std::unique_ptr<Pattern>> entries;
-
-    /**
-     * Default constructor.
-     *
-     * @param dictionary_size Number of entries in the dictionary.
-     */
-    CompData(const std::size_t dictionary_size);
-
-    /**
-     * Default destructor.
-     */
-    ~CompData();
 };
 
 #endif //__MEM_CACHE_COMPRESSORS_CPACK_HH__
