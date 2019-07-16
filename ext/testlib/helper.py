@@ -390,13 +390,13 @@ def _copy_file_keep_perms(source, target):
     os.chown(target, st[stat.ST_UID], st[stat.ST_GID])
 
 
-def _filter_file_inplace(fname, filters):
+def _filter_file_inplace(fname, dir, filters):
     '''
     Filter the given file writing filtered lines out to a temporary file, then
     copy that tempfile back into the original file.
     '''
     reenter = False
-    (_, tfname) = tempfile.mkstemp(text=True)
+    (_, tfname) = tempfile.mkstemp(dir=dir, text=True)
     with open(tfname, 'w') as tempfile_:
         for line in _filter_file(fname, filters):
             tempfile_.write(line)
@@ -414,11 +414,11 @@ def diff_out_file(ref_file, out_file, logger, ignore_regexes=tuple()):
     if not os.path.exists(out_file):
         raise OSError("%s doesn't exist in output directory" % out_file)
 
-    _filter_file_inplace(out_file, ignore_regexes)
-    _filter_file_inplace(ref_file, ignore_regexes)
+    _filter_file_inplace(out_file, os.path.dirname(out_file), ignore_regexes)
+    _filter_file_inplace(ref_file, os.path.dirname(out_file), ignore_regexes)
 
     #try :
-    (_, tfname) = tempfile.mkstemp(text=True)
+    (_, tfname) = tempfile.mkstemp(dir=os.path.dirname(out_file), text=True)
     with open(tfname, 'r+') as tempfile_:
         try:
             log_call(logger, ['diff', out_file, ref_file], stdout=tempfile_)
