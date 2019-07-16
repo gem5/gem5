@@ -116,7 +116,7 @@ class SMMUv3SlaveInterface : public MemObject
         SMMUv3SlaveInterface,
         &SMMUv3SlaveInterface::atsSendDeviceRetry> atsSendDeviceRetryEvent;
 
-    Port& getPort(const std::string &name, PortID id);
+    Port& getPort(const std::string &name, PortID id) override;
 
   public:
     SMMUv3SlaveInterface(const SMMUv3SlaveInterfaceParams *p);
