@@ -130,11 +130,6 @@ SwitchAllocator::arbitrate_inports()
                     m_port_requests[outport][inport] = true;
                     m_vc_winners[outport][inport]= invc;
 
-                    // Update Round Robin pointer to the next VC
-                    m_round_robin_invc[inport] = invc + 1;
-                    if (m_round_robin_invc[inport] >= m_num_vcs)
-                        m_round_robin_invc[inport] = 0;
-
                     break; // got one vc winner for this port
                 }
             }
@@ -247,6 +242,15 @@ SwitchAllocator::arbitrate_outports()
                 m_round_robin_inport[outport] = inport + 1;
                 if (m_round_robin_inport[outport] >= m_num_inports)
                     m_round_robin_inport[outport] = 0;
+
+                // Update Round Robin pointer to the next VC
+                // We do it here to keep it fair.
+                // Only the VC which got switch traversal
+                // is updated.
+                m_round_robin_invc[inport] = invc + 1;
+                if (m_round_robin_invc[inport] >= m_num_vcs)
+                    m_round_robin_invc[inport] = 0;
+
 
                 break; // got a input winner for this outport
             }
