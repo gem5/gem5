@@ -357,11 +357,10 @@ class CPack::Pattern
      * its data.
      *
      * @param dict_bytes The bytes in the corresponding matching entry.
-     * @param data The decompressed pattern.
-     * @return Whether entry should be added to dictionary or not.
+     * @return The decompressed pattern.
      */
-    virtual bool decompress(const std::array<uint8_t, 4> dict_bytes,
-                            std::array<uint8_t, 4>& data) const = 0;
+    virtual std::array<uint8_t, 4> decompress(
+        const std::array<uint8_t, 4> dict_bytes) const = 0;
 };
 
 class CPack::PatternZZZZ : public Pattern
@@ -378,11 +377,10 @@ class CPack::PatternZZZZ : public Pattern
                (bytes[0] == 0);
     }
 
-    bool decompress(const std::array<uint8_t, 4> dict_bytes,
-                    std::array<uint8_t, 4>& data) const override
+    std::array<uint8_t, 4>
+    decompress(const std::array<uint8_t, 4> dict_bytes) const override
     {
-        data = {0, 0, 0, 0};
-        return false;
+        return {0, 0, 0, 0};
     }
 };
 
@@ -407,11 +405,10 @@ class CPack::PatternXXXX : public Pattern
         return true;
     }
 
-    bool decompress(const std::array<uint8_t, 4> dict_bytes,
-                    std::array<uint8_t, 4>& data) const override
+    std::array<uint8_t, 4>
+    decompress(const std::array<uint8_t, 4> dict_bytes) const override
     {
-        data = bytes;
-        return true;
+        return bytes;
     }
 };
 
@@ -428,11 +425,10 @@ class CPack::PatternMMMM : public Pattern
         return (bytes == dict_bytes) && (match_location >= 0);
     }
 
-    bool decompress(const std::array<uint8_t, 4> dict_bytes,
-                    std::array<uint8_t, 4>& data) const override
+    std::array<uint8_t, 4>
+    decompress(const std::array<uint8_t, 4> dict_bytes) const override
     {
-        data = dict_bytes;
-        return true;
+        return dict_bytes;
     }
 };
 
@@ -461,11 +457,10 @@ class CPack::PatternMMXX : public Pattern
 
     }
 
-    bool decompress(const std::array<uint8_t, 4> dict_bytes,
-                    std::array<uint8_t, 4>& data) const override
+    std::array<uint8_t, 4>
+    decompress(const std::array<uint8_t, 4> dict_bytes) const override
     {
-        data = {byte0, byte1, dict_bytes[2], dict_bytes[3]};
-        return true;
+        return {byte0, byte1, dict_bytes[2], dict_bytes[3]};
     }
 };
 
@@ -489,11 +484,10 @@ class CPack::PatternZZZX : public Pattern
                (bytes[0] != 0);
     }
 
-    bool decompress(const std::array<uint8_t, 4> dict_bytes,
-                    std::array<uint8_t, 4>& data) const override
+    std::array<uint8_t, 4>
+    decompress(const std::array<uint8_t, 4> dict_bytes) const override
     {
-        data = {byte, 0, 0, 0};
-        return false;
+        return {byte, 0, 0, 0};
     }
 };
 
@@ -519,11 +513,10 @@ class CPack::PatternMMMX : public Pattern
                (match_location >= 0);
     }
 
-    bool decompress(const std::array<uint8_t, 4> dict_bytes,
-                    std::array<uint8_t, 4>& data) const override
+    std::array<uint8_t, 4>
+    decompress(const std::array<uint8_t, 4> dict_bytes) const override
     {
-        data = {byte, dict_bytes[1], dict_bytes[2], dict_bytes[3]};
-        return true;
+        return {byte, dict_bytes[1], dict_bytes[2], dict_bytes[3]};
     }
 };
 

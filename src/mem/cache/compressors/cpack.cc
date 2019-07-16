@@ -159,8 +159,6 @@ CPack::compress(const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat)
 uint32_t
 CPack::decompressWord(const Pattern* pattern)
 {
-    std::array<uint8_t, 4> data;
-
     // Search for matching entry
     std::vector<std::array<uint8_t, 4>>::iterator entry_it =
         dictionary.begin();
@@ -168,7 +166,8 @@ CPack::decompressWord(const Pattern* pattern)
 
     // Decompress the match. If the decompressed value must be added to
     // the dictionary, do it
-    if (pattern->decompress(*entry_it, data)) {
+    const std::array<uint8_t, 4> data = pattern->decompress(*entry_it);
+    if (pattern->shouldAllocate()) {
         dictionary[numEntries++] = data;
     }
 
