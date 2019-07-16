@@ -350,6 +350,10 @@ SwitchAllocator::check_for_wakeup()
 {
     Tick nextCycle = m_router->clockEdge(Cycles(1));
 
+    if (m_router->alreadyScheduled(nextCycle)) {
+        return;
+    }
+
     for (int i = 0; i < m_num_inports; i++) {
         for (int j = 0; j < m_num_vcs; j++) {
             if (m_router->getInputUnit(i)->need_stage(j, SA_, nextCycle)) {
