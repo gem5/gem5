@@ -47,16 +47,6 @@ class Verifier(object):
         return test.TestFunction(self._test,
                 name=name, fixtures=self.fixtures)
 
-    def failed(self, fixtures):
-        '''
-        Called if this verifier fails to cleanup (or not) as needed.
-        '''
-        try:
-            fixtures[constants.tempdir_fixture_name].skip_cleanup()
-        except KeyError:
-            pass # No need to do anything if the tempdir fixture doesn't exist
-
-
 class MatchGoldStandard(Verifier):
     '''
     Compares a standard output to the test output and passes if they match,
@@ -90,7 +80,6 @@ class MatchGoldStandard(Verifier):
                             ignore_regexes=self.ignore_regex,
                             logger=params.log)
         if diff is not None:
-            self.failed(fixtures)
             test.fail('Stdout did not match:\n%s\nSee %s for full results'
                       % (diff, tempdir))
 
@@ -195,7 +184,6 @@ class MatchRegex(Verifier):
             if parse_file(joinpath(tempdir,
                                    constants.gem5_simulation_stderr)):
                 return # Success
-        self.failed(fixtures)
         test.fail('Could not match regex.')
 
 _re_type = type(re.compile(''))

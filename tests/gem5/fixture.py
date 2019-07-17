@@ -49,6 +49,7 @@ from testlib.fixture import Fixture
 from testlib.config import config, constants
 from testlib.helper import log_call, cacheresult, joinpath, absdirpath
 import testlib.log as log
+from testlib.state import Result
 
 
 class VariableFixture(Fixture):
@@ -67,12 +68,8 @@ class TempdirFixture(Fixture):
         self.path = tempfile.mkdtemp(prefix='gem5out')
 
     def teardown(self, testitem):
-        if self.path is not None:
+        if testitem.result == Result.Passed:
             shutil.rmtree(self.path)
-
-    def skip_cleanup(self):
-        # Set path to none so it's not deleted
-        self.path = None
 
 class UniqueFixture(Fixture):
     '''
