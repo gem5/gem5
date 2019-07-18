@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2016 ARM Limited
+ * Copyright (c) 2010-2016, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -763,6 +763,9 @@ class TableWalker : public ClockedObject
         bool userTable;
         bool xnTable;
         bool pxnTable;
+
+        /** Hierarchical access permission disable */
+        bool hpd;
 
         /** Flag indicating if a second stage of lookup is required */
         bool stage2Req;
