@@ -502,6 +502,7 @@ namespace ArmISA
         Bitfield<21, 16> t1sz; // EL1
         Bitfield<22> a1; // EL1
         Bitfield<23> epd1; // EL1
+        Bitfield<24> hpd; // EL2/EL3, E2H=0
         Bitfield<25, 24> irgn1; // EL1
         Bitfield<27, 26> orgn1; // EL1
         Bitfield<29, 28> sh1; // EL1
