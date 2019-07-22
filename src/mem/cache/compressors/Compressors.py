@@ -100,6 +100,18 @@ class MultiCompressor(BaseCacheCompressor):
     compressors = VectorParam.BaseCacheCompressor([CPack(), FPCD()],
         "Array of compressors")
 
+class PerfectCompressor(BaseCacheCompressor):
+    type = 'PerfectCompressor'
+    cxx_class = 'PerfectCompressor'
+    cxx_header = "mem/cache/compressors/perfect.hh"
+
+    max_compression_ratio = Param.Int(2,
+        "Maximum compression ratio allowed")
+    compression_latency = Param.Cycles(1,
+        "Number of cycles to perform data compression")
+    decompression_latency = Param.Cycles(1,
+        "Number of cycles to perform data decompression")
+
 class RepeatedQwordsCompressor(BaseDictionaryCompressor):
     type = 'RepeatedQwordsCompressor'
     cxx_class = 'RepeatedQwordsCompressor'
