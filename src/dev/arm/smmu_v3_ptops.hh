@@ -85,6 +85,19 @@ struct V8PageTableOps4k : public PageTableOps
     virtual unsigned lastLevel() const;
 };
 
+struct V8PageTableOps16k : public PageTableOps
+{
+    virtual bool isValid(pte_t pte, unsigned level) const;
+    virtual bool isLeaf(pte_t pte, unsigned level) const;
+    virtual bool isWritable(pte_t pte, unsigned level, bool stage2) const;
+    virtual Addr nextLevelPointer(pte_t pte, unsigned level) const;
+    virtual Addr index(Addr va, unsigned level) const;
+    virtual Addr pageMask(pte_t pte, unsigned level) const;
+    virtual Addr walkMask(unsigned level) const;
+    virtual unsigned firstLevel() const;
+    virtual unsigned lastLevel() const;
+};
+
 struct V8PageTableOps64k : public PageTableOps
 {
     virtual bool isValid(pte_t pte, unsigned level) const;

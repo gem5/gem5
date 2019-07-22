@@ -228,6 +228,102 @@ V8PageTableOps4k::lastLevel() const
 }
 
 bool
+V8PageTableOps16k::isValid(pte_t pte, unsigned level) const
+{
+    switch (level) {
+        case 0: return  pte & 0x1;
+        case 1: return  pte & 0x1;
+        case 2: return  pte & 0x1;
+        case 3: return (pte & 0x1) && (pte & 0x2);
+        default: panic("bad level %d", level);
+    }
+}
+
+bool
+V8PageTableOps16k::isLeaf(pte_t pte, unsigned level) const
+{
+    switch (level) {
+        case 0: return false;
+        case 1: return false;
+        case 2: return !(pte & 0x2);
+        case 3: return true;
+        default: panic("bad level %d", level);
+    }
+}
+
+bool
+V8PageTableOps16k::isWritable(pte_t pte, unsigned level, bool stage2) const
+{
+    return stage2 ? bits(pte, 7, 6) == 3 : bits(pte, 7) == 0;
+}
+
+Addr
+V8PageTableOps16k::nextLevelPointer(pte_t pte, unsigned level) const
+{
+    if (isLeaf(pte, level)) {
+        switch (level) {
+            // no level 0 here
+            case 1: return mbits(pte, 47, 36);
+            case 2: return mbits(pte, 47, 25);
+            case 3: return mbits(pte, 47, 14);
+            default: panic("bad level %d", level);
+        }
+    } else {
+        return mbits(pte, 47, 12);
+    }
+}
+
+Addr
+V8PageTableOps16k::index(Addr va, unsigned level) const
+{
+    switch (level) {
+        case 0: return bits(va, 47, 47) << 3; break;
+        case 1: return bits(va, 46, 36) << 3; break;
+        case 2: return bits(va, 35, 25) << 3; break;
+        case 3: return bits(va, 24, 14) << 3; break;
+        default: panic("bad level %d", level);
+    }
+}
+
+Addr
+V8PageTableOps16k::pageMask(pte_t pte, unsigned level) const
+{
+    switch (level) {
+        // no level 0 here
+        case 1: return ~mask(36);
+        // 16K granule supports contiguous entries also at L2; - 1G
+        case 2: return bits(pte, 52) ? ~mask(30) : ~mask(25);
+        // as well as at L3; - 2M
+        case 3: return bits(pte, 52) ? ~mask(21) : ~mask(14);
+        default: panic("bad level %d", level);
+    }
+}
+
+Addr
+V8PageTableOps16k::walkMask(unsigned level) const
+{
+    switch (level) {
+        case 0: return ~mask(47);
+        case 1: return ~mask(36);
+        case 2: return ~mask(25);
+        case 3: return ~mask(14);
+        default: panic("bad level %d", level);
+    }
+}
+
+unsigned
+V8PageTableOps16k::firstLevel() const
+{
+    return 0;
+}
+
+unsigned
+V8PageTableOps16k::lastLevel() const
+{
+    return 3;
+}
+
+bool
 V8PageTableOps64k::isValid(pte_t pte, unsigned level) const
 {
     switch (level) {
