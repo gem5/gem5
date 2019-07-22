@@ -55,7 +55,7 @@ struct PageTableOps
     virtual Addr index(Addr va, unsigned level) const = 0;
     virtual Addr pageMask(pte_t pte, unsigned level) const = 0;
     virtual Addr walkMask(unsigned level) const = 0;
-    virtual unsigned firstLevel() const = 0;
+    virtual unsigned firstLevel(uint8_t tsz) const = 0;
     virtual unsigned lastLevel() const = 0;
 };
 
@@ -68,7 +68,7 @@ struct V7LPageTableOps : public PageTableOps
     Addr index(Addr va, unsigned level) const override;
     Addr pageMask(pte_t pte, unsigned level) const override;
     Addr walkMask(unsigned level) const override;
-    unsigned firstLevel() const override;
+    unsigned firstLevel(uint8_t tsz) const override;
     unsigned lastLevel() const override;
 };
 
@@ -81,7 +81,7 @@ struct V8PageTableOps4k : public PageTableOps
     Addr index(Addr va, unsigned level) const override;
     Addr pageMask(pte_t pte, unsigned level) const override;
     Addr walkMask(unsigned level) const override;
-    unsigned firstLevel() const override;
+    unsigned firstLevel(uint8_t tsz) const override;
     unsigned lastLevel() const override;
 };
 
@@ -94,7 +94,7 @@ struct V8PageTableOps16k : public PageTableOps
     Addr index(Addr va, unsigned level) const override;
     Addr pageMask(pte_t pte, unsigned level) const override;
     Addr walkMask(unsigned level) const override;
-    unsigned firstLevel() const override;
+    unsigned firstLevel(uint8_t tsz) const override;
     unsigned lastLevel() const override;
 };
 
@@ -107,7 +107,7 @@ struct V8PageTableOps64k : public PageTableOps
     Addr index(Addr va, unsigned level) const override;
     Addr pageMask(pte_t pte, unsigned level) const override;
     Addr walkMask(unsigned level) const override;
-    unsigned firstLevel() const override;
+    unsigned firstLevel(uint8_t tsz) const override;
     unsigned lastLevel() const override;
 };
 

@@ -122,7 +122,7 @@ V7LPageTableOps::walkMask(unsigned level) const
 }
 
 unsigned
-V7LPageTableOps::firstLevel() const
+V7LPageTableOps::firstLevel(uint8_t tsz) const
 {
     return 1;
 }
@@ -216,9 +216,13 @@ V8PageTableOps4k::walkMask(unsigned level) const
 }
 
 unsigned
-V8PageTableOps4k::firstLevel() const
+V8PageTableOps4k::firstLevel(uint8_t tsz) const
 {
-    return 0;
+    if (tsz >= 16 && tsz <= 24) return 0;
+    if (tsz >= 25 && tsz <= 33) return 1;
+    if (tsz >= 34 && tsz <= 39) return 2;
+
+    panic("Unsupported TnSZ: %d\n", tsz);
 }
 
 unsigned
@@ -312,9 +316,14 @@ V8PageTableOps16k::walkMask(unsigned level) const
 }
 
 unsigned
-V8PageTableOps16k::firstLevel() const
+V8PageTableOps16k::firstLevel(uint8_t tsz) const
 {
-    return 0;
+    if (tsz == 16) return 0;
+    if (tsz >= 17 && tsz <= 27) return 1;
+    if (tsz >= 28 && tsz <= 38) return 2;
+    if (tsz == 39) return 3;
+
+    panic("Unsupported TnSZ: %d\n", tsz);
 }
 
 unsigned
@@ -400,9 +409,13 @@ V8PageTableOps64k::walkMask(unsigned level) const
 }
 
 unsigned
-V8PageTableOps64k::firstLevel() const
+V8PageTableOps64k::firstLevel(uint8_t tsz) const
 {
-    return 1;
+    if (tsz >= 12 && tsz <= 21) return 1;
+    if (tsz >= 22 && tsz <= 34) return 2;
+    if (tsz >= 35 && tsz <= 39) return 3;
+
+    panic("Unsupported TnSZ: %d\n", tsz);
 }
 
 unsigned

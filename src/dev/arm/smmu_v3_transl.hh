@@ -73,6 +73,8 @@ class SMMUTranslationProcess : public SMMUProcess
         uint16_t vmid;
         uint8_t stage1TranslGranule;
         uint8_t stage2TranslGranule;
+        uint8_t t0sz;
+        uint8_t s2t0sz;
     };
 
     enum FaultType
