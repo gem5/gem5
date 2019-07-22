@@ -311,6 +311,15 @@ struct ContextDescriptor
     uint64_t _pad[3];
 };
 
+enum {
+    CR0_SMMUEN_MASK = 0x1,
+    CR0_PRIQEN_MASK = 0x2,
+    CR0_EVENTQEN_MASK = 0x4,
+    CR0_CMDQEN_MASK = 0x8,
+    CR0_ATSCHK_MASK = 0x10,
+    CR0_VMW_MASK = 0x1C0,
+};
+
 enum SMMUCommandType {
     CMD_PRF_CONFIG   = 0x1000,
     CMD_PRF_ADDR     = 0x1001,

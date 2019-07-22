@@ -155,8 +155,7 @@ SMMUTranslationProcess::main(Yield &yield)
 
     recvTick = curTick();
 
-
-    if (!(smmu.regs.cr0 & 0x1)) {
+    if (!(smmu.regs.cr0 & CR0_SMMUEN_MASK)) {
         // SMMU disabled
         doDelay(yield, Cycles(1));
         completeTransaction(yield, bypass(request.addr));
