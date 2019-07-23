@@ -90,6 +90,11 @@ _start:
         str	w0, [x1], #4
         str	w0, [x1], #4
 
+        /* SRE & Disable IRQ/FIQ Bypass & Allow EL2 access to ICC_SRE_EL2 */
+        mrs	x10, S3_6_C12_C12_5 // read ICC_SRE_EL3
+        orr	x10, x10, #0xf      // enable 0xf
+        msr	S3_6_C12_C12_5, x10 // write ICC_SRE_EL3
+        isb
 
 2:      mov	x0, #1
         msr	S3_0_c12_c12_6, x0 // ICC_IGRPEN0_EL1 Enable
