@@ -532,6 +532,9 @@ SMMUTranslationProcess::configCacheLookup(Yield &yield, TranslContext &tc)
     tc.stage1TranslGranule = e->stage1_tg;
     tc.stage2TranslGranule = e->stage2_tg;
 
+    tc.t0sz = e->t0sz;
+    tc.s2t0sz = e->s2t0sz;
+
     return true;
 }
 
@@ -555,6 +558,8 @@ SMMUTranslationProcess::configCacheUpdate(Yield &yield,
     e.vmid = tc.vmid;
     e.stage1_tg = tc.stage1TranslGranule;
     e.stage2_tg = tc.stage2TranslGranule;
+    e.t0sz = tc.t0sz;
+    e.s2t0sz = tc.s2t0sz;
 
     doSemaphoreDown(yield, smmu.configSem);
 

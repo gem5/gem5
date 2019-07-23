@@ -252,6 +252,8 @@ class ConfigCache : public SMMUv3BaseCache
         uint16_t vmid;
         uint8_t stage1_tg;
         uint8_t stage2_tg;
+        uint8_t t0sz;
+        uint8_t s2t0sz;
     };
 
     ConfigCache(unsigned numEntries, unsigned _associativity,
