@@ -2077,6 +2077,7 @@ let {{
                 case 0x1: cond = COND_VS; break;
                 case 0x2: cond = COND_GE; break;
                 case 0x3: cond = COND_GT; break;
+                default: panic("unreachable");
                 }
                 if (size == 3) {
                     return new VselD(machInst, vd, vn, vm, cond);
