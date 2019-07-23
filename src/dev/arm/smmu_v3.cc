@@ -604,6 +604,16 @@ SMMUv3::writeControl(PacketPtr pkt)
                 pkt->getLE<uint32_t>();
             break;
 
+        case offsetof(SMMURegs, cmdq_cons):
+            assert(pkt->getSize() == sizeof(uint32_t));
+            if (regs.cr0 & CR0_CMDQEN_MASK) {
+                warn("CMDQ is enabled: ignoring write to CMDQ_CONS\n");
+            } else {
+                *reinterpret_cast<uint32_t *>(regs.data + offset) =
+                    pkt->getLE<uint32_t>();
+            }
+            break;
+
         case offsetof(SMMURegs, cmdq_prod):
             assert(pkt->getSize() == sizeof(uint32_t));
             *reinterpret_cast<uint32_t *>(regs.data + offset) =
@@ -620,12 +630,15 @@ SMMUv3::writeControl(PacketPtr pkt)
 
         case offsetof(SMMURegs, cmdq_base):
             assert(pkt->getSize() == sizeof(uint64_t));
-            *reinterpret_cast<uint64_t *>(regs.data + offset) =
-                pkt->getLE<uint64_t>();
-            regs.cmdq_cons = 0;
-            regs.cmdq_prod = 0;
+            if (regs.cr0 & CR0_CMDQEN_MASK) {
+                warn("CMDQ is enabled: ignoring write to CMDQ_BASE\n");
+            } else {
+                *reinterpret_cast<uint64_t *>(regs.data + offset) =
+                    pkt->getLE<uint64_t>();
+                regs.cmdq_cons = 0;
+                regs.cmdq_prod = 0;
+            }
             break;
-
 
         case offsetof(SMMURegs, eventq_base):
             assert(pkt->getSize() == sizeof(uint64_t));
