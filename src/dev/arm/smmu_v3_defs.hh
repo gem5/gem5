@@ -321,28 +321,58 @@ enum {
 };
 
 enum SMMUCommandType {
-    CMD_PRF_CONFIG   = 0x1000,
-    CMD_PRF_ADDR     = 0x1001,
-    CMD_INV_STE      = 0x1100,
-    CMD_INV_CD       = 0x1101,
-    CMD_INV_CD_ALL   = 0x1102,
-    CMD_INV_ALL      = 0x1104,
-    CMD_TLBI_ALL     = 0x1110,
-    CMD_TLBI_ASID    = 0x1111,
-    CMD_TLBI_VAAL    = 0x1112,
-    CMD_TLBI_VAA     = 0x1113,
-    CMD_TLBI_VAL     = 0x1114,
-    CMD_TLBI_VA      = 0x1115,
-    CMD_TLBI_VM_IPAL = 0x1120,
-    CMD_TLBI_VM_IPA  = 0x1121,
-    CMD_TLBI_VM_S12  = 0x1122,
-    CMD_RESUME_S     = 0x1200,
+    CMD_PRF_CONFIG     = 0x01,
+    CMD_PRF_ADDR       = 0x02,
+    CMD_CFGI_STE       = 0x03,
+    CMD_CFGI_STE_RANGE = 0x04,
+    CMD_CFGI_CD        = 0x05,
+    CMD_CFGI_CD_ALL    = 0x06,
+    CMD_TLBI_NH_ALL    = 0x10,
+    CMD_TLBI_NH_ASID   = 0x11,
+    CMD_TLBI_NH_VAA    = 0x13,
+    CMD_TLBI_NH_VA     = 0x12,
+    CMD_TLBI_EL3_ALL   = 0x18,
+    CMD_TLBI_EL3_VA    = 0x1A,
+    CMD_TLBI_EL2_ALL   = 0x20,
+    CMD_TLBI_EL2_ASID  = 0x21,
+    CMD_TLBI_EL2_VA    = 0x22,
+    CMD_TLBI_EL2_VAA   = 0x23,
+    CMD_TLBI_S2_IPA    = 0x2a,
+    CMD_TLBI_S12_VMALL = 0x28,
+    CMD_TLBI_NSNH_ALL  = 0x30,
+    CMD_ATC_INV        = 0x40,
+    CMD_PRI_RESP       = 0x41,
+    CMD_RESUME         = 0x44,
+    CMD_STALL_TERM     = 0x45,
+    CMD_SYNC           = 0x46,
 };
 
 struct SMMUCommand
 {
-    uint32_t type;
-    uint32_t data[3];
+    BitUnion64(DWORD0)
+        Bitfield<7, 0>   type;
+        Bitfield<10>     ssec;
+        Bitfield<11>     ssv;
+        Bitfield<31, 12> ssid;
+        Bitfield<47, 32> vmid;
+        Bitfield<63, 48> asid;
+        Bitfield<63, 32> sid;
+    EndBitUnion(DWORD0)
+    DWORD0 dw0;
+
+    BitUnion64(DWORD1)
+        Bitfield<0>      leaf;
+        Bitfield<4, 0>   size;
+        Bitfield<4, 0>   range;
+        Bitfield<63, 12> address;
+    EndBitUnion(DWORD1)
+    DWORD1 dw1;
+
+    uint64_t addr() const
+    {
+        uint64_t address = (uint64_t)(dw1.address) << 12;
+        return address;
+    }
 };
 
 enum SMMUEventTypes {

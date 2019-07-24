@@ -383,7 +383,7 @@ SMMUv3::processCommands()
 void
 SMMUv3::processCommand(const SMMUCommand &cmd)
 {
-    switch (cmd.type) {
+    switch (cmd.dw0.type) {
         case CMD_PRF_CONFIG:
             DPRINTF(SMMUv3, "CMD_PREFETCH_CONFIG - ignored\n");
             break;
@@ -392,29 +392,128 @@ SMMUv3::processCommand(const SMMUCommand &cmd)
             DPRINTF(SMMUv3, "CMD_PREFETCH_ADDR - ignored\n");
             break;
 
-        case CMD_INV_STE:
-            DPRINTF(SMMUv3, "CMD_INV_STE sid=%#x\n", cmd.data[0]);
-            configCache.invalidateSID(cmd.data[0]);
+        case CMD_CFGI_STE: {
+            DPRINTF(SMMUv3, "CMD_CFGI_STE sid=%#x\n", cmd.dw0.sid);
+            configCache.invalidateSID(cmd.dw0.sid);
             break;
+        }
 
-        case CMD_INV_CD:
-            DPRINTF(SMMUv3, "CMD_INV_CD sid=%#x ssid=%#x\n",
-                cmd.data[0], cmd.data[1]);
-            configCache.invalidateSSID(cmd.data[0], cmd.data[1]);
+        case CMD_CFGI_STE_RANGE: {
+            const auto range = cmd.dw1.range;
+            if (range == 31) {
+                // CMD_CFGI_ALL is an alias of CMD_CFGI_STE_RANGE with
+                // range = 31
+                DPRINTF(SMMUv3, "CMD_CFGI_ALL\n");
+                configCache.invalidateAll();
+            } else {
+                DPRINTF(SMMUv3, "CMD_CFGI_STE_RANGE\n");
+                const auto start_sid = cmd.dw0.sid & ~((1 << (range + 1)) - 1);
+                const auto end_sid = start_sid + (1 << (range + 1)) - 1;
+                for (auto sid = start_sid; sid <= end_sid; sid++)
+                    configCache.invalidateSID(sid);
+            }
             break;
+        }
 
-        case CMD_INV_CD_ALL:
-            DPRINTF(SMMUv3, "CMD_INV_CD_ALL sid=%#x\n", cmd.data[0]);
-            configCache.invalidateSID(cmd.data[0]);
+        case CMD_CFGI_CD: {
+            DPRINTF(SMMUv3, "CMD_CFGI_CD sid=%#x ssid=%#x\n",
+                    cmd.dw0.sid, cmd.dw0.ssid);
+            configCache.invalidateSSID(cmd.dw0.sid, cmd.dw0.ssid);
             break;
+        }
 
-        case CMD_INV_ALL:
-            DPRINTF(SMMUv3, "CMD_INV_ALL\n");
-            configCache.invalidateAll();
+        case CMD_CFGI_CD_ALL: {
+            DPRINTF(SMMUv3, "CMD_CFGI_CD_ALL sid=%#x\n", cmd.dw0.sid);
+            configCache.invalidateSID(cmd.dw0.sid);
             break;
+        }
 
-        case CMD_TLBI_ALL:
-            DPRINTF(SMMUv3, "CMD_TLBI_ALL\n");
+        case CMD_TLBI_NH_ALL: {
+            DPRINTF(SMMUv3, "CMD_TLBI_NH_ALL vmid=%#x\n", cmd.dw0.vmid);
+            for (auto slave_interface : slaveInterfaces) {
+                slave_interface->microTLB->invalidateVMID(cmd.dw0.vmid);
+                slave_interface->mainTLB->invalidateVMID(cmd.dw0.vmid);
+            }
+            tlb.invalidateVMID(cmd.dw0.vmid);
+            walkCache.invalidateVMID(cmd.dw0.vmid);
+            break;
+        }
+
+        case CMD_TLBI_NH_ASID: {
+            DPRINTF(SMMUv3, "CMD_TLBI_NH_ASID asid=%#x vmid=%#x\n",
+                    cmd.dw0.asid, cmd.dw0.vmid);
+            for (auto slave_interface : slaveInterfaces) {
+                slave_interface->microTLB->invalidateASID(
+                    cmd.dw0.asid, cmd.dw0.vmid);
+                slave_interface->mainTLB->invalidateASID(
+                    cmd.dw0.asid, cmd.dw0.vmid);
+            }
+            tlb.invalidateASID(cmd.dw0.asid, cmd.dw0.vmid);
+            walkCache.invalidateASID(cmd.dw0.asid, cmd.dw0.vmid);
+            break;
+        }
+
+        case CMD_TLBI_NH_VAA: {
+            const Addr addr = cmd.addr();
+            DPRINTF(SMMUv3, "CMD_TLBI_NH_VAA va=%#08x vmid=%#x\n",
+                    addr, cmd.dw0.vmid);
+            for (auto slave_interface : slaveInterfaces) {
+                slave_interface->microTLB->invalidateVAA(
+                    addr, cmd.dw0.vmid);
+                slave_interface->mainTLB->invalidateVAA(
+                    addr, cmd.dw0.vmid);
+            }
+            tlb.invalidateVAA(addr, cmd.dw0.vmid);
+
+            if (!cmd.dw1.leaf)
+                walkCache.invalidateVAA(addr, cmd.dw0.vmid);
+            break;
+        }
+
+        case CMD_TLBI_NH_VA: {
+            const Addr addr = cmd.addr();
+            DPRINTF(SMMUv3, "CMD_TLBI_NH_VA va=%#08x asid=%#x vmid=%#x\n",
+                    addr, cmd.dw0.asid, cmd.dw0.vmid);
+            for (auto slave_interface : slaveInterfaces) {
+                slave_interface->microTLB->invalidateVA(
+                    addr, cmd.dw0.asid, cmd.dw0.vmid);
+                slave_interface->mainTLB->invalidateVA(
+                    addr, cmd.dw0.asid, cmd.dw0.vmid);
+            }
+            tlb.invalidateVA(addr, cmd.dw0.asid, cmd.dw0.vmid);
+
+            if (!cmd.dw1.leaf)
+                walkCache.invalidateVA(addr, cmd.dw0.asid, cmd.dw0.vmid);
+            break;
+        }
+
+        case CMD_TLBI_S2_IPA: {
+            const Addr addr = cmd.addr();
+            DPRINTF(SMMUv3, "CMD_TLBI_S2_IPA ipa=%#08x vmid=%#x\n",
+                    addr, cmd.dw0.vmid);
+            // This does not invalidate TLBs containing
+            // combined Stage1 + Stage2 translations, as per the spec.
+            ipaCache.invalidateIPA(addr, cmd.dw0.vmid);
+
+            if (!cmd.dw1.leaf)
+                walkCache.invalidateVMID(cmd.dw0.vmid);
+            break;
+        }
+
+        case CMD_TLBI_S12_VMALL: {
+            DPRINTF(SMMUv3, "CMD_TLBI_S12_VMALL vmid=%#x\n", cmd.dw0.vmid);
+            for (auto slave_interface : slaveInterfaces) {
+                slave_interface->microTLB->invalidateVMID(cmd.dw0.vmid);
+                slave_interface->mainTLB->invalidateVMID(cmd.dw0.vmid);
+            }
+            tlb.invalidateVMID(cmd.dw0.vmid);
+            ipaCache.invalidateVMID(cmd.dw0.vmid);
+            walkCache.invalidateVMID(cmd.dw0.vmid);
+            break;
+        }
+
+        case CMD_TLBI_NSNH_ALL: {
+            DPRINTF(SMMUv3, "CMD_TLBI_NSNH_ALL\n");
             for (auto slave_interface : slaveInterfaces) {
                 slave_interface->microTLB->invalidateAll();
                 slave_interface->mainTLB->invalidateAll();
@@ -423,106 +522,15 @@ SMMUv3::processCommand(const SMMUCommand &cmd)
             ipaCache.invalidateAll();
             walkCache.invalidateAll();
             break;
+        }
 
-        case CMD_TLBI_ASID:
-            DPRINTF(SMMUv3, "CMD_TLBI_ASID asid=%#x vmid=%#x\n",
-                cmd.data[0], cmd.data[1]);
-            for (auto slave_interface : slaveInterfaces) {
-                slave_interface->microTLB->invalidateASID(
-                    cmd.data[0], cmd.data[1]);
-                slave_interface->mainTLB->invalidateASID(
-                    cmd.data[0], cmd.data[1]);
-            }
-            tlb.invalidateASID(cmd.data[0], cmd.data[1]);
-            walkCache.invalidateASID(cmd.data[0], cmd.data[1]);
-            break;
-
-        case CMD_TLBI_VAAL:
-            DPRINTF(SMMUv3, "CMD_TLBI_VAAL va=%#08x vmid=%#x\n",
-                cmd.data[0], cmd.data[1]);
-            for (auto slave_interface : slaveInterfaces) {
-                slave_interface->microTLB->invalidateVAA(
-                    cmd.data[0], cmd.data[1]);
-                slave_interface->mainTLB->invalidateVAA(
-                    cmd.data[0], cmd.data[1]);
-            }
-            tlb.invalidateVAA(cmd.data[0], cmd.data[1]);
-            break;
-
-        case CMD_TLBI_VAA:
-            DPRINTF(SMMUv3, "CMD_TLBI_VAA va=%#08x vmid=%#x\n",
-                cmd.data[0], cmd.data[1]);
-            for (auto slave_interface : slaveInterfaces) {
-                slave_interface->microTLB->invalidateVAA(
-                    cmd.data[0], cmd.data[1]);
-                slave_interface->mainTLB->invalidateVAA(
-                    cmd.data[0], cmd.data[1]);
-            }
-            tlb.invalidateVAA(cmd.data[0], cmd.data[1]);
-            walkCache.invalidateVAA(cmd.data[0], cmd.data[1]);
-            break;
-
-        case CMD_TLBI_VAL:
-            DPRINTF(SMMUv3, "CMD_TLBI_VAL va=%#08x asid=%#x vmid=%#x\n",
-                cmd.data[0], cmd.data[1], cmd.data[2]);
-            for (auto slave_interface : slaveInterfaces) {
-                slave_interface->microTLB->invalidateVA(
-                    cmd.data[0], cmd.data[1], cmd.data[2]);
-                slave_interface->mainTLB->invalidateVA(
-                    cmd.data[0], cmd.data[1], cmd.data[2]);
-            }
-            tlb.invalidateVA(cmd.data[0], cmd.data[1], cmd.data[2]);
-            break;
-
-        case CMD_TLBI_VA:
-            DPRINTF(SMMUv3, "CMD_TLBI_VA va=%#08x asid=%#x vmid=%#x\n",
-                cmd.data[0], cmd.data[1], cmd.data[2]);
-            for (auto slave_interface : slaveInterfaces) {
-                slave_interface->microTLB->invalidateVA(
-                    cmd.data[0], cmd.data[1], cmd.data[2]);
-                slave_interface->mainTLB->invalidateVA(
-                    cmd.data[0], cmd.data[1], cmd.data[2]);
-            }
-            tlb.invalidateVA(cmd.data[0], cmd.data[1], cmd.data[2]);
-            walkCache.invalidateVA(cmd.data[0], cmd.data[1], cmd.data[2]);
-            break;
-
-        case CMD_TLBI_VM_IPAL:
-            DPRINTF(SMMUv3, "CMD_TLBI_VM_IPAL ipa=%#08x vmid=%#x\n",
-                cmd.data[0], cmd.data[1]);
-            // This does not invalidate TLBs containing
-            // combined Stage1 + Stage2 translations, as per the spec.
-            ipaCache.invalidateIPA(cmd.data[0], cmd.data[1]);
-            walkCache.invalidateVMID(cmd.data[1]);
-            break;
-
-        case CMD_TLBI_VM_IPA:
-            DPRINTF(SMMUv3, "CMD_TLBI_VM_IPA ipa=%#08x vmid=%#x\n",
-                cmd.data[0], cmd.data[1]);
-            // This does not invalidate TLBs containing
-            // combined Stage1 + Stage2 translations, as per the spec.
-            ipaCache.invalidateIPA(cmd.data[0], cmd.data[1]);
-            walkCache.invalidateVMID(cmd.data[1]);
-            break;
-
-        case CMD_TLBI_VM_S12:
-            DPRINTF(SMMUv3, "CMD_TLBI_VM_S12 vmid=%#x\n", cmd.data[0]);
-            for (auto slave_interface : slaveInterfaces) {
-                slave_interface->microTLB->invalidateVMID(cmd.data[0]);
-                slave_interface->mainTLB->invalidateVMID(cmd.data[0]);
-            }
-            tlb.invalidateVMID(cmd.data[0]);
-            ipaCache.invalidateVMID(cmd.data[0]);
-            walkCache.invalidateVMID(cmd.data[0]);
-            break;
-
-        case CMD_RESUME_S:
-            DPRINTF(SMMUv3, "CMD_RESUME_S\n");
+        case CMD_RESUME:
+            DPRINTF(SMMUv3, "CMD_RESUME\n");
             panic("resume unimplemented");
             break;
 
         default:
-            warn("Unimplemented command %#x\n", cmd.type);
+            warn("Unimplemented command %#x\n", cmd.dw0.type);
             break;
     }
 }
