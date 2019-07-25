@@ -130,6 +130,8 @@ class SMMUTLB : public SMMUv3BaseCache
                              bool updStats=true);
     void store(const Entry &incoming, AllocPolicy alloc);
 
+    void invalidateSSID(uint32_t sid, uint32_t ssid);
+    void invalidateSID(uint32_t sid);
     void invalidateVA(Addr va, uint16_t asid, uint16_t vmid);
     void invalidateVAA(Addr va, uint16_t vmid);
     void invalidateASID(uint16_t asid, uint16_t vmid);
@@ -142,6 +144,7 @@ class SMMUTLB : public SMMUv3BaseCache
 
     size_t associativity;
 
+    size_t pickSetIdx(uint32_t sid, uint32_t ssid) const;
     size_t pickSetIdx(Addr va) const;
     size_t pickEntryIdxToReplace(const Set &set, AllocPolicy alloc);
 };

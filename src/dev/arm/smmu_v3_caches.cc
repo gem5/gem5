@@ -258,6 +258,34 @@ SMMUTLB::store(const Entry &incoming, AllocPolicy alloc)
 }
 
 void
+SMMUTLB::invalidateSSID(uint32_t sid, uint32_t ssid)
+{
+    Set &set = sets[pickSetIdx(sid, ssid)];
+
+    for (size_t i = 0; i < set.size(); i++) {
+        Entry &e = set[i];
+
+        if (e.sid == sid && e.ssid == ssid)
+            e.valid = false;
+    }
+}
+
+void
+SMMUTLB::invalidateSID(uint32_t sid)
+{
+    for (size_t s = 0; s < sets.size(); s++) {
+        Set &set = sets[s];
+
+        for (size_t i = 0; i < set.size(); i++) {
+            Entry &e = set[i];
+
+            if (e.sid == sid)
+                e.valid = false;
+        }
+    }
+}
+
+void
 SMMUTLB::invalidateVA(Addr va, uint16_t asid, uint16_t vmid)
 {
     Set &set = sets[pickSetIdx(va)];
@@ -331,6 +359,12 @@ size_t
 SMMUTLB::pickSetIdx(Addr va) const
 {
     return (va >> 12) % sets.size();
+}
+
+size_t
+SMMUTLB::pickSetIdx(uint32_t sid, uint32_t ssid) const
+{
+    return (sid^ssid) % sets.size();
 }
 
 size_t

@@ -395,6 +395,11 @@ SMMUv3::processCommand(const SMMUCommand &cmd)
         case CMD_CFGI_STE: {
             DPRINTF(SMMUv3, "CMD_CFGI_STE sid=%#x\n", cmd.dw0.sid);
             configCache.invalidateSID(cmd.dw0.sid);
+
+            for (auto slave_interface : slaveInterfaces) {
+                slave_interface->microTLB->invalidateSID(cmd.dw0.sid);
+                slave_interface->mainTLB->invalidateSID(cmd.dw0.sid);
+            }
             break;
         }
 
@@ -405,12 +410,23 @@ SMMUv3::processCommand(const SMMUCommand &cmd)
                 // range = 31
                 DPRINTF(SMMUv3, "CMD_CFGI_ALL\n");
                 configCache.invalidateAll();
+
+                for (auto slave_interface : slaveInterfaces) {
+                    slave_interface->microTLB->invalidateAll();
+                    slave_interface->mainTLB->invalidateAll();
+                }
             } else {
                 DPRINTF(SMMUv3, "CMD_CFGI_STE_RANGE\n");
                 const auto start_sid = cmd.dw0.sid & ~((1 << (range + 1)) - 1);
                 const auto end_sid = start_sid + (1 << (range + 1)) - 1;
-                for (auto sid = start_sid; sid <= end_sid; sid++)
+                for (auto sid = start_sid; sid <= end_sid; sid++) {
                     configCache.invalidateSID(sid);
+
+                    for (auto slave_interface : slaveInterfaces) {
+                        slave_interface->microTLB->invalidateSID(sid);
+                        slave_interface->mainTLB->invalidateSID(sid);
+                    }
+                }
             }
             break;
         }
@@ -419,12 +435,24 @@ SMMUv3::processCommand(const SMMUCommand &cmd)
             DPRINTF(SMMUv3, "CMD_CFGI_CD sid=%#x ssid=%#x\n",
                     cmd.dw0.sid, cmd.dw0.ssid);
             configCache.invalidateSSID(cmd.dw0.sid, cmd.dw0.ssid);
+
+            for (auto slave_interface : slaveInterfaces) {
+                slave_interface->microTLB->invalidateSSID(
+                    cmd.dw0.sid, cmd.dw0.ssid);
+                slave_interface->mainTLB->invalidateSSID(
+                    cmd.dw0.sid, cmd.dw0.ssid);
+            }
             break;
         }
 
         case CMD_CFGI_CD_ALL: {
             DPRINTF(SMMUv3, "CMD_CFGI_CD_ALL sid=%#x\n", cmd.dw0.sid);
             configCache.invalidateSID(cmd.dw0.sid);
+
+            for (auto slave_interface : slaveInterfaces) {
+                slave_interface->microTLB->invalidateSID(cmd.dw0.sid);
+                slave_interface->mainTLB->invalidateSID(cmd.dw0.sid);
+            }
             break;
         }
 
