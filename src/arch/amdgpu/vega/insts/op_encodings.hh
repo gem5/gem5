@@ -789,11 +789,12 @@ namespace VegaISA
         }
 
         void
-        calcAddr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &addr)
+        calcAddr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &addr,
+                 ScalarRegU32 offset)
         {
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
-                    gpuDynInst->addr.at(lane) = addr[lane];
+                    gpuDynInst->addr.at(lane) = addr[lane] + offset;
                 }
             }
             gpuDynInst->resolveFlatSegment(gpuDynInst->exec_mask);

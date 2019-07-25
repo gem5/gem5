@@ -42461,7 +42461,7 @@ namespace VegaISA
 
         addr.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         if (isFlatGlobal()) {
             gpuDynInst->computeUnit()->globalMemoryPipe
@@ -42552,7 +42552,7 @@ namespace VegaISA
 
         addr.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         if (isFlatGlobal()) {
             gpuDynInst->computeUnit()->globalMemoryPipe
@@ -42644,7 +42644,7 @@ namespace VegaISA
 
         addr.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         if (isFlatGlobal()) {
             gpuDynInst->computeUnit()->globalMemoryPipe
@@ -42707,7 +42707,7 @@ namespace VegaISA
 
         addr.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         if (isFlatGlobal()) {
             gpuDynInst->computeUnit()->globalMemoryPipe
@@ -42770,7 +42770,7 @@ namespace VegaISA
 
         addr.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         if (isFlatGlobal()) {
             gpuDynInst->computeUnit()->globalMemoryPipe
@@ -42841,7 +42841,7 @@ namespace VegaISA
 
         addr.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         if (isFlatGlobal()) {
             gpuDynInst->computeUnit()->globalMemoryPipe
@@ -42920,7 +42920,7 @@ namespace VegaISA
         data.read();
 
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -42983,7 +42983,7 @@ namespace VegaISA
         addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43046,7 +43046,7 @@ namespace VegaISA
         addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43117,7 +43117,7 @@ namespace VegaISA
             }
         }
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         if (isFlatGlobal()) {
             gpuDynInst->computeUnit()->globalMemoryPipe
@@ -43178,7 +43178,7 @@ namespace VegaISA
         data1.read();
         data2.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43252,7 +43252,7 @@ namespace VegaISA
         data2.read();
         data3.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43329,7 +43329,7 @@ namespace VegaISA
         addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43417,7 +43417,7 @@ namespace VegaISA
         data.read();
         cmp.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43501,7 +43501,7 @@ namespace VegaISA
         addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
                 (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
@@ -43894,7 +43894,7 @@ namespace VegaISA
             }
         }
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         if (isFlatGlobal()) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
@@ -43970,7 +43970,7 @@ namespace VegaISA
         addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr);
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
