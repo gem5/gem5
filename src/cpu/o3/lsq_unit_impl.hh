@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2010-2014, 2017-2019 ARM Limited
+ * Copyright (c) 2010-2014, 2017-2020 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -753,6 +753,21 @@ LSQUnit<Impl>::writebackStores()
 
         DynInstPtr inst = storeWBIt->instruction();
         LSQRequest* req = storeWBIt->request();
+
+        // Process store conditionals or store release after all previous
+        // stores are completed
+        if ((req->mainRequest()->isLLSC() ||
+             req->mainRequest()->isRelease()) &&
+             (storeWBIt.idx() != storeQueue.head())) {
+            DPRINTF(LSQUnit, "Store idx:%i PC:%s to Addr:%#x "
+                "[sn:%lli] is %s%s and not head of the queue\n",
+                storeWBIt.idx(), inst->pcState(),
+                req->request()->getPaddr(), inst->seqNum,
+                req->mainRequest()->isLLSC() ? "SC" : "",
+                req->mainRequest()->isRelease() ? "/Release" : "");
+            break;
+        }
+
         storeWBIt->committed() = true;
 
         assert(!inst->memData);
