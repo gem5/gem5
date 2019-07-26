@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014,2017-2018 ARM Limited
+ * Copyright (c) 2013-2014,2017-2018,2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1029,10 +1029,11 @@ LSQ::tryToSendToTransfers(LSQRequestPtr request)
 
     bool is_load = request->isLoad;
     bool is_llsc = request->request->isLLSC();
+    bool is_release = request->request->isRelease();
     bool is_swap = request->request->isSwap();
     bool is_atomic = request->request->isAtomic();
     bool bufferable = !(request->request->isStrictlyOrdered() ||
-                        is_llsc || is_swap || is_atomic);
+                        is_llsc || is_swap || is_atomic || is_release);
 
     if (is_load) {
         if (numStoresInTransfers != 0) {
@@ -1048,6 +1049,15 @@ LSQ::tryToSendToTransfers(LSQRequestPtr request)
             DPRINTF(MinorMem, "Moving store into transfers queue\n");
             return;
         }
+    }
+
+    // Process store conditionals or store release after all previous
+    // stores are completed
+    if (((!is_load && is_llsc) || is_release) &&
+        !storeBuffer.isDrained()) {
+        DPRINTF(MinorMem, "Memory access needs to wait for store buffer"
+                          " to drain\n");
+        return;
     }
 
     /* Check if this is the head instruction (and so must be executable as
