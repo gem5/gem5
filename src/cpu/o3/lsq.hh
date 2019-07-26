@@ -366,7 +366,7 @@ class LSQ
                 isAnyActiveElement(byteEnable.begin(), byteEnable.end())) {
                 auto request = std::make_shared<Request>(_inst->getASID(),
                         addr, size, _flags, _inst->masterId(),
-                        _inst->instAddr(), _inst->contextId());
+                        _inst->instAddr(), _inst->contextId(), _amo_op);
                 if (!byteEnable.empty()) {
                     request->setByteEnable(byteEnable);
                 }
