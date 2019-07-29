@@ -53,7 +53,8 @@
 			     "arm,armv7-timer";
 		interrupts = <1 13 0xf08>,
 		             <1 14 0xf08>,
-		             <1 11 0xf08>;
+		             <1 11 0xf08>,
+		             <1 10 0xf08>;
 		clocks = <&osc_sys>;
 		clock-names="apb_pclk";
 	};
