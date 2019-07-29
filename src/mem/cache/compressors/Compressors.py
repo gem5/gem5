@@ -99,6 +99,16 @@ class FPCD(BaseDictionaryCompressor):
 
     dictionary_size = 2
 
+class MultiCompressor(BaseCacheCompressor):
+    type = 'MultiCompressor'
+    cxx_class = 'MultiCompressor'
+    cxx_header = "mem/cache/compressors/multi.hh"
+
+    # Dummy default compressor list. This might not be an optimal choice,
+    # since these compressors have many overlapping patterns
+    compressors = VectorParam.BaseCacheCompressor([CPack(), FPCD()],
+        "Array of compressors")
+
 class RepeatedQwordsCompressor(BaseDictionaryCompressor):
     type = 'RepeatedQwordsCompressor'
     cxx_class = 'RepeatedQwordsCompressor'

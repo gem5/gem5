@@ -54,6 +54,12 @@ struct BaseCacheCompressorParams;
 class BaseCacheCompressor : public SimObject {
   protected:
     /**
+     * This compressor must be able to access the protected functions of
+     * its sub-compressors.
+     */
+    friend class MultiCompressor;
+
+    /**
      * Forward declaration of compression data. Every new compressor must
      * create a new compression data based on it.
      */
