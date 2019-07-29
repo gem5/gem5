@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2018 ARM Limited
+ * Copyright (c) 2010-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -91,6 +91,7 @@ ISA::ISA(Params *p)
         haveLargeAsid64 = system->haveLargeAsid64();
         physAddrRange = system->physAddrRange();
         haveSVE = system->haveSVE();
+        havePAN = system->havePAN();
         sveVL = system->sveVL();
     } else {
         highestELIs64 = true; // ArmSystem::highestELIs64 does the same
@@ -99,6 +100,7 @@ ISA::ISA(Params *p)
         haveLargeAsid64 = false;
         physAddrRange = 32;  // dummy value
         haveSVE = true;
+        havePAN = false;
         sveVL = p->sve_vl_se;
     }
 
@@ -391,6 +393,10 @@ ISA::initID64(const ArmISAParams *p)
     miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64ISAR0_EL1], 19, 4,
         haveCrypto ? 0x1112 : 0x0);
+    // PAN
+    miscRegs[MISCREG_ID_AA64MMFR1_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64MMFR1_EL1], 23, 20,
+        havePAN ? 0x1 : 0x0);
 }
 
 void
@@ -639,6 +645,10 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
       case MISCREG_CURRENTEL:
         {
             return miscRegs[MISCREG_CPSR] & 0xc;
+        }
+      case MISCREG_PAN:
+        {
+            return miscRegs[MISCREG_CPSR] & 0x400000;
         }
       case MISCREG_L2CTLR:
         {
@@ -1880,6 +1890,17 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
                 misc_reg = MISCREG_CPSR;
             }
             break;
+          case MISCREG_PAN:
+            {
+                // PAN is affecting data accesses
+                getDTBPtr(tc)->invalidateMiscReg();
+
+                CPSR cpsr = miscRegs[MISCREG_CPSR];
+                cpsr.pan = (uint8_t) ((CPSR) newVal).pan;
+                newVal = cpsr;
+                misc_reg = MISCREG_CPSR;
+            }
+            break;
           case MISCREG_AT_S1E1R_Xt:
           case MISCREG_AT_S1E1W_Xt:
           case MISCREG_AT_S1E0R_Xt:
@@ -2020,9 +2041,13 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_SPSR_EL3:
           case MISCREG_SPSR_EL2:
           case MISCREG_SPSR_EL1:
-            // Force bits 23:21 to 0
-            newVal = val & ~(0x7 << 21);
-            break;
+            {
+                RegVal spsr_mask = havePAN ?
+                    ~(0x5 << 21) : ~(0x7 << 21);
+
+                newVal = val & spsr_mask;
+                break;
+            }
           case MISCREG_L2CTLR:
             warn("miscreg L2CTLR (%s) written with %#x. ignored...\n",
                  miscRegName[misc_reg], uint32_t(val));

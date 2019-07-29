@@ -244,6 +244,8 @@ class TLB : public BaseTLB
     Fault checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode);
     Fault checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
                              ThreadContext *tc);
+    bool checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
+                  Mode mode);
 
 
     /** Reset the entire TLB

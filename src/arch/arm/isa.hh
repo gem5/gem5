@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2018 ARM Limited
+ * Copyright (c) 2010, 2012-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -95,6 +95,7 @@ namespace ArmISA
         bool haveGICv3CPUInterface;
         uint8_t physAddrRange;
         bool haveSVE;
+        bool havePAN;
 
         /** SVE vector length in quadwords */
         unsigned sveVL;
@@ -686,6 +687,7 @@ namespace ArmISA
             SERIALIZE_SCALAR(physAddrRange);
             SERIALIZE_SCALAR(haveSVE);
             SERIALIZE_SCALAR(sveVL);
+            SERIALIZE_SCALAR(havePAN);
         }
         void unserialize(CheckpointIn &cp)
         {
@@ -702,6 +704,7 @@ namespace ArmISA
             UNSERIALIZE_SCALAR(physAddrRange);
             UNSERIALIZE_SCALAR(haveSVE);
             UNSERIALIZE_SCALAR(sveVL);
+            UNSERIALIZE_SCALAR(havePAN);
         }
 
         void startup(ThreadContext *tc);

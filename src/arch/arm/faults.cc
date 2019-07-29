@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2014, 2016-2018 ARM Limited
+ * Copyright (c) 2010, 2012-2014, 2016-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -448,6 +448,21 @@ ArmFault::update(ThreadContext *tc)
     if (fromEL > toEL)
         toEL = fromEL;
 
+    // Check for Set Priviledge Access Never, if PAN is supported
+    AA64MMFR1 mmfr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
+    if (mmfr1.pan) {
+        if (toEL == EL1) {
+            const SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
+            span = !sctlr.span;
+        }
+
+        const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+        if (toEL == EL2 && hcr.e2h && hcr.tge) {
+            const SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL2);
+            span = !sctlr.span;
+        }
+    }
+
     to64 = ELIs64(tc, toEL);
 
     // The fault specific informations have been updated; it is
@@ -536,6 +551,7 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     }
     cpsr.it1 = cpsr.it2 = 0;
     cpsr.j = 0;
+    cpsr.pan = span ? 1 : saved_cpsr.pan;
     tc->setMiscReg(MISCREG_CPSR, cpsr);
 
     // Make sure mailbox sets to one always
@@ -635,7 +651,6 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         spsr.q = 0;
         spsr.it1 = 0;
         spsr.j = 0;
-        spsr.res0_23_22 = 0;
         spsr.ge = 0;
         spsr.it2 = 0;
         spsr.t = 0;
@@ -645,7 +660,6 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         spsr.it2 = it.top6;
         spsr.it1 = it.bottom2;
         // Force some bitfields to 0
-        spsr.res0_23_22 = 0;
         spsr.ss = 0;
     }
     tc->setMiscReg(spsr_idx, spsr);
@@ -670,6 +684,7 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     cpsr.daif = 0xf;
     cpsr.il = 0;
     cpsr.ss = 0;
+    cpsr.pan = span ? 1 : spsr.pan;
     tc->setMiscReg(MISCREG_CPSR, cpsr);
 
     // If we have a valid instruction then use it to annotate this fault with

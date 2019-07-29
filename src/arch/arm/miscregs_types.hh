@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2018 ARM Limited
+ * Copyright (c) 2010-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -55,7 +55,7 @@ namespace ArmISA
         Bitfield<27> q;
         Bitfield<26, 25> it1;
         Bitfield<24> j;
-        Bitfield<23, 22> res0_23_22;
+        Bitfield<22> pan;
         Bitfield<21> ss;        // AArch64
         Bitfield<20> il;        // AArch64
         Bitfield<19, 16> ge;
@@ -322,6 +322,8 @@ namespace ArmISA
         Bitfield<25>   ee;      // Exception Endianness
         Bitfield<24>   e0e;     // Endianness of explicit data accesses at EL0
                                 // (AArch64 SCTLR_EL1 only)
+        Bitfield<23>   span;    // Set Priviledge Access Never on taking
+                                // an exception
         Bitfield<23>   xp;      // Extended page table enable (dropped in ARMv7)
         Bitfield<22>   u;       // Alignment (dropped in ARMv7)
         Bitfield<21>   fi;      // Fast interrupts configuration enable

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015-2018 ARM Limited
+ * Copyright (c) 2010-2013, 2015-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1984,6 +1984,8 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_SPSEL;
                       case 2:
                         return MISCREG_CURRENTEL;
+                      case 3:
+                        return MISCREG_PAN;
                     }
                     break;
                   case 6:
@@ -4057,6 +4059,9 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode();
     InitReg(MISCREG_CURRENTEL)
       .allPrivileges().exceptUserMode().writes(0);
+    InitReg(MISCREG_PAN)
+      .allPrivileges().exceptUserMode()
+      .implemented(havePAN);
     InitReg(MISCREG_NZCV)
       .allPrivileges();
     InitReg(MISCREG_DAIF)

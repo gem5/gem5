@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016-2018 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -82,6 +82,7 @@ class ArmFault : public FaultBase
     bool faultUpdated;
 
     bool hypRouted; // True if the fault has been routed to Hypervisor
+    bool span; // True if the fault is setting the PSTATE.PAN bit
 
     virtual Addr getVector(ThreadContext *tc);
     Addr getVector64(ThreadContext *tc);
@@ -200,7 +201,7 @@ class ArmFault : public FaultBase
     ArmFault(ExtMachInst _machInst = 0, uint32_t _iss = 0) :
         machInst(_machInst), issRaw(_iss), from64(false), to64(false),
         fromEL(EL0), toEL(EL0), fromMode(MODE_UNDEFINED),
-        faultUpdated(false), hypRouted(false) {}
+        faultUpdated(false), hypRouted(false), span(false) {}
 
     // Returns the actual syndrome register to use based on the target
     // exception level

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2015,2017-2018 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015,2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -73,6 +73,7 @@ ArmSystem::ArmSystem(Params *p)
       _haveLargeAsid64(p->have_large_asid_64),
       _haveSVE(p->have_sve),
       _sveVL(p->sve_vl),
+      _havePAN(p->have_pan),
       _m5opRange(p->m5ops_base ?
                  RangeSize(p->m5ops_base, 0x10000) :
                  AddrRange(1, 0)), // Create an empty range if disabled

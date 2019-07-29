@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014, 2016-2018 ARM Limited
+ * Copyright (c) 2010-2014, 2016-2019 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -1129,6 +1129,7 @@ ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
     new_cpsr.nz = spsr.nz;
     new_cpsr.c = spsr.c;
     new_cpsr.v = spsr.v;
+    new_cpsr.pan = spsr.pan;
     if (new_cpsr.width) {
         // aarch32
         const ITSTATE it = getRestoredITBits(tc, spsr);

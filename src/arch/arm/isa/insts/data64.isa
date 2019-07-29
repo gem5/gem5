@@ -512,13 +512,21 @@ let {{
     def buildMsrImmInst(mnem, inst_name, code):
         global header_output, decoder_output, exec_output
         msrImmPermission = '''
-            if (!canWriteAArch64SysReg(
-                    (MiscRegIndex) xc->tcBase()->flattenRegId(
-                       RegId(MiscRegClass, dest)).index(),
-                    Scr64, Cpsr, xc->tcBase())) {
-                return std::make_shared<UndefinedInstruction>(
-                                machInst, 0, EC_TRAPPED_MSR_MRS_64,
-                                mnemonic);
+            auto misc_index = (MiscRegIndex) xc->tcBase()->flattenRegId(
+               RegId(MiscRegClass, dest)).index();
+
+            if (!miscRegInfo[misc_index][MISCREG_IMPLEMENTED]) {
+                    return std::make_shared<UndefinedInstruction>(
+                                    machInst, false,
+                                    mnemonic);
+            }
+
+            if (!canWriteAArch64SysReg(misc_index,
+                Scr64, Cpsr, xc->tcBase())) {
+
+                    return std::make_shared<UndefinedInstruction>(
+                                    machInst, 0, EC_TRAPPED_MSR_MRS_64,
+                                    mnemonic);
             }
 
         '''

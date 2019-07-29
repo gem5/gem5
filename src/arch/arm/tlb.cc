@@ -904,6 +904,11 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
             break;
           case EL1:
             {
+                if (checkPAN(tc, ap, req, mode)) {
+                    grant = false;
+                    break;
+                }
+
                 uint8_t perm = (ap << 2)  | (xn << 1) | pxn;
                 switch (perm) {
                   case 0:
@@ -938,6 +943,11 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
             }
             break;
           case EL2:
+            if (checkPAN(tc, ap, req, mode)) {
+                grant = false;
+                break;
+            }
+            M5_FALLTHROUGH;
           case EL3:
             {
                 uint8_t perm = (ap & 0x2) | xn;
@@ -987,6 +997,26 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
     }
 
     return NoFault;
+}
+
+bool
+TLB::checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req, Mode mode)
+{
+    // The PAN bit has no effect on:
+    // 1) Instruction accesses.
+    // 2) Data Cache instructions other than DC ZVA
+    // 3) Address translation instructions, other than ATS1E1RP and
+    // ATS1E1WP when ARMv8.2-ATS1E1 is implemented. (Unimplemented in
+    // gem5)
+    // 4) Unprivileged instructions (Unimplemented in gem5)
+    AA64MMFR1 mmfr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
+    if (mmfr1.pan && cpsr.pan && (ap & 0x1) && mode != Execute &&
+        (!req->isCacheMaintenance() ||
+            (req->getFlags() & Request::CACHE_BLOCK_ZERO))) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 Fault

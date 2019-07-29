@@ -327,6 +327,8 @@ MiscRegImmOp64::miscRegImm() const
 {
     if (dest == MISCREG_SPSEL) {
         return imm & 0x1;
+    } else if (dest == MISCREG_PAN) {
+        return (imm & 0x1) << 22;
     } else {
         panic("Not a valid PSTATE field register\n");
     }

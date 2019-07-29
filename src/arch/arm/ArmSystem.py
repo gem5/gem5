@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2012-2013, 2015-2018 ARM Limited
+# Copyright (c) 2009, 2012-2013, 2015-2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -86,6 +86,8 @@ class ArmSystem(System):
         "True if SVE is implemented (ARMv8)")
     sve_vl = Param.SveVectorLength(1,
         "SVE vector length in quadwords (128-bit)")
+    have_pan = Param.Bool(True,
+        "True if Priviledge Access Never is implemented (ARMv8.1)")
 
     semihosting = Param.ArmSemihosting(NULL,
         "Enable support for the Arm semihosting by settings this parameter")
