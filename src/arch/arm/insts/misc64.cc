@@ -35,6 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
+ *          Giacomo Travaglini
  */
 
 #include "arch/arm/insts/misc64.hh"
@@ -319,6 +320,27 @@ MiscRegOp64::checkEL3Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
         break;
     }
     return trap_to_mon;
+}
+
+RegVal
+MiscRegImmOp64::miscRegImm() const
+{
+    if (dest == MISCREG_SPSEL) {
+        return imm & 0x1;
+    } else {
+        panic("Not a valid PSTATE field register\n");
+    }
+}
+
+std::string
+MiscRegImmOp64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printMiscReg(ss, dest);
+    ss << ", ";
+    ccprintf(ss, "#0x%x", imm);
+    return ss.str();
 }
 
 std::string

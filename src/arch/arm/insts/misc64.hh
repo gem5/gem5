@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2017-2018 ARM Limited
+ * Copyright (c) 2011-2013,2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,6 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
+ *          Giacomo Travaglini
  */
 
 #ifndef __ARCH_ARM_INSTS_MISC64_HH__
@@ -140,6 +141,30 @@ class MiscRegOp64 : public ArmStaticInst
     bool checkEL3Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
                       ExceptionLevel el, bool *is_vfp_neon) const;
 
+};
+
+class MiscRegImmOp64 : public MiscRegOp64
+{
+  protected:
+    MiscRegIndex dest;
+    uint32_t imm;
+
+    MiscRegImmOp64(const char *mnem, ExtMachInst _machInst,
+                   OpClass __opClass, MiscRegIndex _dest,
+                   uint32_t _imm) :
+        MiscRegOp64(mnem, _machInst, __opClass, false),
+        dest(_dest), imm(_imm)
+    {}
+
+    /** Returns the "register view" of the immediate field.
+     * as if it was a MSR PSTATE REG instruction.
+     * This means basically shifting and masking depending on
+     * which PSTATE field is being set/cleared.
+     */
+    RegVal miscRegImm() const;
+
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class MiscRegRegImmOp64 : public MiscRegOp64

@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013, 2016-2018 ARM Limited
+// Copyright (c) 2011-2013, 2016-2019 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -509,45 +509,43 @@ let {{
     exec_output += DCStore64InitiateAcc.subst(msrDCIVACIop);
     exec_output += Store64CompleteAcc.subst(msrDCIVACIop);
 
+    def buildMsrImmInst(mnem, inst_name, code):
+        global header_output, decoder_output, exec_output
+        msrImmPermission = '''
+            if (!canWriteAArch64SysReg(
+                    (MiscRegIndex) xc->tcBase()->flattenRegId(
+                       RegId(MiscRegClass, dest)).index(),
+                    Scr64, Cpsr, xc->tcBase())) {
+                return std::make_shared<UndefinedInstruction>(
+                                machInst, 0, EC_TRAPPED_MSR_MRS_64,
+                                mnemonic);
+            }
 
-    buildDataXImmInst("msrSP", '''
-        if (!canWriteAArch64SysReg(
-                (MiscRegIndex) xc->tcBase()->flattenRegId(
-                   RegId(MiscRegClass, dest)).index(),
-                Scr64, Cpsr, xc->tcBase())) {
-            return std::make_shared<UndefinedInstruction>(machInst, false,
-                                                          mnemonic);
-        }
-        MiscDest_ud = imm;
-    ''', optArgs = ["IsSerializeAfter", "IsNonSpeculative"])
+        '''
+        msrIop = InstObjParams("msr", inst_name, "MiscRegImmOp64",
+                               msrImmPermission + code,
+                               ["IsSerializeAfter", "IsNonSpeculative"])
+        header_output += MiscRegOp64Declare.subst(msrIop)
+        decoder_output += MiscRegOp64Constructor.subst(msrIop)
+        exec_output += BasicExecute.subst(msrIop)
 
-    buildDataXImmInst("msrDAIFSet", '''
-        if (!canWriteAArch64SysReg(
-                (MiscRegIndex) xc->tcBase()->flattenRegId(
-                   RegId(MiscRegClass, dest)).index(),
-                Scr64, Cpsr, xc->tcBase())) {
-            return std::make_shared<UndefinedInstruction>(
-                            machInst, 0, EC_TRAPPED_MSR_MRS_64,
-                            mnemonic);
-        }
+    buildMsrImmInst("msr", "MsrImm64", '''
+        // Mask and shift immediate (depending on PSTATE field)
+        // before assignment
+        MiscDest_ud = miscRegImm();
+    ''')
+
+    buildMsrImmInst("msr", "MsrImmDAIFSet64", '''
         CPSR cpsr = Cpsr;
         cpsr.daif = cpsr.daif | imm;
         Cpsr = cpsr;
-    ''', optArgs = ["IsSerializeAfter", "IsNonSpeculative"])
+    ''')
 
-    buildDataXImmInst("msrDAIFClr", '''
-        if (!canWriteAArch64SysReg(
-                (MiscRegIndex) xc->tcBase()->flattenRegId(
-                   RegId(MiscRegClass, dest)).index(),
-                Scr64, Cpsr, xc->tcBase())) {
-            return std::make_shared<UndefinedInstruction>(
-                                machInst, 0, EC_TRAPPED_MSR_MRS_64,
-                                mnemonic);
-        }
+    buildMsrImmInst("msr", "MsrImmDAIFClr64", '''
         CPSR cpsr = Cpsr;
         cpsr.daif = cpsr.daif & ~imm;
         Cpsr = cpsr;
-    ''', optArgs = ["IsSerializeAfter", "IsNonSpeculative"])
+    ''')
 
     def buildDataXCompInst(mnem, instType, suffix, code):
         global header_output, decoder_output, exec_output

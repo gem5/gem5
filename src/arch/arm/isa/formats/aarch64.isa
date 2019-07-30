@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 ARM Limited
+// Copyright (c) 2011-2019 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -389,28 +389,21 @@ namespace Aarch64
                             return new Unknown64(machInst);
                         }
                     } else if (crn == 0x4) {
-                        // MSR immediate
+                        // MSR immediate: moving immediate value to selected
+                        // bits of the PSTATE
                         switch (op1 << 3 | op2) {
                           case 0x5:
                             // SP
-                            return new MsrSP64(machInst,
-                                               (IntRegIndex) MISCREG_SPSEL,
-                                               INTREG_ZERO,
-                                               crm & 0x1);
+                            return new MsrImm64(
+                                machInst, MISCREG_SPSEL, crm);
                           case 0x1e:
                             // DAIFSet
-                            return new MsrDAIFSet64(
-                                machInst,
-                                (IntRegIndex) MISCREG_DAIF,
-                                INTREG_ZERO,
-                                crm);
+                            return new MsrImmDAIFSet64(
+                                machInst, MISCREG_DAIF, crm);
                           case 0x1f:
                             // DAIFClr
-                            return new MsrDAIFClr64(
-                                machInst,
-                                (IntRegIndex) MISCREG_DAIF,
-                                INTREG_ZERO,
-                                crm);
+                            return new MsrImmDAIFClr64(
+                                machInst, MISCREG_DAIF, crm);
                           default:
                             return new Unknown64(machInst);
                         }
