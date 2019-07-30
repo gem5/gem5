@@ -1,4 +1,4 @@
-# Copyright (c) 2016 ARM Limited
+# Copyright (c) 2016, 2019 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -53,6 +53,18 @@ version="%prog 2.0"
 brief_copyright=\
     "gem5 is copyrighted software; use the --copyright option for details."
 
+def _stats_help(option, opt, value, parser):
+    import m5
+    print("A stat file can either be specified as a URI or a plain")
+    print("path. When specified as a path, gem5 uses the default text ")
+    print("format.")
+    print()
+    print("The following stat formats are supported:")
+    print()
+    m5.stats.printStatVisitorTypes()
+    sys.exit(0)
+
+
 def parse_options():
     from . import config
     from .options import OptionParser
@@ -105,6 +117,9 @@ def parse_options():
     group("Statistics Options")
     option("--stats-file", metavar="FILE", default="stats.txt",
         help="Sets the output file for statistics [Default: %default]")
+    option("--stats-help",
+           action="callback", callback=_stats_help,
+           help="Display documentation for available stat visitors")
 
     # Configuration Options
     group("Configuration Options")

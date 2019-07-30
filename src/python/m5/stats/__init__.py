@@ -40,6 +40,9 @@
 # Authors: Nathan Binkert
 #          Andreas Sandberg
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 import m5
 
 import _m5.stats
@@ -52,7 +55,15 @@ from _m5.stats import periodicStatDump
 
 outputList = []
 
-def _url_factory(func):
+# Dictionary of stat visitor factories populated by the _url_factory
+# visitor.
+factories = { }
+
+# List of all factories. Contains tuples of (factory, schemes,
+# enabled).
+all_factories = []
+
+def _url_factory(schemes, enable=True):
     """Wrap a plain Python function with URL parsing helpers
 
     Wrap a plain Python function f(fn, **kwargs) to expect a URL that
@@ -60,6 +71,13 @@ def _url_factory(func):
     is assumed to be a filename, this is created as the concatenation
     of the netloc (~hostname) and path in the parsed URL. Keyword
     arguments are derived from the query values in the URL.
+
+    Arguments:
+        schemes: A list of URL schemes to use for this function.
+
+    Keyword arguments:
+        enable: Enable/disable this factory. Typically used when the
+                presence of a function depends on some runtime property.
 
     For example:
         wrapped_f(urlparse.urlsplit("text://stats.txt?desc=False")) ->
@@ -69,43 +87,52 @@ def _url_factory(func):
 
     from functools import wraps
 
-    @wraps(func)
-    def wrapper(url):
-        try:
-            from urllib.parse import parse_qs
-        except ImportError:
-            # Python 2 fallback
-            from urlparse import parse_qs
-        from ast import literal_eval
+    def decorator(func):
+        @wraps(func)
+        def wrapper(url):
+            try:
+                from urllib.parse import parse_qs
+            except ImportError:
+                # Python 2 fallback
+                from urlparse import parse_qs
+            from ast import literal_eval
 
-        qs = parse_qs(url.query, keep_blank_values=True)
+            qs = parse_qs(url.query, keep_blank_values=True)
 
-        # parse_qs returns a list of values for each parameter. Only
-        # use the last value since kwargs don't allow multiple values
-        # per parameter. Use literal_eval to transform string param
-        # values into proper Python types.
-        def parse_value(key, values):
-            if len(values) == 0 or (len(values) == 1 and not values[0]):
-                fatal("%s: '%s' doesn't have a value." % (url.geturl(), key))
-            elif len(values) > 1:
-                fatal("%s: '%s' has multiple values." % (url.geturl(), key))
-            else:
-                try:
-                    return key, literal_eval(values[0])
-                except ValueError:
-                    fatal("%s: %s isn't a valid Python literal" \
-                          % (url.geturl(), values[0]))
+            # parse_qs returns a list of values for each parameter. Only
+            # use the last value since kwargs don't allow multiple values
+            # per parameter. Use literal_eval to transform string param
+            # values into proper Python types.
+            def parse_value(key, values):
+                if len(values) == 0 or (len(values) == 1 and not values[0]):
+                    fatal("%s: '%s' doesn't have a value." % (
+                        url.geturl(), key))
+                elif len(values) > 1:
+                    fatal("%s: '%s' has multiple values." % (
+                        url.geturl(), key))
+                else:
+                    try:
+                        return key, literal_eval(values[0])
+                    except ValueError:
+                        fatal("%s: %s isn't a valid Python literal" \
+                              % (url.geturl(), values[0]))
 
-        kwargs = dict([ parse_value(k, v) for k, v in qs.items() ])
+            kwargs = dict([ parse_value(k, v) for k, v in qs.items() ])
 
-        try:
-            return func("%s%s" % (url.netloc, url.path), **kwargs)
-        except TypeError:
-            fatal("Illegal stat visitor parameter specified")
+            try:
+                return func("%s%s" % (url.netloc, url.path), **kwargs)
+            except TypeError:
+                fatal("Illegal stat visitor parameter specified")
 
-    return wrapper
+        all_factories.append((wrapper, schemes, enable))
+        for scheme in schemes:
+            assert scheme not in factories
+            factories[scheme] = wrapper if enable else None
+        return wrapper
 
-@_url_factory
+    return decorator
+
+@_url_factory([ None, "", "text", "file", ])
 def _textFactory(fn, desc=True):
     """Output stats in text format.
 
@@ -113,13 +140,17 @@ def _textFactory(fn, desc=True):
     description. The description is enabled by default, but can be
     disabled by setting the desc parameter to False.
 
-    Example: text://stats.txt?desc=False
+    Parameters:
+      * desc (bool): Output stat descriptions (default: True)
+
+    Example:
+      text://stats.txt?desc=False
 
     """
 
     return _m5.stats.initText(fn, desc)
 
-@_url_factory
+@_url_factory([ "h5", ], enable=hasattr(_m5.stats, "initHDF5"))
 def _hdf5Factory(fn, chunking=10, desc=True, formulas=True):
     """Output stats in HDF5 format.
 
@@ -153,19 +184,7 @@ def _hdf5Factory(fn, chunking=10, desc=True, formulas=True):
 
     """
 
-    if hasattr(_m5.stats, "initHDF5"):
-        return _m5.stats.initHDF5(fn, chunking, desc, formulas)
-    else:
-        fatal("HDF5 support not enabled at compile time")
-
-factories = {
-    # Default to the text factory if we're given a naked path
-    "" : _textFactory,
-    "file" : _textFactory,
-    "text" : _textFactory,
-    "h5" : _hdf5Factory,
-}
-
+    return _m5.stats.initHDF5(fn, chunking, desc, formulas)
 
 def addStatVisitor(url):
     """Add a stat visitor specified using a URL string
@@ -191,9 +210,29 @@ def addStatVisitor(url):
     try:
         factory = factories[parsed.scheme]
     except KeyError:
-        fatal("Illegal stat file type specified.")
+        fatal("Illegal stat file type '%s' specified." % parsed.scheme)
+
+    if factory is None:
+        fatal("Stat type '%s' disabled at compile time" % parsed.scheme)
 
     outputList.append(factory(parsed))
+
+def printStatVisitorTypes():
+    """List available stat visitors and their documentation"""
+
+    import inspect
+
+    def print_doc(doc):
+        for line in doc.splitlines():
+            print("| %s" % line)
+        print()
+
+    enabled_visitors = [ x for x in all_factories if x[2] ]
+    for factory, schemes, _ in enabled_visitors:
+        print("%s:" % ", ".join(filter(lambda x: x is not None, schemes)))
+
+        # Try to extract the factory doc string
+        print_doc(inspect.getdoc(factory))
 
 def initSimStats():
     _m5.stats.initSimStats()
