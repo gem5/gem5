@@ -77,9 +77,6 @@ SectorTags::tagsInit()
         // Locate next cache sector
         SectorBlk* sec_blk = &secBlks[sec_blk_index];
 
-        // Link block to indexing policy
-        indexingPolicy->setEntry(sec_blk, sec_blk_index);
-
         // Associate a replacement data entry to the sector
         sec_blk->replacementData = replacementPolicy->instantiateEntry();
 
@@ -107,6 +104,9 @@ SectorTags::tagsInit()
             // Update block index
             ++blk_index;
         }
+
+        // Link block to indexing policy
+        indexingPolicy->setEntry(sec_blk, sec_blk_index);
     }
 }
 

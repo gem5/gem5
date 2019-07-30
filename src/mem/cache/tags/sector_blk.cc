@@ -167,3 +167,12 @@ SectorBlk::setSecure()
 {
     _secureBit = true;
 }
+
+void
+SectorBlk::setPosition(const uint32_t set, const uint32_t way)
+{
+    ReplaceableEntry::setPosition(set, way);
+    for (auto& blk : blks) {
+        blk->setPosition(set, way);
+    }
+}

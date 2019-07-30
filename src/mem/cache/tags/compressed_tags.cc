@@ -67,9 +67,6 @@ CompressedTags::tagsInit()
         // allocation conditions
         superblock->setBlkSize(blkSize);
 
-        // Link block to indexing policy
-        indexingPolicy->setEntry(superblock, superblock_index);
-
         // Associate a replacement data entry to the block
         superblock->replacementData = replacementPolicy->instantiateEntry();
 
@@ -97,6 +94,9 @@ CompressedTags::tagsInit()
             // Update block index
             ++blk_index;
         }
+
+        // Link block to indexing policy
+        indexingPolicy->setEntry(superblock, superblock_index);
     }
 }
 

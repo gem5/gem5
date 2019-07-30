@@ -76,7 +76,9 @@ class ReplaceableEntry
      * @param set The set of this entry.
      * @param way The way of this entry.
      */
-    void setPosition(const uint32_t set, const uint32_t way) {
+    virtual void
+    setPosition(const uint32_t set, const uint32_t way)
+    {
         _set = set;
         _way = way;
     }
