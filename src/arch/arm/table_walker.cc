@@ -457,6 +457,7 @@ TableWalker::processWalk()
 
     // If translation isn't enabled, we shouldn't be here
     assert(currState->sctlr.m || isStage2);
+    const bool is_atomic = currState->req->isAtomic();
 
     DPRINTF(TLB, "Beginning table walk for address %#x, TTBCR: %#x, bits:%#x\n",
             currState->vaddr_tainted, currState->ttbcr, mbits(currState->vaddr, 31,
@@ -478,7 +479,8 @@ TableWalker::processWalk()
             else
                 return std::make_shared<DataAbort>(
                     currState->vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess, currState->isWrite,
+                    TlbEntry::DomainType::NoAccess,
+                    is_atomic ? false : currState->isWrite,
                     ArmFault::TranslationLL + L1, isStage2,
                     ArmFault::VmsaTran);
         }
@@ -497,7 +499,8 @@ TableWalker::processWalk()
             else
                 return std::make_shared<DataAbort>(
                     currState->vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess, currState->isWrite,
+                    TlbEntry::DomainType::NoAccess,
+                    is_atomic ? false : currState->isWrite,
                     ArmFault::TranslationLL + L1, isStage2,
                     ArmFault::VmsaTran);
         }
@@ -591,6 +594,8 @@ TableWalker::processWalkLPAE()
         else
             ttbr1_min = (1ULL << (32 - currState->ttbcr.t0sz));
 
+        const bool is_atomic = currState->req->isAtomic();
+
         // The following code snippet selects the appropriate translation table base
         // address (TTBR0 or TTBR1) and the appropriate starting lookup level
         // depending on the address range supported by the translation table (ARM
@@ -609,7 +614,7 @@ TableWalker::processWalkLPAE()
                     return std::make_shared<DataAbort>(
                         currState->vaddr_tainted,
                         TlbEntry::DomainType::NoAccess,
-                        currState->isWrite,
+                        is_atomic ? false : currState->isWrite,
                         ArmFault::TranslationLL + L1,
                         isStage2,
                         ArmFault::LpaeTran);
@@ -633,7 +638,7 @@ TableWalker::processWalkLPAE()
                     return std::make_shared<DataAbort>(
                         currState->vaddr_tainted,
                         TlbEntry::DomainType::NoAccess,
-                        currState->isWrite,
+                        is_atomic ? false : currState->isWrite,
                         ArmFault::TranslationLL + L1,
                         isStage2,
                         ArmFault::LpaeTran);
@@ -655,7 +660,8 @@ TableWalker::processWalkLPAE()
                 return std::make_shared<DataAbort>(
                     currState->vaddr_tainted,
                     TlbEntry::DomainType::NoAccess,
-                    currState->isWrite, ArmFault::TranslationLL + L1,
+                    is_atomic ? false : currState->isWrite,
+                    ArmFault::TranslationLL + L1,
                     isStage2, ArmFault::LpaeTran);
         }
 
@@ -849,6 +855,8 @@ TableWalker::processWalkAArch64()
         break;
     }
 
+    const bool is_atomic = currState->req->isAtomic();
+
     if (fault) {
         Fault f;
         if (currState->isFetch)
@@ -860,7 +868,7 @@ TableWalker::processWalkAArch64()
             f = std::make_shared<DataAbort>(
                 currState->vaddr_tainted,
                 TlbEntry::DomainType::NoAccess,
-                currState->isWrite,
+                is_atomic ? false : currState->isWrite,
                 ArmFault::TranslationLL + L0,
                 isStage2, ArmFault::LpaeTran);
 
@@ -946,7 +954,7 @@ TableWalker::processWalkAArch64()
             f = std::make_shared<DataAbort>(
                 currState->vaddr_tainted,
                 TlbEntry::DomainType::NoAccess,
-                currState->isWrite,
+                is_atomic ? false : currState->isWrite,
                 ArmFault::AddressSizeLL + start_lookup_level,
                 isStage2,
                 ArmFault::LpaeTran);
@@ -1458,6 +1466,8 @@ TableWalker::doL1Descriptor()
             currState->vaddr_tainted, currState->l1Desc.data);
     TlbEntry te;
 
+    const bool is_atomic = currState->req->isAtomic();
+
     switch (currState->l1Desc.type()) {
       case L1Descriptor::Ignore:
       case L1Descriptor::Reserved:
@@ -1478,7 +1488,7 @@ TableWalker::doL1Descriptor()
                 std::make_shared<DataAbort>(
                     currState->vaddr_tainted,
                     TlbEntry::DomainType::NoAccess,
-                    currState->isWrite,
+                    is_atomic ? false : currState->isWrite,
                     ArmFault::TranslationLL + L1, isStage2,
                     ArmFault::VmsaTran);
         return;
@@ -1492,7 +1502,7 @@ TableWalker::doL1Descriptor()
             currState->fault = std::make_shared<DataAbort>(
                 currState->vaddr_tainted,
                 currState->l1Desc.domain(),
-                currState->isWrite,
+                is_atomic ? false : currState->isWrite,
                 ArmFault::AccessFlagLL + L1,
                 isStage2,
                 ArmFault::VmsaTran);
@@ -1555,7 +1565,7 @@ TableWalker::generateLongDescFault(ArmFault::FaultSource src)
         return std::make_shared<DataAbort>(
             currState->vaddr_tainted,
             TlbEntry::DomainType::NoAccess,
-            currState->isWrite,
+            currState->req->isAtomic() ? false : currState->isWrite,
             src + currState->longDesc.lookupLevel,
             isStage2,
             ArmFault::LpaeTran);
@@ -1599,16 +1609,15 @@ TableWalker::doLongDescriptor()
 
     switch (currState->longDesc.type()) {
       case LongDescriptor::Invalid:
-        if (!currState->timing) {
-            currState->tc = NULL;
-            currState->req = NULL;
-        }
-
         DPRINTF(TLB, "L%d descriptor Invalid, causing fault type %d\n",
                 currState->longDesc.lookupLevel,
                 ArmFault::TranslationLL + currState->longDesc.lookupLevel);
 
         currState->fault = generateLongDescFault(ArmFault::TranslationLL);
+        if (!currState->timing) {
+            currState->tc = NULL;
+            currState->req = NULL;
+        }
         return;
 
       case LongDescriptor::Block:
@@ -1735,6 +1744,8 @@ TableWalker::doL2Descriptor()
             currState->vaddr_tainted, currState->l2Desc.data);
     TlbEntry te;
 
+    const bool is_atomic = currState->req->isAtomic();
+
     if (currState->l2Desc.invalid()) {
         DPRINTF(TLB, "L2 descriptor invalid, causing fault\n");
         if (!currState->timing) {
@@ -1750,7 +1761,8 @@ TableWalker::doL2Descriptor()
         else
             currState->fault = std::make_shared<DataAbort>(
                 currState->vaddr_tainted, currState->l1Desc.domain(),
-                currState->isWrite, ArmFault::TranslationLL + L2,
+                is_atomic ? false : currState->isWrite,
+                ArmFault::TranslationLL + L2,
                 isStage2,
                 ArmFault::VmsaTran);
         return;
@@ -1765,7 +1777,8 @@ TableWalker::doL2Descriptor()
 
         currState->fault = std::make_shared<DataAbort>(
             currState->vaddr_tainted,
-            TlbEntry::DomainType::NoAccess, currState->isWrite,
+            TlbEntry::DomainType::NoAccess,
+            is_atomic ? false : currState->isWrite,
             ArmFault::AccessFlagLL + L2, isStage2,
             ArmFault::VmsaTran);
     }
