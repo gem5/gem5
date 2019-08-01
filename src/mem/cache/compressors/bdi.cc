@@ -166,7 +166,7 @@ BDI::BDICompDataBaseDelta<TB, TD>::calculateCompressedSize()
     std::size_t size = encodingBits;
 
     // Number of bits used by BitMask
-    size += bitMask.size()*std::ceil(std::log2(bases.size()));
+    size += bitMask.size()*std::ceil(std::log2(maxNumBases));
 
     // Number of bits used by Bases. bases[0] is implicit in a hardware
     // implementation, therefore its size is 0
