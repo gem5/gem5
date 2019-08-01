@@ -321,7 +321,8 @@ class DownloadedArchive(DownloadedProgram):
                 t = self._getremotetime()
             except urllib2.URLError:
                 # Problem checking the server, use the old files.
-                log.test_log.debug("Could not contact server. Binaries may be old.")
+                log.test_log.debug("Could not contact server. "
+                                   "Binaries may be old.")
                 return
             # If the server version is more recent, download it
             if t > os.path.getmtime(self.filename):
