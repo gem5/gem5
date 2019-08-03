@@ -63,12 +63,15 @@ class ReplaceableEntry
      */
     uint32_t _way;
 
-   public:
-     /**
-      * Replacement data associated to this entry.
-      * It must be instantiated by the replacement policy before being used.
-      */
-     std::shared_ptr<ReplacementData> replacementData;
+  public:
+    ReplaceableEntry() = default;
+    virtual ~ReplaceableEntry() = default;
+
+    /**
+     * Replacement data associated to this entry.
+     * It must be instantiated by the replacement policy before being used.
+     */
+    std::shared_ptr<ReplacementData> replacementData;
 
     /**
      * Set both the set and way. Should be called only once.
