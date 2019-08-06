@@ -2533,6 +2533,9 @@ class Distribution : public DistBase<Distribution, DistStor>
         params->min = min;
         params->max = max;
         params->bucket_size = bkt;
+        // Division by zero is especially serious in an Aarch64 host,
+        // where it gets rounded to allocate 32GiB RAM.
+        assert(bkt > 0);
         params->buckets = (size_type)ceil((max - min + 1.0) / bkt);
         this->setParams(params);
         this->doInit();
