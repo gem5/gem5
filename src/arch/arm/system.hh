@@ -130,6 +130,11 @@ class ArmSystem : public System
     /** SVE vector length at reset, in quadwords */
     const unsigned _sveVL;
 
+    /**
+     * True if LSE is implemented (ARMv8.1)
+     */
+    const bool _haveLSE;
+
     /** True if Priviledge Access Never is implemented */
     const unsigned _havePAN;
 
@@ -243,6 +248,9 @@ class ArmSystem : public System
 
     /** Returns the SVE vector length at reset, in quadwords */
     unsigned sveVL() const { return _sveVL; }
+
+    /** Returns true if LSE is implemented (ARMv8.1) */
+    bool haveLSE() const { return _haveLSE; }
 
     /** Returns true if Priviledge Access Never is implemented */
     bool havePAN() const { return _havePAN; }

@@ -73,6 +73,7 @@ ArmSystem::ArmSystem(Params *p)
       _haveLargeAsid64(p->have_large_asid_64),
       _haveSVE(p->have_sve),
       _sveVL(p->sve_vl),
+      _haveLSE(p->have_lse),
       _havePAN(p->have_pan),
       _m5opRange(p->m5ops_base ?
                  RangeSize(p->m5ops_base, 0x10000) :

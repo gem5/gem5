@@ -93,6 +93,7 @@ ISA::ISA(Params *p)
         haveSVE = system->haveSVE();
         havePAN = system->havePAN();
         sveVL = system->sveVL();
+        haveLSE = system->haveLSE();
     } else {
         highestELIs64 = true; // ArmSystem::highestELIs64 does the same
         haveSecurity = haveLPAE = haveVirtualization = false;
@@ -102,6 +103,7 @@ ISA::ISA(Params *p)
         haveSVE = true;
         havePAN = false;
         sveVL = p->sve_vl_se;
+        haveLSE = true;
     }
 
     // Initial rename mode depends on highestEL
@@ -393,6 +395,10 @@ ISA::initID64(const ArmISAParams *p)
     miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64ISAR0_EL1], 19, 4,
         haveCrypto ? 0x1112 : 0x0);
+    // LSE
+    miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64ISAR0_EL1], 23, 20,
+        haveLSE ? 0x2 : 0x0);
     // PAN
     miscRegs[MISCREG_ID_AA64MMFR1_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64MMFR1_EL1], 23, 20,

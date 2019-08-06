@@ -95,6 +95,7 @@ namespace ArmISA
         bool haveGICv3CPUInterface;
         uint8_t physAddrRange;
         bool haveSVE;
+        bool haveLSE;
         bool havePAN;
 
         /** SVE vector length in quadwords */
@@ -687,6 +688,7 @@ namespace ArmISA
             SERIALIZE_SCALAR(physAddrRange);
             SERIALIZE_SCALAR(haveSVE);
             SERIALIZE_SCALAR(sveVL);
+            SERIALIZE_SCALAR(haveLSE);
             SERIALIZE_SCALAR(havePAN);
         }
         void unserialize(CheckpointIn &cp)
@@ -704,6 +706,7 @@ namespace ArmISA
             UNSERIALIZE_SCALAR(physAddrRange);
             UNSERIALIZE_SCALAR(haveSVE);
             UNSERIALIZE_SCALAR(sveVL);
+            UNSERIALIZE_SCALAR(haveLSE);
             UNSERIALIZE_SCALAR(havePAN);
         }
 
