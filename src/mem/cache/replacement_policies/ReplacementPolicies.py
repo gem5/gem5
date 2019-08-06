@@ -34,6 +34,20 @@ class BaseReplacementPolicy(SimObject):
     cxx_class = 'replacement_policy::Base'
     cxx_header = "mem/cache/replacement_policies/base.hh"
 
+class DuelingRP(BaseReplacementPolicy):
+    type = 'DuelingRP'
+    cxx_class = 'replacement_policy::Dueling'
+    cxx_header = "mem/cache/replacement_policies/dueling_rp.hh"
+
+    constituency_size = Param.Unsigned(
+        "The size of a region containing one sample")
+    team_size = Param.Unsigned(
+        "Number of entries in a sampling set that belong to a team")
+    replacement_policy_a = Param.BaseReplacementPolicy(
+        "Sub-replacement policy A")
+    replacement_policy_b = Param.BaseReplacementPolicy(
+        "Sub-replacement policy B")
+
 class FIFORP(BaseReplacementPolicy):
     type = 'FIFORP'
     cxx_class = 'replacement_policy::FIFO'
