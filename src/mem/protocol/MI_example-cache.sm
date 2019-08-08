@@ -254,9 +254,12 @@ machine(MachineType:L1Cache, "MI Example L1 Cache")
         if (is_invalid(cache_entry) &&
             cacheMemory.cacheAvail(in_msg.LineAddress) == false ) {
           // make room for the block
-          trigger(Event:Replacement, cacheMemory.cacheProbe(in_msg.LineAddress),
-                  getCacheEntry(cacheMemory.cacheProbe(in_msg.LineAddress)),
-                  TBEs[cacheMemory.cacheProbe(in_msg.LineAddress)]);
+          // Check if the line we want to evict is not locked
+          Addr addr := cacheMemory.cacheProbe(in_msg.LineAddress);
+          check_on_cache_probe(mandatoryQueue_in, addr);
+          trigger(Event:Replacement, addr,
+                  getCacheEntry(addr),
+                  TBEs[addr]);
         }
         else {
           trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
