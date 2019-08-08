@@ -192,7 +192,7 @@ class Gicv3(BaseGic):
     cxx_header = "dev/arm/gic_v3.hh"
 
     # Used for DTB autogeneration
-    _state = FdtState(addr_cells=2, interrupt_cells=3)
+    _state = FdtState(addr_cells=2, size_cells=2, interrupt_cells=3)
 
     its = Param.Gicv3Its(Gicv3Its(), "GICv3 Interrupt Translation Service")
 
@@ -214,3 +214,39 @@ class Gicv3(BaseGic):
         "redistributors")
 
     gicv4 = Param.Bool(True, "GICv4 extension available")
+
+    def interruptCells(self, int_type, int_num, int_flag):
+        """
+        Interupt cells generation helper:
+        Following specifications described in
+
+        Documentation/devicetree/bindings/interrupt-controller/arm,gic-v3.txt
+        """
+        prop = self._state.interruptCells(0)
+        assert len(prop) >= 3
+        prop[0] = int_type
+        prop[1] = int_num
+        prop[2] = int_flag
+        return prop
+
+    def generateDeviceTree(self, state):
+        node = FdtNode("interrupt-controller")
+        node.appendCompatible(["arm,gic-v3"])
+        node.append(self._state.interruptCellsProperty())
+        node.append(self._state.addrCellsProperty())
+        node.append(self._state.sizeCellsProperty())
+        node.append(FdtProperty("interrupt-controller"))
+
+        regs = (
+            state.addrCells(self.dist_addr) +
+            state.sizeCells(0x10000) +
+            state.addrCells(self.redist_addr) +
+            state.sizeCells(0x2000000) )
+
+        node.append(FdtPropertyWords("reg", regs))
+        node.append(FdtPropertyWords("interrupts",
+            self.interruptCells(1, int(self.maint_int.num)-16, 0xf04)))
+
+        node.appendPhandle(self)
+
+        yield node
