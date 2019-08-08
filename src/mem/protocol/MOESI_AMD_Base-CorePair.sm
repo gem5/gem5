@@ -543,7 +543,9 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
                           tbe);
                 }
               } else {
+                // Check if the line we want to evict is not locked
                 Addr victim := L1Icache.cacheProbe(in_msg.LineAddress);
+                check_on_cache_probe(mandatoryQueue_in, victim);
                 trigger(Event:L1I_Repl, victim,
                         getCacheEntry(victim), TBEs.lookup(victim));
               }
@@ -582,7 +584,9 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
                             cache_entry, tbe);
                   }
                 } else {
+                  // Check if the line we want to evict is not locked
                   Addr victim := L1D1cache.cacheProbe(in_msg.LineAddress);
+                  check_on_cache_probe(mandatoryQueue_in, victim);
                   trigger(Event:L1D1_Repl, victim,
                           getCacheEntry(victim), TBEs.lookup(victim));
                 }
@@ -618,7 +622,9 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
                             cache_entry, tbe);
                   }
                 } else {
+                  // Check if the line we want to evict is not locked
                   Addr victim := L1D0cache.cacheProbe(in_msg.LineAddress);
+                  check_on_cache_probe(mandatoryQueue_in, victim);
                   trigger(Event:L1D0_Repl, victim, getCacheEntry(victim),
                           TBEs.lookup(victim));
                 }
