@@ -245,13 +245,7 @@ class BaseCPU(ClockedObject):
         elif buildEnv['TARGET_ISA'] == 'alpha':
             self.interrupts = [AlphaInterrupts() for i in range(self.numThreads)]
         elif buildEnv['TARGET_ISA'] == 'x86':
-            self.apic_clk_domain = DerivedClockDomain(clk_domain =
-                                                      Parent.clk_domain,
-                                                      clk_divider = 16)
-            self.interrupts = [X86LocalApic(clk_domain = self.apic_clk_domain,
-                                           pio_addr=0x2000000000000000)
-                               for i in range(self.numThreads)]
-            _localApic = self.interrupts
+            self.interrupts = [X86LocalApic() for i in range(self.numThreads)]
         elif buildEnv['TARGET_ISA'] == 'mips':
             self.interrupts = [MipsInterrupts() for i in range(self.numThreads)]
         elif buildEnv['TARGET_ISA'] == 'arm':
