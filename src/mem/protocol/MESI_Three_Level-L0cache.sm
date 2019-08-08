@@ -324,9 +324,12 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
                       Icache_entry, TBEs[in_msg.LineAddress]);
             } else {
               // No room in the L0, so we need to make room in the L0
-              trigger(Event:L0_Replacement, Icache.cacheProbe(in_msg.LineAddress),
-                      getICacheEntry(Icache.cacheProbe(in_msg.LineAddress)),
-                      TBEs[Icache.cacheProbe(in_msg.LineAddress)]);
+              // Check if the line we want to evict is not locked
+              Addr addr := Icache.cacheProbe(in_msg.LineAddress);
+              check_on_cache_probe(mandatoryQueue_in, addr);
+              trigger(Event:L0_Replacement, addr,
+                      getICacheEntry(addr),
+                      TBEs[addr]);
             }
           }
         } else {
@@ -354,9 +357,12 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
                       Dcache_entry, TBEs[in_msg.LineAddress]);
             } else {
               // No room in the L1, so we need to make room in the L0
-              trigger(Event:L0_Replacement, Dcache.cacheProbe(in_msg.LineAddress),
-                      getDCacheEntry(Dcache.cacheProbe(in_msg.LineAddress)),
-                      TBEs[Dcache.cacheProbe(in_msg.LineAddress)]);
+              // Check if the line we want to evict is not locked
+              Addr addr := Dcache.cacheProbe(in_msg.LineAddress);
+              check_on_cache_probe(mandatoryQueue_in, addr);
+              trigger(Event:L0_Replacement, addr,
+                      getDCacheEntry(addr),
+                      TBEs[addr]);
             }
           }
         }
