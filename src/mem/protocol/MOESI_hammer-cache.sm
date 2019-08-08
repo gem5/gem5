@@ -468,7 +468,9 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
               }
             } else {
               // No room in the L1, so we need to make room
+              // Check if the line we want to evict is not locked
               Addr l1i_victim_addr := L1Icache.cacheProbe(in_msg.LineAddress);
+              check_on_cache_probe(mandatoryQueue_in, l1i_victim_addr);
               if (L2cache.cacheAvail(l1i_victim_addr)) {
                 // The L2 has room, so we move the line from the L1 to the L2
                 trigger(Event:L1_to_L2,
@@ -525,7 +527,9 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
               }
             } else {
               // No room in the L1, so we need to make room
+              // Check if the line we want to evict is not locked
               Addr l1d_victim_addr := L1Dcache.cacheProbe(in_msg.LineAddress);
+              check_on_cache_probe(mandatoryQueue_in, l1i_victim_addr);
               if (L2cache.cacheAvail(l1d_victim_addr)) {
                 // The L2 has room, so we move the line from the L1 to the L2
                 trigger(Event:L1_to_L2,
