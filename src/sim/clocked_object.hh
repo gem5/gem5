@@ -144,12 +144,23 @@ class Clocked
         tick = elapsedCycles * clockPeriod();
     }
 
+    /**
+     * A hook subclasses can implement so they can do any extra work that's
+     * needed when the clock rate is changed.
+     */
+    virtual void clockPeriodUpdated() {}
+
   public:
 
     /**
      * Update the tick to the current tick.
      */
-    void updateClockPeriod() const { update(); }
+    void
+    updateClockPeriod()
+    {
+        update();
+        clockPeriodUpdated();
+    }
 
     /**
      * Determine the tick when a cycle begins, by default the current one, but
