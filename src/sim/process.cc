@@ -529,8 +529,6 @@ Process::absolutePath(const std::string &filename, bool host_filesystem)
 Process *
 ProcessParams::create()
 {
-    Process *process = nullptr;
-
     // If not specified, set the executable parameter equal to the
     // simulated system's zeroth command line parameter
     if (executable == "") {
@@ -538,9 +536,9 @@ ProcessParams::create()
     }
 
     ObjectFile *obj_file = createObjectFile(executable);
-    fatal_if(!obj_file, "Can't load object file %s", executable);
+    fatal_if(!obj_file, "Cannot load object file %s.", executable);
 
-    process = ObjectFile::tryLoaders(this, obj_file);
+    Process *process = ObjectFile::tryLoaders(this, obj_file);
     fatal_if(!process, "Unknown error creating process object.");
 
     return process;
