@@ -99,7 +99,7 @@ class EmulationPageTable : public Serializable
     // flag which marks the page table as shared among software threads
     bool shared;
 
-    virtual void initState(ThreadContext* tc) {};
+    virtual void initState() {};
 
     // for DPRINTF compatibility
     const std::string name() const { return _name; }

@@ -202,7 +202,7 @@ public:
     ~MultiLevelPageTable() {}
 
     void
-    initState(ThreadContext* tc) override
+    initState() override
     {
         if (shared)
             return;

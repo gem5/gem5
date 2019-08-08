@@ -282,7 +282,7 @@ Process::initState()
     // mark this context as active so it will start ticking.
     tc->activate();
 
-    pTable->initState(tc);
+    pTable->initState();
 }
 
 DrainState
