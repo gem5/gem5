@@ -48,6 +48,9 @@ class BaseGic(PioDevice):
     abstract = True
     cxx_header = "dev/arm/base_gic.hh"
 
+    # Used for DTB autogeneration
+    _state = FdtState(addr_cells=0, interrupt_cells=3)
+
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
 
     gicd_iidr = Param.UInt32(0,
@@ -58,6 +61,16 @@ class BaseGic(PioDevice):
         "CPU Interface Identification Register")
     gicv_iidr = Param.UInt32(0,
         "VM CPU Interface Identification Register")
+
+    def interruptCells(self, int_type, int_num, int_flag):
+        """
+        Interupt cells generation helper:
+        Following specifications described in
+
+        Documentation/devicetree/bindings/interrupt-controller/arm,gic.txt
+        """
+        assert self._state.interrupt_cells == 3
+        return [ int_type, int_num, int_flag ]
 
 class ArmInterruptPin(SimObject):
     type = 'ArmInterruptPin'
@@ -140,8 +153,8 @@ class VGic(PioDevice):
         node = FdtNode("interrupt-controller")
         node.appendCompatible(["gem5,gic", "arm,cortex-a15-gic",
                                "arm,cortex-a9-gic"])
-        node.append(FdtPropertyWords("#interrupt-cells", [3]))
-        node.append(FdtPropertyWords("#address-cells", [0]))
+        node.append(gic._state.interruptCellsProperty())
+        node.append(gic._state.addrCellsProperty())
         node.append(FdtProperty("interrupt-controller"))
 
         regs = (
@@ -177,6 +190,9 @@ class Gicv3Its(BasicPioDevice):
 class Gicv3(BaseGic):
     type = 'Gicv3'
     cxx_header = "dev/arm/gic_v3.hh"
+
+    # Used for DTB autogeneration
+    _state = FdtState(addr_cells=2, interrupt_cells=3)
 
     its = Param.Gicv3Its(Gicv3Its(), "GICv3 Interrupt Translation Service")
 
