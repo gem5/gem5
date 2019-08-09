@@ -1001,7 +1001,7 @@ setpgidFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         return -EINVAL;
 
     if (pid == 0) {
-        process->setpgid(process->pid());
+        process->pgid(process->pid());
         return 0;
     }
 
@@ -1020,7 +1020,7 @@ setpgidFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     }
 
     assert(matched_ph);
-    matched_ph->setpgid((pgid == 0) ? matched_ph->pid() : pgid);
+    matched_ph->pgid((pgid == 0) ? matched_ph->pid() : pgid);
 
     return 0;
 }

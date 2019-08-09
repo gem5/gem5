@@ -87,8 +87,8 @@ class Process : public SimObject
     inline uint64_t pid() { return _pid; }
     inline uint64_t ppid() { return _ppid; }
     inline uint64_t pgid() { return _pgid; }
+    inline void pgid(uint64_t pgid) { _pgid = pgid; }
     inline uint64_t tgid() { return _tgid; }
-    inline void setpgid(uint64_t pgid) { _pgid = pgid; }
 
     const char *progName() const { return executable.c_str(); }
 
