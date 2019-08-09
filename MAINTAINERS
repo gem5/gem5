@@ -88,6 +88,11 @@ sim-power: Power modeling
 
 stats: Updates to statistics for regressions
 
+system: System boot code and related components
+system-alpha:
+system-arm:
+  Andreas Sandberg <andreas.sandberg@arm.com>
+
 tests: testing changes (not stats updates for tests. See stats:)
   Andreas Sandberg <andreas.sandberg@arm.com>
 
