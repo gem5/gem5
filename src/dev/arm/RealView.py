@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2018 ARM Limited
+# Copyright (c) 2009-2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -126,8 +126,9 @@ class GenericArmPciHost(GenericPciHost):
     _dma_coherent = True
 
     def generateDeviceTree(self, state):
-        local_state = FdtState(addr_cells=3, size_cells=2, cpu_cells=1)
-        intterrupt_cells = 1
+        local_state = FdtState(
+            addr_cells=3, size_cells=2,
+            cpu_cells=1, interrupt_cells=1)
 
         node = FdtNode("pci")
 
@@ -143,7 +144,7 @@ class GenericArmPciHost(GenericPciHost):
         # Cell sizes of child nodes/peripherals
         node.append(local_state.addrCellsProperty())
         node.append(local_state.sizeCellsProperty())
-        node.append(FdtPropertyWords("#interrupt-cells", intterrupt_cells))
+        node.append(local_state.interruptCellsProperty())
         # PCI address for CPU
         node.append(FdtPropertyWords("reg",
             state.addrCells(self.conf_base) +
@@ -167,12 +168,24 @@ class GenericArmPciHost(GenericPciHost):
         node.append(FdtPropertyWords("ranges", ranges))
 
         if str(self.int_policy) == 'ARM_PCI_INT_DEV':
-            int_phandle = state.phandle(self._parent.unproxy(self).gic)
+            gic = self._parent.unproxy(self).gic
+            int_phandle = state.phandle(gic)
             # Interrupt mapping
             interrupts = []
+
+            # child interrupt specifier
+            child_interrupt = local_state.interruptCells(0x0)
+
+            # parent unit address
+            parent_addr = gic._state.addrCells(0x0)
+
             for i in range(int(self.int_count)):
+                parent_interrupt = gic.interruptCells(0,
+                    int(self.int_base) - 32 + i, 1)
+
                 interrupts += self.pciFdtAddr(device=i, addr=0) + \
-                    [0x0, int_phandle, 0, int(self.int_base) - 32 + i, 1]
+                    child_interrupt + [int_phandle] + parent_addr + \
+                    parent_interrupt
 
             node.append(FdtPropertyWords("interrupt-map", interrupts))
 
