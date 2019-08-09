@@ -31,24 +31,19 @@ DTC?=dtc
 
 DTC_CPP_FLAGS=-nostdinc -undef
 
+# $(1) is the prefix of DTB files
+NUM_CPUS := 1 2 4 8 16
+CREATE_TARGET=$(foreach n, $(NUM_CPUS), $(1)_$(n)cpu.dtb)
+
+TARGET_PREFIX=\
+	armv7_gem5_v1 \
+	armv8_gem5_v1 \
+	armv8_gem5_v2
+
 TARGETS=\
-	armv7_gem5_v1_1cpu.dtb \
-	armv7_gem5_v1_2cpu.dtb \
-	armv7_gem5_v1_4cpu.dtb \
-	armv7_gem5_v1_8cpu.dtb \
-	armv7_gem5_v1_16cpu.dtb \
-	armv8_gem5_v1_1cpu.dtb \
-	armv8_gem5_v1_2cpu.dtb \
-	armv8_gem5_v1_4cpu.dtb \
-	armv8_gem5_v1_8cpu.dtb \
-	armv8_gem5_v1_16cpu.dtb \
+	$(foreach prefix, $(TARGET_PREFIX), $(call CREATE_TARGET, $(prefix))) \
 	armv8_gem5_v1_big_little_2_2.dtb \
-	armv8_gem5_v1_big_little_2_4.dtb \
-	armv8_gem5_v2_1cpu.dtb \
-	armv8_gem5_v2_2cpu.dtb \
-	armv8_gem5_v2_4cpu.dtb \
-	armv8_gem5_v2_8cpu.dtb \
-	armv8_gem5_v2_16cpu.dtb
+	armv8_gem5_v1_big_little_2_4.dtb
 
 VEXPRESS_GEM5_V1_DTSIS=\
 	platforms/vexpress_gem5_v1.dtsi \
