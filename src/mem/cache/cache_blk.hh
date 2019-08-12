@@ -274,6 +274,7 @@ class CacheBlk : public ReplaceableEntry
      */
     Tick getWhenReady() const
     {
+        assert(whenReady != MaxTick);
         return whenReady;
     }
 

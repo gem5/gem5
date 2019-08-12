@@ -1094,6 +1094,11 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         }
     }
 
+    // The critical latency part of a write depends only on the tag access
+    if (pkt->isWrite()) {
+        lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
+    }
+
     // Writeback handling is special case.  We can write the block into
     // the cache without having a writeable copy (or any copy at all).
     if (pkt->isWriteback()) {
@@ -1113,8 +1118,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             // and we just had to wait for the time to find a match in the
             // MSHR. As of now assume a mshr queue search takes as long as
             // a tag lookup for simplicity.
-            lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
-
             return true;
         }
 
@@ -1124,11 +1127,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             if (!blk) {
                 // no replaceable block available: give up, fwd to next level.
                 incMissCount(pkt);
-
-                // A writeback searches for the block, then writes the data.
-                // As the block could not be found, it was a tag-only access.
-                lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
-
                 return false;
             }
 
@@ -1140,14 +1138,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             // If that is the case we might need to evict blocks.
             if (!updateCompressionData(blk, pkt->getConstPtr<uint64_t>(),
                 writebacks)) {
-                // This is a failed data expansion (write), which happened
-                // after finding the replacement entries and accessing the
-                // block's data. There were no replaceable entries available
-                // to make room for the expanded block, and since it does not
-                // fit anymore and it has been properly updated to contain
-                // the new data, forward it to the next level
-                lat = calculateAccessLatency(blk, pkt->headerDelay,
-                                             tag_latency);
                 invalidateBlock(blk);
                 return false;
             }
@@ -1170,9 +1160,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         pkt->writeDataToBlock(blk->data, blkSize);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
-
-        // A writeback searches for the block, then writes the data
-        lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
 
         // When the packet metadata arrives, the tag lookup will be done while
         // the payload is arriving. Then the block will be ready to access as
@@ -1206,10 +1193,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         if (!blk) {
             if (pkt->writeThrough()) {
-                // A writeback searches for the block, then writes the data.
-                // As the block could not be found, it was a tag-only access.
-                lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
-
                 // if this is a write through packet, we don't try to
                 // allocate if the block is not present
                 return false;
@@ -1220,13 +1203,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                     // no replaceable block available: give up, fwd to
                     // next level.
                     incMissCount(pkt);
-
-                    // A writeback searches for the block, then writes the
-                    // data. As the block could not be found, it was a tag-only
-                    // access.
-                    lat = calculateTagOnlyLatency(pkt->headerDelay,
-                                                  tag_latency);
-
                     return false;
                 }
 
@@ -1239,14 +1215,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             // If that is the case we might need to evict blocks.
             if (!updateCompressionData(blk, pkt->getConstPtr<uint64_t>(),
                 writebacks)) {
-                // This is a failed data expansion (write), which happened
-                // after finding the replacement entries and accessing the
-                // block's data. There were no replaceable entries available
-                // to make room for the expanded block, and since it does not
-                // fit anymore and it has been properly updated to contain
-                // the new data, forward it to the next level
-                lat = calculateAccessLatency(blk, pkt->headerDelay,
-                                             tag_latency);
                 invalidateBlock(blk);
                 return false;
             }
@@ -1267,9 +1235,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         incHitCount(pkt);
 
-        // A writeback searches for the block, then writes the data
-        lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
-
         // When the packet metadata arrives, the tag lookup will be done while
         // the payload is arriving. Then the block will be ready to access as
         // soon as the fill is done
@@ -1284,12 +1249,12 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         incHitCount(pkt);
 
         // Calculate access latency based on the need to access the data array
-        if (pkt->isRead() || pkt->isWrite()) {
+        if (pkt->isRead()) {
             lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
 
             // When a block is compressed, it must first be decompressed
             // before being read. This adds to the access latency.
-            if (compressor && pkt->isRead()) {
+            if (compressor) {
                 lat += compressor->getDecompressionLatency(blk);
             }
         } else {
