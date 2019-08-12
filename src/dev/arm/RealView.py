@@ -66,6 +66,7 @@ from m5.objects.ClockedObject import ClockedObject
 from m5.objects.PS2 import *
 from m5.objects.VirtIOMMIO import MmioVirtIO
 from m5.objects.Display import Display, Display1080p
+from m5.objects.SMMUv3 import SMMUv3
 
 # Platforms with KVM support should generally use in-kernel GIC
 # emulation. Use a GIC model that automatically switches between
@@ -820,6 +821,8 @@ Memory map:
    0x20000000-0x3fffffff: On-chip peripherals:
        0x2b000000-0x2b00ffff: HDLCD
 
+       0x2b400000-0x2b41ffff: SMMUv3
+
        0x2c001000-0x2c001fff: GIC (distributor)
        0x2c002000-0x2c003fff: GIC (CPU interface)
        0x2c004000-0x2c005fff: vGIC (HV)
@@ -950,6 +953,31 @@ Interrupts:
     def attachPciDevice(self, device, *args, **kwargs):
         device.host = self.pci_host
         self._attach_device(device, *args, **kwargs)
+
+    def attachSmmu(self, devices, bus):
+        """
+        Instantiate a single SMMU and attach a group of client devices to it.
+        The devices' dma port is wired to the SMMU and the SMMU's dma port
+        (master) is attached to the bus. In order to make it work, the list
+        of clients shouldn't contain any device part of the _off_chip_devices
+        or _on_chip_devices.
+        This method should be called only once.
+
+        Parameters:
+            devices (list): List of devices which will be using the SMMU
+            bus (Bus): The bus downstream of the SMMU. Its slave port will
+                       receive memory requests from the SMMU, and its master
+                       port will forward accesses to the memory mapped devices
+        """
+        if hasattr(self, 'smmu'):
+            m5.fatal("A SMMU has already been instantiated\n")
+
+        self.smmu = SMMUv3(reg_map=AddrRange(0x2b400000, size=0x00020000))
+
+        dma_ports = []
+        for dev in devices:
+            self._attach_device(dev, bus, dma_ports)
+            self.smmu.connect(dev, bus)
 
     def setupBootLoader(self, cur_sys, loc):
         if not cur_sys.boot_loader:
