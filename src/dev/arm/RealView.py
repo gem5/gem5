@@ -491,6 +491,7 @@ class HDLcd(AmbaDmaDevice):
     pixel_chunk = Param.Unsigned(32, "Number of pixels to handle in one batch")
     virt_refresh_rate = Param.Frequency("20Hz", "Frame refresh rate "
                                         "in KVM mode")
+    _status = "disabled"
 
     encoder = Param.Display(Display1080p(), "Display encoder")
 
@@ -527,7 +528,7 @@ class HDLcd(AmbaDmaDevice):
         # haven't been standardized yet. To use it,  override this status to
         # "ok" and add the display configuration nodes required by the driver.
         # See the driver for more information.
-        node.append(FdtPropertyStrings("status", ["disabled"]))
+        node.append(FdtPropertyStrings("status", [ self._status ]))
 
         self.addIommuProperty(state, node)
 
