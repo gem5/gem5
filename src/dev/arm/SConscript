@@ -41,6 +41,7 @@ Import('*')
 
 if env['TARGET_ISA'] == 'arm':
     SimObject('AbstractNVM.py')
+    SimObject('Display.py')
     SimObject('FlashDevice.py')
     SimObject('Gic.py')
     SimObject('RealView.py')
@@ -54,6 +55,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('amba_device.cc')
     Source('amba_fake.cc')
     Source('base_gic.cc')
+    Source('display.cc')
     Source('flash_device.cc')
     Source('generic_timer.cc')
     Source('gic_v2.cc')

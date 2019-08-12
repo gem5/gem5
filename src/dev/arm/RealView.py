@@ -65,6 +65,7 @@ from m5.objects.Graphics import ImageFormat
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.PS2 import *
 from m5.objects.VirtIOMMIO import MmioVirtIO
+from m5.objects.Display import Display, Display1080p
 
 # Platforms with KVM support should generally use in-kernel GIC
 # emulation. Use a GIC model that automatically switches between
@@ -491,7 +492,29 @@ class HDLcd(AmbaDmaDevice):
     virt_refresh_rate = Param.Frequency("20Hz", "Frame refresh rate "
                                         "in KVM mode")
 
+    encoder = Param.Display(Display1080p(), "Display encoder")
+
+    def endpointPhandle(self):
+        return "hdlcd_endpoint"
+
     def generateDeviceTree(self, state):
+        endpoint_node = FdtNode("endpoint")
+        endpoint_node.appendPhandle(self.endpointPhandle())
+
+        for encoder_node in self.encoder.generateDeviceTree(state):
+            encoder_endpoint = self.encoder.endpointNode()
+
+            # Endpoint subnode
+            endpoint_node.append(FdtPropertyWords("remote-endpoint",
+                [ state.phandle(self.encoder.endpointPhandle()) ]))
+            encoder_endpoint.append(FdtPropertyWords("remote-endpoint",
+                [ state.phandle(self.endpointPhandle()) ]))
+
+            yield encoder_node
+
+        port_node = FdtNode("port")
+        port_node.append(endpoint_node)
+
         # Interrupt number is hardcoded; it is not a property of this class
         node = self.generateBasicPioDeviceNode(state, 'hdlcd',
                                                self.pio_addr, 0x1000, [63])
@@ -507,6 +530,8 @@ class HDLcd(AmbaDmaDevice):
         node.append(FdtPropertyStrings("status", ["disabled"]))
 
         self.addIommuProperty(state, node)
+
+        node.append(port_node)
 
         yield node
 
