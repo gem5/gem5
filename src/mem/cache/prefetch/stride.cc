@@ -59,7 +59,7 @@
 
 namespace Prefetcher {
 
-Stride::StrideEntry::StrideEntry(const SatCounter& init_confidence)
+Stride::StrideEntry::StrideEntry(const SatCounter8& init_confidence)
   : TaggedEntry(), confidence(init_confidence)
 {
     invalidate();

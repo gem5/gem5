@@ -91,7 +91,7 @@ class Stride : public Queued
 {
   protected:
     /** Initial confidence counter value for the pc tables. */
-    const SatCounter initConfidence;
+    const SatCounter8 initConfidence;
 
     /** Confidence threshold for prefetch generation. */
     const double threshConf;
@@ -124,13 +124,13 @@ class Stride : public Queued
     /** Tagged by hashed PCs. */
     struct StrideEntry : public TaggedEntry
     {
-        StrideEntry(const SatCounter& init_confidence);
+        StrideEntry(const SatCounter8& init_confidence);
 
         void invalidate() override;
 
         Addr lastAddr;
         int stride;
-        SatCounter confidence;
+        SatCounter8 confidence;
     };
     typedef AssociativeSet<StrideEntry> PCTable;
     std::unordered_map<int, PCTable> pcTables;

@@ -47,7 +47,7 @@ class Base : public SimObject
     const unsigned offsetBits;
 
     /** The filter itself. */
-    std::vector<SatCounter> filter;
+    std::vector<SatCounter8> filter;
 
     /** Number of bits needed to represent the size of the filter. */
     const int sizeBits;
@@ -61,7 +61,7 @@ class Base : public SimObject
      */
     Base(const BloomFilterBaseParams &p)
         : SimObject(p), offsetBits(p.offset_bits),
-          filter(p.size, SatCounter(p.num_bits)),
+          filter(p.size, SatCounter8(p.num_bits)),
           sizeBits(floorLog2(p.size)), setThreshold(p.threshold)
     {
         clear();

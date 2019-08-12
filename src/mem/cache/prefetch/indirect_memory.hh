@@ -85,7 +85,7 @@ class IndirectMemory : public Queued
         /** Shift detected */
         int shift;
         /** Confidence counter of the indirect fields */
-        SatCounter indirectCounter;
+        SatCounter8 indirectCounter;
         /**
          * This variable is set to indicate that there has been at least one
          * match with the current index value. This information is later used

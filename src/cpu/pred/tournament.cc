@@ -47,12 +47,12 @@ TournamentBP::TournamentBP(const TournamentBPParams &params)
     : BPredUnit(params),
       localPredictorSize(params.localPredictorSize),
       localCtrBits(params.localCtrBits),
-      localCtrs(localPredictorSize, SatCounter(localCtrBits)),
+      localCtrs(localPredictorSize, SatCounter8(localCtrBits)),
       localHistoryTableSize(params.localHistoryTableSize),
       localHistoryBits(ceilLog2(params.localPredictorSize)),
       globalPredictorSize(params.globalPredictorSize),
       globalCtrBits(params.globalCtrBits),
-      globalCtrs(globalPredictorSize, SatCounter(globalCtrBits)),
+      globalCtrs(globalPredictorSize, SatCounter8(globalCtrBits)),
       globalHistory(params.numThreads, 0),
       globalHistoryBits(
           ceilLog2(params.globalPredictorSize) >
@@ -61,7 +61,7 @@ TournamentBP::TournamentBP(const TournamentBPParams &params)
           ceilLog2(params.choicePredictorSize)),
       choicePredictorSize(params.choicePredictorSize),
       choiceCtrBits(params.choiceCtrBits),
-      choiceCtrs(choicePredictorSize, SatCounter(choiceCtrBits))
+      choiceCtrs(choicePredictorSize, SatCounter8(choiceCtrBits))
 {
     if (!isPowerOf2(localPredictorSize)) {
         fatal("Invalid local predictor size!\n");

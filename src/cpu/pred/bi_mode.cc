@@ -43,9 +43,9 @@ BiModeBP::BiModeBP(const BiModeBPParams &params)
       choiceCtrBits(params.choiceCtrBits),
       globalPredictorSize(params.globalPredictorSize),
       globalCtrBits(params.globalCtrBits),
-      choiceCounters(choicePredictorSize, SatCounter(choiceCtrBits)),
-      takenCounters(globalPredictorSize, SatCounter(globalCtrBits)),
-      notTakenCounters(globalPredictorSize, SatCounter(globalCtrBits))
+      choiceCounters(choicePredictorSize, SatCounter8(choiceCtrBits)),
+      takenCounters(globalPredictorSize, SatCounter8(globalCtrBits)),
+      notTakenCounters(globalPredictorSize, SatCounter8(globalCtrBits))
 {
     if (!isPowerOf2(choicePredictorSize))
         fatal("Invalid choice predictor size.\n");

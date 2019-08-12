@@ -116,7 +116,7 @@ class LocalBP : public BPredUnit
     const unsigned localPredictorSets;
 
     /** Array of counters that make up the local predictor. */
-    std::vector<SatCounter> localCtrs;
+    std::vector<SatCounter8> localCtrs;
 
     /** Mask to get index bits. */
     const unsigned indexMask;

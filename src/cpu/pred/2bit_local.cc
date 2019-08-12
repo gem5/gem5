@@ -38,7 +38,7 @@ LocalBP::LocalBP(const LocalBPParams &params)
       localPredictorSize(params.localPredictorSize),
       localCtrBits(params.localCtrBits),
       localPredictorSets(localPredictorSize / localCtrBits),
-      localCtrs(localPredictorSets, SatCounter(localCtrBits)),
+      localCtrs(localPredictorSets, SatCounter8(localCtrBits)),
       indexMask(localPredictorSets - 1)
 {
     if (!isPowerOf2(localPredictorSize)) {

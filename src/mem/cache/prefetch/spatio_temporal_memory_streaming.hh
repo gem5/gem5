@@ -76,7 +76,7 @@ class STeMS : public Queued
         /** Sequence entry data type */
         struct SequenceEntry {
             /** 2-bit confidence counter */
-            SatCounter counter;
+            SatCounter8 counter;
             /** Offset, in cache lines, within the spatial region */
             unsigned int offset;
             /** Intearleaving position on the global access sequence */

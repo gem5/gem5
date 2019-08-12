@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Inria
+ * Copyright (c) 2019, 2020 Inria
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,7 @@ TEST(SatCounterTest, MaximumValue)
 {
     const unsigned bits = 3;
     const unsigned max_value = (1 << bits) - 1;
-    SatCounter counter(bits);
+    SatCounter8 counter(bits);
 
     for (int i = 0; i < 2*max_value; i++) {
         counter++;
@@ -55,7 +55,7 @@ TEST(SatCounterTest, MaximumValue)
 TEST(SatCounterTest, MinimumValue)
 {
     const unsigned bits = 3;
-    SatCounter counter(bits);
+    SatCounter8 counter(bits);
 
     for (int i = 0; i < 2; i++) {
         counter--;
@@ -71,7 +71,7 @@ TEST(SatCounterTest, InitialValue)
 {
     const unsigned bits = 3;
     const unsigned initial_value = 4;
-    SatCounter counter(bits, initial_value);
+    SatCounter8 counter(bits, initial_value);
     ASSERT_EQ(counter, initial_value);
     counter++;
     counter.reset();
@@ -85,7 +85,7 @@ TEST(SatCounterTest, SaturationPercentile)
 {
     const unsigned bits = 3;
     const unsigned max_value = (1 << bits) - 1;
-    SatCounter counter(bits);
+    SatCounter8 counter(bits);
 
     ASSERT_FALSE(counter.isSaturated());
     for (double value = 0.0; value <= max_value; value++, counter++) {
@@ -102,7 +102,7 @@ TEST(SatCounterTest, Saturate)
 {
     const unsigned bits = 3;
     const unsigned max_value = (1 << bits) - 1;
-    SatCounter counter(bits);
+    SatCounter8 counter(bits);
     counter++;
     ASSERT_FALSE(counter.isSaturated());
 
@@ -118,7 +118,7 @@ TEST(SatCounterTest, Saturate)
 TEST(SatCounterTest, IntComparison)
 {
     const unsigned bits = 3;
-    SatCounter counter(bits);
+    SatCounter8 counter(bits);
     int value = 0;
 
     ASSERT_EQ(counter++, value++);
@@ -144,11 +144,11 @@ TEST(SatCounterTest, Shift)
     const unsigned bits = 3;
     const unsigned max_value = (1 << bits) - 1;
     const unsigned initial_value = 1;
-    SatCounter counter(bits, initial_value);
-    SatCounter other(bits, initial_value);
+    SatCounter8 counter(bits, initial_value);
+    SatCounter8 other(bits, initial_value);
     // The saturated shift value is just enough to saturate, since greater
     // values could generate undefined behavior
-    SatCounter saturated_counter(bits, bits);
+    SatCounter8 saturated_counter(bits, bits);
     int value = initial_value;
 
     // Test random shifts
@@ -201,12 +201,12 @@ TEST(SatCounterTest, PrePostOperators)
 {
     const unsigned bits = 3;
     const unsigned max_value = (1 << bits) - 1;
-    SatCounter counter_pre(bits);
-    SatCounter counter_post(bits);
+    SatCounter8 counter_pre(bits);
+    SatCounter8 counter_post(bits);
 
     for (int i = 0; i < 2*max_value; i++) {
         counter_post++;
-        SatCounter value_pre = ++counter_pre;
+        SatCounter8 value_pre = ++counter_pre;
         ASSERT_EQ(counter_post, value_pre);
     }
 
@@ -215,7 +215,7 @@ TEST(SatCounterTest, PrePostOperators)
 
     for (int i = 0; i < 2*max_value; i++) {
         counter_post--;
-        SatCounter value_pre = --counter_pre;
+        SatCounter8 value_pre = --counter_pre;
         ASSERT_EQ(counter_post, value_pre);
     }
 
@@ -231,16 +231,16 @@ TEST(SatCounterTest, CopyMove)
     const unsigned bits = 3;
     const unsigned max_value = (1 << bits) - 1;
     const unsigned initial_value = 1;
-    SatCounter counter(bits, initial_value);
-    SatCounter deep_copy(1);
-    SatCounter counter_copy(2);
+    SatCounter8 counter(bits, initial_value);
+    SatCounter8 deep_copy(1);
+    SatCounter8 counter_copy(2);
 
     // Increase counter value so that we can check if the inner counter is
     // being copied
     counter++;
 
     // Copy counter using both the copy constructor and the copy assignment
-    SatCounter counter_copy_constructor(counter);
+    SatCounter8 counter_copy_constructor(counter);
     deep_copy = counter_copy = counter;
     ASSERT_EQ(counter_copy_constructor, initial_value + 1);
     ASSERT_EQ(counter_copy, initial_value + 1);
@@ -267,11 +267,11 @@ TEST(SatCounterTest, CopyMove)
     ASSERT_EQ(deep_copy, initial_value);
 
     // Now check move
-    SatCounter counter_move_constructor(std::move(counter));
+    SatCounter8 counter_move_constructor(std::move(counter));
     ASSERT_EQ(counter, 0);
     ASSERT_EQ(counter_move_constructor, initial_value + 1);
 
-    SatCounter counter_move(bits);
+    SatCounter8 counter_move(bits);
     counter_move = std::move(counter_move_constructor);
     ASSERT_EQ(counter_move_constructor, 0);
     ASSERT_EQ(counter_move, initial_value + 1);
@@ -284,9 +284,9 @@ TEST(SatCounterTest, AddSubAssignment)
 {
     const unsigned bits = 3;
     const unsigned max_value = (1 << bits) - 1;
-    SatCounter counter(bits);
-    SatCounter other(bits, 2);
-    SatCounter saturated_counter(bits, max_value);
+    SatCounter8 counter(bits);
+    SatCounter8 other(bits, 2);
+    SatCounter8 saturated_counter(bits, max_value);
     int value = 0;
 
     // Test add-assignment for a few random values and then saturate
@@ -334,7 +334,7 @@ TEST(SatCounterTest, NegativeAddSubAssignment)
 {
     const unsigned bits = 3;
     const unsigned max_value = (1 << bits) - 1;
-    SatCounter counter(bits, max_value);
+    SatCounter8 counter(bits, max_value);
     int value = max_value;
 
     // Test add-assignment for a few negative values until zero is reached

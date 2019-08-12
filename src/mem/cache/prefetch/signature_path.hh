@@ -87,7 +87,7 @@ class SignaturePath : public Queued
         /** stride in a page in blkSize increments */
         stride_t stride;
         /** Saturating counter */
-        SatCounter counter;
+        SatCounter8 counter;
         PatternStrideEntry(unsigned bits) : stride(0), counter(bits)
         {}
     };
@@ -97,7 +97,7 @@ class SignaturePath : public Queued
         /** group of stides */
         std::vector<PatternStrideEntry> strideEntries;
         /** use counter, used by SPPv2 */
-        SatCounter counter;
+        SatCounter8 counter;
         PatternEntry(size_t num_strides, unsigned counter_bits)
           : TaggedEntry(), strideEntries(num_strides, counter_bits),
             counter(counter_bits)

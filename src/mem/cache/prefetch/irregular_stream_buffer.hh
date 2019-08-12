@@ -70,7 +70,7 @@ class IrregularStreamBuffer : public Queued
     /** Address Mapping entry, holds an address and a confidence counter */
     struct AddressMapping {
         Addr address;
-        SatCounter counter;
+        SatCounter8 counter;
         AddressMapping(unsigned bits) : address(0), counter(bits)
         {}
     };

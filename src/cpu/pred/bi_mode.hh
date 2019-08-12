@@ -97,11 +97,11 @@ class BiModeBP : public BPredUnit
     unsigned globalHistoryMask;
 
     // choice predictors
-    std::vector<SatCounter> choiceCounters;
+    std::vector<SatCounter8> choiceCounters;
     // taken direction predictors
-    std::vector<SatCounter> takenCounters;
+    std::vector<SatCounter8> takenCounters;
     // not-taken direction predictors
-    std::vector<SatCounter> notTakenCounters;
+    std::vector<SatCounter8> notTakenCounters;
 
     unsigned choiceThreshold;
     unsigned takenThreshold;
