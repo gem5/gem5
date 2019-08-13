@@ -38,7 +38,7 @@
 from m5.params import *
 from m5.proxy import *
 
-from Gic import GicV2
+from m5.objects.Gic import GicV2
 
 class MuxingKvmGic(GicV2):
     type = 'MuxingKvmGic'
