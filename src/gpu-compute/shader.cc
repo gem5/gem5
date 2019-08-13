@@ -153,19 +153,6 @@ Shader::updateContext(int cid) {
     assert(gpuTc);
 }
 
-void
-Shader::hostWakeUp(BaseCPU *cpu) {
-    if (cpuPointer == cpu) {
-        if (gpuTc->status() == ThreadContext::Suspended)
-            cpu->activateContext(gpuTc->threadId());
-    } else {
-        //Make sure both dispatcher and shader are trying to
-        //wakeup same host. Hack here to enable kernel launch
-        //from multiple CPUs
-        panic("Dispatcher wants to wakeup a different host");
-    }
-}
-
 Shader*
 ShaderParams::create()
 {

@@ -301,7 +301,6 @@ class Shader : public ClockedObject
     Addr mmap(int length);
     void functionalTLBAccess(PacketPtr pkt, int cu_id, BaseTLB::Mode mode);
     void updateContext(int cid);
-    void hostWakeUp(BaseCPU *cpu);
     void notifyCuSleep();
 };
 
