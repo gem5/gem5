@@ -981,7 +981,7 @@ class ComputeUnit : public ClockedObject
     // hold the time of the arrival of the first cache block related to
     // a particular GPUDynInst. This is used to calculate the difference
     // between the first and last chace block arrival times.
-    std::map<GPUDynInstPtr, Tick> headTailMap;
+    std::unordered_map<GPUDynInstPtr, Tick> headTailMap;
 };
 
 #endif // __COMPUTE_UNIT_HH__
