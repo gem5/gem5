@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017 ARM Limited
+# Copyright (c) 2016-2017, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -54,13 +54,13 @@ m5.util.addToPath("../../")
 
 from common import SysPaths
 from common import CpuConfig
+from common import PlatformConfig
 from common.cores.arm import ex5_big, ex5_LITTLE
 
 import devices
 from devices import AtomicCluster, KvmCluster
 
 
-default_kernel = 'vmlinux4.3.aarch64'
 default_disk = 'aarch64-ubuntu-trusty-headless.img'
 default_rcs = 'bootscript.rcS'
 
@@ -114,8 +114,12 @@ class Ex5LittleCluster(devices.CpuCluster):
         super(Ex5LittleCluster, self).__init__(system, num_cpus, cpu_clock,
                                          cpu_voltage, *cpu_config)
 
-def createSystem(caches, kernel, bootscript, disks=[]):
-    sys = devices.SimpleSystem(caches, default_mem_size,
+def createSystem(caches, kernel, bootscript,
+                 machine_type="VExpress_GEM5", disks=[]):
+    platform = PlatformConfig.get(machine_type)
+    m5.util.inform("Simulated platform: %s", platform.__name__)
+
+    sys = devices.SimpleSystem(caches, default_mem_size, platform(),
                                kernel=SysPaths.binary(kernel),
                                readfile=bootscript)
 
@@ -157,8 +161,14 @@ def addOptions(parser):
                         help="Restore from checkpoint")
     parser.add_argument("--dtb", type=str, default=None,
                         help="DTB file to load")
-    parser.add_argument("--kernel", type=str, default=default_kernel,
+    parser.add_argument("--kernel", type=str, required=True,
                         help="Linux kernel")
+    parser.add_argument("--root", type=str, default="/dev/vda1",
+                        help="Specify the kernel CLI root= argument")
+    parser.add_argument("--machine-type", type=str,
+                        choices=PlatformConfig.platform_names(),
+                        default="VExpress_GEM5",
+                        help="Hardware platform class")
     parser.add_argument("--disk", action="append", type=str, default=[],
                         help="Disks to instantiate")
     parser.add_argument("--bootscript", type=str, default=default_rcs,
@@ -203,7 +213,7 @@ def build(options):
         "norandmaps",
         "loglevel=8",
         "mem=%s" % default_mem_size,
-        "root=/dev/vda1",
+        "root=%s" % options.root,
         "rw",
         "init=%s" % options.kernel_init,
         "vmalloc=768MB",
@@ -215,6 +225,7 @@ def build(options):
     system = createSystem(options.caches,
                           options.kernel,
                           options.bootscript,
+                          options.machine_type,
                           disks=disks)
 
     root.system = system
