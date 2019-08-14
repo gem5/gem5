@@ -506,6 +506,8 @@ class HDLcd(AmbaDmaDevice):
         # See the driver for more information.
         node.append(FdtPropertyStrings("status", ["disabled"]))
 
+        self.addIommuProperty(state, node)
+
         yield node
 
 class RealView(Platform):
