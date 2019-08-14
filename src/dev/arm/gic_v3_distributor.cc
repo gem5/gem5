@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Metempsy Technology Consulting
  * All rights reserved.
  *
@@ -64,7 +76,12 @@ Gicv3Distributor::Gicv3Distributor(Gicv3 * gic, uint32_t it_lines)
       irqConfig(it_lines),
       irqGrpmod(it_lines),
       irqNsacr(it_lines),
-      irqAffinityRouting(it_lines)
+      irqAffinityRouting(it_lines),
+      gicdPidr0(0x92),
+      gicdPidr1(0xb4),
+      gicdPidr2(0x3b),
+      gicdPidr3(0),
+      gicdPidr4(0x44)
 {
     panic_if(it_lines > Gicv3::INTID_SECURE, "Invalid value for it_lines!");
 }
@@ -486,29 +503,19 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
         return 0x0;
 
       case GICD_PIDR0: // Peripheral ID0 Register
-          return 0x92; // Part number, bits[7:0]
+        return gicdPidr0;
 
-      case GICD_PIDR1: { // Peripheral ID1 Register
-          uint8_t des_0 = 0xB; // JEP106 identification code, bits[3:0]
-          uint8_t part_1 = 0x4; // Part number, bits[11:8]
-          return (des_0 << 4) | (part_1 << 0);
-      }
+      case GICD_PIDR1: // Peripheral ID1 Register
+        return gicdPidr1;
 
-      case GICD_PIDR2: { // Peripheral ID2 Register
-          uint8_t arch_rev = 0x3; // 0x3 GICv3
-          uint8_t jdec = 0x1; // JEP code
-          uint8_t des_1 = 0x3; // JEP106 identification code, bits[6:4]
-          return (arch_rev << 4) | (jdec << 3) | (des_1 << 0);
-      }
+      case GICD_PIDR2: // Peripheral ID2 Register
+        return gicdPidr2;
 
       case GICD_PIDR3: // Peripheral ID3 Register
-        return 0x0; // Implementation defined
+        return gicdPidr3;
 
-      case GICD_PIDR4: { // Peripheral ID4 Register
-          uint8_t size = 0x4; // 64 KB software visible page
-          uint8_t des_2 = 0x4; // ARM implementation
-          return (size << 4) | (des_2 << 0);
-      }
+      case GICD_PIDR4: // Peripheral ID4 Register
+        return gicdPidr4;
 
       case GICD_PIDR5: // Peripheral ID5 Register
       case GICD_PIDR6: // Peripheral ID6 Register

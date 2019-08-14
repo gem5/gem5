@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Metempsy Technology Consulting
  * All rights reserved.
  *
@@ -136,6 +148,12 @@ class Gicv3Distributor : public Serializable
     std::vector <uint8_t> irqGrpmod;
     std::vector <uint8_t> irqNsacr;
     std::vector <IROUTER> irqAffinityRouting;
+
+    uint32_t gicdPidr0;
+    uint32_t gicdPidr1;
+    uint32_t gicdPidr2;
+    uint32_t gicdPidr3;
+    uint32_t gicdPidr4;
 
   public:
 
