@@ -52,6 +52,8 @@
 
 const AddrRange Gicv3Its::GITS_BASER(0x0100, 0x0138);
 
+const uint32_t Gicv3Its::CTLR_QUIESCENT = 0x80000000;
+
 ItsProcess::ItsProcess(Gicv3Its &_its)
   : its(_its), coroutine(nullptr)
 {
@@ -218,12 +220,15 @@ ItsTranslation::ItsTranslation(Gicv3Its &_its)
 {
     reinit();
     its.pendingTranslations++;
+    its.gitsControl.quiescent = 0;
 }
 
 ItsTranslation::~ItsTranslation()
 {
     assert(its.pendingTranslations >= 1);
     its.pendingTranslations--;
+    if (!its.pendingTranslations && !its.pendingCommands)
+        its.gitsControl.quiescent = 1;
 }
 
 void
@@ -309,11 +314,16 @@ ItsCommand::ItsCommand(Gicv3Its &_its)
 {
     reinit();
     its.pendingCommands = true;
+
+    its.gitsControl.quiescent = 0;
 }
 
 ItsCommand::~ItsCommand()
 {
     its.pendingCommands = false;
+
+    if (!its.pendingTranslations)
+        its.gitsControl.quiescent = 1;
 }
 
 std::string
@@ -766,7 +776,7 @@ ItsCommand::vsync(Yield &yield, CommandEntry &command)
 Gicv3Its::Gicv3Its(const Gicv3ItsParams *params)
  : BasicPioDevice(params, params->pio_size),
    dmaPort(name() + ".dma", *this),
-   gitsControl(0x1),
+   gitsControl(CTLR_QUIESCENT),
    gitsTyper(params->gits_typer),
    gitsCbaser(0), gitsCreadr(0),
    gitsCwriter(0), gitsIidr(0),
@@ -881,7 +891,11 @@ Gicv3Its::write(PacketPtr pkt)
     switch (addr) {
       case GITS_CTLR:
         assert(pkt->getSize() == sizeof(uint32_t));
-        gitsControl = pkt->getLE<uint32_t>();
+        gitsControl = (pkt->getLE<uint32_t>() & ~CTLR_QUIESCENT);
+        // We should check here if the ITS has been disabled, and if
+        // that's the case, flush GICv3 caches to external memory.
+        // This is not happening now, since LPI caching is not
+        // currently implemented in gem5.
         break;
 
       case GITS_IIDR:

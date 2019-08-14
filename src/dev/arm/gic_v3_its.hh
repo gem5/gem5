@@ -114,6 +114,9 @@ class Gicv3Its : public BasicPioDevice
 
     static const uint32_t NUM_BASER_REGS = 8;
 
+    // GITS_CTLR.quiescent mask
+    static const uint32_t CTLR_QUIESCENT;
+
     enum : Addr
     {
         // Control frame
