@@ -123,6 +123,7 @@ class Gicv3Its : public BasicPioDevice
         GITS_CBASER  = itsControl + 0x0080,
         GITS_CWRITER = itsControl + 0x0088,
         GITS_CREADR  = itsControl + 0x0090,
+        GITS_PIDR2 = itsControl + 0xffe8,
 
         // Translation frame
         GITS_TRANSLATER = itsTranslate + 0x0040

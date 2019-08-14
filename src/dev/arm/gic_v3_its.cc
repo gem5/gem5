@@ -834,6 +834,10 @@ Gicv3Its::read(PacketPtr pkt)
         value = gitsCreadr;
         break;
 
+      case GITS_PIDR2:
+        value = gic->getDistributor()->gicdPidr2;
+        break;
+
       case GITS_TRANSLATER:
         value = gitsTranslater;
         break;

@@ -53,6 +53,7 @@ class Gicv3Distributor : public Serializable
 
     friend class Gicv3Redistributor;
     friend class Gicv3CPUInterface;
+    friend class Gicv3Its;
 
   protected:
 
