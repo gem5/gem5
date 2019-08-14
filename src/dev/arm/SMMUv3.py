@@ -207,3 +207,7 @@ class SMMUv3(ClockedObject):
             sys.exit(1)
 
         self.slave_interfaces.append(slave_interface)
+
+        # Storing a reference to the smmu to be used when generating
+        # the binding in the device DTB.
+        device._iommu = self
