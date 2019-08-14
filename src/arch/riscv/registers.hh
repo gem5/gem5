@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2013 ARM Limited
  * Copyright (c) 2014-2015 Sven Karlsson
+ * Copyright (c) 2019 Yifei Liu
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -42,6 +43,10 @@
  * Authors: Andreas Hansson
  *          Sven Karlsson
  *          Alec Roelke
+ *          Yifei Liu
+ *          Lin Cheng
+ *          Xihao Chen
+ *          Cheng Tan
  */
 
 #ifndef __ARCH_RISCV_REGISTERS_HH__
@@ -309,6 +314,7 @@ enum CSRIndex {
     CSR_SIDELEG = 0x103,
     CSR_SIE = 0x104,
     CSR_STVEC = 0x105,
+    CSR_SCOUNTEREN = 0x106,
     CSR_SSCRATCH = 0x140,
     CSR_SEPC = 0x141,
     CSR_SCAUSE = 0x142,
@@ -326,6 +332,7 @@ enum CSRIndex {
     CSR_MIDELEG = 0x303,
     CSR_MIE = 0x304,
     CSR_MTVEC = 0x305,
+    CSR_MCOUNTEREN = 0x306,
     CSR_MSCRATCH = 0x340,
     CSR_MEPC = 0x341,
     CSR_MCAUSE = 0x342,
@@ -478,6 +485,7 @@ const std::map<int, CSRMetadata> CSRData = {
     {CSR_SIDELEG, {"sideleg", MISCREG_SIDELEG}},
     {CSR_SIE, {"sie", MISCREG_IE}},
     {CSR_STVEC, {"stvec", MISCREG_STVEC}},
+    {CSR_SCOUNTEREN, {"scounteren", MISCREG_SCOUNTEREN}},
     {CSR_SSCRATCH, {"sscratch", MISCREG_SSCRATCH}},
     {CSR_SEPC, {"sepc", MISCREG_SEPC}},
     {CSR_SCAUSE, {"scause", MISCREG_SCAUSE}},
@@ -495,6 +503,7 @@ const std::map<int, CSRMetadata> CSRData = {
     {CSR_MIDELEG, {"mideleg", MISCREG_MIDELEG}},
     {CSR_MIE, {"mie", MISCREG_IE}},
     {CSR_MTVEC, {"mtvec", MISCREG_MTVEC}},
+    {CSR_MCOUNTEREN, {"mcounteren", MISCREG_MCOUNTEREN}},
     {CSR_MSCRATCH, {"mscratch", MISCREG_MSCRATCH}},
     {CSR_MEPC, {"mepc", MISCREG_MEPC}},
     {CSR_MCAUSE, {"mcause", MISCREG_MCAUSE}},
