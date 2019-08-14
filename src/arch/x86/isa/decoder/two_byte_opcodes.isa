@@ -756,10 +756,13 @@
                     Rcx = result.rcx;
                     Rdx = result.rdx;
                 } else {
-                    Rax = Rax;
-                    Rbx = Rbx;
-                    Rcx = Rcx;
-                    Rdx = Rdx;
+                    // It isn't defined what to do in this case. We used to
+                    // leave R[abcd]x unmodified, but setting them all to 0
+                    // seems a little safer and more predictable.
+                    Rax = 0;
+                    Rbx = 0;
+                    Rcx = 0;
+                    Rdx = 0;
                 }
                 }});
             0x3: Inst::BT(Ev,Gv);
