@@ -1014,7 +1014,7 @@ SupervisorTrap::routeToHyp(ThreadContext *tc) const
     CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
 
     // if HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector
-    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (cpsr.el == EL0);
+    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (currEL(tc) == EL0);
     return toHyp;
 }
 
@@ -1536,7 +1536,7 @@ PCAlignmentFault::routeToHyp(ThreadContext *tc) const
     CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
 
     // if HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector
-    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (cpsr.el == EL0);
+    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (currEL(tc) == EL0);
     return toHyp;
 }
 

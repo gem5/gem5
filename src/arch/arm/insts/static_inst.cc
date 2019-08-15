@@ -686,7 +686,7 @@ Fault
 ArmStaticInst::checkFPAdvSIMDEnabled64(ThreadContext *tc,
                                        CPSR cpsr, CPACR cpacr) const
 {
-    const ExceptionLevel el = (ExceptionLevel) (uint8_t)cpsr.el;
+    const ExceptionLevel el = currEL(tc);
     if ((el == EL0 && cpacr.fpen != 0x3) ||
         (el == EL1 && !(cpacr.fpen & 0x1)))
         return advSIMDFPAccessTrap64(EL1);
@@ -876,19 +876,21 @@ ArmStaticInst::trapWFx(ThreadContext *tc,
                        bool isWfe) const
 {
     Fault fault = NoFault;
-    if (cpsr.el == EL0) {
+    ExceptionLevel curr_el = currEL(tc);
+
+    if (curr_el == EL0) {
         fault = checkForWFxTrap32(tc, EL1, isWfe);
     }
 
     if ((fault == NoFault) &&
         ArmSystem::haveEL(tc, EL2) && !inSecureState(scr, cpsr) &&
-        ((cpsr.el == EL0) || (cpsr.el == EL1))) {
+        ((curr_el == EL0) || (curr_el == EL1))) {
 
         fault = checkForWFxTrap32(tc, EL2, isWfe);
     }
 
     if ((fault == NoFault) &&
-        ArmSystem::haveEL(tc, EL3) && cpsr.el != EL3) {
+        ArmSystem::haveEL(tc, EL3) && curr_el != EL3) {
         fault = checkForWFxTrap32(tc, EL3, isWfe);
     }
 
@@ -899,9 +901,9 @@ Fault
 ArmStaticInst::checkSETENDEnabled(ThreadContext *tc, CPSR cpsr) const
 {
     bool setend_disabled(false);
-    ExceptionLevel pstateEL = (ExceptionLevel)(uint8_t)(cpsr.el);
+    ExceptionLevel pstate_el = currEL(tc);
 
-    if (pstateEL == EL2) {
+    if (pstate_el == EL2) {
        setend_disabled = ((SCTLR)tc->readMiscRegNoEffect(MISCREG_HSCTLR)).sed;
     } else {
         // Please note: in the armarm pseudocode there is a distinction
@@ -923,7 +925,7 @@ ArmStaticInst::checkSETENDEnabled(ThreadContext *tc, CPSR cpsr) const
         setend_disabled = ((SCTLR)tc->readMiscRegNoEffect(banked_sctlr)).sed;
     }
 
-    return setend_disabled ? undefinedFault32(tc, pstateEL) :
+    return setend_disabled ? undefinedFault32(tc, pstate_el) :
                              NoFault;
 }
 

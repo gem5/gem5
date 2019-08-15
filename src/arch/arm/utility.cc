@@ -341,7 +341,7 @@ ELUsingAArch32K(ThreadContext *tc, ExceptionLevel el)
             // EL0 controlled by PSTATE
             CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
 
-            known = (cpsr.el == EL0);
+            known = (currEL(tc) == EL0);
             aarch32 = (cpsr.width == 1);
         } else {
             known = true;
