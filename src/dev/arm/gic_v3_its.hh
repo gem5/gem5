@@ -149,12 +149,16 @@ class Gicv3Its : public BasicPioDevice
 
     // Command read/write, (CREADR, CWRITER)
     BitUnion64(CRDWR)
+        Bitfield<63, 32> high;
+        Bitfield<31, 0> low;
         Bitfield<19, 5> offset;
         Bitfield<0> retry;
         Bitfield<0> stalled;
     EndBitUnion(CRDWR)
 
     BitUnion64(CBASER)
+        Bitfield<63, 32> high;
+        Bitfield<31, 0> low;
         Bitfield<63> valid;
         Bitfield<61, 59> innerCache;
         Bitfield<55, 53> outerCache;

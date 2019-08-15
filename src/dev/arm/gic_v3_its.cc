@@ -826,12 +826,24 @@ Gicv3Its::read(PacketPtr pkt)
         value = gitsCbaser;
         break;
 
+      case GITS_CBASER + 4:
+        value = gitsCbaser.high;
+        break;
+
       case GITS_CWRITER:
         value = gitsCwriter;
         break;
 
+      case GITS_CWRITER + 4:
+        value = gitsCwriter.high;
+        break;
+
       case GITS_CREADR:
         value = gitsCreadr;
+        break;
+
+      case GITS_CREADR + 4:
+        value = gitsCreadr.high;
         break;
 
       case GITS_PIDR2:
@@ -879,16 +891,41 @@ Gicv3Its::write(PacketPtr pkt)
         panic("GITS_TYPER is Read Only\n");
 
       case GITS_CBASER:
-        assert(pkt->getSize() == sizeof(uint64_t));
-        gitsCbaser = pkt->getLE<uint64_t>();
+        if (pkt->getSize() == sizeof(uint32_t)) {
+            gitsCbaser.low = pkt->getLE<uint32_t>();
+        } else {
+            assert(pkt->getSize() == sizeof(uint64_t));
+            gitsCbaser = pkt->getLE<uint64_t>();
+        }
+
+        gitsCreadr = 0; // Cleared when CBASER gets written
+
+        checkCommandQueue();
+        break;
+
+      case GITS_CBASER + 4:
+        assert(pkt->getSize() == sizeof(uint32_t));
+        gitsCbaser.high = pkt->getLE<uint32_t>();
+
         gitsCreadr = 0; // Cleared when CBASER gets written
 
         checkCommandQueue();
         break;
 
       case GITS_CWRITER:
-        assert(pkt->getSize() == sizeof(uint64_t));
-        gitsCwriter = pkt->getLE<uint64_t>();
+        if (pkt->getSize() == sizeof(uint32_t)) {
+            gitsCwriter.low = pkt->getLE<uint32_t>();
+        } else {
+            assert(pkt->getSize() == sizeof(uint64_t));
+            gitsCwriter = pkt->getLE<uint64_t>();
+        }
+
+        checkCommandQueue();
+        break;
+
+      case GITS_CWRITER + 4:
+        assert(pkt->getSize() == sizeof(uint32_t));
+        gitsCwriter.high = pkt->getLE<uint32_t>();
 
         checkCommandQueue();
         break;
