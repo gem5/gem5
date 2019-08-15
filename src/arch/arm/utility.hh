@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016-2018 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -153,8 +153,7 @@ currOpMode(ThreadContext *tc)
 static inline ExceptionLevel
 currEL(ThreadContext *tc)
 {
-    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    return (ExceptionLevel) (uint8_t) cpsr.el;
+    return opModeToEL(currOpMode(tc));
 }
 
 /**
