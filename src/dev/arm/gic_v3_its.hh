@@ -114,6 +114,18 @@ class Gicv3Its : public BasicPioDevice
 
     static const uint32_t NUM_BASER_REGS = 8;
 
+    // We currently don't support two level ITS tables
+    // The indirect bit is RAZ/WI for implementations that only
+    // support flat tables.
+    static const uint64_t BASER_INDIRECT = 0x4000000000000000;
+    static const uint64_t BASER_TYPE = 0x0700000000000000;
+    static const uint64_t BASER_ESZ = 0x001F000000000000;
+    static const uint64_t BASER_SZ = 0x00000000000000FF;
+    static const uint64_t BASER_WMASK =
+        ~(BASER_INDIRECT | BASER_TYPE | BASER_ESZ);
+    static const uint64_t BASER_WMASK_UNIMPL =
+        ~(BASER_INDIRECT | BASER_TYPE | BASER_ESZ | BASER_SZ);
+
     // GITS_CTLR.quiescent mask
     static const uint32_t CTLR_QUIESCENT;
 

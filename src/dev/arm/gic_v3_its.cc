@@ -780,18 +780,22 @@ Gicv3Its::Gicv3Its(const Gicv3ItsParams *params)
    gitsTyper(params->gits_typer),
    gitsCbaser(0), gitsCreadr(0),
    gitsCwriter(0), gitsIidr(0),
+   tableBases(NUM_BASER_REGS, 0),
    masterId(params->system->getMasterId(this)),
    gic(nullptr),
    commandEvent([this] { checkCommandQueue(); }, name()),
    pendingCommands(false),
    pendingTranslations(0)
 {
-    for (auto idx = 0; idx < NUM_BASER_REGS; idx++) {
-        BASER gits_baser = 0;
-        gits_baser.type = idx;
-        gits_baser.entrySize = sizeof(uint64_t) - 1;
-        tableBases.push_back(gits_baser);
-    }
+    BASER device_baser = 0;
+    device_baser.type = DEVICE_TABLE;
+    device_baser.entrySize = sizeof(uint64_t) - 1;
+    tableBases[0] = device_baser;
+
+    BASER icollect_baser = 0;
+    icollect_baser.type = COLLECTION_TABLE;
+    icollect_baser.entrySize = sizeof(uint64_t) - 1;
+    tableBases[1] = icollect_baser;
 }
 
 void
@@ -958,12 +962,12 @@ Gicv3Its::write(PacketPtr pkt)
             auto relative_addr = addr - GITS_BASER.start();
             auto baser_index = relative_addr / sizeof(uint64_t);
 
-            BASER val = pkt->getLE<uint64_t>();
+            const uint64_t table_base = tableBases[baser_index];
+            const uint64_t w_mask = tableBases[baser_index].type ?
+                BASER_WMASK : BASER_WMASK_UNIMPL;
+            const uint64_t val = pkt->getLE<uint64_t>() & w_mask;
 
-            panic_if(val.indirect,
-                "We currently don't support two level ITS tables");
-
-            tableBases[baser_index] = val;
+            tableBases[baser_index] = table_base | val;
             break;
         } else {
             panic("Unrecognized register access\n");
@@ -1224,7 +1228,16 @@ Gicv3Its::getRedistributor(uint64_t rd_base)
 Addr
 Gicv3Its::pageAddress(Gicv3Its::ItsTables table)
 {
-    const BASER base = tableBases[table];
+    auto base_it = std::find_if(
+        tableBases.begin(), tableBases.end(),
+        [table] (const BASER &b) { return b.type == table; }
+    );
+
+    panic_if(base_it == tableBases.end(),
+        "ITS Table not recognised\n");
+
+    const BASER base = *base_it;
+
     // real address depends on page size
     switch (base.pageSize) {
       case SIZE_4K:
