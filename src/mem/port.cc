@@ -137,54 +137,6 @@ MasterPort::getAddrRanges() const
     return _slavePort->getAddrRanges();
 }
 
-Tick
-MasterPort::sendAtomic(PacketPtr pkt)
-{
-    assert(pkt->isRequest());
-    return _slavePort->recvAtomic(pkt);
-}
-
-Tick
-MasterPort::sendAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
-{
-    assert(pkt->isRequest());
-    return _slavePort->recvAtomicBackdoor(pkt, backdoor);
-}
-
-void
-MasterPort::sendFunctional(PacketPtr pkt)
-{
-    assert(pkt->isRequest());
-    return _slavePort->recvFunctional(pkt);
-}
-
-bool
-MasterPort::sendTimingReq(PacketPtr pkt)
-{
-    assert(pkt->isRequest());
-    return _slavePort->recvTimingReq(pkt);
-}
-
-bool
-MasterPort::tryTiming(PacketPtr pkt) const
-{
-  assert(pkt->isRequest());
-  return _slavePort->tryTiming(pkt);
-}
-
-bool
-MasterPort::sendTimingSnoopResp(PacketPtr pkt)
-{
-    assert(pkt->isResponse());
-    return _slavePort->recvTimingSnoopResp(pkt);
-}
-
-void
-MasterPort::sendRetryResp()
-{
-    _slavePort->recvRespRetry();
-}
-
 void
 MasterPort::printAddr(Addr a)
 {
@@ -235,44 +187,4 @@ SlavePort::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
         defaultBackdoorWarned = true;
     }
     return recvAtomic(pkt);
-}
-
-Tick
-SlavePort::sendAtomicSnoop(PacketPtr pkt)
-{
-    assert(pkt->isRequest());
-    return _masterPort->recvAtomicSnoop(pkt);
-}
-
-void
-SlavePort::sendFunctionalSnoop(PacketPtr pkt)
-{
-    assert(pkt->isRequest());
-    return _masterPort->recvFunctionalSnoop(pkt);
-}
-
-bool
-SlavePort::sendTimingResp(PacketPtr pkt)
-{
-    assert(pkt->isResponse());
-    return _masterPort->recvTimingResp(pkt);
-}
-
-void
-SlavePort::sendTimingSnoopReq(PacketPtr pkt)
-{
-    assert(pkt->isRequest());
-    _masterPort->recvTimingSnoopReq(pkt);
-}
-
-void
-SlavePort::sendRetryReq()
-{
-    _masterPort->recvReqRetry();
-}
-
-void
-SlavePort::sendRetrySnoopResp()
-{
-    _masterPort->recvRetrySnoopResp();
 }
