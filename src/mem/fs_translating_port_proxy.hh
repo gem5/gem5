@@ -79,7 +79,10 @@ class FSTranslatingPortProxy : public PortProxy
 
     FSTranslatingPortProxy(ThreadContext* tc);
 
-    FSTranslatingPortProxy(MasterPort &port, unsigned int cacheLineSize);
+    FSTranslatingPortProxy(SendFunctionalFunc func,
+                           unsigned int cacheLineSize);
+    FSTranslatingPortProxy(MasterPort &port,
+                           unsigned int cacheLineSize);
 
     ~FSTranslatingPortProxy() {}
 

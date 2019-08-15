@@ -70,8 +70,7 @@
 class SecurePortProxy : public PortProxy
 {
   public:
-    SecurePortProxy(MasterPort &port, unsigned int cache_line_size)
-        : PortProxy(port, cache_line_size) {}
+    using PortProxy::PortProxy;
 
     bool tryReadBlob(Addr addr, void *p, int size) const override;
     bool tryWriteBlob(Addr addr, const void *p, int size) const override;

@@ -53,7 +53,7 @@ PortProxy::readBlobPhys(Addr addr, Request::Flags flags,
 
         Packet pkt(req, MemCmd::ReadReq);
         pkt.dataStatic(static_cast<uint8_t *>(p));
-        _port.sendFunctional(&pkt);
+        sendFunctional(&pkt);
         p = static_cast<uint8_t *>(p) + gen.size();
     }
 }
@@ -70,7 +70,7 @@ PortProxy::writeBlobPhys(Addr addr, Request::Flags flags,
 
         Packet pkt(req, MemCmd::WriteReq);
         pkt.dataStaticConst(static_cast<const uint8_t *>(p));
-        _port.sendFunctional(&pkt);
+        sendFunctional(&pkt);
         p = static_cast<const uint8_t *>(p) + gen.size();
     }
 }

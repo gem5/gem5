@@ -80,7 +80,9 @@ class SETranslatingPortProxy : public PortProxy
     AllocType allocating;
 
   public:
-    SETranslatingPortProxy(MasterPort& port, Process* p, AllocType alloc);
+    SETranslatingPortProxy(SendFunctionalFunc func,
+                           Process* p, AllocType alloc);
+    SETranslatingPortProxy(MasterPort &port, Process* p, AllocType alloc);
     ~SETranslatingPortProxy() {}
 
     void setPageTable(EmulationPageTable *p) { pTable = p; }

@@ -55,8 +55,13 @@
 
 using namespace TheISA;
 
-SETranslatingPortProxy::SETranslatingPortProxy(MasterPort& port, Process *p,
-                                           AllocType alloc)
+SETranslatingPortProxy::SETranslatingPortProxy(
+        SendFunctionalFunc func, Process *p, AllocType alloc)
+    : PortProxy(func, p->system->cacheLineSize()), pTable(p->pTable),
+      process(p), allocating(alloc)
+{ }
+SETranslatingPortProxy::SETranslatingPortProxy(MasterPort &port,
+                                               Process *p, AllocType alloc)
     : PortProxy(port, p->system->cacheLineSize()), pTable(p->pTable),
       process(p), allocating(alloc)
 { }

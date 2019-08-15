@@ -59,38 +59,53 @@
 #ifndef __MEM_PORT_PROXY_HH__
 #define __MEM_PORT_PROXY_HH__
 
+#include <functional>
 #include <limits>
 
 #include "mem/port.hh"
 #include "sim/byteswap.hh"
 
 /**
- * This object is a proxy for a structural port, to be used for debug
- * accesses.
+ * This object is a proxy for a port or other object which implements the
+ * functional response protocol, to be used for debug accesses.
  *
  * This proxy object is used when non structural entities
  * (e.g. thread contexts, object file loaders) need access to the
  * memory system. It calls the corresponding functions on the underlying
- * structural port, and provides templatized convenience access functions.
+ * protocol, and provides templatized convenience access functions.
  *
  * The addresses are interpreted as physical addresses.
  *
  * @sa SETranslatingProxy
  * @sa FSTranslatingProxy
  */
-class PortProxy
+class PortProxy : FunctionalRequestProtocol
 {
-  private:
+  public:
+    typedef std::function<void(PacketPtr pkt)> SendFunctionalFunc;
 
-    /** The actual physical port used by this proxy. */
-    MasterPort &_port;
+  private:
+    SendFunctionalFunc sendFunctional;
 
     /** Granularity of any transactions issued through this proxy. */
     const unsigned int _cacheLineSize;
 
+    void
+    recvFunctionalSnoop(PacketPtr pkt) override
+    {
+        // Since port proxies aren't anyone else's peer, they should never
+        // receive snoops.
+        panic("Port proxies should never receive snoops.");
+    }
+
   public:
-    PortProxy(MasterPort &port, unsigned int cacheLineSize) :
-        _port(port), _cacheLineSize(cacheLineSize)
+    PortProxy(SendFunctionalFunc func, unsigned int cacheLineSize) :
+        sendFunctional(func), _cacheLineSize(cacheLineSize)
+    {}
+    PortProxy(const MasterPort &port, unsigned int cacheLineSize) :
+        sendFunctional([&port](PacketPtr pkt)->void {
+                port.sendFunctional(pkt);
+            }), _cacheLineSize(cacheLineSize)
     {}
     virtual ~PortProxy() { }
 
