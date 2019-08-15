@@ -1122,7 +1122,16 @@ WalkCache::invalidateVAA(Addr va, uint16_t vmid, const bool leaf_only)
 void
 WalkCache::invalidateASID(uint16_t asid, uint16_t vmid)
 {
-    panic("%s unimplemented\n", __func__);
+    for (size_t s = 0; s < sets.size(); s++) {
+        Set &set = sets[s];
+
+        for (size_t i = 0; i < set.size(); i++) {
+            Entry &e = set[i];
+
+            if (e.asid==asid && e.vmid==vmid)
+                e.valid = false;
+        }
+    }
 }
 
 void
