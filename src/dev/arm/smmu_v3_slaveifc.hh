@@ -83,6 +83,7 @@ class SMMUv3SlaveInterface : public MemObject
 
     unsigned wrBufSlotsRemaining;
     unsigned xlateSlotsRemaining;
+    unsigned pendingMemAccesses;
 
     const bool prefetchEnable;
     const bool prefetchReserveLastWay;

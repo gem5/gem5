@@ -67,6 +67,7 @@ SMMUv3SlaveInterface::SMMUv3SlaveInterface(
     portWidth(p->port_width),
     wrBufSlotsRemaining(p->wrbuf_slots),
     xlateSlotsRemaining(p->xlate_slots),
+    pendingMemAccesses(0),
     prefetchEnable(p->prefetch_enable),
     prefetchReserveLastWay(
         p->prefetch_reserve_last_way),
