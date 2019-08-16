@@ -45,7 +45,7 @@
 #include "debug/Config.hh"
 #include "debug/Drain.hh"
 #include "debug/Ruby.hh"
-#include "mem/protocol/AccessPermission.hh"
+#include "mem/ruby/protocol/AccessPermission.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/simple_mem.hh"
 #include "sim/full_system.hh"

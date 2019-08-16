@@ -201,15 +201,16 @@ class Type(Symbol):
 #include <iostream>
 
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
+
 ''')
 
         for dm in self.data_members.values():
             if not dm.type.isPrimitive:
-                code('#include "mem/protocol/$0.hh"', dm.type.c_ident)
+                code('#include "mem/ruby/protocol/$0.hh"', dm.type.c_ident)
 
         parent = ""
         if "interface" in self:
-            code('#include "mem/protocol/$0.hh"', self["interface"])
+            code('#include "mem/ruby/protocol/$0.hh"', self["interface"])
             parent = " :  public %s" % self["interface"]
 
         code('''
@@ -404,7 +405,7 @@ operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
 #include <iostream>
 #include <memory>
 
-#include "mem/protocol/${{self.c_ident}}.hh"
+#include "mem/ruby/protocol/${{self.c_ident}}.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;
@@ -456,7 +457,7 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";''')
 
 ''')
         if self.isStateDecl:
-            code('#include "mem/protocol/AccessPermission.hh"')
+            code('#include "mem/ruby/protocol/AccessPermission.hh"')
 
         if self.isMachineType:
             code('#include <functional>')
@@ -558,7 +559,7 @@ std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
 #include <string>
 
 #include "base/logging.hh"
-#include "mem/protocol/${{self.c_ident}}.hh"
+#include "mem/ruby/protocol/${{self.c_ident}}.hh"
 
 using namespace std;
 
@@ -588,7 +589,8 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
         if self.isMachineType:
             for enum in self.enums.itervalues():
                 if enum.primary:
-                    code('#include "mem/protocol/${{enum.ident}}_Controller.hh"')
+                    code('#include "mem/ruby/protocol/${{enum.ident}}'
+                            '_Controller.hh"')
             code('#include "mem/ruby/common/MachineID.hh"')
 
         code('''

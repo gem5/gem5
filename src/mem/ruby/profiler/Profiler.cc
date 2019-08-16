@@ -52,10 +52,10 @@
 
 #include "base/stl_helpers.hh"
 #include "base/str.hh"
-#include "mem/protocol/MachineType.hh"
-#include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"
+#include "mem/ruby/protocol/MachineType.hh"
+#include "mem/ruby/protocol/RubyRequest.hh"
 
 /**
  * the profiler uses GPUCoalescer code even
@@ -72,6 +72,7 @@
  */
 #ifdef BUILD_GPU
 #include "mem/ruby/system/GPUCoalescer.hh"
+
 #endif
 
 #include "mem/ruby/system/Sequencer.hh"

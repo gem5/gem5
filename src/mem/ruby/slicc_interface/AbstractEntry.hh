@@ -31,7 +31,7 @@
 
 #include <iostream>
 
-#include "mem/protocol/AccessPermission.hh"
+#include "mem/ruby/protocol/AccessPermission.hh"
 
 class AbstractEntry
 {

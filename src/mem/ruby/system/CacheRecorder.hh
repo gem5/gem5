@@ -38,10 +38,10 @@
 #include <vector>
 
 #include "base/types.hh"
-#include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/TypeDefines.hh"
+#include "mem/ruby/protocol/RubyRequestType.hh"
 
 class Sequencer;
 

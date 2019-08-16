@@ -98,7 +98,7 @@ def do_embed_text(target, source, env):
 #
 # Link includes
 #
-generated_dir = Dir('../protocol')
+generated_dir = Dir('protocol')
 
 def MakeIncludeAction(target, source, env):
     f = file(str(target[0]), 'w')
@@ -138,9 +138,9 @@ MakeInclude('structures/WireBuffer.hh')
 MakeInclude('system/DMASequencer.hh')
 MakeInclude('system/Sequencer.hh')
 
-# External types : Group "mem/protocol" : include "header.hh" to the bottom
-# of this MakeIncludes if it is referenced as
-# <# include "mem/protocol/header.hh"> in any file
-# generated_dir = Dir('../protocol')
+# External types : Group "mem/ruby/protocol" : include "header.hh" to the
+# bottom of this MakeIncludes if it is referenced as
+# <# include "mem/ruby/protocol/header.hh"> in any file
+# generated_dir = Dir('protocol')
 MakeInclude('system/GPUCoalescer.hh')
 MakeInclude('system/VIPERCoalescer.hh')

@@ -43,9 +43,9 @@
 #include <vector>
 
 #include "mem/packet.hh"
-#include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/network/BasicRouter.hh"
+#include "mem/ruby/protocol/MessageSizeType.hh"
 #include "params/Switch.hh"
 
 class MessageBuffer;

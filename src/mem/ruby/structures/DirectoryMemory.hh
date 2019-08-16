@@ -45,8 +45,8 @@
 #include <string>
 
 #include "base/addr_range.hh"
-#include "mem/protocol/DirectoryRequestType.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/protocol/DirectoryRequestType.hh"
 #include "mem/ruby/slicc_interface/AbstractEntry.hh"
 #include "params/RubyDirectoryMemory.hh"
 #include "sim/sim_object.hh"

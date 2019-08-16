@@ -40,15 +40,15 @@
 #include <unordered_map>
 
 #include "base/statistics.hh"
-#include "mem/protocol/HSAScope.hh"
-#include "mem/protocol/HSASegment.hh"
-#include "mem/protocol/PrefetchBit.hh"
-#include "mem/protocol/RubyAccessMode.hh"
-#include "mem/protocol/RubyRequestType.hh"
-#include "mem/protocol/SequencerRequestType.hh"
 #include "mem/request.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/protocol/HSAScope.hh"
+#include "mem/ruby/protocol/HSASegment.hh"
+#include "mem/ruby/protocol/PrefetchBit.hh"
+#include "mem/ruby/protocol/RubyAccessMode.hh"
+#include "mem/ruby/protocol/RubyRequestType.hh"
+#include "mem/ruby/protocol/SequencerRequestType.hh"
 #include "mem/ruby/system/Sequencer.hh"
 
 class DataBlock;

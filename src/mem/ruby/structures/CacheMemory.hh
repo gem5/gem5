@@ -35,10 +35,10 @@
 #include <vector>
 
 #include "base/statistics.hh"
-#include "mem/protocol/CacheRequestType.hh"
-#include "mem/protocol/CacheResourceType.hh"
-#include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/common/DataBlock.hh"
+#include "mem/ruby/protocol/CacheRequestType.hh"
+#include "mem/ruby/protocol/CacheResourceType.hh"
+#include "mem/ruby/protocol/RubyRequest.hh"
 #include "mem/ruby/slicc_interface/AbstractCacheEntry.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/structures/AbstractReplacementPolicy.hh"

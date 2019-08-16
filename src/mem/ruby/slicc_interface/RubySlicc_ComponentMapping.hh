@@ -29,10 +29,10 @@
 #ifndef __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_COMPONENTMAPPINGS_HH__
 #define __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_COMPONENTMAPPINGS_HH__
 
-#include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/protocol/MachineType.hh"
 #include "mem/ruby/structures/DirectoryMemory.hh"
 
 inline NetDest

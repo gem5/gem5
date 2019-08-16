@@ -482,7 +482,7 @@ machine(MachineType:L1Cache, "MSI cache")
             // across different directories, so query the network.
             out_msg.Destination.add(mapAddressToMachine(address,
                                     MachineType:Directory));
-            // See mem/protocol/RubySlicc_Exports.sm for possible sizes.
+            // See mem/ruby/protocol/RubySlicc_Exports.sm for possible sizes.
             out_msg.MessageSize := MessageSizeType:Control;
             // Set that the reqeustor is this machine so we get the response.
             out_msg.Requestor := machineID;

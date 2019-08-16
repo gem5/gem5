@@ -33,7 +33,7 @@
 #include <string>
 
 #include "base/cprintf.hh"
-#include "mem/protocol/MachineType.hh"
+#include "mem/ruby/protocol/MachineType.hh"
 
 struct MachineID
 {

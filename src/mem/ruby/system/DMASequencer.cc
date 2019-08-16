@@ -32,8 +32,8 @@
 
 #include "debug/RubyDma.hh"
 #include "debug/RubyStats.hh"
-#include "mem/protocol/SequencerMsg.hh"
-#include "mem/protocol/SequencerRequestType.hh"
+#include "mem/ruby/protocol/SequencerMsg.hh"
+#include "mem/ruby/protocol/SequencerRequestType.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 DMARequest::DMARequest(uint64_t start_paddr, int len, bool write,

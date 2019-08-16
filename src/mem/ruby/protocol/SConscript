@@ -47,7 +47,7 @@ output_dir = Dir('.')
 html_dir = Dir('html')
 slicc_dir = Dir('../slicc')
 
-sys.path[1:1] = [ Dir('..').srcnode().abspath ]
+sys.path[1:1] = [ Dir('..').Dir('..').srcnode().abspath ]
 from slicc.parser import SLICC
 
 slicc_depends = []

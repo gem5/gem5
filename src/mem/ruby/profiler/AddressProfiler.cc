@@ -31,8 +31,8 @@
 #include <vector>
 
 #include "base/stl_helpers.hh"
-#include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/protocol/RubyRequest.hh"
 
 using namespace std;
 typedef AddressProfiler::AddressMap AddressMap;

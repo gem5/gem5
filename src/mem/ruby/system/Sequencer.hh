@@ -32,10 +32,10 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "mem/protocol/MachineType.hh"
-#include "mem/protocol/RubyRequestType.hh"
-#include "mem/protocol/SequencerRequestType.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/protocol/MachineType.hh"
+#include "mem/ruby/protocol/RubyRequestType.hh"
+#include "mem/ruby/protocol/SequencerRequestType.hh"
 #include "mem/ruby/structures/CacheMemory.hh"
 #include "mem/ruby/system/RubyPort.hh"
 #include "params/RubySequencer.hh"

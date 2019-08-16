@@ -44,9 +44,9 @@
 #include <string>
 #include <vector>
 
-#include "mem/protocol/LinkDirection.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/network/BasicLink.hh"
+#include "mem/ruby/protocol/LinkDirection.hh"
 
 class NetDest;
 class Network;

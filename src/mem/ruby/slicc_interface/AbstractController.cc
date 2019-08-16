@@ -41,8 +41,8 @@
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 
 #include "debug/RubyQueue.hh"
-#include "mem/protocol/MemoryMsg.hh"
 #include "mem/ruby/network/Network.hh"
+#include "mem/ruby/protocol/MemoryMsg.hh"
 #include "mem/ruby/system/GPUCoalescer.hh"
 #include "mem/ruby/system/RubySystem.hh"
 #include "mem/ruby/system/Sequencer.hh"

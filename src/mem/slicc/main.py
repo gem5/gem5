@@ -90,7 +90,8 @@ def main(args=None):
     output("SLICC v0.4")
     output("Parsing...")
 
-    protocol_base = os.path.join(os.path.dirname(__file__), '..', 'protocol')
+    protocol_base = os.path.join(os.path.dirname(__file__),
+                                 '..', 'ruby', 'protocol')
     slicc = SLICC(slicc_file, protocol_base, verbose=True, debug=opts.debug,
                   traceback=opts.tb)
 

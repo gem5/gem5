@@ -33,9 +33,9 @@
 #include <ostream>
 #include <unordered_map>
 
-#include "mem/protocol/DMASequencerRequestType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
+#include "mem/ruby/protocol/DMASequencerRequestType.hh"
 #include "mem/ruby/system/RubyPort.hh"
 #include "params/DMASequencer.hh"
 

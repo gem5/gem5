@@ -133,7 +133,7 @@ class SymbolTable(object):
 
         for symbol in self.sym_vec:
             if isinstance(symbol, Type) and not symbol.isPrimitive:
-                code('#include "mem/protocol/${{symbol.c_ident}}.hh"')
+                code('#include "mem/ruby/protocol/${{symbol.c_ident}}.hh"')
 
         code.write(path, "Types.hh")
 

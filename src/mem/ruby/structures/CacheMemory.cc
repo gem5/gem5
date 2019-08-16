@@ -35,7 +35,7 @@
 #include "debug/RubyCacheTrace.hh"
 #include "debug/RubyResourceStalls.hh"
 #include "debug/RubyStats.hh"
-#include "mem/protocol/AccessPermission.hh"
+#include "mem/ruby/protocol/AccessPermission.hh"
 #include "mem/ruby/system/RubySystem.hh"
 #include "mem/ruby/system/WeightedLRUPolicy.hh"
 

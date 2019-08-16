@@ -45,9 +45,9 @@
 #include <cassert>
 #include <string>
 
-#include "mem/protocol/RequestStatus.hh"
 #include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
+#include "mem/ruby/protocol/RequestStatus.hh"
 #include "mem/ruby/system/RubySystem.hh"
 #include "mem/tport.hh"
 #include "params/RubyPort.hh"
