@@ -70,6 +70,22 @@ BaseMasterPort::getSlavePort() const
     return *_baseSlavePort;
 }
 
+void
+BaseMasterPort::bind(Port &peer)
+{
+    _baseSlavePort = dynamic_cast<BaseSlavePort *>(&peer);
+    fatal_if(!_baseSlavePort, "Attempt to bind port %s to non-master port %s.",
+             name(), peer.name());
+    Port::bind(peer);
+}
+
+void
+BaseMasterPort::unbind()
+{
+    _baseSlavePort = nullptr;
+    Port::unbind();
+}
+
 BaseSlavePort::BaseSlavePort(const std::string &name, PortID _id)
     : Port(name, _id), _baseMasterPort(NULL)
 {
@@ -87,6 +103,22 @@ BaseSlavePort::getMasterPort() const
               name());
 
     return *_baseMasterPort;
+}
+
+void
+BaseSlavePort::bind(Port &peer)
+{
+    _baseMasterPort = dynamic_cast<BaseMasterPort *>(&peer);
+    fatal_if(!_baseMasterPort, "Attempt to bind port %s to non-slave port %s.",
+             name(), peer.name());
+    Port::bind(peer);
+}
+
+void
+BaseSlavePort::unbind()
+{
+    _baseMasterPort = nullptr;
+    Port::unbind();
 }
 
 /**
@@ -109,12 +141,9 @@ MasterPort::bind(Port &peer)
         fatal("Attempt to bind port %s to non-slave port %s.",
                 name(), peer.name());
     }
-    // bind on the level of the base ports
-    _baseSlavePort = slave_port;
-
     // master port keeps track of the slave port
     _slavePort = slave_port;
-    _connected = true;
+    BaseMasterPort::bind(peer);
     // slave port also keeps track of master port
     _slavePort->slaveBind(*this);
 }
@@ -126,9 +155,8 @@ MasterPort::unbind()
         panic("Attempting to unbind master port %s that is not connected\n",
               name());
     _slavePort->slaveUnbind();
-    _slavePort = NULL;
-    _connected = false;
-    _baseSlavePort = NULL;
+    _slavePort = nullptr;
+    BaseMasterPort::unbind();
 }
 
 AddrRangeList
@@ -166,17 +194,15 @@ SlavePort::~SlavePort()
 void
 SlavePort::slaveUnbind()
 {
-    _baseMasterPort = NULL;
     _masterPort = NULL;
-    _connected = false;
+    BaseSlavePort::unbind();
 }
 
 void
 SlavePort::slaveBind(MasterPort& master_port)
 {
-    _baseMasterPort = &master_port;
     _masterPort = &master_port;
-    _connected = true;
+    BaseSlavePort::bind(master_port);
 }
 
 Tick

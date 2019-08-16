@@ -74,6 +74,7 @@ class TlmInitiatorWrapper : public ::Port
                 "incompatible port %s.", name(), peer.name());
 
         initiator().bind(target->target());
+        Port::bind(peer);
     }
 
     void
@@ -107,6 +108,7 @@ class TlmTargetWrapper : public ::Port
     {
         // Ignore attempts to bind a target socket. The initiator will
         // handle it.
+        Port::bind(peer);
     }
 
     void

@@ -72,6 +72,13 @@ class Port
      * to InvalidPortID in case this port is not part of a vector.
      */
     const PortID id;
+
+    /**
+     * A pointer to this port's peer.
+     */
+    Port *_peer;
+
+
     /**
      * Whether this port is currently connected to a peer port.
      */
@@ -92,6 +99,9 @@ class Port
 
   public:
 
+    /** Return a reference to this port's peer. */
+    Port &getPeer() { return *_peer; }
+
     /** Return port name (for DPRINTF). */
     const std::string name() const { return portName; }
 
@@ -99,10 +109,20 @@ class Port
     PortID getId() const { return id; }
 
     /** Attach to a peer port. */
-    virtual void bind(Port &peer) = 0;
+    virtual void
+    bind(Port &peer)
+    {
+        _peer = &peer;
+        _connected = true;
+    }
 
     /** Dettach from a peer port. */
-    virtual void unbind() = 0;
+    virtual void
+    unbind()
+    {
+        _peer = nullptr;
+        _connected = false;
+    }
 
     /** Is this port currently connected to a peer? */
     bool isConnected() const { return _connected; }

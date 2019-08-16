@@ -85,6 +85,7 @@ class ScPortWrapper : public ::Port
             fatal("Attempt to bind sc_port %s to incompatible port %s.",
                   name(), peer.name());
         }
+        Port::bind(peer);
     }
 
   private:
@@ -123,6 +124,7 @@ class ScInterfaceWrapper : public ::Port
         // Don't bind to peer otherwise we may have error messages saying that
         // this interface has already be bound since the peer may already did
         // that. Just let sc_port or sc_export do the binding
+        Port::bind(peer);
     }
 
   private:
@@ -160,6 +162,7 @@ class ScExportWrapper : public ::Port
                  name(), peer.name());
 
         port_.bind(iface->interface());
+        Port::bind(peer);
     }
 
   private:

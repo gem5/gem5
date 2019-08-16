@@ -78,6 +78,8 @@ class BaseMasterPort : public Port
 
   public:
     BaseSlavePort& getSlavePort() const;
+    void bind(Port &peer) override;
+    void unbind() override;
 };
 
 /**
@@ -94,6 +96,8 @@ class BaseSlavePort : public Port
 
   public:
     BaseMasterPort& getMasterPort() const;
+    void bind(Port &peer) override;
+    void unbind() override;
 };
 
 /** Forward declaration */
