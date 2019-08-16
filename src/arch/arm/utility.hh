@@ -156,6 +156,12 @@ currEL(ThreadContext *tc)
     return opModeToEL(currOpMode(tc));
 }
 
+inline ExceptionLevel
+currEL(CPSR cpsr)
+{
+    return opModeToEL((OperatingMode) (uint8_t)cpsr.mode);
+}
+
 /**
  * This function checks whether selected EL provided as an argument
  * is using the AArch32 ISA. This information might be unavailable
