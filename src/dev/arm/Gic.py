@@ -237,6 +237,10 @@ class Gicv3(BaseGic):
         node.append(self._state.sizeCellsProperty())
         node.append(FdtProperty("interrupt-controller"))
 
+        redist_stride = 0x40000 if self.gicv4 else 0x20000
+        node.append(FdtPropertyWords("redistributor-stride",
+            state.sizeCells(redist_stride)))
+
         regs = (
             state.addrCells(self.dist_addr) +
             state.sizeCells(0x10000) +
