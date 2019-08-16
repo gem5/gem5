@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012,2015,2017 ARM Limited
+ * Copyright (c) 2012,2015,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,84 +37,69 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ron Dreslinski
+ * Authors: Steve Reinhardt
  *          Andreas Hansson
  *          William Wang
  */
 
-#ifndef __MEM_ATOMIC_PROTOCOL_HH__
-#define __MEM_ATOMIC_PROTOCOL_HH__
+#include "mem/protocol/timing.hh"
 
-#include "mem/backdoor.hh"
-#include "mem/packet.hh"
+/* The request protocol. */
 
-class AtomicResponseProtocol;
-
-class AtomicRequestProtocol
+bool
+TimingRequestProtocol::sendReq(TimingResponseProtocol *peer, PacketPtr pkt)
 {
-    friend class AtomicResponseProtocol;
+    assert(pkt->isRequest());
+    return peer->recvTimingReq(pkt);
+}
 
-  protected:
-    /**
-     * Send an atomic request packet, where the data is moved and the
-     * state is updated in zero time, without interleaving with other
-     * memory accesses.
-     *
-     * @param peer Peer to send packet to.
-     * @param pkt Packet to send.
-     *
-     * @return Estimated latency of access.
-     */
-    Tick send(AtomicResponseProtocol *peer, PacketPtr pkt);
-
-    /**
-     * Send an atomic request packet like above, but also request a backdoor
-     * to the data being accessed.
-     *
-     * @param peer Peer to send packet to.
-     * @param pkt Packet to send.
-     * @param backdoor Can be set to a back door pointer by the target to let
-     *        caller have direct access to the requested data.
-     *
-     * @return Estimated latency of access.
-     */
-    Tick sendBackdoor(AtomicResponseProtocol *peer, PacketPtr pkt,
-                      MemBackdoorPtr &backdoor);
-
-    /**
-     * Receive an atomic snoop request packet from our peer.
-     */
-    virtual Tick recvAtomicSnoop(PacketPtr pkt) = 0;
-};
-
-class AtomicResponseProtocol
+bool
+TimingRequestProtocol::trySend(
+        TimingResponseProtocol *peer, PacketPtr pkt) const
 {
-    friend class AtomicRequestProtocol;
+  assert(pkt->isRequest());
+  return peer->tryTiming(pkt);
+}
 
-  protected:
-    /**
-     * Send an atomic snoop request packet, where the data is moved
-     * and the state is updated in zero time, without interleaving
-     * with other memory accesses.
-     *
-     * @param peer Peer to send packet to.
-     * @param pkt Snoop packet to send.
-     *
-     * @return Estimated latency of access.
-     */
-    Tick sendSnoop(AtomicRequestProtocol *peer, PacketPtr pkt);
+bool
+TimingRequestProtocol::sendSnoopResp(
+        TimingResponseProtocol *peer, PacketPtr pkt)
+{
+    assert(pkt->isResponse());
+    return peer->recvTimingSnoopResp(pkt);
+}
 
-    /**
-     * Receive an atomic request packet from the peer.
-     */
-    virtual Tick recvAtomic(PacketPtr pkt) = 0;
+void
+TimingRequestProtocol::sendRetryResp(TimingResponseProtocol *peer)
+{
+    peer->recvRespRetry();
+}
 
-    /**
-     * Receive an atomic request packet from the peer, and optionally
-     * provide a backdoor to the data being accessed.
-     */
-    virtual Tick recvAtomicBackdoor(
-            PacketPtr pkt, MemBackdoorPtr &backdoor) = 0;
-};
+/* The response protocol. */
 
-#endif //__MEM_ATOMIC_PROTOCOL_HH__
+bool
+TimingResponseProtocol::sendResp(TimingRequestProtocol *peer, PacketPtr pkt)
+{
+    assert(pkt->isResponse());
+    return peer->recvTimingResp(pkt);
+}
+
+void
+TimingResponseProtocol::sendSnoopReq(
+        TimingRequestProtocol *peer, PacketPtr pkt)
+{
+    assert(pkt->isRequest());
+    peer->recvTimingSnoopReq(pkt);
+}
+
+void
+TimingResponseProtocol::sendRetryReq(TimingRequestProtocol *peer)
+{
+    peer->recvReqRetry();
+}
+
+void
+TimingResponseProtocol::sendRetrySnoopResp(TimingRequestProtocol *peer)
+{
+    peer->recvRetrySnoopResp();
+}

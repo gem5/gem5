@@ -42,32 +42,24 @@
  *          William Wang
  */
 
-#include "mem/atomic_protocol.hh"
-
-#include "base/trace.hh"
+#include "mem/protocol/functional.hh"
 
 /* The request protocol. */
 
-Tick
-AtomicRequestProtocol::send(AtomicResponseProtocol *peer, PacketPtr pkt)
+void
+FunctionalRequestProtocol::send(
+        FunctionalResponseProtocol *peer, PacketPtr pkt) const
 {
     assert(pkt->isRequest());
-    return peer->recvAtomic(pkt);
-}
-
-Tick
-AtomicRequestProtocol::sendBackdoor(AtomicResponseProtocol *peer,
-        PacketPtr pkt, MemBackdoorPtr &backdoor)
-{
-    assert(pkt->isRequest());
-    return peer->recvAtomicBackdoor(pkt, backdoor);
+    return peer->recvFunctional(pkt);
 }
 
 /* The response protocol. */
 
-Tick
-AtomicResponseProtocol::sendSnoop(AtomicRequestProtocol *peer, PacketPtr pkt)
+void
+FunctionalResponseProtocol::sendSnoop(
+        FunctionalRequestProtocol *peer, PacketPtr pkt) const
 {
     assert(pkt->isRequest());
-    return peer->recvAtomicSnoop(pkt);
+    return peer->recvFunctionalSnoop(pkt);
 }

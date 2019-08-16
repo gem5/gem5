@@ -51,10 +51,10 @@
 #define __MEM_PORT_HH__
 
 #include "base/addr_range.hh"
-#include "mem/atomic_protocol.hh"
-#include "mem/functional_protocol.hh"
 #include "mem/packet.hh"
-#include "mem/timing_protocol.hh"
+#include "mem/protocol/atomic.hh"
+#include "mem/protocol/functional.hh"
+#include "mem/protocol/timing.hh"
 #include "sim/port.hh"
 
 class SimObject;

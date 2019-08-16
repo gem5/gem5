@@ -42,8 +42,8 @@
  *          William Wang
  */
 
-#ifndef __MEM_TIMING_PROTOCOL_HH__
-#define __MEM_TIMING_PROTOCOL_HH__
+#ifndef __MEM_GEM5_PROTOCOL_TIMING_HH__
+#define __MEM_GEM5_PROTOCOL_TIMING_HH__
 
 #include "mem/packet.hh"
 
@@ -187,4 +187,4 @@ class TimingResponseProtocol
     virtual void recvRespRetry() = 0;
 };
 
-#endif //__MEM_TIMING_PROTOCOL_HH__
+#endif //__MEM_GEM5_PROTOCOL_TIMING_HH__

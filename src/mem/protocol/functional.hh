@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012,2015,2017 ARM Limited
+ * Copyright (c) 2011-2012,2015,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,69 +37,56 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
+ * Authors: Ron Dreslinski
  *          Andreas Hansson
  *          William Wang
  */
 
-#include "mem/timing_protocol.hh"
+#ifndef __MEM_GEM5_PROTOCOL_FUNCTIONAL_HH__
+#define __MEM_GEM5_PROTOCOL_FUNCTIONAL_HH__
 
-/* The request protocol. */
+#include "mem/packet.hh"
 
-bool
-TimingRequestProtocol::sendReq(TimingResponseProtocol *peer, PacketPtr pkt)
+class FunctionalResponseProtocol;
+
+class FunctionalRequestProtocol
 {
-    assert(pkt->isRequest());
-    return peer->recvTimingReq(pkt);
-}
+    friend class FunctionalResponseProtocol;
 
-bool
-TimingRequestProtocol::trySend(
-        TimingResponseProtocol *peer, PacketPtr pkt) const
+  protected:
+    /**
+     * Send a functional request packet, where the data is instantly
+     * updated everywhere in the memory system, without affecting the
+     * current state of any block or moving the block.
+     *
+     * @param pkt Packet to send.
+     */
+    void send(FunctionalResponseProtocol *peer, PacketPtr pkt) const;
+
+    /**
+     * Receive a functional snoop request packet from the peer.
+     */
+    virtual void recvFunctionalSnoop(PacketPtr pkt) = 0;
+};
+
+class FunctionalResponseProtocol
 {
-  assert(pkt->isRequest());
-  return peer->tryTiming(pkt);
-}
+    friend class FunctionalRequestProtocol;
 
-bool
-TimingRequestProtocol::sendSnoopResp(
-        TimingResponseProtocol *peer, PacketPtr pkt)
-{
-    assert(pkt->isResponse());
-    return peer->recvTimingSnoopResp(pkt);
-}
+  protected:
+    /**
+     * Send a functional snoop request packet, where the data is
+     * instantly updated everywhere in the memory system, without
+     * affecting the current state of any block or moving the block.
+     *
+     * @param pkt Snoop packet to send.
+     */
+    void sendSnoop(FunctionalRequestProtocol *peer, PacketPtr pkt) const;
 
-void
-TimingRequestProtocol::sendRetryResp(TimingResponseProtocol *peer)
-{
-    peer->recvRespRetry();
-}
+    /**
+     * Receive a functional request packet from the peer.
+     */
+    virtual void recvFunctional(PacketPtr pkt) = 0;
+};
 
-/* The response protocol. */
-
-bool
-TimingResponseProtocol::sendResp(TimingRequestProtocol *peer, PacketPtr pkt)
-{
-    assert(pkt->isResponse());
-    return peer->recvTimingResp(pkt);
-}
-
-void
-TimingResponseProtocol::sendSnoopReq(
-        TimingRequestProtocol *peer, PacketPtr pkt)
-{
-    assert(pkt->isRequest());
-    peer->recvTimingSnoopReq(pkt);
-}
-
-void
-TimingResponseProtocol::sendRetryReq(TimingRequestProtocol *peer)
-{
-    peer->recvReqRetry();
-}
-
-void
-TimingResponseProtocol::sendRetrySnoopResp(TimingRequestProtocol *peer)
-{
-    peer->recvRetrySnoopResp();
-}
+#endif //__MEM_GEM5_PROTOCOL_FUNCTIONAL_HH__

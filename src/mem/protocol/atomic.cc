@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012,2015,2017 ARM Limited
+ * Copyright (c) 2012,2015,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,56 +37,37 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ron Dreslinski
+ * Authors: Steve Reinhardt
  *          Andreas Hansson
  *          William Wang
  */
 
-#ifndef __MEM_FUNCTIONAL_PROTOCOL_HH__
-#define __MEM_FUNCTIONAL_PROTOCOL_HH__
+#include "mem/protocol/atomic.hh"
 
-#include "mem/packet.hh"
+#include "base/trace.hh"
 
-class FunctionalResponseProtocol;
+/* The request protocol. */
 
-class FunctionalRequestProtocol
+Tick
+AtomicRequestProtocol::send(AtomicResponseProtocol *peer, PacketPtr pkt)
 {
-    friend class FunctionalResponseProtocol;
+    assert(pkt->isRequest());
+    return peer->recvAtomic(pkt);
+}
 
-  protected:
-    /**
-     * Send a functional request packet, where the data is instantly
-     * updated everywhere in the memory system, without affecting the
-     * current state of any block or moving the block.
-     *
-     * @param pkt Packet to send.
-     */
-    void send(FunctionalResponseProtocol *peer, PacketPtr pkt) const;
-
-    /**
-     * Receive a functional snoop request packet from the peer.
-     */
-    virtual void recvFunctionalSnoop(PacketPtr pkt) = 0;
-};
-
-class FunctionalResponseProtocol
+Tick
+AtomicRequestProtocol::sendBackdoor(AtomicResponseProtocol *peer,
+        PacketPtr pkt, MemBackdoorPtr &backdoor)
 {
-    friend class FunctionalRequestProtocol;
+    assert(pkt->isRequest());
+    return peer->recvAtomicBackdoor(pkt, backdoor);
+}
 
-  protected:
-    /**
-     * Send a functional snoop request packet, where the data is
-     * instantly updated everywhere in the memory system, without
-     * affecting the current state of any block or moving the block.
-     *
-     * @param pkt Snoop packet to send.
-     */
-    void sendSnoop(FunctionalRequestProtocol *peer, PacketPtr pkt) const;
+/* The response protocol. */
 
-    /**
-     * Receive a functional request packet from the peer.
-     */
-    virtual void recvFunctional(PacketPtr pkt) = 0;
-};
-
-#endif //__MEM_FUNCTIONAL_PROTOCOL_HH__
+Tick
+AtomicResponseProtocol::sendSnoop(AtomicRequestProtocol *peer, PacketPtr pkt)
+{
+    assert(pkt->isRequest());
+    return peer->recvAtomicSnoop(pkt);
+}
