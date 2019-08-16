@@ -225,9 +225,7 @@ longDescFormatInUse(ThreadContext *tc)
 RegVal
 readMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
 {
-    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    const ExceptionLevel current_el =
-        opModeToEL((OperatingMode) (uint8_t) cpsr.mode);
+    const ExceptionLevel current_el = currEL(tc);
 
     const bool is_secure = isSecureBelowEL3(tc);
 
@@ -356,7 +354,7 @@ ELUsingAArch32K(ThreadContext *tc, ExceptionLevel el)
 bool
 isBigEndian64(ThreadContext *tc)
 {
-    switch (opModeToEL(currOpMode(tc))) {
+    switch (currEL(tc)) {
       case EL3:
         return ((SCTLR) tc->readMiscReg(MISCREG_SCTLR_EL3)).ee;
       case EL2:
@@ -820,7 +818,7 @@ decodeMrsMsrBankedReg(uint8_t sysM, bool r, bool &isIntReg, int &regIdx,
 bool
 SPAlignmentCheckEnabled(ThreadContext* tc)
 {
-    switch (opModeToEL(currOpMode(tc))) {
+    switch (currEL(tc)) {
       case EL3:
         return ((SCTLR) tc->readMiscReg(MISCREG_SCTLR_EL3)).sa;
       case EL2:

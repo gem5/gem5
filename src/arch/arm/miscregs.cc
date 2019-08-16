@@ -1117,7 +1117,7 @@ canReadAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
 
     bool secure = ArmSystem::haveSecurity(tc) && !scr.ns;
 
-    switch (opModeToEL((OperatingMode) (uint8_t) cpsr.mode)) {
+    switch (currEL(cpsr)) {
       case EL0:
         return secure ? miscRegInfo[reg][MISCREG_USR_S_RD] :
             miscRegInfo[reg][MISCREG_USR_NS_RD];
@@ -1140,7 +1140,7 @@ canWriteAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
     // Check for SP_EL0 access while SPSEL == 0
     if ((reg == MISCREG_SP_EL0) && (tc->readMiscReg(MISCREG_SPSEL) == 0))
         return false;
-    ExceptionLevel el = opModeToEL((OperatingMode) (uint8_t) cpsr.mode);
+    ExceptionLevel el = currEL(cpsr);
     if (reg == MISCREG_DAIF) {
         SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
         if (el == EL0 && !sctlr.uma)

@@ -103,7 +103,7 @@ let {{
                 CPSR cpsr = Cpsr;
                 CPSR spsr = Spsr;
 
-                ExceptionLevel curr_el = opModeToEL((OperatingMode) (uint8_t) cpsr.mode);
+                ExceptionLevel curr_el = currEL(cpsr);
                 switch (curr_el) {
                   case EL3:
                     newPc = xc->tcBase()->readMiscReg(MISCREG_ELR_EL3);
@@ -145,7 +145,7 @@ let {{
                 NextAArch64 = !new_cpsr.width;
                 NextItState = itState(new_cpsr);
                 NPC = purifyTaggedAddr(newPc, xc->tcBase(),
-                    opModeToEL((OperatingMode) (uint8_t) new_cpsr.mode));
+                    currEL(new_cpsr));
 
                 LLSCLock = 0;  // Clear exclusive monitor
                 SevMailbox = 1; //Set Event Register

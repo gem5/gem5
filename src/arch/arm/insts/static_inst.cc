@@ -703,7 +703,7 @@ ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc,
     const bool have_virtualization = ArmSystem::haveVirtualization(tc);
     const bool have_security = ArmSystem::haveSecurity(tc);
     const bool is_secure = inSecureState(tc);
-    const ExceptionLevel cur_el = opModeToEL(currOpMode(tc));
+    const ExceptionLevel cur_el = currEL(tc);
 
     if (cur_el == EL0 && ELIs64(tc, EL1))
         return checkFPAdvSIMDEnabled64(tc, cpsr, cpacr);

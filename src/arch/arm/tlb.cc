@@ -1428,7 +1428,7 @@ TLB::tranTypeEL(CPSR cpsr, ArmTranslationType type)
       case S1CTran:
       case S1S2NsTran:
       case HypMode:
-        return opModeToEL((OperatingMode)(uint8_t)cpsr.mode);
+        return currEL(cpsr);
 
       default:
         panic("Unknown translation mode!\n");

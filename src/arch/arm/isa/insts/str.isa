@@ -114,7 +114,7 @@ let {{
 
             auto tc = xc->tcBase();
             if (badMode32(tc, static_cast<OperatingMode>(regMode))) {
-                return undefinedFault32(tc, opModeToEL(currOpMode(tc)));
+                return undefinedFault32(tc, currEL(tc));
             }
 
             CPSR cpsr = Cpsr;
