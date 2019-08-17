@@ -1146,10 +1146,10 @@ class TraceCPU : public BaseCPU
   public:
 
     /** Used to get a reference to the icache port. */
-    MasterPort &getInstPort() { return icachePort; }
+    Port &getInstPort() { return icachePort; }
 
     /** Used to get a reference to the dcache port. */
-    MasterPort &getDataPort() { return dcachePort; }
+    Port &getDataPort() { return dcachePort; }
 
     void regStats();
 };

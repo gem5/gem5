@@ -105,7 +105,8 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     void setDcachePort(MasterPort *dcache_port);
 
-    MasterPort &getDataPort() override
+    Port &
+    getDataPort() override
     {
         // the checker does not have ports on its own so return the
         // data port of the actual CPU core
@@ -113,7 +114,8 @@ class CheckerCPU : public BaseCPU, public ExecContext
         return *dcachePort;
     }
 
-    MasterPort &getInstPort() override
+    Port &
+    getInstPort() override
     {
         // the checker does not have ports on its own so return the
         // data port of the actual CPU core

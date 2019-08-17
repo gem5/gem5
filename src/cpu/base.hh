@@ -158,7 +158,7 @@ class BaseCPU : public ClockedObject
      *
      * @return a reference to the data port
      */
-    virtual MasterPort &getDataPort() = 0;
+    virtual Port &getDataPort() = 0;
 
     /**
      * Returns a sendFunctional delegate for use with port proxies.
@@ -166,8 +166,9 @@ class BaseCPU : public ClockedObject
     virtual PortProxy::SendFunctionalFunc
     getSendFunctional()
     {
-        MasterPort &port = getDataPort();
-        return [&port](PacketPtr pkt)->void { port.sendFunctional(pkt); };
+        auto port = dynamic_cast<MasterPort *>(&getDataPort());
+        assert(port);
+        return [port](PacketPtr pkt)->void { port->sendFunctional(pkt); };
     }
 
     /**
@@ -176,7 +177,7 @@ class BaseCPU : public ClockedObject
      *
      * @return a reference to the instruction port
      */
-    virtual MasterPort &getInstPort() = 0;
+    virtual Port &getInstPort() = 0;
 
     /** Reads this CPU's ID. */
     int cpuId() const { return _cpuId; }

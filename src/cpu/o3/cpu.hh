@@ -735,14 +735,14 @@ class FullO3CPU : public BaseO3CPU
     }
 
     /** Used by the fetch unit to get a hold of the instruction port. */
-    MasterPort &
+    Port &
     getInstPort() override
     {
         return this->fetch.getInstPort();
     }
 
     /** Get the dcache port (used to find block size for translations). */
-    MasterPort &
+    Port &
     getDataPort() override
     {
         return this->iew.ldstQueue.getDataPort();

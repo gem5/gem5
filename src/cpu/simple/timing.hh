@@ -264,10 +264,10 @@ class TimingSimpleCPU : public BaseSimpleCPU
   protected:
 
      /** Return a reference to the data port. */
-    MasterPort &getDataPort() override { return dcachePort; }
+    Port &getDataPort() override { return dcachePort; }
 
     /** Return a reference to the instruction port. */
-    MasterPort &getInstPort() override { return icachePort; }
+    Port &getInstPort() override { return icachePort; }
 
   public:
 

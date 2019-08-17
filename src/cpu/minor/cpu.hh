@@ -114,10 +114,10 @@ class MinorCPU : public BaseCPU
     Enums::ThreadPolicy threadPolicy;
   protected:
      /** Return a reference to the data port. */
-    MasterPort &getDataPort() override;
+    Port &getDataPort() override;
 
     /** Return a reference to the instruction port. */
-    MasterPort &getInstPort() override;
+    Port &getInstPort() override;
 
   public:
     MinorCPU(MinorCPUParams *params);
