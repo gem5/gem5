@@ -161,6 +161,16 @@ class BaseCPU : public ClockedObject
     virtual MasterPort &getDataPort() = 0;
 
     /**
+     * Returns a sendFunctional delegate for use with port proxies.
+     */
+    virtual PortProxy::SendFunctionalFunc
+    getSendFunctional()
+    {
+        MasterPort &port = getDataPort();
+        return [&port](PacketPtr pkt)->void { port.sendFunctional(pkt); };
+    }
+
+    /**
      * Purely virtual method that returns a reference to the instruction
      * port. All subclasses must implement this method.
      *

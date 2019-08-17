@@ -55,7 +55,7 @@
 #include "sim/system.hh"
 
 FSTranslatingPortProxy::FSTranslatingPortProxy(ThreadContext *tc)
-    : PortProxy(tc->getCpuPtr()->getDataPort(),
+    : PortProxy(tc->getCpuPtr()->getSendFunctional(),
                 tc->getSystemPtr()->cacheLineSize()), _tc(tc)
 {
 }
