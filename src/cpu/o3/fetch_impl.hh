@@ -60,11 +60,13 @@
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
 //#include "cpu/checker/cpu.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/fetch.hh"
 #include "cpu/exetrace.hh"
 #include "debug/Activity.hh"
 #include "debug/Drain.hh"
 #include "debug/Fetch.hh"
+#include "debug/O3CPU.hh"
 #include "debug/O3PipeView.hh"
 #include "mem/packet.hh"
 #include "params/DerivO3CPU.hh"
@@ -96,6 +98,7 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
       fetchQueueSize(params->fetchQueueSize),
       numThreads(params->numThreads),
       numFetchingThreads(params->smtNumFetchingThreads),
+      icachePort(this, _cpu),
       finishTranslationEvent(this)
 {
     if (numThreads > Impl::MaxThreads)
@@ -692,7 +695,7 @@ DefaultFetch<Impl>::finishTranslation(const Fault &fault,
         fetchedCacheLines++;
 
         // Access the cache.
-        if (!cpu->getInstPort().sendTimingReq(data_pkt)) {
+        if (!icachePort.sendTimingReq(data_pkt)) {
             assert(retryPkt == NULL);
             assert(retryTid == InvalidThreadID);
             DPRINTF(Fetch, "[tid:%i] Out of MSHRs!\n", tid);
@@ -1422,7 +1425,7 @@ DefaultFetch<Impl>::recvReqRetry()
         assert(retryTid != InvalidThreadID);
         assert(fetchStatus[retryTid] == IcacheWaitRetry);
 
-        if (cpu->getInstPort().sendTimingReq(retryPkt)) {
+        if (icachePort.sendTimingReq(retryPkt)) {
             fetchStatus[retryTid] = IcacheWaitResponse;
             // Notify Fetch Request probe when a retryPkt is successfully sent.
             // Note that notify must be called before retryPkt is set to NULL.
@@ -1668,6 +1671,26 @@ DefaultFetch<Impl>::profileStall(ThreadID tid) {
             "(Status: %i)\n",
             tid, fetchStatus[tid]);
     }
+}
+
+template<class Impl>
+bool
+DefaultFetch<Impl>::IcachePort::recvTimingResp(PacketPtr pkt)
+{
+    DPRINTF(O3CPU, "Fetch unit received timing\n");
+    // We shouldn't ever get a cacheable block in Modified state
+    assert(pkt->req->isUncacheable() ||
+           !(pkt->cacheResponding() && !pkt->hasSharers()));
+    fetch->processCacheCompletion(pkt);
+
+    return true;
+}
+
+template<class Impl>
+void
+DefaultFetch<Impl>::IcachePort::recvReqRetry()
+{
+    fetch->recvReqRetry();
 }
 
 #endif//__CPU_O3_FETCH_IMPL_HH__

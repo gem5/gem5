@@ -90,26 +90,6 @@ BaseO3CPU::regStats()
     BaseCPU::regStats();
 }
 
-template<class Impl>
-bool
-FullO3CPU<Impl>::IcachePort::recvTimingResp(PacketPtr pkt)
-{
-    DPRINTF(O3CPU, "Fetch unit received timing\n");
-    // We shouldn't ever get a cacheable block in Modified state
-    assert(pkt->req->isUncacheable() ||
-           !(pkt->cacheResponding() && !pkt->hasSharers()));
-    fetch->processCacheCompletion(pkt);
-
-    return true;
-}
-
-template<class Impl>
-void
-FullO3CPU<Impl>::IcachePort::recvReqRetry()
-{
-    fetch->recvReqRetry();
-}
-
 template <class Impl>
 FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     : BaseO3CPU(params),
@@ -148,8 +128,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
       isa(numThreads, NULL),
 
-      icachePort(&fetch, this),
-
       timeBuffer(params->backComSize, params->forwardComSize),
       fetchQueue(params->backComSize, params->forwardComSize),
       decodeQueue(params->backComSize, params->forwardComSize),
@@ -172,7 +150,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     if (params->checker) {
         BaseCPU *temp_checker = params->checker;
         checker = dynamic_cast<Checker<Impl> *>(temp_checker);
-        checker->setIcachePort(&icachePort);
+        checker->setIcachePort(&this->fetch.getInstPort());
         checker->setSystem(params->system);
     } else {
         checker = NULL;

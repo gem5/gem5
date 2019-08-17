@@ -133,31 +133,6 @@ class FullO3CPU : public BaseO3CPU
 
   private:
 
-    /**
-     * IcachePort class for instruction fetch.
-     */
-    class IcachePort : public MasterPort
-    {
-      protected:
-        /** Pointer to fetch. */
-        DefaultFetch<Impl> *fetch;
-
-      public:
-        /** Default constructor. */
-        IcachePort(DefaultFetch<Impl> *_fetch, FullO3CPU<Impl>* _cpu)
-            : MasterPort(_cpu->name() + ".icache_port", _cpu), fetch(_fetch)
-        { }
-
-      protected:
-
-        /** Timing version of receive.  Handles setting fetch to the
-         * proper status to start fetching. */
-        virtual bool recvTimingResp(PacketPtr pkt);
-
-        /** Handles doing a retry of a failed fetch. */
-        virtual void recvReqRetry();
-    };
-
     /** The tick event used for scheduling CPU ticks. */
     EventFunctionWrapper tickEvent;
 
@@ -629,9 +604,6 @@ class FullO3CPU : public BaseO3CPU
 
     std::vector<TheISA::ISA *> isa;
 
-    /** Instruction port. Note that it has to appear after the fetch stage. */
-    IcachePort icachePort;
-
   public:
     /** Enum to give each stage a specific index, so when calling
      *  activateStage() or deactivateStage(), they can specify which stage
@@ -763,7 +735,11 @@ class FullO3CPU : public BaseO3CPU
     }
 
     /** Used by the fetch unit to get a hold of the instruction port. */
-    MasterPort &getInstPort() override { return icachePort; }
+    MasterPort &
+    getInstPort() override
+    {
+        return this->fetch.getInstPort();
+    }
 
     /** Get the dcache port (used to find block size for translations). */
     MasterPort &
