@@ -60,47 +60,6 @@
 class SimObject;
 
 /** Forward declaration */
-class BaseSlavePort;
-
-/**
- * A BaseMasterPort is a protocol-agnostic master port, responsible
- * only for the structural connection to a slave port. The final
- * master port that inherits from the base class must override the
- * bind member function for the specific slave port class.
- */
-class BaseMasterPort : public Port
-{
-  protected:
-    BaseSlavePort *_baseSlavePort;
-
-    BaseMasterPort(const std::string &name, PortID id=InvalidPortID);
-    virtual ~BaseMasterPort();
-
-  public:
-    BaseSlavePort& getSlavePort() const;
-    void bind(Port &peer) override;
-    void unbind() override;
-};
-
-/**
- * A BaseSlavePort is a protocol-agnostic slave port, responsible
- * only for the structural connection to a master port.
- */
-class BaseSlavePort : public Port
-{
-  protected:
-    BaseMasterPort *_baseMasterPort;
-
-    BaseSlavePort(const std::string &name, PortID id=InvalidPortID);
-    virtual ~BaseSlavePort();
-
-  public:
-    BaseMasterPort& getMasterPort() const;
-    void bind(Port &peer) override;
-    void unbind() override;
-};
-
-/** Forward declaration */
 class SlavePort;
 
 /**
@@ -113,7 +72,7 @@ class SlavePort;
  * The three protocols are atomic, timing, and functional, each with its own
  * header file.
  */
-class MasterPort : public BaseMasterPort, public AtomicRequestProtocol,
+class MasterPort : public Port, public AtomicRequestProtocol,
     public TimingRequestProtocol, public FunctionalRequestProtocol
 {
     friend class SlavePort;
@@ -296,7 +255,7 @@ class MasterPort : public BaseMasterPort, public AtomicRequestProtocol,
  * The three protocols are atomic, timing, and functional, each with its own
  * header file.
  */
-class SlavePort : public BaseSlavePort, public AtomicResponseProtocol,
+class SlavePort : public Port, public AtomicResponseProtocol,
     public TimingResponseProtocol, public FunctionalResponseProtocol
 {
     friend class MasterPort;

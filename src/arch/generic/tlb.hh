@@ -48,7 +48,6 @@
 #include "sim/sim_object.hh"
 
 class ThreadContext;
-class BaseMasterPort;
 
 class BaseTLB : public SimObject
 {

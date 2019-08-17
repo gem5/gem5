@@ -81,9 +81,7 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
-class BaseMasterPort;
 class BasePrefetcher;
-class BaseSlavePort;
 class MSHR;
 class MasterPort;
 class QueueEntry;

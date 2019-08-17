@@ -51,81 +51,11 @@
 #include "base/trace.hh"
 #include "sim/sim_object.hh"
 
-BaseMasterPort::BaseMasterPort(const std::string &name, PortID _id)
-    : Port(name, _id), _baseSlavePort(NULL)
-{
-}
-
-BaseMasterPort::~BaseMasterPort()
-{
-}
-
-BaseSlavePort&
-BaseMasterPort::getSlavePort() const
-{
-    if (_baseSlavePort == NULL)
-        panic("Cannot getSlavePort on master port %s that is not connected\n",
-              name());
-
-    return *_baseSlavePort;
-}
-
-void
-BaseMasterPort::bind(Port &peer)
-{
-    _baseSlavePort = dynamic_cast<BaseSlavePort *>(&peer);
-    fatal_if(!_baseSlavePort, "Attempt to bind port %s to non-master port %s.",
-             name(), peer.name());
-    Port::bind(peer);
-}
-
-void
-BaseMasterPort::unbind()
-{
-    _baseSlavePort = nullptr;
-    Port::unbind();
-}
-
-BaseSlavePort::BaseSlavePort(const std::string &name, PortID _id)
-    : Port(name, _id), _baseMasterPort(NULL)
-{
-}
-
-BaseSlavePort::~BaseSlavePort()
-{
-}
-
-BaseMasterPort&
-BaseSlavePort::getMasterPort() const
-{
-    if (_baseMasterPort == NULL)
-        panic("Cannot getMasterPort on slave port %s that is not connected\n",
-              name());
-
-    return *_baseMasterPort;
-}
-
-void
-BaseSlavePort::bind(Port &peer)
-{
-    _baseMasterPort = dynamic_cast<BaseMasterPort *>(&peer);
-    fatal_if(!_baseMasterPort, "Attempt to bind port %s to non-slave port %s.",
-             name(), peer.name());
-    Port::bind(peer);
-}
-
-void
-BaseSlavePort::unbind()
-{
-    _baseMasterPort = nullptr;
-    Port::unbind();
-}
-
 /**
  * Master port
  */
 MasterPort::MasterPort(const std::string& name, SimObject* _owner, PortID _id)
-    : BaseMasterPort(name, _id), _slavePort(NULL), owner(*_owner)
+    : Port(name, _id), _slavePort(NULL), owner(*_owner)
 {
 }
 
@@ -143,7 +73,7 @@ MasterPort::bind(Port &peer)
     }
     // master port keeps track of the slave port
     _slavePort = slave_port;
-    BaseMasterPort::bind(peer);
+    Port::bind(peer);
     // slave port also keeps track of master port
     _slavePort->slaveBind(*this);
 }
@@ -156,7 +86,7 @@ MasterPort::unbind()
               name());
     _slavePort->slaveUnbind();
     _slavePort = nullptr;
-    BaseMasterPort::unbind();
+    Port::unbind();
 }
 
 AddrRangeList
@@ -182,7 +112,7 @@ MasterPort::printAddr(Addr a)
  * Slave port
  */
 SlavePort::SlavePort(const std::string& name, SimObject* _owner, PortID id)
-    : BaseSlavePort(name, id), _masterPort(NULL), defaultBackdoorWarned(false),
+    : Port(name, id), _masterPort(NULL), defaultBackdoorWarned(false),
     owner(*_owner)
 {
 }
@@ -195,14 +125,14 @@ void
 SlavePort::slaveUnbind()
 {
     _masterPort = NULL;
-    BaseSlavePort::unbind();
+    Port::unbind();
 }
 
 void
 SlavePort::slaveBind(MasterPort& master_port)
 {
     _masterPort = &master_port;
-    BaseSlavePort::bind(master_port);
+    Port::bind(master_port);
 }
 
 Tick

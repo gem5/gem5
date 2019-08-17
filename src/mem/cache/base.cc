@@ -64,9 +64,6 @@
 #include "params/WriteAllocator.hh"
 #include "sim/core.hh"
 
-class BaseMasterPort;
-class BaseSlavePort;
-
 using namespace std;
 
 BaseCache::CacheSlavePort::CacheSlavePort(const std::string &_name,
