@@ -317,7 +317,7 @@ DefaultIEW<Impl>::startupStage()
 
     // Initialize the checker's dcache port here
     if (cpu->checker) {
-        cpu->checker->setDcachePort(&cpu->getDataPort());
+        cpu->checker->setDcachePort(&ldstQueue.getDataPort());
     }
 
     cpu->activateStage(O3CPU::IEWIdx);

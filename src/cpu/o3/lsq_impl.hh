@@ -49,6 +49,7 @@
 #include <string>
 
 #include "base/logging.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/lsq.hh"
 #include "debug/Drain.hh"
 #include "debug/Fetch.hh"
@@ -71,6 +72,7 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
                   params->smtLSQThreshold)),
       maxSQEntries(maxLSQAllocation(lsqPolicy, SQEntries, params->numThreads,
                   params->smtLSQThreshold)),
+      dcachePort(this, cpu_ptr),
       numThreads(params->numThreads)
 {
     assert(numThreads > 0 && numThreads <= Impl::MaxThreads);
@@ -103,7 +105,7 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         thread.emplace_back(maxLQEntries, maxSQEntries);
         thread[tid].init(cpu, iew_ptr, params, this, tid);
-        thread[tid].setDcachePort(&cpu_ptr->getDataPort());
+        thread[tid].setDcachePort(&dcachePort);
     }
 }
 
@@ -1162,6 +1164,32 @@ LSQ<Impl>::SplitDataRequest::isCacheBlockHit(Addr blockAddr, Addr blockMask)
         }
     }
     return is_hit;
+}
+
+template <class Impl>
+bool
+LSQ<Impl>::DcachePort::recvTimingResp(PacketPtr pkt)
+{
+    return lsq->recvTimingResp(pkt);
+}
+
+template <class Impl>
+void
+LSQ<Impl>::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
+{
+    for (ThreadID tid = 0; tid < cpu->numThreads; tid++) {
+        if (cpu->getCpuAddrMonitor(tid)->doMonitor(pkt)) {
+            cpu->wakeup(tid);
+        }
+    }
+    lsq->recvTimingSnoopReq(pkt);
+}
+
+template <class Impl>
+void
+LSQ<Impl>::DcachePort::recvReqRetry()
+{
+    lsq->recvReqRetry();
 }
 
 #endif//__CPU_O3_LSQ_IMPL_HH__

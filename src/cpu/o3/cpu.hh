@@ -158,49 +158,6 @@ class FullO3CPU : public BaseO3CPU
         virtual void recvReqRetry();
     };
 
-    /**
-     * DcachePort class for the load/store queue.
-     */
-    class DcachePort : public MasterPort
-    {
-      protected:
-
-        /** Pointer to LSQ. */
-        LSQ<Impl> *lsq;
-        FullO3CPU<Impl> *cpu;
-
-      public:
-        /** Default constructor. */
-        DcachePort(LSQ<Impl> *_lsq, FullO3CPU<Impl>* _cpu)
-            : MasterPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq),
-              cpu(_cpu)
-        { }
-
-      protected:
-
-        /** Timing version of receive.  Handles writing back and
-         * completing the load or store that has returned from
-         * memory. */
-        virtual bool recvTimingResp(PacketPtr pkt);
-        virtual void recvTimingSnoopReq(PacketPtr pkt);
-
-        virtual void recvFunctionalSnoop(PacketPtr pkt)
-        {
-            // @todo: Is there a need for potential invalidation here?
-        }
-
-        /** Handles doing a retry of the previous send. */
-        virtual void recvReqRetry();
-
-        /**
-         * As this CPU requires snooping to maintain the load store queue
-         * change the behaviour from the base CPU port.
-         *
-         * @return true since we have to snoop
-         */
-        virtual bool isSnooping() const { return true; }
-    };
-
     /** The tick event used for scheduling CPU ticks. */
     EventFunctionWrapper tickEvent;
 
@@ -675,9 +632,6 @@ class FullO3CPU : public BaseO3CPU
     /** Instruction port. Note that it has to appear after the fetch stage. */
     IcachePort icachePort;
 
-    /** Data port. Note that it has to appear after the iew stages */
-    DcachePort dcachePort;
-
   public:
     /** Enum to give each stage a specific index, so when calling
      *  activateStage() or deactivateStage(), they can specify which stage
@@ -812,7 +766,11 @@ class FullO3CPU : public BaseO3CPU
     MasterPort &getInstPort() override { return icachePort; }
 
     /** Get the dcache port (used to find block size for translations). */
-    MasterPort &getDataPort() override { return dcachePort; }
+    MasterPort &
+    getDataPort() override
+    {
+        return this->iew.ldstQueue.getDataPort();
+    }
 
     /** Stat for total number of times the CPU is descheduled. */
     Stats::Scalar timesIdled;

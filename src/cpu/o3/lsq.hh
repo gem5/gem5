@@ -58,6 +58,9 @@
 struct DerivO3CPUParams;
 
 template <class Impl>
+class FullO3CPU;
+
+template <class Impl>
 class LSQ
 
 {
@@ -113,6 +116,49 @@ class LSQ
         LSQRequest* request() { return _request; }
         virtual void complete() = 0;
         void writebackDone() { _request->writebackDone(); }
+    };
+
+    /**
+     * DcachePort class for the load/store queue.
+     */
+    class DcachePort : public MasterPort
+    {
+      protected:
+
+        /** Pointer to LSQ. */
+        LSQ<Impl> *lsq;
+        FullO3CPU<Impl> *cpu;
+
+      public:
+        /** Default constructor. */
+        DcachePort(LSQ<Impl> *_lsq, FullO3CPU<Impl>* _cpu)
+            : MasterPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq),
+              cpu(_cpu)
+        { }
+
+      protected:
+
+        /** Timing version of receive.  Handles writing back and
+         * completing the load or store that has returned from
+         * memory. */
+        virtual bool recvTimingResp(PacketPtr pkt);
+        virtual void recvTimingSnoopReq(PacketPtr pkt);
+
+        virtual void recvFunctionalSnoop(PacketPtr pkt)
+        {
+            // @todo: Is there a need for potential invalidation here?
+        }
+
+        /** Handles doing a retry of the previous send. */
+        virtual void recvReqRetry();
+
+        /**
+         * As this CPU requires snooping to maintain the load store queue
+         * change the behaviour from the base CPU port.
+         *
+         * @return true since we have to snoop
+         */
+        virtual bool isSnooping() const { return true; }
     };
 
     /** Memory operation metadata.
@@ -1004,6 +1050,8 @@ class LSQ
     /** Another store port is in use */
     void cachePortBusy(bool is_load);
 
+    MasterPort &getDataPort() { return dcachePort; }
+
   protected:
     /** D-cache is blocked */
     bool _cacheBlocked;
@@ -1056,6 +1104,9 @@ class LSQ
 
     /** Max SQ Size - Used to Enforce Sharing Policies. */
     unsigned maxSQEntries;
+
+    /** Data port. */
+    DcachePort dcachePort;
 
     /** The LSQ units for individual threads. */
     std::vector<LSQUnit> thread;

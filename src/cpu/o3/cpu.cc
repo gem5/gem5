@@ -111,32 +111,6 @@ FullO3CPU<Impl>::IcachePort::recvReqRetry()
 }
 
 template <class Impl>
-bool
-FullO3CPU<Impl>::DcachePort::recvTimingResp(PacketPtr pkt)
-{
-    return lsq->recvTimingResp(pkt);
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
-{
-    for (ThreadID tid = 0; tid < cpu->numThreads; tid++) {
-        if (cpu->getCpuAddrMonitor(tid)->doMonitor(pkt)) {
-            cpu->wakeup(tid);
-        }
-    }
-    lsq->recvTimingSnoopReq(pkt);
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::DcachePort::recvReqRetry()
-{
-    lsq->recvReqRetry();
-}
-
-template <class Impl>
 FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     : BaseO3CPU(params),
       itb(params->itb),
@@ -175,7 +149,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
       isa(numThreads, NULL),
 
       icachePort(&fetch, this),
-      dcachePort(&iew.ldstQueue, this),
 
       timeBuffer(params->backComSize, params->forwardComSize),
       fetchQueue(params->backComSize, params->forwardComSize),
