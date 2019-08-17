@@ -126,6 +126,25 @@ class Port
 
     /** Is this port currently connected to a peer? */
     bool isConnected() const { return _connected; }
+
+    /** A utility function to make it easier to swap out ports. */
+    void
+    takeOverFrom(Port *old)
+    {
+        assert(old);
+        assert(old->isConnected());
+        assert(!isConnected());
+        Port &peer = old->getPeer();
+        assert(peer.isConnected());
+
+        // Disconnect the original binding.
+        old->unbind();
+        peer.unbind();
+
+        // Connect the new binding.
+        peer.bind(*this);
+        bind(peer);
+    }
 };
 
 #endif //__SIM_PORT_HH__
