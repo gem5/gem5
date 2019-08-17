@@ -147,4 +147,11 @@ class Port
     }
 };
 
+static inline std::ostream &
+operator << (std::ostream &os, const Port &port)
+{
+    os << port.name();
+    return os;
+}
+
 #endif //__SIM_PORT_HH__
