@@ -49,6 +49,6 @@ MessageSlavePort::recvAtomic(PacketPtr pkt)
         return recvMessage(pkt);
     } else {
         panic("%s received unexpected atomic command %s from %s.\n",
-              name(), pkt->cmd.toString(), getMasterPort().name());
+              name(), pkt->cmd.toString(), getPeer());
     }
 }

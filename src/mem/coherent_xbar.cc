@@ -125,8 +125,7 @@ CoherentXBar::init()
     for (const auto& p: slavePorts) {
         // check if the connected master port is snooping
         if (p->isSnooping()) {
-            DPRINTF(AddrRanges, "Adding snooping master %s\n",
-                    p->getMasterPort().name());
+            DPRINTF(AddrRanges, "Adding snooping master %s\n", p->getPeer());
             snoopPorts.push_back(p);
         }
     }

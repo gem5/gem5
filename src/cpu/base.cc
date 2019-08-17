@@ -628,24 +628,10 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         Port *new_dtb_port = newTC->getDTBPtr()->getTableWalkerPort();
 
         // Move over any table walker ports if they exist
-        if (new_itb_port) {
-            assert(!new_itb_port->isConnected());
-            assert(old_itb_port);
-            assert(old_itb_port->isConnected());
-            auto &slavePort =
-                dynamic_cast<BaseMasterPort *>(old_itb_port)->getSlavePort();
-            old_itb_port->unbind();
-            new_itb_port->bind(slavePort);
-        }
-        if (new_dtb_port) {
-            assert(!new_dtb_port->isConnected());
-            assert(old_dtb_port);
-            assert(old_dtb_port->isConnected());
-            auto &slavePort =
-                dynamic_cast<BaseMasterPort *>(old_dtb_port)->getSlavePort();
-            old_dtb_port->unbind();
-            new_dtb_port->bind(slavePort);
-        }
+        if (new_itb_port)
+            new_itb_port->takeOverFrom(old_itb_port);
+        if (new_dtb_port)
+            new_dtb_port->takeOverFrom(old_dtb_port);
         newTC->getITBPtr()->takeOverFrom(oldTC->getITBPtr());
         newTC->getDTBPtr()->takeOverFrom(oldTC->getDTBPtr());
 
@@ -667,26 +653,10 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
             newChecker->getDTBPtr()->takeOverFrom(oldChecker->getDTBPtr());
 
             // Move over any table walker ports if they exist for checker
-            if (new_checker_itb_port) {
-                assert(!new_checker_itb_port->isConnected());
-                assert(old_checker_itb_port);
-                assert(old_checker_itb_port->isConnected());
-                auto &slavePort =
-                    dynamic_cast<BaseMasterPort *>(old_checker_itb_port)->
-                    getSlavePort();
-                old_checker_itb_port->unbind();
-                new_checker_itb_port->bind(slavePort);
-            }
-            if (new_checker_dtb_port) {
-                assert(!new_checker_dtb_port->isConnected());
-                assert(old_checker_dtb_port);
-                assert(old_checker_dtb_port->isConnected());
-                auto &slavePort =
-                    dynamic_cast<BaseMasterPort *>(old_checker_dtb_port)->
-                    getSlavePort();
-                old_checker_dtb_port->unbind();
-                new_checker_dtb_port->bind(slavePort);
-            }
+            if (new_checker_itb_port)
+                new_checker_itb_port->takeOverFrom(old_checker_itb_port);
+            if (new_checker_dtb_port)
+                new_checker_dtb_port->takeOverFrom(old_checker_dtb_port);
         }
     }
 
@@ -708,19 +678,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     // ports are dangling while the old CPU has its ports connected
     // already. Unbind the old CPU and then bind the ports of the one
     // we are switching to.
-    assert(!getInstPort().isConnected());
-    assert(oldCPU->getInstPort().isConnected());
-    auto &inst_peer_port =
-        dynamic_cast<BaseMasterPort &>(oldCPU->getInstPort()).getSlavePort();
-    oldCPU->getInstPort().unbind();
-    getInstPort().bind(inst_peer_port);
-
-    assert(!getDataPort().isConnected());
-    assert(oldCPU->getDataPort().isConnected());
-    auto &data_peer_port =
-        dynamic_cast<BaseMasterPort &>(oldCPU->getDataPort()).getSlavePort();
-    oldCPU->getDataPort().unbind();
-    getDataPort().bind(data_peer_port);
+    getInstPort().takeOverFrom(&oldCPU->getInstPort());
+    getDataPort().takeOverFrom(&oldCPU->getDataPort());
 }
 
 void

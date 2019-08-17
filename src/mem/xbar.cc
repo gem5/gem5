@@ -344,7 +344,7 @@ void
 BaseXBar::recvRangeChange(PortID master_port_id)
 {
     DPRINTF(AddrRanges, "Received range change from slave port %s\n",
-            masterPorts[master_port_id]->getSlavePort().name());
+            masterPorts[master_port_id]->getPeer());
 
     // remember that we got a range from this master port and thus the
     // connected slave module
@@ -405,8 +405,8 @@ BaseXBar::recvRangeChange(PortID master_port_id)
                       "%s:\n\t%s\n\t%s\n",
                       name(),
                       r.to_string(),
-                      masterPorts[master_port_id]->getSlavePort().name(),
-                      masterPorts[conflict_id]->getSlavePort().name());
+                      masterPorts[master_port_id]->getPeer(),
+                      masterPorts[conflict_id]->getPeer());
             }
         }
     }
@@ -557,11 +557,11 @@ BaseXBar::regStats()
     // and snoop responses) and what came from the slave and was
     // forwarded to the master (responses and snoop requests)
     for (int i = 0; i < slavePorts.size(); i++) {
-        pktCount.subname(i, slavePorts[i]->getMasterPort().name());
-        pktSize.subname(i, slavePorts[i]->getMasterPort().name());
+        pktCount.subname(i, slavePorts[i]->getPeer().name());
+        pktSize.subname(i, slavePorts[i]->getPeer().name());
         for (int j = 0; j < masterPorts.size(); j++) {
-            pktCount.ysubname(j, masterPorts[j]->getSlavePort().name());
-            pktSize.ysubname(j, masterPorts[j]->getSlavePort().name());
+            pktCount.ysubname(j, masterPorts[j]->getPeer().name());
+            pktSize.ysubname(j, masterPorts[j]->getPeer().name());
         }
     }
 }
