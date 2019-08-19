@@ -235,6 +235,7 @@ class Gicv3(BaseGic):
         node.append(self._state.interruptCellsProperty())
         node.append(self._state.addrCellsProperty())
         node.append(self._state.sizeCellsProperty())
+        node.append(FdtProperty("ranges"))
         node.append(FdtProperty("interrupt-controller"))
 
         redist_stride = 0x40000 if self.gicv4 else 0x20000
