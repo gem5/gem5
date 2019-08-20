@@ -836,6 +836,10 @@ Gicv3Its::read(PacketPtr pkt)
         value = gitsTyper;
         break;
 
+      case GITS_TYPER + 4:
+        value = gitsTyper.high;
+        break;
+
       case GITS_CBASER:
         value = gitsCbaser;
         break;
