@@ -146,7 +146,7 @@ void
 ItsProcess::writeDeviceTable(Yield &yield, uint32_t device_id, DTE dte)
 {
     const Addr base = its.pageAddress(Gicv3Its::DEVICE_TABLE);
-    const Addr address = base + device_id;
+    const Addr address = base + (device_id * sizeof(dte));
 
     DPRINTF(ITS, "Writing DTE at address %#x: %#x\n", address, dte);
 
@@ -157,7 +157,7 @@ void
 ItsProcess::writeIrqTranslationTable(
     Yield &yield, const Addr itt_base, uint32_t event_id, ITTE itte)
 {
-    const Addr address = itt_base + event_id;
+    const Addr address = itt_base + (event_id * sizeof(itte));
 
     doWrite(yield, address, &itte, sizeof(itte));
 
@@ -169,7 +169,7 @@ ItsProcess::writeIrqCollectionTable(
     Yield &yield, uint32_t collection_id, CTE cte)
 {
     const Addr base = its.pageAddress(Gicv3Its::COLLECTION_TABLE);
-    const Addr address = base + collection_id;
+    const Addr address = base + (collection_id * sizeof(cte));
 
     doWrite(yield, address, &cte, sizeof(cte));
 
@@ -179,10 +179,10 @@ ItsProcess::writeIrqCollectionTable(
 uint64_t
 ItsProcess::readDeviceTable(Yield &yield, uint32_t device_id)
 {
-    const Addr base = its.pageAddress(Gicv3Its::DEVICE_TABLE);
-    const Addr address = base + device_id;
-
     uint64_t dte;
+    const Addr base = its.pageAddress(Gicv3Its::DEVICE_TABLE);
+    const Addr address = base + (device_id * sizeof(dte));
+
     doRead(yield, address, &dte, sizeof(dte));
 
     DPRINTF(ITS, "Reading DTE at address %#x: %#x\n", address, dte);
@@ -193,9 +193,9 @@ uint64_t
 ItsProcess::readIrqTranslationTable(
     Yield &yield, const Addr itt_base, uint32_t event_id)
 {
-    const Addr address = itt_base + event_id;
-
     uint64_t itte;
+    const Addr address = itt_base + (event_id * sizeof(itte));
+
     doRead(yield, address, &itte, sizeof(itte));
 
     DPRINTF(ITS, "Reading ITTE at address %#x: %#x\n", address, itte);
@@ -205,10 +205,10 @@ ItsProcess::readIrqTranslationTable(
 uint64_t
 ItsProcess::readIrqCollectionTable(Yield &yield, uint32_t collection_id)
 {
-    const Addr base = its.pageAddress(Gicv3Its::COLLECTION_TABLE);
-    const Addr address = base + collection_id;
-
     uint64_t cte;
+    const Addr base = its.pageAddress(Gicv3Its::COLLECTION_TABLE);
+    const Addr address = base + (collection_id * sizeof(cte));
+
     doRead(yield, address, &cte, sizeof(cte));
 
     DPRINTF(ITS, "Reading CTE at address %#x: %#x\n", address, cte);
