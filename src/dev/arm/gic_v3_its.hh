@@ -257,6 +257,7 @@ class Gicv3Its : public BasicPioDevice
     bool lpiOutOfRange(uint32_t intid) const;
 
   private: // Command
+    uint64_t maxCommands() const;
     void checkCommandQueue();
     void incrementReadPointer();
 

@@ -1065,11 +1065,15 @@ Gicv3Its::incrementReadPointer()
     gitsCreadr.offset = gitsCreadr.offset + 1;
 
     // Check for wrapping
-    auto queue_end = (4096 * (gitsCbaser.size + 1));
-
-    if (gitsCreadr.offset == queue_end) {
+    if (gitsCreadr.offset == maxCommands()) {
         gitsCreadr.offset = 0;
     }
+}
+
+uint64_t
+Gicv3Its::maxCommands() const
+{
+    return (4096 * (gitsCbaser.size + 1)) / sizeof(ItsCommand::CommandEntry);
 }
 
 void
@@ -1077,6 +1081,13 @@ Gicv3Its::checkCommandQueue()
 {
     if (!gitsControl.enabled || !gitsCbaser.valid)
         return;
+
+    // If GITS_CWRITER gets set by sw to a value bigger than the
+    // allowed one, the command queue should stop processing commands
+    // until the register gets reset to an allowed one
+    if (gitsCwriter.offset >= maxCommands()) {
+        return;
+    }
 
     if (gitsCwriter.offset != gitsCreadr.offset) {
         // writer and reader pointing to different command
