@@ -336,6 +336,7 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     void virtualIncrementEOICount();
     bool virtualIsEOISplitMode() const;
     void virtualUpdate();
+    RegVal bpr1(Gicv3::GroupId group);
 
   public:
 

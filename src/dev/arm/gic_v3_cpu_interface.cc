@@ -304,102 +304,45 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
 
       // Binary Point Register 0
       case MISCREG_ICC_BPR0:
-      case MISCREG_ICC_BPR0_EL1:
+      case MISCREG_ICC_BPR0_EL1: {
         if ((currEL() == EL1) && !inSecureState() && hcr_fmo) {
             return readMiscReg(MISCREG_ICV_BPR0_EL1);
         }
 
-        M5_FALLTHROUGH;
+        value = isa->readMiscRegNoEffect(MISCREG_ICC_BPR0_EL1);
+        break;
+      }
 
       // Binary Point Register 1
       case MISCREG_ICC_BPR1:
       case MISCREG_ICC_BPR1_EL1: {
-            if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
-                return readMiscReg(MISCREG_ICV_BPR1_EL1);
-            }
+        value = bpr1(isSecureBelowEL3() ? Gicv3::G1S : Gicv3::G1NS);
+        break;
+      }
 
-            Gicv3::GroupId group =
-                misc_reg == MISCREG_ICC_BPR0_EL1 ? Gicv3::G0S : Gicv3::G1S;
+      // Virtual Binary Point Register 0
+      case MISCREG_ICV_BPR0_EL1: {
+        ICH_VMCR_EL2 ich_vmcr_el2 =
+            isa->readMiscRegNoEffect(MISCREG_ICH_VMCR_EL2);
 
-            if (group == Gicv3::G1S && !inSecureState()) {
-                group = Gicv3::G1NS;
-            }
-
-            ICC_CTLR_EL1 icc_ctlr_el1_s =
-                isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL1_S);
-
-            if ((group == Gicv3::G1S) && !isEL3OrMon() &&
-                icc_ctlr_el1_s.CBPR) {
-                group = Gicv3::G0S;
-            }
-
-            bool sat_inc = false;
-
-            ICC_CTLR_EL1 icc_ctlr_el1_ns =
-                isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL1_NS);
-
-            if ((group == Gicv3::G1NS) && (currEL() < EL3) &&
-                icc_ctlr_el1_ns.CBPR) {
-                // Reads return BPR0 + 1 saturated to 7, WI
-                group = Gicv3::G0S;
-                sat_inc = true;
-            }
-
-            uint8_t bpr;
-
-            if (group == Gicv3::G0S) {
-                bpr = isa->readMiscRegNoEffect(MISCREG_ICC_BPR0_EL1);
-            } else {
-                bpr = isa->readMiscRegNoEffect(MISCREG_ICC_BPR1_EL1);
-                bpr = std::max(bpr, group == Gicv3::G1S ?
-                    GIC_MIN_BPR : GIC_MIN_BPR_NS);
-            }
-
-            if (sat_inc) {
-                bpr++;
-
-                if (bpr > 7) {
-                    bpr = 7;
-                }
-            }
-
-            value = bpr;
-            break;
+        value = ich_vmcr_el2.VBPR0;
+        break;
       }
 
       // Virtual Binary Point Register 1
-      case MISCREG_ICV_BPR0_EL1:
       case MISCREG_ICV_BPR1_EL1: {
-          Gicv3::GroupId group =
-              misc_reg == MISCREG_ICV_BPR0_EL1 ? Gicv3::G0S : Gicv3::G1NS;
-          ICH_VMCR_EL2 ich_vmcr_el2 =
-              isa->readMiscRegNoEffect(MISCREG_ICH_VMCR_EL2);
-          bool sat_inc = false;
+        ICH_VMCR_EL2 ich_vmcr_el2 =
+            isa->readMiscRegNoEffect(MISCREG_ICH_VMCR_EL2);
 
-          if ((group == Gicv3::G1NS) && ich_vmcr_el2.VCBPR) {
-              // bpr0 + 1 saturated to 7, WI
-              group = Gicv3::G0S;
-              sat_inc = true;
-          }
+        if (ich_vmcr_el2.VCBPR) {
+            // bpr0 + 1 saturated to 7, WI
+            value = ich_vmcr_el2.VBPR0 + 1;
+            value = value < 7 ? value : 7;
+        } else {
+            value = ich_vmcr_el2.VBPR1;
+        }
 
-          uint8_t vbpr;
-
-          if (group == Gicv3::G0S) {
-              vbpr = ich_vmcr_el2.VBPR0;
-          } else {
-              vbpr = ich_vmcr_el2.VBPR1;
-          }
-
-          if (sat_inc) {
-              vbpr++;
-
-              if (vbpr > 7) {
-                  vbpr = 7;
-              }
-          }
-
-          value = vbpr;
-          break;
+        break;
       }
 
       // Interrupt Priority Mask Register
@@ -1093,51 +1036,48 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
 
       // Binary Point Register 0
       case MISCREG_ICC_BPR0:
-      case MISCREG_ICC_BPR0_EL1:
+      case MISCREG_ICC_BPR0_EL1: {
+        if ((currEL() == EL1) && !inSecureState() && hcr_fmo) {
+            return setMiscReg(MISCREG_ICV_BPR0_EL1, val);
+        }
+        break;
+      }
       // Binary Point Register 1
       case MISCREG_ICC_BPR1:
       case MISCREG_ICC_BPR1_EL1: {
-          if ((currEL() == EL1) && !inSecureState()) {
-              if (misc_reg == MISCREG_ICC_BPR0_EL1 && hcr_fmo) {
-                  return setMiscReg(MISCREG_ICV_BPR0_EL1, val);
-              } else if (misc_reg == MISCREG_ICC_BPR1_EL1 && hcr_imo) {
-                  return setMiscReg(MISCREG_ICV_BPR1_EL1, val);
-              }
-          }
+        if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
+            return setMiscReg(MISCREG_ICV_BPR1_EL1, val);
+        }
 
-          Gicv3::GroupId group =
-              misc_reg == MISCREG_ICC_BPR0_EL1 ? Gicv3::G0S : Gicv3::G1S;
+        val &= 0x7;
 
-          if (group == Gicv3::G1S && !inSecureState()) {
-              group = Gicv3::G1NS;
-          }
+        if (isSecureBelowEL3()) {
+            // group == Gicv3::G1S
+            ICC_CTLR_EL1 icc_ctlr_el1_s =
+                isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL1_S);
 
-          ICC_CTLR_EL1 icc_ctlr_el1_s =
-              isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL1_S);
+            val = val > GIC_MIN_BPR ? val : GIC_MIN_BPR;
+            if (haveEL(EL3) && !isEL3OrMon() && icc_ctlr_el1_s.CBPR) {
+                isa->setMiscRegNoEffect(MISCREG_ICC_BPR0_EL1, val);
+            } else {
+                isa->setMiscRegNoEffect(MISCREG_ICC_BPR1_EL1_S, val);
+            }
+            return;
+        } else {
+            // group == Gicv3::G1NS
+            ICC_CTLR_EL1 icc_ctlr_el1_ns =
+                isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL1_NS);
 
-          if ((group == Gicv3::G1S) && !isEL3OrMon() &&
-              icc_ctlr_el1_s.CBPR) {
-              group = Gicv3::G0S;
-          }
+            val = val > GIC_MIN_BPR_NS ? val : GIC_MIN_BPR_NS;
+            if (haveEL(EL3) && !isEL3OrMon() && icc_ctlr_el1_ns.CBPR) {
+                // Non secure writes from EL1 and EL2 are ignored
+            } else {
+                isa->setMiscRegNoEffect(MISCREG_ICC_BPR1_EL1_NS, val);
+            }
+            return;
+        }
 
-          ICC_CTLR_EL1 icc_ctlr_el1_ns =
-              isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL1_NS);
-
-          if ((group == Gicv3::G1NS) && (currEL() < EL3) &&
-              icc_ctlr_el1_ns.CBPR) {
-              // BPR0 + 1 saturated to 7, WI
-              return;
-          }
-
-          uint8_t min_val = (group == Gicv3::G1NS) ?
-              GIC_MIN_BPR_NS : GIC_MIN_BPR;
-          val &= 0x7;
-
-          if (val < min_val) {
-              val = min_val;
-          }
-
-          break;
+        break;
       }
 
       // Virtual Binary Point Register 0
@@ -1961,8 +1901,10 @@ Gicv3CPUInterface::groupPriorityMask(Gicv3::GroupId group)
 
     if (group == Gicv3::G0S) {
         bpr = readMiscReg(MISCREG_ICC_BPR0_EL1) & 0x7;
+    } else if (group == Gicv3::G1S) {
+        bpr = bpr1(Gicv3::G1S) & 0x7;
     } else {
-        bpr = readMiscReg(MISCREG_ICC_BPR1_EL1) & 0x7;
+        bpr = bpr1(Gicv3::G1NS) & 0x7;
     }
 
     if (group == Gicv3::G1NS) {
@@ -2554,6 +2496,47 @@ Gicv3CPUInterface::maintenanceInterruptStatus() const
     }
 
     return ich_misr_el2;
+}
+
+RegVal
+Gicv3CPUInterface::bpr1(Gicv3::GroupId group)
+{
+    bool hcr_imo = getHCREL2IMO();
+    if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
+        return readMiscReg(MISCREG_ICV_BPR1_EL1);
+    }
+
+    RegVal bpr = 0;
+
+    if (group == Gicv3::G1S) {
+        ICC_CTLR_EL1 icc_ctlr_el1_s =
+            isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL1_S);
+
+        if (!isEL3OrMon() && icc_ctlr_el1_s.CBPR) {
+            bpr = isa->readMiscRegNoEffect(MISCREG_ICC_BPR0_EL1);
+        } else {
+            bpr = isa->readMiscRegNoEffect(MISCREG_ICC_BPR1_EL1_S);
+            bpr = bpr > GIC_MIN_BPR ? bpr : GIC_MIN_BPR;
+        }
+    } else if (group == Gicv3::G1NS) {
+        ICC_CTLR_EL1 icc_ctlr_el1_ns =
+            isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL1_NS);
+
+        // Check if EL3 is implemented and this is a non secure accesses at
+        // EL1 and EL2
+        if (haveEL(EL3) && !isEL3OrMon() && icc_ctlr_el1_ns.CBPR) {
+            // Reads return BPR0 + 1 saturated to 7, WI
+            bpr = isa->readMiscRegNoEffect(MISCREG_ICC_BPR0_EL1) + 1;
+            bpr = bpr < 7 ? bpr : 7;
+        } else {
+            bpr = isa->readMiscRegNoEffect(MISCREG_ICC_BPR1_EL1_NS);
+            bpr = bpr > GIC_MIN_BPR_NS ? bpr : GIC_MIN_BPR_NS;
+        }
+    } else {
+        panic("Should be used with G1S and G1NS only\n");
+    }
+
+    return bpr;
 }
 
 void
