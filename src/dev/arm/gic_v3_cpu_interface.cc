@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Metempsy Technology Consulting
  * All rights reserved.
  *
@@ -1416,68 +1428,25 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       // Software Generated Interrupt Group 0 Register
       case MISCREG_ICC_SGI0R:
       case MISCREG_ICC_SGI0R_EL1:
+        generateSGI(val, Gicv3::G0S);
+        break;
 
       // Software Generated Interrupt Group 1 Register
       case MISCREG_ICC_SGI1R:
-      case MISCREG_ICC_SGI1R_EL1:
+      case MISCREG_ICC_SGI1R_EL1: {
+        Gicv3::GroupId group = inSecureState() ? Gicv3::G1S : Gicv3::G1NS;
+
+        generateSGI(val, group);
+        break;
+      }
 
       // Alias Software Generated Interrupt Group 1 Register
       case MISCREG_ICC_ASGI1R:
       case MISCREG_ICC_ASGI1R_EL1: {
-          bool ns = !inSecureState();
-          Gicv3::GroupId group;
+        Gicv3::GroupId group = inSecureState() ? Gicv3::G1NS : Gicv3::G1S;
 
-          if (misc_reg == MISCREG_ICC_SGI1R_EL1) {
-              group = ns ? Gicv3::G1NS : Gicv3::G1S;
-          } else if (misc_reg == MISCREG_ICC_ASGI1R_EL1) {
-              group = ns ? Gicv3::G1S : Gicv3::G1NS;
-          } else {
-              group = Gicv3::G0S;
-          }
-
-          if (distributor->DS && group == Gicv3::G1S) {
-              group = Gicv3::G0S;
-          }
-
-          uint8_t aff3 = bits(val, 55, 48);
-          uint8_t aff2 = bits(val, 39, 32);
-          uint8_t aff1 = bits(val, 23, 16);;
-          uint16_t target_list = bits(val, 15, 0);
-          uint32_t int_id = bits(val, 27, 24);
-          bool irm = bits(val, 40, 40);
-          uint8_t rs = bits(val, 47, 44);
-
-          for (int i = 0; i < gic->getSystem()->numContexts(); i++) {
-              Gicv3Redistributor * redistributor_i =
-                  gic->getRedistributor(i);
-              uint32_t affinity_i = redistributor_i->getAffinity();
-
-              if (irm) {
-                  // Interrupts routed to all PEs in the system,
-                  // excluding "self"
-                  if (affinity_i == redistributor->getAffinity()) {
-                      continue;
-                  }
-              } else {
-                  // Interrupts routed to the PEs specified by
-                  // Aff3.Aff2.Aff1.<target list>
-                  if ((affinity_i >> 8) !=
-                      ((aff3 << 16) | (aff2 << 8) | (aff1 << 0))) {
-                      continue;
-                  }
-
-                  uint8_t aff0_i = bits(affinity_i, 7, 0);
-
-                  if (!(aff0_i >= rs * 16 && aff0_i < (rs + 1) * 16 &&
-                      ((0x1 << (aff0_i - rs * 16)) & target_list))) {
-                      continue;
-                  }
-              }
-
-              redistributor_i->sendSGI(int_id, group, ns);
-          }
-
-          break;
+        generateSGI(val, group);
+        break;
       }
 
       // System Register Enable Register EL1
@@ -1787,6 +1756,50 @@ Gicv3CPUInterface::virtualDropPriority()
     }
 
     return 0xff;
+}
+
+void
+Gicv3CPUInterface::generateSGI(RegVal val, Gicv3::GroupId group)
+{
+    uint8_t aff3 = bits(val, 55, 48);
+    uint8_t aff2 = bits(val, 39, 32);
+    uint8_t aff1 = bits(val, 23, 16);;
+    uint16_t target_list = bits(val, 15, 0);
+    uint32_t int_id = bits(val, 27, 24);
+    bool irm = bits(val, 40, 40);
+    uint8_t rs = bits(val, 47, 44);
+
+    bool ns = !inSecureState();
+
+    for (int i = 0; i < gic->getSystem()->numContexts(); i++) {
+        Gicv3Redistributor * redistributor_i =
+            gic->getRedistributor(i);
+        uint32_t affinity_i = redistributor_i->getAffinity();
+
+        if (irm) {
+            // Interrupts routed to all PEs in the system,
+            // excluding "self"
+            if (affinity_i == redistributor->getAffinity()) {
+                continue;
+            }
+        } else {
+            // Interrupts routed to the PEs specified by
+            // Aff3.Aff2.Aff1.<target list>
+            if ((affinity_i >> 8) !=
+                ((aff3 << 16) | (aff2 << 8) | (aff1 << 0))) {
+                continue;
+            }
+
+            uint8_t aff0_i = bits(affinity_i, 7, 0);
+
+            if (!(aff0_i >= rs * 16 && aff0_i < (rs + 1) * 16 &&
+                ((0x1 << (aff0_i - rs * 16)) & target_list))) {
+                continue;
+            }
+        }
+
+        redistributor_i->sendSGI(int_id, group, ns);
+    }
 }
 
 void

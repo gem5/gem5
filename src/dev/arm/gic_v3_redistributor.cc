@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Metempsy Technology Consulting
  * All rights reserved.
  *
@@ -730,25 +742,30 @@ Gicv3Redistributor::sendSGI(uint32_t int_id, Gicv3::GroupId group, bool ns)
     assert(int_id < Gicv3::SGI_MAX);
     Gicv3::GroupId int_group = getIntGroup(int_id);
 
-    // asked for secure group 1
-    // configured as group 0
-    // send group 0
-    if (int_group == Gicv3::G0S && group == Gicv3::G1S) {
-        group = Gicv3::G0S;
-    }
+    bool forward = false;
 
-    if (group == Gicv3::G0S and int_group != Gicv3::G0S) {
-        return;
-    }
-
-    if (ns && distributor->DS == 0) {
+    if (ns) {
+        // Non-Secure EL1 and EL2 access
         int nsaccess = irqNsacr[int_id];
+        if (int_group == Gicv3::G0S) {
 
-        if ((int_group == Gicv3::G0S && nsaccess < 1) ||
-            (int_group == Gicv3::G1S && nsaccess < 2)) {
-            return;
+            forward = distributor->DS || (nsaccess >= 1);
+
+        } else if (int_group == Gicv3::G1S) {
+            forward = ((group == Gicv3::G1S || group == Gicv3::G1NS ) &&
+                      nsaccess == 2);
+        } else {
+            // G1NS
+            forward = group == Gicv3::G1NS;
         }
+    } else {
+        // Secure EL1 and EL3 access
+        forward = (group == int_group) ||
+            (group == Gicv3::G1S && int_group == Gicv3::G0S &&
+            distributor->DS);
     }
+
+    if (!forward) return;
 
     irqPending[int_id] = true;
     DPRINTF(GIC, "Gicv3ReDistributor::sendSGI(): "
