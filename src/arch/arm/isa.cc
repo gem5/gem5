@@ -737,6 +737,7 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
       case MISCREG_CNTVOFF_EL2 ... MISCREG_CNTPS_CVAL_EL1:
         return getGenericTimer(tc).readMiscReg(misc_reg);
 
+      case MISCREG_ICC_AP0R0 ... MISCREG_ICH_LRC15:
       case MISCREG_ICC_PMR_EL1 ... MISCREG_ICC_IGRPEN1_EL3:
       case MISCREG_ICH_AP0R0_EL2 ... MISCREG_ICH_LR15_EL2:
         return getGICv3CPUInterface(tc).readMiscReg(misc_reg);
@@ -2069,6 +2070,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_CNTVOFF_EL2 ... MISCREG_CNTPS_CVAL_EL1:
             getGenericTimer(tc).setMiscReg(misc_reg, newVal);
             break;
+          case MISCREG_ICC_AP0R0 ... MISCREG_ICH_LRC15:
           case MISCREG_ICC_PMR_EL1 ... MISCREG_ICC_IGRPEN1_EL3:
           case MISCREG_ICH_AP0R0_EL2 ... MISCREG_ICH_LR15_EL2:
             getGICv3CPUInterface(tc).setMiscReg(misc_reg, newVal);
