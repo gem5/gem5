@@ -191,6 +191,7 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
               return readMiscReg(MISCREG_ICV_IGRPEN1_EL1);
           }
 
+          value = readBankedMiscReg(MISCREG_ICC_IGRPEN1_EL1);
           break;
       }
 
@@ -1358,7 +1359,8 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
                                       icc_igrpen1_el3);
           }
 
-          break;
+          setBankedMiscReg(MISCREG_ICC_IGRPEN1_EL1, val);
+          return;
       }
 
       // Virtual Interrupt Group 1 Enable register
