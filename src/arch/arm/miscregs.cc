@@ -962,6 +962,18 @@ decodeCP15Reg64(unsigned crm, unsigned opc1)
             return MISCREG_CNTHP_CVAL;
         }
         break;
+      case 12:
+        switch (opc1) {
+          case 0:
+            return MISCREG_ICC_SGI1R;
+          case 1:
+            return MISCREG_ICC_ASGI1R;
+          case 2:
+            return MISCREG_ICC_SGI0R;
+          default:
+            break;
+        }
+        break;
       case 15:
         if (opc1 == 0)
             return MISCREG_CPUMERRSR;
