@@ -310,8 +310,9 @@ class WalkCache : public SMMUv3BaseCache
                         unsigned stage, unsigned level, bool updStats=true);
     void store(const Entry &incoming);
 
-    void invalidateVA(Addr va, uint16_t asid, uint16_t vmid);
-    void invalidateVAA(Addr va, uint16_t vmid);
+    void invalidateVA(Addr va, uint16_t asid, uint16_t vmid,
+                      const bool leaf_only);
+    void invalidateVAA(Addr va, uint16_t vmid, const bool leaf_only);
     void invalidateASID(uint16_t asid, uint16_t vmid);
     void invalidateVMID(uint16_t vmid);
     void invalidateAll();

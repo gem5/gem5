@@ -492,9 +492,8 @@ SMMUv3::processCommand(const SMMUCommand &cmd)
                     addr, cmd.dw0.vmid);
             }
             tlb.invalidateVAA(addr, cmd.dw0.vmid);
-
-            if (!cmd.dw1.leaf)
-                walkCache.invalidateVAA(addr, cmd.dw0.vmid);
+            const bool leaf_only = cmd.dw1.leaf ? true : false;
+            walkCache.invalidateVAA(addr, cmd.dw0.vmid, leaf_only);
             break;
         }
 
@@ -509,9 +508,9 @@ SMMUv3::processCommand(const SMMUCommand &cmd)
                     addr, cmd.dw0.asid, cmd.dw0.vmid);
             }
             tlb.invalidateVA(addr, cmd.dw0.asid, cmd.dw0.vmid);
-
-            if (!cmd.dw1.leaf)
-                walkCache.invalidateVA(addr, cmd.dw0.asid, cmd.dw0.vmid);
+            const bool leaf_only = cmd.dw1.leaf ? true : false;
+            walkCache.invalidateVA(addr, cmd.dw0.asid, cmd.dw0.vmid,
+                                   leaf_only);
             break;
         }
 
