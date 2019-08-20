@@ -652,6 +652,8 @@ namespace Aarch64
                             return new SWPLA64(machInst, rt, rnsp, rs);
                         else
                             return new LDADDLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
                 }
             case 0x1:
                 switch(size_ar){
@@ -711,6 +713,8 @@ namespace Aarch64
                         return new LDCLRA64(machInst, rt, rnsp, rs);
                     case 0xf:
                         return new LDCLRLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
                 }
             case 0x2:
                 switch(size_ar){
@@ -770,6 +774,8 @@ namespace Aarch64
                         return new LDEORA64(machInst, rt, rnsp, rs);
                     case 0xf:
                         return new LDEORLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
                 }
             case 0x3:
                 switch(size_ar){
@@ -829,6 +835,8 @@ namespace Aarch64
                         return new LDSETA64(machInst, rt, rnsp, rs);
                     case 0xf:
                         return new LDSETLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
                 }
             case 0x4:
                 switch(size_ar){
@@ -888,6 +896,8 @@ namespace Aarch64
                         return new LDSMAXA64(machInst, rt, rnsp, rs);
                     case 0xf:
                         return new LDSMAXLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
                 }
             case 0x5:
                 switch(size_ar){
@@ -947,6 +957,8 @@ namespace Aarch64
                         return new LDSMINA64(machInst, rt, rnsp, rs);
                     case 0xf:
                         return new LDSMINLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
                 }
             case 0x6:
                 switch(size_ar){
@@ -1006,6 +1018,8 @@ namespace Aarch64
                         return new LDUMAXA64(machInst, rt, rnsp, rs);
                     case 0xf:
                         return new LDUMAXLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
                 }
             case 0x7:
                 switch(size_ar){
@@ -1065,6 +1079,8 @@ namespace Aarch64
                         return new LDUMINA64(machInst, rt, rnsp, rs);
                     case 0xf:
                         return new LDUMINLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
                 }
             default:
                 return new Unknown64(machInst);
