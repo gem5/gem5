@@ -675,10 +675,34 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       case MISCREG_ICH_AP0R0_EL2:
         break;
 
+      // only implemented if supporting 6 or more bits of priority
+      case MISCREG_ICH_AP0R1:
+      case MISCREG_ICH_AP0R1_EL2:
+      // only implemented if supporting 7 or more bits of priority
+      case MISCREG_ICH_AP0R2:
+      case MISCREG_ICH_AP0R2_EL2:
+      // only implemented if supporting 7 or more bits of priority
+      case MISCREG_ICH_AP0R3:
+      case MISCREG_ICH_AP0R3_EL2:
+        // Unimplemented registers are RAZ/WI
+        return 0;
+
       // Hyp Active Priorities Group 1 Registers
       case MISCREG_ICH_AP1R0:
       case MISCREG_ICH_AP1R0_EL2:
         break;
+
+      // only implemented if supporting 6 or more bits of priority
+      case MISCREG_ICH_AP1R1:
+      case MISCREG_ICH_AP1R1_EL2:
+      // only implemented if supporting 7 or more bits of priority
+      case MISCREG_ICH_AP1R2:
+      case MISCREG_ICH_AP1R2_EL2:
+      // only implemented if supporting 7 or more bits of priority
+      case MISCREG_ICH_AP1R3:
+      case MISCREG_ICH_AP1R3_EL2:
+        // Unimplemented registers are RAZ/WI
+        return 0;
 
       // Maintenance Interrupt State Register
       case MISCREG_ICH_MISR:
@@ -1614,12 +1638,38 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       }
 
       // Hyp Active Priorities Group 0 Registers
-      case MISCREG_ICH_AP0R0 ... MISCREG_ICH_AP0R3:
-      case MISCREG_ICH_AP0R0_EL2 ... MISCREG_ICH_AP0R3_EL2:
-      // Hyp Active Priorities Group 1 Registers
-      case MISCREG_ICH_AP1R0 ... MISCREG_ICH_AP1R3:
-      case MISCREG_ICH_AP1R0_EL2 ... MISCREG_ICH_AP1R3_EL2:
+      case MISCREG_ICH_AP0R0:
+      case MISCREG_ICH_AP0R0_EL2:
         break;
+
+      // only implemented if supporting 6 or more bits of priority
+      case MISCREG_ICH_AP0R1:
+      case MISCREG_ICH_AP0R1_EL2:
+      // only implemented if supporting 7 or more bits of priority
+      case MISCREG_ICH_AP0R2:
+      case MISCREG_ICH_AP0R2_EL2:
+      // only implemented if supporting 7 or more bits of priority
+      case MISCREG_ICH_AP0R3:
+      case MISCREG_ICH_AP0R3_EL2:
+        // Unimplemented registers are RAZ/WI
+        return;
+
+      // Hyp Active Priorities Group 1 Registers
+      case MISCREG_ICH_AP1R0:
+      case MISCREG_ICH_AP1R0_EL2:
+        break;
+
+      // only implemented if supporting 6 or more bits of priority
+      case MISCREG_ICH_AP1R1:
+      case MISCREG_ICH_AP1R1_EL2:
+      // only implemented if supporting 7 or more bits of priority
+      case MISCREG_ICH_AP1R2:
+      case MISCREG_ICH_AP1R2_EL2:
+      // only implemented if supporting 7 or more bits of priority
+      case MISCREG_ICH_AP1R3:
+      case MISCREG_ICH_AP1R3_EL2:
+        // Unimplemented registers are RAZ/WI
+        return;
 
       default:
         panic("Gicv3CPUInterface::setMiscReg(): unknown register %d (%s)",
