@@ -978,7 +978,9 @@
                     0x3: PAVGW(Pq,Qq);
                     0x4: PMULHUW(Pq,Qq);
                     0x5: PMULHW(Pq,Qq);
-                    0x7: WarnUnimpl::movntq_Mq_Pq();
+                    //Non-temporal hint is ignored since we don't have
+                    //proper support for it in the memory system.
+                    0x7: MOVNTQ(Mq,Pq);
                     default: UD2();
                 }
                 // repe (0xF3)
@@ -995,7 +997,11 @@
                     0x4: PMULHUW(Vo,Wo);
                     0x5: PMULHW(Vo,Wo);
                     0x6: CVTTPD2DQ(Vo,Wo);
-                    0x7: WarnUnimpl::movntdq_Mo_Vo();
+                    //MOVNTDQ should really use size o (octword), but
+                    //because it is split in two, we use q (quadword).
+                    //Non-temporal hint is ignored since we don't have
+                    //proper support for it in the memory system.
+                    0x7: MOVNTDQ(Mq,Vq);
                 }
                 // repne (0xF2)
                 0x8: decode OPCODE_OP_BOTTOM3 {
