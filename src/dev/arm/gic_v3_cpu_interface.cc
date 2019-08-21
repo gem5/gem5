@@ -204,8 +204,17 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
 
       // Interrupt Group 1 Enable register EL3
       case MISCREG_ICC_MGRPEN1:
-      case MISCREG_ICC_IGRPEN1_EL3:
+      case MISCREG_ICC_IGRPEN1_EL3: {
+          ICC_IGRPEN1_EL3 igrp_el3 = 0;
+          igrp_el3.EnableGrp1S = ((ICC_IGRPEN1_EL1)isa->readMiscRegNoEffect(
+              MISCREG_ICC_IGRPEN1_EL1_S)).Enable;
+
+          igrp_el3.EnableGrp1NS = ((ICC_IGRPEN1_EL1)isa->readMiscRegNoEffect(
+              MISCREG_ICC_IGRPEN1_EL1_NS)).Enable;
+
+          value = igrp_el3;
           break;
+      }
 
       // Running Priority Register
       case MISCREG_ICC_RPR:
@@ -1344,23 +1353,6 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
               return setMiscReg(MISCREG_ICV_IGRPEN1_EL1, val);
           }
 
-          if (haveEL(EL3)) {
-              ICC_IGRPEN1_EL1 icc_igrpen1_el1 = val;
-              ICC_IGRPEN1_EL3 icc_igrpen1_el3 =
-                  isa->readMiscRegNoEffect(MISCREG_ICC_IGRPEN1_EL3);
-
-              if (inSecureState()) {
-                  // Enable is RW alias of ICC_IGRPEN1_EL3.EnableGrp1S
-                  icc_igrpen1_el3.EnableGrp1S = icc_igrpen1_el1.Enable;
-              } else {
-                  // Enable is RW alias of ICC_IGRPEN1_EL3.EnableGrp1NS
-                  icc_igrpen1_el3.EnableGrp1NS = icc_igrpen1_el1.Enable;
-              }
-
-              isa->setMiscRegNoEffect(MISCREG_ICC_IGRPEN1_EL3,
-                                      icc_igrpen1_el3);
-          }
-
           setBankedMiscReg(MISCREG_ICC_IGRPEN1_EL1, val);
           updateDistributor();
           return;
@@ -1381,19 +1373,12 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       case MISCREG_ICC_MGRPEN1:
       case MISCREG_ICC_IGRPEN1_EL3: {
           ICC_IGRPEN1_EL3 icc_igrpen1_el3 = val;
-          ICC_IGRPEN1_EL1 icc_igrpen1_el1 =
-              isa->readMiscRegNoEffect(MISCREG_ICC_IGRPEN1_EL1);
 
-          if (inSecureState()) {
-              // ICC_IGRPEN1_EL1.Enable is RW alias of EnableGrp1S
-              icc_igrpen1_el1.Enable = icc_igrpen1_el3.EnableGrp1S;
-          } else {
-              // ICC_IGRPEN1_EL1.Enable is RW alias of EnableGrp1NS
-              icc_igrpen1_el1.Enable = icc_igrpen1_el3.EnableGrp1NS;
-          }
-
-          isa->setMiscRegNoEffect(MISCREG_ICC_IGRPEN1_EL1, icc_igrpen1_el1);
-          break;
+          isa->setMiscRegNoEffect(
+              MISCREG_ICC_IGRPEN1_EL1_S, icc_igrpen1_el3.EnableGrp1S);
+          isa->setMiscRegNoEffect(
+              MISCREG_ICC_IGRPEN1_EL1_NS, icc_igrpen1_el3.EnableGrp1NS);
+          return;
       }
 
       // Software Generated Interrupt Group 0 Register
