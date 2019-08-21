@@ -36,6 +36,9 @@ class BaseCacheCompressor(SimObject):
     cxx_header = "mem/cache/compressors/base.hh"
 
     block_size = Param.Int(Parent.cache_line_size, "Block size in bytes")
+    size_threshold = Param.Unsigned(Parent.cache_line_size, "Minimum size, "
+        "in bytes, in which a block must be compressed to. Otherwise it is "
+        "stored in its uncompressed state")
 
 class BDI(BaseCacheCompressor):
     type = 'BDI'

@@ -65,6 +65,12 @@ class BaseCacheCompressor : public SimObject {
     const std::size_t blkSize;
 
     /**
+     * Size in bytes at which a compression is classified as bad and therefore
+     * the compressed block is restored to its uncompressed format.
+     */
+    const std::size_t sizeThreshold;
+
+    /**
      * @defgroup CompressionStats Compression specific statistics.
      * @{
      */

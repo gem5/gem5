@@ -73,8 +73,9 @@ BaseCacheCompressor::CompressionData::getSize() const
 }
 
 BaseCacheCompressor::BaseCacheCompressor(const Params *p)
-    : SimObject(p), blkSize(p->block_size)
+    : SimObject(p), blkSize(p->block_size), sizeThreshold(p->size_threshold)
 {
+    fatal_if(blkSize < sizeThreshold, "Compressed data must fit in a block");
 }
 
 void
@@ -98,8 +99,12 @@ BaseCacheCompressor::compress(const uint64_t* data, Cycles& comp_lat,
              "Decompressed line does not match original line.");
     #endif
 
-    // Get compression size
+    // Get compression size. If compressed size is greater than the size
+    // threshold, the compression is seen as unsuccessful
     comp_size_bits = comp_data->getSizeBits();
+    if (comp_size_bits >= sizeThreshold * 8) {
+        comp_size_bits = blkSize * 8;
+    }
 
     // Update stats
     compressionSize[std::ceil(std::log2(comp_size_bits))]++;
@@ -152,15 +157,14 @@ BaseCacheCompressor::regStats()
 {
     SimObject::regStats();
 
-    // We also store when compression is bigger than original block size
     compressionSize
-        .init(std::log2(blkSize*8) + 2)
+        .init(std::log2(blkSize*8) + 1)
         .name(name() + ".compression_size")
         .desc("Number of blocks that were compressed to this power of" \
               "two size.")
         ;
 
-    for (unsigned i = 0; i <= std::log2(blkSize*8) + 1; ++i) {
+    for (unsigned i = 0; i <= std::log2(blkSize*8); ++i) {
         compressionSize.subname(i, std::to_string(1 << i));
         compressionSize.subdesc(i, "Number of blocks that compressed to fit " \
                                    "in " + std::to_string(1 << i) + " bits");
