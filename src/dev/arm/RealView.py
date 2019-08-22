@@ -1098,7 +1098,7 @@ class VExpress_GEM5_V1(VExpress_GEM5_V1_Base):
 class VExpress_GEM5_V2_Base(VExpress_GEM5_Base):
     gic = Gicv3(dist_addr=0x2c000000, redist_addr=0x2c010000,
                 maint_int=ArmPPI(num=25),
-                its=Gicv3Its(pio_addr=0x2c120000))
+                its=Gicv3Its(pio_addr=0x2e010000))
 
     # Limiting to 128 since it will otherwise overlap with PCI space
     gic.cpu_max = 128
