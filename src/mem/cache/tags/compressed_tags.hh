@@ -110,14 +110,6 @@ class CompressedTags : public SectorTags
                          std::vector<CacheBlk*>& evict_blks) override;
 
     /**
-     * Insert the new block into the cache and update replacement data.
-     *
-     * @param pkt Packet holding the address to update
-     * @param blk The block to update.
-     */
-    void insertBlock(const PacketPtr pkt, CacheBlk *blk) override;
-
-    /**
      * Visit each sub-block in the tags and apply a visitor.
      *
      * The visitor should be a std::function that takes a cache block.

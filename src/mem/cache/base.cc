@@ -853,12 +853,6 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
     CompressionBlk* compression_blk = static_cast<CompressionBlk*>(blk);
     M5_VAR_USED const std::size_t prev_size = compression_blk->getSizeBits();
 
-    // Check if new data is co-allocatable
-    const SuperBlk* superblock =
-        static_cast<const SuperBlk*>(compression_blk->getSectorBlock());
-    const bool is_co_allocatable = superblock->isCompressed(compression_blk) &&
-        superblock->canCoAllocate(compression_size);
-
     // If compressed size didn't change enough to modify its co-allocatability
     // there is nothing to do. Otherwise we may be facing a data expansion
     // (block passing from more compressed to less compressed state), or a
@@ -909,7 +903,7 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
         } else {
             // If we do not move the expanded block, we must make room for
             // the expansion to happen, so evict every co-allocated block
-            superblock = static_cast<const SuperBlk*>(
+            const SuperBlk* superblock = static_cast<const SuperBlk*>(
                 compression_blk->getSectorBlock());
             for (auto& sub_blk : superblock->blks) {
                 if (sub_blk->isValid() && (blk != sub_blk)) {
@@ -944,17 +938,6 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
 
     compression_blk->setSizeBits(compression_size);
     compression_blk->setDecompressionLatency(decompression_lat);
-
-    if (is_data_expansion || is_data_contraction) {
-        // If contracting data, for sure data is compressed. If expanding,
-        // both situations can arise. When no contraction or expansion happens
-        // block keeps its old state
-        if (is_co_allocatable) {
-            compression_blk->setCompressed();
-        } else {
-            compression_blk->setUncompressed();
-        }
-    }
 
     return true;
 }
@@ -1503,15 +1486,15 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
         return nullptr;
     }
 
-    // If using a compressor, set compression data. This must be done before
-    // block insertion, as compressed tags use this information.
+    // Insert new block at victimized entry
+    tags->insertBlock(pkt, victim);
+
+    // If using a compressor, set compression data. This must be done after
+    // insertion, as the compression bit may be set.
     if (compressor) {
         compressor->setSizeBits(victim, blk_size_bits);
         compressor->setDecompressionLatency(victim, decompression_lat);
     }
-
-    // Insert new block at victimized entry
-    tags->insertBlock(pkt, victim);
 
     return victim;
 }

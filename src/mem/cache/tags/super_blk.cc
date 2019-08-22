@@ -93,6 +93,27 @@ void
 CompressionBlk::setSizeBits(const std::size_t size)
 {
     _size = size;
+
+    SuperBlk* superblock = static_cast<SuperBlk*>(getSectorBlock());
+
+    // Either this function is called after an insertion, or an update.
+    // If somebody else is present in the block, keep the superblock's
+    // compressibility. Otherwise, check if it can co-allocate
+    const uint8_t num_valid = superblock->getNumValid();
+    assert(num_valid >= 1);
+    if (num_valid == 1) {
+        if (superblock->canCoAllocate(size)) {
+            setCompressed();
+        } else {
+            setUncompressed();
+        }
+    } else {
+        if (superblock->isCompressed(this)) {
+            setCompressed();
+        } else {
+            setUncompressed();
+        }
+    }
 }
 
 Cycles
