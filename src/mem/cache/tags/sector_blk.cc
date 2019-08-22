@@ -116,7 +116,7 @@ SectorSubBlk::print() const
 }
 
 SectorBlk::SectorBlk()
-    : ReplaceableEntry(), _tag(MaxAddr), _validCounter(0), _secureBit(false)
+    : ReplaceableEntry(), _validCounter(0), _tag(MaxAddr), _secureBit(false)
 {
 }
 
@@ -125,6 +125,12 @@ SectorBlk::isValid() const
 {
     // If any of the blocks in the sector is valid, so is the sector
     return _validCounter > 0;
+}
+
+uint8_t
+SectorBlk::getNumValid() const
+{
+    return _validCounter;
 }
 
 bool

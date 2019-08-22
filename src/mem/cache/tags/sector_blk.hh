@@ -144,17 +144,18 @@ class SectorSubBlk : public CacheBlk
  */
 class SectorBlk : public ReplaceableEntry
 {
-  protected:
-    /**
-     * Sector tag value. A sector's tag is the tag of all its sub-blocks.
-     */
-    Addr _tag;
-
+  private:
     /**
      * Counter of the number of valid sub-blocks. The sector is valid if any
      * of its sub-blocks is valid.
      */
     uint8_t _validCounter;
+
+  protected:
+    /**
+     * Sector tag value. A sector's tag is the tag of all its sub-blocks.
+     */
+    Addr _tag;
 
     /**
      * Whether sector blk is in secure-space or not.
@@ -176,6 +177,13 @@ class SectorBlk : public ReplaceableEntry
      * @return True if any of the blocks in the sector is valid.
      */
     bool isValid() const;
+
+    /**
+     * Get the number of sub-blocks that have been validated.
+     *
+     * @return The number of valid sub-blocks.
+     */
+    uint8_t getNumValid() const;
 
     /**
      * Checks that a sector block is secure. A single secure block suffices
