@@ -187,6 +187,15 @@ class Gicv3Its(BasicPioDevice):
     # ID_bits [12:8] = 0b11111: ITS supports 31 EventID bits
     gits_typer = Param.UInt64(0x30023F01, "GITS_TYPER RO value")
 
+    def generateDeviceTree(self, state):
+        node = self.generateBasicPioDeviceNode(state, "gic-its", self.pio_addr,
+                                               self.pio_size)
+        node.appendCompatible(["arm,gic-v3-its"])
+        node.append(FdtProperty("msi-controller"))
+        node.append(FdtPropertyWords("#msi-cells", [1]))
+
+        return node
+
 class Gicv3(BaseGic):
     type = 'Gicv3'
     cxx_header = "dev/arm/gic_v3.hh"
@@ -253,5 +262,8 @@ class Gicv3(BaseGic):
             self.interruptCells(1, int(self.maint_int.num)-16, 0xf04)))
 
         node.appendPhandle(self)
+
+        # Generate the ITS device tree
+        node.append(self.its.generateDeviceTree(self._state))
 
         yield node
