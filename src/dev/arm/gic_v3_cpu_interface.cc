@@ -128,7 +128,7 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
               return isa->readMiscRegNoEffect(MISCREG_ICV_AP1R0_EL1);
           }
 
-          break;
+          return readBankedMiscReg(MISCREG_ICC_AP1R0_EL1);
       }
 
       case MISCREG_ICC_AP1R1:
@@ -740,7 +740,8 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
             return isa->setMiscRegNoEffect(MISCREG_ICV_AP1R0_EL1, val);
         }
 
-        break;
+        setBankedMiscReg(MISCREG_ICC_AP1R0_EL1, val);
+        return;
 
       case MISCREG_ICC_AP1R1:
       case MISCREG_ICC_AP1R1_EL1:
@@ -1719,11 +1720,23 @@ Gicv3CPUInterface::getHPPIR1() const
 void
 Gicv3CPUInterface::dropPriority(Gicv3::GroupId group)
 {
-    int apr_misc_reg;
-    RegVal apr;
-    apr_misc_reg = group == Gicv3::G0S ?
-                   MISCREG_ICC_AP0R0_EL1 : MISCREG_ICC_AP1R0_EL1;
-    apr = isa->readMiscRegNoEffect(apr_misc_reg);
+    int apr_misc_reg = 0;
+
+    switch (group) {
+      case Gicv3::G0S:
+        apr_misc_reg = MISCREG_ICC_AP0R0_EL1;
+        break;
+      case Gicv3::G1S:
+        apr_misc_reg = MISCREG_ICC_AP1R0_EL1_S;
+        break;
+      case Gicv3::G1NS:
+        apr_misc_reg = MISCREG_ICC_AP1R0_EL1_NS;
+        break;
+      default:
+        panic("Invalid Gicv3::GroupId");
+    }
+
+    RegVal apr = isa->readMiscRegNoEffect(apr_misc_reg);
 
     if (apr) {
         apr &= apr - 1;
@@ -1814,8 +1827,22 @@ Gicv3CPUInterface::activateIRQ(uint32_t int_id, Gicv3::GroupId group)
     uint32_t prio = hppi.prio & 0xf8;
     int apr_bit = prio >> (8 - PRIORITY_BITS);
     int reg_bit = apr_bit % 32;
-    int apr_idx = group == Gicv3::G0S ?
-                 MISCREG_ICC_AP0R0_EL1 : MISCREG_ICC_AP1R0_EL1;
+
+    int apr_idx = 0;
+    switch (group) {
+      case Gicv3::G0S:
+        apr_idx = MISCREG_ICC_AP0R0_EL1;
+        break;
+      case Gicv3::G1S:
+        apr_idx = MISCREG_ICC_AP1R0_EL1_S;
+        break;
+      case Gicv3::G1NS:
+        apr_idx = MISCREG_ICC_AP1R0_EL1_NS;
+        break;
+      default:
+        panic("Invalid Gicv3::GroupId");
+    }
+
     RegVal apr = isa->readMiscRegNoEffect(apr_idx);
     apr |= (1 << reg_bit);
     isa->setMiscRegNoEffect(apr_idx, apr);

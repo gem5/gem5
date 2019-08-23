@@ -4533,7 +4533,7 @@ ISA::initializeMiscRegMetadata()
         .allPrivileges().exceptUserMode()
         .mapsTo(MISCREG_ICC_AP0R3);
     InitReg(MISCREG_ICC_AP1R0_EL1)
-        .banked()
+        .banked64()
         .mapsTo(MISCREG_ICC_AP1R0);
     InitReg(MISCREG_ICC_AP1R0_EL1_NS)
         .bankedChild()
@@ -4544,7 +4544,7 @@ ISA::initializeMiscRegMetadata()
         .allPrivileges().exceptUserMode()
         .mapsTo(MISCREG_ICC_AP1R0_S);
     InitReg(MISCREG_ICC_AP1R1_EL1)
-        .banked()
+        .banked64()
         .mapsTo(MISCREG_ICC_AP1R1);
     InitReg(MISCREG_ICC_AP1R1_EL1_NS)
         .bankedChild()
@@ -4555,7 +4555,7 @@ ISA::initializeMiscRegMetadata()
         .allPrivileges().exceptUserMode()
         .mapsTo(MISCREG_ICC_AP1R1_S);
     InitReg(MISCREG_ICC_AP1R2_EL1)
-        .banked()
+        .banked64()
         .mapsTo(MISCREG_ICC_AP1R2);
     InitReg(MISCREG_ICC_AP1R2_EL1_NS)
         .bankedChild()
@@ -4566,7 +4566,7 @@ ISA::initializeMiscRegMetadata()
         .allPrivileges().exceptUserMode()
         .mapsTo(MISCREG_ICC_AP1R2_S);
     InitReg(MISCREG_ICC_AP1R3_EL1)
-        .banked()
+        .banked64()
         .mapsTo(MISCREG_ICC_AP1R3);
     InitReg(MISCREG_ICC_AP1R3_EL1_NS)
         .bankedChild()
