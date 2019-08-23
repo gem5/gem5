@@ -932,6 +932,8 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
             }
         }
 
+        update();
+
         break;
 
       default:
