@@ -2276,19 +2276,19 @@ Gicv3CPUInterface::groupEnabled(Gicv3::GroupId group) const
       case Gicv3::G0S: {
         ICC_IGRPEN0_EL1 icc_igrpen0_el1 =
             isa->readMiscRegNoEffect(MISCREG_ICC_IGRPEN0_EL1);
-        return icc_igrpen0_el1.Enable;
+        return icc_igrpen0_el1.Enable && distributor->EnableGrp0;
       }
 
       case Gicv3::G1S: {
         ICC_IGRPEN1_EL1 icc_igrpen1_el1_s =
             isa->readMiscRegNoEffect(MISCREG_ICC_IGRPEN1_EL1_S);
-        return icc_igrpen1_el1_s.Enable;
+        return icc_igrpen1_el1_s.Enable && distributor->EnableGrp1S;
       }
 
       case Gicv3::G1NS: {
         ICC_IGRPEN1_EL1 icc_igrpen1_el1_ns =
             isa->readMiscRegNoEffect(MISCREG_ICC_IGRPEN1_EL1_NS);
-        return icc_igrpen1_el1_ns.Enable;
+        return icc_igrpen1_el1_ns.Enable && distributor->EnableGrp1NS;
       }
 
       default:
