@@ -1653,7 +1653,7 @@ Gicv3CPUInterface::virtualFindActive(uint32_t int_id) const
 uint32_t
 Gicv3CPUInterface::getHPPIR0() const
 {
-    if (hppi.prio == 0xff) {
+    if (hppi.prio == 0xff || !groupEnabled(hppi.group)) {
         return Gicv3::INTID_SPURIOUS;
     }
 
@@ -1679,7 +1679,7 @@ Gicv3CPUInterface::getHPPIR0() const
 uint32_t
 Gicv3CPUInterface::getHPPIR1() const
 {
-    if (hppi.prio == 0xff) {
+    if (hppi.prio == 0xff || !groupEnabled(hppi.group)) {
         return Gicv3::INTID_SPURIOUS;
     }
 
