@@ -1,0 +1,129 @@
+/*
+ * Copyright 2019 Google Inc.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ */
+
+component CortexA76x1
+{
+
+    composition
+    {
+        core : ARMCortexA76x1CT();
+
+        // Bridges for the core.
+        ambaBridge : PVBus2AMBAPV();
+        gic_pv2gic : PVBusGICv3Comms();
+        gic_pv2amba : PVBus2AMBAPV();
+        gic_amba2pv : AMBAPV2PVBus();
+
+        // Adapters for CPU-to-GIC signals
+        CNTHPIRQ : SGSignal2AMBAPVSignal();
+        CNTHVIRQ : SGSignal2AMBAPVSignal();
+        CNTPNSIRQ : SGSignal2AMBAPVSignal();
+        CNTPSIRQ : SGSignal2AMBAPVSignal();
+        CNTVIRQ : SGSignal2AMBAPVSignal();
+        COMMIRQ : SGSignal2AMBAPVSignal();
+        CTIDBGIRQ : SGSignal2AMBAPVSignal();
+        PMUIRQ : SGSignal2AMBAPVSignal();
+        VCPUMNTIRQ : SGSignal2AMBAPVSignal();
+
+        // Clocks.
+        clock1Hz : MasterClock();
+        clockDiv : ClockDivider();
+        clockDivPeriph : ClockDivider(mul=0x01800000);
+    }
+
+    connection
+    {
+        // The main interface with memory.
+        core.pvbus_m0 => ambaBridge.pvbus_s;
+        ambaBridge.amba_pv_m => self.amba;
+
+        // Connection to the GIC.
+        self.redistributor_s => gic_amba2pv.amba_pv_s;
+        // Bridges coming in.
+        gic_amba2pv.pvbus_m => gic_pv2gic.pvbus_s;
+        // Bridge to GICV3Comms.
+        gic_pv2gic.distributor_m[0] => core.gicv3_redistributor_s[0];
+        // Bridges going out.
+        gic_pv2gic.pvbus_m => gic_pv2amba.pvbus_s;
+        gic_pv2amba.amba_pv_m => self.redistributor_m;
+
+        // Connections from CPU to adapters
+        core.CNTHPIRQ[0] => CNTHPIRQ.sg_signal_s;
+        CNTHPIRQ.amba_pv_signal_m => self.cnthpirq;
+        core.CNTHVIRQ[0] => CNTHVIRQ.sg_signal_s;
+        CNTHVIRQ.amba_pv_signal_m => self.cnthvirq;
+        core.CNTPNSIRQ[0] => CNTPNSIRQ.sg_signal_s;
+        CNTPNSIRQ.amba_pv_signal_m => self.cntpnsirq;
+        core.CNTPSIRQ[0] => CNTPSIRQ.sg_signal_s;
+        CNTPSIRQ.amba_pv_signal_m => self.cntpsirq;
+        core.CNTVIRQ[0] => CNTVIRQ.sg_signal_s;
+        CNTVIRQ.amba_pv_signal_m => self.cntvirq;
+        core.commirq[0] => COMMIRQ.sg_signal_s;
+        COMMIRQ.amba_pv_signal_m => self.commirq;
+        core.ctidbgirq[0] => CTIDBGIRQ.sg_signal_s;
+        CTIDBGIRQ.amba_pv_signal_m => self.ctidbgirq;
+        core.pmuirq[0] => PMUIRQ.sg_signal_s;
+        PMUIRQ.amba_pv_signal_m => self.pmuirq;
+        core.vcpumntirq[0] => VCPUMNTIRQ.sg_signal_s;
+        VCPUMNTIRQ.amba_pv_signal_m => self.vcpumntirq;
+
+        // Clocks.
+        clock1Hz.clk_out => clockDiv.clk_in;
+        clock1Hz.clk_out => clockDivPeriph.clk_in;
+        clockDiv.clk_out => core.core_clk_in[0];
+        clockDivPeriph.clk_out => core.clk_in;
+    }
+
+    properties
+    {
+        component_type = "System";
+    }
+
+    master port<AMBAPV> amba;
+    slave port<ExportedClockRateControl> clock_rate_s
+    {
+        behavior set_mul_div(uint64_t mul, uint64_t div)
+        {
+            clockDiv.rate.set64(mul, div);
+        }
+    }
+    slave port<AMBAPV> redistributor_s;
+    master port<AMBAPV> redistributor_m;
+
+    // External ports for CPU-to-GIC signals
+    master port<AMBAPVSignal> cnthpirq;
+    master port<AMBAPVSignal> cnthvirq;
+    master port<AMBAPVSignal> cntpsirq;
+    master port<AMBAPVSignal> cntvirq;
+    master port<AMBAPVSignal> commirq;
+    master port<AMBAPVSignal> ctidbgirq;
+    master port<AMBAPVSignal> pmuirq;
+    master port<AMBAPVSignal> vcpumntirq;
+    master port<AMBAPVSignal> cntpnsirq;
+}
