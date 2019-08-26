@@ -553,6 +553,7 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
               return readMiscReg(MISCREG_ICV_CTLR_EL1);
           }
 
+          value = readBankedMiscReg(MISCREG_ICC_CTLR_EL1);
           // Enforce value for RO bits
           // ExtRange [19], INTIDs in the range 1024..8191 not supported
           // RSS [18], SGIs with affinity level 0 values of 0-255 are supported
@@ -1132,7 +1133,7 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
            */
           ICC_CTLR_EL1 requested_icc_ctlr_el1 = val;
           ICC_CTLR_EL1 icc_ctlr_el1 =
-              isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL1);
+              readBankedMiscReg(MISCREG_ICC_CTLR_EL1);
 
           ICC_CTLR_EL3 icc_ctlr_el3 =
               isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL3);
@@ -1190,8 +1191,8 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
 
           isa->setMiscRegNoEffect(MISCREG_ICC_CTLR_EL3, icc_ctlr_el3);
 
-          val = icc_ctlr_el1;
-          break;
+          setBankedMiscReg(MISCREG_ICC_CTLR_EL1, icc_ctlr_el1);
+          return;
       }
 
       // Virtual Control Register
@@ -1963,8 +1964,11 @@ Gicv3CPUInterface::isEOISplitMode() const
             isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL3);
         return icc_ctlr_el3.EOImode_EL3;
     } else {
-        ICC_CTLR_EL1 icc_ctlr_el1 =
-            isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL1);
+        ICC_CTLR_EL1 icc_ctlr_el1 = 0;
+        if (inSecureState())
+            icc_ctlr_el1 = isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL1_S);
+        else
+            icc_ctlr_el1 = isa->readMiscRegNoEffect(MISCREG_ICC_CTLR_EL1_NS);
         return icc_ctlr_el1.EOImode;
     }
 }
