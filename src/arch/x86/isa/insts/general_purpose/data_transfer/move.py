@@ -333,10 +333,12 @@ processDescriptor:
 };
 
 def macroop MOVNTI_M_R {
+    warn_once "MOVNTI: Ignoring non-temporal hint, modeling as cacheable!"
     st reg, seg, sib, disp
 };
 
 def macroop MOVNTI_P_R {
+    warn_once "MOVNTI_P: Ignoring non-temporal hint, modeling as cacheable!"
     rdip t7
     st reg, seg, riprel, disp
 };

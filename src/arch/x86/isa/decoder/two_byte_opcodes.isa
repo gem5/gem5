@@ -878,6 +878,8 @@
                     // no prefix
                     0x0: decode OPCODE_OP_BOTTOM3 {
                         0x2: CMPPS(Vo,Wo,Ib);
+                        //Non-temporal hint is ignored since we don't have
+                        //proper support for it in the memory system.
                         0x3: MOVNTI(Mdp,Gdp);
                         0x4: PINSRW(Pq,Ew,Ib);
                         0x5: PEXTRW(Gd,PRq,Ib);
