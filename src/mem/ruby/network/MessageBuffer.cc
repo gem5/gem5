@@ -51,6 +51,7 @@ MessageBuffer::MessageBuffer(const Params *p)
     m_consumer = NULL;
     m_size_last_time_size_checked = 0;
     m_size_at_cycle_start = 0;
+    m_stalled_at_cycle_start = 0;
     m_msgs_this_cycle = 0;
     m_priority_rank = 0;
 
@@ -89,10 +90,12 @@ MessageBuffer::areNSlotsAvailable(unsigned int n, Tick current_time)
     // until schd cycle, but enqueue operations effect the visible
     // size immediately
     unsigned int current_size = 0;
+    unsigned int current_stall_size = 0;
 
     if (m_time_last_time_pop < current_time) {
-        // no pops this cycle - heap size is correct
+        // no pops this cycle - heap and stall queue size is correct
         current_size = m_prio_heap.size();
+        current_stall_size = m_stall_map_size;
     } else {
         if (m_time_last_time_enqueue < current_time) {
             // no enqueues this cycle - m_size_at_cycle_start is correct
@@ -102,15 +105,19 @@ MessageBuffer::areNSlotsAvailable(unsigned int n, Tick current_time)
             // enqueued msgs to m_size_at_cycle_start
             current_size = m_size_at_cycle_start + m_msgs_this_cycle;
         }
+
+        // Stall queue size at start is considered
+        current_stall_size = m_stalled_at_cycle_start;
     }
 
     // now compare the new size with our max size
-    if (current_size + m_stall_map_size + n <= m_max_size) {
+    if (current_size + current_stall_size + n <= m_max_size) {
         return true;
     } else {
         DPRINTF(RubyQueue, "n: %d, current_size: %d, heap size: %d, "
                 "m_max_size: %d\n",
-                n, current_size, m_prio_heap.size(), m_max_size);
+                n, current_size + current_stall_size,
+                m_prio_heap.size(), m_max_size);
         m_not_avail_count++;
         return false;
     }
@@ -234,6 +241,7 @@ MessageBuffer::dequeue(Tick current_time, bool decrement_messages)
     // adjusted until schd cycle
     if (m_time_last_time_pop < current_time) {
         m_size_at_cycle_start = m_prio_heap.size();
+        m_stalled_at_cycle_start = m_stall_map_size;
         m_time_last_time_pop = current_time;
     }
 
@@ -274,6 +282,7 @@ MessageBuffer::clear()
     m_time_last_time_enqueue = 0;
     m_time_last_time_pop = 0;
     m_size_at_cycle_start = 0;
+    m_stalled_at_cycle_start = 0;
     m_msgs_this_cycle = 0;
 }
 

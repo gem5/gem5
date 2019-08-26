@@ -192,6 +192,7 @@ class MessageBuffer : public SimObject
     Tick m_last_arrival_time;
 
     unsigned int m_size_at_cycle_start;
+    unsigned int m_stalled_at_cycle_start;
     unsigned int m_msgs_this_cycle;
 
     Stats::Scalar m_not_avail_count;  // count the # of times I didn't have N
