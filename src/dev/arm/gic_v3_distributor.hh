@@ -222,13 +222,14 @@ class Gicv3Distributor : public Serializable
     void serialize(CheckpointOut & cp) const override;
     void unserialize(CheckpointIn & cp) override;
     void update();
-    void updateAndInformCPUInterfaces();
+    Gicv3CPUInterface* route(uint32_t int_id);
 
   public:
 
     Gicv3Distributor(Gicv3 * gic, uint32_t it_lines);
 
     void deassertSPI(uint32_t int_id);
+    void clearIrqCpuInterface(uint32_t int_id);
     void init();
     void initState();
     uint64_t read(Addr addr, size_t size, bool is_secure_access);

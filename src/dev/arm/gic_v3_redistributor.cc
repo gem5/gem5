@@ -536,7 +536,7 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
             }
         }
 
-        updateAndInformCPUInterface();
+        updateDistributor();
         break;
 
       case GICR_ICPENDR0:// Interrupt Clear-Pending Register 0
@@ -733,7 +733,7 @@ Gicv3Redistributor::sendPPInt(uint32_t int_id)
     irqPending[int_id] = true;
     DPRINTF(GIC, "Gicv3Redistributor::sendPPInt(): "
             "int_id %d (PPI) pending bit set\n", int_id);
-    updateAndInformCPUInterface();
+    updateDistributor();
 }
 
 void
@@ -770,7 +770,7 @@ Gicv3Redistributor::sendSGI(uint32_t int_id, Gicv3::GroupId group, bool ns)
     irqPending[int_id] = true;
     DPRINTF(GIC, "Gicv3ReDistributor::sendSGI(): "
             "int_id %d (SGI) pending bit set\n", int_id);
-    updateAndInformCPUInterface();
+    updateDistributor();
 }
 
 Gicv3::IntStatus
@@ -791,6 +791,12 @@ Gicv3Redistributor::intStatus(uint32_t int_id) const
     }
 }
 
+void
+Gicv3Redistributor::updateDistributor()
+{
+    distributor->update();
+}
+
 /*
  * Recalculate the highest priority pending interrupt after a
  * change to redistributor state.
@@ -798,8 +804,6 @@ Gicv3Redistributor::intStatus(uint32_t int_id) const
 void
 Gicv3Redistributor::update()
 {
-    bool new_hppi = false;
-
     for (int int_id = 0; int_id < Gicv3::SGI_MAX + Gicv3::PPI_MAX; int_id++) {
         Gicv3::GroupId int_group = getIntGroup(int_id);
         bool group_enabled = distributor->groupEnabled(int_group);
@@ -817,7 +821,6 @@ Gicv3Redistributor::update()
                 cpuInterface->hppi.intid = int_id;
                 cpuInterface->hppi.prio = irqPriority[int_id];
                 cpuInterface->hppi.group = int_group;
-                new_hppi = true;
             }
         }
     }
@@ -866,17 +869,12 @@ Gicv3Redistributor::update()
                     cpuInterface->hppi.intid = lpi_id;
                     cpuInterface->hppi.prio = lpi_priority;
                     cpuInterface->hppi.group = lpi_group;
-                    new_hppi = true;
                 }
             }
         }
     }
 
-    if (!new_hppi && cpuInterface->hppi.prio != 0xff &&
-        (cpuInterface->hppi.intid < Gicv3::SGI_MAX + Gicv3::PPI_MAX ||
-         cpuInterface->hppi.intid > SMALLEST_LPI_ID)) {
-        distributor->fullUpdate();
-    }
+    cpuInterface->update();
 }
 
 uint8_t
@@ -958,14 +956,7 @@ Gicv3Redistributor::setClrLPI(uint64_t data, bool set)
 
     writeEntryLPI(lpi_id, lpi_pending_entry);
 
-    updateAndInformCPUInterface();
-}
-
-void
-Gicv3Redistributor::updateAndInformCPUInterface()
-{
-    update();
-    cpuInterface->update();
+    updateDistributor();
 }
 
 Gicv3::GroupId

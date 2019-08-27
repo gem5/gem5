@@ -1819,15 +1819,19 @@ Gicv3CPUInterface::activateIRQ(uint32_t int_id, Gicv3::GroupId group)
     if (int_id < Gicv3::SGI_MAX + Gicv3::PPI_MAX) {
         // SGI or PPI, redistributor
         redistributor->activateIRQ(int_id);
-        redistributor->updateAndInformCPUInterface();
     } else if (int_id < Gicv3::INTID_SECURE) {
         // SPI, distributor
         distributor->activateIRQ(int_id);
-        distributor->updateAndInformCPUInterfaces();
     } else if (int_id >= Gicv3Redistributor::SMALLEST_LPI_ID) {
         // LPI, Redistributor
         redistributor->setClrLPI(int_id, false);
     }
+
+    // By setting the priority to 0xff we are effectively
+    // making the int_id not pending anymore at the cpu
+    // interface.
+    hppi.prio = 0xff;
+    updateDistributor();
 }
 
 void
@@ -1857,15 +1861,12 @@ Gicv3CPUInterface::deactivateIRQ(uint32_t int_id, Gicv3::GroupId group)
     if (int_id < Gicv3::SGI_MAX + Gicv3::PPI_MAX) {
         // SGI or PPI, redistributor
         redistributor->deactivateIRQ(int_id);
-        redistributor->updateAndInformCPUInterface();
     } else if (int_id < Gicv3::INTID_SECURE) {
         // SPI, distributor
         distributor->deactivateIRQ(int_id);
-        distributor->updateAndInformCPUInterfaces();
-    } else {
-        // LPI, redistributor, shouldn't deactivate
-        redistributor->updateAndInformCPUInterface();
     }
+
+    updateDistributor();
 }
 
 void
@@ -1989,6 +1990,12 @@ Gicv3CPUInterface::highestActiveGroup() const
     }
 
     return -1;
+}
+
+void
+Gicv3CPUInterface::updateDistributor()
+{
+    distributor->update();
 }
 
 void

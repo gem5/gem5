@@ -210,7 +210,7 @@ class Gicv3Redistributor : public Serializable
     void serialize(CheckpointOut & cp) const override;
     void unserialize(CheckpointIn & cp) override;
     void update();
-    void updateAndInformCPUInterface();
+    void updateDistributor();
 
   public:
 

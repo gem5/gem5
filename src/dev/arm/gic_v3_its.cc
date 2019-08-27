@@ -1271,7 +1271,7 @@ Gicv3Its::moveAllPendingState(
         rd1->lpiPendingTablePtr,
         0, sizeof(lpi_pending_table));
 
-    rd2->updateAndInformCPUInterface();
+    rd2->updateDistributor();
 }
 
 Gicv3Its *

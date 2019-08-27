@@ -638,7 +638,7 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
             }
         }
 
-        updateAndInformCPUInterfaces();
+        update();
         return;
     } else if (GICD_ICPENDR.contains(addr)) {
         // Interrupt Clear-Pending Registers
@@ -663,10 +663,11 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
             if (clear) {
                 irqPending[int_id] = false;
+                clearIrqCpuInterface(int_id);
             }
         }
 
-        updateAndInformCPUInterfaces();
+        update();
         return;
     } else if (GICD_ISACTIVER.contains(addr)) {
         // Interrupt Set-Active Registers
@@ -947,7 +948,7 @@ Gicv3Distributor::sendInt(uint32_t int_id)
     irqPending[int_id] = true;
     DPRINTF(GIC, "Gicv3Distributor::sendInt(): "
             "int_id %d (SPI) pending bit set\n", int_id);
-    updateAndInformCPUInterfaces();
+    update();
 }
 
 void
@@ -956,40 +957,59 @@ Gicv3Distributor::deassertSPI(uint32_t int_id)
     panic_if(int_id < Gicv3::SGI_MAX + Gicv3::PPI_MAX, "Invalid SPI!");
     panic_if(int_id > itLines, "Invalid SPI!");
     irqPending[int_id] = false;
-    updateAndInformCPUInterfaces();
+    clearIrqCpuInterface(int_id);
+
+    update();
+}
+
+Gicv3CPUInterface*
+Gicv3Distributor::route(uint32_t int_id)
+{
+    IROUTER affinity_routing = irqAffinityRouting[int_id];
+    Gicv3Redistributor * target_redistributor = nullptr;
+
+    const Gicv3::GroupId int_group = getIntGroup(int_id);
+
+    if (affinity_routing.IRM) {
+        // Interrupts routed to any PE defined as a participating node
+        for (int i = 0; i < gic->getSystem()->numContexts(); i++) {
+            Gicv3Redistributor * redistributor_i =
+                gic->getRedistributor(i);
+
+            if (redistributor_i->
+                    canBeSelectedFor1toNInterrupt(int_group)) {
+                target_redistributor = redistributor_i;
+                break;
+            }
+        }
+    } else {
+        uint32_t affinity = (affinity_routing.Aff3 << 24) |
+                            (affinity_routing.Aff2 << 16) |
+                            (affinity_routing.Aff1 << 8) |
+                            (affinity_routing.Aff0 << 0);
+        target_redistributor =
+            gic->getRedistributorByAffinity(affinity);
+    }
+
+    if (!target_redistributor) {
+        // Interrrupts targeting not present cpus must remain pending
+        return nullptr;
+    } else {
+        return target_redistributor->getCPUInterface();
+    }
 }
 
 void
-Gicv3Distributor::updateAndInformCPUInterfaces()
+Gicv3Distributor::clearIrqCpuInterface(uint32_t int_id)
 {
-    update();
-
-    for (int i = 0; i < gic->getSystem()->numContexts(); i++) {
-        gic->getCPUInterface(i)->update();
-    }
-}
-
-void
-Gicv3Distributor::fullUpdate()
-{
-    for (int i = 0; i < gic->getSystem()->numContexts(); i++) {
-        Gicv3CPUInterface * cpu_interface_i = gic->getCPUInterface(i);
-        cpu_interface_i->hppi.prio = 0xff;
-    }
-
-    update();
-
-    for (int i = 0; i < gic->getSystem()->numContexts(); i++) {
-        Gicv3Redistributor * redistributor_i = gic->getRedistributor(i);
-        redistributor_i->update();
-    }
+    auto cpu_interface = route(int_id);
+    if (cpu_interface)
+        cpu_interface->hppi.prio = 0xff;
 }
 
 void
 Gicv3Distributor::update()
 {
-    std::vector<bool> new_hppi(gic->getSystem()->numContexts(), false);
-
     // Find the highest priority pending SPI
     for (int int_id = Gicv3::SGI_MAX + Gicv3::PPI_MAX; int_id < itLines;
          int_id++) {
@@ -998,65 +1018,27 @@ Gicv3Distributor::update()
 
         if (irqPending[int_id] && irqEnabled[int_id] &&
             !irqActive[int_id] && group_enabled) {
-            IROUTER affinity_routing = irqAffinityRouting[int_id];
-            Gicv3Redistributor * target_redistributor = nullptr;
 
-            if (affinity_routing.IRM) {
-                // Interrupts routed to any PE defined as a participating node
-                for (int i = 0; i < gic->getSystem()->numContexts(); i++) {
-                    Gicv3Redistributor * redistributor_i =
-                        gic->getRedistributor(i);
+            // Find the cpu interface where to route the interrupt
+            Gicv3CPUInterface *target_cpu_interface = route(int_id);
 
-                    if (redistributor_i->
-                            canBeSelectedFor1toNInterrupt(int_group)) {
-                        target_redistributor = redistributor_i;
-                        break;
-                    }
-                }
-            } else {
-                uint32_t affinity = (affinity_routing.Aff3 << 24) |
-                                    (affinity_routing.Aff3 << 16) |
-                                    (affinity_routing.Aff1 << 8) |
-                                    (affinity_routing.Aff0 << 0);
-                target_redistributor =
-                    gic->getRedistributorByAffinity(affinity);
-            }
-
-            if (!target_redistributor) {
-                // Interrrupts targeting not present cpus must remain pending
-                return;
-            }
-
-            Gicv3CPUInterface * target_cpu_interface =
-                target_redistributor->getCPUInterface();
-            uint32_t target_cpu = target_redistributor->cpuId;
+            // Invalid routing
+            if (!target_cpu_interface) continue;
 
             if ((irqPriority[int_id] < target_cpu_interface->hppi.prio) ||
-                /*
-                 * Multiple pending ints with same priority.
-                 * Implementation choice which one to signal.
-                 * Our implementation selects the one with the lower id.
-                 */
                 (irqPriority[int_id] == target_cpu_interface->hppi.prio &&
                 int_id < target_cpu_interface->hppi.intid)) {
+
                 target_cpu_interface->hppi.intid = int_id;
                 target_cpu_interface->hppi.prio = irqPriority[int_id];
                 target_cpu_interface->hppi.group = int_group;
-                new_hppi[target_cpu] = true;
             }
         }
     }
 
+    // Update all redistributors
     for (int i = 0; i < gic->getSystem()->numContexts(); i++) {
-        Gicv3Redistributor * redistributor_i = gic->getRedistributor(i);
-        Gicv3CPUInterface * cpu_interface_i =
-            redistributor_i->getCPUInterface();
-
-        if (!new_hppi[i] && cpu_interface_i->hppi.prio != 0xff &&
-            cpu_interface_i->hppi.intid >= (Gicv3::SGI_MAX + Gicv3::PPI_MAX) &&
-            cpu_interface_i->hppi.intid < Gicv3::INTID_SECURE) {
-            fullUpdate();
-        }
+        gic->getRedistributor(i)->update();
     }
 }
 

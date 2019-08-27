@@ -326,6 +326,7 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     void serialize(CheckpointOut & cp) const override;
     void unserialize(CheckpointIn & cp) override;
     void update();
+    void updateDistributor();
     void virtualActivateIRQ(uint32_t lrIdx);
     void virtualDeactivateIRQ(int lrIdx);
     uint8_t virtualDropPriority();
