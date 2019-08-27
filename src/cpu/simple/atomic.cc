@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2012-2013,2015,2017-2018 ARM Limited
+ * Copyright (c) 2012-2013,2015,2017-2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -362,6 +362,7 @@ AtomicSimpleCPU::genMemFragmentRequest(const RequestPtr& req, Addr frag_addr,
     } else {
         req->setVirt(0, frag_addr, frag_size, flags, dataMasterId(),
                      inst_addr);
+        req->setByteEnable(std::vector<bool>());
     }
 
     return predicate;
