@@ -31,10 +31,10 @@ from m5.SimObject import SimObject
 from m5.objects.ArmInterrupts import ArmInterrupts
 from m5.objects.ArmISA import ArmISA
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
-from m5.objects.FastModel import ScMasterPort
 from m5.objects.FastModelArch import FastModelArmCPU
 from m5.objects.FastModelGIC import Gicv3CommsInitiatorSocket
 from m5.objects.FastModelGIC import Gicv3CommsTargetSocket
+from m5.objects.Gic import ArmPPI
 from m5.objects.SystemC import SystemC_ScModule
 
 class FastModelCortexA76x1(SystemC_ScModule):
@@ -53,18 +53,26 @@ class FastModelCortexA76x1(SystemC_ScModule):
             isa = [ ArmISA() ],
     )
 
+    cnthpirq = Param.ArmInterruptPin(ArmPPI(num=10),
+            "EL2 physical timer event")
+    cnthvirq = Param.ArmInterruptPin(ArmPPI(num=12), "EL2 virtual timer event")
+    cntpsirq = Param.ArmInterruptPin(ArmPPI(num=13),
+            "EL1 Secure physical timer event")
+    cntvirq = Param.ArmInterruptPin(ArmPPI(num=11), "Virtual timer event")
+    commirq = Param.ArmInterruptPin(ArmPPI(num=6),
+            "Interrupt signal from debug communications channel")
+    ctidbgirq = Param.ArmInterruptPin(ArmPPI(num=8),
+            "Cross Trigger Interface (CTI) interrupt trigger output")
+    pmuirq = Param.ArmInterruptPin(ArmPPI(num=7),
+            "Interrupt from performance monitoring unit")
+    vcpumntirq = Param.ArmInterruptPin(ArmPPI(num=9),
+            "Interrupt signal for virtual CPU maintenance IRQ")
+    cntpnsirq = Param.ArmInterruptPin(ArmPPI(num=14),
+            "Non-secure physical timer event")
+
     amba = AmbaInitiatorSocket(64, 'AMBA initiator socket')
     redistributor_m = Gicv3CommsInitiatorSocket('GIC communication initiator')
     redistributor_s = Gicv3CommsTargetSocket('GIC communication target')
-    cnthpirq = ScMasterPort("Master port for CPU-to-GIC signal", "bool")
-    cnthvirq = ScMasterPort("Master port for CPU-to-GIC signal", "bool")
-    cntpsirq = ScMasterPort("Master port for CPU-to-GIC signal", "bool")
-    cntvirq = ScMasterPort("Master port for CPU-to-GIC signal", "bool")
-    commirq = ScMasterPort("Master port for CPU-to-GIC signal", "bool")
-    ctidbgirq = ScMasterPort("Master port for CPU-to-GIC signal", "bool")
-    pmuirq = ScMasterPort("Master port for CPU-to-GIC signal", "bool")
-    vcpumntirq = ScMasterPort("Master port for CPU-to-GIC signal", "bool")
-    cntpnsirq = ScMasterPort("Master port for CPU-to-GIC signal", "bool")
 
     # These parameters are described in "Fast Models Reference Manual" section
     # 3.4.19, "ARMCortexA7x1CT".

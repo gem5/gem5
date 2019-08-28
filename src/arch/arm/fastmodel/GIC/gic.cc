@@ -37,16 +37,7 @@ namespace FastModel
 {
 
 SCGIC::SCGIC(const SCFastModelGICParams &params,
-             sc_core::sc_module_name _name) : scx_evs_GIC(_name),
-    cnthpirqWrapper(cnthpirq, params.name + ".cnthpirq", -1),
-    cnthvirqWrapper(cnthvirq, params.name + ".cnthvirq", -1),
-    cntpnsirqWrapper(cntpnsirq, params.name + ".cntpnsirq", -1),
-    cntpsirqWrapper(cntpsirq, params.name + ".cntpsirq", -1),
-    cntvirqWrapper(cntvirq, params.name + ".cntvirq", -1),
-    commirqWrapper(commirq, params.name + ".commirq", -1),
-    ctidbgirqWrapper(ctidbgirq, params.name + ".ctidbgirq", -1),
-    pmuirqWrapper(pmuirq, params.name + ".pmuirq", -1),
-    vcpumntirqWrapper(vcpumntirq, params.name + ".vcpumntirq", -1)
+             sc_core::sc_module_name _name) : scx_evs_GIC(_name)
 {
     signalInterrupt.bind(signal_interrupt);
 
@@ -289,24 +280,6 @@ GIC::getPort(const std::string &if_name, PortID idx)
         return redistributorM;
     else if (if_name == "redistributor_s")
         return redistributorS;
-    else if (if_name == "cnthpirq")
-        return scGIC->cnthpirqWrapper;
-    else if (if_name == "cnthvirq")
-        return scGIC->cnthvirqWrapper;
-    else if (if_name == "cntpnsirq")
-        return scGIC->cntpnsirqWrapper;
-    else if (if_name == "cntpsirq")
-        return scGIC->cntpsirqWrapper;
-    else if (if_name == "cntvirq")
-        return scGIC->cntvirqWrapper;
-    else if (if_name == "commirq")
-        return scGIC->commirqWrapper;
-    else if (if_name == "ctidbgirq")
-        return scGIC->ctidbgirqWrapper;
-    else if (if_name == "pmuirq")
-        return scGIC->pmuirqWrapper;
-    else if (if_name == "vcpumntirq")
-        return scGIC->vcpumntirqWrapper;
     else
         return BaseGic::getPort(if_name, idx);
 }

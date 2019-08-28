@@ -40,11 +40,6 @@
 #include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/sc_port_wrapper.hh"
 
-// This macro is to get the type IF of a sc_export<IF> variable x. It relies on
-// the fact that the "operator->()" function returns the "IF*" type and
-// std::decay to remove cv-qualifiers and reference.
-#define IFACE_TYPE(x) std::decay<decltype(*(x).operator->())>::type
-
 namespace FastModel
 {
 
@@ -59,16 +54,6 @@ class SCGIC : public scx_evs_GIC
     SCGIC(const SCFastModelGICParams &params, sc_core::sc_module_name _name);
 
     SignalInterruptInitiatorSocket signalInterrupt;
-
-    sc_gem5::ScInterfaceWrapper<IFACE_TYPE(cnthpirq)> cnthpirqWrapper;
-    sc_gem5::ScInterfaceWrapper<IFACE_TYPE(cnthvirq)> cnthvirqWrapper;
-    sc_gem5::ScInterfaceWrapper<IFACE_TYPE(cntpnsirq)> cntpnsirqWrapper;
-    sc_gem5::ScInterfaceWrapper<IFACE_TYPE(cntpsirq)> cntpsirqWrapper;
-    sc_gem5::ScInterfaceWrapper<IFACE_TYPE(cntvirq)> cntvirqWrapper;
-    sc_gem5::ScInterfaceWrapper<IFACE_TYPE(commirq)> commirqWrapper;
-    sc_gem5::ScInterfaceWrapper<IFACE_TYPE(ctidbgirq)> ctidbgirqWrapper;
-    sc_gem5::ScInterfaceWrapper<IFACE_TYPE(pmuirq)> pmuirqWrapper;
-    sc_gem5::ScInterfaceWrapper<IFACE_TYPE(vcpumntirq)> vcpumntirqWrapper;
 
     void
     end_of_elaboration() override

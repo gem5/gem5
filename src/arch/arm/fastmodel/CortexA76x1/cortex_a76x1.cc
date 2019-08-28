@@ -29,8 +29,10 @@
 
 #include "arch/arm/fastmodel/CortexA76x1/cortex_a76x1.hh"
 
+#include "arch/arm/fastmodel/arm/cpu.hh"
 #include "arch/arm/fastmodel/iris/cpu.hh"
 #include "base/logging.hh"
+#include "dev/arm/base_gic.hh"
 #include "params/FastModelCortexA76x1.hh"
 #include "sim/core.hh"
 #include "systemc/tlm_bridge/gem5_to_tlm.hh"
@@ -45,24 +47,25 @@ CortexA76x1::clockChangeHandler()
 }
 
 CortexA76x1::CortexA76x1(const sc_core::sc_module_name &mod_name,
-        const FastModelCortexA76x1Params &params)
+        const FastModelCortexA76x1Params &p)
     : scx_evs_CortexA76x1(mod_name),
-      amba(scx_evs_CortexA76x1::amba, params.name + ".amba", -1),
-      redistributorM(redistributor_m, params.name + ".redistributor_m", -1),
-      redistributorS(redistributor_s, params.name + ".redistributor_s", -1),
-      cnthpirqWrapper(cnthpirq, params.name + ".cnthpirq", -1),
-      cnthvirqWrapper(cnthvirq, params.name + ".cnthvirq", -1),
-      cntpsirqWrapper(cntpsirq, params.name + ".cntpsirq", -1),
-      cntvirqWrapper(cntvirq, params.name + ".cntvirq", -1),
-      commirqWrapper(commirq, params.name + ".commirq", -1),
-      ctidbgirqWrapper(ctidbgirq, params.name + ".ctidbgirq", -1),
-      pmuirqWrapper(pmuirq, params.name + ".pmuirq", -1),
-      vcpumntirqWrapper(vcpumntirq, params.name + ".vcpumntirq", -1),
-      cntpnsirqWrapper(cntpnsirq, params.name + ".cntpnsirq", -1),
+      amba(scx_evs_CortexA76x1::amba, p.name + ".amba", -1),
+      redistributorM(redistributor_m, p.name + ".redistributor_m", -1),
+      redistributorS(redistributor_s, p.name + ".redistributor_s", -1),
+      cnthpirq("cnthpirq"),
+      cnthvirq("cnthvirq"),
+      cntpsirq("cntpsirq"),
+      cntvirq("cntvirq"),
+      commirq("commirq"),
+      ctidbgirq("ctidbgirq"),
+      pmuirq("pmuirq"),
+      vcpumntirq("vcpumntirq"),
+      cntpnsirq("cntpnsirq"),
       clockChanged(Iris::ClockEventName.c_str()),
       clockPeriod(Iris::PeriodAttributeName.c_str()),
       gem5Cpu(Iris::Gem5CpuAttributeName.c_str()),
-      sendFunctional(Iris::SendFunctionalAttributeName.c_str())
+      sendFunctional(Iris::SendFunctionalAttributeName.c_str()),
+      params(p)
 {
     clockRateControl.bind(clock_rate_s);
 
@@ -206,6 +209,16 @@ CortexA76x1::CortexA76x1(const sc_core::sc_module_name &mod_name,
 
     sendFunctional.value = [this](PacketPtr pkt) { sendFunc(pkt); };
     add_attribute(sendFunctional);
+
+    scx_evs_CortexA76x1::cnthpirq.bind(cnthpirq.signal_in);
+    scx_evs_CortexA76x1::cnthvirq.bind(cnthvirq.signal_in);
+    scx_evs_CortexA76x1::cntpsirq.bind(cntpsirq.signal_in);
+    scx_evs_CortexA76x1::cntvirq.bind(cntvirq.signal_in);
+    scx_evs_CortexA76x1::commirq.bind(commirq.signal_in);
+    scx_evs_CortexA76x1::ctidbgirq.bind(ctidbgirq.signal_in);
+    scx_evs_CortexA76x1::pmuirq.bind(pmuirq.signal_in);
+    scx_evs_CortexA76x1::vcpumntirq.bind(vcpumntirq.signal_in);
+    scx_evs_CortexA76x1::cntpnsirq.bind(cntpnsirq.signal_in);
 }
 
 void
@@ -217,6 +230,35 @@ CortexA76x1::sendFunc(PacketPtr pkt)
     trans->release();
 }
 
+void
+CortexA76x1::before_end_of_elaboration()
+{
+    scx_evs_CortexA76x1::before_end_of_elaboration();
+
+    auto *gem5_cpu = gem5Cpu.value;
+    auto set_on_change = [gem5_cpu](SignalReceiver &recv,
+                                    ArmInterruptPinGen *gen,
+                                    int ctx_num)
+    {
+        auto *pin = gen->get(gem5_cpu->getContext(ctx_num));
+        auto handler = [pin](bool status)
+        {
+            status ? pin->raise() : pin->clear();
+        };
+        recv.onChange(handler);
+    };
+
+    set_on_change(cnthpirq, params.cnthpirq, 0);
+    set_on_change(cnthvirq, params.cnthvirq, 0);
+    set_on_change(cntpsirq, params.cntpsirq, 0);
+    set_on_change(cntvirq, params.cntvirq, 0);
+    set_on_change(commirq, params.commirq, 0);
+    set_on_change(ctidbgirq, params.ctidbgirq, 0);
+    set_on_change(pmuirq, params.pmuirq, 0);
+    set_on_change(vcpumntirq, params.vcpumntirq, 0);
+    set_on_change(cntpnsirq, params.cntpnsirq, 0);
+}
+
 Port &
 CortexA76x1::gem5_getPort(const std::string &if_name, int idx)
 {
@@ -226,24 +268,6 @@ CortexA76x1::gem5_getPort(const std::string &if_name, int idx)
         return redistributorM;
     else if (if_name == "redistributor_s")
         return redistributorS;
-    else if (if_name == "cnthpirq")
-        return cnthpirqWrapper;
-    else if (if_name == "cnthvirq")
-        return cnthvirqWrapper;
-    else if (if_name == "cntpsirq")
-        return cntpsirqWrapper;
-    else if (if_name == "cntvirq")
-        return cntvirqWrapper;
-    else if (if_name == "commirq")
-        return commirqWrapper;
-    else if (if_name == "ctidbgirq")
-        return ctidbgirqWrapper;
-    else if (if_name == "pmuirq")
-        return pmuirqWrapper;
-    else if (if_name == "vcpumntirq")
-        return vcpumntirqWrapper;
-    else if (if_name == "cntpnsirq")
-        return cntpnsirqWrapper;
     else
         return scx_evs_CortexA76x1::gem5_getPort(if_name, idx);
 }

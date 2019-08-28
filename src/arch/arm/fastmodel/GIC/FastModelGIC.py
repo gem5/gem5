@@ -29,7 +29,6 @@ from m5.params import *
 from m5.SimObject import SimObject
 
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
-from m5.objects.FastModel import ScSlavePort
 from m5.objects.Gic import BaseGic
 from m5.objects.SystemC import SystemC_ScModule
 
@@ -460,13 +459,3 @@ class FastModelGIC(BaseGic):
 
     redistributor_m = Gicv3CommsInitiatorSocket('GIC communication initiator')
     redistributor_s = Gicv3CommsTargetSocket('GIC communication target')
-
-    cnthpirq = ScSlavePort("Slave port for CPU-to-GIC signal", "bool")
-    cnthvirq = ScSlavePort("Slave port for CPU-to-GIC signal", "bool")
-    cntpsirq = ScSlavePort("Slave port for CPU-to-GIC signal", "bool")
-    cntvirq = ScSlavePort("Slave port for CPU-to-GIC signal", "bool")
-    commirq = ScSlavePort("Slave port for CPU-to-GIC signal", "bool")
-    ctidbgirq = ScSlavePort("Slave port for CPU-to-GIC signal", "bool")
-    pmuirq = ScSlavePort("Slave port for CPU-to-GIC signal", "bool")
-    vcpumntirq = ScSlavePort("Slave port for CPU-to-GIC signal", "bool")
-    cntpnsirq = ScSlavePort("Slave port for CPU-to-GIC signal", "bool")

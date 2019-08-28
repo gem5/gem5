@@ -30,23 +30,16 @@
 #ifndef __ARCH_ARM_FASTMODEL_CORTEXA76X1_CORETEX_A76X1_HH__
 #define __ARCH_ARM_FASTMODEL_CORTEXA76X1_CORETEX_A76X1_HH__
 
-#include <type_traits>
-
 #include "arch/arm/fastmodel/amba_ports.hh"
+#include "arch/arm/fastmodel/common/signal_receiver.hh"
 #include "arch/arm/fastmodel/protocol/exported_clock_rate_control.hh"
 #include "mem/port_proxy.hh"
 #include "params/FastModelCortexA76x1.hh"
 #include "scx_evs_CortexA76x1.h"
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_module.hh"
-#include "systemc/sc_port_wrapper.hh"
 
 class BaseCPU;
-
-// This macro is to get the type IF of a sc_export<IF> variable x. It relies on
-// the fact that the "operator->()" function returns the "IF*" type and
-// std::decay to remove cv-qualifiers and reference.
-#define IFACE_TYPE(x) std::decay<decltype(*(x).operator->())>::type
 
 namespace FastModel
 {
@@ -67,15 +60,15 @@ class CortexA76x1 : public scx_evs_CortexA76x1
 
     ClockRateControlInitiatorSocket clockRateControl;
 
-    sc_gem5::ScPortWrapper<IFACE_TYPE(cnthpirq)> cnthpirqWrapper;
-    sc_gem5::ScPortWrapper<IFACE_TYPE(cnthvirq)> cnthvirqWrapper;
-    sc_gem5::ScPortWrapper<IFACE_TYPE(cntpsirq)> cntpsirqWrapper;
-    sc_gem5::ScPortWrapper<IFACE_TYPE(cntvirq)> cntvirqWrapper;
-    sc_gem5::ScPortWrapper<IFACE_TYPE(commirq)> commirqWrapper;
-    sc_gem5::ScPortWrapper<IFACE_TYPE(ctidbgirq)> ctidbgirqWrapper;
-    sc_gem5::ScPortWrapper<IFACE_TYPE(pmuirq)> pmuirqWrapper;
-    sc_gem5::ScPortWrapper<IFACE_TYPE(vcpumntirq)> vcpumntirqWrapper;
-    sc_gem5::ScPortWrapper<IFACE_TYPE(cntpnsirq)> cntpnsirqWrapper;
+    SignalReceiver cnthpirq;
+    SignalReceiver cnthvirq;
+    SignalReceiver cntpsirq;
+    SignalReceiver cntvirq;
+    SignalReceiver commirq;
+    SignalReceiver ctidbgirq;
+    SignalReceiver pmuirq;
+    SignalReceiver vcpumntirq;
+    SignalReceiver cntpnsirq;
 
     sc_core::sc_event clockChanged;
     sc_core::sc_attribute<Tick> clockPeriod;
@@ -86,11 +79,15 @@ class CortexA76x1 : public scx_evs_CortexA76x1
 
     void clockChangeHandler();
 
+    const FastModelCortexA76x1Params &params;
+
   public:
     CortexA76x1(const sc_core::sc_module_name &mod_name,
-            const FastModelCortexA76x1Params &params);
+            const FastModelCortexA76x1Params &p);
 
     Port &gem5_getPort(const std::string &if_name, int idx=-1) override;
+
+    void before_end_of_elaboration() override;
 
     void
     end_of_elaboration() override

@@ -43,17 +43,6 @@ component GIC
         gic_gic2pv : GICv3CommsPVBus();
         gic_pv2amba : PVBus2AMBAPV();
         gic_amba2pv : AMBAPV2PVBus();
-
-        // Adapters for CPU-to-GIC signals
-        cnthpirqBridge : AMBAPVSignal2SGSignal();
-        cnthvirqBridge : AMBAPVSignal2SGSignal();
-        cntpnsirqBridge : AMBAPVSignal2SGSignal();
-        cntpsirqBridge : AMBAPVSignal2SGSignal();
-        cntvirqBridge : AMBAPVSignal2SGSignal();
-        commirqBridge : AMBAPVSignal2SGSignal();
-        ctidbgirqBridge : AMBAPVSignal2SGSignal();
-        pmuirqBridge : AMBAPVSignal2SGSignal();
-        vcpumntirqBridge : AMBAPVSignal2SGSignal();
     }
 
     connection
@@ -330,26 +319,6 @@ component GIC
         self.ppi_255 => gic.ppi_in_255;
 
         self.spi => gic.spi_in;
-
-        // Connections from CPU
-        self.cnthpirq => cnthpirqBridge.amba_pv_signal_s;
-        cnthpirqBridge.sg_signal_m => gic.ppi_in_0[10];
-        self.cnthvirq => cnthvirqBridge.amba_pv_signal_s;
-        cnthvirqBridge.sg_signal_m => gic.ppi_in_0[12];
-        self.cntpnsirq => cntpnsirqBridge.amba_pv_signal_s;
-        cntpnsirqBridge.sg_signal_m => gic.ppi_in_0[14];
-        self.cntpsirq => cntpsirqBridge.amba_pv_signal_s;
-        cntpsirqBridge.sg_signal_m => gic.ppi_in_0[13];
-        self.cntvirq => cntvirqBridge.amba_pv_signal_s;
-        cntvirqBridge.sg_signal_m => gic.ppi_in_0[11];
-        self.commirq => commirqBridge.amba_pv_signal_s;
-        commirqBridge.sg_signal_m => gic.ppi_in_0[6];
-        self.ctidbgirq => ctidbgirqBridge.amba_pv_signal_s;
-        ctidbgirqBridge.sg_signal_m => gic.ppi_in_0[8];
-        self.pmuirq => pmuirqBridge.amba_pv_signal_s;
-        pmuirqBridge.sg_signal_m => gic.ppi_in_0[7];
-        self.vcpumntirq => vcpumntirqBridge.amba_pv_signal_s;
-        vcpumntirqBridge.sg_signal_m => gic.ppi_in_0[9];
     }
 
     properties
@@ -438,17 +407,6 @@ component GIC
             spi[num].setValue(state);
         }
     }
-
-    // CPU-side connections
-    slave port<AMBAPVSignal> cnthpirq;
-    slave port<AMBAPVSignal> cnthvirq;
-    slave port<AMBAPVSignal> cntpnsirq;
-    slave port<AMBAPVSignal> cntpsirq;
-    slave port<AMBAPVSignal> cntvirq;
-    slave port<AMBAPVSignal> commirq;
-    slave port<AMBAPVSignal> ctidbgirq;
-    slave port<AMBAPVSignal> pmuirq;
-    slave port<AMBAPVSignal> vcpumntirq;
 
     internal slave port<Signal> spi[988];
 
