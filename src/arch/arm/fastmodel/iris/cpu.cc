@@ -61,6 +61,14 @@ BaseCPU::BaseCPU(BaseCPUParams *params, sc_core::sc_module *_evs) :
     panic_if(base && !periodAttribute,
             "The EVS clock period attribute is not of type "
             "sc_attribute<Tick>.");
+
+    base = evs->get_attribute(SendFunctionalAttributeName);
+    sendFunctional =
+        dynamic_cast<sc_core::sc_attribute<PortProxy::SendFunctionalFunc> *>(
+                base);
+    panic_if(base && !sendFunctional,
+            "The EVS send functional attribute is not of type "
+            "sc_attribute<PortProxy::SendFunctionalFunc>.");
 }
 
 BaseCPU::~BaseCPU()

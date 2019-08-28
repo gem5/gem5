@@ -49,6 +49,9 @@ static const std::string PeriodAttributeName = "gem5_clock_period_attribute";
 // The name of the attribute the subsystem should create which will be set to
 // a pointer to its corresponding gem5 CPU.
 static const std::string Gem5CpuAttributeName = "gem5_cpu";
+// The name of the attribute the subsystem should create to hold the
+// sendFunctional delegate for port proxies.
+static const std::string SendFunctionalAttributeName = "gem5_send_functional";
 
 // This CPU class adds some mechanisms which help attach the gem5 and fast
 // model CPUs to each other. It acts as a base class for the gem5 CPU, and
@@ -83,12 +86,21 @@ class BaseCPU : public ::BaseCPU
     Counter totalInsts() const override;
     Counter totalOps() const override { return totalInsts(); }
 
+    PortProxy::SendFunctionalFunc
+    getSendFunctional() override
+    {
+        if (sendFunctional)
+            return sendFunctional->value;
+        return ::BaseCPU::getSendFunctional();
+    }
+
   protected:
     sc_core::sc_module *evs;
 
   private:
     sc_core::sc_event *clockEvent;
     sc_core::sc_attribute<Tick> *periodAttribute;
+    sc_core::sc_attribute<PortProxy::SendFunctionalFunc> *sendFunctional;
 
   protected:
     void
