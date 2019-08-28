@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011, 2014, 2016-2018 ARM Limited
+ * Copyright (c) 2010-2011, 2014, 2016-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -61,6 +61,9 @@ const int MaxInstSrcRegs = ArmISAInst::MaxInstDestRegs +
 using ArmISAInst::MaxInstDestRegs;
 using ArmISAInst::MaxMiscDestRegs;
 
+// Number of VecElem per Vector Register considering only pre-SVE
+// Advanced SIMD registers.
+constexpr unsigned NumVecElemPerNeonVecReg = 4;
 // Number of VecElem per Vector Register, computed based on the vector length
 constexpr unsigned NumVecElemPerVecReg = MaxSveVecLenInWords;
 

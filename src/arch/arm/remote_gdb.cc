@@ -1,7 +1,7 @@
 /*
  * Copyright 2015 LabWare
  * Copyright 2014 Google Inc.
- * Copyright (c) 2010, 2013, 2016, 2018 ARM Limited
+ * Copyright (c) 2010, 2013, 2016, 2018-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -212,7 +212,7 @@ RemoteGDB::AArch64GdbRegCache::getRegs(ThreadContext *context)
     size_t base = 0;
     for (int i = 0; i < NumVecV8ArchRegs; i++) {
         auto v = (context->readVecReg(RegId(VecRegClass, i))).as<VecElem>();
-        for (size_t j = 0; j < NumVecElemPerVecReg; j++) {
+        for (size_t j = 0; j < NumVecElemPerNeonVecReg; j++) {
             r.v[base] = v[j];
             base++;
         }
@@ -241,7 +241,7 @@ RemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
     for (int i = 0; i < NumVecV8ArchRegs; i++) {
         auto v = (context->getWritableVecReg(
                 RegId(VecRegClass, i))).as<VecElem>();
-        for (size_t j = 0; j < NumVecElemPerVecReg; j++) {
+        for (size_t j = 0; j < NumVecElemPerNeonVecReg; j++) {
             v[j] = r.v[base];
             base++;
         }
