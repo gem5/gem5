@@ -33,6 +33,7 @@
 #include "base/logging.hh"
 #include "params/FastModelCortexA76x1.hh"
 #include "sim/core.hh"
+#include "systemc/tlm_bridge/gem5_to_tlm.hh"
 
 namespace FastModel
 {
@@ -60,7 +61,8 @@ CortexA76x1::CortexA76x1(const sc_core::sc_module_name &mod_name,
       cntpnsirqWrapper(cntpnsirq, params.name + ".cntpnsirq", -1),
       clockChanged(Iris::ClockEventName.c_str()),
       clockPeriod(Iris::PeriodAttributeName.c_str()),
-      gem5Cpu(Iris::Gem5CpuAttributeName.c_str())
+      gem5Cpu(Iris::Gem5CpuAttributeName.c_str()),
+      sendFunctional(Iris::SendFunctionalAttributeName.c_str())
 {
     clockRateControl.bind(clock_rate_s);
 
@@ -201,6 +203,18 @@ CortexA76x1::CortexA76x1(const sc_core::sc_module_name &mod_name,
     SC_METHOD(clockChangeHandler);
     dont_initialize();
     sensitive << clockChanged;
+
+    sendFunctional.value = [this](PacketPtr pkt) { sendFunc(pkt); };
+    add_attribute(sendFunctional);
+}
+
+void
+CortexA76x1::sendFunc(PacketPtr pkt)
+{
+    auto *trans = sc_gem5::packet2payload(pkt);
+    panic_if(scx_evs_CortexA76x1::amba->transport_dbg(*trans) !=
+            trans->get_data_length(), "Didn't send entire functional packet!");
+    trans->release();
 }
 
 Port &

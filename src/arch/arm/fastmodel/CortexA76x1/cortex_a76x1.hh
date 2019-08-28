@@ -34,6 +34,7 @@
 
 #include "arch/arm/fastmodel/amba_ports.hh"
 #include "arch/arm/fastmodel/protocol/exported_clock_rate_control.hh"
+#include "mem/port_proxy.hh"
 #include "params/FastModelCortexA76x1.hh"
 #include "scx_evs_CortexA76x1.h"
 #include "systemc/ext/core/sc_event.hh"
@@ -79,6 +80,9 @@ class CortexA76x1 : public scx_evs_CortexA76x1
     sc_core::sc_event clockChanged;
     sc_core::sc_attribute<Tick> clockPeriod;
     sc_core::sc_attribute<::BaseCPU *> gem5Cpu;
+    sc_core::sc_attribute<PortProxy::SendFunctionalFunc> sendFunctional;
+
+    void sendFunc(PacketPtr pkt);
 
     void clockChangeHandler();
 
