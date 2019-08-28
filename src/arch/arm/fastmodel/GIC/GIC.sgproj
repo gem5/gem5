@@ -21,5 +21,6 @@ files
 {
     path = "GIC.lisa";
     path = "${PVLIB_HOME}/etc/sglib.sgrepo";
+    path = "../protocol/SignalInterruptProtocol.lisa";
 }
 }

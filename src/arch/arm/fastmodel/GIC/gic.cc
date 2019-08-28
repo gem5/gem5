@@ -48,8 +48,7 @@ SCGIC::SCGIC(const SCFastModelGICParams &params,
     pmuirqWrapper(pmuirq, params.name + ".pmuirq", -1),
     vcpumntirqWrapper(vcpumntirq, params.name + ".vcpumntirq", -1)
 {
-    ppiCommand.bind(ppi_command);
-    spiCommand.bind(spi_command);
+    signalInterrupt.bind(signal_interrupt);
 
     set_parameter("gic.enabled", params.enabled);
     set_parameter("gic.has-gicv3", params.has_gicv3);
@@ -315,25 +314,25 @@ GIC::getPort(const std::string &if_name, PortID idx)
 void
 GIC::sendInt(uint32_t num)
 {
-    scGIC->spiCommand.set_state(0, SPICommand(num - 32, true));
+    scGIC->signalInterrupt->spi(num - 32, true);
 }
 
 void
 GIC::clearInt(uint32_t num)
 {
-    scGIC->spiCommand.set_state(0, SPICommand(num - 32, false));
+    scGIC->signalInterrupt->spi(num - 32, false);
 }
 
 void
 GIC::sendPPInt(uint32_t num, uint32_t cpu)
 {
-    scGIC->ppiCommand.set_state(0, PPICommand(cpu, num, true));
+    scGIC->signalInterrupt->ppi(cpu, num, true);
 }
 
 void
 GIC::clearPPInt(uint32_t num, uint32_t cpu)
 {
-    scGIC->ppiCommand.set_state(0, PPICommand(cpu, num, false));
+    scGIC->signalInterrupt->ppi(cpu, num, false);
 }
 
 } // namespace FastModel

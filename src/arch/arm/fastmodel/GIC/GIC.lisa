@@ -28,50 +28,6 @@
  *          Chun-Chen TK Hsu
  */
 
-protocol AMBAPVPPICommand
-{
-    properties
-    {
-        sc_master_port_class_name =
-            "amba_pv::signal_master_port<FastModel::PPICommand>";
-        sc_slave_base_class_name =
-            "amba_pv::signal_slave_base<FastModel::PPICommand>";
-        sc_slave_export_class_name =
-            "amba_pv::signal_slave_export<FastModel::PPICommand>";
-    }
-
-    includes
-    {
-        #include <amba_pv.h>
-        #include "arch/arm/fastmodel/GIC/commands.hh"
-    }
-
-    slave behavior set_state(
-            int export_id, const FastModel::PPICommand &value);
-}
-
-protocol AMBAPVSPICommand
-{
-    properties
-    {
-        sc_master_port_class_name =
-            "amba_pv::signal_master_port<FastModel::SPICommand>";
-        sc_slave_base_class_name =
-            "amba_pv::signal_slave_base<FastModel::SPICommand>";
-        sc_slave_export_class_name =
-            "amba_pv::signal_slave_export<FastModel::SPICommand>";
-    }
-
-    includes
-    {
-        #include <amba_pv.h>
-        #include "arch/arm/fastmodel/GIC/commands.hh"
-    }
-
-    slave behavior set_state(
-            int export_id, const FastModel::SPICommand &value);
-}
-
 component GIC
 {
     composition
@@ -410,13 +366,12 @@ component GIC
     #define setPPI(C) \
           case C: ppi_##C[num].setValue(state); \
           break
-    slave port<AMBAPVPPICommand> ppi_command
+    slave port<SignalInterrupt> signal_interrupt
     {
-        behavior set_state(int export_id, const FastModel::PPICommand &value)
+        behavior ppi(uint8_t cpu, uint32_t num, bool state_val)
         {
-            sg::Signal::State state = value.state();
-            uint32_t num = value.num();
-            uint8_t cpu = value.cpu();
+            sg::Signal::State state =
+                state_val ? sg::Signal::Set : sg::Signal::Clear;
 
             switch (cpu) {
               setPPI(0); setPPI(1); setPPI(2); setPPI(3); setPPI(4);
@@ -475,7 +430,15 @@ component GIC
                 sc_assert(false);
             }
         }
+
+        behavior spi(uint32_t num, bool state_val)
+        {
+            sg::Signal::State state =
+                state_val ? sg::Signal::Set : sg::Signal::Clear;
+            spi[num].setValue(state);
+        }
     }
+
     // CPU-side connections
     slave port<AMBAPVSignal> cnthpirq;
     slave port<AMBAPVSignal> cnthvirq;
@@ -486,14 +449,6 @@ component GIC
     slave port<AMBAPVSignal> ctidbgirq;
     slave port<AMBAPVSignal> pmuirq;
     slave port<AMBAPVSignal> vcpumntirq;
-
-    slave port<AMBAPVSPICommand> spi_command
-    {
-        behavior set_state(int export_id, const FastModel::SPICommand &value)
-        {
-            spi[value.num()].setValue(value.state());
-        }
-    }
 
     internal slave port<Signal> spi[988];
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Google, Inc.
+ * Copyright 2019 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -27,58 +27,21 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_ARM_FASTMODEL_GIC_COMMANDS_HH__
-#define __ARCH_ARM_FASTMODEL_GIC_COMMANDS_HH__
-
-#include <cstdint>
-
-#include "base/logging.hh"
-#include "sg/SGSignal.h"
-
-namespace FastModel
+protocol SignalInterrupt
 {
-
-class PPICommand
-{
-  private:
-    uint8_t _cpu;
-    uint32_t _num;
-    sg::Signal::State _state;
-
-  public:
-    PPICommand(uint8_t c, uint32_t n, bool set) :
-        _cpu(c), _num(n), _state(set ? sg::Signal::Set : sg::Signal::Clear)
+    includes
     {
-        panic_if(_cpu > 255, "PPICommand CPU out of bounds");
-        panic_if(_num > 15, "PPICommand number out of bounds");
+        #include "arch/arm/fastmodel/protocol/signal_interrupt.hh"
+    }
+    properties
+    {
+        description = "Signal an interrupt from gem5.";
+        version = "1.0";
+        dso_safe = 0;
+        sc_slave_base_class_name = "SignalInterruptSlaveBase";
+        sc_slave_socket_class_name = "SignalInterruptTargetSocket";
     }
 
-    PPICommand() : PPICommand(0, 0, false) {}
-
-    uint8_t cpu() const { return _cpu; }
-    uint32_t num() const { return _num; }
-    sg::Signal::State state() const { return _state; }
-};
-
-class SPICommand
-{
-  private:
-    uint32_t _num;
-    sg::Signal::State _state;
-
-  public:
-    SPICommand(uint32_t n, bool set) :
-        _num(n), _state(set ? sg::Signal::Set : sg::Signal::Clear)
-    {
-        panic_if(_num > 987, "SPICommand number out of bounds");
-    }
-
-    SPICommand() : SPICommand(0, false) {}
-
-    uint32_t num() const { return _num; }
-    sg::Signal::State state() const { return _state; }
-};
-
-} // namespace FastModel
-
-#endif // __ARCH_ARM_FASTMODEL_GIC_COMMANDS_HH__
+    slave behavior ppi(uint8_t cpu, uint32_t num, bool state);
+    slave behavior spi(uint32_t num, bool state);
+}

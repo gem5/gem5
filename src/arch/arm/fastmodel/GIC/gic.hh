@@ -30,7 +30,8 @@
 #ifndef __ARCH_ARM_FASTMODEL_GIC_GIC_HH__
 #define __ARCH_ARM_FASTMODEL_GIC_GIC_HH__
 
-#include "arch/arm/fastmodel/GIC/commands.hh"
+#include <amba_pv.h>
+
 #include "arch/arm/fastmodel/amba_ports.hh"
 #include "dev/arm/base_gic.hh"
 #include "params/FastModelGIC.hh"
@@ -57,8 +58,7 @@ class SCGIC : public scx_evs_GIC
   public:
     SCGIC(const SCFastModelGICParams &params, sc_core::sc_module_name _name);
 
-    amba_pv::signal_master_port<PPICommand> ppiCommand;
-    amba_pv::signal_master_port<SPICommand> spiCommand;
+    SignalInterruptInitiatorSocket signalInterrupt;
 
     sc_gem5::ScInterfaceWrapper<IFACE_TYPE(cnthpirq)> cnthpirqWrapper;
     sc_gem5::ScInterfaceWrapper<IFACE_TYPE(cnthvirq)> cnthvirqWrapper;
