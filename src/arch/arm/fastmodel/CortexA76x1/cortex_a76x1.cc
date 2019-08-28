@@ -59,7 +59,8 @@ CortexA76x1::CortexA76x1(const sc_core::sc_module_name &mod_name,
       vcpumntirqWrapper(vcpumntirq, params.name + ".vcpumntirq", -1),
       cntpnsirqWrapper(cntpnsirq, params.name + ".cntpnsirq", -1),
       clockChanged(Iris::ClockEventName.c_str()),
-      clockPeriod(Iris::PeriodAttributeName.c_str())
+      clockPeriod(Iris::PeriodAttributeName.c_str()),
+      gem5Cpu(Iris::Gem5CpuAttributeName.c_str())
 {
     clockRateControl.bind(clock_rate_s);
 
@@ -195,6 +196,7 @@ CortexA76x1::CortexA76x1(const sc_core::sc_module_name &mod_name,
     set_parameter("core.cpu0.vfp-enable_at_reset",
                   params.cpu0_vfp_enable_at_reset);
 
+    add_attribute(gem5Cpu);
     add_attribute(clockPeriod);
     SC_METHOD(clockChangeHandler);
     dont_initialize();

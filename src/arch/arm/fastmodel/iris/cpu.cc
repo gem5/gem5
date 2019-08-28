@@ -34,6 +34,35 @@
 namespace Iris
 {
 
+BaseCPU::BaseCPU(BaseCPUParams *params, sc_core::sc_module *_evs) :
+    ::BaseCPU::BaseCPU(params), evs(_evs),
+    clockEvent(nullptr), periodAttribute(nullptr)
+{
+    sc_core::sc_attr_base *base;
+
+    base = evs->get_attribute(Gem5CpuAttributeName);
+    auto *gem5_cpu_attr =
+        dynamic_cast<sc_core::sc_attribute<::BaseCPU *> *>(base);
+    panic_if(base && !gem5_cpu_attr,
+             "The EVS gem5 CPU attribute was not of type "
+             "sc_attribute<::BaesCPU *>.");
+    if (gem5_cpu_attr)
+        gem5_cpu_attr->value = this;
+
+    const auto &event_vec = evs->get_child_events();
+    auto event_it = std::find_if(event_vec.begin(), event_vec.end(),
+            [](const sc_core::sc_event *e) -> bool {
+                return e->basename() == ClockEventName; });
+    if (event_it != event_vec.end())
+        clockEvent = *event_it;
+
+    base = evs->get_attribute(PeriodAttributeName);
+    periodAttribute = dynamic_cast<sc_core::sc_attribute<Tick> *>(base);
+    panic_if(base && !periodAttribute,
+            "The EVS clock period attribute is not of type "
+            "sc_attribute<Tick>.");
+}
+
 BaseCPU::~BaseCPU()
 {
     for (auto &tc: threadContexts)

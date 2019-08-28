@@ -40,6 +40,8 @@
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/sc_port_wrapper.hh"
 
+class BaseCPU;
+
 // This macro is to get the type IF of a sc_export<IF> variable x. It relies on
 // the fact that the "operator->()" function returns the "IF*" type and
 // std::decay to remove cv-qualifiers and reference.
@@ -76,6 +78,7 @@ class CortexA76x1 : public scx_evs_CortexA76x1
 
     sc_core::sc_event clockChanged;
     sc_core::sc_attribute<Tick> clockPeriod;
+    sc_core::sc_attribute<::BaseCPU *> gem5Cpu;
 
     void clockChangeHandler();
 

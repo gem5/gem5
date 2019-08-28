@@ -46,6 +46,9 @@ static const std::string ClockEventName = "gem5_clock_period_event";
 // The name of the attribute the subsystem should create which can be set to
 // the desired clock period, in gem5's Ticks.
 static const std::string PeriodAttributeName = "gem5_clock_period_attribute";
+// The name of the attribute the subsystem should create which will be set to
+// a pointer to its corresponding gem5 CPU.
+static const std::string Gem5CpuAttributeName = "gem5_cpu";
 
 // This CPU class adds some mechanisms which help attach the gem5 and fast
 // model CPUs to each other. It acts as a base class for the gem5 CPU, and
@@ -54,10 +57,7 @@ static const std::string PeriodAttributeName = "gem5_clock_period_attribute";
 class BaseCPU : public ::BaseCPU
 {
   public:
-    BaseCPU(BaseCPUParams *params, sc_core::sc_module *_evs) :
-        ::BaseCPU::BaseCPU(params), evs(_evs),
-        clockEvent(nullptr), periodAttribute(nullptr)
-    {}
+    BaseCPU(BaseCPUParams *params, sc_core::sc_module *_evs);
     virtual ~BaseCPU();
 
     Port &
@@ -90,34 +90,11 @@ class BaseCPU : public ::BaseCPU
     sc_core::sc_event *clockEvent;
     sc_core::sc_attribute<Tick> *periodAttribute;
 
-    bool
-    findClockControls()
-    {
-        if (!clockEvent) {
-            const auto &event_vec = evs->get_child_events();
-            auto event_it = std::find_if(event_vec.begin(), event_vec.end(),
-                    [](const sc_core::sc_event *e) -> bool {
-                        return e->basename() == ClockEventName; });
-            if (event_it != event_vec.end())
-                clockEvent = *event_it;
-        }
-        if (!periodAttribute) {
-            sc_core::sc_attr_base *base =
-                evs->get_attribute(PeriodAttributeName);
-            periodAttribute =
-                dynamic_cast<sc_core::sc_attribute<Tick> *>(base);
-            panic_if(base && !periodAttribute,
-                    "The EVS clock period attribute is not of type "
-                    "sc_attribute<Tick>.");
-        }
-        return clockEvent && periodAttribute;
-    }
-
   protected:
     void
     clockPeriodUpdated() override
     {
-        if (!findClockControls()) {
+        if (!clockEvent || !periodAttribute) {
             warn("Unable to notify EVS of clock change, missing:");
             warn_if(!clockEvent, "  Clock change event");
             warn_if(!periodAttribute, "  Clock period attribute");
