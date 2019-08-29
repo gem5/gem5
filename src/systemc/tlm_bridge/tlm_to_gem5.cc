@@ -69,6 +69,39 @@
 namespace sc_gem5
 {
 
+PacketPtr
+payload2packet(MasterID masterId, tlm::tlm_generic_payload &trans)
+{
+    MemCmd cmd;
+
+    switch (trans.get_command()) {
+        case tlm::TLM_READ_COMMAND:
+            cmd = MemCmd::ReadReq;
+            break;
+        case tlm::TLM_WRITE_COMMAND:
+            cmd = MemCmd::WriteReq;
+            break;
+        case tlm::TLM_IGNORE_COMMAND:
+            return nullptr;
+        default:
+            SC_REPORT_FATAL("TlmToGem5Bridge",
+                            "received transaction with unsupported command");
+    }
+
+    Request::Flags flags;
+    auto req = std::make_shared<Request>(
+        trans.get_address(), trans.get_data_length(), flags, masterId);
+
+    /*
+     * Allocate a new Packet. The packet will be deleted when it returns from
+     * the gem5 world as a response.
+     */
+    auto pkt = new Packet(req, cmd);
+    pkt->dataStatic(trans.get_data_ptr());
+
+    return pkt;
+}
+
 template <unsigned int BITWIDTH>
 void
 TlmToGem5Bridge<BITWIDTH>::sendEndReq(tlm::tlm_generic_payload &trans)
@@ -126,7 +159,7 @@ TlmToGem5Bridge<BITWIDTH>::handleBeginReq(tlm::tlm_generic_payload &trans)
         extension->setPipeThrough();
         pkt = extension->getPacket();
     } else {
-        pkt = generatePacket(trans);
+        pkt = payload2packet(masterId, trans);
     }
 
     auto tlmSenderState = new TlmSenderState(trans);
@@ -156,40 +189,6 @@ TlmToGem5Bridge<BITWIDTH>::handleEndResp(tlm::tlm_generic_payload &trans)
         bmp.sendRetryResp();
         needToSendRetry = false;
     }
-}
-
-template <unsigned int BITWIDTH>
-PacketPtr
-TlmToGem5Bridge<BITWIDTH>::generatePacket(tlm::tlm_generic_payload &trans)
-{
-    MemCmd cmd;
-
-    switch (trans.get_command()) {
-        case tlm::TLM_READ_COMMAND:
-            cmd = MemCmd::ReadReq;
-            break;
-        case tlm::TLM_WRITE_COMMAND:
-            cmd = MemCmd::WriteReq;
-            break;
-        case tlm::TLM_IGNORE_COMMAND:
-            return nullptr;
-        default:
-            SC_REPORT_FATAL("TlmToGem5Bridge",
-                            "received transaction with unsupported command");
-    }
-
-    Request::Flags flags;
-    auto req = std::make_shared<Request>(
-        trans.get_address(), trans.get_data_length(), flags, masterId);
-
-    /*
-     * Allocate a new Packet. The packet will be deleted when it returns from
-     * the gem5 world as a response.
-     */
-    auto pkt = new Packet(req, cmd);
-    pkt->dataStatic(trans.get_data_ptr());
-
-    return pkt;
 }
 
 template <unsigned int BITWIDTH>
@@ -278,7 +277,7 @@ TlmToGem5Bridge<BITWIDTH>::b_transport(tlm::tlm_generic_payload &trans,
         extension->setPipeThrough();
         pkt = extension->getPacket();
     } else {
-        pkt = generatePacket(trans);
+        pkt = payload2packet(masterId, trans);
     }
 
     MemBackdoorPtr backdoor = nullptr;
@@ -315,7 +314,7 @@ TlmToGem5Bridge<BITWIDTH>::transport_dbg(tlm::tlm_generic_payload &trans)
         extension->setPipeThrough();
         bmp.sendFunctional(extension->getPacket());
     } else {
-        auto pkt = generatePacket(trans);
+        auto pkt = payload2packet(masterId, trans);
         if (pkt) {
             bmp.sendFunctional(pkt);
             destroyPacket(pkt);
@@ -341,7 +340,7 @@ TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
         extension->setPipeThrough();
         pkt = extension->getPacket();
     } else {
-        pkt = generatePacket(trans);
+        pkt = payload2packet(masterId, trans);
         pkt->req->setFlags(Request::NO_ACCESS);
     }
 

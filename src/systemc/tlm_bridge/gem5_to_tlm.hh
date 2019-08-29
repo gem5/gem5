@@ -78,6 +78,8 @@
 namespace sc_gem5
 {
 
+tlm::tlm_generic_payload *packet2payload(PacketPtr packet);
+
 class Gem5ToTlmBridgeBase : public sc_core::sc_module
 {
   protected:

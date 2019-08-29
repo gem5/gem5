@@ -80,6 +80,8 @@ class TlmToGem5BridgeBase : public sc_core::sc_module
     using sc_core::sc_module::sc_module;
 };
 
+PacketPtr payload2packet(tlm::tlm_generic_payload &trans);
+
 template <unsigned int BITWIDTH>
 class TlmToGem5Bridge : public TlmToGem5BridgeBase
 {
@@ -134,7 +136,6 @@ class TlmToGem5Bridge : public TlmToGem5BridgeBase
     void handleBeginReq(tlm::tlm_generic_payload &trans);
     void handleEndResp(tlm::tlm_generic_payload &trans);
 
-    PacketPtr generatePacket(tlm::tlm_generic_payload &trans);
     void destroyPacket(PacketPtr pkt);
 
     void checkTransaction(tlm::tlm_generic_payload &trans);
