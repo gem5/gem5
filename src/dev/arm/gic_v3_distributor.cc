@@ -794,7 +794,7 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
                 for (int i = 0, int_id = first_intid;
                      i < 8 * size && int_id < itLines; i++, int_id++) {
-                    irqGrpmod[int_id] = data & (0x1 << i);
+                    irqGrpmod[int_id] = bits(data, i);
                 }
 
                 return ;
