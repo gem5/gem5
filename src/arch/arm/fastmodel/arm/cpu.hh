@@ -39,36 +39,10 @@ namespace FastModel
 // This class adds non-Iris, gem5 functionality to this CPU model.
 class ArmCPU : public Iris::ArmCPU
 {
-  private:
-    class MemPort : public MasterPort
-    {
-      public:
-        using MasterPort::MasterPort;
-
-        bool
-        recvTimingResp(PacketPtr pkt) override
-        {
-            panic("%s.%s not implemented.\n", name(), __FUNCTION__);
-        }
-
-        void
-        recvReqRetry() override
-        {
-            panic("%s.%s not implemented.\n", name(), __FUNCTION__);
-        }
-    };
-
-    MemPort mem;
-
   public:
     ArmCPU(FastModelArmCPUParams *params);
 
     void initState() override;
-    Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
-
-    Port &getDataPort() override { return mem; }
-    Port &getInstPort() override { return mem; }
 };
 
 } // namespace FastModel

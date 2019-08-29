@@ -35,8 +35,7 @@ namespace FastModel
 {
 
 ArmCPU::ArmCPU(FastModelArmCPUParams *params) :
-    Iris::ArmCPU(params, scx::scx_get_iris_connection_interface()),
-    mem(name() + ".mem", this)
+    Iris::ArmCPU(params, scx::scx_get_iris_connection_interface())
 {
 }
 
@@ -46,14 +45,6 @@ ArmCPU::initState()
     auto cntfrq = static_cast<const FastModelArmCPUParams *>(params())->cntfrq;
     for (auto *tc : threadContexts)
         tc->setMiscRegNoEffect(ArmISA::MISCREG_CNTFRQ_EL0, cntfrq);
-}
-
-Port &
-ArmCPU::getPort(const std::string &if_name, PortID idx)
-{
-    if (if_name == "mem")
-        return mem;
-    return Iris::ArmCPU::getPort(if_name, idx);
 }
 
 } // namespace FastModel

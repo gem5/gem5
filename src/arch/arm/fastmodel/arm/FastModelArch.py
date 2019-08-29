@@ -36,5 +36,3 @@ class FastModelArmCPU(IrisArmCPU):
     cxx_header = 'arch/arm/fastmodel/arm/cpu.hh'
 
     cntfrq = Param.UInt64("Value for the CNTFRQ timer register")
-
-    mem = RequestPort('Port for port proxies to attach to.')
