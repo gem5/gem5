@@ -949,6 +949,9 @@ namespace ArmISA
         MISCREG_BANKED,  // True if the register is banked between the two
                          // security states, and this is the parent node of the
                          // two banked registers
+        MISCREG_BANKED64, // True if the register is banked between the two
+                          // security states, and this is the parent node of
+                          // the two banked registers. Used in AA64 only.
         MISCREG_BANKED_CHILD, // The entry is one of the child registers that
                               // forms a banked set of regs (along with the
                               // other child regs)
@@ -1940,6 +1943,9 @@ namespace ArmISA
     // processor
     int
     snsBankedIndex(MiscRegIndex reg, ThreadContext *tc, bool ns);
+
+    int
+    snsBankedIndex64(MiscRegIndex reg, ThreadContext *tc);
 
     // Takes a misc reg index and returns the root reg if its one of a set of
     // banked registers

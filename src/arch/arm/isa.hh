@@ -183,6 +183,10 @@ namespace ArmISA
                 info[MISCREG_BANKED] = v;
                 return *this;
             }
+            chain banked64(bool v = true) const {
+                info[MISCREG_BANKED64] = v;
+                return *this;
+            }
             chain bankedChild(bool v = true) const {
                 info[MISCREG_BANKED_CHILD] = v;
                 return *this;
@@ -642,9 +646,23 @@ namespace ArmISA
                                      inSecureState(miscRegs[MISCREG_SCR],
                                                    miscRegs[MISCREG_CPSR]);
                     flat_idx += secureReg ? 2 : 1;
+                } else {
+                    flat_idx = snsBankedIndex64((MiscRegIndex)reg,
+                        !inSecureState(miscRegs[MISCREG_SCR],
+                                       miscRegs[MISCREG_CPSR]));
                 }
             }
             return flat_idx;
+        }
+
+        int
+        snsBankedIndex64(MiscRegIndex reg, bool ns) const
+        {
+            int reg_as_int = static_cast<int>(reg);
+            if (miscRegInfo[reg][MISCREG_BANKED64]) {
+                reg_as_int += (haveSecurity && !ns) ? 2 : 1;
+            }
+            return reg_as_int;
         }
 
         std::pair<int,int> getMiscIndices(int misc_reg) const

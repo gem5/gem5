@@ -1075,6 +1075,12 @@ snsBankedIndex(MiscRegIndex reg, ThreadContext *tc, bool ns)
     return reg_as_int;
 }
 
+int
+snsBankedIndex64(MiscRegIndex reg, ThreadContext *tc)
+{
+    SCR scr = tc->readMiscReg(MISCREG_SCR);
+    return tc->getIsaPtr()->snsBankedIndex64(reg, scr.ns);
+}
 
 /**
  * If the reg is a child reg of a banked set, then the parent is the last

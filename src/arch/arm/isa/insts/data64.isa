@@ -331,16 +331,18 @@ let {{
     '''
 
     msr_check_code = '''
+        auto pre_flat = (MiscRegIndex)snsBankedIndex64(dest, xc->tcBase());
         MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
-            flattenRegId(RegId(MiscRegClass, dest)).index();
+            flattenRegId(RegId(MiscRegClass, pre_flat)).index();
         CPSR cpsr = Cpsr;
         ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
         %s
     ''' % (msrMrs64EnabledCheckCode % ('Write'),)
 
     mrs_check_code = '''
+        auto pre_flat = (MiscRegIndex)snsBankedIndex64(op1, xc->tcBase());
         MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
-            flattenRegId(RegId(MiscRegClass, op1)).index();
+            flattenRegId(RegId(MiscRegClass, pre_flat)).index();
         CPSR cpsr = Cpsr;
         ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
         %s
@@ -509,8 +511,10 @@ let {{
     def buildMsrImmInst(mnem, inst_name, code):
         global header_output, decoder_output, exec_output
         msrImmPermission = '''
-            auto misc_index = (MiscRegIndex) xc->tcBase()->flattenRegId(
-               RegId(MiscRegClass, dest)).index();
+            auto pre_flat =
+                (MiscRegIndex)snsBankedIndex64(dest, xc->tcBase());
+            MiscRegIndex misc_index = (MiscRegIndex) xc->tcBase()->
+                flattenRegId(RegId(MiscRegClass, pre_flat)).index();
 
             if (!miscRegInfo[misc_index][MISCREG_IMPLEMENTED]) {
                     return std::make_shared<UndefinedInstruction>(
