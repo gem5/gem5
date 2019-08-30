@@ -49,13 +49,13 @@ class SysDC64 : public MiscRegOp64
 {
   protected:
     IntRegIndex base;
-    IntRegIndex dest;
+    MiscRegIndex dest;
     uint64_t imm;
 
     SysDC64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-            IntRegIndex _base, MiscRegIndex miscReg, uint64_t _imm)
+            IntRegIndex _base, MiscRegIndex _dest, uint64_t _imm)
         : MiscRegOp64(mnem, _machInst, __opClass, false),
-          base(_base), dest((IntRegIndex)miscReg), imm(_imm)
+          base(_base), dest(_dest), imm(_imm)
     {}
 
     std::string generateDisassembly(
