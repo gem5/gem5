@@ -319,7 +319,7 @@ initHDF5(const std::string &filename, unsigned chunking,
          bool desc, bool formulas)
 {
     return  std::unique_ptr<Output>(
-        new Hdf5(filename, chunking, desc, formulas));
+        new Hdf5(simout.resolve(filename), chunking, desc, formulas));
 }
 
 }; // namespace Stats
