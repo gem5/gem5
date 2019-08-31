@@ -54,9 +54,13 @@ class CortexA76x1 : public scx_evs_CortexA76x1
   private:
     SC_HAS_PROCESS(CortexA76x1);
 
+    typedef sc_gem5::TlmTargetBaseWrapper<
+        64, svp_gicv3_comms::gicv3_comms_fw_if,
+        svp_gicv3_comms::gicv3_comms_bw_if, 1,
+        sc_core::SC_ONE_OR_MORE_BOUND> TlmGicTarget;
+
     AmbaInitiator amba;
-    AmbaInitiator redistributorM;
-    AmbaTarget redistributorS;
+    TlmGicTarget redistributor;
 
     ClockRateControlInitiatorSocket clockRateControl;
 

@@ -70,10 +70,14 @@ class SCGIC : public scx_evs_GIC
 class GIC : public BaseGic
 {
   private:
+    typedef sc_gem5::TlmInitiatorBaseWrapper<
+        64, svp_gicv3_comms::gicv3_comms_fw_if,
+        svp_gicv3_comms::gicv3_comms_bw_if, 1,
+        sc_core::SC_ONE_OR_MORE_BOUND> TlmGicInitiator;
+
     AmbaInitiator ambaM;
     AmbaTarget ambaS;
-    AmbaInitiator redistributorM;
-    AmbaTarget redistributorS;
+    TlmGicInitiator redistributor;
 
     SCGIC *scGIC;
 

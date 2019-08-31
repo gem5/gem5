@@ -54,11 +54,7 @@ component GIC
         mem_in.pvbus_m => gic.pvbus_s;
 
         // For the CPU interface.
-        gic.redistributor_m => gic_gic2pv.distributor_s;
-        gic_gic2pv.pvbus_m => gic_pv2amba.pvbus_s;
-        gic_pv2amba.amba_pv_m => self.redistributor_m;
-        self.redistributor_s => gic_amba2pv.amba_pv_s;
-        gic_amba2pv.pvbus_m => gic_gic2pv.pvbus_s;
+        gic.redistributor_m => self.redistributor;
 
         // Internal ports for PPI and SPI programmatic access.
         self.ppi_0 => gic.ppi_in_0;
@@ -329,8 +325,7 @@ component GIC
     master port<AMBAPV> amba_m;
     slave port<AMBAPV> amba_s;
 
-    slave port<AMBAPV> redistributor_s;
-    master port<AMBAPV> redistributor_m;
+    master port<GICv3Comms> redistributor;
 
     #define setPPI(C) \
           case C: ppi_##C[num].setValue(state); \

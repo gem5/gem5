@@ -36,9 +36,6 @@ component CortexA76x1
 
         // Bridges for the core.
         ambaBridge : PVBus2AMBAPV();
-        gic_pv2gic : PVBusGICv3Comms();
-        gic_pv2amba : PVBus2AMBAPV();
-        gic_amba2pv : AMBAPV2PVBus();
 
         // Adapters for CPU-to-GIC signals
         CNTHPIRQ : SGSignal2AMBAPVSignal();
@@ -64,14 +61,7 @@ component CortexA76x1
         ambaBridge.amba_pv_m => self.amba;
 
         // Connection to the GIC.
-        self.redistributor_s => gic_amba2pv.amba_pv_s;
-        // Bridges coming in.
-        gic_amba2pv.pvbus_m => gic_pv2gic.pvbus_s;
-        // Bridge to GICV3Comms.
-        gic_pv2gic.distributor_m[0] => core.gicv3_redistributor_s[0];
-        // Bridges going out.
-        gic_pv2gic.pvbus_m => gic_pv2amba.pvbus_s;
-        gic_pv2amba.amba_pv_m => self.redistributor_m;
+        self.redistributor =>core.gicv3_redistributor_s[0];
 
         // Connections from CPU to adapters
         core.CNTHPIRQ[0] => CNTHPIRQ.sg_signal_s;
@@ -113,8 +103,7 @@ component CortexA76x1
             clockDiv.rate.set64(mul, div);
         }
     }
-    slave port<AMBAPV> redistributor_s;
-    master port<AMBAPV> redistributor_m;
+    slave port<GICv3Comms> redistributor;
 
     // External ports for CPU-to-GIC signals
     master port<AMBAPVSignal> cnthpirq;

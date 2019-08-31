@@ -71,8 +71,7 @@ class FastModelCortexA76x1(SystemC_ScModule):
             "Non-secure physical timer event")
 
     amba = AmbaInitiatorSocket(64, 'AMBA initiator socket')
-    redistributor_m = Gicv3CommsInitiatorSocket('GIC communication initiator')
-    redistributor_s = Gicv3CommsTargetSocket('GIC communication target')
+    redistributor = Gicv3CommsTargetSocket('GIC communication target')
 
     # These parameters are described in "Fast Models Reference Manual" section
     # 3.4.19, "ARMCortexA7x1CT".

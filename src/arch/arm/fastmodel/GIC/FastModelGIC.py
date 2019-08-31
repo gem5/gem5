@@ -457,5 +457,4 @@ class FastModelGIC(BaseGic):
     amba_m = AmbaInitiatorSocket(64, 'Memory initiator socket')
     amba_s = AmbaTargetSocket(64, 'Memory target socket')
 
-    redistributor_m = Gicv3CommsInitiatorSocket('GIC communication initiator')
-    redistributor_s = Gicv3CommsTargetSocket('GIC communication target')
+    redistributor = Gicv3CommsInitiatorSocket('GIC communication initiator')

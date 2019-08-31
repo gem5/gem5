@@ -261,10 +261,8 @@ GIC::GIC(const FastModelGICParams &params) :
     BaseGic(&params),
     ambaM(params.sc_gic->amba_m, params.name + ".amba_m", -1),
     ambaS(params.sc_gic->amba_s, params.name + ".amba_s", -1),
-    redistributorM(params.sc_gic->redistributor_m,
-                   params.name + ".redistributor_m", -1),
-    redistributorS(params.sc_gic->redistributor_s,
-                   params.name + ".redistributor_s", -1),
+    redistributor(params.sc_gic->redistributor,
+                  params.name + ".redistributor", -1),
     scGIC(params.sc_gic)
 {
 }
@@ -276,10 +274,8 @@ GIC::getPort(const std::string &if_name, PortID idx)
         return ambaM;
     else if (if_name == "amba_s")
         return ambaS;
-    else if (if_name == "redistributor_m")
-        return redistributorM;
-    else if (if_name == "redistributor_s")
-        return redistributorS;
+    else if (if_name == "redistributor")
+        return redistributor;
     else
         return BaseGic::getPort(if_name, idx);
 }

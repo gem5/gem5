@@ -50,8 +50,8 @@ CortexA76x1::CortexA76x1(const sc_core::sc_module_name &mod_name,
         const FastModelCortexA76x1Params &p)
     : scx_evs_CortexA76x1(mod_name),
       amba(scx_evs_CortexA76x1::amba, p.name + ".amba", -1),
-      redistributorM(redistributor_m, p.name + ".redistributor_m", -1),
-      redistributorS(redistributor_s, p.name + ".redistributor_s", -1),
+      redistributor(scx_evs_CortexA76x1::redistributor,
+              p.name + ".redistributor", -1),
       cnthpirq("cnthpirq"),
       cnthvirq("cnthvirq"),
       cntpsirq("cntpsirq"),
@@ -264,10 +264,8 @@ CortexA76x1::gem5_getPort(const std::string &if_name, int idx)
 {
     if (if_name == "amba")
         return amba;
-    else if (if_name == "redistributor_m")
-        return redistributorM;
-    else if (if_name == "redistributor_s")
-        return redistributorS;
+    else if (if_name == "redistributor")
+        return redistributor;
     else
         return scx_evs_CortexA76x1::gem5_getPort(if_name, idx);
 }
