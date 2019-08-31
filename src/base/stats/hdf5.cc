@@ -109,9 +109,9 @@ Hdf5::beginGroup(const char *name)
     H5::Group group;
     try {
         group = base.openGroup(name);
-    } catch (H5::FileIException e) {
+    } catch (const H5::FileIException& e) {
         group = base.createGroup(name);
-    } catch (H5::GroupIException e) {
+    } catch (const H5::GroupIException& e) {
         group = base.createGroup(name);
     }
 
