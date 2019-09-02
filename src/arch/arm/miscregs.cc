@@ -4603,7 +4603,7 @@ ISA::initializeMiscRegMetadata()
         .allPrivileges().exceptUserMode().writes(0)
         .mapsTo(MISCREG_ICC_HPPIR1);
     InitReg(MISCREG_ICC_BPR1_EL1)
-        .banked()
+        .banked64()
         .mapsTo(MISCREG_ICC_BPR1);
     InitReg(MISCREG_ICC_BPR1_EL1_NS)
         .bankedChild()
