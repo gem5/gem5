@@ -204,4 +204,4 @@ class O3_ARM_v7aL2(Cache):
     # Simple stride prefetcher
     prefetcher = StridePrefetcher(degree=8, latency = 1)
     tags = BaseSetAssoc()
-    repl_policy = RandomRP()
+    replacement_policy = RandomRP()
