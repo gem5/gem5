@@ -74,9 +74,14 @@ MRURP::getVictim(const ReplacementCandidates& candidates) const
     // Visit all candidates to find victim
     ReplaceableEntry* victim = candidates[0];
     for (const auto& candidate : candidates) {
-        // Update victim entry if necessary
-        if (std::static_pointer_cast<MRUReplData>(
-                    candidate->replacementData)->lastTouchTick >
+        std::shared_ptr<MRUReplData> candidate_replacement_data =
+            std::static_pointer_cast<MRUReplData>(candidate->replacementData);
+
+        // Stop searching entry if a cache line that doesn't warm up is found.
+        if (candidate_replacement_data->lastTouchTick == 0) {
+            victim = candidate;
+            break;
+        } else if (candidate_replacement_data->lastTouchTick >
                 std::static_pointer_cast<MRUReplData>(
                     victim->replacementData)->lastTouchTick) {
             victim = candidate;
