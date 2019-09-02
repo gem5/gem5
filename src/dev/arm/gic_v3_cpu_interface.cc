@@ -1321,7 +1321,9 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
               return setMiscReg(MISCREG_ICV_IGRPEN0_EL1, val);
           }
 
-          break;
+          isa->setMiscRegNoEffect(MISCREG_ICC_IGRPEN0_EL1, val);
+          updateDistributor();
+          return;
       }
 
       // Virtual Interrupt Group 0 Enable register
@@ -1360,6 +1362,7 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
           }
 
           setBankedMiscReg(MISCREG_ICC_IGRPEN1_EL1, val);
+          updateDistributor();
           return;
       }
 
