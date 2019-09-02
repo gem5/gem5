@@ -338,6 +338,8 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     void virtualUpdate();
     RegVal bpr1(Gicv3::GroupId group);
 
+    RegVal readBankedMiscReg(MiscRegIndex misc_reg) const;
+    void setBankedMiscReg(MiscRegIndex misc_reg, RegVal val) const;
   public:
 
     Gicv3CPUInterface(Gicv3 * gic, uint32_t cpu_id);

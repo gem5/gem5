@@ -1623,6 +1623,20 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
     }
 }
 
+RegVal
+Gicv3CPUInterface::readBankedMiscReg(MiscRegIndex misc_reg) const
+{
+    return isa->readMiscRegNoEffect(
+        isa->snsBankedIndex64(misc_reg, !isSecureBelowEL3()));
+}
+
+void
+Gicv3CPUInterface::setBankedMiscReg(MiscRegIndex misc_reg, RegVal val) const
+{
+    isa->setMiscRegNoEffect(
+        isa->snsBankedIndex64(misc_reg, !isSecureBelowEL3()), val);
+}
+
 int
 Gicv3CPUInterface::virtualFindActive(uint32_t int_id) const
 {
