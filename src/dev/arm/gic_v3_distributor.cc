@@ -44,6 +44,7 @@
 
 #include <algorithm>
 
+#include "base/intmath.hh"
 #include "debug/GIC.hh"
 #include "dev/arm/gic_v3.hh"
 #include "dev/arm/gic_v3_cpu_interface.hh"
@@ -77,6 +78,7 @@ Gicv3Distributor::Gicv3Distributor(Gicv3 * gic, uint32_t it_lines)
       irqGrpmod(it_lines),
       irqNsacr(it_lines),
       irqAffinityRouting(it_lines),
+      gicdTyper(0),
       gicdPidr0(0x92),
       gicdPidr1(0xb4),
       gicdPidr2(0x3b),
@@ -84,6 +86,37 @@ Gicv3Distributor::Gicv3Distributor(Gicv3 * gic, uint32_t it_lines)
       gicdPidr4(0x44)
 {
     panic_if(it_lines > Gicv3::INTID_SECURE, "Invalid value for it_lines!");
+    /*
+     * RSS           [26]    == 1
+     * (The implementation does supports targeted SGIs with affinity
+     * level 0 values of 0 - 255)
+     * No1N          [25]    == 1
+     * (1 of N SPI interrupts are not supported)
+     * A3V           [24]    == 1
+     * (Supports nonzero values of Affinity level 3)
+     * IDbits        [23:19] == 0xf
+     * (The number of interrupt identifier bits supported, minus one)
+     * DVIS          [18]    == 0
+     * (The implementation does not support Direct Virtual LPI
+     * injection)
+     * LPIS          [17]    == 1
+     * (The implementation does not support LPIs)
+     * MBIS          [16]    == 1
+     * (The implementation supports message-based interrupts
+     * by writing to Distributor registers)
+     * SecurityExtn  [10]    == X
+     * (The GIC implementation supports two Security states)
+     * CPUNumber     [7:5]   == 0
+     * (since for us ARE is always 1 [(ARE = 0) == Gicv2 legacy])
+     * ITLinesNumber [4:0]   == N
+     * (MaxSPIIntId = 32 (N + 1) - 1)
+     */
+    int max_spi_int_id = itLines - 1;
+    int it_lines_number = divCeil(max_spi_int_id + 1, 32) - 1;
+    gicdTyper = (1 << 26) | (1 << 25) | (1 << 24) | (IDBITS << 19) |
+        (1 << 17) | (1 << 16) |
+        ((gic->getSystem()->haveSecurity() ? 1 : 0) << 10) |
+        (it_lines_number << 0);
 }
 
 void
@@ -461,39 +494,7 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
         }
 
       case GICD_TYPER: // Interrupt Controller Type Register
-        /*
-         * RSS           [26]    == 1
-         * (The implementation does supports targeted SGIs with affinity
-         * level 0 values of 0 - 255)
-         * No1N          [25]    == 1
-         * (1 of N SPI interrupts are not supported)
-         * A3V           [24]    == 1
-         * (Supports nonzero values of Affinity level 3)
-         * IDbits        [23:19] == 0xf
-         * (The number of interrupt identifier bits supported, minus one)
-         * DVIS          [18]    == 0
-         * (The implementation does not support Direct Virtual LPI
-         * injection)
-         * LPIS          [17]    == 1
-         * (The implementation does not support LPIs)
-         * MBIS          [16]    == 1
-         * (The implementation supports message-based interrupts
-         * by writing to Distributor registers)
-         * SecurityExtn  [10]    == X
-         * (The GIC implementation supports two Security states)
-         * CPUNumber     [7:5]   == 0
-         * (since for us ARE is always 1 [(ARE = 0) == Gicv2 legacy])
-         * ITLinesNumber [4:0]   == N
-         * (MaxSPIIntId = 32 (N + 1) - 1)
-         */
-        {
-            int max_spi_int_id = itLines - 1;
-            int it_lines_number = ceil((max_spi_int_id + 1) / 32.0) - 1;
-            return (1 << 26) | (1 << 25) | (1 << 24) | (IDBITS << 19) |
-                (1 << 17) | (1 << 16) |
-                (gic->getSystem()->haveSecurity() << 10) |
-                (it_lines_number << 0);
-        }
+        return gicdTyper;
 
       case GICD_IIDR: // Implementer Identification Register
         //return 0x43b; // ARM JEP106 code (r0p0 GIC-500)

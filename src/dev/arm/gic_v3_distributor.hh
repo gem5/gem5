@@ -160,6 +160,7 @@ class Gicv3Distributor : public Serializable
     std::vector <uint8_t> irqNsacr;
     std::vector <IROUTER> irqAffinityRouting;
 
+    uint32_t gicdTyper;
     uint32_t gicdPidr0;
     uint32_t gicdPidr1;
     uint32_t gicdPidr2;
