@@ -47,30 +47,6 @@
 #include "debug/AddrRanges.hh"
 #include "sim/system.hh"
 
-PioPort::PioPort(PioDevice *dev)
-    : SimpleTimingPort(dev->name() + ".pio", dev), device(dev)
-{
-}
-
-Tick
-PioPort::recvAtomic(PacketPtr pkt)
-{
-    // technically the packet only reaches us after the header delay,
-    // and typically we also need to deserialise any payload
-    Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
-    pkt->headerDelay = pkt->payloadDelay = 0;
-
-    const Tick delay(pkt->isRead() ? device->read(pkt) : device->write(pkt));
-    assert(pkt->isResponse() || pkt->isError());
-    return delay + receive_delay;
-}
-
-AddrRangeList
-PioPort::getAddrRanges() const
-{
-    return device->getAddrRanges();
-}
-
 PioDevice::PioDevice(const Params *p)
     : ClockedObject(p), sys(p->system), pioPort(this)
 {}
