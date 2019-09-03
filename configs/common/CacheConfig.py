@@ -47,7 +47,7 @@ from __future__ import absolute_import
 import m5
 from m5.objects import *
 from .Caches import *
-from . import HWPConfig
+from common import ObjectList
 
 def config_cache(options, system):
     if options.external_memory_system and (options.caches or options.l2cache):
@@ -106,7 +106,7 @@ def config_cache(options, system):
         system.l2.cpu_side = system.tol2bus.master
         system.l2.mem_side = system.membus.slave
         if options.l2_hwp_type:
-            hwpClass = HWPConfig.get(options.l2_hwp_type)
+            hwpClass = ObjectList.hwp_list.get(options.l2_hwp_type)
             if system.l2.prefetcher != "Null":
                 print("Warning: l2-hwp-type is set (", hwpClass, "), but",
                       "the current l2 has a default Hardware Prefetcher",
@@ -149,7 +149,7 @@ def config_cache(options, system):
                 dcache = dcache_mon
 
             if options.l1d_hwp_type:
-                hwpClass = HWPConfig.get(options.l1d_hwp_type)
+                hwpClass = ObjectList.hwp_list.get(options.l1d_hwp_type)
                 if dcache.prefetcher != m5.params.NULL:
                     print("Warning: l1d-hwp-type is set (", hwpClass, "), but",
                           "the current l1d has a default Hardware Prefetcher",
@@ -158,7 +158,7 @@ def config_cache(options, system):
                 dcache.prefetcher = hwpClass()
 
             if options.l1i_hwp_type:
-                hwpClass = HWPConfig.get(options.l1i_hwp_type)
+                hwpClass = ObjectList.hwp_list.get(options.l1i_hwp_type)
                 if icache.prefetcher != m5.params.NULL:
                     print("Warning: l1i-hwp-type is set (", hwpClass, "), but",
                           "the current l1i has a default Hardware Prefetcher",

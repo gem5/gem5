@@ -137,6 +137,7 @@ class CPUList(ObjectList):
 
 bp_list = ObjectList(m5.objects.BranchPredictor)
 cpu_list = CPUList(m5.objects.BaseCPU)
+hwp_list = ObjectList(m5.objects.BasePrefetcher)
 indirect_bp_list = ObjectList(m5.objects.IndirectPredictor)
 
 def _subclass_tester(name):

@@ -47,7 +47,6 @@ from m5.objects import *
 
 from .Benchmarks import *
 from . import ObjectList
-from . import HWPConfig
 from . import MemConfig
 from . import PlatformConfig
 
@@ -60,7 +59,7 @@ def _listBPTypes(option, opt, value, parser):
     sys.exit(0)
 
 def _listHWPTypes(option, opt, value, parser):
-    HWPConfig.print_hwp_list()
+    ObjectList.hwp_list.print()
     sys.exit(0)
 
 def _listIndirectBPTypes(option, opt, value, parser):
@@ -184,21 +183,21 @@ def addCommonOptions(parser):
                       action="callback", callback=_listHWPTypes,
                       help="List available hardware prefetcher types")
     parser.add_option("--l1i-hwp-type", type="choice", default=None,
-                      choices=HWPConfig.hwp_names(),
+                      choices=ObjectList.hwp_list.get_names(),
                       help = """
                       type of hardware prefetcher to use with the L1
                       instruction cache.
                       (if not set, use the default prefetcher of
                       the selected cache)""")
     parser.add_option("--l1d-hwp-type", type="choice", default=None,
-                      choices=HWPConfig.hwp_names(),
+                      choices=ObjectList.hwp_list.get_names(),
                       help = """
                       type of hardware prefetcher to use with the L1
                       data cache.
                       (if not set, use the default prefetcher of
                       the selected cache)""")
     parser.add_option("--l2-hwp-type", type="choice", default=None,
-                      choices=HWPConfig.hwp_names(),
+                      choices=ObjectList.hwp_list.get_names(),
                       help = """
                       type of hardware prefetcher to use with the L2 cache.
                       (if not set, use the default prefetcher of
