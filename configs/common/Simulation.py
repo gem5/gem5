@@ -48,7 +48,6 @@ from os.path import join as joinpath
 
 from common import CpuConfig
 from . import ObjectList
-from . import BPConfig
 from . import MemConfig
 
 import m5
@@ -482,11 +481,11 @@ def run(options, root, testsys, cpu_class):
             if options.checker:
                 switch_cpus[i].addCheckerCpu()
             if options.bp_type:
-                bpClass = BPConfig.get(options.bp_type)
+                bpClass = ObjectList.bp_list.get(options.bp_type)
                 switch_cpus[i].branchPred = bpClass()
             if options.indirect_bp_type:
-                IndirectBPClass = \
-                    BPConfig.get_indirect(options.indirect_bp_type)
+                IndirectBPClass = ObjectList.indirect_bp_list.get(
+                    options.indirect_bp_type)
                 switch_cpus[i].branchPred.indirectBranchPred = \
                     IndirectBPClass()
 

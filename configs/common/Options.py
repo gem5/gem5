@@ -47,7 +47,6 @@ from m5.objects import *
 
 from .Benchmarks import *
 from . import ObjectList
-from . import BPConfig
 from . import HWPConfig
 from . import MemConfig
 from . import PlatformConfig
@@ -57,7 +56,7 @@ def _listCpuTypes(option, opt, value, parser):
     sys.exit(0)
 
 def _listBPTypes(option, opt, value, parser):
-    BPConfig.print_bp_list()
+    ObjectList.bp_list.print()
     sys.exit(0)
 
 def _listHWPTypes(option, opt, value, parser):
@@ -65,7 +64,7 @@ def _listHWPTypes(option, opt, value, parser):
     sys.exit(0)
 
 def _listIndirectBPTypes(option, opt, value, parser):
-    BPConfig.print_indirect_bp_list()
+    ObjectList.indirect_bp_list.print()
     sys.exit(0)
 
 def _listMemTypes(option, opt, value, parser):
@@ -172,14 +171,14 @@ def addCommonOptions(parser):
                       action="callback", callback=_listIndirectBPTypes,
                       help="List available indirect branch predictor types")
     parser.add_option("--bp-type", type="choice", default=None,
-                      choices=BPConfig.bp_names(),
+                      choices=ObjectList.bp_list.get_names(),
                       help = """
                       type of branch predictor to run with
                       (if not set, use the default branch predictor of
                       the selected CPU)""")
     parser.add_option("--indirect-bp-type", type="choice",
                       default="SimpleIndirectPredictor",
-                      choices=BPConfig.indirect_bp_names(),
+                      choices=ObjectList.indirect_bp_list.get_names(),
                       help = "type of indirect branch predictor to run with")
     parser.add_option("--list-hwp-types",
                       action="callback", callback=_listHWPTypes,

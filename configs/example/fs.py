@@ -65,7 +65,6 @@ from common import CacheConfig
 from common import CpuConfig
 from common import MemConfig
 from common import ObjectList
-from common import BPConfig
 from common.Caches import *
 from common import Options
 
@@ -206,11 +205,11 @@ def build_test_system(np):
             if options.checker:
                 test_sys.cpu[i].addCheckerCpu()
             if options.bp_type:
-                bpClass = BPConfig.get(options.bp_type)
+                bpClass = ObjectList.bp_list.get(options.bp_type)
                 test_sys.cpu[i].branchPred = bpClass()
             if options.indirect_bp_type:
-                IndirectBPClass = \
-                    BPConfig.get_indirect(options.indirect_bp_type)
+                IndirectBPClass = ObjectList.indirect_bp_list.get(
+                    options.indirect_bp_type)
                 test_sys.cpu[i].branchPred.indirectBranchPred = \
                     IndirectBPClass()
             test_sys.cpu[i].createThreads()

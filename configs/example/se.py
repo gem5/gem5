@@ -63,7 +63,6 @@ from common import Simulation
 from common import CacheConfig
 from common import CpuConfig
 from common import ObjectList
-from common import BPConfig
 from common import MemConfig
 from common.FileSystemConfig import config_filesystem
 from common.Caches import *
@@ -238,11 +237,12 @@ for i in range(np):
         system.cpu[i].addCheckerCpu()
 
     if options.bp_type:
-        bpClass = BPConfig.get(options.bp_type)
+        bpClass = ObjectList.bp_list.get(options.bp_type)
         system.cpu[i].branchPred = bpClass()
 
     if options.indirect_bp_type:
-        indirectBPClass = BPConfig.get_indirect(options.indirect_bp_type)
+        indirectBPClass = \
+            ObjectList.indirect_bp_list.get(options.indirect_bp_type)
         system.cpu[i].branchPred.indirectBranchPred = indirectBPClass()
 
     system.cpu[i].createThreads()

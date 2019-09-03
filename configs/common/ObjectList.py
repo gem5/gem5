@@ -135,7 +135,9 @@ class CPUList(ObjectList):
                     self._is_obj_class):
                     self._sub_classes[name] = cls
 
+bp_list = ObjectList(m5.objects.BranchPredictor)
 cpu_list = CPUList(m5.objects.BaseCPU)
+indirect_bp_list = ObjectList(m5.objects.IndirectPredictor)
 
 def _subclass_tester(name):
     sub_class = getattr(m5.objects, name, None)
