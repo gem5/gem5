@@ -1,0 +1,105 @@
+# Copyright (c) 2019 Inria
+# Copyright (c) 2012, 2017-2018 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Andreas Sandberg
+#          Daniel Carvalho
+
+from __future__ import print_function
+from __future__ import absolute_import
+
+import m5.objects
+import inspect
+import sys
+from textwrap import TextWrapper
+
+class ObjectList(object):
+    """ Creates a list of objects that are sub-classes of a given class. """
+
+    def _is_obj_class(self, cls):
+        """Determine if a class is a a sub class of the provided base class
+           that can be instantiated.
+        """
+
+        # We can't use the normal inspect.isclass because the ParamFactory
+        # and ProxyFactory classes have a tendency to confuse it.
+        try:
+            return issubclass(cls, self.base_cls) and not cls.abstract
+        except (TypeError, AttributeError):
+            return False
+
+    def get(self, name):
+        """Get a sub class from a user provided class name or alias."""
+
+        try:
+            sub_cls = self._sub_classes[name]
+            return sub_cls
+        except KeyError:
+            print("{} is not a valid sub-class of {}.".format(name, \
+                self.base_cls))
+            raise
+
+    def print(self):
+        """Print the list of available sub-classes."""
+
+        print("Available {} classes:".format(self.base_cls))
+        doc_wrapper = TextWrapper(initial_indent="\t\t",
+            subsequent_indent="\t\t")
+        for name, cls in self._sub_classes.items():
+            print("\t{}".format(name))
+
+            # Try to extract the class documentation from the class help
+            # string.
+            doc = inspect.getdoc(cls)
+            if doc:
+                for line in doc_wrapper.wrap(doc):
+                    print(line)
+
+    def get_names(self):
+        """Return a list of valid sub-class names."""
+        return list(self._sub_classes.keys())
+
+    def _add_objects(self):
+        """Add all sub-classes of the base class in the object hierarchy."""
+        for name, cls in inspect.getmembers(m5.objects, self._is_obj_class):
+            self._sub_classes[name] = cls
+
+    def __init__(self, base_cls):
+        # Base class that will be used to determine if models are of this
+        # object class
+        self.base_cls = base_cls
+        # Dictionary that maps names of real models to classes
+        self._sub_classes = {}
+        self._add_objects()
