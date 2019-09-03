@@ -40,58 +40,8 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import m5.objects
-import inspect
-import sys
-from textwrap import  TextWrapper
+from common import ObjectList
 from . import HMC
-
-# Dictionary of mapping names of real memory controller models to
-# classes.
-_mem_classes = {}
-
-def is_mem_class(cls):
-    """Determine if a class is a memory controller that can be instantiated"""
-
-    # We can't use the normal inspect.isclass because the ParamFactory
-    # and ProxyFactory classes have a tendency to confuse it.
-    try:
-        return issubclass(cls, m5.objects.AbstractMemory) and \
-            not cls.abstract
-    except TypeError:
-        return False
-
-def get(name):
-    """Get a memory class from a user provided class name."""
-
-    try:
-        mem_class = _mem_classes[name]
-        return mem_class
-    except KeyError:
-        print("%s is not a valid memory controller." % (name,))
-        sys.exit(1)
-
-def print_mem_list():
-    """Print a list of available memory classes."""
-
-    print("Available memory classes:")
-    doc_wrapper = TextWrapper(initial_indent="\t\t", subsequent_indent="\t\t")
-    for name, cls in _mem_classes.items():
-        print("\t%s" % name)
-
-        # Try to extract the class documentation from the class help
-        # string.
-        doc = inspect.getdoc(cls)
-        if doc:
-            for line in doc_wrapper.wrap(doc):
-                print(line)
-
-def mem_names():
-    """Return a list of valid memory names."""
-    return list(_mem_classes.keys())
-
-# Add all memory controllers in the object hierarchy.
-for name, cls in inspect.getmembers(m5.objects, is_mem_class):
-    _mem_classes[name] = cls
 
 def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size):
     """
@@ -200,7 +150,7 @@ def config_mem(options, system):
     if 2 ** intlv_bits != nbr_mem_ctrls:
         fatal("Number of memory channels must be a power of 2")
 
-    cls = get(opt_mem_type)
+    cls = ObjectList.mem_list.get(opt_mem_type)
     mem_ctrls = []
 
     if opt_elastic_trace_en and not issubclass(cls, m5.objects.SimpleMemory):

@@ -48,6 +48,7 @@ from m5.stats import periodicStatDump
 
 addToPath('../')
 
+from common import ObjectList
 from common import MemConfig
 
 # This script aims at triggering low power state transitions in the DRAM
@@ -61,7 +62,7 @@ parser = argparse.ArgumentParser(
 
 # Use a single-channel DDR4-2400 in 16x4 configuration by default
 parser.add_argument("--mem-type", default="DDR4_2400_16x4",
-                    choices=MemConfig.mem_names(),
+                    choices=ObjectList.mem_list.get_names(),
                     help = "type of memory to use")
 
 parser.add_argument("--mem-ranks", "-r", type=int, default=1,

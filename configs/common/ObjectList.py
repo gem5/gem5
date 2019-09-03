@@ -139,6 +139,7 @@ bp_list = ObjectList(m5.objects.BranchPredictor)
 cpu_list = CPUList(m5.objects.BaseCPU)
 hwp_list = ObjectList(m5.objects.BasePrefetcher)
 indirect_bp_list = ObjectList(m5.objects.IndirectPredictor)
+mem_list = ObjectList(m5.objects.AbstractMemory)
 
 def _subclass_tester(name):
     sub_class = getattr(m5.objects, name, None)

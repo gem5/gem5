@@ -47,7 +47,6 @@ from m5.objects import *
 
 from .Benchmarks import *
 from . import ObjectList
-from . import MemConfig
 from . import PlatformConfig
 
 def _listCpuTypes(option, opt, value, parser):
@@ -67,7 +66,7 @@ def _listIndirectBPTypes(option, opt, value, parser):
     sys.exit(0)
 
 def _listMemTypes(option, opt, value, parser):
-    MemConfig.print_mem_list()
+    ObjectList.mem_list.print()
     sys.exit(0)
 
 def _listPlatformTypes(option, opt, value, parser):
@@ -93,7 +92,7 @@ def addNoISAOptions(parser):
                       action="callback", callback=_listMemTypes,
                       help="List available memory types")
     parser.add_option("--mem-type", type="choice", default="DDR3_1600_8x8",
-                      choices=MemConfig.mem_names(),
+                      choices=ObjectList.mem_list.get_names(),
                       help = "type of memory to use")
     parser.add_option("--mem-channels", type="int", default=1,
                       help = "number of memory channels")

@@ -48,7 +48,6 @@ from os.path import join as joinpath
 
 from common import CpuConfig
 from . import ObjectList
-from . import MemConfig
 
 import m5
 from m5.defines import buildEnv
@@ -97,7 +96,7 @@ def setCPUClass(options):
 def setMemClass(options):
     """Returns a memory controller class."""
 
-    return MemConfig.get(options.mem_type)
+    return ObjectList.mem_list.get(options.mem_type)
 
 def setWorkCountOptions(system, options):
     if options.work_item_id != None:

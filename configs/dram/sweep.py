@@ -48,6 +48,7 @@ from m5.stats import periodicStatDump
 
 addToPath('../')
 
+from common import ObjectList
 from common import MemConfig
 
 # this script is helpful to sweep the efficiency of a specific memory
@@ -64,7 +65,7 @@ dram_generators = {
 
 # Use a single-channel DDR3-1600 x64 (8x8 topology) by default
 parser.add_option("--mem-type", type="choice", default="DDR3_1600_8x8",
-                  choices=MemConfig.mem_names(),
+                  choices=ObjectList.mem_list.get_names(),
                   help = "type of memory to use")
 
 parser.add_option("--mem-ranks", "-r", type="int", default=1,

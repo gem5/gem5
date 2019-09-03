@@ -55,6 +55,7 @@ import shlex
 
 m5.util.addToPath('../..')
 
+from common import ObjectList
 from common import MemConfig
 from common.cores.arm import HPI
 
@@ -194,7 +195,7 @@ def main():
     parser.add_argument("--num-cores", type=int, default=1,
                         help="Number of CPU cores")
     parser.add_argument("--mem-type", default="DDR3_1600_8x8",
-                        choices=MemConfig.mem_names(),
+                        choices=ObjectList.mem_list.get_names(),
                         help = "type of memory to use")
     parser.add_argument("--mem-channels", type=int, default=2,
                         help = "number of memory channels")

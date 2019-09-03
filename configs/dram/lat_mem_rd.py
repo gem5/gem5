@@ -48,6 +48,7 @@ from m5.util import addToPath
 from m5.stats import periodicStatDump
 
 addToPath('../')
+from common import ObjectList
 from common import MemConfig
 
 addToPath('../../util')
@@ -84,7 +85,7 @@ except:
 parser = optparse.OptionParser()
 
 parser.add_option("--mem-type", type="choice", default="DDR3_1600_8x8",
-                  choices=MemConfig.mem_names(),
+                  choices=ObjectList.mem_list.get_names(),
                   help = "type of memory to use")
 parser.add_option("--mem-size", action="store", type="string",
                   default="16MB",
