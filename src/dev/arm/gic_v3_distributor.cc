@@ -476,8 +476,8 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
          * injection)
          * LPIS          [17]    == 1
          * (The implementation does not support LPIs)
-         * MBIS          [16]    == 0
-         * (The implementation does not support message-based interrupts
+         * MBIS          [16]    == 1
+         * (The implementation supports message-based interrupts
          * by writing to Distributor registers)
          * SecurityExtn  [10]    == X
          * (The GIC implementation supports two Security states)
@@ -490,7 +490,8 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
             int max_spi_int_id = itLines - 1;
             int it_lines_number = ceil((max_spi_int_id + 1) / 32.0) - 1;
             return (1 << 26) | (1 << 25) | (1 << 24) | (IDBITS << 19) |
-                (1 << 17) | (gic->getSystem()->haveSecurity() << 10) |
+                (1 << 17) | (1 << 16) |
+                (gic->getSystem()->haveSecurity() << 10) |
                 (it_lines_number << 0);
         }
 
@@ -939,6 +940,76 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
       case GICD_SGIR: // Error Reporting Status Register
         // Only if affinity routing is disabled, RES0
         break;
+
+      case GICD_SETSPI_NSR: {
+        // Writes to this register have no effect if:
+        // * The value written specifies an invalid SPI.
+        // * The SPI is already pending.
+        // * The value written specifies a Secure SPI, the value is
+        // written by a Non-secure access, and the value of the
+        // corresponding GICD_NSACR<n> register is 0.
+        const uint32_t intid = bits(data, 9, 0);
+        if (isNotSPI(intid) || irqPending[intid] ||
+            (nsAccessToSecInt(intid, is_secure_access) &&
+             irqNsacr[intid] == 0)) {
+            return;
+        } else {
+            // Valid SPI, set interrupt pending
+            sendInt(intid);
+        }
+        break;
+      }
+
+      case GICD_CLRSPI_NSR: {
+        // Writes to this register have no effect if:
+        // * The value written specifies an invalid SPI.
+        // * The SPI is not pending.
+        // * The value written specifies a Secure SPI, the value is
+        // written by a Non-secure access, and the value of the
+        // corresponding GICD_NSACR<n> register is less than 0b10.
+        const uint32_t intid = bits(data, 9, 0);
+        if (isNotSPI(intid) || !irqPending[intid] ||
+            (nsAccessToSecInt(intid, is_secure_access) &&
+             irqNsacr[intid] < 2)) {
+            return;
+        } else {
+            // Valid SPI, clear interrupt pending
+            deassertSPI(intid);
+        }
+        break;
+      }
+
+      case GICD_SETSPI_SR: {
+        // Writes to this register have no effect if:
+        // * GICD_CTLR.DS = 1 (WI)
+        // * The value written specifies an invalid SPI.
+        // * The SPI is already pending.
+        // * The value is written by a Non-secure access.
+        const uint32_t intid = bits(data, 9, 0);
+        if (DS || isNotSPI(intid) || irqPending[intid] || !is_secure_access) {
+            return;
+        } else {
+            // Valid SPI, set interrupt pending
+            sendInt(intid);
+        }
+        break;
+      }
+
+      case GICD_CLRSPI_SR: {
+        // Writes to this register have no effect if:
+        // * GICD_CTLR.DS = 1 (WI)
+        // * The value written specifies an invalid SPI.
+        // * The SPI is not pending.
+        // * The value is written by a Non-secure access.
+        const uint32_t intid = bits(data, 9, 0);
+        if (DS || isNotSPI(intid) || !irqPending[intid] || !is_secure_access) {
+            return;
+        } else {
+            // Valid SPI, clear interrupt pending
+            deassertSPI(intid);
+        }
+        break;
+      }
 
       default:
         panic("Gicv3Distributor::write(): invalid offset %#x\n", addr);

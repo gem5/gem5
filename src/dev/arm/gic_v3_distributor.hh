@@ -69,6 +69,14 @@ class Gicv3Distributor : public Serializable
         GICD_IIDR = 0x0008,
         // Error Reporting Status Register
         GICD_STATUSR = 0x0010,
+        // Set Non-secure SPI Pending Register
+        GICD_SETSPI_NSR = 0x0040,
+        // Clear Non-secure SPI Pending Register
+        GICD_CLRSPI_NSR = 0x0048,
+        // Set Secure SPI Pending Register
+        GICD_SETSPI_SR = 0x0050,
+        // Clear Secure SPI Pending Register
+        GICD_CLRSPI_SR = 0x0058,
         // Software Generated Interrupt Register
         GICD_SGIR = 0x0f00,
         // Peripheral ID0 Register
