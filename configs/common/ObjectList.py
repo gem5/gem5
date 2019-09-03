@@ -63,8 +63,9 @@ class ObjectList(object):
     def get(self, name):
         """Get a sub class from a user provided class name or alias."""
 
+        real_name = self._aliases.get(name, name)
         try:
-            sub_cls = self._sub_classes[name]
+            sub_cls = self._sub_classes[real_name]
             return sub_cls
         except KeyError:
             print("{} is not a valid sub-class of {}.".format(name, \
@@ -72,7 +73,7 @@ class ObjectList(object):
             raise
 
     def print(self):
-        """Print the list of available sub-classes."""
+        """Print a list of available sub-classes and aliases."""
 
         print("Available {} classes:".format(self.base_cls))
         doc_wrapper = TextWrapper(initial_indent="\t\t",
@@ -87,22 +88,39 @@ class ObjectList(object):
                 for line in doc_wrapper.wrap(doc):
                     print(line)
 
+        if self._aliases:
+            print("\Aliases:")
+            for alias, target in self._aliases.items():
+                print("\t{} => {}".format(alias, target))
+
     def get_names(self):
-        """Return a list of valid sub-class names."""
-        return list(self._sub_classes.keys())
+        """Return a list of valid sub-class names and aliases."""
+        return list(self._sub_classes.keys()) + list(self._aliases.keys())
 
     def _add_objects(self):
         """Add all sub-classes of the base class in the object hierarchy."""
         for name, cls in inspect.getmembers(m5.objects, self._is_obj_class):
             self._sub_classes[name] = cls
 
-    def __init__(self, base_cls):
+    def _add_aliases(self, aliases):
+        """Add all aliases of the sub-classes."""
+        if aliases is not None:
+            for alias, target in aliases:
+                if target in self._sub_classes:
+                    self._aliases[alias] = target
+
+    def __init__(self, base_cls, aliases=None):
         # Base class that will be used to determine if models are of this
         # object class
         self.base_cls = base_cls
         # Dictionary that maps names of real models to classes
         self._sub_classes = {}
         self._add_objects()
+
+        # Filtered list of aliases. Only aliases for existing objects exist
+        # in this list.
+        self._aliases = {}
+        self._add_aliases(aliases)
 
 class CPUList(ObjectList):
     def _is_obj_class(self, cls):
@@ -140,6 +158,14 @@ cpu_list = CPUList(m5.objects.BaseCPU)
 hwp_list = ObjectList(m5.objects.BasePrefetcher)
 indirect_bp_list = ObjectList(m5.objects.IndirectPredictor)
 mem_list = ObjectList(m5.objects.AbstractMemory)
+
+# Platform aliases. The platforms listed here might not be compiled,
+# we make sure they exist before we add them to the platform list.
+_platform_aliases_all = [
+    ("RealView_PBX", "RealViewPBX"),
+    ("VExpress_GEM5", "VExpress_GEM5_V1"),
+    ]
+platform_list = ObjectList(m5.objects.Platform, _platform_aliases_all)
 
 def _subclass_tester(name):
     sub_class = getattr(m5.objects, name, None)

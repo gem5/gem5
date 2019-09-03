@@ -45,7 +45,7 @@ from __future__ import absolute_import
 from m5.objects import *
 from m5.util import *
 from .Benchmarks import *
-from . import PlatformConfig
+from . import ObjectList
 
 # Populate to reflect supported os types per target ISA
 os_types = { 'alpha' : [ 'linux' ],
@@ -231,7 +231,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
 
     self.mem_mode = mem_mode
 
-    platform_class = PlatformConfig.get(machine_type)
+    platform_class = ObjectList.platform_list.get(machine_type)
     # Resolve the real platform name, the original machine_type
     # variable might have been an alias.
     machine_type = platform_class.__name__

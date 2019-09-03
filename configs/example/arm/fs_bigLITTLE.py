@@ -54,7 +54,6 @@ m5.util.addToPath("../../")
 
 from common import SysPaths
 from common import ObjectList
-from common import PlatformConfig
 from common.cores.arm import ex5_big, ex5_LITTLE
 
 import devices
@@ -117,7 +116,7 @@ class Ex5LittleCluster(devices.CpuCluster):
 
 def createSystem(caches, kernel, bootscript,
                  machine_type="VExpress_GEM5", disks=[]):
-    platform = PlatformConfig.get(machine_type)
+    platform = ObjectList.platform_list.get(machine_type)
     m5.util.inform("Simulated platform: %s", platform.__name__)
 
     sys = devices.SimpleSystem(caches, default_mem_size, platform(),
@@ -167,7 +166,7 @@ def addOptions(parser):
     parser.add_argument("--root", type=str, default="/dev/vda1",
                         help="Specify the kernel CLI root= argument")
     parser.add_argument("--machine-type", type=str,
-                        choices=PlatformConfig.platform_names(),
+                        choices=ObjectList.platform_list.get_names(),
                         default="VExpress_GEM5",
                         help="Hardware platform class")
     parser.add_argument("--disk", action="append", type=str, default=[],

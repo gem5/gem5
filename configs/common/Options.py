@@ -47,7 +47,6 @@ from m5.objects import *
 
 from .Benchmarks import *
 from . import ObjectList
-from . import PlatformConfig
 
 def _listCpuTypes(option, opt, value, parser):
     ObjectList.cpu_list.print()
@@ -70,7 +69,7 @@ def _listMemTypes(option, opt, value, parser):
     sys.exit(0)
 
 def _listPlatformTypes(option, opt, value, parser):
-    PlatformConfig.print_platform_list()
+    ObjectList.platform_list.print()
     sys.exit(0)
 
 # Add the very basic options that work also in the case of the no ISA
@@ -409,7 +408,7 @@ def addFSOptions(parser):
                           action="callback", callback=_listPlatformTypes,
                       help="List available platform types")
         parser.add_option("--machine-type", action="store", type="choice",
-                choices=PlatformConfig.platform_names(),
+                choices=ObjectList.platform_list.get_names(),
                 default="VExpress_EMM")
         parser.add_option("--dtb-filename", action="store", type="string",
               help="Specifies device tree blob file to use with device-tree-"\
