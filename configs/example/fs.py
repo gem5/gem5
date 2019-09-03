@@ -62,8 +62,9 @@ from common.SysPaths import *
 from common.Benchmarks import *
 from common import Simulation
 from common import CacheConfig
-from common import MemConfig
 from common import CpuConfig
+from common import MemConfig
+from common import ObjectList
 from common import BPConfig
 from common.Caches import *
 from common import Options
@@ -144,7 +145,8 @@ def build_test_system(np):
     test_sys.cpu = [TestCPUClass(clk_domain=test_sys.cpu_clk_domain, cpu_id=i)
                     for i in range(np)]
 
-    if CpuConfig.is_kvm_cpu(TestCPUClass) or CpuConfig.is_kvm_cpu(FutureClass):
+    if ObjectList.is_kvm_cpu(TestCPUClass) or \
+        ObjectList.is_kvm_cpu(FutureClass):
         test_sys.kvm_vm = KvmVM()
 
     if options.ruby:
@@ -193,7 +195,7 @@ def build_test_system(np):
 
         # Sanity check
         if options.simpoint_profile:
-            if not CpuConfig.is_noncaching_cpu(TestCPUClass):
+            if not ObjectList.is_noncaching_cpu(TestCPUClass):
                 fatal("SimPoint generation should be done with atomic cpu")
             if np > 1:
                 fatal("SimPoint generation not supported with more than one CPUs")
@@ -278,7 +280,7 @@ def build_drive_system(np):
         print("Error: a kernel must be provided to run in full system mode")
         sys.exit(1)
 
-    if CpuConfig.is_kvm_cpu(DriveCPUClass):
+    if ObjectList.is_kvm_cpu(DriveCPUClass):
         drive_sys.kvm_vm = KvmVM()
 
     drive_sys.iobridge = Bridge(delay='50ns',

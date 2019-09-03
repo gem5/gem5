@@ -103,3 +103,48 @@ class ObjectList(object):
         # Dictionary that maps names of real models to classes
         self._sub_classes = {}
         self._add_objects()
+
+class CPUList(ObjectList):
+    def _is_obj_class(self, cls):
+        """Determine if a class is a CPU that can be instantiated"""
+
+        # We can't use the normal inspect.isclass because the ParamFactory
+        # and ProxyFactory classes have a tendency to confuse it.
+        try:
+            return super(CPUList, self)._is_obj_class(cls) and \
+                not issubclass(cls, m5.objects.CheckerCPU)
+        except (TypeError, AttributeError):
+            return False
+
+    def _add_objects(self):
+        super(CPUList, self)._add_objects()
+
+        from m5.defines import buildEnv
+        from importlib import import_module
+        for package in [ "generic", buildEnv['TARGET_ISA']]:
+            try:
+                package = import_module(".cores." + package,
+                                        package=__name__.rpartition('.')[0])
+            except ImportError:
+                # No timing models for this ISA
+                continue
+
+            for mod_name, module in \
+                inspect.getmembers(package, inspect.ismodule):
+                for name, cls in inspect.getmembers(module,
+                    self._is_obj_class):
+                    self._sub_classes[name] = cls
+
+cpu_list = CPUList(m5.objects.BaseCPU)
+
+def _subclass_tester(name):
+    sub_class = getattr(m5.objects, name, None)
+
+    def tester(cls):
+        return sub_class is not None and cls is not None and \
+            issubclass(cls, sub_class)
+
+    return tester
+
+is_kvm_cpu = _subclass_tester("BaseKvmCPU")
+is_noncaching_cpu = _subclass_tester("NonCachingSimpleCPU")

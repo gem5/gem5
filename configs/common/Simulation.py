@@ -46,7 +46,8 @@ import sys
 from os import getcwd
 from os.path import join as joinpath
 
-from . import CpuConfig
+from common import CpuConfig
+from . import ObjectList
 from . import BPConfig
 from . import MemConfig
 
@@ -59,7 +60,7 @@ addToPath('../common')
 
 def getCPUClass(cpu_type):
     """Returns the required cpu class and the mode of operation."""
-    cls = CpuConfig.get(cpu_type)
+    cls = ObjectList.cpu_list.get(cpu_type)
     return cls, cls.memory_mode()
 
 def setCPUClass(options):

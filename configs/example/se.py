@@ -62,6 +62,7 @@ from common import Options
 from common import Simulation
 from common import CacheConfig
 from common import CpuConfig
+from common import ObjectList
 from common import BPConfig
 from common import MemConfig
 from common.FileSystemConfig import config_filesystem
@@ -206,7 +207,7 @@ if options.elastic_trace_en:
 for cpu in system.cpu:
     cpu.clk_domain = system.cpu_clk_domain
 
-if CpuConfig.is_kvm_cpu(CPUClass) or CpuConfig.is_kvm_cpu(FutureClass):
+if ObjectList.is_kvm_cpu(CPUClass) or ObjectList.is_kvm_cpu(FutureClass):
     if buildEnv['TARGET_ISA'] == 'x86':
         system.kvm_vm = KvmVM()
         for process in multiprocesses:
@@ -217,7 +218,7 @@ if CpuConfig.is_kvm_cpu(CPUClass) or CpuConfig.is_kvm_cpu(FutureClass):
 
 # Sanity check
 if options.simpoint_profile:
-    if not CpuConfig.is_noncaching_cpu(CPUClass):
+    if not ObjectList.is_noncaching_cpu(CPUClass):
         fatal("SimPoint/BPProbe should be done with an atomic cpu")
     if np > 1:
         fatal("SimPoint generation not supported with more than one CPUs")

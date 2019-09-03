@@ -40,66 +40,6 @@ from __future__ import absolute_import
 
 from m5 import fatal
 import m5.objects
-import inspect
-import sys
-from textwrap import TextWrapper
-
-# Dictionary of mapping names of real CPU models to classes.
-_cpu_classes = {}
-
-
-def is_cpu_class(cls):
-    """Determine if a class is a CPU that can be instantiated"""
-
-    # We can't use the normal inspect.isclass because the ParamFactory
-    # and ProxyFactory classes have a tendency to confuse it.
-    try:
-        return issubclass(cls, m5.objects.BaseCPU) and \
-            not cls.abstract and \
-            not issubclass(cls, m5.objects.CheckerCPU)
-    except (TypeError, AttributeError):
-        return False
-
-def _cpu_subclass_tester(name):
-    cpu_class = getattr(m5.objects, name, None)
-
-    def tester(cls):
-        return cpu_class is not None and cls is not None and \
-            issubclass(cls, cpu_class)
-
-    return tester
-
-is_kvm_cpu = _cpu_subclass_tester("BaseKvmCPU")
-is_noncaching_cpu = _cpu_subclass_tester("NonCachingSimpleCPU")
-
-def get(name):
-    """Get a CPU class from a user provided class name or alias."""
-
-    try:
-        cpu_class = _cpu_classes[name]
-        return cpu_class
-    except KeyError:
-        print("%s is not a valid CPU model." % (name,))
-        sys.exit(1)
-
-def print_cpu_list():
-    """Print a list of available CPU classes including their aliases."""
-
-    print("Available CPU classes:")
-    doc_wrapper = TextWrapper(initial_indent="\t\t", subsequent_indent="\t\t")
-    for name, cls in _cpu_classes.items():
-        print("\t%s" % name)
-
-        # Try to extract the class documentation from the class help
-        # string.
-        doc = inspect.getdoc(cls)
-        if doc:
-            for line in doc_wrapper.wrap(doc):
-                print(line)
-
-def cpu_names():
-    """Return a list of valid CPU names."""
-    return list(_cpu_classes.keys())
 
 def config_etrace(cpu_cls, cpu_list, options):
     if issubclass(cpu_cls, m5.objects.DerivO3CPU):
@@ -124,22 +64,3 @@ def config_etrace(cpu_cls, cpu_list, options):
     else:
         fatal("%s does not support data dependency tracing. Use a CPU model of"
               " type or inherited from DerivO3CPU.", cpu_cls)
-
-# Add all CPUs in the object hierarchy.
-for name, cls in inspect.getmembers(m5.objects, is_cpu_class):
-    _cpu_classes[name] = cls
-
-
-from m5.defines import buildEnv
-from importlib import import_module
-for package in [ "generic", buildEnv['TARGET_ISA']]:
-    try:
-        package = import_module(".cores." + package,
-                                package=__name__.rpartition('.')[0])
-    except ImportError:
-        # No timing models for this ISA
-        continue
-
-    for mod_name, module in inspect.getmembers(package, inspect.ismodule):
-        for name, cls in inspect.getmembers(module, is_cpu_class):
-            _cpu_classes[name] = cls

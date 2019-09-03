@@ -46,14 +46,14 @@ from m5.defines import buildEnv
 from m5.objects import *
 
 from .Benchmarks import *
-from . import CpuConfig
+from . import ObjectList
 from . import BPConfig
 from . import HWPConfig
 from . import MemConfig
 from . import PlatformConfig
 
 def _listCpuTypes(option, opt, value, parser):
-    CpuConfig.print_cpu_list()
+    ObjectList.cpu_list.print()
     sys.exit(0)
 
 def _listBPTypes(option, opt, value, parser):
@@ -163,7 +163,7 @@ def addCommonOptions(parser):
                       action="callback", callback=_listCpuTypes,
                       help="List available CPU types")
     parser.add_option("--cpu-type", type="choice", default="AtomicSimpleCPU",
-                      choices=CpuConfig.cpu_names(),
+                      choices=ObjectList.cpu_list.get_names(),
                       help = "type of cpu to run with")
     parser.add_option("--list-bp-types",
                       action="callback", callback=_listBPTypes,
@@ -317,7 +317,8 @@ def addCommonOptions(parser):
     parser.add_option("--work-cpus-checkpoint-count", action="store", type="int",
                       help="checkpoint and exit when active cpu count is reached")
     parser.add_option("--restore-with-cpu", action="store", type="choice",
-                      default="AtomicSimpleCPU", choices=CpuConfig.cpu_names(),
+                      default="AtomicSimpleCPU",
+                      choices=ObjectList.cpu_list.get_names(),
                       help = "cpu type for restoring from a checkpoint")
 
 

@@ -53,7 +53,7 @@ from m5.objects import *
 m5.util.addToPath("../../")
 
 from common import SysPaths
-from common import CpuConfig
+from common import ObjectList
 from common import PlatformConfig
 from common.cores.arm import ex5_big, ex5_LITTLE
 
@@ -85,32 +85,33 @@ def _using_pdes(root):
 class BigCluster(devices.CpuCluster):
     def __init__(self, system, num_cpus, cpu_clock,
                  cpu_voltage="1.0V"):
-        cpu_config = [ CpuConfig.get("O3_ARM_v7a_3"), devices.L1I, devices.L1D,
-                    devices.WalkCache, devices.L2 ]
+        cpu_config = [ ObjectList.cpu_list.get("O3_ARM_v7a_3"),
+            devices.L1I, devices.L1D, devices.WalkCache, devices.L2 ]
         super(BigCluster, self).__init__(system, num_cpus, cpu_clock,
                                          cpu_voltage, *cpu_config)
 
 class LittleCluster(devices.CpuCluster):
     def __init__(self, system, num_cpus, cpu_clock,
                  cpu_voltage="1.0V"):
-        cpu_config = [ CpuConfig.get("MinorCPU"), devices.L1I, devices.L1D,
-                       devices.WalkCache, devices.L2 ]
+        cpu_config = [ ObjectList.cpu_list.get("MinorCPU"), devices.L1I,
+            devices.L1D, devices.WalkCache, devices.L2 ]
         super(LittleCluster, self).__init__(system, num_cpus, cpu_clock,
                                          cpu_voltage, *cpu_config)
 
 class Ex5BigCluster(devices.CpuCluster):
     def __init__(self, system, num_cpus, cpu_clock,
                  cpu_voltage="1.0V"):
-        cpu_config = [ CpuConfig.get("ex5_big"), ex5_big.L1I, ex5_big.L1D,
-                    ex5_big.WalkCache, ex5_big.L2 ]
+        cpu_config = [ ObjectList.cpu_list.get("ex5_big"), ex5_big.L1I,
+            ex5_big.L1D, ex5_big.WalkCache, ex5_big.L2 ]
         super(Ex5BigCluster, self).__init__(system, num_cpus, cpu_clock,
                                          cpu_voltage, *cpu_config)
 
 class Ex5LittleCluster(devices.CpuCluster):
     def __init__(self, system, num_cpus, cpu_clock,
                  cpu_voltage="1.0V"):
-        cpu_config = [ CpuConfig.get("ex5_LITTLE"), ex5_LITTLE.L1I,
-                    ex5_LITTLE.L1D, ex5_LITTLE.WalkCache, ex5_LITTLE.L2 ]
+        cpu_config = [ ObjectList.cpu_list.get("ex5_LITTLE"),
+            ex5_LITTLE.L1I, ex5_LITTLE.L1D, ex5_LITTLE.WalkCache,
+            ex5_LITTLE.L2 ]
         super(Ex5LittleCluster, self).__init__(system, num_cpus, cpu_clock,
                                          cpu_voltage, *cpu_config)
 
