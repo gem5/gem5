@@ -1378,6 +1378,7 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
               MISCREG_ICC_IGRPEN1_EL1_S, icc_igrpen1_el3.EnableGrp1S);
           isa->setMiscRegNoEffect(
               MISCREG_ICC_IGRPEN1_EL1_NS, icc_igrpen1_el3.EnableGrp1NS);
+          updateDistributor();
           return;
       }
 
