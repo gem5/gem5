@@ -69,6 +69,8 @@ class Gicv3Distributor : public Serializable
         GICD_IIDR = 0x0008,
         // Error Reporting Status Register
         GICD_STATUSR = 0x0010,
+        // Software Generated Interrupt Register
+        GICD_SGIR = 0x0f00,
         // Peripheral ID0 Register
         GICD_PIDR0 = 0xffe0,
         // Peripheral ID1 Register

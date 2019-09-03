@@ -936,6 +936,10 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
         break;
 
+      case GICD_SGIR: // Error Reporting Status Register
+        // Only if affinity routing is disabled, RES0
+        break;
+
       default:
         panic("Gicv3Distributor::write(): invalid offset %#x\n", addr);
         break;
