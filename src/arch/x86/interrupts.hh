@@ -53,13 +53,14 @@
 #ifndef __ARCH_X86_INTERRUPTS_HH__
 #define __ARCH_X86_INTERRUPTS_HH__
 
-#include "arch/x86/regs/apic.hh"
+#include "arch/generic/interrupts.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/intmessage.hh"
+#include "arch/x86/regs/apic.hh"
 #include "base/bitfield.hh"
 #include "cpu/thread_context.hh"
-#include "dev/x86/intdev.hh"
 #include "dev/io_device.hh"
+#include "dev/x86/intdev.hh"
 #include "params/X86LocalApic.hh"
 #include "sim/eventq.hh"
 
@@ -72,7 +73,7 @@ namespace X86ISA {
 
 ApicRegIndex decodeAddr(Addr paddr);
 
-class Interrupts : public SimObject
+class Interrupts : public BaseInterrupts
 {
   protected:
     System *sys;

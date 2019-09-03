@@ -53,6 +53,7 @@
 
 #include <memory>
 
+#include "arch/x86/faults.hh"
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/tlb.hh"
 #include "arch/x86/vtophys.hh"

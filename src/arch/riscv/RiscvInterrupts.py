@@ -31,9 +31,9 @@
 #          Sven Karlsson
 #          Alec Roelke
 
-from m5.SimObject import SimObject
+from m5.objects.BaseInterrupts import BaseInterrupts
 
-class RiscvInterrupts(SimObject):
+class RiscvInterrupts(BaseInterrupts):
     type = 'RiscvInterrupts'
     cxx_class = 'RiscvISA::Interrupts'
     cxx_header = 'arch/riscv/interrupts.hh'

@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2011 Google
- * All rights reserved.
+ * Copyright 2019 Google, Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -28,25 +27,26 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_POWER_INTERRUPT_HH__
-#define __ARCH_POWER_INTERRUPT_HH__
+#ifndef __ARCH_GENERIC_INTERRUPTS_HH__
+#define __ARCH_GENERIC_INTERRUPTS_HH__
 
-#include "arch/generic/interrupts.hh"
-#include "base/logging.hh"
-#include "params/PowerInterrupts.hh"
+#include "params/BaseInterrupts.hh"
+#include "sim/sim_object.hh"
 
-class BaseCPU;
 class ThreadContext;
+class BaseCPU;
 
-namespace PowerISA {
-
-class Interrupts : public BaseInterrupts
+class BaseInterrupts : public SimObject
 {
-  private:
-    BaseCPU * cpu;
+  protected:
+    BaseCPU *cpu;
 
   public:
-    typedef PowerInterruptsParams Params;
+    typedef BaseInterruptsParams Params;
+
+    BaseInterrupts(Params *p) : SimObject(p) {}
+
+    virtual void setCPU(BaseCPU * newCPU) = 0;
 
     const Params *
     params() const
@@ -54,54 +54,45 @@ class Interrupts : public BaseInterrupts
         return dynamic_cast<const Params *>(_params);
     }
 
-    Interrupts(Params * p) : BaseInterrupts(p), cpu(NULL)
-    {}
+    /*
+     * Functions for retrieving interrupts for the CPU to handle.
+     */
 
-    void
-    setCPU(BaseCPU * _cpu)
-    {
-        cpu = _cpu;
-    }
+    /*
+     * Return whether there are any interrupts waiting to be recognized.
+     */
+    virtual bool checkInterrupts(ThreadContext *tc) const = 0;
+    /*
+     * Return an interrupt to process. This should return an interrupt exactly
+     * when checkInterrupts returns true.
+     */
+    virtual Fault getInterrupt(ThreadContext *tc) = 0;
+    /*
+     * Update interrupt related state after an interrupt has been processed.
+     */
+    virtual void updateIntrInfo(ThreadContext *tc) = 0;
 
-    void
+    /*
+     * Old functions needed for compatability but which will be phased out
+     * eventually.
+     */
+    virtual void
     post(int int_num, int index)
     {
-        panic("Interrupts::post not implemented.\n");
+        panic("Interrupts::post unimplemented!\n");
     }
 
-    void
+    virtual void
     clear(int int_num, int index)
     {
-        panic("Interrupts::clear not implemented.\n");
+        panic("Interrupts::clear unimplemented!\n");
     }
 
-    void
+    virtual void
     clearAll()
     {
-        panic("Interrupts::clearAll not implemented.\n");
-    }
-
-    bool
-    checkInterrupts(ThreadContext *tc) const
-    {
-        panic("Interrupts::checkInterrupts not implemented.\n");
-    }
-
-    Fault
-    getInterrupt(ThreadContext *tc)
-    {
-        assert(checkInterrupts(tc));
-        panic("Interrupts::getInterrupt not implemented.\n");
-    }
-
-    void
-    updateIntrInfo(ThreadContext *tc)
-    {
-        panic("Interrupts::updateIntrInfo not implemented.\n");
+        panic("Interrupts::clearAll unimplemented!\n");
     }
 };
 
-} // namespace PowerISA
-
-#endif // __ARCH_POWER_INTERRUPT_HH__
-
+#endif // __ARCH_GENERIC_INTERRUPTS_HH__

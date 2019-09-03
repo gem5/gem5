@@ -216,8 +216,9 @@ X86ISA::I82094AA::signalInterrupt(int line)
             }
         } else {
             for (int i = 0; i < numContexts; i++) {
-                Interrupts *localApic = sys->getThreadContext(i)->
+                BaseInterrupts *base_int = sys->getThreadContext(i)->
                     getCpuPtr()->getInterruptController(0);
+                auto *localApic = dynamic_cast<Interrupts *>(base_int);
                 if ((localApic->readReg(APIC_LOGICAL_DESTINATION) >> 24) &
                         message.destination) {
                     apics.push_back(localApic->getInitialApicId());

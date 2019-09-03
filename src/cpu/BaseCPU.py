@@ -66,44 +66,37 @@ if buildEnv['TARGET_ISA'] == 'alpha':
     from m5.objects.AlphaTLB import AlphaDTB as ArchDTB, AlphaITB as ArchITB
     from m5.objects.AlphaInterrupts import AlphaInterrupts as ArchInterrupts
     from m5.objects.AlphaISA import AlphaISA as ArchISA
-    ArchInterruptsParam = VectorParam.AlphaInterrupts
     ArchISAsParam = VectorParam.AlphaISA
 elif buildEnv['TARGET_ISA'] == 'sparc':
     from m5.objects.SparcTLB import SparcTLB as ArchDTB, SparcTLB as ArchITB
     from m5.objects.SparcInterrupts import SparcInterrupts as ArchInterrupts
     from m5.objects.SparcISA import SparcISA as ArchISA
-    ArchInterruptsParam = VectorParam.SparcInterrupts
     ArchISAsParam = VectorParam.SparcISA
 elif buildEnv['TARGET_ISA'] == 'x86':
     from m5.objects.X86TLB import X86TLB as ArchDTB, X86TLB as ArchITB
     from m5.objects.X86LocalApic import X86LocalApic as ArchInterrupts
     from m5.objects.X86ISA import X86ISA as ArchISA
-    ArchInterruptsParam = VectorParam.X86LocalApic
     ArchISAsParam = VectorParam.X86ISA
 elif buildEnv['TARGET_ISA'] == 'mips':
     from m5.objects.MipsTLB import MipsTLB as ArchDTB, MipsTLB as ArchITB
     from m5.objects.MipsInterrupts import MipsInterrupts as ArchInterrupts
     from m5.objects.MipsISA import MipsISA as ArchISA
-    ArchInterruptsParam = VectorParam.MipsInterrupts
     ArchISAsParam = VectorParam.MipsISA
 elif buildEnv['TARGET_ISA'] == 'arm':
     from m5.objects.ArmTLB import ArmTLB as ArchDTB, ArmTLB as ArchITB
     from m5.objects.ArmTLB import ArmStage2IMMU, ArmStage2DMMU
     from m5.objects.ArmInterrupts import ArmInterrupts as ArchInterrupts
     from m5.objects.ArmISA import ArmISA as ArchISA
-    ArchInterruptsParam = VectorParam.ArmInterrupts
     ArchISAsParam = VectorParam.ArmISA
 elif buildEnv['TARGET_ISA'] == 'power':
     from m5.objects.PowerTLB import PowerTLB as ArchDTB, PowerTLB as ArchITB
     from m5.objects.PowerInterrupts import PowerInterrupts as ArchInterrupts
     from m5.objects.PowerISA import PowerISA as ArchISA
-    ArchInterruptsParam = VectorParam.PowerInterrupts
     ArchISAsParam = VectorParam.PowerISA
 elif buildEnv['TARGET_ISA'] == 'riscv':
     from m5.objects.RiscvTLB import RiscvTLB as ArchDTB, RiscvTLB as ArchITB
     from m5.objects.RiscvInterrupts import RiscvInterrupts as ArchInterrupts
     from m5.objects.RiscvISA import RiscvISA as ArchISA
-    ArchInterruptsParam = VectorParam.RiscvInterrupts
     ArchISAsParam = VectorParam.RiscvISA
 else:
     print("Don't know what object types to use for ISA %s" %
@@ -186,7 +179,7 @@ class BaseCPU(ClockedObject):
         dstage2_mmu = ArmStage2DMMU()
     elif buildEnv['TARGET_ISA'] == 'power':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
-    interrupts = ArchInterruptsParam([], "Interrupt Controller")
+    interrupts = VectorParam.BaseInterrupts([], "Interrupt Controller")
     isa = ArchISAsParam([], "ISA instance")
 
     max_insts_all_threads = Param.Counter(0,

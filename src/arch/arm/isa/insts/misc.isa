@@ -756,8 +756,9 @@ let {{
 
     // WFI doesn't sleep if interrupts are pending (masked or not)
     ThreadContext *tc = xc->tcBase();
-    if (tc->getCpuPtr()->getInterruptController(
-                tc->threadId())->checkWfiWake(hcr, cpsr, scr)) {
+    auto *ic = dynamic_cast<ArmISA::Interrupts *>(
+            tc->getCpuPtr()->getInterruptController(tc->threadId()));
+    if (ic->checkWfiWake(hcr, cpsr, scr)) {
         PseudoInst::quiesceSkip(tc);
     } else {
         fault = trapWFx(tc, cpsr, scr, false);

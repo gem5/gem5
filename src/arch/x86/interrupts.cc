@@ -596,7 +596,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
 
 
 X86ISA::Interrupts::Interrupts(Params * p)
-    : SimObject(p), sys(p->system), clockDomain(*p->clk_domain),
+    : BaseInterrupts(p), sys(p->system), clockDomain(*p->clk_domain),
       apicTimerEvent([this]{ processApicTimerEvent(); }, name()),
       pendingSmi(false), smiVector(0),
       pendingNmi(false), nmiVector(0),

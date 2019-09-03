@@ -1,5 +1,4 @@
-# Copyright (c) 2008 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2019 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -26,9 +25,10 @@
 #
 # Authors: Gabe Black
 
-from m5.objects.BaseInterrupts import BaseInterrupts
+from m5.params import *
+from m5.SimObject import SimObject
 
-class SparcInterrupts(BaseInterrupts):
-    type = 'SparcInterrupts'
-    cxx_class = 'SparcISA::Interrupts'
-    cxx_header = 'arch/sparc/interrupts.hh'
+class BaseInterrupts(SimObject):
+    type = 'BaseInterrupts'
+    abstract = True
+    cxx_header = "arch/generic/interrupts.hh"

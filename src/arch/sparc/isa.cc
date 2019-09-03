@@ -32,6 +32,7 @@
 
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/decoder.hh"
+#include "arch/sparc/interrupts.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"

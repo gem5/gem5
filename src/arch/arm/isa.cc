@@ -39,6 +39,9 @@
  */
 
 #include "arch/arm/isa.hh"
+
+#include "arch/arm/faults.hh"
+#include "arch/arm/interrupts.hh"
 #include "arch/arm/pmu.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
@@ -672,15 +675,23 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
       case MISCREG_DBGDSCRint:
         return 0;
       case MISCREG_ISR:
-        return tc->getCpuPtr()->getInterruptController(tc->threadId())->getISR(
-            readMiscRegNoEffect(MISCREG_HCR),
-            readMiscRegNoEffect(MISCREG_CPSR),
-            readMiscRegNoEffect(MISCREG_SCR));
+        {
+            auto ic = dynamic_cast<ArmISA::Interrupts *>(
+                    tc->getCpuPtr()->getInterruptController(tc->threadId()));
+            return ic->getISR(
+                readMiscRegNoEffect(MISCREG_HCR),
+                readMiscRegNoEffect(MISCREG_CPSR),
+                readMiscRegNoEffect(MISCREG_SCR));
+        }
       case MISCREG_ISR_EL1:
-        return tc->getCpuPtr()->getInterruptController(tc->threadId())->getISR(
-            readMiscRegNoEffect(MISCREG_HCR_EL2),
-            readMiscRegNoEffect(MISCREG_CPSR),
-            readMiscRegNoEffect(MISCREG_SCR_EL3));
+        {
+            auto ic = dynamic_cast<ArmISA::Interrupts *>(
+                    tc->getCpuPtr()->getInterruptController(tc->threadId()));
+            return ic->getISR(
+                readMiscRegNoEffect(MISCREG_HCR_EL2),
+                readMiscRegNoEffect(MISCREG_CPSR),
+                readMiscRegNoEffect(MISCREG_SCR_EL3));
+        }
       case MISCREG_DCZID_EL0:
         return 0x04;  // DC ZVA clear 64-byte chunks
       case MISCREG_HCPTR:

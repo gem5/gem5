@@ -33,12 +33,12 @@
 
 #include <string>
 
+#include "arch/generic/interrupts.hh"
 #include "arch/mips/faults.hh"
 #include "base/compiler.hh"
 #include "base/logging.hh"
 #include "params/MipsInterrupts.hh"
 #include "sim/serialize.hh"
-#include "sim/sim_object.hh"
 
 class BaseCPU;
 class Checkpoint;
@@ -46,7 +46,7 @@ class Checkpoint;
 namespace MipsISA
 {
 
-class Interrupts : public SimObject
+class Interrupts : public BaseInterrupts
 {
   public:
     typedef MipsInterruptsParams Params;
@@ -57,7 +57,7 @@ class Interrupts : public SimObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    Interrupts(Params * p) : SimObject(p)
+    Interrupts(Params * p) : BaseInterrupts(p)
     {
     }
 
@@ -104,7 +104,7 @@ class Interrupts : public SimObject
     //  MIPS cause register with the instatus variable. instatus
     //  is essentially a copy of the MIPS cause[IP7:IP0]
     //
-    void updateIntrInfo(ThreadContext *tc) const;
+    void updateIntrInfo(ThreadContext *tc);
     bool interruptsPending(ThreadContext *tc) const;
     bool onCpuTimerInterrupt(ThreadContext *tc) const;
     bool checkInterrupts(ThreadContext *tc) const;

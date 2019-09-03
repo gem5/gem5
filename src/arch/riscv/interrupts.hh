@@ -34,6 +34,7 @@
 #include <bitset>
 #include <memory>
 
+#include "arch/generic/interrupts.hh"
 #include "arch/riscv/faults.hh"
 #include "arch/riscv/registers.hh"
 #include "base/logging.hh"
@@ -51,7 +52,7 @@ namespace RiscvISA {
  * This is based on version 1.10 of the RISC-V privileged ISA reference,
  * chapter 3.1.14.
  */
-class Interrupts : public SimObject
+class Interrupts : public BaseInterrupts
 {
   private:
     BaseCPU * cpu;
@@ -67,7 +68,7 @@ class Interrupts : public SimObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    Interrupts(Params * p) : SimObject(p), cpu(nullptr), ip(0), ie(0) {}
+    Interrupts(Params * p) : BaseInterrupts(p), cpu(nullptr), ip(0), ie(0) {}
 
     void setCPU(BaseCPU * _cpu) { cpu = _cpu; }
 
@@ -92,7 +93,7 @@ class Interrupts : public SimObject
     }
 
     Fault
-    getInterrupt(ThreadContext *tc) const
+    getInterrupt(ThreadContext *tc)
     {
         assert(checkInterrupts(tc));
         std::bitset<NumInterruptTypes> mask = globalMask(tc);

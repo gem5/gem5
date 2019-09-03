@@ -26,9 +26,9 @@
 #
 # Authors: Gabe Black
 
-from m5.SimObject import SimObject
+from m5.objects.BaseInterrupts import BaseInterrupts
 
-class MipsInterrupts(SimObject):
+class MipsInterrupts(BaseInterrupts):
     type = 'MipsInterrupts'
     cxx_class = 'MipsISA::Interrupts'
     cxx_header = 'arch/mips/interrupts.hh'

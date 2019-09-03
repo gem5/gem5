@@ -96,6 +96,7 @@ output exec {{
 #include <cmath>
 
 #include "arch/arm/faults.hh"
+#include "arch/arm/interrupts.hh"
 #include "arch/arm/isa.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"

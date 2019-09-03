@@ -32,6 +32,7 @@
 #ifndef __ARCH_SPARC_INTERRUPT_HH__
 #define __ARCH_SPARC_INTERRUPT_HH__
 
+#include "arch/generic/interrupts.hh"
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/registers.hh"
@@ -55,7 +56,7 @@ enum InterruptTypes
     NumInterruptTypes
 };
 
-class Interrupts : public SimObject
+class Interrupts : public BaseInterrupts
 {
   private:
     BaseCPU * cpu;
@@ -79,7 +80,7 @@ class Interrupts : public SimObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    Interrupts(Params * p) : SimObject(p), cpu(NULL)
+    Interrupts(Params * p) : BaseInterrupts(p), cpu(NULL)
     {
         clearAll();
     }

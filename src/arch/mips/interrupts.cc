@@ -153,7 +153,7 @@ Interrupts::onCpuTimerInterrupt(ThreadContext * tc) const
 }
 
 void
-Interrupts::updateIntrInfo(ThreadContext *tc) const
+Interrupts::updateIntrInfo(ThreadContext *tc)
 {
     //Nothing needs to be done.
 }

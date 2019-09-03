@@ -982,7 +982,7 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative);
             0x01: quiesce({{
                 // Don't sleep if (unmasked) interrupts are pending
-                Interrupts* interrupts =
+                BaseInterrupts* interrupts =
                     xc->tcBase()->getCpuPtr()->getInterruptController(0);
                 if (interrupts->checkInterrupts(xc->tcBase())) {
                     PseudoInst::quiesceSkip(xc->tcBase());
