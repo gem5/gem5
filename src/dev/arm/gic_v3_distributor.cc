@@ -1055,7 +1055,7 @@ Gicv3Distributor::clearIrqCpuInterface(uint32_t int_id)
 {
     auto cpu_interface = route(int_id);
     if (cpu_interface)
-        cpu_interface->hppi.prio = 0xff;
+        cpu_interface->resetHppi(int_id);
 }
 
 void

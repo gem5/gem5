@@ -70,6 +70,13 @@ Gicv3CPUInterface::init()
 }
 
 void
+Gicv3CPUInterface::resetHppi(uint32_t intid)
+{
+    if (intid == hppi.intid)
+        hppi.prio = 0xff;
+}
+
+void
 Gicv3CPUInterface::setThreadContext(ThreadContext *tc)
 {
     maintenanceInterrupt = gic->params()->maint_int->get(tc);
@@ -1843,7 +1850,7 @@ Gicv3CPUInterface::activateIRQ(uint32_t int_id, Gicv3::GroupId group)
     // By setting the priority to 0xff we are effectively
     // making the int_id not pending anymore at the cpu
     // interface.
-    hppi.prio = 0xff;
+    resetHppi(int_id);
     updateDistributor();
 }
 

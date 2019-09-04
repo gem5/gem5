@@ -322,6 +322,7 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     bool isEOISplitMode() const;
     bool isSecureBelowEL3() const;
     ICH_MISR_EL2 maintenanceInterruptStatus() const;
+    void resetHppi(uint32_t intid);
     void serialize(CheckpointOut & cp) const override;
     void unserialize(CheckpointIn & cp) override;
     void update();
