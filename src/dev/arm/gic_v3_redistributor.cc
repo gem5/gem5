@@ -57,14 +57,22 @@ Gicv3Redistributor::Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id)
       cpuInterface(nullptr),
       cpuId(cpu_id),
       memProxy(nullptr),
-      irqGroup(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
-      irqEnabled(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
-      irqPending(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
-      irqActive(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
-      irqPriority(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
-      irqConfig(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
-      irqGrpmod(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
-      irqNsacr(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
+      peInLowPowerState(true),
+      irqGroup(Gicv3::SGI_MAX + Gicv3::PPI_MAX, 0),
+      irqEnabled(Gicv3::SGI_MAX + Gicv3::PPI_MAX, false),
+      irqPending(Gicv3::SGI_MAX + Gicv3::PPI_MAX, false),
+      irqActive(Gicv3::SGI_MAX + Gicv3::PPI_MAX, false),
+      irqPriority(Gicv3::SGI_MAX + Gicv3::PPI_MAX, 0),
+      irqConfig(Gicv3::SGI_MAX + Gicv3::PPI_MAX, Gicv3::INT_EDGE_TRIGGERED),
+      irqGrpmod(Gicv3::SGI_MAX + Gicv3::PPI_MAX, 0),
+      irqNsacr(Gicv3::SGI_MAX + Gicv3::PPI_MAX, 0),
+      DPG1S(false),
+      DPG1NS(false),
+      DPG0(false),
+      EnableLPIs(false),
+      lpiConfigurationTablePtr(0),
+      lpiIDBits(0),
+      lpiPendingTablePtr(0),
       addrRangeSize(gic->params()->gicv4 ? 0x40000 : 0x20000)
 {
 }
@@ -76,38 +84,6 @@ Gicv3Redistributor::init()
     cpuInterface = gic->getCPUInterface(cpuId);
 
     memProxy = &gic->getSystem()->physProxy;
-}
-
-void
-Gicv3Redistributor::initState()
-{
-    reset();
-}
-
-void
-Gicv3Redistributor::reset()
-{
-    peInLowPowerState = true;
-    std::fill(irqGroup.begin(), irqGroup.end(), 0);
-    std::fill(irqEnabled.begin(), irqEnabled.end(), false);
-    std::fill(irqPending.begin(), irqPending.end(), false);
-    std::fill(irqActive.begin(), irqActive.end(), false);
-    std::fill(irqPriority.begin(), irqPriority.end(), 0);
-
-    // SGIs have edge-triggered behavior
-    for (uint32_t int_id = 0; int_id < Gicv3::SGI_MAX; int_id++) {
-        irqConfig[int_id] = Gicv3::INT_EDGE_TRIGGERED;
-    }
-
-    std::fill(irqGrpmod.begin(), irqGrpmod.end(), 0);
-    std::fill(irqNsacr.begin(), irqNsacr.end(), 0);
-    DPG1S = false;
-    DPG1NS = false;
-    DPG0 = false;
-    EnableLPIs = false;
-    lpiConfigurationTablePtr = 0;
-    lpiIDBits = 0;
-    lpiPendingTablePtr = 0;
 }
 
 uint64_t

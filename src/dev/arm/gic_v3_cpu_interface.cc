@@ -58,6 +58,8 @@ Gicv3CPUInterface::Gicv3CPUInterface(Gicv3 * gic, uint32_t cpu_id)
       distributor(nullptr),
       cpuId(cpu_id)
 {
+    hppi.prio = 0xff;
+    hppi.intid = Gicv3::INTID_SPURIOUS;
 }
 
 void
@@ -65,18 +67,6 @@ Gicv3CPUInterface::init()
 {
     redistributor = gic->getRedistributor(cpuId);
     distributor = gic->getDistributor();
-}
-
-void
-Gicv3CPUInterface::initState()
-{
-    reset();
-}
-
-void
-Gicv3CPUInterface::reset()
-{
-    hppi.prio = 0xff;
 }
 
 void

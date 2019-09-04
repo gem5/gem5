@@ -322,7 +322,6 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     bool isEOISplitMode() const;
     bool isSecureBelowEL3() const;
     ICH_MISR_EL2 maintenanceInterruptStatus() const;
-    void reset();
     void serialize(CheckpointOut & cp) const override;
     void unserialize(CheckpointIn & cp) override;
     void update();
@@ -345,7 +344,6 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     Gicv3CPUInterface(Gicv3 * gic, uint32_t cpu_id);
 
     void init();
-    void initState();
 
   public: // BaseISADevice
     RegVal readMiscReg(int misc_reg) override;

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Metempsy Technology Consulting
  * All rights reserved.
  *
@@ -205,7 +217,6 @@ class Gicv3Redistributor : public Serializable
     void writeEntryLPI(uint32_t intid, uint8_t lpi_entry);
     bool isPendingLPI(uint32_t intid);
     void setClrLPI(uint64_t data, bool set);
-    void reset();
     void sendSGI(uint32_t int_id, Gicv3::GroupId group, bool ns);
     void serialize(CheckpointOut & cp) const override;
     void unserialize(CheckpointIn & cp) override;
@@ -217,7 +228,6 @@ class Gicv3Redistributor : public Serializable
     Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id);
     uint32_t getAffinity() const;
     void init();
-    void initState();
     uint64_t read(Addr addr, size_t size, bool is_secure_access);
     void sendPPInt(uint32_t int_id);
     void write(Addr addr, uint64_t data, size_t size, bool is_secure_access);

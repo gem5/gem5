@@ -69,15 +69,19 @@ const AddrRange Gicv3Distributor::GICD_IROUTER   (0x6000, 0x7fe0);
 Gicv3Distributor::Gicv3Distributor(Gicv3 * gic, uint32_t it_lines)
     : gic(gic),
       itLines(it_lines),
-      irqGroup(it_lines),
-      irqEnabled(it_lines),
-      irqPending(it_lines),
-      irqActive(it_lines),
-      irqPriority(it_lines),
-      irqConfig(it_lines),
-      irqGrpmod(it_lines),
-      irqNsacr(it_lines),
-      irqAffinityRouting(it_lines),
+      ARE(true),
+      EnableGrp1S(0),
+      EnableGrp1NS(0),
+      EnableGrp0(0),
+      irqGroup(it_lines, 0),
+      irqEnabled(it_lines, false),
+      irqPending(it_lines, false),
+      irqActive(it_lines, false),
+      irqPriority(it_lines, 0xAA),
+      irqConfig(it_lines, Gicv3::INT_LEVEL_SENSITIVE),
+      irqGrpmod(it_lines, 0),
+      irqNsacr(it_lines, 0),
+      irqAffinityRouting(it_lines, 0),
       gicdTyper(0),
       gicdPidr0(0x92),
       gicdPidr1(0xb4),
@@ -117,48 +121,17 @@ Gicv3Distributor::Gicv3Distributor(Gicv3 * gic, uint32_t it_lines)
         (1 << 17) | (1 << 16) |
         ((gic->getSystem()->haveSecurity() ? 1 : 0) << 10) |
         (it_lines_number << 0);
-}
-
-void
-Gicv3Distributor::init()
-{
-}
-
-void
-Gicv3Distributor::initState()
-{
-    reset();
-}
-
-void
-Gicv3Distributor::reset()
-{
-    std::fill(irqGroup.begin(), irqGroup.end(), 0);
-    // Imp. defined reset value
-    std::fill(irqEnabled.begin(), irqEnabled.end(), false);
-    std::fill(irqPending.begin(), irqPending.end(), false);
-    std::fill(irqActive.begin(), irqActive.end(), false);
-    // Imp. defined reset value
-    std::fill(irqPriority.begin(), irqPriority.end(), 0xAAAAAAAA);
-    std::fill(irqConfig.begin(), irqConfig.end(),
-              Gicv3::INT_LEVEL_SENSITIVE); // Imp. defined reset value
-    std::fill(irqGrpmod.begin(), irqGrpmod.end(), 0);
-    std::fill(irqNsacr.begin(), irqNsacr.end(), 0);
-    /*
-     * For our implementation affinity routing is always enabled,
-     * no GICv2 legacy
-     */
-    ARE = true;
 
     if (gic->getSystem()->haveSecurity()) {
         DS = false;
     } else {
         DS = true;
     }
+}
 
-    EnableGrp0 = 0;
-    EnableGrp1NS = 0;
-    EnableGrp1S = 0;
+void
+Gicv3Distributor::init()
+{
 }
 
 uint64_t
