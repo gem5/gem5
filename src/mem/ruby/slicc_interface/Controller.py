@@ -1,4 +1,4 @@
-# Copyright (c) 2017,2019 ARM Limited
+# Copyright (c) 2017,2019,2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -71,3 +71,8 @@ class RubyController(ClockedObject):
         "memory output to the main memory is now called `memory_out_port`")
 
     system = Param.System(Parent.any, "system object parameter")
+
+    # These can be used by a protocol to enable reuse of the same machine
+    # types to model different levels of the cache hierarchy
+    downstream_destinations = VectorParam.RubyController([],
+                    "Possible destinations for requests sent towards memory")

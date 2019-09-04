@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017,2019 ARM Limited
+ * Copyright (c) 2017,2019,2020 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -44,8 +44,10 @@
 #include <exception>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 
 #include "base/addr_range.hh"
+#include "base/addr_range_map.hh"
 #include "base/callback.hh"
 #include "mem/packet.hh"
 #include "mem/qport.hh"
@@ -174,6 +176,22 @@ class AbstractController : public ClockedObject, public Consumer
      * @return the MachineID of the destination
      */
     MachineID mapAddressToMachine(Addr addr, MachineType mtype) const;
+
+    /**
+     * Maps an address to the correct dowstream MachineID (i.e. the component
+     * in the next level of the cache hierarchy towards memory)
+     *
+     * This function uses the local list of possible destinations instead of
+     * querying the network.
+     *
+     * @param the destination address
+     * @param the type of the destination (optional)
+     * @return the MachineID of the destination
+     */
+    MachineID mapAddressToDownstreamMachine(Addr addr,
+                                    MachineType mtype = MachineType_NUM) const;
+
+    const NetDest& allDownstreamDest() const { return downstreamDestinations; }
 
   protected:
     //! Profiles original cache requests including PUTs
@@ -338,6 +356,13 @@ class AbstractController : public ClockedObject, public Consumer
   private:
     /** The address range to which the controller responds on the CPU side. */
     const AddrRangeList addrRanges;
+
+    typedef std::unordered_map<MachineType, MachineID> AddrMapEntry;
+
+    AddrRangeMap<AddrMapEntry, 3> downstreamAddrMap;
+
+    NetDest downstreamDestinations;
+
 };
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__

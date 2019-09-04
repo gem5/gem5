@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017,2019 ARM Limited
+ * Copyright (c) 2017,2019,2020 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -78,6 +78,29 @@ AbstractController::init()
     if (getMemReqQueue()) {
         getMemReqQueue()->setConsumer(this);
     }
+
+    // Initialize the addr->downstream machine mappings. Multiple machines
+    // in downstream_destinations can have the same address range if they have
+    // different types. If this is the case, mapAddressToDownstreamMachine
+    // needs to specify the machine type
+    downstreamDestinations.resize();
+    for (auto abs_cntrl : params()->downstream_destinations) {
+        MachineID mid = abs_cntrl->getMachineID();
+        const AddrRangeList &ranges = abs_cntrl->getAddrRanges();
+        for (const auto addr_range : ranges) {
+            auto i = downstreamAddrMap.intersects(addr_range);
+            if (i == downstreamAddrMap.end()) {
+                i = downstreamAddrMap.insert(addr_range, AddrMapEntry());
+            }
+            AddrMapEntry &entry = i->second;
+            fatal_if(entry.count(mid.getType()) > 0,
+                     "%s: %s mapped to multiple machines of the same type\n",
+                     name(), addr_range.to_string());
+            entry[mid.getType()] = mid;
+        }
+        downstreamDestinations.add(mid);
+    }
+
 }
 
 void
@@ -356,6 +379,30 @@ AbstractController::mapAddressToMachine(Addr addr, MachineType mtype) const
     MachineID mach = {mtype, node};
     return mach;
 }
+
+MachineID
+AbstractController::mapAddressToDownstreamMachine(Addr addr, MachineType mtype)
+const
+{
+    const auto i = downstreamAddrMap.contains(addr);
+    fatal_if(i == downstreamAddrMap.end(),
+      "%s: couldn't find mapping for address %x\n", name(), addr);
+
+    const AddrMapEntry &entry = i->second;
+    assert(!entry.empty());
+
+    if (mtype == MachineType_NUM) {
+        fatal_if(entry.size() > 1,
+          "%s: address %x mapped to multiple machine types.\n", name(), addr);
+        return entry.begin()->second;
+    } else {
+        auto j = entry.find(mtype);
+        fatal_if(j == entry.end(),
+          "%s: couldn't find mapping for address %x\n", name(), addr);
+        return j->second;
+    }
+}
+
 
 bool
 AbstractController::MemoryPort::recvTimingResp(PacketPtr pkt)
