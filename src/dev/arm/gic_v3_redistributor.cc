@@ -928,6 +928,9 @@ Gicv3Redistributor::setClrLPI(uint64_t data, bool set)
         }
 
         lpi_pending_entry &= ~(1 << (lpi_pending_entry_bit_position));
+
+        // Remove the pending state from the cpu interface
+        cpuInterface->resetHppi(lpi_id);
     }
 
     writeEntryLPI(lpi_id, lpi_pending_entry);
