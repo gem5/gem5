@@ -36,7 +36,6 @@
 #ifndef __MEM_CACHE_COMPRESSORS_CPACK_HH__
 #define __MEM_CACHE_COMPRESSORS_CPACK_HH__
 
-#include <array>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -46,9 +45,11 @@
 
 struct CPackParams;
 
-class CPack : public DictionaryCompressor
+class CPack : public DictionaryCompressor<uint32_t>
 {
   private:
+    using DictionaryEntry = DictionaryCompressor<uint32_t>::DictionaryEntry;
+
     // Forward declaration of all possible patterns
     class PatternZZZZ;
     class PatternXXXX;
@@ -88,14 +89,14 @@ class CPack : public DictionaryCompressor
     };
 
     std::unique_ptr<Pattern> getPattern(
-        const std::array<uint8_t, 4>& bytes,
-        const std::array<uint8_t, 4>& dict_bytes,
+        const DictionaryEntry& bytes,
+        const DictionaryEntry& dict_bytes,
         const int match_location) const override
     {
         return PatternFactory::getPattern(bytes, dict_bytes, match_location);
     }
 
-    void addToDictionary(std::array<uint8_t, 4> data) override;
+    void addToDictionary(DictionaryEntry data) override;
 
     /**
      * Apply compression.
@@ -126,19 +127,19 @@ class CPack : public DictionaryCompressor
 class CPack::PatternZZZZ : public DictionaryCompressor::Pattern
 {
   public:
-    PatternZZZZ(const std::array<uint8_t, 4> bytes, const int match_location)
+    PatternZZZZ(const DictionaryEntry bytes, const int match_location)
         : Pattern(ZZZZ, 0x0, 2, 0, 0, false) {}
 
-    static bool isPattern(const std::array<uint8_t, 4>& bytes,
-                          const std::array<uint8_t, 4>& dict_bytes,
-                          const int match_location)
+    static bool isPattern(const DictionaryEntry& bytes,
+        const DictionaryEntry& dict_bytes,
+        const int match_location)
     {
         return (bytes[3] == 0) && (bytes[2] == 0) && (bytes[1] == 0) &&
                (bytes[0] == 0);
     }
 
-    std::array<uint8_t, 4>
-    decompress(const std::array<uint8_t, 4> dict_bytes) const override
+    DictionaryEntry
+    decompress(const DictionaryEntry dict_bytes) const override
     {
         return {0, 0, 0, 0};
     }
@@ -150,23 +151,23 @@ class CPack::PatternXXXX : public DictionaryCompressor::Pattern
     /**
      * A copy of the word.
      */
-    const std::array<uint8_t, 4> bytes;
+    const DictionaryEntry bytes;
 
   public:
-    PatternXXXX(const std::array<uint8_t, 4> bytes, const int match_location)
+    PatternXXXX(const DictionaryEntry bytes, const int match_location)
         : Pattern(XXXX, 0x1, 2, 4, 0, true), bytes(bytes) {}
 
-    static bool isPattern(const std::array<uint8_t, 4>& bytes,
-                          const std::array<uint8_t, 4>& dict_bytes,
-                          const int match_location)
+    static bool isPattern(const DictionaryEntry& bytes,
+        const DictionaryEntry& dict_bytes,
+        const int match_location)
     {
         // It can always be an unmatch, as it is set to this class when other
         // patterns fail
         return true;
     }
 
-    std::array<uint8_t, 4>
-    decompress(const std::array<uint8_t, 4> dict_bytes) const override
+    DictionaryEntry
+    decompress(const DictionaryEntry dict_bytes) const override
     {
         return bytes;
     }
@@ -175,18 +176,18 @@ class CPack::PatternXXXX : public DictionaryCompressor::Pattern
 class CPack::PatternMMMM : public DictionaryCompressor::Pattern
 {
   public:
-    PatternMMMM(const std::array<uint8_t, 4> bytes, const int match_location)
+    PatternMMMM(const DictionaryEntry bytes, const int match_location)
         : Pattern(MMMM, 0x2, 6, 0, match_location, true) {}
 
-    static bool isPattern(const std::array<uint8_t, 4>& bytes,
-                          const std::array<uint8_t, 4>& dict_bytes,
-                          const int match_location)
+    static bool isPattern(const DictionaryEntry& bytes,
+        const DictionaryEntry& dict_bytes,
+        const int match_location)
     {
         return (bytes == dict_bytes) && (match_location >= 0);
     }
 
-    std::array<uint8_t, 4>
-    decompress(const std::array<uint8_t, 4> dict_bytes) const override
+    DictionaryEntry
+    decompress(const DictionaryEntry dict_bytes) const override
     {
         return dict_bytes;
     }
@@ -202,13 +203,13 @@ class CPack::PatternMMXX : public DictionaryCompressor::Pattern
     const uint8_t byte1;
 
   public:
-    PatternMMXX(const std::array<uint8_t, 4> bytes, const int match_location)
+    PatternMMXX(const DictionaryEntry bytes, const int match_location)
         : Pattern(MMXX, 0xC, 8, 2, match_location, true),
                   byte0(bytes[0]), byte1(bytes[1]) {}
 
-    static bool isPattern(const std::array<uint8_t, 4>& bytes,
-                          const std::array<uint8_t, 4>& dict_bytes,
-                          const int match_location)
+    static bool isPattern(const DictionaryEntry& bytes,
+        const DictionaryEntry& dict_bytes,
+        const int match_location)
     {
         // Notice we don't compare bytes[0], as otherwise we'd be unnecessarily
         // discarding MMXM. If that pattern is added this should be modified
@@ -217,8 +218,8 @@ class CPack::PatternMMXX : public DictionaryCompressor::Pattern
 
     }
 
-    std::array<uint8_t, 4>
-    decompress(const std::array<uint8_t, 4> dict_bytes) const override
+    DictionaryEntry
+    decompress(const DictionaryEntry dict_bytes) const override
     {
         return {byte0, byte1, dict_bytes[2], dict_bytes[3]};
     }
@@ -233,19 +234,19 @@ class CPack::PatternZZZX : public DictionaryCompressor::Pattern
     const uint8_t byte;
 
   public:
-    PatternZZZX(const std::array<uint8_t, 4> bytes, const int match_location)
+    PatternZZZX(const DictionaryEntry bytes, const int match_location)
         : Pattern(ZZZX, 0xD, 4, 1, 0, false), byte(bytes[0]) {}
 
-    static bool isPattern(const std::array<uint8_t, 4>& bytes,
-                          const std::array<uint8_t, 4>& dict_bytes,
-                          const int match_location)
+    static bool isPattern(const DictionaryEntry& bytes,
+        const DictionaryEntry& dict_bytes,
+        const int match_location)
     {
         return (bytes[3] == 0) && (bytes[2] == 0) && (bytes[1] == 0) &&
                (bytes[0] != 0);
     }
 
-    std::array<uint8_t, 4>
-    decompress(const std::array<uint8_t, 4> dict_bytes) const override
+    DictionaryEntry
+    decompress(const DictionaryEntry dict_bytes) const override
     {
         return {byte, 0, 0, 0};
     }
@@ -260,21 +261,21 @@ class CPack::PatternMMMX : public DictionaryCompressor::Pattern
     const uint8_t byte;
 
   public:
-    PatternMMMX(const std::array<uint8_t, 4> bytes, const int match_location)
+    PatternMMMX(const DictionaryEntry bytes, const int match_location)
         : Pattern(MMMX, 0xE, 8, 1, match_location, true),
                   byte(bytes[0]) {}
 
-    static bool isPattern(const std::array<uint8_t, 4>& bytes,
-                          const std::array<uint8_t, 4>& dict_bytes,
-                          const int match_location)
+    static bool isPattern(const DictionaryEntry& bytes,
+        const DictionaryEntry& dict_bytes,
+        const int match_location)
     {
         return (bytes[3] == dict_bytes[3]) && (bytes[2] == dict_bytes[2]) &&
                (bytes[1] == dict_bytes[1]) && (bytes[0] != dict_bytes[0]) &&
                (match_location >= 0);
     }
 
-    std::array<uint8_t, 4>
-    decompress(const std::array<uint8_t, 4> dict_bytes) const override
+    DictionaryEntry
+    decompress(const DictionaryEntry dict_bytes) const override
     {
         return {byte, dict_bytes[1], dict_bytes[2], dict_bytes[3]};
     }

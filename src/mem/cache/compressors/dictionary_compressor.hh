@@ -55,63 +55,11 @@
 #include "base/types.hh"
 #include "mem/cache/compressors/base.hh"
 
-struct DictionaryCompressorParams;
+struct BaseDictionaryCompressorParams;
 
-class DictionaryCompressor : public BaseCacheCompressor
+class BaseDictionaryCompressor : public BaseCacheCompressor
 {
   protected:
-    /**
-     * Compression data for the dictionary compressor. It consists of a vector
-     * of patterns.
-     */
-    class CompData;
-
-    // Forward declaration of a pattern
-    class Pattern;
-
-    /**
-     * Create a factory to determine if input matches a pattern. The if else
-     * chains are constructed by recursion. The patterns should be explored
-     * sorted by size for correct behaviour.
-     */
-    template <class Head, class... Tail>
-    struct Factory
-    {
-        static std::unique_ptr<Pattern> getPattern(
-            const std::array<uint8_t, 4>& bytes,
-            const std::array<uint8_t, 4>& dict_bytes, const int match_location)
-        {
-            // If match this pattern, instantiate it. If a negative match
-            // location is used, the patterns that use the dictionary bytes
-            // must return false. This is used when there are no dictionary
-            // entries yet
-            if (Head::isPattern(bytes, dict_bytes, match_location)) {
-                return std::unique_ptr<Pattern>(
-                            new Head(bytes, match_location));
-            // Otherwise, go for next pattern
-            } else {
-                return Factory<Tail...>::getPattern(bytes, dict_bytes,
-                                                    match_location);
-            }
-        }
-    };
-
-    /** Specialization to end the recursion. */
-    template <class Head>
-    struct Factory<Head>
-    {
-        static std::unique_ptr<Pattern> getPattern(
-            const std::array<uint8_t, 4>& bytes,
-            const std::array<uint8_t, 4>& dict_bytes, const int match_location)
-        {
-            // Instantiate last pattern. Should be the XXXX pattern.
-            return std::unique_ptr<Pattern>(new Head(bytes, match_location));
-        }
-    };
-
-    /** The dictionary. */
-    std::vector<std::array<uint8_t, 4>> dictionary;
-
     /** Dictionary size. */
     const std::size_t dictionarySize;
 
@@ -123,9 +71,7 @@ class DictionaryCompressor : public BaseCacheCompressor
      * @{
      */
 
-    /**
-     * Number of data entries that were compressed to each pattern.
-     */
+    /** Number of data entries that were compressed to each pattern. */
     Stats::Vector patternStats;
 
     /**
@@ -147,14 +93,86 @@ class DictionaryCompressor : public BaseCacheCompressor
      */
     virtual std::string getName(int number) const = 0;
 
+  public:
+    typedef BaseDictionaryCompressorParams Params;
+    BaseDictionaryCompressor(const Params *p);
+    ~BaseDictionaryCompressor() = default;
+
+    void regStats() override;
+};
+
+/**
+ * A template version of the dictionary compressor that allows to choose the
+ * dictionary size.
+ *
+ * @tparam The type of a dictionary entry (e.g., uint16_t, uint32_t, etc).
+ */
+template <class T>
+class DictionaryCompressor : public BaseDictionaryCompressor
+{
+  protected:
+    /**
+     * Compression data for the dictionary compressor. It consists of a vector
+     * of patterns.
+     */
+    class CompData;
+
+    // Forward declaration of a pattern
+    class Pattern;
+
+    /** Convenience typedef for a dictionary entry. */
+    typedef std::array<uint8_t, sizeof(T)> DictionaryEntry;
+
+    /**
+     * Create a factory to determine if input matches a pattern. The if else
+     * chains are constructed by recursion. The patterns should be explored
+     * sorted by size for correct behaviour.
+     */
+    template <class Head, class... Tail>
+    struct Factory
+    {
+        static std::unique_ptr<Pattern> getPattern(
+            const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
+            const int match_location)
+        {
+            // If match this pattern, instantiate it. If a negative match
+            // location is used, the patterns that use the dictionary bytes
+            // must return false. This is used when there are no dictionary
+            // entries yet
+            if (Head::isPattern(bytes, dict_bytes, match_location)) {
+                return std::unique_ptr<Pattern>(
+                            new Head(bytes, match_location));
+            // Otherwise, go for next pattern
+            } else {
+                return Factory<Tail...>::getPattern(bytes, dict_bytes,
+                                                    match_location);
+            }
+        }
+    };
+
+    /** Specialization to end the recursion. */
+    template <class Head>
+    struct Factory<Head>
+    {
+        static std::unique_ptr<Pattern>
+        getPattern(const DictionaryEntry& bytes,
+            const DictionaryEntry& dict_bytes, const int match_location)
+        {
+            // Instantiate last pattern. Should be the XXXX pattern.
+            return std::unique_ptr<Pattern>(new Head(bytes, match_location));
+        }
+    };
+
+    /** The dictionary. */
+    std::vector<DictionaryEntry> dictionary;
+
     /**
      * Since the factory cannot be instantiated here, classes that inherit
      * from this base class have to implement the call to their factory's
      * getPattern.
      */
-    virtual std::unique_ptr<Pattern> getPattern(
-        const std::array<uint8_t, 4>& bytes,
-        const std::array<uint8_t, 4>& dict_bytes,
+    virtual std::unique_ptr<Pattern>
+    getPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
         const int match_location) const = 0;
 
     /**
@@ -163,15 +181,15 @@ class DictionaryCompressor : public BaseCacheCompressor
      * @param data Data to be compressed.
      * @return The pattern this data matches.
      */
-    std::unique_ptr<Pattern> compressWord(const uint32_t data);
+    std::unique_ptr<Pattern> compressValue(const T data);
 
     /**
-     * Decompress a word.
+     * Decompress a pattern into a value that fits in a dictionary entry.
      *
      * @param pattern The pattern to be decompressed.
      * @return The decompressed word.
      */
-    uint32_t decompressWord(const Pattern* pattern);
+    T decompressValue(const Pattern* pattern);
 
     /** Clear all dictionary entries. */
     void resetDictionary();
@@ -181,7 +199,7 @@ class DictionaryCompressor : public BaseCacheCompressor
      *
      * @param data The new entry.
      */
-    virtual void addToDictionary(std::array<uint8_t, 4> data) = 0;
+    virtual void addToDictionary(const DictionaryEntry data) = 0;
 
     /**
      * Apply compression.
@@ -200,18 +218,26 @@ class DictionaryCompressor : public BaseCacheCompressor
      */
     void decompress(const CompressionData* comp_data, uint64_t* data) override;
 
+    /**
+     * Turn a value into a dictionary entry.
+     *
+     * @param value The value to turn.
+     * @return A dictionary entry containing the value.
+     */
+    static DictionaryEntry toDictionaryEntry(T value);
+
+    /**
+     * Turn a dictionary entry into a value.
+     *
+     * @param The dictionary entry to turn.
+     * @return The value that the dictionary entry contained.
+     */
+    static T fromDictionaryEntry(const DictionaryEntry& entry);
+
   public:
-    /** Convenience typedef. */
-    typedef DictionaryCompressorParams Params;
-
-    /** Default constructor. */
+    typedef BaseDictionaryCompressorParams Params;
     DictionaryCompressor(const Params *p);
-
-    /** Default destructor. */
-    ~DictionaryCompressor() {};
-
-    /** Register local statistics. */
-    void regStats() override;
+    ~DictionaryCompressor() = default;
 };
 
 /**
@@ -220,7 +246,8 @@ class DictionaryCompressor : public BaseCacheCompressor
  * decompress(). Then the new pattern must be added to the PatternFactory
  * declaration in crescent order of size (in the DictionaryCompressor class).
  */
-class DictionaryCompressor::Pattern
+template <class T>
+class DictionaryCompressor<T>::Pattern
 {
   protected:
     /** Pattern enum number. */
@@ -322,25 +349,26 @@ class DictionaryCompressor::Pattern
      * @param dict_bytes The bytes in the corresponding matching entry.
      * @return The decompressed pattern.
      */
-    virtual std::array<uint8_t, 4> decompress(
-        const std::array<uint8_t, 4> dict_bytes) const = 0;
+    virtual DictionaryEntry decompress(
+        const DictionaryEntry dict_bytes) const = 0;
 };
 
-class DictionaryCompressor::CompData : public CompressionData
+template <class T>
+class DictionaryCompressor<T>::CompData : public CompressionData
 {
   public:
     /** The patterns matched in the original line. */
     std::vector<std::unique_ptr<Pattern>> entries;
 
-    /**
-     * Default constructor.
-     *
-     * @param dictionary_size Number of entries in the dictionary.
-     */
-    CompData(const std::size_t dictionary_size);
+    CompData();
+    ~CompData() = default;
 
-    /** Default destructor. */
-    ~CompData();
+    /**
+     * Add a pattern entry to the list of patterns.
+     *
+     * @param entry The new pattern entry.
+     */
+    virtual void addEntry(std::unique_ptr<Pattern>);
 };
 
 #endif //__MEM_CACHE_COMPRESSORS_DICTIONARY_COMPRESSOR_HH__

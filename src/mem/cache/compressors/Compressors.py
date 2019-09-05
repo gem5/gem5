@@ -40,6 +40,14 @@ class BaseCacheCompressor(SimObject):
         "in bytes, in which a block must be compressed to. Otherwise it is "
         "stored in its uncompressed state")
 
+class BaseDictionaryCompressor(BaseCacheCompressor):
+    type = 'BaseDictionaryCompressor'
+    abstract = True
+    cxx_header = "mem/cache/compressors/dictionary_compressor.hh"
+
+    dictionary_size = Param.Int(Parent.cache_line_size,
+        "Number of dictionary entries")
+
 class BDI(BaseCacheCompressor):
     type = 'BDI'
     cxx_class = 'BDI'
@@ -49,15 +57,7 @@ class BDI(BaseCacheCompressor):
         "combinations of base and delta for the compressors. False if using" \
         "only the lowest possible delta size for each base size.");
 
-class DictionaryCompressor(BaseCacheCompressor):
-    type = 'DictionaryCompressor'
-    abstract = True
-    cxx_header = "mem/cache/compressors/dictionary_compressor.hh"
-
-    dictionary_size = Param.Int(Parent.cache_line_size,
-        "Number of dictionary entries")
-
-class CPack(DictionaryCompressor):
+class CPack(BaseDictionaryCompressor):
     type = 'CPack'
     cxx_class = 'CPack'
     cxx_header = "mem/cache/compressors/cpack.hh"

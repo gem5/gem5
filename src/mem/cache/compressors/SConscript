@@ -33,6 +33,6 @@ Import('*')
 SimObject('Compressors.py')
 
 Source('base.cc')
+Source('base_dictionary_compressor.cc')
 Source('bdi.cc')
 Source('cpack.cc')
-Source('dictionary_compressor.cc')

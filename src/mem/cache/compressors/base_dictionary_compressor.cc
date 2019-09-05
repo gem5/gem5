@@ -29,45 +29,33 @@
  */
 
 /** @file
- * Implementation of the CPack cache compressor.
+ * Implementation of a base sim object for the templated dictionary-based
+ * cache compressor.
  */
 
-#include "mem/cache/compressors/cpack.hh"
+#include "mem/cache/compressors/dictionary_compressor.hh"
+#include "params/BaseDictionaryCompressor.hh"
 
-#include "mem/cache/compressors/dictionary_compressor_impl.hh"
-#include "params/CPack.hh"
-
-CPack::CPack(const Params *p)
-    : DictionaryCompressor<uint32_t>(p)
+BaseDictionaryCompressor::BaseDictionaryCompressor(const Params *p)
+    : BaseCacheCompressor(p), dictionarySize(p->dictionary_size), numEntries(0)
 {
 }
 
 void
-CPack::addToDictionary(DictionaryEntry data)
+BaseDictionaryCompressor::regStats()
 {
-    assert(numEntries < dictionarySize);
-    dictionary[numEntries++] = data;
-}
+    BaseCacheCompressor::regStats();
 
-std::unique_ptr<BaseCacheCompressor::CompressionData>
-CPack::compress(const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat)
-{
-    std::unique_ptr<BaseCacheCompressor::CompressionData> comp_data =
-        DictionaryCompressor<uint32_t>::compress(data);
+    // We store the frequency of each pattern
+    patternStats
+        .init(getNumPatterns())
+        .name(name() + ".pattern")
+        .desc("Number of data entries that were compressed to this pattern.")
+        ;
 
-    // Set compression latency (Accounts for pattern matching, length
-    // generation, packaging and shifting)
-    comp_lat = Cycles(blkSize/8+5);
-
-    // Set decompression latency (1 qword per cycle)
-    decomp_lat = Cycles(blkSize/8);
-
-    // Return compressed line
-    return std::move(comp_data);
-}
-
-CPack*
-CPackParams::create()
-{
-    return new CPack(this);
+    for (unsigned i = 0; i < getNumPatterns(); ++i) {
+        patternStats.subname(i, getName(i));
+        patternStats.subdesc(i, "Number of data entries that match pattern " +
+                                getName(i));
+    }
 }

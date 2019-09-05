@@ -32,55 +32,63 @@
  * Implementation of a dictionary based cache compressor.
  */
 
-#include "mem/cache/compressors/dictionary_compressor.hh"
+#ifndef __MEM_CACHE_COMPRESSORS_DICTIONARY_COMPRESSOR_IMPL_HH__
+#define __MEM_CACHE_COMPRESSORS_DICTIONARY_COMPRESSOR_IMPL_HH__
 
 #include <algorithm>
 
 #include "debug/CacheComp.hh"
-#include "params/DictionaryCompressor.hh"
+#include "mem/cache/compressors/dictionary_compressor.hh"
+#include "params/BaseDictionaryCompressor.hh"
 
-DictionaryCompressor::CompData::CompData(const std::size_t dictionary_size)
+template <class T>
+DictionaryCompressor<T>::CompData::CompData()
     : CompressionData()
 {
 }
 
-DictionaryCompressor::CompData::~CompData()
+template <class T>
+void
+DictionaryCompressor<T>::CompData::addEntry(std::unique_ptr<Pattern> pattern)
 {
+    // Increase size
+    setSizeBits(getSizeBits() + pattern->getSizeBits());
+
+    // Push new entry to list
+    entries.push_back(std::move(pattern));
 }
 
-DictionaryCompressor::DictionaryCompressor(const Params *p)
-    : BaseCacheCompressor(p), dictionarySize(p->dictionary_size)
+template <class T>
+DictionaryCompressor<T>::DictionaryCompressor(const Params *p)
+    : BaseDictionaryCompressor(p)
 {
     dictionary.resize(dictionarySize);
 
     resetDictionary();
 }
 
+template <class T>
 void
-DictionaryCompressor::resetDictionary()
+DictionaryCompressor<T>::resetDictionary()
 {
     // Reset number of valid entries
     numEntries = 0;
 
     // Set all entries as 0
-    std::array<uint8_t, 4> zero_word = {0, 0, 0, 0};
-    std::fill(dictionary.begin(), dictionary.end(), zero_word);
+    std::fill(dictionary.begin(), dictionary.end(), toDictionaryEntry(0));
 }
 
-std::unique_ptr<DictionaryCompressor::Pattern>
-DictionaryCompressor::compressWord(const uint32_t data)
+template <typename T>
+std::unique_ptr<typename DictionaryCompressor<T>::Pattern>
+DictionaryCompressor<T>::compressValue(const T data)
 {
     // Split data in bytes
-    const std::array<uint8_t, 4> bytes = {
-        static_cast<uint8_t>(data & 0xFF),
-        static_cast<uint8_t>((data >> 8) & 0xFF),
-        static_cast<uint8_t>((data >> 16) & 0xFF),
-        static_cast<uint8_t>((data >> 24) & 0xFF)
-    };
+    const DictionaryEntry bytes = toDictionaryEntry(data);
 
     // Start as a no-match pattern. A negative match location is used so that
     // patterns that depend on the dictionary entry don't match
-    std::unique_ptr<Pattern> pattern = getPattern(bytes, {0, 0, 0, 0}, -1);
+    std::unique_ptr<Pattern> pattern =
+        getPattern(bytes, toDictionaryEntry(0), -1);
 
     // Search for word on dictionary
     for (std::size_t i = 0; i < numEntries; i++) {
@@ -105,69 +113,51 @@ DictionaryCompressor::compressWord(const uint32_t data)
     return pattern;
 }
 
+template <class T>
 std::unique_ptr<BaseCacheCompressor::CompressionData>
-DictionaryCompressor::compress(const uint64_t* data)
+DictionaryCompressor<T>::compress(const uint64_t* data)
 {
     std::unique_ptr<CompData> comp_data =
-        std::unique_ptr<CompData>(new CompData(dictionarySize));
-
-    // Compression size
-    std::size_t size = 0;
+        std::unique_ptr<CompData>(new CompData());
 
     // Reset dictionary
     resetDictionary();
 
-    // Compress every word sequentially
-    for (std::size_t i = 0; i < blkSize/8; i++) {
-        const uint32_t first_word = ((data[i])&0xFFFFFFFF00000000) >> 32;
-        const uint32_t second_word = (data[i])&0x00000000FFFFFFFF;
-
-        // Compress both words
-        std::unique_ptr<Pattern> first_pattern = compressWord(first_word);
-        std::unique_ptr<Pattern> second_pattern = compressWord(second_word);
-
-        // Update total line compression size
-        size += first_pattern->getSizeBits() + second_pattern->getSizeBits();
-
-        // Print debug information
-        DPRINTF(CacheComp, "Compressed %08x to %s\n", first_word,
-                first_pattern->print());
-        DPRINTF(CacheComp, "Compressed %08x to %s\n", second_word,
-                second_pattern->print());
-
-        // Append to pattern list
-        comp_data->entries.push_back(std::move(first_pattern));
-        comp_data->entries.push_back(std::move(second_pattern));
+    // Compress every value sequentially
+    const std::vector<T> values((T*)data, (T*)data + blkSize / sizeof(T));
+    for (const auto& value : values) {
+        std::unique_ptr<Pattern> pattern = compressValue(value);
+        DPRINTF(CacheComp, "Compressed %016x to %s\n", value,
+            pattern->print());
+        comp_data->addEntry(std::move(pattern));
     }
-
-    // Set final compression size
-    comp_data->setSizeBits(size);
 
     // Return compressed line
     return std::move(comp_data);
 }
 
-uint32_t
-DictionaryCompressor::decompressWord(const Pattern* pattern)
+template <class T>
+T
+DictionaryCompressor<T>::decompressValue(const Pattern* pattern)
 {
     // Search for matching entry
-    std::vector<std::array<uint8_t, 4>>::iterator entry_it =
-        dictionary.begin();
+    auto entry_it = dictionary.begin();
     std::advance(entry_it, pattern->getMatchLocation());
 
     // Decompress the match. If the decompressed value must be added to
     // the dictionary, do it
-    const std::array<uint8_t, 4> data = pattern->decompress(*entry_it);
+    const DictionaryEntry data = pattern->decompress(*entry_it);
     if (pattern->shouldAllocate()) {
         addToDictionary(data);
     }
 
-    // Return word
-    return (((((data[3] << 8) | data[2]) << 8) | data[1]) << 8) | data[0];
+    // Return value
+    return fromDictionaryEntry(data);
 }
 
+template <class T>
 void
-DictionaryCompressor::decompress(const CompressionData* comp_data,
+DictionaryCompressor<T>::decompress(const CompressionData* comp_data,
     uint64_t* data)
 {
     const CompData* casted_comp_data = static_cast<const CompData*>(comp_data);
@@ -176,37 +166,47 @@ DictionaryCompressor::decompress(const CompressionData* comp_data,
     resetDictionary();
 
     // Decompress every entry sequentially
-    std::vector<uint32_t> decomp_words;
+    std::vector<T> decomp_values;
     for (const auto& entry : casted_comp_data->entries) {
-        const uint32_t word = decompressWord(&*entry);
-        decomp_words.push_back(word);
-
-        // Print debug information
-        DPRINTF(CacheComp, "Decompressed %s to %x\n", entry->print(), word);
+        const T value = decompressValue(&*entry);
+        decomp_values.push_back(value);
+        DPRINTF(CacheComp, "Decompressed %s to %x\n", entry->print(), value);
     }
 
-    // Concatenate the decompressed words to generate the cache lines
+    // Concatenate the decompressed values to generate the original data
     for (std::size_t i = 0; i < blkSize/8; i++) {
-        data[i] = (static_cast<uint64_t>(decomp_words[2*i]) << 32) |
-                        decomp_words[2*i+1];
+        data[i] = 0;
+        const std::size_t values_per_entry = sizeof(uint64_t)/sizeof(T);
+        for (int j = values_per_entry - 1; j >= 0; j--) {
+            data[i] |=
+                static_cast<uint64_t>(decomp_values[values_per_entry*i+j]) <<
+                (j*8*sizeof(T));
+        }
     }
 }
 
-void
-DictionaryCompressor::regStats()
+template <class T>
+typename DictionaryCompressor<T>::DictionaryEntry
+DictionaryCompressor<T>::toDictionaryEntry(T value)
 {
-    BaseCacheCompressor::regStats();
-
-    // We store the frequency of each pattern
-    patternStats
-        .init(getNumPatterns())
-        .name(name() + ".pattern")
-        .desc("Number of data entries that were compressed to this pattern.")
-        ;
-
-    for (unsigned i = 0; i < getNumPatterns(); ++i) {
-        patternStats.subname(i, getName(i));
-        patternStats.subdesc(i, "Number of data entries that match pattern " +
-                                getName(i));
+    DictionaryEntry entry;
+    for (int i = 0; i < sizeof(T); i++) {
+        entry[i] = value & 0xFF;
+        value >>= 8;
     }
+    return entry;
 }
+
+template <class T>
+T
+DictionaryCompressor<T>::fromDictionaryEntry(const DictionaryEntry& entry)
+{
+    T value = 0;
+    for (int i = sizeof(T) - 1; i >= 0; i--) {
+        value <<= 8;
+        value |= entry[i];
+    }
+    return value;
+}
+
+#endif //__MEM_CACHE_COMPRESSORS_DICTIONARY_COMPRESSOR_IMPL_HH__
