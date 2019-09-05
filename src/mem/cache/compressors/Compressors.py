@@ -69,6 +69,11 @@ class FPCD(BaseDictionaryCompressor):
 
     dictionary_size = 2
 
+class RepeatedQwordsCompressor(BaseDictionaryCompressor):
+    type = 'RepeatedQwordsCompressor'
+    cxx_class = 'RepeatedQwordsCompressor'
+    cxx_header = "mem/cache/compressors/repeated_qwords.hh"
+
 class ZeroCompressor(BaseDictionaryCompressor):
     type = 'ZeroCompressor'
     cxx_class = 'ZeroCompressor'
