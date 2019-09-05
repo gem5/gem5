@@ -68,3 +68,8 @@ class FPCD(BaseDictionaryCompressor):
     cxx_header = "mem/cache/compressors/fpcd.hh"
 
     dictionary_size = 2
+
+class ZeroCompressor(BaseDictionaryCompressor):
+    type = 'ZeroCompressor'
+    cxx_class = 'ZeroCompressor'
+    cxx_header = "mem/cache/compressors/zero.hh"
