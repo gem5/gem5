@@ -791,6 +791,10 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
             getDTBPtr(tc)->invalidateMiscReg();
         }
 
+        if (cpsr.pan != old_cpsr.pan) {
+            getDTBPtr(tc)->invalidateMiscReg();
+        }
+
         DPRINTF(Arm, "Updating CPSR from %#x to %#x f:%d i:%d a:%d mode:%#x\n",
                 miscRegs[misc_reg], cpsr, cpsr.f, cpsr.i, cpsr.a, cpsr.mode);
         PCState pc = tc->pcState();
