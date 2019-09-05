@@ -1,7 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2019 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -26,34 +23,30 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
-#          Gabe Black
+# Authors: Gabe Black
 
-Import('*')
+from m5.params import Port, VectorPort
 
-SimObject('Device.py')
-Source('io_device.cc')
-Source('isa_fake.cc')
-Source('dma_device.cc')
+INT_SOURCE_ROLE = 'Int Source Pin'
+INT_SINK_ROLE = 'Int Sink Pin'
+Port.compat(INT_SOURCE_ROLE, INT_SINK_ROLE)
 
-SimObject('IntPin.py')
-Source('intpin.cc')
+# A source pin generally represents a single pin which might connect to
+# multiple sinks.
+class IntSourcePin(VectorPort):
+    def __init__(self, desc):
+        super(IntSourcePin, self).__init__(
+                INT_SOURCE_ROLE, desc, is_source=True)
 
-DebugFlag('IsaFake')
-DebugFlag('DMA')
+# Each "physical" pin can be driven by a single source pin since there are no
+# provisions for resolving competing signals running to the same pin.
+class IntSinkPin(Port):
+    def __init__(self, desc):
+        super(IntSinkPin, self).__init__(INT_SINK_ROLE, desc)
 
-SimObject('Platform.py')
-Source('platform.cc')
-
-if env['TARGET_ISA'] == 'null':
-    Return()
-
-SimObject('BadDevice.py')
-
-Source('baddev.cc')
-Source('intel_8254_timer.cc')
-Source('mc146818.cc')
-Source('pixelpump.cc')
-
-DebugFlag('Intel8254Timer')
-DebugFlag('MC146818')
+# A vector of sink pins represents a bank of physical pins. For instance, an
+# interrupt controller with many numbered input interrupts could represent them
+# as a VectorIntSinkPin.
+class VectorIntSinkPin(VectorPort):
+    def __init__(self, desc):
+        super(VectorIntSinkPin, self).__init__(INT_SINK_ROLE, desc)
