@@ -50,6 +50,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "base/types.hh"
@@ -131,6 +132,8 @@ class DictionaryCompressor : public BaseDictionaryCompressor
     class LocatedMaskedPattern;
     template <class RepT>
     class RepeatedValuePattern;
+    template <std::size_t DeltaSizeBits>
+    class DeltaPattern;
 
     /**
      * Create a factory to determine if input matches a pattern. The if else
@@ -209,7 +212,7 @@ class DictionaryCompressor : public BaseDictionaryCompressor
     T decompressValue(const Pattern* pattern);
 
     /** Clear all dictionary entries. */
-    void resetDictionary();
+    virtual void resetDictionary();
 
     /**
      * Add an entry to the dictionary.
@@ -641,6 +644,84 @@ class DictionaryCompressor<T>::RepeatedValuePattern
             decomp_value |= value;
         }
         return DictionaryCompressor<T>::toDictionaryEntry(decomp_value);
+    }
+};
+
+/**
+ * A pattern that checks whether the difference of the value and the dictionary
+ * entries' is below a certain threshold. If so, the pattern is successful,
+ * and only the delta bits need to be stored.
+ *
+ * For example, if the delta can only contain up to 4 bits, and the dictionary
+ * contains the entry 0xA231, the value 0xA232 would be compressible, and
+ * the delta 0x1 would be stored. The value 0xA249, on the other hand, would
+ * not be compressible, since its delta (0x18) needs 5 bits to be stored.
+ *
+ * @tparam DeltaSizeBits Size of a delta entry, in number of bits, which
+ *                       determines the threshold. Must always be smaller
+ *                       than the dictionary entry type's size.
+ */
+template <class T>
+template <std::size_t DeltaSizeBits>
+class DictionaryCompressor<T>::DeltaPattern
+    : public DictionaryCompressor<T>::Pattern
+{
+  private:
+    static_assert(DeltaSizeBits < (sizeof(T) * 8),
+        "Delta size must be smaller than base size");
+
+    /**
+     * The original value. In theory we should keep only the deltas, but
+     * the dictionary entry is not inserted in the dictionary before the
+     * call to the constructor, so the delta cannot be calculated then.
+     */
+    const DictionaryEntry bytes;
+
+  public:
+    DeltaPattern(const int number,
+        const uint64_t code,
+        const uint64_t metadata_length,
+        const int match_location,
+        const DictionaryEntry bytes)
+      : DictionaryCompressor<T>::Pattern(number, code, metadata_length,
+            DeltaSizeBits, match_location, false),
+        bytes(bytes)
+    {
+    }
+
+    /**
+     * Compares a given value against a base to calculate their delta, and
+     * then determines whether it fits a limited sized container.
+     *
+     * @param bytes Value to be compared against base.
+     * @param base_bytes Base value.
+     * @return Whether the value fits in the container.
+     */
+    static bool
+    isValidDelta(const DictionaryEntry& bytes,
+        const DictionaryEntry& base_bytes)
+    {
+        const typename std::make_signed<T>::type limit = DeltaSizeBits ?
+            mask(DeltaSizeBits - 1) : 0;
+        const T value =
+            DictionaryCompressor<T>::fromDictionaryEntry(bytes);
+        const T base =
+            DictionaryCompressor<T>::fromDictionaryEntry(base_bytes);
+        const typename std::make_signed<T>::type delta = value - base;
+        return (delta >= -limit) && (delta <= limit);
+    }
+
+    static bool
+    isPattern(const DictionaryEntry& bytes,
+        const DictionaryEntry& dict_bytes, const int match_location)
+    {
+        return (match_location >= 0) && isValidDelta(bytes, dict_bytes);
+    }
+
+    DictionaryEntry
+    decompress(const DictionaryEntry dict_bytes) const override
+    {
+        return bytes;
     }
 };
 

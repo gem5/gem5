@@ -48,6 +48,36 @@ class BaseDictionaryCompressor(BaseCacheCompressor):
     dictionary_size = Param.Int(Parent.cache_line_size,
         "Number of dictionary entries")
 
+class Base64Delta8(BaseDictionaryCompressor):
+    type = 'Base64Delta8'
+    cxx_class = 'Base64Delta8'
+    cxx_header = "mem/cache/compressors/base_delta.hh"
+
+class Base64Delta16(BaseDictionaryCompressor):
+    type = 'Base64Delta16'
+    cxx_class = 'Base64Delta16'
+    cxx_header = "mem/cache/compressors/base_delta.hh"
+
+class Base64Delta32(BaseDictionaryCompressor):
+    type = 'Base64Delta32'
+    cxx_class = 'Base64Delta32'
+    cxx_header = "mem/cache/compressors/base_delta.hh"
+
+class Base32Delta8(BaseDictionaryCompressor):
+    type = 'Base32Delta8'
+    cxx_class = 'Base32Delta8'
+    cxx_header = "mem/cache/compressors/base_delta.hh"
+
+class Base32Delta16(BaseDictionaryCompressor):
+    type = 'Base32Delta16'
+    cxx_class = 'Base32Delta16'
+    cxx_header = "mem/cache/compressors/base_delta.hh"
+
+class Base16Delta8(BaseDictionaryCompressor):
+    type = 'Base16Delta8'
+    cxx_class = 'Base16Delta8'
+    cxx_header = "mem/cache/compressors/base_delta.hh"
+
 class BDI(BaseCacheCompressor):
     type = 'BDI'
     cxx_class = 'BDI'
