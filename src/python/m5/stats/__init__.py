@@ -257,7 +257,19 @@ def _bindStatHierarchy(root):
             for idx, obj in enumerate(obj):
                 _bind_obj("{}{}".format(name, idx), obj)
         else:
-            root.addStatGroup(name, obj.getCCObject())
+            # We need this check because not all obj.getCCObject() is an
+            # instance of Stat::Group. For example, sc_core::sc_module, the C++
+            # class of SystemC_ScModule, is not a subclass of Stat::Group. So
+            # it will cause a type error if obj is a SystemC_ScModule when
+            # calling addStatGroup().
+            if isinstance(obj.getCCObject(), _m5.stats.Group):
+                parent = root
+                while parent:
+                    if hasattr(parent, 'addStatGroup'):
+                        parent.addStatGroup(name, obj.getCCObject())
+                        break
+                    parent = parent.get_parent();
+
             _bindStatHierarchy(obj)
 
     for name, obj in root._children.items():
