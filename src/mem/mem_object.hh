@@ -49,7 +49,6 @@
 #ifndef __MEM_MEM_OBJECT_HH__
 #define __MEM_MEM_OBJECT_HH__
 
-#include "mem/port.hh"
 #include "params/MemObject.hh"
 #include "sim/clocked_object.hh"
 
@@ -59,11 +58,10 @@
 class MemObject : public ClockedObject
 {
   public:
-    typedef MemObjectParams Params;
-    const Params *params() const
-    { return dynamic_cast<const Params *>(_params); }
-
-    MemObject(const Params *params);
+    M5_DEPRECATED_MSG(
+            "MemObject is deprecated. Use ClockedObject or SimObject instead")
+        MemObject(const MemObjectParams *params) : ClockedObject(params)
+    {}
 };
 
 #endif //__MEM_MEM_OBJECT_HH__
