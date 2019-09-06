@@ -71,7 +71,7 @@ VirtIOBlock::Status
 VirtIOBlock::read(const BlkRequest &req, VirtDescriptor *desc_chain,
                   size_t off_data, size_t size)
 {
-    uint8_t data[size];
+    std::vector<uint8_t> data(size);
     uint64_t sector(req.sector);
 
     DPRINTF(VIOBlock, "Read request starting @ sector %i (size: %i)\n",
@@ -81,14 +81,14 @@ VirtIOBlock::read(const BlkRequest &req, VirtDescriptor *desc_chain,
         panic("Unexpected request/sector size relationship\n");
 
     for (Addr offset = 0; offset < size; offset += SectorSize) {
-        if (image.read(data + offset, sector) != SectorSize) {
+        if (image.read(&data[offset], sector) != SectorSize) {
             warn("Failed to read sector %i\n", sector);
             return S_IOERR;
         }
         ++sector;
     }
 
-    desc_chain->chainWrite(off_data, data, size);
+    desc_chain->chainWrite(off_data, &data[0], size);
 
     return S_OK;
 }
@@ -97,7 +97,7 @@ VirtIOBlock::Status
 VirtIOBlock::write(const BlkRequest &req, VirtDescriptor *desc_chain,
                   size_t off_data, size_t size)
 {
-    uint8_t data[size];
+    std::vector<uint8_t> data(size);
     uint64_t sector(req.sector);
 
     DPRINTF(VIOBlock, "Write request starting @ sector %i (size: %i)\n",
@@ -107,10 +107,10 @@ VirtIOBlock::write(const BlkRequest &req, VirtDescriptor *desc_chain,
         panic("Unexpected request/sector size relationship\n");
 
 
-    desc_chain->chainRead(off_data, data, size);
+    desc_chain->chainRead(off_data, &data[0], size);
 
     for (Addr offset = 0; offset < size; offset += SectorSize) {
-        if (image.write(data + offset, sector) != SectorSize) {
+        if (image.write(&data[offset], sector) != SectorSize) {
             warn("Failed to write sector %i\n", sector);
             return S_IOERR;
         }
