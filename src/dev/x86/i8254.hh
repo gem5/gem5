@@ -63,7 +63,7 @@ class I8254 : public BasicPioDevice
 
     X86Intel8254Timer pit;
 
-    std::vector<::IntSourcePin<I8254> *> intPin;
+    std::vector<IntSourcePin<I8254> *> intPin;
 
     void counterInterrupt(unsigned int num);
 
@@ -89,7 +89,7 @@ class I8254 : public BasicPioDevice
             pit(p->name, this)
     {
         for (int i = 0; i < p->port_int_pin_connection_count; i++) {
-            intPin.push_back(new ::IntSourcePin<I8254>(csprintf(
+            intPin.push_back(new IntSourcePin<I8254>(csprintf(
                             "%s.int_pin[%d]", name(), i), i, this));
         }
     }

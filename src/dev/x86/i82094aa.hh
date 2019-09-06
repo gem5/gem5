@@ -82,7 +82,7 @@ class I82094AA : public BasicPioDevice, public IntDevice
     RedirTableEntry redirTable[TableSize];
     bool pinStates[TableSize];
 
-    std::vector<::IntSinkPin<I82094AA> *> inputs;
+    std::vector<IntSinkPin<I82094AA> *> inputs;
 
   public:
     typedef I82094AAParams Params;

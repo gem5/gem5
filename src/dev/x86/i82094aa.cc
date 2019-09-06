@@ -59,7 +59,7 @@ X86ISA::I82094AA::I82094AA(Params *p)
     }
 
     for (int i = 0; i < p->port_inputs_connection_count; i++)
-        inputs.push_back(new ::IntSinkPin<I82094AA>(
+        inputs.push_back(new IntSinkPin<I82094AA>(
                     csprintf("%s.inputs[%d]", name(), i), i, this));
 }
 

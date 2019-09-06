@@ -65,6 +65,5 @@ if env['TARGET_ISA'] == 'x86':
     Source('i82094aa.cc')
     DebugFlag('I82094AA')
 
-    SimObject('X86IntPin.py')
     Source('intdev.cc')
     DebugFlag('IntDevice')

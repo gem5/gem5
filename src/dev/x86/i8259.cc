@@ -44,7 +44,7 @@ X86ISA::I8259::I8259(Params * p)
       readIRR(true), initControlWord(0), autoEOI(false)
 {
     for (int i = 0; i < p->port_output_connection_count; i++) {
-        output.push_back(new ::IntSourcePin<I8259>(
+        output.push_back(new IntSourcePin<I8259>(
                     csprintf("%s.output[%d]", name(), i), i, this));
     }
 
@@ -52,7 +52,7 @@ X86ISA::I8259::I8259(Params * p)
     panic_if(in_count >= NumLines,
             "I8259 only supports 8 inputs, but there are %d.", in_count);
     for (int i = 0; i < in_count; i++) {
-        inputs.push_back(new ::IntSinkPin<I8259>(
+        inputs.push_back(new IntSinkPin<I8259>(
                     csprintf("%s.inputs[%d]", name(), i), i, this));
     }
 

@@ -108,8 +108,8 @@ class I8042 : public BasicPioDevice
     static const uint16_t NoCommand = (uint16_t)(-1);
     uint16_t lastCommand;
 
-    std::vector<::IntSourcePin<I8042> *> mouseIntPin;
-    std::vector<::IntSourcePin<I8042> *> keyboardIntPin;
+    std::vector<IntSourcePin<I8042> *> mouseIntPin;
+    std::vector<IntSourcePin<I8042> *> keyboardIntPin;
 
     PS2Device *mouse;
     PS2Device *keyboard;

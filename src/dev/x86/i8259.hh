@@ -48,8 +48,8 @@ class I8259 : public BasicPioDevice
     void init() override;
 
     Tick latency;
-    std::vector<::IntSourcePin<I8259> *> output;
-    std::vector<::IntSinkPin<I8259> *> inputs;
+    std::vector<IntSourcePin<I8259> *> output;
+    std::vector<IntSinkPin<I8259> *> inputs;
     Enums::X86I8259CascadeMode mode;
     I8259 * slave;
 

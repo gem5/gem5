@@ -64,11 +64,11 @@ X86ISA::I8042::I8042(Params *p)
     commandByte.keyboardFullInt = 1;
 
     for (int i = 0; i < p->port_keyboard_int_pin_connection_count; i++) {
-        keyboardIntPin.push_back(new ::IntSourcePin<I8042>(
+        keyboardIntPin.push_back(new IntSourcePin<I8042>(
                     csprintf("%s.keyboard_int_pin[%d]", name(), i), i, this));
     }
     for (int i = 0; i < p->port_mouse_int_pin_connection_count; i++) {
-        mouseIntPin.push_back(new ::IntSourcePin<I8042>(
+        mouseIntPin.push_back(new IntSourcePin<I8042>(
                     csprintf("%s.mouse_int_pin[%d]", name(), i), i, this));
     }
 }

@@ -56,14 +56,14 @@ class Cmos : public BasicPioDevice
     class X86RTC : public MC146818
     {
       public:
-        std::vector<::IntSourcePin<X86RTC> *> intPin;
+        std::vector<IntSourcePin<X86RTC> *> intPin;
 
         X86RTC(EventManager *em, const std::string &n, const struct tm time,
                 bool bcd, Tick frequency, int int_pin_count) :
             MC146818(em, n, time, bcd, frequency)
         {
             for (int i = 0; i < int_pin_count; i++) {
-                intPin.push_back(new ::IntSourcePin<X86RTC>(
+                intPin.push_back(new IntSourcePin<X86RTC>(
                             csprintf("%s.int_pin[%d]", n, i), i, this));
             }
         }
