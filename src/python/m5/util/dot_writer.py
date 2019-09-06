@@ -117,10 +117,12 @@ def dot_create_edges(simNode, callgraph):
             port_node = dot_create_node(simNode, full_port_name, port_name)
             # create edges
             if isinstance(port, PortRef):
-                dot_add_edge(simNode, callgraph, full_port_name, port)
+                if port.peer:
+                    dot_add_edge(simNode, callgraph, full_port_name, port)
             else:
                 for p in port.elements:
-                    dot_add_edge(simNode, callgraph, full_port_name, p)
+                    if p.peer:
+                        dot_add_edge(simNode, callgraph, full_port_name, p)
 
     # recurse to children
     for child in simnode_children(simNode):
