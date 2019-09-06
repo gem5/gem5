@@ -35,7 +35,7 @@
 #include "sim/system.hh"
 
 SimpleCache::SimpleCache(SimpleCacheParams *params) :
-    MemObject(params),
+    ClockedObject(params),
     latency(params->latency),
     blockSize(params->system->cacheLineSize()),
     capacity(params->size / blockSize),
@@ -64,7 +64,7 @@ SimpleCache::getPort(const std::string &if_name, PortID idx)
         return cpuPorts[idx];
     } else {
         // pass it along to our super class
-        return MemObject::getPort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
     }
 }
 
@@ -427,7 +427,7 @@ void
 SimpleCache::regStats()
 {
     // If you don't do this you get errors about uninitialized stats.
-    MemObject::regStats();
+    ClockedObject::regStats();
 
     hits.name(name() + ".hits")
         .desc("Number of hits")

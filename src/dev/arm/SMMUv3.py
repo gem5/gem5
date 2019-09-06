@@ -40,9 +40,9 @@ from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *
 from m5.SimObject import *
-from m5.objects.MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 
-class SMMUv3SlaveInterface(MemObject):
+class SMMUv3SlaveInterface(ClockedObject):
     type = 'SMMUv3SlaveInterface'
     cxx_header = 'dev/arm/smmu_v3_slaveifc.hh'
 
@@ -73,7 +73,7 @@ class SMMUv3SlaveInterface(MemObject):
     prefetch_reserve_last_way = Param.Bool(True,
         'Reserve last way of the main TLB for prefetched entries')
 
-class SMMUv3(MemObject):
+class SMMUv3(ClockedObject):
     type = 'SMMUv3'
     cxx_header = 'dev/arm/smmu_v3.hh'
 

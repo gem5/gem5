@@ -47,14 +47,14 @@
 #include "dev/arm/smmu_v3_events.hh"
 #include "dev/arm/smmu_v3_ports.hh"
 #include "dev/arm/smmu_v3_proc.hh"
-#include "mem/mem_object.hh"
 #include "params/SMMUv3SlaveInterface.hh"
+#include "sim/clocked_object.hh"
 
 class SMMUTranslationProcess;
 class SMMUv3;
 class SMMUSlavePort;
 
-class SMMUv3SlaveInterface : public MemObject
+class SMMUv3SlaveInterface : public ClockedObject
 {
   protected:
     friend class SMMUTranslationProcess;

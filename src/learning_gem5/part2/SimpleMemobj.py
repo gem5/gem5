@@ -28,9 +28,9 @@
 # Authors: Jason Lowe-Power
 
 from m5.params import *
-from m5.objects.MemObject import MemObject
+from m5.SimObject import SimObject
 
-class SimpleMemobj(MemObject):
+class SimpleMemobj(SimObject):
     type = 'SimpleMemobj'
     cxx_header = "learning_gem5/part2/simple_memobj.hh"
 

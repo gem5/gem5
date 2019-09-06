@@ -55,9 +55,9 @@
 #include "dev/arm/smmu_v3_proc.hh"
 #include "dev/arm/smmu_v3_ptops.hh"
 #include "dev/arm/smmu_v3_slaveifc.hh"
-#include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "params/SMMUv3.hh"
+#include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 
 /**
@@ -80,7 +80,7 @@
  */
 class SMMUTranslationProcess;
 
-class SMMUv3 : public MemObject
+class SMMUv3 : public ClockedObject
 {
   protected:
 

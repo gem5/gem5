@@ -31,8 +31,9 @@
 #ifndef __LEARNING_GEM5_PART2_SIMPLE_MEMOBJ_HH__
 #define __LEARNING_GEM5_PART2_SIMPLE_MEMOBJ_HH__
 
-#include "mem/mem_object.hh"
+#include "mem/port.hh"
 #include "params/SimpleMemobj.hh"
+#include "sim/sim_object.hh"
 
 /**
  * A very simple memory object. Current implementation doesn't even cache
@@ -40,7 +41,7 @@
  * This memobj is fully blocking (not non-blocking). Only a single request can
  * be outstanding at a time.
  */
-class SimpleMemobj : public MemObject
+class SimpleMemobj : public SimObject
 {
   private:
 

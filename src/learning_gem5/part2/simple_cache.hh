@@ -33,8 +33,10 @@
 
 #include <unordered_map>
 
-#include "mem/mem_object.hh"
+#include "base/statistics.hh"
+#include "mem/port.hh"
 #include "params/SimpleCache.hh"
+#include "sim/clocked_object.hh"
 
 /**
  * A very simple cache object. Has a fully-associative data store with random
@@ -43,7 +45,7 @@
  * be outstanding at a time.
  * This cache is a writeback cache.
  */
-class SimpleCache : public MemObject
+class SimpleCache : public ClockedObject
 {
   private:
 

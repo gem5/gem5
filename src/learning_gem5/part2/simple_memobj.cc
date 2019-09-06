@@ -33,7 +33,7 @@
 #include "debug/SimpleMemobj.hh"
 
 SimpleMemobj::SimpleMemobj(SimpleMemobjParams *params) :
-    MemObject(params),
+    SimObject(params),
     instPort(params->name + ".inst_port", this),
     dataPort(params->name + ".data_port", this),
     memPort(params->name + ".mem_side", this),
@@ -55,7 +55,7 @@ SimpleMemobj::getPort(const std::string &if_name, PortID idx)
         return dataPort;
     } else {
         // pass it along to our super class
-        return MemObject::getPort(if_name, idx);
+        return SimObject::getPort(if_name, idx);
     }
 }
 

@@ -46,7 +46,7 @@
 
 SMMUv3SlaveInterface::SMMUv3SlaveInterface(
     const SMMUv3SlaveInterfaceParams *p) :
-    MemObject(p),
+    ClockedObject(p),
     smmu(nullptr),
     microTLB(new SMMUTLB(p->utlb_entries,
                          p->utlb_assoc,
@@ -99,7 +99,7 @@ SMMUv3SlaveInterface::getPort(const std::string &name, PortID id)
     } else if (name == "ats_slave") {
         return atsSlavePort;
     } else {
-        return MemObject::getPort(name, id);
+        return ClockedObject::getPort(name, id);
     }
 }
 

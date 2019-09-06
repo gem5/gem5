@@ -54,7 +54,7 @@
 #include "sim/system.hh"
 
 SMMUv3::SMMUv3(SMMUv3Params *params) :
-    MemObject(params),
+    ClockedObject(params),
     system(*params->system),
     masterId(params->system->getMasterId(this)),
     masterPort(name() + ".master", *this),
@@ -739,7 +739,7 @@ SMMUv3::init()
 void
 SMMUv3::regStats()
 {
-    MemObject::regStats();
+    ClockedObject::regStats();
 
     using namespace Stats;
 
@@ -824,7 +824,7 @@ SMMUv3::getPort(const std::string &name, PortID id)
     } else if (name == "control") {
         return controlPort;
     } else {
-        return MemObject::getPort(name, id);
+        return ClockedObject::getPort(name, id);
     }
 }
 
