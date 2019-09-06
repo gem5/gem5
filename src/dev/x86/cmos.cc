@@ -37,10 +37,11 @@
 void
 X86ISA::Cmos::X86RTC::handleEvent()
 {
-    assert(intPin);
-    intPin->raise();
-    //XXX This is a hack.
-    intPin->lower();
+    for (auto *wire: intPin) {
+        wire->raise();
+        //XXX This is a hack.
+        wire->lower();
+    }
 }
 
 Tick

@@ -50,7 +50,6 @@ X86ISA::I8042::I8042(Params *p)
       latency(p->pio_latency),
       dataPort(p->data_port), commandPort(p->command_port),
       statusReg(0), commandByte(0), dataReg(0), lastCommand(NoCommand),
-      mouseIntPin(p->mouse_int_pin), keyboardIntPin(p->keyboard_int_pin),
       mouse(p->mouse), keyboard(p->keyboard)
 {
     fatal_if(!mouse, "The i8042 model requires a mouse instance");
@@ -63,6 +62,15 @@ X86ISA::I8042::I8042(Params *p)
     commandByte.convertScanCodes = 1;
     commandByte.passedSelfTest = 1;
     commandByte.keyboardFullInt = 1;
+
+    for (int i = 0; i < p->port_keyboard_int_pin_connection_count; i++) {
+        keyboardIntPin.push_back(new ::IntSourcePin<I8042>(
+                    csprintf("%s.keyboard_int_pin[%d]", name(), i), i, this));
+    }
+    for (int i = 0; i < p->port_mouse_int_pin_connection_count; i++) {
+        mouseIntPin.push_back(new ::IntSourcePin<I8042>(
+                    csprintf("%s.mouse_int_pin[%d]", name(), i), i, this));
+    }
 }
 
 
@@ -85,14 +93,18 @@ X86ISA::I8042::writeData(uint8_t newData, bool mouse)
     statusReg.mouseOutputFull = (mouse ? 1 : 0);
     if (!mouse && commandByte.keyboardFullInt) {
         DPRINTF(I8042, "Sending keyboard interrupt.\n");
-        keyboardIntPin->raise();
-        //This is a hack
-        keyboardIntPin->lower();
+        for (auto *wire: keyboardIntPin) {
+            wire->raise();
+            //This is a hack
+            wire->lower();
+        }
     } else if (mouse && commandByte.mouseFullInt) {
         DPRINTF(I8042, "Sending mouse interrupt.\n");
-        mouseIntPin->raise();
-        //This is a hack
-        mouseIntPin->lower();
+        for (auto *wire: mouseIntPin) {
+            wire->raise();
+            //This is a hack
+            wire->lower();
+        }
     }
 }
 

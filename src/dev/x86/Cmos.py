@@ -29,7 +29,7 @@
 from m5.params import *
 from m5.proxy import *
 from m5.objects.Device import BasicPioDevice
-from m5.objects.X86IntPin import X86IntSourcePin
+from m5.objects.IntPin import IntSourcePin
 
 class Cmos(BasicPioDevice):
     type = 'Cmos'
@@ -37,5 +37,4 @@ class Cmos(BasicPioDevice):
     cxx_header = "dev/x86/cmos.hh"
     time = Param.Time('01/01/2012',
         "System time to use ('Now' for actual time)")
-    int_pin = Param.X86IntSourcePin(X86IntSourcePin(),
-            'Pin to signal RTC alarm interrupts to')
+    int_pin = IntSourcePin('Pin to signal RTC alarm interrupts to')

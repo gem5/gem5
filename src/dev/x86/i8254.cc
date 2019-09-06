@@ -40,9 +40,11 @@ X86ISA::I8254::counterInterrupt(unsigned int num)
 {
     DPRINTF(I8254, "Interrupt from counter %d.\n", num);
     if (num == 0) {
-        intPin->raise();
-        //XXX This is a hack.
-        intPin->lower();
+        for (auto *wire: intPin) {
+            wire->raise();
+            //XXX This is a hack.
+            wire->lower();
+        }
     }
 }
 

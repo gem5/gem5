@@ -29,7 +29,7 @@
 from m5.params import *
 from m5.proxy import *
 from m5.objects.Device import BasicPioDevice
-from m5.objects.X86IntPin import X86IntSourcePin, X86IntSinkPin
+from m5.objects.IntPin import IntSourcePin, VectorIntSinkPin
 
 class X86I8259CascadeMode(Enum):
     map = {'I8259Master' : 0,
@@ -41,10 +41,7 @@ class I8259(BasicPioDevice):
     type = 'I8259'
     cxx_class='X86ISA::I8259'
     cxx_header = "dev/x86/i8259.hh"
-    output = Param.X86IntSourcePin(X86IntSourcePin(),
-            'The pin this I8259 drives')
+    output = IntSourcePin('The pin this I8259 drives')
+    inputs = VectorIntSinkPin('The pins that drive this I8259')
     mode = Param.X86I8259CascadeMode('How this I8259 is cascaded')
     slave = Param.I8259(NULL, 'Slave I8259, if any')
-
-    def pin(self, line):
-        return X86IntSinkPin(device=self, number=line)

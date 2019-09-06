@@ -33,15 +33,13 @@
 
 #include <deque>
 
+#include "dev/intpin.hh"
 #include "dev/io_device.hh"
 #include "dev/ps2/device.hh"
-#include "dev/x86/intdev.hh"
 #include "params/I8042.hh"
 
 namespace X86ISA
 {
-
-class IntPin;
 
 class I8042 : public BasicPioDevice
 {
@@ -110,8 +108,8 @@ class I8042 : public BasicPioDevice
     static const uint16_t NoCommand = (uint16_t)(-1);
     uint16_t lastCommand;
 
-    IntSourcePin *mouseIntPin;
-    IntSourcePin *keyboardIntPin;
+    std::vector<::IntSourcePin<I8042> *> mouseIntPin;
+    std::vector<::IntSourcePin<I8042> *> keyboardIntPin;
 
     PS2Device *mouse;
     PS2Device *keyboard;
@@ -129,6 +127,17 @@ class I8042 : public BasicPioDevice
     }
 
     I8042(Params *p);
+
+    Port &
+    getPort(const std::string &if_name, PortID idx=InvalidPortID) override
+    {
+        if (if_name == "mouse_int_pin")
+            return *mouseIntPin.at(idx);
+        else if (if_name == "keyboard_int_pin")
+            return *keyboardIntPin.at(idx);
+        else
+            return BasicPioDevice::getPort(if_name, idx);
+    }
 
     AddrRangeList getAddrRanges() const override;
 

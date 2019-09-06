@@ -35,6 +35,7 @@
 
 #include "base/bitunion.hh"
 #include "dev/x86/intdev.hh"
+#include "dev/intpin.hh"
 #include "dev/io_device.hh"
 #include "params/I82094AA.hh"
 
@@ -81,6 +82,8 @@ class I82094AA : public BasicPioDevice, public IntDevice
     RedirTableEntry redirTable[TableSize];
     bool pinStates[TableSize];
 
+    std::vector<::IntSinkPin<I82094AA> *> inputs;
+
   public:
     typedef I82094AAParams Params;
 
@@ -107,9 +110,9 @@ class I82094AA : public BasicPioDevice, public IntDevice
 
     Tick recvResponse(PacketPtr pkt) override;
 
-    void signalInterrupt(int line) override;
-    void raiseInterruptPin(int number) override;
-    void lowerInterruptPin(int number) override;
+    void signalInterrupt(int line);
+    void raiseInterruptPin(int number);
+    void lowerInterruptPin(int number);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
