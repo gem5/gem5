@@ -1371,7 +1371,7 @@ DataAbort::iss() const
     val  = AbortFault<DataAbort>::iss();
     // ISS is valid if not caused by a stage 1 page table walk, and when taken
     // to AArch64 only when directed to EL2
-    if (!s1ptw && (!to64 || toEL == EL2)) {
+    if (!s1ptw && stage2 && (!to64 || toEL == EL2)) {
         val |= isv << 24;
         if (isv) {
             val |= sas << 22;
