@@ -262,7 +262,7 @@ class DataWrap : public InfoAccess
             parent->addStat(info);
 
         if (name) {
-            info->setName(name);
+            info->setName(parent, name);
             info->flags.set(display);
         }
 
