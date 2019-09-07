@@ -31,16 +31,12 @@
 
 void error(std::string msg);
 void assert(bool condition);
-int random(int number);
 Cycles zero_time();
 NodeID intToID(int nodenum);
 int IDToInt(NodeID id);
 int addressToInt(Addr addr);
 Addr intToAddress(int addr);
-void procProfileCoherenceRequest(NodeID node, bool needCLB);
-void dirProfileCoherenceRequest(NodeID node, bool needCLB);
 int max_tokens();
-Addr setOffset(Addr addr, int offset);
 Addr makeLineAddress(Addr addr);
 int getOffset(Addr addr);
 int mod(int val, int mod);
