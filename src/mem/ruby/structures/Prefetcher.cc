@@ -28,6 +28,7 @@
 
 #include "mem/ruby/structures/Prefetcher.hh"
 
+#include "base/bitfield.hh"
 #include "debug/RubyPrefetcher.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/system/RubySystem.hh"
@@ -475,5 +476,5 @@ Prefetcher::print(std::ostream& out) const
 Addr
 Prefetcher::pageAddress(Addr addr) const
 {
-    return maskLowOrderBits(addr, m_page_shift);
+    return mbits<Addr>(addr, 63, m_page_shift);
 }

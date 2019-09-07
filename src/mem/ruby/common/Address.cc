@@ -28,6 +28,7 @@
 
 #include "mem/ruby/common/Address.hh"
 
+#include "base/bitfield.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 Addr
@@ -48,14 +49,7 @@ bitSelect(Addr addr, unsigned int small, unsigned int big)
 Addr
 maskLowOrderBits(Addr addr, unsigned int number)
 {
-  Addr mask;
-
-  if (number >= ADDRESS_WIDTH - 1) {
-      mask = ~0;
-  } else {
-      mask = (Addr)~0 << number;
-  }
-  return (addr & mask);
+    return mbits<Addr>(addr, 63, number);
 }
 
 Addr
@@ -67,15 +61,14 @@ getOffset(Addr addr)
 Addr
 makeLineAddress(Addr addr)
 {
-    return maskLowOrderBits(addr, RubySystem::getBlockSizeBits());
+    return mbits<Addr>(addr, 63, RubySystem::getBlockSizeBits());
 }
 
 // returns the next stride address based on line address
 Addr
 makeNextStrideAddress(Addr addr, int stride)
 {
-    return maskLowOrderBits(addr, RubySystem::getBlockSizeBits())
-        + RubySystem::getBlockSizeBytes() * stride;
+    return makeLineAddress(addr) + RubySystem::getBlockSizeBytes() * stride;
 }
 
 std::string
@@ -83,7 +76,6 @@ printAddress(Addr addr)
 {
     std::stringstream out;
     out << "[" << std::hex << "0x" << addr << "," << " line 0x"
-       << maskLowOrderBits(addr, RubySystem::getBlockSizeBits())
-       << std::dec << "]";
+       << makeLineAddress(addr) << std::dec << "]";
     return out.str();
 }
