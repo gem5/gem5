@@ -46,31 +46,6 @@ bitSelect(Addr addr, unsigned int small, unsigned int big)
 }
 
 Addr
-bitRemove(Addr addr, unsigned int small, unsigned int big)
-{
-    assert(big >= small);
-
-    if (small >= ADDRESS_WIDTH - 1) {
-        return addr;
-    } else if (big >= ADDRESS_WIDTH - 1) {
-        Addr mask = (Addr)~0 >> small;
-        return (addr & mask);
-    } else if (small == 0) {
-        Addr mask = (Addr)~0 << big;
-        return (addr & mask);
-    } else {
-        Addr mask = ~((Addr)~0 << small);
-        Addr lower_bits = addr & mask;
-        mask = (Addr)~0 << (big + 1);
-        Addr higher_bits = addr & mask;
-
-        // Shift the valid high bits over the removed section
-        higher_bits = higher_bits >> (big - small + 1);
-        return (higher_bits | lower_bits);
-    }
-}
-
-Addr
 maskLowOrderBits(Addr addr, unsigned int number)
 {
   Addr mask;
