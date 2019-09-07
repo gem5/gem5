@@ -42,21 +42,21 @@
 //////////////////////////////////////////////////////////////////////////
 
 output header {{
-    class MicroDebugBase : public X86ISA::X86MicroopBase
+    class MicroDebug : public X86ISA::X86MicroopBase
     {
       protected:
-        typedef GenericISA::M5DebugFault::DebugFunc DebugFunc;
-        DebugFunc func;
-        std::string message;
-        uint8_t cc;
+        std::shared_ptr<GenericISA::M5DebugFault> fault;
 
       public:
-        MicroDebugBase(ExtMachInst machInst, const char * mnem,
-                const char * instMnem, uint64_t setFlags,
-                DebugFunc _func, std::string _message, uint8_t _cc) :
-            X86MicroopBase(machInst, mnem, instMnem, setFlags, No_OpClass),
-                    func(_func), message(_message), cc(_cc)
-        {}
+        MicroDebug(ExtMachInst _machInst, const char *mnem,
+                const char *instMnem, uint64_t setFlags,
+                GenericISA::M5DebugFault *_fault);
+
+        Fault
+        execute(ExecContext *xc, Trace::InstRecord *traceData) const
+        {
+            return fault;
+        }
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const
@@ -64,25 +64,37 @@ output header {{
             std::stringstream response;
 
             printMnemonic(response, instMnem, mnemonic);
-            response << "\"" << message << "\"";
+            response << "\"" << fault->message() << "\"";
 
             return response.str();
         }
     };
-}};
 
-def template MicroDebugDeclare {{
-    class %(class_name)s : public %(base_class)s
+    class MicroDebugFlags : public MicroDebug
     {
+      protected:
+        uint8_t cc;
+
       public:
-        %(class_name)s(ExtMachInst _machInst, const char * instMnem,
-                uint64_t setFlags, std::string _message, uint8_t _cc);
+        MicroDebugFlags(ExtMachInst _machInst, const char *mnem,
+                const char *instMnem, uint64_t setFlags,
+                GenericISA::M5DebugFault *_fault, uint8_t _cc);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
-def template MicroDebugExecute {{
+output decoder {{
+    MicroDebug::MicroDebug(ExtMachInst _machInst, const char *mnem,
+            const char *instMnem, uint64_t setFlags,
+            GenericISA::M5DebugFault *_fault) :
+        X86ISA::X86MicroopBase(_machInst, mnem, instMnem,
+                               setFlags, No_OpClass),
+        fault(_fault)
+    {}
+}};
+
+def template MicroDebugFlagsExecute {{
         Fault
         %(class_name)s::execute(ExecContext *xc,
                 Trace::InstRecord *traceData) const
@@ -90,82 +102,95 @@ def template MicroDebugExecute {{
             %(op_decl)s
             %(op_rd)s
             if (%(cond_test)s) {
-                return std::make_shared<GenericISA::M5DebugFault>(func,
-                                                                  message);
+                return %(base_class)s::execute(xc, traceData);
             } else {
                 return NoFault;
             }
         }
 }};
 
-def template MicroDebugConstructor {{
+def template MicroDebugFlagsConstructor {{
     %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
-            std::string _message, uint8_t _cc) :
-        %(base_class)s(machInst, "%(func)s", instMnem,
-                setFlags, %(func_num)s, _message, _cc)
+            ExtMachInst machInst, const char *mnem,
+            const char *instMnem, uint64_t setFlags,
+            GenericISA::M5DebugFault *_fault, uint8_t _cc) :
+        %(base_class)s(machInst, mnem, instMnem, setFlags, _fault),
+        cc(_cc)
     {
         %(constructor)s;
     }
 }};
 
 let {{
+    iop = InstObjParams("", "MicroDebugFlags", "MicroDebug",
+            {"code": "",
+             "cond_test": "checkCondition(ccFlagBits | cfofBits | \
+                                              dfBit | ecfBit | ezfBit, cc)"})
+    exec_output = MicroDebugFlagsExecute.subst(iop)
+    decoder_output = MicroDebugFlagsConstructor.subst(iop)
+}};
+
+let {{
     class MicroDebug(X86Microop):
-        def __init__(self, message, flags=None):
+        def __init__(self, name, fault, message, once, flags):
+            self.name = name
+            self.fault = fault
             self.message = message
-            if flags:
-                if not isinstance(flags, (list, tuple)):
-                    raise Exception, "flags must be a list or tuple of flags"
-                self.cond = " | ".join(flags)
-                self.className += "Flags"
-            else:
-                self.cond = "0"
+            self.once = once
+            self.flags = flags
+            if flags and not isinstance(flags, (list, tuple)):
+                raise Exception, "flags must be a list or tuple of flags"
+
+            self.className = "MicroDebugFlags" if flags else "MicroDebug"
 
         def getAllocator(self, microFlags):
-            allocator = '''new %(class_name)s(machInst, macrocodeBlock,
-                    %(flags)s, "%(message)s", %(cc)s)''' % {
-                "class_name" : self.className,
-                "flags" : self.microFlagsText(microFlags),
-                "message" : self.message,
-                "cc" : self.cond}
-            return allocator
+            if self.once:
+                fault_allocator_template = \
+                    "new %(fault_type)s(%(token)s, %(message)s)"
+            else:
+                fault_allocator_template = \
+                    "new %(fault_type)s(%(message)s)"
+            fault_allocator = fault_allocator_template % {
+                "fault_type": self.fault,
+                "token": "std::string(\"%s\")" % self.message,
+                "message": "\"%s\"" % self.message
+            }
 
-    exec_output = ""
-    header_output = ""
-    decoder_output = ""
+            args = ["machInst", "\"%s\"" % self.name, "macrocodeBlock",
+                self.microFlagsText(microFlags), fault_allocator]
 
-    def buildDebugMicro(func, func_num):
-        global exec_output, header_output, decoder_output
+            if self.flags:
+                args.append(" | ".join(self.flags))
 
-        iop = InstObjParams(func, "Micro%sFlags" % func.capitalize(),
-                "MicroDebugBase",
-                {"code": "",
-                 "func": func,
-                 "func_num": "GenericISA::M5DebugFault::%s" % func_num,
-                 "cond_test": "checkCondition(ccFlagBits | cfofBits | \
-                                              dfBit | ecfBit | ezfBit, cc)"})
-        exec_output += MicroDebugExecute.subst(iop)
-        header_output += MicroDebugDeclare.subst(iop)
-        decoder_output += MicroDebugConstructor.subst(iop)
+            return "new " + self.className + "(" + ", ".join(args) + ")"
 
-        iop = InstObjParams(func, "Micro%s" % func.capitalize(),
-                "MicroDebugBase",
-                {"code": "",
-                 "func": func,
-                 "func_num": "GenericISA::M5DebugFault::%s" % func_num,
-                 "cond_test": "true"})
-        exec_output += MicroDebugExecute.subst(iop)
-        header_output += MicroDebugDeclare.subst(iop)
-        decoder_output += MicroDebugConstructor.subst(iop)
+    def buildDebugMicro(name, with_once=False):
+        global microopClasses
+
+        fault_class = "GenericISA::M5" + name.capitalize() + "Fault"
 
         class MicroDebugChild(MicroDebug):
-            className = "Micro%s" % func.capitalize()
+            def __init__(self, message, flags=None):
+                super(MicroDebugChild, self).__init__(
+                        name, fault_class, message, False, flags)
 
-        global microopClasses
-        microopClasses[func] = MicroDebugChild
+        microopClasses[name] = MicroDebugChild
 
-    buildDebugMicro("panic", "PanicFunc")
-    buildDebugMicro("fatal", "FatalFunc")
-    buildDebugMicro("warn", "WarnFunc")
-    buildDebugMicro("warn_once", "WarnOnceFunc")
+        if with_once:
+            fault_once_class = \
+                "GenericISA::M5" + name.capitalize() + "OnceFault"
+            name_once = name + "_once"
+
+            class MicroDebugOnceChild(MicroDebug):
+                def __init__(self, message, flags=None):
+                    super(MicroDebugOnceChild, self).__init__(
+                            name_once, fault_once_class, message, True, flags)
+
+            microopClasses[name_once] = MicroDebugOnceChild
+
+    buildDebugMicro("panic")
+    buildDebugMicro("fatal")
+    buildDebugMicro("hack", True)
+    buildDebugMicro("inform", True)
+    buildDebugMicro("warn", True)
 }};

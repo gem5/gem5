@@ -39,6 +39,7 @@
 
 #include "arch/x86/insts/badmicroop.hh"
 
+#include "arch/generic/debugfaults.hh"
 #include "arch/x86/generated/decoder.hh"
 #include "arch/x86/isa_traits.hh"
 
@@ -56,8 +57,8 @@ namespace X86ISA
 // try to delete the static memory when it was destructed.
 
 const StaticInstPtr badMicroop =
-    new X86ISAInst::MicroPanic(dummyMachInst, "BAD",
+    new X86ISAInst::MicroDebug(dummyMachInst, "panic", "BAD",
         StaticInst::IsMicroop | StaticInst::IsLastMicroop,
-        "Invalid microop!", 0);
+        new GenericISA::M5PanicFault("Invalid microop!"));
 
 } // namespace X86ISA

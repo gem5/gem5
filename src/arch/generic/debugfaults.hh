@@ -50,78 +50,125 @@ namespace GenericISA
 
 class M5DebugFault : public FaultBase
 {
-  public:
-    enum DebugFunc
-    {
-        PanicFunc,
-        FatalFunc,
-        WarnFunc,
-        WarnOnceFunc
-    };
-
   protected:
-    std::string message;
-    DebugFunc func;
-
-  public:
-    M5DebugFault(DebugFunc _func, std::string _message) :
-        message(_message), func(_func)
-    {}
-
-    FaultName
-    name() const
+    std::string _message;
+    virtual void debugFunc() = 0;
+    void
+    advancePC(ThreadContext *tc, const StaticInstPtr &inst)
     {
-        switch (func) {
-          case PanicFunc:
-            return "panic fault";
-          case FatalFunc:
-            return "fatal fault";
-          case WarnFunc:
-            return "warn fault";
-          case WarnOnceFunc:
-            return "warn_once fault";
-          default:
-            panic("unrecognized debug function number\n");
+        if (inst) {
+            auto pc = tc->pcState();
+            inst->advancePC(pc);
+            tc->pcState(pc);
         }
     }
+
+  public:
+    M5DebugFault(std::string _m) : _message(_m) {}
+
+    template <class ...Args>
+    M5DebugFault(const std::string &format, const Args &...args) :
+        _message(csprintf(format, args...))
+    {}
+
+    std::string message() { return _message; }
 
     void
     invoke(ThreadContext *tc, const StaticInstPtr &inst =
-           StaticInst::nullStaticInstPtr)
+           StaticInst::nullStaticInstPtr) override
     {
-        switch (func) {
-          case PanicFunc:
-            panic(message);
-            break;
-          case FatalFunc:
-            fatal(message);
-            break;
-          case WarnFunc:
-            warn(message);
-            break;
-          case WarnOnceFunc:
-            warn_once(message);
-            break;
-          default:
-            panic("unrecognized debug function number\n");
-        }
+        debugFunc();
+        advancePC(tc, inst);
     }
 };
 
-template <int Func>
-class M5VarArgsFault : public M5DebugFault
+// The "Flavor" template parameter is to keep warn, hack or inform messages
+// with the same token from blocking each other.
+template <class Flavor>
+class M5DebugOnceFault : public M5DebugFault
 {
+  protected:
+    bool &once;
+
+    template <class F, class OnceToken>
+    static bool &
+    lookUpToken(const OnceToken &token)
+    {
+        static std::map<OnceToken, bool> tokenMap;
+        return tokenMap[token];
+    }
+
   public:
-    template<typename ...Args>
-    M5VarArgsFault(const std::string &format, const Args &...args) :
-        M5DebugFault((DebugFunc)Func, csprintf(format, args...))
+    template <class OnceToken, class ...Args>
+    M5DebugOnceFault(const OnceToken &token, const std::string &format,
+            const Args &...args) :
+        M5DebugFault(format, args...), once(lookUpToken<Flavor>(token))
     {}
+
+    void
+    invoke(ThreadContext *tc, const StaticInstPtr &inst =
+           StaticInst::nullStaticInstPtr) override
+    {
+        if (!once) {
+            once = true;
+            debugFunc();
+        }
+        advancePC(tc, inst);
+    }
 };
 
-typedef M5VarArgsFault<M5DebugFault::PanicFunc> M5PanicFault;
-typedef M5VarArgsFault<M5DebugFault::FatalFunc> M5FatalFault;
-typedef M5VarArgsFault<M5DebugFault::WarnFunc> M5WarnFault;
-typedef M5VarArgsFault<M5DebugFault::WarnOnceFunc> M5WarnOnceFault;
+class M5PanicFault : public M5DebugFault
+{
+  public:
+    using M5DebugFault::M5DebugFault;
+    void debugFunc() override { panic(message()); }
+    FaultName name() const override { return "panic fault"; }
+};
+
+class M5FatalFault : public M5DebugFault
+{
+  public:
+    using M5DebugFault::M5DebugFault;
+    void debugFunc() override { fatal(message()); }
+    FaultName name() const override { return "fatal fault"; }
+};
+
+template <class Base>
+class M5WarnFaultBase : public Base
+{
+  public:
+    using Base::Base;
+    void debugFunc() override { warn(this->message()); }
+    FaultName name() const override { return "warn fault"; }
+};
+
+using M5WarnFault = M5WarnFaultBase<M5DebugFault>;
+using M5WarnOnceFault = M5WarnFaultBase<M5DebugOnceFault<M5WarnFault>>;
+
+template <class Base>
+class M5HackFaultBase : public Base
+{
+  public:
+    using Base::Base;
+    void debugFunc() override { hack(this->message()); }
+    FaultName name() const override { return "hack fault"; }
+};
+
+using M5HackFault = M5HackFaultBase<M5DebugFault>;
+using M5HackOnceFault = M5HackFaultBase<M5DebugOnceFault<M5HackFault>>;
+
+template <class Base>
+class M5InformFaultBase : public Base
+{
+  public:
+    using Base::Base;
+    void debugFunc() override { inform(this->message()); }
+    FaultName name() const override { return "inform fault"; }
+};
+
+using M5InformFault = M5InformFaultBase<M5DebugFault>;
+using M5InformOnceFault =
+    M5InformFaultBase<M5DebugOnceFault<M5InformFault>>;
 
 } // namespace GenericISA
 
