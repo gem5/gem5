@@ -59,19 +59,6 @@ maskLowOrderBits(Addr addr, unsigned int number)
 }
 
 Addr
-maskHighOrderBits(Addr addr, unsigned int number)
-{
-    Addr mask;
-
-    if (number >= ADDRESS_WIDTH - 1) {
-        mask = ~0;
-    } else {
-        mask = (Addr)~0 >> number;
-    }
-    return (addr & mask);
-}
-
-Addr
 shiftLowOrderBits(Addr addr, unsigned int number)
 {
     return (addr >> number);

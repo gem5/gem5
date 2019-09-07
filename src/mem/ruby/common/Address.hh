@@ -40,7 +40,6 @@ const uint32_t ADDRESS_WIDTH = 64; // address width in bytes
 // selects bits inclusive
 Addr bitSelect(Addr addr, unsigned int small, unsigned int big);
 Addr maskLowOrderBits(Addr addr, unsigned int number);
-Addr maskHighOrderBits(Addr addr, unsigned int number);
 Addr shiftLowOrderBits(Addr addr, unsigned int number);
 Addr getOffset(Addr addr);
 Addr makeLineAddress(Addr addr);
