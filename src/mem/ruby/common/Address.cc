@@ -59,12 +59,6 @@ maskLowOrderBits(Addr addr, unsigned int number)
 }
 
 Addr
-shiftLowOrderBits(Addr addr, unsigned int number)
-{
-    return (addr >> number);
-}
-
-Addr
 getOffset(Addr addr)
 {
     return bitSelect(addr, 0, RubySystem::getBlockSizeBits() - 1);
