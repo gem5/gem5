@@ -78,15 +78,6 @@ class Base16Delta8(BaseDictionaryCompressor):
     cxx_class = 'Base16Delta8'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
-class BDI(BaseCacheCompressor):
-    type = 'BDI'
-    cxx_class = 'BDI'
-    cxx_header = "mem/cache/compressors/bdi.hh"
-
-    use_more_compressors = Param.Bool(True, "True if should use all possible" \
-        "combinations of base and delta for the compressors. False if using" \
-        "only the lowest possible delta size for each base size.");
-
 class CPack(BaseDictionaryCompressor):
     type = 'CPack'
     cxx_class = 'CPack'
@@ -118,3 +109,8 @@ class ZeroCompressor(BaseDictionaryCompressor):
     type = 'ZeroCompressor'
     cxx_class = 'ZeroCompressor'
     cxx_header = "mem/cache/compressors/zero.hh"
+
+class BDI(MultiCompressor):
+    compressors = [ZeroCompressor(), RepeatedQwordsCompressor(),
+        Base64Delta8(), Base64Delta16(), Base64Delta32(), Base32Delta8(),
+        Base32Delta16(), Base16Delta8()]
