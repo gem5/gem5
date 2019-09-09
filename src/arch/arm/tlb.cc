@@ -943,7 +943,7 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
             }
             break;
           case EL2:
-            if (checkPAN(tc, ap, req, mode)) {
+            if (hcr.e2h && checkPAN(tc, ap, req, mode)) {
                 grant = false;
                 break;
             }
