@@ -162,12 +162,12 @@ class BaseSimpleCPU : public BaseCPU
 
     virtual Fault amoMem(Addr addr, uint8_t* data, unsigned size,
                          Request::Flags flags,
-                         AtomicOpFunctor *amo_op)
+                         AtomicOpFunctorPtr amo_op)
     { panic("amoMem() is not implemented\n"); }
 
     virtual Fault initiateMemAMO(Addr addr, unsigned size,
                                  Request::Flags flags,
-                                 AtomicOpFunctor *amo_op)
+                                 AtomicOpFunctorPtr amo_op)
     { panic("initiateMemAMO() is not implemented\n"); }
 
     void countInst();

@@ -564,7 +564,7 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
 Fault
 TimingSimpleCPU::initiateMemAMO(Addr addr, unsigned size,
                                 Request::Flags flags,
-                                AtomicOpFunctor *amo_op)
+                                AtomicOpFunctorPtr amo_op)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
@@ -579,7 +579,8 @@ TimingSimpleCPU::initiateMemAMO(Addr addr, unsigned size,
         traceData->setMem(addr, size, flags);
 
     RequestPtr req = make_shared<Request>(asid, addr, size, flags,
-                            dataMasterId(), pc, thread->contextId(), amo_op);
+                            dataMasterId(), pc, thread->contextId(),
+                            std::move(amo_op));
 
     assert(req->hasAtomicOpFunctor());
 

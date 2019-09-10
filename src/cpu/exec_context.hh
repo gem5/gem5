@@ -270,7 +270,7 @@ class ExecContext {
      */
     virtual Fault amoMem(Addr addr, uint8_t *data, unsigned int size,
                          Request::Flags flags,
-                         AtomicOpFunctor *amo_op)
+                         AtomicOpFunctorPtr amo_op)
     {
         panic("ExecContext::amoMem() should be overridden\n");
     }
@@ -281,7 +281,7 @@ class ExecContext {
      */
     virtual Fault initiateMemAMO(Addr addr, unsigned int size,
                                  Request::Flags flags,
-                                 AtomicOpFunctor *amo_op)
+                                 AtomicOpFunctorPtr amo_op)
     {
         panic("ExecContext::initiateMemAMO() should be overridden\n");
     }

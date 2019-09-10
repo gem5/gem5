@@ -311,7 +311,7 @@ class BaseDynInst : public ExecContext, public RefCounted
                    const std::vector<bool>& byteEnable = std::vector<bool>());
 
     Fault initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
-                         AtomicOpFunctor *amo_op);
+                         AtomicOpFunctorPtr amo_op);
 
     /** True if the DTB address translation has started. */
     bool translationStarted() const { return instFlags[TranslationStarted]; }
@@ -986,7 +986,7 @@ template<class Impl>
 Fault
 BaseDynInst<Impl>::initiateMemAMO(Addr addr, unsigned size,
                                   Request::Flags flags,
-                                  AtomicOpFunctor *amo_op)
+                                  AtomicOpFunctorPtr amo_op)
 {
     // atomic memory instructions do not have data to be written to memory yet
     // since the atomic operations will be executed directly in cache/memory.
@@ -995,7 +995,8 @@ BaseDynInst<Impl>::initiateMemAMO(Addr addr, unsigned size,
     // memory
     return cpu->pushRequest(
             dynamic_cast<typename DynInstPtr::PtrType>(this),
-            /* atomic */ false, nullptr, size, addr, flags, nullptr, amo_op);
+            /* atomic */ false, nullptr, size, addr, flags, nullptr,
+            std::move(amo_op));
 }
 
 #endif // __CPU_BASE_DYN_INST_HH__

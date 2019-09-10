@@ -133,11 +133,11 @@ class ExecContext : public ::ExecContext
 
     Fault
     initiateMemAMO(Addr addr, unsigned int size, Request::Flags flags,
-                   AtomicOpFunctor *amo_op) override
+                   AtomicOpFunctorPtr amo_op) override
     {
         // AMO requests are pushed through the store path
         return execute.getLSQ().pushRequest(inst, false /* amo */, nullptr,
-            size, addr, flags, nullptr, amo_op);
+            size, addr, flags, nullptr, std::move(amo_op));
     }
 
     RegVal

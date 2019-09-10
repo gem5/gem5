@@ -708,7 +708,7 @@ class LSQ : public Named
      *  the LSQ */
     Fault pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
                       unsigned int size, Addr addr, Request::Flags flags,
-                      uint64_t *res, AtomicOpFunctor *amo_op,
+                      uint64_t *res, AtomicOpFunctorPtr amo_op,
                       const std::vector<bool>& byteEnable =
                           std::vector<bool>());
 

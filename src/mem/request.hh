@@ -389,7 +389,7 @@ class Request
     InstSeqNum _reqInstSeqNum;
 
     /** A pointer to an atomic operation */
-    AtomicOpFunctor *atomicOpFunctor;
+    AtomicOpFunctorPtr atomicOpFunctor;
 
   public:
 
@@ -470,9 +470,9 @@ class Request
 
     Request(uint64_t asid, Addr vaddr, unsigned size, Flags flags,
             MasterID mid, Addr pc, ContextID cid,
-            AtomicOpFunctor *atomic_op)
+            AtomicOpFunctorPtr atomic_op)
     {
-        setVirt(asid, vaddr, size, flags, mid, pc, atomic_op);
+        setVirt(asid, vaddr, size, flags, mid, pc, std::move(atomic_op));
         setContext(cid);
     }
 
@@ -489,18 +489,12 @@ class Request
           translateDelta(other.translateDelta),
           accessDelta(other.accessDelta), depth(other.depth)
     {
-        if (other.atomicOpFunctor)
-            atomicOpFunctor = (other.atomicOpFunctor)->clone();
-        else
-            atomicOpFunctor = nullptr;
+
+        atomicOpFunctor.reset(other.atomicOpFunctor ?
+                                other.atomicOpFunctor->clone() : nullptr);
     }
 
-    ~Request()
-    {
-        if (hasAtomicOpFunctor()) {
-            delete atomicOpFunctor;
-        }
-    }
+    ~Request() {}
 
     /**
      * Set up Context numbers.
@@ -533,7 +527,7 @@ class Request
      */
     void
     setVirt(uint64_t asid, Addr vaddr, unsigned size, Flags flags,
-            MasterID mid, Addr pc, AtomicOpFunctor *amo_op = nullptr)
+            MasterID mid, Addr pc, AtomicOpFunctorPtr amo_op = nullptr)
     {
         _asid = asid;
         _vaddr = vaddr;
@@ -549,7 +543,7 @@ class Request
         depth = 0;
         accessDelta = 0;
         translateDelta = 0;
-        atomicOpFunctor = amo_op;
+        atomicOpFunctor = std::move(amo_op);
     }
 
     /**
@@ -669,14 +663,14 @@ class Request
     bool
     hasAtomicOpFunctor()
     {
-        return atomicOpFunctor != NULL;
+        return (bool)atomicOpFunctor;
     }
 
     AtomicOpFunctor *
     getAtomicOpFunctor()
     {
-        assert(atomicOpFunctor != NULL);
-        return atomicOpFunctor;
+        assert(atomicOpFunctor);
+        return atomicOpFunctor.get();
     }
 
     /** Accessor for flags. */

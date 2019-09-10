@@ -687,7 +687,7 @@ template<class Impl>
 Fault
 LSQ<Impl>::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                        unsigned int size, Addr addr, Request::Flags flags,
-                       uint64_t *res, AtomicOpFunctor *amo_op,
+                       uint64_t *res, AtomicOpFunctorPtr amo_op,
                        const std::vector<bool>& byteEnable)
 {
     // This comming request can be either load, store or atomic.
@@ -717,7 +717,7 @@ LSQ<Impl>::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                     size, flags, data, res);
         } else {
             req = new SingleDataRequest(&thread[tid], inst, isLoad, addr,
-                    size, flags, data, res, amo_op);
+                    size, flags, data, res, std::move(amo_op));
         }
         assert(req);
         if (!byteEnable.empty()) {

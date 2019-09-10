@@ -299,7 +299,7 @@ class LSQ
         const Request::Flags _flags;
         std::vector<bool> _byteEnable;
         uint32_t _numOutstandingPackets;
-        AtomicOpFunctor *_amo_op;
+        AtomicOpFunctorPtr _amo_op;
       protected:
         LSQUnit* lsqUnit() { return &_port; }
         LSQRequest(LSQUnit* port, const DynInstPtr& inst, bool isLoad) :
@@ -318,7 +318,7 @@ class LSQ
                    const Addr& addr, const uint32_t& size,
                    const Request::Flags& flags_,
                    PacketDataPtr data = nullptr, uint64_t* res = nullptr,
-                   AtomicOpFunctor* amo_op = nullptr)
+                   AtomicOpFunctorPtr amo_op = nullptr)
             : _state(State::NotIssued), _senderState(nullptr),
             numTranslatedFragments(0),
             numInTranslationFragments(0),
@@ -326,7 +326,7 @@ class LSQ
             _res(res), _addr(addr), _size(size),
             _flags(flags_),
             _numOutstandingPackets(0),
-            _amo_op(amo_op)
+            _amo_op(std::move(amo_op))
         {
             flags.set(Flag::IsLoad, isLoad);
             flags.set(Flag::WbStore,
@@ -412,7 +412,8 @@ class LSQ
                 isAnyActiveElement(byteEnable.begin(), byteEnable.end())) {
                 auto request = std::make_shared<Request>(_inst->getASID(),
                         addr, size, _flags, _inst->masterId(),
-                        _inst->instAddr(), _inst->contextId(), _amo_op);
+                        _inst->instAddr(), _inst->contextId(),
+                        std::move(_amo_op));
                 if (!byteEnable.empty()) {
                     request->setByteEnable(byteEnable);
                 }
@@ -721,9 +722,9 @@ class LSQ
                           const Request::Flags& flags_,
                           PacketDataPtr data = nullptr,
                           uint64_t* res = nullptr,
-                          AtomicOpFunctor* amo_op = nullptr) :
+                          AtomicOpFunctorPtr amo_op = nullptr) :
             LSQRequest(port, inst, isLoad, addr, size, flags_, data, res,
-                       amo_op) {}
+                       std::move(amo_op)) {}
 
         inline virtual ~SingleDataRequest() {}
         virtual void initiateTranslation();
@@ -1032,7 +1033,7 @@ class LSQ
 
     Fault pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                       unsigned int size, Addr addr, Request::Flags flags,
-                      uint64_t *res, AtomicOpFunctor *amo_op,
+                      uint64_t *res, AtomicOpFunctorPtr amo_op,
                       const std::vector<bool>& byteEnable);
 
     /** The CPU pointer. */

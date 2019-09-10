@@ -125,15 +125,16 @@ writeMemAtomic(XC *xc, Trace::InstRecord *traceData, const MemT &mem,
 template <class XC, class MemT>
 Fault
 amoMemAtomic(XC *xc, Trace::InstRecord *traceData, MemT &mem, Addr addr,
-             Request::Flags flags, AtomicOpFunctor *amo_op)
+             Request::Flags flags, AtomicOpFunctor *_amo_op)
 {
-    assert(amo_op);
+    assert(_amo_op);
 
     // mem will hold the previous value at addr after the AMO completes
     memset(&mem, 0, sizeof(mem));
 
+    AtomicOpFunctorPtr amo_op = AtomicOpFunctorPtr(_amo_op);
     Fault fault = xc->amoMem(addr, (uint8_t *)&mem, sizeof(MemT), flags,
-                             amo_op);
+                             std::move(amo_op));
 
     if (fault == NoFault) {
         mem = TheISA::gtoh(mem);
@@ -147,10 +148,11 @@ amoMemAtomic(XC *xc, Trace::InstRecord *traceData, MemT &mem, Addr addr,
 template <class XC, class MemT>
 Fault
 initiateMemAMO(XC *xc, Trace::InstRecord *traceData, Addr addr, MemT& mem,
-               Request::Flags flags, AtomicOpFunctor *amo_op)
+               Request::Flags flags, AtomicOpFunctor *_amo_op)
 {
-    assert(amo_op);
-    return xc->initiateMemAMO(addr, sizeof(MemT), flags, amo_op);
+    assert(_amo_op);
+    AtomicOpFunctorPtr amo_op = AtomicOpFunctorPtr(_amo_op);
+    return xc->initiateMemAMO(addr, sizeof(MemT), flags, std::move(amo_op));
 }
 
 #endif

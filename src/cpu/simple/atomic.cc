@@ -566,7 +566,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
 
 Fault
 AtomicSimpleCPU::amoMem(Addr addr, uint8_t* data, unsigned size,
-                        Request::Flags flags, AtomicOpFunctor *amo_op)
+                        Request::Flags flags, AtomicOpFunctorPtr amo_op)
 {
     SimpleExecContext& t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
@@ -596,7 +596,7 @@ AtomicSimpleCPU::amoMem(Addr addr, uint8_t* data, unsigned size,
 
     req->taskId(taskId());
     req->setVirt(0, addr, size, flags, dataMasterId(),
-                 thread->pcState().instAddr(), amo_op);
+                 thread->pcState().instAddr(), std::move(amo_op));
 
     // translate to physical address
     Fault fault = thread->dtb->translateAtomic(req, thread->getTC(),

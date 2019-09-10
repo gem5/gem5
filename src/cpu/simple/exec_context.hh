@@ -463,16 +463,16 @@ class SimpleExecContext : public ExecContext {
     }
 
     Fault amoMem(Addr addr, uint8_t *data, unsigned int size,
-                 Request::Flags flags, AtomicOpFunctor *amo_op) override
+                 Request::Flags flags, AtomicOpFunctorPtr amo_op) override
     {
-        return cpu->amoMem(addr, data, size, flags, amo_op);
+        return cpu->amoMem(addr, data, size, flags, std::move(amo_op));
     }
 
     Fault initiateMemAMO(Addr addr, unsigned int size,
                          Request::Flags flags,
-                         AtomicOpFunctor *amo_op) override
+                         AtomicOpFunctorPtr amo_op) override
     {
-        return cpu->initiateMemAMO(addr, size, flags, amo_op);
+        return cpu->initiateMemAMO(addr, size, flags, std::move(amo_op));
     }
 
     /**

@@ -1573,7 +1573,7 @@ LSQ::needsToTick()
 Fault
 LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
                  unsigned int size, Addr addr, Request::Flags flags,
-                 uint64_t *res, AtomicOpFunctor *amo_op,
+                 uint64_t *res, AtomicOpFunctorPtr amo_op,
                  const std::vector<bool>& byteEnable)
 {
     assert(inst->translationFault == NoFault || inst->inLSQ);
@@ -1635,7 +1635,7 @@ LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
     request->request->setVirt(0 /* asid */,
         addr, size, flags, cpu.dataMasterId(),
         /* I've no idea why we need the PC, but give it */
-        inst->pc.instAddr(), amo_op);
+        inst->pc.instAddr(), std::move(amo_op));
     request->request->setByteEnable(byteEnable);
 
     requests.push(request);

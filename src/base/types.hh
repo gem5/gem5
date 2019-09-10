@@ -259,6 +259,8 @@ struct TypedAtomicOpFunctor : public AtomicOpFunctor
     virtual void execute(T * p) = 0;
 };
 
+typedef std::unique_ptr<AtomicOpFunctor> AtomicOpFunctorPtr;
+
 enum ByteOrder {
     BigEndianByteOrder,
     LittleEndianByteOrder

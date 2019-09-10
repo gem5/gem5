@@ -293,7 +293,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
         override;
 
     Fault initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
-                         AtomicOpFunctor *amo_op) override;
+                         AtomicOpFunctorPtr amo_op) override;
 
     void fetch();
     void sendFetch(const Fault &fault,
