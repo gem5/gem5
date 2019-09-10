@@ -1,3 +1,15 @@
+# Copyright (c) 2020 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2009 The Hewlett-Packard Development Company
 # Copyright (c) 2017 Google Inc.
 # All rights reserved.
@@ -132,7 +144,8 @@ class SLICC(Grammar):
                'INCR', 'DECR',
                'DOUBLE_COLON', 'SEMI',
                'ASSIGN', 'DOT',
-               'IDENT', 'LIT_BOOL', 'FLOATNUMBER', 'NUMBER', 'STRING' ]
+               'IDENT', 'LIT_BOOL', 'FLOATNUMBER', 'NUMBER', 'STRING',
+               'AMP', 'CONST' ]
     tokens += reserved.values()
 
     t_EQ = r'=='
@@ -149,6 +162,8 @@ class SLICC(Grammar):
     t_PLUS = r'\+'
     t_DASH = r'-'
     t_STAR = r'\*'
+    t_AMP = r'&'
+    t_CONST = r'const'
     t_SLASH = r'/'
     t_MOD = r'%'
     t_DOUBLE_COLON = r'::'
@@ -433,11 +448,19 @@ class SLICC(Grammar):
 
     def p_param__pointer(self, p):
         "param : type STAR ident"
-        p[0] = ast.FormalParamAST(self, p[1], p[3], None, True)
+        p[0] = ast.FormalParamAST(self, p[1], p[3], None, "PTR")
+
+    def p_param__ref(self, p):
+        "param : type AMP ident"
+        p[0] = ast.FormalParamAST(self, p[1], p[3], None, "REF")
+
+    def p_param__const_ref(self, p):
+        "param : CONST type AMP ident"
+        p[0] = ast.FormalParamAST(self, p[1], p[3], None, "CONST_REF")
 
     def p_param__pointer_default(self, p):
         "param : type STAR ident ASSIGN STRING"
-        p[0] = ast.FormalParamAST(self, p[1], p[3], p[5], True)
+        p[0] = ast.FormalParamAST(self, p[1], p[3], p[5], "PTR")
 
     def p_param__default_number(self, p):
         "param : type ident ASSIGN NUMBER"
