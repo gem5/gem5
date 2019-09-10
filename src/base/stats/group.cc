@@ -70,7 +70,8 @@ Group::regStats()
 
     for (auto &g : statGroups) {
         if (DTRACE(Stats)) {
-            const SimObject *so = dynamic_cast<const SimObject *>(this);
+            const SimObject M5_VAR_USED *so =
+                dynamic_cast<const SimObject *>(this);
             DPRINTF(Stats, "%s: regStats in group %s\n",
                     so ? so->name() : "?",
                     g.first);
