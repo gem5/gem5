@@ -42,10 +42,10 @@ from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 
-from m5.objects.Device import BasicPioDevice
+from m5.objects.Device import PioDevice
 from m5.objects.ClockDomain import DerivedClockDomain
 
-class X86LocalApic(BasicPioDevice):
+class X86LocalApic(PioDevice):
     type = 'X86LocalApic'
     cxx_class = 'X86ISA::Interrupts'
     cxx_header = 'arch/x86/interrupts.hh'
@@ -54,10 +54,7 @@ class X86LocalApic(BasicPioDevice):
     int_latency = Param.Latency('1ns', \
             "Latency for an interrupt to propagate through this device.")
 
-    # pio_addr isn't used by the local APIC model since it's address is
-    # calculated dynamically using the initial ID of the CPU it's attached to,
-    # but it needs to be set to something to make the BasicPioDevice happy.
-    pio_addr = 0x2000000000000000
+    pio_latency = Param.Latency('100ns', 'Programmed IO latency')
 
     # The clock rate for the local APIC timer is supposed to be the "bus clock"
     # which we assume is 1/16th the rate of the CPU clock. I don't think this

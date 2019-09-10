@@ -191,7 +191,7 @@ Tick
 X86ISA::Interrupts::read(PacketPtr pkt)
 {
     Addr offset = pkt->getAddr() - pioAddr;
-    //Make sure we're at least only accessing one register.
+    // Make sure we're at least only accessing one register.
     if ((offset & ~mask(3)) != ((offset + pkt->getSize()) & ~mask(3)))
         panic("Accessed more than one register at a time in the APIC!\n");
     ApicRegIndex reg = decodeAddr(offset);
@@ -208,7 +208,7 @@ Tick
 X86ISA::Interrupts::write(PacketPtr pkt)
 {
     Addr offset = pkt->getAddr() - pioAddr;
-    //Make sure we're at least only accessing one register.
+    // Make sure we're at least only accessing one register.
     if ((offset & ~mask(3)) != ((offset + pkt->getSize()) & ~mask(3)))
         panic("Accessed more than one register at a time in the APIC!\n");
     ApicRegIndex reg = decodeAddr(offset);
@@ -295,7 +295,7 @@ X86ISA::Interrupts::init()
     // int port that it inherited from IntDevice.  Note IntDevice is
     // not a SimObject itself.
     //
-    BasicPioDevice::init();
+    PioDevice::init();
     IntDevice::init();
 
     // the slave port has a range so inform the connected master
@@ -344,6 +344,16 @@ X86ISA::Interrupts::recvResponse(PacketPtr pkt)
     }
     DPRINTF(LocalApic, "ICR is now idle.\n");
     return 0;
+}
+
+
+AddrRangeList
+X86ISA::Interrupts::getAddrRanges() const
+{
+    assert(cpu);
+    AddrRangeList ranges;
+    ranges.push_back(RangeSize(pioAddr, PageBytes));
+    return ranges;
 }
 
 
@@ -587,7 +597,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
 
 
 X86ISA::Interrupts::Interrupts(Params * p)
-    : BasicPioDevice(p, PageBytes), IntDevice(this, p->int_latency),
+    : PioDevice(p), IntDevice(this, p->int_latency),
       apicTimerEvent([this]{ processApicTimerEvent(); }, name()),
       pendingSmi(false), smiVector(0),
       pendingNmi(false), nmiVector(0),
@@ -596,7 +606,8 @@ X86ISA::Interrupts::Interrupts(Params * p)
       pendingStartup(false), startupVector(0),
       startedUp(false), pendingUnmaskableInt(false),
       pendingIPIs(0), cpu(NULL),
-      intSlavePort(name() + ".int_slave", this, this)
+      intSlavePort(name() + ".int_slave", this, this),
+      pioDelay(p->pio_latency)
 {
     memset(regs, 0, sizeof(regs));
     //Set the local apic DFR to the flat model.

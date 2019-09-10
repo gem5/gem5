@@ -72,7 +72,7 @@ namespace X86ISA {
 
 ApicRegIndex decodeAddr(Addr paddr);
 
-class Interrupts : public BasicPioDevice, IntDevice
+class Interrupts : public PioDevice, IntDevice
 {
   protected:
     // Storage for the APIC registers
@@ -174,6 +174,9 @@ class Interrupts : public BasicPioDevice, IntDevice
     // Port for receiving interrupts
     IntSlavePort intSlavePort;
 
+    Tick pioDelay;
+    Addr pioAddr = MaxAddr;
+
   public:
 
     int getInitialApicId() { return initialApicId; }
@@ -213,6 +216,7 @@ class Interrupts : public BasicPioDevice, IntDevice
         return entry.periodic;
     }
 
+    AddrRangeList getAddrRanges() const override;
     AddrRangeList getIntAddrRange() const override;
 
     Port &getPort(const std::string &if_name,
@@ -223,7 +227,7 @@ class Interrupts : public BasicPioDevice, IntDevice
         } else if (if_name == "int_slave") {
             return intSlavePort;
         }
-        return BasicPioDevice::getPort(if_name, idx);
+        return PioDevice::getPort(if_name, idx);
     }
 
     /*
