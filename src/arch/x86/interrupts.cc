@@ -290,16 +290,13 @@ X86ISA::Interrupts::setCPU(BaseCPU * newCPU)
 void
 X86ISA::Interrupts::init()
 {
-    //
-    // The local apic must register its address ranges on its pio
-    // port via the basicpiodevice(piodevice) init() function.
-    PioDevice::init();
-
-    // The slave port has a range, so inform the connected master.
-    intSlavePort.sendRangeChange();
-    // If the master port isn't connected, we can't send interrupts anywhere.
     panic_if(!intMasterPort.isConnected(),
             "Int port not connected to anything!");
+    panic_if(!pioPort.isConnected(),
+            "Pio port of %s not connected to anything!", name());
+
+    intSlavePort.sendRangeChange();
+    pioPort.sendRangeChange();
 }
 
 
@@ -599,7 +596,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
 
 
 X86ISA::Interrupts::Interrupts(Params * p)
-    : PioDevice(p),
+    : SimObject(p), sys(p->system), clockDomain(*p->clk_domain),
       apicTimerEvent([this]{ processApicTimerEvent(); }, name()),
       pendingSmi(false), smiVector(0),
       pendingNmi(false), nmiVector(0),
@@ -610,7 +607,7 @@ X86ISA::Interrupts::Interrupts(Params * p)
       pendingIPIs(0), cpu(NULL),
       intSlavePort(name() + ".int_slave", this, this),
       intMasterPort(name() + ".int_master", this, this, p->int_latency),
-      pioDelay(p->pio_latency)
+      pioPort(this), pioDelay(p->pio_latency)
 {
     memset(regs, 0, sizeof(regs));
     //Set the local apic DFR to the flat model.

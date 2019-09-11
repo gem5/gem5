@@ -72,9 +72,12 @@ namespace X86ISA {
 
 ApicRegIndex decodeAddr(Addr paddr);
 
-class Interrupts : public PioDevice
+class Interrupts : public SimObject
 {
   protected:
+    System *sys;
+    ClockDomain &clockDomain;
+
     // Storage for the APIC registers
     uint32_t regs[NUM_APIC_REGS];
 
@@ -165,6 +168,8 @@ class Interrupts : public PioDevice
         return bits(regs[base + (vector / 32)], vector % 32);
     }
 
+    Tick clockPeriod() const { return clockDomain.clockPeriod(); }
+
     void requestInterrupt(uint8_t vector, uint8_t deliveryMode, bool level);
 
     BaseCPU *cpu;
@@ -174,6 +179,9 @@ class Interrupts : public PioDevice
     // Ports for interrupts.
     IntSlavePort<Interrupts> intSlavePort;
     IntMasterPort<Interrupts> intMasterPort;
+
+    // Port for memory mapped register accesses.
+    PioPort<Interrupts> pioPort;
 
     Tick pioDelay;
     Addr pioAddr = MaxAddr;
@@ -203,8 +211,8 @@ class Interrupts : public PioDevice
     /*
      * Functions to interact with the interrupt port.
      */
-    Tick read(PacketPtr pkt) override;
-    Tick write(PacketPtr pkt) override;
+    Tick read(PacketPtr pkt);
+    Tick write(PacketPtr pkt);
     Tick recvMessage(PacketPtr pkt);
     void completeIPI(PacketPtr pkt);
 
@@ -217,7 +225,7 @@ class Interrupts : public PioDevice
         return entry.periodic;
     }
 
-    AddrRangeList getAddrRanges() const override;
+    AddrRangeList getAddrRanges() const;
     AddrRangeList getIntAddrRange() const;
 
     Port &getPort(const std::string &if_name,
@@ -227,8 +235,10 @@ class Interrupts : public PioDevice
             return intMasterPort;
         } else if (if_name == "int_slave") {
             return intSlavePort;
+        } else if (if_name == "pio") {
+            return pioPort;
         }
-        return PioDevice::getPort(if_name, idx);
+        return SimObject::getPort(if_name, idx);
     }
 
     /*
