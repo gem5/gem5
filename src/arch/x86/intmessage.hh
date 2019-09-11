@@ -84,7 +84,7 @@ namespace X86ISA
             size, Request::UNCACHEABLE,
             Request::intMasterId);
 
-        PacketPtr pkt = new Packet(req, MemCmd::MessageReq);
+        PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
         pkt->allocate();
         return pkt;
     }

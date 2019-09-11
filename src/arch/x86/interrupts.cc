@@ -307,7 +307,7 @@ Tick
 X86ISA::Interrupts::recvMessage(PacketPtr pkt)
 {
     Addr offset = pkt->getAddr() - x86InterruptAddress(initialApicId, 0);
-    assert(pkt->cmd == MemCmd::MessageReq);
+    assert(pkt->cmd == MemCmd::WriteReq);
     switch(offset)
     {
       case 0:
@@ -335,7 +335,7 @@ bool
 X86ISA::Interrupts::recvResponse(PacketPtr pkt)
 {
     assert(!pkt->isError());
-    assert(pkt->cmd == MemCmd::MessageResp);
+    assert(pkt->cmd == MemCmd::WriteResp);
     if (--pendingIPIs == 0) {
         InterruptCommandRegLow low = regs[APIC_INTERRUPT_COMMAND_LOW];
         // Record that the ICR is now idle.

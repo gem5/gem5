@@ -76,7 +76,7 @@ class IntSlavePort : public SimpleTimingPort
     Tick
     recvAtomic(PacketPtr pkt)
     {
-        panic_if(pkt->cmd != MemCmd::MessageReq,
+        panic_if(pkt->cmd != MemCmd::WriteReq,
                 "%s received unexpected command %s from %s.\n",
                 name(), pkt->cmd.toString(), getPeer());
         pkt->headerDelay = pkt->payloadDelay = 0;
