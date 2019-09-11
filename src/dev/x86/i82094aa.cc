@@ -85,16 +85,6 @@ X86ISA::I82094AA::getPort(const std::string &if_name, PortID idx)
         return BasicPioDevice::getPort(if_name, idx);
 }
 
-AddrRangeList
-X86ISA::I82094AA::getIntAddrRange() const
-{
-    AddrRangeList ranges;
-    ranges.push_back(RangeEx(x86InterruptAddress(initialApicId, 0),
-                             x86InterruptAddress(initialApicId, 0) +
-                             PhysAddrAPICRangeSize));
-    return ranges;
-}
-
 Tick
 X86ISA::I82094AA::recvResponse(PacketPtr pkt)
 {

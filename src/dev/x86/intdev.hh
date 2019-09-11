@@ -54,34 +54,40 @@
 
 namespace X86ISA {
 
+template <class Device>
+class IntSlavePort : public SimpleTimingPort
+{
+    Device * device;
+
+  public:
+    IntSlavePort(const std::string& _name, SimObject* _parent,
+                 Device* dev) :
+        SimpleTimingPort(_name, _parent), device(dev)
+    {
+    }
+
+    AddrRangeList
+    getAddrRanges() const
+    {
+        return device->getIntAddrRange();
+    }
+
+    Tick
+    recvAtomic(PacketPtr pkt)
+    {
+        panic_if(pkt->cmd != MemCmd::MessageReq,
+                "%s received unexpected command %s from %s.\n",
+                name(), pkt->cmd.toString(), getPeer());
+        pkt->headerDelay = pkt->payloadDelay = 0;
+        return device->recvMessage(pkt);
+    }
+};
+
 typedef std::list<int> ApicList;
 
 class IntDevice
 {
   protected:
-    class IntSlavePort : public MessageSlavePort
-    {
-        IntDevice * device;
-
-      public:
-        IntSlavePort(const std::string& _name, SimObject* _parent,
-                     IntDevice* dev) :
-            MessageSlavePort(_name, _parent), device(dev)
-        {
-        }
-
-        AddrRangeList getAddrRanges() const
-        {
-            return device->getIntAddrRange();
-        }
-
-        Tick recvMessage(PacketPtr pkt)
-        {
-            // @todo someone should pay for this
-            pkt->headerDelay = pkt->payloadDelay = 0;
-            return device->recvMessage(pkt);
-        }
-    };
 
     class IntMasterPort : public MessageMasterPort
     {
@@ -119,23 +125,10 @@ class IntDevice
     virtual void init();
 
     virtual Tick
-    recvMessage(PacketPtr pkt)
-    {
-        panic("recvMessage not implemented.\n");
-        return 0;
-    }
-
-    virtual Tick
     recvResponse(PacketPtr pkt)
     {
         panic("recvResponse not implemented.\n");
         return 0;
-    }
-
-    virtual AddrRangeList
-    getIntAddrRange() const
-    {
-        panic("intAddrRange not implemented.\n");
     }
 };
 

@@ -172,7 +172,7 @@ class Interrupts : public PioDevice, IntDevice
     int initialApicId;
 
     // Port for receiving interrupts
-    IntSlavePort intSlavePort;
+    IntSlavePort<Interrupts> intSlavePort;
 
     Tick pioDelay;
     Addr pioAddr = MaxAddr;
@@ -200,11 +200,11 @@ class Interrupts : public PioDevice, IntDevice
     void init() override;
 
     /*
-     * Functions to interact with the interrupt port from IntDevice.
+     * Functions to interact with the interrupt port.
      */
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
-    Tick recvMessage(PacketPtr pkt) override;
+    Tick recvMessage(PacketPtr pkt);
     Tick recvResponse(PacketPtr pkt) override;
 
     bool
@@ -217,7 +217,7 @@ class Interrupts : public PioDevice, IntDevice
     }
 
     AddrRangeList getAddrRanges() const override;
-    AddrRangeList getIntAddrRange() const override;
+    AddrRangeList getIntAddrRange() const;
 
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override

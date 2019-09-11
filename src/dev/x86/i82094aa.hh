@@ -100,8 +100,6 @@ class I82094AA : public BasicPioDevice, public IntDevice
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
 
-    AddrRangeList getIntAddrRange() const override;
-
     void writeReg(uint8_t offset, uint32_t value);
     uint32_t readReg(uint8_t offset);
 
