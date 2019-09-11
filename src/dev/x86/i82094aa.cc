@@ -40,8 +40,9 @@
 #include "sim/system.hh"
 
 X86ISA::I82094AA::I82094AA(Params *p)
-    : BasicPioDevice(p, 20), IntDevice(this, p->int_latency),
-      extIntPic(p->external_int_pic), lowestPriorityOffset(0)
+    : BasicPioDevice(p, 20), extIntPic(p->external_int_pic),
+      lowestPriorityOffset(0),
+      intMasterPort(name() + ".int_master", this, this, p->int_latency)
 {
     // This assumes there's only one I/O APIC in the system and since the apic
     // id is stored in a 8-bit field with 0xff meaning broadcast, the id must
@@ -66,12 +67,13 @@ X86ISA::I82094AA::I82094AA(Params *p)
 void
 X86ISA::I82094AA::init()
 {
-    // The io apic must register its address ranges on both its pio port
-    // via the piodevice init() function and its int port that it inherited
-    // from IntDevice.  Note IntDevice is not a SimObject itself.
-
+    // The io apic must register its address range with its pio port via
+    // the piodevice init() function.
     BasicPioDevice::init();
-    IntDevice::init();
+
+    // If the master port isn't connected, we can't send interrupts anywhere.
+    panic_if(!intMasterPort.isConnected(),
+            "Int port not connected to anything!");
 }
 
 Port &

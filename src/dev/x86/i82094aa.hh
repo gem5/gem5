@@ -45,7 +45,7 @@ namespace X86ISA
 class I8259;
 class Interrupts;
 
-class I82094AA : public BasicPioDevice, public IntDevice
+class I82094AA : public BasicPioDevice
 {
   public:
     BitUnion64(RedirTableEntry)
@@ -84,6 +84,8 @@ class I82094AA : public BasicPioDevice, public IntDevice
 
     std::vector<IntSinkPin<I82094AA> *> inputs;
 
+    IntMasterPort<I82094AA> intMasterPort;
+
   public:
     typedef I82094AAParams Params;
 
@@ -106,7 +108,7 @@ class I82094AA : public BasicPioDevice, public IntDevice
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;
 
-    bool recvResponse(PacketPtr pkt) override;
+    bool recvResponse(PacketPtr pkt);
 
     void signalInterrupt(int line);
     void raiseInterruptPin(int number);

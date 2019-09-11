@@ -290,16 +290,15 @@ void
 X86ISA::Interrupts::init()
 {
     //
-    // The local apic must register its address ranges on both its pio
-    // port via the basicpiodevice(piodevice) init() function and its
-    // int port that it inherited from IntDevice.  Note IntDevice is
-    // not a SimObject itself.
-    //
+    // The local apic must register its address ranges on its pio
+    // port via the basicpiodevice(piodevice) init() function.
     PioDevice::init();
-    IntDevice::init();
 
-    // the slave port has a range so inform the connected master
+    // The slave port has a range, so inform the connected master.
     intSlavePort.sendRangeChange();
+    // If the master port isn't connected, we can't send interrupts anywhere.
+    panic_if(!intMasterPort.isConnected(),
+            "Int port not connected to anything!");
 }
 
 
@@ -597,7 +596,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
 
 
 X86ISA::Interrupts::Interrupts(Params * p)
-    : PioDevice(p), IntDevice(this, p->int_latency),
+    : PioDevice(p),
       apicTimerEvent([this]{ processApicTimerEvent(); }, name()),
       pendingSmi(false), smiVector(0),
       pendingNmi(false), nmiVector(0),
@@ -607,6 +606,7 @@ X86ISA::Interrupts::Interrupts(Params * p)
       startedUp(false), pendingUnmaskableInt(false),
       pendingIPIs(0), cpu(NULL),
       intSlavePort(name() + ".int_slave", this, this),
+      intMasterPort(name() + ".int_master", this, this, p->int_latency),
       pioDelay(p->pio_latency)
 {
     memset(regs, 0, sizeof(regs));

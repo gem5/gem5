@@ -48,7 +48,6 @@
 #include <string>
 
 #include "arch/x86/intmessage.hh"
-#include "arch/x86/x86_traits.hh"
 #include "mem/tport.hh"
 #include "sim/sim_object.hh"
 
@@ -128,30 +127,6 @@ class IntMasterPort : public QueuedMasterPort
                 device->recvResponse(pkt);
             }
         }
-    }
-};
-
-class IntDevice
-{
-  protected:
-
-    IntMasterPort<IntDevice> intMasterPort;
-
-  public:
-    IntDevice(SimObject * parent, Tick latency = 0) :
-        intMasterPort(parent->name() + ".int_master", parent, this, latency)
-    {
-    }
-
-    virtual ~IntDevice()
-    {}
-
-    virtual void init();
-
-    virtual bool
-    recvResponse(PacketPtr pkt)
-    {
-        panic("recvResponse not implemented.\n");
     }
 };
 

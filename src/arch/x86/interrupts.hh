@@ -72,7 +72,7 @@ namespace X86ISA {
 
 ApicRegIndex decodeAddr(Addr paddr);
 
-class Interrupts : public PioDevice, IntDevice
+class Interrupts : public PioDevice
 {
   protected:
     // Storage for the APIC registers
@@ -171,8 +171,9 @@ class Interrupts : public PioDevice, IntDevice
 
     int initialApicId;
 
-    // Port for receiving interrupts
+    // Ports for interrupts.
     IntSlavePort<Interrupts> intSlavePort;
+    IntMasterPort<Interrupts> intMasterPort;
 
     Tick pioDelay;
     Addr pioAddr = MaxAddr;
@@ -205,7 +206,7 @@ class Interrupts : public PioDevice, IntDevice
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
     Tick recvMessage(PacketPtr pkt);
-    bool recvResponse(PacketPtr pkt) override;
+    bool recvResponse(PacketPtr pkt);
 
     bool
     triggerTimerInterrupt()
