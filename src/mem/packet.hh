@@ -115,9 +115,8 @@ class MemCmd
         StoreCondResp,
         SwapReq,
         SwapResp,
-        MessageReq,
-        MessageResp,
-        MemFenceReq,
+        // MessageReq and MessageResp are deprecated.
+        MemFenceReq = SwapResp + 3,
         MemFenceResp,
         CleanSharedReq,
         CleanSharedResp,

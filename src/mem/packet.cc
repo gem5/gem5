@@ -180,11 +180,8 @@ MemCmd::commandInfo[] =
     /* SwapResp -- for Swap ldstub type operations */
     { SET4(IsRead, IsWrite, IsResponse, HasData),
             InvalidCmd, "SwapResp" },
-    /* IntReq -- for interrupts */
-    { SET4(IsWrite, IsRequest, NeedsResponse, HasData),
-        MessageResp, "MessageReq" },
-    /* IntResp -- for interrupts */
-    { SET2(IsWrite, IsResponse), InvalidCmd, "MessageResp" },
+    { 0, InvalidCmd, "Deprecated_MessageReq" },
+    { 0, InvalidCmd, "Deprecated_MessageResp" },
     /* MemFenceReq -- for synchronization requests */
     {SET2(IsRequest, NeedsResponse), MemFenceResp, "MemFenceReq"},
     /* MemFenceResp -- for synchronization responses */
