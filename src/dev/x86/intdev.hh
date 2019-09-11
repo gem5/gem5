@@ -115,7 +115,8 @@ class IntMasterPort : public QueuedMasterPort
     sendMessage(X86ISA::ApicList apics, TriggerIntMessage message, bool timing)
     {
         for (auto id: apics) {
-            PacketPtr pkt = buildIntRequest(id, message);
+            Addr addr = x86InterruptAddress(id, TriggerIntOffset);
+            PacketPtr pkt = buildIntPacket(addr, message);
             if (timing) {
                 schedTimingReq(pkt, curTick() + latency);
                 // The target handles cleaning up the packet in timing mode.

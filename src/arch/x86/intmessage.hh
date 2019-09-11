@@ -76,39 +76,16 @@ namespace X86ISA
 
     static const Addr TriggerIntOffset = 0;
 
-    static inline PacketPtr
-    prepIntRequest(const uint8_t id, Addr offset, Addr size)
-    {
-        RequestPtr req = std::make_shared<Request>(
-            x86InterruptAddress(id, offset),
-            size, Request::UNCACHEABLE,
-            Request::intMasterId);
-
-        PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
-        pkt->allocate();
-        return pkt;
-    }
-
     template<class T>
     PacketPtr
-    buildIntRequest(const uint8_t id, T payload, Addr offset, Addr size)
+    buildIntPacket(Addr addr, T payload)
     {
-        PacketPtr pkt = prepIntRequest(id, offset, size);
+        RequestPtr req = std::make_shared<Request>(
+            addr, sizeof(T), Request::UNCACHEABLE, Request::intMasterId);
+        PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
+        pkt->allocate();
         pkt->setRaw<T>(payload);
         return pkt;
-    }
-
-    static inline PacketPtr
-    buildIntRequest(const uint8_t id, TriggerIntMessage payload)
-    {
-        return buildIntRequest(id, payload, TriggerIntOffset,
-                sizeof(TriggerIntMessage));
-    }
-
-    static inline PacketPtr
-    buildIntResponse()
-    {
-        panic("buildIntResponse not implemented.\n");
     }
 }
 
