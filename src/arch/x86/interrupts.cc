@@ -51,6 +51,7 @@
 
 #include "arch/x86/interrupts.hh"
 
+#include <list>
 #include <memory>
 
 #include "arch/x86/intmessage.hh"
@@ -484,7 +485,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
             message.destMode = low.destMode;
             message.level = low.level;
             message.trigger = low.trigger;
-            ApicList apics;
+            std::list<int> apics;
             int numContexts = sys->numContexts();
             switch (low.destShorthand) {
               case 0:
@@ -545,7 +546,10 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
                 pendingIPIs += apics.size();
             }
             regs[APIC_INTERRUPT_COMMAND_LOW] = low;
-            intMasterPort.sendMessage(apics, message, sys->isTimingMode());
+            for (auto id: apics) {
+                PacketPtr pkt = buildIntTriggerPacket(id, message);
+                intMasterPort.sendMessage(pkt, sys->isTimingMode());
+            }
             newVal = regs[APIC_INTERRUPT_COMMAND_LOW];
         }
         break;

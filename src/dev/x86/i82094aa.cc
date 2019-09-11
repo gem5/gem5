@@ -30,6 +30,8 @@
 
 #include "dev/x86/i82094aa.hh"
 
+#include <list>
+
 #include "arch/x86/interrupts.hh"
 #include "arch/x86/intmessage.hh"
 #include "cpu/base.hh"
@@ -205,7 +207,7 @@ X86ISA::I82094AA::signalInterrupt(int line)
         message.destMode = entry.destMode;
         message.level = entry.polarity;
         message.trigger = entry.trigger;
-        ApicList apics;
+        std::list<int> apics;
         int numContexts = sys->numContexts();
         if (message.destMode == 0) {
             if (message.deliveryMode == DeliveryMode::LowestPriority) {
@@ -237,7 +239,7 @@ X86ISA::I82094AA::signalInterrupt(int line)
                 // through the set of APICs selected above.
                 uint64_t modOffset = lowestPriorityOffset % apics.size();
                 lowestPriorityOffset++;
-                ApicList::iterator apicIt = apics.begin();
+                auto apicIt = apics.begin();
                 while (modOffset--) {
                     apicIt++;
                     assert(apicIt != apics.end());
@@ -247,7 +249,10 @@ X86ISA::I82094AA::signalInterrupt(int line)
                 apics.push_back(selected);
             }
         }
-        intMasterPort.sendMessage(apics, message, sys->isTimingMode());
+        for (auto id: apics) {
+            PacketPtr pkt = buildIntTriggerPacket(id, message);
+            intMasterPort.sendMessage(pkt, sys->isTimingMode());
+        }
     }
 }
 

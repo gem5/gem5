@@ -34,6 +34,7 @@
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
 #include "base/types.hh"
+#include "dev/x86/intdev.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
@@ -76,16 +77,11 @@ namespace X86ISA
 
     static const Addr TriggerIntOffset = 0;
 
-    template<class T>
-    PacketPtr
-    buildIntPacket(Addr addr, T payload)
+    static inline PacketPtr
+    buildIntTriggerPacket(int id, TriggerIntMessage message)
     {
-        RequestPtr req = std::make_shared<Request>(
-            addr, sizeof(T), Request::UNCACHEABLE, Request::intMasterId);
-        PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
-        pkt->allocate();
-        pkt->setRaw<T>(payload);
-        return pkt;
+        Addr addr = x86InterruptAddress(id, TriggerIntOffset);
+        return buildIntPacket(addr, message);
     }
 }
 

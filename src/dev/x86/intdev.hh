@@ -44,10 +44,8 @@
 #define __DEV_X86_INTDEV_HH__
 
 #include <cassert>
-#include <list>
 #include <string>
 
-#include "arch/x86/intmessage.hh"
 #include "mem/tport.hh"
 #include "sim/sim_object.hh"
 
@@ -83,7 +81,17 @@ class IntSlavePort : public SimpleTimingPort
     }
 };
 
-typedef std::list<int> ApicList;
+template<class T>
+PacketPtr
+buildIntPacket(Addr addr, T payload)
+{
+    RequestPtr req = std::make_shared<Request>(
+        addr, sizeof(T), Request::UNCACHEABLE, Request::intMasterId);
+    PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
+    pkt->allocate();
+    pkt->setRaw<T>(payload);
+    return pkt;
+}
 
 template <class Device>
 class IntMasterPort : public QueuedMasterPort
@@ -109,24 +117,18 @@ class IntMasterPort : public QueuedMasterPort
         return device->recvResponse(pkt);
     }
 
-    // This is x86 focused, so if this class becomes generic, this would
-    // need to be moved into a subclass.
     void
-    sendMessage(X86ISA::ApicList apics, TriggerIntMessage message, bool timing)
+    sendMessage(PacketPtr pkt, bool timing)
     {
-        for (auto id: apics) {
-            Addr addr = x86InterruptAddress(id, TriggerIntOffset);
-            PacketPtr pkt = buildIntPacket(addr, message);
-            if (timing) {
-                schedTimingReq(pkt, curTick() + latency);
-                // The target handles cleaning up the packet in timing mode.
-            } else {
-                // ignore the latency involved in the atomic transaction
-                sendAtomic(pkt);
-                assert(pkt->isResponse());
-                // also ignore the latency in handling the response
-                device->recvResponse(pkt);
-            }
+        if (timing) {
+            schedTimingReq(pkt, curTick() + latency);
+            // The target handles cleaning up the packet in timing mode.
+        } else {
+            // ignore the latency involved in the atomic transaction
+            sendAtomic(pkt);
+            assert(pkt->isResponse());
+            // also ignore the latency in handling the response
+            device->recvResponse(pkt);
         }
     }
 };
