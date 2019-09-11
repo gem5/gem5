@@ -331,7 +331,7 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
 }
 
 
-Tick
+bool
 X86ISA::Interrupts::recvResponse(PacketPtr pkt)
 {
     assert(!pkt->isError());
@@ -343,7 +343,7 @@ X86ISA::Interrupts::recvResponse(PacketPtr pkt)
         regs[APIC_INTERRUPT_COMMAND_LOW] = low;
     }
     DPRINTF(LocalApic, "ICR is now idle.\n");
-    return 0;
+    return true;
 }
 
 

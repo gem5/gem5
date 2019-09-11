@@ -106,7 +106,7 @@ class I82094AA : public BasicPioDevice, public IntDevice
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;
 
-    Tick recvResponse(PacketPtr pkt) override;
+    bool recvResponse(PacketPtr pkt) override;
 
     void signalInterrupt(int line);
     void raiseInterruptPin(int number);

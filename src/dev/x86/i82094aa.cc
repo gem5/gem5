@@ -85,12 +85,12 @@ X86ISA::I82094AA::getPort(const std::string &if_name, PortID idx)
         return BasicPioDevice::getPort(if_name, idx);
 }
 
-Tick
+bool
 X86ISA::I82094AA::recvResponse(PacketPtr pkt)
 {
     // Packet instantiated calling sendMessage() in signalInterrupt()
     delete pkt;
-    return 0;
+    return true;
 }
 
 Tick

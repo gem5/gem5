@@ -49,10 +49,11 @@
 
 #include "arch/x86/intmessage.hh"
 #include "arch/x86/x86_traits.hh"
-#include "mem/mport.hh"
+#include "mem/tport.hh"
 #include "sim/sim_object.hh"
 
-namespace X86ISA {
+namespace X86ISA
+{
 
 template <class Device>
 class IntSlavePort : public SimpleTimingPort
@@ -85,33 +86,56 @@ class IntSlavePort : public SimpleTimingPort
 
 typedef std::list<int> ApicList;
 
+template <class Device>
+class IntMasterPort : public QueuedMasterPort
+{
+    ReqPacketQueue reqQueue;
+    SnoopRespPacketQueue snoopRespQueue;
+
+    Device* device;
+    Tick latency;
+
+  public:
+    IntMasterPort(const std::string& _name, SimObject* _parent,
+                  Device* dev, Tick _latency) :
+        QueuedMasterPort(_name, _parent, reqQueue, snoopRespQueue),
+        reqQueue(*_parent, *this), snoopRespQueue(*_parent, *this),
+        device(dev), latency(_latency)
+    {
+    }
+
+    bool
+    recvTimingResp(PacketPtr pkt) override
+    {
+        return device->recvResponse(pkt);
+    }
+
+    // This is x86 focused, so if this class becomes generic, this would
+    // need to be moved into a subclass.
+    void
+    sendMessage(X86ISA::ApicList apics, TriggerIntMessage message, bool timing)
+    {
+        for (auto id: apics) {
+            PacketPtr pkt = buildIntRequest(id, message);
+            if (timing) {
+                schedTimingReq(pkt, curTick() + latency);
+                // The target handles cleaning up the packet in timing mode.
+            } else {
+                // ignore the latency involved in the atomic transaction
+                sendAtomic(pkt);
+                assert(pkt->isResponse());
+                // also ignore the latency in handling the response
+                device->recvResponse(pkt);
+            }
+        }
+    }
+};
+
 class IntDevice
 {
   protected:
 
-    class IntMasterPort : public MessageMasterPort
-    {
-        IntDevice* device;
-        Tick latency;
-      public:
-        IntMasterPort(const std::string& _name, SimObject* _parent,
-                      IntDevice* dev, Tick _latency) :
-            MessageMasterPort(_name, _parent), device(dev), latency(_latency)
-        {
-        }
-
-        Tick recvResponse(PacketPtr pkt)
-        {
-            return device->recvResponse(pkt);
-        }
-
-        // This is x86 focused, so if this class becomes generic, this would
-        // need to be moved into a subclass.
-        void sendMessage(ApicList apics,
-                TriggerIntMessage message, bool timing);
-    };
-
-    IntMasterPort intMasterPort;
+    IntMasterPort<IntDevice> intMasterPort;
 
   public:
     IntDevice(SimObject * parent, Tick latency = 0) :
@@ -124,11 +148,10 @@ class IntDevice
 
     virtual void init();
 
-    virtual Tick
+    virtual bool
     recvResponse(PacketPtr pkt)
     {
         panic("recvResponse not implemented.\n");
-        return 0;
     }
 };
 
