@@ -44,6 +44,7 @@
 #define __DEV_X86_INTDEV_HH__
 
 #include <cassert>
+#include <functional>
 #include <string>
 
 #include "mem/tport.hh"
@@ -96,11 +97,17 @@ buildIntPacket(Addr addr, T payload)
 template <class Device>
 class IntMasterPort : public QueuedMasterPort
 {
+  private:
     ReqPacketQueue reqQueue;
     SnoopRespPacketQueue snoopRespQueue;
 
     Device* device;
     Tick latency;
+
+    typedef std::function<void(PacketPtr)> OnCompletionFunc;
+    OnCompletionFunc onCompletion = nullptr;
+    // If nothing extra needs to happen, just clean up the packet.
+    static void defaultOnCompletion(PacketPtr pkt) { delete pkt; }
 
   public:
     IntMasterPort(const std::string& _name, SimObject* _parent,
@@ -114,21 +121,24 @@ class IntMasterPort : public QueuedMasterPort
     bool
     recvTimingResp(PacketPtr pkt) override
     {
-        return device->recvResponse(pkt);
+        assert(pkt->isResponse());
+        onCompletion(pkt);
+        onCompletion = nullptr;
+        return true;
     }
 
     void
-    sendMessage(PacketPtr pkt, bool timing)
+    sendMessage(PacketPtr pkt, bool timing,
+            OnCompletionFunc func=defaultOnCompletion)
     {
         if (timing) {
+            onCompletion = func;
             schedTimingReq(pkt, curTick() + latency);
             // The target handles cleaning up the packet in timing mode.
         } else {
             // ignore the latency involved in the atomic transaction
             sendAtomic(pkt);
-            assert(pkt->isResponse());
-            // also ignore the latency in handling the response
-            device->recvResponse(pkt);
+            func(pkt);
         }
     }
 };

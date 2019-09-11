@@ -206,7 +206,7 @@ class Interrupts : public PioDevice
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
     Tick recvMessage(PacketPtr pkt);
-    bool recvResponse(PacketPtr pkt);
+    void completeIPI(PacketPtr pkt);
 
     bool
     triggerTimerInterrupt()

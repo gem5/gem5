@@ -331,11 +331,9 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
 }
 
 
-bool
-X86ISA::Interrupts::recvResponse(PacketPtr pkt)
+void
+X86ISA::Interrupts::completeIPI(PacketPtr pkt)
 {
-    assert(!pkt->isError());
-    assert(pkt->cmd == MemCmd::WriteResp);
     if (--pendingIPIs == 0) {
         InterruptCommandRegLow low = regs[APIC_INTERRUPT_COMMAND_LOW];
         // Record that the ICR is now idle.
@@ -343,7 +341,7 @@ X86ISA::Interrupts::recvResponse(PacketPtr pkt)
         regs[APIC_INTERRUPT_COMMAND_LOW] = low;
     }
     DPRINTF(LocalApic, "ICR is now idle.\n");
-    return true;
+    delete pkt;
 }
 
 
@@ -548,7 +546,8 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
             regs[APIC_INTERRUPT_COMMAND_LOW] = low;
             for (auto id: apics) {
                 PacketPtr pkt = buildIntTriggerPacket(id, message);
-                intMasterPort.sendMessage(pkt, sys->isTimingMode());
+                intMasterPort.sendMessage(pkt, sys->isTimingMode(),
+                        [this](PacketPtr pkt) { completeIPI(pkt); });
             }
             newVal = regs[APIC_INTERRUPT_COMMAND_LOW];
         }
