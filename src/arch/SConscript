@@ -60,7 +60,6 @@ Import('*')
 env.SwitchingHeaders(
     Split('''
         decoder.hh
-        interrupts.hh
         isa.hh
         isa_traits.hh
         kernel_stats.hh
