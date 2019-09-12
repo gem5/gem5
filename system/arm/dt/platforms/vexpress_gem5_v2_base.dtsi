@@ -49,6 +49,13 @@
 		#size-cells = <0x2>;
 		linux,phandle = <0x1>;
 		phandle = <0x1>;
+
+		gic-its@2e010000 {
+			compatible = "arm,gic-v3-its";
+			msi-controller;
+			#msi-cells = <1>;
+			reg = <0x0 0x2e010000 0 0x20000>;
+		};
 	};
 
 	timer {
