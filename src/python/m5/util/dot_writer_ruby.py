@@ -1,4 +1,4 @@
-# Copyright (c) 2019 ARM Limited
+# Copyright (c) 2019,2021 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -90,9 +90,24 @@ def _dot_create(network, callgraph):
         )
         connected[link.dst_node.path()] = link.src_node.path()
 
+    # Find common prefixes and sufixes to generate names
+    paths = [link.ext_node.path() for link in network.ext_links]
+    rpaths = [link.ext_node.path()[::-1] for link in network.ext_links]
+    preffix = os.path.commonprefix(paths)
+    suffix = os.path.commonprefix(rpaths)[::-1]
+    def strip_right(text, suffix):
+        if not text.endswith(suffix):
+            return text
+        return text[:len(text)-len(suffix)]
+    def strip_left(text, prefix):
+        if not text.startswith(prefix):
+            return text
+        return text[len(prefix):]
+
+
     for link in network.ext_links:
         ctrl = link.ext_node
-        label = ctrl._name
+        label = strip_right(strip_left(ctrl.path(), preffix), suffix)
         if hasattr(ctrl, '_node_type'):
             label += ' (' + ctrl._node_type + ')'
         callgraph.add_node(
