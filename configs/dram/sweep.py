@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015, 2018 ARM Limited
+# Copyright (c) 2014-2015, 2018-2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -78,8 +78,9 @@ parser.add_option("--mode", type="choice", default="DRAM",
                   help = "DRAM: Random traffic; \
                           DRAM_ROTATE: Traffic rotating across banks and ranks")
 
-parser.add_option("--addr_map", type="int", default=1,
-                  help = "0: RoCoRaBaCh; 1: RoRaBaCoCh/RoRaBaChCo")
+parser.add_argument("--addr-map",
+                    choices=m5.objects.AddrMap.vals,
+                    default="RoRaBaCoCh", help = "DRAM address map policy")
 
 (options, args) = parser.parse_args()
 
@@ -122,13 +123,7 @@ if not isinstance(system.mem_ctrls[0], m5.objects.DRAMCtrl):
 system.mem_ctrls[0].null = True
 
 # Set the address mapping based on input argument
-# Default to RoRaBaCoCh
-if options.addr_map == 0:
-   system.mem_ctrls[0].addr_mapping = "RoCoRaBaCh"
-elif options.addr_map == 1:
-   system.mem_ctrls[0].addr_mapping = "RoRaBaCoCh"
-else:
-    fatal("Did not specify a valid address map argument")
+system.mem_ctrls[0].addr_mapping = args.addr_map
 
 # stay in each state for 0.25 ms, long enough to warm things up, and
 # short enough to avoid hitting a refresh
@@ -183,6 +178,8 @@ root.system.mem_mode = 'timing'
 
 m5.instantiate()
 
+addr_map = m5.objects.AddrMap.map[args.addr_map]
+
 def trace():
     generator = dram_generators[options.mode](system.tgen)
     for bank in range(1, nbr_banks + 1):
@@ -192,7 +189,7 @@ def trace():
                             0, max_addr, burst_size, int(itt), int(itt),
                             options.rd_perc, 0,
                             num_seq_pkts, page_size, nbr_banks, bank,
-                            options.addr_map, options.mem_ranks)
+                            addr_map, options.mem_ranks)
     yield system.tgen.createExit(0)
 
 system.tgen.start(trace())

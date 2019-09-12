@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2017-2018 ARM Limited
+ * Copyright (c) 2012-2013, 2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -52,6 +52,7 @@
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 #include "dram_gen.hh"
+#include "enums/AddrMap.hh"
 #include "mem/packet.hh"
 
 class DramRotGen : public DramGen
@@ -84,7 +85,6 @@ class DramRotGen : public DramGen
      *                          for N banks, we will use banks: 0->(N-1)
      * @param nbr_of_ranks Number of ranks utilized,
      * @param addr_mapping Address mapping to be used,
-     *                     0: RoCoRaBaCh, 1: RoRaBaCoCh/RoRaBaChCo
      *                     assumes single channel system
      */
     DramRotGen(SimObject &obj, MasterID master_id, Tick _duration,
@@ -94,7 +94,7 @@ class DramRotGen : public DramGen
             uint8_t read_percent, Addr data_limit,
             unsigned int num_seq_pkts, unsigned int page_size,
             unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
-            unsigned int addr_mapping,
+            Enums::AddrMap addr_mapping,
             unsigned int nbr_of_ranks,
             unsigned int max_seq_count_per_rank)
         : DramGen(obj, master_id, _duration, start_addr, end_addr,

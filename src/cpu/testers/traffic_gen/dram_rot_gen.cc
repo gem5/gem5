@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2016-2017 ARM Limited
+ * Copyright (c) 2012-2013, 2016-2017, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,6 +47,7 @@
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/TrafficGen.hh"
+#include "enums/AddrMap.hh"
 
 PacketPtr
 DramRotGen::getNextPacket()
@@ -102,14 +103,13 @@ DramRotGen::getNextPacket()
 
     } else {
         // increment the column by one
-        if (addrMapping == 1)
-            // addrMapping=1: RoRaBaCoCh/RoRaBaChCo
+        if (addrMapping == Enums::RoRaBaCoCh ||
+            addrMapping == Enums::RoRaBaChCo)
             // Simply increment addr by blocksize to
             // increment the column by one
             addr += blocksize;
 
-        else if (addrMapping == 0) {
-            // addrMapping=0: RoCoRaBaCh
+        else if (addrMapping ==  Enums::RoCoRaBaCh) {
             // Explicity increment the column bits
 
                     unsigned int new_col = ((addr / blocksize /

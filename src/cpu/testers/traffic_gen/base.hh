@@ -47,6 +47,7 @@
 #include <unordered_map>
 
 #include "base/statistics.hh"
+#include "enums/AddrMap.hh"
 #include "mem/qport.hh"
 #include "sim/clocked_object.hh"
 
@@ -278,7 +279,7 @@ class BaseTrafficGen : public ClockedObject
         uint8_t read_percent, Addr data_limit,
         unsigned int num_seq_pkts, unsigned int page_size,
         unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
-        unsigned int addr_mapping,
+        Enums::AddrMap addr_mapping,
         unsigned int nbr_of_ranks);
 
     std::shared_ptr<BaseGen> createDramRot(
@@ -288,7 +289,7 @@ class BaseTrafficGen : public ClockedObject
         uint8_t read_percent, Addr data_limit,
         unsigned int num_seq_pkts, unsigned int page_size,
         unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
-        unsigned int addr_mapping,
+        Enums::AddrMap addr_mapping,
         unsigned int nbr_of_ranks,
         unsigned int max_seq_count_per_rank);
 

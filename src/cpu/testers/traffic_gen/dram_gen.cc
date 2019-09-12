@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2016-2018 ARM Limited
+ * Copyright (c) 2012-2013, 2016-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,7 +47,7 @@
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/TrafficGen.hh"
-
+#include "enums/AddrMap.hh"
 
 DramGen::DramGen(SimObject &obj,
                  MasterID master_id, Tick _duration,
@@ -58,7 +58,7 @@ DramGen::DramGen(SimObject &obj,
                  unsigned int num_seq_pkts, unsigned int page_size,
                  unsigned int nbr_of_banks_DRAM,
                  unsigned int nbr_of_banks_util,
-                 unsigned int addr_mapping,
+                 Enums::AddrMap addr_mapping,
                  unsigned int nbr_of_ranks)
         : RandomGen(obj, master_id, _duration, start_addr, end_addr,
           _blocksize, cacheline_size, min_period, max_period,
@@ -73,11 +73,6 @@ DramGen::DramGen(SimObject &obj,
           rankBits(floorLog2(nbr_of_ranks)),
           nbrOfRanks(nbr_of_ranks)
 {
-    if (addrMapping != 1 && addrMapping != 0) {
-        addrMapping = 1;
-        warn("Unknown address mapping specified, using RoRaBaCoCh\n");
-    }
-
     if (nbr_of_banks_util > nbr_of_banks_DRAM)
         fatal("Attempting to use more banks (%d) than "
               "what is available (%d)\n",
@@ -115,14 +110,13 @@ DramGen::getNextPacket()
 
     } else {
         // increment the column by one
-        if (addrMapping == 1)
-            // addrMapping=1: RoRaBaCoCh/RoRaBaChCo
+        if (addrMapping == Enums::RoRaBaCoCh ||
+            addrMapping == Enums::RoRaBaChCo)
             // Simply increment addr by blocksize to increment
             // the column by one
             addr += blocksize;
 
-        else if (addrMapping == 0) {
-            // addrMapping=0: RoCoRaBaCh
+        else if (addrMapping == Enums::RoCoRaBaCh) {
             // Explicity increment the column bits
             unsigned int new_col = ((addr / blocksize /
                                        nbrOfBanksDRAM / nbrOfRanks) %
@@ -177,8 +171,8 @@ DramGen::genStartAddr(unsigned int new_bank, unsigned int new_rank)
     unsigned int new_col =
         random_mt.random<unsigned int>(0, columns_per_page - numSeqPkts);
 
-    if (addrMapping == 1) {
-        // addrMapping=1: RoRaBaCoCh/RoRaBaChCo
+    if (addrMapping == Enums::RoRaBaCoCh ||
+        addrMapping == Enums::RoRaBaChCo) {
         // Block bits, then page bits, then bank bits, then rank bits
         replaceBits(addr, blockBits + pageBits + bankBits - 1,
                     blockBits + pageBits, new_bank);
@@ -187,8 +181,7 @@ DramGen::genStartAddr(unsigned int new_bank, unsigned int new_rank)
             replaceBits(addr, blockBits + pageBits + bankBits +rankBits - 1,
                         blockBits + pageBits + bankBits, new_rank);
         }
-    } else if (addrMapping == 0) {
-        // addrMapping=0: RoCoRaBaCh
+    } else if (addrMapping == Enums::RoCoRaBaCh) {
         // Block bits, then bank bits, then rank bits, then page bits
         replaceBits(addr, blockBits + bankBits - 1, blockBits, new_bank);
         replaceBits(addr, blockBits + bankBits + rankBits + pageBits - 1,
