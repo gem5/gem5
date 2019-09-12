@@ -410,6 +410,12 @@ let {{
     exec_output += DCStore64InitiateAcc.subst(msrDCZVAIop);
     exec_output += Store64CompleteAcc.subst(msrDCZVAIop);
 
+    # Cache maintenance fault annotation
+    # The DC ZVA instruction is not classified as a cache maintenance
+    # instruction, and therefore we shouldn't annotate it
+    cachem_fa = '''
+        fault->annotate(ArmFault::CM, 1);
+    '''
 
     msrdccvau_ea_code = msr_check_code
     msrdccvau_ea_code += '''
@@ -425,7 +431,8 @@ let {{
                                  { "ea_code" : msrdccvau_ea_code,
                                    "memacc_code" : ';',
                                    "use_uops" : 0,
-                                   "op_wb" : ";", "fa_code" : ";"},
+                                   "op_wb" : ";",
+                                   "fa_code" : cachem_fa},
                                  ['IsStore', 'IsMemRef']);
     header_output += DCStore64Declare.subst(msrDCCVAUIop);
     decoder_output += DCStore64Constructor.subst(msrDCCVAUIop);
@@ -448,7 +455,8 @@ let {{
                                  { "ea_code" : msrdccvac_ea_code,
                                    "memacc_code" : ';',
                                    "use_uops" : 0,
-                                   "op_wb" : ";", "fa_code" : ";"},
+                                   "op_wb" : ";",
+                                   "fa_code" : cachem_fa},
                                  ['IsStore', 'IsMemRef']);
     header_output += DCStore64Declare.subst(msrDCCVACIop);
     decoder_output += DCStore64Constructor.subst(msrDCCVACIop);
@@ -471,7 +479,8 @@ let {{
                                   { "ea_code" : msrdccivac_ea_code,
                                     "memacc_code" : ';',
                                     "use_uops" : 0,
-                                    "op_wb" : ";", "fa_code" : ";"},
+                                    "op_wb" : ";",
+                                    "fa_code" : cachem_fa},
                                   ['IsStore', 'IsMemRef']);
     header_output += DCStore64Declare.subst(msrDCCIVACIop);
     decoder_output += DCStore64Constructor.subst(msrDCCIVACIop);
@@ -500,7 +509,8 @@ let {{
                                  { "ea_code" : msrdcivac_ea_code,
                                    "memacc_code" : ';',
                                    "use_uops" : 0,
-                                   "op_wb" : ";", "fa_code" : ";"},
+                                   "op_wb" : ";",
+                                   "fa_code" : cachem_fa},
                                  ['IsStore', 'IsMemRef']);
     header_output += DCStore64Declare.subst(msrDCIVACIop);
     decoder_output += DCStore64Constructor.subst(msrDCIVACIop);
