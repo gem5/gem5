@@ -76,7 +76,7 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     ranksPerChannel(p->ranks_per_channel),
     bankGroupsPerRank(p->bank_groups_per_rank),
     bankGroupArch(p->bank_groups_per_rank > 0),
-    banksPerRank(p->banks_per_rank), channels(p->channels), rowsPerBank(0),
+    banksPerRank(p->banks_per_rank), rowsPerBank(0),
     readBufferSize(p->read_buffer_size),
     writeBufferSize(p->write_buffer_size),
     writeHighThreshold(writeBufferSize * p->write_high_thresh_perc / 100.0),
@@ -201,10 +201,6 @@ DRAMCtrl::init()
     // a bit of sanity checks on the interleaving, save it for here to
     // ensure that the system pointer is initialised
     if (range.interleaved()) {
-        if (channels != range.stripes())
-            fatal("%s has %d interleaved address stripes but %d channel(s)\n",
-                  name(), range.stripes(), channels);
-
         if (addrMapping == Enums::RoRaBaChCo) {
             if (rowBufferSize != range.granularity()) {
                 fatal("Channel interleaving of %s doesn't match RoRaBaChCo "
@@ -323,37 +319,12 @@ DRAMCtrl::decodeAddr(const PacketPtr pkt, Addr dramPktAddr, unsigned size,
 
     // we have removed the lowest order address bits that denote the
     // position within the column
-    if (addrMapping == Enums::RoRaBaChCo) {
+    if (addrMapping == Enums::RoRaBaChCo || addrMapping == Enums::RoRaBaCoCh) {
         // the lowest order bits denote the column to ensure that
         // sequential cache lines occupy the same row
         addr = addr / columnsPerRowBuffer;
 
-        // take out the channel part of the address
-        addr = addr / channels;
-
         // after the channel bits, get the bank bits to interleave
-        // over the banks
-        bank = addr % banksPerRank;
-        addr = addr / banksPerRank;
-
-        // after the bank, we get the rank bits which thus interleaves
-        // over the ranks
-        rank = addr % ranksPerChannel;
-        addr = addr / ranksPerChannel;
-
-        // lastly, get the row bits, no need to remove them from addr
-        row = addr % rowsPerBank;
-    } else if (addrMapping == Enums::RoRaBaCoCh) {
-        // take out the lower-order column bits
-        addr = addr / columnsPerStripe;
-
-        // take out the channel part of the address
-        addr = addr / channels;
-
-        // next, the higher-order column bites
-        addr = addr / (columnsPerRowBuffer / columnsPerStripe);
-
-        // after the column bits, we get the bank bits to interleave
         // over the banks
         bank = addr % banksPerRank;
         addr = addr / banksPerRank;
@@ -371,11 +342,6 @@ DRAMCtrl::decodeAddr(const PacketPtr pkt, Addr dramPktAddr, unsigned size,
 
         // take out the lower-order column bits
         addr = addr / columnsPerStripe;
-
-        // take out the channel part of the address, not that this has
-        // to match with how accesses are interleaved between the
-        // controllers in the address mapping
-        addr = addr / channels;
 
         // start with the bank bits, as this provides the maximum
         // opportunity for parallelism between requests
@@ -425,12 +391,13 @@ DRAMCtrl::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
     // address of first DRAM packet is kept unaliged. Subsequent DRAM packets
     // are aligned to burst size boundaries. This is to ensure we accurately
     // check read packets against packets in write queue.
-    Addr addr = pkt->getAddr();
+    const Addr base_addr = getCtrlAddr(pkt->getAddr());
+    Addr addr = base_addr;
     unsigned pktsServicedByWrQ = 0;
     BurstHelper* burst_helper = NULL;
     for (int cnt = 0; cnt < pktCount; ++cnt) {
         unsigned size = std::min((addr | (burstSize - 1)) + 1,
-                        pkt->getAddr() + pkt->getSize()) - addr;
+                                 base_addr + pkt->getSize()) - addr;
         stats.readPktSize[ceilLog2(size)]++;
         stats.readBursts++;
         stats.masterReadAccesses[pkt->masterId()]++;
@@ -525,10 +492,11 @@ DRAMCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
 
     // if the request size is larger than burst size, the pkt is split into
     // multiple DRAM packets
-    Addr addr = pkt->getAddr();
+    const Addr base_addr = getCtrlAddr(pkt->getAddr());
+    Addr addr = base_addr;
     for (int cnt = 0; cnt < pktCount; ++cnt) {
         unsigned size = std::min((addr | (burstSize - 1)) + 1,
-                        pkt->getAddr() + pkt->getSize()) - addr;
+                                 base_addr + pkt->getSize()) - addr;
         stats.writePktSize[ceilLog2(size)]++;
         stats.writeBursts++;
         stats.masterWriteAccesses[pkt->masterId()]++;

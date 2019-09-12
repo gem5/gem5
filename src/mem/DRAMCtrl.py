@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2018 ARM Limited
+# Copyright (c) 2012-2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -130,10 +130,6 @@ class DRAMCtrl(QoSMemCtrl):
     # update per memory class when bank group architecture is supported
     bank_groups_per_rank = Param.Unsigned(0, "Number of bank groups per rank")
     banks_per_rank = Param.Unsigned("Number of banks per rank")
-    # only used for the address mapping as the controller by
-    # construction is a single channel and multiple controllers have
-    # to be instantiated for a multi-channel configuration
-    channels = Param.Unsigned(1, "Number of channels")
 
     # Enable DRAM powerdown states if True. This is False by default due to
     # performance being lower when enabled

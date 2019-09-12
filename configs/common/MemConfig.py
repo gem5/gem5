@@ -66,10 +66,6 @@ def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size):
 
     # Only do this for DRAMs
     if issubclass(cls, m5.objects.DRAMCtrl):
-        # Inform each controller how many channels to account
-        # for
-        ctrl.channels = nbr_mem_ctrls
-
         # If the channel bits are appearing after the column
         # bits, we need to add the appropriate number of bits
         # for the row buffer size

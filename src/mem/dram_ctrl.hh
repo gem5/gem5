@@ -819,6 +819,20 @@ class DRAMCtrl : public QoS::MemCtrl
                            unsigned int size, bool isRead) const;
 
     /**
+     * Get an address in a dense range which starts from 0. The input
+     * address is the physical address of the request in an address
+     * space that contains other SimObjects apart from this
+     * controller.
+     *
+     * @param addr The intput address which should be in the addrRange
+     * @return An address in the continues range [0, max)
+     */
+    Addr getCtrlAddr(Addr addr)
+    {
+        return range.getOffset(addr);
+    }
+
+    /**
      * The memory schduler/arbiter - picks which request needs to
      * go next, based on the specified policy such as FCFS or FR-FCFS
      * and moves it to the head of the queue.
@@ -946,7 +960,6 @@ class DRAMCtrl : public QoS::MemCtrl
     const uint32_t bankGroupsPerRank;
     const bool bankGroupArch;
     const uint32_t banksPerRank;
-    const uint32_t channels;
     uint32_t rowsPerBank;
     const uint32_t readBufferSize;
     const uint32_t writeBufferSize;
