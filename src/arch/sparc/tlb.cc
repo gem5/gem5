@@ -61,7 +61,7 @@ TLB::TLB(const Params *p)
         fatal("SPARC T1 TLB registers don't support more than 64 TLB entries");
 
     tlb = new TlbEntry[size];
-    std::memset(tlb, 0, sizeof(TlbEntry) * size);
+    std::memset((void *)tlb, 0, sizeof(TlbEntry) * size);
 
     for (int x = 0; x < size; x++)
         freeList.push_back(&tlb[x]);
