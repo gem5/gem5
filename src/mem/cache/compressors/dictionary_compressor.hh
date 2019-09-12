@@ -272,8 +272,8 @@ class DictionaryCompressor<T>::Pattern
     /** Length, in bits, of the code and match location. */
     const uint8_t length;
 
-    /** Number of unmatched bytes. */
-    const uint8_t numUnmatchedBytes;
+    /** Number of unmatched bits. */
+    const uint8_t numUnmatchedBits;
 
     /** Index representing the the match location. */
     const int matchLocation;
@@ -288,14 +288,14 @@ class DictionaryCompressor<T>::Pattern
      * @param number Pattern number.
      * @param code Code associated to this pattern.
      * @param metadata_length Length, in bits, of the code and match location.
-     * @param num_unmatched_bytes Number of unmatched bytes.
+     * @param num_unmatched_bits Number of unmatched bits.
      * @param match_location Index of the match location.
      */
     Pattern(const int number, const uint64_t code,
-            const uint64_t metadata_length, const uint64_t num_unmatched_bytes,
+            const uint64_t metadata_length, const uint64_t num_unmatched_bits,
             const int match_location, const bool allocate = true)
         : patternNumber(number), code(code), length(metadata_length),
-          numUnmatchedBytes(num_unmatched_bytes),
+          numUnmatchedBits(num_unmatched_bits),
           matchLocation(match_location), allocate(allocate)
     {
     }
@@ -333,7 +333,7 @@ class DictionaryCompressor<T>::Pattern
     std::size_t
     getSizeBits() const
     {
-        return numUnmatchedBytes*CHAR_BIT + length;
+        return numUnmatchedBits + length;
     }
 
     /**
@@ -404,7 +404,7 @@ class DictionaryCompressor<T>::UncompressedPattern
         const int match_location,
         const DictionaryEntry bytes)
       : DictionaryCompressor<T>::Pattern(number, code, metadata_length,
-            sizeof(T), match_location, true),
+            sizeof(T) * 8, match_location, true),
         data(bytes)
     {
     }
@@ -456,7 +456,7 @@ class DictionaryCompressor<T>::MaskedPattern
         const DictionaryEntry bytes,
         const bool allocate = true)
       : DictionaryCompressor<T>::Pattern(number, code, metadata_length,
-            popCount(~mask) / 8, match_location, allocate),
+            popCount(~mask), match_location, allocate),
         bits(DictionaryCompressor<T>::fromDictionaryEntry(bytes) & ~mask)
     {
     }
