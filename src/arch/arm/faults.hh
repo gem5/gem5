@@ -136,6 +136,7 @@ class ArmFault : public FaultBase
         SAS,   // DataAbort: Syndrome Access Size
         SSE,   // DataAbort: Syndrome Sign Extend
         SRT,   // DataAbort: Syndrome Register Transfer
+        CM,    // DataAbort: Cache Maintenance/Address Translation Op
 
         // AArch64 only
         SF,    // DataAbort: width of the accessed register is SixtyFour
@@ -482,6 +483,7 @@ class DataAbort : public AbortFault<DataAbort>
     uint8_t sas;
     uint8_t sse;
     uint8_t srt;
+    uint8_t cm;
 
     // AArch64 only
     bool sf;
@@ -491,7 +493,7 @@ class DataAbort : public AbortFault<DataAbort>
               bool _stage2 = false, ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran) :
         AbortFault<DataAbort>(_addr, _write, _domain, _source, _stage2,
                               _tranMethod),
-        isv(false), sas (0), sse(0), srt(0), sf(false), ar(false)
+        isv(false), sas (0), sse(0), srt(0), cm(0), sf(false), ar(false)
     {}
 
     ExceptionClass ec(ThreadContext *tc) const override;

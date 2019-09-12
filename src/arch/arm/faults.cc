@@ -1369,6 +1369,9 @@ DataAbort::iss() const
 
     // Add on the data abort specific fields to the generic abort ISS value
     val  = AbortFault<DataAbort>::iss();
+
+    val |= cm << 8;
+
     // ISS is valid if not caused by a stage 1 page table walk, and when taken
     // to AArch64 only when directed to EL2
     if (!s1ptw && stage2 && (!to64 || toEL == EL2)) {
@@ -1411,6 +1414,9 @@ DataAbort::annotate(AnnotationIDs id, uint64_t val)
       case AR:
         isv = true;
         ar  = val;
+        break;
+      case CM:
+        cm  = val;
         break;
       // Just ignore unknown ID's
       default:
