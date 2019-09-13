@@ -114,13 +114,13 @@ class Ex5LittleCluster(devices.CpuCluster):
         super(Ex5LittleCluster, self).__init__(system, num_cpus, cpu_clock,
                                          cpu_voltage, *cpu_config)
 
-def createSystem(caches, kernel, bootscript,
-                 machine_type="VExpress_GEM5", disks=[]):
+def createSystem(caches, kernel, bootscript, machine_type="VExpress_GEM5",
+                 disks=[],  mem_size=default_mem_size):
     platform = ObjectList.platform_list.get(machine_type)
     m5.util.inform("Simulated platform: %s", platform.__name__)
 
     sys = devices.simpleSystem(LinuxArmSystem,
-                               caches, default_mem_size, platform(),
+                               caches, mem_size, platform(),
                                kernel=SysPaths.binary(kernel),
                                readfile=bootscript)
 
@@ -194,6 +194,8 @@ def addOptions(parser):
     parser.add_argument("--sim-quantum", type=str, default="1ms",
                         help="Simulation quantum for parallel simulation. " \
                         "Default: %(default)s")
+    parser.add_argument("--mem-size", type=str, default=default_mem_size,
+                        help="System memory size")
     parser.add_argument("-P", "--param", action="append", default=[],
         help="Set a SimObject parameter relative to the root node. "
              "An extended Python multi range slicing syntax can be used "
@@ -213,7 +215,7 @@ def build(options):
         "lpj=19988480",
         "norandmaps",
         "loglevel=8",
-        "mem=%s" % default_mem_size,
+        "mem=%s" % options.mem_size,
         "root=%s" % options.root,
         "rw",
         "init=%s" % options.kernel_init,
@@ -227,7 +229,8 @@ def build(options):
                           options.kernel,
                           options.bootscript,
                           options.machine_type,
-                          disks=disks)
+                          disks=disks,
+                          mem_size=options.mem_size)
 
     root.system = system
     system.boot_osflags = " ".join(kernel_cmd)
