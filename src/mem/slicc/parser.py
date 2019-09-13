@@ -128,7 +128,7 @@ class SLICC(Grammar):
     tokens = [ 'EQ', 'NE', 'LT', 'GT', 'LE', 'GE',
                'LEFTSHIFT', 'RIGHTSHIFT',
                'NOT', 'AND', 'OR',
-               'PLUS', 'DASH', 'STAR', 'SLASH',
+               'PLUS', 'DASH', 'STAR', 'SLASH', 'MOD',
                'INCR', 'DECR',
                'DOUBLE_COLON', 'SEMI',
                'ASSIGN', 'DOT',
@@ -150,6 +150,7 @@ class SLICC(Grammar):
     t_DASH = r'-'
     t_STAR = r'\*'
     t_SLASH = r'/'
+    t_MOD = r'%'
     t_DOUBLE_COLON = r'::'
     t_SEMI = r';'
     t_ASSIGN = r':='
@@ -165,7 +166,7 @@ class SLICC(Grammar):
         ('left', 'LT', 'GT', 'LE', 'GE'),
         ('left', 'RIGHTSHIFT', 'LEFTSHIFT'),
         ('left', 'PLUS', 'DASH'),
-        ('left', 'STAR', 'SLASH'),
+        ('left', 'STAR', 'SLASH', 'MOD'),
         ('right', 'NOT', 'UMINUS'),
     )
 
@@ -695,6 +696,7 @@ class SLICC(Grammar):
     def p_expr__binary_op(self, p):
         """expr : expr STAR  expr
                 | expr SLASH expr
+                | expr MOD   expr
                 | expr PLUS  expr
                 | expr DASH  expr
                 | expr LT    expr

@@ -64,7 +64,7 @@ class InfixOperatorExprAST(ExprAST):
             elif self.op in ("<<", ">>"):
                 expected_types = [("int", "int", "int"),
                                   ("Cycles", "int", "Cycles")]
-            elif self.op in ("+", "-", "*", "/"):
+            elif self.op in ("+", "-", "*", "/", "%"):
                 expected_types = [("int", "int", "int"),
                                   ("Cycles", "Cycles", "Cycles"),
                                   ("Tick", "Tick", "Tick"),
