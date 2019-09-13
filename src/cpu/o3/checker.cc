@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,45 +48,15 @@
 template
 class Checker<O3CPUImpl>;
 
-////////////////////////////////////////////////////////////////////////
-//
-//  CheckerCPU Simulation Object
-//
 O3Checker *
 O3CheckerParams::create()
 {
-    O3Checker::Params *params = new O3Checker::Params();
-    params->name = name;
-    params->numThreads = numThreads;
-    params->max_insts_any_thread = 0;
-    params->max_insts_all_threads = 0;
-    params->max_loads_any_thread = 0;
-    params->max_loads_all_threads = 0;
-    params->exitOnError = exitOnError;
-    params->updateOnError = updateOnError;
-    params->warnOnlyOnLoadError = warnOnlyOnLoadError;
-    params->clk_domain = clk_domain;
-    params->tracer = tracer;
-    // Hack to touch all parameters.  Consider not deriving Checker
-    // from BaseCPU..it's not really a CPU in the end.
-    Counter temp;
-    temp = max_insts_any_thread;
-    temp = max_insts_all_threads;
-    temp = max_loads_any_thread;
-    temp = max_loads_all_threads;
-    temp++;
-    Tick temp2 = progress_interval;
-    params->progress_interval = 0;
-    temp2++;
+    // The checker should check all instructions executed by the main
+    // cpu and therefore any parameters for early exit don't make much
+    // sense.
+    fatal_if(max_insts_any_thread || max_insts_all_threads ||
+             max_loads_any_thread || max_loads_all_threads ||
+             progress_interval, "Invalid checker parameters");
 
-    params->itb = itb;
-    params->dtb = dtb;
-    params->isa = isa;
-    params->system = system;
-    params->cpu_id = cpu_id;
-    params->profile = profile;
-    params->workload = workload;
-
-    O3Checker *cpu = new O3Checker(params);
-    return cpu;
+    return new O3Checker(this);
 }
