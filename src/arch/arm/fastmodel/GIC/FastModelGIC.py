@@ -464,3 +464,38 @@ class FastModelGIC(BaseGic):
 
     redistributor = VectorGicv3CommsInitiatorSocket(
             'GIC communication initiator')
+
+    def get_redist_bases(self):
+        """
+        The format of reg_base_per_redistributor is
+        '0.0.0.0=0x2c010000,0.0.0.1=0x2c020000...'
+        Return an array of base addresses
+        """
+        redists = self.sc_gic.reg_base_per_redistributor.split(",")
+        # make sure we have at least one redistributor
+        assert len(redists) > 0 and "=" in redists[0]
+        return [ int(r.split('=')[1], 16) for r in redists ]
+
+    def get_addr_ranges(self):
+        """ Return address ranges that should be served by this GIC """
+        sc_gic = self.sc_gic
+        gic_frame_size = 0x10000
+        # Add range of distributor
+        ranges = [AddrRange(sc_gic.reg_base, size=gic_frame_size)]
+        # Add ranges of redistributors
+        redist_frame_size = gic_frame_size * (4 if sc_gic.has_gicv4_1 else 2)
+        ranges += [
+            AddrRange(redist_base, size=redist_frame_size)
+            for redist_base in self.get_redist_bases()
+        ]
+        # Add ranges of ITSs
+        its_bases = [
+            sc_gic.its0_base, sc_gic.its1_base, sc_gic.its2_base,
+            sc_gic.its3_base
+        ]
+        ranges += [
+            AddrRange(its_bases[i], size=2 * gic_frame_size)
+            for i in xrange(sc_gic.its_count)
+        ]
+
+        return ranges

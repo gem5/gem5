@@ -57,7 +57,7 @@ from common import ObjectList
 from common.cores.arm import ex5_big, ex5_LITTLE
 
 import devices
-from devices import AtomicCluster, KvmCluster
+from devices import AtomicCluster, KvmCluster, FastmodelCluster
 
 
 default_disk = 'aarch64-ubuntu-trusty-headless.img'
@@ -156,6 +156,9 @@ cpu_types = {
 if devices.have_kvm:
     cpu_types["kvm"] = (KvmCluster, KvmCluster)
 
+# Only add the FastModel CPU if it has been compiled into gem5
+if devices.have_fastmodel:
+    cpu_types["fastmodel"] = (FastmodelCluster, FastmodelCluster)
 
 def addOptions(parser):
     parser.add_argument("--restore-from", type=str, default=None,
@@ -283,6 +286,15 @@ def build(options):
         system.dtb_filename = SysPaths.binary(options.dtb)
     else:
         system.generateDtb(m5.options.outdir, 'system.dtb')
+
+    if devices.have_fastmodel and issubclass(big_model, FastmodelCluster):
+        from m5 import arm_fast_model as fm, systemc as sc
+        # setup FastModels for simulation
+        fm.setup_simulation("cortexa76")
+        # setup SystemC
+        root.systemc_kernel = m5.objects.SystemC_Kernel()
+        m5.tlm.tlm_global_quantum_instance().set(
+            sc.sc_time(10000.0 / 100000000.0, sc.sc_time.SC_SEC))
 
     return root
 

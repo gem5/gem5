@@ -48,6 +48,7 @@ from common.Caches import *
 from common import ObjectList
 
 have_kvm = "ArmV8KvmCPU" in ObjectList.cpu_list.get_names()
+have_fastmodel = "FastModelCortexA76" in ObjectList.cpu_list.get_names()
 
 class L1I(L1_ICache):
     tag_latency = 1
@@ -185,6 +186,74 @@ class KvmCluster(CpuCluster):
     def addL1(self):
         pass
 
+class FastmodelCluster(SubSystem):
+    def __init__(self, system,  num_cpus, cpu_clock, cpu_voltage="1.0V"):
+        super(FastmodelCluster, self).__init__()
+
+        # Setup GIC
+        gic = system.realview.gic
+        gic.sc_gic.cpu_affinities = ','.join(
+            [ '0.0.%d.0' % i for i in range(num_cpus) ])
+
+        # Parse the base address of redistributor.
+        redist_base = gic.get_redist_bases()[0]
+        redist_frame_size = 0x40000 if gic.sc_gic.has_gicv4_1 else 0x20000
+        gic.sc_gic.reg_base_per_redistributor = ','.join([
+            '0.0.%d.0=%#x' % (i, redist_base + redist_frame_size * i)
+            for i in range(num_cpus)
+        ])
+
+        gic_a2t = AmbaToTlmBridge64(amba=gic.amba_m)
+        gic_t2g = TlmToGem5Bridge64(tlm=gic_a2t.tlm, gem5=system.iobus.slave)
+        gic_g2t = Gem5ToTlmBridge64(gem5=system.membus.master)
+        gic_g2t.addr_ranges = gic.get_addr_ranges()
+        gic_t2a = AmbaFromTlmBridge64(tlm=gic_g2t.tlm)
+        gic.amba_s = gic_t2a.amba
+
+        system.gic_hub = SubSystem()
+        system.gic_hub.gic_a2t = gic_a2t
+        system.gic_hub.gic_t2g = gic_t2g
+        system.gic_hub.gic_g2t = gic_g2t
+        system.gic_hub.gic_t2a = gic_t2a
+
+        self.voltage_domain = VoltageDomain(voltage=cpu_voltage)
+        self.clk_domain = SrcClockDomain(clock=cpu_clock,
+                                         voltage_domain=self.voltage_domain)
+
+        # Setup CPU
+        assert num_cpus <= 4
+        CpuClasses = [FastModelCortexA76x1, FastModelCortexA76x2,
+                      FastModelCortexA76x3, FastModelCortexA76x4]
+        CpuClass = CpuClasses[num_cpus - 1]
+
+        cpu = CpuClass(GICDISABLE=False)
+        for core in cpu.cores:
+            core.semihosting_enable = False
+            core.RVBARADDR = 0x10
+            core.redistributor = gic.redistributor
+        self.cpus = [ cpu ]
+
+        a2t = AmbaToTlmBridge64(amba=cpu.amba)
+        t2g = TlmToGem5Bridge64(tlm=a2t.tlm, gem5=system.membus.slave)
+        system.gic_hub.a2t = a2t
+        system.gic_hub.t2g = t2g
+
+        system.addCpuCluster(self, num_cpus)
+
+    def requireCaches(self):
+        return False
+
+    def memoryMode(self):
+        return 'atomic_noncaching'
+
+    def addL1(self):
+        pass
+
+    def addL2(self, clk_domain):
+        pass
+
+    def connectMemSide(self, bus):
+        pass
 
 def simpleSystem(BaseSystem, caches, mem_size, platform=None, **kwargs):
     """
