@@ -196,6 +196,8 @@ def addOptions(parser):
                         "Default: %(default)s")
     parser.add_argument("--mem-size", type=str, default=default_mem_size,
                         help="System memory size")
+    parser.add_argument("--kernel-cmd", type=str, default=None,
+                        help="Custom Linux kernel command")
     parser.add_argument("-P", "--param", action="append", default=[],
         help="Set a SimObject parameter relative to the root node. "
              "An extended Python multi range slicing syntax can be used "
@@ -233,7 +235,10 @@ def build(options):
                           mem_size=options.mem_size)
 
     root.system = system
-    system.boot_osflags = " ".join(kernel_cmd)
+    if options.kernel_cmd:
+        system.boot_osflags = options.kernel_cmd
+    else:
+        system.boot_osflags = " ".join(kernel_cmd)
 
     if options.big_cpus + options.little_cpus == 0:
         m5.util.panic("Empty CPU clusters")
