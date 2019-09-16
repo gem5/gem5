@@ -36,6 +36,39 @@
 namespace FastModel
 {
 
+int
+SCGIC::Terminator::countUnbound(const Initiators &inits)
+{
+    int count = 0;
+    for (auto &init: inits)
+        if (!init.get_port_base().size())
+            count++;
+    return count;
+}
+
+SCGIC::Terminator::Terminator(
+        sc_core::sc_module_name _name, Initiators &inits) :
+    sc_core::sc_module(_name),
+    targets("targets", countUnbound(inits))
+{
+    // For every unbound initiator socket, connected it to one
+    // terminator target socket.
+    int i = 0;
+    for (auto &init: inits) {
+        if (!init.get_port_base().size()) {
+            auto &term = targets.at(i++);
+            term.bind(*this);
+            term.bind(init);
+        }
+    }
+}
+
+void
+SCGIC::Terminator::sendTowardsCPU(uint8_t len, const uint8_t *data)
+{
+    panic("Call to terminated interface!");
+}
+
 SCGIC::SCGIC(const SCFastModelGICParams &params,
              sc_core::sc_module_name _name) : scx_evs_GIC(_name)
 {
@@ -257,27 +290,39 @@ SCGIC::SCGIC(const SCFastModelGICParams &params,
     set_parameter("gic.consolidators", params.consolidators);
 }
 
+void
+SCGIC::before_end_of_elaboration()
+{
+    scx_evs_GIC::before_end_of_elaboration();
+    terminator.reset(new Terminator("terminator", redistributor));
+}
+
 GIC::GIC(const FastModelGICParams &params) :
     BaseGic(&params),
     ambaM(params.sc_gic->amba_m, params.name + ".amba_m", -1),
     ambaS(params.sc_gic->amba_s, params.name + ".amba_s", -1),
-    redistributor(params.sc_gic->redistributor,
-                  params.name + ".redistributor", -1),
+    redistributors(params.port_redistributor_connection_count),
     scGIC(params.sc_gic)
-{
-}
+{}
 
 Port &
 GIC::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name == "amba_m")
+    if (if_name == "amba_m") {
         return ambaM;
-    else if (if_name == "amba_s")
+    } else if (if_name == "amba_s") {
         return ambaS;
-    else if (if_name == "redistributor")
-        return redistributor;
-    else
+    } else if (if_name == "redistributor") {
+        auto &ptr = redistributors.at(idx);
+        if (!ptr) {
+            ptr.reset(new TlmGicInitiator(scGIC->redistributor[idx],
+                                          csprintf("%s.redistributor[%d]",
+                                                   name(), idx), idx));
+        }
+        return *ptr;
+    } else {
         return BaseGic::getPort(if_name, idx);
+    }
 }
 
 void

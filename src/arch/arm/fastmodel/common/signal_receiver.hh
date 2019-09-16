@@ -31,6 +31,7 @@
 #define __ARCH_ARM_FASTMODEL_COMMON_SIGNAL_RECEIVER_HH__
 
 #include <amba_pv.h>
+
 #include <functional>
 
 namespace FastModel

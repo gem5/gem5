@@ -325,7 +325,7 @@ component GIC
     master port<AMBAPV> amba_m;
     slave port<AMBAPV> amba_s;
 
-    master port<GICv3Comms> redistributor;
+    master port<GICv3Comms> redistributor[256];
 
     #define setPPI(C) \
           case C: ppi_##C[num].setValue(state); \

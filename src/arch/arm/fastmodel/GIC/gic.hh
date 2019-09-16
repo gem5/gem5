@@ -32,6 +32,8 @@
 
 #include <amba_pv.h>
 
+#include <memory>
+
 #include "arch/arm/fastmodel/amba_ports.hh"
 #include "dev/arm/base_gic.hh"
 #include "params/FastModelGIC.hh"
@@ -50,10 +52,40 @@ namespace FastModel
 // the work.
 class SCGIC : public scx_evs_GIC
 {
+  private:
+    // The unconnected CPU ports/sockets still need to be connected for TLM to
+    // be happy, so this module finds all unbound sockets, creates pair
+    // sockets for them to connect to, binds everything together, and
+    // implements the target interface with a dummy stub that will complain
+    // and crash gem5 if it ever gets called.
+    class Terminator : public sc_core::sc_module,
+                            public svp_gicv3_comms::gicv3_comms_fw_if
+    {
+      protected:
+        typedef sc_core::sc_vector<
+            svp_gicv3_comms::gicv3_comms_initiator_socket<>> Initiators;
+        typedef sc_core::sc_vector<
+            svp_gicv3_comms::gicv3_comms_target_socket<>> Targets;
+
+        Targets targets;
+
+        static int countUnbound(const Initiators &inits);
+
+      public:
+        Terminator(sc_core::sc_module_name _name, Initiators &inits);
+
+        // Stub out the terminated interface.
+        void sendTowardsCPU(uint8_t len, const uint8_t *data) override;
+    };
+
+    std::unique_ptr<Terminator> terminator;
+
   public:
     SCGIC(const SCFastModelGICParams &params, sc_core::sc_module_name _name);
 
     SignalInterruptInitiatorSocket signalInterrupt;
+
+    void before_end_of_elaboration() override;
 
     void
     end_of_elaboration() override
@@ -77,7 +109,7 @@ class GIC : public BaseGic
 
     AmbaInitiator ambaM;
     AmbaTarget ambaS;
-    TlmGicInitiator redistributor;
+    std::vector<std::unique_ptr<TlmGicInitiator>> redistributors;
 
     SCGIC *scGIC;
 

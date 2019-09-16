@@ -47,6 +47,11 @@ class Gicv3CommsInitiatorSocket(Port):
         super(Gicv3CommsInitiatorSocket, self).__init__(
                 GICV3_COMMS_TARGET_ROLE, desc, is_source=True)
 
+class VectorGicv3CommsInitiatorSocket(VectorPort):
+    def __init__(self, desc):
+        super(VectorGicv3CommsInitiatorSocket, self).__init__(
+                GICV3_COMMS_TARGET_ROLE, desc, is_source=True)
+
 
 class SCFastModelGIC(SystemC_ScModule):
     type = 'SCFastModelGIC'
@@ -457,4 +462,5 @@ class FastModelGIC(BaseGic):
     amba_m = AmbaInitiatorSocket(64, 'Memory initiator socket')
     amba_s = AmbaTargetSocket(64, 'Memory target socket')
 
-    redistributor = Gicv3CommsInitiatorSocket('GIC communication initiator')
+    redistributor = VectorGicv3CommsInitiatorSocket(
+            'GIC communication initiator')
