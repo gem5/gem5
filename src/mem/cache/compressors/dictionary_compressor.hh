@@ -111,6 +111,9 @@ template <class T>
 class DictionaryCompressor : public BaseDictionaryCompressor
 {
   protected:
+    /** Convenience typedef for a dictionary entry. */
+    typedef std::array<uint8_t, sizeof(T)> DictionaryEntry;
+
     /**
      * Compression data for the dictionary compressor. It consists of a vector
      * of patterns.
@@ -120,9 +123,8 @@ class DictionaryCompressor : public BaseDictionaryCompressor
     // Forward declaration of a pattern
     class Pattern;
     class UncompressedPattern;
-
-    /** Convenience typedef for a dictionary entry. */
-    typedef std::array<uint8_t, sizeof(T)> DictionaryEntry;
+    template <T mask>
+    class MaskedPattern;
 
     /**
      * Create a factory to determine if input matches a pattern. The if else
@@ -417,6 +419,64 @@ class DictionaryCompressor<T>::UncompressedPattern
     decompress(const DictionaryEntry dict_bytes) const override
     {
         return data;
+    }
+};
+
+/**
+ * A pattern that compares masked values against dictionary entries. If
+ * the masked dictionary entry matches perfectly the masked value to be
+ * compressed, there is a pattern match.
+ *
+ * For example, if the mask is 0xFF00 (that is, this pattern matches the MSB),
+ * the value (V) 0xFF20 is being compressed, and the dictionary contains
+ * the value (D) 0xFF03, this is a match (V & mask == 0xFF00 == D & mask),
+ * and 0x0020 is added to the list of unmatched bits.
+ *
+ * @tparam mask A mask containing the bits that must match.
+ */
+template <class T>
+template <T mask>
+class DictionaryCompressor<T>::MaskedPattern
+    : public DictionaryCompressor<T>::Pattern
+{
+  private:
+    static_assert(mask != 0, "The pattern's value mask must not be zero. Use "
+        "the uncompressed pattern instead.");
+
+    /** A copy of the bits that do not belong to the mask. */
+    const T bits;
+
+  public:
+    MaskedPattern(const int number,
+        const uint64_t code,
+        const uint64_t metadata_length,
+        const int match_location,
+        const DictionaryEntry bytes,
+        const bool allocate = true)
+      : DictionaryCompressor<T>::Pattern(number, code, metadata_length,
+            popCount(~mask) / 8, match_location, allocate),
+        bits(DictionaryCompressor<T>::fromDictionaryEntry(bytes) & ~mask)
+    {
+    }
+
+    static bool
+    isPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
+        const int match_location)
+    {
+        const T masked_bytes =
+            DictionaryCompressor<T>::fromDictionaryEntry(bytes) & mask;
+        const T masked_dict_bytes =
+            DictionaryCompressor<T>::fromDictionaryEntry(dict_bytes) & mask;
+        return (match_location >= 0) && (masked_bytes == masked_dict_bytes);
+    }
+
+    DictionaryEntry
+    decompress(const DictionaryEntry dict_bytes) const override
+    {
+        const T masked_dict_bytes =
+            DictionaryCompressor<T>::fromDictionaryEntry(dict_bytes) & mask;
+        return DictionaryCompressor<T>::toDictionaryEntry(
+            bits | masked_dict_bytes);
     }
 };
 

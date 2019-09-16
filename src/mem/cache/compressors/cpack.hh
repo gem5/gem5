@@ -154,55 +154,21 @@ class CPack::PatternXXXX : public UncompressedPattern
     }
 };
 
-class CPack::PatternMMMM : public DictionaryCompressor::Pattern
+class CPack::PatternMMMM : public MaskedPattern<0xFFFFFFFF>
 {
   public:
     PatternMMMM(const DictionaryEntry bytes, const int match_location)
-        : Pattern(MMMM, 0x2, 6, 0, match_location, true) {}
-
-    static bool isPattern(const DictionaryEntry& bytes,
-        const DictionaryEntry& dict_bytes,
-        const int match_location)
+        : MaskedPattern<0xFFFFFFFF>(MMMM, 0x2, 6, match_location, bytes, true)
     {
-        return (bytes == dict_bytes) && (match_location >= 0);
-    }
-
-    DictionaryEntry
-    decompress(const DictionaryEntry dict_bytes) const override
-    {
-        return dict_bytes;
     }
 };
 
-class CPack::PatternMMXX : public DictionaryCompressor::Pattern
+class CPack::PatternMMXX : public MaskedPattern<0xFFFF0000>
 {
-  private:
-    /**
-     * A copy of the unmatched bytes.
-     */
-    const uint8_t byte0;
-    const uint8_t byte1;
-
   public:
     PatternMMXX(const DictionaryEntry bytes, const int match_location)
-        : Pattern(MMXX, 0xC, 8, 2, match_location, true),
-                  byte0(bytes[0]), byte1(bytes[1]) {}
-
-    static bool isPattern(const DictionaryEntry& bytes,
-        const DictionaryEntry& dict_bytes,
-        const int match_location)
+        : MaskedPattern<0xFFFF0000>(MMXX, 0xC, 8, match_location, bytes, true)
     {
-        // Notice we don't compare bytes[0], as otherwise we'd be unnecessarily
-        // discarding MMXM. If that pattern is added this should be modified
-        return (bytes[3] == dict_bytes[3]) && (bytes[2] == dict_bytes[2]) &&
-               (bytes[1] != dict_bytes[1]) && (match_location >= 0);
-
-    }
-
-    DictionaryEntry
-    decompress(const DictionaryEntry dict_bytes) const override
-    {
-        return {byte0, byte1, dict_bytes[2], dict_bytes[3]};
     }
 };
 
@@ -233,32 +199,12 @@ class CPack::PatternZZZX : public DictionaryCompressor::Pattern
     }
 };
 
-class CPack::PatternMMMX : public DictionaryCompressor::Pattern
+class CPack::PatternMMMX : public MaskedPattern<0xFFFFFF00>
 {
-  private:
-    /**
-     * A copy of the unmatched byte.
-     */
-    const uint8_t byte;
-
   public:
     PatternMMMX(const DictionaryEntry bytes, const int match_location)
-        : Pattern(MMMX, 0xE, 8, 1, match_location, true),
-                  byte(bytes[0]) {}
-
-    static bool isPattern(const DictionaryEntry& bytes,
-        const DictionaryEntry& dict_bytes,
-        const int match_location)
+        : MaskedPattern<0xFFFFFF00>(MMMX, 0xE, 8, match_location, bytes, true)
     {
-        return (bytes[3] == dict_bytes[3]) && (bytes[2] == dict_bytes[2]) &&
-               (bytes[1] == dict_bytes[1]) && (bytes[0] != dict_bytes[0]) &&
-               (match_location >= 0);
-    }
-
-    DictionaryEntry
-    decompress(const DictionaryEntry dict_bytes) const override
-    {
-        return {byte, dict_bytes[1], dict_bytes[2], dict_bytes[3]};
     }
 };
 
