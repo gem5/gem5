@@ -217,7 +217,7 @@ namespace X86ISA
         // the avg. over all pages.
         Stats::Scalar avgReuseDistance;
 
-        void regStats();
+        void regStats() override;
         void updatePageFootprint(Addr virt_page_addr);
         void printAccessPattern();
 
@@ -235,8 +235,8 @@ namespace X86ISA
         TlbEntry *insert(Addr vpn, TlbEntry &entry);
 
         // Checkpointing
-        virtual void serialize(CheckpointOut& cp) const;
-        virtual void unserialize(CheckpointIn& cp);
+        virtual void serialize(CheckpointOut& cp) const override;
+        virtual void unserialize(CheckpointIn& cp) override;
         void issueTranslation();
         enum tlbOutcome {TLB_HIT, TLB_MISS, PAGE_WALK, MISS_RETURN};
         bool tlbLookup(const RequestPtr &req,

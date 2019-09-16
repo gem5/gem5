@@ -280,7 +280,7 @@ class ComputeUnit : public ClockedObject
     bool cedeSIMD(int simdId, int wfSlotId);
 
     template<typename c0, typename c1> void doSmReturn(GPUDynInstPtr gpuDynInst);
-    virtual void init();
+    virtual void init() override;
     void sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt);
     void sendSyncRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt);
     void injectGlobalMemFence(GPUDynInstPtr gpuDynInst,
@@ -380,7 +380,7 @@ class ComputeUnit : public ClockedObject
     int glbMemInstAvail;
 
     void
-    regStats();
+    regStats() override;
 
     LdsState &
     getLds() const

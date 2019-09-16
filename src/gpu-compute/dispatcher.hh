@@ -103,8 +103,8 @@ class GpuDispatcher : public DmaDevice
         ~GpuDispatcher() { }
 
         void exec();
-        virtual void serialize(CheckpointOut &cp) const;
-        virtual void unserialize(CheckpointIn &cp);
+        virtual void serialize(CheckpointOut &cp) const override;
+        virtual void unserialize(CheckpointIn &cp) override;
         void notifyWgCompl(Wavefront *w);
         void scheduleDispatch();
         void accessUserVar(BaseCPU *cpu, uint64_t addr, int val, int off);
@@ -143,9 +143,9 @@ class GpuDispatcher : public DmaDevice
         Port &getPort(const std::string &if_name,
                       PortID idx=InvalidPortID) override;
 
-        AddrRangeList getAddrRanges() const;
-        Tick read(PacketPtr pkt);
-        Tick write(PacketPtr pkt);
+        AddrRangeList getAddrRanges() const override;
+        Tick read(PacketPtr pkt) override;
+        Tick write(PacketPtr pkt) override;
 
         // helper functions to retrieve/set GPU attributes
         int getNumCUs();

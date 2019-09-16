@@ -143,7 +143,7 @@ class TLBCoalescer : public ClockedObject
 
     bool canCoalesce(PacketPtr pkt1, PacketPtr pkt2);
     void updatePhysAddresses(PacketPtr pkt);
-    void regStats();
+    void regStats() override;
 
     // Clock related functions. Maps to-and-from
     // Simulation ticks and object clocks.
