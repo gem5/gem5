@@ -127,6 +127,8 @@ class DictionaryCompressor : public BaseDictionaryCompressor
     class MaskedPattern;
     template <T value, T mask>
     class MaskedValuePattern;
+    template <class RepT>
+    class RepeatedValuePattern;
 
     /**
      * Create a factory to determine if input matches a pattern. The if else
@@ -535,6 +537,74 @@ class DictionaryCompressor<T>::MaskedValuePattern
     {
         return MaskedPattern<mask>::decompress(
             DictionaryCompressor<T>::toDictionaryEntry(value));
+    }
+};
+
+/**
+ * A pattern that checks if dictionary entry sized values are solely composed
+ * of multiple copies of a single value.
+ *
+ * For example, if we are looking for repeated bytes in a 1-byte granularity
+ * (RepT is uint8_t), the value 0x3232 would match, however 0x3332 wouldn't.
+ *
+ * @tparam RepT The type of the repeated value, which must fit in a dictionary
+ *              entry.
+ */
+template <class T>
+template <class RepT>
+class DictionaryCompressor<T>::RepeatedValuePattern
+    : public DictionaryCompressor<T>::Pattern
+{
+  private:
+    static_assert(sizeof(T) > sizeof(RepT), "The repeated value's type must "
+        "be smaller than the dictionary entry's type.");
+
+    /** The repeated value. */
+    RepT value;
+
+  public:
+    RepeatedValuePattern(const int number,
+        const uint64_t code,
+        const uint64_t metadata_length,
+        const int match_location,
+        const DictionaryEntry bytes,
+        const bool allocate = true)
+      : DictionaryCompressor<T>::Pattern(number, code, metadata_length,
+            8 * sizeof(RepT), match_location, allocate),
+        value(DictionaryCompressor<T>::fromDictionaryEntry(bytes))
+    {
+    }
+
+    static bool
+    isPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
+        const int match_location)
+    {
+        // Parse the dictionary entry in a RepT granularity, and if all values
+        // are equal, this is a repeated value pattern. Since the dictionary
+        // is not being used, the match_location is irrelevant
+        T bytes_value = DictionaryCompressor<T>::fromDictionaryEntry(bytes);
+        const RepT rep_value = bytes_value;
+        for (int i = 0; i < (sizeof(T) / sizeof(RepT)); i++) {
+            RepT cur_value = bytes_value;
+            if (cur_value != rep_value) {
+                return false;
+            }
+            bytes_value >>= 8 * sizeof(RepT);
+        }
+        return true;
+    }
+
+    DictionaryEntry
+    decompress(const DictionaryEntry dict_bytes) const override
+    {
+        // The decompressed value is just multiple consecutive instances of
+        // the same value
+        T decomp_value = 0;
+        for (int i = 0; i < (sizeof(T) / sizeof(RepT)); i++) {
+            decomp_value <<= 8 * sizeof(RepT);
+            decomp_value |= value;
+        }
+        return DictionaryCompressor<T>::toDictionaryEntry(decomp_value);
     }
 };
 
