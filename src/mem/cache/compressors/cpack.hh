@@ -124,24 +124,13 @@ class CPack : public DictionaryCompressor<uint32_t>
     ~CPack() {};
 };
 
-class CPack::PatternZZZZ : public DictionaryCompressor::Pattern
+class CPack::PatternZZZZ : public MaskedValuePattern<0, 0xFFFFFFFF>
 {
   public:
     PatternZZZZ(const DictionaryEntry bytes, const int match_location)
-        : Pattern(ZZZZ, 0x0, 2, 0, 0, false) {}
-
-    static bool isPattern(const DictionaryEntry& bytes,
-        const DictionaryEntry& dict_bytes,
-        const int match_location)
+        : MaskedValuePattern<0, 0xFFFFFFFF>(ZZZZ, 0x0, 2, match_location,
+          bytes)
     {
-        return (bytes[3] == 0) && (bytes[2] == 0) && (bytes[1] == 0) &&
-               (bytes[0] == 0);
-    }
-
-    DictionaryEntry
-    decompress(const DictionaryEntry dict_bytes) const override
-    {
-        return {0, 0, 0, 0};
     }
 };
 
@@ -172,30 +161,13 @@ class CPack::PatternMMXX : public MaskedPattern<0xFFFF0000>
     }
 };
 
-class CPack::PatternZZZX : public DictionaryCompressor::Pattern
+class CPack::PatternZZZX : public MaskedValuePattern<0, 0xFFFFFF00>
 {
-  private:
-    /**
-     * A copy of the unmatched byte.
-     */
-    const uint8_t byte;
-
   public:
     PatternZZZX(const DictionaryEntry bytes, const int match_location)
-        : Pattern(ZZZX, 0xD, 4, 1, 0, false), byte(bytes[0]) {}
-
-    static bool isPattern(const DictionaryEntry& bytes,
-        const DictionaryEntry& dict_bytes,
-        const int match_location)
+        : MaskedValuePattern<0, 0xFFFFFF00>(ZZZX, 0xD, 4, match_location,
+          bytes)
     {
-        return (bytes[3] == 0) && (bytes[2] == 0) && (bytes[1] == 0) &&
-               (bytes[0] != 0);
-    }
-
-    DictionaryEntry
-    decompress(const DictionaryEntry dict_bytes) const override
-    {
-        return {byte, 0, 0, 0};
     }
 };
 

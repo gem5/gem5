@@ -125,6 +125,8 @@ class DictionaryCompressor : public BaseDictionaryCompressor
     class UncompressedPattern;
     template <T mask>
     class MaskedPattern;
+    template <T value, T mask>
+    class MaskedValuePattern;
 
     /**
      * Create a factory to determine if input matches a pattern. The if else
@@ -477,6 +479,62 @@ class DictionaryCompressor<T>::MaskedPattern
             DictionaryCompressor<T>::fromDictionaryEntry(dict_bytes) & mask;
         return DictionaryCompressor<T>::toDictionaryEntry(
             bits | masked_dict_bytes);
+    }
+};
+
+/**
+ * A pattern that compares masked values to a masked portion of a fixed value.
+ * If all the masked bits match the provided non-dictionary value, there is a
+ * pattern match.
+ *
+ * For example, assume the mask is 0xFF00 (that is, this pattern matches the
+ * MSB), and we are searching for data containing only ones (i.e., the fixed
+ * value is 0xFFFF).
+ * If the value (V) 0xFF20 is being compressed, this is a match (V & mask ==
+ * 0xFF00 == 0xFFFF & mask), and 0x20 is added to the list of unmatched bits.
+ * If the value (V2) 0x0120 is being compressed, this is not a match
+ * ((V2 & mask == 0x0100) != (0xFF00 == 0xFFFF & mask).
+ *
+ * @tparam value The value that is being matched against.
+ * @tparam mask A mask containing the bits that must match the given value.
+ */
+template <class T>
+template <T value, T mask>
+class DictionaryCompressor<T>::MaskedValuePattern
+    : public MaskedPattern<mask>
+{
+  private:
+    static_assert(mask != 0, "The pattern's value mask must not be zero.");
+
+  public:
+    MaskedValuePattern(const int number,
+        const uint64_t code,
+        const uint64_t metadata_length,
+        const int match_location,
+        const DictionaryEntry bytes,
+        const bool allocate = false)
+      : MaskedPattern<mask>(number, code, metadata_length, match_location,
+            bytes, allocate)
+    {
+    }
+
+    static bool
+    isPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
+        const int match_location)
+    {
+        // Compare the masked fixed value to the value being checked for
+        // patterns. Since the dictionary is not being used the match_location
+        // is irrelevant.
+        const T masked_bytes =
+            DictionaryCompressor<T>::fromDictionaryEntry(bytes) & mask;
+        return ((value & mask) == masked_bytes);
+    }
+
+    DictionaryEntry
+    decompress(const DictionaryEntry dict_bytes) const override
+    {
+        return MaskedPattern<mask>::decompress(
+            DictionaryCompressor<T>::toDictionaryEntry(value));
     }
 };
 
