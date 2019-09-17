@@ -119,6 +119,7 @@ class DictionaryCompressor : public BaseDictionaryCompressor
 
     // Forward declaration of a pattern
     class Pattern;
+    class UncompressedPattern;
 
     /** Convenience typedef for a dictionary entry. */
     typedef std::array<uint8_t, sizeof(T)> DictionaryEntry;
@@ -150,15 +151,23 @@ class DictionaryCompressor : public BaseDictionaryCompressor
         }
     };
 
-    /** Specialization to end the recursion. */
+    /**
+     * Specialization to end the recursion. This must be called when all
+     * other patterns failed, and there is no choice but to leave data
+     * uncompressed. As such, this pattern must inherit from the uncompressed
+     * pattern.
+     */
     template <class Head>
     struct Factory<Head>
     {
+        static_assert(std::is_base_of<UncompressedPattern, Head>::value,
+            "The last pattern must always be derived from the uncompressed "
+            "pattern.");
+
         static std::unique_ptr<Pattern>
         getPattern(const DictionaryEntry& bytes,
             const DictionaryEntry& dict_bytes, const int match_location)
         {
-            // Instantiate last pattern. Should be the XXXX pattern.
             return std::unique_ptr<Pattern>(new Head(bytes, match_location));
         }
     };
@@ -369,6 +378,46 @@ class DictionaryCompressor<T>::CompData : public CompressionData
      * @param entry The new pattern entry.
      */
     virtual void addEntry(std::unique_ptr<Pattern>);
+};
+
+/**
+ * A pattern containing the original uncompressed data. This should be the
+ * worst case of every pattern factory, where if all other patterns fail,
+ * an instance of this pattern is created.
+ */
+template <class T>
+class DictionaryCompressor<T>::UncompressedPattern
+    : public DictionaryCompressor<T>::Pattern
+{
+  private:
+    /** A copy of the original data. */
+    const DictionaryEntry data;
+
+  public:
+    UncompressedPattern(const int number,
+        const uint64_t code,
+        const uint64_t metadata_length,
+        const int match_location,
+        const DictionaryEntry bytes)
+      : DictionaryCompressor<T>::Pattern(number, code, metadata_length,
+            sizeof(T), match_location, true),
+        data(bytes)
+    {
+    }
+
+    static bool
+    isPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
+        const int match_location)
+    {
+        // An entry can always be uncompressed
+        return true;
+    }
+
+    DictionaryEntry
+    decompress(const DictionaryEntry dict_bytes) const override
+    {
+        return data;
+    }
 };
 
 #endif //__MEM_CACHE_COMPRESSORS_DICTIONARY_COMPRESSOR_HH__

@@ -145,31 +145,12 @@ class CPack::PatternZZZZ : public DictionaryCompressor::Pattern
     }
 };
 
-class CPack::PatternXXXX : public DictionaryCompressor::Pattern
+class CPack::PatternXXXX : public UncompressedPattern
 {
-  private:
-    /**
-     * A copy of the word.
-     */
-    const DictionaryEntry bytes;
-
   public:
     PatternXXXX(const DictionaryEntry bytes, const int match_location)
-        : Pattern(XXXX, 0x1, 2, 4, 0, true), bytes(bytes) {}
-
-    static bool isPattern(const DictionaryEntry& bytes,
-        const DictionaryEntry& dict_bytes,
-        const int match_location)
+        : UncompressedPattern(XXXX, 0x1, 2, match_location, bytes)
     {
-        // It can always be an unmatch, as it is set to this class when other
-        // patterns fail
-        return true;
-    }
-
-    DictionaryEntry
-    decompress(const DictionaryEntry dict_bytes) const override
-    {
-        return bytes;
     }
 };
 
