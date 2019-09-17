@@ -151,9 +151,9 @@ Terminal::terminalDump(const TerminalParams* p)
     switch (p->outfile) {
       case Enums::TerminalDump::none:
         return nullptr;
-      case Enums::TerminalDump::stdout:
+      case Enums::TerminalDump::stdoutput:
         return simout.findOrCreate("stdout");
-      case Enums::TerminalDump::stderr:
+      case Enums::TerminalDump::stderror:
         return simout.findOrCreate("stderr");
       case Enums::TerminalDump::file:
         return simout.findOrCreate(p->name);
