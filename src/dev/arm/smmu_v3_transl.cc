@@ -803,7 +803,7 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
         tr = combineTranslations(tr, s2tr);
     }
 
-    walkCacheUpdate(yield, addr, tr.addrMask, tr.addr,
+    walkCacheUpdate(yield, addr, tr.addrMask, walkPtr,
                     1, level, true, tr.writable);
 
     return tr;
