@@ -226,7 +226,10 @@ SMMUTranslationProcess::main(Yield &yield)
         hazardIdRelease();
 
         if (tr.fault != FAULT_NONE)
-            panic("fault\n");
+            panic("Translation Fault (addr=%#x, size=%#x, sid=%d, ssid=%d, "
+                    "isWrite=%d, isPrefetch=%d, isAtsRequest=%d)\n",
+                    request.addr, request.size, request.sid, request.ssid,
+                    request.isWrite, request.isPrefetch, request.isAtsRequest);
 
         completeTransaction(yield, tr);
     }
