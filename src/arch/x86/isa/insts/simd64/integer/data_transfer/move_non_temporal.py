@@ -38,12 +38,12 @@
 
 microcode = '''
 def macroop MOVNTQ_M_MMX {
-    warn "MOVNTQ: Ignoring non-temporal hint, modeling as cacheable!"
+    warn_once "MOVNTQ: Ignoring non-temporal hint, modeling as cacheable!"
     stfp mmx, seg, sib, "DISPLACEMENT", dataSize=8
 };
 
 def macroop MOVNTQ_P_MMX {
-    warn "MOVNTQ_P: Ignoring non-temporal hint, modeling as cacheable!"
+    warn_once "MOVNTQ_P: Ignoring non-temporal hint, modeling as cacheable!"
     rdip t7
     stfp mmx, seg, riprel, "DISPLACEMENT", dataSize=8
 };

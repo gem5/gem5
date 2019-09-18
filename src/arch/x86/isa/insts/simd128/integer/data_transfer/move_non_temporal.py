@@ -38,14 +38,14 @@
 
 microcode = '''
 def macroop MOVNTDQ_M_XMM {
-    warn "MOVNTDQ: Ignoring non-temporal hint, modeling as cacheable!"
+    warn_once "MOVNTDQ: Ignoring non-temporal hint, modeling as cacheable!"
     cda seg, sib, "DISPLACEMENT + 8", dataSize=8
     stfp xmml, seg, sib, "DISPLACEMENT", dataSize=8
     stfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8
 };
 
 def macroop MOVNTDQ_P_XMM {
-    warn "MOVNTDQ_P: Ignoring non-temporal hint, modeling as cacheable!"
+    warn_once "MOVNTDQ_P: Ignoring non-temporal hint, modeling as cacheable!"
     rdip t7
     cda seg, riprel, "DISPLACEMENT + 8", dataSize=8
     stfp xmml, seg, riprel, "DISPLACEMENT", dataSize=8
