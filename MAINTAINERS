@@ -13,12 +13,13 @@ maintainers.
 
 PMC Members (general maintainers):
   Ali Saidi <asaidi@gmail.com>
-  Andreas Hansson <andreas.hansson@arm.com>
   Andreas Sandberg <andreas.sandberg@arm.com>
-  Tony Gutierrez <anthony.gutierrez@amd.com>
   Brad Beckmann <brad.beckmann@amd.com>
-  Jason Lowe-Power <jason@lowepower.com>
-  Nathan Binkert <nate@binkert.org>
+  David Wood <david@cs.wisc.edu>
+  Gabe Black <gabeblack@google.com>
+  Jason Lowe-Power <jason@lowepower.com> (chair)
+  Matt Sinclair <sinclair@cs.wisc.edu>
+  Tony Gutierrez <anthony.gutierrez@amd.com>
   Steve Reinhardt <stever@gmail.com>
 
 arch: General architecture-specific components
