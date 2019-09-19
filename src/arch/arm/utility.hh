@@ -117,6 +117,10 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 
 void initCPU(ThreadContext *tc, int cpuId);
 
+/** Send an event (SEV) to a specific PE if there isn't
+ * already a pending event */
+void sendEvent(ThreadContext *tc);
+
 static inline bool
 inUserMode(CPSR cpsr)
 {

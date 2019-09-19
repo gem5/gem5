@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013,2017-2018 ARM Limited
+// Copyright (c) 2010-2013,2017-2019 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -784,11 +784,9 @@ let {{
         ThreadContext *oc = sys->getThreadContext(x);
         if (oc == xc->tcBase())
             continue;
+
         // Wake CPU with interrupt if they were sleeping
-        if (oc->readMiscReg(MISCREG_SEV_MAILBOX) == 0) {
-            // Post Interrupt and wake cpu if needed
-            oc->getCpuPtr()->postInterrupt(oc->threadId(), INT_SEV, 0);
-        }
+        sendEvent(oc);
     }
     '''
     sevIop = InstObjParams("sev", "SevInst", "PredOp", \

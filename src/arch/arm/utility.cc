@@ -192,6 +192,15 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     dynamic_cast<TLB *>(dest->getDTBPtr())->invalidateMiscReg();
 }
 
+void
+sendEvent(ThreadContext *tc)
+{
+    if (tc->readMiscReg(MISCREG_SEV_MAILBOX) == 0) {
+        // Post Interrupt and wake cpu if needed
+        tc->getCpuPtr()->postInterrupt(tc->threadId(), INT_SEV, 0);
+    }
+}
+
 bool
 inSecureState(ThreadContext *tc)
 {
