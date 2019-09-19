@@ -365,18 +365,16 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
                             in_msg.addr, cache_entry, tbe);
                 } else {
                     // No room in the L1, so we need to make room in the L1
-                    Entry victim_entry :=
-                        getCacheEntry(cache.cacheProbe(in_msg.addr));
-                    TBE victim_tbe := TBEs[cache.cacheProbe(in_msg.addr)];
+                    Addr victim := cache.cacheProbe(in_msg.addr);
+                    Entry victim_entry := getCacheEntry(victim);
+                    TBE victim_tbe := TBEs[victim];
 
                     if (is_valid(victim_entry) && inL0Cache(victim_entry.CacheState)) {
                         trigger(Event:L0_Invalidate_Own,
-                                cache.cacheProbe(in_msg.addr),
-                                victim_entry, victim_tbe);
+                                victim, victim_entry, victim_tbe);
                     }  else {
                         trigger(Event:L1_Replacement,
-                                cache.cacheProbe(in_msg.addr),
-                                victim_entry, victim_tbe);
+                                victim, victim_entry, victim_tbe);
                     }
                 }
             }

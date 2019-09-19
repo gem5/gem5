@@ -714,9 +714,9 @@ machine(MachineType:L2Cache, "Token protocol")
           Entry cache_entry := getCacheEntry(in_msg.addr);
           if (is_invalid(cache_entry) &&
                    L2cache.cacheAvail(in_msg.addr) == false) {
-            trigger(Event:L2_Replacement, L2cache.cacheProbe(in_msg.addr),
-                    getCacheEntry(L2cache.cacheProbe(in_msg.addr)),
-                    TBEs[L2cache.cacheProbe(in_msg.addr)]);
+            Addr victim := L2cache.cacheProbe(in_msg.addr);
+            trigger(Event:L2_Replacement,
+                    victim, getCacheEntry(victim), TBEs[victim]);
           }
           else {
             trigger(Event:L1_WBDIRTYDATA, in_msg.addr,
@@ -726,9 +726,9 @@ machine(MachineType:L2Cache, "Token protocol")
           Entry cache_entry := getCacheEntry(in_msg.addr);
           if (is_invalid(cache_entry) &&
                    L2cache.cacheAvail(in_msg.addr) == false) {
-            trigger(Event:L2_Replacement, L2cache.cacheProbe(in_msg.addr),
-                    getCacheEntry(L2cache.cacheProbe(in_msg.addr)),
-                    TBEs[L2cache.cacheProbe(in_msg.addr)]);
+            Addr victim := L2cache.cacheProbe(in_msg.addr);
+            trigger(Event:L2_Replacement,
+                    victim, getCacheEntry(victim), TBEs[victim]);
           }
           else {
             trigger(Event:L1_WBCLEANDATA, in_msg.addr,

@@ -427,9 +427,9 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
                         pf_entry, tbe);
               } else {
                 trigger(Event:Pf_Replacement,
-                        probeFilter.cacheProbe(in_msg.addr),
-                        getProbeFilterEntry(probeFilter.cacheProbe(in_msg.addr)),
-                        TBEs[probeFilter.cacheProbe(in_msg.addr)]);
+                Addr victim := probeFilter.cacheProbe(in_msg.addr);
+                trigger(Event:Pf_Replacement,
+                        victim, getProbeFilterEntry(victim), TBEs[victim]);
               }
             }
           } else {

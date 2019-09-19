@@ -696,9 +696,9 @@ machine(MachineType:L1Cache, "Token protocol")
             } else {
               // No room in the L1, so we need to make room
               trigger(Event:L1_Replacement,
-                      L1Icache.cacheProbe(in_msg.LineAddress),
-                      getL1ICacheEntry(L1Icache.cacheProbe(in_msg.LineAddress)),
-                      L1_TBEs[L1Icache.cacheProbe(in_msg.LineAddress)]);
+              Addr victim := L1Icache.cacheProbe(in_msg.LineAddress);
+              trigger(Event:L1_Replacement,
+                      victim, getL1ICacheEntry(victim), L1_TBEs[victim]);
             }
           }
         } else {
@@ -726,10 +726,9 @@ machine(MachineType:L1Cache, "Token protocol")
                       in_msg.LineAddress, L1Dcache_entry, tbe);
             } else {
               // No room in the L1, so we need to make room
+              Addr victim := L1Dcache.cacheProbe(in_msg.LineAddress);
               trigger(Event:L1_Replacement,
-                      L1Dcache.cacheProbe(in_msg.LineAddress),
-                      getL1DCacheEntry(L1Dcache.cacheProbe(in_msg.LineAddress)),
-                      L1_TBEs[L1Dcache.cacheProbe(in_msg.LineAddress)]);
+                      victim, getL1DCacheEntry(victim), L1_TBEs[victim]);
             }
           }
         }

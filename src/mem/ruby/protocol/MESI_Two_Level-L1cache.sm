@@ -330,10 +330,9 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
                               L1Icache_entry, TBEs[in_msg.LineAddress]);
                   } else {
                       // No room in the L1, so we need to make room in the L1
+                      Addr victim := L1Icache.cacheProbe(in_msg.LineAddress);
                       trigger(Event:PF_L1_Replacement,
-                              L1Icache.cacheProbe(in_msg.LineAddress),
-                              getL1ICacheEntry(L1Icache.cacheProbe(in_msg.LineAddress)),
-                              TBEs[L1Icache.cacheProbe(in_msg.LineAddress)]);
+                              victim, getL1ICacheEntry(victim), TBEs[victim]);
                   }
               } else {
                   // Data prefetch
@@ -364,10 +363,9 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
                               L1Dcache_entry, TBEs[in_msg.LineAddress]);
                   } else {
                       // No room in the L1, so we need to make room in the L1
+                      Addr victim := L1Dcache.cacheProbe(in_msg.LineAddress);
                       trigger(Event:PF_L1_Replacement,
-                              L1Dcache.cacheProbe(in_msg.LineAddress),
-                              getL1DCacheEntry(L1Dcache.cacheProbe(in_msg.LineAddress)),
-                              TBEs[L1Dcache.cacheProbe(in_msg.LineAddress)]);
+                              victim, getL1DCacheEntry(victim), TBEs[victim]);
                   }
               }
           }

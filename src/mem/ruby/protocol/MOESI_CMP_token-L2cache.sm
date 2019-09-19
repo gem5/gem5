@@ -449,9 +449,8 @@ machine(MachineType:L2Cache, "Token protocol")
               }
             }
             else {
-                trigger(Event:L2_Replacement,
-                        L2cache.cacheProbe(in_msg.addr),
-                        getCacheEntry(L2cache.cacheProbe(in_msg.addr)));
+                Addr victim := L2cache.cacheProbe(in_msg.addr);
+                trigger(Event:L2_Replacement, victim, getCacheEntry(victim));
             }
           } else if (in_msg.Type == CoherenceResponseType:INV) {
             trigger(Event:L1_INV, in_msg.addr, cache_entry);
@@ -486,9 +485,8 @@ machine(MachineType:L2Cache, "Token protocol")
               }
             }
             else {
-                trigger(Event:L2_Replacement,
-                        L2cache.cacheProbe(in_msg.addr),
-                        getCacheEntry(L2cache.cacheProbe(in_msg.addr)));
+                Addr victim := L2cache.cacheProbe(in_msg.addr);
+                trigger(Event:L2_Replacement, victim, getCacheEntry(victim));
             }
           } else if (in_msg.Type == CoherenceResponseType:INV) {
             trigger(Event:L1_INV, in_msg.addr, cache_entry);
