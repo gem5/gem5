@@ -47,6 +47,7 @@ import m5
 
 import _m5.stats
 from m5.objects import Root
+from m5.params import isNullPointer
 from m5.util import attrdict, fatal
 
 # Stat exports
@@ -253,6 +254,8 @@ def _visit_stats(visitor, root=None):
 
 def _bindStatHierarchy(root):
     def _bind_obj(name, obj):
+        if isNullPointer(obj):
+            return
         if m5.SimObject.isSimObjectVector(obj):
             for idx, obj in enumerate(obj):
                 _bind_obj("{}{}".format(name, idx), obj)
