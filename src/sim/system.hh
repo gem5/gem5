@@ -200,7 +200,7 @@ class System : public SimObject
     std::vector<ThreadContext *> threadContexts;
     const bool multiThread;
 
-    ThreadContext *getThreadContext(ContextID tid)
+    ThreadContext *getThreadContext(ContextID tid) const
     {
         return threadContexts[tid];
     }
