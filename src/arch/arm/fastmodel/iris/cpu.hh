@@ -48,7 +48,7 @@ static const std::string ClockEventName = "gem5_clock_period_event";
 static const std::string PeriodAttributeName = "gem5_clock_period_attribute";
 // The name of the attribute the subsystem should create which will be set to
 // a pointer to its corresponding gem5 CPU.
-static const std::string Gem5CpuAttributeName = "gem5_cpu";
+static const std::string Gem5CpuClusterAttributeName = "gem5_cpu_cluster";
 // The name of the attribute the subsystem should create to hold the
 // sendFunctional delegate for port proxies.
 static const std::string SendFunctionalAttributeName = "gem5_send_functional";
@@ -133,7 +133,7 @@ class CPU : public Iris::BaseCPU
         System *sys = params->system;
 
         int thread_id = 0;
-        for (const std::string &sub_path: params->core_paths) {
+        for (const std::string &sub_path: params->thread_paths) {
             std::string path = parent_path + "." + sub_path;
             auto *tc = new TC(this, thread_id++, sys, iris_if, path);
             threadContexts.push_back(tc);

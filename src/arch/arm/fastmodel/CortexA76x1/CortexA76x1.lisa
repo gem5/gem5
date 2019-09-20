@@ -61,27 +61,27 @@ component CortexA76x1
         ambaBridge.amba_pv_m => self.amba;
 
         // Connection to the GIC.
-        self.redistributor =>core.gicv3_redistributor_s[0];
+        self.redistributor => core.gicv3_redistributor_s;
 
         // Connections from CPU to adapters
         core.CNTHPIRQ[0] => CNTHPIRQ.sg_signal_s;
-        CNTHPIRQ.amba_pv_signal_m => self.cnthpirq;
+        CNTHPIRQ.amba_pv_signal_m => self.cnthpirq[0];
         core.CNTHVIRQ[0] => CNTHVIRQ.sg_signal_s;
-        CNTHVIRQ.amba_pv_signal_m => self.cnthvirq;
+        CNTHVIRQ.amba_pv_signal_m => self.cnthvirq[0];
         core.CNTPNSIRQ[0] => CNTPNSIRQ.sg_signal_s;
-        CNTPNSIRQ.amba_pv_signal_m => self.cntpnsirq;
+        CNTPNSIRQ.amba_pv_signal_m => self.cntpnsirq[0];
         core.CNTPSIRQ[0] => CNTPSIRQ.sg_signal_s;
-        CNTPSIRQ.amba_pv_signal_m => self.cntpsirq;
+        CNTPSIRQ.amba_pv_signal_m => self.cntpsirq[0];
         core.CNTVIRQ[0] => CNTVIRQ.sg_signal_s;
-        CNTVIRQ.amba_pv_signal_m => self.cntvirq;
+        CNTVIRQ.amba_pv_signal_m => self.cntvirq[0];
         core.commirq[0] => COMMIRQ.sg_signal_s;
-        COMMIRQ.amba_pv_signal_m => self.commirq;
+        COMMIRQ.amba_pv_signal_m => self.commirq[0];
         core.ctidbgirq[0] => CTIDBGIRQ.sg_signal_s;
-        CTIDBGIRQ.amba_pv_signal_m => self.ctidbgirq;
+        CTIDBGIRQ.amba_pv_signal_m => self.ctidbgirq[0];
         core.pmuirq[0] => PMUIRQ.sg_signal_s;
-        PMUIRQ.amba_pv_signal_m => self.pmuirq;
+        PMUIRQ.amba_pv_signal_m => self.pmuirq[0];
         core.vcpumntirq[0] => VCPUMNTIRQ.sg_signal_s;
-        VCPUMNTIRQ.amba_pv_signal_m => self.vcpumntirq;
+        VCPUMNTIRQ.amba_pv_signal_m => self.vcpumntirq[0];
 
         // Clocks.
         clock1Hz.clk_out => clockDiv.clk_in;
@@ -103,16 +103,16 @@ component CortexA76x1
             clockDiv.rate.set64(mul, div);
         }
     }
-    slave port<GICv3Comms> redistributor;
+    slave port<GICv3Comms> redistributor[1];
 
     // External ports for CPU-to-GIC signals
-    master port<AMBAPVSignal> cnthpirq;
-    master port<AMBAPVSignal> cnthvirq;
-    master port<AMBAPVSignal> cntpsirq;
-    master port<AMBAPVSignal> cntvirq;
-    master port<AMBAPVSignal> commirq;
-    master port<AMBAPVSignal> ctidbgirq;
-    master port<AMBAPVSignal> pmuirq;
-    master port<AMBAPVSignal> vcpumntirq;
-    master port<AMBAPVSignal> cntpnsirq;
+    master port<AMBAPVSignal> cnthpirq[1];
+    master port<AMBAPVSignal> cnthvirq[1];
+    master port<AMBAPVSignal> cntpsirq[1];
+    master port<AMBAPVSignal> cntvirq[1];
+    master port<AMBAPVSignal> commirq[1];
+    master port<AMBAPVSignal> ctidbgirq[1];
+    master port<AMBAPVSignal> pmuirq[1];
+    master port<AMBAPVSignal> vcpumntirq[1];
+    master port<AMBAPVSignal> cntpnsirq[1];
 }

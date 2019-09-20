@@ -26,32 +26,129 @@
 # Authors: Gabe Black
 
 from m5.params import *
+from m5.proxy import *
 from m5.SimObject import SimObject
 
 from m5.objects.ArmInterrupts import ArmInterrupts
 from m5.objects.ArmISA import ArmISA
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
 from m5.objects.FastModelArch import FastModelArmCPU
-from m5.objects.FastModelGIC import Gicv3CommsInitiatorSocket
 from m5.objects.FastModelGIC import Gicv3CommsTargetSocket
 from m5.objects.Gic import ArmPPI
 from m5.objects.SystemC import SystemC_ScModule
 
-class FastModelCortexA76x1(SystemC_ScModule):
-    type = 'FastModelCortexA76x1'
-    cxx_class = 'FastModel::CortexA76x1'
+class FastModelCortexA76(FastModelArmCPU):
+    type = 'FastModelCortexA76'
+    cxx_class = 'FastModel::CortexA76'
     cxx_header = 'arch/arm/fastmodel/CortexA76x1/cortex_a76x1.hh'
 
-    _core_paths = [ 'core.cpu0' ]
-    cpu_wrapper = FastModelArmCPU(
-            core_paths=_core_paths,
+    cntfrq = 0x1800000
 
-            cntfrq = 0x1800000,
+    # We shouldn't need these, but gem5 gets mad without them.
+    interrupts = [ ArmInterrupts() ]
+    isa = [ ArmISA() ]
 
-            # We shouldn't need these, but gem5 gets mad without them.
-            interrupts = [ ArmInterrupts() ],
-            isa = [ ArmISA() ],
-    )
+    evs = Parent.evs
+
+    redistributor = Gicv3CommsTargetSocket('GIC communication target')
+
+    CFGEND = Param.Bool(False, "Endianness configuration at reset.  "\
+            "0, little endian. 1, big endian.")
+    CFGTE = Param.Bool(False, "Instruction set state when resetting "\
+            "into AArch32.  0, A32. 1, T32.")
+    CRYPTODISABLE = Param.Bool(False, "Disable cryptographic features.")
+    RVBARADDR = Param.Addr(0x0, "Value of RVBAR_ELx register.")
+    VINITHI = Param.Bool(False, "Reset value of SCTLR.V.")
+    enable_trace_special_hlt_imm16 = Param.Bool(False,
+            "Enable usage of parameter trace_special_hlt_imm16")
+    l2cache_hit_latency = Param.UInt64(0, "L2 Cache timing annotation "\
+            "latency for hit.  Intended to model the tag-lookup time.  This "\
+            "is only used when l2cache-state_modelled=true.")
+    l2cache_maintenance_latency = Param.UInt64(0, "L2 Cache timing "\
+            "annotation latency for cache maintenance operations given in "\
+            "total ticks. This is only used when dcache-state_modelled=true.")
+    l2cache_miss_latency = Param.UInt64(0, "L2 Cache timing annotation "\
+            "latency for miss.  Intended to model the time for failed "\
+            "tag-lookup and allocation of intermediate buffers.  This is "\
+            "only used when l2cache-state_modelled=true.")
+    l2cache_read_access_latency = Param.UInt64(0, "L2 Cache timing "\
+            "annotation latency for read accesses given in ticks per "\
+            "access.  If this parameter is non-zero, per-access latencies "\
+            "will be used instead of per-byte even if l2cache-read_latency "\
+            "is set. This is in addition to the hit or miss latency, and "\
+            "intended to correspond to the time taken to transfer across the "\
+            "cache upstream bus, this is only used when "\
+            "l2cache-state_modelled=true.")
+    l2cache_read_latency = Param.UInt64(0, "L2 Cache timing annotation "\
+            "latency for read accesses given in ticks per byte "\
+            "accessed.l2cache-read_access_latency must be set to 0 for "\
+            "per-byte latencies to be applied.  This is in addition to the "\
+            "hit or miss latency, and intended to correspond to the time "\
+            "taken to transfer across the cache upstream bus. This is only "\
+            "used when l2cache-state_modelled=true.")
+    l2cache_size = Param.MemorySize32('0x80000', "L2 Cache size in bytes.")
+    l2cache_snoop_data_transfer_latency = Param.UInt64(0, "L2 Cache "\
+            "timing annotation latency for received snoop accesses that "\
+            "perform a data transfer given in ticks per byte accessed. This "\
+            "is only used when dcache-state_modelled=true.")
+    l2cache_snoop_issue_latency = Param.UInt64(0, "L2 Cache timing "\
+            "annotation latency for snoop accesses issued by this cache in "\
+            "total ticks. This is only used when dcache-state_modelled=true.")
+    l2cache_write_access_latency = Param.UInt64(0, "L2 Cache timing "\
+            "annotation latency for write accesses given in ticks per "\
+            "access. If this parameter is non-zero, per-access latencies "\
+            "will be used instead of per-byte even if l2cache-write_latency "\
+            "is set. This is only used when l2cache-state_modelled=true.")
+    l2cache_write_latency = Param.UInt64(0, "L2 Cache timing annotation "\
+            "latency for write accesses given in ticks per byte accessed. "\
+            "l2cache-write_access_latency must be set to 0 for per-byte "\
+            "latencies to be applied. This is only used when "\
+            "l2cache-state_modelled=true.")
+    max_code_cache_mb = Param.MemorySize32('0x100', "Maximum size of "\
+            "the simulation code cache (MiB). For platforms with more than 2 "\
+            "cores this limit will be scaled down. (e.g 1/8 for 16 or more "\
+            "cores)")
+    min_sync_level = Param.Unsigned(0, "Force minimum syncLevel "\
+            "(0=off=default,1=syncState,2=postInsnIO,3=postInsnAll)")
+    semihosting_A32_HLT = Param.UInt16(0xf000,
+            "A32 HLT number for semihosting calls.")
+    semihosting_A64_HLT = Param.UInt16(0xf000,
+            "A64 HLT number for semihosting calls.")
+    semihosting_ARM_SVC = Param.UInt32(0x123456,
+            "A32 SVC number for semihosting calls.")
+    semihosting_T32_HLT = Param.Unsigned(60,
+            "T32 HLT number for semihosting calls.")
+    semihosting_Thumb_SVC = Param.Unsigned(171,
+            "T32 SVC number for semihosting calls.")
+    semihosting_cmd_line = Param.String("",
+            "Command line available to semihosting calls.")
+    semihosting_cwd = Param.String("",
+            "Base directory for semihosting file access.")
+    semihosting_enable = Param.Bool(True, "Enable semihosting SVC/HLT traps.")
+    semihosting_heap_base = Param.Addr(0x0, "Virtual address of heap base.")
+    semihosting_heap_limit = Param.Addr(0xf000000,
+            "Virtual address of top of heap.")
+    semihosting_stack_base = Param.Addr(0x10000000,
+            "Virtual address of base of descending stack.")
+    semihosting_stack_limit = Param.Addr(0xf000000,
+            "Virtual address of stack limit.")
+    trace_special_hlt_imm16 = Param.UInt16(0xf000, "For this HLT "\
+            "number, IF enable_trace_special_hlt_imm16=true, skip performing "\
+            "usual HLT execution but call MTI trace if registered")
+    vfp_enable_at_reset = Param.Bool(False, "Enable VFP in CPACR, "\
+            "CPPWR, NSACR at reset. Warning: Arm recommends going through "\
+            "the implementation's suggested VFP power-up sequence!")
+
+class FastModelCortexA76Cluster(SimObject):
+    type = 'FastModelCortexA76Cluster'
+    cxx_class = 'FastModel::CortexA76Cluster'
+    cxx_header = 'arch/arm/fastmodel/CortexA76x1/cortex_a76x1.hh'
+
+    cores = VectorParam.FastModelCortexA76(
+            'Core in a given cluster of CortexA76s')
+
+    evs = Param.SystemC_ScModule(
+            "Fast mo0del exported virtual subsystem holding cores")
 
     cnthpirq = Param.ArmInterruptPin(ArmPPI(num=10),
             "EL2 physical timer event")
@@ -71,7 +168,6 @@ class FastModelCortexA76x1(SystemC_ScModule):
             "Non-secure physical timer event")
 
     amba = AmbaInitiatorSocket(64, 'AMBA initiator socket')
-    redistributor = Gicv3CommsTargetSocket('GIC communication target')
 
     # These parameters are described in "Fast Models Reference Manual" section
     # 3.4.19, "ARMCortexA7x1CT".
@@ -258,92 +354,12 @@ class FastModelCortexA76x1(SystemC_ScModule):
     walk_cache_latency = Param.UInt64(0, "Walk cache latency for TA (Timing "\
             "Annotation), expressed in simulation ticks")
 
-    cpu0_CFGEND = Param.Bool(False, "Endianness configuration at reset.  "\
-            "0, little endian. 1, big endian.")
-    cpu0_CFGTE = Param.Bool(False, "Instruction set state when resetting "\
-            "into AArch32.  0, A32. 1, T32.")
-    cpu0_CRYPTODISABLE = Param.Bool(False, "Disable cryptographic features.")
-    cpu0_RVBARADDR = Param.Addr(0x0, "Value of RVBAR_ELx register.")
-    cpu0_VINITHI = Param.Bool(False, "Reset value of SCTLR.V.")
-    cpu0_enable_trace_special_hlt_imm16 = Param.Bool(False,
-            "Enable usage of parameter trace_special_hlt_imm16")
-    cpu0_l2cache_hit_latency = Param.UInt64(0, "L2 Cache timing annotation "\
-            "latency for hit.  Intended to model the tag-lookup time.  This "\
-            "is only used when l2cache-state_modelled=true.")
-    cpu0_l2cache_maintenance_latency = Param.UInt64(0, "L2 Cache timing "\
-            "annotation latency for cache maintenance operations given in "\
-            "total ticks. This is only used when dcache-state_modelled=true.")
-    cpu0_l2cache_miss_latency = Param.UInt64(0, "L2 Cache timing annotation "\
-            "latency for miss.  Intended to model the time for failed "\
-            "tag-lookup and allocation of intermediate buffers.  This is "\
-            "only used when l2cache-state_modelled=true.")
-    cpu0_l2cache_read_access_latency = Param.UInt64(0, "L2 Cache timing "\
-            "annotation latency for read accesses given in ticks per "\
-            "access.  If this parameter is non-zero, per-access latencies "\
-            "will be used instead of per-byte even if l2cache-read_latency "\
-            "is set. This is in addition to the hit or miss latency, and "\
-            "intended to correspond to the time taken to transfer across the "\
-            "cache upstream bus, this is only used when "\
-            "l2cache-state_modelled=true.")
-    cpu0_l2cache_read_latency = Param.UInt64(0, "L2 Cache timing annotation "\
-            "latency for read accesses given in ticks per byte "\
-            "accessed.l2cache-read_access_latency must be set to 0 for "\
-            "per-byte latencies to be applied.  This is in addition to the "\
-            "hit or miss latency, and intended to correspond to the time "\
-            "taken to transfer across the cache upstream bus. This is only "\
-            "used when l2cache-state_modelled=true.")
-    cpu0_l2cache_size = Param.MemorySize32('0x80000',
-            "L2 Cache size in bytes.")
-    cpu0_l2cache_snoop_data_transfer_latency = Param.UInt64(0, "L2 Cache "\
-            "timing annotation latency for received snoop accesses that "\
-            "perform a data transfer given in ticks per byte accessed. This "\
-            "is only used when dcache-state_modelled=true.")
-    cpu0_l2cache_snoop_issue_latency = Param.UInt64(0, "L2 Cache timing "\
-            "annotation latency for snoop accesses issued by this cache in "\
-            "total ticks. This is only used when dcache-state_modelled=true.")
-    cpu0_l2cache_write_access_latency = Param.UInt64(0, "L2 Cache timing "\
-            "annotation latency for write accesses given in ticks per "\
-            "access. If this parameter is non-zero, per-access latencies "\
-            "will be used instead of per-byte even if l2cache-write_latency "\
-            "is set. This is only used when l2cache-state_modelled=true.")
-    cpu0_l2cache_write_latency = Param.UInt64(0, "L2 Cache timing annotation "\
-            "latency for write accesses given in ticks per byte accessed. "\
-            "l2cache-write_access_latency must be set to 0 for per-byte "\
-            "latencies to be applied. This is only used when "\
-            "l2cache-state_modelled=true.")
-    cpu0_max_code_cache_mb = Param.MemorySize32('0x100', "Maximum size of "\
-            "the simulation code cache (MiB). For platforms with more than 2 "\
-            "cores this limit will be scaled down. (e.g 1/8 for 16 or more "\
-            "cores)")
-    cpu0_min_sync_level = Param.Unsigned(0, "Force minimum syncLevel "\
-            "(0=off=default,1=syncState,2=postInsnIO,3=postInsnAll)")
-    cpu0_semihosting_A32_HLT = Param.UInt16(0xf000,
-            "A32 HLT number for semihosting calls.")
-    cpu0_semihosting_A64_HLT = Param.UInt16(0xf000,
-            "A64 HLT number for semihosting calls.")
-    cpu0_semihosting_ARM_SVC = Param.UInt32(0x123456,
-            "A32 SVC number for semihosting calls.")
-    cpu0_semihosting_T32_HLT = Param.Unsigned(60,
-            "T32 HLT number for semihosting calls.")
-    cpu0_semihosting_Thumb_SVC = Param.Unsigned(171,
-            "T32 SVC number for semihosting calls.")
-    cpu0_semihosting_cmd_line = Param.String("",
-            "Command line available to semihosting calls.")
-    cpu0_semihosting_cwd = Param.String("",
-            "Base directory for semihosting file access.")
-    cpu0_semihosting_enable = Param.Bool(True,
-            "Enable semihosting SVC/HLT traps.")
-    cpu0_semihosting_heap_base = Param.Addr(0x0,
-            "Virtual address of heap base.")
-    cpu0_semihosting_heap_limit = Param.Addr(0xf000000,
-            "Virtual address of top of heap.")
-    cpu0_semihosting_stack_base = Param.Addr(0x10000000,
-            "Virtual address of base of descending stack.")
-    cpu0_semihosting_stack_limit = Param.Addr(0xf000000,
-            "Virtual address of stack limit.")
-    cpu0_trace_special_hlt_imm16 = Param.UInt16(0xf000, "For this HLT "\
-            "number, IF enable_trace_special_hlt_imm16=true, skip performing "\
-            "usual HLT execution but call MTI trace if registered")
-    cpu0_vfp_enable_at_reset = Param.Bool(False, "Enable VFP in CPACR, "\
-            "CPPWR, NSACR at reset. Warning: Arm recommends going through "\
-            "the implementation's suggested VFP power-up sequence!")
+class FastModelScxEvsCortexA76x1(SystemC_ScModule):
+    type = 'FastModelScxEvsCortexA76x1'
+    cxx_class = 'FastModel::ScxEvsCortexA76x1'
+    cxx_header = 'arch/arm/fastmodel/CortexA76x1/cortex_a76x1.hh'
+
+class FastModelCortexA76x1(FastModelCortexA76Cluster):
+    cores = [ FastModelCortexA76(thread_paths=[ 'core.cpu0' ]) ]
+
+    evs = FastModelScxEvsCortexA76x1()

@@ -40,15 +40,6 @@ BaseCPU::BaseCPU(BaseCPUParams *params, sc_core::sc_module *_evs) :
 {
     sc_core::sc_attr_base *base;
 
-    base = evs->get_attribute(Gem5CpuAttributeName);
-    auto *gem5_cpu_attr =
-        dynamic_cast<sc_core::sc_attribute<::BaseCPU *> *>(base);
-    panic_if(base && !gem5_cpu_attr,
-             "The EVS gem5 CPU attribute was not of type "
-             "sc_attribute<::BaesCPU *>.");
-    if (gem5_cpu_attr)
-        gem5_cpu_attr->value = this;
-
     const auto &event_vec = evs->get_child_events();
     auto event_it = std::find_if(event_vec.begin(), event_vec.end(),
             [](const sc_core::sc_event *e) -> bool {

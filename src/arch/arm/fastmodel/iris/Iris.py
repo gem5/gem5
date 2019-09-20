@@ -49,7 +49,7 @@ class IrisBaseCPU(BaseCPU):
         #TODO Make this work.
         return False
 
-    evs = Param.SystemC_ScModule(Parent.any,
+    evs = Param.SystemC_ScModule(
             "Fast model exported virtual subsystem holding cores")
-    core_paths = VectorParam.String(
-            "Sub-paths to elements in the EVS which are cores")
+    thread_paths = VectorParam.String(
+            "Sub-paths to elements in the EVS which support a thread context")

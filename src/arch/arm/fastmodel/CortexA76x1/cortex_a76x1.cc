@@ -33,7 +33,6 @@
 #include "arch/arm/fastmodel/iris/cpu.hh"
 #include "base/logging.hh"
 #include "dev/arm/base_gic.hh"
-#include "params/FastModelCortexA76x1.hh"
 #include "sim/core.hh"
 #include "systemc/tlm_bridge/gem5_to_tlm.hh"
 
@@ -41,188 +40,210 @@ namespace FastModel
 {
 
 void
-CortexA76x1::clockChangeHandler()
+CortexA76::setCluster(CortexA76Cluster *_cluster, int _num)
+{
+    cluster = _cluster;
+    num = _num;
+
+    set_evs_param("CFGEND", params().CFGEND);
+    set_evs_param("CFGTE", params().CFGTE);
+    set_evs_param("CRYPTODISABLE", params().CRYPTODISABLE);
+    set_evs_param("RVBARADDR", params().RVBARADDR);
+    set_evs_param("VINITHI", params().VINITHI);
+    set_evs_param("enable_trace_special_hlt_imm16",
+                  params().enable_trace_special_hlt_imm16);
+    set_evs_param("l2cache-hit_latency", params().l2cache_hit_latency);
+    set_evs_param("l2cache-maintenance_latency",
+                  params().l2cache_maintenance_latency);
+    set_evs_param("l2cache-miss_latency", params().l2cache_miss_latency);
+    set_evs_param("l2cache-read_access_latency",
+                  params().l2cache_read_access_latency);
+    set_evs_param("l2cache-read_latency", params().l2cache_read_latency);
+    set_evs_param("l2cache-size", params().l2cache_size);
+    set_evs_param("l2cache-snoop_data_transfer_latency",
+                  params().l2cache_snoop_data_transfer_latency);
+    set_evs_param("l2cache-snoop_issue_latency",
+                  params().l2cache_snoop_issue_latency);
+    set_evs_param("l2cache-write_access_latency",
+                  params().l2cache_write_access_latency);
+    set_evs_param("l2cache-write_latency", params().l2cache_write_latency);
+    set_evs_param("max_code_cache_mb", params().max_code_cache_mb);
+    set_evs_param("min_sync_level", params().min_sync_level);
+    set_evs_param("semihosting-A32_HLT", params().semihosting_A32_HLT);
+    set_evs_param("semihosting-A64_HLT", params().semihosting_A64_HLT);
+    set_evs_param("semihosting-ARM_SVC", params().semihosting_ARM_SVC);
+    set_evs_param("semihosting-T32_HLT", params().semihosting_T32_HLT);
+    set_evs_param("semihosting-Thumb_SVC", params().semihosting_Thumb_SVC);
+    set_evs_param("semihosting-cmd_line", params().semihosting_cmd_line);
+    set_evs_param("semihosting-cwd", params().semihosting_cwd);
+    set_evs_param("semihosting-enable", params().semihosting_enable);
+    set_evs_param("semihosting-heap_base", params().semihosting_heap_base);
+    set_evs_param("semihosting-heap_limit", params().semihosting_heap_limit);
+    set_evs_param("semihosting-stack_base", params().semihosting_stack_base);
+    set_evs_param("semihosting-stack_limit", params().semihosting_stack_limit);
+    set_evs_param("trace_special_hlt_imm16", params().trace_special_hlt_imm16);
+    set_evs_param("vfp-enable_at_reset", params().vfp_enable_at_reset);
+}
+
+Port &
+CortexA76::getPort(const std::string &if_name, PortID idx)
+{
+    if (if_name == "redistributor")
+        return cluster->getEvs()->gem5_getPort(if_name, num);
+    else
+        return ArmCPU::getPort(if_name, idx);
+}
+
+CortexA76Cluster::CortexA76Cluster(Params &p) :
+    SimObject(&p), _params(p), cores(p.cores), evs(p.evs)
+{
+    for (int i = 0; i < p.cores.size(); i++)
+        p.cores[i]->setCluster(this, i);
+
+    sc_core::sc_attr_base *base;
+
+    base = evs->get_attribute(Iris::Gem5CpuClusterAttributeName);
+    auto *gem5_cluster_attr =
+        dynamic_cast<sc_core::sc_attribute<CortexA76Cluster *> *>(base);
+    panic_if(base && !gem5_cluster_attr,
+             "The EVS gem5 CPU cluster attribute was not of type "
+             "sc_attribute<FastModel::CortexA76Cluster *>.");
+    if (gem5_cluster_attr)
+        gem5_cluster_attr->value = this;
+
+    set_evs_param("core.BROADCASTATOMIC", p.BROADCASTATOMIC);
+    set_evs_param("core.BROADCASTCACHEMAINT", p.BROADCASTCACHEMAINT);
+    set_evs_param("core.BROADCASTOUTER", p.BROADCASTOUTER);
+    set_evs_param("core.BROADCASTPERSIST", p.BROADCASTPERSIST);
+    set_evs_param("core.CLUSTER_ID", p.CLUSTER_ID);
+    set_evs_param("core.GICDISABLE", p.GICDISABLE);
+    set_evs_param("core.cpi_div", p.cpi_div);
+    set_evs_param("core.cpi_mul", p.cpi_mul);
+    set_evs_param("core.dcache-hit_latency", p.dcache_hit_latency);
+    set_evs_param("core.dcache-maintenance_latency",
+                  p.dcache_maintenance_latency);
+    set_evs_param("core.dcache-miss_latency", p.dcache_miss_latency);
+    set_evs_param("core.dcache-prefetch_enabled",
+                  p.dcache_prefetch_enabled);
+    set_evs_param("core.dcache-read_access_latency",
+                  p.dcache_read_access_latency);
+    set_evs_param("core.dcache-read_latency", p.dcache_read_latency);
+    set_evs_param("core.dcache-snoop_data_transfer_latency",
+                  p.dcache_snoop_data_transfer_latency);
+    set_evs_param("core.dcache-state_modelled", p.dcache_state_modelled);
+    set_evs_param("core.dcache-write_access_latency",
+                  p.dcache_write_access_latency);
+    set_evs_param("core.dcache-write_latency", p.dcache_write_latency);
+    set_evs_param("core.default_opmode", p.default_opmode);
+    set_evs_param("core.diagnostics", p.diagnostics);
+    set_evs_param("core.enable_simulation_performance_optimizations",
+                  p.enable_simulation_performance_optimizations);
+    set_evs_param("core.ext_abort_device_read_is_sync",
+                  p.ext_abort_device_read_is_sync);
+    set_evs_param("core.ext_abort_device_write_is_sync",
+                  p.ext_abort_device_write_is_sync);
+    set_evs_param("core.ext_abort_so_read_is_sync",
+                  p.ext_abort_so_read_is_sync);
+    set_evs_param("core.ext_abort_so_write_is_sync",
+                  p.ext_abort_so_write_is_sync);
+    set_evs_param("core.gicv3.cpuintf-mmap-access-level",
+                  p.gicv3_cpuintf_mmap_access_level);
+    set_evs_param("core.has_peripheral_port", p.has_peripheral_port);
+    set_evs_param("core.has_statistical_profiling",
+                  p.has_statistical_profiling);
+    set_evs_param("core.icache-hit_latency", p.icache_hit_latency);
+    set_evs_param("core.icache-maintenance_latency",
+                  p.icache_maintenance_latency);
+    set_evs_param("core.icache-miss_latency", p.icache_miss_latency);
+    set_evs_param("core.icache-prefetch_enabled",
+                  p.icache_prefetch_enabled);
+    set_evs_param("core.icache-read_access_latency",
+                  p.icache_read_access_latency);
+    set_evs_param("core.icache-read_latency", p.icache_read_latency);
+    set_evs_param("core.icache-state_modelled", p.icache_state_modelled);
+    set_evs_param("core.l3cache-hit_latency", p.l3cache_hit_latency);
+    set_evs_param("core.l3cache-maintenance_latency",
+                  p.l3cache_maintenance_latency);
+    set_evs_param("core.l3cache-miss_latency", p.l3cache_miss_latency);
+    set_evs_param("core.l3cache-read_access_latency",
+                  p.l3cache_read_access_latency);
+    set_evs_param("core.l3cache-read_latency", p.l3cache_read_latency);
+    set_evs_param("core.l3cache-size", p.l3cache_size);
+    set_evs_param("core.l3cache-snoop_data_transfer_latency",
+                  p.l3cache_snoop_data_transfer_latency);
+    set_evs_param("core.l3cache-snoop_issue_latency",
+                  p.l3cache_snoop_issue_latency);
+    set_evs_param("core.l3cache-write_access_latency",
+                  p.l3cache_write_access_latency);
+    set_evs_param("core.l3cache-write_latency", p.l3cache_write_latency);
+    set_evs_param("core.pchannel_treat_simreset_as_poreset",
+                  p.pchannel_treat_simreset_as_poreset);
+    set_evs_param("core.periph_address_end", p.periph_address_end);
+    set_evs_param("core.periph_address_start", p.periph_address_start);
+    set_evs_param("core.ptw_latency", p.ptw_latency);
+    set_evs_param("core.tlb_latency", p.tlb_latency);
+    set_evs_param("core.treat-dcache-cmos-to-pou-as-nop",
+                  p.treat_dcache_cmos_to_pou_as_nop);
+    set_evs_param("core.walk_cache_latency", p.walk_cache_latency);
+}
+
+Port &
+CortexA76Cluster::getPort(const std::string &if_name, PortID idx)
+{
+    if (if_name == "amba") {
+        return evs->gem5_getPort(if_name, idx);
+    } else {
+        return SimObject::getPort(if_name, idx);
+    }
+}
+
+void
+ScxEvsCortexA76x1::clockChangeHandler()
 {
     clockRateControl->set_mul_div(SimClock::Int::s, clockPeriod.value);
 }
 
-CortexA76x1::CortexA76x1(const sc_core::sc_module_name &mod_name,
-        const FastModelCortexA76x1Params &p)
-    : scx_evs_CortexA76x1(mod_name),
-      amba(scx_evs_CortexA76x1::amba, p.name + ".amba", -1),
-      redistributor(scx_evs_CortexA76x1::redistributor,
-              p.name + ".redistributor", -1),
-      cnthpirq("cnthpirq"),
-      cnthvirq("cnthvirq"),
-      cntpsirq("cntpsirq"),
-      cntvirq("cntvirq"),
-      commirq("commirq"),
-      ctidbgirq("ctidbgirq"),
-      pmuirq("pmuirq"),
-      vcpumntirq("vcpumntirq"),
-      cntpnsirq("cntpnsirq"),
-      clockChanged(Iris::ClockEventName.c_str()),
-      clockPeriod(Iris::PeriodAttributeName.c_str()),
-      gem5Cpu(Iris::Gem5CpuAttributeName.c_str()),
-      sendFunctional(Iris::SendFunctionalAttributeName.c_str()),
-      params(p)
+ScxEvsCortexA76x1::ScxEvsCortexA76x1(const sc_core::sc_module_name &mod_name,
+        const Params &p) :
+    scx_evs_CortexA76x1(mod_name),
+    amba(scx_evs_CortexA76x1::amba, p.name + ".amba", -1),
+    redist {
+      new TlmGicTarget(redistributor[0],
+              csprintf("%s.redistributor[%d]", name(), 0), 0)
+    },
+    cnthpirq("cnthpirq"), cnthvirq("cnthvirq"), cntpsirq("cntpsirq"),
+    cntvirq("cntvirq"), commirq("commirq"), ctidbgirq("ctidbgirq"),
+    pmuirq("pmuirq"), vcpumntirq("vcpumntirq"), cntpnsirq("cntpnsirq"),
+    clockChanged(Iris::ClockEventName.c_str()),
+    clockPeriod(Iris::PeriodAttributeName.c_str()),
+    gem5CpuCluster(Iris::Gem5CpuClusterAttributeName.c_str()),
+    sendFunctional(Iris::SendFunctionalAttributeName.c_str()),
+    params(p)
 {
     clockRateControl.bind(clock_rate_s);
 
-    set_parameter("core.BROADCASTATOMIC", params.BROADCASTATOMIC);
-    set_parameter("core.BROADCASTCACHEMAINT", params.BROADCASTCACHEMAINT);
-    set_parameter("core.BROADCASTOUTER", params.BROADCASTOUTER);
-    set_parameter("core.BROADCASTPERSIST", params.BROADCASTPERSIST);
-    set_parameter("core.CLUSTER_ID", params.CLUSTER_ID);
-    set_parameter("core.GICDISABLE", params.GICDISABLE);
-    set_parameter("core.cpi_div", params.cpi_div);
-    set_parameter("core.cpi_mul", params.cpi_mul);
-    set_parameter("core.dcache-hit_latency", params.dcache_hit_latency);
-    set_parameter("core.dcache-maintenance_latency",
-                  params.dcache_maintenance_latency);
-    set_parameter("core.dcache-miss_latency", params.dcache_miss_latency);
-    set_parameter("core.dcache-prefetch_enabled",
-                  params.dcache_prefetch_enabled);
-    set_parameter("core.dcache-read_access_latency",
-                  params.dcache_read_access_latency);
-    set_parameter("core.dcache-read_latency", params.dcache_read_latency);
-    set_parameter("core.dcache-snoop_data_transfer_latency",
-                  params.dcache_snoop_data_transfer_latency);
-    set_parameter("core.dcache-state_modelled", params.dcache_state_modelled);
-    set_parameter("core.dcache-write_access_latency",
-                  params.dcache_write_access_latency);
-    set_parameter("core.dcache-write_latency", params.dcache_write_latency);
-    set_parameter("core.default_opmode", params.default_opmode);
-    set_parameter("core.diagnostics", params.diagnostics);
-    set_parameter("core.enable_simulation_performance_optimizations",
-                  params.enable_simulation_performance_optimizations);
-    set_parameter("core.ext_abort_device_read_is_sync",
-                  params.ext_abort_device_read_is_sync);
-    set_parameter("core.ext_abort_device_write_is_sync",
-                  params.ext_abort_device_write_is_sync);
-    set_parameter("core.ext_abort_so_read_is_sync",
-                  params.ext_abort_so_read_is_sync);
-    set_parameter("core.ext_abort_so_write_is_sync",
-                  params.ext_abort_so_write_is_sync);
-    set_parameter("core.gicv3.cpuintf-mmap-access-level",
-                  params.gicv3_cpuintf_mmap_access_level);
-    set_parameter("core.has_peripheral_port", params.has_peripheral_port);
-    set_parameter("core.has_statistical_profiling",
-                  params.has_statistical_profiling);
-    set_parameter("core.icache-hit_latency", params.icache_hit_latency);
-    set_parameter("core.icache-maintenance_latency",
-                  params.icache_maintenance_latency);
-    set_parameter("core.icache-miss_latency", params.icache_miss_latency);
-    set_parameter("core.icache-prefetch_enabled",
-                  params.icache_prefetch_enabled);
-    set_parameter("core.icache-read_access_latency",
-                  params.icache_read_access_latency);
-    set_parameter("core.icache-read_latency", params.icache_read_latency);
-    set_parameter("core.icache-state_modelled", params.icache_state_modelled);
-    set_parameter("core.l3cache-hit_latency", params.l3cache_hit_latency);
-    set_parameter("core.l3cache-maintenance_latency",
-                  params.l3cache_maintenance_latency);
-    set_parameter("core.l3cache-miss_latency", params.l3cache_miss_latency);
-    set_parameter("core.l3cache-read_access_latency",
-                  params.l3cache_read_access_latency);
-    set_parameter("core.l3cache-read_latency", params.l3cache_read_latency);
-    set_parameter("core.l3cache-size", params.l3cache_size);
-    set_parameter("core.l3cache-snoop_data_transfer_latency",
-                  params.l3cache_snoop_data_transfer_latency);
-    set_parameter("core.l3cache-snoop_issue_latency",
-                  params.l3cache_snoop_issue_latency);
-    set_parameter("core.l3cache-write_access_latency",
-                  params.l3cache_write_access_latency);
-    set_parameter("core.l3cache-write_latency", params.l3cache_write_latency);
-    set_parameter("core.pchannel_treat_simreset_as_poreset",
-                  params.pchannel_treat_simreset_as_poreset);
-    set_parameter("core.periph_address_end", params.periph_address_end);
-    set_parameter("core.periph_address_start", params.periph_address_start);
-    set_parameter("core.ptw_latency", params.ptw_latency);
-    set_parameter("core.tlb_latency", params.tlb_latency);
-    set_parameter("core.treat-dcache-cmos-to-pou-as-nop",
-                  params.treat_dcache_cmos_to_pou_as_nop);
-    set_parameter("core.walk_cache_latency", params.walk_cache_latency);
-
-    set_parameter("core.cpu0.CFGEND", params.cpu0_CFGEND);
-    set_parameter("core.cpu0.CFGTE", params.cpu0_CFGTE);
-    set_parameter("core.cpu0.CRYPTODISABLE", params.cpu0_CRYPTODISABLE);
-    set_parameter("core.cpu0.RVBARADDR", params.cpu0_RVBARADDR);
-    set_parameter("core.cpu0.VINITHI", params.cpu0_VINITHI);
-    set_parameter("core.cpu0.enable_trace_special_hlt_imm16",
-                  params.cpu0_enable_trace_special_hlt_imm16);
-    set_parameter("core.cpu0.l2cache-hit_latency",
-                  params.cpu0_l2cache_hit_latency);
-    set_parameter("core.cpu0.l2cache-maintenance_latency",
-                  params.cpu0_l2cache_maintenance_latency);
-    set_parameter("core.cpu0.l2cache-miss_latency",
-                  params.cpu0_l2cache_miss_latency);
-    set_parameter("core.cpu0.l2cache-read_access_latency",
-                  params.cpu0_l2cache_read_access_latency);
-    set_parameter("core.cpu0.l2cache-read_latency",
-                  params.cpu0_l2cache_read_latency);
-    set_parameter("core.cpu0.l2cache-size", params.cpu0_l2cache_size);
-    set_parameter("core.cpu0.l2cache-snoop_data_transfer_latency",
-                  params.cpu0_l2cache_snoop_data_transfer_latency);
-    set_parameter("core.cpu0.l2cache-snoop_issue_latency",
-                  params.cpu0_l2cache_snoop_issue_latency);
-    set_parameter("core.cpu0.l2cache-write_access_latency",
-                  params.cpu0_l2cache_write_access_latency);
-    set_parameter("core.cpu0.l2cache-write_latency",
-                  params.cpu0_l2cache_write_latency);
-    set_parameter("core.cpu0.max_code_cache_mb",
-                  params.cpu0_max_code_cache_mb);
-    set_parameter("core.cpu0.min_sync_level", params.cpu0_min_sync_level);
-    set_parameter("core.cpu0.semihosting-A32_HLT",
-                  params.cpu0_semihosting_A32_HLT);
-    set_parameter("core.cpu0.semihosting-A64_HLT",
-                  params.cpu0_semihosting_A64_HLT);
-    set_parameter("core.cpu0.semihosting-ARM_SVC",
-                  params.cpu0_semihosting_ARM_SVC);
-    set_parameter("core.cpu0.semihosting-T32_HLT",
-                  params.cpu0_semihosting_T32_HLT);
-    set_parameter("core.cpu0.semihosting-Thumb_SVC",
-                  params.cpu0_semihosting_Thumb_SVC);
-    set_parameter("core.cpu0.semihosting-cmd_line",
-                  params.cpu0_semihosting_cmd_line);
-    set_parameter("core.cpu0.semihosting-cwd", params.cpu0_semihosting_cwd);
-    set_parameter("core.cpu0.semihosting-enable",
-                  params.cpu0_semihosting_enable);
-    set_parameter("core.cpu0.semihosting-heap_base",
-                  params.cpu0_semihosting_heap_base);
-    set_parameter("core.cpu0.semihosting-heap_limit",
-                  params.cpu0_semihosting_heap_limit);
-    set_parameter("core.cpu0.semihosting-stack_base",
-                  params.cpu0_semihosting_stack_base);
-    set_parameter("core.cpu0.semihosting-stack_limit",
-                  params.cpu0_semihosting_stack_limit);
-    set_parameter("core.cpu0.trace_special_hlt_imm16",
-                  params.cpu0_trace_special_hlt_imm16);
-    set_parameter("core.cpu0.vfp-enable_at_reset",
-                  params.cpu0_vfp_enable_at_reset);
-
-    add_attribute(gem5Cpu);
+    add_attribute(gem5CpuCluster);
     add_attribute(clockPeriod);
     SC_METHOD(clockChangeHandler);
     dont_initialize();
     sensitive << clockChanged;
 
+    scx_evs_CortexA76x1::cnthpirq[0].bind(cnthpirq.signal_in);
+    scx_evs_CortexA76x1::cnthvirq[0].bind(cnthvirq.signal_in);
+    scx_evs_CortexA76x1::cntpsirq[0].bind(cntpsirq.signal_in);
+    scx_evs_CortexA76x1::cntvirq[0].bind(cntvirq.signal_in);
+    scx_evs_CortexA76x1::commirq[0].bind(commirq.signal_in);
+    scx_evs_CortexA76x1::ctidbgirq[0].bind(ctidbgirq.signal_in);
+    scx_evs_CortexA76x1::pmuirq[0].bind(pmuirq.signal_in);
+    scx_evs_CortexA76x1::vcpumntirq[0].bind(vcpumntirq.signal_in);
+    scx_evs_CortexA76x1::cntpnsirq[0].bind(cntpnsirq.signal_in);
+
     sendFunctional.value = [this](PacketPtr pkt) { sendFunc(pkt); };
     add_attribute(sendFunctional);
-
-    scx_evs_CortexA76x1::cnthpirq.bind(cnthpirq.signal_in);
-    scx_evs_CortexA76x1::cnthvirq.bind(cnthvirq.signal_in);
-    scx_evs_CortexA76x1::cntpsirq.bind(cntpsirq.signal_in);
-    scx_evs_CortexA76x1::cntvirq.bind(cntvirq.signal_in);
-    scx_evs_CortexA76x1::commirq.bind(commirq.signal_in);
-    scx_evs_CortexA76x1::ctidbgirq.bind(ctidbgirq.signal_in);
-    scx_evs_CortexA76x1::pmuirq.bind(pmuirq.signal_in);
-    scx_evs_CortexA76x1::vcpumntirq.bind(vcpumntirq.signal_in);
-    scx_evs_CortexA76x1::cntpnsirq.bind(cntpnsirq.signal_in);
 }
 
 void
-CortexA76x1::sendFunc(PacketPtr pkt)
+ScxEvsCortexA76x1::sendFunc(PacketPtr pkt)
 {
     auto *trans = sc_gem5::packet2payload(pkt);
     panic_if(scx_evs_CortexA76x1::amba->transport_dbg(*trans) !=
@@ -231,16 +252,16 @@ CortexA76x1::sendFunc(PacketPtr pkt)
 }
 
 void
-CortexA76x1::before_end_of_elaboration()
+ScxEvsCortexA76x1::before_end_of_elaboration()
 {
     scx_evs_CortexA76x1::before_end_of_elaboration();
 
-    auto *gem5_cpu = gem5Cpu.value;
-    auto set_on_change = [gem5_cpu](SignalReceiver &recv,
-                                    ArmInterruptPinGen *gen,
-                                    int ctx_num)
+    auto *cluster = gem5CpuCluster.value;
+
+    auto set_on_change = [cluster](
+            SignalReceiver &recv, ArmInterruptPinGen *gen, int num)
     {
-        auto *pin = gen->get(gem5_cpu->getContext(ctx_num));
+        auto *pin = gen->get(cluster->getCore(num)->getContext(0));
         auto handler = [pin](bool status)
         {
             status ? pin->raise() : pin->clear();
@@ -248,32 +269,44 @@ CortexA76x1::before_end_of_elaboration()
         recv.onChange(handler);
     };
 
-    set_on_change(cnthpirq, params.cnthpirq, 0);
-    set_on_change(cnthvirq, params.cnthvirq, 0);
-    set_on_change(cntpsirq, params.cntpsirq, 0);
-    set_on_change(cntvirq, params.cntvirq, 0);
-    set_on_change(commirq, params.commirq, 0);
-    set_on_change(ctidbgirq, params.ctidbgirq, 0);
-    set_on_change(pmuirq, params.pmuirq, 0);
-    set_on_change(vcpumntirq, params.vcpumntirq, 0);
-    set_on_change(cntpnsirq, params.cntpnsirq, 0);
+    set_on_change(cnthpirq, cluster->params().cnthpirq, 0);
+    set_on_change(cnthvirq, cluster->params().cnthvirq, 0);
+    set_on_change(cntpsirq, cluster->params().cntpsirq, 0);
+    set_on_change(cntvirq, cluster->params().cntvirq, 0);
+    set_on_change(commirq, cluster->params().commirq, 0);
+    set_on_change(ctidbgirq, cluster->params().ctidbgirq, 0);
+    set_on_change(pmuirq, cluster->params().pmuirq, 0);
+    set_on_change(vcpumntirq, cluster->params().vcpumntirq, 0);
+    set_on_change(cntpnsirq, cluster->params().cntpnsirq, 0);
 }
 
 Port &
-CortexA76x1::gem5_getPort(const std::string &if_name, int idx)
+ScxEvsCortexA76x1::gem5_getPort(const std::string &if_name, int idx)
 {
-    if (if_name == "amba")
+    if (if_name == "redistributor")
+        return *redist.at(idx);
+    else if (if_name == "amba")
         return amba;
-    else if (if_name == "redistributor")
-        return redistributor;
     else
         return scx_evs_CortexA76x1::gem5_getPort(if_name, idx);
 }
 
 } // namespace FastModel
 
-FastModel::CortexA76x1 *
-FastModelCortexA76x1Params::create()
+FastModel::CortexA76 *
+FastModelCortexA76Params::create()
 {
-    return new FastModel::CortexA76x1(name.c_str(), *this);
+    return new FastModel::CortexA76(*this);
+}
+
+FastModel::CortexA76Cluster *
+FastModelCortexA76ClusterParams::create()
+{
+    return new FastModel::CortexA76Cluster(*this);
+}
+
+FastModel::ScxEvsCortexA76x1 *
+FastModelScxEvsCortexA76x1Params::create()
+{
+    return new FastModel::ScxEvsCortexA76x1(name.c_str(), *this);
 }
