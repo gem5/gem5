@@ -37,7 +37,13 @@
 #include "arch/arm/fastmodel/protocol/exported_clock_rate_control.hh"
 #include "mem/port_proxy.hh"
 #include "params/FastModelScxEvsCortexA76x1.hh"
+#include "params/FastModelScxEvsCortexA76x2.hh"
+#include "params/FastModelScxEvsCortexA76x3.hh"
+#include "params/FastModelScxEvsCortexA76x4.hh"
 #include "scx_evs_CortexA76x1.h"
+#include "scx_evs_CortexA76x2.h"
+#include "scx_evs_CortexA76x3.h"
+#include "scx_evs_CortexA76x4.h"
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/tlm_port_wrapper.hh"
@@ -111,6 +117,33 @@ struct ScxEvsCortexA76x1Types
 };
 using ScxEvsCortexA76x1 = ScxEvsCortexA76<ScxEvsCortexA76x1Types>;
 extern template class ScxEvsCortexA76<ScxEvsCortexA76x1Types>;
+
+struct ScxEvsCortexA76x2Types
+{
+    using Base = scx_evs_CortexA76x2;
+    using Params = FastModelScxEvsCortexA76x2Params;
+    static const int CoreCount = 2;
+};
+using ScxEvsCortexA76x2 = ScxEvsCortexA76<ScxEvsCortexA76x2Types>;
+extern template class ScxEvsCortexA76<ScxEvsCortexA76x2Types>;
+
+struct ScxEvsCortexA76x3Types
+{
+    using Base = scx_evs_CortexA76x3;
+    using Params = FastModelScxEvsCortexA76x3Params;
+    static const int CoreCount = 3;
+};
+using ScxEvsCortexA76x3 = ScxEvsCortexA76<ScxEvsCortexA76x3Types>;
+extern template class ScxEvsCortexA76<ScxEvsCortexA76x3Types>;
+
+struct ScxEvsCortexA76x4Types
+{
+    using Base = scx_evs_CortexA76x4;
+    using Params = FastModelScxEvsCortexA76x4Params;
+    static const int CoreCount = 4;
+};
+using ScxEvsCortexA76x4 = ScxEvsCortexA76<ScxEvsCortexA76x4Types>;
+extern template class ScxEvsCortexA76<ScxEvsCortexA76x4Types>;
 
 } // namespace FastModel
 

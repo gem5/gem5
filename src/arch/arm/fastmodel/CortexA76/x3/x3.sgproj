@@ -1,0 +1,29 @@
+sgproject "x3.sgproj"
+{
+TOP_LEVEL_COMPONENT = "CortexA76x3";
+ACTIVE_CONFIG_LINUX  = "gcc";
+ACTIVE_CONFIG_WINDOWS  = "Win64-Release-VC2015";
+config "gcc"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -O3 -Wall -std=c++11 -Wno-deprecated -Wno-unused-function";
+    ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
+    BUILD_DIR = "./gcc";
+    COMPILER = "gcc-6.4";
+    CONFIG_DESCRIPTION = "";
+    CONFIG_NAME = "gcc";
+    PLATFORM = "Linux64";
+    PREPROCESSOR_DEFINES = "NDEBUG";
+    SIMGEN_COMMAND_LINE = "--num-comps-file 50";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "1";
+
+    INCLUDE_DIRS="../../../../../";
+}
+files
+{
+    path = "x3.lisa";
+    path = "${PVLIB_HOME}/etc/sglib.sgrepo";
+    path = "../../protocol/ExportedClockRateControlProtocol.lisa";
+}
+}

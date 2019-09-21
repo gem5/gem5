@@ -364,3 +364,42 @@ class FastModelCortexA76x1(FastModelCortexA76Cluster):
     cores = [ FastModelCortexA76(thread_paths=[ 'core.cpu0' ]) ]
 
     evs = FastModelScxEvsCortexA76x1()
+
+class FastModelScxEvsCortexA76x2(SystemC_ScModule):
+    type = 'FastModelScxEvsCortexA76x2'
+    cxx_class = 'FastModel::ScxEvsCortexA76<FastModel::ScxEvsCortexA76x2Types>'
+    cxx_template_params = [ 'class Types' ]
+    cxx_header = 'arch/arm/fastmodel/CortexA76/evs.hh'
+
+class FastModelCortexA76x2(FastModelCortexA76Cluster):
+    cores = [ FastModelCortexA76(thread_paths=[ 'core.cpu0' ]),
+              FastModelCortexA76(thread_paths=[ 'core.cpu1' ]) ]
+
+    evs = FastModelScxEvsCortexA76x2()
+
+class FastModelScxEvsCortexA76x3(SystemC_ScModule):
+    type = 'FastModelScxEvsCortexA76x3'
+    cxx_class = 'FastModel::ScxEvsCortexA76<FastModel::ScxEvsCortexA76x3Types>'
+    cxx_template_params = [ 'class Types' ]
+    cxx_header = 'arch/arm/fastmodel/CortexA76/evs.hh'
+
+class FastModelCortexA76x3(FastModelCortexA76Cluster):
+    cores = [ FastModelCortexA76(thread_paths=[ 'core.cpu0' ]),
+              FastModelCortexA76(thread_paths=[ 'core.cpu1' ]),
+              FastModelCortexA76(thread_paths=[ 'core.cpu2' ]) ]
+
+    evs = FastModelScxEvsCortexA76x3()
+
+class FastModelScxEvsCortexA76x4(SystemC_ScModule):
+    type = 'FastModelScxEvsCortexA76x4'
+    cxx_class = 'FastModel::ScxEvsCortexA76<FastModel::ScxEvsCortexA76x4Types>'
+    cxx_template_params = [ 'class Types' ]
+    cxx_header = 'arch/arm/fastmodel/CortexA76/evs.hh'
+
+class FastModelCortexA76x4(FastModelCortexA76Cluster):
+    cores = [ FastModelCortexA76(thread_paths=[ 'core.cpu0' ]),
+              FastModelCortexA76(thread_paths=[ 'core.cpu1' ]),
+              FastModelCortexA76(thread_paths=[ 'core.cpu2' ]),
+              FastModelCortexA76(thread_paths=[ 'core.cpu3' ]) ]
+
+    evs = FastModelScxEvsCortexA76x4()

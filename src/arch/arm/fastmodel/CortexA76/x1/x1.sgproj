@@ -18,12 +18,12 @@ config "gcc"
     TARGET_SYSTEMC = "1";
     TARGET_SYSTEMC_AUTO = "1";
 
-    INCLUDE_DIRS="../../../../";
+    INCLUDE_DIRS="../../../../../";
 }
 files
 {
     path = "x1.lisa";
     path = "${PVLIB_HOME}/etc/sglib.sgrepo";
-    path = "../protocol/ExportedClockRateControlProtocol.lisa";
+    path = "../../protocol/ExportedClockRateControlProtocol.lisa";
 }
 }

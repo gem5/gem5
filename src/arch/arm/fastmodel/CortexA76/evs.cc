@@ -150,6 +150,9 @@ ScxEvsCortexA76<Types>::gem5_getPort(const std::string &if_name, int idx)
 }
 
 template class ScxEvsCortexA76<ScxEvsCortexA76x1Types>;
+template class ScxEvsCortexA76<ScxEvsCortexA76x2Types>;
+template class ScxEvsCortexA76<ScxEvsCortexA76x3Types>;
+template class ScxEvsCortexA76<ScxEvsCortexA76x4Types>;
 
 } // namespace FastModel
 
@@ -157,4 +160,22 @@ FastModel::ScxEvsCortexA76x1 *
 FastModelScxEvsCortexA76x1Params::create()
 {
     return new FastModel::ScxEvsCortexA76x1(name.c_str(), *this);
+}
+
+FastModel::ScxEvsCortexA76x2 *
+FastModelScxEvsCortexA76x2Params::create()
+{
+    return new FastModel::ScxEvsCortexA76x2(name.c_str(), *this);
+}
+
+FastModel::ScxEvsCortexA76x3 *
+FastModelScxEvsCortexA76x3Params::create()
+{
+    return new FastModel::ScxEvsCortexA76x3(name.c_str(), *this);
+}
+
+FastModel::ScxEvsCortexA76x4 *
+FastModelScxEvsCortexA76x4Params::create()
+{
+    return new FastModel::ScxEvsCortexA76x4(name.c_str(), *this);
 }
