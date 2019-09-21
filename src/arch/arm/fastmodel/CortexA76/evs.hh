@@ -27,87 +27,35 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_ARM_FASTMODEL_CORTEXA76X1_CORETEX_A76X1_HH__
-#define __ARCH_ARM_FASTMODEL_CORTEXA76X1_CORETEX_A76X1_HH__
+#ifndef __ARCH_ARM_FASTMODEL_CORTEXA76_EVS_HH__
+#define __ARCH_ARM_FASTMODEL_CORTEXA76_EVS_HH__
+
+#include <memory>
 
 #include "arch/arm/fastmodel/amba_ports.hh"
-#include "arch/arm/fastmodel/arm/cpu.hh"
 #include "arch/arm/fastmodel/common/signal_receiver.hh"
 #include "arch/arm/fastmodel/protocol/exported_clock_rate_control.hh"
 #include "mem/port_proxy.hh"
-#include "params/FastModelCortexA76.hh"
-#include "params/FastModelCortexA76Cluster.hh"
 #include "params/FastModelScxEvsCortexA76x1.hh"
 #include "scx_evs_CortexA76x1.h"
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_module.hh"
-
-class BaseCPU;
+#include "systemc/tlm_port_wrapper.hh"
 
 namespace FastModel
 {
 
-// The fast model exports a class called scx_evs_CortexA76x1 which represents
-// the subsystem described in LISA+. This class specializes it to export gem5
-// ports and interface with its peer gem5 CPU. The gem5 CPU inherits from the
-// gem5 BaseCPU class and implements its API, while this class actually does
-// the work.
 class CortexA76Cluster;
 
-class CortexA76 : public ArmCPU
-{
-  protected:
-    typedef FastModelCortexA76Params Params;
-    const Params &_params;
-
-    CortexA76Cluster *cluster = nullptr;
-    int num = 0;
-
-    const Params &params() { return _params; }
-
-  public:
-    CortexA76(Params &p) : ArmCPU(&p), _params(p) {}
-
-    template <class T>
-    void set_evs_param(const std::string &n, T val);
-
-    void setCluster(CortexA76Cluster *_cluster, int _num);
-
-    Port &getPort(const std::string &if_name,
-            PortID idx=InvalidPortID) override;
-};
-
-class CortexA76Cluster : public SimObject
+template <class Types>
+class ScxEvsCortexA76 : public Types::Base
 {
   private:
-    typedef FastModelCortexA76ClusterParams Params;
-    const Params &_params;
+    static const int CoreCount = Types::CoreCount;
+    using Base = typename Types::Base;
+    using Params = typename Types::Params;
 
-    std::vector<CortexA76 *> cores;
-    sc_core::sc_module *evs;
-
-  public:
-    template <class T>
-    void
-    set_evs_param(const std::string &n, T val)
-    {
-        scx::scx_set_parameter(evs->name() + std::string(".") + n, val);
-    }
-
-    CortexA76 *getCore(int num) { return cores.at(num); }
-    sc_core::sc_module *getEvs() { return evs; }
-
-    CortexA76Cluster(Params &p);
-    const Params &params() { return _params; }
-
-    Port &getPort(const std::string &if_name,
-            PortID idx=InvalidPortID) override;
-};
-
-class ScxEvsCortexA76x1 : public scx_evs_CortexA76x1
-{
-  private:
-    SC_HAS_PROCESS(ScxEvsCortexA76x1);
+    SC_HAS_PROCESS(ScxEvsCortexA76);
 
     ClockRateControlInitiatorSocket clockRateControl;
 
@@ -117,17 +65,17 @@ class ScxEvsCortexA76x1 : public scx_evs_CortexA76x1
         sc_core::SC_ONE_OR_MORE_BOUND> TlmGicTarget;
 
     AmbaInitiator amba;
-    std::vector<TlmGicTarget *> redist;
+    std::vector<std::unique_ptr<TlmGicTarget>> redist;
 
-    SignalReceiver cnthpirq;
-    SignalReceiver cnthvirq;
-    SignalReceiver cntpsirq;
-    SignalReceiver cntvirq;
-    SignalReceiver commirq;
-    SignalReceiver ctidbgirq;
-    SignalReceiver pmuirq;
-    SignalReceiver vcpumntirq;
-    SignalReceiver cntpnsirq;
+    std::vector<std::unique_ptr<SignalReceiver>> cnthpirq;
+    std::vector<std::unique_ptr<SignalReceiver>> cnthvirq;
+    std::vector<std::unique_ptr<SignalReceiver>> cntpsirq;
+    std::vector<std::unique_ptr<SignalReceiver>> cntvirq;
+    std::vector<std::unique_ptr<SignalReceiver>> commirq;
+    std::vector<std::unique_ptr<SignalReceiver>> ctidbgirq;
+    std::vector<std::unique_ptr<SignalReceiver>> pmuirq;
+    std::vector<std::unique_ptr<SignalReceiver>> vcpumntirq;
+    std::vector<std::unique_ptr<SignalReceiver>> cntpnsirq;
 
     sc_core::sc_event clockChanged;
     sc_core::sc_attribute<Tick> clockPeriod;
@@ -138,12 +86,10 @@ class ScxEvsCortexA76x1 : public scx_evs_CortexA76x1
 
     void clockChangeHandler();
 
-    typedef FastModelScxEvsCortexA76x1Params Params;
     const Params &params;
 
   public:
-    ScxEvsCortexA76x1(
-            const sc_core::sc_module_name &mod_name, const Params &p);
+    ScxEvsCortexA76(const sc_core::sc_module_name &mod_name, const Params &p);
 
     void before_end_of_elaboration() override;
     Port &gem5_getPort(const std::string &if_name, int idx) override;
@@ -151,20 +97,21 @@ class ScxEvsCortexA76x1 : public scx_evs_CortexA76x1
     void
     end_of_elaboration() override
     {
-        scx_evs_CortexA76x1::end_of_elaboration();
-        scx_evs_CortexA76x1::start_of_simulation();
+        Base::end_of_elaboration();
+        Base::start_of_simulation();
     }
     void start_of_simulation() override {}
 };
 
-template <class T>
-inline void
-CortexA76::set_evs_param(const std::string &n, T val)
+struct ScxEvsCortexA76x1Types
 {
-    for (auto &path: params().thread_paths)
-        cluster->set_evs_param(path + "." + n, val);
-}
+    using Base = scx_evs_CortexA76x1;
+    using Params = FastModelScxEvsCortexA76x1Params;
+    static const int CoreCount = 1;
+};
+using ScxEvsCortexA76x1 = ScxEvsCortexA76<ScxEvsCortexA76x1Types>;
+extern template class ScxEvsCortexA76<ScxEvsCortexA76x1Types>;
 
 } // namespace FastModel
 
-#endif // __ARCH_ARM_FASTMODEL_CORTEXA76X1_CORETEX_A76X1_HH__
+#endif // __ARCH_ARM_FASTMODEL_CORTEXA76_EVS_HH__

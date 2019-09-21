@@ -86,7 +86,7 @@ component CortexA76x1
         // Clocks.
         clock1Hz.clk_out => clockDiv.clk_in;
         clock1Hz.clk_out => clockDivPeriph.clk_in;
-        clockDiv.clk_out => core.core_clk_in[0];
+        clockDiv.clk_out => core.core_clk_in;
         clockDivPeriph.clk_out => core.clk_in;
     }
 

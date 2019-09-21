@@ -27,7 +27,7 @@
  * Authors: Gabe Black
  */
 
-#include "arch/arm/fastmodel/CortexA76x1/cortex_a76x1.hh"
+#include "arch/arm/fastmodel/CortexA76/cortex_a76.hh"
 
 #include "arch/arm/fastmodel/arm/cpu.hh"
 #include "arch/arm/fastmodel/iris/cpu.hh"
@@ -197,100 +197,6 @@ CortexA76Cluster::getPort(const std::string &if_name, PortID idx)
     }
 }
 
-void
-ScxEvsCortexA76x1::clockChangeHandler()
-{
-    clockRateControl->set_mul_div(SimClock::Int::s, clockPeriod.value);
-}
-
-ScxEvsCortexA76x1::ScxEvsCortexA76x1(const sc_core::sc_module_name &mod_name,
-        const Params &p) :
-    scx_evs_CortexA76x1(mod_name),
-    amba(scx_evs_CortexA76x1::amba, p.name + ".amba", -1),
-    redist {
-      new TlmGicTarget(redistributor[0],
-              csprintf("%s.redistributor[%d]", name(), 0), 0)
-    },
-    cnthpirq("cnthpirq"), cnthvirq("cnthvirq"), cntpsirq("cntpsirq"),
-    cntvirq("cntvirq"), commirq("commirq"), ctidbgirq("ctidbgirq"),
-    pmuirq("pmuirq"), vcpumntirq("vcpumntirq"), cntpnsirq("cntpnsirq"),
-    clockChanged(Iris::ClockEventName.c_str()),
-    clockPeriod(Iris::PeriodAttributeName.c_str()),
-    gem5CpuCluster(Iris::Gem5CpuClusterAttributeName.c_str()),
-    sendFunctional(Iris::SendFunctionalAttributeName.c_str()),
-    params(p)
-{
-    clockRateControl.bind(clock_rate_s);
-
-    add_attribute(gem5CpuCluster);
-    add_attribute(clockPeriod);
-    SC_METHOD(clockChangeHandler);
-    dont_initialize();
-    sensitive << clockChanged;
-
-    scx_evs_CortexA76x1::cnthpirq[0].bind(cnthpirq.signal_in);
-    scx_evs_CortexA76x1::cnthvirq[0].bind(cnthvirq.signal_in);
-    scx_evs_CortexA76x1::cntpsirq[0].bind(cntpsirq.signal_in);
-    scx_evs_CortexA76x1::cntvirq[0].bind(cntvirq.signal_in);
-    scx_evs_CortexA76x1::commirq[0].bind(commirq.signal_in);
-    scx_evs_CortexA76x1::ctidbgirq[0].bind(ctidbgirq.signal_in);
-    scx_evs_CortexA76x1::pmuirq[0].bind(pmuirq.signal_in);
-    scx_evs_CortexA76x1::vcpumntirq[0].bind(vcpumntirq.signal_in);
-    scx_evs_CortexA76x1::cntpnsirq[0].bind(cntpnsirq.signal_in);
-
-    sendFunctional.value = [this](PacketPtr pkt) { sendFunc(pkt); };
-    add_attribute(sendFunctional);
-}
-
-void
-ScxEvsCortexA76x1::sendFunc(PacketPtr pkt)
-{
-    auto *trans = sc_gem5::packet2payload(pkt);
-    panic_if(scx_evs_CortexA76x1::amba->transport_dbg(*trans) !=
-            trans->get_data_length(), "Didn't send entire functional packet!");
-    trans->release();
-}
-
-void
-ScxEvsCortexA76x1::before_end_of_elaboration()
-{
-    scx_evs_CortexA76x1::before_end_of_elaboration();
-
-    auto *cluster = gem5CpuCluster.value;
-
-    auto set_on_change = [cluster](
-            SignalReceiver &recv, ArmInterruptPinGen *gen, int num)
-    {
-        auto *pin = gen->get(cluster->getCore(num)->getContext(0));
-        auto handler = [pin](bool status)
-        {
-            status ? pin->raise() : pin->clear();
-        };
-        recv.onChange(handler);
-    };
-
-    set_on_change(cnthpirq, cluster->params().cnthpirq, 0);
-    set_on_change(cnthvirq, cluster->params().cnthvirq, 0);
-    set_on_change(cntpsirq, cluster->params().cntpsirq, 0);
-    set_on_change(cntvirq, cluster->params().cntvirq, 0);
-    set_on_change(commirq, cluster->params().commirq, 0);
-    set_on_change(ctidbgirq, cluster->params().ctidbgirq, 0);
-    set_on_change(pmuirq, cluster->params().pmuirq, 0);
-    set_on_change(vcpumntirq, cluster->params().vcpumntirq, 0);
-    set_on_change(cntpnsirq, cluster->params().cntpnsirq, 0);
-}
-
-Port &
-ScxEvsCortexA76x1::gem5_getPort(const std::string &if_name, int idx)
-{
-    if (if_name == "redistributor")
-        return *redist.at(idx);
-    else if (if_name == "amba")
-        return amba;
-    else
-        return scx_evs_CortexA76x1::gem5_getPort(if_name, idx);
-}
-
 } // namespace FastModel
 
 FastModel::CortexA76 *
@@ -303,10 +209,4 @@ FastModel::CortexA76Cluster *
 FastModelCortexA76ClusterParams::create()
 {
     return new FastModel::CortexA76Cluster(*this);
-}
-
-FastModel::ScxEvsCortexA76x1 *
-FastModelScxEvsCortexA76x1Params::create()
-{
-    return new FastModel::ScxEvsCortexA76x1(name.c_str(), *this);
 }

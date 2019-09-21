@@ -32,10 +32,11 @@ if not env['USE_ARM_FASTMODEL'] or env['TARGET_ISA'] != 'arm':
 
 protocol_dir = Dir('..').Dir('protocol')
 
-ArmFastModelComponent(File('CortexA76x1.sgproj'),
-                      File('CortexA76x1.lisa'),
+ArmFastModelComponent(File('x1.sgproj'),
+                      File('x1.lisa'),
                       protocol_dir.File(
                           'ExportedClockRateControlProtocol.lisa')
                       ).prepare_env(env)
-SimObject('FastModelCortexA76x1.py')
-Source('cortex_a76x1.cc')
+SimObject('FastModelCortexA76.py')
+Source('cortex_a76.cc')
+Source('evs.cc')

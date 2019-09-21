@@ -40,7 +40,7 @@ from m5.objects.SystemC import SystemC_ScModule
 class FastModelCortexA76(FastModelArmCPU):
     type = 'FastModelCortexA76'
     cxx_class = 'FastModel::CortexA76'
-    cxx_header = 'arch/arm/fastmodel/CortexA76x1/cortex_a76x1.hh'
+    cxx_header = 'arch/arm/fastmodel/CortexA76/cortex_a76.hh'
 
     cntfrq = 0x1800000
 
@@ -142,7 +142,7 @@ class FastModelCortexA76(FastModelArmCPU):
 class FastModelCortexA76Cluster(SimObject):
     type = 'FastModelCortexA76Cluster'
     cxx_class = 'FastModel::CortexA76Cluster'
-    cxx_header = 'arch/arm/fastmodel/CortexA76x1/cortex_a76x1.hh'
+    cxx_header = 'arch/arm/fastmodel/CortexA76/cortex_a76.hh'
 
     cores = VectorParam.FastModelCortexA76(
             'Core in a given cluster of CortexA76s')
@@ -356,8 +356,9 @@ class FastModelCortexA76Cluster(SimObject):
 
 class FastModelScxEvsCortexA76x1(SystemC_ScModule):
     type = 'FastModelScxEvsCortexA76x1'
-    cxx_class = 'FastModel::ScxEvsCortexA76x1'
-    cxx_header = 'arch/arm/fastmodel/CortexA76x1/cortex_a76x1.hh'
+    cxx_class = 'FastModel::ScxEvsCortexA76<FastModel::ScxEvsCortexA76x1Types>'
+    cxx_template_params = [ 'class Types' ]
+    cxx_header = 'arch/arm/fastmodel/CortexA76/evs.hh'
 
 class FastModelCortexA76x1(FastModelCortexA76Cluster):
     cores = [ FastModelCortexA76(thread_paths=[ 'core.cpu0' ]) ]

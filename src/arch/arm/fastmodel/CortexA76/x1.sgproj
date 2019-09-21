@@ -1,4 +1,4 @@
-sgproject "CortexA76x1.sgproj"
+sgproject "x1.sgproj"
 {
 TOP_LEVEL_COMPONENT = "CortexA76x1";
 ACTIVE_CONFIG_LINUX  = "gcc";
@@ -21,7 +21,7 @@ config "gcc"
 }
 files
 {
-    path = "CortexA76x1.lisa";
+    path = "x1.lisa";
     path = "${PVLIB_HOME}/etc/sglib.sgrepo";
     path = "../protocol/ExportedClockRateControlProtocol.lisa";
 }
