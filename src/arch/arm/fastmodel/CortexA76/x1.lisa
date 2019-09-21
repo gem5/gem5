@@ -34,20 +34,6 @@ component CortexA76x1
     {
         core : ARMCortexA76x1CT();
 
-        // Bridges for the core.
-        ambaBridge : PVBus2AMBAPV();
-
-        // Adapters for CPU-to-GIC signals
-        CNTHPIRQ : SGSignal2AMBAPVSignal();
-        CNTHVIRQ : SGSignal2AMBAPVSignal();
-        CNTPNSIRQ : SGSignal2AMBAPVSignal();
-        CNTPSIRQ : SGSignal2AMBAPVSignal();
-        CNTVIRQ : SGSignal2AMBAPVSignal();
-        COMMIRQ : SGSignal2AMBAPVSignal();
-        CTIDBGIRQ : SGSignal2AMBAPVSignal();
-        PMUIRQ : SGSignal2AMBAPVSignal();
-        VCPUMNTIRQ : SGSignal2AMBAPVSignal();
-
         // Clocks.
         clock1Hz : MasterClock();
         clockDiv : ClockDivider();
@@ -57,31 +43,21 @@ component CortexA76x1
     connection
     {
         // The main interface with memory.
-        core.pvbus_m0 => ambaBridge.pvbus_s;
-        ambaBridge.amba_pv_m => self.amba;
+        core.pvbus_m0 => self.amba;
 
         // Connection to the GIC.
         self.redistributor => core.gicv3_redistributor_s;
 
-        // Connections from CPU to adapters
-        core.CNTHPIRQ[0] => CNTHPIRQ.sg_signal_s;
-        CNTHPIRQ.amba_pv_signal_m => self.cnthpirq[0];
-        core.CNTHVIRQ[0] => CNTHVIRQ.sg_signal_s;
-        CNTHVIRQ.amba_pv_signal_m => self.cnthvirq[0];
-        core.CNTPNSIRQ[0] => CNTPNSIRQ.sg_signal_s;
-        CNTPNSIRQ.amba_pv_signal_m => self.cntpnsirq[0];
-        core.CNTPSIRQ[0] => CNTPSIRQ.sg_signal_s;
-        CNTPSIRQ.amba_pv_signal_m => self.cntpsirq[0];
-        core.CNTVIRQ[0] => CNTVIRQ.sg_signal_s;
-        CNTVIRQ.amba_pv_signal_m => self.cntvirq[0];
-        core.commirq[0] => COMMIRQ.sg_signal_s;
-        COMMIRQ.amba_pv_signal_m => self.commirq[0];
-        core.ctidbgirq[0] => CTIDBGIRQ.sg_signal_s;
-        CTIDBGIRQ.amba_pv_signal_m => self.ctidbgirq[0];
-        core.pmuirq[0] => PMUIRQ.sg_signal_s;
-        PMUIRQ.amba_pv_signal_m => self.pmuirq[0];
-        core.vcpumntirq[0] => VCPUMNTIRQ.sg_signal_s;
-        VCPUMNTIRQ.amba_pv_signal_m => self.vcpumntirq[0];
+        // Core interrupt signals.
+        core.CNTHPIRQ => self.cnthpirq;
+        core.CNTHVIRQ => self.cnthvirq;
+        core.CNTPNSIRQ => self.cntpnsirq;
+        core.CNTPSIRQ => self.cntpsirq;
+        core.CNTVIRQ => self.cntvirq;
+        core.commirq => self.commirq;
+        core.ctidbgirq => self.ctidbgirq;
+        core.pmuirq => self.pmuirq;
+        core.vcpumntirq => self.vcpumntirq;
 
         // Clocks.
         clock1Hz.clk_out => clockDiv.clk_in;
@@ -95,7 +71,7 @@ component CortexA76x1
         component_type = "System";
     }
 
-    master port<AMBAPV> amba;
+    master port<PVBus> amba;
     slave port<ExportedClockRateControl> clock_rate_s
     {
         behavior set_mul_div(uint64_t mul, uint64_t div)
@@ -106,13 +82,13 @@ component CortexA76x1
     slave port<GICv3Comms> redistributor[1];
 
     // External ports for CPU-to-GIC signals
-    master port<AMBAPVSignal> cnthpirq[1];
-    master port<AMBAPVSignal> cnthvirq[1];
-    master port<AMBAPVSignal> cntpsirq[1];
-    master port<AMBAPVSignal> cntvirq[1];
-    master port<AMBAPVSignal> commirq[1];
-    master port<AMBAPVSignal> ctidbgirq[1];
-    master port<AMBAPVSignal> pmuirq[1];
-    master port<AMBAPVSignal> vcpumntirq[1];
-    master port<AMBAPVSignal> cntpnsirq[1];
+    master port<Signal> cnthpirq[1];
+    master port<Signal> cnthvirq[1];
+    master port<Signal> cntpsirq[1];
+    master port<Signal> cntvirq[1];
+    master port<Signal> commirq[1];
+    master port<Signal> ctidbgirq[1];
+    master port<Signal> pmuirq[1];
+    master port<Signal> vcpumntirq[1];
+    master port<Signal> cntpnsirq[1];
 }
