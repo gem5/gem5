@@ -204,14 +204,15 @@ def build_test_system(np):
                 test_sys.cpu[i].addSimPointProbe(options.simpoint_interval)
             if options.checker:
                 test_sys.cpu[i].addCheckerCpu()
-            if options.bp_type:
-                bpClass = ObjectList.bp_list.get(options.bp_type)
-                test_sys.cpu[i].branchPred = bpClass()
-            if options.indirect_bp_type:
-                IndirectBPClass = ObjectList.indirect_bp_list.get(
-                    options.indirect_bp_type)
-                test_sys.cpu[i].branchPred.indirectBranchPred = \
-                    IndirectBPClass()
+            if not ObjectList.is_kvm_cpu(TestCPUClass):
+                if options.bp_type:
+                    bpClass = ObjectList.bp_list.get(options.bp_type)
+                    test_sys.cpu[i].branchPred = bpClass()
+                if options.indirect_bp_type:
+                    IndirectBPClass = ObjectList.indirect_bp_list.get(
+                        options.indirect_bp_type)
+                    test_sys.cpu[i].branchPred.indirectBranchPred = \
+                        IndirectBPClass()
             test_sys.cpu[i].createThreads()
 
         # If elastic tracing is enabled when not restoring from checkpoint and
