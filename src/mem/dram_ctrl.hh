@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 ARM Limited
+ * Copyright (c) 2012-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -270,43 +270,16 @@ class DRAMCtrl : public QoS::MemCtrl
          REF_RUN
      };
 
-    /**
-     * Rank class includes a vector of banks. Refresh and Power state
-     * machines are defined per rank. Events required to change the
-     * state of the refresh and power state machine are scheduled per
-     * rank. This class allows the implementation of rank-wise refresh
-     * and rank-wise power-down.
-     */
-    class Rank : public EventManager
+    class Rank;
+    struct RankStats : public Stats::Group
     {
+        RankStats(DRAMCtrl& memory, Rank &rank);
 
-      private:
+        void regStats() override;
+        void resetStats() override;
+        void preDumpStats() override;
 
-        /**
-         * A reference to the parent DRAMCtrl instance
-         */
-        DRAMCtrl& memory;
-
-        /**
-         * Since we are taking decisions out of order, we need to keep
-         * track of what power transition is happening at what time
-         */
-        PowerState pwrStateTrans;
-
-        /**
-         * Previous low-power state, which will be re-entered after refresh.
-         */
-        PowerState pwrStatePostRefresh;
-
-        /**
-         * Track when we transitioned to the current power state
-         */
-        Tick pwrStateTick;
-
-        /**
-         * Keep track of when a refresh is due.
-         */
-        Tick refreshDueAt;
+        Rank &rank;
 
         /*
          * Command energies
@@ -354,7 +327,46 @@ class DRAMCtrl : public QoS::MemCtrl
         /**
          * Track time spent in each power state.
          */
-        Stats::Vector pwrStateTime;
+        Stats::Vector memoryStateTime;
+    };
+
+    /**
+     * Rank class includes a vector of banks. Refresh and Power state
+     * machines are defined per rank. Events required to change the
+     * state of the refresh and power state machine are scheduled per
+     * rank. This class allows the implementation of rank-wise refresh
+     * and rank-wise power-down.
+     */
+    class Rank : public EventManager
+    {
+
+      private:
+
+        /**
+         * A reference to the parent DRAMCtrl instance
+         */
+        DRAMCtrl& memory;
+
+        /**
+         * Since we are taking decisions out of order, we need to keep
+         * track of what power transition is happening at what time
+         */
+        PowerState pwrStateTrans;
+
+        /**
+         * Previous low-power state, which will be re-entered after refresh.
+         */
+        PowerState pwrStatePostRefresh;
+
+        /**
+         * Track when we transitioned to the current power state
+         */
+        Tick pwrStateTick;
+
+        /**
+         * Keep track of when a refresh is due.
+         */
+        Tick refreshDueAt;
 
         /**
          * Function to update Power Stats
@@ -566,44 +578,8 @@ class DRAMCtrl : public QoS::MemCtrl
         void processWakeUpEvent();
         EventFunctionWrapper wakeUpEvent;
 
-    };
-
-    /**
-     * Define the process to compute stats on a stats dump event, e.g. on
-     * simulation exit or intermediate stats dump. This is defined per rank
-     * as the per rank stats are based on state transition and periodically
-     * updated, requiring re-sync at exit.
-     */
-    class RankDumpCallback : public Callback
-    {
-        Rank *ranks;
-      public:
-        RankDumpCallback(Rank *r) : ranks(r) {}
-        virtual void process() { ranks->computeStats(); };
-    };
-
-    /** Define a process to clear power lib counters on a stats reset */
-    class RankResetCallback : public Callback
-    {
-      private:
-        /** Pointer to the rank, thus we instantiate per rank */
-        Rank *rank;
-
-      public:
-        RankResetCallback(Rank *r) : rank(r) {}
-        virtual void process() { rank->resetStats(); };
-    };
-
-    /** Define a process to store the time on a stats reset */
-    class MemResetCallback : public Callback
-    {
-      private:
-        /** A reference to the DRAMCtrl instance */
-        DRAMCtrl *mem;
-
-      public:
-        MemResetCallback(DRAMCtrl *_mem) : mem(_mem) {}
-        virtual void process() { mem->lastStatsResetTick = curTick(); };
+      protected:
+        RankStats stats;
     };
 
     /**
@@ -1051,85 +1027,101 @@ class DRAMCtrl : public QoS::MemCtrl
      */
     Tick nextReqTime;
 
-    // All statistics that the model needs to capture
-    Stats::Scalar readReqs;
-    Stats::Scalar writeReqs;
-    Stats::Scalar readBursts;
-    Stats::Scalar writeBursts;
-    Stats::Scalar bytesReadDRAM;
-    Stats::Scalar bytesReadWrQ;
-    Stats::Scalar bytesWritten;
-    Stats::Scalar bytesReadSys;
-    Stats::Scalar bytesWrittenSys;
-    Stats::Scalar servicedByWrQ;
-    Stats::Scalar mergedWrBursts;
-    Stats::Scalar neitherReadNorWrite;
-    Stats::Vector perBankRdBursts;
-    Stats::Vector perBankWrBursts;
-    Stats::Scalar numRdRetry;
-    Stats::Scalar numWrRetry;
-    Stats::Scalar totGap;
-    Stats::Vector readPktSize;
-    Stats::Vector writePktSize;
-    Stats::Vector rdQLenPdf;
-    Stats::Vector wrQLenPdf;
-    Stats::Histogram bytesPerActivate;
-    Stats::Histogram rdPerTurnAround;
-    Stats::Histogram wrPerTurnAround;
+    /** All statistics that the model needs to capture */
+    struct DRAMStats : public Stats::Group {
+        DRAMStats(DRAMCtrl &dram);
 
-    // per-master bytes read and written to memory
-    Stats::Vector masterReadBytes;
-    Stats::Vector masterWriteBytes;
+        void regStats() override;
+        void resetStats() override;
 
-    // per-master bytes read and written to memory rate
-    Stats::Formula masterReadRate;
-    Stats::Formula masterWriteRate;
+        DRAMCtrl &dram;
 
-    // per-master read and write serviced memory accesses
-    Stats::Vector masterReadAccesses;
-    Stats::Vector masterWriteAccesses;
+        Stats::Scalar readReqs;
+        Stats::Scalar writeReqs;
+        Stats::Scalar readBursts;
+        Stats::Scalar writeBursts;
+        Stats::Scalar servicedByWrQ;
+        Stats::Scalar mergedWrBursts;
+        Stats::Scalar neitherReadNorWriteReqs;
+        Stats::Vector perBankRdBursts;
+        Stats::Vector perBankWrBursts;
 
-    // per-master read and write total memory access latency
-    Stats::Vector masterReadTotalLat;
-    Stats::Vector masterWriteTotalLat;
+        // Average queue lengths
+        Stats::Average avgRdQLen;
+        Stats::Average avgWrQLen;
 
-    // per-master raed and write average memory access latency
-    Stats::Formula masterReadAvgLat;
-    Stats::Formula masterWriteAvgLat;
+        // Latencies summed over all requests
+        Stats::Scalar totQLat;
+        Stats::Scalar totBusLat;
+        Stats::Scalar totMemAccLat;
 
-    // Latencies summed over all requests
-    Stats::Scalar totQLat;
-    Stats::Scalar totMemAccLat;
-    Stats::Scalar totBusLat;
+        // Average latencies per request
+        Stats::Formula avgQLat;
+        Stats::Formula avgBusLat;
+        Stats::Formula avgMemAccLat;
 
-    // Average latencies per request
-    Stats::Formula avgQLat;
-    Stats::Formula avgBusLat;
-    Stats::Formula avgMemAccLat;
+        Stats::Scalar numRdRetry;
+        Stats::Scalar numWrRetry;
 
-    // Average bandwidth
-    Stats::Formula avgRdBW;
-    Stats::Formula avgWrBW;
-    Stats::Formula avgRdBWSys;
-    Stats::Formula avgWrBWSys;
-    Stats::Formula peakBW;
-    Stats::Formula busUtil;
-    Stats::Formula busUtilRead;
-    Stats::Formula busUtilWrite;
+        // Row hit count and rate
+        Stats::Scalar readRowHits;
+        Stats::Scalar writeRowHits;
+        Stats::Formula readRowHitRate;
+        Stats::Formula writeRowHitRate;
 
-    // Average queue lengths
-    Stats::Average avgRdQLen;
-    Stats::Average avgWrQLen;
+        Stats::Vector readPktSize;
+        Stats::Vector writePktSize;
+        Stats::Vector rdQLenPdf;
+        Stats::Vector wrQLenPdf;
+        Stats::Histogram bytesPerActivate;
+        Stats::Histogram rdPerTurnAround;
+        Stats::Histogram wrPerTurnAround;
 
-    // Row hit count and rate
-    Stats::Scalar readRowHits;
-    Stats::Scalar writeRowHits;
-    Stats::Formula readRowHitRate;
-    Stats::Formula writeRowHitRate;
-    Stats::Formula avgGap;
+        Stats::Scalar bytesReadDRAM;
+        Stats::Scalar bytesReadWrQ;
+        Stats::Scalar bytesWritten;
+        Stats::Scalar bytesReadSys;
+        Stats::Scalar bytesWrittenSys;
 
-    // DRAM Power Calculation
-    Stats::Formula pageHitRate;
+        // Average bandwidth
+        Stats::Formula avgRdBW;
+        Stats::Formula avgWrBW;
+        Stats::Formula avgRdBWSys;
+        Stats::Formula avgWrBWSys;
+        Stats::Formula peakBW;
+
+        Stats::Formula busUtil;
+        Stats::Formula busUtilRead;
+        Stats::Formula busUtilWrite;
+
+        Stats::Scalar totGap;
+        Stats::Formula avgGap;
+
+        // per-master bytes read and written to memory
+        Stats::Vector masterReadBytes;
+        Stats::Vector masterWriteBytes;
+
+        // per-master bytes read and written to memory rate
+        Stats::Formula masterReadRate;
+        Stats::Formula masterWriteRate;
+
+        // per-master read and write serviced memory accesses
+        Stats::Vector masterReadAccesses;
+        Stats::Vector masterWriteAccesses;
+
+        // per-master read and write total memory access latency
+        Stats::Vector masterReadTotalLat;
+        Stats::Vector masterWriteTotalLat;
+
+        // per-master raed and write average memory access latency
+        Stats::Formula masterReadAvgLat;
+        Stats::Formula masterWriteAvgLat;
+
+        // DRAM Power Calculation
+        Stats::Formula pageHitRate;
+    };
+
+    DRAMStats stats;
 
     // Holds the value of the rank of burst issued
     uint8_t activeRank;
@@ -1172,9 +1164,6 @@ class DRAMCtrl : public QoS::MemCtrl
     };
 
   public:
-
-    void regStats() override;
-
     DRAMCtrl(const DRAMCtrlParams* p);
 
     DrainState drain() override;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018 ARM Limited
+ * Copyright (c) 2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -52,7 +52,8 @@ MemCtrl::MemCtrl(const QoSMemCtrlParams * p)
     qosPriorityEscalation(p->qos_priority_escalation),
     qosSyncroScheduler(p->qos_syncro_scheduler),
     totalReadQueueSize(0), totalWriteQueueSize(0),
-    busState(READ), busStateNext(READ)
+    busState(READ), busStateNext(READ),
+    stats(*this)
 {
     // Set the priority policy
     if (policy) {
@@ -113,7 +114,7 @@ MemCtrl::logRequest(BusState dir, MasterID m_id, uint8_t qos,
     }
 
     // Record statistics
-    avgPriority[m_id].sample(qos);
+    stats.avgPriority[m_id].sample(qos);
 
     // Compute avg priority distance
 
@@ -122,7 +123,7 @@ MemCtrl::logRequest(BusState dir, MasterID m_id, uint8_t qos,
             (abs(int(qos) - int(i))) * packetPriorities[m_id][i];
 
         if (distance > 0) {
-            avgPriorityDistance[m_id].sample(distance);
+            stats.avgPriorityDistance[m_id].sample(distance);
             DPRINTF(QOS,
                     "QoSMemCtrl::logRequest MASTER %s [id %d]"
                     " registering priority distance %d for priority %d"
@@ -191,13 +192,13 @@ MemCtrl::logResponse(BusState dir, MasterID m_id, uint8_t qos,
 
         if (latency > 0) {
             // Record per-priority latency stats
-            if (priorityMaxLatency[qos].value() < latency) {
-                priorityMaxLatency[qos] = latency;
+            if (stats.priorityMaxLatency[qos].value() < latency) {
+                stats.priorityMaxLatency[qos] = latency;
             }
 
-            if (priorityMinLatency[qos].value() > latency
-                    || priorityMinLatency[qos].value() == 0) {
-                priorityMinLatency[qos] = latency;
+            if (stats.priorityMinLatency[qos].value() > latency
+                    || stats.priorityMinLatency[qos].value() == 0) {
+                stats.priorityMinLatency[qos] = latency;
             }
         }
     }
@@ -280,52 +281,71 @@ MemCtrl::addMaster(MasterID m_id)
     }
 }
 
-void
-MemCtrl::regStats()
+MemCtrl::MemCtrlStats::MemCtrlStats(MemCtrl &mc)
+    : Stats::Group(&mc),
+    memCtrl(mc),
+
+    ADD_STAT(avgPriority,
+             "Average QoS priority value for accepted requests"),
+    ADD_STAT(avgPriorityDistance,
+             "Average QoS priority distance between assigned and "
+             "queued values"),
+
+    ADD_STAT(priorityMinLatency,
+             "per QoS priority minimum request to response latency (s)"),
+    ADD_STAT(priorityMaxLatency,
+        "per QoS priority maximum request to response latency (s)"),
+    ADD_STAT(numReadWriteTurnArounds,
+             "Number of turnarounds from READ to WRITE"),
+    ADD_STAT(numWriteReadTurnArounds,
+             "Number of turnarounds from WRITE to READ"),
+    ADD_STAT(numStayReadState,
+             "Number of times bus staying in READ state"),
+    ADD_STAT(numStayWriteState,
+             "Number of times bus staying in WRITE state")
 {
-    AbstractMemory::regStats();
+}
+
+void
+MemCtrl::MemCtrlStats::regStats()
+{
+    Stats::Group::regStats();
 
     using namespace Stats;
 
+    System *system = memCtrl._system;
+    const auto max_masters = system->maxMasters();
+    const auto num_priorities = memCtrl.numPriorities();
+
     // Initializes per master statistics
-    avgPriority.init(_system->maxMasters()).name(name() + ".avgPriority")
-        .desc("Average QoS priority value for accepted requests")
-        .flags(nozero | nonan).precision(2);
+    avgPriority
+        .init(max_masters)
+        .flags(nozero | nonan)
+        .precision(2)
+        ;
 
-    avgPriorityDistance.init(_system->maxMasters())
-        .name(name() + ".avgPriorityDistance")
-        .desc("Average QoS priority distance between assigned and "
-        "queued values").flags(nozero | nonan);
+    avgPriorityDistance
+        .init(max_masters)
+        .flags(nozero | nonan)
+        ;
 
-    priorityMinLatency.init(numPriorities())
-        .name(name() + ".priorityMinLatency")
-        .desc("per QoS priority minimum request to response latency (s)")
-        .precision(12);
+    priorityMinLatency
+        .init(num_priorities)
+        .precision(12)
+        ;
 
-    priorityMaxLatency.init(numPriorities())
-        .name(name() + ".priorityMaxLatency")
-        .desc("per QoS priority maximum request to response latency (s)")
-        .precision(12);
+    priorityMaxLatency
+        .init(num_priorities)
+        .precision(12)
+        ;
 
-    numReadWriteTurnArounds.name(name() + ".numReadWriteTurnArounds")
-        .desc("Number of turnarounds from READ to WRITE");
-
-    numWriteReadTurnArounds.name(name() + ".numWriteReadTurnArounds")
-        .desc("Number of turnarounds from WRITE to READ");
-
-    numStayReadState.name(name() + ".numStayReadState")
-        .desc("Number of times bus staying in READ state");
-
-    numStayWriteState.name(name() + ".numStayWriteState")
-        .desc("Number of times bus staying in WRITE state");
-
-    for (int i = 0; i < _system->maxMasters(); i++) {
-        const std::string master = _system->getMasterName(i);
+    for (int i = 0; i < max_masters; i++) {
+        const std::string master = system->getMasterName(i);
         avgPriority.subname(i, master);
         avgPriorityDistance.subname(i, master);
     }
 
-    for (int j = 0; j < numPriorities(); ++j) {
+    for (int j = 0; j < num_priorities; ++j) {
         priorityMinLatency.subname(j, std::to_string(j));
         priorityMaxLatency.subname(j, std::to_string(j));
     }
@@ -336,15 +356,15 @@ MemCtrl::recordTurnaroundStats()
 {
     if (busStateNext != busState) {
         if (busState == READ) {
-            numWriteReadTurnArounds++;
+            stats.numWriteReadTurnArounds++;
         } else if (busState == WRITE) {
-            numReadWriteTurnArounds++;
+            stats.numReadWriteTurnArounds++;
         }
     } else {
         if (busState == READ) {
-            numStayReadState++;
+            stats.numStayReadState++;
         } else if (busState == WRITE) {
-            numStayWriteState++;
+            stats.numStayWriteState++;
         }
     }
 }

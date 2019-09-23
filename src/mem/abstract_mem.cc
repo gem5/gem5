@@ -62,7 +62,8 @@ AbstractMemory::AbstractMemory(const Params *p) :
              (MemBackdoor::Flags)(MemBackdoor::Readable |
                                   MemBackdoor::Writeable)),
     confTableReported(p->conf_table_reported), inAddrMap(p->in_addr_map),
-    kvmMap(p->kvm_map), _system(NULL)
+    kvmMap(p->kvm_map), _system(NULL),
+    stats(*this)
 {
 }
 
@@ -88,110 +89,126 @@ AbstractMemory::setBackingStore(uint8_t* pmem_addr)
     pmemAddr = pmem_addr;
 }
 
-void
-AbstractMemory::regStats()
+AbstractMemory::MemStats::MemStats(AbstractMemory &_mem)
+    : Stats::Group(&_mem), mem(_mem),
+    bytesRead(this, "bytes_read",
+              "Number of bytes read from this memory"),
+    bytesInstRead(this, "bytes_inst_read",
+                  "Number of instructions bytes read from this memory"),
+    bytesWritten(this, "bytes_written",
+                 "Number of bytes written to this memory"),
+    numReads(this, "num_reads",
+             "Number of read requests responded to by this memory"),
+    numWrites(this, "num_writes",
+              "Number of write requests responded to by this memory"),
+    numOther(this, "num_other",
+             "Number of other requests responded to by this memory"),
+    bwRead(this, "bw_read",
+           "Total read bandwidth from this memory (bytes/s)"),
+    bwInstRead(this, "bw_inst_read",
+               "Instruction read bandwidth from this memory (bytes/s)"),
+    bwWrite(this, "bw_write",
+            "Write bandwidth from this memory (bytes/s)"),
+    bwTotal(this, "bw_total",
+            "Total bandwidth to/from this memory (bytes/s)")
 {
-    ClockedObject::regStats();
+}
 
+void
+AbstractMemory::MemStats::regStats()
+{
     using namespace Stats;
 
-    assert(system());
+    Stats::Group::regStats();
+
+    System *sys = mem.system();
+    assert(sys);
+    const auto max_masters = sys->maxMasters();
 
     bytesRead
-        .init(system()->maxMasters())
-        .name(name() + ".bytes_read")
-        .desc("Number of bytes read from this memory")
+        .init(max_masters)
         .flags(total | nozero | nonan)
         ;
-    for (int i = 0; i < system()->maxMasters(); i++) {
-        bytesRead.subname(i, system()->getMasterName(i));
+    for (int i = 0; i < max_masters; i++) {
+        bytesRead.subname(i, sys->getMasterName(i));
     }
+
     bytesInstRead
-        .init(system()->maxMasters())
-        .name(name() + ".bytes_inst_read")
-        .desc("Number of instructions bytes read from this memory")
+        .init(max_masters)
         .flags(total | nozero | nonan)
         ;
-    for (int i = 0; i < system()->maxMasters(); i++) {
-        bytesInstRead.subname(i, system()->getMasterName(i));
+    for (int i = 0; i < max_masters; i++) {
+        bytesInstRead.subname(i, sys->getMasterName(i));
     }
+
     bytesWritten
-        .init(system()->maxMasters())
-        .name(name() + ".bytes_written")
-        .desc("Number of bytes written to this memory")
+        .init(max_masters)
         .flags(total | nozero | nonan)
         ;
-    for (int i = 0; i < system()->maxMasters(); i++) {
-        bytesWritten.subname(i, system()->getMasterName(i));
+    for (int i = 0; i < max_masters; i++) {
+        bytesWritten.subname(i, sys->getMasterName(i));
     }
+
     numReads
-        .init(system()->maxMasters())
-        .name(name() + ".num_reads")
-        .desc("Number of read requests responded to by this memory")
+        .init(max_masters)
         .flags(total | nozero | nonan)
         ;
-    for (int i = 0; i < system()->maxMasters(); i++) {
-        numReads.subname(i, system()->getMasterName(i));
+    for (int i = 0; i < max_masters; i++) {
+        numReads.subname(i, sys->getMasterName(i));
     }
+
     numWrites
-        .init(system()->maxMasters())
-        .name(name() + ".num_writes")
-        .desc("Number of write requests responded to by this memory")
+        .init(max_masters)
         .flags(total | nozero | nonan)
         ;
-    for (int i = 0; i < system()->maxMasters(); i++) {
-        numWrites.subname(i, system()->getMasterName(i));
+    for (int i = 0; i < max_masters; i++) {
+        numWrites.subname(i, sys->getMasterName(i));
     }
+
     numOther
-        .init(system()->maxMasters())
-        .name(name() + ".num_other")
-        .desc("Number of other requests responded to by this memory")
+        .init(max_masters)
         .flags(total | nozero | nonan)
         ;
-    for (int i = 0; i < system()->maxMasters(); i++) {
-        numOther.subname(i, system()->getMasterName(i));
+    for (int i = 0; i < max_masters; i++) {
+        numOther.subname(i, sys->getMasterName(i));
     }
+
     bwRead
-        .name(name() + ".bw_read")
-        .desc("Total read bandwidth from this memory (bytes/s)")
         .precision(0)
         .prereq(bytesRead)
         .flags(total | nozero | nonan)
         ;
-    for (int i = 0; i < system()->maxMasters(); i++) {
-        bwRead.subname(i, system()->getMasterName(i));
+    for (int i = 0; i < max_masters; i++) {
+        bwRead.subname(i, sys->getMasterName(i));
     }
 
     bwInstRead
-        .name(name() + ".bw_inst_read")
-        .desc("Instruction read bandwidth from this memory (bytes/s)")
         .precision(0)
         .prereq(bytesInstRead)
         .flags(total | nozero | nonan)
         ;
-    for (int i = 0; i < system()->maxMasters(); i++) {
-        bwInstRead.subname(i, system()->getMasterName(i));
+    for (int i = 0; i < max_masters; i++) {
+        bwInstRead.subname(i, sys->getMasterName(i));
     }
+
     bwWrite
-        .name(name() + ".bw_write")
-        .desc("Write bandwidth from this memory (bytes/s)")
         .precision(0)
         .prereq(bytesWritten)
         .flags(total | nozero | nonan)
         ;
-    for (int i = 0; i < system()->maxMasters(); i++) {
-        bwWrite.subname(i, system()->getMasterName(i));
+    for (int i = 0; i < max_masters; i++) {
+        bwWrite.subname(i, sys->getMasterName(i));
     }
+
     bwTotal
-        .name(name() + ".bw_total")
-        .desc("Total bandwidth to/from this memory (bytes/s)")
         .precision(0)
         .prereq(bwTotal)
         .flags(total | nozero | nonan)
         ;
-    for (int i = 0; i < system()->maxMasters(); i++) {
-        bwTotal.subname(i, system()->getMasterName(i));
+    for (int i = 0; i < max_masters; i++) {
+        bwTotal.subname(i, sys->getMasterName(i));
     }
+
     bwRead = bytesRead / simSeconds;
     bwInstRead = bytesInstRead / simSeconds;
     bwWrite = bytesWritten / simSeconds;
@@ -384,7 +401,7 @@ AbstractMemory::access(PacketPtr pkt)
 
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Read/Write");
-            numOther[pkt->req->masterId()]++;
+            stats.numOther[pkt->req->masterId()]++;
         }
     } else if (pkt->isRead()) {
         assert(!pkt->isWrite());
@@ -398,10 +415,10 @@ AbstractMemory::access(PacketPtr pkt)
             pkt->setData(hostAddr);
         }
         TRACE_PACKET(pkt->req->isInstFetch() ? "IFetch" : "Read");
-        numReads[pkt->req->masterId()]++;
-        bytesRead[pkt->req->masterId()] += pkt->getSize();
+        stats.numReads[pkt->req->masterId()]++;
+        stats.bytesRead[pkt->req->masterId()] += pkt->getSize();
         if (pkt->req->isInstFetch())
-            bytesInstRead[pkt->req->masterId()] += pkt->getSize();
+            stats.bytesInstRead[pkt->req->masterId()] += pkt->getSize();
     } else if (pkt->isInvalidate() || pkt->isClean()) {
         assert(!pkt->isWrite());
         // in a fastmem system invalidating and/or cleaning packets
@@ -417,8 +434,8 @@ AbstractMemory::access(PacketPtr pkt)
             }
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Write");
-            numWrites[pkt->req->masterId()]++;
-            bytesWritten[pkt->req->masterId()] += pkt->getSize();
+            stats.numWrites[pkt->req->masterId()]++;
+            stats.bytesWritten[pkt->req->masterId()] += pkt->getSize();
         }
     } else {
         panic("Unexpected packet %s", pkt->print());

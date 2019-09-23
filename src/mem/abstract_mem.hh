@@ -161,32 +161,40 @@ class AbstractMemory : public ClockedObject
         }
     }
 
-    /** Number of total bytes read from this memory */
-    Stats::Vector bytesRead;
-    /** Number of instruction bytes read from this memory */
-    Stats::Vector bytesInstRead;
-    /** Number of bytes written to this memory */
-    Stats::Vector bytesWritten;
-    /** Number of read requests */
-    Stats::Vector numReads;
-    /** Number of write requests */
-    Stats::Vector numWrites;
-    /** Number of other requests */
-    Stats::Vector numOther;
-    /** Read bandwidth from this memory */
-    Stats::Formula bwRead;
-    /** Read bandwidth from this memory */
-    Stats::Formula bwInstRead;
-    /** Write bandwidth from this memory */
-    Stats::Formula bwWrite;
-    /** Total bandwidth from this memory */
-    Stats::Formula bwTotal;
-
     /** Pointor to the System object.
      * This is used for getting the number of masters in the system which is
      * needed when registering stats
      */
     System *_system;
+
+    struct MemStats : public Stats::Group {
+        MemStats(AbstractMemory &mem);
+
+        void regStats() override;
+
+        const AbstractMemory &mem;
+
+        /** Number of total bytes read from this memory */
+        Stats::Vector bytesRead;
+        /** Number of instruction bytes read from this memory */
+        Stats::Vector bytesInstRead;
+        /** Number of bytes written to this memory */
+        Stats::Vector bytesWritten;
+        /** Number of read requests */
+        Stats::Vector numReads;
+        /** Number of write requests */
+        Stats::Vector numWrites;
+        /** Number of other requests */
+        Stats::Vector numOther;
+        /** Read bandwidth from this memory */
+        Stats::Formula bwRead;
+        /** Read bandwidth from this memory */
+        Stats::Formula bwInstRead;
+        /** Write bandwidth from this memory */
+        Stats::Formula bwWrite;
+        /** Total bandwidth from this memory */
+        Stats::Formula bwTotal;
+    } stats;
 
 
   private:
@@ -318,12 +326,6 @@ class AbstractMemory : public ClockedObject
      * @param pkt Packet performing the access
      */
     void functionalAccess(PacketPtr pkt);
-
-    /**
-     * Register Statistics
-     */
-    void regStats() override;
-
 };
 
 #endif //__MEM_ABSTRACT_MEMORY_HH__
