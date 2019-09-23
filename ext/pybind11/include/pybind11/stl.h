@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <list>
+#include <deque>
 #include <valarray>
 
 #if defined(_MSC_VER)
@@ -30,7 +31,8 @@
 #    define PYBIND11_HAS_OPTIONAL 1
 #  endif
 // std::experimental::optional (but not allowed in c++11 mode)
-#  if defined(PYBIND11_CPP14) && __has_include(<experimental/optional>)
+#  if defined(PYBIND11_CPP14) && (__has_include(<experimental/optional>) && \
+                                 !__has_include(<optional>))
 #    include <experimental/optional>
 #    define PYBIND11_HAS_EXP_OPTIONAL 1
 #  endif
@@ -82,6 +84,8 @@ template <typename Type, typename Key> struct set_caster {
 
     template <typename T>
     static handle cast(T &&src, return_value_policy policy, handle parent) {
+        if (!std::is_lvalue_reference<T>::value)
+            policy = return_value_policy_override<Key>::policy(policy);
         pybind11::set s;
         for (auto &&value : src) {
             auto value_ = reinterpret_steal<object>(key_conv::cast(forward_like<T>(value), policy, parent));
@@ -91,7 +95,7 @@ template <typename Type, typename Key> struct set_caster {
         return s.release();
     }
 
-    PYBIND11_TYPE_CASTER(type, _("Set[") + key_conv::name() + _("]"));
+    PYBIND11_TYPE_CASTER(type, _("Set[") + key_conv::name + _("]"));
 };
 
 template <typename Type, typename Key, typename Value> struct map_caster {
@@ -117,9 +121,15 @@ template <typename Type, typename Key, typename Value> struct map_caster {
     template <typename T>
     static handle cast(T &&src, return_value_policy policy, handle parent) {
         dict d;
+        return_value_policy policy_key = policy;
+        return_value_policy policy_value = policy;
+        if (!std::is_lvalue_reference<T>::value) {
+            policy_key = return_value_policy_override<Key>::policy(policy_key);
+            policy_value = return_value_policy_override<Value>::policy(policy_value);
+        }
         for (auto &&kv : src) {
-            auto key = reinterpret_steal<object>(key_conv::cast(forward_like<T>(kv.first), policy, parent));
-            auto value = reinterpret_steal<object>(value_conv::cast(forward_like<T>(kv.second), policy, parent));
+            auto key = reinterpret_steal<object>(key_conv::cast(forward_like<T>(kv.first), policy_key, parent));
+            auto value = reinterpret_steal<object>(value_conv::cast(forward_like<T>(kv.second), policy_value, parent));
             if (!key || !value)
                 return handle();
             d[key] = value;
@@ -127,14 +137,14 @@ template <typename Type, typename Key, typename Value> struct map_caster {
         return d.release();
     }
 
-    PYBIND11_TYPE_CASTER(Type, _("Dict[") + key_conv::name() + _(", ") + value_conv::name() + _("]"));
+    PYBIND11_TYPE_CASTER(Type, _("Dict[") + key_conv::name + _(", ") + value_conv::name + _("]"));
 };
 
 template <typename Type, typename Value> struct list_caster {
     using value_conv = make_caster<Value>;
 
     bool load(handle src, bool convert) {
-        if (!isinstance<sequence>(src))
+        if (!isinstance<sequence>(src) || isinstance<str>(src))
             return false;
         auto s = reinterpret_borrow<sequence>(src);
         value.clear();
@@ -157,6 +167,8 @@ private:
 public:
     template <typename T>
     static handle cast(T &&src, return_value_policy policy, handle parent) {
+        if (!std::is_lvalue_reference<T>::value)
+            policy = return_value_policy_override<Value>::policy(policy);
         list l(src.size());
         size_t index = 0;
         for (auto &&value : src) {
@@ -168,11 +180,14 @@ public:
         return l.release();
     }
 
-    PYBIND11_TYPE_CASTER(Type, _("List[") + value_conv::name() + _("]"));
+    PYBIND11_TYPE_CASTER(Type, _("List[") + value_conv::name + _("]"));
 };
 
 template <typename Type, typename Alloc> struct type_caster<std::vector<Type, Alloc>>
  : list_caster<std::vector<Type, Alloc>, Type> { };
+
+template <typename Type, typename Alloc> struct type_caster<std::deque<Type, Alloc>>
+ : list_caster<std::deque<Type, Alloc>, Type> { };
 
 template <typename Type, typename Alloc> struct type_caster<std::list<Type, Alloc>>
  : list_caster<std::list<Type, Alloc>, Type> { };
@@ -194,9 +209,9 @@ private:
 
 public:
     bool load(handle src, bool convert) {
-        if (!isinstance<list>(src))
+        if (!isinstance<sequence>(src))
             return false;
-        auto l = reinterpret_borrow<list>(src);
+        auto l = reinterpret_borrow<sequence>(src);
         if (!require_size(l.size()))
             return false;
         size_t ctr = 0;
@@ -222,7 +237,7 @@ public:
         return l.release();
     }
 
-    PYBIND11_TYPE_CASTER(ArrayType, _("List[") + value_conv::name() + _<Resizable>(_(""), _("[") + _<Size>() + _("]")) + _("]"));
+    PYBIND11_TYPE_CASTER(ArrayType, _("List[") + value_conv::name + _<Resizable>(_(""), _("[") + _<Size>() + _("]")) + _("]"));
 };
 
 template <typename Type, size_t Size> struct type_caster<std::array<Type, Size>>
@@ -251,6 +266,7 @@ template<typename T> struct optional_caster {
     static handle cast(T_ &&src, return_value_policy policy, handle parent) {
         if (!src)
             return none().inc_ref();
+        policy = return_value_policy_override<typename T::value_type>::policy(policy);
         return value_conv::cast(*std::forward<T_>(src), policy, parent);
     }
 
@@ -268,7 +284,7 @@ template<typename T> struct optional_caster {
         return true;
     }
 
-    PYBIND11_TYPE_CASTER(T, _("Optional[") + value_conv::name() + _("]"));
+    PYBIND11_TYPE_CASTER(T, _("Optional[") + value_conv::name + _("]"));
 };
 
 #ifdef PYBIND11_HAS_OPTIONAL
@@ -348,13 +364,14 @@ struct variant_caster<V<Ts...>> {
     }
 
     using Type = V<Ts...>;
-    PYBIND11_TYPE_CASTER(Type, _("Union[") + detail::concat(make_caster<Ts>::name()...) + _("]"));
+    PYBIND11_TYPE_CASTER(Type, _("Union[") + detail::concat(make_caster<Ts>::name...) + _("]"));
 };
 
 #ifdef PYBIND11_HAS_VARIANT
 template <typename... Ts>
 struct type_caster<std::variant<Ts...>> : variant_caster<std::variant<Ts...>> { };
 #endif
+
 NAMESPACE_END(detail)
 
 inline std::ostream &operator<<(std::ostream &os, const handle &obj) {

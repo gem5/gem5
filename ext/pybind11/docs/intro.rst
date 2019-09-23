@@ -41,7 +41,6 @@ The following core C++ features can be mapped to Python
 - Custom operators
 - Single and multiple inheritance
 - STL data structures
-- Iterators and ranges
 - Smart pointers with reference counting like ``std::shared_ptr``
 - Internal references with correct reference counting
 - C++ classes with virtual (and pure virtual) methods can be extended in Python
@@ -77,9 +76,8 @@ In addition to the core functionality, pybind11 provides some extra goodies:
   of `PyRosetta`_, an enormous Boost.Python binding project, reported a binary
   size reduction of **5.4x** and compile time reduction by **5.8x**.
 
-- When supported by the compiler, two new C++14 features (relaxed constexpr and
-  return value deduction) are used to precompute function signatures at compile
-  time, leading to smaller binaries.
+- Function signatures are precomputed at compile time (using ``constexpr``),
+  leading to smaller binaries.
 
 - With little extra effort, C++ types can be pickled and unpickled similar to
   regular Python objects.
@@ -92,4 +90,4 @@ Supported compilers
 1. Clang/LLVM (any non-ancient version with C++11 support)
 2. GCC 4.8 or newer
 3. Microsoft Visual Studio 2015 or newer
-4. Intel C++ compiler v15 or newer
+4. Intel C++ compiler v17 or newer (v16 with pybind11 v2.0 and v15 with pybind11 v2.0 and a `workaround <https://github.com/pybind/pybind11/issues/276>`_ )

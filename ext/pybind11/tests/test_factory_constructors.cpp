@@ -13,7 +13,7 @@
 #include <cmath>
 
 // Classes for testing python construction via C++ factory function:
-// Not publically constructible, copyable, or movable:
+// Not publicly constructible, copyable, or movable:
 class TestFactory1 {
     friend class TestFactoryHelper;
     TestFactory1() : value("(empty)") { print_default_created(this); }
@@ -285,6 +285,7 @@ TEST_SUBMODULE(factory_constructors, m) {
     // test_reallocations
     // Class that has verbose operator_new/operator_delete calls
     struct NoisyAlloc {
+        NoisyAlloc(const NoisyAlloc &) = default;
         NoisyAlloc(int i) { py::print(py::str("NoisyAlloc(int {})").format(i)); }
         NoisyAlloc(double d) { py::print(py::str("NoisyAlloc(double {})").format(d)); }
         ~NoisyAlloc() { py::print("~NoisyAlloc()"); }

@@ -11,6 +11,11 @@
 #include "pybind11_tests.h"
 #include "constructor_stats.h"
 
+#if !defined(PYBIND11_OVERLOAD_CAST)
+template <typename... Args>
+using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
+#endif
+
 class ExampleMandA {
 public:
     ExampleMandA() { print_default_created(this); }
@@ -242,15 +247,16 @@ TEST_SUBMODULE(methods_and_attributes, m) {
         .def("overloaded_const", py::overload_cast<int,     int>(&ExampleMandA::overloaded, py::const_))
         .def("overloaded_const", py::overload_cast<float, float>(&ExampleMandA::overloaded, py::const_))
 #else
-        .def("overloaded", static_cast<py::str (ExampleMandA::*)()>(&ExampleMandA::overloaded))
-        .def("overloaded", static_cast<py::str (ExampleMandA::*)(int)>(&ExampleMandA::overloaded))
-        .def("overloaded", static_cast<py::str (ExampleMandA::*)(int,   float)>(&ExampleMandA::overloaded))
+        // Use both the traditional static_cast method and the C++11 compatible overload_cast_
+        .def("overloaded", overload_cast_<>()(&ExampleMandA::overloaded))
+        .def("overloaded", overload_cast_<int>()(&ExampleMandA::overloaded))
+        .def("overloaded", overload_cast_<int,   float>()(&ExampleMandA::overloaded))
         .def("overloaded", static_cast<py::str (ExampleMandA::*)(float,   int)>(&ExampleMandA::overloaded))
         .def("overloaded", static_cast<py::str (ExampleMandA::*)(int,     int)>(&ExampleMandA::overloaded))
         .def("overloaded", static_cast<py::str (ExampleMandA::*)(float, float)>(&ExampleMandA::overloaded))
-        .def("overloaded_float", static_cast<py::str (ExampleMandA::*)(float, float)>(&ExampleMandA::overloaded))
-        .def("overloaded_const", static_cast<py::str (ExampleMandA::*)(int         ) const>(&ExampleMandA::overloaded))
-        .def("overloaded_const", static_cast<py::str (ExampleMandA::*)(int,   float) const>(&ExampleMandA::overloaded))
+        .def("overloaded_float", overload_cast_<float, float>()(&ExampleMandA::overloaded))
+        .def("overloaded_const", overload_cast_<int         >()(&ExampleMandA::overloaded, py::const_))
+        .def("overloaded_const", overload_cast_<int,   float>()(&ExampleMandA::overloaded, py::const_))
         .def("overloaded_const", static_cast<py::str (ExampleMandA::*)(float,   int) const>(&ExampleMandA::overloaded))
         .def("overloaded_const", static_cast<py::str (ExampleMandA::*)(int,     int) const>(&ExampleMandA::overloaded))
         .def("overloaded_const", static_cast<py::str (ExampleMandA::*)(float, float) const>(&ExampleMandA::overloaded))
@@ -279,12 +285,20 @@ TEST_SUBMODULE(methods_and_attributes, m) {
         .def(py::init<>())
         .def_readonly("def_readonly", &TestProperties::value)
         .def_readwrite("def_readwrite", &TestProperties::value)
+        .def_property("def_writeonly", nullptr,
+                      [](TestProperties& s,int v) { s.value = v; } )
+        .def_property("def_property_writeonly", nullptr, &TestProperties::set)
         .def_property_readonly("def_property_readonly", &TestProperties::get)
         .def_property("def_property", &TestProperties::get, &TestProperties::set)
+        .def_property("def_property_impossible", nullptr, nullptr)
         .def_readonly_static("def_readonly_static", &TestProperties::static_value)
         .def_readwrite_static("def_readwrite_static", &TestProperties::static_value)
+        .def_property_static("def_writeonly_static", nullptr,
+                             [](py::object, int v) { TestProperties::static_value = v; })
         .def_property_readonly_static("def_property_readonly_static",
                                       [](py::object) { return TestProperties::static_get(); })
+        .def_property_static("def_property_writeonly_static", nullptr,
+                             [](py::object, int v) { return TestProperties::static_set(v); })
         .def_property_static("def_property_static",
                              [](py::object) { return TestProperties::static_get(); },
                              [](py::object, int v) { TestProperties::static_set(v); })

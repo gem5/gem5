@@ -2,15 +2,16 @@ import pytest
 
 from pybind11_tests import stl as m
 from pybind11_tests import UserType
+from pybind11_tests import ConstructorStats
 
 
 def test_vector(doc):
     """std::vector <-> list"""
-    l = m.cast_vector()
-    assert l == [1]
-    l.append(2)
-    assert m.load_vector(l)
-    assert m.load_vector(tuple(l))
+    lst = m.cast_vector()
+    assert lst == [1]
+    lst.append(2)
+    assert m.load_vector(lst)
+    assert m.load_vector(tuple(lst))
 
     assert m.cast_bool_vector() == [True, False]
     assert m.load_bool_vector([True, False])
@@ -22,11 +23,20 @@ def test_vector(doc):
     assert m.cast_ptr_vector() == ["lvalue", "lvalue"]
 
 
+def test_deque(doc):
+    """std::deque <-> list"""
+    lst = m.cast_deque()
+    assert lst == [1]
+    lst.append(2)
+    assert m.load_deque(lst)
+    assert m.load_deque(tuple(lst))
+
+
 def test_array(doc):
     """std::array <-> list"""
-    l = m.cast_array()
-    assert l == [1, 2]
-    assert m.load_array(l)
+    lst = m.cast_array()
+    assert lst == [1, 2]
+    assert m.load_array(lst)
 
     assert doc(m.cast_array) == "cast_array() -> List[int[2]]"
     assert doc(m.load_array) == "load_array(arg0: List[int[2]]) -> bool"
@@ -34,9 +44,9 @@ def test_array(doc):
 
 def test_valarray(doc):
     """std::valarray <-> list"""
-    l = m.cast_valarray()
-    assert l == [1, 4, 9]
-    assert m.load_valarray(l)
+    lst = m.cast_valarray()
+    assert lst == [1, 4, 9]
+    assert m.load_valarray(lst)
 
     assert doc(m.cast_valarray) == "cast_valarray() -> List[int]"
     assert doc(m.load_valarray) == "load_valarray(arg0: List[int]) -> bool"
@@ -46,7 +56,9 @@ def test_map(doc):
     """std::map <-> dict"""
     d = m.cast_map()
     assert d == {"key": "value"}
+    assert "key" in d
     d["key2"] = "value2"
+    assert "key2" in d
     assert m.load_map(d)
 
     assert doc(m.cast_map) == "cast_map() -> Dict[str, str]"
@@ -164,7 +176,7 @@ def test_stl_pass_by_pointer(msg):
         m.stl_pass_by_pointer()  # default value is `nullptr`
     assert msg(excinfo.value) == """
         stl_pass_by_pointer(): incompatible function arguments. The following argument types are supported:
-            1. (v: List[int]=None) -> List[int]
+            1. (v: List[int] = None) -> List[int]
 
         Invoked with:
     """  # noqa: E501 line too long
@@ -173,7 +185,7 @@ def test_stl_pass_by_pointer(msg):
         m.stl_pass_by_pointer(None)
     assert msg(excinfo.value) == """
         stl_pass_by_pointer(): incompatible function arguments. The following argument types are supported:
-            1. (v: List[int]=None) -> List[int]
+            1. (v: List[int] = None) -> List[int]
 
         Invoked with: None
     """  # noqa: E501 line too long
@@ -198,3 +210,32 @@ def test_missing_header_message():
     with pytest.raises(TypeError) as excinfo:
         cm.missing_header_return()
     assert expected_message in str(excinfo.value)
+
+
+def test_function_with_string_and_vector_string_arg():
+    """Check if a string is NOT implicitly converted to a list, which was the
+    behavior before fix of issue #1258"""
+    assert m.func_with_string_or_vector_string_arg_overload(('A', 'B', )) == 2
+    assert m.func_with_string_or_vector_string_arg_overload(['A', 'B']) == 2
+    assert m.func_with_string_or_vector_string_arg_overload('A') == 3
+
+
+def test_stl_ownership():
+    cstats = ConstructorStats.get(m.Placeholder)
+    assert cstats.alive() == 0
+    r = m.test_stl_ownership()
+    assert len(r) == 1
+    del r
+    assert cstats.alive() == 0
+
+
+def test_array_cast_sequence():
+    assert m.array_cast_sequence((1, 2, 3)) == [1, 2, 3]
+
+
+def test_issue_1561():
+    """ check fix for issue #1561 """
+    bar = m.Issue1561Outer()
+    bar.list = [m.Issue1561Inner('bar')]
+    bar.list
+    assert bar.list[0].data == 'bar'

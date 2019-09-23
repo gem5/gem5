@@ -44,6 +44,7 @@ def test_single_char_arguments():
     toolong_message = "Expected a character, but multi-character string found"
 
     assert m.ord_char(u'a') == 0x61  # simple ASCII
+    assert m.ord_char_lv(u'b') == 0x62
     assert m.ord_char(u'é') == 0xE9  # requires 2 bytes in utf-8, but can be stuffed in a char
     with pytest.raises(ValueError) as excinfo:
         assert m.ord_char(u'Ā') == 0x100  # requires 2 bytes, doesn't fit in a char
@@ -54,9 +55,11 @@ def test_single_char_arguments():
 
     assert m.ord_char16(u'a') == 0x61
     assert m.ord_char16(u'é') == 0xE9
+    assert m.ord_char16_lv(u'ê') == 0xEA
     assert m.ord_char16(u'Ā') == 0x100
     assert m.ord_char16(u'‽') == 0x203d
     assert m.ord_char16(u'♥') == 0x2665
+    assert m.ord_char16_lv(u'♡') == 0x2661
     with pytest.raises(ValueError) as excinfo:
         assert m.ord_char16(u'🎂') == 0x1F382  # requires surrogate pair
     assert str(excinfo.value) == toobig_message(0x10000)
@@ -320,3 +323,20 @@ def test_numpy_bool():
     assert convert(np.bool_(False)) is False
     assert noconvert(np.bool_(True)) is True
     assert noconvert(np.bool_(False)) is False
+
+
+def test_int_long():
+    """In Python 2, a C++ int should return a Python int rather than long
+    if possible: longs are not always accepted where ints are used (such
+    as the argument to sys.exit()). A C++ long long is always a Python
+    long."""
+
+    import sys
+    must_be_long = type(getattr(sys, 'maxint', 1) + 1)
+    assert isinstance(m.int_cast(), int)
+    assert isinstance(m.long_cast(), int)
+    assert isinstance(m.longlong_cast(), must_be_long)
+
+
+def test_void_caster_2():
+    assert m.test_void_caster()

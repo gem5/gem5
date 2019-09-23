@@ -50,7 +50,9 @@ TEST_SUBMODULE(builtin_casters, m) {
     // test_single_char_arguments
     m.attr("wchar_size") = py::cast(sizeof(wchar_t));
     m.def("ord_char", [](char c) -> int { return static_cast<unsigned char>(c); });
+    m.def("ord_char_lv", [](char &c) -> int { return static_cast<unsigned char>(c); });
     m.def("ord_char16", [](char16_t c) -> uint16_t { return c; });
+    m.def("ord_char16_lv", [](char16_t &c) -> uint16_t { return c; });
     m.def("ord_char32", [](char32_t c) -> uint32_t { return c; });
     m.def("ord_wchar", [](wchar_t c) -> int { return c; });
 
@@ -153,4 +155,16 @@ TEST_SUBMODULE(builtin_casters, m) {
     // test_complex
     m.def("complex_cast", [](float x) { return "{}"_s.format(x); });
     m.def("complex_cast", [](std::complex<float> x) { return "({}, {})"_s.format(x.real(), x.imag()); });
+
+    // test int vs. long (Python 2)
+    m.def("int_cast", []() {return (int) 42;});
+    m.def("long_cast", []() {return (long) 42;});
+    m.def("longlong_cast", []() {return  ULLONG_MAX;});
+
+    /// test void* cast operator
+    m.def("test_void_caster", []() -> bool {
+        void *v = (void *) 0xabcd;
+        py::object o = py::cast(v);
+        return py::cast<void *>(o) == v;
+    });
 }

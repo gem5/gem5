@@ -51,7 +51,6 @@ pybind11 can map the following core C++ features to Python
 - Custom operators
 - Single and multiple inheritance
 - STL data structures
-- Iterators and ranges
 - Smart pointers with reference counting like ``std::shared_ptr``
 - Internal references with correct reference counting
 - C++ classes with virtual (and pure virtual) methods can be extended in Python
@@ -87,9 +86,8 @@ In addition to the core functionality, pybind11 provides some extra goodies:
   [reported](http://graylab.jhu.edu/RosettaCon2016/PyRosetta-4.pdf) a binary
   size reduction of **5.4x** and compile time reduction by **5.8x**.
 
-- When supported by the compiler, two new C++14 features (relaxed constexpr and
-  return value deduction) are used to precompute function signatures at compile
-  time, leading to smaller binaries.
+- Function signatures are precomputed at compile time (using ``constexpr``),
+  leading to smaller binaries.
 
 - With little extra effort, C++ types can be pickled and unpickled similar to
   regular Python objects.
@@ -99,7 +97,7 @@ In addition to the core functionality, pybind11 provides some extra goodies:
 1. Clang/LLVM 3.3 or newer (for Apple Xcode's clang, this is 5.0.0 or newer)
 2. GCC 4.8 or newer
 3. Microsoft Visual Studio 2015 Update 3 or newer
-4. Intel C++ compiler 16 or newer (15 with a [workaround](https://github.com/pybind/pybind11/issues/276))
+4. Intel C++ compiler 17 or newer (16 with pybind11 v2.0 and 15 with pybind11 v2.0 and a [workaround](https://github.com/pybind/pybind11/issues/276))
 5. Cygwin/GCC (tested on 2.5.1)
 
 ## About
@@ -107,6 +105,7 @@ In addition to the core functionality, pybind11 provides some extra goodies:
 This project was created by [Wenzel Jakob](http://rgl.epfl.ch/people/wjakob).
 Significant features and/or improvements to the code were contributed by
 Jonas Adler,
+Lori A. Burns,
 Sylvain Corlay,
 Trent Houliston,
 Axel Huebl,
@@ -119,6 +118,7 @@ Ben Pritchard,
 Jason Rhinelander,
 Boris Schäling,
 Pim Schellart,
+Henry Schreiner,
 Ivan Smirnov, and
 Patrick Stewart.
 

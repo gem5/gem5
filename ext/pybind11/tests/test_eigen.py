@@ -19,7 +19,7 @@ def assert_equal_ref(mat):
 
 
 def assert_sparse_equal_ref(sparse_mat):
-    assert_equal_ref(sparse_mat.todense())
+    assert_equal_ref(sparse_mat.toarray())
 
 
 def test_fixed():
@@ -181,8 +181,7 @@ def test_negative_stride_from_python(msg):
         double_threer(): incompatible function arguments. The following argument types are supported:
             1. (arg0: numpy.ndarray[float32[1, 3], flags.writeable]) -> None
 
-        Invoked with: array([ 5.,  4.,  3.], dtype=float32)
-    """  # noqa: E501 line too long
+        Invoked with: """ + repr(np.array([ 5.,  4.,  3.], dtype='float32'))  # noqa: E501 line too long
 
     with pytest.raises(TypeError) as excinfo:
         m.double_threec(second_col)
@@ -190,8 +189,7 @@ def test_negative_stride_from_python(msg):
         double_threec(): incompatible function arguments. The following argument types are supported:
             1. (arg0: numpy.ndarray[float32[3, 1], flags.writeable]) -> None
 
-        Invoked with: array([ 7.,  4.,  1.], dtype=float32)
-    """  # noqa: E501 line too long
+        Invoked with: """ + repr(np.array([ 7.,  4.,  1.], dtype='float32'))  # noqa: E501 line too long
 
 
 def test_nonunit_stride_to_python():
@@ -670,6 +668,21 @@ def test_issue738():
 
     assert np.all(m.iss738_f2(np.array([[1., 2, 3]])) == np.array([[1., 102, 203]]))
     assert np.all(m.iss738_f2(np.array([[1.], [2], [3]])) == np.array([[1.], [12], [23]]))
+
+
+def test_issue1105():
+    """Issue 1105: 1xN or Nx1 input arrays weren't accepted for eigen
+    compile-time row vectors or column vector"""
+    assert m.iss1105_row(np.ones((1, 7)))
+    assert m.iss1105_col(np.ones((7, 1)))
+
+    # These should still fail (incompatible dimensions):
+    with pytest.raises(TypeError) as excinfo:
+        m.iss1105_row(np.ones((7, 1)))
+    assert "incompatible function arguments" in str(excinfo.value)
+    with pytest.raises(TypeError) as excinfo:
+        m.iss1105_col(np.ones((1, 7)))
+    assert "incompatible function arguments" in str(excinfo.value)
 
 
 def test_custom_operator_new():

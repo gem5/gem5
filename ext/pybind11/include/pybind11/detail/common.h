@@ -27,15 +27,16 @@
 #  endif
 #endif
 
-#if !defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#if !(defined(_MSC_VER) && __cplusplus == 199711L) && !defined(__INTEL_COMPILER)
 #  if __cplusplus >= 201402L
 #    define PYBIND11_CPP14
-#    if __cplusplus > 201402L /* Temporary: should be updated to >= the final C++17 value once known */
+#    if __cplusplus >= 201703L
 #      define PYBIND11_CPP17
 #    endif
 #  endif
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && __cplusplus == 199711L
 // MSVC sets _MSVC_LANG rather than __cplusplus (supposedly until the standard is fully implemented)
+// Unless you use the /Zc:__cplusplus flag on Visual Studio 2017 15.7 Preview 3 or newer
 #  if _MSVC_LANG >= 201402L
 #    define PYBIND11_CPP14
 #    if _MSVC_LANG > 201402L && _MSC_VER >= 1910
@@ -46,8 +47,8 @@
 
 // Compiler version assertions
 #if defined(__INTEL_COMPILER)
-#  if __INTEL_COMPILER < 1500
-#    error pybind11 requires Intel C++ compiler v15 or newer
+#  if __INTEL_COMPILER < 1700
+#    error pybind11 requires Intel C++ compiler v17 or newer
 #  endif
 #elif defined(__clang__) && !defined(__apple_build_version__)
 #  if __clang_major__ < 3 || (__clang_major__ == 3 && __clang_minor__ < 3)
@@ -92,7 +93,7 @@
 #endif
 
 #define PYBIND11_VERSION_MAJOR 2
-#define PYBIND11_VERSION_MINOR 2
+#define PYBIND11_VERSION_MINOR 4
 #define PYBIND11_VERSION_PATCH 1
 
 /// Include Python header, disable linking to pythonX_d.lib on Windows in debug mode
@@ -111,10 +112,6 @@
 #include <Python.h>
 #include <frameobject.h>
 #include <pythread.h>
-
-#if defined(_WIN32) && (defined(min) || defined(max))
-#  error Macro clash with min and max -- define NOMINMAX when compiling your program on Windows
-#endif
 
 #if defined(isalnum)
 #  undef isalnum
@@ -158,6 +155,8 @@
 #define PYBIND11_BYTES_SIZE PyBytes_Size
 #define PYBIND11_LONG_CHECK(o) PyLong_Check(o)
 #define PYBIND11_LONG_AS_LONGLONG(o) PyLong_AsLongLong(o)
+#define PYBIND11_LONG_FROM_SIGNED(o) PyLong_FromSsize_t((ssize_t) o)
+#define PYBIND11_LONG_FROM_UNSIGNED(o) PyLong_FromSize_t((size_t) o)
 #define PYBIND11_BYTES_NAME "bytes"
 #define PYBIND11_STRING_NAME "str"
 #define PYBIND11_SLICE_OBJECT PyObject
@@ -165,7 +164,9 @@
 #define PYBIND11_STR_TYPE ::pybind11::str
 #define PYBIND11_BOOL_ATTR "__bool__"
 #define PYBIND11_NB_BOOL(ptr) ((ptr)->nb_bool)
+// Providing a separate declaration to make Clang's -Wmissing-prototypes happy
 #define PYBIND11_PLUGIN_IMPL(name) \
+    extern "C" PYBIND11_EXPORT PyObject *PyInit_##name();   \
     extern "C" PYBIND11_EXPORT PyObject *PyInit_##name()
 
 #else
@@ -180,6 +181,8 @@
 #define PYBIND11_BYTES_SIZE PyString_Size
 #define PYBIND11_LONG_CHECK(o) (PyInt_Check(o) || PyLong_Check(o))
 #define PYBIND11_LONG_AS_LONGLONG(o) (PyInt_Check(o) ? (long long) PyLong_AsLong(o) : PyLong_AsLongLong(o))
+#define PYBIND11_LONG_FROM_SIGNED(o) PyInt_FromSsize_t((ssize_t) o) // Returns long if needed.
+#define PYBIND11_LONG_FROM_UNSIGNED(o) PyInt_FromSize_t((size_t) o) // Returns long if needed.
 #define PYBIND11_BYTES_NAME "str"
 #define PYBIND11_STRING_NAME "unicode"
 #define PYBIND11_SLICE_OBJECT PySliceObject
@@ -187,8 +190,10 @@
 #define PYBIND11_STR_TYPE ::pybind11::bytes
 #define PYBIND11_BOOL_ATTR "__nonzero__"
 #define PYBIND11_NB_BOOL(ptr) ((ptr)->nb_nonzero)
+// Providing a separate PyInit decl to make Clang's -Wmissing-prototypes happy
 #define PYBIND11_PLUGIN_IMPL(name) \
     static PyObject *pybind11_init_wrapper();               \
+    extern "C" PYBIND11_EXPORT void init##name();           \
     extern "C" PYBIND11_EXPORT void init##name() {          \
         (void)pybind11_init_wrapper();                      \
     }                                                       \
@@ -206,6 +211,31 @@ extern "C" {
 #define PYBIND11_STRINGIFY(x) #x
 #define PYBIND11_TOSTRING(x) PYBIND11_STRINGIFY(x)
 #define PYBIND11_CONCAT(first, second) first##second
+
+#define PYBIND11_CHECK_PYTHON_VERSION \
+    {                                                                          \
+        const char *compiled_ver = PYBIND11_TOSTRING(PY_MAJOR_VERSION)         \
+            "." PYBIND11_TOSTRING(PY_MINOR_VERSION);                           \
+        const char *runtime_ver = Py_GetVersion();                             \
+        size_t len = std::strlen(compiled_ver);                                \
+        if (std::strncmp(runtime_ver, compiled_ver, len) != 0                  \
+                || (runtime_ver[len] >= '0' && runtime_ver[len] <= '9')) {     \
+            PyErr_Format(PyExc_ImportError,                                    \
+                "Python version mismatch: module was compiled for Python %s, " \
+                "but the interpreter version is incompatible: %s.",            \
+                compiled_ver, runtime_ver);                                    \
+            return nullptr;                                                    \
+        }                                                                      \
+    }
+
+#define PYBIND11_CATCH_INIT_EXCEPTIONS \
+        catch (pybind11::error_already_set &e) {                               \
+            PyErr_SetString(PyExc_ImportError, e.what());                      \
+            return nullptr;                                                    \
+        } catch (const std::exception &e) {                                    \
+            PyErr_SetString(PyExc_ImportError, e.what());                      \
+            return nullptr;                                                    \
+        }                                                                      \
 
 /** \rst
     ***Deprecated in favor of PYBIND11_MODULE***
@@ -226,27 +256,10 @@ extern "C" {
     PYBIND11_DEPRECATED("PYBIND11_PLUGIN is deprecated, use PYBIND11_MODULE")  \
     static PyObject *pybind11_init();                                          \
     PYBIND11_PLUGIN_IMPL(name) {                                               \
-        int major, minor;                                                      \
-        if (sscanf(Py_GetVersion(), "%i.%i", &major, &minor) != 2) {           \
-            PyErr_SetString(PyExc_ImportError, "Can't parse Python version."); \
-            return nullptr;                                                    \
-        } else if (major != PY_MAJOR_VERSION || minor != PY_MINOR_VERSION) {   \
-            PyErr_Format(PyExc_ImportError,                                    \
-                         "Python version mismatch: module was compiled for "   \
-                         "version %i.%i, while the interpreter is running "    \
-                         "version %i.%i.", PY_MAJOR_VERSION, PY_MINOR_VERSION, \
-                         major, minor);                                        \
-            return nullptr;                                                    \
-        }                                                                      \
+        PYBIND11_CHECK_PYTHON_VERSION                                          \
         try {                                                                  \
             return pybind11_init();                                            \
-        } catch (pybind11::error_already_set &e) {                             \
-            PyErr_SetString(PyExc_ImportError, e.what());                      \
-            return nullptr;                                                    \
-        } catch (const std::exception &e) {                                    \
-            PyErr_SetString(PyExc_ImportError, e.what());                      \
-            return nullptr;                                                    \
-        }                                                                      \
+        } PYBIND11_CATCH_INIT_EXCEPTIONS                                       \
     }                                                                          \
     PyObject *pybind11_init()
 
@@ -270,29 +283,12 @@ extern "C" {
 #define PYBIND11_MODULE(name, variable)                                        \
     static void PYBIND11_CONCAT(pybind11_init_, name)(pybind11::module &);     \
     PYBIND11_PLUGIN_IMPL(name) {                                               \
-        int major, minor;                                                      \
-        if (sscanf(Py_GetVersion(), "%i.%i", &major, &minor) != 2) {           \
-            PyErr_SetString(PyExc_ImportError, "Can't parse Python version."); \
-            return nullptr;                                                    \
-        } else if (major != PY_MAJOR_VERSION || minor != PY_MINOR_VERSION) {   \
-            PyErr_Format(PyExc_ImportError,                                    \
-                         "Python version mismatch: module was compiled for "   \
-                         "version %i.%i, while the interpreter is running "    \
-                         "version %i.%i.", PY_MAJOR_VERSION, PY_MINOR_VERSION, \
-                         major, minor);                                        \
-            return nullptr;                                                    \
-        }                                                                      \
+        PYBIND11_CHECK_PYTHON_VERSION                                          \
         auto m = pybind11::module(PYBIND11_TOSTRING(name));                    \
         try {                                                                  \
             PYBIND11_CONCAT(pybind11_init_, name)(m);                          \
             return m.ptr();                                                    \
-        } catch (pybind11::error_already_set &e) {                             \
-            PyErr_SetString(PyExc_ImportError, e.what());                      \
-            return nullptr;                                                    \
-        } catch (const std::exception &e) {                                    \
-            PyErr_SetString(PyExc_ImportError, e.what());                      \
-            return nullptr;                                                    \
-        }                                                                      \
+        } PYBIND11_CATCH_INIT_EXCEPTIONS                                       \
     }                                                                          \
     void PYBIND11_CONCAT(pybind11_init_, name)(pybind11::module &variable)
 
@@ -377,18 +373,20 @@ constexpr size_t instance_simple_holder_in_ptrs() {
 struct type_info;
 struct value_and_holder;
 
+struct nonsimple_values_and_holders {
+    void **values_and_holders;
+    uint8_t *status;
+};
+
 /// The 'instance' type which needs to be standard layout (need to be able to use 'offsetof')
 struct instance {
     PyObject_HEAD
     /// Storage for pointers and holder; see simple_layout, below, for a description
     union {
         void *simple_value_holder[1 + instance_simple_holder_in_ptrs()];
-        struct {
-            void **values_and_holders;
-            uint8_t *status;
-        } nonsimple;
+        nonsimple_values_and_holders nonsimple;
     };
-    /// Weak references (needed for keep alive):
+    /// Weak references
     PyObject *weakrefs;
     /// If true, the pointer is owned which means we're free to manage it with a holder.
     bool owned : 1;
@@ -405,10 +403,10 @@ struct instance {
      * (which is typically the size of two pointers), or when multiple inheritance is used on the
      * python side.  Non-simple layout allocates the required amount of memory to have multiple
      * bound C++ classes as parents.  Under this layout, `nonsimple.values_and_holders` is set to a
-     * pointer to allocated space of the required space to hold a a sequence of value pointers and
+     * pointer to allocated space of the required space to hold a sequence of value pointers and
      * holders followed `status`, a set of bit flags (1 byte each), i.e.
      * [val1*][holder1][val2*][holder2]...[bb...]  where each [block] is rounded up to a multiple of
-     * `sizeof(void *)`.  `nonsimple.holder_constructed` is, for convenience, a pointer to the
+     * `sizeof(void *)`.  `nonsimple.status` is, for convenience, a pointer to the
      * beginning of the [bb...] block (but not independently allocated).
      *
      * Status bits indicate whether the associated holder is constructed (&
@@ -471,7 +469,7 @@ template <size_t... IPrev, size_t I, bool B, bool... Bs> struct select_indices_i
     : select_indices_impl<conditional_t<B, index_sequence<IPrev..., I>, index_sequence<IPrev...>>, I + 1, Bs...> {};
 template <bool... Bs> using select_indices = typename select_indices_impl<index_sequence<>, 0, Bs...>::type;
 
-/// Backports of std::bool_constant and std::negation to accomodate older compilers
+/// Backports of std::bool_constant and std::negation to accommodate older compilers
 template <bool B> using bool_constant = std::integral_constant<bool, B>;
 template <typename T> struct negation : bool_constant<!T::value> { };
 
@@ -479,7 +477,7 @@ template <typename...> struct void_t_impl { using type = void; };
 template <typename... Ts> using void_t = typename void_t_impl<Ts...>::type;
 
 /// Compile-time all/any/none of that check the boolean value of all template types
-#ifdef __cpp_fold_expressions
+#if defined(__cpp_fold_expressions) && !(defined(_MSC_VER) && (_MSC_VER < 1916))
 template <class... Ts> using all_of = bool_constant<(Ts::value && ...)>;
 template <class... Ts> using any_of = bool_constant<(Ts::value || ...)>;
 #elif !defined(_MSC_VER)
@@ -581,6 +579,11 @@ template <typename T, typename... Us> using deferred_t = typename deferred_type<
 template <typename Base, typename Derived> using is_strict_base_of = bool_constant<
     std::is_base_of<Base, Derived>::value && !std::is_same<Base, Derived>::value>;
 
+/// Like is_base_of, but also requires that the base type is accessible (i.e. that a Derived pointer
+/// can be converted to a Base pointer)
+template <typename Base, typename Derived> using is_accessible_base_of = bool_constant<
+    std::is_base_of<Base, Derived>::value && std::is_convertible<Derived *, Base *>::value>;
+
 template <template<typename...> class Base>
 struct is_template_base_of_impl {
     template <typename... Us> static std::true_type check(Base<Us...> *);
@@ -670,6 +673,7 @@ PYBIND11_RUNTIME_EXCEPTION(index_error, PyExc_IndexError)
 PYBIND11_RUNTIME_EXCEPTION(key_error, PyExc_KeyError)
 PYBIND11_RUNTIME_EXCEPTION(value_error, PyExc_ValueError)
 PYBIND11_RUNTIME_EXCEPTION(type_error, PyExc_TypeError)
+PYBIND11_RUNTIME_EXCEPTION(buffer_error, PyExc_BufferError)
 PYBIND11_RUNTIME_EXCEPTION(cast_error, PyExc_RuntimeError) /// Thrown when pybind11::cast or handle::call fail due to a type casting error
 PYBIND11_RUNTIME_EXCEPTION(reference_cast_error, PyExc_RuntimeError) /// Used internally
 
@@ -699,8 +703,12 @@ template <typename T> struct format_descriptor<T, detail::enable_if_t<std::is_ar
     static std::string format() { return std::string(1, c); }
 };
 
+#if !defined(PYBIND11_CPP17)
+
 template <typename T> constexpr const char format_descriptor<
     T, detail::enable_if_t<std::is_arithmetic<T>::value>>::value[2];
+
+#endif
 
 /// RAII wrapper that temporarily clears any Python error state
 struct error_scope {
@@ -711,10 +719,6 @@ struct error_scope {
 
 /// Dummy destructor wrapper that can be used to expose classes with a private destructor
 struct nodelete { template <typename T> void operator()(T*) { } };
-
-// overload_cast requires variable templates: C++14
-#if defined(PYBIND11_CPP14)
-#define PYBIND11_OVERLOAD_CAST 1
 
 NAMESPACE_BEGIN(detail)
 template <typename... Args>
@@ -735,19 +739,23 @@ struct overload_cast_impl {
 };
 NAMESPACE_END(detail)
 
+// overload_cast requires variable templates: C++14
+#if defined(PYBIND11_CPP14)
+#define PYBIND11_OVERLOAD_CAST 1
 /// Syntax sugar for resolving overloaded function pointers:
 ///  - regular: static_cast<Return (Class::*)(Arg0, Arg1, Arg2)>(&Class::func)
 ///  - sweet:   overload_cast<Arg0, Arg1, Arg2>(&Class::func)
 template <typename... Args>
 static constexpr detail::overload_cast_impl<Args...> overload_cast = {};
 // MSVC 2015 only accepts this particular initialization syntax for this variable template.
+#endif
 
 /// Const member function selector for overload_cast
 ///  - regular: static_cast<Return (Class::*)(Arg) const>(&Class::func)
 ///  - sweet:   overload_cast<Arg>(&Class::func, const_)
 static constexpr auto const_ = std::true_type{};
 
-#else // no overload_cast: providing something that static_assert-fails:
+#if !defined(PYBIND11_CPP14) // no overload_cast: providing something that static_assert-fails:
 template <typename... Args> struct overload_cast {
     static_assert(detail::deferred_t<std::false_type, Args...>::value,
                   "pybind11::overload_cast<...> requires compiling in C++14 mode");

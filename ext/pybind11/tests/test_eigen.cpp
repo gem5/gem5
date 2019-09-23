@@ -11,6 +11,11 @@
 #include "constructor_stats.h"
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
+
+#if defined(_MSC_VER)
+#  pragma warning(disable: 4996) // C4996: std::unary_negation is deprecated
+#endif
+
 #include <Eigen/Cholesky>
 
 using MatrixXdR = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
@@ -119,7 +124,7 @@ TEST_SUBMODULE(eigen, m) {
     // This one accepts a matrix of any stride:
     m.def("add_any", [](py::EigenDRef<Eigen::MatrixXd> x, int r, int c, double v) { x(r,c) += v; });
 
-    // Return mutable references (numpy maps into eigen varibles)
+    // Return mutable references (numpy maps into eigen variables)
     m.def("get_cm_ref", []() { return Eigen::Ref<Eigen::MatrixXd>(get_cm()); });
     m.def("get_rm_ref", []() { return Eigen::Ref<MatrixXdR>(get_rm()); });
     // The same references, but non-mutable (numpy maps into eigen variables, but is !writeable)
@@ -287,6 +292,13 @@ TEST_SUBMODULE(eigen, m) {
     // requiring a copy!) because the stride value can be safely ignored on a size-1 dimension.
     m.def("iss738_f1", &adjust_matrix<const Eigen::Ref<const Eigen::MatrixXd> &>, py::arg().noconvert());
     m.def("iss738_f2", &adjust_matrix<const Eigen::Ref<const Eigen::Matrix<double, -1, -1, Eigen::RowMajor>> &>, py::arg().noconvert());
+
+    // test_issue1105
+    // Issue #1105: when converting from a numpy two-dimensional (Nx1) or (1xN) value into a dense
+    // eigen Vector or RowVector, the argument would fail to load because the numpy copy would fail:
+    // numpy won't broadcast a Nx1 into a 1-dimensional vector.
+    m.def("iss1105_col", [](Eigen::VectorXd) { return true; });
+    m.def("iss1105_row", [](Eigen::RowVectorXd) { return true; });
 
     // test_named_arguments
     // Make sure named arguments are working properly:

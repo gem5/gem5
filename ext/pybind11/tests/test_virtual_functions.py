@@ -227,7 +227,7 @@ def test_dispatch_issue(msg):
 
 
 def test_override_ref():
-    """#392/397: overridding reference-returning functions"""
+    """#392/397: overriding reference-returning functions"""
     o = m.OverrideTest("asdf")
 
     # Not allowed (see associated .cpp comment)
@@ -369,3 +369,9 @@ def test_inherited_virtuals():
     assert obj.unlucky_number() == -7
     assert obj.lucky_number() == -1.375
     assert obj.say_everything() == "BT -7"
+
+
+def test_issue_1454():
+    # Fix issue #1454 (crash when acquiring/releasing GIL on another thread in Python 2.7)
+    m.test_gil()
+    m.test_gil_from_thread()

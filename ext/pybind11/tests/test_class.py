@@ -44,6 +44,31 @@ def test_docstrings(doc):
     """
 
 
+def test_qualname(doc):
+    """Tests that a properly qualified name is set in __qualname__ (even in pre-3.3, where we
+    backport the attribute) and that generated docstrings properly use it and the module name"""
+    assert m.NestBase.__qualname__ == "NestBase"
+    assert m.NestBase.Nested.__qualname__ == "NestBase.Nested"
+
+    assert doc(m.NestBase.__init__) == """
+        __init__(self: m.class_.NestBase) -> None
+    """
+    assert doc(m.NestBase.g) == """
+        g(self: m.class_.NestBase, arg0: m.class_.NestBase.Nested) -> None
+    """
+    assert doc(m.NestBase.Nested.__init__) == """
+        __init__(self: m.class_.NestBase.Nested) -> None
+    """
+    assert doc(m.NestBase.Nested.fn) == """
+        fn(self: m.class_.NestBase.Nested, arg0: int, arg1: m.class_.NestBase, arg2: m.class_.NestBase.Nested) -> None
+    """  # noqa: E501 line too long
+    assert doc(m.NestBase.Nested.fa) == """
+        fa(self: m.class_.NestBase.Nested, a: int, b: m.class_.NestBase, c: m.class_.NestBase.Nested) -> None
+    """  # noqa: E501 line too long
+    assert m.NestBase.__module__ == "pybind11_tests.class_"
+    assert m.NestBase.Nested.__module__ == "pybind11_tests.class_"
+
+
 def test_inheritance(msg):
     roger = m.Rabbit('Rabbit')
     assert roger.name() + " is a " + roger.species() == "Rabbit is a parrot"
@@ -203,6 +228,12 @@ def test_brace_initialization():
     assert a.field1 == 123
     assert a.field2 == "test"
 
+    # Tests that a non-simple class doesn't get brace initialization (if the
+    # class defines an initializer_list constructor, in particular, it would
+    # win over the expected constructor).
+    b = m.NoBraceInitialization([123, 456])
+    assert b.vec == [123, 456]
+
 
 @pytest.unsupported_on_pypy
 def test_class_refcount():
@@ -229,7 +260,22 @@ def test_reentrant_implicit_conversion_failure(msg):
     # ensure that there is no runaway reentrant implicit conversion (#1035)
     with pytest.raises(TypeError) as excinfo:
         m.BogusImplicitConversion(0)
-    assert msg(excinfo.value) == '''__init__(): incompatible constructor arguments. The following argument types are supported:
-    1. m.class_.BogusImplicitConversion(arg0: m.class_.BogusImplicitConversion)
+    assert msg(excinfo.value) == '''
+        __init__(): incompatible constructor arguments. The following argument types are supported:
+            1. m.class_.BogusImplicitConversion(arg0: m.class_.BogusImplicitConversion)
 
-Invoked with: 0'''
+        Invoked with: 0
+    '''
+
+
+def test_error_after_conversions():
+    with pytest.raises(TypeError) as exc_info:
+        m.test_error_after_conversions("hello")
+    assert str(exc_info.value).startswith(
+        "Unable to convert function return value to a Python type!")
+
+
+def test_aligned():
+    if hasattr(m, "Aligned"):
+        p = m.Aligned().ptr()
+        assert p % 1024 == 0
