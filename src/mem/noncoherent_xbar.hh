@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 ARM Limited
+ * Copyright (c) 2011-2015, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -187,9 +187,6 @@ class NoncoherentXBar : public BaseXBar
     NoncoherentXBar(const NoncoherentXBarParams *p);
 
     virtual ~NoncoherentXBar();
-
-    void regStats() override;
-    Stats::Scalar totPktSize;
 };
 
 #endif //__MEM_NONCOHERENT_XBAR_HH__

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015, 2018 ARM Limited
+ * Copyright (c) 2011-2015, 2018-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -64,8 +64,15 @@ BaseXBar::BaseXBar(const BaseXBarParams *p)
       gotAddrRanges(p->port_default_connection_count +
                           p->port_master_connection_count, false),
       gotAllAddrRanges(false), defaultPortID(InvalidPortID),
-      useDefaultRange(p->use_default_range)
-{}
+      useDefaultRange(p->use_default_range),
+
+      transDist(this, "trans_dist", "Transaction distribution"),
+      pktCount(this, "pkt_count",
+                   "Packet count per connected master and slave (bytes)"),
+      pktSize(this, "pkt_size",
+              "Cumulative packet size per connected master and slave (bytes)")
+{
+}
 
 BaseXBar::~BaseXBar()
 {
@@ -133,9 +140,20 @@ BaseXBar::calcPacketTiming(PacketPtr pkt, Tick header_delay)
 template <typename SrcType, typename DstType>
 BaseXBar::Layer<SrcType, DstType>::Layer(DstType& _port, BaseXBar& _xbar,
                                        const std::string& _name) :
-    port(_port), xbar(_xbar), _name(_name), state(IDLE),
-    waitingForPeer(NULL), releaseEvent([this]{ releaseLayer(); }, name())
+    Stats::Group(&_xbar, _name.c_str()),
+    port(_port), xbar(_xbar), _name(xbar.name() + "." + _name), state(IDLE),
+    waitingForPeer(NULL), releaseEvent([this]{ releaseLayer(); }, name()),
+    ADD_STAT(occupancy, "Layer occupancy (ticks)"),
+    ADD_STAT(utilization, "Layer utilization (%)")
 {
+    occupancy
+        .flags(Stats::nozero);
+
+    utilization
+        .precision(1)
+        .flags(Stats::nozero);
+
+    utilization = 100 * occupancy / simTicks;
 }
 
 template <typename SrcType, typename DstType>
@@ -527,8 +545,6 @@ BaseXBar::regStats()
 
     transDist
         .init(MemCmd::NUM_MEM_CMDS)
-        .name(name() + ".trans_dist")
-        .desc("Transaction distribution")
         .flags(nozero);
 
     // get the string representation of the commands
@@ -540,14 +556,10 @@ BaseXBar::regStats()
 
     pktCount
         .init(slavePorts.size(), masterPorts.size())
-        .name(name() + ".pkt_count")
-        .desc("Packet count per connected master and slave (bytes)")
         .flags(total | nozero | nonan);
 
     pktSize
         .init(slavePorts.size(), masterPorts.size())
-        .name(name() + ".pkt_size")
-        .desc("Cumulative packet size per connected master and slave (bytes)")
         .flags(total | nozero | nonan);
 
     // both the packet count and total size are two-dimensional
@@ -579,26 +591,6 @@ BaseXBar::Layer<SrcType, DstType>::drain()
     } else {
         return DrainState::Drained;
     }
-}
-
-template <typename SrcType, typename DstType>
-void
-BaseXBar::Layer<SrcType, DstType>::regStats()
-{
-    using namespace Stats;
-
-    occupancy
-        .name(name() + ".occupancy")
-        .desc("Layer occupancy (ticks)")
-        .flags(nozero);
-
-    utilization
-        .name(name() + ".utilization")
-        .desc("Layer utilization (%)")
-        .precision(1)
-        .flags(nozero);
-
-    utilization = 100 * occupancy / simTicks;
 }
 
 /**

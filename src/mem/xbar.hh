@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015, 2018 ARM Limited
+ * Copyright (c) 2011-2015, 2018-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -90,7 +90,7 @@ class BaseXBar : public ClockedObject
      * ports, whereas a response layer holds master ports.
      */
     template <typename SrcType, typename DstType>
-    class Layer : public Drainable
+    class Layer : public Drainable, public Stats::Group
     {
 
       public:
@@ -116,7 +116,7 @@ class BaseXBar : public ClockedObject
          */
         DrainState drain() override;
 
-        const std::string name() const { return xbar.name() + _name; }
+        const std::string name() const { return _name; }
 
 
         /**
@@ -165,8 +165,6 @@ class BaseXBar : public ClockedObject
          * before calling retryWaiting.
          */
         void recvRetry();
-
-        void regStats();
 
       protected:
 

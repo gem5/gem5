@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015, 2018 ARM Limited
+ * Copyright (c) 2011-2015, 2018-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -65,7 +65,7 @@ NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams *p)
         MasterPort* bp = new NoncoherentXBarMasterPort(portName, *this, i);
         masterPorts.push_back(bp);
         reqLayers.push_back(new ReqLayer(*bp, *this,
-                                         csprintf(".reqLayer%d", i)));
+                                         csprintf("reqLayer%d", i)));
     }
 
     // see if we have a default slave device connected and if so add
@@ -76,7 +76,7 @@ NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams *p)
         MasterPort* bp = new NoncoherentXBarMasterPort(portName, *this,
                                                       defaultPortID);
         masterPorts.push_back(bp);
-        reqLayers.push_back(new ReqLayer(*bp, *this, csprintf(".reqLayer%d",
+        reqLayers.push_back(new ReqLayer(*bp, *this, csprintf("reqLayer%d",
                                                               defaultPortID)));
     }
 
@@ -86,7 +86,7 @@ NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams *p)
         QueuedSlavePort* bp = new NoncoherentXBarSlavePort(portName, *this, i);
         slavePorts.push_back(bp);
         respLayers.push_back(new RespLayer(*bp, *this,
-                                           csprintf(".respLayer%d", i)));
+                                           csprintf("respLayer%d", i)));
     }
 }
 
@@ -316,15 +316,4 @@ NoncoherentXBar*
 NoncoherentXBarParams::create()
 {
     return new NoncoherentXBar(this);
-}
-
-void
-NoncoherentXBar::regStats()
-{
-    // register the stats of the base class and our layers
-    BaseXBar::regStats();
-    for (auto l: reqLayers)
-        l->regStats();
-    for (auto l: respLayers)
-        l->regStats();
 }

@@ -62,7 +62,11 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
       maxOutstandingSnoopCheck(p->max_outstanding_snoops),
       maxRoutingTableSizeCheck(p->max_routing_table_size),
       pointOfCoherency(p->point_of_coherency),
-      pointOfUnification(p->point_of_unification)
+      pointOfUnification(p->point_of_unification),
+
+      snoops(this, "snoops", "Total snoops (count)"),
+      snoopTraffic(this, "snoopTraffic", "Total snoop traffic (bytes)"),
+      snoopFanout(this, "snoop_fanout", "Request fanout histogram")
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
@@ -72,9 +76,9 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
         MasterPort* bp = new CoherentXBarMasterPort(portName, *this, i);
         masterPorts.push_back(bp);
         reqLayers.push_back(new ReqLayer(*bp, *this,
-                                         csprintf(".reqLayer%d", i)));
+                                         csprintf("reqLayer%d", i)));
         snoopLayers.push_back(
-                new SnoopRespLayer(*bp, *this, csprintf(".snoopLayer%d", i)));
+                new SnoopRespLayer(*bp, *this, csprintf("snoopLayer%d", i)));
     }
 
     // see if we have a default slave device connected and if so add
@@ -85,10 +89,10 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
         MasterPort* bp = new CoherentXBarMasterPort(portName, *this,
                                                     defaultPortID);
         masterPorts.push_back(bp);
-        reqLayers.push_back(new ReqLayer(*bp, *this, csprintf(".reqLayer%d",
+        reqLayers.push_back(new ReqLayer(*bp, *this, csprintf("reqLayer%d",
                                          defaultPortID)));
         snoopLayers.push_back(new SnoopRespLayer(*bp, *this,
-                                                 csprintf(".snoopLayer%d",
+                                                 csprintf("snoopLayer%d",
                                                           defaultPortID)));
     }
 
@@ -98,7 +102,7 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
         QueuedSlavePort* bp = new CoherentXBarSlavePort(portName, *this, i);
         slavePorts.push_back(bp);
         respLayers.push_back(new RespLayer(*bp, *this,
-                                           csprintf(".respLayer%d", i)));
+                                           csprintf("respLayer%d", i)));
         snoopRespPorts.push_back(new SnoopRespPort(*bp, *this));
     }
 }
@@ -1104,30 +1108,9 @@ CoherentXBar::forwardPacket(const PacketPtr pkt)
 void
 CoherentXBar::regStats()
 {
-    // register the stats of the base class and our layers
     BaseXBar::regStats();
-    for (auto l: reqLayers)
-        l->regStats();
-    for (auto l: respLayers)
-        l->regStats();
-    for (auto l: snoopLayers)
-        l->regStats();
 
-    snoops
-        .name(name() + ".snoops")
-        .desc("Total snoops (count)")
-    ;
-
-    snoopTraffic
-        .name(name() + ".snoopTraffic")
-        .desc("Total snoop traffic (bytes)")
-    ;
-
-    snoopFanout
-        .init(0, snoopPorts.size(), 1)
-        .name(name() + ".snoop_fanout")
-        .desc("Request fanout histogram")
-    ;
+    snoopFanout.init(0, snoopPorts.size(), 1);
 }
 
 CoherentXBar *
