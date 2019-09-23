@@ -278,7 +278,7 @@ NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
                 (transfer_offset ? pkt->payloadDelay : 0);
 
             assert(tgt_pkt->req->masterId() < system->maxMasters());
-            missLatency[tgt_pkt->cmdToIndex()][tgt_pkt->req->masterId()] +=
+            stats.cmdStats(tgt_pkt).missLatency[tgt_pkt->req->masterId()] +=
                 completion_time - target.recvTime;
 
             tgt_pkt->makeTimingResponse();

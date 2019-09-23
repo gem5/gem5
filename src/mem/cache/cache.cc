@@ -334,7 +334,7 @@ Cache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
         // should have flushed and have no valid block
         assert(!blk || !blk->isValid());
 
-        mshr_uncacheable[pkt->cmdToIndex()][pkt->req->masterId()]++;
+        stats.cmdStats(pkt).mshr_uncacheable[pkt->req->masterId()]++;
 
         if (pkt->isWrite()) {
             allocateWriteBuffer(pkt, forward_time);
@@ -776,7 +776,8 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
                 assert(!tgt_pkt->req->isUncacheable());
 
                 assert(tgt_pkt->req->masterId() < system->maxMasters());
-                missLatency[tgt_pkt->cmdToIndex()][tgt_pkt->req->masterId()] +=
+                stats.cmdStats(tgt_pkt)
+                    .missLatency[tgt_pkt->req->masterId()] +=
                     completion_time - target.recvTime;
             } else if (pkt->cmd == MemCmd::UpgradeFailResp) {
                 // failed StoreCond upgrade

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015-2016, 2018 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2016, 2018-2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -912,137 +912,155 @@ class BaseCache : public ClockedObject
     /** System we are currently operating in. */
     System *system;
 
-    // Statistics
-    /**
-     * @addtogroup CacheStatistics
-     * @{
-     */
+    struct CacheCmdStats : public Stats::Group
+    {
+        CacheCmdStats(BaseCache &c, const std::string &name);
 
-    /** Number of hits per thread for each type of command.
-        @sa Packet::Command */
-    Stats::Vector hits[MemCmd::NUM_MEM_CMDS];
-    /** Number of hits for demand accesses. */
-    Stats::Formula demandHits;
-    /** Number of hit for all accesses. */
-    Stats::Formula overallHits;
+        /**
+         * Callback to register stats from parent
+         * CacheStats::regStats(). We can't use the normal flow since
+         * there is is no guaranteed order and CacheStats::regStats()
+         * needs to rely on these stats being initialised.
+         */
+        void regStatsFromParent();
 
-    /** Number of misses per thread for each type of command.
-        @sa Packet::Command */
-    Stats::Vector misses[MemCmd::NUM_MEM_CMDS];
-    /** Number of misses for demand accesses. */
-    Stats::Formula demandMisses;
-    /** Number of misses for all accesses. */
-    Stats::Formula overallMisses;
+        const BaseCache &cache;
 
-    /**
-     * Total number of cycles per thread/command spent waiting for a miss.
-     * Used to calculate the average miss latency.
-     */
-    Stats::Vector missLatency[MemCmd::NUM_MEM_CMDS];
-    /** Total number of cycles spent waiting for demand misses. */
-    Stats::Formula demandMissLatency;
-    /** Total number of cycles spent waiting for all misses. */
-    Stats::Formula overallMissLatency;
+        /** Number of hits per thread for each type of command.
+            @sa Packet::Command */
+        Stats::Vector hits;
+        /** Number of misses per thread for each type of command.
+            @sa Packet::Command */
+        Stats::Vector misses;
+        /**
+         * Total number of cycles per thread/command spent waiting for a miss.
+         * Used to calculate the average miss latency.
+         */
+        Stats::Vector missLatency;
+        /** The number of accesses per command and thread. */
+        Stats::Formula accesses;
+        /** The miss rate per command and thread. */
+        Stats::Formula missRate;
+        /** The average miss latency per command and thread. */
+        Stats::Formula avgMissLatency;
+        /** Number of misses that hit in the MSHRs per command and thread. */
+        Stats::Vector mshr_hits;
+        /** Number of misses that miss in the MSHRs, per command and thread. */
+        Stats::Vector mshr_misses;
+        /** Number of misses that miss in the MSHRs, per command and thread. */
+        Stats::Vector mshr_uncacheable;
+        /** Total cycle latency of each MSHR miss, per command and thread. */
+        Stats::Vector mshr_miss_latency;
+        /** Total cycle latency of each MSHR miss, per command and thread. */
+        Stats::Vector mshr_uncacheable_lat;
+        /** The miss rate in the MSHRs pre command and thread. */
+        Stats::Formula mshrMissRate;
+        /** The average latency of an MSHR miss, per command and thread. */
+        Stats::Formula avgMshrMissLatency;
+        /** The average latency of an MSHR miss, per command and thread. */
+        Stats::Formula avgMshrUncacheableLatency;
+    };
 
-    /** The number of accesses per command and thread. */
-    Stats::Formula accesses[MemCmd::NUM_MEM_CMDS];
-    /** The number of demand accesses. */
-    Stats::Formula demandAccesses;
-    /** The number of overall accesses. */
-    Stats::Formula overallAccesses;
+    struct CacheStats : public Stats::Group
+    {
+        CacheStats(BaseCache &c);
 
-    /** The miss rate per command and thread. */
-    Stats::Formula missRate[MemCmd::NUM_MEM_CMDS];
-    /** The miss rate of all demand accesses. */
-    Stats::Formula demandMissRate;
-    /** The miss rate for all accesses. */
-    Stats::Formula overallMissRate;
+        void regStats() override;
 
-    /** The average miss latency per command and thread. */
-    Stats::Formula avgMissLatency[MemCmd::NUM_MEM_CMDS];
-    /** The average miss latency for demand misses. */
-    Stats::Formula demandAvgMissLatency;
-    /** The average miss latency for all misses. */
-    Stats::Formula overallAvgMissLatency;
+        CacheCmdStats &cmdStats(const PacketPtr p) {
+            return *cmd[p->cmdToIndex()];
+        }
 
-    /** The total number of cycles blocked for each blocked cause. */
-    Stats::Vector blocked_cycles;
-    /** The number of times this cache blocked for each blocked cause. */
-    Stats::Vector blocked_causes;
+        const BaseCache &cache;
 
-    /** The average number of cycles blocked for each blocked cause. */
-    Stats::Formula avg_blocked;
+        /** Number of hits for demand accesses. */
+        Stats::Formula demandHits;
+        /** Number of hit for all accesses. */
+        Stats::Formula overallHits;
 
-    /** The number of times a HW-prefetched block is evicted w/o reference. */
-    Stats::Scalar unusedPrefetches;
+        /** Number of misses for demand accesses. */
+        Stats::Formula demandMisses;
+        /** Number of misses for all accesses. */
+        Stats::Formula overallMisses;
 
-    /** Number of blocks written back per thread. */
-    Stats::Vector writebacks;
+        /** Total number of cycles spent waiting for demand misses. */
+        Stats::Formula demandMissLatency;
+        /** Total number of cycles spent waiting for all misses. */
+        Stats::Formula overallMissLatency;
 
-    /** Number of misses that hit in the MSHRs per command and thread. */
-    Stats::Vector mshr_hits[MemCmd::NUM_MEM_CMDS];
-    /** Demand misses that hit in the MSHRs. */
-    Stats::Formula demandMshrHits;
-    /** Total number of misses that hit in the MSHRs. */
-    Stats::Formula overallMshrHits;
+        /** The number of demand accesses. */
+        Stats::Formula demandAccesses;
+        /** The number of overall accesses. */
+        Stats::Formula overallAccesses;
 
-    /** Number of misses that miss in the MSHRs, per command and thread. */
-    Stats::Vector mshr_misses[MemCmd::NUM_MEM_CMDS];
-    /** Demand misses that miss in the MSHRs. */
-    Stats::Formula demandMshrMisses;
-    /** Total number of misses that miss in the MSHRs. */
-    Stats::Formula overallMshrMisses;
+        /** The miss rate of all demand accesses. */
+        Stats::Formula demandMissRate;
+        /** The miss rate for all accesses. */
+        Stats::Formula overallMissRate;
 
-    /** Number of misses that miss in the MSHRs, per command and thread. */
-    Stats::Vector mshr_uncacheable[MemCmd::NUM_MEM_CMDS];
-    /** Total number of misses that miss in the MSHRs. */
-    Stats::Formula overallMshrUncacheable;
+        /** The average miss latency for demand misses. */
+        Stats::Formula demandAvgMissLatency;
+        /** The average miss latency for all misses. */
+        Stats::Formula overallAvgMissLatency;
 
-    /** Total cycle latency of each MSHR miss, per command and thread. */
-    Stats::Vector mshr_miss_latency[MemCmd::NUM_MEM_CMDS];
-    /** Total cycle latency of demand MSHR misses. */
-    Stats::Formula demandMshrMissLatency;
-    /** Total cycle latency of overall MSHR misses. */
-    Stats::Formula overallMshrMissLatency;
+        /** The total number of cycles blocked for each blocked cause. */
+        Stats::Vector blocked_cycles;
+        /** The number of times this cache blocked for each blocked cause. */
+        Stats::Vector blocked_causes;
 
-    /** Total cycle latency of each MSHR miss, per command and thread. */
-    Stats::Vector mshr_uncacheable_lat[MemCmd::NUM_MEM_CMDS];
-    /** Total cycle latency of overall MSHR misses. */
-    Stats::Formula overallMshrUncacheableLatency;
+        /** The average number of cycles blocked for each blocked cause. */
+        Stats::Formula avg_blocked;
 
-    /** The miss rate in the MSHRs pre command and thread. */
-    Stats::Formula mshrMissRate[MemCmd::NUM_MEM_CMDS];
-    /** The demand miss rate in the MSHRs. */
-    Stats::Formula demandMshrMissRate;
-    /** The overall miss rate in the MSHRs. */
-    Stats::Formula overallMshrMissRate;
+        /** The number of times a HW-prefetched block is evicted w/o
+         * reference. */
+        Stats::Scalar unusedPrefetches;
 
-    /** The average latency of an MSHR miss, per command and thread. */
-    Stats::Formula avgMshrMissLatency[MemCmd::NUM_MEM_CMDS];
-    /** The average latency of a demand MSHR miss. */
-    Stats::Formula demandAvgMshrMissLatency;
-    /** The average overall latency of an MSHR miss. */
-    Stats::Formula overallAvgMshrMissLatency;
+        /** Number of blocks written back per thread. */
+        Stats::Vector writebacks;
 
-    /** The average latency of an MSHR miss, per command and thread. */
-    Stats::Formula avgMshrUncacheableLatency[MemCmd::NUM_MEM_CMDS];
-    /** The average overall latency of an MSHR miss. */
-    Stats::Formula overallAvgMshrUncacheableLatency;
+        /** Demand misses that hit in the MSHRs. */
+        Stats::Formula demandMshrHits;
+        /** Total number of misses that hit in the MSHRs. */
+        Stats::Formula overallMshrHits;
 
-    /** Number of replacements of valid blocks. */
-    Stats::Scalar replacements;
+        /** Demand misses that miss in the MSHRs. */
+        Stats::Formula demandMshrMisses;
+        /** Total number of misses that miss in the MSHRs. */
+        Stats::Formula overallMshrMisses;
 
-    /** Number of data expansions. */
-    Stats::Scalar dataExpansions;
+        /** Total number of misses that miss in the MSHRs. */
+        Stats::Formula overallMshrUncacheable;
 
-    /**
-     * @}
-     */
+        /** Total cycle latency of demand MSHR misses. */
+        Stats::Formula demandMshrMissLatency;
+        /** Total cycle latency of overall MSHR misses. */
+        Stats::Formula overallMshrMissLatency;
 
-    /**
-     * Register stats for this object.
-     */
-    void regStats() override;
+        /** Total cycle latency of overall MSHR misses. */
+        Stats::Formula overallMshrUncacheableLatency;
+
+        /** The demand miss rate in the MSHRs. */
+        Stats::Formula demandMshrMissRate;
+        /** The overall miss rate in the MSHRs. */
+        Stats::Formula overallMshrMissRate;
+
+        /** The average latency of a demand MSHR miss. */
+        Stats::Formula demandAvgMshrMissLatency;
+        /** The average overall latency of an MSHR miss. */
+        Stats::Formula overallAvgMshrMissLatency;
+
+        /** The average overall latency of an MSHR miss. */
+        Stats::Formula overallAvgMshrUncacheableLatency;
+
+        /** Number of replacements of valid blocks. */
+        Stats::Scalar replacements;
+
+        /** Number of data expansions. */
+        Stats::Scalar dataExpansions;
+
+        /** Per-command statistics */
+        std::vector<std::unique_ptr<CacheCmdStats>> cmd;
+    } stats;
 
     /** Registers probes. */
     void regProbePoints() override;
@@ -1135,7 +1153,7 @@ class BaseCache : public ClockedObject
     {
         uint8_t flag = 1 << cause;
         if (blocked == 0) {
-            blocked_causes[cause]++;
+            stats.blocked_causes[cause]++;
             blockedCycle = curCycle();
             cpuSidePort.setBlocked();
         }
@@ -1156,7 +1174,7 @@ class BaseCache : public ClockedObject
         blocked &= ~flag;
         DPRINTF(Cache,"Unblocking for cause %d, mask=%d\n", cause, blocked);
         if (blocked == 0) {
-            blocked_cycles[cause] += curCycle() - blockedCycle;
+            stats.blocked_cycles[cause] += curCycle() - blockedCycle;
             cpuSidePort.clearBlocked();
         }
     }
@@ -1194,7 +1212,7 @@ class BaseCache : public ClockedObject
     void incMissCount(PacketPtr pkt)
     {
         assert(pkt->req->masterId() < system->maxMasters());
-        misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
+        stats.cmdStats(pkt).misses[pkt->req->masterId()]++;
         pkt->req->incAccessDepth();
         if (missCount) {
             --missCount;
@@ -1205,8 +1223,7 @@ class BaseCache : public ClockedObject
     void incHitCount(PacketPtr pkt)
     {
         assert(pkt->req->masterId() < system->maxMasters());
-        hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
-
+        stats.cmdStats(pkt).hits[pkt->req->masterId()]++;
     }
 
     /**

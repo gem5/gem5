@@ -125,7 +125,7 @@ SectorTags::invalidate(CacheBlk *blk)
     // in the sector.
     if (!sector_blk->isValid()) {
         // Decrease the number of tags in use
-        tagsInUse--;
+        stats.tagsInUse--;
 
         // Invalidate replacement data, as we're invalidating the sector
         replacementPolicy->invalidate(sector_blk->replacementData);
@@ -140,13 +140,13 @@ SectorTags::accessBlock(Addr addr, bool is_secure, Cycles &lat)
     // Access all tags in parallel, hence one in each way.  The data side
     // either accesses all blocks in parallel, or one block sequentially on
     // a hit.  Sequential access with a miss doesn't access data.
-    tagAccesses += allocAssoc;
+    stats.tagAccesses += allocAssoc;
     if (sequentialAccess) {
         if (blk != nullptr) {
-            dataAccesses += 1;
+            stats.dataAccesses += 1;
         }
     } else {
-        dataAccesses += allocAssoc*numBlocksPerSector;
+        stats.dataAccesses += allocAssoc*numBlocksPerSector;
     }
 
     // If a cache hit
@@ -183,7 +183,7 @@ SectorTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
         replacementPolicy->touch(sector_blk->replacementData);
     } else {
         // Increment tag counter
-        tagsInUse++;
+        stats.tagsInUse++;
 
         // A new entry resets the replacement data
         replacementPolicy->reset(sector_blk->replacementData);

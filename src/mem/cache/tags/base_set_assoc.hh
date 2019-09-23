@@ -131,13 +131,13 @@ class BaseSetAssoc : public BaseTags
         // Access all tags in parallel, hence one in each way.  The data side
         // either accesses all blocks in parallel, or one block sequentially on
         // a hit.  Sequential access with a miss doesn't access data.
-        tagAccesses += allocAssoc;
+        stats.tagAccesses += allocAssoc;
         if (sequentialAccess) {
             if (blk != nullptr) {
-                dataAccesses += 1;
+                stats.dataAccesses += 1;
             }
         } else {
-            dataAccesses += allocAssoc;
+            stats.dataAccesses += allocAssoc;
         }
 
         // If a cache hit
@@ -195,7 +195,7 @@ class BaseSetAssoc : public BaseTags
         BaseTags::insertBlock(pkt, blk);
 
         // Increment tag counter
-        tagsInUse++;
+        stats.tagsInUse++;
 
         // Update replacement policy
         replacementPolicy->reset(blk->replacementData);

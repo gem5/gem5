@@ -131,7 +131,7 @@ FALRU::invalidate(CacheBlk *blk)
     BaseTags::invalidate(blk);
 
     // Decrease the number of tags in use
-    tagsInUse--;
+    stats.tagsInUse--;
 
     // Move the block to the tail to make it the next victim
     moveToTail((FALRUBlk*)blk);
@@ -220,7 +220,7 @@ FALRU::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     BaseTags::insertBlock(pkt, blk);
 
     // Increment tag counter
-    tagsInUse++;
+    stats.tagsInUse++;
 
     // New block is the MRU
     moveToHead(falruBlk);

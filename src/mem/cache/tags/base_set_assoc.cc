@@ -87,7 +87,7 @@ BaseSetAssoc::invalidate(CacheBlk *blk)
     BaseTags::invalidate(blk);
 
     // Decrease the number of tags in use
-    tagsInUse--;
+    stats.tagsInUse--;
 
     // Invalidate replacement data
     replacementPolicy->invalidate(blk->replacementData);
