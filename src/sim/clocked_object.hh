@@ -270,7 +270,6 @@ class ClockedObject : public SimObject, public Clocked
     void computeStats();
 
     void pwrState(Enums::PwrState);
-    void regStats() override;
 
   protected:
 
@@ -279,18 +278,18 @@ class ClockedObject : public SimObject, public Clocked
 
     Tick prvEvalTick;
 
-    Stats::Scalar numPwrStateTransitions;
-    Stats::Distribution pwrStateClkGateDist;
-    Stats::Vector pwrStateResidencyTicks;
+    struct ClockedObjectStats : public Stats::Group
+    {
+        ClockedObjectStats(ClockedObject &co);
 
-};
+        void regStats() override;
+        void preDumpStats() override;
 
-class ClockedObjectDumpCallback : public Callback
-{
-    ClockedObject *co;
-  public:
-    ClockedObjectDumpCallback(ClockedObject *co_t) : co(co_t) {}
-    virtual void process() { co->computeStats(); };
+        ClockedObject &clockedObject;
+        Stats::Scalar numPwrStateTransitions;
+        Stats::Distribution pwrStateClkGateDist;
+        Stats::Vector pwrStateResidencyTicks;
+    } stats;
 };
 
 #endif //__SIM_CLOCKED_OBJECT_HH__

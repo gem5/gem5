@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 ARM Limited
+ * Copyright (c) 2012-2014, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -49,7 +49,7 @@
 #include "sim/sim_object.hh"
 
 VoltageDomain::VoltageDomain(const Params *p)
-    : SimObject(p), voltageOpPoints(p->voltage), _perfLevel(0)
+    : SimObject(p), voltageOpPoints(p->voltage), _perfLevel(0), stats(*this)
 {
     fatal_if(voltageOpPoints.empty(), "DVFS: Empty set of voltages for "\
              "voltage domain %s\n", name());
@@ -127,18 +127,6 @@ VoltageDomain::startup() {
     }
 }
 
-void
-VoltageDomain::regStats()
-{
-    SimObject::regStats();
-
-    currentVoltage
-        .method(this, &VoltageDomain::voltage)
-        .name(params()->name + ".voltage")
-        .desc("Voltage in Volts")
-        ;
-}
-
 VoltageDomain *
 VoltageDomainParams::create()
 {
@@ -156,4 +144,11 @@ VoltageDomain::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(_perfLevel);
     perfLevel(_perfLevel);
+}
+
+VoltageDomain::VoltageDomainStats::VoltageDomainStats(VoltageDomain &vd)
+    : Stats::Group(&vd),
+    ADD_STAT(voltage, "Voltage in Volts")
+{
+    voltage.method(&vd, &VoltageDomain::voltage);
 }

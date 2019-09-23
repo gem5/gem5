@@ -46,7 +46,8 @@
 ClockedObject::ClockedObject(const ClockedObjectParams *p) :
     SimObject(p), Clocked(*p->clk_domain),
     _currPwrState(p->default_p_state),
-    prvEvalTick(0)
+    prvEvalTick(0),
+    stats(*this)
 {
     // Register the power_model with the object
     for (auto & power_model: p->power_model)
@@ -103,7 +104,7 @@ ClockedObject::pwrState(Enums::PwrState p)
 
     _currPwrState = p;
 
-    numPwrStateTransitions++;
+    stats.numPwrStateTransitions++;
 }
 
 void
@@ -112,13 +113,13 @@ ClockedObject::computeStats()
     // Calculate time elapsed from last (valid) state change
     Tick elapsed_time = curTick() - prvEvalTick;
 
-    pwrStateResidencyTicks[_currPwrState] += elapsed_time;
+    stats.pwrStateResidencyTicks[_currPwrState] += elapsed_time;
 
     // Time spent in CLK_GATED state, this might change depending on
     // transition to other low power states in respective simulation
     // objects.
     if (_currPwrState == Enums::PwrState::CLK_GATED) {
-        pwrStateClkGateDist.sample(elapsed_time);
+        stats.pwrStateClkGateDist.sample(elapsed_time);
     }
 
     prvEvalTick = curTick();
@@ -130,7 +131,7 @@ ClockedObject::pwrStateWeights() const
     // Get residency stats
     std::vector<double> ret;
     Stats::VCounter residencies;
-    pwrStateResidencyTicks.value(residencies);
+    stats.pwrStateResidencyTicks.value(residencies);
 
     // Account for current state too!
     Tick elapsed_time = curTick() - prvEvalTick;
@@ -139,38 +140,45 @@ ClockedObject::pwrStateWeights() const
     ret.resize(Enums::PwrState::Num_PwrState);
     for (unsigned i = 0; i < Enums::PwrState::Num_PwrState; i++)
         ret[i] = residencies[i] / \
-                     (pwrStateResidencyTicks.total() + elapsed_time);
+                     (stats.pwrStateResidencyTicks.total() + elapsed_time);
 
     return ret;
 }
 
-void
-ClockedObject::regStats()
+
+ClockedObject::ClockedObjectStats::ClockedObjectStats(ClockedObject &co)
+    : Stats::Group(&co),
+    clockedObject(co),
+    ADD_STAT(numPwrStateTransitions,
+             "Number of power state transitions"),
+    ADD_STAT(pwrStateClkGateDist,
+             "Distribution of time spent in the clock gated state"),
+    ADD_STAT(pwrStateResidencyTicks,
+             "Cumulative time (in ticks) in various power states")
 {
-    SimObject::regStats();
+}
+
+void
+ClockedObject::ClockedObjectStats::regStats()
+{
+    Stats::Group::regStats();
 
     using namespace Stats;
 
-    numPwrStateTransitions
-        .name(params()->name + ".numPwrStateTransitions")
-        .desc("Number of power state transitions")
-        .flags(nozero)
-        ;
+    const ClockedObjectParams *p = clockedObject.params();
+
+    numPwrStateTransitions.flags(nozero);
 
     // Each sample is time in ticks
-    unsigned num_bins = std::max(params()->p_state_clk_gate_bins, 10U);
+    unsigned num_bins = std::max(p->p_state_clk_gate_bins, 10U);
     pwrStateClkGateDist
-        .init(params()->p_state_clk_gate_min, params()->p_state_clk_gate_max,
-          (params()->p_state_clk_gate_max / num_bins))
-        .name(params()->name + ".pwrStateClkGateDist")
-        .desc("Distribution of time spent in the clock gated state")
+        .init(p->p_state_clk_gate_min, p->p_state_clk_gate_max,
+          (p->p_state_clk_gate_max / num_bins))
         .flags(pdf | nozero | nonan)
         ;
 
     pwrStateResidencyTicks
         .init(Enums::PwrState::Num_PwrState)
-        .name(params()->name + ".pwrStateResidencyTicks")
-        .desc("Cumulative time (in ticks) in various power states")
         .flags(nozero)
         ;
     for (int i = 0; i < Enums::PwrState::Num_PwrState; i++) {
@@ -178,6 +186,12 @@ ClockedObject::regStats()
     }
 
     numPwrStateTransitions = 0;
+}
+
+void
+ClockedObject::ClockedObjectStats::preDumpStats()
+{
+    Stats::Group::preDumpStats();
 
     /**
      * For every stats dump, the power state residency and other distribution
@@ -187,5 +201,5 @@ ClockedObject::regStats()
      * next dump window which might have rather unpleasant effects (like
      * perturbing the distribution stats).
      */
-    registerDumpCallback(new ClockedObjectDumpCallback(this));
+    clockedObject.computeStats();
 }
