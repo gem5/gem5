@@ -371,6 +371,10 @@ def dump(root=None):
     # Only prepare stats the first time we dump them in the same tick.
     if new_dump:
         _m5.stats.processDumpQueue()
+        # Notify new-style stats group that we are about to dump stats.
+        sim_root = Root.getInstance()
+        if sim_root:
+            sim_root.preDumpStats();
         prepare()
 
     for output in outputList:

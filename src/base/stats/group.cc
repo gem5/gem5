@@ -94,6 +94,16 @@ Group::resetStats()
 }
 
 void
+Group::preDumpStats()
+{
+    for (auto &g : mergedStatGroups)
+        g->preDumpStats();
+
+    for (auto &g : statGroups)
+        g.second->preDumpStats();
+}
+
+void
 Group::addStat(Stats::Info *info)
 {
     stats.push_back(info);

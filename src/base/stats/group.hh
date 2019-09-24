@@ -128,6 +128,13 @@ class Group
     virtual void resetStats();
 
     /**
+     * Callback before stats are dumped. This can be overridden by
+     * objects that need to perform calculations in addition to the
+     * capabiltiies implemented in the stat framework.
+     */
+    virtual void preDumpStats();
+
+    /**
      * Register a stat with this group. This method is normally called
      * automatically when a stat is instantiated.
      */
