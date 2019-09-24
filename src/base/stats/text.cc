@@ -396,8 +396,9 @@ DistPrint::DistPrint(const Text *text, const VectorDistInfo &info, int i)
 {
     init(text, info);
 
-    name = info.name + "_" +
-        (info.subnames[i].empty() ? (std::to_string(i)) : info.subnames[i]);
+    name = text->statName(
+        info.name + "_" +
+        (info.subnames[i].empty() ? (std::to_string(i)) : info.subnames[i]));
 
     if (!info.subdescs[i].empty())
         desc = info.subdescs[i];
