@@ -227,6 +227,7 @@ def main(*args):
     from . import trace
 
     from .util import inform, fatal, panic, isInteractive
+    from m5.util.terminal_formatter import TerminalFormatter
 
     if len(args) == 0:
         options, arguments = parse_options()
@@ -306,18 +307,21 @@ def main(*args):
         print("SimObjects:")
         objects = list(SimObject.allClasses.keys())
         objects.sort()
+        terminal_formatter = TerminalFormatter()
         for name in objects:
             obj = SimObject.allClasses[name]
-            print("    %s" % obj)
+            print(terminal_formatter.format_output(str(obj), indent=4))
             params = list(obj._params.keys())
             params.sort()
             for pname in params:
                 param = obj._params[pname]
                 default = getattr(param, 'default', '')
-                print("        %s" % pname)
+                print(terminal_formatter.format_output(pname, indent=8))
                 if default:
-                    print("            default: %s" % default)
-                print("            desc: %s" % param.desc)
+                    print(terminal_formatter.format_output(
+                        str(default), label="default: ", indent=21))
+                print(terminal_formatter.format_output(
+                    param.desc, label="desc: ", indent=21))
                 print()
             print()
 
