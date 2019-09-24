@@ -257,8 +257,11 @@ def _bindStatHierarchy(root):
         if isNullPointer(obj):
             return
         if m5.SimObject.isSimObjectVector(obj):
-            for idx, obj in enumerate(obj):
-                _bind_obj("{}{}".format(name, idx), obj)
+            if len(obj) == 1:
+                _bind_obj(name, obj[0])
+            else:
+                for idx, obj in enumerate(obj):
+                    _bind_obj("{}{}".format(name, idx), obj)
         else:
             # We need this check because not all obj.getCCObject() is an
             # instance of Stat::Group. For example, sc_core::sc_module, the C++
