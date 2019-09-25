@@ -1,4 +1,4 @@
-# Copyright (c) 2015-2016 ARM Limited
+# Copyright (c) 2015-2016, 2019 ARM Limited
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@ VEXPRESS_GEM5_V2_DTSIS=\
 GEN_DTS=mkdir -p .gen; \
 	$(CPP) -x assembler-with-cpp \
 		$(DTC_CPP_FLAGS) \
-		-DCONF_PLATFORM=\"platforms/$(1)\" \
+		-DCONF_PLATFORM=\"../platforms/$(1)\" \
 		-DCONF_CPUS=$(2) \
 		-o $@ $<
 
