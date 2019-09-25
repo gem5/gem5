@@ -119,7 +119,8 @@ def createSystem(caches, kernel, bootscript,
     platform = ObjectList.platform_list.get(machine_type)
     m5.util.inform("Simulated platform: %s", platform.__name__)
 
-    sys = devices.SimpleSystem(caches, default_mem_size, platform(),
+    sys = devices.simpleSystem(LinuxArmSystem,
+                               caches, default_mem_size, platform(),
                                kernel=SysPaths.binary(kernel),
                                readfile=bootscript)
 

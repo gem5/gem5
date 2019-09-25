@@ -104,7 +104,8 @@ def create(args):
     # Only simulate caches when using a timing CPU (e.g., the HPI model)
     want_caches = True if mem_mode == "timing" else False
 
-    system = devices.SimpleSystem(want_caches,
+    system = devices.simpleSystem(LinuxArmSystem,
+                                  want_caches,
                                   args.mem_size,
                                   mem_mode=mem_mode,
                                   kernel=SysPaths.binary(args.kernel),
