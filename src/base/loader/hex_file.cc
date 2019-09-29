@@ -62,7 +62,7 @@ HexFile::~HexFile()
 }
 
 bool
-HexFile::loadSections(PortProxy& memProxy)
+HexFile::loadSegments(PortProxy& memProxy)
 {
     char Line[64];
     Addr MemAddr;

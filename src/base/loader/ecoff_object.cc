@@ -73,21 +73,21 @@ EcoffObject::EcoffObject(const string &_filename, size_t _len, uint8_t *_data,
 
     entry = aoutHdr->entry;
 
-    text.baseAddr = aoutHdr->text_start;
+    text.base = aoutHdr->text_start;
     text.size = aoutHdr->tsize;
-    text.fileImage = fileData + ECOFF_TXTOFF(execHdr);
+    text.data = fileData + ECOFF_TXTOFF(execHdr);
 
-    data.baseAddr = aoutHdr->data_start;
+    data.base = aoutHdr->data_start;
     data.size = aoutHdr->dsize;
-    data.fileImage = fileData + ECOFF_DATOFF(execHdr);
+    data.data = fileData + ECOFF_DATOFF(execHdr);
 
-    bss.baseAddr = aoutHdr->bss_start;
+    bss.base = aoutHdr->bss_start;
     bss.size = aoutHdr->bsize;
-    bss.fileImage = NULL;
+    bss.data = nullptr;
 
-    DPRINTFR(Loader, "text: 0x%x %d\ndata: 0x%x %d\nbss: 0x%x %d\n",
-             text.baseAddr, text.size, data.baseAddr, data.size,
-             bss.baseAddr, bss.size);
+    DPRINTFR(Loader, "text: %#x %d\ndata: %#x %d\nbss: %#x %d\n",
+             text.base, text.size, data.base, data.size,
+             bss.base, bss.size);
 }
 
 bool

@@ -45,21 +45,21 @@ RawObject::RawObject(const std::string &_filename, size_t _len,
         uint8_t *_data, Arch _arch, OpSys _opSys)
     : ObjectFile(_filename, _len, _data, _arch, _opSys)
 {
-    text.baseAddr = 0;
+    text.base = 0;
     text.size = len;
-    text.fileImage = fileData;
+    text.data = fileData;
 
-    data.baseAddr = 0;
+    data.base = 0;
     data.size = 0;
-    data.fileImage = NULL;
+    data.data = nullptr;
 
-    bss.baseAddr = 0;
+    bss.base = 0;
     bss.size = 0;
-    bss.fileImage = NULL;
+    bss.data = nullptr;
 
-    DPRINTFR(Loader, "text: 0x%x %d\ndata: 0x%x %d\nbss: 0x%x %d\n",
-             text.baseAddr, text.size, data.baseAddr, data.size,
-             bss.baseAddr, bss.size);
+    DPRINTFR(Loader, "text: %#x %d\ndata: %#x %d\nbss: %#x %d\n",
+             text.base, text.size, data.base, data.size,
+             bss.base, bss.size);
 }
 
 bool
@@ -73,10 +73,6 @@ bool
 RawObject::loadGlobalSymbols(SymbolTable *symtab, Addr base, Addr offset,
                              Addr addr_mask)
 {
-/*    int fnameStart = filename.rfind('/',filename.size()) + 1;
-    int extStart = filename.rfind('.',filename.size());
-    symtab->insert(text.baseAddr & addr_mask, filename.substr(fnameStart,
-                extStart-fnameStart) + "_start");*/
     return true;
 }
 
@@ -84,9 +80,5 @@ bool
 RawObject::loadLocalSymbols(SymbolTable *symtab, Addr base, Addr offset,
                             Addr addr_mask)
 {
-/*    int fnameStart = filename.rfind('/',filename.size()) + 1;
-    int extStart = filename.rfind('.',filename.size());
-    symtab->insert(text.baseAddr & addr_mask, filename.substr(fnameStart,
-                extStart-fnameStart) + "_start");*/
     return true;
 }

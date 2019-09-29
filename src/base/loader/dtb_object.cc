@@ -55,17 +55,17 @@ DtbObject::DtbObject(const std::string &_filename, size_t _len, uint8_t *_data,
                      Arch _arch, OpSys _opSys)
     : ObjectFile(_filename, _len, _data, _arch, _opSys)
 {
-    text.baseAddr = 0;
+    text.base = 0;
     text.size = len;
-    text.fileImage = fileData;
+    text.data = fileData;
 
-    data.baseAddr = 0;
+    data.base = 0;
     data.size = 0;
-    data.fileImage = NULL;
+    data.data = nullptr;
 
-    bss.baseAddr = 0;
+    bss.base = 0;
     bss.size = 0;
-    bss.fileImage = NULL;
+    bss.data = nullptr;
 
     fileDataMmapped = true;
 }
@@ -141,7 +141,7 @@ DtbObject::addBootCmdLine(const char* _args, size_t len)
     }
 
     text.size = newLen;
-    text.fileImage = fdt_buf_w_space;
+    text.data = fdt_buf_w_space;
 
     // clean up old buffer and set to new fdt blob
     munmap(fileData, this->len);

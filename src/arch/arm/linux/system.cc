@@ -152,7 +152,7 @@ LinuxArmSystem::initState()
         }
 
         dtb_file->setTextBase(params()->atags_addr + loadAddrOffset);
-        dtb_file->loadSections(physProxy);
+        dtb_file->loadSegments(physProxy);
         delete dtb_file;
     } else {
         // Using ATAGS

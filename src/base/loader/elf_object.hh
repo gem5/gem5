@@ -51,9 +51,6 @@
 class ElfObject : public ObjectFile
 {
   protected:
-    // The global definition of a gem5 "Section" is closest to ELF's segments.
-    typedef ObjectFile::Section Segment;
-
     // These values are provided to a linux process by the kernel, so we
     // need to keep them around.
     Addr _programHeaderTable;
@@ -94,7 +91,7 @@ class ElfObject : public ObjectFile
   public:
     virtual ~ElfObject() {}
 
-    bool loadSections(const PortProxy& mem_proxy, Addr addr_mask = maxAddr,
+    bool loadSegments(const PortProxy& mem_proxy, Addr addr_mask = maxAddr,
                       Addr offset = 0) override;
 
     virtual bool loadAllSymbols(SymbolTable *symtab, Addr base = 0,

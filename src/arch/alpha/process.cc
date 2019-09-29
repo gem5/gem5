@@ -58,9 +58,8 @@ AlphaProcess::AlphaProcess(ProcessParams *params, ObjectFile *objFile)
                      objFile->bssSize();
     brk_point = roundUp(brk_point, PageBytes);
 
-    // Set up stack.  On Alpha, stack goes below text section.  This
-    // code should get moved to some architecture-specific spot.
-    Addr stack_base = objFile->textBase() - (409600+4096);
+    // Set up stack.  On Alpha, stack goes below the image.
+    Addr stack_base = objFile->textBase() - (409600 + 4096);
 
     // Set up region for mmaps.
     Addr mmap_end = 0x10000;
@@ -80,7 +79,7 @@ AlphaProcess::argsInit(int intSize, int pageSize)
     // Patch the ld_bias for dynamic executables.
     updateBias();
 
-    objFile->loadSections(initVirtMem);
+    objFile->loadSegments(initVirtMem);
 
     std::vector<AuxVector<uint64_t>>  auxv;
 

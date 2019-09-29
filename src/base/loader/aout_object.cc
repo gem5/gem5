@@ -46,9 +46,8 @@ AoutObject::tryFile(const string &fname, size_t len, uint8_t *data)
         // right now this is only used for Alpha PAL code
         return new AoutObject(fname, len, data,
                               ObjectFile::Alpha, ObjectFile::UnknownOpSys);
-    }
-    else {
-        return NULL;
+    } else {
+        return nullptr;
     }
 }
 
@@ -62,21 +61,21 @@ AoutObject::AoutObject(const string &_filename,
 
     entry = execHdr->entry;
 
-    text.baseAddr = N_TXTADDR(*execHdr);
+    text.base = N_TXTADDR(*execHdr);
     text.size = execHdr->tsize;
-    text.fileImage = fileData + N_TXTOFF(*execHdr);
+    text.data = fileData + N_TXTOFF(*execHdr);
 
-    data.baseAddr = N_DATADDR(*execHdr);
+    data.base = N_DATADDR(*execHdr);
     data.size = execHdr->dsize;
-    data.fileImage = fileData + N_DATOFF(*execHdr);
+    data.data = fileData + N_DATOFF(*execHdr);
 
-    bss.baseAddr = N_BSSADDR(*execHdr);
+    bss.base = N_BSSADDR(*execHdr);
     bss.size = execHdr->bsize;
-    bss.fileImage = NULL;
+    bss.data = NULL;
 
     DPRINTFR(Loader, "text: 0x%x %d\ndata: 0x%x %d\nbss: 0x%x %d\n",
-             text.baseAddr, text.size, data.baseAddr, data.size,
-             bss.baseAddr, bss.size);
+             text.base, text.size, data.base, data.size,
+             bss.base, bss.size);
 }
 
 

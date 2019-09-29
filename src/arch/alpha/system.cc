@@ -109,8 +109,8 @@ AlphaSystem::initState()
     System::initState();
 
     // Load program sections into memory
-    pal->loadSections(physProxy, loadAddrMask);
-    console->loadSections(physProxy, loadAddrMask);
+    pal->loadSegments(physProxy, loadAddrMask);
+    console->loadSegments(physProxy, loadAddrMask);
 
     /**
      * Copy the osflags (kernel arguments) into the consoles

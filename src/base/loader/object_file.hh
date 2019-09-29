@@ -88,17 +88,17 @@ class ObjectFile
 
     static const Addr maxAddr = std::numeric_limits<Addr>::max();
 
-    virtual bool loadSections(const PortProxy& mem_proxy,
-                              Addr mask = maxAddr, Addr offset = 0);
+    virtual bool loadSegments(const PortProxy &mem_proxy,
+                              Addr mask=maxAddr, Addr offset=0);
 
     virtual bool loadAllSymbols(SymbolTable *symtab, Addr base = 0,
-                                Addr offset = 0, Addr mask = maxAddr) = 0;
+                                Addr offset=0, Addr mask=maxAddr) = 0;
     virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr base = 0,
-                                   Addr offset = 0, Addr mask = maxAddr) = 0;
-    virtual bool loadLocalSymbols(SymbolTable *symtab, Addr base = 0,
-                                  Addr offset = 0, Addr mask = maxAddr) = 0;
-    virtual bool loadWeakSymbols(SymbolTable *symtab, Addr base = 0,
-                                 Addr offset = 0, Addr mask = maxAddr)
+                                   Addr offset=0, Addr mask=maxAddr) = 0;
+    virtual bool loadLocalSymbols(SymbolTable *symtab, Addr base=0,
+                                  Addr offset=0, Addr mask=maxAddr) = 0;
+    virtual bool loadWeakSymbols(SymbolTable *symtab, Addr base=0,
+                                 Addr offset=0, Addr mask=maxAddr)
     { return false; }
 
     virtual ObjectFile *getInterpreter() const { return nullptr; }
@@ -116,27 +116,28 @@ class ObjectFile
 
   protected:
 
-    struct Section {
-        Addr baseAddr;
-        uint8_t *fileImage;
+    struct Segment
+    {
+        Addr base;
+        uint8_t *data;
         size_t size;
     };
 
     Addr entry;
 
-    Section text;
-    Section data;
-    Section bss;
+    Segment text;
+    Segment data;
+    Segment bss;
 
-    bool loadSection(Section *sec, const PortProxy& mem_proxy, Addr mask,
-                     Addr offset = 0);
+    bool loadSegment(Segment *seg, const PortProxy &mem_proxy, Addr mask,
+                     Addr offset=0);
 
   public:
     Addr entryPoint() const { return entry; }
 
-    Addr textBase() const { return text.baseAddr; }
-    Addr dataBase() const { return data.baseAddr; }
-    Addr bssBase() const { return bss.baseAddr; }
+    Addr textBase() const { return text.base; }
+    Addr dataBase() const { return data.base; }
+    Addr bssBase() const { return bss.base; }
 
     size_t textSize() const { return text.size; }
     size_t dataSize() const { return data.size; }
@@ -147,7 +148,7 @@ class ObjectFile
      * blob that doesn't include an object header.
      * @param a address to load the binary/text section at
      */
-    void setTextBase(Addr a) { text.baseAddr = a; }
+    void setTextBase(Addr a) { text.base = a; }
 
     /**
      * Each instance of a Loader subclass will have a chance to try to load

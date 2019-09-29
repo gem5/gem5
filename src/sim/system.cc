@@ -327,9 +327,9 @@ System::initState()
                 }
             }
             // Load program sections into memory
-            kernel->loadSections(physProxy, loadAddrMask, loadAddrOffset);
+            kernel->loadSegments(physProxy, loadAddrMask, loadAddrOffset);
             for (const auto &extra_kernel : kernelExtras) {
-                extra_kernel->loadSections(physProxy, loadAddrMask,
+                extra_kernel->loadSegments(physProxy, loadAddrMask,
                                            loadAddrOffset);
             }
 

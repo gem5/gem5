@@ -295,7 +295,7 @@ ElfObject::ElfObject(const std::string &_filename, size_t _len,
 
     // initialize segment sizes to 0 in case they're not present
     text.size = data.size = bss.size = 0;
-    text.baseAddr = data.baseAddr = bss.baseAddr = 0;
+    text.base = data.base = bss.base = 0;
 
     int sec_idx = 1;
 
@@ -352,9 +352,9 @@ ElfObject::ElfObject(const std::string &_filename, size_t _len,
         if (phdr.p_paddr <= bss_sec_start &&
             phdr.p_paddr + phdr.p_memsz > bss_sec_start &&
             phdr.p_memsz - phdr.p_filesz > 0) {
-            bss.baseAddr = phdr.p_paddr + phdr.p_filesz;
+            bss.base = phdr.p_paddr + phdr.p_filesz;
             bss.size = phdr.p_memsz - phdr.p_filesz;
-            bss.fileImage = NULL;
+            bss.data = nullptr;
         }
 
         // Check to see if this is the text or data segment
@@ -365,21 +365,21 @@ ElfObject::ElfObject(const std::string &_filename, size_t _len,
             if (phdr.p_vaddr != 0)
                 relocate = false;
 
-            text.baseAddr = phdr.p_paddr;
+            text.base = phdr.p_paddr;
             text.size = phdr.p_filesz;
-            text.fileImage = fileData + phdr.p_offset;
+            text.data = fileData + phdr.p_offset;
         } else if (phdr.p_vaddr <= data_sec_start &&
                    phdr.p_vaddr + phdr.p_filesz > data_sec_start) {
-            data.baseAddr = phdr.p_paddr;
+            data.base = phdr.p_paddr;
             data.size = phdr.p_filesz;
-            data.fileImage = fileData + phdr.p_offset;
+            data.data = fileData + phdr.p_offset;
         } else {
             // If it's none of the above but is loadable,
             // load the filesize worth of data
             Segment extra;
-            extra.baseAddr = phdr.p_paddr;
+            extra.base = phdr.p_paddr;
             extra.size = phdr.p_filesz;
-            extra.fileImage = fileData + phdr.p_offset;
+            extra.data = fileData + phdr.p_offset;
             extraSegments.push_back(extra);
         }
     }
@@ -389,9 +389,9 @@ ElfObject::ElfObject(const std::string &_filename, size_t _len,
             "Empty .text segment in '%s'. ELF file corrupted?\n",
             filename);
 
-    DPRINTFR(Loader, "text: 0x%x %d\ndata: 0x%x %d\nbss: 0x%x %d\n",
-             text.baseAddr, text.size, data.baseAddr, data.size,
-             bss.baseAddr, bss.size);
+    DPRINTFR(Loader, "text: %#x %d\ndata: %#x %d\nbss: %#x %d\n",
+             text.base, text.size, data.base, data.size,
+             bss.base, bss.size);
 
     elf_end(elf);
 
@@ -498,20 +498,20 @@ ElfObject::loadWeakSymbols(SymbolTable *symtab, Addr base, Addr offset,
 }
 
 bool
-ElfObject::loadSections(const PortProxy& mem_proxy, Addr addr_mask,
+ElfObject::loadSegments(const PortProxy& mem_proxy, Addr addr_mask,
                         Addr offset)
 {
-    if (!ObjectFile::loadSections(mem_proxy, addr_mask, offset))
+    if (!ObjectFile::loadSegments(mem_proxy, addr_mask, offset))
         return false;
 
     for (auto seg : extraSegments) {
-        if (!loadSection(&seg, mem_proxy, addr_mask, offset)) {
+        if (!loadSegment(&seg, mem_proxy, addr_mask, offset)) {
             return false;
         }
     }
 
     if (interpreter)
-        interpreter->loadSections(mem_proxy, addr_mask, offset);
+        interpreter->loadSegments(mem_proxy, addr_mask, offset);
 
     return true;
 }
@@ -570,9 +570,9 @@ ElfObject::updateBias(Addr bias_addr)
     entry += bias_addr;
 
     // Patch segments with the bias_addr.
-    text.baseAddr += bias_addr;
-    data.baseAddr += bias_addr;
-    bss.baseAddr  += bias_addr;
+    text.base += bias_addr;
+    data.base += bias_addr;
+    bss.base  += bias_addr;
     for (auto &segment : extraSegments)
-        segment.baseAddr += bias_addr;
+        segment.base += bias_addr;
 }

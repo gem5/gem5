@@ -143,7 +143,7 @@ ArmSystem::initState()
 
     if (bootldr) {
         bool isGICv3System = dynamic_cast<Gicv3 *>(getGIC()) != nullptr;
-        bootldr->loadSections(physProxy);
+        bootldr->loadSegments(physProxy);
 
         inform("Using bootloader at address %#x\n", bootldr->entryPoint());
 

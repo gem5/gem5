@@ -126,7 +126,7 @@ RiscvProcess::argsInit(int pageSize)
     const int addrSize = sizeof(IntType);
 
     updateBias();
-    objFile->loadSections(initVirtMem);
+    objFile->loadSegments(initVirtMem);
     ElfObject* elfObject = dynamic_cast<ElfObject*>(objFile);
     memState->setStackMin(memState->getStackBase());
 

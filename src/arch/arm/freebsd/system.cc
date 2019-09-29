@@ -133,7 +133,7 @@ FreebsdArmSystem::initState()
         bootReleaseAddr = ra & ~ULL(0x7F);
 
     dtb_file->setTextBase(params()->atags_addr + loadAddrOffset);
-    dtb_file->loadSections(physProxy);
+    dtb_file->loadSegments(physProxy);
     delete dtb_file;
 
     // Kernel boot requirements to set up r0, r1 and r2 in ARMv7

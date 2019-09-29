@@ -776,7 +776,7 @@ X86Process::argsInit(int pageSize,
     updateBias();
 
     // load object file into target memory
-    objFile->loadSections(initVirtMem);
+    objFile->loadSegments(initVirtMem);
 
     enum X86CpuFeature {
         X86_OnboardFPU = 1 << 0,

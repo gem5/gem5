@@ -138,22 +138,22 @@ SparcSystem::initState()
 
     // Load reset binary into memory
     reset->setTextBase(params()->reset_addr);
-    reset->loadSections(physProxy);
+    reset->loadSegments(physProxy);
     // Load the openboot binary
     openboot->setTextBase(params()->openboot_addr);
-    openboot->loadSections(physProxy);
+    openboot->loadSegments(physProxy);
     // Load the hypervisor binary
     hypervisor->setTextBase(params()->hypervisor_addr);
-    hypervisor->loadSections(physProxy);
+    hypervisor->loadSegments(physProxy);
     // Load the nvram image
     nvram->setTextBase(params()->nvram_addr);
-    nvram->loadSections(physProxy);
+    nvram->loadSegments(physProxy);
     // Load the hypervisor description image
     hypervisor_desc->setTextBase(params()->hypervisor_desc_addr);
-    hypervisor_desc->loadSections(physProxy);
+    hypervisor_desc->loadSegments(physProxy);
     // Load the partition description image
     partition_desc->setTextBase(params()->partition_desc_addr);
-    partition_desc->loadSections(physProxy);
+    partition_desc->loadSegments(physProxy);
 
 
     // @todo any fixup code over writing data in binaries on setting break

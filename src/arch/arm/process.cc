@@ -272,7 +272,7 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
     updateBias();
 
     // load object file into target memory
-    objFile->loadSections(initVirtMem);
+    objFile->loadSegments(initVirtMem);
 
     //Setup the auxilliary vectors. These will already have endian conversion.
     //Auxilliary vectors are loaded only for elf formatted executables.

@@ -73,17 +73,16 @@ ObjectFile::~ObjectFile()
 
 
 bool
-ObjectFile::loadSection(Section *sec, const PortProxy& mem_proxy,
+ObjectFile::loadSegment(Segment *seg, const PortProxy& mem_proxy,
                         Addr addr_mask, Addr offset)
 {
-    if (sec->size != 0) {
-        Addr addr = (sec->baseAddr & addr_mask) + offset;
-        if (sec->fileImage) {
-            mem_proxy.writeBlob(addr, sec->fileImage, sec->size);
-        }
-        else {
+    if (seg->size != 0) {
+        Addr addr = (seg->base & addr_mask) + offset;
+        if (seg->data) {
+            mem_proxy.writeBlob(addr, seg->data, seg->size);
+        } else {
             // no image: must be bss
-            mem_proxy.memsetBlob(addr, 0, sec->size);
+            mem_proxy.memsetBlob(addr, 0, seg->size);
         }
     }
     return true;
@@ -91,12 +90,12 @@ ObjectFile::loadSection(Section *sec, const PortProxy& mem_proxy,
 
 
 bool
-ObjectFile::loadSections(const PortProxy& mem_proxy, Addr addr_mask,
+ObjectFile::loadSegments(const PortProxy& mem_proxy, Addr addr_mask,
                          Addr offset)
 {
-    return (loadSection(&text, mem_proxy, addr_mask, offset)
-            && loadSection(&data, mem_proxy, addr_mask, offset)
-            && loadSection(&bss, mem_proxy, addr_mask, offset));
+    return (loadSegment(&text, mem_proxy, addr_mask, offset)
+            && loadSegment(&data, mem_proxy, addr_mask, offset)
+            && loadSegment(&bss, mem_proxy, addr_mask, offset));
 }
 
 namespace
