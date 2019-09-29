@@ -57,7 +57,7 @@ ObjectFile::ObjectFile(const string &_filename,
                        size_t _len, uint8_t *_data,
                        Arch _arch, OpSys _op_sys)
     : filename(_filename), fileData(_data), len(_len),
-      arch(_arch), opSys(_op_sys), entry(0), globalPtr(0),
+      arch(_arch), opSys(_op_sys), entry(0),
       text{0, nullptr, 0}, data{0, nullptr, 0}, bss{0, nullptr, 0}
 {
 }

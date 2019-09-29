@@ -213,7 +213,7 @@ AlphaProcess::initState()
     argsInit(MachineBytes, PageBytes);
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
-    tc->setIntReg(GlobalPointerReg, objFile->globalPointer());
+    tc->setIntReg(GlobalPointerReg, 0);
     //Operate in user mode
     tc->setMiscRegNoEffect(IPR_ICM, mode_user << 3);
     tc->setMiscRegNoEffect(IPR_DTB_CM, mode_user << 3);

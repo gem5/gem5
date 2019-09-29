@@ -123,7 +123,6 @@ class ObjectFile
     };
 
     Addr entry;
-    Addr globalPtr;
 
     Section text;
     Section data;
@@ -131,12 +130,9 @@ class ObjectFile
 
     bool loadSection(Section *sec, const PortProxy& mem_proxy, Addr mask,
                      Addr offset = 0);
-    void setGlobalPointer(Addr global_ptr) { globalPtr = global_ptr; }
 
   public:
     Addr entryPoint() const { return entry; }
-
-    Addr globalPointer() const { return globalPtr; }
 
     Addr textBase() const { return text.baseAddr; }
     Addr dataBase() const { return data.baseAddr; }
