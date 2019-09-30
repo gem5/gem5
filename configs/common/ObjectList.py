@@ -162,7 +162,6 @@ mem_list = ObjectList(getattr(m5.objects, 'AbstractMemory', None))
 # Platform aliases. The platforms listed here might not be compiled,
 # we make sure they exist before we add them to the platform list.
 _platform_aliases_all = [
-    ("RealView_PBX", "RealViewPBX"),
     ("VExpress_GEM5", "VExpress_GEM5_V1"),
     ]
 platform_list = ObjectList(getattr(m5.objects, 'Platform', None), \

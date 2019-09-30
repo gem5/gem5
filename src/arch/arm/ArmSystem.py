@@ -46,7 +46,6 @@ from m5.objects.ArmSemihosting import ArmSemihosting
 
 class ArmMachineType(Enum):
     map = {
-        'RealViewPBX' : 1901,
         'VExpress_EMM' : 2272,
         'VExpress_EMM64' : 2272,
         'DTOnly' : -1,

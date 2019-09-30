@@ -98,13 +98,11 @@ class LinuxArmSystemBuilder(object):
         system.panic_on_oops = True
 
         default_kernels = {
-            "RealViewPBX": "vmlinux.arm.smp.fb.2.6.38.8",
             "VExpress_EMM": "vmlinux.aarch32.ll_20131205.0-gem5",
             "VExpress_EMM64": "vmlinux.aarch64.20140821",
         }
         system.kernel = SysPaths.binary(default_kernels[self.machine_type])
         default_dtbs = {
-           "RealViewPBX": None,
            "VExpress_EMM": "vexpress.aarch32.ll_20131205.0-gem5.{}cpu.dtb" \
              .format(self.num_cpus),
            "VExpress_EMM64": "vexpress.aarch64.20140821.dtb",
