@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2017 ARM Limited
+ * Copyright (c) 2015, 2017, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -109,8 +109,8 @@ const std::vector<ArmV8KvmCPU::MiscRegInfo> ArmV8KvmCPU::miscRegMap = {
     MiscRegInfo(INT_REG(spsr[KVM_SPSR_UND]), MISCREG_SPSR_UND, "SPSR(UND)"),
     MiscRegInfo(INT_REG(spsr[KVM_SPSR_IRQ]), MISCREG_SPSR_IRQ, "SPSR(IRQ)"),
     MiscRegInfo(INT_REG(spsr[KVM_SPSR_FIQ]), MISCREG_SPSR_FIQ, "SPSR(FIQ)"),
-    MiscRegInfo(INT_REG(fp_regs.fpsr), MISCREG_FPSR, "FPSR"),
-    MiscRegInfo(INT_REG(fp_regs.fpcr), MISCREG_FPCR, "FPCR"),
+    MiscRegInfo(CORE_REG(fp_regs.fpsr, U32), MISCREG_FPSR, "FPSR"),
+    MiscRegInfo(CORE_REG(fp_regs.fpcr, U32), MISCREG_FPCR, "FPCR"),
 };
 
 const std::set<MiscRegIndex> ArmV8KvmCPU::deviceRegSet = {
