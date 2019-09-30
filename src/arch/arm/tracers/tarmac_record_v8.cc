@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018 ARM Limited
+ * Copyright (c) 2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -241,7 +241,7 @@ TarmacTracerRecordV8::TraceRegEntryV8::print(
                  cpuName,              /* Cpu name */
                  regName,              /* Register name */
                  regWidth >> 2,        /* Register value padding */
-                 valueLo);             /* Register value */
+                 values[Lo]);          /* Register value */
     }
 }
 

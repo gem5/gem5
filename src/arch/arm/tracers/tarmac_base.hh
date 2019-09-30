@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011,2017-2018 ARM Limited
+ * Copyright (c) 2011,2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -78,7 +78,7 @@ class TarmacBaseRecord : public InstRecord
                      ISET_UNSUPPORTED };
 
     /** ARM register type. */
-    enum RegType { REG_R, REG_X, REG_S, REG_D, REG_Q, REG_MISC };
+    enum RegType { REG_R, REG_X, REG_S, REG_D, REG_P, REG_Q, REG_Z, REG_MISC };
 
     /** TARMAC instruction trace record. */
     struct InstEntry
@@ -100,14 +100,20 @@ class TarmacBaseRecord : public InstRecord
     /** TARMAC register trace record. */
     struct RegEntry
     {
+        enum RegElement {
+            Lo = 0,
+            Hi = 1,
+            // Max = (max SVE vector length) 2048b / 64 = 32
+            Max = 32
+        };
+
         RegEntry() = default;
         RegEntry(ArmISA::PCState pc);
 
         RegType type;
         RegIndex index;
         ISetState isetstate;
-        uint64_t valueHi;
-        uint64_t valueLo;
+        std::vector<uint64_t> values;
     };
 
     /** TARMAC memory access trace record (stores only). */

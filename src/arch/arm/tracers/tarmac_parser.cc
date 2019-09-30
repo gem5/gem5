@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011,2017-2018 ARM Limited
+ * Copyright (c) 2011,2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -63,6 +63,7 @@ namespace Trace {
 
 // TARMAC Parser static variables
 const int TarmacParserRecord::MaxLineLength;
+int8_t TarmacParserRecord::maxVectorLength = 0;
 
 TarmacParserRecord::ParserInstEntry TarmacParserRecord::instRecord;
 TarmacParserRecord::ParserRegEntry TarmacParserRecord::regRecord;
@@ -636,47 +637,98 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
     list<ParserRegEntry>::iterator it = destRegRecords.begin(),
                                    end = destRegRecords.end();
 
-    uint64_t value_hi, value_lo;
-    bool check_value_hi = false;
+    std::vector<uint64_t> values;
 
     for (; it != end; ++it) {
+        values.clear();
         switch (it->type) {
           case REG_R:
           case REG_X:
-            value_lo = thread->readIntReg(it->index);
+            values.push_back(thread->readIntReg(it->index));
             break;
           case REG_S:
-            if (instRecord.isetstate == ISET_A64)
-                value_lo = thread->readFloatReg(it->index * 4);
-            else
-                value_lo = thread->readFloatReg(it->index);
+            if (instRecord.isetstate == ISET_A64) {
+                const ArmISA::VecRegContainer& vc = thread->readVecReg(
+                    RegId(VecRegClass, it->index));
+                auto vv = vc.as<uint32_t>();
+                values.push_back(vv[0]);
+            } else {
+                const VecElem elem = thread->readVecElem(
+                    RegId(VecElemClass,
+                        it->index / NumVecElemPerNeonVecReg,
+                        it->index % NumVecElemPerNeonVecReg));
+                values.push_back(elem);
+            }
             break;
           case REG_D:
-            if (instRecord.isetstate == ISET_A64)
-                value_lo = thread->readFloatReg(it->index * 4) |
-                    (uint64_t) thread->readFloatReg(it->index * 4 + 1) <<
-                    32;
-            else
-                value_lo = thread->readFloatReg(it->index * 2) |
-                    (uint64_t) thread->readFloatReg(it->index * 2 + 1) <<
-                    32;
+            if (instRecord.isetstate == ISET_A64) {
+                const ArmISA::VecRegContainer& vc = thread->readVecReg(
+                    RegId(VecRegClass, it->index));
+                auto vv = vc.as<uint64_t>();
+                values.push_back(vv[0]);
+            } else {
+                const VecElem w0 = thread->readVecElem(
+                    RegId(VecElemClass,
+                        it->index / NumVecElemPerNeonVecReg,
+                        it->index % NumVecElemPerNeonVecReg));
+                const VecElem w1 = thread->readVecElem(
+                    RegId(VecElemClass,
+                        (it->index + 1) / NumVecElemPerNeonVecReg,
+                        (it->index + 1) % NumVecElemPerNeonVecReg));
+
+                values.push_back((uint64_t)(w1) << 32 | w0);
+            }
+            break;
+          case REG_P:
+            {
+                const ArmISA::VecPredRegContainer& pc =
+                    thread->readVecPredReg(RegId(VecPredRegClass, it->index));
+                auto pv = pc.as<uint8_t>();
+                uint64_t p = 0;
+                for (int i = maxVectorLength * 8; i > 0; ) {
+                    p = (p << 1) | pv[--i];
+                }
+                values.push_back(p);
+            }
             break;
           case REG_Q:
-            check_value_hi = true;
             if (instRecord.isetstate == ISET_A64) {
-                value_lo = thread->readFloatReg(it->index * 4) |
-                    (uint64_t) thread->readFloatReg(it->index * 4 + 1) <<
-                    32;
-                value_hi = thread->readFloatReg(it->index * 4 + 2) |
-                    (uint64_t) thread->readFloatReg(it->index * 4 + 3) <<
-                    32;
+                const ArmISA::VecRegContainer& vc = thread->readVecReg(
+                    RegId(VecRegClass, it->index));
+                auto vv = vc.as<uint64_t>();
+                values.push_back(vv[0]);
+                values.push_back(vv[1]);
             } else {
-                value_lo = thread->readFloatReg(it->index * 2) |
-                    (uint64_t) thread->readFloatReg(it->index * 2 + 1) <<
-                    32;
-                value_hi = thread->readFloatReg(it->index * 2 + 2) |
-                    (uint64_t) thread->readFloatReg(it->index * 2 + 3) <<
-                    32;
+                const VecElem w0 = thread->readVecElem(
+                    RegId(VecElemClass,
+                        it->index / NumVecElemPerNeonVecReg,
+                        it->index % NumVecElemPerNeonVecReg));
+                const VecElem w1 = thread->readVecElem(
+                    RegId(VecElemClass,
+                        (it->index + 1) / NumVecElemPerNeonVecReg,
+                        (it->index + 1) % NumVecElemPerNeonVecReg));
+                const VecElem w2 = thread->readVecElem(
+                    RegId(VecElemClass,
+                        (it->index + 2) / NumVecElemPerNeonVecReg,
+                        (it->index + 2) % NumVecElemPerNeonVecReg));
+                const VecElem w3 = thread->readVecElem(
+                    RegId(VecElemClass,
+                        (it->index + 3) / NumVecElemPerNeonVecReg,
+                        (it->index + 3) % NumVecElemPerNeonVecReg));
+
+                values.push_back((uint64_t)(w1) << 32 | w0);
+                values.push_back((uint64_t)(w3) << 32 | w2);
+            }
+            break;
+          case REG_Z:
+            {
+                int8_t i = maxVectorLength;
+                const TheISA::VecRegContainer& vc = thread->readVecReg(
+                    RegId(VecRegClass, it->index));
+                auto vv = vc.as<uint64_t>();
+                while (i > 0) {
+                    values.push_back(vv[--i]);
+                }
             }
             break;
           case REG_MISC:
@@ -687,41 +739,86 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
                 cpsr.c = thread->readCCReg(CCREG_C);
                 cpsr.v = thread->readCCReg(CCREG_V);
                 cpsr.ge = thread->readCCReg(CCREG_GE);
-                value_lo = cpsr;
+                values.push_back(cpsr);
             } else if (it->index == MISCREG_NZCV) {
                 CPSR cpsr = 0;
                 cpsr.nz = thread->readCCReg(CCREG_NZ);
                 cpsr.c = thread->readCCReg(CCREG_C);
                 cpsr.v = thread->readCCReg(CCREG_V);
-                value_lo = cpsr;
+                values.push_back(cpsr);
+            } else if (it->index == MISCREG_FPCR) {
+                // Read FPSCR and extract FPCR value
+                FPSCR fpscr = thread->readMiscRegNoEffect(MISCREG_FPSCR);
+                const uint32_t ones = (uint32_t)(-1);
+                FPSCR fpcrMask  = 0;
+                fpcrMask.ioe = ones;
+                fpcrMask.dze = ones;
+                fpcrMask.ofe = ones;
+                fpcrMask.ufe = ones;
+                fpcrMask.ixe = ones;
+                fpcrMask.ide = ones;
+                fpcrMask.len    = ones;
+                fpcrMask.stride = ones;
+                fpcrMask.rMode  = ones;
+                fpcrMask.fz     = ones;
+                fpcrMask.dn     = ones;
+                fpcrMask.ahp    = ones;
+                values.push_back(fpscr & fpcrMask);
+            } else if (it->index == MISCREG_FPSR) {
+                // Read FPSCR and extract FPSR value
+                FPSCR fpscr = thread->readMiscRegNoEffect(MISCREG_FPSCR);
+                const uint32_t ones = (uint32_t)(-1);
+                FPSCR fpsrMask  = 0;
+                fpsrMask.ioc = ones;
+                fpsrMask.dzc = ones;
+                fpsrMask.ofc = ones;
+                fpsrMask.ufc = ones;
+                fpsrMask.ixc = ones;
+                fpsrMask.idc = ones;
+                fpsrMask.qc = ones;
+                fpsrMask.v = ones;
+                fpsrMask.c = ones;
+                fpsrMask.z = ones;
+                fpsrMask.n = ones;
+                values.push_back(fpscr & fpsrMask);
             } else {
-                value_lo = thread->readMiscRegNoEffect(it->index);
+                values.push_back(thread->readMiscRegNoEffect(it->index));
             }
             break;
           default:
             panic("Unknown TARMAC trace record type!");
         }
 
-        if (value_lo != it->valueLo ||
-            (check_value_hi && (value_hi != it->valueHi))) {
-            if (!mismatch)
-                TarmacParserRecord::printMismatchHeader(inst, pc);
-            outs << "diff> [" << it->repr << "] gem5: 0x";
-            if (check_value_hi)
-                outs << hex << setfill('0') << setw(16) << value_hi
-                     << setfill('0') << setw(16) << value_lo;
-            else
-                outs << hex << value_lo;
-            outs << ", TARMAC: 0x";
-            if (check_value_hi)
-                outs << hex << setfill('0') << setw(16) << it->valueHi
-                     << setfill('0') << setw(16) << it->valueLo << endl;
-            else
-                outs << it->valueLo << endl;
-            mismatch = true;
+        bool same = true;
+        if (values.size() != it->values.size()) same = false;
+
+        uint32_t size = values.size();
+        if (size > it->values.size())
+            size = it->values.size();
+
+        if (same) {
+            for (int i = 0; i < size; ++i) {
+                if (values[i] != it->values[i]) {
+                    same = false;
+                    break;
+                }
+            }
         }
 
-        check_value_hi = false;
+        if (!same) {
+            if (!mismatch) {
+                TarmacParserRecord::printMismatchHeader(inst, pc);
+                mismatch = true;
+            }
+            outs << "diff> [" << it->repr << "] gem5: 0x" << hex;
+            for (auto v : values)
+                outs << setw(16) << setfill('0') << v;
+
+            outs << ", TARMAC: 0x" << hex;
+            for (auto v : it->values)
+                outs << setw(16) << setfill('0') << v;
+            outs << endl;
+        }
     }
     destRegRecords.clear();
 
@@ -766,6 +863,9 @@ TarmacParserRecord::TarmacParserRecord(Tick _when, ThreadContext *_thread,
       mismatchOnPcOrOpcode(false), parent(_parent)
 {
     memReq = std::make_shared<Request>();
+    if (maxVectorLength == 0) {
+        maxVectorLength = ArmStaticInst::getCurSveVecLen<uint64_t>(_thread);
+    }
 }
 
 void
@@ -936,6 +1036,7 @@ TarmacParserRecord::advanceTrace()
     } else if (buf[0] == 'R') {
         // Register trace record
         currRecordType = TARMAC_REG;
+        regRecord.values.clear();
         trace >> buf;
         strcpy(regRecord.repr, buf);
         if (buf[0] == 'r' && isdigit(buf[1])) {
@@ -981,6 +1082,14 @@ TarmacParserRecord::advanceTrace()
             // Q register
             regRecord.type = REG_Q;
             regRecord.index = atoi(&buf[1]);
+        } else if (buf[0] == 'z' && isdigit(buf[1])) {
+            // Z (SVE vector) register
+            regRecord.type = REG_Z;
+            regRecord.index = atoi(&buf[1]);
+        } else if (buf[0] == 'p' && isdigit(buf[1])) {
+            // P (SVE predicate) register
+            regRecord.type = REG_P;
+            regRecord.index = atoi(&buf[1]);
         } else if (strncmp(buf, "SP_EL", 5) == 0) {
             // A64 stack pointer
             regRecord.type = REG_X;
@@ -1008,20 +1117,38 @@ TarmacParserRecord::advanceTrace()
         if (regRecord.type == REG_Q) {
             trace.ignore();
             trace.get(buf, 17);
-            // buf[16] = '\0';
-            regRecord.valueHi = strtoull(buf, NULL, 16);
+            uint64_t hi = strtoull(buf, NULL, 16);
             trace.get(buf, 17);
-            // buf[16] = '\0';
-            regRecord.valueLo = strtoull(buf, NULL, 16);
+            uint64_t lo = strtoull(buf, NULL, 16);
+            regRecord.values.push_back(lo);
+            regRecord.values.push_back(hi);
+        } else if (regRecord.type == REG_Z) {
+            regRecord.values.resize(maxVectorLength);
+            for (uint8_t i = 0; i < maxVectorLength; ++i) {
+                uint64_t v;
+                trace >> v;
+                char c;
+                trace >> c;
+                assert(c == '_');
+
+                uint64_t lsw = 0;
+                trace >> lsw;
+                v = (v << 32) | lsw;
+                if (i < maxVectorLength - 1) trace >> c;
+                regRecord.values[i] = v;
+            }
         } else {
-            trace >> regRecord.valueLo;
+            // REG_P values are also parsed here
+            uint64_t v;
+            trace >> v;
             char c = trace.peek();
-            if (c == ':') {
-                // 64-bit value with colon in the middle
+            if ((c == ':') || (c == '_')) {
+                // 64-bit value with : or _ in the middle
                 uint64_t lsw = 0;
                 trace >> c >> lsw;
-                regRecord.valueLo = (regRecord.valueLo << 32) | lsw;
+                v = (v << 32) | lsw;
             }
+            regRecord.values.push_back(v);
         }
         trace.ignore(MaxLineLength, '\n');
         buf[0] = 0;

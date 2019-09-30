@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018 ARM Limited
+ * Copyright (c) 2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -83,8 +83,11 @@ TarmacBaseRecord::InstEntry::InstEntry(
 }
 
 TarmacBaseRecord::RegEntry::RegEntry(PCState pc)
-  : isetstate(pcToISetState(pc))
+  : isetstate(pcToISetState(pc)),
+    values(2, 0)
 {
+    // values vector is constructed with size = 2, for
+    // holding Lo and Hi values.
 }
 
 TarmacBaseRecord::MemEntry::MemEntry (

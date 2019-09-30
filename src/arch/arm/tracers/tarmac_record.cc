@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018 ARM Limited
+ * Copyright (c) 2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -195,7 +195,7 @@ TarmacTracerRecord::TraceRegEntry::updateMisc(
 
     regValid = true;
     regName = miscRegName[regRelIdx];
-    valueLo = thread->readMiscRegNoEffect(regRelIdx);
+    values[Lo] = thread->readMiscRegNoEffect(regRelIdx);
 
     // If it is the CPSR:
     // update the value of the CPSR register and add
@@ -208,7 +208,7 @@ TarmacTracerRecord::TraceRegEntry::updateMisc(
         cpsr.ge = thread->readCCReg(CCREG_GE);
 
         // update the entry value
-        valueLo = cpsr;
+        values[Lo] = cpsr;
     }
 }
 
@@ -222,7 +222,7 @@ TarmacTracerRecord::TraceRegEntry::updateCC(
 
     regValid = true;
     regName = ccRegName[regRelIdx];
-    valueLo = thread->readCCReg(regRelIdx);
+    values[Lo] = thread->readCCReg(regRelIdx);
 }
 
 void
@@ -235,7 +235,7 @@ TarmacTracerRecord::TraceRegEntry::updateFloat(
 
     regValid = true;
     regName  = "f" + std::to_string(regRelIdx);
-    valueLo = bitsToFloat32(thread->readFloatReg(regRelIdx));
+    values[Lo] = bitsToFloat32(thread->readFloatReg(regRelIdx));
 }
 
 void
@@ -275,7 +275,7 @@ TarmacTracerRecord::TraceRegEntry::updateInt(
         regName  = "r" + std::to_string(regRelIdx);
         break;
     }
-    valueLo = thread->readIntReg(regRelIdx);
+    values[Lo] = thread->readIntReg(regRelIdx);
 }
 
 void
@@ -451,7 +451,7 @@ TarmacTracerRecord::TraceRegEntry::print(
         ccprintf(outs, "%s clk R %s %08x\n",
                  curTick(),                 /* Tick time */
                  regName,                   /* Register name */
-                 valueLo);                  /* Register value */
+                 values[Lo]);                  /* Register value */
 }
 
 } // namespace Trace
