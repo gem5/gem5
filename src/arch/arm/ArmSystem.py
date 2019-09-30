@@ -97,6 +97,23 @@ class ArmSystem(System):
         "Base of the 64KiB PA range used for memory-mapped m5ops. Set to 0 "
         "to disable.")
 
+    dtb_filename = Param.String("",
+        "File that contains the Device Tree Blob. Don't use DTB if empty.")
+
+    def generateDtb(self, outdir, filename):
+        """
+        Autogenerate DTB. Arguments are the folder where the DTB
+        will be stored, and the name of the DTB file.
+        """
+        state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
+        rootNode = self.generateDeviceTree(state)
+
+        fdt = Fdt()
+        fdt.add_rootnode(rootNode)
+        dtb_filename = os.path.join(outdir, filename)
+        self.dtb_filename = fdt.writeDtbFile(dtb_filename)
+
+
     def generateDeviceTree(self, state):
         # Generate a device tree root node for the system by creating the root
         # node and adding the generated subnodes of all children.
@@ -137,29 +154,15 @@ class GenericArmSystem(ArmSystem):
         "Machine id from http://www.arm.linux.org.uk/developer/machines/")
     atags_addr = Param.Addr("Address where default atags structure should " \
                                 "be written")
-    dtb_filename = Param.String("",
-        "File that contains the Device Tree Blob. Don't use DTB if empty.")
     early_kernel_symbols = Param.Bool(False,
         "enable early kernel symbol tables before MMU")
-    enable_context_switch_stats_dump = Param.Bool(False, "enable stats/task info dumping at context switch boundaries")
+    enable_context_switch_stats_dump = Param.Bool(False,
+        "enable stats/task info dumping at context switch boundaries")
 
     panic_on_panic = Param.Bool(False, "Trigger a gem5 panic if the " \
                                     "guest kernel panics")
     panic_on_oops = Param.Bool(False, "Trigger a gem5 panic if the " \
                                    "guest kernel oopses")
-
-    def generateDtb(self, outdir, filename):
-        """
-        Autogenerate DTB. Arguments are the folder where the DTB
-        will be stored, and the name of the DTB file.
-        """
-        state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
-        rootNode = self.generateDeviceTree(state)
-
-        fdt = Fdt()
-        fdt.add_rootnode(rootNode)
-        dtb_filename = os.path.join(outdir, filename)
-        self.dtb_filename = fdt.writeDtbFile(dtb_filename)
 
 class LinuxArmSystem(GenericArmSystem):
     type = 'LinuxArmSystem'
