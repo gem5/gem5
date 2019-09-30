@@ -551,6 +551,8 @@ class RealView(Platform):
     _off_chip_ranges = []
 
     def _attach_device(self, device, bus, dma_ports=None):
+        if hasattr(device, "port"):
+            device.port = bus.master
         if hasattr(device, "pio"):
             device.pio = bus.master
         if hasattr(device, "dma"):
@@ -589,11 +591,6 @@ class RealView(Platform):
         self._attach_io(self._off_chip_devices(), *args, **kwargs)
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
-        cur_sys.bootmem = SimpleMemory(
-            range = AddrRange('2GB', size = '64MB'),
-            conf_table_reported = False)
-        if mem_bus is not None:
-            cur_sys.bootmem.port = mem_bus.master
         cur_sys.boot_loader = loc('boot.arm')
         cur_sys.atags_addr = 0x100
         cur_sys.load_offset = 0
@@ -646,6 +643,7 @@ class VExpress_EMM(RealView):
     def _on_chip_devices(self):
         devices = [
             self.gic, self.vgic,
+            self.bootmem,
             self.local_cpu_timer
         ]
         if hasattr(self, "gicv2m"):
@@ -675,6 +673,8 @@ class VExpress_EMM(RealView):
                             BAR1 = 0x1C1A0100, BAR1Size = '4096B',
                             BAR0LegacyIO = True, BAR1LegacyIO = True)
 
+    bootmem        = SimpleMemory(range = AddrRange('64MB'),
+                                  conf_table_reported = False)
     vram           = SimpleMemory(range = AddrRange(0x18000000, size='32MB'),
                                   conf_table_reported = False)
     rtc            = PL031(pio_addr=0x1C170000, int_num=36)
@@ -737,10 +737,6 @@ class VExpress_EMM(RealView):
         self.gicv2m.frames = [Gicv2mFrame(spi_base=256, spi_len=64, addr=0x2C1C0000)]
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
-        cur_sys.bootmem = SimpleMemory(range = AddrRange('64MB'),
-                                       conf_table_reported = False)
-        if mem_bus is not None:
-            cur_sys.bootmem.port = mem_bus.master
         if not cur_sys.boot_loader:
             cur_sys.boot_loader = loc('boot_emm.arm')
         cur_sys.atags_addr = 0x8000000
@@ -756,10 +752,6 @@ class VExpress_EMM64(VExpress_EMM):
         pci_pio_base=0x2f000000)
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
-        cur_sys.bootmem = SimpleMemory(range=AddrRange(0, size='64MB'),
-                                       conf_table_reported=False)
-        if mem_bus is not None:
-            cur_sys.bootmem.port = mem_bus.master
         if not cur_sys.boot_loader:
             cur_sys.boot_loader = loc('boot_emm.arm64')
         cur_sys.atags_addr = 0x8000000
@@ -872,6 +864,9 @@ Interrupts:
         AddrRange(0x2f000000, 0x7fffffff),
     ]
 
+    bootmem = SimpleMemory(range=AddrRange(0, size='64MB'),
+                           conf_table_reported=False)
+
     # Platform control device (off-chip)
     realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000,
                                idreg=0x02250000, pio_addr=0x1c010000)
@@ -887,6 +882,7 @@ Interrupts:
     def _on_chip_devices(self):
         return [
             self.generic_timer,
+            self.bootmem,
         ]
 
     ### Off-chip devices ###
@@ -936,10 +932,6 @@ Interrupts:
         self._attach_device(device, *args, **kwargs)
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
-        cur_sys.bootmem = SimpleMemory(range=AddrRange(0, size='64MB'),
-                                       conf_table_reported=False)
-        if mem_bus is not None:
-            cur_sys.bootmem.port = mem_bus.master
         if not cur_sys.boot_loader:
             cur_sys.boot_loader = [ loc('boot_emm.arm64'), loc('boot_emm.arm') ]
         cur_sys.atags_addr = 0x8000000
