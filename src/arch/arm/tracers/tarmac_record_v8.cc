@@ -126,6 +126,59 @@ TarmacTracerRecordV8::TraceRegEntryV8::updateMisc(
 }
 
 void
+TarmacTracerRecordV8::TraceRegEntryV8::updateVec(
+    const TarmacContext& tarmCtx,
+    RegIndex regRelIdx
+)
+{
+    auto thread = tarmCtx.thread;
+    const auto& vec_container = thread->readVecReg(
+        RegId(regClass, regRelIdx));
+    auto vv = vec_container.as<VecElem>();
+
+    regWidth = ArmStaticInst::getCurSveVecLenInBits(thread);
+    auto num_elements = regWidth / (sizeof(VecElem) * 8);
+
+    // Resize vector of values
+    values.resize(num_elements);
+
+    for (auto i = 0; i < num_elements; i++) {
+        values[i] = vv[i];
+    }
+
+    regValid = true;
+    regName = "Z" + std::to_string(regRelIdx);
+}
+
+void
+TarmacTracerRecordV8::TraceRegEntryV8::updatePred(
+    const TarmacContext& tarmCtx,
+    RegIndex regRelIdx
+)
+{
+    auto thread = tarmCtx.thread;
+    const auto& pred_container = thread->readVecPredReg(
+        RegId(regClass, regRelIdx));
+
+    // Predicate registers are always 1/8 the size of related vector
+    // registers. (getCurSveVecLenInBits(thread) / 8)
+    regWidth = ArmStaticInst::getCurSveVecLenInBits(thread) / 8;
+    auto num_elements = regWidth / 16;
+
+    // Resize vector of values
+    values.resize(num_elements);
+
+    // Get a copy of pred_container as a vector of half-words
+    auto vv = pred_container.as<uint16_t>();
+    for (auto i = 0; i < num_elements; i++) {
+        values[i] = vv[i];
+    }
+
+    regValid = true;
+    regName = "P" + std::to_string(regRelIdx);
+}
+
+void
 TarmacTracerRecordV8::addInstEntry(std::vector<InstPtr>& queue,
                                    const TarmacContext& tarmCtx)
 {
@@ -236,12 +289,35 @@ TarmacTracerRecordV8::TraceRegEntryV8::print(
     // Print the register record formatted according
     // to the Tarmac specification
     if (regValid) {
-        ccprintf(outs, "%s clk %s R %s %0*x\n",
+        ccprintf(outs, "%s clk %s R %s %s\n",
                  curTick(),            /* Tick time */
                  cpuName,              /* Cpu name */
                  regName,              /* Register name */
-                 regWidth >> 2,        /* Register value padding */
-                 values[Lo]);          /* Register value */
+                 formatReg());         /* Register value */
+    }
+}
+
+std::string
+TarmacTracerRecordV8::TraceRegEntryV8::formatReg() const
+{
+    if (regWidth <= 64) {
+        // Register width is < 64 bit (scalar register).
+        return csprintf("%0*x", regWidth / 4, values[Lo]);
+    } else {
+
+        // Register width is > 64 bit (vector).  Iterate over every vector
+        // element. Since the vector values are stored in Little Endian, print
+        // starting from the last element.
+        std::string reg_val;
+        for (auto it = values.rbegin(); it != values.rend(); it++) {
+            reg_val += csprintf("%0*x_",
+                static_cast<int>(sizeof(VecElem) * 2), *it);
+        }
+
+        // Remove trailing underscore
+        reg_val.pop_back();
+
+        return reg_val;
     }
 }
 

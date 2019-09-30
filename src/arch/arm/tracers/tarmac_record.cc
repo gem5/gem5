@@ -178,6 +178,12 @@ TarmacTracerRecord::TraceRegEntry::update(
       case MiscRegClass:
         updateMisc(tarmCtx, regRel);
         break;
+      case VecRegClass:
+        updateVec(tarmCtx, regRel);
+        break;
+      case VecPredRegClass:
+        updatePred(tarmCtx, regRel);
+        break;
       default:
         // If unsupported format, do nothing: non updating
         // the register will prevent it to be printed.

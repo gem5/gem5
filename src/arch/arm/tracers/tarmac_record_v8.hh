@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018 ARM Limited
+ * Copyright (c) 2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -108,7 +108,23 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
         void updateMisc(const TarmacContext& tarmCtx,
                         RegIndex regRelIdx) override;
 
-        uint8_t regWidth;
+        void updateVec(const TarmacContext& tarmCtx,
+                       RegIndex regRelIdx) override;
+
+        void updatePred(const TarmacContext& tarmCtx,
+                        RegIndex regRelIdx) override;
+
+        /**
+         * Returning a string which contains the formatted
+         * register value: transformed in hex, 0 padded or/and
+         * split in chunks separated by underscores in case of
+         * vector register.
+         * @return str formatted string
+         */
+        std::string formatReg() const;
+
+        /** Size in bits of arch register */
+        uint16_t regWidth;
     };
 
     /**
