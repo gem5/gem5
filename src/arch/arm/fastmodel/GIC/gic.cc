@@ -70,7 +70,8 @@ SCGIC::Terminator::sendTowardsCPU(uint8_t len, const uint8_t *data)
 }
 
 SCGIC::SCGIC(const SCFastModelGICParams &params,
-             sc_core::sc_module_name _name) : scx_evs_GIC(_name)
+             sc_core::sc_module_name _name)
+    : scx_evs_GIC(_name), _params(params)
 {
     signalInterrupt.bind(signal_interrupt);
 
@@ -347,6 +348,15 @@ void
 GIC::clearPPInt(uint32_t num, uint32_t cpu)
 {
     scGIC->signalInterrupt->ppi(cpu, num, false);
+}
+
+bool
+GIC::supportsVersion(GicVersion version)
+{
+    if (scGIC->params().gicv2_only)
+        return version == GicVersion::GIC_V2;
+    return (version == GicVersion::GIC_V3) ||
+           (version == GicVersion::GIC_V4 && scGIC->params().has_gicv4_1);
 }
 
 } // namespace FastModel

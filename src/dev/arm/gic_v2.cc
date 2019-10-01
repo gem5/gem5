@@ -950,6 +950,12 @@ GicV2::postFiq(uint32_t cpu, Tick when)
     }
 }
 
+bool
+GicV2::supportsVersion(GicVersion version)
+{
+    return version == GicVersion::GIC_V2;
+}
+
 void
 GicV2::postDelayedFiq(uint32_t cpu)
 {

@@ -475,6 +475,8 @@ class GicV2 : public BaseGic, public BaseGicRegisters
     void sendPPInt(uint32_t num, uint32_t cpu) override;
     void clearPPInt(uint32_t num, uint32_t cpu) override;
 
+    bool supportsVersion(GicVersion version) override;
+
   protected:
     /** Handle a read to the distributor portion of the GIC
      * @param pkt packet to respond to

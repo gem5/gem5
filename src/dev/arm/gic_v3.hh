@@ -125,6 +125,7 @@ class Gicv3 : public BaseGic
     void serialize(CheckpointOut & cp) const override;
     void unserialize(CheckpointIn & cp) override;
     Tick write(PacketPtr pkt) override;
+    bool supportsVersion(GicVersion version) override;
 
   public:
 

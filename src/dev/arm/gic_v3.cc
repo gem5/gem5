@@ -209,6 +209,13 @@ Gicv3::postInt(uint32_t cpu, ArmISA::InterruptTypes int_type)
     platform->intrctrl->post(cpu, int_type, 0);
 }
 
+bool
+Gicv3::supportsVersion(GicVersion version)
+{
+    return (version == GicVersion::GIC_V3) ||
+           (version == GicVersion::GIC_V4 && params()->gicv4);
+}
+
 void
 Gicv3::deassertInt(uint32_t cpu, ArmISA::InterruptTypes int_type)
 {
