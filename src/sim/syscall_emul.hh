@@ -1888,19 +1888,14 @@ mmapImpl(SyscallDesc *desc, int num, ThreadContext *tc, bool is_mmap2)
         // this will not work since there is a single global symbol table.
         ObjectFile *interpreter = p->getInterpreter();
         if (interpreter) {
-            Addr text_start = interpreter->textBase();
-            Addr text_end = text_start + interpreter->textSize();
-
-            Addr pc = tc->pcState().pc();
-
-            if (pc >= text_start && pc < text_end) {
+            if (interpreter->contains(tc->pcState().instAddr())) {
                 std::shared_ptr<FDEntry> fdep = (*p->fds)[tgt_fd];
                 auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
                 ObjectFile *lib = createObjectFile(ffdp->getFileName());
 
                 if (lib) {
                     lib->loadAllSymbols(debugSymbolTable,
-                                        lib->textBase(), start);
+                                        lib->minSegmentAddr(), start);
                 }
             }
         }

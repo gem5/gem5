@@ -86,13 +86,10 @@ class ElfObject : public ObjectFile
     void getSections();
     bool sectionExists(std::string sec);
 
-    std::vector<Segment> extraSegments;
-
   public:
     virtual ~ElfObject() {}
 
-    bool loadSegments(const PortProxy& mem_proxy, Addr addr_mask = maxAddr,
-                      Addr offset = 0) override;
+    bool loadSegments(const PortProxy &mem_proxy) override;
 
     virtual bool loadAllSymbols(SymbolTable *symtab, Addr base = 0,
                                 Addr offset = 0, Addr addr_mask = maxAddr)

@@ -57,11 +57,13 @@ AlphaSystem::AlphaSystem(Params *p)
      */
     // Load Console Code
     console = createObjectFile(params()->console);
+    console->setLoadMask(loadAddrMask);
     if (console == NULL)
         fatal("Could not load console file %s", params()->console);
 
     // Load pal file
     pal = createObjectFile(params()->pal);
+    pal->setLoadMask(loadAddrMask);
     if (pal == NULL)
         fatal("Could not load PALcode file %s", params()->pal);
 
@@ -109,8 +111,8 @@ AlphaSystem::initState()
     System::initState();
 
     // Load program sections into memory
-    pal->loadSegments(physProxy, loadAddrMask);
-    console->loadSegments(physProxy, loadAddrMask);
+    pal->loadSegments(physProxy);
+    console->loadSegments(physProxy);
 
     /**
      * Copy the osflags (kernel arguments) into the consoles

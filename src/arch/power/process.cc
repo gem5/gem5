@@ -56,8 +56,7 @@ PowerProcess::PowerProcess(ProcessParams *params, ObjectFile *objFile)
 {
     fatal_if(params->useArchPT, "Arch page tables not implemented.");
     // Set up break point (Top of Heap)
-    Addr brk_point = objFile->dataBase() + objFile->dataSize() +
-                     objFile->bssSize();
+    Addr brk_point = objFile->maxSegmentAddr();
     brk_point = roundUp(brk_point, PageBytes);
 
     Addr stack_base = 0xbf000000L;

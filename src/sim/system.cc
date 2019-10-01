@@ -152,14 +152,16 @@ System::System(Params *p)
         } else {
             // Get the kernel code
             kernel = createObjectFile(params()->kernel);
+            kernel->setLoadOffset(loadAddrOffset);
+            kernel->setLoadMask(loadAddrMask);
             inform("kernel located at: %s", params()->kernel);
 
             if (kernel == NULL)
                 fatal("Could not load kernel file %s", params()->kernel);
 
             // setup entry points
-            kernelStart = kernel->textBase();
-            kernelEnd = kernel->bssBase() + kernel->bssSize();
+            kernelStart = kernel->minSegmentAddr();
+            kernelEnd = kernel->maxSegmentAddr();
             kernelEntry = kernel->entryPoint();
 
             // If load_addr_mask is set to 0x0, then auto-calculate
@@ -168,6 +170,7 @@ System::System(Params *p)
             if (loadAddrMask == 0) {
                 Addr shift_amt = findMsbSet(kernelEnd - kernelStart) + 1;
                 loadAddrMask = ((Addr)1 << shift_amt) - 1;
+                kernel->setLoadMask(loadAddrMask);
             }
 
             // load symbols
@@ -192,6 +195,8 @@ System::System(Params *p)
             ObjectFile *obj = createObjectFile(obj_name);
             fatal_if(!obj, "Failed to additional kernel object '%s'.\n",
                      obj_name);
+            obj->setLoadOffset(loadAddrOffset);
+            obj->setLoadMask(loadAddrMask);
             kernelExtras.push_back(obj);
         }
     }
@@ -327,11 +332,9 @@ System::initState()
                 }
             }
             // Load program sections into memory
-            kernel->loadSegments(physProxy, loadAddrMask, loadAddrOffset);
-            for (const auto &extra_kernel : kernelExtras) {
-                extra_kernel->loadSegments(physProxy, loadAddrMask,
-                                           loadAddrOffset);
-            }
+            kernel->loadSegments(physProxy);
+            for (const auto &extra_kernel : kernelExtras)
+                extra_kernel->loadSegments(physProxy);
 
             DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
             DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);

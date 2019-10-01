@@ -49,6 +49,8 @@ class DtbObject : public ObjectFile
          */
         bool fileDataMmapped;
 
+        Segment *data;
+
     public:
         virtual ~DtbObject();
 

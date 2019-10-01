@@ -53,20 +53,10 @@ DtbObject::tryFile(const std::string &fname, size_t len, uint8_t *data)
 
 DtbObject::DtbObject(const std::string &_filename, size_t _len, uint8_t *_data,
                      Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _len, _data, _arch, _opSys)
+    : ObjectFile(_filename, _len, _data, _arch, _opSys),
+    data(new Segment{ "data", 0, fileData, len })
 {
-    text.base = 0;
-    text.size = len;
-    text.data = fileData;
-
-    data.base = 0;
-    data.size = 0;
-    data.data = nullptr;
-
-    bss.base = 0;
-    bss.size = 0;
-    bss.data = nullptr;
-
+    segments.emplace_back(data);
     fileDataMmapped = true;
 }
 
@@ -92,10 +82,10 @@ DtbObject::addBootCmdLine(const char* _args, size_t len)
     const char* property_name = "bootargs";
 
     // Make a new buffer that has extra space to add nodes/properties
-    int newLen = 2*this->len;
-    uint8_t* fdt_buf_w_space = new uint8_t[newLen];
+    int newLen = 2 * this->len;
+    uint8_t *fdt_buf_w_space = new uint8_t[newLen];
     // Copy and unpack flattened device tree into new buffer
-    int ret = fdt_open_into((void*)fileData, (void*)fdt_buf_w_space, (newLen));
+    int ret = fdt_open_into((void *)fileData, (void *)fdt_buf_w_space, newLen);
     if (ret < 0) {
         warn("Error resizing buffer of flattened device tree, "
              "errno: %d\n", ret);
@@ -104,14 +94,15 @@ DtbObject::addBootCmdLine(const char* _args, size_t len)
     }
 
     // First try finding the /chosen node in the dtb
-    int offset = fdt_path_offset((void*)fdt_buf_w_space, full_path_node_name);
+    int offset = fdt_path_offset((void *)fdt_buf_w_space, full_path_node_name);
     if (offset < 0) {
         // try adding the node by walking dtb tree to proper insertion point
-        offset = fdt_path_offset((void*)fdt_buf_w_space, root_path);
-        offset = fdt_add_subnode((void*)fdt_buf_w_space, offset, node_name);
+        offset = fdt_path_offset((void *)fdt_buf_w_space, root_path);
+        offset = fdt_add_subnode((void *)fdt_buf_w_space, offset, node_name);
         // if we successfully add the subnode, get the offset
         if (offset >= 0)
-          offset = fdt_path_offset((void*)fdt_buf_w_space, full_path_node_name);
+          offset = fdt_path_offset((void *)fdt_buf_w_space,
+                                   full_path_node_name);
 
         if (offset < 0) {
             warn("Error finding or adding \"chosen\" subnode to flattened "
@@ -122,8 +113,8 @@ DtbObject::addBootCmdLine(const char* _args, size_t len)
     }
 
     // Set the bootargs property in the /chosen node
-    ret = fdt_setprop((void*)fdt_buf_w_space, offset, property_name,
-                      (const void*)_args, len+1);
+    ret = fdt_setprop((void *)fdt_buf_w_space, offset, property_name,
+                      (const void *)_args, len+1);
     if (ret < 0) {
         warn("Error setting \"bootargs\" property to flattened device tree, "
              "errno: %d\n", ret);
@@ -132,7 +123,7 @@ DtbObject::addBootCmdLine(const char* _args, size_t len)
     }
 
     // Repack the dtb for kernel use
-    ret = fdt_pack((void*)fdt_buf_w_space);
+    ret = fdt_pack((void *)fdt_buf_w_space);
     if (ret < 0) {
         warn("Error re-packing flattened device tree structure, "
              "errno: %d\n", ret);
@@ -140,8 +131,8 @@ DtbObject::addBootCmdLine(const char* _args, size_t len)
         return false;
     }
 
-    text.size = newLen;
-    text.data = fdt_buf_w_space;
+    data->size = newLen;
+    data->data = fdt_buf_w_space;
 
     // clean up old buffer and set to new fdt blob
     munmap(fileData, this->len);
@@ -155,7 +146,7 @@ DtbObject::addBootCmdLine(const char* _args, size_t len)
 Addr
 DtbObject::findReleaseAddr()
 {
-    void *fd = (void*)fileData;
+    void *fd = (void *)fileData;
 
     int offset = fdt_path_offset(fd, "/cpus/cpu@0");
     int len;
@@ -164,9 +155,11 @@ DtbObject::findReleaseAddr()
     Addr rel_addr = 0;
 
     if (len > 3)
-        rel_addr = betoh(*static_cast<const uint32_t*>(temp));
-    if (len == 8)
-        rel_addr = (rel_addr << 32) | betoh(*(static_cast<const uint32_t*>(temp)+1));
+        rel_addr = betoh(*static_cast<const uint32_t *>(temp));
+    if (len == 8) {
+        rel_addr = (rel_addr << 32) |
+            betoh(*(static_cast<const uint32_t *>(temp) + 1));
+    }
 
     return rel_addr;
 }

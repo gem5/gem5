@@ -137,22 +137,22 @@ SparcSystem::initState()
     System::initState();
 
     // Load reset binary into memory
-    reset->setTextBase(params()->reset_addr);
+    reset->setLoadOffset(params()->reset_addr);
     reset->loadSegments(physProxy);
     // Load the openboot binary
-    openboot->setTextBase(params()->openboot_addr);
+    openboot->setLoadOffset(params()->openboot_addr);
     openboot->loadSegments(physProxy);
     // Load the hypervisor binary
-    hypervisor->setTextBase(params()->hypervisor_addr);
+    hypervisor->setLoadOffset(params()->hypervisor_addr);
     hypervisor->loadSegments(physProxy);
     // Load the nvram image
-    nvram->setTextBase(params()->nvram_addr);
+    nvram->setLoadOffset(params()->nvram_addr);
     nvram->loadSegments(physProxy);
     // Load the hypervisor description image
-    hypervisor_desc->setTextBase(params()->hypervisor_desc_addr);
+    hypervisor_desc->setLoadOffset(params()->hypervisor_desc_addr);
     hypervisor_desc->loadSegments(physProxy);
     // Load the partition description image
-    partition_desc->setTextBase(params()->partition_desc_addr);
+    partition_desc->setLoadOffset(params()->partition_desc_addr);
     partition_desc->loadSegments(physProxy);
 
 

@@ -65,8 +65,7 @@ MipsProcess::MipsProcess(ProcessParams *params, ObjectFile *objFile)
     Addr next_thread_stack_base = stack_base - max_stack_size;
 
     // Set up break point (Top of Heap)
-    Addr brk_point = objFile->dataBase() + objFile->dataSize() +
-                     objFile->bssSize();
+    Addr brk_point = objFile->maxSegmentAddr();
     brk_point = roundUp(brk_point, PageBytes);
 
     // Set up region for mmaps.  Start it 1GB above the top of the heap.

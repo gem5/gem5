@@ -43,23 +43,10 @@ RawObject::tryFile(const std::string &fname, size_t len, uint8_t *data)
 
 RawObject::RawObject(const std::string &_filename, size_t _len,
         uint8_t *_data, Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _len, _data, _arch, _opSys)
+    : ObjectFile(_filename, _len, _data, _arch, _opSys),
+    data(new Segment{ "data", 0, fileData, len })
 {
-    text.base = 0;
-    text.size = len;
-    text.data = fileData;
-
-    data.base = 0;
-    data.size = 0;
-    data.data = nullptr;
-
-    bss.base = 0;
-    bss.size = 0;
-    bss.data = nullptr;
-
-    DPRINTFR(Loader, "text: %#x %d\ndata: %#x %d\nbss: %#x %d\n",
-             text.base, text.size, data.base, data.size,
-             bss.base, bss.size);
+    segments.emplace_back(data);
 }
 
 bool

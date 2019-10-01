@@ -132,7 +132,7 @@ FreebsdArmSystem::initState()
     if (ra)
         bootReleaseAddr = ra & ~ULL(0x7F);
 
-    dtb_file->setTextBase(params()->atags_addr + loadAddrOffset);
+    dtb_file->setLoadOffset(params()->atags_addr + loadAddrOffset);
     dtb_file->loadSegments(physProxy);
     delete dtb_file;
 

@@ -38,6 +38,9 @@ class RawObject: public ObjectFile
   protected:
     RawObject(const std::string &_filename, size_t _len,
               uint8_t *_data, Arch _arch, OpSys _opSys);
+
+    Segment *data;
+
   public:
     virtual ~RawObject() {}
 

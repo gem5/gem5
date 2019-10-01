@@ -75,8 +75,7 @@ RiscvProcess64::RiscvProcess64(ProcessParams *params, ObjectFile *objFile) :
     const Addr stack_base = 0x7FFFFFFFFFFFFFFFL;
     const Addr max_stack_size = 8 * 1024 * 1024;
     const Addr next_thread_stack_base = stack_base - max_stack_size;
-    const Addr brk_point = roundUp(objFile->bssBase() + objFile->bssSize(),
-            PageBytes);
+    const Addr brk_point = roundUp(objFile->maxSegmentAddr(), PageBytes);
     const Addr mmap_end = 0x4000000000000000L;
     memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
             next_thread_stack_base, mmap_end);
@@ -88,8 +87,7 @@ RiscvProcess32::RiscvProcess32(ProcessParams *params, ObjectFile *objFile) :
     const Addr stack_base = 0x7FFFFFFF;
     const Addr max_stack_size = 8 * 1024 * 1024;
     const Addr next_thread_stack_base = stack_base - max_stack_size;
-    const Addr brk_point = roundUp(objFile->bssBase() + objFile->bssSize(),
-            PageBytes);
+    const Addr brk_point = roundUp(objFile->maxSegmentAddr(), PageBytes);
     const Addr mmap_end = 0x40000000L;
     memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
                                      next_thread_stack_base, mmap_end);

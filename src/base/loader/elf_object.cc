@@ -293,44 +293,7 @@ ElfObject::ElfObject(const std::string &_filename, size_t _len,
 
     entry = ehdr.e_entry;
 
-    // initialize segment sizes to 0 in case they're not present
-    text.size = data.size = bss.size = 0;
-    text.base = data.base = bss.base = 0;
-
     int sec_idx = 1;
-
-    // The first address of some important sections.
-    Addr text_sec_start = 0;
-    Addr data_sec_start = 0;
-    Addr bss_sec_start = 0;
-
-    // Get the first section
-    Elf_Scn *section = elf_getscn(elf, sec_idx);
-
-    // Find the beginning of the most interesting sections.
-    while (section) {
-        GElf_Shdr shdr;
-        gelf_getshdr(section, &shdr);
-        char *sec_name = elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name);
-
-        if (sec_name) {
-            if (!strcmp(".text", sec_name)) {
-                text_sec_start = shdr.sh_addr;
-            } else if (!strcmp(".data", sec_name)) {
-                data_sec_start = shdr.sh_addr;
-            } else if (!strcmp(".bss", sec_name)) {
-                bss_sec_start = shdr.sh_addr;
-            }
-        } else {
-            Elf_Error errorNum = (Elf_Error)elf_errno();
-            if (errorNum != ELF_E_NONE) {
-                const char *errorMessage = elf_errmsg(errorNum);
-                fatal("Error from libelf: %s.\n", errorMessage);
-            }
-        }
-
-        section = elf_getscn(elf, ++sec_idx);
-    }
 
     // Go through all the segments in the program, record them, and scrape
     // out information about the text, data, and bss areas needed by other
@@ -348,50 +311,54 @@ ElfObject::ElfObject(const std::string &_filename, size_t _len,
         ldMin = std::min(ldMin, phdr.p_vaddr);
         ldMax = std::max(ldMax, phdr.p_vaddr + phdr.p_memsz);
 
-        // Check to see if this segment contains the bss section.
-        if (phdr.p_paddr <= bss_sec_start &&
-            phdr.p_paddr + phdr.p_memsz > bss_sec_start &&
-            phdr.p_memsz - phdr.p_filesz > 0) {
-            bss.base = phdr.p_paddr + phdr.p_filesz;
-            bss.size = phdr.p_memsz - phdr.p_filesz;
-            bss.data = nullptr;
+        std::string name;
+
+        // Get the first section
+        Elf_Scn *section = elf_getscn(elf, sec_idx);
+
+        // Name segments after the sections they contain.
+        while (section) {
+            GElf_Shdr shdr;
+            gelf_getshdr(section, &shdr);
+            char *sec_name = elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name);
+
+            if (!sec_name) {
+                Elf_Error errorNum = (Elf_Error)elf_errno();
+                if (errorNum != ELF_E_NONE) {
+                    const char *errorMessage = elf_errmsg(errorNum);
+                    fatal("Error from libelf: %s.\n", errorMessage);
+                }
+            }
+
+            if (shdr.sh_addr >= ldMin && shdr.sh_addr < ldMax) {
+                if (name != "")
+                    name += ",";
+                name += sec_name;
+            }
+
+            section = elf_getscn(elf, ++sec_idx);
         }
 
-        // Check to see if this is the text or data segment
-        if (phdr.p_vaddr <= text_sec_start &&
-            phdr.p_vaddr + phdr.p_filesz > text_sec_start) {
-
-            // If this value is nonzero, we need to flip the relocate flag.
-            if (phdr.p_vaddr != 0)
-                relocate = false;
-
-            text.base = phdr.p_paddr;
-            text.size = phdr.p_filesz;
-            text.data = fileData + phdr.p_offset;
-        } else if (phdr.p_vaddr <= data_sec_start &&
-                   phdr.p_vaddr + phdr.p_filesz > data_sec_start) {
-            data.base = phdr.p_paddr;
-            data.size = phdr.p_filesz;
-            data.data = fileData + phdr.p_offset;
-        } else {
-            // If it's none of the above but is loadable,
-            // load the filesize worth of data
-            Segment extra;
-            extra.base = phdr.p_paddr;
-            extra.size = phdr.p_filesz;
-            extra.data = fileData + phdr.p_offset;
-            extraSegments.push_back(extra);
+        addSegment(name, phdr.p_paddr, fileData + phdr.p_offset,
+                phdr.p_filesz);
+        Addr uninitialized = phdr.p_memsz - phdr.p_filesz;
+        if (uninitialized) {
+            // There may be parts of a segment which aren't included in the
+            // file. In those cases, we need to create a new segment with no
+            // data to take up the extra space. This should be zeroed when
+            // loaded into memory.
+            addSegment(name + "(uninitialized)", phdr.p_paddr + phdr.p_filesz,
+                    nullptr, uninitialized);
         }
     }
 
     // should have found at least one loadable segment
-    warn_if(text.size == 0,
-            "Empty .text segment in '%s'. ELF file corrupted?\n",
+    warn_if(segments.empty(),
+            "No loadable segments in '%s'. ELF file corrupted?\n",
             filename);
 
-    DPRINTFR(Loader, "text: %#x %d\ndata: %#x %d\nbss: %#x %d\n",
-             text.base, text.size, data.base, data.size,
-             bss.base, bss.size);
+    for (auto &seg: segments)
+        DPRINTFR(Loader, "%s\n", *seg);
 
     elf_end(elf);
 
@@ -498,20 +465,13 @@ ElfObject::loadWeakSymbols(SymbolTable *symtab, Addr base, Addr offset,
 }
 
 bool
-ElfObject::loadSegments(const PortProxy& mem_proxy, Addr addr_mask,
-                        Addr offset)
+ElfObject::loadSegments(const PortProxy &mem_proxy)
 {
-    if (!ObjectFile::loadSegments(mem_proxy, addr_mask, offset))
+    if (!ObjectFile::loadSegments(mem_proxy))
         return false;
 
-    for (auto seg : extraSegments) {
-        if (!loadSegment(&seg, mem_proxy, addr_mask, offset)) {
-            return false;
-        }
-    }
-
     if (interpreter)
-        interpreter->loadSegments(mem_proxy, addr_mask, offset);
+        interpreter->loadSegments(mem_proxy);
 
     return true;
 }
@@ -570,9 +530,6 @@ ElfObject::updateBias(Addr bias_addr)
     entry += bias_addr;
 
     // Patch segments with the bias_addr.
-    text.base += bias_addr;
-    data.base += bias_addr;
-    bss.base  += bias_addr;
-    for (auto &segment : extraSegments)
-        segment.base += bias_addr;
+    for (auto &segment : segments)
+        segment->base += bias_addr;
 }

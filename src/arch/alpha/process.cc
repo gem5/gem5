@@ -54,12 +54,10 @@ AlphaProcess::AlphaProcess(ProcessParams *params, ObjectFile *objFile)
       objFile)
 {
     fatal_if(params->useArchPT, "Arch page tables not implemented.");
-    Addr brk_point = objFile->dataBase() + objFile->dataSize() +
-                     objFile->bssSize();
-    brk_point = roundUp(brk_point, PageBytes);
+    Addr brk_point = roundUp(objFile->maxSegmentAddr(), PageBytes);
 
     // Set up stack.  On Alpha, stack goes below the image.
-    Addr stack_base = objFile->textBase() - (409600 + 4096);
+    Addr stack_base = objFile->minSegmentAddr() - (409600 + 4096);
 
     // Set up region for mmaps.
     Addr mmap_end = 0x10000;

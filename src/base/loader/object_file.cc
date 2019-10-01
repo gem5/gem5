@@ -57,10 +57,8 @@ ObjectFile::ObjectFile(const string &_filename,
                        size_t _len, uint8_t *_data,
                        Arch _arch, OpSys _op_sys)
     : filename(_filename), fileData(_data), len(_len),
-      arch(_arch), opSys(_op_sys), entry(0),
-      text{0, nullptr, 0}, data{0, nullptr, 0}, bss{0, nullptr, 0}
-{
-}
+      arch(_arch), opSys(_op_sys), entry(0)
+{}
 
 
 ObjectFile::~ObjectFile()
@@ -73,11 +71,10 @@ ObjectFile::~ObjectFile()
 
 
 bool
-ObjectFile::loadSegment(Segment *seg, const PortProxy& mem_proxy,
-                        Addr addr_mask, Addr offset)
+ObjectFile::loadSegment(Segment *seg, const PortProxy &mem_proxy)
 {
     if (seg->size != 0) {
-        Addr addr = (seg->base & addr_mask) + offset;
+        Addr addr = (seg->base & loadMask) + loadOffset;
         if (seg->data) {
             mem_proxy.writeBlob(addr, seg->data, seg->size);
         } else {
@@ -90,12 +87,12 @@ ObjectFile::loadSegment(Segment *seg, const PortProxy& mem_proxy,
 
 
 bool
-ObjectFile::loadSegments(const PortProxy& mem_proxy, Addr addr_mask,
-                         Addr offset)
+ObjectFile::loadSegments(const PortProxy &proxy)
 {
-    return (loadSegment(&text, mem_proxy, addr_mask, offset)
-            && loadSegment(&data, mem_proxy, addr_mask, offset)
-            && loadSegment(&bss, mem_proxy, addr_mask, offset));
+    for (auto &seg: segments)
+        if (!loadSegment(seg.get(), proxy))
+            return false;
+    return true;
 }
 
 namespace

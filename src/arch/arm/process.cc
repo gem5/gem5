@@ -75,8 +75,7 @@ ArmProcess32::ArmProcess32(ProcessParams *params, ObjectFile *objFile,
                            ObjectFile::Arch _arch)
     : ArmProcess(params, objFile, _arch)
 {
-    Addr brk_point = roundUp(objFile->dataBase() + objFile->dataSize() +
-                             objFile->bssSize(), PageBytes);
+    Addr brk_point = roundUp(objFile->maxSegmentAddr(), PageBytes);
     Addr stack_base = 0xbf000000L;
     Addr max_stack_size = 8 * 1024 * 1024;
     Addr next_thread_stack_base = stack_base - max_stack_size;
@@ -90,8 +89,7 @@ ArmProcess64::ArmProcess64(ProcessParams *params, ObjectFile *objFile,
                            ObjectFile::Arch _arch)
     : ArmProcess(params, objFile, _arch)
 {
-    Addr brk_point = roundUp(objFile->dataBase() + objFile->dataSize() +
-                             objFile->bssSize(), PageBytes);
+    Addr brk_point = roundUp(objFile->maxSegmentAddr(), PageBytes);
     Addr stack_base = 0x7fffff0000L;
     Addr max_stack_size = 8 * 1024 * 1024;
     Addr next_thread_stack_base = stack_base - max_stack_size;

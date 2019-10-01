@@ -73,21 +73,14 @@ EcoffObject::EcoffObject(const string &_filename, size_t _len, uint8_t *_data,
 
     entry = aoutHdr->entry;
 
-    text.base = aoutHdr->text_start;
-    text.size = aoutHdr->tsize;
-    text.data = fileData + ECOFF_TXTOFF(execHdr);
+    addSegment("text", aoutHdr->text_start, fileData + ECOFF_TXTOFF(execHdr),
+            aoutHdr->tsize);
+    addSegment("data", aoutHdr->data_start, fileData + ECOFF_DATOFF(execHdr),
+            aoutHdr->dsize);
+    addSegment("bss", aoutHdr->bss_start, nullptr, aoutHdr->bsize);
 
-    data.base = aoutHdr->data_start;
-    data.size = aoutHdr->dsize;
-    data.data = fileData + ECOFF_DATOFF(execHdr);
-
-    bss.base = aoutHdr->bss_start;
-    bss.size = aoutHdr->bsize;
-    bss.data = nullptr;
-
-    DPRINTFR(Loader, "text: %#x %d\ndata: %#x %d\nbss: %#x %d\n",
-             text.base, text.size, data.base, data.size,
-             bss.base, bss.size);
+    for (auto &seg: segments)
+        DPRINTFR(Loader, "%s\n", *seg);
 }
 
 bool

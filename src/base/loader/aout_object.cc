@@ -61,21 +61,14 @@ AoutObject::AoutObject(const string &_filename,
 
     entry = execHdr->entry;
 
-    text.base = N_TXTADDR(*execHdr);
-    text.size = execHdr->tsize;
-    text.data = fileData + N_TXTOFF(*execHdr);
+    addSegment("text", N_TXTADDR(*execHdr), fileData + N_TXTOFF(*execHdr),
+            execHdr->tsize);
+    addSegment("data", N_DATADDR(*execHdr), fileData + N_DATOFF(*execHdr),
+            execHdr->dsize);
+    addSegment("bss", N_BSSADDR(*execHdr), nullptr, execHdr->bsize);
 
-    data.base = N_DATADDR(*execHdr);
-    data.size = execHdr->dsize;
-    data.data = fileData + N_DATOFF(*execHdr);
-
-    bss.base = N_BSSADDR(*execHdr);
-    bss.size = execHdr->bsize;
-    bss.data = NULL;
-
-    DPRINTFR(Loader, "text: 0x%x %d\ndata: 0x%x %d\nbss: 0x%x %d\n",
-             text.base, text.size, data.base, data.size,
-             bss.base, bss.size);
+    for (auto &seg: segments)
+        DPRINTFR(Loader, "%s\n", *seg);
 }
 
 
