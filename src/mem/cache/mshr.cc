@@ -612,8 +612,10 @@ MSHR::promoteReadable()
 void
 MSHR::promoteWritable()
 {
+    PacketPtr def_tgt_pkt = deferredTargets.front().pkt;
     if (deferredTargets.needsWritable &&
-        !(hasPostInvalidate() || hasPostDowngrade())) {
+        !(hasPostInvalidate() || hasPostDowngrade()) &&
+        !def_tgt_pkt->req->isCacheInvalidate()) {
         // We got a writable response, but we have deferred targets
         // which are waiting to request a writable copy (not because
         // of a pending invalidate).  This can happen if the original
