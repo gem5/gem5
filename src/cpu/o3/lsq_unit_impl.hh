@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2010-2014, 2017-2018 ARM Limited
+ * Copyright (c) 2010-2014, 2017-2019 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -426,6 +426,7 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
 
                 // Mark the load for re-execution
                 ld_inst->fault = std::make_shared<ReExec>();
+                req->setStateToFault();
             } else {
                 DPRINTF(LSQUnit, "HitExternal Snoop for addr %#x [sn:%lli]\n",
                         pkt->getAddr(), ld_inst->seqNum);

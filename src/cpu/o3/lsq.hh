@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, 2014, 2018 ARM Limited
+ * Copyright (c) 2011-2012, 2014, 2018-2019 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -621,6 +621,12 @@ class LSQ
         {
             return (_state == State::Request ||
                     (isPartialFault() && isLoad()));
+        }
+
+        void
+        setStateToFault()
+        {
+            setState(State::Fault);
         }
 
         /**
