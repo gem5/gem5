@@ -129,6 +129,8 @@ Process::Process(ProcessParams *params, EmulationPageTable *pTable,
     exitGroup = new bool();
     sigchld = new bool();
 
+    image = objFile->buildImage();
+
     if (!debugSymbolTable) {
         debugSymbolTable = new SymbolTable();
         if (!objFile->loadGlobalSymbols(debugSymbolTable) ||
@@ -271,6 +273,16 @@ Process::revokeThreadContext(int context_id)
 }
 
 void
+Process::init()
+{
+    // Patch the ld_bias for dynamic executables.
+    updateBias();
+
+    if (objFile->getInterpreter())
+        interpImage = objFile->getInterpreter()->buildImage();
+}
+
+void
 Process::initState()
 {
     if (contextIds.empty())
@@ -283,6 +295,10 @@ Process::initState()
     tc->activate();
 
     pTable->initState();
+
+    // load object file into target memory
+    image.write(initVirtMem);
+    interpImage.write(initVirtMem);
 }
 
 DrainState

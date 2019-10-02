@@ -75,7 +75,7 @@ ArmProcess32::ArmProcess32(ProcessParams *params, ObjectFile *objFile,
                            ObjectFile::Arch _arch)
     : ArmProcess(params, objFile, _arch)
 {
-    Addr brk_point = roundUp(objFile->maxSegmentAddr(), PageBytes);
+    Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = 0xbf000000L;
     Addr max_stack_size = 8 * 1024 * 1024;
     Addr next_thread_stack_base = stack_base - max_stack_size;
@@ -89,7 +89,7 @@ ArmProcess64::ArmProcess64(ProcessParams *params, ObjectFile *objFile,
                            ObjectFile::Arch _arch)
     : ArmProcess(params, objFile, _arch)
 {
-    Addr brk_point = roundUp(objFile->maxSegmentAddr(), PageBytes);
+    Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = 0x7fffff0000L;
     Addr max_stack_size = 8 * 1024 * 1024;
     Addr next_thread_stack_base = stack_base - max_stack_size;
@@ -265,14 +265,6 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
 
     //We want 16 byte alignment
     uint64_t align = 16;
-
-    // Patch the ld_bias for dynamic executables.
-    updateBias();
-
-    // load object file into target memory
-    objFile->loadSegments(initVirtMem);
-    if (objFile->getInterpreter())
-        objFile->getInterpreter()->loadSegments(initVirtMem);
 
     //Setup the auxilliary vectors. These will already have endian conversion.
     //Auxilliary vectors are loaded only for elf formatted executables.

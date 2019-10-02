@@ -136,25 +136,15 @@ SparcSystem::initState()
     // Call the initialisation of the super class
     System::initState();
 
-    // Load reset binary into memory
-    reset->setLoadOffset(params()->reset_addr);
-    reset->loadSegments(physProxy);
-    // Load the openboot binary
-    openboot->setLoadOffset(params()->openboot_addr);
-    openboot->loadSegments(physProxy);
-    // Load the hypervisor binary
-    hypervisor->setLoadOffset(params()->hypervisor_addr);
-    hypervisor->loadSegments(physProxy);
-    // Load the nvram image
-    nvram->setLoadOffset(params()->nvram_addr);
-    nvram->loadSegments(physProxy);
-    // Load the hypervisor description image
-    hypervisor_desc->setLoadOffset(params()->hypervisor_desc_addr);
-    hypervisor_desc->loadSegments(physProxy);
-    // Load the partition description image
-    partition_desc->setLoadOffset(params()->partition_desc_addr);
-    partition_desc->loadSegments(physProxy);
-
+    reset->buildImage().offset(params()->reset_addr).write(physProxy);
+    openboot->buildImage().offset(params()->openboot_addr).write(physProxy);
+    hypervisor->buildImage().
+        offset(params()->hypervisor_addr).write(physProxy);
+    nvram->buildImage().offset(params()->nvram_addr).write(physProxy);
+    hypervisor_desc->buildImage().
+        offset(params()->hypervisor_desc_addr).write(physProxy);
+    partition_desc->buildImage().
+        offset(params()->partition_desc_addr).write(physProxy);
 
     // @todo any fixup code over writing data in binaries on setting break
     // events on functions should happen here.

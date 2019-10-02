@@ -65,7 +65,7 @@ MipsProcess::MipsProcess(ProcessParams *params, ObjectFile *objFile)
     Addr next_thread_stack_base = stack_base - max_stack_size;
 
     // Set up break point (Top of Heap)
-    Addr brk_point = objFile->maxSegmentAddr();
+    Addr brk_point = image.maxAddr();
     brk_point = roundUp(brk_point, PageBytes);
 
     // Set up region for mmaps.  Start it 1GB above the top of the heap.
@@ -88,14 +88,6 @@ void
 MipsProcess::argsInit(int pageSize)
 {
     int intSize = sizeof(IntType);
-
-    // Patch the ld_bias for dynamic executables.
-    updateBias();
-
-    // load object file into target memory
-    objFile->loadSegments(initVirtMem);
-    if (objFile->getInterpreter())
-        objFile->getInterpreter()->loadSegments(initVirtMem);
 
     std::vector<AuxVector<IntType>> auxv;
 

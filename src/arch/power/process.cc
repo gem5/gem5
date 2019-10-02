@@ -56,7 +56,7 @@ PowerProcess::PowerProcess(ProcessParams *params, ObjectFile *objFile)
 {
     fatal_if(params->useArchPT, "Arch page tables not implemented.");
     // Set up break point (Top of Heap)
-    Addr brk_point = objFile->maxSegmentAddr();
+    Addr brk_point = image.maxAddr();
     brk_point = roundUp(brk_point, PageBytes);
 
     Addr stack_base = 0xbf000000L;
@@ -95,13 +95,9 @@ PowerProcess::argsInit(int intSize, int pageSize)
     //We want 16 byte alignment
     uint64_t align = 16;
 
-    // Patch the ld_bias for dynamic executables.
-    updateBias();
-
     // load object file into target memory
-    objFile->loadSegments(initVirtMem);
-    if (objFile->getInterpreter())
-        objFile->getInterpreter()->loadSegments(initVirtMem);
+    image.write(initVirtMem);
+    interpImage.write(initVirtMem);
 
     //Setup the auxilliary vectors. These will already have endian conversion.
     //Auxilliary vectors are loaded only for elf formatted executables.

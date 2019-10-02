@@ -72,15 +72,23 @@ EcoffObject::EcoffObject(const string &_filename, size_t _len, uint8_t *_data,
     aoutHdr = &(execHdr->a);
 
     entry = aoutHdr->entry;
+}
 
-    addSegment("text", aoutHdr->text_start, fileData + ECOFF_TXTOFF(execHdr),
-            aoutHdr->tsize);
-    addSegment("data", aoutHdr->data_start, fileData + ECOFF_DATOFF(execHdr),
-            aoutHdr->dsize);
-    addSegment("bss", aoutHdr->bss_start, nullptr, aoutHdr->bsize);
+MemoryImage
+EcoffObject::buildImage() const
+{
+    MemoryImage image({
+            { "text", aoutHdr->text_start,
+              fileData + ECOFF_TXTOFF(execHdr), aoutHdr->tsize },
+            { "data", aoutHdr->data_start,
+              fileData + ECOFF_DATOFF(execHdr), aoutHdr->dsize },
+            { "bss", aoutHdr->bss_start, nullptr, aoutHdr->bsize }
+    });
 
-    for (auto &seg: segments)
-        DPRINTFR(Loader, "%s\n", *seg);
+    for (auto &seg: image.segments())
+        DPRINTFR(Loader, "%s\n", seg);
+
+    return image;
 }
 
 bool

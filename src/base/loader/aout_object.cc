@@ -58,17 +58,23 @@ AoutObject::AoutObject(const string &_filename,
     : ObjectFile(_filename, _len, _data, _arch, _opSys)
 {
     execHdr = (aout_exechdr *)fileData;
-
     entry = execHdr->entry;
+}
 
-    addSegment("text", N_TXTADDR(*execHdr), fileData + N_TXTOFF(*execHdr),
-            execHdr->tsize);
-    addSegment("data", N_DATADDR(*execHdr), fileData + N_DATOFF(*execHdr),
-            execHdr->dsize);
-    addSegment("bss", N_BSSADDR(*execHdr), nullptr, execHdr->bsize);
+MemoryImage
+AoutObject::buildImage() const
+{
+    MemoryImage image({
+            { "text", N_TXTADDR(*execHdr),
+              fileData + N_TXTOFF(*execHdr), execHdr->tsize },
+            { "data", N_DATADDR(*execHdr),
+              fileData + N_DATOFF(*execHdr), execHdr->dsize },
+            { "bss", N_BSSADDR(*execHdr), nullptr, execHdr->bsize}
+    });
 
-    for (auto &seg: segments)
-        DPRINTFR(Loader, "%s\n", *seg);
+    for (auto &seg: image.segments())
+        DPRINTFR(Loader, "%s\n", seg);
+    return image;
 }
 
 

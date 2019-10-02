@@ -86,34 +86,30 @@ class ElfObject : public ObjectFile
     void getSections();
     bool sectionExists(std::string sec);
 
+    MemoryImage image;
+
   public:
     virtual ~ElfObject() {}
 
-    virtual bool loadAllSymbols(SymbolTable *symtab, Addr base = 0,
-                                Addr offset = 0, Addr addr_mask = maxAddr)
-                                override;
+    MemoryImage buildImage() const override { return image; }
 
-    virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr base = 0,
-                                   Addr offset = 0, Addr addr_mask = maxAddr)
-                                   override;
-
-    virtual bool loadLocalSymbols(SymbolTable *symtab, Addr base = 0,
-                                  Addr offset = 0, Addr addr_mask = maxAddr)
-                                  override;
-
-    virtual bool loadWeakSymbols(SymbolTable *symtab, Addr base = 0,
-                                 Addr offset = 0, Addr addr_mask = maxAddr)
-                                 override;
+    bool loadAllSymbols(SymbolTable *symtab, Addr base=0,
+                        Addr offset=0, Addr addr_mask=MaxAddr) override;
+    bool loadGlobalSymbols(SymbolTable *symtab, Addr base=0,
+                           Addr offset=0, Addr addr_mask=MaxAddr) override;
+    bool loadLocalSymbols(SymbolTable *symtab, Addr base=0,
+                          Addr offset=0, Addr addr_mask=MaxAddr) override;
+    bool loadWeakSymbols(SymbolTable *symtab, Addr base=0,
+                         Addr offset=0, Addr addr_mask=MaxAddr) override;
 
 
-    virtual ObjectFile *getInterpreter() const override
-    { return interpreter; }
-    virtual Addr bias() const override { return ldBias; }
-    virtual bool relocatable() const override { return relocate; }
-    virtual Addr mapSize() const override { return ldMax - ldMin; }
-    virtual void updateBias(Addr bias_addr) override;
+    ObjectFile *getInterpreter() const override { return interpreter; }
+    Addr bias() const override { return ldBias; }
+    bool relocatable() const override { return relocate; }
+    Addr mapSize() const override { return ldMax - ldMin; }
+    void updateBias(Addr bias_addr) override;
 
-    virtual bool hasTLS() override { return sectionExists(".tbss"); }
+    bool hasTLS() override { return sectionExists(".tbss"); }
 
     static ObjectFile *tryFile(const std::string &fname,
                                size_t len, uint8_t *data,

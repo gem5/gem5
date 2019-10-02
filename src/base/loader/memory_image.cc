@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2002-2004 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,51 +25,40 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
  */
 
-#include "base/loader/raw_object.hh"
-
-#include "base/loader/symtab.hh"
-#include "base/trace.hh"
-#include "debug/Loader.hh"
-
-ObjectFile *
-RawObject::tryFile(const std::string &fname, size_t len, uint8_t *data)
-{
-    return new RawObject(fname, len, data, ObjectFile::UnknownArch,
-            ObjectFile::UnknownOpSys);
-}
-
-RawObject::RawObject(const std::string &_filename, size_t _len,
-        uint8_t *_data, Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _len, _data, _arch, _opSys)
-{
-}
-
-MemoryImage
-RawObject::buildImage() const
-{
-    return {{ "data", 0, fileData, len }};
-}
+#include "base/loader/memory_image.hh"
+#include "mem/port_proxy.hh"
 
 bool
-RawObject::loadAllSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                          Addr addr_mask)
+MemoryImage::writeSegment(const Segment &seg, const PortProxy &proxy) const
 {
+    if (seg.size != 0) {
+        if (seg.data) {
+            proxy.writeBlob(seg.base, seg.data, seg.size);
+        } else {
+            // no image: must be bss
+            proxy.memsetBlob(seg.base, 0, seg.size);
+        }
+    }
     return true;
 }
 
 bool
-RawObject::loadGlobalSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                             Addr addr_mask)
+MemoryImage::write(const PortProxy &proxy) const
 {
+    for (auto &seg: _segments)
+        if (!writeSegment(seg, proxy))
+            return false;
     return true;
 }
 
-bool
-RawObject::loadLocalSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                            Addr addr_mask)
+MemoryImage &
+MemoryImage::move(std::function<Addr(Addr)> mapper)
 {
-    return true;
+    for (auto &seg: _segments)
+        seg.base = mapper(seg.base);
+    return *this;
 }

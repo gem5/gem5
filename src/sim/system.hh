@@ -53,6 +53,7 @@
 #include <vector>
 
 #include "arch/isa_traits.hh"
+#include "base/loader/memory_image.hh"
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
@@ -224,6 +225,7 @@ class System : public SimObject
 
     /** Object pointer for the kernel code */
     ObjectFile *kernel;
+    MemoryImage kernelImage;
 
     /** Additional object files */
     std::vector<ObjectFile *> kernelExtras;

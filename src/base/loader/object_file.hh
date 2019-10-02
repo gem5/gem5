@@ -37,6 +37,7 @@
 #include <string>
 #include <vector>
 
+#include "base/loader/memory_image.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
 
@@ -74,14 +75,10 @@ class ObjectFile
         FreeBSD
     };
 
-    static const Addr maxAddr = std::numeric_limits<Addr>::max();
-
   protected:
     const std::string filename;
     uint8_t *fileData;
     size_t len;
-    Addr loadOffset=0;
-    Addr loadMask=maxAddr;
 
     Arch arch;
     OpSys opSys;
@@ -92,16 +89,16 @@ class ObjectFile
   public:
     virtual ~ObjectFile();
 
-    virtual bool loadSegments(const PortProxy &mem_proxy);
+    virtual MemoryImage buildImage() const = 0;
 
     virtual bool loadAllSymbols(SymbolTable *symtab, Addr base = 0,
-                                Addr offset=0, Addr mask=maxAddr) = 0;
+                                Addr offset=0, Addr mask=MaxAddr) = 0;
     virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr base = 0,
-                                   Addr offset=0, Addr mask=maxAddr) = 0;
+                                   Addr offset=0, Addr mask=MaxAddr) = 0;
     virtual bool loadLocalSymbols(SymbolTable *symtab, Addr base=0,
-                                  Addr offset=0, Addr mask=maxAddr) = 0;
+                                  Addr offset=0, Addr mask=MaxAddr) = 0;
     virtual bool loadWeakSymbols(SymbolTable *symtab, Addr base=0,
-                                 Addr offset=0, Addr mask=maxAddr)
+                                 Addr offset=0, Addr mask=MaxAddr)
     { return false; }
 
     virtual ObjectFile *getInterpreter() const { return nullptr; }
@@ -117,76 +114,11 @@ class ObjectFile
     Arch  getArch()  const { return arch; }
     OpSys getOpSys() const { return opSys; }
 
-    struct Segment
-    {
-        std::string name;
-        Addr base;
-        uint8_t *data;
-        size_t size;
-    };
-
   protected:
     Addr entry;
 
-    std::vector<std::unique_ptr<Segment>> segments;
-
-    void
-    addSegment(std::string name, Addr base, uint8_t *data, size_t size)
-    {
-        Segment *seg = new Segment;
-        seg->name = name;
-        seg->base = base;
-        seg->data = data;
-        seg->size = size;
-        segments.emplace_back(seg);
-    }
-
-    bool loadSegment(Segment *seg, const PortProxy &mem_proxy);
-
   public:
     Addr entryPoint() const { return entry; }
-
-    Addr
-    maxSegmentAddr() const
-    {
-        Addr max = 0;
-        for (auto &seg: segments) {
-            Addr end = seg->base + seg->size;
-            if (end > max)
-                max = end;
-        }
-        return max;
-    }
-
-    Addr
-    minSegmentAddr() const
-    {
-        Addr min = maxAddr;
-        for (auto &seg: segments)
-            if (seg->base < min)
-                min = seg->base;
-        return min;
-    }
-
-    bool
-    contains(Addr addr) const
-    {
-        for (auto &seg: segments) {
-            Addr start = seg->base;
-            Addr end = seg->base + seg->size;
-            if (addr >= start && addr < end)
-                return true;
-        }
-        return false;
-    }
-
-    /* This function allows you to override the base address where
-     * a binary is going to be loaded or set it if the binary is just a
-     * blob that doesn't include an object header.
-     * @param a address to load the binary/text section at
-     */
-    void setLoadOffset(Addr val) { loadOffset = val; }
-    void setLoadMask(Addr val) { loadMask = val; }
 
     /**
      * Each instance of a Loader subclass will have a chance to try to load
@@ -220,13 +152,6 @@ class ObjectFile
     // successful. If none are, complain and fail.
     static Process *tryLoaders(ProcessParams *params, ObjectFile *obj_file);
 };
-
-static inline std::ostream &
-operator << (std::ostream &os, const ObjectFile::Segment &seg)
-{
-    ccprintf(os, "%s: %#x %d", seg.name, seg.base, seg.size);
-    return os;
-}
 
 ObjectFile *createObjectFile(const std::string &fname, bool raw = false);
 

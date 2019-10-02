@@ -40,50 +40,50 @@
  */
 class DtbObject : public ObjectFile
 {
-    protected:
-        DtbObject(const std::string &_filename, size_t _len, uint8_t *_data,
-                  Arch _arch, OpSys _opSys);
+  protected:
+    DtbObject(const std::string &_filename, size_t _len, uint8_t *_data,
+              Arch _arch, OpSys _opSys);
 
-        /** Bool marking if this dtb file has replaced the original
-         *  read in DTB file with a new modified buffer
-         */
-        bool fileDataMmapped;
+    /** Bool marking if this dtb file has replaced the original
+     *  read in DTB file with a new modified buffer
+     */
+    bool fileDataMmapped;
 
-        Segment *data;
+  public:
+    virtual ~DtbObject();
 
-    public:
-        virtual ~DtbObject();
+    /** Adds the passed in Command Line options for the kernel
+      * to the proper location in the device tree.
+      * @param _args command line to append
+      * @param len length of the command line string
+      * @return returns true on success, false otherwise
+      */
+    bool addBootCmdLine(const char* _args, size_t len);
 
-        /** Adds the passed in Command Line options for the kernel
-          * to the proper location in the device tree.
-          * @param _args command line to append
-          * @param len length of the command line string
-          * @return returns true on success, false otherwise
-          */
-        bool addBootCmdLine(const char* _args, size_t len);
+    /** Parse the DTB file enough to find the provided release
+     * address and return it.
+     * @return release address for SMP boot
+     */
+    Addr findReleaseAddr();
 
-        /** Parse the DTB file enough to find the provided release
-         * address and return it.
-         * @return release address for SMP boot
-         */
-        Addr findReleaseAddr();
+    MemoryImage buildImage() const override;
 
-        bool loadAllSymbols(SymbolTable *symtab, Addr base = 0,
-                            Addr offset = 0, Addr addrMask = maxAddr);
-        bool loadGlobalSymbols(SymbolTable *symtab, Addr base = 0,
-                               Addr offset = 0, Addr addrMask = maxAddr);
-        bool loadLocalSymbols(SymbolTable *symtab, Addr base = 0,
-                              Addr offset = 0, Addr addrMask = maxAddr);
+    bool loadAllSymbols(SymbolTable *symtab, Addr base=0,
+                        Addr offset=0, Addr addrMask=MaxAddr) override;
+    bool loadGlobalSymbols(SymbolTable *symtab, Addr base=0,
+                           Addr offset=0, Addr addrMask=MaxAddr) override;
+    bool loadLocalSymbols(SymbolTable *symtab, Addr base=0,
+                          Addr offset=0, Addr addrMask=MaxAddr) override;
 
-        /** Static function that tries to load file as a
-          * flattened device tree blob.
-          * @param fname path to file
-          * @param len length of file
-          * @param data mmap'ed data buffer containing file contents
-          * @return ObjectFile representing closest match of file type
-          */
-        static ObjectFile *tryFile(const std::string &fname,
-                                   size_t len, uint8_t *data);
+    /** Static function that tries to load file as a
+      * flattened device tree blob.
+      * @param fname path to file
+      * @param len length of file
+      * @param data mmap'ed data buffer containing file contents
+      * @return ObjectFile representing closest match of file type
+      */
+    static ObjectFile *tryFile(const std::string &fname,
+                               size_t len, uint8_t *data);
 };
 
 #endif //__DTB_OBJECT_HH__

@@ -136,7 +136,7 @@ X86_64Process::X86_64Process(ProcessParams *params, ObjectFile *objFile,
     vsyscallPage.vtimeOffset = 0x400;
     vsyscallPage.vgettimeofdayOffset = 0x0;
 
-    Addr brk_point = roundUp(objFile->maxSegmentAddr(), PageBytes);
+    Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = 0x7FFFFFFFF000ULL;
     Addr max_stack_size = 8 * 1024 * 1024;
     Addr next_thread_stack_base = stack_base - max_stack_size;
@@ -175,7 +175,7 @@ I386Process::I386Process(ProcessParams *params, ObjectFile *objFile,
     vsyscallPage.vsyscallOffset = 0x400;
     vsyscallPage.vsysexitOffset = 0x410;
 
-    Addr brk_point = roundUp(objFile->maxSegmentAddr(), PageBytes);
+    Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = _gdtStart;
     Addr max_stack_size = 8 * 1024 * 1024;
     Addr next_thread_stack_base = stack_base - max_stack_size;
@@ -769,14 +769,6 @@ X86Process::argsInit(int pageSize,
 
     // We want 16 byte alignment
     uint64_t align = 16;
-
-    // Patch the ld_bias for dynamic executables.
-    updateBias();
-
-    // load object file into target memory
-    objFile->loadSegments(initVirtMem);
-    if (objFile->getInterpreter())
-        objFile->getInterpreter()->loadSegments(initVirtMem);
 
     enum X86CpuFeature {
         X86_OnboardFPU = 1 << 0,

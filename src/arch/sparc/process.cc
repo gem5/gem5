@@ -204,14 +204,6 @@ SparcProcess::argsInit(int pageSize)
     // maintain double word alignment of the stack pointer.
     uint64_t align = 16;
 
-    // Patch the ld_bias for dynamic executables.
-    updateBias();
-
-    // load object file into target memory
-    objFile->loadSegments(initVirtMem);
-    if (objFile->getInterpreter())
-        objFile->getInterpreter()->loadSegments(initVirtMem);
-
     enum hardwareCaps
     {
         M5_HWCAP_SPARC_FLUSH = 1,

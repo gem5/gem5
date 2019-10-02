@@ -54,10 +54,10 @@ AlphaProcess::AlphaProcess(ProcessParams *params, ObjectFile *objFile)
       objFile)
 {
     fatal_if(params->useArchPT, "Arch page tables not implemented.");
-    Addr brk_point = roundUp(objFile->maxSegmentAddr(), PageBytes);
+    Addr brk_point = roundUp(image.maxAddr(), PageBytes);
 
     // Set up stack.  On Alpha, stack goes below the image.
-    Addr stack_base = objFile->minSegmentAddr() - (409600 + 4096);
+    Addr stack_base = image.minAddr() - (409600 + 4096);
 
     // Set up region for mmaps.
     Addr mmap_end = 0x10000;
@@ -74,13 +74,6 @@ AlphaProcess::AlphaProcess(ProcessParams *params, ObjectFile *objFile)
 void
 AlphaProcess::argsInit(int intSize, int pageSize)
 {
-    // Patch the ld_bias for dynamic executables.
-    updateBias();
-
-    objFile->loadSegments(initVirtMem);
-    if (objFile->getInterpreter())
-        objFile->getInterpreter()->loadSegments(initVirtMem);
-
     std::vector<AuxVector<uint64_t>>  auxv;
 
     ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);

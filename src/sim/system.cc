@@ -152,16 +152,16 @@ System::System(Params *p)
         } else {
             // Get the kernel code
             kernel = createObjectFile(params()->kernel);
-            kernel->setLoadOffset(loadAddrOffset);
-            kernel->setLoadMask(loadAddrMask);
             inform("kernel located at: %s", params()->kernel);
 
             if (kernel == NULL)
                 fatal("Could not load kernel file %s", params()->kernel);
 
+            kernelImage = kernel->buildImage();
+
             // setup entry points
-            kernelStart = kernel->minSegmentAddr();
-            kernelEnd = kernel->maxSegmentAddr();
+            kernelStart = kernelImage.minAddr();
+            kernelEnd = kernelImage.maxAddr();
             kernelEntry = kernel->entryPoint();
 
             // If load_addr_mask is set to 0x0, then auto-calculate
@@ -170,8 +170,11 @@ System::System(Params *p)
             if (loadAddrMask == 0) {
                 Addr shift_amt = findMsbSet(kernelEnd - kernelStart) + 1;
                 loadAddrMask = ((Addr)1 << shift_amt) - 1;
-                kernel->setLoadMask(loadAddrMask);
             }
+
+            kernelImage.move([this](Addr a) {
+                return (a & loadAddrMask) + loadAddrOffset;
+            });
 
             // load symbols
             if (!kernel->loadGlobalSymbols(kernelSymtab))
@@ -195,8 +198,6 @@ System::System(Params *p)
             ObjectFile *obj = createObjectFile(obj_name);
             fatal_if(!obj, "Failed to additional kernel object '%s'.\n",
                      obj_name);
-            obj->setLoadOffset(loadAddrOffset);
-            obj->setLoadMask(loadAddrMask);
             kernelExtras.push_back(obj);
         }
     }
@@ -316,25 +317,24 @@ System::initState()
         /**
          * Load the kernel code into memory
          */
+        auto mapper = [this](Addr a) {
+            return (a & loadAddrMask) + loadAddrOffset;
+        };
         if (params()->kernel != "")  {
             if (params()->kernel_addr_check) {
                 // Validate kernel mapping before loading binary
-                if (!(isMemAddr((kernelStart & loadAddrMask) +
-                                loadAddrOffset) &&
-                      isMemAddr((kernelEnd & loadAddrMask) +
-                                loadAddrOffset))) {
+                if (!isMemAddr(mapper(kernelStart)) ||
+                        !isMemAddr(mapper(kernelEnd))) {
                     fatal("Kernel is mapped to invalid location (not memory). "
                           "kernelStart 0x(%x) - kernelEnd 0x(%x) %#x:%#x\n",
-                          kernelStart,
-                          kernelEnd, (kernelStart & loadAddrMask) +
-                          loadAddrOffset,
-                          (kernelEnd & loadAddrMask) + loadAddrOffset);
+                          kernelStart, kernelEnd,
+                          mapper(kernelStart), mapper(kernelEnd));
                 }
             }
             // Load program sections into memory
-            kernel->loadSegments(physProxy);
+            kernelImage.write(physProxy);
             for (const auto &extra_kernel : kernelExtras)
-                extra_kernel->loadSegments(physProxy);
+                extra_kernel->buildImage().move(mapper).write(physProxy);
 
             DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
             DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);

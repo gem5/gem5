@@ -41,6 +41,7 @@
 #include <vector>
 
 #include "arch/registers.hh"
+#include "base/loader/memory_image.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
@@ -69,6 +70,7 @@ class Process : public SimObject
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
+    void init() override;
     void initState() override;
     DrainState drain() override;
 
@@ -182,6 +184,8 @@ class Process : public SimObject
     SETranslatingPortProxy initVirtMem; // memory proxy for initial image load
 
     ObjectFile *objFile;
+    MemoryImage image;
+    MemoryImage interpImage;
     std::vector<std::string> argv;
     std::vector<std::string> envp;
     std::string executable;

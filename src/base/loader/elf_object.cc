@@ -339,26 +339,25 @@ ElfObject::ElfObject(const std::string &_filename, size_t _len,
             section = elf_getscn(elf, ++sec_idx);
         }
 
-        addSegment(name, phdr.p_paddr, fileData + phdr.p_offset,
-                phdr.p_filesz);
+        image.addSegment(name, phdr.p_paddr, fileData + phdr.p_offset,
+                         phdr.p_filesz);
         Addr uninitialized = phdr.p_memsz - phdr.p_filesz;
         if (uninitialized) {
             // There may be parts of a segment which aren't included in the
             // file. In those cases, we need to create a new segment with no
             // data to take up the extra space. This should be zeroed when
             // loaded into memory.
-            addSegment(name + "(uninitialized)", phdr.p_paddr + phdr.p_filesz,
-                    nullptr, uninitialized);
+            image.addSegment(name + "(uninitialized)",
+                    phdr.p_paddr + phdr.p_filesz, nullptr, uninitialized);
         }
     }
 
     // should have found at least one loadable segment
-    warn_if(segments.empty(),
-            "No loadable segments in '%s'. ELF file corrupted?\n",
-            filename);
+    warn_if(image.segments().empty(),
+            "No loadable segments in '%s'. ELF file corrupted?\n", filename);
 
-    for (auto &seg: segments)
-        DPRINTFR(Loader, "%s\n", *seg);
+    for (auto &seg: image.segments())
+        DPRINTFR(Loader, "%s\n", seg);
 
     elf_end(elf);
 
@@ -518,6 +517,5 @@ ElfObject::updateBias(Addr bias_addr)
     entry += bias_addr;
 
     // Patch segments with the bias_addr.
-    for (auto &segment : segments)
-        segment->base += bias_addr;
+    image.offset(bias_addr);
 }

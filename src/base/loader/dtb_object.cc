@@ -53,10 +53,8 @@ DtbObject::tryFile(const std::string &fname, size_t len, uint8_t *data)
 
 DtbObject::DtbObject(const std::string &_filename, size_t _len, uint8_t *_data,
                      Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _len, _data, _arch, _opSys),
-    data(new Segment{ "data", 0, fileData, len })
+    : ObjectFile(_filename, _len, _data, _arch, _opSys)
 {
-    segments.emplace_back(data);
     fileDataMmapped = true;
 }
 
@@ -131,9 +129,6 @@ DtbObject::addBootCmdLine(const char* _args, size_t len)
         return false;
     }
 
-    data->size = newLen;
-    data->data = fdt_buf_w_space;
-
     // clean up old buffer and set to new fdt blob
     munmap(fileData, this->len);
     fileData = fdt_buf_w_space;
@@ -162,6 +157,12 @@ DtbObject::findReleaseAddr()
     }
 
     return rel_addr;
+}
+
+MemoryImage
+DtbObject::buildImage() const
+{
+    return {{"data", 0, fileData, len}};
 }
 
 bool

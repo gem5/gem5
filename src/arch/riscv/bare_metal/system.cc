@@ -55,7 +55,7 @@ BareMetalRiscvSystem::initState()
     RiscvSystem::initState();
 
     // load program sections into memory
-    if (!bootloader->loadSegments(physProxy)) {
+    if (!bootloader->buildImage().write(physProxy)) {
         warn("could not load sections to memory");
     }
 }

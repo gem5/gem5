@@ -1886,17 +1886,14 @@ mmapImpl(SyscallDesc *desc, int num, ThreadContext *tc, bool is_mmap2)
         // executing inside the loader by checking the program counter value.
         // XXX: with multiprogrammed workloads or multi-node configurations,
         // this will not work since there is a single global symbol table.
-        ObjectFile *interpreter = p->getInterpreter();
-        if (interpreter) {
-            if (interpreter->contains(tc->pcState().instAddr())) {
-                std::shared_ptr<FDEntry> fdep = (*p->fds)[tgt_fd];
-                auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
-                ObjectFile *lib = createObjectFile(ffdp->getFileName());
+        if (p->interpImage.contains(tc->pcState().instAddr())) {
+            std::shared_ptr<FDEntry> fdep = (*p->fds)[tgt_fd];
+            auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
+            ObjectFile *lib = createObjectFile(ffdp->getFileName());
 
-                if (lib) {
-                    lib->loadAllSymbols(debugSymbolTable,
-                                        lib->minSegmentAddr(), start);
-                }
+            if (lib) {
+                lib->loadAllSymbols(debugSymbolTable,
+                                    lib->buildImage().minAddr(), start);
             }
         }
 

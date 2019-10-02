@@ -70,31 +70,6 @@ ObjectFile::~ObjectFile()
 }
 
 
-bool
-ObjectFile::loadSegment(Segment *seg, const PortProxy &mem_proxy)
-{
-    if (seg->size != 0) {
-        Addr addr = (seg->base & loadMask) + loadOffset;
-        if (seg->data) {
-            mem_proxy.writeBlob(addr, seg->data, seg->size);
-        } else {
-            // no image: must be bss
-            mem_proxy.memsetBlob(addr, 0, seg->size);
-        }
-    }
-    return true;
-}
-
-
-bool
-ObjectFile::loadSegments(const PortProxy &proxy)
-{
-    for (auto &seg: segments)
-        if (!loadSegment(seg.get(), proxy))
-            return false;
-    return true;
-}
-
 namespace
 {
 
