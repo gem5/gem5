@@ -50,6 +50,8 @@ if env['TARGET_ISA'] == 'arm':
     SimObject('EnergyCtrl.py')
     SimObject('NoMali.py')
     SimObject('VirtIOMMIO.py')
+    if env['USE_ARM_FASTMODEL']:
+	SimObject('VExpressFastmodel.py')
 
     Source('a9scu.cc')
     Source('amba_device.cc')
