@@ -342,7 +342,7 @@ ElfObject::ElfObject(const std::string &_filename, size_t _len,
         }
 
         // for now we don't care about non-loadable segments
-        if (!(phdr.p_type & PT_LOAD))
+        if (phdr.p_type != PT_LOAD)
             continue;
 
         ldMin = std::min(ldMin, phdr.p_vaddr);
