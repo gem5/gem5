@@ -125,6 +125,8 @@ RiscvProcess::argsInit(int pageSize)
 
     updateBias();
     objFile->loadSegments(initVirtMem);
+    if (objFile->getInterpreter())
+        objFile->getInterpreter()->loadSegments(initVirtMem);
     ElfObject* elfObject = dynamic_cast<ElfObject*>(objFile);
     memState->setStackMin(memState->getStackBase());
 

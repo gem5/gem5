@@ -100,6 +100,8 @@ PowerProcess::argsInit(int intSize, int pageSize)
 
     // load object file into target memory
     objFile->loadSegments(initVirtMem);
+    if (objFile->getInterpreter())
+        objFile->getInterpreter()->loadSegments(initVirtMem);
 
     //Setup the auxilliary vectors. These will already have endian conversion.
     //Auxilliary vectors are loaded only for elf formatted executables.

@@ -209,6 +209,8 @@ SparcProcess::argsInit(int pageSize)
 
     // load object file into target memory
     objFile->loadSegments(initVirtMem);
+    if (objFile->getInterpreter())
+        objFile->getInterpreter()->loadSegments(initVirtMem);
 
     enum hardwareCaps
     {

@@ -78,6 +78,8 @@ AlphaProcess::argsInit(int intSize, int pageSize)
     updateBias();
 
     objFile->loadSegments(initVirtMem);
+    if (objFile->getInterpreter())
+        objFile->getInterpreter()->loadSegments(initVirtMem);
 
     std::vector<AuxVector<uint64_t>>  auxv;
 

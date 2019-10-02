@@ -464,18 +464,6 @@ ElfObject::loadWeakSymbols(SymbolTable *symtab, Addr base, Addr offset,
     return loadSomeSymbols(symtab, STB_WEAK, addr_mask, base, offset);
 }
 
-bool
-ElfObject::loadSegments(const PortProxy &mem_proxy)
-{
-    if (!ObjectFile::loadSegments(mem_proxy))
-        return false;
-
-    if (interpreter)
-        interpreter->loadSegments(mem_proxy);
-
-    return true;
-}
-
 void
 ElfObject::getSections()
 {
