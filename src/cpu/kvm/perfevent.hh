@@ -297,7 +297,7 @@ public:
      *
      * @param signal Signal to send upon overflow
      */
-    void enableSignals(int signal) { enableSignals(gettid(), signal); }
+    void enableSignals(int signal) { enableSignals(sysGettid(), signal); }
 
 private:
     // Disallow copying
@@ -312,7 +312,7 @@ private:
      *
      * @return Current thread's TID
      */
-    pid_t gettid();
+    pid_t sysGettid();
 
     /**
      * MMAP the PerfEvent file descriptor.

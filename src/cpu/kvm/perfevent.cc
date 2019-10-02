@@ -186,7 +186,7 @@ PerfKvmCounter::attach(PerfKvmCounterConfig &config,
 }
 
 pid_t
-PerfKvmCounter::gettid()
+PerfKvmCounter::sysGettid()
 {
     return syscall(__NR_gettid);
 }

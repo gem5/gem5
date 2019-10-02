@@ -61,7 +61,7 @@
 #endif
 
 static pid_t
-gettid()
+sysGettid()
 {
     return syscall(__NR_gettid);
 }
@@ -84,7 +84,7 @@ PosixKvmTimer::PosixKvmTimer(int signo, clockid_t clockID,
 
     sev.sigev_notify = SIGEV_THREAD_ID;
     sev.sigev_signo = signo;
-    sev.sigev_notify_thread_id = gettid();
+    sev.sigev_notify_thread_id = sysGettid();
     sev.sigev_value.sival_ptr = NULL;
 
     while (timer_create(clockID, &sev, &timer) == -1) {
