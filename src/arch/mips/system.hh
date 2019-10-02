@@ -37,7 +37,6 @@
 #include <string>
 #include <vector>
 
-#include "base/loader/hex_file.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/pc_event.hh"
 #include "kern/system_events.hh"
@@ -66,9 +65,6 @@ class MipsSystem : public System
 
     /** Object pointer for the console code */
     ObjectFile *console;
-
-    /** Used by some Bare Iron Configurations */
-    HexFile *hexFile;
 
 #ifndef NDEBUG
   /** Event to halt the simulator if the console calls panic() */
