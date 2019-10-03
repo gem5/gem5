@@ -161,7 +161,7 @@ class AbstractMemory : public ClockedObject
         }
     }
 
-    /** Pointor to the System object.
+    /** Pointer to the System object.
      * This is used for getting the number of masters in the system which is
      * needed when registering stats
      */

@@ -2535,8 +2535,7 @@ DRAMCtrl::DRAMStats::regStats()
 {
     using namespace Stats;
 
-    System *sys = dram._system;
-    assert(sys);
+    assert(dram._system);
     const auto max_masters = dram._system->maxMasters();
 
     perBankRdBursts.init(dram.banksPerRank * dram.ranksPerChannel);
