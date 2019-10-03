@@ -153,11 +153,11 @@ class CPUList(ObjectList):
                     self._is_obj_class):
                     self._sub_classes[name] = cls
 
-bp_list = ObjectList(m5.objects.BranchPredictor)
-cpu_list = CPUList(m5.objects.BaseCPU)
-hwp_list = ObjectList(m5.objects.BasePrefetcher)
-indirect_bp_list = ObjectList(m5.objects.IndirectPredictor)
-mem_list = ObjectList(m5.objects.AbstractMemory)
+bp_list = ObjectList(getattr(m5.objects, 'BranchPredictor', None))
+cpu_list = CPUList(getattr(m5.objects, 'BaseCPU', None))
+hwp_list = ObjectList(getattr(m5.objects, 'BasePrefetcher', None))
+indirect_bp_list = ObjectList(getattr(m5.objects, 'IndirectPredictor', None))
+mem_list = ObjectList(getattr(m5.objects, 'AbstractMemory', None))
 
 # Platform aliases. The platforms listed here might not be compiled,
 # we make sure they exist before we add them to the platform list.
@@ -165,7 +165,8 @@ _platform_aliases_all = [
     ("RealView_PBX", "RealViewPBX"),
     ("VExpress_GEM5", "VExpress_GEM5_V1"),
     ]
-platform_list = ObjectList(m5.objects.Platform, _platform_aliases_all)
+platform_list = ObjectList(getattr(m5.objects, 'Platform', None), \
+    _platform_aliases_all)
 
 def _subclass_tester(name):
     sub_class = getattr(m5.objects, name, None)
