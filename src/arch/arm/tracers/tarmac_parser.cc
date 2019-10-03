@@ -873,9 +873,7 @@ TarmacParserRecord::dump()
 {
     ostream &outs = Trace::output();
 
-    // By default TARMAC splits memory accesses into 4-byte chunks (see
-    // 'loadstore-display-width' option in TARMAC plugin)
-    uint32_t written_data = 0;
+    uint64_t written_data = 0;
     unsigned mem_flags = ArmISA::TLB::MustBeOne | 3 |
         ArmISA::TLB::AllowUnaligned;
 
@@ -1161,7 +1159,16 @@ TarmacParserRecord::advanceTrace()
             // Skip phys. address and _S/_NS suffix
             trace >> c >> buf;
         }
-        trace >> memRecord.data;
+        uint64_t data = 0;
+        trace >> data;
+        c = trace.peek();
+        if (c == '_') {
+            // 64-bit value with _ in the middle
+            uint64_t lsw = 0;
+            trace >> c >> lsw;
+            data = (data << 32) | lsw;
+        }
+        memRecord.data = data;
         trace.ignore(MaxLineLength, '\n');
         buf[0] = 0;
     } else {
