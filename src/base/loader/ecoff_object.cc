@@ -50,39 +50,43 @@
 using namespace std;
 
 ObjectFile *
-EcoffObject::tryFile(const string &fname, size_t len, uint8_t *data)
+EcoffObjectFormat::load(ImageFileDataPtr ifd)
 {
-    if (((ecoff_filehdr *)data)->f_magic == ECOFF_MAGIC_ALPHA) {
-        // it's Alpha ECOFF
-        return new EcoffObject(fname, len, data,
-                               ObjectFile::Alpha, ObjectFile::Tru64);
-    }
-    else {
-        return NULL;
-    }
+    if (((const ecoff_filehdr *)ifd->data())->f_magic == ECOFF_MAGIC_ALPHA)
+        return new EcoffObject(ifd);
+    else
+        return nullptr;
 }
 
-
-EcoffObject::EcoffObject(const string &_filename, size_t _len, uint8_t *_data,
-                         Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _len, _data, _arch, _opSys)
+namespace
 {
-    execHdr = (ecoff_exechdr *)fileData;
+
+EcoffObjectFormat ecoffObjectFormat;
+
+} // anonymous namespace
+
+
+EcoffObject::EcoffObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
+{
+    execHdr = (const ecoff_exechdr *)imageData->data();
     fileHdr = &(execHdr->f);
     aoutHdr = &(execHdr->a);
 
     entry = aoutHdr->entry;
+    // it's Alpha ECOFF
+    arch = Alpha;
+    opSys = Tru64;
 }
 
 MemoryImage
 EcoffObject::buildImage() const
 {
     MemoryImage image({
-            { "text", aoutHdr->text_start,
-              fileData + ECOFF_TXTOFF(execHdr), aoutHdr->tsize },
-            { "data", aoutHdr->data_start,
-              fileData + ECOFF_DATOFF(execHdr), aoutHdr->dsize },
-            { "bss", aoutHdr->bss_start, nullptr, aoutHdr->bsize }
+            { "text", aoutHdr->text_start, imageData,
+              ECOFF_TXTOFF(execHdr), aoutHdr->tsize },
+            { "data", aoutHdr->data_start, imageData,
+              ECOFF_DATOFF(execHdr), aoutHdr->dsize },
+            { "bss", aoutHdr->bss_start, aoutHdr->bsize }
     });
 
     for (auto &seg: image.segments())
@@ -108,21 +112,24 @@ EcoffObject::loadGlobalSymbols(SymbolTable *symtab, Addr base, Addr offset,
         return false;
 
     if (fileHdr->f_magic != ECOFF_MAGIC_ALPHA) {
-        warn("loadGlobalSymbols: wrong magic on %s\n", filename);
+        warn("loadGlobalSymbols: wrong magic on %s\n", imageData->filename());
         return false;
     }
 
-    ecoff_symhdr *syms = (ecoff_symhdr *)(fileData + fileHdr->f_symptr);
+    auto *syms = (const ecoff_symhdr *)(imageData->data() + fileHdr->f_symptr);
     if (syms->magic != magicSym2) {
-        warn("loadGlobalSymbols: bad symbol header magic on %s\n", filename);
+        warn("loadGlobalSymbols: bad symbol header magic on %s\n",
+                imageData->filename());
         return false;
     }
 
-    ecoff_extsym *ext_syms = (ecoff_extsym *)(fileData + syms->cbExtOffset);
+    auto *ext_syms = (const ecoff_extsym *)(
+            imageData->data() + syms->cbExtOffset);
 
-    char *ext_strings = (char *)(fileData + syms->cbSsExtOffset);
+    auto *ext_strings =
+        (const char *)(imageData->data() + syms->cbSsExtOffset);
     for (int i = 0; i < syms->iextMax; i++) {
-        ecoff_sym *entry = &(ext_syms[i].asym);
+        const ecoff_sym *entry = &(ext_syms[i].asym);
         if (entry->iss != -1)
             symtab->insert(entry->value, ext_strings + entry->iss);
     }
@@ -138,23 +145,25 @@ EcoffObject::loadLocalSymbols(SymbolTable *symtab, Addr base, Addr offset,
         return false;
 
     if (fileHdr->f_magic != ECOFF_MAGIC_ALPHA) {
-        warn("loadGlobalSymbols: wrong magic on %s\n", filename);
+        warn("loadGlobalSymbols: wrong magic on %s\n", imageData->filename());
         return false;
     }
 
-    ecoff_symhdr *syms = (ecoff_symhdr *)(fileData + fileHdr->f_symptr);
+    auto *syms = (const ecoff_symhdr *)(imageData->data() + fileHdr->f_symptr);
     if (syms->magic != magicSym2) {
-        warn("loadGlobalSymbols: bad symbol header magic on %s\n", filename);
+        warn("loadGlobalSymbols: bad symbol header magic on %s\n",
+                imageData->filename());
         return false;
     }
 
-    ecoff_sym *local_syms = (ecoff_sym *)(fileData + syms->cbSymOffset);
-    char *local_strings = (char *)(fileData + syms->cbSsOffset);
-    ecoff_fdr *fdesc = (ecoff_fdr *)(fileData + syms->cbFdOffset);
+    auto *local_syms =
+        (const ecoff_sym *)(imageData->data() + syms->cbSymOffset);
+    auto *local_strings = (const char *)(imageData->data() + syms->cbSsOffset);
+    auto *fdesc = (const ecoff_fdr *)(imageData->data() + syms->cbFdOffset);
 
     for (int i = 0; i < syms->ifdMax; i++) {
-        ecoff_sym *entry = (ecoff_sym *)(local_syms + fdesc[i].isymBase);
-        char *strings = (char *)(local_strings + fdesc[i].issBase);
+        auto *entry = (const ecoff_sym *)(local_syms + fdesc[i].isymBase);
+        auto *strings = (const char *)(local_strings + fdesc[i].issBase);
         for (int j = 0; j < fdesc[i].csym; j++) {
             if (entry[j].st == stGlobal || entry[j].st == stProc)
                 if (entry[j].iss != -1)
@@ -163,7 +172,7 @@ EcoffObject::loadLocalSymbols(SymbolTable *symtab, Addr base, Addr offset,
     }
 
     for (int i = 0; i < syms->isymMax; i++) {
-        ecoff_sym *entry = &(local_syms[i]);
+        const ecoff_sym *entry = &(local_syms[i]);
         if (entry->st == stProc)
             symtab->insert(entry->value, local_strings + entry->iss);
     }

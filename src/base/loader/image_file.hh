@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2002-2004 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,51 +25,28 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
  */
 
-#include "base/loader/raw_object.hh"
+#ifndef __BASE_LOADER_IMAGE_FILE_HH__
+#define __BASE_LOADER_IMAGE_FILE_HH__
 
-#include "base/loader/symtab.hh"
-#include "base/trace.hh"
-#include "debug/Loader.hh"
+#include <cstdint>
+#include <string>
 
-ObjectFile *
-RawObject::tryFile(const std::string &fname, size_t len, uint8_t *data)
+#include "base/loader/image_file_data.hh"
+#include "base/loader/memory_image.hh"
+
+class ImageFile
 {
-    return new RawObject(fname, len, data, ObjectFile::UnknownArch,
-            ObjectFile::UnknownOpSys);
-}
+  protected:
+    ImageFileDataPtr imageData;
+    ImageFile(ImageFileDataPtr data) : imageData(data) {}
+    virtual ~ImageFile() {}
 
-RawObject::RawObject(const std::string &_filename, size_t _len,
-        uint8_t *_data, Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _len, _data, _arch, _opSys)
-{
-}
+  public:
+    virtual MemoryImage buildImage() const = 0;
+};
 
-MemoryImage
-RawObject::buildImage() const
-{
-    return {{ "data", 0, fileData, len }};
-}
-
-bool
-RawObject::loadAllSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                          Addr addr_mask)
-{
-    return true;
-}
-
-bool
-RawObject::loadGlobalSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                             Addr addr_mask)
-{
-    return true;
-}
-
-bool
-RawObject::loadLocalSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                            Addr addr_mask)
-{
-    return true;
-}
+#endif // __BASE_LOADER_IMAGE_FILE_HH__

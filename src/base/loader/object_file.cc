@@ -31,44 +31,16 @@
 
 #include "base/loader/object_file.hh"
 
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <zlib.h>
-
-#include <cstdio>
-#include <list>
 #include <string>
 #include <vector>
 
-#include "base/cprintf.hh"
-#include "base/loader/aout_object.hh"
-#include "base/loader/dtb_object.hh"
-#include "base/loader/ecoff_object.hh"
-#include "base/loader/elf_object.hh"
-#include "base/loader/raw_object.hh"
+#include "base/loader/raw_image.hh"
 #include "base/loader/symtab.hh"
 #include "mem/port_proxy.hh"
 
 using namespace std;
 
-ObjectFile::ObjectFile(const string &_filename,
-                       size_t _len, uint8_t *_data,
-                       Arch _arch, OpSys _op_sys)
-    : filename(_filename), fileData(_data), len(_len),
-      arch(_arch), opSys(_op_sys), entry(0)
-{}
-
-
-ObjectFile::~ObjectFile()
-{
-    if (fileData) {
-        ::munmap((char*)fileData, len);
-        fileData = NULL;
-    }
-}
-
+ObjectFile::ObjectFile(ImageFileDataPtr ifd) : ImageFile(ifd) {}
 
 namespace
 {
@@ -101,117 +73,37 @@ ObjectFile::tryLoaders(ProcessParams *params, ObjectFile *obj_file)
     return nullptr;
 }
 
-static bool
-hasGzipMagic(int fd)
+namespace {
+
+typedef std::vector<ObjectFileFormat *> ObjectFileFormatList;
+
+ObjectFileFormatList &
+object_file_formats()
 {
-    uint8_t buf[2] = {0};
-    size_t sz = pread(fd, buf, 2, 0);
-    panic_if(sz != 2, "Couldn't read magic bytes from object file");
-    return ((buf[0] == 0x1f) && (buf[1] == 0x8b));
+    static ObjectFileFormatList formats;
+    return formats;
 }
 
-static int
-doGzipLoad(int fd)
+} // anonymous namespace
+
+ObjectFileFormat::ObjectFileFormat()
 {
-    const size_t blk_sz = 4096;
-
-    gzFile fdz = gzdopen(fd, "rb");
-    if (!fdz) {
-        return -1;
-    }
-
-    size_t tmp_len = strlen(P_tmpdir);
-    char *tmpnam = (char*) malloc(tmp_len + 20);
-    strcpy(tmpnam, P_tmpdir);
-    strcpy(tmpnam+tmp_len, "/gem5-gz-obj-XXXXXX"); // 19 chars
-    fd = mkstemp(tmpnam); // repurposing fd variable for output
-    if (fd < 0) {
-        free(tmpnam);
-        gzclose(fdz);
-        return fd;
-    }
-
-    if (unlink(tmpnam) != 0)
-        warn("couldn't remove temporary file %s\n", tmpnam);
-
-    free(tmpnam);
-
-    auto buf = new uint8_t[blk_sz];
-    int r; // size of (r)emaining uncopied data in (buf)fer
-    while ((r = gzread(fdz, buf, blk_sz)) > 0) {
-        auto p = buf; // pointer into buffer
-        while (r > 0) {
-            auto sz = write(fd, p, r);
-            assert(sz <= r);
-            r -= sz;
-            p += sz;
-        }
-    }
-    delete[] buf;
-    gzclose(fdz);
-    if (r < 0) { // error
-        close(fd);
-        return -1;
-    }
-    assert(r == 0); // finished successfully
-    return fd; // return fd to decompressed temporary file for mmap()'ing
+    object_file_formats().emplace_back(this);
 }
 
 ObjectFile *
-createObjectFile(const string &fname, bool raw)
+createObjectFile(const std::string &fname, bool raw)
 {
-    // open the file
-    int fd = open(fname.c_str(), O_RDONLY);
-    if (fd < 0) {
-        return NULL;
-    }
+    ImageFileDataPtr ifd(new ImageFileData(fname));
 
-    // decompress GZ files
-    if (hasGzipMagic(fd)) {
-        fd = doGzipLoad(fd);
-        if (fd < 0) {
-            return NULL;
-        }
-    }
-
-    // find the length of the file by seeking to the end
-    off_t off = lseek(fd, 0, SEEK_END);
-    fatal_if(off < 0,
-             "Failed to determine size of object file %s\n", fname);
-    auto len = static_cast<size_t>(off);
-
-    // mmap the whole shebang
-    uint8_t *file_data = (uint8_t *)mmap(NULL, len, PROT_READ, MAP_SHARED,
-                                         fd, 0);
-    close(fd);
-
-    if (file_data == MAP_FAILED) {
-        return NULL;
-    }
-
-    ObjectFile *file_obj = NULL;
-
-    // figure out what we have here
-    if ((file_obj = ElfObject::tryFile(fname, len, file_data)) != NULL) {
-        return file_obj;
-    }
-
-    if ((file_obj = EcoffObject::tryFile(fname, len, file_data)) != NULL) {
-        return file_obj;
-    }
-
-    if ((file_obj = AoutObject::tryFile(fname, len, file_data)) != NULL) {
-        return file_obj;
-    }
-
-    if ((file_obj = DtbObject::tryFile(fname, len, file_data)) != NULL) {
-        return file_obj;
+    for (auto &format: object_file_formats()) {
+        ObjectFile *file_obj = format->load(ifd);
+        if (file_obj)
+            return file_obj;
     }
 
     if (raw)
-        return RawObject::tryFile(fname, len, file_data);
+        return new RawImage(ifd);
 
-    // don't know what it is
-    munmap((char*)file_data, len);
-    return NULL;
+    return nullptr;
 }

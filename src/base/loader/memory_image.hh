@@ -32,37 +32,63 @@
 #ifndef __BASE_LOADER_MEMORY_IMAGE_HH__
 #define __BASE_LOADER_MEMORY_IMAGE_HH__
 
+#include <algorithm>
 #include <functional>
 #include <initializer_list>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "base/loader/image_file_data.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
 
 class PortProxy;
-class Process;
-class ProcessParams;
-class SymbolTable;
 
 class MemoryImage
 {
   public:
     struct Segment
     {
+        Segment(const std::string &_name, Addr _base,
+                const uint8_t *_data, size_t _size) :
+            name(_name), base(_base), data(_data), size(_size)
+        {}
+
+        Segment(const std::string &_name, Addr _base, size_t _size) :
+            name(_name), base(_base), size(_size)
+        {}
+
+        Segment(const std::string &_name, Addr _base,
+                const ImageFileDataPtr &_ifd, Addr offset, size_t _size) :
+            ifd(_ifd), name(_name), base(_base), size(_size)
+        {
+            panic_if(offset + size > ifd->len(),
+                    "Segment outside the bounds of the image data");
+            data = ifd->data() + offset;
+        }
+
+        Segment(const std::string &_name, const ImageFileDataPtr &_ifd) :
+            Segment(_name, 0, _ifd, 0, _ifd->len())
+        {}
+
+        ImageFileDataPtr ifd;
         std::string name;
-        Addr base;
-        uint8_t *data;
-        size_t size;
+        Addr base = 0;
+        const uint8_t *data = nullptr;
+        size_t size = 0;
     };
 
     MemoryImage() {}
 
-    MemoryImage(std::initializer_list<Segment> new_segs)
+    MemoryImage(const Segment &seg)
     {
-        for (auto &seg: new_segs)
-            addSegment(seg);
+        addSegment(seg);
+    }
+
+    MemoryImage(std::initializer_list<Segment> segs)
+    {
+        addSegments(segs);
     }
 
   private:
@@ -83,9 +109,10 @@ class MemoryImage
     }
 
     void
-    addSegment(std::string name, Addr base, uint8_t *data, size_t size)
+    addSegments(std::initializer_list<Segment> segs)
     {
-        _segments.push_back(Segment({name, base, data, size}));
+        for (auto &seg: segs)
+            addSegment(seg);
     }
 
     bool write(const PortProxy &proxy) const;
@@ -104,11 +131,8 @@ class MemoryImage
     maxAddr() const
     {
         Addr max = 0;
-        for (auto &seg: _segments) {
-            Addr end = seg.base + seg.size;
-            if (end > max)
-                max = end;
-        }
+        for (auto &seg: _segments)
+            max = std::max(max, seg.base + seg.size);
         return max;
     }
 
@@ -117,8 +141,7 @@ class MemoryImage
     {
         Addr min = MaxAddr;
         for (auto &seg: _segments)
-            if (seg.base < min)
-                min = seg.base;
+            min = std::min(min, seg.base);
         return min;
     }
 

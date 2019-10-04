@@ -28,7 +28,7 @@
  * Authors: Anthony Gutierrez
  */
 
-#include "base/loader/dtb_object.hh"
+#include "base/loader/dtb_file.hh"
 
 #include <sys/mman.h>
 #include <unistd.h>
@@ -39,48 +39,34 @@
 #include "libfdt.h"
 #include "sim/byteswap.hh"
 
-ObjectFile *
-DtbObject::tryFile(const std::string &fname, size_t len, uint8_t *data)
+DtbFile::DtbFile(const std::string &filename) :
+    ImageFile(ImageFileDataPtr(new ImageFileData(filename)))
 {
-    // Check if this is a FDT file by looking for magic number
-    if (fdt_magic((void*)data) == FDT_MAGIC) {
-        return new DtbObject(fname, len, data,
-                             ObjectFile::UnknownArch, ObjectFile::UnknownOpSys);
-    } else {
-        return NULL;
-    }
-}
-
-DtbObject::DtbObject(const std::string &_filename, size_t _len, uint8_t *_data,
-                     Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _len, _data, _arch, _opSys)
-{
+    panic_if(fdt_magic((const void *)imageData->data()) != FDT_MAGIC,
+            "File %s doesn't seem to be a DTB.\n", filename);
     fileDataMmapped = true;
+    fileData = const_cast<uint8_t *>(imageData->data());
+    length = imageData->len();
 }
 
-DtbObject::~DtbObject()
+DtbFile::~DtbFile()
 {
     // Make sure to clean up memory properly depending
     // on how buffer was allocated.
-    if (fileData && !fileDataMmapped) {
+    if (!fileDataMmapped)
         delete [] fileData;
-        fileData = NULL;
-    } else if (fileData) {
-        munmap(fileData, len);
-        fileData = NULL;
-    }
 }
 
 bool
-DtbObject::addBootCmdLine(const char* _args, size_t len)
+DtbFile::addBootCmdLine(const char *_args, size_t len)
 {
-    const char* root_path = "/";
-    const char* node_name = "chosen";
-    const char* full_path_node_name = "/chosen";
-    const char* property_name = "bootargs";
+    const char *root_path = "/";
+    const char *node_name = "chosen";
+    const char *full_path_node_name = "/chosen";
+    const char *property_name = "bootargs";
 
     // Make a new buffer that has extra space to add nodes/properties
-    int newLen = 2 * this->len;
+    int newLen = 2 * length;
     uint8_t *fdt_buf_w_space = new uint8_t[newLen];
     // Copy and unpack flattened device tree into new buffer
     int ret = fdt_open_into((void *)fileData, (void *)fdt_buf_w_space, newLen);
@@ -130,23 +116,24 @@ DtbObject::addBootCmdLine(const char* _args, size_t len)
     }
 
     // clean up old buffer and set to new fdt blob
-    munmap(fileData, this->len);
+    if (!fileDataMmapped)
+        delete [] fileData;
     fileData = fdt_buf_w_space;
     fileDataMmapped = false;
-    this->len = newLen;
+    length = newLen;
 
     return true;
 }
 
 Addr
-DtbObject::findReleaseAddr()
+DtbFile::findReleaseAddr()
 {
     void *fd = (void *)fileData;
 
     int offset = fdt_path_offset(fd, "/cpus/cpu@0");
     int len;
 
-    const void* temp = fdt_getprop(fd, offset, "cpu-release-addr", &len);
+    const void *temp = fdt_getprop(fd, offset, "cpu-release-addr", &len);
     Addr rel_addr = 0;
 
     if (len > 3)
@@ -160,30 +147,10 @@ DtbObject::findReleaseAddr()
 }
 
 MemoryImage
-DtbObject::buildImage() const
+DtbFile::buildImage() const
 {
-    return {{"data", 0, fileData, len}};
-}
-
-bool
-DtbObject::loadAllSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                          Addr addr_mask)
-{
-    return false;
-}
-
-bool
-DtbObject::loadGlobalSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                             Addr addr_mask)
-{
-    // nothing to do here
-    return false;
-}
-
-bool
-DtbObject::loadLocalSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                            Addr addr_mask)
-{
-    // nothing to do here
-    return false;
+    if (fileDataMmapped)
+        return {{ "data", imageData }};
+    else
+        return {{ "data", 0, fileData, length }};
 }

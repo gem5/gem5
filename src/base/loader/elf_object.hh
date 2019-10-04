@@ -40,48 +40,59 @@
  * Authors: Steve Reinhardt
  */
 
-#ifndef __ELF_OBJECT_HH__
-#define __ELF_OBJECT_HH__
+#ifndef __BASE_LOADER_ELF_OBJECT_HH__
+#define __BASE_LOADER_ELF_OBJECT_HH__
 
 #include <set>
 #include <vector>
 
 #include "base/loader/object_file.hh"
+#include "gelf.h"
+
+class ElfObjectFormat : public ObjectFileFormat
+{
+  public:
+    ObjectFile *load(ImageFileDataPtr data) override;
+};
 
 class ElfObject : public ObjectFile
 {
   protected:
+    Elf *elf;
+    GElf_Ehdr ehdr;
+
+    void determineArch();
+    void determineOpSys();
+    void handleLoadableSegment(GElf_Phdr phdr);
+
     // These values are provided to a linux process by the kernel, so we
     // need to keep them around.
-    Addr _programHeaderTable;
-    uint16_t _programHeaderSize;
-    uint16_t _programHeaderCount;
+    Addr _programHeaderTable = 0;
+    uint16_t _programHeaderSize = 0;
+    uint16_t _programHeaderCount = 0;
     std::set<std::string> sectionNames;
 
-    ElfObject *interpreter;
+    ElfObject *interpreter = nullptr;
 
     // An interpreter load bias is the location in the process address space
     // where the interpreter is chosen to reside. Typically, this is carved
     // out of the top of the mmap reserve section.
-    Addr ldBias;
+    Addr ldBias = 0;
 
     // The interpreter is typically a relocatable shared library and will
     // have a default value of zero which means that it does not care where
     // it is placed. However, the loader can be compiled and linked so that
     // it does care and needs a specific entry point.
-    bool relocate;
+    bool relocate = true;
 
     // The ldMin and ldMax fields are required to know how large of an
     // area is required to map the interpreter.
-    Addr ldMin;
-    Addr ldMax;
+    Addr ldMin = MaxAddr;
+    Addr ldMax = MaxAddr;
 
     /// Helper functions for loadGlobalSymbols() and loadLocalSymbols().
     bool loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask,
                          Addr base, Addr offset);
-
-    ElfObject(const std::string &_filename, size_t _len, uint8_t *_data,
-              Arch _arch, OpSys _opSys);
 
     void getSections();
     bool sectionExists(std::string sec);
@@ -89,7 +100,8 @@ class ElfObject : public ObjectFile
     MemoryImage image;
 
   public:
-    virtual ~ElfObject() {}
+    ElfObject(ImageFileDataPtr ifd);
+    ~ElfObject();
 
     MemoryImage buildImage() const override { return image; }
 
@@ -111,12 +123,9 @@ class ElfObject : public ObjectFile
 
     bool hasTLS() override { return sectionExists(".tbss"); }
 
-    static ObjectFile *tryFile(const std::string &fname,
-                               size_t len, uint8_t *data,
-                               bool skip_interp_check = false);
     Addr programHeaderTable() {return _programHeaderTable;}
     uint16_t programHeaderSize() {return _programHeaderSize;}
     uint16_t programHeaderCount() {return _programHeaderCount;}
 };
 
-#endif // __ELF_OBJECT_HH__
+#endif // __BASE_LOADER_ELF_OBJECT_HH__

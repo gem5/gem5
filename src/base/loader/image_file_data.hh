@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2002-2004 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,36 +25,33 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
  */
 
-#ifndef __BASE_LOADER_RAW_OBJECT_HH__
-#define __BASE_LOADER_RAW_OBJECT_HH__
+#ifndef __BASE_LOADER_IMAGE_FILE_DATA_HH__
+#define __BASE_LOADER_IMAGE_FILE_DATA_HH__
 
-#include "base/loader/object_file.hh"
+#include <cstdint>
+#include <memory>
+#include <string>
 
-class RawObject: public ObjectFile
+class ImageFileData
 {
-  protected:
-    RawObject(const std::string &_filename, size_t _len,
-              uint8_t *_data, Arch _arch, OpSys _opSys);
+  private:
+    std::string _filename;
+    uint8_t *_data;
+    size_t _len;
 
   public:
-    virtual ~RawObject() {}
+    const std::string &filename() const { return _filename; }
+    uint8_t const *data() const { return _data; }
+    size_t len() const { return _len; }
 
-    MemoryImage buildImage() const override;
-
-    bool loadAllSymbols(SymbolTable *symtab, Addr base=0,
-                        Addr offset=0, Addr addr_mask=MaxAddr) override;
-    bool loadGlobalSymbols(SymbolTable *symtab, Addr base=0,
-                           Addr offset=0, Addr addr_mask=MaxAddr) override;
-    bool loadLocalSymbols(SymbolTable *symtab, Addr base=0,
-                          Addr offset=0, Addr addr_mask=MaxAddr) override;
-
-    static ObjectFile *tryFile(const std::string &fname, size_t len,
-            uint8_t *data);
+    ImageFileData(const std::string &f_name);
+    virtual ~ImageFileData();
 };
 
+typedef std::shared_ptr<ImageFileData> ImageFileDataPtr;
 
-
-#endif // __BASE_LOADER_RAW_OBJECT_HH__
+#endif // __BASE_LOADER_IMAGE_FILE_DATA_HH__

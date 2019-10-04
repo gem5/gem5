@@ -28,29 +28,29 @@
  * Authors: Anthony Gutierrez
  */
 
-#ifndef __DTB_OBJECT_HH__
-#define __DTB_OBJECT_HH__
+#ifndef __BASE_LOADER_DTB_FILE_HH__
+#define __BASE_LOADER_DTB_FILE_HH__
 
-#include "base/loader/object_file.hh"
+#include "base/loader/image_file.hh"
 
 /** @file
- * This implements an object file format to support loading
+ * This implements an image file format to support loading
  * and modifying flattened device tree blobs for use with
  * current and future ARM Linux kernels.
  */
-class DtbObject : public ObjectFile
+class DtbFile : public ImageFile
 {
   protected:
-    DtbObject(const std::string &_filename, size_t _len, uint8_t *_data,
-              Arch _arch, OpSys _opSys);
-
     /** Bool marking if this dtb file has replaced the original
      *  read in DTB file with a new modified buffer
      */
     bool fileDataMmapped;
+    uint8_t *fileData = nullptr;
+    size_t length = 0;
 
   public:
-    virtual ~DtbObject();
+    DtbFile(const std::string &name);
+    ~DtbFile();
 
     /** Adds the passed in Command Line options for the kernel
       * to the proper location in the device tree.
@@ -67,23 +67,6 @@ class DtbObject : public ObjectFile
     Addr findReleaseAddr();
 
     MemoryImage buildImage() const override;
-
-    bool loadAllSymbols(SymbolTable *symtab, Addr base=0,
-                        Addr offset=0, Addr addrMask=MaxAddr) override;
-    bool loadGlobalSymbols(SymbolTable *symtab, Addr base=0,
-                           Addr offset=0, Addr addrMask=MaxAddr) override;
-    bool loadLocalSymbols(SymbolTable *symtab, Addr base=0,
-                          Addr offset=0, Addr addrMask=MaxAddr) override;
-
-    /** Static function that tries to load file as a
-      * flattened device tree blob.
-      * @param fname path to file
-      * @param len length of file
-      * @param data mmap'ed data buffer containing file contents
-      * @return ObjectFile representing closest match of file type
-      */
-    static ObjectFile *tryFile(const std::string &fname,
-                               size_t len, uint8_t *data);
 };
 
-#endif //__DTB_OBJECT_HH__
+#endif //__BASE_LOADER_DTB_FILE_HH__

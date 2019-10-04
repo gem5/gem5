@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,59 +25,30 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
+ * Authors: Ali Saidi
  */
 
-#include "base/loader/aout_object.hh"
+#ifndef __BASE_LOADER_RAW_IMAGE_HH__
+#define __BASE_LOADER_RAW_IMAGE_HH__
 
-#include <string>
+#include "base/loader/object_file.hh"
 
-#include "base/loader/exec_aout.h"
-#include "base/loader/symtab.hh"
-#include "base/trace.hh"
-#include "debug/Loader.hh"
-
-using namespace std;
-
-ObjectFile *
-AoutObjectFileFormat::load(ImageFileDataPtr ifd)
+class RawImage: public ObjectFile
 {
-    if (!N_BADMAG(*(const aout_exechdr *)ifd->data()))
-        return new AoutObject(ifd);
-    else
-        return nullptr;
-}
+  public:
+    RawImage(ImageFileDataPtr ifd) : ObjectFile(ifd) {}
 
-namespace
-{
+    RawImage(const std::string &filename) :
+        RawImage(ImageFileDataPtr(new ImageFileData(filename)))
+    {}
 
-AoutObjectFileFormat aoutObjectFileFormat;
+    MemoryImage
+    buildImage() const override
+    {
+        return {{ "data", imageData }};
+    }
+};
 
-} // anonymous namespace
 
 
-AoutObject::AoutObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
-{
-    execHdr = (const aout_exechdr *)imageData->data();
-    entry = execHdr->entry;
-
-    // Right now this is only used for Alpha PAL code.
-    arch = Alpha;
-}
-
-MemoryImage
-AoutObject::buildImage() const
-{
-    MemoryImage image({
-            MemoryImage::Segment{ "text", N_TXTADDR(*execHdr), imageData,
-              N_TXTOFF(*execHdr), execHdr->tsize },
-            MemoryImage::Segment{ "data", N_DATADDR(*execHdr), imageData,
-              N_DATOFF(*execHdr), execHdr->dsize },
-            MemoryImage::Segment{ "bss", N_BSSADDR(*execHdr), execHdr->bsize}
-    });
-
-    for (auto &seg: image.segments())
-        DPRINTFR(Loader, "%s\n", seg);
-
-    return image;
-}
+#endif // __BASE_LOADER_RAW_IMAGE_HH__

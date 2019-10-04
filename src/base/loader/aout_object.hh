@@ -39,26 +39,18 @@ struct aout_exechdr;
 class AoutObject : public ObjectFile
 {
   protected:
-    aout_exechdr *execHdr;
-
-    AoutObject(const std::string &_filename,
-               size_t _len, uint8_t *_data,
-               Arch _arch, OpSys _opSys);
+    const aout_exechdr *execHdr;
 
   public:
-    virtual ~AoutObject() {}
+    AoutObject(ImageFileDataPtr ifd);
 
     MemoryImage buildImage() const override;
+};
 
-    bool loadAllSymbols(SymbolTable *symtab, Addr base=0,
-                        Addr offset=0, Addr addr_mask = MaxAddr) override;
-    bool loadGlobalSymbols(SymbolTable *symtab, Addr base=0,
-                           Addr offset=0, Addr addr_mask=MaxAddr) override;
-    bool loadLocalSymbols(SymbolTable *symtab, Addr base=0,
-                          Addr offset=0, Addr addr_mask=MaxAddr) override;
-
-    static ObjectFile *tryFile(const std::string &fname,
-                               size_t len, uint8_t *data);
+class AoutObjectFileFormat : public ObjectFileFormat
+{
+  public:
+    ObjectFile *load(ImageFileDataPtr data) override;
 };
 
 #endif // __AOUT_OBJECT_HH__
