@@ -10,7 +10,46 @@ gem5's testing infrastructure has the following goals:
  * Fast execution in the simple case
  * High coverage of gem5 code
 
-# Running tests
+# Running unit tests
+
+gem5 comes with unit tests, created using the Google Test framework. These can
+be built through SCons.
+
+To build and run all the unit tests:
+
+```shell
+scons build/NULL/unittests.opt
+```
+
+All unit tests should be run prior to posting a patch to
+https://gem5-review.googlesource.com
+
+To compile and run just one set of tests (e.g. those declared within
+`src/base/bitunion.test.cc`):
+
+```shell
+scons build/NULL/base/bitunion.test.opt
+./build/NULL/base/bitunion.test.opt
+```
+
+To list the available test functions from a test file:
+
+```shell
+./build/NULL/base/bitunion.test.opt --gtest_list_tests
+```
+
+To run a specific test function (e.g., BitUnionData.NormalBitfield):
+
+```shell
+./build/NULL/base/bitunion.test.opt --gtest_filter=BitUnionData.NormalBitfield
+```
+
+# Running system-level tests
+
+Within the `tests` directory we have system-level tests. These tests run
+the gem5 framework against various hardware configurations, with different
+ISAs, then verify the simulations execute correctly. These should be seen as
+high-level, coarse-grained tests to compliment the unit-tests.
 
 Below is the most common way the tests are run. This will run all of the
 "quick" tests for X86, ARM, and RISC-V. These tests make up our best-supported
@@ -24,7 +63,7 @@ cd tests
 ./main.py run
 ```
 
-The above is the *minumum* you should run before posting a patch to 
+The above is the *minumum* you should run before posting a patch to
 https://gem5-review.googlesource.com
 
 ## Specifying a subset of tests to run
@@ -120,7 +159,7 @@ using the `rerun` command.
 ./main.py rerun
 ```
 
-# If something goes wrong
+## If something goes wrong
 
 The first step is to turn up the verbosity of the output using `-v`. This will
 allow you to see what tests are running and why a test is failing.
@@ -156,7 +195,7 @@ if the file causes an exception. This means there are no tests in that file
 (e.g., it's not a new-style test).
 
 
-# Binary test applications
+## Binary test applications
 
 The code for test binaries that are run in the gem5 guest during testing are
 found in `tests/test-progs`.
@@ -186,7 +225,7 @@ adding a new test and you don't have access to the gem5 server, contact a
 maintainer (see MAINTAINERS).*
 
 
-# Running Tests in Parallel
+## Running Tests in Parallel
 
 Whimsy has support for parallel testing baked in. This system supports
 running multiple suites at the same time on the same computer. To run 
