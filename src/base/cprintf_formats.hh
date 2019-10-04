@@ -312,6 +312,12 @@ format_integer(std::ostream &out, unsigned char data, Format &fmt)
 inline void
 format_integer(std::ostream &out, signed char data, Format &fmt)
 { _format_integer(out, (int)data, fmt); }
+inline void
+format_integer(std::ostream &out, const unsigned char *data, Format &fmt)
+{ _format_integer(out, (uintptr_t)data, fmt); }
+inline void
+format_integer(std::ostream &out, const signed char *data, Format &fmt)
+{ _format_integer(out, (uintptr_t)data, fmt); }
 
 //
 // floating point formats
