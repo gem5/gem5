@@ -58,7 +58,7 @@ using namespace X86ISA;
 namespace
 {
 
-class X86LinuxObjectFileLoader : public ObjectFile::Loader
+class X86LinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *

@@ -65,7 +65,7 @@ using namespace ArmISA;
 namespace
 {
 
-class ArmLinuxObjectFileLoader : public ObjectFile::Loader
+class ArmLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *

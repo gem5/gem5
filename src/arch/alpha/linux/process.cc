@@ -48,7 +48,7 @@ using namespace AlphaISA;
 namespace
 {
 
-class AlphaLinuxObjectFileLoader : public ObjectFile::Loader
+class AlphaLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *

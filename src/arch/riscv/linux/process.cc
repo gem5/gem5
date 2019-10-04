@@ -55,7 +55,7 @@ using namespace RiscvISA;
 namespace
 {
 
-class RiscvLinuxObjectFileLoader : public ObjectFile::Loader
+class RiscvLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *

@@ -46,7 +46,7 @@ using namespace SparcISA;
 namespace
 {
 
-class SparcSolarisObjectFileLoader : public ObjectFile::Loader
+class SparcSolarisObjectFileLoader : public Process::Loader
 {
   public:
     Process *

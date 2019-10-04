@@ -51,7 +51,7 @@ using namespace PowerISA;
 namespace
 {
 
-class PowerLinuxObjectFileLoader : public ObjectFile::Loader
+class PowerLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *

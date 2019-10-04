@@ -51,7 +51,7 @@ using namespace MipsISA;
 namespace
 {
 
-class MipsLinuxObjectFileLoader : public ObjectFile::Loader
+class MipsLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *

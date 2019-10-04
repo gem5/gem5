@@ -48,7 +48,7 @@ using namespace SparcISA;
 namespace
 {
 
-class SparcLinuxObjectFileLoader : public ObjectFile::Loader
+class SparcLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *

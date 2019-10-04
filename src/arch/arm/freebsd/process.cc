@@ -56,7 +56,7 @@ using namespace ArmISA;
 namespace
 {
 
-class ArmFreebsdObjectFileLoader : public ObjectFile::Loader
+class ArmFreebsdObjectFileLoader : public Process::Loader
 {
   public:
     Process *

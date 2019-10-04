@@ -42,37 +42,6 @@ using namespace std;
 
 ObjectFile::ObjectFile(ImageFileDataPtr ifd) : ImageFile(ifd) {}
 
-namespace
-{
-
-typedef std::vector<ObjectFile::Loader *> LoaderList;
-
-LoaderList &
-object_file_loaders()
-{
-    static LoaderList loaders;
-    return loaders;
-}
-
-} // anonymous namespace
-
-ObjectFile::Loader::Loader()
-{
-    object_file_loaders().emplace_back(this);
-}
-
-Process *
-ObjectFile::tryLoaders(ProcessParams *params, ObjectFile *obj_file)
-{
-    for (auto &loader: object_file_loaders()) {
-        Process *p = loader->load(params, obj_file);
-        if (p)
-            return p;
-    }
-
-    return nullptr;
-}
-
 namespace {
 
 typedef std::vector<ObjectFileFormat *> ObjectFileFormatList;

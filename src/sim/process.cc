@@ -75,6 +75,37 @@
 using namespace std;
 using namespace TheISA;
 
+namespace
+{
+
+typedef std::vector<Process::Loader *> LoaderList;
+
+LoaderList &
+process_loaders()
+{
+    static LoaderList loaders;
+    return loaders;
+}
+
+} // anonymous namespace
+
+Process::Loader::Loader()
+{
+    process_loaders().emplace_back(this);
+}
+
+Process *
+Process::tryLoaders(ProcessParams *params, ObjectFile *obj_file)
+{
+    for (auto &loader: process_loaders()) {
+        Process *p = loader->load(params, obj_file);
+        if (p)
+            return p;
+    }
+
+    return nullptr;
+}
+
 static std::string
 normalize(std::string& directory)
 {
@@ -554,7 +585,7 @@ ProcessParams::create()
     ObjectFile *obj_file = createObjectFile(executable);
     fatal_if(!obj_file, "Cannot load object file %s.", executable);
 
-    Process *process = ObjectFile::tryLoaders(this, obj_file);
+    Process *process = Process::tryLoaders(this, obj_file);
     fatal_if(!process, "Unknown error creating process object.");
 
     return process;
