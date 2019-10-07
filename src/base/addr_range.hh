@@ -471,6 +471,44 @@ class AddrRange
     }
 
     /**
+     * This method adds the interleaving bits removed by
+     * removeIntlvBits.
+     */
+    inline Addr addIntlvBits(Addr a) const
+    {
+        // Get the LSB set from each mask
+        int masks_lsb[masks.size()];
+        for (int i = 0; i < masks.size(); i++) {
+            masks_lsb[i] = ctz64(masks[i]);
+        }
+
+        // Add bits one-by-one from the LSB side.
+        std::sort(masks_lsb, masks_lsb + masks.size());
+        for (int i = 0; i < masks.size(); i++) {
+            const int intlv_bit = masks_lsb[i];
+            if (intlv_bit > 0) {
+                // on every iteration we add one bit from the input
+                // address, and therefore the lowest invtl_bit has
+                // also shifted to the left by i positions.
+                a = insertBits(a << 1, intlv_bit + i - 1, 0, a);
+            } else {
+                a <<= 1;
+            }
+        }
+
+        for (int i = 0; i < masks.size(); i++) {
+            const int lsb = ctz64(masks[i]);
+            const Addr intlv_bit = bits(intlvMatch, i);
+            // Calculate the mask ignoring the LSB
+            const Addr masked = a & masks[i] & ~(1 << lsb);
+            // Set the LSB of the mask to whatever satisfies the selector bit
+            a = insertBits(a, lsb, intlv_bit ^ popCount(masked));
+        }
+
+        return a;
+    }
+
+    /**
      * Determine the offset of an address within the range.
      *
      * This function returns the offset of the given address from the

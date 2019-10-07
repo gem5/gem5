@@ -121,6 +121,16 @@ class AddrRangeBase : public testing::Test {
         }
     }
 
+    void testAddRemoveIntlvBits()
+    {
+        for (Addr addr = start; addr <= end; addr++) {
+            AddrRange &r = range[getIndex(addr)];
+            Addr ch_addr = r.removeIntlvBits(addr);
+            Addr pa = r.addIntlvBits(ch_addr);
+            ASSERT_EQ(addr, pa);
+        }
+    }
+
     static const Addr end = 0x1ffff;
     static const Addr start = 0x0;
     static const int intlvSize = 4;
@@ -162,6 +172,11 @@ TEST_F(AddrRangeCont, AddrRangeGetOffset)
     testGetOffset();
 }
 
+TEST_F(AddrRangeCont, AddrRangeAddRemoveIntlvBits)
+{
+    testAddRemoveIntlvBits();
+}
+
 
 class AddrRangeContLegacy : public AddrRangeCont {
   protected:
@@ -185,6 +200,10 @@ TEST_F(AddrRangeContLegacy, AddrRangeGetOffset)
     testGetOffset();
 }
 
+TEST_F(AddrRangeContLegacy, AddrRangeAddRemoveIntlvBits)
+{
+    testAddRemoveIntlvBits();
+}
 
 class AddrRangeArb : public AddrRangeBase {
   protected:
@@ -217,4 +236,9 @@ TEST_F(AddrRangeArb, AddrRangeContains)
 TEST_F(AddrRangeArb, AddrRangeGetOffset)
 {
     testGetOffset();
+}
+
+TEST_F(AddrRangeArb, AddrRangeAddRemoveIntlvBits)
+{
+    testAddRemoveIntlvBits();
 }
