@@ -74,8 +74,7 @@ def create_TLB_Coalescer(options, my_level, my_index, tlb_name,
         coalescer_name.append(eval(Coalescer_constructor(my_level)))
 
 def config_tlb_hierarchy(options, system, shader_idx):
-    n_cu = options.cu_per_sa * options.sa_per_complex * \
-           options.num_gpu_complexes
+    n_cu = options.num_compute_units
 
     if options.TLB_config == "perLane":
         num_TLBs = 64 * n_cu
