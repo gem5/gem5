@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2019 ARM Limited
  * Copyright (c) 2015 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -368,7 +368,7 @@ futexFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         if (val != mem_val)
             return -OS::TGT_EWOULDBLOCK;
 
-        if (OS::TGT_FUTEX_WAIT) {
+        if (OS::TGT_FUTEX_WAIT == op) {
             futex_map.suspend(uaddr, process->tgid(), tc);
         } else {
             futex_map.suspend_bitset(uaddr, process->tgid(), tc, val3);
