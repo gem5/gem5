@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012,2016-2017 ARM Limited
+ * Copyright (c) 2011-2012,2016-2017, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -63,6 +63,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/Mwait.hh"
 #include "debug/SyscallVerbose.hh"
+#include "debug/Thread.hh"
 #include "mem/page_table.hh"
 #include "params/BaseCPU.hh"
 #include "sim/clocked_object.hh"
@@ -489,6 +490,8 @@ BaseCPU::findContext(ThreadContext *tc)
 void
 BaseCPU::activateContext(ThreadID thread_num)
 {
+    DPRINTF(Thread, "activate contextId %d\n",
+            threadContexts[thread_num]->contextId());
     // Squash enter power gating event while cpu gets activated
     if (enterPwrGatingEvent.scheduled())
         deschedule(enterPwrGatingEvent);
@@ -501,6 +504,8 @@ BaseCPU::activateContext(ThreadID thread_num)
 void
 BaseCPU::suspendContext(ThreadID thread_num)
 {
+    DPRINTF(Thread, "suspend contextId %d\n",
+            threadContexts[thread_num]->contextId());
     // Check if all threads are suspended
     for (auto t : threadContexts) {
         if (t->status() != ThreadContext::Suspended) {
