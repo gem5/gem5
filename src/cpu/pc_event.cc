@@ -144,22 +144,6 @@ BreakPCEvent::process(ThreadContext *tc)
         delete this;
 }
 
-void
-sched_break_pc_sys(System *sys, Addr addr)
-{
-    new BreakPCEvent(&sys->pcEventQueue, "debug break", addr, true);
-}
-
-void
-sched_break_pc(Addr addr)
-{
-     for (vector<System *>::iterator sysi = System::systemList.begin();
-          sysi != System::systemList.end(); ++sysi) {
-         sched_break_pc_sys(*sysi, addr);
-    }
-
-}
-
 PanicPCEvent::PanicPCEvent(PCEventQueue *q, const std::string &desc, Addr pc)
     : PCEvent(q, desc, pc)
 {

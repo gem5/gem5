@@ -142,10 +142,6 @@ class BreakPCEvent : public PCEvent
     virtual void process(ThreadContext *tc);
 };
 
-void sched_break_pc_sys(System *sys, Addr addr);
-
-void sched_break_pc(Addr addr);
-
 class PanicPCEvent : public PCEvent
 {
   public:
