@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014, 2019 ARM Limited
  * All rights reserved
  *
  * Copyright (c) 2001-2006 The Regents of The University of Michigan
@@ -45,6 +45,7 @@
 #include "base/logging.hh"
 #include "base/output.hh"
 #include "base/str.hh"
+#include "debug/FmtFlag.hh"
 
 const std::string &name()
 {
@@ -101,8 +102,10 @@ disable()
 
 ObjectMatch ignore;
 
+
 void
-Logger::dump(Tick when, const std::string &name, const void *d, int len)
+Logger::dump(Tick when, const std::string &name,
+         const void *d, int len, const std::string &flag)
 {
     if (!name.empty() && ignore.match(name))
         return;
@@ -133,7 +136,7 @@ Logger::dump(Tick when, const std::string &name, const void *d, int len)
         }
 
         ccprintf(line, "\n");
-        logMessage(when, name, line.str());
+        logMessage(when, name, flag, line.str());
 
         if (c < 16)
             break;
@@ -142,13 +145,16 @@ Logger::dump(Tick when, const std::string &name, const void *d, int len)
 
 void
 OstreamLogger::logMessage(Tick when, const std::string &name,
-                          const std::string &message)
+        const std::string &flag, const std::string &message)
 {
     if (!name.empty() && ignore.match(name))
         return;
 
     if (when != MaxTick)
         ccprintf(stream, "%7d: ", when);
+
+    if (DTRACE(FmtFlag) && !flag.empty())
+        stream << flag << ": ";
 
     if (!name.empty())
         stream << name << ": ";

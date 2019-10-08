@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014, 2019 ARM Limited
  * All rights reserved
  *
  * Copyright (c) 2001-2006 The Regents of The University of Michigan
@@ -60,21 +60,29 @@ class Logger
     void dprintf(Tick when, const std::string &name, const char *fmt,
                  const Args &...args)
     {
+        dprintf_flag(when, name, "", fmt, args...);
+    }
+
+    /** Log a single message with a flag prefix. */
+    template <typename ...Args>
+    void dprintf_flag(Tick when, const std::string &name,
+            const std::string &flag,
+            const char *fmt, const Args &...args)
+    {
         if (!name.empty() && ignore.match(name))
             return;
-
         std::ostringstream line;
         ccprintf(line, fmt, args...);
-        logMessage(when, name, line.str());
+        logMessage(when, name, flag, line.str());
     }
 
     /** Dump a block of data of length len */
-    virtual void dump(Tick when, const std::string &name,
-                      const void *d, int len);
+    void dump(Tick when, const std::string &name,
+            const void *d, int len, const std::string &flag);
 
     /** Log formatted message */
     virtual void logMessage(Tick when, const std::string &name,
-                            const std::string &message) = 0;
+            const std::string &flag, const std::string &message) = 0;
 
     /** Return an ostream that can be used to send messages to
      *  the 'same place' as formatted logMessage messages.  This
@@ -104,7 +112,7 @@ class OstreamLogger : public Logger
     { }
 
     void logMessage(Tick when, const std::string &name,
-                    const std::string &message) override;
+            const std::string &flag, const std::string &message) override;
 
     std::ostream &getOstream() override { return stream; }
 };
@@ -166,46 +174,47 @@ class Named
 
 #define DTRACE(x) (Debug::x)
 
-#define DDUMP(x, data, count) do {                                        \
-    using namespace Debug;                                                \
-    if (DTRACE(x))                                                        \
-        Trace::getDebugLogger()->dump(curTick(), name(), data, count);    \
+#define DDUMP(x, data, count) do {               \
+    using namespace Debug;                       \
+    if (DTRACE(x))                               \
+        Trace::getDebugLogger()->dump(           \
+            curTick(), name(), data, count, #x); \
 } while (0)
 
-#define DPRINTF(x, ...) do {                                              \
-    using namespace Debug;                                                \
-    if (DTRACE(x)) {                                                      \
-        Trace::getDebugLogger()->dprintf(curTick(), name(),               \
-            __VA_ARGS__);                                                 \
-    }                                                                     \
+#define DPRINTF(x, ...) do {                     \
+    using namespace Debug;                       \
+    if (DTRACE(x)) {                             \
+        Trace::getDebugLogger()->dprintf_flag(   \
+            curTick(), name(), #x, __VA_ARGS__); \
+    }                                            \
 } while (0)
 
-#define DPRINTFS(x, s, ...) do {                                          \
-    using namespace Debug;                                                \
-    if (DTRACE(x)) {                                                      \
-        Trace::getDebugLogger()->dprintf(curTick(), s->name(),            \
-            __VA_ARGS__);                                                 \
-    }                                                                     \
+#define DPRINTFS(x, s, ...) do {                        \
+    using namespace Debug;                              \
+    if (DTRACE(x)) {                                    \
+        Trace::getDebugLogger()->dprintf_flag(          \
+                curTick(), s->name(), #x, __VA_ARGS__); \
+    }                                                   \
 } while (0)
 
-#define DPRINTFR(x, ...) do {                                             \
-    using namespace Debug;                                                \
-    if (DTRACE(x)) {                                                      \
-        Trace::getDebugLogger()->dprintf((Tick)-1, std::string(),         \
-            __VA_ARGS__);                                                 \
-    }                                                                     \
+#define DPRINTFR(x, ...) do {                          \
+    using namespace Debug;                             \
+    if (DTRACE(x)) {                                   \
+        Trace::getDebugLogger()->dprintf_flag(         \
+            (Tick)-1, std::string(), #x, __VA_ARGS__); \
+    }                                                  \
 } while (0)
 
-#define DDUMPN(data, count) do {                                          \
-    Trace::getDebugLogger()->dump(curTick(), name(), data, count);        \
+#define DDUMPN(data, count) do {                                       \
+    Trace::getDebugLogger()->dump(curTick(), name(), data, count);     \
 } while (0)
 
-#define DPRINTFN(...) do {                                                \
-    Trace::getDebugLogger()->dprintf(curTick(), name(), __VA_ARGS__);     \
+#define DPRINTFN(...) do {                                             \
+    Trace::getDebugLogger()->dprintf(curTick(), name(), __VA_ARGS__);  \
 } while (0)
 
-#define DPRINTFNR(...) do {                                               \
-    Trace::getDebugLogger()->dprintf((Tick)-1, std::string(), __VA_ARGS__);  \
+#define DPRINTFNR(...) do {                                                 \
+    Trace::getDebugLogger()->dprintf((Tick)-1, std::string(), __VA_ARGS__); \
 } while (0)
 
 #else // !TRACING_ON

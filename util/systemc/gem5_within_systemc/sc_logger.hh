@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -70,7 +70,7 @@ class Logger : public Trace::Logger
 
     /** Log a single message as a single sc_report call */
     void logMessage(Tick when, const std::string &name,
-        const std::string &message);
+            const std::string &flag, const std::string &message) override;
 
     std::ostream &getOstream();
 };
