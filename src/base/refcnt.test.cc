@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2019 The Regents of The University of California
+ * All rights resvered.
+ *
  * Copyright (c) 2010 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,162 +29,143 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
+ *          Bobby R. Bruce
  */
 
-#include <cassert>
-#include <iostream>
+#include <gtest/gtest.h>
+
 #include <list>
 
-#include "base/cprintf.hh"
 #include "base/refcnt.hh"
-#include "unittest/unittest.hh"
 
 using namespace std;
-using UnitTest::setCase;
 
 namespace {
-
-bool printNewDel = false;
 
 class TestRC;
 typedef list<TestRC *> LiveList;
 LiveList liveList;
 
 int
-live()
-{
+liveListSize(){
     return liveList.size();
-}
-
-int
-liveChange()
-{
-    static int oldLive = 0;
-    int newLive = live();
-    int diff =  newLive - oldLive;
-    oldLive = newLive;
-    return diff;
 }
 
 class TestRC : public RefCounted
 {
   protected:
-    const char *_tag;
     LiveList::iterator liveIt;
 
   public:
-    TestRC(const char *newTag) : _tag(newTag)
+    TestRC()
     {
-        if (printNewDel)
-            cprintf("  Creating object \"%s\"\n", _tag);
         liveList.push_front(this);
         liveIt = liveList.begin();
     }
 
     ~TestRC()
     {
-        if (printNewDel)
-            cprintf("  Destroying object \"%s\"\n", _tag);
         liveList.erase(liveIt);
-    }
-
-    const char *
-    tag()
-    {
-        return _tag;
     }
 
     int testVal;
 };
-
 typedef RefCountingPtr<TestRC> Ptr;
 
 } // anonymous namespace
 
-int
-main()
+TEST(RefcntTest, NullPointerCheck)
 {
-    assert(live() == 0);
-    assert(liveChange() == 0);
-
     // Create an empty Ptr and verify it's data pointer is NULL.
-    setCase("NULL check");
     Ptr nullCheck;
-    EXPECT_EQ(nullCheck.get(), NULL);
+    EXPECT_EQ(NULL, nullCheck.get());
+    EXPECT_EQ(0, liveListSize());
+}
 
-    EXPECT_EQ(liveChange(), 0);
-
+TEST(RefcntTest, ConstructionFromPointer)
+{
     // Construct a Ptr from a TestRC pointer.
-    setCase("construction from pointer");
-    Ptr constFromPointer = new TestRC("construction from pointer");
+    Ptr constFromPointer = new TestRC();
+    EXPECT_EQ(1, liveListSize());
+}
 
-    EXPECT_EQ(liveChange(), 1);
-
+TEST(RefcntTest, ConstructionFromExistingPointer)
+{
     // Construct a Ptr from an existing Ptr.
-    setCase("construction from a Ptr");
-    Ptr constFromPtr = constFromPointer;
+    Ptr constFromPointer1 = new TestRC();
+    Ptr constFromPointer2 = constFromPointer1;
 
-    EXPECT_EQ(liveChange(), 0);
+    EXPECT_EQ(1, liveListSize());
+}
 
+TEST(RefcntTest, DestroyPointer)
+{
     // Test a Ptr being destroyed.
-    setCase("destroying a Ptr");
-    Ptr *ptrPtr = new Ptr(new TestRC("destroying a ptr"));
-    EXPECT_EQ(liveChange(), 1);
+    Ptr *ptrPtr = new Ptr(new TestRC());
+    EXPECT_EQ(1, liveListSize());
     delete ptrPtr;
-    EXPECT_EQ(liveChange(), -1);
+    EXPECT_EQ(0, liveListSize());
+}
 
+TEST(RefcntTest, AssignmentFromAPointerFromAPointer)
+{
     // Test assignment from a pointer and from a Ptr.
-    setCase("assignment operators");
     Ptr assignmentTarget;
-    TestRC *assignmentSourcePointer = new TestRC("assignment source 1");
-    EXPECT_EQ(liveChange(), 1);
+    TestRC *assignmentSourcePointer = new TestRC();
+    EXPECT_EQ(liveListSize(), 1);
     assignmentTarget = assignmentSourcePointer;
-    EXPECT_EQ(liveChange(), 0);
+    EXPECT_EQ(liveListSize(), 1);
     assignmentTarget = NULL;
-    EXPECT_EQ(liveChange(), -1);
-    Ptr assignmentSourcePtr(new TestRC("assignment source 2"));
-    EXPECT_EQ(liveChange(), 1);
+    EXPECT_EQ(liveListSize(), 0);
+    Ptr assignmentSourcePtr(new TestRC());
+    EXPECT_EQ(liveListSize(), 1);
     assignmentTarget = assignmentSourcePtr;
-    EXPECT_EQ(liveChange(), 0);
+    EXPECT_EQ(liveListSize(), 1);
     assignmentSourcePtr = NULL;
-    EXPECT_EQ(liveChange(), 0);
+    EXPECT_EQ(liveListSize(), 1);
     assignmentTarget = NULL;
-    EXPECT_EQ(liveChange(), -1);
+    EXPECT_EQ(liveListSize(), 0);
+}
 
+TEST(RefcntTest, AccessToClassPointers)
+{
     // Test access to members of the pointed to class and dereferencing.
-    setCase("access to members");
-    TestRC *accessTest = new TestRC("access test");
+    TestRC *accessTest = new TestRC();
     Ptr accessTestPtr = accessTest;
     accessTest->testVal = 1;
-    EXPECT_EQ(accessTestPtr->testVal, 1);
-    EXPECT_EQ((*accessTestPtr).testVal, 1);
+    EXPECT_EQ(1, accessTestPtr->testVal);
+    EXPECT_EQ(1, (*accessTestPtr).testVal);
     accessTest->testVal = 2;
-    EXPECT_EQ(accessTestPtr->testVal, 2);
-    EXPECT_EQ((*accessTestPtr).testVal, 2);
+    EXPECT_EQ(2, accessTestPtr->testVal);
+    EXPECT_EQ(2, (*accessTestPtr).testVal);
     accessTestPtr->testVal = 3;
-    EXPECT_EQ(accessTest->testVal, 3);
+    EXPECT_EQ(3, accessTest->testVal);
     (*accessTestPtr).testVal = 4;
-    EXPECT_EQ(accessTest->testVal, 4);
+    EXPECT_EQ(4, accessTest->testVal);
     accessTestPtr = NULL;
     accessTest = NULL;
-    EXPECT_EQ(liveChange(), 0);
+    EXPECT_EQ(0, liveListSize());
+}
 
+TEST(RefcntTest, BoolAndLogicalNotOperatorOverloads)
+{
     // Test bool and ! operator overloads.
-    setCase("conversion to bool and ! overload");
-    Ptr boolTest = new TestRC("bool test");
+    Ptr boolTest = new TestRC();
     EXPECT_EQ(boolTest, true);
     EXPECT_EQ(!boolTest, false);
     boolTest = NULL;
-    EXPECT_EQ(boolTest, false);
-    EXPECT_EQ(!boolTest, true);
-    EXPECT_EQ(liveChange(), 0);
+    EXPECT_FALSE(boolTest);
+    EXPECT_TRUE(!boolTest);
+    EXPECT_EQ(0, liveListSize());
+}
 
+TEST(RefcntTest, EqualityOperators)
+{
     // Test the equality operators.
-    setCase("equality operators");
-    TestRC *equalTestA = new TestRC("equal test a");
+    TestRC *equalTestA = new TestRC();
     Ptr equalTestAPtr = equalTestA;
     Ptr equalTestAPtr2 = equalTestA;
-    TestRC *equalTestB = new TestRC("equal test b");
+    TestRC *equalTestB = new TestRC();
     Ptr equalTestBPtr = equalTestB;
     EXPECT_TRUE(equalTestA == equalTestAPtr);
     EXPECT_TRUE(equalTestAPtr == equalTestA);
@@ -189,6 +173,4 @@ main()
     EXPECT_TRUE(equalTestA != equalTestBPtr);
     EXPECT_TRUE(equalTestAPtr != equalTestB);
     EXPECT_TRUE(equalTestAPtr != equalTestBPtr);
-
-    return UnitTest::printResults();
 }
