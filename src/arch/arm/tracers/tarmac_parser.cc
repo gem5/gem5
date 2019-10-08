@@ -1038,7 +1038,7 @@ TarmacParserRecord::advanceTrace()
         regRecord.values.clear();
         trace >> buf;
         strcpy(regRecord.repr, buf);
-        if (buf[0] == 'r' && isdigit(buf[1])) {
+        if (std::tolower(buf[0]) == 'r' && isdigit(buf[1])) {
             // R register
             regRecord.type = REG_R;
             int base_index = atoi(&buf[1]);
@@ -1064,28 +1064,27 @@ TarmacParserRecord::advanceTrace()
                 else if (strncmp(pch, "hyp", 3) == 0)
                     regRecord.index = INTREG_HYP(base_index);
             }
-        // A64 register names are capitalized in AEM TARMAC, unlike A32
-        } else if (buf[0] == 'X' && isdigit(buf[1])) {
+        } else if (std::tolower(buf[0]) == 'x' && isdigit(buf[1])) {
             // X register (A64)
             regRecord.type = REG_X;
             regRecord.index = atoi(&buf[1]);
-        } else if (buf[0] == 's' && isdigit(buf[1])) {
+        } else if (std::tolower(buf[0]) == 's' && isdigit(buf[1])) {
             // S register
             regRecord.type = REG_S;
             regRecord.index = atoi(&buf[1]);
-        } else if (buf[0] == 'd' && isdigit(buf[1])) {
+        } else if (std::tolower(buf[0]) == 'd' && isdigit(buf[1])) {
             // D register
             regRecord.type = REG_D;
             regRecord.index = atoi(&buf[1]);
-        } else if (buf[0] == 'q' && isdigit(buf[1])) {
+        } else if (std::tolower(buf[0]) == 'q' && isdigit(buf[1])) {
             // Q register
             regRecord.type = REG_Q;
             regRecord.index = atoi(&buf[1]);
-        } else if (buf[0] == 'z' && isdigit(buf[1])) {
+        } else if (std::tolower(buf[0]) == 'z' && isdigit(buf[1])) {
             // Z (SVE vector) register
             regRecord.type = REG_Z;
             regRecord.index = atoi(&buf[1]);
-        } else if (buf[0] == 'p' && isdigit(buf[1])) {
+        } else if (std::tolower(buf[0]) == 'p' && isdigit(buf[1])) {
             // P (SVE predicate) register
             regRecord.type = REG_P;
             regRecord.index = atoi(&buf[1]);
