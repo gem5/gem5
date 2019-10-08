@@ -57,7 +57,6 @@ class ExeTracerRecord : public InstRecord
     void traceInst(const StaticInstPtr &inst, bool ran);
 
     void dump();
-    virtual void dumpTicks(std::ostream &outs);
 };
 
 class ExeTracer : public InstTracer
