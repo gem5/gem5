@@ -153,9 +153,16 @@ class FutexMap : public std::unordered_map<FutexKey, WaiterList>
         auto &waiterList = it->second;
 
         while (!waiterList.empty() && woken_up < count) {
-            waiterList.front().tc->activate();
+            // Threads may be woken up by access to locked
+            // memory addresses outside of syscalls, so we
+            // must only count threads that were actually
+            // woken up by this syscall.
+            auto& tc = waiterList.front().tc;
+            if (tc->status() != ThreadContext::Active) {
+                tc->activate();
+                woken_up++;
+            }
             waiterList.pop_front();
-            woken_up++;
         }
 
         if (waiterList.empty())
