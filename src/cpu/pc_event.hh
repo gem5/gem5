@@ -66,31 +66,36 @@ class PCEvent
 class PCEventQueue
 {
   protected:
-    typedef PCEvent * record_t;
     class MapCompare {
       public:
-        bool operator()(const record_t &l, const record_t &r) const {
+        bool
+        operator()(PCEvent * const &l, PCEvent * const &r) const
+        {
             return l->pc() < r->pc();
         }
-        bool operator()(const record_t &l, Addr pc) const {
+        bool
+        operator()(PCEvent * const &l, Addr pc) const
+        {
             return l->pc() < pc;
         }
-        bool operator()(Addr pc, const record_t &r) const {
+        bool
+        operator()(Addr pc, PCEvent * const &r) const
+        {
             return pc < r->pc();
         }
     };
-    typedef std::vector<record_t> map_t;
+    typedef std::vector<PCEvent *> Map;
 
   public:
-    typedef map_t::iterator iterator;
-    typedef map_t::const_iterator const_iterator;
+    typedef Map::iterator iterator;
+    typedef Map::const_iterator const_iterator;
 
   protected:
     typedef std::pair<iterator, iterator> range_t;
     typedef std::pair<const_iterator, const_iterator> const_range_t;
 
   protected:
-    map_t pc_map;
+    Map pcMap;
 
     bool doService(ThreadContext *tc);
 
@@ -102,7 +107,7 @@ class PCEventQueue
     bool schedule(PCEvent *event);
     bool service(ThreadContext *tc)
     {
-        if (pc_map.empty())
+        if (pcMap.empty())
             return false;
 
         return doService(tc);

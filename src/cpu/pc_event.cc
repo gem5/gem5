@@ -57,17 +57,15 @@ PCEventQueue::remove(PCEvent *event)
     int removed = 0;
     range_t range = equal_range(event);
     iterator i = range.first;
-    while (i != range.second &&
-           i != pc_map.end()) {
+    while (i != range.second && i != pcMap.end()) {
         if (*i == event) {
             DPRINTF(PCEvent, "PC based event removed at %#x: %s\n",
                     event->pc(), event->descr());
-            i = pc_map.erase(i);
+            i = pcMap.erase(i);
             ++removed;
         } else {
             i++;
         }
-
     }
 
     return removed > 0;
@@ -76,8 +74,8 @@ PCEventQueue::remove(PCEvent *event)
 bool
 PCEventQueue::schedule(PCEvent *event)
 {
-    pc_map.push_back(event);
-    sort(pc_map.begin(), pc_map.end(), MapCompare());
+    pcMap.push_back(event);
+    sort(pcMap.begin(), pcMap.end(), MapCompare());
 
     DPRINTF(PCEvent, "PC based event scheduled for %#x: %s\n",
             event->pc(), event->descr());
@@ -114,8 +112,8 @@ PCEventQueue::doService(ThreadContext *tc)
 void
 PCEventQueue::dump() const
 {
-    const_iterator i = pc_map.begin();
-    const_iterator e = pc_map.end();
+    const_iterator i = pcMap.begin();
+    const_iterator e = pcMap.end();
 
     for (; i != e; ++i)
         cprintf("%d: event at %#x: %s\n", curTick(), (*i)->pc(),
@@ -125,7 +123,7 @@ PCEventQueue::dump() const
 PCEventQueue::range_t
 PCEventQueue::equal_range(Addr pc)
 {
-    return std::equal_range(pc_map.begin(), pc_map.end(), pc, MapCompare());
+    return std::equal_range(pcMap.begin(), pcMap.end(), pc, MapCompare());
 }
 
 BreakPCEvent::BreakPCEvent(PCEventQueue *q, const std::string &desc, Addr addr,
