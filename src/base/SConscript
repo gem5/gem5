@@ -35,6 +35,7 @@ if env['CP_ANNOTATE']:
     Source('cp_annotate.cc')
 SimObject('Graphics.py')
 Source('atomicio.cc')
+GTest('atomicio.test', 'atomicio.test.cc', 'atomicio.cc')
 Source('bitfield.cc')
 Source('imgwriter.cc')
 Source('bmpwriter.cc')
