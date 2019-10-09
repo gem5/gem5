@@ -203,7 +203,7 @@ class Gicv3(BaseGic):
     # Used for DTB autogeneration
     _state = FdtState(addr_cells=2, size_cells=2, interrupt_cells=3)
 
-    its = Param.Gicv3Its(Gicv3Its(), "GICv3 Interrupt Translation Service")
+    its = Param.Gicv3Its(NULL, "GICv3 Interrupt Translation Service")
 
     dist_addr = Param.Addr("Address for distributor")
     dist_pio_delay = Param.Latency('10ns', "Delay for PIO r/w to distributor")
@@ -263,7 +263,8 @@ class Gicv3(BaseGic):
 
         node.appendPhandle(self)
 
-        # Generate the ITS device tree
-        node.append(self.its.generateDeviceTree(self._state))
+        # Generate the ITS device tree if instantiated
+        if self.its != NULL:
+            node.append(self.its.generateDeviceTree(self._state))
 
         yield node

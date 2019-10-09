@@ -91,7 +91,9 @@ Gicv3::init()
         cpuInterfaces[i]->init();
     }
 
-    params()->its->setGIC(this);
+    Gicv3Its *its = params()->its;
+    if (its)
+        its->setGIC(this);
 
     BaseGic::init();
 }
