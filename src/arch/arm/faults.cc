@@ -1418,6 +1418,9 @@ DataAbort::annotate(AnnotationIDs id, uint64_t val)
       case CM:
         cm  = val;
         break;
+      case OFA:
+        faultAddr  = val;
+        break;
       // Just ignore unknown ID's
       default:
         break;

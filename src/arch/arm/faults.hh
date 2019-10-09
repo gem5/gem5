@@ -137,6 +137,10 @@ class ArmFault : public FaultBase
         SSE,   // DataAbort: Syndrome Sign Extend
         SRT,   // DataAbort: Syndrome Register Transfer
         CM,    // DataAbort: Cache Maintenance/Address Translation Op
+        OFA,   // DataAbort: Override fault Address. This is needed when
+               // the abort is triggered by a CMO. The faulting address is
+               // then the address specified in the register argument of the
+               // instruction and not the cacheline address (See FAR doc)
 
         // AArch64 only
         SF,    // DataAbort: width of the accessed register is SixtyFour

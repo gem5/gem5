@@ -412,9 +412,10 @@ let {{
 
     # Cache maintenance fault annotation
     # The DC ZVA instruction is not classified as a cache maintenance
-    # instruction, and therefore we shouldn't annotate it
+    # instruction, and therefore we shouldn't annotate it.
     cachem_fa = '''
         fault->annotate(ArmFault::CM, 1);
+        fault->annotate(ArmFault::OFA, faultAddr);
     '''
 
     msrdccvau_ea_code = msr_check_code
@@ -422,6 +423,7 @@ let {{
            Request::Flags memAccessFlags = Request::CLEAN | Request::DST_POU |
               ArmISA::TLB::MustBeOne;
            EA = XBase;
+           faultAddr = EA;
            System *sys = xc->tcBase()->getSystemPtr();
            Addr op_size = sys->cacheLineSize();
            EA &= ~(op_size - 1);
@@ -446,6 +448,7 @@ let {{
            Request::Flags memAccessFlags = Request::CLEAN | Request::DST_POC |
               ArmISA::TLB::MustBeOne;
            EA = XBase;
+           faultAddr = EA;
            System *sys = xc->tcBase()->getSystemPtr();
            Addr op_size = sys->cacheLineSize();
            EA &= ~(op_size - 1);
@@ -470,6 +473,7 @@ let {{
            Request::Flags memAccessFlags = Request::CLEAN |
               Request::INVALIDATE | Request::DST_POC | ArmISA::TLB::MustBeOne;
            EA = XBase;
+           faultAddr = EA;
            System *sys = xc->tcBase()->getSystemPtr();
            Addr op_size = sys->cacheLineSize();
            EA &= ~(op_size - 1);
@@ -494,6 +498,7 @@ let {{
            Request::Flags memAccessFlags = Request::INVALIDATE |
               Request::DST_POC | ArmISA::TLB::MustBeOne;
            EA = XBase;
+           faultAddr = EA;
            HCR hcr = Hcr64;
            SCR scr = Scr64;
            if (el == EL1 && ArmSystem::haveVirtualization(xc->tcBase()) &&
