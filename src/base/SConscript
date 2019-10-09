@@ -77,6 +77,7 @@ Source('time.cc')
 Source('trace.cc')
 GTest('trie.test', 'trie.test.cc')
 Source('types.cc')
+GTest('types.test', 'types.test.cc', 'types.cc')
 
 Source('loader/aout_object.cc')
 Source('loader/dtb_file.cc')
