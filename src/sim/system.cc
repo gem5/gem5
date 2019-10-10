@@ -292,6 +292,20 @@ System::registerThreadContext(ThreadContext *tc, ContextID assigned)
     return id;
 }
 
+#if THE_ISA != NULL_ISA
+bool
+System::schedule(PCEvent *event)
+{
+    return pcEventQueue.schedule(event);
+}
+
+bool
+System::remove(PCEvent *event)
+{
+    return pcEventQueue.remove(event);
+}
+#endif
+
 int
 System::numRunningContexts()
 {

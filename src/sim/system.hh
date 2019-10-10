@@ -74,7 +74,8 @@
  */
 #if THE_ISA != NULL_ISA
 #include "cpu/pc_event.hh"
-
+#else
+class PCEvent;
 #endif
 
 class BaseRemoteGDB;
@@ -83,6 +84,9 @@ class ObjectFile;
 class ThreadContext;
 
 class System : public SimObject
+#if THE_ISA != NULL_ISA
+               , public PCEventScope
+#endif
 {
   private:
 
@@ -200,6 +204,13 @@ class System : public SimObject
 
     std::vector<ThreadContext *> threadContexts;
     const bool multiThread;
+
+    using SimObject::schedule;
+
+#if THE_ISA != NULL_ISA
+    bool schedule(PCEvent *event) override;
+    bool remove(PCEvent *event) override;
+#endif
 
     ThreadContext *getThreadContext(ContextID tid) const
     {
@@ -493,7 +504,7 @@ class System : public SimObject
 
 #if THE_ISA != NULL_ISA
         if (symtab->findAddress(lbl, addr)) {
-            T *ev = new T(&pcEventQueue, desc, fixFuncEventAddr(addr),
+            T *ev = new T(this, desc, fixFuncEventAddr(addr),
                           std::forward<Args>(args)...);
             return ev;
         }

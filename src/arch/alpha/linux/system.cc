@@ -149,7 +149,7 @@ LinuxAlphaSystem::setupFuncEvents()
     // leads to non-intuitive behavior with --trace-start.
     Addr addr = 0;
     if (false && kernelSymtab->findAddress("alpha_switch_to", addr)) {
-        printThreadEvent = new PrintThreadInfo(&pcEventQueue, "threadinfo",
+        printThreadEvent = new PrintThreadInfo(this, "threadinfo",
                                                addr + sizeof(MachInst) * 6);
     } else {
         printThreadEvent = NULL;
