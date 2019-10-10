@@ -92,13 +92,6 @@ PCEventQueue::doService(ThreadContext *tc)
     int serviced = 0;
     range_t range = equal_range(pc);
     for (iterator i = range.first; i != range.second; ++i) {
-        // Make sure that the pc wasn't changed as the side effect of
-        // another event.  This for example, prevents two invocations
-        // of the SkipFuncEvent.  Maybe we should have separate PC
-        // event queues for each processor?
-        if (pc != tc->instAddr())
-            continue;
-
         DPRINTF(PCEvent, "PC based event serviced at %#x: %s\n",
                 (*i)->pc(), (*i)->descr());
 
