@@ -1114,6 +1114,8 @@ DefaultCommit<Impl>::commitInsts()
                         oldpc = pc[tid].instAddr();
                         cpu->system->pcEventQueue.service(
                                 oldpc, thread[tid]->getTC());
+                        thread[tid]->pcEventQueue.service(
+                                oldpc, thread[tid]->getTC());
                         count++;
                     } while (oldpc != pc[tid].instAddr());
                     if (count > 1) {

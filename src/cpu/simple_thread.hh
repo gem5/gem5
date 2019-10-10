@@ -126,6 +126,8 @@ class SimpleThread : public ThreadState, public ThreadContext
         return csprintf("%s.[tid:%i]", baseCpu->name(), threadId());
     }
 
+    PCEventQueue pcEventQueue;
+
     System *system;
 
     BaseTLB *itb;
@@ -187,6 +189,9 @@ class SimpleThread : public ThreadState, public ThreadContext
     /*******************************************
      * ThreadContext interface functions.
      ******************************************/
+
+    bool schedule(PCEvent *e) override { return pcEventQueue.schedule(e); }
+    bool remove(PCEvent *e) override { return pcEventQueue.remove(e); }
 
     BaseCPU *getCpuPtr() override { return baseCpu; }
 

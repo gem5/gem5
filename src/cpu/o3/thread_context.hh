@@ -75,6 +75,17 @@ class O3ThreadContext : public ThreadContext
    /** Pointer to the CPU. */
     O3CPU *cpu;
 
+    bool
+    schedule(PCEvent *e) override
+    {
+        return thread->pcEventQueue.schedule(e);
+    }
+    bool
+    remove(PCEvent *e) override
+    {
+        return thread->pcEventQueue.remove(e);
+    }
+
     /** Pointer to the thread state that this TC corrseponds to. */
     O3ThreadState<Impl> *thread;
 

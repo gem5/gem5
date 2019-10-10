@@ -72,7 +72,10 @@ struct O3ThreadState : public ThreadState {
   private:
     /** Pointer to the CPU. */
     O3CPU *cpu;
+
   public:
+    PCEventQueue pcEventQueue;
+
     /* This variable controls if writes to a thread context should cause a all
      * dynamic/speculative state to be thrown away. Nominally this is the
      * desired behavior because the external thread context write has updated

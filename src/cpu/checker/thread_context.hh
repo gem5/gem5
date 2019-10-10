@@ -89,6 +89,8 @@ class CheckerThreadContext : public ThreadContext
     CheckerCPU *checkerCPU;
 
   public:
+    bool schedule(PCEvent *e) override { return actualTC->schedule(e); }
+    bool remove(PCEvent *e) override { return actualTC->remove(e); }
 
     BaseCPU *getCpuPtr() override { return actualTC->getCpuPtr(); }
 

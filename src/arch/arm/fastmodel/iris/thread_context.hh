@@ -93,6 +93,9 @@ class ThreadContext : public ::ThreadContext
                   const std::string &iris_path);
     virtual ~ThreadContext();
 
+    bool schedule(PCEvent *e) override { return false; }
+    bool remove(PCEvent *e) override { return false; }
+
     virtual Counter
     totalInsts()
     {

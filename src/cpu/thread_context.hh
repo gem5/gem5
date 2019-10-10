@@ -51,6 +51,7 @@
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
+#include "cpu/pc_event.hh"
 #include "cpu/reg_class.hh"
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and
@@ -88,7 +89,7 @@ namespace Kernel {
  * interface; the ExecContext is a more implicit interface that must
  * be implemented so that the ISA can access whatever state it needs.
  */
-class ThreadContext
+class ThreadContext : public PCEventScope
 {
   protected:
     typedef TheISA::MachInst MachInst;
