@@ -102,6 +102,7 @@ GTest('circular_queue.test', 'circular_queue.test.cc')
 GTest('sat_counter.test', 'sat_counter.test.cc')
 GTest('refcnt.test','refcnt.test.cc')
 GTest('condcodes.test', 'condcodes.test.cc')
+GTest('chunk_generator.test', 'chunk_generator.test.cc')
 
 DebugFlag('Annotate', "State machine annotation debugging")
 DebugFlag('AnnotateQ', "State machine annotation queue debugging")
