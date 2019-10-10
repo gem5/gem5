@@ -127,7 +127,7 @@ BreakPCEvent::BreakPCEvent(PCEventScope *s, const std::string &desc, Addr addr,
 void
 BreakPCEvent::process(ThreadContext *tc)
 {
-    StringWrap name(tc->getCpuPtr()->name() + ".break_event");
+    StringWrap name("break_event");
     DPRINTFN("break event %s triggered\n", descr());
     Debug::breakpoint();
     if (remove)
@@ -142,6 +142,6 @@ PanicPCEvent::PanicPCEvent(PCEventScope *s, const std::string &desc, Addr pc)
 void
 PanicPCEvent::process(ThreadContext *tc)
 {
-    StringWrap name(tc->getCpuPtr()->name() + ".panic_event");
+    StringWrap name("panic_event");
     panic(descr());
 }
