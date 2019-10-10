@@ -117,7 +117,14 @@ sext(uint64_t val)
 }
 
 /**
- * Return val with bits first to last set to bit_val
+ * Returns val with bits first to last set to the LSBs of bit_val
+ *
+ * E.g.:
+ * first: 7
+ * last:  4
+ * val:      0xFFFF
+ * bit_val:  0x0000
+ * returned: 0xFF0F
  */
 template <class T, class B>
 inline
