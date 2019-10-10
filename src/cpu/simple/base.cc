@@ -600,7 +600,6 @@ BaseSimpleCPU::postExecute()
 
     if (curStaticInst->isLoad()) {
         ++t_info.numLoad;
-        comLoadEventQueue[curThread]->serviceEvents(t_info.numLoad);
     }
 
     if (CPA::available()) {

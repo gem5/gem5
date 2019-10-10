@@ -55,7 +55,6 @@ O3CheckerParams::create()
     // cpu and therefore any parameters for early exit don't make much
     // sense.
     fatal_if(max_insts_any_thread || max_insts_all_threads ||
-             max_loads_any_thread || max_loads_all_threads ||
              progress_interval, "Invalid checker parameters");
 
     return new O3Checker(this);

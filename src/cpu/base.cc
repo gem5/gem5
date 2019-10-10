@@ -195,32 +195,9 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
         }
     }
 
-    // allocate per-thread load-based event queues
-    comLoadEventQueue = new EventQueue *[numThreads];
-    for (ThreadID tid = 0; tid < numThreads; ++tid)
-        comLoadEventQueue[tid] = new EventQueue("load-based event queue");
-
     //
     // set up instruction-count-based termination events, if any
     //
-    if (p->max_loads_any_thread != 0) {
-        const char *cause = "a thread reached the max load count";
-        for (ThreadID tid = 0; tid < numThreads; ++tid)
-            scheduleLoadStop(tid, p->max_loads_any_thread, cause);
-    }
-
-    if (p->max_loads_all_threads != 0) {
-        const char *cause = "all threads reached the max load count";
-        // allocate & initialize shared downcounter: each event will
-        // decrement this when triggered; simulation will terminate
-        // when counter reaches 0
-        int *counter = new int;
-        *counter = numThreads;
-        for (ThreadID tid = 0; tid < numThreads; ++tid) {
-            Event *event = new CountedExitEvent(cause, *counter);
-            comLoadEventQueue[tid]->schedule(event, p->max_loads_all_threads);
-        }
-    }
 
     functionTracingEnabled = false;
     if (p->function_trace) {
@@ -273,7 +250,6 @@ BaseCPU::enableFunctionTrace()
 BaseCPU::~BaseCPU()
 {
     delete profileEvent;
-    delete[] comLoadEventQueue;
     delete[] comInstEventQueue;
 }
 
@@ -779,15 +755,6 @@ bool AddressMonitor::doMonitor(PacketPtr pkt) {
         }
     }
     return false;
-}
-
-void
-BaseCPU::scheduleLoadStop(ThreadID tid, Counter loads, const char *cause)
-{
-    const Tick now(comLoadEventQueue[tid]->getCurTick());
-    Event *event(new LocalSimLoopExitEvent(cause, 0));
-
-    comLoadEventQueue[tid]->schedule(event, now + loads);
 }
 
 

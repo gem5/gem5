@@ -390,13 +390,6 @@ class BaseCPU : public ClockedObject
      */
     EventQueue **comInstEventQueue;
 
-    /**
-     * Vector of per-thread load-based event queues.  Used for
-     * scheduling events based on number of loads committed by
-     *a particular thread.
-     */
-    EventQueue **comLoadEventQueue;
-
     System *system;
 
     /**
@@ -462,21 +455,6 @@ class BaseCPU : public ClockedObject
      * @param cause Cause to signal in the exit event.
      */
     void scheduleInstStop(ThreadID tid, Counter insts, const char *cause);
-
-    /**
-     * Schedule an event that exits the simulation loops after a
-     * predefined number of load operations.
-     *
-     * This method is usually called from the configuration script to
-     * get an exit event some time in the future. It is typically used
-     * when the script wants to simulate for a specific number of
-     * loads rather than ticks.
-     *
-     * @param tid Thread monitor.
-     * @param loads Number of load instructions into the future.
-     * @param cause Cause to signal in the exit event.
-     */
-    void scheduleLoadStop(ThreadID tid, Counter loads, const char *cause);
 
     /**
      * Get the number of instructions executed by the specified thread

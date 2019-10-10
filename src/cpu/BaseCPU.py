@@ -122,7 +122,6 @@ class BaseCPU(ClockedObject):
         PyBindMethod("flushTLBs"),
         PyBindMethod("totalInsts"),
         PyBindMethod("scheduleInstStop"),
-        PyBindMethod("scheduleLoadStop"),
         PyBindMethod("getCurrentInstCount"),
     ]
 
@@ -196,10 +195,6 @@ class BaseCPU(ClockedObject):
         "terminate when any thread reaches this inst count")
     simpoint_start_insts = VectorParam.Counter([],
         "starting instruction counts of simpoints")
-    max_loads_all_threads = Param.Counter(0,
-        "terminate when all threads have reached this load count")
-    max_loads_any_thread = Param.Counter(0,
-        "terminate when any thread reaches this load count")
     progress_interval = Param.Frequency('0Hz',
         "frequency to print out the progress message")
 
