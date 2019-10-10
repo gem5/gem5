@@ -99,6 +99,7 @@ class System : public SimObject, public PCEventScope
         { panic("SystemPort does not expect retry!\n"); }
     };
 
+    std::list<PCEvent *> liveEvents;
     SystemPort _systemPort;
 
   public:
@@ -185,8 +186,6 @@ class System : public SimObject, public PCEventScope
      * Get the cache line size of the system.
      */
     unsigned int cacheLineSize() const { return _cacheLineSize; }
-
-    PCEventQueue pcEventQueue;
 
     std::vector<ThreadContext *> threadContexts;
     const bool multiThread;

@@ -265,6 +265,8 @@ System::registerThreadContext(ThreadContext *tc, ContextID assigned)
              "Cannot have two CPUs with the same id (%d)\n", id);
 
     threadContexts[id] = tc;
+    for (auto *e: liveEvents)
+        tc->schedule(e);
 
 #if THE_ISA != NULL_ISA
     int port = getRemoteGDBPort();
@@ -295,13 +297,21 @@ System::registerThreadContext(ThreadContext *tc, ContextID assigned)
 bool
 System::schedule(PCEvent *event)
 {
-    return pcEventQueue.schedule(event);
+    bool all = true;
+    liveEvents.push_back(event);
+    for (auto *tc: threadContexts)
+        all = tc->schedule(event) && all;
+    return all;
 }
 
 bool
 System::remove(PCEvent *event)
 {
-    return pcEventQueue.remove(event);
+    bool all = true;
+    liveEvents.remove(event);
+    for (auto *tc: threadContexts)
+        all = tc->remove(event) && all;
+    return all;
 }
 
 int
@@ -363,6 +373,10 @@ System::replaceThreadContext(ThreadContext *tc, ContextID context_id)
               context_id, threadContexts.size());
     }
 
+    for (auto *e: liveEvents) {
+        threadContexts[context_id]->remove(e);
+        tc->schedule(e);
+    }
     threadContexts[context_id] = tc;
     if (context_id < remoteGDB.size())
         remoteGDB[context_id]->replaceThreadContext(tc);
