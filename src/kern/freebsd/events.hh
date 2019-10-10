@@ -57,9 +57,9 @@ class UDelayEvent : public SkipFuncEvent
     uint64_t argMultToNs;
 
   public:
-    UDelayEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+    UDelayEvent(PCEventScope *s, const std::string &desc, Addr addr,
             uint64_t mult, uint64_t div)
-        : SkipFuncEvent(q, desc, addr), argDivToNs(div), argMultToNs(mult) {}
+        : SkipFuncEvent(s, desc, addr), argDivToNs(div), argMultToNs(mult) {}
     virtual void process(ThreadContext *xc);
 };
 

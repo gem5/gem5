@@ -54,16 +54,16 @@ class LinuxMipsSystem : public MipsSystem
     class SkipDelayLoopEvent : public SkipFuncEvent
     {
       public:
-        SkipDelayLoopEvent(PCEventQueue *q, const std::string &desc, Addr addr)
-            : SkipFuncEvent(q, desc, addr) {}
+        SkipDelayLoopEvent(PCEventScope *s, const std::string &desc, Addr addr)
+            : SkipFuncEvent(s, desc, addr) {}
         virtual void process(ThreadContext *tc);
     };
 
     class PrintThreadInfo : public PCEvent
     {
       public:
-        PrintThreadInfo(PCEventQueue *q, const std::string &desc, Addr addr)
-            : PCEvent(q, desc, addr) {}
+        PrintThreadInfo(PCEventScope *s, const std::string &desc, Addr addr)
+            : PCEvent(s, desc, addr) {}
         virtual void process(ThreadContext *tc);
     };
 

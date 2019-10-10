@@ -126,9 +126,9 @@ PCEventQueue::equal_range(Addr pc)
     return std::equal_range(pcMap.begin(), pcMap.end(), pc, MapCompare());
 }
 
-BreakPCEvent::BreakPCEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+BreakPCEvent::BreakPCEvent(PCEventScope *s, const std::string &desc, Addr addr,
                            bool del)
-    : PCEvent(q, desc, addr), remove(del)
+    : PCEvent(s, desc, addr), remove(del)
 {
 }
 
@@ -142,8 +142,8 @@ BreakPCEvent::process(ThreadContext *tc)
         delete this;
 }
 
-PanicPCEvent::PanicPCEvent(PCEventQueue *q, const std::string &desc, Addr pc)
-    : PCEvent(q, desc, pc)
+PanicPCEvent::PanicPCEvent(PCEventScope *s, const std::string &desc, Addr pc)
+    : PCEvent(s, desc, pc)
 {
 }
 

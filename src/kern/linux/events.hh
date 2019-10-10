@@ -51,8 +51,8 @@ namespace Linux {
 class DebugPrintkEvent : public SkipFuncEvent
 {
   public:
-    DebugPrintkEvent(PCEventQueue *q, const std::string &desc, Addr addr)
-        : SkipFuncEvent(q, desc, addr) {}
+    DebugPrintkEvent(PCEventScope *s, const std::string &desc, Addr addr)
+        : SkipFuncEvent(s, desc, addr) {}
     virtual void process(ThreadContext *xc);
 };
 
@@ -70,9 +70,9 @@ class DmesgDumpEvent : public PCEvent
     std::string fname;
 
   public:
-    DmesgDumpEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+    DmesgDumpEvent(PCEventScope *s, const std::string &desc, Addr addr,
                    const std::string &_fname)
-        : PCEvent(q, desc, addr), fname(_fname) {}
+        : PCEvent(s, desc, addr), fname(_fname) {}
     virtual void process(ThreadContext *xc);
 };
 
@@ -90,9 +90,9 @@ class KernelPanicEvent : public PCEvent
     std::string fname;
 
   public:
-    KernelPanicEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+    KernelPanicEvent(PCEventScope *s, const std::string &desc, Addr addr,
                const std::string &_fname)
-        : PCEvent(q, desc, addr), fname(_fname) {}
+        : PCEvent(s, desc, addr), fname(_fname) {}
     virtual void process(ThreadContext *xc);
 };
 
@@ -116,9 +116,9 @@ class UDelayEvent : public SkipFuncEvent
     uint64_t argMultToNs;
 
   public:
-    UDelayEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+    UDelayEvent(PCEventScope *s, const std::string &desc, Addr addr,
             uint64_t mult, uint64_t div)
-        : SkipFuncEvent(q, desc, addr), argDivToNs(div), argMultToNs(mult) {}
+        : SkipFuncEvent(s, desc, addr), argDivToNs(div), argMultToNs(mult) {}
     virtual void process(ThreadContext *xc);
 };
 

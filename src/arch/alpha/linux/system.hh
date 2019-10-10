@@ -53,15 +53,15 @@ class LinuxAlphaSystem : public AlphaSystem
   private:
     struct SkipDelayLoopEvent : public SkipFuncEvent
     {
-        SkipDelayLoopEvent(PCEventQueue *q, const std::string &desc, Addr addr)
-            : SkipFuncEvent(q, desc, addr) {}
+        SkipDelayLoopEvent(PCEventScope *s, const std::string &desc, Addr addr)
+            : SkipFuncEvent(s, desc, addr) {}
         virtual void process(ThreadContext *tc);
     };
 
     struct PrintThreadInfo : public PCEvent
     {
-        PrintThreadInfo(PCEventQueue *q, const std::string &desc, Addr addr)
-            : PCEvent(q, desc, addr) {}
+        PrintThreadInfo(PCEventScope *s, const std::string &desc, Addr addr)
+            : PCEvent(s, desc, addr) {}
         virtual void process(ThreadContext *tc);
     };
 

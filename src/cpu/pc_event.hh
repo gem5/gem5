@@ -40,18 +40,19 @@
 class ThreadContext;
 class PCEventQueue;
 class System;
+class PCEventScope;
 
 class PCEvent
 {
   protected:
     std::string description;
-    PCEventQueue *queue;
+    PCEventScope *scope;
     Addr evpc;
 
   public:
-    PCEvent(PCEventQueue *q, const std::string &desc, Addr pc);
+    PCEvent(PCEventScope *q, const std::string &desc, Addr pc);
 
-    virtual ~PCEvent() { if (queue) remove(); }
+    virtual ~PCEvent() { if (scope) remove(); }
 
     // for DPRINTF
     virtual const std::string name() const { return description; }
@@ -63,7 +64,14 @@ class PCEvent
     virtual void process(ThreadContext *tc) = 0;
 };
 
-class PCEventQueue
+class PCEventScope
+{
+  public:
+    virtual bool remove(PCEvent *event) = 0;
+    virtual bool schedule(PCEvent *event) = 0;
+};
+
+class PCEventQueue : public PCEventScope
 {
   protected:
     class MapCompare {
@@ -103,8 +111,8 @@ class PCEventQueue
     PCEventQueue();
     ~PCEventQueue();
 
-    bool remove(PCEvent *event);
-    bool schedule(PCEvent *event);
+    bool remove(PCEvent *event) override;
+    bool schedule(PCEvent *event) override;
     bool service(ThreadContext *tc)
     {
         if (pcMap.empty())
@@ -121,19 +129,19 @@ class PCEventQueue
 
 
 inline
-PCEvent::PCEvent(PCEventQueue *q, const std::string &desc, Addr pc)
-    : description(desc), queue(q), evpc(pc)
+PCEvent::PCEvent(PCEventScope *s, const std::string &desc, Addr pc)
+    : description(desc), scope(s), evpc(pc)
 {
-    queue->schedule(this);
+    scope->schedule(this);
 }
 
 inline bool
 PCEvent::remove()
 {
-    if (!queue)
+    if (!scope)
         panic("cannot remove an uninitialized event;");
 
-    return queue->remove(this);
+    return scope->remove(this);
 }
 
 class BreakPCEvent : public PCEvent
@@ -142,7 +150,7 @@ class BreakPCEvent : public PCEvent
     bool remove;
 
   public:
-    BreakPCEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+    BreakPCEvent(PCEventScope *s, const std::string &desc, Addr addr,
                  bool del = false);
     virtual void process(ThreadContext *tc);
 };
@@ -150,7 +158,7 @@ class BreakPCEvent : public PCEvent
 class PanicPCEvent : public PCEvent
 {
   public:
-    PanicPCEvent(PCEventQueue *q, const std::string &desc, Addr pc);
+    PanicPCEvent(PCEventScope *s, const std::string &desc, Addr pc);
     virtual void process(ThreadContext *tc);
 };
 

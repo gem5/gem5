@@ -127,8 +127,8 @@ class LinuxArmSystem : public GenericArmSystem
 class DumpStatsPCEvent : public PCEvent
 {
   public:
-    DumpStatsPCEvent(PCEventQueue *q, const std::string &desc, Addr addr)
-        : PCEvent(q, desc, addr)
+    DumpStatsPCEvent(PCEventScope *s, const std::string &desc, Addr addr)
+        : PCEvent(s, desc, addr)
     {}
 
     virtual void process(ThreadContext* tc);
@@ -140,8 +140,8 @@ class DumpStatsPCEvent : public PCEvent
 
 class DumpStatsPCEvent64 : public DumpStatsPCEvent {
   public:
-    DumpStatsPCEvent64(PCEventQueue *q, const std::string &desc, Addr addr)
-        : DumpStatsPCEvent(q, desc, addr)
+    DumpStatsPCEvent64(PCEventScope *s, const std::string &desc, Addr addr)
+        : DumpStatsPCEvent(s, desc, addr)
     {}
   private:
     void getTaskDetails(ThreadContext *tc, uint32_t &pid, uint32_t &tgid,
