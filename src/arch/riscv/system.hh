@@ -79,21 +79,8 @@ class RiscvSystem : public System
     /** Object pointer for the console code */
     ObjectFile *console;
 
-#ifndef NDEBUG
-  /** Event to halt the simulator if the console calls panic() */
-    BreakPCEvent *consolePanicEvent;
-#endif
-
   protected:
     const Params *params() const { return (const Params *)_params; }
-
-    /** Add a function-based event to the console code. */
-    template <class T>
-    T *
-    addConsoleFuncEvent(const char *lbl)
-    {
-        return addFuncEvent<T>(consoleSymtab, lbl);
-    }
 
     virtual Addr fixFuncEventAddr(Addr addr);
 
