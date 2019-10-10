@@ -841,7 +841,7 @@ Execute::tryPCEvents(ThreadID thread_id)
     Addr oldPC;
     do {
         oldPC = thread->instAddr();
-        cpu.system->pcEventQueue.service(thread);
+        cpu.system->pcEventQueue.service(oldPC, thread);
         num_pc_event_checks++;
     } while (oldPC != thread->instAddr());
 

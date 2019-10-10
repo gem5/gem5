@@ -144,7 +144,7 @@ BaseSimpleCPU::checkPcEventQueue()
     Addr oldpc, pc = threadInfo[curThread]->thread->instAddr();
     do {
         oldpc = pc;
-        system->pcEventQueue.service(threadContexts[curThread]);
+        system->pcEventQueue.service(oldpc, threadContexts[curThread]);
         pc = threadInfo[curThread]->thread->instAddr();
     } while (oldpc != pc);
 }

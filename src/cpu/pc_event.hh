@@ -105,7 +105,7 @@ class PCEventQueue : public PCEventScope
   protected:
     Map pcMap;
 
-    bool doService(ThreadContext *tc);
+    bool doService(Addr pc, ThreadContext *tc);
 
   public:
     PCEventQueue();
@@ -113,12 +113,12 @@ class PCEventQueue : public PCEventScope
 
     bool remove(PCEvent *event) override;
     bool schedule(PCEvent *event) override;
-    bool service(ThreadContext *tc)
+    bool service(Addr pc, ThreadContext *tc)
     {
         if (pcMap.empty())
             return false;
 
-        return doService(tc);
+        return doService(pc, tc);
     }
 
     range_t equal_range(Addr pc);

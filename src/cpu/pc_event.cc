@@ -84,11 +84,10 @@ PCEventQueue::schedule(PCEvent *event)
 }
 
 bool
-PCEventQueue::doService(ThreadContext *tc)
+PCEventQueue::doService(Addr pc, ThreadContext *tc)
 {
-    // This will fail to break on Alpha PALcode addresses, but that is
-    // a rare use case.
-    Addr pc = tc->instAddr();
+    // Using the raw PC address will fail to break on Alpha PALcode addresses,
+    // but that is a rare use case.
     int serviced = 0;
     range_t range = equal_range(pc);
     for (iterator i = range.first; i != range.second; ++i) {

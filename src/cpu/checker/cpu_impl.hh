@@ -412,7 +412,7 @@ Checker<Impl>::verify(const DynInstPtr &completed_inst)
             int count = 0;
             do {
                 oldpc = thread->instAddr();
-                system->pcEventQueue.service(tc);
+                system->pcEventQueue.service(oldpc, tc);
                 count++;
             } while (oldpc != thread->instAddr());
             if (count > 1) {
