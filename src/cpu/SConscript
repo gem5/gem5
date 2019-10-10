@@ -72,6 +72,8 @@ CompoundFlag('ExecNoTicks', [ 'ExecEnable', 'ExecOpClass', 'ExecThread',
     'ExecEffAddr', 'ExecResult', 'ExecMicro', 'ExecMacro', 'ExecFaulting',
     'ExecUser', 'ExecKernel' ])
 
+Source('pc_event.cc')
+
 if env['TARGET_ISA'] == 'null':
     SimObject('IntrControl.py')
     Source('intr_control_noisa.cc')
@@ -99,7 +101,6 @@ Source('func_unit.cc')
 Source('inteltrace.cc')
 Source('intr_control.cc')
 Source('nativetrace.cc')
-Source('pc_event.cc')
 Source('profile.cc')
 Source('quiesce_event.cc')
 Source('reg_class.cc')

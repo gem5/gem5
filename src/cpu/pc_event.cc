@@ -37,8 +37,6 @@
 
 #include "base/debug.hh"
 #include "base/trace.hh"
-#include "cpu/base.hh"
-#include "cpu/thread_context.hh"
 #include "debug/PCEvent.hh"
 #include "sim/core.hh"
 #include "sim/system.hh"

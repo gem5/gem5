@@ -57,6 +57,7 @@
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
+#include "cpu/pc_event.hh"
 #include "enums/MemoryMode.hh"
 #include "mem/mem_master.hh"
 #include "mem/physical.hh"
@@ -68,25 +69,12 @@
 #include "sim/se_signal.hh"
 #include "sim/sim_object.hh"
 
-/**
- * To avoid linking errors with LTO, only include the header if we
- * actually have the definition.
- */
-#if THE_ISA != NULL_ISA
-#include "cpu/pc_event.hh"
-#else
-class PCEvent;
-#endif
-
 class BaseRemoteGDB;
 class KvmVM;
 class ObjectFile;
 class ThreadContext;
 
-class System : public SimObject
-#if THE_ISA != NULL_ISA
-               , public PCEventScope
-#endif
+class System : public SimObject, public PCEventScope
 {
   private:
 
@@ -198,19 +186,15 @@ class System : public SimObject
      */
     unsigned int cacheLineSize() const { return _cacheLineSize; }
 
-#if THE_ISA != NULL_ISA
     PCEventQueue pcEventQueue;
-#endif
 
     std::vector<ThreadContext *> threadContexts;
     const bool multiThread;
 
     using SimObject::schedule;
 
-#if THE_ISA != NULL_ISA
     bool schedule(PCEvent *event) override;
     bool remove(PCEvent *event) override;
-#endif
 
     ThreadContext *getThreadContext(ContextID tid) const
     {
@@ -502,13 +486,11 @@ class System : public SimObject
     {
         Addr addr M5_VAR_USED = 0; // initialize only to avoid compiler warning
 
-#if THE_ISA != NULL_ISA
         if (symtab->findAddress(lbl, addr)) {
             T *ev = new T(this, desc, fixFuncEventAddr(addr),
                           std::forward<Args>(args)...);
             return ev;
         }
-#endif
 
         return NULL;
     }
