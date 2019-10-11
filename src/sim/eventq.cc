@@ -392,7 +392,8 @@ Event::trace(const char *action)
     // more informative message in the trace, override this method on
     // the particular subclass where you have the information that
     // needs to be printed.
-    DPRINTFN("%s event %s @ %d\n", description(), action, when());
+    DPRINTF_UNCONDITIONAL(Event, "%s event %s @ %d\n",
+            description(), action, when());
 }
 
 void
