@@ -46,7 +46,6 @@ DebugFlag('ExecRegDelta')
 DebugFlag('ExecResult', 'Format: Include results from execution')
 DebugFlag('ExecSymbol', 'Format: Try to include symbol names')
 DebugFlag('ExecThread', 'Format: Include thread ID in trace')
-DebugFlag('ExecTicks', 'Format: Include tick count')
 DebugFlag('ExecMicro', 'Filter: Include microops')
 DebugFlag('ExecMacro', 'Filter: Include macroops')
 DebugFlag('ExecUser', 'Filter: Trace user mode instructions')
@@ -63,14 +62,12 @@ DebugFlag('Mwait')
 CompoundFlag('ExecAll', [ 'ExecEnable', 'ExecCPSeq', 'ExecEffAddr',
     'ExecFaulting', 'ExecFetchSeq', 'ExecOpClass', 'ExecRegDelta',
     'ExecResult', 'ExecSymbol', 'ExecThread',
-    'ExecTicks', 'ExecMicro', 'ExecMacro', 'ExecUser', 'ExecKernel',
+    'ExecMicro', 'ExecMacro', 'ExecUser', 'ExecKernel',
     'ExecAsid', 'ExecFlags' ])
-CompoundFlag('Exec', [ 'ExecEnable', 'ExecTicks', 'ExecOpClass', 'ExecThread',
+CompoundFlag('Exec', [ 'ExecEnable', 'ExecOpClass', 'ExecThread',
     'ExecEffAddr', 'ExecResult', 'ExecSymbol', 'ExecMicro', 'ExecMacro',
     'ExecFaulting', 'ExecUser', 'ExecKernel' ])
-CompoundFlag('ExecNoTicks', [ 'ExecEnable', 'ExecOpClass', 'ExecThread',
-    'ExecEffAddr', 'ExecResult', 'ExecMicro', 'ExecMacro', 'ExecFaulting',
-    'ExecUser', 'ExecKernel' ])
+CompoundFlag('ExecNoTicks', [ 'Exec', 'FmtTicksOff' ])
 
 Source('pc_event.cc')
 

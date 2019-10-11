@@ -46,6 +46,7 @@
 #include "base/output.hh"
 #include "base/str.hh"
 #include "debug/FmtFlag.hh"
+#include "debug/FmtTicksOff.hh"
 
 const std::string &name()
 {
@@ -150,7 +151,7 @@ OstreamLogger::logMessage(Tick when, const std::string &name,
     if (!name.empty() && ignore.match(name))
         return;
 
-    if (when != MaxTick)
+    if (!DTRACE(FmtTicksOff) && (when != MaxTick))
         ccprintf(stream, "%7d: ", when);
 
     if (DTRACE(FmtFlag) && !flag.empty())

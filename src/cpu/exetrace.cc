@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 ARM Limited
+ * Copyright (c) 2017, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -55,6 +55,7 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "debug/ExecAll.hh"
+#include "debug/FmtTicksOff.hh"
 #include "enums/OpClass.hh"
 
 using namespace std;
@@ -79,7 +80,7 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
         if (!in_user_mode && !Debug::ExecKernel) return;
     }
 
-    if (Debug::ExecTicks)
+    if (!DTRACE(FmtTicksOff))
         dumpTicks(outs);
 
     outs << thread->getCpuPtr()->name() << " ";
