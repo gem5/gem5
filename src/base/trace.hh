@@ -217,6 +217,11 @@ class Named
     Trace::getDebugLogger()->dprintf((Tick)-1, std::string(), __VA_ARGS__); \
 } while (0)
 
+#define DPRINTF_UNCONDITIONAL(x, ...) do {    \
+    Trace::getDebugLogger()->dprintf_flag(    \
+        curTick(), name(), #x, __VA_ARGS__);  \
+} while (0)
+
 #else // !TRACING_ON
 
 #define DTRACE(x) (false)
