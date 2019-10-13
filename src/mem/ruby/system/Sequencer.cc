@@ -48,6 +48,7 @@
 #include "debug/LLSC.hh"
 #include "debug/MemoryAccess.hh"
 #include "debug/ProtocolTrace.hh"
+#include "debug/RubyHitMiss.hh"
 #include "debug/RubySequencer.hh"
 #include "debug/RubyStats.hh"
 #include "mem/packet.hh"
@@ -629,6 +630,10 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
         Addr line_addr = makeLineAddress(request_address);
         llscLoadLinked(line_addr);
     }
+
+    DPRINTF(RubyHitMiss, "Cache %s at %#x\n",
+                         externalHit ? "miss" : "hit",
+                         printAddress(request_address));
 
     // update the data unless it is a non-data-carrying flush
     if (RubySystem::getWarmupEnabled()) {

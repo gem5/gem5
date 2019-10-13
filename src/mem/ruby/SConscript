@@ -68,11 +68,12 @@ DebugFlag('RubyTester')
 DebugFlag('RubyStats')
 DebugFlag('RubyResourceStalls')
 DebugFlag('RubyProtocol')
+DebugFlag('RubyHitMiss')
 
 CompoundFlag('Ruby', [ 'RubyQueue', 'RubyNetwork', 'RubyTester',
     'RubyGenerated', 'RubySlicc', 'RubySystem', 'RubyCache',
     'RubyDma', 'RubyPort', 'RubySequencer', 'RubyCacheTrace',
-    'RubyPrefetcher', 'RubyProtocol'])
+    'RubyPrefetcher', 'RubyProtocol', 'RubyHitMiss'])
 
 #
 # Link includes
