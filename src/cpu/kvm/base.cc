@@ -630,7 +630,7 @@ BaseKvmCPU::tick()
 
       case RunningServiceCompletion:
       case Running: {
-          const uint64_t nextInstEvent(nextInstEventCount(0));
+          const uint64_t nextInstEvent(tc->nextInstEventCount());
           // Enter into KVM and complete pending IO instructions if we
           // have an instruction event pending.
           const Tick ticksToExecute(
@@ -686,7 +686,7 @@ BaseKvmCPU::tick()
           // Service any pending instruction events. The vCPU should
           // have exited in time for the event using the instruction
           // counter configured by setupInstStop().
-          serviceInstCountEvents(0, ctrInsts);
+          tc->serviceInstCountEvents(ctrInsts);
 
           if (tryDrain())
               _status = Idle;
@@ -1346,7 +1346,7 @@ BaseKvmCPU::ioctlRun()
 void
 BaseKvmCPU::setupInstStop()
 {
-    Tick next = nextInstEventCount(0);
+    Tick next = tc->nextInstEventCount();
     if (next == MaxTick) {
         setupInstCounter(0);
     } else {

@@ -870,7 +870,8 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
         cpu.system->totalNumInsts++;
 
         /* Act on events related to instruction counts */
-        cpu.serviceInstCountEvents(inst->id.threadId, thread->numInst);
+        cpu.getContext(inst->id.threadId)->
+            serviceInstCountEvents(thread->numInst);
     }
     thread->numOp++;
     thread->numOps++;

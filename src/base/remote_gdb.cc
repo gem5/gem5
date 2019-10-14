@@ -753,18 +753,16 @@ BaseRemoteGDB::setTempBreakpoint(Addr bkpt)
 void
 BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta)
 {
-    auto *cpu = tc->getCpuPtr();
     // Here "ticks" aren't simulator ticks which measure time, they're
     // instructions committed by the CPU.
-    cpu->scheduleInstCountEvent(tc->threadId(), ev,
-            cpu->getCurrentInstCount(tc->threadId()) + delta);
+    tc->scheduleInstCountEvent(ev, tc->getCurrentInstCount() + delta);
 }
 
 void
 BaseRemoteGDB::descheduleInstCommitEvent(Event *ev)
 {
     if (ev->scheduled())
-        tc->getCpuPtr()->descheduleInstCountEvent(tc->threadId(), ev);
+        tc->descheduleInstCountEvent(ev);
 }
 
 std::map<char, BaseRemoteGDB::GdbCommand> BaseRemoteGDB::command_map = {

@@ -1521,7 +1521,7 @@ FullO3CPU<Impl>::instDone(ThreadID tid, const DynInstPtr &inst)
         system->totalNumInsts++;
 
         // Check for instruction-count-based events.
-        serviceInstCountEvents(tid, thread[tid]->numInst);
+        thread[tid]->tc->serviceInstCountEvents(thread[tid]->numInst);
     }
     thread[tid]->numOp++;
     thread[tid]->numOps++;

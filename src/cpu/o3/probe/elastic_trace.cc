@@ -109,8 +109,8 @@ ElasticTrace::regProbeListeners()
     } else {
         // Schedule an event to register all elastic trace probes when
         // specified no. of instructions are committed.
-        cpu->scheduleInstCountEvent(
-                0, &regEtraceListenersEvent, startTraceInst);
+        cpu->getContext(0)->scheduleInstCountEvent(
+                &regEtraceListenersEvent, startTraceInst);
     }
 }
 

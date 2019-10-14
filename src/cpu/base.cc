@@ -314,8 +314,8 @@ BaseCPU::init()
         *counter = numThreads;
         for (ThreadID tid = 0; tid < numThreads; ++tid) {
             Event *event = new CountedExitEvent(cause, *counter);
-            scheduleInstCountEvent(
-                    tid, event, params()->max_insts_all_threads);
+            threadContexts[tid]->scheduleInstCountEvent(
+                    event, params()->max_insts_all_threads);
         }
     }
 
@@ -725,7 +725,7 @@ BaseCPU::scheduleInstStop(ThreadID tid, Counter insts, const char *cause)
     const Tick now(getCurrentInstCount(tid));
     Event *event(new LocalSimLoopExitEvent(cause, 0));
 
-    scheduleInstCountEvent(tid, event, now + insts);
+    threadContexts[tid]->scheduleInstCountEvent(event, now + insts);
 }
 
 Tick

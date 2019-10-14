@@ -465,30 +465,6 @@ class BaseCPU : public ClockedObject
      */
     uint64_t getCurrentInstCount(ThreadID tid);
 
-    Tick
-    nextInstEventCount(ThreadID tid)
-    {
-        return threadContexts[tid]->nextInstEventCount();
-    }
-
-    void
-    serviceInstCountEvents(ThreadID tid, Tick count)
-    {
-        threadContexts[tid]->serviceInstCountEvents(count);
-    }
-
-    void
-    scheduleInstCountEvent(ThreadID tid, Event *event, Tick count)
-    {
-        threadContexts[tid]->scheduleInstCountEvent(event, count);
-    }
-
-    void
-    descheduleInstCountEvent(ThreadID tid, Event *event)
-    {
-        threadContexts[tid]->descheduleInstCountEvent(event);
-    }
-
   public:
     /**
      * @{
