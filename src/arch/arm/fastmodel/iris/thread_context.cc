@@ -163,6 +163,15 @@ ThreadContext::~ThreadContext()
     client.unregisterEventCallback("ec_IRIS_INSTANCE_REGISTRY_CHANGED");
 }
 
+Tick
+ThreadContext::getCurrentInstCount()
+{
+    uint64_t count;
+    auto ret = call().step_getStepCounterValue(_instId, count, "instruction");
+    panic_if(ret != iris::E_ok, "Failed to get instruction count.");
+    return count;
+}
+
 ThreadContext::Status
 ThreadContext::status() const
 {

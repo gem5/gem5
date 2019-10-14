@@ -100,7 +100,7 @@ class ThreadContext : public ::ThreadContext
     void serviceInstCountEvents(Tick count) override {}
     void scheduleInstCountEvent(Event *event, Tick count) override {}
     void descheduleInstCountEvent(Event *event) override {}
-    Tick getCurrentInstCount() override { return 0; }
+    Tick getCurrentInstCount() override;
 
     virtual Counter
     totalInsts()
