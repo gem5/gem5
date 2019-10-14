@@ -41,12 +41,15 @@
 #include <sstream>
 #include <string>
 
+#include "base/atomicio.hh"
 #include "base/debug.hh"
 #include "base/logging.hh"
 #include "base/output.hh"
 #include "base/str.hh"
 #include "debug/FmtFlag.hh"
+#include "debug/FmtStackTrace.hh"
 #include "debug/FmtTicksOff.hh"
+#include "sim/backtrace.hh"
 
 const std::string &name()
 {
@@ -162,6 +165,11 @@ OstreamLogger::logMessage(Tick when, const std::string &name,
 
     stream << message;
     stream.flush();
+
+    if (DTRACE(FmtStackTrace)) {
+        print_backtrace();
+        STATIC_ERR("\n");
+    }
 }
 
 } // namespace Trace
