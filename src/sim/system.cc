@@ -112,7 +112,6 @@ System::System(Params *p)
       thermalModel(p->thermal_model),
       _params(p),
       totalNumInsts(0),
-      instEventQueue("system instruction-based event queue"),
       redirectPaths(p->redirect_paths)
 {
 

@@ -689,7 +689,6 @@ BaseKvmCPU::tick()
           // have exited in time for the event using the instruction
           // counter configured by setupInstStop().
           comInstEventQueue[0]->serviceEvents(ctrInsts);
-          system->instEventQueue.serviceEvents(system->totalNumInsts);
 
           if (tryDrain())
               _status = Idle;

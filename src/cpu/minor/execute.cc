@@ -871,7 +871,6 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
 
         /* Act on events related to instruction counts */
         cpu.comInstEventQueue[inst->id.threadId]->serviceEvents(thread->numInst);
-        cpu.system->instEventQueue.serviceEvents(cpu.system->totalNumInsts);
     }
     thread->numOp++;
     thread->numOps++;

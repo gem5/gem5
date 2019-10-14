@@ -500,7 +500,6 @@ BaseSimpleCPU::preExecute()
 
     // check for instruction-count-based events
     comInstEventQueue[curThread]->serviceEvents(t_info.numInst);
-    system->instEventQueue.serviceEvents(system->totalNumInsts);
 
     // decode the instruction
     inst = gtoh(inst);
