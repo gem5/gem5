@@ -383,13 +383,6 @@ class BaseCPU : public ClockedObject
      */
     ThreadID numThreads;
 
-    /**
-     * Vector of per-thread instruction-based event queues.  Used for
-     * scheduling events based on number of instructions committed by
-     * a particular thread.
-     */
-    EventQueue **comInstEventQueue;
-
     System *system;
 
     /**

@@ -86,6 +86,33 @@ class O3ThreadContext : public ThreadContext
         return thread->pcEventQueue.remove(e);
     }
 
+    Tick
+    nextInstEventCount() override
+    {
+        return thread->comInstEventQueue.empty() ?
+            MaxTick : thread->comInstEventQueue.nextTick();
+    }
+    void
+    serviceInstCountEvents(Tick count) override
+    {
+        thread->comInstEventQueue.serviceEvents(count);
+    }
+    void
+    scheduleInstCountEvent(Event *event, Tick count) override
+    {
+        thread->comInstEventQueue.schedule(event, count);
+    }
+    void
+    descheduleInstCountEvent(Event *event) override
+    {
+        thread->comInstEventQueue.deschedule(event);
+    }
+    Tick
+    getCurrentInstCount() override
+    {
+        return thread->comInstEventQueue.getCurTick();
+    }
+
     /** Pointer to the thread state that this TC corrseponds to. */
     O3ThreadState<Impl> *thread;
 

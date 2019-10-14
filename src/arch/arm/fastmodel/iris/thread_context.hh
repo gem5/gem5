@@ -96,6 +96,12 @@ class ThreadContext : public ::ThreadContext
     bool schedule(PCEvent *e) override { return false; }
     bool remove(PCEvent *e) override { return false; }
 
+    Tick nextInstEventCount() override { return MaxTick; }
+    void serviceInstCountEvents(Tick count) override {}
+    void scheduleInstCountEvent(Event *event, Tick count) override {}
+    void descheduleInstCountEvent(Event *event) override {}
+    Tick getCurrentInstCount() override { return 0; }
+
     virtual Counter
     totalInsts()
     {

@@ -55,41 +55,6 @@
 #include "params/BaseCPU.hh"
 #include "sim/full_system.hh"
 
-Tick
-ThreadContext::nextInstEventCount()
-{
-    auto *queue = getCpuPtr()->comInstEventQueue[threadId()];
-    return queue->empty() ? MaxTick : queue->nextTick();
-}
-
-void
-ThreadContext::serviceInstCountEvents(Tick count)
-{
-    auto *queue = getCpuPtr()->comInstEventQueue[threadId()];
-    queue->serviceEvents(count);
-}
-
-void
-ThreadContext::scheduleInstCountEvent(Event *event, Tick count)
-{
-    auto *queue = getCpuPtr()->comInstEventQueue[threadId()];
-    return queue->schedule(event, count);
-}
-
-void
-ThreadContext::descheduleInstCountEvent(Event *event)
-{
-    auto *queue = getCpuPtr()->comInstEventQueue[threadId()];
-    queue->deschedule(event);
-}
-
-Tick
-ThreadContext::getCurrentInstCount()
-{
-    auto *queue = getCpuPtr()->comInstEventQueue[threadId()];
-    return queue->getCurTick();
-}
-
 void
 ThreadContext::compare(ThreadContext *one, ThreadContext *two)
 {

@@ -156,12 +156,6 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
     if (numThreads > maxThreadsPerCPU)
         maxThreadsPerCPU = numThreads;
 
-    // allocate per-thread instruction-based event queues
-    comInstEventQueue = new EventQueue *[numThreads];
-    for (ThreadID tid = 0; tid < numThreads; ++tid)
-        comInstEventQueue[tid] =
-            new EventQueue("instruction-based event queue");
-
     functionTracingEnabled = false;
     if (p->function_trace) {
         const string fname = csprintf("ftrace.%s", name());
@@ -213,7 +207,6 @@ BaseCPU::enableFunctionTrace()
 BaseCPU::~BaseCPU()
 {
     delete profileEvent;
-    delete[] comInstEventQueue;
 }
 
 void

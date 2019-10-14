@@ -75,6 +75,11 @@ struct O3ThreadState : public ThreadState {
 
   public:
     PCEventQueue pcEventQueue;
+    /**
+     * An instruction-based event queue. Used for scheduling events based on
+     * number of instructions committed.
+     */
+    EventQueue comInstEventQueue;
 
     /* This variable controls if writes to a thread context should cause a all
      * dynamic/speculative state to be thrown away. Nominally this is the
@@ -92,9 +97,9 @@ struct O3ThreadState : public ThreadState {
     bool trapPending;
 
     O3ThreadState(O3CPU *_cpu, int _thread_num, Process *_process)
-        : ThreadState(_cpu, _thread_num, _process),
-          cpu(_cpu), noSquashFromTC(false), trapPending(false),
-          tc(nullptr)
+        : ThreadState(_cpu, _thread_num, _process), cpu(_cpu),
+          comInstEventQueue("instruction-based event queue"),
+          noSquashFromTC(false), trapPending(false), tc(nullptr)
     {
         if (!FullSystem)
             return;

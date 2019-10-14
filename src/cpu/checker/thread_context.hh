@@ -92,6 +92,28 @@ class CheckerThreadContext : public ThreadContext
     bool schedule(PCEvent *e) override { return actualTC->schedule(e); }
     bool remove(PCEvent *e) override { return actualTC->remove(e); }
 
+    Tick
+    nextInstEventCount() override
+    {
+        return actualTC->nextInstEventCount();
+    }
+    void
+    serviceInstCountEvents(Tick count) override
+    {
+        actualTC->serviceInstCountEvents(count);
+    }
+    void
+    scheduleInstCountEvent(Event *event, Tick count) override
+    {
+        actualTC->scheduleInstCountEvent(event, count);
+    }
+    void
+    descheduleInstCountEvent(Event *event) override
+    {
+        actualTC->descheduleInstCountEvent(event);
+    }
+    Tick getCurrentInstCount() override { return getCurrentInstCount(); }
+
     BaseCPU *getCpuPtr() override { return actualTC->getCpuPtr(); }
 
     uint32_t socketId() const override { return actualTC->socketId(); }
