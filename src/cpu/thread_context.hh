@@ -192,6 +192,12 @@ class ThreadContext : public PCEventScope
 
     virtual EndQuiesceEvent *getQuiesceEvent() = 0;
 
+    virtual Tick nextInstEventCount();
+    virtual void serviceInstCountEvents(Tick count);
+    virtual void scheduleInstCountEvent(Event *event, Tick count);
+    virtual void descheduleInstCountEvent(Event *event);
+    virtual Tick getCurrentInstCount();
+
     // Not necessarily the best location for these...
     // Having an extra function just to read these is obnoxious
     virtual Tick readLastActivate() = 0;

@@ -468,26 +468,25 @@ class BaseCPU : public ClockedObject
     Tick
     nextInstEventCount(ThreadID tid)
     {
-        return comInstEventQueue[tid]->empty() ?
-            MaxTick : comInstEventQueue[tid]->nextTick();
+        return threadContexts[tid]->nextInstEventCount();
     }
 
     void
     serviceInstCountEvents(ThreadID tid, Tick count)
     {
-        comInstEventQueue[tid]->serviceEvents(count);
+        threadContexts[tid]->serviceInstCountEvents(count);
     }
 
     void
     scheduleInstCountEvent(ThreadID tid, Event *event, Tick count)
     {
-        comInstEventQueue[tid]->schedule(event, count);
+        threadContexts[tid]->scheduleInstCountEvent(event, count);
     }
 
     void
     descheduleInstCountEvent(ThreadID tid, Event *event)
     {
-        comInstEventQueue[tid]->deschedule(event);
+        threadContexts[tid]->descheduleInstCountEvent(event);
     }
 
   public:

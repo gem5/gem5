@@ -162,43 +162,6 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
         comInstEventQueue[tid] =
             new EventQueue("instruction-based event queue");
 
-    //
-    // set up instruction-count-based termination events, if any
-    //
-    if (p->max_insts_any_thread != 0) {
-        const char *cause = "a thread reached the max instruction count";
-        for (ThreadID tid = 0; tid < numThreads; ++tid)
-            scheduleInstStop(tid, p->max_insts_any_thread, cause);
-    }
-
-    // Set up instruction-count-based termination events for SimPoints
-    // Typically, there are more than one action points.
-    // Simulation.py is responsible to take the necessary actions upon
-    // exitting the simulation loop.
-    if (!p->simpoint_start_insts.empty()) {
-        const char *cause = "simpoint starting point found";
-        for (size_t i = 0; i < p->simpoint_start_insts.size(); ++i)
-            scheduleInstStop(0, p->simpoint_start_insts[i], cause);
-    }
-
-    if (p->max_insts_all_threads != 0) {
-        const char *cause = "all threads reached the max instruction count";
-
-        // allocate & initialize shared downcounter: each event will
-        // decrement this when triggered; simulation will terminate
-        // when counter reaches 0
-        int *counter = new int;
-        *counter = numThreads;
-        for (ThreadID tid = 0; tid < numThreads; ++tid) {
-            Event *event = new CountedExitEvent(cause, *counter);
-            scheduleInstCountEvent(tid, event, p->max_insts_all_threads);
-        }
-    }
-
-    //
-    // set up instruction-count-based termination events, if any
-    //
-
     functionTracingEnabled = false;
     if (p->function_trace) {
         const string fname = csprintf("ftrace.%s", name());
@@ -323,6 +286,39 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseTLB *dtb)
 void
 BaseCPU::init()
 {
+    // Set up instruction-count-based termination events, if any. This needs
+    // to happen after threadContexts has been constructed.
+    if (params()->max_insts_any_thread != 0) {
+        const char *cause = "a thread reached the max instruction count";
+        for (ThreadID tid = 0; tid < numThreads; ++tid)
+            scheduleInstStop(tid, params()->max_insts_any_thread, cause);
+    }
+
+    // Set up instruction-count-based termination events for SimPoints
+    // Typically, there are more than one action points.
+    // Simulation.py is responsible to take the necessary actions upon
+    // exitting the simulation loop.
+    if (!params()->simpoint_start_insts.empty()) {
+        const char *cause = "simpoint starting point found";
+        for (size_t i = 0; i < params()->simpoint_start_insts.size(); ++i)
+            scheduleInstStop(0, params()->simpoint_start_insts[i], cause);
+    }
+
+    if (params()->max_insts_all_threads != 0) {
+        const char *cause = "all threads reached the max instruction count";
+
+        // allocate & initialize shared downcounter: each event will
+        // decrement this when triggered; simulation will terminate
+        // when counter reaches 0
+        int *counter = new int;
+        *counter = numThreads;
+        for (ThreadID tid = 0; tid < numThreads; ++tid) {
+            Event *event = new CountedExitEvent(cause, *counter);
+            scheduleInstCountEvent(
+                    tid, event, params()->max_insts_all_threads);
+        }
+    }
+
     if (!params()->switched_out) {
         registerThreadContexts();
 
@@ -735,7 +731,7 @@ BaseCPU::scheduleInstStop(ThreadID tid, Counter insts, const char *cause)
 Tick
 BaseCPU::getCurrentInstCount(ThreadID tid)
 {
-    return comInstEventQueue[tid]->getCurTick();
+    return threadContexts[tid]->getCurrentInstCount();
 }
 
 AddressMonitor::AddressMonitor() {
