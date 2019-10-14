@@ -62,8 +62,6 @@ class ArmThreadContext : public Iris::ThreadContext
     ResourceIds intReg32Ids;
     ResourceIds intReg64Ids;
 
-    Counter totalInsts() override;
-
     void setIntReg(RegIndex reg_idx, RegVal val) override;
     RegVal readIntReg(RegIndex reg_idx) const override;
     TheISA::ISA *

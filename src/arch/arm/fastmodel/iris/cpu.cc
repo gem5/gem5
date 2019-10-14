@@ -82,10 +82,8 @@ Counter
 BaseCPU::totalInsts() const
 {
     Counter count = 0;
-    for (auto *tc: threadContexts) {
-        auto *itc = dynamic_cast<Iris::ThreadContext *>(tc);
-        count += itc->totalInsts();
-    }
+    for (auto *tc: threadContexts)
+        count += tc->getCurrentInstCount();
     return count;
 }
 

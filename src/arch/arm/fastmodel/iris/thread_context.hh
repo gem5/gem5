@@ -102,12 +102,6 @@ class ThreadContext : public ::ThreadContext
     void descheduleInstCountEvent(Event *event) override {}
     Tick getCurrentInstCount() override;
 
-    virtual Counter
-    totalInsts()
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-
     ::BaseCPU *getCpuPtr() override { return _cpu; }
     int cpuId() const override { return _cpu->cpuId(); }
     uint32_t socketId() const override { return _cpu->socketId(); }

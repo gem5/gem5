@@ -105,14 +105,6 @@ ArmThreadContext::nextInstAddr() const
     return pcState().nextInstAddr();
 }
 
-Counter
-ArmThreadContext::totalInsts()
-{
-    iris::ResourceReadResult result;
-    call().resource_read(_instId, result, icountRscId);
-    return result.data.at(0);
-}
-
 uint64_t
 ArmThreadContext::readIntReg(RegIndex reg_idx) const
 {
