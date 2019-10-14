@@ -98,11 +98,6 @@ class CheckerThreadContext : public ThreadContext
         return actualTC->nextInstEventCount();
     }
     void
-    serviceInstCountEvents(Tick count) override
-    {
-        actualTC->serviceInstCountEvents(count);
-    }
-    void
     scheduleInstCountEvent(Event *event, Tick count) override
     {
         actualTC->scheduleInstCountEvent(event, count);

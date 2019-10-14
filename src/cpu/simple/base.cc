@@ -500,7 +500,7 @@ BaseSimpleCPU::preExecute()
     t_info.setMemAccPredicate(true);
 
     // check for instruction-count-based events
-    thread->getTC()->serviceInstCountEvents(t_info.numInst);
+    thread->comInstEventQueue.serviceEvents(t_info.numInst);
 
     // decode the instruction
     inst = gtoh(inst);

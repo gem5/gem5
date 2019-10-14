@@ -205,11 +205,6 @@ class SimpleThread : public ThreadState, public ThreadContext
             MaxTick : comInstEventQueue.nextTick();
     }
     void
-    serviceInstCountEvents(Tick count) override
-    {
-        comInstEventQueue.serviceEvents(count);
-    }
-    void
     scheduleInstCountEvent(Event *event, Tick count) override
     {
         comInstEventQueue.schedule(event, count);

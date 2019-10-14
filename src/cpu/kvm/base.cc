@@ -686,7 +686,7 @@ BaseKvmCPU::tick()
           // Service any pending instruction events. The vCPU should
           // have exited in time for the event using the instruction
           // counter configured by setupInstStop().
-          tc->serviceInstCountEvents(ctrInsts);
+          thread->comInstEventQueue.serviceEvents(ctrInsts);
 
           if (tryDrain())
               _status = Idle;

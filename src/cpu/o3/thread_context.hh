@@ -93,11 +93,6 @@ class O3ThreadContext : public ThreadContext
             MaxTick : thread->comInstEventQueue.nextTick();
     }
     void
-    serviceInstCountEvents(Tick count) override
-    {
-        thread->comInstEventQueue.serviceEvents(count);
-    }
-    void
     scheduleInstCountEvent(Event *event, Tick count) override
     {
         thread->comInstEventQueue.schedule(event, count);
