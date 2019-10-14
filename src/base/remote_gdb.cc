@@ -317,12 +317,6 @@ break_type(char c)
 
 std::map<Addr, HardBreakpoint *> hardBreakMap;
 
-EventQueue *
-getComInstEventQueue(ThreadContext *tc)
-{
-    return tc->getCpuPtr()->comInstEventQueue[tc->threadId()];
-}
-
 }
 
 BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c, int _port) :
@@ -759,17 +753,18 @@ BaseRemoteGDB::setTempBreakpoint(Addr bkpt)
 void
 BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta)
 {
-    EventQueue *eq = getComInstEventQueue(tc);
+    auto *cpu = tc->getCpuPtr();
     // Here "ticks" aren't simulator ticks which measure time, they're
     // instructions committed by the CPU.
-    eq->schedule(ev, eq->getCurTick() + delta);
+    cpu->scheduleInstCountEvent(tc->threadId(), ev,
+            cpu->getCurrentInstCount(tc->threadId()) + delta);
 }
 
 void
 BaseRemoteGDB::descheduleInstCommitEvent(Event *ev)
 {
     if (ev->scheduled())
-        getComInstEventQueue(tc)->deschedule(ev);
+        tc->getCpuPtr()->descheduleInstCountEvent(tc->threadId(), ev);
 }
 
 std::map<char, BaseRemoteGDB::GdbCommand> BaseRemoteGDB::command_map = {

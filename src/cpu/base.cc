@@ -191,7 +191,7 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
         *counter = numThreads;
         for (ThreadID tid = 0; tid < numThreads; ++tid) {
             Event *event = new CountedExitEvent(cause, *counter);
-            comInstEventQueue[tid]->schedule(event, p->max_insts_all_threads);
+            scheduleInstCountEvent(tid, event, p->max_insts_all_threads);
         }
     }
 
@@ -726,16 +726,16 @@ BaseCPU::unserialize(CheckpointIn &cp)
 void
 BaseCPU::scheduleInstStop(ThreadID tid, Counter insts, const char *cause)
 {
-    const Tick now(comInstEventQueue[tid]->getCurTick());
+    const Tick now(getCurrentInstCount(tid));
     Event *event(new LocalSimLoopExitEvent(cause, 0));
 
-    comInstEventQueue[tid]->schedule(event, now + insts);
+    scheduleInstCountEvent(tid, event, now + insts);
 }
 
-uint64_t
+Tick
 BaseCPU::getCurrentInstCount(ThreadID tid)
 {
-    return Tick(comInstEventQueue[tid]->getCurTick());
+    return comInstEventQueue[tid]->getCurTick();
 }
 
 AddressMonitor::AddressMonitor() {
