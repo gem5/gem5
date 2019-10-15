@@ -73,15 +73,27 @@ class ThreadContext : public ::ThreadContext
     ResourceIds intRegIds;
 
 
+    // A queue to keep track of instruction count based events.
+    EventQueue comInstEventQueue;
+    // A helper function to maintain the IRIS step count. This makes sure the
+    // step count is correct even after IRIS resets it for us, and also handles
+    // events which are supposed to happen at the current instruction count.
+    void maintainStepping();
+
+
     iris::IrisErrorCode instanceRegistryChanged(
             uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
             uint64_t sInstId, bool syncEc, std::string &error_message_out);
     iris::IrisErrorCode phaseInitLeave(
             uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
             uint64_t sInstId, bool syncEc, std::string &error_message_out);
+    iris::IrisErrorCode simulationTimeEvent(
+            uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
+            uint64_t sInstId, bool syncEc, std::string &error_message_out);
 
     iris::EventStreamId regEventStreamId;
     iris::EventStreamId initEventStreamId;
+    iris::EventStreamId timeEventStreamId;
 
     mutable iris::IrisInstance client;
     iris::IrisCppAdapter &call() const { return client.irisCall(); }
@@ -96,8 +108,8 @@ class ThreadContext : public ::ThreadContext
     bool schedule(PCEvent *e) override { return false; }
     bool remove(PCEvent *e) override { return false; }
 
-    void scheduleInstCountEvent(Event *event, Tick count) override {}
-    void descheduleInstCountEvent(Event *event) override {}
+    void scheduleInstCountEvent(Event *event, Tick count) override;
+    void descheduleInstCountEvent(Event *event) override;
     Tick getCurrentInstCount() override;
 
     ::BaseCPU *getCpuPtr() override { return _cpu; }

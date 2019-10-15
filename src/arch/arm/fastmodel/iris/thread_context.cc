@@ -68,6 +68,35 @@ ThreadContext::extractResourceMap(
     }
 }
 
+void
+ThreadContext::maintainStepping()
+{
+    Tick now = 0;
+
+    while (true) {
+        if (comInstEventQueue.empty()) {
+            // Set to 0 to deactivate stepping.
+            call().step_setup(_instId, 0, "instruction");
+            break;
+        }
+
+        Tick next = comInstEventQueue.nextTick();
+        if (!now)
+            now = getCurrentInstCount();
+
+        if (next <= now) {
+            comInstEventQueue.serviceEvents(now);
+            // Start over now that comInstEventQueue has likely changed.
+            continue;
+        }
+
+        // Set to the number of instructions still to step through.
+        Tick remaining = next - now;
+        call().step_setup(_instId, remaining, "instruction");
+        break;
+    }
+}
+
 iris::IrisErrorCode
 ThreadContext::instanceRegistryChanged(
         uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
@@ -107,11 +136,34 @@ ThreadContext::phaseInitLeave(
     return iris::E_ok;
 }
 
+iris::IrisErrorCode
+ThreadContext::simulationTimeEvent(
+        uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
+        uint64_t sInstId, bool syncEc, std::string &error_message_out)
+{
+    if (fields.at("RUNNING").getAsBool()) {
+        // If this is just simulation time starting up, don't do anything.
+        return iris::E_ok;
+    }
+
+    // If simulation time has stopped for any reason, IRIS helpfully clears
+    // all stepping counters and we need to set them back. We might also need
+    // to service events based on the current number of executed instructions.
+    maintainStepping();
+
+    // Restart simulation time to make sure things progress once we give
+    // control back.
+    call().simulationTime_run(iris::IrisInstIdSimulationEngine);
+
+    return iris::E_ok;
+}
+
 ThreadContext::ThreadContext(
         BaseCPU *cpu, int id, System *system,
         iris::IrisConnectionInterface *iris_if, const std::string &iris_path) :
     _cpu(cpu), _threadId(id), _system(system), _irisPath(iris_path),
     _instId(iris::IRIS_UINT64_MAX), _status(Active),
+    comInstEventQueue("instruction-based event queue"),
     client(iris_if, "client." + iris_path)
 {
     iris::InstanceInfo info;
@@ -148,6 +200,17 @@ ThreadContext::ThreadContext(
     call().eventStream_create(
             iris::IrisInstIdSimulationEngine, initEventStreamId,
             evSrcInfo.evSrcId, client.getInstId());
+
+    client.registerEventCallback<Self, &Self::simulationTimeEvent>(
+            this, "ec_IRIS_SIMULATION_TIME_EVENT",
+            "Handle simulation time stopping for breakpoints or stepping",
+            "Iris::ThreadContext");
+    call().event_getEventSource(iris::IrisInstIdSimulationEngine, evSrcInfo,
+            "IRIS_SIMULATION_TIME_EVENT");
+    timeEventStreamId = iris::IRIS_UINT64_MAX;
+    call().eventStream_create(
+            iris::IrisInstIdSimulationEngine, timeEventStreamId,
+            evSrcInfo.evSrcId, client.getInstId());
 }
 
 ThreadContext::~ThreadContext()
@@ -161,6 +224,29 @@ ThreadContext::~ThreadContext()
             iris::IrisInstIdGlobalInstance, regEventStreamId);
     regEventStreamId = iris::IRIS_UINT64_MAX;
     client.unregisterEventCallback("ec_IRIS_INSTANCE_REGISTRY_CHANGED");
+
+    call().eventStream_destroy(
+            iris::IrisInstIdGlobalInstance, timeEventStreamId);
+    timeEventStreamId = iris::IRIS_UINT64_MAX;
+    client.unregisterEventCallback("ec_IRIS_SIMULATION_TIME_EVENT");
+}
+
+void
+ThreadContext::scheduleInstCountEvent(Event *event, Tick count)
+{
+    Tick now = getCurrentInstCount();
+    comInstEventQueue.schedule(event, count);
+    if (count <= now)
+        call().simulationTime_stop(iris::IrisInstIdSimulationEngine);
+    else
+        maintainStepping();
+}
+
+void
+ThreadContext::descheduleInstCountEvent(Event *event)
+{
+    comInstEventQueue.deschedule(event);
+    maintainStepping();
 }
 
 Tick
