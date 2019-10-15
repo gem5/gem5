@@ -215,7 +215,6 @@ machine(MachineType:L1Cache, "L1 cache protocol")
          ((cache_entry.CacheState != State:O) && (state == State:O)) ) {
 
         cache_entry.CacheState := state;
-        sequencer.checkCoherence(addr);
       }
       else {
         cache_entry.CacheState := state;

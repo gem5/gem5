@@ -156,9 +156,6 @@ machine(MachineType:Directory, "Directory protocol")
     assert(getDirectoryEntry(addr).Sharers.count() == 0);
 
     directory.deallocate(addr);
-
-    // disable coherence checker
-    // sequencer.checkCoherence(addr);
   }
 
   State getState(TBE tbe, Addr addr) {

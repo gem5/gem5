@@ -522,13 +522,6 @@ machine(MachineType:L2Cache, "Token protocol")
                 (state == State:SLS)) {
        assert(is_valid(cache_entry));
        assert(L2cache.isTagPresent(addr));
-
-       if ( ((cache_entry.CacheState != State:M) && (state == State:M)) ||
-           ((cache_entry.CacheState != State:S) && (state == State:S)) ||
-           ((cache_entry.CacheState != State:O) && (state == State:O)) ) {
-        // disable Coherence Checker for now
-        // sequencer.checkCoherence(addr);
-      }
     } else if ( (state == State:ILS) ||
                 (state == State:ILX) ||
                 (state == State:ILO) ||
