@@ -205,7 +205,7 @@ class Named
 } while (0)
 
 #define DPRINTFNR(...) do {                                               \
-    Trace::getDebugLogger()->dprintf((Tick)-1, string(), __VA_ARGS__);    \
+    Trace::getDebugLogger()->dprintf((Tick)-1, std::string(), __VA_ARGS__);  \
 } while (0)
 
 #else // !TRACING_ON
