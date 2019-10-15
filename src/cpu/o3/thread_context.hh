@@ -86,12 +86,6 @@ class O3ThreadContext : public ThreadContext
         return thread->pcEventQueue.remove(e);
     }
 
-    Tick
-    nextInstEventCount() override
-    {
-        return thread->comInstEventQueue.empty() ?
-            MaxTick : thread->comInstEventQueue.nextTick();
-    }
     void
     scheduleInstCountEvent(Event *event, Tick count) override
     {

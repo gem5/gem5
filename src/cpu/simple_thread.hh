@@ -198,12 +198,6 @@ class SimpleThread : public ThreadState, public ThreadContext
     bool schedule(PCEvent *e) override { return pcEventQueue.schedule(e); }
     bool remove(PCEvent *e) override { return pcEventQueue.remove(e); }
 
-    Tick
-    nextInstEventCount() override
-    {
-        return comInstEventQueue.empty() ?
-            MaxTick : comInstEventQueue.nextTick();
-    }
     void
     scheduleInstCountEvent(Event *event, Tick count) override
     {

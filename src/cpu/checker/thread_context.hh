@@ -92,11 +92,6 @@ class CheckerThreadContext : public ThreadContext
     bool schedule(PCEvent *e) override { return actualTC->schedule(e); }
     bool remove(PCEvent *e) override { return actualTC->remove(e); }
 
-    Tick
-    nextInstEventCount() override
-    {
-        return actualTC->nextInstEventCount();
-    }
     void
     scheduleInstCountEvent(Event *event, Tick count) override
     {
