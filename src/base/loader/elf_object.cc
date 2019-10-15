@@ -131,7 +131,7 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
             "No loadable segments in '%s'. ELF file corrupted?\n",
             imageData->filename());
 
-    for (auto &seg: image.segments())
+    for (auto M5_VAR_USED &seg: image.segments())
         DPRINTFR(Loader, "%s\n", seg);
 
     // We will actually read the sections when we need to load them

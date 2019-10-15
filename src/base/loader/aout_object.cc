@@ -76,7 +76,7 @@ AoutObject::buildImage() const
             MemoryImage::Segment{ "bss", N_BSSADDR(*execHdr), execHdr->bsize}
     });
 
-    for (auto &seg: image.segments())
+    for (auto M5_VAR_USED &seg: image.segments())
         DPRINTFR(Loader, "%s\n", seg);
 
     return image;

@@ -89,7 +89,7 @@ EcoffObject::buildImage() const
             { "bss", aoutHdr->bss_start, aoutHdr->bsize }
     });
 
-    for (auto &seg: image.segments())
+    for (auto M5_VAR_USED &seg: image.segments())
         DPRINTFR(Loader, "%s\n", seg);
 
     return image;
