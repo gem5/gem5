@@ -124,7 +124,6 @@ class Sequencer : public RubyPort
     { deschedule(deadlockCheckEvent); }
 
     void print(std::ostream& out) const;
-    void checkCoherence(Addr address);
 
     void markRemoved();
     void evictionCallback(Addr address);

@@ -128,7 +128,6 @@ structure (Sequencer, external = "yes") {
   void writeCallbackScFail(Addr, DataBlock);
   bool llscCheckMonitor(Addr);
 
-  void checkCoherence(Addr);
   void evictionCallback(Addr);
   void recordRequestType(SequencerRequestType);
   bool checkResourceAvailable(CacheResourceType, Addr);
@@ -148,7 +147,6 @@ structure (GPUCoalescer, external = "yes") {
                      Cycles, Cycles, Cycles);
   void writeCallback(Addr, MachineType, DataBlock,
                      Cycles, Cycles, Cycles, bool);
-  void checkCoherence(Addr);
   void evictionCallback(Addr);
   void recordCPReadCallBack(MachineID, MachineID);
   void recordCPWriteCallBack(MachineID, MachineID);
@@ -169,7 +167,6 @@ structure (VIPERCoalescer, external = "yes") {
                      Cycles, Cycles, Cycles, bool);
   void invCallback(Addr);
   void wbCallback(Addr);
-  void checkCoherence(Addr);
   void evictionCallback(Addr);
 }
 

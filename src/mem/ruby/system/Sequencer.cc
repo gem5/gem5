@@ -738,14 +738,6 @@ Sequencer::print(ostream& out) const
         << "]";
 }
 
-// this can be called from setState whenever coherence permissions are
-// upgraded when invoked, coherence violations will be checked for the
-// given block
-void
-Sequencer::checkCoherence(Addr addr)
-{
-}
-
 void
 Sequencer::recordRequestType(SequencerRequestType requestType) {
     DPRINTF(RubyStats, "Recorded statistic: %s\n",

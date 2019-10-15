@@ -976,13 +976,6 @@ GPUCoalescer::print(ostream& out) const
         << "]";
 }
 
-// this can be called from setState whenever coherence permissions are
-// upgraded when invoked, coherence violations will be checked for the
-// given block
-void
-GPUCoalescer::checkCoherence(Addr addr)
-{
-}
 
 void
 GPUCoalescer::recordRequestType(SequencerRequestType requestType) {

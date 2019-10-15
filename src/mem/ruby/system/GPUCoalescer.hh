@@ -176,7 +176,6 @@ class GPUCoalescer : public RubyPort
     bool empty() const;
 
     void print(std::ostream& out) const;
-    void checkCoherence(Addr address);
 
     void markRemoved();
     void removeRequest(GPUCoalescerRequest* request);
