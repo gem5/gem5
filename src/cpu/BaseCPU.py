@@ -182,8 +182,8 @@ class BaseCPU(ClockedObject):
     dtb = Param.BaseTLB(ArchDTB(), "Data TLB")
     itb = Param.BaseTLB(ArchITB(), "Instruction TLB")
     if buildEnv['TARGET_ISA'] == 'arm':
-        istage2_mmu = Param.ArmStage2MMU(ArmStage2IMMU(), "Stage 2 trans")
-        dstage2_mmu = Param.ArmStage2MMU(ArmStage2DMMU(), "Stage 2 trans")
+        istage2_mmu = ArmStage2IMMU()
+        dstage2_mmu = ArmStage2DMMU()
     elif buildEnv['TARGET_ISA'] == 'power':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
     interrupts = ArchInterruptsParam([], "Interrupt Controller")
