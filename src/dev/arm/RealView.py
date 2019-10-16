@@ -550,9 +550,14 @@ class RealView(Platform):
 
     _off_chip_ranges = []
 
+    def _attach_memory(self, mem, bus, mem_ports=None):
+        if hasattr(mem, "port"):
+            if mem_ports is None:
+                mem.port = bus.master
+            else:
+                mem_ports.append(mem.port)
+
     def _attach_device(self, device, bus, dma_ports=None):
-        if hasattr(device, "port"):
-            device.port = bus.master
         if hasattr(device, "pio"):
             device.pio = bus.master
         if hasattr(device, "dma"):
@@ -564,6 +569,10 @@ class RealView(Platform):
     def _attach_io(self, devices, *args, **kwargs):
         for d in devices:
             self._attach_device(d, *args, **kwargs)
+
+    def _attach_mem(self, memories, *args, **kwargs):
+        for mem in memories:
+            self._attach_memory(mem, *args, **kwargs)
 
     def _attach_clk(self, devices, clkdomain):
         for d in devices:
@@ -582,8 +591,9 @@ class RealView(Platform):
     def offChipIOClkDomain(self, clkdomain):
         self._attach_clk(self._off_chip_devices(), clkdomain)
 
-    def attachOnChipIO(self, bus, bridge=None, *args, **kwargs):
-        self._attach_io(self._on_chip_devices(), bus, *args, **kwargs)
+    def attachOnChipIO(self, bus, bridge=None, dma_ports=None, mem_ports=None):
+        self._attach_mem(self._on_chip_memory(), bus, mem_ports)
+        self._attach_io(self._on_chip_devices(), bus, dma_ports)
         if bridge:
             bridge.ranges = self._off_chip_ranges
 
@@ -643,13 +653,18 @@ class VExpress_EMM(RealView):
     def _on_chip_devices(self):
         devices = [
             self.gic, self.vgic,
-            self.bootmem,
             self.local_cpu_timer
         ]
         if hasattr(self, "gicv2m"):
             devices.append(self.gicv2m)
         devices.append(self.hdlcd)
         return devices
+
+    def _on_chip_memory(self):
+        memories = [
+            self.bootmem,
+        ]
+        return memories
 
     ### Off-chip devices ###
     uart = Pl011(pio_addr=0x1c090000, int_num=37)
@@ -882,8 +897,13 @@ Interrupts:
     def _on_chip_devices(self):
         return [
             self.generic_timer,
+        ]
+
+    def _on_chip_memory(self):
+        memories = [
             self.bootmem,
         ]
+        return memories
 
     ### Off-chip devices ###
     clock24MHz = SrcClockDomain(clock="24MHz",

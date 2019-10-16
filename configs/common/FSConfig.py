@@ -365,7 +365,9 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         self.realview.attachIO(self.iobus)
     elif ruby:
         self._dma_ports = [ ]
-        self.realview.attachOnChipIO(self.iobus, dma_ports=self._dma_ports)
+        self._mem_ports = [ ]
+        self.realview.attachOnChipIO(self.iobus,
+            dma_ports=self._dma_ports, mem_ports=self._mem_ports)
         self.realview.attachIO(self.iobus, dma_ports=self._dma_ports)
     else:
         self.realview.attachOnChipIO(self.membus, self.bridge)
