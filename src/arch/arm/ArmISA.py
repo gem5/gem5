@@ -57,7 +57,11 @@ class ArmISA(SimObject):
     pmu = Param.ArmPMU(NULL, "Performance Monitoring Unit")
     decoderFlavour = Param.DecoderFlavour('Generic', "Decoder flavour specification")
 
-    midr = Param.UInt32(0x410fc0f0, "MIDR value")
+    # If no MIDR value is provided, 0x0 is treated by gem5 as follows:
+    # When 'highest_el_is_64' (AArch64 support) is:
+    #   True  -> Cortex-A57 TRM r0p0 MIDR is used
+    #   False -> Cortex-A15 TRM r0p0 MIDR is used
+    midr = Param.UInt32(0x0, "MIDR value")
 
     # See section B4.1.89 - B4.1.92 of the ARM ARM
     #  VMSAv7 support

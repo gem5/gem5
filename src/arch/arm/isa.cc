@@ -319,9 +319,20 @@ void
 ISA::initID32(const ArmISAParams *p)
 {
     // Initialize configurable default values
-    miscRegs[MISCREG_MIDR] = p->midr;
-    miscRegs[MISCREG_MIDR_EL1] = p->midr;
-    miscRegs[MISCREG_VPIDR] = p->midr;
+
+    uint32_t midr;
+    if (p->midr != 0x0)
+        midr = p->midr;
+    else if (highestELIs64)
+        // Cortex-A57 TRM r0p0 MIDR
+        midr = 0x410fd070;
+    else
+        // Cortex-A15 TRM r0p0 MIDR
+        midr = 0x410fc0f0;
+
+    miscRegs[MISCREG_MIDR] = midr;
+    miscRegs[MISCREG_MIDR_EL1] = midr;
+    miscRegs[MISCREG_VPIDR] = midr;
 
     miscRegs[MISCREG_ID_ISAR0] = p->id_isar0;
     miscRegs[MISCREG_ID_ISAR1] = p->id_isar1;
