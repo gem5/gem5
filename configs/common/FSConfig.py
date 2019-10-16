@@ -236,6 +236,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
     # variable might have been an alias.
     machine_type = platform_class.__name__
     self.realview = platform_class()
+    self._bootmem = self.realview.bootmem
 
     if isinstance(self.realview, VExpress_EMM64):
         if os.path.split(mdesc.disk())[-1] == 'linux-aarch32-ael.img':

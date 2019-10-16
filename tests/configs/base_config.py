@@ -170,7 +170,7 @@ class BaseSystem(object):
             options.num_cpus = self.num_cpus
             options.num_dirs = 2
 
-            bootmem = getattr(system, 'bootmem', None)
+            bootmem = getattr(system, '_bootmem', None)
             Ruby.create_system(options, True, system, system.iobus,
                                system._dma_ports, bootmem)
 

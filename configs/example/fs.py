@@ -149,7 +149,7 @@ def build_test_system(np):
         test_sys.kvm_vm = KvmVM()
 
     if options.ruby:
-        bootmem = getattr(test_sys, 'bootmem', None)
+        bootmem = getattr(test_sys, '_bootmem', None)
         Ruby.create_system(options, True, test_sys, test_sys.iobus,
                            test_sys._dma_ports, bootmem)
 
