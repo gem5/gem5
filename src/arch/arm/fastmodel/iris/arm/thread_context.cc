@@ -40,7 +40,7 @@ ArmThreadContext::ArmThreadContext(
         iris::IrisConnectionInterface *iris_if,
         const std::string &iris_path) :
     ThreadContext(cpu, id, system, dtb, itb, iris_if, iris_path),
-    pcRscId(iris::IRIS_UINT64_MAX)
+    vecRegs(TheISA::NumVecRegs), pcRscId(iris::IRIS_UINT64_MAX)
 {}
 
 void
@@ -55,6 +55,8 @@ ArmThreadContext::initFromIrisInstance(const ResourceMap &resources)
 
     extractResourceMap(intReg32Ids, resources, intReg32IdxNameMap);
     extractResourceMap(intReg64Ids, resources, intReg64IdxNameMap);
+
+    extractResourceMap(vecRegIds, resources, vecRegIdxNameMap);
 }
 
 TheISA::PCState
@@ -128,6 +130,21 @@ ArmThreadContext::setIntReg(RegIndex reg_idx, uint64_t val)
         call().resource_write(_instId, result, intReg32Ids.at(reg_idx), val);
     else
         call().resource_write(_instId, result, intReg64Ids.at(reg_idx), val);
+}
+
+const ArmISA::VecRegContainer &
+ArmThreadContext::readVecReg(const RegId &reg_id) const
+{
+    const RegIndex idx = reg_id.index();
+    ArmISA::VecRegContainer &reg = vecRegs.at(idx);
+
+    iris::ResourceReadResult result;
+    call().resource_read(_instId, result, vecRegIds.at(idx));
+    size_t data_size = result.data.size() * (sizeof(*result.data.data()));
+    size_t size = std::min(data_size, reg.SIZE);
+    memcpy(reg.raw_ptr<void>(), (void *)result.data.data(), size);
+
+    return reg;
 }
 
 Iris::ThreadContext::IdxNameMap ArmThreadContext::miscRegIdxNameMap({
@@ -814,6 +831,17 @@ Iris::ThreadContext::IdxNameMap ArmThreadContext::intReg64IdxNameMap({
         { ArmISA::INTREG_X29, "X29" },
         { ArmISA::INTREG_X30, "X30" },
         { ArmISA::INTREG_SPX, "SP" },
+});
+
+Iris::ThreadContext::IdxNameMap ArmThreadContext::vecRegIdxNameMap({
+        { 0, "V0" }, { 1, "V1" }, { 2, "V2" }, { 3, "V3" },
+        { 4, "V4" }, { 5, "V5" }, { 6, "V6" }, { 7, "V7" },
+        { 8, "V8" }, { 9, "V9" }, { 10, "V10" }, { 11, "V11" },
+        { 12, "V12" }, { 13, "V13" }, { 14, "V14" }, { 15, "V15" },
+        { 16, "V16" }, { 17, "V17" }, { 18, "V18" }, { 19, "V19" },
+        { 20, "V20" }, { 21, "V21" }, { 22, "V22" }, { 23, "V23" },
+        { 24, "V24" }, { 25, "V25" }, { 26, "V26" }, { 27, "V27" },
+        { 28, "V28" }, { 29, "V29" }, { 30, "V30" }, { 31, "V31" }
 });
 
 } // namespace Iris

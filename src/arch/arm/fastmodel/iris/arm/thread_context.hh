@@ -43,6 +43,11 @@ class ArmThreadContext : public Iris::ThreadContext
     static IdxNameMap miscRegIdxNameMap;
     static IdxNameMap intReg32IdxNameMap;
     static IdxNameMap intReg64IdxNameMap;
+    static IdxNameMap vecRegIdxNameMap;
+
+    // Temporary holding places for the vector reg accessors to return.
+    // These are not updated live, only when requested.
+    mutable std::vector<ArmISA::VecRegContainer> vecRegs;
 
   public:
     ArmThreadContext(::BaseCPU *cpu, int id, System *system,
@@ -62,6 +67,7 @@ class ArmThreadContext : public Iris::ThreadContext
 
     ResourceIds intReg32Ids;
     ResourceIds intReg64Ids;
+    ResourceIds vecRegIds;
 
     void setIntReg(RegIndex reg_idx, RegVal val) override;
     RegVal readIntReg(RegIndex reg_idx) const override;
@@ -70,6 +76,8 @@ class ArmThreadContext : public Iris::ThreadContext
     {
         panic("%s not implemented.", __FUNCTION__);
     }
+
+    const VecRegContainer &readVecReg(const RegId &reg) const override;
 };
 
 } // namespace Iris
