@@ -361,13 +361,13 @@ AbstractMemory::access(PacketPtr pkt)
 
     assert(pkt->getAddrRange().isSubset(range));
 
-    uint8_t *hostAddr = pmemAddr + pkt->getAddr() - range.start();
+    uint8_t *host_addr = toHostAddr(pkt->getAddr());
 
     if (pkt->cmd == MemCmd::SwapReq) {
         if (pkt->isAtomicOp()) {
             if (pmemAddr) {
-                pkt->setData(hostAddr);
-                (*(pkt->getAtomicOp()))(hostAddr);
+                pkt->setData(host_addr);
+                (*(pkt->getAtomicOp()))(host_addr);
             }
         } else {
             std::vector<uint8_t> overwrite_val(pkt->getSize());
@@ -381,23 +381,23 @@ AbstractMemory::access(PacketPtr pkt)
             // keep a copy of our possible write value, and copy what is at the
             // memory address into the packet
             pkt->writeData(&overwrite_val[0]);
-            pkt->setData(hostAddr);
+            pkt->setData(host_addr);
 
             if (pkt->req->isCondSwap()) {
                 if (pkt->getSize() == sizeof(uint64_t)) {
                     condition_val64 = pkt->req->getExtraData();
-                    overwrite_mem = !std::memcmp(&condition_val64, hostAddr,
+                    overwrite_mem = !std::memcmp(&condition_val64, host_addr,
                                                  sizeof(uint64_t));
                 } else if (pkt->getSize() == sizeof(uint32_t)) {
                     condition_val32 = (uint32_t)pkt->req->getExtraData();
-                    overwrite_mem = !std::memcmp(&condition_val32, hostAddr,
+                    overwrite_mem = !std::memcmp(&condition_val32, host_addr,
                                                  sizeof(uint32_t));
                 } else
                     panic("Invalid size for conditional read/write\n");
             }
 
             if (overwrite_mem)
-                std::memcpy(hostAddr, &overwrite_val[0], pkt->getSize());
+                std::memcpy(host_addr, &overwrite_val[0], pkt->getSize());
 
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Read/Write");
@@ -412,7 +412,7 @@ AbstractMemory::access(PacketPtr pkt)
             trackLoadLocked(pkt);
         }
         if (pmemAddr) {
-            pkt->setData(hostAddr);
+            pkt->setData(host_addr);
         }
         TRACE_PACKET(pkt->req->isInstFetch() ? "IFetch" : "Read");
         stats.numReads[pkt->req->masterId()]++;
@@ -428,9 +428,9 @@ AbstractMemory::access(PacketPtr pkt)
     } else if (pkt->isWrite()) {
         if (writeOK(pkt)) {
             if (pmemAddr) {
-                pkt->writeData(hostAddr);
-                DPRINTF(MemoryAccess, "%s wrote %i bytes to address %x\n",
-                        __func__, pkt->getSize(), pkt->getAddr());
+                pkt->writeData(host_addr);
+                DPRINTF(MemoryAccess, "%s write due to %s\n",
+                        __func__, pkt->print());
             }
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Write");
@@ -451,17 +451,17 @@ AbstractMemory::functionalAccess(PacketPtr pkt)
 {
     assert(pkt->getAddrRange().isSubset(range));
 
-    uint8_t *hostAddr = pmemAddr + pkt->getAddr() - range.start();
+    uint8_t *host_addr = toHostAddr(pkt->getAddr());
 
     if (pkt->isRead()) {
         if (pmemAddr) {
-            pkt->setData(hostAddr);
+            pkt->setData(host_addr);
         }
         TRACE_PACKET("Read");
         pkt->makeResponse();
     } else if (pkt->isWrite()) {
         if (pmemAddr) {
-            pkt->writeData(hostAddr);
+            pkt->writeData(host_addr);
         }
         TRACE_PACKET("Write");
         pkt->makeResponse();
@@ -473,7 +473,7 @@ AbstractMemory::functionalAccess(PacketPtr pkt)
         // through printObj().
         prs->printLabels();
         // Right now we just print the single byte at the specified address.
-        ccprintf(prs->os, "%s%#x\n", prs->curPrefix(), *hostAddr);
+        ccprintf(prs->os, "%s%#x\n", prs->curPrefix(), *host_addr);
     } else {
         panic("AbstractMemory: unimplemented functional command %s",
               pkt->cmdString());

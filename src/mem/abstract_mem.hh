@@ -271,6 +271,19 @@ class AbstractMemory : public ClockedObject
     AddrRange getAddrRange() const;
 
     /**
+     * Transform a gem5 address space address into its physical counterpart
+     * in the host address space.
+     *
+     * @param addr Address in gem5's address space.
+     * @return Pointer to the corresponding memory address of the host.
+     */
+    inline uint8_t *
+    toHostAddr(Addr addr) const
+    {
+        return pmemAddr + addr - range.start();
+    }
+
+    /**
      * Get the memory size.
      *
      * @return the size of the memory
