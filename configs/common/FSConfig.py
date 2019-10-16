@@ -297,17 +297,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
                       'lpj=19988480 norandmaps rw loglevel=8 ' + \
                       'mem=%(mem)s root=%(rootdev)s'
 
-        # When using external memory, gem5 writes the boot loader to nvmem
-        # and then SST will read from it, but SST can only get to nvmem from
-        # iobus, as gem5's membus is only used for initialization and
-        # SST doesn't use it.  Attaching nvmem to iobus solves this issue.
-        # During initialization, system_port -> membus -> iobus -> nvmem.
-        if external_memory:
-            self.realview.setupBootLoader(self.iobus,  self, binary)
-        elif ruby:
-            self.realview.setupBootLoader(None, self, binary)
-        else:
-            self.realview.setupBootLoader(self.membus, self, binary)
+        self.realview.setupBootLoader(self, binary)
 
         if hasattr(self.realview.gic, 'cpu_addr'):
             self.gic_cpu_addr = self.realview.gic.cpu_addr

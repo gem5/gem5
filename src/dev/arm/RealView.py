@@ -600,7 +600,7 @@ class RealView(Platform):
     def attachIO(self, *args, **kwargs):
         self._attach_io(self._off_chip_devices(), *args, **kwargs)
 
-    def setupBootLoader(self, mem_bus, cur_sys, loc):
+    def setupBootLoader(self, cur_sys, loc):
         cur_sys.boot_loader = loc('boot.arm')
         cur_sys.atags_addr = 0x100
         cur_sys.load_offset = 0
@@ -751,7 +751,7 @@ class VExpress_EMM(RealView):
         self.gicv2m = Gicv2m()
         self.gicv2m.frames = [Gicv2mFrame(spi_base=256, spi_len=64, addr=0x2C1C0000)]
 
-    def setupBootLoader(self, mem_bus, cur_sys, loc):
+    def setupBootLoader(self, cur_sys, loc):
         if not cur_sys.boot_loader:
             cur_sys.boot_loader = loc('boot_emm.arm')
         cur_sys.atags_addr = 0x8000000
@@ -766,7 +766,7 @@ class VExpress_EMM64(VExpress_EMM):
         conf_base=0x30000000, conf_size='256MB', conf_device_bits=12,
         pci_pio_base=0x2f000000)
 
-    def setupBootLoader(self, mem_bus, cur_sys, loc):
+    def setupBootLoader(self, cur_sys, loc):
         if not cur_sys.boot_loader:
             cur_sys.boot_loader = loc('boot_emm.arm64')
         cur_sys.atags_addr = 0x8000000
@@ -951,7 +951,7 @@ Interrupts:
         device.host = self.pci_host
         self._attach_device(device, *args, **kwargs)
 
-    def setupBootLoader(self, mem_bus, cur_sys, loc):
+    def setupBootLoader(self, cur_sys, loc):
         if not cur_sys.boot_loader:
             cur_sys.boot_loader = [ loc('boot_emm.arm64'), loc('boot_emm.arm') ]
         cur_sys.atags_addr = 0x8000000
@@ -1012,9 +1012,9 @@ class VExpress_GEM5_V2_Base(VExpress_GEM5_Base):
                 self.gic, self.gic.its
             ]
 
-    def setupBootLoader(self, mem_bus, cur_sys, loc):
+    def setupBootLoader(self, cur_sys, loc):
         cur_sys.boot_loader = [ loc('boot_emm_v2.arm64') ]
-        super(VExpress_GEM5_V2_Base,self).setupBootLoader(mem_bus,
+        super(VExpress_GEM5_V2_Base,self).setupBootLoader(
                 cur_sys, loc)
 
 class VExpress_GEM5_V2(VExpress_GEM5_V2_Base):

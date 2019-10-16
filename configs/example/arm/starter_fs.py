@@ -148,7 +148,7 @@ def create(args):
         system.addCaches(want_caches, last_cache_level=2)
 
     # Setup gem5's minimal Linux boot loader.
-    system.realview.setupBootLoader(system.membus, system, SysPaths.binary)
+    system.realview.setupBootLoader(system, SysPaths.binary)
 
     if args.dtb:
         system.dtb_filename = args.dtb

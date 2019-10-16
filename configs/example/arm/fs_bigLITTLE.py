@@ -142,7 +142,7 @@ def createSystem(caches, kernel, bootscript,
         for dev in sys.pci_vio_block:
             sys.attach_pci(dev)
 
-    sys.realview.setupBootLoader(sys.membus, sys, SysPaths.binary)
+    sys.realview.setupBootLoader(sys, SysPaths.binary)
 
     return sys
 
