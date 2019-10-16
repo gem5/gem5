@@ -46,6 +46,7 @@ class ArmThreadContext : public Iris::ThreadContext
 
   public:
     ArmThreadContext(::BaseCPU *cpu, int id, System *system,
+                     ::BaseTLB *dtb, ::BaseTLB *itb,
                      iris::IrisConnectionInterface *iris_if,
                      const std::string &iris_path);
 

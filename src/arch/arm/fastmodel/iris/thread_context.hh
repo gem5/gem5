@@ -55,6 +55,8 @@ class ThreadContext : public ::ThreadContext
     int _threadId;
     ContextID _contextId;
     System *_system;
+    ::BaseTLB *_dtb;
+    ::BaseTLB *_itb;
 
     std::string _irisPath;
     iris::InstanceId _instId;
@@ -101,6 +103,7 @@ class ThreadContext : public ::ThreadContext
 
   public:
     ThreadContext(::BaseCPU *cpu, int id, System *system,
+                  ::BaseTLB *dtb, ::BaseTLB *itb,
                   iris::IrisConnectionInterface *iris_if,
                   const std::string &iris_path);
     virtual ~ThreadContext();
@@ -125,12 +128,12 @@ class ThreadContext : public ::ThreadContext
     BaseTLB *
     getITBPtr() override
     {
-        panic("%s not implemented.", __FUNCTION__);
+        return _itb;
     }
     BaseTLB *
     getDTBPtr() override
     {
-        panic("%s not implemented.", __FUNCTION__);
+        return _dtb;
     }
     CheckerCPU *
     getCheckerCpuPtr() override

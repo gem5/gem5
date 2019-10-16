@@ -135,7 +135,8 @@ class CPU : public Iris::BaseCPU
         int thread_id = 0;
         for (const std::string &sub_path: params->thread_paths) {
             std::string path = parent_path + "." + sub_path;
-            auto *tc = new TC(this, thread_id++, sys, iris_if, path);
+            auto *tc = new TC(this, thread_id++, sys,
+                    params->dtb, params->itb,iris_if, path);
             threadContexts.push_back(tc);
         }
     }

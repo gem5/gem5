@@ -159,10 +159,10 @@ ThreadContext::simulationTimeEvent(
 }
 
 ThreadContext::ThreadContext(
-        BaseCPU *cpu, int id, System *system,
+        BaseCPU *cpu, int id, System *system, ::BaseTLB *dtb, ::BaseTLB *itb,
         iris::IrisConnectionInterface *iris_if, const std::string &iris_path) :
-    _cpu(cpu), _threadId(id), _system(system), _irisPath(iris_path),
-    _instId(iris::IRIS_UINT64_MAX), _status(Active),
+    _cpu(cpu), _threadId(id), _system(system), _dtb(dtb), _itb(itb),
+    _irisPath(iris_path), _instId(iris::IRIS_UINT64_MAX), _status(Active),
     comInstEventQueue("instruction-based event queue"),
     client(iris_if, "client." + iris_path)
 {

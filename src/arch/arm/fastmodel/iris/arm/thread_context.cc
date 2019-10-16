@@ -36,10 +36,10 @@ namespace Iris
 {
 
 ArmThreadContext::ArmThreadContext(
-        ::BaseCPU *cpu, int id, System *system,
+        ::BaseCPU *cpu, int id, System *system, ::BaseTLB *dtb, ::BaseTLB *itb,
         iris::IrisConnectionInterface *iris_if,
         const std::string &iris_path) :
-    ThreadContext(cpu, id, system, iris_if, iris_path),
+    ThreadContext(cpu, id, system, dtb, itb, iris_if, iris_path),
     pcRscId(iris::IRIS_UINT64_MAX)
 {}
 
