@@ -83,8 +83,7 @@ elif buildEnv['TARGET_ISA'] == 'mips':
     from m5.objects.MipsISA import MipsISA as ArchISA
     ArchISAsParam = VectorParam.MipsISA
 elif buildEnv['TARGET_ISA'] == 'arm':
-    from m5.objects.ArmTLB import ArmTLB as ArchDTB, ArmTLB as ArchITB
-    from m5.objects.ArmTLB import ArmStage2IMMU, ArmStage2DMMU
+    from m5.objects.ArmTLB import ArmDTB as ArchDTB, ArmITB as ArchITB
     from m5.objects.ArmInterrupts import ArmInterrupts as ArchInterrupts
     from m5.objects.ArmISA import ArmISA as ArchISA
     ArchISAsParam = VectorParam.ArmISA
@@ -174,10 +173,7 @@ class BaseCPU(ClockedObject):
 
     dtb = Param.BaseTLB(ArchDTB(), "Data TLB")
     itb = Param.BaseTLB(ArchITB(), "Instruction TLB")
-    if buildEnv['TARGET_ISA'] == 'arm':
-        istage2_mmu = ArmStage2IMMU()
-        dstage2_mmu = ArmStage2DMMU()
-    elif buildEnv['TARGET_ISA'] == 'power':
+    if buildEnv['TARGET_ISA'] == 'power':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
     interrupts = VectorParam.BaseInterrupts([], "Interrupt Controller")
     isa = ArchISAsParam([], "ISA instance")

@@ -90,11 +90,17 @@ class ArmStage2MMU(SimObject):
 class ArmStage2IMMU(ArmStage2MMU):
     # We rely on the itb being a parameter of the CPU, and get the
     # appropriate object that way
-    tlb = Parent.itb
+    tlb = Parent.any
     stage2_tlb = ArmStage2TLB()
 
 class ArmStage2DMMU(ArmStage2MMU):
     # We rely on the dtb being a parameter of the CPU, and get the
     # appropriate object that way
-    tlb = Parent.dtb
+    tlb = Parent.any
     stage2_tlb = ArmStage2TLB()
+
+class ArmITB(ArmTLB):
+    stage2_mmu = ArmStage2IMMU()
+
+class ArmDTB(ArmTLB):
+    stage2_mmu = ArmStage2DMMU()
