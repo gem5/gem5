@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -63,7 +63,8 @@ AmbaFake::read(PacketPtr pkt)
 
     pkt->setLE<uint32_t>(0);
     if (!readId(pkt, ambaId, pioAddr) && !params()->ignore_access)
-        panic("Tried to read AmbaFake at offset %#x that doesn't exist\n", daddr);
+        panic("Tried to read AmbaFake %s at offset %#x that doesn't exist\n",
+              name(), daddr);
 
     pkt->makeAtomicResponse();
     return pioDelay;
@@ -76,7 +77,8 @@ AmbaFake::write(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - pioAddr;
 
     if (!params()->ignore_access)
-        panic("Tried to write AmbaFake at offset %#x that doesn't exist\n", daddr);
+        panic("Tried to write AmbaFake %s at offset %#x that doesn't exist\n",
+              name(), daddr);
 
     pkt->makeAtomicResponse();
     return pioDelay;
