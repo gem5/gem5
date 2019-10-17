@@ -162,7 +162,10 @@ fp80_cvtfp64(fp80_t fp80)
              * as normals */
             return build_fp64(sign, fp64_frac, fp64_exp);
         } else if (fp64_exp <= 0) {
-            uint64_t fp64_denormal_frac = fp64_frac >> (-fp64_exp);
+            uint64_t fp64_denormal_frac = -64 < fp64_exp
+                // -64 < fp_exp <= 0, so safe to bitshift by -fp_exp
+                ? fp64_frac >> (-fp64_exp)
+                : 0;
             /* Generate a denormal or zero */
             return build_fp64(sign, fp64_denormal_frac, 0);
         } else {
