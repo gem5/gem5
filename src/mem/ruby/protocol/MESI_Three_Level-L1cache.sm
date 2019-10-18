@@ -553,10 +553,20 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     }
   }
 
-  action(forward_eviction_to_L0, "\cc", desc="sends eviction information to the processor") {
+  action(forward_eviction_to_L0_own, "\cc", desc="sends (own) eviction information to the processor") {
       enqueue(bufferToL0_out, CoherenceMsg, l1_request_latency) {
           out_msg.addr := address;
-          out_msg.Class := CoherenceClass:INV;
+          out_msg.Class := CoherenceClass:INV_OWN;
+          out_msg.Sender := machineID;
+          out_msg.Dest := createMachineID(MachineType:L0Cache, version);
+          out_msg.MessageSize := MessageSizeType:Control;
+      }
+  }
+
+  action(forward_eviction_to_L0_else, "\cce", desc="sends (else) eviction information to the processor") {
+      enqueue(bufferToL0_out, CoherenceMsg, l1_request_latency) {
+          out_msg.addr := address;
+          out_msg.Class := CoherenceClass:INV_ELSE;
           out_msg.Sender := machineID;
           out_msg.Dest := createMachineID(MachineType:L0Cache, version);
           out_msg.MessageSize := MessageSizeType:Control;
@@ -816,8 +826,12 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     ff_deallocateCacheBlock;
   }
 
-  transition(S, {L0_Invalidate_Own, L0_Invalidate_Else}, S_IL0) {
-    forward_eviction_to_L0;
+  transition(S, L0_Invalidate_Own, S_IL0) {
+    forward_eviction_to_L0_own;
+  }
+
+  transition(S, L0_Invalidate_Else, S_IL0) {
+    forward_eviction_to_L0_else;
   }
 
   transition(SS, Inv, I) {
@@ -860,8 +874,12 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     l_popL2RequestQueue;
   }
 
-  transition(E, {L0_Invalidate_Own, L0_Invalidate_Else}, E_IL0) {
-    forward_eviction_to_L0;
+  transition(E, L0_Invalidate_Own, E_IL0) {
+    forward_eviction_to_L0_own;
+  }
+
+  transition(E, L0_Invalidate_Else, E_IL0) {
+    forward_eviction_to_L0_else;
   }
 
   // Transitions from Modified
@@ -906,8 +924,12 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     l_popL2RequestQueue;
   }
 
-  transition(M, {L0_Invalidate_Own, L0_Invalidate_Else}, M_IL0) {
-    forward_eviction_to_L0;
+  transition(M, L0_Invalidate_Own, M_IL0) {
+    forward_eviction_to_L0_own;
+  }
+
+  transition(M, L0_Invalidate_Else, M_IL0) {
+    forward_eviction_to_L0_else;
   }
 
   transition(M_I, Fwd_GETX, SINK_WB_ACK) {
@@ -1008,7 +1030,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   transition(SM, L0_Invalidate_Else, SM_IL0) {
-    forward_eviction_to_L0;
+    forward_eviction_to_L0_else;
   }
 
   transition(SINK_WB_ACK, Inv){

@@ -101,7 +101,9 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     Ifetch,          desc="I-fetch request from the home processor";
     Store,           desc="Store request from the home processor";
 
-    Inv,           desc="Invalidate request from L2 bank";
+    // invalidations from L1 (due to self or other core)
+    InvOwn,          desc="Invalidate request from L1 (own)";
+    InvElse,         desc="Invalidate request from L1 (else)";
 
     // internal generated request
     L0_Replacement,  desc="L0 Replacement", format="!r";
@@ -287,8 +289,10 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
             trigger(Event:Ack, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Class == CoherenceClass:WB_ACK) {
             trigger(Event:WB_Ack, in_msg.addr, cache_entry, tbe);
-        } else if (in_msg.Class == CoherenceClass:INV) {
-          trigger(Event:Inv, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Class == CoherenceClass:INV_OWN) {
+          trigger(Event:InvOwn, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Class == CoherenceClass:INV_ELSE) {
+          trigger(Event:InvElse, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Class == CoherenceClass:GETX ||
                    in_msg.Class == CoherenceClass:UPGRADE) {
           // upgrade transforms to GETX due to race
@@ -659,12 +663,12 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     k_popMandatoryQueue;
   }
 
-  transition({I, IS, IM, Inst_IS}, Inv) {
+  transition({I, IS, IM, Inst_IS}, {InvOwn, InvElse}) {
     fi_sendInvAck;
     l_popRequestQueue;
   }
 
-  transition(SM, Inv, IM) {
+  transition(SM, {InvOwn, InvElse}, IM) {
     fi_sendInvAck;
     l_popRequestQueue;
   }
@@ -694,7 +698,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     ff_deallocateCacheBlock;
   }
 
-  transition(S, Inv, I) {
+  transition(S, {InvOwn, InvElse}, I) {
     forward_eviction_to_cpu;
     fi_sendInvAck;
     ff_deallocateCacheBlock;
@@ -714,7 +718,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     ff_deallocateCacheBlock;
   }
 
-  transition(E, {Inv, Fwd_GETX}, I) {
+  transition(E, {InvOwn, InvElse, Fwd_GETX}, I) {
     // don't send data
     forward_eviction_to_cpu;
     fi_sendInvAck;
@@ -734,7 +738,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     ff_deallocateCacheBlock;
   }
 
-  transition(M, {Inv, Fwd_GETX}, I) {
+  transition(M, {InvOwn, InvElse, Fwd_GETX}, I) {
     forward_eviction_to_cpu;
     f_sendDataToL1;
     ff_deallocateCacheBlock;
