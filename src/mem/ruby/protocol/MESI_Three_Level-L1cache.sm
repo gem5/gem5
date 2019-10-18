@@ -277,7 +277,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   out_port(bufferToL0_out, CoherenceMsg, bufferToL0);
 
   // Response From the L2 Cache to this L1 cache
-  in_port(responseNetwork_in, ResponseMsg, responseFromL2, rank = 3) {
+  in_port(responseNetwork_in, ResponseMsg, responseFromL2, rank = 2) {
     if (responseNetwork_in.isReady(clockEdge())) {
       peek(responseNetwork_in, ResponseMsg) {
         assert(in_msg.Destination.isElement(machineID));
@@ -315,7 +315,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   // Request to this L1 cache from the shared L2
-  in_port(requestNetwork_in, RequestMsg, requestFromL2, rank = 2) {
+  in_port(requestNetwork_in, RequestMsg, requestFromL2, rank = 1) {
     if(requestNetwork_in.isReady(clockEdge())) {
       peek(requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
