@@ -27,6 +27,7 @@ arch: General architecture-specific components
 arch-alpha:
 arch-arm:
   Andreas Sandberg <andreas.sandberg@arm.com>
+  Giacomo Travaglini <giacomo.travaglini@arm.com>
 arch-hsail:
   Tony Gutierrez <anthony.gutierrez@amd.com>
 arch-mips:
@@ -53,6 +54,10 @@ cpu-simple:
 dev:
 dev-virtio:
   Andreas Sandberg <andreas.sandberg@arm.com>
+
+dev-arm:
+  Andreas Sandberg <andreas.sandberg@arm.com>
+  Giacomo Travaglini <giacomo.travaglini@arm.com>
 
 ext: Components external to gem5
 
@@ -93,6 +98,7 @@ system: System boot code and related components
 system-alpha:
 system-arm:
   Andreas Sandberg <andreas.sandberg@arm.com>
+  Giacomo Travaglini <giacomo.travaglini@arm.com>
 
 tests: testing changes (not stats updates for tests. See stats:)
   Andreas Sandberg <andreas.sandberg@arm.com>
