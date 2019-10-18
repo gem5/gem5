@@ -768,7 +768,7 @@ class AddrRange(ParamValue):
             if 'end' in kwargs:
                 self.end = Addr(kwargs.pop('end'))
             elif 'size' in kwargs:
-                self.end = self.start + Addr(kwargs.pop('size')) - 1
+                self.end = self.start + Addr(kwargs.pop('size'))
             else:
                 raise TypeError("Either end or size must be specified")
 
@@ -810,7 +810,7 @@ class AddrRange(ParamValue):
                 self.end = Addr(args[0][1])
             else:
                 self.start = Addr(0)
-                self.end = Addr(args[0]) - 1
+                self.end = Addr(args[0])
 
         elif len(args) == 2:
             self.start = Addr(args[0])
@@ -830,7 +830,7 @@ class AddrRange(ParamValue):
 
     def size(self):
         # Divide the size by the size of the interleaving slice
-        return (long(self.end) - long(self.start) + 1) >> self.intlvBits
+        return (long(self.end) - long(self.start)) >> self.intlvBits
 
     @classmethod
     def cxx_predecls(cls, code):

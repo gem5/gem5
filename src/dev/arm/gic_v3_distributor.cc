@@ -50,20 +50,20 @@
 #include "dev/arm/gic_v3_cpu_interface.hh"
 #include "dev/arm/gic_v3_redistributor.hh"
 
-const AddrRange Gicv3Distributor::GICD_IGROUPR   (0x0080, 0x00ff);
-const AddrRange Gicv3Distributor::GICD_ISENABLER (0x0100, 0x017f);
-const AddrRange Gicv3Distributor::GICD_ICENABLER (0x0180, 0x01ff);
-const AddrRange Gicv3Distributor::GICD_ISPENDR   (0x0200, 0x027f);
-const AddrRange Gicv3Distributor::GICD_ICPENDR   (0x0280, 0x02ff);
-const AddrRange Gicv3Distributor::GICD_ISACTIVER (0x0300, 0x037f);
-const AddrRange Gicv3Distributor::GICD_ICACTIVER (0x0380, 0x03ff);
-const AddrRange Gicv3Distributor::GICD_IPRIORITYR(0x0400, 0x07ff);
-const AddrRange Gicv3Distributor::GICD_ITARGETSR (0x0800, 0x08ff);
-const AddrRange Gicv3Distributor::GICD_ICFGR     (0x0c00, 0x0cff);
-const AddrRange Gicv3Distributor::GICD_IGRPMODR  (0x0d00, 0x0d7f);
-const AddrRange Gicv3Distributor::GICD_NSACR     (0x0e00, 0x0eff);
-const AddrRange Gicv3Distributor::GICD_CPENDSGIR (0x0f10, 0x0f1f);
-const AddrRange Gicv3Distributor::GICD_SPENDSGIR (0x0f20, 0x0f2f);
+const AddrRange Gicv3Distributor::GICD_IGROUPR   (0x0080, 0x0100);
+const AddrRange Gicv3Distributor::GICD_ISENABLER (0x0100, 0x0180);
+const AddrRange Gicv3Distributor::GICD_ICENABLER (0x0180, 0x0200);
+const AddrRange Gicv3Distributor::GICD_ISPENDR   (0x0200, 0x0280);
+const AddrRange Gicv3Distributor::GICD_ICPENDR   (0x0280, 0x0300);
+const AddrRange Gicv3Distributor::GICD_ISACTIVER (0x0300, 0x0380);
+const AddrRange Gicv3Distributor::GICD_ICACTIVER (0x0380, 0x0400);
+const AddrRange Gicv3Distributor::GICD_IPRIORITYR(0x0400, 0x0800);
+const AddrRange Gicv3Distributor::GICD_ITARGETSR (0x0800, 0x0900);
+const AddrRange Gicv3Distributor::GICD_ICFGR     (0x0c00, 0x0d00);
+const AddrRange Gicv3Distributor::GICD_IGRPMODR  (0x0d00, 0x0d80);
+const AddrRange Gicv3Distributor::GICD_NSACR     (0x0e00, 0x0f00);
+const AddrRange Gicv3Distributor::GICD_CPENDSGIR (0x0f10, 0x0f20);
+const AddrRange Gicv3Distributor::GICD_SPENDSGIR (0x0f20, 0x0f30);
 const AddrRange Gicv3Distributor::GICD_IROUTER   (0x6000, 0x7fe0);
 
 Gicv3Distributor::Gicv3Distributor(Gicv3 * gic, uint32_t it_lines)

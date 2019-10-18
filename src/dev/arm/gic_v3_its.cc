@@ -50,7 +50,7 @@
 
 #define COMMAND(x, method) { x, DispatchEntry(#x, method) }
 
-const AddrRange Gicv3Its::GITS_BASER(0x0100, 0x0138);
+const AddrRange Gicv3Its::GITS_BASER(0x0100, 0x0140);
 
 const uint32_t Gicv3Its::CTLR_QUIESCENT = 0x80000000;
 

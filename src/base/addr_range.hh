@@ -75,7 +75,8 @@ class AddrRange
   private:
 
     /// Private fields for the start and end of the range
-    /// Both _start and _end are part of the range.
+    /// _start is the beginning of the range (inclusive).
+    /// _end is not part of the range.
     Addr _start;
     Addr _end;
 
@@ -121,7 +122,7 @@ class AddrRange
      * @param _start The start address of this range
      * @param _end The end address of this range (not included in  the range)
      * @param _masks The input vector of masks
-     * @param intlv_math The matching value of the xor operations
+     * @param intlv_match The matching value of the xor operations
      */
     AddrRange(Addr _start, Addr _end, const std::vector<Addr> &_masks,
               uint8_t _intlv_match)
@@ -155,7 +156,8 @@ class AddrRange
      * @param _end The end address of this range (not included in  the range)
      * @param _intlv_high_bit The MSB of the intlv bits (disabled if 0)
      * @param _xor_high_bit The MSB of the xor bit (disabled if 0)
-     * @param intlv_math The matching value of the xor operations
+     * @param _intlv_bits the size, in bits, of the intlv and xor bits
+     * @param intlv_match The matching value of the xor operations
      */
     AddrRange(Addr _start, Addr _end, uint8_t _intlv_high_bit,
               uint8_t _xor_high_bit, uint8_t _intlv_bits,
@@ -281,7 +283,7 @@ class AddrRange
      */
     Addr size() const
     {
-        return (_end - _start + 1) >> masks.size();
+        return (_end - _start) >> masks.size();
     }
 
     /**
@@ -348,7 +350,7 @@ class AddrRange
      */
     bool intersects(const AddrRange& r) const
     {
-        if (_start > r._end || _end < r._start)
+        if (_start >= r._end || _end <= r._start)
             // start with the simple case of no overlap at all,
             // applicable even if we have interleaved ranges
             return false;
@@ -406,7 +408,7 @@ class AddrRange
         // check if the address is in the range and if there is either
         // no interleaving, or with interleaving also if the selected
         // bits from the address match the interleaving value
-        bool in_range = a >= _start && a <= _end;
+        bool in_range = a >= _start && a < _end;
         if (in_range) {
             auto sel = 0;
             for (int i = 0; i < masks.size(); i++) {
@@ -441,7 +443,7 @@ class AddrRange
      * |    0 | a_high | a_mid | a_low |
      * ---------------------------------
      *
-     * @param the input address
+     * @param a the input address
      * @return the new address
      */
     inline Addr removeIntlvBits(Addr a) const
@@ -521,7 +523,7 @@ class AddrRange
      */
     Addr getOffset(const Addr& a) const
     {
-        bool in_range = a >= _start && a <= _end;
+        bool in_range = a >= _start && a < _end;
         if (!in_range) {
             return MaxAddr;
         }
@@ -572,14 +574,14 @@ typedef std::list<AddrRange> AddrRangeList;
 
 inline AddrRange
 RangeEx(Addr start, Addr end)
-{ return AddrRange(start, end - 1); }
-
-inline AddrRange
-RangeIn(Addr start, Addr end)
 { return AddrRange(start, end); }
 
 inline AddrRange
+RangeIn(Addr start, Addr end)
+{ return AddrRange(start, end + 1); }
+
+inline AddrRange
 RangeSize(Addr start, Addr size)
-{ return AddrRange(start, start + size - 1); }
+{ return AddrRange(start, start + size); }
 
 #endif // __BASE_ADDR_RANGE_HH__

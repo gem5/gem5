@@ -51,16 +51,16 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-const AddrRange GicV2::GICD_IGROUPR   (0x080, 0x0ff);
-const AddrRange GicV2::GICD_ISENABLER (0x100, 0x17f);
-const AddrRange GicV2::GICD_ICENABLER (0x180, 0x1ff);
-const AddrRange GicV2::GICD_ISPENDR   (0x200, 0x27f);
-const AddrRange GicV2::GICD_ICPENDR   (0x280, 0x2ff);
-const AddrRange GicV2::GICD_ISACTIVER (0x300, 0x37f);
-const AddrRange GicV2::GICD_ICACTIVER (0x380, 0x3ff);
-const AddrRange GicV2::GICD_IPRIORITYR(0x400, 0x7ff);
-const AddrRange GicV2::GICD_ITARGETSR (0x800, 0xbff);
-const AddrRange GicV2::GICD_ICFGR     (0xc00, 0xcff);
+const AddrRange GicV2::GICD_IGROUPR   (0x080, 0x100);
+const AddrRange GicV2::GICD_ISENABLER (0x100, 0x180);
+const AddrRange GicV2::GICD_ICENABLER (0x180, 0x200);
+const AddrRange GicV2::GICD_ISPENDR   (0x200, 0x280);
+const AddrRange GicV2::GICD_ICPENDR   (0x280, 0x300);
+const AddrRange GicV2::GICD_ISACTIVER (0x300, 0x380);
+const AddrRange GicV2::GICD_ICACTIVER (0x380, 0x400);
+const AddrRange GicV2::GICD_IPRIORITYR(0x400, 0x800);
+const AddrRange GicV2::GICD_ITARGETSR (0x800, 0xc00);
+const AddrRange GicV2::GICD_ICFGR     (0xc00, 0xd00);
 
 GicV2::GicV2(const Params *p)
     : BaseGic(p),

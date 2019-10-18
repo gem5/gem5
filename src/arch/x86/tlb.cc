@@ -229,7 +229,7 @@ TLB::finalizePhysical(const RequestPtr &req,
 {
     Addr paddr = req->getPaddr();
 
-    AddrRange m5opRange(0xFFFF0000, 0xFFFFFFFF);
+    AddrRange m5opRange(0xFFFF0000, 0x100000000);
 
     if (m5opRange.contains(paddr)) {
         req->setFlags(Request::MMAPPED_IPR | Request::GENERIC_IPR |
@@ -241,7 +241,7 @@ TLB::finalizePhysical(const RequestPtr &req,
         LocalApicBase localApicBase =
             tc->readMiscRegNoEffect(MISCREG_APIC_BASE);
         AddrRange apicRange(localApicBase.base * PageBytes,
-                            (localApicBase.base + 1) * PageBytes - 1);
+                            (localApicBase.base + 1) * PageBytes);
 
         if (apicRange.contains(paddr)) {
             // The Intel developer's manuals say the below restrictions apply,

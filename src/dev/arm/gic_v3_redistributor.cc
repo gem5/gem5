@@ -49,7 +49,7 @@
 #include "mem/fs_translating_port_proxy.hh"
 
 const AddrRange Gicv3Redistributor::GICR_IPRIORITYR(SGI_base + 0x0400,
-                                                    SGI_base + 0x041f);
+                                                    SGI_base + 0x0420);
 
 Gicv3Redistributor::Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id)
     : gic(gic),
