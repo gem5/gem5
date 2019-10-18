@@ -1,6 +1,7 @@
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
 # Copyright (c) 2009,2015 Advanced Micro Devices, Inc.
 # Copyright (c) 2013 Mark D. Hill and David A. Wood
+# Copyright (c) 2020 ARM Limited
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -48,6 +49,13 @@ def define_options(parser):
     parser.add_option("--num-clusters", type = "int", default = 1,
             help = "number of clusters in a design in which there are shared\
             caches private to clusters")
+    parser.add_option("--l0i_size", type="string", default="4096B")
+    parser.add_option("--l0d_size", type="string", default="4096B")
+    parser.add_option("--l0i_assoc", type="int", default=1)
+    parser.add_option("--l0d_assoc", type="int", default=1)
+    parser.add_option("--l0_transitions_per_cycle", type="int", default=32)
+    parser.add_option("--l1_transitions_per_cycle", type="int", default=32)
+    parser.add_option("--l2_transitions_per_cycle", type="int", default=4)
     return
 
 def create_system(options, full_system, system, dma_ports, bootmem,
@@ -89,11 +97,15 @@ def create_system(options, full_system, system, dma_ports, bootmem,
             #
             # First create the Ruby objects associated with this cpu
             #
-            l0i_cache = L0Cache(size = '4096B', assoc = 1, is_icache = True,
+            l0i_cache = L0Cache(size = options.l0i_size,
+                assoc = options.l0i_assoc,
+                is_icache = True,
                 start_index_bit = block_size_bits,
                 replacement_policy = LRURP())
 
-            l0d_cache = L0Cache(size = '4096B', assoc = 1, is_icache = False,
+            l0d_cache = L0Cache(size = options.l0d_size,
+                assoc = options.l0d_assoc,
+                is_icache = False,
                 start_index_bit = block_size_bits,
                 replacement_policy = LRURP())
 
@@ -110,9 +122,12 @@ def create_system(options, full_system, system, dma_ports, bootmem,
                 clk_domain = system.cpu[i].clk_domain
 
             l0_cntrl = L0Cache_Controller(
-                   version = i * num_cpus_per_cluster + j, Icache = l0i_cache,
-                   Dcache = l0d_cache, send_evictions = send_evicts(options),
-                   clk_domain = clk_domain, ruby_system = ruby_system)
+                   version = i * num_cpus_per_cluster + j,
+                   Icache = l0i_cache, Dcache = l0d_cache,
+                   transitions_per_cycle = options.l0_transitions_per_cycle,
+                   send_evictions = send_evicts(options),
+                   clk_domain = clk_domain,
+                   ruby_system = ruby_system)
 
             cpu_seq = RubySequencer(version = i * num_cpus_per_cluster + j,
                                     icache = l0i_cache,
@@ -130,7 +145,9 @@ def create_system(options, full_system, system, dma_ports, bootmem,
             l1_cntrl = L1Cache_Controller(
                     version = i * num_cpus_per_cluster + j,
                     cache = l1_cache, l2_select_num_bits = l2_bits,
-                    cluster_id = i, ruby_system = ruby_system)
+                    cluster_id = i,
+                    transitions_per_cycle = options.l1_transitions_per_cycle,
+                    ruby_system = ruby_system)
 
             exec("ruby_system.l0_cntrl%d = l0_cntrl"
                  % ( i * num_cpus_per_cluster + j))
@@ -173,7 +190,8 @@ def create_system(options, full_system, system, dma_ports, bootmem,
             l2_cntrl = L2Cache_Controller(
                         version = i * num_l2caches_per_cluster + j,
                         L2cache = l2_cache, cluster_id = i,
-                        transitions_per_cycle = options.ports,
+                        transitions_per_cycle =\
+                         options.l2_transitions_per_cycle,
                         ruby_system = ruby_system)
 
             exec("ruby_system.l2_cntrl%d = l2_cntrl"
@@ -272,14 +290,16 @@ def create_system(options, full_system, system, dma_ports, bootmem,
 
                 FileSystemConfig.register_cache(level = 0,
                                                 idu_type = 'Instruction',
-                                                size = '4096B',
-                                                line_size = options.cacheline_size,
+                                                size = options.l0i_size,
+                                                line_size =\
+                                                 options.cacheline_size,
                                                 assoc = 1,
                                                 cpus = [i*num_cpus_per_cluster+j])
                 FileSystemConfig.register_cache(level = 0,
                                                 idu_type = 'Data',
-                                                size = '4096B',
-                                                line_size = options.cacheline_size,
+                                                size = options.l0d_size,
+                                                line_size =\
+                                                 options.cacheline_size,
                                                 assoc = 1,
                                                 cpus = [i*num_cpus_per_cluster+j])
 
