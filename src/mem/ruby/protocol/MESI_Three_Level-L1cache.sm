@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -59,13 +71,13 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
     // Base states
-    I, AccessPermission:Invalid, desc="a L1 cache entry Idle";
-    S, AccessPermission:Read_Only, desc="a L1 cache entry Shared";
-    SS, AccessPermission:Read_Only, desc="a L1 cache entry Shared";
-    E, AccessPermission:Read_Only, desc="a L1 cache entry Exclusive";
-    EE, AccessPermission:Read_Write, desc="a L1 cache entry Exclusive";
-    M, AccessPermission:Maybe_Stale, desc="a L1 cache entry Modified", format="!b";
-    MM, AccessPermission:Read_Write, desc="a L1 cache entry Modified", format="!b";
+    I, AccessPermission:Invalid, desc="L1 cache entry Idle";
+    S, AccessPermission:Read_Only, desc="Line is present in shared state in L1 and L0";
+    SS, AccessPermission:Read_Only, desc="Line is present in shared state in L1 but not L0";
+    E, AccessPermission:Read_Only, desc="Line is present in exclusive state in L1 and L0";
+    EE, AccessPermission:Read_Write, desc="Line is present in exclusive state in L1 but not L0";
+    M, AccessPermission:Maybe_Stale, desc="Line is present in modified state in L1 and present in L0", format="!b";
+    MM, AccessPermission:Read_Write, desc="Line is present in modified state in L1 but not present in L0", format="!b";
 
     // Transient States
     IS, AccessPermission:Busy, desc="L1 idle, issued GETS, have not seen response yet";
@@ -78,11 +90,11 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     // For all of the following states, invalidate
     // message has been sent to L0 cache. The response
     // from the L0 cache has not been seen yet.
-    S_IL0, AccessPermission:Busy;
-    E_IL0, AccessPermission:Busy;
-    M_IL0, AccessPermission:Busy;
-    MM_IL0, AccessPermission:Read_Write;
-    SM_IL0, AccessPermission:Busy;
+    S_IL0, AccessPermission:Busy, desc="Shared in L1, invalidation sent to L0, have not seen response yet";
+    E_IL0, AccessPermission:Busy, desc="Exclusive in L1, invalidation sent to L0, have not seen response yet";
+    M_IL0, AccessPermission:Busy, desc="Modified in L1, invalidation sent to L0, have not seen response yet";
+    MM_IL0, AccessPermission:Read_Write, desc="Invalidation sent to L0, have not seen response yet";
+    SM_IL0, AccessPermission:Busy, desc="Invalidation sent to L0, have not seen response yet";
   }
 
   // EVENTS
@@ -95,17 +107,14 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     // Responses from the L0 Cache
     // L0 cache received the invalidation message
     // and has sent the data.
-    L0_DataAck;
+    L0_DataAck,      desc="L0 received INV message";
 
     Inv,           desc="Invalidate request from L2 bank";
 
-    // internal generated request
-    // Invalidate the line in L0 due to own requirements
-    L0_Invalidate_Own;
-    // Invalidate the line in L0 due to some other cache's requirements
-    L0_Invalidate_Else;
-    // Invalidate the line in the cache due to some one else / space needs.
-    L1_Replacement;
+    // internally generated requests:
+    L0_Invalidate_Own,  desc="Invalidate line in L0, due to this cache's (L1) requirements";
+    L0_Invalidate_Else, desc="Invalidate line in L0, due to another cache's requirements";
+    L1_Replacement,     desc="Invalidate line in this cache (L1), due to another cache's requirements";
 
     // other requests
     Fwd_GETX,   desc="GETX from other processor";

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -48,43 +60,43 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     // Base states
 
     // The cache entry has not been allocated.
-    I, AccessPermission:Invalid;
+    I, AccessPermission:Invalid, desc="Invalid";
 
     // The cache entry is in shared mode. The processor can read this entry
     // but it cannot write to it.
-    S, AccessPermission:Read_Only;
+    S, AccessPermission:Read_Only, desc="Shared";
 
     // The cache entry is in exclusive mode. The processor can read this
     // entry. It can write to this entry without informing the directory.
     // On writing, the entry moves to M state.
-    E, AccessPermission:Read_Only;
+    E, AccessPermission:Read_Only, desc="Exclusive";
 
     // The processor has read and write permissions on this entry.
-    M, AccessPermission:Read_Write;
+    M, AccessPermission:Read_Write, desc="Modified";
 
     // Transient States
 
     // The cache controller has requested an instruction.  It will be stored
     // in the shared state so that the processor can read it.
-    Inst_IS, AccessPermission:Busy;
+    Inst_IS, AccessPermission:Busy, desc="Issued GETS, have not seen response yet";
 
     // The cache controller has requested that this entry be fetched in
     // shared state so that the processor can read it.
-    IS, AccessPermission:Busy;
+    IS, AccessPermission:Busy, desc="Issued GETS, have not seen response yet";
 
     // The cache controller has requested that this entry be fetched in
     // modify state so that the processor can read/write it.
-    IM, AccessPermission:Busy;
+    IM, AccessPermission:Busy, desc="Issued GETX, have not seen response yet";
 
     // The cache controller had read permission over the entry. But now the
     // processor needs to write to it. So, the controller has requested for
     // write permission.
-    SM, AccessPermission:Read_Only;
+    SM, AccessPermission:Read_Only, desc="Issued GETX, have not seen response yet";
   }
 
   // EVENTS
   enumeration(Event, desc="Cache events") {
-    // L0 events
+    // Events from core
     Load,            desc="Load request from the home processor";
     Ifetch,          desc="I-fetch request from the home processor";
     Store,           desc="Store request from the home processor";
@@ -94,17 +106,17 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     // internal generated request
     L0_Replacement,  desc="L0 Replacement", format="!r";
 
-    // other requests
+    // requests forwarded from other processors
     Fwd_GETX,   desc="GETX from other processor";
     Fwd_GETS,   desc="GETS from other processor";
     Fwd_GET_INSTR,   desc="GET_INSTR from other processor";
 
+    // data arrives from L1 cache
     Data,               desc="Data for processor";
     Data_Exclusive,     desc="Data for processor";
     Data_Stale,         desc="Data for processor, but not for storage";
 
     Ack,        desc="Ack for processor";
-    Ack_all,      desc="Last ack for processor";
 
     WB_Ack,        desc="Ack for replacement";
   }
@@ -419,7 +431,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     }
   }
 
-  action(f_sendDataToL1, "f", desc="send data to the L2 cache") {
+  action(f_sendDataToL1, "f", desc="Send data to the L1 cache") {
     enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
       assert(is_valid(cache_entry));
       out_msg.addr := address;
@@ -433,7 +445,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     cache_entry.Dirty := false;
   }
 
-  action(fi_sendInvAck, "fi", desc="send data to the L2 cache") {
+  action(fi_sendInvAck, "fi", desc="Send data to the L1 cache") {
     peek(messgeBuffer_in, CoherenceMsg) {
       enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
         out_msg.addr := address;
@@ -445,14 +457,14 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     }
   }
 
-  action(forward_eviction_to_cpu, "\cc", desc="sends eviction information to the processor") {
+  action(forward_eviction_to_cpu, "\cc", desc="Send eviction information to the processor") {
     if (send_evictions) {
       DPRINTF(RubySlicc, "Sending invalidation for %#x to the CPU\n", address);
       sequencer.evictionCallback(address);
     }
   }
 
-  action(g_issuePUTX, "g", desc="send data to the L2 cache") {
+  action(g_issuePUTX, "g", desc="Relinquish line to the L1 cache") {
     enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
       assert(is_valid(cache_entry));
       out_msg.addr := address;
@@ -470,35 +482,41 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     }
   }
 
-  action(h_load_hit, "hd", desc="If not prefetch, notify sequencer the load completed.") {
+  action(h_load_hit, "hd", desc="Notify sequencer the load completed (cache hit)") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     Dcache.setMRU(cache_entry);
     sequencer.readCallback(address, cache_entry.DataBlk);
   }
 
-  action(h_ifetch_hit, "hi", desc="If not prefetch, notify sequencer the ifetch completed.") {
+  action(h_ifetch_hit, "hi", desc="Notify sequencer the ifetch completed (cache hit)") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     Icache.setMRU(cache_entry);
     sequencer.readCallback(address, cache_entry.DataBlk);
   }
 
-  action(hx_load_hit, "hxd", desc="notify sequencer the load completed.") {
+  // The action name uses a counterintuitive _hit prefix when it is only
+  // called due to a cache miss. It is technically now a hit after having
+  // serviced the miss.
+  action(hx_load_hit, "hxd", desc="Notify sequencer the load completed (cache miss)") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     Dcache.setMRU(cache_entry);
     sequencer.readCallback(address, cache_entry.DataBlk, true);
   }
 
-  action(hx_ifetch_hit, "hxi", desc="notify sequencer the ifetch completed.") {
+  // The action name uses a counterintuitive _hit prefix when it is only
+  // called due to a cache miss. It is technically now a hit after having
+  // serviced the miss.
+  action(hx_ifetch_hit, "hxi", desc="Notify sequencer the ifetch completed (cache miss)") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     Icache.setMRU(cache_entry);
     sequencer.readCallback(address, cache_entry.DataBlk, true);
   }
 
-  action(hh_store_hit, "\h", desc="If not prefetch, notify sequencer that store completed.") {
+  action(hh_store_hit, "\h", desc="Notify sequencer that store completed (cache hit)") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     Dcache.setMRU(cache_entry);
@@ -506,7 +524,10 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     cache_entry.Dirty := true;
   }
 
-  action(hhx_store_hit, "\hx", desc="If not prefetch, notify sequencer that store completed.") {
+  // The action name uses a counterintuitive _hit prefix when it is only
+  // called due to a cache miss. It is technically now a hit after having
+  // serviced the miss.
+  action(hhx_store_hit, "\hx", desc="Notify sequencer that store completed (cache miss)") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     Dcache.setMRU(cache_entry);
@@ -523,7 +544,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     tbe.DataBlk := cache_entry.DataBlk;
   }
 
-  action(k_popMandatoryQueue, "k", desc="Pop mandatory queue.") {
+  action(k_popMandatoryQueue, "k", desc="Pop mandatory queue") {
     mandatoryQueue_in.dequeue(clockEdge());
   }
 
@@ -568,23 +589,23 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     unset_cache_entry();
   }
 
-  action(oo_allocateDCacheBlock, "\o", desc="Set L1 D-cache tag equal to tag of block B.") {
+  action(oo_allocateDCacheBlock, "\o", desc="Set L1 D-cache tag equal to tag of block B") {
     if (is_invalid(cache_entry)) {
       set_cache_entry(Dcache.allocate(address, new Entry));
     }
   }
 
-  action(pp_allocateICacheBlock, "\p", desc="Set L1 I-cache tag equal to tag of block B.") {
+  action(pp_allocateICacheBlock, "\p", desc="Set L1 I-cache tag equal to tag of block B") {
     if (is_invalid(cache_entry)) {
       set_cache_entry(Icache.allocate(address, new Entry));
     }
   }
 
-  action(z_stallAndWaitMandatoryQueue, "\z", desc="recycle cpu request queue") {
+  action(z_stallAndWaitMandatoryQueue, "\z", desc="Stall cpu request queue") {
     stall_and_wait(mandatoryQueue_in, address);
   }
 
-  action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
+  action(kd_wakeUpDependents, "kd", desc="Wake-up dependents") {
     wakeUpAllBuffers(address);
   }
 
@@ -592,7 +613,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
         ++Icache.demand_misses;
   }
 
-  action(uu_profileInstHit, "\uih", desc="Profile the demand miss") {
+  action(uu_profileInstHit, "\uih", desc="Profile the demand hit") {
         ++Icache.demand_hits;
   }
 
@@ -600,7 +621,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
         ++Dcache.demand_misses;
   }
 
-  action(uu_profileDataHit, "\udh", desc="Profile the demand miss") {
+  action(uu_profileDataHit, "\udh", desc="Profile the demand hit") {
         ++Dcache.demand_hits;
   }
 
