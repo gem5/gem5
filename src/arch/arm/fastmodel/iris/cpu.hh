@@ -116,6 +116,8 @@ class BaseCPU : public ::BaseCPU
         periodAttribute->value = clockPeriod();
         clockEvent->notify();
     }
+
+    void init() override;
 };
 
 // This class specializes the one above and sets up ThreadContexts based on

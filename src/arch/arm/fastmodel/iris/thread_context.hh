@@ -30,6 +30,8 @@
 #ifndef __ARCH_ARM_FASTMODEL_IRIS_THREAD_CONTEXT_HH__
 #define __ARCH_ARM_FASTMODEL_IRIS_THREAD_CONTEXT_HH__
 
+#include <memory>
+
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "iris/IrisInstance.h"
@@ -76,6 +78,9 @@ class ThreadContext : public ::ThreadContext
 
     std::vector<iris::MemorySpaceInfo> memorySpaces;
     std::vector<iris::MemorySupportedAddressTranslationResult> translations;
+
+    std::unique_ptr<PortProxy> virtProxy = nullptr;
+    std::unique_ptr<PortProxy> physProxy = nullptr;
 
 
     // A queue to keep track of instruction count based events.
@@ -161,21 +166,11 @@ class ThreadContext : public ::ThreadContext
     {
         panic("%s not implemented.", __FUNCTION__);
     }
-    PortProxy &
-    getPhysProxy() override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-    PortProxy &
-    getVirtProxy() override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-    void
-    initMemProxies(::ThreadContext *tc) override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
+
+    PortProxy &getPhysProxy() override { return *physProxy; }
+    PortProxy &getVirtProxy() override { return *virtProxy; }
+    void initMemProxies(::ThreadContext *tc) override;
+
     Process *
     getProcessPtr() override
     {

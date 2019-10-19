@@ -31,6 +31,8 @@
 
 #include "iris/detail/IrisCppAdapter.h"
 #include "iris/detail/IrisObjects.h"
+#include "mem/fs_translating_port_proxy.hh"
+#include "mem/se_translating_port_proxy.hh"
 
 namespace Iris
 {
@@ -289,6 +291,22 @@ ThreadContext::getCurrentInstCount()
     auto ret = call().step_getStepCounterValue(_instId, count, "instruction");
     panic_if(ret != iris::E_ok, "Failed to get instruction count.");
     return count;
+}
+
+void
+ThreadContext::initMemProxies(::ThreadContext *tc)
+{
+    if (FullSystem) {
+        assert(!physProxy && !virtProxy);
+        physProxy.reset(new PortProxy(_cpu->getSendFunctional(),
+                                      _cpu->cacheLineSize()));
+        virtProxy.reset(new FSTranslatingPortProxy(tc));
+    } else {
+        assert(!virtProxy);
+        virtProxy.reset(new SETranslatingPortProxy(
+                        _cpu->getSendFunctional(), getProcessPtr(),
+                        SETranslatingPortProxy::NextPage));
+    }
 }
 
 ThreadContext::Status

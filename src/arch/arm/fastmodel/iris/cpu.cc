@@ -78,4 +78,12 @@ BaseCPU::totalInsts() const
     return count;
 }
 
+void
+BaseCPU::init()
+{
+    ::BaseCPU::init();
+    for (auto *tc: threadContexts)
+        tc->initMemProxies(tc);
+}
+
 } // namespace Iris
