@@ -32,5 +32,6 @@ if not env['USE_ARM_FASTMODEL']:
 
 SimObject('Iris.py')
 Source('cpu.cc')
+Source('tlb.cc')
 
 Source('thread_context.cc')
