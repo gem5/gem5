@@ -207,6 +207,9 @@ Shader::prepareInvalidate(HSAQueueEntry *task) {
         _dispatcher.updateInvCounter(kernId, +1);
         // all necessary INV flags are all set now, call cu to execute
         cuList[i_cu]->doInvalidate(req, task->dispatchId());
+
+        // I don't like this. This is intrusive coding.
+        cuList[i_cu]->resetRegisterPool();
     }
 }
 

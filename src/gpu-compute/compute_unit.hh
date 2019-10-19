@@ -415,6 +415,8 @@ class ComputeUnit : public ClockedObject
     int cacheLineSize() const { return _cacheLineSize; }
     int getCacheLineBits() const { return cacheLineBits; }
 
+    void resetRegisterPool();
+
   private:
     WFBarrier&
     barrierSlot(int bar_id)

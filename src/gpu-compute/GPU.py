@@ -28,8 +28,6 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-#
-# Authors: Steve Reinhardt
 
 from m5.defines import buildEnv
 from m5.params import *
@@ -66,6 +64,12 @@ class SimplePoolManager(PoolManager):
     type = 'SimplePoolManager'
     cxx_class = 'SimplePoolManager'
     cxx_header = "gpu-compute/simple_pool_manager.hh"
+
+## This is for allowing multiple workgroups on one CU
+class DynPoolManager(PoolManager):
+    type = 'DynPoolManager'
+    cxx_class = 'DynPoolManager'
+    cxx_header = "gpu-compute/dyn_pool_manager.hh"
 
 class RegisterFile(SimObject):
     type = 'RegisterFile'

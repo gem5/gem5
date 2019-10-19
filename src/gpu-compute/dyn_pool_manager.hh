@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 Advanced Micro Devices, Inc.
+ * Copyright (c) 2020 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -29,48 +29,49 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
-#ifndef __POOL_MANAGER_HH__
-#define __POOL_MANAGER_HH__
+#ifndef __DYN_POOL_MANAGER_HH__
+#define __DYN_POOL_MANAGER_HH__
 
 #include <cassert>
 #include <cstdint>
-#include <string>
 
-#include "params/PoolManager.hh"
-#include "sim/sim_object.hh"
+#include "gpu-compute/pool_manager.hh"
+#include "params/DynPoolManager.hh"
 
-// Pool Manager Logic
-class PoolManager : public SimObject
+// Dynamic Pool Manager: allows multiple WGs on the same pool
+class DynPoolManager : public PoolManager
 {
   public:
-    PoolManager(const PoolManagerParams &p);
-    virtual ~PoolManager() { _poolSize = 0; }
-    uint32_t minAllocation() { return _minAllocation; }
-    virtual std::string printRegion() = 0;
-    virtual uint32_t regionSize(std::pair<uint32_t,uint32_t> &region) = 0;
-    virtual bool canAllocate(uint32_t numRegions, uint32_t size) = 0;
+    DynPoolManager(const PoolManagerParams &p)
+        : PoolManager(p), _regionSize(0), _nxtFreeIdx(0)
+    {
+        _totRegSpaceAvailable = p.pool_size;
+    }
 
-    virtual uint32_t allocateRegion(const uint32_t size,
-                                    uint32_t *reserved) = 0;
-
-    virtual void freeRegion(uint32_t firstIdx, uint32_t lastIdx) = 0;
-    uint32_t poolSize() { return _poolSize; }
-    // I don't think with the current API it is possible to do what
-    // we intend to - reset the entire register pool.
-    // Because we need to reset the register pool when all WGs on
-    // the Compute Unit are finished - before launching WGs from
-    // another kernel.
-    // TsungTai Yeh added a virtual method do the very same - at a diff
-    // place though.
-    virtual void resetRegion(const int & regsPerSimd) {}; // do nothing
+    uint32_t allocateRegion(const uint32_t size, uint32_t *reservedPoolSize) override;
+    bool canAllocate(uint32_t numRegions, uint32_t size) override;
+    void freeRegion(uint32_t firstIdx, uint32_t lastIdx) override;
+    uint32_t minAllocatedElements(uint32_t size);
+    std::string printRegion() override;
+    uint32_t regionSize(std::pair<uint32_t,uint32_t> &region) override;
+    void resetRegion(const int & regsPerSimd) override;
 
   private:
-    // minimum size that can be reserved per allocation
-    uint32_t _minAllocation;
-    // pool size in number of elements
-    uint32_t _poolSize;
+    // actual size of a region (normalized to the minimum size that can
+    // be reserved)
+    uint32_t _regionSize;
+    // next index to allocate a region
+    int _nxtFreeIdx;
+    // total registers available - across chunks
+    uint32_t _totRegSpaceAvailable;
+    // regIndex and freeSpace record
+    std::list<std::pair<int,int>> freeSpaceRecord;
+    int reservedSpaceRecord;
+    // total registers to be allocated -- treat as a const
+    int totalRegSpace;
 };
 
-#endif // __POOL_MANAGER_HH__
+#endif // __DYN_POOL_MANAGER_HH__

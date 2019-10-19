@@ -182,6 +182,8 @@ parser.add_option('--fast-forward-pseudo-op', action='store_true',
                   ' m5_switchcpu pseudo-ops will toggle back and forth')
 parser.add_option("--num-hw-queues", type="int", default=10,
                   help="number of hw queues in packet processor")
+parser.add_option("--reg-alloc-policy",type="string", default="simple",
+                  help="register allocation policy (simple/dynamic)")
 
 Ruby.define_options(parser)
 
@@ -295,18 +297,28 @@ for i in range(n_cu):
         for k in range(shader.n_wf):
             wavefronts.append(Wavefront(simdId = j, wf_slot_id = k,
                                         wf_size = options.wf_size))
-        vrf_pool_mgrs.append(SimplePoolManager(pool_size = \
+
+        if options.reg_alloc_policy == "simple":
+            vrf_pool_mgrs.append(SimplePoolManager(pool_size = \
                                                options.vreg_file_size,
+                                               min_alloc = \
+                                               options.vreg_min_alloc))
+            srf_pool_mgrs.append(SimplePoolManager(pool_size = \
+                                               options.sreg_file_size,
+                                               min_alloc = \
+                                               options.vreg_min_alloc))
+        elif options.reg_alloc_policy == "dynamic":
+            vrf_pool_mgrs.append(DynPoolManager(pool_size = \
+                                               options.vreg_file_size,
+                                               min_alloc = \
+                                               options.vreg_min_alloc))
+            srf_pool_mgrs.append(DynPoolManager(pool_size = \
+                                               options.sreg_file_size,
                                                min_alloc = \
                                                options.vreg_min_alloc))
 
         vrfs.append(VectorRegisterFile(simd_id=j, wf_size=options.wf_size,
                                        num_regs=options.vreg_file_size))
-
-        srf_pool_mgrs.append(SimplePoolManager(pool_size = \
-                                               options.sreg_file_size,
-                                               min_alloc = \
-                                               options.vreg_min_alloc))
         srfs.append(ScalarRegisterFile(simd_id=j, wf_size=options.wf_size,
                                        num_regs=options.sreg_file_size))
 

@@ -400,6 +400,19 @@ ComputeUnit::doFlush(GPUDynInstPtr gpuDynInst) {
     injectGlobalMemFence(gpuDynInst, true);
 }
 
+// reseting SIMD register pools
+// I couldn't think of any other place and
+// I think it is needed in my implementation
+void
+ComputeUnit::resetRegisterPool()
+{
+    for (int i=0; i<numVectorALUs; i++)
+    {
+        registerManager->vrfPoolMgrs[i]->resetRegion(numVecRegsPerSimd);
+        registerManager->srfPoolMgrs[i]->resetRegion(numScalarRegsPerSimd);
+    }
+}
+
 void
 ComputeUnit::dispWorkgroup(HSAQueueEntry *task, int num_wfs_in_wg)
 {

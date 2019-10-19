@@ -152,13 +152,13 @@ StaticRegisterManagerPolicy::freeRegisters(Wavefront *w)
              w->simdId,
              w->computeUnit->scalarRegsReserved[w->simdId]);
 
-    int endIndex = (w->startVgprIndex + w->reservedVectorRegs - 1) %
-        w->computeUnit->vrf[w->simdId]->numRegs();
+    // Current dynamic register allocation does not handle wraparound
+    int endIndex = w->startVgprIndex + w->reservedVectorRegs;
 
     w->computeUnit->registerManager->vrfPoolMgrs[w->simdId]->
         freeRegion(w->startVgprIndex, endIndex);
 
-    // mark/pre-mark all registers as not busy
+    // mark/pre-mark all registers are not busy
     for (int i = 0; i < w->reservedVectorRegs; i++) {
         uint32_t physVgprIdx = mapVgpr(w, i);
         w->computeUnit->vrf[w->simdId]->markReg(physVgprIdx, false);
@@ -167,12 +167,11 @@ StaticRegisterManagerPolicy::freeRegisters(Wavefront *w)
     w->reservedVectorRegs = 0;
     w->startVgprIndex = 0;
 
-    endIndex = (w->startSgprIndex + w->reservedScalarRegs - 1) %
-        w->computeUnit->srf[w->simdId]->numRegs();
+    endIndex = w->startSgprIndex + w->reservedScalarRegs;
     w->computeUnit->registerManager->srfPoolMgrs[w->simdId]->
         freeRegion(w->startSgprIndex, endIndex);
 
-    // mark/pre-mark all registers as not busy
+    // mark/pre-mark all registers are not busy
     for (int i = 0; i < w->reservedScalarRegs; i++) {
         uint32_t physSgprIdx = mapSgpr(w, i);
         w->computeUnit->srf[w->simdId]->markReg(physSgprIdx, false);
