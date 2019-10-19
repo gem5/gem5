@@ -43,6 +43,9 @@ ThreadContext::initFromIrisInstance(const ResourceMap &resources)
     _status = enabled ? Active : Suspended;
 
     suspend();
+
+    call().memory_getMemorySpaces(_instId, memorySpaces);
+    call().memory_getUsefulAddressTranslations(_instId, translations);
 }
 
 iris::ResourceId
@@ -229,6 +232,36 @@ ThreadContext::~ThreadContext()
             iris::IrisInstIdGlobalInstance, timeEventStreamId);
     timeEventStreamId = iris::IRIS_UINT64_MAX;
     client.unregisterEventCallback("ec_IRIS_SIMULATION_TIME_EVENT");
+}
+
+bool
+ThreadContext::translateAddress(Addr &paddr, iris::MemorySpaceId p_space,
+                                Addr vaddr, iris::MemorySpaceId v_space)
+{
+    iris::MemoryAddressTranslationResult result;
+    auto ret = noThrow().memory_translateAddress(
+            _instId, result, v_space, vaddr, p_space);
+
+    if (ret != iris::E_ok) {
+        // Check if there was  a legal translation between these two spaces.
+        // If so, something else went wrong.
+        for (auto &trans: translations)
+            if (trans.inSpaceId == v_space && trans.outSpaceId == p_space)
+                return false;
+
+        panic("No legal translation IRIS address translation found.");
+    }
+
+    if (result.address.empty())
+        return false;
+
+    if (result.address.size() > 1) {
+        warn("Multiple mappings for address %#x.", vaddr);
+        return false;
+    }
+
+    paddr = result.address[0];
+    return true;
 }
 
 void

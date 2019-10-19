@@ -29,6 +29,7 @@
 
 #include "arch/arm/fastmodel/iris/arm/thread_context.hh"
 
+#include "arch/arm/fastmodel/iris/memory_spaces.hh"
 #include "iris/detail/IrisCppAdapter.h"
 #include "iris/detail/IrisObjects.h"
 
@@ -42,6 +43,43 @@ ArmThreadContext::ArmThreadContext(
     ThreadContext(cpu, id, system, dtb, itb, iris_if, iris_path),
     vecRegs(TheISA::NumVecRegs), pcRscId(iris::IRIS_UINT64_MAX)
 {}
+
+bool
+ArmThreadContext::translateAddress(Addr &paddr, Addr vaddr)
+{
+    // Determine what memory spaces are currently active.
+    CanonicalMsn in_msn;
+    switch (currEL(this)) {
+      case EL3:
+        in_msn = SecureMonitorMsn;
+        break;
+      case EL2:
+        in_msn = NsHypMsn;
+        break;
+      default:
+        in_msn = GuestMsn;
+        break;
+    }
+
+    CanonicalMsn out_msn = inSecureState(this) ?
+        PhysicalMemorySecureMsn : PhysicalMemoryNonSecureMsn;
+
+    // Figure out what memory spaces match the canonical numbers we need.
+    iris::MemorySpaceId in = iris::IRIS_UINT64_MAX;
+    iris::MemorySpaceId out = iris::IRIS_UINT64_MAX;
+
+    for (auto &space: memorySpaces) {
+        if (space.canonicalMsn == in_msn)
+            in = space.spaceId;
+        else if (space.canonicalMsn == out_msn)
+            out = space.spaceId;
+    }
+
+    panic_if(in == iris::IRIS_UINT64_MAX || out == iris::IRIS_UINT64_MAX,
+            "Canonical IRIS memory space numbers not found.");
+
+    return ThreadContext::translateAddress(paddr, out, vaddr, in);
+}
 
 void
 ArmThreadContext::initFromIrisInstance(const ResourceMap &resources)

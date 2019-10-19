@@ -74,6 +74,9 @@ class ThreadContext : public ::ThreadContext
     ResourceIds miscRegIds;
     ResourceIds intRegIds;
 
+    std::vector<iris::MemorySpaceInfo> memorySpaces;
+    std::vector<iris::MemorySupportedAddressTranslationResult> translations;
+
 
     // A queue to keep track of instruction count based events.
     EventQueue comInstEventQueue;
@@ -101,12 +104,17 @@ class ThreadContext : public ::ThreadContext
     iris::IrisCppAdapter &call() const { return client.irisCall(); }
     iris::IrisCppAdapter &noThrow() const { return client.irisCallNoThrow(); }
 
+    bool translateAddress(Addr &paddr, iris::MemorySpaceId p_space,
+                          Addr vaddr, iris::MemorySpaceId v_space);
+
   public:
     ThreadContext(::BaseCPU *cpu, int id, System *system,
                   ::BaseTLB *dtb, ::BaseTLB *itb,
                   iris::IrisConnectionInterface *iris_if,
                   const std::string &iris_path);
     virtual ~ThreadContext();
+
+    virtual bool translateAddress(Addr &paddr, Addr vaddr) = 0;
 
     bool schedule(PCEvent *e) override { return false; }
     bool remove(PCEvent *e) override { return false; }

@@ -55,6 +55,8 @@ class ArmThreadContext : public Iris::ThreadContext
                      iris::IrisConnectionInterface *iris_if,
                      const std::string &iris_path);
 
+    bool translateAddress(Addr &paddr, Addr vaddr) override;
+
     void initFromIrisInstance(const ResourceMap &resources) override;
 
     TheISA::PCState pcState() const override;
