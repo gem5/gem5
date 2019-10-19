@@ -77,7 +77,12 @@ def config_filesystem(system, options = None):
     procdir = joinpath(fsdir, 'proc')
     mkdir(procdir)
 
-    cpus = [obj for obj in system.descendants() if isinstance(obj, BaseCPU)]
+    try:
+        cpus = \
+            [obj for obj in system.descendants() if isinstance(obj, BaseCPU)]
+    except NameError:
+        # BaseCPU is not defined for the NULL ISA
+        cpus = []
 
     cpu_clock = 0
     if hasattr(options, 'cpu_clock'):
