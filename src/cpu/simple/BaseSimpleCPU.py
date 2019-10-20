@@ -42,11 +42,11 @@ class BaseSimpleCPU(BaseCPU):
 
     def addCheckerCpu(self):
         if buildEnv['TARGET_ISA'] in ['arm']:
-            from m5.objects.ArmTLB import ArmTLB
+            from m5.objects.ArmTLB import ArmITB, ArmDTB
 
             self.checker = DummyChecker(workload = self.workload)
-            self.checker.itb = ArmTLB(size = self.itb.size)
-            self.checker.dtb = ArmTLB(size = self.dtb.size)
+            self.checker.itb = ArmITB(size = self.itb.size)
+            self.checker.dtb = ArmDTB(size = self.dtb.size)
         else:
             print("ERROR: Checker only supported under ARM ISA!")
             exit(1)
