@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -52,6 +64,7 @@ class TBETable
         return (m_number_of_TBEs - m_map.size()) >= n;
     }
 
+    ENTRY *getNullEntry();
     ENTRY *lookup(Addr address);
 
     // Print cache contents
@@ -103,6 +116,13 @@ TBETable<ENTRY>::deallocate(Addr address)
     assert(isPresent(address));
     assert(m_map.size() > 0);
     m_map.erase(address);
+}
+
+template<class ENTRY>
+inline ENTRY*
+TBETable<ENTRY>::getNullEntry()
+{
+    return nullptr;
 }
 
 // looks an address up in the cache

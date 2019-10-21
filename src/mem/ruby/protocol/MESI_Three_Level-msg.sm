@@ -76,6 +76,7 @@ structure(CoherenceMsg, desc="...", interface="Message") {
   MessageSizeType MessageSize,  desc="size category of the message";
   DataBlock DataBlk,            desc="Data for the cache line (if PUTX)";
   bool Dirty, default="false",  desc="Dirty bit";
+  PrefetchBit Prefetch,         desc="Is this a prefetch request";
 
   bool functionalRead(Packet *pkt) {
     // Only PUTX messages contains the data block

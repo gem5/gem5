@@ -75,6 +75,13 @@ class CacheMemory : public SimObject
     //   b) an unused line in the same cache "way"
     bool cacheAvail(Addr address) const;
 
+    // Returns a NULL entry that acts as a placeholder for invalid lines
+    AbstractCacheEntry*
+    getNullEntry() const
+    {
+        return nullptr;
+    }
+
     // find an unused entry and sets the tag appropriate for the address
     AbstractCacheEntry* allocate(Addr address, AbstractCacheEntry* new_entry);
     void allocateVoid(Addr address, AbstractCacheEntry* new_entry)

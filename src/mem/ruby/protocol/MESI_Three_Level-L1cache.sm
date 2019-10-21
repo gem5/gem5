@@ -406,6 +406,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
                 address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
+        out_msg.Prefetch := in_msg.Prefetch;
       }
     }
   }
@@ -423,6 +424,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
                 address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
+        out_msg.Prefetch := in_msg.Prefetch;
       }
     }
   }
@@ -439,6 +441,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
                 address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
+        out_msg.Prefetch := in_msg.Prefetch;
       }
     }
   }
@@ -708,6 +711,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     peek(responseNetwork_in, ResponseMsg) {
       assert(is_valid(cache_entry));
       cache_entry.DataBlk := in_msg.DataBlk;
+      cache_entry.Dirty := in_msg.Dirty;
     }
   }
 

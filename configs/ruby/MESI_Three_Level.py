@@ -53,6 +53,8 @@ def define_options(parser):
     parser.add_option("--l0_transitions_per_cycle", type="int", default=32)
     parser.add_option("--l1_transitions_per_cycle", type="int", default=32)
     parser.add_option("--l2_transitions_per_cycle", type="int", default=4)
+    parser.add_option("--enable-prefetch", action="store_true", default=False,\
+                        help="Enable Ruby hardware prefetcher")
     return
 
 def create_system(options, full_system, system, dma_ports, bootmem,
@@ -118,10 +120,22 @@ def create_system(options, full_system, system, dma_ports, bootmem,
             else:
                 clk_domain = system.cpu[i].clk_domain
 
+            # Ruby prefetcher
+            prefetcher = RubyPrefetcher.Prefetcher(
+                num_streams=16,
+                unit_filter = 256,
+                nonunit_filter = 256,
+                train_misses = 5,
+                num_startup_pfs = 4,
+                cross_page = False
+            )
+
             l0_cntrl = L0Cache_Controller(
                    version = i * num_cpus_per_cluster + j,
                    Icache = l0i_cache, Dcache = l0d_cache,
                    transitions_per_cycle = options.l0_transitions_per_cycle,
+                   prefetcher = prefetcher,
+                   enable_prefetch = options.enable_prefetch,
                    send_evictions = send_evicts(options),
                    clk_domain = clk_domain,
                    ruby_system = ruby_system)
@@ -159,6 +173,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
             l1_cntrl_nodes.append(l1_cntrl)
 
             # Connect the L0 and L1 controllers
+            l0_cntrl.prefetchQueue = MessageBuffer()
             l0_cntrl.mandatoryQueue = MessageBuffer()
             l0_cntrl.bufferToL1 = MessageBuffer(ordered = True)
             l1_cntrl.bufferFromL0 = l0_cntrl.bufferToL1
