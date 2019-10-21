@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2012 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -105,19 +117,9 @@ Prefetcher::regStats()
         .desc("number of prefetch requests made")
         ;
 
-    numPrefetchAccepted
-        .name(name() + ".prefetches_accepted")
-        .desc("number of prefetch requests accepted")
-        ;
-
-    numDroppedPrefetches
-        .name(name() + ".dropped_prefetches")
-        .desc("number of prefetch requests dropped")
-        ;
-
     numHits
         .name(name() + ".hits")
-        .desc("number of prefetched blocks accessed")
+        .desc("number of prefetched blocks accessed (for the first time)")
         ;
 
     numPartialHits
@@ -157,7 +159,7 @@ Prefetcher::observeMiss(Addr address, const RubyRequestType& type)
                 // The controller has issued the prefetch request,
                 // but the request for the block arrived earlier.
                 numPartialHits++;
-                observePfHit(line_addr);
+                observePfMiss(line_addr);
                 return;
             }
         } else {
@@ -242,16 +244,17 @@ Prefetcher::issueNextPrefetch(Addr address, PrefetchEntry *stream)
 
     // possibly stop prefetching at page boundaries
     if (page_addr != pageAddress(line_addr)) {
-        numPagesCrossed++;
         if (!m_prefetch_cross_pages) {
             // Deallocate the stream since we are not prefetching
             // across page boundries
             stream->m_is_valid = false;
             return;
         }
+        numPagesCrossed++;
     }
 
     // launch next prefetch
+    numPrefetchRequested++;
     stream->m_address = line_addr;
     stream->m_use_time = m_controller->curCycle();
     DPRINTF(RubyPrefetcher, "Requesting prefetch for %#x\n", line_addr);
@@ -308,12 +311,12 @@ Prefetcher::initializeStream(Addr address, int stride,
         line_addr = makeNextStrideAddress(line_addr, stride);
         // possibly stop prefetching at page boundaries
         if (page_addr != pageAddress(line_addr)) {
-            numPagesCrossed++;
             if (!m_prefetch_cross_pages) {
                 // deallocate this stream prefetcher
                 mystream->m_is_valid = false;
                 return;
             }
+            numPagesCrossed++;
         }
 
         // launch prefetch

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2012 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -166,7 +178,7 @@ class Prefetcher : public SimObject
         //! have been hit
         uint32_t *m_unit_filter_hit;
 
-        //! a negative nit stride filter array: helps reduce BW requirement
+        //! a negative unit stride filter array: helps reduce BW requirement
         //! of prefetching
         std::vector<Addr> m_negative_filter;
         /// a round robin pointer into the negative filter group
@@ -199,10 +211,6 @@ class Prefetcher : public SimObject
         Stats::Scalar numAllocatedStreams;
         //! Count of prefetch requests made
         Stats::Scalar numPrefetchRequested;
-        //! Count of prefetch requests accepted
-        Stats::Scalar numPrefetchAccepted;
-        //! Count of prefetches dropped
-        Stats::Scalar numDroppedPrefetches;
         //! Count of successful prefetches
         Stats::Scalar numHits;
         //! Count of partial successful prefetches
