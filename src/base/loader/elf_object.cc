@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2011-2013, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -116,7 +116,7 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
         }
 
         if (phdr.p_type == PT_LOAD)
-            handleLoadableSegment(phdr);
+            handleLoadableSegment(phdr, i);
         if (phdr.p_type == PT_INTERP) {
             // Make sure the interpreter is an valid ELF file.
             char *interp_path = (char *)imageData->data() + phdr.p_offset;
@@ -253,36 +253,9 @@ ElfObject::determineOpSys()
 }
 
 void
-ElfObject::handleLoadableSegment(GElf_Phdr phdr)
+ElfObject::handleLoadableSegment(GElf_Phdr phdr, int seg_num)
 {
-    Addr mem_start = phdr.p_vaddr;
-    Addr mem_end = mem_start + phdr.p_memsz;
-    Addr file_start = phdr.p_offset;
-    Addr file_end = file_start + phdr.p_filesz;
-
-    std::string name;
-
-    // Name segments after the sections they contain.
-    Elf_Scn *section = elf_getscn(elf, 1);
-    for (int sec_idx = 1; section; section = elf_getscn(elf, ++sec_idx)) {
-        GElf_Shdr shdr;
-        gelf_getshdr(section, &shdr);
-        char *sec_name = elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name);
-
-        if (!sec_name) {
-            Elf_Error errorNum = (Elf_Error)elf_errno();
-            if (errorNum != ELF_E_NONE) {
-                const char *errorMessage = elf_errmsg(errorNum);
-                fatal("Error from libelf: %s.\n", errorMessage);
-            }
-        }
-
-        if (shdr.sh_addr >= mem_start && shdr.sh_addr < mem_end) {
-            if (name != "")
-                name += ",";
-            name += sec_name;
-        }
-    }
+    auto name = std::to_string(seg_num);
 
     image.addSegment({ name, phdr.p_paddr, imageData,
                        phdr.p_offset, phdr.p_filesz });
@@ -296,12 +269,15 @@ ElfObject::handleLoadableSegment(GElf_Phdr phdr)
                            phdr.p_paddr + phdr.p_filesz, uninitialized });
     }
 
+    const Addr file_start = phdr.p_offset;
+    const Addr file_end = file_start + phdr.p_filesz;
+
     // If there is a program header table, figure out the virtual
     // address of the header table in the final memory image. We use
     // the program headers themselves to translate from a file offset
     // to the address in the image.
     if (file_start <= ehdr.e_phoff && file_end > ehdr.e_phoff)
-        _programHeaderTable = mem_start + (ehdr.e_phoff - file_start);
+        _programHeaderTable = phdr.p_vaddr + (ehdr.e_phoff - file_start);
 }
 
 ElfObject::~ElfObject()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 ARM Limited
+ * Copyright (c) 2013, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -63,7 +63,7 @@ class ElfObject : public ObjectFile
 
     void determineArch();
     void determineOpSys();
-    void handleLoadableSegment(GElf_Phdr phdr);
+    void handleLoadableSegment(GElf_Phdr phdr, int seg_num);
 
     // These values are provided to a linux process by the kernel, so we
     // need to keep them around.
