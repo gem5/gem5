@@ -380,9 +380,30 @@ PciDevice::writeConfig(PacketPtr pkt)
                         // does it mean something special to write 0 to a BAR?
                         he_new_bar &= ~bar_mask;
                         if (he_new_bar) {
-                            BARAddrs[barnum] = BAR_IO_SPACE(he_old_bar) ?
-                                hostInterface.pioAddr(he_new_bar) :
-                                hostInterface.memAddr(he_new_bar);
+                            if (isLargeBAR(barnum)) {
+                                if (BAR_IO_SPACE(he_old_bar))
+                                    warn("IO BARs can't be set as large BAR");
+                                uint64_t he_large_bar =
+                                         letoh(config.baseAddr[barnum + 1]);
+                                he_large_bar = he_large_bar << 32;
+                                he_large_bar += he_new_bar;
+                                BARAddrs[barnum] =
+                                        hostInterface.memAddr(he_large_bar);
+                            } else if (isLargeBAR(barnum - 1)) {
+                                BARAddrs[barnum] = 0;
+                                uint64_t he_large_bar = he_new_bar;
+                                he_large_bar = he_large_bar << 32;
+                                // We need to apply mask to lower bits
+                                he_large_bar +=
+                                         letoh(config.baseAddr[barnum - 1]
+                                         & ~bar_mask);
+                                BARAddrs[barnum - 1] =
+                                        hostInterface.memAddr(he_large_bar);
+                           } else {
+                                BARAddrs[barnum] = BAR_IO_SPACE(he_old_bar) ?
+                                    hostInterface.pioAddr(he_new_bar) :
+                                    hostInterface.memAddr(he_new_bar);
+                            }
                             pioPort.sendRangeChange();
                         }
                     }

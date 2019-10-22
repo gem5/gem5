@@ -116,6 +116,15 @@ class PciDevice : public DmaDevice
     bool legacyIO[6];
 
     /**
+     * Does the given BAR represent 32 lower bits of a 64-bit address?
+     */
+    bool
+    isLargeBAR(int bar) const
+    {
+        return bits(config.baseAddr[bar], 2, 1) == 0x2;
+    }
+
+    /**
      * Does the given address lie within the space mapped by the given
      * base address register?
      */
