@@ -71,6 +71,7 @@ if env['TARGET_ISA'] != 'null':
 Source('socket.cc')
 Source('statistics.cc')
 Source('str.cc')
+GTest('str.test', 'str.test.cc', 'str.cc')
 Source('time.cc')
 Source('trace.cc')
 GTest('trie.test', 'trie.test.cc')
