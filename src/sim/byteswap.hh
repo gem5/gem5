@@ -37,6 +37,7 @@
 #ifndef __SIM_BYTE_SWAP_HH__
 #define __SIM_BYTE_SWAP_HH__
 
+#include "base/logging.hh"
 #include "base/types.hh"
 
 // This lets us figure out what the byte order of the host system is

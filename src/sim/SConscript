@@ -77,6 +77,8 @@ Source('dvfs_handler.cc')
 Source('clocked_object.cc')
 Source('mathexpr.cc')
 
+GTest('byteswap.test', 'byteswap.test.cc', '../base/types.cc')
+
 if env['TARGET_ISA'] != 'null':
     SimObject('InstTracer.py')
     SimObject('Process.py')
