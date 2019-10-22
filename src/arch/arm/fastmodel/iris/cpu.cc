@@ -30,6 +30,7 @@
 #include "arch/arm/fastmodel/iris/cpu.hh"
 
 #include "arch/arm/fastmodel/iris/thread_context.hh"
+#include "scx/scx.h"
 
 namespace Iris
 {
@@ -60,6 +61,12 @@ BaseCPU::BaseCPU(BaseCPUParams *params, sc_core::sc_module *_evs) :
     panic_if(base && !sendFunctional,
             "The EVS send functional attribute is not of type "
             "sc_attribute<PortProxy::SendFunctionalFunc>.");
+
+    // Make sure fast model knows we're using debugging mechanisms to control
+    // the simulation, and it shouldn't shut down if simulation time stops
+    // for some reason. Despite the misleading name, this doesn't start a CADI
+    // server because it's first parameter is false.
+    scx::scx_start_cadi_server(false, false, true);
 }
 
 BaseCPU::~BaseCPU()
