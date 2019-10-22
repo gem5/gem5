@@ -134,6 +134,7 @@ template <class T>
 inline int
 ceilLog2(const T& n)
 {
+    assert(n > 0);
     if (n == 1)
         return 0;
 
