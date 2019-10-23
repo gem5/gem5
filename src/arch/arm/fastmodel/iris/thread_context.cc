@@ -29,6 +29,8 @@
 
 #include "arch/arm/fastmodel/iris/thread_context.hh"
 
+#include <utility>
+
 #include "iris/detail/IrisCppAdapter.h"
 #include "iris/detail/IrisObjects.h"
 #include "mem/fs_translating_port_proxy.hh"
@@ -48,6 +50,19 @@ ThreadContext::initFromIrisInstance(const ResourceMap &resources)
 
     call().memory_getMemorySpaces(_instId, memorySpaces);
     call().memory_getUsefulAddressTranslations(_instId, translations);
+
+    typedef ThreadContext Self;
+    iris::EventSourceInfo evSrcInfo;
+
+    client.registerEventCallback<Self, &Self::breakpointHit>(
+            this, "ec_IRIS_BREAKPOINT_HIT",
+            "Handle hitting a breakpoint", "Iris::ThreadContext");
+    call().event_getEventSource(_instId, evSrcInfo, "IRIS_BREAKPOINT_HIT");
+    call().eventStream_create(_instId, breakpointEventStreamId,
+            evSrcInfo.evSrcId, client.getInstId());
+
+    for (auto it = bps.begin(); it != bps.end(); it++)
+        installBp(it);
 }
 
 iris::ResourceId
@@ -100,6 +115,47 @@ ThreadContext::maintainStepping()
         call().step_setup(_instId, remaining, "instruction");
         break;
     }
+}
+
+ThreadContext::BpInfoIt
+ThreadContext::getOrAllocBp(Addr pc)
+{
+    auto pc_it = bps.find(pc);
+
+    if (pc_it != bps.end())
+        return pc_it;
+
+    auto res = bps.emplace(std::make_pair(pc, new BpInfo(pc)));
+    panic_if(!res.second, "Inserting breakpoint failed.");
+    return res.first;
+}
+
+void
+ThreadContext::installBp(BpInfoIt it)
+{
+    BpId id;
+    // Hard code address space 5 for now.
+    call().breakpoint_set_code(_instId, id, it->second->pc, 5, 0, true);
+    it->second->id = id;
+}
+
+void
+ThreadContext::uninstallBp(BpInfoIt it)
+{
+    call().breakpoint_delete(_instId, it->second->id);
+    it->second->clearId();
+}
+
+void
+ThreadContext::delBp(BpInfoIt it)
+{
+    panic_if(!it->second->empty(),
+             "BP info still had events associated with it.");
+
+    if (it->second->validId())
+        uninstallBp(it);
+
+    bps.erase(it);
 }
 
 iris::IrisErrorCode
@@ -163,6 +219,26 @@ ThreadContext::simulationTimeEvent(
     return iris::E_ok;
 }
 
+iris::IrisErrorCode
+ThreadContext::breakpointHit(
+        uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
+        uint64_t sInstId, bool syncEc, std::string &error_message_out)
+{
+    Addr pc = fields.at("PC").getU64();
+
+    auto it = getOrAllocBp(pc);
+
+    auto e_it = it->second->events.begin();
+    while (e_it != it->second->events.end()) {
+        PCEvent *e = *e_it;
+        // Advance e_it here since e might remove itself from the list.
+        e_it++;
+        e->process(this);
+    }
+
+    return iris::E_ok;
+}
+
 ThreadContext::ThreadContext(
         BaseCPU *cpu, int id, System *system, ::BaseTLB *dtb, ::BaseTLB *itb,
         iris::IrisConnectionInterface *iris_if, const std::string &iris_path) :
@@ -216,6 +292,8 @@ ThreadContext::ThreadContext(
     call().eventStream_create(
             iris::IrisInstIdSimulationEngine, timeEventStreamId,
             evSrcInfo.evSrcId, client.getInstId());
+
+    breakpointEventStreamId = iris::IRIS_UINT64_MAX;
 }
 
 ThreadContext::~ThreadContext()
@@ -234,6 +312,30 @@ ThreadContext::~ThreadContext()
             iris::IrisInstIdGlobalInstance, timeEventStreamId);
     timeEventStreamId = iris::IRIS_UINT64_MAX;
     client.unregisterEventCallback("ec_IRIS_SIMULATION_TIME_EVENT");
+}
+
+bool
+ThreadContext::schedule(PCEvent *e)
+{
+    auto it = getOrAllocBp(e->pc());
+    it->second->events.push_back(e);
+
+    if (_instId != iris::IRIS_UINT64_MAX && !it->second->validId())
+        installBp(it);
+
+    return true;
+}
+
+bool
+ThreadContext::remove(PCEvent *e)
+{
+    auto it = getOrAllocBp(e->pc());
+    it->second->events.remove(e);
+
+    if (it->second->empty())
+        delBp(it);
+
+    return true;
 }
 
 bool

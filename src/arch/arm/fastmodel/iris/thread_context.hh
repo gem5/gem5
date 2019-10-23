@@ -30,6 +30,8 @@
 #ifndef __ARCH_ARM_FASTMODEL_IRIS_THREAD_CONTEXT_HH__
 #define __ARCH_ARM_FASTMODEL_IRIS_THREAD_CONTEXT_HH__
 
+#include <list>
+#include <map>
 #include <memory>
 
 #include "cpu/base.hh"
@@ -91,6 +93,33 @@ class ThreadContext : public ::ThreadContext
     void maintainStepping();
 
 
+    using BpId = uint64_t;
+    struct BpInfo
+    {
+        Addr pc;
+        BpId id;
+        std::list<PCEvent *> events;
+
+        BpInfo(Addr _pc) : pc(_pc), id(iris::IRIS_UINT64_MAX) {}
+
+        bool empty() const { return events.empty(); }
+        bool validId() const { return id != iris::IRIS_UINT64_MAX; }
+        void clearId() { id = iris::IRIS_UINT64_MAX; }
+    };
+
+    using BpInfoPtr = std::unique_ptr<BpInfo>;
+    using BpInfoMap = std::map<Addr, BpInfoPtr>;
+    using BpInfoIt = BpInfoMap::iterator;
+
+    BpInfoMap bps;
+
+    BpInfoIt getOrAllocBp(Addr pc);
+
+    void installBp(BpInfoIt it);
+    void uninstallBp(BpInfoIt it);
+    void delBp(BpInfoIt it);
+
+
     iris::IrisErrorCode instanceRegistryChanged(
             uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
             uint64_t sInstId, bool syncEc, std::string &error_message_out);
@@ -100,10 +129,14 @@ class ThreadContext : public ::ThreadContext
     iris::IrisErrorCode simulationTimeEvent(
             uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
             uint64_t sInstId, bool syncEc, std::string &error_message_out);
+    iris::IrisErrorCode breakpointHit(
+            uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
+            uint64_t sInstId, bool syncEc, std::string &error_message_out);
 
     iris::EventStreamId regEventStreamId;
     iris::EventStreamId initEventStreamId;
     iris::EventStreamId timeEventStreamId;
+    iris::EventStreamId breakpointEventStreamId;
 
     mutable iris::IrisInstance client;
     iris::IrisCppAdapter &call() const { return client.irisCall(); }
@@ -121,8 +154,8 @@ class ThreadContext : public ::ThreadContext
 
     virtual bool translateAddress(Addr &paddr, Addr vaddr) = 0;
 
-    bool schedule(PCEvent *e) override { return false; }
-    bool remove(PCEvent *e) override { return false; }
+    bool schedule(PCEvent *e) override;
+    bool remove(PCEvent *e) override;
 
     void scheduleInstCountEvent(Event *event, Tick count) override;
     void descheduleInstCountEvent(Event *event) override;
