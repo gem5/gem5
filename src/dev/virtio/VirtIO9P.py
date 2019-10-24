@@ -60,7 +60,7 @@ class VirtIO9PDiod(VirtIO9PProxy):
     cxx_header = 'dev/virtio/fs9p.hh'
 
     diod = Param.String("diod", "Path to diod, optionally in PATH")
-    root = Param.String("/tmp", "Path to export through diod")
+    root = Param.String("Path to export through diod")
     socketPath = Param.String("Unused socket to diod")
 
 class VirtIO9PSocket(VirtIO9PProxy):
