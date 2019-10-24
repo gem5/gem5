@@ -92,14 +92,19 @@ def build_test_system(np):
         test_sys = makeLinuxX86System(test_mem_mode, np, bm[0], options.ruby,
                                       cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == "arm":
-        test_sys = makeArmSystem(test_mem_mode, options.machine_type, np,
-                                 bm[0], options.dtb_filename,
-                                 bare_metal=options.bare_metal,
-                                 cmdline=cmdline,
-                                 external_memory=
-                                   options.external_memory_system,
-                                 ruby=options.ruby,
-                                 security=options.enable_security_extensions)
+        test_sys = makeArmSystem(
+            test_mem_mode,
+            options.machine_type,
+            np,
+            bm[0],
+            options.dtb_filename,
+            bare_metal=options.bare_metal,
+            cmdline=cmdline,
+            external_memory=options.external_memory_system,
+            ruby=options.ruby,
+            security=options.enable_security_extensions,
+            vio_9p=options.vio_9p,
+        )
         if options.enable_context_switch_stats_dump:
             test_sys.enable_context_switch_stats_dump = True
     else:

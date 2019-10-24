@@ -42,6 +42,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
+import m5
 from m5.objects import *
 from m5.util import *
 from .Benchmarks import *
@@ -70,6 +71,19 @@ class CowIdeDisk(IdeDisk):
 class MemBus(SystemXBar):
     badaddr_responder = BadAddr()
     default = Self.badaddr_responder.pio
+
+def attach_9p(parent, bus):
+    viopci = PciVirtIO()
+    viopci.vio = VirtIO9PDiod()
+    viodir = os.path.join(m5.options.outdir, '9p')
+    viopci.vio.root = os.path.join(viodir, 'share')
+    viopci.vio.socketPath = os.path.join(viodir, 'socket')
+    if not os.path.exists(viopci.vio.root):
+        os.makedirs(viopci.vio.root)
+    if os.path.exists(viopci.vio.socketPath):
+        os.remove(viopci.vio.socketPath)
+    parent.viopci = viopci
+    parent.attachPciDevice(viopci, bus)
 
 def fillInCmdline(mdesc, template, **kwargs):
     kwargs.setdefault('disk', mdesc.disk())
@@ -206,7 +220,8 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
 
 def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
                   dtb_filename=None, bare_metal=False, cmdline=None,
-                  external_memory="", ruby=False, security=False):
+                  external_memory="", ruby=False, security=False,
+                  vio_9p=None):
     assert machine_type
 
     pci_devices = []
@@ -373,6 +388,9 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
     self.intrctrl = IntrControl()
     self.terminal = Terminal()
     self.vncserver = VncServer()
+
+    if vio_9p:
+        attach_9p(self.realview, self.iobus)
 
     if not ruby:
         self.system_port = self.membus.slave

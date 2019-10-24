@@ -48,6 +48,16 @@ from m5.objects import *
 from .Benchmarks import *
 from . import ObjectList
 
+vio_9p_help = """\
+Enable the Virtio 9P device and set the path to share. The default 9p path is
+m5ou5/9p/share, and it can be changed by setting VirtIO9p.root with --param. A
+sample guest mount command is: "mount -t 9p -o
+trans=virtio,version=9p2000.L,aname=<host-full-path> gem5 /mnt/9p" where
+"<host-full-path>" is the full path being shared on the host, and "gem5" is a
+fixed mount tag. This option requires the diod 9P server to be installed in the
+host PATH or selected with with: VirtIO9PDiod.diod.
+"""
+
 def _listCpuTypes(option, opt, value, parser):
     ObjectList.cpu_list.print()
     sys.exit(0)
@@ -434,6 +444,7 @@ def addFSOptions(parser):
         parser.add_option("--enable-context-switch-stats-dump", \
                 action="store_true", help="Enable stats dump at context "\
                 "switches and dump tasks file (required for Streamline)")
+        parser.add_option("--vio-9p", action="store_true", help=vio_9p_help)
 
     # Benchmark options
     parser.add_option("--dual", action="store_true",

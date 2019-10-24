@@ -52,8 +52,10 @@ from m5.objects import *
 
 m5.util.addToPath("../../")
 
+from common import FSConfig
 from common import SysPaths
 from common import ObjectList
+from common import Options
 from common.cores.arm import ex5_big, ex5_LITTLE
 
 import devices
@@ -209,6 +211,8 @@ def addOptions(parser):
              "sets max_insts_all_threads for cpus 0, 1, 3, 5 and 7 "
              "Direct parameters of the root object are not accessible, "
              "only parameters of its children.")
+    parser.add_argument("--vio-9p", action="store_true",
+                        help=Options.vio_9p_help)
     return parser
 
 def build(options):
@@ -295,6 +299,9 @@ def build(options):
         root.systemc_kernel = m5.objects.SystemC_Kernel()
         m5.tlm.tlm_global_quantum_instance().set(
             sc.sc_time(10000.0 / 100000000.0, sc.sc_time.SC_SEC))
+
+    if options.vio_9p:
+        FSConfig.attach_9p(system.realview, system.iobus)
 
     return root
 
