@@ -394,6 +394,7 @@ VirtIO9PDiod::startDiod()
 
         // Start diod
         execlp(diod, diod,
+               "-d", DTRACE(VIO9P) ? "1" : "0", // show debug output
                "-f", // start in foreground
                "-r", "3", // setup read FD
                "-w", "4", // setup write FD
