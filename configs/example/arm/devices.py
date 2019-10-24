@@ -303,14 +303,10 @@ def simpleSystem(BaseSystem, caches, mem_size, platform=None, **kwargs):
                 self.dmabridge = Bridge(delay='50ns',
                                         ranges=[self.mem_ranges[0]])
 
-            self._pci_devices = 0
             self._clusters = []
             self._num_cpus = 0
 
         def attach_pci(self, dev):
-            dev.pci_bus, dev.pci_dev, dev.pci_func = \
-                (0, self._pci_devices + 1, 0)
-            self._pci_devices += 1
             self.realview.attachPciDevice(dev, self.iobus)
 
         def connect(self):

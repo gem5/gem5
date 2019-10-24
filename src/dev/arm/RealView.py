@@ -542,6 +542,7 @@ class RealView(Platform):
     cxx_header = "dev/arm/realview.hh"
     system = Param.System(Parent.any, "system")
     _mem_regions = [ AddrRange(0, size='256MB') ]
+    _num_pci_dev = 0
 
     def _on_chip_devices(self):
         return []
@@ -952,6 +953,10 @@ Interrupts:
 
     def attachPciDevice(self, device, *args, **kwargs):
         device.host = self.pci_host
+        self._num_pci_dev += 1
+        device.pci_bus = 0
+        device.pci_dev = self._num_pci_dev
+        device.pci_func = 0
         self._attach_device(device, *args, **kwargs)
 
     def attachSmmu(self, devices, bus):

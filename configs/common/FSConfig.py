@@ -365,8 +365,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         # Attach off-chip devices
         self.realview.attachIO(self.iobus)
 
-    for dev_id, dev in enumerate(pci_devices):
-        dev.pci_bus, dev.pci_dev, dev.pci_func = (0, dev_id + 1, 0)
+    for dev in pci_devices:
         self.realview.attachPciDevice(
             dev, self.iobus,
             dma_ports=self._dma_ports if ruby else None)
