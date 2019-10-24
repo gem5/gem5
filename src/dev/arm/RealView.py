@@ -796,13 +796,35 @@ model in the future. Such devices should normally have interrupts in
 the gem5-specific SPI range.
 
 On-chip peripherals are loosely modeled after the ARM CoreTile Express
-A15x2 A7x3 memory and interrupt map. In particular, the GIC and
+A15x2 memory and interrupt map. In particular, the GIC and
 Generic Timer have the same interrupt lines and base addresses. Other
 on-chip devices are gem5 specific.
 
 Unlike the original Versatile Express RS2 extended platform, gem5 implements a
 large contigious DRAM space, without aliases or holes, starting at the
 2GiB boundary. This means that PCI memory is limited to 1GiB.
+
+References:
+
+    Technical Reference Manuals:
+        Arm Motherboard Express uATX (V2M-P1) - ARM DUI 0447J
+        Arm CoreTile Express A15x2 (V2P-CA15) - ARM DUI 0604E
+
+    Official Linux device tree specifications:
+        V2M-P1   - arch/arm/boot/dts/vexpress-v2m-rs1.dtsi
+        V2P-CA15 - arch/arm/boot/dts/vexpress-v2p-ca15-tc1.dts
+
+    Memory map:
+        Arm CoreTile Express A15x2 (V2P-CA15) - ARM DUI 0604E
+        Daughterboard (global)
+            Section 3.2.1 - Table 3-1 - Daughterboard memory map
+        On-chip
+            Section 3.2.3 - Table 3-2 - Cortex-A15 MPCore on-chip peripheral
+                                        memory map
+
+    Interrupts:
+        Arm CoreTile Express A15x2 (V2P-CA15) - ARM DUI 0604E
+        Section 2.8.2 - Test chip interrupts
 
 Memory map:
    0x00000000-0x03ffffff: Boot memory (CS0)
