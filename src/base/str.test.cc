@@ -39,6 +39,8 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdint>
+
 #include "base/str.hh"
 
 /*
@@ -95,7 +97,7 @@ TEST(StrTest, EatWhiteNoWhitespace)
 TEST(StrTest, ToLower)
 {
     std::string val = "gOoDbYe FOO@barr!";
-    to_lower("goodbye foo@bar!");
+    EXPECT_EQ("goodbye foo@barr!", to_lower(val));
 }
 
 /*
