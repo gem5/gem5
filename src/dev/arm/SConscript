@@ -81,6 +81,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('smmu_v3_slaveifc.cc');
     Source('smmu_v3_transl.cc');
     Source('timer_sp804.cc')
+    Source('watchdog_sp805.cc')
     Source('gpu_nomali.cc')
     Source('pci_host.cc')
     Source('rv_ctrl.cc')
@@ -104,6 +105,7 @@ if env['TARGET_ISA'] == 'arm':
     DebugFlag('RVCTRL')
     DebugFlag('SMMUv3')
     DebugFlag('SMMUv3Hazard')
+    DebugFlag('Sp805')
     DebugFlag('EnergyCtrl')
     DebugFlag('UFSHostDevice')
     DebugFlag('VGIC')

@@ -402,6 +402,34 @@ class Sp804(AmbaPioDevice):
     clock1 = Param.Clock('1MHz', "Clock speed of the input")
     amba_id = 0x00141804
 
+class Sp805(AmbaIntDevice):
+    """
+Arm Watchdog Module (SP805)
+Reference:
+    Arm Watchdog Module (SP805) - Technical Reference Manual - rev. r1p0
+    Doc. ID: ARM DDI 0270B
+    """
+
+    type = 'Sp805'
+    cxx_header = 'dev/arm/watchdog_sp805.hh'
+
+    amba_id = 0x00141805
+
+    def generateDeviceTree(self, state):
+        node = self.generateBasicPioDeviceNode(state, 'watchdog',
+            self.pio_addr, 0x1000, [int(self.int_num)])
+        node.appendCompatible(['arm,sp805', 'arm,primecell'])
+        clocks = [state.phandle(self.clk_domain.unproxy(self))]
+        clock_names = ['wdogclk']
+        platform = self._parent.unproxy(self)
+        if self in platform._off_chip_devices():
+            clocks.append(state.phandle(platform.dcc.osc_smb))
+            clock_names.append('apb_pclk')
+        node.append(FdtPropertyWords('clocks', clocks))
+        node.append(FdtPropertyStrings('clock-names', clock_names))
+
+        yield node
+
 class A9GlobalTimer(BasicPioDevice):
     type = 'A9GlobalTimer'
     cxx_header = "dev/arm/timer_a9global.hh"
