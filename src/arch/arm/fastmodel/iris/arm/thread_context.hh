@@ -44,6 +44,7 @@ class ArmThreadContext : public Iris::ThreadContext
     static IdxNameMap intReg32IdxNameMap;
     static IdxNameMap intReg64IdxNameMap;
     static IdxNameMap vecRegIdxNameMap;
+    static iris::MemorySpaceId bpSpaceId;
 
     // Temporary holding places for the vector reg accessors to return.
     // These are not updated live, only when requested.
@@ -70,6 +71,8 @@ class ArmThreadContext : public Iris::ThreadContext
     ResourceIds intReg32Ids;
     ResourceIds intReg64Ids;
     ResourceIds vecRegIds;
+
+    iris::MemorySpaceId getBpSpaceId(Addr pc) const override;
 
     void setIntReg(RegIndex reg_idx, RegVal val) override;
     RegVal readIntReg(RegIndex reg_idx) const override;

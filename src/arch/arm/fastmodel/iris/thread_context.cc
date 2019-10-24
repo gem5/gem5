@@ -134,8 +134,9 @@ void
 ThreadContext::installBp(BpInfoIt it)
 {
     BpId id;
-    // Hard code address space 5 for now.
-    call().breakpoint_set_code(_instId, id, it->second->pc, 5, 0, true);
+    Addr pc = it->second->pc;
+    auto space_id = getBpSpaceId(pc);
+    call().breakpoint_set_code(_instId, id, pc, space_id, 0, true);
     it->second->id = id;
 }
 

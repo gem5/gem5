@@ -145,6 +145,22 @@ ArmThreadContext::nextInstAddr() const
     return pcState().nextInstAddr();
 }
 
+iris::MemorySpaceId
+ArmThreadContext::getBpSpaceId(Addr pc) const
+{
+    if (bpSpaceId == iris::IRIS_UINT64_MAX) {
+        for (auto &space: memorySpaces) {
+            if (space.canonicalMsn == CurrentMsn) {
+                bpSpaceId = space.spaceId;
+                break;
+            }
+        }
+        panic_if(bpSpaceId == iris::IRIS_UINT64_MAX,
+                "Unable to find address space for breakpoints.");
+    }
+    return bpSpaceId;
+}
+
 uint64_t
 ArmThreadContext::readIntReg(RegIndex reg_idx) const
 {
@@ -881,5 +897,7 @@ Iris::ThreadContext::IdxNameMap ArmThreadContext::vecRegIdxNameMap({
         { 24, "V24" }, { 25, "V25" }, { 26, "V26" }, { 27, "V27" },
         { 28, "V28" }, { 29, "V29" }, { 30, "V30" }, { 31, "V31" }
 });
+
+iris::MemorySpaceId ArmThreadContext::bpSpaceId = iris::IRIS_UINT64_MAX;
 
 } // namespace Iris

@@ -119,6 +119,8 @@ class ThreadContext : public ::ThreadContext
     void uninstallBp(BpInfoIt it);
     void delBp(BpInfoIt it);
 
+    virtual iris::MemorySpaceId getBpSpaceId(Addr pc) const = 0;
+
 
     iris::IrisErrorCode instanceRegistryChanged(
             uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
