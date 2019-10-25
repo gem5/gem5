@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2009, 2012-2013 ARM Limited
+# Copyright (c) 2009, 2012-2013, 2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -92,6 +92,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('vio_mmio.cc')
     Source('ufs_device.cc')
     Source('energy_ctrl.cc')
+    Source('fvp_base_pwr_ctrl.cc')
 
     DebugFlag('AMBA')
     DebugFlag('FlashDevice')
@@ -106,6 +107,7 @@ if env['TARGET_ISA'] == 'arm':
     DebugFlag('SMMUv3Hazard')
     DebugFlag('Sp805')
     DebugFlag('EnergyCtrl')
+    DebugFlag('FVPBasePwrCtrl')
     DebugFlag('UFSHostDevice')
     DebugFlag('VGIC')
     DebugFlag('NoMali')

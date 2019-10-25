@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2015-2019 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -53,6 +53,7 @@
 
 class GenericTimer;
 class BaseGic;
+class FVPBasePwrCtrl;
 class ThreadContext;
 
 class ArmSystem : public System
@@ -83,6 +84,11 @@ class ArmSystem : public System
      */
     GenericTimer *_genericTimer;
     BaseGic *_gic;
+
+    /**
+     * Pointer to the Power Controller (if any)
+     */
+    FVPBasePwrCtrl *_pwrCtrl;
 
     /**
      * Reset address (ARMv8)
@@ -175,11 +181,20 @@ class ArmSystem : public System
     /** Sets the pointer to the GIC. */
     void setGIC(BaseGic *gic) { _gic = gic; }
 
+    /** Sets the pointer to the Power Controller */
+    void setPowerController(FVPBasePwrCtrl *pwr_ctrl)
+    {
+        _pwrCtrl = pwr_ctrl;
+    }
+
     /** Get a pointer to the system's generic timer model */
     GenericTimer *getGenericTimer() const { return _genericTimer; }
 
     /** Get a pointer to the system's GIC */
     BaseGic *getGIC() const { return _gic; }
+
+    /** Get a pointer to the system's power controller */
+    FVPBasePwrCtrl *getPowerController() const { return _pwrCtrl; }
 
     /** Returns true if the register width of the highest implemented exception
      * level is 64 bits (ARMv8) */
@@ -305,6 +320,12 @@ class ArmSystem : public System
     /** Make a Semihosting call from aarch32 */
     static uint32_t callSemihosting32(ThreadContext *tc,
                                       uint32_t op, uint32_t param);
+
+    /** Make a call to notify the power controller of STANDBYWFI assertion */
+    static void callSetStandByWfi(ThreadContext *tc);
+
+    /** Make a call to notify the power controller of STANDBYWFI deassertion */
+    static void callClearStandByWfi(ThreadContext *tc);
 };
 
 #endif

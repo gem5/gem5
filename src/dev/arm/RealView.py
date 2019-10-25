@@ -1159,3 +1159,14 @@ class VExpress_GEM5_V2(VExpress_GEM5_V2_Base):
         return super(VExpress_GEM5_V2,self)._on_chip_devices() + [
                 self.hdlcd,
             ]
+
+class FVPBasePwrCtrl(BasicPioDevice):
+    """
+Based on Fast Models Base_PowerController v11.8
+Reference:
+    Fast Models Reference Manual - Section 7.7.2 - Version 11.8
+    Document ID: 100964_1180_00_en
+    """
+
+    type = 'FVPBasePwrCtrl'
+    cxx_header = 'dev/arm/fvp_base_pwr_ctrl.hh'

@@ -762,6 +762,7 @@ let {{
         fault = trapWFx(tc, cpsr, scr, false);
         if (fault == NoFault) {
             PseudoInst::quiesce(tc);
+            ArmSystem::callSetStandByWfi(tc);
         } else {
             PseudoInst::quiesceSkip(tc);
         }

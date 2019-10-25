@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2015,2017-2019 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015,2017-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,6 +47,7 @@
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
+#include "dev/arm/fvp_base_pwr_ctrl.hh"
 #include "dev/arm/gic_v2.hh"
 #include "mem/fs_translating_port_proxy.hh"
 #include "mem/physical.hh"
@@ -62,6 +63,7 @@ ArmSystem::ArmSystem(Params *p)
       _haveCrypto(p->have_crypto),
       _genericTimer(nullptr),
       _gic(nullptr),
+      _pwrCtrl(nullptr),
       _highestELIs64(p->highest_el_is_64),
       _physAddrRange64(p->phys_addr_range_64),
       _haveLargeAsid64(p->have_large_asid_64),
@@ -195,6 +197,20 @@ ArmSystem::callSemihosting32(ThreadContext *tc,
 {
     ArmSystem *sys = getArmSystem(tc);
     return sys->semihosting->call32(tc, op, param);
+}
+
+void
+ArmSystem::callSetStandByWfi(ThreadContext *tc)
+{
+    if (FVPBasePwrCtrl *pwr_ctrl = getArmSystem(tc)->getPowerController())
+        pwr_ctrl->setStandByWfi(tc);
+}
+
+void
+ArmSystem::callClearStandByWfi(ThreadContext *tc)
+{
+    if (FVPBasePwrCtrl *pwr_ctrl = getArmSystem(tc)->getPowerController())
+        pwr_ctrl->clearStandByWfi(tc);
 }
 
 ArmSystem *

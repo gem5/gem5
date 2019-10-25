@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2019-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -205,6 +205,7 @@ void
 Gicv3::postInt(uint32_t cpu, ArmISA::InterruptTypes int_type)
 {
     platform->intrctrl->post(cpu, int_type, 0);
+    ArmSystem::callClearStandByWfi(sys->getThreadContext(cpu));
 }
 
 bool
