@@ -231,4 +231,19 @@ class MiscRegImplDefined64 : public MiscRegOp64
             Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
+class RegNone : public ArmStaticInst
+{
+  protected:
+    IntRegIndex dest;
+
+    RegNone(const char *mnem, ExtMachInst _machInst,
+                     OpClass __opClass, IntRegIndex _dest) :
+        ArmStaticInst(mnem, _machInst, __opClass),
+        dest(_dest)
+    {}
+
+    std::string generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const;
+};
+
 #endif

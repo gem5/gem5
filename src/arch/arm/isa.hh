@@ -96,6 +96,7 @@ namespace ArmISA
         bool haveLSE;
         bool havePAN;
         bool haveSecEL2;
+        bool haveTME;
 
         /** SVE vector length in quadwords */
         unsigned sveVL;

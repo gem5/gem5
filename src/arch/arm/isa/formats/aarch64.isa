@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 ARM Limited
+// Copyright (c) 2011-2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -268,6 +268,8 @@ namespace Aarch64
                     return new Brk64(machInst, imm16);
                   case 0x08:
                     return new Hlt64(machInst, imm16);
+                  case 0x0c:
+                    return new Tcancel64(machInst, imm16);
                   case 0x15:
                     return new FailUnimplemented("dcps1", machInst);
                   case 0x16:
@@ -288,7 +290,21 @@ namespace Aarch64
                 IntRegIndex rt = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
                 switch (op0) {
                   case 0x0:
-                    if (rt != 0x1f || l)
+                    // early out for TME
+                    if (crn == 0x3 && op1 == 0x3 && op2 == 0x3) {
+                        switch (crm) {
+                            case 0x0:
+                              if (rt == 0b11111)
+                                return new Tcommit64(machInst);
+                              else
+                                return new Tstart64(machInst, rt);
+                            case 0x1:
+                              return new Ttest64(machInst, rt);
+                            default:
+                              return new Unknown64(machInst);
+                        }
+                    }
+                    else if (rt != 0x1f || l)
                         return new Unknown64(machInst);
                     if (crn == 0x2 && op1 == 0x3) {
                         switch (crm) {

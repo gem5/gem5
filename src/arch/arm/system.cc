@@ -66,6 +66,7 @@ ArmSystem::ArmSystem(Params *p)
       _highestELIs64(p->highest_el_is_64),
       _physAddrRange64(p->phys_addr_range_64),
       _haveLargeAsid64(p->have_large_asid_64),
+      _haveTME(p->have_tme),
       _haveSVE(p->have_sve),
       _sveVL(p->sve_vl),
       _haveLSE(p->have_lse),
@@ -144,6 +145,12 @@ ArmSystem::haveEL(ThreadContext *tc, ExceptionLevel el)
         warn("Unimplemented Exception Level\n");
         return false;
     }
+}
+
+bool
+ArmSystem::haveTME(ThreadContext *tc)
+{
+    return getArmSystem(tc)->haveTME();
 }
 
 Addr

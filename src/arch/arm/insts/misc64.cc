@@ -868,3 +868,13 @@ MiscRegImplDefined64::generateDisassembly(
 {
     return csprintf("%-10s (implementation defined)", fullMnemonic.c_str());
 }
+
+std::string
+RegNone::generateDisassembly(
+    Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printIntReg(ss, dest);
+    return ss.str();
+}

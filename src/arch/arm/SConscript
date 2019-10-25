@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2009, 2012-2013, 2017-2018 ARM Limited
+# Copyright (c) 2009, 2012-2013, 2017-2018, 2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -48,6 +48,7 @@ if env['TARGET_ISA'] == 'arm':
     GTest('aapcs64.test', 'aapcs64.test.cc')
     Source('decoder.cc')
     Source('faults.cc')
+    Source('htm.cc')
     Source('insts/branch.cc')
     Source('insts/branch64.cc')
     Source('insts/data64.cc')
@@ -64,6 +65,11 @@ if env['TARGET_ISA'] == 'arm':
     Source('insts/vfp.cc')
     Source('insts/fplib.cc')
     Source('insts/crypto.cc')
+    Source('insts/tme64.cc')
+    if env['PROTOCOL'] == 'MESI_Three_Level_HTM':
+        Source('insts/tme64ruby.cc')
+    else:
+        Source('insts/tme64classic.cc')
     Source('interrupts.cc')
     Source('isa.cc')
     Source('isa_device.cc')
@@ -101,6 +107,7 @@ if env['TARGET_ISA'] == 'arm':
     SimObject('ArmPMU.py')
 
     DebugFlag('Arm')
+    DebugFlag('ArmTme', 'Transactional Memory Extension')
     DebugFlag('Semihosting')
     DebugFlag('Decoder', "Instructions returned by the predecoder")
     DebugFlag('Faults', "Trace Exceptions, interrupts, svc/swi")

@@ -143,6 +143,12 @@ let {{
     exec_output += PredOpExecute.subst(hvcIop)
 
     eretCode = '''
+        if (xc->inHtmTransactionalState()) {
+            fault = std::make_shared<GenericHtmFailureFault>(
+                xc->getHtmTransactionUid(),
+                HtmFailureFaultCause::EXCEPTION);
+            return fault;
+        }
         SCTLR sctlr   = Sctlr;
         CPSR old_cpsr = Cpsr;
         old_cpsr.nz   = CondCodesNZ;
@@ -754,6 +760,12 @@ let {{
     exec_output += QuiescePredOpExecuteWithFixup.subst(wfeIop)
 
     wfiCode = '''
+    if (xc->inHtmTransactionalState()) {
+        fault = std::make_shared<GenericHtmFailureFault>(
+            xc->getHtmTransactionUid(),
+            HtmFailureFaultCause::EXCEPTION);
+        return fault;
+    }
     HCR  hcr  = Hcr;
     CPSR cpsr = Cpsr;
     SCR  scr  = Scr64;

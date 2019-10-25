@@ -97,7 +97,7 @@ class ArmISA(BaseISA):
     id_aa64dfr1_el1 = Param.UInt64(0x0000000000000000,
         "AArch64 Debug Feature Register 1")
 
-    # !CRC32 | !SHA2 | !SHA1 | !AES
+    # !TME | !Atomic | !CRC32 | !SHA2 | !SHA1 | !AES
     id_aa64isar0_el1 = Param.UInt64(0x0000000000000000,
         "AArch64 Instruction Set Attribute Register 0")
 
