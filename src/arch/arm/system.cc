@@ -174,6 +174,14 @@ ArmSystem::initState()
     }
 }
 
+ArmSystem *
+ArmSystem::getArmSystem(System *sys)
+{
+    ArmSystem *a_sys = dynamic_cast<ArmSystem *>(sys);
+    assert(a_sys);
+    return a_sys;
+}
+
 ArmSystem*
 ArmSystem::getArmSystem(ThreadContext *tc)
 {
