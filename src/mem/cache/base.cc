@@ -1413,7 +1413,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     // compressor is used, the compression/decompression methods are called to
     // calculate the amount of extra cycles needed to read or write compressed
     // blocks.
-    if (compressor) {
+    if (compressor && pkt->hasData()) {
         compressor->compress(pkt->getConstPtr<uint64_t>(), compression_lat,
                              decompression_lat, blk_size_bits);
     }
