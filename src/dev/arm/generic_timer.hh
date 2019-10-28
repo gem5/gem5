@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2015, 2017-2018 ARM Limited
+ * Copyright (c) 2013, 2015, 2017-2018, 2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -63,7 +63,7 @@ class SystemCounter : public Serializable
 {
   protected:
     /// Counter frequency (as specified by CNTFRQ).
-    uint64_t _freq;
+    uint32_t _freq;
     /// Cached copy of the counter period (inverse of the frequency).
     Tick _period;
     /// Tick when the counter was reset.
@@ -86,7 +86,7 @@ class SystemCounter : public Serializable
     }
 
     /// Returns the counter frequency.
-    uint64_t freq() const { return _freq; }
+    uint32_t freq() const { return _freq; }
     /// Sets the counter frequency.
     /// @param freq frequency in Hz.
     void setFreq(uint32_t freq);
