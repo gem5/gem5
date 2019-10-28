@@ -36,6 +36,7 @@
  *
  * Authors: Giacomo Gabrielli
  *          Andreas Sandberg
+ *          Adrian Herrera
  */
 
 #ifndef __DEV_ARM_GENERIC_TIMER_HH__
@@ -64,6 +65,8 @@ class SystemCounter : public Serializable
   protected:
     /// Counter frequency (as specified by CNTFRQ).
     uint32_t _freq;
+    /// Frequency modes table with all possible frequencies for the counter
+    std::vector<uint32_t> _freqTable;
     /// Cached copy of the counter period (inverse of the frequency).
     Tick _period;
     /// Tick when the counter was reset.
@@ -74,8 +77,11 @@ class SystemCounter : public Serializable
     /// Hypervisor event stream control register
     uint32_t _regCnthctl;
 
+    /// Maximum architectural number of frequency table entries
+    static constexpr size_t MAX_FREQ_ENTRIES = 1004;
+
   public:
-    SystemCounter();
+    SystemCounter(std::vector<uint32_t> &freqs);
 
     /// Returns the current value of the physical counter.
     uint64_t value() const

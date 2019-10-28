@@ -404,6 +404,10 @@ class GenericTimer(ClockedObject):
     int_virt = Param.ArmPPI("Virtual timer interrupt")
     int_hyp = Param.ArmPPI("Hypervisor timer interrupt")
 
+    freqs = VectorParam.UInt32([0x01800000], "Frequencies available for the "
+        "system counter (in Hz). First element is the base frequency, "
+        "following are alternative lower ones which must be exact divisors")
+
     def generateDeviceTree(self, state):
         node = FdtNode("timer")
 
@@ -429,6 +433,10 @@ class GenericTimerMem(PioDevice):
 
     int_phys = Param.ArmSPI("Physical Interrupt")
     int_virt = Param.ArmSPI("Virtual Interrupt")
+
+    freqs = VectorParam.UInt32([0x01800000], "Frequencies available for the "
+        "system counter (in Hz). First element is the base frequency, "
+        "following are alternative lower ones which must be exact divisors")
 
 class PL031(AmbaIntDevice):
     type = 'PL031'

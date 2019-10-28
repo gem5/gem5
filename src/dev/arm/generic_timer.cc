@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2015, 2017-2018 ARM Limited
+ * Copyright (c) 2013, 2015, 2017-2018, 2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -36,6 +36,7 @@
  *
  * Authors: Giacomo Gabrielli
  *          Andreas Sandberg
+ *          Adrian Herrera
  */
 
 #include "dev/arm/generic_timer.hh"
@@ -47,10 +48,21 @@
 #include "params/GenericTimer.hh"
 #include "params/GenericTimerMem.hh"
 
-SystemCounter::SystemCounter()
-    : _freq(0), _period(0), _resetTick(0), _regCntkctl(0)
+SystemCounter::SystemCounter(std::vector<uint32_t> &freqs)
+    : _freqTable(freqs),
+      _resetTick(0),
+      _regCntkctl(0)
 {
-    setFreq(0x01800000);
+    fatal_if(_freqTable.empty(), "SystemCounter::SystemCounter: Base "
+        "frequency not provided\n");
+    // Store the table end marker as a 32-bit zero word
+    _freqTable.push_back(0);
+    fatal_if(_freqTable.size() > MAX_FREQ_ENTRIES,
+        "SystemCounter::SystemCounter: Architecture states a maximum of 1004 "
+        "frequency table entries, limit surpassed\n");
+    // Set the active frequency to be the base
+    _freq = freqs.front();
+    _period = (1.0 / _freq) * SimClock::Frequency;
 }
 
 void
@@ -221,6 +233,7 @@ ArchTimer::drainResume()
 
 GenericTimer::GenericTimer(GenericTimerParams *p)
     : ClockedObject(p),
+      systemCounter(p->freqs),
       system(*p->system)
 {
     fatal_if(!p->system, "No system specified, can't instantiate timer.\n");
@@ -528,7 +541,7 @@ GenericTimerMem::GenericTimerMem(GenericTimerMemParams *p)
       timerRange(RangeSize(p->base + sys->getPageBytes(),
                   sys->getPageBytes())),
       addrRanges{ctrlRange, timerRange},
-      systemCounter(),
+      systemCounter(p->freqs),
       physTimer(csprintf("%s.phys_timer0", name()),
                 *this, systemCounter,
                 p->int_phys->get()),
