@@ -34,15 +34,10 @@
 #include <limits>
 #include <string>
 
-#ifdef SINIC_VTOPHYS
-#include "arch/vtophys.hh"
-
-#endif
 #include "base/compiler.hh"
 #include "base/debug.hh"
 #include "base/inet.hh"
 #include "base/types.hh"
-#include "config/the_isa.hh"
 #include "debug/EthernetAll.hh"
 #include "dev/net/etherlink.hh"
 #include "mem/packet.hh"
@@ -52,7 +47,6 @@
 
 using namespace std;
 using namespace Net;
-using namespace TheISA;
 
 namespace Sinic {
 
@@ -365,15 +359,6 @@ Device::write(PacketPtr pkt)
 
         if (Regs::get_RxData_Vaddr(pkt->getLE<uint64_t>())) {
             panic("vtophys not implemented in newmem");
-#ifdef SINIC_VTOPHYS
-            Addr vaddr = Regs::get_RxData_Addr(reg64);
-            Addr paddr = vtophys(req->xc, vaddr);
-            DPRINTF(EthernetPIO, "write RxData vnic %d (rxunique %d): "
-                    "vaddr=%#x, paddr=%#x\n",
-                    index, vnic.rxUnique, vaddr, paddr);
-
-            vnic.RxData = Regs::set_RxData_Addr(vnic.RxData, paddr);
-#endif
         } else {
             DPRINTF(EthernetPIO, "write RxData vnic %d (rxunique %d)\n",
                     index, vnic.rxUnique);
@@ -403,15 +388,6 @@ Device::write(PacketPtr pkt)
 
         if (Regs::get_TxData_Vaddr(pkt->getLE<uint64_t>())) {
             panic("vtophys won't work here in newmem.\n");
-#ifdef SINIC_VTOPHYS
-            Addr vaddr = Regs::get_TxData_Addr(reg64);
-            Addr paddr = vtophys(req->xc, vaddr);
-            DPRINTF(EthernetPIO, "write TxData vnic %d (txunique %d): "
-                    "vaddr=%#x, paddr=%#x\n",
-                    index, vnic.txUnique, vaddr, paddr);
-
-            vnic.TxData = Regs::set_TxData_Addr(vnic.TxData, paddr);
-#endif
         } else {
             DPRINTF(EthernetPIO, "write TxData vnic %d (txunique %d)\n",
                     index, vnic.txUnique);
