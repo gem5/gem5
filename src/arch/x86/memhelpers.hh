@@ -113,7 +113,7 @@ readMemAtomic(ExecContext *xc, Trace::InstRecord *traceData, Addr addr,
         // If LE to LE, this is a nop, if LE to BE, the actual data ends up
         // in the right place because the LSBs where at the low addresses on
         // access. This doesn't work for BE guests.
-        mem = gtoh(mem);
+        mem = letoh(mem);
         if (traceData)
             traceData->setData(mem);
     }
@@ -129,7 +129,7 @@ readPackedMemAtomic(ExecContext *xc, Addr addr, std::array<uint64_t, N> &mem,
     Fault fault = xc->readMem(addr, (uint8_t *)&real_mem,
                               sizeof(T) * N, flags);
     if (fault == NoFault) {
-        real_mem = gtoh(real_mem);
+        real_mem = letoh(real_mem);
         for (int i = 0; i < N; i++)
             mem[i] = real_mem[i];
     }
@@ -167,7 +167,7 @@ writePackedMem(ExecContext *xc, std::array<uint64_t, N> &mem, Addr addr,
     std::array<T, N> real_mem;
     for (int i = 0; i < N; i++)
         real_mem[i] = mem[i];
-    real_mem = htog(real_mem);
+    real_mem = htole(real_mem);
     return xc->writeMem((uint8_t *)&real_mem, sizeof(T) * N,
                         addr, flags, res);
 }
@@ -179,7 +179,7 @@ writeMemTiming(ExecContext *xc, Trace::InstRecord *traceData, uint64_t mem,
 {
     if (traceData)
         traceData->setData(mem);
-    mem = htog(mem);
+    mem = htole(mem);
     return xc->writeMem((uint8_t *)&mem, dataSize, addr, flags, res);
 }
 
@@ -209,11 +209,11 @@ writeMemAtomic(ExecContext *xc, Trace::InstRecord *traceData, uint64_t mem,
 {
     if (traceData)
         traceData->setData(mem);
-    uint64_t host_mem = htog(mem);
+    uint64_t host_mem = htole(mem);
     Fault fault =
           xc->writeMem((uint8_t *)&host_mem, dataSize, addr, flags, res);
     if (fault == NoFault && res)
-        *res = gtoh(*res);
+        *res = letoh(*res);
     return fault;
 }
 
@@ -239,7 +239,7 @@ writeMemAtomic(ExecContext *xc, Trace::InstRecord *traceData,
     }
 
     if (fault == NoFault && res)
-        *res = gtoh(*res);
+        *res = letoh(*res);
 
     return fault;
 }

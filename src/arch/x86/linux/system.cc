@@ -85,8 +85,7 @@ LinuxX86System::initState()
 
     // Generate a pointer of the right size and endianness to put into
     // commandLinePointer.
-    uint32_t guestCommandLineBuff =
-        X86ISA::htog((uint32_t)commandLineBuff);
+    uint32_t guestCommandLineBuff = htole((uint32_t)commandLineBuff);
     physProxy.writeBlob(commandLinePointer, &guestCommandLineBuff,
                         sizeof(guestCommandLineBuff));
 

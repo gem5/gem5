@@ -44,28 +44,28 @@ void
 X86NativeTrace::ThreadState::update(NativeTrace *parent)
 {
     parent->read(this, sizeof(*this));
-    rax = X86ISA::gtoh(rax);
-    rcx = X86ISA::gtoh(rcx);
-    rdx = X86ISA::gtoh(rdx);
-    rbx = X86ISA::gtoh(rbx);
-    rsp = X86ISA::gtoh(rsp);
-    rbp = X86ISA::gtoh(rbp);
-    rsi = X86ISA::gtoh(rsi);
-    rdi = X86ISA::gtoh(rdi);
-    r8 = X86ISA::gtoh(r8);
-    r9 = X86ISA::gtoh(r9);
-    r10 = X86ISA::gtoh(r10);
-    r11 = X86ISA::gtoh(r11);
-    r12 = X86ISA::gtoh(r12);
-    r13 = X86ISA::gtoh(r13);
-    r14 = X86ISA::gtoh(r14);
-    r15 = X86ISA::gtoh(r15);
-    rip = X86ISA::gtoh(rip);
+    rax = letoh(rax);
+    rcx = letoh(rcx);
+    rdx = letoh(rdx);
+    rbx = letoh(rbx);
+    rsp = letoh(rsp);
+    rbp = letoh(rbp);
+    rsi = letoh(rsi);
+    rdi = letoh(rdi);
+    r8 = letoh(r8);
+    r9 = letoh(r9);
+    r10 = letoh(r10);
+    r11 = letoh(r11);
+    r12 = letoh(r12);
+    r13 = letoh(r13);
+    r14 = letoh(r14);
+    r15 = letoh(r15);
+    rip = letoh(rip);
     //This should be expanded if x87 registers are considered
     for (int i = 0; i < 8; i++)
-        mmx[i] = X86ISA::gtoh(mmx[i]);
+        mmx[i] = letoh(mmx[i]);
     for (int i = 0; i < 32; i++)
-        xmm[i] = X86ISA::gtoh(xmm[i]);
+        xmm[i] = letoh(xmm[i]);
 }
 
 void

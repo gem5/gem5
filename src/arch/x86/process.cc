@@ -986,7 +986,7 @@ X86Process::argsInit(int pageSize,
 
     // figure out argc
     IntType argc = argv.size();
-    IntType guestArgc = X86ISA::htog(argc);
+    IntType guestArgc = htole(argc);
 
     // Write out the sentry void *
     IntType sentry_NULL = 0;

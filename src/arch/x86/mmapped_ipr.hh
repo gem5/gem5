@@ -63,7 +63,7 @@ namespace X86ISA
             Addr offset = pkt->getAddr() & mask(3);
             MiscRegIndex index = (MiscRegIndex)(
                 pkt->getAddr() / sizeof(RegVal));
-            RegVal data = htog(xc->readMiscReg(index));
+            RegVal data = htole(xc->readMiscReg(index));
             // Make sure we don't trot off the end of data.
             assert(offset + pkt->getSize() <= sizeof(RegVal));
             pkt->setData(((uint8_t *)&data) + offset);
@@ -80,11 +80,11 @@ namespace X86ISA
             Addr offset = pkt->getAddr() & mask(3);
             MiscRegIndex index = (MiscRegIndex)(
                 pkt->getAddr() / sizeof(RegVal));
-            RegVal data = htog(xc->readMiscRegNoEffect(index));
+            RegVal data = htole(xc->readMiscRegNoEffect(index));
             // Make sure we don't trot off the end of data.
             assert(offset + pkt->getSize() <= sizeof(RegVal));
             pkt->writeData(((uint8_t *)&data) + offset);
-            xc->setMiscReg(index, gtoh(data));
+            xc->setMiscReg(index, letoh(data));
             return Cycles(1);
         }
     }

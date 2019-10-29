@@ -196,7 +196,7 @@ X86ISA::Interrupts::read(PacketPtr pkt)
     if ((offset & ~mask(3)) != ((offset + pkt->getSize()) & ~mask(3)))
         panic("Accessed more than one register at a time in the APIC!\n");
     ApicRegIndex reg = decodeAddr(offset);
-    uint32_t val = htog(readReg(reg));
+    uint32_t val = htole(readReg(reg));
     DPRINTF(LocalApic,
             "Reading Local APIC register %d at offset %#x as %#x.\n",
             reg, offset, val);
@@ -217,8 +217,8 @@ X86ISA::Interrupts::write(PacketPtr pkt)
     pkt->writeData(((uint8_t *)&val) + (offset & mask(3)));
     DPRINTF(LocalApic,
             "Writing Local APIC register %d at offset %#x as %#x.\n",
-            reg, offset, gtoh(val));
-    setReg(reg, gtoh(val));
+            reg, offset, letoh(val));
+    setReg(reg, letoh(val));
     pkt->makeAtomicResponse();
     return pioDelay;
 }
