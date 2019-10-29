@@ -39,7 +39,6 @@
 #include <vector>
 
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "debug/Tsunami.hh"
 #include "dev/alpha/tsunami.hh"
 #include "dev/alpha/tsunami_cchip.hh"
@@ -50,8 +49,6 @@
 #include "sim/system.hh"
 
 using namespace std;
-//Should this be AlphaISA?
-using namespace TheISA;
 
 TsunamiPChip::TsunamiPChip(const Params *p)
     : GenericPciHost(p),

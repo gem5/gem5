@@ -41,7 +41,6 @@
 
 #include "arch/alpha/ev5.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
 #include "cpu/thread_context.hh"
 #include "debug/IPI.hh"
@@ -53,9 +52,6 @@
 #include "mem/port.hh"
 #include "params/TsunamiCChip.hh"
 #include "sim/system.hh"
-
-//Should this be AlphaISA?
-using namespace TheISA;
 
 TsunamiCChip::TsunamiCChip(const Params *p)
     : BasicPioDevice(p, 0x10000000), tsunami(p->tsunami)
@@ -227,7 +223,8 @@ TsunamiCChip::write(PacketPtr pkt)
                 // The bit is now set and it wasn't before (set)
                 if ((dim[number] & bitvector) && (dir[number] & bitvector))
                 {
-                    tsunami->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
+                    tsunami->intrctrl->post(
+                            number, AlphaISA::INTLEVEL_IRQ1, x);
                     DPRINTF(Tsunami, "dim write resulting in posting dir"
                             " interrupt to cpu %d\n", number);
                 }
@@ -236,7 +233,8 @@ TsunamiCChip::write(PacketPtr pkt)
                 {
                     // The bit was set and now its now clear and
                     // we were interrupting on that bit before
-                    tsunami->intrctrl->clear(number, TheISA::INTLEVEL_IRQ1, x);
+                    tsunami->intrctrl->clear(
+                            number, AlphaISA::INTLEVEL_IRQ1, x);
                     DPRINTF(Tsunami, "dim write resulting in clear"
                             " dir interrupt to cpu %d\n", number);
 
@@ -311,27 +309,25 @@ TsunamiCChip::write(PacketPtr pkt)
                 olddir = dir[number];
                 dim[number] = pkt->getLE<uint64_t>();
                 dir[number] = dim[number] & drir;
-                for (int x = 0; x < 64; x++)
-                {
+                for (int x = 0; x < 64; x++) {
                     bitvector = ULL(1) << x;
                     // Figure out which bits have changed
-                    if ((dim[number] & bitvector) != (olddim & bitvector))
-                    {
+                    if ((dim[number] & bitvector) != (olddim & bitvector)) {
                         // The bit is now set and it wasn't before (set)
-                        if ((dim[number] & bitvector) && (dir[number] & bitvector))
-                        {
-                          tsunami->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
-                          DPRINTF(Tsunami, "posting dir interrupt to cpu 0\n");
-                        }
-                        else if ((olddir & bitvector) &&
-                                !(dir[number] & bitvector))
-                        {
+                        if ((dim[number] & bitvector) &&
+                                (dir[number] & bitvector)) {
+                            tsunami->intrctrl->post(
+                                    number, AlphaISA::INTLEVEL_IRQ1, x);
+                            DPRINTF(Tsunami,
+                                    "posting dir interrupt to cpu 0\n");
+                        } else if ((olddir & bitvector) &&
+                                !(dir[number] & bitvector)) {
                             // The bit was set and now its now clear and
                             // we were interrupting on that bit before
-                            tsunami->intrctrl->clear(number, TheISA::INTLEVEL_IRQ1, x);
-                          DPRINTF(Tsunami, "dim write resulting in clear"
-                                    " dir interrupt to cpu %d\n",
-                                    x);
+                            tsunami->intrctrl->clear(
+                                    number, AlphaISA::INTLEVEL_IRQ1, x);
+                            DPRINTF(Tsunami, "dim write resulting in clear"
+                                    " dir interrupt to cpu %d\n", x);
 
                         }
 
@@ -389,11 +385,12 @@ TsunamiCChip::clearIPI(uint64_t ipintr)
                 // Check if there is a pending ipi
                 if (ipint & cpumask) {
                     ipint &= ~cpumask;
-                    tsunami->intrctrl->clear(cpunum, TheISA::INTLEVEL_IRQ3, 0);
+                    tsunami->intrctrl->clear(
+                            cpunum, AlphaISA::INTLEVEL_IRQ3, 0);
                     DPRINTF(IPI, "clear IPI IPI cpu=%d\n", cpunum);
-                }
-                else
+                } else {
                     warn("clear IPI for CPU=%d, but NO IPI\n", cpunum);
+                }
             }
         }
     }
@@ -411,14 +408,14 @@ TsunamiCChip::clearITI(uint64_t itintr)
         for (int i=0; i < numcpus; i++) {
             uint64_t cpumask = ULL(1) << i;
             if (itintr & cpumask & itint) {
-                tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ2, 0);
+                tsunami->intrctrl->clear(i, AlphaISA::INTLEVEL_IRQ2, 0);
                 itint &= ~cpumask;
                 DPRINTF(Tsunami, "clearing rtc interrupt to cpu=%d\n", i);
             }
         }
-    }
-    else
+    } else {
         panic("Big ITI Clear, but not processors indicated\n");
+    }
 }
 
 void
@@ -435,16 +432,17 @@ TsunamiCChip::reqIPI(uint64_t ipreq)
                 // Check if there is already an ipi (bits 8:11)
                 if (!(ipint & cpumask)) {
                     ipint  |= cpumask;
-                    tsunami->intrctrl->post(cpunum, TheISA::INTLEVEL_IRQ3, 0);
+                    tsunami->intrctrl->post(
+                            cpunum, AlphaISA::INTLEVEL_IRQ3, 0);
                     DPRINTF(IPI, "send IPI cpu=%d\n", cpunum);
-                }
-                else
+                } else {
                     warn("post IPI for CPU=%d, but IPI already\n", cpunum);
+                }
             }
         }
-    }
-    else
+    } else {
         panic("Big IPI Request, but not processors indicated\n");
+    }
 }
 
 
@@ -456,13 +454,12 @@ TsunamiCChip::postRTC()
 
     for (int i = 0; i < size; i++) {
         uint64_t cpumask = ULL(1) << i;
-       if (!(cpumask & itint)) {
-           itint |= cpumask;
-           tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ2, 0);
-           DPRINTF(Tsunami, "Posting RTC interrupt to cpu=%d\n", i);
-       }
+        if (!(cpumask & itint)) {
+            itint |= cpumask;
+            tsunami->intrctrl->post(i, AlphaISA::INTLEVEL_IRQ2, 0);
+            DPRINTF(Tsunami, "Posting RTC interrupt to cpu=%d\n", i);
+        }
     }
-
 }
 
 void
@@ -475,11 +472,11 @@ TsunamiCChip::postDRIR(uint32_t interrupt)
 
     for (int i=0; i < size; i++) {
         dir[i] = dim[i] & drir;
-       if (dim[i] & bitvector) {
-              tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ1, interrupt);
-              DPRINTF(Tsunami, "posting dir interrupt to cpu %d,"
-                        "interrupt %d\n",i, interrupt);
-       }
+        if (dim[i] & bitvector) {
+            tsunami->intrctrl->post(i, AlphaISA::INTLEVEL_IRQ1, interrupt);
+            DPRINTF(Tsunami, "posting dir interrupt to cpu %d,"
+                    "interrupt %d\n",i, interrupt);
+        }
     }
 }
 
@@ -495,16 +492,16 @@ TsunamiCChip::clearDRIR(uint32_t interrupt)
         drir &= ~bitvector;
         for (int i=0; i < size; i++) {
            if (dir[i] & bitvector) {
-               tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ1, interrupt);
+               tsunami->intrctrl->clear(i, AlphaISA::INTLEVEL_IRQ1, interrupt);
                DPRINTF(Tsunami, "clearing dir interrupt to cpu %d,"
                     "interrupt %d\n",i, interrupt);
 
            }
            dir[i] = dim[i] & drir;
         }
-    }
-    else
+    } else {
         DPRINTF(Tsunami, "Spurrious clear? interrupt %d\n", interrupt);
+    }
 }
 
 

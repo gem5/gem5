@@ -44,7 +44,6 @@
 
 #include "base/time.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "debug/Tsunami.hh"
 #include "dev/alpha/tsunami.hh"
 #include "dev/alpha/tsunami_cchip.hh"
@@ -59,9 +58,6 @@
 // we open up the entire namespace std
 using std::string;
 using std::ostream;
-
-//Should this be AlphaISA?
-using namespace TheISA;
 
 TsunamiIO::RTC::RTC(const string &n, const TsunamiIOParams *p)
     : MC146818(p->tsunami, n, p->time, p->year_is_bcd, p->frequency),
