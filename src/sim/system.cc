@@ -88,10 +88,7 @@ System::System(Params *p)
       pagePtr(0),
       init_param(p->init_param),
       physProxy(_systemPort, p->cache_line_size),
-      kernelSymtab(nullptr),
-      kernel(nullptr),
-      loadAddrMask(p->load_addr_mask),
-      loadAddrOffset(p->load_offset),
+      workload(p->workload),
 #if USE_KVM
       kvmVM(p->kvm_vm),
 #else
@@ -111,6 +108,8 @@ System::System(Params *p)
       totalNumInsts(0),
       redirectPaths(p->redirect_paths)
 {
+    if (workload)
+        workload->system = this;
 
     // add self to global system list
     systemList.push_back(this);
@@ -120,12 +119,6 @@ System::System(Params *p)
         kvmVM->setSystem(this);
     }
 #endif
-
-    if (FullSystem) {
-        kernelSymtab = new SymbolTable;
-        if (!debugSymbolTable)
-            debugSymbolTable = new SymbolTable;
-    }
 
     // check if the cache line size is a value known to work
     if (!(_cacheLineSize == 16 || _cacheLineSize == 32 ||
@@ -141,68 +134,6 @@ System::System(Params *p)
     tmp_id = getMasterId(this, "interrupt");
     assert(tmp_id == Request::intMasterId);
 
-    if (FullSystem) {
-        if (params()->kernel == "") {
-            inform("No kernel set for full system simulation. "
-                   "Assuming you know what you're doing\n");
-        } else {
-            // Get the kernel code
-            kernel = createObjectFile(params()->kernel);
-            inform("kernel located at: %s", params()->kernel);
-
-            if (kernel == NULL)
-                fatal("Could not load kernel file %s", params()->kernel);
-
-            kernelImage = kernel->buildImage();
-
-            // setup entry points
-            kernelStart = kernelImage.minAddr();
-            kernelEnd = kernelImage.maxAddr();
-            kernelEntry = kernel->entryPoint();
-
-            // If load_addr_mask is set to 0x0, then auto-calculate
-            // the smallest mask to cover all kernel addresses so gem5
-            // can relocate the kernel to a new offset.
-            if (loadAddrMask == 0) {
-                Addr shift_amt = findMsbSet(kernelEnd - kernelStart) + 1;
-                loadAddrMask = ((Addr)1 << shift_amt) - 1;
-            }
-
-            kernelImage.move([this](Addr a) {
-                return (a & loadAddrMask) + loadAddrOffset;
-            });
-
-            // load symbols
-            if (!kernel->loadGlobalSymbols(kernelSymtab))
-                fatal("could not load kernel symbols\n");
-
-            if (!kernel->loadLocalSymbols(kernelSymtab))
-                fatal("could not load kernel local symbols\n");
-
-            if (!kernel->loadGlobalSymbols(debugSymbolTable))
-                fatal("could not load kernel symbols\n");
-
-            if (!kernel->loadLocalSymbols(debugSymbolTable))
-                fatal("could not load kernel local symbols\n");
-
-            // Loading only needs to happen once and after memory system is
-            // connected so it will happen in initState()
-        }
-
-        if (p->kernel_extras_addrs.empty())
-            p->kernel_extras_addrs.resize(p->kernel_extras.size(), MaxAddr);
-        fatal_if(p->kernel_extras.size() != p->kernel_extras_addrs.size(),
-            "Additional kernel objects, not all load addresses specified\n");
-        for (int ker_idx = 0; ker_idx < p->kernel_extras.size(); ker_idx++) {
-            const std::string &obj_name = p->kernel_extras[ker_idx];
-            const bool raw = p->kernel_extras_addrs[ker_idx] != MaxAddr;
-            ObjectFile *obj = createObjectFile(obj_name, raw);
-            fatal_if(!obj, "Failed to build additional kernel object '%s'.\n",
-                     obj_name);
-            kernelExtras.push_back(obj);
-        }
-    }
-
     // increment the number of running systems
     numSystemsRunning++;
 
@@ -213,9 +144,6 @@ System::System(Params *p)
 
 System::~System()
 {
-    delete kernelSymtab;
-    delete kernel;
-
     for (uint32_t j = 0; j < numWorkIds; j++)
         delete workItemStats[j];
 }
@@ -357,50 +285,6 @@ System::numRunningContexts()
 }
 
 void
-System::initState()
-{
-    if (FullSystem) {
-        // Moved from the constructor to here since it relies on the
-        // address map being resolved in the interconnect
-        /**
-         * Load the kernel code into memory
-         */
-        auto mapper = [this](Addr a) {
-            return (a & loadAddrMask) + loadAddrOffset;
-        };
-        if (params()->kernel != "")  {
-            if (params()->kernel_addr_check) {
-                // Validate kernel mapping before loading binary
-                if (!isMemAddr(mapper(kernelStart)) ||
-                        !isMemAddr(mapper(kernelEnd))) {
-                    fatal("Kernel is mapped to invalid location (not memory). "
-                          "kernelStart 0x(%x) - kernelEnd 0x(%x) %#x:%#x\n",
-                          kernelStart, kernelEnd,
-                          mapper(kernelStart), mapper(kernelEnd));
-                }
-            }
-            // Load program sections into memory
-            kernelImage.write(physProxy);
-
-            DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
-            DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
-            DPRINTF(Loader, "Kernel entry = %#x\n", kernelEntry);
-            DPRINTF(Loader, "Kernel loaded...\n");
-        }
-        std::function<Addr(Addr)> extra_mapper;
-        for (auto ker_idx = 0; ker_idx < kernelExtras.size(); ker_idx++) {
-            const Addr load_addr = params()->kernel_extras_addrs[ker_idx];
-            auto image = kernelExtras[ker_idx]->buildImage();
-            if (load_addr != MaxAddr)
-                image = image.offset(load_addr);
-            else
-                image = image.move(mapper);
-            image.write(physProxy);
-        }
-    }
-}
-
-void
 System::replaceThreadContext(ThreadContext *tc, ContextID context_id)
 {
     if (context_id >= threadContexts.size()) {
@@ -481,10 +365,7 @@ System::drainResume()
 void
 System::serialize(CheckpointOut &cp) const
 {
-    if (FullSystem)
-        kernelSymtab->serialize("kernel_symtab", cp);
     SERIALIZE_SCALAR(pagePtr);
-    serializeSymtab(cp);
 
     // also serialize the memories in the system
     physmem.serializeSection(cp, "physmem");
@@ -494,10 +375,7 @@ System::serialize(CheckpointOut &cp) const
 void
 System::unserialize(CheckpointIn &cp)
 {
-    if (FullSystem)
-        kernelSymtab->unserialize("kernel_symtab", cp);
     UNSERIALIZE_SCALAR(pagePtr);
-    unserializeSymtab(cp);
 
     // also unserialize the memories in the system
     physmem.unserializeSection(cp, "physmem");

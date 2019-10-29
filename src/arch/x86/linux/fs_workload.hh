@@ -35,29 +35,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_LINUX_X86_SYSTEM_HH__
-#define __ARCH_LINUX_X86_SYSTEM_HH__
-
-#include <string>
-#include <vector>
+#ifndef __ARCH_X86_LINUX_FS_WORKLOAD_HH__
+#define __ARCH_X86_LINUX_FS_WORKLOAD_HH__
 
 #include "arch/x86/bios/e820.hh"
-#include "arch/x86/system.hh"
-#include "params/LinuxX86System.hh"
+#include "arch/x86/fs_workload.hh"
+#include "params/X86FsLinux.hh"
 
-class LinuxX86System : public X86System
+namespace X86ISA
+{
+
+class FsLinux : public X86ISA::FsWorkload
 {
   protected:
-    std::string commandLine;
-    X86ISA::E820Table * e820Table;
+    E820Table *e820Table;
 
   public:
-    typedef LinuxX86SystemParams Params;
-    LinuxX86System(Params *p);
-    ~LinuxX86System();
+    typedef X86FsLinuxParams Params;
+    FsLinux(Params *p);
 
-    void initState();
+    void initState() override;
 };
 
-#endif
+} // namespace X86ISA
 
+#endif // __ARCH_X86_LINUX_FS_WORKLOAD_HH__

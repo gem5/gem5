@@ -1,0 +1,171 @@
+/*
+ * Copyright 2019 Google Inc.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "sim/os_kernel.hh"
+
+#include "base/loader/object_file.hh"
+#include "base/loader/symtab.hh"
+#include "debug/Loader.hh"
+#include "params/OsKernel.hh"
+#include "sim/system.hh"
+
+OsKernel::OsKernel(const Params &p) : SimObject(&p), _params(p),
+    commandLine(p.command_line), symtab(new SymbolTable),
+    loadAddrMask(p.load_addr_mask), loadAddrOffset(p.load_addr_offset)
+{
+    if (!debugSymbolTable)
+        debugSymbolTable = new SymbolTable;
+
+    if (params().object_file == "") {
+        inform("No kernel set for full system simulation. "
+               "Assuming you know what you're doing.");
+    } else {
+        obj = createObjectFile(params().object_file);
+        inform("kernel located at: %s", params().object_file);
+
+        fatal_if(!obj, "Could not load kernel file %s", params().object_file);
+
+        image = obj->buildImage();
+
+        start = image.minAddr();
+        end = image.maxAddr();
+        entry = obj->entryPoint();
+
+        // If load_addr_mask is set to 0x0, then calculate the smallest mask to
+        // cover all kernel addresses so gem5 can relocate the kernel to a new
+        // offset.
+        if (loadAddrMask == 0)
+            loadAddrMask = mask(findMsbSet(end - start) + 1);
+
+        image.move([this](Addr a) {
+            return (a & loadAddrMask) + loadAddrOffset;
+        });
+
+        // load symbols
+        fatal_if(!obj->loadGlobalSymbols(symtab),
+                "Could not load kernel symbols.");
+
+        fatal_if(!obj->loadLocalSymbols(symtab),
+                "Could not load kernel local symbols.");
+
+        fatal_if(!obj->loadGlobalSymbols(debugSymbolTable),
+                "Could not load kernel symbols.");
+
+        fatal_if(!obj->loadLocalSymbols(debugSymbolTable),
+                "Could not load kernel local symbols.");
+    }
+
+    // Loading only needs to happen once and after memory system is
+    // connected so it will happen in initState()
+
+    std::vector<Addr> extras_addrs = p.extras_addrs;
+    if (extras_addrs.empty())
+        extras_addrs.resize(p.extras.size(), MaxAddr);
+    fatal_if(p.extras.size() != extras_addrs.size(),
+        "Additional kernel objects, not all load addresses specified\n");
+    for (int ker_idx = 0; ker_idx < p.extras.size(); ker_idx++) {
+        const std::string &obj_name = p.extras[ker_idx];
+        const bool raw = extras_addrs[ker_idx] != MaxAddr;
+        ObjectFile *obj = createObjectFile(obj_name, raw);
+        fatal_if(!obj, "Failed to build additional kernel object '%s'.\n",
+                 obj_name);
+        extras.push_back(obj);
+    }
+}
+
+Addr
+OsKernel::fixFuncEventAddr(Addr addr)
+{
+    return system->fixFuncEventAddr(addr);
+}
+
+OsKernel::~OsKernel()
+{
+    delete symtab;
+}
+
+void
+OsKernel::initState()
+{
+    auto &phys_mem = system->physProxy;
+    /**
+     * Load the kernel code into memory.
+     */
+    auto mapper = [this](Addr a) {
+        return (a & loadAddrMask) + loadAddrOffset;
+    };
+    if (params().object_file != "")  {
+        if (params().addr_check) {
+            // Validate kernel mapping before loading binary
+            fatal_if(!system->isMemAddr(mapper(start)) ||
+                    !system->isMemAddr(mapper(end)),
+                    "Kernel is mapped to invalid location (not memory). "
+                    "start (%#x) - end (%#x) %#x:%#x\n",
+                    start, end, mapper(start), mapper(end));
+        }
+        // Load program sections into memory
+        image.write(phys_mem);
+
+        DPRINTF(Loader, "Kernel start = %#x\n", start);
+        DPRINTF(Loader, "Kernel end   = %#x\n", end);
+        DPRINTF(Loader, "Kernel entry = %#x\n", entry);
+        DPRINTF(Loader, "Kernel loaded...\n");
+    }
+
+    std::vector<Addr> extras_addrs = params().extras_addrs;
+    if (extras_addrs.empty())
+        extras_addrs.resize(params().extras.size(), MaxAddr);
+    for (int idx = 0; idx < extras.size(); idx++) {
+        const Addr load_addr = extras_addrs[idx];
+        auto image = extras[idx]->buildImage();
+        if (load_addr != MaxAddr)
+            image = image.offset(load_addr);
+        else
+            image = image.move(mapper);
+        image.write(phys_mem);
+    }
+}
+
+void
+OsKernel::serialize(CheckpointOut &cp) const
+{
+    symtab->serialize("symtab", cp);
+    serializeSymtab(cp);
+}
+
+void
+OsKernel::unserialize(CheckpointIn &cp)
+{
+    symtab->unserialize("symtab", cp);
+    unserializeSymtab(cp);
+}
+
+OsKernel *
+OsKernelParams::create()
+{
+    return new OsKernel(*this);
+}

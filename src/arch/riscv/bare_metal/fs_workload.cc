@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2014 Advanced Micro Devices, Inc.
- * All rights reserved.
+ * Copyright (c) 2018 TU Dresden
+ * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,47 +26,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/x86/pseudo_inst.hh"
+#include "arch/riscv/bare_metal/fs_workload.hh"
 
-#include "arch/x86/fs_workload.hh"
-#include "arch/x86/isa_traits.hh"
-#include "cpu/thread_context.hh"
-#include "debug/PseudoInst.hh"
-#include "mem/se_translating_port_proxy.hh"
-#include "sim/process.hh"
+#include "base/loader/object_file.hh"
+#include "sim/system.hh"
 
-using namespace X86ISA;
-
-namespace X86ISA {
-
-/*
- * This function is executed when the simulation is executing the pagefault
- * handler in System Emulation mode.
- */
-void
-m5PageFault(ThreadContext *tc)
+namespace RiscvISA
 {
-    DPRINTF(PseudoInst, "PseudoInst::m5PageFault()\n");
 
-    Process *p = tc->getProcessPtr();
-    if (!p->fixupStackFault(tc->readMiscReg(MISCREG_CR2))) {
-        PortProxy &proxy = tc->getVirtProxy();
-        // at this point we should have 6 values on the interrupt stack
-        int size = 6;
-        uint64_t is[size];
-        // reading the interrupt handler stack
-        proxy.readBlob(ISTVirtAddr + PageBytes - size * sizeof(uint64_t),
-                       &is, sizeof(is));
-        panic("Page fault at addr %#x\n\tInterrupt handler stack:\n"
-                "\tss: %#x\n"
-                "\trsp: %#x\n"
-                "\trflags: %#x\n"
-                "\tcs: %#x\n"
-                "\trip: %#x\n"
-                "\terr_code: %#x\n",
-                tc->readMiscReg(MISCREG_CR2),
-                is[5], is[4], is[3], is[2], is[1], is[0]);
-   }
+BareMetal::BareMetal(Params *p) : RiscvISA::FsWorkload(p),
+      bootloader(createObjectFile(p->bootloader)),
+      bootloaderSymtab(new SymbolTable)
+{
+    fatal_if(!bootloader, "Could not load bootloader file %s.", p->bootloader);
+    _resetVect = bootloader->entryPoint();
 }
 
-} // namespace X86ISA
+BareMetal::~BareMetal()
+{
+    delete bootloader;
+}
+
+void
+BareMetal::initState()
+{
+    RiscvISA::FsWorkload::initState();
+    warn_if(!bootloader->buildImage().write(system->physProxy),
+            "Could not load sections to memory.");
+}
+
+} // namespace RiscvISA
+
+RiscvISA::BareMetal *
+RiscvBareMetalParams::create()
+{
+    return new RiscvISA::BareMetal(this);
+}

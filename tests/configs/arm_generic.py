@@ -104,14 +104,17 @@ class LinuxArmSystemBuilder(object):
         # We typically want the simulator to panic if the kernel
         # panics or oopses. This prevents the simulator from running
         # an obviously failed test case until the end of time.
-        system.panic_on_panic = True
-        system.panic_on_oops = True
+        system.workload.panic_on_panic = True
+        system.workload.panic_on_oops = True
 
-        system.kernel = SysPaths.binary(default_kernels[self.machine_type])
+        system.workload.object_file = SysPaths.binary(
+                    default_kernels[self.machine_type])
 
         self.init_system(system)
 
-        system.generateDtb(m5.options.outdir, 'system.dtb')
+        system.workload.dtb_filename = \
+            os.path.join(m5.options.outdir, 'system.dtb')
+        system.generateDtb(system.workload.dtb_filename)
         return system
 
 class LinuxArmFSSystem(LinuxArmSystemBuilder,

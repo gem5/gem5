@@ -29,40 +29,7 @@
 
 #include "arch/riscv/system.hh"
 
-#include "arch/vtophys.hh"
-#include "base/loader/object_file.hh"
-#include "base/loader/symtab.hh"
-#include "base/trace.hh"
-#include "mem/physical.hh"
 #include "params/RiscvSystem.hh"
-#include "sim/byteswap.hh"
-
-RiscvSystem::RiscvSystem(Params *p)
-    : System(p),
-      _isBareMetal(p->bare_metal),
-      _resetVect(p->reset_vect)
-{
-}
-
-RiscvSystem::~RiscvSystem()
-{
-}
-
-Addr
-RiscvSystem::fixFuncEventAddr(Addr addr)
-{
-    return addr;
-}
-
-void
-RiscvSystem::setRiscvAccess(Addr access)
-{}
-
-bool
-RiscvSystem::breakpoint()
-{
-    return 0;
-}
 
 RiscvSystem *
 RiscvSystemParams::create()

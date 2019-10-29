@@ -118,9 +118,10 @@ def createSystem(caches, kernel, bootscript, machine_type="VExpress_GEM5",
     platform = ObjectList.platform_list.get(machine_type)
     m5.util.inform("Simulated platform: %s", platform.__name__)
 
-    sys = devices.simpleSystem(LinuxArmSystem,
+    sys = devices.simpleSystem(ArmSystem,
                                caches, mem_size, platform(),
-                               kernel=SysPaths.binary(kernel),
+                               workload=ArmFsLinux(
+                                   object_file=SysPaths.binary(kernel)),
                                readfile=bootscript)
 
     sys.mem_ctrls = [ SimpleMemory(range=r, port=sys.membus.master)
@@ -243,9 +244,9 @@ def build(options):
 
     root.system = system
     if options.kernel_cmd:
-        system.boot_osflags = options.kernel_cmd
+        system.workload.command_line = options.kernel_cmd
     else:
-        system.boot_osflags = " ".join(kernel_cmd)
+        system.workload.command_line = " ".join(kernel_cmd)
 
     if options.big_cpus + options.little_cpus == 0:
         m5.util.panic("Empty CPU clusters")
@@ -287,9 +288,11 @@ def build(options):
 
     # Linux device tree
     if options.dtb is not None:
-        system.dtb_filename = SysPaths.binary(options.dtb)
+        system.workload.dtb_filename = SysPaths.binary(options.dtb)
     else:
-        system.generateDtb(m5.options.outdir, 'system.dtb')
+        system.workload.dtb_filename = \
+            os.path.join(m5.options.outdir, 'system.dtb')
+        system.generateDtb(system.workload.dtb_filename)
 
     if devices.have_fastmodel and issubclass(big_model, FastmodelCluster):
         from m5 import arm_fast_model as fm, systemc as sc

@@ -40,7 +40,6 @@ class MipsSystem(System):
     hex_file_name = Param.String("test.hex","hex file that contains [address,data] pairs")
     system_type = Param.UInt64("Type of system we are emulating")
     system_rev = Param.UInt64("Revision of system we are emulating")
-    load_addr_mask = 0xffffffffff
 
 class LinuxMipsSystem(MipsSystem):
     type = 'LinuxMipsSystem'

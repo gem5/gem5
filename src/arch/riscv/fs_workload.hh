@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2014 Advanced Micro Devices, Inc.
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,47 +27,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/x86/pseudo_inst.hh"
+#ifndef __ARCH_RISCV_FS_WORKLOAD_HH__
+#define __ARCH_RISCV_FS_WORKLOAD_HH__
 
-#include "arch/x86/fs_workload.hh"
-#include "arch/x86/isa_traits.hh"
-#include "cpu/thread_context.hh"
-#include "debug/PseudoInst.hh"
-#include "mem/se_translating_port_proxy.hh"
-#include "sim/process.hh"
+#include "params/RiscvFsWorkload.hh"
+#include "sim/os_kernel.hh"
+#include "sim/sim_object.hh"
 
-using namespace X86ISA;
-
-namespace X86ISA {
-
-/*
- * This function is executed when the simulation is executing the pagefault
- * handler in System Emulation mode.
- */
-void
-m5PageFault(ThreadContext *tc)
+namespace RiscvISA
 {
-    DPRINTF(PseudoInst, "PseudoInst::m5PageFault()\n");
 
-    Process *p = tc->getProcessPtr();
-    if (!p->fixupStackFault(tc->readMiscReg(MISCREG_CR2))) {
-        PortProxy &proxy = tc->getVirtProxy();
-        // at this point we should have 6 values on the interrupt stack
-        int size = 6;
-        uint64_t is[size];
-        // reading the interrupt handler stack
-        proxy.readBlob(ISTVirtAddr + PageBytes - size * sizeof(uint64_t),
-                       &is, sizeof(is));
-        panic("Page fault at addr %#x\n\tInterrupt handler stack:\n"
-                "\tss: %#x\n"
-                "\trsp: %#x\n"
-                "\trflags: %#x\n"
-                "\tcs: %#x\n"
-                "\trip: %#x\n"
-                "\terr_code: %#x\n",
-                tc->readMiscReg(MISCREG_CR2),
-                is[5], is[4], is[3], is[2], is[1], is[0]);
-   }
-}
+class FsWorkload : public OsKernel
+{
+  protected:
+    // checker for bare metal application
+    bool _isBareMetal;
+    // entry point for simulation
+    Addr _resetVect;
 
-} // namespace X86ISA
+  public:
+    FsWorkload(RiscvFsWorkloadParams *p) : OsKernel(*p),
+        _isBareMetal(p->bare_metal), _resetVect(p->reset_vect)
+    {}
+
+    // return reset vector
+    Addr resetVect() const { return _resetVect; }
+
+    // return bare metal checker
+    bool isBareMetal() const { return _isBareMetal; }
+};
+
+} // namespace RiscvISA
+
+#endif // __ARCH_RISCV_FS_WORKLOAD_HH__

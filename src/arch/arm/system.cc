@@ -42,7 +42,7 @@
 
 #include <iostream>
 
-#include "arch/arm/faults.hh"
+#include "arch/arm/fs_workload.hh"
 #include "arch/arm/semihosting.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
@@ -56,16 +56,12 @@ using namespace Linux;
 
 ArmSystem::ArmSystem(Params *p)
     : System(p),
-      bootLoaders(), bootldr(nullptr),
       _haveSecurity(p->have_security),
       _haveLPAE(p->have_lpae),
       _haveVirtualization(p->have_virtualization),
       _haveCrypto(p->have_crypto),
       _genericTimer(nullptr),
       _gic(nullptr),
-      _resetAddr(p->auto_reset_addr ?
-                 (kernelEntry & loadAddrMask) + loadAddrOffset :
-                 p->reset_addr),
       _highestELIs64(p->highest_el_is_64),
       _physAddrRange64(p->phys_addr_range_64),
       _haveLargeAsid64(p->have_large_asid_64),
@@ -76,106 +72,35 @@ ArmSystem::ArmSystem(Params *p)
       semihosting(p->semihosting),
       multiProc(p->multi_proc)
 {
-    // Check if the physical address range is valid
+    if (p->auto_reset_addr) {
+        _resetAddr = (workload->entry & workload->loadAddrMask) +
+            workload->loadAddrOffset;
+    } else {
+        _resetAddr = p->reset_addr;
+    }
+
+    auto *arm_workload = dynamic_cast<ArmISA::FsWorkload *>(p->workload);
+    panic_if(!arm_workload,
+            "Workload was not the expected type (ArmISA::FsWorkload).");
+
+    warn_if(workload->entry != _resetAddr,
+            "Workload entry point %#x overriding reset address %#x",
+            workload->entry, _resetAddr);
+    _resetAddr = workload->entry;
+
+    if (arm_workload->highestELIs64() != _highestELIs64) {
+        warn("Highest ARM exception-level set to AArch%d but the workload "
+              "is for AArch%d. Assuming you wanted these to match.",
+              _highestELIs64 ? 64 : 32,
+              arm_workload->highestELIs64() ? 64 : 32);
+        _highestELIs64 = arm_workload->highestELIs64();
+    }
+
     if (_highestELIs64 && (
             _physAddrRange64 < 32 ||
             _physAddrRange64 > 48 ||
             (_physAddrRange64 % 4 != 0 && _physAddrRange64 != 42))) {
         fatal("Invalid physical address range (%d)\n", _physAddrRange64);
-    }
-
-    bootLoaders.reserve(p->boot_loader.size());
-    for (const auto &bl : p->boot_loader) {
-        std::unique_ptr<ObjectFile> obj;
-        obj.reset(createObjectFile(bl));
-
-        fatal_if(!obj, "Could not read bootloader: %s\n", bl);
-        bootLoaders.emplace_back(std::move(obj));
-    }
-
-    if (kernel) {
-        bootldr = getBootLoader(kernel);
-    } else if (!bootLoaders.empty()) {
-        // No kernel specified, default to the first boot loader
-        bootldr = bootLoaders[0].get();
-    }
-
-    if (!bootLoaders.empty() && !bootldr)
-        fatal("Can't find a matching boot loader / kernel combination!");
-
-    if (bootldr) {
-        bootldr->loadGlobalSymbols(debugSymbolTable);
-
-        warn_if(bootldr->entryPoint() != _resetAddr,
-                "Bootloader entry point %#x overriding reset address %#x",
-                bootldr->entryPoint(), _resetAddr);
-        const_cast<Addr&>(_resetAddr) = bootldr->entryPoint();
-
-        if ((bootldr->getArch() == ObjectFile::Arm64) && !_highestELIs64) {
-            warn("Highest ARM exception-level set to AArch32 but bootloader "
-                  "is for AArch64. Assuming you wanted these to match.\n");
-            _highestELIs64 = true;
-        } else if ((bootldr->getArch() == ObjectFile::Arm) && _highestELIs64) {
-            warn("Highest ARM exception-level set to AArch64 but bootloader "
-                  "is for AArch32. Assuming you wanted these to match.\n");
-            _highestELIs64 = false;
-        }
-    }
-
-    debugPrintkEvent = addKernelFuncEvent<DebugPrintkEvent>("dprintk");
-}
-
-void
-ArmSystem::initState()
-{
-    // Moved from the constructor to here since it relies on the
-    // address map being resolved in the interconnect
-
-    // Call the initialisation of the super class
-    System::initState();
-
-    // Reset CP15?? What does that mean -- ali
-
-    // FPEXC.EN = 0
-
-    for (auto *tc: threadContexts) {
-        Reset().invoke(tc);
-        tc->activate();
-    }
-
-    const Params* p = params();
-
-    if (bootldr) {
-        bool is_gic_v2 =
-            getGIC()->supportsVersion(BaseGic::GicVersion::GIC_V2);
-        bootldr->buildImage().write(physProxy);
-
-        inform("Using bootloader at address %#x\n", bootldr->entryPoint());
-
-        // Put the address of the boot loader into r7 so we know
-        // where to branch to after the reset fault
-        // All other values needed by the boot loader to know what to do
-        if (!p->flags_addr)
-           fatal("flags_addr must be set with bootloader\n");
-
-        if (!p->gic_cpu_addr && is_gic_v2)
-            fatal("gic_cpu_addr must be set with bootloader\n");
-
-        for (int i = 0; i < threadContexts.size(); i++) {
-            if (!_highestELIs64)
-                threadContexts[i]->setIntReg(3, (kernelEntry & loadAddrMask) +
-                        loadAddrOffset);
-            if (is_gic_v2)
-                threadContexts[i]->setIntReg(4, params()->gic_cpu_addr);
-            threadContexts[i]->setIntReg(5, params()->flags_addr);
-        }
-        inform("Using kernel entry physical address at %#x\n",
-               (kernelEntry & loadAddrMask) + loadAddrOffset);
-    } else {
-        // Set the initial PC to be at start of the kernel code
-        if (!_highestELIs64)
-            threadContexts[0]->pcState((kernelEntry & loadAddrMask) +
-                    loadAddrOffset);
     }
 }
 
@@ -183,24 +108,6 @@ bool
 ArmSystem::haveSecurity(ThreadContext *tc)
 {
     return FullSystem? getArmSystem(tc)->haveSecurity() : false;
-}
-
-
-ArmSystem::~ArmSystem()
-{
-    if (debugPrintkEvent)
-        delete debugPrintkEvent;
-}
-
-ObjectFile *
-ArmSystem::getBootLoader(ObjectFile *const obj)
-{
-    for (auto &bl : bootLoaders) {
-        if (bl->getArch() == obj->getArch())
-            return bl.get();
-    }
-
-    return nullptr;
 }
 
 bool
@@ -294,21 +201,4 @@ ArmSystem *
 ArmSystemParams::create()
 {
     return new ArmSystem(this);
-}
-
-void
-GenericArmSystem::initState()
-{
-    // Moved from the constructor to here since it relies on the
-    // address map being resolved in the interconnect
-
-    // Call the initialisation of the super class
-    ArmSystem::initState();
-}
-
-GenericArmSystem *
-GenericArmSystemParams::create()
-{
-
-    return new GenericArmSystem(this);
 }

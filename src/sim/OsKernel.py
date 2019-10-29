@@ -1,7 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2004-2005 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2019 Google Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -26,38 +23,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.params import *
+from m5.SimObject import SimObject
 
-if env['TARGET_ISA'] == 'sparc':
-    Source('asi.cc')
-    Source('decoder.cc')
-    Source('faults.cc')
-    Source('fs_workload.cc')
-    Source('interrupts.cc')
-    Source('isa.cc')
-    Source('linux/linux.cc')
-    Source('linux/process.cc')
-    Source('linux/syscalls.cc')
-    Source('nativetrace.cc')
-    Source('pagetable.cc')
-    Source('process.cc')
-    Source('remote_gdb.cc')
-    Source('solaris/process.cc')
-    Source('solaris/solaris.cc')
-    Source('system.cc')
-    Source('tlb.cc')
-    Source('ua2005.cc')
-    Source('utility.cc')
-    Source('vtophys.cc')
+from m5.objects.SimpleMemory import *
 
-    SimObject('SparcFsWorkload.py')
-    SimObject('SparcInterrupts.py')
-    SimObject('SparcISA.py')
-    SimObject('SparcNativeTrace.py')
-    SimObject('SparcSystem.py')
-    SimObject('SparcTLB.py')
+class OsKernel(SimObject):
+    type = 'OsKernel'
+    cxx_header = "sim/os_kernel.hh"
 
-    DebugFlag('Sparc', "Generic SPARC ISA stuff")
-    DebugFlag('RegisterWindows', "Register window manipulation")
+    object_file = Param.String("", "File that contains the kernel code")
+    extras = VectorParam.String([], "Additional object files to load")
+    extras_addrs = VectorParam.Addr([],
+            "Load addresses for additional object files")
 
-    ISADesc('isa/main.isa')
+    addr_check = Param.Bool(True,
+        "whether to bounds check kernel addresses (disable for baremetal)")
+    load_addr_mask = Param.UInt64(0xffffffffffffffff,
+            "Mask to apply to kernel addresses. If zero, "
+            "auto-calculated to be the most restrictive.")
+    load_addr_offset = Param.UInt64(0, "Address to offset the kernel with")
+
+    command_line = Param.String("a", "boot flags to pass to the kernel")

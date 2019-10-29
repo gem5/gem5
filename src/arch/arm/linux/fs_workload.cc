@@ -38,10 +38,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/arm/linux/system.hh"
+#include "arch/arm/linux/fs_workload.hh"
 
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/linux/atag.hh"
+#include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/linux/threadinfo.hh"
 #include "base/loader/dtb_file.hh"
@@ -53,20 +54,159 @@
 #include "debug/Loader.hh"
 #include "kern/linux/events.hh"
 #include "kern/linux/helpers.hh"
+#include "kern/system_events.hh"
 #include "mem/fs_translating_port_proxy.hh"
 #include "mem/physical.hh"
 #include "sim/stat_control.hh"
 
-using namespace ArmISA;
 using namespace Linux;
 
-LinuxArmSystem::LinuxArmSystem(Params *p)
-    : GenericArmSystem(p), dumpStatsPCEvent(nullptr),
-      enableContextSwitchStatsDump(p->enable_context_switch_stats_dump),
-      taskFile(nullptr), kernelPanicEvent(nullptr), kernelOopsEvent(nullptr)
+namespace ArmISA
 {
+
+FsLinux::FsLinux(Params *p) : ArmISA::FsWorkload(p),
+    enableContextSwitchStatsDump(p->enable_context_switch_stats_dump)
+{}
+
+void
+FsLinux::initState()
+{
+    ArmISA::FsWorkload::initState();
+
+    // Load symbols at physical address, we might not want
+    // to do this permanently, for but early bootup work
+    // it is helpful.
+    if (params()->early_kernel_symbols) {
+        obj->loadGlobalSymbols(symtab, 0, 0, loadAddrMask);
+        obj->loadGlobalSymbols(debugSymbolTable, 0, 0, loadAddrMask);
+    }
+
+    // Setup boot data structure
+    Addr addr;
+    // Check if the kernel image has a symbol that tells us it supports
+    // device trees.
+    bool kernel_has_fdt_support =
+        symtab->findAddress("unflatten_device_tree", addr);
+    bool dtb_file_specified = params()->dtb_filename != "";
+
+    if (kernel_has_fdt_support && dtb_file_specified) {
+        // Kernel supports flattened device tree and dtb file specified.
+        // Using Device Tree Blob to describe system configuration.
+        inform("Loading DTB file: %s at address %#x\n", params()->dtb_filename,
+                params()->atags_addr + loadAddrOffset);
+
+        DtbFile *dtb_file = new DtbFile(params()->dtb_filename);
+
+        if (!dtb_file->addBootCmdLine(
+                    commandLine.c_str(), commandLine.size())) {
+            warn("couldn't append bootargs to DTB file: %s\n",
+                 params()->dtb_filename);
+        }
+
+        dtb_file->buildImage().
+            offset(params()->atags_addr + loadAddrOffset).
+            write(system->physProxy);
+        delete dtb_file;
+    } else {
+        // Using ATAGS
+        // Warn if the kernel supports FDT and we haven't specified one
+        if (kernel_has_fdt_support) {
+            assert(!dtb_file_specified);
+            warn("Kernel supports device tree, but no DTB file specified\n");
+        }
+        // Warn if the kernel doesn't support FDT and we have specified one
+        if (dtb_file_specified) {
+            assert(!kernel_has_fdt_support);
+            warn("DTB file specified, but no device tree support in kernel\n");
+        }
+
+        AtagCore ac;
+        ac.flags(1); // read-only
+        ac.pagesize(8192);
+        ac.rootdev(0);
+
+        AddrRangeList atagRanges = system->getPhysMem().getConfAddrRanges();
+        fatal_if(atagRanges.size() != 1,
+                 "Expected a single ATAG memory entry but got %d",
+                 atagRanges.size());
+        AtagMem am;
+        am.memSize(atagRanges.begin()->size());
+        am.memStart(atagRanges.begin()->start());
+
+        AtagCmdline ad;
+        ad.cmdline(commandLine);
+
+        DPRINTF(Loader, "boot command line %d bytes: %s\n",
+                ad.size() << 2, commandLine);
+
+        AtagNone an;
+
+        uint32_t size = ac.size() + am.size() + ad.size() + an.size();
+        uint32_t offset = 0;
+        uint8_t *boot_data = new uint8_t[size << 2];
+
+        offset += ac.copyOut(boot_data + offset);
+        offset += am.copyOut(boot_data + offset);
+        offset += ad.copyOut(boot_data + offset);
+        offset += an.copyOut(boot_data + offset);
+
+        DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
+        DDUMP(Loader, boot_data, size << 2);
+
+        system->physProxy.writeBlob(params()->atags_addr + loadAddrOffset,
+                                    boot_data, size << 2);
+
+        delete[] boot_data;
+    }
+
+    // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
+    for (auto tc: system->threadContexts) {
+        tc->setIntReg(0, 0);
+        tc->setIntReg(1, params()->machine_type);
+        tc->setIntReg(2, params()->atags_addr + loadAddrOffset);
+    }
+}
+
+FsLinux::~FsLinux()
+{
+    delete uDelaySkipEvent;
+    delete constUDelaySkipEvent;
+
+    delete dumpStatsPCEvent;
+    delete debugPrintkEvent;
+}
+
+void
+FsLinux::startup()
+{
+    FsWorkload::startup();
+
+    auto *arm_sys = dynamic_cast<ArmSystem *>(system);
+    if (enableContextSwitchStatsDump) {
+        if (!arm_sys->highestELIs64()) {
+            dumpStatsPCEvent =
+                addKernelFuncEvent<DumpStatsPCEvent>("__switch_to");
+        } else {
+            dumpStatsPCEvent =
+                addKernelFuncEvent<DumpStatsPCEvent64>("__switch_to");
+        }
+
+        panic_if(!dumpStatsPCEvent, "dumpStatsPCEvent not created!");
+
+        std::string task_filename = "tasks.txt";
+        taskFile = simout.create(name() + "." + task_filename);
+
+        for (const auto tc : arm_sys->threadContexts) {
+            uint32_t pid = tc->getCpuPtr()->getPid();
+            if (pid != BaseCPU::invldPid) {
+                mapPid(tc, pid);
+                tc->getCpuPtr()->taskId(taskMap[pid]);
+            }
+        }
+    }
+
     const std::string dmesg_output = name() + ".dmesg";
-    if (p->panic_on_panic) {
+    if (params()->panic_on_panic) {
         kernelPanicEvent = addKernelFuncEventOrPanic<Linux::KernelPanicEvent>(
             "panic", "Kernel panic in simulated kernel", dmesg_output);
     } else {
@@ -74,7 +214,7 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
             "panic", "Kernel panic in simulated kernel", dmesg_output);
     }
 
-    if (p->panic_on_oops) {
+    if (params()->panic_on_oops) {
         kernelOopsEvent = addKernelFuncEventOrPanic<Linux::KernelPanicEvent>(
             "oops_exit", "Kernel oops in guest", dmesg_output);
     } else {
@@ -98,160 +238,11 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
         constUDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent>(
          "__const_udelay", "__const_udelay", 1000, 107374);
 
+    debugPrintkEvent = addKernelFuncEvent<DebugPrintkEvent>("dprintk");
 }
 
 void
-LinuxArmSystem::initState()
-{
-    // Moved from the constructor to here since it relies on the
-    // address map being resolved in the interconnect
-
-    // Call the initialisation of the super class
-    GenericArmSystem::initState();
-
-    // Load symbols at physical address, we might not want
-    // to do this permanently, for but early bootup work
-    // it is helpful.
-    if (params()->early_kernel_symbols) {
-        kernel->loadGlobalSymbols(kernelSymtab, 0, 0, loadAddrMask);
-        kernel->loadGlobalSymbols(debugSymbolTable, 0, 0, loadAddrMask);
-    }
-
-    // Setup boot data structure
-    Addr addr = 0;
-    // Check if the kernel image has a symbol that tells us it supports
-    // device trees.
-    bool kernel_has_fdt_support =
-        kernelSymtab->findAddress("unflatten_device_tree", addr);
-    bool dtb_file_specified = params()->dtb_filename != "";
-
-    if (kernel_has_fdt_support && dtb_file_specified) {
-        // Kernel supports flattened device tree and dtb file specified.
-        // Using Device Tree Blob to describe system configuration.
-        inform("Loading DTB file: %s at address %#x\n", params()->dtb_filename,
-                params()->atags_addr + loadAddrOffset);
-
-        DtbFile *dtb_file = new DtbFile(params()->dtb_filename);
-
-        if (!dtb_file->addBootCmdLine(params()->boot_osflags.c_str(),
-                                      params()->boot_osflags.size())) {
-            warn("couldn't append bootargs to DTB file: %s\n",
-                 params()->dtb_filename);
-        }
-
-        dtb_file->buildImage().
-            offset(params()->atags_addr + loadAddrOffset).write(physProxy);
-        delete dtb_file;
-    } else {
-        // Using ATAGS
-        // Warn if the kernel supports FDT and we haven't specified one
-        if (kernel_has_fdt_support) {
-            assert(!dtb_file_specified);
-            warn("Kernel supports device tree, but no DTB file specified\n");
-        }
-        // Warn if the kernel doesn't support FDT and we have specified one
-        if (dtb_file_specified) {
-            assert(!kernel_has_fdt_support);
-            warn("DTB file specified, but no device tree support in kernel\n");
-        }
-
-        AtagCore ac;
-        ac.flags(1); // read-only
-        ac.pagesize(8192);
-        ac.rootdev(0);
-
-        AddrRangeList atagRanges = physmem.getConfAddrRanges();
-        if (atagRanges.size() != 1) {
-            fatal("Expected a single ATAG memory entry but got %d\n",
-                  atagRanges.size());
-        }
-        AtagMem am;
-        am.memSize(atagRanges.begin()->size());
-        am.memStart(atagRanges.begin()->start());
-
-        AtagCmdline ad;
-        ad.cmdline(params()->boot_osflags);
-
-        DPRINTF(Loader, "boot command line %d bytes: %s\n",
-                ad.size() <<2, params()->boot_osflags.c_str());
-
-        AtagNone an;
-
-        uint32_t size = ac.size() + am.size() + ad.size() + an.size();
-        uint32_t offset = 0;
-        uint8_t *boot_data = new uint8_t[size << 2];
-
-        offset += ac.copyOut(boot_data + offset);
-        offset += am.copyOut(boot_data + offset);
-        offset += ad.copyOut(boot_data + offset);
-        offset += an.copyOut(boot_data + offset);
-
-        DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
-        DDUMP(Loader, boot_data, size << 2);
-
-        physProxy.writeBlob(params()->atags_addr + loadAddrOffset, boot_data,
-                size << 2);
-
-        delete[] boot_data;
-    }
-
-    // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
-    for (int i = 0; i < threadContexts.size(); i++) {
-        threadContexts[i]->setIntReg(0, 0);
-        threadContexts[i]->setIntReg(1, params()->machine_type);
-        threadContexts[i]->setIntReg(2, params()->atags_addr + loadAddrOffset);
-    }
-}
-
-LinuxArmSystem::~LinuxArmSystem()
-{
-    if (uDelaySkipEvent)
-        delete uDelaySkipEvent;
-    if (constUDelaySkipEvent)
-        delete constUDelaySkipEvent;
-
-    if (dumpStatsPCEvent)
-        delete dumpStatsPCEvent;
-}
-
-LinuxArmSystem *
-LinuxArmSystemParams::create()
-{
-    return new LinuxArmSystem(this);
-}
-
-void
-LinuxArmSystem::startup()
-{
-    GenericArmSystem::startup();
-
-    if (enableContextSwitchStatsDump) {
-        if (!highestELIs64()) {
-            dumpStatsPCEvent =
-                addKernelFuncEvent<DumpStatsPCEvent>("__switch_to");
-        } else {
-            dumpStatsPCEvent =
-                addKernelFuncEvent<DumpStatsPCEvent64>("__switch_to");
-        }
-
-        if (!dumpStatsPCEvent)
-           panic("dumpStatsPCEvent not created!");
-
-        std::string task_filename = "tasks.txt";
-        taskFile = simout.create(name() + "." + task_filename);
-
-        for (const auto tc : threadContexts) {
-            uint32_t pid = tc->getCpuPtr()->getPid();
-            if (pid != BaseCPU::invldPid) {
-                mapPid(tc, pid);
-                tc->getCpuPtr()->taskId(taskMap[pid]);
-            }
-        }
-    }
-}
-
-void
-LinuxArmSystem::mapPid(ThreadContext *tc, uint32_t pid)
+FsLinux::mapPid(ThreadContext *tc, uint32_t pid)
 {
     // Create a new unique identifier for this pid
     std::map<uint32_t, uint32_t>::iterator itr = taskMap.find(pid);
@@ -267,9 +258,9 @@ LinuxArmSystem::mapPid(ThreadContext *tc, uint32_t pid)
 }
 
 void
-LinuxArmSystem::dumpDmesg()
+FsLinux::dumpDmesg()
 {
-    Linux::dumpDmesg(getThreadContext(0), std::cout);
+    Linux::dumpDmesg(system->getThreadContext(0), std::cout);
 }
 
 /**
@@ -337,26 +328,24 @@ DumpStatsPCEvent::process(ThreadContext *tc)
         next_task_str = "kernel";
     }
 
-    LinuxArmSystem* sys = dynamic_cast<LinuxArmSystem *>(tc->getSystemPtr());
-    if (!sys) {
-        panic("System is not LinuxArmSystem while getting Linux process info!");
-    }
-    std::map<uint32_t, uint32_t>& taskMap = sys->taskMap;
+    FsLinux* wl = dynamic_cast<FsLinux *>(tc->getSystemPtr()->workload);
+    panic_if(!wl, "System workload is not ARM Linux!");
+    std::map<uint32_t, uint32_t>& taskMap = wl->taskMap;
 
     // Create a new unique identifier for this pid
-    sys->mapPid(tc, pid);
+    wl->mapPid(tc, pid);
 
     // Set cpu task id, output process info, and dump stats
     tc->getCpuPtr()->taskId(taskMap[pid]);
     tc->getCpuPtr()->setPid(pid);
 
-    OutputStream* taskFile = sys->taskFile;
+    OutputStream* taskFile = wl->taskFile;
 
     // Task file is read by cache occupancy plotting script or
     // Streamline conversion script.
     ccprintf(*(taskFile->stream()),
              "tick=%lld %d cpu_id=%d next_pid=%d next_tgid=%d next_task=%s\n",
-             curTick(), taskMap[pid], tc->cpuId(), (int) pid, (int) tgid,
+             curTick(), taskMap[pid], tc->cpuId(), (int)pid, (int)tgid,
              next_task_str);
     taskFile->stream()->flush();
 
@@ -364,3 +353,10 @@ DumpStatsPCEvent::process(ThreadContext *tc)
     Stats::schedStatEvent(true, true, curTick(), 0);
 }
 
+} // namespace ArmISA
+
+FsLinux *
+ArmFsLinuxParams::create()
+{
+    return new FsLinux(this);
+}

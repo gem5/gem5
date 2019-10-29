@@ -217,7 +217,7 @@ loadsymbol(ThreadContext *tc)
         if (!to_number(address, addr))
             continue;
 
-        if (!tc->getSystemPtr()->kernelSymtab->insert(addr, symbol))
+        if (!tc->getSystemPtr()->workload->symtab->insert(addr, symbol))
             continue;
 
 
@@ -239,7 +239,7 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
 
     DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
 
-    tc->getSystemPtr()->kernelSymtab->insert(addr,symbol);
+    tc->getSystemPtr()->workload->symtab->insert(addr,symbol);
     debugSymbolTable->insert(addr,symbol);
 }
 

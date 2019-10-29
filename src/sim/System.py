@@ -99,21 +99,10 @@ class System(SimObject):
     work_cpus_ckpt_count = Param.Counter(0,
         "create checkpoint when active cpu count value is reached")
 
+    workload = Param.OsKernel(NULL, "Operating system kernel")
     init_param = Param.UInt64(0, "numerical value to pass into simulator")
-    boot_osflags = Param.String("a", "boot flags to pass to the kernel")
-    kernel = Param.String("", "file that contains the kernel code")
-    kernel_addr_check = Param.Bool(True,
-        "whether to address check on kernel (disable for baremetal)")
-    kernel_extras = VectorParam.String([], "Additional object files to load")
-    kernel_extras_addrs = VectorParam.Addr([],
-        "Load addresses for additional object files")
     readfile = Param.String("", "file to read startup script from")
     symbolfile = Param.String("", "file to get the symbols from")
-    load_addr_mask = Param.UInt64(0xffffffffffffffff,
-            "Address to mask loading binaries with, if 0, system "
-            "auto-calculates the mask to be the most restrictive, "
-            "otherwise it obeys a custom mask.")
-    load_offset = Param.UInt64(0, "Address to offset loading binaries with")
 
     multi_thread = Param.Bool(False,
             "Supports multi-threaded CPUs? Impacts Thread/Context IDs")

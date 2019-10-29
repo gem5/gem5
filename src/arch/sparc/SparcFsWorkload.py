@@ -26,8 +26,37 @@
 
 from m5.params import *
 
-from m5.objects.System import System
+from m5.objects.SimpleMemory import SimpleMemory
+from m5.objects.OsKernel import OsKernel
 
-class SparcSystem(System):
-    type = 'SparcSystem'
-    cxx_header = 'arch/sparc/system.hh'
+class SparcFsWorkload(OsKernel):
+    type = 'SparcFsWorkload'
+    cxx_header = 'arch/sparc/fs_workload.hh'
+    cxx_class = 'SparcISA::FsWorkload'
+
+    load_addr_mask = 0xffffffffff
+
+    _rom_base = 0xfff0000000
+    _nvram_base = 0x1f11000000
+    _hypervisor_desc_base = 0x1f12080000
+    _partition_desc_base = 0x1f12000000
+
+    reset_addr = Param.Addr(_rom_base, "Address to load ROM at")
+    hypervisor_addr = Param.Addr(Addr('64kB') + _rom_base,
+                                 "Address to load hypervisor at")
+    openboot_addr = Param.Addr(Addr('512kB') + _rom_base,
+                               "Address to load openboot at")
+    nvram_addr = Param.Addr(_nvram_base, "Address to put the nvram")
+    hypervisor_desc_addr = Param.Addr(_hypervisor_desc_base,
+            "Address for the hypervisor description")
+    partition_desc_addr = Param.Addr(_partition_desc_base,
+            "Address for the partition description")
+
+    reset_bin = Param.String("file that contains the reset code")
+    hypervisor_bin = Param.String("file that contains the hypervisor code")
+    openboot_bin = Param.String("file that contains the openboot code")
+    nvram_bin = Param.String("file that contains the contents of nvram")
+    hypervisor_desc_bin = Param.String(
+            "file that contains the hypervisor description")
+    partition_desc_bin = Param.String(
+            "file that contains the partition description")

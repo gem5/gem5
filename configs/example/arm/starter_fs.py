@@ -99,11 +99,13 @@ def create(args):
     # Only simulate caches when using a timing CPU (e.g., the HPI model)
     want_caches = True if mem_mode == "timing" else False
 
-    system = devices.simpleSystem(LinuxArmSystem,
+    system = devices.simpleSystem(ArmSystem,
                                   want_caches,
                                   args.mem_size,
                                   mem_mode=mem_mode,
-                                  kernel=SysPaths.binary(args.kernel),
+                                  workload=ArmFsLinux(
+                                      object_file=
+                                      SysPaths.binary(args.kernel)),
                                   readfile=args.script)
 
     MemConfig.config_mem(args, system)
@@ -146,10 +148,12 @@ def create(args):
     system.realview.setupBootLoader(system, SysPaths.binary)
 
     if args.dtb:
-        system.dtb_filename = args.dtb
+        system.workload.dtb_filename = args.dtb
     else:
         # No DTB specified: autogenerate DTB
-        system.generateDtb(m5.options.outdir, 'system.dtb')
+        system.workload.dtb_filename = \
+            os.path.join(m5.options.outdir, 'system.dtb')
+        system.generateDtb(system.workload.dtb_filename)
 
     # Linux boot command flags
     kernel_cmd = [
@@ -161,13 +165,13 @@ def create(args):
         # memory layout.
         "norandmaps",
         # Tell Linux where to find the root disk image.
-        "root=/dev/vda1",
+        "root=/dev/vda",
         # Mount the root disk read-write by default.
         "rw",
         # Tell Linux about the amount of physical memory present.
         "mem=%s" % args.mem_size,
     ]
-    system.boot_osflags = " ".join(kernel_cmd)
+    system.workload.command_line = " ".join(kernel_cmd)
 
     return system
 

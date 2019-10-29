@@ -123,10 +123,6 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
                        AddrRange(Addr('2GB'), size ='256MB')]
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
-    self.rom.port = self.membus.master
-    self.nvram.port = self.membus.master
-    self.hypervisor_desc.port = self.membus.master
-    self.partition_desc.port = self.membus.master
     self.intrctrl = IntrControl()
     self.disk0 = CowMmDisk()
     self.disk0.childImage(mdesc.disks()[0])
@@ -150,14 +146,36 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
         AddrRange(self.t1000.hvuart.pio_addr,
                   self.t1000.hvuart.pio_addr + uart_pio_size - 1)
         ]
-    self.reset_bin = binary('reset_new.bin')
-    self.hypervisor_bin = binary('q_new.bin')
-    self.openboot_bin = binary('openboot_new.bin')
-    self.nvram_bin = binary('nvram1')
-    self.hypervisor_desc_bin = binary('1up-hv.bin')
-    self.partition_desc_bin = binary('1up-md.bin')
+
+    workload = SparcFsWorkload(
+        reset_bin=binary('reset_new.bin'),
+        hypervisor_bin=binary('q_new.bin'),
+        openboot_bin=binary('openboot_new.bin'),
+        nvram_bin=binary('nvram1'),
+        hypervisor_desc_bin=binary('1up-hv.bin'),
+        partition_desc_bin=binary('1up-md.bin'),
+    )
+
+    # ROM for OBP/Reset/Hypervisor
+    self.rom = SimpleMemory(range=AddrRange(workload._rom_base, size='8MB'))
+    # nvram
+    self.nvram = SimpleMemory(
+            range=AddrRange(workload._nvram_base, size='8kB'))
+    # hypervisor description
+    self.hypervisor_desc = SimpleMemory(
+            range=AddrRange(workload._hypervisor_desc_base, size='8kB'))
+    # partition description
+    self.partition_desc = SimpleMemory(
+            range=AddrRange(workload._partition_desc_base, size='8kB'))
+
+    self.rom.port = self.membus.master
+    self.nvram.port = self.membus.master
+    self.hypervisor_desc.port = self.membus.master
+    self.partition_desc.port = self.membus.master
 
     self.system_port = self.membus.slave
+
+    self.workload = workload
 
     return self
 
@@ -169,10 +187,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
 
     pci_devices = []
 
-    if bare_metal:
-        self = ArmSystem()
-    else:
-        self = LinuxArmSystem()
+    self = ArmSystem()
 
     if not mdesc:
         # generic system
@@ -242,19 +257,19 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         # EOT character on UART will end the simulation
         self.realview.uart[0].end_on_eot = True
     else:
-        if dtb_filename:
-            self.dtb_filename = binary(dtb_filename)
+        workload = ArmFsLinux()
 
-        self.machine_type = machine_type if machine_type in ArmMachineType.map \
-                            else "DTOnly"
+        if dtb_filename:
+            workload.dtb_filename = binary(dtb_filename)
+
+        workload.machine_type = \
+            machine_type if machine_type in ArmMachineType.map else "DTOnly"
 
         # Ensure that writes to the UART actually go out early in the boot
         if not cmdline:
             cmdline = 'earlyprintk=pl011,0x1c090000 console=ttyAMA0 ' + \
                       'lpj=19988480 norandmaps rw loglevel=8 ' + \
                       'mem=%(mem)s root=%(rootdev)s'
-
-        self.realview.setupBootLoader(self, binary, bootloader)
 
         if hasattr(self.realview.gic, 'cpu_addr'):
             self.gic_cpu_addr = self.realview.gic.cpu_addr
@@ -292,7 +307,11 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
                            "androidboot.selinux=permissive " + \
                            "video=Virtual-1:1920x1080-16"
 
-        self.boot_osflags = fillInCmdline(mdesc, cmdline)
+        workload.command_line = fillInCmdline(mdesc, cmdline)
+
+        self.workload = workload
+
+        self.realview.setupBootLoader(self, binary)
 
     if external_memory:
         # I/O traffic enters iobus
@@ -381,7 +400,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
     self.console = binary('mips/console')
     if not cmdline:
         cmdline = 'root=/dev/hda1 console=ttyS0'
-    self.boot_osflags = fillInCmdline(mdesc, cmdline)
+    self.workload = OsKernel(command_line=fillInCmdline(mdesc, cmdline))
 
     self.system_port = self.membus.slave
 
@@ -445,9 +464,12 @@ def connectX86RubySystem(x86_sys):
     x86_sys.pc.attachIO(x86_sys.iobus, x86_sys._dma_ports)
 
 
-def makeX86System(mem_mode, numCPUs=1, mdesc=None, self=None, Ruby=False):
-    if self == None:
-        self = X86System()
+def makeX86System(mem_mode, numCPUs=1, mdesc=None, workload=None, Ruby=False):
+    self = X86System()
+
+    if workload is None:
+        workload = X86FsWorkload()
+    self.workload = workload
 
     if not mdesc:
         # generic system
@@ -489,7 +511,7 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, self=None, Ruby=False):
 
     # Add in a Bios information structure.
     structures = [X86SMBiosBiosInformation()]
-    self.smbios_table.structures = structures
+    workload.smbios_table.structures = structures
 
     # Set up the Intel MP table
     base_entries = []
@@ -509,8 +531,8 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, self=None, Ruby=False):
     self.pc.south_bridge.io_apic.apic_id = io_apic.id
     base_entries.append(io_apic)
     # In gem5 Pc::calcPciConfigAddr(), it required "assert(bus==0)",
-    # but linux kernel cannot config PCI device if it was not connected to PCI bus,
-    # so we fix PCI bus id to 0, and ISA bus id to 1.
+    # but linux kernel cannot config PCI device if it was not connected to
+    # PCI bus, so we fix PCI bus id to 0, and ISA bus id to 1.
     pci_bus = X86IntelMPBus(bus_id = 0, bus_type='PCI   ')
     base_entries.append(pci_bus)
     isa_bus = X86IntelMPBus(bus_id = 1, bus_type='ISA   ')
@@ -550,15 +572,15 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, self=None, Ruby=False):
     assignISAInt(1, 1)
     for i in range(3, 15):
         assignISAInt(i, i)
-    self.intel_mp_table.base_entries = base_entries
-    self.intel_mp_table.ext_entries = ext_entries
+    workload.intel_mp_table.base_entries = base_entries
+    workload.intel_mp_table.ext_entries = ext_entries
+
+    return self
 
 def makeLinuxX86System(mem_mode, numCPUs=1, mdesc=None, Ruby=False,
                        cmdline=None):
-    self = LinuxX86System()
-
     # Build up the x86 system and then specialize it for Linux
-    makeX86System(mem_mode, numCPUs, mdesc, self, Ruby)
+    self = makeX86System(mem_mode, numCPUs, mdesc, X86FsLinux(), Ruby)
 
     # We assume below that there's at least 1MB of memory. We'll require 2
     # just to avoid corner cases.
@@ -596,12 +618,12 @@ def makeLinuxX86System(mem_mode, numCPUs=1, mdesc=None, Ruby=False,
         entries.append(X86E820Entry(addr = 0x100000000,
             size = '%dB' % (self.mem_ranges[1].size()), range_type = 1))
 
-    self.e820_table.entries = entries
+    self.workload.e820_table.entries = entries
 
     # Command line
     if not cmdline:
         cmdline = 'earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda1'
-    self.boot_osflags = fillInCmdline(mdesc, cmdline)
+    self.workload.command_line = fillInCmdline(mdesc, cmdline)
     return self
 
 

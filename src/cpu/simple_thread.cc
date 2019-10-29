@@ -98,7 +98,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
     clearArchRegs();
 
     if (baseCpu->params()->profile) {
-        profile = new FunctionProfile(system->kernelSymtab);
+        profile = new FunctionProfile(system->workload->symtab);
         Callback *cb =
             new MakeCallback<SimpleThread,
             &SimpleThread::dumpFuncProfile>(this);

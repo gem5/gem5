@@ -104,7 +104,7 @@ struct O3ThreadState : public ThreadState {
 
         if (cpu->params()->profile) {
             profile = new FunctionProfile(
-                    cpu->params()->system->kernelSymtab);
+                    cpu->params()->system->workload->symtab);
             Callback *cb =
                 new MakeCallback<O3ThreadState,
                 &O3ThreadState::dumpFuncProfile>(this);

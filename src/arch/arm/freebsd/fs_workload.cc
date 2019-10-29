@@ -30,7 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/arm/freebsd/system.hh"
+#include "arch/arm/freebsd/fs_workload.hh"
 
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
@@ -47,13 +47,13 @@
 #include "mem/physical.hh"
 #include "sim/stat_control.hh"
 
-using namespace ArmISA;
 using namespace FreeBSD;
 
-FreebsdArmSystem::FreebsdArmSystem(Params *p)
-    : GenericArmSystem(p),
-      enableContextSwitchStatsDump(p->enable_context_switch_stats_dump),
-      taskFile(nullptr), kernelPanicEvent(nullptr), kernelOopsEvent(nullptr)
+namespace ArmISA
+{
+
+FsFreebsd::FsFreebsd(Params *p) : ArmISA::FsWorkload(p),
+    enableContextSwitchStatsDump(p->enable_context_switch_stats_dump)
 {
     if (p->panic_on_panic) {
         kernelPanicEvent = addKernelFuncEventOrPanic<PanicPCEvent>(
@@ -74,36 +74,24 @@ FreebsdArmSystem::FreebsdArmSystem(Params *p)
 }
 
 void
-FreebsdArmSystem::initState()
+FsFreebsd::initState()
 {
-    // Moved from the constructor to here since it relies on the
-    // address map being resolved in the interconnect
-
-    // Call the initialisation of the super class
-    GenericArmSystem::initState();
+    ArmISA::FsWorkload::initState();
 
     // Load symbols at physical address, we might not want
     // to do this permanently, for but early bootup work
     // it is helpful.
     if (params()->early_kernel_symbols) {
-        kernel->loadGlobalSymbols(kernelSymtab, 0, 0, loadAddrMask);
-        kernel->loadGlobalSymbols(debugSymbolTable, 0, 0, loadAddrMask);
+        obj->loadGlobalSymbols(symtab, 0, 0, loadAddrMask);
+        obj->loadGlobalSymbols(debugSymbolTable, 0, 0, loadAddrMask);
     }
-
-    // Setup boot data structure
-    Addr addr = 0;
 
     // Check if the kernel image has a symbol that tells us it supports
     // device trees.
-    bool kernel_has_fdt_support =
-        kernelSymtab->findAddress("fdt_get_range", addr);
-    bool dtb_file_specified = params()->dtb_filename != "";
-
-    if (!dtb_file_specified)
-        fatal("dtb file is not specified\n");
-
-    if (!kernel_has_fdt_support)
-        fatal("kernel must have fdt support\n");
+    Addr addr;
+    fatal_if(!symtab->findAddress("fdt_get_range", addr),
+             "Kernel must have fdt support.");
+    fatal_if(params()->dtb_filename == "", "dtb file is not specified.");
 
     // Kernel supports flattened device tree and dtb file specified.
     // Using Device Tree Blob to describe system configuration.
@@ -112,38 +100,36 @@ FreebsdArmSystem::initState()
 
     DtbFile *dtb_file = new DtbFile(params()->dtb_filename);
 
-    if (!dtb_file->addBootCmdLine(params()->boot_osflags.c_str(),
-                                  params()->boot_osflags.size())) {
-        warn("couldn't append bootargs to DTB file: %s\n",
-             params()->dtb_filename);
-    }
+    warn_if(!dtb_file->addBootCmdLine(commandLine.c_str(), commandLine.size()),
+            "Couldn't append bootargs to DTB file: %s",
+            params()->dtb_filename);
 
     Addr ra = dtb_file->findReleaseAddr();
     if (ra)
         bootReleaseAddr = ra & ~ULL(0x7F);
 
     dtb_file->buildImage().
-        offset(params()->atags_addr + loadAddrOffset).write(physProxy);
+        offset(params()->atags_addr + loadAddrOffset).
+        write(system->physProxy);
     delete dtb_file;
 
     // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
-    for (int i = 0; i < threadContexts.size(); i++) {
-        threadContexts[i]->setIntReg(0, 0);
-        threadContexts[i]->setIntReg(1, params()->machine_type);
-        threadContexts[i]->setIntReg(2, params()->atags_addr + loadAddrOffset);
+    for (auto tc: system->threadContexts) {
+        tc->setIntReg(0, 0);
+        tc->setIntReg(1, params()->machine_type);
+        tc->setIntReg(2, params()->atags_addr + loadAddrOffset);
     }
 }
 
-FreebsdArmSystem::~FreebsdArmSystem()
+FsFreebsd::~FsFreebsd()
 {
-    if (uDelaySkipEvent)
-        delete uDelaySkipEvent;
-    if (constUDelaySkipEvent)
-        delete constUDelaySkipEvent;
+    delete uDelaySkipEvent;
 }
 
-FreebsdArmSystem *
-FreebsdArmSystemParams::create()
+} // namespace ArmISA
+
+ArmISA::FsFreebsd *
+ArmFsFreebsdParams::create()
 {
-    return new FreebsdArmSystem(this);
+    return new ArmISA::FsFreebsd(this);
 }

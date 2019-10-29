@@ -1,18 +1,10 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
- * All rights reserved
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2015 Ruslan Bukin <br@bsdpad.com>
  * All rights reserved.
+ *
+ * This software was developed by the University of Cambridge Computer
+ * Laboratory as part of the CTSRD Project, with support from the UK Higher
+ * Education Innovation Fund (HEIF).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,34 +30,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_ARM_LINUX_SYSTEM_HH__
-#define __ARCH_ARM_LINUX_SYSTEM_HH__
+#ifndef __ARCH_ARM_FREEBSD_FS_WORKLOAD_HH__
+#define __ARCH_ARM_FREEBSD_FS_WORKLOAD_HH__
 
-#include <cstdio>
 #include <map>
-#include <string>
-#include <vector>
 
-#include "arch/arm/system.hh"
-#include "base/output.hh"
-#include "kern/linux/events.hh"
-#include "params/LinuxArmSystem.hh"
-#include "sim/core.hh"
+#include "arch/arm/fs_workload.hh"
+#include "kern/freebsd/events.hh"
+#include "params/ArmFsFreebsd.hh"
 
-class DumpStatsPCEvent;
-
-class LinuxArmSystem : public GenericArmSystem
+namespace ArmISA
 {
-  protected:
-    DumpStatsPCEvent *dumpStatsPCEvent;
 
+class FsFreebsd : public ArmISA::FsWorkload
+{
   public:
     /** Boilerplate params code */
-    typedef LinuxArmSystemParams Params;
+    typedef ArmFsFreebsdParams Params;
     const Params *
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params *>(&_params);
     }
 
     /** When enabled, dump stats/task info on context switches for
@@ -80,72 +65,43 @@ class LinuxArmSystem : public GenericArmSystem
 
     /** This is a file that is placed in the run directory that prints out
      * mappings between taskIds and OS process IDs */
-    OutputStream* taskFile;
+    std::ostream* taskFile;
 
-    LinuxArmSystem(Params *p);
-    ~LinuxArmSystem();
+    FsFreebsd(Params *p);
+    ~FsFreebsd();
 
-    void initState();
-
-    void startup();
+    void initState() override;
 
     /** This function creates a new task Id for the given pid.
      * @param tc thread context that is currentyl executing  */
     void mapPid(ThreadContext* tc, uint32_t pid);
 
-  public: // Exported Python methods
-    /**
-     * Dump the kernel's dmesg buffer to stdout
-     */
-    void dumpDmesg();
-
   private:
     /** Event to halt the simulator if the kernel calls panic()  */
-    PCEvent *kernelPanicEvent;
+    PCEvent *kernelPanicEvent = nullptr;
 
     /** Event to halt the simulator if the kernel calls oopses  */
-    PCEvent *kernelOopsEvent;
+    PCEvent *kernelOopsEvent = nullptr;
 
     /**
      * PC based event to skip udelay(<time>) calls and quiesce the
      * processor for the appropriate amount of time. This is not functionally
      * required but does speed up simulation.
      */
-    Linux::UDelayEvent *uDelaySkipEvent;
+    FreeBSD::UDelayEvent *uDelaySkipEvent = nullptr;
 
-    /** Another PC based skip event for const_udelay(). Similar to the udelay
-     * skip, but this function precomputes the first multiply that is done
-     * in the generic case since the parameter is known at compile time.
-     * Thus we need to do some division to get back to us.
+    /** These variables store addresses of important data structures
+     * that are normaly kept coherent at boot with cache mainetence operations.
+     * Since these operations aren't supported in gem5, we keep them coherent
+     * by making them uncacheable until all processors in the system boot.
      */
-    Linux::UDelayEvent *constUDelaySkipEvent;
-
+    Addr secDataPtrAddr;
+    Addr secDataAddr;
+    Addr penReleaseAddr;
+    Addr pen64ReleaseAddr;
+    Addr bootReleaseAddr;
 };
 
-class DumpStatsPCEvent : public PCEvent
-{
-  public:
-    DumpStatsPCEvent(PCEventScope *s, const std::string &desc, Addr addr)
-        : PCEvent(s, desc, addr)
-    {}
+} // namespace ArmISA
 
-    virtual void process(ThreadContext* tc);
-  protected:
-    virtual void getTaskDetails(ThreadContext *tc, uint32_t &pid,
-            uint32_t &tgid, std::string &next_task_str, int32_t &mm);
-
-};
-
-class DumpStatsPCEvent64 : public DumpStatsPCEvent {
-  public:
-    DumpStatsPCEvent64(PCEventScope *s, const std::string &desc, Addr addr)
-        : DumpStatsPCEvent(s, desc, addr)
-    {}
-  private:
-    void getTaskDetails(ThreadContext *tc, uint32_t &pid, uint32_t &tgid,
-                        std::string &next_task_str, int32_t &mm) override;
-};
-
-
-#endif // __ARCH_ARM_LINUX_SYSTEM_HH__
-
+#endif // __ARCH_ARM_FREEBSD_FS_WORKLOAD_HH__

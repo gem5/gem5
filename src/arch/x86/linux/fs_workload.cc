@@ -35,7 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/x86/linux/system.hh"
+#include "arch/x86/linux/fs_workload.hh"
 
 #include "arch/vtophys.hh"
 #include "arch/x86/isa_traits.hh"
@@ -43,24 +43,22 @@
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "mem/port_proxy.hh"
-#include "params/LinuxX86System.hh"
+#include "params/X86FsLinux.hh"
 #include "sim/byteswap.hh"
+#include "sim/system.hh"
 
-using namespace X86ISA;
-
-LinuxX86System::LinuxX86System(Params *p)
-    : X86System(p), commandLine(p->boot_osflags), e820Table(p->e820_table)
+namespace X86ISA
 {
-}
 
-LinuxX86System::~LinuxX86System()
-{
-}
+FsLinux::FsLinux(Params *p) : X86ISA::FsWorkload(p), e820Table(p->e820_table)
+{}
 
 void
-LinuxX86System::initState()
+FsLinux::initState()
 {
-    X86System::initState();
+    X86ISA::FsWorkload::initState();
+
+    auto phys_proxy = system->physProxy;
 
     // The location of the real mode data structure.
     const Addr realModeData = 0x90200;
@@ -74,17 +72,16 @@ LinuxX86System::initState()
     // A pointer to the commandLineBuff stored in the real mode data.
     const Addr commandLinePointer = realModeData + 0x228;
 
-    if (commandLine.length() + 1 > realModeData - commandLineBuff)
-        panic("Command line \"%s\" is longer than %d characters.\n",
+    panic_if(commandLine.length() + 1 > realModeData - commandLineBuff,
+             "Command line \"%s\" is longer than %d characters.",
                 commandLine, realModeData - commandLineBuff - 1);
-    physProxy.writeBlob(commandLineBuff, commandLine.c_str(),
-                        commandLine.length() + 1);
+    phys_proxy.writeString(commandLineBuff, commandLine.c_str());
 
     // Generate a pointer of the right size and endianness to put into
     // commandLinePointer.
     uint32_t guestCommandLineBuff = htole((uint32_t)commandLineBuff);
-    physProxy.writeBlob(commandLinePointer, &guestCommandLineBuff,
-                        sizeof(guestCommandLineBuff));
+    phys_proxy.writeBlob(commandLinePointer, &guestCommandLineBuff,
+                         sizeof(guestCommandLineBuff));
 
     /*
      * Screen Info.
@@ -121,17 +118,19 @@ LinuxX86System::initState()
     // A pointer to the buffer for E820 entries.
     const Addr e820MapPointer = realModeData + 0x2d0;
 
-    e820Table->writeTo(physProxy, e820MapNrPointer, e820MapPointer);
+    e820Table->writeTo(phys_proxy, e820MapNrPointer, e820MapPointer);
 
     /*
      * Pass the location of the real mode data structure to the kernel
      * using register %esi. We'll use %rsi which should be equivalent.
      */
-    threadContexts[0]->setIntReg(INTREG_RSI, realModeData);
+    system->threadContexts[0]->setIntReg(INTREG_RSI, realModeData);
 }
 
-LinuxX86System *
-LinuxX86SystemParams::create()
+} // namespace X86ISA
+
+X86ISA::FsLinux *
+X86FsLinuxParams::create()
 {
-    return new LinuxX86System(this);
+    return new X86ISA::FsLinux(this);
 }

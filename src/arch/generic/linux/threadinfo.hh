@@ -47,7 +47,7 @@ class ThreadInfo
     get_data(const char *symbol, T &data)
     {
         Addr addr = 0;
-        if (!sys->kernelSymtab->findAddress(symbol, addr)) {
+        if (!sys->workload->symtab->findAddress(symbol, addr)) {
             warn_once("Unable to find kernel symbol %s\n", symbol);
             warn_once("Kernel not compiled with task_struct info; can't get "
                       "currently executing task/process/thread name/ids!\n");

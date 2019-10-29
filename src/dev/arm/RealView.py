@@ -619,9 +619,9 @@ class RealView(Platform):
         self._attach_io(self._off_chip_devices(), *args, **kwargs)
 
     def setupBootLoader(self, cur_sys, boot_loader, atags_addr, load_offset):
-        cur_sys.boot_loader = boot_loader
-        cur_sys.atags_addr = atags_addr
-        cur_sys.load_offset = load_offset
+        cur_sys.workload.boot_loader = boot_loader
+        cur_sys.workload.atags_addr = atags_addr
+        cur_sys.workload.load_addr_offset = load_offset
 
     def generateDeviceTree(self, state):
         node = FdtNode("/") # Things in this module need to end up in the root

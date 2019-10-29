@@ -33,6 +33,7 @@
 #include <vector>
 
 #include "arch/riscv/faults.hh"
+#include "arch/riscv/fs_workload.hh"
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/pra_constants.hh"
 #include "arch/riscv/system.hh"
@@ -285,7 +286,9 @@ TLB::translateInst(const RequestPtr &req, ThreadContext *tc)
          * check if we simulate a bare metal system
          * if so, we have no tlb, phys addr == virt addr
          */
-        if (static_cast<RiscvSystem *>(tc->getSystemPtr())->isBareMetal())
+        auto *workload = dynamic_cast<FsWorkload *>(
+                tc->getSystemPtr()->workload);
+        if (workload->isBareMetal())
             req->setFlags(Request::PHYSICAL);
 
         if (req->getFlags() & Request::PHYSICAL) {
@@ -320,7 +323,9 @@ TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
          * check if we simulate a bare metal system
          * if so, we have no tlb, phys addr == virt addr
          */
-        if (static_cast<RiscvSystem *>(tc->getSystemPtr())->isBareMetal())
+        auto *workload = dynamic_cast<FsWorkload *>(
+                tc->getSystemPtr()->workload);
+        if (workload->isBareMetal())
             req->setFlags(Request::PHYSICAL);
 
         if (req->getFlags() & Request::PHYSICAL) {

@@ -125,7 +125,7 @@ def config_mem(options, system):
             port_data=opt_tlm_memory,
             port=system.membus.master,
             addr_ranges=system.mem_ranges)
-        system.kernel_addr_check = False
+        system.workload.addr_check = False
         return
 
     if opt_external_memory_system:
@@ -133,7 +133,7 @@ def config_mem(options, system):
             port_type=opt_external_memory_system,
             port_data="init_mem0", port=xbar.master,
             addr_ranges=system.mem_ranges)
-        subsystem.kernel_addr_check = False
+        subsystem.workload.addr_check = False
         return
 
     nbr_mem_ctrls = opt_mem_channels

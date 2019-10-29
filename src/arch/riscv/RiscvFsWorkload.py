@@ -1,6 +1,7 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2004-2005 The Regents of The University of Michigan
+# Copyright (c) 2016 RISC-V Foundation
+# Copyright (c) 2016 The University of Virginia
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,38 +27,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.params import *
 
-if env['TARGET_ISA'] == 'sparc':
-    Source('asi.cc')
-    Source('decoder.cc')
-    Source('faults.cc')
-    Source('fs_workload.cc')
-    Source('interrupts.cc')
-    Source('isa.cc')
-    Source('linux/linux.cc')
-    Source('linux/process.cc')
-    Source('linux/syscalls.cc')
-    Source('nativetrace.cc')
-    Source('pagetable.cc')
-    Source('process.cc')
-    Source('remote_gdb.cc')
-    Source('solaris/process.cc')
-    Source('solaris/solaris.cc')
-    Source('system.cc')
-    Source('tlb.cc')
-    Source('ua2005.cc')
-    Source('utility.cc')
-    Source('vtophys.cc')
+from m5.objects.System import System
+from m5.objects.OsKernel import OsKernel
 
-    SimObject('SparcFsWorkload.py')
-    SimObject('SparcInterrupts.py')
-    SimObject('SparcISA.py')
-    SimObject('SparcNativeTrace.py')
-    SimObject('SparcSystem.py')
-    SimObject('SparcTLB.py')
+class RiscvFsWorkload(OsKernel):
+    type = 'RiscvFsWorkload'
+    cxx_class = 'RiscvISA::FsWorkload'
+    cxx_header = 'arch/riscv/fs_workload.hh'
+    abstract = True
 
-    DebugFlag('Sparc', "Generic SPARC ISA stuff")
-    DebugFlag('RegisterWindows', "Register window manipulation")
+    bare_metal = Param.Bool(False, "Using Bare Metal Application?")
+    reset_vect = Param.Addr(0x0, 'Reset vector')
 
-    ISADesc('isa/main.isa')
+
+class RiscvBareMetal(RiscvFsWorkload):
+    type = 'RiscvBareMetal'
+    cxx_class = 'RiscvISA::BareMetal'
+    cxx_header = 'arch/riscv/bare_metal/fs_workload.hh'
+    bootloader = Param.String("File, that contains the bootloader code")
+
+    bare_metal = True

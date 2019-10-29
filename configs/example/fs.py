@@ -124,7 +124,7 @@ def build_test_system(np):
                                              test_sys.cpu_voltage_domain)
 
     if options.kernel is not None:
-        test_sys.kernel = binary(options.kernel)
+        test_sys.workload.object_file = binary(options.kernel)
 
     if options.script is not None:
         test_sys.readfile = options.script
@@ -269,7 +269,7 @@ def build_drive_system(np):
     drive_sys.cpu.createInterruptController()
     drive_sys.cpu.connectAllPorts(drive_sys.membus)
     if options.kernel is not None:
-        drive_sys.kernel = binary(options.kernel)
+        drive_sys.workload.object_file = binary(options.kernel)
 
     if ObjectList.is_kvm_cpu(DriveCPUClass):
         drive_sys.kvm_vm = KvmVM()
@@ -369,7 +369,9 @@ if buildEnv['TARGET_ISA'] == "arm" and not options.bare_metal \
     for sysname in ('system', 'testsys', 'drivesys'):
         if hasattr(root, sysname):
             sys = getattr(root, sysname)
-            sys.generateDtb(m5.options.outdir, '%s.dtb' % sysname)
+            sys.workload.dtb_filename = \
+                os.path.join(m5.options.outdir, '%s.dtb' % sysname)
+            sys.generateDtb(sys.workload.dtb_filename)
 
 Simulation.setWorkCountOptions(test_sys, options)
 Simulation.run(options, root, test_sys, FutureClass)

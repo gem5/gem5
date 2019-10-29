@@ -98,7 +98,8 @@ def create(args):
                                   args.mem_size,
                                   platform=VExpress_GEM5_V2(),
                                   mem_mode=mem_mode,
-                                  kernel=args.kernel,
+                                  workload=ArmFsWorkload(
+                                      object_file=args.kernel),
                                   readfile=args.readfile)
 
     MemConfig.config_mem(args, system)
@@ -215,7 +216,7 @@ def main():
 
     if args.dtb_gen:
         # No run, autogenerate DTB and exit
-        root.system.generateDtb(m5.options.outdir, 'system.dtb')
+        root.system.generateDtb(os.path.join(m5.options.outdir, 'system.dtb'))
     else:
         run(args)
 

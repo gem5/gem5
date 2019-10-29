@@ -35,17 +35,75 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_X86_SYSTEM_HH__
-#define __ARCH_X86_SYSTEM_HH__
+#ifndef __ARCH_X86_FS_WORKLOAD_HH__
+#define __ARCH_X86_FS_WORKLOAD_HH__
 
-#include "params/X86System.hh"
-#include "sim/system.hh"
+#include <string>
+#include <vector>
 
-class X86System : public System
+#include "arch/x86/regs/misc.hh"
+#include "arch/x86/regs/segment.hh"
+#include "base/types.hh"
+#include "cpu/thread_context.hh"
+#include "params/X86FsWorkload.hh"
+#include "sim/os_kernel.hh"
+
+namespace X86ISA
+{
+
+namespace SMBios
+{
+
+class SMBiosTable;
+
+} // namespace SMBios
+namespace IntelMP
+{
+
+class FloatingPointer;
+class ConfigTable;
+
+} // namespace IntelMP
+
+/* memory mappings for KVMCpu in SE mode */
+const Addr syscallCodeVirtAddr = 0xffff800000000000;
+const Addr GDTVirtAddr = 0xffff800000001000;
+const Addr IDTVirtAddr = 0xffff800000002000;
+const Addr TSSVirtAddr = 0xffff800000003000;
+const Addr TSSPhysAddr = 0x63000;
+const Addr ISTVirtAddr = 0xffff800000004000;
+const Addr PFHandlerVirtAddr = 0xffff800000005000;
+const Addr MMIORegionVirtAddr = 0xffffc90000000000;
+const Addr MMIORegionPhysAddr = 0xffff0000;
+
+void installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
+                    SegDescriptor desc, bool longmode);
+
+class FsWorkload : public OsKernel
 {
   public:
-    using System::System;
-    Addr fixFuncEventAddr(Addr addr) override { return addr; }
+    typedef X86FsWorkloadParams Params;
+    FsWorkload(Params *p);
+
+  public:
+    void initState() override;
+
+  protected:
+
+    SMBios::SMBiosTable *smbiosTable;
+    IntelMP::FloatingPointer *mpFloatingPointer;
+    IntelMP::ConfigTable *mpConfigTable;
+    ACPI::RSDP *rsdp;
+
+    void writeOutSMBiosTable(Addr header,
+            Addr &headerSize, Addr &tableSize, Addr table=0);
+
+    void writeOutMPTable(Addr fp,
+            Addr &fpSize, Addr &tableSize, Addr table=0);
+
+    const Params *params() const { return (const Params *)&_params; }
 };
 
-#endif // __ARCH_X86_SYSTEM_HH__
+} // namespace X86ISA
+
+#endif // __ARCH_X86_FS_WORKLOAD_HH__

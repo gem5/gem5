@@ -47,7 +47,6 @@
 
 #include "kern/linux/events.hh"
 #include "params/ArmSystem.hh"
-#include "params/GenericArmSystem.hh"
 #include "sim/full_system.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
@@ -59,20 +58,6 @@ class ThreadContext;
 class ArmSystem : public System
 {
   protected:
-    /**
-     * PC based event to skip the dprink() call and emulate its
-     * functionality
-     */
-    Linux::DebugPrintkEvent *debugPrintkEvent;
-
-    /** Bootloaders */
-    std::vector<std::unique_ptr<ObjectFile>> bootLoaders;
-
-    /**
-     * Pointer to the bootloader object
-     */
-    ObjectFile *bootldr;
-
     /**
      * True if this system implements the Security Extensions
      */
@@ -102,7 +87,7 @@ class ArmSystem : public System
     /**
      * Reset address (ARMv8)
      */
-    const Addr _resetAddr;
+    Addr _resetAddr;
 
     /**
      * True if the register width of the highest implemented exception level is
@@ -142,16 +127,6 @@ class ArmSystem : public System
      */
     ArmSemihosting *const semihosting;
 
-  protected:
-    /**
-     * Get a boot loader that matches the kernel.
-     *
-     * @param obj Kernel binary
-     * @return Pointer to boot loader ObjectFile or nullptr if there
-     *         is no matching boot loader.
-     */
-    ObjectFile *getBootLoader(ObjectFile *const obj);
-
   public:
     typedef ArmSystemParams Params;
     const Params *
@@ -161,20 +136,13 @@ class ArmSystem : public System
     }
 
     ArmSystem(Params *p);
-    ~ArmSystem();
 
-    /**
-     * Initialise the system
-     */
-    virtual void initState();
-
-    virtual Addr fixFuncEventAddr(Addr addr)
+    Addr
+    fixFuncEventAddr(Addr addr) override
     {
         // Remove the low bit that thumb symbols have set
         // but that aren't actually odd aligned
-        if (addr & 0x1)
-            return addr & ~1;
-        return addr;
+        return addr & ~1;
     }
 
     /** true if this a multiprocessor system */
@@ -198,16 +166,14 @@ class ArmSystem : public System
     bool haveCrypto() const { return _haveCrypto; }
 
     /** Sets the pointer to the Generic Timer. */
-    void setGenericTimer(GenericTimer *generic_timer)
+    void
+    setGenericTimer(GenericTimer *generic_timer)
     {
         _genericTimer = generic_timer;
     }
 
     /** Sets the pointer to the GIC. */
-    void setGIC(BaseGic *gic)
-    {
-        _gic = gic;
-    }
+    void setGIC(BaseGic *gic) { _gic = gic; }
 
     /** Get a pointer to the system's generic timer model */
     GenericTimer *getGenericTimer() const { return _genericTimer; }
@@ -220,7 +186,8 @@ class ArmSystem : public System
     bool highestELIs64() const { return _highestELIs64; }
 
     /** Returns the highest implemented exception level */
-    ExceptionLevel highestEL() const
+    ExceptionLevel
+    highestEL() const
     {
         if (_haveSecurity)
             return EL3;
@@ -232,6 +199,7 @@ class ArmSystem : public System
     /** Returns the reset address if the highest implemented exception level is
      * 64 bits (ARMv8) */
     Addr resetAddr() const { return _resetAddr; }
+    void setResetAddr(Addr addr) { _resetAddr = addr; }
 
     /** Returns true if ASID is 16 bits in AArch64 (ARMv8) */
     bool haveLargeAsid64() const { return _haveLargeAsid64; }
@@ -253,7 +221,8 @@ class ArmSystem : public System
     uint8_t physAddrRange64() const { return _physAddrRange64; }
 
     /** Returns the supported physical address range in bits */
-    uint8_t physAddrRange() const
+    uint8_t
+    physAddrRange() const
     {
         if (_highestELIs64)
             return _physAddrRange64;
@@ -263,10 +232,7 @@ class ArmSystem : public System
     }
 
     /** Returns the physical address mask */
-    Addr physAddrMask() const
-    {
-        return mask(physAddrRange());
-    }
+    Addr physAddrMask() const { return mask(physAddrRange()); }
 
     /** Is Arm Semihosting support enabled? */
     bool haveSemihosting() const { return semihosting != nullptr; }
@@ -339,25 +305,6 @@ class ArmSystem : public System
     /** Make a Semihosting call from aarch32 */
     static uint32_t callSemihosting32(ThreadContext *tc,
                                       uint32_t op, uint32_t param);
-};
-
-class GenericArmSystem : public ArmSystem
-{
-  public:
-    typedef GenericArmSystemParams Params;
-    const Params *
-    params() const
-    {
-        return dynamic_cast<const Params *>(_params);
-    }
-
-    GenericArmSystem(Params *p) : ArmSystem(p) {};
-    virtual ~GenericArmSystem() {};
-
-    /**
-     * Initialise the system
-     */
-    virtual void initState();
 };
 
 #endif

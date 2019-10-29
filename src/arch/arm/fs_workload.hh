@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
- * All rights reserved.
+ * Copyright (c) 2010, 2012-2013, 2015-2019 ARM Limited
+ * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -10,6 +10,9 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -35,17 +38,60 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_X86_SYSTEM_HH__
-#define __ARCH_X86_SYSTEM_HH__
+#ifndef __ARCH_ARM_FS_WORKLOAD_HH__
+#define __ARCH_ARM_FS_WORKLOAD_HH__
 
-#include "params/X86System.hh"
-#include "sim/system.hh"
+#include <memory>
+#include <vector>
 
-class X86System : public System
+#include "kern/linux/events.hh"
+#include "params/ArmFsWorkload.hh"
+#include "sim/os_kernel.hh"
+#include "sim/sim_object.hh"
+
+namespace ArmISA
 {
+
+class FsWorkload : public OsKernel
+{
+  protected:
+    /** Bootloaders */
+    std::vector<std::unique_ptr<ObjectFile>> bootLoaders;
+
+    /**
+     * Pointer to the bootloader object
+     */
+    ObjectFile *bootldr = nullptr;
+
+    /**
+     * Whether the highest exception level in software is 64 it.
+     */
+    bool _highestELIs64 = true;
+
+    /**
+     * Get a boot loader that matches the kernel.
+     *
+     * @param obj Kernel binary
+     * @return Pointer to boot loader ObjectFile or nullptr if there
+     *         is no matching boot loader.
+     */
+    ObjectFile *getBootLoader(ObjectFile *const obj);
+
   public:
-    using System::System;
-    Addr fixFuncEventAddr(Addr addr) override { return addr; }
+    typedef ArmFsWorkloadParams Params;
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(&_params);
+    }
+
+    FsWorkload(Params *p);
+
+    void initState() override;
+
+    bool highestELIs64() const { return _highestELIs64; }
 };
 
-#endif // __ARCH_X86_SYSTEM_HH__
+} // namespace ArmISA
+
+#endif // __ARCH_ARM_FS_WORKLOAD_HH__
