@@ -63,9 +63,6 @@
 #include "sim/core.hh"
 #include "sim/sim_object.hh"
 
-using namespace std;
-using namespace TheISA;
-
 IdeDisk::IdeDisk(const Params *p)
     : SimObject(p), ctrl(NULL), image(p->image), diskDelay(p->delay),
       dmaTransferEvent([this]{ doDmaTransfer(); }, name()),
