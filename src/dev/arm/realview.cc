@@ -50,13 +50,9 @@
 #include <string>
 #include <vector>
 
-#include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
 #include "dev/arm/base_gic.hh"
 #include "sim/system.hh"
-
-using namespace std;
-using namespace TheISA;
 
 
 RealView::RealView(const Params *p)
