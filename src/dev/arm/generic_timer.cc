@@ -524,8 +524,9 @@ GenericTimerISA::readMiscReg(int reg)
 
 GenericTimerMem::GenericTimerMem(GenericTimerMemParams *p)
     : PioDevice(p),
-      ctrlRange(RangeSize(p->base, TheISA::PageBytes)),
-      timerRange(RangeSize(p->base + TheISA::PageBytes, TheISA::PageBytes)),
+      ctrlRange(RangeSize(p->base, sys->getPageBytes())),
+      timerRange(RangeSize(p->base + sys->getPageBytes(),
+                  sys->getPageBytes())),
       addrRanges{ctrlRange, timerRange},
       systemCounter(),
       physTimer(csprintf("%s.phys_timer0", name()),
