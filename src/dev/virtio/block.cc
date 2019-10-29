@@ -45,7 +45,8 @@
 
 VirtIOBlock::VirtIOBlock(Params *params)
     : VirtIODeviceBase(params, ID_BLOCK, sizeof(Config), 0),
-      qRequests(params->system->physProxy, params->queueSize, *this),
+      qRequests(params->system->physProxy, byteOrder,
+                params->queueSize, *this),
       image(*params->image)
 {
     registerQueue(qRequests);
@@ -62,7 +63,7 @@ void
 VirtIOBlock::readConfig(PacketPtr pkt, Addr cfgOffset)
 {
     Config cfg_out;
-    cfg_out.capacity = htov_legacy(config.capacity);
+    cfg_out.capacity = htog(config.capacity, byteOrder);
 
     readConfigBlob(pkt, cfgOffset, (uint8_t *)&cfg_out);
 }
@@ -132,8 +133,8 @@ VirtIOBlock::RequestQueue::onNotifyDescriptor(VirtDescriptor *desc)
      */
     BlkRequest req;
     desc->chainRead(0, (uint8_t *)&req, sizeof(req));
-    req.type = htov_legacy(req.type);
-    req.sector = htov_legacy(req.sector);
+    req.type = htog(req.type, byteOrder);
+    req.sector = htog(req.sector, byteOrder);
 
     Status status;
     const size_t data_size(desc->chainSize()

@@ -147,8 +147,9 @@ class VirtIO9PBase : public VirtIODeviceBase
     class FSQueue : public VirtQueue
     {
       public:
-        FSQueue(PortProxy &proxy, uint16_t size, VirtIO9PBase &_parent)
-            : VirtQueue(proxy, size), parent(_parent) {}
+        FSQueue(PortProxy &proxy, ByteOrder bo,
+                uint16_t size, VirtIO9PBase &_parent)
+            : VirtQueue(proxy, bo, size), parent(_parent) {}
         virtual ~FSQueue() {}
 
         void onNotifyDescriptor(VirtDescriptor *desc);

@@ -45,8 +45,8 @@
 
 VirtIOConsole::VirtIOConsole(Params *params)
     : VirtIODeviceBase(params, ID_CONSOLE, sizeof(Config), F_SIZE),
-      qRecv(params->system->physProxy, params->qRecvSize, *this),
-      qTrans(params->system->physProxy, params->qTransSize, *this),
+      qRecv(params->system->physProxy, byteOrder, params->qRecvSize, *this),
+      qTrans(params->system->physProxy, byteOrder, params->qTransSize, *this),
       device(*params->device), callbackDataAvail(qRecv)
 {
     registerQueue(qRecv);
@@ -66,8 +66,8 @@ void
 VirtIOConsole::readConfig(PacketPtr pkt, Addr cfgOffset)
 {
     Config cfg_out;
-    cfg_out.rows = htov_legacy(config.rows);
-    cfg_out.cols = htov_legacy(config.cols);
+    cfg_out.rows = htog(config.rows, byteOrder);
+    cfg_out.cols = htog(config.cols, byteOrder);
 
     readConfigBlob(pkt, cfgOffset, (uint8_t *)&cfg_out);
 }

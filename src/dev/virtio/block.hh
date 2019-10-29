@@ -163,8 +163,9 @@ class VirtIOBlock : public VirtIODeviceBase
         : public VirtQueue
     {
       public:
-        RequestQueue(PortProxy &proxy, uint16_t size, VirtIOBlock &_parent)
-            : VirtQueue(proxy, size), parent(_parent) {}
+        RequestQueue(PortProxy &proxy, ByteOrder bo,
+                uint16_t size, VirtIOBlock &_parent)
+            : VirtQueue(proxy, bo, size), parent(_parent) {}
         virtual ~RequestQueue() {}
 
         void onNotifyDescriptor(VirtDescriptor *desc);

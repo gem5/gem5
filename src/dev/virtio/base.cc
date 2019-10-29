@@ -42,10 +42,11 @@
 #include "debug/VIO.hh"
 #include "params/VirtIODeviceBase.hh"
 #include "params/VirtIODummyDevice.hh"
+#include "sim/system.hh"
 
-VirtDescriptor::VirtDescriptor(PortProxy &_memProxy, VirtQueue &_queue,
-                               Index descIndex)
-    : memProxy(&_memProxy), queue(&_queue), _index(descIndex),
+VirtDescriptor::VirtDescriptor(PortProxy &_memProxy, ByteOrder bo,
+                               VirtQueue &_queue, Index descIndex)
+    : memProxy(&_memProxy), queue(&_queue), byteOrder(bo), _index(descIndex),
       desc{0, 0, 0, 0}
 {
 }
@@ -64,6 +65,7 @@ VirtDescriptor::operator=(VirtDescriptor &&rhs) noexcept
 {
     memProxy = std::move(rhs.memProxy);
     queue = std::move(rhs.queue);
+    byteOrder = std::move(rhs.byteOrder);
     _index = std::move(rhs._index);
     desc = std::move(rhs.desc);
 
@@ -82,7 +84,7 @@ VirtDescriptor::update()
     const Addr desc_addr(vq_addr + sizeof(desc) * _index);
     vring_desc guest_desc;
     memProxy->readBlob(desc_addr, &guest_desc, sizeof(guest_desc));
-    desc = vtoh_legacy(guest_desc);
+    desc = gtoh(guest_desc, byteOrder);
     DPRINTF(VIO,
             "VirtDescriptor(%i): Addr: 0x%x, Len: %i, Flags: 0x%x, "
             "Next: 0x%x\n",
@@ -224,14 +226,14 @@ VirtDescriptor::chainSize() const
 
 
 
-VirtQueue::VirtQueue(PortProxy &proxy, uint16_t size)
-    : _size(size), _address(0), memProxy(proxy),
-      avail(proxy, size), used(proxy, size),
+VirtQueue::VirtQueue(PortProxy &proxy, ByteOrder bo, uint16_t size)
+    : byteOrder(bo), _size(size), _address(0), memProxy(proxy),
+      avail(proxy, bo, size), used(proxy, bo, size),
       _last_avail(0)
 {
     descriptors.reserve(_size);
     for (int i = 0; i < _size; ++i)
-        descriptors.emplace_back(proxy, *this, i);
+        descriptors.emplace_back(proxy, bo, *this, i);
 }
 
 void
@@ -326,6 +328,7 @@ VirtIODeviceBase::VirtIODeviceBase(Params *params, DeviceId id,
                                    size_t config_size, FeatureBits features)
     : SimObject(params),
       guestFeatures(0),
+      byteOrder(params->system->getGuestByteOrder()),
       deviceId(id), configSize(config_size), deviceFeatures(features),
       _deviceStatus(0), _queueSelect(0),
       transKick(NULL)
