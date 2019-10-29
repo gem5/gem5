@@ -153,6 +153,8 @@ class ArmFault : public FaultBase
     {
         NODEBUG = 0,
         BRKPOINT,
+        WPOINT_CM,
+        WPOINT_NOCM
     };
 
     struct FaultVals
@@ -498,9 +500,11 @@ class DataAbort : public AbortFault<DataAbort>
     bool ar;
 
     DataAbort(Addr _addr, TlbEntry::DomainType _domain, bool _write, uint8_t _source,
-              bool _stage2 = false, ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran) :
+              bool _stage2=false,
+              ArmFault::TranMethod _tranMethod=ArmFault::UnknownTran,
+              ArmFault::DebugType _debug_type=ArmFault::NODEBUG) :
         AbortFault<DataAbort>(_addr, _write, _domain, _source, _stage2,
-                              _tranMethod),
+                              _tranMethod, _debug_type),
         isv(false), sas (0), sse(0), srt(0), cm(0), sf(false), ar(false)
     {}
 
@@ -611,6 +615,23 @@ class HardwareBreakpoint : public ArmFaultVals<HardwareBreakpoint>
     ExceptionClass ec(ThreadContext *tc) const override;
 };
 
+class Watchpoint : public ArmFaultVals<Watchpoint>
+{
+  private:
+    Addr vAddr;
+    bool write;
+    bool cm;
+
+  public:
+    Watchpoint(ExtMachInst _mach_inst, Addr _vaddr, bool _write, bool _cm);
+    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr) override;
+    bool routeToHyp(ThreadContext *tc) const override;
+    uint32_t iss() const override;
+    ExceptionClass ec(ThreadContext *tc) const override;
+    void annotate(AnnotationIDs id, uint64_t val);
+};
+
 // A fault that flushes the pipe, excluding the faulting instructions
 class ArmSev : public ArmFaultVals<ArmSev>
 {
@@ -652,6 +673,7 @@ template<> ArmFault::FaultVals ArmFaultVals<SPAlignmentFault>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<SystemError>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<SoftwareBreakpoint>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<HardwareBreakpoint>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<Watchpoint>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals;
 
 /**

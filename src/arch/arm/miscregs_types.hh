@@ -697,6 +697,20 @@ namespace ArmISA
         Bitfield<0> e;
    EndBitUnion(DBGBCR)
 
+    BitUnion64(DBGWCR)
+        Bitfield<63, 29> res0_2;
+        Bitfield<28, 24> mask;
+        Bitfield<23, 21> res0_1;
+        Bitfield<20> wt;
+        Bitfield<19, 16> lbn;
+        Bitfield<15, 14> ssc;
+        Bitfield<13> hmc;
+        Bitfield<12, 5> bas;
+        Bitfield<4, 3> lsv;
+        Bitfield<2, 1> pac;
+        Bitfield<0> e;
+   EndBitUnion(DBGWCR)
+
    BitUnion32(DBGDS32)
         Bitfield<31> tfo;
         Bitfield<30> rxfull;

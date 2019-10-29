@@ -1199,6 +1199,15 @@ TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
         if (mode == Execute) {
             fault = sd->testBreakPoints(tc, req->getVaddr());
         }
+        else if (!req->isCacheMaintenance() ||
+                 (req->isCacheInvalidate() && !req->isCacheClean()))
+        {
+            bool md = mode == Write ? true: false;
+            fault = sd->testWatchPoints(tc, req->getVaddr(), md,
+                                        req->isAtomic(),
+                                        req->getSize(),
+                                        req->isCacheMaintenance());
+        }
     }
 
     return fault;

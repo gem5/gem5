@@ -189,6 +189,7 @@ bool ELIs64(ThreadContext *tc, ExceptionLevel el);
 bool ELIsInHost(ThreadContext *tc, ExceptionLevel el);
 
 ExceptionLevel debugTargetFrom(ThreadContext *tc, bool secure);
+
 bool isBigEndian64(const ThreadContext *tc);
 
 

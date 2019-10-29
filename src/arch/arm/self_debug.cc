@@ -94,6 +94,48 @@ SelfDebug::triggerException(ThreadContext * tc, Addr vaddr)
     }
 }
 
+Fault
+SelfDebug::testWatchPoints(ThreadContext *tc, Addr vaddr, bool write,
+                           bool atomic, unsigned size, bool cm)
+{
+    setAArch32(tc);
+    to32 = targetAArch32(tc);
+    if (!initialized)
+        init(tc);
+    if (!isDebugEnabled(tc) || !enableFlag)
+        return NoFault;
+
+    ExceptionLevel el = (ExceptionLevel) currEL(tc);
+    int idxtmp = -1;
+    for (auto &p: arWatchPoints){
+        idxtmp ++;
+        if (p.getEnable())
+        {
+            bool debug = p.test(tc, vaddr, el, write, atomic, size);
+            if (debug){
+                return triggerWatchpointException(tc, vaddr, write, cm);
+            }
+        }
+    }
+    return NoFault;
+}
+
+Fault
+SelfDebug::triggerWatchpointException(ThreadContext *tc, Addr vaddr,
+                                      bool write, bool cm)
+{
+    if (isTo32()) {
+        ArmFault::DebugType d = cm? ArmFault::WPOINT_CM:
+                                    ArmFault::WPOINT_NOCM;
+        return std::make_shared<DataAbort>(vaddr,
+                                           TlbEntry::DomainType::NoAccess,
+                                           write, ArmFault::DebugEvent, cm,
+                                           ArmFault::UnknownTran, d);
+    } else {
+        return std::make_shared<Watchpoint>(0, vaddr, write, cm);
+    }
+}
+
 bool
 SelfDebug::isDebugEnabledForEL64(ThreadContext *tc, ExceptionLevel el,
                          bool secure, bool mask)
@@ -384,5 +426,124 @@ BrkPoint::getVMIDfromReg(ThreadContext *tc)
     if (VMID16enabled)
         vmid_index = 47;
     return bits(tc->readMiscReg(valRegIndex), vmid_index, 32);
+}
+
+
+bool
+WatchPoint::isEnabled(ThreadContext* tc, ExceptionLevel el,
+                      bool hmc, uint8_t ssc, uint8_t pac)
+{
+
+    bool v;
+    bool aarch32 = conf->isAArch32();
+    bool noEL2 = !ArmSystem::haveEL(tc, EL2);
+    bool noEL3 = !ArmSystem::haveEL(tc, EL3);
+
+    if (aarch32){
+        // WatchPoint PL2 using aarch32 is disabled except for
+        // debug state. Check G2-5395 table G2-15.
+        if (el==EL2)
+            return false;
+        if (noEL3){
+            if (ssc == 0x01 || ssc == 0x02){
+                return false;
+            }
+            else if (noEL2 && ((!hmc && ssc==0x3) || (hmc && ssc==0x0)))
+            {
+                return false;
+            }
+        }
+        if (noEL2 && hmc && ssc == 0x03 && pac == 0)
+            return false;
+    }
+    switch (el) {
+        case EL0:
+            v = (pac == 0x3 || (pac == 0x2 && !hmc && ssc != 0x3));
+            break;
+        case EL1:
+            v = (pac == 0x1 || pac == 0x3);
+            break;
+        case EL2:
+            v = (hmc && (ssc != 0x2 || pac != 0x0));
+            break;
+        case EL3:
+            v = (hmc && (ssc == 0x2 ||
+                        (ssc == 0x1 && (pac == 0x1 || pac == 0x3))));
+            break;
+        default:
+            panic("Unexpected EL in WatchPoint::isEnabled.\n");
+    }
+    return v && SelfDebug::securityStateMatch(tc, ssc, hmc);
+}
+
+bool
+WatchPoint::test(ThreadContext *tc, Addr addr, ExceptionLevel el, bool& wrt,
+                 bool atomic, unsigned size)
+{
+
+    bool v = false;
+    const DBGWCR ctr = tc->readMiscReg(ctrlRegIndex);
+    if (isEnabled(tc, el, ctr.hmc, ctr.ssc, ctr.pac) &&
+            ((wrt && (ctr.lsv & 0x2)) || (!wrt && (ctr.lsv & 0x1)) || atomic))
+    {
+        v = compareAddress(tc, addr, ctr.bas, ctr.mask, size);
+        if (ctr.wt){
+            v = v && (conf->getBrkPoint(ctr.lbn))->testLinkedBk(tc, addr, el);
+        }
+    }
+    if (atomic && (ctr.lsv & 0x1)){
+        wrt = false;
+    }
+    return v;
+}
+
+bool
+WatchPoint::compareAddress(ThreadContext *tc, Addr in_addr, uint8_t bas,
+        uint8_t mask, unsigned size)
+{
+    Addr addr_tocmp = getAddrfromReg(tc);
+    int maxAddrSize = getMaxAddrSize();
+    int maxbits = isDoubleAligned(addr_tocmp) ? 4: 8;
+    int bottom = isDoubleAligned(addr_tocmp) ? 2: 3;
+    Addr addr = bits(in_addr, maxAddrSize, 0);
+
+    if (bas == 0x0)
+        return false;
+
+    if (mask == 0x0){
+
+        for (int i=0; i < maxbits; i++){
+            uint8_t bas_m = 0x1 << i;
+            uint8_t masked_bas = bas & bas_m;
+            if (masked_bas == bas_m){
+                uint8_t off = log2(masked_bas);
+                Addr cmpaddr = addr_tocmp | off;
+                for (int j=0; j<size; j++){
+                    if ((addr+j) == cmpaddr) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    else
+    {
+        bool v = false;
+        for (int j=0; j<size; j++)
+        {
+            Addr compaddr;
+            if (mask > bottom){
+                addr = bits((in_addr+j), maxAddrSize, mask);
+                compaddr = bits(addr_tocmp, maxAddrSize, mask);
+            }
+            else{
+                addr = bits((in_addr+j), maxAddrSize, bottom);
+                compaddr = bits(addr_tocmp, maxAddrSize, bottom);
+            }
+            v = v || (addr==compaddr) ;
+        }
+        return v;
+    }
 }
 

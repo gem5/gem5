@@ -147,11 +147,66 @@ class BrkPoint
 
 };
 
+class WatchPoint
+{
+  private:
+    MiscRegIndex ctrlRegIndex;
+    MiscRegIndex valRegIndex;
+    SelfDebug * conf;
+    bool enable;
+    int maxAddrSize;
+
+    inline int getMaxAddrSize()
+    {
+        return maxAddrSize;
+    }
+
+
+  public:
+    WatchPoint(MiscRegIndex _ctrlIndex, MiscRegIndex _valIndex,
+               SelfDebug* _conf, bool lva, bool aarch32):
+                ctrlRegIndex(_ctrlIndex),
+                valRegIndex(_valIndex), conf(_conf), enable(false)
+    {
+        maxAddrSize = lva ? 52: 48 ;
+        maxAddrSize = aarch32 ? 31 : maxAddrSize;
+    }
+
+    bool compareAddress(ThreadContext *tc, Addr in_addr,
+                        uint8_t bas, uint8_t mask, unsigned size);
+
+    inline Addr getAddrfromReg(ThreadContext *tc)
+    {
+       return bits(tc->readMiscReg(valRegIndex), maxAddrSize, 0);
+
+    }
+
+    inline bool isDoubleAligned(Addr addr)
+    {
+        return addr & 0x4;
+    }
+
+    inline void updateControl(DBGWCR val)
+    {
+        enable = val.e == 0x1;
+    }
+    bool getEnable()
+    {
+        return enable;
+    }
+
+    bool isEnabled(ThreadContext* tc, ExceptionLevel el, bool hmc,
+                   uint8_t ssc, uint8_t pac);
+    bool test(ThreadContext *tc, Addr addr, ExceptionLevel el, bool& wrt,
+              bool atomic, unsigned size);
+};
+
 
 class SelfDebug
 {
   private:
     std::vector<BrkPoint> arBrkPoints;
+    std::vector<WatchPoint> arWatchPoints;
 
     bool initialized;
     bool enableTdeTge; // MDCR_EL2.TDE || HCR_EL2.TGE
@@ -174,7 +229,13 @@ class SelfDebug
     ~SelfDebug(){}
 
     Fault testBreakPoints(ThreadContext *tc, Addr vaddr);
+    Fault testWatchPoints(ThreadContext *tc, Addr vaddr, bool write,
+                          bool atomic, unsigned size, bool cm);
+    Fault testVectorCatch(ThreadContext *tc, Addr addr, ArmFault* flt);
+
     Fault triggerException(ThreadContext * tc, Addr vaddr);
+    Fault triggerWatchpointException(ThreadContext *tc, Addr vaddr,
+                                     bool write, bool cm);
 
     inline BrkPoint* getBrkPoint(uint8_t index)
     {
@@ -255,6 +316,11 @@ class SelfDebug
         arBrkPoints[index].updateControl(val);
     }
 
+    inline void updateDBGWCR(int index, DBGWCR val)
+    {
+        arWatchPoints[index].updateControl(val);
+    }
+
     inline bool isAArch32()
     {
         return aarch32;
@@ -306,6 +372,15 @@ class SelfDebug
             arBrkPoints.push_back(bkp);
         }
 
+        for (int i=0; i<=dfr.wrps; i++){
+            WatchPoint  wtp = WatchPoint((MiscRegIndex)(MISCREG_DBGWCR0+i),
+                                         (MiscRegIndex)(MISCREG_DBGWVR0+i),
+                                         this, (bool)mm_fr2.varange, aarch32);
+            const DBGWCR ctr = tc->readMiscReg(MISCREG_DBGWCR0+i);
+
+            wtp.updateControl(ctr);
+            arWatchPoints.push_back(wtp);
+        }
 
         initialized = true;
 

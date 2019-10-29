@@ -285,6 +285,10 @@ template<> ArmFault::FaultVals ArmFaultVals<HardwareBreakpoint>::vals(
     "Hardware Breakpoint",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
     0, 0, 0, 0, true, false, false,  EC_HW_BREAKPOINT
 );
+template<> ArmFault::FaultVals ArmFaultVals<Watchpoint>::vals(
+    "Watchpoint",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
+    0, 0, 0, 0, true, false, false,  EC_WATCHPOINT
+);
 template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals(
     // Some dummy values
     "ArmSev Flush",          0x000, 0x000, 0x000, 0x000, 0x000, MODE_SVC,
@@ -1084,6 +1088,9 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             tc->setMiscReg(T::FarIndex, faultAddr);
             if (debug == ArmFault::BRKPOINT){
                 Rext.moe = 0x1;
+            } else if (debug > ArmFault::BRKPOINT) {
+                Rext.moe = 0xa;
+                fsr.cm = (debug == ArmFault::WPOINT_CM)? 1 : 0;
             }
 
             tc->setMiscReg(T::FsrIndex, fsr);
@@ -1354,10 +1361,10 @@ DataAbort::routeToHyp(ThreadContext *tc) const
     toHyp |= (stage2 ||
               ((currEL(tc) != EL2) &&
                (((source == AsynchronousExternalAbort) && hcr.amo) ||
-                ((source == DebugEvent) && hdcr.tde))) ||
-               ((currEL(tc) == EL0) && hcr.tge &&
-                ((source == AlignmentFault) ||
-                 (source == SynchronousExternalAbort)))) && !inSecureState(tc);
+                ((source == DebugEvent) && (hdcr.tde || hcr.tge)))) ||
+              ((currEL(tc) == EL0) && hcr.tge &&
+               ((source == AlignmentFault) ||
+                (source == SynchronousExternalAbort)))) && !inSecureState(tc);
     return toHyp;
 }
 
@@ -1668,6 +1675,70 @@ HardwareBreakpoint::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
 }
 
+Watchpoint::Watchpoint(ExtMachInst _mach_inst, Addr _vaddr,
+                       bool _write, bool _cm)
+    : ArmFaultVals<Watchpoint>(_mach_inst), vAddr(_vaddr),
+      write(_write), cm(_cm)
+{}
+
+uint32_t
+Watchpoint::iss() const
+{
+    uint32_t iss = 0x0022;
+// NV
+//    if (toEL == EL2)
+//        iss |= 0x02000;
+    if (cm)
+        iss |= 0x00100;
+    if (write)
+        iss |= 0x00040;
+    return iss;
+}
+
+void
+Watchpoint::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+{
+    ArmFaultVals<Watchpoint>::invoke(tc, inst);
+    // Set the FAR
+    tc->setMiscReg(getFaultAddrReg64(), vAddr);
+
+}
+
+bool
+Watchpoint::routeToHyp(ThreadContext *tc) const
+{
+    const HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
+
+    return fromEL == EL2 || (EL2Enabled(tc) && fromEL <= EL1 &&
+                             (hcr.tge || mdcr.tde));
+}
+
+void
+Watchpoint::annotate(AnnotationIDs id, uint64_t val)
+{
+    ArmFaultVals<Watchpoint>::annotate(id, val);
+    switch (id)
+    {
+      case OFA:
+        vAddr  = val;
+        break;
+      // Just ignore unknown ID's
+      default:
+        break;
+    }
+}
+
+ExceptionClass
+Watchpoint::ec(ThreadContext *tc) const
+{
+        // AArch64
+        if (toEL == fromEL)
+            return EC_WATCHPOINT_CURR_EL;
+        else
+            return EC_WATCHPOINT_LOWER_EL;
+}
+
 void
 ArmSev::invoke(ThreadContext *tc, const StaticInstPtr &inst) {
     DPRINTF(Faults, "Invoking ArmSev Fault\n");
@@ -1701,6 +1772,8 @@ template class ArmFaultVals<PCAlignmentFault>;
 template class ArmFaultVals<SPAlignmentFault>;
 template class ArmFaultVals<SystemError>;
 template class ArmFaultVals<SoftwareBreakpoint>;
+template class ArmFaultVals<HardwareBreakpoint>;
+template class ArmFaultVals<Watchpoint>;
 template class ArmFaultVals<ArmSev>;
 template class AbortFault<PrefetchAbort>;
 template class AbortFault<DataAbort>;
