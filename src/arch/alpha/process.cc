@@ -148,9 +148,9 @@ AlphaProcess::argsInit(int intSize, int pageSize)
     // write contents to stack
     uint64_t argc = argv.size();
     if (intSize == 8)
-        argc = htog((uint64_t)argc);
+        argc = htole((uint64_t)argc);
     else if (intSize == 4)
-        argc = htog((uint32_t)argc);
+        argc = htole((uint32_t)argc);
     else
         panic("Unknown int size");
 

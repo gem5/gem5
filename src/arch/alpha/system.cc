@@ -129,9 +129,9 @@ AlphaSystem::initState()
      */
     if (consoleSymtab->findAddress("m5_rpb", addr)) {
         uint64_t data;
-        data = htog(params()->system_type);
+        data = htole(params()->system_type);
         virtProxy.write(addr+0x50, data);
-        data = htog(params()->system_rev);
+        data = htole(params()->system_rev);
         virtProxy.write(addr+0x58, data);
     } else
         panic("could not find hwrpb\n");
@@ -212,7 +212,7 @@ AlphaSystem::setAlphaAccess(Addr access)
 {
     Addr addr = 0;
     if (consoleSymtab->findAddress("m5AlphaAccess", addr)) {
-        virtProxy.write(addr, htog(Phys2K0Seg(access)));
+        virtProxy.write(addr, htole(Phys2K0Seg(access)));
     } else {
         panic("could not find m5AlphaAccess\n");
     }

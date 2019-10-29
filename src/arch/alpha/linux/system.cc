@@ -110,7 +110,7 @@ LinuxAlphaSystem::initState()
      * 255 ASNs.
      */
     if (kernelSymtab->findAddress("dp264_mv", addr))
-        virtProxy.write(addr + 0x18, LittleEndianGuest::htog((uint32_t)127));
+        virtProxy.write(addr + 0x18, htole((uint32_t)127));
     else
         panic("could not find dp264_mv\n");
 

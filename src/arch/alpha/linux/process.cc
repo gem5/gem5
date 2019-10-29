@@ -141,7 +141,7 @@ osf_setsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
           // I don't think this exactly matches the HW FPCR
           fpcr.copyIn(tc->getVirtProxy());
           DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
-                   " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
+                   " setting FPCR to 0x%x\n", letoh(*(uint64_t*)fpcr));
           return 0;
       }
 
