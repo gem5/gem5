@@ -354,7 +354,7 @@ SparcProcess::argsInit(int pageSize)
 
     // figure out argc
     IntType argc = argv.size();
-    IntType guestArgc = SparcISA::htog(argc);
+    IntType guestArgc = htobe(argc);
 
     // Write out the sentry void *
     uint64_t sentry_NULL = 0;
@@ -446,7 +446,7 @@ void Sparc32Process::flushWindows(ThreadContext *tc)
             RegVal sp = tc->readIntReg(StackPointerReg);
             for (int index = 16; index < 32; index++) {
                 uint32_t regVal = tc->readIntReg(index);
-                regVal = htog(regVal);
+                regVal = htobe(regVal);
                 if (!tc->getVirtProxy().tryWriteBlob(
                         sp + (index - 16) * 4, (uint8_t *)&regVal, 4)) {
                     warn("Failed to save register to the stack when "
@@ -481,7 +481,7 @@ Sparc64Process::flushWindows(ThreadContext *tc)
             RegVal sp = tc->readIntReg(StackPointerReg);
             for (int index = 16; index < 32; index++) {
                 RegVal regVal = tc->readIntReg(index);
-                regVal = htog(regVal);
+                regVal = htobe(regVal);
                 if (!tc->getVirtProxy().tryWriteBlob(
                         sp + 2047 + (index - 16) * 8, (uint8_t *)&regVal, 8)) {
                     warn("Failed to save register to the stack when "

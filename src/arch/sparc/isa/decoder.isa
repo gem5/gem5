@@ -1434,14 +1434,14 @@ decode OP default Unknown::unknown()
                 }
             }
             0x3C: CasAlt::casa({{
-                               mem_data = htog(Rs2_uw);
+                               mem_data = htobe(Rs2_uw);
                                Mem_uw = Rd_uw;}},
                          {{
                                uint32_t tmp = mem_data;
                                Rd_uw = tmp;
                          }}, MEM_SWAP_COND);
             0x3D: Nop::prefetcha();
-            0x3E: CasAlt::casxa({{mem_data = gtoh(Rs2);
+            0x3E: CasAlt::casxa({{mem_data = betoh(Rs2);
                                 Mem_udw = Rd_udw; }},
                          {{ Rd_udw = mem_data; }}, MEM_SWAP_COND);
         }

@@ -60,7 +60,7 @@ unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 SyscallReturn
 getresuidFunc(SyscallDesc *desc, int num, ThreadContext *tc)
 {
-    const uint64_t id = htog(100);
+    const uint64_t id = htobe(100);
     int index = 0;
     auto p = tc->getProcessPtr();
     Addr ruid = p->getSyscallArg(tc, index);
