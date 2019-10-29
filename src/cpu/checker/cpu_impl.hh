@@ -285,7 +285,6 @@ Checker<Impl>::verify(const DynInstPtr &completed_inst)
 
                     pkt->dataStatic(&machInst);
                     icachePort->sendFunctional(pkt);
-                    machInst = gtoh(machInst);
 
                     delete pkt;
                 }

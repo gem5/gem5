@@ -66,7 +66,7 @@ class Decoder
     void
     moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
     {
-        ext_inst = inst;
+        ext_inst = letoh(inst);
         instDone = true;
         if (FullSystem)
             ext_inst |= (static_cast<ExtMachInst>(pc.pc() & 0x1) << 32);

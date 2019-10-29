@@ -1285,8 +1285,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 break;
             }
 
-            MachInst inst = TheISA::gtoh(cacheInsts[blkOffset]);
-            decoder[tid]->moreBytes(thisPC, fetchAddr, inst);
+            decoder[tid]->moreBytes(thisPC, fetchAddr, cacheInsts[blkOffset]);
 
             if (decoder[tid]->needMoreBytes()) {
                 blkOffset++;

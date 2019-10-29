@@ -503,8 +503,6 @@ BaseSimpleCPU::preExecute()
     thread->comInstEventQueue.serviceEvents(t_info.numInst);
 
     // decode the instruction
-    inst = gtoh(inst);
-
     TheISA::PCState pcState = thread->pcState();
 
     if (isRomMicroPC(pcState.microPC())) {

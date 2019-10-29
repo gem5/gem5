@@ -310,7 +310,7 @@ class Decoder
         DPRINTF(Decoder, "Getting more bytes.\n");
         basePC = fetchPC;
         offset = (fetchPC >= pc.instAddr()) ? 0 : pc.instAddr() - fetchPC;
-        fetchChunk = data;
+        fetchChunk = letoh(data);
         outOfBytes = false;
         process();
     }

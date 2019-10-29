@@ -65,7 +65,7 @@ class Decoder
     void
     moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
     {
-        emi = inst;
+        emi = betoh(inst);
         // The I bit, bit 13, is used to figure out where the ASI
         // should come from. Use that in the ExtMachInst. This is
         // slightly redundant, but it removes the need to put a condition

@@ -52,6 +52,7 @@ void Decoder::reset()
 void
 Decoder::moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
 {
+    inst = letoh(inst);
     DPRINTF(Decode, "Requesting bytes 0x%08x from address %#x\n", inst,
             fetchPC);
 

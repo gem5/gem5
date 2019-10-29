@@ -154,7 +154,7 @@ Decoder::consumeBytes(int numBytes)
 void
 Decoder::moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
 {
-    data = inst;
+    data = letoh(inst);
     offset = (fetchPC >= pc.instAddr()) ? 0 : pc.instAddr() - fetchPC;
     emi.thumb = pc.thumb();
     emi.aarch64 = pc.aarch64();
