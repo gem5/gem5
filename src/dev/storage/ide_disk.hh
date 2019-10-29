@@ -241,6 +241,8 @@ class IdeDisk : public SimObject
     DmaState_t dmaState;
     /** Dma transaction is a read */
     bool dmaRead;
+    /** Size of OS pages. */
+    Addr pageBytes;
     /** PRD table base address */
     uint32_t curPrdAddr;
     /** PRD entry */
@@ -282,9 +284,12 @@ class IdeDisk : public SimObject
      * Set the controller for this device
      * @param c The IDE controller
      */
-    void setController(IdeController *c) {
-        if (ctrl) panic("Cannot change the controller once set!\n");
+    void
+    setController(IdeController *c, Addr page_bytes)
+    {
+        panic_if(ctrl, "Cannot change the controller once set!\n");
         ctrl = c;
+        pageBytes = page_bytes;
     }
 
     // Device register read/write

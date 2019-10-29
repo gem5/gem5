@@ -124,7 +124,7 @@ IdeController::IdeController(Params *p)
             panic("IDE controllers support a maximum "
                   "of 4 devices attached!\n");
         }
-        params()->disks[i]->setController(this);
+        params()->disks[i]->setController(this, sys->getPageBytes());
     }
 
     primary.select(false);
