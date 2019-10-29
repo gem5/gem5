@@ -38,17 +38,19 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-decode ILLEGALEXEC default IllegalExec::illegalExec() {
-    0: decode DECODERFAULT default DecoderFault::decoderFault() {
-        0: decode THUMB default Unknown::unknown() {
-            0: decode AARCH64 {
-                0:
-                ##include "arm.isa"
+decode DEBUGSTEP default DebugStep::debugStep() {
+    0: decode ILLEGALEXEC default IllegalExec::illegalExec() {
+        0: decode DECODERFAULT default DecoderFault::decoderFault() {
+            0: decode THUMB default Unknown::unknown() {
+                0: decode AARCH64 {
+                    0:
+                    ##include "arm.isa"
+                    1:
+                    ##include "aarch64.isa"
+                }
                 1:
-                ##include "aarch64.isa"
+                ##include "thumb.isa"
             }
-            1:
-            ##include "thumb.isa"
         }
     }
 }

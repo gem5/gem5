@@ -53,7 +53,8 @@ namespace ArmISA
 GenericISA::BasicDecodeCache Decoder::defaultCache;
 
 Decoder::Decoder(ISA* isa)
-    : data(0), fpscrLen(0), fpscrStride(0), decoderFlavor(isa->decoderFlavor())
+    : data(0), fpscrLen(0), fpscrStride(0),
+      decoderFlavor(isa->decoderFlavor())
 {
     reset();
 
@@ -181,7 +182,7 @@ Decoder::decode(ArmISA::PCState &pc)
         pc.nextItstate(itBits);
     this_emi.itstate = pc.itstate();
     this_emi.illegalExecution = pc.illegalExec() ? 1 : 0;
-
+    this_emi.debugStep = pc.debugStep() ? 1 : 0;
     pc.size(inst_size);
 
     emi = 0;

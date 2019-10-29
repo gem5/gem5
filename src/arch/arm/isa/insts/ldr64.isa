@@ -236,7 +236,12 @@ let {{
                 accCode = "WDest = cSwap(Mem%s, isBigEndian64(xc->tcBase()));"
 
             accCode = accCode % buildMemSuffix(self.sign, self.size)
-
+            if self.flavor in ('exclusive', 'acex'):
+                accCode += '''
+             auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+             SelfDebug * sd = isa->getSelfDebug();
+             sd->getSstep()->setLdx();
+             '''
             self.codeBlobs["memacc_code"] = accCode
             if accEpilogCode:
                 self.codeBlobs["memacc_epilog_code"] = accEpilogCode
@@ -332,6 +337,12 @@ let {{
                             XDest2 = cSwap(Mem_tud[1],
                                            isBigEndian64(xc->tcBase()));
                         '''
+            if self.flavor in ('exp', 'acexp'):
+                accCode += '''
+             auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+             SelfDebug * sd = isa->getSelfDebug();
+             sd->getSstep()->setLdx();
+             '''
             self.codeBlobs["memacc_code"] = accCode
             if accEpilogCode:
                 self.codeBlobs["memacc_epilog_code"] = accEpilogCode

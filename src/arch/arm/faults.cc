@@ -289,6 +289,10 @@ template<> ArmFault::FaultVals ArmFaultVals<Watchpoint>::vals(
     "Watchpoint",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
     0, 0, 0, 0, true, false, false,  EC_WATCHPOINT
 );
+template<> ArmFault::FaultVals ArmFaultVals<SoftwareStepFault>::vals(
+    "SoftwareStep",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
+    0, 0, 0, 0, true, false, false,  EC_SOFTWARE_STEP
+);
 template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals(
     // Some dummy values
     "ArmSev Flush",          0x000, 0x000, 0x000, 0x000, 0x000, MODE_SVC,
@@ -649,6 +653,7 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     spsr.nz = tc->readCCReg(CCREG_NZ);
     spsr.c = tc->readCCReg(CCREG_C);
     spsr.v = tc->readCCReg(CCREG_V);
+    spsr.ss = isResetSPSR() ? 0: cpsr.ss;
     if (from64) {
         // Force some bitfields to 0
         spsr.q = 0;
@@ -662,8 +667,6 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         ITSTATE it = tc->pcState().itstate();
         spsr.it2 = it.top6;
         spsr.it1 = it.bottom2;
-        // Force some bitfields to 0
-        spsr.ss = 0;
     }
     tc->setMiscReg(spsr_idx, spsr);
 
@@ -705,6 +708,7 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     pc.aarch64(!cpsr.width);
     pc.nextAArch64(!cpsr.width);
     pc.illegalExec(false);
+    pc.stepped(false);
     tc->pcState(pc);
 
     // Save exception syndrome
@@ -911,7 +915,9 @@ UndefinedInstruction::ec(ThreadContext *tc) const
 
 HypervisorCall::HypervisorCall(ExtMachInst _machInst, uint32_t _imm) :
         ArmFaultVals<HypervisorCall>(_machInst, _imm)
-{}
+{
+    bStep = true;
+}
 
 ExceptionClass
 HypervisorCall::ec(ThreadContext *tc) const
@@ -1739,6 +1745,52 @@ Watchpoint::ec(ThreadContext *tc) const
             return EC_WATCHPOINT_LOWER_EL;
 }
 
+SoftwareStepFault::SoftwareStepFault(ExtMachInst _mach_inst, bool is_ldx,
+                                     bool _stepped)
+    : ArmFaultVals<SoftwareStepFault>(_mach_inst), isldx(is_ldx),
+                                      stepped(_stepped)
+{
+    bStep = true;
+}
+
+bool
+SoftwareStepFault::routeToHyp(ThreadContext *tc) const
+{
+    const bool have_el2 = ArmSystem::haveVirtualization(tc);
+
+    const HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
+
+    return have_el2 && !inSecureState(tc) && fromEL <= EL1 &&
+        (hcr.tge || mdcr.tde);
+}
+
+ExceptionClass
+SoftwareStepFault::ec(ThreadContext *tc) const
+{
+    // AArch64
+    if (toEL == fromEL)
+        return EC_SOFTWARE_STEP_CURR_EL;
+    else
+        return EC_SOFTWARE_STEP_LOWER_EL;
+}
+
+uint32_t
+SoftwareStepFault::iss() const
+{
+    uint32_t iss= 0x0022;
+    if (stepped) {
+        iss |= 0x1000000;
+    }
+
+    if (isldx) {
+        iss |= 0x40;
+    }
+
+    return iss;
+
+}
+
 void
 ArmSev::invoke(ThreadContext *tc, const StaticInstPtr &inst) {
     DPRINTF(Faults, "Invoking ArmSev Fault\n");
@@ -1774,6 +1826,7 @@ template class ArmFaultVals<SystemError>;
 template class ArmFaultVals<SoftwareBreakpoint>;
 template class ArmFaultVals<HardwareBreakpoint>;
 template class ArmFaultVals<Watchpoint>;
+template class ArmFaultVals<SoftwareStepFault>;
 template class ArmFaultVals<ArmSev>;
 template class AbortFault<PrefetchAbort>;
 template class AbortFault<DataAbort>;

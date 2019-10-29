@@ -836,6 +836,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
         pc.nextThumb(cpsr.t);
         pc.nextJazelle(cpsr.j);
         pc.illegalExec(cpsr.il == 1);
+        selfDebug->setDebugMask(cpsr.d == 1);
 
         tc->getDecoderPtr()->setSveLen((getCurSveVecLenInBits() >> 7) - 1);
 

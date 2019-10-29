@@ -48,10 +48,8 @@
 
 class ThreadContext;
 
-
 namespace ArmISA
 {
-
 
 class SelfDebug;
 
@@ -201,12 +199,70 @@ class WatchPoint
               bool atomic, unsigned size);
 };
 
+class SoftwareStep
+{
+
+  private:
+    static const uint8_t INACTIVE_STATE = 0;
+    static const uint8_t ACTIVE_PENDING_STATE = 1;
+    static const uint8_t ACTIVE_NOT_PENDING_STATE = 2;
+
+
+    bool bSS;
+    int stateSS;
+    SelfDebug * conf;
+    bool steppedLdx;
+    bool prevSteppedLdx;
+    bool cpsrD;
+
+    bool ctrStepped;
+    bool ctrActivate;
+
+
+  public:
+    SoftwareStep(SelfDebug* s): bSS(false), stateSS(INACTIVE_STATE),
+                                conf(s), steppedLdx(false) { }
+
+    ~SoftwareStep() { }
+
+    bool debugExceptionReturnSS(ThreadContext *tc, CPSR spsr,
+                                ExceptionLevel dest, bool aarch32);
+    bool advanceSS(ThreadContext * tc);
+
+    inline void setCPSRD(bool val)
+    {
+        cpsrD = val;
+    }
+
+    inline void setEnableSS(bool val)
+    {
+        bSS = val;
+    }
+
+    void setLdx()
+    {
+        prevSteppedLdx = steppedLdx;
+        steppedLdx = true;
+    }
+
+    void clearLdx()
+    {
+        prevSteppedLdx = steppedLdx;
+        steppedLdx = false;
+    }
+
+    bool getLdx()
+    {
+        return prevSteppedLdx;
+    }
+};
 
 class SelfDebug
 {
   private:
     std::vector<BrkPoint> arBrkPoints;
     std::vector<WatchPoint> arWatchPoints;
+    SoftwareStep * softStep;
 
     bool initialized;
     bool enableTdeTge; // MDCR_EL2.TDE || HCR_EL2.TGE
@@ -224,9 +280,14 @@ class SelfDebug
   public:
     SelfDebug(): initialized(false), enableTdeTge(false),
                  enableFlag(false), bSDD(false), bKDE(false), oslk(false)
-    {}
+    {
+        softStep = new SoftwareStep(this);
+    }
 
-    ~SelfDebug(){}
+    ~SelfDebug()
+    {
+        delete softStep;
+    }
 
     Fault testBreakPoints(ThreadContext *tc, Addr vaddr);
     Fault testWatchPoints(ThreadContext *tc, Addr vaddr, bool write,
@@ -294,6 +355,7 @@ class SelfDebug
     {
         enableFlag = bits(val, 15);
         bKDE = bits(val, 13);
+        softStep->setEnableSS((bool)bits(val, 0));
     }
 
     inline void setMDBGen(RegVal val)
@@ -321,6 +383,10 @@ class SelfDebug
         arWatchPoints[index].updateControl(val);
     }
 
+    inline void setDebugMask(bool mask)
+    {
+        softStep->setCPSRD(mask);
+    }
     inline bool isAArch32()
     {
         return aarch32;
@@ -339,6 +405,11 @@ class SelfDebug
             aarch32 = ELIs32(tc, fromEL);
         return;
     }
+    SoftwareStep * getSstep()
+    {
+        return softStep;
+    }
+
 
     bool targetAArch32(ThreadContext * tc)
     {
@@ -358,7 +429,7 @@ class SelfDebug
         const AA64MMFR1 mm_fr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
         const uint8_t nCtxtAwareBp = dfr.ctx_cmps;
         const bool VMIDBits = mm_fr1.vmidbits;
-        for (int i=0; i<=dfr.brps; i++){
+        for (int i=0; i<=dfr.brps; i++) {
             const bool isctxaw = i>=(dfr.brps-nCtxtAwareBp);
 
             BrkPoint  bkp = BrkPoint((MiscRegIndex)(MISCREG_DBGBCR0_EL1+i),
@@ -372,7 +443,7 @@ class SelfDebug
             arBrkPoints.push_back(bkp);
         }
 
-        for (int i=0; i<=dfr.wrps; i++){
+        for (int i=0; i<=dfr.wrps; i++) {
             WatchPoint  wtp = WatchPoint((MiscRegIndex)(MISCREG_DBGWCR0+i),
                                          (MiscRegIndex)(MISCREG_DBGWVR0+i),
                                          this, (bool)mm_fr2.varange, aarch32);

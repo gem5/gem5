@@ -69,6 +69,7 @@ namespace ArmISA
         // Decoder state
         Bitfield<63, 62> decoderFault; // See DecoderFault
         Bitfield<61> illegalExecution;
+        Bitfield<60> debugStep;
 
         // SVE vector length, encoded in the same format as the ZCR_EL<x>.LEN
         // bitfields
@@ -228,9 +229,15 @@ namespace ArmISA
         uint8_t _nextItstate;
         uint8_t _size;
         bool _illegalExec;
+
+        // Software Step flags
+        bool _debugStep;
+        bool _stepped;
+
       public:
         PCState() : flags(0), nextFlags(0), _itstate(0), _nextItstate(0),
-                    _size(0), _illegalExec(false)
+                    _size(0), _illegalExec(false), _debugStep(false),
+                    _stepped(false)
         {}
 
         void
@@ -241,7 +248,8 @@ namespace ArmISA
         }
 
         PCState(Addr val) : flags(0), nextFlags(0), _itstate(0),
-                            _nextItstate(0), _size(0), _illegalExec(false)
+                            _nextItstate(0), _size(0), _illegalExec(false),
+                            _debugStep(false), _stepped(false)
         { set(val); }
 
         bool
@@ -254,6 +262,30 @@ namespace ArmISA
         illegalExec(bool val)
         {
             _illegalExec = val;
+        }
+
+        bool
+        debugStep() const
+        {
+            return _debugStep;
+        }
+
+        void
+        debugStep(bool val)
+        {
+            _debugStep = val;
+        }
+
+        bool
+        stepped() const
+        {
+            return _stepped;
+        }
+
+        void
+        stepped(bool val)
+        {
+            _stepped = val;
         }
 
         bool
@@ -491,7 +523,9 @@ namespace ArmISA
                 flags == opc.flags && nextFlags == opc.nextFlags &&
                 _itstate == opc._itstate &&
                 _nextItstate == opc._nextItstate &&
-                _illegalExec == opc._illegalExec;
+                _illegalExec == opc._illegalExec &&
+                _debugStep == opc._debugStep &&
+                _stepped == opc._stepped;
         }
 
         bool
@@ -510,6 +544,8 @@ namespace ArmISA
             SERIALIZE_SCALAR(_itstate);
             SERIALIZE_SCALAR(_nextItstate);
             SERIALIZE_SCALAR(_illegalExec);
+            SERIALIZE_SCALAR(_debugStep);
+            SERIALIZE_SCALAR(_stepped);
         }
 
         void
@@ -522,6 +558,8 @@ namespace ArmISA
             UNSERIALIZE_SCALAR(_itstate);
             UNSERIALIZE_SCALAR(_nextItstate);
             UNSERIALIZE_SCALAR(_illegalExec);
+            UNSERIALIZE_SCALAR(_debugStep);
+            UNSERIALIZE_SCALAR(_stepped);
         }
     };
 
@@ -648,6 +686,9 @@ namespace ArmISA
         EC_HW_BREAKPOINT           = 0x30,
         EC_HW_BREAKPOINT_LOWER_EL  = 0x30,
         EC_HW_BREAKPOINT_CURR_EL   = 0x31,
+        EC_SOFTWARE_STEP           = 0x32,
+        EC_SOFTWARE_STEP_LOWER_EL  = 0x32,
+        EC_SOFTWARE_STEP_CURR_EL   = 0x33,
         EC_WATCHPOINT              = 0x34,
         EC_WATCHPOINT_LOWER_EL     = 0x34,
         EC_WATCHPOINT_CURR_EL      = 0x35,

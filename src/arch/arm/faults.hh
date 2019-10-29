@@ -64,6 +64,7 @@ class ArmFault : public FaultBase
     uint32_t issRaw;
 
     // Helper variables for ARMv8 exception handling
+    bool bStep; // True if the Arm Faul exception is a software Step exception
     bool from64;  // True if the exception is generated from the AArch64 state
     bool to64;  // True if the exception is taken in AArch64 state
     ExceptionLevel fromEL;  // Source exception level
@@ -207,8 +208,8 @@ class ArmFault : public FaultBase
     };
 
     ArmFault(ExtMachInst _machInst = 0, uint32_t _iss = 0) :
-        machInst(_machInst), issRaw(_iss), from64(false), to64(false),
-        fromEL(EL0), toEL(EL0), fromMode(MODE_UNDEFINED),
+        machInst(_machInst), issRaw(_iss), bStep(false), from64(false),
+        to64(false), fromEL(EL0), toEL(EL0), fromMode(MODE_UNDEFINED),
         faultUpdated(false), hypRouted(false), span(false) {}
 
     // Returns the actual syndrome register to use based on the target
@@ -223,6 +224,7 @@ class ArmFault : public FaultBase
     void invoke64(ThreadContext *tc, const StaticInstPtr &inst =
                   StaticInst::nullStaticInstPtr);
     void update(ThreadContext *tc);
+    bool isResetSPSR(){ return bStep; }
 
     ArmStaticInst *instrAnnotate(const StaticInstPtr &inst);
     virtual void annotate(AnnotationIDs id, uint64_t val) {}
@@ -332,7 +334,9 @@ class SupervisorCall : public ArmFaultVals<SupervisorCall>
                    ExceptionClass _overrideEc = EC_INVALID) :
         ArmFaultVals<SupervisorCall>(_machInst, _iss),
         overrideEc(_overrideEc)
-    {}
+    {
+        bStep = true;
+    }
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr) override;
@@ -346,7 +350,9 @@ class SecureMonitorCall : public ArmFaultVals<SecureMonitorCall>
   public:
     SecureMonitorCall(ExtMachInst _machInst) :
         ArmFaultVals<SecureMonitorCall>(_machInst)
-    {}
+    {
+        bStep = true;
+    }
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr) override;
@@ -632,6 +638,19 @@ class Watchpoint : public ArmFaultVals<Watchpoint>
     void annotate(AnnotationIDs id, uint64_t val);
 };
 
+class SoftwareStepFault : public ArmFaultVals<SoftwareStepFault>
+{
+  private:
+    bool isldx;
+    bool stepped;
+
+  public:
+    SoftwareStepFault(ExtMachInst _mach_inst, bool is_ldx, bool stepped);
+    bool routeToHyp(ThreadContext *tc) const override;
+    uint32_t iss() const override;
+    ExceptionClass ec(ThreadContext *tc) const override;
+};
+
 // A fault that flushes the pipe, excluding the faulting instructions
 class ArmSev : public ArmFaultVals<ArmSev>
 {
@@ -674,6 +693,7 @@ template<> ArmFault::FaultVals ArmFaultVals<SystemError>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<SoftwareBreakpoint>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<HardwareBreakpoint>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<Watchpoint>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<SoftwareStepFault>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals;
 
 /**

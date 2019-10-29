@@ -43,6 +43,8 @@
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/isa.hh"
+#include "arch/arm/self_debug.hh"
+#include "arch/arm/utility.hh"
 #include "base/condcodes.hh"
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
@@ -1106,10 +1108,7 @@ CPSR
 ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
 {
     CPSR new_cpsr = 0;
-
-    // gem5 doesn't implement single-stepping, so force the SS bit to
-    // 0.
-    new_cpsr.ss = 0;
+    ExceptionLevel dest;
 
     if (illegalExceptionReturn(tc, cpsr, spsr)) {
         // If the SPSR specifies an illegal exception return,
@@ -1123,6 +1122,7 @@ ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
             new_cpsr.el = cpsr.el;
             new_cpsr.sp = cpsr.sp;
         }
+        dest = currEL(tc);
     } else {
         new_cpsr.il = spsr.il;
         if (spsr.width && unknownMode32((OperatingMode)(uint8_t)spsr.mode)) {
@@ -1133,6 +1133,7 @@ ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
             new_cpsr.el = spsr.el;
             new_cpsr.sp = spsr.sp;
         }
+        dest = (ExceptionLevel)(uint8_t) spsr.el;
     }
 
     new_cpsr.nz = spsr.nz;
@@ -1153,6 +1154,10 @@ ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
         // aarch64
         new_cpsr.daif = spsr.daif;
     }
+
+    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+    SoftwareStep * ss = (isa->getSelfDebug())->getSstep();
+    new_cpsr.ss = ss->debugExceptionReturnSS(tc, spsr, dest, new_cpsr.width);
 
     return new_cpsr;
 }

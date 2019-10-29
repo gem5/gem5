@@ -547,3 +547,74 @@ WatchPoint::compareAddress(ThreadContext *tc, Addr in_addr, uint8_t bas,
     }
 }
 
+bool
+SoftwareStep::debugExceptionReturnSS(ThreadContext *tc, CPSR spsr,
+                                     ExceptionLevel dest, bool aarch32)
+{
+    bool SS_bit = false;
+    bool enabled_src = false;
+    if (bSS) {
+        enabled_src = conf->isDebugEnabled(tc);
+
+        bool enabled_dst = false;
+        bool secure = isSecureBelowEL3(tc) || dest == EL3;
+        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+        if (cpsr.width) {
+            enabled_dst = conf->isDebugEnabledForEL32(tc, dest, secure,
+                                                      spsr.d == 1);
+        } else {
+            enabled_dst = conf->isDebugEnabledForEL64(tc, dest, secure,
+                                                      spsr.d == 1);
+        }
+        ExceptionLevel ELd = debugTargetFrom(tc, secure);
+
+        if (!ELIs32(tc, ELd) && !enabled_src && enabled_dst) {
+            SS_bit = spsr.ss;
+            if (SS_bit == 0x0) {
+                stateSS = ACTIVE_PENDING_STATE;
+            } else {
+                stateSS = ACTIVE_NOT_PENDING_STATE;
+            }
+        }
+    }
+    return SS_bit;
+}
+
+bool
+SoftwareStep::advanceSS(ThreadContext * tc)
+{
+
+    PCState pc = tc->pcState();
+    bool res = false;
+    switch (stateSS){
+      case INACTIVE_STATE:
+        pc.debugStep(false);
+        break;
+
+      case ACTIVE_NOT_PENDING_STATE:
+        pc.debugStep(false);
+        if (cpsrD == 1 || !bSS) {
+            stateSS = INACTIVE_STATE;
+        } else {
+            pc.stepped(true);
+            stateSS = ACTIVE_PENDING_STATE;
+            tc->pcState(pc);
+        }
+        break;
+
+      case ACTIVE_PENDING_STATE:
+        if (!cpsrD && bSS) {
+            pc.debugStep(true);
+            res = true;
+            tc->pcState(pc);
+        }
+        stateSS = INACTIVE_STATE;
+        clearLdx();
+        break;
+
+      default:
+            break;
+    }
+    return res;
+}
+

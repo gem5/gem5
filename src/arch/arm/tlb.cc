@@ -1197,11 +1197,13 @@ TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
         auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
         SelfDebug * sd = isa->getSelfDebug();
         if (mode == Execute) {
-            fault = sd->testBreakPoints(tc, req->getVaddr());
+            const bool d_step = sd->getSstep()->advanceSS(tc);
+            if (!d_step) {
+                fault = sd->testBreakPoints(tc, req->getVaddr());
+            }
         }
         else if (!req->isCacheMaintenance() ||
-                 (req->isCacheInvalidate() && !req->isCacheClean()))
-        {
+                 (req->isCacheInvalidate() && !req->isCacheClean())) {
             bool md = mode == Write ? true: false;
             fault = sd->testWatchPoints(tc, req->getVaddr(), md,
                                         req->isAtomic(),
@@ -1291,7 +1293,9 @@ TLB::translateComplete(const RequestPtr &req, ThreadContext *tc,
     // stage 2 translation we prevent marking the translation as delayed twice,
     // one when the translation starts and again when the stage 1 translation
     // completes.
-    if (translation && (callFromS2 || !stage2Req || req->hasPaddr() || fault != NoFault)) {
+
+    if (translation && (callFromS2 || !stage2Req || req->hasPaddr() ||
+        fault != NoFault)) {
         if (!delay)
             translation->finish(fault, req, tc, mode);
         else

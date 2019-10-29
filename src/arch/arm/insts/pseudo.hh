@@ -131,4 +131,12 @@ class IllegalExecInst : public ArmStaticInst
     Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
 };
 
+class DebugStep : public ArmStaticInst
+{
+  public:
+    DebugStep(ExtMachInst _machInst);
+
+    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+};
+
 #endif

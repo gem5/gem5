@@ -209,6 +209,13 @@ let {{
                 accCode = "IWDest = cSwap(Mem%s, ((CPSR)Cpsr).e);"
             accCode = accCode % buildMemSuffix(self.sign, self.size)
 
+            if self.flavor in ('exclusive', 'acex'):
+                accCode += '''
+           auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+           SelfDebug * sd = isa->getSelfDebug();
+           sd->getSstep()->setLdx();
+              '''
+
             self.codeBlobs["memacc_code"] = accCode
 
             # Push it out to the output files
@@ -284,6 +291,12 @@ let {{
                 FpDest_uw = (uint32_t)swappedMem;
                 FpDest2_uw = (uint32_t)(swappedMem >> 32);
                 '''
+            if self.flavor in ('exclusive', 'acex'):
+                accCode += '''
+             auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+             SelfDebug * sd = isa->getSelfDebug();
+             sd->getSstep()->setLdx();
+             '''
 
             self.codeBlobs["memacc_code"] = accCode
 
