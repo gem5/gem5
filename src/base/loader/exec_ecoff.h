@@ -37,6 +37,8 @@
 #ifndef	_SYS_EXEC_ECOFF_H_
 #define	_SYS_EXEC_ECOFF_H_
 
+#include "arch/alpha/ecoff_machdep.h"
+
 struct ecoff_filehdr {
         coff_ushort f_magic;	/* magic number */
         coff_ushort f_nscns;	/* # of sections */
