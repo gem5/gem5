@@ -46,6 +46,8 @@
 class X86Linux : public Linux
 {
   public:
+    static const ByteOrder byteOrder = LittleEndianByteOrder;
+
     static void
     archClone(uint64_t flags,
                           Process *pp, Process *cp,

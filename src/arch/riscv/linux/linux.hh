@@ -34,7 +34,13 @@
 #include "arch/riscv/utility.hh"
 #include "kern/linux/linux.hh"
 
-class RiscvLinux64 : public Linux
+class RiscvLinux : public Linux
+{
+  public:
+    static const ByteOrder byteOrder = LittleEndianByteOrder;
+};
+
+class RiscvLinux64 : public RiscvLinux
 {
   public:
     static const int TGT_SIGHUP         =  1;
@@ -203,7 +209,7 @@ class RiscvLinux64 : public Linux
     }
 };
 
-class RiscvLinux32 : public Linux
+class RiscvLinux32 : public RiscvLinux
 {
   public:
     static const int TGT_SIGHUP         =  1;

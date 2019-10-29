@@ -38,6 +38,8 @@ class SparcLinux : public Linux
 {
   public:
 
+    static const ByteOrder byteOrder = BigEndianByteOrder;
+
     typedef struct {
         uint32_t st_dev;
         char __pad1[4];

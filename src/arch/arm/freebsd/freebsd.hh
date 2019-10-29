@@ -35,10 +35,15 @@
 
 #include "kern/freebsd/freebsd.hh"
 
-class ArmFreebsd32 : public FreeBSD
+class ArmFreebsd : public FreeBSD
 {
   public:
+    static const ByteOrder byteOrder = LittleEndianByteOrder;
+};
 
+class ArmFreebsd32 : public ArmFreebsd
+{
+  public:
     /// This table maps the target open() flags to the corresponding
     /// host open() flags.
     static SyscallFlagTransTable openFlagTable[];
@@ -192,7 +197,7 @@ class ArmFreebsd32 : public FreeBSD
     };
 };
 
-class ArmFreebsd64 : public FreeBSD
+class ArmFreebsd64 : public ArmFreebsd
 {
   public:
 
