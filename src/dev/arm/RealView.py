@@ -657,10 +657,10 @@ class RealView(Platform):
     def attachIO(self, *args, **kwargs):
         self._attach_io(self._off_chip_devices(), *args, **kwargs)
 
-    def setupBootLoader(self, cur_sys, loc):
-        cur_sys.boot_loader = loc('boot.arm')
-        cur_sys.atags_addr = 0x100
-        cur_sys.load_offset = 0
+    def setupBootLoader(self, cur_sys, boot_loader, atags_addr, load_offset):
+        cur_sys.boot_loader = boot_loader
+        cur_sys.atags_addr = atags_addr
+        cur_sys.load_offset = load_offset
 
     def generateDeviceTree(self, state):
         node = FdtNode("/") # Things in this module need to end up in the root
@@ -808,11 +808,11 @@ class VExpress_EMM(RealView):
         self.gicv2m = Gicv2m()
         self.gicv2m.frames = [Gicv2mFrame(spi_base=256, spi_len=64, addr=0x2C1C0000)]
 
-    def setupBootLoader(self, cur_sys, loc):
-        if not cur_sys.boot_loader:
-            cur_sys.boot_loader = loc('boot_emm.arm')
-        cur_sys.atags_addr = 0x8000000
-        cur_sys.load_offset = 0x80000000
+    def setupBootLoader(self, cur_sys, loc, boot_loader=None):
+        if boot_loader is None:
+            boot_loader = loc('boot_emm.arm')
+        super(VExpress_EMM, self).setupBootLoader(
+                cur_sys, boot_loader, 0x8000000, 0x80000000)
 
 class VExpress_EMM64(VExpress_EMM):
     # Three memory regions are specified totalling 512GB
@@ -823,11 +823,11 @@ class VExpress_EMM64(VExpress_EMM):
         conf_base=0x30000000, conf_size='256MB', conf_device_bits=12,
         pci_pio_base=0x2f000000)
 
-    def setupBootLoader(self, cur_sys, loc):
-        if not cur_sys.boot_loader:
-            cur_sys.boot_loader = loc('boot_emm.arm64')
-        cur_sys.atags_addr = 0x8000000
-        cur_sys.load_offset = 0x80000000
+    def setupBootLoader(self, cur_sys, loc, boot_loader=None):
+        if boot_loader is None:
+            boot_loader = loc('boot_emm.arm64')
+        RealView.setupBootLoader(self, cur_sys, boot_loader,
+                0x8000000, 0x80000000)
 
 class VExpress_GEM5_Base(RealView):
     """
@@ -1080,11 +1080,11 @@ Interrupts:
             self._attach_device(dev, bus, dma_ports)
             self.smmu.connect(dev, bus)
 
-    def setupBootLoader(self, cur_sys, loc):
-        if not cur_sys.boot_loader:
-            cur_sys.boot_loader = [ loc('boot.arm64'), loc('boot.arm') ]
-        cur_sys.atags_addr = 0x8000000
-        cur_sys.load_offset = 0x80000000
+    def setupBootLoader(self, cur_sys, loc, boot_loader=None):
+        if boot_loader is None:
+            boot_loader = [ loc('boot.arm64'), loc('boot.arm') ]
+        super(VExpress_GEM5_Base, self).setupBootLoader(
+                cur_sys, boot_loader, 0x8000000, 0x80000000)
 
         #  Setup m5ops. It's technically not a part of the boot
         #  loader, but this is the only place we can configure the
@@ -1141,10 +1141,11 @@ class VExpress_GEM5_V2_Base(VExpress_GEM5_Base):
                 self.gic, self.gic.its
             ]
 
-    def setupBootLoader(self, cur_sys, loc):
-        cur_sys.boot_loader = [ loc('boot_v2.arm64') ]
-        super(VExpress_GEM5_V2_Base,self).setupBootLoader(
-                cur_sys, loc)
+    def setupBootLoader(self, cur_sys, loc, boot_loader=None):
+        if boot_loader is None:
+            boot_loader = [ loc('boot_v2.arm64') ]
+        super(VExpress_GEM5_V2_Base, self).setupBootLoader(
+                cur_sys, boot_loader)
 
 class VExpress_GEM5_V2(VExpress_GEM5_V2_Base):
     hdlcd  = HDLcd(pxl_clk=VExpress_GEM5_V2_Base.dcc.osc_pxl,
