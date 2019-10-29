@@ -43,7 +43,6 @@
 #include "base/debug.hh"
 #include "base/inet.hh"
 #include "base/types.hh"
-#include "config/the_isa.hh"
 #include "debug/EthernetAll.hh"
 #include "dev/net/etherlink.hh"
 #include "mem/packet.hh"
@@ -90,7 +89,6 @@ const char *NsDmaState[] =
 };
 
 using namespace Net;
-using namespace TheISA;
 
 ///////////////////////////////////////////////////////////////////////
 //
