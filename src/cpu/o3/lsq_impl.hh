@@ -1152,13 +1152,37 @@ LSQ<Impl>::SingleDataRequest::isCacheBlockHit(Addr blockAddr, Addr blockMask)
     return ( (LSQRequest::_requests[0]->getPaddr() & blockMask) == blockAddr);
 }
 
+/**
+ * Caches may probe into the load-store queue to enforce memory ordering
+ * guarantees. This method supports probes by providing a mechanism to compare
+ * snoop messages with requests tracked by the load-store queue.
+ *
+ * Consistency models must enforce ordering constraints. TSO, for instance,
+ * must prevent memory reorderings except stores which are reordered after
+ * loads. The reordering restrictions negatively impact performance by
+ * cutting down on memory level parallelism. However, the core can regain
+ * performance by generating speculative loads. Speculative loads may issue
+ * without affecting correctness if precautions are taken to handle invalid
+ * memory orders. The load queue must squash under memory model violations.
+ * Memory model violations may occur when block ownership is granted to
+ * another core or the block cannot be accurately monitored by the load queue.
+ */
 template<class Impl>
 bool
 LSQ<Impl>::SplitDataRequest::isCacheBlockHit(Addr blockAddr, Addr blockMask)
 {
     bool is_hit = false;
     for (auto &r: _requests) {
-        if ((r->getPaddr() & blockMask) == blockAddr) {
+       /**
+        * The load-store queue handles partial faults which complicates this
+        * method. Physical addresses must be compared between requests and
+        * snoops. Some requests will not have a valid physical address, since
+        * partial faults may have outstanding translations. Therefore, the
+        * existence of a valid request address must be checked before
+        * comparing block hits. We assume no pipeline squash is needed if a
+        * valid request address does not exist.
+        */
+        if (r->hasPaddr() && (r->getPaddr() & blockMask) == blockAddr) {
             is_hit = true;
             break;
         }
