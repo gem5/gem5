@@ -347,7 +347,7 @@ _llseekFunc(SyscallDesc *desc, int num, ThreadContext *tc)
     uint64_t offset = (offset_high << 32) | offset_low;
 
     uint64_t result = lseek(sim_fd, offset, whence);
-    result = TheISA::htog(result);
+    result = htog(result, tc->getSystemPtr()->getGuestByteOrder());
 
     if (result == (off_t)-1)
         return -errno;
@@ -1262,9 +1262,10 @@ getdentsImpl(SyscallDesc *desc, int callnum, ThreadContext *tc)
          * passing the data back into the target's address space to preserve
          * endianness.
          */
-        buffer->d_ino = htog(buffer->d_ino);
-        buffer->d_off = htog(buffer->d_off);
-        buffer->d_reclen = htog(buffer->d_reclen);
+        const ByteOrder bo = tc->getSystemPtr()->getGuestByteOrder();
+        buffer->d_ino = htog(buffer->d_ino, bo);
+        buffer->d_off = htog(buffer->d_off, bo);
+        buffer->d_reclen = htog(buffer->d_reclen, bo);
 
         traversed += host_reclen;
     }
