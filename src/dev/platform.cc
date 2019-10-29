@@ -32,7 +32,6 @@
 #include "dev/platform.hh"
 
 #include "base/logging.hh"
-#include "config/the_isa.hh"
 #include "sim/sim_exit.hh"
 
 using namespace std;

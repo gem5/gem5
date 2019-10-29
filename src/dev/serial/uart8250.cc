@@ -39,7 +39,6 @@
 
 #include "base/inifile.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "debug/Uart.hh"
 #include "dev/platform.hh"
 #include "mem/packet.hh"
