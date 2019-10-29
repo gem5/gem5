@@ -56,7 +56,7 @@ class LinuxX86SystemBuilder(object):
         pass
 
     def create_system(self):
-        mdesc = SysConfig(disk = 'linux-x86.img')
+        mdesc = SysConfig(disks = ['linux-x86.img'])
         system = FSConfig.makeLinuxX86System(self.mem_mode,
                                              numCPUs=self.num_cpus,
                                              mdesc=mdesc)

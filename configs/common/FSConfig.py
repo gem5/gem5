@@ -86,17 +86,24 @@ def attach_9p(parent, bus):
     parent.attachPciDevice(viopci, bus)
 
 def fillInCmdline(mdesc, template, **kwargs):
-    kwargs.setdefault('disk', mdesc.disk())
     kwargs.setdefault('rootdev', mdesc.rootdev())
     kwargs.setdefault('mem', mdesc.mem())
     kwargs.setdefault('script', mdesc.script())
     return template % kwargs
 
+def makeCowDisks(disk_paths):
+    disks = []
+    for disk_path in disk_paths:
+        disk = CowIdeDisk(driveID='master')
+        disk.childImage(disk_path);
+        disks.append(disk)
+    return disks
+
 def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False, cmdline=None):
 
     class BaseTsunami(Tsunami):
         ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
-        ide = IdeController(disks=[Parent.disk0, Parent.disk2],
+        ide = IdeController(disks=Parent.disks,
                             pci_func=0, pci_dev=0, pci_bus=0)
 
     self = LinuxAlphaSystem()
@@ -136,12 +143,9 @@ def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False, cmdline=None):
         self.system_port = self.membus.slave
 
     self.mem_ranges = [AddrRange(mdesc.mem())]
-    self.disk0 = CowIdeDisk(driveID='master')
-    self.disk2 = CowIdeDisk(driveID='master')
-    self.disk0.childImage(mdesc.disk())
-    self.disk2.childImage(disk('linux-bigswap2.img'))
-    self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
-                                               read_only = True))
+    self.disks = makeCowDisks(mdesc.disks())
+    self.simple_disk = SimpleDisk(disk=RawDiskImage(
+        image_file = mdesc.disks()[0], read_only = True))
     self.intrctrl = IntrControl()
     self.mem_mode = mem_mode
     self.terminal = Terminal()
@@ -186,7 +190,7 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
     self.partition_desc.port = self.membus.master
     self.intrctrl = IntrControl()
     self.disk0 = CowMmDisk()
-    self.disk0.childImage(mdesc.disk())
+    self.disk0.childImage(mdesc.disks()[0])
     self.disk0.pio = self.iobus.master
 
     # The puart0 and hvuart are placed on the IO bus, so create ranges
@@ -254,7 +258,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
     self._bootmem = self.realview.bootmem
 
     if isinstance(self.realview, VExpress_EMM64):
-        if os.path.split(mdesc.disk())[-1] == 'linux-aarch32-ael.img':
+        if os.path.split(mdesc.disks()[0])[-1] == 'linux-aarch32-ael.img':
             print("Selected 64-bit ARM architecture, updating default "
                   "disk image...")
             mdesc.diskname = 'linaro-minimal-aarch64.img'
@@ -263,17 +267,16 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
     # Attach any PCI devices this platform supports
     self.realview.attachPciDevices()
 
-    self.cf0 = CowIdeDisk(driveID='master')
-    self.cf0.childImage(mdesc.disk())
+    disks = makeCowDisks(mdesc.disks())
     # Old platforms have a built-in IDE or CF controller. Default to
     # the IDE controller if both exist. New platforms expect the
     # storage controller to be added from the config script.
     if hasattr(self.realview, "ide"):
-        self.realview.ide.disks = [self.cf0]
+        self.realview.ide.disks = disks
     elif hasattr(self.realview, "cf_ctrl"):
-        self.realview.cf_ctrl.disks = [self.cf0]
+        self.realview.cf_ctrl.disks = disks
     else:
-        self.pci_ide = IdeController(disks=[self.cf0])
+        self.pci_ide = IdeController(disks=disks)
         pci_devices.append(self.pci_ide)
 
     self.mem_ranges = []
@@ -325,7 +328,8 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         # behavior has been replaced with a more explicit option per
         # the error message below. The disk can have any name now and
         # doesn't need to include 'android' substring.
-        if (os.path.split(mdesc.disk())[-1]).lower().count('android'):
+        if (mdesc.disks() and
+                os.path.split(mdesc.disks()[0])[-1]).lower().count('android'):
             if 'android' not in mdesc.os_type():
                 fatal("It looks like you are trying to boot an Android " \
                       "platform.  To boot Android, you must specify " \
@@ -409,7 +413,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
 def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
     class BaseMalta(Malta):
         ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
-        ide = IdeController(disks=[Parent.disk0, Parent.disk2],
+        ide = IdeController(disks=Parent.disks,
                             pci_func=0, pci_dev=0, pci_bus=0)
 
     self = LinuxMipsSystem()
@@ -423,18 +427,15 @@ def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
     self.mem_ranges = [AddrRange('1GB')]
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
-    self.disk0 = CowIdeDisk(driveID='master')
-    self.disk2 = CowIdeDisk(driveID='master')
-    self.disk0.childImage(mdesc.disk())
-    self.disk2.childImage(disk('linux-bigswap2.img'))
+    self.disks = makeCowDisks(mdesc.disks())
     self.malta = BaseMalta()
     self.malta.attachIO(self.iobus)
     self.malta.ide.pio = self.iobus.master
     self.malta.ide.dma = self.iobus.slave
     self.malta.ethernet.pio = self.iobus.master
     self.malta.ethernet.dma = self.iobus.slave
-    self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
-                                               read_only = True))
+    self.simple_disk = SimpleDisk(disk=RawDiskImage(
+        image_file = mdesc.disks()[0], read_only = True))
     self.intrctrl = IntrControl()
     self.mem_mode = mem_mode
     self.terminal = Terminal()
@@ -544,11 +545,8 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, self=None, Ruby=False):
     self.intrctrl = IntrControl()
 
     # Disks
-    disk0 = CowIdeDisk(driveID='master')
-    disk2 = CowIdeDisk(driveID='master')
-    disk0.childImage(mdesc.disk())
-    disk2.childImage(disk('linux-bigswap2.img'))
-    self.pc.south_bridge.ide.disks = [disk0, disk2]
+    disks = makeCowDisks(mdesc.disks())
+    self.pc.south_bridge.ide.disks = disks
 
     # Add in a Bios information structure.
     structures = [X86SMBiosBiosInformation()]

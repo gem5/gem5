@@ -98,7 +98,7 @@ class LinuxArmSystemBuilder(object):
             "VExpress_GEM5_V1": gem5_kernel,
         }
 
-        sc = SysConfig(None, self.mem_size, disk_image, "/dev/sda")
+        sc = SysConfig(None, self.mem_size, [disk_image], "/dev/sda")
         system = FSConfig.makeArmSystem(self.mem_mode,
                                         self.machine_type, self.num_cpus,
                                         sc, False, ruby=self.use_ruby)

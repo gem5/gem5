@@ -461,10 +461,10 @@ def addFSOptions(parser):
                       "ethernet traffic")
 
     # Disk Image Options
-    parser.add_option("--disk-image", action="store", type="string", default=None,
-                      help="Path to the disk image to use.")
-    parser.add_option("--root-device", action="store", type="string", default=None,
-                      help="OS device name for root partition")
+    parser.add_option("--disk-image", action="append", type="string",
+            default=[], help="Path to the disk images to use.")
+    parser.add_option("--root-device", action="store", type="string",
+            default=None, help="OS device name for root partition")
 
     # Command line options
     parser.add_option("--command-line", action="store", type="string",

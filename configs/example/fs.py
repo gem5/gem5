@@ -329,12 +329,12 @@ if options.benchmark:
         sys.exit(1)
 else:
     if options.dual:
-        bm = [SysConfig(disk=options.disk_image, rootdev=options.root_device,
+        bm = [SysConfig(disks=options.disk_image, rootdev=options.root_device,
                         mem=options.mem_size, os_type=options.os_type),
-              SysConfig(disk=options.disk_image, rootdev=options.root_device,
+              SysConfig(disks=options.disk_image, rootdev=options.root_device,
                         mem=options.mem_size, os_type=options.os_type)]
     else:
-        bm = [SysConfig(disk=options.disk_image, rootdev=options.root_device,
+        bm = [SysConfig(disks=options.disk_image, rootdev=options.root_device,
                         mem=options.mem_size, os_type=options.os_type)]
 
 np = options.num_cpus
