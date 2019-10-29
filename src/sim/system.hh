@@ -283,6 +283,19 @@ class System : public SimObject, public PCEventScope
      */
     Arch getArch() const { return Arch::TheISA; }
 
+    /**
+     * Get the guest byte order.
+     */
+    ByteOrder
+    getGuestByteOrder() const
+    {
+#if THE_ISA != NULL_ISA
+        return TheISA::GuestByteOrder;
+#else
+        panic("The NULL ISA has no endianness.");
+#endif
+    }
+
      /**
      * Get the page bytes for the ISA.
      */
