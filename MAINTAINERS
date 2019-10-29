@@ -100,7 +100,10 @@ system-arm:
   Andreas Sandberg <andreas.sandberg@arm.com>
   Giacomo Travaglini <giacomo.travaglini@arm.com>
 
+systemc: Code for the gem5 SystemC implementation and interface
+  Gabe Black <gabeblack@google.com>
+
 tests: testing changes (not stats updates for tests. See stats:)
-  Andreas Sandberg <andreas.sandberg@arm.com>
+  Bobby Bruce <bbruce@ucdavis.edu>
 
 util:
