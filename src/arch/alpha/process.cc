@@ -156,8 +156,10 @@ AlphaProcess::argsInit(int intSize, int pageSize)
 
     initVirtMem.writeBlob(memState->getStackMin(), &argc, intSize);
 
-    copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
-    copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base,
+                    LittleEndianByteOrder, initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base,
+                    LittleEndianByteOrder, initVirtMem);
 
     //Copy the aux stuff
     Addr auxv_array_end = auxv_array_base;

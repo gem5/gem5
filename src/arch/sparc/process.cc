@@ -375,8 +375,10 @@ SparcProcess::argsInit(int pageSize)
     initVirtMem.write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
-    copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
-    copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base,
+                    BigEndianByteOrder, initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base,
+                    BigEndianByteOrder, initVirtMem);
 
     initVirtMem.writeBlob(argc_base, &guestArgc, intSize);
 

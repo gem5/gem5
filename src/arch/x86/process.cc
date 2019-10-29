@@ -1017,8 +1017,10 @@ X86Process::argsInit(int pageSize,
 
     initVirtMem.writeString(aux_data_base, platform.c_str());
 
-    copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
-    copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base,
+                    LittleEndianByteOrder, initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base,
+                    LittleEndianByteOrder, initVirtMem);
 
     initVirtMem.writeBlob(argc_base, &guestArgc, intSize);
 
