@@ -161,7 +161,7 @@ MipsProcess::argsInit(int pageSize)
     // write contents to stack
     IntType argc = argv.size();
 
-    argc = htog((IntType)argc);
+    argc = htole((IntType)argc);
 
     initVirtMem.writeBlob(memState->getStackMin(), &argc, intSize);
 
