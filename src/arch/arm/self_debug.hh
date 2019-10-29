@@ -257,12 +257,49 @@ class SoftwareStep
     }
 };
 
+class VectorCatch
+{
+  private:
+    bool vcmatch;
+    SelfDebug *conf;
+    std::vector<Fault *> vectorTypes();
+
+  public:
+    VectorCatch(bool _vcmatch, SelfDebug* s) : vcmatch(_vcmatch), conf(s)
+    {}
+
+    bool addressMatching(ThreadContext *tc, Addr addr, ExceptionLevel el);
+    bool exceptionTrapping(ThreadContext *tc, ExceptionLevel el,
+                           ArmFault* fault);
+    bool isVCMatch()
+    {
+        return vcmatch;
+    }
+
+  private:
+    Addr getVectorBase(ThreadContext *tc, bool monitor)
+    {
+        if (monitor) {
+            return tc->readMiscReg(MISCREG_MVBAR) & ~0x1F;
+        }
+        SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
+        if (sctlr.v) {
+            return (Addr) 0xFFFF0000;
+        } else {
+            Addr vbar = tc->readMiscReg(MISCREG_VBAR) & ~0x1F;
+            return vbar;
+        }
+    }
+
+};
+
 class SelfDebug
 {
   private:
     std::vector<BrkPoint> arBrkPoints;
     std::vector<WatchPoint> arWatchPoints;
     SoftwareStep * softStep;
+    VectorCatch * vcExcpt;
 
     bool initialized;
     bool enableTdeTge; // MDCR_EL2.TDE || HCR_EL2.TGE
@@ -287,6 +324,7 @@ class SelfDebug
     ~SelfDebug()
     {
         delete softStep;
+        delete vcExcpt;
     }
 
     Fault testBreakPoints(ThreadContext *tc, Addr vaddr);
@@ -387,6 +425,7 @@ class SelfDebug
     {
         softStep->setCPSRD(mask);
     }
+
     inline bool isAArch32()
     {
         return aarch32;
@@ -410,6 +449,12 @@ class SelfDebug
         return softStep;
     }
 
+    VectorCatch* getVectorCatch(ThreadContext* tc)
+    {
+        if (!initialized)
+            init(tc);
+        return vcExcpt;
+    }
 
     bool targetAArch32(ThreadContext * tc)
     {
@@ -467,6 +512,10 @@ class SelfDebug
         const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
         const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
         setenableTDETGE(hcr, mdcr);
+
+        // Enable Vector Catch Exceptions
+        const DEVID dvid = tc->readMiscReg(MISCREG_DBGDEVID0);
+        vcExcpt = new VectorCatch(dvid.vectorcatch==0x0, this);
 
     }
 };

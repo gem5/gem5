@@ -618,3 +618,123 @@ SoftwareStep::advanceSS(ThreadContext * tc)
     return res;
 }
 
+Fault
+SelfDebug::testVectorCatch(ThreadContext *tc, Addr addr,
+                           ArmFault* fault)
+{
+
+    setAArch32(tc);
+    to32 = targetAArch32(tc);
+    if (!initialized)
+        init(tc);
+    if (!isDebugEnabled(tc) || !enableFlag || !aarch32)
+        return NoFault;
+
+    ExceptionLevel el = (ExceptionLevel) currEL(tc);
+    bool debug;
+    if (fault == nullptr)
+        debug = vcExcpt->addressMatching(tc, addr, el);
+    else
+        debug = vcExcpt->exceptionTrapping(tc, el, fault);
+    if (debug) {
+        if (enableTdeTge) {
+            return std::make_shared<HypervisorTrap>(0, 0x22,
+                                        EC_PREFETCH_ABORT_TO_HYP);
+        } else {
+            return std::make_shared<PrefetchAbort>(addr,
+                                       ArmFault::DebugEvent, false,
+                                       ArmFault::UnknownTran,
+                                       ArmFault::VECTORCATCH);
+        }
+    }
+
+    return NoFault;
+}
+
+bool
+VectorCatch::addressMatching(ThreadContext *tc, Addr addr, ExceptionLevel el)
+{
+    // Each bit position in this string corresponds to a bit in DBGVCR
+    // and an exception vector.
+    bool enabled;
+    if (conf->isAArch32() && ELIs32(tc, EL1) &&
+        (addr & 0x3) == 0 && el != EL2 ) {
+
+        DBGVCR match_word = 0x0;
+
+        Addr vbase = getVectorBase(tc, false);
+        Addr vaddress = addr & ~ 0x1f;
+        Addr low_addr = bits(addr, 5, 2);
+        if (vaddress == vbase) {
+            if (ArmSystem::haveEL(tc, EL3) && !inSecureState(tc)) {
+                uint32_t bmask = 1UL << (low_addr + 24);
+                match_word = match_word | (DBGVCR) bmask;
+                // Non-secure vectors
+            } else {
+                uint32_t bmask = 1UL << (low_addr);
+                match_word = match_word | (DBGVCR) bmask;
+                // Secure vectors (or no EL3)
+            }
+        }
+        uint32_t mvbase = getVectorBase(tc, true);
+        if (ArmSystem::haveEL(tc, EL3) && ELIs32(tc, EL3) &&
+            inSecureState(tc) && (vaddress == mvbase)) {
+            uint32_t bmask = 1UL << (low_addr + 8);
+            match_word = match_word | (DBGVCR) bmask;
+            // Monitor vectors
+        }
+
+        DBGVCR mask;
+
+        // Mask out bits not corresponding to vectors.
+        if (!ArmSystem::haveEL(tc, EL3)) {
+            mask = (DBGVCR) 0xDE;
+        } else if (!ELIs32(tc, EL3)) {
+            mask = (DBGVCR) 0xDE0000DE;
+        } else {
+            mask = (DBGVCR) 0xDE00DEDE;
+        }
+        DBGVCR dbgvcr = tc->readMiscReg(MISCREG_DBGVCR);
+        match_word = match_word & dbgvcr & mask;
+        enabled = match_word != 0x0;
+        // Check for UNPREDICTABLE case - match on Prefetch Abort and
+        // Data Abort vectors
+        ExceptionLevel ELd = debugTargetFrom(tc, inSecureState(tc));
+        if (((match_word & 0x18001818) != 0x0) && ELd == el) {
+            enabled = false;
+        }
+    } else {
+        enabled = false;
+    }
+    return enabled;
+}
+
+bool
+VectorCatch::exceptionTrapping(ThreadContext *tc, ExceptionLevel el,
+                               ArmFault* fault)
+{
+    if (conf->isAArch32() && ELIs32(tc, EL1) && el != EL2) {
+
+        DBGVCR dbgvcr = tc->readMiscReg(MISCREG_DBGVCR);
+        DBGVCR match_type = fault->vectorCatchFlag();
+        DBGVCR mask;
+
+        if (!ArmSystem::haveEL(tc, EL3)) {
+            mask = (DBGVCR) 0xDE;
+        } else if (ELIs32(tc, EL3) && fault->getToMode() == MODE_MON) {
+            mask = (DBGVCR) 0x0000DE00;
+        } else {
+            if (inSecureState(tc))
+                mask = (DBGVCR) 0x000000DE;
+            else
+                mask = (DBGVCR) 0xDE000000;
+        }
+        match_type = match_type & mask & dbgvcr;
+
+        if (match_type != 0x0) {
+            return true;
+        }
+    }
+    return false;
+}
+

@@ -42,6 +42,8 @@
 #include "arch/arm/faults.hh"
 
 #include "arch/arm/insts/static_inst.hh"
+#include "arch/arm/isa.hh"
+#include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
 #include "base/compiler.hh"
@@ -480,7 +482,6 @@ ArmFault::update(ThreadContext *tc)
 void
 ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-
     // Update fault state informations, like the starting mode (aarch32)
     // or EL (aarch64) and the ending mode or EL.
     // From the update function we are also evaluating if the fault must
@@ -492,6 +493,9 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         invoke64(tc, inst);
         return;
     }
+
+    if (vectorCatch(tc, inst))
+        return;
 
     // ARMv7 (ARM ARM issue C B1.9)
 
@@ -714,6 +718,21 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     // Save exception syndrome
     if ((nextMode() != MODE_IRQ) && (nextMode() != MODE_FIQ))
         setSyndrome(tc, getSyndromeReg64());
+}
+
+bool
+ArmFault::vectorCatch(ThreadContext *tc, const StaticInstPtr &inst)
+{
+    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+    SelfDebug * sd = isa->getSelfDebug();
+    VectorCatch* vc = sd->getVectorCatch(tc);
+    if (!vc->isVCMatch()) {
+        Fault fault = sd->testVectorCatch(tc, 0x0, this);
+        if (fault != NoFault)
+            fault->invoke(tc, inst);
+        return true;
+    }
+    return false;
 }
 
 ArmStaticInst *
@@ -1094,7 +1113,9 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             tc->setMiscReg(T::FarIndex, faultAddr);
             if (debug == ArmFault::BRKPOINT){
                 Rext.moe = 0x1;
-            } else if (debug > ArmFault::BRKPOINT) {
+            } else if (debug == ArmFault::VECTORCATCH){
+                Rext.moe = 0x5;
+            } else if (debug > ArmFault::VECTORCATCH) {
                 Rext.moe = 0xa;
                 fsr.cm = (debug == ArmFault::WPOINT_CM)? 1 : 0;
             }

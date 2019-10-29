@@ -154,6 +154,7 @@ class ArmFault : public FaultBase
     {
         NODEBUG = 0,
         BRKPOINT,
+        VECTORCATCH,
         WPOINT_CM,
         WPOINT_NOCM
     };
@@ -226,6 +227,8 @@ class ArmFault : public FaultBase
     void update(ThreadContext *tc);
     bool isResetSPSR(){ return bStep; }
 
+    bool vectorCatch(ThreadContext *tc, const StaticInstPtr &inst);
+
     ArmStaticInst *instrAnnotate(const StaticInstPtr &inst);
     virtual void annotate(AnnotationIDs id, uint64_t val) {}
     virtual FaultStat& countStat() = 0;
@@ -241,12 +244,13 @@ class ArmFault : public FaultBase
     virtual bool abortDisable(ThreadContext *tc) = 0;
     virtual bool fiqDisable(ThreadContext *tc) = 0;
     virtual ExceptionClass ec(ThreadContext *tc) const = 0;
+    virtual uint32_t vectorCatchFlag() const { return 0x0; }
     virtual uint32_t iss() const = 0;
     virtual bool isStage2() const { return false; }
     virtual FSR getFsr(ThreadContext *tc) const { return 0; }
     virtual void setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg);
     virtual bool getFaultVAddr(Addr &va) const { return false; }
-
+    OperatingMode getToMode() const { return toMode; }
 };
 
 template<typename T>
@@ -323,6 +327,7 @@ class UndefinedInstruction : public ArmFaultVals<UndefinedInstruction>
     bool routeToHyp(ThreadContext *tc) const override;
     ExceptionClass ec(ThreadContext *tc) const override;
     uint32_t iss() const override;
+    uint32_t vectorCatchFlag() const override { return 0x02000002; }
 };
 
 class SupervisorCall : public ArmFaultVals<SupervisorCall>
@@ -343,6 +348,7 @@ class SupervisorCall : public ArmFaultVals<SupervisorCall>
     bool routeToHyp(ThreadContext *tc) const override;
     ExceptionClass ec(ThreadContext *tc) const override;
     uint32_t iss() const override;
+    uint32_t vectorCatchFlag() const override { return 0x04000404; }
 };
 
 class SecureMonitorCall : public ArmFaultVals<SecureMonitorCall>
@@ -358,6 +364,7 @@ class SecureMonitorCall : public ArmFaultVals<SecureMonitorCall>
                 StaticInst::nullStaticInstPtr) override;
     ExceptionClass ec(ThreadContext *tc) const override;
     uint32_t iss() const override;
+    uint32_t vectorCatchFlag() const override { return 0x00000400; }
 };
 
 class SupervisorTrap : public ArmFaultVals<SupervisorTrap>
@@ -400,6 +407,7 @@ class HypervisorCall : public ArmFaultVals<HypervisorCall>
     HypervisorCall(ExtMachInst _machInst, uint32_t _imm);
 
     ExceptionClass ec(ThreadContext *tc) const override;
+    uint32_t vectorCatchFlag() const override { return 0xFFFFFFFF; }
 };
 
 class HypervisorTrap : public ArmFaultVals<HypervisorTrap>
@@ -487,6 +495,7 @@ class PrefetchAbort : public AbortFault<PrefetchAbort>
     // @todo: external aborts should be routed if SCR.EA == 1
     bool routeToMonitor(ThreadContext *tc) const override;
     bool routeToHyp(ThreadContext *tc) const override;
+    uint32_t vectorCatchFlag() const override { return 0x08000808; }
 };
 
 class DataAbort : public AbortFault<DataAbort>
@@ -520,6 +529,7 @@ class DataAbort : public AbortFault<DataAbort>
     bool routeToHyp(ThreadContext *tc) const override;
     uint32_t iss() const override;
     void annotate(AnnotationIDs id, uint64_t val) override;
+    uint32_t vectorCatchFlag() const override { return 0x10001010; }
 };
 
 class VirtualDataAbort : public AbortFault<VirtualDataAbort>
@@ -543,6 +553,7 @@ class Interrupt : public ArmFaultVals<Interrupt>
     bool routeToMonitor(ThreadContext *tc) const override;
     bool routeToHyp(ThreadContext *tc) const override;
     bool abortDisable(ThreadContext *tc) override;
+    uint32_t vectorCatchFlag() const override { return 0x40004040; }
 };
 
 class VirtualInterrupt : public ArmFaultVals<VirtualInterrupt>
@@ -558,6 +569,7 @@ class FastInterrupt : public ArmFaultVals<FastInterrupt>
     bool routeToHyp(ThreadContext *tc) const override;
     bool abortDisable(ThreadContext *tc) override;
     bool fiqDisable(ThreadContext *tc) override;
+    uint32_t vectorCatchFlag() const override { return 0x80008080; }
 };
 
 class VirtualFastInterrupt : public ArmFaultVals<VirtualFastInterrupt>

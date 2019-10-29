@@ -693,6 +693,7 @@ namespace ArmISA
         EC_WATCHPOINT_LOWER_EL     = 0x34,
         EC_WATCHPOINT_CURR_EL      = 0x35,
         EC_SOFTWARE_BREAKPOINT     = 0x38,
+        EC_VECTOR_CATCH            = 0x3A,
         EC_SOFTWARE_BREAKPOINT_64  = 0x3C,
     };
 

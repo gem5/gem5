@@ -61,6 +61,8 @@ decodeCP14Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                     return MISCREG_DBGDIDR;
                   case 1:
                     return MISCREG_DBGDSCRint;
+                  case 7:
+                    return MISCREG_DBGVCR;
                 }
                 break;
               case 2:
@@ -561,6 +563,12 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                     return MISCREG_ICIALLUIS;
                   case 6:
                     return MISCREG_BPIALLIS;
+                }
+                break;
+              case 2:
+                switch (opc2) {
+                  case 7:
+                    return MISCREG_DBGDEVID0;
                 }
                 break;
               case 4:
@@ -3417,8 +3425,7 @@ ISA::initializeMiscRegMetadata()
       .unimplemented()
       .allPrivileges();
     InitReg(MISCREG_DBGVCR)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGDTRRXext)
       .unimplemented()
       .allPrivileges();
@@ -3625,7 +3632,6 @@ ISA::initializeMiscRegMetadata()
       .unimplemented()
       .allPrivileges().monSecureWrite(0).monNonSecureWrite(0);
     InitReg(MISCREG_DBGDEVID0)
-      .unimplemented()
       .allPrivileges().monSecureWrite(0).monNonSecureWrite(0);
     InitReg(MISCREG_TEECR)
       .unimplemented()
@@ -4532,7 +4538,7 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_MDDTRRX_EL0)
       .allPrivileges();
     InitReg(MISCREG_DBGVCR32_EL2)
-      .allPrivileges()
+      .hyp().mon()
       .mapsTo(MISCREG_DBGVCR);
     InitReg(MISCREG_MDRAR_EL1)
       .allPrivileges().monSecureWrite(0).monNonSecureWrite(0)

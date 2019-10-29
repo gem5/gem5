@@ -1196,10 +1196,13 @@ TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
     if (fault == NoFault) {
         auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
         SelfDebug * sd = isa->getSelfDebug();
-        if (mode == Execute) {
+        if (mode == Execute)
+        {
             const bool d_step = sd->getSstep()->advanceSS(tc);
             if (!d_step) {
-                fault = sd->testBreakPoints(tc, req->getVaddr());
+                fault = sd->testVectorCatch(tc, req->getVaddr(), nullptr);
+                if (fault == NoFault)
+                    fault = sd->testBreakPoints(tc, req->getVaddr());
             }
         }
         else if (!req->isCacheMaintenance() ||

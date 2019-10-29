@@ -735,6 +735,44 @@ namespace ArmISA
         Bitfield<5, 2> moe;
         Bitfield<1, 0> res0_1;
    EndBitUnion(DBGDS32)
+
+   BitUnion32(DBGVCR)
+        Bitfield<31> nsf;
+        Bitfield<30> nsi;
+        Bitfield<29> res0_5;
+        Bitfield<28> nsd;
+        Bitfield<27> nsp;
+        Bitfield<26> nss;
+        Bitfield<25> nsu;
+        Bitfield<24, 16> res0_4;
+        Bitfield<15> mf;
+        Bitfield<14> mi;
+        Bitfield<13> res0_3;
+        Bitfield<12> md;
+        Bitfield<11> mp;
+        Bitfield<10> ms;
+        Bitfield<9,8> res0_2;
+        Bitfield<7> sf;
+        Bitfield<6> si;
+        Bitfield<5> res0_1;
+        Bitfield<4> sd;
+        Bitfield<3> sp;
+        Bitfield<2> ss;
+        Bitfield<1> su;
+        Bitfield<0> res0_0;
+   EndBitUnion(DBGVCR)
+
+   BitUnion32(DEVID)
+        Bitfield<31,28> cidmask;
+        Bitfield<27,24> auxregs;
+        Bitfield<23,20> doublelock;
+        Bitfield<19,16> virtextns;
+        Bitfield<15,12> vectorcatch;
+        Bitfield<11,8>  bpaddremask;
+        Bitfield<7,4>   wpaddrmask;
+        Bitfield<3,0>   pcsample;
+   EndBitUnion(DEVID)
+
 }
 
 #endif // __ARCH_ARM_MISCREGS_TYPES_HH__
