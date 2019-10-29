@@ -74,7 +74,7 @@ Trace::ArmNativeTrace::ThreadState::update(NativeTrace *parent)
 
     uint64_t diffVector;
     parent->read(&diffVector, sizeof(diffVector));
-    diffVector = ArmISA::gtoh(diffVector);
+    diffVector = letoh(diffVector);
 
     int changes = 0;
     for (int i = 0; i < STATE_NUMVALS; i++) {
@@ -92,7 +92,7 @@ Trace::ArmNativeTrace::ThreadState::update(NativeTrace *parent)
     int pos = 0;
     for (int i = 0; i < STATE_NUMVALS; i++) {
         if (changed[i]) {
-            newState[i] = ArmISA::gtoh(values[pos++]);
+            newState[i] = letoh(values[pos++]);
             changed[i] = (newState[i] != oldState[i]);
         }
     }

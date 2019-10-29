@@ -218,11 +218,11 @@ let {{
                                     sizeof(memUnion.elements[0]);
             if (((CPSR)Cpsr).e) {
                 for (unsigned i = 0; i < eCount; i++) {
-                    memUnion.elements[i] = gtobe(memUnion.elements[i]);
+                    memUnion.elements[i] = letobe(memUnion.elements[i]);
                 }
             } else {
                 for (unsigned i = 0; i < eCount; i++) {
-                    memUnion.elements[i] = gtole(memUnion.elements[i]);
+                    memUnion.elements[i] = memUnion.elements[i];
                 }
             }
         '''
@@ -234,14 +234,14 @@ let {{
             if reg == regs - 1:
                 mask = ' & mask(%d)' % (32 - 8 * (regs * 4 - size))
             regSetCode += '''
-            FpDestP%(reg)d_uw = gtoh(memUnion.floatRegBits[%(reg)d])%(mask)s;
+            FpDestP%(reg)d_uw = letoh(memUnion.floatRegBits[%(reg)d])%(mask)s;
             ''' % { "reg" : reg, "mask" : mask }
 
         # Pull everything in from registers
         regGetCode = ''
         for reg in range(regs):
             regGetCode += '''
-            memUnion.floatRegBits[%(reg)d] = htog(FpDestP%(reg)d_uw);
+            memUnion.floatRegBits[%(reg)d] = htole(FpDestP%(reg)d_uw);
             ''' % { "reg" : reg }
 
         loadMemAccCode = convCode + regSetCode
@@ -313,12 +313,12 @@ let {{
         unloadConv = ''
         for dReg in range(dRegs):
             loadConv += '''
-                conv1.cRegs[%(sReg0)d] = htog(FpOp1P%(sReg0)d_uw);
-                conv1.cRegs[%(sReg1)d] = htog(FpOp1P%(sReg1)d_uw);
+                conv1.cRegs[%(sReg0)d] = htole(FpOp1P%(sReg0)d_uw);
+                conv1.cRegs[%(sReg1)d] = htole(FpOp1P%(sReg1)d_uw);
             ''' % { "sReg0" : (dReg * 2), "sReg1" : (dReg * 2 + 1) }
             unloadConv += '''
-                FpDestS%(dReg)dP0_uw = gtoh(conv2.cRegs[2 * %(dReg)d + 0]);
-                FpDestS%(dReg)dP1_uw = gtoh(conv2.cRegs[2 * %(dReg)d + 1]);
+                FpDestS%(dReg)dP0_uw = letoh(conv2.cRegs[2 * %(dReg)d + 0]);
+                FpDestS%(dReg)dP1_uw = letoh(conv2.cRegs[2 * %(dReg)d + 1]);
             ''' % { "dReg" : dReg }
         microDeintNeonCode = '''
             const unsigned dRegs = %(dRegs)d;
@@ -359,12 +359,12 @@ let {{
         unloadConv = ''
         for dReg in range(dRegs):
             loadConv += '''
-                conv1.cRegs[2 * %(dReg)d + 0] = htog(FpOp1S%(dReg)dP0_uw);
-                conv1.cRegs[2 * %(dReg)d + 1] = htog(FpOp1S%(dReg)dP1_uw);
+                conv1.cRegs[2 * %(dReg)d + 0] = htole(FpOp1S%(dReg)dP0_uw);
+                conv1.cRegs[2 * %(dReg)d + 1] = htole(FpOp1S%(dReg)dP1_uw);
             ''' % { "dReg" : dReg }
             unloadConv += '''
-                FpDestP%(sReg0)d_uw = gtoh(conv2.cRegs[%(sReg0)d]);
-                FpDestP%(sReg1)d_uw = gtoh(conv2.cRegs[%(sReg1)d]);
+                FpDestP%(sReg0)d_uw = letoh(conv2.cRegs[%(sReg0)d]);
+                FpDestP%(sReg1)d_uw = letoh(conv2.cRegs[%(sReg1)d]);
             ''' % { "sReg0" : (dReg * 2), "sReg1" : (dReg * 2 + 1) }
         microInterNeonCode = '''
             const unsigned dRegs = %(dRegs)d;
@@ -425,8 +425,8 @@ let {{
         baseLoadRegs = ''
         for reg in range(sRegs):
             baseLoadRegs += '''
-                sourceRegs.fRegs[%(reg0)d] = htog(FpOp1P%(reg0)d_uw);
-                sourceRegs.fRegs[%(reg1)d] = htog(FpOp1P%(reg1)d_uw);
+                sourceRegs.fRegs[%(reg0)d] = htole(FpOp1P%(reg0)d_uw);
+                sourceRegs.fRegs[%(reg1)d] = htole(FpOp1P%(reg1)d_uw);
             ''' % { "reg0" : (2 * reg + 0),
                     "reg1" : (2 * reg + 1) }
         for dRegs in range(sRegs, 5):
@@ -434,12 +434,12 @@ let {{
             loadRegs = baseLoadRegs
             for reg in range(dRegs):
                 loadRegs += '''
-                    destRegs[%(reg)d].fRegs[0] = htog(FpDestS%(reg)dP0_uw);
-                    destRegs[%(reg)d].fRegs[1] = htog(FpDestS%(reg)dP1_uw);
+                    destRegs[%(reg)d].fRegs[0] = htole(FpDestS%(reg)dP0_uw);
+                    destRegs[%(reg)d].fRegs[1] = htole(FpDestS%(reg)dP1_uw);
                 ''' % { "reg" : reg }
                 unloadRegs += '''
-                    FpDestS%(reg)dP0_uw = gtoh(destRegs[%(reg)d].fRegs[0]);
-                    FpDestS%(reg)dP1_uw = gtoh(destRegs[%(reg)d].fRegs[1]);
+                    FpDestS%(reg)dP0_uw = letoh(destRegs[%(reg)d].fRegs[0]);
+                    FpDestS%(reg)dP1_uw = letoh(destRegs[%(reg)d].fRegs[1]);
                 ''' % { "reg" : reg }
             microUnpackNeonCode = '''
             const unsigned perDReg = (2 * sizeof(uint32_t)) / sizeof(Element);
@@ -479,16 +479,16 @@ let {{
         loadRegs = ''
         for reg in range(sRegs):
             loadRegs += '''
-                sourceRegs.fRegs[%(reg0)d] = htog(FpOp1P%(reg0)d_uw);
-                sourceRegs.fRegs[%(reg1)d] = htog(FpOp1P%(reg1)d_uw);
+                sourceRegs.fRegs[%(reg0)d] = htole(FpOp1P%(reg0)d_uw);
+                sourceRegs.fRegs[%(reg1)d] = htole(FpOp1P%(reg1)d_uw);
             ''' % { "reg0" : (2 * reg + 0),
                     "reg1" : (2 * reg + 1) }
         for dRegs in range(sRegs, 5):
             unloadRegs = ''
             for reg in range(dRegs):
                 unloadRegs += '''
-                    FpDestS%(reg)dP0_uw = gtoh(destRegs[%(reg)d].fRegs[0]);
-                    FpDestS%(reg)dP1_uw = gtoh(destRegs[%(reg)d].fRegs[1]);
+                    FpDestS%(reg)dP0_uw = letoh(destRegs[%(reg)d].fRegs[0]);
+                    FpDestS%(reg)dP1_uw = letoh(destRegs[%(reg)d].fRegs[1]);
                 ''' % { "reg" : reg }
             microUnpackAllNeonCode = '''
             const unsigned perDReg = (2 * sizeof(uint32_t)) / sizeof(Element);
@@ -529,16 +529,16 @@ let {{
         unloadRegs = ''
         for reg in range(dRegs):
             unloadRegs += '''
-                FpDestP%(reg0)d_uw = gtoh(destRegs.fRegs[%(reg0)d]);
-                FpDestP%(reg1)d_uw = gtoh(destRegs.fRegs[%(reg1)d]);
+                FpDestP%(reg0)d_uw = letoh(destRegs.fRegs[%(reg0)d]);
+                FpDestP%(reg1)d_uw = letoh(destRegs.fRegs[%(reg1)d]);
             ''' % { "reg0" : (2 * reg + 0),
                     "reg1" : (2 * reg + 1) }
         for sRegs in range(dRegs, 5):
             loadRegs = ''
             for reg in range(sRegs):
                 loadRegs += '''
-                    sourceRegs[%(reg)d].fRegs[0] = htog(FpOp1S%(reg)dP0_uw);
-                    sourceRegs[%(reg)d].fRegs[1] = htog(FpOp1S%(reg)dP1_uw);
+                    sourceRegs[%(reg)d].fRegs[0] = htole(FpOp1S%(reg)dP0_uw);
+                    sourceRegs[%(reg)d].fRegs[1] = htole(FpOp1S%(reg)dP1_uw);
                 ''' % { "reg" : reg }
             microPackNeonCode = '''
             const unsigned perDReg =

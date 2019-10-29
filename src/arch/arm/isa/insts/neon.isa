@@ -1156,12 +1156,12 @@ let {{
         '''
         for reg in range(rCount):
             eWalkCode += '''
-                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
-                srcReg2.regs[%(reg)d] = htog(FpOp2P%(reg)d_uw);
+                srcReg1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
+                srcReg2.regs[%(reg)d] = htole(FpOp2P%(reg)d_uw);
             ''' % { "reg" : reg }
             if readDest:
                 eWalkCode += '''
-                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                    destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
         if standardFpcsr:
@@ -1169,31 +1169,31 @@ let {{
             FPSCR fpscr = fpStandardFPSCRValue((FPSCR)FpscrExc);
             '''
         if readDest:
-            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+            readDestCode = 'destElem = letoh(destReg.elements[i]);'
         if pairwise:
             eWalkCode += '''
             for (unsigned i = 0; i < eCount; i++) {
-                Element srcElem1 = gtoh(2 * i < eCount ?
+                Element srcElem1 = letoh(2 * i < eCount ?
                                         srcReg1.elements[2 * i] :
                                         srcReg2.elements[2 * i - eCount]);
-                Element srcElem2 = gtoh(2 * i < eCount ?
+                Element srcElem2 = letoh(2 * i < eCount ?
                                         srcReg1.elements[2 * i + 1] :
                                         srcReg2.elements[2 * i + 1 - eCount]);
                 Element destElem;
                 %(readDest)s
                 %(op)s
-                destReg.elements[i] = htog(destElem);
+                destReg.elements[i] = htole(destElem);
             }
             ''' % { "op" : op, "readDest" : readDestCode }
         else:
             eWalkCode += '''
             for (unsigned i = 0; i < eCount; i++) {
-                Element srcElem1 = gtoh(srcReg1.elements[i]);
-                Element srcElem2 = gtoh(srcReg2.elements[i]);
+                Element srcElem1 = letoh(srcReg1.elements[i]);
+                Element srcElem2 = letoh(srcReg2.elements[i]);
                 Element destElem;
                 %(readDest)s
                 %(op)s
-                destReg.elements[i] = htog(destElem);
+                destReg.elements[i] = htole(destElem);
             }
             ''' % { "op" : op, "readDest" : readDestCode }
         if standardFpcsr:
@@ -1202,7 +1202,7 @@ let {{
             '''
         for reg in range(rCount):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegRegOp",
@@ -1323,35 +1323,35 @@ let {{
         ''' % (src1Prefix, src2Prefix, destPrefix)
         for reg in range(src1Cnt):
             eWalkCode += '''
-                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
+                srcReg1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
             ''' % { "reg" : reg }
         for reg in range(src2Cnt):
             eWalkCode += '''
-                srcReg2.regs[%(reg)d] = htog(FpOp2P%(reg)d_uw);
+                srcReg2.regs[%(reg)d] = htole(FpOp2P%(reg)d_uw);
             ''' % { "reg" : reg }
         if readDest:
             for reg in range(destCnt):
                 eWalkCode += '''
-                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                    destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
         if readDest:
-            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+            readDestCode = 'destElem = letoh(destReg.elements[i]);'
         eWalkCode += '''
         for (unsigned i = 0; i < eCount; i++) {
-            %(src1Prefix)sElement srcElem1 = gtoh(srcReg1.elements[i]);
-            %(src1Prefix)sElement srcElem2 = gtoh(srcReg2.elements[i]);
+            %(src1Prefix)sElement srcElem1 = letoh(srcReg1.elements[i]);
+            %(src1Prefix)sElement srcElem2 = letoh(srcReg2.elements[i]);
             %(destPrefix)sElement destElem;
             %(readDest)s
             %(op)s
-            destReg.elements[i] = htog(destElem);
+            destReg.elements[i] = htole(destElem);
         }
         ''' % { "op" : op, "readDest" : readDestCode,
                 "src1Prefix" : src1Prefix, "src2Prefix" : src2Prefix,
                 "destPrefix" : destPrefix }
         for reg in range(destCnt):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegRegOp",
@@ -1385,34 +1385,34 @@ let {{
         '''
         for reg in range(rCount):
             eWalkCode += '''
-                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
-                srcReg2.regs[%(reg)d] = htog(FpOp2P%(reg)d_uw);
+                srcReg1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
+                srcReg2.regs[%(reg)d] = htole(FpOp2P%(reg)d_uw);
             ''' % { "reg" : reg }
             if readDest:
                 eWalkCode += '''
-                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                    destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
         if readDest:
-            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+            readDestCode = 'destElem = letoh(destReg.elements[i]);'
         eWalkCode += '''
         if (imm < 0 && imm >= eCount) {
             fault = std::make_shared<UndefinedInstruction>(machInst, false,
                                                            mnemonic);
         } else {
             for (unsigned i = 0; i < eCount; i++) {
-                Element srcElem1 = gtoh(srcReg1.elements[i]);
-                Element srcElem2 = gtoh(srcReg2.elements[imm]);
+                Element srcElem1 = letoh(srcReg1.elements[i]);
+                Element srcElem2 = letoh(srcReg2.elements[imm]);
                 Element destElem;
                 %(readDest)s
                 %(op)s
-                destReg.elements[i] = htog(destElem);
+                destReg.elements[i] = htole(destElem);
             }
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         for reg in range(rCount):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegRegImmOp",
@@ -1436,35 +1436,35 @@ let {{
         '''
         for reg in range(rCount):
             eWalkCode += '''
-                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
-                srcReg2.regs[%(reg)d] = htog(FpOp2P%(reg)d_uw);;
+                srcReg1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
+                srcReg2.regs[%(reg)d] = htole(FpOp2P%(reg)d_uw);;
             ''' % { "reg" : reg }
         if readDest:
             for reg in range(2 * rCount):
                 eWalkCode += '''
-                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                    destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
         if readDest:
-            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+            readDestCode = 'destElem = letoh(destReg.elements[i]);'
         eWalkCode += '''
         if (imm < 0 && imm >= eCount) {
             fault = std::make_shared<UndefinedInstruction>(machInst, false,
                                                           mnemonic);
         } else {
             for (unsigned i = 0; i < eCount; i++) {
-                Element srcElem1 = gtoh(srcReg1.elements[i]);
-                Element srcElem2 = gtoh(srcReg2.elements[imm]);
+                Element srcElem1 = letoh(srcReg1.elements[i]);
+                Element srcElem2 = letoh(srcReg2.elements[imm]);
                 BigElement destElem;
                 %(readDest)s
                 %(op)s
-                destReg.elements[i] = htog(destElem);
+                destReg.elements[i] = htole(destElem);
             }
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         for reg in range(2 * rCount):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegRegImmOp",
@@ -1537,25 +1537,25 @@ let {{
         '''
         for reg in range(rCount):
             eWalkCode += '''
-                srcRegs1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
+                srcRegs1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
             ''' % { "reg" : reg }
             if readDest:
                 eWalkCode += '''
-                    destRegs.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                    destRegs.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
         if readDest:
-            readDestCode = 'destElem = gtoh(destRegs.elements[i]);'
+            readDestCode = 'destElem = letoh(destRegs.elements[i]);'
             if toInt:
-                readDestCode = 'destReg = gtoh(destRegs.regs[i]);'
-        readOpCode = 'Element srcElem1 = gtoh(srcRegs1.elements[i]);'
+                readDestCode = 'destReg = letoh(destRegs.regs[i]);'
+        readOpCode = 'Element srcElem1 = letoh(srcRegs1.elements[i]);'
         if fromInt:
-            readOpCode = 'uint32_t srcReg1 = gtoh(srcRegs1.regs[i]);'
+            readOpCode = 'uint32_t srcReg1 = letoh(srcRegs1.regs[i]);'
         declDest = 'Element destElem;'
-        writeDestCode = 'destRegs.elements[i] = htog(destElem);'
+        writeDestCode = 'destRegs.elements[i] = htole(destElem);'
         if toInt:
             declDest = 'uint32_t destReg;'
-            writeDestCode = 'destRegs.regs[i] = htog(destReg);'
+            writeDestCode = 'destRegs.regs[i] = htole(destReg);'
         eWalkCode += '''
         for (unsigned i = 0; i < eCount; i++) {
             %(readOp)s
@@ -1571,7 +1571,7 @@ let {{
                 "writeDest" : writeDestCode }
         for reg in range(rCount):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destRegs.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destRegs.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegImmOp",
@@ -1594,28 +1594,28 @@ let {{
         '''
         for reg in range(4):
             eWalkCode += '''
-                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
+                srcReg1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
             ''' % { "reg" : reg }
         if readDest:
             for reg in range(2):
                 eWalkCode += '''
-                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                    destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
         if readDest:
-            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+            readDestCode = 'destElem = letoh(destReg.elements[i]);'
         eWalkCode += '''
         for (unsigned i = 0; i < eCount; i++) {
-            BigElement srcElem1 = gtoh(srcReg1.elements[i]);
+            BigElement srcElem1 = letoh(srcReg1.elements[i]);
             Element destElem;
             %(readDest)s
             %(op)s
-            destReg.elements[i] = htog(destElem);
+            destReg.elements[i] = htole(destElem);
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         for reg in range(2):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegImmOp",
@@ -1638,28 +1638,28 @@ let {{
         '''
         for reg in range(2):
             eWalkCode += '''
-                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
+                srcReg1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
             ''' % { "reg" : reg }
         if readDest:
             for reg in range(4):
                 eWalkCode += '''
-                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                    destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
         if readDest:
-            readDestCode = 'destReg = gtoh(destReg.elements[i]);'
+            readDestCode = 'destReg = letoh(destReg.elements[i]);'
         eWalkCode += '''
         for (unsigned i = 0; i < eCount; i++) {
-            Element srcElem1 = gtoh(srcReg1.elements[i]);
+            Element srcElem1 = letoh(srcReg1.elements[i]);
             BigElement destElem;
             %(readDest)s
             %(op)s
-            destReg.elements[i] = htog(destElem);
+            destReg.elements[i] = htole(destElem);
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         for reg in range(4):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegImmOp",
@@ -1681,28 +1681,28 @@ let {{
         '''
         for reg in range(rCount):
             eWalkCode += '''
-                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
+                srcReg1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
             ''' % { "reg" : reg }
             if readDest:
                 eWalkCode += '''
-                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                    destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
         if readDest:
-            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+            readDestCode = 'destElem = letoh(destReg.elements[i]);'
         eWalkCode += '''
         for (unsigned i = 0; i < eCount; i++) {
             unsigned j = i;
-            Element srcElem1 = gtoh(srcReg1.elements[i]);
+            Element srcElem1 = letoh(srcReg1.elements[i]);
             Element destElem;
             %(readDest)s
             %(op)s
-            destReg.elements[j] = htog(destElem);
+            destReg.elements[j] = htole(destElem);
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         for reg in range(rCount):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegOp",
@@ -1724,27 +1724,27 @@ let {{
         '''
         for reg in range(rCount):
             eWalkCode += '''
-                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
+                srcReg1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
             ''' % { "reg" : reg }
             if readDest:
                 eWalkCode += '''
-                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                    destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
         if readDest:
-            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+            readDestCode = 'destElem = letoh(destReg.elements[i]);'
         eWalkCode += '''
         for (unsigned i = 0; i < eCount; i++) {
-            Element srcElem1 = gtoh(srcReg1.elements[imm]);
+            Element srcElem1 = letoh(srcReg1.elements[imm]);
             Element destElem;
             %(readDest)s
             %(op)s
-            destReg.elements[i] = htog(destElem);
+            destReg.elements[i] = htole(destElem);
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         for reg in range(rCount):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegImmOp",
@@ -1766,20 +1766,20 @@ let {{
         '''
         for reg in range(rCount):
             eWalkCode += '''
-                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
-                destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                srcReg1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
+                destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
             ''' % { "reg" : reg }
             if readDest:
                 eWalkCode += '''
                 ''' % { "reg" : reg }
         readDestCode = ''
         if readDest:
-            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+            readDestCode = 'destElem = letoh(destReg.elements[i]);'
         eWalkCode += op
         for reg in range(rCount):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
-            FpOp1P%(reg)d_uw = gtoh(srcReg1.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
+            FpOp1P%(reg)d_uw = letoh(srcReg1.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegOp",
@@ -1868,28 +1868,28 @@ let {{
         '''
         for reg in range(rCount):
             eWalkCode += '''
-                srcRegs.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
+                srcRegs.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
             ''' % { "reg" : reg }
             if readDest:
                 eWalkCode += '''
-                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                    destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
         if readDest:
-            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+            readDestCode = 'destElem = letoh(destReg.elements[i]);'
         eWalkCode += '''
         for (unsigned i = 0; i < eCount / 2; i++) {
-            Element srcElem1 = gtoh(srcRegs.elements[2 * i]);
-            Element srcElem2 = gtoh(srcRegs.elements[2 * i + 1]);
+            Element srcElem1 = letoh(srcRegs.elements[2 * i]);
+            Element srcElem2 = letoh(srcRegs.elements[2 * i + 1]);
             BigElement destElem;
             %(readDest)s
             %(op)s
-            destReg.elements[i] = htog(destElem);
+            destReg.elements[i] = htole(destElem);
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         for reg in range(rCount):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegOp",
@@ -1912,28 +1912,28 @@ let {{
         '''
         for reg in range(4):
             eWalkCode += '''
-                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
+                srcReg1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
             ''' % { "reg" : reg }
         if readDest:
             for reg in range(2):
                 eWalkCode += '''
-                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                    destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
         if readDest:
-            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+            readDestCode = 'destElem = letoh(destReg.elements[i]);'
         eWalkCode += '''
         for (unsigned i = 0; i < eCount; i++) {
-            BigElement srcElem1 = gtoh(srcReg1.elements[i]);
+            BigElement srcElem1 = letoh(srcReg1.elements[i]);
             Element destElem;
             %(readDest)s
             %(op)s
-            destReg.elements[i] = htog(destElem);
+            destReg.elements[i] = htole(destElem);
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         for reg in range(2):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegOp",
@@ -1956,22 +1956,22 @@ let {{
         if readDest:
             for reg in range(rCount):
                 eWalkCode += '''
-                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                    destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
         if readDest:
-            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+            readDestCode = 'destElem = letoh(destReg.elements[i]);'
         eWalkCode += '''
         for (unsigned i = 0; i < eCount; i++) {
             Element destElem;
             %(readDest)s
             %(op)s
-            destReg.elements[i] = htog(destElem);
+            destReg.elements[i] = htole(destElem);
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         for reg in range(rCount):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegImmOp",
@@ -1994,28 +1994,28 @@ let {{
         '''
         for reg in range(2):
             eWalkCode += '''
-                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
+                srcReg1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
             ''' % { "reg" : reg }
         if readDest:
             for reg in range(4):
                 eWalkCode += '''
-                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+                    destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
         if readDest:
-            readDestCode = 'destReg = gtoh(destReg.elements[i]);'
+            readDestCode = 'destReg = letoh(destReg.elements[i]);'
         eWalkCode += '''
         for (unsigned i = 0; i < eCount; i++) {
-            Element srcElem1 = gtoh(srcReg1.elements[i]);
+            Element srcElem1 = letoh(srcReg1.elements[i]);
             BigElement destElem;
             %(readDest)s
             %(op)s
-            destReg.elements[i] = htog(destElem);
+            destReg.elements[i] = htole(destElem);
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         for reg in range(4):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegOp",
@@ -3718,12 +3718,12 @@ let {{
         eWalkCode = simdEnabledCheckCode + '''
         RegVect destReg;
         for (unsigned i = 0; i < eCount; i++) {
-            destReg.elements[i] = htog((Element)Op1);
+            destReg.elements[i] = htole((Element)Op1);
         }
         '''
         for reg in range(rCount):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegOp",
@@ -3803,13 +3803,13 @@ let {{
         '''
         for reg in range(rCount):
             eWalkCode += '''
-                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
-                srcReg2.regs[%(reg)d] = htog(FpOp2P%(reg)d_uw);
+                srcReg1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
+                srcReg2.regs[%(reg)d] = htole(FpOp2P%(reg)d_uw);
             ''' % { "reg" : reg }
         eWalkCode += op
         for reg in range(rCount):
             eWalkCode += '''
-            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
                             "RegRegRegImmOp",
@@ -3862,15 +3862,15 @@ let {{
             const unsigned length = %(length)d;
             const bool isVtbl = %(isVtbl)s;
 
-            srcReg2.regs[0] = htog(FpOp2P0_uw);
-            srcReg2.regs[1] = htog(FpOp2P1_uw);
+            srcReg2.regs[0] = htole(FpOp2P0_uw);
+            srcReg2.regs[1] = htole(FpOp2P1_uw);
 
-            destReg.regs[0] = htog(FpDestP0_uw);
-            destReg.regs[1] = htog(FpDestP1_uw);
+            destReg.regs[0] = htole(FpDestP0_uw);
+            destReg.regs[1] = htole(FpDestP1_uw);
         ''' % { "length" : length, "isVtbl" : isVtbl }
         for reg in range(8):
             if reg < length * 2:
-                code += 'table.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);\n' % \
+                code += 'table.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);\n' % \
                         { "reg" : reg }
             else:
                 code += 'table.regs[%(reg)d] = 0;\n' % { "reg" : reg }
@@ -3886,8 +3886,8 @@ let {{
             }
         }
 
-        FpDestP0_uw = gtoh(destReg.regs[0]);
-        FpDestP1_uw = gtoh(destReg.regs[1]);
+        FpDestP0_uw = letoh(destReg.regs[0]);
+        FpDestP1_uw = letoh(destReg.regs[1]);
         '''
         iop = InstObjParams(name, Name,
                             "RegRegRegOp",

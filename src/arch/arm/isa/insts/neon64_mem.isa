@@ -83,15 +83,15 @@ let {{
                 for (unsigned i = 0; i < eCount; i++) {
                     switch (eSize) {
                       case 0x3:  // 64-bit
-                        writeVecElem(&x, (XReg) gtobe(
+                        writeVecElem(&x, (XReg) letobe(
                             (uint64_t) readVecElem(x, i, eSize)), i, eSize);
                         break;
                       case 0x2:  // 32-bit
-                        writeVecElem(&x, (XReg) gtobe(
+                        writeVecElem(&x, (XReg) letobe(
                             (uint32_t) readVecElem(x, i, eSize)), i, eSize);
                         break;
                       case 0x1:  // 16-bit
-                        writeVecElem(&x, (XReg) gtobe(
+                        writeVecElem(&x, (XReg) letobe(
                             (uint16_t) readVecElem(x, i, eSize)), i, eSize);
                         break;
                       default:  // 8-bit
@@ -102,16 +102,16 @@ let {{
                 for (unsigned i = 0; i < eCount; i++) {
                     switch (eSize) {
                       case 0x3:  // 64-bit
-                        writeVecElem(&x, (XReg) gtole(
-                            (uint64_t) readVecElem(x, i, eSize)), i, eSize);
+                        writeVecElem(&x, (XReg)readVecElem(x, i, eSize),
+                                     i, eSize);
                         break;
                       case 0x2:  // 32-bit
-                        writeVecElem(&x, (XReg) gtole(
-                            (uint32_t) readVecElem(x, i, eSize)), i, eSize);
+                        writeVecElem(&x, (XReg)readVecElem(x, i, eSize),
+                                     i, eSize);
                         break;
                       case 0x1:  // 16-bit
-                        writeVecElem(&x, (XReg) gtole(
-                            (uint16_t) readVecElem(x, i, eSize)), i, eSize);
+                        writeVecElem(&x, (XReg)readVecElem(x, i, eSize),
+                                     i, eSize);
                         break;
                       default:  // 8-bit
                         break;  // Nothing to do here
@@ -129,14 +129,14 @@ let {{
         regSetCode = ''
         for reg in range(4):
             regSetCode += '''
-            AA64FpDestP%(reg)d_uw = gtoh(memUnion.floatRegBits[%(reg)d]);
+            AA64FpDestP%(reg)d_uw = letoh(memUnion.floatRegBits[%(reg)d]);
             ''' % { 'reg' : reg }
 
         # Pull everything in from registers
         regGetCode = ''
         for reg in range(4):
             regGetCode += '''
-            memUnion.floatRegBits[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+            memUnion.floatRegBits[%(reg)d] = htole(AA64FpDestP%(reg)d_uw);
             ''' % { 'reg' : reg }
 
         loadMemAccCode = convCode + regSetCode

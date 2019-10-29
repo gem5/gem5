@@ -57,9 +57,9 @@ let {{
     '''
     for reg in range(4):
         cryptoRegRegRegPrefix += '''
-            srcReg1.regs[%(reg)d] = htog(AA64FpOp1P%(reg)d_uw);
-            srcReg2.regs[%(reg)d] = htog(AA64FpOp2P%(reg)d_uw);
-            destReg.regs[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+            srcReg1.regs[%(reg)d] = htole(AA64FpOp1P%(reg)d_uw);
+            srcReg2.regs[%(reg)d] = htole(AA64FpOp2P%(reg)d_uw);
+            destReg.regs[%(reg)d] = htole(AA64FpDestP%(reg)d_uw);
         ''' % { "reg" : reg }
     cryptoRegRegRegPrefix += '''
         unsigned char *output = (unsigned char *)(&destReg.regs[0]);
@@ -70,7 +70,7 @@ let {{
     cryptoSuffix = ""
     for reg in range(4):
         cryptoSuffix += '''
-            AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+            AA64FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
         ''' % { "reg" : reg }
 
     cryptoRegRegPrefix = '''
@@ -80,8 +80,8 @@ let {{
     '''
     for reg in range(4):
         cryptoRegRegPrefix += '''
-            srcReg1.regs[%(reg)d] = htog(AA64FpOp1P%(reg)d_uw);
-            destReg.regs[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+            srcReg1.regs[%(reg)d] = htole(AA64FpOp1P%(reg)d_uw);
+            destReg.regs[%(reg)d] = htole(AA64FpDestP%(reg)d_uw);
         ''' % { "reg" : reg }
 
     cryptoRegRegPrefix += '''

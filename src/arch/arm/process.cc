@@ -403,7 +403,7 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
 
     // figure out argc
     IntType argc = argv.size();
-    IntType guestArgc = ArmISA::htog(argc);
+    IntType guestArgc = htole(argc);
 
     //Write out the sentry void *
     IntType sentry_NULL = 0;

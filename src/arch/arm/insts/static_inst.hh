@@ -314,9 +314,9 @@ class ArmStaticInst : public StaticInst
     cSwap(T val, bool big)
     {
         if (big) {
-            return gtobe(val);
+            return letobe(val);
         } else {
-            return gtole(val);
+            return val;
         }
     }
 
@@ -329,17 +329,17 @@ class ArmStaticInst : public StaticInst
             T tVal;
             E eVals[count];
         } conv;
-        conv.tVal = htog(val);
+        conv.tVal = htole(val);
         if (big) {
             for (unsigned i = 0; i < count; i++) {
-                conv.eVals[i] = gtobe(conv.eVals[i]);
+                conv.eVals[i] = letobe(conv.eVals[i]);
             }
         } else {
             for (unsigned i = 0; i < count; i++) {
-                conv.eVals[i] = gtole(conv.eVals[i]);
+                conv.eVals[i] = conv.eVals[i];
             }
         }
-        return gtoh(conv.tVal);
+        return letoh(conv.tVal);
     }
 
     // Perform an interworking branch.
