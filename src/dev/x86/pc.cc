@@ -40,16 +40,12 @@
 
 #include "arch/x86/intmessage.hh"
 #include "arch/x86/x86_traits.hh"
-#include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
 #include "dev/x86/i82094aa.hh"
 #include "dev/x86/i8254.hh"
 #include "dev/x86/i8259.hh"
 #include "dev/x86/south_bridge.hh"
 #include "sim/system.hh"
-
-using namespace std;
-using namespace TheISA;
 
 Pc::Pc(const Params *p)
     : Platform(p), system(p->system)
@@ -65,7 +61,7 @@ Pc::init()
     /*
      * Initialize the timer.
      */
-    I8254 & timer = *southBridge->pit;
+    auto &timer = *southBridge->pit;
     //Timer 0, mode 2, no bcd, 16 bit count
     timer.writeControl(0x34);
     //Timer 0, latch command
@@ -77,13 +73,13 @@ Pc::init()
     /*
      * Initialize the I/O APIC.
      */
-    I82094AA & ioApic = *southBridge->ioApic;
-    I82094AA::RedirTableEntry entry = 0;
-    entry.deliveryMode = DeliveryMode::ExtInt;
+    X86ISA::I82094AA &ioApic = *southBridge->ioApic;
+    X86ISA::I82094AA::RedirTableEntry entry = 0;
+    entry.deliveryMode = X86ISA::DeliveryMode::ExtInt;
     entry.vector = 0x20;
     ioApic.writeReg(0x10, entry.bottomDW);
     ioApic.writeReg(0x11, entry.topDW);
-    entry.deliveryMode = DeliveryMode::Fixed;
+    entry.deliveryMode = X86ISA::DeliveryMode::Fixed;
     entry.vector = 0x24;
     ioApic.writeReg(0x18, entry.bottomDW);
     ioApic.writeReg(0x19, entry.topDW);
