@@ -226,7 +226,7 @@ PowerProcess::argsInit(int intSize, int pageSize)
 
     // figure out argc
     uint32_t argc = argv.size();
-    uint32_t guestArgc = PowerISA::htog(argc);
+    uint32_t guestArgc = htobe(argc);
 
     //Write out the sentry void *
     uint32_t sentry_NULL = 0;
