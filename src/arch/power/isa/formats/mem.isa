@@ -73,7 +73,7 @@ def template LoadExecute {{
         %(ea_code)s;
 
         if (fault == NoFault) {
-            fault = readMemAtomic(xc, traceData, EA, Mem, memAccessFlags);
+            fault = readMemAtomicBE(xc, traceData, EA, Mem, memAccessFlags);
             %(memacc_code)s;
         }
 
@@ -119,7 +119,7 @@ def template LoadCompleteAcc {{
 
         EA = pkt->req->getVaddr();
 
-        getMem(pkt, Mem, traceData);
+        getMemBE(pkt, Mem, traceData);
 
         if (fault == NoFault) {
             %(memacc_code)s;
@@ -150,7 +150,7 @@ def template StoreExecute {{
         }
 
         if (fault == NoFault) {
-            fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
+            fault = writeMemAtomicBE(xc, traceData, Mem, EA, memAccessFlags,
                     NULL);
         }
 
@@ -179,7 +179,7 @@ def template StoreInitiateAcc {{
         }
 
         if (fault == NoFault) {
-            fault = writeMemTiming(xc, traceData, Mem, EA, memAccessFlags,
+            fault = writeMemTimingBE(xc, traceData, Mem, EA, memAccessFlags,
                     NULL);
         }
 

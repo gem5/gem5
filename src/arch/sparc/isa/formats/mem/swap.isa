@@ -50,7 +50,7 @@ def template SwapExecute {{
             }
             if (storeCond && fault == NoFault) {
                 %(EA_trunc)s
-                fault = writeMemAtomic(xc, traceData, Mem, EA,
+                fault = writeMemAtomicBE(xc, traceData, Mem, EA,
                         %(asi_val)s, &mem_data);
             }
             if (fault == NoFault) {
@@ -87,7 +87,7 @@ def template SwapInitiateAcc {{
             }
             if (fault == NoFault) {
                 %(EA_trunc)s
-                fault = writeMemTiming(xc, traceData, Mem, EA, %(asi_val)s,
+                fault = writeMemTimingBE(xc, traceData, Mem, EA, %(asi_val)s,
                         &mem_data);
             }
             return fault;
@@ -103,7 +103,7 @@ def template SwapCompleteAcc {{
             Fault fault = NoFault;
             %(op_decl)s;
 
-            getMem(pkt, Mem, traceData);
+            getMemBE(pkt, Mem, traceData);
             uint64_t mem_data = Mem;
 
             if (fault == NoFault) {

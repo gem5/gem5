@@ -86,8 +86,8 @@ def template SwapExecute {{
             %(preacc_code)s;
 
             if (fault == NoFault) {
-                fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
-                        &memData);
+                fault = writeMemAtomicLE(xc, traceData, Mem, EA,
+                        memAccessFlags, &memData);
             }
 
             if (fault == NoFault) {
@@ -122,8 +122,8 @@ def template SwapInitiateAcc {{
             %(preacc_code)s;
 
             if (fault == NoFault) {
-                fault = writeMemTiming(xc, traceData, Mem, EA, memAccessFlags,
-                        &memData);
+                fault = writeMemTimingLE(xc, traceData, Mem, EA,
+                        memAccessFlags, &memData);
             }
         } else {
             xc->setPredicate(false);
@@ -145,7 +145,7 @@ def template SwapCompleteAcc {{
         if (%(predicate_test)s)
         {
             // ARM instructions will not have a pkt if the predicate is false
-            getMem(pkt, Mem, traceData);
+            getMemLE(pkt, Mem, traceData);
             uint64_t memData = Mem;
 
             %(postacc_code)s;
@@ -173,7 +173,8 @@ def template LoadExecute {{
         if (%(predicate_test)s)
         {
             if (fault == NoFault) {
-                fault = readMemAtomic(xc, traceData, EA, Mem, memAccessFlags);
+                fault = readMemAtomicLE(
+                        xc, traceData, EA, Mem, memAccessFlags);
                 %(memacc_code)s;
             }
 
@@ -240,7 +241,7 @@ def template StoreExecute {{
             }
 
             if (fault == NoFault) {
-                fault = writeMemAtomic(xc, traceData, Mem, EA,
+                fault = writeMemAtomicLE(xc, traceData, Mem, EA,
                         memAccessFlags, NULL);
             }
 
@@ -313,8 +314,8 @@ def template StoreExExecute {{
             uint64_t writeResult;
 
             if (fault == NoFault) {
-                fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
-                        &writeResult);
+                fault = writeMemAtomicLE(xc, traceData, Mem, EA,
+                        memAccessFlags, &writeResult);
             }
 
             if (fault == NoFault) {
@@ -350,8 +351,8 @@ def template StoreExInitiateAcc {{
             }
 
             if (fault == NoFault) {
-                fault = writeMemTiming(xc, traceData, Mem, EA, memAccessFlags,
-                        NULL);
+                fault = writeMemTimingLE(xc, traceData, Mem, EA,
+                        memAccessFlags, NULL);
             }
         } else {
             xc->setPredicate(false);
@@ -379,8 +380,8 @@ def template StoreInitiateAcc {{
             }
 
             if (fault == NoFault) {
-                fault = writeMemTiming(xc, traceData, Mem, EA, memAccessFlags,
-                        NULL);
+                fault = writeMemTimingLE(xc, traceData, Mem, EA,
+                        memAccessFlags, NULL);
             }
         } else {
             xc->setPredicate(false);
@@ -485,7 +486,7 @@ def template LoadCompleteAcc {{
         if (%(predicate_test)s)
         {
             // ARM instructions will not have a pkt if the predicate is false
-            getMem(pkt, Mem, traceData);
+            getMemLE(pkt, Mem, traceData);
 
             if (fault == NoFault) {
                 %(memacc_code)s;

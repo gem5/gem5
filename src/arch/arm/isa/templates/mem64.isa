@@ -58,7 +58,7 @@ def template Load64Execute {{
         %(ea_code)s;
 
         if (fault == NoFault) {
-            fault = readMemAtomic(xc, traceData, EA, Mem, memAccessFlags);
+            fault = readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags);
             %(memacc_code)s;
         }
 
@@ -82,7 +82,7 @@ def template Load64FpExecute {{
         %(ea_code)s;
 
         if (fault == NoFault) {
-            fault = readMemAtomic(xc, traceData, EA, Mem, memAccessFlags);
+            fault = readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags);
         }
 
         if (fault == NoFault) {
@@ -110,8 +110,8 @@ def template Store64Execute {{
         }
 
         if (fault == NoFault) {
-            fault = writeMemAtomic(xc, traceData, Mem, EA,
-                                   memAccessFlags, NULL);
+            fault = writeMemAtomicLE(xc, traceData, Mem, EA,
+                                     memAccessFlags, NULL);
         }
 
         if (fault == NoFault) {
@@ -138,8 +138,8 @@ def template Store64InitiateAcc {{
         }
 
         if (fault == NoFault) {
-            fault = writeMemTiming(xc, traceData, Mem, EA, memAccessFlags,
-                                   NULL);
+            fault = writeMemTimingLE(xc, traceData, Mem, EA, memAccessFlags,
+                                     NULL);
         }
 
         return fault;
@@ -163,8 +163,8 @@ def template StoreEx64Execute {{
 
         uint64_t writeResult = 0;
         if (fault == NoFault) {
-            fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
-                                   &writeResult);
+            fault = writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
+                                     &writeResult);
         }
 
         if (fault == NoFault) {
@@ -195,8 +195,8 @@ def template StoreEx64InitiateAcc {{
         }
 
         if (fault == NoFault) {
-            fault = writeMemTiming(xc, traceData, Mem, EA, memAccessFlags,
-                                   NULL);
+            fault = writeMemTimingLE(xc, traceData, Mem, EA, memAccessFlags,
+                                     NULL);
         }
 
         return fault;
@@ -232,7 +232,7 @@ def template Load64CompleteAcc {{
         %(op_rd)s;
 
         // ARM instructions will not have a pkt if the predicate is false
-        getMem(pkt, Mem, traceData);
+        getMemLE(pkt, Mem, traceData);
 
         if (fault == NoFault) {
             %(memacc_code)s;
@@ -749,8 +749,8 @@ def template AmoOpExecute {{
         %(amo_code)s;
         assert(amo_op);
 
-        const Fault fault = amoMemAtomic(xc, traceData, Mem, EA,
-                                         memAccessFlags, amo_op);
+        const Fault fault = amoMemAtomicLE(xc, traceData, Mem, EA,
+                                           memAccessFlags, amo_op);
 
         if (fault == NoFault) {
             %(postacc_code)s;
@@ -790,7 +790,7 @@ def template AmoOpCompleteAcc {{
         %(op_rd)s;
 
          // ARM instructions will not have a pkt if the predicate is false
-        getMem(pkt, Mem, traceData);
+        getMemLE(pkt, Mem, traceData);
 
         %(postacc_code)s;
 

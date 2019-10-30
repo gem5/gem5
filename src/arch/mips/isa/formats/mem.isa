@@ -175,7 +175,7 @@ def template LoadExecute {{
         %(ea_code)s;
 
         if (fault == NoFault) {
-            fault = readMemAtomic(xc, traceData, EA, Mem, memAccessFlags);
+            fault = readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags);
             %(memacc_code)s;
         }
 
@@ -230,7 +230,7 @@ def template LoadCompleteAcc {{
         %(op_decl)s;
         %(op_rd)s;
 
-        getMem(pkt, Mem, traceData);
+        getMemLE(pkt, Mem, traceData);
 
         if (fault == NoFault) {
             %(memacc_code)s;
@@ -261,7 +261,7 @@ def template StoreExecute {{
         }
 
         if (fault == NoFault) {
-            fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
+            fault = writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
                     NULL);
         }
 
@@ -297,7 +297,7 @@ def template StoreFPExecute {{
         }
 
         if (fault == NoFault) {
-            fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
+            fault = writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
                     NULL);
         }
 
@@ -331,7 +331,7 @@ def template StoreCondExecute {{
         }
 
         if (fault == NoFault) {
-            fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
+            fault = writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
                     &write_result);
         }
 
@@ -364,7 +364,7 @@ def template StoreInitiateAcc {{
         }
 
         if (fault == NoFault) {
-            fault = writeMemTiming(xc, traceData, Mem, EA, memAccessFlags,
+            fault = writeMemTimingLE(xc, traceData, Mem, EA, memAccessFlags,
                     NULL);
         }
 
@@ -523,7 +523,7 @@ def format StoreUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3;
         uint32_t byte_offset = unaligned_addr & 3;
         if (GuestByteOrder == BigEndianByteOrder)
             byte_offset ^= 3;
-        fault = readMemAtomic(xc, traceData, EA, mem_word, memAccessFlags);
+        fault = readMemAtomicLE(xc, traceData, EA, mem_word, memAccessFlags);
     '''
     memacc_code = decl_code + memacc_code + '\nMem = mem_word;\n'
 
