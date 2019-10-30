@@ -41,6 +41,7 @@ if env['TARGET_ISA'] == 'arm':
     SimObject('AbstractNVM.py')
     SimObject('Display.py')
     SimObject('FlashDevice.py')
+    SimObject('GenericTimer.py')
     SimObject('Gic.py')
     SimObject('RealView.py')
     SimObject('SMMUv3.py')

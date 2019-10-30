@@ -51,6 +51,7 @@ from m5.objects.Platform import Platform
 from m5.objects.Terminal import Terminal
 from m5.objects.Uart import Uart
 from m5.objects.SimpleMemory import SimpleMemory
+from m5.objects.GenericTimer import *
 from m5.objects.Gic import *
 from m5.objects.EnergyCtrl import EnergyCtrl
 from m5.objects.ClockedObject import ClockedObject
@@ -437,49 +438,6 @@ class CpuLocalTimer(BasicPioDevice):
     int_timer = Param.ArmPPI("Interrrupt used per-cpu to GIC")
     int_watchdog = Param.ArmPPI("Interrupt for per-cpu watchdog to GIC")
 
-class GenericTimer(ClockedObject):
-    type = 'GenericTimer'
-    cxx_header = "dev/arm/generic_timer.hh"
-    system = Param.ArmSystem(Parent.any, "system")
-    int_phys_s = Param.ArmPPI("Physical (S) timer interrupt")
-    int_phys_ns = Param.ArmPPI("Physical (NS) timer interrupt")
-    int_virt = Param.ArmPPI("Virtual timer interrupt")
-    int_hyp = Param.ArmPPI("Hypervisor timer interrupt")
-
-    freqs = VectorParam.UInt32([0x01800000], "Frequencies available for the "
-        "system counter (in Hz). First element is the base frequency, "
-        "following are alternative lower ones which must be exact divisors")
-
-    def generateDeviceTree(self, state):
-        node = FdtNode("timer")
-
-        node.appendCompatible(["arm,cortex-a15-timer",
-                               "arm,armv7-timer",
-                               "arm,armv8-timer"])
-        node.append(FdtPropertyWords("interrupts", [
-            1, int(self.int_phys_s.num) - 16, 0xf08,
-            1, int(self.int_phys_ns.num) - 16, 0xf08,
-            1, int(self.int_virt.num) - 16, 0xf08,
-            1, int(self.int_hyp.num) - 16, 0xf08,
-        ]))
-        clock = state.phandle(self.clk_domain.unproxy(self))
-        node.append(FdtPropertyWords("clocks", clock))
-
-        yield node
-
-class GenericTimerMem(PioDevice):
-    type = 'GenericTimerMem'
-    cxx_header = "dev/arm/generic_timer.hh"
-
-    base = Param.Addr(0, "Base address")
-
-    int_phys = Param.ArmSPI("Physical Interrupt")
-    int_virt = Param.ArmSPI("Virtual Interrupt")
-
-    freqs = VectorParam.UInt32([0x01800000], "Frequencies available for the "
-        "system counter (in Hz). First element is the base frequency, "
-        "following are alternative lower ones which must be exact divisors")
-
 class PL031(AmbaIntDevice):
     type = 'PL031'
     cxx_header = "dev/arm/rtc_pl031.hh"
@@ -732,6 +690,7 @@ class VExpress_EMM(RealView):
         conf_base=0x30000000, conf_size='256MB', conf_device_bits=16,
         pci_pio_base=0)
 
+    sys_counter = SystemCounter()
     generic_timer = GenericTimer(int_phys_s=ArmPPI(num=29),
                                  int_phys_ns=ArmPPI(num=30),
                                  int_virt=ArmPPI(num=27),
@@ -901,7 +860,14 @@ Memory map:
        0x1c170000-0x1c17ffff: RTC
 
    0x20000000-0x3fffffff: On-chip peripherals:
+       0x2a430000-0x2a43ffff: System Counter (control)
        0x2a490000-0x2a49ffff: Trusted Watchdog (SP805)
+       0x2a800000-0x2a800fff: System Counter (read)
+       0x2a810000-0x2a810fff: System Timer (control)
+
+       0x2a820000-0x2a820fff: System Timer (frame 0)
+       0x2a830000-0x2a830fff: System Timer (frame 1)
+
        0x2b000000-0x2b00ffff: HDLCD
 
        0x2b060000-0x2b060fff: System Watchdog (SP805)
@@ -946,6 +912,8 @@ Interrupts:
         47   : Reserved (Ethernet)
         48   : Reserved (USB)
         56   : Trusted Watchdog (SP805)
+        57   : System timer0 (phys)
+        58   : System timer1 (phys)
     95-255: On-chip interrupt sources (we use these for
             gem5-specific devices, SPIs)
          74    : VirtIO (gem5/FM extension)
@@ -991,19 +959,29 @@ Interrupts:
     # Trusted Watchdog, SP805
     trusted_watchdog = Sp805(pio_addr=0x2a490000, int_num=56)
 
+    sys_counter = SystemCounter()
     generic_timer = GenericTimer(int_phys_s=ArmPPI(num=29),
                                  int_phys_ns=ArmPPI(num=30),
                                  int_virt=ArmPPI(num=27),
                                  int_hyp=ArmPPI(num=26))
+    generic_timer_mem = GenericTimerMem(cnt_control_base=0x2a430000,
+                                        cnt_read_base=0x2a800000,
+                                        cnt_ctl_base=0x2a810000,
+                                        frames=[
+            GenericTimerFrame(cnt_base=0x2a820000,
+                int_phys=ArmSPI(num=57), int_virt=ArmSPI(num=133)),
+            GenericTimerFrame(cnt_base=0x2a830000,
+                int_phys=ArmSPI(num=58), int_virt=ArmSPI(num=134))
+    ])
 
     system_watchdog = Sp805(pio_addr=0x2b060000, int_num=130)
 
     def _on_chip_devices(self):
         return [
-            self.generic_timer,
+            self.generic_timer_mem,
             self.trusted_watchdog,
             self.system_watchdog
-        ]
+        ] + self.generic_timer_mem.frames
 
     def _on_chip_memory(self):
         memories = [

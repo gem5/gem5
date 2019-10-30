@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2015, 2017-2018, 2019 ARM Limited
+ * Copyright (c) 2013, 2015, 2017-2018,2020 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -40,67 +40,106 @@
 
 #include "arch/arm/isa_device.hh"
 #include "arch/arm/system.hh"
-#include "base/bitunion.hh"
 #include "dev/arm/base_gic.hh"
+#include "dev/arm/generic_timer_miscregs_types.hh"
 #include "sim/core.hh"
 #include "sim/sim_object.hh"
 
 /// @file
 /// This module implements the global system counter and the local per-CPU
-/// architected timers as specified by the ARM Generic Timer extension (ARM
-/// ARM, Issue C, Chapter 17).
+/// architected timers as specified by the ARM Generic Timer extension:
+/// Arm ARM (ARM DDI 0487E.a)
+///     D11.1.2 - The system counter
+///     D11.2 - The AArch64 view of the Generic Timer
+///     G6.2  - The AArch32 view of the Generic Timer
+///     I2 - System Level Implementation of the Generic Timer
 
 class Checkpoint;
+class SystemCounterParams;
 class GenericTimerParams;
+class GenericTimerFrameParams;
 class GenericTimerMemParams;
 
-/// Global system counter.  It is shared by the architected timers.
-/// @todo: implement memory-mapped controls
-class SystemCounter : public Serializable
+/// Abstract class for elements whose events depend on the counting speed
+/// of the System Counter
+class SystemCounterListener : public Serializable
+{
+  public:
+    /// Called from the SystemCounter when a change in counting speed occurred
+    /// Events should be rescheduled properly inside this member function
+    virtual void notify(void) = 0;
+};
+
+/// Global system counter.  It is shared by the architected and memory-mapped
+/// timers.
+class SystemCounter : public SimObject
 {
   protected:
+    /// Indicates if the counter is enabled
+    bool _enabled;
     /// Counter frequency (as specified by CNTFRQ).
     uint32_t _freq;
+    /// Counter value (as specified in CNTCV).
+    uint64_t _value;
+    /// Value increment in each counter cycle
+    uint64_t _increment;
     /// Frequency modes table with all possible frequencies for the counter
     std::vector<uint32_t> _freqTable;
+    /// Currently selected entry in the table, its contents should match _freq
+    size_t _activeFreqEntry;
     /// Cached copy of the counter period (inverse of the frequency).
     Tick _period;
-    /// Tick when the counter was reset.
-    Tick _resetTick;
+    /// Counter cycle start Tick when the counter status affecting
+    /// its value has been updated
+    Tick _updateTick;
 
-    /// Kernel event stream control register
-    uint32_t _regCntkctl;
-    /// Hypervisor event stream control register
-    uint32_t _regCnthctl;
+    /// Listeners to changes in counting speed
+    std::vector<SystemCounterListener *> _listeners;
 
     /// Maximum architectural number of frequency table entries
     static constexpr size_t MAX_FREQ_ENTRIES = 1004;
 
   public:
-    SystemCounter(std::vector<uint32_t> &freqs);
+    SystemCounter(SystemCounterParams *const p);
 
-    /// Returns the current value of the physical counter.
-    uint64_t value() const
-    {
-        if (_freq == 0)
-            return 0;  // Counter is still off.
-        return (curTick() - _resetTick) / _period;
-    }
+    /// Validates a System Counter reference
+    /// @param sys_cnt System counter reference to validate
+    static void validateCounterRef(SystemCounter *sys_cnt);
 
+    /// Indicates if the counter is enabled.
+    bool enabled() const { return _enabled; }
     /// Returns the counter frequency.
     uint32_t freq() const { return _freq; }
-    /// Sets the counter frequency.
-    /// @param freq frequency in Hz.
-    void setFreq(uint32_t freq);
-
+    /// Updates and returns the counter value.
+    uint64_t value();
+    /// Returns the value increment
+    uint64_t increment() const { return _increment; }
+    /// Returns a reference to the frequency modes table.
+    std::vector<uint32_t>& freqTable() { return _freqTable; }
+    /// Returns the currently active frequency table entry.
+    size_t activeFreqEntry() const { return _activeFreqEntry; }
     /// Returns the counter period.
     Tick period() const { return _period; }
 
-    void setKernelControl(uint32_t val) { _regCntkctl = val; }
-    uint32_t getKernelControl() { return _regCntkctl; }
+    /// Enables the counter after a CNTCR.EN == 1
+    void enable();
+    /// Disables the counter after a CNTCR.EN == 0
+    void disable();
 
-    void setHypControl(uint32_t val) { _regCnthctl = val; }
-    uint32_t getHypControl() { return _regCnthctl; }
+    /// Schedules a counter frequency update after a CNTCR.FCREQ == 1
+    /// This complies with frequency transitions as per the architecture
+    /// @param new_freq_entry Index in CNTFID of the new freq
+    void freqUpdateSchedule(size_t new_freq_entry);
+
+    /// Sets the value explicitly from writes to CNTCR.CNTCV
+    void setValue(uint64_t new_value);
+
+    /// Called from System Counter Listeners to register
+    void registerListener(SystemCounterListener *listener);
+
+    /// Returns the tick at which a certain counter value is reached
+    Tick whenValue(uint64_t target_val);
+    Tick whenValue(uint64_t cur_val, uint64_t target_val) const;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -108,10 +147,25 @@ class SystemCounter : public Serializable
   private:
     // Disable copying
     SystemCounter(const SystemCounter &c);
+
+    /// Frequency update event handling
+    EventFunctionWrapper _freqUpdateEvent;
+    size_t _nextFreqEntry;
+    /// Callback for the frequency update
+    void freqUpdateCallback();
+
+    /// Updates the counter value.
+    void updateValue(void);
+
+    /// Updates the update tick, normalizes to the lower cycle start tick
+    void updateTick(void);
+
+    /// Notifies counting speed changes to listeners
+    void notifyListeners(void) const;
 };
 
 /// Per-CPU architected timer.
-class ArchTimer : public Serializable, public Drainable
+class ArchTimer : public SystemCounterListener, public Drainable
 {
   protected:
     /// Control register.
@@ -178,6 +232,11 @@ class ArchTimer : public Serializable, public Drainable
 
     /// Returns the value of the counter which this timer relies on.
     uint64_t value() const;
+    Tick whenValue(uint64_t target_val) {
+        return _systemCounter.whenValue(value(), target_val);
+    }
+
+    void notify(void) override;
 
     // Serializable
     void serialize(CheckpointOut &cp) const override;
@@ -214,12 +273,12 @@ class ArchTimerKvm : public ArchTimer
     }
 };
 
-class GenericTimer : public ClockedObject
+class GenericTimer : public SimObject
 {
   public:
     const GenericTimerParams * params() const;
 
-    GenericTimer(GenericTimerParams *p);
+    GenericTimer(GenericTimerParams *const p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -229,11 +288,15 @@ class GenericTimer : public ClockedObject
     RegVal readMiscReg(int misc_reg, unsigned cpu);
 
   protected:
-    struct CoreTimers {
-        CoreTimers(GenericTimer &parent, ArmSystem &system, unsigned cpu,
+    class CoreTimers : public SystemCounterListener
+    {
+      public:
+        CoreTimers(GenericTimer &_parent, ArmSystem &system, unsigned cpu,
                    ArmInterruptPin *_irqPhysS, ArmInterruptPin *_irqPhysNS,
                    ArmInterruptPin *_irqVirt, ArmInterruptPin *_irqHyp)
-            : irqPhysS(_irqPhysS),
+            : parent(_parent),
+              threadContext(system.getThreadContext(cpu)),
+              irqPhysS(_irqPhysS),
               irqPhysNS(_irqPhysNS),
               irqVirt(_irqVirt),
               irqHyp(_irqHyp),
@@ -250,8 +313,33 @@ class GenericTimer : public ClockedObject
                    _irqVirt),
               hyp(csprintf("%s.hyp_timer%d", parent.name(), cpu),
                    system, parent, parent.systemCounter,
-                   _irqHyp)
-        {}
+                   _irqHyp),
+              physEvStream{
+                   EventFunctionWrapper([this]{ physEventStreamCallback(); },
+                   csprintf("%s.phys_event_gen%d", parent.name(), cpu)), 0, 0
+              },
+              virtEvStream{
+                   EventFunctionWrapper([this]{ virtEventStreamCallback(); },
+                   csprintf("%s.virt_event_gen%d", parent.name(), cpu)), 0, 0
+              }
+        {
+            cntfrq = 0x01800000;
+        }
+
+        /// System counter frequency as visible from this core
+        uint32_t cntfrq;
+
+        /// Kernel control register
+        CNTKCTL cntkctl;
+
+        /// Hypervisor control register
+        CNTHCTL cnthctl;
+
+        /// Generic Timer parent reference
+        GenericTimer &parent;
+
+        /// Thread (HW) context associated to this PE implementation
+        ThreadContext *threadContext;
 
         ArmInterruptPin const *irqPhysS;
         ArmInterruptPin const *irqPhysNS;
@@ -263,6 +351,39 @@ class GenericTimer : public ClockedObject
         ArchTimerKvm virt;
         ArchTimerKvm hyp;
 
+        // Event Stream. Events are generated based on a configurable
+        // transitionBit over the counter value. transitionTo indicates
+        // the transition direction (0->1 or 1->0)
+        struct EventStream
+        {
+            EventFunctionWrapper event;
+            uint8_t transitionTo;
+            uint8_t transitionBit;
+
+            uint64_t
+            eventTargetValue(uint64_t val) const
+            {
+                uint64_t bit_val = bits(val, transitionBit);
+                uint64_t ret_val = mbits(val, 63, transitionBit);
+                uint64_t incr_val = 1 << transitionBit;
+                if (bit_val == transitionTo)
+                    incr_val *= 2;
+                return ret_val + incr_val;
+            }
+        };
+
+        EventStream physEvStream;
+        EventStream virtEvStream;
+        void physEventStreamCallback();
+        void virtEventStreamCallback();
+        void eventStreamCallback() const;
+        void schedNextEvent(EventStream &ev_stream, ArchTimer &timer);
+
+        void notify(void) override;
+
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
+
       private:
         // Disable copying
         CoreTimers(const CoreTimers &c);
@@ -271,8 +392,8 @@ class GenericTimer : public ClockedObject
     CoreTimers &getTimers(int cpu_id);
     void createTimers(unsigned cpus);
 
-    /// System counter.
-    SystemCounter systemCounter;
+    /// System counter reference.
+    SystemCounter &systemCounter;
 
     /// Per-CPU physical architected timers.
     std::vector<std::unique_ptr<CoreTimers>> timers;
@@ -280,6 +401,9 @@ class GenericTimer : public ClockedObject
   protected: // Configuration
     /// ARM system containing this timer
     ArmSystem &system;
+
+    void handleStream(CoreTimers::EventStream *ev_stream,
+        ArchTimer *timer, RegVal old_cnt_ctl, RegVal cnt_ctl);
 };
 
 class GenericTimerISA : public ArmISA::BaseISADevice
@@ -296,61 +420,190 @@ class GenericTimerISA : public ArmISA::BaseISADevice
     unsigned cpu;
 };
 
-class GenericTimerMem : public PioDevice
+class GenericTimerFrame : public PioDevice
 {
   public:
-    GenericTimerMem(GenericTimerMemParams *p);
+    GenericTimerFrame(GenericTimerFrameParams *const p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-  public: // PioDevice
-    AddrRangeList getAddrRanges() const override { return addrRanges; }
+    /// Indicates if this frame implements a virtual timer
+    bool hasVirtualTimer() const;
+
+    /// Returns the virtual offset for this frame if a virtual timer is
+    /// implemented
+    uint64_t getVirtOffset() const;
+
+    /// Sets the virtual offset for this frame's virtual timer after
+    /// a write to CNTVOFF
+    void setVirtOffset(uint64_t new_offset);
+
+    /// Indicates if this frame implements a second EL0 view
+    bool hasEl0View() const;
+
+    /// Returns the access bits for this frame
+    uint8_t getAccessBits() const;
+
+    /// Updates the access bits after a write to CNTCTLBase.CNTACR
+    void setAccessBits(uint8_t data);
+
+    /// Indicates if non-secure accesses are allowed to this frame
+    bool hasNonSecureAccess() const;
+
+    /// Allows non-secure accesses after an enabling write to
+    /// CNTCTLBase.CNTNSAR
+    void setNonSecureAccess();
+
+    /// Indicates if CNTVOFF is readable for this frame
+    bool hasReadableVoff() const;
+
+  protected:
+    AddrRangeList getAddrRanges() const override;
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
 
-  protected:
-    uint64_t ctrlRead(Addr addr, size_t size) const;
-    void ctrlWrite(Addr addr, size_t size, uint64_t value);
-
-    uint64_t timerRead(Addr addr, size_t size) const;
-    void timerWrite(Addr addr, size_t size, uint64_t value);
-
-  protected: // Registers
-    static const Addr CTRL_CNTFRQ          = 0x000;
-    static const Addr CTRL_CNTNSAR         = 0x004;
-    static const Addr CTRL_CNTTIDR         = 0x008;
-    static const Addr CTRL_CNTACR_BASE     = 0x040;
-    static const Addr CTRL_CNTVOFF_LO_BASE = 0x080;
-    static const Addr CTRL_CNTVOFF_HI_BASE = 0x084;
-
-    static const Addr TIMER_CNTPCT_LO    = 0x000;
-    static const Addr TIMER_CNTPCT_HI    = 0x004;
-    static const Addr TIMER_CNTVCT_LO    = 0x008;
-    static const Addr TIMER_CNTVCT_HI    = 0x00C;
-    static const Addr TIMER_CNTFRQ       = 0x010;
-    static const Addr TIMER_CNTEL0ACR    = 0x014;
-    static const Addr TIMER_CNTVOFF_LO   = 0x018;
-    static const Addr TIMER_CNTVOFF_HI   = 0x01C;
-    static const Addr TIMER_CNTP_CVAL_LO = 0x020;
-    static const Addr TIMER_CNTP_CVAL_HI = 0x024;
-    static const Addr TIMER_CNTP_TVAL    = 0x028;
-    static const Addr TIMER_CNTP_CTL     = 0x02C;
-    static const Addr TIMER_CNTV_CVAL_LO = 0x030;
-    static const Addr TIMER_CNTV_CVAL_HI = 0x034;
-    static const Addr TIMER_CNTV_TVAL    = 0x038;
-    static const Addr TIMER_CNTV_CTL     = 0x03C;
-
-  protected: // Params
-    const AddrRange ctrlRange;
+  private:
+    /// CNTBase/CNTEL0Base (Memory-mapped timer frame)
+    uint64_t timerRead(Addr addr, size_t size, bool is_sec, bool to_el0) const;
+    void timerWrite(Addr addr, size_t size, uint64_t data, bool is_sec,
+                    bool to_el0);
     const AddrRange timerRange;
-    const AddrRangeList addrRanges;
+    AddrRange timerEl0Range;
 
-  protected:
-    /// System counter.
-    SystemCounter systemCounter;
+    static const Addr TIMER_CNTPCT_LO          = 0x00;
+    static const Addr TIMER_CNTPCT_HI          = 0x04;
+    static const Addr TIMER_CNTVCT_LO          = 0x08;
+    static const Addr TIMER_CNTVCT_HI          = 0x0c;
+    static const Addr TIMER_CNTFRQ             = 0x10;
+    static const Addr TIMER_CNTEL0ACR          = 0x14;
+    static const Addr TIMER_CNTVOFF_LO         = 0x18;
+    static const Addr TIMER_CNTVOFF_HI         = 0x1c;
+    static const Addr TIMER_CNTP_CVAL_LO       = 0x20;
+    static const Addr TIMER_CNTP_CVAL_HI       = 0x24;
+    static const Addr TIMER_CNTP_TVAL          = 0x28;
+    static const Addr TIMER_CNTP_CTL           = 0x2c;
+    static const Addr TIMER_CNTV_CVAL_LO       = 0x30;
+    static const Addr TIMER_CNTV_CVAL_HI       = 0x34;
+    static const Addr TIMER_CNTV_TVAL          = 0x38;
+    static const Addr TIMER_CNTV_CTL           = 0x3c;
+
+    /// All MMIO ranges GenericTimerFrame responds to
+    AddrRangeList addrRanges;
+
+    /// System counter reference.
+    SystemCounter &systemCounter;
+
+    /// Physical and virtual timers
     ArchTimer physTimer;
     ArchTimer virtTimer;
+
+    /// Reports access properties of the CNTBase register frame elements
+    BitUnion8(AccessBits)
+        Bitfield<5> rwpt;
+        Bitfield<4> rwvt;
+        Bitfield<3> rvoff;
+        Bitfield<2> rfrq;
+        Bitfield<1> rvct;
+        Bitfield<0> rpct;
+    EndBitUnion(AccessBits)
+    AccessBits accessBits;
+
+    // Reports access properties of the CNTEL0Base register frame elements
+    BitUnion16(AccessBitsEl0)
+        Bitfield<9> pten;
+        Bitfield<8> vten;
+        Bitfield<1> vcten;
+        Bitfield<0> pcten;
+    EndBitUnion(AccessBitsEl0)
+    AccessBitsEl0 accessBitsEl0;
+
+    /// Reports whether non-secure accesses are allowed to this frame
+    bool nonSecureAccess;
+
+    ArmSystem &system;
+};
+
+class GenericTimerMem : public PioDevice
+{
+  public:
+    GenericTimerMem(GenericTimerMemParams *const p);
+
+    /// Validates a Generic Timer register frame address range
+    /// @param base_addr Range of the register frame
+    static void validateFrameRange(const AddrRange &range);
+
+    /// Validates an MMIO access permissions
+    /// @param sys System reference where the acces is being made
+    /// @param is_sec If the access is to secure memory
+    static bool validateAccessPerm(ArmSystem &sys, bool is_sec);
+
+  protected:
+    AddrRangeList getAddrRanges() const override;
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
+
+  private:
+    /// CNTControlBase (System counter control frame)
+    uint64_t counterCtrlRead(Addr addr, size_t size, bool is_sec) const;
+    void counterCtrlWrite(Addr addr, size_t size, uint64_t data, bool is_sec);
+    const AddrRange counterCtrlRange;
+
+    BitUnion32(CNTCR)
+        Bitfield<17,8> fcreq;
+        Bitfield<2> scen;
+        Bitfield<1> hdbg;
+        Bitfield<0> en;
+    EndBitUnion(CNTCR)
+
+    BitUnion32(CNTSR)
+        Bitfield<31,8> fcack;
+    EndBitUnion(CNTSR)
+
+    static const Addr COUNTER_CTRL_CNTCR       = 0x00;
+    static const Addr COUNTER_CTRL_CNTSR       = 0x04;
+    static const Addr COUNTER_CTRL_CNTCV_LO    = 0x08;
+    static const Addr COUNTER_CTRL_CNTCV_HI    = 0x0c;
+    static const Addr COUNTER_CTRL_CNTSCR      = 0x10;
+    static const Addr COUNTER_CTRL_CNTID       = 0x1c;
+    static const Addr COUNTER_CTRL_CNTFID      = 0x20;
+
+    /// CNTReadBase (System counter status frame)
+    uint64_t counterStatusRead(Addr addr, size_t size) const;
+    void counterStatusWrite(Addr addr, size_t size, uint64_t data);
+    const AddrRange counterStatusRange;
+
+    static const Addr COUNTER_STATUS_CNTCV_LO  = 0x00;
+    static const Addr COUNTER_STATUS_CNTCV_HI  = 0x04;
+
+    /// CNTCTLBase (Memory-mapped timer global control frame)
+    uint64_t timerCtrlRead(Addr addr, size_t size, bool is_sec) const;
+    void timerCtrlWrite(Addr addr, size_t size, uint64_t data, bool is_sec);
+    const AddrRange timerCtrlRange;
+
+    /// ID register for reporting features of implemented timer frames
+    uint32_t cnttidr;
+
+    static const Addr TIMER_CTRL_CNTFRQ        = 0x00;
+    static const Addr TIMER_CTRL_CNTNSAR       = 0x04;
+    static const Addr TIMER_CTRL_CNTTIDR       = 0x08;
+    static const Addr TIMER_CTRL_CNTACR        = 0x40;
+    static const Addr TIMER_CTRL_CNTVOFF_LO    = 0x80;
+    static const Addr TIMER_CTRL_CNTVOFF_HI    = 0x84;
+
+    /// All MMIO ranges GenericTimerMem responds to
+    const AddrRangeList addrRanges;
+
+    /// System counter reference.
+    SystemCounter &systemCounter;
+
+    /// Maximum architectural number of memory-mapped timer frames
+    static constexpr size_t MAX_TIMER_FRAMES = 8;
+
+    /// Timer frame references
+    std::vector<GenericTimerFrame *> frames;
+
+    ArmSystem &system;
 };
 
 #endif // __DEV_ARM_GENERIC_TIMER_HH__
