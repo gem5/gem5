@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2020-2021 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -70,7 +70,6 @@ PerfectSwitch::PerfectSwitch(SwitchID sid, Switch *sw, uint32_t virt_nets)
     : Consumer(sw, Switch::PERFECTSWITCH_EV_PRI),
       m_switch_id(sid), m_switch(sw)
 {
-    m_round_robin_start = 0;
     m_wakeups_wo_switch = 0;
     m_virtual_networks = virt_nets;
 }
@@ -119,36 +118,43 @@ PerfectSwitch::~PerfectSwitch()
 {
 }
 
+MessageBuffer*
+PerfectSwitch::inBuffer(int in_port, int vnet) const
+{
+    if (m_in[in_port].size() <= vnet) {
+        return nullptr;
+    }
+    else {
+        return m_in[in_port][vnet];
+    }
+}
+
 void
 PerfectSwitch::operateVnet(int vnet)
 {
-    // This is for round-robin scheduling
-    int incoming = m_round_robin_start;
-    m_round_robin_start++;
-    if (m_round_robin_start >= m_in.size()) {
-        m_round_robin_start = 0;
-    }
-
     if (m_pending_message_count[vnet] > 0) {
-        // for all input ports, use round robin scheduling
-        for (int counter = 0; counter < m_in.size(); counter++) {
-            // Round robin scheduling
-            incoming++;
-            if (incoming >= m_in.size()) {
-                incoming = 0;
+        // first check the port with the oldest message
+        unsigned start_in_port = 0;
+        Tick lowest_tick = MaxTick;
+        for (int i = 0; i < m_in.size(); ++i) {
+            MessageBuffer *buffer = inBuffer(i, vnet);
+            if (buffer) {
+                Tick ready_time = buffer->readyTime();
+                if (ready_time < lowest_tick){
+                    lowest_tick = ready_time;
+                    start_in_port = i;
+                }
             }
-
-            // Is there a message waiting?
-            if (m_in[incoming].size() <= vnet) {
-                continue;
-            }
-
-            MessageBuffer *buffer = m_in[incoming][vnet];
-            if (buffer == nullptr) {
-                continue;
-            }
-
-            operateMessageBuffer(buffer, incoming, vnet);
+        }
+        DPRINTF(RubyNetwork, "vnet %d: %d pending msgs. "
+                             "Checking port %d first\n",
+                vnet, m_pending_message_count[vnet], start_in_port);
+        // check all ports starting with the one with the oldest message
+        for (int i = 0; i < m_in.size(); ++i) {
+            int in_port = (i + start_in_port) % m_in.size();
+            MessageBuffer *buffer = inBuffer(in_port, vnet);
+            if (buffer)
+                operateMessageBuffer(buffer, in_port, vnet);
         }
     }
 }

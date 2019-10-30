@@ -86,6 +86,9 @@ class MessageBuffer : public SimObject
     // TRUE if head of queue timestamp <= SystemTime
     bool isReady(Tick current_time) const;
 
+    // earliest tick the head of queue will be ready, or MaxTick if empty
+    Tick readyTime() const;
+
     void
     delayHead(Tick current_time, Tick delta)
     {

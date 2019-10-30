@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2021 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -105,11 +117,12 @@ class PerfectSwitch : public Consumer
     std::vector<LinkOrder> m_link_order;
 
     uint32_t m_virtual_networks;
-    int m_round_robin_start;
     int m_wakeups_wo_switch;
 
     SimpleNetwork* m_network_ptr;
     std::vector<int> m_pending_message_count;
+
+    MessageBuffer* inBuffer(int in_port, int vnet) const;
 };
 
 inline std::ostream&

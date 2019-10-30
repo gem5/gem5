@@ -523,6 +523,15 @@ MessageBuffer::isReady(Tick current_time) const
     return can_dequeue && is_ready;
 }
 
+Tick
+MessageBuffer::readyTime() const
+{
+    if (m_prio_heap.empty())
+        return MaxTick;
+    else
+        return m_prio_heap.front()->getLastEnqueueTime();
+}
+
 uint32_t
 MessageBuffer::functionalAccess(Packet *pkt, bool is_read, WriteMask *mask)
 {
