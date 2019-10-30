@@ -48,7 +48,6 @@
 #include "cpu/thread_context.hh"
 #include "params/X86System.hh"
 
-using namespace LittleEndianGuest;
 using namespace X86ISA;
 
 X86System::X86System(Params *p) :

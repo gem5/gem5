@@ -42,8 +42,6 @@
 #include "params/RiscvSystem.hh"
 #include "sim/byteswap.hh"
 
-using namespace LittleEndianGuest;
-
 RiscvSystem::RiscvSystem(Params *p)
     : System(p),
       _isBareMetal(p->bare_metal),

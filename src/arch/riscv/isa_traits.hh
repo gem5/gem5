@@ -50,12 +50,10 @@
 #include "base/types.hh"
 #include "cpu/static_inst_fwd.hh"
 
-namespace LittleEndianGuest {}
-
 namespace RiscvISA
 {
 
-using namespace LittleEndianGuest;
+const ByteOrder GuestByteOrder = LittleEndianByteOrder;
 
 const Addr PageShift = 12;
 const Addr PageBytes = ULL(1) << PageShift;

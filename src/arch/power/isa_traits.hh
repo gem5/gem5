@@ -39,12 +39,10 @@
 #include "base/types.hh"
 #include "cpu/static_inst_fwd.hh"
 
-namespace BigEndianGuest {}
-
 namespace PowerISA
 {
 
-using namespace BigEndianGuest;
+const ByteOrder GuestByteOrder = BigEndianByteOrder;
 
 StaticInstPtr decodeInst(ExtMachInst);
 

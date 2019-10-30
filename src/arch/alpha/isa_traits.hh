@@ -32,8 +32,6 @@
 #ifndef __ARCH_ALPHA_ISA_TRAITS_HH__
 #define __ARCH_ALPHA_ISA_TRAITS_HH__
 
-namespace LittleEndianGuest {}
-
 #include "arch/alpha/ipr.hh"
 #include "arch/alpha/types.hh"
 #include "base/types.hh"
@@ -41,7 +39,7 @@ namespace LittleEndianGuest {}
 
 namespace AlphaISA {
 
-using namespace LittleEndianGuest;
+const ByteOrder GuestByteOrder = LittleEndianByteOrder;
 
 StaticInstPtr decodeInst(ExtMachInst);
 

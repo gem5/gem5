@@ -37,12 +37,10 @@
 #include "base/types.hh"
 #include "cpu/static_inst_fwd.hh"
 
-namespace BigEndianGuest {}
-
 namespace SparcISA
 {
-// This makes sure the big endian versions of certain functions are used.
-using namespace BigEndianGuest;
+
+const ByteOrder GuestByteOrder = BigEndianByteOrder;
 
 const Addr PageShift = 13;
 const Addr PageBytes = ULL(1) << PageShift;

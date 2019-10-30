@@ -41,8 +41,6 @@
 #include "params/MipsSystem.hh"
 #include "sim/byteswap.hh"
 
-using namespace LittleEndianGuest;
-
 MipsSystem::MipsSystem(Params *p) : System(p)
 {
 }

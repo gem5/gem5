@@ -48,7 +48,6 @@
 #include "params/LinuxX86System.hh"
 #include "sim/byteswap.hh"
 
-using namespace LittleEndianGuest;
 using namespace X86ISA;
 
 LinuxX86System::LinuxX86System(Params *p)

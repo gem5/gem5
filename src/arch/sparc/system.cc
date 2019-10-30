@@ -38,8 +38,6 @@
 #include "params/SparcSystem.hh"
 #include "sim/byteswap.hh"
 
-using namespace BigEndianGuest;
-
 namespace
 {
 

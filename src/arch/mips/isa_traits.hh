@@ -38,12 +38,10 @@
 #include "base/types.hh"
 #include "cpu/static_inst_fwd.hh"
 
-namespace LittleEndianGuest {}
-
 namespace MipsISA
 {
 
-using namespace LittleEndianGuest;
+const ByteOrder GuestByteOrder = LittleEndianByteOrder;
 
 StaticInstPtr decodeInst(ExtMachInst);
 

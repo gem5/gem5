@@ -45,13 +45,9 @@
 #include "base/compiler.hh"
 #include "base/types.hh"
 
-namespace LittleEndianGuest {}
-
 namespace X86ISA
 {
-    //This makes sure the little endian version of certain functions
-    //are used.
-    using namespace LittleEndianGuest;
+    const ByteOrder GuestByteOrder = LittleEndianByteOrder;
 
     const Addr PageShift = 12;
     const Addr PageBytes = ULL(1) << PageShift;

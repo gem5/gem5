@@ -169,37 +169,4 @@ inline T gtoh(T value, ByteOrder guest_byte_order)
         betoh(value) : letoh(value);
 }
 
-namespace BigEndianGuest
-{
-    const ByteOrder GuestByteOrder = BigEndianByteOrder;
-    template <typename T>
-    inline T gtole(T value) {return betole(value);}
-    template <typename T>
-    inline T letog(T value) {return letobe(value);}
-    template <typename T>
-    inline T gtobe(T value) {return value;}
-    template <typename T>
-    inline T betog(T value) {return value;}
-    template <typename T>
-    inline T htog(T value) {return htobe(value);}
-    template <typename T>
-    inline T gtoh(T value) {return betoh(value);}
-}
-
-namespace LittleEndianGuest
-{
-    const ByteOrder GuestByteOrder = LittleEndianByteOrder;
-    template <typename T>
-    inline T gtole(T value) {return value;}
-    template <typename T>
-    inline T letog(T value) {return value;}
-    template <typename T>
-    inline T gtobe(T value) {return letobe(value);}
-    template <typename T>
-    inline T betog(T value) {return betole(value);}
-    template <typename T>
-    inline T htog(T value) {return htole(value);}
-    template <typename T>
-    inline T gtoh(T value) {return letoh(value);}
-}
 #endif // __SIM_BYTE_SWAP_HH__
