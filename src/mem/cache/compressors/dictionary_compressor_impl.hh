@@ -117,23 +117,24 @@ template <class T>
 std::unique_ptr<BaseCacheCompressor::CompressionData>
 DictionaryCompressor<T>::compress(const uint64_t* data)
 {
-    std::unique_ptr<CompData> comp_data =
+    std::unique_ptr<BaseCacheCompressor::CompressionData> comp_data =
         std::unique_ptr<CompData>(new CompData());
 
     // Reset dictionary
     resetDictionary();
 
     // Compress every value sequentially
+    CompData* const comp_data_ptr = static_cast<CompData*>(comp_data.get());
     const std::vector<T> values((T*)data, (T*)data + blkSize / sizeof(T));
     for (const auto& value : values) {
         std::unique_ptr<Pattern> pattern = compressValue(value);
         DPRINTF(CacheComp, "Compressed %016x to %s\n", value,
             pattern->print());
-        comp_data->addEntry(std::move(pattern));
+        comp_data_ptr->addEntry(std::move(pattern));
     }
 
     // Return compressed line
-    return std::move(comp_data);
+    return comp_data;
 }
 
 template <class T>
