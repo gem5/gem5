@@ -31,6 +31,7 @@
 #ifndef __CACHE_PREFETCH_ASSOCIATIVE_SET_IMPL_HH__
 #define __CACHE_PREFETCH_ASSOCIATIVE_SET_IMPL_HH__
 
+#include "base/intmath.hh"
 #include "mem/cache/prefetch/associative_set.hh"
 
 template<class Entry>
