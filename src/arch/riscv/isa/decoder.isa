@@ -36,7 +36,7 @@
 
 decode QUADRANT default Unknown::unknown() {
     0x0: decode COPCODE {
-        0x0: CIOp::c_addi4spn({{
+        0x0: CIAddi4spnOp::c_addi4spn({{
             imm = CIMM8<1:1> << 2 |
                   CIMM8<0:0> << 3 |
                   CIMM8<7:6> << 4 |
@@ -197,7 +197,7 @@ decode QUADRANT default Unknown::unknown() {
                     Rp1 = Rp1 & imm;
                 }}, uint64_t);
             }
-            format ROp {
+            format CompressedROp {
                 0x3: decode CFUNCT1 {
                     0x0: decode CFUNCT2LOW {
                         0x0: c_sub({{
@@ -328,7 +328,7 @@ decode QUADRANT default Unknown::unknown() {
                         ra = NPC;
                         NPC = Rc1;
                     }}, IsIndirectControl, IsUncondControl, IsCall);
-                    default: ROp::c_add({{
+                    default: CompressedROp::c_add({{
                         Rc1_sd = Rc1_sd + Rc2_sd;
                     }});
                 }

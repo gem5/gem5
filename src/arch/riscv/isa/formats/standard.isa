@@ -203,9 +203,7 @@ def template JumpExecute {{
         std::vector<RegId> indices = {%(regs)s};
         std::stringstream ss;
         ss << mnemonic << ' ';
-        for (const RegId& idx: indices)
-            ss << registerName(idx) << ", ";
-        ss << imm;
+        ss << registerName(indices[0]);
         return ss.str();
     }
 }};
@@ -328,7 +326,7 @@ def format BOp(code, *opt_flags) {{
 }};
 
 def format Jump(code, *opt_flags) {{
-    regs = ['_destRegIdx[0]', '_srcRegIdx[0]']
+    regs = ['_srcRegIdx[0]']
     iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
         {'code': code, 'imm_code': 'imm = sext<12>(IMM12);',
          'regs': ','.join(regs)}, opt_flags)
