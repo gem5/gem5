@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2019 The Regents of the University of California
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+            Bobby R. Bruce
  */
 
 #include "base/match.hh"
@@ -101,5 +103,18 @@ ObjectMatch::domatch(const string &name) const
     }
 
     return false;
+}
+
+std::vector<std::vector<std::string> >
+ObjectMatch::getExpressions()
+{
+    std::vector<std::vector<std::string> > to_return;
+    for (const std::vector<std::string> expression : tokens) {
+        std::vector<std::string> to_add;
+        to_add.insert(to_add.end(), expression.begin(), expression.end());
+        to_return.push_back(to_add);
+    }
+
+    return to_return;
 }
 
