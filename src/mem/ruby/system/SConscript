@@ -37,7 +37,6 @@ if env['BUILD_GPU']:
     SimObject('GPUCoalescer.py')
 SimObject('RubySystem.py')
 SimObject('Sequencer.py')
-SimObject('WeightedLRUReplacementPolicy.py')
 if env['BUILD_GPU']:
     SimObject('VIPERCoalescer.py')
 
@@ -51,4 +50,3 @@ Source('RubySystem.cc')
 Source('Sequencer.cc')
 if env['BUILD_GPU']:
     Source('VIPERCoalescer.cc')
-Source('WeightedLRUPolicy.cc')

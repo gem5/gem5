@@ -33,14 +33,15 @@
  * Authors: Sooraj Puthoor
  */
 
-#ifndef __MEM_RUBY_SYSTEM_WEIGHTEDLRUPOLICY_HH__
-#define __MEM_RUBY_SYSTEM_WEIGHTEDLRUPOLICY_HH__
+#ifndef __MEM_CACHE_REPLACEMENT_POLICIES_WEIGHTED_LRU_RP_HH__
+#define __MEM_CACHE_REPLACEMENT_POLICIES_WEIGHTED_LRU_RP_HH__
 
+#include <memory>
+
+#include "base/types.hh"
 #include "mem/cache/replacement_policies/base.hh"
-#include "mem/ruby/structures/CacheMemory.hh"
-#include "params/WeightedLRUReplacementPolicy.hh"
 
-/* Simple true LRU replacement policy */
+struct WeightedLRURPParams;
 
 class WeightedLRUPolicy : public BaseReplacementPolicy
 {
@@ -61,7 +62,7 @@ class WeightedLRUPolicy : public BaseReplacementPolicy
                                 last_occ_ptr(0), last_touch_tick(0) {}
     };
   public:
-    typedef WeightedLRUReplacementPolicyParams Params;
+    typedef WeightedLRURPParams Params;
     WeightedLRUPolicy(const Params* p);
     ~WeightedLRUPolicy() {}
 
@@ -110,4 +111,4 @@ class WeightedLRUPolicy : public BaseReplacementPolicy
                                               candidates) const override;
 };
 
-#endif // __MEM_RUBY_SYSTEM_WeightedLRUPolicy_HH__
+#endif // __MEM_CACHE_REPLACEMENT_POLICIES_WEIGHTED_LRU_RP_HH__

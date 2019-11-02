@@ -33,10 +33,11 @@
  * Authors: Derek Hower
  */
 
-#include "mem/ruby/system/WeightedLRUPolicy.hh"
+#include "mem/cache/replacement_policies/weighted_lru_rp.hh"
 
 #include <cassert>
-#include <memory>
+
+#include "params/WeightedLRURP.hh"
 
 WeightedLRUPolicy::WeightedLRUPolicy(const Params* p)
     : BaseReplacementPolicy(p)
@@ -44,7 +45,7 @@ WeightedLRUPolicy::WeightedLRUPolicy(const Params* p)
 }
 
 WeightedLRUPolicy *
-WeightedLRUReplacementPolicyParams::create()
+WeightedLRURPParams::create()
 {
     return new WeightedLRUPolicy(this);
 }
