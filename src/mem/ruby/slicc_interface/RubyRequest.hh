@@ -26,21 +26,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SLICC_INTERFACE_RUBY_REQUEST_HH__
-#define __MEM_RUBY_SLICC_INTERFACE_RUBY_REQUEST_HH__
+#ifndef __MEM_RUBY_SLICC_INTERFACE_RUBYREQUEST_HH__
+#define __MEM_RUBY_SLICC_INTERFACE_RUBYREQUEST_HH__
 
 #include <ostream>
 #include <vector>
 
-#include "mem/protocol/HSAScope.hh"
-#include "mem/protocol/HSASegment.hh"
-#include "mem/protocol/Message.hh"
-#include "mem/protocol/PrefetchBit.hh"
-#include "mem/protocol/RubyAccessMode.hh"
-#include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/WriteMask.hh"
+#include "mem/ruby/protocol/HSAScope.hh"
+#include "mem/ruby/protocol/HSASegment.hh"
+#include "mem/ruby/protocol/Message.hh"
+#include "mem/ruby/protocol/PrefetchBit.hh"
+#include "mem/ruby/protocol/RubyAccessMode.hh"
+#include "mem/ruby/protocol/RubyRequestType.hh"
 
 class RubyRequest : public Message
 {
@@ -165,4 +165,4 @@ operator<<(std::ostream& out, const RubyRequest& obj)
   return out;
 }
 
-#endif  // __MEM_RUBY_SLICC_INTERFACE_RUBY_REQUEST_HH__
+#endif  //__MEM_RUBY_SLICC_INTERFACE_RUBYREQUEST_HH__

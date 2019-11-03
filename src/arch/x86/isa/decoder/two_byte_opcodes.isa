@@ -133,7 +133,7 @@
                 0x7: decode MODRM_MOD {
                     0x3: decode MODRM_RM {
                         0x0: Inst::SWAPGS();
-                        0x1: rdtscp();
+                        0x1: Inst::RDTSCP();
                         default: Inst::UD2();
                     }
                     default: Inst::INVLPG(M);
@@ -228,12 +228,16 @@
                     0x5b: m5_work_end({{
                         PseudoInst::workend(xc->tcBase(), Rdi, Rsi);
                     }}, IsNonSpeculative);
+                    0x62: m5togglesync({{
+                        PseudoInst::togglesync(xc->tcBase());
+                    }}, IsNonSpeculative, IsQuiesce);
                     default: Inst::UD2();
                 }
             }
             0x05: decode FullSystemInt {
-                0: SyscallInst::syscall('xc->syscall(Rax)',
-                        IsSyscall, IsNonSpeculative, IsSerializeAfter);
+                0: SyscallInst::syscall('xc->syscall(Rax, &fault)',
+                                        IsSyscall, IsNonSpeculative,
+                                        IsSerializeAfter);
                 default: decode MODE_MODE {
                     0x0: decode MODE_SUBMODE {
                         0x0: Inst::SYSCALL_64();
@@ -356,9 +360,11 @@
             0x04: decode LEGACY_DECODEVAL {
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
-                    0x0: MOV(Rd,Cd);
+                    0x0: CondInst::MOV(
+                        {{isValidMiscReg(MISCREG_CR(MODRM_REG))}},Rd,Cd);
                     0x1: MOV(Rd,Dd);
-                    0x2: MOV(Cd,Rd);
+                    0x2: CondInst::MOV(
+                        {{isValidMiscReg(MISCREG_CR(MODRM_REG))}},Cd,Rd);
                     0x3: MOV(Dd,Rd);
                     default: UD2();
                 }
@@ -377,7 +383,9 @@
                     0x0: MOVAPS(Vq,Wq);
                     0x1: MOVAPS(Wq,Vq);
                     0x2: CVTPI2PS(Vq,Qq);
-                    0x3: WarnUnimpl::movntps_Mo_Vo();
+                    //Non-temporal hint is ignored since we don't have
+                    //proper support for it in the memory system.
+                    0x3: MOVNTPS(Mq,Vq);
                     0x4: CVTTPS2PI(Pq,Wq);
                     0x5: CVTPS2PI(Pq,Wq);
                     0x6: UCOMISS(Vd,Wd);
@@ -395,7 +403,9 @@
                     0x0: MOVAPD(Vo,Wo);
                     0x1: MOVAPD(Wo,Vo);
                     0x2: CVTPI2PD(Vo,Qq);
-                    0x3: WarnUnimpl::movntpd_Mo_Vo();
+                    //Non-temporal hint is ignored since we don't have
+                    //proper support for it in the memory system.
+                    0x3: MOVNTPD(Mq,Vq);
                     0x4: CVTTPD2PI(Pq,Wo);
                     0x5: CVTPD2PI(Pq,Wo);
                     0x6: UCOMISD(Vq,Wq);
@@ -419,8 +429,9 @@
             0x2: Inst::RDMSR();
             0x3: rdpmc();
             0x4: decode FullSystemInt {
-                0: SyscallInst::sysenter('xc->syscall(Rax)',
-                        IsSyscall, IsNonSpeculative, IsSerializeAfter);
+                0: SyscallInst::sysenter('xc->syscall(Rax, &fault)',
+                                         IsSyscall, IsNonSpeculative,
+                                         IsSerializeAfter);
                 default: sysenter();
             }
             0x5: sysexit();
@@ -749,10 +760,13 @@
                     Rcx = result.rcx;
                     Rdx = result.rdx;
                 } else {
-                    Rax = Rax;
-                    Rbx = Rbx;
-                    Rcx = Rcx;
-                    Rdx = Rdx;
+                    // It isn't defined what to do in this case. We used to
+                    // leave R[abcd]x unmodified, but setting them all to 0
+                    // seems a little safer and more predictable.
+                    Rax = 0;
+                    Rbx = 0;
+                    Rcx = 0;
+                    Rdx = 0;
                 }
                 }});
             0x3: Inst::BT(Ev,Gv);
@@ -771,7 +785,8 @@
             0x6: decode MODRM_MOD {
                 0x3: decode MODRM_REG {
                     0x5: BasicOperate::LFENCE(
-                                 {{/*Nothing*/}}, IsReadBarrier);
+                                 {{/*Nothing*/}}, IsReadBarrier,
+                                 IsSerializeAfter);
                     0x6: BasicOperate::MFENCE(
                                  {{/*Nothing*/}}, IsMemBarrier);
                     0x7: BasicOperate::SFENCE(
@@ -793,8 +808,16 @@
                     0x3: Inst::STMXCSR(Md);
                     0x4: xsave();
                     0x5: xrstor();
-                    0x6: Inst::UD2();
-                    0x7: clflush();
+                    0x6: decode LEGACY_DECODEVAL {
+                        0x0: Inst::UD2();
+                        0x1: Inst::CLWB(Mb);
+                        default: Inst::UD2();
+                    }
+                    0x7: decode LEGACY_DECODEVAL {
+                        0x0: Inst::CLFLUSH(Mb);
+                        0x1: Inst::CLFLUSHOPT(Mb);
+                        default: Inst::CLFLUSH(Mb);
+                    }
                 }
             }
             0x7: Inst::IMUL(Gv,Ev);
@@ -860,6 +883,8 @@
                     // no prefix
                     0x0: decode OPCODE_OP_BOTTOM3 {
                         0x2: CMPPS(Vo,Wo,Ib);
+                        //Non-temporal hint is ignored since we don't have
+                        //proper support for it in the memory system.
                         0x3: MOVNTI(Mdp,Gdp);
                         0x4: PINSRW(Pq,Ew,Ib);
                         0x5: PEXTRW(Gd,PRq,Ib);
@@ -960,7 +985,9 @@
                     0x3: PAVGW(Pq,Qq);
                     0x4: PMULHUW(Pq,Qq);
                     0x5: PMULHW(Pq,Qq);
-                    0x7: WarnUnimpl::movntq_Mq_Pq();
+                    //Non-temporal hint is ignored since we don't have
+                    //proper support for it in the memory system.
+                    0x7: MOVNTQ(Mq,Pq);
                     default: UD2();
                 }
                 // repe (0xF3)
@@ -977,7 +1004,11 @@
                     0x4: PMULHUW(Vo,Wo);
                     0x5: PMULHW(Vo,Wo);
                     0x6: CVTTPD2DQ(Vo,Wo);
-                    0x7: WarnUnimpl::movntdq_Mo_Vo();
+                    //MOVNTDQ should really use size o (octword), but
+                    //because it is split in two, we use q (quadword).
+                    //Non-temporal hint is ignored since we don't have
+                    //proper support for it in the memory system.
+                    0x7: MOVNTDQ(Mq,Vq);
                 }
                 // repne (0xF2)
                 0x8: decode OPCODE_OP_BOTTOM3 {

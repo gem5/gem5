@@ -36,12 +36,14 @@
 #include "dev/net/etherswitch.hh"
 
 #include "base/random.hh"
+#include "base/trace.hh"
 #include "debug/EthernetAll.hh"
+#include "sim/core.hh"
 
 using namespace std;
 
 EtherSwitch::EtherSwitch(const Params *p)
-    : EtherObject(p), ttl(p->time_to_live)
+    : SimObject(p), ttl(p->time_to_live)
 {
     for (int i = 0; i < p->port_interface_connection_count; ++i) {
         std::string interfaceName = csprintf("%s.interface%d", name(), i);
@@ -60,16 +62,15 @@ EtherSwitch::~EtherSwitch()
     interfaces.clear();
 }
 
-EtherInt*
-EtherSwitch::getEthPort(const std::string &if_name, int idx)
+Port &
+EtherSwitch::getPort(const std::string &if_name, PortID idx)
 {
-    if (idx < 0 || idx >= interfaces.size())
-        return nullptr;
+    if (if_name == "interface") {
+        panic_if(idx < 0 || idx >= interfaces.size(), "index out of bounds");
+        return *interfaces.at(idx);
+    }
 
-    Interface *interface = interfaces.at(idx);
-    panic_if(interface->getPeer(), "interface already connected\n");
-
-    return interface;
+    return SimObject::getPort(if_name, idx);
 }
 
 bool
@@ -129,7 +130,8 @@ EtherSwitch::Interface::Interface(const std::string &name,
                                   Tick delay_var, double rate, unsigned id)
     : EtherInt(name), ticksPerByte(rate), switchDelay(delay),
       delayVar(delay_var), interfaceId(id), parent(etherSwitch),
-      outputFifo(name + ".outputFifo", outputBufferSize), txEvent(this)
+      outputFifo(name + ".outputFifo", outputBufferSize),
+      txEvent([this]{ transmit(); }, name)
 {
 }
 
@@ -172,7 +174,7 @@ EtherSwitch::Interface::enqueue(EthPacketPtr packet, unsigned senderId)
     // to send this packet out the external link
     // otherwise, there is already a txEvent scheduled
     if (outputFifo.push(packet, senderId)) {
-        parent->reschedule(txEvent, curTick() + switchingDelay());
+        parent->reschedule(txEvent, curTick() + switchingDelay(), true);
     }
 }
 
@@ -200,7 +202,7 @@ EtherSwitch::Interface::transmit()
 Tick
 EtherSwitch::Interface::switchingDelay()
 {
-    Tick delay = (Tick)ceil(((double)outputFifo.front()->length
+    Tick delay = (Tick)ceil(((double)outputFifo.front()->simLength
                                      * ticksPerByte) + 1.0);
     if (delayVar != 0)
                 delay += random_mt.random<Tick>(0, delayVar);

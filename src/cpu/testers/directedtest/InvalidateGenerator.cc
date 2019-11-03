@@ -27,8 +27,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "cpu/testers/directedtest/InvalidateGenerator.hh"
+
+#include "base/trace.hh"
+#include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
 #include "debug/DirectedTest.hh"
 
@@ -58,7 +60,7 @@ InvalidateGenerator::initiate()
     Packet::Command cmd;
 
     // For simplicity, requests are assumed to be 1 byte-sized
-    Request *req = new Request(m_address, 1, flags, masterId);
+    RequestPtr req = std::make_shared<Request>(m_address, 1, flags, masterId);
 
     //
     // Based on the current state, issue a load or a store
@@ -90,7 +92,6 @@ InvalidateGenerator::initiate()
         // If the packet did not issue, must delete
         // Note: No need to delete the data, the packet destructor
         // will delete it
-        delete pkt->req;
         delete pkt;
 
         DPRINTF(DirectedTest, "failed to issue request - sequencer not ready\n");

@@ -50,15 +50,4 @@ namespace HsailISA
     {
         disassembly = opcode;
     }
-
-    const std::string&
-    HsailGPUStaticInst::disassemble()
-    {
-        if (disassembly.empty()) {
-            generateDisassembly();
-            assert(!disassembly.empty());
-        }
-
-        return disassembly;
-    }
 } // namespace HsailISA

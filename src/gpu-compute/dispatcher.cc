@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2011-2015,2018 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,7 +30,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Brad Beckmann, Marc Orr
+ * Authors: Brad Beckmann,
+ *          Marc Orr,
+ *          Anthony Gutierrez
  */
 
 
@@ -47,10 +49,12 @@
 GpuDispatcher *GpuDispatcher::instance = nullptr;
 
 GpuDispatcher::GpuDispatcher(const Params *p)
-    : DmaDevice(p), _masterId(p->system->getMasterId(name() + ".disp")),
+    : DmaDevice(p), _masterId(p->system->getMasterId(this, "disp")),
       pioAddr(p->pio_addr), pioSize(4096), pioDelay(p->pio_latency),
       dispatchCount(0), dispatchActive(false), cpu(p->cpu),
-      shader(p->shader_pointer), driver(p->cl_driver), tickEvent(this)
+      shader(p->shader_pointer), driver(p->cl_driver),
+      tickEvent([this]{ exec(); }, "GPU Dispatcher tick",
+                false, Event::CPU_Tick_Pri)
 {
     shader->handshake(this);
     driver->handshake(this);
@@ -135,7 +139,7 @@ GpuDispatcher::read(PacketPtr pkt)
         assert(pkt->getSize() == 8);
 
         uint64_t retval = dispatchActive;
-        pkt->set(retval);
+        pkt->setLE(retval);
     } else {
         offset -= 8;
         assert(offset + pkt->getSize() < sizeof(HsaQueueEntry));
@@ -162,16 +166,16 @@ GpuDispatcher::write(PacketPtr pkt)
 
     switch (pkt->getSize()) {
       case 1:
-        data_val = pkt->get<uint8_t>();
+        data_val = pkt->getLE<uint8_t>();
         break;
       case 2:
-        data_val = pkt->get<uint16_t>();
+        data_val = pkt->getLE<uint16_t>();
         break;
       case 4:
-        data_val = pkt->get<uint32_t>();
+        data_val = pkt->getLE<uint32_t>();
         break;
       case 8:
-        data_val = pkt->get<uint64_t>();
+        data_val = pkt->getLE<uint64_t>();
         break;
       default:
         DPRINTF(GPUDisp, "bad size %d\n", pkt->getSize());
@@ -247,14 +251,14 @@ GpuDispatcher::write(PacketPtr pkt)
 }
 
 
-BaseMasterPort&
-GpuDispatcher::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+GpuDispatcher::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "translation_port") {
         return *tlbPort;
     }
 
-    return DmaDevice::getMasterPort(if_name, idx);
+    return DmaDevice::getPort(if_name, idx);
 }
 
 void
@@ -305,7 +309,7 @@ GpuDispatcher::exec()
 void
 GpuDispatcher::notifyWgCompl(Wavefront *w)
 {
-    int kern_id = w->kern_id;
+    int kern_id = w->kernId;
     DPRINTF(GPUDisp, "notify WgCompl %d\n",kern_id);
     assert(ndRangeMap[kern_id].dispatchId == kern_id);
     ndRangeMap[kern_id].numWgCompleted++;
@@ -363,23 +367,6 @@ GpuDispatcher::accessUserVar(BaseCPU *cpu, uint64_t addr, int val, int off)
     }
 }
 
-GpuDispatcher::TickEvent::TickEvent(GpuDispatcher *_dispatcher)
-    : Event(CPU_Tick_Pri), dispatcher(_dispatcher)
-{
-}
-
-void
-GpuDispatcher::TickEvent::process()
-{
-    dispatcher->exec();
-}
-
-const char*
-GpuDispatcher::TickEvent::description() const
-{
-    return "GPU Dispatcher tick";
-}
-
 // helper functions for driver to retrieve GPU attributes
 int
 GpuDispatcher::getNumCUs()
@@ -397,4 +384,10 @@ void
 GpuDispatcher::setFuncargsSize(int funcargs_size)
 {
     shader->funcargs_size = funcargs_size;
+}
+
+uint32_t
+GpuDispatcher::getStaticContextSize() const
+{
+    return shader->cuList[0]->wfList[0][0]->getStaticContextSize();
 }

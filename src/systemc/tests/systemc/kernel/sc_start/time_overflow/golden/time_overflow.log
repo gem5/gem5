@@ -1,0 +1,11 @@
+SystemC Simulation
+0 s: Issuing sc_start(10, SC_NS)
+10 ns: Issuing sc_start()
+18446744073709551615 ps: Issuing sc_start()
+
+Warning: (W571) no activity or clock movement for sc_start() invocation
+In file: <removed by verify.pl>
+18446744073709551615 ps: Issuing sc_start(10, SC_NS)
+
+Error: (E544) simulation time value overflow, simulation aborted
+In file: <removed by verify.pl>

@@ -36,19 +36,19 @@
 #include "cpu/base.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
-#include "mem/mem_object.hh"
 #include "sim/process.hh"
 
 class EndQuiesceEvent;
 class FunctionProfile;
 class ProfileNode;
-namespace TheISA {
-    namespace Kernel {
-        class Statistics;
-    }
+namespace Kernel {
+    class Statistics;
 }
 
 class Checkpoint;
+
+class FSTranslatingPortProxy;
+class SETranslatingPortProxy;
 
 /**
  *  Struct for holding general thread state that is needed across CPU
@@ -99,20 +99,33 @@ struct ThreadState : public Serializable {
 
     void profileSample();
 
-    TheISA::Kernel::Statistics *getKernelStats() { return kernelStats; }
+    Kernel::Statistics *getKernelStats() { return kernelStats; }
 
     PortProxy &getPhysProxy();
 
-    FSTranslatingPortProxy &getVirtProxy();
+    PortProxy &getVirtProxy();
 
     Process *getProcessPtr() { return process; }
 
-    SETranslatingPortProxy &getMemProxy();
+    void setProcessPtr(Process *p)
+    {
+        process = p;
+        /**
+         * When the process pointer changes while operating in SE Mode,
+         * the se translating port proxy needs to be reinitialized since it
+         * holds a pointer to the process class.
+         */
+        if (virtProxy) {
+            delete virtProxy;
+            virtProxy = NULL;
+            initMemProxies(NULL);
+        }
+    }
 
     /** Reads the number of instructions functionally executed and
      * committed.
      */
-    Counter readFuncExeInst() { return funcExeInst; }
+    Counter readFuncExeInst() const { return funcExeInst; }
 
     /** Sets the total number of instructions functionally executed
      * and committed.
@@ -171,7 +184,7 @@ struct ThreadState : public Serializable {
     Addr profilePC;
     EndQuiesceEvent *quiesceEvent;
 
-    TheISA::Kernel::Statistics *kernelStats;
+    Kernel::Statistics *kernelStats;
 
   protected:
     Process *process;
@@ -182,8 +195,7 @@ struct ThreadState : public Serializable {
 
     /** A translating port proxy, outgoing only, for functional
      * accesse to virtual addresses. */
-    FSTranslatingPortProxy *virtProxy;
-    SETranslatingPortProxy *proxy;
+    PortProxy *virtProxy;
 
   public:
     /*

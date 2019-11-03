@@ -38,9 +38,10 @@
  */
 
 #include "arch/x86/linux/system.hh"
-#include "arch/x86/regs/int.hh"
-#include "arch/x86/isa_traits.hh"
+
 #include "arch/vtophys.hh"
+#include "arch/x86/isa_traits.hh"
+#include "arch/x86/regs/int.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "mem/port_proxy.hh"
@@ -79,14 +80,14 @@ LinuxX86System::initState()
     if (commandLine.length() + 1 > realModeData - commandLineBuff)
         panic("Command line \"%s\" is longer than %d characters.\n",
                 commandLine, realModeData - commandLineBuff - 1);
-    physProxy.writeBlob(commandLineBuff, (uint8_t *)commandLine.c_str(),
+    physProxy.writeBlob(commandLineBuff, commandLine.c_str(),
                         commandLine.length() + 1);
 
     // Generate a pointer of the right size and endianness to put into
     // commandLinePointer.
     uint32_t guestCommandLineBuff =
         X86ISA::htog((uint32_t)commandLineBuff);
-    physProxy.writeBlob(commandLinePointer, (uint8_t *)&guestCommandLineBuff,
+    physProxy.writeBlob(commandLinePointer, &guestCommandLineBuff,
                         sizeof(guestCommandLineBuff));
 
     /*

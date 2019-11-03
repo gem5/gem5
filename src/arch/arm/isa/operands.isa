@@ -1,5 +1,5 @@
 // -*- mode:c++ -*-
-// Copyright (c) 2010-2014 ARM Limited
+// Copyright (c) 2010-2014, 2016-2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -46,10 +46,20 @@ def operand_types {{
     'uh' : 'uint16_t',
     'sw' : 'int32_t',
     'uw' : 'uint32_t',
+    'sd' : 'int64_t',
     'ud' : 'uint64_t',
-    'tud' : 'Twin64_t',
+    'sq' : '__int128_t',
+    'uq' : '__uint128_t',
+    'tud' : 'std::array<uint64_t, 2>',
     'sf' : 'float',
-    'df' : 'double'
+    'df' : 'double',
+    'vc' : 'ArmISA::VecRegContainer',
+    # For operations that are implemented as a template
+    'x' : 'TPElem',
+    'xs' : 'TPSElem',
+    'xd' : 'TPDElem',
+    'pc' : 'ArmISA::VecPredRegContainer',
+    'pb' : 'uint8_t'
 }};
 
 let {{
@@ -99,11 +109,11 @@ let {{
         xc->%(func)s(this, %(op_idx)s, (%(final_val)s) & mask(32))
     '''
     cntrlNsBankedWrite = '''
-        xc->setMiscReg(flattenMiscRegNsBanked(dest, xc->tcBase()), %(final_val)s)
+        xc->setMiscReg(snsBankedIndex(dest, xc->tcBase()), %(final_val)s)
     '''
 
     cntrlNsBankedRead = '''
-        xc->readMiscReg(flattenMiscRegNsBanked(op1, xc->tcBase()))
+        xc->readMiscReg(snsBankedIndex(op1, xc->tcBase()))
     '''
 
     #PCState operands need to have a sorting index (the number at the end)
@@ -117,8 +127,17 @@ let {{
     srtMode = 1
     srtEPC = 0
 
-    def floatReg(idx):
-        return ('FloatReg', 'sf', idx, 'IsFloating', srtNormal)
+    def vectorElem(idx, elem):
+        return ('VecElem', 'sf', (idx, elem), 'IsVectorElem', srtNormal)
+
+    def vectorReg(idx, elems = None):
+        return ('VecReg', 'vc', (idx, elems) , 'IsVector', srtNormal)
+
+    def vectorRegElem(elem, ext = 'sf', zeroing = False):
+        return (elem, ext, zeroing)
+
+    def vecPredReg(idx):
+        return ('VecPredReg', 'pc', idx, None, srtNormal)
 
     def intReg(idx):
         return ('IntReg', 'uw', idx, 'IsInteger', srtNormal,
@@ -180,7 +199,7 @@ def operands {{
     'AIWDest': intRegAIWPC('dest'),
     'Dest2': intReg('dest2'),
     'XDest2': intRegX64('dest2'),
-    'FDest2': floatReg('dest2'),
+    'IWDest2': intRegIWPC('dest2'),
     'Result': intReg('result'),
     'XResult': intRegX64('result'),
     'XBase': intRegX64('base', id = srtBase),
@@ -248,135 +267,369 @@ def operands {{
     'FpCondCodes': ccReg('CCREG_FP'),
 
     #Abstracted floating point reg operands
-    'FpDest': floatReg('(dest + 0)'),
-    'FpDestP0': floatReg('(dest + 0)'),
-    'FpDestP1': floatReg('(dest + 1)'),
-    'FpDestP2': floatReg('(dest + 2)'),
-    'FpDestP3': floatReg('(dest + 3)'),
-    'FpDestP4': floatReg('(dest + 4)'),
-    'FpDestP5': floatReg('(dest + 5)'),
-    'FpDestP6': floatReg('(dest + 6)'),
-    'FpDestP7': floatReg('(dest + 7)'),
-    'FpDestS0P0': floatReg('(dest + step * 0 + 0)'),
-    'FpDestS0P1': floatReg('(dest + step * 0 + 1)'),
-    'FpDestS1P0': floatReg('(dest + step * 1 + 0)'),
-    'FpDestS1P1': floatReg('(dest + step * 1 + 1)'),
-    'FpDestS2P0': floatReg('(dest + step * 2 + 0)'),
-    'FpDestS2P1': floatReg('(dest + step * 2 + 1)'),
-    'FpDestS3P0': floatReg('(dest + step * 3 + 0)'),
-    'FpDestS3P1': floatReg('(dest + step * 3 + 1)'),
+    'FpDest': vectorElem('dest / 4', 'dest % 4'),
+    'FpDestP0': vectorElem('(dest + 0) / 4', '(dest + 0) % 4'),
+    'FpDestP1': vectorElem('(dest + 1) / 4', '(dest + 1) % 4'),
+    'FpDestP2': vectorElem('(dest + 2) / 4', '(dest + 2) % 4'),
+    'FpDestP3': vectorElem('(dest + 3) / 4', '(dest + 3) % 4'),
+    'FpDestP4': vectorElem('(dest + 4) / 4', '(dest + 4) % 4'),
+    'FpDestP5': vectorElem('(dest + 5) / 4', '(dest + 5) % 4'),
+    'FpDestP6': vectorElem('(dest + 6) / 4', '(dest + 6) % 4'),
+    'FpDestP7': vectorElem('(dest + 7) / 4', '(dest + 7) % 4'),
 
-    'FpDest2': floatReg('(dest2 + 0)'),
-    'FpDest2P0': floatReg('(dest2 + 0)'),
-    'FpDest2P1': floatReg('(dest2 + 1)'),
-    'FpDest2P2': floatReg('(dest2 + 2)'),
-    'FpDest2P3': floatReg('(dest2 + 3)'),
+    'FpDestS0P0': vectorElem(
+        '(dest + step * 0 + 0) / 4', '(dest + step * 0 + 0) % 4'),
+    'FpDestS0P1': vectorElem(
+        '(dest + step * 0 + 1) / 4', '(dest + step * 0 + 1) % 4'),
+    'FpDestS1P0': vectorElem(
+        '(dest + step * 1 + 0) / 4', '(dest + step * 1 + 0) % 4'),
+    'FpDestS1P1': vectorElem(
+        '(dest + step * 1 + 1) / 4', '(dest + step * 1 + 1) % 4'),
+    'FpDestS2P0': vectorElem(
+        '(dest + step * 2 + 0) / 4', '(dest + step * 2 + 0) % 4'),
+    'FpDestS2P1': vectorElem(
+        '(dest + step * 2 + 1) / 4', '(dest + step * 2 + 1) % 4'),
+    'FpDestS3P0': vectorElem(
+        '(dest + step * 3 + 0) / 4', '(dest + step * 3 + 0) % 4'),
+    'FpDestS3P1': vectorElem(
+        '(dest + step * 3 + 1) / 4', '(dest + step * 3 + 1) % 4'),
 
-    'FpOp1': floatReg('(op1 + 0)'),
-    'FpOp1P0': floatReg('(op1 + 0)'),
-    'FpOp1P1': floatReg('(op1 + 1)'),
-    'FpOp1P2': floatReg('(op1 + 2)'),
-    'FpOp1P3': floatReg('(op1 + 3)'),
-    'FpOp1P4': floatReg('(op1 + 4)'),
-    'FpOp1P5': floatReg('(op1 + 5)'),
-    'FpOp1P6': floatReg('(op1 + 6)'),
-    'FpOp1P7': floatReg('(op1 + 7)'),
-    'FpOp1S0P0': floatReg('(op1 + step * 0 + 0)'),
-    'FpOp1S0P1': floatReg('(op1 + step * 0 + 1)'),
-    'FpOp1S1P0': floatReg('(op1 + step * 1 + 0)'),
-    'FpOp1S1P1': floatReg('(op1 + step * 1 + 1)'),
-    'FpOp1S2P0': floatReg('(op1 + step * 2 + 0)'),
-    'FpOp1S2P1': floatReg('(op1 + step * 2 + 1)'),
-    'FpOp1S3P0': floatReg('(op1 + step * 3 + 0)'),
-    'FpOp1S3P1': floatReg('(op1 + step * 3 + 1)'),
+    'FpDest2': vectorElem('dest2 / 4', 'dest2 % 4'),
+    'FpDest2P0': vectorElem('(dest2 + 0) / 4', '(dest2 + 0) % 4'),
+    'FpDest2P1': vectorElem('(dest2 + 1) / 4', '(dest2 + 1) % 4'),
+    'FpDest2P2': vectorElem('(dest2 + 2) / 4', '(dest2 + 2) % 4'),
+    'FpDest2P3': vectorElem('(dest2 + 3) / 4', '(dest2 + 3) % 4'),
 
-    'FpOp2': floatReg('(op2 + 0)'),
-    'FpOp2P0': floatReg('(op2 + 0)'),
-    'FpOp2P1': floatReg('(op2 + 1)'),
-    'FpOp2P2': floatReg('(op2 + 2)'),
-    'FpOp2P3': floatReg('(op2 + 3)'),
+    'FpOp1': vectorElem('op1 / 4', 'op1 % 4'),
+    'FpOp1P0': vectorElem('(op1 + 0) / 4', '(op1 + 0) % 4'),
+    'FpOp1P1': vectorElem('(op1 + 1) / 4', '(op1 + 1) % 4'),
+    'FpOp1P2': vectorElem('(op1 + 2) / 4', '(op1 + 2) % 4'),
+    'FpOp1P3': vectorElem('(op1 + 3) / 4', '(op1 + 3) % 4'),
+    'FpOp1P4': vectorElem('(op1 + 4) / 4', '(op1 + 4) % 4'),
+    'FpOp1P5': vectorElem('(op1 + 5) / 4', '(op1 + 5) % 4'),
+    'FpOp1P6': vectorElem('(op1 + 6) / 4', '(op1 + 6) % 4'),
+    'FpOp1P7': vectorElem('(op1 + 7) / 4', '(op1 + 7) % 4'),
+
+    'FpOp1S0P0': vectorElem(
+        '(op1 + step * 0 + 0) / 4', '(op1 + step * 0 + 0) % 4'),
+    'FpOp1S0P1': vectorElem(
+        '(op1 + step * 0 + 1) / 4', '(op1 + step * 0 + 1) % 4'),
+    'FpOp1S1P0': vectorElem(
+        '(op1 + step * 1 + 0) / 4', '(op1 + step * 1 + 0) % 4'),
+    'FpOp1S1P1': vectorElem(
+        '(op1 + step * 1 + 1) / 4', '(op1 + step * 1 + 1) % 4'),
+    'FpOp1S2P0': vectorElem(
+        '(op1 + step * 2 + 0) / 4', '(op1 + step * 2 + 0) % 4'),
+    'FpOp1S2P1': vectorElem(
+        '(op1 + step * 2 + 1) / 4', '(op1 + step * 2 + 1) % 4'),
+    'FpOp1S3P0': vectorElem(
+        '(op1 + step * 3 + 0) / 4', '(op1 + step * 3 + 0) % 4'),
+    'FpOp1S3P1': vectorElem(
+        '(op1 + step * 3 + 1) / 4', '(op1 + step * 3 + 1) % 4'),
+
+    'FpOp2': vectorElem('op2 / 4', 'op2 % 4'),
+    'FpOp2P0': vectorElem('(op2 + 0) / 4', '(op2 + 0) % 4'),
+    'FpOp2P1': vectorElem('(op2 + 1) / 4', '(op2 + 1) % 4'),
+    'FpOp2P2': vectorElem('(op2 + 2) / 4', '(op2 + 2) % 4'),
+    'FpOp2P3': vectorElem('(op2 + 3) / 4', '(op2 + 3) % 4'),
 
     # Create AArch64 unpacked view of the FP registers
-    'AA64FpOp1P0':   floatReg('((op1 * 4) + 0)'),
-    'AA64FpOp1P1':   floatReg('((op1 * 4) + 1)'),
-    'AA64FpOp1P2':   floatReg('((op1 * 4) + 2)'),
-    'AA64FpOp1P3':   floatReg('((op1 * 4) + 3)'),
-    'AA64FpOp2P0':   floatReg('((op2 * 4) + 0)'),
-    'AA64FpOp2P1':   floatReg('((op2 * 4) + 1)'),
-    'AA64FpOp2P2':   floatReg('((op2 * 4) + 2)'),
-    'AA64FpOp2P3':   floatReg('((op2 * 4) + 3)'),
-    'AA64FpOp3P0':   floatReg('((op3 * 4) + 0)'),
-    'AA64FpOp3P1':   floatReg('((op3 * 4) + 1)'),
-    'AA64FpOp3P2':   floatReg('((op3 * 4) + 2)'),
-    'AA64FpOp3P3':   floatReg('((op3 * 4) + 3)'),
-    'AA64FpDestP0':  floatReg('((dest * 4) + 0)'),
-    'AA64FpDestP1':  floatReg('((dest * 4) + 1)'),
-    'AA64FpDestP2':  floatReg('((dest * 4) + 2)'),
-    'AA64FpDestP3':  floatReg('((dest * 4) + 3)'),
-    'AA64FpDest2P0': floatReg('((dest2 * 4) + 0)'),
-    'AA64FpDest2P1': floatReg('((dest2 * 4) + 1)'),
-    'AA64FpDest2P2': floatReg('((dest2 * 4) + 2)'),
-    'AA64FpDest2P3': floatReg('((dest2 * 4) + 3)'),
+    # Name   ::= 'AA64Vec' OpSpec [LaneSpec]
+    # OpSpec ::= IOSpec [Index] [Plus]
+    # IOSpec ::= 'S' | 'D'
+    # Index  ::= '0' | ... | '9'
+    # Plus  ::= [PlusAmount] ['l']
+    # PlusAmount ::= 'p' [PlusAmount]
+    # LaneSpec ::= 'L' Index
+    #
+    # All the constituents are hierarchically defined as part of the Vector
+    # Register they belong to
 
-    'AA64FpOp1P0V0':   floatReg('((((op1+0)) * 4) + 0)'),
-    'AA64FpOp1P1V0':   floatReg('((((op1+0)) * 4) + 1)'),
-    'AA64FpOp1P2V0':   floatReg('((((op1+0)) * 4) + 2)'),
-    'AA64FpOp1P3V0':   floatReg('((((op1+0)) * 4) + 3)'),
+    'AA64FpOp1':       vectorReg('op1',
+    {
+        'AA64FpOp1P0': vectorRegElem('0'),
+        'AA64FpOp1P1': vectorRegElem('1'),
+        'AA64FpOp1P2': vectorRegElem('2'),
+        'AA64FpOp1P3': vectorRegElem('3'),
+        'AA64FpOp1S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpOp1D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpOp1Q':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
 
-    'AA64FpOp1P0V1':   floatReg('((((op1+1)) * 4) + 0)'),
-    'AA64FpOp1P1V1':   floatReg('((((op1+1)) * 4) + 1)'),
-    'AA64FpOp1P2V1':   floatReg('((((op1+1)) * 4) + 2)'),
-    'AA64FpOp1P3V1':   floatReg('((((op1+1)) * 4) + 3)'),
+    'AA64FpOp2':       vectorReg('op2',
+    {
+        'AA64FpOp2P0': vectorRegElem('0'),
+        'AA64FpOp2P1': vectorRegElem('1'),
+        'AA64FpOp2P2': vectorRegElem('2'),
+        'AA64FpOp2P3': vectorRegElem('3'),
+        'AA64FpOp2S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpOp2D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpOp2Q':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
 
-    'AA64FpOp1P0V2':   floatReg('((((op1+2)) * 4) + 0)'),
-    'AA64FpOp1P1V2':   floatReg('((((op1+2)) * 4) + 1)'),
-    'AA64FpOp1P2V2':   floatReg('((((op1+2)) * 4) + 2)'),
-    'AA64FpOp1P3V2':   floatReg('((((op1+2)) * 4) + 3)'),
+    'AA64FpOp3':       vectorReg('op3',
+    {
+        'AA64FpOp3P0': vectorRegElem('0'),
+        'AA64FpOp3P1': vectorRegElem('1'),
+        'AA64FpOp3P2': vectorRegElem('2'),
+        'AA64FpOp3P3': vectorRegElem('3'),
+        'AA64FpOp3S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpOp3D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpOp3Q':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
 
-    'AA64FpOp1P0V3':   floatReg('((((op1+3)) * 4) + 0)'),
-    'AA64FpOp1P1V3':   floatReg('((((op1+3)) * 4) + 1)'),
-    'AA64FpOp1P2V3':   floatReg('((((op1+3)) * 4) + 2)'),
-    'AA64FpOp1P3V3':   floatReg('((((op1+3)) * 4) + 3)'),
+    'AA64FpDest':       vectorReg('dest',
+    {
+        'AA64FpDestP0': vectorRegElem('0'),
+        'AA64FpDestP1': vectorRegElem('1'),
+        'AA64FpDestP2': vectorRegElem('2'),
+        'AA64FpDestP3': vectorRegElem('3'),
+        'AA64FpDestS':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpDestD':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpDestQ':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
 
-    'AA64FpOp1P0V0S':   floatReg('((((op1+0)%32) * 4) + 0)'),
-    'AA64FpOp1P1V0S':   floatReg('((((op1+0)%32) * 4) + 1)'),
-    'AA64FpOp1P2V0S':   floatReg('((((op1+0)%32) * 4) + 2)'),
-    'AA64FpOp1P3V0S':   floatReg('((((op1+0)%32) * 4) + 3)'),
+    'AA64FpDest2':       vectorReg('dest2',
+    {
+        'AA64FpDest2P0': vectorRegElem('0'),
+        'AA64FpDest2P1': vectorRegElem('1'),
+        'AA64FpDest2P2': vectorRegElem('2'),
+        'AA64FpDest2P3': vectorRegElem('3'),
+        'AA64FpDest2S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpDest2D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpDest2Q':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
 
-    'AA64FpOp1P0V1S':   floatReg('((((op1+1)%32) * 4) + 0)'),
-    'AA64FpOp1P1V1S':   floatReg('((((op1+1)%32) * 4) + 1)'),
-    'AA64FpOp1P2V1S':   floatReg('((((op1+1)%32) * 4) + 2)'),
-    'AA64FpOp1P3V1S':   floatReg('((((op1+1)%32) * 4) + 3)'),
+    'AA64FpOp1V0':       vectorReg('op1',
+    {
+        'AA64FpOp1P0V0': vectorRegElem('0'),
+        'AA64FpOp1P1V0': vectorRegElem('1'),
+        'AA64FpOp1P2V0': vectorRegElem('2'),
+        'AA64FpOp1P3V0': vectorRegElem('3'),
+        'AA64FpOp1SV0':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpOp1DV0':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpOp1QV0':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
 
-    'AA64FpOp1P0V2S':   floatReg('((((op1+2)%32) * 4) + 0)'),
-    'AA64FpOp1P1V2S':   floatReg('((((op1+2)%32) * 4) + 1)'),
-    'AA64FpOp1P2V2S':   floatReg('((((op1+2)%32) * 4) + 2)'),
-    'AA64FpOp1P3V2S':   floatReg('((((op1+2)%32) * 4) + 3)'),
+    'AA64FpOp1V1':       vectorReg('op1+1',
+    {
+        'AA64FpOp1P0V1': vectorRegElem('0'),
+        'AA64FpOp1P1V1': vectorRegElem('1'),
+        'AA64FpOp1P2V1': vectorRegElem('2'),
+        'AA64FpOp1P3V1': vectorRegElem('3'),
+        'AA64FpOp1SV1':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpOp1DV1':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpOp1QV1':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
 
-    'AA64FpOp1P0V3S':   floatReg('((((op1+3)%32) * 4) + 0)'),
-    'AA64FpOp1P1V3S':   floatReg('((((op1+3)%32) * 4) + 1)'),
-    'AA64FpOp1P2V3S':   floatReg('((((op1+3)%32) * 4) + 2)'),
-    'AA64FpOp1P3V3S':   floatReg('((((op1+3)%32) * 4) + 3)'),
+    'AA64FpOp1V2':       vectorReg('op1+2',
+    {
+        'AA64FpOp1P0V2': vectorRegElem('0'),
+        'AA64FpOp1P1V2': vectorRegElem('1'),
+        'AA64FpOp1P2V2': vectorRegElem('2'),
+        'AA64FpOp1P3V2': vectorRegElem('3'),
+        'AA64FpOp1SV2':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpOp1DV2':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpOp1QV2':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
 
-    'AA64FpDestP0V0':   floatReg('((((dest+0)) * 4) + 0)'),
-    'AA64FpDestP1V0':   floatReg('((((dest+0)) * 4) + 1)'),
-    'AA64FpDestP2V0':   floatReg('((((dest+0)) * 4) + 2)'),
-    'AA64FpDestP3V0':   floatReg('((((dest+0)) * 4) + 3)'),
+    'AA64FpOp1V3':       vectorReg('op1+3',
+    {
+        'AA64FpOp1P0V3': vectorRegElem('0'),
+        'AA64FpOp1P1V3': vectorRegElem('1'),
+        'AA64FpOp1P2V3': vectorRegElem('2'),
+        'AA64FpOp1P3V3': vectorRegElem('3'),
+        'AA64FpOp1SV3':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpOp1DV3':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpOp1QV3':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
 
-    'AA64FpDestP0V1':   floatReg('((((dest+1)) * 4) + 0)'),
-    'AA64FpDestP1V1':   floatReg('((((dest+1)) * 4) + 1)'),
-    'AA64FpDestP2V1':   floatReg('((((dest+1)) * 4) + 2)'),
-    'AA64FpDestP3V1':   floatReg('((((dest+1)) * 4) + 3)'),
+    'AA64FpOp1V0S':       vectorReg('(op1+0)%32',
+    {
+        'AA64FpOp1P0V0S': vectorRegElem('0'),
+        'AA64FpOp1P1V0S': vectorRegElem('1'),
+        'AA64FpOp1P2V0S': vectorRegElem('2'),
+        'AA64FpOp1P3V0S': vectorRegElem('3'),
+        'AA64FpOp1SV0S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpOp1DV0S':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpOp1QV0S':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
 
-    'AA64FpDestP0V0L':   floatReg('((((dest+0)%32) * 4) + 0)'),
-    'AA64FpDestP1V0L':   floatReg('((((dest+0)%32) * 4) + 1)'),
-    'AA64FpDestP2V0L':   floatReg('((((dest+0)%32) * 4) + 2)'),
-    'AA64FpDestP3V0L':   floatReg('((((dest+0)%32) * 4) + 3)'),
+    'AA64FpOp1V1S':       vectorReg('(op1+1)%32',
+    {
+        'AA64FpOp1P0V1S': vectorRegElem('0'),
+        'AA64FpOp1P1V1S': vectorRegElem('1'),
+        'AA64FpOp1P2V1S': vectorRegElem('2'),
+        'AA64FpOp1P3V1S': vectorRegElem('3'),
+        'AA64FpOp1SV1S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpOp1DV1S':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpOp1QV1S':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
 
-    'AA64FpDestP0V1L':   floatReg('((((dest+1)%32) * 4) + 0)'),
-    'AA64FpDestP1V1L':   floatReg('((((dest+1)%32) * 4) + 1)'),
-    'AA64FpDestP2V1L':   floatReg('((((dest+1)%32) * 4) + 2)'),
-    'AA64FpDestP3V1L':   floatReg('((((dest+1)%32) * 4) + 3)'),
+    'AA64FpOp1V2S':       vectorReg('(op1+2)%32',
+    {
+        'AA64FpOp1P0V2S': vectorRegElem('0'),
+        'AA64FpOp1P1V2S': vectorRegElem('1'),
+        'AA64FpOp1P2V2S': vectorRegElem('2'),
+        'AA64FpOp1P3V2S': vectorRegElem('3'),
+        'AA64FpOp1SV2S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpOp1DV2S':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpOp1QV2S':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64FpOp1V3S':       vectorReg('(op1+3)%32',
+    {
+        'AA64FpOp1P0V3S': vectorRegElem('0'),
+        'AA64FpOp1P1V3S': vectorRegElem('1'),
+        'AA64FpOp1P2V3S': vectorRegElem('2'),
+        'AA64FpOp1P3V3S': vectorRegElem('3'),
+        'AA64FpOp1SV3S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpOp1DV3S':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpOp1QV3S':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64FpDestV0':       vectorReg('(dest+0)',
+    {
+        'AA64FpDestP0V0': vectorRegElem('0'),
+        'AA64FpDestP1V0': vectorRegElem('1'),
+        'AA64FpDestP2V0': vectorRegElem('2'),
+        'AA64FpDestP3V0': vectorRegElem('3'),
+        'AA64FpDestSV0':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpDestDV0':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpDestQV0':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64FpDestV1':       vectorReg('(dest+1)',
+    {
+        'AA64FpDestP0V1': vectorRegElem('0'),
+        'AA64FpDestP1V1': vectorRegElem('1'),
+        'AA64FpDestP2V1': vectorRegElem('2'),
+        'AA64FpDestP3V1': vectorRegElem('3'),
+        'AA64FpDestSV1':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpDestDV1':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpDestQV1':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64FpDestV0L':       vectorReg('(dest+0)%32',
+    {
+        'AA64FpDestP0V0L': vectorRegElem('0'),
+        'AA64FpDestP1V0L': vectorRegElem('1'),
+        'AA64FpDestP2V0L': vectorRegElem('2'),
+        'AA64FpDestP3V0L': vectorRegElem('3'),
+        'AA64FpDestSV0L':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpDestDV0L':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpDestQV0L':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64FpDestV1L':       vectorReg('(dest+1)%32',
+    {
+        'AA64FpDestP0V1L': vectorRegElem('0'),
+        'AA64FpDestP1V1L': vectorRegElem('1'),
+        'AA64FpDestP2V1L': vectorRegElem('2'),
+        'AA64FpDestP3V1L': vectorRegElem('3'),
+        'AA64FpDestSV1L':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpDestDV1L':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpDestQV1L':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    # Temporary registers for SVE interleaving
+    'AA64IntrlvReg0': vectorReg('INTRLVREG0',
+    {
+        'AA64IntrlvReg0P0': vectorRegElem('0'),
+        'AA64IntrlvReg0P1': vectorRegElem('1'),
+        'AA64IntrlvReg0P2': vectorRegElem('2'),
+        'AA64IntrlvReg0P3': vectorRegElem('3'),
+        'AA64IntrlvReg0S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64IntrlvReg0D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64IntrlvReg0Q':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64IntrlvReg1': vectorReg('INTRLVREG1',
+    {
+        'AA64IntrlvReg1P0': vectorRegElem('0'),
+        'AA64IntrlvReg1P1': vectorRegElem('1'),
+        'AA64IntrlvReg1P2': vectorRegElem('2'),
+        'AA64IntrlvReg1P3': vectorRegElem('3'),
+        'AA64IntrlvReg1S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64IntrlvReg1D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64IntrlvReg1Q':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64IntrlvReg2': vectorReg('INTRLVREG2',
+    {
+        'AA64IntrlvReg2P0': vectorRegElem('0'),
+        'AA64IntrlvReg2P1': vectorRegElem('1'),
+        'AA64IntrlvReg2P2': vectorRegElem('2'),
+        'AA64IntrlvReg2P3': vectorRegElem('3'),
+        'AA64IntrlvReg2S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64IntrlvReg2D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64IntrlvReg2Q':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64IntrlvReg3': vectorReg('INTRLVREG3',
+    {
+        'AA64IntrlvReg3P0': vectorRegElem('0'),
+        'AA64IntrlvReg3P1': vectorRegElem('1'),
+        'AA64IntrlvReg3P2': vectorRegElem('2'),
+        'AA64IntrlvReg3P3': vectorRegElem('3'),
+        'AA64IntrlvReg3S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64IntrlvReg3D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64IntrlvReg3Q':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64FpDestMerge':       vectorReg('dest',
+    {
+        'AA64FpDestMergeP0': vectorRegElem('0'),
+        'AA64FpDestMergeP1': vectorRegElem('1'),
+        'AA64FpDestMergeP2': vectorRegElem('2'),
+        'AA64FpDestMergeP3': vectorRegElem('3'),
+        'AA64FpDestMergeS':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpDestMergeD':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpDestMergeQ':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64FpBase': vectorReg('base',
+    {
+        'AA64FpBaseP0': vectorRegElem('0'),
+        'AA64FpBaseP1': vectorRegElem('1'),
+        'AA64FpBaseP2': vectorRegElem('2'),
+        'AA64FpBaseP3': vectorRegElem('3'),
+        'AA64FpBaseS':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpBaseD':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpBaseQ':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64FpOffset': vectorReg('offset',
+    {
+        'AA64FpOffsetP0': vectorRegElem('0'),
+        'AA64FpOffsetP1': vectorRegElem('1'),
+        'AA64FpOffsetP2': vectorRegElem('2'),
+        'AA64FpOffsetP3': vectorRegElem('3'),
+        'AA64FpOffsetS':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpOffsetD':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpOffsetQ':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64FpUreg0': vectorReg('VECREG_UREG0',
+    {
+        'AA64FpUreg0P0': vectorRegElem('0'),
+        'AA64FpUreg0P1': vectorRegElem('1'),
+        'AA64FpUreg0P2': vectorRegElem('2'),
+        'AA64FpUreg0P3': vectorRegElem('3'),
+        'AA64FpUreg0S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpUreg0D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpUreg0Q':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    # Predicate register operands
+    'GpOp': vecPredReg('gp'),
+    'POp1': vecPredReg('op1'),
+    'POp2': vecPredReg('op2'),
+    'PDest': vecPredReg('dest'),
+    'PDestMerge': vecPredReg('dest'),
+    'Ffr': vecPredReg('PREDREG_FFR'),
+    'FfrAux': vecPredReg('PREDREG_FFR'),
+    'PUreg0': vecPredReg('PREDREG_UREG0'),
 
     #Abstracted control reg operands
     'MiscDest': cntrlReg('dest'),
@@ -419,8 +672,7 @@ def operands {{
     'XURa' : intRegX64('ura'),
     'WURa' : intRegW64('ura'),
     'IWRa' : intRegIWPC('ura'),
-    'Fa' : floatReg('ura'),
-    'FaP1' : floatReg('ura + 1'),
+    'Fa' : vectorElem('ura / 4', 'ura % 4'),
     'URb' : intReg('urb'),
     'XURb' : intRegX64('urb'),
     'URc' : intReg('urc'),

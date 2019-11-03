@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2017, 2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -53,6 +53,8 @@
 #include "params/DmaDevice.hh"
 #include "sim/drain.hh"
 #include "sim/system.hh"
+
+class ClockedObject;
 
 class DmaPort : public MasterPort, public Drainable
 {
@@ -109,7 +111,7 @@ class DmaPort : public MasterPort, public Drainable
 
   public:
     /** The device that owns this port. */
-    MemObject *const device;
+    ClockedObject *const device;
 
     /** The system that device/port are in. This is used to select which mode
      * we are currently operating in. */
@@ -123,7 +125,7 @@ class DmaPort : public MasterPort, public Drainable
     std::deque<PacketPtr> transmitList;
 
     /** Event used to schedule a future sending from the transmit list. */
-    EventWrapper<DmaPort, &DmaPort::sendDma> sendEvent;
+    EventFunctionWrapper sendEvent;
 
     /** Number of outstanding packets the dma port has. */
     uint32_t pendingCount;
@@ -131,6 +133,12 @@ class DmaPort : public MasterPort, public Drainable
     /** If the port is currently waiting for a retry before it can
      * send whatever it is that it's sending. */
     bool inRetry;
+
+    /** Default streamId */
+    const uint32_t defaultSid;
+
+    /** Default substreamId */
+    const uint32_t defaultSSid;
 
   protected:
 
@@ -141,10 +149,17 @@ class DmaPort : public MasterPort, public Drainable
 
   public:
 
-    DmaPort(MemObject *dev, System *s);
+    DmaPort(ClockedObject *dev, System *s,
+            uint32_t sid = 0, uint32_t ssid = 0);
 
-    RequestPtr dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
-                         uint8_t *data, Tick delay, Request::Flags flag = 0);
+    RequestPtr
+    dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
+              uint8_t *data, Tick delay, Request::Flags flag = 0);
+
+    RequestPtr
+    dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
+              uint8_t *data, uint32_t sid, uint32_t ssid, Tick delay,
+              Request::Flags flag = 0);
 
     bool dmaPending() const { return pendingCount > 0; }
 
@@ -162,9 +177,23 @@ class DmaDevice : public PioDevice
     virtual ~DmaDevice() { }
 
     void dmaWrite(Addr addr, int size, Event *event, uint8_t *data,
+                  uint32_t sid, uint32_t ssid, Tick delay = 0)
+    {
+        dmaPort.dmaAction(MemCmd::WriteReq, addr, size, event, data,
+                          sid, ssid, delay);
+    }
+
+    void dmaWrite(Addr addr, int size, Event *event, uint8_t *data,
                   Tick delay = 0)
     {
         dmaPort.dmaAction(MemCmd::WriteReq, addr, size, event, data, delay);
+    }
+
+    void dmaRead(Addr addr, int size, Event *event, uint8_t *data,
+                 uint32_t sid, uint32_t ssid, Tick delay = 0)
+    {
+        dmaPort.dmaAction(MemCmd::ReadReq, addr, size, event, data,
+                          sid, ssid, delay);
     }
 
     void dmaRead(Addr addr, int size, Event *event, uint8_t *data,
@@ -179,9 +208,79 @@ class DmaDevice : public PioDevice
 
     unsigned int cacheBlockSize() const { return sys->cacheLineSize(); }
 
-    BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
+};
+
+/**
+ * DMA callback class.
+ *
+ * Allows one to register for a callback event after a sequence of (potentially
+ * non-contiguous) DMA transfers on a DmaPort completes.  Derived classes must
+ * implement the process() method and use getChunkEvent() to allocate a
+ * callback event for each participating DMA.
+ */
+class DmaCallback : public Drainable
+{
+  public:
+    virtual const std::string name() const { return "DmaCallback"; }
+
+    /**
+     * DmaPort ensures that all oustanding DMA accesses have completed before
+     * it finishes draining.  However, DmaChunkEvents scheduled with a delay
+     * might still be sitting on the event queue.  Therefore, draining is not
+     * complete until count is 0, which ensures that all outstanding
+     * DmaChunkEvents associated with this DmaCallback have fired.
+     */
+    DrainState drain() override
+    {
+        return count ? DrainState::Draining : DrainState::Drained;
+    }
+
+  protected:
+    int count;
+
+    DmaCallback()
+        : count(0)
+    { }
+
+    virtual ~DmaCallback() { }
+
+    /**
+     * Callback function invoked on completion of all chunks.
+     */
+    virtual void process() = 0;
+
+  private:
+    /**
+     * Called by DMA engine completion event on each chunk completion.
+     * Since the object may delete itself here, callers should not use
+     * the object pointer after calling this function.
+     */
+    void chunkComplete()
+    {
+        if (--count == 0) {
+            process();
+            // Need to notify DrainManager that this object is finished
+            // draining, even though it is immediately deleted.
+            signalDrainDone();
+            delete this;
+        }
+    }
+
+  public:
+
+    /**
+     * Request a chunk event.  Chunks events should be provided to each DMA
+     * request that wishes to participate in this DmaCallback.
+     */
+    Event *getChunkEvent()
+    {
+        ++count;
+        return new EventFunctionWrapper([this]{ chunkComplete(); }, name(),
+                                        true);
+    }
 };
 
 /**
@@ -409,8 +508,14 @@ class DmaReadFifo : public Drainable, public Serializable
     /** Handle pending requests that have been flagged as done. */
     void handlePending();
 
-    /** Try to issue new DMA requests */
+    /** Try to issue new DMA requests or bypass DMA requests*/
     void resumeFill();
+
+    /** Try to issue new DMA requests during normal execution*/
+    void resumeFillTiming();
+
+    /** Try to bypass DMA requests in KVM execution mode */
+    void resumeFillFunctional();
 
   private: // Internal state
     Fifo<uint8_t> buffer;

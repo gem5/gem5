@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016 ARM Limited
+ * Copyright (c) 2010-2013, 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,18 +43,29 @@
  *          Andreas Sandberg
  */
 
-#include "m5ops.h"
+#include <gem5/asm/generic/m5ops.h>
 
+#ifdef M5OP_ADDR
+.macro	m5op_func, name, func, subfunc
+        .globl \name
+        \name:
+        ldr x9, m5_mem
+        movz x10, #((\func << 8) | \subfunc)
+        ldr x0, [ x9, x10 ]
+        ret
+.endm
+#else
 .macro	m5op_func, name, func, subfunc
         .globl \name
         \name:
         .long 0xff000110 | (\func << 16) | (\subfunc << 12)
         ret
 .endm
+#endif
 
 .text
 #define M5OP(name, func, subfunc) m5op_func name, func, subfunc
-        FOREACH_M5OP
+        M5OP_FOREACH
 
-#define M5_ANNOTATION(name, ann) m5op_func name, annotate_func, ann
-        FOREACH_M5_ANNOTATION
+#define M5_ANNOTATION(name, ann) m5op_func name, M5OP_ANNOTATE, ann
+        M5OP_FOREACH_ANNOTATION

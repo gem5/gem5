@@ -29,17 +29,17 @@
  *          Nathan Binkert
  */
 
+#include "arch/alpha/kernel_stats.hh"
+
 #include <map>
 #include <stack>
 #include <string>
 
-#include "arch/generic/linux/threadinfo.hh"
-#include "arch/alpha/kernel_stats.hh"
 #include "arch/alpha/osfpal.hh"
+#include "arch/generic/linux/threadinfo.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Context.hh"
-#include "kern/tru64/tru64_syscalls.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -50,9 +50,10 @@ namespace Kernel {
 
 const char *modestr[] = { "kernel", "user", "idle" };
 
-Statistics::Statistics(System *system)
-    : ::Kernel::Statistics(system),
-      idleProcess((Addr)-1), themode(kernel), lastModeTick(0)
+Statistics::Statistics()
+    : ::Kernel::Statistics(),
+      idleProcess((Addr)-1), themode(kernel), lastModeTick(0),
+      iplLast(0), iplLastTick(0)
 {
 }
 
@@ -120,6 +121,35 @@ Statistics::regStats(const string &_name)
         .name(name() + ".swap_context")
         .desc("number of times the context was actually changed")
         ;
+
+    _iplCount
+        .init(32)
+        .name(name() + ".ipl_count")
+        .desc("number of times we switched to this ipl")
+        .flags(total | pdf | nozero | nonan)
+        ;
+
+    _iplGood
+        .init(32)
+        .name(name() + ".ipl_good")
+        .desc("number of times we switched to this ipl from a different ipl")
+        .flags(total | pdf | nozero | nonan)
+        ;
+
+    _iplTicks
+        .init(32)
+        .name(name() + ".ipl_ticks")
+        .desc("number of cycles we spent at this ipl")
+        .flags(total | pdf | nozero | nonan)
+        ;
+
+    _iplUsed
+        .name(name() + ".ipl_used")
+        .desc("fraction of swpipl calls that actually changed the ipl")
+        .flags(total | nozero | nonan)
+        ;
+
+    _iplUsed = _iplGood / _iplCount;
 }
 
 void
@@ -181,16 +211,22 @@ Statistics::callpal(int code, ThreadContext *tc)
         return;
 
     _callpal[code]++;
+}
 
-    switch (code) {
-      case PAL::callsys: {
-          int number = tc->readIntReg(0);
-          if (SystemCalls<Tru64>::validSyscallNumber(number)) {
-              int cvtnum = SystemCalls<Tru64>::convert(number);
-              _syscall[cvtnum]++;
-          }
-      } break;
-    }
+void
+Statistics::swpipl(int ipl)
+{
+    assert(ipl >= 0 && ipl <= 0x1f && "invalid IPL\n");
+
+    _iplCount[ipl]++;
+
+    if (ipl == iplLast)
+        return;
+
+    _iplGood[ipl]++;
+    _iplTicks[iplLast] += curTick() - iplLastTick;
+    iplLastTick = curTick();
+    iplLast = ipl;
 }
 
 void
@@ -201,6 +237,8 @@ Statistics::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(exemode);
     SERIALIZE_SCALAR(idleProcess);
     SERIALIZE_SCALAR(lastModeTick);
+    SERIALIZE_SCALAR(iplLast);
+    SERIALIZE_SCALAR(iplLastTick);
 }
 
 void
@@ -212,6 +250,8 @@ Statistics::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(idleProcess);
     UNSERIALIZE_SCALAR(lastModeTick);
     themode = (cpu_mode)exemode;
+    UNSERIALIZE_SCALAR(iplLast);
+    UNSERIALIZE_SCALAR(iplLastTick);
 }
 
 } // namespace Kernel

@@ -46,7 +46,7 @@
 #include <cassert>
 #include <cerrno>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 KvmDevice::KvmDevice(int _fd)
     : fd(_fd)

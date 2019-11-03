@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,7 +30,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Sooraj Puthoor
+ * Authors: Sooraj Puthoor
  */
 
 #ifndef __MEM_RUBY_SYSTEM_GPU_COALESCER_HH__
@@ -40,16 +40,16 @@
 #include <unordered_map>
 
 #include "base/statistics.hh"
-#include "mem/protocol/HSAScope.hh"
-#include "mem/protocol/HSASegment.hh"
-#include "mem/protocol/PrefetchBit.hh"
-#include "mem/protocol/RubyAccessMode.hh"
-#include "mem/protocol/RubyRequestType.hh"
-#include "mem/protocol/SequencerRequestType.hh"
 #include "mem/request.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/system/RubyPort.hh"
+#include "mem/ruby/protocol/HSAScope.hh"
+#include "mem/ruby/protocol/HSASegment.hh"
+#include "mem/ruby/protocol/PrefetchBit.hh"
+#include "mem/ruby/protocol/RubyAccessMode.hh"
+#include "mem/ruby/protocol/RubyRequestType.hh"
+#include "mem/ruby/protocol/SequencerRequestType.hh"
+#include "mem/ruby/system/Sequencer.hh"
 
 class DataBlock;
 class CacheMsg;
@@ -58,8 +58,8 @@ class CacheMemory;
 
 class RubyGPUCoalescerParams;
 
-HSAScope reqScopeToHSAScope(Request* req);
-HSASegment reqSegmentToHSASegment(Request* req);
+HSAScope reqScopeToHSAScope(const RequestPtr &req);
+HSASegment reqSegmentToHSASegment(const RequestPtr &req);
 
 struct GPUCoalescerRequest
 {
@@ -71,6 +71,24 @@ struct GPUCoalescerRequest
                         Cycles _issue_time)
         : pkt(_pkt), m_type(_m_type), issue_time(_issue_time)
     {}
+};
+
+class RequestDesc
+{
+  public:
+    RequestDesc(PacketPtr pkt, RubyRequestType p_type, RubyRequestType s_type)
+        : pkt(pkt), primaryType(p_type), secondaryType(s_type)
+    {
+    }
+
+    RequestDesc() : pkt(nullptr), primaryType(RubyRequestType_NULL),
+        secondaryType(RubyRequestType_NULL)
+    {
+    }
+
+    PacketPtr pkt;
+    RubyRequestType primaryType;
+    RubyRequestType secondaryType;
 };
 
 std::ostream& operator<<(std::ostream& out, const GPUCoalescerRequest& obj);
@@ -237,21 +255,7 @@ class GPUCoalescer : public RubyPort
 
     bool handleLlsc(Addr address, GPUCoalescerRequest* request);
 
-    // Private copy constructor and assignment operator
-    GPUCoalescer(const GPUCoalescer& obj);
-    GPUCoalescer& operator=(const GPUCoalescer& obj);
-
-    class IssueEvent : public Event
-    {
-      private:
-        GPUCoalescer *seq;
-      public:
-        IssueEvent(GPUCoalescer *_seq);
-        void process();
-        const char *description() const;
-    };
-
-    IssueEvent issueEvent;
+    EventFunctionWrapper issueEvent;
 
 
   // Changed to protected to enable inheritance by VIPER Coalescer
@@ -262,18 +266,11 @@ class GPUCoalescer : public RubyPort
     CacheMemory* m_dataCache_ptr;
     CacheMemory* m_instCache_ptr;
 
-    // The cache access latency for this GPU data cache. This is assessed at the
-    // beginning of each access. This should be very similar to the
-    // implementation in Sequencer() as this is very much like a Sequencer
-    Cycles m_data_cache_hit_latency;
-
     // We need to track both the primary and secondary request types.
     // The secondary request type comprises a subset of RubyRequestTypes that
     // are understood by the L1 Controller. A primary request type can be any
     // RubyRequestType.
-    enum {PrimaryType, SecondaryType};
-    typedef std::pair<PacketPtr, std::vector<RubyRequestType> > RequestDesc;
-    typedef std::unordered_map<Addr, std::vector<RequestDesc> > CoalescingTable;
+    typedef std::unordered_map<Addr, std::vector<RequestDesc>> CoalescingTable;
     CoalescingTable reqCoalescer;
     std::vector<Addr> newRequests;
 
@@ -291,24 +288,9 @@ class GPUCoalescer : public RubyPort
     int m_load_waiting_on_store_cycles;
     int m_load_waiting_on_load_cycles;
 
-    bool m_usingNetworkTester;
+    bool m_runningGarnetStandalone;
 
-    class GPUCoalescerWakeupEvent : public Event
-    {
-      private:
-        GPUCoalescer *m_GPUCoalescer_ptr;
-
-      public:
-        GPUCoalescerWakeupEvent(GPUCoalescer *_seq) :
-            m_GPUCoalescer_ptr(_seq) {}
-        void process() { m_GPUCoalescer_ptr->wakeup(); }
-        const char *description() const
-        {
-            return "GPUCoalescer deadlock check";
-        }
-    };
-
-    GPUCoalescerWakeupEvent deadlockCheckEvent;
+    EventFunctionWrapper deadlockCheckEvent;
     bool assumingRfOCoherence;
 
     // m5 style stats for TCP hit/miss counts
@@ -354,6 +336,11 @@ class GPUCoalescer : public RubyPort
     std::vector<Stats::Histogram *> m_InitialToForwardDelayHist;
     std::vector<Stats::Histogram *> m_ForwardToFirstResponseDelayHist;
     std::vector<Stats::Histogram *> m_FirstResponseToCompletionDelayHist;
+
+private:
+    // Private copy constructor and assignment operator
+    GPUCoalescer(const GPUCoalescer& obj);
+    GPUCoalescer& operator=(const GPUCoalescer& obj);
 };
 
 inline std::ostream&
@@ -365,4 +352,3 @@ operator<<(std::ostream& out, const GPUCoalescer& obj)
 }
 
 #endif // __MEM_RUBY_SYSTEM_GPU_COALESCER_HH__
-

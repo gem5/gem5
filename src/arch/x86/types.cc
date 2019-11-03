@@ -29,6 +29,7 @@
  */
 
 #include "arch/x86/types.hh"
+
 #include "sim/serialize.hh"
 
 using namespace X86ISA;

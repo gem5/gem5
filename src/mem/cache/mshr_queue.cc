@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015-2016 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2016, 2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -47,7 +47,9 @@
 
 #include "mem/cache/mshr_queue.hh"
 
-using namespace std;
+#include <cassert>
+
+#include "mem/cache/mshr.hh"
 
 MSHRQueue::MSHRQueue(const std::string &_label,
                      int num_entries, int reserve, int demand_reserve)
@@ -80,6 +82,17 @@ MSHRQueue::moveToFront(MSHR *mshr)
         readyList.erase(mshr->readyIter);
         mshr->readyIter = readyList.insert(readyList.begin(), mshr);
     }
+}
+
+void
+MSHRQueue::delay(MSHR *mshr, Tick delay_ticks)
+{
+    mshr->delay(delay_ticks);
+    auto it = std::find_if(mshr->readyIter, readyList.end(),
+                            [mshr] (const MSHR* _mshr) {
+                                return mshr->readyTime >= _mshr->readyTime;
+                            });
+    readyList.splice(it, readyList, mshr->readyIter);
 }
 
 void

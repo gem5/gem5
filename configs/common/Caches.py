@@ -38,6 +38,10 @@
 #
 # Authors: Lisa Hsu
 
+from __future__ import print_function
+from __future__ import absolute_import
+
+from m5.defines import buildEnv
 from m5.objects import *
 
 # Base implementations of L1, L2, IO and TLB-walker caches. There are
@@ -48,7 +52,8 @@ from m5.objects import *
 
 class L1Cache(Cache):
     assoc = 2
-    hit_latency = 2
+    tag_latency = 2
+    data_latency = 2
     response_latency = 2
     mshrs = 4
     tgts_per_mshr = 20
@@ -63,7 +68,8 @@ class L1_DCache(L1Cache):
 
 class L2Cache(Cache):
     assoc = 8
-    hit_latency = 20
+    tag_latency = 20
+    data_latency = 20
     response_latency = 20
     mshrs = 20
     tgts_per_mshr = 12
@@ -71,7 +77,8 @@ class L2Cache(Cache):
 
 class IOCache(Cache):
     assoc = 8
-    hit_latency = 50
+    tag_latency = 50
+    data_latency = 50
     response_latency = 50
     mshrs = 20
     size = '1kB'
@@ -79,7 +86,8 @@ class IOCache(Cache):
 
 class PageTableWalkerCache(Cache):
     assoc = 2
-    hit_latency = 2
+    tag_latency = 2
+    data_latency = 2
     response_latency = 2
     mshrs = 10
     size = '1kB'

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,7 +45,7 @@
 
 #include "arch/generic/types.hh"
 #include "base/bitunion.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "debug/Decoder.hh"
 
@@ -70,6 +70,11 @@ namespace ArmISA
     BitUnion64(ExtMachInst)
         // Decoder state
         Bitfield<63, 62> decoderFault; // See DecoderFault
+        Bitfield<61> illegalExecution;
+
+        // SVE vector length, encoded in the same format as the ZCR_EL<x>.LEN
+        // bitfields
+        Bitfield<59, 56> sveLen;
 
         // ITSTATE bits
         Bitfield<55, 48> itstate;
@@ -218,14 +223,16 @@ namespace ArmISA
             JazelleBit = (1 << 1),
             AArch64Bit = (1 << 2)
         };
+
         uint8_t flags;
         uint8_t nextFlags;
         uint8_t _itstate;
         uint8_t _nextItstate;
         uint8_t _size;
+        bool _illegalExec;
       public:
         PCState() : flags(0), nextFlags(0), _itstate(0), _nextItstate(0),
-                    _size(0)
+                    _size(0), _illegalExec(false)
         {}
 
         void
@@ -236,8 +243,20 @@ namespace ArmISA
         }
 
         PCState(Addr val) : flags(0), nextFlags(0), _itstate(0),
-                            _nextItstate(0), _size(0)
+                            _nextItstate(0), _size(0), _illegalExec(false)
         { set(val); }
+
+        bool
+        illegalExec() const
+        {
+            return _illegalExec;
+        }
+
+        void
+        illegalExec(bool val)
+        {
+            _illegalExec = val;
+        }
 
         bool
         thumb() const
@@ -472,7 +491,9 @@ namespace ArmISA
         {
             return Base::operator == (opc) &&
                 flags == opc.flags && nextFlags == opc.nextFlags &&
-                _itstate == opc._itstate && _nextItstate == opc._nextItstate;
+                _itstate == opc._itstate &&
+                _nextItstate == opc._nextItstate &&
+                _illegalExec == opc._illegalExec;
         }
 
         bool
@@ -490,6 +511,7 @@ namespace ArmISA
             SERIALIZE_SCALAR(nextFlags);
             SERIALIZE_SCALAR(_itstate);
             SERIALIZE_SCALAR(_nextItstate);
+            SERIALIZE_SCALAR(_illegalExec);
         }
 
         void
@@ -501,6 +523,7 @@ namespace ArmISA
             UNSERIALIZE_SCALAR(nextFlags);
             UNSERIALIZE_SCALAR(_itstate);
             UNSERIALIZE_SCALAR(_nextItstate);
+            UNSERIALIZE_SCALAR(_illegalExec);
         }
     };
 
@@ -609,6 +632,7 @@ namespace ArmISA
         EC_HVC_64                  = 0x16,
         EC_SMC_64                  = 0x17,
         EC_TRAPPED_MSR_MRS_64      = 0x18,
+        EC_TRAPPED_SVE             = 0x19,
         EC_PREFETCH_ABORT_TO_HYP   = 0x20,
         EC_PREFETCH_ABORT_LOWER_EL = 0x20,  // AArch64 alias
         EC_PREFETCH_ABORT_FROM_HYP = 0x21,
@@ -621,7 +645,9 @@ namespace ArmISA
         EC_STACK_PTR_ALIGNMENT     = 0x26,
         EC_FP_EXCEPTION            = 0x28,
         EC_FP_EXCEPTION_64         = 0x2C,
-        EC_SERROR                  = 0x2F
+        EC_SERROR                  = 0x2F,
+        EC_SOFTWARE_BREAKPOINT     = 0x38,
+        EC_SOFTWARE_BREAKPOINT_64  = 0x3C,
     };
 
     /**
@@ -689,7 +715,7 @@ namespace ArmISA
     }
 
     static inline bool
-    badMode(OperatingMode mode)
+    unknownMode(OperatingMode mode)
     {
         switch (mode) {
           case MODE_EL0T:
@@ -714,9 +740,8 @@ namespace ArmISA
         }
     }
 
-
     static inline bool
-    badMode32(OperatingMode mode)
+    unknownMode32(OperatingMode mode)
     {
         switch (mode) {
           case MODE_USER:
@@ -734,20 +759,18 @@ namespace ArmISA
         }
     }
 
+    constexpr unsigned MaxSveVecLenInBits = 2048;
+    static_assert(MaxSveVecLenInBits >= 128 &&
+                  MaxSveVecLenInBits <= 2048 &&
+                  MaxSveVecLenInBits % 128 == 0,
+                  "Unsupported max. SVE vector length");
+    constexpr unsigned MaxSveVecLenInBytes  = MaxSveVecLenInBits >> 3;
+    constexpr unsigned MaxSveVecLenInWords  = MaxSveVecLenInBits >> 5;
+    constexpr unsigned MaxSveVecLenInDWords = MaxSveVecLenInBits >> 6;
+
+    constexpr unsigned VecRegSizeBytes = MaxSveVecLenInBytes;
+    constexpr unsigned VecPredRegSizeBits = MaxSveVecLenInBytes;
+    constexpr unsigned VecPredRegHasPackedRepr = false;
 } // namespace ArmISA
-
-namespace std {
-
-template<>
-struct hash<ArmISA::ExtMachInst> :
-        public hash<ArmISA::ExtMachInst::__DataType> {
-
-    size_t operator()(const ArmISA::ExtMachInst &emi) const {
-        return hash<ArmISA::ExtMachInst::__DataType>::operator()(emi);
-    }
-
-};
-
-}
 
 #endif

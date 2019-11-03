@@ -1,0 +1,81 @@
+SystemC Simulation
+initiator1: Send write request: A = 0x0, D = 0x0 @ 0 s
+target1: OK, extension data = 11
+target1: Received write request: A = 0x0, D = 0x0 @ 0 s
+initiator1: Received ok response @ 10 ns
+target1: get_direct_mem_ptr OK, extension data = 11
+initiator1: Send write request: A = 0x4, D = 0x1 @ 10 ns
+initiator1: Received ok response @ 20 ns
+initiator1: Send write request: A = 0x8, D = 0x2 @ 20 ns
+initiator1: Received ok response @ 30 ns
+initiator1: Send write request: A = 0xc, D = 0x3 @ 30 ns
+initiator1: got DMI pointer invalidation @ 35 ns
+initiator1: Received ok response @ 40 ns
+initiator1: Send write request: A = 0x10, D = 0x4 @ 40 ns
+target1: OK, extension data = 11
+target1: Received write request: A = 0x10, D = 0x4 @ 40 ns
+initiator1: Received ok response @ 50 ns
+target1: get_direct_mem_ptr OK, extension data = 11
+initiator1: Send write request: A = 0x14, D = 0x5 @ 50 ns
+initiator1: Received ok response @ 60 ns
+initiator1: Send write request: A = 0x18, D = 0x6 @ 60 ns
+initiator1: Received ok response @ 70 ns
+initiator1: Send write request: A = 0x1c, D = 0x7 @ 70 ns
+initiator1: got DMI pointer invalidation @ 75 ns
+initiator1: Received ok response @ 80 ns
+initiator1: Send write request: A = 0x20, D = 0x8 @ 80 ns
+target1: OK, extension data = 11
+target1: Received write request: A = 0x20, D = 0x8 @ 80 ns
+initiator1: Received ok response @ 90 ns
+target1: get_direct_mem_ptr OK, extension data = 11
+initiator1: Send write request: A = 0x24, D = 0x9 @ 90 ns
+initiator1: Received ok response @ 100 ns
+initiator1: Send read request: A = 0x0 @ 100 ns
+initiator1: got DMI pointer invalidation @ 115 ns
+initiator1: Received ok response: D = 0x0 @ 200 ns
+initiator1: Send read request: A = 0x4 @ 200 ns
+target1: OK, extension data = 11
+target1: Received read request: A = 0x4 @ 200 ns
+initiator1: Received ok response: D = 0x1 @ 300 ns
+target1: get_direct_mem_ptr OK, extension data = 11
+initiator1: Send read request: A = 0x8 @ 300 ns
+initiator1: got DMI pointer invalidation @ 325 ns
+initiator1: Received ok response: D = 0x2 @ 400 ns
+initiator1: Send read request: A = 0xc @ 400 ns
+target1: OK, extension data = 11
+target1: Received read request: A = 0xc @ 400 ns
+initiator1: Received ok response: D = 0x3 @ 500 ns
+target1: get_direct_mem_ptr OK, extension data = 11
+initiator1: Send read request: A = 0x10 @ 500 ns
+initiator1: got DMI pointer invalidation @ 525 ns
+initiator1: Received ok response: D = 0x4 @ 600 ns
+initiator1: Send read request: A = 0x14 @ 600 ns
+target1: OK, extension data = 11
+target1: Received read request: A = 0x14 @ 600 ns
+initiator1: Received ok response: D = 0x5 @ 700 ns
+target1: get_direct_mem_ptr OK, extension data = 11
+initiator1: Send read request: A = 0x18 @ 700 ns
+initiator1: got DMI pointer invalidation @ 725 ns
+initiator1: Received ok response: D = 0x6 @ 800 ns
+initiator1: Send read request: A = 0x1c @ 800 ns
+target1: OK, extension data = 11
+target1: Received read request: A = 0x1c @ 800 ns
+initiator1: Received ok response: D = 0x7 @ 900 ns
+target1: get_direct_mem_ptr OK, extension data = 11
+initiator1: Send read request: A = 0x20 @ 900 ns
+initiator1: got DMI pointer invalidation @ 925 ns
+initiator1: Received ok response: D = 0x8 @ 1 us
+initiator1: Send read request: A = 0x24 @ 1 us
+target1: OK, extension data = 11
+target1: Received read request: A = 0x24 @ 1 us
+initiator1: Received ok response: D = 0x9 @ 1100 ns
+target1: get_direct_mem_ptr OK, extension data = 11
+initiator1: got DMI pointer invalidation @ 1125 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+initiator1, <<SimpleLTInitiator1>>:
+
+Mem @0
+00 00 00 00 01 00 00 00 02 00 00 00 03 00 00 00
+04 00 00 00 05 00 00 00 06 00 00 00 07 00 00 00
+

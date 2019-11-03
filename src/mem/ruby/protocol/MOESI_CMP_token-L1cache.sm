@@ -1,0 +1,2446 @@
+/*
+ * Copyright (c) 1999-2013 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * $Id: MOESI_CMP_token-L1cache.sm 1.22 05/01/19 15:55:39-06:00 beckmann@s0-28.cs.wisc.edu $
+ *
+ */
+
+machine(MachineType:L1Cache, "Token protocol")
+ : Sequencer * sequencer;
+   CacheMemory * L1Icache;
+   CacheMemory * L1Dcache;
+   int l2_select_num_bits;
+   int N_tokens;
+
+   Cycles l1_request_latency := 2;
+   Cycles l1_response_latency := 2;
+   int retry_threshold := 1;
+   Cycles fixed_timeout_latency := 100;
+   Cycles reissue_wakeup_latency := 10;
+   Cycles use_timeout_latency := 50;
+
+   bool dynamic_timeout_enabled := "True";
+   bool no_mig_atomic := "True";
+   bool send_evictions;
+
+   // Message Queues
+   // From this node's L1 cache TO the network
+ 
+   // a local L1 -> this L2 bank
+   MessageBuffer * responseFromL1Cache, network="To", virtual_network="4",
+        vnet_type="response";
+   MessageBuffer * persistentFromL1Cache, network="To", virtual_network="3",
+        vnet_type="persistent";
+   // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
+   MessageBuffer * requestFromL1Cache, network="To", virtual_network="1",
+        vnet_type="request";
+ 
+   // To this node's L1 cache FROM the network
+
+   // a L2 bank -> this L1
+   MessageBuffer * responseToL1Cache, network="From", virtual_network="4",
+        vnet_type="response";
+   MessageBuffer * persistentToL1Cache, network="From", virtual_network="3",
+        vnet_type="persistent";
+   // a L2 bank -> this L1
+   MessageBuffer * requestToL1Cache, network="From", virtual_network="1",
+        vnet_type="request";
+
+   MessageBuffer * mandatoryQueue;
+{
+  // STATES
+  state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
+    // Base states
+    NP, AccessPermission:Invalid, "NP", desc="Not Present";
+    I, AccessPermission:Invalid, "I", desc="Idle";
+    S, AccessPermission:Read_Only, "S", desc="Shared";
+    O, AccessPermission:Read_Only, "O", desc="Owned";
+    M, AccessPermission:Read_Only, "M", desc="Modified (dirty)";
+    MM, AccessPermission:Read_Write, "MM", desc="Modified (dirty and locally modified)";
+    M_W, AccessPermission:Read_Only, "M^W", desc="Modified (dirty), waiting";
+    MM_W, AccessPermission:Read_Write, "MM^W", desc="Modified (dirty and locally modified), waiting";
+
+    // Transient States
+    IM, AccessPermission:Busy, "IM", desc="Issued GetX";
+    SM, AccessPermission:Read_Only, "SM", desc="Issued GetX, we still have an old copy of the line";
+    OM, AccessPermission:Read_Only, "OM", desc="Issued GetX, received data";
+    IS, AccessPermission:Busy, "IS", desc="Issued GetS";
+
+    // Locked states
+    I_L, AccessPermission:Busy, "I^L", desc="Invalid, Locked";
+    S_L, AccessPermission:Busy, "S^L", desc="Shared, Locked";
+    IM_L, AccessPermission:Busy, "IM^L", desc="Invalid, Locked, trying to go to Modified";
+    SM_L, AccessPermission:Busy, "SM^L", desc="Shared, Locked, trying to go to Modified";
+    IS_L, AccessPermission:Busy, "IS^L", desc="Invalid, Locked, trying to go to Shared";
+  }
+
+  // EVENTS
+  enumeration(Event, desc="Cache events") {
+    Load,            desc="Load request from the processor";
+    Ifetch,          desc="I-fetch request from the processor";
+    Store,           desc="Store request from the processor";
+    Atomic,          desc="Atomic request from the processor";
+    L1_Replacement,  desc="L1 Replacement";
+
+    // Responses
+    Data_Shared,             desc="Received a data message, we are now a sharer";
+    Data_Owner,              desc="Received a data message, we are now the owner";
+    Data_All_Tokens,   desc="Received a data message, we are now the owner, we now have all the tokens";
+    Ack,                     desc="Received an ack message";
+    Ack_All_Tokens,          desc="Received an ack message, we now have all the tokens";
+
+    // Requests
+    Transient_GETX,  desc="A GetX from another processor";
+    Transient_Local_GETX,  desc="A GetX from another processor";
+    Transient_GETS,  desc="A GetS from another processor";
+    Transient_Local_GETS,  desc="A GetS from another processor";
+    Transient_GETS_Last_Token,  desc="A GetS from another processor";
+    Transient_Local_GETS_Last_Token,  desc="A GetS from another processor";
+
+    // Lock/Unlock for distributed
+    Persistent_GETX,     desc="Another processor has priority to read/write";
+    Persistent_GETS,     desc="Another processor has priority to read";
+    Persistent_GETS_Last_Token, desc="Another processor has priority to read, no more tokens";
+    Own_Lock_or_Unlock,  desc="This processor now has priority";
+
+    // Triggers
+    Request_Timeout,         desc="Timeout";
+    Use_TimeoutStarverX,             desc="Timeout";
+    Use_TimeoutStarverS,             desc="Timeout";
+    Use_TimeoutNoStarvers,             desc="Timeout";
+    Use_TimeoutNoStarvers_NoMig,     desc="Timeout Don't Migrate";
+  }
+
+  // TYPES
+
+  // CacheEntry
+  structure(Entry, desc="...", interface="AbstractCacheEntry") {
+    State CacheState,        desc="cache state";
+    bool Dirty,              desc="Is the data dirty (different than memory)?";
+    int Tokens,              desc="The number of tokens we're holding for the line";
+    DataBlock DataBlk,       desc="data for the block";
+  }
+
+
+  // TBE fields
+  structure(TBE, desc="...") {
+    Addr addr,                      desc="Physical address for this TBE";
+    State TBEState,                       desc="Transient state";
+    int IssueCount,      default="0",     desc="The number of times we've issued a request for this line.";
+    Addr PC,                           desc="Program counter of request";
+
+    bool WentPersistent, default="false",  desc="Request went persistent";
+    bool ExternalResponse, default="false", desc="Response came from an external controller";
+    bool IsAtomic, default="false",       desc="Request was an atomic request";
+
+    AccessType TypeOfAccess,                desc="Type of request (used for profiling)";
+    Cycles IssueTime,                       desc="Time the request was issued";
+    RubyAccessMode AccessMode,    desc="user/supervisor access type";
+    PrefetchBit Prefetch,         desc="Is this a prefetch request";
+  }
+
+  structure(TBETable, external="yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+  }
+
+  structure(PersistentTable, external="yes") {
+    void persistentRequestLock(Addr, MachineID, AccessType);
+    void persistentRequestUnlock(Addr, MachineID);
+    bool okToIssueStarving(Addr, MachineID);
+    MachineID findSmallest(Addr);
+    AccessType typeOfSmallest(Addr);
+    void markEntries(Addr);
+    bool isLocked(Addr);
+    int countStarvingForAddress(Addr);
+    int countReadStarvingForAddress(Addr);
+  }
+
+  Tick clockEdge();
+  Tick cyclesToTicks(Cycles c);
+  void set_cache_entry(AbstractCacheEntry b);
+  void unset_cache_entry();
+  void set_tbe(TBE b);
+  void unset_tbe();
+  void wakeUpAllBuffers();
+  void wakeUpBuffers(Addr a);
+  Cycles curCycle();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
+
+  TBETable L1_TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
+
+  bool starving, default="false";
+  int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
+
+  PersistentTable persistentTable;
+  TimerTable useTimerTable;
+  TimerTable reissueTimerTable;
+
+  int outstandingRequests, default="0";
+  int outstandingPersistentRequests, default="0";
+
+  // Constant that provides hysteresis for calculated the estimated average
+  int averageLatencyHysteresis, default="(8)";
+  Cycles averageLatencyCounter,
+        default="(Cycles(500) << (*m_averageLatencyHysteresis_ptr))";
+
+  Cycles averageLatencyEstimate() {
+    DPRINTF(RubySlicc, "%d\n",
+            (averageLatencyCounter >> averageLatencyHysteresis));
+    return averageLatencyCounter >> averageLatencyHysteresis;
+  }
+
+  void updateAverageLatencyEstimate(Cycles latency) {
+    DPRINTF(RubySlicc, "%d\n", latency);
+
+    // By subtracting the current average and then adding the most
+    // recent sample, we calculate an estimate of the recent average.
+    // If we simply used a running sum and divided by the total number
+    // of entries, the estimate of the average would adapt very slowly
+    // after the execution has run for a long time.
+    // averageLatencyCounter := averageLatencyCounter - averageLatencyEstimate() + latency;
+
+    averageLatencyCounter := averageLatencyCounter - averageLatencyEstimate() + latency;
+  }
+
+  Entry getCacheEntry(Addr addr), return_by_pointer="yes" {
+    Entry L1Dcache_entry := static_cast(Entry, "pointer", L1Dcache.lookup(addr));
+    if(is_valid(L1Dcache_entry)) {
+      return L1Dcache_entry;
+    }
+
+    Entry L1Icache_entry := static_cast(Entry, "pointer", L1Icache.lookup(addr));
+    return L1Icache_entry;
+  }
+
+  void functionalRead(Addr addr, Packet *pkt) {
+    testAndRead(addr, getCacheEntry(addr).DataBlk, pkt);
+  }
+
+  int functionalWrite(Addr addr, Packet *pkt) {
+    int num_functional_writes := 0;
+    num_functional_writes := num_functional_writes +
+        testAndWrite(addr, getCacheEntry(addr).DataBlk, pkt);
+    return num_functional_writes;
+  }
+
+  Entry getL1DCacheEntry(Addr addr), return_by_pointer="yes" {
+    Entry L1Dcache_entry := static_cast(Entry, "pointer", L1Dcache.lookup(addr));
+    return L1Dcache_entry;
+  }
+
+  Entry getL1ICacheEntry(Addr addr), return_by_pointer="yes" {
+    Entry L1Icache_entry := static_cast(Entry, "pointer", L1Icache.lookup(addr));
+    return L1Icache_entry;
+  }
+
+  int getTokens(Entry cache_entry) {
+    if (is_valid(cache_entry)) {
+      return cache_entry.Tokens;
+    }
+    return 0;
+  }
+
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
+
+    if (is_valid(tbe)) {
+      return tbe.TBEState;
+    } else if (is_valid(cache_entry)) {
+      return cache_entry.CacheState;
+    } else {
+      if (persistentTable.isLocked(addr) && (persistentTable.findSmallest(addr) != machineID)) {
+      // Not in cache, in persistent table, but this processor isn't highest priority
+      return State:I_L;
+      } else {
+        return State:NP;
+      }
+    }
+  }
+
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
+    assert((L1Dcache.isTagPresent(addr) && L1Icache.isTagPresent(addr)) == false);
+
+    if (is_valid(tbe)) {
+      assert(state != State:I);
+      assert(state != State:S);
+      assert(state != State:O);
+      assert(state != State:MM);
+      assert(state != State:M);
+      tbe.TBEState := state;
+    }
+
+    if (is_valid(cache_entry)) {
+      // Make sure the token count is in range
+      assert(cache_entry.Tokens >= 0);
+      assert(cache_entry.Tokens <= max_tokens());
+      assert(cache_entry.Tokens != (max_tokens() / 2));
+
+      if ((state == State:I_L) ||
+          (state == State:IM_L) ||
+          (state == State:IS_L)) {
+        // Make sure we have no tokens in the "Invalid, locked" states
+          assert(cache_entry.Tokens == 0);
+
+        // Make sure the line is locked
+        // assert(persistentTable.isLocked(addr));
+
+        // But we shouldn't have highest priority for it
+        // assert(persistentTable.findSmallest(addr) != id);
+
+      } else if ((state == State:S_L) ||
+                 (state == State:SM_L)) {
+        assert(cache_entry.Tokens >= 1);
+        assert(cache_entry.Tokens < (max_tokens() / 2));
+
+        // Make sure the line is locked...
+        // assert(persistentTable.isLocked(addr));
+
+        // ...But we shouldn't have highest priority for it...
+        // assert(persistentTable.findSmallest(addr) != id);
+
+        // ...And it must be a GETS request
+        // assert(persistentTable.typeOfSmallest(addr) == AccessType:Read);
+
+      } else {
+
+        // If there is an entry in the persistent table of this block,
+        // this processor needs to have an entry in the table for this
+        // block, and that entry better be the smallest (highest
+        // priority).  Otherwise, the state should have been one of
+        // locked states
+
+        //if (persistentTable.isLocked(addr)) {
+        //  assert(persistentTable.findSmallest(addr) == id);
+        //}
+      }
+
+      // in M and E you have all the tokens
+      if (state == State:MM || state == State:M || state == State:MM_W || state == State:M_W) {
+        assert(cache_entry.Tokens == max_tokens());
+      }
+
+      // in NP you have no tokens
+      if (state == State:NP) {
+        assert(cache_entry.Tokens == 0);
+      }
+
+      // You have at least one token in S-like states
+      if (state == State:S || state == State:SM) {
+        assert(cache_entry.Tokens > 0);
+      }
+
+      // You have at least half the token in O-like states
+      if (state == State:O && state == State:OM) {
+        assert(cache_entry.Tokens > (max_tokens() / 2));
+      }
+
+      cache_entry.CacheState := state;
+    }
+  }
+
+  AccessPermission getAccessPermission(Addr addr) {
+    TBE tbe := L1_TBEs[addr];
+    if(is_valid(tbe)) {
+      return L1Cache_State_to_permission(tbe.TBEState);
+    }
+
+    Entry cache_entry := getCacheEntry(addr);
+    if(is_valid(cache_entry)) {
+      return L1Cache_State_to_permission(cache_entry.CacheState);
+    }
+
+    return AccessPermission:NotPresent;
+  }
+
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
+    if (is_valid(cache_entry)) {
+      cache_entry.changePermission(L1Cache_State_to_permission(state));
+    }
+  }
+
+  Event mandatory_request_type_to_event(RubyRequestType type) {
+    if (type == RubyRequestType:LD) {
+      return Event:Load;
+    } else if (type == RubyRequestType:IFETCH) {
+      return Event:Ifetch;
+    } else if (type == RubyRequestType:ST) {
+      return Event:Store;
+    } else if (type == RubyRequestType:ATOMIC) {
+      if (no_mig_atomic) {
+        return Event:Atomic;
+      } else {
+        return Event:Store;
+      }
+    } else {
+      error("Invalid RubyRequestType");
+    }
+  }
+
+  AccessType cache_request_type_to_access_type(RubyRequestType type) {
+    if ((type == RubyRequestType:LD) || (type == RubyRequestType:IFETCH)) {
+      return AccessType:Read;
+    } else if ((type == RubyRequestType:ST) || (type == RubyRequestType:ATOMIC)) {
+      return AccessType:Write;
+    } else {
+      error("Invalid RubyRequestType");
+    }
+  }
+
+  // NOTE: direct local hits should not call this function
+  bool isExternalHit(Addr addr, MachineID sender) {
+    if (machineIDToMachineType(sender) == MachineType:L1Cache) {
+      return true;
+    } else if (machineIDToMachineType(sender) == MachineType:L2Cache) {
+
+      if (sender == mapAddressToRange(addr, MachineType:L2Cache,
+                      l2_select_low_bit, l2_select_num_bits, intToID(0))) {
+        return false;
+      } else {
+        return  true;
+      }
+    }
+
+    return true;
+  }
+
+  bool okToIssueStarving(Addr addr, MachineID machineID) {
+    return persistentTable.okToIssueStarving(addr, machineID);
+  }
+
+  void markPersistentEntries(Addr addr) {
+    persistentTable.markEntries(addr);
+  }
+
+  void setExternalResponse(TBE tbe) {
+    assert(is_valid(tbe));
+    tbe.ExternalResponse := true;
+  }
+
+  bool IsAtomic(TBE tbe) {
+    assert(is_valid(tbe));
+    return tbe.IsAtomic;
+  }
+
+  // ** OUT_PORTS **
+  out_port(persistentNetwork_out, PersistentMsg, persistentFromL1Cache);
+  out_port(requestNetwork_out, RequestMsg, requestFromL1Cache);
+  out_port(responseNetwork_out, ResponseMsg, responseFromL1Cache);
+  out_port(requestRecycle_out, RequestMsg, requestToL1Cache);
+
+  // ** IN_PORTS **
+
+  // Use Timer
+  in_port(useTimerTable_in, Addr, useTimerTable, rank=5) {
+    if (useTimerTable_in.isReady(clockEdge())) {
+      Addr readyAddress := useTimerTable.nextAddress();
+      TBE tbe := L1_TBEs.lookup(readyAddress);
+
+      if (persistentTable.isLocked(readyAddress) &&
+          (persistentTable.findSmallest(readyAddress) != machineID)) {
+        if (persistentTable.typeOfSmallest(readyAddress) == AccessType:Write) {
+          trigger(Event:Use_TimeoutStarverX, readyAddress,
+                  getCacheEntry(readyAddress), tbe);
+        } else {
+          trigger(Event:Use_TimeoutStarverS, readyAddress,
+                  getCacheEntry(readyAddress), tbe);
+        }
+      } else {
+        if (no_mig_atomic && IsAtomic(tbe)) {
+          trigger(Event:Use_TimeoutNoStarvers_NoMig, readyAddress,
+                  getCacheEntry(readyAddress), tbe);
+        } else {
+          trigger(Event:Use_TimeoutNoStarvers, readyAddress,
+                  getCacheEntry(readyAddress), tbe);
+        }
+      }
+    }
+  }
+
+  // Reissue Timer
+  in_port(reissueTimerTable_in, Addr, reissueTimerTable, rank=4) {
+    Tick current_time := clockEdge();
+    if (reissueTimerTable_in.isReady(current_time)) {
+      Addr addr := reissueTimerTable.nextAddress();
+      trigger(Event:Request_Timeout, addr, getCacheEntry(addr),
+              L1_TBEs.lookup(addr));
+    }
+  }
+
+  // Persistent Network
+  in_port(persistentNetwork_in, PersistentMsg, persistentToL1Cache, rank=3) {
+    if (persistentNetwork_in.isReady(clockEdge())) {
+      peek(persistentNetwork_in, PersistentMsg, block_on="addr") {
+        assert(in_msg.Destination.isElement(machineID));
+
+        // Apply the lockdown or unlockdown message to the table
+        if (in_msg.Type == PersistentRequestType:GETX_PERSISTENT) {
+          persistentTable.persistentRequestLock(in_msg.addr, in_msg.Requestor, AccessType:Write);
+        } else if (in_msg.Type == PersistentRequestType:GETS_PERSISTENT) {
+          persistentTable.persistentRequestLock(in_msg.addr, in_msg.Requestor, AccessType:Read);
+        } else if (in_msg.Type == PersistentRequestType:DEACTIVATE_PERSISTENT) {
+          persistentTable.persistentRequestUnlock(in_msg.addr, in_msg.Requestor);
+        } else {
+          error("Unexpected message");
+        }
+
+        // React to the message based on the current state of the table
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := L1_TBEs[in_msg.addr];
+
+        if (persistentTable.isLocked(in_msg.addr)) {
+          if (persistentTable.findSmallest(in_msg.addr) == machineID) {
+            // Our Own Lock - this processor is highest priority
+            trigger(Event:Own_Lock_or_Unlock, in_msg.addr,
+                    cache_entry, tbe);
+          } else {
+            if (persistentTable.typeOfSmallest(in_msg.addr) == AccessType:Read) {
+              if (getTokens(cache_entry) == 1 ||
+                  getTokens(cache_entry) == (max_tokens() / 2) + 1) {
+                trigger(Event:Persistent_GETS_Last_Token, in_msg.addr,
+                        cache_entry, tbe);
+              } else {
+                trigger(Event:Persistent_GETS, in_msg.addr,
+                        cache_entry, tbe);
+              }
+            } else {
+              trigger(Event:Persistent_GETX, in_msg.addr,
+                      cache_entry, tbe);
+            }
+          }
+        } else {
+          // Unlock case - no entries in the table
+          trigger(Event:Own_Lock_or_Unlock, in_msg.addr,
+                  cache_entry, tbe);
+        }
+      }
+    }
+  }
+
+  // Response Network
+  in_port(responseNetwork_in, ResponseMsg, responseToL1Cache, rank=2) {
+    if (responseNetwork_in.isReady(clockEdge())) {
+      peek(responseNetwork_in, ResponseMsg, block_on="addr") {
+        assert(in_msg.Destination.isElement(machineID));
+
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := L1_TBEs[in_msg.addr];
+
+        // Mark TBE flag if response received off-chip.  Use this to update average latency estimate
+        if ( machineIDToMachineType(in_msg.Sender) == MachineType:L2Cache ) {
+
+          if (in_msg.Sender == mapAddressToRange(in_msg.addr,
+                                 MachineType:L2Cache, l2_select_low_bit,
+                                 l2_select_num_bits, intToID(0))) {
+
+            // came from an off-chip L2 cache
+            if (is_valid(tbe)) {
+               // L1_TBEs[in_msg.addr].ExternalResponse := true;
+               // profile_offchipL2_response(in_msg.addr);
+            }
+          }
+          else {
+               // profile_onchipL2_response(in_msg.addr );
+          }
+        } else if ( machineIDToMachineType(in_msg.Sender) == MachineType:Directory ) {
+          if (is_valid(tbe)) {
+            setExternalResponse(tbe);
+            // profile_memory_response( in_msg.addr);
+          }
+        } else if ( machineIDToMachineType(in_msg.Sender) == MachineType:L1Cache) {
+          //if (isLocalProcessor(machineID, in_msg.Sender) == false) {
+            //if (is_valid(tbe)) {
+               // tbe.ExternalResponse := true;
+               // profile_offchipL1_response(in_msg.addr );
+            //}
+          //}
+          //else {
+               // profile_onchipL1_response(in_msg.addr );
+          //}
+        } else {
+          error("unexpected SenderMachine");
+        }
+
+
+        if (getTokens(cache_entry) + in_msg.Tokens != max_tokens()) {
+          if (in_msg.Type == CoherenceResponseType:ACK) {
+            assert(in_msg.Tokens < (max_tokens() / 2));
+            trigger(Event:Ack, in_msg.addr, cache_entry, tbe);
+          } else if (in_msg.Type == CoherenceResponseType:DATA_OWNER) {
+            trigger(Event:Data_Owner, in_msg.addr, cache_entry, tbe);
+          } else if (in_msg.Type == CoherenceResponseType:DATA_SHARED) {
+            assert(in_msg.Tokens < (max_tokens() / 2));
+            trigger(Event:Data_Shared, in_msg.addr, cache_entry, tbe);
+          } else {
+            error("Unexpected message");
+          }
+        } else {
+          if (in_msg.Type == CoherenceResponseType:ACK) {
+            assert(in_msg.Tokens < (max_tokens() / 2));
+            trigger(Event:Ack_All_Tokens, in_msg.addr, cache_entry, tbe);
+          } else if (in_msg.Type == CoherenceResponseType:DATA_OWNER || in_msg.Type == CoherenceResponseType:DATA_SHARED) {
+            trigger(Event:Data_All_Tokens, in_msg.addr, cache_entry, tbe);
+          } else {
+            error("Unexpected message");
+          }
+        }
+      }
+    }
+  }
+
+  // Request Network
+  in_port(requestNetwork_in, RequestMsg, requestToL1Cache) {
+    if (requestNetwork_in.isReady(clockEdge())) {
+      peek(requestNetwork_in, RequestMsg, block_on="addr") {
+        assert(in_msg.Destination.isElement(machineID));
+
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := L1_TBEs[in_msg.addr];
+
+        if (in_msg.Type == CoherenceRequestType:GETX) {
+          if (in_msg.isLocal) {
+            trigger(Event:Transient_Local_GETX, in_msg.addr,
+                    cache_entry, tbe);
+          }
+          else {
+            trigger(Event:Transient_GETX, in_msg.addr,
+                    cache_entry, tbe);
+          }
+        } else if (in_msg.Type == CoherenceRequestType:GETS) {
+          if (getTokens(cache_entry) == 1 ||
+              getTokens(cache_entry) == (max_tokens() / 2) + 1) {
+            if (in_msg.isLocal) {
+              trigger(Event:Transient_Local_GETS_Last_Token, in_msg.addr,
+                      cache_entry, tbe);
+            }
+            else {
+              trigger(Event:Transient_GETS_Last_Token, in_msg.addr,
+                      cache_entry, tbe);
+            }
+          }
+          else {
+            if (in_msg.isLocal) {
+              trigger(Event:Transient_Local_GETS, in_msg.addr,
+                      cache_entry, tbe);
+            }
+            else {
+              trigger(Event:Transient_GETS, in_msg.addr,
+                      cache_entry, tbe);
+            }
+          }
+        } else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
+
+  // Mandatory Queue
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...", rank=0) {
+    if (mandatoryQueue_in.isReady(clockEdge())) {
+      peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
+        // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
+
+        TBE tbe := L1_TBEs[in_msg.LineAddress];
+
+        if (in_msg.Type == RubyRequestType:IFETCH) {
+          // ** INSTRUCTION ACCESS ***
+
+          Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
+          if (is_valid(L1Icache_entry)) {
+            // The tag matches for the L1, so the L1 fetches the line.
+            // We know it can't be in the L2 due to exclusion.
+            trigger(mandatory_request_type_to_event(in_msg.Type),
+                    in_msg.LineAddress, L1Icache_entry, tbe);
+          } else {
+
+            // Check to see if it is in the OTHER L1
+            Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
+            if (is_valid(L1Dcache_entry)) {
+              // The block is in the wrong L1, try to write it to the L2
+                trigger(Event:L1_Replacement, in_msg.LineAddress,
+                        L1Dcache_entry, tbe);
+            }
+
+            if (L1Icache.cacheAvail(in_msg.LineAddress)) {
+              // L1 does't have the line, but we have space for it in the L1
+              trigger(mandatory_request_type_to_event(in_msg.Type),
+                      in_msg.LineAddress, L1Icache_entry, tbe);
+            } else {
+              // No room in the L1, so we need to make room
+              Addr victim := L1Icache.cacheProbe(in_msg.LineAddress);
+              trigger(Event:L1_Replacement,
+                      victim, getL1ICacheEntry(victim), L1_TBEs[victim]);
+            }
+          }
+        } else {
+          // *** DATA ACCESS ***
+
+          Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
+          if (is_valid(L1Dcache_entry)) {
+            // The tag matches for the L1, so the L1 fetches the line.
+            // We know it can't be in the L2 due to exclusion.
+            trigger(mandatory_request_type_to_event(in_msg.Type),
+                    in_msg.LineAddress, L1Dcache_entry, tbe);
+          } else {
+
+            // Check to see if it is in the OTHER L1
+            Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
+            if (is_valid(L1Icache_entry)) {
+              // The block is in the wrong L1, try to write it to the L2
+              trigger(Event:L1_Replacement, in_msg.LineAddress,
+                      L1Icache_entry, tbe);
+            }
+
+            if (L1Dcache.cacheAvail(in_msg.LineAddress)) {
+              // L1 does't have the line, but we have space for it in the L1
+              trigger(mandatory_request_type_to_event(in_msg.Type),
+                      in_msg.LineAddress, L1Dcache_entry, tbe);
+            } else {
+              // No room in the L1, so we need to make room
+              Addr victim := L1Dcache.cacheProbe(in_msg.LineAddress);
+              trigger(Event:L1_Replacement,
+                      victim, getL1DCacheEntry(victim), L1_TBEs[victim]);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ACTIONS
+
+  action(a_issueReadRequest, "a", desc="Issue GETS") {
+      assert(is_valid(tbe));
+      if (tbe.IssueCount == 0) {
+        // Update outstanding requests
+        //profile_outstanding_request(outstandingRequests);
+        outstandingRequests := outstandingRequests + 1;
+      }
+
+      if (tbe.IssueCount >= retry_threshold) {
+        // Issue a persistent request if possible
+        if (okToIssueStarving(address, machineID) && (starving == false)) {
+          enqueue(persistentNetwork_out, PersistentMsg, l1_request_latency) {
+            out_msg.addr := address;
+            out_msg.Type := PersistentRequestType:GETS_PERSISTENT;
+            out_msg.Requestor := machineID;
+            out_msg.Destination.broadcast(MachineType:L1Cache);
+
+            //
+            // Currently the configuration system limits the system to only one
+            // chip.  Therefore, if we assume one shared L2 cache, then only one
+            // pertinent L2 cache exist.
+            //
+            //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
+
+            out_msg.Destination.add(mapAddressToRange(address,
+                                      MachineType:L2Cache, l2_select_low_bit,
+                                      l2_select_num_bits, intToID(0)));
+
+            out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+            out_msg.MessageSize := MessageSizeType:Persistent_Control;
+            out_msg.Prefetch := tbe.Prefetch;
+            out_msg.AccessMode := tbe.AccessMode;
+          }
+          markPersistentEntries(address);
+          starving := true;
+
+          if (tbe.IssueCount == 0) {
+            //profile_persistent_prediction(address, tbe.TypeOfAccess);
+          }
+
+          // Update outstanding requests
+          //profile_outstanding_persistent_request(outstandingPersistentRequests);
+          outstandingPersistentRequests := outstandingPersistentRequests + 1;
+
+          // Increment IssueCount
+          tbe.IssueCount := tbe.IssueCount + 1;
+
+          tbe.WentPersistent := true;
+
+          // Do not schedule a wakeup, a persistent requests will always complete
+        }
+        else {
+
+          // We'd like to issue a persistent request, but are not allowed
+          // to issue a P.R. right now.  This, we do not increment the
+          // IssueCount.
+
+          // Set a wakeup timer
+          reissueTimerTable.set(
+            address, clockEdge() + cyclesToTicks(reissue_wakeup_latency));
+
+        }
+      } else {
+        // Make a normal request
+        enqueue(requestNetwork_out, RequestMsg, l1_request_latency) {
+          out_msg.addr := address;
+          out_msg.Type := CoherenceRequestType:GETS;
+          out_msg.Requestor := machineID;
+          out_msg.Destination.add(mapAddressToRange(address,
+                                    MachineType:L2Cache, l2_select_low_bit,
+                                    l2_select_num_bits, intToID(0)));
+
+          out_msg.RetryNum := tbe.IssueCount;
+          if (tbe.IssueCount == 0) {
+            out_msg.MessageSize := MessageSizeType:Request_Control;
+          } else {
+            out_msg.MessageSize := MessageSizeType:Reissue_Control;
+          }
+          out_msg.Prefetch := tbe.Prefetch;
+          out_msg.AccessMode := tbe.AccessMode;
+        }
+
+        // send to other local L1s, with local bit set
+        enqueue(requestNetwork_out, RequestMsg, l1_request_latency) {
+          out_msg.addr := address;
+          out_msg.Type := CoherenceRequestType:GETS;
+          out_msg.Requestor := machineID;
+          //
+          // Since only one chip, assuming all L1 caches are local
+          //
+          //out_msg.Destination := getOtherLocalL1IDs(machineID);
+          out_msg.Destination.broadcast(MachineType:L1Cache);
+          out_msg.Destination.remove(machineID);
+
+          out_msg.RetryNum := tbe.IssueCount;
+          out_msg.isLocal := true;
+          if (tbe.IssueCount == 0) {
+            out_msg.MessageSize := MessageSizeType:Broadcast_Control;
+          } else {
+            out_msg.MessageSize := MessageSizeType:Broadcast_Control;
+          }
+          out_msg.Prefetch := tbe.Prefetch;
+          out_msg.AccessMode := tbe.AccessMode;
+        }
+
+        // Increment IssueCount
+        tbe.IssueCount := tbe.IssueCount + 1;
+
+        // Set a wakeup timer
+
+        if (dynamic_timeout_enabled) {
+          reissueTimerTable.set(
+            address, clockEdge() + cyclesToTicks(averageLatencyEstimate()));
+        } else {
+          reissueTimerTable.set(
+            address, clockEdge() + cyclesToTicks(fixed_timeout_latency));
+        }
+
+      }
+  }
+
+  action(b_issueWriteRequest, "b", desc="Issue GETX") {
+
+      assert(is_valid(tbe));
+      if (tbe.IssueCount == 0) {
+        // Update outstanding requests
+        //profile_outstanding_request(outstandingRequests);
+        outstandingRequests := outstandingRequests + 1;
+      }
+
+      if (tbe.IssueCount >= retry_threshold) {
+        // Issue a persistent request if possible
+        if ( okToIssueStarving(address, machineID) && (starving == false)) {
+          enqueue(persistentNetwork_out, PersistentMsg, l1_request_latency) {
+            out_msg.addr := address;
+            out_msg.Type := PersistentRequestType:GETX_PERSISTENT;
+            out_msg.Requestor := machineID;
+            out_msg.Destination.broadcast(MachineType:L1Cache);
+
+            //
+            // Currently the configuration system limits the system to only one
+            // chip.  Therefore, if we assume one shared L2 cache, then only one
+            // pertinent L2 cache exist.
+            //
+            //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
+
+            out_msg.Destination.add(mapAddressToRange(address,
+                                      MachineType:L2Cache, l2_select_low_bit,
+                                      l2_select_num_bits, intToID(0)));
+
+            out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+            out_msg.MessageSize := MessageSizeType:Persistent_Control;
+            out_msg.Prefetch := tbe.Prefetch;
+            out_msg.AccessMode := tbe.AccessMode;
+          }
+          markPersistentEntries(address);
+          starving := true;
+
+          // Update outstanding requests
+          //profile_outstanding_persistent_request(outstandingPersistentRequests);
+          outstandingPersistentRequests := outstandingPersistentRequests + 1;
+
+          if (tbe.IssueCount == 0) {
+            //profile_persistent_prediction(address, tbe.TypeOfAccess);
+          }
+
+          // Increment IssueCount
+          tbe.IssueCount := tbe.IssueCount + 1;
+
+          tbe.WentPersistent := true;
+
+          // Do not schedule a wakeup, a persistent requests will always complete
+        }
+        else {
+
+          // We'd like to issue a persistent request, but are not allowed
+          // to issue a P.R. right now.  This, we do not increment the
+          // IssueCount.
+
+          // Set a wakeup timer
+          reissueTimerTable.set(
+            address, clockEdge() + cyclesToTicks(reissue_wakeup_latency));
+        }
+
+      } else  {
+        // Make a normal request
+        enqueue(requestNetwork_out, RequestMsg, l1_request_latency) {
+          out_msg.addr := address;
+          out_msg.Type := CoherenceRequestType:GETX;
+          out_msg.Requestor := machineID;
+
+          out_msg.Destination.add(mapAddressToRange(address,
+                                    MachineType:L2Cache, l2_select_low_bit,
+                                    l2_select_num_bits, intToID(0)));
+
+          out_msg.RetryNum := tbe.IssueCount;
+
+          if (tbe.IssueCount == 0) {
+            out_msg.MessageSize := MessageSizeType:Request_Control;
+          } else {
+            out_msg.MessageSize := MessageSizeType:Reissue_Control;
+          }
+          out_msg.Prefetch := tbe.Prefetch;
+          out_msg.AccessMode := tbe.AccessMode;
+        }
+
+        // send to other local L1s too
+        enqueue(requestNetwork_out, RequestMsg, l1_request_latency) {
+          out_msg.addr := address;
+          out_msg.Type := CoherenceRequestType:GETX;
+          out_msg.Requestor := machineID;
+          out_msg.isLocal := true;
+
+          //
+          // Since only one chip, assuming all L1 caches are local
+          //
+          //out_msg.Destination := getOtherLocalL1IDs(machineID);
+          out_msg.Destination.broadcast(MachineType:L1Cache);
+          out_msg.Destination.remove(machineID);
+
+          out_msg.RetryNum := tbe.IssueCount;
+          if (tbe.IssueCount == 0) {
+            out_msg.MessageSize := MessageSizeType:Broadcast_Control;
+          } else {
+            out_msg.MessageSize := MessageSizeType:Broadcast_Control;
+          }
+          out_msg.Prefetch := tbe.Prefetch;
+          out_msg.AccessMode := tbe.AccessMode;
+        }
+
+        // Increment IssueCount
+        tbe.IssueCount := tbe.IssueCount + 1;
+
+        DPRINTF(RubySlicc, "incremented issue count to %d\n",
+                tbe.IssueCount);
+
+        // Set a wakeup timer
+        if (dynamic_timeout_enabled) {
+          reissueTimerTable.set(
+            address, clockEdge() + cyclesToTicks(averageLatencyEstimate()));
+        } else {
+          reissueTimerTable.set(
+            address, clockEdge() + cyclesToTicks(fixed_timeout_latency));
+        }
+      }
+  }
+
+  action(bb_bounceResponse, "\b", desc="Bounce tokens and data to memory") {
+    peek(responseNetwork_in, ResponseMsg) {
+      // FIXME, should use a 3rd vnet
+      enqueue(responseNetwork_out, ResponseMsg, 1) {
+        out_msg.addr := address;
+        out_msg.Type := in_msg.Type;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+        out_msg.Tokens := in_msg.Tokens;
+        out_msg.MessageSize := in_msg.MessageSize;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Dirty := in_msg.Dirty;
+      }
+    }
+  }
+
+  action(c_ownedReplacement, "c", desc="Issue writeback") {
+    assert(is_valid(cache_entry));
+    enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+      out_msg.addr := address;
+      out_msg.Sender := machineID;
+
+      out_msg.Destination.add(mapAddressToRange(address,
+                                MachineType:L2Cache, l2_select_low_bit,
+                                l2_select_num_bits, intToID(0)));
+
+      out_msg.Tokens := cache_entry.Tokens;
+      out_msg.DataBlk := cache_entry.DataBlk;
+      out_msg.Dirty := cache_entry.Dirty;
+      out_msg.Type := CoherenceResponseType:WB_OWNED;
+
+      // always send the data?
+      out_msg.MessageSize := MessageSizeType:Writeback_Data;
+    }
+    cache_entry.Tokens := 0;
+  }
+
+  action(cc_sharedReplacement, "\c", desc="Issue shared writeback") {
+
+    // don't send writeback if replacing block with no tokens
+    assert(is_valid(cache_entry));
+    assert (cache_entry.Tokens > 0);
+    enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+        out_msg.addr := address;
+        out_msg.Sender := machineID;
+
+        out_msg.Destination.add(mapAddressToRange(address,
+                                  MachineType:L2Cache, l2_select_low_bit,
+                                  l2_select_num_bits, intToID(0)));
+
+        out_msg.Tokens := cache_entry.Tokens;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        // assert(cache_entry.Dirty == false);
+        out_msg.Dirty := false;
+
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.Type := CoherenceResponseType:WB_SHARED_DATA;
+    }
+    cache_entry.Tokens := 0;
+  }
+
+  action(tr_tokenReplacement, "tr", desc="Issue token writeback") {
+    assert(is_valid(cache_entry));
+    if (cache_entry.Tokens > 0) {
+      enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+        out_msg.addr := address;
+        out_msg.Sender := machineID;
+
+        out_msg.Destination.add(mapAddressToRange(address,
+                                  MachineType:L2Cache, l2_select_low_bit,
+                                  l2_select_num_bits, intToID(0)));
+
+        out_msg.Tokens := cache_entry.Tokens;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        // assert(cache_entry.Dirty == false);
+        out_msg.Dirty := false;
+
+        // always send the data?
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        out_msg.Type := CoherenceResponseType:WB_TOKENS;
+      }
+    }
+    cache_entry.Tokens := 0;
+  }
+
+
+  action(d_sendDataWithToken, "d", desc="Send data and a token from cache to requestor") {
+    assert(is_valid(cache_entry));
+    peek(requestNetwork_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:DATA_SHARED;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.Tokens := 1;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        // out_msg.Dirty := cache_entry.Dirty;
+        out_msg.Dirty := false;
+        if (in_msg.isLocal) {
+          out_msg.MessageSize := MessageSizeType:ResponseLocal_Data;
+        } else {
+          out_msg.MessageSize := MessageSizeType:Response_Data;
+        }
+      }
+    }
+    cache_entry.Tokens := cache_entry.Tokens - 1;
+    assert(cache_entry.Tokens >= 1);
+  }
+
+  action(d_sendDataWithNTokenIfAvail, "\dd", desc="Send data and a token from cache to requestor") {
+    assert(is_valid(cache_entry));
+    peek(requestNetwork_in, RequestMsg) {
+      if (cache_entry.Tokens > (N_tokens + (max_tokens() / 2))) {
+        enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+          out_msg.addr := address;
+          out_msg.Type := CoherenceResponseType:DATA_SHARED;
+          out_msg.Sender := machineID;
+          out_msg.Destination.add(in_msg.Requestor);
+          out_msg.Tokens := N_tokens;
+          out_msg.DataBlk := cache_entry.DataBlk;
+          // out_msg.Dirty := cache_entry.Dirty;
+          out_msg.Dirty := false;
+          if (in_msg.isLocal) {
+            out_msg.MessageSize := MessageSizeType:ResponseLocal_Data;
+          } else {
+            out_msg.MessageSize := MessageSizeType:Response_Data;
+          }
+        }
+        cache_entry.Tokens := cache_entry.Tokens - N_tokens;
+      }
+      else if (cache_entry.Tokens > 1) {
+        enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+          out_msg.addr := address;
+          out_msg.Type := CoherenceResponseType:DATA_SHARED;
+          out_msg.Sender := machineID;
+          out_msg.Destination.add(in_msg.Requestor);
+          out_msg.Tokens := 1;
+          out_msg.DataBlk := cache_entry.DataBlk;
+          // out_msg.Dirty := cache_entry.Dirty;
+          out_msg.Dirty := false;
+          if (in_msg.isLocal) {
+            out_msg.MessageSize := MessageSizeType:ResponseLocal_Data;
+          } else {
+            out_msg.MessageSize := MessageSizeType:Response_Data;
+          }
+        }
+        cache_entry.Tokens := cache_entry.Tokens - 1;
+      }
+    }
+//    assert(cache_entry.Tokens >= 1);
+  }
+
+  action(dd_sendDataWithAllTokens, "\d", desc="Send data and all tokens from cache to requestor") {
+    peek(requestNetwork_in, RequestMsg) {
+    assert(is_valid(cache_entry));
+      enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:DATA_OWNER;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        assert(cache_entry.Tokens > (max_tokens() / 2));
+        out_msg.Tokens := cache_entry.Tokens;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.Dirty := cache_entry.Dirty;
+        if (in_msg.isLocal) {
+          out_msg.MessageSize := MessageSizeType:ResponseLocal_Data;
+        } else {
+          out_msg.MessageSize := MessageSizeType:Response_Data;
+        }
+      }
+    }
+    cache_entry.Tokens := 0;
+  }
+
+  action(e_sendAckWithCollectedTokens, "e", desc="Send ack with the tokens we've collected thus far.") {
+    // assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
+    assert(is_valid(cache_entry));
+    if (cache_entry.Tokens > 0) {
+      enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+        out_msg.addr := address;
+        if (cache_entry.Tokens > (max_tokens() / 2)) {
+          out_msg.Type := CoherenceResponseType:DATA_OWNER;
+        } else {
+          out_msg.Type := CoherenceResponseType:ACK;
+        }
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(persistentTable.findSmallest(address));
+        assert(cache_entry.Tokens >= 1);
+        out_msg.Tokens := cache_entry.Tokens;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+      }
+    }
+    cache_entry.Tokens := 0;
+  }
+
+  action(ee_sendDataWithAllTokens, "\e", desc="Send data and all tokens from cache to starver") {
+    //assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
+    assert(is_valid(cache_entry));
+    assert(cache_entry.Tokens > 0);
+    enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:DATA_OWNER;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(persistentTable.findSmallest(address));
+      assert(cache_entry.Tokens > (max_tokens() / 2));
+      out_msg.Tokens := cache_entry.Tokens;
+      out_msg.DataBlk := cache_entry.DataBlk;
+      out_msg.Dirty := cache_entry.Dirty;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+    cache_entry.Tokens := 0;
+  }
+
+  action(f_sendAckWithAllButNorOneTokens, "f", desc="Send ack with all our tokens but one to starver.") {
+    //assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
+    assert(is_valid(cache_entry));
+    assert(cache_entry.Tokens > 0);
+    if (cache_entry.Tokens > 1) {
+      enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+        out_msg.addr := address;
+        if (cache_entry.Tokens > (max_tokens() / 2)) {
+          out_msg.Type := CoherenceResponseType:DATA_OWNER;
+        } else {
+          out_msg.Type := CoherenceResponseType:ACK;
+        }
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(persistentTable.findSmallest(address));
+        assert(cache_entry.Tokens >= 1);
+        if (cache_entry.Tokens > N_tokens) {
+          out_msg.Tokens := cache_entry.Tokens - N_tokens;
+        } else {
+          out_msg.Tokens := cache_entry.Tokens - 1;
+        }
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+      }
+    }
+    if (cache_entry.Tokens > N_tokens) {
+      cache_entry.Tokens := N_tokens;
+    } else {
+      cache_entry.Tokens := 1;
+    }
+  }
+
+  action(ff_sendDataWithAllButNorOneTokens, "\f", desc="Send data and out tokens but one to starver") {
+    //assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
+    assert(is_valid(cache_entry));
+    assert(cache_entry.Tokens > ((max_tokens() / 2) + 1));
+    enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:DATA_OWNER;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(persistentTable.findSmallest(address));
+        if (cache_entry.Tokens > (N_tokens + (max_tokens() / 2))) {
+          out_msg.Tokens := cache_entry.Tokens - N_tokens;
+        } else {
+          out_msg.Tokens := cache_entry.Tokens - 1;
+        }
+        assert(out_msg.Tokens > (max_tokens() / 2));
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.Dirty := cache_entry.Dirty;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+    if (cache_entry.Tokens > (N_tokens + (max_tokens() / 2))) {
+      cache_entry.Tokens := N_tokens;
+    } else {
+      cache_entry.Tokens := 1;
+    }
+  }
+
+  action(fo_sendDataWithOwnerToken, "fo", desc="Send data and owner tokens") {
+    assert(is_valid(cache_entry));
+    assert(cache_entry.Tokens == ((max_tokens() / 2) + 1));
+    enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:DATA_OWNER;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(persistentTable.findSmallest(address));
+        out_msg.Tokens := cache_entry.Tokens;
+        assert(out_msg.Tokens > (max_tokens() / 2));
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.Dirty := cache_entry.Dirty;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+    cache_entry.Tokens := 0;
+  }
+
+  action(g_bounceResponseToStarver, "g", desc="Redirect response to starving processor") {
+    // assert(persistentTable.isLocked(address));
+
+    peek(responseNetwork_in, ResponseMsg) {
+      // assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
+      // FIXME, should use a 3rd vnet in some cases
+      enqueue(responseNetwork_out, ResponseMsg, 1) {
+        out_msg.addr := address;
+        out_msg.Type := in_msg.Type;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(persistentTable.findSmallest(address));
+        out_msg.Tokens := in_msg.Tokens;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Dirty := in_msg.Dirty;
+        out_msg.MessageSize := in_msg.MessageSize;
+      }
+    }
+  }
+
+  action(h_load_hit, "hd", desc="Notify sequencer the load completed.") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
+            address, cache_entry.DataBlk);
+
+    L1Dcache.setMRU(cache_entry);
+    sequencer.readCallback(address, cache_entry.DataBlk, false,
+                           MachineType:L1Cache);
+  }
+
+  action(h_ifetch_hit, "hi", desc="Notify sequencer the load completed.") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
+            address, cache_entry.DataBlk);
+
+    L1Icache.setMRU(cache_entry);
+    sequencer.readCallback(address, cache_entry.DataBlk, false,
+                           MachineType:L1Cache);
+  }
+
+  action(x_external_load_hit, "x", desc="Notify sequencer the load completed.") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
+            address, cache_entry.DataBlk);
+    peek(responseNetwork_in, ResponseMsg) {
+      L1Icache.setMRU(address);
+      L1Dcache.setMRU(address);
+      sequencer.readCallback(address, cache_entry.DataBlk,
+                             isExternalHit(address, in_msg.Sender),
+                             machineIDToMachineType(in_msg.Sender));
+    }
+  }
+
+  action(hh_store_hit, "\h", desc="Notify sequencer that store completed.") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
+            address, cache_entry.DataBlk);
+
+    L1Dcache.setMRU(cache_entry);
+    sequencer.writeCallback(address, cache_entry.DataBlk, false,
+                            MachineType:L1Cache);
+    cache_entry.Dirty := true;
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+  }
+
+  action(xx_external_store_hit, "\x", desc="Notify sequencer that store completed.") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
+            address, cache_entry.DataBlk);
+    peek(responseNetwork_in, ResponseMsg) {
+      L1Icache.setMRU(address);
+      L1Dcache.setMRU(address);
+      sequencer.writeCallback(address, cache_entry.DataBlk,
+                              isExternalHit(address, in_msg.Sender),
+                              machineIDToMachineType(in_msg.Sender));
+    }
+    cache_entry.Dirty := true;
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+  }
+
+  action(i_allocateTBE, "i", desc="Allocate TBE") {
+    check_allocate(L1_TBEs);
+    L1_TBEs.allocate(address);
+    set_tbe(L1_TBEs[address]);
+    tbe.IssueCount := 0;
+    peek(mandatoryQueue_in, RubyRequest) {
+      tbe.PC := in_msg.ProgramCounter;
+      tbe.TypeOfAccess := cache_request_type_to_access_type(in_msg.Type);
+      if (in_msg.Type == RubyRequestType:ATOMIC) {
+        tbe.IsAtomic := true;
+      }
+      tbe.Prefetch := in_msg.Prefetch;
+      tbe.AccessMode := in_msg.AccessMode;
+    }
+    tbe.IssueTime := curCycle();
+  }
+
+  action(ta_traceStalledAddress, "ta", desc="Trace Stalled Address") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      APPEND_TRANSITION_COMMENT(in_msg.LineAddress);
+    }
+  }
+
+  action(j_unsetReissueTimer, "j", desc="Unset reissue timer.") {
+    if (reissueTimerTable.isSet(address)) {
+      reissueTimerTable.unset(address);
+    }
+  }
+
+  action(jj_unsetUseTimer, "\j", desc="Unset use timer.") {
+    useTimerTable.unset(address);
+  }
+
+  action(k_popMandatoryQueue, "k", desc="Pop mandatory queue.") {
+    mandatoryQueue_in.dequeue(clockEdge());
+  }
+
+  action(l_popPersistentQueue, "l", desc="Pop persistent queue.") {
+    persistentNetwork_in.dequeue(clockEdge());
+  }
+
+  action(m_popRequestQueue, "m", desc="Pop request queue.") {
+    requestNetwork_in.dequeue(clockEdge());
+  }
+
+  action(n_popResponseQueue, "n", desc="Pop response queue") {
+    responseNetwork_in.dequeue(clockEdge());
+  }
+
+  action(o_scheduleUseTimeout, "o", desc="Schedule a use timeout.") {
+    useTimerTable.set(
+        address, clockEdge() + cyclesToTicks(use_timeout_latency));
+  }
+
+  action(p_informL2AboutTokenLoss, "p", desc="Inform L2 about loss of all tokens") {
+    enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+       out_msg.addr := address;
+       out_msg.Type := CoherenceResponseType:INV;
+       out_msg.Tokens := 0;
+       out_msg.Sender := machineID;
+
+       out_msg.Destination.add(mapAddressToRange(address,
+                                 MachineType:L2Cache, l2_select_low_bit,
+                                 l2_select_num_bits, intToID(0)));
+       out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+
+  action(q_updateTokensFromResponse, "q", desc="Update the token count based on the incoming response message") {
+    peek(responseNetwork_in, ResponseMsg) {
+      assert(is_valid(cache_entry));
+      assert(in_msg.Tokens != 0);
+      DPRINTF(RubySlicc, "L1 received tokens for address: %#x, tokens: %d\n",
+              in_msg.addr, in_msg.Tokens);
+      cache_entry.Tokens := cache_entry.Tokens + in_msg.Tokens;
+      DPRINTF(RubySlicc, "%d\n", cache_entry.Tokens);
+
+      if (cache_entry.Dirty == false && in_msg.Dirty) {
+        cache_entry.Dirty := true;
+      }
+    }
+  }
+
+  action(s_deallocateTBE, "s", desc="Deallocate TBE") {
+
+    assert(is_valid(tbe));
+    if (tbe.WentPersistent) {
+      // assert(starving);
+      outstandingRequests := outstandingRequests - 1;
+      enqueue(persistentNetwork_out, PersistentMsg, l1_request_latency) {
+        out_msg.addr := address;
+        out_msg.Type := PersistentRequestType:DEACTIVATE_PERSISTENT;
+        out_msg.Requestor := machineID;
+        out_msg.Destination.broadcast(MachineType:L1Cache);
+
+        //
+        // Currently the configuration system limits the system to only one
+        // chip.  Therefore, if we assume one shared L2 cache, then only one
+        // pertinent L2 cache exist.
+        //
+        //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
+
+        out_msg.Destination.add(mapAddressToRange(address,
+                                  MachineType:L2Cache, l2_select_low_bit,
+                                  l2_select_num_bits, intToID(0)));
+
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+        out_msg.MessageSize := MessageSizeType:Persistent_Control;
+      }
+      starving := false;
+    }
+
+    // Update average latency
+    if (tbe.IssueCount <= 1) {
+      if (tbe.ExternalResponse) {
+        updateAverageLatencyEstimate(curCycle() - tbe.IssueTime);
+      }
+    }
+
+    // Profile
+    //if (tbe.WentPersistent) {
+    //  profile_token_retry(address, tbe.TypeOfAccess, 2);
+    //}
+    //else {
+    //  profile_token_retry(address, tbe.TypeOfAccess, 1);
+    //}
+
+    //profile_token_retry(address, tbe.TypeOfAccess, tbe.IssueCount);
+    L1_TBEs.deallocate(address);
+    unset_tbe();
+  }
+
+  action(t_sendAckWithCollectedTokens, "t", desc="Send ack with the tokens we've collected thus far.") {
+    assert(is_valid(cache_entry));
+    if (cache_entry.Tokens > 0) {
+      peek(requestNetwork_in, RequestMsg) {
+        enqueue(responseNetwork_out, ResponseMsg, l1_response_latency) {
+          out_msg.addr := address;
+          if (cache_entry.Tokens > (max_tokens() / 2)) {
+            out_msg.Type := CoherenceResponseType:DATA_OWNER;
+          } else {
+            out_msg.Type := CoherenceResponseType:ACK;
+          }
+          out_msg.Sender := machineID;
+          out_msg.Destination.add(in_msg.Requestor);
+          assert(cache_entry.Tokens >= 1);
+          out_msg.Tokens := cache_entry.Tokens;
+          out_msg.DataBlk := cache_entry.DataBlk;
+          out_msg.MessageSize := MessageSizeType:Response_Control;
+        }
+      }
+    }
+    cache_entry.Tokens := 0;
+  }
+
+  action(u_writeDataToCache, "u", desc="Write data to cache") {
+    peek(responseNetwork_in, ResponseMsg) {
+      assert(is_valid(cache_entry));
+      cache_entry.DataBlk := in_msg.DataBlk;
+      if (cache_entry.Dirty == false && in_msg.Dirty) {
+        cache_entry.Dirty := in_msg.Dirty;
+      }
+
+    }
+  }
+
+  action(gg_deallocateL1CacheBlock, "\g", desc="Deallocate cache block.  Sets the cache to invalid, allowing a replacement in parallel with a fetch.") {
+    assert(getTokens(cache_entry) == 0);
+    if (L1Dcache.isTagPresent(address)) {
+      L1Dcache.deallocate(address);
+    } else {
+      L1Icache.deallocate(address);
+    }
+    unset_cache_entry();
+  }
+
+  action(ii_allocateL1DCacheBlock, "\i", desc="Set L1 D-cache tag equal to tag of block B.") {
+    if (is_valid(cache_entry)) {
+    } else {
+      set_cache_entry(L1Dcache.allocate(address, new Entry));
+    }
+  }
+
+  action(pp_allocateL1ICacheBlock, "\p", desc="Set L1 I-cache tag equal to tag of block B.") {
+    if (is_valid(cache_entry)) {
+    } else {
+      set_cache_entry(L1Icache.allocate(address, new Entry));
+    }
+  }
+
+  action(forward_eviction_to_cpu, "\cc", desc="sends eviction information to the processor") {
+    if (send_evictions) {
+      DPRINTF(RubySlicc, "Sending invalidation for %#x to the CPU\n", address);
+      sequencer.evictionCallback(address);
+    }
+  }
+
+  action(uu_profileInstMiss, "\uim", desc="Profile the demand miss") {
+      ++L1Icache.demand_misses;
+  }
+
+  action(uu_profileInstHit, "\uih", desc="Profile the demand hit") {
+      ++L1Icache.demand_hits;
+  }
+
+  action(uu_profileDataMiss, "\udm", desc="Profile the demand miss") {
+      ++L1Dcache.demand_misses;
+  }
+
+  action(uu_profileDataHit, "\udh", desc="Profile the demand hit") {
+      ++L1Dcache.demand_hits;
+  }
+
+  action(w_assertIncomingDataAndCacheDataMatch, "w", desc="Assert that the incoming data and the data in the cache match") {
+    peek(responseNetwork_in, ResponseMsg) {
+      assert(is_valid(cache_entry));
+      assert(cache_entry.DataBlk == in_msg.DataBlk);
+    }
+  }
+
+  action(zz_stallAndWaitMandatoryQueue, "\z", desc="Send the head of the mandatory queue to the back of the queue.") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      APPEND_TRANSITION_COMMENT(in_msg.LineAddress);
+    }
+    stall_and_wait(mandatoryQueue_in, address);
+  }
+
+  action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
+    wakeUpBuffers(address);
+  }
+
+  action(ka_wakeUpAllDependents, "ka", desc="wake-up all dependents") {
+    wakeUpAllBuffers();
+  }
+
+  //*****************************************************
+  // TRANSITIONS
+  //*****************************************************
+
+  // Transitions for Load/Store/L2_Replacement from transient states
+  transition({IM, SM, OM, IS, IM_L, IS_L, I_L, S_L, SM_L, M_W, MM_W}, L1_Replacement) {
+    ta_traceStalledAddress;
+    zz_stallAndWaitMandatoryQueue;
+  }
+
+  transition({IM, SM, OM, IS, IM_L, IS_L, SM_L}, {Store, Atomic}) {
+    zz_stallAndWaitMandatoryQueue;
+  }
+
+  transition({IM, IS, IM_L, IS_L}, {Load, Ifetch}) {
+    zz_stallAndWaitMandatoryQueue;
+  }
+
+  // Lockdowns
+  transition({NP, I, S, O, M, MM, M_W, MM_W, IM, SM, OM, IS}, Own_Lock_or_Unlock) {
+    l_popPersistentQueue;
+  }
+
+  // Transitions from NP
+  transition(NP, Load, IS) {
+    ii_allocateL1DCacheBlock;
+    i_allocateTBE;
+    a_issueReadRequest;
+    uu_profileDataMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(NP, Ifetch, IS) {
+    pp_allocateL1ICacheBlock;
+    i_allocateTBE;
+    a_issueReadRequest;
+    uu_profileInstMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(NP, {Store, Atomic}, IM) {
+    ii_allocateL1DCacheBlock;
+    i_allocateTBE;
+    b_issueWriteRequest;
+    uu_profileDataMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(NP, {Ack, Data_Shared, Data_Owner, Data_All_Tokens}) {
+    bb_bounceResponse;
+    n_popResponseQueue;
+  }
+
+  transition(NP, {Transient_GETX, Transient_Local_GETX, Transient_GETS, Transient_Local_GETS}) {
+    m_popRequestQueue;
+  }
+
+  transition(NP, {Persistent_GETX, Persistent_GETS, Persistent_GETS_Last_Token}, I_L) {
+    l_popPersistentQueue;
+  }
+
+  // Transitions from Idle
+  transition(I, Load, IS) {
+    i_allocateTBE;
+    a_issueReadRequest;
+    uu_profileDataMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(I, Ifetch, IS) {
+    i_allocateTBE;
+    a_issueReadRequest;
+    uu_profileInstMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(I, {Store, Atomic}, IM) {
+    i_allocateTBE;
+    b_issueWriteRequest;
+    uu_profileDataMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(I, L1_Replacement) {
+    ta_traceStalledAddress;
+    tr_tokenReplacement;
+    gg_deallocateL1CacheBlock;
+    ka_wakeUpAllDependents;
+  }
+
+  transition(I, {Transient_GETX, Transient_Local_GETX}) {
+    t_sendAckWithCollectedTokens;
+    m_popRequestQueue;
+  }
+
+  transition(I, {Transient_GETS, Transient_GETS_Last_Token, Transient_Local_GETS_Last_Token, Transient_Local_GETS}) {
+    m_popRequestQueue;
+  }
+
+  transition(I, {Persistent_GETX, Persistent_GETS, Persistent_GETS_Last_Token}, I_L) {
+    e_sendAckWithCollectedTokens;
+    l_popPersistentQueue;
+  }
+
+  transition(I_L, {Persistent_GETX, Persistent_GETS, Persistent_GETS_Last_Token}) {
+    l_popPersistentQueue;
+  }
+
+  transition(I, Ack) {
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(I, Data_Shared, S) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(I, Data_Owner, O) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(I, Data_All_Tokens, M) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  // Transitions from Shared
+  transition({S, SM, S_L, SM_L}, Load) {
+    h_load_hit;
+    uu_profileDataHit;
+    k_popMandatoryQueue;
+  }
+
+  transition({S, SM, S_L, SM_L}, Ifetch) {
+    h_ifetch_hit;
+    uu_profileInstHit;
+    k_popMandatoryQueue;
+  }
+
+  transition(S, {Store, Atomic}, SM) {
+    i_allocateTBE;
+    b_issueWriteRequest;
+    uu_profileDataMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(S, L1_Replacement, I) {
+    ta_traceStalledAddress;
+    cc_sharedReplacement; // Only needed in some cases
+    forward_eviction_to_cpu;
+    gg_deallocateL1CacheBlock;
+    ka_wakeUpAllDependents;
+  }
+
+  transition(S, {Transient_GETX, Transient_Local_GETX}, I) {
+    t_sendAckWithCollectedTokens;
+    p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
+    m_popRequestQueue;
+  }
+
+  // only owner responds to non-local requests
+  transition(S, Transient_GETS) {
+    m_popRequestQueue;
+  }
+
+  transition(S, Transient_Local_GETS) {
+    d_sendDataWithToken;
+    m_popRequestQueue;
+  }
+
+  transition(S, {Transient_GETS_Last_Token, Transient_Local_GETS_Last_Token}) {
+    m_popRequestQueue;
+  }
+
+  transition({S, S_L}, Persistent_GETX, I_L) {
+    e_sendAckWithCollectedTokens;
+    p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
+    l_popPersistentQueue;
+  }
+
+  transition(S, {Persistent_GETS, Persistent_GETS_Last_Token}, S_L) {
+    f_sendAckWithAllButNorOneTokens;
+    l_popPersistentQueue;
+  }
+
+  transition(S_L, {Persistent_GETS, Persistent_GETS_Last_Token}) {
+    l_popPersistentQueue;
+  }
+
+  transition(S, Ack) {
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(S, Data_Shared) {
+    w_assertIncomingDataAndCacheDataMatch;
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(S, Data_Owner, O) {
+    w_assertIncomingDataAndCacheDataMatch;
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(S, Data_All_Tokens, M) {
+    w_assertIncomingDataAndCacheDataMatch;
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  // Transitions from Owned
+  transition({O, OM}, Ifetch) {
+    h_ifetch_hit;
+    uu_profileInstHit;
+    k_popMandatoryQueue;
+  }
+
+  transition({O, OM}, Load) {
+    h_load_hit;
+    uu_profileDataHit;
+    k_popMandatoryQueue;
+  }
+
+  transition(O, {Store, Atomic}, OM) {
+    i_allocateTBE;
+    b_issueWriteRequest;
+    uu_profileDataMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(O, L1_Replacement, I) {
+    ta_traceStalledAddress;
+    c_ownedReplacement;
+    forward_eviction_to_cpu
+    gg_deallocateL1CacheBlock;
+    ka_wakeUpAllDependents;
+  }
+
+  transition(O, {Transient_GETX, Transient_Local_GETX}, I) {
+    dd_sendDataWithAllTokens;
+    p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
+    m_popRequestQueue;
+  }
+
+  transition(O, Persistent_GETX, I_L) {
+    ee_sendDataWithAllTokens;
+    p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
+    l_popPersistentQueue;
+  }
+
+  transition(O, Persistent_GETS, S_L) {
+    ff_sendDataWithAllButNorOneTokens;
+    l_popPersistentQueue;
+  }
+
+  transition(O, Persistent_GETS_Last_Token, I_L) {
+    fo_sendDataWithOwnerToken;
+    forward_eviction_to_cpu
+    l_popPersistentQueue;
+  }
+
+  transition(O, Transient_GETS) {
+    d_sendDataWithToken;
+    m_popRequestQueue;
+  }
+
+  transition(O, Transient_Local_GETS) {
+    d_sendDataWithToken;
+    m_popRequestQueue;
+  }
+
+  // ran out of tokens, wait for it to go persistent
+  transition(O, {Transient_GETS_Last_Token, Transient_Local_GETS_Last_Token}) {
+    m_popRequestQueue;
+  }
+
+  transition(O, Ack) {
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(O, Ack_All_Tokens, M) {
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(O, Data_Shared) {
+    w_assertIncomingDataAndCacheDataMatch;
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(O, Data_All_Tokens, M) {
+    w_assertIncomingDataAndCacheDataMatch;
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  // Transitions from Modified
+  transition({MM, MM_W}, Ifetch) {
+    h_ifetch_hit;
+    uu_profileInstHit;
+    k_popMandatoryQueue;
+  }
+
+  transition({MM, MM_W}, Load) {
+    h_load_hit;
+    uu_profileDataHit;
+    k_popMandatoryQueue;
+  }
+
+  transition({MM_W}, {Store, Atomic}) {
+    hh_store_hit;
+    uu_profileDataHit;
+    k_popMandatoryQueue;
+  }
+
+  transition(MM, Store) {
+    hh_store_hit;
+    uu_profileDataHit;
+    k_popMandatoryQueue;
+  }
+
+  transition(MM, Atomic, M) {
+    hh_store_hit;
+    uu_profileDataHit;
+    k_popMandatoryQueue;
+  }
+
+  transition(MM, L1_Replacement, I) {
+    ta_traceStalledAddress;
+    c_ownedReplacement;
+    forward_eviction_to_cpu
+    gg_deallocateL1CacheBlock;
+    ka_wakeUpAllDependents;
+  }
+
+  transition(MM, {Transient_GETX, Transient_Local_GETX, Transient_GETS, Transient_Local_GETS}, I) {
+    dd_sendDataWithAllTokens;
+    p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
+    m_popRequestQueue;
+  }
+
+  transition({MM_W}, {Transient_GETX, Transient_Local_GETX, Transient_GETS, Transient_Local_GETS}) { // Ignore the request
+    m_popRequestQueue;
+  }
+
+  // Implement the migratory sharing optimization, even for persistent requests
+  transition(MM, {Persistent_GETX, Persistent_GETS}, I_L) {
+    ee_sendDataWithAllTokens;
+    p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
+    l_popPersistentQueue;
+  }
+
+  // ignore persistent requests in lockout period
+  transition(MM_W, {Persistent_GETX, Persistent_GETS}) {
+    l_popPersistentQueue;
+  }
+
+  transition(MM_W, Use_TimeoutNoStarvers, MM) {
+    s_deallocateTBE;
+    jj_unsetUseTimer;
+    kd_wakeUpDependents;
+  }
+
+  transition(MM_W, Use_TimeoutNoStarvers_NoMig, M) {
+    s_deallocateTBE;
+    jj_unsetUseTimer;
+    kd_wakeUpDependents;
+  }
+
+  // Transitions from Dirty Exclusive
+  transition({M, M_W}, Ifetch) {
+    h_ifetch_hit;
+    uu_profileInstHit;
+    k_popMandatoryQueue;
+  }
+
+  transition({M, M_W}, Load) {
+    h_load_hit;
+    uu_profileDataHit;
+    k_popMandatoryQueue;
+  }
+
+  transition(M, Store, MM) {
+    hh_store_hit;
+    uu_profileDataHit;
+    k_popMandatoryQueue;
+  }
+
+  transition(M, Atomic) {
+    hh_store_hit;
+    uu_profileDataHit;
+    k_popMandatoryQueue;
+  }
+
+  transition(M_W, Store, MM_W) {
+    hh_store_hit;
+    uu_profileDataHit;
+    k_popMandatoryQueue;
+  }
+
+  transition(M_W, Atomic) {
+    hh_store_hit;
+    uu_profileDataHit;
+    k_popMandatoryQueue;
+  }
+
+  transition(M, L1_Replacement, I) {
+    ta_traceStalledAddress;
+    c_ownedReplacement;
+    forward_eviction_to_cpu
+    gg_deallocateL1CacheBlock;
+    ka_wakeUpAllDependents;
+  }
+
+  transition(M, {Transient_GETX, Transient_Local_GETX}, I) {
+    dd_sendDataWithAllTokens;
+    p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
+    m_popRequestQueue;
+  }
+
+  transition(M, Transient_Local_GETS, O) {
+    d_sendDataWithToken;
+    m_popRequestQueue;
+  }
+
+  transition(M, Transient_GETS, O) {
+    d_sendDataWithNTokenIfAvail;
+    m_popRequestQueue;
+  }
+
+  transition(M_W, {Transient_GETX, Transient_Local_GETX, Transient_GETS, Transient_Local_GETS}) { // Ignore the request
+    m_popRequestQueue;
+  }
+
+  transition(M, Persistent_GETX, I_L) {
+    ee_sendDataWithAllTokens;
+    p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
+    l_popPersistentQueue;
+  }
+
+  transition(M, Persistent_GETS, S_L) {
+    ff_sendDataWithAllButNorOneTokens;
+    l_popPersistentQueue;
+  }
+
+  // ignore persistent requests in lockout period
+  transition(M_W, {Persistent_GETX, Persistent_GETS}) {
+    l_popPersistentQueue;
+  }
+
+  transition(M_W, Use_TimeoutStarverS, S_L) {
+    s_deallocateTBE;
+    ff_sendDataWithAllButNorOneTokens;
+    jj_unsetUseTimer;
+  }
+
+  // someone unlocked during timeout
+  transition(M_W, {Use_TimeoutNoStarvers, Use_TimeoutNoStarvers_NoMig}, M) {
+    s_deallocateTBE;
+    jj_unsetUseTimer;
+    kd_wakeUpDependents;
+  }
+
+  transition(M_W, Use_TimeoutStarverX, I_L) {
+    s_deallocateTBE;
+    ee_sendDataWithAllTokens;
+    forward_eviction_to_cpu;
+    p_informL2AboutTokenLoss;
+    jj_unsetUseTimer;
+  }
+
+  // migratory
+  transition(MM_W, {Use_TimeoutStarverX, Use_TimeoutStarverS}, I_L) {
+    s_deallocateTBE;
+    ee_sendDataWithAllTokens;
+    forward_eviction_to_cpu;
+    p_informL2AboutTokenLoss;
+    jj_unsetUseTimer;
+
+  }
+
+  // Transient_GETX and Transient_GETS in transient states
+  transition(OM, {Transient_GETX, Transient_Local_GETX, Transient_GETS, Transient_GETS_Last_Token, Transient_Local_GETS_Last_Token, Transient_Local_GETS}) {
+    m_popRequestQueue;  // Even if we have the data, we can pretend we don't have it yet.
+  }
+
+  transition(IS, {Transient_GETX, Transient_Local_GETX}) {
+    t_sendAckWithCollectedTokens;
+    m_popRequestQueue;
+  }
+
+  transition(IS, {Transient_GETS, Transient_GETS_Last_Token, Transient_Local_GETS_Last_Token, Transient_Local_GETS}) {
+    m_popRequestQueue;
+  }
+
+  transition(IS, {Persistent_GETX, Persistent_GETS, Persistent_GETS_Last_Token}, IS_L) {
+    e_sendAckWithCollectedTokens;
+    l_popPersistentQueue;
+  }
+
+  transition(IS_L, {Persistent_GETX, Persistent_GETS}) {
+    l_popPersistentQueue;
+  }
+
+  transition(IM, {Persistent_GETX, Persistent_GETS, Persistent_GETS_Last_Token}, IM_L) {
+    e_sendAckWithCollectedTokens;
+    l_popPersistentQueue;
+  }
+
+  transition(IM_L, {Persistent_GETX, Persistent_GETS}) {
+    l_popPersistentQueue;
+  }
+
+  transition({SM, SM_L}, Persistent_GETX, IM_L) {
+    e_sendAckWithCollectedTokens;
+    forward_eviction_to_cpu
+    l_popPersistentQueue;
+  }
+
+  transition(SM, {Persistent_GETS, Persistent_GETS_Last_Token}, SM_L) {
+    f_sendAckWithAllButNorOneTokens;
+    l_popPersistentQueue;
+  }
+
+  transition(SM_L, {Persistent_GETS, Persistent_GETS_Last_Token}) {
+    l_popPersistentQueue;
+  }
+
+  transition(OM, Persistent_GETX, IM_L) {
+    ee_sendDataWithAllTokens;
+    forward_eviction_to_cpu
+    l_popPersistentQueue;
+  }
+
+  transition(OM, Persistent_GETS, SM_L) {
+    ff_sendDataWithAllButNorOneTokens;
+    l_popPersistentQueue;
+  }
+
+  transition(OM, Persistent_GETS_Last_Token, IM_L) {
+    fo_sendDataWithOwnerToken;
+    l_popPersistentQueue;
+  }
+
+  // Transitions from IM/SM
+
+  transition({IM, SM}, Ack) {
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(IM, Data_Shared, SM) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(IM, Data_Owner, OM) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(IM, Data_All_Tokens, MM_W) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    xx_external_store_hit;
+    o_scheduleUseTimeout;
+    j_unsetReissueTimer;
+    n_popResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(SM, Data_Shared) {
+    w_assertIncomingDataAndCacheDataMatch;
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(SM, Data_Owner, OM) {
+    w_assertIncomingDataAndCacheDataMatch;
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(SM, Data_All_Tokens, MM_W) {
+    w_assertIncomingDataAndCacheDataMatch;
+    q_updateTokensFromResponse;
+    xx_external_store_hit;
+    o_scheduleUseTimeout;
+    j_unsetReissueTimer;
+    n_popResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition({IM, SM}, {Transient_GETX, Transient_Local_GETX}, IM) { // We don't have the data yet, but we might have collected some tokens.  We give them up here to avoid livelock
+    t_sendAckWithCollectedTokens;
+    forward_eviction_to_cpu;
+    m_popRequestQueue;
+  }
+
+  transition({IM, SM}, {Transient_GETS, Transient_GETS_Last_Token, Transient_Local_GETS_Last_Token, Transient_Local_GETS}) {
+    m_popRequestQueue;
+  }
+
+  transition({IM, SM}, Request_Timeout) {
+    j_unsetReissueTimer;
+    b_issueWriteRequest;
+  }
+
+  // Transitions from OM
+
+  transition(OM, Ack) {
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(OM, Ack_All_Tokens, MM_W) {
+    q_updateTokensFromResponse;
+    xx_external_store_hit;
+    o_scheduleUseTimeout;
+    j_unsetReissueTimer;
+    n_popResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(OM, Data_Shared) {
+    w_assertIncomingDataAndCacheDataMatch;
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(OM, Data_All_Tokens, MM_W) {
+    w_assertIncomingDataAndCacheDataMatch;
+    q_updateTokensFromResponse;
+    xx_external_store_hit;
+    o_scheduleUseTimeout;
+    j_unsetReissueTimer;
+    n_popResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(OM, Request_Timeout) {
+    j_unsetReissueTimer;
+    b_issueWriteRequest;
+  }
+
+  // Transitions from IS
+
+  transition(IS, Ack) {
+    q_updateTokensFromResponse;
+    n_popResponseQueue;
+  }
+
+  transition(IS, Data_Shared, S) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    x_external_load_hit;
+    s_deallocateTBE;
+    j_unsetReissueTimer;
+    n_popResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(IS, Data_Owner, O) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    x_external_load_hit;
+    s_deallocateTBE;
+    j_unsetReissueTimer;
+    n_popResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(IS, Data_All_Tokens, M_W) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    x_external_load_hit;
+    o_scheduleUseTimeout;
+    j_unsetReissueTimer;
+    n_popResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(IS, Request_Timeout) {
+    j_unsetReissueTimer;
+    a_issueReadRequest;
+  }
+
+  // Transitions from I_L
+
+  transition(I_L, Load, IS_L) {
+    ii_allocateL1DCacheBlock;
+    i_allocateTBE;
+    a_issueReadRequest;
+    uu_profileDataMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(I_L, Ifetch, IS_L) {
+    pp_allocateL1ICacheBlock;
+    i_allocateTBE;
+    a_issueReadRequest;
+    uu_profileInstMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(I_L, {Store, Atomic}, IM_L) {
+    ii_allocateL1DCacheBlock;
+    i_allocateTBE;
+    b_issueWriteRequest;
+    uu_profileDataMiss;
+    k_popMandatoryQueue;
+  }
+
+
+  // Transitions from S_L
+
+  transition(S_L, {Store, Atomic}, SM_L) {
+    i_allocateTBE;
+    b_issueWriteRequest;
+    uu_profileDataMiss;
+    k_popMandatoryQueue;
+  }
+
+  // Other transitions from *_L states
+
+  transition({I_L, IM_L, IS_L, S_L, SM_L}, {Transient_GETS, Transient_GETS_Last_Token, Transient_Local_GETS_Last_Token, Transient_Local_GETS, Transient_GETX, Transient_Local_GETX}) {
+    m_popRequestQueue;
+  }
+
+  transition({I_L, IM_L, IS_L, S_L, SM_L}, Ack) {
+    g_bounceResponseToStarver;
+    n_popResponseQueue;
+  }
+
+  transition({I_L, IM_L, S_L, SM_L}, {Data_Shared, Data_Owner}) {
+    g_bounceResponseToStarver;
+    n_popResponseQueue;
+  }
+
+  transition({I_L, S_L}, Data_All_Tokens) {
+    g_bounceResponseToStarver;
+    n_popResponseQueue;
+  }
+
+  transition(IS_L, Request_Timeout) {
+    j_unsetReissueTimer;
+    a_issueReadRequest;
+  }
+
+  transition({IM_L, SM_L}, Request_Timeout) {
+    j_unsetReissueTimer;
+    b_issueWriteRequest;
+  }
+
+  // Opportunisticly Complete the memory operation in the following
+  // cases.  Note: these transitions could just use
+  // g_bounceResponseToStarver, but if we have the data and tokens, we
+  // might as well complete the memory request while we have the
+  // chance (and then immediately forward on the data)
+
+  transition(IM_L, Data_All_Tokens, MM_W) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    xx_external_store_hit;
+    j_unsetReissueTimer;
+    o_scheduleUseTimeout;
+    n_popResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(SM_L, Data_All_Tokens, S_L) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    xx_external_store_hit;
+    ff_sendDataWithAllButNorOneTokens;
+    s_deallocateTBE;
+    j_unsetReissueTimer;
+    n_popResponseQueue;
+  }
+
+  transition(IS_L, Data_Shared, I_L) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    x_external_load_hit;
+    s_deallocateTBE;
+    e_sendAckWithCollectedTokens;
+    p_informL2AboutTokenLoss;
+    j_unsetReissueTimer;
+    n_popResponseQueue;
+  }
+
+  transition(IS_L, Data_Owner, I_L) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    x_external_load_hit;
+    ee_sendDataWithAllTokens;
+    s_deallocateTBE;
+    p_informL2AboutTokenLoss;
+    j_unsetReissueTimer;
+    n_popResponseQueue;
+  }
+
+  transition(IS_L, Data_All_Tokens, M_W) {
+    u_writeDataToCache;
+    q_updateTokensFromResponse;
+    x_external_load_hit;
+    j_unsetReissueTimer;
+    o_scheduleUseTimeout;
+    n_popResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  // Own_Lock_or_Unlock
+
+  transition(I_L, Own_Lock_or_Unlock, I) {
+    l_popPersistentQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(S_L, Own_Lock_or_Unlock, S) {
+    l_popPersistentQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(IM_L, Own_Lock_or_Unlock, IM) {
+    l_popPersistentQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(IS_L, Own_Lock_or_Unlock, IS) {
+    l_popPersistentQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(SM_L, Own_Lock_or_Unlock, SM) {
+    l_popPersistentQueue;
+    kd_wakeUpDependents;
+  }
+}

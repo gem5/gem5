@@ -1,0 +1,11 @@
+SystemC Simulation
+Ready 	 = False
+Ack 	 = False
+Ready 	 = True
+Ack 	 = True
+Ready 	 = False
+Ack 	 = False
+Ready 	 = True
+Ack 	 = True
+Ready 	 = False
+Ack 	 = False

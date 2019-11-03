@@ -1,0 +1,218 @@
+/*
+ * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ * Authors: Brad Beckmann
+ *          Tushar Krishna
+ */
+
+
+machine(MachineType:L1Cache, "Garnet_standalone L1 Cache")
+    : Sequencer * sequencer;
+      Cycles issue_latency := 2;
+
+      // NETWORK BUFFERS
+      MessageBuffer * requestFromCache, network="To", virtual_network="0",
+            vnet_type = "request";
+      MessageBuffer * forwardFromCache, network="To", virtual_network="1",
+            vnet_type = "forward";
+      MessageBuffer * responseFromCache, network="To", virtual_network="2",
+            vnet_type = "response";
+
+      MessageBuffer * mandatoryQueue;
+{
+  // STATES
+  state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
+    I,  AccessPermission:Invalid, desc="Not Present/Invalid";
+  }
+
+  // EVENTS
+  enumeration(Event, desc="Cache events") {
+    // From processor
+    Request,    desc="Request from Garnet_standalone";
+    Forward,    desc="Forward from Garnet_standalone";
+    Response,   desc="Response from Garnet_standalone";
+  }
+
+  // STRUCTURE DEFINITIONS
+  DataBlock dummyData;
+
+  // CacheEntry
+  structure(Entry, desc="...", interface="AbstractCacheEntry") {
+    State CacheState,        desc="cache state";
+    DataBlock DataBlk,       desc="Data in the block";
+  }
+
+  // FUNCTIONS
+  Tick clockEdge();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
+
+  // cpu/testers/networktest/networktest.cc generates packets of the type
+  // ReadReq, INST_FETCH, and WriteReq.
+  // These are converted to LD, IFETCH and ST by mem/ruby/system/RubyPort.cc.
+  // These are then sent to the sequencer, which sends them here.
+  // Garnet_standalone-cache.sm tags LD, IFETCH and ST as Request, Forward,
+  // and Response Events respectively, which are then injected into
+  // virtual networks 0, 1 and 2 respectively.
+  // This models traffic of different types within the network.
+  //
+  // Note that requests and forwards are MessageSizeType:Control,
+  // while responses are MessageSizeType:Data.
+  //
+  Event mandatory_request_type_to_event(RubyRequestType type) {
+    if (type == RubyRequestType:LD) {
+      return Event:Request;
+    } else if (type == RubyRequestType:IFETCH) {
+      return Event:Forward;
+    } else if (type == RubyRequestType:ST) {
+      return Event:Response;
+    } else {
+      error("Invalid RubyRequestType");
+    }
+  }
+
+
+  State getState(Entry cache_entry, Addr addr) {
+    return State:I;
+  }
+
+  void setState(Entry cache_entry, Addr addr, State state) {
+
+  }
+
+  AccessPermission getAccessPermission(Addr addr) {
+    return AccessPermission:NotPresent;
+  }
+
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
+  }
+
+  Entry getCacheEntry(Addr address), return_by_pointer="yes" {
+    return OOD;
+  }
+
+  void functionalRead(Addr addr, Packet *pkt) {
+    error("Garnet_standalone does not support functional read.");
+  }
+
+  int functionalWrite(Addr addr, Packet *pkt) {
+    error("Garnet_standalone does not support functional write.");
+  }
+
+  // NETWORK PORTS
+
+  out_port(requestNetwork_out, RequestMsg, requestFromCache);
+  out_port(forwardNetwork_out, RequestMsg, forwardFromCache);
+  out_port(responseNetwork_out, RequestMsg, responseFromCache);
+
+  // Mandatory Queue
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...") {
+    if (mandatoryQueue_in.isReady(clockEdge())) {
+      peek(mandatoryQueue_in, RubyRequest) {
+        trigger(mandatory_request_type_to_event(in_msg.Type),
+                in_msg.LineAddress, getCacheEntry(in_msg.LineAddress));
+      }
+    }
+  }
+
+  // ACTIONS
+
+  // The destination directory of the packets is embedded in the address
+  // map_Address_to_Directory is used to retrieve it.
+
+  action(a_issueRequest, "a", desc="Issue a request") {
+    enqueue(requestNetwork_out, RequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceRequestType:MSG;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+
+      // To send broadcasts in vnet0 (to emulate broadcast-based protocols),
+      // replace the above line by the following:
+      // out_msg.Destination := broadcast(MachineType:Directory);
+
+      out_msg.MessageSize := MessageSizeType:Control;
+    }
+  }
+
+  action(b_issueForward, "b", desc="Issue a forward") {
+    enqueue(forwardNetwork_out, RequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceRequestType:MSG;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      out_msg.MessageSize := MessageSizeType:Control;
+    }
+  }
+
+  action(c_issueResponse, "c", desc="Issue a response") {
+    enqueue(responseNetwork_out, RequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceRequestType:MSG;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      out_msg.MessageSize := MessageSizeType:Data;
+    }
+  }
+
+  action(m_popMandatoryQueue, "m", desc="Pop the mandatory request queue") {
+    mandatoryQueue_in.dequeue(clockEdge());
+  }
+
+  action(r_load_hit, "r", desc="Notify sequencer the load completed.") {
+    sequencer.readCallback(address, dummyData);
+  }
+
+  action(s_store_hit, "s", desc="Notify sequencer that store completed.") {
+    sequencer.writeCallback(address, dummyData);
+  }
+
+
+  // TRANSITIONS
+
+  // sequencer hit call back is performed after injecting the packets.
+  // The goal of the Garnet_standalone protocol is only to inject packets into
+  // the network, not to keep track of them via TBEs.
+
+  transition(I, Response) {
+    s_store_hit;
+    c_issueResponse;
+    m_popMandatoryQueue;
+  }
+
+  transition(I, Request) {
+    r_load_hit;
+    a_issueRequest;
+    m_popMandatoryQueue;
+  }
+  transition(I, Forward) {
+    r_load_hit;
+    b_issueForward;
+    m_popMandatoryQueue;
+  }
+
+}

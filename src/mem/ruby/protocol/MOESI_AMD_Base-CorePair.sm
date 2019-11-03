@@ -1,0 +1,2917 @@
+/*
+ * Copyright (c) 2010-2015 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * For use for simulation and test purposes only
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Lisa Hsu
+ */
+
+machine(MachineType:CorePair, "CP-like Core Coherence")
+ : Sequencer * sequencer;
+   Sequencer * sequencer1;
+   CacheMemory * L1Icache;
+   CacheMemory * L1D0cache;
+   CacheMemory * L1D1cache;
+   CacheMemory * L2cache;     // func mem logic looks in this CacheMemory
+   bool send_evictions := "False";
+   Cycles issue_latency := 5;  // time to send data down to NB
+   Cycles l2_hit_latency := 18;
+
+  // BEGIN Core Buffers
+
+  // To the Network
+  MessageBuffer * requestFromCore, network="To", virtual_network="0", vnet_type="request";
+  MessageBuffer * responseFromCore, network="To", virtual_network="2", vnet_type="response";
+  MessageBuffer * unblockFromCore, network="To", virtual_network="4", vnet_type="unblock";
+
+  // From the Network
+  MessageBuffer * probeToCore, network="From", virtual_network="0", vnet_type="request";
+  MessageBuffer * responseToCore, network="From", virtual_network="2", vnet_type="response";
+
+  MessageBuffer * mandatoryQueue;
+
+  MessageBuffer * triggerQueue, ordered="true";
+
+  // END Core Buffers
+
+{
+  // BEGIN STATES
+  state_declaration(State, desc="Cache states", default="CorePair_State_I") {
+
+    // Base States
+    I, AccessPermission:Invalid, desc="Invalid";
+    S, AccessPermission:Read_Only, desc="Shared";
+    E0, AccessPermission:Read_Write, desc="Exclusive with Cluster 0 ownership";
+    E1, AccessPermission:Read_Write, desc="Exclusive with Cluster 1 ownership";
+    Es, AccessPermission:Read_Write, desc="Exclusive in core";
+    O, AccessPermission:Read_Only, desc="Owner state in core, both clusters and other cores may be sharing line";
+    Ms, AccessPermission:Read_Write, desc="Modified in core, both clusters may be sharing line";
+    M0, AccessPermission:Read_Write, desc="Modified with cluster ownership";
+    M1, AccessPermission:Read_Write, desc="Modified with cluster ownership";
+
+    // Transient States
+    I_M0, AccessPermission:Busy, desc="Invalid, issued RdBlkM, have not seen response yet";
+    I_M1, AccessPermission:Busy, desc="Invalid, issued RdBlkM, have not seen response yet";
+    I_M0M1, AccessPermission:Busy, desc="Was in I_M0, got a store request from other cluster as well";
+    I_M1M0, AccessPermission:Busy, desc="Was in I_M1, got a store request from other cluster as well";
+    I_M0Ms, AccessPermission:Busy, desc="Was in I_M0, got a load request from other cluster as well";
+    I_M1Ms, AccessPermission:Busy, desc="Was in I_M1, got a load request from other cluster as well";
+    I_E0S, AccessPermission:Busy, desc="Invalid, issued RdBlk, have not seen response yet";
+    I_E1S, AccessPermission:Busy, desc="Invalid, issued RdBlk, have not seen response yet";
+    I_ES, AccessPermission:Busy, desc="S_F got hit by invalidating probe, RdBlk response needs to go to both clusters";
+
+    IF_E0S, AccessPermission:Busy, desc="something got hit with Probe Invalidate, now just I_E0S but expecting a L2_to_L1D0 trigger, just drop when receive";
+    IF_E1S, AccessPermission:Busy, desc="something got hit with Probe Invalidate, now just I_E1S but expecting a L2_to_L1D1 trigger, just drop when receive";
+    IF_ES, AccessPermission:Busy, desc="same, but waiting for two fills";
+    IF0_ES, AccessPermission:Busy, desc="same, but waiting for two fills, got one";
+    IF1_ES, AccessPermission:Busy, desc="same, but waiting for two fills, got one";
+    F_S0, AccessPermission:Busy, desc="same, but going to S0 when trigger received";
+    F_S1, AccessPermission:Busy, desc="same, but going to S1 when trigger received";
+
+    ES_I, AccessPermission:Read_Only, desc="L2 replacement, waiting for clean writeback ack";
+    MO_I, AccessPermission:Read_Only, desc="L2 replacement, waiting for dirty writeback ack";
+    MO_S0, AccessPermission:Read_Only, desc="M/O got Ifetch Miss, must write back first, then send RdBlkS";
+    MO_S1, AccessPermission:Read_Only, desc="M/O got Ifetch Miss, must write back first, then send RdBlkS";
+    S_F0, AccessPermission:Read_Only,  desc="Shared, filling L1";
+    S_F1, AccessPermission:Read_Only,  desc="Shared, filling L1";
+    S_F, AccessPermission:Read_Only,   desc="Shared, filling L1";
+    O_F0, AccessPermission:Read_Only,  desc="Owned, filling L1";
+    O_F1, AccessPermission:Read_Only,  desc="Owned, filling L1";
+    O_F,  AccessPermission:Read_Only,  desc="Owned, filling L1";
+    Si_F0, AccessPermission:Read_Only, desc="Shared, filling icache";
+    Si_F1, AccessPermission:Read_Only, desc="Shared, filling icache";
+    S_M0, AccessPermission:Read_Only, desc="Shared, issued CtoD, have not seen response yet";
+    S_M1, AccessPermission:Read_Only, desc="Shared, issued CtoD, have not seen response yet";
+    O_M0, AccessPermission:Read_Only, desc="Shared, issued CtoD, have not seen response yet";
+    O_M1, AccessPermission:Read_Only, desc="Shared, issued CtoD, have not seen response yet";
+    S0, AccessPermission:Busy, desc="RdBlkS on behalf of cluster 0, waiting for response";
+    S1, AccessPermission:Busy, desc="RdBlkS on behalf of cluster 1, waiting for response";
+
+    Es_F0, AccessPermission:Read_Write, desc="Es, Cluster read, filling";
+    Es_F1, AccessPermission:Read_Write, desc="Es, Cluster read, filling";
+    Es_F, AccessPermission:Read_Write,  desc="Es, other cluster read, filling";
+    E0_F, AccessPermission:Read_Write, desc="E0, cluster read, filling";
+    E1_F, AccessPermission:Read_Write, desc="...";
+    E0_Es, AccessPermission:Read_Write, desc="...";
+    E1_Es, AccessPermission:Read_Write, desc="...";
+    Ms_F0, AccessPermission:Read_Write, desc="...";
+    Ms_F1, AccessPermission:Read_Write, desc="...";
+    Ms_F, AccessPermission:Read_Write,  desc="...";
+    M0_F, AccessPermission:Read_Write, desc="...";
+    M0_Ms, AccessPermission:Read_Write, desc="...";
+    M1_F, AccessPermission:Read_Write, desc="...";
+    M1_Ms, AccessPermission:Read_Write, desc="...";
+
+    I_C, AccessPermission:Invalid, desc="Invalid, but waiting for WBAck from NB from canceled writeback";
+    S0_C, AccessPermission:Busy, desc="MO_S0 hit by invalidating probe, waiting for WBAck form NB for canceled WB";
+    S1_C, AccessPermission:Busy, desc="MO_S1 hit by invalidating probe, waiting for WBAck form NB for canceled WB";
+    S_C, AccessPermission:Busy, desc="S*_C got NB_AckS, still waiting for WBAck";
+
+  } // END STATES
+
+  // BEGIN EVENTS
+  enumeration(Event, desc="CP Events") {
+    // CP Initiated events
+    C0_Load_L1miss,            desc="Cluster 0 load, L1 missed";
+    C0_Load_L1hit,             desc="Cluster 0 load, L1 hit";
+    C1_Load_L1miss,            desc="Cluster 1 load L1 missed";
+    C1_Load_L1hit,             desc="Cluster 1 load L1 hit";
+    Ifetch0_L1hit,             desc="Instruction fetch, hit in the L1";
+    Ifetch1_L1hit,             desc="Instruction fetch, hit in the L1";
+    Ifetch0_L1miss,            desc="Instruction fetch, missed in the L1";
+    Ifetch1_L1miss,            desc="Instruction fetch, missed in the L1";
+    C0_Store_L1miss,           desc="Cluster 0 store missed in L1";
+    C0_Store_L1hit,            desc="Cluster 0 store hit in L1";
+    C1_Store_L1miss,           desc="Cluster 1 store missed in L1";
+    C1_Store_L1hit,            desc="Cluster 1 store hit in L1";
+    // NB Initiated events
+    NB_AckS,             desc="NB Ack to Core Request";
+    NB_AckM,             desc="NB Ack to Core Request";
+    NB_AckE,             desc="NB Ack to Core Request";
+
+    NB_AckWB,            desc="NB Ack for writeback";
+
+    // Memory System initiatied events
+    L1I_Repl,           desc="Replace address from L1I"; // Presumed clean
+    L1D0_Repl,           desc="Replace address from L1D0"; // Presumed clean
+    L1D1_Repl,           desc="Replace address from L1D1"; // Presumed clean
+    L2_Repl,            desc="Replace address from L2";
+
+    L2_to_L1D0,           desc="L1 fill from L2";
+    L2_to_L1D1,           desc="L1 fill from L2";
+    L2_to_L1I,           desc="L1 fill from L2";
+
+    // Probe Events
+    PrbInvData,         desc="probe, return O or M data";
+    PrbInv,             desc="probe, no need for data";
+    PrbShrData,         desc="probe downgrade, return O or M data";
+
+  }  // END EVENTS
+
+  enumeration(RequestType, desc="To communicate stats from transitions to recordStats") {
+    L1D0DataArrayRead,    desc="Read the data array";
+    L1D0DataArrayWrite,   desc="Write the data array";
+    L1D0TagArrayRead,     desc="Read the data array";
+    L1D0TagArrayWrite,    desc="Write the data array";
+    L1D1DataArrayRead,    desc="Read the data array";
+    L1D1DataArrayWrite,   desc="Write the data array";
+    L1D1TagArrayRead,     desc="Read the data array";
+    L1D1TagArrayWrite,    desc="Write the data array";
+    L1IDataArrayRead,     desc="Read the data array";
+    L1IDataArrayWrite,    desc="Write the data array";
+    L1ITagArrayRead,      desc="Read the data array";
+    L1ITagArrayWrite,     desc="Write the data array";
+    L2DataArrayRead,      desc="Read the data array";
+    L2DataArrayWrite,     desc="Write the data array";
+    L2TagArrayRead,       desc="Read the data array";
+    L2TagArrayWrite,      desc="Write the data array";
+  }
+
+
+  // BEGIN STRUCTURE DEFINITIONS
+
+
+  // Cache Entry
+  structure(Entry, desc="...", interface="AbstractCacheEntry") {
+    State CacheState,           desc="cache state";
+    bool Dirty,                 desc="Is the data dirty (diff than memory)?";
+    DataBlock DataBlk,          desc="data for the block";
+    bool FromL2, default="false", desc="block just moved from L2";
+  }
+
+  structure(TBE, desc="...") {
+    State TBEState,             desc="Transient state";
+    DataBlock DataBlk,       desc="data for the block, required for concurrent writebacks";
+    bool Dirty,              desc="Is the data dirty (different than memory)?";
+    int NumPendingMsgs,      desc="Number of acks/data messages that this processor is waiting for";
+    bool Shared,             desc="Victim hit by shared probe";
+   }
+
+  structure(TBETable, external="yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+  }
+
+  TBETable TBEs, template="<CorePair_TBE>", constructor="m_number_of_TBEs";
+
+  void set_cache_entry(AbstractCacheEntry b);
+  void unset_cache_entry();
+  void set_tbe(TBE b);
+  void unset_tbe();
+  void wakeUpAllBuffers();
+  void wakeUpBuffers(Addr a);
+  Cycles curCycle();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
+
+  // END STRUCTURE DEFINITIONS
+
+  // BEGIN INTERNAL FUNCTIONS
+
+  Tick clockEdge();
+  Tick cyclesToTicks(Cycles c);
+
+  bool addressInCore(Addr addr) {
+    return (L2cache.isTagPresent(addr) || L1Icache.isTagPresent(addr) || L1D0cache.isTagPresent(addr) || L1D1cache.isTagPresent(addr));
+  }
+
+  Entry getCacheEntry(Addr address), return_by_pointer="yes" {
+    Entry L2cache_entry := static_cast(Entry, "pointer", L2cache.lookup(address));
+    return L2cache_entry;
+  }
+
+  DataBlock getDataBlock(Addr addr), return_by_ref="yes" {
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      return tbe.DataBlk;
+    } else {
+      return getCacheEntry(addr).DataBlk;
+    }
+  }
+
+  Entry getL1CacheEntry(Addr addr, int cluster), return_by_pointer="yes" {
+    if (cluster == 0) {
+      Entry L1D0_entry := static_cast(Entry, "pointer", L1D0cache.lookup(addr));
+      return L1D0_entry;
+    } else {
+      Entry L1D1_entry := static_cast(Entry, "pointer", L1D1cache.lookup(addr));
+      return L1D1_entry;
+    }
+  }
+
+  Entry getICacheEntry(Addr addr), return_by_pointer="yes" {
+    Entry c_entry := static_cast(Entry, "pointer", L1Icache.lookup(addr));
+    return c_entry;
+  }
+
+  bool presentOrAvail2(Addr addr) {
+    return L2cache.isTagPresent(addr) || L2cache.cacheAvail(addr);
+  }
+
+  bool presentOrAvailI(Addr addr) {
+    return L1Icache.isTagPresent(addr) || L1Icache.cacheAvail(addr);
+  }
+
+  bool presentOrAvailD0(Addr addr) {
+    return L1D0cache.isTagPresent(addr) || L1D0cache.cacheAvail(addr);
+  }
+
+  bool presentOrAvailD1(Addr addr) {
+    return L1D1cache.isTagPresent(addr) || L1D1cache.cacheAvail(addr);
+  }
+
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
+    if(is_valid(tbe)) {
+      return tbe.TBEState;
+    } else if (is_valid(cache_entry)) {
+      return cache_entry.CacheState;
+    }
+    return State:I;
+  }
+
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
+    if (is_valid(tbe)) {
+      tbe.TBEState := state;
+    }
+
+    if (is_valid(cache_entry)) {
+      cache_entry.CacheState := state;
+    }
+  }
+
+  AccessPermission getAccessPermission(Addr addr) {
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      return CorePair_State_to_permission(tbe.TBEState);
+    }
+
+    Entry cache_entry := getCacheEntry(addr);
+    if(is_valid(cache_entry)) {
+      return CorePair_State_to_permission(cache_entry.CacheState);
+    }
+
+    return AccessPermission:NotPresent;
+  }
+
+  void functionalRead(Addr addr, Packet *pkt) {
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      testAndRead(addr, tbe.DataBlk, pkt);
+    } else {
+      functionalMemoryRead(pkt);
+    }
+  }
+
+  int functionalWrite(Addr addr, Packet *pkt) {
+    int num_functional_writes := 0;
+
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      num_functional_writes := num_functional_writes +
+            testAndWrite(addr, tbe.DataBlk, pkt);
+    }
+
+    num_functional_writes := num_functional_writes + functionalMemoryWrite(pkt);
+    return num_functional_writes;
+  }
+
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
+    if (is_valid(cache_entry)) {
+      cache_entry.changePermission(CorePair_State_to_permission(state));
+    }
+  }
+
+  MachineType testAndClearLocalHit(Entry cache_entry) {
+    assert(is_valid(cache_entry));
+    if (cache_entry.FromL2) {
+      cache_entry.FromL2 := false;
+      return MachineType:L2Cache;
+    } else {
+      return MachineType:L1Cache;
+    }
+  }
+
+  void recordRequestType(RequestType request_type, Addr addr) {
+    if (request_type == RequestType:L1D0DataArrayRead) {
+        L1D0cache.recordRequestType(CacheRequestType:DataArrayRead, addr);
+    } else if (request_type == RequestType:L1D0DataArrayWrite) {
+        L1D0cache.recordRequestType(CacheRequestType:DataArrayWrite, addr);
+    } else if (request_type == RequestType:L1D0TagArrayRead) {
+        L1D0cache.recordRequestType(CacheRequestType:TagArrayRead, addr);
+    } else if (request_type == RequestType:L1D0TagArrayWrite) {
+        L1D0cache.recordRequestType(CacheRequestType:TagArrayWrite, addr);
+    } else if (request_type == RequestType:L1D1DataArrayRead) {
+        L1D1cache.recordRequestType(CacheRequestType:DataArrayRead, addr);
+    } else if (request_type == RequestType:L1D1DataArrayWrite) {
+        L1D1cache.recordRequestType(CacheRequestType:DataArrayWrite, addr);
+    } else if (request_type == RequestType:L1D1TagArrayRead) {
+        L1D1cache.recordRequestType(CacheRequestType:TagArrayRead, addr);
+    } else if (request_type == RequestType:L1D1TagArrayWrite) {
+        L1D1cache.recordRequestType(CacheRequestType:TagArrayWrite, addr);
+    } else if (request_type == RequestType:L1IDataArrayRead) {
+        L1Icache.recordRequestType(CacheRequestType:DataArrayRead, addr);
+    } else if (request_type == RequestType:L1IDataArrayWrite) {
+        L1Icache.recordRequestType(CacheRequestType:DataArrayWrite, addr);
+    } else if (request_type == RequestType:L1ITagArrayRead) {
+        L1Icache.recordRequestType(CacheRequestType:TagArrayRead, addr);
+    } else if (request_type == RequestType:L1ITagArrayWrite) {
+        L1Icache.recordRequestType(CacheRequestType:TagArrayWrite, addr);
+    } else if (request_type == RequestType:L2DataArrayRead) {
+        L2cache.recordRequestType(CacheRequestType:DataArrayRead, addr);
+    } else if (request_type == RequestType:L2DataArrayWrite) {
+        L2cache.recordRequestType(CacheRequestType:DataArrayWrite, addr);
+    } else if (request_type == RequestType:L2TagArrayRead) {
+        L2cache.recordRequestType(CacheRequestType:TagArrayRead, addr);
+    } else if (request_type == RequestType:L2TagArrayWrite) {
+        L2cache.recordRequestType(CacheRequestType:TagArrayWrite, addr);
+    }
+  }
+
+  bool checkResourceAvailable(RequestType request_type, Addr addr) {
+    if (request_type == RequestType:L2DataArrayRead) {
+      return L2cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:L2DataArrayWrite) {
+      return L2cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:L2TagArrayRead) {
+      return L2cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else if (request_type == RequestType:L2TagArrayWrite) {
+      return L2cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else if  (request_type == RequestType:L1D0DataArrayRead) {
+      return L1D0cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:L1D0DataArrayWrite) {
+      return L1D0cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:L1D0TagArrayRead) {
+      return L1D0cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else if (request_type == RequestType:L1D0TagArrayWrite) {
+      return L1D0cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else if (request_type == RequestType:L1D1DataArrayRead) {
+      return L1D1cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:L1D1DataArrayWrite) {
+      return L1D1cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:L1D1TagArrayRead) {
+      return L1D1cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else if (request_type == RequestType:L1D1TagArrayWrite) {
+      return L1D1cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else if (request_type == RequestType:L1IDataArrayRead) {
+      return L1Icache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:L1IDataArrayWrite) {
+      return L1Icache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:L1ITagArrayRead) {
+      return L1Icache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else if (request_type == RequestType:L1ITagArrayWrite) {
+      return L1Icache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+
+    } else {
+      return true;
+    }
+  }
+
+  // END INTERNAL FUNCTIONS
+
+  // ** OUT_PORTS **
+
+  out_port(requestNetwork_out, CPURequestMsg, requestFromCore);
+  out_port(responseNetwork_out, ResponseMsg, responseFromCore);
+  out_port(triggerQueue_out, TriggerMsg, triggerQueue);
+  out_port(unblockNetwork_out, UnblockMsg, unblockFromCore);
+
+  // ** IN_PORTS **
+
+  in_port(triggerQueue_in, TriggerMsg, triggerQueue, block_on="addr") {
+    if (triggerQueue_in.isReady(clockEdge())) {
+      peek(triggerQueue_in, TriggerMsg) {
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := TBEs.lookup(in_msg.addr);
+
+        if (in_msg.Type == TriggerType:L2_to_L1) {
+          if (in_msg.Dest == CacheId:L1I) {
+            trigger(Event:L2_to_L1I, in_msg.addr, cache_entry, tbe);
+          } else if (in_msg.Dest == CacheId:L1D0) {
+            trigger(Event:L2_to_L1D0, in_msg.addr, cache_entry, tbe);
+          } else if (in_msg.Dest == CacheId:L1D1) {
+            trigger(Event:L2_to_L1D1, in_msg.addr, cache_entry, tbe);
+          } else {
+            error("unexpected trigger dest");
+          }
+        }
+      }
+    }
+  }
+
+
+  in_port(probeNetwork_in, NBProbeRequestMsg, probeToCore) {
+    if (probeNetwork_in.isReady(clockEdge())) {
+      peek(probeNetwork_in, NBProbeRequestMsg, block_on="addr") {
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := TBEs.lookup(in_msg.addr);
+
+        if (in_msg.Type == ProbeRequestType:PrbInv) {
+          if (in_msg.ReturnData) {
+            trigger(Event:PrbInvData, in_msg.addr, cache_entry, tbe);
+          } else {
+            trigger(Event:PrbInv, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.Type == ProbeRequestType:PrbDowngrade) {
+          assert(in_msg.ReturnData);
+          trigger(Event:PrbShrData, in_msg.addr, cache_entry, tbe);
+        }
+      }
+    }
+  }
+
+
+  // ResponseNetwork
+  in_port(responseToCore_in, ResponseMsg, responseToCore) {
+    if (responseToCore_in.isReady(clockEdge())) {
+      peek(responseToCore_in, ResponseMsg, block_on="addr") {
+
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := TBEs.lookup(in_msg.addr);
+
+        if (in_msg.Type == CoherenceResponseType:NBSysResp) {
+          if (in_msg.State == CoherenceState:Modified) {
+              trigger(Event:NB_AckM, in_msg.addr, cache_entry, tbe);
+          } else if (in_msg.State == CoherenceState:Shared) {
+            trigger(Event:NB_AckS, in_msg.addr, cache_entry, tbe);
+          } else if (in_msg.State == CoherenceState:Exclusive) {
+            trigger(Event:NB_AckE, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.Type == CoherenceResponseType:NBSysWBAck) {
+          trigger(Event:NB_AckWB, in_msg.addr, cache_entry, tbe);
+        } else {
+          error("Unexpected Response Message to Core");
+        }
+      }
+    }
+  }
+
+  // Nothing from the Unblock Network
+
+  // Mandatory Queue
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...") {
+    if (mandatoryQueue_in.isReady(clockEdge())) {
+      peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
+
+        Entry cache_entry := getCacheEntry(in_msg.LineAddress);
+        TBE tbe := TBEs.lookup(in_msg.LineAddress);
+
+        if (in_msg.Type == RubyRequestType:IFETCH) {
+          // FETCH ACCESS
+
+          if (L1Icache.isTagPresent(in_msg.LineAddress)) {
+            if (mod(in_msg.contextId, 2) == 0) {
+              trigger(Event:Ifetch0_L1hit, in_msg.LineAddress, cache_entry, tbe);
+            } else {
+              trigger(Event:Ifetch1_L1hit, in_msg.LineAddress, cache_entry, tbe);
+            }
+          } else {
+            if (presentOrAvail2(in_msg.LineAddress)) {
+              if (presentOrAvailI(in_msg.LineAddress)) {
+                if (mod(in_msg.contextId, 2) == 0) {
+                  trigger(Event:Ifetch0_L1miss, in_msg.LineAddress, cache_entry,
+                          tbe);
+                } else {
+                  trigger(Event:Ifetch1_L1miss, in_msg.LineAddress, cache_entry,
+                          tbe);
+                }
+              } else {
+                // Check if the line we want to evict is not locked
+                Addr victim := L1Icache.cacheProbe(in_msg.LineAddress);
+                check_on_cache_probe(mandatoryQueue_in, victim);
+                trigger(Event:L1I_Repl, victim,
+                        getCacheEntry(victim), TBEs.lookup(victim));
+              }
+            } else { // Not present or avail in L2
+              Addr victim := L2cache.cacheProbe(in_msg.LineAddress);
+              trigger(Event:L2_Repl, victim, getCacheEntry(victim),
+                      TBEs.lookup(victim));
+            }
+          }
+        } else {
+          // DATA ACCESS
+          if (mod(in_msg.contextId, 2) == 1) {
+            if (L1D1cache.isTagPresent(in_msg.LineAddress)) {
+              if (in_msg.Type == RubyRequestType:LD) {
+                trigger(Event:C1_Load_L1hit, in_msg.LineAddress, cache_entry,
+                        tbe);
+              } else {
+                // Stores must write through, make sure L2 avail.
+                if (presentOrAvail2(in_msg.LineAddress)) {
+                  trigger(Event:C1_Store_L1hit, in_msg.LineAddress, cache_entry,
+                          tbe);
+                } else {
+                  Addr victim := L2cache.cacheProbe(in_msg.LineAddress);
+                  trigger(Event:L2_Repl, victim, getCacheEntry(victim),
+                          TBEs.lookup(victim));
+                }
+              }
+            } else {
+              if (presentOrAvail2(in_msg.LineAddress)) {
+                if (presentOrAvailD1(in_msg.LineAddress)) {
+                  if (in_msg.Type == RubyRequestType:LD) {
+                    trigger(Event:C1_Load_L1miss, in_msg.LineAddress,
+                            cache_entry, tbe);
+                  } else {
+                    trigger(Event:C1_Store_L1miss, in_msg.LineAddress,
+                            cache_entry, tbe);
+                  }
+                } else {
+                  // Check if the line we want to evict is not locked
+                  Addr victim := L1D1cache.cacheProbe(in_msg.LineAddress);
+                  check_on_cache_probe(mandatoryQueue_in, victim);
+                  trigger(Event:L1D1_Repl, victim,
+                          getCacheEntry(victim), TBEs.lookup(victim));
+                }
+              } else { // not present or avail in L2
+                Addr victim := L2cache.cacheProbe(in_msg.LineAddress);
+                trigger(Event:L2_Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
+              }
+            }
+          } else {
+            Entry L1D0cache_entry := getL1CacheEntry(in_msg.LineAddress, 0);
+            if (is_valid(L1D0cache_entry)) {
+              if (in_msg.Type == RubyRequestType:LD) {
+                trigger(Event:C0_Load_L1hit, in_msg.LineAddress, cache_entry,
+                    tbe);
+              } else {
+                if (presentOrAvail2(in_msg.LineAddress)) {
+                  trigger(Event:C0_Store_L1hit, in_msg.LineAddress, cache_entry,
+                      tbe);
+                } else {
+                  Addr victim := L2cache.cacheProbe(in_msg.LineAddress);
+                  trigger(Event:L2_Repl, victim, getCacheEntry(victim),
+                      TBEs.lookup(victim));
+                }
+              }
+            } else {
+              if (presentOrAvail2(in_msg.LineAddress)) {
+                if (presentOrAvailD0(in_msg.LineAddress)) {
+                  if (in_msg.Type == RubyRequestType:LD) {
+                    trigger(Event:C0_Load_L1miss, in_msg.LineAddress,
+                        cache_entry, tbe);
+                  } else {
+                    trigger(Event:C0_Store_L1miss, in_msg.LineAddress,
+                            cache_entry, tbe);
+                  }
+                } else {
+                  // Check if the line we want to evict is not locked
+                  Addr victim := L1D0cache.cacheProbe(in_msg.LineAddress);
+                  check_on_cache_probe(mandatoryQueue_in, victim);
+                  trigger(Event:L1D0_Repl, victim, getCacheEntry(victim),
+                          TBEs.lookup(victim));
+                }
+              } else {
+                Addr victim := L2cache.cacheProbe(in_msg.LineAddress);
+                trigger(Event:L2_Repl, victim, getCacheEntry(victim),
+                        TBEs.lookup(victim));
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+  // ACTIONS
+  action(ii_invIcache, "ii", desc="invalidate iCache") {
+    if (L1Icache.isTagPresent(address)) {
+      L1Icache.deallocate(address);
+    }
+  }
+
+  action(i0_invCluster, "i0", desc="invalidate cluster 0") {
+    if (L1D0cache.isTagPresent(address)) {
+      L1D0cache.deallocate(address);
+    }
+  }
+
+  action(i1_invCluster, "i1", desc="invalidate cluster 1") {
+    if (L1D1cache.isTagPresent(address)) {
+      L1D1cache.deallocate(address);
+    }
+  }
+
+  action(ib_invBothClusters, "ib", desc="invalidate both clusters") {
+    if (L1D0cache.isTagPresent(address)) {
+      L1D0cache.deallocate(address);
+    }
+    if (L1D1cache.isTagPresent(address)) {
+      L1D1cache.deallocate(address);
+    }
+  }
+
+  action(i2_invL2, "i2", desc="invalidate L2") {
+    if(is_valid(cache_entry)) {
+        L2cache.deallocate(address);
+    }
+    unset_cache_entry();
+  }
+
+  action(mru_setMRU, "mru", desc="Update LRU state") {
+    L2cache.setMRU(address);
+  }
+
+  action(mruD1_setD1cacheMRU, "mruD1", desc="Update LRU state") {
+    L1D1cache.setMRU(address);
+  }
+
+  action(mruD0_setD0cacheMRU, "mruD0", desc="Update LRU state") {
+    L1D0cache.setMRU(address);
+  }
+
+  action(mruI_setIcacheMRU, "mruI", desc="Update LRU state") {
+    L1Icache.setMRU(address);
+  }
+
+  action(n_issueRdBlk, "n", desc="Issue RdBlk") {
+    enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceRequestType:RdBlk;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      DPRINTF(RubySlicc,"%s\n",out_msg.Destination);
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.InitialRequestTime := curCycle();
+    }
+  }
+
+  action(nM_issueRdBlkM, "nM", desc="Issue RdBlkM") {
+    enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceRequestType:RdBlkM;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.InitialRequestTime := curCycle();
+    }
+  }
+
+  action(nS_issueRdBlkS, "nS", desc="Issue RdBlkS") {
+    enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceRequestType:RdBlkS;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.InitialRequestTime := curCycle();
+    }
+  }
+
+  action(vd_victim, "vd", desc="Victimize M/O L2 Data") {
+    enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Requestor := machineID;
+      assert(is_valid(cache_entry));
+      out_msg.DataBlk := cache_entry.DataBlk;
+      assert(cache_entry.Dirty);
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.Type := CoherenceRequestType:VicDirty;
+      out_msg.InitialRequestTime := curCycle();
+      if (cache_entry.CacheState == State:O) {
+        out_msg.Shared := true;
+      } else {
+        out_msg.Shared := false;
+      }
+    }
+  }
+
+  action(vc_victim, "vc", desc="Victimize E/S L2 Data") {
+    enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.Type := CoherenceRequestType:VicClean;
+      out_msg.InitialRequestTime := curCycle();
+      if (cache_entry.CacheState == State:S) {
+        out_msg.Shared := true;
+      } else {
+        out_msg.Shared := false;
+      }
+    }
+  }
+
+  action(a0_allocateL1D, "a0", desc="Allocate L1D0 Block") {
+    if (L1D0cache.isTagPresent(address) == false) {
+      L1D0cache.allocateVoid(address, new Entry);
+    }
+  }
+
+  action(a1_allocateL1D, "a1", desc="Allocate L1D1 Block") {
+    if (L1D1cache.isTagPresent(address) == false) {
+      L1D1cache.allocateVoid(address, new Entry);
+    }
+  }
+
+  action(ai_allocateL1I, "ai", desc="Allocate L1I Block") {
+    if (L1Icache.isTagPresent(address) == false) {
+      L1Icache.allocateVoid(address, new Entry);
+    }
+  }
+
+  action(a2_allocateL2, "a2", desc="Allocate L2 Block") {
+    if (is_invalid(cache_entry)) {
+      set_cache_entry(L2cache.allocate(address, new Entry));
+    }
+  }
+
+  action(t_allocateTBE, "t", desc="allocate TBE Entry") {
+    check_allocate(TBEs);
+    assert(is_valid(cache_entry));
+    TBEs.allocate(address);
+    set_tbe(TBEs.lookup(address));
+    tbe.DataBlk := cache_entry.DataBlk;  // Data only used for WBs
+    tbe.Dirty := cache_entry.Dirty;
+    tbe.Shared := false;
+  }
+
+  action(d_deallocateTBE, "d", desc="Deallocate TBE") {
+    TBEs.deallocate(address);
+    unset_tbe();
+  }
+
+  action(p_popMandatoryQueue, "pm", desc="Pop Mandatory Queue") {
+    mandatoryQueue_in.dequeue(clockEdge());
+  }
+
+  action(pr_popResponseQueue, "pr", desc="Pop Response Queue") {
+    responseToCore_in.dequeue(clockEdge());
+  }
+
+  action(pt_popTriggerQueue, "pt", desc="Pop Trigger Queue") {
+    triggerQueue_in.dequeue(clockEdge());
+  }
+
+  action(pp_popProbeQueue, "pp", desc="pop probe queue") {
+    probeNetwork_in.dequeue(clockEdge());
+  }
+
+  action(il0_loadDone, "il0", desc="Cluster 0 i load done") {
+    Entry entry := getICacheEntry(address);
+    Entry l2entry := getCacheEntry(address); // Used for functional accesses
+    assert(is_valid(entry));
+    // L2 supplies data (functional accesses only look in L2, ok because L1
+    //                   writes through to L2)
+    sequencer.readCallback(address,
+                           l2entry.DataBlk,
+                           true,
+                           testAndClearLocalHit(entry));
+  }
+
+  action(il1_loadDone, "il1", desc="Cluster 1 i load done") {
+    Entry entry := getICacheEntry(address);
+    Entry l2entry := getCacheEntry(address); // Used for functional accesses
+    assert(is_valid(entry));
+    // L2 supplies data (functional accesses only look in L2, ok because L1
+    //                   writes through to L2)
+    sequencer1.readCallback(address,
+                            l2entry.DataBlk,
+                            true,
+                            testAndClearLocalHit(entry));
+  }
+
+  action(l0_loadDone, "l0", desc="Cluster 0 load done") {
+    Entry entry := getL1CacheEntry(address, 0);
+    Entry l2entry := getCacheEntry(address); // Used for functional accesses
+    assert(is_valid(entry));
+    // L2 supplies data (functional accesses only look in L2, ok because L1
+    //                   writes through to L2)
+    sequencer.readCallback(address,
+                           l2entry.DataBlk,
+                           true,
+                           testAndClearLocalHit(entry));
+  }
+
+  action(l1_loadDone, "l1", desc="Cluster 1 load done") {
+    Entry entry := getL1CacheEntry(address, 1);
+    Entry l2entry := getCacheEntry(address); // Used for functional accesses
+    assert(is_valid(entry));
+    // L2 supplies data (functional accesses only look in L2, ok because L1
+    //                   writes through to L2)
+    sequencer1.readCallback(address,
+                            l2entry.DataBlk,
+                            true,
+                            testAndClearLocalHit(entry));
+  }
+
+  action(xl0_loadDone, "xl0", desc="Cluster 0 load done") {
+    peek(responseToCore_in, ResponseMsg) {
+      assert((machineIDToMachineType(in_msg.Sender) == MachineType:Directory) ||
+              (machineIDToMachineType(in_msg.Sender) == MachineType:L3Cache));
+      Entry l2entry := getCacheEntry(address); // Used for functional accesses
+      DPRINTF(ProtocolTrace, "CP Load Done 0 -- address %s, data: %s\n", address, l2entry.DataBlk);
+      // L2 supplies data (functional accesses only look in L2, ok because L1
+      //                   writes through to L2)
+      sequencer.readCallback(address,
+                             l2entry.DataBlk,
+                             false,
+                             machineIDToMachineType(in_msg.Sender),
+                             in_msg.InitialRequestTime,
+                             in_msg.ForwardRequestTime,
+                             in_msg.ProbeRequestStartTime);
+    }
+  }
+
+  action(xl1_loadDone, "xl1", desc="Cluster 1 load done") {
+   peek(responseToCore_in, ResponseMsg) {
+      assert((machineIDToMachineType(in_msg.Sender) == MachineType:Directory) ||
+              (machineIDToMachineType(in_msg.Sender) == MachineType:L3Cache));
+      Entry l2entry := getCacheEntry(address); // Used for functional accesses
+      // L2 supplies data (functional accesses only look in L2, ok because L1
+      //                   writes through to L2)
+      sequencer1.readCallback(address,
+                              l2entry.DataBlk,
+                              false,
+                              machineIDToMachineType(in_msg.Sender),
+                              in_msg.InitialRequestTime,
+                              in_msg.ForwardRequestTime,
+                              in_msg.ProbeRequestStartTime);
+    }
+  }
+
+  action(xi0_loadDone, "xi0", desc="Cluster 0 i-load done") {
+    peek(responseToCore_in, ResponseMsg) {
+      assert((machineIDToMachineType(in_msg.Sender) == MachineType:Directory) ||
+              (machineIDToMachineType(in_msg.Sender) == MachineType:L3Cache));
+      Entry l2entry := getCacheEntry(address); // Used for functional accesses
+      // L2 supplies data (functional accesses only look in L2, ok because L1
+      //                   writes through to L2)
+      sequencer.readCallback(address,
+                             l2entry.DataBlk,
+                             false,
+                             machineIDToMachineType(in_msg.Sender),
+                             in_msg.InitialRequestTime,
+                             in_msg.ForwardRequestTime,
+                             in_msg.ProbeRequestStartTime);
+    }
+  }
+
+  action(xi1_loadDone, "xi1", desc="Cluster 1 i-load done") {
+    peek(responseToCore_in, ResponseMsg) {
+      assert((machineIDToMachineType(in_msg.Sender) == MachineType:Directory) ||
+              (machineIDToMachineType(in_msg.Sender) == MachineType:L3Cache));
+      Entry l2entry := getCacheEntry(address); // Used for functional accesses
+      // L2 supplies data (functional accesses only look in L2, ok because L1
+      //                   writes through to L2)
+      sequencer1.readCallback(address,
+                              l2entry.DataBlk,
+                              false,
+                              machineIDToMachineType(in_msg.Sender),
+                              in_msg.InitialRequestTime,
+                              in_msg.ForwardRequestTime,
+                              in_msg.ProbeRequestStartTime);
+    }
+  }
+
+  action(s0_storeDone, "s0", desc="Cluster 0 store done") {
+    Entry entry := getL1CacheEntry(address, 0);
+    assert(is_valid(entry));
+    assert(is_valid(cache_entry));
+    sequencer.writeCallback(address,
+                            cache_entry.DataBlk,
+                            true,
+                            testAndClearLocalHit(entry));
+    cache_entry.Dirty := true;
+    entry.DataBlk := cache_entry.DataBlk;
+    entry.Dirty := true;
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+  }
+
+  action(s1_storeDone, "s1", desc="Cluster 1 store done") {
+    Entry entry := getL1CacheEntry(address, 1);
+    assert(is_valid(entry));
+    assert(is_valid(cache_entry));
+    sequencer1.writeCallback(address,
+                             cache_entry.DataBlk,
+                             true,
+                             testAndClearLocalHit(entry));
+    cache_entry.Dirty := true;
+    entry.Dirty := true;
+    entry.DataBlk := cache_entry.DataBlk;
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+  }
+
+  action(xs0_storeDone, "xs0", desc="Cluster 0 store done") {
+    peek(responseToCore_in, ResponseMsg) {
+      Entry entry := getL1CacheEntry(address, 0);
+      assert(is_valid(entry));
+      assert(is_valid(cache_entry));
+      assert((machineIDToMachineType(in_msg.Sender) == MachineType:Directory) ||
+             (machineIDToMachineType(in_msg.Sender) == MachineType:L3Cache));
+      sequencer.writeCallback(address,
+                              cache_entry.DataBlk,
+                              false,
+                              machineIDToMachineType(in_msg.Sender),
+                              in_msg.InitialRequestTime,
+                              in_msg.ForwardRequestTime,
+                              in_msg.ProbeRequestStartTime);
+      cache_entry.Dirty := true;
+      entry.Dirty := true;
+      entry.DataBlk := cache_entry.DataBlk;
+      DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    }
+  }
+
+  action(xs1_storeDone, "xs1", desc="Cluster 1 store done") {
+    peek(responseToCore_in, ResponseMsg) {
+      Entry entry := getL1CacheEntry(address, 1);
+      assert(is_valid(entry));
+      assert(is_valid(cache_entry));
+      assert((machineIDToMachineType(in_msg.Sender) == MachineType:Directory) ||
+             (machineIDToMachineType(in_msg.Sender) == MachineType:L3Cache));
+      sequencer1.writeCallback(address,
+                               cache_entry.DataBlk,
+                               false,
+                               machineIDToMachineType(in_msg.Sender),
+                               in_msg.InitialRequestTime,
+                               in_msg.ForwardRequestTime,
+                               in_msg.ProbeRequestStartTime);
+      cache_entry.Dirty := true;
+      entry.Dirty := true;
+      entry.DataBlk := cache_entry.DataBlk;
+      DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    }
+  }
+
+  action(forward_eviction_to_cpu0, "fec0", desc="sends eviction information to processor0") {
+    if (send_evictions) {
+      DPRINTF(RubySlicc, "Sending invalidation for %s to the CPU\n", address);
+      sequencer.evictionCallback(address);
+    }
+  }
+
+  action(forward_eviction_to_cpu1, "fec1", desc="sends eviction information to processor1") {
+    if (send_evictions) {
+      DPRINTF(RubySlicc, "Sending invalidation for %s to the CPU\n", address);
+      sequencer1.evictionCallback(address);
+    }
+  }
+
+  action(ci_copyL2ToL1, "ci", desc="copy L2 data to L1") {
+    Entry entry := getICacheEntry(address);
+    assert(is_valid(entry));
+    assert(is_valid(cache_entry));
+    entry.Dirty := cache_entry.Dirty;
+    entry.DataBlk := cache_entry.DataBlk;
+    entry.FromL2 := true;
+  }
+
+  action(c0_copyL2ToL1, "c0", desc="copy L2 data to L1") {
+    Entry entry := getL1CacheEntry(address, 0);
+    assert(is_valid(entry));
+    assert(is_valid(cache_entry));
+    entry.Dirty := cache_entry.Dirty;
+    entry.DataBlk := cache_entry.DataBlk;
+    entry.FromL2 := true;
+  }
+
+  action(c1_copyL2ToL1, "c1", desc="copy L2 data to L1") {
+    Entry entry := getL1CacheEntry(address, 1);
+    assert(is_valid(entry));
+    assert(is_valid(cache_entry));
+    entry.Dirty := cache_entry.Dirty;
+    entry.DataBlk := cache_entry.DataBlk;
+    entry.FromL2 := true;
+  }
+
+  action(fi_L2ToL1, "fi", desc="L2 to L1 inst fill") {
+    enqueue(triggerQueue_out, TriggerMsg, l2_hit_latency) {
+      out_msg.addr := address;
+      out_msg.Type := TriggerType:L2_to_L1;
+      out_msg.Dest := CacheId:L1I;
+    }
+  }
+
+  action(f0_L2ToL1, "f0", desc="L2 to L1 data fill") {
+    enqueue(triggerQueue_out, TriggerMsg, l2_hit_latency) {
+      out_msg.addr := address;
+      out_msg.Type := TriggerType:L2_to_L1;
+      out_msg.Dest := CacheId:L1D0;
+    }
+  }
+
+  action(f1_L2ToL1, "f1", desc="L2 to L1 data fill") {
+    enqueue(triggerQueue_out, TriggerMsg, l2_hit_latency) {
+      out_msg.addr := address;
+      out_msg.Type := TriggerType:L2_to_L1;
+      out_msg.Dest := CacheId:L1D1;
+    }
+  }
+
+  action(wi_writeIcache, "wi", desc="write data to icache (and l2)") {
+    peek(responseToCore_in, ResponseMsg) {
+      Entry entry := getICacheEntry(address);
+      assert(is_valid(entry));
+      assert(is_valid(cache_entry));
+      entry.DataBlk := in_msg.DataBlk;
+      entry.Dirty := in_msg.Dirty;
+      cache_entry.DataBlk := in_msg.DataBlk;
+      cache_entry.Dirty := in_msg.Dirty;
+    }
+  }
+
+  action(w0_writeDcache, "w0", desc="write data to dcache 0 (and l2)") {
+    peek(responseToCore_in, ResponseMsg) {
+      Entry entry := getL1CacheEntry(address, 0);
+      assert(is_valid(entry));
+      assert(is_valid(cache_entry));
+      DPRINTF(ProtocolTrace, "CP writeD0: address %s, data: %s\n", address, in_msg.DataBlk);
+      entry.DataBlk := in_msg.DataBlk;
+      entry.Dirty := in_msg.Dirty;
+      cache_entry.DataBlk := in_msg.DataBlk;
+      cache_entry.Dirty := in_msg.Dirty;
+    }
+  }
+
+  action(w1_writeDcache, "w1", desc="write data to dcache 1 (and l2)") {
+    peek(responseToCore_in, ResponseMsg) {
+      Entry entry := getL1CacheEntry(address, 1);
+      assert(is_valid(entry));
+      assert(is_valid(cache_entry));
+      entry.DataBlk := in_msg.DataBlk;
+      entry.Dirty := in_msg.Dirty;
+      cache_entry.DataBlk := in_msg.DataBlk;
+      cache_entry.Dirty := in_msg.Dirty;
+    }
+  }
+
+  action(ss_sendStaleNotification, "ss", desc="stale data; nothing to writeback") {
+    peek(responseToCore_in, ResponseMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:StaleNotif;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+        DPRINTF(RubySlicc, "%s\n", out_msg);
+      }
+    }
+  }
+
+  action(wb_data, "wb", desc="write back data") {
+    peek(responseToCore_in, ResponseMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:CPUData;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+        out_msg.DataBlk := tbe.DataBlk;
+        out_msg.Dirty := tbe.Dirty;
+        if (tbe.Shared) {
+          out_msg.NbReqShared := true;
+        } else {
+          out_msg.NbReqShared := false;
+        }
+        out_msg.State := CoherenceState:Shared; // faux info
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        DPRINTF(RubySlicc, "%s\n", out_msg);
+      }
+    }
+  }
+
+  action(pi_sendProbeResponseInv, "pi", desc="send probe ack inv, no data") {
+    enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
+      out_msg.Sender := machineID;
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      out_msg.Dirty := false;
+      out_msg.Hit := false;
+      out_msg.Ntsl := true;
+      out_msg.State := CoherenceState:NA;
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+
+  action(pim_sendProbeResponseInvMs, "pim", desc="send probe ack inv, no data") {
+    enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
+      out_msg.Sender := machineID;
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      out_msg.Dirty := false;
+      out_msg.Ntsl := true;
+      out_msg.Hit := false;
+      out_msg.State := CoherenceState:NA;
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+
+  action(ph_sendProbeResponseHit, "ph", desc="send probe ack PrbShrData, no data") {
+    enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
+      out_msg.Sender := machineID;
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      assert(addressInCore(address) || is_valid(tbe));
+      out_msg.Dirty := false;  // only true if sending back data i think
+      out_msg.Hit := true;
+      out_msg.Ntsl := false;
+      out_msg.State := CoherenceState:NA;
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+
+  action(pb_sendProbeResponseBackprobe, "pb", desc="send probe ack PrbShrData, no data, check for L1 residence") {
+    enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
+      out_msg.Sender := machineID;
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      if (addressInCore(address)) {
+        out_msg.Hit := true;
+      } else {
+        out_msg.Hit := false;
+      }
+      out_msg.Dirty := false;  // not sending back data, so def. not dirty
+      out_msg.Ntsl := false;
+      out_msg.State := CoherenceState:NA;
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+
+  action(pd_sendProbeResponseData, "pd", desc="send probe ack, with data") {
+    enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+      assert(is_valid(cache_entry));
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;
+      out_msg.Sender := machineID;
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      out_msg.DataBlk := cache_entry.DataBlk;
+      assert(cache_entry.Dirty);
+      out_msg.Dirty := true;
+      out_msg.Hit := true;
+      out_msg.State := CoherenceState:NA;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+  }
+
+  action(pdm_sendProbeResponseDataMs, "pdm", desc="send probe ack, with data") {
+    enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+      assert(is_valid(cache_entry));
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;
+      out_msg.Sender := machineID;
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      out_msg.DataBlk := cache_entry.DataBlk;
+      assert(cache_entry.Dirty);
+      out_msg.Dirty := true;
+      out_msg.Hit := true;
+      out_msg.State := CoherenceState:NA;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+  }
+
+  action(pdt_sendProbeResponseDataFromTBE, "pdt", desc="send probe ack with data") {
+    enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+      assert(is_valid(tbe));
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      out_msg.DataBlk := tbe.DataBlk;
+      assert(tbe.Dirty);
+      out_msg.Dirty := true;
+      out_msg.Hit := true;
+      out_msg.State := CoherenceState:NA;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+  }
+
+  action(s_setSharedFlip, "s", desc="hit by shared probe, status may be different") {
+    assert(is_valid(tbe));
+    tbe.Shared := true;
+  }
+
+  action(uu_sendUnblock, "uu", desc="state changed, unblock") {
+    enqueue(unblockNetwork_out, UnblockMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      out_msg.MessageSize := MessageSizeType:Unblock_Control;
+      DPRINTF(RubySlicc, "%s\n", out_msg);
+    }
+  }
+
+  action(l2m_profileMiss, "l2m", desc="l2m miss profile") {
+    ++L2cache.demand_misses;
+  }
+
+  action(l10m_profileMiss, "l10m", desc="l10m miss profile") {
+    ++L1D0cache.demand_misses;
+  }
+
+  action(l11m_profileMiss, "l11m", desc="l11m miss profile") {
+    ++L1D1cache.demand_misses;
+  }
+
+  action(l1im_profileMiss, "l1lm", desc="l1im miss profile") {
+    ++L1Icache.demand_misses;
+  }
+
+  action(yy_recycleProbeQueue, "yy", desc="recycle probe queue") {
+    probeNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
+  }
+
+  action(xx_recycleResponseQueue, "xx", desc="recycle response queue") {
+    responseToCore_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
+  }
+
+  action(zz_recycleMandatoryQueue, "\z", desc="recycle mandatory queue") {
+    mandatoryQueue_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
+  }
+
+  // END ACTIONS
+
+  // BEGIN TRANSITIONS
+
+  // transitions from base
+  transition(I, C0_Load_L1miss, I_E0S) {L1D0TagArrayRead, L2TagArrayRead} {
+    // track misses, if implemented
+    // since in I state, L2 miss as well
+    l2m_profileMiss;
+    l10m_profileMiss;
+    a0_allocateL1D;
+    a2_allocateL2;
+    i1_invCluster;
+    ii_invIcache;
+    n_issueRdBlk;
+    p_popMandatoryQueue;
+  }
+
+  transition(I, C1_Load_L1miss, I_E1S) {L1D1TagArrayRead, L2TagArrayRead} {
+    // track misses, if implemented
+    // since in I state, L2 miss as well
+    l2m_profileMiss;
+    l11m_profileMiss;
+    a1_allocateL1D;
+    a2_allocateL2;
+    i0_invCluster;
+    ii_invIcache;
+    n_issueRdBlk;
+    p_popMandatoryQueue;
+  }
+
+  transition(I, Ifetch0_L1miss, S0) {L1ITagArrayRead,L2TagArrayRead} {
+    // track misses, if implemented
+    // L2 miss as well
+    l2m_profileMiss;
+    l1im_profileMiss;
+    ai_allocateL1I;
+    a2_allocateL2;
+    ib_invBothClusters;
+    nS_issueRdBlkS;
+    p_popMandatoryQueue;
+  }
+
+  transition(I, Ifetch1_L1miss, S1) {L1ITagArrayRead, L2TagArrayRead} {
+    // track misses, if implemented
+    // L2 miss as well
+    l2m_profileMiss;
+    l1im_profileMiss;
+    ai_allocateL1I;
+    a2_allocateL2;
+    ib_invBothClusters;
+    nS_issueRdBlkS;
+    p_popMandatoryQueue;
+  }
+
+  transition(I, C0_Store_L1miss, I_M0) {L1D0TagArrayRead, L2TagArrayRead} {
+    l2m_profileMiss;
+    l10m_profileMiss;
+    a0_allocateL1D;
+    a2_allocateL2;
+    i1_invCluster;
+    ii_invIcache;
+    nM_issueRdBlkM;
+    p_popMandatoryQueue;
+  }
+
+  transition(I, C1_Store_L1miss, I_M1) {L1D0TagArrayRead, L2TagArrayRead} {
+    l2m_profileMiss;
+    l11m_profileMiss;
+    a1_allocateL1D;
+    a2_allocateL2;
+    i0_invCluster;
+    ii_invIcache;
+    nM_issueRdBlkM;
+    p_popMandatoryQueue;
+  }
+
+  transition(S, C0_Load_L1miss, S_F0) {L1D0TagArrayRead, L2TagArrayRead, L2DataArrayRead} {
+    l10m_profileMiss;
+    a0_allocateL1D;
+    f0_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(S, C1_Load_L1miss, S_F1) {L1D1TagArrayRead,L2TagArrayRead, L2DataArrayRead} {
+    l11m_profileMiss;
+    a1_allocateL1D;
+    f1_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(S, Ifetch0_L1miss, Si_F0) {L1ITagArrayRead, L2TagArrayRead, L2DataArrayRead} {
+    l1im_profileMiss;
+    ai_allocateL1I;
+    fi_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(S, Ifetch1_L1miss, Si_F1) {L1ITagArrayRead,L2TagArrayRead, L2DataArrayRead} {
+    l1im_profileMiss;
+    ai_allocateL1I;
+    fi_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition({S}, {C0_Store_L1hit, C0_Store_L1miss}, S_M0) {L1D0TagArrayRead, L2TagArrayRead} {
+    l2m_profileMiss;
+    l10m_profileMiss;
+    a0_allocateL1D;
+    mruD0_setD0cacheMRU;
+    i1_invCluster;
+    ii_invIcache;
+    nM_issueRdBlkM;
+    p_popMandatoryQueue;
+  }
+
+  transition({S}, {C1_Store_L1hit, C1_Store_L1miss}, S_M1) {L1D1TagArrayRead, L2TagArrayRead} {
+    l2m_profileMiss;
+    l11m_profileMiss;
+    a1_allocateL1D;
+    mruD1_setD1cacheMRU;
+    i0_invCluster;
+    ii_invIcache;
+    nM_issueRdBlkM;
+    p_popMandatoryQueue;
+  }
+
+  transition(Es, C0_Load_L1miss, Es_F0) {L1D0TagArrayRead, L2TagArrayRead, L2DataArrayRead} {  // can this be folded with S_F?
+    a0_allocateL1D;
+    l10m_profileMiss;
+    f0_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(Es, C1_Load_L1miss, Es_F1) {L1D1TagArrayRead, L2TagArrayRead, L2DataArrayRead} {  // can this be folded with S_F?
+    l11m_profileMiss;
+    a1_allocateL1D;
+    f1_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(Es, Ifetch0_L1miss, S0) {L1ITagArrayRead, L1ITagArrayWrite, L2TagArrayRead, L2TagArrayWrite} {
+    l1im_profileMiss;
+    i2_invL2;
+    ai_allocateL1I;
+    a2_allocateL2;
+    ib_invBothClusters;
+    nS_issueRdBlkS;
+    p_popMandatoryQueue;
+  }
+
+  transition(Es, Ifetch1_L1miss, S1) {L1ITagArrayRead, L2TagArrayRead} {
+    l1im_profileMiss;
+    i2_invL2;
+    ai_allocateL1I;
+    a2_allocateL2;
+    ib_invBothClusters;
+    nS_issueRdBlkS;
+    p_popMandatoryQueue;
+  }
+
+  // THES SHOULD NOT BE INSTANTANEOUS BUT OH WELL FOR NOW
+  transition(Es, {C0_Store_L1hit, C0_Store_L1miss}, M0) {L1D0TagArrayRead, L1D0TagArrayWrite, L1D0DataArrayWrite, L2TagArrayRead, L2TagArrayWrite, L2DataArrayWrite} {
+    a0_allocateL1D;
+    i1_invCluster;
+    s0_storeDone;   // instantaneous L1/L2 dirty - no writethrough delay
+    mruD0_setD0cacheMRU;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(Es, {C1_Store_L1hit, C1_Store_L1miss}, M1) {L1D1TagArrayRead, L1D1TagArrayWrite, L1D1DataArrayWrite, L2TagArrayRead, L2TagArrayWrite, L2DataArrayWrite} {
+    a1_allocateL1D;
+    i0_invCluster;
+    s1_storeDone;
+    mruD1_setD1cacheMRU;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(E0, C0_Load_L1miss, E0_F) {L1D0TagArrayRead,L2TagArrayRead, L2DataArrayRead} {
+    l10m_profileMiss;
+    a0_allocateL1D;
+    f0_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(E0, C1_Load_L1miss, E0_Es) {L1D1TagArrayRead,  L2TagArrayRead, L2DataArrayRead} {
+    l11m_profileMiss;
+    a1_allocateL1D;
+    f1_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(E0, Ifetch0_L1miss, S0) {L2TagArrayRead, L1ITagArrayRead} {
+    l2m_profileMiss; // permissions miss, still issue RdBlkS
+    l1im_profileMiss;
+    i2_invL2;
+    ai_allocateL1I;
+    a2_allocateL2;
+    i0_invCluster;
+    nS_issueRdBlkS;
+    p_popMandatoryQueue;
+  }
+
+  transition(E0, Ifetch1_L1miss, S1) {L2TagArrayRead, L1ITagArrayRead} {
+    l2m_profileMiss; // permissions miss, still issue RdBlkS
+    l1im_profileMiss;
+    i2_invL2;
+    ai_allocateL1I;
+    a2_allocateL2;
+    i0_invCluster;
+    nS_issueRdBlkS;
+    p_popMandatoryQueue;
+  }
+
+  transition(E0, {C0_Store_L1hit, C0_Store_L1miss}, M0) {L1D0TagArrayRead, L1D0DataArrayWrite, L1D0TagArrayWrite, L2TagArrayRead, L2DataArrayWrite, L2TagArrayWrite} {
+    a0_allocateL1D;
+    s0_storeDone;
+    mruD0_setD0cacheMRU;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(E0, C1_Store_L1miss, M1) {L1D1TagArrayRead, L1D1TagArrayWrite, L1D1TagArrayWrite, L2TagArrayRead, L2TagArrayWrite, L2DataArrayWrite} {
+    l11m_profileMiss;
+    a1_allocateL1D;
+    i0_invCluster;
+    s1_storeDone;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(E1, C1_Load_L1miss, E1_F) {L1D1TagArrayRead, L2TagArrayRead, L2DataArrayRead} {
+     l11m_profileMiss;
+    a1_allocateL1D;
+    f1_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(E1, C0_Load_L1miss, E1_Es) {L1D0TagArrayRead,  L2TagArrayRead, L2DataArrayRead} {
+    l11m_profileMiss;
+    a0_allocateL1D;
+    f0_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(E1, Ifetch1_L1miss, S1) {L2TagArrayRead,  L1ITagArrayRead} {
+    l2m_profileMiss; // permissions miss, still issue RdBlkS
+    l1im_profileMiss;
+    i2_invL2;
+    ai_allocateL1I;
+    a2_allocateL2;
+    i1_invCluster;
+    nS_issueRdBlkS;
+    p_popMandatoryQueue;
+  }
+
+  transition(E1, Ifetch0_L1miss, S0) {L2TagArrayRead, L1ITagArrayRead} {
+    l2m_profileMiss; // permissions miss, still issue RdBlkS
+    l1im_profileMiss;
+    i2_invL2;
+    ai_allocateL1I;
+    a2_allocateL2;
+    i1_invCluster;
+    nS_issueRdBlkS;
+    p_popMandatoryQueue;
+  }
+
+  transition(E1, {C1_Store_L1hit, C1_Store_L1miss}, M1) {L1D1TagArrayRead, L2TagArrayRead, L2DataArrayWrite, L1D1TagArrayWrite, L2TagArrayWrite} {
+    a1_allocateL1D;
+    s1_storeDone;
+    mruD1_setD1cacheMRU;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(E1, C0_Store_L1miss, M0) {L1D0TagArrayRead, L2TagArrayRead, L2TagArrayWrite, L1D0TagArrayWrite, L1D0DataArrayWrite, L2DataArrayWrite} {
+     l10m_profileMiss;
+    a0_allocateL1D;
+    i1_invCluster;
+    s0_storeDone;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition({O}, {C0_Store_L1hit, C0_Store_L1miss}, O_M0) {L1D0TagArrayRead,L2TagArrayRead} {
+    l2m_profileMiss; // permissions miss, still issue CtoD
+    l10m_profileMiss;
+    a0_allocateL1D;
+    mruD0_setD0cacheMRU;
+    i1_invCluster;
+    ii_invIcache;
+    nM_issueRdBlkM;
+    p_popMandatoryQueue;
+  }
+
+  transition({O}, {C1_Store_L1hit, C1_Store_L1miss}, O_M1) {L1D1TagArrayRead, L2TagArrayRead} {
+    l2m_profileMiss; // permissions miss, still issue RdBlkS
+     l11m_profileMiss;
+    a1_allocateL1D;
+    mruD1_setD1cacheMRU;
+    i0_invCluster;
+    ii_invIcache;
+    nM_issueRdBlkM;
+    p_popMandatoryQueue;
+  }
+
+  transition(O, C0_Load_L1miss, O_F0) {L2TagArrayRead, L2DataArrayRead, L1D0TagArrayRead} {
+    l10m_profileMiss;
+    a0_allocateL1D;
+    f0_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(O, C1_Load_L1miss, O_F1) {L2TagArrayRead, L2DataArrayRead, L1D1TagArrayRead} {
+     l11m_profileMiss;
+    a1_allocateL1D;
+    f1_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(Ms, C0_Load_L1miss, Ms_F0) {L2TagArrayRead, L2DataArrayRead, L1D0TagArrayRead} {
+    l10m_profileMiss;
+    a0_allocateL1D;
+    f0_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(Ms, C1_Load_L1miss, Ms_F1) {L2TagArrayRead, L2DataArrayRead, L1D1TagArrayRead} {
+    l11m_profileMiss;
+    a1_allocateL1D;
+    f1_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition({Ms, M0, M1, O}, Ifetch0_L1miss, MO_S0) {L1ITagArrayRead, L2DataArrayRead, L2TagArrayRead} {
+    l2m_profileMiss;  // permissions miss
+    l1im_profileMiss;
+    ai_allocateL1I;
+    t_allocateTBE;
+    ib_invBothClusters;
+    vd_victim;
+//    i2_invL2;
+    p_popMandatoryQueue;
+  }
+
+  transition({Ms, M0, M1, O}, Ifetch1_L1miss, MO_S1) {L1ITagArrayRead, L2TagArrayRead, L2DataArrayRead } {
+    l2m_profileMiss;  // permissions miss
+     l1im_profileMiss;
+    ai_allocateL1I;
+    t_allocateTBE;
+    ib_invBothClusters;
+    vd_victim;
+//    i2_invL2;
+    p_popMandatoryQueue;
+  }
+
+  transition(Ms, {C0_Store_L1hit, C0_Store_L1miss}, M0) {L1D0TagArrayRead, L1D0TagArrayWrite, L1D0DataArrayWrite, L2TagArrayRead, L2DataArrayWrite, L2TagArrayWrite} {
+    a0_allocateL1D;
+    i1_invCluster;
+    s0_storeDone;
+    mruD0_setD0cacheMRU;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(Ms, {C1_Store_L1hit, C1_Store_L1miss}, M1) {L1D1TagArrayRead, L1D1TagArrayWrite, L1D1DataArrayWrite, L2TagArrayRead, L2DataArrayWrite, L2TagArrayWrite} {
+    a1_allocateL1D;
+    i0_invCluster;
+    s1_storeDone;
+    mruD1_setD1cacheMRU;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(M0, C0_Load_L1miss, M0_F) {L1D0TagArrayRead, L2TagArrayRead, L2DataArrayRead} {
+     l10m_profileMiss;
+    a0_allocateL1D;
+    f0_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(M0, C1_Load_L1miss, M0_Ms) {L2TagArrayRead, L2DataArrayRead,L1D0TagArrayRead} {
+    l11m_profileMiss;
+    a1_allocateL1D;
+    f1_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(M0, {C0_Store_L1hit, C0_Store_L1miss}) {L1D0TagArrayRead,L1D0DataArrayWrite, L2DataArrayWrite, L2TagArrayRead} {
+    a0_allocateL1D;
+    s0_storeDone;
+    mruD0_setD0cacheMRU;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(M0, {C1_Store_L1hit, C1_Store_L1miss}, M1) {L1D1TagArrayRead, L1D1TagArrayWrite, L1D0DataArrayWrite, L2DataArrayWrite, L2TagArrayRead, L2TagArrayWrite} {
+    a1_allocateL1D;
+    i0_invCluster;
+    s1_storeDone;
+    mruD1_setD1cacheMRU;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(M1, C0_Load_L1miss, M1_Ms) {L2TagArrayRead, L2DataArrayRead, L1D0TagArrayRead} {
+    l10m_profileMiss;
+    a0_allocateL1D;
+    f0_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(M1, C1_Load_L1miss, M1_F) {L1D1TagArrayRead,L2TagArrayRead, L2DataArrayRead} {
+    a1_allocateL1D;
+    f1_L2ToL1;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(M1, {C0_Store_L1hit, C0_Store_L1miss}, M0) {L1D0TagArrayRead, L1D0TagArrayWrite, L1D0DataArrayWrite, L2TagArrayRead, L2DataArrayWrite, L2TagArrayWrite} {
+    a0_allocateL1D;
+    i1_invCluster;
+    s0_storeDone;
+    mruD0_setD0cacheMRU;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(M1, {C1_Store_L1hit, C1_Store_L1miss}) {L1D1TagArrayRead, L2TagArrayRead, L2DataArrayWrite} {
+    a1_allocateL1D;
+    s1_storeDone;
+    mruD1_setD1cacheMRU;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  // end transitions from base
+
+  // Begin simple hit transitions
+  transition({S, Es, E0, O, Ms, M0, O_F1, S_F1, Si_F0, Si_F1, Es_F1, E0_Es,
+          Ms_F1, M0_Ms}, C0_Load_L1hit) {L1D0TagArrayRead, L1D0DataArrayRead} {
+    // track hits, if implemented
+    l0_loadDone;
+    mruD0_setD0cacheMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition({S, Es, E1, O, Ms, M1, O_F0, S_F0, Si_F0, Si_F1, Es_F0, E1_Es,
+          Ms_F0, M1_Ms}, C1_Load_L1hit) {L1D1TagArrayRead, L1D1DataArrayRead} {
+    // track hits, if implemented
+    l1_loadDone;
+    mruD1_setD1cacheMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition({S, S_C, S_F0, S_F1, S_F}, Ifetch0_L1hit) {L1ITagArrayRead, L1IDataArrayRead} {
+    // track hits, if implemented
+    il0_loadDone;
+    mruI_setIcacheMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition({S, S_C, S_F0, S_F1, S_F}, Ifetch1_L1hit) {L1ITagArrayRead, L1IDataArrayWrite} {
+    // track hits, if implemented
+    il1_loadDone;
+    mruI_setIcacheMRU;
+    p_popMandatoryQueue;
+  }
+
+  // end simple hit transitions
+
+  // Transitions from transient states
+
+  // recycles
+  transition({I_M0, I_M0M1, I_M1M0, I_M0Ms, I_M1Ms, I_E0S, I_ES, IF_E0S, IF_ES,
+          IF0_ES, IF1_ES, S_F0, S_F, O_F0, O_F, S_M0, O_M0, Es_F0, Es_F, E0_F,
+          E1_Es, Ms_F0, Ms_F, M0_F, M1_Ms}, C0_Load_L1hit) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({IF_E1S, F_S0, F_S1, ES_I, MO_I, MO_S0, MO_S1, Si_F0, Si_F1, S_M1,
+          O_M1, S0, S1, I_C, S0_C, S1_C, S_C}, C0_Load_L1miss) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({I_M1, I_M0M1, I_M1M0, I_M0Ms, I_M1Ms, I_E1S, I_ES, IF_E1S, IF_ES,
+          IF0_ES, IF1_ES, S_F1, S_F, O_F1, O_F, S_M1, O_M1, Es_F1, Es_F, E1_F,
+          E0_Es, Ms_F1, Ms_F, M0_Ms, M1_F}, C1_Load_L1hit) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({IF_E0S, F_S0, F_S1, ES_I, MO_I, MO_S0, MO_S1, Si_F0, Si_F1, S_M0,
+          O_M0, S0, S1, I_C, S0_C, S1_C, S_C},  C1_Load_L1miss) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({F_S0, F_S1, MO_S0, MO_S1, Si_F0, Si_F1, S0, S1, S0_C, S1_C}, {Ifetch0_L1hit, Ifetch1_L1hit}) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({I_M0, I_M1, I_M0M1, I_M1M0, I_M0Ms, I_M1Ms, I_E0S, I_E1S, I_ES,
+          IF_E0S, IF_E1S, IF_ES, IF0_ES, IF1_ES, ES_I, MO_I, S_F0, S_F1, S_F,
+          O_F0, O_F1, O_F, S_M0, S_M1, O_M0, O_M1, Es_F0, Es_F1, Es_F, E0_F,
+          E1_F, E0_Es, E1_Es, Ms_F0, Ms_F1, Ms_F, M0_F, M0_Ms, M1_F, M1_Ms, I_C,
+          S_C}, {Ifetch0_L1miss, Ifetch1_L1miss}) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({I_E1S, IF_E1S, F_S0, F_S1, ES_I, MO_I, MO_S0, MO_S1, S_F1, O_F1,
+          Si_F0, Si_F1, S_M1, O_M1, S0, S1, Es_F1, E1_F, E0_Es, Ms_F1, M0_Ms,
+          M1_F, I_C, S0_C, S1_C, S_C}, {C0_Store_L1miss}) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({I_E0S, IF_E0S, F_S0, F_S1, ES_I, MO_I, MO_S0, MO_S1 S_F0, O_F0,
+          Si_F0, Si_F1, S_M0, O_M0, S0, S1, Es_F0, E0_F, E1_Es, Ms_F0, M0_F,
+          M1_Ms, I_C, S0_C, S1_C, S_C}, {C1_Store_L1miss}) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({I_M0, I_M0M1, I_M1M0, I_M0Ms, I_M1Ms, I_E0S, I_ES, IF_E0S, IF_ES,
+          IF0_ES, IF1_ES, S_F0, S_F1, S_F, O_F0, O_F1, O_F, Si_F0, Si_F1, S_M0, O_M0, Es_F0, Es_F1, Es_F, E0_F, E0_Es, E1_Es, Ms_F0, Ms_F1, Ms_F, M0_F, M0_Ms, M1_Ms}, {C0_Store_L1hit}) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({I_M1, I_M0M1, I_M1M0, I_M0Ms, I_M1Ms, I_E1S, I_ES, IF_E1S, IF_ES,
+          IF0_ES, IF1_ES, S_F0, S_F1, S_F, O_F0, O_F1, O_F, Si_F0, Si_F1, S_M1,
+          O_M1, Es_F0, Es_F1, Es_F, E1_F, E0_Es, E1_Es, Ms_F0, Ms_F1, Ms_F,
+          M0_Ms, M1_F, M1_Ms}, {C1_Store_L1hit}) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({I_M0, I_M0M1, I_M1M0, I_M0Ms, I_M1Ms, I_E0S, I_ES, IF_E0S, IF_ES,
+          IF0_ES, IF1_ES, S_F0, S_F, O_F0, O_F, S_M0, O_M0, Es_F0, Es_F, E0_F,
+          E1_Es, Ms_F0, Ms_F, M0_F, M1_Ms}, L1D0_Repl) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({I_M1, I_M0M1, I_M1M0, I_M0Ms, I_M1Ms, I_E1S, I_ES, IF_E1S, IF_ES,
+          IF0_ES, IF1_ES, S_F1, S_F, O_F1, O_F, S_M1, O_M1, Es_F1, Es_F, E1_F,
+          E0_Es, Ms_F1, Ms_F, M0_Ms, M1_F}, L1D1_Repl) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({F_S0, F_S1, MO_S0, MO_S1, Si_F0, Si_F1, S0, S1, S0_C, S1_C}, L1I_Repl) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({S_C, S0_C, S1_C, S0, S1, Si_F0, Si_F1, I_M0, I_M1, I_M0M1, I_M1M0, I_M0Ms, I_M1Ms, I_E0S, I_E1S, I_ES, S_F0, S_F1, S_F, O_F0, O_F1, O_F, S_M0, O_M0, S_M1, O_M1, Es_F0, Es_F1, Es_F, E0_F, E1_F, E0_Es, E1_Es, Ms_F0, Ms_F1, Ms_F, M0_F, M0_Ms, M1_F, M1_Ms, MO_S0, MO_S1, IF_E0S, IF_E1S, IF_ES, IF0_ES, IF1_ES, F_S0, F_S1}, L2_Repl) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({IF_E0S, IF_E1S, IF_ES, IF0_ES, IF1_ES, F_S0, F_S1}, {NB_AckS,
+          PrbInvData, PrbInv, PrbShrData}) {} {
+    yy_recycleProbeQueue;  // these should be resolved soon, but I didn't want to add more states, though technically they could be solved now, and probes really could be solved but i don't think it's really necessary.
+  }
+
+  transition({IF_E0S, IF_E1S, IF_ES, IF0_ES, IF1_ES}, NB_AckE) {} {
+    xx_recycleResponseQueue;  // these should be resolved soon, but I didn't want to add more states, though technically they could be solved now, and probes really could be solved but i don't think it's really necessary.
+  }
+
+  transition({E0_Es, E1_F, Es_F1}, C0_Load_L1miss, Es_F) {L2DataArrayRead} {
+    l10m_profileMiss;
+    a0_allocateL1D;
+    f0_L2ToL1;
+    p_popMandatoryQueue;
+  }
+
+  transition(S_F1, C0_Load_L1miss, S_F) {L2DataArrayRead} {
+    l10m_profileMiss;
+    a0_allocateL1D;
+    f0_L2ToL1;
+    p_popMandatoryQueue;
+  }
+
+  transition(O_F1, C0_Load_L1miss, O_F) {L2DataArrayRead} {
+    l10m_profileMiss;
+    a0_allocateL1D;
+    f0_L2ToL1;
+    p_popMandatoryQueue;
+  }
+
+  transition({Ms_F1, M0_Ms, M1_F}, C0_Load_L1miss, Ms_F) {L2DataArrayRead} {
+    l10m_profileMiss;
+    a0_allocateL1D;
+    f0_L2ToL1;
+    p_popMandatoryQueue;
+  }
+
+  transition(I_M0, C1_Load_L1miss, I_M0Ms) {} {
+    l2m_profileMiss;
+    l11m_profileMiss;
+    a1_allocateL1D;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(I_M1, C0_Load_L1miss, I_M1Ms) {} {
+    l2m_profileMiss;
+    l10m_profileMiss;
+    a0_allocateL1D;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(I_M0, C1_Store_L1miss, I_M0M1) {} {
+    l2m_profileMiss;
+    l11m_profileMiss;
+    a1_allocateL1D;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(I_M1, C0_Store_L1miss, I_M1M0) {} {
+    l2m_profileMiss;
+    l10m_profileMiss;
+    a0_allocateL1D;
+    mru_setMRU;
+    p_popMandatoryQueue;
+  }
+
+  transition(I_E0S, C1_Load_L1miss, I_ES) {} {
+    l2m_profileMiss;
+    l11m_profileMiss;
+    a1_allocateL1D;
+    p_popMandatoryQueue;
+  }
+
+  transition(I_E1S, C0_Load_L1miss, I_ES) {} {
+    l2m_profileMiss;
+    l10m_profileMiss;
+    a0_allocateL1D;
+    p_popMandatoryQueue;
+  }
+
+  transition({E1_Es, E0_F, Es_F0}, C1_Load_L1miss, Es_F) {L2DataArrayRead} {
+    l11m_profileMiss;
+    a1_allocateL1D;
+    f1_L2ToL1;
+    p_popMandatoryQueue;
+  }
+
+  transition(S_F0, C1_Load_L1miss, S_F) {L2DataArrayRead} {
+    l11m_profileMiss;
+    a1_allocateL1D;
+    f1_L2ToL1;
+    p_popMandatoryQueue;
+  }
+
+  transition(O_F0, C1_Load_L1miss, O_F) {L2DataArrayRead} {
+    l11m_profileMiss;
+    a1_allocateL1D;
+    f1_L2ToL1;
+    p_popMandatoryQueue;
+  }
+
+  transition({Ms_F0, M1_Ms, M0_F}, C1_Load_L1miss, Ms_F) { L2DataArrayRead} {
+    l11m_profileMiss;
+    a1_allocateL1D;
+    f1_L2ToL1;
+    p_popMandatoryQueue;
+  }
+
+  transition({S, Es, E0, O, Ms, M0, O_F1, S_F1, Si_F0, Si_F1, Es_F1, E0_Es, Ms_F1, M0_Ms}, L1D0_Repl) {L1D0TagArrayRead} {
+    i0_invCluster;
+  }
+
+  transition({S, Es, E1, O, Ms, M1, O_F0, S_F0, Si_F0, Si_F1, Es_F0, E1_Es, Ms_F0, M1_Ms}, L1D1_Repl) {L1D1TagArrayRead} {
+    i1_invCluster;
+  }
+
+  transition({S, S_C, S_F0, S_F1}, L1I_Repl) {L1ITagArrayRead} {
+    ii_invIcache;
+  }
+
+  transition({S, E0, E1, Es}, L2_Repl, ES_I) {L2TagArrayRead, L2DataArrayRead, L1D0TagArrayRead, L1D1TagArrayRead} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    t_allocateTBE;
+    vc_victim;
+    ib_invBothClusters;
+    i2_invL2;
+    ii_invIcache;
+  }
+
+  transition({Ms, M0, M1, O}, L2_Repl, MO_I) {L2TagArrayRead, L2DataArrayRead, L1D0TagArrayRead, L1D1TagArrayRead} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    t_allocateTBE;
+    vd_victim;
+    i2_invL2;
+    ib_invBothClusters;  // nothing will happen for D0 on M1, vice versa
+  }
+
+  transition(S0, NB_AckS, S) {L1D0DataArrayWrite, L1D0TagArrayWrite, L2DataArrayWrite, L2TagArrayWrite} {
+    wi_writeIcache;
+    xi0_loadDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(S1, NB_AckS, S) {L1D1DataArrayWrite, L1D1TagArrayWrite, L2DataArrayWrite, L2TagArrayWrite} {
+    wi_writeIcache;
+    xi1_loadDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(S0_C, NB_AckS, S_C) {L1D0DataArrayWrite,L2DataArrayWrite} {
+    wi_writeIcache;
+    xi0_loadDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(S1_C, NB_AckS, S_C) {L1D1DataArrayWrite, L2DataArrayWrite} {
+    wi_writeIcache;
+    xi1_loadDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(I_M0, NB_AckM, M0) {L1D0DataArrayWrite, L1D0TagArrayWrite,L2DataArrayWrite, L2TagArrayWrite} {
+    w0_writeDcache;
+    xs0_storeDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(I_M1, NB_AckM, M1) {L1D1DataArrayWrite, L1D1TagArrayWrite, L2DataArrayWrite, L2TagArrayWrite} {
+    w1_writeDcache;
+    xs1_storeDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  // THESE MO->M1 should not be instantaneous but oh well for now.
+  transition(I_M0M1, NB_AckM, M1) {L1D1DataArrayWrite, L1D1TagArrayWrite, L2DataArrayWrite, L2TagArrayWrite} {
+    w0_writeDcache;
+    xs0_storeDone;
+    uu_sendUnblock;
+    i0_invCluster;
+    s1_storeDone;
+    pr_popResponseQueue;
+  }
+
+  transition(I_M1M0, NB_AckM, M0) {L1D0DataArrayWrite, L1D0TagArrayWrite, L2DataArrayWrite, L2TagArrayWrite} {
+    w1_writeDcache;
+    xs1_storeDone;
+    uu_sendUnblock;
+    i1_invCluster;
+    s0_storeDone;
+    pr_popResponseQueue;
+  }
+
+  // Above shoudl be more like this, which has some latency to xfer to L1
+  transition(I_M0Ms, NB_AckM, M0_Ms) {L1D0DataArrayWrite,L2DataArrayWrite} {
+    w0_writeDcache;
+    xs0_storeDone;
+    uu_sendUnblock;
+    f1_L2ToL1;
+    pr_popResponseQueue;
+  }
+
+  transition(I_M1Ms, NB_AckM, M1_Ms) {L1D1DataArrayWrite, L2DataArrayWrite} {
+    w1_writeDcache;
+    xs1_storeDone;
+    uu_sendUnblock;
+    f0_L2ToL1;
+    pr_popResponseQueue;
+  }
+
+  transition(I_E0S, NB_AckE, E0) {L1D0DataArrayWrite, L1D0TagArrayWrite, L2DataArrayWrite, L2TagArrayWrite} {
+    w0_writeDcache;
+    xl0_loadDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(I_E1S, NB_AckE, E1) {L1D1DataArrayWrite, L1D1TagArrayWrite, L2DataArrayWrite, L2TagArrayWrite} {
+    w1_writeDcache;
+    xl1_loadDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(I_ES, NB_AckE, Es) {L1D1DataArrayWrite, L1D1TagArrayWrite, L1D0DataArrayWrite, L1D0TagArrayWrite, L2DataArrayWrite, L2TagArrayWrite } {
+    w0_writeDcache;
+    xl0_loadDone;
+    w1_writeDcache;
+    xl1_loadDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(I_E0S, NB_AckS, S) {L1D0DataArrayWrite, L1D0TagArrayWrite,L2DataArrayWrite, L2TagArrayWrite} {
+    w0_writeDcache;
+    xl0_loadDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(I_E1S, NB_AckS, S) {L1D1TagArrayWrite, L1D1DataArrayWrite, L2TagArrayWrite, L2DataArrayWrite} {
+    w1_writeDcache;
+    xl1_loadDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(I_ES, NB_AckS, S) {L1D0TagArrayWrite, L1D0DataArrayWrite, L2TagArrayWrite,  L2DataArrayWrite} {
+    w0_writeDcache;
+    xl0_loadDone;
+    w1_writeDcache;
+    xl1_loadDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(S_F0, L2_to_L1D0, S) {L1D0TagArrayWrite, L1D0DataArrayWrite,  L2TagArrayWrite, L2DataArrayRead} {
+    c0_copyL2ToL1;
+    mru_setMRU;
+    l0_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(S_F1, L2_to_L1D1, S) {L1D1TagArrayWrite, L1D1DataArrayWrite,  L2TagArrayWrite, L2DataArrayRead} {
+    c1_copyL2ToL1;
+    mru_setMRU;
+    l1_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(Si_F0, L2_to_L1I, S) {L1ITagArrayWrite, L1IDataArrayWrite,  L2TagArrayWrite, L2DataArrayRead} {
+    ci_copyL2ToL1;
+    mru_setMRU;
+    il0_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(Si_F1, L2_to_L1I, S) {L1ITagArrayWrite, L1IDataArrayWrite,  L2TagArrayWrite, L2DataArrayRead} {
+    ci_copyL2ToL1;
+    mru_setMRU;
+    il1_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(S_F, L2_to_L1D0, S_F1) { L1D0DataArrayWrite, L2DataArrayRead} {
+    c0_copyL2ToL1;
+    mru_setMRU;
+    l0_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(S_F, L2_to_L1D1, S_F0) { L1D1DataArrayWrite, L2DataArrayRead} {
+    c1_copyL2ToL1;
+    mru_setMRU;
+    l1_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(O_F0, L2_to_L1D0, O) { L1D0DataArrayWrite, L1D0TagArrayWrite, L2TagArrayWrite, L2DataArrayRead} {
+    c0_copyL2ToL1;
+    mru_setMRU;
+    l0_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(O_F1, L2_to_L1D1, O) {L1D1DataArrayWrite, L1D1TagArrayWrite, L2TagArrayWrite, L2DataArrayRead} {
+    c1_copyL2ToL1;
+    mru_setMRU;
+    l1_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(O_F, L2_to_L1D0, O_F1) { L1D0DataArrayWrite, L2DataArrayRead} {
+    c0_copyL2ToL1;
+    mru_setMRU;
+    l0_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(O_F, L2_to_L1D1, O_F0) { L1D1DataArrayWrite, L2DataArrayRead} {
+    c1_copyL2ToL1;
+    mru_setMRU;
+    l1_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(M1_F, L2_to_L1D1, M1) {L1D1DataArrayWrite, L1D1TagArrayWrite, L2TagArrayWrite, L2DataArrayRead} {
+    c1_copyL2ToL1;
+    mru_setMRU;
+    l1_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(M0_F, L2_to_L1D0, M0) {L1D0DataArrayWrite, L1D0TagArrayWrite, L2TagArrayWrite, L2DataArrayRead} {
+    c0_copyL2ToL1;
+    mru_setMRU;
+    l0_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(Ms_F0, L2_to_L1D0, Ms) {L1D0DataArrayWrite, L1D0TagArrayWrite, L2TagArrayWrite, L2DataArrayRead} {
+    c0_copyL2ToL1;
+    mru_setMRU;
+    l0_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(Ms_F1, L2_to_L1D1, Ms) {L1D1DataArrayWrite, L1D1TagArrayWrite, L2TagArrayWrite, L2DataArrayRead} {
+    c1_copyL2ToL1;
+    mru_setMRU;
+    l1_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(Ms_F, L2_to_L1D0, Ms_F1) {L1D0DataArrayWrite, L2DataArrayRead} {
+    c0_copyL2ToL1;
+    mru_setMRU;
+    l0_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(Ms_F, L2_to_L1D1, Ms_F0) {L1IDataArrayWrite, L2DataArrayRead} {
+    c1_copyL2ToL1;
+    mru_setMRU;
+    l1_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(M1_Ms, L2_to_L1D0, Ms) {L1D0TagArrayWrite, L1D0DataArrayWrite, L2TagArrayWrite, L2DataArrayRead} {
+    c0_copyL2ToL1;
+    mru_setMRU;
+    l0_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(M0_Ms, L2_to_L1D1, Ms) {L1D1TagArrayWrite, L1D1DataArrayWrite, L2TagArrayWrite, L2DataArrayRead} {
+    c1_copyL2ToL1;
+    mru_setMRU;
+    l1_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(Es_F0, L2_to_L1D0, Es) {L1D0TagArrayWrite, L1D0DataArrayWrite, L2TagArrayWrite, L2DataArrayRead} {
+    c0_copyL2ToL1;
+    mru_setMRU;
+    l0_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(Es_F1, L2_to_L1D1, Es) {L1D1TagArrayWrite, L1D1DataArrayWrite, L2TagArrayWrite, L2DataArrayRead} {
+    c1_copyL2ToL1;
+    mru_setMRU;
+    l1_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(Es_F, L2_to_L1D0, Es_F1) {L2TagArrayRead, L2DataArrayRead} {
+    c0_copyL2ToL1;
+    mru_setMRU;
+    l0_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(Es_F, L2_to_L1D1, Es_F0) {L2TagArrayRead, L2DataArrayRead} {
+    c1_copyL2ToL1;
+    mru_setMRU;
+    l1_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(E0_F, L2_to_L1D0, E0) {L2TagArrayRead, L2DataArrayRead} {
+    c0_copyL2ToL1;
+    mru_setMRU;
+    l0_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(E1_F, L2_to_L1D1, E1) {L2TagArrayRead, L2DataArrayRead} {
+    c1_copyL2ToL1;
+    mru_setMRU;
+    l1_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(E1_Es, L2_to_L1D0, Es) {L2TagArrayRead, L2DataArrayRead} {
+    c0_copyL2ToL1;
+    mru_setMRU;
+    l0_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(E0_Es, L2_to_L1D1, Es) {L2TagArrayRead, L2DataArrayRead} {
+    c1_copyL2ToL1;
+    mru_setMRU;
+    l1_loadDone;
+    pt_popTriggerQueue;
+  }
+
+  transition(IF_E0S, L2_to_L1D0, I_E0S) {} {
+    pt_popTriggerQueue;
+  }
+
+  transition(IF_E1S, L2_to_L1D1, I_E1S) {} {
+    pt_popTriggerQueue;
+  }
+
+  transition(IF_ES, L2_to_L1D0, IF1_ES) {} {
+    pt_popTriggerQueue;
+  }
+
+  transition(IF_ES, L2_to_L1D1, IF0_ES) {} {
+    pt_popTriggerQueue;
+  }
+
+  transition(IF0_ES, L2_to_L1D0, I_ES) {} {
+    pt_popTriggerQueue;
+  }
+
+  transition(IF1_ES, L2_to_L1D1, I_ES) {} {
+    pt_popTriggerQueue;
+  }
+
+  transition(F_S0, L2_to_L1I, S0) {} {
+    pt_popTriggerQueue;
+  }
+
+  transition(F_S1, L2_to_L1I, S1) {} {
+    pt_popTriggerQueue;
+  }
+
+  transition({S_M0, O_M0}, NB_AckM, M0) {L1D0TagArrayWrite, L1D0DataArrayWrite, L2DataArrayWrite, L2TagArrayWrite} {
+    mru_setMRU;
+    xs0_storeDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition({S_M1, O_M1}, NB_AckM, M1) {L1D1TagArrayWrite, L1D1DataArrayWrite, L2DataArrayWrite, L2TagArrayWrite} {
+    mru_setMRU;
+    xs1_storeDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(MO_I, NB_AckWB, I) {L2TagArrayWrite} {
+    wb_data;
+    d_deallocateTBE;
+    pr_popResponseQueue;
+  }
+
+  transition(ES_I, NB_AckWB, I) {L2TagArrayWrite} {
+    wb_data;
+    d_deallocateTBE;
+    pr_popResponseQueue;
+  }
+
+  transition(MO_S0, NB_AckWB, S0) {L2TagArrayWrite} {
+    wb_data;
+    i2_invL2;
+    a2_allocateL2;
+    d_deallocateTBE; // FOO
+    nS_issueRdBlkS;
+    pr_popResponseQueue;
+  }
+
+  transition(MO_S1, NB_AckWB, S1) {L2TagArrayWrite} {
+    wb_data;
+    i2_invL2;
+    a2_allocateL2;
+    d_deallocateTBE; // FOO
+    nS_issueRdBlkS;
+    pr_popResponseQueue;
+  }
+
+  // Writeback cancel "ack"
+  transition(I_C, NB_AckWB, I) {L2TagArrayWrite} {
+    ss_sendStaleNotification;
+    d_deallocateTBE;
+    pr_popResponseQueue;
+  }
+
+  transition(S0_C, NB_AckWB, S0) {L2TagArrayWrite} {
+    ss_sendStaleNotification;
+    pr_popResponseQueue;
+  }
+
+  transition(S1_C, NB_AckWB, S1) {L2TagArrayWrite} {
+    ss_sendStaleNotification;
+    pr_popResponseQueue;
+  }
+
+  transition(S_C, NB_AckWB, S) {L2TagArrayWrite} {
+    ss_sendStaleNotification;
+    pr_popResponseQueue;
+  }
+
+  // Begin Probe Transitions
+
+  transition({Ms, M0, M1, O}, PrbInvData, I) {L2TagArrayRead, L2TagArrayWrite, L2DataArrayRead} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pd_sendProbeResponseData;
+    i2_invL2;
+    ib_invBothClusters;
+    pp_popProbeQueue;
+  }
+
+  transition({Es, E0, E1, S, I}, PrbInvData, I) {L2TagArrayRead, L2TagArrayWrite} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    i2_invL2;
+    ib_invBothClusters;
+    ii_invIcache;  // only relevant for S
+    pp_popProbeQueue;
+  }
+
+  transition(S_C, PrbInvData, I_C) {L2TagArrayWrite} {
+    t_allocateTBE;
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    i2_invL2;
+    ib_invBothClusters;
+    ii_invIcache;
+    pp_popProbeQueue;
+  }
+
+  transition(I_C, PrbInvData, I_C) {} {
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;
+    pp_popProbeQueue;
+  }
+
+  transition({Ms, M0, M1, O, Es, E0, E1, S, I}, PrbInv, I) {L2TagArrayRead, L2TagArrayWrite} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    i2_invL2; // nothing will happen in I
+    ib_invBothClusters;
+    ii_invIcache;
+    pp_popProbeQueue;
+  }
+
+  transition(S_C, PrbInv, I_C) {L2TagArrayWrite} {
+    t_allocateTBE;
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    i2_invL2;
+    ib_invBothClusters;
+    ii_invIcache;
+    pp_popProbeQueue;
+  }
+
+  transition(I_C, PrbInv, I_C) {} {
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;
+    ii_invIcache;
+    pp_popProbeQueue;
+  }
+
+  transition({Ms, M0, M1, O}, PrbShrData, O) {L2TagArrayRead, L2TagArrayWrite, L2DataArrayRead} {
+    pd_sendProbeResponseData;
+    pp_popProbeQueue;
+  }
+
+  transition({Es, E0, E1, S}, PrbShrData, S) {L2TagArrayRead, L2TagArrayWrite} {
+    ph_sendProbeResponseHit;
+    pp_popProbeQueue;
+  }
+
+  transition(S_C, PrbShrData) {} {
+    ph_sendProbeResponseHit;
+    pp_popProbeQueue;
+  }
+
+  transition({I, I_C}, PrbShrData) {L2TagArrayRead} {
+    pb_sendProbeResponseBackprobe;
+    pp_popProbeQueue;
+  }
+
+  transition({I_M0, I_E0S}, {PrbInv, PrbInvData}) {} {
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;  // must invalidate current data (only relevant for I_M0)
+    a0_allocateL1D;  // but make sure there is room for incoming data when it arrives
+    pp_popProbeQueue;
+  }
+
+  transition({I_M1, I_E1S}, {PrbInv, PrbInvData}) {} {
+    pi_sendProbeResponseInv;
+    ib_invBothClusters; // must invalidate current data (only relevant for I_M1)
+    a1_allocateL1D;  // but make sure there is room for incoming data when it arrives
+    pp_popProbeQueue;
+  }
+
+  transition({I_M0M1, I_M1M0, I_M0Ms, I_M1Ms, I_ES}, {PrbInv, PrbInvData, PrbShrData}) {} {
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;
+    a0_allocateL1D;
+    a1_allocateL1D;
+    pp_popProbeQueue;
+  }
+
+  transition({I_M0, I_E0S, I_M1, I_E1S}, PrbShrData) {} {
+    pb_sendProbeResponseBackprobe;
+    pp_popProbeQueue;
+  }
+
+  transition(ES_I, PrbInvData, I_C) {} {
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;
+    ii_invIcache;
+    pp_popProbeQueue;
+  }
+
+  transition(MO_I, PrbInvData, I_C) {} {
+    pdt_sendProbeResponseDataFromTBE;
+    ib_invBothClusters;
+    ii_invIcache;
+    pp_popProbeQueue;
+  }
+
+  transition(MO_I, PrbInv, I_C) {} {
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;
+    ii_invIcache;
+    pp_popProbeQueue;
+  }
+
+  transition(ES_I, PrbInv, I_C) {} {
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;
+    ii_invIcache;
+    pp_popProbeQueue;
+  }
+
+  transition(ES_I, PrbShrData, ES_I) {} {
+    ph_sendProbeResponseHit;
+    s_setSharedFlip;
+    pp_popProbeQueue;
+  }
+
+  transition(MO_I, PrbShrData, MO_I) {} {
+    pdt_sendProbeResponseDataFromTBE;
+    s_setSharedFlip;
+    pp_popProbeQueue;
+  }
+
+  transition(MO_S0, PrbInvData, S0_C) {L2TagArrayWrite} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pdt_sendProbeResponseDataFromTBE;
+    i2_invL2;
+    a2_allocateL2;
+    d_deallocateTBE;
+    nS_issueRdBlkS;
+    pp_popProbeQueue;
+  }
+
+  transition(MO_S1, PrbInvData, S1_C) {L2TagArrayWrite} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pdt_sendProbeResponseDataFromTBE;
+    i2_invL2;
+    a2_allocateL2;
+    d_deallocateTBE;
+    nS_issueRdBlkS;
+    pp_popProbeQueue;
+  }
+
+  transition(MO_S0, PrbInv, S0_C) {L2TagArrayWrite} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    i2_invL2;
+    a2_allocateL2;
+    d_deallocateTBE;
+    nS_issueRdBlkS;
+    pp_popProbeQueue;
+  }
+
+  transition(MO_S1, PrbInv, S1_C) {L2TagArrayWrite} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    i2_invL2;
+    a2_allocateL2;
+    d_deallocateTBE;
+    nS_issueRdBlkS;
+    pp_popProbeQueue;
+  }
+
+  transition({MO_S0, MO_S1}, PrbShrData) {} {
+    pdt_sendProbeResponseDataFromTBE;
+    s_setSharedFlip;
+    pp_popProbeQueue;
+  }
+
+  transition({S_F0, Es_F0, E0_F, E1_Es}, {PrbInvData, PrbInv}, IF_E0S) {}{
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    // invalidate everything you've got
+    ib_invBothClusters;
+    ii_invIcache;
+    i2_invL2;
+    // but make sure you have room for what you need from the fill
+    a0_allocateL1D;
+    a2_allocateL2;
+    n_issueRdBlk;
+    pp_popProbeQueue;
+  }
+
+  transition({S_F1, Es_F1, E1_F, E0_Es}, {PrbInvData, PrbInv}, IF_E1S) {} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    // invalidate everything you've got
+    ib_invBothClusters;
+    ii_invIcache;
+    i2_invL2;
+    // but make sure you have room for what you need from the fill
+    a1_allocateL1D;
+    a2_allocateL2;
+    n_issueRdBlk;
+    pp_popProbeQueue;
+  }
+
+  transition({S_F, Es_F}, {PrbInvData, PrbInv}, IF_ES) {} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    // invalidate everything you've got
+    ib_invBothClusters;
+    ii_invIcache;
+    i2_invL2;
+    // but make sure you have room for what you need from the fill
+    a0_allocateL1D;
+    a1_allocateL1D;
+    a2_allocateL2;
+    n_issueRdBlk;
+    pp_popProbeQueue;
+  }
+
+  transition(Si_F0, {PrbInvData, PrbInv}, F_S0) {} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;
+    ii_invIcache;
+    i2_invL2;
+    ai_allocateL1I;
+    a2_allocateL2;
+    nS_issueRdBlkS;
+    pp_popProbeQueue;
+  }
+
+  transition(Si_F1, {PrbInvData, PrbInv}, F_S1) {} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;
+    ii_invIcache;
+    i2_invL2;
+    ai_allocateL1I;
+    a2_allocateL2;
+    nS_issueRdBlkS;
+    pp_popProbeQueue;
+  }
+
+  transition({Es_F0, E0_F, E1_Es}, PrbShrData, S_F0) {} {
+    ph_sendProbeResponseHit;
+    pp_popProbeQueue;
+  }
+
+  transition({Es_F1, E1_F, E0_Es}, PrbShrData, S_F1) {} {
+    ph_sendProbeResponseHit;
+    pp_popProbeQueue;
+  }
+
+  transition(Es_F, PrbShrData, S_F) {} {
+    ph_sendProbeResponseHit;
+    pp_popProbeQueue;
+  }
+
+  transition({S_F0, S_F1, S_F, Si_F0, Si_F1}, PrbShrData) {} {
+    ph_sendProbeResponseHit;
+    pp_popProbeQueue;
+  }
+
+  transition(S_M0, PrbInvData, I_M0) {} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pim_sendProbeResponseInvMs;
+    ib_invBothClusters;
+    ii_invIcache;
+    i2_invL2;
+    a0_allocateL1D;
+    a2_allocateL2;
+    pp_popProbeQueue;
+  }
+
+  transition(O_M0, PrbInvData, I_M0) {L2DataArrayRead} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pdm_sendProbeResponseDataMs;
+    ib_invBothClusters;
+    ii_invIcache;
+    i2_invL2;
+    a0_allocateL1D;
+    a2_allocateL2;
+    pp_popProbeQueue;
+  }
+
+  transition({S_M0, O_M0}, {PrbInv}, I_M0) {} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pim_sendProbeResponseInvMs;
+    ib_invBothClusters;
+    ii_invIcache;
+    i2_invL2;
+    a0_allocateL1D;
+    a2_allocateL2;
+    pp_popProbeQueue;
+  }
+
+  transition(S_M1, PrbInvData, I_M1) {} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pim_sendProbeResponseInvMs;
+    ib_invBothClusters;
+    ii_invIcache;
+    i2_invL2;
+    a1_allocateL1D;
+    a2_allocateL2;
+    pp_popProbeQueue;
+  }
+
+  transition(O_M1, PrbInvData, I_M1) {} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pdm_sendProbeResponseDataMs;
+    ib_invBothClusters;
+    ii_invIcache;
+    i2_invL2;
+    a1_allocateL1D;
+    a2_allocateL2;
+    pp_popProbeQueue;
+  }
+
+  transition({S_M1, O_M1}, {PrbInv}, I_M1) {} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pim_sendProbeResponseInvMs;
+    ib_invBothClusters;
+    ii_invIcache;
+    i2_invL2;
+    a1_allocateL1D;
+    a2_allocateL2;
+    pp_popProbeQueue;
+  }
+
+  transition({S0, S0_C}, {PrbInvData, PrbInv}) {} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;
+    ii_invIcache;
+    i2_invL2;
+    ai_allocateL1I;
+    a2_allocateL2;
+    pp_popProbeQueue;
+  }
+
+  transition({S1, S1_C}, {PrbInvData, PrbInv}) {}  {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;
+    ii_invIcache;
+    i2_invL2;
+    ai_allocateL1I;
+    a2_allocateL2;
+    pp_popProbeQueue;
+  }
+
+  transition({S_M0, S_M1}, PrbShrData) {} {
+    ph_sendProbeResponseHit;
+    pp_popProbeQueue;
+  }
+
+  transition({O_M0, O_M1}, PrbShrData) {L2DataArrayRead} {
+    pd_sendProbeResponseData;
+    pp_popProbeQueue;
+  }
+
+  transition({S0, S1, S0_C, S1_C}, PrbShrData) {} {
+    pb_sendProbeResponseBackprobe;
+    pp_popProbeQueue;
+  }
+
+  transition({Ms_F0, M0_F, M1_Ms, O_F0}, PrbInvData, IF_E0S) { L2DataArrayRead} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pd_sendProbeResponseData;
+    ib_invBothClusters;
+    i2_invL2;
+    a0_allocateL1D;
+    a2_allocateL2;
+    n_issueRdBlk;
+    pp_popProbeQueue;
+  }
+
+  transition({Ms_F1, M1_F, M0_Ms, O_F1}, PrbInvData, IF_E1S) {L2DataArrayRead} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pd_sendProbeResponseData;
+    ib_invBothClusters;
+    i2_invL2;
+    a1_allocateL1D;
+    a2_allocateL2;
+    n_issueRdBlk;
+    pp_popProbeQueue;
+  }
+
+  transition({Ms_F, O_F}, PrbInvData, IF_ES) {L2DataArrayRead} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pd_sendProbeResponseData;
+    ib_invBothClusters;
+    i2_invL2;
+    a0_allocateL1D;
+    a1_allocateL1D;
+    a2_allocateL2;
+    n_issueRdBlk;
+    pp_popProbeQueue;
+  }
+
+  transition({Ms_F0, M0_F, M1_Ms, O_F0}, PrbInv, IF_E0S) {} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;
+    i2_invL2;
+    a0_allocateL1D;
+    a2_allocateL2;
+    n_issueRdBlk;
+    pp_popProbeQueue;
+  }
+
+  transition({Ms_F1, M1_F, M0_Ms, O_F1}, PrbInv, IF_E1S) {} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;
+    i2_invL2;
+    a1_allocateL1D;
+    a2_allocateL2;
+    n_issueRdBlk;
+    pp_popProbeQueue;
+  }
+
+  transition({Ms_F, O_F}, PrbInv, IF_ES) {} {
+    forward_eviction_to_cpu0;
+    forward_eviction_to_cpu1;
+    pi_sendProbeResponseInv;
+    ib_invBothClusters;
+    i2_invL2;
+    a0_allocateL1D;
+    a1_allocateL1D;
+    a2_allocateL2;
+    n_issueRdBlk;
+    pp_popProbeQueue;
+  }
+
+  transition({Ms_F0, M0_F, M1_Ms}, PrbShrData, O_F0) {L2DataArrayRead} {
+    pd_sendProbeResponseData;
+    pp_popProbeQueue;
+  }
+
+  transition({Ms_F1, M1_F, M0_Ms}, PrbShrData, O_F1) {} {
+  }
+
+  transition({Ms_F}, PrbShrData, O_F) {L2DataArrayRead} {
+    pd_sendProbeResponseData;
+    pp_popProbeQueue;
+  }
+
+  transition({O_F0, O_F1, O_F}, PrbShrData) {L2DataArrayRead} {
+    pd_sendProbeResponseData;
+    pp_popProbeQueue;
+  }
+
+  // END TRANSITIONS
+}
+
+

@@ -88,11 +88,16 @@ decode OPCODE default Unknown::unknown() {
         // Arithmetic instructions all use source registers Ra and Rb,
         // with destination register Rt.
         format IntArithOp {
-            75: mulhw({{ int64_t prod = Ra_sq * Rb_sq; Rt = prod >> 32; }});
-            11: mulhwu({{ uint64_t prod = Ra_uq * Rb_uq; Rt = prod >> 32; }});
-            235: mullw({{ int64_t prod = Ra_sq * Rb_sq; Rt = prod; }});
-            747: mullwo({{ int64_t src1 = Ra_sq; int64_t src2 = Rb; int64_t prod = src1 * src2; Rt = prod; }},
-                        true);
+            75: mulhw({{ int64_t prod = Ra_sd * Rb_sd; Rt = prod >> 32; }});
+            11: mulhwu({{ uint64_t prod = Ra_ud * Rb_ud; Rt = prod >> 32; }});
+            235: mullw({{ int64_t prod = Ra_sd * Rb_sd; Rt = prod; }});
+            747: mullwo({{
+                int64_t src1 = Ra_sd;
+                int64_t src2 = Rb;
+                int64_t prod = src1 * src2;
+                Rt = prod;
+            }},
+            true);
 
             491: divw({{
                 int32_t src1 = Ra_sw;
@@ -158,8 +163,8 @@ decode OPCODE default Unknown::unknown() {
             508: cmpb({{
                 uint32_t val = 0;
                 for (int n = 0; n < 32; n += 8) {
-                    if(bits(Rs, n, n+7) == bits(Rb, n, n+7)) {
-                        val = insertBits(val, n, n+7, 0xff);
+                    if(bits(Rs, n+7, n) == bits(Rb, n+7, n)) {
+                        val = insertBits(val, n+7, n, 0xff);
                     }
                 }
                 Ra = val;
@@ -381,12 +386,12 @@ decode OPCODE default Unknown::unknown() {
 
         // Conditionally branch relative to PC based on CR and CTR.
         format BranchPCRelCondCtr {
-            0: bc({{ NPC = (uint32_t)(PC + disp); }});
+            0: bc({{ NIA = (uint32_t)(CIA + disp); }});
         }
 
         // Conditionally branch to fixed address based on CR and CTR.
         format BranchNonPCRelCondCtr {
-            1: bca({{ NPC = targetAddr; }});
+            1: bca({{ NIA = targetAddr; }});
         }
     }
 
@@ -394,12 +399,12 @@ decode OPCODE default Unknown::unknown() {
 
         // Unconditionally branch relative to PC.
         format BranchPCRel {
-            0: b({{ NPC = (uint32_t)(PC + disp); }});
+            0: b({{ NIA = (uint32_t)(CIA + disp); }});
         }
 
         // Unconditionally branch to fixed address.
         format BranchNonPCRel {
-            1: ba({{ NPC = targetAddr; }});
+            1: ba({{ NIA = targetAddr; }});
         }
     }
 
@@ -407,12 +412,12 @@ decode OPCODE default Unknown::unknown() {
 
         // Conditionally branch to address in LR based on CR and CTR.
         format BranchLrCondCtr {
-           16: bclr({{ NPC = LR & 0xfffffffc; }});
+           16: bclr({{ NIA = LR & 0xfffffffc; }});
         }
 
         // Conditionally branch to address in CTR based on CR.
         format BranchCtrCond {
-           528: bcctr({{ NPC = CTR & 0xfffffffc; }});
+           528: bcctr({{ NIA = CTR & 0xfffffffc; }});
         }
 
         // Condition register manipulation instructions.
@@ -512,7 +517,7 @@ decode OPCODE default Unknown::unknown() {
         55: stfdu({{ Mem_df = Fs; }});
     }
 
-    17: IntOp::sc({{ xc->syscall(R0); }},
+    17: IntOp::sc({{ xc->syscall(R0, &fault); }},
                   [ IsSyscall, IsNonSpeculative, IsSerializeAfter ]);
 
     format FloatArithOp {
@@ -559,29 +564,29 @@ decode OPCODE default Unknown::unknown() {
             format FloatRCCheckOp {
                 72: fmr({{ Ft = Fb; }});
                 264: fabs({{
-                    Ft_uq = Fb_uq;
-                    Ft_uq = insertBits(Ft_uq, 63, 0); }});
+                    Ft_ud = Fb_ud;
+                    Ft_ud = insertBits(Ft_ud, 63, 0); }});
                 136: fnabs({{
-                    Ft_uq = Fb_uq;
-                    Ft_uq = insertBits(Ft_uq, 63, 1); }});
+                    Ft_ud = Fb_ud;
+                    Ft_ud = insertBits(Ft_ud, 63, 1); }});
                 40: fneg({{ Ft = -Fb; }});
                 8: fcpsgn({{
-                    Ft_uq = Fb_uq;
-                    Ft_uq = insertBits(Ft_uq, 63, Fa_uq<63:63>);
+                    Ft_ud = Fb_ud;
+                    Ft_ud = insertBits(Ft_ud, 63, Fa_ud<63:63>);
                 }});
-                583: mffs({{ Ft_uq = FPSCR; }});
+                583: mffs({{ Ft_ud = FPSCR; }});
                 134: mtfsfi({{
                     FPSCR = insertCRField(FPSCR, BF + (8 * (1 - W_FIELD)),
                                           U_FIELD);
                 }});
                 711: mtfsf({{
-                    if (L_FIELD == 1) { FPSCR = Fb_uq; }
+                    if (L_FIELD == 1) { FPSCR = Fb_ud; }
                     else {
                         for (int i = 0; i < 8; ++i) {
                             if (bits(FLM, i) == 1) {
                                 int k = 4 * (i + (8 * (1 - W_FIELD)));
-                                FPSCR = insertBits(FPSCR, k, k + 3,
-                                                   bits(Fb_uq, k, k + 3));
+                                FPSCR = insertBits(FPSCR, k + 3, k,
+                                                   bits(Fb_ud, k + 3, k));
                             }
                         }
                     }

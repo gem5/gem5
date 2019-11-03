@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2014-2017 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,7 +30,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Brad Beckmann, Sooraj Puthoor
+ * Authors: Anthony Gutierrez,
+ *          Brad Beckmann,
+ *          Sooraj Puthoor
  */
 
 #include "gpu-compute/fetch_unit.hh"
@@ -114,18 +116,28 @@ void
 FetchUnit::initiateFetch(Wavefront *wavefront)
 {
     // calculate the virtual address to fetch from the SQC
-    Addr vaddr = wavefront->pc() + wavefront->instructionBuffer.size();
-    vaddr = wavefront->base_ptr +  vaddr * sizeof(GPUStaticInst*);
+    Addr vaddr = wavefront->pc();
+
+    /**
+     * the instruction buffer holds one instruction per entry, regardless
+     * of the underlying instruction's size. the PC, however, addresses
+     * instrutions on a 32b granularity so we must account for that here.
+    */
+    for (int i = 0; i < wavefront->instructionBuffer.size(); ++i) {
+        vaddr +=
+            wavefront->instructionBuffer.at(i)->staticInstruction()->instSize();
+    }
+    vaddr = wavefront->basePtr +  vaddr;
 
     DPRINTF(GPUTLB, "CU%d: WF[%d][%d]: Initiating fetch translation: %#x\n",
             computeUnit->cu_id, wavefront->simdId, wavefront->wfSlotId, vaddr);
 
     // Since this is an instruction prefetch, if you're split then just finish
     // out the current line.
-    unsigned block_size = RubySystem::getBlockSizeBytes();
+    int block_size = computeUnit->cacheLineSize();
     // check for split accesses
     Addr split_addr = roundDown(vaddr + block_size - 1, block_size);
-    unsigned size = block_size;
+    int size = block_size;
 
     if (split_addr > vaddr) {
         // misaligned access, just grab the rest of the line
@@ -133,8 +145,9 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
     }
 
     // set up virtual request
-    Request *req = new Request(0, vaddr, size, Request::INST_FETCH,
-                               computeUnit->masterId(), 0, 0, 0);
+    RequestPtr req = std::make_shared<Request>(
+        0, vaddr, size, Request::INST_FETCH,
+        computeUnit->masterId(), 0, 0, nullptr);
 
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
     // This fetchBlock is kind of faux right now - because the translations so
@@ -267,6 +280,18 @@ FetchUnit::processFetchReturn(PacketPtr pkt)
             GPUStaticInst *inst_ptr = decoder.decode(inst_index_ptr[i]);
 
             assert(inst_ptr);
+
+            if (inst_ptr->instSize() == 8) {
+                /**
+                 * this instruction occupies 2 consecutive
+                 * entries in the instruction array, the
+                 * second of which contains a nullptr. so if
+                 * this inst is 8 bytes we advance two entries
+                 * instead of 1
+                 */
+                ++i;
+            }
+
             DPRINTF(GPUFetch, "CU%d: WF[%d][%d]: added %s\n",
                     computeUnit->cu_id, wavefront->simdId,
                     wavefront->wfSlotId, inst_ptr->disassemble());
@@ -282,7 +307,6 @@ FetchUnit::processFetchReturn(PacketPtr pkt)
     wavefront->pendingFetch = false;
 
     delete pkt->senderState;
-    delete pkt->req;
     delete pkt;
 }
 

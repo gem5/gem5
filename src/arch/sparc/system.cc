@@ -29,6 +29,7 @@
  */
 
 #include "arch/sparc/system.hh"
+
 #include "arch/vtophys.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
@@ -38,6 +39,19 @@
 #include "sim/byteswap.hh"
 
 using namespace BigEndianGuest;
+
+namespace
+{
+
+ObjectFile *
+loadFirmwareImage(const std::string &fname, const std::string &name)
+{
+    ObjectFile *obj = createObjectFile(fname, true);
+    fatal_if(!obj, "Could not load %s %s.", name, fname);
+    return obj;
+}
+
+} // anonymous namespace
 
 SparcSystem::SparcSystem(Params *p)
     : System(p), sysTick(0)
@@ -49,40 +63,15 @@ SparcSystem::SparcSystem(Params *p)
     hypervisorDescSymtab = new SymbolTable;
     partitionDescSymtab = new SymbolTable;
 
-    /**
-     * Load the boot code, and hypervisor into memory.
-     */
-    // Read the reset binary
-    reset = createObjectFile(params()->reset_bin, true);
-    if (reset == NULL)
-        fatal("Could not load reset binary %s", params()->reset_bin);
-
-    // Read the openboot binary
-    openboot = createObjectFile(params()->openboot_bin, true);
-    if (openboot == NULL)
-        fatal("Could not load openboot bianry %s", params()->openboot_bin);
-
-    // Read the hypervisor binary
-    hypervisor = createObjectFile(params()->hypervisor_bin, true);
-    if (hypervisor == NULL)
-        fatal("Could not load hypervisor binary %s", params()->hypervisor_bin);
-
-    // Read the nvram image
-    nvram = createObjectFile(params()->nvram_bin, true);
-    if (nvram == NULL)
-        fatal("Could not load nvram image %s", params()->nvram_bin);
-
-    // Read the hypervisor description image
-    hypervisor_desc = createObjectFile(params()->hypervisor_desc_bin, true);
-    if (hypervisor_desc == NULL)
-        fatal("Could not load hypervisor description image %s",
-                params()->hypervisor_desc_bin);
-
-    // Read the partition description image
-    partition_desc = createObjectFile(params()->partition_desc_bin, true);
-    if (partition_desc == NULL)
-        fatal("Could not load partition description image %s",
-                params()->partition_desc_bin);
+    reset = loadFirmwareImage(params()->reset_bin, "reset binary");
+    openboot = loadFirmwareImage(params()->openboot_bin, "openboot binary");
+    hypervisor = loadFirmwareImage(
+            params()->hypervisor_bin, "hypervisor binary");
+    nvram = loadFirmwareImage(params()->nvram_bin, "nvram image");
+    hypervisor_desc = loadFirmwareImage(
+            params()->hypervisor_desc_bin, "hypervisor description image");
+    partition_desc = loadFirmwareImage(
+            params()->partition_desc_bin, "partition description image");
 
     // load symbols
     if (!reset->loadGlobalSymbols(resetSymtab))
@@ -129,35 +118,44 @@ SparcSystem::SparcSystem(Params *p)
 
 }
 
+namespace
+{
+
+void
+writeFirmwareImage(ObjectFile *obj, Addr addr, const PortProxy &proxy)
+{
+    MemoryImage image = obj->buildImage();
+
+    // If the entry point isn't somewhere in the image, we assume we need to
+    // move where it's loaded so that it is.
+    if (addr < image.minAddr() || addr >= image.maxAddr()) {
+        // Move the image by the difference between the expected entry address,
+        // and the entry point in the object file.
+        image.offset(addr - obj->entryPoint());
+    }
+
+    image.write(proxy);
+}
+
+} // anonymous namespace
+
 void
 SparcSystem::initState()
 {
     // Call the initialisation of the super class
     System::initState();
 
-    // Load reset binary into memory
-    reset->setTextBase(params()->reset_addr);
-    reset->loadSections(physProxy);
-    // Load the openboot binary
-    openboot->setTextBase(params()->openboot_addr);
-    openboot->loadSections(physProxy);
-    // Load the hypervisor binary
-    hypervisor->setTextBase(params()->hypervisor_addr);
-    hypervisor->loadSections(physProxy);
-    // Load the nvram image
-    nvram->setTextBase(params()->nvram_addr);
-    nvram->loadSections(physProxy);
-    // Load the hypervisor description image
-    hypervisor_desc->setTextBase(params()->hypervisor_desc_addr);
-    hypervisor_desc->loadSections(physProxy);
-    // Load the partition description image
-    partition_desc->setTextBase(params()->partition_desc_addr);
-    partition_desc->loadSections(physProxy);
-
+    writeFirmwareImage(reset, params()->reset_addr, physProxy);
+    writeFirmwareImage(openboot, params()->openboot_addr, physProxy);
+    writeFirmwareImage(hypervisor, params()->hypervisor_addr, physProxy);
+    writeFirmwareImage(nvram, params()->nvram_addr, physProxy);
+    writeFirmwareImage(
+            hypervisor_desc, params()->hypervisor_desc_addr, physProxy);
+    writeFirmwareImage(
+            partition_desc, params()->partition_desc_addr, physProxy);
 
     // @todo any fixup code over writing data in binaries on setting break
     // events on functions should happen here.
-
 }
 
 SparcSystem::~SparcSystem()

@@ -51,7 +51,7 @@ using namespace ArmISA;
 Stage2MMU::Stage2MMU(const Params *p)
     : SimObject(p), _stage1Tlb(p->tlb), _stage2Tlb(p->stage2_tlb),
       port(_stage1Tlb->getTableWalker(), p->sys),
-      masterId(p->sys->getMasterId(_stage1Tlb->getTableWalker()->name()))
+      masterId(p->sys->getMasterId(_stage1Tlb->getTableWalker()))
 {
     // we use the stage-one table walker as the parent of the port,
     // and to get our master id, this is done to keep things
@@ -67,17 +67,17 @@ Stage2MMU::readDataUntimed(ThreadContext *tc, Addr oVAddr, Addr descAddr,
     Fault fault;
 
     // translate to physical address using the second stage MMU
-    Request req = Request();
-    req.setVirt(0, descAddr, numBytes, flags | Request::PT_WALK, masterId, 0);
+    auto req = std::make_shared<Request>();
+    req->setVirt(0, descAddr, numBytes, flags | Request::PT_WALK, masterId, 0);
     if (isFunctional) {
-        fault = stage2Tlb()->translateFunctional(&req, tc, BaseTLB::Read);
+        fault = stage2Tlb()->translateFunctional(req, tc, BaseTLB::Read);
     } else {
-        fault = stage2Tlb()->translateAtomic(&req, tc, BaseTLB::Read);
+        fault = stage2Tlb()->translateAtomic(req, tc, BaseTLB::Read);
     }
 
     // Now do the access.
-    if (fault == NoFault && !req.getFlags().isSet(Request::NO_ACCESS)) {
-        Packet pkt = Packet(&req, MemCmd::ReadReq);
+    if (fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
+        Packet pkt = Packet(req, MemCmd::ReadReq);
         pkt.dataStatic(data);
         if (isFunctional) {
             port.sendFunctional(&pkt);
@@ -97,16 +97,15 @@ Stage2MMU::readDataUntimed(ThreadContext *tc, Addr oVAddr, Addr descAddr,
     return fault;
 }
 
-Fault
+void
 Stage2MMU::readDataTimed(ThreadContext *tc, Addr descAddr,
                          Stage2Translation *translation, int numBytes,
                          Request::Flags flags)
 {
-    Fault fault;
     // translate to physical address using the second stage MMU
-    translation->setVirt(descAddr, numBytes, flags | Request::PT_WALK, masterId);
-    fault = translation->translateTiming(tc);
-    return fault;
+    translation->setVirt(
+            descAddr, numBytes, flags | Request::PT_WALK, masterId);
+    translation->translateTiming(tc);
 }
 
 Stage2MMU::Stage2Translation::Stage2Translation(Stage2MMU &_parent,
@@ -114,10 +113,12 @@ Stage2MMU::Stage2Translation::Stage2Translation(Stage2MMU &_parent,
     : data(_data), numBytes(0), event(_event), parent(_parent), oVAddr(_oVAddr),
     fault(NoFault)
 {
+    req = std::make_shared<Request>();
 }
 
 void
-Stage2MMU::Stage2Translation::finish(const Fault &_fault, RequestPtr req,
+Stage2MMU::Stage2Translation::finish(const Fault &_fault,
+                                     const RequestPtr &req,
                                      ThreadContext *tc, BaseTLB::Mode mode)
 {
     fault = _fault;
@@ -131,9 +132,9 @@ Stage2MMU::Stage2Translation::finish(const Fault &_fault, RequestPtr req,
     }
 
     if (_fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
-        parent.getPort().dmaAction(MemCmd::ReadReq, req->getPaddr(), numBytes,
-                                   event, data, tc->getCpuPtr()->clockPeriod(),
-                                   req->getFlags());
+        parent.getDMAPort().dmaAction(
+            MemCmd::ReadReq, req->getPaddr(), numBytes, event, data,
+            tc->getCpuPtr()->clockPeriod(), req->getFlags());
     } else {
         // We can't do the DMA access as there's been a problem, so tell the
         // event we're done

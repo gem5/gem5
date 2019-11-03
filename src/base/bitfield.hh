@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2017, 2019 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -27,12 +39,19 @@
  *
  * Authors: Steve Reinhardt
  *          Nathan Binkert
+ *          Giacomo Travaglini
  */
 
 #ifndef __BASE_BITFIELD_HH__
 #define __BASE_BITFIELD_HH__
 
-#include "base/types.hh"
+#include <inttypes.h>
+#include <cassert>
+#include <cstddef>
+#include <type_traits>
+
+/** Lookup table used for High Speed bit reversing */
+extern const uint8_t reverseLookUpTable[];
 
 /**
  * Generate a 64-bit mask of 'nbits' 1s, right justified.
@@ -42,8 +61,6 @@ mask(int nbits)
 {
     return (nbits == 64) ? (uint64_t)-1LL : (1ULL << nbits) - 1;
 }
-
-
 
 /**
  * Extract the bitfield from position 'first' to 'last' (inclusive)
@@ -100,7 +117,14 @@ sext(uint64_t val)
 }
 
 /**
- * Return val with bits first to last set to bit_val
+ * Returns val with bits first to last set to the LSBs of bit_val
+ *
+ * E.g.:
+ * first: 7
+ * last:  4
+ * val:      0xFFFF
+ * bit_val:  0x0000
+ * returned: 0xFF0F
  */
 template <class T, class B>
 inline
@@ -143,6 +167,35 @@ replaceBits(T& val, int bit, B bit_val)
 {
     val = insertBits(val, bit, bit, bit_val);
 }
+
+/**
+ * Takes a variable lenght word and returns the mirrored version
+ * (Bit by bit, LSB=>MSB).
+ *
+ * algorithm from
+ * http://graphics.stanford.edu/~seander/bithacks.html
+ * #ReverseBitsByLookupTable
+ *
+ * @param val: variable lenght word
+ * @param size: number of bytes to mirror
+ * @return mirrored word
+ */
+template <class T>
+T
+reverseBits(T val, std::size_t size = sizeof(T))
+{
+    static_assert(std::is_integral<T>::value, "Expecting an integer type");
+
+    assert(size <= sizeof(T));
+
+    T output = 0;
+    for (auto byte = 0; byte < size; byte++, val = static_cast<T>(val >> 8)) {
+        output = (output << 8) | reverseLookUpTable[val & 0xFF];
+    }
+
+    return output;
+}
+
 /**
  * Returns the bit position of the MSB that is set in the input
  */
@@ -211,4 +264,51 @@ popCount(uint64_t val) {
     return (val * sum) >> 56;             // horizontal sum
 #endif // defined(__GNUC__) || (defined(__clang__) && __has_builtin(__builtin_popcountl))
 }
+
+/**
+ * Align to the next highest power of two.
+ *
+ * The number passed in is aligned to the next highest power of two,
+ * if it is not already a power of two. Please note that if 0 is
+ * passed in, 0 is returned.
+ *
+ * This code has been modified from the following:
+ * http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+ */
+inline uint64_t alignToPowerOfTwo(uint64_t val)
+{
+    val--;
+    val |= val >> 1;
+    val |= val >> 2;
+    val |= val >> 4;
+    val |= val >> 8;
+    val |= val >> 16;
+    val |= val >> 32;
+    val++;
+
+    return val;
+};
+
+/**
+ * Count trailing zeros in a 32-bit value.
+ *
+ * @param An input value
+ * @return The number of trailing zeros or 32 if the value is zero.
+ */
+inline int ctz32(uint32_t value)
+{
+    return value ? __builtin_ctzl(value) : 32;
+}
+
+/**
+ * Count trailing zeros in a 64-bit value.
+ *
+ * @param An input value
+ * @return The number of trailing zeros or 64 if the value is zero.
+ */
+inline int ctz64(uint64_t value)
+{
+    return value ? __builtin_ctzll(value) : 64;
+}
+
 #endif // __BASE_BITFIELD_HH__

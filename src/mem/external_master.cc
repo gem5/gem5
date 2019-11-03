@@ -36,28 +36,32 @@
  *
  * Authors: Andrew Bardsley
  *          Curtis Dunham
+ *          Christian Menard
  */
+
+#include "mem/external_master.hh"
 
 #include <cctype>
 #include <iomanip>
 
+#include "base/trace.hh"
 #include "debug/ExternalPort.hh"
-#include "mem/external_master.hh"
+#include "sim/system.hh"
 
 std::map<std::string, ExternalMaster::Handler *>
     ExternalMaster::portHandlers;
 
 ExternalMaster::ExternalMaster(ExternalMasterParams *params) :
-    MemObject(params),
+    SimObject(params),
     externalPort(NULL),
     portName(params->name + ".port"),
     portType(params->port_type),
-    portData(params->port_data)
+    portData(params->port_data),
+    masterId(params->system->getMasterId(this))
 {}
 
-BaseMasterPort &
-ExternalMaster::getMasterPort(const std::string &if_name,
-    PortID idx)
+Port &
+ExternalMaster::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "port") {
         DPRINTF(ExternalPort, "Trying to bind external port: %s %s\n",
@@ -79,7 +83,7 @@ ExternalMaster::getMasterPort(const std::string &if_name,
         }
         return *externalPort;
     } else {
-        return MemObject::getMasterPort(if_name, idx);
+        return SimObject::getPort(if_name, idx);
     }
 }
 

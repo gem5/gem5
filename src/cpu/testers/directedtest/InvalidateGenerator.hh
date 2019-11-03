@@ -37,7 +37,7 @@
 
 #include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
-#include "mem/protocol/InvalidateGeneratorStatus.hh"
+#include "mem/ruby/protocol/InvalidateGeneratorStatus.hh"
 #include "params/InvalidateGenerator.hh"
 
 class InvalidateGenerator : public DirectedGenerator

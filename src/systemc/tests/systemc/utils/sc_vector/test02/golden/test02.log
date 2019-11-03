@@ -1,0 +1,18 @@
+SystemC Simulation
+dut.array - sc_vector
+dut.inps - sc_vector
+dut.inps_0 - sc_in
+dut.inps_1 - sc_in
+dut.inps_2 - sc_in
+dut.inps_3 - sc_in
+dut.inps_4 - sc_in
+dut.sigs - sc_vector
+dut.array_0 - derived_0
+dut.array_1 - derived_1
+dut.array_2 - derived_0
+dut.sigs_0 - sc_signal
+dut.sigs_1 - sc_signal
+dut.sigs_2 - sc_signal
+dut.sigs_3 - sc_signal
+dut.sigs_4 - sc_signal
+Program completed

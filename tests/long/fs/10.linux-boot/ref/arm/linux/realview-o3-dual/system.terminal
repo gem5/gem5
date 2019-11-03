@@ -158,10 +158,10 @@ ata1.00: 1048320 sectors, multi 0: LBA
 ata1.00: configured for UDMA/33
 scsi 0:0:0:0: Direct-Access     ATA      M5 IDE Disk      n/a  PQ: 0 ANSI: 5
 sd 0:0:0:0: [sda] 1048320 512-byte logical blocks: (536 MB/511 MiB)
+sd 0:0:0:0: Attached scsi generic sg0 type 0
 sd 0:0:0:0: [sda] Write Protect is off
 sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
 sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-sd 0:0:0:0: Attached scsi generic sg0 type 0
  sda: sda1
 sd 0:0:0:0: [sda] Attached SCSI disk
 e1000 0000:00:00.0 eth0: (PCI:33MHz:32-bit) 00:90:00:00:00:01

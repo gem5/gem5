@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2016 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -124,7 +124,7 @@ Checker<Impl>::handlePendingInt()
 
 template <class Impl>
 void
-Checker<Impl>::verify(DynInstPtr &completed_inst)
+Checker<Impl>::verify(const DynInstPtr &completed_inst)
 {
     DynInstPtr inst;
 
@@ -208,7 +208,7 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
         // maintain $r0 semantics
         thread->setIntReg(ZeroReg, 0);
 #if THE_ISA == ALPHA_ISA
-        thread->setFloatReg(ZeroReg, 0.0);
+        thread->setFloatReg(ZeroReg, 0);
 #endif
 
         // Check if any recent PC changes match up with anything we
@@ -244,16 +244,17 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
             // If not in the middle of a macro instruction
             if (!curMacroStaticInst) {
                 // set up memory request for instruction fetch
-                memReq = new Request(unverifiedInst->threadNumber, fetch_PC,
-                                     sizeof(MachInst),
-                                     0,
-                                     masterId,
-                                     fetch_PC, thread->contextId());
-                memReq->setVirt(0, fetch_PC, sizeof(MachInst),
-                                Request::INST_FETCH, masterId, thread->instAddr());
+                auto mem_req = std::make_shared<Request>(
+                    unverifiedInst->threadNumber, fetch_PC,
+                    sizeof(MachInst), 0, masterId, fetch_PC,
+                    thread->contextId());
 
+                mem_req->setVirt(0, fetch_PC, sizeof(MachInst),
+                                 Request::INST_FETCH, masterId,
+                                 thread->instAddr());
 
-                fault = itb->translateFunctional(memReq, tc, BaseTLB::Execute);
+                fault = itb->translateFunctional(
+                    mem_req, tc, BaseTLB::Execute);
 
                 if (fault != NoFault) {
                     if (unverifiedInst->getFault() == NoFault) {
@@ -270,7 +271,6 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
                         advancePC(NoFault);
 
                         // Give up on an ITB fault..
-                        delete memReq;
                         unverifiedInst = NULL;
                         return;
                     } else {
@@ -278,17 +278,14 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
                         // the fault and see if our results match the CPU on
                         // the next tick().
                         fault = unverifiedInst->getFault();
-                        delete memReq;
                         break;
                     }
                 } else {
-                    PacketPtr pkt = new Packet(memReq, MemCmd::ReadReq);
+                    PacketPtr pkt = new Packet(mem_req, MemCmd::ReadReq);
 
                     pkt->dataStatic(&machInst);
                     icachePort->sendFunctional(pkt);
-                    machInst = gtoh(machInst);
 
-                    delete memReq;
                     delete pkt;
                 }
             }
@@ -414,7 +411,7 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
             int count = 0;
             do {
                 oldpc = thread->instAddr();
-                system->pcEventQueue.service(tc);
+                thread->pcEventQueue.service(oldpc, tc);
                 count++;
             } while (oldpc != thread->instAddr());
             if (count > 1) {
@@ -458,7 +455,7 @@ Checker<Impl>::takeOverFrom(BaseCPU *oldCPU)
 
 template <class Impl>
 void
-Checker<Impl>::validateInst(DynInstPtr &inst)
+Checker<Impl>::validateInst(const DynInstPtr &inst)
 {
     if (inst->instAddr() != thread->instAddr()) {
         warn("%lli: PCs do not match! Inst: %s, checker: %s",
@@ -479,30 +476,35 @@ Checker<Impl>::validateInst(DynInstPtr &inst)
 
 template <class Impl>
 void
-Checker<Impl>::validateExecution(DynInstPtr &inst)
+Checker<Impl>::validateExecution(const DynInstPtr &inst)
 {
-    uint64_t checker_val;
-    uint64_t inst_val;
+    InstResult checker_val;
+    InstResult inst_val;
     int idx = -1;
     bool result_mismatch = false;
+    bool scalar_mismatch = false;
+    bool vector_mismatch = false;
 
     if (inst->isUnverifiable()) {
         // Unverifiable instructions assume they were executed
         // properly by the CPU. Grab the result from the
         // instruction and write it to the register.
-        copyResult(inst, 0, idx);
+        copyResult(inst, InstResult(0ul, InstResult::ResultType::Scalar), idx);
     } else if (inst->numDestRegs() > 0 && !result.empty()) {
         DPRINTF(Checker, "Dest regs %d, number of checker dest regs %d\n",
                          inst->numDestRegs(), result.size());
         for (int i = 0; i < inst->numDestRegs() && !result.empty(); i++) {
-            result.front().get(checker_val);
+            checker_val = result.front();
             result.pop();
-            inst_val = 0;
-            inst->template popResult<uint64_t>(inst_val);
+            inst_val = inst->popResult(
+                    InstResult(0ul, InstResult::ResultType::Scalar));
             if (checker_val != inst_val) {
                 result_mismatch = true;
                 idx = i;
-                break;
+                scalar_mismatch = checker_val.isScalar();
+                vector_mismatch = checker_val.isVector();
+                panic_if(!(scalar_mismatch || vector_mismatch),
+                        "Unknown type of result\n");
             }
         }
     } // Checker CPU checks all the saved results in the dyninst passed by
@@ -512,9 +514,12 @@ Checker<Impl>::validateExecution(DynInstPtr &inst)
       // this is ok and not a bug.  May be worthwhile to try and correct this.
 
     if (result_mismatch) {
-        warn("%lli: Instruction results do not match! (Values may not "
-             "actually be integers) Inst: %#x, checker: %#x",
-             curTick(), inst_val, checker_val);
+        if (scalar_mismatch) {
+            warn("%lli: Instruction results (%i) do not match! (Values may"
+                 " not actually be integers) Inst: %#x, checker: %#x",
+                 curTick(), idx, inst_val.asIntegerNoAssert(),
+                 checker_val.asInteger());
+        }
 
         // It's useful to verify load values from memory, but in MP
         // systems the value obtained at execute may be different than
@@ -589,56 +594,84 @@ Checker<Impl>::validateState()
 
 template <class Impl>
 void
-Checker<Impl>::copyResult(DynInstPtr &inst, uint64_t mismatch_val,
-                          int start_idx)
+Checker<Impl>::copyResult(const DynInstPtr &inst,
+                          const InstResult& mismatch_val, int start_idx)
 {
     // We've already popped one dest off the queue,
     // so do the fix-up then start with the next dest reg;
     if (start_idx >= 0) {
-        RegIndex idx = inst->destRegIdx(start_idx);
-        switch (regIdxToClass(idx)) {
+        const RegId& idx = inst->destRegIdx(start_idx);
+        switch (idx.classValue()) {
           case IntRegClass:
-            thread->setIntReg(idx, mismatch_val);
+            panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
+            thread->setIntReg(idx.index(), mismatch_val.asInteger());
             break;
           case FloatRegClass:
-            thread->setFloatRegBits(idx - TheISA::FP_Reg_Base, mismatch_val);
+            panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
+            thread->setFloatReg(idx.index(), mismatch_val.asInteger());
+            break;
+          case VecRegClass:
+            panic_if(!mismatch_val.isVector(), "Unexpected type of result");
+            thread->setVecReg(idx, mismatch_val.asVector());
+            break;
+          case VecElemClass:
+            panic_if(!mismatch_val.isVecElem(),
+                     "Unexpected type of result");
+            thread->setVecElem(idx, mismatch_val.asVectorElem());
             break;
           case CCRegClass:
-            thread->setCCReg(idx - TheISA::CC_Reg_Base, mismatch_val);
+            panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
+            thread->setCCReg(idx.index(), mismatch_val.asInteger());
             break;
           case MiscRegClass:
-            thread->setMiscReg(idx - TheISA::Misc_Reg_Base,
-                               mismatch_val);
+            panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
+            thread->setMiscReg(idx.index(), mismatch_val.asInteger());
             break;
+          default:
+            panic("Unknown register class: %d", (int)idx.classValue());
         }
     }
     start_idx++;
-    uint64_t res = 0;
+    InstResult res;
     for (int i = start_idx; i < inst->numDestRegs(); i++) {
-        RegIndex idx = inst->destRegIdx(i);
-        inst->template popResult<uint64_t>(res);
-        switch (regIdxToClass(idx)) {
+        const RegId& idx = inst->destRegIdx(i);
+        res = inst->popResult();
+        switch (idx.classValue()) {
           case IntRegClass:
-            thread->setIntReg(idx, res);
+            panic_if(!res.isScalar(), "Unexpected type of result");
+            thread->setIntReg(idx.index(), res.asInteger());
             break;
           case FloatRegClass:
-            thread->setFloatRegBits(idx - TheISA::FP_Reg_Base, res);
+            panic_if(!res.isScalar(), "Unexpected type of result");
+            thread->setFloatReg(idx.index(), res.asInteger());
+            break;
+          case VecRegClass:
+            panic_if(!res.isVector(), "Unexpected type of result");
+            thread->setVecReg(idx, res.asVector());
+            break;
+          case VecElemClass:
+            panic_if(!res.isVecElem(), "Unexpected type of result");
+            thread->setVecElem(idx, res.asVectorElem());
             break;
           case CCRegClass:
-            thread->setCCReg(idx - TheISA::CC_Reg_Base, res);
+            panic_if(!res.isScalar(), "Unexpected type of result");
+            thread->setCCReg(idx.index(), res.asInteger());
             break;
           case MiscRegClass:
+            panic_if(res.isValid(), "MiscReg expecting invalid result");
             // Try to get the proper misc register index for ARM here...
-            thread->setMiscReg(idx - TheISA::Misc_Reg_Base, res);
+            thread->setMiscReg(idx.index(), 0);
             break;
             // else Register is out of range...
+          default:
+            panic("Unknown register class: %d", (int)idx.classValue());
         }
     }
 }
 
 template <class Impl>
 void
-Checker<Impl>::dumpAndExit(DynInstPtr &inst)
+Checker<Impl>::dumpAndExit(const DynInstPtr &inst)
 {
     cprintf("Error detected, instruction information:\n");
     cprintf("PC:%s, nextPC:%#x\n[sn:%lli]\n[tid:%i]\n"

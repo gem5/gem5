@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,6 +43,8 @@
 #include "arch/arm/registers.hh"
 #include "base/compiler.hh"
 
+class ThreadContext;
+
 namespace ArmISA
 {
 
@@ -62,6 +64,7 @@ class BaseISADevice
     virtual ~BaseISADevice() {}
 
     virtual void setISA(ISA *isa);
+    virtual void setThreadContext(ThreadContext *tc) {}
 
     /**
      * Write to a system register belonging to this device.
@@ -69,7 +72,7 @@ class BaseISADevice
      * @param misc_reg Register number (see miscregs.hh)
      * @param val Value to store
      */
-    virtual void setMiscReg(int misc_reg, MiscReg val) = 0;
+    virtual void setMiscReg(int misc_reg, RegVal val) = 0;
 
     /**
      * Read a system register belonging to this device.
@@ -77,7 +80,7 @@ class BaseISADevice
      * @param misc_reg Register number (see miscregs.hh)
      * @return Register value.
      */
-    virtual MiscReg readMiscReg(int misc_reg) = 0;
+    virtual RegVal readMiscReg(int misc_reg) = 0;
 
   protected:
     ISA *isa;
@@ -97,8 +100,8 @@ class DummyISADevice : public BaseISADevice
         : BaseISADevice() {}
     ~DummyISADevice() {}
 
-    void setMiscReg(int misc_reg, MiscReg val) override;
-    MiscReg readMiscReg(int misc_reg) override;
+    void setMiscReg(int misc_reg, RegVal val) override;
+    RegVal readMiscReg(int misc_reg) override;
 };
 
 }

@@ -32,12 +32,12 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "mem/protocol/AccessType.hh"
-#include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Histogram.hh"
 #include "mem/ruby/profiler/AccessTraceForAddress.hh"
 #include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/protocol/AccessType.hh"
+#include "mem/ruby/protocol/RubyRequest.hh"
 
 class Set;
 

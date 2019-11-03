@@ -26,9 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <algorithm>
-
 #include "mem/ruby/common/NetDest.hh"
+
+#include <algorithm>
 
 NetDest::NetDest()
 {

@@ -41,20 +41,17 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
-#include <typeinfo>
 
-#define MILLION 1000000
 
 template<typename T>
 T fromString(const std::string& s,
              std::ios_base& (*f)(std::ios_base &) = std::dec)
-throw(std::runtime_error)
 {
   std::istringstream is(s);
   T t;
 
   if (!(is >> f >> t)) {
-    throw std::runtime_error("fromString cannot convert " + s);
+    throw std::runtime_error("Cannot convert string");
   }
 
   return t;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011, 2014 ARM Limited
+ * Copyright (c) 2010-2011, 2014, 2016-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,10 +43,13 @@
 #ifndef __ARCH_ARM_REGISTERS_HH__
 #define __ARCH_ARM_REGISTERS_HH__
 
+#include "arch/arm/ccregs.hh"
 #include "arch/arm/generated/max_inst_regs.hh"
 #include "arch/arm/intregs.hh"
-#include "arch/arm/ccregs.hh"
 #include "arch/arm/miscregs.hh"
+#include "arch/arm/types.hh"
+#include "arch/generic/vec_pred_reg.hh"
+#include "arch/generic/vec_reg.hh"
 
 namespace ArmISA {
 
@@ -58,19 +61,22 @@ const int MaxInstSrcRegs = ArmISAInst::MaxInstDestRegs +
 using ArmISAInst::MaxInstDestRegs;
 using ArmISAInst::MaxMiscDestRegs;
 
-typedef uint16_t  RegIndex;
+// Number of VecElem per Vector Register considering only pre-SVE
+// Advanced SIMD registers.
+constexpr unsigned NumVecElemPerNeonVecReg = 4;
+// Number of VecElem per Vector Register, computed based on the vector length
+constexpr unsigned NumVecElemPerVecReg = MaxSveVecLenInWords;
 
-typedef uint64_t IntReg;
+using VecElem = uint32_t;
+using VecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, false>;
+using ConstVecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, true>;
+using VecRegContainer = VecReg::Container;
 
-// floating point register file entry type
-typedef uint32_t FloatRegBits;
-typedef float FloatReg;
-
-// cop-0/cop-1 system control register
-typedef uint64_t MiscReg;
-
-// condition code register; must be at least 32 bits for FpCondCodes
-typedef uint64_t CCReg;
+using VecPredReg = ::VecPredRegT<VecElem, NumVecElemPerVecReg,
+                                 VecPredRegHasPackedRepr, false>;
+using ConstVecPredReg = ::VecPredRegT<VecElem, NumVecElemPerVecReg,
+                                      VecPredRegHasPackedRepr, true>;
+using VecPredRegContainer = VecPredReg::Container;
 
 // Constants Related to the number of registers
 const int NumIntArchRegs = NUM_ARCH_INTREGS;
@@ -78,15 +84,29 @@ const int NumIntArchRegs = NUM_ARCH_INTREGS;
 const int NumFloatV7ArchRegs  = 64;
 const int NumFloatV8ArchRegs  = 128;
 const int NumFloatSpecialRegs = 32;
+const int NumVecV7ArchRegs  = 64;
+const int NumVecV8ArchRegs  = 32;
+const int NumVecSpecialRegs = 8;
 
+const int NumVecIntrlvRegs = 4;
 const int NumIntRegs = NUM_INTREGS;
 const int NumFloatRegs = NumFloatV8ArchRegs + NumFloatSpecialRegs;
+const int NumVecRegs = NumVecV8ArchRegs + NumVecSpecialRegs + NumVecIntrlvRegs;
+const int VECREG_UREG0 = 32;
+const int NumVecPredRegs = 18;  // P0-P15, FFR, UREG0
+const int PREDREG_FFR = 16;
+const int PREDREG_UREG0 = 17;
 const int NumCCRegs = NUM_CCREGS;
 const int NumMiscRegs = NUM_MISCREGS;
+const int INTRLVREG0 = NumVecV8ArchRegs + NumVecSpecialRegs;
+const int INTRLVREG1 = INTRLVREG0 + 1;
+const int INTRLVREG2 = INTRLVREG0 + 2;
+const int INTRLVREG3 = INTRLVREG0 + 3;
 
 #define ISA_HAS_CC_REGS
 
-const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
+const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumVecRegs +
+    NumVecPredRegs + NumMiscRegs;
 
 // semantically meaningful register indices
 const int ReturnValueReg = 0;
@@ -108,19 +128,6 @@ const int ZeroReg = INTREG_ZERO;
 const int SyscallNumReg = ReturnValueReg;
 const int SyscallPseudoReturnReg = ReturnValueReg;
 const int SyscallSuccessReg = ReturnValueReg;
-
-// These help enumerate all the registers for dependence tracking.
-const int FP_Reg_Base = NumIntRegs * (MODE_MAXMODE + 1);
-const int CC_Reg_Base = FP_Reg_Base + NumFloatRegs;
-const int Misc_Reg_Base = CC_Reg_Base + NumCCRegs;
-const int Max_Reg_Index = Misc_Reg_Base + NumMiscRegs;
-
-typedef union {
-    IntReg   intreg;
-    FloatReg fpreg;
-    CCReg    ccreg;
-    MiscReg  ctrlreg;
-} AnyReg;
 
 } // namespace ArmISA
 

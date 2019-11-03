@@ -1,4 +1,4 @@
-# Copyright (c) 2010 ARM Limited
+# Copyright (c) 2010, 2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -41,7 +41,8 @@
 from m5.SimObject import SimObject
 from m5.defines import buildEnv
 from m5.params import *
-from FuncUnit import *
+
+from m5.objects.FuncUnit import *
 
 class IntALU(FUDesc):
     opList = [ OpDesc(opClass='IntAlu') ]
@@ -68,6 +69,8 @@ class FP_ALU(FUDesc):
 
 class FP_MultDiv(FUDesc):
     opList = [ OpDesc(opClass='FloatMult', opLat=4),
+               OpDesc(opClass='FloatMultAcc', opLat=5),
+               OpDesc(opClass='FloatMisc', opLat=3),
                OpDesc(opClass='FloatDiv', opLat=12, pipelined=False),
                OpDesc(opClass='FloatSqrt', opLat=24, pipelined=False) ]
     count = 2
@@ -83,6 +86,7 @@ class SIMD_Unit(FUDesc):
                OpDesc(opClass='SimdMultAcc'),
                OpDesc(opClass='SimdShift'),
                OpDesc(opClass='SimdShiftAcc'),
+               OpDesc(opClass='SimdDiv'),
                OpDesc(opClass='SimdSqrt'),
                OpDesc(opClass='SimdFloatAdd'),
                OpDesc(opClass='SimdFloatAlu'),
@@ -92,19 +96,31 @@ class SIMD_Unit(FUDesc):
                OpDesc(opClass='SimdFloatMisc'),
                OpDesc(opClass='SimdFloatMult'),
                OpDesc(opClass='SimdFloatMultAcc'),
-               OpDesc(opClass='SimdFloatSqrt') ]
+               OpDesc(opClass='SimdFloatSqrt'),
+               OpDesc(opClass='SimdReduceAdd'),
+               OpDesc(opClass='SimdReduceAlu'),
+               OpDesc(opClass='SimdReduceCmp'),
+               OpDesc(opClass='SimdFloatReduceAdd'),
+               OpDesc(opClass='SimdFloatReduceCmp') ]
     count = 4
 
+class PredALU(FUDesc):
+    opList = [ OpDesc(opClass='SimdPredAlu') ]
+    count = 1
+
 class ReadPort(FUDesc):
-    opList = [ OpDesc(opClass='MemRead') ]
+    opList = [ OpDesc(opClass='MemRead'),
+               OpDesc(opClass='FloatMemRead') ]
     count = 0
 
 class WritePort(FUDesc):
-    opList = [ OpDesc(opClass='MemWrite') ]
+    opList = [ OpDesc(opClass='MemWrite'),
+               OpDesc(opClass='FloatMemWrite') ]
     count = 0
 
 class RdWrPort(FUDesc):
-    opList = [ OpDesc(opClass='MemRead'), OpDesc(opClass='MemWrite') ]
+    opList = [ OpDesc(opClass='MemRead'), OpDesc(opClass='MemWrite'),
+               OpDesc(opClass='FloatMemRead'), OpDesc(opClass='FloatMemWrite')]
     count = 4
 
 class IprPort(FUDesc):

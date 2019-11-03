@@ -26,12 +26,14 @@
 #
 # Authors: Korey Sewell
 
+from __future__ import print_function
+
 m5.util.addToPath('../configs/common')
 from cpu2000 import twolf
 import os
 
 workload = twolf(isa, opsys, 'smred')
-root.system.cpu[0].workload = workload.makeLiveProcess()
+root.system.cpu[0].workload = workload.makeProcess()
 cwd = root.system.cpu[0].workload[0].cwd
 
 #Remove two files who's presence or absence affects execution
@@ -40,8 +42,8 @@ sv2_file = os.path.join(cwd, workload.input_set + '.sv2')
 try:
     os.unlink(sav_file)
 except:
-    print "Couldn't unlink ", sav_file
+    print("Couldn't unlink ", sav_file)
 try:
     os.unlink(sv2_file)
 except:
-    print "Couldn't unlink ", sv2_file
+    print("Couldn't unlink ", sv2_file)

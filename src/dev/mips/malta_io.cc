@@ -34,6 +34,8 @@
  * Malta I/O including PIC, PIT, RTC, DMA
  */
 
+#include "dev/mips/malta_io.hh"
+
 #include <sys/time.h>
 
 #include <deque>
@@ -42,11 +44,9 @@
 
 #include "base/time.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "debug/Malta.hh"
 #include "dev/mips/malta.hh"
 #include "dev/mips/malta_cchip.hh"
-#include "dev/mips/malta_io.hh"
 #include "dev/mips/maltareg.h"
 #include "dev/rtcreg.h"
 #include "mem/packet.hh"
@@ -56,7 +56,6 @@
 #include "sim/system.hh"
 
 using namespace std;
-using namespace TheISA;
 
 MaltaIO::RTC::RTC(const string &name, const MaltaIOParams *p)
     : MC146818(p->malta, name, p->time, p->year_is_bcd, p->frequency),

@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,7 +30,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Steve Reinhardt
+ * Authors: Steve Reinhardt
  */
 
 #include "gpu-compute/shader.hh"
@@ -50,14 +50,17 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "sim/sim_exit.hh"
 
-Shader::Shader(const Params *p) : SimObject(p),
-    clock(p->clk_domain->clockPeriod()), cpuThread(nullptr), gpuTc(nullptr),
-    cpuPointer(p->cpu_pointer), tickEvent(this), timingSim(p->timing),
-    hsail_mode(SIMT), impl_kern_boundary_sync(p->impl_kern_boundary_sync),
-    separate_acquire_release(p->separate_acquire_release), coissue_return(1),
-    trace_vgpr_all(1), n_cu((p->CUs).size()), n_wf(p->n_wf),
-    globalMemSize(p->globalmem), nextSchedCu(0), sa_n(0), tick_cnt(0),
-    box_tick_cnt(0), start_tick_cnt(0)
+Shader::Shader(const Params *p)
+    : ClockedObject(p), clock(p->clk_domain->clockPeriod()),
+      cpuThread(nullptr), gpuTc(nullptr), cpuPointer(p->cpu_pointer),
+      tickEvent([this]{ processTick(); }, "Shader tick",
+                false, Event::CPU_Tick_Pri),
+      timingSim(p->timing), hsail_mode(SIMT),
+      impl_kern_boundary_sync(p->impl_kern_boundary_sync),
+      separate_acquire_release(p->separate_acquire_release), coissue_return(1),
+      trace_vgpr_all(1), n_cu((p->CUs).size()), n_wf(p->n_wf),
+      globalMemSize(p->globalmem), nextSchedCu(0), sa_n(0), tick_cnt(0),
+      box_tick_cnt(0), start_tick_cnt(0)
 {
 
     cuList.resize(n_cu);
@@ -79,18 +82,20 @@ Shader::mmap(int length)
     length = roundUp(length, TheISA::PageBytes);
 
     Process *proc = gpuTc->getProcessPtr();
+    auto mem_state = proc->memState;
 
     if (proc->mmapGrowsDown()) {
         DPRINTF(HSAIL, "GROWS DOWN");
-        start = proc->mmap_end - length;
-        proc->mmap_end = start;
+        start = mem_state->getMmapEnd() - length;
+        mem_state->setMmapEnd(start);
     } else {
         DPRINTF(HSAIL, "GROWS UP");
-        start = proc->mmap_end;
-        proc->mmap_end += length;
+        start = mem_state->getMmapEnd();
+        mem_state->setMmapEnd(start + length);
 
         // assertion to make sure we don't overwrite the stack (it grows down)
-        assert(proc->mmap_end < proc->stack_base - proc->max_stack_size);
+        assert(mem_state->getStackBase() - mem_state->getMaxStackSize() >
+               mem_state->getMmapEnd());
     }
 
     DPRINTF(HSAIL,"Shader::mmap start= %#x, %#x\n", start, length);
@@ -221,10 +226,10 @@ Shader::handshake(GpuDispatcher *_dispatcher)
 }
 
 void
-Shader::doFunctionalAccess(RequestPtr req, MemCmd cmd, void *data,
+Shader::doFunctionalAccess(const RequestPtr &req, MemCmd cmd, void *data,
                            bool suppress_func_errors, int cu_id)
 {
-    unsigned block_size = RubySystem::getBlockSizeBytes();
+    int block_size = cuList.at(cu_id)->cacheLineSize();
     unsigned size = req->getSize();
 
     Addr tmp_addr;
@@ -315,25 +320,14 @@ Shader::ScheduleAdd(uint32_t *val,Tick when,int x)
     ++sa_n;
 }
 
-Shader::TickEvent::TickEvent(Shader *_shader)
-    : Event(CPU_Tick_Pri), shader(_shader)
-{
-}
-
 
 void
-Shader::TickEvent::process()
+Shader::processTick()
 {
-    if (shader->busy()) {
-        shader->exec();
-        shader->schedule(this, curTick() + shader->ticks(1));
+    if (busy()) {
+        exec();
+        schedule(tickEvent, curTick() + ticks(1));
     }
-}
-
-const char*
-Shader::TickEvent::description() const
-{
-    return "Shader tick";
 }
 
 void
@@ -342,14 +336,15 @@ Shader::AccessMem(uint64_t address, void *ptr, uint32_t size, int cu_id,
 {
     uint8_t *data_buf = (uint8_t*)ptr;
 
-    for (ChunkGenerator gen(address, size, RubySystem::getBlockSizeBytes());
+    for (ChunkGenerator gen(address, size, cuList.at(cu_id)->cacheLineSize());
          !gen.done(); gen.next()) {
-        Request *req = new Request(0, gen.addr(), gen.size(), 0,
-                                   cuList[0]->masterId(), 0, 0, 0);
+
+        RequestPtr req = std::make_shared<Request>(
+            0, gen.addr(), gen.size(), 0,
+            cuList[0]->masterId(), 0, 0, nullptr);
 
         doFunctionalAccess(req, cmd, data_buf, suppress_func_errors, cu_id);
         data_buf += gen.size();
-        delete req;
     }
 }
 

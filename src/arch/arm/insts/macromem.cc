@@ -40,9 +40,9 @@
  * Authors: Stephen Hines
  */
 
-#include <sstream>
-
 #include "arch/arm/insts/macromem.hh"
+
+#include <sstream>
 
 #include "arch/arm/generated/decoder.hh"
 #include "arch/arm/insts/neon64_mem.hh"
@@ -563,8 +563,8 @@ VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
 
     unsigned eBytes = (1 << size);
     unsigned loadSize = eBytes * elems;
-    unsigned loadRegs M5_VAR_USED = (loadSize + sizeof(FloatRegBits) - 1) /
-                        sizeof(FloatRegBits);
+    unsigned loadRegs M5_VAR_USED =
+        (loadSize + sizeof(uint32_t) - 1) / sizeof(uint32_t);
 
     assert(loadRegs > 0 && loadRegs <= 4);
 
@@ -927,8 +927,8 @@ VstSingleOp::VstSingleOp(const char *mnem, ExtMachInst machInst,
 
     unsigned eBytes = (1 << size);
     unsigned storeSize = eBytes * elems;
-    unsigned storeRegs M5_VAR_USED = (storeSize + sizeof(FloatRegBits) - 1) /
-                         sizeof(FloatRegBits);
+    unsigned storeRegs M5_VAR_USED =
+        (storeSize + sizeof(uint32_t) - 1) / sizeof(uint32_t);
 
     assert(storeRegs > 0 && storeRegs <= 4);
 
@@ -1525,9 +1525,9 @@ MicroIntImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, ura);
+    printIntReg(ss, ura);
     ss << ", ";
-    printReg(ss, urb);
+    printIntReg(ss, urb);
     ss << ", ";
     ccprintf(ss, "#%d", imm);
     return ss.str();
@@ -1538,9 +1538,9 @@ MicroIntImmXOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, ura);
+    printIntReg(ss, ura);
     ss << ", ";
-    printReg(ss, urb);
+    printIntReg(ss, urb);
     ss << ", ";
     ccprintf(ss, "#%d", imm);
     return ss.str();
@@ -1560,9 +1560,9 @@ MicroIntRegXOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, ura);
+    printIntReg(ss, ura);
     ccprintf(ss, ", ");
-    printReg(ss, urb);
+    printIntReg(ss, urb);
     printExtendOperand(false, ss, (IntRegIndex)urc, type, shiftAmt);
     return ss.str();
 }
@@ -1572,9 +1572,9 @@ MicroIntMov::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, ura);
+    printIntReg(ss, ura);
     ss << ", ";
-    printReg(ss, urb);
+    printIntReg(ss, urb);
     return ss.str();
 }
 
@@ -1583,11 +1583,11 @@ MicroIntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, ura);
+    printIntReg(ss, ura);
     ss << ", ";
-    printReg(ss, urb);
+    printIntReg(ss, urb);
     ss << ", ";
-    printReg(ss, urc);
+    printIntReg(ss, urc);
     return ss.str();
 }
 
@@ -1597,11 +1597,11 @@ MicroMemOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     std::stringstream ss;
     printMnemonic(ss);
     if (isFloating())
-        printReg(ss, ura + FP_Reg_Base);
+        printFloatReg(ss, ura);
     else
-        printReg(ss, ura);
+        printIntReg(ss, ura);
     ss << ", [";
-    printReg(ss, urb);
+    printIntReg(ss, urb);
     ss << ", ";
     ccprintf(ss, "#%d", imm);
     ss << "]";
@@ -1613,11 +1613,11 @@ MicroMemPairOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ss << ",";
-    printReg(ss, dest2);
+    printIntReg(ss, dest2);
     ss << ", [";
-    printReg(ss, urb);
+    printIntReg(ss, urb);
     ss << ", ";
     ccprintf(ss, "#%d", imm);
     ss << "]";

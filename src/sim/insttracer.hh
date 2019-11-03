@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,10 +44,10 @@
 #ifndef __INSTRECORD_HH__
 #define __INSTRECORD_HH__
 
-#include "base/bigint.hh"
-#include "base/trace.hh"
+#include "arch/generic/vec_pred_reg.hh"
+#include "arch/generic/vec_reg.hh"
 #include "base/types.hh"
-#include "cpu/inst_seq.hh"      // for InstSeqNum
+#include "cpu/inst_seq.hh"
 #include "cpu/static_inst.hh"
 #include "sim/sim_object.hh"
 
@@ -97,6 +97,9 @@ class InstRecord
     union {
         uint64_t as_int;
         double as_double;
+        ::VecRegContainer<TheISA::VecRegSizeBytes>* as_vec;
+        ::VecPredRegContainer<TheISA::VecPredRegSizeBits,
+                              TheISA::VecPredRegHasPackedRepr>* as_pred;
     } data;
 
     /** @defgroup fetch_seq
@@ -114,13 +117,15 @@ class InstRecord
     /** @ingroup data
      * What size of data was written?
      */
-    enum {
+    enum DataStatus {
         DataInvalid = 0,
         DataInt8 = 1,   // set to equal number of bytes
         DataInt16 = 2,
         DataInt32 = 4,
         DataInt64 = 8,
-        DataDouble = 3
+        DataDouble = 3,
+        DataVec = 5,
+        DataVecPred = 6
     } data_status;
 
     /** @ingroup memory
@@ -152,7 +157,16 @@ class InstRecord
         fetch_seq_valid(false), cp_seq_valid(false), predicate(true)
     { }
 
-    virtual ~InstRecord() { }
+    virtual ~InstRecord()
+    {
+        if (data_status == DataVec) {
+            assert(data.as_vec);
+            delete data.as_vec;
+        } else if (data_status == DataVecPred) {
+            assert(data.as_pred);
+            delete data.as_pred;
+        }
+    }
 
     void setWhen(Tick new_when) { when = new_when; }
     void setMem(Addr a, Addr s, unsigned f)
@@ -160,8 +174,17 @@ class InstRecord
         addr = a; size = s; flags = f; mem_valid = true;
     }
 
-    void setData(Twin64_t d) { data.as_int = d.a; data_status = DataInt64; }
-    void setData(Twin32_t d) { data.as_int = d.a; data_status = DataInt32; }
+    template <typename T, size_t N>
+    void
+    setData(std::array<T, N> d)
+    {
+        data.as_int = d[0];
+        data_status = (DataStatus)sizeof(T);
+        static_assert(sizeof(T) == DataInt8 || sizeof(T) == DataInt16 ||
+                      sizeof(T) == DataInt32 || sizeof(T) == DataInt64,
+                      "Type T has an unrecognized size.");
+    }
+
     void setData(uint64_t d) { data.as_int = d; data_status = DataInt64; }
     void setData(uint32_t d) { data.as_int = d; data_status = DataInt32; }
     void setData(uint16_t d) { data.as_int = d; data_status = DataInt16; }
@@ -173,6 +196,22 @@ class InstRecord
     void setData(int8_t d)  { setData((uint8_t)d); }
 
     void setData(double d) { data.as_double = d; data_status = DataDouble; }
+
+    void
+    setData(::VecRegContainer<TheISA::VecRegSizeBytes>& d)
+    {
+        data.as_vec = new ::VecRegContainer<TheISA::VecRegSizeBytes>(d);
+        data_status = DataVec;
+    }
+
+    void
+    setData(::VecPredRegContainer<TheISA::VecPredRegSizeBits,
+                                  TheISA::VecPredRegHasPackedRepr>& d)
+    {
+        data.as_pred = new ::VecPredRegContainer<
+            TheISA::VecPredRegSizeBits, TheISA::VecPredRegHasPackedRepr>(d);
+        data_status = DataVecPred;
+    }
 
     void setFetchSeq(InstSeqNum seq)
     { fetch_seq = seq; fetch_seq_valid = true; }

@@ -1,5 +1,17 @@
 # -*- mode:python -*-
-
+#
+# Copyright (c) 2018 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -44,6 +56,7 @@ SimObject('SimpleMemory.py')
 SimObject('XBar.py')
 SimObject('HMCController.py')
 SimObject('SerialLink.py')
+SimObject('MemDelay.py')
 
 Source('abstract_mem.cc')
 Source('addr_mapper.cc')
@@ -53,14 +66,13 @@ Source('drampower.cc')
 Source('dram_ctrl.cc')
 Source('external_master.cc')
 Source('external_slave.cc')
-Source('mem_object.cc')
-Source('mport.cc')
 Source('noncoherent_xbar.cc')
 Source('packet.cc')
 Source('port.cc')
 Source('packet_queue.cc')
 Source('port_proxy.cc')
 Source('physical.cc')
+Source('secure_port_proxy.cc')
 Source('simple_mem.cc')
 Source('snoop_filter.cc')
 Source('stack_dist_calc.cc')
@@ -68,13 +80,12 @@ Source('tport.cc')
 Source('xbar.cc')
 Source('hmc_controller.cc')
 Source('serial_link.cc')
+Source('mem_delay.cc')
 
 if env['TARGET_ISA'] != 'null':
     Source('fs_translating_port_proxy.cc')
     Source('se_translating_port_proxy.cc')
     Source('page_table.cc')
-if env['TARGET_ISA'] == 'x86':
-    Source('multi_level_page_table.cc')
 
 if env['HAVE_DRAMSIM']:
     SimObject('DRAMSim2.py')
@@ -110,3 +121,4 @@ DebugFlag('SerialLink')
 
 DebugFlag("MemChecker")
 DebugFlag("MemCheckerMonitor")
+DebugFlag("QOS")

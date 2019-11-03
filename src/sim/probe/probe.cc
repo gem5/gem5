@@ -37,8 +37,10 @@
  * Authors: Matt Horsnell
  */
 
-#include "debug/ProbeVerbose.hh"
 #include "sim/probe/probe.hh"
+
+#include "debug/ProbeVerbose.hh"
+#include "params/ProbeListenerObject.hh"
 
 ProbePoint::ProbePoint(ProbeManager *manager, const std::string& _name)
     : name(_name)

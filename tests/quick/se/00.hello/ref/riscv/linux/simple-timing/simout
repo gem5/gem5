@@ -1,0 +1,13 @@
+Redirecting stdout to build/RISCV/tests/opt/quick/se/00.hello/riscv/linux/simple-timing/simout
+Redirecting stderr to build/RISCV/tests/opt/quick/se/00.hello/riscv/linux/simple-timing/simerr
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Jul 13 2017 17:37:52
+gem5 started Jul 13 2017 18:03:36
+gem5 executing on boldrock, pid 21570
+command line: /home/ar4jc/gem5/build/RISCV/gem5.opt -d build/RISCV/tests/opt/quick/se/00.hello/riscv/linux/simple-timing --stats-file 'text://stats.txt?desc=False' -re /home/ar4jc/gem5/tests/testing/../run.py quick/se/00.hello/riscv/linux/simple-timing
+
+Global frequency set at 1000000000000 ticks per second
+Hello world!
+Exiting @ tick 31821500 because exiting with last active thread context

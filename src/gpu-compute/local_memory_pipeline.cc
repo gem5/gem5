@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,7 +30,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Sooraj Puthoor
+ * Authors: Sooraj Puthoor
  */
 
 #include "gpu-compute/local_memory_pipeline.hh"
@@ -62,11 +62,13 @@ LocalMemPipeline::exec()
         lmReturnedRequests.front() : nullptr;
 
     bool accessVrf = true;
-    if ((m) && (m->m_op==Enums::MO_LD || MO_A(m->m_op))) {
-        Wavefront *w = computeUnit->wfList[m->simdId][m->wfSlotId];
+    Wavefront *w = nullptr;
+
+    if ((m) && (m->isLoad() || m->isAtomicRet())) {
+        w = m->wavefront();
 
         accessVrf =
-            w->computeUnit->vrf[m->simdId]->
+            w->computeUnit->vrf[w->simdId]->
             vrfOperandAccessReady(m->seqNum(), w, m,
                                   VrfAccessType::WRITE);
     }
@@ -74,44 +76,29 @@ LocalMemPipeline::exec()
     if (!lmReturnedRequests.empty() && m->latency.rdy() && accessVrf &&
         computeUnit->locMemToVrfBus.rdy() && (computeUnit->shader->coissue_return
                  || computeUnit->wfWait.at(m->pipeId).rdy())) {
-        if (m->v_type == VT_32 && m->m_type == Enums::M_U8)
-            doSmReturn<uint32_t, uint8_t>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_U16)
-            doSmReturn<uint32_t, uint16_t>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_U32)
-            doSmReturn<uint32_t, uint32_t>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_S8)
-            doSmReturn<int32_t, int8_t>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_S16)
-            doSmReturn<int32_t, int16_t>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_S32)
-            doSmReturn<int32_t, int32_t>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_F16)
-            doSmReturn<float, Float16>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_F32)
-            doSmReturn<float, float>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_U8)
-            doSmReturn<uint64_t, uint8_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_U16)
-            doSmReturn<uint64_t, uint16_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_U32)
-            doSmReturn<uint64_t, uint32_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_U64)
-            doSmReturn<uint64_t, uint64_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_S8)
-            doSmReturn<int64_t, int8_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_S16)
-            doSmReturn<int64_t, int16_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_S32)
-            doSmReturn<int64_t, int32_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_S64)
-            doSmReturn<int64_t, int64_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_F16)
-            doSmReturn<double, Float16>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_F32)
-            doSmReturn<double, float>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_F64)
-            doSmReturn<double, double>(m);
+
+        lmReturnedRequests.pop();
+        w = m->wavefront();
+
+        m->completeAcc(m);
+
+        // Decrement outstanding request count
+        computeUnit->shader->ScheduleAdd(&w->outstandingReqs, m->time, -1);
+
+        if (m->isStore() || m->isAtomic()) {
+            computeUnit->shader->ScheduleAdd(&w->outstandingReqsWrLm,
+                                             m->time, -1);
+        }
+
+        if (m->isLoad() || m->isAtomic()) {
+            computeUnit->shader->ScheduleAdd(&w->outstandingReqsRdLm,
+                                             m->time, -1);
+        }
+
+        // Mark write bus busy for appropriate amount of time
+        computeUnit->locMemToVrfBus.set(m->time);
+        if (computeUnit->shader->coissue_return == 0)
+            w->computeUnit->wfWait.at(m->pipeId).set(m->time);
     }
 
     // If pipeline has executed a local memory instruction
@@ -127,66 +114,6 @@ LocalMemPipeline::exec()
         }
         lmIssuedRequests.pop();
     }
-}
-
-template<typename c0, typename c1>
-void
-LocalMemPipeline::doSmReturn(GPUDynInstPtr m)
-{
-    lmReturnedRequests.pop();
-    Wavefront *w = computeUnit->wfList[m->simdId][m->wfSlotId];
-
-    // Return data to registers
-    if (m->m_op == Enums::MO_LD || MO_A(m->m_op)) {
-        std::vector<uint32_t> regVec;
-        for (int k = 0; k < m->n_reg; ++k) {
-            int dst = m->dst_reg+k;
-
-            if (m->n_reg > MAX_REGS_FOR_NON_VEC_MEM_INST)
-                dst = m->dst_reg_vec[k];
-            // virtual->physical VGPR mapping
-            int physVgpr = w->remap(dst,sizeof(c0),1);
-            // save the physical VGPR index
-            regVec.push_back(physVgpr);
-            c1 *p1 = &((c1 *)m->d_data)[k * w->computeUnit->wfSize()];
-
-            for (int i = 0; i < w->computeUnit->wfSize(); ++i) {
-                if (m->exec_mask[i]) {
-                    // write the value into the physical VGPR. This is a purely
-                    // functional operation. No timing is modeled.
-                    w->computeUnit->vrf[w->simdId]->write<c0>(physVgpr,
-                                                                *p1, i);
-                }
-                ++p1;
-            }
-        }
-
-        // Schedule the write operation of the load data on the VRF. This simply
-        // models the timing aspect of the VRF write operation. It does not
-        // modify the physical VGPR.
-        loadVrfBankConflictCycles +=
-            w->computeUnit->vrf[w->simdId]->exec(m->seqNum(), w,
-                                                 regVec, sizeof(c0), m->time);
-    }
-
-    // Decrement outstanding request count
-    computeUnit->shader->ScheduleAdd(&w->outstanding_reqs, m->time, -1);
-
-    if (m->m_op == Enums::MO_ST || MO_A(m->m_op) || MO_ANR(m->m_op)
-        || MO_H(m->m_op)) {
-        computeUnit->shader->ScheduleAdd(&w->outstanding_reqs_wr_lm,
-                                         m->time, -1);
-    }
-
-    if (m->m_op == Enums::MO_LD || MO_A(m->m_op) || MO_ANR(m->m_op)) {
-        computeUnit->shader->ScheduleAdd(&w->outstanding_reqs_rd_lm,
-                                         m->time, -1);
-    }
-
-    // Mark write bus busy for appropriate amount of time
-    computeUnit->locMemToVrfBus.set(m->time);
-    if (computeUnit->shader->coissue_return == 0)
-        w->computeUnit->wfWait.at(m->pipeId).set(m->time);
 }
 
 void

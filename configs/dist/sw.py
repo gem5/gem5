@@ -37,10 +37,10 @@ from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import addToPath, fatal
 
-addToPath('../common')
+addToPath('../')
 
-import Simulation
-import Options
+from common import Simulation
+from common import Options
 
 def build_switch(options):
     # instantiate an EtherSwitch
@@ -57,19 +57,23 @@ def build_switch(options):
                                       sync_repeat = options.dist_sync_repeat,
                                       is_switch = True,
                                       num_nodes = options.dist_size)
-                       for i in xrange(options.dist_size)]
+                       for i in range(options.dist_size)]
 
     for (i, link) in enumerate(switch.portlink):
         link.int0 = switch.interface[i]
 
     return switch
-# Add options
-parser = optparse.OptionParser()
-Options.addCommonOptions(parser)
-Options.addFSOptions(parser)
-(options, args) = parser.parse_args()
 
-system = build_switch(options)
-root = Root(full_system = True, system = system)
-Simulation.run(options, root, None, None)
+def main():
+    # Add options
+    parser = optparse.OptionParser()
+    Options.addCommonOptions(parser)
+    Options.addFSOptions(parser)
+    (options, args) = parser.parse_args()
 
+    system = build_switch(options)
+    root = Root(full_system = True, system = system)
+    Simulation.run(options, root, None, None)
+
+if __name__ == "__m5_main__":
+    main()

@@ -79,7 +79,7 @@ namespace HsailISA
     void
     Call::execPseudoInst(Wavefront *w, GPUDynInstPtr gpuDynInst)
     {
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
 
         int op = 0;
         bool got_op = false;
@@ -181,7 +181,7 @@ namespace HsailISA
     Call::MagicPrintLane(Wavefront *w)
     {
     #if TRACING_ON
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 int src_val1 = src1.get<int>(w, lane, 1);
@@ -204,7 +204,7 @@ namespace HsailISA
     Call::MagicPrintLane64(Wavefront *w)
     {
     #if TRACING_ON
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 int64_t src_val1 = src1.get<int64_t>(w, lane, 1);
@@ -227,7 +227,7 @@ namespace HsailISA
     Call::MagicPrintWF32(Wavefront *w)
     {
     #if TRACING_ON
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         std::string res_str;
         res_str = csprintf("krl_prt (%s)\n", disassemble());
 
@@ -265,7 +265,7 @@ namespace HsailISA
     Call::MagicPrintWF32ID(Wavefront *w)
     {
     #if TRACING_ON
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         std::string res_str;
         int src_val3 = -1;
         res_str = csprintf("krl_prt (%s)\n", disassemble());
@@ -307,7 +307,7 @@ namespace HsailISA
     Call::MagicPrintWF64(Wavefront *w)
     {
     #if TRACING_ON
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         std::string res_str;
         res_str = csprintf("krl_prt (%s)\n", disassemble());
 
@@ -345,7 +345,7 @@ namespace HsailISA
     Call::MagicPrintWFID64(Wavefront *w)
     {
     #if TRACING_ON
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         std::string res_str;
         int src_val3 = -1;
         res_str = csprintf("krl_prt (%s)\n", disassemble());
@@ -387,7 +387,7 @@ namespace HsailISA
     Call::MagicPrintWFFloat(Wavefront *w)
     {
     #if TRACING_ON
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         std::string res_str;
         res_str = csprintf("krl_prt (%s)\n", disassemble());
 
@@ -425,7 +425,7 @@ namespace HsailISA
         res_str = csprintf("Breakpoint encountered for wavefront %i\n",
                            w->wfSlotId);
 
-        res_str += csprintf("  Kern ID: %i\n", w->kern_id);
+        res_str += csprintf("  Kern ID: %i\n", w->kernId);
         res_str += csprintf("  Phase ID: %i\n", w->simdId);
         res_str += csprintf("  Executing on CU #%i\n", w->computeUnit->cu_id);
         res_str += csprintf("  Exec mask: ");
@@ -455,7 +455,7 @@ namespace HsailISA
     void
     Call::MagicPrefixSum(Wavefront *w)
     {
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         int res = 0;
 
         for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
@@ -474,7 +474,7 @@ namespace HsailISA
         //   The reduction instruction takes up to 64 inputs (one from
         //   each thread in a WF) and sums them. It returns the sum to
         //   each thread in the WF.
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         int res = 0;
 
         for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
@@ -494,7 +494,7 @@ namespace HsailISA
     void
     Call::MagicMaskLower(Wavefront *w)
     {
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         int res = 0;
 
         for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
@@ -519,7 +519,7 @@ namespace HsailISA
     void
     Call::MagicMaskUpper(Wavefront *w)
     {
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         int res = 0;
         for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
@@ -544,42 +544,42 @@ namespace HsailISA
     void
     Call::MagicJoinWFBar(Wavefront *w)
     {
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         int max_cnt = 0;
 
         for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
-                w->bar_cnt[lane]++;
+                w->barCnt[lane]++;
 
-                if (w->bar_cnt[lane] > max_cnt) {
-                    max_cnt = w->bar_cnt[lane];
+                if (w->barCnt[lane] > max_cnt) {
+                    max_cnt = w->barCnt[lane];
                 }
             }
         }
 
-        if (max_cnt > w->max_bar_cnt) {
-            w->max_bar_cnt = max_cnt;
+        if (max_cnt > w->maxBarCnt) {
+            w->maxBarCnt = max_cnt;
         }
     }
 
     void
     Call::MagicWaitWFBar(Wavefront *w)
     {
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         int max_cnt = 0;
 
         for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
-                w->bar_cnt[lane]--;
+                w->barCnt[lane]--;
             }
 
-            if (w->bar_cnt[lane] > max_cnt) {
-                max_cnt = w->bar_cnt[lane];
+            if (w->barCnt[lane] > max_cnt) {
+                max_cnt = w->barCnt[lane];
             }
         }
 
-        if (max_cnt < w->max_bar_cnt) {
-            w->max_bar_cnt = max_cnt;
+        if (max_cnt < w->maxBarCnt) {
+            w->maxBarCnt = max_cnt;
         }
 
         w->instructionBuffer.erase(w->instructionBuffer.begin() + 1,
@@ -591,7 +591,7 @@ namespace HsailISA
     void
     Call::MagicPanic(Wavefront *w)
     {
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
 
         for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
@@ -627,8 +627,12 @@ namespace HsailISA
             ((int*)m->a_data)[lane] = src1.get<int>(w, lane, 3);
         }
 
-        m->m_op = brigAtomicToMemOpType(Brig::BRIG_OPCODE_ATOMICNORET,
-                                        Brig::BRIG_ATOMIC_ADD);
+        setFlag(AtomicNoReturn);
+        setFlag(AtomicAdd);
+        setFlag(NoScope);
+        setFlag(NoOrder);
+        setFlag(GlobalSegment);
+
         m->m_type = U32::memType;
         m->v_type = U32::vgprType;
 
@@ -636,24 +640,21 @@ namespace HsailISA
         m->statusBitVector = 0;
         m->equiv = 0;  // atomics don't have an equivalence class operand
         m->n_reg = 1;
-        m->memoryOrder = Enums::MEMORY_ORDER_NONE;
-        m->scope = Enums::MEMORY_SCOPE_NONE;
 
         m->simdId = w->simdId;
         m->wfSlotId = w->wfSlotId;
         m->wfDynId = w->wfDynId;
         m->latency.init(&w->computeUnit->shader->tick_cnt);
 
-        m->s_type = SEG_GLOBAL;
         m->pipeId = GLBMEM_PIPE;
         m->latency.set(w->computeUnit->shader->ticks(64));
-        w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
-        w->outstanding_reqs_wr_gm++;
-        w->wr_gm_reqs_in_pipe--;
-        w->outstanding_reqs_rd_gm++;
-        w->rd_gm_reqs_in_pipe--;
-        w->outstanding_reqs++;
-        w->mem_reqs_in_pipe--;
+        w->computeUnit->globalMemoryPipe.issueRequest(m);
+        w->outstandingReqsWrGm++;
+        w->wrGmReqsInPipe--;
+        w->outstandingReqsRdGm++;
+        w->rdGmReqsInPipe--;
+        w->outstandingReqs++;
+        w->memReqsInPipe--;
     }
 
     void
@@ -666,8 +667,12 @@ namespace HsailISA
             ((int*)m->a_data)[lane] = src1.get<int>(w, lane, 1);
         }
 
-        m->m_op = brigAtomicToMemOpType(Brig::BRIG_OPCODE_ATOMICNORET,
-                                        Brig::BRIG_ATOMIC_ADD);
+        setFlag(AtomicNoReturn);
+        setFlag(AtomicAdd);
+        setFlag(NoScope);
+        setFlag(NoOrder);
+        setFlag(GlobalSegment);
+
         m->m_type = U32::memType;
         m->v_type = U32::vgprType;
 
@@ -675,24 +680,21 @@ namespace HsailISA
         m->statusBitVector = 0;
         m->equiv = 0;  // atomics don't have an equivalence class operand
         m->n_reg = 1;
-        m->memoryOrder = Enums::MEMORY_ORDER_NONE;
-        m->scope = Enums::MEMORY_SCOPE_NONE;
 
         m->simdId = w->simdId;
         m->wfSlotId = w->wfSlotId;
         m->wfDynId = w->wfDynId;
         m->latency.init(&w->computeUnit->shader->tick_cnt);
 
-        m->s_type = SEG_GLOBAL;
         m->pipeId = GLBMEM_PIPE;
         m->latency.set(w->computeUnit->shader->ticks(64));
-        w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
-        w->outstanding_reqs_wr_gm++;
-        w->wr_gm_reqs_in_pipe--;
-        w->outstanding_reqs_rd_gm++;
-        w->rd_gm_reqs_in_pipe--;
-        w->outstanding_reqs++;
-        w->mem_reqs_in_pipe--;
+        w->computeUnit->globalMemoryPipe.issueRequest(m);
+        w->outstandingReqsWrGm++;
+        w->wrGmReqsInPipe--;
+        w->outstandingReqsRdGm++;
+        w->rdGmReqsInPipe--;
+        w->outstandingReqs++;
+        w->memReqsInPipe--;
     }
 
     void
@@ -702,7 +704,11 @@ namespace HsailISA
         // calculate the address
         calcAddr(w, m);
 
-        m->m_op = Enums::MO_LD;
+        setFlag(Load);
+        setFlag(NoScope);
+        setFlag(NoOrder);
+        setFlag(GlobalSegment);
+
         m->m_type = U32::memType;  //MemDataType::memType;
         m->v_type = U32::vgprType; //DestDataType::vgprType;
 
@@ -710,8 +716,6 @@ namespace HsailISA
         m->statusBitVector = 0;
         m->equiv = 0;
         m->n_reg = 1;
-        m->memoryOrder = Enums::MEMORY_ORDER_NONE;
-        m->scope = Enums::MEMORY_SCOPE_NONE;
 
         // FIXME
         //m->dst_reg = this->dest.regIndex();
@@ -721,20 +725,19 @@ namespace HsailISA
         m->wfDynId = w->wfDynId;
         m->latency.init(&w->computeUnit->shader->tick_cnt);
 
-        m->s_type = SEG_GLOBAL;
         m->pipeId = GLBMEM_PIPE;
         m->latency.set(w->computeUnit->shader->ticks(1));
-        w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
-        w->outstanding_reqs_rd_gm++;
-        w->rd_gm_reqs_in_pipe--;
-        w->outstanding_reqs++;
-        w->mem_reqs_in_pipe--;
+        w->computeUnit->globalMemoryPipe.issueRequest(m);
+        w->outstandingReqsRdGm++;
+        w->rdGmReqsInPipe--;
+        w->outstandingReqs++;
+        w->memReqsInPipe--;
     }
 
     void
     Call::MagicXactCasLd(Wavefront *w)
     {
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         int src_val1 = 0;
 
         for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
@@ -756,7 +759,7 @@ namespace HsailISA
     void
     Call::MagicMostSigThread(Wavefront *w)
     {
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         unsigned mst = true;
 
         for (int lane = w->computeUnit->wfSize() - 1; lane >= 0; --lane) {
@@ -770,7 +773,7 @@ namespace HsailISA
     void
     Call::MagicMostSigBroadcast(Wavefront *w)
     {
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         int res = 0;
         bool got_res = false;
 

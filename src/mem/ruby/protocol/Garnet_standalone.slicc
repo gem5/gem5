@@ -1,0 +1,5 @@
+protocol "Garnet_standalone";
+include "RubySlicc_interfaces.slicc";
+include "Garnet_standalone-msg.sm";
+include "Garnet_standalone-cache.sm";
+include "Garnet_standalone-dir.sm";

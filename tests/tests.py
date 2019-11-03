@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #
 # Copyright (c) 2016 ARM Limited
 # All rights reserved
@@ -36,6 +36,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Andreas Sandberg
+
+from __future__ import print_function
 
 import argparse
 import sys
@@ -126,7 +128,7 @@ def _list_tests(args):
         for test in get_tests(isa, categories=categories, modes=modes,
                               ruby_protocol=args.ruby_protocol,
                               gpu_isa=args.gpu_isa):
-            print "/".join(test)
+            print("/".join(test))
     sys.exit(0)
 
 def _run_tests_args(subparsers):
@@ -174,6 +176,11 @@ def _run_tests_args(subparsers):
     _add_format_args(parser)
 
 def _run_tests(args):
+    if not os.path.isfile(args.gem5) or not os.access(args.gem5, os.X_OK):
+        print("gem5 binary '%s' not an executable file" % args.gem5,
+            file=sys.stderr)
+        sys.exit(2)
+
     formatter = _create_formatter(args)
 
     out_base = os.path.abspath(args.directory)
@@ -190,9 +197,9 @@ def _run_tests(args):
                         skip_diff_out=args.skip_diff_out))
 
     all_results = []
-    print "Running %i tests" % len(tests)
+    print("Running %i tests" % len(tests))
     for testno, test in enumerate(tests):
-        print "%i: Running '%s'..." % (testno, test)
+        print("%i: Running '%s'..." % (testno, test))
 
         all_results.append(test.run())
 
@@ -237,14 +244,68 @@ def _show_args(subparsers):
                         help="Pickled test results")
 
 def _show(args):
+    def _load(f):
+        # Load the pickled status file, sometimes e.g., when a
+        # regression is still running the status file might be
+        # incomplete.
+        try:
+            return pickle.load(f)
+        except EOFError:
+            print('Could not read file %s' % f.name, file=sys.stderr)
+            return []
+
     formatter = _create_formatter(args)
-    suites = sum([ pickle.load(f) for f in args.result ], [])
+    suites = sum([ _load(f) for f in args.result ], [])
     formatter.dump_suites(suites)
+
+def _test_args(subparsers):
+    parser = subparsers.add_parser(
+        "test",
+        formatter_class=ParagraphHelpFormatter,
+        help='Probe test results and set exit code',
+        epilog="""
+
+        Load one or more pickled test file and return an exit code
+        corresponding to the test outcome. The following exit codes
+        can be returned:
+
+        0: All tests were successful or skipped.
+
+        1: General fault in the script such as incorrect parameters or
+        failing to parse a pickle file.
+
+        2: At least one test failed to run. This is what the summary
+        formatter usually shows as a 'FAILED'.
+
+        3: All tests ran correctly, but at least one failed to
+        verify its output. When displaying test output using the
+        summary formatter, such a test would show up as 'CHANGED'.
+        """)
+
+    parser.add_argument("result", type=argparse.FileType("rb"), nargs="*",
+                        help="Pickled test results")
+
+def _test(args):
+    try:
+        suites = sum([ pickle.load(f) for f in args.result ], [])
+    except EOFError:
+        print('Could not read all files', file=sys.stderr)
+        sys.exit(2)
+
+    if all(s for s in suites):
+        sys.exit(0)
+    elif any([ s.failed_run() for s in suites ]):
+        sys.exit(2)
+    elif any([ s.changed() for s in suites ]):
+        sys.exit(3)
+    else:
+        assert False, "Unexpected return status from test"
 
 _commands = {
     "list" : (_list_tests, _list_tests_args),
     "run" : (_run_tests, _run_tests_args),
     "show" : (_show, _show_args),
+    "test" : (_test, _test_args),
 }
 
 def main():

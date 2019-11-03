@@ -41,9 +41,12 @@
 from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice
 
-class X86LocalApic(BasicPioDevice):
+from m5.objects.BaseInterrupts import BaseInterrupts
+from m5.objects.ClockDomain import DerivedClockDomain
+from m5.SimObject import SimObject
+
+class X86LocalApic(BaseInterrupts):
     type = 'X86LocalApic'
     cxx_class = 'X86ISA::Interrupts'
     cxx_header = 'arch/x86/interrupts.hh'
@@ -51,3 +54,15 @@ class X86LocalApic(BasicPioDevice):
     int_slave = SlavePort("Port for receiving interrupt messages")
     int_latency = Param.Latency('1ns', \
             "Latency for an interrupt to propagate through this device.")
+    pio = SlavePort("Programmed I/O port")
+    system = Param.System(Parent.any, "System this device is part of")
+
+    pio_latency = Param.Latency('100ns', 'Programmed IO latency')
+
+    # The clock rate for the local APIC timer is supposed to be the "bus clock"
+    # which we assume is 1/16th the rate of the CPU clock. I don't think this
+    # is a hard rule, but seems to be true in practice. This can be overriden
+    # in configs that use it.
+    clk_domain = Param.DerivedClockDomain(
+            DerivedClockDomain(clk_domain=Parent.clk_domain, clk_divider=16),
+            "The clock for the local APIC. Should not be modified.")

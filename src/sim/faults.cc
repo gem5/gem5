@@ -29,13 +29,14 @@
  *          Gabe Black
  */
 
+#include "sim/faults.hh"
+
 #include "arch/isa_traits.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Fault.hh"
 #include "mem/page_table.hh"
-#include "sim/faults.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 
@@ -54,6 +55,11 @@ void UnimpFault::invoke(ThreadContext * tc, const StaticInstPtr &inst)
 }
 
 void ReExec::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+{
+    tc->pcState(tc->pcState());
+}
+
+void SyscallRetryFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     tc->pcState(tc->pcState());
 }

@@ -1,0 +1,27 @@
+SystemC Simulation
+
+Info: (I804) /IEEE_Std_1666/deprecated: interface and/or port binding in port constructors is deprecated
+c.sig_1 (sc_signal)
+c.sig_2 (sc_signal)
+c.sig_3 (sc_signal)
+c.sig_4 (sc_signal)
+c.in_1 (sc_port)
+c.in_2 (sc_port)
+c.in_3 (sc_port)
+c.in_4 (sc_port)
+c.port_0 (sc_port)
+c.port_1 (sc_port)
+c.inout_1 (sc_port)
+c.inout_2 (sc_port)
+c.inout_3 (sc_port)
+c.inout_4 (sc_port)
+c.port_2 (sc_port)
+c.port_3 (sc_port)
+
+Info: (I804) /IEEE_Std_1666/deprecated: You can turn off warnings about
+             IEEE 1666 deprecated features by placing this method call
+             as the first statement in your sc_main() function:
+
+  sc_core::sc_report_handler::set_actions( "/IEEE_Std_1666/deprecated",
+                                           sc_core::SC_DO_NOTHING );
+

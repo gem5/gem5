@@ -1,3 +1,15 @@
+# Copyright (c) 2017 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006 The Regents of The University of Michigan
 # Copyright (c) 2013 Advanced Micro Devices, Inc.
 # Copyright (c) 2013 Mark D. Hill and David A. Wood
@@ -28,26 +40,35 @@
 #
 # Authors: Nathan Binkert
 
-import m5
-import internal.event
+from __future__ import print_function
 
-from internal.event import PythonEvent, GlobalSimLoopExitEvent as SimExit
+import m5
+import _m5.event
+
+from _m5.event import GlobalSimLoopExitEvent as SimExit
+from _m5.event import PyEvent as Event
+from _m5.event import getEventQueue, setEventQueue
 
 mainq = None
 
-def create(obj, priority=None):
-    if priority is None:
-        priority = Event.Default_Pri
-    return PythonEvent(obj, priority)
+class EventWrapper(Event):
+    """Helper class to wrap callable objects in an Event base class"""
 
+    def __init__(self, func, **kwargs):
+        super(EventWrapper, self).__init__(**kwargs)
 
-# As a reminder, priorities found in sim/eventq.hh are stuck into the
-# Event class by swig
-class Event(PythonEvent):
-    def __init__(self, priority=None):
-        if priority is None:
-            priority = Event.Default_Pri
-        super(Event, self).__init__(self, priority)
+        if not callable(func):
+            raise RuntimeError("Can't wrap '%s', object is not callable" % \
+                               str(func))
+
+        self._func = func
+
+    def __call__(self):
+        self._func()
+
+    def __str__(self):
+        return "EventWrapper(%s)" % (str(self._func), )
+
 
 class ProgressEvent(Event):
     def __init__(self, eventq, period):
@@ -57,13 +78,14 @@ class ProgressEvent(Event):
         self.eventq.schedule(self, m5.curTick() + self.period)
 
     def __call__(self):
-        print "Progress! Time now %fs" % (m5.curTick()/1e12)
+        print("Progress! Time now %fs" % (m5.curTick()/1e12))
         self.eventq.schedule(self, m5.curTick() + self.period)
 
-def getEventQueue(index):
-    return internal.event.getEventQueue(index)
 
-def setEventQueue(eventq):
-    internal.event.curEventQueue(eventq)
+def create(func, priority=Event.Default_Pri):
+    """Create an Event from a function"""
 
-__all__ = [ 'create', 'Event', 'ProgressEvent', 'SimExit', 'mainq' ]
+    return EventWrapper(func, priority=priority)
+
+__all__ = [ 'Event', 'EventWrapper', 'ProgressEvent', 'SimExit',
+            'mainq', 'create' ]

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2014-2017 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,34 +30,33 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Sooraj Puthoor
+ * Authors: Sooraj Puthoor,
+ *          Anthony Gutierrez
  */
 
-#ifndef __SCHEDULER_HH__
-#define __SCHEDULER_HH__
+#ifndef __GPU_COMPUTE_SCHEDULER_HH__
+#define __GPU_COMPUTE_SCHEDULER_HH__
 
-#include "gpu-compute/of_scheduling_policy.hh"
-#include "gpu-compute/rr_scheduling_policy.hh"
+#include <vector>
+
 #include "gpu-compute/scheduling_policy.hh"
-#include "params/ComputeUnit.hh"
 
-enum SCHED_POLICY
-{
-    OF_POLICY = 0,
-    RR_POLICY
-};
+class ComputeUnitParams;
 
 class Scheduler
 {
   public:
     Scheduler(const ComputeUnitParams *params);
     Wavefront *chooseWave();
-    void bindList(std::vector<Wavefront*> *list);
+    void bindList(std::vector<Wavefront*> *sched_list);
 
   private:
-    SCHED_POLICY schedPolicy;
-    SchedulingPolicy<RRSchedulingPolicy> RRSchedPolicy;
-    SchedulingPolicy<OFSchedulingPolicy> OFSchedPolicy;
+    /**
+     * Scheduling policy. Currently the model can support oldest-first
+     * or round-robin scheduling.
+     */
+    SchedulingPolicy *schedPolicy;
+    std::vector<Wavefront*> *scheduleList;
 };
 
-#endif // __SCHEDULER_HH__
+#endif // __GPU_COMPUTE_SCHEDULER_HH__

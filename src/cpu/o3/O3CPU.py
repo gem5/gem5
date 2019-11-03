@@ -1,3 +1,15 @@
+# Copyright (c) 2016, 2019 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -26,13 +38,25 @@
 #
 # Authors: Kevin Lim
 
+from __future__ import print_function
+
 from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
-from BaseCPU import BaseCPU
-from FUPool import *
-from O3Checker import O3Checker
-from BranchPredictor import *
+
+from m5.objects.BaseCPU import BaseCPU
+from m5.objects.FUPool import *
+from m5.objects.O3Checker import O3Checker
+from m5.objects.BranchPredictor import *
+
+class FetchPolicy(ScopedEnum):
+    vals = [ 'SingleThread', 'RoundRobin', 'Branch', 'IQCount', 'LSQCount' ]
+
+class SMTQueuePolicy(ScopedEnum):
+    vals = [ 'Dynamic', 'Partitioned', 'Threshold' ]
+
+class CommitPolicy(ScopedEnum):
+    vals = [ 'Aggressive', 'RoundRobin', 'OldestReady' ]
 
 class DerivO3CPU(BaseCPU):
     type = 'DerivO3CPU'
@@ -52,7 +76,10 @@ class DerivO3CPU(BaseCPU):
 
     activity = Param.Unsigned(0, "Initial count")
 
-    cachePorts = Param.Unsigned(200, "Cache Ports")
+    cacheStorePorts = Param.Unsigned(200, "Cache Ports. "
+          "Constrains stores only.")
+    cacheLoadPorts = Param.Unsigned(200, "Cache Ports. "
+          "Constrains loads only.")
 
     decodeToFetchDelay = Param.Cycles(1, "Decode to fetch delay")
     renameToFetchDelay = Param.Cycles(1 ,"Rename to fetch delay")
@@ -124,20 +151,27 @@ class DerivO3CPU(BaseCPU):
         # (it's a side effect of int reg renaming), so they should
         # never be the bottleneck here.
         _defaultNumPhysCCRegs = Self.numPhysIntRegs * 5
+    numPhysVecRegs = Param.Unsigned(256, "Number of physical vector "
+                                      "registers")
+    numPhysVecPredRegs = Param.Unsigned(32, "Number of physical predicate "
+                                      "registers")
     numPhysCCRegs = Param.Unsigned(_defaultNumPhysCCRegs,
                                    "Number of physical cc registers")
     numIQEntries = Param.Unsigned(64, "Number of instruction queue entries")
     numROBEntries = Param.Unsigned(192, "Number of reorder buffer entries")
 
     smtNumFetchingThreads = Param.Unsigned(1, "SMT Number of Fetching Threads")
-    smtFetchPolicy = Param.String('SingleThread', "SMT Fetch policy")
-    smtLSQPolicy    = Param.String('Partitioned', "SMT LSQ Sharing Policy")
+    smtFetchPolicy = Param.FetchPolicy('SingleThread', "SMT Fetch policy")
+    smtLSQPolicy    = Param.SMTQueuePolicy('Partitioned',
+                                           "SMT LSQ Sharing Policy")
     smtLSQThreshold = Param.Int(100, "SMT LSQ Threshold Sharing Parameter")
-    smtIQPolicy    = Param.String('Partitioned', "SMT IQ Sharing Policy")
+    smtIQPolicy    = Param.SMTQueuePolicy('Partitioned',
+                                          "SMT IQ Sharing Policy")
     smtIQThreshold = Param.Int(100, "SMT IQ Threshold Sharing Parameter")
-    smtROBPolicy   = Param.String('Partitioned', "SMT ROB Sharing Policy")
+    smtROBPolicy   = Param.SMTQueuePolicy('Partitioned',
+                                          "SMT ROB Sharing Policy")
     smtROBThreshold = Param.Int(100, "SMT ROB Threshold Sharing Parameter")
-    smtCommitPolicy = Param.String('RoundRobin', "SMT Commit Policy")
+    smtCommitPolicy = Param.CommitPolicy('RoundRobin', "SMT Commit Policy")
 
     branchPred = Param.BranchPredictor(TournamentBP(numThreads =
                                                        Parent.numThreads),
@@ -147,16 +181,16 @@ class DerivO3CPU(BaseCPU):
 
     def addCheckerCpu(self):
         if buildEnv['TARGET_ISA'] in ['arm']:
-            from ArmTLB import ArmTLB
+            from m5.objects.ArmTLB import ArmDTB, ArmITB
 
             self.checker = O3Checker(workload=self.workload,
                                      exitOnError=False,
                                      updateOnError=True,
                                      warnOnlyOnLoadError=True)
-            self.checker.itb = ArmTLB(size = self.itb.size)
-            self.checker.dtb = ArmTLB(size = self.dtb.size)
+            self.checker.itb = ArmITB(size = self.itb.size)
+            self.checker.dtb = ArmDTB(size = self.dtb.size)
             self.checker.cpu_id = self.cpu_id
 
         else:
-            print "ERROR: Checker only supported under ARM ISA!"
+            print("ERROR: Checker only supported under ARM ISA!")
             exit(1)

@@ -34,13 +34,10 @@
 
 #include <string>
 
-#include "config/the_isa.hh"
 #include "sim/serialize.hh"
 #include "sim/stats.hh"
 
 // What does kernel stats expect is included?
-class System;
-
 namespace Kernel {
 
 class Statistics : public Serializable
@@ -51,37 +48,20 @@ class Statistics : public Serializable
   protected:
     Stats::Scalar _arm;
     Stats::Scalar _quiesce;
-    Stats::Scalar _hwrei;
-
-    Stats::Vector _iplCount;
-    Stats::Vector _iplGood;
-    Stats::Vector _iplTicks;
-    Stats::Formula _iplUsed;
-
-#if THE_ISA == ALPHA_ISA
-    Stats::Vector _syscall;
-#endif
-//    Stats::Vector _faults;
-
-  private:
-    int iplLast;
-    Tick iplLastTick;
 
   public:
-    Statistics(System *system);
     virtual ~Statistics() {}
 
     const std::string name() const { return myname; }
-    void regStats(const std::string &name);
+    virtual void regStats(const std::string &name);
 
   public:
     void arm() { _arm++; }
     void quiesce() { _quiesce++; }
-    void swpipl(int ipl);
 
   public:
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
+    void serialize(CheckpointOut &cp) const override {}
+    void unserialize(CheckpointIn &cp) override {}
 };
 
 } // namespace Kernel

@@ -26,7 +26,7 @@
 #
 # Authors: Nathan Binkert
 
-import internal
+from __future__ import print_function
+from __future__ import absolute_import
 
-def setOutputDir(dir):
-    internal.core.setOutputDir(dir)
+from _m5.core import setOutputDir

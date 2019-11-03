@@ -1,10 +1,39 @@
 /*
- * boot.S - simple register setup code for stand-alone Linux booting
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
  *
- * Copyright (C) 2012 ARM Limited. All rights reserved.
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
  *
- * Use of this source code is governed by a BSD-style license that can be
- * found in the LICENSE.txt file.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
         .text
@@ -38,6 +67,39 @@ _start:
         // Test the the MPIDR_EL1 register against 0xff00ffffff to
         // extract the primary CPU.
         ldr x1, =0xff00ffffff
+#ifdef GICV3
+        and	x2, x0, #0xff // use Aff0 as cpuid for now...
+        tst	x0, x1 // check for cpuid==zero
+        b.ne	1f // secondary CPU
+
+        ldr	x1, =GIC_DIST_BASE // GICD_CTLR
+        mov	w0, #7 // EnableGrp0 | EnableGrp1NS | EnableGrp1S
+        str	w0, [x1]
+
+
+1:      ldr	x1, =GIC_REDIST_BASE + 0x10000 + 0x80 // GICR_IGROUPR0
+        // 128K for each redistributor, 256K strided...
+        mov	x3, #1 << 18 // GICv4
+        mul	x3, x3, x2
+        add	x1, x1, x3
+        mov	w0, #~0 // Grp1 interrupts
+        str	w0, [x1], #4
+        b.ne	2f // Only local interrupts for secondary CPUs
+        ldr	x1, =GIC_DIST_BASE + 0x84 // GICD_IGROUPR
+        str	w0, [x1], #4
+        str	w0, [x1], #4
+        str	w0, [x1], #4
+
+        /* SRE & Disable IRQ/FIQ Bypass & Allow EL2 access to ICC_SRE_EL2 */
+2:      mrs	x10, S3_6_C12_C12_5 // read ICC_SRE_EL3
+        orr	x10, x10, #0xf      // enable 0xf
+        msr	S3_6_C12_C12_5, x10 // write ICC_SRE_EL3
+        isb
+
+        mov	x0, #1
+        msr	S3_0_c12_c12_6, x0 // ICC_IGRPEN0_EL1 Enable
+        msr	S3_0_C12_C12_7, x0 // ICC_IGRPEN1_EL1 Enable
+#else
         tst x0, x1                    // check for cpuid==zero
         b.ne	1f				      // secondary CPU
 
@@ -59,6 +121,7 @@ _start:
 
         mov	w0, #1 << 7			// allow NS access to GICC_PMR
         str	w0, [x1, #4]			// GICC_PMR
+#endif
 
         msr	sctlr_el2, xzr
 

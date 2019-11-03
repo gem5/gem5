@@ -42,7 +42,7 @@
 #include <cstring>
 #include <string>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/SimpleDisk.hh"
 #include "debug/SimpleDiskData.hh"
@@ -83,14 +83,6 @@ void
 SimpleDisk::write(Addr addr, baddr_t block, int count)
 {
     panic("unimplemented!\n");
-
-#if 0
-    uint8_t *data = physmem->dma_addr(addr, count);
-    if (!data)
-        panic("dma out of range! write addr=%#x count=%d\n", addr, count);
-
-    image->write(data, block, count);
-#endif
 }
 
 SimpleDisk *

@@ -1,4 +1,4 @@
-# Copyright (c) 2015 ARM Limited
+# Copyright (c) 2015, 2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -38,18 +38,8 @@
 from m5.params import *
 from m5.proxy import *
 
-from Gic import BaseGic
-from KvmVM import KvmVM
-from System import System
+from m5.objects.Gic import GicV2
 
-class KvmGic(BaseGic):
-    type = 'KvmGic'
+class MuxingKvmGic(GicV2):
+    type = 'MuxingKvmGic'
     cxx_header = "arch/arm/kvm/gic.hh"
-
-    dist_addr = Param.Addr(0x1f001000, "Address for distributor")
-    cpu_addr = Param.Addr(0x1f000100, "Address for cpu")
-    it_lines = Param.UInt32(128, "Number of interrupt lines supported")
-
-    system = Param.System(Parent.any,
-                          'System this interrupt controller belongs to')
-    kvmVM = Param.KvmVM(Parent.any, 'KVM VM (i.e., shared memory domain)')

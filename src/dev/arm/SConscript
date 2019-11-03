@@ -41,25 +41,43 @@ Import('*')
 
 if env['TARGET_ISA'] == 'arm':
     SimObject('AbstractNVM.py')
+    SimObject('Display.py')
     SimObject('FlashDevice.py')
     SimObject('Gic.py')
     SimObject('RealView.py')
+    SimObject('SMMUv3.py')
     SimObject('UFSHostDevice.py')
     SimObject('EnergyCtrl.py')
     SimObject('NoMali.py')
+    SimObject('VirtIOMMIO.py')
 
     Source('a9scu.cc')
     Source('amba_device.cc')
     Source('amba_fake.cc')
     Source('base_gic.cc')
+    Source('display.cc')
     Source('flash_device.cc')
     Source('generic_timer.cc')
-    Source('gic_pl390.cc')
+    Source('gic_v2.cc')
     Source('gic_v2m.cc')
+    Source('gic_v3.cc')
+    Source('gic_v3_cpu_interface.cc')
+    Source('gic_v3_distributor.cc')
+    Source('gic_v3_redistributor.cc')
+    Source('gic_v3_its.cc')
     Source('pl011.cc')
     Source('pl111.cc')
     Source('hdlcd.cc')
     Source('kmi.cc')
+    Source('smmu_v3.cc');
+    Source('smmu_v3_caches.cc');
+    Source('smmu_v3_cmdexec.cc');
+    Source('smmu_v3_events.cc');
+    Source('smmu_v3_ports.cc');
+    Source('smmu_v3_proc.cc');
+    Source('smmu_v3_ptops.cc');
+    Source('smmu_v3_slaveifc.cc');
+    Source('smmu_v3_transl.cc');
     Source('timer_sp804.cc')
     Source('gpu_nomali.cc')
     Source('pci_host.cc')
@@ -67,7 +85,9 @@ if env['TARGET_ISA'] == 'arm':
     Source('realview.cc')
     Source('rtc_pl031.cc')
     Source('timer_cpulocal.cc')
+    Source('timer_a9global.cc')
     Source('vgic.cc')
+    Source('vio_mmio.cc')
     Source('ufs_device.cc')
     Source('energy_ctrl.cc')
 
@@ -78,7 +98,10 @@ if env['TARGET_ISA'] == 'arm':
     DebugFlag('GICV2M')
     DebugFlag('Pl050')
     DebugFlag('GIC')
+    DebugFlag('ITS')
     DebugFlag('RVCTRL')
+    DebugFlag('SMMUv3')
+    DebugFlag('SMMUv3Hazard')
     DebugFlag('EnergyCtrl')
     DebugFlag('UFSHostDevice')
     DebugFlag('VGIC')

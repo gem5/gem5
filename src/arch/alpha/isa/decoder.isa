@@ -840,7 +840,7 @@ decode OPCODE default Unknown::unknown() {
                     exitSimLoop("halt instruction encountered");
                 }}, IsNonSpeculative);
                 0x83: callsys({{
-                    xc->syscall(R0);
+                    xc->syscall(R0, &fault);
                 }}, IsSerializeAfter, IsNonSpeculative, IsSyscall);
                 // Read uniq reg into ABI return value register (r0)
                 0x9e: rduniq({{ R0 = Runiq; }}, IsIprAccess);
@@ -858,7 +858,30 @@ decode OPCODE default Unknown::unknown() {
             } else {
                 // check to see if simulator wants to do something special
                 // on this PAL call (including maybe suppress it)
-                bool dopal = xc->simPalCheck(palFunc);
+                bool dopal = true;
+                ThreadContext *tc = xc->tcBase();
+                auto *base_stats = tc->getKernelStats();
+                auto *stats = dynamic_cast<AlphaISA::Kernel::Statistics *>(
+                        base_stats);
+                assert(stats || !base_stats);
+                if (stats)
+                    stats->callpal(palFunc, tc);
+
+                System *sys = tc->getSystemPtr();
+
+                switch (palFunc) {
+                  case PAL::halt:
+                    xc->tcBase()->halt();
+                    if (--System::numSystemsRunning == 0)
+                        exitSimLoop("all cpus halted");
+                    break;
+
+                  case PAL::bpt:
+                  case PAL::bugchk:
+                    if (sys->breakpoint())
+                        dopal = false;
+                    break;
+                }
 
                 if (dopal) {
                     xc->setMiscReg(IPR_EXC_ADDR, NPC);
@@ -930,7 +953,24 @@ decode OPCODE default Unknown::unknown() {
   0x1e: decode PALMODE {
       0: OpcdecFault::hw_rei();
         format BasicOperate {
-          1: hw_rei({{ xc->hwrei(); }}, IsSerializing, IsSerializeBefore);
+          1: hw_rei({{
+                Addr pc = PC;
+                if (!(pc & 0x3))
+                    return std::make_shared<UnimplementedOpcodeFault>();
+
+                LockFlag = false;
+                NPC = IprExcAddr;
+
+                ThreadContext *tc = xc->tcBase();
+                auto *base_stats = tc->getKernelStats();
+                auto *stats = dynamic_cast<AlphaISA::Kernel::Statistics *>(
+                        base_stats);
+                assert(stats || !base_stats);
+                if (stats)
+                    stats->hwrei();
+
+                CPA::cpa()->swAutoBegin(tc, IprExcAddr);
+          }}, IsSerializing, IsSerializeBefore);
         }
     }
 
@@ -942,7 +982,7 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative);
             0x01: quiesce({{
                 // Don't sleep if (unmasked) interrupts are pending
-                Interrupts* interrupts =
+                BaseInterrupts* interrupts =
                     xc->tcBase()->getCpuPtr()->getInterruptController(0);
                 if (interrupts->checkInterrupts(xc->tcBase())) {
                     PseudoInst::quiesceSkip(xc->tcBase());

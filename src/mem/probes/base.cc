@@ -41,7 +41,6 @@
 
 #include "params/BaseMemProbe.hh"
 
-
 BaseMemProbe::BaseMemProbe(BaseMemProbeParams *p)
     : SimObject(p)
 {

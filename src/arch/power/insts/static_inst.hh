@@ -59,15 +59,21 @@ class PowerStaticInst : public StaticInst
     /// Print a register name for disassembly given the unique
     /// dependence tag number (FP or int).
     void
-    printReg(std::ostream &os, int reg) const;
+    printReg(std::ostream &os, RegId reg) const;
 
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 
     void
-    advancePC(PowerISA::PCState &pcState) const
+    advancePC(PowerISA::PCState &pcState) const override
     {
         pcState.advance();
+    }
+
+    size_t
+    asBytes(void *buf, size_t max_size) override
+    {
+        return simpleAsBytes(buf, max_size, machInst);
     }
 };
 

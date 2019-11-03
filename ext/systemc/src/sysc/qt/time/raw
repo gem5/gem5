@@ -1,0 +1,58 @@
+#! /bin/csh
+
+rm -f timed
+
+set init=1
+set runone=6
+set blockint=7
+set blockfloat=8
+set vainit0=14
+set vainit2=15
+set vainit4=16
+set vainit8=17
+set vastart0=10
+set vastart2=11
+set vastart4=12
+set vastart8=13
+set bench_regcall=18
+set bench_immcall=19
+set bench_add=20
+set bench_load=21
+
+source configuration
+
+echo -n $config_machine $init $config_init
+/bin/time run $init $config_init
+echo -n $config_machine $runone $config_runone
+/bin/time run $runone $config_runone
+echo -n $config_machine $blockint $config_blockint
+/bin/time run $blockint $config_blockint
+echo -n $config_machine $blockfloat $config_blockfloat
+/bin/time run $blockfloat $config_blockfloat
+
+echo -n $config_machine $vainit0 $config_vainit0
+/bin/time run $vainit0 $config_vainit0
+echo -n $config_machine $vainit2 $config_vainit2
+/bin/time run $vainit2 $config_vainit2
+echo -n $config_machine $vainit4 $config_vainit4
+/bin/time run $vainit4 $config_vainit4
+echo -n $config_machine $vainit8 $config_vainit8
+/bin/time run $vainit8 $config_vainit8
+
+echo -n $config_machine $vastart0 $config_vastart0
+/bin/time run $vastart0 $config_vastart0
+echo -n $config_machine $vastart2 $config_vastart2
+/bin/time run $vastart2 $config_vastart2
+echo -n $config_machine $vastart4 $config_vastart4
+/bin/time run $vastart4 $config_vastart4
+echo -n $config_machine $vastart8 $config_vastart8
+/bin/time run $vastart8 $config_vastart8
+
+echo -n $config_machine $bench_regcall $config_bcall_reg
+/bin/time run $bench_regcall $config_bcall_reg
+echo -n $config_machine $bench_immcall $config_bcall_imm
+/bin/time run $bench_immcall $config_bcall_imm
+echo -n $config_machine $bench_add $config_b_add
+/bin/time run $bench_add $config_b_add
+echo -n $config_machine $bench_load $config_b_load
+/bin/time run $bench_load $config_b_load

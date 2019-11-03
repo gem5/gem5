@@ -28,10 +28,11 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/nativetrace.hh"
+
+#include "arch/x86/isa_traits.hh"
 #include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/int.hh"
-#include "arch/x86/isa_traits.hh"
-#include "arch/x86/nativetrace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/ExecRegDelta.hh"
 #include "params/X86NativeTrace.hh"
@@ -89,9 +90,9 @@ X86NativeTrace::ThreadState::update(ThreadContext *tc)
     rip = tc->pcState().npc();
     //This should be expanded if x87 registers are considered
     for (int i = 0; i < 8; i++)
-        mmx[i] = tc->readFloatRegBits(X86ISA::FLOATREG_MMX(i));
+        mmx[i] = tc->readFloatReg(X86ISA::FLOATREG_MMX(i));
     for (int i = 0; i < 32; i++)
-        xmm[i] = tc->readFloatRegBits(X86ISA::FLOATREG_XMM_BASE + i);
+        xmm[i] = tc->readFloatReg(X86ISA::FLOATREG_XMM_BASE + i);
 }
 
 

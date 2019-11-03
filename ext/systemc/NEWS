@@ -1,0 +1,107 @@
+* SystemC 2.3.1a
+  Relicensed under Apache License, Version 2.0.
+  No functional changes.
+
+* SystemC 2.3.1
+  Release of SystemC 2.3.1
+  - Bug fixes.
+  - Code cleanup.
+  - Some experimental new features.
+
+* SystemC 2.3.0
+  Release of SystemC 2.3.0
+  - Compliance to IEEE Std 1666-2011
+  - Per LRM, includes TLM-2.0.2
+  - Bug fixes.
+  - Code cleanup.
+
+* SystemC 2.2
+  Production release of SystemC 2.2
+  - Compliance to IEEE Std 1666-2005
+
+* SystemC 2.2 Beta
+  Beta release of SystemC 2.2
+  - Bug fixes.
+  - Code cleanup.
+  - Major new functionality
+    o Compliance with the IEEE 1666 SystemC Language reference module.
+  - Platforms and compilers supported (added since 2.1):
+    o Support for 64-bit Linux systems gcc-3.4.3.
+    o Linux with GNU C++ compiler version gcc-4.0.1.
+    o MacOS X with GNU C++ compiler version gcc-4.0.0.
+
+* SystemC 2.1 
+  Release of SystemC 2.1
+  - Bug fixes.
+  - Code cleanup.
+  - Major new functionality
+    o Dynamic process support, including synchronization primitives.
+    o Mixed concatenation and concatenation of long types.
+    o Event queue support.
+    o Exported interfaces: sc_export.
+    o New error reporting API.
+  - Platforms and compilers supported (added since 2.0.1 Production):
+    o Solaris 2.8 with Sun CC compiler version Forte 7 and gcc-3.2.3
+    o Linux (Redhat 9.0) with GNU C++ compiler version gcc-3.2.2
+    o Linux (Redhat 8.0) with GNU C++ compiler version gcc-2.95.3 and gcc-3.2.3
+    o MacOS X with GNU C++ compiler version gcc-3.1 and gcc-3.3.
+    o Windows NT 4.0 (SP6a) with VC++ 7.0 
+
+* SystemC 2.0.1 
+  Production release of SystemC 2.0.1
+  - Bug fixes.
+  - Code cleanup.
+  - Simple bus example included.
+  - Platforms supported (changed from 2.0 Production):
+    o Sun Solaris 2.7 and 2.8 with GNU C++ compiler version gcc-2.95.3
+    o Linux (Redhat 6.2) with GNU C++ compiler version gcc-2.95.3
+    o Linux (Redhat 7.2) with GNU C++ compiler version gcc-2.95.3
+    o HP-UX 11.00 with HP C++ compiler version A.03.33
+      (Note: +O1 is the highest safe optimization level)
+    o Windows NT 4.0 (SP6a) with VC++ 6.0 (SP5)
+  - First release of a regression test suite for SystemC.
+    The SystemC regression test suite is released separately.
+
+* SystemC 2.0
+  Production release of SystemC 2.0.
+  - All new SystemC 2.0 core language features.
+  - All SystemC 1.0.2 functionality (except obsoleted SystemC 0.9 features).
+  - No methodology-specific channels as in SystemC 1.2.1 beta.
+    (Note: starting with this release, the 2.0 Core Language Features
+     will be released separately from the methodology-specific libraries,
+     an example of which is the Master-Slave Library of 1.2.1 beta.
+     The release of the Master-Slave Library will follow this release.
+     You would be able to use the Master-Slave Library in conjunction with
+     this release). 
+  - Dynamic thread creation example provided.
+  - Directory structure changed from 1.0.2, but same as 2.0 beta-2.
+  - Build process changed from 1.0.2 but same as 2.0 beta-2.
+  - Bug fixes for 2.0 beta-2.
+  - Platforms supported (changed from 2.0 beta-2):
+    o Sun Solaris 2.7 and 2.8 with GNU C++ compiler version 2.95.2
+    o Sun Solaris 2.7 and 2.8 with SC6.1 and SC6.2
+    o Linux (Redhat 6.2) with GNU C++ compiler version 2.95.2
+    o HP-UX 11.00 with aCC C++ compiler versions A.03.31 and A.03.15
+      (Note: +O1 is the highest safe optimization level)
+    o Windows NT 4.0 (SP3 and higher) with VC++6.0
+
+* SystemC 2.0 Beta-2
+  Second beta release of SystemC 2.0.
+
+* SystemC 2.0 Beta-1
+  First beta release of SystemC 2.0.
+
+* SystemC 1.0.2
+  Bug fix release.
+
+* SystemC 1.0.1
+  Bug fix release.
+
+* SystemC 1.0
+  First release of new SystemC syntax and fixed-point package.
+
+* SystemC 0.91
+  Second release of SystemC.
+
+* SystemC 0.9
+  This is the first release of SystemC.

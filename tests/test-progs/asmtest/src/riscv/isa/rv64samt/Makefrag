@@ -1,0 +1,13 @@
+#=========================================================================
+# Makefrag for rv64samt tests
+#=========================================================================
+
+rv64sa_mt_tests = sysclone_d \
+                  sysfutex_d \
+                  sysfutex1_d \
+                  sysfutex2_d \
+                  sysfutex3_d \
+
+rv64samt_ps_tests = $(addprefix rv64samt-ps-, $(rv64sa_mt_tests))
+
+spike_tests += $(rv64samt_ps_tests)

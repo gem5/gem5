@@ -31,23 +31,15 @@
 #ifndef __ARCH_ARM_KERNEL_STATS_HH__
 #define __ARCH_ARM_KERNEL_STATS_HH__
 
-#include <map>
-#include <stack>
-#include <string>
-#include <vector>
-
 #include "kern/kernel_stats.hh"
 
 namespace ArmISA {
 namespace Kernel {
 
-enum cpu_mode { hypervisor, kernel, user, idle, cpu_mode_num };
-extern const char *modestr[];
-
 class Statistics : public ::Kernel::Statistics
 {
   public:
-    Statistics(System *system) : ::Kernel::Statistics(system)
+    Statistics() : ::Kernel::Statistics()
     {}
 };
 

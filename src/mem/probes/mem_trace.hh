@@ -45,6 +45,7 @@
 #include "proto/protoio.hh"
 
 struct MemTraceProbeParams;
+class System;
 
 class MemTraceProbe : public BaseMemProbe
 {
@@ -60,10 +61,14 @@ class MemTraceProbe : public BaseMemProbe
      */
     void closeStreams();
 
+    void startup() override;
+
   protected:
 
     /** Trace output stream */
     ProtoOutputStream *traceStream;
+
+    System *system;
 
   private:
 

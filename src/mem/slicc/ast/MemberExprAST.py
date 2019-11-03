@@ -41,10 +41,13 @@ class MemberExprAST(ExprAST):
         return_type, gcode = self.expr_ast.inline(True)
         fix = code.nofix()
 
+
+        # Check whether return_type is Entry by checking
+        # interfaces since entries in protocol files use
+        # AbstractCacheEntry as interfaces.
         if str(return_type) == "TBE" \
            or ("interface" in return_type and
-            (return_type["interface"] == "AbstractCacheEntry" or
-             return_type["interface"] == "AbstractEntry")):
+            (return_type["interface"] == "AbstractCacheEntry")):
             code("(*$gcode).m_${{self.field}}")
         else:
             code("($gcode).m_${{self.field}}")

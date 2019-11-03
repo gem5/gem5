@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013 ARM Limited
+// Copyright (c) 2011-2013, 2016-2019 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -50,7 +50,7 @@ let {{
             _in = bits(resTemp, intWidth - 1);
             _iz = ((resTemp & mask(intWidth)) == 0);
             CondCodesNZ = (_in << 1) | _iz;
-            DPRINTF(Arm, "(in, iz) = (%%d, %%d)\\n", _in, _iz);
+            DPRINTF(Arm, "(in, iz) = (%d, %d)\\n", _in, _iz);
         '''
         if overflow and overflow != "none":
             code +=  '''
@@ -226,6 +226,42 @@ let {{
         "Dest64 = shiftReg64(Op164, Op264, LSR, intWidth)")
     buildDataXRegInst("rorv", 2,
         "Dest64 = shiftReg64(Op164, Op264, ROR, intWidth)")
+
+    crcCode = '''
+    constexpr uint8_t size_bytes = %(sz)d;
+    constexpr uint32_t poly = %(polynom)s;
+
+    // Initial value is often a previously evaluated
+    // crc value hence is always 32bit in CRC32
+    uint32_t initial_crc = Op164 & 0xFFFFFFFF;
+
+    uint64_t data = htole(Op264);
+    auto data_buffer = reinterpret_cast<uint8_t*>(&data);
+
+    Dest = crc32<poly>(
+        data_buffer,   /* Message register */
+        initial_crc,   /* Initial value of the CRC */
+        size_bytes     /* Size of the original Message */
+    );
+    '''
+    buildDataXRegInst("crc32b", 2,
+        crcCode % {"sz": 1, "polynom": "0x04C11DB7"})
+    buildDataXRegInst("crc32h", 2,
+        crcCode % {"sz": 2, "polynom": "0x04C11DB7"})
+    buildDataXRegInst("crc32w", 2,
+        crcCode % {"sz": 4, "polynom": "0x04C11DB7"})
+    buildDataXRegInst("crc32x", 2,
+        crcCode % {"sz": 8, "polynom": "0x04C11DB7"})
+
+    buildDataXRegInst("crc32cb", 2,
+        crcCode % {"sz": 1, "polynom": "0x1EDC6F41"})
+    buildDataXRegInst("crc32ch", 2,
+        crcCode % {"sz": 2, "polynom": "0x1EDC6F41"})
+    buildDataXRegInst("crc32cw", 2,
+        crcCode % {"sz": 4, "polynom": "0x1EDC6F41"})
+    buildDataXRegInst("crc32cx", 2,
+        crcCode % {"sz": 8, "polynom": "0x1EDC6F41"})
+
     buildDataXRegInst("sdiv", 2, '''
         int64_t op1 = Op164;
         int64_t op2 = Op264;
@@ -248,18 +284,7 @@ let {{
         Dest64 = (Op164 == 0) ? intWidth : (intWidth - 1 - findMsbSet(Op164));
     ''')
     buildDataXRegInst("rbit", 1, '''
-        uint64_t result = Op164;
-        uint64_t lBit = 1ULL << (intWidth - 1);
-        uint64_t rBit = 1ULL;
-        while (lBit > rBit) {
-            uint64_t maskBits = lBit | rBit;
-            uint64_t testBits = result & maskBits;
-            // If these bits are different, swap them by toggling them.
-            if (testBits && testBits != maskBits)
-                result ^= maskBits;
-            lBit >>= 1; rBit <<= 1;
-        }
-        Dest64 = result;
+        Dest64 = reverseBits(Op164, intWidth/8);
     ''')
     buildDataXRegInst("rev", 1, '''
         if (intWidth == 32)
@@ -301,40 +326,38 @@ let {{
                                                           mnemonic);
         }
 
-        // Check for traps to supervisor (FP/SIMD regs)
-        if (el <= EL1 && msrMrs64TrapToSup(flat_idx, el, Cpacr64))
-            return std::make_shared<SupervisorTrap>(machInst, 0x1E00000,
-                                                    EC_TRAPPED_SIMD_FP);
-
-        bool is_vfp_neon = false;
-
-        // Check for traps to hypervisor
-        if ((ArmSystem::haveVirtualization(xc->tcBase()) && el <= EL2) &&
-            msrMrs64TrapToHyp(flat_idx, %s, CptrEl264, Hcr64, &is_vfp_neon)) {
-            return std::make_shared<HypervisorTrap>(
-                machInst, is_vfp_neon ? 0x1E00000 : imm,
-                is_vfp_neon ? EC_TRAPPED_SIMD_FP : EC_TRAPPED_MSR_MRS_64);
-        }
-
-        // Check for traps to secure monitor
-        if ((ArmSystem::haveSecurity(xc->tcBase()) && el <= EL3) &&
-            msrMrs64TrapToMon(flat_idx, CptrEl364, el, &is_vfp_neon)) {
-            return std::make_shared<SecureMonitorTrap>(
-                machInst,
-                is_vfp_neon ? 0x1E00000 : imm,
-                is_vfp_neon ? EC_TRAPPED_SIMD_FP : EC_TRAPPED_MSR_MRS_64);
-        }
+        fault = this->trap(xc->tcBase(), flat_idx, el, imm);
+        if (fault != NoFault) return fault;
     '''
 
-    buildDataXImmInst("mrs", '''
+    msr_check_code = '''
+        auto pre_flat = (MiscRegIndex)snsBankedIndex64(dest, xc->tcBase());
         MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
-            flattenMiscIndex(op1);
+            flattenRegId(RegId(MiscRegClass, pre_flat)).index();
         CPSR cpsr = Cpsr;
         ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
         %s
+    ''' % (msrMrs64EnabledCheckCode % ('Write'),)
+
+    mrs_check_code = '''
+        auto pre_flat = (MiscRegIndex)snsBankedIndex64(op1, xc->tcBase());
+        MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
+            flattenRegId(RegId(MiscRegClass, pre_flat)).index();
+        CPSR cpsr = Cpsr;
+        ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
+        %s
+    ''' % (msrMrs64EnabledCheckCode % ('Read'),)
+
+
+    mrsCode = mrs_check_code + '''
         XDest = MiscOp1_ud;
-    ''' % (msrMrs64EnabledCheckCode % ('Read', 'true'),),
-        ["IsSerializeBefore"])
+    '''
+    mrsIop = InstObjParams("mrs", "Mrs64", "RegMiscRegImmOp64",
+                           mrsCode,
+                           ["IsSerializeBefore"])
+    header_output += RegMiscRegOp64Declare.subst(mrsIop)
+    decoder_output += RegMiscRegOp64Constructor.subst(mrsIop)
+    exec_output += BasicExecute.subst(mrsIop)
 
     buildDataXRegInst("mrsNZCV", 1, '''
         CPSR cpsr = 0;
@@ -344,15 +367,16 @@ let {{
         XDest = cpsr;
     ''')
 
-    buildDataXImmInst("msr", '''
-        MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
-            flattenMiscIndex(dest);
-        CPSR cpsr = Cpsr;
-        ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
-        %s
+    msrCode = msr_check_code + '''
         MiscDest_ud = XOp1;
-    ''' % (msrMrs64EnabledCheckCode % ('Write', 'false'),),
-        ["IsSerializeAfter", "IsNonSpeculative"])
+    '''
+    msrIop = InstObjParams("msr", "Msr64", "MiscRegRegImmOp64",
+                           msrCode,
+                           ["IsSerializeAfter", "IsNonSpeculative"])
+    header_output += MiscRegRegOp64Declare.subst(msrIop)
+    decoder_output += MiscRegRegOp64Constructor.subst(msrIop)
+    exec_output += BasicExecute.subst(msrIop)
+
 
     buildDataXRegInst("msrNZCV", 1, '''
         CPSR cpsr = XOp1;
@@ -361,15 +385,11 @@ let {{
         CondCodesV = cpsr.v;
     ''')
 
-    msrdczva_ea_code = '''
-        MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest);
-        CPSR cpsr = Cpsr;
-        ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
-    '''
 
-    msrdczva_ea_code += msrMrs64EnabledCheckCode % ('Write', 'false')
+    msrdczva_ea_code = msr_check_code
     msrdczva_ea_code += '''
-           Request::Flags memAccessFlags = Request::CACHE_BLOCK_ZERO|ArmISA::TLB::MustBeOne;
+           Request::Flags memAccessFlags = Request::CACHE_BLOCK_ZERO |
+               ArmISA::TLB::MustBeOne;
            EA = XBase;
            assert(!(Dczid & 0x10));
            uint64_t op_size = power(2, Dczid + 2);
@@ -377,53 +397,174 @@ let {{
 
    '''
 
-    msrDCZVAIop = InstObjParams("dczva", "Dczva", "SysDC64",
-                { "ea_code" : msrdczva_ea_code,
-                  "memacc_code" : ";", "use_uops" : 0,
-                  "op_wb" : ";", "fa_code" : ";"}, ['IsStore', 'IsMemRef']);
+    msrDCZVAIop = InstObjParams("dc zva", "Dczva", "SysDC64",
+                                { "ea_code" : msrdczva_ea_code,
+                                  "memacc_code" : ';',
+                                  "use_uops" : 0,
+                                  "op_wb" : ";",
+                                  "fa_code" : ";"},
+                                ['IsStore', 'IsMemRef']);
     header_output += DCStore64Declare.subst(msrDCZVAIop);
     decoder_output += DCStore64Constructor.subst(msrDCZVAIop);
     exec_output += DCStore64Execute.subst(msrDCZVAIop);
     exec_output += DCStore64InitiateAcc.subst(msrDCZVAIop);
     exec_output += Store64CompleteAcc.subst(msrDCZVAIop);
 
+    # Cache maintenance fault annotation
+    # The DC ZVA instruction is not classified as a cache maintenance
+    # instruction, and therefore we shouldn't annotate it
+    cachem_fa = '''
+        fault->annotate(ArmFault::CM, 1);
+    '''
+
+    msrdccvau_ea_code = msr_check_code
+    msrdccvau_ea_code += '''
+           Request::Flags memAccessFlags = Request::CLEAN | Request::DST_POU |
+              ArmISA::TLB::MustBeOne;
+           EA = XBase;
+           System *sys = xc->tcBase()->getSystemPtr();
+           Addr op_size = sys->cacheLineSize();
+           EA &= ~(op_size - 1);
+    '''
+
+    msrDCCVAUIop = InstObjParams("dc cvau", "Dccvau", "SysDC64",
+                                 { "ea_code" : msrdccvau_ea_code,
+                                   "memacc_code" : ';',
+                                   "use_uops" : 0,
+                                   "op_wb" : ";",
+                                   "fa_code" : cachem_fa},
+                                 ['IsStore', 'IsMemRef']);
+    header_output += DCStore64Declare.subst(msrDCCVAUIop);
+    decoder_output += DCStore64Constructor.subst(msrDCCVAUIop);
+    exec_output += DCStore64Execute.subst(msrDCCVAUIop);
+    exec_output += DCStore64InitiateAcc.subst(msrDCCVAUIop);
+    exec_output += Store64CompleteAcc.subst(msrDCCVAUIop);
 
 
-    buildDataXImmInst("msrSP", '''
-        if (!canWriteAArch64SysReg(
-                (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest),
+    msrdccvac_ea_code = msr_check_code
+    msrdccvac_ea_code += '''
+           Request::Flags memAccessFlags = Request::CLEAN | Request::DST_POC |
+              ArmISA::TLB::MustBeOne;
+           EA = XBase;
+           System *sys = xc->tcBase()->getSystemPtr();
+           Addr op_size = sys->cacheLineSize();
+           EA &= ~(op_size - 1);
+    '''
+
+    msrDCCVACIop = InstObjParams("dc cvac", "Dccvac", "SysDC64",
+                                 { "ea_code" : msrdccvac_ea_code,
+                                   "memacc_code" : ';',
+                                   "use_uops" : 0,
+                                   "op_wb" : ";",
+                                   "fa_code" : cachem_fa},
+                                 ['IsStore', 'IsMemRef']);
+    header_output += DCStore64Declare.subst(msrDCCVACIop);
+    decoder_output += DCStore64Constructor.subst(msrDCCVACIop);
+    exec_output += DCStore64Execute.subst(msrDCCVACIop);
+    exec_output += DCStore64InitiateAcc.subst(msrDCCVACIop);
+    exec_output += Store64CompleteAcc.subst(msrDCCVACIop);
+
+
+    msrdccivac_ea_code = msr_check_code
+    msrdccivac_ea_code += '''
+           Request::Flags memAccessFlags = Request::CLEAN |
+              Request::INVALIDATE | Request::DST_POC | ArmISA::TLB::MustBeOne;
+           EA = XBase;
+           System *sys = xc->tcBase()->getSystemPtr();
+           Addr op_size = sys->cacheLineSize();
+           EA &= ~(op_size - 1);
+    '''
+
+    msrDCCIVACIop = InstObjParams("dc civac", "Dccivac", "SysDC64",
+                                  { "ea_code" : msrdccivac_ea_code,
+                                    "memacc_code" : ';',
+                                    "use_uops" : 0,
+                                    "op_wb" : ";",
+                                    "fa_code" : cachem_fa},
+                                  ['IsStore', 'IsMemRef']);
+    header_output += DCStore64Declare.subst(msrDCCIVACIop);
+    decoder_output += DCStore64Constructor.subst(msrDCCIVACIop);
+    exec_output += DCStore64Execute.subst(msrDCCIVACIop);
+    exec_output += DCStore64InitiateAcc.subst(msrDCCIVACIop);
+    exec_output += Store64CompleteAcc.subst(msrDCCIVACIop);
+
+
+    msrdcivac_ea_code = msr_check_code
+    msrdcivac_ea_code += '''
+           Request::Flags memAccessFlags = Request::INVALIDATE |
+              Request::DST_POC | ArmISA::TLB::MustBeOne;
+           EA = XBase;
+           HCR hcr = Hcr64;
+           SCR scr = Scr64;
+           if (el == EL1 && ArmSystem::haveVirtualization(xc->tcBase()) &&
+               hcr.vm && (scr.ns || !ArmSystem::haveSecurity(xc->tcBase()))) {
+               memAccessFlags = memAccessFlags | Request::CLEAN;
+           }
+           System *sys = xc->tcBase()->getSystemPtr();
+           Addr op_size = sys->cacheLineSize();
+           EA &= ~(op_size - 1);
+    '''
+
+    msrDCIVACIop = InstObjParams("dc ivac", "Dcivac", "SysDC64",
+                                 { "ea_code" : msrdcivac_ea_code,
+                                   "memacc_code" : ';',
+                                   "use_uops" : 0,
+                                   "op_wb" : ";",
+                                   "fa_code" : cachem_fa},
+                                 ['IsStore', 'IsMemRef']);
+    header_output += DCStore64Declare.subst(msrDCIVACIop);
+    decoder_output += DCStore64Constructor.subst(msrDCIVACIop);
+    exec_output += DCStore64Execute.subst(msrDCIVACIop);
+    exec_output += DCStore64InitiateAcc.subst(msrDCIVACIop);
+    exec_output += Store64CompleteAcc.subst(msrDCIVACIop);
+
+    def buildMsrImmInst(mnem, inst_name, code):
+        global header_output, decoder_output, exec_output
+        msrImmPermission = '''
+            auto pre_flat =
+                (MiscRegIndex)snsBankedIndex64(dest, xc->tcBase());
+            MiscRegIndex misc_index = (MiscRegIndex) xc->tcBase()->
+                flattenRegId(RegId(MiscRegClass, pre_flat)).index();
+
+            if (!miscRegInfo[misc_index][MISCREG_IMPLEMENTED]) {
+                    return std::make_shared<UndefinedInstruction>(
+                                    machInst, false,
+                                    mnemonic);
+            }
+
+            if (!canWriteAArch64SysReg(misc_index,
                 Scr64, Cpsr, xc->tcBase())) {
-            return std::make_shared<UndefinedInstruction>(machInst, false,
-                                                          mnemonic);
-        }
-        MiscDest_ud = imm;
-    ''', optArgs = ["IsSerializeAfter", "IsNonSpeculative"])
 
-    buildDataXImmInst("msrDAIFSet", '''
-        if (!canWriteAArch64SysReg(
-                (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest),
-                Scr64, Cpsr, xc->tcBase())) {
-            return std::make_shared<UndefinedInstruction>(
-                            machInst, 0, EC_TRAPPED_MSR_MRS_64,
-                            mnemonic);
-        }
+                    return std::make_shared<UndefinedInstruction>(
+                                    machInst, 0, EC_TRAPPED_MSR_MRS_64,
+                                    mnemonic);
+            }
+
+        '''
+        msrIop = InstObjParams("msr", inst_name, "MiscRegImmOp64",
+                               msrImmPermission + code,
+                               ["IsSerializeAfter", "IsNonSpeculative"])
+        header_output += MiscRegOp64Declare.subst(msrIop)
+        decoder_output += MiscRegOp64Constructor.subst(msrIop)
+        exec_output += BasicExecute.subst(msrIop)
+
+    buildMsrImmInst("msr", "MsrImm64", '''
+        // Mask and shift immediate (depending on PSTATE field)
+        // before assignment
+        MiscDest_ud = miscRegImm();
+    ''')
+
+    buildMsrImmInst("msr", "MsrImmDAIFSet64", '''
         CPSR cpsr = Cpsr;
         cpsr.daif = cpsr.daif | imm;
         Cpsr = cpsr;
-    ''', optArgs = ["IsSerializeAfter", "IsNonSpeculative"])
+    ''')
 
-    buildDataXImmInst("msrDAIFClr", '''
-        if (!canWriteAArch64SysReg(
-                (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest),
-                Scr64, Cpsr, xc->tcBase())) {
-            return std::make_shared<UndefinedInstruction>(
-                                machInst, 0, EC_TRAPPED_MSR_MRS_64,
-                                mnemonic);
-        }
+    buildMsrImmInst("msr", "MsrImmDAIFClr64", '''
         CPSR cpsr = Cpsr;
         cpsr.daif = cpsr.daif & ~imm;
         Cpsr = cpsr;
-    ''', optArgs = ["IsSerializeAfter", "IsNonSpeculative"])
+    ''')
 
     def buildDataXCompInst(mnem, instType, suffix, code):
         global header_output, decoder_output, exec_output

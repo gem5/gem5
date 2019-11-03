@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,13 +30,25 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Anthony Gutierrez
+ * Authors: Anthony Gutierrez
  */
 
 #include "gpu-compute/gpu_static_inst.hh"
 
 GPUStaticInst::GPUStaticInst(const std::string &opcode)
-    : o_type(Enums::OT_ALU), executed_as(Enums::SC_NONE), opcode(opcode),
-      _instNum(0), _scalarOp(false)
+    : executed_as(Enums::SC_NONE), opcode(opcode),
+      _instNum(0), _instAddr(0)
 {
+    setFlag(NoOrder);
+}
+
+const std::string&
+GPUStaticInst::disassemble()
+{
+    if (disassembly.empty()) {
+        generateDisassembly();
+        assert(!disassembly.empty());
+    }
+
+    return disassembly;
 }

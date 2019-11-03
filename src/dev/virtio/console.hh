@@ -40,8 +40,8 @@
 #ifndef __DEV_VIRTIO_CONSOLE_HH__
 #define __DEV_VIRTIO_CONSOLE_HH__
 
+#include "dev/serial/serial.hh"
 #include "dev/virtio/base.hh"
-#include "dev/terminal.hh"
 
 struct VirtIOConsoleParams;
 
@@ -108,8 +108,9 @@ class VirtIOConsole : public VirtIODeviceBase
         : public VirtQueue
     {
       public:
-        TermRecvQueue(PortProxy &proxy, uint16_t size, VirtIOConsole &_parent)
-            : VirtQueue(proxy, size), parent(_parent) {}
+        TermRecvQueue(PortProxy &proxy, ByteOrder bo,
+                uint16_t size, VirtIOConsole &_parent)
+            : VirtQueue(proxy, bo, size), parent(_parent) {}
         virtual ~TermRecvQueue() {}
 
         void onNotify() { trySend(); }
@@ -132,8 +133,9 @@ class VirtIOConsole : public VirtIODeviceBase
         : public VirtQueue
     {
       public:
-        TermTransQueue(PortProxy &proxy, uint16_t size, VirtIOConsole &_parent)
-            : VirtQueue(proxy, size), parent(_parent) {}
+        TermTransQueue(PortProxy &proxy, ByteOrder bo,
+                uint16_t size, VirtIOConsole &_parent)
+            : VirtQueue(proxy, bo, size), parent(_parent) {}
         virtual ~TermTransQueue() {}
 
         void onNotifyDescriptor(VirtDescriptor *desc);
@@ -147,7 +149,7 @@ class VirtIOConsole : public VirtIODeviceBase
     TermTransQueue qTrans;
 
   protected:
-    Terminal &term;
+    SerialDevice &device;
     MakeCallback<VirtIOConsole::TermRecvQueue,
                  &VirtIOConsole::TermRecvQueue::trySend> callbackDataAvail;
 };

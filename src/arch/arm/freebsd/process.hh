@@ -55,16 +55,16 @@ class ArmFreebsdProcessBits
 };
 
 /// A process with emulated Arm/Freebsd syscalls.
-class ArmFreebsdProcess32 : public ArmLiveProcess32, public ArmFreebsdProcessBits
+class ArmFreebsdProcess32 : public ArmProcess32, public ArmFreebsdProcessBits
 {
   public:
-    ArmFreebsdProcess32(LiveProcessParams * params, ObjectFile *objFile,
-                      ObjectFile::Arch _arch);
+    ArmFreebsdProcess32(ProcessParams * params, ObjectFile *objFile,
+                        ObjectFile::Arch _arch);
 
     void initState();
 
     /// Explicitly import the otherwise hidden getSyscallArg
-    using ArmLiveProcess::getSyscallArg;
+    using ArmProcess::getSyscallArg;
 
     /// A page to hold "kernel" provided functions. The name might be wrong.
     static const Addr commPage;
@@ -73,11 +73,11 @@ class ArmFreebsdProcess32 : public ArmLiveProcess32, public ArmFreebsdProcessBit
 };
 
 /// A process with emulated Arm/Freebsd syscalls.
-class ArmFreebsdProcess64 : public ArmLiveProcess64, public ArmFreebsdProcessBits
+class ArmFreebsdProcess64 : public ArmProcess64, public ArmFreebsdProcessBits
 {
   public:
-    ArmFreebsdProcess64(LiveProcessParams * params, ObjectFile *objFile,
-                      ObjectFile::Arch _arch);
+    ArmFreebsdProcess64(ProcessParams * params, ObjectFile *objFile,
+                        ObjectFile::Arch _arch);
 
     void initState();
     SyscallDesc* getDesc(int callnum);

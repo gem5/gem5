@@ -37,6 +37,8 @@ class MipsLinux : public Linux
 {
   public:
 
+    static const ByteOrder byteOrder = LittleEndianByteOrder;
+
     static const int TGT_SIGHUP         = 0x000001;
     static const int TGT_SIGINT         = 0x000002;
     static const int TGT_SIGQUIT        = 0x000003;

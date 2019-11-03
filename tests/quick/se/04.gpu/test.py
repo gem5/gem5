@@ -32,17 +32,20 @@
 #
 #  Author: Brad Beckmann
 #
+
+from __future__ import print_function
+
 executable = binpath('gpu-hello')
 kernel_path = os.path.dirname(executable)
 kernel_files = glob.glob(os.path.join(kernel_path, '*.asm'))
 if kernel_files:
-    print "Using GPU kernel code file(s)", ",".join(kernel_files)
+    print("Using GPU kernel code file(s)", ",".join(kernel_files))
 else:
     fatal("Can't locate kernel code (.asm) in " + kernel_path)
 
 driver = ClDriver(filename="hsa", codefile=kernel_files)
 root.system.cpu[2].cl_driver = driver
-root.system.cpu[0].workload = LiveProcess(cmd = 'gpu-hello',
-                                          executable = binpath('gpu-hello'),
-                                          drivers = [driver])
+root.system.cpu[0].workload = Process(cmd = 'gpu-hello',
+                                      executable = binpath('gpu-hello'),
+                                      drivers = [driver])
 

@@ -1,0 +1,65 @@
+SystemC Simulation
+initiator: Send write request: A = 0x0, D = 0x0 @ 0 s
+target: Received write request: A = 0x0, D = 0x0 @ 0 s
+initiator: Received ok response @ 10 ns
+initiator: Send write request: A = 0x4, D = 0x1 @ 10 ns
+initiator: Received ok response @ 20 ns
+initiator: Send write request: A = 0x8, D = 0x2 @ 20 ns
+initiator: Received ok response @ 30 ns
+initiator: Send write request: A = 0xc, D = 0x3 @ 30 ns
+initiator: got DMI pointer invalidation @ 35 ns
+initiator: Received ok response @ 40 ns
+initiator: Send write request: A = 0x10, D = 0x4 @ 40 ns
+target: Received write request: A = 0x10, D = 0x4 @ 40 ns
+initiator: Received ok response @ 50 ns
+initiator: Send write request: A = 0x14, D = 0x5 @ 50 ns
+initiator: Received ok response @ 60 ns
+initiator: Send write request: A = 0x18, D = 0x6 @ 60 ns
+initiator: Received ok response @ 70 ns
+initiator: Send write request: A = 0x1c, D = 0x7 @ 70 ns
+initiator: got DMI pointer invalidation @ 75 ns
+initiator: Received ok response @ 80 ns
+initiator: Send write request: A = 0x20, D = 0x8 @ 80 ns
+target: Received write request: A = 0x20, D = 0x8 @ 80 ns
+initiator: Received ok response @ 90 ns
+initiator: Send write request: A = 0x24, D = 0x9 @ 90 ns
+initiator: Received ok response @ 100 ns
+initiator: Send read request: A = 0x0 @ 100 ns
+initiator: got DMI pointer invalidation @ 115 ns
+initiator: Received ok response: D = 0x0 @ 200 ns
+initiator: Send read request: A = 0x4 @ 200 ns
+target: Received read request: A = 0x4 @ 200 ns
+initiator: Received ok response: D = 0x1 @ 300 ns
+initiator: Send read request: A = 0x8 @ 300 ns
+initiator: got DMI pointer invalidation @ 325 ns
+initiator: Received ok response: D = 0x2 @ 400 ns
+initiator: Send read request: A = 0xc @ 400 ns
+target: Received read request: A = 0xc @ 400 ns
+initiator: Received ok response: D = 0x3 @ 500 ns
+initiator: Send read request: A = 0x10 @ 500 ns
+initiator: got DMI pointer invalidation @ 525 ns
+initiator: Received ok response: D = 0x4 @ 600 ns
+initiator: Send read request: A = 0x14 @ 600 ns
+target: Received read request: A = 0x14 @ 600 ns
+initiator: Received ok response: D = 0x5 @ 700 ns
+initiator: Send read request: A = 0x18 @ 700 ns
+initiator: got DMI pointer invalidation @ 725 ns
+initiator: Received ok response: D = 0x6 @ 800 ns
+initiator: Send read request: A = 0x1c @ 800 ns
+target: Received read request: A = 0x1c @ 800 ns
+initiator: Received ok response: D = 0x7 @ 900 ns
+initiator: Send read request: A = 0x20 @ 900 ns
+initiator: got DMI pointer invalidation @ 925 ns
+initiator: Received ok response: D = 0x8 @ 1 us
+initiator: Send read request: A = 0x24 @ 1 us
+target: Received read request: A = 0x24 @ 1 us
+initiator: Received ok response: D = 0x9 @ 1100 ns
+initiator: got DMI pointer invalidation @ 1125 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+initiator, <<SimpleLTInitiator1>>:
+
+Mem @0
+00 00 00 00 01 00 00 00 02 00 00 00 03 00 00 00
+04 00 00 00 05 00 00 00 06 00 00 00 07 00 00 00
+

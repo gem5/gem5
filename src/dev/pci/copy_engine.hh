@@ -95,7 +95,7 @@ class CopyEngine : public PciDevice
       public:
         CopyEngineChannel(CopyEngine *_ce, int cid);
         virtual ~CopyEngineChannel();
-        BaseMasterPort &getMasterPort();
+        Port &getPort();
 
         std::string name() { assert(ce); return ce->name() + csprintf("-chan%d", channelId); }
         virtual Tick read(PacketPtr pkt)
@@ -115,28 +115,23 @@ class CopyEngine : public PciDevice
       private:
         void fetchDescriptor(Addr address);
         void fetchDescComplete();
-        EventWrapper<CopyEngineChannel, &CopyEngineChannel::fetchDescComplete>
-            fetchCompleteEvent;
+        EventFunctionWrapper fetchCompleteEvent;
 
         void fetchNextAddr(Addr address);
         void fetchAddrComplete();
-        EventWrapper<CopyEngineChannel, &CopyEngineChannel::fetchAddrComplete>
-            addrCompleteEvent;
+        EventFunctionWrapper addrCompleteEvent;
 
         void readCopyBytes();
         void readCopyBytesComplete();
-        EventWrapper<CopyEngineChannel, &CopyEngineChannel::readCopyBytesComplete>
-            readCompleteEvent;
+        EventFunctionWrapper readCompleteEvent;
 
         void writeCopyBytes();
         void writeCopyBytesComplete();
-        EventWrapper <CopyEngineChannel, &CopyEngineChannel::writeCopyBytesComplete>
-            writeCompleteEvent;
+        EventFunctionWrapper writeCompleteEvent;
 
         void writeCompletionStatus();
         void writeStatusComplete();
-        EventWrapper <CopyEngineChannel, &CopyEngineChannel::writeStatusComplete>
-            statusCompleteEvent;
+        EventFunctionWrapper statusCompleteEvent;
 
 
         void continueProcessing();
@@ -198,8 +193,8 @@ class CopyEngine : public PciDevice
 
     void regStats() override;
 
-    BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+            PortID idx = InvalidPortID) override;
 
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;

@@ -1,0 +1,56 @@
+SystemC Simulation
+Should be silent except for reports ...
+
+Warning: (W505) object already exists: top.m.T. Latter declaration will be renamed to top.m.T_0
+In file: <removed by verify.pl>
+
+Warning: (W505) object already exists: top.m.T. Latter declaration will be renamed to top.m.T_1
+In file: <removed by verify.pl>
+
+Info: type: msg
+
+Warning: type: msg
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Error: type: msg
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Fatal: type: msg
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Info: type: msg
+
+Warning: type: msg
+In file: <removed by verify.pl>
+In process: top.m.T_0 @ 0 s
+
+Error: type: msg
+In file: <removed by verify.pl>
+In process: top.m.T_0 @ 0 s
+
+Fatal: type: msg
+In file: <removed by verify.pl>
+In process: top.m.T_0 @ 0 s
+
+Info: type: msg
+
+Warning: type: msg
+In file: <removed by verify.pl>
+In process: top.m.T_1 @ 0 s
+
+Error: type: msg
+In file: <removed by verify.pl>
+In process: top.m.T_1 @ 0 s
+
+Fatal: type: msg
+In file: <removed by verify.pl>
+In process: top.m.T_1 @ 0 s
+
+Error: type: msg
+In file: <removed by verify.pl>
+In process: top.m.R @ 100 ns
+
+Success

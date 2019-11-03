@@ -44,8 +44,11 @@
 #include "base/statistics.hh"
 #include "debug/ThermalDomain.hh"
 #include "params/ThermalDomain.hh"
+#include "sim/clocked_object.hh"
+#include "sim/linear_solver.hh"
 #include "sim/power/thermal_model.hh"
-#include "sim/sim_object.hh"
+#include "sim/probe/probe.hh"
+#include "sim/sub_system.hh"
 
 ThermalDomain::ThermalDomain(const Params *p)
     : SimObject(p), _initTemperature(p->initial_temperature),

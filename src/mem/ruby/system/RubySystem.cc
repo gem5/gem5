@@ -380,12 +380,12 @@ RubySystem::startup()
 }
 
 void
-RubySystem::RubyEvent::process()
+RubySystem::processRubyEvent()
 {
-    if (RubySystem::getWarmupEnabled()) {
-        m_ruby_system->m_cache_recorder->enqueueNextFetchRequest();
-    } else if (RubySystem::getCooldownEnabled()) {
-        m_ruby_system->m_cache_recorder->enqueueNextFlushRequest();
+    if (getWarmupEnabled()) {
+        m_cache_recorder->enqueueNextFetchRequest();
+    } else if (getCooldownEnabled()) {
+        m_cache_recorder->enqueueNextFlushRequest();
     }
 }
 
@@ -432,7 +432,6 @@ RubySystem::functionalRead(PacketPtr pkt)
                  access_perm == AccessPermission_NotPresent)
             num_invalid++;
     }
-    assert(num_rw <= 1);
 
     // This if case is meant to capture what happens in a Broadcast/Snoop
     // protocol where the block does not exist in the cache hierarchy. You
@@ -451,7 +450,14 @@ RubySystem::functionalRead(PacketPtr pkt)
                 return true;
             }
         }
-    } else if (num_ro > 0 || num_rw == 1) {
+    } else if (num_ro > 0 || num_rw >= 1) {
+        if (num_rw > 1) {
+            // We iterate over the vector of abstract controllers, and return
+            // the first copy found. If we have more than one cache with block
+            // in writable permission, the first one found would be returned.
+            warn("More than one Abstract Controller with RW permission for "
+                 "addr: %#x on cacheline: %#x.", address, line_address);
+        }
         // In Broadcast/Snoop protocols, this covers if you know the block
         // exists somewhere in the caching hierarchy, then you want to read any
         // valid RO or RW block.  In directory protocols, same thing, you want
@@ -507,58 +513,6 @@ RubySystem::functionalWrite(PacketPtr pkt)
 
     return true;
 }
-
-#ifdef CHECK_COHERENCE
-// This code will check for cases if the given cache block is exclusive in
-// one node and shared in another-- a coherence violation
-//
-// To use, the SLICC specification must call sequencer.checkCoherence(address)
-// when the controller changes to a state with new permissions.  Do this
-// in setState.  The SLICC spec must also define methods "isBlockShared"
-// and "isBlockExclusive" that are specific to that protocol
-//
-void
-RubySystem::checkGlobalCoherenceInvariant(const Address& addr)
-{
-#if 0
-    NodeID exclusive = -1;
-    bool sharedDetected = false;
-    NodeID lastShared = -1;
-
-    for (int i = 0; i < m_chip_vector.size(); i++) {
-        if (m_chip_vector[i]->isBlockExclusive(addr)) {
-            if (exclusive != -1) {
-                // coherence violation
-                WARN_EXPR(exclusive);
-                WARN_EXPR(m_chip_vector[i]->getID());
-                WARN_EXPR(addr);
-                WARN_EXPR(getTime());
-                ERROR_MSG("Coherence Violation Detected -- 2 exclusive chips");
-            } else if (sharedDetected) {
-                WARN_EXPR(lastShared);
-                WARN_EXPR(m_chip_vector[i]->getID());
-                WARN_EXPR(addr);
-                WARN_EXPR(getTime());
-                ERROR_MSG("Coherence Violation Detected -- exclusive chip with >=1 shared");
-            } else {
-                exclusive = m_chip_vector[i]->getID();
-            }
-        } else if (m_chip_vector[i]->isBlockShared(addr)) {
-            sharedDetected = true;
-            lastShared = m_chip_vector[i]->getID();
-
-            if (exclusive != -1) {
-                WARN_EXPR(lastShared);
-                WARN_EXPR(exclusive);
-                WARN_EXPR(addr);
-                WARN_EXPR(getTime());
-                ERROR_MSG("Coherence Violation Detected -- exclusive chip with >=1 shared");
-            }
-        }
-    }
-#endif
-}
-#endif
 
 RubySystem *
 RubySystemParams::create()

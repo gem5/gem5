@@ -1,0 +1,51 @@
+
+$timescale
+     1 ps
+$end
+
+$scope module SystemC $end
+$var event    1  aaaaa  event       $end
+$var time   64  aaaab  time [63:0]  $end
+$upscope $end
+$enddefinitions  $end
+
+$comment
+All initial values are dumped below at time 0 sec = 0 timescale units.
+$end
+
+$dumpvars
+
+b0 aaaab
+$end
+
+#1000
+1aaaaa
+b1111101000 aaaab
+
+#2000
+1aaaaa
+b11111010000 aaaab
+
+#3000
+b101110111000 aaaab
+
+#4000
+1aaaaa
+b111110100000 aaaab
+
+#5000
+1aaaaa
+b1001110001000 aaaab
+
+#6000
+1aaaaa
+b1011101110000 aaaab
+
+#7000
+b1101101011000 aaaab
+
+#8000
+1aaaaa
+b1111101000000 aaaab
+
+#9000

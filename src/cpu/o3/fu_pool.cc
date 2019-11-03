@@ -40,9 +40,10 @@
  * Authors: Kevin Lim
  */
 
+#include "cpu/o3/fu_pool.hh"
+
 #include <sstream>
 
-#include "cpu/o3/fu_pool.hh"
 #include "cpu/func_unit.hh"
 
 using namespace std;

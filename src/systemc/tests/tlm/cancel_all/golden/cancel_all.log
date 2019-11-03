@@ -1,0 +1,10 @@
+SystemC Simulation
+Unit test for cancel_all()
+Called peq_cb with section = 1
+cancel_all
+Called peq_cb with section = 2
+cancel_all
+Called get_next_transaction with section = 3
+cancel_all
+Called get_next_transaction with section = 4
+cancel_all

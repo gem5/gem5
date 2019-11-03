@@ -39,8 +39,9 @@
  * up boot time.
  */
 
-#include "arch/generic/linux/threadinfo.hh"
 #include "arch/mips/linux/system.hh"
+
+#include "arch/generic/linux/threadinfo.hh"
 #include "arch/mips/idle_event.hh"
 #include "arch/mips/system.hh"
 #include "arch/vtophys.hh"

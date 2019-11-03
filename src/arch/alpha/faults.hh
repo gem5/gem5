@@ -299,6 +299,19 @@ class FloatEnableFault : public AlphaFault
     FaultStat & countStat() {return _count;}
 };
 
+class VectorEnableFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+
+  public:
+    FaultName name() const {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
 class PalFault : public AlphaFault
 {
   private:

@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010, 2016 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -57,7 +57,7 @@ class %(class_name)s : public %(base_class)s
         // Constructor
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
                 IntRegIndex _op1, uint32_t _imm, bool _rotC=true);
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -77,7 +77,7 @@ def template DataImmConstructor {{
             }
         }
 
-        if (%(is_branch)s && !isFloating()){
+        if (%(is_branch)s && !isFloating() && !isVector()){
             flags[IsControl] = true;
             flags[IsIndirectControl] = true;
             if (condCode == COND_AL || condCode == COND_UC)
@@ -96,7 +96,7 @@ class %(class_name)s : public %(base_class)s
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
                 IntRegIndex _op1, IntRegIndex _op2,
                 int32_t _shiftAmt, ArmShiftType _shiftType);
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -117,7 +117,7 @@ def template DataRegConstructor {{
             }
         }
 
-        if (%(is_branch)s && !isFloating()){
+        if (%(is_branch)s && !isFloating() && !isVector()){
             flags[IsControl] = true;
             flags[IsIndirectControl] = true;
             if (condCode == COND_AL || condCode == COND_UC)
@@ -141,7 +141,7 @@ class %(class_name)s : public %(base_class)s
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
                 IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _shift,
                 ArmShiftType _shiftType);
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -165,7 +165,8 @@ def template DataRegRegConstructor {{
 }};
 
 def template PredOpExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+    Fault %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         uint64_t resTemp = 0;
@@ -189,7 +190,8 @@ def template PredOpExecute {{
 }};
 
 def template QuiescePredOpExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+    Fault %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         uint64_t resTemp = 0;
@@ -214,7 +216,8 @@ def template QuiescePredOpExecute {{
 }};
 
 def template QuiescePredOpExecuteWithFixup {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+    Fault %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         uint64_t resTemp = 0;

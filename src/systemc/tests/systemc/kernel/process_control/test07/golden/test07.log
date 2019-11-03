@@ -1,0 +1,124 @@
+SystemC Simulation
+------ (50 ns) ------
+ dut (sc_module)
+  dut.parent (sc_thread_process) (running)
+---------------------- 
++++ dut.parent.child0 starting (50 ns)
++++ dut.parent.child1 starting (50 ns)
+------ (100 ns) ------
+ dut (sc_module)
+  dut.parent (sc_thread_process) (running)
+   dut.parent.child0 (sc_thread_process) (running)
+    dut.parent.child0.local (sc_object)
+   dut.parent.child1 (sc_thread_process) (running)
+    dut.parent.child1.local (sc_object)
+    dut.parent.child1.dyn_obj (sc_object)
+---------------------- 
++++ dut.parent.child0.grandchild starting (150 ns)
++++ dut.parent.child1.grandchild starting (150 ns)
+------ (200 ns) ------
+ dut (sc_module)
+  dut.parent (sc_thread_process) (running)
+   dut.parent.child0 (sc_thread_process) (running)
+    dut.parent.child0.local (sc_object)
+    dut.parent.child0.grandchild (sc_thread_process) (running)
+     dut.parent.child0.grandchild.local (sc_object)
+   dut.parent.child1 (sc_thread_process) (running)
+    dut.parent.child1.local (sc_object)
+    dut.parent.child1.dyn_obj (sc_object)
+    dut.parent.child1.grandchild (sc_thread_process) (running)
+     dut.parent.child1.grandchild.local (sc_object)
+---------------------- 
++++ dut.parent.child0 exiting (250 ns)
++++ dut.parent.child0.local deleted
++++ dut.parent.child1 exiting (250 ns)
++++ dut.parent.child1.local deleted
+------ (300 ns) ------
+ dut (sc_module)
+  dut.parent (sc_thread_process) (running)
+   dut.parent.child0 (sc_thread_process) (terminated)
+    dut.parent.child0.grandchild (sc_thread_process) (running)
+     dut.parent.child0.grandchild.local (sc_object)
+   dut.parent.child1 (sc_thread_process) (terminated)
+    dut.parent.child1.grandchild (sc_thread_process) (running)
+     dut.parent.child1.grandchild.local (sc_object)
+    dut.parent.child1.dyn_obj (sc_object)
+---------------------- 
++++ dut.parent.child0.grandchild exiting (350 ns)
++++ dut.parent.child0.grandchild.local deleted
++++ dut.parent.child1.grandchild exiting (350 ns)
++++ dut.parent.child1.grandchild.local deleted
+------ (400 ns) ------
+ dut (sc_module)
+  dut.parent (sc_thread_process) (running)
+   dut.parent.child0 (sc_thread_process) (terminated)
+    dut.parent.child0.grandchild (sc_thread_process) (terminated)
+   dut.parent.child1 (sc_thread_process) (terminated)
+    dut.parent.child1.grandchild (sc_thread_process) (terminated)
+    dut.parent.child1.dyn_obj (sc_object)
+---------------------- 
++++ dut.parent.child1.dyn_obj deleted
+------ (500 ns) ------
+ dut (sc_module)
+  dut.parent (sc_thread_process) (running)
+   dut.parent.child0 (sc_thread_process) (terminated)
+    dut.parent.child0.grandchild (sc_thread_process) (terminated)
+   dut.parent.child1 (sc_thread_process) (terminated)
+    dut.parent.child1.grandchild (sc_thread_process) (terminated)
+---------------------- 
+
+Warning: (W505) object already exists: dut.parent.child0. Latter declaration will be renamed to dut.parent.child0_0
+
+In process: dut.parent @ 500 ns
+
+Warning: (W505) object already exists: dut.parent.child1. Latter declaration will be renamed to dut.parent.child1_0
+
+In process: dut.parent @ 500 ns
++++ dut.parent.child0_0 starting (500 ns)
++++ dut.parent.child1_0 starting (500 ns)
+------ (600 ns) ------
+ dut (sc_module)
+  dut.parent (sc_thread_process) (running)
+   dut.parent.child0 (sc_thread_process) (terminated)
+    dut.parent.child0.grandchild (sc_thread_process) (terminated)
+   dut.parent.child1 (sc_thread_process) (terminated)
+    dut.parent.child1.grandchild (sc_thread_process) (terminated)
+   dut.parent.child0_0 (sc_thread_process) (running)
+    dut.parent.child0_0.local (sc_object)
+   dut.parent.child1_0 (sc_thread_process) (running)
+    dut.parent.child1_0.local (sc_object)
+---------------------- 
++++ dut.parent.child0_0.grandchild starting (600 ns)
++++ dut.parent.child1_0.grandchild starting (600 ns)
++++ dut.parent.child0_0.local deleted
++++ dut.parent.child1_0.grandchild.local deleted
++++ dut.parent.child1_0.local deleted
++++ kills sent ... (650 ns)
+------ (700 ns) ------
+ dut (sc_module)
+  dut.parent (sc_thread_process) (running)
+   dut.parent.child0 (sc_thread_process) (terminated)
+    dut.parent.child0.grandchild (sc_thread_process) (terminated)
+   dut.parent.child1 (sc_thread_process) (terminated)
+    dut.parent.child1.grandchild (sc_thread_process) (terminated)
+   dut.parent.child0_0 (sc_thread_process) (terminated)
+    dut.parent.child0_0.grandchild (sc_thread_process) (running)
+     dut.parent.child0_0.grandchild.local (sc_object)
+   dut.parent.child1_0 (sc_thread_process) (terminated)
+    dut.parent.child1_0.grandchild (sc_thread_process) (terminated)
+---------------------- 
++++ dut.parent exiting (700 ns)
++++ dut.parent.child0_0.grandchild exiting (800 ns)
++++ dut.parent.child0_0.grandchild.local deleted
+------ (900 ns) ------
+ dut (sc_module)
+  dut.parent (sc_thread_process) (terminated)
+   dut.parent.child0 (sc_thread_process) (terminated)
+    dut.parent.child0.grandchild (sc_thread_process) (terminated)
+   dut.parent.child1 (sc_thread_process) (terminated)
+    dut.parent.child1.grandchild (sc_thread_process) (terminated)
+   dut.parent.child0_0 (sc_thread_process) (terminated)
+    dut.parent.child0_0.grandchild (sc_thread_process) (terminated)
+   dut.parent.child1_0 (sc_thread_process) (terminated)
+    dut.parent.child1_0.grandchild (sc_thread_process) (terminated)
+---------------------- 

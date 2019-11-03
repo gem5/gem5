@@ -1,0 +1,42 @@
+#! /bin/awk -f
+
+BEGIN {
+  purpose = "Report time used to initialize a thread."
+  nmach = 0;
+
+  test_single = "1";
+  test_v0 = "14";
+  test_v2 = "15";
+  test_v4 = "16";
+  test_v8 = "17";
+}
+
+{
+  mach = $1
+  test = $2
+  iter = $3
+  time = $6 + $8
+
+  if (machi[mach] == 0) {
+    machn[nmach] = mach;
+    machi[mach] = 1;
+    ++nmach;
+  }
+
+  us_per_op = time / iter * 1000000
+  times[mach "_" test] = us_per_op;
+}
+
+
+END {
+  for (i=0; i<nmach; ++i) {
+    m = machn[i];
+
+    single = times[m "_" test_single];
+    v0 = times[m "_" test_v0];
+    v2 = times[m "_" test_v2];
+    v4 = times[m "_" test_v4];
+    v8 = times[m "_" test_v8];
+    printf ("%s|%3.1f|%3.1f|%3.1f|%3.1f|%3.1f\n", m, single, v0, v2, v4, v8);
+  }
+}

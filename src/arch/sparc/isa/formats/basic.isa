@@ -28,142 +28,121 @@
 //          Gabe Black
 //          Steve Reinhardt
 
-// Declarations for execute() methods.
-def template BasicExecDeclare {{
-        Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const;
-}};
-
-def template DoFpOpDeclare {{
-        Fault doFpOp(%(CPU_exec_context)s *, Trace::InstRecord *)
-            const M5_NO_INLINE;
-}};
-
-// Definitions of execute methods that panic.
-def template BasicExecPanic {{
-        Fault
-        execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
-        {
-            panic("Execute method called when it shouldn't!");
-            M5_DUMMY_RETURN
-        }
-}};
-
 // Basic instruction class declaration template.
 def template BasicDeclare {{
-        /**
-         * Static instruction class for "%(mnemonic)s".
-         */
-        class %(class_name)s : public %(base_class)s
-        {
-          public:
-            // Constructor.
-            %(class_name)s(ExtMachInst machInst);
-            %(BasicExecDeclare)s
-        };
+/**
+ * Static instruction class for "%(mnemonic)s".
+ */
+class %(class_name)s : public %(base_class)s
+{
+  public:
+    // Constructor.
+    %(class_name)s(ExtMachInst machInst);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+};
 }};
 
 // Basic instruction class declaration template.
 def template FpBasicDeclare {{
-        /**
-         * Static instruction class for "%(mnemonic)s".
-         */
-        class %(class_name)s : public %(base_class)s
-        {
-          public:
-            // Constructor.
-            %(class_name)s(ExtMachInst machInst);
-            %(BasicExecDeclare)s
-            %(DoFpOpDeclare)s
-        };
+/**
+ * Static instruction class for "%(mnemonic)s".
+ */
+class %(class_name)s : public %(base_class)s
+{
+  public:
+    // Constructor.
+    %(class_name)s(ExtMachInst machInst);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault doFpOp(ExecContext *, Trace::InstRecord *) const M5_NO_INLINE;
+};
 }};
 
 // Basic instruction class declaration template.
 def template BasicDeclareWithMnemonic {{
-        /**
-         * Static instruction class for "%(mnemonic)s".
-         */
-        class %(class_name)s : public %(base_class)s
-        {
-          public:
-            // Constructor.
-            %(class_name)s(const char * mnemonic, ExtMachInst machInst);
-            %(BasicExecDeclare)s
-        };
+/**
+ * Static instruction class for "%(mnemonic)s".
+ */
+class %(class_name)s : public %(base_class)s
+{
+  public:
+    // Constructor.
+    %(class_name)s(const char *mnemonic, ExtMachInst machInst);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+};
 }};
 
 // Basic instruction class constructor template.
 def template BasicConstructor {{
-        %(class_name)s::%(class_name)s(ExtMachInst machInst)
-            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
-        {
-                %(constructor)s;
-        }
+%(class_name)s::%(class_name)s(ExtMachInst machInst) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+{
+    %(constructor)s;
+}
 }};
 
 // Basic instruction class constructor template.
 def template BasicConstructorWithMnemonic {{
-        %(class_name)s::%(class_name)s(const char * mnemonic,
-                ExtMachInst machInst)
-            : %(base_class)s(mnemonic, machInst, %(op_class)s)
-        {
-                %(constructor)s;
-        }
+%(class_name)s::%(class_name)s(const char *mnemonic, ExtMachInst machInst) :
+        %(base_class)s(mnemonic, machInst, %(op_class)s)
+{
+    %(constructor)s;
+}
 }};
 
 // Basic instruction class execute method template.
 def template BasicExecute {{
-        Fault
-        %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
-                Trace::InstRecord *traceData) const
-        {
-            Fault fault = NoFault;
+Fault
+%(class_name)s::execute(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+{
+    Fault fault = NoFault;
 
-            %(fp_enable_check)s;
-            %(op_decl)s;
-            %(op_rd)s;
-            %(code)s;
+    %(fp_enable_check)s;
+    %(op_decl)s;
+    %(op_rd)s;
+    %(code)s;
 
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
-            return fault;
-        }
+    if (fault == NoFault) {
+        %(op_wb)s;
+    }
+    return fault;
+}
 }};
 
 def template DoFpOpExecute {{
-        Fault
-        %(class_name)s::doFpOp(CPU_EXEC_CONTEXT *xc,
-                Trace::InstRecord *traceData) const
-        {
-            Fault fault = NoFault;
-            %(op_decl)s;
-            %(op_rd)s;
-            %(fp_code)s;
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
-            return fault;
-        }
+Fault
+%(class_name)s::doFpOp(ExecContext *xc, Trace::InstRecord *traceData) const
+{
+    Fault fault = NoFault;
+    %(op_decl)s;
+    %(op_rd)s;
+    %(fp_code)s;
+    if (fault == NoFault) {
+        %(op_wb)s;
+    }
+    return fault;
+}
 }};
 
 // Basic decode template.
 def template BasicDecode {{
-        return new %(class_name)s(machInst);
+return new %(class_name)s(machInst);
 }};
 
 // Basic decode template, passing mnemonic in as string arg to constructor.
 def template BasicDecodeWithMnemonic {{
-    return new %(class_name)s("%(mnemonic)s", machInst);
+return new %(class_name)s("%(mnemonic)s", machInst);
 }};
 
 // The most basic instruction format... used only for a few misc. insts
 def format BasicOperate(code, *flags) {{
-        code = filterDoubles(code)
-        iop = InstObjParams(name, Name, 'SparcStaticInst', code, flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+    code = filterDoubles(code)
+    iop = InstObjParams(name, Name, 'SparcStaticInst', code, flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+
 }};
 
 def format FpBasic(code, *flags) {{
@@ -187,7 +166,7 @@ def format FpBasic(code, *flags) {{
 """
     fp_code = filterDoubles(code)
     iop = InstObjParams(name, Name, 'SparcStaticInst',
-            { "code" : exec_code, "fp_code" : fp_code }, flags)
+                        { "code" : exec_code, "fp_code" : fp_code }, flags)
     header_output = FpBasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)

@@ -361,8 +361,12 @@ if ($added_stats)
 }
 
 cleanup();
-# Exit code is 0 if all stats are found (with no extras) & no stats error, 1 otherwise
-$status = ($missing_stats == 0 && $added_stats == 0 && $max_err_mag == 0.0) ? 0 : 1;
+# Exit codes:
+# 0 if all stats are found (with no extras) & no stats error
+# 1 if there are additional stats, but no stat errors
+# 2 otherwise
+$no_hard_errors = $missing_stats == 0 && $max_err_mag == 0.0;
+$status = $no_hard_errors ? ($added_stats == 0 ? 0 : 1) : 2;
 exit $status;
 
 sub cleanup

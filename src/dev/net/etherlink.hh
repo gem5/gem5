@@ -51,7 +51,6 @@
 
 #include "base/types.hh"
 #include "dev/net/etherint.hh"
-#include "dev/net/etherobject.hh"
 #include "dev/net/etherpkt.hh"
 #include "params/EtherLink.hh"
 #include "sim/eventq.hh"
@@ -62,7 +61,7 @@ class Checkpoint;
 /*
  * Model for a fixed bandwidth full duplex ethernet link
  */
-class EtherLink : public EtherObject
+class EtherLink : public SimObject
 {
   protected:
     class Interface;
@@ -92,9 +91,7 @@ class EtherLink : public EtherObject
          */
         EthPacketPtr packet;
         void txDone();
-        typedef EventWrapper<Link, &Link::txDone> DoneEvent;
-        friend void DoneEvent::process();
-        DoneEvent doneEvent;
+        EventFunctionWrapper doneEvent;
 
         /**
          * Maintain a queue of in-flight packets. Assume that the
@@ -104,9 +101,7 @@ class EtherLink : public EtherObject
         std::deque<std::pair<Tick, EthPacketPtr>> txQueue;
 
         void processTxQueue();
-        typedef EventWrapper<Link, &Link::processTxQueue> TxQueueEvent;
-        friend void TxQueueEvent::process();
-        TxQueueEvent txQueueEvent;
+        EventFunctionWrapper txQueueEvent;
 
         void txComplete(EthPacketPtr packet);
 
@@ -156,7 +151,8 @@ class EtherLink : public EtherObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    EtherInt *getEthPort(const std::string &if_name, int idx) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

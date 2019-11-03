@@ -36,17 +36,16 @@
  * anything more.
  */
 
-#include "base/misc.hh"
-#include "cpu/static_inst.hh"
+#include <inttypes.h>
+
+#include "cpu/static_inst_fwd.hh"
+
+typedef uint16_t MicroPC;
 
 class MicrocodeRom
 {
   public:
-    StaticInstPtr
-    fetchMicroop(MicroPC micropc, StaticInstPtr curMacroop)
-    {
-        panic("ROM based microcode isn't implemented.\n");
-    }
+    StaticInstPtr fetchMicroop(MicroPC micropc, StaticInstPtr curMacroop);
 };
 
 #endif // __SIM_MICROCODE_ROM_HH__

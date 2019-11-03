@@ -49,15 +49,210 @@
 #ifndef __MEM_CACHE_PREFETCH_BASE_HH__
 #define __MEM_CACHE_PREFETCH_BASE_HH__
 
+#include <cstdint>
+
+#include "arch/isa_traits.hh"
+#include "arch/generic/tlb.hh"
 #include "base/statistics.hh"
+#include "base/types.hh"
 #include "mem/packet.hh"
-#include "params/BasePrefetcher.hh"
+#include "mem/request.hh"
+#include "sim/byteswap.hh"
 #include "sim/clocked_object.hh"
+#include "sim/probe/probe.hh"
 
 class BaseCache;
+struct BasePrefetcherParams;
 
 class BasePrefetcher : public ClockedObject
 {
+    class PrefetchListener : public ProbeListenerArgBase<PacketPtr>
+    {
+      public:
+        PrefetchListener(BasePrefetcher &_parent, ProbeManager *pm,
+                         const std::string &name, bool _isFill = false,
+                         bool _miss = false)
+            : ProbeListenerArgBase(pm, name),
+              parent(_parent), isFill(_isFill), miss(_miss) {}
+        void notify(const PacketPtr &pkt) override;
+      protected:
+        BasePrefetcher &parent;
+        const bool isFill;
+        const bool miss;
+    };
+
+    std::vector<PrefetchListener *> listeners;
+
+  public:
+
+    /**
+     * Class containing the information needed by the prefetch to train and
+     * generate new prefetch requests.
+     */
+    class PrefetchInfo {
+        /** The address used to train and generate prefetches */
+        Addr address;
+        /** The program counter that generated this address. */
+        Addr pc;
+        /** The requestor ID that generated this address. */
+        MasterID masterId;
+        /** Validity bit for the PC of this address. */
+        bool validPC;
+        /** Whether this address targets the secure memory space. */
+        bool secure;
+        /** Size in bytes of the request triggering this event */
+        unsigned int size;
+        /** Whether this event comes from a write request */
+        bool write;
+        /** Physical address, needed because address can be virtual */
+        Addr paddress;
+        /** Whether this event comes from a cache miss */
+        bool cacheMiss;
+        /** Pointer to the associated request data */
+        uint8_t *data;
+
+      public:
+        /**
+         * Obtains the address value of this Prefetcher address.
+         * @return the addres value.
+         */
+        Addr getAddr() const
+        {
+            return address;
+        }
+
+        /**
+         * Returns true if the address targets the secure memory space.
+         * @return true if the address targets the secure memory space.
+         */
+        bool isSecure() const
+        {
+            return secure;
+        }
+
+        /**
+         * Returns the program counter that generated this request.
+         * @return the pc value
+         */
+        Addr getPC() const
+        {
+            assert(hasPC());
+            return pc;
+        }
+
+        /**
+         * Returns true if the associated program counter is valid
+         * @return true if the program counter has a valid value
+         */
+        bool hasPC() const
+        {
+            return validPC;
+        }
+
+        /**
+         * Gets the requestor ID that generated this address
+         * @return the requestor ID that generated this address
+         */
+        MasterID getMasterId() const
+        {
+            return masterId;
+        }
+
+        /**
+         * Gets the size of the request triggering this event
+         * @return the size in bytes of the request triggering this event
+         */
+        unsigned int getSize() const
+        {
+            return size;
+        }
+
+        /**
+         * Checks if the request that caused this prefetch event was a write
+         * request
+         * @return true if the request causing this event is a write request
+         */
+        bool isWrite() const
+        {
+            return write;
+        }
+
+        /**
+         * Gets the physical address of the request
+         * @return physical address of the request
+         */
+        Addr getPaddr() const
+        {
+            return paddress;
+        }
+
+        /**
+         * Check if this event comes from a cache miss
+         * @result true if this event comes from a cache miss
+         */
+        bool isCacheMiss() const
+        {
+            return cacheMiss;
+        }
+
+        /**
+         * Gets the associated data of the request triggering the event
+         * @param Byte ordering of the stored data
+         * @return the data
+         */
+        template <typename T>
+        inline T
+        get(ByteOrder endian) const
+        {
+            if (data == nullptr) {
+                panic("PrefetchInfo::get called with a request with no data.");
+            }
+            switch (endian) {
+                case BigEndianByteOrder:
+                    return betoh(*(T*)data);
+
+                case LittleEndianByteOrder:
+                    return letoh(*(T*)data);
+
+                default:
+                    panic("Illegal byte order in PrefetchInfo::get()\n");
+            };
+        }
+
+        /**
+         * Check for equality
+         * @param pfi PrefetchInfo to compare against
+         * @return True if this object and the provided one are equal
+         */
+        bool sameAddr(PrefetchInfo const &pfi) const
+        {
+            return this->getAddr() == pfi.getAddr() &&
+                this->isSecure() == pfi.isSecure();
+        }
+
+        /**
+         * Constructs a PrefetchInfo using a PacketPtr.
+         * @param pkt PacketPtr used to generate the PrefetchInfo
+         * @param addr the address value of the new object, this address is
+         *        used to train the prefetcher
+         * @param miss whether this event comes from a cache miss
+         */
+        PrefetchInfo(PacketPtr pkt, Addr addr, bool miss);
+
+        /**
+         * Constructs a PrefetchInfo using a new address value and
+         * another PrefetchInfo as a reference.
+         * @param pfi PrefetchInfo used to generate this new object
+         * @param addr the address value of the new object
+         */
+        PrefetchInfo(PrefetchInfo const &pfi, Addr addr);
+
+        ~PrefetchInfo()
+        {
+            delete data;
+        }
+    };
+
   protected:
 
     // PARAMETERS
@@ -71,37 +266,46 @@ class BasePrefetcher : public ClockedObject
     /** log_2(block size of the parent cache). */
     unsigned lBlkSize;
 
-    /** System we belong to */
-    System* system;
-
     /** Only consult prefetcher on cache misses? */
-    bool onMiss;
+    const bool onMiss;
 
     /** Consult prefetcher on reads? */
-    bool onRead;
+    const bool onRead;
 
     /** Consult prefetcher on reads? */
-    bool onWrite;
+    const bool onWrite;
 
     /** Consult prefetcher on data accesses? */
-    bool onData;
+    const bool onData;
 
     /** Consult prefetcher on instruction accesses? */
-    bool onInst;
+    const bool onInst;
 
     /** Request id for prefetches */
-    MasterID masterId;
+    const MasterID masterId;
 
     const Addr pageBytes;
 
-    /** Determine if this access should be observed */
-    bool observeAccess(const PacketPtr &pkt) const;
+    /** Prefetch on every access, not just misses */
+    const bool prefetchOnAccess;
+
+    /** Use Virtual Addresses for prefetching */
+    const bool useVirtualAddresses;
+
+    /**
+     * Determine if this access should be observed
+     * @param pkt The memory request causing the event
+     * @param miss whether this event comes from a cache miss
+     */
+    bool observeAccess(const PacketPtr &pkt, bool miss) const;
 
     /** Determine if address is in cache */
     bool inCache(Addr addr, bool is_secure) const;
 
     /** Determine if address is in cache miss queue */
     bool inMissQueue(Addr addr, bool is_secure) const;
+
+    bool hasBeenPrefetched(Addr addr, bool is_secure) const;
 
     /** Determine if addresses are on the same page */
     bool samePage(Addr a, Addr b) const;
@@ -116,8 +320,15 @@ class BasePrefetcher : public ClockedObject
     /** Build the address of the i-th block inside the page */
     Addr pageIthBlockAddress(Addr page, uint32_t i) const;
 
-
     Stats::Scalar pfIssued;
+
+    /** Total prefetches issued */
+    uint64_t issuedPrefetches;
+    /** Total prefetches that has been useful */
+    uint64_t usefulPrefetches;
+
+    /** Registered tlb for address translations */
+    BaseTLB * tlb;
 
   public:
 
@@ -125,19 +336,52 @@ class BasePrefetcher : public ClockedObject
 
     virtual ~BasePrefetcher() {}
 
-    void setCache(BaseCache *_cache);
+    virtual void setCache(BaseCache *_cache);
 
     /**
      * Notify prefetcher of cache access (may be any access or just
      * misses, depending on cache parameters.)
-     * @retval Time of next prefetch availability, or MaxTick if none.
      */
-    virtual Tick notify(const PacketPtr &pkt) = 0;
+    virtual void notify(const PacketPtr &pkt, const PrefetchInfo &pfi) = 0;
+
+    /** Notify prefetcher of cache fill */
+    virtual void notifyFill(const PacketPtr &pkt)
+    {}
 
     virtual PacketPtr getPacket() = 0;
 
     virtual Tick nextPrefetchReadyTime() const = 0;
 
-    virtual void regStats();
+    /**
+     * Register local statistics.
+     */
+    void regStats() override;
+
+    /**
+     * Register probe points for this object.
+     */
+    void regProbeListeners() override;
+
+    /**
+     * Process a notification event from the ProbeListener.
+     * @param pkt The memory request causing the event
+     * @param miss whether this event comes from a cache miss
+     */
+    void probeNotify(const PacketPtr &pkt, bool miss);
+
+    /**
+     * Add a SimObject and a probe name to listen events from
+     * @param obj The SimObject pointer to listen from
+     * @param name The probe name
+     */
+    void addEventProbe(SimObject *obj, const char *name);
+
+    /**
+     * Add a BaseTLB object to be used whenever a translation is needed.
+     * This is generally required when the prefetcher is allowed to generate
+     * page crossing references and/or uses virtual addresses for training.
+     * @param tlb pointer to the BaseTLB object to add
+     */
+    void addTLB(BaseTLB *tlb);
 };
 #endif //__MEM_CACHE_PREFETCH_BASE_HH__

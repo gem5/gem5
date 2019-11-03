@@ -35,6 +35,7 @@
 
 #include "base/bitunion.hh"
 #include "dev/x86/intdev.hh"
+#include "dev/intpin.hh"
 #include "dev/io_device.hh"
 #include "params/I82094AA.hh"
 
@@ -44,7 +45,7 @@ namespace X86ISA
 class I8259;
 class Interrupts;
 
-class I82094AA : public BasicPioDevice, public IntDevice
+class I82094AA : public BasicPioDevice
 {
   public:
     BitUnion64(RedirTableEntry)
@@ -81,6 +82,10 @@ class I82094AA : public BasicPioDevice, public IntDevice
     RedirTableEntry redirTable[TableSize];
     bool pinStates[TableSize];
 
+    std::vector<IntSinkPin<I82094AA> *> inputs;
+
+    IntMasterPort<I82094AA> intMasterPort;
+
   public:
     typedef I82094AAParams Params;
 
@@ -97,19 +102,17 @@ class I82094AA : public BasicPioDevice, public IntDevice
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
 
-    AddrRangeList getIntAddrRange() const override;
-
     void writeReg(uint8_t offset, uint32_t value);
     uint32_t readReg(uint8_t offset);
 
-    BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
-    Tick recvResponse(PacketPtr pkt) override;
+    bool recvResponse(PacketPtr pkt);
 
-    void signalInterrupt(int line) override;
-    void raiseInterruptPin(int number) override;
-    void lowerInterruptPin(int number) override;
+    void signalInterrupt(int line);
+    void raiseInterruptPin(int number);
+    void lowerInterruptPin(int number);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

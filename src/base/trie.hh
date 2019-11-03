@@ -32,9 +32,10 @@
 #define __BASE_TRIE_HH__
 
 #include <cassert>
+#include <iostream>
 
 #include "base/cprintf.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 
 // Key has to be an integral type.
@@ -82,20 +83,21 @@ class Trie
         }
 
         void
-        dump(int level)
+        dump(std::ostream &os, int level)
         {
             for (int i = 1; i < level; i++) {
-                cprintf("|");
+                ccprintf(os, "|");
             }
             if (level == 0)
-                cprintf("Root ");
+                ccprintf(os, "Root ");
             else
-                cprintf("+ ");
-            cprintf("(%p, %p, %#X, %#X, %p)\n", parent, this, key, mask, value);
+                ccprintf(os, "+ ");
+            ccprintf(os, "(%p, %p, %#X, %#X, %p)\n",
+                     parent, this, key, mask, value);
             if (kids[0])
-                kids[0]->dump(level + 1);
+                kids[0]->dump(os, level + 1);
             if (kids[1])
-                kids[1]->dump(level + 1);
+                kids[1]->dump(os, level + 1);
         }
     };
 
@@ -185,6 +187,10 @@ class Trie
     Handle
     insert(Key key, unsigned width, Value *val)
     {
+        // We use NULL value pointers to mark internal nodes of the trie, so
+        // we don't allow inserting them as real values.
+        assert(val);
+
         // Build a mask which masks off all the bits we don't care about.
         Key new_mask = ~(Key)0;
         if (width < MaxBits)
@@ -347,13 +353,13 @@ class Trie
      * @param title An identifying title to put in the dump header.
      */
     void
-    dump(const char *title)
+    dump(const char *title, std::ostream &os=std::cout)
     {
-        cprintf("**************************************************\n");
-        cprintf("*** Start of Trie: %s\n", title);
-        cprintf("*** (parent, me, key, mask, value pointer)\n");
-        cprintf("**************************************************\n");
-        head.dump(0);
+        ccprintf(os, "**************************************************\n");
+        ccprintf(os, "*** Start of Trie: %s\n", title);
+        ccprintf(os, "*** (parent, me, key, mask, value pointer)\n");
+        ccprintf(os, "**************************************************\n");
+        head.dump(os, 0);
     }
 };
 

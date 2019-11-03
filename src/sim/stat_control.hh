@@ -44,6 +44,9 @@
 #ifndef __SIM_STAT_CONTROL_HH__
 #define __SIM_STAT_CONTROL_HH__
 
+#include "base/types.hh"
+#include "sim/core.hh"
+
 namespace Stats {
 
 double statElapsedTime();

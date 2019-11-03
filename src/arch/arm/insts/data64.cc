@@ -56,7 +56,7 @@ DataXImmOnlyOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ccprintf(ss, ", #%d", imm);
     return ss.str();
 }
@@ -84,9 +84,9 @@ DataX1RegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ccprintf(ss, ", ");
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     return ss.str();
 }
 
@@ -95,9 +95,9 @@ DataX1RegImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ccprintf(ss, ", ");
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ccprintf(ss, ", #%d", imm);
     return ss.str();
 }
@@ -107,9 +107,9 @@ DataX1Reg2ImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ccprintf(ss, ", ");
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ccprintf(ss, ", #%d, #%d", imm1, imm2);
     return ss.str();
 }
@@ -119,11 +119,11 @@ DataX2RegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ccprintf(ss, ", ");
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ccprintf(ss, ", ");
-    printReg(ss, op2);
+    printIntReg(ss, op2);
     return ss.str();
 }
 
@@ -132,11 +132,11 @@ DataX2RegImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ccprintf(ss, ", ");
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ccprintf(ss, ", ");
-    printReg(ss, op2);
+    printIntReg(ss, op2);
     ccprintf(ss, ", #%d", imm);
     return ss.str();
 }
@@ -146,13 +146,13 @@ DataX3RegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ccprintf(ss, ", ");
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ccprintf(ss, ", ");
-    printReg(ss, op2);
+    printIntReg(ss, op2);
     ccprintf(ss, ", ");
-    printReg(ss, op3);
+    printIntReg(ss, op3);
     return ss.str();
 }
 
@@ -162,7 +162,7 @@ DataXCondCompImmOp::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ccprintf(ss, ", #%d, #%d", imm, defCc);
     ccprintf(ss, ", ");
     printCondition(ss, condCode, true);
@@ -175,9 +175,9 @@ DataXCondCompRegOp::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ccprintf(ss, ", ");
-    printReg(ss, op2);
+    printIntReg(ss, op2);
     ccprintf(ss, ", #%d", defCc);
     ccprintf(ss, ", ");
     printCondition(ss, condCode, true);
@@ -190,11 +190,11 @@ DataXCondSelOp::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ccprintf(ss, ", ");
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ccprintf(ss, ", ");
-    printReg(ss, op2);
+    printIntReg(ss, op2);
     ccprintf(ss, ", ");
     printCondition(ss, condCode, true);
     return ss.str();

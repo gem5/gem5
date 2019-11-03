@@ -1,0 +1,147 @@
+/*
+ * Copyright (c) 2015-2016 ARM Limited
+ * All rights reserved
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Andreas Sandberg
+ *          Gabor Dozsa
+ */
+
+/dts-v1/;
+
+/memreserve/ 0x80000000 0x00010000;
+
+#include CONF_PLATFORM
+
+/* Assign a unique ID for pre-defined configurations. The selected
+ * configuration is picked up from CONF_CPUS
+*/
+// 2 big and 2 little cpus
+#define _2_2 1
+// 2 big and 4 little cpus
+#define _2_4 2
+
+#define CPU(n,id) \
+	CPU ## n: cpu@ ## id { \
+		device_type = "cpu"; \
+		compatible = "gem5,armv8", "arm,armv8"; \
+		reg = < ## id >; \
+		enable-method = "spin-table"; \
+		cpu-release-addr = <0 0x8000fff8>; \
+	};
+
+
+/ {
+	model = "V2P-AARCH64";
+	compatible = "arm,vexpress,v2p-aarch64", "arm,vexpress";
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0 0x80000000 0x4 0x00000000>;
+	};
+
+
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		#if CONF_CPUS == _2_2
+		CPU(0,0x0)
+		CPU(1,0x1)
+		CPU(2,0x102)
+		CPU(3,0x103)
+		cpu-map {
+			cluster0 {
+				core0 { cpu = <&CPU0>; };
+				core1 { cpu = <&CPU1>; };
+			};
+			cluster1 {
+				core0 { cpu = <&CPU2>; };
+				core1 { cpu = <&CPU3>; };
+			};
+		};
+		#elif CONF_CPUS == _2_4
+		CPU(0,0x0)
+		CPU(1,0x1)
+		CPU(2,0x102)
+		CPU(3,0x103)
+		CPU(4,0x104)
+		CPU(5,0x105)
+		cpu-map {
+			cluster0 {
+				core0 { cpu = <&CPU0>; };
+				core1 { cpu = <&CPU1>; };
+			};
+			cluster1 {
+				core0 { cpu = <&CPU2>; };
+				core1 { cpu = <&CPU3>; };
+				core2 { cpu = <&CPU4>; };
+				core3 { cpu = <&CPU5>; };
+			};
+		};
+		#else
+		#error Missing configuration section
+		#endif
+	};
+
+	virt-encoder {
+		compatible = "drm,virtual-encoder";
+		port {
+			dp0_virt_input: endpoint@0 {
+				remote-endpoint = <&dp0_output>;
+			};
+		};
+
+		display-timings {
+			native-mode = <&timing0>;
+
+			timing0: timing_1080p60 {
+				/* 1920x1080-60 */
+				clock-frequency = <148500000>;
+				hactive = <1920>;
+				vactive = <1080>;
+				hfront-porch = <148>;
+				hback-porch = <88>;
+				hsync-len = <44>;
+				vfront-porch = <36>;
+				vback-porch = <4>;
+				vsync-len = <5>;
+			};
+		};
+	};
+};
+
+&dp0 {
+	status = "ok";
+
+	port {
+		dp0_output: endpoint@0 {
+			remote-endpoint = <&dp0_virt_input>;
+		};
+	};
+};
+
+

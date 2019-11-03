@@ -49,21 +49,20 @@
 #ifndef __SIM_OBJECT_HH__
 #define __SIM_OBJECT_HH__
 
-#include <iostream>
-#include <list>
-#include <map>
 #include <string>
 #include <vector>
 
-#include "enums/MemoryMode.hh"
+#include "base/stats/group.hh"
 #include "params/SimObject.hh"
 #include "sim/drain.hh"
+#include "sim/eventq.hh"
 #include "sim/eventq_impl.hh"
+#include "sim/port.hh"
 #include "sim/serialize.hh"
 
-class BaseCPU;
-class Event;
+class EventManager;
 class ProbeManager;
+
 /**
  * Abstract superclass for simulation objects.  Represents things that
  * correspond to physical components and can be specified via the
@@ -94,7 +93,8 @@ class ProbeManager;
  * SimObject.py). This has the effect of calling the method on the
  * parent node <i>before</i> its children.
  */
-class SimObject : public EventManager, public Serializable, public Drainable
+class SimObject : public EventManager, public Serializable, public Drainable,
+                  public Stats::Group
 {
   private:
     typedef std::vector<SimObject *> SimObjectList;
@@ -148,16 +148,6 @@ class SimObject : public EventManager, public Serializable, public Drainable
     virtual void initState();
 
     /**
-     * Register statistics for this object.
-     */
-    virtual void regStats();
-
-    /**
-     * Reset statistics associated with this object.
-     */
-    virtual void resetStats();
-
-    /**
      * Register probe points for this object.
      */
     virtual void regProbePoints();
@@ -171,6 +161,18 @@ class SimObject : public EventManager, public Serializable, public Drainable
      * Get the probe manager for this object.
      */
     ProbeManager *getProbeManager();
+
+    /**
+     * Get a port with a given name and index. This is used at binding time
+     * and returns a reference to a protocol-agnostic port.
+     *
+     * @param if_name Port name
+     * @param idx Index in the case of a VectorPort
+     *
+     * @return A reference to the given port
+     */
+    virtual Port &getPort(const std::string &if_name,
+                          PortID idx=InvalidPortID);
 
     /**
      * startup() is the final initialization call before simulation.

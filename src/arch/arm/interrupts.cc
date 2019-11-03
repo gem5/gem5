@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2012-2013 ARM Limited
+ * Copyright (c) 2009, 2012-2013, 2016, 2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -38,6 +38,7 @@
  */
 
 #include "arch/arm/interrupts.hh"
+
 #include "arch/arm/system.hh"
 
 ArmISA::Interrupts *
@@ -57,7 +58,7 @@ ArmISA::Interrupts::takeInt(ThreadContext *tc, InterruptTypes int_type) const
     SCR scr;
     HCR hcr;
     hcr = tc->readMiscReg(MISCREG_HCR);
-    ExceptionLevel el = (ExceptionLevel) ((uint32_t) cpsr.el);
+    ExceptionLevel el = currEL(tc);
     bool cpsr_mask_bit, scr_routing_bit, scr_fwaw_bit, hcr_mask_override_bit;
 
     if (!highest_el_is_64)
@@ -65,7 +66,7 @@ ArmISA::Interrupts::takeInt(ThreadContext *tc, InterruptTypes int_type) const
     else
         scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-    bool is_secure = inSecureState(scr, cpsr);
+    bool is_secure = inSecureState(tc);
 
     switch(int_type) {
       case INT_FIQ:

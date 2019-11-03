@@ -1,0 +1,4 @@
+SystemC Simulation
+
+Error: (E533) module name stack is empty: did you forget to add a sc_module_name parameter to your module constructor?
+In file: <removed by verify.pl>

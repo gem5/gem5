@@ -28,10 +28,10 @@
  * Authors: Nathan Binkert
  */
 
+#include "sim/arguments.hh"
+
 #include "arch/utility.hh"
 #include "config/the_isa.hh"
-#include "cpu/thread_context.hh"
-#include "sim/arguments.hh"
 
 Arguments::Data::~Data()
 {

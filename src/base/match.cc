@@ -29,6 +29,7 @@
  */
 
 #include "base/match.hh"
+
 #include "base/str.hh"
 
 using namespace std;
@@ -40,6 +41,12 @@ ObjectMatch::ObjectMatch()
 ObjectMatch::ObjectMatch(const string &expr)
 {
     setExpression(expr);
+}
+
+void
+ObjectMatch::add(const ObjectMatch &other)
+{
+    tokens.insert(tokens.end(), other.tokens.begin(), other.tokens.end());
 }
 
 void

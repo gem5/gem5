@@ -28,10 +28,13 @@
 # Authors: Brad Beckmann
 #          Tushar Krishna
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 from m5.params import *
 from m5.objects import *
 
-from BaseTopology import SimpleTopology
+from .BaseTopology import SimpleTopology
 
 class Pt2Pt(SimpleTopology):
     description='Pt2Pt'
@@ -42,22 +45,34 @@ class Pt2Pt(SimpleTopology):
     def makeTopology(self, options, network, IntLink, ExtLink, Router):
         nodes = self.nodes
 
-        # Create an individual router for each controller, and connect all to all.
-        routers = [Router(router_id=i) for i in range(len(nodes))]
+        # default values for link latency and router latency.
+        # Can be over-ridden on a per link/router basis
+        link_latency = options.link_latency # used by simple and garnet
+        router_latency = options.router_latency # only used by garnet
+
+        # Create an individual router for each controller,
+        # and connect all to all.
+        # Since this is a high-radix router, router_latency should
+        # accordingly be set to a higher value than the default
+        # (which is 1 for mesh routers)
+        routers = [Router(router_id=i, latency = router_latency) \
+            for i in range(len(nodes))]
         network.routers = routers
 
-        ext_links = [ExtLink(link_id=i, ext_node=n, int_node=routers[i])
+        ext_links = [ExtLink(link_id=i, ext_node=n, int_node=routers[i],
+                     latency = link_latency)
                     for (i, n) in enumerate(nodes)]
         network.ext_links = ext_links
 
         link_count = len(nodes)
         int_links = []
-        for i in xrange(len(nodes)):
-            for j in xrange(len(nodes)):
+        for i in range(len(nodes)):
+            for j in range(len(nodes)):
                 if (i != j):
                     link_count += 1
                     int_links.append(IntLink(link_id=link_count,
-                                            node_a=routers[i],
-                                            node_b=routers[j]))
+                                             src_node=routers[i],
+                                             dst_node=routers[j],
+                                             latency = link_latency))
 
         network.int_links = int_links

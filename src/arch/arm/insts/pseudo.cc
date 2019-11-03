@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014,2016-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -42,6 +42,7 @@
  */
 
 #include "arch/arm/insts/pseudo.hh"
+
 #include "cpu/exec_context.hh"
 
 DecoderFaultInst::DecoderFaultInst(ExtMachInst _machInst)
@@ -180,23 +181,12 @@ WarnUnimplemented::generateDisassembly(Addr pc, const SymbolTable *symtab) const
                     fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
 }
 
-
-
-FlushPipeInst::FlushPipeInst(const char *_mnemonic, ExtMachInst _machInst)
-    : ArmStaticInst(_mnemonic, _machInst, No_OpClass)
-{
-    flags[IsNonSpeculative] = true;
-}
+IllegalExecInst::IllegalExecInst(ExtMachInst _machInst)
+    : ArmStaticInst("Illegal Execution", _machInst, No_OpClass)
+{}
 
 Fault
-FlushPipeInst::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+IllegalExecInst::execute(ExecContext *xc, Trace::InstRecord *traceData) const
 {
-    Fault fault = std::make_shared<FlushPipe>();
-    return fault;
-}
-
-std::string
-FlushPipeInst::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-{
-    return csprintf("%-10s (pipe flush)", mnemonic);
+    return std::make_shared<IllegalInstSetStateFault>();
 }

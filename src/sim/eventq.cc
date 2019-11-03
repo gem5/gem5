@@ -38,7 +38,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "cpu/smt.hh"
 #include "debug/Checkpoint.hh"
@@ -227,7 +227,7 @@ EventQueue::serviceOne()
 
         event->process();
         if (event->isExitEvent()) {
-            assert(!event->flags.isSet(Event::AutoDelete) ||
+            assert(!event->flags.isSet(Event::Managed) ||
                    !event->flags.isSet(Event::IsMainQueue)); // would be silly
             return event;
         }
@@ -235,8 +235,7 @@ EventQueue::serviceOne()
         event->flags.clear(Event::Squashed);
     }
 
-    if (event->flags.isSet(Event::AutoDelete) && !event->scheduled())
-        delete event;
+    event->release();
 
     return NULL;
 }

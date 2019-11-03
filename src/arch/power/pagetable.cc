@@ -36,6 +36,7 @@
  */
 
 #include "arch/power/pagetable.hh"
+
 #include "sim/serialize.hh"
 
 namespace PowerISA

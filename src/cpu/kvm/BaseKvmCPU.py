@@ -35,26 +35,22 @@
 #
 # Authors: Andreas Sandberg
 
+from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
 
-from BaseCPU import BaseCPU
-from KvmVM import KvmVM
+from m5.objects.BaseCPU import BaseCPU
+from m5.objects.KvmVM import KvmVM
 
 class BaseKvmCPU(BaseCPU):
     type = 'BaseKvmCPU'
     cxx_header = "cpu/kvm/base.hh"
     abstract = True
 
-    @classmethod
-    def export_method_cxx_predecls(cls, code):
-        code('#include "cpu/kvm/base.hh"')
-
-    @classmethod
-    def export_methods(cls, code):
-        code('''
-      void dump() const;
-''')
+    @cxxMethod
+    def dump(self):
+        """Dump the internal state of KVM to standard out."""
+        pass
 
     @classmethod
     def memory_mode(cls):
@@ -68,7 +64,6 @@ class BaseKvmCPU(BaseCPU):
     def support_take_over(cls):
         return True
 
-    kvmVM = Param.KvmVM(Parent.any, 'KVM VM (i.e., shared memory domain)')
     useCoalescedMMIO = Param.Bool(False, "Use coalesced MMIO (EXPERIMENTAL)")
     usePerfOverflow = Param.Bool(False, "Use perf event overflow counters (EXPERIMENTAL)")
     alwaysSyncTC = Param.Bool(False,

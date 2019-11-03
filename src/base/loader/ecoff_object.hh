@@ -28,8 +28,8 @@
  * Authors: Steve Reinhardt
  */
 
-#ifndef __ECOFF_OBJECT_HH__
-#define __ECOFF_OBJECT_HH__
+#ifndef __BASE_LOADER_ECOFF_OBJECT_HH__
+#define __BASE_LOADER_ECOFF_OBJECT_HH__
 
 #include "base/loader/object_file.hh"
 
@@ -38,28 +38,30 @@ struct ecoff_exechdr;
 struct ecoff_filehdr;
 struct ecoff_aouthdr;
 
+class EcoffObjectFormat : public ObjectFileFormat
+{
+  public:
+    ObjectFile *load(ImageFileDataPtr data) override;
+};
+
 class EcoffObject : public ObjectFile
 {
   protected:
-    ecoff_exechdr *execHdr;
-    ecoff_filehdr *fileHdr;
-    ecoff_aouthdr *aoutHdr;
-
-    EcoffObject(const std::string &_filename, size_t _len, uint8_t *_data,
-                Arch _arch, OpSys _opSys);
+    const ecoff_exechdr *execHdr;
+    const ecoff_filehdr *fileHdr;
+    const ecoff_aouthdr *aoutHdr;
 
   public:
-    virtual ~EcoffObject() {}
+    EcoffObject(ImageFileDataPtr ifd);
 
-    virtual bool loadAllSymbols(SymbolTable *symtab, Addr base = 0,
-                                Addr offset = 0, Addr addr_mask = maxAddr);
-    virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr base = 0,
-                                  Addr offset = 0, Addr addr_mask = maxAddr);
-    virtual bool loadLocalSymbols(SymbolTable *symtab, Addr base = 0,
-                                  Addr offset = 0, Addr addr_mask = maxAddr);
+    MemoryImage buildImage() const override;
 
-    static ObjectFile *tryFile(const std::string &fname,
-                               size_t len, uint8_t *data);
+    bool loadAllSymbols(SymbolTable *symtab, Addr base=0,
+                        Addr offset=0, Addr addr_mask=MaxAddr) override;
+    bool loadGlobalSymbols(SymbolTable *symtab, Addr base=0,
+                           Addr offset=0, Addr addr_mask=MaxAddr) override;
+    bool loadLocalSymbols(SymbolTable *symtab, Addr base=0,
+                          Addr offset=0, Addr addr_mask=MaxAddr) override;
 };
 
-#endif // __ECOFF_OBJECT_HH__
+#endif // __BASE_LOADER_ECOFF_OBJECT_HH__

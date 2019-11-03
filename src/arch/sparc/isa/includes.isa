@@ -39,10 +39,21 @@ output header {{
 #include <sstream>
 
 #include "arch/sparc/faults.hh"
+#include "arch/sparc/insts/blockmem.hh"
+#include "arch/sparc/insts/branch.hh"
+#include "arch/sparc/insts/integer.hh"
+#include "arch/sparc/insts/mem.hh"
+#include "arch/sparc/insts/micro.hh"
+#include "arch/sparc/insts/nop.hh"
+#include "arch/sparc/insts/priv.hh"
+#include "arch/sparc/insts/static_inst.hh"
+#include "arch/sparc/insts/trap.hh"
+#include "arch/sparc/insts/unimp.hh"
+#include "arch/sparc/insts/unknown.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/registers.hh"
 #include "base/condcodes.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"  // some constructors use MemReq flags
@@ -69,7 +80,6 @@ output exec {{
 
 #include "arch/generic/memhelpers.hh"
 #include "arch/sparc/asi.hh"
-#include "base/bigint.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "debug/Sparc.hh"

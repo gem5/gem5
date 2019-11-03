@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #
-# Copyright (c) 2016 ARM Limited
+# Copyright (c) 2016-2017 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -102,6 +102,7 @@ arch_configs = {
         'realview-minor-dual',
         'realview-switcheroo-atomic',
         'realview-switcheroo-timing',
+        'realview-switcheroo-noncaching-timing',
         'realview-switcheroo-o3',
         'realview-switcheroo-full',
         'realview64-simple-atomic',
@@ -125,7 +126,7 @@ arch_configs = {
         't1000-simple-x86',
     ),
 
-    ("timing", None) : (
+    ("x86", None) : (
         'pc-simple-atomic',
         'pc-simple-timing',
         'pc-o3-timing',
@@ -156,10 +157,18 @@ generic_configs = (
     'memtest-filter',
     'tgen-simple-mem',
     'tgen-dram-ctrl',
+    'dram-lowp',
 
     'learning-gem5-p1-simple',
     'learning-gem5-p1-two-level',
 )
+
+default_ruby_protocol = {
+    "arm" : "MOESI_CMP_directory",
+}
+
+def get_default_protocol(arch):
+    return default_ruby_protocol.get(arch, 'MI_example')
 
 all_categories = ("quick", "long")
 all_modes = ("fs", "se")
@@ -213,7 +222,9 @@ class Test(object):
             for u in self.verify_units()
         ]
 
-        return TestResult(self.test_name, run_results + verify_results)
+        return TestResult(self.test_name,
+                          run_results=run_results,
+                          verify_results=verify_results)
 
     def __str__(self):
         return self.test_name
@@ -222,16 +233,24 @@ class ClassicTest(Test):
     # The diff ignore list contains all files that shouldn't be diffed
     # using DiffOutFile. These files typically use special-purpose
     # diff tools (e.g., DiffStatFile).
-    diff_ignore_files = (
-        # Stat files use a special stat differ
-        "stats.txt",
-    )
+    diff_ignore_files = FileIgnoreList(
+        names=(
+            # Stat files use a special stat differ
+            "stats.txt",
+        ), rex=(
+        ))
 
     # These files should never be included in the list of
     # reference files. This list should include temporary files
     # and other files that we don't care about.
-    ref_ignore_files = (
-    )
+    ref_ignore_files = FileIgnoreList(
+        names=(
+            "EMPTY",
+        ), rex=(
+            # Mercurial sometimes leaves backups when applying MQ patches
+            r"\.orig$",
+            r"\.rej$",
+        ))
 
     def __init__(self, gem5, output_dir, config_tuple,
                  timeout=None,
@@ -275,16 +294,20 @@ class ClassicTest(Test):
         ]
 
     def verify_units(self):
-        return [
-            DiffStatFile(ref_dir=self.ref_dir, test_dir=self.output_dir,
-                         skip=self.skip_diff_stat)
-        ] + [
+        ref_files = set(self.ref_files())
+        units = []
+        if "stats.txt" in ref_files:
+            units.append(
+                DiffStatFile(ref_dir=self.ref_dir, test_dir=self.output_dir,
+                             skip=self.skip_diff_stat))
+        units += [
             DiffOutFile(f,
                         ref_dir=self.ref_dir, test_dir=self.output_dir,
                         skip=self.skip_diff_out)
-            for f in self.ref_files()
-            if f not in ClassicTest.diff_ignore_files
+            for f in ref_files if f not in ClassicTest.diff_ignore_files
         ]
+
+        return units
 
     def update_ref(self):
         for fname in self.ref_files():
@@ -323,8 +346,11 @@ def get_tests(isa,
     else:
         configs += generic_configs
 
-    if ruby_protocol == 'MI_example':
-        configs += [ "%s-ruby" % (c, ) for c in configs ]
+    if ruby_protocol == get_default_protocol(isa):
+        if ruby_protocol == 'MI_example':
+            configs += [ "%s-ruby" % (c, ) for c in configs ]
+        else:
+            configs += [ "%s-ruby-%s" % (c, ruby_protocol) for c in configs ]
     elif ruby_protocol is not None:
         # Override generic ISA configs when using Ruby (excluding
         # MI_example which is included in all ISAs by default). This

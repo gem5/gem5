@@ -33,22 +33,19 @@
 #  Author: Brad Beckmann
 #
 
+from __future__ import print_function
+
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
 import os, optparse, sys, math, glob
 
-# Get paths we might need
-config_path = os.path.dirname(os.path.abspath(__file__))
-config_root = os.path.dirname(config_path)
-addToPath(config_root+'/configs/common')
-addToPath(config_root+'/configs/ruby')
-addToPath(config_root+'/configs/topologies')
+m5.util.addToPath('../configs/')
 
-import Ruby
-import Options
-import GPUTLBOptions, GPUTLBConfig
+from ruby import Ruby
+from common import Options
+from common import GPUTLBOptions, GPUTLBConfig
 
 ########################## Script Options ########################
 def setOption(parser, opt_str, value = 1):
@@ -82,7 +79,7 @@ def run_test(root):
 
     # simulate until program terminates
     exit_event = m5.simulate(maxtick)
-    print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
+    print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())
 
 parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
@@ -200,7 +197,7 @@ if options.TLB_config == "perLane":
 
 # List of compute units; one GPU can have multiple compute units
 compute_units = []
-for i in xrange(n_cu):
+for i in range(n_cu):
     compute_units.append(ComputeUnit(cu_id = i, perLaneTLB = per_lane,
                                      num_SIMDs = options.simds_per_cu,
                                      wfSize = options.wf_size,
@@ -230,8 +227,8 @@ for i in xrange(n_cu):
                                               options.ldsBankConflictPenalty)))
     wavefronts = []
     vrfs = []
-    for j in xrange(options.simds_per_cu):
-        for k in xrange(shader.n_wf):
+    for j in range(options.simds_per_cu):
+        for k in range(int(shader.n_wf)):
             wavefronts.append(Wavefront(simdId = j, wf_slot_id = k))
         vrfs.append(VectorRegisterFile(simd_id=j,
                               num_regs_per_simd=options.vreg_file_size))
@@ -311,15 +308,15 @@ gpu_port_idx = len(system.ruby._cpu_ports) \
 gpu_port_idx = gpu_port_idx - options.num_cp * 2
 
 wavefront_size = options.wf_size
-for i in xrange(n_cu):
+for i in range(n_cu):
     # The pipeline issues wavefront_size number of uncoalesced requests
     # in one GPU issue cycle. Hence wavefront_size mem ports.
-    for j in xrange(wavefront_size):
+    for j in range(wavefront_size):
         system.cpu[shader_idx].CUs[i].memory_port[j] = \
                   system.ruby._cpu_ports[gpu_port_idx].slave[j]
     gpu_port_idx += 1
 
-for i in xrange(n_cu):
+for i in range(n_cu):
     if i > 0 and not i % options.cu_per_sqc:
         gpu_port_idx += 1
     system.cpu[shader_idx].CUs[i].sqc_port = \

@@ -29,34 +29,67 @@
  *          Ali Saidi
  */
 
-#include "arch/alpha/linux/linux.hh"
 #include "arch/alpha/linux/process.hh"
+
 #include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/linux/linux.hh"
+#include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/SyscallVerbose.hh"
 #include "kern/linux/linux.hh"
 #include "sim/process.hh"
+#include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
 
 using namespace std;
 using namespace AlphaISA;
 
+namespace
+{
+
+class AlphaLinuxObjectFileLoader : public Process::Loader
+{
+  public:
+    Process *
+    load(ProcessParams *params, ObjectFile *obj_file) override
+    {
+        if (obj_file->getArch() != ObjectFile::Alpha)
+            return nullptr;
+
+        auto opsys = obj_file->getOpSys();
+
+        if (opsys == ObjectFile::UnknownOpSys) {
+            warn("Unknown operating system; assuming Linux.");
+            opsys = ObjectFile::Linux;
+        }
+
+        if (opsys != ObjectFile::Linux)
+            return nullptr;
+
+        return new AlphaLinuxProcess(params, obj_file);
+    }
+};
+
+AlphaLinuxObjectFileLoader loader;
+
+} // anonymous namespace
+
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
-          ThreadContext *tc)
+unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "sim.gem5.org");
-    strcpy(name->release, "3.0.0");
+    strcpy(name->release, process->release.c_str());
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "alpha");
 
-    name.copyOut(tc->getMemProxy());
+    name.copyOut(tc->getVirtProxy());
     return 0;
 }
 
@@ -64,10 +97,10 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 /// borrowed from Tru64, the subcases that get used appear to be
 /// different in practice from those used by Tru64 processes.
 static SyscallReturn
-osf_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
-                   ThreadContext *tc)
+osf_getsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     unsigned op = process->getSyscallArg(tc, index);
     Addr bufPtr = process->getSyscallArg(tc, index);
     // unsigned nbytes = process->getSyscallArg(tc, 2);
@@ -78,7 +111,7 @@ osf_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           TypedBufferArg<uint64_t> fpcr(bufPtr);
           // I don't think this exactly matches the HW FPCR
           *fpcr = 0;
-          fpcr.copyOut(tc->getMemProxy());
+          fpcr.copyOut(tc->getVirtProxy());
           return 0;
       }
 
@@ -93,10 +126,10 @@ osf_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
 /// Target osf_setsysinfo() handler.
 static SyscallReturn
-osf_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
-                   ThreadContext *tc)
+osf_setsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     unsigned op = process->getSyscallArg(tc, index);
     Addr bufPtr = process->getSyscallArg(tc, index);
     // unsigned nbytes = process->getSyscallArg(tc, 2);
@@ -106,9 +139,9 @@ osf_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
       case 14: { // SSI_IEEE_FP_CONTROL
           TypedBufferArg<uint64_t> fpcr(bufPtr);
           // I don't think this exactly matches the HW FPCR
-          fpcr.copyIn(tc->getMemProxy());
+          fpcr.copyIn(tc->getVirtProxy());
           DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
-                   " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
+                   " setting FPCR to 0x%x\n", letoh(*(uint64_t*)fpcr));
           return 0;
       }
 
@@ -126,8 +159,8 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /*  0 */ SyscallDesc("osf_syscall", unimplementedFunc),
     /*  1 */ SyscallDesc("exit", exitFunc),
     /*  2 */ SyscallDesc("fork", unimplementedFunc),
-    /*  3 */ SyscallDesc("read", readFunc),
-    /*  4 */ SyscallDesc("write", writeFunc),
+    /*  3 */ SyscallDesc("read", readFunc<AlphaLinux>),
+    /*  4 */ SyscallDesc("write", writeFunc<AlphaLinux>),
     /*  5 */ SyscallDesc("osf_old_open", unimplementedFunc),
     /*  6 */ SyscallDesc("close", closeFunc),
     /*  7 */ SyscallDesc("osf_wait4", unimplementedFunc),
@@ -438,7 +471,7 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 309 */ SyscallDesc("get_kernel_syms", unimplementedFunc),
     /* 310 */ SyscallDesc("syslog", unimplementedFunc),
     /* 311 */ SyscallDesc("reboot", unimplementedFunc),
-    /* 312 */ SyscallDesc("clone", cloneFunc),
+    /* 312 */ SyscallDesc("clone", cloneFunc<AlphaLinux>),
     /* 313 */ SyscallDesc("uselib", unimplementedFunc),
     /* 314 */ SyscallDesc("mlock", unimplementedFunc),
     /* 315 */ SyscallDesc("munlock", unimplementedFunc),
@@ -570,9 +603,9 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 441 */ SyscallDesc("keyctl", unimplementedFunc)
 };
 
-AlphaLinuxProcess::AlphaLinuxProcess(LiveProcessParams * params,
+AlphaLinuxProcess::AlphaLinuxProcess(ProcessParams * params,
                                      ObjectFile *objFile)
-    : AlphaLiveProcess(params, objFile),
+    : AlphaProcess(params, objFile),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {
     //init_regs->intRegFile[0] = 0;

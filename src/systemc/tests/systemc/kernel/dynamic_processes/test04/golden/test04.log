@@ -1,0 +1,8 @@
+SystemC Simulation
+
+0 s, mod1.main: main thread, Before spawning round robin methods 
+
+
+Error: (E561) Attempt to register method process with sc_join object
+In file: <removed by verify.pl>
+In process: mod1.main @ 0 s

@@ -38,14 +38,15 @@
  *          Ali Saidi
  */
 
-#include "base/vnc/vncinput.hh"
+#include "dev/arm/pl111.hh"
+
 #include "base/output.hh"
 #include "base/trace.hh"
+#include "base/vnc/vncinput.hh"
 #include "debug/PL111.hh"
 #include "debug/Uart.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/arm/base_gic.hh"
-#include "dev/arm/pl111.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
@@ -67,10 +68,13 @@ Pl111::Pl111(const Params *p)
       vnc(p->vnc), bmp(&fb), pic(NULL),
       width(LcdMaxWidth), height(LcdMaxHeight),
       bytesPerPixel(4), startTime(0), startAddr(0), maxAddr(0), curAddr(0),
-      waterMark(0), dmaPendingNum(0), readEvent(this), fillFifoEvent(this),
+      waterMark(0), dmaPendingNum(0),
+      readEvent([this]{ readFramebuffer(); }, name()),
+      fillFifoEvent([this]{ fillFifo(); }, name()),
       dmaDoneEventAll(maxOutstandingDma, this),
       dmaDoneEventFree(maxOutstandingDma),
-      intEvent(this), enableCapture(p->enable_capture)
+      intEvent([this]{ generateInterrupt(); }, name()),
+      enableCapture(p->enable_capture)
 {
     pioSize = 0xFFFF;
 
@@ -181,7 +185,7 @@ Pl111::read(PacketPtr pkt)
       default:
         if (readId(pkt, AMBA_ID, pioAddr)) {
             // Hack for variable size accesses
-            data = pkt->get<uint32_t>();
+            data = pkt->getLE<uint32_t>();
             break;
         } else if (daddr >= CrsrImage && daddr <= 0xBFC) {
             // CURSOR IMAGE
@@ -204,13 +208,13 @@ Pl111::read(PacketPtr pkt)
 
     switch(pkt->getSize()) {
       case 1:
-        pkt->set<uint8_t>(data);
+        pkt->setLE<uint8_t>(data);
         break;
       case 2:
-        pkt->set<uint16_t>(data);
+        pkt->setLE<uint16_t>(data);
         break;
       case 4:
-        pkt->set<uint32_t>(data);
+        pkt->setLE<uint32_t>(data);
         break;
       default:
         panic("CLCD controller read size too big?\n");
@@ -232,13 +236,13 @@ Pl111::write(PacketPtr pkt)
 
     switch(pkt->getSize()) {
       case 1:
-        data = pkt->get<uint8_t>();
+        data = pkt->getLE<uint8_t>();
         break;
       case 2:
-        data = pkt->get<uint16_t>();
+        data = pkt->getLE<uint16_t>();
         break;
       case 4:
-        data = pkt->get<uint32_t>();
+        data = pkt->getLE<uint32_t>();
         break;
       default:
         panic("PL111 CLCD controller write size too big?\n");
@@ -251,7 +255,7 @@ Pl111::write(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - pioAddr;
 
     DPRINTF(PL111, " write register %#x value %#x size=%d\n", daddr,
-            pkt->get<uint8_t>(), pkt->getSize());
+            pkt->getLE<uint8_t>(), pkt->getSize());
 
     switch (daddr) {
       case LcdTiming0:

@@ -53,19 +53,20 @@ class MemCommand {
    * 3. WR - Write
    * 4. PRE - Explicit Precharge per bank
    * 5. REF - Refresh all banks
-   * 6. END - To indicate end of trace
-   * 7. RDA - Read with auto-precharge
-   * 8. WRA - Write with auto-precharge
-   * 9. PREA - Precharge all banks
-   * 10. PDN_F_PRE - Precharge Power-down Entry command (Fast-Exit)
-   * 11. PDN_S_PRE - Precharge Power-down Entry command (Slow-Exit)
-   * 12. PDN_F_ACT - Active Power-down Entry command (Fast-Exit)
-   * 13. PDN_S_ACT - Active Power-down Entry command (Slow-Exit)
-   * 14. PUP_PRE - Precharge Power-down Exit
-   * 15. PUP_ACT - Active Power-down Exit
-   * 16. SREN - Self-Refresh Entry command
-   * 17. SREX - Self-refresh Exit
-   * 18. NOP - To indicate end of trace
+   * 6  REFB- Refresh a particular bank
+   * 7. END - To indicate end of trace
+   * 8. RDA - Read with auto-precharge
+   * 9. WRA - Write with auto-precharge
+   * 10. PREA - Precharge all banks
+   * 11. PDN_F_PRE - Precharge Power-down Entry command (Fast-Exit)
+   * 12. PDN_S_PRE - Precharge Power-down Entry command (Slow-Exit)
+   * 13. PDN_F_ACT - Active Power-down Entry command (Fast-Exit)
+   * 14. PDN_S_ACT - Active Power-down Entry command (Slow-Exit)
+   * 15. PUP_PRE - Precharge Power-down Exit
+   * 16. PUP_ACT - Active Power-down Exit
+   * 17. SREN - Self-Refresh Entry command
+   * 18. SREX - Self-refresh Exit
+   * 19. NOP - To indicate end of trace
    */
 
   enum cmds {
@@ -74,29 +75,31 @@ class MemCommand {
     WR        = 2,
     PRE       = 3,
     REF       = 4,
-    END       = 5,
-    RDA       = 6,
-    WRA       = 7,
-    PREA      = 8,
-    PDN_F_PRE = 9,
-    PDN_S_PRE = 10,
-    PDN_F_ACT = 11,
-    PDN_S_ACT = 12,
-    PUP_PRE   = 13,
-    PUP_ACT   = 14,
-    SREN      = 15,
-    SREX      = 16,
-    NOP       = 17
+    REFB      = 5,
+    END       = 6,
+    RDA       = 7,
+    WRA       = 8,
+    PREA      = 9,
+    PDN_F_PRE = 10,
+    PDN_S_PRE = 11,
+    PDN_F_ACT = 12,
+    PDN_S_ACT = 13,
+    PUP_PRE   = 14,
+    PUP_ACT   = 15,
+    SREN      = 16,
+    SREX      = 17,
+    NOP       = 18,
+    UNINITIALIZED = 19
   };
 
-  MemCommand();
+//  MemCommand();
   MemCommand(
     // Command Type
-    MemCommand::cmds type,
+    MemCommand::cmds type = UNINITIALIZED,
     // Target Bank
     unsigned         bank = 0,
     // Command Issue Timestamp (in cc)
-    double           timestamp = 0);
+    int64_t          timestamp = 0L);
 
   // Get command type
   cmds getType() const;
@@ -111,16 +114,15 @@ class MemCommand {
   unsigned getBank() const;
 
   // Set timestamp
-  void setTime(double _timestamp);
+  void setTime(int64_t _timestamp);
 
   // Get timestamp
-  double getTime() const;
   int64_t getTimeInt64() const;
 
   cmds typeWithoutAutoPrechargeFlag() const;
 
   // To calculate precharge offset after read or write with auto-precharge
-  int getPrechargeOffset(const MemorySpecification& memSpec,
+  int64_t getPrechargeOffset(const MemorySpecification& memSpec,
                          MemCommand::cmds           type) const;
 
   // To check for equivalence
@@ -136,19 +138,36 @@ class MemCommand {
     }
   }
 
-  static const unsigned int nCommands = 18;
+  static const unsigned int nCommands = 20;
 
   static std::string* getCommandTypeStrings()
   {
-    static std::string type_map[nCommands] = { "ACT",       "RD",      "WR",      "PRE",  "REF",
-                                               "END",       "RDA",     "WRA",     "PREA", "PDN_F_PRE","PDN_S_PRE",  "PDN_F_ACT",
-                                               "PDN_S_ACT", "PUP_PRE", "PUP_ACT", "SREN", "SREX",     "NOP" };
+    static std::string type_map[nCommands] = { "ACT",
+                                               "RD",
+                                               "WR",
+                                               "PRE",
+                                               "REF",
+                                               "REFB",
+                                               "END",
+                                               "RDA",
+                                               "WRA",
+                                               "PREA",
+                                               "PDN_F_PRE",
+                                               "PDN_S_PRE",
+                                               "PDN_F_ACT",
+                                               "PDN_S_ACT",
+                                               "PUP_PRE",
+                                               "PUP_ACT",
+                                               "SREN",
+                                               "SREX",
+                                               "NOP",
+                                               "UNINITIALIZED" };
 
     return type_map;
   }
 
   // To identify command type from name
-  static cmds getTypeFromName(const std::string name)
+  static cmds getTypeFromName(const std::string& name)
   {
     std::string* typeStrings = getCommandTypeStrings();
 
@@ -165,7 +184,7 @@ class MemCommand {
  private:
   MemCommand::cmds type;
   unsigned bank;
-  double timestamp;
+  int64_t timestamp;
 };
 }
 #endif // ifndef MEMCOMMAND_H

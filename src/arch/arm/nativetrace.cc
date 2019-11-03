@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011, 2014 ARM Limited
+ * Copyright (c) 2010-2011, 2014, 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -40,9 +40,10 @@
  * Authors: Gabe Black
  */
 
+#include "arch/arm/nativetrace.hh"
+
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/miscregs.hh"
-#include "arch/arm/nativetrace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/ExecRegDelta.hh"
 #include "params/ArmNativeTrace.hh"
@@ -124,10 +125,11 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
     newState[STATE_CPSR] = cpsr;
     changed[STATE_CPSR] = (newState[STATE_CPSR] != oldState[STATE_CPSR]);
 
-    for (int i = 0; i < NumFloatV7ArchRegs; i += 2) {
-        newState[STATE_F0 + (i >> 1)] =
-            static_cast<uint64_t>(tc->readFloatRegBits(i + 1)) << 32 |
-            tc->readFloatRegBits(i);
+    for (int i = 0; i < NumVecV7ArchRegs; i++) {
+        auto vec(tc->readVecReg(RegId(VecRegClass,i))
+            .as<uint64_t, MaxSveVecLenInDWords>());
+        newState[STATE_F0 + 2*i] = vec[0];
+        newState[STATE_F0 + 2*i + 1] = vec[1];
     }
     newState[STATE_FPSCR] = tc->readMiscRegNoEffect(MISCREG_FPSCR) |
                             tc->readCCReg(CCREG_FP);

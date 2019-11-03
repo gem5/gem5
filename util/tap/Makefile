@@ -29,20 +29,13 @@
 CC= gcc
 CXX= g++
 
-CURDIR?= $(shell /bin/pwd)
-SRCDIR?= .
-M5_SRCDIR?= $(SRCDIR)/../..
-
-vpath % $(M5_SRCDIR)/base
-vpath % $(M5_SRCDIR)/sim
-
-INCLDIRS= -I. -I$(M5_SRCDIR) -I- -I/usr/local/include
-CCFLAGS= -g -O0 -MMD $(INCLDIRS) 
+INCLDIRS= -iquote . -I /usr/local/include
+CCFLAGS= -g -MMD $(INCLDIRS)
 
 default: m5tap
 
-m5tap: tap.o cprintf.o
-	$(CXX) $(LFLAGS) -o $@ $^ -lpcap -L/usr/local/lib -ldnet 
+m5tap: tap.o
+	$(CXX) $(LFLAGS) -o $@ $^ -lpcap
 
 install: m5tap
 	$(SUDO) install -o root -m 555 m5tap /usr/local/bin

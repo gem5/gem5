@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,9 +51,9 @@ FpCondCompRegOp::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ccprintf(ss, ", ");
-    printReg(ss, op2);
+    printIntReg(ss, op2);
     ccprintf(ss, ", #%d", defCc);
     ccprintf(ss, ", ");
     printCondition(ss, condCode, true);
@@ -66,11 +66,11 @@ FpCondSelOp::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ccprintf(ss, ", ");
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ccprintf(ss, ", ");
-    printReg(ss, op2);
+    printIntReg(ss, op2);
     ccprintf(ss, ", ");
     printCondition(ss, condCode, true);
     return ss.str();
@@ -81,9 +81,9 @@ FpRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, dest + FP_Reg_Base);
+    printFloatReg(ss, dest);
     ss << ", ";
-    printReg(ss, op1 + FP_Reg_Base);
+    printFloatReg(ss, op1);
     return ss.str();
 }
 
@@ -92,7 +92,7 @@ FpRegImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, dest + FP_Reg_Base);
+    printFloatReg(ss, dest);
     ccprintf(ss, ", #%d", imm);
     return ss.str();
 }
@@ -102,9 +102,9 @@ FpRegRegImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, dest + FP_Reg_Base);
+    printFloatReg(ss, dest);
     ss << ", ";
-    printReg(ss, op1 + FP_Reg_Base);
+    printFloatReg(ss, op1);
     ccprintf(ss, ", #%d", imm);
     return ss.str();
 }
@@ -114,11 +114,26 @@ FpRegRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, dest + FP_Reg_Base);
+    printFloatReg(ss, dest);
     ss << ", ";
-    printReg(ss, op1 + FP_Reg_Base);
+    printFloatReg(ss, op1);
     ss << ", ";
-    printReg(ss, op2 + FP_Reg_Base);
+    printFloatReg(ss, op2);
+    return ss.str();
+}
+
+std::string
+FpRegRegRegCondOp::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printCondition(ss, cond);
+    printFloatReg(ss, dest);
+    ss << ", ";
+    printFloatReg(ss, op1);
+    ss << ", ";
+    printFloatReg(ss, op2);
     return ss.str();
 }
 
@@ -127,13 +142,13 @@ FpRegRegRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, dest + FP_Reg_Base);
+    printFloatReg(ss, dest);
     ss << ", ";
-    printReg(ss, op1 + FP_Reg_Base);
+    printFloatReg(ss, op1);
     ss << ", ";
-    printReg(ss, op2 + FP_Reg_Base);
+    printFloatReg(ss, op2);
     ss << ", ";
-    printReg(ss, op3 + FP_Reg_Base);
+    printFloatReg(ss, op3);
     return ss.str();
 }
 
@@ -142,11 +157,11 @@ FpRegRegRegImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, dest + FP_Reg_Base);
+    printFloatReg(ss, dest);
     ss << ", ";
-    printReg(ss, op1 + FP_Reg_Base);
+    printFloatReg(ss, op1);
     ss << ", ";
-    printReg(ss, op2 + FP_Reg_Base);
+    printFloatReg(ss, op2);
     ccprintf(ss, ", #%d", imm);
     return ss.str();
 }
@@ -875,6 +890,17 @@ unsignedRecipEstimate(uint32_t op)
         return (1 << 31) | bits(estimate, 51, 21);
     }
 }
+
+FPSCR
+fpStandardFPSCRValue(const FPSCR &fpscr)
+{
+    FPSCR new_fpscr(0);
+    new_fpscr.ahp = fpscr.ahp;
+    new_fpscr.dn = 1;
+    new_fpscr.fz = 1;
+    new_fpscr.fz16 = fpscr.fz16;
+    return new_fpscr;
+};
 
 template <class fpType>
 fpType

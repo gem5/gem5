@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -147,8 +147,9 @@ class VirtIO9PBase : public VirtIODeviceBase
     class FSQueue : public VirtQueue
     {
       public:
-        FSQueue(PortProxy &proxy, uint16_t size, VirtIO9PBase &_parent)
-            : VirtQueue(proxy, size), parent(_parent) {}
+        FSQueue(PortProxy &proxy, ByteOrder bo,
+                uint16_t size, VirtIO9PBase &_parent)
+            : VirtQueue(proxy, bo, size), parent(_parent) {}
         virtual ~FSQueue() {}
 
         void onNotifyDescriptor(VirtDescriptor *desc);
@@ -305,6 +306,8 @@ class VirtIO9PDiod : public VirtIO9PProxy
 
     ssize_t read(uint8_t *data, size_t len);
     ssize_t write(const uint8_t *data, size_t len);
+    /** Kill the diod child process at the end of the simulation */
+    void terminateDiod();
 
   private:
     class DiodDataEvent : public PollEvent

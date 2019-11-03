@@ -32,10 +32,11 @@
  * BadDevice implemenation
  */
 
+#include "dev/baddev.hh"
+
 #include <string>
 
 #include "base/trace.hh"
-#include "dev/baddev.hh"
 #include "params/BadDevice.hh"
 #include "sim/system.hh"
 

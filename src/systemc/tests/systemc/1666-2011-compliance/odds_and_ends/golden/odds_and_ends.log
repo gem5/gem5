@@ -1,0 +1,35 @@
+SystemC Simulation
+task1 or task2 completed
+task1 or task2 completed
+T2 at 10 ns
+T2 at 20 ns
+suspend at 25 ns
+resume at 45 ns
+T2 at 45 ns
+T2 at 50 ns
+T2 at 60 ns
+disable at 65 ns
+enable at 85 ns
+T2 at 90 ns
+T2 at 100 ns
+reset_handler() called at 105 ns
+T2 at 110 ns
+T2 at 120 ns
+kill_handler() called at 125 ns
+Reentering sc_start at 145 ns
+Reentering sc_start at 150 ns
+Reentering sc_start at 150 ns
+Reentering sc_start at 160 ns
+Reentering sc_start at 160 ns
+Reentering sc_start at 170 ns
+Reentering sc_start at 170 ns
+Reentering sc_start at 180 ns
+Reentering sc_start at 180 ns
+Reentering sc_start at 190 ns
+Reentering sc_start at 190 ns
+Reentering sc_start at 195 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+sc_max_time() = 18446744073709551615 ps
+
+Success

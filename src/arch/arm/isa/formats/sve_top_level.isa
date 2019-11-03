@@ -1,0 +1,319 @@
+// Copyright (c) 2017-2019 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Giacomo Gabrielli
+
+/// @file
+/// SVE top-level decoder.
+
+output header {{
+namespace Aarch64
+{
+    StaticInstPtr decodeSveIntArithBinPred(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntReduc(ExtMachInst machInst);
+    StaticInstPtr decodeSveShiftByImmPred(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntArithUnaryPred(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntMulAdd(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntArithUnpred(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntLogUnpred(ExtMachInst machInst);
+    StaticInstPtr decodeSveIndexGen(ExtMachInst machInst);
+    StaticInstPtr decodeSveStackAlloc(ExtMachInst machInst);
+    StaticInstPtr decodeSveShiftByImmUnpred(ExtMachInst machInst);
+    StaticInstPtr decodeSveCompVecAddr(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntMiscUnpred(ExtMachInst machInst);
+    StaticInstPtr decodeSveElemCount(ExtMachInst machInst);
+    StaticInstPtr decodeSveLogMaskImm(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntWideImmPred(ExtMachInst machInst);
+    StaticInstPtr decodeSvePermExtract(ExtMachInst machInst);
+    StaticInstPtr decodeSvePermUnpred(ExtMachInst machInst);
+    StaticInstPtr decodeSvePermPredicates(ExtMachInst machInst);
+    StaticInstPtr decodeSvePermIntlv(ExtMachInst machInst);
+    StaticInstPtr decodeSvePermPred(ExtMachInst machInst);
+    StaticInstPtr decodeSveSelVec(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntCmpVec(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntCmpUImm(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntCmpSImm(ExtMachInst machInst);
+    StaticInstPtr decodeSvePredGen(ExtMachInst machInst);
+    StaticInstPtr decodeSvePredCount(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntCmpSca(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntWideImmUnpred(ExtMachInst machInst);
+
+    StaticInstPtr decodeSveMultiplyAddUnpred(ExtMachInst machInst);
+    StaticInstPtr decodeSveMultiplyIndexed(ExtMachInst machInst);
+
+    StaticInstPtr decodeSveFpFastReduc(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpUnaryUnpred(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpCmpZero(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpAccumReduc(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpArithUnpred(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpArithPred(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpUnaryPred(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpCmpVec(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpFusedMulAdd(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpCplxAdd(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpCplxMulAddVec(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpMulAddIndexed(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpCplxMulAddIndexed(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpMulIndexed(ExtMachInst machInst);
+
+    StaticInstPtr decodeSveMemGather32(ExtMachInst machInst);
+    StaticInstPtr decodeSveMemContigLoad(ExtMachInst machInst);
+    StaticInstPtr decodeSveMemGather64(ExtMachInst machInst);
+    StaticInstPtr decodeSveMemStore(ExtMachInst machInst);
+}
+}};
+
+output decoder {{
+namespace Aarch64
+{
+
+    StaticInstPtr
+    decodeSveInt(ExtMachInst machInst)
+    {
+        uint8_t b_29_24_21 = (bits(machInst, 29) << 2) |
+                             (bits(machInst, 24) << 1) |
+                             bits(machInst, 21);
+        switch (b_29_24_21) {
+          case 0x0:
+            {
+                if (bits(machInst, 14)) {
+                    return decodeSveIntMulAdd(machInst);
+                } else {
+                    uint8_t b_15_13 = (bits(machInst, 15) << 1) |
+                                      bits(machInst, 13);
+                    switch (b_15_13) {
+                      case 0x0:
+                        if (bits(machInst, 30)) {
+                            return decodeSveMultiplyAddUnpred(machInst);
+                        } else {
+                            return decodeSveIntArithBinPred(machInst);
+                        }
+                      case 0x1:
+                        return decodeSveIntReduc(machInst);
+                      case 0x2:
+                        return decodeSveShiftByImmPred(machInst);
+                      case 0x3:
+                        return decodeSveIntArithUnaryPred(machInst);
+                    }
+                }
+                break;
+            }
+          case 0x1:
+            {
+                uint8_t b_15_14 = bits(machInst, 15, 14);
+                uint8_t b_13 = bits(machInst, 13);
+                uint8_t b_12 = bits(machInst, 12);
+                switch (b_15_14) {
+                  case 0x0:
+                    if (b_13) {
+                        return decodeSveIntLogUnpred(machInst);
+                    } else {
+                        if (bits(machInst, 30)) {
+                            return decodeSveMultiplyIndexed(machInst);
+                        } else {
+                            return decodeSveIntArithUnpred(machInst);
+                        }
+                    }
+                  case 0x1:
+                    if (b_13) {
+                        return new Unknown64(machInst);
+                    } else if (b_12) {
+                        return decodeSveStackAlloc(machInst);
+                    } else {
+                        return decodeSveIndexGen(machInst);
+                    }
+                  case 0x2:
+                    if (b_13) {
+                        if (b_12) {
+                            return decodeSveIntMiscUnpred(machInst);
+                        } else {
+                            return decodeSveCompVecAddr(machInst);
+                        }
+                    } else {
+                        return decodeSveShiftByImmUnpred(machInst);
+                    }
+                  case 0x3:
+                    return decodeSveElemCount(machInst);
+                }
+                break;
+            }
+          case 0x2:
+            if (bits(machInst, 20)) {
+                return decodeSveIntWideImmPred(machInst);
+            } else {
+                return decodeSveLogMaskImm(machInst);
+            }
+          case 0x3:
+            {
+                uint8_t b_15_14 = bits(machInst, 15, 14);
+                uint8_t b_13 = bits(machInst, 13);
+                switch (b_15_14) {
+                  case 0x0:
+                    if (b_13) {
+                        return decodeSvePermUnpred(machInst);
+                    } else {
+                        return decodeSvePermExtract(machInst);
+                    }
+                  case 0x1:
+                    if (b_13) {
+                        return decodeSvePermIntlv(machInst);
+                    } else {
+                        return decodeSvePermPredicates(machInst);
+                    }
+                  case 0x2:
+                    return decodeSvePermPred(machInst);
+                  case 0x3:
+                    return decodeSveSelVec(machInst);
+                }
+                break;
+            }
+          case 0x4:
+            return decodeSveIntCmpVec(machInst);
+          case 0x5:
+            return decodeSveIntCmpUImm(machInst);
+          case 0x6:
+            if (bits(machInst, 14)) {
+                return decodeSvePredGen(machInst);
+            } else {
+                return decodeSveIntCmpSImm(machInst);
+            }
+          case 0x7:
+            {
+                uint8_t b_15_14 = bits(machInst, 15, 14);
+                switch (b_15_14) {
+                  case 0x0:
+                    return decodeSveIntCmpSca(machInst);
+                  case 0x1:
+                    return new Unknown64(machInst);
+                  case 0x2:
+                    return decodeSvePredCount(machInst);
+                  case 0x3:
+                    return decodeSveIntWideImmUnpred(machInst);
+                }
+            }
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSveFp(ExtMachInst machInst)
+    {
+        uint8_t b_24_21 = (bits(machInst, 24) << 1) |
+                          bits(machInst, 21);
+        switch (b_24_21) {
+          case 0x0:
+            if (!bits(machInst, 15)) {
+                return decodeSveFpCplxMulAddVec(machInst);
+            } else if((bits(machInst, 20, 17) | bits(machInst, 14, 13)) == 0) {
+                return decodeSveFpCplxAdd(machInst);
+            }
+            return new Unknown64(machInst);
+          case 0x1:
+            if (bits(machInst, 15, 12) == 1) {
+                return decodeSveFpCplxMulAddIndexed(machInst);
+            }
+            switch (bits(machInst, 13, 11)) {
+              case 0:
+                return decodeSveFpMulAddIndexed(machInst);
+              case 4:
+                if (!bits(machInst, 10))
+                    return decodeSveFpMulIndexed(machInst);
+                M5_FALLTHROUGH;
+              default:
+                return new Unknown64(machInst);
+            }
+          case 0x2:
+            {
+                if (bits(machInst, 14)) {
+                    return decodeSveFpCmpVec(machInst);
+                } else {
+                    uint8_t b_15_13 = (bits(machInst, 15) << 1) |
+                                      bits(machInst, 13);
+                    switch (b_15_13) {
+                      case 0x0:
+                        return decodeSveFpArithUnpred(machInst);
+                      case 0x1:
+                        {
+                            uint8_t b_20_19 = (bits(machInst, 20) << 1) |
+                                              bits(machInst, 19);
+                            switch (b_20_19) {
+                              case 0x0:
+                                  return decodeSveFpFastReduc(machInst);
+                              case 0x1:
+                                  if (bits(machInst, 12)) {
+                                      return decodeSveFpUnaryUnpred(machInst);
+                                  } else {
+                                      return new Unknown64(machInst);
+                                  }
+                              case 0x2:
+                                  return decodeSveFpCmpZero(machInst);
+                              case 0x3:
+                                  return decodeSveFpAccumReduc(machInst);
+                            }
+                            break;
+                        }
+                      case 0x2:
+                        return decodeSveFpArithPred(machInst);
+                      case 0x3:
+                        return decodeSveFpUnaryPred(machInst);
+                    }
+                }
+                break;
+            }
+          case 0x3:
+            return decodeSveFpFusedMulAdd(machInst);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSveMem(ExtMachInst machInst)
+    {
+        uint8_t b_30_29 = bits(machInst, 30, 29);
+        switch (b_30_29) {
+          case 0x0:
+            return decodeSveMemGather32(machInst);
+          case 0x1:
+            return decodeSveMemContigLoad(machInst);
+          case 0x2:
+            return decodeSveMemGather64(machInst);
+          case 0x3:
+            return decodeSveMemStore(machInst);
+        }
+        return new Unknown64(machInst);
+    }
+
+}  // namespace Aarch64
+}};

@@ -1,0 +1,38 @@
+SystemC Simulation
+
+Info: (I703) tracing timescale unit set: 1 ns (systemc.vcd)
+Seen other edge
+AsyncBlock: Value read = 0
+AsyncProc: Value read = 0
+Seen other edge
+AsyncBlock: Value read = 100
+Sync: Value written = 100  value1 read = 0  value2 read = 0
+AsyncProc: Value read = 100
+Seen other edge
+AsyncBlock: Value read = 100
+Waited one cycle
+
+AsyncProc: Value read = 100
+Seen other edge
+AsyncBlock: Value read = 101
+Sync: Value written = 101  value1 read = 100  value2 read = 100
+AsyncProc: Value read = 101
+Seen other edge
+AsyncBlock: Value read = 101
+Waited one cycle
+
+AsyncProc: Value read = 101
+Seen other edge
+AsyncBlock: Value read = 102
+Sync: Value written = 102  value1 read = 101  value2 read = 101
+AsyncProc: Value read = 102
+Seen other edge
+AsyncBlock: Value read = 102
+Waited one cycle
+
+AsyncProc: Value read = 102
+Seen other edge
+AsyncBlock: Value read = 103
+Sync: Value written = 103  value1 read = 102  value2 read = 102
+AsyncProc: Value read = 103
+Seen other edge

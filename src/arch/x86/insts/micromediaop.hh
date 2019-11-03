@@ -59,7 +59,7 @@ namespace X86ISA
                 OpClass __opClass) :
             X86MicroopBase(_machInst, mnem, _instMnem, setFlags,
                     __opClass),
-            src1(_src1.idx), dest(_dest.idx),
+            src1(_src1.index()), dest(_dest.index()),
             srcSize(_srcSize), destSize(_destSize), ext(_ext)
         {}
 
@@ -72,7 +72,7 @@ namespace X86ISA
         int
         numItems(int size) const
         {
-            return scalarOp() ? 1 : (sizeof(FloatRegBits) / size);
+            return scalarOp() ? 1 : (sizeof(uint64_t) / size);
         }
 
         bool
@@ -102,7 +102,7 @@ namespace X86ISA
             MediaOpBase(_machInst, mnem, _instMnem, setFlags,
                     _src1, _dest, _srcSize, _destSize, _ext,
                     __opClass),
-            src2(_src2.idx)
+            src2(_src2.index())
         {}
 
         std::string generateDisassembly(Addr pc,

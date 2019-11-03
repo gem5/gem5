@@ -1,2 +1,0 @@
-warn: Sockets disabled, not accepting gdb connections
-warn: ignoring syscall sigprocmask(1, ...)

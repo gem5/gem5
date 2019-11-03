@@ -28,12 +28,13 @@
  * Authors: Kevin Lim
  */
 
-#include "arch/kernel_stats.hh"
+#include "cpu/thread_state.hh"
+
 #include "base/output.hh"
 #include "cpu/base.hh"
 #include "cpu/profile.hh"
 #include "cpu/quiesce_event.hh"
-#include "cpu/thread_state.hh"
+#include "kern/kernel_stats.hh"
 #include "mem/fs_translating_port_proxy.hh"
 #include "mem/port.hh"
 #include "mem/port_proxy.hh"
@@ -48,7 +49,7 @@ ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
       _contextId(0), _threadId(_tid), lastActivate(0), lastSuspend(0),
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
       kernelStats(NULL), process(_process), physProxy(NULL), virtProxy(NULL),
-      proxy(NULL), funcExeInst(0), storeCondFailures(0)
+      funcExeInst(0), storeCondFailures(0)
 {
 }
 
@@ -58,8 +59,6 @@ ThreadState::~ThreadState()
         delete physProxy;
     if (virtProxy != NULL)
         delete virtProxy;
-    if (proxy != NULL)
-        delete proxy;
 }
 
 void
@@ -110,15 +109,15 @@ ThreadState::initMemProxies(ThreadContext *tc)
         assert(physProxy == NULL);
         // This cannot be done in the constructor as the thread state
         // itself is created in the base cpu constructor and the
-        // getDataPort is a virtual function
-        physProxy = new PortProxy(baseCpu->getDataPort(),
+        // getSendFunctional is a virtual function
+        physProxy = new PortProxy(baseCpu->getSendFunctional(),
                                   baseCpu->cacheLineSize());
 
         assert(virtProxy == NULL);
         virtProxy = new FSTranslatingPortProxy(tc);
     } else {
-        assert(proxy == NULL);
-        proxy = new SETranslatingPortProxy(baseCpu->getDataPort(),
+        assert(virtProxy == NULL);
+        virtProxy = new SETranslatingPortProxy(baseCpu->getSendFunctional(),
                                            process,
                                            SETranslatingPortProxy::NextPage);
     }
@@ -132,20 +131,11 @@ ThreadState::getPhysProxy()
     return *physProxy;
 }
 
-FSTranslatingPortProxy &
+PortProxy &
 ThreadState::getVirtProxy()
 {
-    assert(FullSystem);
     assert(virtProxy != NULL);
     return *virtProxy;
-}
-
-SETranslatingPortProxy &
-ThreadState::getMemProxy()
-{
-    assert(!FullSystem);
-    assert(proxy != NULL);
-    return *proxy;
 }
 
 void

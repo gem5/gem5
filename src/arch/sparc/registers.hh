@@ -32,6 +32,8 @@
 #ifndef __ARCH_SPARC_REGISTERS_HH__
 #define __ARCH_SPARC_REGISTERS_HH__
 
+#include "arch/generic/vec_pred_reg.hh"
+#include "arch/generic/vec_reg.hh"
 #include "arch/sparc/generated/max_inst_regs.hh"
 #include "arch/sparc/miscregs.hh"
 #include "arch/sparc/sparc_traits.hh"
@@ -44,22 +46,20 @@ using SparcISAInst::MaxInstSrcRegs;
 using SparcISAInst::MaxInstDestRegs;
 using SparcISAInst::MaxMiscDestRegs;
 
-typedef uint64_t IntReg;
-typedef uint64_t MiscReg;
-typedef float FloatReg;
-typedef uint32_t FloatRegBits;
+// Not applicable to SPARC
+using VecElem = ::DummyVecElem;
+using VecReg = ::DummyVecReg;
+using ConstVecReg = ::DummyConstVecReg;
+using VecRegContainer = ::DummyVecRegContainer;
+constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
+constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;
 
-// dummy typedef since we don't have CC regs
-typedef uint8_t CCReg;
-
-typedef union
-{
-    IntReg intReg;
-    FloatReg fpreg;
-    MiscReg ctrlreg;
-} AnyReg;
-
-typedef uint16_t RegIndex;
+// Not applicable to SPARC
+using VecPredReg = ::DummyVecPredReg;
+using ConstVecPredReg = ::DummyConstVecPredReg;
+using VecPredRegContainer = ::DummyVecPredRegContainer;
+constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
+constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
 
 // semantically meaningful register indices
 const int ZeroReg = 0;      // architecturally meaningful
@@ -74,17 +74,13 @@ const int SyscallPseudoReturnReg = 9;
 
 const int NumIntArchRegs = 32;
 const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
+const int NumVecRegs = 1;  // Not applicable to SPARC
+                           // (1 to prevent warnings)
+const int NumVecPredRegs = 1;  // Not applicable to SPARC
+                               // (1 to prevent warnings)
 const int NumCCRegs = 0;
 
 const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
-
-// These enumerate all the registers for dependence tracking.
-enum DependenceTags {
-    FP_Reg_Base = NumIntRegs,
-    CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
-    Misc_Reg_Base = CC_Reg_Base + NumCCRegs, // NumCCRegs == 0
-    Max_Reg_Index = Misc_Reg_Base + NumMiscRegs,
-};
 
 } // namespace SparcISA
 

@@ -1,0 +1,26 @@
+SystemC Simulation
+
+Round robin method 1 at time 100 ns
+Round robin method 2 at time 110 ns
+Round robin method 3 at time 120 ns
+Round robin method 4 at time 130 ns
+Round robin method 1 at time 140 ns
+Round robin method 2 at time 150 ns
+Round robin method 3 at time 160 ns
+Round robin method 4 at time 170 ns
+Round robin method 1 at time 180 ns
+Round robin method 2 at time 190 ns
+Round robin method 3 at time 200 ns
+Round robin method 4 at time 210 ns
+Round robin method 1 at time 220 ns
+Round robin method 2 at time 230 ns
+Round robin method 3 at time 240 ns
+Round robin method 4 at time 250 ns
+Round robin method 1 at time 260 ns
+Round robin method 2 at time 270 ns
+Round robin method 3 at time 280 ns
+Round robin method 4 at time 290 ns
+
+Done.
+
+Info: /OSCI/SystemC: Simulation stopped by user.

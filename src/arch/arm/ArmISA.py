@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015 ARM Limited
+# Copyright (c) 2012-2013, 2015-2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -40,7 +40,9 @@ from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
-from ArmPMU import ArmPMU
+from m5.objects.ArmPMU import ArmPMU
+from m5.objects.ArmSystem import SveVectorLength
+from m5.objects.ISACommon import VecRegRenameMode
 
 # Enum for DecoderFlavour
 class DecoderFlavour(Enum): vals = ['Generic']
@@ -56,15 +58,6 @@ class ArmISA(SimObject):
     decoderFlavour = Param.DecoderFlavour('Generic', "Decoder flavour specification")
 
     midr = Param.UInt32(0x410fc0f0, "MIDR value")
-
-    # See section B4.1.93 - B4.1.94 of the ARM ARM
-    #
-    # !ThumbEE | !Jazelle | Thumb | ARM
-    # Note: ThumbEE is disabled for now since we don't support CP14
-    # config registers and jumping to ThumbEE vectors
-    id_pfr0 = Param.UInt32(0x00000031, "Processor Feature Register 0")
-    # !Timer | Virti | !M Profile | TrustZone | ARMv4
-    id_pfr1 = Param.UInt32(0x00001011, "Processor Feature Register 1")
 
     # See section B4.1.89 - B4.1.92 of the ARM ARM
     #  VMSAv7 support
@@ -112,14 +105,19 @@ class ArmISA(SimObject):
     # 4K | 64K | !16K | !BigEndEL0 | !SNSMem | !BigEnd | 8b ASID | 40b PA
     id_aa64mmfr0_el1 = Param.UInt64(0x0000000000f00002,
         "AArch64 Memory Model Feature Register 0")
-    # Reserved for future expansion
-    id_aa64mmfr1_el1 = Param.UInt64(0x0000000000000000,
+    # PAN | HPDS
+    id_aa64mmfr1_el1 = Param.UInt64(0x0000000000101000,
         "AArch64 Memory Model Feature Register 1")
+    id_aa64mmfr2_el1 = Param.UInt64(0x0000000000000000,
+        "AArch64 Memory Model Feature Register 2")
 
-    # !GICv3 CP15 | AdvSIMD | FP | !EL3 | !EL2 | EL1 (AArch64) | EL0 (AArch64)
-    # (no AArch32/64 interprocessing support for now)
-    id_aa64pfr0_el1 = Param.UInt64(0x0000000000000011,
-        "AArch64 Processor Feature Register 0")
-    # Reserved for future expansion
-    id_aa64pfr1_el1 = Param.UInt64(0x0000000000000000,
-        "AArch64 Processor Feature Register 1")
+    # Any access (read/write) to an unimplemented
+    # Implementation Defined registers is not causing an Undefined Instruction.
+    # It is rather executed as a NOP.
+    impdef_nop = Param.Bool(False,
+        "Any access to a MISCREG_IMPDEF_UNIMPL register is executed as NOP")
+
+    # This is required because in SE mode a generic System SimObject is
+    # allocated, instead of an ArmSystem
+    sve_vl_se = Param.SveVectorLength(1,
+        "SVE vector length in quadwords (128-bit), SE-mode only")

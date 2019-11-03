@@ -48,7 +48,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
 
@@ -62,7 +63,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
         class HiLoRsSelOp: public HiLoOp
@@ -75,7 +77,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
         class HiLoRdSelOp: public HiLoOp
@@ -88,7 +91,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
         class HiLoRdSelValOp: public HiLoOp
@@ -101,7 +105,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
         class IntImmOp : public MipsStaticInst
@@ -124,16 +129,16 @@ output header {{
                     }
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-
-
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
 }};
 
 // HiLo instruction class execute method template.
 def template HiLoExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 
@@ -152,7 +157,8 @@ def template HiLoExecute {{
 
 // HiLoRsSel instruction class execute method template.
 def template HiLoRsSelExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 
@@ -178,7 +184,8 @@ def template HiLoRsSelExecute {{
 
 // HiLoRdSel instruction class execute method template.
 def template HiLoRdSelExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 
@@ -257,9 +264,9 @@ output decoder {{
 
             ccprintf(ss, "%-10s ", mnemonic);
 
-            if (_numDestRegs > 0 && _destRegIdx[0] < 32) {
+            if (_numDestRegs > 0 && _destRegIdx[0].index() < 32) {
                 printReg(ss, _destRegIdx[0]);
-            } else if (_numSrcRegs > 0 && _srcRegIdx[0] < 32) {
+            } else if (_numSrcRegs > 0 && _srcRegIdx[0].index() < 32) {
                 printReg(ss, _srcRegIdx[0]);
             }
 
@@ -272,9 +279,9 @@ output decoder {{
 
             ccprintf(ss, "%-10s ", mnemonic);
 
-            if (_numDestRegs > 0 && _destRegIdx[0] < 32) {
+            if (_numDestRegs > 0 && _destRegIdx[0].index() < 32) {
                 printReg(ss, _destRegIdx[0]);
-            } else if (_numSrcRegs > 0 && _srcRegIdx[0] < 32) {
+            } else if (_numSrcRegs > 0 && _srcRegIdx[0].index() < 32) {
                 printReg(ss, _srcRegIdx[0]);
             }
 
@@ -287,9 +294,9 @@ output decoder {{
 
             ccprintf(ss, "%-10s ", mnemonic);
 
-            if (_numDestRegs > 0 && _destRegIdx[0] < 32) {
+            if (_numDestRegs > 0 && _destRegIdx[0].index() < 32) {
                 printReg(ss, _destRegIdx[0]);
-            } else if (_numSrcRegs > 0 && _srcRegIdx[0] < 32) {
+            } else if (_numSrcRegs > 0 && _srcRegIdx[0].index() < 32) {
                 printReg(ss, _srcRegIdx[0]);
             }
 

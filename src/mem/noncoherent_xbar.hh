@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 ARM Limited
+ * Copyright (c) 2011-2015, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -104,30 +104,35 @@ class NoncoherentXBar : public BaseXBar
 
       protected:
 
-        /**
-         * When receiving a timing request, pass it to the crossbar.
-         */
-        virtual bool recvTimingReq(PacketPtr pkt)
-        { return xbar.recvTimingReq(pkt, id); }
+        bool
+        recvTimingReq(PacketPtr pkt) override
+        {
+            return xbar.recvTimingReq(pkt, id);
+        }
 
-        /**
-         * When receiving an atomic request, pass it to the crossbar.
-         */
-        virtual Tick recvAtomic(PacketPtr pkt)
-        { return xbar.recvAtomic(pkt, id); }
+        Tick
+        recvAtomic(PacketPtr pkt) override
+        {
+            return xbar.recvAtomicBackdoor(pkt, id);
+        }
 
-        /**
-         * When receiving a functional request, pass it to the crossbar.
-         */
-        virtual void recvFunctional(PacketPtr pkt)
-        { xbar.recvFunctional(pkt, id); }
+        Tick
+        recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor) override
+        {
+            return xbar.recvAtomicBackdoor(pkt, id, &backdoor);
+        }
 
-        /**
-         * Return the union of all adress ranges seen by this crossbar.
-         */
-        virtual AddrRangeList getAddrRanges() const
-        { return xbar.getAddrRanges(); }
+        void
+        recvFunctional(PacketPtr pkt) override
+        {
+            xbar.recvFunctional(pkt, id);
+        }
 
+        AddrRangeList
+        getAddrRanges() const override
+        {
+            return xbar.getAddrRanges();
+        }
     };
 
     /**
@@ -151,42 +156,30 @@ class NoncoherentXBar : public BaseXBar
 
       protected:
 
-        /**
-         * When receiving a timing response, pass it to the crossbar.
-         */
-        virtual bool recvTimingResp(PacketPtr pkt)
-        { return xbar.recvTimingResp(pkt, id); }
+        bool
+        recvTimingResp(PacketPtr pkt) override
+        {
+            return xbar.recvTimingResp(pkt, id);
+        }
 
-        /** When reciving a range change from the peer port (at id),
-            pass it to the crossbar. */
-        virtual void recvRangeChange()
-        { xbar.recvRangeChange(id); }
+        void
+        recvRangeChange() override
+        {
+            xbar.recvRangeChange(id);
+        }
 
-        /** When reciving a retry from the peer port (at id),
-            pass it to the crossbar. */
-        virtual void recvReqRetry()
-        { xbar.recvReqRetry(id); }
-
+        void
+        recvReqRetry() override
+        {
+            xbar.recvReqRetry(id);
+        }
     };
 
-    /** Function called by the port when the crossbar is recieving a Timing
-      request packet.*/
     virtual bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);
-
-    /** Function called by the port when the crossbar is recieving a Timing
-      response packet.*/
     virtual bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
-
-    /** Timing function called by port when it is once again able to process
-     * requests. */
     void recvReqRetry(PortID master_port_id);
-
-    /** Function called by the port when the crossbar is recieving a Atomic
-      transaction.*/
-    Tick recvAtomic(PacketPtr pkt, PortID slave_port_id);
-
-    /** Function called by the port when the crossbar is recieving a Functional
-        transaction.*/
+    Tick recvAtomicBackdoor(PacketPtr pkt, PortID slave_port_id,
+                            MemBackdoorPtr *backdoor=nullptr);
     void recvFunctional(PacketPtr pkt, PortID slave_port_id);
 
   public:
@@ -194,12 +187,6 @@ class NoncoherentXBar : public BaseXBar
     NoncoherentXBar(const NoncoherentXBarParams *p);
 
     virtual ~NoncoherentXBar();
-
-    /**
-     * stats
-     */
-    virtual void regStats();
-    Stats::Scalar totPktSize;
 };
 
 #endif //__MEM_NONCOHERENT_XBAR_HH__

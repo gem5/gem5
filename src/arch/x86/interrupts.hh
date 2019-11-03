@@ -53,13 +53,14 @@
 #ifndef __ARCH_X86_INTERRUPTS_HH__
 #define __ARCH_X86_INTERRUPTS_HH__
 
-#include "arch/x86/regs/apic.hh"
+#include "arch/generic/interrupts.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/intmessage.hh"
+#include "arch/x86/regs/apic.hh"
 #include "base/bitfield.hh"
 #include "cpu/thread_context.hh"
-#include "dev/x86/intdev.hh"
 #include "dev/io_device.hh"
+#include "dev/x86/intdev.hh"
 #include "params/X86LocalApic.hh"
 #include "sim/eventq.hh"
 
@@ -72,9 +73,12 @@ namespace X86ISA {
 
 ApicRegIndex decodeAddr(Addr paddr);
 
-class Interrupts : public BasicPioDevice, IntDevice
+class Interrupts : public BaseInterrupts
 {
   protected:
+    System *sys;
+    ClockDomain &clockDomain;
+
     // Storage for the APIC registers
     uint32_t regs[NUM_APIC_REGS];
 
@@ -92,26 +96,8 @@ class Interrupts : public BasicPioDevice, IntDevice
     /*
      * Timing related stuff.
      */
-    class ApicTimerEvent : public Event
-    {
-      private:
-        Interrupts *localApic;
-      public:
-        ApicTimerEvent(Interrupts *_localApic) :
-            Event(), localApic(_localApic)
-        {}
-
-        void process()
-        {
-            assert(localApic);
-            if (localApic->triggerTimerInterrupt()) {
-                localApic->setReg(APIC_INITIAL_COUNT,
-                        localApic->readReg(APIC_INITIAL_COUNT));
-            }
-        }
-    };
-
-    ApicTimerEvent apicTimerEvent;
+    EventFunctionWrapper apicTimerEvent;
+    void processApicTimerEvent();
 
     /*
      * A set of variables to keep track of interrupts that don't go through
@@ -183,14 +169,23 @@ class Interrupts : public BasicPioDevice, IntDevice
         return bits(regs[base + (vector / 32)], vector % 32);
     }
 
+    Tick clockPeriod() const { return clockDomain.clockPeriod(); }
+
     void requestInterrupt(uint8_t vector, uint8_t deliveryMode, bool level);
 
     BaseCPU *cpu;
 
     int initialApicId;
 
-    // Port for receiving interrupts
-    IntSlavePort intSlavePort;
+    // Ports for interrupts.
+    IntSlavePort<Interrupts> intSlavePort;
+    IntMasterPort<Interrupts> intMasterPort;
+
+    // Port for memory mapped register accesses.
+    PioPort<Interrupts> pioPort;
+
+    Tick pioDelay;
+    Addr pioAddr = MaxAddr;
 
   public:
 
@@ -215,12 +210,12 @@ class Interrupts : public BasicPioDevice, IntDevice
     void init() override;
 
     /*
-     * Functions to interact with the interrupt port from IntDevice.
+     * Functions to interact with the interrupt port.
      */
-    Tick read(PacketPtr pkt) override;
-    Tick write(PacketPtr pkt) override;
-    Tick recvMessage(PacketPtr pkt) override;
-    Tick recvResponse(PacketPtr pkt) override;
+    Tick read(PacketPtr pkt);
+    Tick write(PacketPtr pkt);
+    Tick recvMessage(PacketPtr pkt);
+    void completeIPI(PacketPtr pkt);
 
     bool
     triggerTimerInterrupt()
@@ -231,24 +226,20 @@ class Interrupts : public BasicPioDevice, IntDevice
         return entry.periodic;
     }
 
-    AddrRangeList getIntAddrRange() const override;
+    AddrRangeList getAddrRanges() const;
+    AddrRangeList getIntAddrRange() const;
 
-    BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID) override
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override
     {
         if (if_name == "int_master") {
             return intMasterPort;
-        }
-        return BasicPioDevice::getMasterPort(if_name, idx);
-    }
-
-    BaseSlavePort &getSlavePort(const std::string &if_name,
-                                PortID idx = InvalidPortID) override
-    {
-        if (if_name == "int_slave") {
+        } else if (if_name == "int_slave") {
             return intSlavePort;
+        } else if (if_name == "pio") {
+            return pioPort;
         }
-        return BasicPioDevice::getSlavePort(if_name, idx);
+        return SimObject::getPort(if_name, idx);
     }
 
     /*

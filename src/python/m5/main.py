@@ -1,3 +1,15 @@
+# Copyright (c) 2016, 2019 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2005 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -26,6 +38,8 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+
 import code
 import datetime
 import os
@@ -39,14 +53,28 @@ version="%prog 2.0"
 brief_copyright=\
     "gem5 is copyrighted software; use the --copyright option for details."
 
+def _stats_help(option, opt, value, parser):
+    import m5
+    print("A stat file can either be specified as a URI or a plain")
+    print("path. When specified as a path, gem5 uses the default text ")
+    print("format.")
+    print()
+    print("The following stat formats are supported:")
+    print()
+    m5.stats.printStatVisitorTypes()
+    sys.exit(0)
+
+
 def parse_options():
-    import config
-    from options import OptionParser
+    from . import config
+    from .options import OptionParser
 
     options = OptionParser(usage=usage, version=version,
                            description=brief_copyright)
     option = options.add_option
     group = options.set_group
+
+    listener_modes = ( "on", "off", "auto" )
 
     # Help options
     option('-B', "--build-info", action="store_true", default=False,
@@ -67,6 +95,13 @@ def parse_options():
         help="Filename for -r redirection [Default: %default]")
     option("--stderr-file", metavar="FILE", default="simerr",
         help="Filename for -e redirection [Default: %default]")
+    option("--listener-mode", metavar="{on,off,auto}",
+        choices=listener_modes, default="auto",
+        help="Port (e.g., gdb) listener mode (auto: Enable if running " \
+        "interactively) [Default: %default]")
+    option("--listener-loopback-only", action="store_true", default=False,
+        help="Port listeners will only accept connections over the " \
+        "loopback device")
     option('-i', "--interactive", action="store_true", default=False,
         help="Invoke the interactive interpreter after running the script")
     option("--pdb", action="store_true", default=False,
@@ -82,6 +117,9 @@ def parse_options():
     group("Statistics Options")
     option("--stats-file", metavar="FILE", default="stats.txt",
         help="Sets the output file for statistics [Default: %default]")
+    option("--stats-help",
+           action="callback", callback=_stats_help,
+           help="Display documentation for available stat visitors")
 
     # Configuration Options
     group("Configuration Options")
@@ -125,7 +163,7 @@ def parse_options():
     options_file = config.get('options.py')
     if options_file:
         scope = { 'options' : options }
-        execfile(options_file, scope)
+        exec(compile(open(options_file).read(), options_file, 'exec'), scope)
 
     arguments = options.parse_args()
     return options,arguments
@@ -151,7 +189,7 @@ def interact(scope):
         try:
             import IPython
             from IPython.config.loader import Config
-            from IPython.frontend.terminal.embed import InteractiveShellEmbed
+            from IPython.terminal.embed import InteractiveShellEmbed
 
             cfg = Config()
             cfg.PromptManager.in_template = prompt_in1
@@ -168,33 +206,37 @@ def interact(scope):
         # isn't available.
         code.InteractiveConsole(scope).interact(banner)
 
+
+def _check_tracing():
+    from . import defines
+
+    if defines.TRACING_ON:
+        return
+
+    fatal("Tracing is not enabled.  Compile with TRACING_ON")
+
 def main(*args):
     import m5
 
-    import core
-    import debug
-    import defines
-    import event
-    import info
-    import stats
-    import trace
+    from . import core
+    from . import debug
+    from . import defines
+    from . import event
+    from . import info
+    from . import stats
+    from . import trace
 
-    from util import fatal
+    from .util import inform, fatal, panic, isInteractive
+    from m5.util.terminal_formatter import TerminalFormatter
 
     if len(args) == 0:
         options, arguments = parse_options()
     elif len(args) == 2:
         options, arguments = args
     else:
-        raise TypeError, "main() takes 0 or 2 arguments (%d given)" % len(args)
+        raise TypeError("main() takes 0 or 2 arguments (%d given)" % len(args))
 
     m5.options = options
-
-    def check_tracing():
-        if defines.TRACING_ON:
-            return
-
-        fatal("Tracing is not enabled.  Compile with TRACING_ON")
 
     # Set the main event queue for the main thread.
     event.mainq = event.getEventQueue(0)
@@ -209,12 +251,12 @@ def main(*args):
 
     # Print redirection notices here before doing any redirection
     if options.redirect_stdout and not options.redirect_stderr:
-        print "Redirecting stdout and stderr to", stdout_file
+        print("Redirecting stdout and stderr to", stdout_file)
     else:
         if options.redirect_stdout:
-            print "Redirecting stdout to", stdout_file
+            print("Redirecting stdout to", stdout_file)
         if options.redirect_stderr:
-            print "Redirecting stderr to", stderr_file
+            print("Redirecting stderr to", stderr_file)
 
     # Now redirect stdout/stderr as desired
     if options.redirect_stdout:
@@ -231,54 +273,57 @@ def main(*args):
 
     if options.build_info:
         done = True
-        print 'Build information:'
-        print
-        print 'compiled %s' % defines.compileDate;
-        print 'build options:'
-        keys = defines.buildEnv.keys()
+        print('Build information:')
+        print()
+        print('compiled %s' % defines.compileDate)
+        print('build options:')
+        keys = list(defines.buildEnv.keys())
         keys.sort()
         for key in keys:
             val = defines.buildEnv[key]
-            print '    %s = %s' % (key, val)
-        print
+            print('    %s = %s' % (key, val))
+        print()
 
     if options.copyright:
         done = True
-        print info.COPYING
-        print
+        print(info.COPYING)
+        print()
 
     if options.readme:
         done = True
-        print 'Readme:'
-        print
-        print info.README
-        print
+        print('Readme:')
+        print()
+        print(info.README)
+        print()
 
     if options.debug_help:
         done = True
-        check_tracing()
+        _check_tracing()
         debug.help()
 
     if options.list_sim_objects:
-        import SimObject
+        from . import SimObject
         done = True
-        print "SimObjects:"
-        objects = SimObject.allClasses.keys()
+        print("SimObjects:")
+        objects = list(SimObject.allClasses.keys())
         objects.sort()
+        terminal_formatter = TerminalFormatter()
         for name in objects:
             obj = SimObject.allClasses[name]
-            print "    %s" % obj
-            params = obj._params.keys()
+            print(terminal_formatter.format_output(str(obj), indent=4))
+            params = list(obj._params.keys())
             params.sort()
             for pname in params:
                 param = obj._params[pname]
                 default = getattr(param, 'default', '')
-                print "        %s" % pname
+                print(terminal_formatter.format_output(pname, indent=8))
                 if default:
-                    print "            default: %s" % default
-                print "            desc: %s" % param.desc
-                print
-            print
+                    print(terminal_formatter.format_output(
+                        str(default), label="default: ", indent=21))
+                print(terminal_formatter.format_output(
+                    param.desc, label="desc: ", indent=21))
+                print()
+            print()
 
     if done:
         sys.exit(0)
@@ -289,26 +334,26 @@ def main(*args):
 
     verbose = options.verbose - options.quiet
     if verbose >= 0:
-        print "gem5 Simulator System.  http://gem5.org"
-        print brief_copyright
-        print
+        print("gem5 Simulator System.  http://gem5.org")
+        print(brief_copyright)
+        print()
 
-        print "gem5 compiled %s" % defines.compileDate;
+        print("gem5 compiled %s" % defines.compileDate)
 
-        print "gem5 started %s" % \
-            datetime.datetime.now().strftime("%b %e %Y %X")
-        print "gem5 executing on %s, pid %d" % \
-            (socket.gethostname(), os.getpid())
+        print("gem5 started %s" %
+              datetime.datetime.now().strftime("%b %e %Y %X"))
+        print("gem5 executing on %s, pid %d" %
+              (socket.gethostname(), os.getpid()))
 
         # in Python 3 pipes.quote() is moved to shlex.quote()
         import pipes
-        print "command line:", " ".join(map(pipes.quote, sys.argv))
-        print
+        print("command line:", " ".join(map(pipes.quote, sys.argv)))
+        print()
 
     # check to make sure we can find the listed script
     if not arguments or not os.path.isfile(arguments[0]):
         if arguments and not os.path.isfile(arguments[0]):
-            print "Script %s not found" % arguments[0]
+            print("Script %s not found" % arguments[0])
 
         options.usage(2)
 
@@ -319,7 +364,23 @@ def main(*args):
     sys.path[0:0] = options.path
 
     # set stats options
-    stats.initText(options.stats_file)
+    stats.addStatVisitor(options.stats_file)
+
+    # Disable listeners unless running interactively or explicitly
+    # enabled
+    if options.listener_mode == "off":
+        m5.disableAllListeners()
+    elif options.listener_mode == "auto":
+        if not isInteractive():
+            inform("Standard input is not a terminal, disabling listeners.")
+            m5.disableAllListeners()
+    elif options.listener_mode == "on":
+        pass
+    else:
+        panic("Unhandled listener mode: %s" % options.listener_mode)
+
+    if options.listener_loopback_only:
+        m5.listenersLoopbackOnly()
 
     # set debugging options
     debug.setRemoteGDBPort(options.remote_gdb_port)
@@ -327,7 +388,7 @@ def main(*args):
         debug.schedBreak(int(when))
 
     if options.debug_flags:
-        check_tracing()
+        _check_tracing()
 
         on_flags = []
         off_flags = []
@@ -338,7 +399,7 @@ def main(*args):
                 off = True
 
             if flag not in debug.flags:
-                print >>sys.stderr, "invalid debug flag '%s'" % flag
+                print("invalid debug flag '%s'" % flag, file=sys.stderr)
                 sys.exit(1)
 
             if off:
@@ -347,35 +408,31 @@ def main(*args):
                 debug.flags[flag].enable()
 
     if options.debug_start:
-        check_tracing()
+        _check_tracing()
         e = event.create(trace.enable, event.Event.Debug_Enable_Pri)
         event.mainq.schedule(e, options.debug_start)
     else:
         trace.enable()
 
     if options.debug_end:
-        check_tracing()
+        _check_tracing()
         e = event.create(trace.disable, event.Event.Debug_Enable_Pri)
         event.mainq.schedule(e, options.debug_end)
 
     trace.output(options.debug_file)
 
     for ignore in options.debug_ignore:
-        check_tracing()
+        _check_tracing()
         trace.ignore(ignore)
 
     sys.argv = arguments
     sys.path = [ os.path.dirname(sys.argv[0]) ] + sys.path
 
     filename = sys.argv[0]
-    filedata = file(filename, 'r').read()
+    filedata = open(filename, 'r').read()
     filecode = compile(filedata, filename, 'exec')
     scope = { '__file__' : filename,
               '__name__' : '__m5_main__' }
-
-    # we want readline if we're doing anything interactive
-    if options.interactive or options.pdb:
-        exec "import readline" in scope
 
     # if pdb was requested, execfile the thing under pdb, otherwise,
     # just do the execfile normally
@@ -387,17 +444,17 @@ def main(*args):
         try:
             pdb.run(filecode, scope)
         except SystemExit:
-            print "The program exited via sys.exit(). Exit status: ",
-            print sys.exc_info()[1]
+            print("The program exited via sys.exit(). Exit status: ", end=' ')
+            print(sys.exc_info()[1])
         except:
             traceback.print_exc()
-            print "Uncaught exception. Entering post mortem debugging"
+            print("Uncaught exception. Entering post mortem debugging")
             t = sys.exc_info()[2]
             while t.tb_next is not None:
                 t = t.tb_next
                 pdb.interaction(t.tb_frame,t)
     else:
-        exec filecode in scope
+        exec(filecode, scope)
 
     # once the script is done
     if options.interactive:
@@ -408,9 +465,9 @@ if __name__ == '__main__':
 
     options, arguments = parse_options()
 
-    print 'opts:'
+    print('opts:')
     pprint(options, indent=4)
-    print
+    print()
 
-    print 'args:'
+    print('args:')
     pprint(arguments, indent=4)

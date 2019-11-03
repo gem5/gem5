@@ -37,8 +37,6 @@
 #ifndef __SIM_BYTE_SWAP_HH__
 #define __SIM_BYTE_SWAP_HH__
 
-#include "base/bigint.hh"
-#include "base/misc.hh"
 #include "base/types.hh"
 
 // This lets us figure out what the byte order of the host system is
@@ -124,20 +122,13 @@ inline T swap_byte(T x) {
         panic("Can't byte-swap values larger than 64 bits");
 }
 
-template<>
-inline Twin64_t swap_byte<Twin64_t>(Twin64_t x)
+template <typename T, size_t N>
+inline std::array<T, N>
+swap_byte(std::array<T, N> a)
 {
-    x.a = swap_byte(x.a);
-    x.b = swap_byte(x.b);
-    return x;
-}
-
-template<>
-inline Twin32_t swap_byte<Twin32_t>(Twin32_t x)
-{
-    x.a = swap_byte(x.a);
-    x.b = swap_byte(x.b);
-    return x;
+    for (T &v: a)
+        v = swap_byte(v);
+    return a;
 }
 
 //The conversion functions with fixed endianness on both ends don't need to
@@ -162,6 +153,20 @@ template <typename T> inline T betoh(T value) {return swap_byte(value);}
 #else
         #error Invalid Endianess
 #endif
+
+template <typename T>
+inline T htog(T value, ByteOrder guest_byte_order)
+{
+    return guest_byte_order == BigEndianByteOrder ?
+        htobe(value) : htole(value);
+}
+
+template <typename T>
+inline T gtoh(T value, ByteOrder guest_byte_order)
+{
+    return guest_byte_order == BigEndianByteOrder ?
+        betoh(value) : letoh(value);
+}
 
 namespace BigEndianGuest
 {

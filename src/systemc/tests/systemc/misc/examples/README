@@ -1,0 +1,13 @@
+Example Tests
+-------------
+
+datawidth_int_c		-	This test consists of a single CC file. 
+				The regression harness looks for the .cc 
+				extension.
+
+datawidth_int_file	-	This test consists of multiple CC files
+				referenced by a single file that lists the
+				names of each CC file in the design.  The
+				regression harness will detect the list file
+				by looking for the .f extension.
+

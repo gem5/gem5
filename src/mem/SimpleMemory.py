@@ -40,7 +40,7 @@
 #          Andreas Hansson
 
 from m5.params import *
-from AbstractMemory import *
+from m5.objects.AbstractMemory import *
 
 class SimpleMemory(AbstractMemory):
     type = 'SimpleMemory'

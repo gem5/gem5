@@ -1,0 +1,115 @@
+SystemC Simulation
+test_print
+0 s
+1230 ps
+12300 ns
+1230 us
+12300 ms
+1230 s
+12300000 s
+test_constructors
+0 s
+0 s
+1235 ps
+1234 ps
+0 s
+18446744073709550382 ps
+18446744073709550383 ps
+1 ns
+2 ns
+3 ns
+4 ns
+5 ns
+6 ns
+7 ns
+8 ns
+9 ns
+10 ns
+11 ns
+0 s
+
+Info: (I804) /IEEE_Std_1666/deprecated: deprecated constructor: sc_time(double,bool)
+1234 ps
+1235 ps
+18446744073709550383 ps
+18446744073709550382 ps
+1 ps
+2 ps
+0 s
+18446744073709551615 ps
+
+Info: (I804) /IEEE_Std_1666/deprecated: deprecated constructor: sc_time(uint64,bool)
+0 s
+25 ns
+25 ps
+25 ps
+test_assignment
+0 s
+1235 ps
+18446744073709550074 ps
+test_conversion
+0
+0
+0 s
+0
+1234500
+1.2345e+006
+1234500 ps
+1.2345e-006
+18446744073709550074
+1.84467e+019
+18446744073709550074 ps
+1.84467e+007
+test_relational
+1
+0
+0
+1
+0
+1
+0
+1
+0
+0
+1
+1
+0
+1
+1
+1
+0
+0
+test_arithmetic
+0 s
+1235 ps
+18446744073709550074 ps
+1235 ps
+2469 ps
+18446744073709551309 ps
+18446744073709548532 ps
+0 s
+18446744073709550381 ps
+1542 ps
+1 ps
+2777 ps
+0 s
+0 s
+1525 ps
+2468 ps
+0 s
+617 ps
+1.00081
+1235 ps
+1 ps
+1 ps
+1 ps
+test_SC_ZERO_TIME
+0 s
+
+Info: (I804) /IEEE_Std_1666/deprecated: You can turn off warnings about
+             IEEE 1666 deprecated features by placing this method call
+             as the first statement in your sc_main() function:
+
+  sc_core::sc_report_handler::set_actions( "/IEEE_Std_1666/deprecated",
+                                           sc_core::SC_DO_NOTHING );
+

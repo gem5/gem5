@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #
 # Copyright (c) 2016 ARM Limited
 # All rights reserved
@@ -36,6 +36,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Andreas Sandberg
+
+from __future__ import print_function
 
 from abc import ABCMeta, abstractmethod
 import inspect
@@ -105,27 +107,41 @@ class UnitResult(object):
 class TestResult(object):
     """Results for from a single test consisting of one or more units."""
 
-    def __init__(self, name, results=[]):
+    def __init__(self, name, run_results=[], verify_results=[]):
         self.name = name
-        self.results = results
+        self.results = run_results + verify_results
+        self.run_results = run_results
+        self.verify_results = verify_results
 
     def success(self):
-        return all([ r.success() for r in self.results])
+        return self.success_run() and self.success_verify()
 
-    def skipped(self):
-        return all([ r.skipped() for r in self.results])
+    def success_run(self):
+        return all([ r.success() for r in self.run_results ])
 
-    def changed(self):
-        return self.results[0].success() and self.failed()
+    def success_verify(self):
+        return all([ r.success() for r in self.verify_results ])
 
     def failed(self):
-        return any([ not r for r in self.results])
+        return self.failed_run() or self.failed_verify()
+
+    def failed_run(self):
+        return any([ not r for r in self.run_results ])
+
+    def failed_verify(self):
+        return any([ not r for r in self.verify_results ])
+
+    def skipped(self):
+        return all([ r.skipped() for r in self.run_results ])
+
+    def changed(self):
+        return self.success_run() and self.failed_verify()
 
     def runtime(self):
         return sum([ r.runtime for r in self.results ])
 
     def __nonzero__(self):
-        return all([r for r in self.results])
+        return all([ r for r in self.results ])
 
 class ResultFormatter(object):
     __metaclass__ = ABCMeta
@@ -159,21 +175,21 @@ class Text(ResultFormatter):
     def dump_suites(self, suites):
         fout = self.fout
         for suite in suites:
-            print >> fout, "--- %s ---" % suite.name
+            print("--- %s ---" % suite.name, file=fout)
 
             for t in suite.results:
-                print >> fout, "*** %s" % t
+                print("*** %s" % t, file=fout)
 
                 if t and not self.verbose:
                     continue
 
                 if t.message:
-                    print >> fout, t.message
+                    print(t.message, file=fout)
 
                 if t.stderr:
-                    print >> fout, t.stderr
+                    print(t.stderr, file=fout)
                 if t.stdout:
-                    print >> fout, t.stdout
+                    print(t.stdout, file=fout)
 
 class TextSummary(ResultFormatter):
     """Output test results as a text summary"""
@@ -195,7 +211,7 @@ class TextSummary(ResultFormatter):
         fout = self.fout
         for suite in suites:
             status = self.test_status(suite)
-            print >> fout, "%s: %s" % (suite.name, status)
+            print("%s: %s" % (suite.name, status), file=fout)
 
 class JUnit(ResultFormatter):
     """Output test results as JUnit XML"""

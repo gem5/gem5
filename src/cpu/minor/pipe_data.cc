@@ -71,9 +71,6 @@ operator <<(std::ostream &os, BranchData::Reason reason)
       case BranchData::SuspendThread:
         os << "SuspendThread";
         break;
-      case BranchData::WakeupFetch:
-        os << "WakeupFetch";
-        break;
       case BranchData::HaltFetch:
         os << "HaltFetch";
         break;
@@ -102,7 +99,6 @@ BranchData::isStreamChange(const BranchData::Reason reason)
       case BadlyPredictedBranch:
       case SuspendThread:
       case Interrupt:
-      case WakeupFetch:
       case HaltFetch:
         ret = true;
         break;
@@ -123,7 +119,6 @@ BranchData::isBranch(const BranchData::Reason reason)
       case CorrectlyPredictedBranch:
       case SuspendThread:
       case Interrupt:
-      case WakeupFetch:
       case HaltFetch:
         ret = false;
         break;
@@ -228,8 +223,8 @@ ForwardLineData::reportData(std::ostream &os) const
         os << id;
 }
 
-ForwardInstData::ForwardInstData(unsigned int width) :
-    numInsts(width)
+ForwardInstData::ForwardInstData(unsigned int width, ThreadID tid) :
+    numInsts(width), threadId(tid)
 {
     bubbleFill();
 }

@@ -59,16 +59,15 @@ namespace HsailISA
         BrnInstBase(const Brig::BrigInstBase *ib, const BrigObject *obj)
            : HsailGPUStaticInst(obj, "brn")
         {
-            o_type = Enums::OT_BRANCH;
+            setFlag(Branch);
+            setFlag(UnconditionalJump);
             width = ((Brig::BrigInstBr*)ib)->width;
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             target.init(op_offs, obj);
-            o_type = Enums::OT_BRANCH;
         }
 
         uint32_t getTargetPc()  override { return target.getTarget(0, 0); }
 
-        bool unconditionalJumpInstruction() override { return true; }
         bool isVectorRegister(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.isVectorRegister();
@@ -96,7 +95,9 @@ namespace HsailISA
             return target.opSize();
         }
 
-        int getRegisterIndex(int operandIndex) override {
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
+        {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.regIndex();
         }
@@ -134,7 +135,6 @@ namespace HsailISA
             // Rpc and execution mask remain the same
             w->pc(getTargetPc());
         }
-        w->discardFetch();
     }
 
     class BrnDirectInst : public BrnInstBase<LabelOperand>
@@ -175,13 +175,12 @@ namespace HsailISA
         CbrInstBase(const Brig::BrigInstBase *ib, const BrigObject *obj)
            : HsailGPUStaticInst(obj, "cbr")
         {
-            o_type = Enums::OT_BRANCH;
+            setFlag(Branch);
             width = ((Brig::BrigInstBr *)ib)->width;
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             cond.init(op_offs, obj);
             op_offs = obj->getOperandPtr(ib->operands, 1);
             target.init(op_offs, obj);
-            o_type = Enums::OT_BRANCH;
         }
 
         uint32_t getTargetPc() override { return target.getTarget(0, 0); }
@@ -226,7 +225,9 @@ namespace HsailISA
             else
                 return 1;
         }
-        int getRegisterIndex(int operandIndex) override {
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
+        {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             if (!operandIndex)
                 return target.regIndex();
@@ -260,7 +261,7 @@ namespace HsailISA
     {
         Wavefront *w = gpuDynInst->wavefront();
 
-        const uint32_t curr_pc = w->pc();
+        const uint32_t curr_pc M5_VAR_USED = w->pc();
         const uint32_t curr_rpc = w->rpc();
         const VectorMask curr_mask = w->execMask();
 
@@ -284,7 +285,7 @@ namespace HsailISA
         }
 
         // not taken branch
-        const uint32_t false_pc = curr_pc + 1;
+        const uint32_t false_pc = nextInstAddr();
         assert(true_pc != false_pc);
         if (false_pc != rpc && true_mask.count() < curr_mask.count()) {
             VectorMask false_mask = curr_mask & ~true_mask;
@@ -295,7 +296,6 @@ namespace HsailISA
             w->pushToReconvergenceStack(true_pc, rpc, true_mask);
         }
         assert(w->pc() != curr_pc);
-        w->discardFetch();
     }
 
 
@@ -343,16 +343,14 @@ namespace HsailISA
         BrInstBase(const Brig::BrigInstBase *ib, const BrigObject *obj)
            : HsailGPUStaticInst(obj, "br")
         {
-            o_type = Enums::OT_BRANCH;
+            setFlag(Branch);
+            setFlag(UnconditionalJump);
             width.init(((Brig::BrigInstBr *)ib)->width, obj);
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             target.init(op_offs, obj);
-            o_type = Enums::OT_BRANCH;
         }
 
         uint32_t getTargetPc() override { return target.getTarget(0, 0); }
-
-        bool unconditionalJumpInstruction() override { return true; }
 
         void execute(GPUDynInstPtr gpuDynInst) override;
         bool isVectorRegister(int operandIndex) override {
@@ -376,7 +374,9 @@ namespace HsailISA
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.opSize();
         }
-        int getRegisterIndex(int operandIndex) override {
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
+        {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.regIndex();
         }
@@ -409,7 +409,6 @@ namespace HsailISA
             // Rpc and execution mask remain the same
             w->pc(getTargetPc());
         }
-        w->discardFetch();
     }
 
     class BrDirectInst : public BrInstBase<LabelOperand>

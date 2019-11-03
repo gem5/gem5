@@ -1,0 +1,13 @@
+SystemC Simulation
+t1.method 1
+t1.thread 3
+t1.method 1
+t1.method 1
+t1.thread 3
+t1.method 1
+t1.thread 3
+t1.method 1
+t1.thread 3
+t1.method 1
+t1.thread 3
+t1.method 1

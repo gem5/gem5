@@ -26,17 +26,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SYSTEM_MACHINEID_HH__
-#define __MEM_RUBY_SYSTEM_MACHINEID_HH__
+#ifndef __MEM_RUBY_COMMON_MACHINEID_HH__
+#define __MEM_RUBY_COMMON_MACHINEID_HH__
 
 #include <iostream>
 #include <string>
 
 #include "base/cprintf.hh"
-#include "mem/protocol/MachineType.hh"
+#include "mem/ruby/protocol/MachineType.hh"
 
 struct MachineID
 {
+    MachineID() : type(MachineType_NULL), num(0) { }
+    MachineID(MachineType mach_type, NodeID node_id)
+        : type(mach_type), num(node_id) { }
+
     MachineType type;
     //! range: 0 ... number of this machine's components in system - 1
     NodeID num;
@@ -80,4 +84,4 @@ operator<<(std::ostream& out, const MachineID& obj)
     return out;
 }
 
-#endif // __MEM_RUBY_SYSTEM_MACHINEID_HH__
+#endif // __MEM_RUBY_COMMON_MACHINEID_HH__

@@ -32,10 +32,10 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "mem/protocol/AccessType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/protocol/AccessType.hh"
 
 class PersistentTableEntry
 {

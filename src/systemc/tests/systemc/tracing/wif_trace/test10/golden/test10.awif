@@ -1,0 +1,89 @@
+
+type scalar "BIT" enum '0', '1' ;
+type scalar "MVL" enum '0', '1', 'X', 'Z', '?' ;
+
+type scalar "Enum__type__" enum "OK", "NOTOK", "SOSO", "SC_WIF_UNDEF" ;
+declare  O0   "Enum"  "Enum__type__" variable ;
+start_trace O0 ;
+declare  O1   "Clock"  BIT  variable ;
+start_trace O1 ;
+comment "All initial values are dumped below at time 0 sec = 0 timescale units." ;
+assign O0 "OK" ;
+assign O1 '1' ;
+
+delta_time 10000 ;
+assign O0 "NOTOK" ;
+assign O1 '0' ;
+
+delta_time 10000 ;
+assign O0 "SOSO" ;
+assign O1 '1' ;
+
+delta_time 10000 ;
+assign O0 "SC_WIF_UNDEF" ;
+assign O1 '0' ;
+
+delta_time 10000 ;
+assign O0 "OK" ;
+assign O1 '1' ;
+
+delta_time 10000 ;
+assign O0 "NOTOK" ;
+assign O1 '0' ;
+
+delta_time 10000 ;
+assign O0 "SOSO" ;
+assign O1 '1' ;
+
+delta_time 10000 ;
+assign O0 "SC_WIF_UNDEF" ;
+assign O1 '0' ;
+
+delta_time 10000 ;
+assign O0 "OK" ;
+assign O1 '1' ;
+
+delta_time 10000 ;
+assign O0 "NOTOK" ;
+assign O1 '0' ;
+
+delta_time 10000 ;
+assign O0 "SOSO" ;
+assign O1 '1' ;
+
+delta_time 10000 ;
+assign O0 "SC_WIF_UNDEF" ;
+assign O1 '0' ;
+
+delta_time 10000 ;
+assign O0 "OK" ;
+assign O1 '1' ;
+
+delta_time 10000 ;
+assign O0 "NOTOK" ;
+assign O1 '0' ;
+
+delta_time 10000 ;
+assign O0 "SOSO" ;
+assign O1 '1' ;
+
+delta_time 10000 ;
+assign O0 "SC_WIF_UNDEF" ;
+assign O1 '0' ;
+
+delta_time 10000 ;
+assign O0 "OK" ;
+assign O1 '1' ;
+
+delta_time 10000 ;
+assign O0 "NOTOK" ;
+assign O1 '0' ;
+
+delta_time 10000 ;
+assign O0 "SOSO" ;
+assign O1 '1' ;
+
+delta_time 10000 ;
+assign O0 "SC_WIF_UNDEF" ;
+assign O1 '0' ;
+

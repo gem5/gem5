@@ -47,7 +47,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
         class TrapImm : public MipsStaticInst
         {
@@ -61,9 +62,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-
-
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
 }};
@@ -81,7 +81,8 @@ output decoder {{
 
 def template TrapExecute {{
         //Edit This Template When Traps Are Implemented
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
         {
                 //Write the resulting state to the execution context
                 %(op_wb)s;

@@ -68,6 +68,7 @@
 #include "sim/cxx_manager.hh"
 #include "sim/init_signals.hh"
 #include "sim/serialize.hh"
+#include "sim/sim_events.hh"
 #include "sim/simulate.hh"
 #include "sim/stat_control.hh"
 #include "sim/system.hh"

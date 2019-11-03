@@ -1,0 +1,33 @@
+SystemC Simulation
+
+Info: (I804) /IEEE_Std_1666/deprecated: use of () to specify sensitivity is deprecated, use << instead
+
+Info: (I804) /IEEE_Std_1666/deprecated: sc_sensitive_pos is deprecated use sc_sensitive << with pos() instead
+j = 0
+i = 0
+j = 1
+i = 1
+j = 2
+i = 2
+j = 3
+i = 3
+j = 4
+i = 4
+j = 5
+i = 5
+j = 6
+i = 6
+j = 7
+i = 7
+j = 8
+i = 8
+j = 9
+i = 9
+
+Info: (I804) /IEEE_Std_1666/deprecated: You can turn off warnings about
+             IEEE 1666 deprecated features by placing this method call
+             as the first statement in your sc_main() function:
+
+  sc_core::sc_report_handler::set_actions( "/IEEE_Std_1666/deprecated",
+                                           sc_core::SC_DO_NOTHING );
+

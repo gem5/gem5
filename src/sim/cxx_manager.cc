@@ -37,14 +37,16 @@
  * Authors: Andrew Bardsley
  */
 
+#include "sim/cxx_manager.hh"
+
 #include <cstdlib>
 #include <sstream>
 
 #include "base/str.hh"
+#include "base/trace.hh"
 #include "debug/CxxConfig.hh"
-#include "mem/mem_object.hh"
-#include "sim/cxx_manager.hh"
 #include "sim/serialize.hh"
+#include "sim/sim_object.hh"
 
 CxxConfigManager::CxxConfigManager(CxxConfigFileBase &configFile_) :
     configFile(configFile_), flags(configFile_.getFlags()),
@@ -413,13 +415,6 @@ CxxConfigManager::findAllObjects()
     std::vector<std::string> objects;
     configFile.getAllObjectNames(objects);
 
-    /* Sort the object names to get a consistent initialisation order
-     *  even with config file reorganisation */
-    std::sort(objects.begin(), objects.end());
-
-    for (auto i = objects.begin(); i != objects.end(); ++i)
-        findObject(*i);
-
     /* Set the traversal order for further iterators */
     objectsInOrder.clear();
     findTraversalOrder("root");
@@ -456,29 +451,14 @@ CxxConfigManager::bindPort(
     SimObject *slave_object, const std::string &slave_port_name,
     PortID slave_port_index)
 {
-    MemObject *master_mem_object = dynamic_cast<MemObject *>(master_object);
-    MemObject *slave_mem_object = dynamic_cast<MemObject *>(slave_object);
-
-    if (!master_mem_object) {
-        throw Exception(master_object->name(), csprintf(
-            "Object isn't a mem object and so can have master port:"
-            " %s[%d]", master_port_name, master_port_index));
-    }
-
-    if (!slave_mem_object) {
-        throw Exception(slave_object->name(), csprintf(
-            "Object isn't a mem object and so can have slave port:"
-            " %s[%d]", slave_port_name, slave_port_index));
-    }
-
     /* FIXME, check slave_port_index against connection_count
      *  defined for port, need getPortConnectionCount and a
      *  getCxxConfigDirectoryEntry for each object. */
 
     /* It would be nice to be able to catch the errors from these calls. */
-    BaseMasterPort &master_port = master_mem_object->getMasterPort(
+    Port &master_port = master_object->getPort(
         master_port_name, master_port_index);
-    BaseSlavePort &slave_port = slave_mem_object->getSlavePort(
+    Port &slave_port = slave_object->getPort(
         slave_port_name, slave_port_index);
 
     if (master_port.isConnected()) {

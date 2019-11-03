@@ -1,0 +1,13 @@
+SystemC Simulation
+Creating able...
+Creating baker...
+Creating charlie...
+charlie: 0 s
+baker: 0 s
+
+Warning: (W545) sc_stop has already been called
+In file: <removed by verify.pl>
+In process: x.baker @ 0 s
+able: 0 s
+
+Info: /OSCI/SystemC: Simulation stopped by user.

@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2011 ARM Limited
+// Copyright (c) 2010-2011, 2017-2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -40,6 +40,9 @@
 //Basic instruction templates
 ##include "basic.isa"
 
+//Semihosting instruction templates
+##include "semihost.isa"
+
 //Templates for AArch64 bit data instructions.
 ##include "data64.isa"
 
@@ -73,4 +76,11 @@
 //Templates for Neon instructions
 ##include "neon.isa"
 
+//Templates for Crypto instructions
+##include "crypto.isa"
+
 ##include "neon64.isa"
+
+//Templates for SVE instructions
+##include "sve.isa"
+##include "sve_mem.isa"

@@ -1,0 +1,21 @@
+SystemC Simulation
+writting 0 to channel and notifying write_event
+reading  0 from channel and notifying read_event
+writting 1 to channel and notifying write_event
+reading  1 from channel and notifying read_event
+writting 2 to channel and notifying write_event
+reading  2 from channel and notifying read_event
+writting 3 to channel and notifying write_event
+reading  3 from channel and notifying read_event
+writting 4 to channel and notifying write_event
+reading  4 from channel and notifying read_event
+writting 5 to channel and notifying write_event
+reading  5 from channel and notifying read_event
+writting 6 to channel and notifying write_event
+reading  6 from channel and notifying read_event
+writting 7 to channel and notifying write_event
+reading  7 from channel and notifying read_event
+writting 8 to channel and notifying write_event
+reading  8 from channel and notifying read_event
+writting 9 to channel and notifying write_event
+reading  9 from channel and notifying read_event

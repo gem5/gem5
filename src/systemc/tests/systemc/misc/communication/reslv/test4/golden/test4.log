@@ -1,0 +1,23 @@
+SystemC Simulation
+Value on Bus = X
+P1: Set to 1
+P2: Set to Z
+Value on Bus = 1
+P1: Set to Z
+P2: Set to 0
+Value on Bus = 0
+P1: Set to 1
+P2: Set to Z
+Value on Bus = 1
+P1: Set to Z
+P2: Set to 0
+Value on Bus = 0
+P1: Set to 1
+P2: Set to Z
+Value on Bus = 1
+P1: Set to Z
+P2: Set to 0
+Value on Bus = 0
+P1: Set to 1
+P2: Set to Z
+Value on Bus = 1

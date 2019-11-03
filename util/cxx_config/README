@@ -19,6 +19,15 @@ needed):
 > scons --with-cxx-config --without-python build/ARM/libgem5_opt.so
 > cd util/cxx_config
 
+Note: For MAC / OSX this command should be used:
+> scons --with-cxx-config --without-python build/ARM/libgem5_opt.dylib
+
+Set a proper LD_LIBRARY_PATH e.g. for bash:
+> export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
+
+or for MAC / OSX:
+> export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
+
 Then edit Makefile to set the paths for PYTHON and run make
 
 > make

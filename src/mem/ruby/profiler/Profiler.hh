@@ -51,11 +51,11 @@
 
 #include "base/callback.hh"
 #include "base/statistics.hh"
-#include "mem/protocol/AccessType.hh"
-#include "mem/protocol/PrefetchBit.hh"
-#include "mem/protocol/RubyAccessMode.hh"
-#include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/MachineID.hh"
+#include "mem/ruby/protocol/AccessType.hh"
+#include "mem/ruby/protocol/PrefetchBit.hh"
+#include "mem/ruby/protocol/RubyAccessMode.hh"
+#include "mem/ruby/protocol/RubyRequestType.hh"
 #include "params/RubySystem.hh"
 
 class RubyRequest;

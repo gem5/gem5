@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2014 ARM Limited
+// Copyright (c) 2010-2014, 2017 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -43,6 +43,9 @@
 //Useful bits shared by memory instructions
 ##include "mem.isa"
 
+//AArch64 atomic operations
+##include "amo64.isa"
+
 //Loads of a single item
 ##include "ldr.isa"
 
@@ -61,9 +64,6 @@ split decoder;
 
 //Stores of a single item
 ##include "str.isa"
-
-//Swaps
-##include "swap.isa"
 
 //Load/store multiple
 ##include "macromem.isa"
@@ -100,5 +100,15 @@ split exec;
 split decoder;
 ##include "neon64_mem.isa"
 
+//SVE
+##include "sve.isa"
+##include "sve_mem.isa"
+
 //m5 Pseudo-ops
 ##include "m5ops.isa"
+
+//Crypto
+##include "crypto.isa"
+
+//Crypto
+##include "crypto64.isa"

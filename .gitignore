@@ -6,6 +6,7 @@ cscope.out
 *.pyc
 *~
 .*.swp
+.*.swo
 m5out
 /src/doxygen
 /ext/dramsim2/DRAMSim2
@@ -13,3 +14,14 @@ m5out
 /util/m5/*.o
 /util/m5/*.a
 /util/m5/m5
+/util/packet_pb2.py
+/util/tap/*.d
+/util/tap/*.o
+/util/tap/m5tap
+/util/term/m5term
+/system/arm/dt/*.dtb
+/system/arm/simple_bootloader/*.o
+/system/arm/simple_bootloader/boot.arm
+/system/arm/simple_bootloader/boot_emm.arm
+/system/arm/aarch64_bootloader/boot_emm.arm64
+/system/arm/aarch64_bootloader/boot_emm_v2.arm64

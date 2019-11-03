@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015-2016 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2016, 2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -50,10 +50,16 @@
 #define __MEM_CACHE_QUEUE_HH__
 
 #include <cassert>
+#include <string>
+#include <type_traits>
 
+#include "base/logging.hh"
 #include "base/trace.hh"
+#include "base/types.hh"
 #include "debug/Drain.hh"
 #include "mem/cache/queue_entry.hh"
+#include "mem/packet.hh"
+#include "sim/core.hh"
 #include "sim/drain.hh"
 
 /**
@@ -63,6 +69,9 @@
 template<class Entry>
 class Queue : public Drainable
 {
+    static_assert(std::is_base_of<QueueEntry, Entry>::value,
+        "Entry must be derived from QueueEntry");
+
   protected:
     /** Local label (for functional print requests) */
     const std::string label;
@@ -104,8 +113,7 @@ class Queue : public Drainable
                 return readyList.insert(i, entry);
             }
         }
-        assert(false);
-        return readyList.end();  // keep stupid compilers happy
+        panic("Failed to add to ready list.");
     }
 
     /** The number of entries that are in service. */
@@ -148,12 +156,15 @@ class Queue : public Drainable
     }
 
     /**
-     * Find the first WriteQueueEntry that matches the provided address.
+     * Find the first entry that matches the provided address.
+     *
      * @param blk_addr The block address to find.
      * @param is_secure True if the target memory space is secure.
+     * @param ignore_uncacheable Should uncacheables be ignored or not
      * @return Pointer to the matching WriteQueueEntry, null if not found.
      */
-    Entry* findMatch(Addr blk_addr, bool is_secure) const
+    Entry* findMatch(Addr blk_addr, bool is_secure,
+                     bool ignore_uncacheable = true) const
     {
         for (const auto& entry : allocatedList) {
             // we ignore any entries allocated for uncacheable
@@ -162,19 +173,20 @@ class Queue : public Drainable
             // uncacheable entries, and we do not want normal
             // cacheable accesses being added to an WriteQueueEntry
             // serving an uncacheable access
-            if (!entry->isUncacheable() && entry->blkAddr == blk_addr &&
-                entry->isSecure == is_secure) {
+            if (!(ignore_uncacheable && entry->isUncacheable()) &&
+                entry->matchBlockAddr(blk_addr, is_secure)) {
                 return entry;
             }
         }
         return nullptr;
     }
 
-    bool checkFunctional(PacketPtr pkt, Addr blk_addr)
+    bool trySatisfyFunctional(PacketPtr pkt)
     {
         pkt->pushLabel(label);
         for (const auto& entry : allocatedList) {
-            if (entry->blkAddr == blk_addr && entry->checkFunctional(pkt)) {
+            if (entry->matchBlockAddr(pkt) &&
+                entry->trySatisfyFunctional(pkt)) {
                 pkt->popLabel();
                 return true;
             }
@@ -184,16 +196,17 @@ class Queue : public Drainable
     }
 
     /**
-     * Find any pending requests that overlap the given request.
-     * @param blk_addr Block address.
-     * @param is_secure True if the target memory space is secure.
-     * @return A pointer to the earliest matching WriteQueueEntry.
+     * Find any pending requests that overlap the given request of a
+     * different queue.
+     *
+     * @param entry The entry to be compared against.
+     * @return A pointer to the earliest matching entry.
      */
-    Entry* findPending(Addr blk_addr, bool is_secure) const
+    Entry* findPending(const QueueEntry* entry) const
     {
-        for (const auto& entry : readyList) {
-            if (entry->blkAddr == blk_addr && entry->isSecure == is_secure) {
-                return entry;
+        for (const auto& ready_entry : readyList) {
+            if (ready_entry->conflictAddr(entry)) {
+                return ready_entry;
             }
         }
         return nullptr;

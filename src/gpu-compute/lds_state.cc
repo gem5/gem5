@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,7 +30,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: John Kalamatianos, Joe Gross
+ * Authors: John Kalamatianos,
+ *          Joe Gross
  */
 
 #include "gpu-compute/lds_state.hh"
@@ -47,7 +48,7 @@
  * the default constructor that works with SWIG
  */
 LdsState::LdsState(const Params *params) :
-    MemObject(params),
+    ClockedObject(params),
     tickEvent(this),
     cuPort(name() + ".port", this),
     maximumSize(params->size),
@@ -141,8 +142,7 @@ LdsState::countBankConflicts(GPUDynInstPtr gpuDynInst,
             }
         }
 
-        if (gpuDynInst->m_op == Enums::MO_LD ||
-            gpuDynInst->m_op == Enums::MO_ST) {
+        if (gpuDynInst->isLoad() || gpuDynInst->isStore()) {
             // mask identical addresses
             for (int j = 0; j < numBanks; ++j) {
                 for (int j0 = 0; j0 < j; j0++) {
@@ -208,8 +208,8 @@ LdsState::processPacket(PacketPtr packet)
 
     GPUDynInstPtr dynInst = getDynInstr(packet);
     // account for the LDS bank conflict overhead
-    int busLength = (dynInst->m_op == Enums::MO_LD) ? parent->loadBusLength() :
-        (dynInst->m_op == Enums::MO_ST) ? parent->storeBusLength() :
+    int busLength = (dynInst->isLoad()) ? parent->loadBusLength() :
+        (dynInst->isStore()) ? parent->storeBusLength() :
         parent->loadBusLength();
     // delay for accessing the LDS
     Tick processingTime =

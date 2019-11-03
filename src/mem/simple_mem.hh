@@ -46,8 +46,8 @@
  * SimpleMemory declaration
  */
 
-#ifndef __SIMPLE_MEMORY_HH__
-#define __SIMPLE_MEMORY_HH__
+#ifndef __MEM_SIMPLE_MEMORY_HH__
+#define __MEM_SIMPLE_MEMORY_HH__
 
 #include <list>
 
@@ -84,27 +84,20 @@ class SimpleMemory : public AbstractMemory
 
     class MemoryPort : public SlavePort
     {
-
       private:
-
         SimpleMemory& memory;
 
       public:
-
         MemoryPort(const std::string& _name, SimpleMemory& _memory);
 
       protected:
-
-        Tick recvAtomic(PacketPtr pkt);
-
-        void recvFunctional(PacketPtr pkt);
-
-        bool recvTimingReq(PacketPtr pkt);
-
-        void recvRespRetry();
-
-        AddrRangeList getAddrRanges() const;
-
+        Tick recvAtomic(PacketPtr pkt) override;
+        Tick recvAtomicBackdoor(
+                PacketPtr pkt, MemBackdoorPtr &_backdoor) override;
+        void recvFunctional(PacketPtr pkt) override;
+        bool recvTimingReq(PacketPtr pkt) override;
+        void recvRespRetry() override;
+        AddrRangeList getAddrRanges() const override;
     };
 
     MemoryPort port;
@@ -158,7 +151,7 @@ class SimpleMemory : public AbstractMemory
      */
     void release();
 
-    EventWrapper<SimpleMemory, &SimpleMemory::release> releaseEvent;
+    EventFunctionWrapper releaseEvent;
 
     /**
      * Dequeue a packet from our internal packet queue and move it to
@@ -166,7 +159,7 @@ class SimpleMemory : public AbstractMemory
      */
     void dequeue();
 
-    EventWrapper<SimpleMemory, &SimpleMemory::dequeue> dequeueEvent;
+    EventFunctionWrapper dequeueEvent;
 
     /**
      * Detemine the latency.
@@ -187,20 +180,16 @@ class SimpleMemory : public AbstractMemory
 
     DrainState drain() override;
 
-    BaseSlavePort& getSlavePort(const std::string& if_name,
-                                PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
     void init() override;
 
   protected:
-
     Tick recvAtomic(PacketPtr pkt);
-
+    Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor);
     void recvFunctional(PacketPtr pkt);
-
     bool recvTimingReq(PacketPtr pkt);
-
     void recvRespRetry();
-
 };
 
-#endif //__SIMPLE_MEMORY_HH__
+#endif //__MEM_SIMPLE_MEMORY_HH__

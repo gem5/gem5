@@ -36,6 +36,8 @@
 
 namespace Stats {
 
+class Group;
+
 typedef uint16_t FlagsType;
 typedef ::Flags<FlagsType> Flags;
 
@@ -97,6 +99,7 @@ class Info
 
     /** Set the name of this statistic */
     void setName(const std::string &name);
+    void setName(const Group *parent, const std::string &name);
     void setSeparator(std::string _sep) { separatorString = _sep;}
 
     /**
@@ -229,6 +232,8 @@ class Vector2dInfo : public Info
     mutable VCounter cvec;
 
     void enable();
+
+    virtual Result total() const = 0;
 };
 
 class FormulaInfo : public VectorInfo

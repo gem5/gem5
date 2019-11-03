@@ -30,6 +30,7 @@
  */
 
 #include "arch/alpha/idle_event.hh"
+
 #include "arch/alpha/kernel_stats.hh"
 #include "cpu/thread_context.hh"
 
@@ -39,8 +40,11 @@ void
 IdleStartEvent::process(ThreadContext *tc)
 {
     if (tc->getKernelStats()) {
-        MiscReg val = tc->readMiscRegNoEffect(IPR_PALtemp23);
-        tc->getKernelStats()->setIdleProcess(val, tc);
+        RegVal val = tc->readMiscRegNoEffect(IPR_PALtemp23);
+        auto *stats = dynamic_cast<AlphaISA::Kernel::Statistics *>(
+                tc->getKernelStats());
+        assert(stats);
+        stats->setIdleProcess(val, tc);
     }
     remove();
 }

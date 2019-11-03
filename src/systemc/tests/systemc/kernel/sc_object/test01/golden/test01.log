@@ -1,0 +1,20 @@
+SystemC Simulation
+attributes of object:
+a1
+a2
+a3
+
+name = module
+kind = sc_module
+name = module
+kind = sc_module
+
+module
+
+Module base name: module
+number of attributes: 3
+after removing attribute a1
+number of attributes: 2
+removing all attributes
+number of attributes: 0
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2016-2017 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -39,6 +39,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Nathanael Premillieu
  */
 
 #ifndef __CPU_O3_COMM_HH__
@@ -50,11 +51,6 @@
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "sim/faults.hh"
-
-// Typedef for physical register index type. Although the Impl would be the
-// most likely location for this, there are a few classes that need this
-// typedef yet are not templated on the Impl. For now it will be defined here.
-typedef short int PhysRegIndex;
 
 /** Struct that defines the information passed from fetch to decode. */
 template<class Impl>

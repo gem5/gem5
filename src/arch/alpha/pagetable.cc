@@ -29,6 +29,7 @@
  */
 
 #include "arch/alpha/pagetable.hh"
+
 #include "sim/serialize.hh"
 
 namespace AlphaISA {

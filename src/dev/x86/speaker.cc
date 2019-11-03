@@ -28,11 +28,12 @@
  * Authors: Gabe Black
  */
 
+#include "dev/x86/speaker.hh"
+
 #include "base/bitunion.hh"
 #include "base/trace.hh"
 #include "debug/PcSpeaker.hh"
 #include "dev/x86/i8254.hh"
-#include "dev/x86/speaker.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
@@ -47,7 +48,7 @@ X86ISA::Speaker::read(PacketPtr pkt)
             controlVal.gate ? "on" : "off",
             controlVal.speaker ? "on" : "off",
             controlVal.timer ? "on" : "off");
-    pkt->set((uint8_t)controlVal);
+    pkt->setLE((uint8_t)controlVal);
     pkt->makeAtomicResponse();
     return latency;
 }
@@ -57,7 +58,7 @@ X86ISA::Speaker::write(PacketPtr pkt)
 {
     assert(pkt->getAddr() == pioAddr);
     assert(pkt->getSize() == 1);
-    SpeakerControl val = pkt->get<uint8_t>();
+    SpeakerControl val = pkt->getLE<uint8_t>();
     controlVal.gate = val.gate;
     //Change the gate value in the timer.
     if (!val.gate)
@@ -76,16 +77,13 @@ X86ISA::Speaker::write(PacketPtr pkt)
 void
 X86ISA::Speaker::serialize(CheckpointOut &cp) const
 {
-    uint8_t controlValData = controlVal.__data;
-    SERIALIZE_SCALAR(controlValData);
+    SERIALIZE_SCALAR(controlVal);
 }
 
 void
 X86ISA::Speaker::unserialize(CheckpointIn &cp)
 {
-    uint8_t controlValData;
-    UNSERIALIZE_SCALAR(controlValData);
-    controlVal.__data = controlValData;
+    UNSERIALIZE_SCALAR(controlVal);
 }
 
 X86ISA::Speaker *

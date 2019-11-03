@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2014 ARM Limited
+// Copyright (c) 2011-2014, 2017 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -74,6 +74,10 @@ let {{
             elif self.flavor == "iprefetch":
                 self.memFlags.append("Request::PREFETCH")
                 self.instFlags = ['IsInstPrefetch']
+            elif self.flavor == "mprefetch":
+                self.memFlags.append("((((dest>>3)&3)==2)? \
+                     (Request::PF_EXCLUSIVE):(Request::PREFETCH))")
+                self.instFlags = ['IsDataPrefetch']
             if self.micro:
                 self.instFlags.append("IsMicroop")
 
@@ -94,6 +98,13 @@ let {{
                                        "IsReadBarrier"])
             if self.flavor in ("acex", "exclusive", "exp", "acexp"):
                 self.memFlags.append("Request::LLSC")
+
+            # Using a different execute template for fp flavoured loads.
+            # In this specific template the memacc_code is executed
+            # conditionally depending of wether the memory load has
+            # generated any fault
+            if flavor == "fp":
+                self.fullExecTemplate = eval(self.execBase + 'FpExecute')
 
         def buildEACode(self):
             # Address computation code
@@ -175,10 +186,16 @@ let {{
         def emit(self):
             self.buildEACode()
 
+            accEpilogCode = None
             # Code that actually handles the access
-            if self.flavor in ("dprefetch", "iprefetch"):
+            if self.flavor in ("dprefetch", "iprefetch", "mprefetch"):
                 accCode = 'uint64_t temp M5_VAR_USED = Mem%s;'
             elif self.flavor == "fp":
+                accEpilogCode = '''
+                    ArmISA::ISA::zeroSveVecRegUpperPart(AA64FpDest,
+                        ArmStaticInst::getCurSveVecLen<uint64_t>(
+                            xc->tcBase()));
+                '''
                 if self.size in (1, 2, 4):
                     accCode = '''
                         AA64FpDestP0_uw = cSwap(Mem%s,
@@ -198,14 +215,11 @@ let {{
                     '''
                 elif self.size == 16:
                     accCode = '''
-                    Twin64_t data = cSwap(Mem%s,
-                                          isBigEndian64(xc->tcBase()));
-
-
-                    AA64FpDestP0_uw = (uint32_t)data.a;
-                    AA64FpDestP1_uw = (data.a >> 32);
-                    AA64FpDestP2_uw = (uint32_t)data.b;
-                    AA64FpDestP3_uw = (data.b >> 32);
+                    auto data = cSwap(Mem%s, isBigEndian64(xc->tcBase()));
+                    AA64FpDestP0_uw = (uint32_t)data[0];
+                    AA64FpDestP1_uw = (data[0] >> 32);
+                    AA64FpDestP2_uw = (uint32_t)data[1];
+                    AA64FpDestP3_uw = (data[1] >> 32);
                     '''
             elif self.flavor == "widen" or self.size == 8:
                 accCode = "XDest = cSwap(Mem%s, isBigEndian64(xc->tcBase()));"
@@ -215,6 +229,8 @@ let {{
             accCode = accCode % buildMemSuffix(self.sign, self.size)
 
             self.codeBlobs["memacc_code"] = accCode
+            if accEpilogCode:
+                self.codeBlobs["memacc_epilog_code"] = accEpilogCode
 
             # Push it out to the output files
             wbDecl = None
@@ -226,28 +242,45 @@ let {{
         def emit(self):
             self.buildEACode()
 
+            accEpilogCode = None
             # Code that actually handles the access
             if self.flavor == "fp":
+                accEpilogCode = '''
+                    ArmISA::ISA::zeroSveVecRegUpperPart(AA64FpDest,
+                        ArmStaticInst::getCurSveVecLen<uint64_t>(
+                            xc->tcBase()));
+                    ArmISA::ISA::zeroSveVecRegUpperPart(AA64FpDest2,
+                        ArmStaticInst::getCurSveVecLen<uint64_t>(
+                            xc->tcBase()));
+                '''
                 if self.size == 4:
                     accCode = '''
                         uint64_t data = cSwap(Mem_ud, isBigEndian64(xc->tcBase()));
-                        AA64FpDestP0_uw = (uint32_t)data;
+                        AA64FpDestP0_uw = isBigEndian64(xc->tcBase())
+                                            ? (data >> 32)
+                                            : (uint32_t)data;
                         AA64FpDestP1_uw = 0;
                         AA64FpDestP2_uw = 0;
                         AA64FpDestP3_uw = 0;
-                        AA64FpDest2P0_uw = (data >> 32);
+                        AA64FpDest2P0_uw = isBigEndian64(xc->tcBase())
+                                            ? (uint32_t)data
+                                            : (data >> 32);
                         AA64FpDest2P1_uw = 0;
                         AA64FpDest2P2_uw = 0;
                         AA64FpDest2P3_uw = 0;
                     '''
                 elif self.size == 8:
                     accCode = '''
-                        AA64FpDestP0_uw = (uint32_t)Mem_tud.a;
-                        AA64FpDestP1_uw = (uint32_t)(Mem_tud.a >> 32);
+                        uint64_t data_a = cSwap(Mem_tud[0],
+                                                isBigEndian64(xc->tcBase()));
+                        uint64_t data_b = cSwap(Mem_tud[1],
+                                                isBigEndian64(xc->tcBase()));
+                        AA64FpDestP0_uw = (uint32_t)data_a;
+                        AA64FpDestP1_uw = (uint32_t)(data_a >> 32);
                         AA64FpDestP2_uw = 0;
                         AA64FpDestP3_uw = 0;
-                        AA64FpDest2P0_uw = (uint32_t)Mem_tud.b;
-                        AA64FpDest2P1_uw = (uint32_t)(Mem_tud.b >> 32);
+                        AA64FpDest2P0_uw = (uint32_t)data_b;
+                        AA64FpDest2P1_uw = (uint32_t)(data_b >> 32);
                         AA64FpDest2P2_uw = 0;
                         AA64FpDest2P3_uw = 0;
                     '''
@@ -257,28 +290,42 @@ let {{
                         accCode = '''
                             uint64_t data = cSwap(Mem_ud,
                                                   isBigEndian64(xc->tcBase()));
-                            XDest = sext<32>((uint32_t)data);
-                            XDest2 = sext<32>(data >> 32);
+                            XDest = isBigEndian64(xc->tcBase())
+                                    ? sext<32>(data >> 32)
+                                    : sext<32>((uint32_t)data);
+                            XDest2 = isBigEndian64(xc->tcBase())
+                                     ? sext<32>((uint32_t)data)
+                                     : sext<32>(data >> 32);
                         '''
                     elif self.size == 8:
                         accCode = '''
-                            XDest = Mem_tud.a;
-                            XDest2 = Mem_tud.b;
+                            XDest = cSwap(Mem_tud[0],
+                                          isBigEndian64(xc->tcBase()));
+                            XDest2 = cSwap(Mem_tud[1],
+                                           isBigEndian64(xc->tcBase()));
                         '''
                 else:
                     if self.size == 4:
                         accCode = '''
                             uint64_t data = cSwap(Mem_ud,
                                                   isBigEndian64(xc->tcBase()));
-                            XDest = (uint32_t)data;
-                            XDest2 = data >> 32;
+                            XDest = isBigEndian64(xc->tcBase())
+                                    ? (data >> 32)
+                                    : (uint32_t)data;
+                            XDest2 = isBigEndian64(xc->tcBase())
+                                    ? (uint32_t)data
+                                    : (data >> 32);
                         '''
                     elif self.size == 8:
                         accCode = '''
-                            XDest = Mem_tud.a;
-                            XDest2 = Mem_tud.b;
+                            XDest = cSwap(Mem_tud[0],
+                                          isBigEndian64(xc->tcBase()));
+                            XDest2 = cSwap(Mem_tud[1],
+                                           isBigEndian64(xc->tcBase()));
                         '''
             self.codeBlobs["memacc_code"] = accCode
+            if accEpilogCode:
+                self.codeBlobs["memacc_epilog_code"] = accEpilogCode
 
             # Push it out to the output files
             wbDecl = None
@@ -348,10 +395,11 @@ let {{
     buildLoads64("ldr", "LDRSFP64", 4, False, flavor="fp")
     buildLoads64("ldr", "LDRDFP64", 8, False, flavor="fp")
 
-    LoadImm64("prfm", "PRFM64_IMM", 8, flavor="dprefetch").emit()
-    LoadReg64("prfm", "PRFM64_REG", 8, flavor="dprefetch").emit()
-    LoadLit64("prfm", "PRFM64_LIT", 8, literal=True, flavor="dprefetch").emit()
-    LoadImm64("prfum", "PRFUM64_IMM", 8, flavor="dprefetch").emit()
+    LoadImm64("prfm", "PRFM64_IMM", 8, flavor="mprefetch").emit()
+    LoadReg64("prfm", "PRFM64_REG", 8, flavor="mprefetch").emit()
+    LoadLit64("prfm", "PRFM64_LIT", 8, literal=True,
+              flavor="mprefetch").emit()
+    LoadImm64("prfum", "PRFUM64_IMM", 8, flavor="mprefetch").emit()
 
     LoadImm64("ldurb", "LDURB64_IMM", 1, False).emit()
     LoadImm64("ldursb", "LDURSBW64_IMM", 1, True).emit()
@@ -398,6 +446,11 @@ let {{
     LoadEx64("ldxr", "LDXRW64", 4, flavor="exclusive").emit()
     LoadEx64("ldxrh", "LDXRH64", 2, flavor="exclusive").emit()
     LoadEx64("ldxrb", "LDXRB64", 1, flavor="exclusive").emit()
+
+    LoadRaw64("ldapr", "LDAPRX64", 8, flavor="acquire").emit()
+    LoadRaw64("ldapr", "LDAPRW64", 4, flavor="acquire").emit()
+    LoadRaw64("ldaprh", "LDAPRH64", 2, flavor="acquire").emit()
+    LoadRaw64("ldaprb", "LDAPRB64", 1, flavor="acquire").emit()
 
     class LoadImmU64(LoadImm64):
         decConstBase = 'LoadStoreImmU64'

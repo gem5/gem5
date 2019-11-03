@@ -1,0 +1,10 @@
+bin/arm/linux/hello32-static
+bin/arm/linux/hello64-static
+
+bin/x86/linux/hello32-static
+bin/x86/linux/hello64-static
+bin/x86/linux/hello64-dynamic
+
+src/dockcross*
+src/*-dynamic
+src/*-static

@@ -91,8 +91,6 @@ class BranchData /* : public ReportIF, public BubbleIF */
          * count it as stream changing itself and expect pc to be the PC
          * of the next instruction */
         SuspendThread,
-        /* Wakeup fetching from Halted */
-        WakeupFetch,
         /* Branch from an interrupt (no instruction) */
         Interrupt,
         /* Stop fetching in anticipation of of draining */
@@ -112,6 +110,9 @@ class BranchData /* : public ReportIF, public BubbleIF */
     /** Explanation for this branch */
     Reason reason;
 
+    /** ThreadID associated with branch */
+    ThreadID threadId;
+
     /** Sequence number of new stream/prediction to be adopted */
     InstSeqNum newStreamSeqNum;
     InstSeqNum newPredictionSeqNum;
@@ -124,18 +125,20 @@ class BranchData /* : public ReportIF, public BubbleIF */
 
   public:
     BranchData() :
-        reason(NoBranch), newStreamSeqNum(0),
+        reason(NoBranch), threadId(InvalidThreadID), newStreamSeqNum(0),
         newPredictionSeqNum(0), target(TheISA::PCState(0)),
         inst(MinorDynInst::bubble())
     { }
 
     BranchData(
         Reason reason_,
+        ThreadID thread_id,
         InstSeqNum new_stream_seq_num,
         InstSeqNum new_prediction_seq_num,
         TheISA::PCState target,
         MinorDynInstPtr inst_) :
         reason(reason_),
+        threadId(thread_id),
         newStreamSeqNum(new_stream_seq_num),
         newPredictionSeqNum(new_prediction_seq_num),
         target(target),
@@ -258,8 +261,12 @@ class ForwardInstData /* : public ReportIF, public BubbleIF */
     /** The number of insts slots that can be expected to be valid insts */
     unsigned int numInsts;
 
+    /** Thread associated with these instructions */
+    ThreadID threadId;
+
   public:
-    explicit ForwardInstData(unsigned int width = 0);
+    explicit ForwardInstData(unsigned int width = 0,
+                             ThreadID tid = InvalidThreadID);
 
     ForwardInstData(const ForwardInstData &src);
 

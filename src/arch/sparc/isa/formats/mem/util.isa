@@ -33,104 +33,9 @@
 // Mem utility templates and functions
 //
 
-output header {{
-        /**
-         * Base class for memory operations.
-         */
-        class Mem : public SparcStaticInst
-        {
-          protected:
-
-            // Constructor
-            Mem(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-                SparcStaticInst(mnem, _machInst, __opClass)
-            {
-            }
-
-            std::string generateDisassembly(Addr pc,
-                    const SymbolTable *symtab) const;
-        };
-
-        /**
-         * Class for memory operations which use an immediate offset.
-         */
-        class MemImm : public Mem
-        {
-          protected:
-
-            // Constructor
-            MemImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-                Mem(mnem, _machInst, __opClass), imm(sext<13>(SIMM13))
-            {}
-
-            std::string generateDisassembly(Addr pc,
-                    const SymbolTable *symtab) const;
-
-            const int32_t imm;
-        };
-}};
-
-output decoder {{
-        std::string Mem::generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
-        {
-            std::stringstream response;
-            bool load = flags[IsLoad];
-            bool store = flags[IsStore];
-
-            printMnemonic(response, mnemonic);
-            if (store) {
-                printReg(response, _srcRegIdx[0]);
-                ccprintf(response, ", ");
-            }
-            ccprintf(response, "[");
-            if (_srcRegIdx[!store ? 0 : 1] != 0) {
-                printSrcReg(response, !store ? 0 : 1);
-                ccprintf(response, " + ");
-            }
-            printSrcReg(response, !store ? 1 : 2);
-            ccprintf(response, "]");
-            if (load) {
-                ccprintf(response, ", ");
-                printReg(response, _destRegIdx[0]);
-            }
-
-            return response.str();
-        }
-
-        std::string MemImm::generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
-        {
-            std::stringstream response;
-            bool load = flags[IsLoad];
-            bool save = flags[IsStore];
-
-            printMnemonic(response, mnemonic);
-            if (save) {
-                printReg(response, _srcRegIdx[0]);
-                ccprintf(response, ", ");
-            }
-            ccprintf(response, "[");
-            if (_srcRegIdx[!save ? 0 : 1] != 0) {
-                printReg(response, _srcRegIdx[!save ? 0 : 1]);
-                ccprintf(response, " + ");
-            }
-            if (imm >= 0)
-                ccprintf(response, "0x%x]", imm);
-            else
-                ccprintf(response, "-0x%x]", -imm);
-            if (load) {
-                ccprintf(response, ", ");
-                printReg(response, _destRegIdx[0]);
-            }
-
-            return response.str();
-        }
-}};
-
 // This template provides the execute functions for a load
 def template LoadExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+        Fault %(class_name)s::execute(ExecContext *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
@@ -158,7 +63,7 @@ def template LoadExecute {{
 }};
 
 def template LoadInitiateAcc {{
-        Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT * xc,
+        Fault %(class_name)s::initiateAcc(ExecContext * xc,
                 Trace::InstRecord * traceData) const
         {
             Fault fault = NoFault;
@@ -178,7 +83,7 @@ def template LoadInitiateAcc {{
 }};
 
 def template LoadCompleteAcc {{
-        Fault %(class_name)s::completeAcc(PacketPtr pkt, CPU_EXEC_CONTEXT * xc,
+        Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext * xc,
                 Trace::InstRecord * traceData) const
         {
             Fault fault = NoFault;
@@ -195,7 +100,7 @@ def template LoadCompleteAcc {{
 
 // This template provides the execute functions for a store
 def template StoreExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+        Fault %(class_name)s::execute(ExecContext *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
@@ -226,7 +131,7 @@ def template StoreExecute {{
 }};
 
 def template StoreInitiateAcc {{
-        Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT * xc,
+        Fault %(class_name)s::initiateAcc(ExecContext * xc,
                 Trace::InstRecord * traceData) const
         {
             Fault fault = NoFault;
@@ -251,47 +156,11 @@ def template StoreInitiateAcc {{
 }};
 
 def template StoreCompleteAcc {{
-        Fault %(class_name)s::completeAcc(PacketPtr, CPU_EXEC_CONTEXT * xc,
+        Fault %(class_name)s::completeAcc(PacketPtr, ExecContext * xc,
                 Trace::InstRecord * traceData) const
         {
             return NoFault;
         }
-}};
-
-def template EACompExecute {{
-    Fault
-    %(class_name)s::eaComp(CPU_EXEC_CONTEXT *xc,
-                                   Trace::InstRecord *traceData) const
-    {
-        Addr EA;
-        Fault fault = NoFault;
-        %(op_decl)s;
-        %(op_rd)s;
-        %(ea_code)s;
-        %(fault_check)s;
-
-        // NOTE: Trace Data is written using execute or completeAcc templates
-        if (fault == NoFault) {
-            %(EA_trunc)s
-            xc->setEA(EA);
-        }
-
-        return fault;
-    }
-}};
-
-def template EACompDeclare {{
-    Fault eaComp(%(CPU_exec_context)s *, Trace::InstRecord *) const;
-}};
-
-// This delcares the initiateAcc function in memory operations
-def template InitiateAccDeclare {{
-    Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
-}};
-
-// This declares the completeAcc function in memory operations
-def template CompleteAccDeclare {{
-    Fault completeAcc(PacketPtr, %(CPU_exec_context)s *, Trace::InstRecord *) const;
 }};
 
 // Here are some code snippets which check for various fault conditions
@@ -326,8 +195,9 @@ let {{
     '''
 
     TruncateEA = '''
-        if (!FullSystem)
+        if (!FullSystem) {
             EA = Pstate.am ? EA<31:0> : EA;
+        }
     '''
 }};
 

@@ -38,6 +38,7 @@
 #include <string>
 #include <vector>
 
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/Ethernet.hh"
 #include "debug/EthernetData.hh"
@@ -50,8 +51,9 @@
 using namespace std;
 
 EtherBus::EtherBus(const Params *p)
-    : EtherObject(p), ticksPerByte(p->speed), loopback(p->loopback),
-      event(this), sender(0), dump(p->dump)
+    : SimObject(p), ticksPerByte(p->speed), loopback(p->loopback),
+      event([this]{ txDone(); }, "ethernet bus completion"),
+      sender(0), dump(p->dump)
 {
 }
 
@@ -79,8 +81,8 @@ EtherBus::txDone()
     packet = 0;
 }
 
-EtherInt*
-EtherBus::getEthPort(const std::string &if_name, int idx)
+Port &
+EtherBus::getPort(const std::string &if_name, PortID idx)
 {
     panic("Etherbus doesn't work\n");
 }
@@ -98,7 +100,7 @@ EtherBus::send(EtherInt *sndr, EthPacketPtr &pkt)
 
     packet = pkt;
     sender = sndr;
-    int delay = (int)ceil(((double)pkt->length * ticksPerByte) + 1.0);
+    int delay = (int)ceil(((double)pkt->simLength * ticksPerByte) + 1.0);
     DPRINTF(Ethernet, "scheduling packet: delay=%d, (rate=%f)\n",
             delay, ticksPerByte);
     schedule(event, curTick() + delay);

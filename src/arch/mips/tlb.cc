@@ -33,13 +33,14 @@
  *          Deyuan Guo
  */
 
+#include "arch/mips/tlb.hh"
+
 #include <string>
 #include <vector>
 
 #include "arch/mips/faults.hh"
 #include "arch/mips/pagetable.hh"
 #include "arch/mips/pra_constants.hh"
-#include "arch/mips/tlb.hh"
 #include "arch/mips/utility.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
@@ -141,7 +142,7 @@ TLB::probeEntry(Addr vpn, uint8_t asn) const
 }
 
 inline Fault
-TLB::checkCacheability(RequestPtr &req)
+TLB::checkCacheability(const RequestPtr &req)
 {
     Addr VAddrUncacheable = 0xA0000000;
     // In MIPS, cacheability is controlled by certain bits of the virtual
@@ -281,7 +282,7 @@ TLB::regStats()
 }
 
 Fault
-TLB::translateInst(RequestPtr req, ThreadContext *tc)
+TLB::translateInst(const RequestPtr &req, ThreadContext *tc)
 {
     if (FullSystem)
         panic("translateInst not implemented in MIPS.\n");
@@ -296,7 +297,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
 }
 
 Fault
-TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
+TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
 {
     if (FullSystem)
         panic("translateData not implemented in MIPS.\n");
@@ -311,7 +312,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 }
 
 Fault
-TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
+TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode)
 {
     if (mode == Execute)
         return translateInst(req, tc);
@@ -320,7 +321,7 @@ TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
 }
 
 void
-TLB::translateTiming(RequestPtr req, ThreadContext *tc,
+TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
         Translation *translation, Mode mode)
 {
     assert(translation);
@@ -328,14 +329,8 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
 }
 
 Fault
-TLB::translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode)
-{
-    panic("Not implemented\n");
-    return NoFault;
-}
-
-Fault
-TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
+TLB::finalizePhysical(const RequestPtr &req,
+                      ThreadContext *tc, Mode mode) const
 {
     return NoFault;
 }

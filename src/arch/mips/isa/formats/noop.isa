@@ -53,10 +53,10 @@ output header {{
 
         ~Nop() { }
 
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
@@ -82,7 +82,7 @@ output decoder {{
 
 output exec {{
     Fault
-    Nop::execute(CPU_EXEC_CONTEXT *, Trace::InstRecord *) const
+    Nop::execute(ExecContext *, Trace::InstRecord *) const
     {
         return NoFault;
     }

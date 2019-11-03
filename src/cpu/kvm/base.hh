@@ -44,6 +44,7 @@
 
 #include <csignal>
 #include <memory>
+#include <queue>
 
 #include "base/statistics.hh"
 #include "cpu/kvm/perfevent.hh"
@@ -51,6 +52,7 @@
 #include "cpu/kvm/vm.hh"
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
+#include "sim/faults.hh"
 
 /** Signal to use to trigger exits from KVM */
 #define KVM_KICK_SIGNAL SIGRTMIN
@@ -96,8 +98,8 @@ class BaseKvmCPU : public BaseCPU
 
     void verifyMemoryMode() const override;
 
-    MasterPort &getDataPort() override { return dataPort; }
-    MasterPort &getInstPort() override { return instPort; }
+    Port &getDataPort() override { return dataPort; }
+    Port &getInstPort() override { return instPort; }
 
     void wakeup(ThreadID tid = 0) override;
     void activateContext(ThreadID thread_num) override;
@@ -105,10 +107,17 @@ class BaseKvmCPU : public BaseCPU
     void deallocateContext(ThreadID thread_num);
     void haltContext(ThreadID thread_num) override;
 
+    long getVCpuID() const { return vcpuID; }
     ThreadContext *getContext(int tn) override;
 
     Counter totalInsts() const override;
     Counter totalOps() const override;
+
+    /**
+     * Callback from KvmCPUPort to transition the CPU out of RunningMMIOPending
+     * when all timing requests have completed.
+     */
+    void finishMMIOPending();
 
     /** Dump the internal state to the terminal. */
     virtual void dump() const;
@@ -152,6 +161,7 @@ class BaseKvmCPU : public BaseCPU
      *     Running;
      *     RunningService;
      *     RunningServiceCompletion;
+     *     RunningMMIOPending;
      *
      *     Idle -> Idle;
      *     Idle -> Running [label="activateContext()", URL="\ref activateContext"];
@@ -161,6 +171,8 @@ class BaseKvmCPU : public BaseCPU
      *     Running -> Idle [label="drain()", URL="\ref drain"];
      *     Idle -> Running [label="drainResume()", URL="\ref drainResume"];
      *     RunningService -> RunningServiceCompletion [label="handleKvmExit()", URL="\ref handleKvmExit"];
+     *     RunningService -> RunningMMIOPending [label="handleKvmExit()", URL="\ref handleKvmExit"];
+     *     RunningMMIOPending -> RunningServiceCompletion [label="finishMMIOPending()", URL="\ref finishMMIOPending"];
      *     RunningServiceCompletion -> Running [label="tick()", URL="\ref tick"];
      *     RunningServiceCompletion -> RunningService [label="tick()", URL="\ref tick"];
      *   }
@@ -190,12 +202,21 @@ class BaseKvmCPU : public BaseCPU
          * after running service is determined in handleKvmExit() and
          * depends on what kind of service the guest requested:
          * <ul>
-         *   <li>IO/MMIO: RunningServiceCompletion
+         *   <li>IO/MMIO (Atomic): RunningServiceCompletion
+         *   <li>IO/MMIO (Timing): RunningMMIOPending
          *   <li>Halt: Idle
          *   <li>Others: Running
          * </ul>
          */
         RunningService,
+        /** Timing MMIO request in flight or stalled.
+         *
+         *  The VM has requested IO/MMIO and we are in timing mode.  A timing
+         *  request is either stalled (and will be retried with recvReqRetry())
+         *  or it is in flight.  After the timing request is complete, the CPU
+         *  will transition to the RunningServiceCompletion state.
+         */
+        RunningMMIOPending,
         /** Service completion in progress.
          *
          * The VM has requested service that requires KVM to be
@@ -399,6 +420,16 @@ class BaseKvmCPU : public BaseCPU
     void syncThreadContext();
 
     /**
+     * Get a pointer to the event queue owning devices.
+     *
+     * Devices always live in a separate device event queue when
+     * running in multi-core mode. We need to temporarily migrate to
+     * this queue when accessing devices. By convention, devices and
+     * the VM use the same event queue.
+     */
+    EventQueue *deviceEventQueue() { return vm.eventQueue(); }
+
+    /**
      * Update the KVM if the thread context is dirty.
      */
     void syncKvmState();
@@ -543,28 +574,39 @@ class BaseKvmCPU : public BaseCPU
 
 
     /**
-     * KVM memory port. Uses the default MasterPort behavior, but
-     * panics on timing accesses.
+     * KVM memory port.  Uses default MasterPort behavior and provides an
+     * interface for KVM to transparently submit atomic or timing requests.
      */
     class KVMCpuPort : public MasterPort
     {
 
       public:
         KVMCpuPort(const std::string &_name, BaseKvmCPU *_cpu)
-            : MasterPort(_name, _cpu)
+            : MasterPort(_name, _cpu), cpu(_cpu), activeMMIOReqs(0)
         { }
+        /**
+         * Interface to send Atomic or Timing IO request.  Assumes that the pkt
+         * and corresponding req have been dynamically allocated and deletes
+         * them both if the system is in atomic mode.
+         */
+        Tick submitIO(PacketPtr pkt);
+
+        /** Returns next valid state after one or more IO accesses */
+        Status nextIOState() const;
 
       protected:
-        bool recvTimingResp(PacketPtr pkt)
-        {
-            panic("The KVM CPU doesn't expect recvTimingResp!\n");
-            return true;
-        }
+        /** KVM cpu pointer for finishMMIOPending() callback */
+        BaseKvmCPU *cpu;
 
-        void recvReqRetry()
-        {
-            panic("The KVM CPU doesn't expect recvReqRetry!\n");
-        }
+        /** Pending MMIO packets */
+        std::queue<PacketPtr> pendingMMIOPkts;
+
+        /** Number of MMIO requests in flight */
+        unsigned int activeMMIOReqs;
+
+        bool recvTimingResp(PacketPtr pkt) override;
+
+        void recvReqRetry() override;
 
     };
 
@@ -599,20 +641,6 @@ class BaseKvmCPU : public BaseCPU
     pthread_t vcpuThread;
 
   private:
-    struct TickEvent : public Event
-    {
-        BaseKvmCPU &cpu;
-
-        TickEvent(BaseKvmCPU &c)
-            : Event(CPU_Tick_Pri), cpu(c) {}
-
-        void process() { cpu.tick(); }
-
-        const char *description() const {
-            return "BaseKvmCPU tick";
-        }
-    };
-
     /**
      * Service MMIO requests in the mmioRing.
      *
@@ -677,7 +705,7 @@ class BaseKvmCPU : public BaseCPU
     /** Cached page size of the host */
     const long pageSize;
 
-    TickEvent tickEvent;
+    EventFunctionWrapper tickEvent;
 
     /**
      * Setup an instruction break if there is one pending.

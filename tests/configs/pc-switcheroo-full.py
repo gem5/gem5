@@ -42,7 +42,7 @@ from x86_generic import *
 import switcheroo
 
 root = LinuxX86FSSwitcheroo(
-    mem_class=DDR3_1600_x64,
+    mem_class=DDR3_1600_8x8,
     cpu_classes=(AtomicSimpleCPU, TimingSimpleCPU, DerivO3CPU)
     ).create_root()
 

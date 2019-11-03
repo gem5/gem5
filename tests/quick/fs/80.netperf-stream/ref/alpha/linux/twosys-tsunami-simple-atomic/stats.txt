@@ -4,11 +4,11 @@ sim_seconds                                  0.200409                       # Nu
 sim_ticks                                200409271000                       # Number of ticks simulated
 final_tick                               4321213476000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                               21345619                       # Simulator instruction rate (inst/s)
-host_op_rate                                 21345611                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8167264006                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 541036                       # Number of bytes of host memory used
-host_seconds                                    24.54                       # Real time elapsed on the host
+host_inst_rate                               18920085                       # Simulator instruction rate (inst/s)
+host_op_rate                                 18920078                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             7239205973                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 501524                       # Number of bytes of host memory used
+host_seconds                                    27.68                       # Real time elapsed on the host
 sim_insts                                   523780905                       # Number of instructions simulated
 sim_ops                                     523780905                       # Number of ops (including micro ops) simulated
 drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
@@ -114,19 +114,6 @@ drivesys.cpu.kern.ipl_used::21                      1                       # fr
 drivesys.cpu.kern.ipl_used::22                      1                       # fraction of swpipl calls that actually changed the ipl
 drivesys.cpu.kern.ipl_used::31               0.973376                       # fraction of swpipl calls that actually changed the ipl
 drivesys.cpu.kern.ipl_used::total            0.988398                       # fraction of swpipl calls that actually changed the ipl
-drivesys.cpu.kern.syscall::2                        1      4.55%      4.55% # number of syscalls executed
-drivesys.cpu.kern.syscall::6                        3     13.64%     18.18% # number of syscalls executed
-drivesys.cpu.kern.syscall::17                       2      9.09%     27.27% # number of syscalls executed
-drivesys.cpu.kern.syscall::97                       1      4.55%     31.82% # number of syscalls executed
-drivesys.cpu.kern.syscall::99                       2      9.09%     40.91% # number of syscalls executed
-drivesys.cpu.kern.syscall::101                      2      9.09%     50.00% # number of syscalls executed
-drivesys.cpu.kern.syscall::102                      3     13.64%     63.64% # number of syscalls executed
-drivesys.cpu.kern.syscall::104                      1      4.55%     68.18% # number of syscalls executed
-drivesys.cpu.kern.syscall::105                      3     13.64%     81.82% # number of syscalls executed
-drivesys.cpu.kern.syscall::106                      1      4.55%     86.36% # number of syscalls executed
-drivesys.cpu.kern.syscall::118                      2      9.09%     95.45% # number of syscalls executed
-drivesys.cpu.kern.syscall::150                      1      4.55%    100.00% # number of syscalls executed
-drivesys.cpu.kern.syscall::total                   22                       # number of syscalls executed
 drivesys.cpu.kern.callpal::swpctx                  72      0.06%      0.06% # number of callpals executed
 drivesys.cpu.kern.callpal::tbi                      5      0.00%      0.06% # number of callpals executed
 drivesys.cpu.kern.callpal::swpipl              102333     83.31%     83.37% # number of callpals executed
@@ -178,7 +165,9 @@ drivesys.cpu.op_class::FloatAdd                   141      0.00%     63.95% # Cl
 drivesys.cpu.op_class::FloatCmp                     0      0.00%     63.95% # Class of executed instruction
 drivesys.cpu.op_class::FloatCvt                     0      0.00%     63.95% # Class of executed instruction
 drivesys.cpu.op_class::FloatMult                    0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatMultAcc                 0      0.00%     63.95% # Class of executed instruction
 drivesys.cpu.op_class::FloatDiv                    23      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatMisc                    0      0.00%     63.95% # Class of executed instruction
 drivesys.cpu.op_class::FloatSqrt                    0      0.00%     63.95% # Class of executed instruction
 drivesys.cpu.op_class::SimdAdd                      0      0.00%     63.95% # Class of executed instruction
 drivesys.cpu.op_class::SimdAddAcc                   0      0.00%     63.95% # Class of executed instruction
@@ -200,8 +189,10 @@ drivesys.cpu.op_class::SimdFloatMisc                0      0.00%     63.95% # Cl
 drivesys.cpu.op_class::SimdFloatMult                0      0.00%     63.95% # Class of executed instruction
 drivesys.cpu.op_class::SimdFloatMultAcc             0      0.00%     63.95% # Class of executed instruction
 drivesys.cpu.op_class::SimdFloatSqrt                0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::MemRead                4026028     21.13%     85.08% # Class of executed instruction
-drivesys.cpu.op_class::MemWrite               2085021     10.94%     96.02% # Class of executed instruction
+drivesys.cpu.op_class::MemRead                4025389     21.13%     85.08% # Class of executed instruction
+drivesys.cpu.op_class::MemWrite               2084412     10.94%     96.02% # Class of executed instruction
+drivesys.cpu.op_class::FloatMemRead               639      0.00%     96.02% # Class of executed instruction
+drivesys.cpu.op_class::FloatMemWrite              609      0.00%     96.02% # Class of executed instruction
 drivesys.cpu.op_class::IprAccess               757336      3.98%    100.00% # Class of executed instruction
 drivesys.cpu.op_class::InstPrefetch                 0      0.00%    100.00% # Class of executed instruction
 drivesys.cpu.op_class::total                 19051393                       # Class of executed instruction
@@ -235,6 +226,12 @@ drivesys.iobus.pkt_size_drivesys.bridge.master::total       948604              
 drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::drivesys.iobridge.slave     57261614                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::total     57261614                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.iobus.pkt_size::total               58210218                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.snoop_filter.tot_requests            0                       # Total number of requests made to the snoop filter.
+drivesys.membus.snoop_filter.hit_single_requests            0                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
+drivesys.membus.snoop_filter.hit_multi_requests            0                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
+drivesys.membus.snoop_filter.tot_snoops             0                       # Total number of snoops made to the snoop filter.
+drivesys.membus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
+drivesys.membus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 drivesys.membus.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 drivesys.membus.trans_dist::ReadReq          25081955                       # Transaction distribution
 drivesys.membus.trans_dist::ReadResp         25182911                       # Transaction distribution
@@ -260,15 +257,16 @@ drivesys.membus.pkt_size_drivesys.iobridge.master::drivesys.physmem.port     572
 drivesys.membus.pkt_size_drivesys.iobridge.master::total     57261614                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.membus.pkt_size::total             175319714                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.membus.snoops                              0                       # Total snoops (count)
+drivesys.membus.snoopTraffic                        0                       # Total snoop traffic (bytes)
 drivesys.membus.snoop_fanout::samples        27247410                       # Request fanout histogram
-drivesys.membus.snoop_fanout::mean           0.786764                       # Request fanout histogram
-drivesys.membus.snoop_fanout::stdev          0.409593                       # Request fanout histogram
+drivesys.membus.snoop_fanout::mean                  0                       # Request fanout histogram
+drivesys.membus.snoop_fanout::stdev                 0                       # Request fanout histogram
 drivesys.membus.snoop_fanout::underflows            0      0.00%      0.00% # Request fanout histogram
-drivesys.membus.snoop_fanout::0               5810141     21.32%     21.32% # Request fanout histogram
-drivesys.membus.snoop_fanout::1              21437269     78.68%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::0              27247410    100.00%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::1                     0      0.00%    100.00% # Request fanout histogram
 drivesys.membus.snoop_fanout::overflows             0      0.00%    100.00% # Request fanout histogram
 drivesys.membus.snoop_fanout::min_value             0                       # Request fanout histogram
-drivesys.membus.snoop_fanout::max_value             1                       # Request fanout histogram
+drivesys.membus.snoop_fanout::max_value             0                       # Request fanout histogram
 drivesys.membus.snoop_fanout::total          27247410                       # Request fanout histogram
 drivesys.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 drivesys.tsunami.backdoor.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
@@ -451,28 +449,6 @@ testsys.cpu.kern.ipl_used::21                       1                       # fr
 testsys.cpu.kern.ipl_used::22                       1                       # fraction of swpipl calls that actually changed the ipl
 testsys.cpu.kern.ipl_used::31                0.973245                       # fraction of swpipl calls that actually changed the ipl
 testsys.cpu.kern.ipl_used::total             0.988227                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.syscall::2                         3      3.61%      3.61% # number of syscalls executed
-testsys.cpu.kern.syscall::3                         7      8.43%     12.05% # number of syscalls executed
-testsys.cpu.kern.syscall::4                         1      1.20%     13.25% # number of syscalls executed
-testsys.cpu.kern.syscall::6                         7      8.43%     21.69% # number of syscalls executed
-testsys.cpu.kern.syscall::17                        7      8.43%     30.12% # number of syscalls executed
-testsys.cpu.kern.syscall::19                        2      2.41%     32.53% # number of syscalls executed
-testsys.cpu.kern.syscall::20                        1      1.20%     33.73% # number of syscalls executed
-testsys.cpu.kern.syscall::33                        3      3.61%     37.35% # number of syscalls executed
-testsys.cpu.kern.syscall::45                       10     12.05%     49.40% # number of syscalls executed
-testsys.cpu.kern.syscall::48                        5      6.02%     55.42% # number of syscalls executed
-testsys.cpu.kern.syscall::54                        1      1.20%     56.63% # number of syscalls executed
-testsys.cpu.kern.syscall::59                        3      3.61%     60.24% # number of syscalls executed
-testsys.cpu.kern.syscall::71                       15     18.07%     78.31% # number of syscalls executed
-testsys.cpu.kern.syscall::74                        4      4.82%     83.13% # number of syscalls executed
-testsys.cpu.kern.syscall::97                        2      2.41%     85.54% # number of syscalls executed
-testsys.cpu.kern.syscall::98                        2      2.41%     87.95% # number of syscalls executed
-testsys.cpu.kern.syscall::101                       2      2.41%     90.36% # number of syscalls executed
-testsys.cpu.kern.syscall::102                       2      2.41%     92.77% # number of syscalls executed
-testsys.cpu.kern.syscall::104                       1      1.20%     93.98% # number of syscalls executed
-testsys.cpu.kern.syscall::105                       3      3.61%     97.59% # number of syscalls executed
-testsys.cpu.kern.syscall::118                       2      2.41%    100.00% # number of syscalls executed
-testsys.cpu.kern.syscall::total                    83                       # number of syscalls executed
 testsys.cpu.kern.callpal::swpctx                  438      0.34%      0.34% # number of callpals executed
 testsys.cpu.kern.callpal::tbi                      20      0.02%      0.36% # number of callpals executed
 testsys.cpu.kern.callpal::swpipl               106832     83.26%     83.62% # number of callpals executed
@@ -525,7 +501,9 @@ testsys.cpu.op_class::FloatAdd                   4655      0.02%     63.60% # Cl
 testsys.cpu.op_class::FloatCmp                      1      0.00%     63.60% # Class of executed instruction
 testsys.cpu.op_class::FloatCvt                      0      0.00%     63.60% # Class of executed instruction
 testsys.cpu.op_class::FloatMult                     0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::FloatMultAcc                  0      0.00%     63.60% # Class of executed instruction
 testsys.cpu.op_class::FloatDiv                    922      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::FloatMisc                     0      0.00%     63.60% # Class of executed instruction
 testsys.cpu.op_class::FloatSqrt                     0      0.00%     63.60% # Class of executed instruction
 testsys.cpu.op_class::SimdAdd                       0      0.00%     63.60% # Class of executed instruction
 testsys.cpu.op_class::SimdAddAcc                    0      0.00%     63.60% # Class of executed instruction
@@ -547,8 +525,10 @@ testsys.cpu.op_class::SimdFloatMisc                 0      0.00%     63.60% # Cl
 testsys.cpu.op_class::SimdFloatMult                 0      0.00%     63.60% # Class of executed instruction
 testsys.cpu.op_class::SimdFloatMultAcc              0      0.00%     63.60% # Class of executed instruction
 testsys.cpu.op_class::SimdFloatSqrt                 0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::MemRead                 4230485     20.88%     84.48% # Class of executed instruction
-testsys.cpu.op_class::MemWrite                2319388     11.45%     95.93% # Class of executed instruction
+testsys.cpu.op_class::MemRead                 4224290     20.85%     84.45% # Class of executed instruction
+testsys.cpu.op_class::MemWrite                2313781     11.42%     95.87% # Class of executed instruction
+testsys.cpu.op_class::FloatMemRead               6195      0.03%     95.90% # Class of executed instruction
+testsys.cpu.op_class::FloatMemWrite              5607      0.03%     95.93% # Class of executed instruction
 testsys.cpu.op_class::IprAccess                824126      4.07%    100.00% # Class of executed instruction
 testsys.cpu.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 testsys.cpu.op_class::total                  20261020                       # Class of executed instruction
@@ -586,6 +566,12 @@ testsys.iobus.pkt_size_testsys.bridge.master::total       942152                
 testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::testsys.iobridge.slave     57261398                       # Cumulative packet size per connected master and slave (bytes)
 testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::total     57261398                       # Cumulative packet size per connected master and slave (bytes)
 testsys.iobus.pkt_size::total                58203550                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.snoop_filter.tot_requests            0                       # Total number of requests made to the snoop filter.
+testsys.membus.snoop_filter.hit_single_requests            0                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
+testsys.membus.snoop_filter.hit_multi_requests            0                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
+testsys.membus.snoop_filter.tot_snoops              0                       # Total number of snoops made to the snoop filter.
+testsys.membus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
+testsys.membus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 testsys.membus.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 testsys.membus.trans_dist::ReadReq           26478762                       # Transaction distribution
 testsys.membus.trans_dist::ReadResp          26587372                       # Transaction distribution
@@ -611,15 +597,16 @@ testsys.membus.pkt_size_testsys.iobridge.master::testsys.physmem.port     572613
 testsys.membus.pkt_size_testsys.iobridge.master::total     57261398                       # Cumulative packet size per connected master and slave (bytes)
 testsys.membus.pkt_size::total              183678150                       # Cumulative packet size per connected master and slave (bytes)
 testsys.membus.snoops                               0                       # Total snoops (count)
+testsys.membus.snoopTraffic                         0                       # Total snoop traffic (bytes)
 testsys.membus.snoop_fanout::samples         28885173                       # Request fanout histogram
-testsys.membus.snoop_fanout::mean            0.784032                       # Request fanout histogram
-testsys.membus.snoop_fanout::stdev           0.411493                       # Request fanout histogram
+testsys.membus.snoop_fanout::mean                   0                       # Request fanout histogram
+testsys.membus.snoop_fanout::stdev                  0                       # Request fanout histogram
 testsys.membus.snoop_fanout::underflows             0      0.00%      0.00% # Request fanout histogram
-testsys.membus.snoop_fanout::0                6238286     21.60%     21.60% # Request fanout histogram
-testsys.membus.snoop_fanout::1               22646887     78.40%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::0               28885173    100.00%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::1                      0      0.00%    100.00% # Request fanout histogram
 testsys.membus.snoop_fanout::overflows              0      0.00%    100.00% # Request fanout histogram
 testsys.membus.snoop_fanout::min_value              0                       # Request fanout histogram
-testsys.membus.snoop_fanout::max_value              1                       # Request fanout histogram
+testsys.membus.snoop_fanout::max_value              0                       # Request fanout histogram
 testsys.membus.snoop_fanout::total           28885173                       # Request fanout histogram
 testsys.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 testsys.tsunami.backdoor.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
@@ -707,10 +694,10 @@ sim_seconds                                  0.000407                       # Nu
 sim_ticks                                   407341500                       # Number of ticks simulated
 final_tick                               4321620817500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                            10808376500                       # Simulator instruction rate (inst/s)
-host_op_rate                              10806472833                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8401634086                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 541036                       # Number of bytes of host memory used
+host_inst_rate                             9697698249                       # Simulator instruction rate (inst/s)
+host_op_rate                               9695968284                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             7538213070                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 501524                       # Number of bytes of host memory used
 host_seconds                                     0.05                       # Real time elapsed on the host
 sim_insts                                   523853183                       # Number of instructions simulated
 sim_ops                                     523853183                       # Number of ops (including micro ops) simulated
@@ -860,7 +847,9 @@ drivesys.cpu.op_class::FloatAdd                     0      0.00%     63.60% # Cl
 drivesys.cpu.op_class::FloatCmp                     0      0.00%     63.60% # Class of executed instruction
 drivesys.cpu.op_class::FloatCvt                     0      0.00%     63.60% # Class of executed instruction
 drivesys.cpu.op_class::FloatMult                    0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::FloatMultAcc                 0      0.00%     63.60% # Class of executed instruction
 drivesys.cpu.op_class::FloatDiv                     0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::FloatMisc                    0      0.00%     63.60% # Class of executed instruction
 drivesys.cpu.op_class::FloatSqrt                    0      0.00%     63.60% # Class of executed instruction
 drivesys.cpu.op_class::SimdAdd                      0      0.00%     63.60% # Class of executed instruction
 drivesys.cpu.op_class::SimdAddAcc                   0      0.00%     63.60% # Class of executed instruction
@@ -884,6 +873,8 @@ drivesys.cpu.op_class::SimdFloatMultAcc             0      0.00%     63.60% # Cl
 drivesys.cpu.op_class::SimdFloatSqrt                0      0.00%     63.60% # Class of executed instruction
 drivesys.cpu.op_class::MemRead                   7678     21.24%     84.84% # Class of executed instruction
 drivesys.cpu.op_class::MemWrite                  3936     10.89%     95.73% # Class of executed instruction
+drivesys.cpu.op_class::FloatMemRead                 0      0.00%     95.73% # Class of executed instruction
+drivesys.cpu.op_class::FloatMemWrite                0      0.00%     95.73% # Class of executed instruction
 drivesys.cpu.op_class::IprAccess                 1545      4.27%    100.00% # Class of executed instruction
 drivesys.cpu.op_class::InstPrefetch                 0      0.00%    100.00% # Class of executed instruction
 drivesys.cpu.op_class::total                    36152                       # Class of executed instruction
@@ -917,6 +908,12 @@ drivesys.iobus.pkt_size_drivesys.bridge.master::total         1928              
 drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::drivesys.iobridge.slave       116400                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::total       116400                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.iobus.pkt_size::total                 118328                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.snoop_filter.tot_requests            0                       # Total number of requests made to the snoop filter.
+drivesys.membus.snoop_filter.hit_single_requests            0                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
+drivesys.membus.snoop_filter.hit_multi_requests            0                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
+drivesys.membus.snoop_filter.tot_snoops             0                       # Total number of snoops made to the snoop filter.
+drivesys.membus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
+drivesys.membus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 drivesys.membus.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 drivesys.membus.trans_dist::ReadReq             47907                       # Transaction distribution
 drivesys.membus.trans_dist::ReadResp            48111                       # Transaction distribution
@@ -942,15 +939,16 @@ drivesys.membus.pkt_size_drivesys.iobridge.master::drivesys.physmem.port       1
 drivesys.membus.pkt_size_drivesys.iobridge.master::total       116400                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.membus.pkt_size::total                340576                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.membus.snoops                              0                       # Total snoops (count)
+drivesys.membus.snoopTraffic                        0                       # Total snoop traffic (bytes)
 drivesys.membus.snoop_fanout::samples           52004                       # Request fanout histogram
-drivesys.membus.snoop_fanout::mean           0.788439                       # Request fanout histogram
-drivesys.membus.snoop_fanout::stdev          0.408419                       # Request fanout histogram
+drivesys.membus.snoop_fanout::mean                  0                       # Request fanout histogram
+drivesys.membus.snoop_fanout::stdev                 0                       # Request fanout histogram
 drivesys.membus.snoop_fanout::underflows            0      0.00%      0.00% # Request fanout histogram
-drivesys.membus.snoop_fanout::0                 11002     21.16%     21.16% # Request fanout histogram
-drivesys.membus.snoop_fanout::1                 41002     78.84%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::0                 52004    100.00%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::1                     0      0.00%    100.00% # Request fanout histogram
 drivesys.membus.snoop_fanout::overflows             0      0.00%    100.00% # Request fanout histogram
 drivesys.membus.snoop_fanout::min_value             0                       # Request fanout histogram
-drivesys.membus.snoop_fanout::max_value             1                       # Request fanout histogram
+drivesys.membus.snoop_fanout::max_value             0                       # Request fanout histogram
 drivesys.membus.snoop_fanout::total             52004                       # Request fanout histogram
 drivesys.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 drivesys.tsunami.backdoor.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
@@ -1158,7 +1156,9 @@ testsys.cpu.op_class::FloatAdd                      0      0.00%     63.58% # Cl
 testsys.cpu.op_class::FloatCmp                      0      0.00%     63.58% # Class of executed instruction
 testsys.cpu.op_class::FloatCvt                      0      0.00%     63.58% # Class of executed instruction
 testsys.cpu.op_class::FloatMult                     0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::FloatMultAcc                  0      0.00%     63.58% # Class of executed instruction
 testsys.cpu.op_class::FloatDiv                      0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::FloatMisc                     0      0.00%     63.58% # Class of executed instruction
 testsys.cpu.op_class::FloatSqrt                     0      0.00%     63.58% # Class of executed instruction
 testsys.cpu.op_class::SimdAdd                       0      0.00%     63.58% # Class of executed instruction
 testsys.cpu.op_class::SimdAddAcc                    0      0.00%     63.58% # Class of executed instruction
@@ -1182,6 +1182,8 @@ testsys.cpu.op_class::SimdFloatMultAcc              0      0.00%     63.58% # Cl
 testsys.cpu.op_class::SimdFloatSqrt                 0      0.00%     63.58% # Class of executed instruction
 testsys.cpu.op_class::MemRead                    7674     21.24%     84.82% # Class of executed instruction
 testsys.cpu.op_class::MemWrite                   3938     10.90%     95.72% # Class of executed instruction
+testsys.cpu.op_class::FloatMemRead                  0      0.00%     95.72% # Class of executed instruction
+testsys.cpu.op_class::FloatMemWrite                 0      0.00%     95.72% # Class of executed instruction
 testsys.cpu.op_class::IprAccess                  1545      4.28%    100.00% # Class of executed instruction
 testsys.cpu.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 testsys.cpu.op_class::total                     36126                       # Class of executed instruction
@@ -1215,6 +1217,12 @@ testsys.iobus.pkt_size_testsys.bridge.master::total         1928                
 testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::testsys.iobridge.slave       116376                       # Cumulative packet size per connected master and slave (bytes)
 testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::total       116376                       # Cumulative packet size per connected master and slave (bytes)
 testsys.iobus.pkt_size::total                  118304                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.snoop_filter.tot_requests            0                       # Total number of requests made to the snoop filter.
+testsys.membus.snoop_filter.hit_single_requests            0                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
+testsys.membus.snoop_filter.hit_multi_requests            0                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
+testsys.membus.snoop_filter.tot_snoops              0                       # Total number of snoops made to the snoop filter.
+testsys.membus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
+testsys.membus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 testsys.membus.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 testsys.membus.trans_dist::ReadReq              47876                       # Transaction distribution
 testsys.membus.trans_dist::ReadResp             48080                       # Transaction distribution
@@ -1240,15 +1248,16 @@ testsys.membus.pkt_size_testsys.iobridge.master::testsys.physmem.port       1163
 testsys.membus.pkt_size_testsys.iobridge.master::total       116376                       # Cumulative packet size per connected master and slave (bytes)
 testsys.membus.pkt_size::total                 340448                       # Cumulative packet size per connected master and slave (bytes)
 testsys.membus.snoops                               0                       # Total snoops (count)
+testsys.membus.snoopTraffic                         0                       # Total snoop traffic (bytes)
 testsys.membus.snoop_fanout::samples            51975                       # Request fanout histogram
-testsys.membus.snoop_fanout::mean            0.788360                       # Request fanout histogram
-testsys.membus.snoop_fanout::stdev           0.408475                       # Request fanout histogram
+testsys.membus.snoop_fanout::mean                   0                       # Request fanout histogram
+testsys.membus.snoop_fanout::stdev                  0                       # Request fanout histogram
 testsys.membus.snoop_fanout::underflows             0      0.00%      0.00% # Request fanout histogram
-testsys.membus.snoop_fanout::0                  11000     21.16%     21.16% # Request fanout histogram
-testsys.membus.snoop_fanout::1                  40975     78.84%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::0                  51975    100.00%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::1                      0      0.00%    100.00% # Request fanout histogram
 testsys.membus.snoop_fanout::overflows              0      0.00%    100.00% # Request fanout histogram
 testsys.membus.snoop_fanout::min_value              0                       # Request fanout histogram
-testsys.membus.snoop_fanout::max_value              1                       # Request fanout histogram
+testsys.membus.snoop_fanout::max_value              0                       # Request fanout histogram
 testsys.membus.snoop_fanout::total              51975                       # Request fanout histogram
 testsys.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 testsys.tsunami.backdoor.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states

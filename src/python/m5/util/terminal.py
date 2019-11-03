@@ -26,6 +26,9 @@
 #
 # Author: Steve Reinhardt
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 import sys
 
 # Intended usage example:
@@ -36,7 +39,7 @@ import sys
 #    from m5.util.terminal import no_termcap as termcap
 # else:
 #    from m5.util.terminal import tty_termcap as termcap
-# print termcap.Blue + "This could be blue!" + termcap.Normal
+# print(termcap.Blue + "This could be blue!" + termcap.Normal)
 
 # ANSI color names in index order
 color_names = "Black Red Green Yellow Blue Magenta Cyan".split()
@@ -61,7 +64,7 @@ capability_map = {
        'Normal': 'sgr0'
 }
 
-capability_names = capability_map.keys()
+capability_names = list(capability_map.keys())
 
 def null_cap_string(s, *args):
     return ''
@@ -82,7 +85,7 @@ class ColorStrings(object):
     def __init__(self, cap_string):
         for i, c in enumerate(color_names):
             setattr(self, c, cap_string('setaf', i))
-        for name, cap in capability_map.iteritems():
+        for name, cap in capability_map.items():
             setattr(self, name, cap_string(cap))
 
 termcap = ColorStrings(cap_string)
@@ -105,18 +108,18 @@ def get_termcap(use_colors = None):
 def test_termcap(obj):
     for c_name in color_names:
         c_str = getattr(obj, c_name)
-        print c_str + c_name + obj.Normal
+        print(c_str + c_name + obj.Normal)
         for attr_name in capability_names:
             if attr_name == 'Normal':
                 continue
             attr_str = getattr(obj, attr_name)
-            print attr_str + c_str + attr_name + " " + c_name + obj.Normal
-        print obj.Bold + obj.Underline + \
-              c_name + "Bold Underline " + c + obj.Normal
+            print(attr_str + c_str + attr_name + " " + c_name + obj.Normal)
+        print(obj.Bold + obj.Underline +
+              c_name + "Bold Underline " + c + obj.Normal)
 
 if __name__ == '__main__':
-    print "=== termcap enabled ==="
+    print("=== termcap enabled ===")
     test_termcap(termcap)
-    print termcap.Normal
-    print "=== termcap disabled ==="
+    print(termcap.Normal)
+    print("=== termcap disabled ===")
     test_termcap(no_termcap)

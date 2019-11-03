@@ -1,4 +1,4 @@
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010,2017-2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -76,17 +76,17 @@ def format ArmMiscMedia() {{
 
 def format ArmDataProcReg() {{
     pclr = '''
-        return new %(className)ssRegPclr(machInst, %(dest)s,
-                                        %(op1)s, rm, imm5,
-                                        type);
+                    if (%(dest)s == INTREG_PC) {
+                        return new %(className)ssRegPclr(machInst, %(dest)s,
+                                                         %(op1)s, rm, imm5,
+                                                         type);
+                    } else
     '''
     instDecode = '''
           case %(opcode)#x:
             if (immShift) {
                 if (setCc) {
-                    if (%(dest)s == INTREG_PC) {
-                        %(pclr)s
-                    } else {
+                    %(pclr)s {
                         return new %(className)sRegCc(machInst, %(dest)s,
                                                       %(op1)s, rm, imm5, type);
                     }
@@ -452,26 +452,26 @@ def format ArmParallelAddSubtract() {{
 
 def format ArmDataProcImm() {{
     pclr = '''
-        return new %(className)ssImmPclr(machInst, %(dest)s,
-                                        %(op1)s, imm, false);
+                if (%(dest)s == INTREG_PC) {
+                    return new %(className)ssImmPclr(machInst, %(dest)s,
+                                                     %(op1)s, imm, false);
+                } else
     '''
     adr = '''
-        return new AdrImm(machInst, %(dest)s, %(add)s,
-                                     imm, false);
+                if (%(op1)s == INTREG_PC) {
+                    return new AdrImm(machInst, %(dest)s, %(add)s,
+                                      imm, false);
+                } else
     '''
     instDecode = '''
           case %(opcode)#x:
             if (setCc) {
-                if (%(pclrInst)s && %(dest)s == INTREG_PC) {
-                    %(pclr)s
-                } else {
+                %(pclr)s {
                     return new %(className)sImmCc(machInst, %(dest)s, %(op1)s,
                                                    imm, rotC);
                 }
             } else {
-                if (%(adrInst)s && %(op1)s == INTREG_PC) {
-                    %(adr)s
-                } else {
+                %(adr)s {
                     return new %(className)sImm(machInst, %(dest)s, %(op1)s,
                                                  imm, rotC);
                 }
@@ -493,13 +493,10 @@ def format ArmDataProcImm() {{
                       "opcode": opcode,
                       "dest": dest,
                       "op1": op1,
-                      "adr": "",
-                      "adrInst": "false" }
+                      "adr": "" }
         if useDest:
-            substDict["pclrInst"] = "true"
             substDict["pclr"] = pclr % substDict
         else:
-            substDict["pclrInst"] = "false"
             substDict["pclr"] = ""
         return instDecode % substDict
 
@@ -509,9 +506,7 @@ def format ArmDataProcImm() {{
                       "opcode": opcode,
                       "dest": "rd",
                       "op1": "rn",
-                      "add": add,
-                      "pclrInst": "true",
-                      "adrInst": "true" }
+                      "add": add }
         substDict["pclr"] = pclr % substDict
         substDict["adr"] = adr % substDict
         return instDecode % substDict
@@ -611,6 +606,8 @@ def format Thumb32DataProcReg() {{
                   case 0x7:
                     return new MovRegRegCc(machInst, rd,
                             INTREG_ZERO, rn, rm, ROR);
+                  default:
+                    M5_UNREACHABLE;
                 }
             } else if (bits(op2, 3) == 0) {
                 return new Unknown(machInst);
@@ -788,7 +785,7 @@ def format Thumb32DataProcReg() {{
                     }
                 }
             } else if (bits(op1, 3, 2) == 0x2 && bits(op2, 3, 2) == 0x2) {
-                const uint32_t op1 = bits(machInst, 21, 20);
+                const uint32_t op1 = bits(machInst, 22, 20);
                 const uint32_t op2 = bits(machInst, 5, 4);
                 const IntRegIndex rd =
                     (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
@@ -832,6 +829,36 @@ def format Thumb32DataProcReg() {{
                     if (op2 == 0) {
                         return new Clz(machInst, rd, rm);
                     }
+                    break;
+                }
+            } else if (bits(op1, 3, 2) == 0x3 && bits(op2, 3, 2) == 0x2) {
+                const uint32_t op1 = bits(machInst, 22, 20);
+                const uint32_t op2 = bits(machInst, 5, 4);
+                const IntRegIndex rd =
+                    (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+                const IntRegIndex rm =
+                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                switch (op1) {
+                  case 0x4:
+                    switch (op2) {
+                      case 0x0:
+                        return new Crc32b(machInst, rd, rn, rm);
+                      case 0x1:
+                        return new Crc32h(machInst, rd, rn, rm);
+                      case 0x2:
+                        return new Crc32w(machInst, rd, rn, rm);
+                    }
+                    break;
+                  case 0x5:
+                    switch (op2) {
+                      case 0x0:
+                        return new Crc32cb(machInst, rd, rn, rm);
+                      case 0x1:
+                        return new Crc32ch(machInst, rd, rn, rm);
+                      case 0x2:
+                        return new Crc32cw(machInst, rd, rn, rm);
+                    }
+                    break;
                 }
             }
             return new Unknown(machInst);
@@ -895,6 +922,8 @@ def format Thumb16ShiftAddSubMoveCmp() {{
                 } else {
                     return new SubImmCc(machInst, rd, rn, imm3, true);
                 }
+              default:
+                M5_UNREACHABLE;
             }
           case 0x4:
             if (machInst.itstateMask) {
@@ -916,6 +945,8 @@ def format Thumb16ShiftAddSubMoveCmp() {{
             } else {
                 return new SubImmCc(machInst, rd8, rd8, imm8, true);
             }
+          default:
+            M5_UNREACHABLE;
         }
     }
     '''
@@ -1019,6 +1050,8 @@ def format Thumb16DataProcessing() {{
             } else {
                 return new MvnRegCc(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
             }
+          default:
+            M5_UNREACHABLE;
         }
     }
     '''
@@ -1048,6 +1081,8 @@ def format Thumb16SpecDataAndBx() {{
                                   (IntRegIndex)(uint32_t)bits(machInst, 6, 3),
                                   COND_UC);
             }
+          default:
+            M5_UNREACHABLE;
         }
     }
     '''
@@ -1088,19 +1123,36 @@ def format ArmMisc() {{
                     false);
           case 0x9:
             if (RN == 0) {
-                switch (IMM) {
-                  case 0x0:
-                    return new NopInst(machInst);
-                  case 0x1:
-                    return new YieldInst(machInst);
-                  case 0x2:
-                    return new WfeInst(machInst);
-                  case 0x3:
-                    return new WfiInst(machInst);
-                  case 0x4:
-                    return new SevInst(machInst);
-                  default:
-                    return new Unknown(machInst);
+                if ((IMM & 0xf0) == 0xf0) {
+                    return new Dbg(machInst);
+                } else {
+                    switch (IMM) {
+                      case 0x0:
+                        return new NopInst(machInst);
+                      case 0x1:
+                        return new YieldInst(machInst);
+                      case 0x2:
+                        return new WfeInst(machInst);
+                      case 0x3:
+                        return new WfiInst(machInst);
+                      case 0x4:
+                        return new SevInst(machInst);
+                      case 0x5:
+                        return new WarnUnimplemented(
+                                "sevl", machInst);
+                      case 0x10:
+                        return new WarnUnimplemented(
+                                "esb", machInst);
+                      case 0x12:
+                        return new WarnUnimplemented(
+                                "tsb csync", machInst);
+                      case 0x14:
+                        return new WarnUnimplemented(
+                                "csdb", machInst);
+                      default:
+                        return new WarnUnimplemented(
+                                "unallocated_hint", machInst);
+                    }
                 }
             } else {
                 return new MsrCpsrImm(machInst, imm, byteMask);
@@ -1148,6 +1200,8 @@ def format Thumb16Misc() {{
                     return new Uxth(machInst, rd, 0, rm);
                   case 0x3:
                     return new Uxtb(machInst, rd, 0, rm);
+                  default:
+                    M5_UNREACHABLE;
                 }
             }
           case 0x1:
@@ -1175,20 +1229,29 @@ def format Thumb16Misc() {{
                                           ((enable ? 1 : 0) << 9);
                     return new Cps(machInst, mods);
                 }
+                return new Unknown(machInst);
             }
           case 0xa:
             {
-                IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 2, 0);
-                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 5, 3);
-                switch (bits(machInst, 7, 6)) {
-                  case 0x0:
-                    return new Rev(machInst, rd, rm);
-                  case 0x1:
-                    return new Rev16(machInst, rd, rm);
-                  case 0x3:
-                    return new Revsh(machInst, rd, rm);
-                  default:
-                    break;
+                const uint8_t op1 = bits(machInst, 7, 6);
+                if (op1 == 0x2) {
+                    return new Hlt(machInst, bits(machInst, 5, 0));
+                } else {
+                    IntRegIndex rd =
+                        (IntRegIndex)(uint32_t)bits(machInst, 2, 0);
+                    IntRegIndex rm =
+                        (IntRegIndex)(uint32_t)bits(machInst, 5, 3);
+
+                    switch (op1) {
+                      case 0x0:
+                        return new Rev(machInst, rd, rm);
+                      case 0x1:
+                        return new Rev16(machInst, rd, rm);
+                      case 0x3:
+                        return new Revsh(machInst, rd, rm);
+                      default:
+                        break;
+                    }
                 }
             }
             break;
@@ -1378,7 +1441,7 @@ def format Thumb32DataProcPlainBin() {{
                 const uint32_t satImm = bits(machInst, 4, 0);
                 return new Ssat16(machInst, rd, satImm + 1, rn);
             }
-            // Fall through on purpose...
+            M5_FALLTHROUGH;
           case 0x10:
             {
                 const uint32_t satImm = bits(machInst, 4, 0);
@@ -1411,7 +1474,7 @@ def format Thumb32DataProcPlainBin() {{
                 const uint32_t satImm = bits(machInst, 4, 0);
                 return new Usat16(machInst, rd, satImm, rn);
             }
-            // Fall through on purpose...
+            M5_FALLTHROUGH;
           case 0x18:
             {
                 const uint32_t satImm = bits(machInst, 4, 0);

@@ -1,0 +1,205 @@
+SystemC Simulation
+*** smaller ***
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+7
+10
+7
+10
+
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+7
+10
+7
+10
+
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+7
+10
+7
+10
+
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+7
+10
+7
+10
+*** equal ***
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+7
+-6
+7
+-6
+
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+7
+10
+7
+10
+
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+7
+-6
+7
+-6
+
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+7
+10
+7
+10
+*** larger ***
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+-1
+-2
+-1
+-2
+
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+3
+2
+3
+2
+
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+-1
+-2
+-1
+-2
+
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+3
+2
+3
+2

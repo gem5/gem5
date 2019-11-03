@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,16 +37,24 @@
  * Authors: Andreas Sandberg
  */
 
+#include "dev/virtio/fs9p.hh"
+
+#include <fcntl.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <fcntl.h>
-#include <netdb.h>
+#include <sys/un.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
+#include <csignal>
+#include <fstream>
+
+#include "base/callback.hh"
+#include "base/output.hh"
 #include "debug/VIO9P.hh"
 #include "debug/VIO9PData.hh"
-#include "dev/virtio/fs9p.hh"
 #include "params/VirtIO9PBase.hh"
 #include "params/VirtIO9PDiod.hh"
 #include "params/VirtIO9PProxy.hh"
@@ -110,11 +118,11 @@ VirtIO9PBase::VirtIO9PBase(Params *params)
     : VirtIODeviceBase(params, ID_9P,
                        sizeof(Config) + params->tag.size(),
                        F_MOUNT_TAG),
-      queue(params->system->physProxy, params->queueSize, *this)
+      queue(params->system->physProxy, byteOrder, params->queueSize, *this)
 {
     config.reset((Config *)
                  operator new(configSize));
-    config->len = htov_legacy(params->tag.size());
+    config->len = htog(params->tag.size(), byteOrder);
     memcpy(config->tag, params->tag.c_str(), params->tag.size());
 
     registerQueue(queue);
@@ -308,6 +316,10 @@ VirtIO9PDiod::VirtIO9PDiod(Params *params)
     : VirtIO9PProxy(params),
       fd_to_diod(-1), fd_from_diod(-1), diod_pid(-1)
 {
+    // Register an exit callback so we can kill the diod process
+    Callback* cb = new MakeCallback<VirtIO9PDiod,
+                                    &VirtIO9PDiod::terminateDiod>(this);
+    registerExitCallback(cb);
 }
 
 VirtIO9PDiod::~VirtIO9PDiod()
@@ -333,18 +345,46 @@ VirtIO9PDiod::startDiod()
 
     const char *diod(p->diod.c_str());
 
+    DPRINTF(VIO9P, "Using diod at %s \n", p->diod.c_str());
+
     if (pipe(pipe_rfd) == -1 || pipe(pipe_wfd) == -1)
         panic("Failed to create DIOD pipes: %i\n", errno);
 
     fd_to_diod = pipe_rfd[1];
     fd_from_diod = pipe_wfd[0];
 
+    // Create Unix domain socket
+    int socket_id = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (socket_id == -1) {
+        panic("Socket creation failed %i \n", errno);
+    }
+    // Bind the socket to a path which will not be read
+    struct sockaddr_un socket_address;
+    memset(&socket_address, 0, sizeof(struct sockaddr_un));
+    socket_address.sun_family = AF_UNIX;
+
+    const std::string socket_path = simout.resolve(p->socketPath);
+    fatal_if(!OutputDirectory::isAbsolute(socket_path), "Please make the" \
+             " output directory an absolute path, else diod will fail!\n");
+
+    // Prevent overflow in strcpy
+    fatal_if(sizeof(socket_address.sun_path) <= socket_path.length(),
+             "Incorrect length of socket path");
+    strncpy(socket_address.sun_path, socket_path.c_str(),
+            sizeof(socket_address.sun_path) - 1);
+    if (bind(socket_id, (struct sockaddr*) &socket_address,
+             sizeof(struct sockaddr_un)) == -1){
+        perror("Socket binding");
+        panic("Socket binding to %i failed - most likely the output dir" \
+              " and hence unused socket already exists \n", socket_id);
+    }
+
     diod_pid = fork();
     if (diod_pid == -1) {
         panic("Fork failed: %i\n", errno);
     } else if (diod_pid == 0) {
+        // Create the socket which will later by used by the diod process
         close(STDIN_FILENO);
-
         if (dup2(pipe_rfd[0], DIOD_RFD) == -1 ||
             dup2(pipe_wfd[1], DIOD_WFD) == -1) {
 
@@ -352,6 +392,7 @@ VirtIO9PDiod::startDiod()
                   errno);
         }
 
+        // Start diod
         execlp(diod, diod,
                "-f", // start in foreground
                "-r", "3", // setup read FD
@@ -359,11 +400,15 @@ VirtIO9PDiod::startDiod()
                "-e", p->root.c_str(), // path to export
                "-n", // disable security
                "-S", // squash all users
+               "-l", socket_path.c_str(), // pass the socket
                (char *)NULL);
-        panic("Failed to execute diod: %i\n", errno);
+        perror("Starting DIOD");
+        panic("Failed to execute diod to %s: %i\n",socket_path, errno);
     } else {
         close(pipe_rfd[0]);
         close(pipe_wfd[1]);
+        inform("Started diod with PID %u, you might need to manually kill " \
+                " diod if gem5 crashes \n", diod_pid);
     }
 
 #undef DIOD_RFD
@@ -392,6 +437,46 @@ VirtIO9PDiod::DiodDataEvent::process(int revent)
     parent.serverDataReady();
 }
 
+void
+VirtIO9PDiod::terminateDiod()
+{
+    assert(diod_pid != -1);
+
+    DPRINTF(VIO9P, "Trying to kill diod at pid %u \n", diod_pid);
+
+    if (kill(diod_pid, SIGTERM) != 0) {
+        perror("Killing diod process");
+        warn("Failed to kill diod using SIGTERM");
+        return;
+    }
+
+    // Check if kill worked
+    for (unsigned i = 0; i < 5; i++) {
+        int wait_return = waitpid(diod_pid, NULL, WNOHANG);
+        if (wait_return == diod_pid) {
+            // Managed to kill diod
+            return;
+        } else if (wait_return == 0) {
+            // Diod is not killed so sleep and try again
+            usleep(500);
+        } else {
+            // Failed in waitpid
+            perror("Waitpid");
+            warn("Failed in waitpid");
+        }
+    }
+
+    // Try again to kill diod with sigkill
+    inform("Trying to kill diod with SIGKILL as SIGTERM failed \n");
+    if (kill(diod_pid, SIGKILL) != 0) {
+        perror("Killing diod process");
+        warn("Failed to kill diod using SIGKILL");
+    } else {
+        // Managed to kill diod
+        return;
+    }
+
+}
 VirtIO9PDiod *
 VirtIO9PDiodParams::create()
 {

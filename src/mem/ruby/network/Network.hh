@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2017 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -42,13 +54,19 @@
 
 #include <iostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
-#include "mem/protocol/LinkDirection.hh"
-#include "mem/protocol/MessageSizeType.hh"
+#include "base/addr_range.hh"
+#include "base/types.hh"
+#include "mem/packet.hh"
+#include "mem/port.hh"
+#include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/network/Topology.hh"
-#include "mem/packet.hh"
+#include "mem/ruby/network/dummy_port.hh"
+#include "mem/ruby/protocol/LinkDirection.hh"
+#include "mem/ruby/protocol/MessageSizeType.hh"
 #include "params/RubyNetwork.hh"
 #include "sim/clocked_object.hh"
 
@@ -64,7 +82,7 @@ class Network : public ClockedObject
     { return dynamic_cast<const Params *>(_params); }
 
     virtual ~Network();
-    virtual void init();
+    void init() override;
 
     static uint32_t getNumberOfVirtualNetworks() { return m_virtual_networks; }
     int getNumNodes() const { return m_nodes; }
@@ -80,15 +98,14 @@ class Network : public ClockedObject
     virtual void checkNetworkAllocation(NodeID id, bool ordered,
         int network_num, std::string vnet_type);
 
-    virtual void makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                             LinkDirection direction,
+    virtual void makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
                              const NetDest& routing_table_entry) = 0;
-    virtual void makeInLink(NodeID src, SwitchID dest, BasicLink* link,
-                            LinkDirection direction,
+    virtual void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                             const NetDest& routing_table_entry) = 0;
     virtual void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                                  LinkDirection direction,
-                                  const NetDest& routing_table_entry) = 0;
+                                  const NetDest& routing_table_entry,
+                                  PortDirection src_outport,
+                                  PortDirection dst_inport) = 0;
 
     virtual void collateStats() = 0;
     virtual void print(std::ostream& out) const = 0;
@@ -102,6 +119,26 @@ class Network : public ClockedObject
     { fatal("Functional read not implemented.\n"); }
     virtual uint32_t functionalWrite(Packet *pkt)
     { fatal("Functional write not implemented.\n"); }
+
+    /**
+     * Map an address to the correct NodeID
+     *
+     * This function traverses the global address map to find the
+     * NodeID that corresponds to the given address and the type of
+     * the destination. For example for a request to a directory this
+     * function will return the NodeID of the right directory.
+     *
+     * @param the destination address
+     * @param the type of the destination
+     * @return the NodeID of the destination
+     */
+    NodeID addressToNodeID(Addr addr, MachineType mtype);
+
+    Port &
+    getPort(const std::string &, PortID idx=InvalidPortID) override
+    {
+        return RubyDummyPort::instance();
+    }
 
   protected:
     // Private copy constructor and assignment operator
@@ -138,6 +175,13 @@ class Network : public ClockedObject
 
         void process() {ctr->collateStats();}
     };
+
+    // Global address map
+    struct AddrMapNode {
+        NodeID id;
+        AddrRangeList ranges;
+    };
+    std::unordered_multimap<MachineType, AddrMapNode> addrMap;
 };
 
 inline std::ostream&

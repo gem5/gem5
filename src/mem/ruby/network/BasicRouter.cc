@@ -32,6 +32,7 @@ BasicRouter::BasicRouter(const Params *p)
     : ClockedObject(p)
 {
     m_id = p->router_id;
+    m_latency = p->latency;
 }
 
 void

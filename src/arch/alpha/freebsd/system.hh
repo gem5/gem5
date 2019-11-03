@@ -42,9 +42,9 @@ class FreebsdAlphaSystem : public AlphaSystem
     class SkipCalibrateClocksEvent : public SkipFuncEvent
     {
       public:
-        SkipCalibrateClocksEvent(PCEventQueue *q, const std::string &desc,
+        SkipCalibrateClocksEvent(PCEventScope *s, const std::string &desc,
                                  Addr addr)
-            : SkipFuncEvent(q, desc, addr) {}
+            : SkipFuncEvent(s, desc, addr) {}
         virtual void process(ThreadContext *tc);
     };
 

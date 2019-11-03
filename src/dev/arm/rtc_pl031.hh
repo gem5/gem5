@@ -91,7 +91,7 @@ class PL031 : public AmbaIntDevice
 
     /** Called when the counter reaches matches */
     void counterMatch();
-    EventWrapper<PL031, &PL031::counterMatch> matchEvent;
+    EventFunctionWrapper matchEvent;
 
     /** Called to update the matchEvent when the load Value or match value are
      * written.

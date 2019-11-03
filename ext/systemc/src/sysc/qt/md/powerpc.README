@@ -1,0 +1,27 @@
+
+PowerPC assembly support
+
+
+1) MacOS X, Darwin, MKLinux and other systems based on Mach kernel ABI:
+
+	- Configuration command: ./config powerpc-darwin
+
+	- See documentation inside powerpc_mach.h, powerpc_mach.s, powerpc.c.
+
+
+2) LinuxPPC, and other systems based on System V ABI:
+
+	- Configuration command: ./config powerpc
+
+	- See documentation inside powerpc_sys5.h, powerpc_sys5.s, powerpc.c.
+
+
+Marco Bucci <marco.bucci@inwind.it>
+December 2002
+
+
+ * This software is largely based on the original PowerPC-Linux porting
+ * developed by Ken Aaker <kenaaker@silverbacksystems.com>
+ *
+ * Marco Bucci <marco.bucci@inwind.it>
+ * December 2002

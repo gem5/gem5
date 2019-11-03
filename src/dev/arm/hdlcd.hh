@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015 ARM Limited
+ * Copyright (c) 2010-2013, 2015, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -79,8 +79,8 @@
 #include <fstream>
 #include <memory>
 
-#include "base/bitmap.hh"
 #include "base/framebuffer.hh"
+#include "base/imgwriter.hh"
 #include "base/output.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/pixelpump.hh"
@@ -116,6 +116,7 @@ class HDLcd: public AmbaDmaDevice
     const AddrRangeList addrRanges;
     const bool enableCapture;
     const Addr pixelBufferSize;
+    const Tick virtRefreshRate;
 
   protected: // Register handling
     /** ARM HDLcd register offsets */
@@ -344,8 +345,15 @@ class HDLcd: public AmbaDmaDevice
         HDLcd &parent;
     };
 
+    /** Handler for fast frame refresh in KVM-mode */
+    void virtRefresh();
+    EventFunctionWrapper virtRefreshEvent;
+
     /** Helper to write out bitmaps */
-    Bitmap bmp;
+    std::unique_ptr<ImgWriter> imgWriter;
+
+    /** Image Format */
+    Enums::ImageFormat imgFormat;
 
     /** Picture of what the current frame buffer looks like */
     OutputStream *pic;

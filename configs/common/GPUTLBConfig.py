@@ -1,37 +1,38 @@
+# Copyright (c) 2011-2015 Advanced Micro Devices, Inc.
+# All rights reserved.
 #
-#  Copyright (c) 2011-2015 Advanced Micro Devices, Inc.
-#  All rights reserved.
+# For use for simulation and test purposes only
 #
-#  For use for simulation and test purposes only
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
 #
-#  Redistribution and use in source and binary forms, with or without
-#  modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
 #
-#  1. Redistributions of source code must retain the above copyright notice,
-#  this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
 #
-#  2. Redistributions in binary form must reproduce the above copyright notice,
-#  this list of conditions and the following disclaimer in the documentation
-#  and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
 #
-#  3. Neither the name of the copyright holder nor the names of its contributors
-#  may be used to endorse or promote products derived from this software
-#  without specific prior written permission.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 #
-#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-#  POSSIBILITY OF SUCH DAMAGE.
-#
-#  Author: Lisa Hsu
-#
+# Authors: Lisa Hsu
+
+from __future__ import print_function
+from __future__ import absolute_import
 
 # Configure the TLB hierarchy
 # Places which would probably need to be modified if you
@@ -69,7 +70,7 @@ def Coalescer_constructor(level):
 def create_TLB_Coalescer(options, my_level, my_index, TLB_name, Coalescer_name):
     # arguments: options, TLB level, number of private structures for this Level,
     # TLB name and  Coalescer name
-    for i in xrange(my_index):
+    for i in range(my_index):
         TLB_name.append(eval(TLB_constructor(my_level)))
         Coalescer_name.append(eval(Coalescer_constructor(my_level)))
 
@@ -88,7 +89,7 @@ def config_tlb_hierarchy(options, system, shader_idx):
     elif options.TLB_config == "2CU":
         num_TLBs = n_cu >> 1
     else:
-        print "Bad option for TLB Configuration."
+        print("Bad option for TLB Configuration.")
         sys.exit(1)
 
     #----------------------------------------------------------------------------------------
@@ -109,7 +110,7 @@ def config_tlb_hierarchy(options, system, shader_idx):
     # Create the hiearchy
     # Call the appropriate constructors and add objects to the system
 
-    for i in xrange(len(TLB_hierarchy)):
+    for i in range(len(TLB_hierarchy)):
         hierarchy_level = TLB_hierarchy[i]
         level = i+1
         for TLB_type in hierarchy_level:
@@ -143,7 +144,7 @@ def config_tlb_hierarchy(options, system, shader_idx):
     # Each TLB is connected with its Coalescer through a single port.
     # There is a one-to-one mapping of TLBs to Coalescers at a given level
     # This won't be modified no matter what the hierarchy looks like.
-    for i in xrange(len(TLB_hierarchy)):
+    for i in range(len(TLB_hierarchy)):
         hierarchy_level = TLB_hierarchy[i]
         level = i+1
         for TLB_type in hierarchy_level:
@@ -159,7 +160,7 @@ def config_tlb_hierarchy(options, system, shader_idx):
         name = TLB_type['name']
         num_TLBs = TLB_type['width']
         if name == 'l1':     # L1 D-TLBs
-            tlb_per_cu = num_TLBs / n_cu
+            tlb_per_cu = num_TLBs // n_cu
             for cu_idx in range(n_cu):
                 if tlb_per_cu:
                     for tlb in range(tlb_per_cu):

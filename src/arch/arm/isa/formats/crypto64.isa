@@ -1,0 +1,126 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2018 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Giacomo Travaglini
+
+let {{
+    header_output = '''
+    StaticInstPtr
+    decodeCryptoAES(ExtMachInst machInst);
+
+    StaticInstPtr
+    decodeCryptoThreeRegSHA(ExtMachInst machInst);
+
+    StaticInstPtr
+    decodeCryptoTwoRegSHA(ExtMachInst machInst);
+    '''
+
+    decoder_output = '''
+
+    StaticInstPtr
+    decodeCryptoAES(ExtMachInst machInst)
+    {
+        const auto opcode = bits(machInst, 16, 12);
+        const auto size = bits(machInst, 23, 22);
+
+        IntRegIndex rd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        if (size) {
+            // UNALLOCATED
+            return new Unknown64(machInst);
+        } else {
+            switch (opcode) {
+              case 0x4: return new AESE64(machInst, rd, rd, rn);
+              case 0x5: return new AESD64(machInst, rd, rd, rn);
+              case 0x6: return new AESMC64(machInst, rd, rn);
+              case 0x7: return new AESIMC64(machInst, rd, rn);
+              default: return new Unknown64(machInst);
+            }
+        }
+    }
+
+    StaticInstPtr
+    decodeCryptoTwoRegSHA(ExtMachInst machInst)
+    {
+        const auto opcode = bits(machInst, 16, 12);
+        const auto size = bits(machInst, 23, 22);
+
+        IntRegIndex rd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        if (size) {
+            // UNALLOCATED
+            return new Unknown64(machInst);
+        } else {
+            switch (opcode) {
+              case 0x0: return new SHA1H64(machInst, rd, rn);
+              case 0x1: return new SHA1SU164(machInst, rd, rn);
+              case 0x2: return new SHA256SU064(machInst, rd, rn);
+              default: return new Unknown64(machInst);
+            }
+        }
+    }
+
+    StaticInstPtr
+    decodeCryptoThreeRegSHA(ExtMachInst machInst)
+    {
+        const auto opcode = bits(machInst, 14, 12);
+        const auto size = bits(machInst, 23, 22);
+
+        IntRegIndex rd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        if (size) {
+            // UNALLOCATED
+            return new Unknown64(machInst);
+        } else {
+            switch (opcode) {
+              case 0x0: return new SHA1C64(machInst, rd, rn, rm);
+              case 0x1: return new SHA1P64(machInst, rd, rn, rm);
+              case 0x2: return new SHA1M64(machInst, rd, rn, rm);
+              case 0x3: return new SHA1SU064(machInst, rd, rn, rm);
+              case 0x4: return new SHA256H64(machInst, rd, rn, rm);
+              case 0x5: return new SHA256H264(machInst, rd, rn, rm);
+              case 0x6: return new SHA256SU164(machInst, rd, rn, rm);
+              default: return new Unknown64(machInst);
+            }
+        }
+    }
+   '''
+}};

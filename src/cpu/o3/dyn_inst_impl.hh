@@ -106,17 +106,6 @@ template <class Impl>
 void
 BaseO3DynInst<Impl>::initVars()
 {
-    // Make sure to have the renamed register entries set to the same
-    // as the normal register entries.  It will allow the IQ to work
-    // without any modifications.
-    for (int i = 0; i < this->staticInst->numDestRegs(); i++) {
-        this->_destRegIdx[i] = this->staticInst->destRegIdx(i);
-    }
-
-    for (int i = 0; i < this->staticInst->numSrcRegs(); i++) {
-        this->_srcRegIdx[i] = this->staticInst->srcRegIdx(i);
-    }
-
     this->_readySrcRegIdx.reset();
 
     _numDestMiscRegs = 0;
@@ -196,34 +185,6 @@ BaseO3DynInst<Impl>::completeAcc(PacketPtr pkt)
 }
 
 template <class Impl>
-Fault
-BaseO3DynInst<Impl>::hwrei()
-{
-#if THE_ISA == ALPHA_ISA
-    // Can only do a hwrei when in pal mode.
-    if (!(this->instAddr() & 0x3))
-        return std::make_shared<AlphaISA::UnimplementedOpcodeFault>();
-
-    // Set the next PC based on the value of the EXC_ADDR IPR.
-    AlphaISA::PCState pc = this->pcState();
-    pc.npc(this->cpu->readMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR,
-                                          this->threadNumber));
-    this->pcState(pc);
-    if (CPA::available()) {
-        ThreadContext *tc = this->cpu->tcBase(this->threadNumber);
-        CPA::cpa()->swAutoBegin(tc, this->nextInstAddr());
-    }
-
-    // Tell CPU to clear any state it needs to if a hwrei is taken.
-    this->cpu->hwrei(this->threadNumber);
-#else
-
-#endif
-    // FIXME: XXX check for interrupts? XXX
-    return NoFault;
-}
-
-template <class Impl>
 void
 BaseO3DynInst<Impl>::trap(const Fault &fault)
 {
@@ -231,18 +192,8 @@ BaseO3DynInst<Impl>::trap(const Fault &fault)
 }
 
 template <class Impl>
-bool
-BaseO3DynInst<Impl>::simPalCheck(int palFunc)
-{
-#if THE_ISA != ALPHA_ISA
-    panic("simPalCheck called, but PAL only exists in Alpha!\n");
-#endif
-    return this->cpu->simPalCheck(palFunc, this->threadNumber);
-}
-
-template <class Impl>
 void
-BaseO3DynInst<Impl>::syscall(int64_t callnum)
+BaseO3DynInst<Impl>::syscall(int64_t callnum, Fault *fault)
 {
     if (FullSystem)
         panic("Syscall emulation isn't available in FS mode.\n");
@@ -251,7 +202,7 @@ BaseO3DynInst<Impl>::syscall(int64_t callnum)
     // changes, update this instruction's nextPC because the syscall
     // must have changed the nextPC.
     TheISA::PCState curPC = this->cpu->pcState(this->threadNumber);
-    this->cpu->syscall(callnum, this->threadNumber);
+    this->cpu->syscall(callnum, this->threadNumber, fault);
     TheISA::PCState newPC = this->cpu->pcState(this->threadNumber);
     if (!(curPC == newPC)) {
         this->pcState(newPC);

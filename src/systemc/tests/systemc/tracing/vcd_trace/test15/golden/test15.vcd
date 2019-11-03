@@ -1,0 +1,44 @@
+
+$timescale
+     1 ps
+$end
+
+$scope module SystemC $end
+$scope module test_top $end
+$var wire   32  aaaaa  sig [31:0]  $end
+$upscope $end
+$upscope $end
+$enddefinitions  $end
+
+$comment
+All initial values are dumped below at time 0 sec = 0 timescale units.
+$end
+
+$dumpvars
+b10 aaaaa
+$end
+
+#1
+b11 aaaaa
+
+#2
+b100 aaaaa
+
+#1002
+b111 aaaaa
+
+#2002
+b1000 aaaaa
+
+#3002
+b1001 aaaaa
+
+#3003
+b1010 aaaaa
+
+#3005
+b1011 aaaaa
+
+#4005
+b1100 aaaaa
+

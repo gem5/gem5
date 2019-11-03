@@ -42,14 +42,11 @@
  *          Andreas Sandberg
  */
 
-#include "arch/isa_traits.hh"
-#include "base/bigint.hh"
-#include "config/the_isa.hh"
-#include "mem/packet.hh"
-#include "sim/byteswap.hh"
-
 #ifndef __MEM_PACKET_ACCESS_HH__
 #define __MEM_PACKET_ACCESS_HH__
+
+#include "mem/packet.hh"
+#include "sim/byteswap.hh"
 
 template <typename T>
 inline T
@@ -101,13 +98,6 @@ Packet::get(ByteOrder endian) const
 }
 
 template <typename T>
-inline T
-Packet::get() const
-{
-    return TheISA::gtoh(getRaw<T>());
-}
-
-template <typename T>
 inline void
 Packet::setBE(T v)
 {
@@ -135,13 +125,6 @@ Packet::set(T v, ByteOrder endian)
       default:
         panic("Illegal byte order in Packet::set()\n");
     };
-}
-
-template <typename T>
-inline void
-Packet::set(T v)
-{
-    setRaw(TheISA::htog(v));
 }
 
 #endif //__MEM_PACKET_ACCESS_HH__

@@ -1,0 +1,63 @@
+SystemC Simulation
+0 s ... static method
+0 s ... static thread event wait 
+0 s ... static thread timed wait 
+0 s ... static thread clocked
+0 s ... static cthread
+1 ns ... dynamic method
+1 ns ... dynamic thread clocked
+1 ns ... dynamic thread event wait
+1 ns ... dynamic thread timed wait
+
+2500 ps asserting asynchronous reset
+2500 ps ... dynamic thread timed wait
+2500 ps ... dynamic thread event wait
+2500 ps ... dynamic thread clocked
+2500 ps ... static thread timed wait 
+2500 ps ... static thread event wait 
+2500 ps ... static thread clocked
+2500 ps ... static cthread
+3 ns ... dynamic thread clocked
+3 ns ... static thread clocked
+3 ns ... static cthread
+
+3500 ps clearing asynchronous reset
+
+5500 ps asserting synchronous reset
+6 ns ... dynamic thread clocked
+6 ns ... static thread clocked
+6 ns ... static cthread
+
+6500 ps clearing synchronous reset
+
+13500 ps asserting asynchronous reset
+13500 ps ... dynamic thread timed wait
+13500 ps ... dynamic thread event wait
+13500 ps ... dynamic thread clocked
+13500 ps ... static thread timed wait 
+13500 ps ... static thread event wait 
+13500 ps ... static thread clocked
+13500 ps ... static cthread
+14 ns ... dynamic thread clocked
+14 ns ... static thread clocked
+14 ns ... static cthread
+15 ns ... dynamic thread clocked
+15 ns ... static thread clocked
+15 ns ... static cthread
+
+15500 ps clearing asynchronous reset
+
+17500 ps asserting synchronous reset
+18 ns ... dynamic thread clocked
+18 ns ... static thread clocked
+18 ns ... static cthread
+19 ns ... dynamic thread clocked
+19 ns ... static thread clocked
+19 ns ... static cthread
+
+19500 ps clearing synchronous reset
+
+24500 ps terminating simulation
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+Program completed

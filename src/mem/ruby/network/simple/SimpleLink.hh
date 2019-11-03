@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_NETWORK_SIMPLE_LINK_HH__
-#define __MEM_RUBY_NETWORK_SIMPLE_LINK_HH__
+#ifndef __MEM_RUBY_NETWORK_SIMPLE_SIMPLELINK_HH__
+#define __MEM_RUBY_NETWORK_SIMPLE_SIMPLELINK_HH__
 
 #include <iostream>
 #include <string>
@@ -79,4 +79,4 @@ operator<<(std::ostream& out, const SimpleIntLink& obj)
     return out;
 }
 
-#endif // __MEM_RUBY_NETWORK_SIMPLE_LINK_HH__
+#endif //__MEM_RUBY_NETWORK_SIMPLE_SIMPLELINK_HH__

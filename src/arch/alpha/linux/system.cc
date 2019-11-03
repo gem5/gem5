@@ -41,6 +41,7 @@
  */
 
 #include "arch/alpha/linux/system.hh"
+
 #include "arch/alpha/idle_event.hh"
 #include "arch/alpha/system.hh"
 #include "arch/generic/linux/threadinfo.hh"
@@ -89,8 +90,8 @@ LinuxAlphaSystem::initState()
      * kernel arguments directly into the kernel's memory.
      */
     virtProxy.writeBlob(CommandLine(),
-                        (uint8_t*)params()->boot_osflags.c_str(),
-                        params()->boot_osflags.length()+1);
+                        params()->boot_osflags.c_str(),
+                        params()->boot_osflags.length() + 1);
 
     /**
      * find the address of the est_cycle_freq variable and insert it
@@ -109,7 +110,7 @@ LinuxAlphaSystem::initState()
      * 255 ASNs.
      */
     if (kernelSymtab->findAddress("dp264_mv", addr))
-        virtProxy.write(addr + 0x18, LittleEndianGuest::htog((uint32_t)127));
+        virtProxy.write(addr + 0x18, htole((uint32_t)127));
     else
         panic("could not find dp264_mv\n");
 
@@ -121,10 +122,6 @@ LinuxAlphaSystem::setupFuncEvents()
     AlphaSystem::setupFuncEvents();
 #ifndef NDEBUG
     kernelPanicEvent = addKernelFuncEventOrPanic<BreakPCEvent>("panic");
-
-#if 0
-    kernelDieEvent = addKernelFuncEventOrPanic<BreakPCEvent>("die_if_kernel");
-#endif
 
 #endif
 
@@ -152,7 +149,7 @@ LinuxAlphaSystem::setupFuncEvents()
     // leads to non-intuitive behavior with --trace-start.
     Addr addr = 0;
     if (false && kernelSymtab->findAddress("alpha_switch_to", addr)) {
-        printThreadEvent = new PrintThreadInfo(&pcEventQueue, "threadinfo",
+        printThreadEvent = new PrintThreadInfo(this, "threadinfo",
                                                addr + sizeof(MachInst) * 6);
     } else {
         printThreadEvent = NULL;
@@ -179,8 +176,9 @@ LinuxAlphaSystem::setDelayLoop(ThreadContext *tc)
     if (kernelSymtab->findAddress("loops_per_jiffy", addr)) {
         Tick cpuFreq = tc->getCpuPtr()->frequency();
         assert(intrFreq);
-        FSTranslatingPortProxy &vp = tc->getVirtProxy();
-        vp.writeHtoG(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988));
+        PortProxy &vp = tc->getVirtProxy();
+        vp.write(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988),
+                 GuestByteOrder);
     }
 }
 

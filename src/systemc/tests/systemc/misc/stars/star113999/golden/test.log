@@ -1,0 +1,17 @@
+SystemC Simulation
+
+Info: (I804) /IEEE_Std_1666/deprecated: sc_bit is deprecated, use bool instead
+0
+1
+1
+
+Error: (E204) value is not valid: sc_bit( 2 )
+In file: <removed by verify.pl>
+
+Info: (I804) /IEEE_Std_1666/deprecated: You can turn off warnings about
+             IEEE 1666 deprecated features by placing this method call
+             as the first statement in your sc_main() function:
+
+  sc_core::sc_report_handler::set_actions( "/IEEE_Std_1666/deprecated",
+                                           sc_core::SC_DO_NOTHING );
+

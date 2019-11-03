@@ -1,6 +1,6 @@
 // -*- mode: c++ -*-
 
-// Copyright (c) 2012-2013, 2015 ARM Limited
+// Copyright (c) 2012-2013, 2015-2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -45,8 +45,13 @@ let {{
     decoders = { 'Generic' : {} }
 
     # FP types (FP operations always work with unsigned representations)
-    floatTypes = ("uint32_t", "uint64_t")
+    floatTypes = ("uint16_t", "uint32_t", "uint64_t")
     smallFloatTypes = ("uint32_t",)
+
+    zeroSveVecRegUpperPartCode = '''
+        TheISA::ISA::zeroSveVecRegUpperPart(%s,
+            ArmStaticInst::getCurSveVecLen<uint64_t>(xc->tcBase()));
+    '''
 
     def threeEqualRegInstX(name, Name, opClass, types, rCount, op,
                            readDest=False, pairwise=False, scalar=False,
@@ -132,6 +137,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if byElem:
             header_output += NeonX2RegImmOpDeclare.subst(iop)
         else:
@@ -225,16 +231,22 @@ let {{
         AA64FpDestP%(destReg)d_uw = gtoh(destReg.regs[%(reg)d]);
         ''' % { "reg" : reg, "destReg": destReg }
             destReg += 1
-        if destCnt < 4 and not hi:  # zero upper half
-            for reg in range(destCnt, 4):
-                eWalkCode += '''
-        AA64FpDestP%(reg)d_uw = 0;
-        ''' % { "reg" : reg }
+        if destCnt < 4:
+            if hi:  # Explicitly merge with lower half
+                for reg in range(0, destCnt):
+                    eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = AA64FpDestP%(reg)d_uw;''' % { "reg" : reg }
+            else:  # zero upper half
+                for reg in range(destCnt, 4):
+                    eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = 0;''' % { "reg" : reg }
+
         iop = InstObjParams(name, Name,
                             "DataX2RegImmOp" if byElem else "DataX2RegOp",
                             { "code": eWalkCode,
                               "r_count": 2,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if byElem:
             header_output += NeonX2RegImmOpDeclare.subst(iop)
         else:
@@ -322,6 +334,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if hasImm:
             header_output += NeonX1RegImmOpDeclare.subst(iop)
         else:
@@ -373,6 +386,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": 2,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if hasImm:
             header_output += NeonX1RegImmOpDeclare.subst(iop)
         else:
@@ -429,16 +443,22 @@ let {{
         AA64FpDestP%(destReg)d_uw = gtoh(destReg.regs[%(reg)d]);
         ''' % { "reg" : reg, "destReg": destReg }
             destReg += 1
-        if not hi:
+        if hi:
+            for reg in range(0, 2):  # Explicitly merge with the lower half
+                eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = AA64FpDestP%(reg)d_uw;''' % { "reg" : reg }
+        else:
             for reg in range(2, 4):  # zero upper half
                 eWalkCode += '''
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
+
         iop = InstObjParams(name, Name,
                             "DataX1RegImmOp" if hasImm else "DataX1RegOp",
                             { "code": eWalkCode,
                               "r_count": 2,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if hasImm:
             header_output += NeonX1RegImmOpDeclare.subst(iop)
         else:
@@ -474,6 +494,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX2RegOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -509,6 +530,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1Reg2ImmOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -546,6 +568,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -592,6 +615,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegOpDeclare.subst(iop)
         if long:
             exec_output += NeonXUnequalRegOpExecute.subst(iop)
@@ -644,6 +668,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegOpDeclare.subst(iop)
         exec_output += NeonXUnequalRegOpExecute.subst(iop)
         for type in types:
@@ -686,6 +711,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegImmOnlyOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -715,6 +741,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -747,6 +774,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX2RegImmOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -775,6 +803,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegImmOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -818,13 +847,13 @@ let {{
         union
         {
             uint8_t bytes[64];
-            FloatRegBits regs[16];
+            uint32_t regs[16];
         } table;
 
         union
         {
             uint8_t bytes[%(rCount)d * 4];
-            FloatRegBits regs[%(rCount)d];
+            uint32_t regs[%(rCount)d];
         } destReg, srcReg2;
 
         const unsigned length = %(length)d;
@@ -870,6 +899,7 @@ let {{
                             { "code": code,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX2RegOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -2006,7 +2036,7 @@ let {{
     # SQABS
     sqabsCode = '''
         FPSCR fpscr = (FPSCR) FpscrQc;
-        if (srcElem1 == (Element)((Element)1 << (sizeof(Element) * 8 - 1))) {
+        if (srcElem1 == (Element)(std::numeric_limits<Element>::min())) {
             fpscr.qc = 1;
             destElem = ~srcElem1;
         } else if (srcElem1 < 0) {
@@ -2030,7 +2060,7 @@ let {{
             bool negSrc1 = (srcElem1 < 0);
             bool negSrc2 = (srcElem2 < 0);
             if ((negDest != negSrc1) && (negSrc1 == negSrc2)) {
-                destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                destElem = std::numeric_limits<Element>::min();
                 if (negDest)
                     destElem -= 1;
                 fpscr.qc = 1;
@@ -2047,7 +2077,7 @@ let {{
     qdmlalCode = '''
         FPSCR fpscr = (FPSCR) FpscrQc;
         BigElement midElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
-        Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
+        Element maxNeg = std::numeric_limits<Element>::min();
         Element halfNeg = maxNeg / 2;
         if ((srcElem1 == maxNeg && srcElem2 == maxNeg) ||
             (srcElem1 == halfNeg && srcElem2 == maxNeg) ||
@@ -2086,7 +2116,7 @@ let {{
     qdmlslCode = '''
         FPSCR fpscr = (FPSCR) FpscrQc;
         BigElement midElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
-        Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
+        Element maxNeg = std::numeric_limits<Element>::min();
         Element halfNeg = maxNeg / 2;
         if ((srcElem1 == maxNeg && srcElem2 == maxNeg) ||
             (srcElem1 == halfNeg && srcElem2 == maxNeg) ||
@@ -2178,7 +2208,7 @@ let {{
     # SQNEG
     sqnegCode = '''
         FPSCR fpscr = (FPSCR) FpscrQc;
-        if (srcElem1 == (Element)((Element)1 << (sizeof(Element) * 8 - 1))) {
+        if (srcElem1 == (Element)(std::numeric_limits<Element>::min())) {
             fpscr.qc = 1;
             destElem = ~srcElem1;
         } else {
@@ -2198,7 +2228,7 @@ let {{
             destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2 +
                         ((int64_t)1 << (sizeof(Element) * 8 - 1))) >>
                        (sizeof(Element) * 8);
-            Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
+            Element maxNeg = std::numeric_limits<Element>::min();
             Element halfNeg = maxNeg / 2;
             if ((srcElem1 == maxNeg && srcElem2 == maxNeg) ||
                 (srcElem1 == halfNeg && srcElem2 == maxNeg) ||
@@ -2206,7 +2236,7 @@ let {{
                 if (destElem < 0) {
                     destElem = mask(sizeof(Element) * 8 - 1);
                 } else {
-                    destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                    destElem = std::numeric_limits<Element>::min();
                 }
                 fpscr.qc = 1;
             }
@@ -2368,7 +2398,7 @@ let {{
             FPSCR fpscr = (FPSCR) FpscrQc;
             if (imm >= sizeof(Element) * 8) {
                 if (srcElem1 != 0) {
-                    destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                    destElem = std::numeric_limits<Element>::min();
                     if (srcElem1 > 0)
                         destElem = ~destElem;
                     fpscr.qc = 1;
@@ -2381,7 +2411,7 @@ let {{
                                         sizeof(Element) * 8 - 1,
                                         sizeof(Element) * 8 - 1 - imm);
                 if (topBits != 0 && topBits != mask(imm + 1)) {
-                    destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                    destElem = std::numeric_limits<Element>::min();
                     if (srcElem1 > 0)
                         destElem = ~destElem;
                     fpscr.qc = 1;
@@ -2557,7 +2587,7 @@ let {{
             bool negSrc1 = (srcElem1 < 0);
             bool posSrc2 = (srcElem2 >= 0);
             if ((negDest != negSrc1) && (negSrc1 == posSrc2)) {
-                destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                destElem = std::numeric_limits<Element>::min();
                 if (negDest)
                     destElem -= 1;
                 fpscr.qc = 1;

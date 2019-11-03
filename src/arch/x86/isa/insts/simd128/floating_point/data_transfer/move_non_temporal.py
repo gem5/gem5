@@ -1,4 +1,5 @@
 # Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2015, 2018 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,8 +35,42 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Gabe Black
+#          Steve Reinhardt
 
 microcode = '''
-# MOVNTPS
-# MOVNTPD
+# movntps is basically the same as movaps, excepting the caching hint and
+# ordering constraints
+# We are ignoring the non-temporal hint.
+def macroop MOVNTPS_M_XMM {
+    warn_once "MOVNTPS: Ignoring non-temporal hint, modeling as cacheable!"
+    cda seg, sib, "DISPLACEMENT + 8", dataSize=8
+    stfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    stfp xmml, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVNTPS_P_XMM {
+    warn_once "MOVNTPS_P: Ignoring non-temporal hint, modeling as cacheable!"
+    rdip t7
+    cda seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    stfp xmmh, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    stfp xmml, seg, riprel, disp, dataSize=8
+};
+
+# movntpd is basically the same as movapd, excepting the caching hint and
+# ordering constraints
+# We are ignoring the non-temporal hint.
+def macroop MOVNTPD_M_XMM {
+    warn_once "MOVNTPD: Ignoring non-temporal hint, modeling as cacheable!"
+    cda seg, sib, "DISPLACEMENT + 8", dataSize=8
+    stfp xmml, seg, sib, "DISPLACEMENT", dataSize=8
+    stfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8
+};
+
+def macroop MOVNTPD_P_XMM {
+    warn_once "MOVNTPD_P: Ignoring non-temporal hint, modeling as cacheable!"
+    rdip t7
+    cda seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    stfp xmml, seg, riprel, "DISPLACEMENT", dataSize=8
+    stfp xmmh, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+};
 '''

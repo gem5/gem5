@@ -24,7 +24,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import __builtin__
+from __future__ import print_function
+
+try:
+    import builtins
+except ImportError:
+    # Python 2 fallback
+    import __builtin__ as builtins
 import inspect
 import os
 import re
@@ -64,15 +70,15 @@ class lookup(object):
         if self.formatter.globals and item in self.frame.f_globals:
             return self.frame.f_globals[item]
 
-        if item in __builtin__.__dict__:
-            return __builtin__.__dict__[item]
+        if item in builtins.__dict__:
+            return builtins.__dict__[item]
 
         try:
             item = int(item)
             return self.args[item]
         except ValueError:
             pass
-        raise IndexError, "Could not find '%s'" % item
+        raise IndexError("Could not find '%s'" % item)
 
 class code_formatter_meta(type):
     pattern = r"""
@@ -152,7 +158,7 @@ class code_formatter(object):
         self._data = []
 
     def write(self, *args):
-        f = file(os.path.join(*args), "w")
+        f = open(os.path.join(*args), "w")
         for data in self._data:
             f.write(data)
         f.close()
@@ -273,7 +279,7 @@ class code_formatter(object):
 __all__ = [ "code_formatter" ]
 
 if __name__ == '__main__':
-    from code_formatter import code_formatter
+    from .code_formatter import code_formatter
     f = code_formatter()
 
     class Foo(dict):
@@ -294,11 +300,11 @@ if __name__ == '__main__':
     f('    $y')
     f('''$__file__:$__line__
 {''')
-    f("${{', '.join(str(x) for x in xrange(4))}}")
+    f("${{', '.join(str(x) for x in range(4))}}")
     f('${x}')
     f('$x')
     f.indent()
-    for i in xrange(5):
+    for i in range(5):
         f('$x')
         f('$i')
         f('$0', "zero")
@@ -312,4 +318,4 @@ if __name__ == '__main__':
 }
 ''', 1, 9)
 
-    print f,
+    print(f, end=' ')

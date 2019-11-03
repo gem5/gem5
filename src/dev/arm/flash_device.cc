@@ -54,6 +54,7 @@
 
 #include "dev/arm/flash_device.hh"
 
+#include "base/trace.hh"
 #include "debug/Drain.hh"
 
 /**
@@ -87,7 +88,7 @@ FlashDevice::FlashDevice(const FlashDeviceParams* p):
     blocksPerDisk(0),
     planeMask(numPlanes - 1),
     planeEventQueue(numPlanes),
-    planeEvent(this)
+    planeEvent([this]{ actionComplete(); }, name())
 {
 
     /*

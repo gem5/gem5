@@ -1,3 +1,15 @@
+# Copyright (c) 2017,2019 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
@@ -29,14 +41,16 @@
 
 from m5.params import *
 from m5.proxy import *
-from MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 
-class RubyController(MemObject):
+class RubyController(ClockedObject):
     type = 'RubyController'
     cxx_class = 'AbstractController'
     cxx_header = "mem/ruby/slicc_interface/AbstractController.hh"
     abstract = True
     version = Param.Int("")
+    addr_ranges = VectorParam.AddrRange([AllMemory], "Address range this "
+                                        "controller responds to")
     cluster_id = Param.UInt32(0, "Id of this controller's cluster")
 
     transitions_per_cycle = \
@@ -46,6 +60,14 @@ class RubyController(MemObject):
     recycle_latency = Param.Cycles(10, "")
     number_of_TBEs = Param.Int(256, "")
     ruby_system = Param.RubySystem("")
+
+    # This is typically a proxy to the icache/dcache hit latency.
+    # If the latency depends on the request type or protocol-specific states,
+    # the protocol may ignore this parameter by overriding the
+    # mandatoryQueueLatency function
+    mandatory_queue_latency = \
+        Param.Cycles(1, "Default latency for requests added to the " \
+                        "mandatory queue on top-level controllers")
 
     memory = MasterPort("Port for attaching a memory controller")
     system = Param.System(Parent.any, "system object parameter")

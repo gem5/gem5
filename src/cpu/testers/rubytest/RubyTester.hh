@@ -47,13 +47,14 @@
 #include <vector>
 
 #include "cpu/testers/rubytest/CheckTable.hh"
-#include "mem/mem_object.hh"
 #include "mem/packet.hh"
+#include "mem/port.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "params/RubyTester.hh"
+#include "sim/clocked_object.hh"
 
-class RubyTester : public MemObject
+class RubyTester : public ClockedObject
 {
   public:
     class CpuPort : public MasterPort
@@ -94,8 +95,8 @@ class RubyTester : public MemObject
     RubyTester(const Params *p);
     ~RubyTester();
 
-    virtual BaseMasterPort &getMasterPort(const std::string &if_name,
-                                          PortID idx = InvalidPortID);
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     bool isInstOnlyCpuPort(int idx);
     bool isInstDataCpuPort(int idx);
@@ -103,7 +104,7 @@ class RubyTester : public MemObject
     MasterPort* getReadableCpuPort(int idx);
     MasterPort* getWritableCpuPort(int idx);
 
-    virtual void init();
+    void init() override;
 
     void wakeup();
 
@@ -118,20 +119,7 @@ class RubyTester : public MemObject
 
     MasterID masterId() { return _masterId; }
   protected:
-    class CheckStartEvent : public Event
-    {
-      private:
-        RubyTester *tester;
-
-      public:
-        CheckStartEvent(RubyTester *_tester)
-            : Event(CPU_Tick_Pri), tester(_tester)
-        {}
-        void process() { tester->wakeup(); }
-        virtual const char *description() const { return "RubyTester tick"; }
-    };
-
-    CheckStartEvent checkStartEvent;
+    EventFunctionWrapper checkStartEvent;
 
     MasterID _masterId;
 

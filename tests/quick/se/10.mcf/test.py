@@ -30,5 +30,5 @@ m5.util.addToPath('../configs/common')
 from cpu2000 import mcf
 
 workload = mcf(isa, opsys, 'smred')
-root.system.cpu[0].workload = workload.makeLiveProcess()
+root.system.cpu[0].workload = workload.makeProcess()
 root.system.physmem.range=AddrRange('256MB')

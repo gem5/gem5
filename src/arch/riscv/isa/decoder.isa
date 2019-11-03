@@ -1,0 +1,1826 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2015 RISC-V Foundation
+// Copyright (c) 2017 The University of Virginia
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Alec Roelke
+
+////////////////////////////////////////////////////////////////////
+//
+// The RISC-V ISA decoder
+//
+
+decode QUADRANT default Unknown::unknown() {
+    0x0: decode COPCODE {
+        0x0: CIOp::c_addi4spn({{
+            imm = CIMM8<1:1> << 2 |
+                  CIMM8<0:0> << 3 |
+                  CIMM8<7:6> << 4 |
+                  CIMM8<5:2> << 6;
+        }}, {{
+            if (machInst == 0)
+                fault = make_shared<IllegalInstFault>("zero instruction",
+                                                      machInst);
+            Rp2 = sp + imm;
+        }}, uint64_t);
+        format CompressedLoad {
+            0x1: c_fld({{
+                offset = CIMM3 << 3 | CIMM2 << 6;
+            }}, {{
+                Fp2_bits = Mem;
+            }}, {{
+                EA = Rp1 + offset;
+            }});
+            0x2: c_lw({{
+                offset = CIMM2<1:1> << 2 |
+                         CIMM3 << 3 |
+                         CIMM2<0:0> << 6;
+            }}, {{
+                Rp2_sd = Mem_sw;
+            }}, {{
+                EA = Rp1 + offset;
+            }});
+            0x3: c_ld({{
+                offset = CIMM3 << 3 | CIMM2 << 6;
+            }}, {{
+                Rp2_sd = Mem_sd;
+            }}, {{
+                EA = Rp1 + offset;
+            }});
+        }
+        format CompressedStore {
+            0x5: c_fsd({{
+                offset = CIMM3 << 3 | CIMM2 << 6;
+            }}, {{
+                Mem = Fp2_bits;
+            }}, {{
+                EA = Rp1 + offset;
+            }});
+            0x6: c_sw({{
+                offset = CIMM2<1:1> << 2 |
+                         CIMM3 << 3 |
+                         CIMM2<0:0> << 6;
+            }}, {{
+                Mem_uw = Rp2_uw;
+            }}, ea_code={{
+                EA = Rp1 + offset;
+            }});
+            0x7: c_sd({{
+                offset = CIMM3 << 3 | CIMM2 << 6;
+            }}, {{
+                    Mem_ud = Rp2_ud;
+            }}, {{
+                EA = Rp1 + offset;
+            }});
+        }
+    }
+    0x1: decode COPCODE {
+        format CIOp {
+            0x0: c_addi({{
+                imm = CIMM5;
+                if (CIMM1 > 0)
+                    imm |= ~((uint64_t)0x1F);
+            }}, {{
+                if ((RC1 == 0) != (imm == 0)) {
+                    if (RC1 == 0) {
+                        fault = make_shared<IllegalInstFault>("source reg x0",
+                                                              machInst);
+                    } else // imm == 0
+                        fault = make_shared<IllegalInstFault>("immediate = 0",
+                                                              machInst);
+                }
+                Rc1_sd = Rc1_sd + imm;
+            }});
+            0x1: c_addiw({{
+                imm = CIMM5;
+                if (CIMM1 > 0)
+                    imm |= ~((uint64_t)0x1F);
+            }}, {{
+                if (RC1 == 0) {
+                    fault = make_shared<IllegalInstFault>("source reg x0",
+                                                          machInst);
+                }
+                Rc1_sd = (int32_t)Rc1_sd + imm;
+            }});
+            0x2: c_li({{
+                imm = CIMM5;
+                if (CIMM1 > 0)
+                    imm |= ~((uint64_t)0x1F);
+            }}, {{
+                if (RC1 == 0) {
+                    fault = make_shared<IllegalInstFault>("source reg x0",
+                                                          machInst);
+                }
+                Rc1_sd = imm;
+            }});
+            0x3: decode RC1 {
+                0x2: c_addi16sp({{
+                    imm = CIMM5<4:4> << 4 |
+                          CIMM5<0:0> << 5 |
+                          CIMM5<3:3> << 6 |
+                          CIMM5<2:1> << 7;
+                    if (CIMM1 > 0)
+                        imm |= ~((int64_t)0x1FF);
+                }}, {{
+                    if (imm == 0) {
+                        fault = make_shared<IllegalInstFault>("immediate = 0",
+                                                              machInst);
+                    }
+                    sp_sd = sp_sd + imm;
+                }});
+                default: c_lui({{
+                    imm = CIMM5 << 12;
+                    if (CIMM1 > 0)
+                        imm |= ~((uint64_t)0x1FFFF);
+                }}, {{
+                    if (RC1 == 0 || RC1 == 2) {
+                        fault = make_shared<IllegalInstFault>("source reg x0",
+                                                              machInst);
+                    }
+                    if (imm == 0) {
+                        fault = make_shared<IllegalInstFault>("immediate = 0",
+                                                              machInst);
+                    }
+                    Rc1_sd = imm;
+                }});
+            }
+        }
+        0x4: decode CFUNCT2HIGH {
+            format CIOp {
+                0x0: c_srli({{
+                    imm = CIMM5 | (CIMM1 << 5);
+                }}, {{
+                    if (imm == 0) {
+                        fault = make_shared<IllegalInstFault>("immediate = 0",
+                                                              machInst);
+                    }
+                    Rp1 = Rp1 >> imm;
+                }}, uint64_t);
+                0x1: c_srai({{
+                    imm = CIMM5 | (CIMM1 << 5);
+                }}, {{
+                    if (imm == 0) {
+                        fault = make_shared<IllegalInstFault>("immediate = 0",
+                                                              machInst);
+                    }
+                    Rp1_sd = Rp1_sd >> imm;
+                }}, uint64_t);
+                0x2: c_andi({{
+                    imm = CIMM5;
+                    if (CIMM1 > 0)
+                        imm |= ~((uint64_t)0x1F);
+                }}, {{
+                    Rp1 = Rp1 & imm;
+                }}, uint64_t);
+            }
+            format ROp {
+                0x3: decode CFUNCT1 {
+                    0x0: decode CFUNCT2LOW {
+                        0x0: c_sub({{
+                            Rp1 = Rp1 - Rp2;
+                        }});
+                        0x1: c_xor({{
+                            Rp1 = Rp1 ^ Rp2;
+                        }});
+                        0x2: c_or({{
+                            Rp1 = Rp1 | Rp2;
+                        }});
+                        0x3: c_and({{
+                            Rp1 = Rp1 & Rp2;
+                        }});
+                    }
+                    0x1: decode CFUNCT2LOW {
+                        0x0: c_subw({{
+                            Rp1_sd = (int32_t)Rp1_sd - Rp2_sw;
+                        }});
+                        0x1: c_addw({{
+                            Rp1_sd = (int32_t)Rp1_sd + Rp2_sw;
+                        }});
+                    }
+                }
+            }
+        }
+        0x5: CJOp::c_j({{
+            NPC = PC + imm;
+        }}, IsDirectControl, IsUncondControl);
+        format CBOp {
+            0x6: c_beqz({{
+                if (Rp1 == 0)
+                    NPC = PC + imm;
+                else
+                    NPC = NPC;
+            }}, IsDirectControl, IsCondControl);
+            0x7: c_bnez({{
+                if (Rp1 != 0)
+                    NPC = PC + imm;
+                else
+                    NPC = NPC;
+            }}, IsDirectControl, IsCondControl);
+        }
+    }
+    0x2: decode COPCODE {
+        0x0: CIOp::c_slli({{
+            imm = CIMM5 | (CIMM1 << 5);
+        }}, {{
+            if (imm == 0) {
+                fault = make_shared<IllegalInstFault>("immediate = 0",
+                                                      machInst);
+            }
+            if (RC1 == 0) {
+                fault = make_shared<IllegalInstFault>("source reg x0",
+                                                      machInst);
+            }
+            Rc1 = Rc1 << imm;
+        }}, uint64_t);
+        format CompressedLoad {
+            0x1: c_fldsp({{
+                offset = CIMM5<4:3> << 3 |
+                         CIMM1 << 5 |
+                         CIMM5<2:0> << 6;
+            }}, {{
+                Fc1_bits = Mem;
+            }}, {{
+                EA = sp + offset;
+            }});
+            0x2: c_lwsp({{
+                offset = CIMM5<4:2> << 2 |
+                         CIMM1 << 5 |
+                         CIMM5<1:0> << 6;
+            }}, {{
+                if (RC1 == 0) {
+                    fault = make_shared<IllegalInstFault>("source reg x0",
+                                                          machInst);
+                }
+                Rc1_sd = Mem_sw;
+            }}, {{
+                EA = sp + offset;
+            }});
+            0x3: c_ldsp({{
+                offset = CIMM5<4:3> << 3 |
+                         CIMM1 << 5 |
+                         CIMM5<2:0> << 6;
+            }}, {{
+                if (RC1 == 0) {
+                    fault = make_shared<IllegalInstFault>("source reg x0",
+                                                          machInst);
+                }
+                Rc1_sd = Mem_sd;
+            }}, {{
+                EA = sp + offset;
+            }});
+        }
+        0x4: decode CFUNCT1 {
+            0x0: decode RC2 {
+                0x0: Jump::c_jr({{
+                    if (RC1 == 0) {
+                        fault = make_shared<IllegalInstFault>("source reg x0",
+                                                              machInst);
+                    }
+                    NPC = Rc1;
+                }}, IsIndirectControl, IsUncondControl, IsCall);
+                default: CROp::c_mv({{
+                    if (RC1 == 0) {
+                        fault = make_shared<IllegalInstFault>("source reg x0",
+                                                              machInst);
+                    }
+                    Rc1 = Rc2;
+                }});
+            }
+            0x1: decode RC1 {
+                0x0: SystemOp::c_ebreak({{
+                    if (RC2 != 0) {
+                        fault = make_shared<IllegalInstFault>("source reg x1",
+                                                              machInst);
+                    }
+                    fault = make_shared<BreakpointFault>(xc->pcState());
+                }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                default: decode RC2 {
+                    0x0: Jump::c_jalr({{
+                        if (RC1 == 0) {
+                            fault = make_shared<IllegalInstFault>
+                                                        ("source reg x0",
+                                                         machInst);
+                        }
+                        ra = NPC;
+                        NPC = Rc1;
+                    }}, IsIndirectControl, IsUncondControl, IsCall);
+                    default: ROp::c_add({{
+                        Rc1_sd = Rc1_sd + Rc2_sd;
+                    }});
+                }
+            }
+        }
+        format CompressedStore {
+            0x5: c_fsdsp({{
+                offset = CIMM6<5:3> << 3 |
+                         CIMM6<2:0> << 6;
+            }}, {{
+                Mem_ud = Fc2_bits;
+            }}, {{
+                EA = sp + offset;
+            }});
+            0x6: c_swsp({{
+                offset = CIMM6<5:2> << 2 |
+                         CIMM6<1:0> << 6;
+            }}, {{
+                Mem_uw = Rc2_uw;
+            }}, {{
+                EA = sp + offset;
+            }});
+            0x7: c_sdsp({{
+                offset = CIMM6<5:3> << 3 |
+                         CIMM6<2:0> << 6;
+            }}, {{
+                Mem = Rc2;
+            }}, {{
+                EA = sp + offset;
+            }});
+        }
+    }
+    0x3: decode OPCODE {
+        0x00: decode FUNCT3 {
+            format Load {
+                0x0: lb({{
+                    Rd_sd = Mem_sb;
+                }});
+                0x1: lh({{
+                    Rd_sd = Mem_sh;
+                }});
+                0x2: lw({{
+                    Rd_sd = Mem_sw;
+                }});
+                0x3: ld({{
+                    Rd_sd = Mem_sd;
+                }});
+                0x4: lbu({{
+                    Rd = Mem_ub;
+                }});
+                0x5: lhu({{
+                    Rd = Mem_uh;
+                }});
+                0x6: lwu({{
+                    Rd = Mem_uw;
+                }});
+            }
+        }
+
+        0x01: decode FUNCT3 {
+            format Load {
+                0x2: flw({{
+                    Fd_bits = (uint64_t)Mem_uw;
+                }}, inst_flags=FloatMemReadOp);
+                0x3: fld({{
+                    Fd_bits = Mem;
+                }}, inst_flags=FloatMemReadOp);
+            }
+        }
+
+        0x03: decode FUNCT3 {
+            format IOp {
+                0x0: fence({{
+                }}, uint64_t, IsMemBarrier, No_OpClass);
+                0x1: fence_i({{
+                }}, uint64_t, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+            }
+        }
+
+        0x04: decode FUNCT3 {
+            format IOp {
+                0x0: addi({{
+                    Rd_sd = Rs1_sd + imm;
+                }});
+                0x1: slli({{
+                    Rd = Rs1 << SHAMT6;
+                }});
+                0x2: slti({{
+                    Rd = (Rs1_sd < imm) ? 1 : 0;
+                }});
+                0x3: sltiu({{
+                    Rd = (Rs1 < imm) ? 1 : 0;
+                }}, uint64_t);
+                0x4: xori({{
+                    Rd = Rs1 ^ imm;
+                }}, uint64_t);
+                0x5: decode SRTYPE {
+                    0x0: srli({{
+                        Rd = Rs1 >> SHAMT6;
+                    }});
+                    0x1: srai({{
+                        Rd_sd = Rs1_sd >> SHAMT6;
+                    }});
+                }
+                0x6: ori({{
+                    Rd = Rs1 | imm;
+                }}, uint64_t);
+                0x7: andi({{
+                    Rd = Rs1 & imm;
+                }}, uint64_t);
+            }
+        }
+
+        0x05: UOp::auipc({{
+            Rd = PC + imm;
+        }});
+
+        0x06: decode FUNCT3 {
+            format IOp {
+                0x0: addiw({{
+                    Rd_sd = Rs1_sw + imm;
+                }}, int32_t);
+                0x1: slliw({{
+                    Rd_sd = Rs1_sw << SHAMT5;
+                }});
+                0x5: decode SRTYPE {
+                    0x0: srliw({{
+                        Rd_sd = (int32_t)(Rs1_uw >> SHAMT5);
+                    }});
+                    0x1: sraiw({{
+                        Rd_sd = Rs1_sw >> SHAMT5;
+                    }});
+                }
+            }
+        }
+
+        0x08: decode FUNCT3 {
+            format Store {
+                0x0: sb({{
+                    Mem_ub = Rs2_ub;
+                }});
+                0x1: sh({{
+                    Mem_uh = Rs2_uh;
+                }});
+                0x2: sw({{
+                    Mem_uw = Rs2_uw;
+                }});
+                0x3: sd({{
+                    Mem_ud = Rs2_ud;
+                }});
+            }
+        }
+
+        0x09: decode FUNCT3 {
+            format Store {
+                0x2: fsw({{
+                    Mem_uw = (uint32_t)Fs2_bits;
+                }}, inst_flags=FloatMemWriteOp);
+                0x3: fsd({{
+                    Mem_ud = Fs2_bits;
+                }}, inst_flags=FloatMemWriteOp);
+            }
+        }
+
+        0x0b: decode FUNCT3 {
+            0x2: decode AMOFUNCT {
+                0x2: LoadReserved::lr_w({{
+                    Rd_sd = Mem_sw;
+                }}, mem_flags=LLSC);
+                0x3: StoreCond::sc_w({{
+                    Mem_uw = Rs2_uw;
+                }}, {{
+                    Rd = result;
+                }}, inst_flags=IsStoreConditional, mem_flags=LLSC);
+                0x0: AtomicMemOp::amoadd_w({{
+                    Rd_sd = Mem_sw;
+                }}, {{
+                    TypedAtomicOpFunctor<int32_t> *amo_op =
+                          new AtomicGenericOp<int32_t>(Rs2_sw,
+                                  [](int32_t* b, int32_t a){ *b += a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x1: AtomicMemOp::amoswap_w({{
+                    Rd_sd = Mem_sw;
+                }}, {{
+                    TypedAtomicOpFunctor<uint32_t> *amo_op =
+                          new AtomicGenericOp<uint32_t>(Rs2_uw,
+                                  [](uint32_t* b, uint32_t a){ *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x4: AtomicMemOp::amoxor_w({{
+                    Rd_sd = Mem_sw;
+                }}, {{
+                    TypedAtomicOpFunctor<uint32_t> *amo_op =
+                          new AtomicGenericOp<uint32_t>(Rs2_uw,
+                                  [](uint32_t* b, uint32_t a){ *b ^= a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x8: AtomicMemOp::amoor_w({{
+                    Rd_sd = Mem_sw;
+                }}, {{
+                    TypedAtomicOpFunctor<uint32_t> *amo_op =
+                          new AtomicGenericOp<uint32_t>(Rs2_uw,
+                                  [](uint32_t* b, uint32_t a){ *b |= a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0xc: AtomicMemOp::amoand_w({{
+                    Rd_sd = Mem_sw;
+                }}, {{
+                    TypedAtomicOpFunctor<uint32_t> *amo_op =
+                          new AtomicGenericOp<uint32_t>(Rs2_uw,
+                                  [](uint32_t* b, uint32_t a){ *b &= a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x10: AtomicMemOp::amomin_w({{
+                    Rd_sd = Mem_sw;
+                }}, {{
+                    TypedAtomicOpFunctor<int32_t> *amo_op =
+                      new AtomicGenericOp<int32_t>(Rs2_sw,
+                        [](int32_t* b, int32_t a){ if (a < *b) *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x14: AtomicMemOp::amomax_w({{
+                    Rd_sd = Mem_sw;
+                }}, {{
+                    TypedAtomicOpFunctor<int32_t> *amo_op =
+                      new AtomicGenericOp<int32_t>(Rs2_sw,
+                        [](int32_t* b, int32_t a){ if (a > *b) *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x18: AtomicMemOp::amominu_w({{
+                    Rd_sd = Mem_sw;
+                }}, {{
+                    TypedAtomicOpFunctor<uint32_t> *amo_op =
+                      new AtomicGenericOp<uint32_t>(Rs2_uw,
+                        [](uint32_t* b, uint32_t a){ if (a < *b) *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x1c: AtomicMemOp::amomaxu_w({{
+                    Rd_sd = Mem_sw;
+                }}, {{
+                    TypedAtomicOpFunctor<uint32_t> *amo_op =
+                      new AtomicGenericOp<uint32_t>(Rs2_uw,
+                        [](uint32_t* b, uint32_t a){ if (a > *b) *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+            }
+            0x3: decode AMOFUNCT {
+                0x2: LoadReserved::lr_d({{
+                    Rd_sd = Mem_sd;
+                }}, mem_flags=LLSC);
+                0x3: StoreCond::sc_d({{
+                    Mem = Rs2;
+                }}, {{
+                    Rd = result;
+                }}, mem_flags=LLSC, inst_flags=IsStoreConditional);
+                0x0: AtomicMemOp::amoadd_d({{
+                    Rd_sd = Mem_sd;
+                }}, {{
+                    TypedAtomicOpFunctor<int64_t> *amo_op =
+                          new AtomicGenericOp<int64_t>(Rs2_sd,
+                                  [](int64_t* b, int64_t a){ *b += a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x1: AtomicMemOp::amoswap_d({{
+                    Rd_sd = Mem_sd;
+                }}, {{
+                    TypedAtomicOpFunctor<uint64_t> *amo_op =
+                          new AtomicGenericOp<uint64_t>(Rs2_ud,
+                                  [](uint64_t* b, uint64_t a){ *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x4: AtomicMemOp::amoxor_d({{
+                    Rd_sd = Mem_sd;
+                }}, {{
+                    TypedAtomicOpFunctor<uint64_t> *amo_op =
+                          new AtomicGenericOp<uint64_t>(Rs2_ud,
+                                 [](uint64_t* b, uint64_t a){ *b ^= a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x8: AtomicMemOp::amoor_d({{
+                    Rd_sd = Mem_sd;
+                }}, {{
+                    TypedAtomicOpFunctor<uint64_t> *amo_op =
+                          new AtomicGenericOp<uint64_t>(Rs2_ud,
+                                 [](uint64_t* b, uint64_t a){ *b |= a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0xc: AtomicMemOp::amoand_d({{
+                    Rd_sd = Mem_sd;
+                }}, {{
+                    TypedAtomicOpFunctor<uint64_t> *amo_op =
+                          new AtomicGenericOp<uint64_t>(Rs2_ud,
+                                 [](uint64_t* b, uint64_t a){ *b &= a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x10: AtomicMemOp::amomin_d({{
+                    Rd_sd = Mem_sd;
+                }}, {{
+                    TypedAtomicOpFunctor<int64_t> *amo_op =
+                      new AtomicGenericOp<int64_t>(Rs2_sd,
+                        [](int64_t* b, int64_t a){ if (a < *b) *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x14: AtomicMemOp::amomax_d({{
+                    Rd_sd = Mem_sd;
+                }}, {{
+                    TypedAtomicOpFunctor<int64_t> *amo_op =
+                      new AtomicGenericOp<int64_t>(Rs2_sd,
+                        [](int64_t* b, int64_t a){ if (a > *b) *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x18: AtomicMemOp::amominu_d({{
+                    Rd_sd = Mem_sd;
+                }}, {{
+                    TypedAtomicOpFunctor<uint64_t> *amo_op =
+                      new AtomicGenericOp<uint64_t>(Rs2_ud,
+                        [](uint64_t* b, uint64_t a){ if (a < *b) *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x1c: AtomicMemOp::amomaxu_d({{
+                    Rd_sd = Mem_sd;
+                }}, {{
+                    TypedAtomicOpFunctor<uint64_t> *amo_op =
+                      new AtomicGenericOp<uint64_t>(Rs2_ud,
+                        [](uint64_t* b, uint64_t a){ if (a > *b) *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+            }
+        }
+        0x0c: decode FUNCT3 {
+            format ROp {
+                0x0: decode FUNCT7 {
+                    0x0: add({{
+                        Rd = Rs1_sd + Rs2_sd;
+                    }});
+                    0x1: mul({{
+                        Rd = Rs1_sd*Rs2_sd;
+                    }}, IntMultOp);
+                    0x20: sub({{
+                        Rd = Rs1_sd - Rs2_sd;
+                    }});
+                }
+                0x1: decode FUNCT7 {
+                    0x0: sll({{
+                        Rd = Rs1 << Rs2<5:0>;
+                    }});
+                    0x1: mulh({{
+                        bool negate = (Rs1_sd < 0) != (Rs2_sd < 0);
+
+                        uint64_t Rs1_lo = (uint32_t)abs(Rs1_sd);
+                        uint64_t Rs1_hi = (uint64_t)abs(Rs1_sd) >> 32;
+                        uint64_t Rs2_lo = (uint32_t)abs(Rs2_sd);
+                        uint64_t Rs2_hi = (uint64_t)abs(Rs2_sd) >> 32;
+
+                        uint64_t hi = Rs1_hi*Rs2_hi;
+                        uint64_t mid1 = Rs1_hi*Rs2_lo;
+                        uint64_t mid2 = Rs1_lo*Rs2_hi;
+                        uint64_t lo = Rs2_lo*Rs1_lo;
+                        uint64_t carry = ((uint64_t)(uint32_t)mid1
+                                + (uint64_t)(uint32_t)mid2 + (lo >> 32)) >> 32;
+
+                        uint64_t res = hi +
+                                       (mid1 >> 32) +
+                                       (mid2 >> 32) +
+                                       carry;
+                        Rd = negate ? ~res + (Rs1_sd*Rs2_sd == 0 ? 1 : 0)
+                                    : res;
+                    }}, IntMultOp);
+                }
+                0x2: decode FUNCT7 {
+                    0x0: slt({{
+                        Rd = (Rs1_sd < Rs2_sd) ? 1 : 0;
+                    }});
+                    0x1: mulhsu({{
+                        bool negate = Rs1_sd < 0;
+                        uint64_t Rs1_lo = (uint32_t)abs(Rs1_sd);
+                        uint64_t Rs1_hi = (uint64_t)abs(Rs1_sd) >> 32;
+                        uint64_t Rs2_lo = (uint32_t)Rs2;
+                        uint64_t Rs2_hi = Rs2 >> 32;
+
+                        uint64_t hi = Rs1_hi*Rs2_hi;
+                        uint64_t mid1 = Rs1_hi*Rs2_lo;
+                        uint64_t mid2 = Rs1_lo*Rs2_hi;
+                        uint64_t lo = Rs1_lo*Rs2_lo;
+                        uint64_t carry = ((uint64_t)(uint32_t)mid1
+                                + (uint64_t)(uint32_t)mid2 + (lo >> 32)) >> 32;
+
+                        uint64_t res = hi +
+                                       (mid1 >> 32) +
+                                       (mid2 >> 32) +
+                                       carry;
+                        Rd = negate ? ~res + (Rs1_sd*Rs2 == 0 ? 1 : 0) : res;
+                    }}, IntMultOp);
+                }
+                0x3: decode FUNCT7 {
+                    0x0: sltu({{
+                        Rd = (Rs1 < Rs2) ? 1 : 0;
+                    }});
+                    0x1: mulhu({{
+                        uint64_t Rs1_lo = (uint32_t)Rs1;
+                        uint64_t Rs1_hi = Rs1 >> 32;
+                        uint64_t Rs2_lo = (uint32_t)Rs2;
+                        uint64_t Rs2_hi = Rs2 >> 32;
+
+                        uint64_t hi = Rs1_hi*Rs2_hi;
+                        uint64_t mid1 = Rs1_hi*Rs2_lo;
+                        uint64_t mid2 = Rs1_lo*Rs2_hi;
+                        uint64_t lo = Rs1_lo*Rs2_lo;
+                        uint64_t carry = ((uint64_t)(uint32_t)mid1
+                                + (uint64_t)(uint32_t)mid2 + (lo >> 32)) >> 32;
+
+                        Rd = hi + (mid1 >> 32) + (mid2 >> 32) + carry;
+                    }}, IntMultOp);
+                }
+                0x4: decode FUNCT7 {
+                    0x0: xor({{
+                        Rd = Rs1 ^ Rs2;
+                    }});
+                    0x1: div({{
+                        if (Rs2_sd == 0) {
+                            Rd_sd = -1;
+                        } else if (Rs1_sd == numeric_limits<int64_t>::min()
+                                && Rs2_sd == -1) {
+                            Rd_sd = numeric_limits<int64_t>::min();
+                        } else {
+                            Rd_sd = Rs1_sd/Rs2_sd;
+                        }
+                    }}, IntDivOp);
+                }
+                0x5: decode FUNCT7 {
+                    0x0: srl({{
+                        Rd = Rs1 >> Rs2<5:0>;
+                    }});
+                    0x1: divu({{
+                        if (Rs2 == 0) {
+                            Rd = numeric_limits<uint64_t>::max();
+                        } else {
+                            Rd = Rs1/Rs2;
+                        }
+                    }}, IntDivOp);
+                    0x20: sra({{
+                        Rd_sd = Rs1_sd >> Rs2<5:0>;
+                    }});
+                }
+                0x6: decode FUNCT7 {
+                    0x0: or({{
+                        Rd = Rs1 | Rs2;
+                    }});
+                    0x1: rem({{
+                        if (Rs2_sd == 0) {
+                            Rd = Rs1_sd;
+                        } else if (Rs1_sd == numeric_limits<int64_t>::min()
+                                && Rs2_sd == -1) {
+                            Rd = 0;
+                        } else {
+                            Rd = Rs1_sd%Rs2_sd;
+                        }
+                    }}, IntDivOp);
+                }
+                0x7: decode FUNCT7 {
+                    0x0: and({{
+                        Rd = Rs1 & Rs2;
+                    }});
+                    0x1: remu({{
+                        if (Rs2 == 0) {
+                            Rd = Rs1;
+                        } else {
+                            Rd = Rs1%Rs2;
+                        }
+                    }}, IntDivOp);
+                }
+            }
+        }
+
+        0x0d: UOp::lui({{
+            Rd = (uint64_t)imm;
+        }});
+
+        0x0e: decode FUNCT3 {
+            format ROp {
+                0x0: decode FUNCT7 {
+                    0x0: addw({{
+                        Rd_sd = Rs1_sw + Rs2_sw;
+                    }});
+                    0x1: mulw({{
+                        Rd_sd = (int32_t)(Rs1_sw*Rs2_sw);
+                    }}, IntMultOp);
+                    0x20: subw({{
+                        Rd_sd = Rs1_sw - Rs2_sw;
+                    }});
+                }
+                0x1: sllw({{
+                    Rd_sd = Rs1_sw << Rs2<4:0>;
+                }});
+                0x4: divw({{
+                    if (Rs2_sw == 0) {
+                        Rd_sd = -1;
+                    } else if (Rs1_sw == numeric_limits<int32_t>::min()
+                            && Rs2_sw == -1) {
+                        Rd_sd = numeric_limits<int32_t>::min();
+                    } else {
+                        Rd_sd = Rs1_sw/Rs2_sw;
+                    }
+                }}, IntDivOp);
+                0x5: decode FUNCT7 {
+                    0x0: srlw({{
+                        Rd_sd = (int32_t)(Rs1_uw >> Rs2<4:0>);
+                    }});
+                    0x1: divuw({{
+                        if (Rs2_uw == 0) {
+                            Rd_sd = numeric_limits<uint64_t>::max();
+                        } else {
+                            Rd_sd = (int32_t)(Rs1_uw/Rs2_uw);
+                        }
+                    }}, IntDivOp);
+                    0x20: sraw({{
+                        Rd_sd = Rs1_sw >> Rs2<4:0>;
+                    }});
+                }
+                0x6: remw({{
+                    if (Rs2_sw == 0) {
+                        Rd_sd = Rs1_sw;
+                    } else if (Rs1_sw == numeric_limits<int32_t>::min()
+                            && Rs2_sw == -1) {
+                        Rd_sd = 0;
+                    } else {
+                        Rd_sd = Rs1_sw%Rs2_sw;
+                    }
+                }}, IntDivOp);
+                0x7: remuw({{
+                    if (Rs2_uw == 0) {
+                        Rd_sd = (int32_t)Rs1_uw;
+                    } else {
+                        Rd_sd = (int32_t)(Rs1_uw%Rs2_uw);
+                    }
+                }}, IntDivOp);
+            }
+        }
+
+        format FPROp {
+            0x10: decode FUNCT2 {
+                0x0: fmadd_s({{
+                    uint32_t temp;
+                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+                    float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
+                    float fd;
+
+                    if (std::isnan(fs1) || std::isnan(fs2) ||
+                            std::isnan(fs3)) {
+                        if (issignalingnan(fs1) || issignalingnan(fs2)
+                                || issignalingnan(fs3)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        fd = numeric_limits<float>::quiet_NaN();
+                    } else if (std::isinf(fs1) || std::isinf(fs2) ||
+                            std::isinf(fs3)) {
+                        if (signbit(fs1) == signbit(fs2)
+                                && !std::isinf(fs3)) {
+                            fd = numeric_limits<float>::infinity();
+                        } else if (signbit(fs1) != signbit(fs2)
+                                && !std::isinf(fs3)) {
+                            fd = -numeric_limits<float>::infinity();
+                        } else { // Fs3_sf is infinity
+                            fd = fs3;
+                        }
+                    } else {
+                        fd = fs1*fs2 + fs3;
+                    }
+                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                }}, FloatMultAccOp);
+                0x1: fmadd_d({{
+                    if (std::isnan(Fs1) || std::isnan(Fs2) ||
+                            std::isnan(Fs3)) {
+                        if (issignalingnan(Fs1) || issignalingnan(Fs2)
+                                || issignalingnan(Fs3)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        Fd = numeric_limits<double>::quiet_NaN();
+                    } else if (std::isinf(Fs1) || std::isinf(Fs2) ||
+                            std::isinf(Fs3)) {
+                        if (signbit(Fs1) == signbit(Fs2)
+                                && !std::isinf(Fs3)) {
+                            Fd = numeric_limits<double>::infinity();
+                        } else if (signbit(Fs1) != signbit(Fs2)
+                                && !std::isinf(Fs3)) {
+                            Fd = -numeric_limits<double>::infinity();
+                        } else {
+                            Fd = Fs3;
+                        }
+                    } else {
+                        Fd = Fs1*Fs2 + Fs3;
+                    }
+                }}, FloatMultAccOp);
+            }
+            0x11: decode FUNCT2 {
+                0x0: fmsub_s({{
+                    uint32_t temp;
+                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+                    float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
+                    float fd;
+
+                    if (std::isnan(fs1) || std::isnan(fs2) ||
+                            std::isnan(fs3)) {
+                        if (issignalingnan(fs1) || issignalingnan(fs2)
+                                || issignalingnan(fs3)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        fd = numeric_limits<float>::quiet_NaN();
+                    } else if (std::isinf(fs1) || std::isinf(fs2) ||
+                            std::isinf(fs3)) {
+                        if (signbit(fs1) == signbit(fs2)
+                                && !std::isinf(fs3)) {
+                            fd = numeric_limits<float>::infinity();
+                        } else if (signbit(fs1) != signbit(fs2)
+                                && !std::isinf(fs3)) {
+                            fd = -numeric_limits<float>::infinity();
+                        } else { // Fs3_sf is infinity
+                            fd = -fs3;
+                        }
+                    } else {
+                        fd = fs1*fs2 - fs3;
+                    }
+                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                }}, FloatMultAccOp);
+                0x1: fmsub_d({{
+                    if (std::isnan(Fs1) || std::isnan(Fs2) ||
+                            std::isnan(Fs3)) {
+                        if (issignalingnan(Fs1) || issignalingnan(Fs2)
+                                || issignalingnan(Fs3)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        Fd = numeric_limits<double>::quiet_NaN();
+                    } else if (std::isinf(Fs1) || std::isinf(Fs2) ||
+                            std::isinf(Fs3)) {
+                        if (signbit(Fs1) == signbit(Fs2)
+                                && !std::isinf(Fs3)) {
+                            Fd = numeric_limits<double>::infinity();
+                        } else if (signbit(Fs1) != signbit(Fs2)
+                                && !std::isinf(Fs3)) {
+                            Fd = -numeric_limits<double>::infinity();
+                        } else {
+                            Fd = -Fs3;
+                        }
+                    } else {
+                        Fd = Fs1*Fs2 - Fs3;
+                    }
+                }}, FloatMultAccOp);
+            }
+            0x12: decode FUNCT2 {
+                0x0: fnmsub_s({{
+                    uint32_t temp;
+                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+                    float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
+                    float fd;
+
+                    if (std::isnan(fs1) || std::isnan(fs2) ||
+                            std::isnan(fs3)) {
+                        if (issignalingnan(fs1) || issignalingnan(fs2)
+                                || issignalingnan(fs3)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        fd = numeric_limits<float>::quiet_NaN();
+                    } else if (std::isinf(fs1) || std::isinf(fs2) ||
+                            std::isinf(fs3)) {
+                        if (signbit(fs1) == signbit(fs2)
+                                && !std::isinf(fs3)) {
+                            fd = -numeric_limits<float>::infinity();
+                        } else if (signbit(fs1) != signbit(fs2)
+                                && !std::isinf(fs3)) {
+                            fd = numeric_limits<float>::infinity();
+                        } else { // Fs3_sf is infinity
+                            fd = fs3;
+                        }
+                    } else {
+                        fd = -(fs1*fs2 - fs3);
+                    }
+                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                }}, FloatMultAccOp);
+                0x1: fnmsub_d({{
+                    if (std::isnan(Fs1) || std::isnan(Fs2) ||
+                            std::isnan(Fs3)) {
+                        if (issignalingnan(Fs1) || issignalingnan(Fs2)
+                                || issignalingnan(Fs3)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        Fd = numeric_limits<double>::quiet_NaN();
+                    } else if (std::isinf(Fs1) || std::isinf(Fs2)
+                            || std::isinf(Fs3)) {
+                        if (signbit(Fs1) == signbit(Fs2)
+                                && !std::isinf(Fs3)) {
+                            Fd = -numeric_limits<double>::infinity();
+                        } else if (signbit(Fs1) != signbit(Fs2)
+                                && !std::isinf(Fs3)) {
+                            Fd = numeric_limits<double>::infinity();
+                        } else {
+                            Fd = Fs3;
+                        }
+                    } else {
+                        Fd = -(Fs1*Fs2 - Fs3);
+                    }
+                }}, FloatMultAccOp);
+            }
+            0x13: decode FUNCT2 {
+                0x0: fnmadd_s({{
+                    uint32_t temp;
+                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+                    float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
+                    float fd;
+
+                    if (std::isnan(fs1) || std::isnan(fs2) ||
+                            std::isnan(fs3)) {
+                        if (issignalingnan(fs1) || issignalingnan(fs2)
+                                || issignalingnan(fs3)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        fd = numeric_limits<float>::quiet_NaN();
+                    } else if (std::isinf(fs1) || std::isinf(fs2) ||
+                            std::isinf(fs3)) {
+                        if (signbit(fs1) == signbit(fs2)
+                                && !std::isinf(fs3)) {
+                            fd = -numeric_limits<float>::infinity();
+                        } else if (signbit(fs1) != signbit(fs2)
+                                && !std::isinf(fs3)) {
+                            fd = numeric_limits<float>::infinity();
+                        } else { // Fs3_sf is infinity
+                            fd = -fs3;
+                        }
+                    } else {
+                        fd = -(fs1*fs2 + fs3);
+                    }
+                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                }}, FloatMultAccOp);
+                0x1: fnmadd_d({{
+                    if (std::isnan(Fs1) || std::isnan(Fs2) ||
+                            std::isnan(Fs3)) {
+                        if (issignalingnan(Fs1) || issignalingnan(Fs2)
+                                || issignalingnan(Fs3)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        Fd = numeric_limits<double>::quiet_NaN();
+                    } else if (std::isinf(Fs1) || std::isinf(Fs2) ||
+                            std::isinf(Fs3)) {
+                        if (signbit(Fs1) == signbit(Fs2)
+                                && !std::isinf(Fs3)) {
+                            Fd = -numeric_limits<double>::infinity();
+                        } else if (signbit(Fs1) != signbit(Fs2)
+                                && !std::isinf(Fs3)) {
+                            Fd = numeric_limits<double>::infinity();
+                        } else {
+                            Fd = -Fs3;
+                        }
+                    } else {
+                        Fd = -(Fs1*Fs2 + Fs3);
+                    }
+                }}, FloatMultAccOp);
+            }
+            0x14: decode FUNCT7 {
+                0x0: fadd_s({{
+                    uint32_t temp;
+                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+                    float fd;
+
+                    if (std::isnan(fs1) || std::isnan(fs2)) {
+                        if (issignalingnan(fs1) || issignalingnan(fs2)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        fd = numeric_limits<float>::quiet_NaN();
+                    } else {
+                        fd = fs1 + fs2;
+                    }
+                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                }}, FloatAddOp);
+                0x1: fadd_d({{
+                    if (std::isnan(Fs1) || std::isnan(Fs2)) {
+                        if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        Fd = numeric_limits<double>::quiet_NaN();
+                    } else {
+                        Fd = Fs1 + Fs2;
+                    }
+                }}, FloatAddOp);
+                0x4: fsub_s({{
+                    uint32_t temp;
+                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+                    float fd;
+
+                    if (std::isnan(fs1) || std::isnan(fs2)) {
+                        if (issignalingnan(fs1) || issignalingnan(fs2)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        fd = numeric_limits<float>::quiet_NaN();
+                    } else {
+                        fd = fs1 - fs2;
+                    }
+                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                }}, FloatAddOp);
+                0x5: fsub_d({{
+                    if (std::isnan(Fs1) || std::isnan(Fs2)) {
+                        if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        Fd = numeric_limits<double>::quiet_NaN();
+                    } else {
+                        Fd = Fs1 - Fs2;
+                    }
+                }}, FloatAddOp);
+                0x8: fmul_s({{
+                    uint32_t temp;
+                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+                    float fd;
+
+                    if (std::isnan(fs1) || std::isnan(fs2)) {
+                        if (issignalingnan(fs1) || issignalingnan(fs2)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        fd = numeric_limits<float>::quiet_NaN();
+                    } else {
+                        fd = fs1*fs2;
+                    }
+                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                }}, FloatMultOp);
+                0x9: fmul_d({{
+                    if (std::isnan(Fs1) || std::isnan(Fs2)) {
+                        if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        Fd = numeric_limits<double>::quiet_NaN();
+                    } else {
+                        Fd = Fs1*Fs2;
+                    }
+                }}, FloatMultOp);
+                0xc: fdiv_s({{
+                    uint32_t temp;
+                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+                    float fd;
+
+                    if (std::isnan(fs1) || std::isnan(fs2)) {
+                        if (issignalingnan(fs1) || issignalingnan(fs2)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        fd = numeric_limits<float>::quiet_NaN();
+                    } else {
+                        fd = fs1/fs2;
+                    }
+                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                }}, FloatDivOp);
+                0xd: fdiv_d({{
+                    if (std::isnan(Fs1) || std::isnan(Fs2)) {
+                        if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        Fd = numeric_limits<double>::quiet_NaN();
+                    } else {
+                        Fd = Fs1/Fs2;
+                    }
+                }}, FloatDivOp);
+                0x10: decode ROUND_MODE {
+                    0x0: fsgnj_s({{
+                        uint32_t temp;
+                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+                        float fd;
+
+                        if (issignalingnan(fs1)) {
+                            fd = numeric_limits<float>::signaling_NaN();
+                            feclearexcept(FE_INVALID);
+                        } else {
+                            fd = copysign(fs1, fs2);
+                        }
+                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    }}, FloatMiscOp);
+                    0x1: fsgnjn_s({{
+                        uint32_t temp;
+                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+                        float fd;
+
+                        if (issignalingnan(fs1)) {
+                            fd = numeric_limits<float>::signaling_NaN();
+                            feclearexcept(FE_INVALID);
+                        } else {
+                            fd = copysign(fs1, -fs2);
+                        }
+                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    }}, FloatMiscOp);
+                    0x2: fsgnjx_s({{
+                        uint32_t temp;
+                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+                        float fd;
+
+                        if (issignalingnan(fs1)) {
+                            fd = numeric_limits<float>::signaling_NaN();
+                            feclearexcept(FE_INVALID);
+                        } else {
+                            fd = fs1*(signbit(fs2) ? -1.0 : 1.0);
+                        }
+                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    }}, FloatMiscOp);
+                }
+                0x11: decode ROUND_MODE {
+                    0x0: fsgnj_d({{
+                        if (issignalingnan(Fs1)) {
+                            Fd = numeric_limits<double>::signaling_NaN();
+                            feclearexcept(FE_INVALID);
+                        } else {
+                            Fd = copysign(Fs1, Fs2);
+                        }
+                    }}, FloatMiscOp);
+                    0x1: fsgnjn_d({{
+                        if (issignalingnan(Fs1)) {
+                            Fd = numeric_limits<double>::signaling_NaN();
+                            feclearexcept(FE_INVALID);
+                        } else {
+                            Fd = copysign(Fs1, -Fs2);
+                        }
+                    }}, FloatMiscOp);
+                    0x2: fsgnjx_d({{
+                        if (issignalingnan(Fs1)) {
+                            Fd = numeric_limits<double>::signaling_NaN();
+                            feclearexcept(FE_INVALID);
+                        } else {
+                            Fd = Fs1*(signbit(Fs2) ? -1.0 : 1.0);
+                        }
+                    }}, FloatMiscOp);
+                }
+                0x14: decode ROUND_MODE {
+                    0x0: fmin_s({{
+                        uint32_t temp;
+                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+                        float fd;
+
+                        if (issignalingnan(fs2)) {
+                            fd = fs1;
+                            FFLAGS |= FloatInvalid;
+                        } else if (issignalingnan(fs1)) {
+                            fd = fs2;
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            fd = fmin(fs1, fs2);
+                        }
+                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    }}, FloatCmpOp);
+                    0x1: fmax_s({{
+                        uint32_t temp;
+                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+                        float fd;
+
+                        if (issignalingnan(fs2)) {
+                            fd = fs1;
+                            FFLAGS |= FloatInvalid;
+                        } else if (issignalingnan(fs1)) {
+                            fd = fs2;
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            fd = fmax(fs1, fs2);
+                        }
+                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    }}, FloatCmpOp);
+                }
+                0x15: decode ROUND_MODE {
+                    0x0: fmin_d({{
+                        if (issignalingnan(Fs2)) {
+                            Fd = Fs1;
+                            FFLAGS |= FloatInvalid;
+                        } else if (issignalingnan(Fs1)) {
+                            Fd = Fs2;
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            Fd = fmin(Fs1, Fs2);
+                        }
+                    }}, FloatCmpOp);
+                    0x1: fmax_d({{
+                        if (issignalingnan(Fs2)) {
+                            Fd = Fs1;
+                            FFLAGS |= FloatInvalid;
+                        } else if (issignalingnan(Fs1)) {
+                            Fd = Fs2;
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            Fd = fmax(Fs1, Fs2);
+                        }
+                    }}, FloatCmpOp);
+                }
+                0x20: fcvt_s_d({{
+                    if (CONV_SGN != 1) {
+                        fault = make_shared<IllegalInstFault>("CONV_SGN != 1",
+                                                              machInst);
+                    }
+                    float fd;
+                    if (issignalingnan(Fs1)) {
+                        fd = numeric_limits<float>::quiet_NaN();
+                        FFLAGS |= FloatInvalid;
+                    } else {
+                        fd = (float)Fs1;
+                    }
+                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                }}, FloatCvtOp);
+                0x21: fcvt_d_s({{
+                    if (CONV_SGN != 0) {
+                        fault = make_shared<IllegalInstFault>("CONV_SGN != 0",
+                                                              machInst);
+                    }
+                    uint32_t temp;
+                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+
+                    if (issignalingnan(fs1)) {
+                        Fd = numeric_limits<double>::quiet_NaN();
+                        FFLAGS |= FloatInvalid;
+                    } else {
+                        Fd = (double)fs1;
+                    }
+                }}, FloatCvtOp);
+                0x2c: fsqrt_s({{
+                    if (RS2 != 0) {
+                        fault = make_shared<IllegalInstFault>("source reg x1",
+                                                              machInst);
+                    }
+                    uint32_t temp;
+                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                    float fd;
+
+                    if (issignalingnan(Fs1_sf)) {
+                        FFLAGS |= FloatInvalid;
+                    }
+                    fd = sqrt(fs1);
+                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                }}, FloatSqrtOp);
+                0x2d: fsqrt_d({{
+                    if (RS2 != 0) {
+                        fault = make_shared<IllegalInstFault>("source reg x1",
+                                                              machInst);
+                    }
+                    Fd = sqrt(Fs1);
+                }}, FloatSqrtOp);
+                0x50: decode ROUND_MODE {
+                    0x0: fle_s({{
+                        uint32_t temp;
+                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+
+                        if (std::isnan(fs1) || std::isnan(fs2)) {
+                            FFLAGS |= FloatInvalid;
+                            Rd = 0;
+                        } else {
+                            Rd = fs1 <= fs2 ? 1 : 0;
+                        }
+                    }}, FloatCmpOp);
+                    0x1: flt_s({{
+                        uint32_t temp;
+                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+
+                        if (std::isnan(fs1) || std::isnan(fs2)) {
+                            FFLAGS |= FloatInvalid;
+                            Rd = 0;
+                        } else {
+                            Rd = fs1 < fs2 ? 1 : 0;
+                        }
+                    }}, FloatCmpOp);
+                    0x2: feq_s({{
+                        uint32_t temp;
+                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+
+                        if (issignalingnan(fs1) || issignalingnan(fs2)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        Rd = fs1 == fs2 ? 1 : 0;
+                    }}, FloatCmpOp);
+                }
+                0x51: decode ROUND_MODE {
+                    0x0: fle_d({{
+                        if (std::isnan(Fs1) || std::isnan(Fs2)) {
+                            FFLAGS |= FloatInvalid;
+                            Rd = 0;
+                        } else {
+                            Rd = Fs1 <= Fs2 ? 1 : 0;
+                        }
+                    }}, FloatCmpOp);
+                    0x1: flt_d({{
+                        if (std::isnan(Fs1) || std::isnan(Fs2)) {
+                            FFLAGS |= FloatInvalid;
+                            Rd = 0;
+                        } else {
+                            Rd = Fs1 < Fs2 ? 1 : 0;
+                        }
+                    }}, FloatCmpOp);
+                    0x2: feq_d({{
+                        if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
+                            FFLAGS |= FloatInvalid;
+                        }
+                        Rd = Fs1 == Fs2 ? 1 : 0;
+                    }}, FloatCmpOp);
+                }
+                0x60: decode CONV_SGN {
+                    0x0: fcvt_w_s({{
+                        uint32_t temp;
+                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+
+                        if (std::isnan(fs1)) {
+                            Rd_sd = numeric_limits<int32_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 >= numeric_limits<int32_t>::max()) {
+                            Rd_sd = numeric_limits<int32_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 <= numeric_limits<int32_t>::min()) {
+                            Rd_sd = numeric_limits<int32_t>::min();
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            Rd_sd = (int32_t)fs1;
+                        }
+                    }}, FloatCvtOp);
+                    0x1: fcvt_wu_s({{
+                        uint32_t temp;
+                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+
+                        if (std::isnan(fs1)) {
+                            Rd = numeric_limits<uint64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 < 0.0) {
+                            Rd = 0;
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 > numeric_limits<uint32_t>::max()) {
+                            Rd = numeric_limits<uint64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            Rd = (uint32_t)fs1;
+                        }
+                    }}, FloatCvtOp);
+                    0x2: fcvt_l_s({{
+                        uint32_t temp;
+                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+
+                        if (std::isnan(fs1)) {
+                            Rd_sd = numeric_limits<int64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 > numeric_limits<int64_t>::max()) {
+                            Rd_sd = numeric_limits<int64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 < numeric_limits<int64_t>::min()) {
+                            Rd_sd = numeric_limits<int64_t>::min();
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            Rd_sd = (int64_t)fs1;
+                        }
+                    }}, FloatCvtOp);
+                    0x3: fcvt_lu_s({{
+                        uint32_t temp;
+                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+
+                        if (std::isnan(fs1)) {
+                            Rd = numeric_limits<uint64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 < 0.0) {
+                            Rd = 0;
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 > numeric_limits<uint64_t>::max()) {
+                            Rd = numeric_limits<uint64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            Rd = (uint64_t)fs1;
+                        }
+                    }}, FloatCvtOp);
+                }
+                0x61: decode CONV_SGN {
+                    0x0: fcvt_w_d({{
+                        if (std::isnan(Fs1)) {
+                            Rd_sd = numeric_limits<int32_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 > numeric_limits<int32_t>::max()) {
+                            Rd_sd = numeric_limits<int32_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 < numeric_limits<int32_t>::min()) {
+                            Rd_sd = numeric_limits<int32_t>::min();
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            Rd_sd = (int32_t)Fs1;
+                        }
+                    }}, FloatCvtOp);
+                    0x1: fcvt_wu_d({{
+                        if (std::isnan(Fs1)) {
+                            Rd = numeric_limits<uint64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 < 0) {
+                            Rd = 0;
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 > numeric_limits<uint32_t>::max()) {
+                            Rd = numeric_limits<uint64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            Rd = (uint32_t)Fs1;
+                        }
+                    }}, FloatCvtOp);
+                    0x2: fcvt_l_d({{
+                        if (std::isnan(Fs1)) {
+                            Rd_sd = numeric_limits<int64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 > numeric_limits<int64_t>::max()) {
+                            Rd_sd = numeric_limits<int64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 < numeric_limits<int64_t>::min()) {
+                            Rd_sd = numeric_limits<int64_t>::min();
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            Rd_sd = Fs1;
+                        }
+                    }}, FloatCvtOp);
+                    0x3: fcvt_lu_d({{
+                        if (std::isnan(Fs1)) {
+                            Rd = numeric_limits<uint64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 < 0) {
+                            Rd = 0;
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 > numeric_limits<uint64_t>::max()) {
+                            Rd = numeric_limits<uint64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            Rd = Fs1;
+                        }
+                    }}, FloatCvtOp);
+                }
+                0x68: decode CONV_SGN {
+                    0x0: fcvt_s_w({{
+                        float temp = (float)Rs1_sw;
+                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(temp);
+                    }}, FloatCvtOp);
+                    0x1: fcvt_s_wu({{
+                        float temp = (float)Rs1_uw;
+                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(temp);
+                    }}, FloatCvtOp);
+                    0x2: fcvt_s_l({{
+                        float temp = (float)Rs1_sd;
+                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(temp);
+                    }}, FloatCvtOp);
+                    0x3: fcvt_s_lu({{
+                        float temp = (float)Rs1;
+                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(temp);
+                    }}, FloatCvtOp);
+                }
+                0x69: decode CONV_SGN {
+                    0x0: fcvt_d_w({{
+                        Fd = (double)Rs1_sw;
+                    }}, FloatCvtOp);
+                    0x1: fcvt_d_wu({{
+                        Fd = (double)Rs1_uw;
+                    }}, FloatCvtOp);
+                    0x2: fcvt_d_l({{
+                        Fd = (double)Rs1_sd;
+                    }}, FloatCvtOp);
+                    0x3: fcvt_d_lu({{
+                        Fd = (double)Rs1;
+                    }}, FloatCvtOp);
+                }
+                0x70: decode ROUND_MODE {
+                    0x0: fmv_x_s({{
+                        Rd = (uint32_t)Fs1_bits;
+                        if ((Rd&0x80000000) != 0) {
+                            Rd |= (0xFFFFFFFFULL << 32);
+                        }
+                    }}, FloatCvtOp);
+                    0x1: fclass_s({{
+                        uint32_t temp;
+                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+                        switch (fpclassify(fs1)) {
+                          case FP_INFINITE:
+                            if (signbit(fs1)) {
+                                Rd = 1 << 0;
+                            } else {
+                                Rd = 1 << 7;
+                            }
+                            break;
+                          case FP_NAN:
+                            if (issignalingnan(fs1)) {
+                                Rd = 1 << 8;
+                            } else {
+                                Rd = 1 << 9;
+                            }
+                            break;
+                          case FP_ZERO:
+                            if (signbit(fs1)) {
+                                Rd = 1 << 3;
+                            } else {
+                                Rd = 1 << 4;
+                            }
+                            break;
+                          case FP_SUBNORMAL:
+                            if (signbit(fs1)) {
+                                Rd = 1 << 2;
+                            } else {
+                                Rd = 1 << 5;
+                            }
+                            break;
+                          case FP_NORMAL:
+                            if (signbit(fs1)) {
+                                Rd = 1 << 1;
+                            } else {
+                                Rd = 1 << 6;
+                            }
+                            break;
+                          default:
+                            panic("Unknown classification for operand.");
+                            break;
+                        }
+                    }}, FloatMiscOp);
+                }
+                0x71: decode ROUND_MODE {
+                    0x0: fmv_x_d({{
+                        Rd = Fs1_bits;
+                    }}, FloatCvtOp);
+                    0x1: fclass_d({{
+                        switch (fpclassify(Fs1)) {
+                          case FP_INFINITE:
+                            if (signbit(Fs1)) {
+                                Rd = 1 << 0;
+                            } else {
+                                Rd = 1 << 7;
+                            }
+                            break;
+                          case FP_NAN:
+                            if (issignalingnan(Fs1)) {
+                                Rd = 1 << 8;
+                            } else {
+                                Rd = 1 << 9;
+                            }
+                            break;
+                          case FP_ZERO:
+                            if (signbit(Fs1)) {
+                                Rd = 1 << 3;
+                            } else {
+                                Rd = 1 << 4;
+                            }
+                            break;
+                          case FP_SUBNORMAL:
+                            if (signbit(Fs1)) {
+                                Rd = 1 << 2;
+                            } else {
+                                Rd = 1 << 5;
+                            }
+                            break;
+                          case FP_NORMAL:
+                            if (signbit(Fs1)) {
+                                Rd = 1 << 1;
+                            } else {
+                                Rd = 1 << 6;
+                            }
+                            break;
+                          default:
+                            panic("Unknown classification for operand.");
+                            break;
+                        }
+                    }}, FloatMiscOp);
+                }
+                0x78: fmv_s_x({{
+                    Fd_bits = (uint64_t)Rs1_uw;
+                }}, FloatCvtOp);
+                0x79: fmv_d_x({{
+                    Fd_bits = Rs1;
+                }}, FloatCvtOp);
+            }
+        }
+
+        0x18: decode FUNCT3 {
+            format BOp {
+                0x0: beq({{
+                    if (Rs1 == Rs2) {
+                        NPC = PC + imm;
+                    } else {
+                        NPC = NPC;
+                    }
+                }}, IsDirectControl, IsCondControl);
+                0x1: bne({{
+                    if (Rs1 != Rs2) {
+                        NPC = PC + imm;
+                    } else {
+                        NPC = NPC;
+                    }
+                }}, IsDirectControl, IsCondControl);
+                0x4: blt({{
+                    if (Rs1_sd < Rs2_sd) {
+                        NPC = PC + imm;
+                    } else {
+                        NPC = NPC;
+                    }
+                }}, IsDirectControl, IsCondControl);
+                0x5: bge({{
+                    if (Rs1_sd >= Rs2_sd) {
+                        NPC = PC + imm;
+                    } else {
+                        NPC = NPC;
+                    }
+                }}, IsDirectControl, IsCondControl);
+                0x6: bltu({{
+                    if (Rs1 < Rs2) {
+                        NPC = PC + imm;
+                    } else {
+                        NPC = NPC;
+                    }
+                }}, IsDirectControl, IsCondControl);
+                0x7: bgeu({{
+                    if (Rs1 >= Rs2) {
+                        NPC = PC + imm;
+                    } else {
+                        NPC = NPC;
+                    }
+                }}, IsDirectControl, IsCondControl);
+            }
+        }
+
+        0x19: decode FUNCT3 {
+            0x0: Jump::jalr({{
+                Rd = NPC;
+                NPC = (imm + Rs1) & (~0x1);
+            }}, IsIndirectControl, IsUncondControl, IsCall);
+        }
+
+        0x1b: JOp::jal({{
+            Rd = NPC;
+            NPC = PC + imm;
+        }}, IsDirectControl, IsUncondControl, IsCall);
+
+        0x1c: decode FUNCT3 {
+            format SystemOp {
+                0x0: decode FUNCT12 {
+                    0x0: ecall({{
+                        fault = make_shared<SyscallFault>(
+                                (PrivilegeMode)xc->readMiscReg(MISCREG_PRV));
+                    }}, IsSerializeAfter, IsNonSpeculative, IsSyscall,
+                        No_OpClass);
+                    0x1: ebreak({{
+                        fault = make_shared<BreakpointFault>(xc->pcState());
+                    }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                    0x2: uret({{
+                        STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                        status.uie = status.upie;
+                        status.upie = 1;
+                        xc->setMiscReg(MISCREG_STATUS, status);
+                        NPC = xc->readMiscReg(MISCREG_UEPC);
+                    }}, IsReturn);
+                    0x102: sret({{
+                        if (xc->readMiscReg(MISCREG_PRV) == PRV_U) {
+                            fault = make_shared<IllegalInstFault>(
+                                        "sret in user mode", machInst);
+                            NPC = NPC;
+                        } else {
+                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            xc->setMiscReg(MISCREG_PRV, status.spp);
+                            status.sie = status.spie;
+                            status.spie = 1;
+                            status.spp = PRV_U;
+                            xc->setMiscReg(MISCREG_STATUS, status);
+                            NPC = xc->readMiscReg(MISCREG_SEPC);
+                        }
+                    }}, IsReturn);
+                    0x302: mret({{
+                        if (xc->readMiscReg(MISCREG_PRV) != PRV_M) {
+                            fault = make_shared<IllegalInstFault>(
+                                        "mret at lower privilege", machInst);
+                            NPC = NPC;
+                        } else {
+                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            xc->setMiscReg(MISCREG_PRV, status.mpp);
+                            status.mie = status.mpie;
+                            status.mpie = 1;
+                            status.mpp = PRV_U;
+                            xc->setMiscReg(MISCREG_STATUS, status);
+                            NPC = xc->readMiscReg(MISCREG_MEPC);
+                        }
+                    }}, IsReturn);
+                }
+            }
+            format CSROp {
+                0x1: csrrw({{
+                    Rd = data;
+                    data = Rs1;
+                }}, IsNonSpeculative, No_OpClass);
+                0x2: csrrs({{
+                    Rd = data;
+                    data |= Rs1;
+                }}, IsNonSpeculative, No_OpClass);
+                0x3: csrrc({{
+                    Rd = data;
+                    data &= ~Rs1;
+                }}, IsNonSpeculative, No_OpClass);
+                0x5: csrrwi({{
+                    Rd = data;
+                    data = uimm;
+                }}, IsNonSpeculative, No_OpClass);
+                0x6: csrrsi({{
+                    Rd = data;
+                    data |= uimm;
+                }}, IsNonSpeculative, No_OpClass);
+                0x7: csrrci({{
+                    Rd = data;
+                    data &= ~uimm;
+                }}, IsNonSpeculative, No_OpClass);
+            }
+        }
+    }
+}

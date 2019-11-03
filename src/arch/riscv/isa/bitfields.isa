@@ -1,0 +1,120 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2015 RISC-V Foundation
+// Copyright (c) 2016 The University of Virginia
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Maxwell Walter
+//          Alec Roelke
+
+////////////////////////////////////////////////////////////////////
+//
+// Bitfield definitions.
+//
+
+def bitfield QUADRANT <1:0>;
+def bitfield OPCODE <6:2>;
+
+// R-Type
+def bitfield ALL	<31:0>;
+def bitfield RD     <11:7>;
+def bitfield FUNCT3 <14:12>;
+def bitfield RS1    <19:15>;
+def bitfield RS2    <24:20>;
+def bitfield FUNCT7 <31:25>;
+
+// Bit shifts
+def bitfield SRTYPE <30>;
+def bitfield SHAMT5 <24:20>;
+def bitfield SHAMT6 <25:20>;
+
+// I-Type
+def bitfield IMM12  <31:20>;
+
+// S-Type
+def bitfield IMM5   <11:7>;
+def bitfield IMM7   <31:25>;
+
+// U-Type
+def bitfield IMM20  <31:12>;
+
+// SB-Type
+def bitfield BIMM12BIT11 <7>;
+def bitfield BIMM12BITS4TO1<11:8>;
+def bitfield BIMM12BITS10TO5 <30:25>;
+def bitfield IMMSIGN <31>;
+
+// UJ-Type
+def bitfield UJIMMBITS10TO1 <30:21>;
+def bitfield UJIMMBIT11 <20>;
+def bitfield UJIMMBITS19TO12 <19:12>;
+
+// System
+def bitfield FUNCT12 <31:20>;
+def bitfield CSRIMM <19:15>;
+
+// Floating point
+def bitfield FD <11:7>;
+def bitfield FS1 <19:15>;
+def bitfield FS2 <24:20>;
+def bitfield FS3 <31:27>;
+
+def bitfield ROUND_MODE <14:12>;
+def bitfield CONV_SGN <24:20>;
+def bitfield FUNCT2 <26:25>;
+
+// AMO
+def bitfield AMOFUNCT <31:27>;
+def bitfield AQ <26>;
+def bitfield RL <25>;
+
+// Compressed
+def bitfield COPCODE <15:13>;
+def bitfield CFUNCT1 <12>;
+def bitfield CFUNCT2HIGH <11:10>;
+def bitfield CFUNCT2LOW <6:5>;
+def bitfield RC1 <11:7>;
+def bitfield RC2 <6:2>;
+def bitfield RP1 <9:7>;
+def bitfield RP2 <4:2>;
+def bitfield FC1 <11:7>;
+def bitfield FC2 <6:2>;
+def bitfield FP2 <4:2>;
+def bitfield CJUMPIMM <12:2>;
+def bitfield CJUMPIMM3TO1 <5:3>;
+def bitfield CJUMPIMM4TO4 <11:11>;
+def bitfield CJUMPIMM5TO5 <2:2>;
+def bitfield CJUMPIMM6TO6 <7:7>;
+def bitfield CJUMPIMM7TO7 <6:6>;
+def bitfield CJUMPIMM9TO8 <10:9>;
+def bitfield CJUMPIMM10TO10 <8:8>;
+def bitfield CJUMPIMMSIGN <12:12>;
+def bitfield CIMM8 <12:5>;
+def bitfield CIMM6 <12:7>;
+def bitfield CIMM5 <6:2>;
+def bitfield CIMM3 <12:10>;
+def bitfield CIMM2 <6:5>;
+def bitfield CIMM1 <12>;

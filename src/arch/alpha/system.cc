@@ -29,10 +29,11 @@
  *          Nathan Binkert
  */
 
+#include "arch/alpha/system.hh"
+
 #include <sys/signal.h>
 
 #include "arch/alpha/ev5.hh"
-#include "arch/alpha/system.hh"
 #include "arch/vtophys.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
@@ -108,8 +109,8 @@ AlphaSystem::initState()
     System::initState();
 
     // Load program sections into memory
-    pal->loadSections(physProxy, loadAddrMask);
-    console->loadSections(physProxy, loadAddrMask);
+    pal->buildImage().mask(loadAddrMask).write(physProxy);
+    console->buildImage().mask(loadAddrMask).write(physProxy);
 
     /**
      * Copy the osflags (kernel arguments) into the consoles
@@ -118,7 +119,7 @@ AlphaSystem::initState()
      * others do.)
      */
     if (consoleSymtab->findAddress("env_booted_osflags", addr)) {
-        virtProxy.writeBlob(addr, (uint8_t*)params()->boot_osflags.c_str(),
+        virtProxy.writeBlob(addr, params()->boot_osflags.c_str(),
                             strlen(params()->boot_osflags.c_str()));
     }
 
@@ -128,9 +129,9 @@ AlphaSystem::initState()
      */
     if (consoleSymtab->findAddress("m5_rpb", addr)) {
         uint64_t data;
-        data = htog(params()->system_type);
+        data = htole(params()->system_type);
         virtProxy.write(addr+0x50, data);
-        data = htog(params()->system_rev);
+        data = htole(params()->system_rev);
         virtProxy.write(addr+0x58, data);
     } else
         panic("could not find hwrpb\n");
@@ -211,7 +212,7 @@ AlphaSystem::setAlphaAccess(Addr access)
 {
     Addr addr = 0;
     if (consoleSymtab->findAddress("m5AlphaAccess", addr)) {
-        virtProxy.write(addr, htog(Phys2K0Seg(access)));
+        virtProxy.write(addr, htole(Phys2K0Seg(access)));
     } else {
         panic("could not find m5AlphaAccess\n");
     }

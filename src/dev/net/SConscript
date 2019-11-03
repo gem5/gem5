@@ -44,9 +44,6 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'null':
-    Return()
-
 SimObject('Ethernet.py')
 
 # Basic Ethernet infrastructure

@@ -35,6 +35,5 @@ if env['PROTOCOL'] == 'None':
 
 Source('AccessTraceForAddress.cc')
 Source('AddressProfiler.cc')
-Source('MemCntrlProfiler.cc')
 Source('Profiler.cc')
 Source('StoreTrace.cc')

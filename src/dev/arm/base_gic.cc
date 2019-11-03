@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -39,7 +39,11 @@
 
 #include "dev/arm/base_gic.hh"
 
+#include "cpu/thread_context.hh"
 #include "dev/arm/realview.hh"
+#include "params/ArmInterruptPin.hh"
+#include "params/ArmPPI.hh"
+#include "params/ArmSPI.hh"
 #include "params/BaseGic.hh"
 
 BaseGic::BaseGic(const Params *p)
@@ -60,8 +64,131 @@ BaseGic::~BaseGic()
 {
 }
 
+void
+BaseGic::init()
+{
+    PioDevice::init();
+    getSystem()->setGIC(this);
+}
+
 const BaseGic::Params *
 BaseGic::params() const
 {
     return dynamic_cast<const Params *>(_params);
+}
+
+ArmInterruptPinGen::ArmInterruptPinGen(const ArmInterruptPinParams *p)
+  : SimObject(p)
+{
+}
+
+ArmSPIGen::ArmSPIGen(const ArmSPIParams *p)
+    : ArmInterruptPinGen(p), pin(new ArmSPI(p->platform, p->num))
+{
+}
+
+ArmInterruptPin*
+ArmSPIGen::get(ThreadContext* tc)
+{
+    return pin;
+}
+
+ArmPPIGen::ArmPPIGen(const ArmPPIParams *p)
+    : ArmInterruptPinGen(p)
+{
+}
+
+ArmInterruptPin*
+ArmPPIGen::get(ThreadContext* tc)
+{
+    panic_if(!tc, "Invalid Thread Context\n");
+    ContextID cid = tc->contextId();
+
+    auto pin_it = pins.find(cid);
+
+    if (pin_it != pins.end()) {
+        // PPI Pin Already generated
+        return pin_it->second;
+    } else {
+        // Generate PPI Pin
+        auto p = static_cast<const ArmPPIParams *>(_params);
+        ArmPPI *pin = new ArmPPI(p->platform, tc, p->num);
+
+        pins.insert({cid, pin});
+
+        return pin;
+    }
+}
+
+ArmInterruptPin::ArmInterruptPin(
+    Platform  *_platform, ThreadContext *tc, uint32_t int_num)
+      : threadContext(tc), platform(dynamic_cast<RealView*>(_platform)),
+        intNum(int_num)
+{
+    fatal_if(!platform, "Interrupt not connected to a RealView platform");
+}
+
+void
+ArmInterruptPin::setThreadContext(ThreadContext *tc)
+{
+    panic_if(threadContext,
+             "InterruptLine::setThreadContext called twice\n");
+
+    threadContext = tc;
+}
+
+ContextID
+ArmInterruptPin::targetContext() const
+{
+    panic_if(!threadContext, "Per-context interrupt triggered without a " \
+             "call to InterruptLine::setThreadContext.\n");
+    return threadContext->contextId();
+}
+
+ArmSPI::ArmSPI(
+    Platform  *_platform, uint32_t int_num)
+      : ArmInterruptPin(_platform, nullptr, int_num)
+{
+}
+
+void
+ArmSPI::raise()
+{
+    platform->gic->sendInt(intNum);
+}
+
+void
+ArmSPI::clear()
+{
+    platform->gic->clearInt(intNum);
+}
+
+ArmPPI::ArmPPI(
+    Platform  *_platform, ThreadContext *tc, uint32_t int_num)
+      : ArmInterruptPin(_platform, tc, int_num)
+{
+}
+
+void
+ArmPPI::raise()
+{
+    platform->gic->sendPPInt(intNum, targetContext());
+}
+
+void
+ArmPPI::clear()
+{
+    platform->gic->clearPPInt(intNum, targetContext());
+}
+
+ArmSPIGen *
+ArmSPIParams::create()
+{
+    return new ArmSPIGen(this);
+}
+
+ArmPPIGen *
+ArmPPIParams::create()
+{
+    return new ArmPPIGen(this);
 }

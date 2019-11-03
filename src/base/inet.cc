@@ -43,13 +43,15 @@
  *          Geoffrey Blake
  */
 
+#include "base/inet.hh"
+
 #include <cstddef>
 #include <cstdio>
 #include <sstream>
 #include <string>
 
 #include "base/cprintf.hh"
-#include "base/inet.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 
 using namespace std;
@@ -237,7 +239,7 @@ cksum(const TcpPtr &tcp)
     } else if (Ip6Ptr(tcp.packet())) {
         return __tu_cksum6(Ip6Ptr(tcp.packet()));
     } else {
-        assert(0);
+        panic("Unrecognized IP packet format");
     }
     // Should never reach here
     return 0;
@@ -251,7 +253,7 @@ cksum(const UdpPtr &udp)
     } else if (Ip6Ptr(udp.packet())) {
         return __tu_cksum6(Ip6Ptr(udp.packet()));
     } else {
-        assert(0);
+        panic("Unrecognized IP packet format");
     }
     return 0;
 }

@@ -78,8 +78,8 @@ class WholeTranslationState
      * Single translation state.  We set the number of outstanding
      * translations to one and indicate that it is not split.
      */
-    WholeTranslationState(RequestPtr _req, uint8_t *_data, uint64_t *_res,
-                          BaseTLB::Mode _mode)
+    WholeTranslationState(const RequestPtr &_req, uint8_t *_data,
+                          uint64_t *_res, BaseTLB::Mode _mode)
         : outstanding(1), delay(false), isSplit(false), mainReq(_req),
           sreqLow(NULL), sreqHigh(NULL), data(_data), res(_res), mode(_mode)
     {
@@ -92,9 +92,9 @@ class WholeTranslationState
      * number of outstanding translations to two and then mark this as a
      * split translation.
      */
-    WholeTranslationState(RequestPtr _req, RequestPtr _sreqLow,
-                          RequestPtr _sreqHigh, uint8_t *_data, uint64_t *_res,
-                          BaseTLB::Mode _mode)
+    WholeTranslationState(const RequestPtr &_req, const RequestPtr &_sreqLow,
+                          const RequestPtr &_sreqHigh, uint8_t *_data,
+                          uint64_t *_res, BaseTLB::Mode _mode)
         : outstanding(2), delay(false), isSplit(true), mainReq(_req),
           sreqLow(_sreqLow), sreqHigh(_sreqHigh), data(_data), res(_res),
           mode(_mode)
@@ -196,10 +196,10 @@ class WholeTranslationState
     void
     deleteReqs()
     {
-        delete mainReq;
+        mainReq.reset();
         if (isSplit) {
-            delete sreqLow;
-            delete sreqHigh;
+            sreqLow.reset();
+            sreqHigh.reset();
         }
     }
 };
@@ -249,7 +249,7 @@ class DataTranslation : public BaseTLB::Translation
      * translation is complete if the state says so.
      */
     void
-    finish(const Fault &fault, RequestPtr req, ThreadContext *tc,
+    finish(const Fault &fault, const RequestPtr &req, ThreadContext *tc,
            BaseTLB::Mode mode)
     {
         assert(state);

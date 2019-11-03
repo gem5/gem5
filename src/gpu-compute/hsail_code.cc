@@ -84,6 +84,11 @@ HsailCode::init(const BrigDirectiveExecutable *code_dir, const BrigObject *obj,
     const BrigBase *endPtr =
         obj->getCodeSectionEntry(code_dir->nextModuleEntry);
 
+    // the instruction's byte address (relative to the base addr
+    // of the code section)
+    int inst_addr = 0;
+    // the index that points to the instruction in the instruction
+    // array
     int inst_idx = 0;
     std::vector<GPUStaticInst*> instructions;
     int funcarg_size_scope = 0;
@@ -121,7 +126,7 @@ HsailCode::init(const BrigDirectiveExecutable *code_dir, const BrigObject *obj,
                         "kind_label, label is: %s \n",
                         obj->getString(lbl->name));
 
-                labelMap.addLabel(lbl, inst_idx, obj);
+                labelMap.addLabel(lbl, inst_addr, obj);
             }
             break;
 
@@ -175,14 +180,16 @@ HsailCode::init(const BrigDirectiveExecutable *code_dir, const BrigObject *obj,
 
                 if (iptr) {
                     DPRINTF(HSAILObject, "Initializing code, processing inst "
-                            "#%d idx %d: OPCODE=%d\n",
-                            inst_idx,  _insts.size(), instPtr->opcode);
+                            "byte addr #%d idx %d: OPCODE=%d\n", inst_addr,
+                            inst_idx, instPtr->opcode);
 
-                    TheGpuISA::RawMachInst inst_num = decoder.saveInst(iptr);
+                    TheGpuISA::RawMachInst raw_inst = decoder.saveInst(iptr);
                     iptr->instNum(inst_idx);
-                    _insts.push_back(inst_num);
+                    iptr->instAddr(inst_addr);
+                    _insts.push_back(raw_inst);
                     instructions.push_back(iptr);
                 }
+                inst_addr += sizeof(TheGpuISA::RawMachInst);
                 ++inst_idx;
             } else if (entryPtr->kind >= BRIG_KIND_OPERAND_BEGIN &&
                        entryPtr->kind < BRIG_KIND_OPERAND_END) {
@@ -298,8 +305,8 @@ StorageSpace::addSymbol(const BrigDirectiveVariable *sym,
 
     nextOffset = offset + size;
 
-    DPRINTF(HSAILObject, "Adding %s SYMBOL %s size %d offset 0x%x, init: %d\n",
-            segmentNames[segment], sym_name, size, offset, sym->init);
+    DPRINTF(HSAILObject, "Adding SYMBOL %s size %d offset %#x, init: %d\n",
+            sym_name, size, offset, sym->init);
 
     StorageElement* se = new StorageElement(sym_name, offset, size, sym);
     elements.push_back(se);
@@ -326,7 +333,7 @@ StorageSpace::findSymbol(uint64_t addr)
 {
     assert(elements_by_addr.size() > 0);
 
-    auto se = elements_by_addr.find(addr);
+    auto se = elements_by_addr.contains(addr);
 
     if (se == elements_by_addr.end()) {
         return nullptr;

@@ -1,0 +1,33 @@
+SystemC Simulation
+
+Proc1: Initiating Transfer
+Proc1: Data Ready has value = 1 at time 20 ns
+Proc1: Data Ack has value = 0 at same time
+Proc2: Received data = 10 at time 20 ns
+Proc1: Data Ack Received at time 30 ns
+Proc1: Data Ready has value = 0 at time 40 ns
+Proc1: Transfer complete
+
+Proc1: Initiating Transfer
+Proc1: Data Ready has value = 1 at time 50 ns
+Proc1: Data Ack has value = 0 at same time
+Proc2: Received data = 11 at time 50 ns
+Proc1: Data Ack Received at time 60 ns
+Proc1: Data Ready has value = 0 at time 70 ns
+Proc1: Transfer complete
+
+Proc1: Initiating Transfer
+Proc1: Data Ready has value = 1 at time 80 ns
+Proc1: Data Ack has value = 0 at same time
+Proc2: Received data = 12 at time 80 ns
+Proc1: Data Ack Received at time 90 ns
+Proc1: Data Ready has value = 0 at time 100 ns
+Proc1: Transfer complete
+
+Proc1: Initiating Transfer
+Proc1: Data Ready has value = 1 at time 110 ns
+Proc1: Data Ack has value = 0 at same time
+Proc2: Received data = 13 at time 110 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+SIMULATION COMPLETED AT TIME 110 ns

@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013, 2016 ARM Limited
+// Copyright (c) 2011-2013, 2016,2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -103,7 +103,7 @@ let {{
                 CPSR cpsr = Cpsr;
                 CPSR spsr = Spsr;
 
-                ExceptionLevel curr_el = opModeToEL((OperatingMode) (uint8_t) cpsr.mode);
+                ExceptionLevel curr_el = currEL(cpsr);
                 switch (curr_el) {
                   case EL3:
                     newPc = xc->tcBase()->readMiscReg(MISCREG_ELR_EL3);
@@ -120,12 +120,19 @@ let {{
                                                                   mnemonic);
                     break;
                 }
-                if (spsr.width && (newPc & mask(2))) {
-                    // To avoid PC Alignment fault when returning to AArch32
-                    if (spsr.t)
-                        newPc = newPc & ~mask(1);
-                    else
-                        newPc = newPc & ~mask(2);
+                if (spsr.width) {
+                    // Exception return to AArch32.
+                    // 32 most significant bits are ignored
+                    newPc &= mask(32);
+
+                    if (newPc & mask(2)) {
+                        // Mask bits to avoid PC Alignment fault when returning
+                        // to AArch32
+                        if (spsr.t)
+                            newPc = newPc & ~mask(1);
+                        else
+                            newPc = newPc & ~mask(2);
+                    }
                 }
 
                 CPSR new_cpsr = getPSTATEFromPSR(xc->tcBase(), cpsr, spsr);
@@ -138,7 +145,7 @@ let {{
                 NextAArch64 = !new_cpsr.width;
                 NextItState = itState(new_cpsr);
                 NPC = purifyTaggedAddr(newPc, xc->tcBase(),
-                    opModeToEL((OperatingMode) (uint8_t) new_cpsr.mode));
+                    currEL(new_cpsr));
 
                 LLSCLock = 0;  // Clear exclusive monitor
                 SevMailbox = 1; //Set Event Register

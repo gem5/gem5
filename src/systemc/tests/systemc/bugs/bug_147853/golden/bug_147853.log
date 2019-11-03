@@ -1,0 +1,21 @@
+SystemC Simulation
+0 s t1 clk = 0
+0 s t2 clk = 0
+5 ns t1 clk = 1
+5 ns t2 clk = 1
+10 ns t1 clk = 0
+10 ns t2 clk = 0
+15 ns t1 clk = 1
+15 ns t2 clk = 1
+20 ns t1 clk = 0
+20 ns t2 clk = 0
+25 ns t1 clk = 1
+25 ns t2 clk = 1
+30 ns t1 clk = 0
+30 ns t2 clk = 0
+35 ns t1 clk = 1
+35 ns t2 clk = 1
+40 ns t1 clk = 0
+40 ns t2 clk = 0
+45 ns t1 clk = 1
+45 ns t2 clk = 1

@@ -1,0 +1,33 @@
+
+type scalar "BIT" enum '0', '1' ;
+type scalar "MVL" enum '0', '1', 'X', 'Z', '?' ;
+
+declare  O0   "test_top.sig"  BIT  0 31 variable ;
+start_trace O0 ;
+comment "All initial values are dumped below at time 0 sec = 0 timescale units." ;
+assign O0 "00000000000000000000000000000010" ;
+
+delta_time 1 ;
+assign O0 "00000000000000000000000000000011" ;
+
+delta_time 1 ;
+assign O0 "00000000000000000000000000000100" ;
+
+delta_time 1000 ;
+assign O0 "00000000000000000000000000000111" ;
+
+delta_time 1000 ;
+assign O0 "00000000000000000000000000001000" ;
+
+delta_time 1000 ;
+assign O0 "00000000000000000000000000001001" ;
+
+delta_time 1 ;
+assign O0 "00000000000000000000000000001010" ;
+
+delta_time 2 ;
+assign O0 "00000000000000000000000000001011" ;
+
+delta_time 1000 ;
+assign O0 "00000000000000000000000000001100" ;
+

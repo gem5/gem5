@@ -35,6 +35,7 @@
 #include <array>
 
 #include "base/types.hh"
+#include "cpu/exec_context.hh"
 #include "sim/byteswap.hh"
 #include "sim/insttracer.hh"
 
@@ -42,10 +43,9 @@ namespace X86ISA
 {
 
 /// Initiate a read from memory in timing mode.
-template <class XC>
-Fault
-initiateMemRead(XC *xc, Trace::InstRecord *traceData, Addr addr,
-                unsigned dataSize, unsigned flags)
+static Fault
+initiateMemRead(ExecContext *xc, Trace::InstRecord *traceData, Addr addr,
+                unsigned dataSize, Request::Flags flags)
 {
     return xc->initiateMemRead(addr, dataSize, flags);
 }
@@ -56,16 +56,16 @@ getMem(PacketPtr pkt, uint64_t &mem, unsigned dataSize,
 {
     switch (dataSize) {
       case 1:
-        mem = pkt->get<uint8_t>();
+        mem = pkt->getLE<uint8_t>();
         break;
       case 2:
-        mem = pkt->get<uint16_t>();
+        mem = pkt->getLE<uint16_t>();
         break;
       case 4:
-        mem = pkt->get<uint32_t>();
+        mem = pkt->getLE<uint32_t>();
         break;
       case 8:
-        mem = pkt->get<uint64_t>();
+        mem = pkt->getLE<uint64_t>();
         break;
       default:
         panic("Unhandled size in getMem.\n");
@@ -74,33 +74,38 @@ getMem(PacketPtr pkt, uint64_t &mem, unsigned dataSize,
         traceData->setData(mem);
 }
 
+template <typename T, size_t N>
+static void
+getPackedMem(PacketPtr pkt, std::array<uint64_t, N> &mem, unsigned dataSize)
+{
+    std::array<T, N> real_mem = pkt->getLE<std::array<T, N> >();
+    for (int i = 0; i < N; i++)
+        mem[i] = real_mem[i];
+}
 
 template <size_t N>
-void
+static void
 getMem(PacketPtr pkt, std::array<uint64_t, N> &mem, unsigned dataSize,
        Trace::InstRecord *traceData)
 {
-    assert(dataSize >= 8);
-    assert((dataSize % 8) == 0);
-
-    int num_words = dataSize / 8;
-    assert(num_words <= N);
-
-    auto pkt_data = pkt->getConstPtr<const uint64_t>();
-    for (int i = 0; i < num_words; ++i)
-        mem[i] = gtoh(pkt_data[i]);
-
-    // traceData record only has space for 64 bits, so we just record
-    // the first qword
+    switch (dataSize) {
+      case 4:
+        getPackedMem<uint32_t, N>(pkt, mem, dataSize);
+        break;
+      case 8:
+        getPackedMem<uint64_t, N>(pkt, mem, dataSize);
+        break;
+      default:
+        panic("Unhandled element size in getMem.\n");
+    }
     if (traceData)
         traceData->setData(mem[0]);
 }
 
 
-template <class XC>
-Fault
-readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr, uint64_t &mem,
-        unsigned dataSize, unsigned flags)
+static Fault
+readMemAtomic(ExecContext *xc, Trace::InstRecord *traceData, Addr addr,
+              uint64_t &mem, unsigned dataSize, Request::Flags flags)
 {
     memset(&mem, 0, sizeof(mem));
     Fault fault = xc->readMem(addr, (uint8_t *)&mem, dataSize, flags);
@@ -115,102 +120,126 @@ readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr, uint64_t &mem,
     return fault;
 }
 
-template <class XC, size_t N>
-Fault
-readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr,
+template <typename T, size_t N>
+static Fault
+readPackedMemAtomic(ExecContext *xc, Addr addr, std::array<uint64_t, N> &mem,
+                    unsigned flags)
+{
+    std::array<T, N> real_mem;
+    Fault fault = xc->readMem(addr, (uint8_t *)&real_mem,
+                              sizeof(T) * N, flags);
+    if (fault == NoFault) {
+        real_mem = gtoh(real_mem);
+        for (int i = 0; i < N; i++)
+            mem[i] = real_mem[i];
+    }
+    return fault;
+}
+
+template <size_t N>
+static Fault
+readMemAtomic(ExecContext *xc, Trace::InstRecord *traceData, Addr addr,
               std::array<uint64_t, N> &mem, unsigned dataSize,
               unsigned flags)
 {
-    assert(dataSize >= 8);
-    assert((dataSize % 8) == 0);
+    Fault fault = NoFault;
 
-    Fault fault = xc->readMem(addr, (uint8_t *)&mem, dataSize, flags);
-
-    if (fault == NoFault) {
-        int num_words = dataSize / 8;
-        assert(num_words <= N);
-
-        for (int i = 0; i < num_words; ++i)
-            mem[i] = gtoh(mem[i]);
-
-        if (traceData)
-            traceData->setData(mem[0]);
+    switch (dataSize) {
+      case 4:
+        fault = readPackedMemAtomic<uint32_t, N>(xc, addr, mem, flags);
+        break;
+      case 8:
+        fault = readPackedMemAtomic<uint64_t, N>(xc, addr, mem, flags);
+        break;
+      default:
+        panic("Unhandled element size in readMemAtomic\n");
     }
+    if (fault == NoFault && traceData)
+        traceData->setData(mem[0]);
     return fault;
 }
 
-template <class XC>
-Fault
-writeMemTiming(XC *xc, Trace::InstRecord *traceData, uint64_t mem,
-        unsigned dataSize, Addr addr, unsigned flags, uint64_t *res)
+template <typename T, size_t N>
+static Fault
+writePackedMem(ExecContext *xc, std::array<uint64_t, N> &mem, Addr addr,
+               unsigned flags, uint64_t *res)
 {
-    if (traceData) {
+    std::array<T, N> real_mem;
+    for (int i = 0; i < N; i++)
+        real_mem[i] = mem[i];
+    real_mem = htog(real_mem);
+    return xc->writeMem((uint8_t *)&real_mem, sizeof(T) * N,
+                        addr, flags, res);
+}
+
+static Fault
+writeMemTiming(ExecContext *xc, Trace::InstRecord *traceData, uint64_t mem,
+               unsigned dataSize, Addr addr, Request::Flags flags,
+               uint64_t *res)
+{
+    if (traceData)
         traceData->setData(mem);
-    }
-    mem = TheISA::htog(mem);
+    mem = htog(mem);
     return xc->writeMem((uint8_t *)&mem, dataSize, addr, flags, res);
 }
 
-template <class XC, size_t N>
-Fault
-writeMemTiming(XC *xc, Trace::InstRecord *traceData,
+template <size_t N>
+static Fault
+writeMemTiming(ExecContext *xc, Trace::InstRecord *traceData,
                std::array<uint64_t, N> &mem, unsigned dataSize,
                Addr addr, unsigned flags, uint64_t *res)
 {
-    assert(dataSize >= 8);
-    assert((dataSize % 8) == 0);
-
-    if (traceData) {
+    if (traceData)
         traceData->setData(mem[0]);
+
+    switch (dataSize) {
+      case 4:
+        return writePackedMem<uint32_t, N>(xc, mem, addr, flags, res);
+      case 8:
+        return writePackedMem<uint64_t, N>(xc, mem, addr, flags, res);
+      default:
+        panic("Unhandled element size in writeMemTiming.\n");
     }
-
-    int num_words = dataSize / 8;
-    assert(num_words <= N);
-
-    for (int i = 0; i < num_words; ++i)
-        mem[i] = htog(mem[i]);
-
-    return xc->writeMem((uint8_t *)&mem, dataSize, addr, flags, res);
 }
 
-template <class XC>
-Fault
-writeMemAtomic(XC *xc, Trace::InstRecord *traceData, uint64_t mem,
-        unsigned dataSize, Addr addr, unsigned flags, uint64_t *res)
+static Fault
+writeMemAtomic(ExecContext *xc, Trace::InstRecord *traceData, uint64_t mem,
+               unsigned dataSize, Addr addr, Request::Flags flags,
+               uint64_t *res)
 {
-    if (traceData) {
+    if (traceData)
         traceData->setData(mem);
-    }
-    uint64_t host_mem = TheISA::htog(mem);
+    uint64_t host_mem = htog(mem);
     Fault fault =
           xc->writeMem((uint8_t *)&host_mem, dataSize, addr, flags, res);
-    if (fault == NoFault && res != NULL) {
+    if (fault == NoFault && res)
         *res = gtoh(*res);
-    }
     return fault;
 }
 
-template <class XC, size_t N>
-Fault
-writeMemAtomic(XC *xc, Trace::InstRecord *traceData,
+template <size_t N>
+static Fault
+writeMemAtomic(ExecContext *xc, Trace::InstRecord *traceData,
                std::array<uint64_t, N> &mem, unsigned dataSize,
                Addr addr, unsigned flags, uint64_t *res)
 {
-    if (traceData) {
+    if (traceData)
         traceData->setData(mem[0]);
+
+    Fault fault;
+    switch (dataSize) {
+      case 4:
+        fault = writePackedMem<uint32_t, N>(xc, mem, addr, flags, res);
+        break;
+      case 8:
+        fault = writePackedMem<uint64_t, N>(xc, mem, addr, flags, res);
+        break;
+      default:
+        panic("Unhandled element size in writeMemAtomic.\n");
     }
 
-    int num_words = dataSize / 8;
-    assert(num_words <= N);
-
-    for (int i = 0; i < num_words; ++i)
-        mem[i] = htog(mem[i]);
-
-    Fault fault = xc->writeMem((uint8_t *)&mem, dataSize, addr, flags, res);
-
-    if (fault == NoFault && res != NULL) {
+    if (fault == NoFault && res)
         *res = gtoh(*res);
-    }
 
     return fault;
 }

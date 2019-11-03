@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,86 +44,97 @@
 #ifndef __BASE_ADDR_RANGE_MAP_HH__
 #define __BASE_ADDR_RANGE_MAP_HH__
 
+#include <cstddef>
+#include <functional>
+#include <list>
 #include <map>
 #include <utility>
 
 #include "base/addr_range.hh"
+#include "base/types.hh"
 
 /**
  * The AddrRangeMap uses an STL map to implement an interval tree for
  * address decoding. The value stored is a template type and can be
  * e.g. a port identifier, or a pointer.
  */
-template <typename V>
+template <typename V, int max_cache_size=0>
 class AddrRangeMap
 {
   private:
     typedef std::map<AddrRange, V> RangeMap;
-    RangeMap tree;
 
   public:
     typedef typename RangeMap::iterator iterator;
     typedef typename RangeMap::const_iterator const_iterator;
 
+    /**
+     * Find entry that contains the given address range
+     *
+     * Searches through the ranges in the address map and returns an
+     * iterator to the entry which range is a superset of the input
+     * address range. Returns end() if none found.
+     *
+     * @param r An input address range
+     * @return An iterator that contains the input address range
+     */
     const_iterator
-    find(const AddrRange &r) const
+    contains(const AddrRange &r) const
     {
-        if (tree.empty())
-            return tree.end();
-
-        const_iterator i = tree.upper_bound(r);
-
-        if (i == tree.begin()) {
-            if (i->first.intersects(r)) {
-                return i;
-            } else {
-                return tree.end();
-            }
-        }
-
-        --i;
-
-        if (i->first.intersects(r))
-            return i;
-
-        // if we are looking at an interleaved range, also step
-        // backwards through the ranges while we are looking at ranges
-        // that are part of the same contigous chunk
-        if (i->first.interleaved()) {
-            AddrRange orig_range = i->first;
-
-            while (i != tree.begin() && i->first.mergesWith(orig_range)) {
-                --i;
-                if (i->first.intersects(r)) {
-                    return i;
-                }
-            }
-
-            // we could leave the loop based on reaching the first
-            // element, so we must still check for an intersection
-            if (i->first.intersects(r))
-                return i;
-        }
-
-        return tree.end();
+        return find(r, [r](const AddrRange r1) { return r.isSubset(r1); });
+    }
+    iterator
+    contains(const AddrRange &r)
+    {
+        return find(r, [r](const AddrRange r1) { return r.isSubset(r1); });
     }
 
+    /**
+     * Find entry that contains the given address
+     *
+     * Searches through the ranges in the address map and returns an
+     * iterator to the entry which range is a superset of the input
+     * address. Returns end() if none found.
+     *
+     * @param r An input address
+     * @return An iterator that contains the input address
+     */
     const_iterator
-    find(const Addr &r) const
+    contains(Addr r) const
     {
-        return find(RangeSize(r, 1));
+        return contains(RangeSize(r, 1));
+    }
+    iterator
+    contains(Addr r)
+    {
+        return contains(RangeSize(r, 1));
     }
 
-    bool
-    intersect(const AddrRange &r) const
+    /**
+     * Find entry that intersects with the given address range
+     *
+     * Searches through the ranges in the address map and returns an
+     * iterator to the first entry which range intersects with the
+     * input address.
+     *
+     * @param r An input address
+     * @return An iterator that intersects with the input address range
+     */
+    const_iterator
+    intersects(const AddrRange &r) const
     {
-        return find(r) != tree.end();
+        return find(r, [r](const AddrRange r1) { return r.intersects(r1); });
+    }
+    iterator
+    intersects(const AddrRange &r)
+    {
+        return find(r, [r](const AddrRange r1) { return r.intersects(r1); });
     }
 
-    const_iterator
+    iterator
     insert(const AddrRange &r, const V& d)
     {
-        if (intersect(r))
+        if (intersects(r) != end())
             return tree.end();
 
         return tree.insert(std::make_pair(r, d)).first;
@@ -132,18 +143,23 @@ class AddrRangeMap
     void
     erase(iterator p)
     {
+        cache.remove(p);
         tree.erase(p);
     }
 
     void
     erase(iterator p, iterator q)
     {
+        for (auto it = p; it != q; it++) {
+            cache.remove(p);
+        }
         tree.erase(p,q);
     }
 
     void
     clear()
     {
+        cache.erase(cache.begin(), cache.end());
         tree.erase(tree.begin(), tree.end());
     }
 
@@ -182,6 +198,96 @@ class AddrRangeMap
     {
         return tree.empty();
     }
+
+  private:
+    /**
+     * Add an address range map entry to the cache.
+     *
+     * @param it Iterator to the entry in the address range map
+     */
+    void
+    addNewEntryToCache(iterator it) const
+    {
+        if (max_cache_size != 0) {
+            // If there's a cache, add this element to it.
+            if (cache.size() >= max_cache_size) {
+                // If the cache is full, move the last element to the
+                // front and overwrite it with the new value. This
+                // avoids creating or destroying elements of the list.
+                auto last = cache.end();
+                last--;
+                *last = it;
+                if (max_cache_size > 1)
+                    cache.splice(cache.begin(), cache, last);
+            } else {
+                cache.push_front(it);
+            }
+        }
+    }
+
+    /**
+     * Find entry that satisfies a condition on an address range
+     *
+     * Searches through the ranges in the address map and returns an
+     * iterator to the entry that satisfies the input conidition on
+     * the input address range. Returns end() if none found.
+     *
+     * @param r An input address range
+     * @param f A condition on an address range
+     * @return An iterator that contains the input address range
+     */
+    iterator
+    find(const AddrRange &r, std::function<bool(const AddrRange)> cond)
+    {
+        // Check the cache first
+        for (auto c = cache.begin(); c != cache.end(); c++) {
+            auto it = *c;
+            if (cond(it->first)) {
+                // If this entry matches, promote it to the front
+                // of the cache and return it.
+                cache.splice(cache.begin(), cache, c);
+                return it;
+            }
+        }
+
+        iterator next = tree.upper_bound(r);
+        if (next != end() && cond(next->first)) {
+            addNewEntryToCache(next);
+            return next;
+        }
+        if (next == begin())
+            return end();
+        next--;
+
+        iterator i;
+        do {
+            i = next;
+            if (cond(i->first)) {
+                addNewEntryToCache(i);
+                return i;
+            }
+            // Keep looking if the next range merges with the current one.
+        } while (next != begin() &&
+                 (--next)->first.mergesWith(i->first));
+
+        return end();
+    }
+
+    const_iterator
+    find(const AddrRange &r, std::function<bool(const AddrRange)> cond) const
+    {
+        return const_cast<AddrRangeMap *>(this)->find(r, cond);
+    }
+
+    RangeMap tree;
+
+    /**
+     * A list of iterator that correspond to the max_cache_size most
+     * recently used entries in the address range map. This mainly
+     * used to optimize lookups. The elements in the list should
+     * always be valid iterators of the tree.
+     */
+    mutable std::list<iterator> cache;
 };
 
 #endif //__BASE_ADDR_RANGE_MAP_HH__

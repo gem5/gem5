@@ -58,11 +58,11 @@ class SparcLinuxProcess
 };
 
 /// A process with emulated SPARC/Linux syscalls.
-class Sparc32LinuxProcess : public SparcLinuxProcess, public Sparc32LiveProcess
+class Sparc32LinuxProcess : public SparcLinuxProcess, public Sparc32Process
 {
   public:
     /// Constructor.
-    Sparc32LinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
+    Sparc32LinuxProcess(ProcessParams * params, ObjectFile *objFile);
 
     SyscallDesc*
     getDesc(int callnum)
@@ -70,15 +70,15 @@ class Sparc32LinuxProcess : public SparcLinuxProcess, public Sparc32LiveProcess
         return SparcLinuxProcess::getDesc32(callnum);
     }
 
-    void handleTrap(int trapNum, ThreadContext *tc);
+    void handleTrap(int trapNum, ThreadContext *tc, Fault *fault);
 };
 
 /// A process with emulated 32 bit SPARC/Linux syscalls.
-class Sparc64LinuxProcess : public SparcLinuxProcess, public Sparc64LiveProcess
+class Sparc64LinuxProcess : public SparcLinuxProcess, public Sparc64Process
 {
   public:
     /// Constructor.
-    Sparc64LinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
+    Sparc64LinuxProcess(ProcessParams * params, ObjectFile *objFile);
 
     SyscallDesc*
     getDesc(int callnum)
@@ -86,11 +86,11 @@ class Sparc64LinuxProcess : public SparcLinuxProcess, public Sparc64LiveProcess
         return SparcLinuxProcess::getDesc(callnum);
     }
 
-    void handleTrap(int trapNum, ThreadContext *tc);
+    void handleTrap(int trapNum, ThreadContext *tc, Fault *fault);
 };
 
 SyscallReturn getresuidFunc(SyscallDesc *desc, int num,
-                                 LiveProcess *p, ThreadContext *tc);
+                            Process *p, ThreadContext *tc);
 
 } // namespace SparcISA
 #endif // __SPARC_LINUX_PROCESS_HH__

@@ -1,0 +1,8 @@
+SystemC Simulation
+20 ns : WRITING ready = 1
+20 ns : READY = 1 DETECTED
+40 ns : WRITING ready = 0
+60 ns : WRITING ready = 1
+60 ns : READY = 1 DETECTED
+80 ns : READY = 1 DETECTED
+100 ns : READY = 1 DETECTED

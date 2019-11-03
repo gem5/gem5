@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2015 ARM Limited
+# Copyright (c) 2012, 2015, 2017, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -39,13 +39,14 @@
 # Authors: Nathan Binkert
 #          Andreas Hansson
 
-from MemObject import MemObject
-from System import System
+from m5.objects.System import System
 from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
-class BaseXBar(MemObject):
+from m5.objects.ClockedObject import ClockedObject
+
+class BaseXBar(ClockedObject):
     type = 'BaseXBar'
     abstract = True
     cxx_header = "mem/xbar.hh"
@@ -100,11 +101,21 @@ class CoherentXBar(BaseXBar):
     # An optional snoop filter
     snoop_filter = Param.SnoopFilter(NULL, "Selected snoop filter")
 
+    # Maximum number of outstanding snoop requests for sanity checks
+    max_outstanding_snoops = Param.Int(512, "Max. outstanding snoops allowed")
+
+    # Maximum routing table size for sanity checks
+    max_routing_table_size = Param.Int(512, "Max. routing table size")
+
     # Determine how this crossbar handles packets where caches have
     # already committed to responding, by establishing if the crossbar
     # is the point of coherency or not.
     point_of_coherency = Param.Bool(False, "Consider this crossbar the " \
                                     "point of coherency")
+
+    # Specify whether this crossbar is the point of unification.
+    point_of_unification = Param.Bool(False, "Consider this crossbar the " \
+                                      "point of unification")
 
     system = Param.System(Parent.any, "System that the crossbar belongs to.")
 
@@ -139,6 +150,11 @@ class L2XBar(CoherentXBar):
     # the crossbar
     snoop_filter = SnoopFilter(lookup_latency = 0)
 
+    # This specialisation of the coherent crossbar is to be considered
+    # the point of unification, it connects the dcache and the icache
+    # to the first level of unified cache.
+    point_of_unification = True
+
 # One of the key coherent crossbar instances is the system
 # interconnect, tying together the CPU clusters, GPUs, and any I/O
 # coherent masters, and DRAM controllers.
@@ -153,10 +169,20 @@ class SystemXBar(CoherentXBar):
     response_latency = 2
     snoop_response_latency = 4
 
+    # Use a snoop-filter by default
+    snoop_filter = SnoopFilter(lookup_latency = 1)
+
     # This specialisation of the coherent crossbar is to be considered
     # the point of coherency, as there are no (coherent) downstream
     # caches.
     point_of_coherency = True
+
+    # This specialisation of the coherent crossbar is to be considered
+    # the point of unification, it connects the dcache and the icache
+    # to the first level of unified cache. This is needed for systems
+    # without caches where the SystemXBar is also the point of
+    # unification.
+    point_of_unification = True
 
 # In addition to the system interconnect, we typically also have one
 # or more on-chip I/O crossbars. Note that at some point we might want

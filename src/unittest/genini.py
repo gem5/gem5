@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # Copyright (c) 2005 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -26,6 +26,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
+
+from __future__ import print_function
 
 import getopt, os, os.path, sys
 from os.path import join as joinpath, realpath
@@ -68,7 +70,7 @@ for path in pathlist:
 for arg in args:
     m5execfile(arg, globals())
 
-if globals().has_key('root') and isinstance(root, Root):
+if 'root' in globals() and isinstance(root, Root):
     instantiate(root)
 else:
-    print "Instantiation skipped: no root object found."
+    print("Instantiation skipped: no root object found.")

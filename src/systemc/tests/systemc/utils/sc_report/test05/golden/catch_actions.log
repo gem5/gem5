@@ -1,0 +1,10 @@
+SystemC Simulation
+
+[normal] Info: catch_actions: prepared custom handler
+
+[normal] Info: catch_actions: preparing catch actions
+
+[normal] Info: catch_actions: only log errors from catch actions
+
+[caught] Error: catch_actions: throwing an exception
+In file: <removed by verify.pl>

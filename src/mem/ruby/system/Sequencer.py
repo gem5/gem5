@@ -29,9 +29,9 @@
 
 from m5.params import *
 from m5.proxy import *
-from MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 
-class RubyPort(MemObject):
+class RubyPort(ClockedObject):
    type = 'RubyPort'
    abstract = True
    cxx_header = "mem/ruby/system/RubyPort.hh"
@@ -63,17 +63,12 @@ class RubySequencer(RubyPort):
 
    icache = Param.RubyCache("")
    dcache = Param.RubyCache("")
-   # Cache latencies currently assessed at the beginning of each access
-   # NOTE: Setting these values to a value greater than one will result in
-   # O3 CPU pipeline bubbles and negatively impact performance
-   # TODO: Latencies should be migrated into each top-level cache controller
-   icache_hit_latency = Param.Cycles(1, "Inst cache hit latency")
-   dcache_hit_latency = Param.Cycles(1, "Data cache hit latency")
+
    max_outstanding_requests = Param.Int(16,
        "max requests (incl. prefetches) outstanding")
    deadlock_threshold = Param.Cycles(500000,
        "max outstanding cycles for a request before deadlock/livelock declared")
-   using_network_tester = Param.Bool(False, "")
+   garnet_standalone = Param.Bool(False, "")
    # id used by protocols that support multiple sequencers per controller
    # 99 is the dummy default value
    coreid = Param.Int(99, "CorePair core id")
@@ -81,3 +76,4 @@ class RubySequencer(RubyPort):
 class DMASequencer(RubyPort):
    type = 'DMASequencer'
    cxx_header = "mem/ruby/system/DMASequencer.hh"
+   max_outstanding_requests = Param.Int(64, "max outstanding requests")

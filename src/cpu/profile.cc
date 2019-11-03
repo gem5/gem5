@@ -28,15 +28,16 @@
  * Authors: Nathan Binkert
  */
 
+#include "cpu/profile.hh"
+
 #include <string>
 
-#include "base/loader/symtab.hh"
 #include "base/bitfield.hh"
 #include "base/callback.hh"
+#include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
-#include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
 
 using namespace std;

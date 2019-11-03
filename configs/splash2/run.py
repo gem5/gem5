@@ -29,14 +29,15 @@
 # Splash2 Run Script
 #
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 import os
 import optparse
 import sys
 
 import m5
 from m5.objects import *
-
-m5.util.addToPath('../common')
 
 # --------------------
 # Define Command Line Options
@@ -69,49 +70,49 @@ parser.add_option("-b", "--benchmark",
 (options, args) = parser.parse_args()
 
 if args:
-    print "Error: script doesn't take any positional arguments"
+    print("Error: script doesn't take any positional arguments")
     sys.exit(1)
 
 if not options.numcpus:
-    print "Specify the number of cpus with -n"
+    print("Specify the number of cpus with -n")
     sys.exit(1)
 
 # --------------------
 # Define Splash2 Benchmarks
 # ====================
-class Cholesky(LiveProcess):
+class Cholesky(Process):
     cwd = options.rootdir + '/kernels/cholesky'
     executable = options.rootdir + '/kernels/cholesky/CHOLESKY'
     cmd = ['CHOLESKY', '-p' +  str(options.numcpus),
             options.rootdir + '/kernels/cholesky/inputs/tk23.O']
 
-class FFT(LiveProcess):
+class FFT(Process):
     cwd = options.rootdir + '/kernels/fft'
     executable = options.rootdir + '/kernels/fft/FFT'
     cmd = ['FFT', '-p', str(options.numcpus), '-m18']
 
-class LU_contig(LiveProcess):
+class LU_contig(Process):
     executable = options.rootdir + '/kernels/lu/contiguous_blocks/LU'
     cmd = ['LU', '-p', str(options.numcpus)]
     cwd = options.rootdir + '/kernels/lu/contiguous_blocks'
 
-class LU_noncontig(LiveProcess):
+class LU_noncontig(Process):
     executable = options.rootdir + '/kernels/lu/non_contiguous_blocks/LU'
     cmd = ['LU', '-p', str(options.numcpus)]
     cwd = options.rootdir + '/kernels/lu/non_contiguous_blocks'
 
-class Radix(LiveProcess):
+class Radix(Process):
     executable = options.rootdir + '/kernels/radix/RADIX'
     cmd = ['RADIX', '-n524288', '-p', str(options.numcpus)]
     cwd = options.rootdir + '/kernels/radix'
 
-class Barnes(LiveProcess):
+class Barnes(Process):
     executable = options.rootdir + '/apps/barnes/BARNES'
     cmd = ['BARNES']
     input = options.rootdir + '/apps/barnes/input.p' + str(options.numcpus)
     cwd = options.rootdir + '/apps/barnes'
 
-class FMM(LiveProcess):
+class FMM(Process):
     executable = options.rootdir + '/apps/fmm/FMM'
     cmd = ['FMM']
     if str(options.numcpus) == '1':
@@ -120,23 +121,23 @@ class FMM(LiveProcess):
         input = options.rootdir + '/apps/fmm/inputs/input.2048.p' + str(options.numcpus)
     cwd = options.rootdir + '/apps/fmm'
 
-class Ocean_contig(LiveProcess):
+class Ocean_contig(Process):
     executable = options.rootdir + '/apps/ocean/contiguous_partitions/OCEAN'
     cmd = ['OCEAN', '-p', str(options.numcpus)]
     cwd = options.rootdir + '/apps/ocean/contiguous_partitions'
 
-class Ocean_noncontig(LiveProcess):
+class Ocean_noncontig(Process):
     executable = options.rootdir + '/apps/ocean/non_contiguous_partitions/OCEAN'
     cmd = ['OCEAN', '-p', str(options.numcpus)]
     cwd = options.rootdir + '/apps/ocean/non_contiguous_partitions'
 
-class Raytrace(LiveProcess):
+class Raytrace(Process):
     executable = options.rootdir + '/apps/raytrace/RAYTRACE'
     cmd = ['RAYTRACE', '-p' + str(options.numcpus),
            options.rootdir + '/apps/raytrace/inputs/teapot.env']
     cwd = options.rootdir + '/apps/raytrace'
 
-class Water_nsquared(LiveProcess):
+class Water_nsquared(Process):
     executable = options.rootdir + '/apps/water-nsquared/WATER-NSQUARED'
     cmd = ['WATER-NSQUARED']
     if options.numcpus==1:
@@ -145,7 +146,7 @@ class Water_nsquared(LiveProcess):
         input = options.rootdir + '/apps/water-nsquared/input.p' + str(options.numcpus)
     cwd = options.rootdir + '/apps/water-nsquared'
 
-class Water_spatial(LiveProcess):
+class Water_spatial(Process):
     executable = options.rootdir + '/apps/water-spatial/WATER-SPATIAL'
     cmd = ['WATER-SPATIAL']
     if options.numcpus==1:
@@ -182,15 +183,15 @@ busFrequency = Frequency(options.frequency)
 if options.timing:
     cpus = [TimingSimpleCPU(cpu_id = i,
                             clock=options.frequency)
-            for i in xrange(options.numcpus)]
+            for i in range(options.numcpus)]
 elif options.detailed:
     cpus = [DerivO3CPU(cpu_id = i,
                        clock=options.frequency)
-            for i in xrange(options.numcpus)]
+            for i in range(options.numcpus)]
 else:
     cpus = [AtomicSimpleCPU(cpu_id = i,
                             clock=options.frequency)
-            for i in xrange(options.numcpus)]
+            for i in range(options.numcpus)]
 
 # ----------------------
 # Create a system, and add system wide objects
@@ -255,9 +256,10 @@ elif options.benchmark == 'WaterNSquared':
 elif options.benchmark == 'WaterSpatial':
     root.workload = Water_spatial()
 else:
-    print >> sys.stderr, """The --benchmark environment variable was set to something improper.
-Use Cholesky, FFT, LUContig, LUNoncontig, Radix, Barnes, FMM, OceanContig,
-OceanNoncontig, Raytrace, WaterNSquared, or WaterSpatial"""
+    print("The --benchmark environment variable was set to something "
+          "improper. Use Cholesky, FFT, LUContig, LUNoncontig, Radix, "
+          "Barnes, FMM, OceanContig, OceanNoncontig, Raytrace, WaterNSquared, "
+          "or WaterSpatial", file=sys.stderr)
     sys.exit(1)
 
 # --------------------
@@ -283,5 +285,5 @@ if options.maxtick:
 else:
     exit_event = m5.simulate(m5.MaxTick)
 
-print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
+print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())
 

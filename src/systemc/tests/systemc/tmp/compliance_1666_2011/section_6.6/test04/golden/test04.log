@@ -1,0 +1,8 @@
+SystemC Simulation
+Target called/reset at 0 s
+Target awoke at 10 ns
+Target called/reset at 20 ns
+Target called/reset at 30 ns
+Target awoke at 40 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.

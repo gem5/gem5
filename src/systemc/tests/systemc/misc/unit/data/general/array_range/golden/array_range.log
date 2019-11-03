@@ -1,0 +1,8 @@
+SystemC Simulation
+IN1 = 01011001
+O1 = 0101  O2 = 1001
+O3 = 10011010
+O4 = 10011010
+O5 = 10001110
+
+Info: /OSCI/SystemC: Simulation stopped by user.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2015-2017 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,15 +30,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: John Kalamatianos
+ * Authors: John Kalamatianos,
+ *          Mark Wyse
  */
 
 #include "gpu-compute/vector_register_file.hh"
 
 #include <string>
 
-#include "base/misc.hh"
-#include "gpu-compute/code_enums.hh"
+#include "base/logging.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
 #include "gpu-compute/shader.hh"
@@ -122,7 +122,7 @@ VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
 {
     for (int i = 0; i < ii->getNumOperands(); ++i) {
         if (ii->isVectorRegister(i)) {
-            uint32_t vgprIdx = ii->getRegisterIndex(i);
+            uint32_t vgprIdx = ii->getRegisterIndex(i, ii);
             uint32_t pVgpr = w->remap(vgprIdx, ii->getOperandSize(i), 1);
 
             if (regBusy(pVgpr, ii->getOperandSize(i)) == 1) {
@@ -153,15 +153,15 @@ VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
 void
 VectorRegisterFile::exec(GPUDynInstPtr ii, Wavefront *w)
 {
-    bool loadInstr = IS_OT_READ(ii->opType());
-    bool atomicInstr = IS_OT_ATOMIC(ii->opType());
+    bool loadInstr = ii->isLoad();
+    bool atomicInstr = ii->isAtomic() || ii->isMemFence();
 
     bool loadNoArgInstr = loadInstr && !ii->isArgLoad();
 
     // iterate over all register destination operands
     for (int i = 0; i < ii->getNumOperands(); ++i) {
         if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
-            uint32_t physReg = w->remap(ii->getRegisterIndex(i),
+            uint32_t physReg = w->remap(ii->getRegisterIndex(i, ii),
                                         ii->getOperandSize(i), 1);
 
             // mark the destination vector register as busy
@@ -217,7 +217,7 @@ VectorRegisterFile::updateResources(Wavefront *w, GPUDynInstPtr ii)
     // iterate over all register destination operands
     for (int i = 0; i < ii->getNumOperands(); ++i) {
         if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
-            uint32_t physReg = w->remap(ii->getRegisterIndex(i),
+            uint32_t physReg = w->remap(ii->getRegisterIndex(i, ii),
                                         ii->getOperandSize(i), 1);
             // set the in-flight status of the destination vector register
             preMarkReg(physReg, ii->getOperandSize(i), 1);

@@ -39,6 +39,7 @@
  */
 
 #include "arch/x86/insts/static_inst.hh"
+
 #include "arch/x86/regs/segment.hh"
 #include "cpu/reg_class.hh"
 
@@ -119,7 +120,7 @@ namespace X86ISA
     }
 
     void
-    X86StaticInst::printReg(std::ostream &os, int reg, int size) const
+    X86StaticInst::printReg(std::ostream &os, RegId reg, int size) const
     {
         assert(size == 1 || size == 2 || size == 4 || size == 8);
         static const char * abcdFormats[9] =
@@ -131,20 +132,19 @@ namespace X86ISA
         static const char * microFormats[9] =
             {"", "t%db", "t%dw", "", "t%dd", "", "", "", "t%d"};
 
-        RegIndex rel_reg;
+        RegIndex reg_idx = reg.index();
 
-        switch (regIdxToClass(reg, &rel_reg)) {
-          case IntRegClass: {
+        if (reg.isIntReg()) {
             const char * suffix = "";
-            bool fold = rel_reg & IntFoldBit;
-            rel_reg &= ~IntFoldBit;
+            bool fold = reg_idx & IntFoldBit;
+            reg_idx &= ~IntFoldBit;
 
             if (fold)
                 suffix = "h";
-            else if (rel_reg < 8 && size == 1)
+            else if (reg_idx < 8 && size == 1)
                 suffix = "l";
 
-            switch (rel_reg) {
+            switch (reg_idx) {
               case INTREG_RAX:
                 ccprintf(os, abcdFormats[size], "a");
                 break;
@@ -194,43 +194,37 @@ namespace X86ISA
                 ccprintf(os, longFormats[size], "15");
                 break;
               default:
-                ccprintf(os, microFormats[size], rel_reg - NUM_INTREGS);
+                ccprintf(os, microFormats[size], reg_idx - NUM_INTREGS);
             }
             ccprintf(os, suffix);
-            break;
-          }
 
-          case FloatRegClass: {
-            if (rel_reg < NumMMXRegs) {
-                ccprintf(os, "%%mmx%d", rel_reg);
+        } else if (reg.isFloatReg()) {
+            if (reg_idx < NumMMXRegs) {
+                ccprintf(os, "%%mmx%d", reg_idx);
                 return;
             }
-            rel_reg -= NumMMXRegs;
-            if (rel_reg < NumXMMRegs * 2) {
-                ccprintf(os, "%%xmm%d_%s", rel_reg / 2,
-                        (rel_reg % 2) ? "high": "low");
+            reg_idx -= NumMMXRegs;
+            if (reg_idx < NumXMMRegs * 2) {
+                ccprintf(os, "%%xmm%d_%s", reg_idx / 2,
+                        (reg_idx % 2) ? "high": "low");
                 return;
             }
-            rel_reg -= NumXMMRegs * 2;
-            if (rel_reg < NumMicroFpRegs) {
-                ccprintf(os, "%%ufp%d", rel_reg);
+            reg_idx -= NumXMMRegs * 2;
+            if (reg_idx < NumMicroFpRegs) {
+                ccprintf(os, "%%ufp%d", reg_idx);
                 return;
             }
-            rel_reg -= NumMicroFpRegs;
-            ccprintf(os, "%%st(%d)", rel_reg);
-            break;
-          }
+            reg_idx -= NumMicroFpRegs;
+            ccprintf(os, "%%st(%d)", reg_idx);
 
-          case CCRegClass:
-            ccprintf(os, "%%cc%d", rel_reg);
-            break;
+        } else if (reg.isCCReg()) {
+            ccprintf(os, "%%cc%d", reg_idx);
 
-          case MiscRegClass:
-            switch (rel_reg) {
+        } else if (reg.isMiscReg()) {
+            switch (reg_idx) {
               default:
-                ccprintf(os, "%%ctrl%d", rel_reg);
+                ccprintf(os, "%%ctrl%d", reg_idx);
             }
-            break;
         }
     }
 
@@ -249,14 +243,14 @@ namespace X86ISA
             {
                 if (scale != 1)
                     ccprintf(os, "%d*", scale);
-                printReg(os, index, addressSize);
+                printReg(os, InstRegIndex(index), addressSize);
                 someAddr = true;
             }
             if (base != ZeroReg)
             {
                 if (someAddr)
                     os << " + ";
-                printReg(os, base, addressSize);
+                printReg(os, InstRegIndex(base), addressSize);
                 someAddr = true;
             }
         }

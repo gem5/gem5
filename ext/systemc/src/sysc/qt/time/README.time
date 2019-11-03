@@ -1,0 +1,17 @@
+The program `raw', when run in `..' runs the program `run' produced
+from `meas.c'.  It produces a raw output file (see `../tmp/*.raw').
+`raw' will die with an error if run in the current directory.  Note
+that some versions of `time' produce output in an unexpected format;
+edit them by hand.
+
+`prim', `init', `cswap' and `go' produce formatted table entries used
+in the documentation (in `../doc').  For example, from `..',
+
+	foreach i (tmp/*.raw)
+	  time/prim $i
+	end
+
+See notes in the QuickThreads document about the applicability of
+these microbenchmark measurements -- in general, you can expect all
+QuickThreads operations to be a bit slower when used in a real
+application.

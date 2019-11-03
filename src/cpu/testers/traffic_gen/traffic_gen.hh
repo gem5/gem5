@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2016 ARM Limited
+ * Copyright (c) 2012-2013, 2016-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -38,66 +38,70 @@
  *          Andreas Hansson
  *          Sascha Bischoff
  */
+
 #ifndef __CPU_TRAFFIC_GEN_TRAFFIC_GEN_HH__
 #define __CPU_TRAFFIC_GEN_TRAFFIC_GEN_HH__
 
 #include <unordered_map>
 
-#include "base/statistics.hh"
-#include "cpu/testers/traffic_gen/generators.hh"
-#include "mem/mem_object.hh"
-#include "mem/qport.hh"
-#include "params/TrafficGen.hh"
+#include "cpu/testers/traffic_gen/base.hh"
+
+struct TrafficGenParams;
 
 /**
  * The traffic generator is a master module that generates stimuli for
- * the memory system, based on a collection of simple generator
- * behaviours that are either probabilistic or based on traces. It can
- * be used stand alone for creating test cases for interconnect and
- * memory controllers, or function as a black box replacement for
- * system components that are not yet modelled in detail, e.g. a video
- * engine or baseband subsystem.
+ * the memory system, based on a collection of simple behaviours that
+ * are either probabilistic or based on traces. It can be used stand
+ * alone for creating test cases for interconnect and memory
+ * controllers, or function as a black-box replacement for system
+ * components that are not yet modelled in detail, e.g. a video engine
+ * or baseband subsystem in an SoC.
+ *
+ * The traffic generator has a single master port that is used to send
+ * requests, independent of the specific behaviour. The behaviour of
+ * the traffic generator is specified in a configuration file, and this
+ * file describes a state transition graph where each state is a
+ * specific generator behaviour. Examples include idling, generating
+ * linear address sequences, random sequences and replay of captured
+ * traces. By describing these behaviours as states, it is straight
+ * forward to create very complex behaviours, simply by arranging them
+ * in graphs. The graph transitions can also be annotated with
+ * probabilities, effectively making it a Markov Chain.
  */
-class TrafficGen : public MemObject
+class TrafficGen : public BaseTrafficGen
 {
+  private: // Params
+    /**
+     * The config file to parse.
+     */
+    const std::string configFile;
 
   private:
-
     /**
-     * Determine next state and perform the transition.
-     */
-    void transition();
-
-    /**
-     * Enter a new state.
+     * Resolve a file path in the configuration file.
      *
-     * @param newState identifier of state to enter
+     * This method resolves a relative path to a file that has been
+     * referenced in the configuration file. It first tries to resolve
+     * the file relative to the configuration file's path. If that
+     * fails, it falls back to constructing a path relative to the
+     * current working directory.
+     *
+     * Absolute paths are returned unmodified.
+     *
+     * @param name Path to resolve
      */
-    void enterState(uint32_t newState);
+    std::string resolveFile(const std::string &name);
 
-    /**
-     * Parse the config file and build the state map and
-     * transition matrix.
-     */
+     /**
+      * Parse the config file and build the state map and
+      * transition matrix.
+      */
     void parseConfig();
 
     /**
-     * Schedules event for next update and executes an update on the
-     * state graph, either performing a state transition or executing
-     * the current state, depending on the current time.
+     * Use the transition matrix to find the next state index.
      */
-    void update();
-
-    /**
-     * Receive a retry from the neighbouring port and attempt to
-     * resend the waiting packet.
-     */
-    void recvReqRetry();
-
-    /**
-     * Method to inform the user we have made no progress.
-     */
-    void noProgress();
+    size_t nextState();
 
     /** Struct to represent a probabilistic transition during parsing. */
     struct Transition {
@@ -106,45 +110,6 @@ class TrafficGen : public MemObject
         double p;
     };
 
-    /**
-     * The system used to determine which mode we are currently operating
-     * in.
-     */
-    System* system;
-
-    /**
-     * MasterID used in generated requests.
-     */
-    MasterID masterID;
-
-    /**
-     * The config file to parse.
-     */
-    const std::string configFile;
-
-    /**
-     * Determine whether to add elasticity in the request injection,
-     * thus responding to backpressure by slowing things down.
-     */
-    const bool elasticReq;
-
-    /**
-     * Time to tolerate waiting for retries (not making progress),
-     * until we declare things broken.
-     */
-    const Tick progressCheck;
-
-    /**
-     * Event to keep track of our progress, or lack thereof.
-     */
-    EventWrapper<TrafficGen, &TrafficGen::noProgress> noProgressEvent;
-
-    /** Time of next transition */
-    Tick nextTransitionTick;
-
-    /** Time of the next packet. */
-    Tick nextPacketTick;
-
     /** State transition matrix */
     std::vector<std::vector<double> > transitionMatrix;
 
@@ -152,57 +117,10 @@ class TrafficGen : public MemObject
     uint32_t currState;
 
     /** Map of generator states */
-    std::unordered_map<uint32_t, BaseGen*> states;
+    std::unordered_map<uint32_t, std::shared_ptr<BaseGen>> states;
 
-    /** Master port specialisation for the traffic generator */
-    class TrafficGenPort : public MasterPort
-    {
-      public:
-
-        TrafficGenPort(const std::string& name, TrafficGen& traffic_gen)
-            : MasterPort(name, &traffic_gen), trafficGen(traffic_gen)
-        { }
-
-      protected:
-
-        void recvReqRetry() { trafficGen.recvReqRetry(); }
-
-        bool recvTimingResp(PacketPtr pkt);
-
-        void recvTimingSnoopReq(PacketPtr pkt) { }
-
-        void recvFunctionalSnoop(PacketPtr pkt) { }
-
-        Tick recvAtomicSnoop(PacketPtr pkt) { return 0; }
-
-      private:
-
-        TrafficGen& trafficGen;
-
-    };
-
-    /** The instance of master port used by the traffic generator. */
-    TrafficGenPort port;
-
-    /** Packet waiting to be sent. */
-    PacketPtr retryPkt;
-
-    /** Tick when the stalled packet was meant to be sent. */
-    Tick retryPktTick;
-
-    /** Event for scheduling updates */
-    EventWrapper<TrafficGen, &TrafficGen::update> updateEvent;
-
-    uint64_t numSuppressed;
-
-    /** Count the number of generated packets. */
-    Stats::Scalar numPackets;
-
-    /** Count the number of retries. */
-    Stats::Scalar numRetries;
-
-    /** Count the time incurred from back-pressure. */
-    Stats::Scalar retryTicks;
+  protected: // BaseTrafficGen
+    std::shared_ptr<BaseGen> nextGenerator() override;
 
   public:
 
@@ -210,20 +128,11 @@ class TrafficGen : public MemObject
 
     ~TrafficGen() {}
 
-    BaseMasterPort& getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID) override;
-
     void init() override;
-
     void initState() override;
-
-    DrainState drain() override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
-
-    /** Register statistics */
-    void regStats() override;
 
 };
 

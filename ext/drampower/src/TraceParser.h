@@ -48,6 +48,7 @@
 
 class TraceParser {
  public:
+  TraceParser(const Data::MemorySpecification& memSpec);
   // list of parsed commands
   std::vector<Data::MemCommand> cmd_list;
 

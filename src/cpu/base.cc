@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012,2016 ARM Limited
+ * Copyright (c) 2011-2012,2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,18 +45,19 @@
  *          Rick Strong
  */
 
+#include "cpu/base.hh"
+
 #include <iostream>
 #include <sstream>
 #include <string>
 
-#include "arch/tlb.hh"
-#include "base/loader/symtab.hh"
+#include "arch/generic/tlb.hh"
 #include "base/cprintf.hh"
-#include "base/misc.hh"
+#include "base/loader/symtab.hh"
+#include "base/logging.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "cpu/checker/cpu.hh"
-#include "cpu/base.hh"
 #include "cpu/cpuevent.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
@@ -125,16 +126,21 @@ CPUProgressEvent::description() const
 }
 
 BaseCPU::BaseCPU(Params *p, bool is_checker)
-    : MemObject(p), instCnt(0), _cpuId(p->cpu_id), _socketId(p->socket_id),
-      _instMasterId(p->system->getMasterId(name() + ".inst")),
-      _dataMasterId(p->system->getMasterId(name() + ".data")),
+    : ClockedObject(p), instCnt(0), _cpuId(p->cpu_id), _socketId(p->socket_id),
+      _instMasterId(p->system->getMasterId(this, "inst")),
+      _dataMasterId(p->system->getMasterId(this, "data")),
       _taskId(ContextSwitchTaskId::Unknown), _pid(invldPid),
       _switchedOut(p->switched_out), _cacheLineSize(p->system->cacheLineSize()),
       interrupts(p->interrupts), profileEvent(NULL),
       numThreads(p->numThreads), system(p->system),
+      previousCycle(0), previousState(CPU_STATE_SLEEP),
       functionTraceStream(nullptr), currentFunctionStart(0),
       currentFunctionEnd(0), functionEntryTick(0),
-      addressMonitor(p->numThreads)
+      addressMonitor(p->numThreads),
+      syscallRetryLatency(p->syscallRetryLatency),
+      pwrGatingLatency(p->pwr_gating_latency),
+      powerGatingOnIdle(p->power_gating_on_idle),
+      enterPwrGatingEvent([this]{ enterPwrGating(); }, name())
 {
     // if Python did not provide a valid ID, do it here
     if (_cpuId == -1 ) {
@@ -150,72 +156,6 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
     if (numThreads > maxThreadsPerCPU)
         maxThreadsPerCPU = numThreads;
 
-    // allocate per-thread instruction-based event queues
-    comInstEventQueue = new EventQueue *[numThreads];
-    for (ThreadID tid = 0; tid < numThreads; ++tid)
-        comInstEventQueue[tid] =
-            new EventQueue("instruction-based event queue");
-
-    //
-    // set up instruction-count-based termination events, if any
-    //
-    if (p->max_insts_any_thread != 0) {
-        const char *cause = "a thread reached the max instruction count";
-        for (ThreadID tid = 0; tid < numThreads; ++tid)
-            scheduleInstStop(tid, p->max_insts_any_thread, cause);
-    }
-
-    // Set up instruction-count-based termination events for SimPoints
-    // Typically, there are more than one action points.
-    // Simulation.py is responsible to take the necessary actions upon
-    // exitting the simulation loop.
-    if (!p->simpoint_start_insts.empty()) {
-        const char *cause = "simpoint starting point found";
-        for (size_t i = 0; i < p->simpoint_start_insts.size(); ++i)
-            scheduleInstStop(0, p->simpoint_start_insts[i], cause);
-    }
-
-    if (p->max_insts_all_threads != 0) {
-        const char *cause = "all threads reached the max instruction count";
-
-        // allocate & initialize shared downcounter: each event will
-        // decrement this when triggered; simulation will terminate
-        // when counter reaches 0
-        int *counter = new int;
-        *counter = numThreads;
-        for (ThreadID tid = 0; tid < numThreads; ++tid) {
-            Event *event = new CountedExitEvent(cause, *counter);
-            comInstEventQueue[tid]->schedule(event, p->max_insts_all_threads);
-        }
-    }
-
-    // allocate per-thread load-based event queues
-    comLoadEventQueue = new EventQueue *[numThreads];
-    for (ThreadID tid = 0; tid < numThreads; ++tid)
-        comLoadEventQueue[tid] = new EventQueue("load-based event queue");
-
-    //
-    // set up instruction-count-based termination events, if any
-    //
-    if (p->max_loads_any_thread != 0) {
-        const char *cause = "a thread reached the max load count";
-        for (ThreadID tid = 0; tid < numThreads; ++tid)
-            scheduleLoadStop(tid, p->max_loads_any_thread, cause);
-    }
-
-    if (p->max_loads_all_threads != 0) {
-        const char *cause = "all threads reached the max load count";
-        // allocate & initialize shared downcounter: each event will
-        // decrement this when triggered; simulation will terminate
-        // when counter reaches 0
-        int *counter = new int;
-        *counter = numThreads;
-        for (ThreadID tid = 0; tid < numThreads; ++tid) {
-            Event *event = new CountedExitEvent(cause, *counter);
-            comLoadEventQueue[tid]->schedule(event, p->max_loads_all_threads);
-        }
-    }
-
     functionTracingEnabled = false;
     if (p->function_trace) {
         const string fname = csprintf("ftrace.%s", name());
@@ -227,8 +167,8 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
         if (p->function_trace_start == 0) {
             functionTracingEnabled = true;
         } else {
-            typedef EventWrapper<BaseCPU, &BaseCPU::enableFunctionTrace> wrap;
-            Event *event = new wrap(this, true);
+            Event *event = new EventFunctionWrapper(
+                [this]{ enableFunctionTrace(); }, name(), true);
             schedule(event, p->function_trace_start);
         }
     }
@@ -246,7 +186,9 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
 
     if (FullSystem) {
         if (params()->profile)
-            profileEvent = new ProfileEvent(this, params()->profile);
+            profileEvent = new EventFunctionWrapper(
+                [this]{ processProfileEvent(); },
+                name());
     }
     tracer = params()->tracer;
 
@@ -265,8 +207,6 @@ BaseCPU::enableFunctionTrace()
 BaseCPU::~BaseCPU()
 {
     delete profileEvent;
-    delete[] comLoadEventQueue;
-    delete[] comInstEventQueue;
 }
 
 void
@@ -305,12 +245,13 @@ BaseCPU::mwait(ThreadID tid, PacketPtr pkt)
 }
 
 void
-BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, TheISA::TLB *dtb)
+BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseTLB *dtb)
 {
     assert(tid < numThreads);
     AddressMonitor &monitor = addressMonitor[tid];
 
-    Request req;
+    RequestPtr req = std::make_shared<Request>();
+
     Addr addr = monitor.vAddr;
     int block_size = cacheLineSize();
     uint64_t mask = ~((uint64_t)(block_size - 1));
@@ -322,13 +263,13 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, TheISA::TLB *dtb)
     if (secondAddr > addr)
         size = secondAddr - addr;
 
-    req.setVirt(0, addr, size, 0x0, dataMasterId(), tc->instAddr());
+    req->setVirt(0, addr, size, 0x0, dataMasterId(), tc->instAddr());
 
     // translate to physical address
-    Fault fault = dtb->translateAtomic(&req, tc, BaseTLB::Read);
+    Fault fault = dtb->translateAtomic(req, tc, BaseTLB::Read);
     assert(fault == NoFault);
 
-    monitor.pAddr = req.getPaddr() & mask;
+    monitor.pAddr = req->getPaddr() & mask;
     monitor.waiting = true;
 
     DPRINTF(Mwait,"[tid:%d] mwait called (vAddr=0x%lx, line's paddr=0x%lx)\n",
@@ -338,6 +279,39 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, TheISA::TLB *dtb)
 void
 BaseCPU::init()
 {
+    // Set up instruction-count-based termination events, if any. This needs
+    // to happen after threadContexts has been constructed.
+    if (params()->max_insts_any_thread != 0) {
+        const char *cause = "a thread reached the max instruction count";
+        for (ThreadID tid = 0; tid < numThreads; ++tid)
+            scheduleInstStop(tid, params()->max_insts_any_thread, cause);
+    }
+
+    // Set up instruction-count-based termination events for SimPoints
+    // Typically, there are more than one action points.
+    // Simulation.py is responsible to take the necessary actions upon
+    // exitting the simulation loop.
+    if (!params()->simpoint_start_insts.empty()) {
+        const char *cause = "simpoint starting point found";
+        for (size_t i = 0; i < params()->simpoint_start_insts.size(); ++i)
+            scheduleInstStop(0, params()->simpoint_start_insts[i], cause);
+    }
+
+    if (params()->max_insts_all_threads != 0) {
+        const char *cause = "all threads reached the max instruction count";
+
+        // allocate & initialize shared downcounter: each event will
+        // decrement this when triggered; simulation will terminate
+        // when counter reaches 0
+        int *counter = new int;
+        *counter = numThreads;
+        for (ThreadID tid = 0; tid < numThreads; ++tid) {
+            Event *event = new CountedExitEvent(cause, *counter);
+            threadContexts[tid]->scheduleInstCountEvent(
+                    event, params()->max_insts_all_threads);
+        }
+    }
+
     if (!params()->switched_out) {
         registerThreadContexts();
 
@@ -357,6 +331,9 @@ BaseCPU::startup()
         new CPUProgressEvent(this, params()->progress_interval);
     }
 
+    if (_switchedOut)
+        ClockedObject::pwrState(Enums::PwrState::OFF);
+
     // Assumption CPU start to operate instantaneously without any latency
     if (ClockedObject::pwrState() == Enums::PwrState::UNDEFINED)
         ClockedObject::pwrState(Enums::PwrState::ON);
@@ -375,25 +352,31 @@ BaseCPU::pmuProbePoint(const char *name)
 void
 BaseCPU::regProbePoints()
 {
-    ppCycles = pmuProbePoint("Cycles");
+    ppAllCycles = pmuProbePoint("Cycles");
+    ppActiveCycles = pmuProbePoint("ActiveCycles");
 
     ppRetiredInsts = pmuProbePoint("RetiredInsts");
+    ppRetiredInstsPC = pmuProbePoint("RetiredInstsPC");
     ppRetiredLoads = pmuProbePoint("RetiredLoads");
     ppRetiredStores = pmuProbePoint("RetiredStores");
     ppRetiredBranches = pmuProbePoint("RetiredBranches");
+
+    ppSleeping = new ProbePointArg<bool>(this->getProbeManager(),
+                                         "Sleeping");
 }
 
 void
-BaseCPU::probeInstCommit(const StaticInstPtr &inst)
+BaseCPU::probeInstCommit(const StaticInstPtr &inst, Addr pc)
 {
-    if (!inst->isMicroop() || inst->isLastMicroop())
+    if (!inst->isMicroop() || inst->isLastMicroop()) {
         ppRetiredInsts->notify(1);
-
+        ppRetiredInstsPC->notify(pc);
+    }
 
     if (inst->isLoad())
         ppRetiredLoads->notify(1);
 
-    if (inst->isStore())
+    if (inst->isStore() || inst->isAtomic())
         ppRetiredStores->notify(1);
 
     if (inst->isControl())
@@ -403,7 +386,7 @@ BaseCPU::probeInstCommit(const StaticInstPtr &inst)
 void
 BaseCPU::regStats()
 {
-    MemObject::regStats();
+    ClockedObject::regStats();
 
     using namespace Stats;
 
@@ -433,19 +416,18 @@ BaseCPU::regStats()
         threadContexts[0]->regStats(name());
 }
 
-BaseMasterPort &
-BaseCPU::getMasterPort(const string &if_name, PortID idx)
+Port &
+BaseCPU::getPort(const string &if_name, PortID idx)
 {
     // Get the right port based on name. This applies to all the
     // subclasses of the base CPU and relies on their implementation
-    // of getDataPort and getInstPort. In all cases there methods
-    // return a MasterPort pointer.
+    // of getDataPort and getInstPort.
     if (if_name == "dcache_port")
         return getDataPort();
     else if (if_name == "icache_port")
         return getInstPort();
     else
-        return MemObject::getMasterPort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
 }
 
 void
@@ -468,6 +450,30 @@ BaseCPU::registerThreadContexts()
     }
 }
 
+void
+BaseCPU::deschedulePowerGatingEvent()
+{
+    if (enterPwrGatingEvent.scheduled()){
+        deschedule(enterPwrGatingEvent);
+    }
+}
+
+void
+BaseCPU::schedulePowerGatingEvent()
+{
+    for (auto tc : threadContexts) {
+        if (tc->status() == ThreadContext::Active)
+            return;
+    }
+
+    if (ClockedObject::pwrState() == Enums::PwrState::CLK_GATED &&
+        powerGatingOnIdle) {
+        assert(!enterPwrGatingEvent.scheduled());
+        // Schedule a power gating event when clock gated for the specified
+        // amount of time
+        schedule(enterPwrGatingEvent, clockEdge(pwrGatingLatency));
+    }
+}
 
 int
 BaseCPU::findContext(ThreadContext *tc)
@@ -483,8 +489,13 @@ BaseCPU::findContext(ThreadContext *tc)
 void
 BaseCPU::activateContext(ThreadID thread_num)
 {
+    // Squash enter power gating event while cpu gets activated
+    if (enterPwrGatingEvent.scheduled())
+        deschedule(enterPwrGatingEvent);
     // For any active thread running, update CPU power state to active (ON)
     ClockedObject::pwrState(Enums::PwrState::ON);
+
+    updateCycleCounters(CPU_STATE_WAKEUP);
 }
 
 void
@@ -497,8 +508,30 @@ BaseCPU::suspendContext(ThreadID thread_num)
         }
     }
 
+    // All CPU thread are suspended, update cycle count
+    updateCycleCounters(CPU_STATE_SLEEP);
+
     // All CPU threads suspended, enter lower power state for the CPU
     ClockedObject::pwrState(Enums::PwrState::CLK_GATED);
+
+    // If pwrGatingLatency is set to 0 then this mechanism is disabled
+    if (powerGatingOnIdle) {
+        // Schedule power gating event when clock gated for pwrGatingLatency
+        // cycles
+        schedule(enterPwrGatingEvent, clockEdge(pwrGatingLatency));
+    }
+}
+
+void
+BaseCPU::haltContext(ThreadID thread_num)
+{
+    updateCycleCounters(BaseCPU::CPU_STATE_SLEEP);
+}
+
+void
+BaseCPU::enterPwrGating(void)
+{
+    ClockedObject::pwrState(Enums::PwrState::OFF);
 }
 
 void
@@ -512,6 +545,9 @@ BaseCPU::switchOut()
     // Flush all TLBs in the CPU to avoid having stale translations if
     // it gets switched in later.
     flushTLBs();
+
+    // Go to the power gating state
+    ClockedObject::pwrState(Enums::PwrState::OFF);
 }
 
 void
@@ -523,6 +559,12 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     assert(oldCPU != this);
     _pid = oldCPU->getPid();
     _taskId = oldCPU->taskId();
+    // Take over the power state of the switchedOut CPU
+    ClockedObject::pwrState(oldCPU->pwrState());
+
+    previousState = oldCPU->previousState;
+    previousCycle = oldCPU->previousCycle;
+
     _switchedOut = false;
 
     ThreadID size = threadContexts.size();
@@ -545,28 +587,16 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
             ThreadContext::compare(oldTC, newTC);
         */
 
-        BaseMasterPort *old_itb_port = oldTC->getITBPtr()->getMasterPort();
-        BaseMasterPort *old_dtb_port = oldTC->getDTBPtr()->getMasterPort();
-        BaseMasterPort *new_itb_port = newTC->getITBPtr()->getMasterPort();
-        BaseMasterPort *new_dtb_port = newTC->getDTBPtr()->getMasterPort();
+        Port *old_itb_port = oldTC->getITBPtr()->getTableWalkerPort();
+        Port *old_dtb_port = oldTC->getDTBPtr()->getTableWalkerPort();
+        Port *new_itb_port = newTC->getITBPtr()->getTableWalkerPort();
+        Port *new_dtb_port = newTC->getDTBPtr()->getTableWalkerPort();
 
         // Move over any table walker ports if they exist
-        if (new_itb_port) {
-            assert(!new_itb_port->isConnected());
-            assert(old_itb_port);
-            assert(old_itb_port->isConnected());
-            BaseSlavePort &slavePort = old_itb_port->getSlavePort();
-            old_itb_port->unbind();
-            new_itb_port->bind(slavePort);
-        }
-        if (new_dtb_port) {
-            assert(!new_dtb_port->isConnected());
-            assert(old_dtb_port);
-            assert(old_dtb_port->isConnected());
-            BaseSlavePort &slavePort = old_dtb_port->getSlavePort();
-            old_dtb_port->unbind();
-            new_dtb_port->bind(slavePort);
-        }
+        if (new_itb_port)
+            new_itb_port->takeOverFrom(old_itb_port);
+        if (new_dtb_port)
+            new_dtb_port->takeOverFrom(old_dtb_port);
         newTC->getITBPtr()->takeOverFrom(oldTC->getITBPtr());
         newTC->getDTBPtr()->takeOverFrom(oldTC->getDTBPtr());
 
@@ -575,37 +605,23 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         CheckerCPU *oldChecker = oldTC->getCheckerCpuPtr();
         CheckerCPU *newChecker = newTC->getCheckerCpuPtr();
         if (oldChecker && newChecker) {
-            BaseMasterPort *old_checker_itb_port =
-                oldChecker->getITBPtr()->getMasterPort();
-            BaseMasterPort *old_checker_dtb_port =
-                oldChecker->getDTBPtr()->getMasterPort();
-            BaseMasterPort *new_checker_itb_port =
-                newChecker->getITBPtr()->getMasterPort();
-            BaseMasterPort *new_checker_dtb_port =
-                newChecker->getDTBPtr()->getMasterPort();
+            Port *old_checker_itb_port =
+                oldChecker->getITBPtr()->getTableWalkerPort();
+            Port *old_checker_dtb_port =
+                oldChecker->getDTBPtr()->getTableWalkerPort();
+            Port *new_checker_itb_port =
+                newChecker->getITBPtr()->getTableWalkerPort();
+            Port *new_checker_dtb_port =
+                newChecker->getDTBPtr()->getTableWalkerPort();
 
             newChecker->getITBPtr()->takeOverFrom(oldChecker->getITBPtr());
             newChecker->getDTBPtr()->takeOverFrom(oldChecker->getDTBPtr());
 
             // Move over any table walker ports if they exist for checker
-            if (new_checker_itb_port) {
-                assert(!new_checker_itb_port->isConnected());
-                assert(old_checker_itb_port);
-                assert(old_checker_itb_port->isConnected());
-                BaseSlavePort &slavePort =
-                    old_checker_itb_port->getSlavePort();
-                old_checker_itb_port->unbind();
-                new_checker_itb_port->bind(slavePort);
-            }
-            if (new_checker_dtb_port) {
-                assert(!new_checker_dtb_port->isConnected());
-                assert(old_checker_dtb_port);
-                assert(old_checker_dtb_port->isConnected());
-                BaseSlavePort &slavePort =
-                    old_checker_dtb_port->getSlavePort();
-                old_checker_dtb_port->unbind();
-                new_checker_dtb_port->bind(slavePort);
-            }
+            if (new_checker_itb_port)
+                new_checker_itb_port->takeOverFrom(old_checker_itb_port);
+            if (new_checker_dtb_port)
+                new_checker_dtb_port->takeOverFrom(old_checker_dtb_port);
         }
     }
 
@@ -627,17 +643,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     // ports are dangling while the old CPU has its ports connected
     // already. Unbind the old CPU and then bind the ports of the one
     // we are switching to.
-    assert(!getInstPort().isConnected());
-    assert(oldCPU->getInstPort().isConnected());
-    BaseSlavePort &inst_peer_port = oldCPU->getInstPort().getSlavePort();
-    oldCPU->getInstPort().unbind();
-    getInstPort().bind(inst_peer_port);
-
-    assert(!getDataPort().isConnected());
-    assert(oldCPU->getDataPort().isConnected());
-    BaseSlavePort &data_peer_port = oldCPU->getDataPort().getSlavePort();
-    oldCPU->getDataPort().unbind();
-    getDataPort().bind(data_peer_port);
+    getInstPort().takeOverFrom(&oldCPU->getInstPort());
+    getDataPort().takeOverFrom(&oldCPU->getDataPort());
 }
 
 void
@@ -656,21 +663,15 @@ BaseCPU::flushTLBs()
     }
 }
 
-
-BaseCPU::ProfileEvent::ProfileEvent(BaseCPU *_cpu, Tick _interval)
-    : cpu(_cpu), interval(_interval)
-{ }
-
 void
-BaseCPU::ProfileEvent::process()
+BaseCPU::processProfileEvent()
 {
-    ThreadID size = cpu->threadContexts.size();
-    for (ThreadID i = 0; i < size; ++i) {
-        ThreadContext *tc = cpu->threadContexts[i];
-        tc->profileSample();
-    }
+    ThreadID size = threadContexts.size();
 
-    cpu->schedule(this, curTick() + interval);
+    for (ThreadID i = 0; i < size; ++i)
+        threadContexts[i]->profileSample();
+
+    schedule(profileEvent, curTick() + params()->profile);
 }
 
 void
@@ -714,16 +715,16 @@ BaseCPU::unserialize(CheckpointIn &cp)
 void
 BaseCPU::scheduleInstStop(ThreadID tid, Counter insts, const char *cause)
 {
-    const Tick now(comInstEventQueue[tid]->getCurTick());
+    const Tick now(getCurrentInstCount(tid));
     Event *event(new LocalSimLoopExitEvent(cause, 0));
 
-    comInstEventQueue[tid]->schedule(event, now + insts);
+    threadContexts[tid]->scheduleInstCountEvent(event, now + insts);
 }
 
-uint64_t
+Tick
 BaseCPU::getCurrentInstCount(ThreadID tid)
 {
-    return Tick(comInstEventQueue[tid]->getCurTick());
+    return threadContexts[tid]->getCurrentInstCount();
 }
 
 AddressMonitor::AddressMonitor() {
@@ -743,15 +744,6 @@ bool AddressMonitor::doMonitor(PacketPtr pkt) {
         }
     }
     return false;
-}
-
-void
-BaseCPU::scheduleLoadStop(ThreadID tid, Counter loads, const char *cause)
-{
-    const Tick now(comLoadEventQueue[tid]->getCurTick());
-    Event *event(new LocalSimLoopExitEvent(cause, 0));
-
-    comLoadEventQueue[tid]->schedule(event, now + loads);
 }
 
 
@@ -780,4 +772,10 @@ BaseCPU::traceFunctionsInternal(Addr pc)
                  curTick() - functionEntryTick, curTick(), sym_str);
         functionEntryTick = curTick();
     }
+}
+
+bool
+BaseCPU::waitForRemoteGDB() const
+{
+    return params()->wait_for_remote_gdb;
 }

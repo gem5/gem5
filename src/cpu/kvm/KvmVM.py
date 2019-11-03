@@ -44,6 +44,5 @@ class KvmVM(SimObject):
     type = 'KvmVM'
     cxx_header = "cpu/kvm/vm.hh"
 
-    system = Param.System(Parent.any, "system object")
-
-    coalescedMMIO = VectorParam.AddrRange([], "memory ranges for coalesced MMIO")
+    coalescedMMIO = \
+      VectorParam.AddrRange([], "memory ranges for coalesced MMIO")

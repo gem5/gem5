@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,43 +37,91 @@
  * Authors: Andreas Hansson
  */
 
-#include "base/chunk_generator.hh"
 #include "mem/port_proxy.hh"
 
+#include "base/chunk_generator.hh"
+
 void
-PortProxy::readBlob(Addr addr, uint8_t *p, int size) const
+PortProxy::readBlobPhys(Addr addr, Request::Flags flags,
+                        void *p, int size) const
 {
     for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
          gen.next()) {
-        Request req(gen.addr(), gen.size(), 0, Request::funcMasterId);
-        Packet pkt(&req, MemCmd::ReadReq);
-        pkt.dataStatic(p);
-        _port.sendFunctional(&pkt);
-        p += gen.size();
+
+        auto req = std::make_shared<Request>(
+            gen.addr(), gen.size(), flags, Request::funcMasterId);
+
+        Packet pkt(req, MemCmd::ReadReq);
+        pkt.dataStatic(static_cast<uint8_t *>(p));
+        sendFunctional(&pkt);
+        p = static_cast<uint8_t *>(p) + gen.size();
     }
 }
 
 void
-PortProxy::writeBlob(Addr addr, const uint8_t *p, int size) const
+PortProxy::writeBlobPhys(Addr addr, Request::Flags flags,
+                         const void *p, int size) const
 {
     for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
          gen.next()) {
-        Request req(gen.addr(), gen.size(), 0, Request::funcMasterId);
-        Packet pkt(&req, MemCmd::WriteReq);
-        pkt.dataStaticConst(p);
-        _port.sendFunctional(&pkt);
-        p += gen.size();
+
+        auto req = std::make_shared<Request>(
+            gen.addr(), gen.size(), flags, Request::funcMasterId);
+
+        Packet pkt(req, MemCmd::WriteReq);
+        pkt.dataStaticConst(static_cast<const uint8_t *>(p));
+        sendFunctional(&pkt);
+        p = static_cast<const uint8_t *>(p) + gen.size();
     }
 }
 
 void
-PortProxy::memsetBlob(Addr addr, uint8_t v, int size) const
+PortProxy::memsetBlobPhys(Addr addr, Request::Flags flags,
+                          uint8_t v, int size) const
 {
     // quick and dirty...
     uint8_t *buf = new uint8_t[size];
 
     std::memset(buf, v, size);
-    PortProxy::writeBlob(addr, buf, size);
+    PortProxy::writeBlobPhys(addr, flags, buf, size);
 
     delete [] buf;
+}
+
+bool
+PortProxy::tryWriteString(Addr addr, const char *str) const
+{
+    do {
+        if (!tryWriteBlob(addr++, str, 1))
+            return false;
+    } while (*str++);
+    return true;
+}
+
+bool
+PortProxy::tryReadString(std::string &str, Addr addr) const
+{
+    while (true) {
+        uint8_t c;
+        if (!tryReadBlob(addr++, &c, 1))
+            return false;
+        if (!c)
+            return true;
+        str += c;
+    }
+}
+
+bool
+PortProxy::tryReadString(char *str, Addr addr, size_t maxlen) const
+{
+    assert(maxlen);
+    while (maxlen--) {
+        if (!tryReadBlob(addr++, str, 1))
+            return false;
+        if (!*str++)
+            return true;
+    }
+    // We ran out of room, so back up and add a terminator.
+    *--str = '\0';
+    return true;
 }

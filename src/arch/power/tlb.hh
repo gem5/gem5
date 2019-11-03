@@ -159,17 +159,17 @@ class TLB : public BaseTLB
 
     // static helper functions... really
     static bool validVirtualAddress(Addr vaddr);
-    static Fault checkCacheability(RequestPtr &req);
-    Fault translateInst(RequestPtr req, ThreadContext *tc);
-    Fault translateData(RequestPtr req, ThreadContext *tc, bool write);
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-                         Translation *translation, Mode mode);
-    /** Stub function for CheckerCPU compilation support.  Power ISA not
-     *  supported by Checker at the moment
-     */
-    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
-    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
+    static Fault checkCacheability(const RequestPtr &req);
+    Fault translateInst(const RequestPtr &req, ThreadContext *tc);
+    Fault translateData(const RequestPtr &req, ThreadContext *tc, bool write);
+    Fault translateAtomic(
+            const RequestPtr &req, ThreadContext *tc, Mode mode) override;
+    void translateTiming(
+            const RequestPtr &req, ThreadContext *tc,
+            Translation *translation, Mode mode) override;
+    Fault finalizePhysical(
+            const RequestPtr &req,
+            ThreadContext *tc, Mode mode) const override;
 
     // Checkpointing
     void serialize(CheckpointOut &cp) const override;

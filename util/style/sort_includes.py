@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #
 # Copyright (c) 2014-2015 ARM Limited
 # All rights reserved
@@ -158,6 +158,9 @@ class SortIncludes(object):
     includes_re = (
         ('main', '""', _include_matcher_main()),
         ('python', '<>', _include_matcher_fname("^Python\.h$")),
+        ('pybind', '""', _include_matcher_fname("^pybind11/.*\.h$",
+                                                delim='""')),
+        ('m5shared', '<>', _include_matcher_fname("^gem5/")),
         ('c', '<>', _include_matcher_fname("^.*\.h$")),
         ('stl', '<>', _include_matcher_fname("^\w+$")),
         ('cc', '<>', _include_matcher_fname("^.*\.(hh|hxx|hpp|H)$")),
@@ -169,11 +172,13 @@ class SortIncludes(object):
         )
 
     block_order = (
-        ('main', ),
         ('python', ),
+        ('pybind', ),
+        ('main', ),
         ('c', ),
         ('stl', ),
         ('cc', ),
+        ('m5shared', ),
         ('m5header', ),
         ('swig0', 'swig1', 'swig2', 'swig3', ),
         )

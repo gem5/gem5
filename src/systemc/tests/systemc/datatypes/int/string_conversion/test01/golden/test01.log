@@ -1,0 +1,32 @@
+SystemC Simulation
+*** test_string_conversions
+sc_int
+-1
+0b11111111
+negative
+-0bsm00000001
+0o777
+negative
+-0osm001
+0xff
+negative
+-0xsm01
+-1
+0csd0000000-
+-1
+255
+sc_uint
+255
+0b011111111
+0bus11111111
+0bsm11111111
+0o377
+0ous377
+0osm377
+0x0ff
+0xusff
+0xsmff
+255
+0csd10000000-
+255
+255

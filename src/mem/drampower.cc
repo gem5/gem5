@@ -37,11 +37,10 @@
  * Authors: Omar Naji
  */
 
-#include "base/intmath.hh"
 #include "mem/drampower.hh"
-#include "sim/core.hh"
 
-using namespace Data;
+#include "base/intmath.hh"
+#include "sim/core.hh"
 
 DRAMPower::DRAMPower(const DRAMCtrlParams* p, bool include_io) :
     powerlib(libDRAMPower(getMemSpec(p), include_io))

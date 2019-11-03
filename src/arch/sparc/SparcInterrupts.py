@@ -26,9 +26,9 @@
 #
 # Authors: Gabe Black
 
-from m5.SimObject import SimObject
+from m5.objects.BaseInterrupts import BaseInterrupts
 
-class SparcInterrupts(SimObject):
+class SparcInterrupts(BaseInterrupts):
     type = 'SparcInterrupts'
     cxx_class = 'SparcISA::Interrupts'
     cxx_header = 'arch/sparc/interrupts.hh'

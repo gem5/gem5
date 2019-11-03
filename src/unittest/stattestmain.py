@@ -1,12 +1,12 @@
 def main():
-    from m5.internal.stattest import stattest_init, stattest_run
+    from _m5.stattest import stattest_init, stattest_run
     import m5.stats
 
     stattest_init()
 
     # Initialize the global statistics
     m5.stats.initSimStats()
-    m5.stats.initText("cout")
+    m5.stats.addStatVisitor("cout")
 
     # We're done registering statistics.  Enable the stats package now.
     m5.stats.enable()

@@ -41,6 +41,12 @@
 #include <fstream>
 #include <string>
 
+#ifdef KVM_SWITCH
+#include "m5op.h"
+
+void *m5_mem = (void*)0xffffc90000000000;
+#endif
+
 #define SUCCESS 0
 #define FAILURE 1
 
@@ -246,6 +252,10 @@ runCLKernel(cl_kernel kernel)
         printf("Error: Setting kernel argument. (memOut)\n");
         return FAILURE;
     }
+
+#ifdef KVM_SWITCH
+    m5_switchcpu();
+#endif
 
     // 2. Launch kernel
     status = clEnqueueNDRangeKernel(commandQueue, kernel, 1, NULL,

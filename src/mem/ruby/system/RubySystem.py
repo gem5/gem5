@@ -28,14 +28,16 @@
 #          Brad Beckmann
 
 from m5.params import *
-from ClockedObject import ClockedObject
-from SimpleMemory import *
+from m5.objects.ClockedObject import ClockedObject
+from m5.objects.SimpleMemory import *
 
 class RubySystem(ClockedObject):
     type = 'RubySystem'
     cxx_header = "mem/ruby/system/RubySystem.hh"
     randomization = Param.Bool(False,
-        "insert random delays on message enqueue times");
+        "insert random delays on message enqueue times (if True, all message \
+         buffers are enforced to have randomization; otherwise, a message \
+         buffer set its own flag to enable/disable randomization)");
     block_size_bytes = Param.UInt32(64,
         "default cache block size; must be a power of two");
     memory_size_bits = Param.UInt32(64,

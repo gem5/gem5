@@ -1,0 +1,151 @@
+SystemC Simulation
+AT_I1: Send write request: A = 0x10000000, D = 0x0 @ 0 s
+LT_I1: Send write request: A = 0x20000000, D = 0x0 @ 0 s
+LT_I2: Send write request: A = 0x30000000, D = 0x0 @ 0 s
+LT_I3: Send write request: A = 0x60000000, D = 0x0 @ 0 s
+AT_I2: Send write request: A = 0x50000000, D = 0x0 @ 0 s
+LT_I4: Send write request: A = 0x40000000, D = 0x0 @ 0 s (0 s + 0 s)
+AT_T2: Received write request: A = 0x0, D = 0x0 @ 0 s
+AT_T1: Received write request: A = 0x0, D = 0x0 @ 0 s
+LT_T1: Received write request: A = 0x0, D = 0x0 @ 0 s
+LT_T2: Received write request: A = 0x0, D = 0x0 @ 0 s
+LT_T3: Received write request: A = 0x0, D = 0x0 @ 0 s
+AT_T3: Received write request: A = 0x0, D = 0x0 @ 10 ns
+LT_I1: Received ok response @ 10 ns
+LT_I1: Send write request: A = 0x20000004, D = 0x1 @ 10 ns
+LT_T1: Received write request: A = 0x4, D = 0x1 @ 10 ns
+LT_I2: Received ok response @ 10 ns
+LT_I2: Send write request: A = 0x30000004, D = 0x1 @ 10 ns
+LT_T2: Received write request: A = 0x4, D = 0x1 @ 10 ns
+LT_I1: Received ok response @ 20 ns
+LT_I1: Send write request: A = 0x20000008, D = 0x2 @ 20 ns
+LT_T1: Received write request: A = 0x8, D = 0x2 @ 20 ns
+LT_I2: Received ok response @ 20 ns
+LT_I2: Send write request: A = 0x30000008, D = 0x2 @ 20 ns
+LT_T2: Received write request: A = 0x8, D = 0x2 @ 20 ns
+AT_I2: Send write request: A = 0x50000004, D = 0x1 @ 25 ns
+AT_T2: Received write request: A = 0x4, D = 0x1 @ 25 ns
+AT_I1: Send write request: A = 0x10000004, D = 0x1 @ 25 ns
+AT_T1: Received write request: A = 0x4, D = 0x1 @ 25 ns
+LT_I1: Received ok response @ 30 ns
+LT_I1: Send read request: A = 0x20000000 @ 30 ns
+LT_T1: Received read request: A = 0x0 @ 30 ns
+LT_I2: Received ok response @ 30 ns
+LT_I2: Send read request: A = 0x30000000 @ 30 ns
+LT_T2: Received read request: A = 0x0 @ 30 ns
+AT_I2: Send write request: A = 0x50000008, D = 0x2 @ 50 ns
+AT_T2: Received write request: A = 0x8, D = 0x2 @ 50 ns
+AT_I1: Send write request: A = 0x10000008, D = 0x2 @ 50 ns
+AT_T1: Received write request: A = 0x8, D = 0x2 @ 50 ns
+LT_I4: Received ok response @ 50 ns (50 ns + 0 s)
+LT_I4: Send write request: A = 0x40000004, D = 0x1 @ 50 ns (50 ns + 0 s)
+LT_T3: Received write request: A = 0x4, D = 0x1 @ 50 ns
+LT_I3: Received ok response @ 60 ns
+LT_I3: Send write request: A = 0x60000004, D = 0x1 @ 60 ns
+AT_I2: Send read request: A = 0x50000000 @ 75 ns
+AT_T2: Received read request: A = 0x0 @ 75 ns
+AT_I1: Send read request: A = 0x10000000 @ 75 ns
+AT_T1: Received read request: A = 0x0 @ 75 ns
+AT_I2: Send read request: A = 0x50000004 @ 100 ns
+AT_T2: Received read request: A = 0x4 @ 100 ns
+AT_I1: Send read request: A = 0x10000004 @ 100 ns
+AT_T1: Received read request: A = 0x4 @ 100 ns
+LT_I4: Received ok response @ 100 ns (100 ns + 0 s)
+LT_I4: Send write request: A = 0x40000008, D = 0x2 @ 100 ns (100 ns + 0 s)
+LT_T3: Received write request: A = 0x8, D = 0x2 @ 100 ns
+AT_I2: Received ok response @ 125 ns
+AT_I2: Send read request: A = 0x50000008 @ 125 ns
+AT_T2: Received read request: A = 0x8 @ 125 ns
+AT_I1: Send read request: A = 0x10000008 @ 125 ns
+AT_T1: Received read request: A = 0x8 @ 125 ns
+AT_T3: Received write request: A = 0x4, D = 0x1 @ 130 ns
+LT_I1: Received ok response: D = 0x0 @ 130 ns
+LT_I1: Send read request: A = 0x20000004 @ 130 ns
+LT_T1: Received read request: A = 0x4 @ 130 ns
+LT_I2: Received ok response: D = 0x0 @ 130 ns
+LT_I2: Send read request: A = 0x30000004 @ 130 ns
+LT_T2: Received read request: A = 0x4 @ 130 ns
+AT_I1: Received ok response @ 135 ns
+LT_I4: Received ok response @ 150 ns (150 ns + 0 s)
+LT_I4: Send read request: A = 0x40000000 @ 150 ns (150 ns + 0 s)
+LT_T3: Received read request: A = 0x0 @ 150 ns
+LT_I3: Received ok response @ 180 ns
+LT_I3: Send write request: A = 0x60000008, D = 0x2 @ 180 ns
+AT_T3: Received write request: A = 0x8, D = 0x2 @ 230 ns
+LT_I1: Received ok response: D = 0x1 @ 230 ns
+LT_I1: Send read request: A = 0x20000008 @ 230 ns
+LT_T1: Received read request: A = 0x8 @ 230 ns
+LT_I2: Received ok response: D = 0x1 @ 230 ns
+LT_I2: Send read request: A = 0x30000008 @ 230 ns
+LT_T2: Received read request: A = 0x8 @ 230 ns
+AT_I2: Received ok response @ 235 ns
+AT_I1: Received ok response @ 245 ns
+LT_I4: Received ok response: D = 0x0 @ 250 ns (250 ns + 0 s)
+LT_I4: Send read request: A = 0x40000004 @ 250 ns (250 ns + 0 s)
+LT_T3: Received read request: A = 0x4 @ 250 ns
+LT_I3: Received ok response @ 280 ns
+LT_I3: Send read request: A = 0x60000000 @ 280 ns
+AT_T3: Received read request: A = 0x0 @ 330 ns
+LT_I1: Received ok response: D = 0x2 @ 330 ns
+LT_I2: Received ok response: D = 0x2 @ 330 ns
+AT_I2: Received ok response @ 345 ns
+LT_I4: Received ok response: D = 0x1 @ 350 ns (350 ns + 0 s)
+LT_I4: Send read request: A = 0x40000008 @ 350 ns (350 ns + 0 s)
+LT_T3: Received read request: A = 0x8 @ 350 ns
+AT_I1: Received ok response @ 355 ns
+LT_I3: Received ok response: D = 0x0 @ 430 ns
+LT_I3: Send read request: A = 0x60000004 @ 430 ns
+AT_T3: Received read request: A = 0x4 @ 430 ns
+LT_I4: Received ok response: D = 0x2 @ 450 ns (450 ns + 0 s)
+AT_I2: Received ok response: D = 0x0 @ 455 ns
+AT_I1: Received ok response: D = 0x0 @ 465 ns
+LT_I3: Received ok response: D = 0x1 @ 530 ns
+LT_I3: Send read request: A = 0x60000008 @ 530 ns
+AT_T3: Received read request: A = 0x8 @ 530 ns
+AT_I2: Received ok response: D = 0x1 @ 565 ns
+AT_I1: Received ok response: D = 0x1 @ 575 ns
+LT_I3: Received ok response: D = 0x2 @ 630 ns
+AT_I2: Received ok response: D = 0x2 @ 675 ns
+AT_I1: Received ok response: D = 0x2 @ 685 ns
+At 685 ns status of bus1 is 
+  Number of connected initiators: 4
+  Number of connected targets: 3
+  Pending requests:
+    0 pending requests for target number 0
+    0 pending requests for target number 1
+    0 pending requests for target number 2
+  Pending responses:
+    0 pending responses for initiator number 0
+    0 pending responses for initiator number 1
+    0 pending responses for initiator number 2
+    0 pending responses for initiator number 3
+  The address map is:
+SimpleAddressMap: printing the sorted MAP:
+key: 10000000    value: 255 
+key: 1000ffff    value: 0 
+key: 20000000    value: 255 
+key: 2000ffff    value: 1 
+key: 30000000    value: 255 
+key: 6000ffff    value: 2 
+At 685 ns status of bus2 is 
+  Number of connected initiators: 3
+  Number of connected targets: 4
+  Pending requests:
+    0 pending requests for target number 0
+    0 pending requests for target number 1
+    0 pending requests for target number 2
+    0 pending requests for target number 3
+  Pending responses:
+    0 pending responses for initiator number 0
+    0 pending responses for initiator number 1
+    0 pending responses for initiator number 2
+  The address map is:
+SimpleAddressMap: printing the sorted MAP:
+key: 30000000    value: 255 
+key: 3000ffff    value: 1 
+key: 40000000    value: 255 
+key: 4000ffff    value: 3 
+key: 50000000    value: 255 
+key: 5000ffff    value: 0 
+key: 60000000    value: 255 
+key: 6000ffff    value: 2 

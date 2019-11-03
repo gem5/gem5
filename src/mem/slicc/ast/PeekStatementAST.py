@@ -71,7 +71,7 @@ class PeekStatementAST(StatementAST):
     }
 ''')
 
-        if self.pairs.has_key("block_on"):
+        if "block_on" in self.pairs:
             address_field = self.pairs['block_on']
             code('''
     if (m_is_blocking &&
@@ -82,7 +82,7 @@ class PeekStatementAST(StatementAST):
     }
             ''')
 
-        if self.pairs.has_key("wake_up"):
+        if "wake_up" in self.pairs:
             address_field = self.pairs['wake_up']
             code('''
     if (m_waiting_buffers.count(in_msg_ptr->m_$address_field) > 0) {

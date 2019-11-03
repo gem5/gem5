@@ -29,7 +29,8 @@
  */
 
 #include "arch/generic/pseudo_inst.hh"
-#include "base/misc.hh"
+
+#include "base/logging.hh"
 
 class ThreadContext;
 

@@ -1,0 +1,33 @@
+SystemC Simulation
+0 s : CLK UP
+
+5 ns : _____________CLK2 UP
+
+9 ns : _____________CLK2 DN
+
+10 ns : CLK DN
+
+20 ns : CLK UP
+
+25 ns : _____________CLK2 UP
+
+29 ns : _____________CLK2 DN
+
+30 ns : CLK DN
+
+40 ns : CLK UP
+
+45 ns : _____________CLK2 UP
+
+49 ns : _____________CLK2 DN
+
+50 ns : CLK DN
+
+60 ns : CLK UP
+
+65 ns : _____________CLK2 UP
+
+69 ns : _____________CLK2 DN
+
+70 ns : CLK DN
+

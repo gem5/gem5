@@ -48,7 +48,7 @@
 #include <iostream>
 #include <memory>
 
-#include "base/bitmap.hh"
+#include "base/imgwriter.hh"
 #include "params/VncInput.hh"
 #include "sim/sim_object.hh"
 
@@ -226,8 +226,11 @@ class VncInput : public SimObject
     /** Computed hash of the last captured frame */
     uint64_t captureLastHash;
 
-    /** Cached bitmap object for writing out frame buffers to file */
-    std::unique_ptr<Bitmap> captureBitmap;
+    /** Cached ImgWriter object for writing out frame buffers to file */
+    std::unique_ptr<ImgWriter> captureImage;
+
+    /** image format */
+    Enums::ImageFormat imgFormat;
 
     /** Captures the current frame buffer to a file */
     void captureFrameBuffer();

@@ -28,6 +28,8 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+
 import os, subprocess
 
 Import('main')
@@ -114,8 +116,8 @@ if m4env.Detect('gm4'):
 # Check that m4 is available
 import SCons.Tool.m4
 if not SCons.Tool.m4.exists(m4env):
-   print "Error: Can't find version of M4 macro processor.  " + \
-         "Please install M4 and try again."
+   print("Error: Can't find version of M4 macro processor.  " +
+         "Please install M4 and try again.")
    Exit(1)
 
 m4env.Append(M4FLAGS=['-DSRCDIR=%s' % Dir('.').path])

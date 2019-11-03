@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,7 +30,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Sooraj Puthoor
+ * Authors: Sooraj Puthoor
  */
 
 #ifndef __LOCAL_MEMORY_PIPELINE_HH__
@@ -61,8 +61,6 @@ class LocalMemPipeline
     void init(ComputeUnit *cu);
     void exec();
 
-    template<typename c0, typename c1> void doSmReturn(GPUDynInstPtr m);
-
     std::queue<GPUDynInstPtr> &getLMReqFIFO() { return lmIssuedRequests; }
     std::queue<GPUDynInstPtr> &getLMRespFIFO() { return lmReturnedRequests; }
 
@@ -80,6 +78,12 @@ class LocalMemPipeline
 
     const std::string& name() const { return _name; }
     void regStats();
+
+    void
+    incLoadVRFBankConflictCycles(int num_cycles)
+    {
+        loadVrfBankConflictCycles += num_cycles;
+    }
 
   private:
     ComputeUnit *computeUnit;

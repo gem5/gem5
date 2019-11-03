@@ -33,7 +33,7 @@
 
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/types.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 
 class ThreadContext;

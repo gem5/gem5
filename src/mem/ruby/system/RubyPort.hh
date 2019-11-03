@@ -45,16 +45,17 @@
 #include <cassert>
 #include <string>
 
-#include "mem/protocol/RequestStatus.hh"
+#include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
+#include "mem/ruby/protocol/RequestStatus.hh"
 #include "mem/ruby/system/RubySystem.hh"
-#include "mem/mem_object.hh"
 #include "mem/tport.hh"
 #include "params/RubyPort.hh"
+#include "sim/clocked_object.hh"
 
 class AbstractController;
 
-class RubyPort : public MemObject
+class RubyPort : public ClockedObject
 {
   public:
     class MemMasterPort : public QueuedMasterPort
@@ -88,8 +89,7 @@ class RubyPort : public MemObject
       protected:
         bool recvTimingReq(PacketPtr pkt);
 
-        Tick recvAtomic(PacketPtr pkt)
-        { panic("RubyPort::MemSlavePort::recvAtomic() not implemented!\n"); }
+        Tick recvAtomic(PacketPtr pkt);
 
         void recvFunctional(PacketPtr pkt);
 
@@ -127,8 +127,7 @@ class RubyPort : public MemObject
       protected:
         bool recvTimingReq(PacketPtr pkt);
 
-        Tick recvAtomic(PacketPtr pkt)
-        { panic("recvAtomic not supported with ruby!"); }
+        Tick recvAtomic(PacketPtr pkt);
 
         void recvFunctional(PacketPtr pkt)
         { panic("recvFunctional should never be called on pio slave port!"); }
@@ -149,10 +148,8 @@ class RubyPort : public MemObject
 
     void init() override;
 
-    BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID) override;
-    BaseSlavePort &getSlavePort(const std::string &if_name,
-                                PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     virtual RequestStatus makeRequest(PacketPtr pkt) = 0;
     virtual int outstandingCount() const = 0;

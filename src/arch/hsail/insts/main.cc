@@ -131,12 +131,12 @@ namespace HsailISA
     {
         Wavefront *w = gpuDynInst->wavefront();
 
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
 
         // mask off completed work-items
         for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
-                w->init_mask[lane] = 0;
+                w->initMask[lane] = 0;
             }
 
         }
@@ -149,14 +149,14 @@ namespace HsailISA
         }
 
         // if all work-items have completed, then wave-front is done
-        if (w->init_mask.none()) {
+        if (w->initMask.none()) {
             w->status = Wavefront::S_STOPPED;
 
             int32_t refCount = w->computeUnit->getLds().
-                                   decreaseRefCounter(w->dispatchid, w->wg_id);
+                                   decreaseRefCounter(w->dispatchId, w->wgId);
 
             DPRINTF(GPUExec, "CU%d: decrease ref ctr WG[%d] to [%d]\n",
-                            w->computeUnit->cu_id, w->wg_id, refCount);
+                            w->computeUnit->cu_id, w->wgId, refCount);
 
             // free the vector registers of the completed wavefront
             w->computeUnit->vectorRegsReserved[w->simdId] -=
@@ -179,12 +179,13 @@ namespace HsailISA
                     w->computeUnit->cu_id, w->simdId, w->wfSlotId, w->wfDynId);
 
             if (!refCount) {
+                setFlag(SystemScope);
+                setFlag(Release);
+                setFlag(GlobalSegment);
                 // Notify Memory System of Kernel Completion
                 // Kernel End = isKernel + isRelease
                 w->status = Wavefront::S_RETURNING;
                 GPUDynInstPtr local_mempacket = gpuDynInst;
-                local_mempacket->memoryOrder = Enums::MEMORY_ORDER_SC_RELEASE;
-                local_mempacket->scope = Enums::MEMORY_SCOPE_SYSTEM;
                 local_mempacket->useContinuation = false;
                 local_mempacket->simdId = w->simdId;
                 local_mempacket->wfSlotId = w->wfSlotId;
@@ -201,8 +202,8 @@ namespace HsailISA
     {
         Wavefront *w = gpuDynInst->wavefront();
 
-        assert(w->barrier_cnt == w->old_barrier_cnt);
-        w->barrier_cnt = w->old_barrier_cnt + 1;
+        assert(w->barrierCnt == w->oldBarrierCnt);
+        w->barrierCnt = w->oldBarrierCnt + 1;
         w->stalledAtBarrier = true;
     }
 } // namespace HsailISA

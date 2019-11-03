@@ -33,6 +33,8 @@
  *          Andrew Bardsley
  */
 
+#include "base/trace.hh"
+
 #include <cctype>
 #include <fstream>
 #include <iostream>
@@ -40,10 +42,9 @@
 #include <string>
 
 #include "base/debug.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/output.hh"
 #include "base/str.hh"
-#include "base/trace.hh"
 
 const std::string &name()
 {

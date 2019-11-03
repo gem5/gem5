@@ -44,13 +44,6 @@
 
 #include "gem5.hh"
 
-#include <sst_config.h>
-#include <sst/core/serialization.h>
-
-#include <sst/core/params.h>
-#include <sst/core/output.h>
-#include <sst/core/link.h>
-
 #ifdef fatal  // gem5 sets this
 #undef fatal
 #endif
@@ -135,7 +128,6 @@ ExtSlave::recvTimingReq(PacketPtr pkt)
 
     if (simPhase == INIT) {
         link->sendInitData(ev);
-        delete pkt->req;
         delete pkt;
     } else {
         if (pkt->needsResponse()) {
@@ -183,7 +175,9 @@ ExtSlave::handleEvent(Event* ev)
 
         // make Req/Pkt for Snoop/no response needed
         // presently no consideration for masterId, packet type, flags...
-        RequestPtr req = new Request(event->getAddr(), event->getSize(), 0, 0);
+        RequestPtr req = std::make_shared<Request>(
+            event->getAddr(), event->getSize(), 0, 0);
+
         auto pkt = new Packet(req, ::MemCmd::InvalidateReq);
 
         // Clear out bus delay notifications

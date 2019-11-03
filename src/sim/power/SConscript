@@ -40,5 +40,6 @@ Source('power_model.cc')
 Source('mathexpr_powermodel.cc')
 Source('thermal_domain.cc')
 Source('thermal_model.cc')
+Source('thermal_node.cc')
 
 DebugFlag('ThermalDomain')

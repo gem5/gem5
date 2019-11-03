@@ -30,18 +30,13 @@
  *          Nathan Binkert
  */
 
-#include <cassert>
+#include "sim/sim_object.hh"
 
-#include "base/callback.hh"
-#include "base/inifile.hh"
+#include "base/logging.hh"
 #include "base/match.hh"
-#include "base/misc.hh"
 #include "base/trace.hh"
-#include "base/types.hh"
 #include "debug/Checkpoint.hh"
 #include "sim/probe/probe.hh"
-#include "sim/sim_object.hh"
-#include "sim/stats.hh"
 
 using namespace std;
 
@@ -61,7 +56,9 @@ SimObject::SimObjectList SimObject::simObjectList;
 // SimObject constructor: used to maintain static simObjectList
 //
 SimObject::SimObject(const Params *p)
-    : EventManager(getEventQueue(p->eventq_index)), _params(p)
+    : EventManager(getEventQueue(p->eventq_index)),
+      Stats::Group(nullptr),
+      _params(p)
 {
 #ifdef DEBUG
     doDebugBreak = false;
@@ -103,19 +100,6 @@ SimObject::startup()
 {
 }
 
-//
-// no default statistics, so nothing to do in base implementation
-//
-void
-SimObject::regStats()
-{
-}
-
-void
-SimObject::resetStats()
-{
-}
-
 /**
  * No probe points by default, so do nothing in base.
  */
@@ -136,6 +120,12 @@ ProbeManager *
 SimObject::getProbeManager()
 {
     return probeManager;
+}
+
+Port &
+SimObject::getPort(const std::string &if_name, PortID idx)
+{
+    fatal("%s does not have any port named %s\n", name(), if_name);
 }
 
 //

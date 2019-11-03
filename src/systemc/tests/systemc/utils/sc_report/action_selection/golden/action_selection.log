@@ -1,0 +1,97 @@
+SystemC Simulation
+We got 24 user-defined actions
+Default settings for ID4
+report: ID4 INFO -->  log display
+ msg=extra_msg_for_info file=no_specific_file line 0 time=0 s process=<none>
+report: ID4 WARNING -->  log display
+ msg=extra_msg_for_warning file=no_specific_file line 1 time=0 s process=<none>
+report: ID4 ERROR -->  throw log cache-report
+ msg=extra_msg_for_error file=no_specific_file line 2 time=0 s process=<none>
+report: ID4 FATAL -->  log display cache-report abort
+ msg=extra_msg_for_fatal file=no_specific_file line 3 time=0 s process=<none>
+
+Specific settings for ID1..ID3
+report: ID1 INFO -->  usr2
+ msg=extra_msg_for_info file=no_specific_file line 0 time=0 s process=<none>
+report: ID1 WARNING -->  usr3
+ msg=extra_msg_for_warning file=no_specific_file line 1 time=0 s process=<none>
+report: ID1 ERROR -->  usr4
+ msg=extra_msg_for_error file=no_specific_file line 2 time=0 s process=<none>
+report: ID1 FATAL -->  usr5
+ msg=extra_msg_for_fatal file=no_specific_file line 3 time=0 s process=<none>
+
+report: ID2 INFO -->  usr1
+ msg=extra_msg_for_info file=no_specific_file line 0 time=0 s process=<none>
+report: ID2 WARNING -->  usr1
+ msg=extra_msg_for_warning file=no_specific_file line 1 time=0 s process=<none>
+report: ID2 ERROR -->  usr1
+ msg=extra_msg_for_error file=no_specific_file line 2 time=0 s process=<none>
+report: ID2 FATAL -->  usr1
+ msg=extra_msg_for_fatal file=no_specific_file line 3 time=0 s process=<none>
+
+report: ID3 INFO -->  usr5
+ msg=extra_msg_for_info file=no_specific_file line 0 time=0 s process=<none>
+report: ID3 WARNING -->  usr3
+ msg=extra_msg_for_warning file=no_specific_file line 1 time=0 s process=<none>
+report: ID3 ERROR -->  usr1
+ msg=extra_msg_for_error file=no_specific_file line 2 time=0 s process=<none>
+report: ID3 FATAL -->  usr5
+ msg=extra_msg_for_fatal file=no_specific_file line 3 time=0 s process=<none>
+
+temporarily suppress usr4
+report: ID1 INFO -->  usr2
+ msg=extra_msg_for_info file=no_specific_file line 0 time=1 ns process=<none>
+report: ID1 WARNING -->  usr3
+ msg=extra_msg_for_warning file=no_specific_file line 1 time=1 ns process=<none>
+report: ID1 ERROR --> 
+ msg=extra_msg_for_error file=no_specific_file line 2 time=1 ns process=<none>
+report: ID1 FATAL -->  usr5
+ msg=extra_msg_for_fatal file=no_specific_file line 3 time=1 ns process=<none>
+
+report: ID1 INFO -->  usr2
+ msg=extra_msg_for_info file=no_specific_file line 0 time=1 ns process=<none>
+report: ID1 WARNING -->  usr3
+ msg=extra_msg_for_warning file=no_specific_file line 1 time=1 ns process=<none>
+report: ID1 ERROR -->  usr4
+ msg=extra_msg_for_error file=no_specific_file line 2 time=1 ns process=<none>
+report: ID1 FATAL -->  usr5
+ msg=extra_msg_for_fatal file=no_specific_file line 3 time=1 ns process=<none>
+
+temporarily force usr1
+report: ID1 INFO -->  usr1 usr2
+ msg=extra_msg_for_info file=no_specific_file line 0 time=2 ns process=<none>
+report: ID1 WARNING -->  usr1 usr3
+ msg=extra_msg_for_warning file=no_specific_file line 1 time=2 ns process=<none>
+report: ID1 ERROR -->  usr1 usr4
+ msg=extra_msg_for_error file=no_specific_file line 2 time=2 ns process=<none>
+report: ID1 FATAL -->  usr1 usr5
+ msg=extra_msg_for_fatal file=no_specific_file line 3 time=2 ns process=<none>
+
+report: ID1 INFO -->  usr2
+ msg=extra_msg_for_info file=no_specific_file line 0 time=2 ns process=<none>
+report: ID1 WARNING -->  usr3
+ msg=extra_msg_for_warning file=no_specific_file line 1 time=2 ns process=<none>
+report: ID1 ERROR -->  usr4
+ msg=extra_msg_for_error file=no_specific_file line 2 time=2 ns process=<none>
+report: ID1 FATAL -->  usr5
+ msg=extra_msg_for_fatal file=no_specific_file line 3 time=2 ns process=<none>
+
+temporarily suppress {usr3,usr4} and force {usr1,usr3}
+report: ID1 INFO -->  usr1 usr2 usr3
+ msg=extra_msg_for_info file=no_specific_file line 0 time=3 ns process=<none>
+report: ID1 WARNING -->  usr1 usr3
+ msg=extra_msg_for_warning file=no_specific_file line 1 time=3 ns process=<none>
+report: ID1 ERROR -->  usr1 usr3
+ msg=extra_msg_for_error file=no_specific_file line 2 time=3 ns process=<none>
+report: ID1 FATAL -->  usr1 usr3 usr5
+ msg=extra_msg_for_fatal file=no_specific_file line 3 time=3 ns process=<none>
+
+report: ID1 INFO -->  usr2
+ msg=extra_msg_for_info file=no_specific_file line 0 time=3 ns process=<none>
+report: ID1 WARNING -->  usr3
+ msg=extra_msg_for_warning file=no_specific_file line 1 time=3 ns process=<none>
+report: ID1 ERROR -->  usr4
+ msg=extra_msg_for_error file=no_specific_file line 2 time=3 ns process=<none>
+report: ID1 FATAL -->  usr5
+ msg=extra_msg_for_fatal file=no_specific_file line 3 time=3 ns process=<none>
+

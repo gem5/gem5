@@ -43,6 +43,24 @@
 
 namespace AlphaISA {
 
+template<typename T>
+TLB *
+getITBPtr(T *tc)
+{
+    auto tlb = dynamic_cast<TLB *>(tc->getITBPtr());
+    assert(tlb);
+    return tlb;
+}
+
+template<typename T>
+TLB *
+getDTBPtr(T *tc)
+{
+    auto tlb = dynamic_cast<TLB *>(tc->getDTBPtr());
+    assert(tlb);
+    return tlb;
+}
+
 ////////////////////////////////////////////////////////////////////////
 //
 //  Machine dependent functions
@@ -70,7 +88,7 @@ zeroRegisters(CPU *cpu)
     // (no longer very clean due to the change in setIntReg() in the
     // cpu model.  Consider changing later.)
     cpu->thread->setIntReg(ZeroReg, 0);
-    cpu->thread->setFloatReg(ZeroReg, 0.0);
+    cpu->thread->setFloatReg(ZeroReg, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -89,7 +107,7 @@ initIPRs(ThreadContext *tc, int cpuId)
     tc->setMiscRegNoEffect(IPR_PALtemp16, cpuId);
 }
 
-MiscReg
+RegVal
 ISA::readIpr(int idx, ThreadContext *tc)
 {
     uint64_t retval = 0;        // return value, default 0
@@ -161,7 +179,7 @@ ISA::readIpr(int idx, ThreadContext *tc)
 
       case IPR_DTB_PTE:
         {
-            TlbEntry &entry = tc->getDTBPtr()->index(1);
+            TlbEntry &entry = getDTBPtr(tc)->index(1);
 
             retval |= ((uint64_t)entry.ppn & ULL(0x7ffffff)) << 32;
             retval |= ((uint64_t)entry.xre & ULL(0xf)) << 8;
@@ -201,6 +219,9 @@ int break_ipl = -1;
 void
 ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
 {
+    auto *stats = dynamic_cast<AlphaISA::Kernel::Statistics *>(
+            tc->getKernelStats());
+    assert(stats || !tc->getKernelStats());
     switch (idx) {
       case IPR_PALtemp0:
       case IPR_PALtemp1:
@@ -249,8 +270,8 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
 
       case IPR_PALtemp23:
         // write entire quad w/ no side-effect
-        if (tc->getKernelStats())
-            tc->getKernelStats()->context(ipr[idx], val, tc);
+        if (stats)
+            stats->context(ipr[idx], val, tc);
         ipr[idx] = val;
         break;
 
@@ -273,18 +294,19 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
       case IPR_IPLR:
         // only write least significant five bits - interrupt level
         ipr[idx] = val & 0x1f;
-        if (tc->getKernelStats())
-            tc->getKernelStats()->swpipl(ipr[idx]);
+        if (stats)
+            stats->swpipl(ipr[idx]);
         break;
 
       case IPR_DTB_CM:
         if (val & 0x18) {
-            if (tc->getKernelStats())
-                tc->getKernelStats()->mode(Kernel::user, tc);
+            if (stats)
+                stats->mode(Kernel::user, tc);
         } else {
-            if (tc->getKernelStats())
-                tc->getKernelStats()->mode(Kernel::kernel, tc);
+            if (stats)
+                stats->mode(Kernel::kernel, tc);
         }
+        M5_FALLTHROUGH;
 
       case IPR_ICM:
         // only write two mode bits - processor mode
@@ -358,21 +380,21 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
         // really a control write
         ipr[idx] = 0;
 
-        tc->getDTBPtr()->flushAll();
+        getDTBPtr(tc)->flushAll();
         break;
 
       case IPR_DTB_IAP:
         // really a control write
         ipr[idx] = 0;
 
-        tc->getDTBPtr()->flushProcesses();
+        getDTBPtr(tc)->flushProcesses();
         break;
 
       case IPR_DTB_IS:
         // really a control write
         ipr[idx] = val;
 
-        tc->getDTBPtr()->flushAddr(val, DTB_ASN_ASN(ipr[IPR_DTB_ASN]));
+        getDTBPtr(tc)->flushAddr(val, DTB_ASN_ASN(ipr[IPR_DTB_ASN]));
         break;
 
       case IPR_DTB_TAG: {
@@ -395,7 +417,7 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
           entry.asn = DTB_ASN_ASN(ipr[IPR_DTB_ASN]);
 
           // insert new TAG/PTE value into data TLB
-          tc->getDTBPtr()->insert(val, entry);
+          getDTBPtr(tc)->insert(val, entry);
       }
         break;
 
@@ -419,7 +441,7 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
           entry.asn = ITB_ASN_ASN(ipr[IPR_ITB_ASN]);
 
           // insert new TAG/PTE value into data TLB
-          tc->getITBPtr()->insert(ipr[IPR_ITB_TAG], entry);
+          getITBPtr(tc)->insert(ipr[IPR_ITB_TAG], entry);
       }
         break;
 
@@ -427,21 +449,21 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
         // really a control write
         ipr[idx] = 0;
 
-        tc->getITBPtr()->flushAll();
+        getITBPtr(tc)->flushAll();
         break;
 
       case IPR_ITB_IAP:
         // really a control write
         ipr[idx] = 0;
 
-        tc->getITBPtr()->flushProcesses();
+        getITBPtr(tc)->flushProcesses();
         break;
 
       case IPR_ITB_IS:
         // really a control write
         ipr[idx] = val;
 
-        tc->getITBPtr()->flushAddr(val, ITB_ASN_ASN(ipr[IPR_ITB_ASN]));
+        getITBPtr(tc)->flushAddr(val, ITB_ASN_ASN(ipr[IPR_ITB_ASN]));
         break;
 
       default:
@@ -460,51 +482,3 @@ copyIprs(ThreadContext *src, ThreadContext *dest)
 }
 
 } // namespace AlphaISA
-
-using namespace AlphaISA;
-
-Fault
-SimpleThread::hwrei()
-{
-    PCState pc = pcState();
-    if (!(pc.pc() & 0x3))
-        return std::make_shared<UnimplementedOpcodeFault>();
-
-    pc.npc(readMiscRegNoEffect(IPR_EXC_ADDR));
-    pcState(pc);
-
-    CPA::cpa()->swAutoBegin(tc, pc.npc());
-
-    if (kernelStats)
-        kernelStats->hwrei();
-
-    // FIXME: XXX check for interrupts? XXX
-    return NoFault;
-}
-
-/**
- * Check for special simulator handling of specific PAL calls.
- * If return value is false, actual PAL call will be suppressed.
- */
-bool
-SimpleThread::simPalCheck(int palFunc)
-{
-    if (kernelStats)
-        kernelStats->callpal(palFunc, tc);
-
-    switch (palFunc) {
-      case PAL::halt:
-        halt();
-        if (--System::numSystemsRunning == 0)
-            exitSimLoop("all cpus halted");
-        break;
-
-      case PAL::bpt:
-      case PAL::bugchk:
-        if (system->breakpoint())
-            return false;
-        break;
-    }
-
-    return true;
-}

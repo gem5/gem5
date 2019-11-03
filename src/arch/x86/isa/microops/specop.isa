@@ -69,7 +69,7 @@ output header {{
         {
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
 
         std::string generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const;
@@ -83,12 +83,12 @@ def template MicroFaultDeclare {{
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
                 uint64_t setFlags, Fault _fault, uint8_t _cc);
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
 def template MicroFaultExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+        Fault %(class_name)s::execute(ExecContext *xc,
                 Trace::InstRecord *traceData) const
         {
             %(op_decl)s;
@@ -104,8 +104,7 @@ def template MicroFaultExecute {{
 
 output exec {{
     Fault
-    MicroHalt::execute(CPU_EXEC_CONTEXT *xc,
-            Trace::InstRecord * traceData) const
+    MicroHalt::execute(ExecContext *xc, Trace::InstRecord * traceData) const
     {
         xc->tcBase()->suspend();
         return NoFault;
@@ -215,7 +214,7 @@ def template MicroFenceOpDeclare {{
                 const char * instMnem,
                 uint64_t setFlags);
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 

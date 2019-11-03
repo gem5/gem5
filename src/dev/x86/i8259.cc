@@ -28,22 +28,45 @@
  * Authors: Gabe Black
  */
 
+#include "dev/x86/i8259.hh"
+
 #include "base/bitfield.hh"
 #include "debug/I8259.hh"
 #include "dev/x86/i82094aa.hh"
-#include "dev/x86/i8259.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
 X86ISA::I8259::I8259(Params * p)
-    : BasicPioDevice(p, 2), IntDevice(this),
-      latency(p->pio_latency), output(p->output),
+    : BasicPioDevice(p, 2),
+      latency(p->pio_latency),
       mode(p->mode), slave(p->slave),
       IRR(0), ISR(0), IMR(0),
       readIRR(true), initControlWord(0), autoEOI(false)
 {
-    for (int i = 0; i < NumLines; i++)
-        pinStates[i] = false;
+    for (int i = 0; i < p->port_output_connection_count; i++) {
+        output.push_back(new IntSourcePin<I8259>(
+                    csprintf("%s.output[%d]", name(), i), i, this));
+    }
+
+    int in_count = p->port_inputs_connection_count;
+    panic_if(in_count >= NumLines,
+            "I8259 only supports 8 inputs, but there are %d.", in_count);
+    for (int i = 0; i < in_count; i++) {
+        inputs.push_back(new IntSinkPin<I8259>(
+                    csprintf("%s.inputs[%d]", name(), i), i, this));
+    }
+
+    for (bool &state: pinStates)
+        state = false;
+}
+
+void
+X86ISA::I8259::init()
+{
+    BasicPioDevice::init();
+
+    for (auto *input: inputs)
+        pinStates[input->getId()] = input->state();
 }
 
 Tick
@@ -55,15 +78,15 @@ X86ISA::I8259::read(PacketPtr pkt)
       case 0x0:
         if (readIRR) {
             DPRINTF(I8259, "Reading IRR as %#x.\n", IRR);
-            pkt->set(IRR);
+            pkt->setLE(IRR);
         } else {
             DPRINTF(I8259, "Reading ISR as %#x.\n", ISR);
-            pkt->set(ISR);
+            pkt->setLE(ISR);
         }
         break;
       case 0x1:
         DPRINTF(I8259, "Reading IMR as %#x.\n", IMR);
-        pkt->set(IMR);
+        pkt->setLE(IMR);
         break;
     }
     pkt->makeAtomicResponse();
@@ -74,7 +97,7 @@ Tick
 X86ISA::I8259::write(PacketPtr pkt)
 {
     assert(pkt->getSize() == 1);
-    uint8_t val = pkt->get<uint8_t>();
+    uint8_t val = pkt->getLE<uint8_t>();
     switch (pkt->getAddr() - pioAddr) {
       case 0x0:
         if (bits(val, 4)) {
@@ -230,11 +253,13 @@ void
 X86ISA::I8259::requestInterrupt(int line)
 {
     if (bits(ISR, 7, line) == 0) {
-        if (output) {
+        if (!output.empty()) {
             DPRINTF(I8259, "Propogating interrupt.\n");
-            output->raise();
-            //XXX This is a hack.
-            output->lower();
+            for (auto *wire: output) {
+                wire->raise();
+                //XXX This is a hack.
+                wire->lower();
+            }
         } else {
             warn("Received interrupt but didn't have "
                     "anyone to tell about it.\n");

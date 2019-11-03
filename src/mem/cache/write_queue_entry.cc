@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015-2016 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -50,18 +50,13 @@
 
 #include "mem/cache/write_queue_entry.hh"
 
-#include <algorithm>
 #include <cassert>
 #include <string>
-#include <vector>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
-#include "debug/Cache.hh"
-#include "mem/cache/cache.hh"
-#include "sim/core.hh"
-
-using namespace std;
+#include "mem/cache/base.hh"
+#include "mem/request.hh"
 
 inline void
 WriteQueueEntry::TargetList::add(PacketPtr pkt, Tick readyTime,
@@ -71,10 +66,10 @@ WriteQueueEntry::TargetList::add(PacketPtr pkt, Tick readyTime,
 }
 
 bool
-WriteQueueEntry::TargetList::checkFunctional(PacketPtr pkt)
+WriteQueueEntry::TargetList::trySatisfyFunctional(PacketPtr pkt)
 {
     for (auto& t : *this) {
-        if (pkt->checkFunctional(t.pkt)) {
+        if (pkt->trySatisfyFunctional(t.pkt)) {
             return true;
         }
     }
@@ -111,11 +106,15 @@ WriteQueueEntry::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
              "Write queue entry %#llx should never have more than one "
              "cacheable target", blkAddr);
     panic_if(!((target->isWrite() && _isUncacheable) ||
-               (target->isEviction() && !_isUncacheable)),
-             "Write queue entry %#llx should either be uncacheable write or "
-             "a cacheable eviction");
+               (target->isEviction() && !_isUncacheable) ||
+               target->cmd == MemCmd::WriteClean),
+             "Write queue entry %#llx should be an uncacheable write or "
+             "a cacheable eviction or a writeclean");
 
     targets.add(target, when_ready, _order);
+
+    // All targets must refer to the same block
+    assert(target->matchBlockAddr(targets.front().pkt, blkSize));
 }
 
 void
@@ -126,23 +125,44 @@ WriteQueueEntry::deallocate()
 }
 
 bool
-WriteQueueEntry::checkFunctional(PacketPtr pkt)
+WriteQueueEntry::trySatisfyFunctional(PacketPtr pkt)
 {
     // For printing, we treat the WriteQueueEntry as a whole as single
     // entity. For other requests, we iterate over the individual
     // targets since that's where the actual data lies.
     if (pkt->isPrint()) {
-        pkt->checkFunctional(this, blkAddr, isSecure, blkSize, nullptr);
+        pkt->trySatisfyFunctional(this, blkAddr, isSecure, blkSize, nullptr);
         return false;
     } else {
-        return targets.checkFunctional(pkt);
+        return targets.trySatisfyFunctional(pkt);
     }
 }
 
 bool
-WriteQueueEntry::sendPacket(Cache &cache)
+WriteQueueEntry::sendPacket(BaseCache &cache)
 {
     return cache.sendWriteQueuePacket(this);
+}
+
+bool
+WriteQueueEntry::matchBlockAddr(const Addr addr, const bool is_secure) const
+{
+    assert(hasTargets());
+    return (blkAddr == addr) && (isSecure == is_secure);
+}
+
+bool
+WriteQueueEntry::matchBlockAddr(const PacketPtr pkt) const
+{
+    assert(hasTargets());
+    return pkt->matchBlockAddr(blkAddr, isSecure, blkSize);
+}
+
+bool
+WriteQueueEntry::conflictAddr(const QueueEntry* entry) const
+{
+    assert(hasTargets());
+    return entry->matchBlockAddr(blkAddr, isSecure);
 }
 
 void
@@ -162,7 +182,7 @@ WriteQueueEntry::print(std::ostream &os, int verbosity,
 std::string
 WriteQueueEntry::print() const
 {
-    ostringstream str;
+    std::ostringstream str;
     print(str);
     return str.str();
 }

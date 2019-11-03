@@ -36,6 +36,12 @@ if 'AtomicSimpleCPU' in env['CPU_MODELS']:
     SimObject('AtomicSimpleCPU.py')
     Source('atomic.cc')
 
+    # The NonCachingSimpleCPU is really an atomic CPU in
+    # disguise. It's therefore always enabled when the atomic CPU is
+    # enabled.
+    SimObject('NonCachingSimpleCPU.py')
+    Source('noncaching.cc')
+
 if 'TimingSimpleCPU' in env['CPU_MODELS']:
     need_simple_base = True
     SimObject('TimingSimpleCPU.py')

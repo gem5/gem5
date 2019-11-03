@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,6 +51,7 @@
 #define __SERIALIZE_HH__
 
 
+#include <algorithm>
 #include <iostream>
 #include <list>
 #include <map>
@@ -59,135 +60,65 @@
 #include <vector>
 
 #include "base/bitunion.hh"
-#include "base/types.hh"
+#include "base/logging.hh"
+#include "base/str.hh"
 
 class IniFile;
-class Serializable;
-class CheckpointIn;
 class SimObject;
 class SimObjectResolver;
-class EventQueue;
 
 typedef std::ostream CheckpointOut;
 
-
-template <class T>
-void paramOut(CheckpointOut &cp, const std::string &name, const T &param);
-
-template <typename DataType, typename BitUnion>
-void paramOut(CheckpointOut &cp, const std::string &name,
-              const BitfieldBackend::BitUnionOperators<DataType, BitUnion> &p)
+class CheckpointIn
 {
-    paramOut(cp, name, p.__data);
-}
+  private:
 
-template <class T>
-void paramIn(CheckpointIn &cp, const std::string &name, T &param);
+    IniFile *db;
 
-template <typename DataType, typename BitUnion>
-void paramIn(CheckpointIn &cp, const std::string &name,
-             BitfieldBackend::BitUnionOperators<DataType, BitUnion> &p)
-{
-    paramIn(cp, name, p.__data);
-}
+    SimObjectResolver &objNameResolver;
 
-template <class T>
-bool optParamIn(CheckpointIn &cp, const std::string &name, T &param,
-                bool warn = true);
+  public:
+    CheckpointIn(const std::string &cpt_dir, SimObjectResolver &resolver);
+    ~CheckpointIn();
 
-template <typename DataType, typename BitUnion>
-bool optParamIn(CheckpointIn &cp, const std::string &name,
-                BitfieldBackend::BitUnionOperators<DataType, BitUnion> &p,
-                bool warn = true)
-{
-    return optParamIn(cp, name, p.__data, warn);
-}
+    const std::string cptDir;
 
-template <class T>
-void arrayParamOut(CheckpointOut &cp, const std::string &name,
-                   const T *param, unsigned size);
+    bool find(const std::string &section, const std::string &entry,
+              std::string &value);
 
-template <class T>
-void arrayParamOut(CheckpointOut &cp, const std::string &name,
-                   const std::vector<T> &param);
+    bool findObj(const std::string &section, const std::string &entry,
+                 SimObject *&value);
 
-template <class T>
-void arrayParamOut(CheckpointOut &cp, const std::string &name,
-                   const std::list<T> &param);
 
-template <class T>
-void arrayParamOut(CheckpointOut &cp, const std::string &name,
-                   const std::set<T> &param);
+    bool entryExists(const std::string &section, const std::string &entry);
+    bool sectionExists(const std::string &section);
 
-template <class T>
-void arrayParamIn(CheckpointIn &cp, const std::string &name,
-                  T *param, unsigned size);
+    // The following static functions have to do with checkpoint
+    // creation rather than restoration.  This class makes a handy
+    // namespace for them though.  Currently no Checkpoint object is
+    // created on serialization (only unserialization) so we track the
+    // directory name as a global.  It would be nice to change this
+    // someday
 
-template <class T>
-void arrayParamIn(CheckpointIn &cp, const std::string &name,
-                  std::vector<T> &param);
+  private:
+    // current directory we're serializing into.
+    static std::string currentDirectory;
 
-template <class T>
-void arrayParamIn(CheckpointIn &cp, const std::string &name,
-                  std::list<T> &param);
+  public:
+    // Set the current directory.  This function takes care of
+    // inserting curTick() if there's a '%d' in the argument, and
+    // appends a '/' if necessary.  The final name is returned.
+    static std::string setDir(const std::string &base_name);
 
-template <class T>
-void arrayParamIn(CheckpointIn &cp, const std::string &name,
-                  std::set<T> &param);
+    // Export current checkpoint directory name so other objects can
+    // derive filenames from it (e.g., memory).  The return value is
+    // guaranteed to end in '/' so filenames can be directly appended.
+    // This function is only valid while a checkpoint is being created.
+    static std::string dir();
 
-void
-objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param);
-
-//
-// These macros are streamlined to use in serialize/unserialize
-// functions.  It's assumed that serialize() has a parameter 'os' for
-// the ostream, and unserialize() has parameters 'cp' and 'section'.
-#define SERIALIZE_SCALAR(scalar)        paramOut(cp, #scalar, scalar)
-
-#define UNSERIALIZE_SCALAR(scalar)      paramIn(cp, #scalar, scalar)
-#define UNSERIALIZE_OPT_SCALAR(scalar)      optParamIn(cp, #scalar, scalar)
-
-// ENUMs are like SCALARs, but we cast them to ints on the way out
-#define SERIALIZE_ENUM(scalar)          paramOut(cp, #scalar, (int)scalar)
-
-#define UNSERIALIZE_ENUM(scalar)                        \
-    do {                                                \
-        int tmp;                                        \
-        paramIn(cp, #scalar, tmp);                      \
-        scalar = static_cast<decltype(scalar)>(tmp);    \
-    } while (0)
-
-#define SERIALIZE_ARRAY(member, size)           \
-        arrayParamOut(cp, #member, member, size)
-
-#define UNSERIALIZE_ARRAY(member, size)         \
-        arrayParamIn(cp, #member, member, size)
-
-#define SERIALIZE_CONTAINER(member)             \
-        arrayParamOut(cp, #member, member)
-
-#define UNSERIALIZE_CONTAINER(member)           \
-        arrayParamIn(cp, #member, member)
-
-#define SERIALIZE_EVENT(event) event.serializeSection(cp, #event);
-
-#define UNSERIALIZE_EVENT(event)                        \
-    do {                                                \
-        event.unserializeSection(cp, #event);           \
-        eventQueue()->checkpointReschedule(&event);     \
-    } while (0)
-
-#define SERIALIZE_OBJ(obj) obj.serializeSection(cp, #obj)
-#define UNSERIALIZE_OBJ(obj) obj.unserializeSection(cp, #obj)
-
-#define SERIALIZE_OBJPTR(objptr)        paramOut(cp, #objptr, (objptr)->name())
-
-#define UNSERIALIZE_OBJPTR(objptr)                      \
-    do {                                                \
-        SimObject *sptr;                                \
-        objParamIn(cp, #objptr, sptr);                  \
-        objptr = dynamic_cast<decltype(objptr)>(sptr);  \
-    } while (0)
+    // Filename for base checkpoint file within directory.
+    static const char *baseFilename;
+};
 
 /**
  * Basic support for object serialization.
@@ -336,56 +267,424 @@ class Serializable
     static std::stack<std::string> path;
 };
 
-void debug_serialize(const std::string &cpt_dir);
-
-
-class CheckpointIn
+//
+// The base implementations use to_number for parsing and '<<' for
+// displaying, suitable for integer types.
+//
+template <class T>
+bool
+parseParam(const std::string &s, T &value)
 {
-  private:
+    return to_number(s, value);
+}
 
-    IniFile *db;
+template <class T>
+void
+showParam(CheckpointOut &os, const T &value)
+{
+    os << value;
+}
 
-    SimObjectResolver &objNameResolver;
+template <class T>
+bool
+parseParam(const std::string &s, BitUnionType<T> &value)
+{
+    // Zero initialize storage to avoid leaking an uninitialized value
+    BitUnionBaseType<T> storage = BitUnionBaseType<T>();
+    auto res = to_number(s, storage);
+    value = storage;
+    return res;
+}
 
-  public:
-    CheckpointIn(const std::string &cpt_dir, SimObjectResolver &resolver);
-    ~CheckpointIn();
+template <class T>
+void
+showParam(CheckpointOut &os, const BitUnionType<T> &value)
+{
+    auto storage = static_cast<BitUnionBaseType<T>>(value);
 
-    const std::string cptDir;
+    // For a BitUnion8, the storage type is an unsigned char.
+    // Since we want to serialize a number we need to cast to
+    // unsigned int
+    os << ((sizeof(storage) == 1) ?
+        static_cast<unsigned int>(storage) : storage);
+}
 
-    bool find(const std::string &section, const std::string &entry,
-              std::string &value);
+// Treat 8-bit ints (chars) as ints on output, not as chars
+template <>
+inline void
+showParam(CheckpointOut &os, const char &value)
+{
+    os << (int)value;
+}
 
-    bool findObj(const std::string &section, const std::string &entry,
-                 SimObject *&value);
+template <>
+inline void
+showParam(CheckpointOut &os, const signed char &value)
+{
+    os << (int)value;
+}
 
-    bool sectionExists(const std::string &section);
+template <>
+inline void
+showParam(CheckpointOut &os, const unsigned char &value)
+{
+    os << (unsigned int)value;
+}
 
-    // The following static functions have to do with checkpoint
-    // creation rather than restoration.  This class makes a handy
-    // namespace for them though.  Currently no Checkpoint object is
-    // created on serialization (only unserialization) so we track the
-    // directory name as a global.  It would be nice to change this
-    // someday
+template <>
+inline bool
+parseParam(const std::string &s, float &value)
+{
+    return to_number(s, value);
+}
 
-  private:
-    // current directory we're serializing into.
-    static std::string currentDirectory;
+template <>
+inline bool
+parseParam(const std::string &s, double &value)
+{
+    return to_number(s, value);
+}
 
-  public:
-    // Set the current directory.  This function takes care of
-    // inserting curTick() if there's a '%d' in the argument, and
-    // appends a '/' if necessary.  The final name is returned.
-    static std::string setDir(const std::string &base_name);
+template <>
+inline bool
+parseParam(const std::string &s, bool &value)
+{
+    return to_bool(s, value);
+}
 
-    // Export current checkpoint directory name so other objects can
-    // derive filenames from it (e.g., memory).  The return value is
-    // guaranteed to end in '/' so filenames can be directly appended.
-    // This function is only valid while a checkpoint is being created.
-    static std::string dir();
+// Display bools as strings
+template <>
+inline void
+showParam(CheckpointOut &os, const bool &value)
+{
+    os << (value ? "true" : "false");
+}
 
-    // Filename for base checkpoint file within directory.
-    static const char *baseFilename;
-};
+// String requires no processing to speak of
+template <>
+inline bool
+parseParam(const std::string &s, std::string &value)
+{
+    value = s;
+    return true;
+}
+
+template <class T>
+void
+paramOut(CheckpointOut &os, const std::string &name, const T &param)
+{
+    os << name << "=";
+    showParam(os, param);
+    os << "\n";
+}
+
+template <class T>
+void
+paramIn(CheckpointIn &cp, const std::string &name, T &param)
+{
+    const std::string &section(Serializable::currentSection());
+    std::string str;
+    if (!cp.find(section, name, str) || !parseParam(str, param)) {
+        fatal("Can't unserialize '%s:%s'\n", section, name);
+    }
+}
+
+template <class T>
+bool
+optParamIn(CheckpointIn &cp, const std::string &name,
+           T &param, bool warn = true)
+{
+    const std::string &section(Serializable::currentSection());
+    std::string str;
+    if (!cp.find(section, name, str) || !parseParam(str, param)) {
+        if (warn)
+            warn("optional parameter %s:%s not present\n", section, name);
+        return false;
+    } else {
+        return true;
+    }
+}
+
+template <class T>
+void
+arrayParamOut(CheckpointOut &os, const std::string &name,
+              const std::vector<T> &param)
+{
+    typename std::vector<T>::size_type size = param.size();
+    os << name << "=";
+    if (size > 0)
+        showParam(os, param[0]);
+    for (typename std::vector<T>::size_type i = 1; i < size; ++i) {
+        os << " ";
+        showParam(os, param[i]);
+    }
+    os << "\n";
+}
+
+template <class T>
+void
+arrayParamOut(CheckpointOut &os, const std::string &name,
+              const std::list<T> &param)
+{
+    typename std::list<T>::const_iterator it = param.begin();
+
+    os << name << "=";
+    if (param.size() > 0)
+        showParam(os, *it);
+    it++;
+    while (it != param.end()) {
+        os << " ";
+        showParam(os, *it);
+        it++;
+    }
+    os << "\n";
+}
+
+template <class T>
+void
+arrayParamOut(CheckpointOut &os, const std::string &name,
+              const std::set<T> &param)
+{
+    typename std::set<T>::const_iterator it = param.begin();
+
+    os << name << "=";
+    if (param.size() > 0)
+        showParam(os, *it);
+    it++;
+    while (it != param.end()) {
+        os << " ";
+        showParam(os, *it);
+        it++;
+    }
+    os << "\n";
+}
+
+template <class T>
+void
+arrayParamOut(CheckpointOut &os, const std::string &name,
+              const T *param, unsigned size)
+{
+    os << name << "=";
+    if (size > 0)
+        showParam(os, param[0]);
+    for (unsigned i = 1; i < size; ++i) {
+        os << " ";
+        showParam(os, param[i]);
+    }
+    os << "\n";
+}
+
+/**
+ * Extract values stored in the checkpoint, and assign them to the provided
+ * array container.
+ *
+ * @param cp The checkpoint to be parsed.
+ * @param name Name of the container.
+ * @param param The array container.
+ * @param size The expected number of entries to be extracted.
+ */
+template <class T>
+void
+arrayParamIn(CheckpointIn &cp, const std::string &name,
+             T *param, unsigned size)
+{
+    const std::string &section(Serializable::currentSection());
+    std::string str;
+    if (!cp.find(section, name, str)) {
+        fatal("Can't unserialize '%s:%s'\n", section, name);
+    }
+
+    // code below stolen from VectorParam<T>::parse().
+    // it would be nice to unify these somehow...
+
+    std::vector<std::string> tokens;
+
+    tokenize(tokens, str, ' ');
+
+    // Need this if we were doing a vector
+    // value.resize(tokens.size());
+
+    fatal_if(tokens.size() != size,
+             "Array size mismatch on %s:%s (Got %u, expected %u)'\n",
+             section, name, tokens.size(), size);
+
+    for (std::vector<std::string>::size_type i = 0; i < tokens.size(); i++) {
+        // need to parse into local variable to handle vector<bool>,
+        // for which operator[] returns a special reference class
+        // that's not the same as 'bool&', (since it's a packed
+        // vector)
+        T scalar_value;
+        if (!parseParam(tokens[i], scalar_value)) {
+            std::string err("could not parse \"");
+
+            err += str;
+            err += "\"";
+
+            fatal(err);
+        }
+
+        // assign parsed value to vector
+        param[i] = scalar_value;
+    }
+}
+
+template <class T>
+void
+arrayParamIn(CheckpointIn &cp, const std::string &name, std::vector<T> &param)
+{
+    const std::string &section(Serializable::currentSection());
+    std::string str;
+    if (!cp.find(section, name, str)) {
+        fatal("Can't unserialize '%s:%s'\n", section, name);
+    }
+
+    // code below stolen from VectorParam<T>::parse().
+    // it would be nice to unify these somehow...
+
+    std::vector<std::string> tokens;
+
+    tokenize(tokens, str, ' ');
+
+    // Need this if we were doing a vector
+    // value.resize(tokens.size());
+
+    param.resize(tokens.size());
+
+    for (std::vector<std::string>::size_type i = 0; i < tokens.size(); i++) {
+        // need to parse into local variable to handle vector<bool>,
+        // for which operator[] returns a special reference class
+        // that's not the same as 'bool&', (since it's a packed
+        // vector)
+        T scalar_value;
+        if (!parseParam(tokens[i], scalar_value)) {
+            std::string err("could not parse \"");
+
+            err += str;
+            err += "\"";
+
+            fatal(err);
+        }
+
+        // assign parsed value to vector
+        param[i] = scalar_value;
+    }
+}
+
+template <class T>
+void
+arrayParamIn(CheckpointIn &cp, const std::string &name, std::list<T> &param)
+{
+    const std::string &section(Serializable::currentSection());
+    std::string str;
+    if (!cp.find(section, name, str)) {
+        fatal("Can't unserialize '%s:%s'\n", section, name);
+    }
+    param.clear();
+
+    std::vector<std::string> tokens;
+    tokenize(tokens, str, ' ');
+
+    for (std::vector<std::string>::size_type i = 0; i < tokens.size(); i++) {
+        T scalar_value;
+        if (!parseParam(tokens[i], scalar_value)) {
+            std::string err("could not parse \"");
+
+            err += str;
+            err += "\"";
+
+            fatal(err);
+        }
+
+        // assign parsed value to vector
+        param.push_back(scalar_value);
+    }
+}
+
+template <class T>
+void
+arrayParamIn(CheckpointIn &cp, const std::string &name, std::set<T> &param)
+{
+    const std::string &section(Serializable::currentSection());
+    std::string str;
+    if (!cp.find(section, name, str)) {
+        fatal("Can't unserialize '%s:%s'\n", section, name);
+    }
+    param.clear();
+
+    std::vector<std::string> tokens;
+    tokenize(tokens, str, ' ');
+
+    for (std::vector<std::string>::size_type i = 0; i < tokens.size(); i++) {
+        T scalar_value;
+        if (!parseParam(tokens[i], scalar_value)) {
+            std::string err("could not parse \"");
+
+            err += str;
+            err += "\"";
+
+            fatal(err);
+        }
+
+        // assign parsed value to vector
+        param.insert(scalar_value);
+    }
+}
+
+void
+debug_serialize(const std::string &cpt_dir);
+
+void
+objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param);
+
+//
+// These macros are streamlined to use in serialize/unserialize
+// functions.  It's assumed that serialize() has a parameter 'os' for
+// the ostream, and unserialize() has parameters 'cp' and 'section'.
+#define SERIALIZE_SCALAR(scalar)        paramOut(cp, #scalar, scalar)
+
+#define UNSERIALIZE_SCALAR(scalar)      paramIn(cp, #scalar, scalar)
+#define UNSERIALIZE_OPT_SCALAR(scalar)      optParamIn(cp, #scalar, scalar)
+
+// ENUMs are like SCALARs, but we cast them to ints on the way out
+#define SERIALIZE_ENUM(scalar)          paramOut(cp, #scalar, (int)scalar)
+
+#define UNSERIALIZE_ENUM(scalar)                        \
+    do {                                                \
+        int tmp;                                        \
+        paramIn(cp, #scalar, tmp);                      \
+        scalar = static_cast<decltype(scalar)>(tmp);    \
+    } while (0)
+
+#define SERIALIZE_ARRAY(member, size)           \
+        arrayParamOut(cp, #member, member, size)
+
+#define UNSERIALIZE_ARRAY(member, size)         \
+        arrayParamIn(cp, #member, member, size)
+
+#define SERIALIZE_CONTAINER(member)             \
+        arrayParamOut(cp, #member, member)
+
+#define UNSERIALIZE_CONTAINER(member)           \
+        arrayParamIn(cp, #member, member)
+
+#define SERIALIZE_EVENT(event) event.serializeSection(cp, #event);
+
+#define UNSERIALIZE_EVENT(event)                        \
+    do {                                                \
+        event.unserializeSection(cp, #event);           \
+        eventQueue()->checkpointReschedule(&event);     \
+    } while (0)
+
+#define SERIALIZE_OBJ(obj) obj.serializeSection(cp, #obj)
+#define UNSERIALIZE_OBJ(obj) obj.unserializeSection(cp, #obj)
+
+#define SERIALIZE_OBJPTR(objptr)        paramOut(cp, #objptr, (objptr)->name())
+
+#define UNSERIALIZE_OBJPTR(objptr)                      \
+    do {                                                \
+        SimObject *sptr;                                \
+        objParamIn(cp, #objptr, sptr);                  \
+        objptr = dynamic_cast<decltype(objptr)>(sptr);  \
+    } while (0)
 
 #endif // __SERIALIZE_HH__

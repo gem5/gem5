@@ -30,9 +30,10 @@
  *          Miguel J. Serrano
  */
 
-#include "base/misc.hh"
-#include "debug/Intel8254Timer.hh"
 #include "dev/intel_8254_timer.hh"
+
+#include "base/logging.hh"
+#include "debug/Intel8254Timer.hh"
 
 using namespace std;
 

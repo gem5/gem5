@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2015-2017 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,7 +30,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Anthony Gutierrez
+ * Authors: Anthony Gutierrez
  */
 
 #ifndef __GPU_DYN_INST_HH__
@@ -39,11 +39,8 @@
 #include <cstdint>
 #include <string>
 
-#include "enums/GenericMemoryOrder.hh"
-#include "enums/GenericMemoryScope.hh"
-#include "enums/MemOpType.hh"
+#include "base/logging.hh"
 #include "enums/MemType.hh"
-#include "enums/OpType.hh"
 #include "enums/StorageClassType.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_exec_context.hh"
@@ -58,6 +55,7 @@ class AtomicOpAnd : public TypedAtomicOpFunctor<T>
 
     AtomicOpAnd(T _a) : a(_a) { }
     void execute(T *b) { *b &= a; }
+    AtomicOpFunctor* clone () { return new AtomicOpAnd(a); }
 };
 
 template<typename T>
@@ -67,6 +65,7 @@ class AtomicOpOr : public TypedAtomicOpFunctor<T>
     T a;
     AtomicOpOr(T _a) : a(_a) { }
     void execute(T *b) { *b |= a; }
+    AtomicOpFunctor* clone () { return new AtomicOpOr(a); }
 };
 
 template<typename T>
@@ -76,6 +75,7 @@ class AtomicOpXor : public TypedAtomicOpFunctor<T>
     T a;
     AtomicOpXor(T _a) : a(_a) {}
     void execute(T *b) { *b ^= a; }
+    AtomicOpFunctor* clone () { return new AtomicOpXor(a); }
 };
 
 template<typename T>
@@ -105,6 +105,7 @@ class AtomicOpCAS : public TypedAtomicOpFunctor<T>
             computeUnit->xactCasLoadMap.clear();
         }
     }
+    AtomicOpFunctor* clone () { return new AtomicOpCAS(c, s, computeUnit); }
 };
 
 template<typename T>
@@ -114,6 +115,7 @@ class AtomicOpExch : public TypedAtomicOpFunctor<T>
     T a;
     AtomicOpExch(T _a) : a(_a) { }
     void execute(T *b) { *b = a; }
+    AtomicOpFunctor* clone () { return new AtomicOpExch(a); }
 };
 
 template<typename T>
@@ -123,6 +125,7 @@ class AtomicOpAdd : public TypedAtomicOpFunctor<T>
     T a;
     AtomicOpAdd(T _a) : a(_a) { }
     void execute(T *b) { *b += a; }
+    AtomicOpFunctor* clone () { return new AtomicOpAdd(a); }
 };
 
 template<typename T>
@@ -132,6 +135,7 @@ class AtomicOpSub : public TypedAtomicOpFunctor<T>
     T a;
     AtomicOpSub(T _a) : a(_a) { }
     void execute(T *b) { *b -= a; }
+    AtomicOpFunctor* clone () { return new AtomicOpSub(a); }
 };
 
 template<typename T>
@@ -140,6 +144,7 @@ class AtomicOpInc : public TypedAtomicOpFunctor<T>
   public:
     AtomicOpInc() { }
     void execute(T *b) { *b += 1; }
+    AtomicOpFunctor* clone () { return new AtomicOpInc(); }
 };
 
 template<typename T>
@@ -148,6 +153,7 @@ class AtomicOpDec : public TypedAtomicOpFunctor<T>
   public:
     AtomicOpDec() {}
     void execute(T *b) { *b -= 1; }
+    AtomicOpFunctor* clone () { return new AtomicOpDec(); }
 };
 
 template<typename T>
@@ -163,6 +169,7 @@ class AtomicOpMax : public TypedAtomicOpFunctor<T>
         if (a > *b)
             *b = a;
     }
+    AtomicOpFunctor* clone () { return new AtomicOpMax(a); }
 };
 
 template<typename T>
@@ -178,11 +185,8 @@ class AtomicOpMin : public TypedAtomicOpFunctor<T>
         if (a < *b)
             *b = a;
     }
+    AtomicOpFunctor* clone () { return new AtomicOpMin(a); }
 };
-
-#define MO_A(a) ((a)>=Enums::MO_AAND && (a)<=Enums::MO_AMIN)
-#define MO_ANR(a) ((a)>=Enums::MO_ANRAND && (a)<=Enums::MO_ANRMIN)
-#define MO_H(a) ((a)>=Enums::MO_HAND && (a)<=Enums::MO_HMIN)
 
 typedef enum
 {
@@ -190,39 +194,28 @@ typedef enum
     VT_64,
 } vgpr_type;
 
-typedef enum
-{
-    SEG_PRIVATE,
-    SEG_SPILL,
-    SEG_GLOBAL,
-    SEG_SHARED,
-    SEG_READONLY,
-    SEG_FLAT
-} seg_type;
-
 class GPUDynInst : public GPUExecContext
 {
   public:
-    GPUDynInst(ComputeUnit *_cu, Wavefront *_wf, GPUStaticInst *_staticInst,
+    GPUDynInst(ComputeUnit *_cu, Wavefront *_wf, GPUStaticInst *static_inst,
                uint64_t instSeqNum);
     ~GPUDynInst();
-    void execute();
+    void execute(GPUDynInstPtr gpuDynInst);
     int numSrcRegOperands();
     int numDstRegOperands();
     int getNumOperands();
     bool isVectorRegister(int operandIdx);
     bool isScalarRegister(int operandIdx);
-    int getRegisterIndex(int operandIdx);
+    bool isCondRegister(int operandIdx);
+    int getRegisterIndex(int operandIdx, GPUDynInstPtr gpuDynInst);
     int getOperandSize(int operandIdx);
     bool isDstOperand(int operandIdx);
     bool isSrcOperand(int operandIdx);
-    bool isArgLoad();
 
     const std::string &disassemble() const;
 
     uint64_t seqNum() const;
 
-    Enums::OpType opType();
     Enums::StorageClassType executedAs();
 
     // The address of the memory operation
@@ -240,14 +233,7 @@ class GPUDynInst : public GPUExecContext
 
     // The memory type (M_U32, M_S32, ...)
     Enums::MemType m_type;
-    // The memory operation (MO_LD, MO_ST, ...)
-    Enums::MemOpType m_op;
-    Enums::GenericMemoryOrder memoryOrder;
 
-    // Scope of the request
-    Enums::GenericMemoryScope scope;
-    // The memory segment (SEG_SHARED, SEG_GLOBAL, ...)
-    seg_type s_type;
     // The equivalency class
     int equiv;
     // The return VGPR type (VT_32 or VT_64)
@@ -285,13 +271,79 @@ class GPUDynInst : public GPUExecContext
     // Initiate the specified memory operation, by creating a
     // memory request and sending it off to the memory system.
     void initiateAcc(GPUDynInstPtr gpuDynInst);
+    // Complete the specified memory operation, by writing
+    // value back to the RF in the case of a load or atomic
+    // return or, in the case of a store, we do nothing
+    void completeAcc(GPUDynInstPtr gpuDynInst);
 
     void updateStats();
 
-    GPUStaticInst* staticInstruction() { return staticInst; }
+    GPUStaticInst* staticInstruction() { return _staticInst; }
 
-    // Is the instruction a scalar or vector op?
-    bool scalarOp() const;
+    bool isALU() const;
+    bool isBranch() const;
+    bool isNop() const;
+    bool isReturn() const;
+    bool isUnconditionalJump() const;
+    bool isSpecialOp() const;
+    bool isWaitcnt() const;
+
+    bool isBarrier() const;
+    bool isMemFence() const;
+    bool isMemRef() const;
+    bool isFlat() const;
+    bool isLoad() const;
+    bool isStore() const;
+
+    bool isAtomic() const;
+    bool isAtomicNoRet() const;
+    bool isAtomicRet() const;
+
+    bool isScalar() const;
+    bool readsSCC() const;
+    bool writesSCC() const;
+    bool readsVCC() const;
+    bool writesVCC() const;
+
+    bool isAtomicAnd() const;
+    bool isAtomicOr() const;
+    bool isAtomicXor() const;
+    bool isAtomicCAS() const;
+    bool isAtomicExch() const;
+    bool isAtomicAdd() const;
+    bool isAtomicSub() const;
+    bool isAtomicInc() const;
+    bool isAtomicDec() const;
+    bool isAtomicMax() const;
+    bool isAtomicMin() const;
+
+    bool isArgLoad() const;
+    bool isGlobalMem() const;
+    bool isLocalMem() const;
+
+    bool isArgSeg() const;
+    bool isGlobalSeg() const;
+    bool isGroupSeg() const;
+    bool isKernArgSeg() const;
+    bool isPrivateSeg() const;
+    bool isReadOnlySeg() const;
+    bool isSpillSeg() const;
+
+    bool isWorkitemScope() const;
+    bool isWavefrontScope() const;
+    bool isWorkgroupScope() const;
+    bool isDeviceScope() const;
+    bool isSystemScope() const;
+    bool isNoScope() const;
+
+    bool isRelaxedOrder() const;
+    bool isAcquire() const;
+    bool isRelease() const;
+    bool isAcquireRelease() const;
+    bool isNoOrder() const;
+
+    bool isGloballyCoherent() const;
+    bool isSystemCoherent() const;
 
     /*
      * Loads/stores/atomics may have acquire/release semantics associated
@@ -312,135 +364,90 @@ class GPUDynInst : public GPUExecContext
     bool useContinuation;
 
     template<typename c0> AtomicOpFunctor*
-    makeAtomicOpFunctor(c0 *reg0, c0 *reg1, Enums::MemOpType op)
+    makeAtomicOpFunctor(c0 *reg0, c0 *reg1)
     {
-        using namespace Enums;
-
-        switch(op) {
-          case MO_AAND:
-          case MO_ANRAND:
+        if (isAtomicAnd()) {
             return new AtomicOpAnd<c0>(*reg0);
-          case MO_AOR:
-          case MO_ANROR:
+        } else if (isAtomicOr()) {
             return new AtomicOpOr<c0>(*reg0);
-          case MO_AXOR:
-          case MO_ANRXOR:
+        } else if (isAtomicXor()) {
             return new AtomicOpXor<c0>(*reg0);
-          case MO_ACAS:
-          case MO_ANRCAS:
+        } else if (isAtomicCAS()) {
             return new AtomicOpCAS<c0>(*reg0, *reg1, cu);
-          case MO_AEXCH:
-          case MO_ANREXCH:
+        } else if (isAtomicExch()) {
             return new AtomicOpExch<c0>(*reg0);
-          case MO_AADD:
-          case MO_ANRADD:
+        } else if (isAtomicAdd()) {
             return new AtomicOpAdd<c0>(*reg0);
-          case MO_ASUB:
-          case MO_ANRSUB:
+        } else if (isAtomicSub()) {
             return new AtomicOpSub<c0>(*reg0);
-          case MO_AINC:
-          case MO_ANRINC:
+        } else if (isAtomicInc()) {
             return new AtomicOpInc<c0>();
-          case MO_ADEC:
-          case MO_ANRDEC:
+        } else if (isAtomicDec()) {
             return new AtomicOpDec<c0>();
-          case MO_AMAX:
-          case MO_ANRMAX:
+        } else if (isAtomicMax()) {
             return new AtomicOpMax<c0>(*reg0);
-          case MO_AMIN:
-          case MO_ANRMIN:
+        } else if (isAtomicMin()) {
             return new AtomicOpMin<c0>(*reg0);
-          default:
-            panic("Unrecognized atomic operation");
+        } else {
+            fatal("Unrecognized atomic operation");
         }
     }
 
     void
-    setRequestFlags(Request *req, bool setMemOrder=true)
+    setRequestFlags(RequestPtr req, bool setMemOrder=true)
     {
         // currently these are the easy scopes to deduce
-        switch (s_type) {
-          case SEG_PRIVATE:
+        if (isPrivateSeg()) {
             req->setMemSpaceConfigFlags(Request::PRIVATE_SEGMENT);
-            break;
-          case SEG_SPILL:
+        } else if (isSpillSeg()) {
             req->setMemSpaceConfigFlags(Request::SPILL_SEGMENT);
-            break;
-          case SEG_GLOBAL:
+        } else if (isGlobalSeg()) {
             req->setMemSpaceConfigFlags(Request::GLOBAL_SEGMENT);
-            break;
-          case SEG_READONLY:
+        } else if (isReadOnlySeg()) {
             req->setMemSpaceConfigFlags(Request::READONLY_SEGMENT);
-            break;
-          case SEG_SHARED:
+        } else if (isGroupSeg()) {
             req->setMemSpaceConfigFlags(Request::GROUP_SEGMENT);
-            break;
-          case SEG_FLAT:
-            // TODO: translate to correct scope
-            assert(false);
-          default:
-            panic("Bad segment type");
-            break;
+        } else if (isFlat()) {
+            panic("TODO: translate to correct scope");
+        } else {
+            fatal("%s has bad segment type\n", disassemble());
         }
 
-        switch (scope) {
-          case Enums::MEMORY_SCOPE_NONE:
-          case Enums::MEMORY_SCOPE_WORKITEM:
-            break;
-          case Enums::MEMORY_SCOPE_WAVEFRONT:
+        if (isWavefrontScope()) {
             req->setMemSpaceConfigFlags(Request::SCOPE_VALID |
                                         Request::WAVEFRONT_SCOPE);
-            break;
-          case Enums::MEMORY_SCOPE_WORKGROUP:
+        } else if (isWorkgroupScope()) {
             req->setMemSpaceConfigFlags(Request::SCOPE_VALID |
                                         Request::WORKGROUP_SCOPE);
-            break;
-          case Enums::MEMORY_SCOPE_DEVICE:
+        } else if (isDeviceScope()) {
             req->setMemSpaceConfigFlags(Request::SCOPE_VALID |
                                         Request::DEVICE_SCOPE);
-            break;
-          case Enums::MEMORY_SCOPE_SYSTEM:
+        } else if (isSystemScope()) {
             req->setMemSpaceConfigFlags(Request::SCOPE_VALID |
                                         Request::SYSTEM_SCOPE);
-            break;
-          default:
-            panic("Bad scope type");
-            break;
+        } else if (!isNoScope() && !isWorkitemScope()) {
+            fatal("%s has bad scope type\n", disassemble());
         }
 
         if (setMemOrder) {
             // set acquire and release flags
-            switch (memoryOrder){
-              case Enums::MEMORY_ORDER_SC_ACQUIRE:
+            if (isAcquire()) {
                 req->setFlags(Request::ACQUIRE);
-                break;
-              case Enums::MEMORY_ORDER_SC_RELEASE:
+            } else if (isRelease()) {
                 req->setFlags(Request::RELEASE);
-                break;
-              case Enums::MEMORY_ORDER_SC_ACQUIRE_RELEASE:
+            } else if (isAcquireRelease()) {
                 req->setFlags(Request::ACQUIRE | Request::RELEASE);
-                break;
-              default:
-                break;
+            } else if (!isNoOrder()) {
+                fatal("%s has bad memory order\n", disassemble());
             }
         }
 
         // set atomic type
         // currently, the instruction genenerator only produces atomic return
         // but a magic instruction can produce atomic no return
-        if (m_op == Enums::MO_AADD || m_op == Enums::MO_ASUB ||
-            m_op == Enums::MO_AAND || m_op == Enums::MO_AOR ||
-            m_op == Enums::MO_AXOR || m_op == Enums::MO_AMAX ||
-            m_op == Enums::MO_AMIN || m_op == Enums::MO_AINC ||
-            m_op == Enums::MO_ADEC || m_op == Enums::MO_AEXCH ||
-            m_op == Enums::MO_ACAS) {
+        if (isAtomicRet()) {
             req->setFlags(Request::ATOMIC_RETURN_OP);
-        } else if (m_op == Enums::MO_ANRADD || m_op == Enums::MO_ANRSUB ||
-                   m_op == Enums::MO_ANRAND || m_op == Enums::MO_ANROR ||
-                   m_op == Enums::MO_ANRXOR || m_op == Enums::MO_ANRMAX ||
-                   m_op == Enums::MO_ANRMIN || m_op == Enums::MO_ANRINC ||
-                   m_op == Enums::MO_ANRDEC || m_op == Enums::MO_ANREXCH ||
-                   m_op == Enums::MO_ANRCAS) {
+        } else if (isAtomicNoRet()) {
             req->setFlags(Request::ATOMIC_NO_RETURN_OP);
         }
     }
@@ -457,7 +464,7 @@ class GPUDynInst : public GPUExecContext
     std::vector<int> tlbHitLevel;
 
   private:
-    GPUStaticInst *staticInst;
+    GPUStaticInst *_staticInst;
     uint64_t _seqNum;
 };
 

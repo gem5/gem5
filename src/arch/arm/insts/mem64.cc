@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2011-2013,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -38,6 +38,7 @@
  */
 
 #include "arch/arm/insts/mem64.hh"
+
 #include "arch/arm/tlb.hh"
 #include "base/loader/symtab.hh"
 #include "mem/request.hh"
@@ -52,9 +53,8 @@ SysDC64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    ccprintf(ss, ", [");
-    printReg(ss, base);
-    ccprintf(ss, "]");
+    ccprintf(ss, ", ");
+    printIntReg(ss, base);
     return ss.str();
 }
 
@@ -64,9 +64,13 @@ void
 Memory64::startDisassembly(std::ostream &os) const
 {
     printMnemonic(os, "", false);
-    printReg(os, dest);
+    if (isDataPrefetch()||isInstPrefetch()){
+        printPFflags(os, dest);
+    }else{
+        printIntReg(os, dest);
+    }
     ccprintf(os, ", [");
-    printReg(os, base);
+    printIntReg(os, base);
 }
 
 void
@@ -99,11 +103,11 @@ MemoryDImm64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ccprintf(ss, ", ");
-    printReg(ss, dest2);
+    printIntReg(ss, dest2);
     ccprintf(ss, ", [");
-    printReg(ss, base);
+    printIntReg(ss, base);
     if (imm)
         ccprintf(ss, ", #%d", imm);
     ccprintf(ss, "]");
@@ -115,13 +119,13 @@ MemoryDImmEx64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, result);
+    printIntReg(ss, result);
     ccprintf(ss, ", ");
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ccprintf(ss, ", ");
-    printReg(ss, dest2);
+    printIntReg(ss, dest2);
     ccprintf(ss, ", [");
-    printReg(ss, base);
+    printIntReg(ss, base);
     if (imm)
         ccprintf(ss, ", #%d", imm);
     ccprintf(ss, "]");
@@ -172,11 +176,11 @@ MemoryEx64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ccprintf(ss, ", ");
-    printReg(ss, result);
+    printIntReg(ss, result);
     ccprintf(ss, ", [");
-    printReg(ss, base);
+    printIntReg(ss, base);
     ccprintf(ss, "]");
     return ss.str();
 }
@@ -186,7 +190,7 @@ MemoryLiteral64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ccprintf(ss, ", #%d", pc + imm);
     return ss.str();
 }

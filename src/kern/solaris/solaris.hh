@@ -114,6 +114,9 @@ class Solaris : public OperatingSystem
         char machine[_SYS_NMLN];        //!< Machine type.
     } utsname;
 
+    // for *at syscalls
+    static const int TGT_AT_FDCWD   = -100;
+
 };  // class Solaris
 
 #endif // __SOLARIS_HH__

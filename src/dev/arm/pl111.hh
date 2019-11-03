@@ -49,7 +49,7 @@
 #include <fstream>
 #include <memory>
 
-#include "base/bitmap.hh"
+#include "base/bmpwriter.hh"
 #include "base/framebuffer.hh"
 #include "base/output.hh"
 #include "dev/arm/amba_device.hh"
@@ -266,7 +266,7 @@ class Pl111: public AmbaDmaDevice
     VncInput *vnc;
 
     /** Helper to write out bitmaps */
-    Bitmap bmp;
+    BmpWriter bmp;
 
     /** Picture of what the current frame buffer looks like */
     OutputStream *pic;
@@ -325,10 +325,10 @@ class Pl111: public AmbaDmaDevice
     void dmaDone();
 
     /** DMA framebuffer read event */
-    EventWrapper<Pl111, &Pl111::readFramebuffer> readEvent;
+    EventFunctionWrapper readEvent;
 
     /** Fill fifo */
-    EventWrapper<Pl111, &Pl111::fillFifo> fillFifoEvent;
+    EventFunctionWrapper fillFifoEvent;
 
     /**@{*/
     /**
@@ -354,7 +354,7 @@ class Pl111: public AmbaDmaDevice
     /**@}*/
 
     /** Wrapper to create an event out of the interrupt */
-    EventWrapper<Pl111, &Pl111::generateInterrupt> intEvent;
+    EventFunctionWrapper intEvent;
 
     bool enableCapture;
 

@@ -63,6 +63,9 @@ fnstenvTemplate = """
     # FSW includes TOP when read
     rdval t1, fsw
     st t1, seg, %(mode)s, "DISPLACEMENT + 4", dataSize=2
+    srli t1, t1, 11, dataSize=2
+    andi t1, t1, 0x7, dataSize=2
+    wrval "InstRegIndex(MISCREG_X87_TOP)", t1
 
     rdval t1, ftw
     st t1, seg, %(mode)s, "DISPLACEMENT + 8", dataSize=2

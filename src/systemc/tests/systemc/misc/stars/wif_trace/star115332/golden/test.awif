@@ -1,0 +1,312 @@
+
+type scalar "BIT" enum '0', '1' ;
+type scalar "MVL" enum '0', '1', 'X', 'Z', '?' ;
+
+declare  O0   "clk"  BIT  variable ;
+start_trace O0 ;
+declare  O1   "int1"  BIT  0 0 variable ;
+start_trace O1 ;
+declare  O2   "int2"  BIT  0 0 variable ;
+start_trace O2 ;
+comment "All initial values are dumped below at time 0 sec = 0 timescale units." ;
+assign O0 '1' ;
+assign O1 "0" ;
+assign O2 "0" ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+

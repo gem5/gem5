@@ -1,0 +1,11 @@
+SystemC Simulation
+
+Warning: (W505) object already exists: top.ev2. Latter declaration will be renamed to top.ev2_0
+In file: <removed by verify.pl>
+
+Warning: (W505) object already exists: top. Latter declaration will be renamed to top_0
+In file: <removed by verify.pl>
+
+There should be two name clashes reported above
+
+Success

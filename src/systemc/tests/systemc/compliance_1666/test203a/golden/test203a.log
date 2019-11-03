@@ -1,0 +1,398 @@
+SystemC Simulation
+Should be silent except for warning messages
+There should be warning 11 messages
+
+Warning: (W570) attempt to use an empty process handle ignored: disable()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: enable()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: is_unwinding()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: kill()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: reset()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: resume()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: suspend()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_off()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_on()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: terminated_event()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: throw_it()
+In file: <removed by verify.pl>
+End of warning messages
+There should be warning 11 messages
+
+Warning: (W570) attempt to use an empty process handle ignored: disable()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: enable()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: is_unwinding()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: kill()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: reset()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: resume()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: suspend()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_off()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_on()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: terminated_event()
+In file: <removed by verify.pl>
+
+Warning: (W570) attempt to use an empty process handle ignored: throw_it()
+In file: <removed by verify.pl>
+End of warning messages
+There should be warning 11 messages
+
+Warning: (W570) attempt to use an empty process handle ignored: disable()
+In file: <removed by verify.pl>
+In process: top.m.ME @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: enable()
+In file: <removed by verify.pl>
+In process: top.m.ME @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: is_unwinding()
+In file: <removed by verify.pl>
+In process: top.m.ME @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: kill()
+In file: <removed by verify.pl>
+In process: top.m.ME @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: reset()
+In file: <removed by verify.pl>
+In process: top.m.ME @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: resume()
+In file: <removed by verify.pl>
+In process: top.m.ME @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: suspend()
+In file: <removed by verify.pl>
+In process: top.m.ME @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_off()
+In file: <removed by verify.pl>
+In process: top.m.ME @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_on()
+In file: <removed by verify.pl>
+In process: top.m.ME @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: terminated_event()
+In file: <removed by verify.pl>
+In process: top.m.ME @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: throw_it()
+In file: <removed by verify.pl>
+In process: top.m.ME @ 0 s
+End of warning messages
+There should be warning 11 messages
+
+Warning: (W570) attempt to use an empty process handle ignored: disable()
+In file: <removed by verify.pl>
+In process: top.m.stat_method @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: enable()
+In file: <removed by verify.pl>
+In process: top.m.stat_method @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: is_unwinding()
+In file: <removed by verify.pl>
+In process: top.m.stat_method @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: kill()
+In file: <removed by verify.pl>
+In process: top.m.stat_method @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: reset()
+In file: <removed by verify.pl>
+In process: top.m.stat_method @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: resume()
+In file: <removed by verify.pl>
+In process: top.m.stat_method @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: suspend()
+In file: <removed by verify.pl>
+In process: top.m.stat_method @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_off()
+In file: <removed by verify.pl>
+In process: top.m.stat_method @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_on()
+In file: <removed by verify.pl>
+In process: top.m.stat_method @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: terminated_event()
+In file: <removed by verify.pl>
+In process: top.m.stat_method @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: throw_it()
+In file: <removed by verify.pl>
+In process: top.m.stat_method @ 0 s
+End of warning messages
+There should be warning 11 messages
+
+Warning: (W570) attempt to use an empty process handle ignored: disable()
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: enable()
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: is_unwinding()
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: kill()
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: reset()
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: resume()
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: suspend()
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_off()
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_on()
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: terminated_event()
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: throw_it()
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+End of warning messages
+There should be warning 11 messages
+
+Warning: (W570) attempt to use an empty process handle ignored: disable()
+In file: <removed by verify.pl>
+In process: top.m.stat_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: enable()
+In file: <removed by verify.pl>
+In process: top.m.stat_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: is_unwinding()
+In file: <removed by verify.pl>
+In process: top.m.stat_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: kill()
+In file: <removed by verify.pl>
+In process: top.m.stat_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: reset()
+In file: <removed by verify.pl>
+In process: top.m.stat_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: resume()
+In file: <removed by verify.pl>
+In process: top.m.stat_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: suspend()
+In file: <removed by verify.pl>
+In process: top.m.stat_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_off()
+In file: <removed by verify.pl>
+In process: top.m.stat_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_on()
+In file: <removed by verify.pl>
+In process: top.m.stat_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: terminated_event()
+In file: <removed by verify.pl>
+In process: top.m.stat_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: throw_it()
+In file: <removed by verify.pl>
+In process: top.m.stat_thread @ 0 s
+End of warning messages
+There should be warning 11 messages
+
+Warning: (W570) attempt to use an empty process handle ignored: disable()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: enable()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: is_unwinding()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: kill()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: reset()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: resume()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: suspend()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_off()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_on()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: terminated_event()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_thread @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: throw_it()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_thread @ 0 s
+End of warning messages
+There should be warning 11 messages
+
+Warning: (W570) attempt to use an empty process handle ignored: disable()
+In file: <removed by verify.pl>
+In process: top.m.CT @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: enable()
+In file: <removed by verify.pl>
+In process: top.m.CT @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: is_unwinding()
+In file: <removed by verify.pl>
+In process: top.m.CT @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: kill()
+In file: <removed by verify.pl>
+In process: top.m.CT @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: reset()
+In file: <removed by verify.pl>
+In process: top.m.CT @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: resume()
+In file: <removed by verify.pl>
+In process: top.m.CT @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: suspend()
+In file: <removed by verify.pl>
+In process: top.m.CT @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_off()
+In file: <removed by verify.pl>
+In process: top.m.CT @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_on()
+In file: <removed by verify.pl>
+In process: top.m.CT @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: terminated_event()
+In file: <removed by verify.pl>
+In process: top.m.CT @ 0 s
+
+Warning: (W570) attempt to use an empty process handle ignored: throw_it()
+In file: <removed by verify.pl>
+In process: top.m.CT @ 0 s
+End of warning messages
+There should be warning 11 messages
+
+Warning: (W570) attempt to use an empty process handle ignored: disable()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_method @ 1 ns
+
+Warning: (W570) attempt to use an empty process handle ignored: enable()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_method @ 1 ns
+
+Warning: (W570) attempt to use an empty process handle ignored: is_unwinding()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_method @ 1 ns
+
+Warning: (W570) attempt to use an empty process handle ignored: kill()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_method @ 1 ns
+
+Warning: (W570) attempt to use an empty process handle ignored: reset()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_method @ 1 ns
+
+Warning: (W570) attempt to use an empty process handle ignored: resume()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_method @ 1 ns
+
+Warning: (W570) attempt to use an empty process handle ignored: suspend()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_method @ 1 ns
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_off()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_method @ 1 ns
+
+Warning: (W570) attempt to use an empty process handle ignored: sync_reset_on()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_method @ 1 ns
+
+Warning: (W570) attempt to use an empty process handle ignored: terminated_event()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_method @ 1 ns
+
+Warning: (W570) attempt to use an empty process handle ignored: throw_it()
+In file: <removed by verify.pl>
+In process: top.m.T.dyn_method @ 1 ns
+End of warning messages
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+
+Success

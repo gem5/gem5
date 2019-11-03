@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013 ARM Limited
+# Copyright (c) 2010-2013, 2016, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -41,40 +41,37 @@
 # Authors: Ali Saidi
 #          Brad Beckmann
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 import optparse
 import sys
 
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
-from m5.util import addToPath, fatal
+from m5.util import addToPath, fatal, warn
+from m5.util.fdthelper import *
 
-addToPath('../common')
-addToPath('../ruby')
+addToPath('../')
 
-import Ruby
+from ruby import Ruby
 
-from FSConfig import *
-from SysPaths import *
-from Benchmarks import *
-import Simulation
-import CacheConfig
-import MemConfig
-from Caches import *
-import Options
-
-
-# Check if KVM support has been enabled, we might need to do VM
-# configuration if that's the case.
-have_kvm_support = 'BaseKvmCPU' in globals()
-def is_kvm_cpu(cpu_class):
-    return have_kvm_support and cpu_class != None and \
-        issubclass(cpu_class, BaseKvmCPU)
+from common.FSConfig import *
+from common.SysPaths import *
+from common.Benchmarks import *
+from common import Simulation
+from common import CacheConfig
+from common import CpuConfig
+from common import MemConfig
+from common import ObjectList
+from common.Caches import *
+from common import Options
 
 def cmd_line_template():
     if options.command_line and options.command_line_file:
-        print "Error: --command-line and --command-line-file are " \
-              "mutually exclusive"
+        print("Error: --command-line and --command-line-file are "
+              "mutually exclusive")
         sys.exit(1)
     if options.command_line:
         return options.command_line
@@ -92,14 +89,17 @@ def build_test_system(np):
     elif buildEnv['TARGET_ISA'] == "sparc":
         test_sys = makeSparcSystem(test_mem_mode, bm[0], cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == "x86":
-        test_sys = makeLinuxX86System(test_mem_mode, options.num_cpus, bm[0],
-                options.ruby, cmdline=cmdline)
+        test_sys = makeLinuxX86System(test_mem_mode, np, bm[0], options.ruby,
+                                      cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == "arm":
-        test_sys = makeArmSystem(test_mem_mode, options.machine_type,
-                                 options.num_cpus, bm[0], options.dtb_filename,
+        test_sys = makeArmSystem(test_mem_mode, options.machine_type, np,
+                                 bm[0], options.dtb_filename,
                                  bare_metal=options.bare_metal,
                                  cmdline=cmdline,
-                                 external_memory=options.external_memory_system)
+                                 external_memory=
+                                   options.external_memory_system,
+                                 ruby=options.ruby,
+                                 security=options.enable_security_extensions)
         if options.enable_context_switch_stats_dump:
             test_sys.enable_context_switch_stats_dump = True
     else:
@@ -125,6 +125,9 @@ def build_test_system(np):
 
     if options.kernel is not None:
         test_sys.kernel = binary(options.kernel)
+    else:
+        print("Error: a kernel must be provided to run in full system mode")
+        sys.exit(1)
 
     if options.script is not None:
         test_sys.readfile = options.script
@@ -139,19 +142,16 @@ def build_test_system(np):
 
     # For now, assign all the CPUs to the same clock domain
     test_sys.cpu = [TestCPUClass(clk_domain=test_sys.cpu_clk_domain, cpu_id=i)
-                    for i in xrange(np)]
+                    for i in range(np)]
 
-    if is_kvm_cpu(TestCPUClass) or is_kvm_cpu(FutureClass):
-        test_sys.vm = KvmVM()
+    if ObjectList.is_kvm_cpu(TestCPUClass) or \
+        ObjectList.is_kvm_cpu(FutureClass):
+        test_sys.kvm_vm = KvmVM()
 
     if options.ruby:
-        # Check for timing mode because ruby does not support atomic accesses
-        if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):
-            print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
-            sys.exit(1)
-
+        bootmem = getattr(test_sys, '_bootmem', None)
         Ruby.create_system(options, True, test_sys, test_sys.iobus,
-                           test_sys._dma_ports)
+                           test_sys._dma_ports, bootmem)
 
         # Create a seperate clock domain for Ruby
         test_sys.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
@@ -172,10 +172,11 @@ def build_test_system(np):
             cpu.icache_port = test_sys.ruby._cpu_ports[i].slave
             cpu.dcache_port = test_sys.ruby._cpu_ports[i].slave
 
-            if buildEnv['TARGET_ISA'] == "x86":
+            if buildEnv['TARGET_ISA'] in ("x86", "arm"):
                 cpu.itb.walker.port = test_sys.ruby._cpu_ports[i].slave
                 cpu.dtb.walker.port = test_sys.ruby._cpu_ports[i].slave
 
+            if buildEnv['TARGET_ISA'] in "x86":
                 cpu.interrupts[0].pio = test_sys.ruby._cpu_ports[i].master
                 cpu.interrupts[0].int_master = test_sys.ruby._cpu_ports[i].slave
                 cpu.interrupts[0].int_slave = test_sys.ruby._cpu_ports[i].master
@@ -192,26 +193,26 @@ def build_test_system(np):
             test_sys.iobridge.master = test_sys.membus.slave
 
         # Sanity check
-        if options.fastmem:
-            if TestCPUClass != AtomicSimpleCPU:
-                fatal("Fastmem can only be used with atomic CPU!")
-            if (options.caches or options.l2cache):
-                fatal("You cannot use fastmem in combination with caches!")
-
         if options.simpoint_profile:
-            if not options.fastmem:
-                # Atomic CPU checked with fastmem option already
-                fatal("SimPoint generation should be done with atomic cpu and fastmem")
+            if not ObjectList.is_noncaching_cpu(TestCPUClass):
+                fatal("SimPoint generation should be done with atomic cpu")
             if np > 1:
                 fatal("SimPoint generation not supported with more than one CPUs")
 
-        for i in xrange(np):
-            if options.fastmem:
-                test_sys.cpu[i].fastmem = True
+        for i in range(np):
             if options.simpoint_profile:
                 test_sys.cpu[i].addSimPointProbe(options.simpoint_interval)
             if options.checker:
                 test_sys.cpu[i].addCheckerCpu()
+            if not ObjectList.is_kvm_cpu(TestCPUClass):
+                if options.bp_type:
+                    bpClass = ObjectList.bp_list.get(options.bp_type)
+                    test_sys.cpu[i].branchPred = bpClass()
+                if options.indirect_bp_type:
+                    IndirectBPClass = ObjectList.indirect_bp_list.get(
+                        options.indirect_bp_type)
+                    test_sys.cpu[i].branchPred.indirectBranchPred = \
+                        IndirectBPClass()
             test_sys.cpu[i].createThreads()
 
         # If elastic tracing is enabled when not restoring from checkpoint and
@@ -240,7 +241,8 @@ def build_drive_system(np):
 
     cmdline = cmd_line_template()
     if buildEnv['TARGET_ISA'] == 'alpha':
-        drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1], cmdline=cmdline)
+        drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1],
+                                         cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == 'mips':
         drive_sys = makeLinuxMipsSystem(drive_mem_mode, bm[1], cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == 'sparc':
@@ -272,13 +274,14 @@ def build_drive_system(np):
     drive_sys.cpu.createThreads()
     drive_sys.cpu.createInterruptController()
     drive_sys.cpu.connectAllPorts(drive_sys.membus)
-    if options.fastmem:
-        drive_sys.cpu.fastmem = True
     if options.kernel is not None:
         drive_sys.kernel = binary(options.kernel)
+    else:
+        print("Error: a kernel must be provided to run in full system mode")
+        sys.exit(1)
 
-    if is_kvm_cpu(DriveCPUClass):
-        drive_sys.vm = KvmVM()
+    if ObjectList.is_kvm_cpu(DriveCPUClass):
+        drive_sys.kvm_vm = KvmVM()
 
     drive_sys.iobridge = Bridge(delay='50ns',
                                 ranges = drive_sys.mem_ranges)
@@ -289,7 +292,7 @@ def build_drive_system(np):
     # memory bus
     drive_sys.mem_ctrls = [DriveMemClass(range = r)
                            for r in drive_sys.mem_ranges]
-    for i in xrange(len(drive_sys.mem_ctrls)):
+    for i in range(len(drive_sys.mem_ctrls)):
         drive_sys.mem_ctrls[i].port = drive_sys.membus.master
 
     drive_sys.init_param = options.init_param
@@ -308,7 +311,7 @@ if '--ruby' in sys.argv:
 (options, args) = parser.parse_args()
 
 if args:
-    print "Error: script doesn't take any positional arguments"
+    print("Error: script doesn't take any positional arguments")
     sys.exit(1)
 
 # system under test can be any CPU
@@ -321,8 +324,8 @@ if options.benchmark:
     try:
         bm = Benchmarks[options.benchmark]
     except KeyError:
-        print "Error benchmark %s has not been defined." % options.benchmark
-        print "Valid benchmarks are: %s" % DefinedBenchmarks
+        print("Error benchmark %s has not been defined." % options.benchmark)
+        print("Valid benchmarks are: %s" % DefinedBenchmarks)
         sys.exit(1)
 else:
     if options.dual:
@@ -355,7 +358,7 @@ elif len(bm) == 1 and options.dist:
 elif len(bm) == 1:
     root = Root(full_system=True, system=test_sys)
 else:
-    print "Error I don't know how to create more than 2 systems."
+    print("Error I don't know how to create more than 2 systems.")
     sys.exit(1)
 
 if options.timesync:
@@ -363,6 +366,19 @@ if options.timesync:
 
 if options.frame_capture:
     VncServer.frame_capture = True
+
+if buildEnv['TARGET_ISA'] == "arm" and not options.bare_metal \
+        and not options.dtb_filename:
+    if options.machine_type not in ["VExpress_GEM5", "VExpress_GEM5_V1"]:
+        warn("Can only correctly generate a dtb for VExpress_GEM5_V1 " \
+             "platforms, unless custom hardware models have been equipped "\
+             "with generation functionality.")
+
+    # Generate a Device Tree
+    for sysname in ('system', 'testsys', 'drivesys'):
+        if hasattr(root, sysname):
+            sys = getattr(root, sysname)
+            sys.generateDtb(m5.options.outdir, '%s.dtb' % sysname)
 
 Simulation.setWorkCountOptions(test_sys, options)
 Simulation.run(options, root, test_sys, FutureClass)

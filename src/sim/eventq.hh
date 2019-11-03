@@ -41,13 +41,13 @@
 #include <algorithm>
 #include <cassert>
 #include <climits>
+#include <functional>
 #include <iosfwd>
 #include <memory>
 #include <mutex>
 #include <string>
 
 #include "base/flags.hh"
-#include "base/misc.hh"
 #include "base/types.hh"
 #include "debug/Event.hh"
 #include "sim/serialize.hh"
@@ -68,13 +68,10 @@ extern uint32_t numMainEventQueues;
 //! Array for main event queues.
 extern std::vector<EventQueue *> mainEventQueue;
 
-#ifndef SWIG
 //! The current event queue for the running thread. Access to this queue
 //! does not require any locking from the thread.
 
 extern __thread EventQueue *_curEventQueue;
-
-#endif
 
 //! Current mode of execution: parallel / serial
 extern bool inParallelMode;
@@ -103,7 +100,8 @@ class EventBase
     static const FlagsType PublicWrite   = 0x001d; // public writable flags
     static const FlagsType Squashed      = 0x0001; // has been squashed
     static const FlagsType Scheduled     = 0x0002; // has been scheduled
-    static const FlagsType AutoDelete    = 0x0004; // delete after dispatch
+    static const FlagsType Managed       = 0x0004; // Use life cycle manager
+    static const FlagsType AutoDelete    = Managed; // delete after dispatch
     /**
      * This used to be AutoSerialize. This value can't be reused
      * without changing the checkpoint version since the flag field
@@ -162,6 +160,9 @@ class EventBase
     /// CPU ticks must come after other associated CPU events
     /// (such as writebacks).
     static const Priority CPU_Tick_Pri =                50;
+
+    /// If we want to exit a thread in a CPU, it comes after CPU_Tick_Pri
+    static const Priority CPU_Exit_Pri =                64;
 
     /// Statistics events (dump, reset, etc.) come after
     /// everything else, but before exit.
@@ -286,6 +287,55 @@ class Event : public EventBase, public Serializable
     // This function isn't really useful if TRACING_ON is not defined
     virtual void trace(const char *action);     //!< trace event activity
 
+  protected: /* Memory management */
+    /**
+     * @{
+     * Memory management hooks for events that have the Managed flag set
+     *
+     * Events can use automatic memory management by setting the
+     * Managed flag. The default implementation automatically deletes
+     * events once they have been removed from the event queue. This
+     * typically happens when events are descheduled or have been
+     * triggered and not rescheduled.
+     *
+     * The methods below may be overridden by events that need custom
+     * memory management. For example, events exported to Python need
+     * to impement reference counting to ensure that the Python
+     * implementation of the event is kept alive while it lives in the
+     * event queue.
+     *
+     * @note Memory managers are responsible for implementing
+     * reference counting (by overriding both acquireImpl() and
+     * releaseImpl()) or checking if an event is no longer scheduled
+     * in releaseImpl() before deallocating it.
+     */
+
+    /**
+     * Managed event scheduled and being held in the event queue.
+     */
+    void acquire()
+    {
+        if (flags.isSet(Event::Managed))
+            acquireImpl();
+    }
+
+    /**
+     * Managed event removed from the event queue.
+     */
+    void release() {
+        if (flags.isSet(Event::Managed))
+            releaseImpl();
+    }
+
+    virtual void acquireImpl() {}
+
+    virtual void releaseImpl() {
+        if (!scheduled())
+            delete this;
+    }
+
+    /** @} */
+
   public:
 
     /*
@@ -344,7 +394,8 @@ class Event : public EventBase, public Serializable
     bool isExitEvent() const { return flags.isSet(IsExitEvent); }
 
     /// Check whether this event will auto-delete
-    bool isAutoDelete() const { return flags.isSet(AutoDelete); }
+    bool isManaged() const { return flags.isSet(Managed); }
+    bool isAutoDelete() const { return isManaged(); }
 
     /// Get the time that the event is scheduled
     Tick when() const { return _when; }
@@ -357,13 +408,10 @@ class Event : public EventBase, public Serializable
     //! NULL.  (Overridden in GlobalEvent::BarrierEvent.)
     virtual BaseGlobalEvent *globalEvent() { return NULL; }
 
-#ifndef SWIG
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
-#endif
 };
 
-#ifndef SWIG
 inline bool
 operator<(const Event &l, const Event &r)
 {
@@ -402,7 +450,6 @@ operator!=(const Event &l, const Event &r)
 {
     return l.when() != r.when() || l.priority() != r.priority();
 }
-#endif
 
 /**
  * Queue of events sorted in time order
@@ -490,7 +537,6 @@ class EventQueue
     EventQueue(const EventQueue &);
 
   public:
-#ifndef SWIG
     /**
      * Temporarily migrate execution to a different event queue.
      *
@@ -500,28 +546,36 @@ class EventQueue
      * example, be useful when performing IO across thread event
      * queues when timing is not crucial (e.g., during fast
      * forwarding).
+     *
+     * ScopedMigration does nothing if both eqs are the same
      */
     class ScopedMigration
     {
       public:
-        ScopedMigration(EventQueue *_new_eq)
-            :  new_eq(*_new_eq), old_eq(*curEventQueue())
+        ScopedMigration(EventQueue *_new_eq, bool _doMigrate = true)
+            :new_eq(*_new_eq), old_eq(*curEventQueue()),
+             doMigrate((&new_eq != &old_eq)&&_doMigrate)
         {
-            old_eq.unlock();
-            new_eq.lock();
-            curEventQueue(&new_eq);
+            if (doMigrate){
+                old_eq.unlock();
+                new_eq.lock();
+                curEventQueue(&new_eq);
+            }
         }
 
         ~ScopedMigration()
         {
-            new_eq.unlock();
-            old_eq.lock();
-            curEventQueue(&old_eq);
+            if (doMigrate){
+                new_eq.unlock();
+                old_eq.lock();
+                curEventQueue(&old_eq);
+            }
         }
 
       private:
         EventQueue &new_eq;
         EventQueue &old_eq;
+        bool doMigrate;
     };
 
     /**
@@ -550,7 +604,6 @@ class EventQueue
       private:
         EventQueue &eq;
     };
-#endif
 
     EventQueue(const std::string &n);
 
@@ -661,12 +714,15 @@ class EventQueue
      */
     void checkpointReschedule(Event *event);
 
-    virtual ~EventQueue() { }
+    virtual ~EventQueue()
+    {
+        while (!empty())
+            deschedule(getHead());
+    }
 };
 
 void dumpMainQueue();
 
-#ifndef SWIG
 class EventManager
 {
   protected:
@@ -729,26 +785,6 @@ class EventManager
 };
 
 template <class T, void (T::* F)()>
-void
-DelayFunction(EventQueue *eventq, Tick when, T *object)
-{
-    class DelayEvent : public Event
-    {
-      private:
-        T *object;
-
-      public:
-        DelayEvent(T *o)
-            : Event(Default_Pri, AutoDelete), object(o)
-        { }
-        void process() { (object->*F)(); }
-        const char *description() const { return "delay"; }
-    };
-
-    eventq->schedule(new DelayEvent(object), when);
-}
-
-template <class T, void (T::* F)()>
 class EventWrapper : public Event
 {
   private:
@@ -779,6 +815,33 @@ class EventWrapper : public Event
 
     const char *description() const { return "EventWrapped"; }
 };
-#endif
+
+class EventFunctionWrapper : public Event
+{
+  private:
+      std::function<void(void)> callback;
+      std::string _name;
+
+  public:
+    EventFunctionWrapper(const std::function<void(void)> &callback,
+                         const std::string &name,
+                         bool del = false,
+                         Priority p = Default_Pri)
+        : Event(p), callback(callback), _name(name)
+    {
+        if (del)
+            setFlags(AutoDelete);
+    }
+
+    void process() { callback(); }
+
+    const std::string
+    name() const
+    {
+        return _name + ".wrapped_function_event";
+    }
+
+    const char *description() const { return "EventFunctionWrapped"; }
+};
 
 #endif // __SIM_EVENTQ_HH__

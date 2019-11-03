@@ -50,7 +50,7 @@
 
 ElasticTrace::ElasticTrace(const ElasticTraceParams* params)
     :  ProbeListenerObject(params),
-       regEtraceListenersEvent(this),
+       regEtraceListenersEvent([this]{ regEtraceListeners(); }, name()),
        firstWin(true),
        lastClearedSeqNum(0),
        depWindowSize(params->depWindowSize),
@@ -109,8 +109,8 @@ ElasticTrace::regProbeListeners()
     } else {
         // Schedule an event to register all elastic trace probes when
         // specified no. of instructions are committed.
-        cpu->comInstEventQueue[(ThreadID)0]->schedule(&regEtraceListenersEvent,
-                                                      startTraceInst);
+        cpu->getContext(0)->scheduleInstCountEvent(
+                &regEtraceListenersEvent, startTraceInst);
     }
 }
 
@@ -124,18 +124,23 @@ ElasticTrace::regEtraceListeners()
     // each probe point.
     listeners.push_back(new ProbeListenerArg<ElasticTrace, RequestPtr>(this,
                         "FetchRequest", &ElasticTrace::fetchReqTrace));
-    listeners.push_back(new ProbeListenerArg<ElasticTrace, DynInstPtr>(this,
-                        "Execute", &ElasticTrace::recordExecTick));
-    listeners.push_back(new ProbeListenerArg<ElasticTrace, DynInstPtr>(this,
-                        "ToCommit", &ElasticTrace::recordToCommTick));
-    listeners.push_back(new ProbeListenerArg<ElasticTrace, DynInstPtr>(this,
-                        "Rename", &ElasticTrace::updateRegDep));
+    listeners.push_back(new ProbeListenerArg<ElasticTrace,
+            DynInstConstPtr>(this, "Execute",
+                &ElasticTrace::recordExecTick));
+    listeners.push_back(new ProbeListenerArg<ElasticTrace,
+            DynInstConstPtr>(this, "ToCommit",
+                &ElasticTrace::recordToCommTick));
+    listeners.push_back(new ProbeListenerArg<ElasticTrace,
+            DynInstConstPtr>(this, "Rename",
+                &ElasticTrace::updateRegDep));
     listeners.push_back(new ProbeListenerArg<ElasticTrace, SeqNumRegPair>(this,
                         "SquashInRename", &ElasticTrace::removeRegDepMapEntry));
-    listeners.push_back(new ProbeListenerArg<ElasticTrace, DynInstPtr>(this,
-                        "Squash", &ElasticTrace::addSquashedInst));
-    listeners.push_back(new ProbeListenerArg<ElasticTrace, DynInstPtr>(this,
-                        "Commit", &ElasticTrace::addCommittedInst));
+    listeners.push_back(new ProbeListenerArg<ElasticTrace,
+            DynInstConstPtr>(this, "Squash",
+                &ElasticTrace::addSquashedInst));
+    listeners.push_back(new ProbeListenerArg<ElasticTrace,
+            DynInstConstPtr>(this, "Commit",
+                &ElasticTrace::addCommittedInst));
     allProbesReg = true;
 }
 
@@ -162,7 +167,7 @@ ElasticTrace::fetchReqTrace(const RequestPtr &req)
 }
 
 void
-ElasticTrace::recordExecTick(const DynInstPtr &dyn_inst)
+ElasticTrace::recordExecTick(const DynInstConstPtr& dyn_inst)
 {
 
     // In a corner case, a retired instruction is propagated backward to the
@@ -199,7 +204,7 @@ ElasticTrace::recordExecTick(const DynInstPtr &dyn_inst)
 }
 
 void
-ElasticTrace::recordToCommTick(const DynInstPtr &dyn_inst)
+ElasticTrace::recordToCommTick(const DynInstConstPtr& dyn_inst)
 {
     // If tracing has just been enabled then the instruction at this stage of
     // execution is far enough that we cannot gather info about its past like
@@ -220,7 +225,7 @@ ElasticTrace::recordToCommTick(const DynInstPtr &dyn_inst)
 }
 
 void
-ElasticTrace::updateRegDep(const DynInstPtr &dyn_inst)
+ElasticTrace::updateRegDep(const DynInstConstPtr& dyn_inst)
 {
     // Get the sequence number of the instruction
     InstSeqNum seq_num = dyn_inst->seqNum;
@@ -238,22 +243,31 @@ ElasticTrace::updateRegDep(const DynInstPtr &dyn_inst)
     // dependency on the last writer.
     int8_t max_regs = dyn_inst->numSrcRegs();
     for (int src_idx = 0; src_idx < max_regs; src_idx++) {
-        // Get the physical register index of the i'th source register.
-        PhysRegIndex src_reg = dyn_inst->renamedSrcRegIdx(src_idx);
-        DPRINTFR(ElasticTrace, "[sn:%lli] Check map for src reg %i\n", seq_num,
-                    src_reg);
-        auto itr_last_writer = physRegDepMap.find(src_reg);
-        if (itr_last_writer != physRegDepMap.end()) {
-            InstSeqNum last_writer = itr_last_writer->second;
-            // Additionally the dependency distance is kept less than the window
-            // size parameter to limit the memory allocation to nodes in the
-            // graph. If the window were tending to infinite we would have to
-            // load a large number of node objects during replay.
-            if (seq_num - last_writer < depWindowSize) {
-                // Record a physical register dependency.
-                exec_info_ptr->physRegDepSet.insert(last_writer);
+
+        const RegId& src_reg = dyn_inst->srcRegIdx(src_idx);
+        if (!src_reg.isMiscReg() &&
+            !src_reg.isZeroReg()) {
+            // Get the physical register index of the i'th source register.
+            PhysRegIdPtr phys_src_reg = dyn_inst->renamedSrcRegIdx(src_idx);
+            DPRINTFR(ElasticTrace, "[sn:%lli] Check map for src reg"
+                     " %i (%s)\n", seq_num,
+                     phys_src_reg->flatIndex(), phys_src_reg->className());
+            auto itr_writer = physRegDepMap.find(phys_src_reg->flatIndex());
+            if (itr_writer != physRegDepMap.end()) {
+                InstSeqNum last_writer = itr_writer->second;
+                // Additionally the dependency distance is kept less than the
+                // window size parameter to limit the memory allocation to
+                // nodes in the graph. If the window were tending to infinite
+                // we would have to load a large number of node objects during
+                // replay.
+                if (seq_num - last_writer < depWindowSize) {
+                    // Record a physical register dependency.
+                    exec_info_ptr->physRegDepSet.insert(last_writer);
+                }
             }
+
         }
+
     }
 
     // Loop through the destination registers of this instruction and update
@@ -262,15 +276,16 @@ ElasticTrace::updateRegDep(const DynInstPtr &dyn_inst)
     for (int dest_idx = 0; dest_idx < max_regs; dest_idx++) {
         // For data dependency tracking the register must be an int, float or
         // CC register and not a Misc register.
-        TheISA::RegIndex dest_reg = dyn_inst->destRegIdx(dest_idx);
-        if (regIdxToClass(dest_reg) != MiscRegClass) {
-            // Get the physical register index of the i'th destination register.
-            dest_reg = dyn_inst->renamedDestRegIdx(dest_idx);
-            if (dest_reg != TheISA::ZeroReg) {
-                DPRINTFR(ElasticTrace, "[sn:%lli] Update map for dest reg %i\n",
-                            seq_num, dest_reg);
-                physRegDepMap[dest_reg] = seq_num;
-            }
+        const RegId& dest_reg = dyn_inst->destRegIdx(dest_idx);
+        if (!dest_reg.isMiscReg() &&
+            !dest_reg.isZeroReg()) {
+            // Get the physical register index of the i'th destination
+            // register.
+            PhysRegIdPtr phys_dest_reg = dyn_inst->renamedDestRegIdx(dest_idx);
+            DPRINTFR(ElasticTrace, "[sn:%lli] Update map for dest reg"
+                     " %i (%s)\n", seq_num, phys_dest_reg->flatIndex(),
+                     dest_reg.className());
+            physRegDepMap[phys_dest_reg->flatIndex()] = seq_num;
         }
     }
     maxPhysRegDepMapSize = std::max(physRegDepMap.size(),
@@ -281,14 +296,14 @@ void
 ElasticTrace::removeRegDepMapEntry(const SeqNumRegPair &inst_reg_pair)
 {
     DPRINTFR(ElasticTrace, "Remove Map entry for Reg %i\n",
-                inst_reg_pair.second);
+            inst_reg_pair.second);
     auto itr_regdep_map = physRegDepMap.find(inst_reg_pair.second);
     if (itr_regdep_map != physRegDepMap.end())
         physRegDepMap.erase(itr_regdep_map);
 }
 
 void
-ElasticTrace::addSquashedInst(const DynInstPtr &head_inst)
+ElasticTrace::addSquashedInst(const DynInstConstPtr& head_inst)
 {
     // If the squashed instruction was squashed before being processed by
     // execute stage then it will not be in the temporary store. In this case
@@ -316,7 +331,7 @@ ElasticTrace::addSquashedInst(const DynInstPtr &head_inst)
 }
 
 void
-ElasticTrace::addCommittedInst(const DynInstPtr &head_inst)
+ElasticTrace::addCommittedInst(const DynInstConstPtr& head_inst)
 {
     DPRINTFR(ElasticTrace, "Attempt to add committed inst [sn:%lli]\n",
                 head_inst->seqNum);
@@ -375,7 +390,7 @@ ElasticTrace::addCommittedInst(const DynInstPtr &head_inst)
 }
 
 void
-ElasticTrace::addDepTraceRecord(const DynInstPtr &head_inst,
+ElasticTrace::addDepTraceRecord(const DynInstConstPtr& head_inst,
                                 InstExecInfo* exec_info_ptr, bool commit)
 {
     // Create a record to assign dynamic intruction related fields.
@@ -394,7 +409,7 @@ ElasticTrace::addDepTraceRecord(const DynInstPtr &head_inst,
     new_record->reqFlags = head_inst->memReqFlags;
     new_record->virtAddr = head_inst->effAddr;
     new_record->asid = head_inst->asid;
-    new_record->physAddr = head_inst->physEffAddrLow;
+    new_record->physAddr = head_inst->physEffAddr;
     // Currently the tracing does not support split requests.
     new_record->size = head_inst->effSize;
     new_record->pc = head_inst->instAddr();
@@ -638,7 +653,7 @@ ElasticTrace::hasCompCompleted(TraceInfo* past_record,
 }
 
 void
-ElasticTrace::clearTempStoreUntil(const DynInstPtr head_inst)
+ElasticTrace::clearTempStoreUntil(const DynInstConstPtr& head_inst)
 {
     // Clear from temp store starting with the execution info object
     // corresponding the head_inst and continue clearing by decrementing the

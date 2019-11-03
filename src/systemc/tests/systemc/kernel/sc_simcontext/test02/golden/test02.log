@@ -1,0 +1,24 @@
+SystemC Simulation
+
+Warning: (W524) dont_initialize() has no effect for SC_CTHREADs
+In file: <removed by verify.pl>
+0 s method_a
+0 s thread_a
+500 ps method_a
+500 ps method_b
+500 ps cthread_a
+500 ps thread_a
+500 ps cthread_b
+500 ps thread_b
+1500 ps method_a
+1500 ps method_b
+1500 ps cthread_a
+1500 ps thread_a
+1500 ps cthread_b
+1500 ps thread_b
+2500 ps method_a
+2500 ps method_b
+2500 ps cthread_a
+2500 ps thread_a
+2500 ps cthread_b
+2500 ps thread_b

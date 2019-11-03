@@ -38,30 +38,37 @@
 #
 # Authors: Nathan Binkert
 
+from m5.defines import buildEnv
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
-from PciDevice import PciDevice
+from m5.objects.PciDevice import PciDevice
 
-class EtherObject(SimObject):
-    type = 'EtherObject'
-    abstract = True
-    cxx_header = "dev/net/etherobject.hh"
+ETHERNET_ROLE = 'ETHERNET'
+Port.compat(ETHERNET_ROLE, ETHERNET_ROLE)
 
-class EtherLink(EtherObject):
+class EtherInt(Port):
+    def __init__(self, desc):
+        super(EtherInt, self).__init__(ETHERNET_ROLE, desc)
+
+class VectorEtherInt(VectorPort):
+    def __init__(self, desc):
+        super(VectorEtherInt, self).__init__(ETHERNET_ROLE, desc)
+
+class EtherLink(SimObject):
     type = 'EtherLink'
     cxx_header = "dev/net/etherlink.hh"
-    int0 = SlavePort("interface 0")
-    int1 = SlavePort("interface 1")
+    int0 = EtherInt("interface 0")
+    int1 = EtherInt("interface 1")
     delay = Param.Latency('0us', "packet transmit delay")
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
     speed = Param.NetworkBandwidth('1Gbps', "link speed")
     dump = Param.EtherDump(NULL, "dump object")
 
-class DistEtherLink(EtherObject):
+class DistEtherLink(SimObject):
     type = 'DistEtherLink'
     cxx_header = "dev/net/dist_etherlink.hh"
-    int0 = SlavePort("interface 0")
+    int0 = EtherInt("interface 0")
     delay = Param.Latency('0us', "packet transmit delay")
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
     speed = Param.NetworkBandwidth('1Gbps', "link speed")
@@ -73,33 +80,48 @@ class DistEtherLink(EtherObject):
     server_name = Param.String('localhost', "Message server name")
     server_port = Param.UInt32('2200', "Message server port")
     is_switch = Param.Bool(False, "true if this a link in etherswitch")
+    dist_sync_on_pseudo_op = Param.Bool(False, "Start sync with pseudo_op")
     num_nodes = Param.UInt32('2', "Number of simulate nodes")
 
-class EtherBus(EtherObject):
+class EtherBus(SimObject):
     type = 'EtherBus'
     cxx_header = "dev/net/etherbus.hh"
     loopback = Param.Bool(True, "send packet back to the sending interface")
     dump = Param.EtherDump(NULL, "dump object")
     speed = Param.NetworkBandwidth('100Mbps', "bus speed in bits per second")
 
-class EtherSwitch(EtherObject):
+class EtherSwitch(SimObject):
     type = 'EtherSwitch'
     cxx_header = "dev/net/etherswitch.hh"
     dump = Param.EtherDump(NULL, "dump object")
     fabric_speed = Param.NetworkBandwidth('10Gbps', "switch fabric speed in bits "
                                           "per second")
-    interface = VectorMasterPort("Ethernet Interface")
+    interface = VectorEtherInt("Ethernet Interface")
     output_buffer_size = Param.MemorySize('1MB', "size of output port buffers")
     delay = Param.Latency('0us', "packet transmit delay")
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
     time_to_live = Param.Latency('10ms', "time to live of MAC address maping")
 
-class EtherTap(EtherObject):
-    type = 'EtherTap'
+class EtherTapBase(SimObject):
+    type = 'EtherTapBase'
+    abstract = True
     cxx_header = "dev/net/ethertap.hh"
     bufsz = Param.Int(10000, "tap buffer size")
     dump = Param.EtherDump(NULL, "dump object")
-    port = Param.UInt16(3500, "tap port")
+    tap = EtherInt("Ethernet interface to connect to gem5's network")
+
+if buildEnv['USE_TUNTAP']:
+    class EtherTap(EtherTapBase):
+        type = 'EtherTap'
+        cxx_header = "dev/net/ethertap.hh"
+        tun_clone_device = Param.String('/dev/net/tun',
+                                        "Path to the tun clone device node")
+        tap_device_name = Param.String('gem5-tap', "Tap device name")
+
+class EtherTapStub(EtherTapBase):
+    type = 'EtherTapStub'
+    cxx_header = "dev/net/ethertap.hh"
+    port = Param.UInt16(3500, "Port helper should send packets to")
 
 class EtherDump(SimObject):
     type = 'EtherDump'
@@ -111,7 +133,7 @@ class EtherDevice(PciDevice):
     type = 'EtherDevice'
     abstract = True
     cxx_header = "dev/net/etherdevice.hh"
-    interface = MasterPort("Ethernet Interface")
+    interface = EtherInt("Ethernet Interface")
 
 class IGbE(EtherDevice):
     # Base class for two IGbE adapters listed above

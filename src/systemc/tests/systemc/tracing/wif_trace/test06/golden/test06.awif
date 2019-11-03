@@ -1,0 +1,88 @@
+
+type scalar "BIT" enum '0', '1' ;
+type scalar "MVL" enum '0', '1', 'X', 'Z', '?' ;
+
+declare  O0   "Float"  real  variable ;
+start_trace O0 ;
+declare  O1   "Double"  real  variable ;
+start_trace O1 ;
+comment "All initial values are dumped below at time 0 sec = 0 timescale units." ;
+assign  O0 12.345000 ; 
+assign  O1 -13.567892 ; 
+
+delta_time 10000 ;
+assign  O0 -182634880.000000 ; 
+assign  O1 1672357.298346 ; 
+
+delta_time 10000 ;
+assign  O0 12.345000 ; 
+assign  O1 -13.567892 ; 
+
+delta_time 10000 ;
+assign  O0 -182634880.000000 ; 
+assign  O1 1672357.298346 ; 
+
+delta_time 10000 ;
+assign  O0 12.345000 ; 
+assign  O1 -13.567892 ; 
+
+delta_time 10000 ;
+assign  O0 -182634880.000000 ; 
+assign  O1 1672357.298346 ; 
+
+delta_time 10000 ;
+assign  O0 12.345000 ; 
+assign  O1 -13.567892 ; 
+
+delta_time 10000 ;
+assign  O0 -182634880.000000 ; 
+assign  O1 1672357.298346 ; 
+
+delta_time 10000 ;
+assign  O0 12.345000 ; 
+assign  O1 -13.567892 ; 
+
+delta_time 10000 ;
+assign  O0 -182634880.000000 ; 
+assign  O1 1672357.298346 ; 
+
+delta_time 10000 ;
+assign  O0 12.345000 ; 
+assign  O1 -13.567892 ; 
+
+delta_time 10000 ;
+assign  O0 -182634880.000000 ; 
+assign  O1 1672357.298346 ; 
+
+delta_time 10000 ;
+assign  O0 12.345000 ; 
+assign  O1 -13.567892 ; 
+
+delta_time 10000 ;
+assign  O0 -182634880.000000 ; 
+assign  O1 1672357.298346 ; 
+
+delta_time 10000 ;
+assign  O0 12.345000 ; 
+assign  O1 -13.567892 ; 
+
+delta_time 10000 ;
+assign  O0 -182634880.000000 ; 
+assign  O1 1672357.298346 ; 
+
+delta_time 10000 ;
+assign  O0 12.345000 ; 
+assign  O1 -13.567892 ; 
+
+delta_time 10000 ;
+assign  O0 -182634880.000000 ; 
+assign  O1 1672357.298346 ; 
+
+delta_time 10000 ;
+assign  O0 12.345000 ; 
+assign  O1 -13.567892 ; 
+
+delta_time 10000 ;
+assign  O0 -182634880.000000 ; 
+assign  O1 1672357.298346 ; 
+

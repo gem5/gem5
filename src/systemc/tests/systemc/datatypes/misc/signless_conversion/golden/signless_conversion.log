@@ -1,0 +1,111 @@
+SystemC Simulation
+sc_int_base(bi(3,0)) = -6
+sc_uint_base(bi(3,0)) = 10
+sc_signed(bi(3,0)) = -6
+sc_unsigned(bi(3,0)) = 10
+
+sc_int_base(bui(3,0)) = -6
+sc_uint_base(bui(3,0)) = 10
+sc_signed(bui(3,0)) = -6
+sc_unsigned(bui(3,0)) = 10
+
+sc_int_base(bv) = -6
+sc_uint_base(bv) = 10
+sc_signed(bv) = -6
+sc_unsigned(bv) = 10
+
+sc_int_base(i(3,0)) = -6
+sc_uint_base(i(3,0)) = 10
+sc_signed(i(3,0)) = -6
+sc_unsigned(i(3,0)) = 10
+
+sc_int_base(lv) = -6
+sc_uint_base(lv) = 10
+sc_signed(lv) = -6
+sc_unsigned(lv) = 10
+
+sc_int_base(ui(3,0)) = -6
+sc_uint_base(ui(3,0)) = 10
+sc_signed(ui(3,0)) = -6
+sc_unsigned(ui(3,0)) = 10
+
+sc_int_base((bi(3,2),i(1,0))) = -6
+sc_uint_base((bi(3,2),i(1,0))) = 10
+sc_signed((bi(3,2),i(1,0))) = -6
+sc_unsigned((bi(3,2),i(1,0))) = 10
+
+sc_int_base((bi(3,2),ui(1,0))) = -6
+sc_uint_base((bi(3,2),ui(1,0))) = 10
+sc_signed((bi(3,2),ui(1,0))) = -6
+sc_unsigned((bi(3,2),ui(1,0))) = 10
+
+sc_int_base((bi(3,2),bui(1,0))) = -6
+sc_uint_base((bi(3,2),bui(1,0))) = 10
+sc_signed((bi(3,2),bui(1,0))) = -6
+sc_unsigned((bi(3,2),bui(1,0))) = 10
+
+sc_int_base((bi(3,2),bi(1,0))) = -6
+sc_uint_base((bi(3,2),bi(1,0))) = 10
+sc_signed((bi(3,2),bi(1,0))) = -6
+sc_unsigned((bi(3,2),bi(1,0))) = 10
+
+sc_int_base((bui(3,2),i(1,0))) = -6
+sc_uint_base((bui(3,2),i(1,0))) = 10
+sc_signed((bui(3,2),i(1,0))) = -6
+sc_unsigned((bui(3,2),i(1,0))) = 10
+
+sc_int_base((bui(3,2),ui(1,0))) = -6
+sc_uint_base((bui(3,2),ui(1,0))) = 10
+sc_signed((bui(3,2),ui(1,0))) = -6
+sc_unsigned((bui(3,2),ui(1,0))) = 10
+
+sc_int_base((bui(3,2),bui(1,0))) = -6
+sc_uint_base((bui(3,2),bui(1,0))) = 10
+sc_signed((bui(3,2),bui(1,0))) = -6
+sc_unsigned((bui(3,2),bui(1,0))) = 10
+
+sc_int_base((bui(3,2),bi(1,0))) = -6
+sc_uint_base((bui(3,2),bi(1,0))) = 10
+sc_signed((bui(3,2),bi(1,0))) = -6
+sc_unsigned((bui(3,2),bi(1,0))) = 10
+
+sc_int_base((i(3,2),i(1,0))) = -6
+sc_uint_base((i(3,2),i(1,0))) = 10
+sc_signed((i(3,2),i(1,0))) = -6
+sc_unsigned((i(3,2),i(1,0))) = 10
+
+sc_int_base((i(3,2),ui(1,0))) = -6
+sc_uint_base((i(3,2),ui(1,0))) = 10
+sc_signed((i(3,2),ui(1,0))) = -6
+sc_unsigned((i(3,2),ui(1,0))) = 10
+
+sc_int_base((i(3,2),bui(1,0))) = -6
+sc_uint_base((i(3,2),bui(1,0))) = 10
+sc_signed((i(3,2),bui(1,0))) = -6
+sc_unsigned((i(3,2),bui(1,0))) = 10
+
+sc_int_base((i(3,2),bi(1,0))) = -6
+sc_uint_base((i(3,2),bi(1,0))) = 10
+sc_signed((i(3,2),bi(1,0))) = -6
+sc_unsigned((i(3,2),bi(1,0))) = 10
+
+sc_int_base((ui(3,2),i(1,0))) = -6
+sc_uint_base((ui(3,2),i(1,0))) = 10
+sc_signed((ui(3,2),i(1,0))) = -6
+sc_unsigned((ui(3,2),i(1,0))) = 10
+
+sc_int_base((ui(3,2),ui(1,0))) = -6
+sc_uint_base((ui(3,2),ui(1,0))) = 10
+sc_signed((ui(3,2),ui(1,0))) = -6
+sc_unsigned((ui(3,2),ui(1,0))) = 10
+
+sc_int_base((ui(3,2),bui(1,0))) = -6
+sc_uint_base((ui(3,2),bui(1,0))) = 10
+sc_signed((ui(3,2),bui(1,0))) = -6
+sc_unsigned((ui(3,2),bui(1,0))) = 10
+
+sc_int_base((ui(3,2),bi(1,0))) = -6
+sc_uint_base((ui(3,2),bi(1,0))) = 10
+sc_signed((ui(3,2),bi(1,0))) = -6
+sc_unsigned((ui(3,2),bi(1,0))) = 10
+

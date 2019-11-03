@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014, 2016,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,20 +37,27 @@
  * Authors: Andrew Bardsley
  */
 
+#include "cpu/minor/dyn_inst.hh"
+
 #include <iomanip>
 #include <sstream>
 
 #include "arch/isa.hh"
 #include "arch/registers.hh"
-#include "cpu/minor/dyn_inst.hh"
-#include "cpu/minor/trace.hh"
 #include "cpu/base.hh"
+#include "cpu/minor/trace.hh"
 #include "cpu/reg_class.hh"
 #include "debug/MinorExecute.hh"
 #include "enums/OpClass.hh"
 
 namespace Minor
 {
+
+const InstSeqNum InstId::firstStreamSeqNum;
+const InstSeqNum InstId::firstPredictionSeqNum;
+const InstSeqNum InstId::firstLineSeqNum;
+const InstSeqNum InstId::firstFetchSeqNum;
+const InstSeqNum InstId::firstExecSeqNum;
 
 std::ostream &
 operator <<(std::ostream &os, const InstId &id)
@@ -101,6 +108,8 @@ MinorDynInst::reportData(std::ostream &os) const
         os << "-";
     else if (isFault())
         os << "F;" << id;
+    else if (translationFault != NoFault)
+        os << "TF;" << id;
     else
         os << id;
 }
@@ -113,6 +122,8 @@ operator <<(std::ostream &os, const MinorDynInst &inst)
 
     if (inst.isFault())
         os << "fault: \"" << inst.fault->name() << '"';
+    else if (inst.translationFault != NoFault)
+        os << "translation fault: \"" << inst.translationFault->name() << '"';
     else if (inst.staticInst)
         os << inst.staticInst->getName();
     else
@@ -126,15 +137,13 @@ operator <<(std::ostream &os, const MinorDynInst &inst)
 /** Print a register in the form r<n>, f<n>, m<n>(<name>), z for integer,
  *  float, misc and zero registers given an 'architectural register number' */
 static void
-printRegName(std::ostream &os, TheISA::RegIndex reg)
+printRegName(std::ostream &os, const RegId& reg)
 {
-    RegClass reg_class = regIdxToClass(reg);
-
-    switch (reg_class)
+    switch (reg.classValue())
     {
       case MiscRegClass:
         {
-            TheISA::RegIndex misc_reg = reg - TheISA::Misc_Reg_Base;
+            RegIndex misc_reg = reg.index();
 
         /* This is an ugly test because not all archs. have miscRegName */
 #if THE_ISA == ARM_ISA
@@ -146,17 +155,27 @@ printRegName(std::ostream &os, TheISA::RegIndex reg)
         }
         break;
       case FloatRegClass:
-        os << 'f' << static_cast<unsigned int>(reg - TheISA::FP_Reg_Base);
+        os << 'f' << static_cast<unsigned int>(reg.index());
+        break;
+      case VecRegClass:
+        os << 'v' << static_cast<unsigned int>(reg.index());
+        break;
+      case VecElemClass:
+        os << 'v' << static_cast<unsigned int>(reg.index()) << '[' <<
+              static_cast<unsigned int>(reg.elemIndex()) << ']';
         break;
       case IntRegClass:
-        if (reg == TheISA::ZeroReg) {
+        if (reg.isZeroReg()) {
             os << 'z';
         } else {
-            os << 'r' << static_cast<unsigned int>(reg);
+            os << 'r' << static_cast<unsigned int>(reg.index());
         }
         break;
       case CCRegClass:
-        os << 'c' << static_cast<unsigned int>(reg - TheISA::CC_Reg_Base);
+        os << 'c' << static_cast<unsigned int>(reg.index());
+        break;
+      default:
+        panic("Unknown register class: %d", (int)reg.classValue());
     }
 }
 

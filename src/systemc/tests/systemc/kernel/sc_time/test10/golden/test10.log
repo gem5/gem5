@@ -1,0 +1,13 @@
+SystemC Simulation
+1 fs
+
+Info: (I804) /IEEE_Std_1666/deprecated: deprecated function: sc_get_default_time_unit
+1 ns
+
+Info: (I804) /IEEE_Std_1666/deprecated: You can turn off warnings about
+             IEEE 1666 deprecated features by placing this method call
+             as the first statement in your sc_main() function:
+
+  sc_core::sc_report_handler::set_actions( "/IEEE_Std_1666/deprecated",
+                                           sc_core::SC_DO_NOTHING );
+

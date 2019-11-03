@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -40,6 +40,7 @@
 #ifndef __ARCH_ARM_KVM_ARMV8_CPU_HH__
 #define __ARCH_ARM_KVM_ARMV8_CPU_HH__
 
+#include <set>
 #include <vector>
 
 #include "arch/arm/intregs.hh"
@@ -83,6 +84,8 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
     ArmV8KvmCPU(ArmV8KvmCPUParams *params);
     virtual ~ArmV8KvmCPU();
 
+    void startup() override;
+
     void dump() const override;
 
   protected:
@@ -105,8 +108,9 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
 
     /** Mapping between misc registers in gem5 and registers in KVM */
     struct MiscRegInfo {
-        MiscRegInfo(uint64_t _kvm, MiscRegIndex _idx, const char *_name)
-            : kvm(_kvm), idx(_idx), name(_name) {}
+        MiscRegInfo(uint64_t _kvm, MiscRegIndex _idx, const char *_name,
+                    bool _is_device = false)
+            : kvm(_kvm), idx(_idx), name(_name), is_device(_is_device) {}
 
         /** Register index in KVM */
         uint64_t kvm;
@@ -114,6 +118,8 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
         MiscRegIndex idx;
         /** Name to use in debug dumps */
         const char *name;
+        /** is device register? (needs 'effectful' state update) */
+        bool is_device;
     };
 
     /**
@@ -130,8 +136,12 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
 
     /** Mapping between gem5 integer registers and integer registers in kvm */
     static const std::vector<ArmV8KvmCPU::IntRegInfo> intRegMap;
-    /** Mapping between gem5 misc registers registers and registers in kvm */
+    /** Mapping between gem5 misc registers and registers in kvm */
     static const std::vector<ArmV8KvmCPU::MiscRegInfo> miscRegMap;
+    /** Device registers (needing "effectful" MiscReg writes) */
+    static const std::set<MiscRegIndex> deviceRegSet;
+    /** Mapping between gem5 ID misc registers and registers in kvm */
+    static const std::vector<ArmV8KvmCPU::MiscRegInfo> miscRegIdMap;
 
     /** Cached mapping between system registers in kvm and misc regs in gem5 */
     mutable std::vector<ArmV8KvmCPU::MiscRegInfo> sysRegMap;

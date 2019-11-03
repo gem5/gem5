@@ -45,9 +45,6 @@ using namespace LittleEndianGuest;
 
 StaticInstPtr decodeInst(ExtMachInst);
 
-// Alpha Does NOT have a delay slot
-#define ISA_HAS_DELAY_SLOT 0
-
 const Addr PageShift = 13;
 const Addr PageBytes = ULL(1) << PageShift;
 const Addr PageMask = ~(PageBytes - 1);
@@ -110,10 +107,6 @@ enum mode_type
 };
 
 const int MachineBytes = 8;
-
-// return a no-op instruction... used for instruction fetch faults
-// Alpha UNOP (ldq_u r31,0(r0))
-const ExtMachInst NoopMachInst = 0x2ffe0000;
 
 // Memory accesses cannot be unaligned
 const bool HasUnalignedMemAcc = false;

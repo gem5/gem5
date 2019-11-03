@@ -1,0 +1,36 @@
+SystemC Simulation
+
+sender_1 notifies e1 after 10 ns, e2 after 20 ns
+sender_2 notifies e3 after 10 ns, e4 after 15 ns
+receiver_1 notifies e5 after 10 ns
+receiver_2 notifies e6 after 10 ns
+
+simulation time:0 s sender_1    -e1 -e2
+simulation time:0 s sender_2    -e3 -e4
+simulation time:10 ns receiver_1  -e5
+simulation time:15 ns sender_1    -e1 -e2
+simulation time:15 ns receiver_2  -e6
+simulation time:20 ns receiver_2  -e6
+simulation time:20 ns sender_2    -e3 -e4
+simulation time:25 ns sender_1    -e1 -e2
+simulation time:30 ns receiver_1  -e5
+simulation time:35 ns receiver_2  -e6
+simulation time:35 ns sender_1    -e1 -e2
+simulation time:40 ns sender_2    -e3 -e4
+simulation time:45 ns receiver_2  -e6
+simulation time:45 ns sender_1    -e1 -e2
+simulation time:50 ns receiver_1  -e5
+simulation time:55 ns receiver_2  -e6
+simulation time:55 ns sender_1    -e1 -e2
+simulation time:60 ns sender_2    -e3 -e4
+simulation time:65 ns receiver_2  -e6
+simulation time:65 ns sender_1    -e1 -e2
+simulation time:70 ns receiver_1  -e5
+simulation time:75 ns receiver_2  -e6
+simulation time:75 ns sender_1    -e1 -e2
+simulation time:80 ns sender_2    -e3 -e4
+simulation time:85 ns receiver_2  -e6
+simulation time:85 ns sender_1    -e1 -e2
+simulation time:90 ns receiver_1  -e5
+simulation time:95 ns receiver_2  -e6
+simulation time:95 ns sender_1    -e1 -e2

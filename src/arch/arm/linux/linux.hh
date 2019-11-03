@@ -45,9 +45,31 @@
 #ifndef __ARCH_ARM_LINUX_LINUX_HH__
 #define __ARCH_ARM_LINUX_LINUX_HH__
 
+#include "arch/arm/utility.hh"
 #include "kern/linux/linux.hh"
 
-class ArmLinux32 : public Linux
+class ArmLinux : public Linux
+{
+  public:
+    static const ByteOrder byteOrder = LittleEndianByteOrder;
+
+    static void
+    archClone(uint64_t flags,
+              Process *pp, Process *cp,
+              ThreadContext *ptc, ThreadContext *ctc,
+              uint64_t stack, uint64_t tls)
+    {
+        ArmISA::copyRegs(ptc, ctc);
+
+        if (flags & TGT_CLONE_SETTLS) {
+            /* TPIDR_EL0 is architecturally mapped to TPIDRURW, so
+             * this works for both aarch32 and aarch64. */
+            ctc->setMiscReg(ArmISA::MISCREG_TPIDR_EL0, tls);
+        }
+    }
+};
+
+class ArmLinux32 : public ArmLinux
 {
   public:
 
@@ -254,9 +276,21 @@ class ArmLinux32 : public Linux
         int32_t tms_cutime;     //!< user time of children
         int32_t tms_cstime;     //!< system time of children
     };
+
+    static void
+    archClone(uint64_t flags,
+              Process *pp, Process *cp,
+              ThreadContext *ptc, ThreadContext *ctc,
+              uint64_t stack, uint64_t tls)
+    {
+        ArmLinux::archClone(flags, pp, cp, ptc, ctc, stack, tls);
+
+        if (stack)
+            ctc->setIntReg(ArmISA::INTREG_SP, stack);
+    }
 };
 
-class ArmLinux64 : public Linux
+class ArmLinux64 : public ArmLinux
 {
   public:
 
@@ -499,6 +533,17 @@ class ArmLinux64 : public Linux
         int64_t tms_cutime;     //!< user time of children
         int64_t tms_cstime;     //!< system time of children
     };
+
+    static void archClone(uint64_t flags,
+                          Process *pp, Process *cp,
+                          ThreadContext *ptc, ThreadContext *ctc,
+                          uint64_t stack, uint64_t tls)
+    {
+        ArmLinux::archClone(flags, pp, cp, ptc, ctc, stack, tls);
+
+        if (stack)
+            ctc->setIntReg(ArmISA::INTREG_SP0, stack);
+    }
 };
 
 #endif

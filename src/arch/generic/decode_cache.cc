@@ -29,6 +29,7 @@
  */
 
 #include "arch/generic/decode_cache.hh"
+
 #include "arch/decoder.hh"
 #include "arch/types.hh"
 #include "config/the_isa.hh"
@@ -45,7 +46,7 @@ BasicDecodeCache::decode(TheISA::Decoder *decoder,
     if (si && (si->machInst == mach_inst))
         return si;
 
-    DecodeCache::InstMap::iterator iter = instMap.find(mach_inst);
+    auto iter = instMap.find(mach_inst);
     if (iter != instMap.end()) {
         si = iter->second;
         return si;

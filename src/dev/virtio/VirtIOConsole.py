@@ -39,7 +39,8 @@
 
 from m5.params import *
 from m5.proxy import *
-from VirtIO import VirtIODeviceBase
+from m5.objects.VirtIO import VirtIODeviceBase
+from m5.objects.Serial import SerialDevice
 
 class VirtIOConsole(VirtIODeviceBase):
     type = 'VirtIOConsole'
@@ -48,4 +49,4 @@ class VirtIOConsole(VirtIODeviceBase):
     qRecvSize = Param.Unsigned(16, "Receive queue size (descriptors)")
     qTransSize = Param.Unsigned(16, "Transmit queue size (descriptors)")
 
-    terminal = Param.Terminal(Parent.any, "The terminal")
+    device = Param.SerialDevice("Serial device attached to this device")

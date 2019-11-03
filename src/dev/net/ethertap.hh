@@ -39,70 +39,28 @@
 #include <string>
 
 #include "base/pollevent.hh"
+#include "config/use_tuntap.hh"
 #include "dev/net/etherint.hh"
-#include "dev/net/etherobject.hh"
 #include "dev/net/etherpkt.hh"
+
+#if USE_TUNTAP
 #include "params/EtherTap.hh"
+
+#endif
+
+#include "params/EtherTapStub.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 
 class TapEvent;
-class TapListener;
 class EtherTapInt;
 
-/*
- * Interface to connect a simulated ethernet device to the real world
- */
-class EtherTap : public EtherObject
+class EtherTapBase : public SimObject
 {
-  protected:
-    friend class TapEvent;
-    TapEvent *event;
-
-  protected:
-    friend class TapListener;
-    TapListener *listener;
-    int socket;
-    char *buffer;
-    int buflen;
-    uint32_t buffer_offset;
-    uint32_t data_len;
-
-    EtherDump *dump;
-
-    void attach(int fd);
-    void detach();
-
-  protected:
-    std::string device;
-    std::queue<EthPacketPtr> packetBuffer;
-    EtherTapInt *interface;
-
-    void process(int revent);
-    void enqueue(EthPacketData *packet);
-    void retransmit();
-
-    /*
-     */
-    class TxEvent : public Event
-    {
-      protected:
-        EtherTap *tap;
-
-      public:
-        TxEvent(EtherTap *_tap) : tap(_tap) {}
-        void process() { tap->retransmit(); }
-        virtual const char *description() const
-            { return "EtherTap retransmit"; }
-    };
-
-    friend class TxEvent;
-    TxEvent txEvent;
-
   public:
-    typedef EtherTapParams Params;
-    EtherTap(const Params *p);
-    virtual ~EtherTap();
+    typedef EtherTapBaseParams Params;
+    EtherTapBase(const Params *p);
+    virtual ~EtherTapBase();
 
     const Params *
     params() const
@@ -110,27 +68,129 @@ class EtherTap : public EtherObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    EtherInt *getEthPort(const std::string &if_name, int idx) override;
-
-    virtual bool recvPacket(EthPacketPtr packet);
-    virtual void sendDone();
-
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
+
+  protected:
+    uint8_t *buffer;
+    int buflen;
+
+    EtherDump *dump;
+
+
+    /*
+     * Interface to the real network.
+     */
+  protected:
+    friend class TapEvent;
+    TapEvent *event;
+    void pollFd(int fd);
+    void stopPolling();
+
+    // Receive data from the real network.
+    virtual void recvReal(int revent) = 0;
+    // Prepare and send data out to the real network.
+    virtual bool sendReal(const void *data, size_t len) = 0;
+
+
+    /*
+     * Interface to the simulated network.
+     */
+  protected:
+    EtherTapInt *interface;
+
+  public:
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
+
+    bool recvSimulated(EthPacketPtr packet);
+    void sendSimulated(void *data, size_t len);
+
+  protected:
+    std::queue<EthPacketPtr> packetBuffer;
+    void retransmit();
+    EventFunctionWrapper txEvent;
 };
 
 class EtherTapInt : public EtherInt
 {
   private:
-    EtherTap *tap;
+    EtherTapBase *tap;
   public:
-    EtherTapInt(const std::string &name, EtherTap *t)
-            : EtherInt(name), tap(t)
+    EtherTapInt(const std::string &name, EtherTapBase *t) :
+            EtherInt(name), tap(t)
     { }
 
-    virtual bool recvPacket(EthPacketPtr pkt) { return tap->recvPacket(pkt); }
-    virtual void sendDone() { tap->sendDone(); }
+    bool recvPacket(EthPacketPtr pkt) override
+        { return tap->recvSimulated(pkt); }
+    void sendDone() override {}
 };
+
+
+class TapListener;
+
+/*
+ * Interface to connect a simulated ethernet device to the real world. An
+ * external helper program bridges between this object's TCP port and a
+ * source/sink for Ethernet frames. Each frame going in either direction is
+ * prepended with the frame's length in a 32 bit integer in network byte order.
+ */
+class EtherTapStub : public EtherTapBase
+{
+  public:
+    typedef EtherTapStubParams Params;
+    EtherTapStub(const Params *p);
+    ~EtherTapStub();
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+
+
+  protected:
+    friend class TapListener;
+    TapListener *listener;
+
+    int socket;
+
+    void attach(int fd);
+    void detach();
+
+    uint32_t buffer_used;
+    uint32_t frame_len;
+
+    void recvReal(int revent) override;
+    bool sendReal(const void *data, size_t len) override;
+};
+
+
+#if USE_TUNTAP
+class EtherTap : public EtherTapBase
+{
+  public:
+    typedef EtherTapParams Params;
+    EtherTap(const Params *p);
+    ~EtherTap();
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+
+  protected:
+    int tap;
+
+    void recvReal(int revent) override;
+    bool sendReal(const void *data, size_t len) override;
+};
+#endif
 
 
 #endif // __DEV_NET_ETHERTAP_HH__

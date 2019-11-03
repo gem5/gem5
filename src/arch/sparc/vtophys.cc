@@ -28,10 +28,11 @@
  * Authors: Ali Saidi
  */
 
+#include "arch/sparc/vtophys.hh"
+
 #include <string>
 
 #include "arch/sparc/tlb.hh"
-#include "arch/sparc/vtophys.hh"
 #include "base/chunk_generator.hh"
 #include "base/compiler.hh"
 #include "base/trace.hh"
@@ -82,8 +83,8 @@ vtophys(ThreadContext *tc, Addr addr)
     // int sec_context = bits(tlbdata,63,48);
 
     PortProxy &mem = tc->getPhysProxy();
-    TLB* itb = tc->getITBPtr();
-    TLB* dtb = tc->getDTBPtr();
+    TLB* itb = dynamic_cast<TLB *>(tc->getITBPtr());
+    TLB* dtb = dynamic_cast<TLB *>(tc->getDTBPtr());
     TlbEntry* tbe;
     PageTableEntry pte;
     Addr tsbs[4];

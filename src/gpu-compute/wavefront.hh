@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2011-2017 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,7 +30,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Lisa Hsu
+ * Authors: Lisa Hsu
  */
 
 #ifndef __WAVEFRONT_HH__
@@ -42,15 +42,39 @@
 #include <stack>
 #include <vector>
 
-#include "base/misc.hh"
+#include "arch/gpu_isa.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
+#include "config/the_gpu_isa.hh"
 #include "gpu-compute/condition_register_state.hh"
 #include "gpu-compute/lds_state.hh"
 #include "gpu-compute/misc.hh"
+#include "gpu-compute/ndrange.hh"
 #include "params/Wavefront.hh"
 #include "sim/sim_object.hh"
 
 static const int MAX_NUM_INSTS_PER_WF = 12;
+
+/**
+ * A reconvergence stack entry conveys the necessary state to implement
+ * control flow divergence.
+ */
+struct ReconvergenceStackEntry {
+    /**
+     * PC of current instruction.
+     */
+    uint32_t pc;
+    /**
+     * PC of the immediate post-dominator instruction, i.e., the value of
+     * @a pc for the first instruction that will be executed by the wavefront
+     * when a reconvergence point is reached.
+     */
+    uint32_t rpc;
+    /**
+     * Execution mask.
+     */
+    VectorMask execMask;
+};
 
 /*
  * Arguments for the hsail opcode call, are user defined and variable length.
@@ -120,34 +144,6 @@ class CallArgMem
     }
 };
 
-/**
- * A reconvergence stack entry conveys the necessary state to implement
- * control flow divergence.
- */
-class ReconvergenceStackEntry {
-
-  public:
-    ReconvergenceStackEntry(uint32_t new_pc, uint32_t new_rpc,
-                            VectorMask new_mask) : pc(new_pc), rpc(new_rpc),
-                            execMask(new_mask) {
-    }
-
-    /**
-     * PC of current instruction.
-     */
-    uint32_t pc;
-    /**
-     * PC of the immediate post-dominator instruction, i.e., the value of
-     * @a pc for the first instruction that will be executed by the wavefront
-     * when a reconvergence point is reached.
-     */
-    uint32_t rpc;
-    /**
-     * Execution mask.
-     */
-    VectorMask execMask;
-};
-
 class Wavefront : public SimObject
 {
   public:
@@ -155,16 +151,16 @@ class Wavefront : public SimObject
     enum status_e {S_STOPPED,S_RETURNING,S_RUNNING};
 
     // Base pointer for array of instruction pointers
-    uint64_t base_ptr;
+    uint64_t basePtr;
 
-    uint32_t old_barrier_cnt;
-    uint32_t barrier_cnt;
-    uint32_t barrier_id;
-    uint32_t barrier_slots;
+    uint32_t oldBarrierCnt;
+    uint32_t barrierCnt;
+    uint32_t barrierId;
+    uint32_t barrierSlots;
     status_e status;
     // HW slot id where the WF is mapped to inside a SIMD unit
     int wfSlotId;
-    int kern_id;
+    int kernId;
     // SIMD unit where the WV has been scheduled
     int simdId;
     // pointer to parent CU
@@ -193,37 +189,43 @@ class Wavefront : public SimObject
     bool isOldestInstALU();
     bool isOldestInstBarrier();
     // used for passing spill address to DDInstGPU
-    std::vector<Addr> last_addr;
-    std::vector<uint32_t> workitemid[3];
-    std::vector<uint32_t> workitemFlatId;
-    uint32_t workgroupid[3];
-    uint32_t workgroupsz[3];
-    uint32_t gridsz[3];
-    uint32_t wg_id;
-    uint32_t wg_sz;
-    uint32_t dynwaveid;
-    uint32_t maxdynwaveid;
-    uint32_t dispatchid;
+    std::vector<Addr> lastAddr;
+    std::vector<uint32_t> workItemId[3];
+    std::vector<uint32_t> workItemFlatId;
+    /* kernel launch parameters */
+    uint32_t workGroupId[3];
+    uint32_t workGroupSz[3];
+    uint32_t gridSz[3];
+    uint32_t wgId;
+    uint32_t wgSz;
+    /* the actual WG size can differ than the maximum size */
+    uint32_t actualWgSz[3];
+    uint32_t actualWgSzTotal;
+    void computeActualWgSz(NDRange *ndr);
+    // wavefront id within a workgroup
+    uint32_t wfId;
+    uint32_t maxDynWaveId;
+    uint32_t dispatchId;
     // outstanding global+local memory requests
-    uint32_t outstanding_reqs;
+    uint32_t outstandingReqs;
     // memory requests between scoreboard
     // and execute stage not yet executed
-    uint32_t mem_reqs_in_pipe;
+    uint32_t memReqsInPipe;
     // outstanding global memory write requests
-    uint32_t outstanding_reqs_wr_gm;
+    uint32_t outstandingReqsWrGm;
     // outstanding local memory write requests
-    uint32_t outstanding_reqs_wr_lm;
+    uint32_t outstandingReqsWrLm;
     // outstanding global memory read requests
-    uint32_t outstanding_reqs_rd_gm;
+    uint32_t outstandingReqsRdGm;
     // outstanding local memory read requests
-    uint32_t outstanding_reqs_rd_lm;
-    uint32_t rd_lm_reqs_in_pipe;
-    uint32_t rd_gm_reqs_in_pipe;
-    uint32_t wr_lm_reqs_in_pipe;
-    uint32_t wr_gm_reqs_in_pipe;
+    uint32_t outstandingReqsRdLm;
+    uint32_t rdLmReqsInPipe;
+    uint32_t rdGmReqsInPipe;
+    uint32_t wrLmReqsInPipe;
+    uint32_t wrGmReqsInPipe;
 
-    int mem_trace_busy;
-    uint64_t last_trace;
+    int memTraceBusy;
+    uint64_t lastTrace;
     // number of vector registers reserved by WF
     int reservedVectorRegs;
     // Index into the Vector Register File's namespace where the WF's registers
@@ -231,25 +233,25 @@ class Wavefront : public SimObject
     uint32_t startVgprIndex;
 
     // Old value of destination gpr (for trace)
-    std::vector<uint32_t> old_vgpr;
+    std::vector<uint32_t> oldVgpr;
     // Id of destination gpr (for trace)
-    uint32_t old_vgpr_id;
+    uint32_t oldVgprId;
     // Tick count of last old_vgpr copy
-    uint64_t old_vgpr_tcnt;
+    uint64_t oldVgprTcnt;
 
     // Old value of destination gpr (for trace)
-    std::vector<uint64_t> old_dgpr;
+    std::vector<uint64_t> oldDgpr;
     // Id of destination gpr (for trace)
-    uint32_t old_dgpr_id;
+    uint32_t oldDgprId;
     // Tick count of last old_vgpr copy
-    uint64_t old_dgpr_tcnt;
+    uint64_t oldDgprTcnt;
 
     // Execution mask at wavefront start
-    VectorMask init_mask;
+    VectorMask initMask;
 
     // number of barriers this WF has joined
-    std::vector<int> bar_cnt;
-    int max_bar_cnt;
+    std::vector<int> barCnt;
+    int maxBarCnt;
     // Flag to stall a wave on barrier
     bool stalledAtBarrier;
 
@@ -333,7 +335,7 @@ class Wavefront : public SimObject
     int ready(itype_e type);
     bool instructionBufferHasBranch();
     void regStats();
-    VectorMask get_pred() { return execMask() & init_mask; }
+    VectorMask getPred() { return execMask() & initMask; }
 
     bool waitingAtBarrier(int lane);
 
@@ -354,7 +356,32 @@ class Wavefront : public SimObject
 
     void discardFetch();
 
+    /**
+     * Returns the size of the static hardware context of a particular wavefront
+     * This should be updated everytime the context is changed
+     */
+    uint32_t getStaticContextSize() const;
+
+    /**
+     * Returns the hardware context as a stream of bytes
+     * This method is designed for HSAIL execution
+     */
+    void getContext(const void *out);
+
+    /**
+     * Sets the hardware context fromt a stream of bytes
+     * This method is designed for HSAIL execution
+     */
+    void setContext(const void *in);
+
+    TheGpuISA::GPUISA&
+    gpuISA()
+    {
+        return _gpuISA;
+    }
+
   private:
+    TheGpuISA::GPUISA _gpuISA;
     /**
      * Stack containing Control Flow Graph nodes (i.e., kernel instructions)
      * to be visited by the wavefront, and the associated execution masks. The
@@ -362,7 +389,7 @@ class Wavefront : public SimObject
      * point (branch instruction), and shrinks every time the wavefront
      * reaches a reconvergence point (immediate post-dominator instruction).
      */
-    std::stack<std::unique_ptr<ReconvergenceStackEntry>> reconvergenceStack;
+    std::deque<std::unique_ptr<ReconvergenceStackEntry>> reconvergenceStack;
 };
 
 #endif // __WAVEFRONT_HH__

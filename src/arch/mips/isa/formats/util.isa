@@ -71,7 +71,6 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
             LoadStoreConstructor.subst(iop),
             decode_template.subst(iop),
             fullExecTemplate.subst(iop)
-            + EACompExecute.subst(iop)
             + initiateAccTemplate.subst(iop)
             + completeAccTemplate.subst(iop))
 }};

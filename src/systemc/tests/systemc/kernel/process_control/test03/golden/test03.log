@@ -1,0 +1,73 @@
+SystemC Simulation
+Status before sc_start(1,SC_NS) = SC_ELABORATION
+0 s dynamic_method_and_events: initialization call
+0 s dynamic_method_negedge: initialization call
+0 s dynamic_method_posedge: initialization call
+Status during sc_start(1,SC_NS) = SC_RUNNING
+0 s: stimulus (205) - disabling all processes
+0 s dynamic_thread_and_events: initialization call
+0 s dynamic_thread_negedge: initialization call
+0 s dynamic_thread_posedge: initialization call
+Status after sc_start(1,SC_NS) = SC_PAUSED
+
+3 ns: stimulus (238) - enabling all processes
+3500 ps dynamic_method_negedge: awakened
+3500 ps dynamic_thread_negedge: awakened
+4 ns: static method awakened
+4 ns dynamic_method_posedge: awakened
+
+4 ns: stimulus (244) - disabling all processes
+4 ns: static thread awakened
+4 ns dynamic_thread_posedge: awakened
+
+5 ns: stimulus (259) - enabling all processes
+5500 ps dynamic_method_negedge: awakened
+5500 ps dynamic_thread_negedge: awakened
+6 ns: static method awakened
+6 ns dynamic_method_posedge: awakened
+
+6 ns: stimulus (273) - firing event1 
+6 ns: static thread awakened
+6 ns: cthread awakened
+6 ns dynamic_thread_posedge: awakened
+6500 ps dynamic_method_negedge: awakened
+6500 ps dynamic_thread_negedge: awakened
+7 ns: static method awakened
+7 ns dynamic_method_posedge: awakened
+
+7 ns: stimulus (278) - disabling all processes
+7 ns: static thread awakened
+7 ns: cthread awakened
+7 ns dynamic_thread_posedge: awakened
+
+8 ns: stimulus (295) - firing event2 
+
+11 ns: stimulus (303) - enabling all processes
+11500 ps dynamic_method_negedge: awakened
+11500 ps dynamic_thread_negedge: awakened
+12 ns: static method awakened
+12 ns dynamic_method_posedge: awakened
+
+12 ns: stimulus (317) - firing event2 
+12 ns: static thread awakened
+12 ns: cthread awakened
+12 ns dynamic_thread_posedge: awakened
+12 ns dynamic_method_and_events: awakened
+12 ns dynamic_thread_and_events: awakened
+12500 ps dynamic_method_negedge: awakened
+12500 ps dynamic_thread_negedge: awakened
+13 ns: static method awakened
+13 ns dynamic_method_posedge: awakened
+13 ns: static thread awakened
+13 ns: cthread awakened
+13 ns dynamic_thread_posedge: awakened
+13500 ps dynamic_method_negedge: awakened
+13500 ps dynamic_thread_negedge: awakened
+14 ns: static method awakened
+14 ns dynamic_method_posedge: awakened
+14 ns: static thread awakened
+14 ns: cthread awakened
+14 ns dynamic_thread_posedge: awakened
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+Program completed

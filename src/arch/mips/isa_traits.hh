@@ -47,9 +47,6 @@ using namespace LittleEndianGuest;
 
 StaticInstPtr decodeInst(ExtMachInst);
 
-// MIPS DOES have a delay slot
-#define ISA_HAS_DELAY_SLOT 1
-
 const Addr PageShift = 13;
 const Addr PageBytes = ULL(1) << PageShift;
 const Addr Page_Mask = ~(PageBytes - 1);
@@ -141,9 +138,6 @@ enum mode_type
     mode_debug = 3,         // debug mode
     mode_number             // number of modes
 };
-
-// return a no-op instruction... used for instruction fetch faults
-const ExtMachInst NoopMachInst = 0x00000000;
 
 const int ANNOTE_NONE = 0;
 const uint32_t ITOUCH_ANNOTE = 0xffffffff;

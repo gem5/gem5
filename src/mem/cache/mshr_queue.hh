@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015-2016 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2016, 2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -48,10 +48,12 @@
 #ifndef __MEM_CACHE_MSHR_QUEUE_HH__
 #define __MEM_CACHE_MSHR_QUEUE_HH__
 
-#include <vector>
+#include <string>
 
+#include "base/types.hh"
 #include "mem/cache/mshr.hh"
 #include "mem/cache/queue.hh"
+#include "mem/packet.hh"
 
 /**
  * A Class for maintaining a list of pending and allocated memory requests.
@@ -103,6 +105,15 @@ class MSHRQueue : public Queue<MSHR>
      * @param mshr The entry to move.
      */
     void moveToFront(MSHR *mshr);
+
+    /**
+     * Adds a delay to the provided MSHR and moves MSHRs that will be
+     * ready earlier than this entry to the top of the list
+     *
+     * @param mshr that needs to be delayed
+     * @param delay_ticks ticks of the desired delay
+     */
+    void delay(MSHR *mshr, Tick delay_ticks);
 
     /**
      * Mark the given MSHR as in service. This removes the MSHR from the

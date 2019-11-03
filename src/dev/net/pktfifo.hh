@@ -35,7 +35,7 @@
 #include <list>
 #include <string>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "dev/net/etherpkt.hh"
 #include "sim/serialize.hh"
 

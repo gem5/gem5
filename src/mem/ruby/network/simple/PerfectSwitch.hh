@@ -41,6 +41,7 @@
 #include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 
 class MessageBuffer;
 class NetDest;

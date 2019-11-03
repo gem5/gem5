@@ -37,11 +37,11 @@
  * Authors: Andreas Sandberg
  */
 
+#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
-#include <fcntl.h>
 #include <syscall.h>
 #include <unistd.h>
 
@@ -50,7 +50,7 @@
 #include <csignal>
 #include <cstring>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "perfevent.hh"
 
 PerfKvmCounterConfig::PerfKvmCounterConfig(uint32_t type, uint64_t config)
@@ -169,13 +169,24 @@ PerfKvmCounter::attach(PerfKvmCounterConfig &config,
                  group_fd,
                  0); // Flags
     if (fd == -1)
-        panic("PerfKvmCounter::open failed (%i)\n", errno);
+    {
+        if (errno == EACCES)
+        {
+            panic("PerfKvmCounter::attach recieved error EACCESS\n"
+            "  This error may be caused by a too restrictive setting\n"
+            "  in the file '/proc/sys/kernel/perf_event_paranoid'\n"
+            "  The default value was changed to 2 in kernel 4.6\n"
+            "  A value greater than 1 prevents gem5 from making\n"
+            "  the syscall to perf_event_open");
+        }
+        panic("PerfKvmCounter::attach failed (%i)\n", errno);
+    }
 
     mmapPerf(1);
 }
 
 pid_t
-PerfKvmCounter::gettid()
+PerfKvmCounter::sysGettid()
 {
     return syscall(__NR_gettid);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -54,7 +54,9 @@
 #include "dev/arm/amba_device.hh"
 #include "params/Pl050.hh"
 
-class Pl050 : public AmbaIntDevice, public VncKeyboard, public VncMouse
+class PS2Device;
+
+class Pl050 : public AmbaIntDevice
 {
   protected:
     static const int kmiCr       = 0x000;
@@ -101,61 +103,35 @@ class Pl050 : public AmbaIntDevice, public VncKeyboard, public VncMouse
         Bitfield<1> tx;
     EndBitUnion(InterruptReg)
 
-    /** interrupt status register. */
-    InterruptReg interrupts;
-
     /** raw interrupt register (unmasked) */
     InterruptReg rawInterrupts;
 
-    /** If the controller should ignore the next data byte and acknowledge it.
-     * The driver is attempting to setup some feature we don't care about
+    /** Set or clear the TX interrupt */
+    void setTxInt(bool value);
+
+    /** Update the RX interrupt using PS/2 device state */
+    void updateRxInt();
+
+    /**
+     * Update the status of the interrupt and control registers and
+     * deliver an interrupt if required.
      */
-    int ackNext;
+    void updateIntCtrl(InterruptReg ints, ControlReg ctrl);
 
-    /** is the shift key currently down */
-    bool shiftDown;
+    void setInterrupts(InterruptReg ints) { updateIntCtrl(ints, control); }
+    void setControl(ControlReg ctrl) { updateIntCtrl(rawInterrupts, ctrl); }
 
-    /** The vnc server we're connected to (if any) */
-    VncInput *vnc;
+    /** Get current interrupt value */
+    InterruptReg getInterrupt() const;
 
-    /** If the linux driver has initialized the device yet and thus can we send
-     * mouse data */
-    bool driverInitialized;
-
-    /** Update the status of the interrupt registers and schedule an interrupt
-     * if required */
-    void updateIntStatus();
-
-    /** Function to generate interrupt */
-    void generateInterrupt();
-
-    /** Wrapper to create an event out of the thing */
-    EventWrapper<Pl050, &Pl050::generateInterrupt> intEvent;
-
-    /** Receive queue. This list contains all the pending commands that
-     * need to be sent to the driver
-     */
-    std::list<uint8_t> rxQueue;
-
-    /** Handle a command sent to the kmi and respond appropriately
-     */
-    void processCommand(uint8_t byte);
+    /** PS2 device connected to this KMI interface */
+    PS2Device *ps2;
 
   public:
-    typedef Pl050Params Params;
-    const Params *
-    params() const
-    {
-        return dynamic_cast<const Params *>(_params);
-    }
-
-    Pl050(const Params *p);
+    Pl050(const Pl050Params *p);
 
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
-
-    void mouseAt(uint16_t x, uint16_t y, uint8_t buttons) override;
-    void keyPress(uint32_t key, bool down) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

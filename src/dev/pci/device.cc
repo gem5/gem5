@@ -54,7 +54,7 @@
 
 #include "base/inifile.hh"
 #include "base/intmath.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "debug/PciDevice.hh"
@@ -62,7 +62,6 @@
 #include "mem/packet_access.hh"
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
-
 
 PciDevice::PciDevice(const PciDeviceParams *p)
     : DmaDevice(p),
@@ -229,13 +228,13 @@ PciDevice::readConfig(PacketPtr pkt)
                   "not implemented for %s!\n", this->name());
         switch (pkt->getSize()) {
             case sizeof(uint8_t):
-                pkt->set<uint8_t>(0);
+                pkt->setLE<uint8_t>(0);
                 break;
             case sizeof(uint16_t):
-                pkt->set<uint16_t>(0);
+                pkt->setLE<uint16_t>(0);
                 break;
             case sizeof(uint32_t):
-                pkt->set<uint32_t>(0);
+                pkt->setLE<uint32_t>(0);
                 break;
             default:
                 panic("invalid access size(?) for PCI configspace!\n");
@@ -246,25 +245,25 @@ PciDevice::readConfig(PacketPtr pkt)
 
     switch (pkt->getSize()) {
       case sizeof(uint8_t):
-        pkt->set<uint8_t>(config.data[offset]);
+        pkt->setLE<uint8_t>(config.data[offset]);
         DPRINTF(PciDevice,
             "readConfig:  dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
             _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->get<uint8_t>());
+            (uint32_t)pkt->getLE<uint8_t>());
         break;
       case sizeof(uint16_t):
-        pkt->set<uint16_t>(*(uint16_t*)&config.data[offset]);
+        pkt->setLE<uint16_t>(*(uint16_t*)&config.data[offset]);
         DPRINTF(PciDevice,
             "readConfig:  dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
             _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->get<uint16_t>());
+            (uint32_t)pkt->getLE<uint16_t>());
         break;
       case sizeof(uint32_t):
-        pkt->set<uint32_t>(*(uint32_t*)&config.data[offset]);
+        pkt->setLE<uint32_t>(*(uint32_t*)&config.data[offset]);
         DPRINTF(PciDevice,
             "readConfig:  dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
             _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->get<uint32_t>());
+            (uint32_t)pkt->getLE<uint32_t>());
         break;
       default:
         panic("invalid access size(?) for PCI configspace!\n");
@@ -311,13 +310,13 @@ PciDevice::writeConfig(PacketPtr pkt)
       case sizeof(uint8_t):
         switch (offset) {
           case PCI0_INTERRUPT_LINE:
-            config.interruptLine = pkt->get<uint8_t>();
+            config.interruptLine = pkt->getLE<uint8_t>();
             break;
           case PCI_CACHE_LINE_SIZE:
-            config.cacheLineSize = pkt->get<uint8_t>();
+            config.cacheLineSize = pkt->getLE<uint8_t>();
             break;
           case PCI_LATENCY_TIMER:
-            config.latencyTimer = pkt->get<uint8_t>();
+            config.latencyTimer = pkt->getLE<uint8_t>();
             break;
           /* Do nothing for these read-only registers */
           case PCI0_INTERRUPT_PIN:
@@ -332,18 +331,18 @@ PciDevice::writeConfig(PacketPtr pkt)
         DPRINTF(PciDevice,
             "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
             _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->get<uint8_t>());
+            (uint32_t)pkt->getLE<uint8_t>());
         break;
       case sizeof(uint16_t):
         switch (offset) {
           case PCI_COMMAND:
-            config.command = pkt->get<uint8_t>();
+            config.command = pkt->getLE<uint8_t>();
             break;
           case PCI_STATUS:
-            config.status = pkt->get<uint8_t>();
+            config.status = pkt->getLE<uint8_t>();
             break;
           case PCI_CACHE_LINE_SIZE:
-            config.cacheLineSize = pkt->get<uint8_t>();
+            config.cacheLineSize = pkt->getLE<uint8_t>();
             break;
           default:
             panic("writing to a read only register");
@@ -351,7 +350,7 @@ PciDevice::writeConfig(PacketPtr pkt)
         DPRINTF(PciDevice,
             "writeConfig: dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
             _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->get<uint16_t>());
+            (uint32_t)pkt->getLE<uint16_t>());
         break;
       case sizeof(uint32_t):
         switch (offset) {
@@ -367,7 +366,7 @@ PciDevice::writeConfig(PacketPtr pkt)
                 if (!legacyIO[barnum]) {
                     // convert BAR values to host endianness
                     uint32_t he_old_bar = letoh(config.baseAddr[barnum]);
-                    uint32_t he_new_bar = letoh(pkt->get<uint32_t>());
+                    uint32_t he_new_bar = letoh(pkt->getLE<uint32_t>());
 
                     uint32_t bar_mask =
                         BAR_IO_SPACE(he_old_bar) ? BAR_IO_MASK : BAR_MEM_MASK;
@@ -381,9 +380,30 @@ PciDevice::writeConfig(PacketPtr pkt)
                         // does it mean something special to write 0 to a BAR?
                         he_new_bar &= ~bar_mask;
                         if (he_new_bar) {
-                            BARAddrs[barnum] = BAR_IO_SPACE(he_old_bar) ?
-                                hostInterface.pioAddr(he_new_bar) :
-                                hostInterface.memAddr(he_new_bar);
+                            if (isLargeBAR(barnum)) {
+                                if (BAR_IO_SPACE(he_old_bar))
+                                    warn("IO BARs can't be set as large BAR");
+                                uint64_t he_large_bar =
+                                         letoh(config.baseAddr[barnum + 1]);
+                                he_large_bar = he_large_bar << 32;
+                                he_large_bar += he_new_bar;
+                                BARAddrs[barnum] =
+                                        hostInterface.memAddr(he_large_bar);
+                            } else if (isLargeBAR(barnum - 1)) {
+                                BARAddrs[barnum] = 0;
+                                uint64_t he_large_bar = he_new_bar;
+                                he_large_bar = he_large_bar << 32;
+                                // We need to apply mask to lower bits
+                                he_large_bar +=
+                                         letoh(config.baseAddr[barnum - 1]
+                                         & ~bar_mask);
+                                BARAddrs[barnum - 1] =
+                                        hostInterface.memAddr(he_large_bar);
+                           } else {
+                                BARAddrs[barnum] = BAR_IO_SPACE(he_old_bar) ?
+                                    hostInterface.pioAddr(he_new_bar) :
+                                    hostInterface.memAddr(he_new_bar);
+                            }
                             pioPort.sendRangeChange();
                         }
                     }
@@ -394,17 +414,17 @@ PciDevice::writeConfig(PacketPtr pkt)
             break;
 
           case PCI0_ROM_BASE_ADDR:
-            if (letoh(pkt->get<uint32_t>()) == 0xfffffffe)
+            if (letoh(pkt->getLE<uint32_t>()) == 0xfffffffe)
                 config.expansionROM = htole((uint32_t)0xffffffff);
             else
-                config.expansionROM = pkt->get<uint32_t>();
+                config.expansionROM = pkt->getLE<uint32_t>();
             break;
 
           case PCI_COMMAND:
             // This could also clear some of the error bits in the Status
             // register. However they should never get set, so lets ignore
             // it for now
-            config.command = pkt->get<uint32_t>();
+            config.command = pkt->getLE<uint32_t>();
             break;
 
           default:
@@ -413,7 +433,7 @@ PciDevice::writeConfig(PacketPtr pkt)
         DPRINTF(PciDevice,
             "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
             _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->get<uint32_t>());
+            (uint32_t)pkt->getLE<uint32_t>());
         break;
       default:
         panic("invalid access size(?) for PCI configspace!\n");

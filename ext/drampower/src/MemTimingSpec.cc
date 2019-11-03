@@ -58,6 +58,7 @@ MemTimingSpec::MemTimingSpec() :
   RL(0),
   RP(0),
   RFC(0),
+  REFB(0),
   RAS(0),
   WL(0),
   AL(0),
@@ -94,6 +95,7 @@ void MemTimingSpec::processParameters()
   RL        = getParamValWithDefault("RL", 0);
   RP        = getParamValWithDefault("RP", 0);
   RFC       = getParamValWithDefault("RFC", 0);
+  REFB      = getParamValWithDefault("REFB", 0);
   RAS       = getParamValWithDefault("RAS", 0);
   WL        = getParamValWithDefault("WL", 0);
   AL        = getParamValWithDefault("AL", 0);

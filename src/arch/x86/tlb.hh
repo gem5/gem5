@@ -41,20 +41,15 @@
 #define __ARCH_X86_TLB_HH__
 
 #include <list>
-#include <string>
 #include <vector>
 
 #include "arch/generic/tlb.hh"
-#include "arch/x86/regs/segment.hh"
 #include "arch/x86/pagetable.hh"
 #include "base/trie.hh"
-#include "mem/mem_object.hh"
 #include "mem/request.hh"
 #include "params/X86TLB.hh"
-#include "sim/sim_object.hh"
 
 class ThreadContext;
-class Packet;
 
 namespace X86ISA
 {
@@ -105,9 +100,15 @@ namespace X86ISA
         TlbEntryTrie trie;
         uint64_t lruSeq;
 
-        Fault translateInt(RequestPtr req, ThreadContext *tc);
+        // Statistics
+        Stats::Scalar rdAccesses;
+        Stats::Scalar wrAccesses;
+        Stats::Scalar rdMisses;
+        Stats::Scalar wrMisses;
 
-        Fault translate(RequestPtr req, ThreadContext *tc,
+        Fault translateInt(const RequestPtr &req, ThreadContext *tc);
+
+        Fault translate(const RequestPtr &req, ThreadContext *tc,
                 Translation *translation, Mode mode,
                 bool &delayedResponse, bool timing);
 
@@ -121,13 +122,11 @@ namespace X86ISA
             return ++lruSeq;
         }
 
-        Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
-        void translateTiming(RequestPtr req, ThreadContext *tc,
-                Translation *translation, Mode mode);
-        /** Stub function for compilation support of CheckerCPU. x86 ISA does
-         *  not support Checker model at the moment
-         */
-        Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
+        Fault translateAtomic(
+            const RequestPtr &req, ThreadContext *tc, Mode mode) override;
+        void translateTiming(
+            const RequestPtr &req, ThreadContext *tc,
+            Translation *translation, Mode mode) override;
 
         /**
          * Do post-translation physical address finalization.
@@ -142,26 +141,31 @@ namespace X86ISA
          * @param mode Request type (read/write/execute).
          * @return A fault on failure, NoFault otherwise.
          */
-        Fault finalizePhysical(RequestPtr req, ThreadContext *tc,
-                               Mode mode) const;
+        Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                               Mode mode) const override;
 
-        TlbEntry * insert(Addr vpn, TlbEntry &entry);
+        TlbEntry *insert(Addr vpn, const TlbEntry &entry);
+
+        /*
+         * Function to register Stats
+         */
+        void regStats() override;
 
         // Checkpointing
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
 
         /**
-         * Get the table walker master port. This is used for
+         * Get the table walker port. This is used for
          * migrating port connections during a CPU takeOverFrom()
          * call. For architectures that do not have a table walker,
          * NULL is returned, hence the use of a pointer rather than a
          * reference. For X86 this method will always return a valid
          * port pointer.
          *
-         * @return A pointer to the walker master port
+         * @return A pointer to the walker port
          */
-        BaseMasterPort *getMasterPort() override;
+        Port *getTableWalkerPort() override;
     };
 }
 

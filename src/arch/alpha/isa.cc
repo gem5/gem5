@@ -28,10 +28,11 @@
  * Authors: Gabe Black
  */
 
+#include "arch/alpha/isa.hh"
+
 #include <cassert>
 
-#include "arch/alpha/isa.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/thread_context.hh"
 #include "params/AlphaISA.hh"
 #include "sim/serialize.hh"
@@ -73,7 +74,7 @@ ISA::unserialize(CheckpointIn &cp)
 }
 
 
-MiscReg
+RegVal
 ISA::readMiscRegNoEffect(int misc_reg, ThreadID tid) const
 {
     switch (misc_reg) {
@@ -93,7 +94,7 @@ ISA::readMiscRegNoEffect(int misc_reg, ThreadID tid) const
     }
 }
 
-MiscReg
+RegVal
 ISA::readMiscReg(int misc_reg, ThreadContext *tc, ThreadID tid)
 {
     switch (misc_reg) {
@@ -113,7 +114,7 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc, ThreadID tid)
 }
 
 void
-ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
+ISA::setMiscRegNoEffect(int misc_reg, RegVal val, ThreadID tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:
@@ -139,8 +140,7 @@ ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
 }
 
 void
-ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc,
-                ThreadID tid)
+ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc, ThreadID tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:

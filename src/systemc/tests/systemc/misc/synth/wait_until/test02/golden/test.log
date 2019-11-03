@@ -1,0 +1,30 @@
+SystemC Simulation
+Begin Simulation
+[Cycle No: 0] i1 = 0 o1 = 0 o2 = 0 cont1 = 0
+[Cycle No: 1] i1 = 5 o1 = 0 o2 = 0 cont1 = 0
+[Cycle No: 2] i1 = 5 o1 = 0 o2 = 0 cont1 = 0
+[Cycle No: 3] i1 = 5 o1 = 0 o2 = 0 cont1 = 0
+[Cycle No: 4] i1 = 5 o1 = 0 o2 = 0 cont1 = 0
+[Cycle No: 5] i1 = 5 o1 = 0 o2 = 0 cont1 = 0
+[Cycle No: 6] i1 = 5 o1 = 0 o2 = 0 cont1 = 0
+[Cycle No: 7] i1 = 5 o1 = 0 o2 = 0 cont1 = 1
+[Cycle No: 8] i1 = 5 o1 = 0 o2 = 0 cont1 = 1
+[Cycle No: 9] i1 = 5 o1 = 0 o2 = 0 cont1 = 1
+[Cycle No: 10] i1 = 5 o1 = 2 o2 = 0 cont1 = 1
+[Cycle No: 11] i1 = 5 o1 = 2 o2 = 3 cont1 = 1
+[Cycle No: 12] i1 = 0 o1 = 0 o2 = 0 cont1 = 0
+[Cycle No: 13] i1 = 0 o1 = 0 o2 = 0 cont1 = 0
+[Cycle No: 14] i1 = 0 o1 = 0 o2 = 0 cont1 = 0
+[Cycle No: 15] i1 = 0 o1 = 0 o2 = 0 cont1 = 0
+Mismatch. Expected: 2. Actual: 0
+[Cycle No: 16] i1 = 0 o1 = 0 o2 = 0 cont1 = 0
+Mismatch. Expected: 3. Actual: 0
+[Cycle No: 17] i1 = 0 o1 = 2 o2 = 0 cont1 = 0
+[Cycle No: 18] i1 = 0 o1 = 2 o2 = 3 cont1 = 0
+[Cycle No: 19] i1 = 0 o1 = 0 o2 = 0 cont1 = 0
+[Cycle No: 20] i1 = 0 o1 = 0 o2 = 0 cont1 = 0
+[Cycle No: 21] i1 = 0 o1 = 0 o2 = 0 cont1 = 0
+[Cycle No: 22] i1 = 0 o1 = 0 o2 = 0 cont1 = 0
+End Simulation
+
+Info: /OSCI/SystemC: Simulation stopped by user.

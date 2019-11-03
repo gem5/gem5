@@ -1,0 +1,10 @@
+SystemC Simulation
+
+Fatal: Oh no!: A bad thing has happened
+In file: <removed by verify.pl>
+In process: dut.thread @ 1 ns
+
+Fatal: Oh no!: A bad thing has happened
+In file: <removed by verify.pl>
+In process: dut.thread @ 2 ns
+Program completed

@@ -1,0 +1,13 @@
+SystemC Simulation
+
+Info: (I1) : empty msg id
+1
+
+Info: (I1) : empty msg id
+2
+
+Info: (I0) unknown error: null msg id
+1
+
+Info: (I0) unknown error: another (integer) null msg id
+2

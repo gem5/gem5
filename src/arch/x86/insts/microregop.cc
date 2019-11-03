@@ -37,9 +37,10 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/insts/microregop.hh"
+
 #include <string>
 
-#include "arch/x86/insts/microregop.hh"
 #include "arch/x86/regs/misc.hh"
 #include "base/condcodes.hh"
 #include "debug/X86.hh"

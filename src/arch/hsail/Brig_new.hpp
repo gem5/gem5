@@ -1455,6 +1455,8 @@ struct BrigInstSourceType {
     uint16_t reserved; //.defValue=0
 };
 
+typedef BrigInstSourceType BrigInstPopcount;
+
 struct BrigOperandAddress {
     BrigBase base;
     BrigCodeOffset32_t symbol; //.wtype=ItemRef<DirectiveVariable>

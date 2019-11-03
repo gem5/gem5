@@ -34,7 +34,7 @@
 
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/str.hh"
 
 using namespace std;

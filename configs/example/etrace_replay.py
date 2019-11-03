@@ -37,37 +37,40 @@
 
 # Basic elastic traces replay script that configures a Trace CPU
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 import optparse
 
 from m5.util import addToPath, fatal
 
-addToPath('../common')
+addToPath('../')
 
-import Options
-import Simulation
-import CacheConfig
-import MemConfig
-from Caches import *
+from common import Options
+from common import Simulation
+from common import CacheConfig
+from common import MemConfig
+from common.Caches import *
 
 parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
 
 if '--ruby' in sys.argv:
-    print "This script does not support Ruby configuration, mainly"\
-    " because Trace CPU has been tested only with classic memory system"
+    print("This script does not support Ruby configuration, mainly"
+    " because Trace CPU has been tested only with classic memory system")
     sys.exit(1)
 
 (options, args) = parser.parse_args()
 
 if args:
-    print "Error: script doesn't take any positional arguments"
+    print("Error: script doesn't take any positional arguments")
     sys.exit(1)
 
 numThreads = 1
 
-if options.cpu_type != "trace":
+if options.cpu_type != "TraceCPU":
     fatal("This is a script for elastic trace replay simulation, use "\
-            "--cpu-type=trace\n");
+            "--cpu-type=TraceCPU\n");
 
 if options.num_cpus > 1:
     fatal("This script does not support multi-processor trace replay.\n")
@@ -103,6 +106,11 @@ system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock,
 # frequency.
 for cpu in system.cpu:
     cpu.clk_domain = system.cpu_clk_domain
+
+# BaseCPU no longer has default values for the BaseCPU.isa
+# createThreads() is needed to fill in the cpu.isa
+for cpu in system.cpu:
+    cpu.createThreads()
 
 # Assign input trace files to the Trace CPU
 system.cpu.instTraceFile=options.inst_trace_file

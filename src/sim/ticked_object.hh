@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,8 +48,9 @@
 #ifndef __SIM_TICKED_OBJECT_HH__
 #define __SIM_TICKED_OBJECT_HH__
 
-#include "params/TickedObject.hh"
 #include "sim/clocked_object.hh"
+
+class TickedObjectParams;
 
 /** Ticked attaches gem5's event queue/scheduler to evaluate
  *  calls and provides a start/stop interface to ticking.
@@ -59,39 +60,14 @@
 class Ticked : public Serializable
 {
   protected:
-    /** An event to call process periodically */
-    class ClockEvent : public Event
-    {
-      public:
-        Ticked &owner;
-
-        ClockEvent(Ticked &owner_, Priority priority) :
-            Event(priority),
-            owner(owner_)
-        { }
-
-        /** Evaluate and reschedule */
-        void
-        process()
-        {
-            ++owner.tickCycles;
-            ++owner.numCycles;
-            owner.countCycles(Cycles(1));
-            owner.evaluate();
-            if (owner.running) {
-                owner.object.schedule(this,
-                    owner.object.clockEdge(Cycles(1)));
-            }
-        }
-    };
-
-    friend class ClockEvent;
-
     /** ClockedObject who is responsible for this Ticked's actions/stats */
     ClockedObject &object;
 
-    /** The single instance of ClockEvent used */
-    ClockEvent event;
+    /** The wrapper for processClockEvent */
+    EventFunctionWrapper event;
+
+    /** Evaluate and reschedule */
+    void processClockEvent();
 
     /** Have I been started? and am not stopped */
     bool running;
@@ -189,7 +165,7 @@ class Ticked : public Serializable
 class TickedObject : public ClockedObject, public Ticked
 {
   public:
-    TickedObject(TickedObjectParams *params,
+    TickedObject(const TickedObjectParams *params,
         Event::Priority priority = Event::CPU_Tick_Pri);
 
     /** Disambiguate to make these functions overload correctly */

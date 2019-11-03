@@ -37,6 +37,7 @@
 #include "arch/sparc/registers.hh"
 #include "arch/sparc/types.hh"
 #include "cpu/cpuevent.hh"
+#include "cpu/reg_class.hh"
 #include "sim/sim_object.hh"
 
 class Checkpoint;
@@ -115,8 +116,8 @@ class ISA : public SimObject
 
     // These need to check the int_dis field and if 0 then
     // set appropriate bit in softint and checkinterrutps on the cpu
-    void  setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc);
-    MiscReg readFSReg(int miscReg, ThreadContext * tc);
+    void  setFSReg(int miscReg, RegVal val, ThreadContext *tc);
+    RegVal readFSReg(int miscReg, ThreadContext * tc);
 
     // Update interrupt state on softint or pil change
     void checkSoftInt(ThreadContext *tc);
@@ -182,12 +183,29 @@ class ISA : public SimObject
 
   public:
 
-    MiscReg readMiscRegNoEffect(int miscReg) const;
-    MiscReg readMiscReg(int miscReg, ThreadContext *tc);
+    RegVal readMiscRegNoEffect(int miscReg) const;
+    RegVal readMiscReg(int miscReg, ThreadContext *tc);
 
-    void setMiscRegNoEffect(int miscReg, const MiscReg val);
-    void setMiscReg(int miscReg, const MiscReg val,
-            ThreadContext *tc);
+    void setMiscRegNoEffect(int miscReg, RegVal val);
+    void setMiscReg(int miscReg, RegVal val, ThreadContext *tc);
+
+    RegId
+    flattenRegId(const RegId& regId) const
+    {
+        switch (regId.classValue()) {
+          case IntRegClass:
+            return RegId(IntRegClass, flattenIntIndex(regId.index()));
+          case FloatRegClass:
+            return RegId(FloatRegClass, flattenFloatIndex(regId.index()));
+          case CCRegClass:
+            return RegId(CCRegClass, flattenCCIndex(regId.index()));
+          case MiscRegClass:
+            return RegId(MiscRegClass, flattenMiscIndex(regId.index()));
+          default:
+            break;
+        }
+        return regId;
+    }
 
     int
     flattenIntIndex(int reg) const
@@ -200,6 +218,24 @@ class ISA : public SimObject
 
     int
     flattenFloatIndex(int reg) const
+    {
+        return reg;
+    }
+
+    int
+    flattenVecIndex(int reg) const
+    {
+        return reg;
+    }
+
+    int
+    flattenVecElemIndex(int reg) const
+    {
+        return reg;
+    }
+
+    int
+    flattenVecPredIndex(int reg) const
     {
         return reg;
     }

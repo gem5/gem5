@@ -46,8 +46,8 @@
  * HMCController declaration
  */
 
-#ifndef __HMC_CONTROLLER__
-#define __HMC_CONTROLLER__
+#ifndef __MEM_HMC_CONTROLLER_HH__
+#define __MEM_HMC_CONTROLLER_HH__
 
 #include "mem/noncoherent_xbar.hh"
 #include "mem/port.hh"
@@ -100,4 +100,4 @@ private:
     int rotate_counter();
 };
 
-#endif //__HMC_CONTROLLER__
+#endif //__MEM_HMC_CONTROLLER_HH__

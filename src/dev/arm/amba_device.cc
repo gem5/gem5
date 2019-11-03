@@ -40,9 +40,10 @@
  * Authors: Ali Saidi
  */
 
+#include "dev/arm/amba_device.hh"
+
 #include "base/trace.hh"
 #include "debug/AMBA.hh"
-#include "dev/arm/amba_device.hh"
 #include "dev/arm/amba_fake.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
@@ -82,6 +83,6 @@ AmbaDevice::readId(PacketPtr pkt, uint64_t amba_id, Addr pio_addr)
             (amba_id >> byte) & 0xFF,
             pkt->getAddr() - pio_addr, byte);
     assert(pkt->getSize() == 4);
-    pkt->set<uint32_t>((amba_id >> byte) & 0xFF);
+    pkt->setLE<uint32_t>((amba_id >> byte) & 0xFF);
     return true;
 }

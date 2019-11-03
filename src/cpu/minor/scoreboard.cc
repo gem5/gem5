@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014, 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,8 +37,9 @@
  * Authors: Andrew Bardsley
  */
 
-#include "arch/registers.hh"
 #include "cpu/minor/scoreboard.hh"
+
+#include "arch/registers.hh"
 #include "cpu/reg_class.hh"
 #include "debug/MinorScoreboard.hh"
 #include "debug/MinorTiming.hh"
@@ -47,66 +48,62 @@ namespace Minor
 {
 
 bool
-Scoreboard::findIndex(RegIndex reg, Index &scoreboard_index)
+Scoreboard::findIndex(const RegId& reg, Index &scoreboard_index)
 {
-    RegClass reg_class = regIdxToClass(reg);
     bool ret = false;
 
-    if (reg == TheISA::ZeroReg) {
+    if (reg.isZeroReg()) {
         /* Don't bother with the zero register */
         ret = false;
     } else {
-        switch (reg_class)
+        switch (reg.classValue())
         {
           case IntRegClass:
-            scoreboard_index = reg;
+            scoreboard_index = reg.index();
             ret = true;
             break;
           case FloatRegClass:
             scoreboard_index = TheISA::NumIntRegs + TheISA::NumCCRegs +
-                reg - TheISA::FP_Reg_Base;
+                reg.index();
+            ret = true;
+            break;
+          case VecRegClass:
+            scoreboard_index = TheISA::NumIntRegs + TheISA::NumCCRegs +
+                TheISA::NumFloatRegs + reg.index();
+            ret = true;
+            break;
+          case VecElemClass:
+            scoreboard_index = TheISA::NumIntRegs + TheISA::NumCCRegs +
+                TheISA::NumFloatRegs + reg.flatIndex();
+            ret = true;
+            break;
+          case VecPredRegClass:
+            scoreboard_index = TheISA::NumIntRegs + TheISA::NumCCRegs +
+                TheISA::NumFloatRegs + TheISA::NumVecRegs + reg.index();
             ret = true;
             break;
           case CCRegClass:
-            scoreboard_index = TheISA::NumIntRegs + reg - TheISA::FP_Reg_Base;
+            scoreboard_index = TheISA::NumIntRegs + reg.index();
             ret = true;
             break;
           case MiscRegClass:
               /* Don't bother with Misc registers */
             ret = false;
             break;
+          default:
+            panic("Unknown register class: %d",
+                    static_cast<int>(reg.classValue()));
         }
     }
 
     return ret;
 }
 
-/** Flatten a RegIndex, irrespective of what reg type it's pointing to */
-static TheISA::RegIndex
-flattenRegIndex(TheISA::RegIndex reg, ThreadContext *thread_context)
+/** Flatten a RegId, irrespective of what reg type it's pointing to */
+static RegId
+flattenRegIndex(const RegId& reg, ThreadContext *thread_context)
 {
-    RegClass reg_class = regIdxToClass(reg);
-    TheISA::RegIndex ret = reg;
-
-    switch (reg_class)
-    {
-      case IntRegClass:
-        ret = thread_context->flattenIntIndex(reg);
-        break;
-      case FloatRegClass:
-        ret = thread_context->flattenFloatIndex(reg);
-        break;
-      case CCRegClass:
-        ret = thread_context->flattenCCIndex(reg);
-        break;
-      case MiscRegClass:
-        /* Don't bother to flatten misc regs as we don't need them here */
-        /* return thread_context->flattenMiscIndex(reg); */
-        ret = reg;
-        break;
-    }
-
-    return ret;
+    return thread_context->flattenRegId(reg);
 }
 
 void
@@ -123,8 +120,8 @@ Scoreboard::markupInstDests(MinorDynInstPtr inst, Cycles retire_time,
     for (unsigned int dest_index = 0; dest_index < num_dests;
         dest_index++)
     {
-        RegIndex reg = flattenRegIndex(
-            staticInst->destRegIdx(dest_index), thread_context);
+        RegId reg = flattenRegIndex(
+                staticInst->destRegIdx(dest_index), thread_context);
         Index index;
 
         if (findIndex(reg, index)) {
@@ -147,7 +144,8 @@ Scoreboard::markupInstDests(MinorDynInstPtr inst, Cycles retire_time,
                 *inst, index, numResults[index], returnCycle[index]);
         } else {
             /* Use ZeroReg to mark invalid/untracked dests */
-            inst->flatDestRegIdx[dest_index] = TheISA::ZeroReg;
+            inst->flatDestRegIdx[dest_index] = RegId(IntRegClass,
+                                                     TheISA::ZeroReg);
         }
     }
 }
@@ -165,7 +163,7 @@ Scoreboard::execSeqNumToWaitFor(MinorDynInstPtr inst,
     unsigned int num_srcs = staticInst->numSrcRegs();
 
     for (unsigned int src_index = 0; src_index < num_srcs; src_index++) {
-        RegIndex reg = flattenRegIndex(staticInst->srcRegIdx(src_index),
+        RegId reg = flattenRegIndex(staticInst->srcRegIdx(src_index),
             thread_context);
         unsigned short int index;
 
@@ -194,7 +192,7 @@ Scoreboard::clearInstDests(MinorDynInstPtr inst, bool clear_unpredictable)
     for (unsigned int dest_index = 0; dest_index < num_dests;
         dest_index++)
     {
-        RegIndex reg = inst->flatDestRegIdx[dest_index];
+        const RegId& reg = inst->flatDestRegIdx[dest_index];
         Index index;
 
         if (findIndex(reg, index)) {
@@ -251,7 +249,7 @@ Scoreboard::canInstIssue(MinorDynInstPtr inst,
     while (src_index < num_srcs && /* More registers */
         ret /* Still possible */)
     {
-        RegIndex reg = flattenRegIndex(staticInst->srcRegIdx(src_index),
+        RegId reg = flattenRegIndex(staticInst->srcRegIdx(src_index),
             thread_context);
         unsigned short int index;
 

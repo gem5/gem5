@@ -28,24 +28,26 @@
 # Authors: Ron Dreslinski
 #          Brad Beckmann
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
 import os, optparse, sys
-addToPath('../common')
-addToPath('../ruby')
-addToPath('../topologies')
 
-import Options
-import Ruby
+addToPath('../')
+
+from common import Options
+from ruby import Ruby
 
 # Get paths we might need.  It's expected this file is in m5/configs/example.
 config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 
 parser = optparse.OptionParser()
-Options.addCommonOptions(parser)
+Options.addNoISAOptions(parser)
 
 parser.add_option("--maxloads", metavar="N", default=0,
                   help="Stop after N loads")
@@ -64,7 +66,9 @@ parser.add_option("--suppress-func-warnings", action="store_true",
 #
 Ruby.define_options(parser)
 
-execfile(os.path.join(config_root, "common", "Options.py"))
+exec(compile( \
+    open(os.path.join(config_root, "common", "Options.py")).read(), \
+    os.path.join(config_root, "common", "Options.py"), 'exec'))
 
 (options, args) = parser.parse_args()
 
@@ -82,44 +86,38 @@ options.l2_assoc=2
 options.l3_assoc=2
 
 if args:
-     print "Error: script doesn't take any positional arguments"
+     print("Error: script doesn't take any positional arguments")
      sys.exit(1)
 
 block_size = 64
 
 if options.num_cpus > block_size:
-     print "Error: Number of testers %d limited to %d because of false sharing" \
-           % (options.num_cpus, block_size)
+     print("Error: Number of testers %d limited to %d because of false sharing"
+           % (options.num_cpus, block_size))
      sys.exit(1)
 
 #
 # Currently ruby does not support atomic or uncacheable accesses
 #
-cpus = [ MemTest(atomic = False,
-                 max_loads = options.maxloads,
-                 issue_dmas = False,
+cpus = [ MemTest(max_loads = options.maxloads,
                  percent_functional = options.functional,
                  percent_uncacheable = 0,
                  progress_interval = options.progress,
                  suppress_func_warnings = options.suppress_func_warnings) \
-         for i in xrange(options.num_cpus) ]
+         for i in range(options.num_cpus) ]
 
 system = System(cpu = cpus,
-                funcmem = SimpleMemory(in_addr_map = False),
-                funcbus = IOXBar(),
                 clk_domain = SrcClockDomain(clock = options.sys_clock),
                 mem_ranges = [AddrRange(options.mem_size)])
 
 if options.num_dmas > 0:
-    dmas = [ MemTest(atomic = False,
-                     max_loads = options.maxloads,
-                     issue_dmas = True,
+    dmas = [ MemTest(max_loads = options.maxloads,
                      percent_functional = 0,
                      percent_uncacheable = 0,
                      progress_interval = options.progress,
                      suppress_func_warnings =
                                         not options.suppress_func_warnings) \
-             for i in xrange(options.num_dmas) ]
+             for i in range(options.num_dmas) ]
     system.dma_devices = dmas
 else:
     dmas = []
@@ -149,24 +147,13 @@ for (i, cpu) in enumerate(cpus):
     #
     # Tie the cpu memtester ports to the correct system ports
     #
-    cpu.test = system.ruby._cpu_ports[i].slave
-    cpu.functional = system.funcbus.slave
+    cpu.port = system.ruby._cpu_ports[i].slave
 
     #
     # Since the memtester is incredibly bursty, increase the deadlock
     # threshold to 5 million cycles
     #
     system.ruby._cpu_ports[i].deadlock_threshold = 5000000
-
-for (i, dma) in enumerate(dmas):
-    #
-    # Tie the dma memtester ports to the correct functional port
-    # Note that the test port has already been connected to the dma_sequencer
-    #
-    dma.functional = system.funcbus.slave
-
-# connect reference memory to funcbus
-system.funcbus.master = system.funcmem.port
 
 # -----------------------
 # run simulation
@@ -184,4 +171,4 @@ m5.instantiate()
 # simulate until program terminates
 exit_event = m5.simulate(options.abs_max_tick)
 
-print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
+print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())

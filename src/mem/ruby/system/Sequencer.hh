@@ -30,12 +30,13 @@
 #define __MEM_RUBY_SYSTEM_SEQUENCER_HH__
 
 #include <iostream>
+#include <list>
 #include <unordered_map>
 
-#include "mem/protocol/MachineType.hh"
-#include "mem/protocol/RubyRequestType.hh"
-#include "mem/protocol/SequencerRequestType.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/protocol/MachineType.hh"
+#include "mem/ruby/protocol/RubyRequestType.hh"
+#include "mem/ruby/protocol/SequencerRequestType.hh"
 #include "mem/ruby/structures/CacheMemory.hh"
 #include "mem/ruby/system/RubyPort.hh"
 #include "params/RubySequencer.hh"
@@ -44,11 +45,12 @@ struct SequencerRequest
 {
     PacketPtr pkt;
     RubyRequestType m_type;
+    RubyRequestType m_second_type;
     Cycles issue_time;
-
     SequencerRequest(PacketPtr _pkt, RubyRequestType _m_type,
-                     Cycles _issue_time)
-        : pkt(_pkt), m_type(_m_type), issue_time(_issue_time)
+                     RubyRequestType _m_second_type, Cycles _issue_time)
+                : pkt(_pkt), m_type(_m_type), m_second_type(_m_second_type),
+                  issue_time(_issue_time)
     {}
 };
 
@@ -151,21 +153,21 @@ class Sequencer : public RubyPort
   private:
     void issueRequest(PacketPtr pkt, RubyRequestType type);
 
-    void hitCallback(SequencerRequest* request, DataBlock& data,
+    void hitCallback(SequencerRequest* srequest, DataBlock& data,
                      bool llscSuccess,
                      const MachineType mach, const bool externalHit,
                      const Cycles initialRequestTime,
                      const Cycles forwardRequestTime,
                      const Cycles firstResponseTime);
 
-    void recordMissLatency(const Cycles t, const RubyRequestType type,
+    void recordMissLatency(SequencerRequest* srequest, bool llscSuccess,
                            const MachineType respondingMach,
-                           bool isExternalHit, Cycles issuedTime,
-                           Cycles initialRequestTime,
-                           Cycles forwardRequestTime, Cycles firstResponseTime,
-                           Cycles completionTime);
+                           bool isExternalHit, Cycles initialRequestTime,
+                           Cycles forwardRequestTime,
+                           Cycles firstResponseTime);
 
-    RequestStatus insertRequest(PacketPtr pkt, RubyRequestType request_type);
+    RequestStatus insertRequest(PacketPtr pkt, RubyRequestType primary_type,
+                                RubyRequestType secondary_type);
     bool handleLlsc(Addr address, SequencerRequest* request);
 
     // Private copy constructor and assignment operator
@@ -186,22 +188,16 @@ class Sequencer : public RubyPort
     Cycles m_data_cache_hit_latency;
     Cycles m_inst_cache_hit_latency;
 
-    typedef std::unordered_map<Addr, SequencerRequest*> RequestTable;
-    RequestTable m_writeRequestTable;
-    RequestTable m_readRequestTable;
+    // RequestTable contains both read and write requests, handles aliasing
+    std::unordered_map<Addr, std::list<SequencerRequest>> m_RequestTable;
+
     // Global outstanding request count, across all request tables
     int m_outstanding_count;
     bool m_deadlock_check_scheduled;
 
-    //! Counters for recording aliasing information.
-    Stats::Scalar m_store_waiting_on_load;
-    Stats::Scalar m_store_waiting_on_store;
-    Stats::Scalar m_load_waiting_on_store;
-    Stats::Scalar m_load_waiting_on_load;
-
     int m_coreId;
 
-    bool m_usingNetworkTester;
+    bool m_runningGarnetStandalone;
 
     //! Histogram for number of outstanding requests per cycle.
     Stats::Histogram m_outstandReqHist;
@@ -237,19 +233,7 @@ class Sequencer : public RubyPort
     std::vector<Stats::Histogram *> m_FirstResponseToCompletionDelayHist;
     std::vector<Stats::Counter> m_IncompleteTimes;
 
-
-    class SequencerWakeupEvent : public Event
-    {
-      private:
-        Sequencer *m_sequencer_ptr;
-
-      public:
-        SequencerWakeupEvent(Sequencer *_seq) : m_sequencer_ptr(_seq) {}
-        void process() { m_sequencer_ptr->wakeup(); }
-        const char *description() const { return "Sequencer deadlock check"; }
-    };
-
-    SequencerWakeupEvent deadlockCheckEvent;
+    EventFunctionWrapper deadlockCheckEvent;
 };
 
 inline std::ostream&

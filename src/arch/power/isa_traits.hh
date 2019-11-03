@@ -48,9 +48,6 @@ using namespace BigEndianGuest;
 
 StaticInstPtr decodeInst(ExtMachInst);
 
-// POWER DOES NOT have a delay slot
-#define ISA_HAS_DELAY_SLOT 0
-
 const Addr PageShift = 12;
 const Addr PageBytes = ULL(1) << PageShift;
 const Addr Page_Mask = ~(PageBytes - 1);
@@ -62,9 +59,6 @@ const Addr NPtePage = ULL(1) << NPtePageShift;
 const Addr PteMask = NPtePage - 1;
 
 const int MachineBytes = 4;
-
-// This is ori 0, 0, 0
-const ExtMachInst NoopMachInst = 0x60000000;
 
 // Memory accesses can be unaligned
 const bool HasUnalignedMemAcc = true;

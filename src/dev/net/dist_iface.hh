@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -83,6 +83,7 @@
 #include <thread>
 #include <utility>
 
+#include "base/logging.hh"
 #include "dev/net/dist_packet.hh"
 #include "dev/net/etherpkt.hh"
 #include "sim/core.hh"
@@ -91,6 +92,8 @@
 #include "sim/serialize.hh"
 
 class EventManager;
+class System;
+class ThreadContext;
 
 /**
  * The interface class to talk to peer gem5 processes.
@@ -139,17 +142,21 @@ class DistIface : public Drainable, public Serializable
          */
         bool doCkpt;
         /**
+         * Flag is set if sync is to stop upon sync completion
+         */
+        bool doStopSync;
+        /**
          * The repeat value for the next periodic sync
          */
         Tick nextRepeat;
         /**
-         * Tick for the very first periodic sync
-         */
-        Tick firstAt;
-        /**
          * Tick for the next periodic sync (if the event is not scheduled yet)
          */
         Tick nextAt;
+        /**
+         *  Flag is set if the sync is aborted (e.g. due to connection lost)
+         */
+        bool isAbort;
 
         friend class SyncEvent;
 
@@ -164,18 +171,30 @@ class DistIface : public Drainable, public Serializable
         void init(Tick start, Tick repeat);
         /**
          *  Core method to perform a full dist sync.
+         *
+         * @return true if the sync completes, false if it gets aborted
          */
-        virtual void run(bool same_tick) = 0;
+        virtual bool run(bool same_tick) = 0;
         /**
          * Callback when the receiver thread gets a sync ack message.
+         *
+         * @return false if the receiver thread needs to stop (e.g.
+         * simulation is to exit)
          */
-        virtual void progress(Tick send_tick,
+        virtual bool progress(Tick send_tick,
                               Tick next_repeat,
                               ReqType do_ckpt,
-                              ReqType do_exit) = 0;
+                              ReqType do_exit,
+                              ReqType do_stop_sync) = 0;
+        /**
+         * Abort processing an on-going sync event (in case of an error, e.g.
+         * lost connection to a peer gem5)
+         */
+        void abort();
 
         virtual void requestCkpt(ReqType req) = 0;
         virtual void requestExit(ReqType req) = 0;
+        virtual void requestStopSync(ReqType req) = 0;
 
         void drainComplete();
 
@@ -194,19 +213,25 @@ class DistIface : public Drainable, public Serializable
          * Ckpt requested
          */
         ReqType needCkpt;
+        /**
+         * Sync stop requested
+         */
+        ReqType needStopSync;
 
       public:
 
         SyncNode();
         ~SyncNode() {}
-        void run(bool same_tick) override;
-        void progress(Tick max_req_tick,
+        bool run(bool same_tick) override;
+        bool progress(Tick max_req_tick,
                       Tick next_repeat,
                       ReqType do_ckpt,
-                      ReqType do_exit) override;
+                      ReqType do_exit,
+                      ReqType do_stop_sync) override;
 
         void requestCkpt(ReqType req) override;
         void requestExit(ReqType req) override;
+        void requestStopSync(ReqType req) override;
 
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
@@ -224,6 +249,10 @@ class DistIface : public Drainable, public Serializable
          */
         unsigned numCkptReq;
         /**
+         * Counter for recording stop sync requests
+         */
+        unsigned numStopSyncReq;
+        /**
          *  Number of connected simulated nodes
          */
         unsigned numNodes;
@@ -232,17 +261,21 @@ class DistIface : public Drainable, public Serializable
         SyncSwitch(int num_nodes);
         ~SyncSwitch() {}
 
-        void run(bool same_tick) override;
-        void progress(Tick max_req_tick,
+        bool run(bool same_tick) override;
+        bool progress(Tick max_req_tick,
                       Tick next_repeat,
                       ReqType do_ckpt,
-                      ReqType do_exit) override;
+                      ReqType do_exit,
+                      ReqType do_stop_sync) override;
 
         void requestCkpt(ReqType) override {
             panic("Switch requested checkpoint");
         }
         void requestExit(ReqType) override {
             panic("Switch requested exit");
+        }
+        void requestStopSync(ReqType) override {
+            panic("Switch requested stop sync");
         }
 
         void serialize(CheckpointOut &cp) const override;
@@ -437,6 +470,10 @@ class DistIface : public Drainable, public Serializable
      * Meta information about data packets received.
      */
     RecvScheduler recvScheduler;
+    /**
+     * Use pseudoOp to start synchronization.
+     */
+    bool syncStartOnPseudoOp;
 
   protected:
     /**
@@ -476,6 +513,14 @@ class DistIface : public Drainable, public Serializable
      * a master to co-ordinate the global synchronisation.
      */
     static DistIface *master;
+    /**
+     * System pointer used to wakeup sleeping threads when stopping sync.
+     */
+    static System *sys;
+    /**
+     * Is this node a switch?
+     */
+     static bool isSwitch;
 
   private:
     /**
@@ -533,6 +578,7 @@ class DistIface : public Drainable, public Serializable
               Tick sync_start,
               Tick sync_repeat,
               EventManager *em,
+              bool use_pseudo_op,
               bool is_switch,
               int num_nodes);
 
@@ -590,6 +636,10 @@ class DistIface : public Drainable, public Serializable
      * Getter for the dist size param.
      */
     static uint64_t sizeParam();
+    /**
+     * Trigger the master to start/stop synchronization.
+     */
+    static void toggleSync(ThreadContext *tc);
  };
 
 #endif

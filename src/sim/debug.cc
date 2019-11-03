@@ -29,16 +29,17 @@
  *          Steve Reinhardt
  */
 
+#include "sim/debug.hh"
+
 #include <string>
 #include <vector>
 
 #include "base/debug.hh"
-#include "sim/debug.hh"
+#include "cpu/pc_event.hh"
 #include "sim/eventq_impl.hh"
 #include "sim/global_event.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
-#include "cpu/pc_event.hh"
 #include "sim/system.hh"
 
 using namespace std;

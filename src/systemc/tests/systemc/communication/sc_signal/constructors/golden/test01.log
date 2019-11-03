@@ -1,0 +1,13 @@
+SystemC Simulation
+signal_0 = 0
+sig2 = 0
+sig3 = 42
+
+signal_1 = 0
+sig2 = 0
+sig3 = 1
+
+signal_2 = X
+sig2 = X
+sig3 = 0
+

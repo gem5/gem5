@@ -82,8 +82,9 @@ bool TCPIface::anyListening = false;
 TCPIface::TCPIface(string server_name, unsigned server_port,
                    unsigned dist_rank, unsigned dist_size,
                    Tick sync_start, Tick sync_repeat,
-                   EventManager *em, bool is_switch, int num_nodes) :
-    DistIface(dist_rank, dist_size, sync_start, sync_repeat, em,
+                   EventManager *em, bool use_pseudo_op, bool is_switch,
+                   int num_nodes) :
+    DistIface(dist_rank, dist_size, sync_start, sync_repeat, em, use_pseudo_op,
               is_switch, num_nodes), serverName(server_name),
     serverPort(server_port), isSwitch(is_switch), listening(false)
 {
@@ -267,9 +268,8 @@ TCPIface::sendTCP(int sock, const void *buf, unsigned length)
     ret = ::send(sock, buf, length, MSG_NOSIGNAL);
     if (ret < 0) {
         if (errno == ECONNRESET || errno == EPIPE) {
-            inform("send(): %s", strerror(errno));
-            exit_message("info", 0, "Message server closed connection, "
-                         "simulation is exiting");
+            exitSimLoop("Message server closed connection, simulation "
+                        "is exiting");
         } else {
             panic("send() failed: %s", strerror(errno));
         }
@@ -330,6 +330,7 @@ TCPIface::recvPacket(const Header &header, EthPacketPtr &packet)
     packet = make_shared<EthPacketData>(header.dataPacketLength);
     bool ret = recvTCP(sock, packet->data, header.dataPacketLength);
     panic_if(!ret, "Error while reading socket");
+    packet->simLength = header.simLength;
     packet->length = header.dataPacketLength;
 }
 

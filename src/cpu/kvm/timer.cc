@@ -37,15 +37,17 @@
  * Authors: Andreas Sandberg
  */
 
+#include "cpu/kvm/timer.hh"
+
+#include <sys/syscall.h>
+#include <unistd.h>
+
 #include <algorithm>
 #include <csignal>
 #include <ctime>
-#include <unistd.h>
-#include <sys/syscall.h>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
-#include "cpu/kvm/timer.hh"
 #include "debug/KvmTimer.hh"
 
 /* According to timer_create(2), the value SIGEV_THREAD_ID can be used
@@ -59,7 +61,7 @@
 #endif
 
 static pid_t
-gettid()
+sysGettid()
 {
     return syscall(__NR_gettid);
 }
@@ -82,7 +84,7 @@ PosixKvmTimer::PosixKvmTimer(int signo, clockid_t clockID,
 
     sev.sigev_notify = SIGEV_THREAD_ID;
     sev.sigev_signo = signo;
-    sev.sigev_notify_thread_id = gettid();
+    sev.sigev_notify_thread_id = sysGettid();
     sev.sigev_value.sival_ptr = NULL;
 
     while (timer_create(clockID, &sev, &timer) == -1) {

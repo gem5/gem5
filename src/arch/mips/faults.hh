@@ -303,6 +303,30 @@ class TlbModifiedFault : public TlbFault<TlbModifiedFault>
     ExcCode code() const { return MipsFault<TlbModifiedFault>::code(); }
 };
 
+/*
+ * Explicitly declare template static member variables to avoid warnings
+ * in some clang versions
+ */
+template<> MipsFaultBase::FaultVals MipsFault<SystemCallFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<ReservedInstructionFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<ThreadFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<IntegerOverflowFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<TrapFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<BreakpointFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<DspStateDisabledFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<MachineCheckFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<ResetFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<SoftResetFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<NonMaskableInterrupt>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<CoprocessorUnusableFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<InterruptFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<AddressErrorFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<TlbInvalidFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<TlbRefillFault>::vals;
+template<> MipsFaultBase::FaultVals MipsFault<TlbModifiedFault>::vals;
+
+
+
 } // namespace MipsISA
 
 #endif // __MIPS_FAULTS_HH__

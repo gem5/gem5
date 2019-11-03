@@ -1,0 +1,20 @@
+SystemC Simulation
+0 s:slave - in reset
+1 ns:slave - self-suspend...
+3 ns:master -                    resuming slave
+3 ns:slave - ... resumed
+4 ns:slave - self-disable ...
+4 ns:slave - ... executing ...
+6 ns:master -                    enabling slave
+7 ns:slave - ... enabled
+7 ns:master -                    sync reset on slave
+8 ns:slave - in reset
+9 ns:slave - in reset
+10 ns:slave - in reset
+10 ns:master -                    sync reset off slave
+11 ns:slave - self-suspend...
+13 ns:master -                    async reset on slave
+13 ns:slave - in reset
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+Program completed

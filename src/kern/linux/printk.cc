@@ -29,13 +29,14 @@
  *          Ali Saidi
  */
 
+#include "kern/linux/printk.hh"
+
 #include <sys/types.h>
 
 #include <algorithm>
 
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "kern/linux/printk.hh"
 #include "sim/arguments.hh"
 
 using namespace std;
@@ -100,6 +101,7 @@ Printk(stringstream &out, Arguments args)
                   break;
                 case 'P':
                   format = true;
+                  M5_FALLTHROUGH;
                 case 'p':
                   hexnum = true;
                   break;
@@ -216,19 +218,11 @@ Printk(stringstream &out, Arguments args)
                 case 'n':
                 case 'N': {
                     args += 2;
-#if 0
-                    uint64_t n = (uint64_t)args++;
-                    struct reg_values *rv = (struct reg_values *)args++;
-#endif
                 }
                   break;
                 case 'r':
                 case 'R': {
                     args += 2;
-#if 0
-                    uint64_t n = (uint64_t)args++;
-                    struct reg_desc *rd = (struct reg_desc *)args++;
-#endif
                 }
                   break;
                 case '%':
@@ -257,4 +251,3 @@ Printk(stringstream &out, Arguments args)
     }
 
 }
-

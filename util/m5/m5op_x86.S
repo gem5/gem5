@@ -30,9 +30,23 @@
  *          Ali Saidi
  */
 
-#include "m5ops.h"
+#include <gem5/asm/generic/m5ops.h>
 
-#ifdef M5OP_ADDR
+#if defined(M5OP_ADDR) && defined(M5OP_PIC)
+/* Use the memory mapped m5op interface */
+#define TWO_BYTE_OP(name, number)         \
+        .globl name;                      \
+        .func name;                       \
+name:                                     \
+        mov m5_mem@gotpcrel(%rip), %r11;  \
+        mov (%r11), %r11;                 \
+        mov $number, %rax;                \
+        shl $8, %rax;                     \
+        mov 0(%r11, %rax, 1), %rax;       \
+        ret;                              \
+        .endfunc;
+
+#elif defined(M5OP_ADDR) && !defined(M5OP_PIC)
 /* Use the memory mapped m5op interface */
 #define TWO_BYTE_OP(name, number)         \
         .globl name;                      \
@@ -61,25 +75,27 @@ name:                                     \
 
 #endif
 
-TWO_BYTE_OP(arm, arm_func)
-TWO_BYTE_OP(quiesce, quiesce_func)
-TWO_BYTE_OP(quiesceNs, quiescens_func)
-TWO_BYTE_OP(quiesceCycle, quiescecycle_func)
-TWO_BYTE_OP(quiesceTime, quiescetime_func)
-TWO_BYTE_OP(rpns, rpns_func)
-TWO_BYTE_OP(m5_exit, exit_func)
-TWO_BYTE_OP(m5_fail, fail_func)
-TWO_BYTE_OP(m5_initparam, initparam_func)
-TWO_BYTE_OP(m5_loadsymbol, loadsymbol_func)
-TWO_BYTE_OP(m5_reset_stats, resetstats_func)
-TWO_BYTE_OP(m5_dump_stats, dumpstats_func)
-TWO_BYTE_OP(m5_dumpreset_stats, dumprststats_func)
-TWO_BYTE_OP(m5_checkpoint, ckpt_func)
-TWO_BYTE_OP(m5_readfile, readfile_func)
-TWO_BYTE_OP(m5_writefile, writefile_func)
-TWO_BYTE_OP(m5_debugbreak, debugbreak_func)
-TWO_BYTE_OP(m5_switchcpu, switchcpu_func)
-TWO_BYTE_OP(m5_addsymbol, addsymbol_func)
-TWO_BYTE_OP(m5_panic, panic_func)
-TWO_BYTE_OP(m5_work_begin, work_begin_func)
-TWO_BYTE_OP(m5_work_end, work_end_func)
+TWO_BYTE_OP(m5_arm, M5OP_ARM)
+TWO_BYTE_OP(m5_quiesce, M5OP_QUIESCE)
+TWO_BYTE_OP(m5_quiesce_ns, M5OP_QUIESCE_NS)
+TWO_BYTE_OP(m5_quiesce_cycle, M5OP_QUIESCE_CYCLE)
+TWO_BYTE_OP(m5_quiesce_time, M5OP_QUIESCE_TIME)
+TWO_BYTE_OP(m5_rpns, M5OP_RPNS)
+TWO_BYTE_OP(m5_wake_cpu, M5OP_WAKE_CPU)
+TWO_BYTE_OP(m5_exit, M5OP_EXIT)
+TWO_BYTE_OP(m5_fail, M5OP_FAIL)
+TWO_BYTE_OP(m5_init_param, M5OP_INIT_PARAM)
+TWO_BYTE_OP(m5_load_symbol, M5OP_LOAD_SYMBOL)
+TWO_BYTE_OP(m5_reset_stats, M5OP_RESET_STATS)
+TWO_BYTE_OP(m5_dump_stats, M5OP_DUMP_STATS)
+TWO_BYTE_OP(m5_dump_reset_stats, M5OP_DUMP_RESET_STATS)
+TWO_BYTE_OP(m5_checkpoint, M5OP_CHECKPOINT)
+TWO_BYTE_OP(m5_read_file, M5OP_READ_FILE)
+TWO_BYTE_OP(m5_write_file, M5OP_WRITE_FILE)
+TWO_BYTE_OP(m5_debug_break, M5OP_DEBUG_BREAK)
+TWO_BYTE_OP(m5_switch_cpu, M5OP_SWITCH_CPU)
+TWO_BYTE_OP(m5_add_symbol, M5OP_ADD_SYMBOL)
+TWO_BYTE_OP(m5_panic, M5OP_PANIC)
+TWO_BYTE_OP(m5_work_begin, M5OP_WORK_BEGIN)
+TWO_BYTE_OP(m5_work_end, M5OP_WORK_END)
+TWO_BYTE_OP(m5_dist_toggle_sync, M5OP_DIST_TOGGLE_SYNC)

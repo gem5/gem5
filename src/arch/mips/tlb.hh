@@ -104,7 +104,7 @@ class TLB : public BaseTLB
     // static helper functions... really
     static bool validVirtualAddress(Addr vaddr);
 
-    static Fault checkCacheability(RequestPtr &req);
+    static Fault checkCacheability(const RequestPtr &req);
 
     // Checkpointing
     void serialize(CheckpointOut &cp) const override;
@@ -112,19 +112,18 @@ class TLB : public BaseTLB
 
     void regStats() override;
 
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation, Mode mode);
-
-    /** Function stub for CheckerCPU compilation issues. MIPS does not
-     *  support the Checker model at the moment.
-     */
-    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
-    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
+    Fault translateAtomic(
+            const RequestPtr &req, ThreadContext *tc, Mode mode) override;
+    void translateTiming(
+            const RequestPtr &req, ThreadContext *tc,
+            Translation *translation, Mode mode) override;
+    Fault finalizePhysical(
+            const RequestPtr &req,
+            ThreadContext *tc, Mode mode) const override;
 
   private:
-    Fault translateInst(RequestPtr req, ThreadContext *tc);
-    Fault translateData(RequestPtr req, ThreadContext *tc, bool write);
+    Fault translateInst(const RequestPtr &req, ThreadContext *tc);
+    Fault translateData(const RequestPtr &req, ThreadContext *tc, bool write);
 };
 
 }

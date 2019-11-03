@@ -86,12 +86,13 @@ class BranchPCRel : public PCDependentDisassembly
         }
     }
 
-    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const;
+    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 /**
@@ -115,12 +116,13 @@ class BranchNonPCRel : public PCDependentDisassembly
         }
     }
 
-    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const;
+    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 /**
@@ -193,12 +195,13 @@ class BranchPCRelCond : public BranchCond
         }
     }
 
-    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const;
+    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 /**
@@ -222,12 +225,13 @@ class BranchNonPCRelCond : public BranchCond
         }
     }
 
-    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const;
+    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 /**
@@ -243,12 +247,13 @@ class BranchRegCond : public BranchCond
     {
     }
 
-    PowerISA::PCState branchTarget(ThreadContext *tc) const;
+    PowerISA::PCState branchTarget(ThreadContext *tc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

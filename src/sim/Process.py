@@ -26,14 +26,19 @@
 #
 # Authors: Nathan Binkert
 
-from m5.SimObject import SimObject
+from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
+from os import getcwd
 
 class Process(SimObject):
     type = 'Process'
-    abstract = True
     cxx_header = "sim/process.hh"
+
+    @cxxMethod
+    def map(self, vaddr, paddr, size, cacheable=False):
+        pass
+
     input = Param.String('cin', "filename for stdin")
     output = Param.String('cout', 'filename for stdout')
     errout = Param.String('cerr', 'filename for stderr')
@@ -41,31 +46,30 @@ class Process(SimObject):
     useArchPT = Param.Bool('false', 'maintain an in-memory version of the page\
                             table in an architecture-specific format')
     kvmInSE = Param.Bool('false', 'initialize the process for KvmCPU in SE')
-    max_stack_size = Param.MemorySize('64MB', 'maximum size of the stack')
+    maxStackSize = Param.MemorySize('64MB', 'maximum size of the stack')
+
+    uid = Param.Int(100, 'user id')
+    euid = Param.Int(100, 'effective user id')
+    gid = Param.Int(100, 'group id')
+    egid = Param.Int(100, 'effective group id')
+    pid = Param.Int(100, 'process id')
+    ppid = Param.Int(0, 'parent process id')
+    pgid = Param.Int(100, 'process group id')
+
+    executable = Param.String('', "executable (overrides cmd[0] if set)")
+    cmd = VectorParam.String("command line (executable plus arguments)")
+    env = VectorParam.String([], "environment settings")
+    cwd = Param.String(getcwd(), "current working directory")
+    simpoint = Param.UInt64(0, 'simulation point at which to start simulation')
+    drivers = VectorParam.EmulatedDriver([], 'Available emulated drivers')
+    release = Param.String('5.1.0', "Linux kernel uname release")
 
     @classmethod
     def export_methods(cls, code):
-        code('bool map(Addr vaddr, Addr paddr, int size, bool cacheable=true);')
+        code('bool map(Addr vaddr, Addr paddr, int sz, bool cacheable=true);')
 
 class EmulatedDriver(SimObject):
     type = 'EmulatedDriver'
     cxx_header = "sim/emul_driver.hh"
     abstract = True
     filename = Param.String("device file name (under /dev)")
-
-class LiveProcess(Process):
-    type = 'LiveProcess'
-    cxx_header = "sim/process.hh"
-    executable = Param.String('', "executable (overrides cmd[0] if set)")
-    cmd = VectorParam.String("command line (executable plus arguments)")
-    env = VectorParam.String([], "environment settings")
-    cwd = Param.String('', "current working directory")
-    uid = Param.Int(100, 'user id')
-    euid = Param.Int(100, 'effective user id')
-    gid = Param.Int(100, 'group id')
-    egid = Param.Int(100, 'effective group id')
-    pid = Param.Int(100, 'process id')
-    ppid = Param.Int(99, 'parent process id')
-    simpoint = Param.UInt64(0, 'simulation point at which to start simulation')
-    drivers = VectorParam.EmulatedDriver([], 'Available emulated drivers')
-

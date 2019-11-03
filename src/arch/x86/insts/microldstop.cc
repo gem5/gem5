@@ -38,9 +38,9 @@
  * Authors: Gabe Black
  */
 
-#include <string>
-
 #include "arch/x86/insts/microldstop.hh"
+
+#include <string>
 
 namespace X86ISA
 {

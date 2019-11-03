@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012,2015 ARM Limited
+ * Copyright (c) 2012,2015,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -46,76 +46,16 @@
  * @file
  * Port object definitions.
  */
-#include "base/trace.hh"
-#include "mem/mem_object.hh"
 #include "mem/port.hh"
 
-Port::Port(const std::string &_name, MemObject& _owner, PortID _id)
-    : portName(_name), id(_id), owner(_owner)
-{
-}
-
-Port::~Port()
-{
-}
-
-BaseMasterPort::BaseMasterPort(const std::string& name, MemObject* owner,
-                               PortID _id)
-    : Port(name, *owner, _id), _baseSlavePort(NULL)
-{
-}
-
-BaseMasterPort::~BaseMasterPort()
-{
-}
-
-BaseSlavePort&
-BaseMasterPort::getSlavePort() const
-{
-    if (_baseSlavePort == NULL)
-        panic("Cannot getSlavePort on master port %s that is not connected\n",
-              name());
-
-    return *_baseSlavePort;
-}
-
-bool
-BaseMasterPort::isConnected() const
-{
-    return _baseSlavePort != NULL;
-}
-
-BaseSlavePort::BaseSlavePort(const std::string& name, MemObject* owner,
-                             PortID _id)
-    : Port(name, *owner, _id), _baseMasterPort(NULL)
-{
-}
-
-BaseSlavePort::~BaseSlavePort()
-{
-}
-
-BaseMasterPort&
-BaseSlavePort::getMasterPort() const
-{
-    if (_baseMasterPort == NULL)
-        panic("Cannot getMasterPort on slave port %s that is not connected\n",
-              name());
-
-    return *_baseMasterPort;
-}
-
-bool
-BaseSlavePort::isConnected() const
-{
-    return _baseMasterPort != NULL;
-}
+#include "base/trace.hh"
+#include "sim/sim_object.hh"
 
 /**
  * Master port
  */
-MasterPort::MasterPort(const std::string& name, MemObject* owner, PortID _id)
-    : BaseMasterPort(name, owner, _id), _slavePort(NULL)
+MasterPort::MasterPort(const std::string& name, SimObject* _owner, PortID _id)
+    : Port(name, _id), _slavePort(NULL), owner(*_owner)
 {
 }
 
@@ -124,24 +64,18 @@ MasterPort::~MasterPort()
 }
 
 void
-MasterPort::bind(BaseSlavePort& slave_port)
+MasterPort::bind(Port &peer)
 {
-    // bind on the level of the base ports
-    _baseSlavePort = &slave_port;
-
-    // also attempt to base the slave to the appropriate type
-    SlavePort* cast_slave_port = dynamic_cast<SlavePort*>(&slave_port);
-
-    // if this port is compatible, then proceed with the binding
-    if (cast_slave_port != NULL) {
-        // master port keeps track of the slave port
-        _slavePort = cast_slave_port;
-        // slave port also keeps track of master port
-        _slavePort->bind(*this);
-    } else {
-        fatal("Master port %s cannot bind to %s\n", name(),
-              slave_port.name());
+    auto *slave_port = dynamic_cast<SlavePort *>(&peer);
+    if (!slave_port) {
+        fatal("Attempt to bind port %s to non-slave port %s.",
+                name(), peer.name());
     }
+    // master port keeps track of the slave port
+    _slavePort = slave_port;
+    Port::bind(peer);
+    // slave port also keeps track of master port
+    _slavePort->slaveBind(*this);
 }
 
 void
@@ -150,9 +84,9 @@ MasterPort::unbind()
     if (_slavePort == NULL)
         panic("Attempting to unbind master port %s that is not connected\n",
               name());
-    _slavePort->unbind();
-    _slavePort = NULL;
-    _baseSlavePort = NULL;
+    _slavePort->slaveUnbind();
+    _slavePort = nullptr;
+    Port::unbind();
 }
 
 AddrRangeList
@@ -161,45 +95,13 @@ MasterPort::getAddrRanges() const
     return _slavePort->getAddrRanges();
 }
 
-Tick
-MasterPort::sendAtomic(PacketPtr pkt)
-{
-    assert(pkt->isRequest());
-    return _slavePort->recvAtomic(pkt);
-}
-
-void
-MasterPort::sendFunctional(PacketPtr pkt)
-{
-    assert(pkt->isRequest());
-    return _slavePort->recvFunctional(pkt);
-}
-
-bool
-MasterPort::sendTimingReq(PacketPtr pkt)
-{
-    assert(pkt->isRequest());
-    return _slavePort->recvTimingReq(pkt);
-}
-
-bool
-MasterPort::sendTimingSnoopResp(PacketPtr pkt)
-{
-    assert(pkt->isResponse());
-    return _slavePort->recvTimingSnoopResp(pkt);
-}
-
-void
-MasterPort::sendRetryResp()
-{
-    _slavePort->recvRespRetry();
-}
-
 void
 MasterPort::printAddr(Addr a)
 {
-    Request req(a, 1, 0, Request::funcMasterId);
-    Packet pkt(&req, MemCmd::PrintReq);
+    auto req = std::make_shared<Request>(
+        a, 1, 0, Request::funcMasterId);
+
+    Packet pkt(req, MemCmd::PrintReq);
     Packet::PrintReqState prs(std::cerr);
     pkt.senderState = &prs;
 
@@ -209,8 +111,9 @@ MasterPort::printAddr(Addr a)
 /**
  * Slave port
  */
-SlavePort::SlavePort(const std::string& name, MemObject* owner, PortID id)
-    : BaseSlavePort(name, owner, id), _masterPort(NULL)
+SlavePort::SlavePort(const std::string& name, SimObject* _owner, PortID id)
+    : Port(name, id), _masterPort(NULL), defaultBackdoorWarned(false),
+    owner(*_owner)
 {
 }
 
@@ -219,55 +122,25 @@ SlavePort::~SlavePort()
 }
 
 void
-SlavePort::unbind()
+SlavePort::slaveUnbind()
 {
-    _baseMasterPort = NULL;
     _masterPort = NULL;
+    Port::unbind();
 }
 
 void
-SlavePort::bind(MasterPort& master_port)
+SlavePort::slaveBind(MasterPort& master_port)
 {
-    _baseMasterPort = &master_port;
     _masterPort = &master_port;
+    Port::bind(master_port);
 }
 
 Tick
-SlavePort::sendAtomicSnoop(PacketPtr pkt)
+SlavePort::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
 {
-    assert(pkt->isRequest());
-    return _masterPort->recvAtomicSnoop(pkt);
-}
-
-void
-SlavePort::sendFunctionalSnoop(PacketPtr pkt)
-{
-    assert(pkt->isRequest());
-    return _masterPort->recvFunctionalSnoop(pkt);
-}
-
-bool
-SlavePort::sendTimingResp(PacketPtr pkt)
-{
-    assert(pkt->isResponse());
-    return _masterPort->recvTimingResp(pkt);
-}
-
-void
-SlavePort::sendTimingSnoopReq(PacketPtr pkt)
-{
-    assert(pkt->isRequest());
-    _masterPort->recvTimingSnoopReq(pkt);
-}
-
-void
-SlavePort::sendRetryReq()
-{
-    _masterPort->recvReqRetry();
-}
-
-void
-SlavePort::sendRetrySnoopResp()
-{
-    _masterPort->recvRetrySnoopResp();
+    if (!defaultBackdoorWarned) {
+        warn("Port %s doesn't support requesting a back door.", name());
+        defaultBackdoorWarned = true;
+    }
+    return recvAtomic(pkt);
 }

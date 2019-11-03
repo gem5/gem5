@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -194,6 +194,9 @@ class MinorDynInst : public RefCounted
     /** This instruction is in the LSQ, not a functional unit */
     bool inLSQ;
 
+    /** Translation fault in case of a mem ref */
+    Fault translationFault;
+
     /** The instruction has been sent to the store buffer */
     bool inStoreBuffer;
 
@@ -201,6 +204,13 @@ class MinorDynInst : public RefCounted
      *  this only happens with mem refs that need to be issued early
      *  to allow other instructions to fill the fetch delay */
     bool canEarlyIssue;
+
+    /** Flag controlling conditional execution of the instruction */
+    bool predicate;
+
+    /** Flag controlling conditional execution of the memory access associated
+     *  with the instruction (only meaningful for loads/stores) */
+    bool memAccPredicate;
 
     /** execSeqNum of the latest inst on which this inst depends.
      *  This can be used as a sanity check for dependency ordering
@@ -219,21 +229,17 @@ class MinorDynInst : public RefCounted
     /** Flat register indices so that, when clearing the scoreboard, we
      *  have the same register indices as when the instruction was marked
      *  up */
-    TheISA::RegIndex flatDestRegIdx[TheISA::MaxInstDestRegs];
-
-    /** Effective address as set by ExecContext::setEA */
-    Addr ea;
+    RegId flatDestRegIdx[TheISA::MaxInstDestRegs];
 
   public:
     MinorDynInst(InstId id_ = InstId(), Fault fault_ = NoFault) :
         staticInst(NULL), id(id_), traceData(NULL),
         pc(TheISA::PCState(0)), fault(fault_),
         triedToPredict(false), predictedTaken(false),
-        fuIndex(0), inLSQ(false), inStoreBuffer(false),
-        canEarlyIssue(false),
-        instToWaitFor(0), extraCommitDelay(Cycles(0)),
-        extraCommitDelayExpr(NULL), minimumCommitCycle(Cycles(0)),
-        ea(0)
+        fuIndex(0), inLSQ(false), translationFault(NoFault),
+        inStoreBuffer(false), canEarlyIssue(false), predicate(true),
+        memAccPredicate(true), instToWaitFor(0), extraCommitDelay(Cycles(0)),
+        extraCommitDelayExpr(NULL), minimumCommitCycle(Cycles(0))
     { }
 
   public:
@@ -269,6 +275,14 @@ class MinorDynInst : public RefCounted
 
     /** ReportIF interface */
     void reportData(std::ostream &os) const;
+
+    bool readPredicate() const { return predicate; }
+
+    void setPredicate(bool val) { predicate = val; }
+
+    bool readMemAccPredicate() const { return memAccPredicate; }
+
+    void setMemAccPredicate(bool val) { memAccPredicate = val; }
 
     ~MinorDynInst();
 };

@@ -43,7 +43,9 @@
 #ifndef __ARCH_GENERIC_MEMHELPERS_HH__
 #define __ARCH_GENERIC_MEMHELPERS_HH__
 
+#include "arch/isa_traits.hh"
 #include "base/types.hh"
+#include "mem/packet.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
 #include "sim/insttracer.hh"
@@ -54,7 +56,7 @@
 template <class XC, class MemT>
 Fault
 initiateMemRead(XC *xc, Trace::InstRecord *traceData, Addr addr,
-                MemT &mem, unsigned flags)
+                MemT &mem, Request::Flags flags)
 {
     return xc->initiateMemRead(addr, sizeof(MemT), flags);
 }
@@ -64,7 +66,7 @@ template <class MemT>
 void
 getMem(PacketPtr pkt, MemT &mem, Trace::InstRecord *traceData)
 {
-    mem = pkt->get<MemT>();
+    mem = pkt->get<MemT>(TheISA::GuestByteOrder);
     if (traceData)
         traceData->setData(mem);
 }
@@ -73,7 +75,7 @@ getMem(PacketPtr pkt, MemT &mem, Trace::InstRecord *traceData)
 template <class XC, class MemT>
 Fault
 readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr, MemT &mem,
-        unsigned flags)
+              Request::Flags flags)
 {
     memset(&mem, 0, sizeof(mem));
     Fault fault = xc->readMem(addr, (uint8_t *)&mem, sizeof(MemT), flags);
@@ -89,7 +91,7 @@ readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr, MemT &mem,
 template <class XC, class MemT>
 Fault
 writeMemTiming(XC *xc, Trace::InstRecord *traceData, MemT mem, Addr addr,
-        unsigned flags, uint64_t *res)
+               Request::Flags flags, uint64_t *res)
 {
     if (traceData) {
         traceData->setData(mem);
@@ -102,7 +104,7 @@ writeMemTiming(XC *xc, Trace::InstRecord *traceData, MemT mem, Addr addr,
 template <class XC, class MemT>
 Fault
 writeMemAtomic(XC *xc, Trace::InstRecord *traceData, const MemT &mem,
-        Addr addr, unsigned flags, uint64_t *res)
+               Addr addr, Request::Flags flags, uint64_t *res)
 {
     if (traceData) {
         traceData->setData(mem);
@@ -112,11 +114,45 @@ writeMemAtomic(XC *xc, Trace::InstRecord *traceData, const MemT &mem,
           xc->writeMem((uint8_t *)&host_mem, sizeof(MemT), addr, flags, res);
     if (fault == NoFault && res != NULL) {
         if (flags & Request::MEM_SWAP || flags & Request::MEM_SWAP_COND)
-            *res = TheISA::gtoh((MemT)*res);
+            *(MemT *)res = TheISA::gtoh(*(MemT *)res);
         else
             *res = TheISA::gtoh(*res);
     }
     return fault;
+}
+
+/// Do atomic read-modify-write (AMO) in atomic mode
+template <class XC, class MemT>
+Fault
+amoMemAtomic(XC *xc, Trace::InstRecord *traceData, MemT &mem, Addr addr,
+             Request::Flags flags, AtomicOpFunctor *_amo_op)
+{
+    assert(_amo_op);
+
+    // mem will hold the previous value at addr after the AMO completes
+    memset(&mem, 0, sizeof(mem));
+
+    AtomicOpFunctorPtr amo_op = AtomicOpFunctorPtr(_amo_op);
+    Fault fault = xc->amoMem(addr, (uint8_t *)&mem, sizeof(MemT), flags,
+                             std::move(amo_op));
+
+    if (fault == NoFault) {
+        mem = TheISA::gtoh(mem);
+        if (traceData)
+            traceData->setData(mem);
+    }
+    return fault;
+}
+
+/// Do atomic read-modify-wrote (AMO) in timing mode
+template <class XC, class MemT>
+Fault
+initiateMemAMO(XC *xc, Trace::InstRecord *traceData, Addr addr, MemT& mem,
+               Request::Flags flags, AtomicOpFunctor *_amo_op)
+{
+    assert(_amo_op);
+    AtomicOpFunctorPtr amo_op = AtomicOpFunctorPtr(_amo_op);
+    return xc->initiateMemAMO(addr, sizeof(MemT), flags, std::move(amo_op));
 }
 
 #endif

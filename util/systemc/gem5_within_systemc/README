@@ -1,0 +1,86 @@
+This directory contains a demo of C++ configuration of gem5.  The intention
+is to provide a mechanism to allow pre-generated config.ini files generated
+by Python-based gem5 to be reloaded in library-base versions of gem5
+embedded in other systems using C++ calls for simulation control.
+
+This directory contain a demo of hosting a C++ configured version of gem5
+onto SystemC's event loop.  The hosting is achieved by replacing 'simulate'
+with a SystemC object which implements an event loop using SystemC scheduler
+mechanisms.
+
+The sc_... files here should probably be hosted in a diferent directory and
+buildable as a library.
+
+Files:
+
+    main.cc                 -- demonstration top level
+    sc_logger.{cc,hh}       -- rehosting of DPRINTF onto SC_REPORT
+    sc_module.{cc,hh}       -- SystemC simulation loop base class
+    sc_gem5_control.{cc,hh} -- Alternative extra wrapping to allow gem5
+                                Systems to be instantiated as single
+                                sc_module objects.
+    stats.{cc,hh}           -- Stats dumping (copied from util/cxx_config)
+
+Read main.cc for more details of the implementation and sc_... files for
+
+To build:
+
+First build gem5 as a library with cxx-config support and (optionally)
+without python.  When building the library, disable gem5's native SystemC
+API support, as that will conflict with the external version.  Also build a
+normal gem5 (cxx-config not needed, Python needed):
+
+> cd ../../..
+> scons build/ARM/gem5.opt
+> scons --with-cxx-config --without-python USE_SYSTEMC=0 \
+>       build/ARM/libgem5_opt.so
+> cd util/systemc
+
+Note: For MAC / OSX this command should be used:
+> scons --with-cxx-config --without-python USE_SYSTEMC=0 \
+>       build/ARM/libgem5_opt.dylib
+
+Set a proper LD_LIBRARY_PATH e.g. for bash:
+> export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
+
+or for MAC / OSX:
+> export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
+
+
+Then edit the Makefile to set the paths for SystemC, e.g:
+
+    Linux:
+    SYSTEMC_INC = /opt/systemc/include
+    SYSTEMC_LIB = /opt/systemc/lib-linux64
+
+    MAC / OSX:
+    SYSTEMC_INC = /opt/systemc/include
+    SYSTEMC_LIB = /opt/systemc/lib-macosx64
+
+Then run make:
+
+> make
+
+Make a config file for the C++-configured gem5 using normal gem5
+
+> ../../../build/ARM/gem5.opt ../../../configs/example/se.py -c \
+>       ../../../tests/test-progs/hello/bin/arm/linux/hello
+
+The binary 'gem5.opt.cxx' can now be used to load in the generated config
+file from the previous normal gem5 run.
+
+Try:
+
+> ./gem5.opt.cxx m5out/config.ini
+
+This should print:
+
+> Hello world!
+
+The .ini file can also be read by the Python .ini file reader example:
+
+> ../../../build/ARM/gem5.opt ../../../configs/example/read_ini.py \
+>       m5out/config.ini
+
+If you are interested in SystemC Transaction Level Modeling (TLM2) please have
+a look into /util/tlm.

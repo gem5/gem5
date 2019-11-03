@@ -1,0 +1,9 @@
+SystemC Simulation
+
+Error: (E808) sc_vector::get_elements called for element type not derived from sc_object: evs
+In file: <removed by verify.pl>
+
+Error: (E808) sc_vector::get_elements called for element type not derived from sc_object: foo
+In file: <removed by verify.pl>
+
+Success

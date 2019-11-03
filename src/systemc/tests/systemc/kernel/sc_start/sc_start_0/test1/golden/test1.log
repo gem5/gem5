@@ -1,0 +1,50 @@
+SystemC Simulation
+Event         Start Parameters         End Parameters
+------------- ----------------         --------------
+
+sc_start(1, SC_NS) - 0 s   0
+  X::comb() - 0 s  0
+                                        1 ns   0
+~tweak      - 1 ns   0
+                                        1 ns   0
+sc_start(0, SC_NS) - 1 ns   0
+                                        1 ns   1
+sc_start(0, SC_NS) - 1 ns   1
+  X::comb() - 1 ns  1
+  X::sync() - 1 ns  1
+                                        1 ns   1
+sc_start(1, SC_NS) - 1 ns   1
+                                        2 ns   1
+sc_start(0, SC_NS) - 2 ns   1
+                                        2 ns   1
+sc_start(0, SC_NS) - 2 ns   1
+  X::sync() - 2 ns  1
+                                        2 ns   1
+~tweak      - 2 ns   1
+                                        2 ns   1
+sc_start(0, SC_NS) - 2 ns   1
+                                        2 ns   0
+~tweak      - 2 ns   0
+                                        2 ns   0
+sc_start(0, SC_NS) - 2 ns   0
+  X::comb() - 2 ns  0
+                                        2 ns   1
+sc_start(0, SC_NS) - 2 ns   1
+  X::comb() - 2 ns  1
+                                        2 ns   1
+sc_start(1, SC_NS) - 2 ns   1
+                                        3 ns   1
+sc_start(1, SC_NS) - 3 ns   1
+  X::sync() - 3 ns  1
+                                        4 ns   1
+sc_start(0, SC_NS) - 4 ns   1
+                                        4 ns   1
+~tweak      - 4 ns   1
+                                        4 ns   1
+sc_start(0, SC_NS) - 4 ns   1
+  X::sync() - 4 ns  1
+                                        4 ns   0
+sc_start(0, SC_NS) - 4 ns   0
+  X::comb() - 4 ns  0
+                                        4 ns   0
+Program completed

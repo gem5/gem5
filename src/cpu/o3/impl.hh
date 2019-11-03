@@ -65,6 +65,7 @@ struct O3CPUImpl
      *  what should be used, and not DynInst *.
      */
     typedef RefCountingPtr<DynInst> DynInstPtr;
+    typedef RefCountingPtr<const DynInst> DynInstConstPtr;
 
     /** The O3CPU type to be used. */
     typedef FullO3CPU<O3CPUImpl> O3CPU;

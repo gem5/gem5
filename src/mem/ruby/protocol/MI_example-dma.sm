@@ -1,0 +1,235 @@
+/*
+ * Copyright (c) 2009-2012 Mark D. Hill and David A. Wood
+ * Copyright (c) 2010-2012 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+machine(MachineType:DMA, "DMA Controller") 
+    : DMASequencer * dma_sequencer;
+      Cycles request_latency := 6;
+
+      MessageBuffer * responseFromDir, network="From", virtual_network="1",
+            vnet_type="response";
+      MessageBuffer * requestToDir, network="To", virtual_network="0",
+            vnet_type="request";
+      MessageBuffer * mandatoryQueue;
+{
+  state_declaration(State, desc="DMA states", default="DMA_State_READY") {
+    READY, AccessPermission:Invalid, desc="Ready to accept a new request";
+    BUSY_RD, AccessPermission:Busy, desc="Busy: currently processing a request";
+    BUSY_WR, AccessPermission:Busy, desc="Busy: currently processing a request";
+  }
+
+  enumeration(Event, desc="DMA events") {
+    ReadRequest,  desc="A new read request";
+    WriteRequest, desc="A new write request";
+    Data,         desc="Data from a DMA memory read";
+    Ack,          desc="DMA write to memory completed";
+  }
+
+  structure(TBE, desc="...") {
+    State TBEState,    desc="Transient state";
+    DataBlock DataBlk, desc="Data";
+  }
+
+  structure(TBETable, external = "yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+  }
+
+  void set_tbe(TBE b);
+  void unset_tbe();
+  void wakeUpAllBuffers();
+
+  TBETable TBEs, template="<DMA_TBE>", constructor="m_number_of_TBEs";
+
+  Tick clockEdge();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
+
+  State getState(TBE tbe, Addr addr) {
+    if (is_valid(tbe)) {
+        return tbe.TBEState;
+    } else {
+        return State:READY;
+    }
+  }
+
+  void setState(TBE tbe, Addr addr, State state) {
+    if (is_valid(tbe)) {
+        tbe.TBEState := state;
+    }
+  }
+
+  AccessPermission getAccessPermission(Addr addr) {
+    return AccessPermission:NotPresent;
+  }
+
+  void setAccessPermission(Addr addr, State state) {
+  }
+
+  void functionalRead(Addr addr, Packet *pkt) {
+    error("DMA does not support functional read.");
+  }
+
+  int functionalWrite(Addr addr, Packet *pkt) {
+    error("DMA does not support functional write.");
+  }
+
+  out_port(requestToDir_out, DMARequestMsg, requestToDir, desc="...");
+
+  in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, desc="...") {
+    if (dmaRequestQueue_in.isReady(clockEdge())) {
+      peek(dmaRequestQueue_in, SequencerMsg) {
+        if (in_msg.Type == SequencerRequestType:LD ) {
+          trigger(Event:ReadRequest, in_msg.LineAddress, TBEs[in_msg.LineAddress]);
+        } else if (in_msg.Type == SequencerRequestType:ST) {
+          trigger(Event:WriteRequest, in_msg.LineAddress, TBEs[in_msg.LineAddress]);
+        } else {
+          error("Invalid request type");
+        }
+      }
+    }
+  }
+
+  in_port(dmaResponseQueue_in, DMAResponseMsg, responseFromDir, desc="...") {
+    if (dmaResponseQueue_in.isReady(clockEdge())) {
+      peek( dmaResponseQueue_in, DMAResponseMsg) {
+        if (in_msg.Type == DMAResponseType:ACK) {
+          trigger(Event:Ack, in_msg.LineAddress, TBEs[in_msg.LineAddress]);
+        } else if (in_msg.Type == DMAResponseType:DATA) {
+          trigger(Event:Data, in_msg.LineAddress, TBEs[in_msg.LineAddress]);
+        } else {
+          error("Invalid response type");
+        }
+      }
+    }
+  }
+
+  action(s_sendReadRequest, "s", desc="Send a DMA read request to memory") {
+    peek(dmaRequestQueue_in, SequencerMsg) {
+      enqueue(requestToDir_out, DMARequestMsg, request_latency) {
+        out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+        out_msg.LineAddress := in_msg.LineAddress; 
+        out_msg.Type := DMARequestType:READ;
+        out_msg.Requestor := machineID;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Len := in_msg.Len;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(s_sendWriteRequest, "\s", desc="Send a DMA write request to memory") {
+    peek(dmaRequestQueue_in, SequencerMsg) {
+      enqueue(requestToDir_out, DMARequestMsg, request_latency) {
+          out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+          out_msg.LineAddress := in_msg.LineAddress; 
+          out_msg.Type := DMARequestType:WRITE;
+          out_msg.Requestor := machineID;
+          out_msg.DataBlk := in_msg.DataBlk;
+          out_msg.Len := in_msg.Len;
+          out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+          out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        }
+      }
+  }
+
+  action(a_ackCallback, "a", desc="Notify dma controller that write request completed") {
+    dma_sequencer.ackCallback(address);
+  }
+
+  action(d_dataCallback, "d", desc="Write data to dma sequencer") {
+    dma_sequencer.dataCallback(tbe.DataBlk, address);
+  }
+
+  action(t_updateTBEData, "t", desc="Update TBE Data") {
+    assert(is_valid(tbe));
+    peek( dmaResponseQueue_in, DMAResponseMsg) {
+        tbe.DataBlk := in_msg.DataBlk;
+    }
+  }
+
+  action(v_allocateTBE, "v", desc="Allocate TBE entry") {
+    TBEs.allocate(address);
+    set_tbe(TBEs[address]);
+  }
+
+  action(w_deallocateTBE, "w", desc="Deallocate TBE entry") {
+    TBEs.deallocate(address);
+    unset_tbe();
+  }
+
+  action(p_popRequestQueue, "p", desc="Pop request queue") {
+    dmaRequestQueue_in.dequeue(clockEdge());
+  }
+
+  action(p_popResponseQueue, "\p", desc="Pop request queue") {
+    dmaResponseQueue_in.dequeue(clockEdge());
+  }
+
+  action(zz_stallAndWaitRequestQueue, "zz", desc="...") {
+    stall_and_wait(dmaRequestQueue_in, address);
+  }
+
+  action(wkad_wakeUpAllDependents, "wkad", desc="wake-up all dependents") {
+    wakeUpAllBuffers();
+  }
+
+  transition(READY, ReadRequest, BUSY_RD) {
+    v_allocateTBE;
+    s_sendReadRequest;
+    p_popRequestQueue;
+  }
+
+  transition(READY, WriteRequest, BUSY_WR) {
+    v_allocateTBE;
+    s_sendWriteRequest;
+    p_popRequestQueue;
+  }
+
+  transition(BUSY_RD, Data, READY) {
+    t_updateTBEData;
+    d_dataCallback;
+    w_deallocateTBE;
+    p_popResponseQueue;
+    wkad_wakeUpAllDependents;
+  }
+
+  transition(BUSY_WR, Ack, READY) {
+    a_ackCallback;
+    w_deallocateTBE;
+    p_popResponseQueue;
+    wkad_wakeUpAllDependents;
+  }
+
+  transition({BUSY_RD,BUSY_WR}, {ReadRequest,WriteRequest}) {
+     zz_stallAndWaitRequestQueue;
+  }
+
+}

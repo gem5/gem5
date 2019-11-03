@@ -38,17 +38,19 @@
  * Authors: Andreas Sandberg
  */
 
+#include "cpu/kvm/vm.hh"
+
+#include <fcntl.h>
 #include <linux/kvm.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <fcntl.h>
 #include <unistd.h>
 
 #include <cerrno>
 #include <memory>
 
-#include "cpu/kvm/vm.hh"
+#include "cpu/kvm/base.hh"
 #include "debug/Kvm.hh"
 #include "params/KvmVM.hh"
 #include "sim/system.hh"
@@ -291,7 +293,7 @@ Kvm::createVM()
 
 KvmVM::KvmVM(KvmVMParams *params)
     : SimObject(params),
-      kvm(new Kvm()), system(params->system),
+      kvm(new Kvm()), system(nullptr),
       vmFD(kvm->createVM()),
       started(false),
       nextVCPUID(0)
@@ -341,13 +343,19 @@ KvmVM::cpuStartup()
 void
 KvmVM::delayedStartup()
 {
-    const std::vector<std::pair<AddrRange, uint8_t*> >&memories(
+    assert(system); // set by the system during its construction
+    const std::vector<BackingStoreEntry> &memories(
         system->getPhysMem().getBackingStore());
 
     DPRINTF(Kvm, "Mapping %i memory region(s)\n", memories.size());
     for (int slot(0); slot < memories.size(); ++slot) {
-        const AddrRange &range(memories[slot].first);
-        void *pmem(memories[slot].second);
+        if (!memories[slot].kvmMap) {
+            DPRINTF(Kvm, "Skipping region marked as not usable by KVM\n");
+            continue;
+        }
+
+        const AddrRange &range(memories[slot].range);
+        void *pmem(memories[slot].pmem);
 
         if (pmem) {
             DPRINTF(Kvm, "Mapping region: 0x%p -> 0x%llx [size: 0x%llx]\n",
@@ -518,6 +526,22 @@ KvmVM::createDevice(uint32_t type, uint32_t flags)
 #else
     panic("Kernel headers don't support KVM_CREATE_DEVICE\n");
 #endif
+}
+
+void
+KvmVM::setSystem(System *s)
+{
+    panic_if(system != nullptr, "setSystem() can only be called once");
+    panic_if(s == nullptr, "setSystem() called with null System*");
+    system = s;
+}
+
+long
+KvmVM::contextIdToVCpuId(ContextID ctx) const
+{
+    assert(system != nullptr);
+    return dynamic_cast<BaseKvmCPU*>
+        (system->getThreadContext(ctx)->getCpuPtr())->getVCpuID();
 }
 
 int

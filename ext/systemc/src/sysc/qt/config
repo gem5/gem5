@@ -1,0 +1,392 @@
+#! /bin/sh
+
+# set -x
+
+: ${LN_S:="ln -s"}
+
+# rm -f Makefile Makefile.md README.md qtmd.h qtmdb.s qtmdc.c qtmds.s configuration
+rm -f qtmdc.c qtmds.s configuration
+
+case $1 in
+	axp*)
+		: "DEC AXP"
+		case $1 in
+			axp-osf1*)
+				: "Compile using /bin/cc under OSF 1.x."
+#				${LN_S} md/axp.1.Makefile Makefile.md
+				;;
+			axp-osf2*)
+				: "Compile using /bin/cc under OSF 2.x."
+#				${LN_S} md/axp.1.Makefile Makefile.md
+				;;
+			*)
+				: "Compile using GNU CC."
+#				${LN_S} md/axp.Makefile Makefile.md
+				;;
+		esac
+
+#		${LN_S} md/axp.h qtmd.h
+		${LN_S} md/axp.c qtmdc.c
+		${LN_S} md/axp.s qtmds.s
+#		${LN_S} md/axp_b.s qtmdb.s
+#		${LN_S} md/axp.README README.md
+		iter_init=1000000000
+		iter_runone=10000000
+		iter_blockint=10000000
+		iter_blockfloat=10000000
+		iter_vainit0=10000000
+		iter_vainit2=10000000
+		iter_vainit4=10000000
+		iter_vainit8=10000000
+		iter_vastart0=10000000
+		iter_vastart2=10000000
+		iter_vastart4=10000000
+		iter_vastart8=10000000
+		iter_bench_call_reg=10000000
+		iter_bench_call_imm=10000000
+		iter_bench_add=100000000
+		iter_bench_load=100000000
+		;;
+
+       hppa*)
+		: "HP's PA-RISC 1.1 processors."
+
+		case $1 in
+			hppa-cnx-spp*)
+				: "Convex SPP (PA-RISC 1.1 processors)."
+#				${LN_S} md/hppa-cnx.Makefile Makefile.md
+				;;
+			*)
+#				${LN_S} md/hppa.Makefile Makefile.md
+				;;
+		esac
+
+#		${LN_S} md/hppa.h qtmd.h
+#		${LN_S} md/null.c qtmdc.c
+		${LN_S} md/hppa.s qtmds.s
+#		${LN_S} md/hppa_b.s qtmdb.s
+		iter_init=10000000
+		iter_runone=1000000
+		iter_blockint=1000000
+		iter_blockfloat=1000000
+		iter_vainit0=1000000
+		iter_vainit2=1000000
+		iter_vainit4=1000000
+		iter_vainit8=1000000
+		iter_vastart0=1000000
+		iter_vastart2=1000000
+		iter_vastart4=1000000
+		iter_vastart8=1000000
+		iter_bench_call_reg=10000000
+		iter_bench_call_imm=10000000
+		iter_bench_add=100000000
+		iter_bench_load=100000000
+		;;
+
+	x86_64*)
+		case $1 in
+			iX86-ss*)
+				: "Assembler comments '//'"
+				sed 's/\/\*/\/\//' < md/i386_64.s > qtmds.s
+				;;
+				
+			*)
+				${LN_S} md/iX86_64.s qtmds.s
+				;;
+		esac
+		: "Intel X386 64-bit and compatibles"
+#		${LN_S} md/null.c qtmdc.c
+		iter_init=10000000
+		iter_runone=1000000
+		iter_blockint=1000000
+		iter_blockfloat=1000000
+		iter_vainit0=1000000
+		iter_vainit2=1000000
+		iter_vainit4=1000000
+		iter_vainit8=1000000
+		iter_vastart0=1000000
+		iter_vastart2=1000000
+		iter_vastart4=1000000
+		iter_vastart8=1000000
+		iter_bench_call_reg=1000000
+		iter_bench_call_imm=1000000
+		iter_bench_add=100000000
+		iter_bench_load=10000000
+		;;
+
+    iX86*)
+        case $1 in
+            iX86-ss*)
+                : "Assembler comments '//'"
+                sed 's/\/\*/\/\//' < md/i386.s > qtmds.s
+#               sed 's/\/\*/\/\//' < md/i386_b.s > qtmdb.s
+                ;;
+                
+            *)
+                ${LN_S} md/i386.s qtmds.s
+#               ${LN_S} md/i386_b.s qtmdb.s
+                ;;
+        esac
+        : "Intel 80386 and compatibles (not '286...)"
+#       ${LN_S} md/default.Makefile Makefile.md
+#       ${LN_S} md/i386.h qtmd.h
+#       ${LN_S} md/null.c qtmdc.c
+#       ${LN_S} md/i386.README README.md
+        iter_init=10000000
+        iter_runone=1000000
+        iter_blockint=1000000
+        iter_blockfloat=1000000
+        iter_vainit0=1000000
+        iter_vainit2=1000000
+        iter_vainit4=1000000
+        iter_vainit8=1000000
+        iter_vastart0=1000000
+        iter_vastart2=1000000
+        iter_vastart4=1000000
+        iter_vastart8=1000000
+        iter_bench_call_reg=1000000
+        iter_bench_call_imm=1000000
+        iter_bench_add=100000000
+        iter_bench_load=10000000
+        ;;
+
+
+	m68k)
+		: "Motorola 68000 family -- incomplete!"
+#		${LN_S} md/default.Makefile Makefile.md
+#		${LN_S} md/m68k.h qtmd.h
+#		${LN_S} md/null.c qtmdc.c
+		${LN_S} md/m68k.s qtmds.s
+#		${LN_S} md/m68k_b.s qtmdb.s
+#		${LN_S} md/null.README README.md
+		;;
+
+	m88k)
+		: "Motorola 88000 family"
+#		${LN_S} md/m88k.Makefile Makefile.md
+#		${LN_S} md/m88k.h qtmd.h
+		${LN_S} md/m88k.c qtmdc.c
+		${LN_S} md/m88k.s qtmds.s
+#		${LN_S} md/m88k_b.s qtmdb.s
+#		${LN_S} md/null.README README.md
+		iter_init=1000000
+		iter_runone=100000
+		iter_blockint=100000
+		iter_blockfloat=100000
+		iter_vainit0=100000
+		iter_vainit2=100000
+		iter_vainit4=100000
+		iter_vainit8=100000
+		iter_vastart0=100000
+		iter_vastart2=100000
+		iter_vastart4=100000
+		iter_vastart8=100000
+		iter_bench_call_reg=100000000
+		iter_bench_call_imm=100000000
+		iter_bench_add=1000000000
+		iter_bench_load=100000000
+		;;
+
+	mips*)
+		: "MIPS R2000 and R3000."
+
+		case $1 in
+			mips-irix5*)
+				: "Silicon Graphics Irix with dynamic linking"
+				: "Use mips for irix4."
+				${LN_S} md/mips-irix5.s qtmds.s
+				;;
+			*)
+				${LN_S} md/mips.s qtmds.s
+				;;
+		esac
+
+#		${LN_S} md/default.Makefile Makefile.md
+#		${LN_S} md/mips.h qtmd.h
+#		${LN_S} md/null.c qtmdc.c
+#		${LN_S} md/mips_b.s qtmdb.s
+#		${LN_S} md/null.README README.md
+		iter_init=10000000
+		iter_runone=10000000
+		iter_blockint=10000000
+		iter_blockfloat=10000000
+		iter_vainit0=1000000
+		iter_vainit2=1000000
+		iter_vainit4=1000000
+		iter_vainit8=1000000
+		iter_vastart0=1000000
+		iter_vastart2=1000000
+		iter_vastart4=1000000
+		iter_vastart8=1000000
+		iter_bench_call_reg=100000000
+		iter_bench_call_imm=100000000
+		iter_bench_add=1000000000
+		iter_bench_load=100000000
+		;;
+
+	sparc*)
+		: "SPARC processors"
+		case $1 in
+			sparc-os2*)
+				sed 's/_qt_/qt_/' md/sparc.s > qtmds.s
+#				sed 's/_b_/b_/' md/sparc_b.s > qtmdb.s
+#				${LN_S} md/solaris.README README.md
+				;;
+			*)
+				${LN_S} md/sparc.s qtmds.s
+#				${LN_S} md/sparc_b.s qtmdb.s
+#				${LN_S} md/null.README README.md
+				;;
+		esac
+
+ 		${LN_S} md/default.Makefile Makefile.md
+#		${LN_S} md/sparc.h qtmd.h
+#		${LN_S} md/null.c qtmdc.c
+		iter_init=10000000
+		iter_runone=1000000
+		iter_blockint=1000000
+		iter_blockfloat=1000000
+		iter_vainit0=1000000
+		iter_vainit2=1000000
+		iter_vainit4=1000000
+		iter_vainit8=1000000
+		iter_vastart0=1000000
+		iter_vastart2=1000000
+		iter_vastart4=1000000
+		iter_vastart8=1000000
+		iter_bench_call_reg=10000000
+		iter_bench_call_imm=10000000
+		iter_bench_add=100000000
+		iter_bench_load=100000000
+		;;
+
+	vax*)
+		: "DEC VAX processors."
+#		${LN_S} md/default.Makefile Makefile.md
+#		${LN_S} md/vax.h qtmd.h
+#		${LN_S} md/null.c qtmdc.c
+		${LN_S} md/vax.s qtmds.s
+#		${LN_S} md/vax_b.s qtmdb.s
+#		${LN_S} md/null.README README.md
+		iter_init=1000000
+		iter_runone=100000
+		iter_blockint=100000
+		iter_blockfloat=100000
+		iter_vainit0=100000
+		iter_vainit2=100000
+		iter_vainit4=100000
+		iter_vainit8=100000
+		iter_vastart0=100000
+		iter_vastart2=100000
+		iter_vastart4=100000
+		iter_vastart8=100000
+		iter_bench_call_reg=10000000
+		iter_bench_call_imm=10000000
+		iter_bench_add=10000000
+		iter_bench_load=1000000
+		;;
+
+	ksr1)
+		: "Kendall Square Research model KSR-1."
+		: "Varargs is not currently supported."
+#		${LN_S} md/ksr1.Makefile Makefile.md
+#		${LN_S} md/ksr1.h qtmd.h
+#		${LN_S} md/null.c qtmdc.c
+		${LN_S} md/ksr1.s qtmds.s
+#		${LN_S} md/ksr1_b.s qtmdb.s
+#		${LN_S} md/null.README README.md
+		iter_init=1000000
+		iter_runone=100000
+		iter_blockint=100000
+		iter_blockfloat=100000
+		iter_vainit0=100000
+		iter_vainit2=100000
+		iter_vainit4=100000
+		iter_vainit8=100000
+		iter_vastart0=100000
+		iter_vastart2=100000
+		iter_vastart4=100000
+		iter_vastart8=100000
+		iter_bench_call_reg=10000000
+		iter_bench_call_imm=10000000
+		iter_bench_add=10000000
+		iter_bench_load=1000000
+		;;
+
+    powerpc*)
+        : "PowerPC IBM/Motorola processors."
+
+        case $1 in
+			powerpc-apple-macosx*)
+				: "PowerPC using Mach Application Binary Interface"
+                : "NOTICE: Darwin assembler syntax is used:"
+                : "  (i.e. registers are named rx not %rx)"
+                ${LN_S} md/default.Makefile Makefile.md
+#               ${LN_S} md/powerpc_mach.h qtmd.h
+                ${LN_S} md/powerpc_mach.s qtmds.s
+                ;;
+            powerpc-linux*)
+                : "PowerPC using System V Application Binary Interface"
+                : "  (e.g. LinuxPPC)"
+                : "Use powerpc-darwin for MacOS X and other systems based on Mac
+h ABI"
+#               ${LN_S} md/powerpc_sys5.h qtmd.h
+                ${LN_S} md/powerpc_sys5.s qtmds.s
+                ;;
+            *)
+                echo "Unknown configuration"
+                echo "See md/powerpc.README for documentation"
+                echo "Use powerpc-darwin for MacOS X and other systems based on
+Mach ABI"
+                echo "Use powerpc-linux for Linux and other systems based on Sys
+tem V ABI"
+                exit 1
+                ;;
+
+        esac
+
+        ${LN_S} md/powerpc.c qtmdc.c
+        ${LN_S} md/powerpc.README README.md
+        ;;
+
+
+	pthreads*)
+		: Posix thread support rather than Quick threads.
+#		${LN_S} md/hppa.h qtmd.h
+#		${LN_S} md/null.c qtmdc.c
+#		${LN_S} md/null.s qtmds.s
+#		${LN_S} md/hppa_b.s qtmdb.s
+#		cp md/pthreads.Makefile Makefile
+		exit 0
+		;;
+
+	clean)
+		: Deconfigure
+		exit 0
+		;;
+
+	*)
+		echo "Unknown configuration"
+		exit 1
+		;;
+esac
+
+# cat Makefile.md Makefile.base > Makefile
+
+echo set config_machine=$1 >> configuration
+echo set config_init=$iter_init >> configuration
+echo set config_runone=$iter_runone >> configuration
+echo set config_blockint=$iter_blockint >> configuration
+echo set config_blockfloat=$iter_blockfloat >> configuration
+echo set config_vainit0=$iter_vainit0 >> configuration
+echo set config_vainit2=$iter_vainit2 >> configuration
+echo set config_vainit4=$iter_vainit4 >> configuration
+echo set config_vainit8=$iter_vainit8 >> configuration
+echo set config_vastart0=$iter_vastart0 >> configuration
+echo set config_vastart2=$iter_vastart2 >> configuration
+echo set config_vastart4=$iter_vastart4 >> configuration
+echo set config_vastart8=$iter_vastart8 >> configuration
+echo set config_bcall_reg=$iter_bench_call_reg >> configuration
+echo set config_bcall_imm=$iter_bench_call_imm >> configuration
+echo set config_b_add=$iter_bench_add >> configuration
+echo set config_b_load=$iter_bench_load >> configuration

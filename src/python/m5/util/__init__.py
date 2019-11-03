@@ -1,3 +1,15 @@
+# Copyright (c) 2016 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2008-2009 The Hewlett-Packard Development Company
 # Copyright (c) 2004-2006 The Regents of The University of Michigan
 # All rights reserved.
@@ -27,44 +39,45 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+
 import os
 import re
 import sys
 
-import convert
-import jobfile
+from . import convert
+from . import jobfile
 
-from attrdict import attrdict, multiattrdict, optiondict
-from code_formatter import code_formatter
-from multidict import multidict
-from orderdict import orderdict
-from smartdict import SmartDict
-from sorteddict import SortedDict
+from .attrdict import attrdict, multiattrdict, optiondict
+from .code_formatter import code_formatter
+from .multidict import multidict
+from .smartdict import SmartDict
+from .sorteddict import SortedDict
 
 # panic() should be called when something happens that should never
 # ever happen regardless of what the user does (i.e., an acutal m5
 # bug).
 def panic(fmt, *args):
-    print >>sys.stderr, 'panic:', fmt % args
+    print('panic:', fmt % args, file=sys.stderr)
     sys.exit(1)
 
 # fatal() should be called when the simulation cannot continue due to
 # some condition that is the user's fault (bad configuration, invalid
 # arguments, etc.) and not a simulator bug.
 def fatal(fmt, *args):
-    print >>sys.stderr, 'fatal:', fmt % args
+    print('fatal:', fmt % args, file=sys.stderr)
     sys.exit(1)
 
 # warn() should be called when the user should be warned about some condition
 # that may or may not be the user's fault, but that they should be made aware
 # of as it may affect the simulation or results.
 def warn(fmt, *args):
-    print >>sys.stderr, 'warn:', fmt % args
+    print('warn:', fmt % args, file=sys.stderr)
 
 # inform() should be called when the user should be informed about some
 # condition that they may be interested in.
 def inform(fmt, *args):
-    print >>sys.stdout, 'info:', fmt % args
+    print('info:', fmt % args, file=sys.stdout)
 
 class Singleton(type):
     def __call__(cls, *args, **kwargs):
@@ -114,7 +127,7 @@ def compareVersions(v1, v2):
         elif isinstance(v, str):
             return map(lambda x: int(re.match('\d+', x).group()), v.split('.'))
         else:
-            raise TypeError
+            raise TypeError()
 
     v1 = make_version_list(v1)
     v2 = make_version_list(v2)
@@ -154,14 +167,14 @@ def printList(items, indent=4):
     line = ' ' * indent
     for i,item in enumerate(items):
         if len(line) + len(item) > 76:
-            print line
+            print(line)
             line = ' ' * indent
 
         if i < len(items) - 1:
             line += '%s, ' % item
         else:
             line += item
-            print line
+            print(line)
 
 def readCommand(cmd, **kwargs):
     """run the command cmd, read the results and return them
@@ -180,7 +193,7 @@ def readCommand(cmd, **kwargs):
     kwargs.setdefault('close_fds', True)
     try:
         subp = Popen(cmd, **kwargs)
-    except Exception, e:
+    except Exception as e:
         if no_exception:
             return exception
         raise
@@ -192,6 +205,11 @@ def makeDir(path):
     ensure that it is a directory"""
     if os.path.exists(path):
         if not os.path.isdir(path):
-            raise AttributeError, "%s exists but is not directory" % path
+            raise AttributeError("%s exists but is not directory" % path)
     else:
         os.mkdir(path)
+
+def isInteractive():
+    """Check if the simulator is run interactively or in a batch environment"""
+
+    return sys.__stdin__.isatty()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -143,10 +143,7 @@ class LSQ : public Named
         PacketPtr packet;
 
         /** The underlying request of this LSQRequest */
-        Request request;
-
-        /** Fault generated performing this request */
-        Fault fault;
+        RequestPtr request;
 
         /** Res from pushRequest */
         uint64_t *res;
@@ -159,6 +156,9 @@ class LSQ : public Named
         /** This in an access other than a normal cacheable load
          *  that's visited the memory system */
         bool issuedToMemory;
+
+        /** Address translation is delayed due to table walk */
+        bool isTranslationDelayed;
 
         enum LSQRequestState
         {
@@ -186,7 +186,14 @@ class LSQ : public Named
 
       protected:
         /** BaseTLB::Translation interface */
-        void markDelayed() { }
+        void markDelayed() { isTranslationDelayed = true; }
+
+        /** Instructions may want to suppress translation faults (e.g.
+         *  non-faulting vector loads).*/
+        void tryToSuppressFault();
+
+        void disableMemAccess();
+        void completeDisabledMemAccess();
 
       public:
         LSQRequest(LSQ &port_, MinorDynInstPtr inst_, bool isLoad_,
@@ -272,7 +279,7 @@ class LSQ : public Named
     {
       protected:
         /** TLB interace */
-        void finish(const Fault &fault_, RequestPtr request_,
+        void finish(const Fault &fault_, const RequestPtr &request_,
                     ThreadContext *tc, BaseTLB::Mode mode)
         { }
 
@@ -333,7 +340,7 @@ class LSQ : public Named
     {
       protected:
         /** TLB interace */
-        void finish(const Fault &fault_, RequestPtr request_,
+        void finish(const Fault &fault_, const RequestPtr &request_,
                     ThreadContext *tc, BaseTLB::Mode mode);
 
         /** Has my only packet been sent to the memory system but has not
@@ -377,20 +384,7 @@ class LSQ : public Named
     {
       protected:
         /** Event to step between translations */
-        class TranslationEvent : public Event
-        {
-          protected:
-            SplitDataRequest &owner;
-
-          public:
-            TranslationEvent(SplitDataRequest &owner_)
-                : owner(owner_) { }
-
-            void process()
-            { owner.sendNextFragmentToTranslation(); }
-        };
-
-        TranslationEvent translationEvent;
+        EventFunctionWrapper translationEvent;
       protected:
         /** Number of fragments this request is split into */
         unsigned int numFragments;
@@ -412,14 +406,14 @@ class LSQ : public Named
 
         /** Fragment Requests corresponding to the address ranges of
          *  each fragment */
-        std::vector<Request *> fragmentRequests;
+        std::vector<RequestPtr> fragmentRequests;
 
         /** Packets matching fragmentRequests to issue fragments to memory */
         std::vector<Packet *> fragmentPackets;
 
       protected:
         /** TLB response interface */
-        void finish(const Fault &fault_, RequestPtr request_,
+        void finish(const Fault &fault_, const RequestPtr &request_,
                     ThreadContext *tc, BaseTLB::Mode mode);
 
       public:
@@ -454,7 +448,8 @@ class LSQ : public Named
         { return numIssuedFragments != numRetiredFragments; }
 
         /** Have we stepped past the end of fragmentPackets? */
-        bool sentAllPackets() { return numIssuedFragments == numFragments; }
+        bool sentAllPackets()
+        { return numIssuedFragments == numTranslatedFragments; }
 
         /** For loads, paste the response data into the main
          *  response packet */
@@ -537,7 +532,7 @@ class LSQ : public Named
     /** Most recent execSeqNum of a memory barrier instruction or
      *  0 if there are no in-flight barriers.  Useful as a
      *  dependency for early-issued memory operations */
-    InstSeqNum lastMemBarrier;
+    std::vector<InstSeqNum> lastMemBarrier;
 
   public:
     /** Retry state of last issued memory transfer */
@@ -640,6 +635,9 @@ class LSQ : public Named
     /** Can a request be sent to the memory system */
     bool canSendToMemorySystem();
 
+    /** Snoop other threads monitors on memory system accesses */
+    void threadSnoop(LSQRequestPtr request);
+
   public:
     LSQ(std::string name_, std::string dcache_port_name_,
         MinorCPU &cpu_, Execute &execute_,
@@ -691,7 +689,8 @@ class LSQ : public Named
     void issuedMemBarrierInst(MinorDynInstPtr inst);
 
     /** Get the execSeqNum of the last issued memory barrier */
-    InstSeqNum getLastMemBarrier() const { return lastMemBarrier; }
+    InstSeqNum getLastMemBarrier(ThreadID thread_id) const
+    { return lastMemBarrier[thread_id]; }
 
     /** Is there nothing left in the LSQ */
     bool isDrained();
@@ -705,10 +704,13 @@ class LSQ : public Named
     void completeMemBarrierInst(MinorDynInstPtr inst,
         bool committed);
 
-    /** Single interface for readMem/writeMem to issue requests into
+    /** Single interface for readMem/writeMem/amoMem to issue requests into
      *  the LSQ */
-    void pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
-        unsigned int size, Addr addr, unsigned int flags, uint64_t *res);
+    Fault pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
+                      unsigned int size, Addr addr, Request::Flags flags,
+                      uint64_t *res, AtomicOpFunctorPtr amo_op,
+                      const std::vector<bool>& byteEnable =
+                          std::vector<bool>());
 
     /** Push a predicate failed-representing request into the queues just
      *  to maintain commit order */
@@ -728,7 +730,7 @@ class LSQ : public Named
 /** Make a suitable packet for the given request.  If the request is a store,
  *  data will be the payload data.  If sender_state is NULL, it won't be
  *  pushed into the packet as senderState */
-PacketPtr makePacketForRequest(Request &request, bool isLoad,
+PacketPtr makePacketForRequest(const RequestPtr &request, bool isLoad,
     Packet::SenderState *sender_state = NULL, PacketDataPtr data = NULL);
 }
 

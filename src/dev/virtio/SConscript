@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2014 ARM Limited
+# Copyright (c) 2014, 2016 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -54,7 +54,7 @@ Source('block.cc')
 Source('fs9p.cc')
 
 DebugFlag('VIO', 'VirtIO base functionality')
-DebugFlag('VIOPci', 'VirtIO PCI transport')
+DebugFlag('VIOIface', 'VirtIO transport')
 DebugFlag('VIOConsole', 'VirtIO console device')
 DebugFlag('VIOBlock', 'VirtIO block device')
 DebugFlag('VIO9P', 'General 9p over VirtIO debugging')

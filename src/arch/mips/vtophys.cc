@@ -31,9 +31,10 @@
  *          Jaidev Patwardhan
  */
 
+#include "arch/mips/vtophys.hh"
+
 #include <string>
 
-#include "arch/mips/vtophys.hh"
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"

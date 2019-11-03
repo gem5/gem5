@@ -31,14 +31,13 @@
 #ifndef __DEV_X86_CMOS_HH__
 #define __DEV_X86_CMOS_HH__
 
+#include "dev/intpin.hh"
 #include "dev/io_device.hh"
 #include "dev/mc146818.hh"
 #include "params/Cmos.hh"
 
 namespace X86ISA
 {
-
-class IntSourcePin;
 
 class Cmos : public BasicPioDevice
 {
@@ -56,13 +55,17 @@ class Cmos : public BasicPioDevice
 
     class X86RTC : public MC146818
     {
-      protected:
-        IntSourcePin * intPin;
       public:
+        std::vector<IntSourcePin<X86RTC> *> intPin;
+
         X86RTC(EventManager *em, const std::string &n, const struct tm time,
-                bool bcd, Tick frequency, IntSourcePin * _intPin) :
-            MC146818(em, n, time, bcd, frequency), intPin(_intPin)
+                bool bcd, Tick frequency, int int_pin_count) :
+            MC146818(em, n, time, bcd, frequency)
         {
+            for (int i = 0; i < int_pin_count; i++) {
+                intPin.push_back(new IntSourcePin<X86RTC>(
+                            csprintf("%s.int_pin[%d]", n, i), i, this));
+            }
         }
       protected:
         void handleEvent();
@@ -72,10 +75,20 @@ class Cmos : public BasicPioDevice
     typedef CmosParams Params;
 
     Cmos(const Params *p) : BasicPioDevice(p, 2), latency(p->pio_latency),
-        rtc(this, "rtc", p->time, true, ULL(5000000000), p->int_pin)
+        rtc(this, name() + ".rtc", p->time, true, ULL(5000000000),
+                p->port_int_pin_connection_count)
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;
+    }
+
+    Port &
+    getPort(const std::string &if_name, PortID idx=InvalidPortID) override
+    {
+        if (if_name == "int_pin")
+            return *rtc.intPin.at(idx);
+        else
+            return BasicPioDevice::getPort(if_name, idx);
     }
 
     Tick read(PacketPtr pkt) override;

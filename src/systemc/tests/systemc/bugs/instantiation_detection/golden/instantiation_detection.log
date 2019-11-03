@@ -1,0 +1,161 @@
+SystemC Simulation
+
+Error: (E100) port specified outside of module: port 'port_0' (sc_port_base)
+In file: <removed by verify.pl>
+
+Error: (E122) sc_export specified outside of module: export 'export_0' (sc_object)
+In file: <removed by verify.pl>
+
+---8<--- end_of_elaboration  ---8<---
+
+Error: (E529) insert module failed: elaboration done
+In file: <removed by verify.pl>
+
+Error: (E110) insert port failed: elaboration done: port 'dut.port_0' (sc_port_base)
+In file: <removed by verify.pl>
+
+Error: (E121) insert sc_export failed: elaboration done: export 'dut.export_0' (sc_object)
+In file: <removed by verify.pl>
+
+Error: (E113) insert primitive channel failed: elaboration done
+In file: <removed by verify.pl>
+
+--->8--- end_of_elaboration  --->8---
+
+---8<--- start_of_simulation ---8<---
+
+Error: (E529) insert module failed: elaboration done
+In file: <removed by verify.pl>
+
+Error: (E110) insert port failed: elaboration done: port 'dut.port_1' (sc_port_base)
+In file: <removed by verify.pl>
+
+Error: (E121) insert sc_export failed: elaboration done: export 'dut.export_1' (sc_object)
+In file: <removed by verify.pl>
+
+Error: (E113) insert primitive channel failed: elaboration done
+In file: <removed by verify.pl>
+
+--->8--- start_of_simulation --->8---
+
+Error: (E529) insert module failed: simulation running
+In file: <removed by verify.pl>
+In process: dut.create_things_1 @ 0 s
+
+Error: (E110) insert port failed: simulation running: port 'dut.create_things_1.port_0' (sc_port_base)
+In file: <removed by verify.pl>
+In process: dut.create_things_1 @ 0 s
+
+Error: (E121) insert sc_export failed: simulation running: export 'dut.create_things_1.export_0' (sc_object)
+In file: <removed by verify.pl>
+In process: dut.create_things_1 @ 0 s
+
+Error: (E113) insert primitive channel failed: simulation running
+In file: <removed by verify.pl>
+In process: dut.create_things_1 @ 0 s
+
+Error: (E542) call to SC_THREAD in sc_module while simulation running: dut.create_things_1.create_things
+In file: <removed by verify.pl>
+In process: dut.create_things_1 @ 0 s
+
+Error: (E541) call to SC_METHOD in sc_module while simulation running: dut.create_things_1.create_things
+In file: <removed by verify.pl>
+In process: dut.create_things_1 @ 0 s
+
+Error: (E529) insert module failed: simulation running
+In file: <removed by verify.pl>
+In process: dut.create_things_3 @ 0 s
+
+Error: (E110) insert port failed: simulation running: port 'dut.create_things_3.port_0' (sc_port_base)
+In file: <removed by verify.pl>
+In process: dut.create_things_3 @ 0 s
+
+Error: (E121) insert sc_export failed: simulation running: export 'dut.create_things_3.export_0' (sc_object)
+In file: <removed by verify.pl>
+In process: dut.create_things_3 @ 0 s
+
+Error: (E113) insert primitive channel failed: simulation running
+In file: <removed by verify.pl>
+In process: dut.create_things_3 @ 0 s
+
+Error: (E542) call to SC_THREAD in sc_module while simulation running: dut.create_things_3.create_things
+In file: <removed by verify.pl>
+In process: dut.create_things_3 @ 0 s
+
+Error: (E541) call to SC_METHOD in sc_module while simulation running: dut.create_things_3.create_things
+In file: <removed by verify.pl>
+In process: dut.create_things_3 @ 0 s
+
+Error: (E529) insert module failed: simulation running
+In file: <removed by verify.pl>
+In process: dut.create_things @ 0 s
+
+Error: (E110) insert port failed: simulation running: port 'dut.create_things.port_0' (sc_port_base)
+In file: <removed by verify.pl>
+In process: dut.create_things @ 0 s
+
+Error: (E121) insert sc_export failed: simulation running: export 'dut.create_things.export_0' (sc_object)
+In file: <removed by verify.pl>
+In process: dut.create_things @ 0 s
+
+Error: (E113) insert primitive channel failed: simulation running
+In file: <removed by verify.pl>
+In process: dut.create_things @ 0 s
+
+Error: (E542) call to SC_THREAD in sc_module while simulation running: dut.create_things.create_things
+In file: <removed by verify.pl>
+In process: dut.create_things @ 0 s
+
+Error: (E541) call to SC_METHOD in sc_module while simulation running: dut.create_things.create_things
+In file: <removed by verify.pl>
+In process: dut.create_things @ 0 s
+
+Error: (E529) insert module failed: simulation running
+In file: <removed by verify.pl>
+In process: dut.create_things_0 @ 0 s
+
+Error: (E110) insert port failed: simulation running: port 'dut.create_things_0.port_0' (sc_port_base)
+In file: <removed by verify.pl>
+In process: dut.create_things_0 @ 0 s
+
+Error: (E121) insert sc_export failed: simulation running: export 'dut.create_things_0.export_0' (sc_object)
+In file: <removed by verify.pl>
+In process: dut.create_things_0 @ 0 s
+
+Error: (E113) insert primitive channel failed: simulation running
+In file: <removed by verify.pl>
+In process: dut.create_things_0 @ 0 s
+
+Error: (E542) call to SC_THREAD in sc_module while simulation running: dut.create_things_0.create_things
+In file: <removed by verify.pl>
+In process: dut.create_things_0 @ 0 s
+
+Error: (E541) call to SC_METHOD in sc_module while simulation running: dut.create_things_0.create_things
+In file: <removed by verify.pl>
+In process: dut.create_things_0 @ 0 s
+
+Error: (E529) insert module failed: simulation running
+In file: <removed by verify.pl>
+In process: dut.create_things_2 @ 0 s
+
+Error: (E110) insert port failed: simulation running: port 'dut.create_things_2.port_0' (sc_port_base)
+In file: <removed by verify.pl>
+In process: dut.create_things_2 @ 0 s
+
+Error: (E121) insert sc_export failed: simulation running: export 'dut.create_things_2.export_0' (sc_object)
+In file: <removed by verify.pl>
+In process: dut.create_things_2 @ 0 s
+
+Error: (E113) insert primitive channel failed: simulation running
+In file: <removed by verify.pl>
+In process: dut.create_things_2 @ 0 s
+
+Error: (E542) call to SC_THREAD in sc_module while simulation running: dut.create_things_2.create_things
+In file: <removed by verify.pl>
+In process: dut.create_things_2 @ 0 s
+
+Error: (E541) call to SC_METHOD in sc_module while simulation running: dut.create_things_2.create_things
+In file: <removed by verify.pl>
+In process: dut.create_things_2 @ 0 s
+
+Success

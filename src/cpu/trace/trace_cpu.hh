@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2015 ARM Limited
+ * Copyright (c) 2013 - 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -136,10 +136,9 @@
  * Strictly-ordered requests are skipped and the dependencies on such requests
  * are handled by simply marking them complete immediately.
  *
- * The simulated seconds can be calculated as the difference between the
- * final_tick stat and the tickOffset stat. A CountedExitEvent that contains a
- * static int belonging to the Trace CPU class as a down counter is used to
- * implement multi Trace CPU simulation exit.
+ * A CountedExitEvent that contains a static int belonging to the Trace CPU
+ * class as a down counter is used to implement multi Trace CPU simulation
+ * exit.
  */
 
 class TraceCPU : public BaseCPU
@@ -171,8 +170,14 @@ class TraceCPU : public BaseCPU
      */
     Counter totalOps() const
     {
-        return dcacheGen.getMicroOpCount();
+        return numOps.value();
     }
+
+    /*
+     * Set the no. of ops when elastic data generator completes executing a
+     * node.
+     */
+    void updateNumOps(uint64_t rob_num);
 
     /* Pure virtual function in BaseCPU. Do nothing. */
     void wakeup(ThreadID tid = 0)
@@ -795,6 +800,14 @@ class TraceCPU : public BaseCPU
             /** Input file stream for the protobuf trace */
             ProtoInputStream trace;
 
+            /**
+             * A multiplier for the compute delays in the trace to modulate
+             * the Trace CPU frequency either up or down. The Trace CPU's
+             * clock domain frequency must also be set to match the expected
+             * result of frequency scaling.
+             */
+            const double timeMultiplier;
+
             /** Count of committed ops read from trace plus the filtered ops */
             uint64_t microOpCount;
 
@@ -809,8 +822,10 @@ class TraceCPU : public BaseCPU
              * Create a trace input stream for a given file name.
              *
              * @param filename Path to the file to read from
+             * @param time_multiplier used to scale the compute delays
              */
-            InputStream(const std::string& filename);
+            InputStream(const std::string& filename,
+                        const double time_multiplier);
 
             /**
              * Reset the stream such that it can be played once
@@ -840,19 +855,19 @@ class TraceCPU : public BaseCPU
         /* Constructor */
         ElasticDataGen(TraceCPU& _owner, const std::string& _name,
                    MasterPort& _port, MasterID master_id,
-                   const std::string& trace_file, uint16_t max_rob,
-                   uint16_t max_stores, uint16_t max_loads)
+                   const std::string& trace_file, TraceCPUParams *params)
             : owner(_owner),
               port(_port),
               masterID(master_id),
-              trace(trace_file),
+              trace(trace_file, 1.0 / params->freqMultiplier),
               genName(owner.name() + ".elastic" + _name),
               retryPkt(nullptr),
               traceComplete(false),
               nextRead(false),
               execComplete(false),
               windowSize(trace.getWindowSize()),
-              hwResource(max_rob, max_stores, max_loads)
+              hwResource(params->sizeROB, params->sizeStoreBuffer,
+                         params->sizeLoadBuffer)
         {
             DPRINTF(TraceCPUData, "Window size in the trace is %d.\n",
                     windowSize);
@@ -865,6 +880,14 @@ class TraceCPU : public BaseCPU
          * @return Tick when first packet must be sent
          */
         Tick init();
+
+        /**
+         * Adjust traceOffset based on what TraceCPU init() determines on
+         * comparing the offsets in the fetch request and elastic traces.
+         *
+         * @param trace_offset trace offset set by comparing both traces
+         */
+        void adjustInitTraceOffset(Tick& offset);
 
         /** Returns name of the ElasticDataGen instance. */
         const std::string& name() const { return genName; }
@@ -1059,10 +1082,10 @@ class TraceCPU : public BaseCPU
     void schedDcacheNext();
 
     /** Event for the control flow method schedIcacheNext() */
-    EventWrapper<TraceCPU, &TraceCPU::schedIcacheNext> icacheNextEvent;
+    EventFunctionWrapper icacheNextEvent;
 
     /** Event for the control flow method schedDcacheNext() */
-    EventWrapper<TraceCPU, &TraceCPU::schedDcacheNext> dcacheNextEvent;
+    EventFunctionWrapper dcacheNextEvent;
 
     /** This is called when either generator finishes executing from the trace */
     void checkAndSchedExitEvent();
@@ -1071,10 +1094,12 @@ class TraceCPU : public BaseCPU
     bool oneTraceComplete;
 
     /**
-     * This is stores the tick of the first instruction fetch request
-     * which is later used for dumping the tickOffset stat.
+     * This stores the time offset in the trace, which is taken away from
+     * the ready times of requests. This is specially useful because the time
+     * offset can be very large if the traces are generated from the middle of
+     * a program.
      */
-    Tick firstFetchTick;
+    Tick traceOffset;
 
     /**
      * Number of Trace CPUs in the system used as a shared variable and passed
@@ -1091,6 +1116,25 @@ class TraceCPU : public BaseCPU
     */
     CountedExitEvent *execCompleteEvent;
 
+    /**
+     * Exit when any one Trace CPU completes its execution. If this is
+     * configured true then the execCompleteEvent is not scheduled.
+     */
+    const bool enableEarlyExit;
+
+    /**
+      * Interval of committed instructions specified by the user at which a
+      * progress info message is printed
+      */
+    const uint64_t progressMsgInterval;
+
+    /*
+     * The progress msg threshold is kept updated to the next multiple of the
+     * progress msg interval. As soon as the threshold is reached, an info
+     * message is printed.
+     */
+    uint64_t progressMsgThreshold;
+
     Stats::Scalar numSchedDcacheEvent;
     Stats::Scalar numSchedIcacheEvent;
 
@@ -1099,20 +1143,13 @@ class TraceCPU : public BaseCPU
     /** Stat for the CPI. This is really cycles per micro-op and not inst. */
     Stats::Formula cpi;
 
-    /**
-     * The first execution tick is dumped as a stat so that the simulated
-     * seconds for a trace replay can be calculated as a difference between the
-     * final_tick stat and the tickOffset stat
-     */
-    Stats::Scalar tickOffset;
-
   public:
 
     /** Used to get a reference to the icache port. */
-    MasterPort &getInstPort() { return icachePort; }
+    Port &getInstPort() { return icachePort; }
 
     /** Used to get a reference to the dcache port. */
-    MasterPort &getDataPort() { return dcachePort; }
+    Port &getDataPort() { return dcachePort; }
 
     void regStats();
 };

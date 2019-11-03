@@ -1,0 +1,89 @@
+This is a source code distribution for QuickThreads.  QuickThreads is a
+toolkit for building threads packages; it is described in detail in the
+University of Washington CS&E Technical report #93-05-06, available via
+anonymous ftp from `ftp.cs.washington.edu' (128.95.1.4, as of Oct. '94)
+in `tr/1993/05/UW-CSE-93-05-06.PS.Z'.
+
+This distribution shows basic ideas in QuickThreads and elaborates with
+example implementations for a gaggle of machines.  As of October those
+machines included:
+
+	80386 faimly
+	88000 faimily
+	DEC AXP (Alpha) family
+	HP-PA family
+	KSR
+	MIPS family
+	SPARC V8 family
+	VAX family
+
+Configuration, build, and installation are described in INSTALL.
+
+Be aware: that there is no varargs code for the KSR.
+
+The HP-PA port was designed to work with both HP workstations
+and Convex SPP computers. It was generously provided by Uwe Reder
+<uereder@cip.informatik.uni-erlangen.de>. It is part of the ELiTE
+(Erlangen Lightweight Thread Environment) project directed by 
+Frank Bellosa <bellosa@informatik.uni-erlangen.de> at the Operating 
+Systems Department of the University of Erlangen (Germany).
+
+Other contributors include: Weihaw Chuang, Richard O'Keefe,
+Laurent Perron, John Polstra, Shinji Suzuki, Assar Westerlund,
+thanks also to Peter Buhr and Dirk Grunwald.
+
+
+Here is a brief summary:
+
+QuickThreads is a toolkit for building threads packages.  It is my hope
+that you'll find it easier to use QuickThreads normally than to take it
+and modify the raw cswap code to fit your application.  The idea behind
+QuickThreads is that it should make it easy for you to write & retarget
+threads packages.  If you want the routine `t_create' to create threads
+and `t_block' to suspend threads, you write them using the QuickThreads
+`primitive' operations `QT_SP', `QT_INIT', and `QT_BLOCK', that perform
+machine-dependent initialization and blocking, plus code you supply for
+performing the portable operatons.  For example, you might write:
+
+	t_create (func, arg)
+	{
+	  stk = malloc (STKSIZE);
+	  stackbase = QT_SP (stk, STKSIZE);
+	  sp = QT_INIT (stakcbase, func, arg);
+	  qput (runq, sp);
+	}
+
+Threads block by doing something like:
+
+	t_block()
+	{
+	  sp_next = qget (runq);
+	  QT_BLOCK (helper, runq, sp_next);
+	  // wake up again here
+	}
+
+	// called by QT_BLOCK after the old thread has blocked,
+	// puts the old thread on the queue `onq'.
+	helper (sp_old, onq)
+	{
+	  qput (onq, sp_old);
+	}
+
+(Of course) it's actually a bit more complex than that, but the general
+idea is that you write portable code to allocate stacks and enqueue and
+dequeue threads.  Than, to get your threads package up and running on a
+different machine, you just reconfigure QuickThreads and recompile, and
+that's it.
+
+The QuickThreads `distribution' includes a sample threads package (look
+at stp.{c,h}) that is written in terms of QuickThreads operations.  The
+TR mentioned above explains the simple threads package in detail.
+
+
+
+If you do use QuickThreads, I'd like to hear both about what worked for
+you and what didn't work, problems you had, insights gleaned, etc.
+
+Let me know what you think.
+
+David Keppel <pardo@cs.washington.edu>

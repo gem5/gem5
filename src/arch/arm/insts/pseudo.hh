@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014,2016,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -56,9 +56,11 @@ class DecoderFaultInst : public ArmStaticInst
   public:
     DecoderFaultInst(ExtMachInst _machInst);
 
-    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+    Fault execute(ExecContext *xc,
+                  Trace::InstRecord *traceData) const override;
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 /**
@@ -80,10 +82,11 @@ class FailUnimplemented : public ArmStaticInst
     FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst,
                       const std::string& _fullMnemonic);
 
-    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+    Fault execute(ExecContext *xc,
+                  Trace::InstRecord *traceData) const override;
 
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 /**
@@ -109,23 +112,26 @@ class WarnUnimplemented : public ArmStaticInst
     WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst,
                       const std::string& _fullMnemonic);
 
-    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+    Fault execute(ExecContext *xc,
+                  Trace::InstRecord *traceData) const override;
 
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
-class FlushPipeInst : public ArmStaticInst
+/**
+ * This class is modelling instructions which are not going to be
+ * executed since they are flagged as Illegal Execution Instructions
+ * (PSTATE.IL = 1 or CPSR.IL = 1).
+ * The sole purpose of this instruction is to generate an appropriate
+ * fault when executed.
+ */
+class IllegalExecInst : public ArmStaticInst
 {
   public:
-    FlushPipeInst(const char *_mnemonic, ExtMachInst _machInst);
+    IllegalExecInst(ExtMachInst _machInst);
 
     Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
-
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-
 };
-
 
 #endif

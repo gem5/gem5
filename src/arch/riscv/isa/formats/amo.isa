@@ -1,0 +1,543 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2015 Riscv Developers
+// Copyright (c) 2016 The University of Virginia
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Alec Roelke
+
+// Declaration templates
+def template AtomicMemOpDeclare {{
+    /**
+     * Static instruction class for an AtomicMemOp operation
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst);
+
+    protected:
+
+        /*
+         * The main RMW part of an AMO
+         */
+        class %(class_name)sRMW : public %(base_class)sMicro
+        {
+          public:
+            // Constructor
+            %(class_name)sRMW(ExtMachInst machInst, %(class_name)s *_p);
+
+            Fault execute(ExecContext *, Trace::InstRecord *) const override;
+            Fault initiateAcc(ExecContext *,
+                              Trace::InstRecord *) const override;
+            Fault completeAcc(PacketPtr, ExecContext *,
+                              Trace::InstRecord *) const override;
+        };
+    };
+}};
+
+def template LRSCDeclare {{
+    /**
+     * Static instruction class for an AtomicMemOp operation
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst);
+
+    protected:
+
+        class %(class_name)sMicro : public %(base_class)sMicro
+        {
+          public:
+            // Constructor
+            %(class_name)sMicro(ExtMachInst machInst, %(class_name)s *_p);
+
+            Fault execute(ExecContext *, Trace::InstRecord *) const override;
+            Fault initiateAcc(ExecContext *,
+                              Trace::InstRecord *) const override;
+            Fault completeAcc(PacketPtr, ExecContext *,
+                              Trace::InstRecord *) const override;
+        };
+    };
+}};
+
+// Constructor templates
+def template LRSCMacroConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst):
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        %(constructor)s;
+
+        StaticInstPtr rel_fence;
+        StaticInstPtr lrsc;
+        StaticInstPtr acq_fence;
+
+        // set up release fence
+        if (RL) {
+            rel_fence = new MemFenceMicro(machInst, No_OpClass);
+            rel_fence->setFlag(IsFirstMicroop);
+            rel_fence->setFlag(IsMemBarrier);
+            rel_fence->setFlag(IsDelayedCommit);
+        }
+
+        // set up atomic rmw op
+        lrsc = new %(class_name)sMicro(machInst, this);
+
+        if (!RL) {
+            lrsc->setFlag(IsFirstMicroop);
+        }
+
+        if (!AQ) {
+            lrsc->setFlag(IsLastMicroop);
+        } else {
+            lrsc->setFlag(IsDelayedCommit);
+        }
+
+        // set up acquire fence
+        if (AQ) {
+            acq_fence = new MemFenceMicro(machInst, No_OpClass);
+            acq_fence->setFlag(IsLastMicroop);
+            acq_fence->setFlag(IsMemBarrier);
+        }
+
+        if (RL && AQ) {
+            microops = {rel_fence, lrsc, acq_fence};
+        } else if (RL) {
+            microops = {rel_fence, lrsc};
+        } else if (AQ) {
+            microops = {lrsc, acq_fence};
+        } else {
+            microops = {lrsc};
+        }
+    }
+}};
+
+def template LRSCMicroConstructor {{
+    %(class_name)s::%(class_name)sMicro::%(class_name)sMicro(
+        ExtMachInst machInst, %(class_name)s *_p)
+            : %(base_class)sMicro("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template AtomicMemOpMacroConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        %(constructor)s;
+
+        StaticInstPtr rel_fence;
+        StaticInstPtr rmw_op;
+        StaticInstPtr acq_fence;
+
+        // set up release fence
+        if (RL) {
+            rel_fence = new MemFenceMicro(machInst, No_OpClass);
+            rel_fence->setFlag(IsFirstMicroop);
+            rel_fence->setFlag(IsMemBarrier);
+            rel_fence->setFlag(IsDelayedCommit);
+        }
+
+        // set up atomic rmw op
+        rmw_op = new %(class_name)sRMW(machInst, this);
+
+        if (!RL) {
+            rmw_op->setFlag(IsFirstMicroop);
+        }
+
+        if (!AQ) {
+            rmw_op->setFlag(IsLastMicroop);
+        } else {
+            rmw_op->setFlag(IsDelayedCommit);
+        }
+
+        // set up acquire fence
+        if (AQ) {
+            acq_fence = new MemFenceMicro(machInst, No_OpClass);
+            acq_fence->setFlag(IsLastMicroop);
+            acq_fence->setFlag(IsMemBarrier);
+        }
+
+        if (RL && AQ) {
+            microops = {rel_fence, rmw_op, acq_fence};
+        } else if (RL) {
+            microops = {rel_fence, rmw_op};
+        } else if (AQ) {
+            microops = {rmw_op, acq_fence};
+        } else {
+            microops = {rmw_op};
+        }
+    }
+}};
+
+def template AtomicMemOpRMWConstructor {{
+    %(class_name)s::%(class_name)sRMW::%(class_name)sRMW(
+        ExtMachInst machInst, %(class_name)s *_p)
+            : %(base_class)s("%(mnemonic)s[l]", machInst, %(op_class)s)
+    {
+        %(constructor)s;
+
+        // overwrite default flags
+        flags[IsMemRef] = true;
+        flags[IsLoad] = false;
+        flags[IsStore] = false;
+        flags[IsAtomic] = true;
+    }
+}};
+
+// execute() templates
+
+def template LoadReservedExecute {{
+    Fault
+    %(class_name)s::%(class_name)sMicro::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            fault = readMemAtomic(xc, traceData, EA, Mem, memAccessFlags);
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template StoreCondExecute {{
+    Fault %(class_name)s::%(class_name)sMicro::execute(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        uint64_t result;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
+                &result);
+            // RISC-V has the opposite convention gem5 has for success flags,
+            // so we invert the result here.
+            result = !result;
+        }
+
+        if (fault == NoFault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template AtomicMemOpRMWExecute {{
+    Fault %(class_name)s::%(class_name)sRMW::execute(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+        %(amoop_code)s;
+
+        assert(amo_op);
+
+        if (fault == NoFault) {
+            fault = amoMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
+                                 amo_op);
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+// initiateAcc() templates
+
+def template LoadReservedInitiateAcc {{
+    Fault
+    %(class_name)s::%(class_name)sMicro::initiateAcc(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_src_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            fault = initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
+        }
+
+        return fault;
+    }
+}};
+
+def template StoreCondInitiateAcc {{
+    Fault
+    %(class_name)s::%(class_name)sMicro::initiateAcc(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            fault = writeMemTiming(xc, traceData, Mem, EA,
+                memAccessFlags, nullptr);
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template AtomicMemOpRMWInitiateAcc {{
+    Fault
+    %(class_name)s::%(class_name)sRMW::initiateAcc(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_src_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+        %(amoop_code)s;
+
+        assert(amo_op);
+
+        if (fault == NoFault) {
+            fault = initiateMemAMO(xc, traceData, EA, Mem, memAccessFlags,
+                                   amo_op);
+        }
+
+        return fault;
+    }
+}};
+
+// completeAcc() templates
+
+def template LoadReservedCompleteAcc {{
+    Fault
+    %(class_name)s::%(class_name)sMicro::completeAcc(PacketPtr pkt,
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+        getMem(pkt, Mem, traceData);
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template StoreCondCompleteAcc {{
+    Fault %(class_name)s::%(class_name)sMicro::completeAcc(Packet *pkt,
+          ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_dest_decl)s;
+
+        // RISC-V has the opposite convention gem5 has for success flags,
+        // so we invert the result here.
+        uint64_t result = !pkt->req->getExtraData();
+
+        if (fault == NoFault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template AtomicMemOpRMWCompleteAcc {{
+    Fault %(class_name)s::%(class_name)sRMW::completeAcc(Packet *pkt,
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+        getMem(pkt, Mem, traceData);
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+// LR/SC/AMO decode formats
+
+def format LoadReserved(memacc_code, postacc_code={{ }}, ea_code={{EA = Rs1;}},
+        mem_flags=[], inst_flags=[]) {{
+    macro_ea_code = ''
+    macro_inst_flags = []
+    macro_iop = InstObjParams(name, Name, 'LoadReserved', macro_ea_code,
+                              macro_inst_flags)
+    header_output = LRSCDeclare.subst(macro_iop)
+    decoder_output = LRSCMacroConstructor.subst(macro_iop)
+    decode_block = BasicDecode.subst(macro_iop)
+
+    exec_output = ''
+
+    mem_flags = makeList(mem_flags)
+    inst_flags = makeList(inst_flags)
+    iop = InstObjParams(name, Name, 'LoadReserved',
+        {'ea_code': ea_code, 'memacc_code': memacc_code,
+        'postacc_code': postacc_code}, inst_flags)
+    iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
+        '|'.join(['Request::%s' % flag for flag in mem_flags]) + ';'
+
+    decoder_output += LRSCMicroConstructor.subst(iop)
+    decode_block += BasicDecode.subst(iop)
+    exec_output += LoadReservedExecute.subst(iop) \
+        + LoadReservedInitiateAcc.subst(iop) \
+        + LoadReservedCompleteAcc.subst(iop)
+}};
+
+def format StoreCond(memacc_code, postacc_code={{ }}, ea_code={{EA = Rs1;}},
+        mem_flags=[], inst_flags=[]) {{
+    macro_ea_code = ''
+    macro_inst_flags = []
+    macro_iop = InstObjParams(name, Name, 'StoreCond', macro_ea_code,
+                              macro_inst_flags)
+    header_output = LRSCDeclare.subst(macro_iop)
+    decoder_output = LRSCMacroConstructor.subst(macro_iop)
+    decode_block = BasicDecode.subst(macro_iop)
+
+    exec_output = ''
+
+    mem_flags = makeList(mem_flags)
+    inst_flags = makeList(inst_flags)
+    iop = InstObjParams(name, Name, 'StoreCond',
+        {'ea_code': ea_code, 'memacc_code': memacc_code,
+        'postacc_code': postacc_code}, inst_flags)
+    iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
+        '|'.join(['Request::%s' % flag for flag in mem_flags]) + ';'
+
+    decoder_output += LRSCMicroConstructor.subst(iop)
+    decode_block += BasicDecode.subst(iop)
+    exec_output += StoreCondExecute.subst(iop) \
+        + StoreCondInitiateAcc.subst(iop) \
+        + StoreCondCompleteAcc.subst(iop)
+}};
+
+def format AtomicMemOp(memacc_code, amoop_code, postacc_code={{ }},
+        ea_code={{EA = Rs1;}}, mem_flags=[], inst_flags=[]) {{
+    macro_ea_code = ''
+    macro_inst_flags = []
+    macro_iop = InstObjParams(name, Name, 'AtomicMemOp', macro_ea_code,
+                              macro_inst_flags)
+    header_output = AtomicMemOpDeclare.subst(macro_iop)
+    decoder_output = AtomicMemOpMacroConstructor.subst(macro_iop)
+    decode_block = BasicDecode.subst(macro_iop)
+
+    exec_output = ''
+
+    rmw_mem_flags = makeList(mem_flags)
+    rmw_inst_flags = makeList(inst_flags)
+    rmw_iop = InstObjParams(name, Name, 'AtomicMemOpMicro',
+                            {'ea_code': ea_code,
+                             'memacc_code': memacc_code,
+                             'postacc_code': postacc_code,
+                             'amoop_code': amoop_code},
+                            rmw_inst_flags)
+
+    rmw_iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
+          '|'.join(['Request::%s' % flag for flag in rmw_mem_flags]) + ';'
+
+    decoder_output += AtomicMemOpRMWConstructor.subst(rmw_iop)
+    decode_block += BasicDecode.subst(rmw_iop)
+    exec_output += AtomicMemOpRMWExecute.subst(rmw_iop) \
+                 + AtomicMemOpRMWInitiateAcc.subst(rmw_iop) \
+                 + AtomicMemOpRMWCompleteAcc.subst(rmw_iop)
+}};

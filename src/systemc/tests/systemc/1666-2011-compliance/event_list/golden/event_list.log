@@ -1,0 +1,23 @@
+SystemC Simulation
+M::T1 awoke with 100 at 10 ns on list
+M::T2 awoke with 100 at 10 ns on list
+M::T1 awoke with 200 at 20 ns on list
+M::T2 awoke with 200 at 20 ns on list
+M::T1 awoke with 210 at 30 ns on list
+M::T2 awoke with 210 at 30 ns on list
+M::T1 awoke with 220 at 40 ns on list
+M::T2 awoke with 220 at 40 ns on list
+M::T1 awoke with 221 at 50 ns on list
+M::T1 awoke with 222 at 60 ns on list
+Awoke at 80 ns
+Awoke at 101 ns
+Awoke at 125 ns
+Awoke at 325 ns
+Awoke at 527 ns
+Awoke at 2027 ns
+Awoke at 3029 ns
+Awoke at 5029 ns
+Awoke at 8029 ns
+
+Success
+~T() called

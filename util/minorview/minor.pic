@@ -115,9 +115,9 @@ macro predictionFrame: decoder=frame stripDir=vert dataElement=predictionSeqNum
 # name ::= ? alphanumeric name with dots ?
 # value ::= "(<char-except-">)*", <char-except-' '>* }
 
-Fi: fetch2.inputBuffer inputBuffer decoder=lines
-Di: decode.inputBuffer inputBuffer decoder=insts hideId=E
-Ei: execute.inputBuffer inputBuffer stripDir=horiz decoder=insts border=mid
+Fi: fetch2.inputBuffer0 inputBuffer decoder=lines
+Di: decode.inputBuffer0 inputBuffer decoder=insts hideId=E
+Ei: execute.inputBuffer0 inputBuffer stripDir=horiz decoder=insts border=mid
 F1: fetch1 streamFrame blankStrips=11 name="Fetch1"
 fe: fetch1 decoder=lines border=thin name="Line"
 F2: fetch2 predictionFrame blankStrips=11 name="Fetch2"
@@ -146,9 +146,9 @@ f3: execute.fu.3 fu shorten=2 name=Div
 f4: execute.fu.4 fu shorten=2 name=Float
 f5: execute.fu.5 fu shorten=2 name=Mem
 f6: execute.fu.6 fu shorten=2 name=Misc
-iq: execute.inFlightInsts fifo decoder=insts name="inFlightInsts"
-im: execute.inFUMemInsts fifo decoder=insts name="inFU..."
-sc: execute.scoreboard name="scoreboard" decoder=indexedCounts \
+iq: execute.inFlightInsts0 fifo decoder=insts name="inFlightInsts"
+im: execute.inFUMemInsts0 fifo decoder=insts name="inFU..."
+sc: execute.scoreboard0 name="scoreboard" decoder=indexedCounts \
     dataElement=busy border=mid name="scoreboard" strips=38 stripelems=3
 sa: activity dataElement=stages activity name="Stage activity"
 ac: activity dataElement=activity decoder=counts border=mid name="Activity"

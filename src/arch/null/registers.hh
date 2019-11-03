@@ -40,15 +40,29 @@
 #ifndef __ARCH_NULL_REGISTERS_HH__
 #define __ARCH_NULL_REGISTERS_HH__
 
+#include "arch/generic/vec_pred_reg.hh"
+#include "arch/generic/vec_reg.hh"
+#include "arch/types.hh"
 #include "base/types.hh"
 
 namespace NullISA {
 
-typedef uint64_t IntReg;
-typedef uint32_t FloatRegBits;
-typedef float FloatReg;
-typedef uint8_t CCReg;
-typedef uint64_t MiscReg;
+const RegIndex ZeroReg = 0;
+
+// Not applicable to null
+using VecElem = ::DummyVecElem;
+using VecReg = ::DummyVecReg;
+using ConstVecReg = ::DummyConstVecReg;
+using VecRegContainer = ::DummyVecRegContainer;
+constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
+constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;
+
+// Not applicable to null
+using VecPredReg = ::DummyVecPredReg;
+using ConstVecPredReg = ::DummyConstVecPredReg;
+using VecPredRegContainer = ::DummyVecPredRegContainer;
+constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
+constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
 
 }
 

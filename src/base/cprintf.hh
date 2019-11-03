@@ -54,6 +54,7 @@ struct Print
     std::ios::fmtflags saved_flags;
     char saved_fill;
     int saved_precision;
+    int saved_width;
 
     Format fmt;
     void process();

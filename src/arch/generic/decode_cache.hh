@@ -47,7 +47,7 @@ namespace GenericISA
 class BasicDecodeCache
 {
   private:
-    DecodeCache::InstMap instMap;
+    DecodeCache::InstMap<TheISA::ExtMachInst> instMap;
     DecodeCache::AddrMap<StaticInstPtr> decodePages;
 
   public:

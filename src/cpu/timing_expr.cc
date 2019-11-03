@@ -37,8 +37,9 @@
  * Authors: Andrew Bardsley
  */
 
-#include "base/intmath.hh"
 #include "cpu/timing_expr.hh"
+
+#include "base/intmath.hh"
 
 TimingExprEvalContext::TimingExprEvalContext(const StaticInstPtr &inst_,
     ThreadContext *thread_,
@@ -57,7 +58,7 @@ TimingExprEvalContext::TimingExprEvalContext(const StaticInstPtr &inst_,
 
 uint64_t TimingExprSrcReg::eval(TimingExprEvalContext &context)
 {
-    return context.inst->srcRegIdx(index);
+    return context.inst->srcRegIdx(index).index();
 }
 
 uint64_t TimingExprReadIntReg::eval(TimingExprEvalContext &context)

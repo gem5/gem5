@@ -55,6 +55,7 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/op_class.hh"
 #include "cpu/timebuf.hh"
+#include "enums/SMTQueuePolicy.hh"
 #include "sim/eventq.hh"
 
 struct DerivO3CPUParams;
@@ -113,7 +114,7 @@ class InstructionQueue
 
       public:
         /** Construct a FU completion event. */
-        FUCompletion(DynInstPtr &_inst, int fu_idx,
+        FUCompletion(const DynInstPtr &_inst, int fu_idx,
                      InstructionQueue<Impl> *iq_ptr);
 
         virtual void process();
@@ -176,15 +177,15 @@ class InstructionQueue
     bool hasReadyInsts();
 
     /** Inserts a new instruction into the IQ. */
-    void insert(DynInstPtr &new_inst);
+    void insert(const DynInstPtr &new_inst);
 
     /** Inserts a new, non-speculative instruction into the IQ. */
-    void insertNonSpec(DynInstPtr &new_inst);
+    void insertNonSpec(const DynInstPtr &new_inst);
 
     /** Inserts a memory or write barrier into the IQ to make sure
      *  loads and stores are ordered properly.
      */
-    void insertBarrier(DynInstPtr &barr_inst);
+    void insertBarrier(const DynInstPtr &barr_inst);
 
     /** Returns the oldest scheduled instruction, and removes it from
      * the list of instructions waiting to execute.
@@ -205,11 +206,11 @@ class InstructionQueue
      * Records the instruction as the producer of a register without
      * adding it to the rest of the IQ.
      */
-    void recordProducer(DynInstPtr &inst)
+    void recordProducer(const DynInstPtr &inst)
     { addToProducers(inst); }
 
     /** Process FU completion event. */
-    void processFUCompletion(DynInstPtr &inst, int fu_idx);
+    void processFUCompletion(const DynInstPtr &inst, int fu_idx);
 
     /**
      * Schedules ready instructions, adding the ready ones (oldest first) to
@@ -227,37 +228,37 @@ class InstructionQueue
     void commit(const InstSeqNum &inst, ThreadID tid = 0);
 
     /** Wakes all dependents of a completed instruction. */
-    int wakeDependents(DynInstPtr &completed_inst);
+    int wakeDependents(const DynInstPtr &completed_inst);
 
     /** Adds a ready memory instruction to the ready list. */
-    void addReadyMemInst(DynInstPtr &ready_inst);
+    void addReadyMemInst(const DynInstPtr &ready_inst);
 
     /**
      * Reschedules a memory instruction. It will be ready to issue once
      * replayMemInst() is called.
      */
-    void rescheduleMemInst(DynInstPtr &resched_inst);
+    void rescheduleMemInst(const DynInstPtr &resched_inst);
 
     /** Replays a memory instruction. It must be rescheduled first. */
-    void replayMemInst(DynInstPtr &replay_inst);
+    void replayMemInst(const DynInstPtr &replay_inst);
 
     /** Completes a memory operation. */
-    void completeMemInst(DynInstPtr &completed_inst);
+    void completeMemInst(const DynInstPtr &completed_inst);
 
     /**
      * Defers a memory instruction when its DTB translation incurs a hw
      * page table walk.
      */
-    void deferMemInst(DynInstPtr &deferred_inst);
+    void deferMemInst(const DynInstPtr &deferred_inst);
 
     /**  Defers a memory instruction when it is cache blocked. */
-    void blockMemInst(DynInstPtr &blocked_inst);
+    void blockMemInst(const DynInstPtr &blocked_inst);
 
     /**  Notify instruction queue that a previous blockage has resolved */
     void cacheUnblocked();
 
     /** Indicates an ordering violation between a store and a load. */
-    void violation(DynInstPtr &store, DynInstPtr &faulting_load);
+    void violation(const DynInstPtr &store, const DynInstPtr &faulting_load);
 
     /**
      * Squashes instructions for a thread. Squashing information is obtained
@@ -403,15 +404,8 @@ class InstructionQueue
     // Various parameters
     //////////////////////////////////////
 
-    /** IQ Resource Sharing Policy */
-    enum IQPolicy {
-        Dynamic,
-        Partitioned,
-        Threshold
-    };
-
     /** IQ sharing policy for SMT. */
-    IQPolicy iqPolicy;
+    SMTQueuePolicy iqPolicy;
 
     /** Number of Total Threads*/
     ThreadID numThreads;
@@ -457,13 +451,13 @@ class InstructionQueue
     std::vector<bool> regScoreboard;
 
     /** Adds an instruction to the dependency graph, as a consumer. */
-    bool addToDependents(DynInstPtr &new_inst);
+    bool addToDependents(const DynInstPtr &new_inst);
 
     /** Adds an instruction to the dependency graph, as a producer. */
-    void addToProducers(DynInstPtr &new_inst);
+    void addToProducers(const DynInstPtr &new_inst);
 
     /** Moves an instruction to the ready queue if it is ready. */
-    void addIfReady(DynInstPtr &inst);
+    void addIfReady(const DynInstPtr &inst);
 
     /** Debugging function to count how many entries are in the IQ.  It does
      *  a linear walk through the instructions, so do not call this function
@@ -543,10 +537,14 @@ class InstructionQueue
     Stats::Scalar intInstQueueWakeupAccesses;
     Stats::Scalar fpInstQueueReads;
     Stats::Scalar fpInstQueueWrites;
-    Stats::Scalar fpInstQueueWakeupQccesses;
+    Stats::Scalar fpInstQueueWakeupAccesses;
+    Stats::Scalar vecInstQueueReads;
+    Stats::Scalar vecInstQueueWrites;
+    Stats::Scalar vecInstQueueWakeupAccesses;
 
     Stats::Scalar intAluAccesses;
     Stats::Scalar fpAluAccesses;
+    Stats::Scalar vecAluAccesses;
 };
 
 #endif //__CPU_O3_INST_QUEUE_HH__

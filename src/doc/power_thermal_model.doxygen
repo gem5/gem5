@@ -126,3 +126,4 @@
   user to define a power model as an equation involving several statistics.
   There's also some automatic (or "magic") variables such as "temp", which
   reports temperature.
+*/

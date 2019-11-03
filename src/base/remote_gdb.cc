@@ -1,4 +1,15 @@
 /*
+ * Copyright (c) 2018 ARM Limited
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright 2015 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
@@ -119,16 +130,19 @@
  * "Stub" to allow remote cpu to debug over a serial line using gdb.
  */
 
-#include <signal.h>
+#include "base/remote_gdb.hh"
+
 #include <sys/signal.h>
 #include <unistd.h>
 
+#include <csignal>
+#include <cstdint>
 #include <cstdio>
+#include <sstream>
 #include <string>
 
 #include "arch/vtophys.hh"
 #include "base/intmath.hh"
-#include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
@@ -136,8 +150,8 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "debug/GDBAll.hh"
-#include "mem/port.hh"
 #include "mem/fs_translating_port_proxy.hh"
+#include "mem/port.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
@@ -145,163 +159,237 @@
 using namespace std;
 using namespace TheISA;
 
-#ifndef NDEBUG
+static const char GDBStart = '$';
+static const char GDBEnd = '#';
+static const char GDBGoodP = '+';
+static const char GDBBadP = '-';
+
 vector<BaseRemoteGDB *> debuggers;
 
-void
-debugger()
+class HardBreakpoint : public PCEvent
 {
-    static int current_debugger = -1;
-    if (current_debugger >= 0 && current_debugger < (int)debuggers.size()) {
-        BaseRemoteGDB *gdb = debuggers[current_debugger];
-        if (!gdb->isattached())
-            gdb->listener->accept();
-        if (gdb->isattached())
-            gdb->trap(SIGILL);
+  private:
+    BaseRemoteGDB *gdb;
+
+  public:
+    int refcount;
+
+  public:
+    HardBreakpoint(BaseRemoteGDB *_gdb, PCEventScope *s, Addr pc)
+        : PCEvent(s, "HardBreakpoint Event", pc),
+          gdb(_gdb), refcount(0)
+    {
+        DPRINTF(GDBMisc, "creating hardware breakpoint at %#x\n", evpc);
+    }
+
+    const std::string name() const override { return gdb->name() + ".hwbkpt"; }
+
+    void
+    process(ThreadContext *tc) override
+    {
+        DPRINTF(GDBMisc, "handling hardware breakpoint at %#x\n", pc());
+
+        if (tc == gdb->tc)
+            gdb->trap(SIGTRAP);
+    }
+};
+
+namespace {
+
+// Exception to throw when the connection to the client is broken.
+struct BadClient
+{
+    const char *warning;
+    BadClient(const char *_warning=NULL) : warning(_warning)
+    {}
+};
+
+// Exception to throw when an error needs to be reported to the client.
+struct CmdError
+{
+    string error;
+    CmdError(std::string _error) : error(_error)
+    {}
+};
+
+// Exception to throw when something isn't supported.
+class Unsupported {};
+
+// Convert a hex digit into an integer.
+// This returns -1 if the argument passed is no valid hex digit.
+int
+digit2i(char c)
+{
+    if (c >= '0' && c <= '9')
+        return (c - '0');
+    else if (c >= 'a' && c <= 'f')
+        return (c - 'a' + 10);
+    else if (c >= 'A' && c <= 'F')
+        return (c - 'A' + 10);
+    else
+        return (-1);
+}
+
+// Convert the low 4 bits of an integer into an hex digit.
+char
+i2digit(int n)
+{
+    return ("0123456789abcdef"[n & 0x0f]);
+}
+
+// Convert a byte array into an hex string.
+void
+mem2hex(char *vdst, const char *vsrc, int len)
+{
+    char *dst = vdst;
+    const char *src = vsrc;
+
+    while (len--) {
+        *dst++ = i2digit(*src >> 4);
+        *dst++ = i2digit(*src++);
+    }
+    *dst = '\0';
+}
+
+// Convert an hex string into a byte array.
+// This returns a pointer to the character following the last valid
+// hex digit. If the string ends in the middle of a byte, NULL is
+// returned.
+const char *
+hex2mem(char *vdst, const char *src, int maxlen)
+{
+    char *dst = vdst;
+    int msb, lsb;
+
+    while (*src && maxlen--) {
+        msb = digit2i(*src++);
+        if (msb < 0)
+            return (src - 1);
+        lsb = digit2i(*src++);
+        if (lsb < 0)
+            return (NULL);
+        *dst++ = (msb << 4) | lsb;
+    }
+    return src;
+}
+
+// Convert an hex string into an integer.
+// This returns a pointer to the character following the last valid
+// hex digit.
+Addr
+hex2i(const char **srcp)
+{
+    const char *src = *srcp;
+    Addr r = 0;
+    int nibble;
+
+    while ((nibble = digit2i(*src)) >= 0) {
+        r *= 16;
+        r += nibble;
+        src++;
+    }
+    *srcp = src;
+    return r;
+}
+
+enum GdbBreakpointType {
+    GdbSoftBp = '0',
+    GdbHardBp = '1',
+    GdbWriteWp = '2',
+    GdbReadWp = '3',
+    GdbAccWp = '4',
+};
+
+#ifndef NDEBUG
+const char *
+break_type(char c)
+{
+    switch(c) {
+      case GdbSoftBp: return "software breakpoint";
+      case GdbHardBp: return "hardware breakpoint";
+      case GdbWriteWp: return "write watchpoint";
+      case GdbReadWp: return "read watchpoint";
+      case GdbAccWp: return "access watchpoint";
+      default: return "unknown breakpoint/watchpoint";
     }
 }
 #endif
 
-///////////////////////////////////////////////////////////
-//
-//
-//
+std::map<Addr, HardBreakpoint *> hardBreakMap;
 
-GDBListener::InputEvent::InputEvent(GDBListener *l, int fd, int e)
-    : PollEvent(fd, e), listener(l)
-{}
-
-void
-GDBListener::InputEvent::process(int revent)
-{
-    listener->accept();
 }
 
-GDBListener::GDBListener(BaseRemoteGDB *g, int p)
-    : inputEvent(NULL), gdb(g), port(p)
+BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c, int _port) :
+        connectEvent(nullptr), dataEvent(nullptr), _port(_port), fd(-1),
+        active(false), attached(false), sys(_system), tc(c),
+        trapEvent(this), singleStepEvent(*this)
 {
-    assert(!gdb->listener);
-    gdb->listener = this;
+    debuggers.push_back(this);
 }
 
-GDBListener::~GDBListener()
+BaseRemoteGDB::~BaseRemoteGDB()
 {
-    if (inputEvent)
-        delete inputEvent;
+    delete connectEvent;
+    delete dataEvent;
 }
 
 string
-GDBListener::name()
+BaseRemoteGDB::name()
 {
-    return gdb->name() + ".listener";
+    return sys->name() + ".remote_gdb";
 }
 
 void
-GDBListener::listen()
+BaseRemoteGDB::listen()
 {
     if (ListenSocket::allDisabled()) {
         warn_once("Sockets disabled, not accepting gdb connections");
         return;
     }
 
-    while (!listener.listen(port, true)) {
-        DPRINTF(GDBMisc, "Can't bind port %d\n", port);
-        port++;
+    while (!listener.listen(_port, true)) {
+        DPRINTF(GDBMisc, "Can't bind port %d\n", _port);
+        _port++;
     }
 
-    inputEvent = new InputEvent(this, listener.getfd(), POLLIN);
-    pollQueue.schedule(inputEvent);
+    connectEvent = new ConnectEvent(this, listener.getfd(), POLLIN);
+    pollQueue.schedule(connectEvent);
 
-#ifndef NDEBUG
-    gdb->number = debuggers.size();
-    debuggers.push_back(gdb);
-#endif
-
-#ifndef NDEBUG
-    ccprintf(cerr, "%d: %s: listening for remote gdb #%d on port %d\n",
-             curTick(), name(), gdb->number, port);
-#else
     ccprintf(cerr, "%d: %s: listening for remote gdb on port %d\n",
-             curTick(), name(), port);
-#endif
+             curTick(), name(), _port);
 }
 
 void
-GDBListener::accept()
+BaseRemoteGDB::connect()
 {
-    if (!listener.islistening())
-        panic("GDBListener::accept(): cannot accept if we're not listening!");
+    panic_if(!listener.islistening(),
+             "Cannot accept GDB connections if we're not listening!");
 
     int sfd = listener.accept(true);
 
     if (sfd != -1) {
-        if (gdb->isattached())
+        if (isAttached())
             close(sfd);
         else
-            gdb->attach(sfd);
+            attach(sfd);
     }
 }
 
-BaseRemoteGDB::InputEvent::InputEvent(BaseRemoteGDB *g, int fd, int e)
-    : PollEvent(fd, e), gdb(g)
-{}
-
-void
-BaseRemoteGDB::InputEvent::process(int revent)
+int
+BaseRemoteGDB::port() const
 {
-    if (revent & POLLIN) {
-        gdb->trapEvent.type(SIGILL);
-        gdb->scheduleInstCommitEvent(&gdb->trapEvent, 0);
-    } else if (revent & POLLNVAL) {
-        gdb->descheduleInstCommitEvent(&gdb->trapEvent);
-        gdb->detach();
-    }
+    panic_if(!listener.islistening(),
+             "Remote GDB port is unknown until listen() has been called.\n");
+    return _port;
 }
-
-void
-BaseRemoteGDB::TrapEvent::process()
-{
-    gdb->trap(_type);
-}
-
-void
-BaseRemoteGDB::SingleStepEvent::process()
-{
-    if (!gdb->singleStepEvent.scheduled())
-        gdb->scheduleInstCommitEvent(&gdb->singleStepEvent, 1);
-    gdb->trap(SIGTRAP);
-}
-
-BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c) :
-        inputEvent(NULL), trapEvent(this), listener(NULL),
-        number(-1), fd(-1), active(false), attached(false), system(_system),
-        context(c), singleStepEvent(this)
-{
-}
-
-BaseRemoteGDB::~BaseRemoteGDB()
-{
-    if (inputEvent)
-        delete inputEvent;
-}
-
-string
-BaseRemoteGDB::name()
-{
-    return system->name() + ".remote_gdb";
-}
-
-bool
-BaseRemoteGDB::isattached()
-{ return attached; }
 
 void
 BaseRemoteGDB::attach(int f)
 {
     fd = f;
 
-    inputEvent = new InputEvent(this, fd, POLLIN);
-    pollQueue.schedule(inputEvent);
+    dataEvent = new DataEvent(this, fd, POLLIN);
+    pollQueue.schedule(dataEvent);
 
     attached = true;
     DPRINTFN("remote gdb attached\n");
@@ -311,70 +399,180 @@ void
 BaseRemoteGDB::detach()
 {
     attached = false;
+    active = false;
+    clearSingleStep();
     close(fd);
     fd = -1;
 
-    pollQueue.remove(inputEvent);
+    pollQueue.remove(dataEvent);
     DPRINTFN("remote gdb detached\n");
 }
 
-const char *
-BaseRemoteGDB::gdb_command(char cmd)
+// This function does all command processing for interfacing to a
+// remote gdb.  Note that the error codes are ignored by gdb at
+// present, but might eventually become meaningful. (XXX) It might
+// makes sense to use POSIX errno values, because that is what the
+// gdb/remote.c functions want to return.
+bool
+BaseRemoteGDB::trap(int type)
 {
-    switch (cmd) {
-      case GDBSignal: return "KGDB_SIGNAL";
-      case GDBSetBaud: return "KGDB_SET_BAUD";
-      case GDBSetBreak: return "KGDB_SET_BREAK";
-      case GDBCont: return "KGDB_CONT";
-      case GDBAsyncCont: return "KGDB_ASYNC_CONT";
-      case GDBDebug: return "KGDB_DEBUG";
-      case GDBDetach: return "KGDB_DETACH";
-      case GDBRegR: return "KGDB_REG_R";
-      case GDBRegW: return "KGDB_REG_W";
-      case GDBSetThread: return "KGDB_SET_THREAD";
-      case GDBCycleStep: return "KGDB_CYCLE_STEP";
-      case GDBSigCycleStep: return "KGDB_SIG_CYCLE_STEP";
-      case GDBKill: return "KGDB_KILL";
-      case GDBMemW: return "KGDB_MEM_W";
-      case GDBMemR: return "KGDB_MEM_R";
-      case GDBSetReg: return "KGDB_SET_REG";
-      case GDBReadReg: return "KGDB_READ_REG";
-      case GDBQueryVar: return "KGDB_QUERY_VAR";
-      case GDBSetVar: return "KGDB_SET_VAR";
-      case GDBReset: return "KGDB_RESET";
-      case GDBStep: return "KGDB_STEP";
-      case GDBAsyncStep: return "KGDB_ASYNC_STEP";
-      case GDBThreadAlive: return "KGDB_THREAD_ALIVE";
-      case GDBTargetExit: return "KGDB_TARGET_EXIT";
-      case GDBBinaryDload: return "KGDB_BINARY_DLOAD";
-      case GDBClrHwBkpt: return "KGDB_CLR_HW_BKPT";
-      case GDBSetHwBkpt: return "KGDB_SET_HW_BKPT";
-      case GDBStart: return "KGDB_START";
-      case GDBEnd: return "KGDB_END";
-      case GDBGoodP: return "KGDB_GOODP";
-      case GDBBadP: return "KGDB_BADP";
-      default: return "KGDB_UNKNOWN";
+
+    if (!attached)
+        return false;
+
+    DPRINTF(GDBMisc, "trap: PC=%s\n", tc->pcState());
+
+    clearSingleStep();
+
+    /*
+     * The first entry to this function is normally through
+     * a breakpoint trap in kgdb_connect(), in which case we
+     * must advance past the breakpoint because gdb will not.
+     *
+     * On the first entry here, we expect that gdb is not yet
+     * listening to us, so just enter the interaction loop.
+     * After the debugger is "active" (connected) it will be
+     * waiting for a "signaled" message from us.
+     */
+    if (!active) {
+        active = true;
+    } else {
+        // Tell remote host that an exception has occurred.
+        send(csprintf("S%02x", type).c_str());
     }
+
+    // Stick frame regs into our reg cache.
+    regCachePtr = gdbRegs();
+    regCachePtr->getRegs(tc);
+
+    GdbCommand::Context cmdCtx;
+    cmdCtx.type = type;
+    std::vector<char> data;
+
+    for (;;) {
+        try {
+            recv(data);
+            if (data.size() == 1)
+                throw BadClient();
+            cmdCtx.cmd_byte = data[0];
+            cmdCtx.data = data.data() + 1;
+            // One for sentinel, one for cmd_byte.
+            cmdCtx.len = data.size() - 2;
+
+            auto cmdIt = command_map.find(cmdCtx.cmd_byte);
+            if (cmdIt == command_map.end()) {
+                DPRINTF(GDBMisc, "Unknown command: %c(%#x)\n",
+                        cmdCtx.cmd_byte, cmdCtx.cmd_byte);
+                throw Unsupported();
+            }
+            cmdCtx.cmd = &(cmdIt->second);
+
+            if (!(this->*(cmdCtx.cmd->func))(cmdCtx))
+                break;
+
+        } catch (BadClient &e) {
+            if (e.warning)
+                warn(e.warning);
+            detach();
+            break;
+        } catch (Unsupported &e) {
+            send("");
+        } catch (CmdError &e) {
+            send(e.error.c_str());
+        } catch (...) {
+            panic("Unrecognzied GDB exception.");
+        }
+    }
+
+    return true;
 }
 
-/////////////////////////
-//
-//
+void
+BaseRemoteGDB::incomingData(int revent)
+{
+    if (trapEvent.scheduled()) {
+        warn("GDB trap event has already been scheduled!");
+        return;
+    }
+
+    if (revent & POLLIN) {
+        trapEvent.type(SIGILL);
+        scheduleInstCommitEvent(&trapEvent, 0);
+    } else if (revent & POLLNVAL) {
+        descheduleInstCommitEvent(&trapEvent);
+        detach();
+    }
+}
 
 uint8_t
 BaseRemoteGDB::getbyte()
 {
     uint8_t b;
-    if (::read(fd, &b, 1) != 1)
-        warn("could not read byte from debugger");
-    return b;
+    if (::read(fd, &b, sizeof(b)) == sizeof(b))
+        return b;
+
+    throw BadClient("Couldn't read data from debugger.");
 }
 
 void
 BaseRemoteGDB::putbyte(uint8_t b)
 {
-    if (::write(fd, &b, 1) != 1)
-        warn("could not write byte to debugger");
+    if (::write(fd, &b, sizeof(b)) == sizeof(b))
+        return;
+
+    throw BadClient("Couldn't write data to the debugger.");
+}
+
+// Receive a packet from gdb
+void
+BaseRemoteGDB::recv(std::vector<char>& bp)
+{
+    uint8_t c;
+    int csum;
+    bp.resize(0);
+
+    do {
+        csum = 0;
+        // Find the beginning of a packet
+        while ((c = getbyte()) != GDBStart);
+
+        // Read until you find the end of the data in the packet, and keep
+        // track of the check sum.
+        while (true) {
+            c = getbyte();
+            if (c == GDBEnd)
+                break;
+            c &= 0x7f;
+            csum += c;
+            bp.push_back(c);
+        }
+
+        // Mask the check sum.
+        csum &= 0xff;
+
+        // Bring in the checksum. If the check sum matches, csum will be 0.
+        csum -= digit2i(getbyte()) * 16;
+        csum -= digit2i(getbyte());
+
+        // If the check sum was correct
+        if (csum == 0) {
+            // Report that the packet was received correctly
+            putbyte(GDBGoodP);
+            // Sequence present?
+            if (bp.size() > 2 && bp[2] == ':') {
+                putbyte(bp[0]);
+                putbyte(bp[1]);
+                auto begin = std::begin(bp);
+                bp.erase(begin, std::next(begin, 3));
+            }
+            break;
+        }
+        // Otherwise, report that there was a mistake.
+        putbyte(GDBBadP);
+    } while (1);
+    // Sentinel.
+    bp.push_back('\0');
+    DPRINTF(GDBRecv, "recv:  %s\n", bp.data());
 }
 
 // Send a packet to gdb
@@ -388,81 +586,22 @@ BaseRemoteGDB::send(const char *bp)
 
     do {
         p = bp;
-        //Start sending a packet
+        // Start sending a packet
         putbyte(GDBStart);
-        //Send the contents, and also keep a check sum.
+        // Send the contents, and also keep a check sum.
         for (csum = 0; (c = *p); p++) {
             putbyte(c);
             csum += c;
         }
-        //Send the ending character.
+        // Send the ending character.
         putbyte(GDBEnd);
-        //Sent the checksum.
+        // Send the checksum.
         putbyte(i2digit(csum >> 4));
         putbyte(i2digit(csum));
-        //Try transmitting over and over again until the other end doesn't send an
-        //error back.
-    } while ((c = getbyte() & 0x7f) == GDBBadP);
-}
-
-// Receive a packet from gdb
-int
-BaseRemoteGDB::recv(char *bp, int maxlen)
-{
-    char *p;
-    int c, csum;
-    int len;
-
-    do {
-        p = bp;
-        csum = len = 0;
-        //Find the beginning of a packet
-        while ((c = getbyte()) != GDBStart)
-            ;
-
-        //Read until you find the end of the data in the packet, and keep
-        //track of the check sum.
-        while ((c = getbyte()) != GDBEnd && len < maxlen) {
-            c &= 0x7f;
-            csum += c;
-            *p++ = c;
-            len++;
-        }
-
-        //Mask the check sum, and terminate the command string.
-        csum &= 0xff;
-        *p = '\0';
-
-        //If the command was too long, report an error.
-        if (len >= maxlen) {
-            putbyte(GDBBadP);
-            continue;
-        }
-
-        //Bring in the checksum. If the check sum matches, csum will be 0.
-        csum -= digit2i(getbyte()) * 16;
-        csum -= digit2i(getbyte());
-
-        //If the check sum was correct
-        if (csum == 0) {
-            //Report that the packet was received correctly
-            putbyte(GDBGoodP);
-            // Sequence present?
-            if (bp[2] == ':') {
-                putbyte(bp[0]);
-                putbyte(bp[1]);
-                len -= 3;
-                memcpy(bp, bp+3, len);
-            }
-            break;
-        }
-        //Otherwise, report that there was a mistake.
-        putbyte(GDBBadP);
-    } while (1);
-
-    DPRINTF(GDBRecv, "recv:  %s: %s\n", gdb_command(*bp), bp);
-
-    return (len);
+        // Try transmitting over and over again until the other end doesn't
+        // send an error back.
+        c = getbyte();
+    } while ((c & 0x7f) == GDBBadP);
 }
 
 // Read bytes from kernel address space for debugger.
@@ -479,13 +618,8 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 
-    if (FullSystem) {
-        FSTranslatingPortProxy &proxy = context->getVirtProxy();
-        proxy.readBlob(vaddr, (uint8_t*)data, size);
-    } else {
-        SETranslatingPortProxy &proxy = context->getMemProxy();
-        proxy.readBlob(vaddr, (uint8_t*)data, size);
-    }
+    PortProxy &proxy = tc->getVirtProxy();
+    proxy.readBlob(vaddr, data, size);
 
 #if TRACING_ON
     if (DTRACE(GDBRead)) {
@@ -522,15 +656,18 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
         } else
             DPRINTFNR("\n");
     }
-    if (FullSystem) {
-        FSTranslatingPortProxy &proxy = context->getVirtProxy();
-        proxy.writeBlob(vaddr, (uint8_t*)data, size);
-    } else {
-        SETranslatingPortProxy &proxy = context->getMemProxy();
-        proxy.writeBlob(vaddr, (uint8_t*)data, size);
-    }
+    PortProxy &proxy = tc->getVirtProxy();
+    proxy.writeBlob(vaddr, data, size);
 
     return true;
+}
+
+void
+BaseRemoteGDB::singleStep()
+{
+    if (!singleStepEvent.scheduled())
+        scheduleInstCommitEvent(&singleStepEvent, 1);
+    trap(SIGTRAP);
 }
 
 void
@@ -546,117 +683,56 @@ BaseRemoteGDB::setSingleStep()
         scheduleInstCommitEvent(&singleStepEvent, 1);
 }
 
-PCEventQueue *BaseRemoteGDB::getPcEventQueue()
-{
-    return &system->pcEventQueue;
-}
-
-EventQueue *
-BaseRemoteGDB::getComInstEventQueue()
-{
-    BaseCPU *cpu = context->getCpuPtr();
-    return cpu->comInstEventQueue[context->threadId()];
-}
-
 void
-BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta)
-{
-    EventQueue *eq = getComInstEventQueue();
-    // Here "ticks" aren't simulator ticks which measure time, they're
-    // instructions committed by the CPU.
-    eq->schedule(ev, eq->getCurTick() + delta);
-}
-
-void
-BaseRemoteGDB::descheduleInstCommitEvent(Event *ev)
-{
-    if (ev->scheduled())
-        getComInstEventQueue()->deschedule(ev);
-}
-
-bool
-BaseRemoteGDB::checkBpLen(size_t len)
-{
-    return len == sizeof(MachInst);
-}
-
-BaseRemoteGDB::HardBreakpoint::HardBreakpoint(BaseRemoteGDB *_gdb, Addr pc)
-    : PCEvent(_gdb->getPcEventQueue(), "HardBreakpoint Event", pc),
-      gdb(_gdb), refcount(0)
-{
-    DPRINTF(GDBMisc, "creating hardware breakpoint at %#x\n", evpc);
-}
-
-void
-BaseRemoteGDB::HardBreakpoint::process(ThreadContext *tc)
-{
-    DPRINTF(GDBMisc, "handling hardware breakpoint at %#x\n", pc());
-
-    if (tc == gdb->context)
-        gdb->trap(SIGTRAP);
-}
-
-bool
 BaseRemoteGDB::insertSoftBreak(Addr addr, size_t len)
 {
     if (!checkBpLen(len))
-        panic("invalid length\n");
+        throw BadClient("Invalid breakpoint length\n");
 
     return insertHardBreak(addr, len);
 }
 
-bool
+void
 BaseRemoteGDB::removeSoftBreak(Addr addr, size_t len)
 {
     if (!checkBpLen(len))
-        panic("invalid length\n");
+        throw BadClient("Invalid breakpoint length.\n");
 
     return removeHardBreak(addr, len);
 }
 
-bool
+void
 BaseRemoteGDB::insertHardBreak(Addr addr, size_t len)
 {
     if (!checkBpLen(len))
-        panic("invalid length\n");
+        throw BadClient("Invalid breakpoint length\n");
 
-    DPRINTF(GDBMisc, "inserting hardware breakpoint at %#x\n", addr);
+    DPRINTF(GDBMisc, "Inserting hardware breakpoint at %#x\n", addr);
 
     HardBreakpoint *&bkpt = hardBreakMap[addr];
     if (bkpt == 0)
-        bkpt = new HardBreakpoint(this, addr);
+        bkpt = new HardBreakpoint(this, sys, addr);
 
     bkpt->refcount++;
-
-    return true;
 }
 
-bool
+void
 BaseRemoteGDB::removeHardBreak(Addr addr, size_t len)
 {
     if (!checkBpLen(len))
-        panic("invalid length\n");
+        throw BadClient("Invalid breakpoint length\n");
 
-    DPRINTF(GDBMisc, "removing hardware breakpoint at %#x\n", addr);
+    DPRINTF(GDBMisc, "Removing hardware breakpoint at %#x\n", addr);
 
-    break_iter_t i = hardBreakMap.find(addr);
+    auto i = hardBreakMap.find(addr);
     if (i == hardBreakMap.end())
-        return false;
+        throw CmdError("E0C");
 
     HardBreakpoint *hbp = (*i).second;
     if (--hbp->refcount == 0) {
         delete hbp;
         hardBreakMap.erase(i);
     }
-
-    return true;
-}
-
-void
-BaseRemoteGDB::setTempBreakpoint(Addr bkpt)
-{
-    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n", bkpt);
-    insertHardBreak(bkpt, sizeof(TheISA::MachInst));
 }
 
 void
@@ -667,398 +743,391 @@ BaseRemoteGDB::clearTempBreakpoint(Addr &bkpt)
     bkpt = 0;
 }
 
-const char *
-BaseRemoteGDB::break_type(char c)
+void
+BaseRemoteGDB::setTempBreakpoint(Addr bkpt)
 {
-    switch(c) {
-      case '0': return "software breakpoint";
-      case '1': return "hardware breakpoint";
-      case '2': return "write watchpoint";
-      case '3': return "read watchpoint";
-      case '4': return "access watchpoint";
-      default: return "unknown breakpoint/watchpoint";
-    }
+    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n", bkpt);
+    insertHardBreak(bkpt, sizeof(TheISA::MachInst));
 }
 
-// This function does all command processing for interfacing to a
-// remote gdb.  Note that the error codes are ignored by gdb at
-// present, but might eventually become meaningful. (XXX) It might
-// makes sense to use POSIX errno values, because that is what the
-// gdb/remote.c functions want to return.
-bool
-BaseRemoteGDB::trap(int type)
+void
+BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta)
 {
-    uint64_t val;
-    size_t datalen, len;
-    char data[GDBPacketBufLen + 1];
-    char *buffer;
-    size_t bufferSize;
-    const char *p;
-    char command, subcmd;
-    string var;
-    bool ret;
+    // Here "ticks" aren't simulator ticks which measure time, they're
+    // instructions committed by the CPU.
+    tc->scheduleInstCountEvent(ev, tc->getCurrentInstCount() + delta);
+}
 
-    if (!attached)
-        return false;
+void
+BaseRemoteGDB::descheduleInstCommitEvent(Event *ev)
+{
+    if (ev->scheduled())
+        tc->descheduleInstCountEvent(ev);
+}
 
-    unique_ptr<BaseRemoteGDB::BaseGdbRegCache> regCache(gdbRegs());
+std::map<char, BaseRemoteGDB::GdbCommand> BaseRemoteGDB::command_map = {
+    // last signal
+    { '?', { "KGDB_SIGNAL", &BaseRemoteGDB::cmd_signal } },
+    // set baud (deprecated)
+    { 'b', { "KGDB_SET_BAUD", &BaseRemoteGDB::cmd_unsupported } },
+    // set breakpoint (deprecated)
+    { 'B', { "KGDB_SET_BREAK", &BaseRemoteGDB::cmd_unsupported } },
+    // resume
+    { 'c', { "KGDB_CONT", &BaseRemoteGDB::cmd_cont } },
+    // continue with signal
+    { 'C', { "KGDB_ASYNC_CONT", &BaseRemoteGDB::cmd_async_cont } },
+    // toggle debug flags (deprecated)
+    { 'd', { "KGDB_DEBUG", &BaseRemoteGDB::cmd_unsupported } },
+    // detach remote gdb
+    { 'D', { "KGDB_DETACH", &BaseRemoteGDB::cmd_detach } },
+    // read general registers
+    { 'g', { "KGDB_REG_R", &BaseRemoteGDB::cmd_reg_r } },
+    // write general registers
+    { 'G', { "KGDB_REG_W", &BaseRemoteGDB::cmd_reg_w } },
+    // set thread
+    { 'H', { "KGDB_SET_THREAD", &BaseRemoteGDB::cmd_set_thread } },
+    // step a single cycle
+    { 'i', { "KGDB_CYCLE_STEP", &BaseRemoteGDB::cmd_unsupported } },
+    // signal then cycle step
+    { 'I', { "KGDB_SIG_CYCLE_STEP", &BaseRemoteGDB::cmd_unsupported } },
+    // kill program
+    { 'k', { "KGDB_KILL", &BaseRemoteGDB::cmd_detach } },
+    // read memory
+    { 'm', { "KGDB_MEM_R", &BaseRemoteGDB::cmd_mem_r } },
+    // write memory
+    { 'M', { "KGDB_MEM_W", &BaseRemoteGDB::cmd_mem_w } },
+    // read register
+    { 'p', { "KGDB_READ_REG", &BaseRemoteGDB::cmd_unsupported } },
+    // write register
+    { 'P', { "KGDB_SET_REG", &BaseRemoteGDB::cmd_unsupported } },
+    // query variable
+    { 'q', { "KGDB_QUERY_VAR", &BaseRemoteGDB::cmd_query_var } },
+    // set variable
+    { 'Q', { "KGDB_SET_VAR", &BaseRemoteGDB::cmd_unsupported } },
+    // reset system (deprecated)
+    { 'r', { "KGDB_RESET", &BaseRemoteGDB::cmd_unsupported } },
+    // step
+    { 's', { "KGDB_STEP", &BaseRemoteGDB::cmd_step } },
+    // signal and step
+    { 'S', { "KGDB_ASYNC_STEP", &BaseRemoteGDB::cmd_async_step } },
+    // find out if the thread is alive
+    { 'T', { "KGDB_THREAD_ALIVE", &BaseRemoteGDB::cmd_unsupported } },
+    // target exited
+    { 'W', { "KGDB_TARGET_EXIT", &BaseRemoteGDB::cmd_unsupported } },
+    // write memory
+    { 'X', { "KGDB_BINARY_DLOAD", &BaseRemoteGDB::cmd_unsupported } },
+    // remove breakpoint or watchpoint
+    { 'z', { "KGDB_CLR_HW_BKPT", &BaseRemoteGDB::cmd_clr_hw_bkpt } },
+    // insert breakpoint or watchpoint
+    { 'Z', { "KGDB_SET_HW_BKPT", &BaseRemoteGDB::cmd_set_hw_bkpt } },
+};
 
-    bufferSize = regCache->size() * 2 + 256;
-    buffer = (char*)malloc(bufferSize);
+bool
+BaseRemoteGDB::checkBpLen(size_t len)
+{
+    return len == sizeof(MachInst);
+}
 
-    DPRINTF(GDBMisc, "trap: PC=%s\n", context->pcState());
-
-    clearSingleStep();
-
-    /*
-     * The first entry to this function is normally through
-     * a breakpoint trap in kgdb_connect(), in which case we
-     * must advance past the breakpoint because gdb will not.
-     *
-     * On the first entry here, we expect that gdb is not yet
-     * listening to us, so just enter the interaction loop.
-     * After the debugger is "active" (connected) it will be
-     * waiting for a "signaled" message from us.
-     */
-    if (!active) {
-        active = true;
-    } else {
-        // Tell remote host that an exception has occurred.
-        snprintf(buffer, bufferSize, "S%02x", type);
-        send(buffer);
-    }
-
-    // Stick frame regs into our reg cache.
-    regCache->getRegs(context);
-
-    for (;;) {
-        datalen = recv(data, sizeof(data));
-        data[sizeof(data) - 1] = 0; // Sentinel
-        command = data[0];
-        subcmd = 0;
-        p = data + 1;
-        switch (command) {
-
-          case GDBSignal:
-            // if this command came from a running gdb, answer it --
-            // the other guy has no way of knowing if we're in or out
-            // of this loop when he issues a "remote-signal".
-            snprintf(buffer, bufferSize,
-                    "S%02x", type);
-            send(buffer);
-            continue;
-
-          case GDBRegR:
-            if (2 * regCache->size() > bufferSize)
-                panic("buffer too small");
-
-            mem2hex(buffer, regCache->data(), regCache->size());
-            send(buffer);
-            continue;
-
-          case GDBRegW:
-            p = hex2mem(regCache->data(), p, regCache->size());
-            if (p == NULL || *p != '\0')
-                send("E01");
-            else {
-                regCache->setRegs(context);
-                send("OK");
-            }
-            continue;
-
-          case GDBMemR:
-            val = hex2i(&p);
-            if (*p++ != ',') {
-                send("E02");
-                continue;
-            }
-            len = hex2i(&p);
-            if (*p != '\0') {
-                send("E03");
-                continue;
-            }
-            if (len > bufferSize) {
-                send("E04");
-                continue;
-            }
-            if (!acc(val, len)) {
-                send("E05");
-                continue;
-            }
-
-            if (read(val, (size_t)len, buffer)) {
-               // variable length array would be nice, but C++ doesn't
-               // officially support those...
-               char *temp = new char[2*len+1];
-               mem2hex(temp, buffer, len);
-               send(temp);
-               delete [] temp;
-            } else {
-               send("E05");
-            }
-            continue;
-
-          case GDBMemW:
-            val = hex2i(&p);
-            if (*p++ != ',') {
-                send("E06");
-                continue;
-            }
-            len = hex2i(&p);
-            if (*p++ != ':') {
-                send("E07");
-                continue;
-            }
-            if (len > datalen - (p - data)) {
-                send("E08");
-                continue;
-            }
-            p = hex2mem(buffer, p, bufferSize);
-            if (p == NULL) {
-                send("E09");
-                continue;
-            }
-            if (!acc(val, len)) {
-                send("E0A");
-                continue;
-            }
-            if (write(val, (size_t)len, buffer))
-              send("OK");
-            else
-              send("E0B");
-            continue;
-
-          case GDBSetThread:
-            subcmd = *p++;
-            val = hex2i(&p);
-            if (val == 0)
-                send("OK");
-            else
-                send("E01");
-            continue;
-
-          case GDBDetach:
-          case GDBKill:
-            active = false;
-            clearSingleStep();
-            detach();
-            goto out;
-
-          case GDBAsyncCont:
-            subcmd = hex2i(&p);
-            if (*p++ == ';') {
-                val = hex2i(&p);
-                context->pcState(val);
-            }
-            clearSingleStep();
-            goto out;
-
-          case GDBCont:
-            if (p - data < (ptrdiff_t)datalen) {
-                val = hex2i(&p);
-                context->pcState(val);
-            }
-            clearSingleStep();
-            goto out;
-
-          case GDBAsyncStep:
-            subcmd = hex2i(&p);
-            if (*p++ == ';') {
-                val = hex2i(&p);
-                context->pcState(val);
-            }
-            setSingleStep();
-            goto out;
-
-          case GDBStep:
-            if (p - data < (ptrdiff_t)datalen) {
-                val = hex2i(&p);
-                context->pcState(val);
-            }
-            setSingleStep();
-            goto out;
-
-          case GDBClrHwBkpt:
-            subcmd = *p++;
-            if (*p++ != ',') send("E0D");
-            val = hex2i(&p);
-            if (*p++ != ',') send("E0D");
-            len = hex2i(&p);
-
-            DPRINTF(GDBMisc, "clear %s, addr=%#x, len=%d\n",
-                    break_type(subcmd), val, len);
-
-            ret = false;
-
-            switch (subcmd) {
-              case '0': // software breakpoint
-                ret = removeSoftBreak(val, len);
-                break;
-
-              case '1': // hardware breakpoint
-                ret = removeHardBreak(val, len);
-                break;
-
-              case '2': // write watchpoint
-              case '3': // read watchpoint
-              case '4': // access watchpoint
-              default: // unknown
-                send("");
-                break;
-            }
-
-            send(ret ? "OK" : "E0C");
-            continue;
-
-          case GDBSetHwBkpt:
-            subcmd = *p++;
-            if (*p++ != ',') send("E0D");
-            val = hex2i(&p);
-            if (*p++ != ',') send("E0D");
-            len = hex2i(&p);
-
-            DPRINTF(GDBMisc, "set %s, addr=%#x, len=%d\n",
-                    break_type(subcmd), val, len);
-
-            ret = false;
-
-            switch (subcmd) {
-              case '0': // software breakpoint
-                ret = insertSoftBreak(val, len);
-                break;
-
-              case '1': // hardware breakpoint
-                ret = insertHardBreak(val, len);
-                break;
-
-              case '2': // write watchpoint
-              case '3': // read watchpoint
-              case '4': // access watchpoint
-              default: // unknown
-                send("");
-                break;
-            }
-
-            send(ret ? "OK" : "E0C");
-            continue;
-
-          case GDBQueryVar:
-            var = string(p, datalen - 1);
-            if (var == "C")
-                send("QC0");
-            else
-                send("");
-            continue;
-
-          case GDBSetBaud:
-          case GDBSetBreak:
-          case GDBDebug:
-          case GDBCycleStep:
-          case GDBSigCycleStep:
-          case GDBReadReg:
-          case GDBSetVar:
-          case GDBReset:
-          case GDBThreadAlive:
-          case GDBTargetExit:
-          case GDBBinaryDload:
-            // Unsupported command
-            DPRINTF(GDBMisc, "Unsupported command: %s\n",
-                    gdb_command(command));
-            DDUMP(GDBMisc, (uint8_t *)data, datalen);
-            send("");
-            continue;
-
-          default:
-            // Unknown command.
-            DPRINTF(GDBMisc, "Unknown command: %c(%#x)\n",
-                    command, command);
-            send("");
-            continue;
+bool
+BaseRemoteGDB::cmd_unsupported(GdbCommand::Context &ctx)
+{
+    DPRINTF(GDBMisc, "Unsupported command: %s\n", ctx.cmd->name);
+    DDUMP(GDBMisc, ctx.data, ctx.len);
+    throw Unsupported();
+}
 
 
-        }
-    }
-
-  out:
-    free(buffer);
+bool
+BaseRemoteGDB::cmd_signal(GdbCommand::Context &ctx)
+{
+    send(csprintf("S%02x", ctx.type).c_str());
     return true;
 }
 
-// Convert a hex digit into an integer.
-// This returns -1 if the argument passed is no valid hex digit.
-int
-BaseRemoteGDB::digit2i(char c)
+bool
+BaseRemoteGDB::cmd_cont(GdbCommand::Context &ctx)
 {
-    if (c >= '0' && c <= '9')
-        return (c - '0');
-    else if (c >= 'a' && c <= 'f')
-        return (c - 'a' + 10);
-    else if (c >= 'A' && c <= 'F')
-
-        return (c - 'A' + 10);
-    else
-        return (-1);
+    const char *p = ctx.data;
+    if (ctx.len) {
+        Addr newPc = hex2i(&p);
+        tc->pcState(newPc);
+    }
+    clearSingleStep();
+    return false;
 }
 
-// Convert the low 4 bits of an integer into an hex digit.
-char
-BaseRemoteGDB::i2digit(int n)
+bool
+BaseRemoteGDB::cmd_async_cont(GdbCommand::Context &ctx)
 {
-    return ("0123456789abcdef"[n & 0x0f]);
+    const char *p = ctx.data;
+    hex2i(&p);
+    if (*p++ == ';') {
+        Addr newPc = hex2i(&p);
+        tc->pcState(newPc);
+    }
+    clearSingleStep();
+    return false;
 }
 
-// Convert a byte array into an hex string.
+bool
+BaseRemoteGDB::cmd_detach(GdbCommand::Context &ctx)
+{
+    detach();
+    return false;
+}
+
+bool
+BaseRemoteGDB::cmd_reg_r(GdbCommand::Context &ctx)
+{
+    char buf[2 * regCachePtr->size() + 1];
+    buf[2 * regCachePtr->size()] = '\0';
+    mem2hex(buf, regCachePtr->data(), regCachePtr->size());
+    send(buf);
+    return true;
+}
+
+bool
+BaseRemoteGDB::cmd_reg_w(GdbCommand::Context &ctx)
+{
+    const char *p = ctx.data;
+    p = hex2mem(regCachePtr->data(), p, regCachePtr->size());
+    if (p == NULL || *p != '\0')
+        throw CmdError("E01");
+
+    regCachePtr->setRegs(tc);
+    send("OK");
+
+    return true;
+}
+
+bool
+BaseRemoteGDB::cmd_set_thread(GdbCommand::Context &ctx)
+{
+    const char *p = ctx.data + 1; // Ignore the subcommand byte.
+    if (hex2i(&p) != 0)
+        throw CmdError("E01");
+    send("OK");
+    return true;
+}
+
+bool
+BaseRemoteGDB::cmd_mem_r(GdbCommand::Context &ctx)
+{
+    const char *p = ctx.data;
+    Addr addr = hex2i(&p);
+    if (*p++ != ',')
+        throw CmdError("E02");
+    size_t len = hex2i(&p);
+    if (*p != '\0')
+        throw CmdError("E03");
+    if (!acc(addr, len))
+        throw CmdError("E05");
+
+    char buf[len];
+    if (!read(addr, len, buf))
+        throw CmdError("E05");
+
+    char temp[2 * len + 1];
+    temp[2 * len] = '\0';
+    mem2hex(temp, buf, len);
+    send(temp);
+    return true;
+}
+
+bool
+BaseRemoteGDB::cmd_mem_w(GdbCommand::Context &ctx)
+{
+    const char *p = ctx.data;
+    Addr addr = hex2i(&p);
+    if (*p++ != ',')
+        throw CmdError("E06");
+    size_t len = hex2i(&p);
+    if (*p++ != ':')
+        throw CmdError("E07");
+    if (len * 2 > ctx.len - (p - ctx.data))
+        throw CmdError("E08");
+    char buf[len];
+    p = (char *)hex2mem(buf, p, len);
+    if (p == NULL)
+        throw CmdError("E09");
+    if (!acc(addr, len))
+        throw CmdError("E0A");
+    if (!write(addr, len, buf))
+        throw CmdError("E0B");
+    send("OK");
+    return true;
+}
+
+bool
+BaseRemoteGDB::cmd_query_var(GdbCommand::Context &ctx)
+{
+    string s(ctx.data, ctx.len - 1);
+    string xfer_read_prefix = "Xfer:features:read:";
+    if (s.rfind("Supported:", 0) == 0) {
+        std::ostringstream oss;
+        // This reply field mandatory. We can receive arbitrarily
+        // long packets, so we could choose it to be arbitrarily large.
+        // This is just an arbitrary filler value that seems to work.
+        oss << "PacketSize=1024";
+        for (const auto& feature : availableFeatures())
+            oss << ';' << feature;
+        send(oss.str().c_str());
+    } else if (s.rfind(xfer_read_prefix, 0) == 0) {
+        size_t offset, length;
+        auto value_string = s.substr(xfer_read_prefix.length());
+        auto colon_pos = value_string.find(':');
+        auto comma_pos = value_string.find(',');
+        if (colon_pos == std::string::npos || comma_pos == std::string::npos)
+            throw CmdError("E00");
+        std::string annex;
+        if (!getXferFeaturesRead(value_string.substr(0, colon_pos), annex))
+            throw CmdError("E00");
+        try {
+            offset = std::stoull(
+                value_string.substr(colon_pos + 1, comma_pos), NULL, 16);
+            length = std::stoull(
+                value_string.substr(comma_pos + 1), NULL, 16);
+        } catch (std::invalid_argument& e) {
+            throw CmdError("E00");
+        } catch (std::out_of_range& e) {
+            throw CmdError("E00");
+        }
+        std::string encoded;
+        encodeXferResponse(annex, encoded, offset, length);
+        send(encoded.c_str());
+    } else if (s == "C") {
+        send("QC0");
+    } else {
+        throw Unsupported();
+    }
+    return true;
+}
+
+std::vector<std::string>
+BaseRemoteGDB::availableFeatures() const
+{
+    return {};
+};
+
+bool
+BaseRemoteGDB::getXferFeaturesRead(
+    const std::string &annex, std::string &output)
+{
+    return false;
+}
+
 void
-BaseRemoteGDB::mem2hex(char *vdst, const char *vsrc, int len)
+BaseRemoteGDB::encodeBinaryData(
+    const std::string &unencoded, std::string &encoded) const
 {
-    char *dst = vdst;
-    const char *src = vsrc;
-
-    while (len--) {
-        *dst++ = i2digit(*src >> 4);
-        *dst++ = i2digit(*src++);
+    for (const char& c : unencoded) {
+        if (c == '$' || c == '#' || c == '}' || c == '*') {
+            encoded += '}';
+            encoded += c ^ 0x20;
+        } else {
+            encoded += c;
+        }
     }
-    *dst = '\0';
 }
 
-// Convert an hex string into a byte array.
-// This returns a pointer to the character following the last valid
-// hex digit. If the string ends in the middle of a byte, NULL is
-// returned.
-const char *
-BaseRemoteGDB::hex2mem(char *vdst, const char *src, int maxlen)
+void
+BaseRemoteGDB::encodeXferResponse(const std::string &unencoded,
+    std::string &encoded, size_t offset, size_t unencoded_length) const
 {
-    char *dst = vdst;
-    int msb, lsb;
-
-    while (*src && maxlen--) {
-        msb = digit2i(*src++);
-        if (msb < 0)
-            return (src - 1);
-        lsb = digit2i(*src++);
-        if (lsb < 0)
-            return (NULL);
-        *dst++ = (msb << 4) | lsb;
-    }
-    return (src);
+    if (offset + unencoded_length < unencoded.length())
+        encoded += 'm';
+    else
+        encoded += 'l';
+    encodeBinaryData(unencoded.substr(offset, unencoded_length), encoded);
 }
 
-// Convert an hex string into an integer.
-// This returns a pointer to the character following the last valid
-// hex digit.
-Addr
-BaseRemoteGDB::hex2i(const char **srcp)
+bool
+BaseRemoteGDB::cmd_async_step(GdbCommand::Context &ctx)
 {
-    const char *src = *srcp;
-    Addr r = 0;
-    int nibble;
-
-    while ((nibble = digit2i(*src)) >= 0) {
-        r *= 16;
-        r += nibble;
-        src++;
+    const char *p = ctx.data;
+    hex2i(&p); // Ignore the subcommand byte.
+    if (*p++ == ';') {
+        Addr newPc = hex2i(&p);
+        tc->pcState(newPc);
     }
-    *srcp = src;
-    return (r);
+    setSingleStep();
+    return false;
 }
 
+bool
+BaseRemoteGDB::cmd_step(GdbCommand::Context &ctx)
+{
+    if (ctx.len) {
+        const char *p = ctx.data;
+        Addr newPc = hex2i(&p);
+        tc->pcState(newPc);
+    }
+    setSingleStep();
+    return false;
+}
+
+bool
+BaseRemoteGDB::cmd_clr_hw_bkpt(GdbCommand::Context &ctx)
+{
+    const char *p = ctx.data;
+    char subcmd = *p++;
+    if (*p++ != ',')
+        throw CmdError("E0D");
+    Addr addr = hex2i(&p);
+    if (*p++ != ',')
+        throw CmdError("E0D");
+    size_t len = hex2i(&p);
+
+    DPRINTF(GDBMisc, "clear %s, addr=%#x, len=%d\n",
+            break_type(subcmd), addr, len);
+
+    switch (subcmd) {
+      case GdbSoftBp:
+        removeSoftBreak(addr, len);
+        break;
+      case GdbHardBp:
+        removeHardBreak(addr, len);
+        break;
+      case GdbWriteWp:
+      case GdbReadWp:
+      case GdbAccWp:
+      default: // unknown
+        throw Unsupported();
+    }
+    send("OK");
+
+    return true;
+}
+
+bool
+BaseRemoteGDB::cmd_set_hw_bkpt(GdbCommand::Context &ctx)
+{
+    const char *p = ctx.data;
+    char subcmd = *p++;
+    if (*p++ != ',')
+        throw CmdError("E0D");
+    Addr addr = hex2i(&p);
+    if (*p++ != ',')
+        throw CmdError("E0D");
+    size_t len = hex2i(&p);
+
+    DPRINTF(GDBMisc, "set %s, addr=%#x, len=%d\n",
+            break_type(subcmd), addr, len);
+
+    switch (subcmd) {
+      case GdbSoftBp:
+        insertSoftBreak(addr, len);
+        break;
+      case GdbHardBp:
+        insertHardBreak(addr, len);
+        break;
+      case GdbWriteWp:
+      case GdbReadWp:
+      case GdbAccWp:
+      default: // unknown
+        throw Unsupported();
+    }
+    send("OK");
+
+    return true;
+}

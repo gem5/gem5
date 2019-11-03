@@ -106,7 +106,8 @@ class MemoryType {
     return val == LPDDR ||
            val == LPDDR2 ||
            val == LPDDR3 ||
-           val == WIDEIO_SDR;
+           val == WIDEIO_SDR ||
+           val == DDR4;
   }
 
   bool isDDRFamily() const
@@ -132,9 +133,11 @@ class MemoryType {
 
   double getCapacitance() const
   {
-    // LPDDR/2/3 and DDR memories only have IO Power (no ODT)
-    // Conservative estimates based on Micron Mobile LPDDR2 Power Calculator
-      // LPDDR/2/3 IO Capacitance in mF
+    // LPDDR1/2 memories only have IO Power (no ODT)
+    // LPDDR3 has optional ODT, but it is typically not used (reflections are elimitated by other means (layout))
+    // The capacitance values are conservative and based on Micron Mobile LPDDR2 Power Calculator
+
+    // LPDDR/2/3 IO Capacitance in mF
     if (val == LPDDR) {
         return 0.0000000045;
     } else if (val == LPDDR2) {

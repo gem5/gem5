@@ -56,7 +56,6 @@
 #include "debug/SerialLink.hh"
 #include "params/SerialLink.hh"
 
-
 SerialLink::SerialLinkSlavePort::SerialLinkSlavePort(const std::string& _name,
                                          SerialLink& _serial_link,
                                          SerialLinkMasterPort& _masterPort,
@@ -67,7 +66,8 @@ SerialLink::SerialLinkSlavePort::SerialLinkSlavePort(const std::string& _name,
       masterPort(_masterPort), delay(_delay),
       ranges(_ranges.begin(), _ranges.end()),
       outstandingResponses(0), retryReq(false),
-      respQueueLimit(_resp_limit), sendEvent(*this)
+      respQueueLimit(_resp_limit),
+      sendEvent([this]{ trySendTiming(); }, _name)
 {
 }
 
@@ -77,38 +77,32 @@ SerialLink::SerialLinkMasterPort::SerialLinkMasterPort(const std::string&
                                            Cycles _delay, int _req_limit)
     : MasterPort(_name, &_serial_link), serial_link(_serial_link),
       slavePort(_slavePort), delay(_delay), reqQueueLimit(_req_limit),
-      sendEvent(*this)
+      sendEvent([this]{ trySendTiming(); }, _name)
 {
 }
 
 SerialLink::SerialLink(SerialLinkParams *p)
-    : MemObject(p),
+    : ClockedObject(p),
       slavePort(p->name + ".slave", *this, masterPort,
                 ticksToCycles(p->delay), p->resp_size, p->ranges),
       masterPort(p->name + ".master", *this, slavePort,
                  ticksToCycles(p->delay), p->req_size),
-      num_lanes(p->num_lanes)
+      num_lanes(p->num_lanes),
+      link_speed(p->link_speed)
+
 {
 }
 
-BaseMasterPort&
-SerialLink::getMasterPort(const std::string &if_name, PortID idx)
+Port&
+SerialLink::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "master")
         return masterPort;
-    else
-        // pass it along to our super class
-        return MemObject::getMasterPort(if_name, idx);
-}
-
-BaseSlavePort&
-SerialLink::getSlavePort(const std::string &if_name, PortID idx)
-{
-    if (if_name == "slave")
+    else if (if_name == "slave")
         return slavePort;
     else
         // pass it along to our super class
-        return MemObject::getSlavePort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
 }
 
 void
@@ -153,8 +147,9 @@ SerialLink::SerialLinkMasterPort::recvTimingResp(PacketPtr pkt)
     // have to wait to receive the whole packet. So we only account for the
     // deserialization latency.
     Cycles cycles = delay;
-    cycles += Cycles(divCeil(pkt->getSize() * 8, serial_link.num_lanes));
-    Tick t = serial_link.clockEdge(cycles);
+    cycles += Cycles(divCeil(pkt->getSize() * 8, serial_link.num_lanes
+                * serial_link.link_speed));
+     Tick t = serial_link.clockEdge(cycles);
 
     //@todo: If the processor sends two uncached requests towards HMC and the
     // second one is smaller than the first one. It may happen that the second
@@ -214,7 +209,7 @@ SerialLink::SerialLinkSlavePort::recvTimingReq(PacketPtr pkt)
             // only.
             Cycles cycles = delay;
             cycles += Cycles(divCeil(pkt->getSize() * 8,
-                serial_link.num_lanes));
+                    serial_link.num_lanes * serial_link.link_speed));
             Tick t = serial_link.clockEdge(cycles);
 
             //@todo: If the processor sends two uncached requests towards HMC
@@ -301,7 +296,7 @@ SerialLink::SerialLinkMasterPort::trySendTiming()
 
             // Make sure bandwidth limitation is met
             Cycles cycles = Cycles(divCeil(pkt->getSize() * 8,
-                serial_link.num_lanes));
+                serial_link.num_lanes * serial_link.link_speed));
             Tick t = serial_link.clockEdge(cycles);
             serial_link.schedule(sendEvent, std::max(next_req.tick, t));
         }
@@ -346,7 +341,7 @@ SerialLink::SerialLinkSlavePort::trySendTiming()
 
             // Make sure bandwidth limitation is met
             Cycles cycles = Cycles(divCeil(pkt->getSize() * 8,
-                serial_link.num_lanes));
+                serial_link.num_lanes * serial_link.link_speed));
             Tick t = serial_link.clockEdge(cycles);
             serial_link.schedule(sendEvent, std::max(next_resp.tick, t));
         }
@@ -390,14 +385,14 @@ SerialLink::SerialLinkSlavePort::recvFunctional(PacketPtr pkt)
 
     // check the response queue
     for (auto i = transmitList.begin();  i != transmitList.end(); ++i) {
-        if (pkt->checkFunctional((*i).pkt)) {
+        if (pkt->trySatisfyFunctional((*i).pkt)) {
             pkt->makeResponse();
             return;
         }
     }
 
     // also check the master port's request queue
-    if (masterPort.checkFunctional(pkt)) {
+    if (masterPort.trySatisfyFunctional(pkt)) {
         return;
     }
 
@@ -408,13 +403,13 @@ SerialLink::SerialLinkSlavePort::recvFunctional(PacketPtr pkt)
 }
 
 bool
-SerialLink::SerialLinkMasterPort::checkFunctional(PacketPtr pkt)
+SerialLink::SerialLinkMasterPort::trySatisfyFunctional(PacketPtr pkt)
 {
     bool found = false;
     auto i = transmitList.begin();
 
     while (i != transmitList.end() && !found) {
-        if (pkt->checkFunctional((*i).pkt)) {
+        if (pkt->trySatisfyFunctional((*i).pkt)) {
             pkt->makeResponse();
             found = true;
         }

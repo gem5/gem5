@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Advanced Micro Devices, Inc.
+ * Copyright (c) 2014-2016 Advanced Micro Devices, Inc.
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -28,143 +28,101 @@
  *
  * Authors: Nathan Binkert
  *          Steve Reinhardt
+ *          Brandon Potter
  */
 
 #ifndef __PROCESS_HH__
 #define __PROCESS_HH__
 
-#include <array>
+#include <inttypes.h>
+
+#include <map>
 #include <string>
 #include <vector>
 
 #include "arch/registers.hh"
+#include "base/loader/memory_image.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "mem/se_translating_port_proxy.hh"
+#include "sim/fd_array.hh"
 #include "sim/fd_entry.hh"
+#include "sim/mem_state.hh"
 #include "sim/sim_object.hh"
-#include "sim/syscallreturn.hh"
 
-class PageTable;
 struct ProcessParams;
-struct LiveProcessParams;
+
+class EmulatedDriver;
+class ObjectFile;
+class EmulationPageTable;
 class SyscallDesc;
+class SyscallReturn;
 class System;
 class ThreadContext;
-class EmulatedDriver;
-
-template<class IntType>
-struct AuxVector
-{
-    IntType a_type;
-    IntType a_val;
-
-    AuxVector()
-    {}
-
-    AuxVector(IntType type, IntType val);
-};
 
 class Process : public SimObject
 {
   public:
+    Process(ProcessParams *params, EmulationPageTable *pTable,
+            ObjectFile *obj_file);
 
-    /// Pointer to object representing the system this process is
-    /// running on.
-    System *system;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
-    // thread contexts associated with this process
-    std::vector<ContextID> contextIds;
-
-    // number of CPUs (esxec contexts, really) assigned to this process.
-    unsigned int numCpus() { return contextIds.size(); }
-
-    // record of blocked context
-    struct WaitRec
-    {
-        Addr waitChan;
-        ThreadContext *waitingContext;
-
-        WaitRec(Addr chan, ThreadContext *ctx)
-            : waitChan(chan), waitingContext(ctx)
-        {       }
-    };
-
-    // list of all blocked contexts
-    std::list<WaitRec> waitList;
-
-    Addr brk_point;             // top of the data segment
-
-    Addr stack_base;            // stack segment base (highest address)
-    unsigned stack_size;        // initial stack size
-    Addr stack_min;             // lowest address accessed on the stack
-
-    // The maximum size allowed for the stack.
-    Addr max_stack_size;
-
-    // addr to use for next stack region (for multithreaded apps)
-    Addr next_thread_stack_base;
-
-    // Base of region for mmaps (when user doesn't specify an address).
-    Addr mmap_end;
-
-    // Does mmap region grow upward or downward from mmap_end?  Most
-    // platforms grow downward, but a few (such as Alpha) grow upward
-    // instead, so they can override thie method to return false.
-    virtual bool mmapGrowsDown() const { return true; }
-
-    // Base of region for nxm data
-    Addr nxm_start;
-    Addr nxm_end;
-
-    Stats::Scalar num_syscalls;       // number of syscalls executed
-
-  protected:
-    // constructor
-    Process(ProcessParams *params);
-
+    void init() override;
     void initState() override;
-
     DrainState drain() override;
 
-  public:
+    virtual void syscall(int64_t callnum, ThreadContext *tc, Fault *fault);
+    virtual RegVal getSyscallArg(ThreadContext *tc, int &i) = 0;
+    virtual RegVal getSyscallArg(ThreadContext *tc, int &i, int width);
+    virtual void setSyscallArg(ThreadContext *tc, int i, RegVal val) = 0;
+    virtual void setSyscallReturn(ThreadContext *tc,
+                                  SyscallReturn return_value) = 0;
+    virtual SyscallDesc *getDesc(int callnum) = 0;
 
-    //This id is assigned by m5 and is used to keep process' tlb entries
-    //separated.
-    uint64_t M5_pid;
+    inline uint64_t uid() { return _uid; }
+    inline uint64_t euid() { return _euid; }
+    inline uint64_t gid() { return _gid; }
+    inline uint64_t egid() { return _egid; }
+    inline uint64_t pid() { return _pid; }
+    inline uint64_t ppid() { return _ppid; }
+    inline uint64_t pgid() { return _pgid; }
+    inline void pgid(uint64_t pgid) { _pgid = pgid; }
+    inline uint64_t tgid() { return _tgid; }
 
-    // flag for using architecture specific page table
-    bool useArchPT;
-    // running KvmCPU in SE mode requires special initialization
-    bool kvmInSE;
+    const char *progName() const { return executable.c_str(); }
 
-    PageTableBase* pTable;
+    /**
+     * Find an emulated device driver.
+     *
+     * @param filename Name of the device (under /dev)
+     * @return Pointer to driver object if found, else nullptr
+     */
+    EmulatedDriver *findDriver(std::string filename);
 
-  protected:
-    /// Memory proxy for initialization (image loading)
-    SETranslatingPortProxy initVirtMem;
-
-  private:
-    static const int NUM_FDS = 1024;
-
-    // File descriptor remapping support.
-    std::shared_ptr<std::array<FDEntry, NUM_FDS>> fd_array;
-
-    // Standard file descriptor options for initialization and checkpoints.
-    std::map<std::string, int> imap;
-    std::map<std::string, int> oemap;
-
-  public:
-    // inherit file descriptor map from another process (necessary for clone)
-    void inheritFDArray(Process *p);
+    // This function acts as a callback to update the bias value in
+    // the object file because the parameters needed to calculate the
+    // bias are not available when the object file is created.
+    void updateBias();
+    Addr getBias();
+    Addr getStartPC();
+    ObjectFile *getInterpreter();
 
     // override of virtual SimObject method: register statistics
     void regStats() override;
 
+    void allocateMem(Addr vaddr, int64_t size, bool clobber = false);
+
+    /// Attempt to fix up a fault at vaddr by allocating a page on the stack.
+    /// @return Whether the fault has been fixed.
+    bool fixupStackFault(Addr vaddr);
+
     // After getting registered with system object, tell process which
     // system-wide context id it is assigned.
-    void assignThreadContext(ContextID context_id)
+    void
+    assignThreadContext(ContextID context_id)
     {
         contextIds.push_back(context_id);
     }
@@ -172,45 +130,18 @@ class Process : public SimObject
     // Find a free context to use
     ThreadContext *findFreeContext();
 
-    // provide program name for debug messages
-    virtual const char *progName() const { return "<unknown>"; }
+    /**
+     * After delegating a thread context to a child process
+     * no longer should relate to the ThreadContext
+     */
+    void revokeThreadContext(int context_id);
 
-    // generate new target fd for sim_fd
-    int allocFD(int sim_fd, const std::string& filename, int flags, int mode,
-                bool pipe);
-
-    // disassociate target fd with simulator fd and cleanup subsidiary fields
-    void resetFDEntry(int tgt_fd);
-
-    // look up simulator fd for given target fd
-    int getSimFD(int tgt_fd);
-
-    // look up fd entry for a given target fd
-    FDEntry *getFDEntry(int tgt_fd);
-
-    // look up target fd for given host fd
-    // Assumes a 1:1 mapping between target file descriptor and host file
-    // descriptor. Given the current API, this must be true given that it's
-    // not possible to map multiple target file descriptors to the same host
-    // file descriptor
-    int getTgtFD(int sim_fd);
-
-    // fix all offsets for currently open files and save them
-    void fixFileOffsets();
-
-    // find all offsets for currently open files and save them
-    void findFileOffsets();
-
-    // set the source of this read pipe for a checkpoint resume
-    void setReadPipeSource(int read_pipe_fd, int source_fd);
-
-    virtual void syscall(int64_t callnum, ThreadContext *tc) = 0;
-
-    void allocateMem(Addr vaddr, int64_t size, bool clobber = false);
-
-    /// Attempt to fix up a fault at vaddr by allocating a page on the stack.
-    /// @return Whether the fault has been fixed.
-    bool fixupStackFault(Addr vaddr);
+    /**
+     * Does mmap region grow upward or downward from mmapEnd?  Most
+     * platforms grow downward, but a few (such as Alpha) grow upward
+     * instead, so they can override this method to return false.
+     */
+    virtual bool mmapGrowsDown() const { return true; }
 
     /**
      * Maps a contiguous range of virtual addresses in this process's
@@ -227,130 +158,139 @@ class Process : public SimObject
      */
     bool map(Addr vaddr, Addr paddr, int size, bool cacheable = true);
 
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
-};
+    void replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
+                       ThreadContext *new_tc, bool alloc_page);
 
-//
-// "Live" process with system calls redirected to host system
-//
-class ObjectFile;
-class LiveProcess : public Process
-{
-  protected:
+    virtual void clone(ThreadContext *old_tc, ThreadContext *new_tc,
+                       Process *new_p, RegVal flags);
+
+    // thread contexts associated with this process
+    std::vector<ContextID> contextIds;
+
+    // system object which owns this process
+    System *system;
+
+    Stats::Scalar numSyscalls;  // track how many system calls are executed
+
+    // flag for using architecture specific page table
+    bool useArchPT;
+    // running KVM requires special initialization
+    bool kvmInSE;
+    // flag for using the process as a thread which shares page tables
+    bool useForClone;
+
+    EmulationPageTable *pTable;
+
+    SETranslatingPortProxy initVirtMem; // memory proxy for initial image load
+
+    /**
+     * Each instance of a Loader subclass will have a chance to try to load
+     * an object file when tryLoaders is called. If they can't because they
+     * aren't compatible with it (wrong arch, wrong OS, etc), then they
+     * silently fail by returning nullptr so other loaders can try.
+     */
+    class Loader
+    {
+      public:
+        Loader();
+
+        /* Loader instances are singletons. */
+        Loader(const Loader &) = delete;
+        void operator=(const Loader &) = delete;
+
+        virtual ~Loader() {}
+
+        /**
+         * Each subclass needs to implement this method. If the loader is
+         * compatible with the passed in object file, it should return the
+         * created Process object corresponding to it. If not, it should fail
+         * silently and return nullptr. If there's a non-compatibliity related
+         * error like file IO errors, etc., those should fail non-silently
+         * with a panic or fail as normal.
+         */
+        virtual Process *load(ProcessParams *params, ObjectFile *obj_file) = 0;
+    };
+
+    // Try all the Loader instance's "load" methods one by one until one is
+    // successful. If none are, complain and fail.
+    static Process *tryLoaders(ProcessParams *params, ObjectFile *obj_file);
+
     ObjectFile *objFile;
+    MemoryImage image;
+    MemoryImage interpImage;
     std::vector<std::string> argv;
     std::vector<std::string> envp;
-    std::string cwd;
     std::string executable;
 
-    LiveProcess(LiveProcessParams *params, ObjectFile *objFile);
+    /**
+     * Return an absolute path given a relative path paired with the current
+     * working directory of the process running under simulation.
+     *
+     * @param path The relative path (generally a filename) that needs the
+     * current working directory prepended.
+     * @param host_fs A flag which determines whether to return a
+     * path for the host filesystem or the filesystem of the process running
+     * under simulation. Only matters if filesysem redirection is used to
+     * replace files (or directories) that would normally appear via the
+     * host filesystem.
+     * @return String containing an absolute path.
+     */
+    std::string absolutePath(const std::string &path, bool host_fs);
+
+    /**
+     * Redirect file path if it matches any keys initialized by system object.
+     * @param filename An input parameter containing either a relative path
+     * or an absolute path. If given a relative path, the path will be
+     * prepended to the current working directory of the simulation with
+     * respect to the host filesystem.
+     * @return String containing an absolute path.
+     */
+    std::string checkPathRedirect(const std::string &filename);
+
+    /**
+     * The cwd members are used to track changes to the current working
+     * directory for the purpose of executing system calls which depend on
+     * relative paths (i.e. open, chdir).
+     *
+     * The tgt member and host member may differ if the path for the current
+     * working directory is redirected to point to a different location
+     * (i.e. `cd /proc` should point to '$(gem5_repo)/m5out/fs/proc'
+     * instead of '/proc').
+     */
+    std::string tgtCwd;
+    std::string hostCwd;
+
+    // Syscall emulation uname release.
+    std::string release;
 
     // Id of the owner of the process
-    uint64_t __uid;
-    uint64_t __euid;
-    uint64_t __gid;
-    uint64_t __egid;
+    uint64_t _uid;
+    uint64_t _euid;
+    uint64_t _gid;
+    uint64_t _egid;
 
     // pid of the process and it's parent
-    uint64_t __pid;
-    uint64_t __ppid;
+    uint64_t _pid;
+    uint64_t _ppid;
+    uint64_t _pgid;
+    uint64_t _tgid;
 
     // Emulated drivers available to this process
     std::vector<EmulatedDriver *> drivers;
 
-  public:
+    std::shared_ptr<FDArray> fds;
 
-    enum AuxiliaryVectorType {
-        M5_AT_NULL = 0,
-        M5_AT_IGNORE = 1,
-        M5_AT_EXECFD = 2,
-        M5_AT_PHDR = 3,
-        M5_AT_PHENT = 4,
-        M5_AT_PHNUM = 5,
-        M5_AT_PAGESZ = 6,
-        M5_AT_BASE = 7,
-        M5_AT_FLAGS = 8,
-        M5_AT_ENTRY = 9,
-        M5_AT_NOTELF = 10,
-        M5_AT_UID = 11,
-        M5_AT_EUID = 12,
-        M5_AT_GID = 13,
-        M5_AT_EGID = 14,
-        // The following may be specific to Linux
-        M5_AT_PLATFORM = 15,
-        M5_AT_HWCAP = 16,
-        M5_AT_CLKTCK = 17,
-
-        M5_AT_SECURE = 23,
-        M5_BASE_PLATFORM = 24,
-        M5_AT_RANDOM = 25,
-
-        M5_AT_EXECFN = 31,
-
-        M5_AT_VECTOR_SIZE = 44
-    };
-
-    inline uint64_t uid() {return __uid;}
-    inline uint64_t euid() {return __euid;}
-    inline uint64_t gid() {return __gid;}
-    inline uint64_t egid() {return __egid;}
-    inline uint64_t pid() {return __pid;}
-    inline uint64_t ppid() {return __ppid;}
-
-    // provide program name for debug messages
-    virtual const char *progName() const { return executable.c_str(); }
-
-    std::string
-    fullPath(const std::string &filename)
-    {
-        if (filename[0] == '/' || cwd.empty())
-            return filename;
-
-        std::string full = cwd;
-
-        if (cwd[cwd.size() - 1] != '/')
-            full += '/';
-
-        return full + filename;
-    }
-
-    std::string getcwd() const { return cwd; }
-
-    virtual void syscall(int64_t callnum, ThreadContext *tc);
-
-    virtual TheISA::IntReg getSyscallArg(ThreadContext *tc, int &i) = 0;
-    virtual TheISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width);
-    virtual void setSyscallArg(ThreadContext *tc,
-            int i, TheISA::IntReg val) = 0;
-    virtual void setSyscallReturn(ThreadContext *tc,
-            SyscallReturn return_value) = 0;
-
-    virtual SyscallDesc *getDesc(int callnum) = 0;
+    bool *exitGroup;
+    std::shared_ptr<MemState> memState;
 
     /**
-     * Find an emulated device driver.
-     *
-     * @param filename Name of the device (under /dev)
-     * @return Pointer to driver object if found, else NULL
+     * Calls a futex wakeup at the address specified by this pointer when
+     * this process exits.
      */
-    EmulatedDriver *findDriver(std::string filename);
+    uint64_t childClearTID;
 
-    // This function acts as a callback to update the bias value in
-    // the object file because the parameters needed to calculate the
-    // bias are not available when the object file is created.
-    void updateBias();
-
-    ObjectFile *getInterpreter();
-
-    Addr getBias();
-    Addr getStartPC();
-
-    // this function is used to create the LiveProcess object, since
-    // we can't tell which subclass of LiveProcess to use until we
-    // open and look at the object file.
-    static LiveProcess *create(LiveProcessParams *params);
+    // Process was forked with SIGCHLD set.
+    bool *sigchld;
 };
-
 
 #endif // __PROCESS_HH__

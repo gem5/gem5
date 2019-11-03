@@ -36,6 +36,7 @@
  *
  * Authors: Andrew Bardsley
  *          Curtis Dunham
+ *          Christian Menard
  */
 
 /**
@@ -56,28 +57,29 @@
  * The external port must provide a gem5 MasterPort interface.
  */
 
-#ifndef __MEM_EXTERNAL_MASTER__
-#define __MEM_EXTERNAL_MASTER__
+#ifndef __MEM_EXTERNAL_MASTER_HH__
+#define __MEM_EXTERNAL_MASTER_HH__
 
-#include "mem/mem_object.hh"
+#include "mem/port.hh"
 #include "params/ExternalMaster.hh"
+#include "sim/sim_object.hh"
 
-class ExternalMaster : public MemObject
+class ExternalMaster : public SimObject
 {
   public:
     /** Derive from this class to create an external port interface */
-    class Port : public MasterPort
+    class ExternalPort : public MasterPort
     {
       protected:
         ExternalMaster &owner;
 
       public:
-        Port(const std::string &name_,
+        ExternalPort(const std::string &name_,
             ExternalMaster &owner_) :
             MasterPort(name_, &owner_), owner(owner_)
         { }
 
-        ~Port() { }
+        ~ExternalPort() { }
 
         /** Any or all of recv... can be overloaded to provide the port's
          *  functionality */
@@ -92,14 +94,14 @@ class ExternalMaster : public MemObject
       public:
         /** Create or find an external port which can be bound.  Returns
          *  NULL on failure */
-        virtual Port *getExternalPort(
+        virtual ExternalPort *getExternalPort(
             const std::string &name, ExternalMaster &owner,
             const std::string &port_data) = 0;
     };
 
   protected:
     /** The peer port for the gem5 port "port" */
-    Port *externalPort;
+    ExternalPort *externalPort;
 
     /** Name of the bound port.  This will be name() + ".port" */
     std::string portName;
@@ -119,17 +121,19 @@ class ExternalMaster : public MemObject
   public:
     ExternalMaster(ExternalMasterParams *params);
 
-    /** MasterPort interface.  Responds only to port "port" */
-    BaseMasterPort &getMasterPort(const std::string &if_name,
-        PortID idx = InvalidPortID);
+    /** Port interface.  Responds only to port "port" */
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     /** Register a handler which can provide ports with port_type ==
      *  handler_name */
     static void registerHandler(const std::string &handler_name,
         Handler *handler);
 
-    void init();
+    void init() override;
+
+    const MasterID masterId;
 };
 
 
-#endif // __MEM_EXTERNAL_MASTER__
+#endif //__MEM_EXTERNAL_MASTER_HH__

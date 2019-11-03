@@ -1,0 +1,42 @@
+SystemC Simulation
+ ----- running for delta
+    -- stopped at - 0 s - delta: 0
+ ----- running for 10 ns
+   --- No-op start (warning) - 
+Warning: (W571) no activity or clock movement for sc_start() invocation
+In file: <removed by verify.pl>
+    -- stopped at - 10 ns - delta: 0
+ ----- running for delta
+`echo.do_print' triggered at 10 ns - delta: 0
+    -- stopped at - 10 ns - delta: 1
+ ----- running for 5 ns
+   --- No-op start (warning) - 
+Warning: (W571) no activity or clock movement for sc_start() invocation
+In file: <removed by verify.pl>
+    -- stopped at - 15 ns - delta: 1
+ ----- running for delta
+`echo.do_print' triggered at 15 ns - delta: 1
+    -- stopped at - 15 ns - delta: 2
+ ----- running for delta
+`echo.do_print' triggered at 15 ns - delta: 2
+    -- stopped at - 15 ns - delta: 3
+ ----- running for 5 ns
+   --- No-op start (warning) - 
+Warning: (W571) no activity or clock movement for sc_start() invocation
+In file: <removed by verify.pl>
+    -- stopped at - 20 ns - delta: 3
+ ----- running for delta
+`echo.do_print' triggered at 20 ns - delta: 3
+    -- stopped at - 20 ns - delta: 4
+ ----- running for 5 ns
+   --- No-op start (warning) - 
+Warning: (W571) no activity or clock movement for sc_start() invocation
+In file: <removed by verify.pl>
+    -- stopped at - 25 ns - delta: 4
+ ----- running for delta
+`echo.do_print' triggered at 25 ns - delta: 4
+    -- stopped at - 25 ns - delta: 5
+ ----- running for delta
+`echo.do_print' triggered at 25 ns - delta: 5
+    -- stopped at - 25 ns - delta: 6
+Success

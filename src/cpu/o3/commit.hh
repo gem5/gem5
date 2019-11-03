@@ -50,6 +50,7 @@
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/timebuf.hh"
+#include "enums/CommitPolicy.hh"
 #include "sim/probe/probe.hh"
 
 struct DerivO3CPUParams;
@@ -101,21 +102,6 @@ class DefaultCommit
 
     typedef O3ThreadState<Impl> Thread;
 
-    /** Event class used to schedule a squash due to a trap (fault or
-     * interrupt) to happen on a specific cycle.
-     */
-    class TrapEvent : public Event {
-      private:
-        DefaultCommit<Impl> *commit;
-        ThreadID tid;
-
-      public:
-        TrapEvent(DefaultCommit<Impl> *_commit, ThreadID _tid);
-
-        void process();
-        const char *description() const;
-    };
-
     /** Overall commit status. Used to determine if the CPU can deschedule
      * itself due to a lack of activity.
      */
@@ -134,13 +120,6 @@ class DefaultCommit
         SquashAfterPending, //< Committing instructions before a squash.
     };
 
-    /** Commit policy for SMT mode. */
-    enum CommitPolicy {
-        Aggressive,
-        RoundRobin,
-        OldestReady
-    };
-
   private:
     /** Overall commit status. */
     CommitStatus _status;
@@ -156,6 +135,9 @@ class DefaultCommit
     ProbePointArg<DynInstPtr> *ppCommitStall;
     /** To probe when an instruction is squashed */
     ProbePointArg<DynInstPtr> *ppSquash;
+
+    /** Mark the thread as processing a trap. */
+    void processTrapEvent(ThreadID tid);
 
   public:
     /** Construct a DefaultCommit with the given parameters. */
@@ -205,6 +187,9 @@ class DefaultCommit
     /** Initializes stage by sending back the number of free entries. */
     void startupStage();
 
+    /** Clear all thread-specific states */
+    void clearStates(ThreadID tid);
+
     /** Initializes the draining of commit. */
     void drain();
 
@@ -235,7 +220,7 @@ class DefaultCommit
     size_t numROBFreeEntries(ThreadID tid);
 
     /** Generates an event to schedule a squash due to a trap. */
-    void generateTrapEvent(ThreadID tid);
+    void generateTrapEvent(ThreadID tid, Fault inst_fault);
 
     /** Records that commit needs to initiate a squash due to an
      * external state update through the TC.
@@ -294,7 +279,7 @@ class DefaultCommit
      * @param tid ID of the thread to squash.
      * @param head_inst Instruction that requested the squash.
      */
-    void squashAfter(ThreadID tid, DynInstPtr &head_inst);
+    void squashAfter(ThreadID tid, const DynInstPtr &head_inst);
 
     /** Handles processing an interrupt. */
     void handleInterrupt();
@@ -308,7 +293,7 @@ class DefaultCommit
     /** Tries to commit the head ROB instruction passed in.
      * @param head_inst The instruction to be committed.
      */
-    bool commitHead(DynInstPtr &head_inst, unsigned inst_num);
+    bool commitHead(const DynInstPtr &head_inst, unsigned inst_num);
 
     /** Gets instructions from rename and inserts them into the ROB. */
     void getInsts();
@@ -489,7 +474,7 @@ class DefaultCommit
     bool avoidQuiesceLiveLock;
 
     /** Updates commit stats based on this instruction. */
-    void updateComInstStats(DynInstPtr &inst);
+    void updateComInstStats(const DynInstPtr &inst);
 
     /** Stat for the total number of squashed instructions discarded by commit.
      */
@@ -513,10 +498,14 @@ class DefaultCommit
     Stats::Vector statComRefs;
     /** Stat for the total number of committed loads. */
     Stats::Vector statComLoads;
+    /** Stat for the total number of committed atomics. */
+    Stats::Vector statComAmos;
     /** Total number of committed memory barriers. */
     Stats::Vector statComMembars;
     /** Total number of committed branches. */
     Stats::Vector statComBranches;
+    /** Total number of vector instructions */
+    Stats::Vector statComVector;
     /** Total number of floating point instructions */
     Stats::Vector statComFloating;
     /** Total number of integer instructions */

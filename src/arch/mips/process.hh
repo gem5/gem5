@@ -35,16 +35,15 @@
 #include <string>
 #include <vector>
 
+#include "mem/page_table.hh"
 #include "sim/process.hh"
 
-class LiveProcess;
 class ObjectFile;
-class System;
 
-class MipsLiveProcess : public LiveProcess
+class MipsProcess : public Process
 {
   protected:
-    MipsLiveProcess(LiveProcessParams * params, ObjectFile *objFile);
+    MipsProcess(ProcessParams * params, ObjectFile *objFile);
 
     void initState();
 
@@ -52,15 +51,11 @@ class MipsLiveProcess : public LiveProcess
     void argsInit(int pageSize);
 
   public:
-    MipsISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
+    RegVal getSyscallArg(ThreadContext *tc, int &i);
     /// Explicitly import the otherwise hidden getSyscallArg
-    using LiveProcess::getSyscallArg;
-    void setSyscallArg(ThreadContext *tc, int i, MipsISA::IntReg val);
+    using Process::getSyscallArg;
+    void setSyscallArg(ThreadContext *tc, int i, RegVal val);
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
-
-/* No architectural page table defined for this ISA */
-typedef NoArchPageTable ArchPageTable;
-
 
 #endif // __MIPS_PROCESS_HH__

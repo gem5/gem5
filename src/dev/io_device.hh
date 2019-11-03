@@ -44,10 +44,10 @@
 #ifndef __DEV_IO_DEVICE_HH__
 #define __DEV_IO_DEVICE_HH__
 
-#include "mem/mem_object.hh"
 #include "mem/tport.hh"
 #include "params/BasicPioDevice.hh"
 #include "params/PioDevice.hh"
+#include "sim/clocked_object.hh"
 
 class PioDevice;
 class System;
@@ -59,19 +59,37 @@ class System;
  * must respond to. The device must also provide getAddrRanges() function
  * with which it returns the address ranges it is interested in.
  */
+template <class Device>
 class PioPort : public SimpleTimingPort
 {
   protected:
     /** The device that this port serves. */
-    PioDevice *device;
+    Device *device;
 
-    virtual Tick recvAtomic(PacketPtr pkt);
+    Tick
+    recvAtomic(PacketPtr pkt) override
+    {
+        // Technically the packet only reaches us after the header delay,
+        // and typically we also need to deserialise any payload.
+        Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
+        pkt->headerDelay = pkt->payloadDelay = 0;
 
-    virtual AddrRangeList getAddrRanges() const;
+        const Tick delay =
+            pkt->isRead() ? device->read(pkt) : device->write(pkt);
+        assert(pkt->isResponse() || pkt->isError());
+        return delay + receive_delay;
+    }
+
+    AddrRangeList
+    getAddrRanges() const override
+    {
+        return device->getAddrRanges();
+    }
 
   public:
-
-    PioPort(PioDevice *dev);
+    PioPort(Device *dev) :
+        SimpleTimingPort(dev->name() + ".pio", dev), device(dev)
+    {}
 };
 
 /**
@@ -81,14 +99,14 @@ class PioPort : public SimpleTimingPort
  * mode we are in, etc is handled by the PioPort so the device doesn't have to
  * bother.
  */
-class PioDevice : public MemObject
+class PioDevice : public ClockedObject
 {
   protected:
     System *sys;
 
     /** The pioPort that handles the requests for us and provides us requests
      * that it sees. */
-    PioPort pioPort;
+    PioPort<PioDevice> pioPort;
 
     /**
      * Every PIO device is obliged to provide an implementation that
@@ -123,12 +141,12 @@ class PioDevice : public MemObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    virtual void init();
+    void init() override;
 
-    virtual BaseSlavePort &getSlavePort(const std::string &if_name,
-                                        PortID idx = InvalidPortID);
+    Port &getPort(const std::string &if_name,
+            PortID idx=InvalidPortID) override;
 
-    friend class PioPort;
+    friend class PioPort<PioDevice>;
 
 };
 
@@ -159,8 +177,7 @@ class BasicPioDevice : public PioDevice
      *
      * @return a list of non-overlapping address ranges
      */
-    virtual AddrRangeList getAddrRanges() const;
-
+    AddrRangeList getAddrRanges() const override;
 };
 
 #endif // __DEV_IO_DEVICE_HH__

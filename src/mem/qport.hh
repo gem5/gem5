@@ -47,6 +47,7 @@
 
 #include "mem/packet_queue.hh"
 #include "mem/port.hh"
+#include "sim/sim_object.hh"
 
 /**
  * A queued port is a port that has an infinite queue for outgoing
@@ -75,7 +76,7 @@ class QueuedSlavePort : public SlavePort
      * behaviuor in a subclass, and provide the latter to the
      * QueuePort constructor.
      */
-    QueuedSlavePort(const std::string& name, MemObject* owner,
+    QueuedSlavePort(const std::string& name, SimObject* owner,
                     RespPacketQueue &resp_queue, PortID id = InvalidPortID) :
         SlavePort(name, owner, id), respQueue(resp_queue)
     { }
@@ -88,13 +89,13 @@ class QueuedSlavePort : public SlavePort
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
      */
-    void schedTimingResp(PacketPtr pkt, Tick when, bool force_order = false)
-    { respQueue.schedSendTiming(pkt, when, force_order); }
+    void schedTimingResp(PacketPtr pkt, Tick when)
+    { respQueue.schedSendTiming(pkt, when); }
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
-    bool checkFunctional(PacketPtr pkt)
-    { return respQueue.checkFunctional(pkt); }
+    bool trySatisfyFunctional(PacketPtr pkt)
+    { return respQueue.trySatisfyFunctional(pkt); }
 };
 
 /**
@@ -128,7 +129,7 @@ class QueuedMasterPort : public MasterPort
      * behaviuor in a subclass, and provide the latter to the
      * QueuePort constructor.
      */
-    QueuedMasterPort(const std::string& name, MemObject* owner,
+    QueuedMasterPort(const std::string& name, SimObject* owner,
                      ReqPacketQueue &req_queue,
                      SnoopRespPacketQueue &snoop_resp_queue,
                      PortID id = InvalidPortID) :
@@ -153,16 +154,15 @@ class QueuedMasterPort : public MasterPort
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
      */
-    void schedTimingSnoopResp(PacketPtr pkt, Tick when, bool force_order =
-                              false)
-    { snoopRespQueue.schedSendTiming(pkt, when, force_order); }
+    void schedTimingSnoopResp(PacketPtr pkt, Tick when)
+    { snoopRespQueue.schedSendTiming(pkt, when); }
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
-    bool checkFunctional(PacketPtr pkt)
+    bool trySatisfyFunctional(PacketPtr pkt)
     {
-        return reqQueue.checkFunctional(pkt) ||
-            snoopRespQueue.checkFunctional(pkt);
+        return reqQueue.trySatisfyFunctional(pkt) ||
+            snoopRespQueue.trySatisfyFunctional(pkt);
     }
 };
 

@@ -1,0 +1,60 @@
+SystemC Simulation
+*** wait(e)
+
+Info: (I804) /IEEE_Std_1666/deprecated: timed_out() function is deprecated
+1:0 s sender
+1:0 s receiver - e1
+1:0 s sender
+2:0 s receiver - e2
+2:0 s sender
+3:2 ns receiver - e3
+*** wait(or_list)
+3:2 ns sender
+3:2 ns receiver - e1 | e1 | e1
+3:2 ns sender
+4:2 ns receiver - e2 | e2 | e2
+4:2 ns sender
+5:4 ns receiver - e3 | e3 | e3
+5:4 ns sender
+5:4 ns receiver - e1 | e2 | e3
+5:4 ns sender
+5:4 ns receiver - e3 | e2 | e1
+*** wait(and_list)
+5:4 ns sender
+5:4 ns receiver - e1 & e1 & e1
+5:4 ns sender
+6:4 ns receiver - e2 & e2 & e2
+6:4 ns sender
+7:6 ns receiver - e3 & e3 & e3
+7:6 ns sender
+8:8 ns receiver - e1 & e2 & e3
+8:8 ns sender
+9:10 ns receiver - e3 & e2 & e1
+*** wait(t)
+10:10 ns receiver - 0 ns
+11:11 ns sender - timed out
+11:11 ns receiver - 1 ns
+*** wait(t,e)
+11:11 ns sender
+11:11 ns receiver - 1 ns | e1
+11:11 ns sender
+12:11 ns receiver - 1 ns | e2
+12:11 ns sender
+13:12 ns receiver - 1 ns | e3 - timed out
+*** wait(t,or_list)
+13:12 ns sender
+13:12 ns receiver - 1 ns | e1 | e2 | e3
+*** wait(t,and_list)
+13:12 ns sender
+14:13 ns receiver - 1 ns | e1 & e2 & e3 - timed out
+14:13 ns receiver - stop
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+
+Info: (I804) /IEEE_Std_1666/deprecated: You can turn off warnings about
+             IEEE 1666 deprecated features by placing this method call
+             as the first statement in your sc_main() function:
+
+  sc_core::sc_report_handler::set_actions( "/IEEE_Std_1666/deprecated",
+                                           sc_core::SC_DO_NOTHING );
+

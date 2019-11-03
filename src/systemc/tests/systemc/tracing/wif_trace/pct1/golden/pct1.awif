@@ -1,0 +1,81 @@
+
+type scalar "BIT" enum '0', '1' ;
+type scalar "MVL" enum '0', '1', 'X', 'Z', '?' ;
+
+declare  O0   "Tx"  BIT  variable ;
+start_trace O0 ;
+declare  O1   "dout"  BIT  0 31 variable ;
+start_trace O1 ;
+declare  O2   "wr"  BIT  variable ;
+start_trace O2 ;
+comment "All initial values are dumped below at time 0 sec = 0 timescale units." ;
+assign O0 '1' ;
+assign O1 "00000000000000000000000000000000" ;
+assign O2 '1' ;
+
+delta_time 50000 ;
+assign O0 '0' ;
+
+delta_time 20000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 20000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 20000 ;
+assign O0 '1' ;
+
+delta_time 20000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 80000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 30000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 20000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+
+delta_time 90000 ;
+assign O0 '0' ;
+
+delta_time 20000 ;
+assign O0 '1' ;
+

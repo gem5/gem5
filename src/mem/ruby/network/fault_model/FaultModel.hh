@@ -37,8 +37,8 @@
  * Proceedings of the 48th Design Automation Conference (DAC'11)
  */
 
-#ifndef __MEM_RUBY_NETWORK_FAULT_MODEL_HH__
-#define __MEM_RUBY_NETWORK_FAULT_MODEL_HH__
+#ifndef __MEM_RUBY_NETWORK_FAULT_MODEL_FAULTMODEL_HH__
+#define __MEM_RUBY_NETWORK_FAULT_MODEL_FAULTMODEL_HH__
 
 // tool limitations and fixed inputs
 #define MAX_VCs 40
@@ -138,4 +138,4 @@ class FaultModel : public SimObject
     std::vector <int> temperature_weights;
 };
 
-#endif //  __MEM_RUBY_NETWORK_FAULT_MODEL_HH__
+#endif //__MEM_RUBY_NETWORK_FAULT_MODEL_FAULTMODEL_HH__

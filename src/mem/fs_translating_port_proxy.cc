@@ -46,33 +46,34 @@
  * Port object definitions.
  */
 
+#include "mem/fs_translating_port_proxy.hh"
+
 #include "arch/vtophys.hh"
 #include "base/chunk_generator.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "mem/fs_translating_port_proxy.hh"
 #include "sim/system.hh"
 
-using namespace TheISA;
-
 FSTranslatingPortProxy::FSTranslatingPortProxy(ThreadContext *tc)
-    : PortProxy(tc->getCpuPtr()->getDataPort(),
+    : PortProxy(tc->getCpuPtr()->getSendFunctional(),
                 tc->getSystemPtr()->cacheLineSize()), _tc(tc)
 {
 }
 
-FSTranslatingPortProxy::FSTranslatingPortProxy(MasterPort &port,
-                                               unsigned int cacheLineSize)
+FSTranslatingPortProxy::FSTranslatingPortProxy(
+        SendFunctionalFunc func, unsigned int cacheLineSize)
+    : PortProxy(func, cacheLineSize), _tc(NULL)
+{
+}
+
+FSTranslatingPortProxy::FSTranslatingPortProxy(
+        MasterPort &port, unsigned int cacheLineSize)
     : PortProxy(port, cacheLineSize), _tc(NULL)
 {
 }
 
-FSTranslatingPortProxy::~FSTranslatingPortProxy()
-{
-}
-
-void
-FSTranslatingPortProxy::readBlob(Addr addr, uint8_t *p, int size) const
+bool
+FSTranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
 {
     Addr paddr;
     for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
@@ -83,13 +84,15 @@ FSTranslatingPortProxy::readBlob(Addr addr, uint8_t *p, int size) const
         else
             paddr = TheISA::vtophys(gen.addr());
 
-        PortProxy::readBlob(paddr, p, gen.size());
-        p += gen.size();
+        PortProxy::readBlobPhys(paddr, 0, p, gen.size());
+        p = static_cast<uint8_t *>(p) + gen.size();
     }
+    return true;
 }
 
-void
-FSTranslatingPortProxy::writeBlob(Addr addr, const uint8_t *p, int size) const
+bool
+FSTranslatingPortProxy::tryWriteBlob(
+        Addr addr, const void *p, int size) const
 {
     Addr paddr;
     for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
@@ -100,13 +103,14 @@ FSTranslatingPortProxy::writeBlob(Addr addr, const uint8_t *p, int size) const
         else
             paddr = TheISA::vtophys(gen.addr());
 
-        PortProxy::writeBlob(paddr, p, gen.size());
-        p += gen.size();
+        PortProxy::writeBlobPhys(paddr, 0, p, gen.size());
+        p = static_cast<const uint8_t *>(p) + gen.size();
     }
+    return true;
 }
 
-void
-FSTranslatingPortProxy::memsetBlob(Addr address, uint8_t v, int size) const
+bool
+FSTranslatingPortProxy::tryMemsetBlob(Addr address, uint8_t v, int size) const
 {
     Addr paddr;
     for (ChunkGenerator gen(address, size, TheISA::PageBytes); !gen.done();
@@ -117,50 +121,7 @@ FSTranslatingPortProxy::memsetBlob(Addr address, uint8_t v, int size) const
         else
             paddr = TheISA::vtophys(gen.addr());
 
-        PortProxy::memsetBlob(paddr, v, gen.size());
+        PortProxy::memsetBlobPhys(paddr, 0, v, gen.size());
     }
-}
-
-void
-CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen)
-{
-    uint8_t *dst = (uint8_t *)dest;
-    tc->getVirtProxy().readBlob(src, dst, cplen);
-}
-
-void
-CopyIn(ThreadContext *tc, Addr dest, const void *source, size_t cplen)
-{
-    uint8_t *src = (uint8_t *)source;
-    tc->getVirtProxy().writeBlob(dest, src, cplen);
-}
-
-void
-CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
-{
-    char *start = dst;
-    FSTranslatingPortProxy &vp = tc->getVirtProxy();
-
-    bool foundNull = false;
-    while ((dst - start + 1) < maxlen && !foundNull) {
-        vp.readBlob(vaddr++, (uint8_t*)dst, 1);
-        if (*dst == '\0')
-            foundNull = true;
-        dst++;
-    }
-
-    if (!foundNull)
-        *dst = '\0';
-}
-
-void
-CopyStringIn(ThreadContext *tc, const char *src, Addr vaddr)
-{
-    FSTranslatingPortProxy &vp = tc->getVirtProxy();
-    for (ChunkGenerator gen(vaddr, strlen(src), TheISA::PageBytes); !gen.done();
-         gen.next())
-    {
-        vp.writeBlob(gen.addr(), (uint8_t*)src, gen.size());
-        src += gen.size();
-    }
+    return true;
 }

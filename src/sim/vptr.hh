@@ -31,8 +31,6 @@
 #ifndef __ARCH_ALPHA_VPTR_HH__
 #define __ARCH_ALPHA_VPTR_HH__
 
-#include "arch/isa_traits.hh"
-#include "arch/vtophys.hh"
 #include "mem/fs_translating_port_proxy.hh"
 
 class ThreadContext;
@@ -71,7 +69,7 @@ class VPtr
         if (!ptr)
             return;
 
-        FSTranslatingPortProxy &proxy = tc->getVirtProxy();
+        PortProxy &proxy = tc->getVirtProxy();
         proxy.readBlob(ptr, buffer, sizeof(T));
     }
 

@@ -1,0 +1,18 @@
+SystemC Simulation
+print
+dump
+name = fifo_0
+
+print
+123
+dump
+name = fifo_0
+value[0] = 123
+
+print
+123
+321
+dump
+name = fifo_0
+value[0] = 123
+value[1] = 321

@@ -1,0 +1,134 @@
+SystemC Simulation
+Stimuli: stim1= 0 stim2= 0 stim3= 0 at 2 ns
+Display : in_data1 0000  at 4 ns
+Display : in_data2 0000  at 6 ns
+Display : in_data2 0000  at 7 ns
+Display : in_data2 0000  at 8 ns
+Display : in_data3 0000  at 10 ns
+Display : in_data3 0000  at 11 ns
+Display : in_data3 0100  at 12 ns
+Stimuli: stim1= 1 stim2= 1 stim3= 1 at 18 ns
+Display : in_data1 0001  at 20 ns
+Display : in_data2 0000  at 22 ns
+Display : in_data2 0000  at 23 ns
+Display : in_data2 0000  at 24 ns
+Display : in_data3 0100  at 26 ns
+Display : in_data3 0100  at 27 ns
+Display : in_data3 0100  at 28 ns
+Stimuli: stim1= 2 stim2= 2 stim3= 2 at 34 ns
+Display : in_data1 0001  at 36 ns
+Display : in_data1 0001  at 37 ns
+Display : in_data2 0001  at 39 ns
+Display : in_data2 0001  at 40 ns
+Display : in_data2 0001  at 41 ns
+Display : in_data3 0100  at 43 ns
+Display : in_data3 0100  at 44 ns
+Display : in_data3 0100  at 45 ns
+Stimuli: stim1= 3 stim2= 3 stim3= 3 at 50 ns
+Display : in_data1 0010  at 52 ns
+Display : in_data1 0010  at 53 ns
+Display : in_data1 0010  at 54 ns
+Display : in_data2 1000  at 56 ns
+Display : in_data2 1000  at 57 ns
+Display : in_data2 1000  at 58 ns
+Display : in_data3 0100  at 60 ns
+Display : in_data3 0100  at 61 ns
+Display : in_data3 0100  at 62 ns
+Stimuli: stim1= 4 stim2= 4 stim3= 4 at 66 ns
+Display : in_data1 0010  at 68 ns
+Display : in_data1 0010  at 69 ns
+Display : in_data1 0010  at 70 ns
+Display : in_data1 0010  at 71 ns
+Display : in_data1 0011  at 72 ns
+Display : in_data2 1011  at 74 ns
+Display : in_data2 1011  at 75 ns
+Display : in_data2 1011  at 76 ns
+Display : in_data3 0100  at 78 ns
+Display : in_data3 0100  at 79 ns
+Display : in_data3 0100  at 80 ns
+Stimuli: stim1= 5 stim2= 5 stim3= 5 at 82 ns
+Display : in_data1 0101  at 84 ns
+Display : in_data2 0100  at 86 ns
+Display : in_data2 0100  at 87 ns
+Display : in_data2 0100  at 88 ns
+Display : in_data3 0100  at 90 ns
+Display : in_data3 0100  at 91 ns
+Display : in_data3 0100  at 92 ns
+Stimuli: stim1= 6 stim2= 6 stim3= 6 at 98 ns
+Display : in_data1 0110  at 100 ns
+Display : in_data2 0100  at 102 ns
+Display : in_data2 0100  at 103 ns
+Display : in_data2 0100  at 104 ns
+Display : in_data3 0100  at 106 ns
+Display : in_data3 0100  at 107 ns
+Display : in_data3 0100  at 108 ns
+Stimuli: stim1= 7 stim2= 7 stim3= 7 at 114 ns
+Display : in_data1 0111  at 116 ns
+Display : in_data2 0100  at 118 ns
+Display : in_data2 0100  at 119 ns
+Display : in_data2 0100  at 120 ns
+Display : in_data3 0100  at 122 ns
+Display : in_data3 0100  at 123 ns
+Display : in_data3 0100  at 124 ns
+Stimuli: stim1= 8 stim2= 8 stim3= 8 at 130 ns
+Display : in_data1 1000  at 132 ns
+Display : in_data2 0100  at 134 ns
+Display : in_data2 0100  at 135 ns
+Display : in_data2 0100  at 136 ns
+Display : in_data2 0100  at 137 ns
+Display : in_data2 0100  at 138 ns
+Display : in_data3 0100  at 140 ns
+Display : in_data3 0100  at 141 ns
+Stimuli: stim1= 9 stim2= 9 stim3= 9 at 146 ns
+Display : in_data1 1001  at 148 ns
+Display : in_data2 0001  at 150 ns
+Display : in_data2 0001  at 151 ns
+Display : in_data2 0001  at 152 ns
+Display : in_data2 0001  at 153 ns
+Display : in_data2 0001  at 154 ns
+Display : in_data3 0100  at 156 ns
+Display : in_data3 0100  at 157 ns
+Stimuli: stim1= 10 stim2= 10 stim3= 10 at 162 ns
+Display : in_data1 1010  at 164 ns
+Display : in_data2 0001  at 166 ns
+Display : in_data2 0001  at 167 ns
+Display : in_data2 0001  at 168 ns
+Display : in_data2 0001  at 169 ns
+Display : in_data2 0001  at 170 ns
+Display : in_data3 0100  at 172 ns
+Display : in_data3 0100  at 173 ns
+Stimuli: stim1= 11 stim2= 11 stim3= 11 at 178 ns
+Display : in_data1 1011  at 180 ns
+Display : in_data2 0001  at 182 ns
+Display : in_data2 0001  at 183 ns
+Display : in_data2 0001  at 184 ns
+Display : in_data2 0001  at 185 ns
+Display : in_data2 0001  at 186 ns
+Display : in_data3 0100  at 188 ns
+Display : in_data3 0100  at 189 ns
+Stimuli: stim1= 12 stim2= 12 stim3= 12 at 194 ns
+Display : in_data1 1100  at 196 ns
+Display : in_data2 0001  at 198 ns
+Display : in_data2 0001  at 199 ns
+Display : in_data3 0100  at 201 ns
+Display : in_data3 0100  at 202 ns
+Stimuli: stim1= 13 stim2= 13 stim3= 13 at 210 ns
+Display : in_data1 1101  at 212 ns
+Display : in_data2 0001  at 214 ns
+Display : in_data2 0001  at 215 ns
+Display : in_data3 0100  at 217 ns
+Display : in_data3 0100  at 218 ns
+Stimuli: stim1= 14 stim2= 14 stim3= 14 at 226 ns
+Display : in_data1 1110  at 228 ns
+Display : in_data2 0001  at 230 ns
+Display : in_data2 0001  at 231 ns
+Display : in_data3 0100  at 233 ns
+Display : in_data3 0100  at 234 ns
+Stimuli: stim1= 15 stim2= 15 stim3= 15 at 242 ns
+Display : in_data1 1111  at 244 ns
+Display : in_data2 0001  at 246 ns
+Display : in_data2 0001  at 247 ns
+Display : in_data3 0100  at 249 ns
+Display : in_data3 0100  at 250 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.

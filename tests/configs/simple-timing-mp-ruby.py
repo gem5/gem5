@@ -32,16 +32,10 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 import os, optparse, sys
 
-# Get paths we might need
-config_path = os.path.dirname(os.path.abspath(__file__))
-config_root = os.path.dirname(config_path)
-m5_root = os.path.dirname(config_root)
-addToPath(config_root+'/configs/common')
-addToPath(config_root+'/configs/ruby')
-addToPath(config_root+'/configs/topologies')
+m5.util.addToPath('../configs/')
 
-import Options
-import Ruby
+from common import Options
+from ruby import Ruby
 
 parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
@@ -65,7 +59,7 @@ options.l2_assoc=2
 options.l3_assoc=2
 
 nb_cores = 4
-cpus = [ TimingSimpleCPU(cpu_id=i) for i in xrange(nb_cores) ]
+cpus = [ TimingSimpleCPU(cpu_id=i) for i in range(nb_cores) ]
 
 # overwrite the num_cpus to equal nb_cores
 options.num_cpus = nb_cores
@@ -99,6 +93,3 @@ for (i, cpu) in enumerate(system.cpu):
 
 root = Root( full_system=False, system = system )
 root.system.mem_mode = 'timing'
-
-# Not much point in this being higher than the L1 latency
-m5.ticks.setGlobalFrequency('1ns')

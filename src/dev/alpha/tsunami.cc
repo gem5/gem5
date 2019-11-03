@@ -32,22 +32,19 @@
  * Implementation of Tsunami platform.
  */
 
+#include "dev/alpha/tsunami.hh"
+
 #include <deque>
 #include <string>
 #include <vector>
 
 #include "arch/alpha/system.hh"
-#include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
-#include "dev/alpha/tsunami.hh"
 #include "dev/alpha/tsunami_cchip.hh"
 #include "dev/alpha/tsunami_io.hh"
 #include "dev/alpha/tsunami_pchip.hh"
-#include "dev/terminal.hh"
 
 using namespace std;
-//Should this be AlphaISA?
-using namespace TheISA;
 
 Tsunami::Tsunami(const Params *p)
     : Platform(p), system(p->system)

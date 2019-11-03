@@ -43,7 +43,6 @@ if env['TARGET_GPU_ISA'] == 'hsail':
     env.Command(['insts/gen_decl.hh', 'gpu_decoder.cc', 'insts/gen_exec.cc'],
                 'gen.py', '$SOURCE $TARGETS')
 
-    Source('generic_types.cc')
     Source('gpu_decoder.cc')
     Source('insts/branch.cc')
     Source('insts/gen_exec.cc')

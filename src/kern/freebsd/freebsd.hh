@@ -39,7 +39,7 @@
 #include "kern/operatingsystem.hh"
 
 class ThreadContext;
-class LiveProcess;
+class Process;
 
 ///
 /// This class encapsulates the types, structures, constants,

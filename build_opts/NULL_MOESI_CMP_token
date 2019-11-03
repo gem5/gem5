@@ -1,0 +1,3 @@
+TARGET_ISA = 'null'
+CPU_MODELS = ''
+PROTOCOL='MOESI_CMP_token'

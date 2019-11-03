@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2017 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
@@ -31,12 +43,11 @@
 #ifndef __SIM_INIT_HH__
 #define __SIM_INIT_HH__
 
-#include <Python.h>
+#include "pybind11/pybind11.h"
 
-/*
- * Data structure describing an embedded python file.
- */
 #include <list>
+#include <map>
+#include <string>
 
 #include <inttypes.h>
 
@@ -45,6 +56,9 @@ struct _object;
 typedef _object PyObject;
 #endif
 
+/*
+ * Data structure describing an embedded python file.
+ */
 struct EmbeddedPython
 {
     const char *filename;
@@ -66,18 +80,37 @@ struct EmbeddedPython
     static int initAll();
 };
 
-struct EmbeddedSwig
+class EmbeddedPyBind
 {
-    void (*initFunc)();
+  public:
+    EmbeddedPyBind(const char *_name,
+                   void (*init_func)(pybind11::module &),
+                   const char *_base);
 
-    EmbeddedSwig(void (*init_func)());
+    EmbeddedPyBind(const char *_name,
+                   void (*init_func)(pybind11::module &));
 
-    static std::list<EmbeddedSwig *> &getList();
+#if PY_MAJOR_VERSION >= 3
+    static PyObject *initAll();
+#else
     static void initAll();
+#endif
+
+  private:
+    void (*initFunc)(pybind11::module &);
+
+    bool depsReady() const;
+    void init(pybind11::module &m);
+
+    bool registered;
+    const std::string name;
+    const std::string base;
+
+    static std::map<std::string, EmbeddedPyBind *> &getMap();
 };
 
-int initM5Python();
+void registerNativeModules();
+
 int m5Main(int argc, char **argv);
-PyMODINIT_FUNC initm5(void);
 
 #endif // __SIM_INIT_HH__

@@ -1,0 +1,12 @@
+SystemC Simulation
+dut.sub_modules - sc_vector
+dut.sub_modules_0 - sc_module
+dut.sub_modules_1 - sc_module
+dut.sub_modules_2 - sc_module
+dut.sub_modules_3 - sc_module
+dut.vector_0 - sc_vector
+dut.vector_0_0 - sc_in
+dut.vector_0_1 - sc_in
+dut.vector_0_2 - sc_in
+dut.vector_0_3 - sc_in
+Program completed

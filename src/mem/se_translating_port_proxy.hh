@@ -45,9 +45,9 @@
 #ifndef __MEM_SE_TRANSLATING_PORT_PROXY_HH__
 #define __MEM_SE_TRANSLATING_PORT_PROXY_HH__
 
-#include "mem/page_table.hh"
 #include "mem/port_proxy.hh"
 
+class EmulationPageTable;
 class Process;
 
 /**
@@ -75,26 +75,21 @@ class SETranslatingPortProxy : public PortProxy
     };
 
   private:
-    PageTableBase *pTable;
+    EmulationPageTable *pTable;
     Process *process;
     AllocType allocating;
 
   public:
-    SETranslatingPortProxy(MasterPort& port, Process* p, AllocType alloc);
-    virtual ~SETranslatingPortProxy();
+    SETranslatingPortProxy(SendFunctionalFunc func,
+                           Process* p, AllocType alloc);
+    SETranslatingPortProxy(MasterPort &port, Process* p, AllocType alloc);
+    ~SETranslatingPortProxy() {}
 
-    bool tryReadBlob(Addr addr, uint8_t *p, int size) const;
-    bool tryWriteBlob(Addr addr, const uint8_t *p, int size) const;
-    bool tryMemsetBlob(Addr addr, uint8_t val, int size) const;
-    bool tryWriteString(Addr addr, const char *str) const;
-    bool tryReadString(std::string &str, Addr addr) const;
-
-    virtual void readBlob(Addr addr, uint8_t *p, int size) const;
-    virtual void writeBlob(Addr addr, const uint8_t *p, int size) const;
-    virtual void memsetBlob(Addr addr, uint8_t val, int size) const;
-
-    void writeString(Addr addr, const char *str) const;
-    void readString(std::string &str, Addr addr) const;
+    void setPageTable(EmulationPageTable *p) { pTable = p; }
+    void setProcess(Process *p) { process = p; }
+    bool tryReadBlob(Addr addr, void *p, int size) const override;
+    bool tryWriteBlob(Addr addr, const void *p, int size) const override;
+    bool tryMemsetBlob(Addr addr, uint8_t val, int size) const override;
 };
 
 #endif // __MEM_SE_TRANSLATING_PORT_PROXY_HH__

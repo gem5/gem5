@@ -30,24 +30,20 @@
  */
 
 #include "arch/power/insts/static_inst.hh"
+
 #include "cpu/reg_class.hh"
 
 using namespace PowerISA;
 
 void
-PowerStaticInst::printReg(std::ostream &os, int reg) const
+PowerStaticInst::printReg(std::ostream &os, RegId reg) const
 {
-    RegIndex rel_reg;
-
-    switch (regIdxToClass(reg, &rel_reg)) {
-      case IntRegClass:
-        ccprintf(os, "r%d", rel_reg);
-        break;
-      case FloatRegClass:
-        ccprintf(os, "f%d", rel_reg);
-        break;
-      case MiscRegClass:
-        switch (rel_reg) {
+    if (reg.isIntReg())
+        ccprintf(os, "r%d", reg.index());
+    else if (reg.isFloatReg())
+        ccprintf(os, "f%d", reg.index());
+    else if (reg.isMiscReg())
+        switch (reg.index()) {
           case 0: ccprintf(os, "cr"); break;
           case 1: ccprintf(os, "xer"); break;
           case 2: ccprintf(os, "lr"); break;
@@ -55,9 +51,8 @@ PowerStaticInst::printReg(std::ostream &os, int reg) const
           default: ccprintf(os, "unknown_reg");
             break;
         }
-      case CCRegClass:
+    else if (reg.isCCReg())
         panic("printReg: POWER does not implement CCRegClass\n");
-    }
 }
 
 std::string

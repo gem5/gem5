@@ -30,90 +30,95 @@
  *          Korey Sewell
  */
 
-#include "arch/mips/isa_traits.hh"
 #include "arch/mips/process.hh"
+
+#include "arch/mips/isa_traits.hh"
 #include "base/loader/elf_object.hh"
 #include "base/loader/object_file.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "mem/page_table.hh"
+#include "params/Process.hh"
+#include "sim/aux_vector.hh"
 #include "sim/process.hh"
 #include "sim/process_impl.hh"
+#include "sim/syscall_return.hh"
 #include "sim/system.hh"
 
 using namespace std;
 using namespace MipsISA;
 
-MipsLiveProcess::MipsLiveProcess(LiveProcessParams * params,
-        ObjectFile *objFile)
-    : LiveProcess(params, objFile)
+MipsProcess::MipsProcess(ProcessParams *params, ObjectFile *objFile)
+    : Process(params,
+              new EmulationPageTable(params->name, params->pid, PageBytes),
+              objFile)
 {
+    fatal_if(params->useArchPT, "Arch page tables not implemented.");
     // Set up stack. On MIPS, stack starts at the top of kuseg
     // user address space. MIPS stack grows down from here
-    stack_base = 0x7FFFFFFF;
+    Addr stack_base = 0x7FFFFFFF;
+
+    Addr max_stack_size = 8 * 1024 * 1024;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
-    next_thread_stack_base = stack_base - (8 * 1024 * 1024);
+    Addr next_thread_stack_base = stack_base - max_stack_size;
 
     // Set up break point (Top of Heap)
-    brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
+    Addr brk_point = image.maxAddr();
     brk_point = roundUp(brk_point, PageBytes);
 
     // Set up region for mmaps.  Start it 1GB above the top of the heap.
-    mmap_end = brk_point + 0x40000000L;
+    Addr mmap_end = brk_point + 0x40000000L;
+
+    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
+                                     next_thread_stack_base, mmap_end);
 }
 
 void
-MipsLiveProcess::initState()
+MipsProcess::initState()
 {
-    LiveProcess::initState();
+    Process::initState();
 
     argsInit<uint32_t>(PageBytes);
 }
 
 template<class IntType>
 void
-MipsLiveProcess::argsInit(int pageSize)
+MipsProcess::argsInit(int pageSize)
 {
     int intSize = sizeof(IntType);
 
-    // Patch the ld_bias for dynamic executables.
-    updateBias();
-
-    // load object file into target memory
-    objFile->loadSections(initVirtMem);
-
-    typedef AuxVector<IntType> auxv_t;
-    std::vector<auxv_t> auxv;
+    std::vector<AuxVector<IntType>> auxv;
 
     ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
     if (elfObject)
     {
         // Set the system page size
-        auxv.push_back(auxv_t(M5_AT_PAGESZ, MipsISA::PageBytes));
+        auxv.emplace_back(M5_AT_PAGESZ, MipsISA::PageBytes);
         // Set the frequency at which time() increments
-        auxv.push_back(auxv_t(M5_AT_CLKTCK, 100));
+        auxv.emplace_back(M5_AT_CLKTCK, 100);
         // For statically linked executables, this is the virtual
         // address of the program header tables if they appear in the
         // executable image.
-        auxv.push_back(auxv_t(M5_AT_PHDR, elfObject->programHeaderTable()));
-        DPRINTF(Loader, "auxv at PHDR %08p\n", elfObject->programHeaderTable());
+        auxv.emplace_back(M5_AT_PHDR, elfObject->programHeaderTable());
+        DPRINTF(Loader, "auxv at PHDR %08p\n",
+                elfObject->programHeaderTable());
         // This is the size of a program header entry from the elf file.
-        auxv.push_back(auxv_t(M5_AT_PHENT, elfObject->programHeaderSize()));
+        auxv.emplace_back(M5_AT_PHENT, elfObject->programHeaderSize());
         // This is the number of program headers from the original elf file.
-        auxv.push_back(auxv_t(M5_AT_PHNUM, elfObject->programHeaderCount()));
+        auxv.emplace_back(M5_AT_PHNUM, elfObject->programHeaderCount());
         // This is the base address of the ELF interpreter; it should be
         // zero for static executables or contain the base address for
         // dynamic executables.
-        auxv.push_back(auxv_t(M5_AT_BASE, getBias()));
+        auxv.emplace_back(M5_AT_BASE, getBias());
         //The entry point to the program
-        auxv.push_back(auxv_t(M5_AT_ENTRY, objFile->entryPoint()));
+        auxv.emplace_back(M5_AT_ENTRY, objFile->entryPoint());
         //Different user and group IDs
-        auxv.push_back(auxv_t(M5_AT_UID, uid()));
-        auxv.push_back(auxv_t(M5_AT_EUID, euid()));
-        auxv.push_back(auxv_t(M5_AT_GID, gid()));
-        auxv.push_back(auxv_t(M5_AT_EGID, egid()));
+        auxv.emplace_back(M5_AT_UID, uid());
+        auxv.emplace_back(M5_AT_EUID, euid());
+        auxv.emplace_back(M5_AT_GID, gid());
+        auxv.emplace_back(M5_AT_EGID, egid());
     }
 
     // Calculate how much space we need for arg & env & auxv arrays.
@@ -138,15 +143,16 @@ MipsLiveProcess::argsInit(int pageSize)
         env_data_size;
 
     // set bottom of stack
-    stack_min = stack_base - space_needed;
+    memState->setStackMin(memState->getStackBase() - space_needed);
     // align it
-    stack_min = roundDown(stack_min, pageSize);
-    stack_size = stack_base - stack_min;
+    memState->setStackMin(roundDown(memState->getStackMin(), pageSize));
+    memState->setStackSize(memState->getStackBase() - memState->getStackMin());
     // map memory
-    allocateMem(stack_min, roundUp(stack_size, pageSize));
+    allocateMem(memState->getStackMin(), roundUp(memState->getStackSize(),
+                pageSize));
 
-    // map out initial stack contents
-    IntType argv_array_base = stack_min + intSize; // room for argc
+    // map out initial stack contents; leave room for argc
+    IntType argv_array_base = memState->getStackMin() + intSize;
     IntType envp_array_base = argv_array_base + argv_array_size;
     IntType auxv_array_base = envp_array_base + envp_array_size;
     IntType arg_data_base = auxv_array_base + auxv_array_size;
@@ -157,54 +163,52 @@ MipsLiveProcess::argsInit(int pageSize)
 
     argc = htog((IntType)argc);
 
-    initVirtMem.writeBlob(stack_min, (uint8_t*)&argc, intSize);
+    initVirtMem.writeBlob(memState->getStackMin(), &argc, intSize);
 
-    copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base,
+                    LittleEndianByteOrder, initVirtMem);
 
-    copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base,
+                    LittleEndianByteOrder, initVirtMem);
 
     // Copy the aux vector
-    for (typename vector<auxv_t>::size_type x = 0; x < auxv.size(); x++) {
-        initVirtMem.writeBlob(auxv_array_base + x * 2 * intSize,
-                (uint8_t*)&(auxv[x].a_type), intSize);
-        initVirtMem.writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
-                (uint8_t*)&(auxv[x].a_val), intSize);
+    Addr auxv_array_end = auxv_array_base;
+    for (const auto &aux: auxv) {
+        initVirtMem.write(auxv_array_end, aux, GuestByteOrder);
+        auxv_array_end += sizeof(aux);
     }
 
     // Write out the terminating zeroed auxilliary vector
-    for (unsigned i = 0; i < 2; i++) {
-        const IntType zero = 0;
-        const Addr addr = auxv_array_base + 2 * intSize * (auxv.size() + i);
-        initVirtMem.writeBlob(addr, (uint8_t*)&zero, intSize);
-    }
+    const AuxVector<IntType> zero(0, 0);
+    initVirtMem.write(auxv_array_end, zero);
+    auxv_array_end += sizeof(zero);
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
 
     setSyscallArg(tc, 0, argc);
     setSyscallArg(tc, 1, argv_array_base);
-    tc->setIntReg(StackPointerReg, stack_min);
+    tc->setIntReg(StackPointerReg, memState->getStackMin());
 
     tc->pcState(getStartPC());
 }
 
 
-MipsISA::IntReg
-MipsLiveProcess::getSyscallArg(ThreadContext *tc, int &i)
+RegVal
+MipsProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 6);
     return tc->readIntReg(FirstArgumentReg + i++);
 }
 
 void
-MipsLiveProcess::setSyscallArg(ThreadContext *tc,
-        int i, MipsISA::IntReg val)
+MipsProcess::setSyscallArg(ThreadContext *tc, int i, RegVal val)
 {
     assert(i < 6);
     tc->setIntReg(FirstArgumentReg + i, val);
 }
 
 void
-MipsLiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
+MipsProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
     if (sysret.successful()) {
         // no error
@@ -212,7 +216,7 @@ MipsLiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
         tc->setIntReg(ReturnValueReg, sysret.returnValue());
     } else {
         // got an error, return details
-        tc->setIntReg(SyscallSuccessReg, (IntReg) -1);
+        tc->setIntReg(SyscallSuccessReg, (uint32_t)(-1));
         tc->setIntReg(ReturnValueReg, sysret.errnoValue());
     }
 }

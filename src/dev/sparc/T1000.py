@@ -28,10 +28,11 @@
 
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice, PioDevice, IsaFake, BadAddr
-from Platform import Platform
-from Terminal import Terminal
-from Uart import Uart8250
+
+from m5.objects.Device import BasicPioDevice, PioDevice, IsaFake, BadAddr
+from m5.objects.Platform import Platform
+from m5.objects.Terminal import Terminal
+from m5.objects.Uart import Uart8250
 
 
 class MmDisk(BasicPioDevice):
@@ -121,8 +122,8 @@ class T1000(Platform):
     # earlier, since the bus object itself is typically defined at the
     # System level.
     def attachIO(self, bus):
-        self.hvuart.terminal = self.hterm
-        self.puart0.terminal = self.pterm
+        self.hvuart.device = self.hterm
+        self.puart0.device = self.pterm
         self.fake_clk.pio = bus.master
         self.fake_membnks.pio = bus.master
         self.fake_l2_1.pio = bus.master

@@ -1,0 +1,21 @@
+SystemC Simulation
+top.parent.method_0 triggered (0 s @ 1)
+top.parent.thread_0 triggered (0 s @ 1)
+top.parent.thread_0.method_0 triggered (0 s @ 1)
+top.parent.method_0.thread_0 triggered (0 s @ 1)
+top.parent.method_0.thread_0.method_0 triggered (0 s @ 1)
+top.parent.thread_0.method_0.thread_0 triggered (0 s @ 1)
+top.parent.method_0.thread_0.method_0 triggered (10 ns @ 4)
+top.parent.thread_0.method_0 triggered (10 ns @ 4)
+top.parent.method_0 triggered (10 ns @ 4)
+top.parent.thread_0.method_0.thread_0 triggered (10 ns @ 4)
+top.parent.method_0.thread_0 triggered (10 ns @ 4)
+top.parent.thread_0 triggered (10 ns @ 4)
+top.parent.thread_0 kill requested (sc_thread_process) (10 ns @ 4)
+top.parent.thread_0.method_0.thread_0 local deleted (10 ns @ 4)
+top.parent.thread_0 local deleted (10 ns @ 4)
+top.parent.method_0 kill requested (sc_method_process) (10 ns @ 4)
+top.parent.method_0.thread_0 local deleted (10 ns @ 4)
+top.parent ended (20 ns @ 7)
+
+Info: /OSCI/SystemC: Simulation stopped by user.

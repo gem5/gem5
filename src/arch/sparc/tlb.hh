@@ -34,7 +34,7 @@
 #include "arch/generic/tlb.hh"
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/tlb_map.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "mem/request.hh"
 #include "params/SparcTLB.hh"
 
@@ -43,6 +43,11 @@ class Packet;
 
 namespace SparcISA
 {
+
+const Addr StartVAddrHole = ULL(0x0000800000000000);
+const Addr EndVAddrHole = ULL(0xFFFF7FFFFFFFFFFF);
+const Addr VAddrAMask = ULL(0xFFFFFFFF);
+const Addr PAddrImplMask = ULL(0x000000FFFFFFFFFF);
 
 class TLB : public BaseTLB
 {
@@ -146,8 +151,8 @@ class TLB : public BaseTLB
 
     void writeTagAccess(Addr va, int context);
 
-    Fault translateInst(RequestPtr req, ThreadContext *tc);
-    Fault translateData(RequestPtr req, ThreadContext *tc, bool write);
+    Fault translateInst(const RequestPtr &req, ThreadContext *tc);
+    Fault translateData(const RequestPtr &req, ThreadContext *tc, bool write);
 
   public:
     typedef SparcTLBParams Params;
@@ -163,14 +168,14 @@ class TLB : public BaseTLB
 
     void dumpAll();
 
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation, Mode mode);
-    /** Stub function for compilation support with CheckerCPU. SPARC ISA
-     *  does not support the Checker model at the moment
-     */
-    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
-    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
+    Fault translateAtomic(
+            const RequestPtr &req, ThreadContext *tc, Mode mode) override;
+    void translateTiming(
+            const RequestPtr &req, ThreadContext *tc,
+            Translation *translation, Mode mode) override;
+    Fault finalizePhysical(
+            const RequestPtr &req,
+            ThreadContext *tc, Mode mode) const override;
     Cycles doMmuRegRead(ThreadContext *tc, Packet *pkt);
     Cycles doMmuRegWrite(ThreadContext *tc, Packet *pkt);
     void GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs);

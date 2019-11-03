@@ -44,7 +44,7 @@
 #include <regex>
 #include <string>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 MathExpr::MathExpr(std::string expr)
  : ops(

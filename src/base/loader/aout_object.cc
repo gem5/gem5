@@ -28,9 +28,10 @@
  * Authors: Steve Reinhardt
  */
 
+#include "base/loader/aout_object.hh"
+
 #include <string>
 
-#include "base/loader/aout_object.hh"
 #include "base/loader/exec_aout.h"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
@@ -39,65 +40,44 @@
 using namespace std;
 
 ObjectFile *
-AoutObject::tryFile(const string &fname, size_t len, uint8_t *data)
+AoutObjectFileFormat::load(ImageFileDataPtr ifd)
 {
-    if (!N_BADMAG(*(aout_exechdr *)data)) {
-        // right now this is only used for Alpha PAL code
-        return new AoutObject(fname, len, data,
-                              ObjectFile::Alpha, ObjectFile::UnknownOpSys);
-    }
-    else {
-        return NULL;
-    }
+    if (!N_BADMAG(*(const aout_exechdr *)ifd->data()))
+        return new AoutObject(ifd);
+    else
+        return nullptr;
 }
 
-
-AoutObject::AoutObject(const string &_filename,
-                       size_t _len, uint8_t *_data,
-                       Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _len, _data, _arch, _opSys)
+namespace
 {
-    execHdr = (aout_exechdr *)fileData;
 
+AoutObjectFileFormat aoutObjectFileFormat;
+
+} // anonymous namespace
+
+
+AoutObject::AoutObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
+{
+    execHdr = (const aout_exechdr *)imageData->data();
     entry = execHdr->entry;
 
-    text.baseAddr = N_TXTADDR(*execHdr);
-    text.size = execHdr->tsize;
-    text.fileImage = fileData + N_TXTOFF(*execHdr);
-
-    data.baseAddr = N_DATADDR(*execHdr);
-    data.size = execHdr->dsize;
-    data.fileImage = fileData + N_DATOFF(*execHdr);
-
-    bss.baseAddr = N_BSSADDR(*execHdr);
-    bss.size = execHdr->bsize;
-    bss.fileImage = NULL;
-
-    DPRINTFR(Loader, "text: 0x%x %d\ndata: 0x%x %d\nbss: 0x%x %d\n",
-             text.baseAddr, text.size, data.baseAddr, data.size,
-             bss.baseAddr, bss.size);
+    // Right now this is only used for Alpha PAL code.
+    arch = Alpha;
 }
 
-
-bool
-AoutObject::loadAllSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                           Addr addr_mask)
+MemoryImage
+AoutObject::buildImage() const
 {
-    return false;
-}
+    MemoryImage image({
+            MemoryImage::Segment{ "text", N_TXTADDR(*execHdr), imageData,
+              N_TXTOFF(*execHdr), execHdr->tsize },
+            MemoryImage::Segment{ "data", N_DATADDR(*execHdr), imageData,
+              N_DATOFF(*execHdr), execHdr->dsize },
+            MemoryImage::Segment{ "bss", N_BSSADDR(*execHdr), execHdr->bsize}
+    });
 
-bool
-AoutObject::loadGlobalSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                              Addr addr_mask)
-{
-    // a.out symbols not supported yet
-    return false;
-}
+    for (auto M5_VAR_USED &seg: image.segments())
+        DPRINTFR(Loader, "%s\n", seg);
 
-bool
-AoutObject::loadLocalSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                             Addr addr_mask)
-{
-    // a.out symbols not supported yet
-    return false;
+    return image;
 }

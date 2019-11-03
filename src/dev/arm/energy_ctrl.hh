@@ -182,6 +182,6 @@ class EnergyCtrl : public BasicPioDevice
         perfLevelAck = 1;
     }
 
-    EventWrapper<EnergyCtrl, &EnergyCtrl::updatePLAck> updateAckEvent;
+    EventFunctionWrapper updateAckEvent;
 };
 #endif //__DEV_ARM_ENERGY_CTRL_HH__

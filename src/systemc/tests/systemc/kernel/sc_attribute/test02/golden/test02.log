@@ -1,0 +1,21 @@
+SystemC Simulation
+a1
+clock
+a1
+clock
+
+added attributes to the attribute collection class
+a1   clock
+a3   24
+a4   casio
+
+size of the class
+3
+
+looking whether the name is in collection class
+a3 exists
+a5 does not exist
+
+removing names 
+a1 is removed 
+a5 does not exist

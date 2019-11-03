@@ -29,6 +29,7 @@
  */
 
 #include "arch/power/insts/branch.hh"
+
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
 
@@ -152,7 +153,7 @@ BranchNonPCRelCond::generateDisassembly(Addr pc,
 PowerISA::PCState
 BranchRegCond::branchTarget(ThreadContext *tc) const
 {
-    uint32_t regVal = tc->readIntReg(_srcRegIdx[_numSrcRegs - 1]);
+    uint32_t regVal = tc->readIntReg(_srcRegIdx[_numSrcRegs - 1].index());
     return regVal & 0xfffffffc;
 }
 

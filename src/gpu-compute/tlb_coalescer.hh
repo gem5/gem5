@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,7 +30,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Lisa Hsu
+ * Authors: Lisa Hsu
  */
 
 #ifndef __TLB_COALESCER_HH__
@@ -46,26 +46,26 @@
 #include "arch/isa_traits.hh"
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/regs/segment.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/statistics.hh"
 #include "gpu-compute/gpu_tlb.hh"
-#include "mem/mem_object.hh"
 #include "mem/port.hh"
 #include "mem/request.hh"
 #include "params/TLBCoalescer.hh"
+#include "sim/clocked_object.hh"
 
 class BaseTLB;
 class Packet;
 class ThreadContext;
 
 /**
- * The TLBCoalescer is a MemObject sitting on the front side (CPUSide) of
+ * The TLBCoalescer is a ClockedObject sitting on the front side (CPUSide) of
  * each TLB. It receives packets and issues coalesced requests to the
  * TLB below it. It controls how requests are coalesced (the rules)
  * and the permitted number of TLB probes per cycle (i.e., how many
  * coalesced requests it feeds the TLB per cycle).
  */
-class TLBCoalescer : public MemObject
+class TLBCoalescer : public ClockedObject
 {
    protected:
     // TLB clock: will inherit clock from shader's clock period in terms
@@ -143,7 +143,7 @@ class TLBCoalescer : public MemObject
 
     bool canCoalesce(PacketPtr pkt1, PacketPtr pkt2);
     void updatePhysAddresses(PacketPtr pkt);
-    void regStats();
+    void regStats() override;
 
     // Clock related functions. Maps to-and-from
     // Simulation ticks and object clocks.
@@ -211,38 +211,17 @@ class TLBCoalescer : public MemObject
     // Coalescer master ports on the memory side
     std::vector<MemSidePort*> memSidePort;
 
-    BaseMasterPort& getMasterPort(const std::string &if_name, PortID idx);
-    BaseSlavePort& getSlavePort(const std::string &if_name, PortID idx);
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
-    class IssueProbeEvent : public Event
-    {
-      private:
-        TLBCoalescer *coalescer;
+    void processProbeTLBEvent();
+    /// This event issues the TLB probes
+    EventFunctionWrapper probeTLBEvent;
 
-      public:
-        IssueProbeEvent(TLBCoalescer *_coalescer);
-        void process();
-        const char *description() const;
-    };
-
-    // this event issues the TLB probes
-    IssueProbeEvent probeTLBEvent;
-
-    // the cleanupEvent is scheduled after a TLBEvent triggers
-    // in order to free memory and do the required clean-up
-    class CleanupEvent : public Event
-    {
-      private:
-        TLBCoalescer *coalescer;
-
-      public:
-        CleanupEvent(TLBCoalescer *_coalescer);
-        void process();
-        const char* description() const;
-     };
-
-    // schedule cleanup
-    CleanupEvent cleanupEvent;
+    void processCleanupEvent();
+    /// The cleanupEvent is scheduled after a TLBEvent triggers
+    /// in order to free memory and do the required clean-up
+    EventFunctionWrapper cleanupEvent;
 
     // this FIFO queue keeps track of the virt. page
     // addresses that are pending cleanup

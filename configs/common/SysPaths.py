@@ -26,56 +26,50 @@
 #
 # Authors: Ali Saidi
 
+from __future__ import print_function
+from __future__ import absolute_import
+
+from six import string_types
 import os, sys
-from os.path import join as joinpath
-from os import environ as env
 
 config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 
-def searchpath(path, filename):
-    for p in path:
-        f = joinpath(p, filename)
-        if os.path.exists(f):
-            return f
-    raise IOError, "Can't find file '%s' on path." % filename
+class PathSearchFunc(object):
+    _sys_paths = None
 
-def disk(filename):
-    system()
-    return searchpath(disk.path, filename)
+    def __init__(self, subdirs, sys_paths=None):
+        if isinstance(subdirs, string_types):
+            subdirs = [subdirs]
+        self._subdir = os.path.join(*subdirs)
+        if sys_paths:
+            self._sys_paths = sys_paths
 
-def binary(filename):
-    system()
-    return searchpath(binary.path, filename)
+    def __call__(self, filename):
+        if self._sys_paths is None:
+            try:
+                paths = os.environ['M5_PATH'].split(':')
+            except KeyError:
+                paths = [ '/dist/m5/system', '/n/poolfs/z/dist/m5/system' ]
 
-def script(filename):
-    system()
-    return searchpath(script.path, filename)
+            # expand '~' and '~user' in paths
+            paths = map(os.path.expanduser, paths)
 
-def system():
-    if not system.path:
+            # filter out non-existent directories
+            paths = filter(os.path.isdir, paths)
+
+            if not paths:
+                raise IOError("Can't find a path to system files.")
+
+            self._sys_paths = list(paths)
+
+        filepath = os.path.join(self._subdir, filename)
+        paths = (os.path.join(p, filepath) for p in self._sys_paths)
         try:
-            path = env['M5_PATH'].split(':')
-        except KeyError:
-            path = [ '/dist/m5/system', '/n/poolfs/z/dist/m5/system' ]
+            return next(p for p in paths if os.path.exists(p))
+        except StopIteration:
+            raise IOError("Can't find file '%s' on path." % filename)
 
-        # expand '~' and '~user' in paths
-        path = map(os.path.expanduser, path)
-
-        # filter out non-existent directories
-        system.path = filter(os.path.isdir, path)
-
-        if not system.path:
-            raise IOError, "Can't find a path to system files."
-
-    if not binary.path:
-        binary.path = [joinpath(p, 'binaries') for p in system.path]
-    if not disk.path:
-        disk.path = [joinpath(p, 'disks') for p in system.path]
-    if not script.path:
-        script.path = [joinpath(config_root, 'boot')]
-
-system.path = None
-binary.path = None
-disk.path = None
-script.path = None
+disk = PathSearchFunc('disks')
+binary = PathSearchFunc('binaries')
+script = PathSearchFunc('boot', sys_paths=[config_root])

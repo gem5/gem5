@@ -42,12 +42,12 @@
 #          Erfan Azarkhish
 
 from m5.params import *
-from MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 
 # SerialLink is a simple variation of the Bridge class, with the ability to
 # account for the latency of packet serialization.
 
-class SerialLink(MemObject):
+class SerialLink(ClockedObject):
     type = 'SerialLink'
     cxx_header = "mem/serial_link.hh"
     slave = SlavePort('Slave port')
@@ -61,3 +61,5 @@ class SerialLink(MemObject):
     #  link belongs to and the number of lanes:
     num_lanes = Param.Unsigned(1, "Number of parallel lanes inside the serial"
         "link. (aka. lane width)")
+    link_speed = Param.UInt64(1, "Gb/s Speed of each parallel lane inside the"
+        "serial link. (aka. lane speed)")

@@ -1,0 +1,3392 @@
+SystemC Simulation
+d is (a * b)
+c is (a + b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+c is (a - b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+p1 is exiting.
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a / b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  1  b =  0  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / (b + 1))
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+  a =  0  b =  0  c =  1  d =  0
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  0  b =  1  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)
+  a =  1  b =  0  c =  1  d =  0
+d is (a / b)
+  a =  1  b =  1  c =  1  d =  1
+d is (a * b)

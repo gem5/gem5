@@ -37,11 +37,12 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/vtophys.hh"
+
 #include <string>
 
 #include "arch/x86/pagetable_walker.hh"
 #include "arch/x86/tlb.hh"
-#include "arch/x86/vtophys.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/VtoPhys.hh"
@@ -59,7 +60,7 @@ namespace X86ISA
     Addr
     vtophys(ThreadContext *tc, Addr vaddr)
     {
-        Walker *walker = tc->getDTBPtr()->getWalker();
+        Walker *walker = dynamic_cast<TLB *>(tc->getDTBPtr())->getWalker();
         unsigned logBytes;
         Addr addr = vaddr;
         Fault fault = walker->startFunctional(

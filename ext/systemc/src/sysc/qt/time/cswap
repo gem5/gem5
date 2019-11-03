@@ -1,0 +1,37 @@
+#! /bin/awk -f
+
+BEGIN {
+  purpose = "report time used by int only and int+fp cswaps";
+
+  nmach = 0;
+
+  test_int = "7";
+  test_fp = "8";
+}
+
+{
+  mach = $1
+  test = $2
+  iter = $3
+  time = $6 + $8
+
+  if (machi[mach] == 0) {
+    machn[nmach] = mach;
+    machi[mach] = 1;
+    ++nmach;
+  }
+
+  us_per_op = time / iter * 1000000
+  times[mach "_" test] = us_per_op;
+}
+
+
+END {
+  for (i=0; i<nmach; ++i) {
+    m = machn[i];
+
+    integer = times[m "_" test_int];
+    fp = times[m "_" test_fp];
+    printf ("%s|%3.1f|%3.1f\n", m, integer, fp);
+  }
+}

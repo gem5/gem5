@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -39,7 +39,7 @@
 
 #include "arch/arm/isa_device.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 namespace ArmISA
 {
@@ -58,12 +58,14 @@ BaseISADevice::setISA(ISA *_isa)
 }
 
 void
-DummyISADevice::setMiscReg(int misc_reg, MiscReg val)
+DummyISADevice::setMiscReg(int misc_reg, RegVal val)
 {
-    warn("Ignoring write to miscreg %s\n", miscRegName[misc_reg]);
+    warn("Ignoring write of 0x%lx to miscreg %s\n",
+          val,
+          miscRegName[misc_reg]);
 }
 
-MiscReg
+RegVal
 DummyISADevice::readMiscReg(int misc_reg)
 {
     warn("Returning zero for read from miscreg %s\n", miscRegName[misc_reg]);

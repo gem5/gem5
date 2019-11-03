@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2012, 2016-2017 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -45,6 +45,7 @@
 #ifndef __CPU_O3_THREAD_CONTEXT_IMPL_HH__
 #define __CPU_O3_THREAD_CONTEXT_IMPL_HH__
 
+#include "arch/generic/traits.hh"
 #include "arch/kernel_stats.hh"
 #include "arch/registers.hh"
 #include "config/the_isa.hh"
@@ -53,7 +54,7 @@
 #include "debug/O3CPU.hh"
 
 template <class Impl>
-FSTranslatingPortProxy&
+PortProxy&
 O3ThreadContext<Impl>::getVirtProxy()
 {
     return thread->getVirtProxy();
@@ -109,6 +110,11 @@ O3ThreadContext<Impl>::suspend()
     if (thread->status() == ThreadContext::Suspended)
         return;
 
+    if (cpu->isDraining()) {
+        DPRINTF(O3CPU, "Ignoring suspend on TC due to pending drain\n");
+        return;
+    }
+
     thread->lastActivate = curTick();
     thread->lastSuspend = curTick();
 
@@ -122,11 +128,18 @@ O3ThreadContext<Impl>::halt()
 {
     DPRINTF(O3CPU, "Calling halt on Thread Context %d\n", threadId());
 
-    if (thread->status() == ThreadContext::Halted)
+    if (thread->status() == ThreadContext::Halting ||
+        thread->status() == ThreadContext::Halted)
         return;
 
-    thread->setStatus(ThreadContext::Halted);
-    cpu->haltContext(thread->threadId());
+    // the thread is not going to halt/terminate immediately in this cycle.
+    // The thread will be removed after an exit trap is processed
+    // (e.g., after trapLatency cycles). Until then, the thread's status
+    // will be Halting.
+    thread->setStatus(ThreadContext::Halting);
+
+    // add this thread to the exiting list to mark that it is trying to exit.
+    cpu->addThreadToExitingList(thread->threadId());
 }
 
 template <class Impl>
@@ -134,7 +147,7 @@ void
 O3ThreadContext<Impl>::regStats(const std::string &name)
 {
     if (FullSystem) {
-        thread->kernelStats = new TheISA::Kernel::Statistics(cpu->system);
+        thread->kernelStats = new TheISA::Kernel::Statistics();
         thread->kernelStats->regStats(name + ".kern");
     }
 }
@@ -171,6 +184,9 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::copyArchRegs(ThreadContext *tc)
 {
+    // Set vector renaming mode before copying registers
+    cpu->vecRenameMode(RenameMode<TheISA::ISA>::mode(tc->pcState()));
+
     // Prevent squashing
     thread->noSquashFromTC = true;
     TheISA::copyRegs(tc, this);
@@ -188,36 +204,65 @@ O3ThreadContext<Impl>::clearArchRegs()
 }
 
 template <class Impl>
-uint64_t
-O3ThreadContext<Impl>::readIntRegFlat(int reg_idx)
+RegVal
+O3ThreadContext<Impl>::readIntRegFlat(RegIndex reg_idx) const
 {
     return cpu->readArchIntReg(reg_idx, thread->threadId());
 }
 
 template <class Impl>
-TheISA::FloatReg
-O3ThreadContext<Impl>::readFloatRegFlat(int reg_idx)
+RegVal
+O3ThreadContext<Impl>::readFloatRegFlat(RegIndex reg_idx) const
 {
     return cpu->readArchFloatReg(reg_idx, thread->threadId());
 }
 
 template <class Impl>
-TheISA::FloatRegBits
-O3ThreadContext<Impl>::readFloatRegBitsFlat(int reg_idx)
+const TheISA::VecRegContainer&
+O3ThreadContext<Impl>::readVecRegFlat(RegIndex reg_id) const
 {
-    return cpu->readArchFloatRegInt(reg_idx, thread->threadId());
+    return cpu->readArchVecReg(reg_id, thread->threadId());
 }
 
 template <class Impl>
-TheISA::CCReg
-O3ThreadContext<Impl>::readCCRegFlat(int reg_idx)
+TheISA::VecRegContainer&
+O3ThreadContext<Impl>::getWritableVecRegFlat(RegIndex reg_id)
+{
+    return cpu->getWritableArchVecReg(reg_id, thread->threadId());
+}
+
+template <class Impl>
+const TheISA::VecElem&
+O3ThreadContext<Impl>::readVecElemFlat(RegIndex idx,
+                                       const ElemIndex& elemIndex) const
+{
+    return cpu->readArchVecElem(idx, elemIndex, thread->threadId());
+}
+
+template <class Impl>
+const TheISA::VecPredRegContainer&
+O3ThreadContext<Impl>::readVecPredRegFlat(RegIndex reg_id) const
+{
+    return cpu->readArchVecPredReg(reg_id, thread->threadId());
+}
+
+template <class Impl>
+TheISA::VecPredRegContainer&
+O3ThreadContext<Impl>::getWritableVecPredRegFlat(RegIndex reg_id)
+{
+    return cpu->getWritableArchVecPredReg(reg_id, thread->threadId());
+}
+
+template <class Impl>
+RegVal
+O3ThreadContext<Impl>::readCCRegFlat(RegIndex reg_idx) const
 {
     return cpu->readArchCCReg(reg_idx, thread->threadId());
 }
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setIntRegFlat(int reg_idx, uint64_t val)
+O3ThreadContext<Impl>::setIntRegFlat(RegIndex reg_idx, RegVal val)
 {
     cpu->setArchIntReg(reg_idx, val, thread->threadId());
 
@@ -226,7 +271,7 @@ O3ThreadContext<Impl>::setIntRegFlat(int reg_idx, uint64_t val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setFloatRegFlat(int reg_idx, FloatReg val)
+O3ThreadContext<Impl>::setFloatRegFlat(RegIndex reg_idx, RegVal val)
 {
     cpu->setArchFloatReg(reg_idx, val, thread->threadId());
 
@@ -235,16 +280,36 @@ O3ThreadContext<Impl>::setFloatRegFlat(int reg_idx, FloatReg val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setFloatRegBitsFlat(int reg_idx, FloatRegBits val)
+O3ThreadContext<Impl>::setVecRegFlat(
+        RegIndex reg_idx, const VecRegContainer& val)
 {
-    cpu->setArchFloatRegInt(reg_idx, val, thread->threadId());
+    cpu->setArchVecReg(reg_idx, val, thread->threadId());
 
     conditionalSquash();
 }
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setCCRegFlat(int reg_idx, TheISA::CCReg val)
+O3ThreadContext<Impl>::setVecElemFlat(RegIndex idx,
+        const ElemIndex& elemIndex, const VecElem& val)
+{
+    cpu->setArchVecElem(idx, elemIndex, val, thread->threadId());
+    conditionalSquash();
+}
+
+template <class Impl>
+void
+O3ThreadContext<Impl>::setVecPredRegFlat(RegIndex reg_idx,
+                                         const VecPredRegContainer& val)
+{
+    cpu->setArchVecPredReg(reg_idx, val, thread->threadId());
+
+    conditionalSquash();
+}
+
+template <class Impl>
+void
+O3ThreadContext<Impl>::setCCRegFlat(RegIndex reg_idx, RegVal val)
 {
     cpu->setArchCCReg(reg_idx, val, thread->threadId());
 
@@ -270,49 +335,28 @@ O3ThreadContext<Impl>::pcStateNoRecord(const TheISA::PCState &val)
 }
 
 template <class Impl>
-int
-O3ThreadContext<Impl>::flattenIntIndex(int reg)
+RegId
+O3ThreadContext<Impl>::flattenRegId(const RegId& regId) const
 {
-    return cpu->isa[thread->threadId()]->flattenIntIndex(reg);
-}
-
-template <class Impl>
-int
-O3ThreadContext<Impl>::flattenFloatIndex(int reg)
-{
-    return cpu->isa[thread->threadId()]->flattenFloatIndex(reg);
-}
-
-template <class Impl>
-int
-O3ThreadContext<Impl>::flattenCCIndex(int reg)
-{
-    return cpu->isa[thread->threadId()]->flattenCCIndex(reg);
-}
-
-template <class Impl>
-int
-O3ThreadContext<Impl>::flattenMiscIndex(int reg)
-{
-    return cpu->isa[thread->threadId()]->flattenMiscIndex(reg);
+    return cpu->isa[thread->threadId()]->flattenRegId(regId);
 }
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
+O3ThreadContext<Impl>::setMiscRegNoEffect(RegIndex misc_reg, RegVal val)
 {
     cpu->setMiscRegNoEffect(misc_reg, val, thread->threadId());
 
     conditionalSquash();
 }
 
-#endif//__CPU_O3_THREAD_CONTEXT_IMPL_HH__
 template <class Impl>
 void
-O3ThreadContext<Impl>::setMiscReg(int misc_reg, const MiscReg &val)
+O3ThreadContext<Impl>::setMiscReg(RegIndex misc_reg, RegVal val)
 {
     cpu->setMiscReg(misc_reg, val, thread->threadId());
 
     conditionalSquash();
 }
 
+#endif //__CPU_O3_THREAD_CONTEXT_IMPL_HH__

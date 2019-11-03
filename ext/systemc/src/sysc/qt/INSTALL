@@ -1,0 +1,81 @@
+Installation of the `QuickThreads' threads-building toolkit.
+
+* Notice
+
+QuickThreads -- Threads-building toolkit.
+Copyright (c) 1993 by David Keppel
+
+Permission to use, copy, modify and distribute this software and
+its documentation for any purpose and without fee is hereby
+granted, provided that the above copyright notice and this notice
+appear in all copies.  This software is provided as a
+proof-of-concept and for demonstration purposes; there is no
+representation about the suitability of this software for any
+purpose.
+
+
+* Configuration
+
+Configure with
+
+	./config *machtype*
+
+where "*machtype*" is one of the supported target machines.  As of
+October 1994, the supported machines (targets) are:
+
+	axp --	All Digital Equipment Corporation AXP (DEC Alpha)
+		processors, compile with GNU CC
+	axp-osf1 -- AXP running OSF 1.x
+	axp-osf2 -- AXP running OSF 2.x
+	hppa -- HP's PA-RISC 1.1 processor
+	hppa-cnx-spp -- Convex SPP (PA-RISC 1.1 processor)
+	iX86 --	80386, 80486, and 80586-compatible processors
+		See notes below for OS/2.
+	iX86-ss -- 'iX86 for assemblers that use slash-slash ('//')
+		comments.
+	ksr1 --	All KSR processors
+	m88k --	All members of the Motorola 88000 family
+	mips --	MIPS R2000 and R3000 processors
+	mips-irix5 -- Irix 5.xx (use `mips' for Irix 4.xx)
+	sparc-os1 -- V8-compliant SPARC processors using compilers
+		that prefix labels (e.g. "foo" appears as "_foo")
+		Includes Solaris 1 (SunOS 4.X).
+	sparc-os2 -- V8-compliant SPARC processors using compilers
+		that do not prefix labels.  Includes Solaris 2.
+	vax --	All VAX processors
+
+In addition, the target `clean' will deconfigure QuickThreads.
+
+Note that a given machine target may not work on all instances of that
+machine because e.g., the assembler syntax varies from machine to
+machine.
+
+Note also that additions to a processor family may require a new
+target.  So, for example, the `vax' target might not work for all
+future VAX processors if, say, new VAX processors are introduced and
+they use separate floating-point registers.
+
+For OS/2, change `ranlib' to `ar -s', `configure' to `configure.cmd'
+(or was that `config' to `config.cmd'?), and replace the soft links
+(`ln -s') with plain copies.
+
+
+* Build
+
+To build the QuickThreads library, first configure (see above) then
+type `make libqt.a' in the top-level directory.
+
+To build the demonstration threads package, SimpleThreads, type
+`make libstp.a' in the top-level directory.
+
+To build an executable ``stress-test'' and measurement program, type
+`make run' in the top-level directory.  Run `time/raw' to run the
+stress tests.
+
+
+* Installation
+
+Build the QuickThreads library (see above) and then copy `libqt.a' to
+the installation library directory (e.g., /usr/local/lib) and `qt.h'
+and `qtmd.h' to the installation include directory (e.g.,
+/usr/local/include).

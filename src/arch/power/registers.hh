@@ -31,8 +31,11 @@
 #ifndef __ARCH_POWER_REGISTERS_HH__
 #define __ARCH_POWER_REGISTERS_HH__
 
+#include "arch/generic/vec_pred_reg.hh"
+#include "arch/generic/vec_reg.hh"
 #include "arch/power/generated/max_inst_regs.hh"
 #include "arch/power/miscregs.hh"
+#include "base/types.hh"
 
 namespace PowerISA {
 
@@ -43,17 +46,20 @@ using PowerISAInst::MaxInstDestRegs;
 // be detected by it. Manually add it here.
 const int MaxMiscDestRegs = PowerISAInst::MaxMiscDestRegs + 1;
 
-typedef uint8_t RegIndex;
+// Not applicable to Power
+using VecElem = ::DummyVecElem;
+using VecReg = ::DummyVecReg;
+using ConstVecReg = ::DummyConstVecReg;
+using VecRegContainer = ::DummyVecRegContainer;
+constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
+constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;
 
-typedef uint64_t IntReg;
-
-// Floating point register file entry type
-typedef uint64_t FloatRegBits;
-typedef double FloatReg;
-typedef uint64_t MiscReg;
-
-// dummy typedef since we don't have CC regs
-typedef uint8_t CCReg;
+// Not applicable to Power
+using VecPredReg = ::DummyVecPredReg;
+using ConstVecPredReg = ::DummyConstVecPredReg;
+using VecPredRegContainer = ::DummyVecPredRegContainer;
+constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
+constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
 
 // Constants Related to the number of registers
 const int NumIntArchRegs = 32;
@@ -67,6 +73,10 @@ const int NumInternalProcRegs = 0;
 
 const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs;
 const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;
+const int NumVecRegs = 1;  // Not applicable to Power
+                           // (1 to prevent warnings)
+const int NumVecPredRegs = 1;  // Not applicable to Power
+                               // (1 to prevent warnings)
 const int NumCCRegs = 0;
 const int NumMiscRegs = NUM_MISCREGS;
 
@@ -86,18 +96,6 @@ const int ZeroReg = NumIntRegs - 1;
 const int SyscallNumReg = 0;
 const int SyscallPseudoReturnReg = 3;
 const int SyscallSuccessReg = 3;
-
-// These help enumerate all the registers for dependence tracking.
-const int FP_Reg_Base = NumIntRegs;
-const int CC_Reg_Base = FP_Reg_Base + NumFloatRegs;
-const int Misc_Reg_Base = CC_Reg_Base + NumCCRegs; // NumCCRegs == 0
-const int Max_Reg_Index = Misc_Reg_Base + NumMiscRegs;
-
-typedef union {
-    IntReg   intreg;
-    FloatReg fpreg;
-    MiscReg  ctrlreg;
-} AnyReg;
 
 enum MiscIntRegNums {
     INTREG_CR = NumIntArchRegs,

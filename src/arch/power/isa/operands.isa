@@ -35,8 +35,8 @@ def operand_types {{
     'uh' : 'uint16_t',
     'sw' : 'int32_t',
     'uw' : 'uint32_t',
-    'sq' : 'int64_t',
-    'uq' : 'uint64_t',
+    'sd' : 'int64_t',
+    'ud' : 'uint64_t',
     'sf' : 'float',
     'df' : 'double'
 }};
@@ -59,8 +59,8 @@ def operands {{
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 8),
 
     # Program counter and next
-    'PC': ('PCState', 'uw', 'pc', (None, None, 'IsControl'), 9),
-    'NPC': ('PCState', 'uw', 'npc', (None, None, 'IsControl'), 9),
+    'CIA': ('PCState', 'uw', 'pc', (None, None, 'IsControl'), 9),
+    'NIA': ('PCState', 'uw', 'npc', (None, None, 'IsControl'), 9),
 
     # Control registers
     'CR': ('IntReg', 'uw', 'INTREG_CR', 'IsInteger', 9),

@@ -1,0 +1,4 @@
+SystemC Simulation
+
+Error: (E109) complete binding failed: 1 actual binds is less than required 2: port 'tb.all' (sc_port)
+In file: <removed by verify.pl>

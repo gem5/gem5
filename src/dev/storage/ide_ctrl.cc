@@ -83,7 +83,7 @@ IdeController::Channel::Channel(
     cmdAddr(0), cmdSize(_cmdSize), ctrlAddr(0), ctrlSize(_ctrlSize),
     master(NULL), slave(NULL), selected(NULL)
 {
-    memset(&bmiRegs, 0, sizeof(bmiRegs));
+    bmiRegs.reset();
     bmiRegs.status.dmaCap0 = 1;
     bmiRegs.status.dmaCap1 = 1;
 }
@@ -102,23 +102,31 @@ IdeController::IdeController(Params *p)
     ioEnabled(false), bmEnabled(false),
     ioShift(p->io_shift), ctrlOffset(p->ctrl_offset)
 {
-    if (params()->disks.size() > 3)
-        panic("IDE controllers support a maximum of 4 devices attached!\n");
 
     // Assign the disks to channels
-    int numDisks = params()->disks.size();
-    if (numDisks > 0)
-        primary.master = params()->disks[0];
-    if (numDisks > 1)
-        primary.slave = params()->disks[1];
-    if (numDisks > 2)
-        secondary.master = params()->disks[2];
-    if (numDisks > 3)
-        secondary.slave = params()->disks[3];
-
     for (int i = 0; i < params()->disks.size(); i++) {
-        params()->disks[i]->setController(this);
+        if (!params()->disks[i])
+            continue;
+        switch (i) {
+          case 0:
+            primary.master = params()->disks[0];
+            break;
+          case 1:
+            primary.slave = params()->disks[1];
+            break;
+          case 2:
+            secondary.master = params()->disks[2];
+            break;
+          case 3:
+            secondary.slave = params()->disks[3];
+            break;
+          default:
+            panic("IDE controllers support a maximum "
+                  "of 4 devices attached!\n");
+        }
+        params()->disks[i]->setController(this, sys->getPageBytes());
     }
+
     primary.select(false);
     secondary.select(false);
 
@@ -177,67 +185,67 @@ IdeController::readConfig(PacketPtr pkt)
       case sizeof(uint8_t):
         switch (offset) {
           case DeviceTiming:
-            pkt->set<uint8_t>(deviceTiming);
+            pkt->setLE<uint8_t>(deviceTiming);
             break;
           case UDMAControl:
-            pkt->set<uint8_t>(udmaControl);
+            pkt->setLE<uint8_t>(udmaControl);
             break;
           case PrimaryTiming + 1:
-            pkt->set<uint8_t>(bits(htole(primaryTiming), 15, 8));
+            pkt->setLE<uint8_t>(bits(htole(primaryTiming), 15, 8));
             break;
           case SecondaryTiming + 1:
-            pkt->set<uint8_t>(bits(htole(secondaryTiming), 15, 8));
+            pkt->setLE<uint8_t>(bits(htole(secondaryTiming), 15, 8));
             break;
           case IDEConfig:
-            pkt->set<uint8_t>(bits(htole(ideConfig), 7, 0));
+            pkt->setLE<uint8_t>(bits(htole(ideConfig), 7, 0));
             break;
           case IDEConfig + 1:
-            pkt->set<uint8_t>(bits(htole(ideConfig), 15, 8));
+            pkt->setLE<uint8_t>(bits(htole(ideConfig), 15, 8));
             break;
           default:
             panic("Invalid PCI configuration read for size 1 at offset: %#x!\n",
                     offset);
         }
         DPRINTF(IdeCtrl, "PCI read offset: %#x size: 1 data: %#x\n", offset,
-                (uint32_t)pkt->get<uint8_t>());
+                (uint32_t)pkt->getLE<uint8_t>());
         break;
       case sizeof(uint16_t):
         switch (offset) {
           case UDMAControl:
-            pkt->set<uint16_t>(udmaControl);
+            pkt->setLE<uint16_t>(udmaControl);
             break;
           case PrimaryTiming:
-            pkt->set<uint16_t>(primaryTiming);
+            pkt->setLE<uint16_t>(primaryTiming);
             break;
           case SecondaryTiming:
-            pkt->set<uint16_t>(secondaryTiming);
+            pkt->setLE<uint16_t>(secondaryTiming);
             break;
           case UDMATiming:
-            pkt->set<uint16_t>(udmaTiming);
+            pkt->setLE<uint16_t>(udmaTiming);
             break;
           case IDEConfig:
-            pkt->set<uint16_t>(ideConfig);
+            pkt->setLE<uint16_t>(ideConfig);
             break;
           default:
             panic("Invalid PCI configuration read for size 2 offset: %#x!\n",
                     offset);
         }
         DPRINTF(IdeCtrl, "PCI read offset: %#x size: 2 data: %#x\n", offset,
-                (uint32_t)pkt->get<uint16_t>());
+                (uint32_t)pkt->getLE<uint16_t>());
         break;
       case sizeof(uint32_t):
         switch (offset) {
           case PrimaryTiming:
-            pkt->set<uint32_t>(primaryTiming);
+            pkt->setLE<uint32_t>(primaryTiming);
             break;
           case IDEConfig:
-            pkt->set<uint32_t>(ideConfig);
+            pkt->setLE<uint32_t>(ideConfig);
             break;
           default:
             panic("No 32bit reads implemented for this device.");
         }
         DPRINTF(IdeCtrl, "PCI read offset: %#x size: 4 data: %#x\n", offset,
-                (uint32_t)pkt->get<uint32_t>());
+                (uint32_t)pkt->getLE<uint32_t>());
         break;
       default:
         panic("invalid access size(?) for PCI configspace!\n");
@@ -258,40 +266,40 @@ IdeController::writeConfig(PacketPtr pkt)
           case sizeof(uint8_t):
             switch (offset) {
               case DeviceTiming:
-                deviceTiming = pkt->get<uint8_t>();
+                deviceTiming = pkt->getLE<uint8_t>();
                 break;
               case UDMAControl:
-                udmaControl = pkt->get<uint8_t>();
+                udmaControl = pkt->getLE<uint8_t>();
                 break;
               case IDEConfig:
-                replaceBits(ideConfig, 7, 0, pkt->get<uint8_t>());
+                replaceBits(ideConfig, 7, 0, pkt->getLE<uint8_t>());
                 break;
               case IDEConfig + 1:
-                replaceBits(ideConfig, 15, 8, pkt->get<uint8_t>());
+                replaceBits(ideConfig, 15, 8, pkt->getLE<uint8_t>());
                 break;
               default:
                 panic("Invalid PCI configuration write "
                         "for size 1 offset: %#x!\n", offset);
             }
             DPRINTF(IdeCtrl, "PCI write offset: %#x size: 1 data: %#x\n",
-                    offset, (uint32_t)pkt->get<uint8_t>());
+                    offset, (uint32_t)pkt->getLE<uint8_t>());
             break;
           case sizeof(uint16_t):
             switch (offset) {
               case UDMAControl:
-                udmaControl = pkt->get<uint16_t>();
+                udmaControl = pkt->getLE<uint16_t>();
                 break;
               case PrimaryTiming:
-                primaryTiming = pkt->get<uint16_t>();
+                primaryTiming = pkt->getLE<uint16_t>();
                 break;
               case SecondaryTiming:
-                secondaryTiming = pkt->get<uint16_t>();
+                secondaryTiming = pkt->getLE<uint16_t>();
                 break;
               case UDMATiming:
-                udmaTiming = pkt->get<uint16_t>();
+                udmaTiming = pkt->getLE<uint16_t>();
                 break;
               case IDEConfig:
-                ideConfig = pkt->get<uint16_t>();
+                ideConfig = pkt->getLE<uint16_t>();
                 break;
               default:
                 panic("Invalid PCI configuration write "
@@ -299,15 +307,15 @@ IdeController::writeConfig(PacketPtr pkt)
                         offset);
             }
             DPRINTF(IdeCtrl, "PCI write offset: %#x size: 2 data: %#x\n",
-                    offset, (uint32_t)pkt->get<uint16_t>());
+                    offset, (uint32_t)pkt->getLE<uint16_t>());
             break;
           case sizeof(uint32_t):
             switch (offset) {
               case PrimaryTiming:
-                primaryTiming = pkt->get<uint32_t>();
+                primaryTiming = pkt->getLE<uint32_t>();
                 break;
               case IDEConfig:
-                ideConfig = pkt->get<uint32_t>();
+                ideConfig = pkt->getLE<uint32_t>();
                 break;
               default:
                 panic("Write of unimplemented PCI config. register: %x\n", offset);
@@ -529,11 +537,11 @@ IdeController::dispatchAccess(PacketPtr pkt, bool read)
 #ifndef NDEBUG
     uint32_t data;
     if (pkt->getSize() == 1)
-        data = pkt->get<uint8_t>();
+        data = pkt->getLE<uint8_t>();
     else if (pkt->getSize() == 2)
-        data = pkt->get<uint16_t>();
+        data = pkt->getLE<uint16_t>();
     else
-        data = pkt->get<uint32_t>();
+        data = pkt->getLE<uint32_t>();
     DPRINTF(IdeCtrl, "%s from offset: %#x size: %#x data: %#x\n",
             read ? "Read" : "Write", pkt->getAddr(), pkt->getSize(), data);
 #endif

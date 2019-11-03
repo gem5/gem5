@@ -31,8 +31,8 @@
 
 #include <unordered_map>
 
-#include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/protocol/AccessPermission.hh"
 
 template<class ENTRY>
 struct PerfectCacheLineState

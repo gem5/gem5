@@ -37,8 +37,9 @@
  * Authors: Andreas Hansson
  */
 
-#include "base/misc.hh"
 #include "proto/protoio.hh"
+
+#include "base/logging.hh"
 
 using namespace std;
 using namespace google::protobuf;

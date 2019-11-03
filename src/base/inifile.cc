@@ -29,13 +29,14 @@
  *          Steve Reinhardt
  */
 
+#include "base/inifile.hh"
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "base/inifile.hh"
 #include "base/str.hh"
 
 using namespace std;
@@ -227,6 +228,17 @@ IniFile::find(const string &sectionName, const string &entryName,
     value = entry->getValue();
 
     return true;
+}
+
+bool
+IniFile::entryExists(const string &sectionName, const string &entryName) const
+{
+    Section *section = findSection(sectionName);
+
+    if (!section)
+        return false;
+    else
+        return section->findEntry(entryName);
 }
 
 bool

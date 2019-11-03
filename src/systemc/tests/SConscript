@@ -1,0 +1,187 @@
+# Copyright 2018 Google, Inc.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Gabe Black
+
+from __future__ import print_function
+
+Import('*')
+
+if env['USE_SYSTEMC']:
+
+    from gem5_scons import Transform
+
+    import os.path
+    import json
+
+    src = str(Dir('.').srcdir)
+
+    class SystemCTest(object):
+        def __init__(self, dirname, name):
+            self.name = name
+            self.reldir = os.path.relpath(dirname, src)
+            self.target = os.path.join(self.reldir, name)
+            self.sources = []
+            self.deps = []
+
+            self.compile_only = False
+
+        def add_source(self, source):
+            self.sources.append(os.path.join(self.reldir, source))
+
+        def add_sources(self, sources):
+            for source in sources:
+                self.sources.append(os.path.join(self.reldir, '..', source))
+
+        def properties(self):
+            return {
+                'name' : self.name,
+                'path' : self.reldir,
+                'compile_only' : self.compile_only,
+                'deps' : self.deps
+            }
+
+    test_dir = Dir('.')
+    class SystemCTestBin(Executable):
+        def __init__(self, test):
+            super(SystemCTestBin, self).__init__(test.target, *test.sources)
+            self.reldir = test.reldir
+            self.test_deps = test.deps
+
+        @classmethod
+        def declare_all(cls, env):
+            env = env.Clone()
+
+            # Turn off extra warnings and Werror for the tests.
+            to_remove = ['-Wall', '-Wundef', '-Wextra', '-Werror']
+            env['CCFLAGS'] = \
+                filter(lambda f: f not in to_remove, env['CCFLAGS'])
+
+            env.Append(CPPPATH=test_dir.Dir('include'))
+
+            shared_lib_path = env['SHARED_LIB'][0].abspath
+            sl_dir, sl_base = os.path.split(shared_lib_path)
+            env.Append(LIBPATH=[sl_dir], LIBS=[sl_base])
+
+            super(SystemCTestBin, cls).declare_all(env)
+
+        def declare(self, env):
+            env = env.Clone()
+            sources = list(self.sources)
+            for f in self.filters:
+                sources += Source.all.apply_filter(f)
+            objs = self.srcs_to_objs(env, sources)
+            objs = objs + env['MAIN_OBJS']
+            relpath = os.path.relpath(
+                    env['SHARED_LIB'][0].dir.abspath,
+                    self.path(env).dir.abspath)
+            env.Append(LINKFLAGS=Split('-z origin'))
+            env.Append(RPATH=[
+                    env.Literal(os.path.join('\\$$ORIGIN', relpath))])
+            test_bin = super(SystemCTestBin, self).declare(env, objs)
+            test_dir = self.dir.Dir(self.reldir)
+            for dep in self.test_deps:
+                env.Depends(test_bin, test_dir.File(dep))
+            return test_bin
+
+    tests = []
+    def new_test(dirname, name):
+        test = SystemCTest(dirname, name)
+        tests.append(test)
+        return test
+
+
+    def scan_dir_for_tests(subdir):
+        def visitor(arg, dirname, names):
+            # If there's a 'DONTRUN' file in this directory, skip it and any
+            # child directories.
+            if 'DONTRUN' in names:
+                del names[:]
+                return
+
+            endswith = lambda sfx: filter(lambda n: n.endswith(sfx), names)
+
+            cpps = endswith('.cpp')
+            if not cpps:
+                return
+
+            def get_entries(fname):
+                with open(os.path.join(dirname, fname)) as content:
+                    lines = content.readlines
+                    # Get rid of leading and trailing whitespace.
+                    lines = map(lambda x: x.strip(), content.readlines())
+                    # Get rid of blank lines.
+                    lines = filter(lambda x: x, lines)
+                    return lines
+
+            # If there's only one source file, then that files name is the test
+            # name, and it's the source for that test.
+            if len(cpps) == 1:
+                cpp = cpps[0]
+
+                test = new_test(dirname, os.path.splitext(cpp)[0])
+                test.add_source(cpp)
+
+            # Otherwise, expect there to be a file that ends in .f. That files
+            # name is the test name, and it will list the source files with
+            # one preceeding path component.
+            else:
+                fs = endswith('.f')
+                if len(fs) != 1:
+                    print("In %s, expected 1 *.f file, but found %d.",
+                          dirname, len(fs))
+                    for f in fs:
+                        print(os.path.join(dirname, f))
+                    return
+                f = fs[0]
+
+                test = new_test(dirname, os.path.splitext(f)[0])
+                # Add all the sources to this test.
+                test.add_sources(get_entries(f))
+
+            if 'COMPILE' in names:
+                test.compile_only = True
+
+            if 'DEPS' in names:
+                test.deps = get_entries('DEPS')
+
+        subdir_src = Dir('.').srcdir.Dir(subdir)
+        os.path.walk(str(subdir_src), visitor, None)
+
+    scan_dir_for_tests('systemc')
+    scan_dir_for_tests('tlm')
+
+
+    def build_tests_json(target, source, env):
+        data = { test.target : test.properties() for test in tests }
+        with open(str(target[0]), "w") as tests_json:
+            json.dump(data, tests_json)
+
+    AlwaysBuild(env.Command(File('tests.json'), None,
+                MakeAction(build_tests_json, Transform("TESTJSON"))))
+
+
+    for test in tests:
+        SystemCTestBin(test)

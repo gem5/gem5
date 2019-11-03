@@ -29,19 +29,20 @@
  *          Steve Reinhardt
  */
 
-#ifndef __OBJECT_FILE_HH__
-#define __OBJECT_FILE_HH__
+#ifndef __BASE_LOADER_OBJECT_FILE_HH__
+#define __BASE_LOADER_OBJECT_FILE_HH__
 
-#include <limits>
 #include <string>
 
-#include "base/misc.hh"
+#include "base/loader/image_file.hh"
+#include "base/loader/image_file_data.hh"
+#include "base/loader/memory_image.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 
-class PortProxy;
 class SymbolTable;
 
-class ObjectFile
+class ObjectFile : public ImageFile
 {
   public:
 
@@ -56,7 +57,9 @@ class ObjectFile
         Arm64,
         Arm,
         Thumb,
-        Power
+        Power,
+        Riscv64,
+        Riscv32
     };
 
     enum OpSys {
@@ -69,40 +72,51 @@ class ObjectFile
     };
 
   protected:
-    const std::string filename;
-    uint8_t *fileData;
-    size_t len;
+    Arch arch = UnknownArch;
+    OpSys opSys = UnknownOpSys;
 
-    Arch  arch;
-    OpSys opSys;
-
-    ObjectFile(const std::string &_filename, size_t _len, uint8_t *_data,
-               Arch _arch, OpSys _opSys);
+    ObjectFile(ImageFileDataPtr ifd);
 
   public:
-    virtual ~ObjectFile();
+    virtual ~ObjectFile() {};
 
-    static const Addr maxAddr = std::numeric_limits<Addr>::max();
-
-    virtual bool loadSections(PortProxy& mem_proxy,
-                              Addr mask = maxAddr, Addr offset = 0);
-
-    virtual bool loadAllSymbols(SymbolTable *symtab, Addr base = 0,
-                                Addr offset = 0, Addr mask = maxAddr) = 0;
-    virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr base = 0,
-                                   Addr offset = 0, Addr mask = maxAddr) = 0;
-    virtual bool loadLocalSymbols(SymbolTable *symtab, Addr base = 0,
-                                  Addr offset = 0, Addr mask = maxAddr) = 0;
-    virtual bool loadWeakSymbols(SymbolTable *symtab, Addr base = 0,
-                                 Addr offset = 0, Addr mask = maxAddr)
-    { return false; }
+    virtual bool
+    loadAllSymbols(SymbolTable *symtab, Addr base=0,
+            Addr offset=0, Addr mask=MaxAddr)
+    {
+        return true;
+    };
+    virtual bool
+    loadGlobalSymbols(SymbolTable *symtab, Addr base=0,
+                      Addr offset=0, Addr mask=MaxAddr)
+    {
+        return true;
+    }
+    virtual bool
+    loadLocalSymbols(SymbolTable *symtab, Addr base=0,
+                     Addr offset=0, Addr mask=MaxAddr)
+    {
+        return true;
+    }
+    virtual bool
+    loadWeakSymbols(SymbolTable *symtab, Addr base=0,
+                    Addr offset=0, Addr mask=MaxAddr)
+    {
+        return true;
+    }
 
     virtual ObjectFile *getInterpreter() const { return nullptr; }
     virtual bool relocatable() const { return false; }
-    virtual Addr mapSize() const
-    { panic("mapSize() should only be called on relocatable objects\n"); }
-    virtual void updateBias(Addr bias_addr)
-    { panic("updateBias() should only be called on relocatable objects\n"); }
+    virtual Addr
+    mapSize() const
+    {
+        panic("mapSize() should only be called on relocatable objects\n");
+    }
+    virtual void
+    updateBias(Addr bias_addr)
+    {
+        panic("updateBias() should only be called on relocatable objects\n");
+    }
     virtual Addr bias() const { return 0; }
 
     virtual bool hasTLS() { return false; }
@@ -111,46 +125,24 @@ class ObjectFile
     OpSys getOpSys() const { return opSys; }
 
   protected:
-
-    struct Section {
-        Addr     baseAddr;
-        uint8_t *fileImage;
-        size_t   size;
-    };
-
-    Addr entry;
-    Addr globalPtr;
-
-    Section text;
-    Section data;
-    Section bss;
-
-    bool loadSection(Section *sec, PortProxy& mem_proxy, Addr mask,
-                     Addr offset = 0);
-    void setGlobalPointer(Addr global_ptr) { globalPtr = global_ptr; }
+    Addr entry = 0;
 
   public:
     Addr entryPoint() const { return entry; }
-
-    Addr globalPointer() const { return globalPtr; }
-
-    Addr textBase() const { return text.baseAddr; }
-    Addr dataBase() const { return data.baseAddr; }
-    Addr bssBase() const { return bss.baseAddr; }
-
-    size_t textSize() const { return text.size; }
-    size_t dataSize() const { return data.size; }
-    size_t bssSize() const { return bss.size; }
-
-    /* This function allows you to override the base address where
-     * a binary is going to be loaded or set it if the binary is just a
-     * blob that doesn't include an object header.
-     * @param a address to load the binary/text section at
-     */
-    void setTextBase(Addr a) { text.baseAddr = a; }
 };
 
-ObjectFile *createObjectFile(const std::string &fname, bool raw = false);
+class ObjectFileFormat
+{
+  protected:
+    ObjectFileFormat();
 
+  public:
+    ObjectFileFormat(const ObjectFileFormat &) = delete;
+    void operator=(const ObjectFileFormat &) = delete;
 
-#endif // __OBJECT_FILE_HH__
+    virtual ObjectFile *load(ImageFileDataPtr data) = 0;
+};
+
+ObjectFile *createObjectFile(const std::string &fname, bool raw=false);
+
+#endif // __BASE_LOADER_OBJECT_FILE_HH__

@@ -1,0 +1,55 @@
+# Copyright 2018 Google, Inc.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Gabe Black
+
+Import('*')
+
+from m5.util import compareVersions
+from m5.util.terminal import termcap
+
+def use_systemc_check(env, warn=False):
+    if ('GCC_VERSION' in env and
+            compareVersions(env['GCC_VERSION'], '5.0') < 0):
+        if warn:
+            print(termcap.Yellow + termcap.Bold +
+                  'Warning: Systemc may not work on gcc versions less '
+                  'than 5.0.' + termcap.Normal)
+        return False
+    elif env['PLATFORM'] == 'darwin':
+        if warn:
+            print(termcap.Yellow + termcap.Bold +
+                  'Warning: Systemc may not work on Mac OS.' + termcap.Normal)
+        return False
+    return True
+
+main.AddMethod(use_systemc_check, 'UseSystemcCheck')
+
+sticky_vars.AddVariables(
+    BoolVariable('USE_SYSTEMC', 'Enable SystemC API support',
+                 main.UseSystemcCheck())
+    )
+
+export_vars.append('USE_SYSTEMC')

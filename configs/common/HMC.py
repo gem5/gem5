@@ -37,6 +37,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Erfan Azarkhish
+#          Abdul Mutaal Ahmad
 
 # A Simplified model of a complete HMC device. Based on:
 #  [1] http://www.hybridmemorycube.org/specification-download/
@@ -48,190 +49,442 @@
 #      (G. Kim et. al)
 #  [5] Near Data Processing, Are we there yet? (M. Gokhale)
 #      http://www.cs.utah.edu/wondp/gokhale.pdf
+#  [6] openHMC - A Configurable Open-Source Hybrid Memory Cube Controller
+#      (J. Schmidt)
+#  [7] Hybrid Memory Cube performance characterization on data-centric
+#      workloads (M. Gokhale)
 #
 # This script builds a complete HMC device composed of vault controllers,
 # serial links, the main internal crossbar, and an external hmc controller.
 #
 # - VAULT CONTROLLERS:
-#   Instances of the HMC_2500_x32 class with their functionality specified in
+#   Instances of the HMC_2500_1x32 class with their functionality specified in
 #   dram_ctrl.cc
 #
 # - THE MAIN XBAR:
 #   This component is simply an instance of the NoncoherentXBar class, and its
 #   parameters are tuned to [2].
 #
-# - SERIAL LINKS:
+# - SERIAL LINKS CONTROLLER:
 #   SerialLink is a simple variation of the Bridge class, with the ability to
-#   account for the latency of packet serialization. We assume that the
-#   serializer component at the transmitter side does not need to receive the
-#   whole packet to start the serialization. But the deserializer waits for
-#   the complete packet to check its integrity first.
-#   * Bandwidth of the serial links is not modeled in the SerialLink component
-#     itself. Instead bandwidth/port of the HMCController has been adjusted to
-#     reflect the bandwidth delivered by 1 serial link.
+#   account for the latency of packet serialization and controller latency. We
+#   assume that the serializer component at the transmitter side does not need
+#   to receive the whole packet to start the serialization. But the
+#   deserializer waits for the complete packet to check its integrity first.
 #
-# - HMC CONTROLLER:
-#   Contains a large buffer (modeled with Bridge) to hide the access latency
-#   of the memory cube. Plus it simply forwards the packets to the serial
-#   links in a round-robin fashion to balance load among them.
+#   * Bandwidth of the serial links is not modeled in the SerialLink component
+#     itself.
+#
+#   * Latency of serial link controller is composed of SerDes latency + link
+#     controller
+#
 #   * It is inferred from the standard [1] and the literature [3] that serial
 #     links share the same address range and packets can travel over any of
 #     them so a load distribution mechanism is required among them.
+#
+#   -----------------------------------------
+#   | Host/HMC Controller                   |
+#   |        ----------------------         |
+#   |        |  Link Aggregator   |  opt    |
+#   |        ----------------------         |
+#   |        ----------------------         |
+#   |        |  Serial Link + Ser | * 4     |
+#   |        ----------------------         |
+#   |---------------------------------------
+#   -----------------------------------------
+#   | Device
+#   |        ----------------------         |
+#   |        |       Xbar         | * 4     |
+#   |        ----------------------         |
+#   |        ----------------------         |
+#   |        |  Vault Controller  | * 16    |
+#   |        ----------------------         |
+#   |        ----------------------         |
+#   |        |     Memory         |         |
+#   |        ----------------------         |
+#   |---------------------------------------|
+#
+#   In this version we have present 3 different HMC archiecture along with
+#   alongwith their corresponding test script.
+#
+#   same: It has 4 crossbars in HMC memory. All the crossbars are connected
+#   to each other, providing complete memory range. This archicture also covers
+#   the added latency for sending a request to non-local vault(bridge in b/t
+#   crossbars). All the 4 serial links can access complete memory. So each
+#   link can be connected to separate processor.
+#
+#   distributed: It has 4 crossbars inside the HMC. Crossbars are not
+#   connected.Through each crossbar only local vaults can be accessed. But to
+#   support this architecture we need a crossbar between serial links and
+#   processor.
+#
+#   mixed: This is a hybrid architecture. It has 4 crossbars inside the HMC.
+#   2 Crossbars are connected to only local vaults. From other 2 crossbar, a
+#   request can be forwarded to any other vault.
 
-import optparse
+from __future__ import print_function
+from __future__ import absolute_import
+
+import argparse
 
 import m5
 from m5.objects import *
+from m5.util import *
 
-# A single Hybrid Memory Cube (HMC)
-class HMCSystem(SubSystem):
-    #*****************************CROSSBAR PARAMETERS*************************
+
+def add_options(parser):
+    # *****************************CROSSBAR PARAMETERS*************************
     # Flit size of the main interconnect [1]
-    xbar_width = Param.Unsigned(32, "Data width of the main XBar (Bytes)")
+    parser.add_argument("--xbar-width", default=32, action="store", type=int,
+                        help="Data width of the main XBar (Bytes)")
 
     # Clock frequency of the main interconnect [1]
     # This crossbar, is placed on the logic-based of the HMC and it has its
     # own voltage and clock domains, different from the DRAM dies or from the
     # host.
-    xbar_frequency = Param.Frequency('1GHz', "Clock Frequency of the main "
-        "XBar")
+    parser.add_argument("--xbar-frequency", default='1GHz', type=str,
+                        help="Clock Frequency of the main XBar")
 
     # Arbitration latency of the HMC XBar [1]
-    xbar_frontend_latency = Param.Cycles(1, "Arbitration latency of the XBar")
+    parser.add_argument("--xbar-frontend-latency", default=1, action="store",
+                        type=int, help="Arbitration latency of the XBar")
 
     # Latency to forward a packet via the interconnect [1](two levels of FIFOs
     # at the input and output of the inteconnect)
-    xbar_forward_latency = Param.Cycles(2, "Forward latency of the XBar")
+    parser.add_argument("--xbar-forward-latency", default=2, action="store",
+                        type=int, help="Forward latency of the XBar")
 
     # Latency to forward a response via the interconnect [1](two levels of
     # FIFOs at the input and output of the inteconnect)
-    xbar_response_latency = Param.Cycles(2, "Response latency of the XBar")
+    parser.add_argument("--xbar-response-latency", default=2, action="store",
+                        type=int, help="Response latency of the XBar")
 
-    #*****************************SERIAL LINK PARAMETERS**********************
-    # Number of serial links [1]
-    num_serial_links = Param.Unsigned(4, "Number of serial links")
+    # number of cross which connects 16 Vaults to serial link[7]
+    parser.add_argument("--number-mem-crossbar", default=4, action="store",
+                        type=int, help="Number of crossbar in HMC")
+
+    # *****************************SERIAL LINK PARAMETERS**********************
+    # Number of serial links controllers [1]
+    parser.add_argument("--num-links-controllers", default=4, action="store",
+                        type=int, help="Number of serial links")
 
     # Number of packets (not flits) to store at the request side of the serial
     #  link. This number should be adjusted to achive required bandwidth
-    link_buffer_size_req = Param.Unsigned(16, "Number of packets to buffer "
-        "at the request side of the serial link")
+    parser.add_argument("--link-buffer-size-req", default=10, action="store",
+                        type=int, help="Number of packets to buffer at the\
+                        request side of the serial link")
 
     # Number of packets (not flits) to store at the response side of the serial
     #  link. This number should be adjusted to achive required bandwidth
-    link_buffer_size_rsp = Param.Unsigned(16, "Number of packets to buffer "
-        "at the response side of the serial link")
+    parser.add_argument("--link-buffer-size-rsp", default=10, action="store",
+                        type=int, help="Number of packets to buffer at the\
+                        response side of the serial link")
 
     # Latency of the serial link composed by SER/DES latency (1.6ns [4]) plus
     # the PCB trace latency (3ns Estimated based on [5])
-    link_latency = Param.Latency('4.6ns', "Latency of the serial links")
+    parser.add_argument("--link-latency", default='4.6ns', type=str,
+                        help="Latency of the serial links")
 
-    # Header overhead of the serial links: Header size is 128bits in HMC [1],
-    #  and we have 16 lanes, so the overhead is 8 cycles
-    link_overhead = Param.Cycles(8, "The number of cycles required to"
-        " transmit the packet header over the serial link")
+    # Clock frequency of the each serial link(SerDes) [1]
+    parser.add_argument("--link-frequency", default='10GHz', type=str,
+                        help="Clock Frequency of the serial links")
 
-    # Clock frequency of the serial links [1]
-    link_frequency = Param.Frequency('10GHz', "Clock Frequency of the serial"
-        "links")
+    # Clock frequency of serial link Controller[6]
+    # clk_hmc[Mhz]= num_lanes_per_link * lane_speed [Gbits/s] /
+    # data_path_width * 10^6
+    # clk_hmc[Mhz]= 16 * 10 Gbps / 256 * 10^6 = 625 Mhz
+    parser.add_argument("--link-controller-frequency", default='625MHz',
+                        type=str, help="Clock Frequency of the link\
+                        controller")
+
+    # Latency of the serial link controller to process the packets[1][6]
+    # (ClockDomain = 625 Mhz )
+    # used here for calculations only
+    parser.add_argument("--link-ctrl-latency", default=4, action="store",
+                        type=int, help="The number of cycles required for the\
+                        controller to process the packet")
+
+    # total_ctrl_latency = link_ctrl_latency + link_latency
+    # total_ctrl_latency = 4(Cycles) * 1.6 ns +  4.6 ns
+    parser.add_argument("--total-ctrl-latency", default='11ns', type=str,
+                        help="The latency experienced by every packet\
+                        regardless of size of packet")
 
     # Number of parallel lanes in each serial link [1]
-    num_lanes_per_link =  Param.Unsigned(16, "Number of lanes per each link")
+    parser.add_argument("--num-lanes-per-link", default=16, action="store",
+                        type=int, help="Number of lanes per each link")
 
     # Number of serial links [1]
-    num_serial_links =  Param.Unsigned(4, "Number of serial links")
+    parser.add_argument("--num-serial-links", default=4, action="store",
+                        type=int, help="Number of serial links")
 
-    #*****************************HMC CONTROLLER PARAMETERS*******************
-    # Number of packets (not flits) to store at the HMC controller. This
-    # number should be high enough to be able to hide the high latency of HMC
-    ctrl_buffer_size_req = Param.Unsigned(256, "Number of packets to buffer "
-        "at the HMC controller (request side)")
+    # speed of each lane of serial link - SerDes serial interface 10 Gb/s
+    parser.add_argument("--serial-link-speed", default=10, action="store",
+                        type=int, help="Gbs/s speed of each lane of serial\
+                        link")
 
-    # Number of packets (not flits) to store at the response side of the HMC
-    #  controller.
-    ctrl_buffer_size_rsp = Param.Unsigned(256, "Number of packets to buffer "
-        "at the HMC controller (response side)")
+    # address range for each of the serial links
+    parser.add_argument("--serial-link-addr-range", default='1GB', type=str,
+                        help="memory range for each of the serial links.\
+                        Default: 1GB")
 
-    # Latency of the HMC controller to process the packets
-    # (ClockDomain = Host clock domain)
-    ctrl_latency = Param.Cycles(4, "The number of cycles required for the "
-        " controller to process the packet")
-
-    # Wiring latency from the SoC crossbar to the HMC controller
-    ctrl_static_latency = Param.Latency('500ps', "Static latency of the HMC"
-        "controller")
-
-    #*****************************PERFORMANCE MONITORING**********************
+    # *****************************PERFORMANCE MONITORING*********************
     # The main monitor behind the HMC Controller
-    enable_global_monitor = Param.Bool(True, "The main monitor behind the "
-        "HMC Controller")
+    parser.add_argument("--enable-global-monitor", action="store_true",
+                        help="The main monitor behind the HMC Controller")
 
     # The link performance monitors
-    enable_link_monitor = Param.Bool(True, "The link monitors")
+    parser.add_argument("--enable-link-monitor", action="store_true",
+                        help="The link monitors")
 
-# Create an HMC device and attach it to the current system
-def config_hmc(options, system):
+    # link aggregator enable - put a cross between buffers & links
+    parser.add_argument("--enable-link-aggr", action="store_true", help="The\
+                        crossbar between port and Link Controller")
 
-    system.hmc = HMCSystem()
+    parser.add_argument("--enable-buff-div", action="store_true",
+                        help="Memory Range of Buffer is ivided between total\
+                        range")
 
-    system.buffer = Bridge(ranges=system.mem_ranges,
-                           req_size=system.hmc.ctrl_buffer_size_req,
-                           resp_size=system.hmc.ctrl_buffer_size_rsp,
-                           delay=system.hmc.ctrl_static_latency)
-    try:
-        system.hmc.enable_global_monitor = options.enable_global_monitor
-    except:
-        pass;
+    # *****************************HMC ARCHITECTURE **************************
+    # Memory chunk for 16 vault - numbers of vault / number of crossbars
+    parser.add_argument("--mem-chunk", default=4, action="store", type=int,
+                        help="Chunk of memory range for each cross bar in\
+                        arch 0")
 
-    try:
-        system.hmc.enable_link_monitor = options.enable_link_monitor
-    except:
-        pass;
+    # size of req buffer within crossbar, used for modelling extra latency
+    # when the reuqest go to non-local vault
+    parser.add_argument("--xbar-buffer-size-req", default=10, action="store",
+                        type=int, help="Number of packets to buffer at the\
+                        request side of the crossbar")
 
-    system.membus.master = system.buffer.slave
+    # size of response buffer within crossbar, used for modelling extra latency
+    # when the response received from non-local vault
+    parser.add_argument("--xbar-buffer-size-resp", default=10, action="store",
+                        type=int, help="Number of packets to buffer at the\
+                        response side of the crossbar")
+    # HMC device architecture. It affects the HMC host controller as well
+    parser.add_argument("--arch", type=str, choices=["same", "distributed",
+                        "mixed"], default="distributed", help="same: HMC with\
+                        4 links, all with same range.\ndistributed: HMC with\
+                        4 links with distributed range.\nmixed: mixed with\
+                        same and distributed range.\nDefault: distributed")
+    # HMC device - number of vaults
+    parser.add_argument("--hmc-dev-num-vaults", default=16, action="store",
+                        type=int, help="number of independent vaults within\
+                        the HMC device. Note: each vault has a memory\
+                        controller (valut controller)\nDefault: 16")
+    # HMC device - vault capacity or size
+    parser.add_argument("--hmc-dev-vault-size", default='256MB', type=str,
+                        help="vault storage capacity in bytes. Default:\
+                        256MB")
+    parser.add_argument("--mem-type", type=str, choices=["HMC_2500_1x32"],
+                        default="HMC_2500_1x32", help="type of HMC memory to\
+                        use. Default: HMC_2500_1x32")
+    parser.add_argument("--mem-channels", default=1, action="store", type=int,
+                        help="Number of memory channels")
+    parser.add_argument("--mem-ranks", default=1, action="store", type=int,
+                        help="Number of ranks to iterate across")
+    parser.add_argument("--burst-length", default=256, action="store",
+                        type=int, help="burst length in bytes. Note: the\
+                        cache line size will be set to this value.\nDefault:\
+                        256")
 
-    # The HMC controller (Clock domain is the same as the host)
-    system.hmccontroller = HMCController(width=(system.hmc.num_lanes_per_link.
-        value * system.hmc.num_serial_links/8),
-        frontend_latency=system.hmc.ctrl_latency,
-        forward_latency=system.hmc.link_overhead,
-        response_latency=system.hmc.link_overhead)
 
-    system.hmccontroller.clk_domain = SrcClockDomain(clock=system.hmc.
-        link_frequency, voltage_domain = VoltageDomain(voltage = '1V'))
+# configure HMC host controller
+def config_hmc_host_ctrl(opt, system):
 
-    # Serial Links
-    system.hmc.seriallink =[ SerialLink(ranges = system.mem_ranges,
-        req_size=system.hmc.link_buffer_size_req,
-        resp_size=system.hmc.link_buffer_size_rsp,
-        num_lanes=system.hmc.num_lanes_per_link,
-        delay=system.hmc.link_latency)
-        for i in xrange(system.hmc.num_serial_links)]
+    # create HMC host controller
+    system.hmc_host = SubSystem()
 
-    if system.hmc.enable_link_monitor:
-        system.hmc.lmonitor = [ CommMonitor()
-        for i in xrange(system.hmc.num_serial_links)]
+    # Create additional crossbar for arch1
+    if opt.arch == "distributed" or opt.arch == "mixed":
+        clk = '100GHz'
+        vd = VoltageDomain(voltage='1V')
+        # Create additional crossbar for arch1
+        system.membus = NoncoherentXBar(width=8)
+        system.membus.badaddr_responder = BadAddr()
+        system.membus.default = Self.badaddr_responder.pio
+        system.membus.width = 8
+        system.membus.frontend_latency = 3
+        system.membus.forward_latency = 4
+        system.membus.response_latency = 2
+        cd = SrcClockDomain(clock=clk, voltage_domain=vd)
+        system.membus.clk_domain = cd
 
-    # The HMC Crossbar located in its logic-base (LoB)
-    system.hmc.xbar = NoncoherentXBar(width = system.hmc.xbar_width,
-        frontend_latency=system.hmc.xbar_frontend_latency,
-        forward_latency=system.hmc.xbar_forward_latency,
-        response_latency=system.hmc.xbar_response_latency )
-    system.hmc.xbar.clk_domain = SrcClockDomain(clock =
-        system.hmc.xbar_frequency, voltage_domain =
-        VoltageDomain(voltage = '1V'))
+    # create memory ranges for the serial links
+    slar = convert.toMemorySize(opt.serial_link_addr_range)
+    # Memmory ranges of serial link for arch-0. Same as the ranges of vault
+    # controllers (4 vaults to 1 serial link)
+    if opt.arch == "same":
+        ser_ranges = [AddrRange(0, (4*slar)-1) for i in
+                      range(opt.num_serial_links)]
+    # Memmory ranges of serial link for arch-1. Distributed range accross
+    # links
+    if opt.arch == "distributed":
+        ser_ranges = [AddrRange(i*slar, ((i+1)*slar)-1) for i in
+                      range(opt.num_serial_links)]
+    # Memmory ranges of serial link for arch-2 'Mixed' address distribution
+    # over links
+    if opt.arch == "mixed":
+        ser_range0 = AddrRange(0, (1*slar)-1)
+        ser_range1 = AddrRange(1*slar, 2*slar-1)
+        ser_range2 = AddrRange(0, (4*slar)-1)
+        ser_range3 = AddrRange(0, (4*slar)-1)
+        ser_ranges = [ser_range0, ser_range1, ser_range2, ser_range3]
 
-    if system.hmc.enable_global_monitor:
-        system.gmonitor = CommMonitor()
-        system.buffer.master = system.gmonitor.slave
-        system.gmonitor.master = system.hmccontroller.slave
-    else:
-        system.hmccontroller.slave = system.buffer.master
+    # Serial link Controller with 16 SerDes links at 10 Gbps with serial link
+    # ranges w.r.t to architecture
+    sl = [SerialLink(ranges=ser_ranges[i],
+                     req_size=opt.link_buffer_size_req,
+                     resp_size=opt.link_buffer_size_rsp,
+                     num_lanes=opt.num_lanes_per_link,
+                     link_speed=opt.serial_link_speed,
+                     delay=opt.total_ctrl_latency) for i in
+          range(opt.num_serial_links)]
+    system.hmc_host.seriallink = sl
 
-    for i in xrange(system.hmc.num_serial_links):
-        system.hmccontroller.master = system.hmc.seriallink[i].slave
-        system.hmc.seriallink[i].clk_domain = system.hmccontroller.clk_domain;
-        if system.hmc.enable_link_monitor:
-            system.hmc.seriallink[i].master = system.hmc.lmonitor[i].slave
-            system.hmc.lmonitor[i].master = system.hmc.xbar.slave
+    # enable global monitor
+    if opt.enable_global_monitor:
+        system.hmc_host.lmonitor = [CommMonitor() for i in
+                                    range(opt.num_serial_links)]
+
+    # set the clock frequency for serial link
+    for i in range(opt.num_serial_links):
+        clk = opt.link_controller_frequency
+        vd = VoltageDomain(voltage='1V')
+        scd = SrcClockDomain(clock=clk, voltage_domain=vd)
+        system.hmc_host.seriallink[i].clk_domain = scd
+
+    # Connect membus/traffic gen to Serial Link Controller for differrent HMC
+    # architectures
+    hh = system.hmc_host
+    if opt.arch == "distributed":
+        mb = system.membus
+        for i in range(opt.num_links_controllers):
+            if opt.enable_global_monitor:
+                mb.master = hh.lmonitor[i].slave
+                hh.lmonitor[i].master = hh.seriallink[i].slave
+            else:
+                mb.master = hh.seriallink[i].slave
+    if opt.arch == "mixed":
+        mb = system.membus
+        if opt.enable_global_monitor:
+            mb.master = hh.lmonitor[0].slave
+            hh.lmonitor[0].master = hh.seriallink[0].slave
+            mb.master = hh.lmonitor[1].slave
+            hh.lmonitor[1].master = hh.seriallink[1].slave
         else:
-            system.hmc.seriallink[i].master = system.hmc.xbar.slave
+            mb.master = hh.seriallink[0].slave
+            mb.master = hh.seriallink[1].slave
+
+    if opt.arch == "same":
+        for i in range(opt.num_links_controllers):
+            if opt.enable_global_monitor:
+                hh.lmonitor[i].master = hh.seriallink[i].slave
+
+    return system
+
+
+# Create an HMC device
+def config_hmc_dev(opt, system, hmc_host):
+
+    # create HMC device
+    system.hmc_dev = SubSystem()
+
+    # create memory ranges for the vault controllers
+    arv = convert.toMemorySize(opt.hmc_dev_vault_size)
+    addr_ranges_vaults = [AddrRange(i*arv, ((i+1)*arv-1)) for i in
+                          range(opt.hmc_dev_num_vaults)]
+    system.mem_ranges = addr_ranges_vaults
+
+    if opt.enable_link_monitor:
+        lm = [CommMonitor() for i in range(opt.num_links_controllers)]
+        system.hmc_dev.lmonitor = lm
+
+    # 4 HMC Crossbars located in its logic-base (LoB)
+    xb = [NoncoherentXBar(width=opt.xbar_width,
+                          frontend_latency=opt.xbar_frontend_latency,
+                          forward_latency=opt.xbar_forward_latency,
+                          response_latency=opt.xbar_response_latency) for i in
+          range(opt.number_mem_crossbar)]
+    system.hmc_dev.xbar = xb
+
+    for i in range(opt.number_mem_crossbar):
+        clk = opt.xbar_frequency
+        vd = VoltageDomain(voltage='1V')
+        scd = SrcClockDomain(clock=clk, voltage_domain=vd)
+        system.hmc_dev.xbar[i].clk_domain = scd
+
+    # Attach 4 serial link to 4 crossbar/s
+    for i in range(opt.num_serial_links):
+        if opt.enable_link_monitor:
+            system.hmc_host.seriallink[i].master = \
+                system.hmc_dev.lmonitor[i].slave
+            system.hmc_dev.lmonitor[i].master = system.hmc_dev.xbar[i].slave
+        else:
+            system.hmc_host.seriallink[i].master = system.hmc_dev.xbar[i].slave
+
+    # Connecting xbar with each other for request arriving at the wrong xbar,
+    # then it will be forward to correct xbar. Bridge is used to connect xbars
+    if opt.arch == "same":
+        numx = len(system.hmc_dev.xbar)
+
+        # create a list of buffers
+        system.hmc_dev.buffers = [Bridge(req_size=opt.xbar_buffer_size_req,
+                                         resp_size=opt.xbar_buffer_size_resp)
+                                  for i in range(numx*(opt.mem_chunk-1))]
+
+        # Buffer iterator
+        it = iter(range(len(system.hmc_dev.buffers)))
+
+        # necesarry to add system_port to one of the xbar
+        system.system_port = system.hmc_dev.xbar[3].slave
+
+        # iterate over all the crossbars and connect them as required
+        for i in range(numx):
+            for j in range(numx):
+                # connect xbar to all other xbars except itself
+                if i != j:
+                    # get the next index of buffer
+                    index = it.next()
+
+                    # Change the default values for ranges of bridge
+                    system.hmc_dev.buffers[index].ranges = system.mem_ranges[
+                            j * int(opt.mem_chunk):
+                            (j + 1) * int(opt.mem_chunk)]
+
+                    # Connect the bridge between corssbars
+                    system.hmc_dev.xbar[i].master = system.hmc_dev.buffers[
+                            index].slave
+                    system.hmc_dev.buffers[
+                            index].master = system.hmc_dev.xbar[j].slave
+                else:
+                    # Don't connect the xbar to itself
+                    pass
+
+    # Two crossbars are connected to all other crossbars-Other 2 vault
+    # can only direct traffic to it local vaults
+    if opt.arch == "mixed":
+        system.hmc_dev.buffer30 = Bridge(ranges=system.mem_ranges[0:4])
+        system.hmc_dev.xbar[3].master = system.hmc_dev.buffer30.slave
+        system.hmc_dev.buffer30.master = system.hmc_dev.xbar[0].slave
+
+        system.hmc_dev.buffer31 = Bridge(ranges=system.mem_ranges[4:8])
+        system.hmc_dev.xbar[3].master = system.hmc_dev.buffer31.slave
+        system.hmc_dev.buffer31.master = system.hmc_dev.xbar[1].slave
+
+        system.hmc_dev.buffer32 = Bridge(ranges=system.mem_ranges[8:12])
+        system.hmc_dev.xbar[3].master = system.hmc_dev.buffer32.slave
+        system.hmc_dev.buffer32.master = system.hmc_dev.xbar[2].slave
+
+        system.hmc_dev.buffer20 = Bridge(ranges=system.mem_ranges[0:4])
+        system.hmc_dev.xbar[2].master = system.hmc_dev.buffer20.slave
+        system.hmc_dev.buffer20.master = system.hmc_dev.xbar[0].slave
+
+        system.hmc_dev.buffer21 = Bridge(ranges=system.mem_ranges[4:8])
+        system.hmc_dev.xbar[2].master = system.hmc_dev.buffer21.slave
+        system.hmc_dev.buffer21.master = system.hmc_dev.xbar[1].slave
+
+        system.hmc_dev.buffer23 = Bridge(ranges=system.mem_ranges[12:16])
+        system.hmc_dev.xbar[2].master = system.hmc_dev.buffer23.slave
+        system.hmc_dev.buffer23.master = system.hmc_dev.xbar[3].slave

@@ -1,0 +1,13 @@
+SystemC Simulation
+sender notifies e2 after 10 ns, receiver e1 at zero time
+simulation time:0 s sender - e2
+simulation time:0 s receiver - e1
+simulation time:0 s sender - e2
+simulation time:10 ns receiver - e1
+simulation time:10 ns sender - e2
+simulation time:20 ns receiver - e1
+simulation time:20 ns sender - e2
+simulation time:30 ns receiver - e1
+simulation time:30 ns sender - e2
+simulation time:40 ns receiver - e1
+simulation time:40 ns sender - e2

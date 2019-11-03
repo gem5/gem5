@@ -1,0 +1,58 @@
+# Copyright 2017 Google Inc.
+#
+# Copyright (c) 2018 ARM Limited
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Import('main')
+
+# The root of the build directory.
+build = Dir('.')
+# The root of the original directory.
+gtest_base = build.srcdir.Dir('googletest')
+gmock_base = build.srcdir.Dir('googlemock')
+# Include files from the original directory.
+gtest_include = gtest_base.Dir('include')
+gmock_include = gmock_base.Dir('include')
+# Use source files from the build directory so build products end up there.
+gtest_src = Dir('googletest/src')
+gmock_src = Dir('googlemock/src')
+
+main.Append(CPPPATH=[gtest_include, gmock_include])
+main.Append(LIBPATH=[build])
+
+env = main.Clone(CPPFLAGS=['-g', '-Wall', '-Wextra', '-pthread',
+                           '-Wno-undef', '-isystem', str(gtest_include),
+                           '-isystem', str(gmock_include)])
+env.Append(CPPPATH=[gtest_base, gmock_base])
+
+gtest_all = env.Object(gtest_src.File('gtest-all.cc'))
+gmock_all = env.Object(gmock_src.File('gmock-all.cc'))
+gtest_main = env.StaticLibrary(target='libgtest', source=[
+        gtest_all, gmock_all, gtest_src.File('gtest_main.cc')])
+
+main['GTEST_LIBS'] = ['libgtest', 'pthread']
+main['GTEST_CPPFLAGS'] = [
+    '-pthread', '-DUSE_GMOCK', '-Wno-undef', '-isystem', gtest_include.abspath]

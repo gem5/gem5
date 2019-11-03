@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013 ARM Limited
+// Copyright (c) 2011-2013,2017 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -212,23 +212,27 @@ let {{
             if self.flavor == "fp":
                 accCode = '''
                     uint64_t data = AA64FpDest2P0_uw;
-                    data = (data << 32) | AA64FpDestP0_uw;
+                    data = isBigEndian64(xc->tcBase())
+                            ? ((uint64_t(AA64FpDestP0_uw) << 32) | data)
+                            : ((data << 32) | AA64FpDestP0_uw);
                     Mem_ud = cSwap(data, isBigEndian64(xc->tcBase()));
                 '''
             else:
                 if self.size == 4:
                     accCode = '''
                         uint64_t data = XDest2_uw;
-                        data = (data << 32) | XDest_uw;
+                        data = isBigEndian64(xc->tcBase())
+                                ? ((uint64_t(XDest_uw) << 32) | data)
+                                : ((data << 32) | XDest_uw);
                         Mem_ud = cSwap(data, isBigEndian64(xc->tcBase()));
                     '''
                 elif self.size == 8:
                     accCode = '''
                         // This temporary needs to be here so that the parser
                         // will correctly identify this instruction as a store.
-                        Twin64_t temp;
-                        temp.a = XDest_ud;
-                        temp.b = XDest2_ud;
+                        std::array<uint64_t, 2> temp;
+                        temp[0] = cSwap(XDest_ud,isBigEndian64(xc->tcBase()));
+                        temp[1] = cSwap(XDest2_ud,isBigEndian64(xc->tcBase()));
                         Mem_tud = temp;
                     '''
             self.codeBlobs["memacc_code"] = accCode
@@ -277,7 +281,8 @@ let {{
         execBase = 'StoreEx64'
         def __init__(self, *args, **kargs):
             super(StoreEx64, self).__init__(*args, **kargs)
-            self.codeBlobs["postacc_code"] = "XResult = !writeResult;"
+            self.codeBlobs["postacc_code"] = \
+                 "XResult = !writeResult; SevMailbox = 1; LLSCLock = 0;"
 
     def buildStores64(mnem, NameBase, size, flavor="normal"):
         StoreImm64(mnem, NameBase + "_IMM", size, flavor=flavor).emit()
@@ -343,7 +348,8 @@ let {{
         writeback = False
         def __init__(self, *args, **kargs):
             super(StoreImmDEx64, self).__init__(*args, **kargs)
-            self.codeBlobs["postacc_code"] = "XResult = !writeResult;"
+            self.codeBlobs["postacc_code"] = \
+                 "XResult = !writeResult; SevMailbox = 1; LLSCLock = 0;"
 
     class StoreRegU64(StoreReg64):
         decConstBase = 'LoadStoreRegU64'

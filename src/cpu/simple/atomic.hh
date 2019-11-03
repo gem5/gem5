@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@
 
 #include "cpu/simple/base.hh"
 #include "cpu/simple/exec_context.hh"
+#include "mem/request.hh"
 #include "params/AtomicSimpleCPU.hh"
 #include "sim/probe/probe.hh"
 
@@ -57,18 +58,9 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
     void init() override;
 
-  private:
+  protected:
 
-    struct TickEvent : public Event
-    {
-        AtomicSimpleCPU *cpu;
-
-        TickEvent(AtomicSimpleCPU *c);
-        void process();
-        const char *description() const;
-    };
-
-    TickEvent tickEvent;
+    EventFunctionWrapper tickEvent;
 
     const int width;
     bool locked;
@@ -96,7 +88,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
      * <li>Stay at PC is true.
      * </ul>
      */
-    bool isDrained() {
+    bool isCpuDrained() const {
         SimpleExecContext &t_info = *threadInfo[curThread];
 
         return t_info.thread->microPC() == 0 &&
@@ -110,6 +102,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
      * @returns true if the CPU is drained, false otherwise.
      */
     bool tryCompleteDrain();
+
+    virtual Tick sendPacket(MasterPort &port, const PacketPtr &pkt);
 
     /**
      * An AtomicCPUPort overrides the default behaviour of the
@@ -145,7 +139,6 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     {
 
       public:
-
         AtomicCPUDPort(const std::string &_name, BaseSimpleCPU* _cpu)
             : AtomicCPUPort(_name, _cpu), cpu(_cpu)
         {
@@ -166,10 +159,11 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     AtomicCPUPort icachePort;
     AtomicCPUDPort dcachePort;
 
-    bool fastmem;
-    Request ifetch_req;
-    Request data_read_req;
-    Request data_write_req;
+
+    RequestPtr ifetch_req;
+    RequestPtr data_read_req;
+    RequestPtr data_write_req;
+    RequestPtr data_amo_req;
 
     bool dcache_access;
     Tick dcache_latency;
@@ -180,10 +174,10 @@ class AtomicSimpleCPU : public BaseSimpleCPU
   protected:
 
     /** Return a reference to the data port. */
-    MasterPort &getDataPort() override { return dcachePort; }
+    Port &getDataPort() override { return dcachePort; }
 
     /** Return a reference to the instruction port. */
-    MasterPort &getInstPort() override { return icachePort; }
+    Port &getInstPort() override { return icachePort; }
 
     /** Perform snoop for other cpu-local thread contexts. */
     void threadSnoop(PacketPtr pkt, ThreadID sender);
@@ -201,13 +195,39 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     void activateContext(ThreadID thread_num) override;
     void suspendContext(ThreadID thread_num) override;
 
-    Fault readMem(Addr addr, uint8_t *data, unsigned size,
-                  unsigned flags) override;
+    /**
+     * Helper function used to set up the request for a single fragment of a
+     * memory access.
+     *
+     * Takes care of setting up the appropriate byte-enable mask for the
+     * fragment, given the mask for the entire memory access.
+     *
+     * @param req Pointer to the Request object to populate.
+     * @param frag_addr Start address of the fragment.
+     * @param size Total size of the memory access in bytes.
+     * @param flags Request flags.
+     * @param byte_enable Byte-enable mask for the entire memory access.
+     * @param[out] frag_size Fragment size.
+     * @param[in,out] size_left Size left to be processed in the memory access.
+     * @return True if the byte-enable mask for the fragment is not all-false.
+     */
+    bool genMemFragmentRequest(const RequestPtr& req, Addr frag_addr,
+                               int size, Request::Flags flags,
+                               const std::vector<bool>& byte_enable,
+                               int& frag_size, int& size_left) const;
 
-    Fault initiateMemRead(Addr addr, unsigned size, unsigned flags) override;
+    Fault readMem(Addr addr, uint8_t *data, unsigned size,
+                  Request::Flags flags,
+                  const std::vector<bool>& byteEnable = std::vector<bool>())
+        override;
 
     Fault writeMem(uint8_t *data, unsigned size,
-                   Addr addr, unsigned flags, uint64_t *res) override;
+                   Addr addr, Request::Flags flags, uint64_t *res,
+                   const std::vector<bool>& byteEnable = std::vector<bool>())
+        override;
+
+    Fault amoMem(Addr addr, uint8_t* data, unsigned size,
+                 Request::Flags flags, AtomicOpFunctorPtr amo_op) override;
 
     void regProbePoints() override;
 

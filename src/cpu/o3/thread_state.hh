@@ -72,7 +72,15 @@ struct O3ThreadState : public ThreadState {
   private:
     /** Pointer to the CPU. */
     O3CPU *cpu;
+
   public:
+    PCEventQueue pcEventQueue;
+    /**
+     * An instruction-based event queue. Used for scheduling events based on
+     * number of instructions committed.
+     */
+    EventQueue comInstEventQueue;
+
     /* This variable controls if writes to a thread context should cause a all
      * dynamic/speculative state to be thrown away. Nominally this is the
      * desired behavior because the external thread context write has updated
@@ -89,9 +97,9 @@ struct O3ThreadState : public ThreadState {
     bool trapPending;
 
     O3ThreadState(O3CPU *_cpu, int _thread_num, Process *_process)
-        : ThreadState(_cpu, _thread_num, _process),
-          cpu(_cpu), noSquashFromTC(false), trapPending(false),
-          tc(nullptr)
+        : ThreadState(_cpu, _thread_num, _process), cpu(_cpu),
+          comInstEventQueue("instruction-based event queue"),
+          noSquashFromTC(false), trapPending(false), tc(nullptr)
     {
         if (!FullSystem)
             return;
@@ -140,7 +148,10 @@ struct O3ThreadState : public ThreadState {
     ThreadContext *getTC() { return tc; }
 
     /** Handles the syscall. */
-    void syscall(int64_t callnum) { process->syscall(callnum, tc); }
+    void syscall(int64_t callnum, Fault *fault)
+    {
+        process->syscall(callnum, tc, fault);
+    }
 
     void dumpFuncProfile()
     {

@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+from six import string_types
 
 import ply.lex
 import ply.yacc
@@ -37,18 +38,17 @@ class ParseError(Exception):
 class Grammar(object):
     def setupLexerFactory(self, **kwargs):
         if 'module' in kwargs:
-            raise AttributeError, "module is an illegal attribute"
+            raise AttributeError("module is an illegal attribute")
         self.lex_kwargs = kwargs
 
     def setupParserFactory(self, **kwargs):
         if 'module' in kwargs:
-            raise AttributeError, "module is an illegal attribute"
+            raise AttributeError("module is an illegal attribute")
 
         if 'output' in kwargs:
             dir,tab = os.path.split(output)
             if not tab.endswith('.py'):
-                raise AttributeError, \
-                    'The output file must end with .py'
+                raise AttributeError('The output file must end with .py')
             kwargs['outputdir'] = dir
             kwargs['tabmodule'] = tab[:-3]
 
@@ -90,13 +90,13 @@ class Grammar(object):
                 return -1
             return self.current_lexer.lineno
 
-        raise AttributeError, \
-            "'%s' object has no attribute '%s'" % (type(self), attr)
+        raise AttributeError(
+            "'%s' object has no attribute '%s'" % (type(self), attr))
 
     def parse_string(self, data, source='<string>', debug=None, tracking=0):
-        if not isinstance(data, basestring):
-            raise AttributeError, \
-                "argument must be a string, was '%s'" % type(f)
+        if not isinstance(data, string_types):
+            raise AttributeError(
+                "argument must be a string, was '%s'" % type(f))
 
         import new
         lexer = self.lex.clone()
@@ -114,14 +114,14 @@ class Grammar(object):
         return result
 
     def parse_file(self, f, **kwargs):
-        if isinstance(f, basestring):
+        if isinstance(f, string_types):
             source = f
-            f = file(f, 'r')
+            f = open(f, 'r')
         elif isinstance(f, file):
             source = f.name
         else:
-            raise AttributeError, \
-                "argument must be either a string or file, was '%s'" % type(f)
+            raise AttributeError(
+                "argument must be either a string or file, was '%s'" % type(f))
 
         return self.parse_string(f.read(), source, **kwargs)
 
@@ -135,5 +135,5 @@ class Grammar(object):
 
     def t_error(self, t):
         msg = "Illegal character %s @ %d:%d" % \
-            (`t.value[0]`, t.lineno, t.lexpos)
+            (repr(t.value[0]), t.lineno, t.lexpos)
         raise ParseError(msg, t)

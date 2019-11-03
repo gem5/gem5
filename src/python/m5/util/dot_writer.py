@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013 ARM Limited
+# Copyright (c) 2012-2013,2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -57,14 +57,28 @@
 #
 #####################################################################
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 import m5, os, re
 from m5.SimObject import isRoot, isSimObjectVector
-from m5.params import PortRef
+from m5.params import PortRef, isNullPointer
 from m5.util import warn
 try:
     import pydot
 except:
     pydot = False
+
+def simnode_children(simNode):
+    for child in simNode._children.values():
+        if isNullPointer(child):
+            continue
+        if isSimObjectVector(child):
+            for obj in child:
+                if not isNullPointer(obj):
+                    yield obj
+        else:
+            yield child
 
 # need to create all nodes (components) before creating edges (memory channels)
 def dot_create_nodes(simNode, callgraph):
@@ -88,14 +102,8 @@ def dot_create_nodes(simNode, callgraph):
             cluster.add_node(port_node)
 
     # recurse to children
-    if simNode._children:
-        for c in simNode._children:
-            child = simNode._children[c]
-            if isSimObjectVector(child):
-                for obj in child:
-                    dot_create_nodes(obj, cluster)
-            else:
-                dot_create_nodes(child, cluster)
+    for child in simnode_children(simNode):
+        dot_create_nodes(child, cluster)
 
     callgraph.add_subgraph(cluster)
 
@@ -109,26 +117,34 @@ def dot_create_edges(simNode, callgraph):
             port_node = dot_create_node(simNode, full_port_name, port_name)
             # create edges
             if isinstance(port, PortRef):
-                dot_add_edge(simNode, callgraph, full_port_name, port)
+                if port.peer:
+                    dot_add_edge(simNode, callgraph, full_port_name, port)
             else:
                 for p in port.elements:
-                    dot_add_edge(simNode, callgraph, full_port_name, p)
+                    if p.peer:
+                        dot_add_edge(simNode, callgraph, full_port_name, p)
 
     # recurse to children
-    if simNode._children:
-        for c in simNode._children:
-            child = simNode._children[c]
-            if isSimObjectVector(child):
-                for obj in child:
-                    dot_create_edges(obj, callgraph)
-            else:
-                dot_create_edges(child, callgraph)
+    for child in simnode_children(simNode):
+        dot_create_edges(child, callgraph)
 
-def dot_add_edge(simNode, callgraph, full_port_name, peerPort):
-    if peerPort.role == "MASTER":
-        peer_port_name = re.sub('\.', '_', peerPort.peer.simobj.path() \
-                + "." + peerPort.peer.name)
-        callgraph.add_edge(pydot.Edge(full_port_name, peer_port_name))
+def dot_add_edge(simNode, callgraph, full_port_name, port):
+    peer = port.peer
+    full_peer_path = re.sub('\.', '_', peer.simobj.path())
+    full_peer_port_name = full_peer_path + "_" + peer.name
+
+    # Each edge is encountered twice, once for each peer. We only want one
+    # edge, so we'll arbitrarily chose which peer "wins" based on their names.
+    if full_peer_port_name < full_port_name:
+        dir_type = {
+            (False, False) : 'both',
+            (True,  False) : 'forward',
+            (False, True)  : 'back',
+            (True,  True)  : 'none'
+        }[ (port.is_source,
+            peer.is_source) ]
+        edge = pydot.Edge(full_port_name, full_peer_port_name, dir=dir_type)
+        callgraph.add_edge(edge)
 
 def dot_create_cluster(simNode, full_path, label):
     # get the parameter values of the node and use them as a tooltip
@@ -140,7 +156,7 @@ def dot_create_cluster(simNode, full_path, label):
             ini_strings.append(str(param) + "&#61;" +
                                simNode._values[param].ini_str())
     # join all the parameters with an HTML newline
-    tooltip = "&#10;".join(ini_strings)
+    tooltip = "&#10;\\".join(ini_strings)
 
     return pydot.Cluster( \
                          full_path, \
@@ -299,48 +315,25 @@ def dot_create_dvfs_nodes(simNode, callgraph, domain=None):
     dvfs_domains = {}
 
     # recurse to children
-    if simNode._children:
-        for c in simNode._children:
-            child = simNode._children[c]
-            if isSimObjectVector(child):
-                for obj in child:
-                    try:
-                        c_dom = obj.__getattr__('clk_domain')
-                        v_dom = c_dom.__getattr__('voltage_domain')
-                    except AttributeError:
-                        # Just re-use the domain from above
-                        c_dom = domain
-                        v_dom = c_dom.__getattr__('voltage_domain')
-                        pass
+    for child in simnode_children(simNode):
+        try:
+            c_dom = child.__getattr__('clk_domain')
+            v_dom = c_dom.__getattr__('voltage_domain')
+        except AttributeError:
+            # Just re-use the domain from above
+            c_dom = domain
+            v_dom = c_dom.__getattr__('voltage_domain')
+            pass
 
-                    if c_dom == domain or c_dom == None:
-                        dot_create_dvfs_nodes(obj, cluster, domain)
-                    else:
-                        if c_dom not in dvfs_domains:
-                            dvfs_cluster = dot_add_clk_domain(c_dom, v_dom)
-                            dvfs_domains[c_dom] = dvfs_cluster
-                        else:
-                            dvfs_cluster = dvfs_domains[c_dom]
-                        dot_create_dvfs_nodes(obj, dvfs_cluster, c_dom)
+        if c_dom == domain or c_dom == None:
+            dot_create_dvfs_nodes(child, cluster, domain)
+        else:
+            if c_dom not in dvfs_domains:
+                dvfs_cluster = dot_add_clk_domain(c_dom, v_dom)
+                dvfs_domains[c_dom] = dvfs_cluster
             else:
-                try:
-                    c_dom = child.__getattr__('clk_domain')
-                    v_dom = c_dom.__getattr__('voltage_domain')
-                except AttributeError:
-                    # Just re-use the domain from above
-                    c_dom = domain
-                    v_dom = c_dom.__getattr__('voltage_domain')
-                    pass
-
-                if c_dom == domain or c_dom == None:
-                    dot_create_dvfs_nodes(child, cluster, domain)
-                else:
-                    if c_dom not in dvfs_domains:
-                        dvfs_cluster = dot_add_clk_domain(c_dom, v_dom)
-                        dvfs_domains[c_dom] = dvfs_cluster
-                    else:
-                        dvfs_cluster = dvfs_domains[c_dom]
-                    dot_create_dvfs_nodes(child, dvfs_cluster, c_dom)
+                dvfs_cluster = dvfs_domains[c_dom]
+            dot_create_dvfs_nodes(child, dvfs_cluster, c_dom)
 
     for key in dvfs_domains:
         cluster.add_subgraph(dvfs_domains[key])

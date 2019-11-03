@@ -72,7 +72,7 @@ extern double ps; ///< picosecond
 extern double Hz;  ///< Hz
 extern double kHz; ///< kHz
 extern double MHz; ///< MHz
-extern double GHZ; ///< GHz
+extern double GHz; ///< GHz
 /** @}*/
 } // namespace Float
 
@@ -91,7 +91,12 @@ extern Tick ps; ///< picosecond
 } // namespace Int
 } // namespace SimClock
 /** @} */
+
+void fixClockFrequency();
+bool clockFrequencyFixed();
+
 void setClockFrequency(Tick ticksPerSecond);
+Tick getClockFrequency(); // Ticks per second.
 
 void setOutputDir(const std::string &dir);
 

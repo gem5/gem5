@@ -37,35 +37,6 @@
  * ISA-specific helper functions for locked memory accesses.
  */
 
-#include "mem/packet.hh"
-#include "mem/request.hh"
-
-namespace X86ISA
-{
-    template <class XC>
-    inline void
-    handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
-    {
-    }
-
-    template <class XC>
-    inline void
-    handleLockedRead(XC *xc, Request *req)
-    {
-    }
-
-    template <class XC>
-    inline bool
-    handleLockedWrite(XC *xc, Request *req, Addr cacheBlockMask)
-    {
-        return true;
-    }
-
-    template <class XC>
-    inline void
-    handleLockedSnoopHit(XC *xc)
-    {
-    }
-}
+#include "arch/generic/locked_mem.hh"
 
 #endif // __ARCH_X86_LOCKEDMEM_HH__

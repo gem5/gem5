@@ -1,0 +1,7 @@
+SystemC Simulation
+5 ns: reset method m1
+5 ns: in m1
+5 ns: in m1() throwing exception in throwee1
+5 ns: in throwee1, caught exception 
+5 ns: in m1() after throwing exception in throwee1
+5 ns: after reset of method m1

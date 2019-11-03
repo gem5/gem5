@@ -39,7 +39,6 @@
 #include <vector>
 
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "debug/Tsunami.hh"
 #include "dev/alpha/tsunami.hh"
 #include "dev/alpha/tsunami_cchip.hh"
@@ -50,8 +49,6 @@
 #include "sim/system.hh"
 
 using namespace std;
-//Should this be AlphaISA?
-using namespace TheISA;
 
 TsunamiPChip::TsunamiPChip(const Params *p)
     : GenericPciHost(p),
@@ -87,60 +84,60 @@ TsunamiPChip::read(PacketPtr pkt)
 
     switch(daddr) {
       case TSDEV_PC_WSBA0:
-            pkt->set(wsba[0]);
+            pkt->setLE(wsba[0]);
             break;
       case TSDEV_PC_WSBA1:
-            pkt->set(wsba[1]);
+            pkt->setLE(wsba[1]);
             break;
       case TSDEV_PC_WSBA2:
-            pkt->set(wsba[2]);
+            pkt->setLE(wsba[2]);
             break;
       case TSDEV_PC_WSBA3:
-            pkt->set(wsba[3]);
+            pkt->setLE(wsba[3]);
             break;
       case TSDEV_PC_WSM0:
-            pkt->set(wsm[0]);
+            pkt->setLE(wsm[0]);
             break;
       case TSDEV_PC_WSM1:
-            pkt->set(wsm[1]);
+            pkt->setLE(wsm[1]);
             break;
       case TSDEV_PC_WSM2:
-            pkt->set(wsm[2]);
+            pkt->setLE(wsm[2]);
             break;
       case TSDEV_PC_WSM3:
-            pkt->set(wsm[3]);
+            pkt->setLE(wsm[3]);
             break;
       case TSDEV_PC_TBA0:
-            pkt->set(tba[0]);
+            pkt->setLE(tba[0]);
             break;
       case TSDEV_PC_TBA1:
-            pkt->set(tba[1]);
+            pkt->setLE(tba[1]);
             break;
       case TSDEV_PC_TBA2:
-            pkt->set(tba[2]);
+            pkt->setLE(tba[2]);
             break;
       case TSDEV_PC_TBA3:
-            pkt->set(tba[3]);
+            pkt->setLE(tba[3]);
             break;
       case TSDEV_PC_PCTL:
-            pkt->set(pctl);
+            pkt->setLE(pctl);
             break;
       case TSDEV_PC_PLAT:
             panic("PC_PLAT not implemented\n");
       case TSDEV_PC_RES:
             panic("PC_RES not implemented\n");
       case TSDEV_PC_PERROR:
-            pkt->set((uint64_t)0x00);
+            pkt->setLE((uint64_t)0x00);
             break;
       case TSDEV_PC_PERRMASK:
-            pkt->set((uint64_t)0x00);
+            pkt->setLE((uint64_t)0x00);
             break;
       case TSDEV_PC_PERRSET:
             panic("PC_PERRSET not implemented\n");
       case TSDEV_PC_TLBIV:
             panic("PC_TLBIV not implemented\n");
       case TSDEV_PC_TLBIA:
-            pkt->set((uint64_t)0x00); // shouldn't be readable, but linux
+            pkt->setLE((uint64_t)0x00); // shouldn't be readable, but linux
             break;
       case TSDEV_PC_PMONCTL:
             panic("PC_PMONCTL not implemented\n");
@@ -171,43 +168,43 @@ TsunamiPChip::write(PacketPtr pkt)
 
     switch(daddr) {
         case TSDEV_PC_WSBA0:
-              wsba[0] = pkt->get<uint64_t>();
+              wsba[0] = pkt->getLE<uint64_t>();
               break;
         case TSDEV_PC_WSBA1:
-              wsba[1] = pkt->get<uint64_t>();
+              wsba[1] = pkt->getLE<uint64_t>();
               break;
         case TSDEV_PC_WSBA2:
-              wsba[2] = pkt->get<uint64_t>();
+              wsba[2] = pkt->getLE<uint64_t>();
               break;
         case TSDEV_PC_WSBA3:
-              wsba[3] = pkt->get<uint64_t>();
+              wsba[3] = pkt->getLE<uint64_t>();
               break;
         case TSDEV_PC_WSM0:
-              wsm[0] = pkt->get<uint64_t>();
+              wsm[0] = pkt->getLE<uint64_t>();
               break;
         case TSDEV_PC_WSM1:
-              wsm[1] = pkt->get<uint64_t>();
+              wsm[1] = pkt->getLE<uint64_t>();
               break;
         case TSDEV_PC_WSM2:
-              wsm[2] = pkt->get<uint64_t>();
+              wsm[2] = pkt->getLE<uint64_t>();
               break;
         case TSDEV_PC_WSM3:
-              wsm[3] = pkt->get<uint64_t>();
+              wsm[3] = pkt->getLE<uint64_t>();
               break;
         case TSDEV_PC_TBA0:
-              tba[0] = pkt->get<uint64_t>();
+              tba[0] = pkt->getLE<uint64_t>();
               break;
         case TSDEV_PC_TBA1:
-              tba[1] = pkt->get<uint64_t>();
+              tba[1] = pkt->getLE<uint64_t>();
               break;
         case TSDEV_PC_TBA2:
-              tba[2] = pkt->get<uint64_t>();
+              tba[2] = pkt->getLE<uint64_t>();
               break;
         case TSDEV_PC_TBA3:
-              tba[3] = pkt->get<uint64_t>();
+              tba[3] = pkt->getLE<uint64_t>();
               break;
         case TSDEV_PC_PCTL:
-              pctl = pkt->get<uint64_t>();
+              pctl = pkt->getLE<uint64_t>();
               break;
         case TSDEV_PC_PLAT:
               panic("PC_PLAT not implemented\n");
@@ -264,23 +261,6 @@ TsunamiPChip::dmaAddr(const PciBusAddr &dev, Addr busAddr) const
     Addr pteAddr;
     Addr dmaAddr;
 
-#if 0
-    DPRINTF(IdeDisk, "Translation for bus address: %#x\n", busAddr);
-    for (int i = 0; i < 4; i++) {
-        DPRINTF(IdeDisk, "(%d) base:%#x mask:%#x\n",
-                i, wsba[i], wsm[i]);
-
-        windowBase = wsba[i];
-        windowMask = ~wsm[i] & (ULL(0xfff) << 20);
-
-        if ((busAddr & windowMask) == (windowBase & windowMask)) {
-            DPRINTF(IdeDisk, "Would have matched %d (wb:%#x wm:%#x --> ba&wm:%#x wb&wm:%#x)\n",
-                    i, windowBase, windowMask, (busAddr & windowMask),
-                    (windowBase & windowMask));
-        }
-    }
-#endif
-
     for (int i = 0; i < 4; i++) {
 
         windowBase = wsba[i];
@@ -300,14 +280,16 @@ TsunamiPChip::dmaAddr(const PciBusAddr &dev, Addr busAddr) const
                         to create an address for the SG page
                     */
 
-                    tbaMask = ~(((wsm[i] & (ULL(0xfff) << 20)) >> 10) | ULL(0x3ff));
+                    tbaMask = ~(((wsm[i] & (ULL(0xfff) << 20)) >> 10) |
+                                ULL(0x3ff));
                     baMask = (wsm[i] & (ULL(0xfff) << 20)) | (ULL(0x7f) << 13);
                     pteAddr = (tba[i] & tbaMask) | ((busAddr & baMask) >> 10);
 
-                    sys->physProxy.readBlob(pteAddr, (uint8_t*)&pteEntry,
+                    sys->physProxy.readBlob(pteAddr, &pteEntry,
                                             sizeof(uint64_t));
 
-                    dmaAddr = ((pteEntry & ~ULL(0x1)) << 12) | (busAddr & ULL(0x1fff));
+                    dmaAddr = ((pteEntry & ~ULL(0x1)) << 12) |
+                              (busAddr & ULL(0x1fff));
 
                 } else {
                     baMask = (wsm[i] & (ULL(0xfff) << 20)) | ULL(0xfffff);

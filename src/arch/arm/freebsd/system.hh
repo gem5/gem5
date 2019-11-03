@@ -44,13 +44,8 @@
 #include "params/FreebsdArmSystem.hh"
 #include "sim/core.hh"
 
-class DumpStatsPCEventF;
-
 class FreebsdArmSystem : public GenericArmSystem
 {
-  protected:
-    DumpStatsPCEventF *dumpStatsPCEventF;
-
   public:
     /** Boilerplate params code */
     typedef FreebsdArmSystemParams Params;
@@ -117,17 +112,6 @@ class FreebsdArmSystem : public GenericArmSystem
     Addr pen64ReleaseAddr;
     Addr bootReleaseAddr;
 };
-
-class DumpStatsPCEventF : public PCEvent
-{
-  public:
-    DumpStatsPCEventF(PCEventQueue *q, const std::string &desc, Addr addr)
-        : PCEvent(q, desc, addr)
-    {}
-
-    virtual void process(ThreadContext* tc);
-};
-
 
 #endif // __ARCH_ARM_FREEBSD_SYSTEM_HH__
 

@@ -27,6 +27,9 @@
 #
 # Authors: Jason Power
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 """ Options wrapper for simple gem5 configuration scripts
 
 This module wraps the optparse class so that we can register options

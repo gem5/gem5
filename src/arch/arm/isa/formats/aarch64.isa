@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 ARM Limited
+// Copyright (c) 2011-2019 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -52,6 +52,10 @@ namespace Aarch64
     template <typename DecoderFeatures>
     StaticInstPtr decodeAdvSIMD(ExtMachInst machInst);
     StaticInstPtr decodeAdvSIMDScalar(ExtMachInst machInst);
+
+    StaticInstPtr decodeSveInt(ExtMachInst machInst);
+    StaticInstPtr decodeSveFp(ExtMachInst machInst);
+    StaticInstPtr decodeSveMem(ExtMachInst machInst);
 
     StaticInstPtr decodeGem5Ops(ExtMachInst machInst);
 }
@@ -108,6 +112,8 @@ namespace Aarch64
                 return new SubXImm(machInst, rdsp, rnsp, imm);
               case 0x3:
                 return new SubXImmCc(machInst, rdzr, rnsp, imm);
+              default:
+                M5_UNREACHABLE;
             }
           }
           case 0x4:
@@ -150,6 +156,8 @@ namespace Aarch64
                 return new EorXImm(machInst, rdsp, rn, imm);
               case 0x3:
                 return new AndXImmCc(machInst, rdzr, rn, imm);
+              default:
+                M5_UNREACHABLE;
             }
           }
           case 0x5:
@@ -167,6 +175,8 @@ namespace Aarch64
                 return new Movz(machInst, rdzr, imm16, hw * 16);
               case 0x3:
                 return new Movk(machInst, rdzr, imm16, hw * 16);
+              default:
+                M5_UNREACHABLE;
             }
           }
           case 0x6:
@@ -181,6 +191,8 @@ namespace Aarch64
                 return new Ubfm64(machInst, rdzr, rn, immr, imms);
               case 0x3:
                 return new Unknown64(machInst);
+              default:
+                M5_UNREACHABLE;
             }
           case 0x7:
           {
@@ -242,21 +254,25 @@ namespace Aarch64
                     (ConditionCode)(uint8_t)(bits(machInst, 3, 0));
                 return new BCond64(machInst, imm, condCode);
             } else if (bits(machInst, 25, 24) == 0x0) {
+
                 if (bits(machInst, 4, 2))
                     return new Unknown64(machInst);
+
+                auto imm16 = bits(machInst, 20, 5);
                 uint8_t decVal = (bits(machInst, 1, 0) << 0) |
                                  (bits(machInst, 23, 21) << 2);
+
                 switch (decVal) {
                   case 0x01:
-                    return new Svc64(machInst);
+                    return new Svc64(machInst, imm16);
                   case 0x02:
-                    return new FailUnimplemented("hvc", machInst);
+                    return new Hvc64(machInst, imm16);
                   case 0x03:
-                    return new Smc64(machInst);
+                    return new Smc64(machInst, imm16);
                   case 0x04:
-                    return new FailUnimplemented("brk", machInst);
+                    return new Brk64(machInst, imm16);
                   case 0x08:
-                    return new FailUnimplemented("hlt", machInst);
+                    return new Hlt64(machInst, imm16);
                   case 0x15:
                     return new FailUnimplemented("dcps1", machInst);
                   case 0x16:
@@ -280,22 +296,85 @@ namespace Aarch64
                     if (rt != 0x1f || l)
                         return new Unknown64(machInst);
                     if (crn == 0x2 && op1 == 0x3) {
-                        switch (op2) {
+                        switch (crm) {
                           case 0x0:
-                            return new NopInst(machInst);
+                            switch (op2) {
+                              case 0x0:
+                                return new NopInst(machInst);
+                              case 0x1:
+                                return new YieldInst(machInst);
+                              case 0x2:
+                                return new WfeInst(machInst);
+                              case 0x3:
+                                return new WfiInst(machInst);
+                              case 0x4:
+                                return new SevInst(machInst);
+                              case 0x5:
+                                return new SevlInst(machInst);
+                            }
+                            break;
                           case 0x1:
-                            return new YieldInst(machInst);
+                            switch (op2) {
+                              case 0x0:
+                                return new WarnUnimplemented(
+                                        "pacia", machInst);
+                              case 0x2:
+                                return new WarnUnimplemented(
+                                        "pacib", machInst);
+                              case 0x4:
+                                return new WarnUnimplemented(
+                                        "autia", machInst);
+                              case 0x6:
+                                return new WarnUnimplemented(
+                                        "autib", machInst);
+                            }
+                            break;
                           case 0x2:
-                            return new WfeInst(machInst);
+                            switch (op2) {
+                              case 0x0:
+                                return new WarnUnimplemented(
+                                        "esb", machInst);
+                              case 0x1:
+                                return new WarnUnimplemented(
+                                        "psb csync", machInst);
+                              case 0x2:
+                                return new WarnUnimplemented(
+                                        "tsb csync", machInst);
+                              case 0x4:
+                                return new WarnUnimplemented(
+                                        "csdb", machInst);
+                            }
+                            break;
                           case 0x3:
-                            return new WfiInst(machInst);
+                            switch (op2) {
+                              case 0x0:
+                              case 0x1:
+                                return new WarnUnimplemented(
+                                        "pacia", machInst);
+                              case 0x2:
+                              case 0x3:
+                                return new WarnUnimplemented(
+                                        "pacib", machInst);
+                              case 0x4:
+                              case 0x5:
+                                return new WarnUnimplemented(
+                                        "autia", machInst);
+                              case 0x6:
+                              case 0x7:
+                                return new WarnUnimplemented(
+                                        "autib", machInst);
+                            }
+                            break;
                           case 0x4:
-                            return new SevInst(machInst);
-                          case 0x5:
-                            return new SevlInst(machInst);
-                          default:
-                            return new Unknown64(machInst);
+                            switch (op2 & 0x1) {
+                              case 0x0:
+                                return new WarnUnimplemented(
+                                        "bti", machInst);
+                            }
+                            break;
                         }
+                        return new WarnUnimplemented(
+                                "unallocated_hint", machInst);
                     } else if (crn == 0x3 && op1 == 0x3) {
                         switch (op2) {
                           case 0x2:
@@ -310,28 +389,25 @@ namespace Aarch64
                             return new Unknown64(machInst);
                         }
                     } else if (crn == 0x4) {
-                        // MSR immediate
+                        // MSR immediate: moving immediate value to selected
+                        // bits of the PSTATE
                         switch (op1 << 3 | op2) {
+                          case 0x4:
+                            // PAN
+                            return new MsrImm64(
+                                machInst, MISCREG_PAN, crm);
                           case 0x5:
                             // SP
-                            return new MsrSP64(machInst,
-                                               (IntRegIndex) MISCREG_SPSEL,
-                                               INTREG_ZERO,
-                                               crm & 0x1);
+                            return new MsrImm64(
+                                machInst, MISCREG_SPSEL, crm);
                           case 0x1e:
                             // DAIFSet
-                            return new MsrDAIFSet64(
-                                machInst,
-                                (IntRegIndex) MISCREG_DAIF,
-                                INTREG_ZERO,
-                                crm);
+                            return new MsrImmDAIFSet64(
+                                machInst, MISCREG_DAIF, crm);
                           case 0x1f:
                             // DAIFClr
-                            return new MsrDAIFClr64(
-                                machInst,
-                                (IntRegIndex) MISCREG_DAIF,
-                                INTREG_ZERO,
-                                crm);
+                            return new MsrImmDAIFClr64(
+                                machInst, MISCREG_DAIF, crm);
                           default:
                             return new Unknown64(machInst);
                         }
@@ -350,13 +426,35 @@ namespace Aarch64
                     if (read) {
                         if ((miscReg == MISCREG_DC_CIVAC_Xt) ||
                             (miscReg == MISCREG_DC_CVAC_Xt) ||
+                            (miscReg == MISCREG_DC_IVAC_Xt)  ||
                             (miscReg == MISCREG_DC_ZVA_Xt)) {
                             return new Unknown64(machInst);
                         }
                     }
                     // Check for invalid registers
                     if (miscReg == MISCREG_UNKNOWN) {
-                        return new Unknown64(machInst);
+                        auto full_mnemonic =
+                            csprintf("%s op0:%d op1:%d crn:%d crm:%d op2:%d",
+                                     read ? "mrs" : "msr",
+                                     op0, op1, crn, crm, op2);
+
+                        return new FailUnimplemented(read ? "mrs" : "msr",
+                            machInst, full_mnemonic);
+
+                    } else if (miscReg == MISCREG_IMPDEF_UNIMPL) {
+                        auto full_mnemonic =
+                            csprintf("%s op0:%d op1:%d crn:%d crm:%d op2:%d",
+                                     read ? "mrs" : "msr",
+                                     op0, op1, crn, crm, op2);
+
+                        uint32_t iss = msrMrs64IssBuild(
+                            read, op0, op1, crn, crm, op2, rt);
+
+                        return new MiscRegImplDefined64(
+                            read ? "mrs" : "msr",
+                            machInst, miscReg, read, iss, full_mnemonic,
+                            miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]);
+
                     } else if (miscRegInfo[miscReg][MISCREG_IMPLEMENTED]) {
                         if (miscReg == MISCREG_NZCV) {
                             if (read)
@@ -365,16 +463,27 @@ namespace Aarch64
                                 return new MsrNZCV64(machInst, (IntRegIndex) miscReg, rt);
                         }
                         uint32_t iss = msrMrs64IssBuild(read, op0, op1, crn, crm, op2, rt);
-                        if (miscReg == MISCREG_DC_ZVA_Xt && !read)
-                            return new Dczva(machInst, rt, (IntRegIndex) miscReg, iss);
-
                         if (read) {
-                            StaticInstPtr si = new Mrs64(machInst, rt, (IntRegIndex) miscReg, iss);
+                            StaticInstPtr si = new Mrs64(machInst, rt, miscReg, iss);
                             if (miscRegInfo[miscReg][MISCREG_UNVERIFIABLE])
                                 si->setFlag(StaticInst::IsUnverifiable);
                             return si;
-                        } else
-                            return new Msr64(machInst, (IntRegIndex) miscReg, rt, iss);
+                        } else {
+                            switch (miscReg) {
+                              case MISCREG_DC_ZVA_Xt:
+                                return new Dczva(machInst, rt, miscReg, iss);
+                              case MISCREG_DC_CVAU_Xt:
+                                return new Dccvau(machInst, rt, miscReg, iss);
+                              case MISCREG_DC_CVAC_Xt:
+                                return new Dccvac(machInst, rt, miscReg, iss);
+                              case MISCREG_DC_CIVAC_Xt:
+                                return new Dccivac(machInst, rt, miscReg, iss);
+                              case MISCREG_DC_IVAC_Xt:
+                                return new Dcivac(machInst, rt, miscReg, iss);
+                              default:
+                                return new Msr64(machInst, miscReg, rt, iss);
+                            }
+                        }
                     } else if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
                         std::string full_mnem = csprintf("%s %s",
                             read ? "mrs" : "msr", miscRegName[miscReg]);
@@ -389,6 +498,8 @@ namespace Aarch64
                     }
                   }
                   break;
+                  default:
+                    M5_UNREACHABLE;
                 }
             } else if (bits(machInst, 25) == 0x1) {
                 uint8_t opc = bits(machInst, 24, 21);
@@ -413,8 +524,11 @@ namespace Aarch64
                     if (rn != 0x1f)
                         return new Unknown64(machInst);
                     return new FailUnimplemented("dret", machInst);
+                  default:
+                    return new Unknown64(machInst);
                 }
             }
+          M5_FALLTHROUGH;
           default:
             return new Unknown64(machInst);
         }
@@ -426,6 +540,560 @@ namespace Aarch64
 output decoder {{
 namespace Aarch64
 {
+    StaticInstPtr
+    decodeAtomicArithOp(ExtMachInst machInst)
+    {
+        uint8_t opc  = bits(machInst, 14, 12);
+        uint8_t o3  = bits(machInst, 15);
+        uint8_t size_ar = bits(machInst, 23, 22)<<0 | bits(machInst, 31, 30)<<2;
+        IntRegIndex rt = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
+        IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
+        IntRegIndex rnsp = makeSP(rn);
+        IntRegIndex rs = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
+        uint8_t  A_rt = bits(machInst, 4, 0)<<0 | bits(machInst, 23)<<5;
+
+        switch(opc) {
+            case 0x0:
+                switch(size_ar){
+                    case 0x0:
+                        if (o3 == 1)
+                            return new SWPB(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADDB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (o3 == 1)
+                            return new SWPLB(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADDLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        if (o3 == 1)
+                            return new SWPAB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        if (o3 == 1)
+                            return new SWPLAB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (o3 == 1)
+                            return new SWPH(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADDH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (o3 == 1)
+                            return new SWPLH(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADDLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        if (o3 == 1)
+                            return new SWPAH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        if (o3 == 1)
+                            return new SWPLAH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (o3 == 1)
+                            return new SWP(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADD(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADD(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (o3 == 1)
+                            return new SWPL(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADDL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        if (o3 == 1)
+                            return new SWPA(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        if (o3 == 1)
+                            return new SWPLA(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (o3 == 1)
+                            return new SWP64(machInst, rt, rnsp, rs);
+
+                        else if (A_rt == 0x1f)
+                            return new STADD64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADD64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (o3 == 1)
+                            return new SWPL64(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADDL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        if (o3 == 1)
+                            return new SWPA64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        if (o3 == 1)
+                            return new SWPLA64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
+                }
+            case 0x1:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STCLRB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLRB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STCLRLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLRLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDCLRAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDCLRLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STCLRH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLRH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STCLRLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLRLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDCLRAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDCLRLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STCLR(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLR(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STCLRL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLRL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDCLRA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDCLRLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STCLR64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLR64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STCLRL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLRL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDCLRA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDCLRLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
+                }
+            case 0x2:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STEORB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEORB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STEORLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEORLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDEORAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDEORLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STEORH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEORH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STEORLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEORLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDEORAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDEORLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STEOR(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEOR(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STEORL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEORL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDEORA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDEORLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STEOR64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEOR64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STEORL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEORL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDEORA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDEORLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
+                }
+            case 0x3:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STSETB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSETB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STSETLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSETLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDSETAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDSETLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STSETH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSETH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STSETLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSETLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDSETAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDSETLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STSET(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSET(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STSETL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSETL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDSETA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDSETLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STSET64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSET64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STSETL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSETL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDSETA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDSETLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
+                }
+            case 0x4:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STSMAXB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAXB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STSMAXLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAXLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDSMAXAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDSMAXLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STSMAXH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAXH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STSMAXLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAXLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDSMAXAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDSMAXLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STSMAX(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAX(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STSMAXL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAXL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDSMAXA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDSMAXLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STSMAX64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAX64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STSMAXL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAXL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDSMAXA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDSMAXLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
+                }
+            case 0x5:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STSMINB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMINB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STSMINLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMINLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDSMINAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDSMINLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STSMINH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMINH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STSMINLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMINLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDSMINAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDSMINLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STSMIN(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMIN(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STSMINL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMINL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDSMINA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDSMINLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STSMIN64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMIN64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STSMINL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMINL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDSMINA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDSMINLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
+                }
+            case 0x6:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STUMAXB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAXB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STUMAXLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAXLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDUMAXAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDUMAXLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STUMAXH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAXH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STUMAXLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAXLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDUMAXAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDUMAXLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STUMAX(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAX(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STUMAXL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAXL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDUMAXA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDUMAXLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STUMAX64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAX64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STUMAXL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAXL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDUMAXA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDUMAXLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
+                }
+            case 0x7:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STUMINB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMINB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STUMINLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMINLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDUMINAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDUMINLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STUMINH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMINH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STUMINLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMINLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDUMINAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDUMINLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STUMIN(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMIN(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STUMINL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMINL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDUMINA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDUMINLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STUMIN64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMIN64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STUMINL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMINL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDUMINA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDUMINLA64(machInst, rt, rnsp, rs);
+                    default:
+                        M5_UNREACHABLE;
+                }
+            default:
+                return new Unknown64(machInst);
+        }
+    }
+}
+}};
+
+
+output decoder {{
+namespace Aarch64
+{
+
     StaticInstPtr
     decodeLoadsStores(ExtMachInst machInst)
     {
@@ -454,6 +1122,8 @@ namespace Aarch64
                         return new STXRW64(machInst, rt, rnsp, rs);
                       case 0x3:
                         return new STXRX64(machInst, rt, rnsp, rs);
+                      default:
+                        M5_UNREACHABLE;
                     }
                   case 0x1:
                     switch (size) {
@@ -465,27 +1135,35 @@ namespace Aarch64
                         return new STLXRW64(machInst, rt, rnsp, rs);
                       case 0x3:
                         return new STLXRX64(machInst, rt, rnsp, rs);
+                      default:
+                        M5_UNREACHABLE;
                     }
                   case 0x2:
                     switch (size) {
                       case 0x0:
+                        return new CASP32(machInst, rt, rnsp, rs);
                       case 0x1:
-                        return new Unknown64(machInst);
+                        return new CASP64(machInst, rt, rnsp, rs);
                       case 0x2:
                         return new STXPW64(machInst, rs, rt, rt2, rnsp);
                       case 0x3:
                         return new STXPX64(machInst, rs, rt, rt2, rnsp);
+                      default:
+                        M5_UNREACHABLE;
                     }
 
                   case 0x3:
                     switch (size) {
                       case 0x0:
+                        return new CASPL32(machInst, rt, rnsp, rs);
                       case 0x1:
-                        return new Unknown64(machInst);
+                        return new CASPL64(machInst, rt, rnsp, rs);
                       case 0x2:
                         return new STLXPW64(machInst, rs, rt, rt2, rnsp);
                       case 0x3:
                         return new STLXPX64(machInst, rs, rt, rt2, rnsp);
+                      default:
+                        M5_UNREACHABLE;
                     }
 
                   case 0x4:
@@ -498,6 +1176,8 @@ namespace Aarch64
                         return new LDXRW64(machInst, rt, rnsp, rs);
                       case 0x3:
                         return new LDXRX64(machInst, rt, rnsp, rs);
+                      default:
+                        M5_UNREACHABLE;
                     }
                   case 0x5:
                     switch (size) {
@@ -509,29 +1189,35 @@ namespace Aarch64
                         return new LDAXRW64(machInst, rt, rnsp, rs);
                       case 0x3:
                         return new LDAXRX64(machInst, rt, rnsp, rs);
+                      default:
+                        M5_UNREACHABLE;
                     }
                   case 0x6:
                     switch (size) {
                       case 0x0:
+                        return new CASPA32(machInst, rt, rnsp, rs);
                       case 0x1:
-                        return new Unknown64(machInst);
+                        return new CASPA64(machInst, rt, rnsp, rs);
                       case 0x2:
                         return new LDXPW64(machInst, rt, rt2, rnsp);
                       case 0x3:
                         return new LDXPX64(machInst, rt, rt2, rnsp);
+                      default:
+                        M5_UNREACHABLE;
                     }
-
                   case 0x7:
                     switch (size) {
                       case 0x0:
+                        return new CASPAL32(machInst, rt, rnsp, rs);
                       case 0x1:
-                        return new Unknown64(machInst);
+                        return new CASPAL64(machInst, rt, rnsp, rs);
                       case 0x2:
                         return new LDAXPW64(machInst, rt, rt2, rnsp);
                       case 0x3:
                         return new LDAXPX64(machInst, rt, rt2, rnsp);
+                      default:
+                        M5_UNREACHABLE;
                     }
-
                   case 0x9:
                     switch (size) {
                       case 0x0:
@@ -542,6 +1228,34 @@ namespace Aarch64
                         return new STLRW64(machInst, rt, rnsp);
                       case 0x3:
                         return new STLRX64(machInst, rt, rnsp);
+                      default:
+                        M5_UNREACHABLE;
+                    }
+                  case 0xa:
+                    switch (size) {
+                      case 0x0:
+                        return new CASB(machInst, rt, rnsp, rs);
+                      case 0x1:
+                        return new CASH(machInst, rt, rnsp, rs);
+                      case 0x2:
+                        return new CAS32(machInst, rt, rnsp, rs);
+                      case 0x3:
+                        return new CAS64(machInst, rt, rnsp, rs);
+                      default:
+                        M5_UNREACHABLE;
+                    }
+                  case 0xb:
+                    switch (size) {
+                      case 0x0:
+                        return new CASLB(machInst, rt, rnsp, rs);
+                      case 0x1:
+                        return new CASLH(machInst, rt, rnsp, rs);
+                      case 0x2:
+                        return new CASL32(machInst, rt, rnsp, rs);
+                      case 0x3:
+                        return new CASL64(machInst, rt, rnsp, rs);
+                      default:
+                        M5_UNREACHABLE;
                     }
                   case 0xd:
                     switch (size) {
@@ -553,6 +1267,34 @@ namespace Aarch64
                         return new LDARW64(machInst, rt, rnsp);
                       case 0x3:
                         return new LDARX64(machInst, rt, rnsp);
+                      default:
+                        M5_UNREACHABLE;
+                    }
+                  case 0xe:
+                    switch (size) {
+                      case 0x0:
+                        return new CASAB(machInst, rt, rnsp, rs);
+                      case 0x1:
+                        return new CASAH(machInst, rt, rnsp, rs);
+                      case 0x2:
+                        return new CASA32(machInst, rt, rnsp, rs);
+                      case 0x3:
+                        return new CASA64(machInst, rt, rnsp, rs);
+                      default:
+                        M5_UNREACHABLE;
+                    }
+                  case 0xf:
+                    switch (size) {
+                      case 0x0:
+                        return new CASALB(machInst, rt, rnsp, rs);
+                      case 0x1:
+                        return new CASALH(machInst, rt, rnsp, rs);
+                      case 0x2:
+                        return new CASAL32(machInst, rt, rnsp, rs);
+                      case 0x3:
+                        return new CASAL64(machInst, rt, rnsp, rs);
+                      default:
+                        M5_UNREACHABLE;
                     }
                   default:
                     return new Unknown64(machInst);
@@ -712,68 +1454,126 @@ namespace Aarch64
                     return new Unknown64(machInst);
                 }
             } else if (bits(machInst, 21) == 1) {
-                if (bits(machInst, 11, 10) != 0x2)
-                    return new Unknown64(machInst);
-                if (!bits(machInst, 14))
-                    return new Unknown64(machInst);
-                IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
-                IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 9, 5);
-                IntRegIndex rnsp = makeSP(rn);
-                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 20, 16);
-                ArmExtendType type =
-                    (ArmExtendType)(uint32_t)bits(machInst, 15, 13);
-                uint8_t s = bits(machInst, 12);
-                switch (switchVal) {
-                  case 0x00:
-                    return new STRB64_REG(machInst, rt, rnsp, rm, type, 0);
-                  case 0x01:
-                    return new LDRB64_REG(machInst, rt, rnsp, rm, type, 0);
-                  case 0x02:
-                    return new LDRSBX64_REG(machInst, rt, rnsp, rm, type, 0);
-                  case 0x03:
-                    return new LDRSBW64_REG(machInst, rt, rnsp, rm, type, 0);
-                  case 0x04:
-                    return new STRBFP64_REG(machInst, rt, rnsp, rm, type, 0);
-                  case 0x05:
-                    return new LDRBFP64_REG(machInst, rt, rnsp, rm, type, 0);
-                  case 0x6:
-                    return new BigFpMemReg("str", machInst, false,
-                                           rt, rnsp, rm, type, s * 4);
-                  case 0x7:
-                    return new BigFpMemReg("ldr", machInst, true,
-                                           rt, rnsp, rm, type, s * 4);
-                  case 0x08:
-                    return new STRH64_REG(machInst, rt, rnsp, rm, type, s);
-                  case 0x09:
-                    return new LDRH64_REG(machInst, rt, rnsp, rm, type, s);
-                  case 0x0a:
-                    return new LDRSHX64_REG(machInst, rt, rnsp, rm, type, s);
-                  case 0x0b:
-                    return new LDRSHW64_REG(machInst, rt, rnsp, rm, type, s);
-                  case 0x0c:
-                    return new STRHFP64_REG(machInst, rt, rnsp, rm, type, s);
-                  case 0x0d:
-                    return new LDRHFP64_REG(machInst, rt, rnsp, rm, type, s);
-                  case 0x10:
-                    return new STRW64_REG(machInst, rt, rnsp, rm, type, s * 2);
-                  case 0x11:
-                    return new LDRW64_REG(machInst, rt, rnsp, rm, type, s * 2);
-                  case 0x12:
-                    return new LDRSW64_REG(machInst, rt, rnsp, rm, type, s * 2);
-                  case 0x14:
-                    return new STRSFP64_REG(machInst, rt, rnsp, rm, type, s * 2);
-                  case 0x15:
-                    return new LDRSFP64_REG(machInst, rt, rnsp, rm, type, s * 2);
-                  case 0x18:
-                    return new STRX64_REG(machInst, rt, rnsp, rm, type, s * 3);
-                  case 0x19:
-                    return new LDRX64_REG(machInst, rt, rnsp, rm, type, s * 3);
-                  case 0x1a:
-                    return new PRFM64_REG(machInst, rt, rnsp, rm, type, s * 3);
-                  case 0x1c:
-                    return new STRDFP64_REG(machInst, rt, rnsp, rm, type, s * 3);
-                  case 0x1d:
-                    return new LDRDFP64_REG(machInst, rt, rnsp, rm, type, s * 3);
+                uint8_t group = bits(machInst, 11, 10);
+                switch (group) {
+                  case 0x0:
+                    {
+                        if ((switchVal & 0x7) == 0x2 &&
+                                bits(machInst, 20, 12) == 0x1fc) {
+                            IntRegIndex rt = (IntRegIndex)(uint32_t)
+                                bits(machInst, 4, 0);
+                            IntRegIndex rn = (IntRegIndex)(uint32_t)
+                                bits(machInst, 9, 5);
+                            IntRegIndex rnsp = makeSP(rn);
+                            uint8_t size = bits(machInst, 31, 30);
+                            switch (size) {
+                              case 0x0:
+                                return new LDAPRB64(machInst, rt, rnsp);
+                              case 0x1:
+                                return new LDAPRH64(machInst, rt, rnsp);
+                              case 0x2:
+                                return new LDAPRW64(machInst, rt, rnsp);
+                              case 0x3:
+                                return new LDAPRX64(machInst, rt, rnsp);
+                              default:
+                                M5_UNREACHABLE;
+                            }
+                        } else {
+                            return decodeAtomicArithOp(machInst);
+                        }
+                    }
+                  case 0x2:
+                    {
+                        if (!bits(machInst, 14))
+                            return new Unknown64(machInst);
+                        IntRegIndex rt = (IntRegIndex)(uint32_t)
+                            bits(machInst, 4, 0);
+                        IntRegIndex rn = (IntRegIndex)(uint32_t)
+                            bits(machInst, 9, 5);
+                        IntRegIndex rnsp = makeSP(rn);
+                        IntRegIndex rm = (IntRegIndex)(uint32_t)
+                            bits(machInst, 20, 16);
+                        ArmExtendType type =
+                            (ArmExtendType)(uint32_t)bits(machInst, 15, 13);
+                        uint8_t s = bits(machInst, 12);
+                        switch (switchVal) {
+                          case 0x00:
+                            return new STRB64_REG(machInst, rt, rnsp, rm,
+                                                  type, 0);
+                          case 0x01:
+                            return new LDRB64_REG(machInst, rt, rnsp, rm,
+                                                  type, 0);
+                          case 0x02:
+                            return new LDRSBX64_REG(machInst, rt, rnsp, rm,
+                                                    type, 0);
+                          case 0x03:
+                            return new LDRSBW64_REG(machInst, rt, rnsp, rm,
+                                                    type, 0);
+                          case 0x04:
+                            return new STRBFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, 0);
+                          case 0x05:
+                            return new LDRBFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, 0);
+                          case 0x6:
+                            return new BigFpMemReg("str", machInst, false,
+                                                   rt, rnsp, rm, type, s * 4);
+                          case 0x7:
+                            return new BigFpMemReg("ldr", machInst, true,
+                                                   rt, rnsp, rm, type, s * 4);
+                          case 0x08:
+                            return new STRH64_REG(machInst, rt, rnsp, rm,
+                                                  type, s);
+                          case 0x09:
+                            return new LDRH64_REG(machInst, rt, rnsp, rm,
+                                                  type, s);
+                          case 0x0a:
+                            return new LDRSHX64_REG(machInst, rt, rnsp, rm,
+                                                    type, s);
+                          case 0x0b:
+                            return new LDRSHW64_REG(machInst, rt, rnsp, rm,
+                                                    type, s);
+                          case 0x0c:
+                            return new STRHFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, s);
+                          case 0x0d:
+                            return new LDRHFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, s);
+                          case 0x10:
+                            return new STRW64_REG(machInst, rt, rnsp, rm,
+                                                  type, s * 2);
+                          case 0x11:
+                            return new LDRW64_REG(machInst, rt, rnsp, rm,
+                                                  type, s * 2);
+                          case 0x12:
+                            return new LDRSW64_REG(machInst, rt, rnsp, rm,
+                                                   type, s * 2);
+                          case 0x14:
+                            return new STRSFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, s * 2);
+                          case 0x15:
+                            return new LDRSFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, s * 2);
+                          case 0x18:
+                            return new STRX64_REG(machInst, rt, rnsp, rm,
+                                                  type, s * 3);
+                          case 0x19:
+                            return new LDRX64_REG(machInst, rt, rnsp, rm,
+                                                  type, s * 3);
+                          case 0x1a:
+                            return new PRFM64_REG(machInst, rt, rnsp, rm,
+                                                  type, s * 3);
+                          case 0x1c:
+                            return new STRDFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, s * 3);
+                          case 0x1d:
+                            return new LDRDFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, s * 3);
+                          default:
+                            return new Unknown64(machInst);
+
+                        }
+                    }
                   default:
                     return new Unknown64(machInst);
                 }
@@ -1005,9 +1805,13 @@ namespace Aarch64
                         return new Unknown64(machInst);
                     }
                   }
+                  default:
+                    M5_UNREACHABLE;
                 }
             }
           }
+          default:
+            M5_UNREACHABLE;
         }
         return new FailUnimplemented("Unhandled Case1", machInst);
     }
@@ -1054,6 +1858,8 @@ namespace Aarch64
                 return new AndXSRegCc(machInst, rdzr, rn, rm, imm6, type);
               case 0x7:
                 return new BicXSRegCc(machInst, rdzr, rn, rm, imm6, type);
+              default:
+                M5_UNREACHABLE;
             }
           }
           case 0x1:
@@ -1080,6 +1886,8 @@ namespace Aarch64
                     return new SubXSReg(machInst, rdzr, rn, rm, imm6, type);
                   case 0x3:
                     return new SubXSRegCc(machInst, rdzr, rn, rm, imm6, type);
+                  default:
+                    M5_UNREACHABLE;
                 }
             } else {
                 if (bits(machInst, 23, 22) != 0 || bits(machInst, 12, 10) > 0x4)
@@ -1103,6 +1911,8 @@ namespace Aarch64
                     return new SubXEReg(machInst, rdsp, rnsp, rm, type, imm3);
                   case 0x3:
                     return new SubXERegCc(machInst, rdzr, rnsp, rm, type, imm3);
+                  default:
+                    M5_UNREACHABLE;
                 }
             }
           }
@@ -1129,6 +1939,8 @@ namespace Aarch64
                     return new SbcXSReg(machInst, rdzr, rn, rm, 0, LSL);
                   case 0x3:
                     return new SbcXSRegCc(machInst, rdzr, rn, rm, 0, LSL);
+                  default:
+                    M5_UNREACHABLE;
                 }
               }
               case 0x1:
@@ -1182,6 +1994,8 @@ namespace Aarch64
                     return new Csinv64(machInst, rdzr, rn, rm, cond);
                   case 0x3:
                     return new Csneg64(machInst, rdzr, rn, rm, cond);
+                  default:
+                    M5_UNREACHABLE;
                 }
               }
               case 0x3:
@@ -1202,6 +2016,22 @@ namespace Aarch64
                         return new Asrv64(machInst, rdzr, rn, rm);
                       case 0xb:
                         return new Rorv64(machInst, rdzr, rn, rm);
+                      case 0x10:
+                        return new Crc32b64(machInst, rdzr, rn, rm);
+                      case 0x11:
+                        return new Crc32h64(machInst, rdzr, rn, rm);
+                      case 0x12:
+                        return new Crc32w64(machInst, rdzr, rn, rm);
+                      case 0x13:
+                        return new Crc32x64(machInst, rdzr, rn, rm);
+                      case 0x14:
+                        return new Crc32cb64(machInst, rdzr, rn, rm);
+                      case 0x15:
+                        return new Crc32ch64(machInst, rdzr, rn, rm);
+                      case 0x16:
+                        return new Crc32cw64(machInst, rdzr, rn, rm);
+                      case 0x17:
+                        return new Crc32cx64(machInst, rdzr, rn, rm);
                       default:
                         return new Unknown64(machInst);
                     }
@@ -1229,8 +2059,12 @@ namespace Aarch64
                         return new Clz64(machInst, rdzr, rn);
                       case 0x5:
                         return new Cls64(machInst, rdzr, rn);
+                      default:
+                        return new Unknown64(machInst);
                     }
                 }
+              default:
+                M5_UNREACHABLE;
             }
           }
           case 0x3:
@@ -1271,6 +2105,8 @@ namespace Aarch64
                 return new Unknown64(machInst);
             }
           }
+          default:
+            M5_UNREACHABLE;
         }
         return new FailUnimplemented("Unhandled Case2", machInst);
     }
@@ -1303,6 +2139,8 @@ namespace Aarch64
                 return decodeNeon3Diff(machInst);
             } else if (bits(machInst, 20, 17) == 0x0) {
                 return decodeNeon2RegMisc(machInst);
+            } else if (bits(machInst, 20, 17) == 0x4) {
+                return decodeCryptoAES(machInst);
             } else if (bits(machInst, 20, 17) == 0x8) {
                 return decodeNeonAcrossLanes(machInst);
             } else {
@@ -1452,6 +2290,8 @@ namespace Aarch64
                   default:
                     return new Unknown64(machInst);
                 }
+              default:
+                return new Unknown64(machInst);
             }
         } else {
             // 30=0, 28:24=11110, 21=1
@@ -1471,12 +2311,14 @@ namespace Aarch64
                     if (type == 0) {
                         // FMOV S[d] = imm8<7>:NOT(imm8<6>):Replicate(imm8<6>,5)
                         //             :imm8<5:0>:Zeros(19)
-                        uint32_t imm = vfp_modified_imm(imm8, false);
+                        uint32_t imm = vfp_modified_imm(imm8,
+                                                        FpDataType::Fp32);
                         return new FmovImmS(machInst, rd, imm);
                     } else if (type == 1) {
                         // FMOV D[d] = imm8<7>:NOT(imm8<6>):Replicate(imm8<6>,8)
                         //             :imm8<5:0>:Zeros(48)
-                        uint64_t imm = vfp_modified_imm(imm8, true);
+                        uint64_t imm = vfp_modified_imm(imm8,
+                                                        FpDataType::Fp64);
                         return new FmovImmD(machInst, rd, imm);
                     } else {
                         return new Unknown64(machInst);
@@ -1810,6 +2652,7 @@ namespace Aarch64
                         return new Unknown64(machInst);
                     }
                 }
+                M5_UNREACHABLE;
               case 0x1:
               {
                 if (bits(machInst, 31) ||
@@ -1914,9 +2757,11 @@ namespace Aarch64
                 else
                     return new Unknown64(machInst);
               }
+              default:
+                M5_UNREACHABLE;
             }
         }
-        return new FailUnimplemented("Unhandled Case4", machInst);
+        M5_UNREACHABLE;
     }
 }
 }};
@@ -1940,15 +2785,20 @@ namespace Aarch64
                 return decodeNeonSc3Diff(machInst);
             } else if (bits(machInst, 20, 17) == 0x0) {
                 return decodeNeonSc2RegMisc(machInst);
+            } else if (bits(machInst, 20, 17) == 0x4) {
+                return decodeCryptoTwoRegSHA(machInst);
             } else if (bits(machInst, 20, 17) == 0x8) {
                 return decodeNeonScPwise(machInst);
             } else {
                 return new Unknown64(machInst);
             }
         } else if (bits(machInst, 23, 22) == 0 &&
-                   bits(machInst, 15) == 0 &&
-                   bits(machInst, 10) == 1) {
-            return decodeNeonScCopy(machInst);
+                   bits(machInst, 15) == 0) {
+            if (bits(machInst, 10) == 1) {
+                return decodeNeonScCopy(machInst);
+            } else {
+                return decodeCryptoThreeRegSHA(machInst);
+            }
         } else {
             return new Unknown64(machInst);
         }
@@ -2002,31 +2852,32 @@ namespace Aarch64
     {
         const uint32_t m5func = bits(machInst, 23, 16);
         switch (m5func) {
-          case 0x00: return new Arm(machInst);
-          case 0x01: return new Quiesce(machInst);
-          case 0x02: return new QuiesceNs64(machInst);
-          case 0x03: return new QuiesceCycles64(machInst);
-          case 0x04: return new QuiesceTime64(machInst);
-          case 0x07: return new Rpns64(machInst);
-          case 0x09: return new WakeCPU64(machInst);
-          case 0x10: return new Deprecated_ivlb(machInst);
-          case 0x11: return new Deprecated_ivle(machInst);
-          case 0x20: return new Deprecated_exit (machInst);
-          case 0x21: return new M5exit64(machInst);
-          case 0x31: return new Loadsymbol(machInst);
-          case 0x30: return new Initparam64(machInst);
-          case 0x40: return new Resetstats64(machInst);
-          case 0x41: return new Dumpstats64(machInst);
-          case 0x42: return new Dumpresetstats64(machInst);
-          case 0x43: return new M5checkpoint64(machInst);
-          case 0x4F: return new M5writefile64(machInst);
-          case 0x50: return new M5readfile64(machInst);
-          case 0x51: return new M5break(machInst);
-          case 0x52: return new M5switchcpu(machInst);
-          case 0x53: return new M5addsymbol64(machInst);
-          case 0x54: return new M5panic(machInst);
-          case 0x5a: return new M5workbegin64(machInst);
-          case 0x5b: return new M5workend64(machInst);
+          case M5OP_ARM: return new Arm(machInst);
+          case M5OP_QUIESCE: return new Quiesce(machInst);
+          case M5OP_QUIESCE_NS: return new QuiesceNs64(machInst);
+          case M5OP_QUIESCE_CYCLE: return new QuiesceCycles64(machInst);
+          case M5OP_QUIESCE_TIME: return new QuiesceTime64(machInst);
+          case M5OP_RPNS: return new Rpns64(machInst);
+          case M5OP_WAKE_CPU: return new WakeCPU64(machInst);
+          case M5OP_DEPRECATED1: return new Deprecated_ivlb(machInst);
+          case M5OP_DEPRECATED2: return new Deprecated_ivle(machInst);
+          case M5OP_DEPRECATED3: return new Deprecated_exit (machInst);
+          case M5OP_EXIT: return new M5exit64(machInst);
+          case M5OP_FAIL: return new M5fail64(machInst);
+          case M5OP_LOAD_SYMBOL: return new Loadsymbol(machInst);
+          case M5OP_INIT_PARAM: return new Initparam64(machInst);
+          case M5OP_RESET_STATS: return new Resetstats64(machInst);
+          case M5OP_DUMP_STATS: return new Dumpstats64(machInst);
+          case M5OP_DUMP_RESET_STATS: return new Dumpresetstats64(machInst);
+          case M5OP_CHECKPOINT: return new M5checkpoint64(machInst);
+          case M5OP_WRITE_FILE: return new M5writefile64(machInst);
+          case M5OP_READ_FILE: return new M5readfile64(machInst);
+          case M5OP_DEBUG_BREAK: return new M5break(machInst);
+          case M5OP_SWITCH_CPU: return new M5switchcpu(machInst);
+          case M5OP_ADD_SYMBOL: return new M5addsymbol64(machInst);
+          case M5OP_PANIC: return new M5panic(machInst);
+          case M5OP_WORK_BEGIN: return new M5workbegin64(machInst);
+          case M5OP_WORK_END: return new M5workend64(machInst);
           default: return new Unknown64(machInst);
         }
     }
@@ -2038,9 +2889,23 @@ def format Aarch64() {{
     {
         using namespace Aarch64;
         if (bits(machInst, 27) == 0x0) {
-            if (bits(machInst, 28) == 0x0)
-                return new Unknown64(machInst);
-            else if (bits(machInst, 26) == 0)
+            if (bits(machInst, 28) == 0x0) {
+                if (bits(machInst, 26, 25) != 0x2) {
+                    return new Unknown64(machInst);
+                }
+                if (bits(machInst, 31) == 0x0) {
+                    switch (bits(machInst, 30, 29)) {
+                      case 0x0:
+                      case 0x1:
+                      case 0x2:
+                        return decodeSveInt(machInst);
+                      case 0x3:
+                        return decodeSveFp(machInst);
+                    }
+                } else {
+                    return decodeSveMem(machInst);
+                }
+            } else if (bits(machInst, 26) == 0)
                 // bit 28:26=100
                 return decodeDataProcImm(machInst);
             else

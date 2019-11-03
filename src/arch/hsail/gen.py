@@ -1,6 +1,4 @@
-#! /usr/bin/python
-
-#
+#!/usr/bin/env python2.7
 #  Copyright (c) 2015 Advanced Micro Devices, Inc.
 #  All rights reserved.
 #
@@ -35,12 +33,14 @@
 #  Author: Steve Reinhardt
 #
 
+from __future__ import print_function
+
 import sys, re
 
 from m5.util import code_formatter
 
 if len(sys.argv) != 4:
-    print "Error: need 3 args (file names)"
+    print("Error: need 3 args (file names)")
     sys.exit(0)
 
 header_code = code_formatter()
@@ -104,6 +104,23 @@ exec_code.indent()
 # Define code templates for class declarations (for header file)
 #
 ###############
+
+# Basic header template for an instruction stub.
+header_template_stub = '''
+class $class_name : public $base_class
+{
+  public:
+    typedef $base_class Base;
+
+    $class_name(const Brig::BrigInstBase *ib, const BrigObject *obj)
+       : Base(ib, obj, "$opcode")
+    {
+    }
+
+    void execute(GPUDynInstPtr gpuDynInst);
+};
+
+'''
 
 # Basic header template for an instruction with no template parameters.
 header_template_nodt = '''
@@ -211,11 +228,13 @@ header_templates = {
     'ExtractInsertInst': header_template_1dt,
     'CmpInst': header_template_2dt,
     'CvtInst': header_template_2dt,
+    'PopcountInst': header_template_2dt,
     'LdInst': '',
     'StInst': '',
     'SpecialInstNoSrc': header_template_nodt,
     'SpecialInst1Src': header_template_nodt,
     'SpecialInstNoSrcNoDest': '',
+    'Stub': header_template_stub,
 }
 
 ###############
@@ -225,6 +244,14 @@ header_templates = {
 ###############
 
 # exec function body
+exec_template_stub = '''
+void
+$class_name::execute(GPUDynInstPtr gpuDynInst)
+{
+    fatal("instruction unimplemented %s\\n", gpuDynInst->disassemble());
+}
+
+'''
 exec_template_nodt_nosrc = '''
 void
 $class_name::execute(GPUDynInstPtr gpuDynInst)
@@ -233,7 +260,7 @@ $class_name::execute(GPUDynInstPtr gpuDynInst)
 
     typedef Base::DestCType DestCType;
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
 
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
@@ -254,7 +281,7 @@ $class_name::execute(GPUDynInstPtr gpuDynInst)
     typedef Base::DestCType DestCType;
     typedef Base::SrcCType  SrcCType;
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
 
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
@@ -275,7 +302,7 @@ $class_name<DataType>::execute(GPUDynInstPtr gpuDynInst)
 {
     Wavefront *w = gpuDynInst->wavefront();
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
 
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
@@ -310,7 +337,7 @@ $class_name<DataType>::execute(GPUDynInstPtr gpuDynInst)
     typedef typename Base::Src1CType Src1T;
     typedef typename Base::Src2CType Src2T;
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
 
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
@@ -344,7 +371,7 @@ $class_name<DataType>::execute(GPUDynInstPtr gpuDynInst)
     typedef CType Src0T;
     typedef typename Base::Src1CType Src1T;
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
 
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
@@ -371,7 +398,7 @@ $class_name<DataType>::execute(GPUDynInstPtr gpuDynInst)
 {
     Wavefront *w = gpuDynInst->wavefront();
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
             CType dest_val;
@@ -399,7 +426,7 @@ $class_name<DestDataType, SrcDataType>::execute(GPUDynInstPtr gpuDynInst)
 {
     Wavefront *w = gpuDynInst->wavefront();
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
 
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
@@ -426,11 +453,13 @@ exec_templates = {
     'ClassInst': exec_template_1dt_2src_1dest,
     'CmpInst': exec_template_2dt,
     'CvtInst': exec_template_2dt,
+    'PopcountInst': exec_template_2dt,
     'LdInst': '',
     'StInst': '',
     'SpecialInstNoSrc': exec_template_nodt_nosrc,
     'SpecialInst1Src': exec_template_nodt_1src,
     'SpecialInstNoSrcNoDest': '',
+    'Stub': exec_template_stub,
 }
 
 ###############
@@ -555,7 +584,7 @@ def gen(brig_opcode, types=None, expr=None, base_class='ArithInst',
         dest_is_src_flag = str(dest_is_src).lower() # for C++
         if base_class in ['ShiftInst']:
             expr = re.sub(r'\bsrc(\d)\b', r'src_val\1', expr)
-        elif base_class in ['ArithInst', 'CmpInst', 'CvtInst']:
+        elif base_class in ['ArithInst', 'CmpInst', 'CvtInst', 'PopcountInst']:
             expr = re.sub(r'\bsrc(\d)\b', r'src_val[\1]', expr)
         else:
             expr = re.sub(r'\bsrc(\d)\b', r'src_val\1', expr)
@@ -566,7 +595,7 @@ def gen(brig_opcode, types=None, expr=None, base_class='ArithInst',
     base_class_base = re.sub(r'<.*>$', '', base_class)
     header_code(header_templates[base_class_base])
 
-    if base_class.startswith('SpecialInst'):
+    if base_class.startswith('SpecialInst') or base_class.startswith('Stub'):
         exec_code(exec_templates[base_class_base])
     elif base_class.startswith('ShiftInst'):
         header_code(exec_template_shift)
@@ -672,9 +701,9 @@ gen('And', bit_types, 'src0 & src1')
 gen('Or', bit_types,  'src0 | src1')
 gen('Xor', bit_types, 'src0 ^ src1')
 
-gen('Bitselect', bit_types, '(src1 & src0) | (src2 & ~src0)')
-gen('Firstbit',bit_types, 'firstbit(src0)')
-gen('Popcount', ('B32', 'B64'), '__builtin_popcount(src0)')
+gen('Bitselect', bit_types, '(src1 & src0) | (src2 & ~(uint64_t)src0)')
+gen('Popcount', ('U32',), '__builtin_popcount(src0)', 'PopcountInst', \
+    ('sourceType', ('B32', 'B64')))
 
 gen('Shl', arith_int_types, 'src0 << (unsigned)src1', 'ShiftInst')
 gen('Shr', arith_int_types, 'src0 >> (unsigned)src1', 'ShiftInst')
@@ -686,7 +715,7 @@ gen('Rem', arith_int_types, 'src0 - ((src0 / src1) * src1)')
 gen('Abs', arith_types, 'std::abs(src0)')
 gen('Neg', arith_types, '-src0')
 
-gen('Mov', bit_types, 'src0')
+gen('Mov', bit_types + arith_types, 'src0')
 gen('Not', bit_types, 'heynot(src0)')
 
 # mad and fma differ only in rounding behavior, which we don't emulate
@@ -745,17 +774,17 @@ def gen_special(brig_opcode, expr, dest_type='U32'):
 
     gen(brig_opcode, None, expr, base_class)
 
-gen_special('WorkItemId', 'w->workitemid[src0][lane]')
+gen_special('WorkItemId', 'w->workItemId[src0][lane]')
 gen_special('WorkItemAbsId',
-    'w->workitemid[src0][lane] + (w->workgroupid[src0] * w->workgroupsz[src0])')
-gen_special('WorkGroupId', 'w->workgroupid[src0]')
-gen_special('WorkGroupSize', 'w->workgroupsz[src0]')
-gen_special('CurrentWorkGroupSize', 'w->workgroupsz[src0]')
-gen_special('GridSize', 'w->gridsz[src0]')
+    'w->workItemId[src0][lane] + (w->workGroupId[src0] * w->workGroupSz[src0])')
+gen_special('WorkGroupId', 'w->workGroupId[src0]')
+gen_special('WorkGroupSize', 'w->workGroupSz[src0]')
+gen_special('CurrentWorkGroupSize', 'w->workGroupSz[src0]')
+gen_special('GridSize', 'w->gridSz[src0]')
 gen_special('GridGroups',
-    'divCeil(w->gridsz[src0],w->workgroupsz[src0])')
+    'divCeil(w->gridSz[src0],w->workGroupSz[src0])')
 gen_special('LaneId', 'lane')
-gen_special('WaveId', 'w->dynwaveid')
+gen_special('WaveId', 'w->wfId')
 gen_special('Clock', 'w->computeUnit->shader->tick_cnt', 'U64')
 
 # gen_special('CU'', ')
@@ -771,11 +800,88 @@ gen('MemFence', base_class='SpecialInstNoSrcNoDest')
 # with magic instructions.
 gen('Call', base_class='SpecialInstNoSrcNoDest')
 
+# Stubs for unimplemented instructions:
+# These may need to be implemented at some point in the future, but
+# for now we just match the instructions with their operands.
+#
+# By defining stubs for these instructions, we can work with
+# applications that have them in dead/unused code paths.
+#
+# Needed for rocm-hcc compilations for HSA backends since
+# builtins-hsail library is `cat`d onto the generated kernels.
+# The builtins-hsail library consists of handcoded hsail functions
+# that __might__ be needed by the rocm-hcc compiler in certain binaries.
+gen('Bitmask', base_class='Stub')
+gen('Bitrev', base_class='Stub')
+gen('Firstbit', base_class='Stub')
+gen('Lastbit', base_class='Stub')
+gen('Unpacklo', base_class='Stub')
+gen('Unpackhi', base_class='Stub')
+gen('Pack', base_class='Stub')
+gen('Unpack', base_class='Stub')
+gen('Lerp', base_class='Stub')
+gen('Packcvt', base_class='Stub')
+gen('Unpackcvt', base_class='Stub')
+gen('Sad', base_class='Stub')
+gen('Sadhi', base_class='Stub')
+gen('Activelanecount', base_class='Stub')
+gen('Activelaneid', base_class='Stub')
+gen('Activelanemask', base_class='Stub')
+gen('Activelanepermute', base_class='Stub')
+gen('Groupbaseptr', base_class='Stub')
+gen('Signalnoret', base_class='Stub')
+
 ###############
 #
 # Generate file epilogs
 #
 ###############
+header_code('''
+template<>
+inline void
+Abs<U32>::execute(GPUDynInstPtr gpuDynInst)
+{
+    Wavefront *w = gpuDynInst->wavefront();
+
+    const VectorMask &mask = w->getPred();
+
+    for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
+        if (mask[lane]) {
+            CType dest_val;
+            CType src_val;
+
+            src_val = this->src[0].template get<CType>(w, lane);
+
+            dest_val = (CType)(src_val);
+
+            this->dest.set(w, lane, dest_val);
+        }
+    }
+}
+
+template<>
+inline void
+Abs<U64>::execute(GPUDynInstPtr gpuDynInst)
+{
+    Wavefront *w = gpuDynInst->wavefront();
+
+    const VectorMask &mask = w->getPred();
+
+    for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
+        if (mask[lane]) {
+            CType dest_val;
+            CType src_val;
+
+            src_val = this->src[0].template get<CType>(w, lane);
+
+            dest_val = (CType)(src_val);
+
+            this->dest.set(w, lane, dest_val);
+        }
+    }
+}
+''')
+
 header_code.dedent()
 header_code('''
 } // namespace HsailISA

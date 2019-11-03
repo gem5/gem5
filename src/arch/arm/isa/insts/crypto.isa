@@ -1,0 +1,189 @@
+// -*- mode:c++ -*-
+//
+// Copyright (c) 2018 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Matt Horsnell
+//          Prakash Ramrakhyani
+
+let {{
+
+    cryptoEnabledCheckCode = '''
+        auto crypto_reg = xc->tcBase()->readMiscReg(MISCREG_ID_ISAR5);
+        if (!(crypto_reg & %(mask)d)) {
+            return std::make_shared<UndefinedInstruction>(machInst, true);
+        }
+    '''
+
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    cryptoRegRegRegPrefix = '''
+        Crypto crypto;
+        RegVect srcReg1, srcReg2, destReg;
+        // Read source and destination registers.
+    '''
+    for reg in range(4):
+        cryptoRegRegRegPrefix += '''
+            srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
+            srcReg2.regs[%(reg)d] = htog(FpOp2P%(reg)d_uw);
+            destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+        ''' % { "reg" : reg }
+    cryptoRegRegRegPrefix += '''
+        unsigned char *output = (unsigned char *)(&destReg.regs[0]);
+        unsigned char *input  = (unsigned char *)(&srcReg1.regs[0]);
+        unsigned char *input2 = (unsigned char *)(&srcReg2.regs[0]);
+    '''
+
+    cryptoSuffix = ""
+    for reg in range(4):
+        cryptoSuffix += '''
+            FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+
+    cryptoRegRegPrefix = '''
+        Crypto crypto;
+        RegVect srcReg1, destReg;
+        // Read source and destination registers.
+    '''
+    for reg in range(4):
+        cryptoRegRegPrefix += '''
+            srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
+            destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
+        ''' % { "reg" : reg }
+
+    cryptoRegRegPrefix += '''
+        // cast into format passed to aes encrypt method.
+        unsigned char *output = (unsigned char *)(&destReg.regs[0]);
+        unsigned char *input  = (unsigned char *)(&srcReg1.regs[0]);
+    '''
+
+    def cryptoRegRegRegInst(name, Name, opClass, enable_check, crypto_func):
+        global header_output, decoder_output, exec_output
+
+        crypto_prefix = enable_check + cryptoRegRegRegPrefix
+        cryptocode = crypto_prefix + crypto_func + cryptoSuffix
+
+        cryptoiop = InstObjParams(name, Name, "RegRegRegOp",
+                                { "code": cryptocode,
+                                  "r_count": 4,
+                                  "predicate_test": predicateTest,
+                                  "op_class": opClass}, [])
+        header_output += RegRegRegOpDeclare.subst(cryptoiop)
+        decoder_output += RegRegRegOpConstructor.subst(cryptoiop)
+        exec_output += CryptoPredOpExecute.subst(cryptoiop)
+
+    def cryptoRegRegInst(name, Name, opClass, enable_check, crypto_func):
+        global header_output, decoder_output, exec_output
+
+        crypto_prefix = enable_check + cryptoRegRegPrefix
+        cryptocode = crypto_prefix + crypto_func + cryptoSuffix
+
+        cryptoiop = InstObjParams(name, Name, "RegRegOp",
+                                { "code": cryptocode,
+                                  "r_count": 4,
+                                  "predicate_test": predicateTest,
+                                  "op_class": opClass}, [])
+        header_output += RegRegOpDeclare.subst(cryptoiop)
+        decoder_output += RegRegOpConstructor.subst(cryptoiop)
+        exec_output += CryptoPredOpExecute.subst(cryptoiop)
+
+    def cryptoRegRegImmInst(name, Name, opClass, enable_check, crypto_func):
+        global header_output, decoder_output, exec_output
+
+        crypto_prefix = enable_check + cryptoRegRegPrefix
+        cryptocode = crypto_prefix + crypto_func + cryptoSuffix
+
+        cryptoiop = InstObjParams(name, Name, "RegRegImmOp",
+                                { "code": cryptocode,
+                                  "r_count": 4,
+                                  "predicate_test": predicateTest,
+                                  "op_class": opClass}, [])
+        header_output += RegRegImmOpDeclare.subst(cryptoiop)
+        decoder_output += RegRegImmOpConstructor.subst(cryptoiop)
+        exec_output += CryptoPredOpExecute.subst(cryptoiop)
+
+    aeseCode = "crypto.aesEncrypt(output, input, input2);"
+    aesdCode = "crypto.aesDecrypt(output, input, input2);"
+    aesmcCode = "crypto.aesMixColumns(output, input);"
+    aesimcCode = "crypto.aesInvMixColumns(output, input);"
+
+    sha1_cCode = "crypto.sha1C(output, input, input2);"
+    sha1_pCode = "crypto.sha1P(output, input, input2);"
+    sha1_mCode = "crypto.sha1M(output, input, input2);"
+    sha1_hCode = "crypto.sha1H(output, input);"
+    sha1_su0Code = "crypto.sha1Su0(output, input, input2);"
+    sha1_su1Code = "crypto.sha1Su1(output, input);"
+
+    sha256_hCode = "crypto.sha256H(output, input, input2);"
+    sha256_h2Code = "crypto.sha256H2(output, input, input2);"
+    sha256_su0Code = "crypto.sha256Su0(output, input);"
+    sha256_su1Code = "crypto.sha256Su1(output, input, input2);"
+
+    aes_enabled = cryptoEnabledCheckCode % { "mask" : 0xF0 }
+    cryptoRegRegRegInst("aese", "AESE", "SimdAesOp",
+                        aes_enabled, aeseCode)
+    cryptoRegRegRegInst("aesd", "AESD", "SimdAesOp",
+                        aes_enabled, aesdCode)
+    cryptoRegRegInst("aesmc", "AESMC", "SimdAesMixOp",
+                     aes_enabled, aesmcCode)
+    cryptoRegRegInst("aesimc", "AESIMC", "SimdAesMixOp",
+                     aes_enabled, aesimcCode)
+
+    sha1_enabled = cryptoEnabledCheckCode % { "mask" : 0xF00 }
+    cryptoRegRegRegInst("sha1c", "SHA1C", "SimdSha1HashOp",
+                        sha1_enabled, sha1_cCode)
+    cryptoRegRegRegInst("sha1p", "SHA1P", "SimdSha1HashOp",
+                        sha1_enabled, sha1_pCode)
+    cryptoRegRegRegInst("sha1m", "SHA1M", "SimdSha1HashOp",
+                        sha1_enabled, sha1_mCode)
+    cryptoRegRegInst("sha1h", "SHA1H", "SimdSha1Hash2Op",
+                     sha1_enabled, sha1_hCode)
+    cryptoRegRegRegInst("sha1su0", "SHA1SU0", "SimdShaSigma3Op",
+                        sha1_enabled, sha1_su0Code)
+    cryptoRegRegInst("sha1su1", "SHA1SU1", "SimdShaSigma2Op",
+                     sha1_enabled, sha1_su1Code)
+
+    sha2_enabled = cryptoEnabledCheckCode % { "mask" : 0xF000 }
+    cryptoRegRegRegInst("sha256h", "SHA256H", "SimdSha256HashOp",
+                        sha2_enabled, sha256_hCode)
+    cryptoRegRegRegInst("sha256h2", "SHA256H2", "SimdSha256Hash2Op",
+                        sha2_enabled, sha256_h2Code)
+    cryptoRegRegInst("sha256su0", "SHA256SU0", "SimdShaSigma2Op",
+                     sha2_enabled, sha256_su0Code)
+    cryptoRegRegRegInst("sha256su1", "SHA256SU1", "SimdShaSigma3Op",
+                        sha2_enabled, sha256_su1Code)
+}};

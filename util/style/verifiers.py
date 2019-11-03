@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #
 # Copyright (c) 2014, 2016 ARM Limited
 # All rights reserved
@@ -55,6 +55,40 @@ import style
 import sort_includes
 from region import *
 from file_types import lang_type
+
+
+def safefix(fix_func):
+    """ Decorator for the fix functions of the Verifier class.
+        This function wraps the fix function and creates a backup file
+        just in case there is an error.
+    """
+    def safefix_wrapper(*args, **kwargs):
+        # Check to be sure that this is decorating a function we expect:
+        # a class method with filename as the first argument (after self)
+        assert(os.path.exists(args[1]))
+        self = args[0]
+        assert(is_verifier(self.__class__))
+        filename = args[1]
+
+        # Now, Let's make a backup file.
+        from shutil import copyfile
+        backup_name = filename+'.bak'
+        copyfile(filename, backup_name)
+
+        # Try to apply the fix. If it fails, then we revert the file
+        # Either way, we need to clean up our backup file
+        try:
+            fix_func(*args, **kwargs)
+        except Exception as e:
+            # Restore the original file to the backup file
+            self.ui.write("Error! Restoring the original file.\n")
+            copyfile(backup_name, filename)
+            raise
+        finally:
+            # Clean up the backup file
+            os.remove(backup_name)
+
+    return safefix_wrapper
 
 def _modified_regions(old, new):
     try:
@@ -122,11 +156,11 @@ class Verifier(object):
         return f
 
     def skip(self, filename):
-        # We never want to handle symlinks, so always skip them: If the location
-        # pointed to is a directory, skip it. If the location is a file inside
-        # the gem5 directory, it will be checked as a file, so symlink can be
-        # skipped. If the location is a file outside gem5, we don't want to
-        # check it anyway.
+        # We never want to handle symlinks, so always skip them: If the
+        # location pointed to is a directory, skip it. If the location is a
+        # file inside the gem5 directory, it will be checked as a file, so
+        # symlink can be skipped. If the location is a file outside gem5, we
+        # don't want to check it anyway.
         if os.path.islink(filename):
             return True
         return lang_type(filename) not in self.languages
@@ -158,8 +192,19 @@ class Verifier(object):
         return False
 
     @abstractmethod
-    def check(self, filename, regions=all_regions):
+    def check(self, filename, regions=all_regions, fobj=None, silent=False):
         """Check specified regions of file 'filename'.
+
+        Given that it is possible that the current contents of the file
+        differ from the file as 'staged to commit', for those cases, and
+        maybe others, the argument fobj should be a file object open and reset
+        with the contents matching what the file would look like after the
+        commit. This is needed keep the messages using 'filename' meaningful.
+
+        The argument silent is useful to prevent output when we run check in
+        the staged file vs the actual file to detect if the user forgot
+        staging fixes to the commit. This way, we prevent reporting errors
+        twice in stderr.
 
         Line-by-line checks can simply provide a check_line() method
         that returns True if the line is OK and False if it has an
@@ -182,24 +227,37 @@ class Verifier(object):
         pass
 
 class LineVerifier(Verifier):
-    def check(self, filename, regions=all_regions):
-        f = self.open(filename, 'r')
+    def check(self, filename, regions=all_regions, fobj=None, silent=False):
+        close = False
+        if fobj is None:
+            fobj = self.open(filename, 'r')
+            close = True
+
+        lang = lang_type(filename)
+        assert lang in self.languages
 
         errors = 0
-        for num,line in enumerate(f):
+        for num,line in enumerate(fobj):
             if num not in regions:
                 continue
             line = line.rstrip('\n')
-            if not self.check_line(line):
-                self.ui.write("invalid %s in %s:%d\n" % \
-                              (self.test_name, filename, num + 1))
-                if self.ui.verbose:
-                    self.ui.write(">>%s<<\n" % line[:-1])
+            if not self.check_line(line, language=lang):
+                if not silent:
+                    self.ui.write("invalid %s in %s:%d\n" % \
+                                  (self.test_name, filename, num + 1))
+                    if self.ui.verbose:
+                        self.ui.write(">>%s<<\n" % line[:-1])
                 errors += 1
+        if close:
+            fobj.close()
         return errors
 
+    @safefix
     def fix(self, filename, regions=all_regions):
         f = self.open(filename, 'r+')
+
+        lang = lang_type(filename)
+        assert lang in self.languages
 
         lines = list(f)
 
@@ -209,19 +267,19 @@ class LineVerifier(Verifier):
         for i,line in enumerate(lines):
             line = line.rstrip('\n')
             if i in regions:
-                line = self.fix_line(line)
+                line = self.fix_line(line, language=lang)
 
             f.write(line)
             f.write("\n")
         f.close()
-
+        self.current_language = None
 
     @abstractmethod
-    def check_line(self, line):
+    def check_line(self, line, **kwargs):
         pass
 
     @abstractmethod
-    def fix_line(self, line):
+    def fix_line(self, line, **kwargs):
         pass
 
 class Whitespace(LineVerifier):
@@ -232,17 +290,25 @@ class Whitespace(LineVerifier):
     - No trailing whitespace
     """
 
-    languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons'))
+    languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons',
+                     'make', 'dts'))
+    trail_only = set(('make', 'dts'))
+
     test_name = 'whitespace'
     opt_name = 'white'
 
     _lead = re.compile(r'^([ \t]+)')
     _trail = re.compile(r'([ \t]+)$')
 
-    def check_line(self, line):
-        match = Whitespace._lead.search(line)
-        if match and match.group(1).find('\t') != -1:
-            return False
+
+    def skip_lead(self, language):
+        return language in Whitespace.trail_only
+
+    def check_line(self, line, language):
+        if not self.skip_lead(language):
+            match = Whitespace._lead.search(line)
+            if match and match.group(1).find('\t') != -1:
+                return False
 
         match = Whitespace._trail.search(line)
         if match:
@@ -250,14 +316,15 @@ class Whitespace(LineVerifier):
 
         return True
 
-    def fix_line(self, line):
-        if Whitespace._lead.search(line):
+    def fix_line(self, line, language):
+        if not self.skip_lead(language) and Whitespace._lead.search(line):
             newline = ''
             for i,c in enumerate(line):
                 if c == ' ':
                     newline += ' '
                 elif c == '\t':
-                    newline += ' ' * (tabsize - len(newline) % tabsize)
+                    newline += ' ' * (style.tabsize - \
+                                      len(newline) % style.tabsize)
                 else:
                     newline += line[i:]
                     break
@@ -278,12 +345,16 @@ class SortedIncludes(Verifier):
         super(SortedIncludes, self).__init__(*args, **kwargs)
         self.sort_includes = sort_includes.SortIncludes()
 
-    def check(self, filename, regions=all_regions):
-        f = self.open(filename, 'r')
+    def check(self, filename, regions=all_regions, fobj=None, silent=False):
+        close = False
+        if fobj is None:
+            fobj = self.open(filename, 'r')
+            close = True
         norm_fname = self.normalize_filename(filename)
 
-        old = [ l.rstrip('\n') for l in f.xreadlines() ]
-        f.close()
+        old = [ l.rstrip('\n') for l in fobj.xreadlines() ]
+        if close:
+            fobj.close()
 
         if len(old) == 0:
             return 0
@@ -294,21 +365,25 @@ class SortedIncludes(Verifier):
         modified = _modified_regions(old, new) & regions
 
         if modified:
-            self.ui.write("invalid sorting of includes in %s\n" % (filename))
-            if self.ui.verbose:
-                for start, end in modified.regions:
-                    self.ui.write("bad region [%d, %d)\n" % (start, end))
+            if not silent:
+                self.ui.write("invalid sorting of includes in %s\n"
+                                % (filename))
+                if self.ui.verbose:
+                    for start, end in modified.regions:
+                        self.ui.write("bad region [%d, %d)\n" % (start, end))
             return 1
 
         return 0
 
+    @safefix
     def fix(self, filename, regions=all_regions):
         f = self.open(filename, 'r+')
+        norm_fname = self.normalize_filename(filename)
 
         old = f.readlines()
         lines = [ l.rstrip('\n') for l in old ]
         language = lang_type(filename, lines[0])
-        sort_lines = list(self.sort_includes(lines, filename, language))
+        sort_lines = list(self.sort_includes(lines, norm_fname, language))
         new = ''.join(line + '\n' for line in sort_lines)
 
         f.seek(0)
@@ -329,12 +404,12 @@ class ControlSpace(LineVerifier):
 
     _any_control = re.compile(r'\b(if|while|for)([ \t]*)\(')
 
-    def check_line(self, line):
+    def check_line(self, line, **kwargs):
         match = ControlSpace._any_control.search(line)
         return not (match and match.group(2) != " ")
 
-    def fix_line(self, line):
-        new_line = _any_control.sub(r'\1 (', line)
+    def fix_line(self, line, **kwargs):
+        new_line = ControlSpace._any_control.sub(r'\1 (', line)
         return new_line
 
 
@@ -343,10 +418,10 @@ class LineLength(LineVerifier):
     test_name = 'line length'
     opt_name = 'length'
 
-    def check_line(self, line):
+    def check_line(self, line, **kwargs):
         return style.normalized_len(line) <= 79
 
-    def fix(self, filename, regions=all_regions):
+    def fix(self, filename, regions=all_regions, **kwargs):
         self.ui.write("Warning: cannot automatically fix overly long lines.\n")
 
     def fix_line(self, line):
@@ -360,10 +435,10 @@ class ControlCharacters(LineVerifier):
     valid = ('\n', '\t')
     invalid = "".join([chr(i) for i in range(0, 0x20) if chr(i) not in valid])
 
-    def check_line(self, line):
+    def check_line(self, line, **kwargs):
         return self.fix_line(line) == line
 
-    def fix_line(self, line):
+    def fix_line(self, line, **kwargs):
         return line.translate(None, ControlCharacters.invalid)
 
 class BoolCompare(LineVerifier):
@@ -373,10 +448,10 @@ class BoolCompare(LineVerifier):
 
     regex = re.compile(r'\s*==\s*([Tt]rue|[Ff]alse)\b')
 
-    def check_line(self, line):
+    def check_line(self, line, **kwargs):
         return self.regex.search(line) == None
 
-    def fix_line(self, line):
+    def fix_line(self, line, **kwargs):
         match = self.regex.search(line)
         if match:
             if match.group(1) in ('true', 'True'):

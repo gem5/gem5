@@ -45,7 +45,7 @@
 
 // GEM5 includes
 #include "FaultModel.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 using namespace std;
 

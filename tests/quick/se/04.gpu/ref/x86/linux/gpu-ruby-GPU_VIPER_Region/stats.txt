@@ -343,7 +343,7 @@ system.cp_cntrl0.L2cache.num_tag_array_reads        12092                       
 system.cp_cntrl0.L2cache.num_tag_array_writes         1694                       # number of tag array writes
 system.cpu0.clk_domain.clock                      500                       # Clock period in ticks
 system.cpu0.apic_clk_domain.clock                8000                       # Clock period in ticks
-system.cpu0.workload.num_syscalls                  21                       # Number of system calls
+system.cpu0.workload.numSyscalls                   21                       # Number of system calls
 system.cpu0.numCycles                          937709                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed

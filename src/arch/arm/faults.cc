@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2014, 2016 ARM Limited
+ * Copyright (c) 2010, 2012-2014, 2016-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,9 +45,10 @@
  */
 
 #include "arch/arm/faults.hh"
+
+#include "arch/arm/insts/static_inst.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
-#include "arch/arm/insts/static_inst.hh"
 #include "base/compiler.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
@@ -176,7 +177,7 @@ uint8_t ArmFault::aarch64FaultSources[] = {
     0x0d,  // PermissionL1
     0x0e,  // PermissionL2
     0x0f,  // PermissionL3
-    0xff,  // DebugEvent (INVALID)
+    0x22,  // DebugEvent
     0x10,  // SynchronousExternalAbort
     0x30,  // TLBConflictAbort
     0x18,  // SynchPtyErrOnMemoryAccess
@@ -197,117 +198,108 @@ static_assert(sizeof(ArmFault::aarch64FaultSources) ==
 // Fields: name, offset, cur{ELT,ELH}Offset, lowerEL{64,32}Offset, next mode,
 //         {ARM, Thumb, ARM_ELR, Thumb_ELR} PC offset, hyp trap,
 //         {A, F} disable, class, stat
-template<> ArmFault::FaultVals ArmFaultVals<Reset>::vals = {
+template<> ArmFault::FaultVals ArmFaultVals<Reset>::vals(
     // Some dummy values (the reset vector has an IMPLEMENTATION DEFINED
     // location in AArch64)
     "Reset",                 0x000, 0x000, 0x000, 0x000, 0x000, MODE_SVC,
-    0, 0, 0, 0, false, true,  true,  EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<UndefinedInstruction>::vals = {
+    0, 0, 0, 0, false, true,  true,  EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<UndefinedInstruction>::vals(
     "Undefined Instruction", 0x004, 0x000, 0x200, 0x400, 0x600, MODE_UNDEFINED,
-    4, 2, 0, 0, true,  false, false, EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SupervisorCall>::vals = {
+    4, 2, 0, 0, true,  false, false, EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<SupervisorCall>::vals(
     "Supervisor Call",       0x008, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
-    4, 2, 4, 2, true,  false, false, EC_SVC_TO_HYP, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorCall>::vals = {
+    4, 2, 4, 2, true,  false, false, EC_SVC_TO_HYP
+);
+template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorCall>::vals(
     "Secure Monitor Call",   0x008, 0x000, 0x200, 0x400, 0x600, MODE_MON,
-    4, 4, 4, 4, false, true,  true,  EC_SMC_TO_HYP, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<HypervisorCall>::vals = {
+    4, 4, 4, 4, false, true,  true,  EC_SMC_TO_HYP
+);
+template<> ArmFault::FaultVals ArmFaultVals<HypervisorCall>::vals(
     "Hypervisor Call",       0x008, 0x000, 0x200, 0x400, 0x600, MODE_HYP,
-    4, 4, 4, 4, true,  false, false, EC_HVC, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<PrefetchAbort>::vals = {
+    4, 4, 4, 4, true,  false, false, EC_HVC
+);
+template<> ArmFault::FaultVals ArmFaultVals<PrefetchAbort>::vals(
     "Prefetch Abort",        0x00C, 0x000, 0x200, 0x400, 0x600, MODE_ABORT,
-    4, 4, 0, 0, true,  true,  false, EC_PREFETCH_ABORT_TO_HYP, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<DataAbort>::vals = {
+    4, 4, 0, 0, true,  true,  false, EC_PREFETCH_ABORT_TO_HYP
+);
+template<> ArmFault::FaultVals ArmFaultVals<DataAbort>::vals(
     "Data Abort",            0x010, 0x000, 0x200, 0x400, 0x600, MODE_ABORT,
-    8, 8, 0, 0, true,  true,  false, EC_DATA_ABORT_TO_HYP, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<VirtualDataAbort>::vals = {
+    8, 8, 0, 0, true,  true,  false, EC_DATA_ABORT_TO_HYP
+);
+template<> ArmFault::FaultVals ArmFaultVals<VirtualDataAbort>::vals(
     "Virtual Data Abort",    0x010, 0x000, 0x200, 0x400, 0x600, MODE_ABORT,
-    8, 8, 0, 0, true,  true,  false, EC_INVALID, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<HypervisorTrap>::vals = {
+    8, 8, 0, 0, true,  true,  false, EC_INVALID
+);
+template<> ArmFault::FaultVals ArmFaultVals<HypervisorTrap>::vals(
     // @todo: double check these values
     "Hypervisor Trap",       0x014, 0x000, 0x200, 0x400, 0x600, MODE_HYP,
-    0, 0, 0, 0, false, false, false, EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<Interrupt>::vals = {
+    0, 0, 0, 0, false, false, false, EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorTrap>::vals(
+    "Secure Monitor Trap",   0x004, 0x000, 0x200, 0x400, 0x600, MODE_MON,
+    4, 2, 0, 0, false, false, false, EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<Interrupt>::vals(
     "IRQ",                   0x018, 0x080, 0x280, 0x480, 0x680, MODE_IRQ,
-    4, 4, 0, 0, false, true,  false, EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<VirtualInterrupt>::vals = {
+    4, 4, 0, 0, false, true,  false, EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<VirtualInterrupt>::vals(
     "Virtual IRQ",           0x018, 0x080, 0x280, 0x480, 0x680, MODE_IRQ,
-    4, 4, 0, 0, false, true,  false, EC_INVALID, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<FastInterrupt>::vals = {
+    4, 4, 0, 0, false, true,  false, EC_INVALID
+);
+template<> ArmFault::FaultVals ArmFaultVals<FastInterrupt>::vals(
     "FIQ",                   0x01C, 0x100, 0x300, 0x500, 0x700, MODE_FIQ,
-    4, 4, 0, 0, false, true,  true,  EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<VirtualFastInterrupt>::vals = {
+    4, 4, 0, 0, false, true,  true,  EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<VirtualFastInterrupt>::vals(
     "Virtual FIQ",           0x01C, 0x100, 0x300, 0x500, 0x700, MODE_FIQ,
-    4, 4, 0, 0, false, true,  true,  EC_INVALID, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SupervisorTrap>::vals = {
+    4, 4, 0, 0, false, true,  true,  EC_INVALID
+);
+template<> ArmFault::FaultVals ArmFaultVals<IllegalInstSetStateFault>::vals(
+    "Illegal Inst Set State Fault",   0x004, 0x000, 0x200, 0x400, 0x600, MODE_UNDEFINED,
+    4, 2, 0, 0, true, false, false, EC_ILLEGAL_INST
+);
+template<> ArmFault::FaultVals ArmFaultVals<SupervisorTrap>::vals(
     // Some dummy values (SupervisorTrap is AArch64-only)
     "Supervisor Trap",   0x014, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
-    0, 0, 0, 0, false, false, false, EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorTrap>::vals = {
-    // Some dummy values (SecureMonitorTrap is AArch64-only)
-    "Secure Monitor Trap",   0x014, 0x000, 0x200, 0x400, 0x600, MODE_MON,
-    0, 0, 0, 0, false, false, false, EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<PCAlignmentFault>::vals = {
+    0, 0, 0, 0, false, false, false, EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<PCAlignmentFault>::vals(
     // Some dummy values (PCAlignmentFault is AArch64-only)
     "PC Alignment Fault",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
-    0, 0, 0, 0, true, false, false, EC_PC_ALIGNMENT, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SPAlignmentFault>::vals = {
+    0, 0, 0, 0, true, false, false, EC_PC_ALIGNMENT
+);
+template<> ArmFault::FaultVals ArmFaultVals<SPAlignmentFault>::vals(
     // Some dummy values (SPAlignmentFault is AArch64-only)
     "SP Alignment Fault",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
-    0, 0, 0, 0, true, false, false, EC_STACK_PTR_ALIGNMENT, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SystemError>::vals = {
+    0, 0, 0, 0, true, false, false, EC_STACK_PTR_ALIGNMENT
+);
+template<> ArmFault::FaultVals ArmFaultVals<SystemError>::vals(
     // Some dummy values (SError is AArch64-only)
     "SError",                0x000, 0x180, 0x380, 0x580, 0x780, MODE_SVC,
-    0, 0, 0, 0, false, true,  true,  EC_SERROR, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<FlushPipe>::vals = {
-    // Some dummy values
-    "Pipe Flush",            0x000, 0x000, 0x000, 0x000, 0x000, MODE_SVC,
-    0, 0, 0, 0, false, true,  true,  EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals = {
+    0, 0, 0, 0, false, true,  true,  EC_SERROR
+);
+template<> ArmFault::FaultVals ArmFaultVals<SoftwareBreakpoint>::vals(
+    // Some dummy values (SoftwareBreakpoint is AArch64-only)
+    "Software Breakpoint",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
+    0, 0, 0, 0, true, false, false,  EC_SOFTWARE_BREAKPOINT
+);
+template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals(
     // Some dummy values
     "ArmSev Flush",          0x000, 0x000, 0x000, 0x000, 0x000, MODE_SVC,
-    0, 0, 0, 0, false, true,  true,  EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<IllegalInstSetStateFault>::vals = {
-    // Some dummy values (SPAlignmentFault is AArch64-only)
-    "Illegal Inst Set State Fault",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
-    0, 0, 0, 0, true, false, false, EC_ILLEGAL_INST, FaultStat()
-};
+    0, 0, 0, 0, false, true,  true,  EC_UNKNOWN
+);
 
 Addr
 ArmFault::getVector(ThreadContext *tc)
 {
     Addr base;
 
-    // ARM ARM issue C B1.8.1
-    bool haveSecurity = ArmSystem::haveSecurity(tc);
-
-    // panic if SCTLR.VE because I have no idea what to do with vectored
-    // interrupts
-    SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
-    assert(!sctlr.ve);
     // Check for invalid modes
     CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
-    assert(haveSecurity                      || cpsr.mode != MODE_MON);
+    assert(ArmSystem::haveSecurity(tc) || cpsr.mode != MODE_MON);
     assert(ArmSystem::haveVirtualization(tc) || cpsr.mode != MODE_HYP);
 
     switch (cpsr.mode)
@@ -319,13 +311,16 @@ ArmFault::getVector(ThreadContext *tc)
         base = tc->readMiscReg(MISCREG_HVBAR);
         break;
       default:
+        SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
         if (sctlr.v) {
             base = HighVecs;
         } else {
-            base = haveSecurity ? tc->readMiscReg(MISCREG_VBAR) : 0;
+            base = ArmSystem::haveSecurity(tc) ?
+                tc->readMiscReg(MISCREG_VBAR) : 0;
         }
         break;
     }
+
     return base + offset(tc);
 }
 
@@ -338,11 +333,10 @@ ArmFault::getVector64(ThreadContext *tc)
         assert(ArmSystem::haveSecurity(tc));
         vbar = tc->readMiscReg(MISCREG_VBAR_EL3);
         break;
-      // @todo: uncomment this to enable Virtualization
-      // case EL2:
-      //   assert(ArmSystem::haveVirtualization(tc));
-      //   vbar = tc->readMiscReg(MISCREG_VBAR_EL2);
-      //   break;
+      case EL2:
+        assert(ArmSystem::haveVirtualization(tc));
+        vbar = tc->readMiscReg(MISCREG_VBAR_EL2);
+        break;
       case EL1:
         vbar = tc->readMiscReg(MISCREG_VBAR_EL1);
         break;
@@ -350,7 +344,7 @@ ArmFault::getVector64(ThreadContext *tc)
         panic("Invalid target exception level");
         break;
     }
-    return vbar + offset64();
+    return vbar + offset64(tc);
 }
 
 MiscRegIndex
@@ -391,6 +385,7 @@ ArmFault::setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg)
     uint32_t value;
     uint32_t exc_class = (uint32_t) ec(tc);
     uint32_t issVal = iss();
+
     assert(!from64 || ArmSystem::highestELIs64(tc));
 
     value = exc_class << 26;
@@ -426,37 +421,74 @@ ArmFault::setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg)
 }
 
 void
-ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+ArmFault::update(ThreadContext *tc)
 {
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
 
-    if (ArmSystem::highestELIs64(tc)) {  // ARMv8
-        // Determine source exception level and mode
-        fromMode = (OperatingMode) (uint8_t) cpsr.mode;
-        fromEL = opModeToEL(fromMode);
-        if (opModeIs64(fromMode))
-            from64 = true;
+    // Determine source exception level and mode
+    fromMode = (OperatingMode) (uint8_t) cpsr.mode;
+    fromEL = opModeToEL(fromMode);
+    if (opModeIs64(fromMode))
+        from64 = true;
 
-        // Determine target exception level
-        if (ArmSystem::haveSecurity(tc) && routeToMonitor(tc))
-            toEL = EL3;
-        else
-            toEL = opModeToEL(nextMode());
-        if (fromEL > toEL)
-            toEL = fromEL;
+    // Determine target exception level (aarch64) or target execution
+    // mode (aarch32).
+    if (ArmSystem::haveSecurity(tc) && routeToMonitor(tc)) {
+        toMode = MODE_MON;
+        toEL = EL3;
+    } else if (ArmSystem::haveVirtualization(tc) && routeToHyp(tc)) {
+        toMode = MODE_HYP;
+        toEL = EL2;
+        hypRouted = true;
+    } else {
+        toMode = nextMode();
+        toEL = opModeToEL(toMode);
+    }
 
-        if (toEL == ArmSystem::highestEL(tc) || ELIs64(tc, toEL)) {
-            // Invoke exception handler in AArch64 state
-            to64 = true;
-            invoke64(tc, inst);
-            return;
+    if (fromEL > toEL)
+        toEL = fromEL;
+
+    // Check for Set Priviledge Access Never, if PAN is supported
+    AA64MMFR1 mmfr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
+    if (mmfr1.pan) {
+        if (toEL == EL1) {
+            const SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
+            span = !sctlr.span;
         }
+
+        const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+        if (toEL == EL2 && hcr.e2h && hcr.tge) {
+            const SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL2);
+            span = !sctlr.span;
+        }
+    }
+
+    to64 = ELIs64(tc, toEL);
+
+    // The fault specific informations have been updated; it is
+    // now possible to use them inside the fault.
+    faultUpdated = true;
+}
+
+void
+ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+{
+
+    // Update fault state informations, like the starting mode (aarch32)
+    // or EL (aarch64) and the ending mode or EL.
+    // From the update function we are also evaluating if the fault must
+    // be handled in AArch64 mode (to64).
+    update(tc);
+
+    if (to64) {
+        // Invoke exception handler in AArch64 state
+        invoke64(tc, inst);
+        return;
     }
 
     // ARMv7 (ARM ARM issue C B1.9)
 
     bool have_security       = ArmSystem::haveSecurity(tc);
-    bool have_virtualization = ArmSystem::haveVirtualization(tc);
 
     FaultBase::invoke(tc);
     if (!FullSystem)
@@ -479,17 +511,7 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     // if we have a valid instruction then use it to annotate this fault with
     // extra information. This is used to generate the correct fault syndrome
     // information
-    if (inst) {
-        ArmStaticInst *armInst = reinterpret_cast<ArmStaticInst *>(inst.get());
-        armInst->annotateFault(this);
-    }
-
-    if (have_security && routeToMonitor(tc))
-        cpsr.mode = MODE_MON;
-    else if (have_virtualization && routeToHyp(tc))
-        cpsr.mode = MODE_HYP;
-    else
-        cpsr.mode = nextMode();
+    ArmStaticInst *arm_inst M5_VAR_USED = instrAnnotate(inst);
 
     // Ensure Secure state if initially in Monitor mode
     if (have_security && saved_cpsr.mode == MODE_MON) {
@@ -499,6 +521,9 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             tc->setMiscRegNoEffect(MISCREG_SCR, scr);
         }
     }
+
+    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    cpsr.mode = toMode;
 
     // some bits are set differently if we have been routed to hyp mode
     if (cpsr.mode == MODE_HYP) {
@@ -526,6 +551,7 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     }
     cpsr.it1 = cpsr.it2 = 0;
     cpsr.j = 0;
+    cpsr.pan = span ? 1 : saved_cpsr.pan;
     tc->setMiscReg(MISCREG_CPSR, cpsr);
 
     // Make sure mailbox sets to one always
@@ -565,7 +591,7 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             setSyndrome(tc, MISCREG_HSR);
         break;
       case MODE_HYP:
-        assert(have_virtualization);
+        assert(ArmSystem::haveVirtualization(tc));
         tc->setMiscReg(MISCREG_SPSR_HYP, saved_cpsr);
         setSyndrome(tc, MISCREG_HSR);
         break;
@@ -574,8 +600,10 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     }
 
     Addr newPc = getVector(tc);
-    DPRINTF(Faults, "Invoking Fault:%s cpsr:%#x PC:%#x lr:%#x newVec: %#x\n",
-            name(), cpsr, curPc, tc->readIntReg(INTREG_LR), newPc);
+    DPRINTF(Faults, "Invoking Fault:%s cpsr:%#x PC:%#x lr:%#x newVec: %#x "
+            "%s\n", name(), cpsr, curPc, tc->readIntReg(INTREG_LR),
+            newPc, arm_inst ? csprintf("inst: %#x", arm_inst->encoding()) :
+            std::string());
     PCState pc(newPc);
     pc.thumb(cpsr.t);
     pc.nextThumb(pc.thumb());
@@ -583,6 +611,7 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     pc.nextJazelle(pc.jazelle());
     pc.aarch64(!cpsr.width);
     pc.nextAArch64(!cpsr.width);
+    pc.illegalExec(false);
     tc->pcState(pc);
 }
 
@@ -596,12 +625,11 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         elr_idx = MISCREG_ELR_EL1;
         spsr_idx = MISCREG_SPSR_EL1;
         break;
-      // @todo: uncomment this to enable Virtualization
-      // case EL2:
-      //   assert(ArmSystem::haveVirtualization());
-      //   elr_idx = MISCREG_ELR_EL2;
-      //   spsr_idx = MISCREG_SPSR_EL2;
-      //   break;
+      case EL2:
+        assert(ArmSystem::haveVirtualization(tc));
+        elr_idx = MISCREG_ELR_EL2;
+        spsr_idx = MISCREG_SPSR_EL2;
+        break;
       case EL3:
         assert(ArmSystem::haveSecurity(tc));
         elr_idx = MISCREG_ELR_EL3;
@@ -623,7 +651,6 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         spsr.q = 0;
         spsr.it1 = 0;
         spsr.j = 0;
-        spsr.res0_23_22 = 0;
         spsr.ge = 0;
         spsr.it2 = 0;
         spsr.t = 0;
@@ -633,7 +660,6 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         spsr.it2 = it.top6;
         spsr.it1 = it.bottom2;
         // Force some bitfields to 0
-        spsr.res0_23_22 = 0;
         spsr.ss = 0;
     }
     tc->setMiscReg(spsr_idx, spsr);
@@ -647,6 +673,8 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         ret_addr += spsr.t ? thumbPcElrOffset() : armPcElrOffset();
     tc->setMiscReg(elr_idx, ret_addr);
 
+    Addr vec_address = getVector64(tc);
+
     // Update process state
     OperatingMode64 mode = 0;
     mode.spX = 1;
@@ -656,25 +684,59 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     cpsr.daif = 0xf;
     cpsr.il = 0;
     cpsr.ss = 0;
+    cpsr.pan = span ? 1 : spsr.pan;
     tc->setMiscReg(MISCREG_CPSR, cpsr);
-
-    // Set PC to start of exception handler
-    Addr new_pc = purifyTaggedAddr(getVector64(tc), tc, toEL);
-    DPRINTF(Faults, "Invoking Fault (AArch64 target EL):%s cpsr:%#x PC:%#x "
-            "elr:%#x newVec: %#x\n", name(), cpsr, curr_pc, ret_addr, new_pc);
-    PCState pc(new_pc);
-    pc.aarch64(!cpsr.width);
-    pc.nextAArch64(!cpsr.width);
-    tc->pcState(pc);
 
     // If we have a valid instruction then use it to annotate this fault with
     // extra information. This is used to generate the correct fault syndrome
     // information
-    if (inst)
-        reinterpret_cast<ArmStaticInst *>(inst.get())->annotateFault(this);
+    ArmStaticInst *arm_inst M5_VAR_USED = instrAnnotate(inst);
+
+    // Set PC to start of exception handler
+    Addr new_pc = purifyTaggedAddr(vec_address, tc, toEL);
+    DPRINTF(Faults, "Invoking Fault (AArch64 target EL):%s cpsr:%#x PC:%#x "
+            "elr:%#x newVec: %#x %s\n", name(), cpsr, curr_pc, ret_addr,
+            new_pc, arm_inst ? csprintf("inst: %#x", arm_inst->encoding()) :
+            std::string());
+    PCState pc(new_pc);
+    pc.aarch64(!cpsr.width);
+    pc.nextAArch64(!cpsr.width);
+    pc.illegalExec(false);
+    tc->pcState(pc);
+
     // Save exception syndrome
     if ((nextMode() != MODE_IRQ) && (nextMode() != MODE_FIQ))
         setSyndrome(tc, getSyndromeReg64());
+}
+
+ArmStaticInst *
+ArmFault::instrAnnotate(const StaticInstPtr &inst)
+{
+    if (inst) {
+        auto arm_inst = static_cast<ArmStaticInst *>(inst.get());
+        arm_inst->annotateFault(this);
+        return arm_inst;
+    } else {
+        return nullptr;
+    }
+}
+
+Addr
+Reset::getVector(ThreadContext *tc)
+{
+    Addr base;
+
+    // Check for invalid modes
+    CPSR M5_VAR_USED cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
+    assert(ArmSystem::haveSecurity(tc) || cpsr.mode != MODE_MON);
+    assert(ArmSystem::haveVirtualization(tc) || cpsr.mode != MODE_HYP);
+
+    // RVBAR is aliased (implemented as) MVBAR in gem5, since the two
+    // are mutually exclusive; there is no need to check here for
+    // which register to use since they hold the same value
+    base = tc->readMiscReg(MISCREG_MVBAR);
+
+    return base + offset(tc);
 }
 
 void
@@ -698,7 +760,7 @@ Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         }
     } else {
         // Advance the PC to the IMPLEMENTATION DEFINED reset value
-        PCState pc = ArmSystem::resetAddr64(tc);
+        PCState pc = ArmSystem::resetAddr(tc);
         pc.aarch64(true);
         pc.nextAArch64(true);
         tc->pcState(pc);
@@ -715,15 +777,16 @@ UndefinedInstruction::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     // If the mnemonic isn't defined this has to be an unknown instruction.
     assert(unknown || mnemonic != NULL);
+    auto arm_inst = static_cast<ArmStaticInst *>(inst.get());
     if (disabled) {
         panic("Attempted to execute disabled instruction "
-                "'%s' (inst 0x%08x)", mnemonic, machInst);
+                "'%s' (inst 0x%08x)", mnemonic, arm_inst->encoding());
     } else if (unknown) {
         panic("Attempted to execute unknown instruction (inst 0x%08x)",
-              machInst);
+              arm_inst->encoding());
     } else {
         panic("Attempted to execute unimplemented instruction "
-                "'%s' (inst 0x%08x)", mnemonic, machInst);
+                "'%s' (inst 0x%08x)", mnemonic, arm_inst->encoding());
     }
 }
 
@@ -746,6 +809,12 @@ UndefinedInstruction::routeToHyp(ThreadContext *tc) const
 uint32_t
 UndefinedInstruction::iss() const
 {
+
+    // If UndefinedInstruction is routed to hypervisor, iss field is 0.
+    if (hypRouted) {
+        return 0;
+    }
+
     if (overrideEc == EC_INVALID)
         return issRaw;
 
@@ -783,7 +852,8 @@ SupervisorCall::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         callNum = tc->readIntReg(INTREG_X8);
     else
         callNum = tc->readIntReg(INTREG_R7);
-    tc->syscall(callNum);
+    Fault fault;
+    tc->syscall(callNum, &fault);
 
     // Advance the PC since that won't happen automatically.
     PCState pc = tc->pcState();
@@ -834,13 +904,24 @@ SecureMonitorCall::iss() const
 ExceptionClass
 UndefinedInstruction::ec(ThreadContext *tc) const
 {
-    return (overrideEc != EC_INVALID) ? overrideEc : vals.ec;
+    // If UndefinedInstruction is routed to hypervisor,
+    // HSR.EC field is 0.
+    if (hypRouted)
+        return EC_UNKNOWN;
+    else
+        return (overrideEc != EC_INVALID) ? overrideEc : vals.ec;
 }
 
 
 HypervisorCall::HypervisorCall(ExtMachInst _machInst, uint32_t _imm) :
         ArmFaultVals<HypervisorCall>(_machInst, _imm)
 {}
+
+ExceptionClass
+HypervisorCall::ec(ThreadContext *tc) const
+{
+    return from64 ? EC_HVC_64 : vals.ec;
+}
 
 ExceptionClass
 HypervisorTrap::ec(ThreadContext *tc) const
@@ -866,6 +947,31 @@ ArmFaultVals<T>::offset(ThreadContext *tc)
         }
     }
     return isHypTrap ? 0x14 : vals.offset;
+}
+
+template<class T>
+FaultOffset
+ArmFaultVals<T>::offset64(ThreadContext *tc)
+{
+    if (toEL == fromEL) {
+        if (opModeIsT(fromMode))
+            return vals.currELTOffset;
+        return vals.currELHOffset;
+    } else {
+        bool lower_32 = false;
+        if (toEL == EL3) {
+            if (!inSecureState(tc) && ArmSystem::haveEL(tc, EL2))
+                lower_32 = ELIs32(tc, EL2);
+            else
+                lower_32 = ELIs32(tc, EL1);
+        } else {
+            lower_32 = ELIs32(tc, static_cast<ExceptionLevel>(toEL - 1));
+        }
+
+        if (lower_32)
+            return vals.lowerEL32Offset;
+        return vals.lowerEL64Offset;
+    }
 }
 
 // void
@@ -898,10 +1004,37 @@ SecureMonitorCall::ec(ThreadContext *tc) const
     return (from64 ? EC_SMC_64 : vals.ec);
 }
 
+bool
+SupervisorTrap::routeToHyp(ThreadContext *tc) const
+{
+    bool toHyp = false;
+
+    SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
+    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
+
+    // if HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector
+    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (currEL(tc) == EL0);
+    return toHyp;
+}
+
+uint32_t
+SupervisorTrap::iss() const
+{
+    // If SupervisorTrap is routed to hypervisor, iss field is 0.
+    if (hypRouted) {
+        return 0;
+    }
+    return issRaw;
+}
+
 ExceptionClass
 SupervisorTrap::ec(ThreadContext *tc) const
 {
-    return (overrideEc != EC_INVALID) ? overrideEc : vals.ec;
+    if (hypRouted)
+        return EC_UNKNOWN;
+    else
+        return (overrideEc != EC_INVALID) ? overrideEc : vals.ec;
 }
 
 ExceptionClass
@@ -942,13 +1075,13 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     }
     // Get effective fault source encoding
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    FSR  fsr  = getFsr(tc);
 
     // source must be determined BEFORE invoking generic routines which will
     // try to set hsr etc. and are based upon source!
     ArmFaultVals<T>::invoke(tc, inst);
 
     if (!this->to64) {  // AArch32
+        FSR  fsr  = getFsr(tc);
         if (cpsr.mode == MODE_HYP) {
             tc->setMiscReg(T::HFarIndex, faultAddr);
         } else if (stage2) {
@@ -963,38 +1096,79 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     } else {  // AArch64
         // Set the FAR register.  Nothing else to do if we are in AArch64 state
         // because the syndrome register has already been set inside invoke64()
-        tc->setMiscReg(AbortFault<T>::getFaultAddrReg64(), faultAddr);
+        if (stage2) {
+            // stage 2 fault, set HPFAR_EL2 to the faulting IPA
+            // and FAR_EL2 to the Original VA
+            tc->setMiscReg(AbortFault<T>::getFaultAddrReg64(), OVAddr);
+            tc->setMiscReg(MISCREG_HPFAR_EL2, bits(faultAddr, 47, 12) << 4);
+
+            DPRINTF(Faults, "Abort Fault (Stage 2) VA: 0x%x IPA: 0x%x\n",
+                    OVAddr, faultAddr);
+        } else {
+            tc->setMiscReg(AbortFault<T>::getFaultAddrReg64(), faultAddr);
+        }
     }
 }
 
 template<class T>
-FSR
-AbortFault<T>::getFsr(ThreadContext *tc)
+void
+AbortFault<T>::setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg)
 {
-    FSR fsr = 0;
-
-    if (((CPSR) tc->readMiscRegNoEffect(MISCREG_CPSR)).width) {
-        // AArch32
-        assert(tranMethod != ArmFault::UnknownTran);
-        if (tranMethod == ArmFault::LpaeTran) {
-            srcEncoded = ArmFault::longDescFaultSources[source];
-            fsr.status = srcEncoded;
-            fsr.lpae   = 1;
-        } else {
-            srcEncoded = ArmFault::shortDescFaultSources[source];
-            fsr.fsLow  = bits(srcEncoded, 3, 0);
-            fsr.fsHigh = bits(srcEncoded, 4);
-            fsr.domain = static_cast<uint8_t>(domain);
-        }
-        fsr.wnr = (write ? 1 : 0);
-        fsr.ext = 0;
-    } else {
-        // AArch64
-        srcEncoded = ArmFault::aarch64FaultSources[source];
-    }
+    srcEncoded = getFaultStatusCode(tc);
     if (srcEncoded == ArmFault::FaultSourceInvalid) {
         panic("Invalid fault source\n");
     }
+    ArmFault::setSyndrome(tc, syndrome_reg);
+}
+
+template<class T>
+uint8_t
+AbortFault<T>::getFaultStatusCode(ThreadContext *tc) const
+{
+
+    panic_if(!this->faultUpdated,
+             "Trying to use un-updated ArmFault internal variables\n");
+
+    uint8_t fsc = 0;
+
+    if (!this->to64) {
+        // AArch32
+        assert(tranMethod != ArmFault::UnknownTran);
+        if (tranMethod == ArmFault::LpaeTran) {
+            fsc = ArmFault::longDescFaultSources[source];
+        } else {
+            fsc = ArmFault::shortDescFaultSources[source];
+        }
+    } else {
+        // AArch64
+        fsc = ArmFault::aarch64FaultSources[source];
+    }
+
+    return fsc;
+}
+
+template<class T>
+FSR
+AbortFault<T>::getFsr(ThreadContext *tc) const
+{
+    FSR fsr = 0;
+
+    auto fsc = getFaultStatusCode(tc);
+
+    // AArch32
+    assert(tranMethod != ArmFault::UnknownTran);
+    if (tranMethod == ArmFault::LpaeTran) {
+        fsr.status = fsc;
+        fsr.lpae   = 1;
+    } else {
+        fsr.fsLow  = bits(fsc, 3, 0);
+        fsr.fsHigh = bits(fsc, 4);
+        fsr.domain = static_cast<uint8_t>(domain);
+    }
+
+    fsr.wnr = (write ? 1 : 0);
+    fsr.ext = 0;
+
     return fsr;
 }
 
@@ -1057,6 +1231,14 @@ AbortFault<T>::isMMUFault() const
          (source <  ArmFault::PermissionLL + 4));
 }
 
+template<class T>
+bool
+AbortFault<T>::getFaultVAddr(Addr &va) const
+{
+    va = (stage2 ?  OVAddr : faultAddr);
+    return true;
+}
+
 ExceptionClass
 PrefetchAbort::ec(ThreadContext *tc) const
 {
@@ -1110,7 +1292,7 @@ PrefetchAbort::routeToHyp(ThreadContext *tc) const
     toHyp |= (stage2 ||
                 ( (source ==               DebugEvent) && hdcr.tde && (cpsr.mode !=  MODE_HYP)) ||
                 ( (source == SynchronousExternalAbort) && hcr.tge  && (cpsr.mode == MODE_USER))
-             ) && !inSecureState(scr, cpsr);
+             ) && !inSecureState(tc);
     return toHyp;
 }
 
@@ -1176,7 +1358,7 @@ DataAbort::routeToHyp(ThreadContext *tc) const
                   ((source == AlignmentFault)            ||
                    (source == SynchronousExternalAbort))
                 )
-             ) && !inSecureState(scr, cpsr);
+             ) && !inSecureState(tc);
     return toHyp;
 }
 
@@ -1187,9 +1369,12 @@ DataAbort::iss() const
 
     // Add on the data abort specific fields to the generic abort ISS value
     val  = AbortFault<DataAbort>::iss();
+
+    val |= cm << 8;
+
     // ISS is valid if not caused by a stage 1 page table walk, and when taken
     // to AArch64 only when directed to EL2
-    if (!s1ptw && (!to64 || toEL == EL2)) {
+    if (!s1ptw && stage2 && (!to64 || toEL == EL2)) {
         val |= isv << 24;
         if (isv) {
             val |= sas << 22;
@@ -1230,6 +1415,9 @@ DataAbort::annotate(AnnotationIDs id, uint64_t val)
         isv = true;
         ar  = val;
         break;
+      case CM:
+        cm  = val;
+        break;
       // Just ignore unknown ID's
       default:
         break;
@@ -1266,7 +1454,7 @@ Interrupt::routeToHyp(ThreadContext *tc) const
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
     CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
     // Determine whether IRQs are routed to Hyp mode.
-    toHyp = (!scr.irq && hcr.imo && !inSecureState(scr, cpsr)) ||
+    toHyp = (!scr.irq && hcr.imo && !inSecureState(tc)) ||
             (cpsr.mode == MODE_HYP);
     return toHyp;
 }
@@ -1305,7 +1493,7 @@ FastInterrupt::routeToHyp(ThreadContext *tc) const
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
     CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
     // Determine whether IRQs are routed to Hyp mode.
-    toHyp = (!scr.fiq && hcr.fmo && !inSecureState(scr, cpsr)) ||
+    toHyp = (!scr.fiq && hcr.fmo && !inSecureState(tc)) ||
             (cpsr.mode == MODE_HYP);
     return toHyp;
 }
@@ -1344,6 +1532,20 @@ PCAlignmentFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     tc->setMiscReg(getFaultAddrReg64(), faultPC);
 }
 
+bool
+PCAlignmentFault::routeToHyp(ThreadContext *tc) const
+{
+    bool toHyp = false;
+
+    SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
+    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
+
+    // if HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector
+    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (currEL(tc) == EL0);
+    return toHyp;
+}
+
 SPAlignmentFault::SPAlignmentFault()
 {}
 
@@ -1374,24 +1576,33 @@ SystemError::routeToHyp(ThreadContext *tc) const
 
     SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
     HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
-    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
 
-    toHyp = (!scr.ea && hcr.amo && !inSecureState(scr, cpsr)) ||
-            (!scr.ea && !scr.rw && !hcr.amo && !inSecureState(scr,cpsr));
+    toHyp = (!scr.ea && hcr.amo && !inSecureState(tc)) ||
+            (!scr.ea && !scr.rw && !hcr.amo && !inSecureState(tc));
     return toHyp;
 }
 
-void
-FlushPipe::invoke(ThreadContext *tc, const StaticInstPtr &inst) {
-    DPRINTF(Faults, "Invoking FlushPipe Fault\n");
 
-    // Set the PC to the next instruction of the faulting instruction.
-    // Net effect is simply squashing all instructions behind and
-    // start refetching from the next instruction.
-    PCState pc = tc->pcState();
-    assert(inst);
-    inst->advancePC(pc);
-    tc->pcState(pc);
+SoftwareBreakpoint::SoftwareBreakpoint(ExtMachInst _mach_inst, uint32_t _iss)
+    : ArmFaultVals<SoftwareBreakpoint>(_mach_inst, _iss)
+{}
+
+bool
+SoftwareBreakpoint::routeToHyp(ThreadContext *tc) const
+{
+    const bool have_el2 = ArmSystem::haveVirtualization(tc);
+
+    const HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
+
+    return have_el2 && !inSecureState(tc) && fromEL <= EL1 &&
+        (hcr.tge || mdcr.tde);
+}
+
+ExceptionClass
+SoftwareBreakpoint::ec(ThreadContext *tc) const
+{
+    return from64 ? EC_SOFTWARE_BREAKPOINT_64 : vals.ec;
 }
 
 void
@@ -1426,7 +1637,7 @@ template class ArmFaultVals<SecureMonitorTrap>;
 template class ArmFaultVals<PCAlignmentFault>;
 template class ArmFaultVals<SPAlignmentFault>;
 template class ArmFaultVals<SystemError>;
-template class ArmFaultVals<FlushPipe>;
+template class ArmFaultVals<SoftwareBreakpoint>;
 template class ArmFaultVals<ArmSev>;
 template class AbortFault<PrefetchAbort>;
 template class AbortFault<DataAbort>;
@@ -1436,5 +1647,29 @@ template class AbortFault<VirtualDataAbort>;
 IllegalInstSetStateFault::IllegalInstSetStateFault()
 {}
 
+bool
+getFaultVAddr(Fault fault, Addr &va)
+{
+    auto arm_fault = dynamic_cast<ArmFault *>(fault.get());
+
+    if (arm_fault) {
+        return arm_fault->getFaultVAddr(va);
+    } else {
+        auto pgt_fault = dynamic_cast<GenericPageTableFault *>(fault.get());
+        if (pgt_fault) {
+            va = pgt_fault->getFaultVAddr();
+            return true;
+        }
+
+        auto align_fault = dynamic_cast<GenericAlignmentFault *>(fault.get());
+        if (align_fault) {
+            va = align_fault->getFaultVAddr();
+            return true;
+        }
+
+        // Return false since it's not an address triggered exception
+        return false;
+    }
+}
 
 } // namespace ArmISA

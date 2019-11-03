@@ -40,11 +40,7 @@
 #include "cpu/static_inst.hh"
 #include "kern/kernel_stats.hh"
 
-class BaseCPU;
 class ThreadContext;
-class FnEvent;
-// What does kernel stats expect is included?
-class System;
 
 namespace AlphaISA {
 namespace Kernel {
@@ -63,7 +59,8 @@ class Statistics : public ::Kernel::Statistics
 
   private:
     Stats::Vector _callpal;
-//    Stats::Vector _faults;
+
+    Stats::Scalar _hwrei;
 
     Stats::Vector _mode;
     Stats::Vector _modeGood;
@@ -72,8 +69,17 @@ class Statistics : public ::Kernel::Statistics
 
     Stats::Scalar _swap_context;
 
+    Stats::Vector _iplCount;
+    Stats::Vector _iplGood;
+    Stats::Vector _iplTicks;
+    Stats::Formula _iplUsed;
+
+  private:
+    int iplLast;
+    Tick iplLastTick;
+
   public:
-    Statistics(System *system);
+    Statistics();
 
     void regStats(const std::string &name);
 
@@ -82,6 +88,7 @@ class Statistics : public ::Kernel::Statistics
     void context(Addr oldpcbb, Addr newpcbb, ThreadContext *tc);
     void callpal(int code, ThreadContext *tc);
     void hwrei() { _hwrei++; }
+    void swpipl(int ipl);
 
     void setIdleProcess(Addr idle, ThreadContext *tc);
 

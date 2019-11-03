@@ -28,6 +28,8 @@
  * Authors: Nathan Binkert
  */
 
+#include "base/debug.hh"
+
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -35,8 +37,7 @@
 #include <csignal>
 
 #include "base/cprintf.hh"
-#include "base/debug.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 using namespace std;
 

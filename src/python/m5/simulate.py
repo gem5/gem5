@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012,2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -40,22 +40,26 @@
 # Authors: Nathan Binkert
 #          Steve Reinhardt
 
+from __future__ import print_function
+
 import atexit
 import os
 import sys
 
-# import the SWIG-wrapped main C++ functions
-import internal
-import core
-import stats
-import SimObject
-import ticks
-import objects
-from m5.util.dot_writer import do_dot, do_dvfs_dot
-from m5.internal.stats import updateEvents as updateStatEvents
+# import the wrapped C++ functions
+import _m5.drain
+import _m5.core
+from _m5.stats import updateEvents as updateStatEvents
 
-from util import fatal
-from util import attrdict
+from . import stats
+from . import SimObject
+from . import ticks
+from . import objects
+from m5.util.dot_writer import do_dot, do_dvfs_dot
+from m5.util.dot_writer_ruby import do_ruby_dot
+
+from .util import fatal
+from .util import attrdict
 
 # define a MaxTick parameter, unsigned 64 bit
 MaxTick = 2**64 - 1
@@ -66,7 +70,7 @@ _memory_modes = {
     "atomic_noncaching" : objects.params.atomic_noncaching,
     }
 
-_drain_manager = internal.drain.DrainManager.instance()
+_drain_manager = _m5.drain.DrainManager.instance()
 
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
@@ -89,7 +93,7 @@ def instantiate(ckpt_dir=None):
     for obj in root.descendants(): obj.unproxyParams()
 
     if options.dump_config:
-        ini_file = file(os.path.join(options.outdir, options.dump_config), 'w')
+        ini_file = open(os.path.join(options.outdir, options.dump_config), 'w')
         # Print ini sections in sorted order for easier diffing
         for obj in sorted(root.descendants(), key=lambda o: o.path()):
             obj.print_ini(ini_file)
@@ -98,7 +102,8 @@ def instantiate(ckpt_dir=None):
     if options.json_config:
         try:
             import json
-            json_file = file(os.path.join(options.outdir, options.json_config), 'w')
+            json_file = open(
+                os.path.join(options.outdir, options.json_config), 'w')
             d = root.get_config_as_dict()
             json.dump(d, json_file, indent=4)
             json_file.close()
@@ -106,6 +111,7 @@ def instantiate(ckpt_dir=None):
             pass
 
     do_dot(root, options.outdir, options.dot_config)
+    do_ruby_dot(root, options.outdir, options.dot_config)
 
     # Initialize the global statistics
     stats.initSimStats()
@@ -118,7 +124,8 @@ def instantiate(ckpt_dir=None):
     for obj in root.descendants(): obj.init()
 
     # Do a third pass to initialize statistics
-    for obj in root.descendants(): obj.regStats()
+    stats._bindStatHierarchy(root)
+    root.regStats()
 
     # Do a fourth pass to initialize probe points
     for obj in root.descendants(): obj.regProbePoints()
@@ -138,8 +145,8 @@ def instantiate(ckpt_dir=None):
     # Restore checkpoint (if any)
     if ckpt_dir:
         _drain_manager.preCheckpointRestore()
-        ckpt = internal.core.getCheckpoint(ckpt_dir)
-        internal.core.unserializeGlobals(ckpt);
+        ckpt = _m5.core.getCheckpoint(ckpt_dir)
+        _m5.core.unserializeGlobals(ckpt);
         for obj in root.descendants(): obj.loadState(ckpt)
     else:
         for obj in root.descendants(): obj.initState()
@@ -162,7 +169,7 @@ def simulate(*args, **kwargs):
         atexit.register(stats.dump)
 
         # register our C++ exit callback function with Python
-        atexit.register(internal.core.doExitCleanup)
+        atexit.register(_m5.core.doExitCleanup)
 
         # Reset to put the stats in a consistent state.
         stats.reset()
@@ -170,11 +177,7 @@ def simulate(*args, **kwargs):
     if _drain_manager.isDrained():
         _drain_manager.resume()
 
-    return internal.event.simulate(*args, **kwargs)
-
-# Export curTick to user script.
-def curTick():
-    return internal.core.curTick()
+    return _m5.event.simulate(*args, **kwargs)
 
 def drain():
     """Drain the simulator in preparation of a checkpoint or memory mode
@@ -198,7 +201,7 @@ def drain():
 
         # WARNING: if a valid exit event occurs while draining, it
         # will not get returned to the user script
-        exit_event = internal.event.simulate()
+        exit_event = _m5.event.simulate()
         while exit_event.getCause() != 'Finished drain':
             exit_event = simulate()
 
@@ -222,21 +225,21 @@ def memInvalidate(root):
 def checkpoint(dir):
     root = objects.Root.getInstance()
     if not isinstance(root, objects.Root):
-        raise TypeError, "Checkpoint must be called on a root object."
+        raise TypeError("Checkpoint must be called on a root object.")
 
     drain()
     memWriteback(root)
-    print "Writing checkpoint"
-    internal.core.serializeAll(dir)
+    print("Writing checkpoint")
+    _m5.core.serializeAll(dir)
 
 def _changeMemoryMode(system, mode):
     if not isinstance(system, (objects.Root, objects.System)):
-        raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
-              (type(system), objects.Root, objects.System)
+        raise TypeError("Parameter of type '%s'.  Must be type %s or %s." % \
+              (type(system), objects.Root, objects.System))
     if system.getMemoryMode() != mode:
         system.setMemoryMode(mode)
     else:
-        print "System already in target mode. Memory mode unchanged."
+        print("System already in target mode. Memory mode unchanged.")
 
 def switchCpus(system, cpuList, verbose=True):
     """Switch CPUs in a system.
@@ -251,13 +254,13 @@ def switchCpus(system, cpuList, verbose=True):
     """
 
     if verbose:
-        print "switching cpus"
+        print("switching cpus")
 
     if not isinstance(cpuList, list):
-        raise RuntimeError, "Must pass a list to this function"
+        raise RuntimeError("Must pass a list to this function")
     for item in cpuList:
         if not isinstance(item, tuple) or len(item) != 2:
-            raise RuntimeError, "List must have tuples of (oldCPU,newCPU)"
+            raise RuntimeError("List must have tuples of (oldCPU,newCPU)")
 
     old_cpus = [old_cpu for old_cpu, new_cpu in cpuList]
     new_cpus = [new_cpu for old_cpu, new_cpu in cpuList]
@@ -265,33 +268,31 @@ def switchCpus(system, cpuList, verbose=True):
     memory_mode_name = new_cpus[0].memory_mode()
     for old_cpu, new_cpu in cpuList:
         if not isinstance(old_cpu, objects.BaseCPU):
-            raise TypeError, "%s is not of type BaseCPU" % old_cpu
+            raise TypeError("%s is not of type BaseCPU" % old_cpu)
         if not isinstance(new_cpu, objects.BaseCPU):
-            raise TypeError, "%s is not of type BaseCPU" % new_cpu
+            raise TypeError("%s is not of type BaseCPU" % new_cpu)
         if new_cpu in old_cpu_set:
-            raise RuntimeError, \
-                "New CPU (%s) is in the list of old CPUs." % (old_cpu,)
+            raise RuntimeError(
+                "New CPU (%s) is in the list of old CPUs." % (old_cpu,))
         if not new_cpu.switchedOut():
-            raise RuntimeError, \
-                "New CPU (%s) is already active." % (new_cpu,)
+            raise RuntimeError("New CPU (%s) is already active." % (new_cpu,))
         if not new_cpu.support_take_over():
-            raise RuntimeError, \
-                "New CPU (%s) does not support CPU handover." % (old_cpu,)
+            raise RuntimeError(
+                "New CPU (%s) does not support CPU handover." % (old_cpu,))
         if new_cpu.memory_mode() != memory_mode_name:
-            raise RuntimeError, \
+            raise RuntimeError(
                 "%s and %s require different memory modes." % (new_cpu,
-                                                               new_cpus[0])
+                                                               new_cpus[0]))
         if old_cpu.switchedOut():
-            raise RuntimeError, \
-                "Old CPU (%s) is inactive." % (new_cpu,)
+            raise RuntimeError("Old CPU (%s) is inactive." % (new_cpu,))
         if not old_cpu.support_take_over():
-            raise RuntimeError, \
-                "Old CPU (%s) does not support CPU handover." % (old_cpu,)
+            raise RuntimeError(
+                "Old CPU (%s) does not support CPU handover." % (old_cpu,))
 
     try:
         memory_mode = _memory_modes[memory_mode_name]
     except KeyError:
-        raise RuntimeError, "Invalid memory mode (%s)" % memory_mode_name
+        raise RuntimeError("Invalid memory mode (%s)" % memory_mode_name)
 
     drain()
 
@@ -343,14 +344,14 @@ def fork(simout="%(parent)s.f%(fork_seq)i"):
     from m5 import options
     global fork_count
 
-    if not internal.core.listenersDisabled():
-        raise RuntimeError, "Can not fork a simulator with listeners enabled"
+    if not _m5.core.listenersDisabled():
+        raise RuntimeError("Can not fork a simulator with listeners enabled")
 
     drain()
 
     try:
         pid = os.fork()
-    except OSError, e:
+    except OSError as e:
         raise e
 
     if pid == 0:
@@ -364,11 +365,12 @@ def fork(simout="%(parent)s.f%(fork_seq)i"):
                 "fork_seq" : fork_count,
                 "pid" : os.getpid(),
                 }
-        core.setOutputDir(options.outdir)
+        _m5.core.setOutputDir(options.outdir)
     else:
         fork_count += 1
 
     return pid
 
-from internal.core import disableAllListeners
-from internal.core import listenersDisabled
+from _m5.core import disableAllListeners, listenersDisabled
+from _m5.core import listenersLoopbackOnly
+from _m5.core import curTick

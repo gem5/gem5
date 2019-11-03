@@ -1,0 +1,29 @@
+SystemC Simulation
+sc_get_status() == SC_ELABORATION ELAB
+sc_get_status() == SC_ELABORATION CTOR in top
+sc_get_status() == SC_BEFORE_END_OF_ELABORATION before_end_of_elaboration in top
+sc_get_status() == SC_BEFORE_END_OF_ELABORATION CTOR in top.m
+sc_get_status() == SC_BEFORE_END_OF_ELABORATION before_end_of_elaboration in top.m
+sc_get_status() == SC_END_OF_ELABORATION end_of_elaboration in top
+sc_get_status() == SC_END_OF_ELABORATION end_of_elaboration in top.m
+sc_get_status() == SC_START_OF_SIMULATION start_of_simulation in top
+sc_get_status() == SC_START_OF_SIMULATION start_of_simulation in top.m
+sc_get_status() == SC_RUNNING METHOD in top
+sc_get_status() == SC_RUNNING PROCESS in top
+on_timed_event() awoke
+sc_get_status() == SC_RUNNING METHOD in top
+sc_get_status() == SC_RUNNING PROCESS after sc_pause in top
+sc_get_status() == SC_PAUSED PAUSED
+sc_get_status() == SC_RUNNING PROCESS after sc_pause in top
+sc_get_status() == SC_PAUSED PAUSED
+on_immed_event() awoke
+spawned_while_paused() awoke
+on_delta_event() awoke
+sc_get_status() == SC_RUNNING PROCESS after sc_stop() in top
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+sc_get_status() == SC_END_OF_SIMULATION end_of_simulation in top
+sc_get_status() == SC_END_OF_SIMULATION end_of_simulation in top.m
+sc_get_status() == SC_STOPPED STOPPED
+
+Success

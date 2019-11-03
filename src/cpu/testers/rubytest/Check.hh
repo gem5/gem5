@@ -33,9 +33,9 @@
 #include <iostream>
 
 #include "cpu/testers/rubytest/RubyTester.hh"
-#include "mem/protocol/RubyAccessMode.hh"
-#include "mem/protocol/TesterStatus.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/protocol/RubyAccessMode.hh"
+#include "mem/ruby/protocol/TesterStatus.hh"
 
 class SubBlock;
 

@@ -26,6 +26,8 @@
 #
 # Authors: Gabe Black
 
+from __future__ import print_function
+
 from micro_asm import MicroAssembler, Combinational_Macroop, Rom_Macroop, Rom
 
 class Bah(object):
@@ -58,7 +60,7 @@ class TestMacroop(Combinational_Macroop):
     def untweak(self):
         microops["bah"] = Bah
     def print_debug(self, message):
-        print message
+        print(message)
 
     def __init__(self, name):
         super(TestMacroop, self).__init__(name)

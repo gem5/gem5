@@ -60,6 +60,7 @@ MemPowerSpec::MemPowerSpec() :
   idd4w2(0.0),
   idd5(0.0),
   idd52(0.0),
+  idd5B(0.0),
   idd6(0.0),
   idd62(0.0),
   vdd(0.0),
@@ -94,6 +95,7 @@ void MemPowerSpec::processParameters()
   idd4w2  = getParamValWithDefault("idd4w2", 0.0);
   idd5    = getParamValWithDefault("idd5", 0.0);
   idd52   = getParamValWithDefault("idd52", 0.0);
+  idd5B   = getParamValWithDefault("idd5B", 0.0);
   idd6    = getParamValWithDefault("idd6", 0.0);
   idd62   = getParamValWithDefault("idd62", 0.0);
   vdd     = getParamValWithDefault("vdd", 0.0);

@@ -1,0 +1,10 @@
+SystemC Simulation
+0 s: initializing
+3 ns: waited 3
+4 ns: initializing
+7 ns: waited 3
+10 ns: waited 3
+12 ns: initializing
+15 ns: initializing
+
+Info: /OSCI/SystemC: Simulation stopped by user.

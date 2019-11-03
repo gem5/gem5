@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import orderdict
+from collections import OrderedDict
 
 from slicc.util import PairContainer
 from slicc.symbols.Symbol import Symbol
@@ -89,9 +89,9 @@ class Type(Symbol):
         self.isStateDecl = ("state_decl" in self)
         self.statePermPairs = []
 
-        self.data_members = orderdict()
+        self.data_members = OrderedDict()
         self.methods = {}
-        self.enums = orderdict()
+        self.enums = OrderedDict()
 
     @property
     def isPrimitive(self):
@@ -201,15 +201,16 @@ class Type(Symbol):
 #include <iostream>
 
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
+
 ''')
 
         for dm in self.data_members.values():
             if not dm.type.isPrimitive:
-                code('#include "mem/protocol/$0.hh"', dm.type.c_ident)
+                code('#include "mem/ruby/protocol/$0.hh"', dm.type.c_ident)
 
         parent = ""
         if "interface" in self:
-            code('#include "mem/protocol/$0.hh"', self["interface"])
+            code('#include "mem/ruby/protocol/$0.hh"', self["interface"])
             parent = " :  public %s" % self["interface"]
 
         code('''
@@ -404,7 +405,7 @@ operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
 #include <iostream>
 #include <memory>
 
-#include "mem/protocol/${{self.c_ident}}.hh"
+#include "mem/ruby/protocol/${{self.c_ident}}.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;
@@ -456,10 +457,11 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";''')
 
 ''')
         if self.isStateDecl:
-            code('#include "mem/protocol/AccessPermission.hh"')
+            code('#include "mem/ruby/protocol/AccessPermission.hh"')
 
         if self.isMachineType:
-            code('#include "base/misc.hh"')
+            code('#include <functional>')
+            code('#include "base/logging.hh"')
             code('#include "mem/ruby/common/Address.hh"')
             code('#include "mem/ruby/common/TypeDefines.hh"')
             code('struct MachineID;')
@@ -498,6 +500,20 @@ std::string ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj);
 ${{self.c_ident}} &operator++(${{self.c_ident}} &e);
 ''')
 
+        if self.isMachineType:
+            code('''
+
+// define a hash function for the MachineType class
+namespace std {
+template<>
+struct hash<MachineType> {
+    std::size_t operator()(const MachineType &mtype) const {
+        return hash<size_t>()(static_cast<size_t>(mtype));
+    }
+};
+}
+
+''')
         # MachineType hack used to set the base component id for each Machine
         if self.isMachineType:
             code('''
@@ -508,10 +524,6 @@ int ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj);
 ''')
 
             for enum in self.enums.itervalues():
-                if enum.ident == "DMA":
-                    code('''
-MachineID map_Address_to_DMA(const Addr &addr);
-''')
                 code('''
 
 MachineID get${{enum.ident}}MachineID(NodeID RubyNode);
@@ -546,8 +558,8 @@ std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
 #include <iostream>
 #include <string>
 
-#include "base/misc.hh"
-#include "mem/protocol/${{self.c_ident}}.hh"
+#include "base/logging.hh"
+#include "mem/ruby/protocol/${{self.c_ident}}.hh"
 
 using namespace std;
 
@@ -577,7 +589,8 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
         if self.isMachineType:
             for enum in self.enums.itervalues():
                 if enum.primary:
-                    code('#include "mem/protocol/${{enum.ident}}_Controller.hh"')
+                    code('#include "mem/ruby/protocol/${{enum.ident}}'
+                            '_Controller.hh"')
             code('#include "mem/ruby/common/MachineID.hh"')
 
         code('''
@@ -713,12 +726,13 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
             # For each field
             code.indent()
             code('  case ${{self.c_ident}}_NUM:')
-            for enum in reversed(self.enums.values()):
+            for enum in reversed(list(self.enums.values())):
                 # Check if there is a defined machine with this type
                 if enum.primary:
                     code('    base += ${{enum.ident}}_Controller::getNumControllers();')
                 else:
                     code('    base += 0;')
+                code('    M5_FALLTHROUGH;')
                 code('  case ${{self.c_ident}}_${{enum.ident}}:')
             code('    break;')
             code.dedent()
@@ -758,16 +772,6 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
 ''')
 
             for enum in self.enums.itervalues():
-                if enum.ident == "DMA":
-                    code('''
-MachineID
-map_Address_to_DMA(const Addr &addr)
-{
-      MachineID dma = {MachineType_DMA, 0};
-      return dma;
-}
-''')
-
                 code('''
 
 MachineID

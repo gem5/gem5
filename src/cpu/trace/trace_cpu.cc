@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2015 ARM Limited
+ * Copyright (c) 2013 - 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -50,25 +50,27 @@ TraceCPU::TraceCPU(TraceCPUParams *params)
     :   BaseCPU(params),
         icachePort(this),
         dcachePort(this),
-        instMasterID(params->system->getMasterId(name() + ".inst")),
-        dataMasterID(params->system->getMasterId(name() + ".data")),
+        instMasterID(params->system->getMasterId(this, "inst")),
+        dataMasterID(params->system->getMasterId(this, "data")),
         instTraceFile(params->instTraceFile),
         dataTraceFile(params->dataTraceFile),
         icacheGen(*this, ".iside", icachePort, instMasterID, instTraceFile),
         dcacheGen(*this, ".dside", dcachePort, dataMasterID, dataTraceFile,
-                    params->sizeROB, params->sizeStoreBuffer,
-                    params->sizeLoadBuffer),
-        icacheNextEvent(this),
-        dcacheNextEvent(this),
+                  params),
+        icacheNextEvent([this]{ schedIcacheNext(); }, name()),
+        dcacheNextEvent([this]{ schedDcacheNext(); }, name()),
         oneTraceComplete(false),
-        firstFetchTick(0),
-        execCompleteEvent(nullptr)
+        traceOffset(0),
+        execCompleteEvent(nullptr),
+        enableEarlyExit(params->enableEarlyExit),
+        progressMsgInterval(params->progressMsgInterval),
+        progressMsgThreshold(params->progressMsgInterval)
 {
     // Increment static counter for number of Trace CPUs.
     ++TraceCPU::numTraceCPUs;
 
-    // Check that the python parameters for sizes of ROB, store buffer and load
-    // buffer do not overflow the corresponding C++ variables.
+    // Check that the python parameters for sizes of ROB, store buffer and
+    // load buffer do not overflow the corresponding C++ variables.
     fatal_if(params->sizeROB > UINT16_MAX, "ROB size set to %d exceeds the "
                 "max. value of %d.\n", params->sizeROB, UINT16_MAX);
     fatal_if(params->sizeStoreBuffer > UINT16_MAX, "ROB size set to %d "
@@ -91,20 +93,21 @@ TraceCPUParams::create()
 }
 
 void
+TraceCPU::updateNumOps(uint64_t rob_num)
+{
+    numOps = rob_num;
+    if (progressMsgInterval != 0 && numOps.value() >= progressMsgThreshold) {
+        inform("%s: %i insts committed\n", name(), progressMsgThreshold);
+        progressMsgThreshold += progressMsgInterval;
+    }
+}
+
+void
 TraceCPU::takeOverFrom(BaseCPU *oldCPU)
 {
     // Unbind the ports of the old CPU and bind the ports of the TraceCPU.
-    assert(!getInstPort().isConnected());
-    assert(oldCPU->getInstPort().isConnected());
-    BaseSlavePort &inst_peer_port = oldCPU->getInstPort().getSlavePort();
-    oldCPU->getInstPort().unbind();
-    getInstPort().bind(inst_peer_port);
-
-    assert(!getDataPort().isConnected());
-    assert(oldCPU->getDataPort().isConnected());
-    BaseSlavePort &data_peer_port = oldCPU->getDataPort().getSlavePort();
-    oldCPU->getDataPort().unbind();
-    getDataPort().bind(data_peer_port);
+    getInstPort().takeOverFrom(&oldCPU->getInstPort());
+    getDataPort().takeOverFrom(&oldCPU->getDataPort());
 }
 
 void
@@ -117,22 +120,37 @@ TraceCPU::init()
 
     BaseCPU::init();
 
-    // Get the send tick of the first instruction read request and schedule
-    // icacheNextEvent at that tick.
+    // Get the send tick of the first instruction read request
     Tick first_icache_tick = icacheGen.init();
-    schedule(icacheNextEvent, first_icache_tick);
 
-    // Get the send tick of the first data read/write request and schedule
-    // dcacheNextEvent at that tick.
+    // Get the send tick of the first data read/write request
     Tick first_dcache_tick = dcacheGen.init();
-    schedule(dcacheNextEvent, first_dcache_tick);
 
-    // The static counter for number of Trace CPUs is correctly set at this
-    // point so create an event and pass it.
-    execCompleteEvent = new CountedExitEvent("end of all traces reached.",
-                                                numTraceCPUs);
-    // Save the first fetch request tick to dump it as tickOffset
-    firstFetchTick = first_icache_tick;
+    // Set the trace offset as the minimum of that in both traces
+    traceOffset = std::min(first_icache_tick, first_dcache_tick);
+    inform("%s: Time offset (tick) found as min of both traces is %lli.\n",
+            name(), traceOffset);
+
+    // Schedule next icache and dcache event by subtracting the offset
+    schedule(icacheNextEvent, first_icache_tick - traceOffset);
+    schedule(dcacheNextEvent, first_dcache_tick - traceOffset);
+
+    // Adjust the trace offset for the dcache generator's ready nodes
+    // We don't need to do this for the icache generator as it will
+    // send its first request at the first event and schedule subsequent
+    // events using a relative tick delta
+    dcacheGen.adjustInitTraceOffset(traceOffset);
+
+    // If the Trace CPU simulation is configured to exit on any one trace
+    // completion then we don't need a counted event to count down all Trace
+    // CPUs in the system. If not then instantiate a counted event.
+    if (!enableEarlyExit) {
+        // The static counter for number of Trace CPUs is correctly set at
+        // this point so create an event and pass it.
+        execCompleteEvent = new CountedExitEvent("end of all traces reached.",
+                                                 numTraceCPUs);
+    }
+
 }
 
 void
@@ -165,6 +183,9 @@ TraceCPU::schedDcacheNext()
 {
     DPRINTF(TraceCPUData, "DcacheGen event.\n");
 
+    // Update stat for numCycles
+    numCycles = clockEdge() / clockPeriod();
+
     dcacheGen.execute();
     if (dcacheGen.isExecComplete()) {
         checkAndSchedExitEvent();
@@ -180,12 +201,15 @@ TraceCPU::checkAndSchedExitEvent()
         // Schedule event to indicate execution is complete as both
         // instruction and data access traces have been played back.
         inform("%s: Execution complete.\n", name());
-
-        // Record stats which are computed at the end of simulation
-        tickOffset = firstFetchTick;
-        numCycles = (clockEdge() - firstFetchTick) / clockPeriod();
-        numOps = dcacheGen.getMicroOpCount();
-        schedule(*execCompleteEvent, curTick());
+        // If the replay is configured to exit early, that is when any one
+        // execution is complete then exit immediately and return. Otherwise,
+        // schedule the counted exit that counts down completion of each Trace
+        // CPU.
+        if (enableEarlyExit) {
+            exitSimLoop("End of trace reached");
+        } else {
+            schedule(*execCompleteEvent, curTick());
+        }
     }
 }
 
@@ -216,11 +240,6 @@ TraceCPU::regStats()
     .precision(6)
     ;
     cpi = numCycles/numOps;
-
-    tickOffset
-    .name(name() + ".tickOffset")
-    .desc("The first execution tick for the root node of elastic traces")
-    ;
 
     icacheGen.regStats();
     dcacheGen.regStats();
@@ -310,6 +329,13 @@ TraceCPU::ElasticDataGen::init()
     // Return the execute tick of the earliest ready node so that an event
     // can be scheduled to call execute()
     return (free_itr->execTick);
+}
+
+void
+TraceCPU::ElasticDataGen::adjustInitTraceOffset(Tick& offset) {
+    for (auto& free_node : readyList) {
+        free_node.execTick -= offset;
+    }
 }
 
 void
@@ -535,6 +561,8 @@ TraceCPU::ElasticDataGen::execute()
             hwResource.release(node_ptr);
             // clear the dynamically allocated set of dependents
             (node_ptr->dependents).clear();
+            // Update the stat for numOps simulated
+            owner.updateNumOps(node_ptr->robNum);
             // delete node
             delete node_ptr;
             // remove from graph
@@ -625,9 +653,11 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
     }
 
     // Create a request and the packet containing request
-    Request* req = new Request(node_ptr->physAddr, node_ptr->size,
-                               node_ptr->flags, masterID, node_ptr->seqNum,
-                               ContextID(0));
+    auto req = std::make_shared<Request>(
+        node_ptr->physAddr, node_ptr->size,
+        node_ptr->flags, masterID, node_ptr->seqNum,
+        ContextID(0));
+
     req->setPC(node_ptr->pc);
     // If virtual address is valid, set the asid and virtual address fields
     // of the request.
@@ -737,6 +767,8 @@ TraceCPU::ElasticDataGen::completeMemAccess(PacketPtr pkt)
 
         // clear the dynamically allocated set of dependents
         (node_ptr->dependents).clear();
+        // Update the stat for numOps completed
+        owner.updateNumOps(node_ptr->robNum);
         // delete node
         delete node_ptr;
         // remove from graph
@@ -1119,7 +1151,7 @@ TraceCPU::FixedRetryGen::send(Addr addr, unsigned size, const MemCmd& cmd,
 {
 
     // Create new request
-    Request* req = new Request(addr, size, flags, masterID);
+    auto req = std::make_shared<Request>(addr, size, flags, masterID);
     req->setPC(pc);
 
     // If this is not done it triggers assert in L1 cache for invalid contextId
@@ -1185,8 +1217,7 @@ bool
 TraceCPU::IcachePort::recvTimingResp(PacketPtr pkt)
 {
     // All responses on the instruction fetch side are ignored. Simply delete
-    // the request and packet to free allocated memory
-    delete pkt->req;
+    // the packet to free allocated memory
     delete pkt;
 
     return true;
@@ -1211,9 +1242,8 @@ TraceCPU::DcachePort::recvTimingResp(PacketPtr pkt)
     // Handle the responses for data memory requests which is done inside the
     // elastic data generator
     owner->dcacheRecvTimingResp(pkt);
-    // After processing the response delete the request and packet to free
+    // After processing the response delete the packet to free
     // memory
-    delete pkt->req;
     delete pkt;
 
     return true;
@@ -1225,8 +1255,11 @@ TraceCPU::DcachePort::recvReqRetry()
     owner->dcacheRetryRecvd();
 }
 
-TraceCPU::ElasticDataGen::InputStream::InputStream(const std::string& filename)
+TraceCPU::ElasticDataGen::InputStream::InputStream(
+    const std::string& filename,
+    const double time_multiplier)
     : trace(filename),
+      timeMultiplier(time_multiplier),
       microOpCount(0)
 {
     // Create a protobuf message for the header and read it from the stream
@@ -1259,7 +1292,8 @@ TraceCPU::ElasticDataGen::InputStream::read(GraphNode* element)
         // Required fields
         element->seqNum = pkt_msg.seq_num();
         element->type = pkt_msg.type();
-        element->compDelay = pkt_msg.comp_delay();
+        // Scale the compute delay to effectively scale the Trace CPU frequency
+        element->compDelay = pkt_msg.comp_delay() * timeMultiplier;
 
         // Repeated field robDepList
         element->clearRobDep();

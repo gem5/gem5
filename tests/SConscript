@@ -42,6 +42,8 @@
 #          Kevin Lim
 #          Andreas Sandberg
 
+from __future__ import print_function
+
 from SCons.Script.SConscript import SConsEnvironment
 import os
 import pickle
@@ -50,11 +52,12 @@ import sys
 sys.path.insert(0, Dir(".").srcnode().abspath)
 import testing.tests as tests
 import testing.results as results
+from gem5_scons.util import get_termcap
 
 Import('env')
 
 # get the termcap from the environment
-termcap = env['TERMCAP']
+termcap = get_termcap()
 
 # Dict that accumulates lists of tests by category (quick, medium, long)
 env.Tests = {}
@@ -120,25 +123,22 @@ def print_test(target, source, env):
     assert len(result) == 1
     result = result[0]
 
-    run = result.results[0]
-    assert run.name == "gem5"
-
     formatter = None
-    if not run:
-        status = color_message(termcap.Red, "FAILED!")
-        formatter = results.Text()
-    elif run.skipped():
+    if result.skipped():
         status = color_message(termcap.Cyan, "skipped.")
+    elif result.changed():
+        status = color_message(termcap.Yellow, "CHANGED!")
+        formatter = results.Text()
     elif result:
         status = color_message(termcap.Green, "passed.")
     else:
-        status = color_message(termcap.Yellow, "CHANGED!")
+        status = color_message(termcap.Red, "FAILED!")
         formatter = results.Text()
 
     if formatter:
         formatter.dump_suites([result])
 
-    print "***** %s: %s" % (source[0].dir, status)
+    print("***** %s: %s" % (source[0].dir, status))
     return 0
 
 printAction = env.Action(print_test, strfunction=None)
@@ -164,23 +164,20 @@ def update_test(target, source, env):
     assert len(result) == 1
     result = result[0]
 
-    run = result.results[0]
-    assert run.name == "gem5"
-
-    if run.skipped():
-        print "*** %s: %s: Test skipped, not updating." % (
-            source[0].dir, color_message(termcap.Yellow, "WARNING"), )
+    if result.skipped():
+        print("*** %s: %s: Test skipped, not updating." %
+              (source[0].dir, color_message(termcap.Yellow, "WARNING")))
         return 0
     elif result:
-        print "*** %s: %s: Test successful, not updating." % (
-            source[0].dir, color_message(termcap.Green, "skipped"), )
+        print("*** %s: %s: Test successful, not updating." %
+              (source[0].dir, color_message(termcap.Green, "skipped")))
         return 0
-    elif not run.success():
-        print "*** %s: %s: Test failed, not updating." % (
-            source[0].dir, color_message(termcap.Red, "ERROR"), )
+    elif result.failed_run():
+        print("*** %s: %s: Test failed, not updating." %
+              (source[0].dir, color_message(termcap.Red, "ERROR")))
         return 1
 
-    print "** Updating %s" % (test, )
+    print("** Updating %s" % test)
     test.update_ref()
 
     return 0
@@ -241,7 +238,7 @@ def list_tests(target, source, env):
     with open(target[0].abspath, "w") as fout:
         for cat in categories:
             for test in env.Tests[cat]:
-                print >> fout,"/".join(test)
+                print("/".join(test), file=fout)
 
     return 0
 

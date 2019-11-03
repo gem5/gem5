@@ -42,7 +42,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 def template MicroRegOpExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+        Fault %(class_name)s::execute(ExecContext *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
@@ -51,7 +51,7 @@ def template MicroRegOpExecute {{
             %(op_decl)s;
             %(op_rd)s;
 
-            IntReg result M5_VAR_USED;
+            RegVal result M5_VAR_USED;
 
             if(%(cond_check)s)
             {
@@ -73,7 +73,7 @@ def template MicroRegOpExecute {{
 }};
 
 def template MicroRegOpImmExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+        Fault %(class_name)s::execute(ExecContext *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
@@ -81,7 +81,7 @@ def template MicroRegOpImmExecute {{
             %(op_decl)s;
             %(op_rd)s;
 
-            IntReg result M5_VAR_USED;
+            RegVal result M5_VAR_USED;
 
             if(%(cond_check)s)
             {
@@ -111,7 +111,7 @@ def template MicroRegOpDeclare {{
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -125,7 +125,7 @@ def template MicroRegOpImmDeclare {{
                 InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -546,23 +546,42 @@ let {{
     class Mul1s(WrRegOp):
         op_class = 'IntMultOp'
 
+        # Multiply two values Aa and Bb where Aa = A << p + a, then correct for
+        # negative operands.
+        #   Aa * Bb
+        # = (A << p + a) * (B << p + b)
+        # = (A * B) << 2p + (A * b + a * B) << p + a * b
         code = '''
             ProdLow = psrc1 * op2;
-            int halfSize = (dataSize * 8) / 2;
-            uint64_t shifter = (ULL(1) << halfSize);
-            uint64_t hiResult;
-            uint64_t psrc1_h = psrc1 / shifter;
-            uint64_t psrc1_l = psrc1 & mask(halfSize);
-            uint64_t psrc2_h = (op2 / shifter) & mask(halfSize);
-            uint64_t psrc2_l = op2 & mask(halfSize);
-            hiResult = ((psrc1_l * psrc2_h + psrc1_h * psrc2_l +
-                        ((psrc1_l * psrc2_l) / shifter)) /shifter) +
-                       psrc1_h * psrc2_h;
+
+            int p = (dataSize * 8) / 2;
+            uint64_t A = bits(psrc1, 2 * p - 1, p);
+            uint64_t a = bits(psrc1, p - 1, 0);
+            uint64_t B = bits<uint64_t>(op2, 2 * p - 1, p);
+            uint64_t b = bits<uint64_t>(op2, p - 1, 0);
+
+            uint64_t c1, c2; // Carry between place values.
+            uint64_t ab = a * b, Ab = A * b, aB = a * B, AB = A * B;
+
+            c1 = ab >> p;
+
+            // Be careful to avoid overflow if p is large.
+            if (p == 32) {
+                c2 = (c1 >> 1) + (Ab >> 1) + (aB >> 1);
+                c2 += ((c1 & 0x1) + (Ab & 0x1) + (aB & 0x1)) >> 1;
+                c2 >>= (p - 1);
+            } else {
+                c2 = (c1 + Ab + aB) >> p;
+            }
+
+            uint64_t hi = AB + c2;
+
             if (bits(psrc1, dataSize * 8 - 1))
-                hiResult -= op2;
+                hi -= op2;
             if (bits(op2, dataSize * 8 - 1))
-                hiResult -= psrc1;
-            ProdHi = hiResult;
+                hi -= psrc1;
+
+            ProdHi = hi;
             '''
         flag_code = '''
             if ((-ProdHi & mask(dataSize * 8)) !=
@@ -578,17 +597,34 @@ let {{
     class Mul1u(WrRegOp):
         op_class = 'IntMultOp'
 
+        # Multiply two values Aa and Bb where Aa = A << p + a.
+        #   Aa * Bb
+        # = (A << p + a) * (B << p + b)
+        # = (A * B) << 2p + (A * b + a * B) << p + a * b
         code = '''
             ProdLow = psrc1 * op2;
-            int halfSize = (dataSize * 8) / 2;
-            uint64_t shifter = (ULL(1) << halfSize);
-            uint64_t psrc1_h = psrc1 / shifter;
-            uint64_t psrc1_l = psrc1 & mask(halfSize);
-            uint64_t psrc2_h = (op2 / shifter) & mask(halfSize);
-            uint64_t psrc2_l = op2 & mask(halfSize);
-            ProdHi = ((psrc1_l * psrc2_h + psrc1_h * psrc2_l +
-                      ((psrc1_l * psrc2_l) / shifter)) / shifter) +
-                     psrc1_h * psrc2_h;
+
+            int p = (dataSize * 8) / 2;
+            uint64_t A = bits(psrc1, 2 * p - 1, p);
+            uint64_t a = bits(psrc1, p - 1, 0);
+            uint64_t B = bits<uint64_t>(op2, 2 * p - 1, p);
+            uint64_t b = bits<uint64_t>(op2, p - 1, 0);
+
+            uint64_t c1, c2; // Carry between place values.
+            uint64_t ab = a * b, Ab = A * b, aB = a * B, AB = A * B;
+
+            c1 = ab >> p;
+
+            // Be careful to avoid overflow if p is large.
+            if (p == 32) {
+                c2 = (c1 >> 1) + (Ab >> 1) + (aB >> 1);
+                c2 += ((c1 & 0x1) + (Ab & 0x1) + (aB & 0x1)) >> 1;
+                c2 >>= (p - 1);
+            } else {
+                c2 = (c1 + Ab + aB) >> p;
+            }
+
+            ProdHi = AB + c2;
             '''
         flag_code = '''
             if (ProdHi) {
@@ -1184,8 +1220,8 @@ let {{
 
     class Wrflags(WrRegOp):
         code = '''
-            MiscReg newFlags = psrc1 ^ op2;
-            MiscReg userFlagMask = 0xDD5;
+            RegVal newFlags = psrc1 ^ op2;
+            RegVal userFlagMask = 0xDD5;
 
             // Get only the user flags
             ccFlagBits = newFlags & ccFlagMask;
@@ -1232,8 +1268,8 @@ let {{
 
     class Rflag(RegOp):
         code = '''
-            MiscReg flagMask = 0x3F7FDD5;
-            MiscReg flags = (nccFlagBits | ccFlagBits | cfofBits | dfBit |
+            RegVal flagMask = 0x3F7FDD5;
+            RegVal flags = (nccFlagBits | ccFlagBits | cfofBits | dfBit |
                              ecfBit | ezfBit) & flagMask;
 
             int flag = bits(flags, imm8);
@@ -1242,8 +1278,8 @@ let {{
             '''
 
         big_code = '''
-            MiscReg flagMask = 0x3F7FDD5;
-            MiscReg flags = (nccFlagBits | ccFlagBits | cfofBits | dfBit |
+            RegVal flagMask = 0x3F7FDD5;
+            RegVal flags = (nccFlagBits | ccFlagBits | cfofBits | dfBit |
                              ecfBit | ezfBit) & flagMask;
 
             int flag = bits(flags, imm8);
@@ -1258,7 +1294,7 @@ let {{
 
     class Sext(RegOp):
         code = '''
-            IntReg val = psrc1;
+            RegVal val = psrc1;
             // Mask the bit position so that it wraps.
             int bitPos = op2 & (dataSize * 8 - 1);
             int sign_bit = bits(val, bitPos, bitPos);
@@ -1268,7 +1304,7 @@ let {{
             '''
 
         big_code = '''
-            IntReg val = psrc1;
+            RegVal val = psrc1;
             // Mask the bit position so that it wraps.
             int bitPos = op2 & (dataSize * 8 - 1);
             int sign_bit = bits(val, bitPos, bitPos);
@@ -1354,10 +1390,7 @@ let {{
             if (dest == 1 || (dest > 4 && dest < 8) || (dest > 8)) {
                 fault = std::make_shared<InvalidOpcode>();
             } else {
-                // There are *s in the line below so it doesn't confuse the
-                // parser. They may be unnecessary.
-                //Mis*cReg old*Val = pick(Cont*rolDest, 0, dat*aSize);
-                MiscReg newVal = psrc1;
+                RegVal newVal = psrc1;
 
                 // Check for any modifications that would cause a fault.
                 switch(dest) {
@@ -1391,6 +1424,7 @@ let {{
                         if (bits(newVal, 63, 4))
                             fault = std::make_shared<GeneralProtection>(0);
                     }
+                    break;
                   default:
                     fault = std::make_shared<GenericISA::M5PanicFault>(
                             "Unrecognized control register %d.\\n", dest);
@@ -1492,7 +1526,7 @@ let {{
                     fault = std::make_shared<GeneralProtection>(selector);
                     break;
                 }
-                // Fall through on purpose
+                M5_FALLTHROUGH;
               case SegIntGateCheck:
                 // Make sure the gate's the right type.
                 if ((m5reg.mode == LongMode && (desc.type & 0xe) != 0xe) ||
@@ -1590,8 +1624,7 @@ let {{
               case LDT64:
               case AvailableTSS64:
               case BusyTSS64:
-                replaceBits(target, 23, 0, desc.baseLow);
-                replaceBits(target, 31, 24, desc.baseHigh);
+                replaceBits(target, 31, 0, desc.base);
                 break;
               case CallGate64:
               case IntGate64:
@@ -1666,12 +1699,8 @@ let {{
                             attr.writable = desc.type.w;
                         }
                     }
-                    Addr base = desc.baseLow | (desc.baseHigh << 24);
-                    Addr limit = desc.limitLow | (desc.limitHigh << 16);
-                    if (desc.g)
-                        limit = (limit << 12) | mask(12);
-                    SegBaseDest = base;
-                    SegLimitDest = limit;
+                    SegBaseDest = desc.base;
+                    SegLimitDest = desc.limit;
                     SegAttrDest = attr;
                 } else {
                     SegBaseDest = SegBaseDest;

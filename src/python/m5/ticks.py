@@ -26,29 +26,22 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+import six
+if six.PY3:
+    long = int
+
 import sys
 from m5.util import warn
 
-tps = 1.0e12         # default to 1 THz (1 Tick == 1 ps)
-tps_fixed = False    # once set to true, can't be changed
-
-# fix the global frequency and tell C++ about it
+# fix the global frequency
 def fixGlobalFrequency():
-    import internal
-    global tps, tps_fixed
-    if not tps_fixed:
-        tps_fixed = True
-        internal.core.setClockFrequency(int(tps))
-        print "Global frequency set at %d ticks per second" % int(tps)
+    import _m5.core
+    _m5.core.fixClockFrequency()
 
 def setGlobalFrequency(ticksPerSecond):
     from m5.util import convert
-
-    global tps, tps_fixed
-
-    if tps_fixed:
-        raise AttributeError, \
-              "Global frequency already fixed at %f ticks/s." % tps
+    import _m5.core
 
     if isinstance(ticksPerSecond, (int, long)):
         tps = ticksPerSecond
@@ -57,27 +50,30 @@ def setGlobalFrequency(ticksPerSecond):
     elif isinstance(ticksPerSecond, str):
         tps = round(convert.anyToFrequency(ticksPerSecond))
     else:
-        raise TypeError, \
-              "wrong type '%s' for ticksPerSecond" % type(ticksPerSecond)
+        raise TypeError(
+            "wrong type '%s' for ticksPerSecond" % type(ticksPerSecond))
+    _m5.core.setClockFrequency(int(tps))
 
 # how big does a rounding error need to be before we warn about it?
 frequency_tolerance = 0.001  # 0.1%
 
 def fromSeconds(value):
+    import _m5.core
+
     if not isinstance(value, float):
-        raise TypeError, "can't convert '%s' to type tick" % type(value)
+        raise TypeError("can't convert '%s' to type tick" % type(value))
 
     # once someone needs to convert to seconds, the global frequency
     # had better be fixed
-    if not tps_fixed:
-        raise AttributeError, \
-              "In order to do conversions, the global frequency must be fixed"
+    if not _m5.core.clockFrequencyFixed():
+        raise AttributeError(
+              "In order to do conversions, the global frequency must be fixed")
 
     if value == 0:
         return 0
 
     # convert the value from time to ticks
-    value *= tps
+    value *= _m5.core.getClockFrequency()
 
     int_value = int(round(value))
     err = (value - int_value) / value

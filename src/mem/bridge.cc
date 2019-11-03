@@ -48,9 +48,10 @@
  * and a slave through a request and response queue.
  */
 
+#include "mem/bridge.hh"
+
 #include "base/trace.hh"
 #include "debug/Bridge.hh"
-#include "mem/bridge.hh"
 #include "params/Bridge.hh"
 
 Bridge::BridgeSlavePort::BridgeSlavePort(const std::string& _name,
@@ -60,8 +61,8 @@ Bridge::BridgeSlavePort::BridgeSlavePort(const std::string& _name,
                                          std::vector<AddrRange> _ranges)
     : SlavePort(_name, &_bridge), bridge(_bridge), masterPort(_masterPort),
       delay(_delay), ranges(_ranges.begin(), _ranges.end()),
-      outstandingResponses(0), retryReq(false),
-      respQueueLimit(_resp_limit), sendEvent(*this)
+      outstandingResponses(0), retryReq(false), respQueueLimit(_resp_limit),
+      sendEvent([this]{ trySendTiming(); }, _name)
 {
 }
 
@@ -70,12 +71,13 @@ Bridge::BridgeMasterPort::BridgeMasterPort(const std::string& _name,
                                            BridgeSlavePort& _slavePort,
                                            Cycles _delay, int _req_limit)
     : MasterPort(_name, &_bridge), bridge(_bridge), slavePort(_slavePort),
-      delay(_delay), reqQueueLimit(_req_limit), sendEvent(*this)
+      delay(_delay), reqQueueLimit(_req_limit),
+      sendEvent([this]{ trySendTiming(); }, _name)
 {
 }
 
 Bridge::Bridge(Params *p)
-    : MemObject(p),
+    : ClockedObject(p),
       slavePort(p->name + ".slave", *this, masterPort,
                 ticksToCycles(p->delay), p->resp_size, p->ranges),
       masterPort(p->name + ".master", *this, slavePort,
@@ -83,24 +85,16 @@ Bridge::Bridge(Params *p)
 {
 }
 
-BaseMasterPort&
-Bridge::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+Bridge::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "master")
         return masterPort;
-    else
-        // pass it along to our super class
-        return MemObject::getMasterPort(if_name, idx);
-}
-
-BaseSlavePort&
-Bridge::getSlavePort(const std::string &if_name, PortID idx)
-{
-    if (if_name == "slave")
+    else if (if_name == "slave")
         return slavePort;
     else
         // pass it along to our super class
-        return MemObject::getSlavePort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
 }
 
 void
@@ -359,14 +353,14 @@ Bridge::BridgeSlavePort::recvFunctional(PacketPtr pkt)
 
     // check the response queue
     for (auto i = transmitList.begin();  i != transmitList.end(); ++i) {
-        if (pkt->checkFunctional((*i).pkt)) {
+        if (pkt->trySatisfyFunctional((*i).pkt)) {
             pkt->makeResponse();
             return;
         }
     }
 
     // also check the master port's request queue
-    if (masterPort.checkFunctional(pkt)) {
+    if (masterPort.trySatisfyFunctional(pkt)) {
         return;
     }
 
@@ -377,13 +371,13 @@ Bridge::BridgeSlavePort::recvFunctional(PacketPtr pkt)
 }
 
 bool
-Bridge::BridgeMasterPort::checkFunctional(PacketPtr pkt)
+Bridge::BridgeMasterPort::trySatisfyFunctional(PacketPtr pkt)
 {
     bool found = false;
     auto i = transmitList.begin();
 
     while (i != transmitList.end() && !found) {
-        if (pkt->checkFunctional((*i).pkt)) {
+        if (pkt->trySatisfyFunctional((*i).pkt)) {
             pkt->makeResponse();
             found = true;
         }

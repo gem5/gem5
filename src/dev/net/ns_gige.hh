@@ -170,10 +170,6 @@ class NSGigE : public EtherDevBase
 
     /** pci settings */
     bool ioEnable;
-#if 0
-    bool memEnable;
-    bool bmEnable;
-#endif
 
     /*** BASIC STRUCTURES FOR TX/RX ***/
     /* Data FIFOs */
@@ -256,20 +252,16 @@ class NSGigE : public EtherDevBase
     bool  doTxDmaWrite();
 
     void rxDmaReadDone();
-    friend class EventWrapper<NSGigE, &NSGigE::rxDmaReadDone>;
-    EventWrapper<NSGigE, &NSGigE::rxDmaReadDone> rxDmaReadEvent;
+    EventFunctionWrapper rxDmaReadEvent;
 
     void rxDmaWriteDone();
-    friend class EventWrapper<NSGigE, &NSGigE::rxDmaWriteDone>;
-    EventWrapper<NSGigE, &NSGigE::rxDmaWriteDone> rxDmaWriteEvent;
+    EventFunctionWrapper rxDmaWriteEvent;
 
     void txDmaReadDone();
-    friend class EventWrapper<NSGigE, &NSGigE::txDmaReadDone>;
-    EventWrapper<NSGigE, &NSGigE::txDmaReadDone> txDmaReadEvent;
+    EventFunctionWrapper txDmaReadEvent;
 
     void txDmaWriteDone();
-    friend class EventWrapper<NSGigE, &NSGigE::txDmaWriteDone>;
-    EventWrapper<NSGigE, &NSGigE::txDmaWriteDone> txDmaWriteEvent;
+    EventFunctionWrapper txDmaWriteEvent;
 
     bool dmaDescFree;
     bool dmaDataFree;
@@ -284,15 +276,11 @@ class NSGigE : public EtherDevBase
 
     void rxKick();
     Tick rxKickTick;
-    typedef EventWrapper<NSGigE, &NSGigE::rxKick> RxKickEvent;
-    friend void RxKickEvent::process();
-    RxKickEvent rxKickEvent;
+    EventFunctionWrapper rxKickEvent;
 
     void txKick();
     Tick txKickTick;
-    typedef EventWrapper<NSGigE, &NSGigE::txKick> TxKickEvent;
-    friend void TxKickEvent::process();
-    TxKickEvent txKickEvent;
+    EventFunctionWrapper txKickEvent;
 
     void eepromKick();
 
@@ -306,9 +294,7 @@ class NSGigE : public EtherDevBase
         if (txState == txFifoBlock)
             txKick();
     }
-    typedef EventWrapper<NSGigE, &NSGigE::txEventTransmit> TxEvent;
-    friend void TxEvent::process();
-    TxEvent txEvent;
+    EventFunctionWrapper txEvent;
 
     void txDump() const;
     void rxDump() const;
@@ -339,9 +325,7 @@ class NSGigE : public EtherDevBase
     void cpuInterrupt();
     void cpuIntrClear();
 
-    typedef EventWrapper<NSGigE, &NSGigE::cpuInterrupt> IntrEvent;
-    friend void IntrEvent::process();
-    IntrEvent *intrEvent;
+    EventFunctionWrapper *intrEvent;
     NSGigEInt *interface;
 
   public:
@@ -353,7 +337,8 @@ class NSGigE : public EtherDevBase
     NSGigE(Params *params);
     ~NSGigE();
 
-    EtherInt *getEthPort(const std::string &if_name, int idx) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     Tick writeConfig(PacketPtr pkt) override;
 

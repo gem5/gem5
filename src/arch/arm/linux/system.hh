@@ -95,6 +95,12 @@ class LinuxArmSystem : public GenericArmSystem
      * @param tc thread context that is currentyl executing  */
     void mapPid(ThreadContext* tc, uint32_t pid);
 
+  public: // Exported Python methods
+    /**
+     * Dump the kernel's dmesg buffer to stdout
+     */
+    void dumpDmesg();
+
   private:
     /** Event to halt the simulator if the kernel calls panic()  */
     PCEvent *kernelPanicEvent;
@@ -121,11 +127,25 @@ class LinuxArmSystem : public GenericArmSystem
 class DumpStatsPCEvent : public PCEvent
 {
   public:
-    DumpStatsPCEvent(PCEventQueue *q, const std::string &desc, Addr addr)
-        : PCEvent(q, desc, addr)
+    DumpStatsPCEvent(PCEventScope *s, const std::string &desc, Addr addr)
+        : PCEvent(s, desc, addr)
     {}
 
     virtual void process(ThreadContext* tc);
+  protected:
+    virtual void getTaskDetails(ThreadContext *tc, uint32_t &pid,
+            uint32_t &tgid, std::string &next_task_str, int32_t &mm);
+
+};
+
+class DumpStatsPCEvent64 : public DumpStatsPCEvent {
+  public:
+    DumpStatsPCEvent64(PCEventScope *s, const std::string &desc, Addr addr)
+        : DumpStatsPCEvent(s, desc, addr)
+    {}
+  private:
+    void getTaskDetails(ThreadContext *tc, uint32_t &pid, uint32_t &tgid,
+                        std::string &next_task_str, int32_t &mm) override;
 };
 
 

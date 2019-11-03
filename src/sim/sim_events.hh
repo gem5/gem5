@@ -60,10 +60,9 @@ class GlobalSimLoopExitEvent : public GlobalEvent
     Tick repeat;
 
   public:
-    // non-scheduling version for createForUnserialize()
-    GlobalSimLoopExitEvent();
     GlobalSimLoopExitEvent(Tick when, const std::string &_cause, int c,
                            Tick repeat = 0);
+    GlobalSimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0);
 
     const std::string getCause() const { return cause; }
     int getCode() const { return code; }
@@ -94,24 +93,6 @@ class LocalSimLoopExitEvent : public Event
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
-    static Serializable *createForUnserialize(CheckpointIn &cp,
-                                              const std::string &section);
-};
-
-class CountedDrainEvent : public Event
-{
-  private:
-    // Count of how many objects have not yet drained
-    int count;
-
-  public:
-    CountedDrainEvent();
-
-    void process() override;
-
-    void setCount(int _count) { count = _count; }
-
-    int getCount() const { return count; }
 };
 
 //

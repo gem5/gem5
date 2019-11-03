@@ -1,0 +1,3482 @@
+SystemC Simulation
+****************** limits fx_float_zero
+****************** limits fx_float_inf
+****************** limits fx_float
+zero_min : 0x0
+zero_plus : 0x0
+zero : 0x0
+NaN : NaN
+Inf_plus : Inf
+Inf_min : -Inf
+Inf : Inf
+long_max : 0x7fffffff
+long_min : 0x8e+7
+int_max : 0x7fffffff
+int_min : 0x8e+7
+uint_max : 0x0ffffffff
+ulong_max : 0x0ffffffff
+double_min : 0x.4e-255
+double_max : 0x0fffffffffffff8e+242
+float_min : 0x.4e-31
+float_max : 0x0ffffffe+26
+zero_min / zero_min : NaN
+zero_min / zero_plus : NaN
+zero_min / zero : NaN
+zero_min / NaN : NaN
+zero_min / Inf_plus : 0x0
+zero_min / Inf_min : 0x0
+zero_min / Inf : 0x0
+zero_min / long_max : 0x0
+zero_min / long_min : 0x0
+zero_min / int_max : 0x0
+zero_min / int_min : 0x0
+zero_min / uint_max : 0x0
+zero_min / ulong_max : 0x0
+zero_min / double_min : 0x0
+zero_min / double_max : 0x0
+zero_min / float_min : 0x0
+zero_min / float_max : 0x0
+zero_min * zero_min : 0x0
+zero_min * zero_plus : 0x0
+zero_min * zero : 0x0
+zero_min * NaN : NaN
+zero_min * Inf_plus : NaN
+zero_min * Inf_min : NaN
+zero_min * Inf : NaN
+zero_min * long_max : 0x0
+zero_min * long_min : 0x0
+zero_min * int_max : 0x0
+zero_min * int_min : 0x0
+zero_min * uint_max : 0x0
+zero_min * ulong_max : 0x0
+zero_min * double_min : 0x0
+zero_min * double_max : 0x0
+zero_min * float_min : 0x0
+zero_min * float_max : 0x0
+zero_min + zero_min : 0x0
+zero_min + zero_plus : 0x0
+zero_min + zero : 0x0
+zero_min + NaN : NaN
+zero_min + Inf_plus : Inf
+zero_min + Inf_min : -Inf
+zero_min + Inf : Inf
+zero_min + long_max : 0x7fffffff
+zero_min + long_min : 0x8e+7
+zero_min + int_max : 0x7fffffff
+zero_min + int_min : 0x8e+7
+zero_min + uint_max : 0x0ffffffff
+zero_min + ulong_max : 0x0ffffffff
+zero_min + double_min : 0x.4e-255
+zero_min + double_max : 0x0fffffffffffff8e+242
+zero_min + float_min : 0x.4e-31
+zero_min + float_max : 0x0ffffffe+26
+zero_min - zero_min : 0x0
+zero_min - zero_plus : 0x0
+zero_min - zero : 0x0
+zero_min - NaN : NaN
+zero_min - Inf_plus : -Inf
+zero_min - Inf_min : Inf
+zero_min - Inf : -Inf
+zero_min - long_max : 0x80000001
+zero_min - long_min : 0x08e+7
+zero_min - int_max : 0x80000001
+zero_min - int_min : 0x08e+7
+zero_min - uint_max : 0xf00000001
+zero_min - ulong_max : 0xf00000001
+zero_min - double_min : 0x.ce-255
+zero_min - double_max : 0xf00000000000008e+242
+zero_min - float_min : 0x.ce-31
+zero_min - float_max : 0xf000001e+26
+zero_min > zero_min : 0x0
+zero_min > zero_plus : 0x0
+zero_min > zero : 0x0
+zero_min > NaN : 0x0
+zero_min > Inf_plus : 0x0
+zero_min > Inf_min : 0x1
+zero_min > Inf : 0x0
+zero_min > long_max : 0x0
+zero_min > long_min : 0x1
+zero_min > int_max : 0x0
+zero_min > int_min : 0x1
+zero_min > uint_max : 0x0
+zero_min > ulong_max : 0x0
+zero_min > double_min : 0x0
+zero_min > double_max : 0x0
+zero_min > float_min : 0x0
+zero_min > float_max : 0x0
+zero_min < zero_min : 0x0
+zero_min < zero_plus : 0x0
+zero_min < zero : 0x0
+zero_min < NaN : 0x0
+zero_min < Inf_plus : 0x1
+zero_min < Inf_min : 0x0
+zero_min < Inf : 0x1
+zero_min < long_max : 0x1
+zero_min < long_min : 0x0
+zero_min < int_max : 0x1
+zero_min < int_min : 0x0
+zero_min < uint_max : 0x1
+zero_min < ulong_max : 0x1
+zero_min < double_min : 0x1
+zero_min < double_max : 0x1
+zero_min < float_min : 0x1
+zero_min < float_max : 0x1
+zero_min >= zero_min : 0x1
+zero_min >= zero_plus : 0x1
+zero_min >= zero : 0x1
+zero_min >= NaN : 0x0
+zero_min >= Inf_plus : 0x0
+zero_min >= Inf_min : 0x1
+zero_min >= Inf : 0x0
+zero_min >= long_max : 0x0
+zero_min >= long_min : 0x1
+zero_min >= int_max : 0x0
+zero_min >= int_min : 0x1
+zero_min >= uint_max : 0x0
+zero_min >= ulong_max : 0x0
+zero_min >= double_min : 0x0
+zero_min >= double_max : 0x0
+zero_min >= float_min : 0x0
+zero_min >= float_max : 0x0
+zero_min <= zero_min : 0x1
+zero_min <= zero_plus : 0x1
+zero_min <= zero : 0x1
+zero_min <= NaN : 0x0
+zero_min <= Inf_plus : 0x1
+zero_min <= Inf_min : 0x0
+zero_min <= Inf : 0x1
+zero_min <= long_max : 0x1
+zero_min <= long_min : 0x0
+zero_min <= int_max : 0x1
+zero_min <= int_min : 0x0
+zero_min <= uint_max : 0x1
+zero_min <= ulong_max : 0x1
+zero_min <= double_min : 0x1
+zero_min <= double_max : 0x1
+zero_min <= float_min : 0x1
+zero_min <= float_max : 0x1
+zero_min == zero_min : 0x1
+zero_min == zero_plus : 0x1
+zero_min == zero : 0x1
+zero_min == NaN : 0x0
+zero_min == Inf_plus : 0x0
+zero_min == Inf_min : 0x0
+zero_min == Inf : 0x0
+zero_min == long_max : 0x0
+zero_min == long_min : 0x0
+zero_min == int_max : 0x0
+zero_min == int_min : 0x0
+zero_min == uint_max : 0x0
+zero_min == ulong_max : 0x0
+zero_min == double_min : 0x0
+zero_min == double_max : 0x0
+zero_min == float_min : 0x0
+zero_min == float_max : 0x0
+zero_min != zero_min : 0x0
+zero_min != zero_plus : 0x0
+zero_min != zero : 0x0
+zero_min != NaN : 0x1
+zero_min != Inf_plus : 0x1
+zero_min != Inf_min : 0x1
+zero_min != Inf : 0x1
+zero_min != long_max : 0x1
+zero_min != long_min : 0x1
+zero_min != int_max : 0x1
+zero_min != int_min : 0x1
+zero_min != uint_max : 0x1
+zero_min != ulong_max : 0x1
+zero_min != double_min : 0x1
+zero_min != double_max : 0x1
+zero_min != float_min : 0x1
+zero_min != float_max : 0x1
+zero_min * zero_min * zero_min : 0x0
+zero_min * zero_min * zero_plus : 0x0
+zero_min * zero_min * zero : 0x0
+zero_min * zero_min * NaN : NaN
+zero_min * zero_min * Inf_plus : NaN
+zero_min * zero_min * Inf_min : NaN
+zero_min * zero_min * Inf : NaN
+zero_min * zero_min * long_max : 0x0
+zero_min * zero_min * long_min : 0x0
+zero_min * zero_min * int_max : 0x0
+zero_min * zero_min * int_min : 0x0
+zero_min * zero_min * uint_max : 0x0
+zero_min * zero_min * ulong_max : 0x0
+zero_min * zero_min * double_min : 0x0
+zero_min * zero_min * double_max : 0x0
+zero_min * zero_min * float_min : 0x0
+zero_min * zero_min * float_max : 0x0
+zero_plus / zero_min : NaN
+zero_plus / zero_plus : NaN
+zero_plus / zero : NaN
+zero_plus / NaN : NaN
+zero_plus / Inf_plus : 0x0
+zero_plus / Inf_min : 0x0
+zero_plus / Inf : 0x0
+zero_plus / long_max : 0x0
+zero_plus / long_min : 0x0
+zero_plus / int_max : 0x0
+zero_plus / int_min : 0x0
+zero_plus / uint_max : 0x0
+zero_plus / ulong_max : 0x0
+zero_plus / double_min : 0x0
+zero_plus / double_max : 0x0
+zero_plus / float_min : 0x0
+zero_plus / float_max : 0x0
+zero_plus * zero_min : 0x0
+zero_plus * zero_plus : 0x0
+zero_plus * zero : 0x0
+zero_plus * NaN : NaN
+zero_plus * Inf_plus : NaN
+zero_plus * Inf_min : NaN
+zero_plus * Inf : NaN
+zero_plus * long_max : 0x0
+zero_plus * long_min : 0x0
+zero_plus * int_max : 0x0
+zero_plus * int_min : 0x0
+zero_plus * uint_max : 0x0
+zero_plus * ulong_max : 0x0
+zero_plus * double_min : 0x0
+zero_plus * double_max : 0x0
+zero_plus * float_min : 0x0
+zero_plus * float_max : 0x0
+zero_plus + zero_min : 0x0
+zero_plus + zero_plus : 0x0
+zero_plus + zero : 0x0
+zero_plus + NaN : NaN
+zero_plus + Inf_plus : Inf
+zero_plus + Inf_min : -Inf
+zero_plus + Inf : Inf
+zero_plus + long_max : 0x7fffffff
+zero_plus + long_min : 0x8e+7
+zero_plus + int_max : 0x7fffffff
+zero_plus + int_min : 0x8e+7
+zero_plus + uint_max : 0x0ffffffff
+zero_plus + ulong_max : 0x0ffffffff
+zero_plus + double_min : 0x.4e-255
+zero_plus + double_max : 0x0fffffffffffff8e+242
+zero_plus + float_min : 0x.4e-31
+zero_plus + float_max : 0x0ffffffe+26
+zero_plus - zero_min : 0x0
+zero_plus - zero_plus : 0x0
+zero_plus - zero : 0x0
+zero_plus - NaN : NaN
+zero_plus - Inf_plus : -Inf
+zero_plus - Inf_min : Inf
+zero_plus - Inf : -Inf
+zero_plus - long_max : 0x80000001
+zero_plus - long_min : 0x08e+7
+zero_plus - int_max : 0x80000001
+zero_plus - int_min : 0x08e+7
+zero_plus - uint_max : 0xf00000001
+zero_plus - ulong_max : 0xf00000001
+zero_plus - double_min : 0x.ce-255
+zero_plus - double_max : 0xf00000000000008e+242
+zero_plus - float_min : 0x.ce-31
+zero_plus - float_max : 0xf000001e+26
+zero_plus > zero_min : 0x0
+zero_plus > zero_plus : 0x0
+zero_plus > zero : 0x0
+zero_plus > NaN : 0x0
+zero_plus > Inf_plus : 0x0
+zero_plus > Inf_min : 0x1
+zero_plus > Inf : 0x0
+zero_plus > long_max : 0x0
+zero_plus > long_min : 0x1
+zero_plus > int_max : 0x0
+zero_plus > int_min : 0x1
+zero_plus > uint_max : 0x0
+zero_plus > ulong_max : 0x0
+zero_plus > double_min : 0x0
+zero_plus > double_max : 0x0
+zero_plus > float_min : 0x0
+zero_plus > float_max : 0x0
+zero_plus < zero_min : 0x0
+zero_plus < zero_plus : 0x0
+zero_plus < zero : 0x0
+zero_plus < NaN : 0x0
+zero_plus < Inf_plus : 0x1
+zero_plus < Inf_min : 0x0
+zero_plus < Inf : 0x1
+zero_plus < long_max : 0x1
+zero_plus < long_min : 0x0
+zero_plus < int_max : 0x1
+zero_plus < int_min : 0x0
+zero_plus < uint_max : 0x1
+zero_plus < ulong_max : 0x1
+zero_plus < double_min : 0x1
+zero_plus < double_max : 0x1
+zero_plus < float_min : 0x1
+zero_plus < float_max : 0x1
+zero_plus >= zero_min : 0x1
+zero_plus >= zero_plus : 0x1
+zero_plus >= zero : 0x1
+zero_plus >= NaN : 0x0
+zero_plus >= Inf_plus : 0x0
+zero_plus >= Inf_min : 0x1
+zero_plus >= Inf : 0x0
+zero_plus >= long_max : 0x0
+zero_plus >= long_min : 0x1
+zero_plus >= int_max : 0x0
+zero_plus >= int_min : 0x1
+zero_plus >= uint_max : 0x0
+zero_plus >= ulong_max : 0x0
+zero_plus >= double_min : 0x0
+zero_plus >= double_max : 0x0
+zero_plus >= float_min : 0x0
+zero_plus >= float_max : 0x0
+zero_plus <= zero_min : 0x1
+zero_plus <= zero_plus : 0x1
+zero_plus <= zero : 0x1
+zero_plus <= NaN : 0x0
+zero_plus <= Inf_plus : 0x1
+zero_plus <= Inf_min : 0x0
+zero_plus <= Inf : 0x1
+zero_plus <= long_max : 0x1
+zero_plus <= long_min : 0x0
+zero_plus <= int_max : 0x1
+zero_plus <= int_min : 0x0
+zero_plus <= uint_max : 0x1
+zero_plus <= ulong_max : 0x1
+zero_plus <= double_min : 0x1
+zero_plus <= double_max : 0x1
+zero_plus <= float_min : 0x1
+zero_plus <= float_max : 0x1
+zero_plus == zero_min : 0x1
+zero_plus == zero_plus : 0x1
+zero_plus == zero : 0x1
+zero_plus == NaN : 0x0
+zero_plus == Inf_plus : 0x0
+zero_plus == Inf_min : 0x0
+zero_plus == Inf : 0x0
+zero_plus == long_max : 0x0
+zero_plus == long_min : 0x0
+zero_plus == int_max : 0x0
+zero_plus == int_min : 0x0
+zero_plus == uint_max : 0x0
+zero_plus == ulong_max : 0x0
+zero_plus == double_min : 0x0
+zero_plus == double_max : 0x0
+zero_plus == float_min : 0x0
+zero_plus == float_max : 0x0
+zero_plus != zero_min : 0x0
+zero_plus != zero_plus : 0x0
+zero_plus != zero : 0x0
+zero_plus != NaN : 0x1
+zero_plus != Inf_plus : 0x1
+zero_plus != Inf_min : 0x1
+zero_plus != Inf : 0x1
+zero_plus != long_max : 0x1
+zero_plus != long_min : 0x1
+zero_plus != int_max : 0x1
+zero_plus != int_min : 0x1
+zero_plus != uint_max : 0x1
+zero_plus != ulong_max : 0x1
+zero_plus != double_min : 0x1
+zero_plus != double_max : 0x1
+zero_plus != float_min : 0x1
+zero_plus != float_max : 0x1
+zero_plus * zero_plus * zero_min : 0x0
+zero_plus * zero_plus * zero_plus : 0x0
+zero_plus * zero_plus * zero : 0x0
+zero_plus * zero_plus * NaN : NaN
+zero_plus * zero_plus * Inf_plus : NaN
+zero_plus * zero_plus * Inf_min : NaN
+zero_plus * zero_plus * Inf : NaN
+zero_plus * zero_plus * long_max : 0x0
+zero_plus * zero_plus * long_min : 0x0
+zero_plus * zero_plus * int_max : 0x0
+zero_plus * zero_plus * int_min : 0x0
+zero_plus * zero_plus * uint_max : 0x0
+zero_plus * zero_plus * ulong_max : 0x0
+zero_plus * zero_plus * double_min : 0x0
+zero_plus * zero_plus * double_max : 0x0
+zero_plus * zero_plus * float_min : 0x0
+zero_plus * zero_plus * float_max : 0x0
+zero / zero_min : NaN
+zero / zero_plus : NaN
+zero / zero : NaN
+zero / NaN : NaN
+zero / Inf_plus : 0x0
+zero / Inf_min : 0x0
+zero / Inf : 0x0
+zero / long_max : 0x0
+zero / long_min : 0x0
+zero / int_max : 0x0
+zero / int_min : 0x0
+zero / uint_max : 0x0
+zero / ulong_max : 0x0
+zero / double_min : 0x0
+zero / double_max : 0x0
+zero / float_min : 0x0
+zero / float_max : 0x0
+zero * zero_min : 0x0
+zero * zero_plus : 0x0
+zero * zero : 0x0
+zero * NaN : NaN
+zero * Inf_plus : NaN
+zero * Inf_min : NaN
+zero * Inf : NaN
+zero * long_max : 0x0
+zero * long_min : 0x0
+zero * int_max : 0x0
+zero * int_min : 0x0
+zero * uint_max : 0x0
+zero * ulong_max : 0x0
+zero * double_min : 0x0
+zero * double_max : 0x0
+zero * float_min : 0x0
+zero * float_max : 0x0
+zero + zero_min : 0x0
+zero + zero_plus : 0x0
+zero + zero : 0x0
+zero + NaN : NaN
+zero + Inf_plus : Inf
+zero + Inf_min : -Inf
+zero + Inf : Inf
+zero + long_max : 0x7fffffff
+zero + long_min : 0x8e+7
+zero + int_max : 0x7fffffff
+zero + int_min : 0x8e+7
+zero + uint_max : 0x0ffffffff
+zero + ulong_max : 0x0ffffffff
+zero + double_min : 0x.4e-255
+zero + double_max : 0x0fffffffffffff8e+242
+zero + float_min : 0x.4e-31
+zero + float_max : 0x0ffffffe+26
+zero - zero_min : 0x0
+zero - zero_plus : 0x0
+zero - zero : 0x0
+zero - NaN : NaN
+zero - Inf_plus : -Inf
+zero - Inf_min : Inf
+zero - Inf : -Inf
+zero - long_max : 0x80000001
+zero - long_min : 0x08e+7
+zero - int_max : 0x80000001
+zero - int_min : 0x08e+7
+zero - uint_max : 0xf00000001
+zero - ulong_max : 0xf00000001
+zero - double_min : 0x.ce-255
+zero - double_max : 0xf00000000000008e+242
+zero - float_min : 0x.ce-31
+zero - float_max : 0xf000001e+26
+zero > zero_min : 0x0
+zero > zero_plus : 0x0
+zero > zero : 0x0
+zero > NaN : 0x0
+zero > Inf_plus : 0x0
+zero > Inf_min : 0x1
+zero > Inf : 0x0
+zero > long_max : 0x0
+zero > long_min : 0x1
+zero > int_max : 0x0
+zero > int_min : 0x1
+zero > uint_max : 0x0
+zero > ulong_max : 0x0
+zero > double_min : 0x0
+zero > double_max : 0x0
+zero > float_min : 0x0
+zero > float_max : 0x0
+zero < zero_min : 0x0
+zero < zero_plus : 0x0
+zero < zero : 0x0
+zero < NaN : 0x0
+zero < Inf_plus : 0x1
+zero < Inf_min : 0x0
+zero < Inf : 0x1
+zero < long_max : 0x1
+zero < long_min : 0x0
+zero < int_max : 0x1
+zero < int_min : 0x0
+zero < uint_max : 0x1
+zero < ulong_max : 0x1
+zero < double_min : 0x1
+zero < double_max : 0x1
+zero < float_min : 0x1
+zero < float_max : 0x1
+zero >= zero_min : 0x1
+zero >= zero_plus : 0x1
+zero >= zero : 0x1
+zero >= NaN : 0x0
+zero >= Inf_plus : 0x0
+zero >= Inf_min : 0x1
+zero >= Inf : 0x0
+zero >= long_max : 0x0
+zero >= long_min : 0x1
+zero >= int_max : 0x0
+zero >= int_min : 0x1
+zero >= uint_max : 0x0
+zero >= ulong_max : 0x0
+zero >= double_min : 0x0
+zero >= double_max : 0x0
+zero >= float_min : 0x0
+zero >= float_max : 0x0
+zero <= zero_min : 0x1
+zero <= zero_plus : 0x1
+zero <= zero : 0x1
+zero <= NaN : 0x0
+zero <= Inf_plus : 0x1
+zero <= Inf_min : 0x0
+zero <= Inf : 0x1
+zero <= long_max : 0x1
+zero <= long_min : 0x0
+zero <= int_max : 0x1
+zero <= int_min : 0x0
+zero <= uint_max : 0x1
+zero <= ulong_max : 0x1
+zero <= double_min : 0x1
+zero <= double_max : 0x1
+zero <= float_min : 0x1
+zero <= float_max : 0x1
+zero == zero_min : 0x1
+zero == zero_plus : 0x1
+zero == zero : 0x1
+zero == NaN : 0x0
+zero == Inf_plus : 0x0
+zero == Inf_min : 0x0
+zero == Inf : 0x0
+zero == long_max : 0x0
+zero == long_min : 0x0
+zero == int_max : 0x0
+zero == int_min : 0x0
+zero == uint_max : 0x0
+zero == ulong_max : 0x0
+zero == double_min : 0x0
+zero == double_max : 0x0
+zero == float_min : 0x0
+zero == float_max : 0x0
+zero != zero_min : 0x0
+zero != zero_plus : 0x0
+zero != zero : 0x0
+zero != NaN : 0x1
+zero != Inf_plus : 0x1
+zero != Inf_min : 0x1
+zero != Inf : 0x1
+zero != long_max : 0x1
+zero != long_min : 0x1
+zero != int_max : 0x1
+zero != int_min : 0x1
+zero != uint_max : 0x1
+zero != ulong_max : 0x1
+zero != double_min : 0x1
+zero != double_max : 0x1
+zero != float_min : 0x1
+zero != float_max : 0x1
+zero * zero * zero_min : 0x0
+zero * zero * zero_plus : 0x0
+zero * zero * zero : 0x0
+zero * zero * NaN : NaN
+zero * zero * Inf_plus : NaN
+zero * zero * Inf_min : NaN
+zero * zero * Inf : NaN
+zero * zero * long_max : 0x0
+zero * zero * long_min : 0x0
+zero * zero * int_max : 0x0
+zero * zero * int_min : 0x0
+zero * zero * uint_max : 0x0
+zero * zero * ulong_max : 0x0
+zero * zero * double_min : 0x0
+zero * zero * double_max : 0x0
+zero * zero * float_min : 0x0
+zero * zero * float_max : 0x0
+zero_min : 0x0
+zero_plus : 0x0
+zero : 0x0
+NaN : NaN
+Inf_plus : Inf
+Inf_min : -Inf
+Inf : Inf
+long_max : 0x7fffffff
+long_min : 0x8e+7
+int_max : 0x7fffffff
+int_min : 0x8e+7
+uint_max : 0x0ffffffff
+ulong_max : 0x0ffffffff
+double_min : 0x.4e-255
+double_max : 0x0fffffffffffff8e+242
+float_min : 0x.4e-31
+float_max : 0x0ffffffe+26
+NaN / zero_min : NaN
+NaN / zero_plus : NaN
+NaN / zero : NaN
+NaN / NaN : NaN
+NaN / Inf_plus : NaN
+NaN / Inf_min : NaN
+NaN / Inf : NaN
+NaN / long_max : NaN
+NaN / long_min : NaN
+NaN / int_max : NaN
+NaN / int_min : NaN
+NaN / uint_max : NaN
+NaN / ulong_max : NaN
+NaN / double_min : NaN
+NaN / double_max : NaN
+NaN / float_min : NaN
+NaN / float_max : NaN
+NaN * zero_min : NaN
+NaN * zero_plus : NaN
+NaN * zero : NaN
+NaN * NaN : NaN
+NaN * Inf_plus : NaN
+NaN * Inf_min : NaN
+NaN * Inf : NaN
+NaN * long_max : NaN
+NaN * long_min : NaN
+NaN * int_max : NaN
+NaN * int_min : NaN
+NaN * uint_max : NaN
+NaN * ulong_max : NaN
+NaN * double_min : NaN
+NaN * double_max : NaN
+NaN * float_min : NaN
+NaN * float_max : NaN
+NaN + zero_min : NaN
+NaN + zero_plus : NaN
+NaN + zero : NaN
+NaN + NaN : NaN
+NaN + Inf_plus : NaN
+NaN + Inf_min : NaN
+NaN + Inf : NaN
+NaN + long_max : NaN
+NaN + long_min : NaN
+NaN + int_max : NaN
+NaN + int_min : NaN
+NaN + uint_max : NaN
+NaN + ulong_max : NaN
+NaN + double_min : NaN
+NaN + double_max : NaN
+NaN + float_min : NaN
+NaN + float_max : NaN
+NaN - zero_min : NaN
+NaN - zero_plus : NaN
+NaN - zero : NaN
+NaN - NaN : NaN
+NaN - Inf_plus : NaN
+NaN - Inf_min : NaN
+NaN - Inf : NaN
+NaN - long_max : NaN
+NaN - long_min : NaN
+NaN - int_max : NaN
+NaN - int_min : NaN
+NaN - uint_max : NaN
+NaN - ulong_max : NaN
+NaN - double_min : NaN
+NaN - double_max : NaN
+NaN - float_min : NaN
+NaN - float_max : NaN
+NaN > zero_min : 0x0
+NaN > zero_plus : 0x0
+NaN > zero : 0x0
+NaN > NaN : 0x0
+NaN > Inf_plus : 0x0
+NaN > Inf_min : 0x0
+NaN > Inf : 0x0
+NaN > long_max : 0x0
+NaN > long_min : 0x0
+NaN > int_max : 0x0
+NaN > int_min : 0x0
+NaN > uint_max : 0x0
+NaN > ulong_max : 0x0
+NaN > double_min : 0x0
+NaN > double_max : 0x0
+NaN > float_min : 0x0
+NaN > float_max : 0x0
+NaN < zero_min : 0x0
+NaN < zero_plus : 0x0
+NaN < zero : 0x0
+NaN < NaN : 0x0
+NaN < Inf_plus : 0x0
+NaN < Inf_min : 0x0
+NaN < Inf : 0x0
+NaN < long_max : 0x0
+NaN < long_min : 0x0
+NaN < int_max : 0x0
+NaN < int_min : 0x0
+NaN < uint_max : 0x0
+NaN < ulong_max : 0x0
+NaN < double_min : 0x0
+NaN < double_max : 0x0
+NaN < float_min : 0x0
+NaN < float_max : 0x0
+NaN >= zero_min : 0x0
+NaN >= zero_plus : 0x0
+NaN >= zero : 0x0
+NaN >= NaN : 0x0
+NaN >= Inf_plus : 0x0
+NaN >= Inf_min : 0x0
+NaN >= Inf : 0x0
+NaN >= long_max : 0x0
+NaN >= long_min : 0x0
+NaN >= int_max : 0x0
+NaN >= int_min : 0x0
+NaN >= uint_max : 0x0
+NaN >= ulong_max : 0x0
+NaN >= double_min : 0x0
+NaN >= double_max : 0x0
+NaN >= float_min : 0x0
+NaN >= float_max : 0x0
+NaN <= zero_min : 0x0
+NaN <= zero_plus : 0x0
+NaN <= zero : 0x0
+NaN <= NaN : 0x0
+NaN <= Inf_plus : 0x0
+NaN <= Inf_min : 0x0
+NaN <= Inf : 0x0
+NaN <= long_max : 0x0
+NaN <= long_min : 0x0
+NaN <= int_max : 0x0
+NaN <= int_min : 0x0
+NaN <= uint_max : 0x0
+NaN <= ulong_max : 0x0
+NaN <= double_min : 0x0
+NaN <= double_max : 0x0
+NaN <= float_min : 0x0
+NaN <= float_max : 0x0
+NaN == zero_min : 0x0
+NaN == zero_plus : 0x0
+NaN == zero : 0x0
+NaN == NaN : 0x0
+NaN == Inf_plus : 0x0
+NaN == Inf_min : 0x0
+NaN == Inf : 0x0
+NaN == long_max : 0x0
+NaN == long_min : 0x0
+NaN == int_max : 0x0
+NaN == int_min : 0x0
+NaN == uint_max : 0x0
+NaN == ulong_max : 0x0
+NaN == double_min : 0x0
+NaN == double_max : 0x0
+NaN == float_min : 0x0
+NaN == float_max : 0x0
+NaN != zero_min : 0x1
+NaN != zero_plus : 0x1
+NaN != zero : 0x1
+NaN != NaN : 0x1
+NaN != Inf_plus : 0x1
+NaN != Inf_min : 0x1
+NaN != Inf : 0x1
+NaN != long_max : 0x1
+NaN != long_min : 0x1
+NaN != int_max : 0x1
+NaN != int_min : 0x1
+NaN != uint_max : 0x1
+NaN != ulong_max : 0x1
+NaN != double_min : 0x1
+NaN != double_max : 0x1
+NaN != float_min : 0x1
+NaN != float_max : 0x1
+NaN * NaN * zero_min : NaN
+NaN * NaN * zero_plus : NaN
+NaN * NaN * zero : NaN
+NaN * NaN * NaN : NaN
+NaN * NaN * Inf_plus : NaN
+NaN * NaN * Inf_min : NaN
+NaN * NaN * Inf : NaN
+NaN * NaN * long_max : NaN
+NaN * NaN * long_min : NaN
+NaN * NaN * int_max : NaN
+NaN * NaN * int_min : NaN
+NaN * NaN * uint_max : NaN
+NaN * NaN * ulong_max : NaN
+NaN * NaN * double_min : NaN
+NaN * NaN * double_max : NaN
+NaN * NaN * float_min : NaN
+NaN * NaN * float_max : NaN
+Inf_plus / zero_min : -Inf
+Inf_plus / zero_plus : Inf
+Inf_plus / zero : Inf
+Inf_plus / NaN : NaN
+Inf_plus / Inf_plus : NaN
+Inf_plus / Inf_min : NaN
+Inf_plus / Inf : NaN
+Inf_plus / long_max : Inf
+Inf_plus / long_min : -Inf
+Inf_plus / int_max : Inf
+Inf_plus / int_min : -Inf
+Inf_plus / uint_max : Inf
+Inf_plus / ulong_max : Inf
+Inf_plus / double_min : Inf
+Inf_plus / double_max : Inf
+Inf_plus / float_min : Inf
+Inf_plus / float_max : Inf
+Inf_plus * zero_min : NaN
+Inf_plus * zero_plus : NaN
+Inf_plus * zero : NaN
+Inf_plus * NaN : NaN
+Inf_plus * Inf_plus : Inf
+Inf_plus * Inf_min : -Inf
+Inf_plus * Inf : Inf
+Inf_plus * long_max : Inf
+Inf_plus * long_min : -Inf
+Inf_plus * int_max : Inf
+Inf_plus * int_min : -Inf
+Inf_plus * uint_max : Inf
+Inf_plus * ulong_max : Inf
+Inf_plus * double_min : Inf
+Inf_plus * double_max : Inf
+Inf_plus * float_min : Inf
+Inf_plus * float_max : Inf
+Inf_plus + zero_min : Inf
+Inf_plus + zero_plus : Inf
+Inf_plus + zero : Inf
+Inf_plus + NaN : NaN
+Inf_plus + Inf_plus : Inf
+Inf_plus + Inf_min : NaN
+Inf_plus + Inf : Inf
+Inf_plus + long_max : Inf
+Inf_plus + long_min : Inf
+Inf_plus + int_max : Inf
+Inf_plus + int_min : Inf
+Inf_plus + uint_max : Inf
+Inf_plus + ulong_max : Inf
+Inf_plus + double_min : Inf
+Inf_plus + double_max : Inf
+Inf_plus + float_min : Inf
+Inf_plus + float_max : Inf
+Inf_plus - zero_min : Inf
+Inf_plus - zero_plus : Inf
+Inf_plus - zero : Inf
+Inf_plus - NaN : NaN
+Inf_plus - Inf_plus : NaN
+Inf_plus - Inf_min : Inf
+Inf_plus - Inf : NaN
+Inf_plus - long_max : Inf
+Inf_plus - long_min : Inf
+Inf_plus - int_max : Inf
+Inf_plus - int_min : Inf
+Inf_plus - uint_max : Inf
+Inf_plus - ulong_max : Inf
+Inf_plus - double_min : Inf
+Inf_plus - double_max : Inf
+Inf_plus - float_min : Inf
+Inf_plus - float_max : Inf
+Inf_plus > zero_min : 0x1
+Inf_plus > zero_plus : 0x1
+Inf_plus > zero : 0x1
+Inf_plus > NaN : 0x0
+Inf_plus > Inf_plus : 0x0
+Inf_plus > Inf_min : 0x1
+Inf_plus > Inf : 0x0
+Inf_plus > long_max : 0x1
+Inf_plus > long_min : 0x1
+Inf_plus > int_max : 0x1
+Inf_plus > int_min : 0x1
+Inf_plus > uint_max : 0x1
+Inf_plus > ulong_max : 0x1
+Inf_plus > double_min : 0x1
+Inf_plus > double_max : 0x1
+Inf_plus > float_min : 0x1
+Inf_plus > float_max : 0x1
+Inf_plus < zero_min : 0x0
+Inf_plus < zero_plus : 0x0
+Inf_plus < zero : 0x0
+Inf_plus < NaN : 0x0
+Inf_plus < Inf_plus : 0x0
+Inf_plus < Inf_min : 0x0
+Inf_plus < Inf : 0x0
+Inf_plus < long_max : 0x0
+Inf_plus < long_min : 0x0
+Inf_plus < int_max : 0x0
+Inf_plus < int_min : 0x0
+Inf_plus < uint_max : 0x0
+Inf_plus < ulong_max : 0x0
+Inf_plus < double_min : 0x0
+Inf_plus < double_max : 0x0
+Inf_plus < float_min : 0x0
+Inf_plus < float_max : 0x0
+Inf_plus >= zero_min : 0x1
+Inf_plus >= zero_plus : 0x1
+Inf_plus >= zero : 0x1
+Inf_plus >= NaN : 0x0
+Inf_plus >= Inf_plus : 0x1
+Inf_plus >= Inf_min : 0x1
+Inf_plus >= Inf : 0x1
+Inf_plus >= long_max : 0x1
+Inf_plus >= long_min : 0x1
+Inf_plus >= int_max : 0x1
+Inf_plus >= int_min : 0x1
+Inf_plus >= uint_max : 0x1
+Inf_plus >= ulong_max : 0x1
+Inf_plus >= double_min : 0x1
+Inf_plus >= double_max : 0x1
+Inf_plus >= float_min : 0x1
+Inf_plus >= float_max : 0x1
+Inf_plus <= zero_min : 0x0
+Inf_plus <= zero_plus : 0x0
+Inf_plus <= zero : 0x0
+Inf_plus <= NaN : 0x0
+Inf_plus <= Inf_plus : 0x1
+Inf_plus <= Inf_min : 0x0
+Inf_plus <= Inf : 0x1
+Inf_plus <= long_max : 0x0
+Inf_plus <= long_min : 0x0
+Inf_plus <= int_max : 0x0
+Inf_plus <= int_min : 0x0
+Inf_plus <= uint_max : 0x0
+Inf_plus <= ulong_max : 0x0
+Inf_plus <= double_min : 0x0
+Inf_plus <= double_max : 0x0
+Inf_plus <= float_min : 0x0
+Inf_plus <= float_max : 0x0
+Inf_plus == zero_min : 0x0
+Inf_plus == zero_plus : 0x0
+Inf_plus == zero : 0x0
+Inf_plus == NaN : 0x0
+Inf_plus == Inf_plus : 0x1
+Inf_plus == Inf_min : 0x0
+Inf_plus == Inf : 0x1
+Inf_plus == long_max : 0x0
+Inf_plus == long_min : 0x0
+Inf_plus == int_max : 0x0
+Inf_plus == int_min : 0x0
+Inf_plus == uint_max : 0x0
+Inf_plus == ulong_max : 0x0
+Inf_plus == double_min : 0x0
+Inf_plus == double_max : 0x0
+Inf_plus == float_min : 0x0
+Inf_plus == float_max : 0x0
+Inf_plus != zero_min : 0x1
+Inf_plus != zero_plus : 0x1
+Inf_plus != zero : 0x1
+Inf_plus != NaN : 0x1
+Inf_plus != Inf_plus : 0x0
+Inf_plus != Inf_min : 0x1
+Inf_plus != Inf : 0x0
+Inf_plus != long_max : 0x1
+Inf_plus != long_min : 0x1
+Inf_plus != int_max : 0x1
+Inf_plus != int_min : 0x1
+Inf_plus != uint_max : 0x1
+Inf_plus != ulong_max : 0x1
+Inf_plus != double_min : 0x1
+Inf_plus != double_max : 0x1
+Inf_plus != float_min : 0x1
+Inf_plus != float_max : 0x1
+Inf_plus * Inf_plus * zero_min : NaN
+Inf_plus * Inf_plus * zero_plus : NaN
+Inf_plus * Inf_plus * zero : NaN
+Inf_plus * Inf_plus * NaN : NaN
+Inf_plus * Inf_plus * Inf_plus : Inf
+Inf_plus * Inf_plus * Inf_min : -Inf
+Inf_plus * Inf_plus * Inf : Inf
+Inf_plus * Inf_plus * long_max : Inf
+Inf_plus * Inf_plus * long_min : -Inf
+Inf_plus * Inf_plus * int_max : Inf
+Inf_plus * Inf_plus * int_min : -Inf
+Inf_plus * Inf_plus * uint_max : Inf
+Inf_plus * Inf_plus * ulong_max : Inf
+Inf_plus * Inf_plus * double_min : Inf
+Inf_plus * Inf_plus * double_max : Inf
+Inf_plus * Inf_plus * float_min : Inf
+Inf_plus * Inf_plus * float_max : Inf
+Inf_min / zero_min : Inf
+Inf_min / zero_plus : -Inf
+Inf_min / zero : -Inf
+Inf_min / NaN : NaN
+Inf_min / Inf_plus : NaN
+Inf_min / Inf_min : NaN
+Inf_min / Inf : NaN
+Inf_min / long_max : -Inf
+Inf_min / long_min : Inf
+Inf_min / int_max : -Inf
+Inf_min / int_min : Inf
+Inf_min / uint_max : -Inf
+Inf_min / ulong_max : -Inf
+Inf_min / double_min : -Inf
+Inf_min / double_max : -Inf
+Inf_min / float_min : -Inf
+Inf_min / float_max : -Inf
+Inf_min * zero_min : NaN
+Inf_min * zero_plus : NaN
+Inf_min * zero : NaN
+Inf_min * NaN : NaN
+Inf_min * Inf_plus : -Inf
+Inf_min * Inf_min : Inf
+Inf_min * Inf : -Inf
+Inf_min * long_max : -Inf
+Inf_min * long_min : Inf
+Inf_min * int_max : -Inf
+Inf_min * int_min : Inf
+Inf_min * uint_max : -Inf
+Inf_min * ulong_max : -Inf
+Inf_min * double_min : -Inf
+Inf_min * double_max : -Inf
+Inf_min * float_min : -Inf
+Inf_min * float_max : -Inf
+Inf_min + zero_min : -Inf
+Inf_min + zero_plus : -Inf
+Inf_min + zero : -Inf
+Inf_min + NaN : NaN
+Inf_min + Inf_plus : NaN
+Inf_min + Inf_min : -Inf
+Inf_min + Inf : NaN
+Inf_min + long_max : -Inf
+Inf_min + long_min : -Inf
+Inf_min + int_max : -Inf
+Inf_min + int_min : -Inf
+Inf_min + uint_max : -Inf
+Inf_min + ulong_max : -Inf
+Inf_min + double_min : -Inf
+Inf_min + double_max : -Inf
+Inf_min + float_min : -Inf
+Inf_min + float_max : -Inf
+Inf_min - zero_min : -Inf
+Inf_min - zero_plus : -Inf
+Inf_min - zero : -Inf
+Inf_min - NaN : NaN
+Inf_min - Inf_plus : -Inf
+Inf_min - Inf_min : NaN
+Inf_min - Inf : -Inf
+Inf_min - long_max : -Inf
+Inf_min - long_min : -Inf
+Inf_min - int_max : -Inf
+Inf_min - int_min : -Inf
+Inf_min - uint_max : -Inf
+Inf_min - ulong_max : -Inf
+Inf_min - double_min : -Inf
+Inf_min - double_max : -Inf
+Inf_min - float_min : -Inf
+Inf_min - float_max : -Inf
+Inf_min > zero_min : 0x0
+Inf_min > zero_plus : 0x0
+Inf_min > zero : 0x0
+Inf_min > NaN : 0x0
+Inf_min > Inf_plus : 0x0
+Inf_min > Inf_min : 0x0
+Inf_min > Inf : 0x0
+Inf_min > long_max : 0x0
+Inf_min > long_min : 0x0
+Inf_min > int_max : 0x0
+Inf_min > int_min : 0x0
+Inf_min > uint_max : 0x0
+Inf_min > ulong_max : 0x0
+Inf_min > double_min : 0x0
+Inf_min > double_max : 0x0
+Inf_min > float_min : 0x0
+Inf_min > float_max : 0x0
+Inf_min < zero_min : 0x1
+Inf_min < zero_plus : 0x1
+Inf_min < zero : 0x1
+Inf_min < NaN : 0x0
+Inf_min < Inf_plus : 0x1
+Inf_min < Inf_min : 0x0
+Inf_min < Inf : 0x1
+Inf_min < long_max : 0x1
+Inf_min < long_min : 0x1
+Inf_min < int_max : 0x1
+Inf_min < int_min : 0x1
+Inf_min < uint_max : 0x1
+Inf_min < ulong_max : 0x1
+Inf_min < double_min : 0x1
+Inf_min < double_max : 0x1
+Inf_min < float_min : 0x1
+Inf_min < float_max : 0x1
+Inf_min >= zero_min : 0x0
+Inf_min >= zero_plus : 0x0
+Inf_min >= zero : 0x0
+Inf_min >= NaN : 0x0
+Inf_min >= Inf_plus : 0x0
+Inf_min >= Inf_min : 0x1
+Inf_min >= Inf : 0x0
+Inf_min >= long_max : 0x0
+Inf_min >= long_min : 0x0
+Inf_min >= int_max : 0x0
+Inf_min >= int_min : 0x0
+Inf_min >= uint_max : 0x0
+Inf_min >= ulong_max : 0x0
+Inf_min >= double_min : 0x0
+Inf_min >= double_max : 0x0
+Inf_min >= float_min : 0x0
+Inf_min >= float_max : 0x0
+Inf_min <= zero_min : 0x1
+Inf_min <= zero_plus : 0x1
+Inf_min <= zero : 0x1
+Inf_min <= NaN : 0x0
+Inf_min <= Inf_plus : 0x1
+Inf_min <= Inf_min : 0x1
+Inf_min <= Inf : 0x1
+Inf_min <= long_max : 0x1
+Inf_min <= long_min : 0x1
+Inf_min <= int_max : 0x1
+Inf_min <= int_min : 0x1
+Inf_min <= uint_max : 0x1
+Inf_min <= ulong_max : 0x1
+Inf_min <= double_min : 0x1
+Inf_min <= double_max : 0x1
+Inf_min <= float_min : 0x1
+Inf_min <= float_max : 0x1
+Inf_min == zero_min : 0x0
+Inf_min == zero_plus : 0x0
+Inf_min == zero : 0x0
+Inf_min == NaN : 0x0
+Inf_min == Inf_plus : 0x0
+Inf_min == Inf_min : 0x1
+Inf_min == Inf : 0x0
+Inf_min == long_max : 0x0
+Inf_min == long_min : 0x0
+Inf_min == int_max : 0x0
+Inf_min == int_min : 0x0
+Inf_min == uint_max : 0x0
+Inf_min == ulong_max : 0x0
+Inf_min == double_min : 0x0
+Inf_min == double_max : 0x0
+Inf_min == float_min : 0x0
+Inf_min == float_max : 0x0
+Inf_min != zero_min : 0x1
+Inf_min != zero_plus : 0x1
+Inf_min != zero : 0x1
+Inf_min != NaN : 0x1
+Inf_min != Inf_plus : 0x1
+Inf_min != Inf_min : 0x0
+Inf_min != Inf : 0x1
+Inf_min != long_max : 0x1
+Inf_min != long_min : 0x1
+Inf_min != int_max : 0x1
+Inf_min != int_min : 0x1
+Inf_min != uint_max : 0x1
+Inf_min != ulong_max : 0x1
+Inf_min != double_min : 0x1
+Inf_min != double_max : 0x1
+Inf_min != float_min : 0x1
+Inf_min != float_max : 0x1
+Inf_min * Inf_min * zero_min : NaN
+Inf_min * Inf_min * zero_plus : NaN
+Inf_min * Inf_min * zero : NaN
+Inf_min * Inf_min * NaN : NaN
+Inf_min * Inf_min * Inf_plus : Inf
+Inf_min * Inf_min * Inf_min : -Inf
+Inf_min * Inf_min * Inf : Inf
+Inf_min * Inf_min * long_max : Inf
+Inf_min * Inf_min * long_min : -Inf
+Inf_min * Inf_min * int_max : Inf
+Inf_min * Inf_min * int_min : -Inf
+Inf_min * Inf_min * uint_max : Inf
+Inf_min * Inf_min * ulong_max : Inf
+Inf_min * Inf_min * double_min : Inf
+Inf_min * Inf_min * double_max : Inf
+Inf_min * Inf_min * float_min : Inf
+Inf_min * Inf_min * float_max : Inf
+Inf / zero_min : -Inf
+Inf / zero_plus : Inf
+Inf / zero : Inf
+Inf / NaN : NaN
+Inf / Inf_plus : NaN
+Inf / Inf_min : NaN
+Inf / Inf : NaN
+Inf / long_max : Inf
+Inf / long_min : -Inf
+Inf / int_max : Inf
+Inf / int_min : -Inf
+Inf / uint_max : Inf
+Inf / ulong_max : Inf
+Inf / double_min : Inf
+Inf / double_max : Inf
+Inf / float_min : Inf
+Inf / float_max : Inf
+Inf * zero_min : NaN
+Inf * zero_plus : NaN
+Inf * zero : NaN
+Inf * NaN : NaN
+Inf * Inf_plus : Inf
+Inf * Inf_min : -Inf
+Inf * Inf : Inf
+Inf * long_max : Inf
+Inf * long_min : -Inf
+Inf * int_max : Inf
+Inf * int_min : -Inf
+Inf * uint_max : Inf
+Inf * ulong_max : Inf
+Inf * double_min : Inf
+Inf * double_max : Inf
+Inf * float_min : Inf
+Inf * float_max : Inf
+Inf + zero_min : Inf
+Inf + zero_plus : Inf
+Inf + zero : Inf
+Inf + NaN : NaN
+Inf + Inf_plus : Inf
+Inf + Inf_min : NaN
+Inf + Inf : Inf
+Inf + long_max : Inf
+Inf + long_min : Inf
+Inf + int_max : Inf
+Inf + int_min : Inf
+Inf + uint_max : Inf
+Inf + ulong_max : Inf
+Inf + double_min : Inf
+Inf + double_max : Inf
+Inf + float_min : Inf
+Inf + float_max : Inf
+Inf - zero_min : Inf
+Inf - zero_plus : Inf
+Inf - zero : Inf
+Inf - NaN : NaN
+Inf - Inf_plus : NaN
+Inf - Inf_min : Inf
+Inf - Inf : NaN
+Inf - long_max : Inf
+Inf - long_min : Inf
+Inf - int_max : Inf
+Inf - int_min : Inf
+Inf - uint_max : Inf
+Inf - ulong_max : Inf
+Inf - double_min : Inf
+Inf - double_max : Inf
+Inf - float_min : Inf
+Inf - float_max : Inf
+Inf > zero_min : 0x1
+Inf > zero_plus : 0x1
+Inf > zero : 0x1
+Inf > NaN : 0x0
+Inf > Inf_plus : 0x0
+Inf > Inf_min : 0x1
+Inf > Inf : 0x0
+Inf > long_max : 0x1
+Inf > long_min : 0x1
+Inf > int_max : 0x1
+Inf > int_min : 0x1
+Inf > uint_max : 0x1
+Inf > ulong_max : 0x1
+Inf > double_min : 0x1
+Inf > double_max : 0x1
+Inf > float_min : 0x1
+Inf > float_max : 0x1
+Inf < zero_min : 0x0
+Inf < zero_plus : 0x0
+Inf < zero : 0x0
+Inf < NaN : 0x0
+Inf < Inf_plus : 0x0
+Inf < Inf_min : 0x0
+Inf < Inf : 0x0
+Inf < long_max : 0x0
+Inf < long_min : 0x0
+Inf < int_max : 0x0
+Inf < int_min : 0x0
+Inf < uint_max : 0x0
+Inf < ulong_max : 0x0
+Inf < double_min : 0x0
+Inf < double_max : 0x0
+Inf < float_min : 0x0
+Inf < float_max : 0x0
+Inf >= zero_min : 0x1
+Inf >= zero_plus : 0x1
+Inf >= zero : 0x1
+Inf >= NaN : 0x0
+Inf >= Inf_plus : 0x1
+Inf >= Inf_min : 0x1
+Inf >= Inf : 0x1
+Inf >= long_max : 0x1
+Inf >= long_min : 0x1
+Inf >= int_max : 0x1
+Inf >= int_min : 0x1
+Inf >= uint_max : 0x1
+Inf >= ulong_max : 0x1
+Inf >= double_min : 0x1
+Inf >= double_max : 0x1
+Inf >= float_min : 0x1
+Inf >= float_max : 0x1
+Inf <= zero_min : 0x0
+Inf <= zero_plus : 0x0
+Inf <= zero : 0x0
+Inf <= NaN : 0x0
+Inf <= Inf_plus : 0x1
+Inf <= Inf_min : 0x0
+Inf <= Inf : 0x1
+Inf <= long_max : 0x0
+Inf <= long_min : 0x0
+Inf <= int_max : 0x0
+Inf <= int_min : 0x0
+Inf <= uint_max : 0x0
+Inf <= ulong_max : 0x0
+Inf <= double_min : 0x0
+Inf <= double_max : 0x0
+Inf <= float_min : 0x0
+Inf <= float_max : 0x0
+Inf == zero_min : 0x0
+Inf == zero_plus : 0x0
+Inf == zero : 0x0
+Inf == NaN : 0x0
+Inf == Inf_plus : 0x1
+Inf == Inf_min : 0x0
+Inf == Inf : 0x1
+Inf == long_max : 0x0
+Inf == long_min : 0x0
+Inf == int_max : 0x0
+Inf == int_min : 0x0
+Inf == uint_max : 0x0
+Inf == ulong_max : 0x0
+Inf == double_min : 0x0
+Inf == double_max : 0x0
+Inf == float_min : 0x0
+Inf == float_max : 0x0
+Inf != zero_min : 0x1
+Inf != zero_plus : 0x1
+Inf != zero : 0x1
+Inf != NaN : 0x1
+Inf != Inf_plus : 0x0
+Inf != Inf_min : 0x1
+Inf != Inf : 0x0
+Inf != long_max : 0x1
+Inf != long_min : 0x1
+Inf != int_max : 0x1
+Inf != int_min : 0x1
+Inf != uint_max : 0x1
+Inf != ulong_max : 0x1
+Inf != double_min : 0x1
+Inf != double_max : 0x1
+Inf != float_min : 0x1
+Inf != float_max : 0x1
+Inf * Inf * zero_min : NaN
+Inf * Inf * zero_plus : NaN
+Inf * Inf * zero : NaN
+Inf * Inf * NaN : NaN
+Inf * Inf * Inf_plus : Inf
+Inf * Inf * Inf_min : -Inf
+Inf * Inf * Inf : Inf
+Inf * Inf * long_max : Inf
+Inf * Inf * long_min : -Inf
+Inf * Inf * int_max : Inf
+Inf * Inf * int_min : -Inf
+Inf * Inf * uint_max : Inf
+Inf * Inf * ulong_max : Inf
+Inf * Inf * double_min : Inf
+Inf * Inf * double_max : Inf
+Inf * Inf * float_min : Inf
+Inf * Inf * float_max : Inf
+****************** limits fx_float_long
+zero_min : 0x0
+zero_plus : 0x0
+zero : 0x0
+NaN : NaN
+Inf_plus : Inf
+Inf_min : -Inf
+Inf : Inf
+long_max : 0x7fffffff
+long_min : 0x8e+7
+int_max : 0x7fffffff
+int_min : 0x8e+7
+uint_max : 0x0ffffffff
+ulong_max : 0x0ffffffff
+double_min : 0x.4e-255
+double_max : 0x0fffffffffffff8e+242
+float_min : 0x.4e-31
+float_max : 0x0ffffffe+26
+long_max / zero_min : -Inf
+long_max / zero_plus : Inf
+long_max / zero : Inf
+long_max / NaN : NaN
+long_max / Inf_plus : 0x0
+long_max / Inf_min : 0x0
+long_max / Inf : 0x0
+long_max / long_max : 0x1
+long_max / long_min : 0xf.00000002
+long_max / int_max : 0x1
+long_max / int_min : 0xf.00000002
+long_max / uint_max : 0x.7fffffff8
+long_max / ulong_max : 0x.7fffffff8
+long_max / double_min : Inf
+long_max / double_max : 0x.7fffffff000004e-248
+long_max / float_min : 0x1fffffffce+31
+long_max / float_max : 0x.08000007f00008e-23
+long_max * zero_min : 0x0
+long_max * zero_plus : 0x0
+long_max * zero : 0x0
+long_max * NaN : NaN
+long_max * Inf_plus : Inf
+long_max * Inf_min : -Inf
+long_max * Inf : Inf
+long_max * long_max : 0x3fffffffe+8
+long_max * long_min : 0xc00000008e+7
+long_max * int_max : 0x3fffffffe+8
+long_max * int_min : 0xc00000008e+7
+long_max * uint_max : 0x7ffffffe8e+7
+long_max * ulong_max : 0x7ffffffe8e+7
+long_max * double_min : 0x.1fffffffce-247
+long_max * double_max : Inf
+long_max * float_min : 0x.1fffffffce-23
+long_max * float_max : 0x7fffff7fe+32
+long_max + zero_min : 0x7fffffff
+long_max + zero_plus : 0x7fffffff
+long_max + zero : 0x7fffffff
+long_max + NaN : NaN
+long_max + Inf_plus : Inf
+long_max + Inf_min : -Inf
+long_max + Inf : Inf
+long_max + long_max : 0x0fffffffe
+long_max + long_min : 0xf
+long_max + int_max : 0x0fffffffe
+long_max + int_min : 0xf
+long_max + uint_max : 0x17ffffffe
+long_max + ulong_max : 0x17ffffffe
+long_max + double_min : 0x7fffffff
+long_max + double_max : 0x0fffffffffffff8e+242
+long_max + float_min : 0x7fffffff
+long_max + float_max : 0x0ffffffe+26
+long_max - zero_min : 0x7fffffff
+long_max - zero_plus : 0x7fffffff
+long_max - zero : 0x7fffffff
+long_max - NaN : NaN
+long_max - Inf_plus : -Inf
+long_max - Inf_min : Inf
+long_max - Inf : -Inf
+long_max - long_max : 0x0
+long_max - long_min : 0x0ffffffff
+long_max - int_max : 0x0
+long_max - int_min : 0x0ffffffff
+long_max - uint_max : 0x8e+7
+long_max - ulong_max : 0x8e+7
+long_max - double_min : 0x7fffffff
+long_max - double_max : 0xf00000000000008e+242
+long_max - float_min : 0x7fffffff
+long_max - float_max : 0xf000001e+26
+long_max > zero_min : 0x1
+long_max > zero_plus : 0x1
+long_max > zero : 0x1
+long_max > NaN : 0x0
+long_max > Inf_plus : 0x0
+long_max > Inf_min : 0x1
+long_max > Inf : 0x0
+long_max > long_max : 0x0
+long_max > long_min : 0x1
+long_max > int_max : 0x0
+long_max > int_min : 0x1
+long_max > uint_max : 0x0
+long_max > ulong_max : 0x0
+long_max > double_min : 0x1
+long_max > double_max : 0x0
+long_max > float_min : 0x1
+long_max > float_max : 0x0
+long_max < zero_min : 0x0
+long_max < zero_plus : 0x0
+long_max < zero : 0x0
+long_max < NaN : 0x0
+long_max < Inf_plus : 0x1
+long_max < Inf_min : 0x0
+long_max < Inf : 0x1
+long_max < long_max : 0x0
+long_max < long_min : 0x0
+long_max < int_max : 0x0
+long_max < int_min : 0x0
+long_max < uint_max : 0x1
+long_max < ulong_max : 0x1
+long_max < double_min : 0x0
+long_max < double_max : 0x1
+long_max < float_min : 0x0
+long_max < float_max : 0x1
+long_max >= zero_min : 0x1
+long_max >= zero_plus : 0x1
+long_max >= zero : 0x1
+long_max >= NaN : 0x0
+long_max >= Inf_plus : 0x0
+long_max >= Inf_min : 0x1
+long_max >= Inf : 0x0
+long_max >= long_max : 0x1
+long_max >= long_min : 0x1
+long_max >= int_max : 0x1
+long_max >= int_min : 0x1
+long_max >= uint_max : 0x0
+long_max >= ulong_max : 0x0
+long_max >= double_min : 0x1
+long_max >= double_max : 0x0
+long_max >= float_min : 0x1
+long_max >= float_max : 0x0
+long_max <= zero_min : 0x0
+long_max <= zero_plus : 0x0
+long_max <= zero : 0x0
+long_max <= NaN : 0x0
+long_max <= Inf_plus : 0x1
+long_max <= Inf_min : 0x0
+long_max <= Inf : 0x1
+long_max <= long_max : 0x1
+long_max <= long_min : 0x0
+long_max <= int_max : 0x1
+long_max <= int_min : 0x0
+long_max <= uint_max : 0x1
+long_max <= ulong_max : 0x1
+long_max <= double_min : 0x0
+long_max <= double_max : 0x1
+long_max <= float_min : 0x0
+long_max <= float_max : 0x1
+long_max == zero_min : 0x0
+long_max == zero_plus : 0x0
+long_max == zero : 0x0
+long_max == NaN : 0x0
+long_max == Inf_plus : 0x0
+long_max == Inf_min : 0x0
+long_max == Inf : 0x0
+long_max == long_max : 0x1
+long_max == long_min : 0x0
+long_max == int_max : 0x1
+long_max == int_min : 0x0
+long_max == uint_max : 0x0
+long_max == ulong_max : 0x0
+long_max == double_min : 0x0
+long_max == double_max : 0x0
+long_max == float_min : 0x0
+long_max == float_max : 0x0
+long_max != zero_min : 0x1
+long_max != zero_plus : 0x1
+long_max != zero : 0x1
+long_max != NaN : 0x1
+long_max != Inf_plus : 0x1
+long_max != Inf_min : 0x1
+long_max != Inf : 0x1
+long_max != long_max : 0x0
+long_max != long_min : 0x1
+long_max != int_max : 0x0
+long_max != int_min : 0x1
+long_max != uint_max : 0x1
+long_max != ulong_max : 0x1
+long_max != double_min : 0x1
+long_max != double_max : 0x1
+long_max != float_min : 0x1
+long_max != float_max : 0x1
+long_max * long_max * zero_min : 0x0
+long_max * long_max * zero_plus : 0x0
+long_max * long_max * zero : 0x0
+long_max * long_max * NaN : NaN
+long_max * long_max * Inf_plus : Inf
+long_max * long_max * Inf_min : -Inf
+long_max * long_max * Inf : Inf
+long_max * long_max * long_max : 0x1fffffff4e+15
+long_max * long_max * long_min : 0xe00000008e+15
+long_max * long_max * int_max : 0x1fffffff4e+15
+long_max * long_max * int_min : 0xe00000008e+15
+long_max * long_max * uint_max : 0x3ffffffece+15
+long_max * long_max * ulong_max : 0x3ffffffece+15
+long_max * long_max * double_min : 0x.0fffffffce-239
+long_max * long_max * double_max : Inf
+long_max * long_max * float_min : 0x.0fffffffce-15
+long_max * long_max * float_max : 0x3fffffbfe+40
+long_min / zero_min : Inf
+long_min / zero_plus : -Inf
+long_min / zero : -Inf
+long_min / NaN : NaN
+long_min / Inf_plus : 0x0
+long_min / Inf_min : 0x0
+long_min / Inf : 0x0
+long_min / long_max : 0xe.fffffffe
+long_min / long_min : 0x1
+long_min / int_max : 0xe.fffffffe
+long_min / int_min : 0x1
+long_min / uint_max : 0xf.7fffffff8
+long_min / ulong_max : 0xf.7fffffff8
+long_min / double_min : -Inf
+long_min / double_max : 0x.f7ffffffffffff8e-247
+long_min / float_min : 0xee+39
+long_min / float_max : 0x.f7fffff7fffff8e-23
+long_min * zero_min : 0x0
+long_min * zero_plus : 0x0
+long_min * zero : 0x0
+long_min * NaN : NaN
+long_min * Inf_plus : -Inf
+long_min * Inf_min : Inf
+long_min * Inf : -Inf
+long_min * long_max : 0xc00000008e+7
+long_min * long_min : 0x4e+15
+long_min * int_max : 0xc00000008e+7
+long_min * int_min : 0x4e+15
+long_min * uint_max : 0x800000008e+7
+long_min * ulong_max : 0x800000008e+7
+long_min * double_min : 0x.ee-247
+long_min * double_max : -Inf
+long_min * float_min : 0x.ee-23
+long_min * float_max : 0x8000008e+33
+long_min + zero_min : 0x8e+7
+long_min + zero_plus : 0x8e+7
+long_min + zero : 0x8e+7
+long_min + NaN : NaN
+long_min + Inf_plus : Inf
+long_min + Inf_min : -Inf
+long_min + Inf : Inf
+long_min + long_max : 0xf
+long_min + long_min : 0xfe+8
+long_min + int_max : 0xf
+long_min + int_min : 0xfe+8
+long_min + uint_max : 0x7fffffff
+long_min + ulong_max : 0x7fffffff
+long_min + double_min : 0x8e+7
+long_min + double_max : 0x0fffffffffffff8e+242
+long_min + float_min : 0x8e+7
+long_min + float_max : 0x0ffffffe+26
+long_min - zero_min : 0x8e+7
+long_min - zero_plus : 0x8e+7
+long_min - zero : 0x8e+7
+long_min - NaN : NaN
+long_min - Inf_plus : -Inf
+long_min - Inf_min : Inf
+long_min - Inf : -Inf
+long_min - long_max : 0xf00000001
+long_min - long_min : 0x0
+long_min - int_max : 0xf00000001
+long_min - int_min : 0x0
+long_min - uint_max : 0xe80000001
+long_min - ulong_max : 0xe80000001
+long_min - double_min : 0x8e+7
+long_min - double_max : 0xf00000000000008e+242
+long_min - float_min : 0x8e+7
+long_min - float_max : 0xf000001e+26
+long_min > zero_min : 0x0
+long_min > zero_plus : 0x0
+long_min > zero : 0x0
+long_min > NaN : 0x0
+long_min > Inf_plus : 0x0
+long_min > Inf_min : 0x1
+long_min > Inf : 0x0
+long_min > long_max : 0x0
+long_min > long_min : 0x0
+long_min > int_max : 0x0
+long_min > int_min : 0x0
+long_min > uint_max : 0x0
+long_min > ulong_max : 0x0
+long_min > double_min : 0x0
+long_min > double_max : 0x0
+long_min > float_min : 0x0
+long_min > float_max : 0x0
+long_min < zero_min : 0x1
+long_min < zero_plus : 0x1
+long_min < zero : 0x1
+long_min < NaN : 0x0
+long_min < Inf_plus : 0x1
+long_min < Inf_min : 0x0
+long_min < Inf : 0x1
+long_min < long_max : 0x1
+long_min < long_min : 0x0
+long_min < int_max : 0x1
+long_min < int_min : 0x0
+long_min < uint_max : 0x1
+long_min < ulong_max : 0x1
+long_min < double_min : 0x1
+long_min < double_max : 0x1
+long_min < float_min : 0x1
+long_min < float_max : 0x1
+long_min >= zero_min : 0x0
+long_min >= zero_plus : 0x0
+long_min >= zero : 0x0
+long_min >= NaN : 0x0
+long_min >= Inf_plus : 0x0
+long_min >= Inf_min : 0x1
+long_min >= Inf : 0x0
+long_min >= long_max : 0x0
+long_min >= long_min : 0x1
+long_min >= int_max : 0x0
+long_min >= int_min : 0x1
+long_min >= uint_max : 0x0
+long_min >= ulong_max : 0x0
+long_min >= double_min : 0x0
+long_min >= double_max : 0x0
+long_min >= float_min : 0x0
+long_min >= float_max : 0x0
+long_min <= zero_min : 0x1
+long_min <= zero_plus : 0x1
+long_min <= zero : 0x1
+long_min <= NaN : 0x0
+long_min <= Inf_plus : 0x1
+long_min <= Inf_min : 0x0
+long_min <= Inf : 0x1
+long_min <= long_max : 0x1
+long_min <= long_min : 0x1
+long_min <= int_max : 0x1
+long_min <= int_min : 0x1
+long_min <= uint_max : 0x1
+long_min <= ulong_max : 0x1
+long_min <= double_min : 0x1
+long_min <= double_max : 0x1
+long_min <= float_min : 0x1
+long_min <= float_max : 0x1
+long_min == zero_min : 0x0
+long_min == zero_plus : 0x0
+long_min == zero : 0x0
+long_min == NaN : 0x0
+long_min == Inf_plus : 0x0
+long_min == Inf_min : 0x0
+long_min == Inf : 0x0
+long_min == long_max : 0x0
+long_min == long_min : 0x1
+long_min == int_max : 0x0
+long_min == int_min : 0x1
+long_min == uint_max : 0x0
+long_min == ulong_max : 0x0
+long_min == double_min : 0x0
+long_min == double_max : 0x0
+long_min == float_min : 0x0
+long_min == float_max : 0x0
+long_min != zero_min : 0x1
+long_min != zero_plus : 0x1
+long_min != zero : 0x1
+long_min != NaN : 0x1
+long_min != Inf_plus : 0x1
+long_min != Inf_min : 0x1
+long_min != Inf : 0x1
+long_min != long_max : 0x1
+long_min != long_min : 0x0
+long_min != int_max : 0x1
+long_min != int_min : 0x0
+long_min != uint_max : 0x1
+long_min != ulong_max : 0x1
+long_min != double_min : 0x1
+long_min != double_max : 0x1
+long_min != float_min : 0x1
+long_min != float_max : 0x1
+long_min * long_min * zero_min : 0x0
+long_min * long_min * zero_plus : 0x0
+long_min * long_min * zero : 0x0
+long_min * long_min * NaN : NaN
+long_min * long_min * Inf_plus : Inf
+long_min * long_min * Inf_min : -Inf
+long_min * long_min * Inf : Inf
+long_min * long_min * long_max : 0x1fffffffce+15
+long_min * long_min * long_min : 0xee+23
+long_min * long_min * int_max : 0x1fffffffce+15
+long_min * long_min * int_min : 0xee+23
+long_min * long_min * uint_max : 0x3fffffffce+15
+long_min * long_min * ulong_max : 0x3fffffffce+15
+long_min * long_min * double_min : 0x.1e-239
+long_min * long_min * double_max : Inf
+long_min * long_min * float_min : 0x.1e-15
+long_min * long_min * float_max : 0x3fffffce+41
+int_max / zero_min : -Inf
+int_max / zero_plus : Inf
+int_max / zero : Inf
+int_max / NaN : NaN
+int_max / Inf_plus : 0x0
+int_max / Inf_min : 0x0
+int_max / Inf : 0x0
+int_max / long_max : 0x1
+int_max / long_min : 0xf.00000002
+int_max / int_max : 0x1
+int_max / int_min : 0xf.00000002
+int_max / uint_max : 0x.7fffffff8
+int_max / ulong_max : 0x.7fffffff8
+int_max / double_min : Inf
+int_max / double_max : 0x.7fffffff000004e-248
+int_max / float_min : 0x1fffffffce+31
+int_max / float_max : 0x.08000007f00008e-23
+int_max * zero_min : 0x0
+int_max * zero_plus : 0x0
+int_max * zero : 0x0
+int_max * NaN : NaN
+int_max * Inf_plus : Inf
+int_max * Inf_min : -Inf
+int_max * Inf : Inf
+int_max * long_max : 0x3fffffffe+8
+int_max * long_min : 0xc00000008e+7
+int_max * int_max : 0x3fffffffe+8
+int_max * int_min : 0xc00000008e+7
+int_max * uint_max : 0x7ffffffe8e+7
+int_max * ulong_max : 0x7ffffffe8e+7
+int_max * double_min : 0x.1fffffffce-247
+int_max * double_max : Inf
+int_max * float_min : 0x.1fffffffce-23
+int_max * float_max : 0x7fffff7fe+32
+int_max + zero_min : 0x7fffffff
+int_max + zero_plus : 0x7fffffff
+int_max + zero : 0x7fffffff
+int_max + NaN : NaN
+int_max + Inf_plus : Inf
+int_max + Inf_min : -Inf
+int_max + Inf : Inf
+int_max + long_max : 0x0fffffffe
+int_max + long_min : 0xf
+int_max + int_max : 0x0fffffffe
+int_max + int_min : 0xf
+int_max + uint_max : 0x17ffffffe
+int_max + ulong_max : 0x17ffffffe
+int_max + double_min : 0x7fffffff
+int_max + double_max : 0x0fffffffffffff8e+242
+int_max + float_min : 0x7fffffff
+int_max + float_max : 0x0ffffffe+26
+int_max - zero_min : 0x7fffffff
+int_max - zero_plus : 0x7fffffff
+int_max - zero : 0x7fffffff
+int_max - NaN : NaN
+int_max - Inf_plus : -Inf
+int_max - Inf_min : Inf
+int_max - Inf : -Inf
+int_max - long_max : 0x0
+int_max - long_min : 0x0ffffffff
+int_max - int_max : 0x0
+int_max - int_min : 0x0ffffffff
+int_max - uint_max : 0x8e+7
+int_max - ulong_max : 0x8e+7
+int_max - double_min : 0x7fffffff
+int_max - double_max : 0xf00000000000008e+242
+int_max - float_min : 0x7fffffff
+int_max - float_max : 0xf000001e+26
+int_max > zero_min : 0x1
+int_max > zero_plus : 0x1
+int_max > zero : 0x1
+int_max > NaN : 0x0
+int_max > Inf_plus : 0x0
+int_max > Inf_min : 0x1
+int_max > Inf : 0x0
+int_max > long_max : 0x0
+int_max > long_min : 0x1
+int_max > int_max : 0x0
+int_max > int_min : 0x1
+int_max > uint_max : 0x0
+int_max > ulong_max : 0x0
+int_max > double_min : 0x1
+int_max > double_max : 0x0
+int_max > float_min : 0x1
+int_max > float_max : 0x0
+int_max < zero_min : 0x0
+int_max < zero_plus : 0x0
+int_max < zero : 0x0
+int_max < NaN : 0x0
+int_max < Inf_plus : 0x1
+int_max < Inf_min : 0x0
+int_max < Inf : 0x1
+int_max < long_max : 0x0
+int_max < long_min : 0x0
+int_max < int_max : 0x0
+int_max < int_min : 0x0
+int_max < uint_max : 0x1
+int_max < ulong_max : 0x1
+int_max < double_min : 0x0
+int_max < double_max : 0x1
+int_max < float_min : 0x0
+int_max < float_max : 0x1
+int_max >= zero_min : 0x1
+int_max >= zero_plus : 0x1
+int_max >= zero : 0x1
+int_max >= NaN : 0x0
+int_max >= Inf_plus : 0x0
+int_max >= Inf_min : 0x1
+int_max >= Inf : 0x0
+int_max >= long_max : 0x1
+int_max >= long_min : 0x1
+int_max >= int_max : 0x1
+int_max >= int_min : 0x1
+int_max >= uint_max : 0x0
+int_max >= ulong_max : 0x0
+int_max >= double_min : 0x1
+int_max >= double_max : 0x0
+int_max >= float_min : 0x1
+int_max >= float_max : 0x0
+int_max <= zero_min : 0x0
+int_max <= zero_plus : 0x0
+int_max <= zero : 0x0
+int_max <= NaN : 0x0
+int_max <= Inf_plus : 0x1
+int_max <= Inf_min : 0x0
+int_max <= Inf : 0x1
+int_max <= long_max : 0x1
+int_max <= long_min : 0x0
+int_max <= int_max : 0x1
+int_max <= int_min : 0x0
+int_max <= uint_max : 0x1
+int_max <= ulong_max : 0x1
+int_max <= double_min : 0x0
+int_max <= double_max : 0x1
+int_max <= float_min : 0x0
+int_max <= float_max : 0x1
+int_max == zero_min : 0x0
+int_max == zero_plus : 0x0
+int_max == zero : 0x0
+int_max == NaN : 0x0
+int_max == Inf_plus : 0x0
+int_max == Inf_min : 0x0
+int_max == Inf : 0x0
+int_max == long_max : 0x1
+int_max == long_min : 0x0
+int_max == int_max : 0x1
+int_max == int_min : 0x0
+int_max == uint_max : 0x0
+int_max == ulong_max : 0x0
+int_max == double_min : 0x0
+int_max == double_max : 0x0
+int_max == float_min : 0x0
+int_max == float_max : 0x0
+int_max != zero_min : 0x1
+int_max != zero_plus : 0x1
+int_max != zero : 0x1
+int_max != NaN : 0x1
+int_max != Inf_plus : 0x1
+int_max != Inf_min : 0x1
+int_max != Inf : 0x1
+int_max != long_max : 0x0
+int_max != long_min : 0x1
+int_max != int_max : 0x0
+int_max != int_min : 0x1
+int_max != uint_max : 0x1
+int_max != ulong_max : 0x1
+int_max != double_min : 0x1
+int_max != double_max : 0x1
+int_max != float_min : 0x1
+int_max != float_max : 0x1
+int_max * int_max * zero_min : 0x0
+int_max * int_max * zero_plus : 0x0
+int_max * int_max * zero : 0x0
+int_max * int_max * NaN : NaN
+int_max * int_max * Inf_plus : Inf
+int_max * int_max * Inf_min : -Inf
+int_max * int_max * Inf : Inf
+int_max * int_max * long_max : 0x1fffffff4e+15
+int_max * int_max * long_min : 0xe00000008e+15
+int_max * int_max * int_max : 0x1fffffff4e+15
+int_max * int_max * int_min : 0xe00000008e+15
+int_max * int_max * uint_max : 0x3ffffffece+15
+int_max * int_max * ulong_max : 0x3ffffffece+15
+int_max * int_max * double_min : 0x.0fffffffce-239
+int_max * int_max * double_max : Inf
+int_max * int_max * float_min : 0x.0fffffffce-15
+int_max * int_max * float_max : 0x3fffffbfe+40
+int_min / zero_min : Inf
+int_min / zero_plus : -Inf
+int_min / zero : -Inf
+int_min / NaN : NaN
+int_min / Inf_plus : 0x0
+int_min / Inf_min : 0x0
+int_min / Inf : 0x0
+int_min / long_max : 0xe.fffffffe
+int_min / long_min : 0x1
+int_min / int_max : 0xe.fffffffe
+int_min / int_min : 0x1
+int_min / uint_max : 0xf.7fffffff8
+int_min / ulong_max : 0xf.7fffffff8
+int_min / double_min : -Inf
+int_min / double_max : 0x.f7ffffffffffff8e-247
+int_min / float_min : 0xee+39
+int_min / float_max : 0x.f7fffff7fffff8e-23
+int_min * zero_min : 0x0
+int_min * zero_plus : 0x0
+int_min * zero : 0x0
+int_min * NaN : NaN
+int_min * Inf_plus : -Inf
+int_min * Inf_min : Inf
+int_min * Inf : -Inf
+int_min * long_max : 0xc00000008e+7
+int_min * long_min : 0x4e+15
+int_min * int_max : 0xc00000008e+7
+int_min * int_min : 0x4e+15
+int_min * uint_max : 0x800000008e+7
+int_min * ulong_max : 0x800000008e+7
+int_min * double_min : 0x.ee-247
+int_min * double_max : -Inf
+int_min * float_min : 0x.ee-23
+int_min * float_max : 0x8000008e+33
+int_min + zero_min : 0x8e+7
+int_min + zero_plus : 0x8e+7
+int_min + zero : 0x8e+7
+int_min + NaN : NaN
+int_min + Inf_plus : Inf
+int_min + Inf_min : -Inf
+int_min + Inf : Inf
+int_min + long_max : 0xf
+int_min + long_min : 0xfe+8
+int_min + int_max : 0xf
+int_min + int_min : 0xfe+8
+int_min + uint_max : 0x7fffffff
+int_min + ulong_max : 0x7fffffff
+int_min + double_min : 0x8e+7
+int_min + double_max : 0x0fffffffffffff8e+242
+int_min + float_min : 0x8e+7
+int_min + float_max : 0x0ffffffe+26
+int_min - zero_min : 0x8e+7
+int_min - zero_plus : 0x8e+7
+int_min - zero : 0x8e+7
+int_min - NaN : NaN
+int_min - Inf_plus : -Inf
+int_min - Inf_min : Inf
+int_min - Inf : -Inf
+int_min - long_max : 0xf00000001
+int_min - long_min : 0x0
+int_min - int_max : 0xf00000001
+int_min - int_min : 0x0
+int_min - uint_max : 0xe80000001
+int_min - ulong_max : 0xe80000001
+int_min - double_min : 0x8e+7
+int_min - double_max : 0xf00000000000008e+242
+int_min - float_min : 0x8e+7
+int_min - float_max : 0xf000001e+26
+int_min > zero_min : 0x0
+int_min > zero_plus : 0x0
+int_min > zero : 0x0
+int_min > NaN : 0x0
+int_min > Inf_plus : 0x0
+int_min > Inf_min : 0x1
+int_min > Inf : 0x0
+int_min > long_max : 0x0
+int_min > long_min : 0x0
+int_min > int_max : 0x0
+int_min > int_min : 0x0
+int_min > uint_max : 0x0
+int_min > ulong_max : 0x0
+int_min > double_min : 0x0
+int_min > double_max : 0x0
+int_min > float_min : 0x0
+int_min > float_max : 0x0
+int_min < zero_min : 0x1
+int_min < zero_plus : 0x1
+int_min < zero : 0x1
+int_min < NaN : 0x0
+int_min < Inf_plus : 0x1
+int_min < Inf_min : 0x0
+int_min < Inf : 0x1
+int_min < long_max : 0x1
+int_min < long_min : 0x0
+int_min < int_max : 0x1
+int_min < int_min : 0x0
+int_min < uint_max : 0x1
+int_min < ulong_max : 0x1
+int_min < double_min : 0x1
+int_min < double_max : 0x1
+int_min < float_min : 0x1
+int_min < float_max : 0x1
+int_min >= zero_min : 0x0
+int_min >= zero_plus : 0x0
+int_min >= zero : 0x0
+int_min >= NaN : 0x0
+int_min >= Inf_plus : 0x0
+int_min >= Inf_min : 0x1
+int_min >= Inf : 0x0
+int_min >= long_max : 0x0
+int_min >= long_min : 0x1
+int_min >= int_max : 0x0
+int_min >= int_min : 0x1
+int_min >= uint_max : 0x0
+int_min >= ulong_max : 0x0
+int_min >= double_min : 0x0
+int_min >= double_max : 0x0
+int_min >= float_min : 0x0
+int_min >= float_max : 0x0
+int_min <= zero_min : 0x1
+int_min <= zero_plus : 0x1
+int_min <= zero : 0x1
+int_min <= NaN : 0x0
+int_min <= Inf_plus : 0x1
+int_min <= Inf_min : 0x0
+int_min <= Inf : 0x1
+int_min <= long_max : 0x1
+int_min <= long_min : 0x1
+int_min <= int_max : 0x1
+int_min <= int_min : 0x1
+int_min <= uint_max : 0x1
+int_min <= ulong_max : 0x1
+int_min <= double_min : 0x1
+int_min <= double_max : 0x1
+int_min <= float_min : 0x1
+int_min <= float_max : 0x1
+int_min == zero_min : 0x0
+int_min == zero_plus : 0x0
+int_min == zero : 0x0
+int_min == NaN : 0x0
+int_min == Inf_plus : 0x0
+int_min == Inf_min : 0x0
+int_min == Inf : 0x0
+int_min == long_max : 0x0
+int_min == long_min : 0x1
+int_min == int_max : 0x0
+int_min == int_min : 0x1
+int_min == uint_max : 0x0
+int_min == ulong_max : 0x0
+int_min == double_min : 0x0
+int_min == double_max : 0x0
+int_min == float_min : 0x0
+int_min == float_max : 0x0
+int_min != zero_min : 0x1
+int_min != zero_plus : 0x1
+int_min != zero : 0x1
+int_min != NaN : 0x1
+int_min != Inf_plus : 0x1
+int_min != Inf_min : 0x1
+int_min != Inf : 0x1
+int_min != long_max : 0x1
+int_min != long_min : 0x0
+int_min != int_max : 0x1
+int_min != int_min : 0x0
+int_min != uint_max : 0x1
+int_min != ulong_max : 0x1
+int_min != double_min : 0x1
+int_min != double_max : 0x1
+int_min != float_min : 0x1
+int_min != float_max : 0x1
+int_min * int_min * zero_min : 0x0
+int_min * int_min * zero_plus : 0x0
+int_min * int_min * zero : 0x0
+int_min * int_min * NaN : NaN
+int_min * int_min * Inf_plus : Inf
+int_min * int_min * Inf_min : -Inf
+int_min * int_min * Inf : Inf
+int_min * int_min * long_max : 0x1fffffffce+15
+int_min * int_min * long_min : 0xee+23
+int_min * int_min * int_max : 0x1fffffffce+15
+int_min * int_min * int_min : 0xee+23
+int_min * int_min * uint_max : 0x3fffffffce+15
+int_min * int_min * ulong_max : 0x3fffffffce+15
+int_min * int_min * double_min : 0x.1e-239
+int_min * int_min * double_max : Inf
+int_min * int_min * float_min : 0x.1e-15
+int_min * int_min * float_max : 0x3fffffce+41
+uint_max / zero_min : -Inf
+uint_max / zero_plus : Inf
+uint_max / zero : Inf
+uint_max / NaN : NaN
+uint_max / Inf_plus : 0x0
+uint_max / Inf_min : 0x0
+uint_max / Inf : 0x0
+uint_max / long_max : 0x2.00000002
+uint_max / long_min : 0xe.00000002
+uint_max / int_max : 0x2.00000002
+uint_max / int_min : 0xe.00000002
+uint_max / uint_max : 0x1
+uint_max / ulong_max : 0x1
+uint_max / double_min : Inf
+uint_max / double_max : 0x.0ffffffff000008e-247
+uint_max / float_min : 0x3fffffffce+31
+uint_max / float_max : 0x.1000000ff0001e-23
+uint_max * zero_min : 0x0
+uint_max * zero_plus : 0x0
+uint_max * zero : 0x0
+uint_max * NaN : NaN
+uint_max * Inf_plus : Inf
+uint_max * Inf_min : -Inf
+uint_max * Inf : Inf
+uint_max * long_max : 0x7ffffffe8e+7
+uint_max * long_min : 0x800000008e+7
+uint_max * int_max : 0x7ffffffe8e+7
+uint_max * int_min : 0x800000008e+7
+uint_max * uint_max : 0x0fffffffee+8
+uint_max * ulong_max : 0x0fffffffee+8
+uint_max * double_min : 0x.3fffffffce-247
+uint_max * double_max : Inf
+uint_max * float_min : 0x.3fffffffce-23
+uint_max * float_max : 0x0fffffeffe+32
+uint_max + zero_min : 0x0ffffffff
+uint_max + zero_plus : 0x0ffffffff
+uint_max + zero : 0x0ffffffff
+uint_max + NaN : NaN
+uint_max + Inf_plus : Inf
+uint_max + Inf_min : -Inf
+uint_max + Inf : Inf
+uint_max + long_max : 0x17ffffffe
+uint_max + long_min : 0x7fffffff
+uint_max + int_max : 0x17ffffffe
+uint_max + int_min : 0x7fffffff
+uint_max + uint_max : 0x1fffffffe
+uint_max + ulong_max : 0x1fffffffe
+uint_max + double_min : 0x0ffffffff
+uint_max + double_max : 0x0fffffffffffff8e+242
+uint_max + float_min : 0x0ffffffff
+uint_max + float_max : 0x0ffffffe+26
+uint_max - zero_min : 0x0ffffffff
+uint_max - zero_plus : 0x0ffffffff
+uint_max - zero : 0x0ffffffff
+uint_max - NaN : NaN
+uint_max - Inf_plus : -Inf
+uint_max - Inf_min : Inf
+uint_max - Inf : -Inf
+uint_max - long_max : 0x08e+7
+uint_max - long_min : 0x17fffffff
+uint_max - int_max : 0x08e+7
+uint_max - int_min : 0x17fffffff
+uint_max - uint_max : 0x0
+uint_max - ulong_max : 0x0
+uint_max - double_min : 0x0ffffffff
+uint_max - double_max : 0xf00000000000008e+242
+uint_max - float_min : 0x0ffffffff
+uint_max - float_max : 0xf000001e+26
+uint_max > zero_min : 0x1
+uint_max > zero_plus : 0x1
+uint_max > zero : 0x1
+uint_max > NaN : 0x0
+uint_max > Inf_plus : 0x0
+uint_max > Inf_min : 0x1
+uint_max > Inf : 0x0
+uint_max > long_max : 0x1
+uint_max > long_min : 0x1
+uint_max > int_max : 0x1
+uint_max > int_min : 0x1
+uint_max > uint_max : 0x0
+uint_max > ulong_max : 0x0
+uint_max > double_min : 0x1
+uint_max > double_max : 0x0
+uint_max > float_min : 0x1
+uint_max > float_max : 0x0
+uint_max < zero_min : 0x0
+uint_max < zero_plus : 0x0
+uint_max < zero : 0x0
+uint_max < NaN : 0x0
+uint_max < Inf_plus : 0x1
+uint_max < Inf_min : 0x0
+uint_max < Inf : 0x1
+uint_max < long_max : 0x0
+uint_max < long_min : 0x0
+uint_max < int_max : 0x0
+uint_max < int_min : 0x0
+uint_max < uint_max : 0x0
+uint_max < ulong_max : 0x0
+uint_max < double_min : 0x0
+uint_max < double_max : 0x1
+uint_max < float_min : 0x0
+uint_max < float_max : 0x1
+uint_max >= zero_min : 0x1
+uint_max >= zero_plus : 0x1
+uint_max >= zero : 0x1
+uint_max >= NaN : 0x0
+uint_max >= Inf_plus : 0x0
+uint_max >= Inf_min : 0x1
+uint_max >= Inf : 0x0
+uint_max >= long_max : 0x1
+uint_max >= long_min : 0x1
+uint_max >= int_max : 0x1
+uint_max >= int_min : 0x1
+uint_max >= uint_max : 0x1
+uint_max >= ulong_max : 0x1
+uint_max >= double_min : 0x1
+uint_max >= double_max : 0x0
+uint_max >= float_min : 0x1
+uint_max >= float_max : 0x0
+uint_max <= zero_min : 0x0
+uint_max <= zero_plus : 0x0
+uint_max <= zero : 0x0
+uint_max <= NaN : 0x0
+uint_max <= Inf_plus : 0x1
+uint_max <= Inf_min : 0x0
+uint_max <= Inf : 0x1
+uint_max <= long_max : 0x0
+uint_max <= long_min : 0x0
+uint_max <= int_max : 0x0
+uint_max <= int_min : 0x0
+uint_max <= uint_max : 0x1
+uint_max <= ulong_max : 0x1
+uint_max <= double_min : 0x0
+uint_max <= double_max : 0x1
+uint_max <= float_min : 0x0
+uint_max <= float_max : 0x1
+uint_max == zero_min : 0x0
+uint_max == zero_plus : 0x0
+uint_max == zero : 0x0
+uint_max == NaN : 0x0
+uint_max == Inf_plus : 0x0
+uint_max == Inf_min : 0x0
+uint_max == Inf : 0x0
+uint_max == long_max : 0x0
+uint_max == long_min : 0x0
+uint_max == int_max : 0x0
+uint_max == int_min : 0x0
+uint_max == uint_max : 0x1
+uint_max == ulong_max : 0x1
+uint_max == double_min : 0x0
+uint_max == double_max : 0x0
+uint_max == float_min : 0x0
+uint_max == float_max : 0x0
+uint_max != zero_min : 0x1
+uint_max != zero_plus : 0x1
+uint_max != zero : 0x1
+uint_max != NaN : 0x1
+uint_max != Inf_plus : 0x1
+uint_max != Inf_min : 0x1
+uint_max != Inf : 0x1
+uint_max != long_max : 0x1
+uint_max != long_min : 0x1
+uint_max != int_max : 0x1
+uint_max != int_min : 0x1
+uint_max != uint_max : 0x0
+uint_max != ulong_max : 0x0
+uint_max != double_min : 0x1
+uint_max != double_max : 0x1
+uint_max != float_min : 0x1
+uint_max != float_max : 0x1
+uint_max * uint_max * zero_min : 0x0
+uint_max * uint_max * zero_plus : 0x0
+uint_max * uint_max * zero : 0x0
+uint_max * uint_max * NaN : NaN
+uint_max * uint_max * Inf_plus : Inf
+uint_max * uint_max * Inf_min : -Inf
+uint_max * uint_max * Inf : Inf
+uint_max * uint_max * long_max : 0x7ffffffee+16
+uint_max * uint_max * long_min : 0x80000001e+16
+uint_max * uint_max * int_max : 0x7ffffffee+16
+uint_max * uint_max * int_min : 0x80000001e+16
+uint_max * uint_max * uint_max : 0x0fffffffde+16
+uint_max * uint_max * ulong_max : 0x0fffffffde+16
+uint_max * uint_max * double_min : 0x.3fffffff8e-239
+uint_max * uint_max * double_max : Inf
+uint_max * uint_max * float_min : 0x.3fffffff8e-15
+uint_max * uint_max * float_max : 0x0fffffefee+40
+ulong_max / zero_min : -Inf
+ulong_max / zero_plus : Inf
+ulong_max / zero : Inf
+ulong_max / NaN : NaN
+ulong_max / Inf_plus : 0x0
+ulong_max / Inf_min : 0x0
+ulong_max / Inf : 0x0
+ulong_max / long_max : 0x2.00000002
+ulong_max / long_min : 0xe.00000002
+ulong_max / int_max : 0x2.00000002
+ulong_max / int_min : 0xe.00000002
+ulong_max / uint_max : 0x1
+ulong_max / ulong_max : 0x1
+ulong_max / double_min : Inf
+ulong_max / double_max : 0x.0ffffffff000008e-247
+ulong_max / float_min : 0x3fffffffce+31
+ulong_max / float_max : 0x.1000000ff0001e-23
+ulong_max * zero_min : 0x0
+ulong_max * zero_plus : 0x0
+ulong_max * zero : 0x0
+ulong_max * NaN : NaN
+ulong_max * Inf_plus : Inf
+ulong_max * Inf_min : -Inf
+ulong_max * Inf : Inf
+ulong_max * long_max : 0x7ffffffe8e+7
+ulong_max * long_min : 0x800000008e+7
+ulong_max * int_max : 0x7ffffffe8e+7
+ulong_max * int_min : 0x800000008e+7
+ulong_max * uint_max : 0x0fffffffee+8
+ulong_max * ulong_max : 0x0fffffffee+8
+ulong_max * double_min : 0x.3fffffffce-247
+ulong_max * double_max : Inf
+ulong_max * float_min : 0x.3fffffffce-23
+ulong_max * float_max : 0x0fffffeffe+32
+ulong_max + zero_min : 0x0ffffffff
+ulong_max + zero_plus : 0x0ffffffff
+ulong_max + zero : 0x0ffffffff
+ulong_max + NaN : NaN
+ulong_max + Inf_plus : Inf
+ulong_max + Inf_min : -Inf
+ulong_max + Inf : Inf
+ulong_max + long_max : 0x17ffffffe
+ulong_max + long_min : 0x7fffffff
+ulong_max + int_max : 0x17ffffffe
+ulong_max + int_min : 0x7fffffff
+ulong_max + uint_max : 0x1fffffffe
+ulong_max + ulong_max : 0x1fffffffe
+ulong_max + double_min : 0x0ffffffff
+ulong_max + double_max : 0x0fffffffffffff8e+242
+ulong_max + float_min : 0x0ffffffff
+ulong_max + float_max : 0x0ffffffe+26
+ulong_max - zero_min : 0x0ffffffff
+ulong_max - zero_plus : 0x0ffffffff
+ulong_max - zero : 0x0ffffffff
+ulong_max - NaN : NaN
+ulong_max - Inf_plus : -Inf
+ulong_max - Inf_min : Inf
+ulong_max - Inf : -Inf
+ulong_max - long_max : 0x08e+7
+ulong_max - long_min : 0x17fffffff
+ulong_max - int_max : 0x08e+7
+ulong_max - int_min : 0x17fffffff
+ulong_max - uint_max : 0x0
+ulong_max - ulong_max : 0x0
+ulong_max - double_min : 0x0ffffffff
+ulong_max - double_max : 0xf00000000000008e+242
+ulong_max - float_min : 0x0ffffffff
+ulong_max - float_max : 0xf000001e+26
+ulong_max > zero_min : 0x1
+ulong_max > zero_plus : 0x1
+ulong_max > zero : 0x1
+ulong_max > NaN : 0x0
+ulong_max > Inf_plus : 0x0
+ulong_max > Inf_min : 0x1
+ulong_max > Inf : 0x0
+ulong_max > long_max : 0x1
+ulong_max > long_min : 0x1
+ulong_max > int_max : 0x1
+ulong_max > int_min : 0x1
+ulong_max > uint_max : 0x0
+ulong_max > ulong_max : 0x0
+ulong_max > double_min : 0x1
+ulong_max > double_max : 0x0
+ulong_max > float_min : 0x1
+ulong_max > float_max : 0x0
+ulong_max < zero_min : 0x0
+ulong_max < zero_plus : 0x0
+ulong_max < zero : 0x0
+ulong_max < NaN : 0x0
+ulong_max < Inf_plus : 0x1
+ulong_max < Inf_min : 0x0
+ulong_max < Inf : 0x1
+ulong_max < long_max : 0x0
+ulong_max < long_min : 0x0
+ulong_max < int_max : 0x0
+ulong_max < int_min : 0x0
+ulong_max < uint_max : 0x0
+ulong_max < ulong_max : 0x0
+ulong_max < double_min : 0x0
+ulong_max < double_max : 0x1
+ulong_max < float_min : 0x0
+ulong_max < float_max : 0x1
+ulong_max >= zero_min : 0x1
+ulong_max >= zero_plus : 0x1
+ulong_max >= zero : 0x1
+ulong_max >= NaN : 0x0
+ulong_max >= Inf_plus : 0x0
+ulong_max >= Inf_min : 0x1
+ulong_max >= Inf : 0x0
+ulong_max >= long_max : 0x1
+ulong_max >= long_min : 0x1
+ulong_max >= int_max : 0x1
+ulong_max >= int_min : 0x1
+ulong_max >= uint_max : 0x1
+ulong_max >= ulong_max : 0x1
+ulong_max >= double_min : 0x1
+ulong_max >= double_max : 0x0
+ulong_max >= float_min : 0x1
+ulong_max >= float_max : 0x0
+ulong_max <= zero_min : 0x0
+ulong_max <= zero_plus : 0x0
+ulong_max <= zero : 0x0
+ulong_max <= NaN : 0x0
+ulong_max <= Inf_plus : 0x1
+ulong_max <= Inf_min : 0x0
+ulong_max <= Inf : 0x1
+ulong_max <= long_max : 0x0
+ulong_max <= long_min : 0x0
+ulong_max <= int_max : 0x0
+ulong_max <= int_min : 0x0
+ulong_max <= uint_max : 0x1
+ulong_max <= ulong_max : 0x1
+ulong_max <= double_min : 0x0
+ulong_max <= double_max : 0x1
+ulong_max <= float_min : 0x0
+ulong_max <= float_max : 0x1
+ulong_max == zero_min : 0x0
+ulong_max == zero_plus : 0x0
+ulong_max == zero : 0x0
+ulong_max == NaN : 0x0
+ulong_max == Inf_plus : 0x0
+ulong_max == Inf_min : 0x0
+ulong_max == Inf : 0x0
+ulong_max == long_max : 0x0
+ulong_max == long_min : 0x0
+ulong_max == int_max : 0x0
+ulong_max == int_min : 0x0
+ulong_max == uint_max : 0x1
+ulong_max == ulong_max : 0x1
+ulong_max == double_min : 0x0
+ulong_max == double_max : 0x0
+ulong_max == float_min : 0x0
+ulong_max == float_max : 0x0
+ulong_max != zero_min : 0x1
+ulong_max != zero_plus : 0x1
+ulong_max != zero : 0x1
+ulong_max != NaN : 0x1
+ulong_max != Inf_plus : 0x1
+ulong_max != Inf_min : 0x1
+ulong_max != Inf : 0x1
+ulong_max != long_max : 0x1
+ulong_max != long_min : 0x1
+ulong_max != int_max : 0x1
+ulong_max != int_min : 0x1
+ulong_max != uint_max : 0x0
+ulong_max != ulong_max : 0x0
+ulong_max != double_min : 0x1
+ulong_max != double_max : 0x1
+ulong_max != float_min : 0x1
+ulong_max != float_max : 0x1
+ulong_max * ulong_max * zero_min : 0x0
+ulong_max * ulong_max * zero_plus : 0x0
+ulong_max * ulong_max * zero : 0x0
+ulong_max * ulong_max * NaN : NaN
+ulong_max * ulong_max * Inf_plus : Inf
+ulong_max * ulong_max * Inf_min : -Inf
+ulong_max * ulong_max * Inf : Inf
+ulong_max * ulong_max * long_max : 0x7ffffffee+16
+ulong_max * ulong_max * long_min : 0x80000001e+16
+ulong_max * ulong_max * int_max : 0x7ffffffee+16
+ulong_max * ulong_max * int_min : 0x80000001e+16
+ulong_max * ulong_max * uint_max : 0x0fffffffde+16
+ulong_max * ulong_max * ulong_max : 0x0fffffffde+16
+ulong_max * ulong_max * double_min : 0x.3fffffff8e-239
+ulong_max * ulong_max * double_max : Inf
+ulong_max * ulong_max * float_min : 0x.3fffffff8e-15
+ulong_max * ulong_max * float_max : 0x0fffffefee+40
+****************** limits fx_float_double
+zero_min : 0x0
+zero_plus : 0x0
+zero : 0x0
+NaN : NaN
+Inf_plus : Inf
+Inf_min : -Inf
+Inf : Inf
+long_max : 0x7fffffff
+long_min : 0x8e+7
+int_max : 0x7fffffff
+int_min : 0x8e+7
+uint_max : 0x0ffffffff
+ulong_max : 0x0ffffffff
+double_min : 0x.4e-255
+double_max : 0x0fffffffffffff8e+242
+float_min : 0x.4e-31
+float_max : 0x0ffffffe+26
+double_min / zero_min : -Inf
+double_min / zero_plus : Inf
+double_min / zero : Inf
+double_min / NaN : NaN
+double_min / Inf_plus : 0x0
+double_min / Inf_min : 0x0
+double_min / Inf : 0x0
+double_min / long_max : 0x.4e-263
+double_min / long_min : 0x.ce-263
+double_min / int_max : 0x.4e-263
+double_min / int_min : 0x.ce-263
+double_min / uint_max : 0x.2e-263
+double_min / ulong_max : 0x.2e-263
+double_min / double_min : 0x1
+double_min / double_max : 0x0
+double_min / float_min : 0x.1e-223
+double_min / float_max : 0x0
+double_min * zero_min : 0x0
+double_min * zero_plus : 0x0
+double_min * zero : 0x0
+double_min * NaN : NaN
+double_min * Inf_plus : Inf
+double_min * Inf_min : -Inf
+double_min * Inf : Inf
+double_min * long_max : 0x.1fffffffce-247
+double_min * long_min : 0x.ee-247
+double_min * int_max : 0x.1fffffffce-247
+double_min * int_min : 0x.ee-247
+double_min * uint_max : 0x.3fffffffce-247
+double_min * ulong_max : 0x.3fffffffce-247
+double_min * double_min : 0x0
+double_min * double_max : 0x3.ffffffffffffe
+double_min * float_min : 0x0
+double_min * float_max : 0x.3fffffce-223
+double_min + zero_min : 0x.4e-255
+double_min + zero_plus : 0x.4e-255
+double_min + zero : 0x.4e-255
+double_min + NaN : NaN
+double_min + Inf_plus : Inf
+double_min + Inf_min : -Inf
+double_min + Inf : Inf
+double_min + long_max : 0x7fffffff
+double_min + long_min : 0x8e+7
+double_min + int_max : 0x7fffffff
+double_min + int_min : 0x8e+7
+double_min + uint_max : 0x0ffffffff
+double_min + ulong_max : 0x0ffffffff
+double_min + double_min : 0x.08e-254
+double_min + double_max : 0x0fffffffffffff8e+242
+double_min + float_min : 0x.4e-31
+double_min + float_max : 0x0ffffffe+26
+double_min - zero_min : 0x.4e-255
+double_min - zero_plus : 0x.4e-255
+double_min - zero : 0x.4e-255
+double_min - NaN : NaN
+double_min - Inf_plus : -Inf
+double_min - Inf_min : Inf
+double_min - Inf : -Inf
+double_min - long_max : 0x80000001
+double_min - long_min : 0x08e+7
+double_min - int_max : 0x80000001
+double_min - int_min : 0x08e+7
+double_min - uint_max : 0xf00000001
+double_min - ulong_max : 0xf00000001
+double_min - double_min : 0x0
+double_min - double_max : 0xf00000000000008e+242
+double_min - float_min : 0x.ce-31
+double_min - float_max : 0xf000001e+26
+double_min > zero_min : 0x1
+double_min > zero_plus : 0x1
+double_min > zero : 0x1
+double_min > NaN : 0x0
+double_min > Inf_plus : 0x0
+double_min > Inf_min : 0x1
+double_min > Inf : 0x0
+double_min > long_max : 0x0
+double_min > long_min : 0x1
+double_min > int_max : 0x0
+double_min > int_min : 0x1
+double_min > uint_max : 0x0
+double_min > ulong_max : 0x0
+double_min > double_min : 0x0
+double_min > double_max : 0x0
+double_min > float_min : 0x0
+double_min > float_max : 0x0
+double_min < zero_min : 0x0
+double_min < zero_plus : 0x0
+double_min < zero : 0x0
+double_min < NaN : 0x0
+double_min < Inf_plus : 0x1
+double_min < Inf_min : 0x0
+double_min < Inf : 0x1
+double_min < long_max : 0x1
+double_min < long_min : 0x0
+double_min < int_max : 0x1
+double_min < int_min : 0x0
+double_min < uint_max : 0x1
+double_min < ulong_max : 0x1
+double_min < double_min : 0x0
+double_min < double_max : 0x1
+double_min < float_min : 0x1
+double_min < float_max : 0x1
+double_min >= zero_min : 0x1
+double_min >= zero_plus : 0x1
+double_min >= zero : 0x1
+double_min >= NaN : 0x0
+double_min >= Inf_plus : 0x0
+double_min >= Inf_min : 0x1
+double_min >= Inf : 0x0
+double_min >= long_max : 0x0
+double_min >= long_min : 0x1
+double_min >= int_max : 0x0
+double_min >= int_min : 0x1
+double_min >= uint_max : 0x0
+double_min >= ulong_max : 0x0
+double_min >= double_min : 0x1
+double_min >= double_max : 0x0
+double_min >= float_min : 0x0
+double_min >= float_max : 0x0
+double_min <= zero_min : 0x0
+double_min <= zero_plus : 0x0
+double_min <= zero : 0x0
+double_min <= NaN : 0x0
+double_min <= Inf_plus : 0x1
+double_min <= Inf_min : 0x0
+double_min <= Inf : 0x1
+double_min <= long_max : 0x1
+double_min <= long_min : 0x0
+double_min <= int_max : 0x1
+double_min <= int_min : 0x0
+double_min <= uint_max : 0x1
+double_min <= ulong_max : 0x1
+double_min <= double_min : 0x1
+double_min <= double_max : 0x1
+double_min <= float_min : 0x1
+double_min <= float_max : 0x1
+double_min == zero_min : 0x0
+double_min == zero_plus : 0x0
+double_min == zero : 0x0
+double_min == NaN : 0x0
+double_min == Inf_plus : 0x0
+double_min == Inf_min : 0x0
+double_min == Inf : 0x0
+double_min == long_max : 0x0
+double_min == long_min : 0x0
+double_min == int_max : 0x0
+double_min == int_min : 0x0
+double_min == uint_max : 0x0
+double_min == ulong_max : 0x0
+double_min == double_min : 0x1
+double_min == double_max : 0x0
+double_min == float_min : 0x0
+double_min == float_max : 0x0
+double_min != zero_min : 0x1
+double_min != zero_plus : 0x1
+double_min != zero : 0x1
+double_min != NaN : 0x1
+double_min != Inf_plus : 0x1
+double_min != Inf_min : 0x1
+double_min != Inf : 0x1
+double_min != long_max : 0x1
+double_min != long_min : 0x1
+double_min != int_max : 0x1
+double_min != int_min : 0x1
+double_min != uint_max : 0x1
+double_min != ulong_max : 0x1
+double_min != double_min : 0x0
+double_min != double_max : 0x1
+double_min != float_min : 0x1
+double_min != float_max : 0x1
+double_min * double_min * zero_min : 0x0
+double_min * double_min * zero_plus : 0x0
+double_min * double_min * zero : 0x0
+double_min * double_min * NaN : NaN
+double_min * double_min * Inf_plus : NaN
+double_min * double_min * Inf_min : NaN
+double_min * double_min * Inf : NaN
+double_min * double_min * long_max : 0x0
+double_min * double_min * long_min : 0x0
+double_min * double_min * int_max : 0x0
+double_min * double_min * int_min : 0x0
+double_min * double_min * uint_max : 0x0
+double_min * double_min * ulong_max : 0x0
+double_min * double_min * double_min : 0x0
+double_min * double_min * double_max : 0x0
+double_min * double_min * float_min : 0x0
+double_min * double_min * float_max : 0x0
+double_max / zero_min : -Inf
+double_max / zero_plus : Inf
+double_max / zero : Inf
+double_max / NaN : NaN
+double_max / Inf_plus : 0x0
+double_max / Inf_min : 0x0
+double_max / Inf : 0x0
+double_max / long_max : 0x200000004e+240
+double_max / long_min : 0xe0000000000001e+235
+double_max / int_max : 0x200000004e+240
+double_max / int_min : 0xe0000000000001e+235
+double_max / uint_max : 0x100000001e+240
+double_max / ulong_max : 0x100000001e+240
+double_max / double_min : Inf
+double_max / double_max : 0x1
+double_max / float_min : Inf
+double_max / float_max : 0x1000001000001e+212
+double_max * zero_min : 0x0
+double_max * zero_plus : 0x0
+double_max * zero : 0x0
+double_max * NaN : NaN
+double_max * Inf_plus : Inf
+double_max * Inf_min : -Inf
+double_max * Inf : Inf
+double_max * long_max : Inf
+double_max * long_min : -Inf
+double_max * int_max : Inf
+double_max * int_min : -Inf
+double_max * uint_max : Inf
+double_max * ulong_max : Inf
+double_max * double_min : 0x3.ffffffffffffe
+double_max * double_max : Inf
+double_max * float_min : 0x3ffffffffffffee+211
+double_max * float_max : Inf
+double_max + zero_min : 0x0fffffffffffff8e+242
+double_max + zero_plus : 0x0fffffffffffff8e+242
+double_max + zero : 0x0fffffffffffff8e+242
+double_max + NaN : NaN
+double_max + Inf_plus : Inf
+double_max + Inf_min : -Inf
+double_max + Inf : Inf
+double_max + long_max : 0x0fffffffffffff8e+242
+double_max + long_min : 0x0fffffffffffff8e+242
+double_max + int_max : 0x0fffffffffffff8e+242
+double_max + int_min : 0x0fffffffffffff8e+242
+double_max + uint_max : 0x0fffffffffffff8e+242
+double_max + ulong_max : 0x0fffffffffffff8e+242
+double_max + double_min : 0x0fffffffffffff8e+242
+double_max + double_max : Inf
+double_max + float_min : 0x0fffffffffffff8e+242
+double_max + float_max : 0x0fffffffffffff8e+242
+double_max - zero_min : 0x0fffffffffffff8e+242
+double_max - zero_plus : 0x0fffffffffffff8e+242
+double_max - zero : 0x0fffffffffffff8e+242
+double_max - NaN : NaN
+double_max - Inf_plus : -Inf
+double_max - Inf_min : Inf
+double_max - Inf : -Inf
+double_max - long_max : 0x0fffffffffffff8e+242
+double_max - long_min : 0x0fffffffffffff8e+242
+double_max - int_max : 0x0fffffffffffff8e+242
+double_max - int_min : 0x0fffffffffffff8e+242
+double_max - uint_max : 0x0fffffffffffff8e+242
+double_max - ulong_max : 0x0fffffffffffff8e+242
+double_max - double_min : 0x0fffffffffffff8e+242
+double_max - double_max : 0x0
+double_max - float_min : 0x0fffffffffffff8e+242
+double_max - float_max : 0x0fffffffffffff8e+242
+double_max > zero_min : 0x1
+double_max > zero_plus : 0x1
+double_max > zero : 0x1
+double_max > NaN : 0x0
+double_max > Inf_plus : 0x0
+double_max > Inf_min : 0x1
+double_max > Inf : 0x0
+double_max > long_max : 0x1
+double_max > long_min : 0x1
+double_max > int_max : 0x1
+double_max > int_min : 0x1
+double_max > uint_max : 0x1
+double_max > ulong_max : 0x1
+double_max > double_min : 0x1
+double_max > double_max : 0x0
+double_max > float_min : 0x1
+double_max > float_max : 0x1
+double_max < zero_min : 0x0
+double_max < zero_plus : 0x0
+double_max < zero : 0x0
+double_max < NaN : 0x0
+double_max < Inf_plus : 0x1
+double_max < Inf_min : 0x0
+double_max < Inf : 0x1
+double_max < long_max : 0x0
+double_max < long_min : 0x0
+double_max < int_max : 0x0
+double_max < int_min : 0x0
+double_max < uint_max : 0x0
+double_max < ulong_max : 0x0
+double_max < double_min : 0x0
+double_max < double_max : 0x0
+double_max < float_min : 0x0
+double_max < float_max : 0x0
+double_max >= zero_min : 0x1
+double_max >= zero_plus : 0x1
+double_max >= zero : 0x1
+double_max >= NaN : 0x0
+double_max >= Inf_plus : 0x0
+double_max >= Inf_min : 0x1
+double_max >= Inf : 0x0
+double_max >= long_max : 0x1
+double_max >= long_min : 0x1
+double_max >= int_max : 0x1
+double_max >= int_min : 0x1
+double_max >= uint_max : 0x1
+double_max >= ulong_max : 0x1
+double_max >= double_min : 0x1
+double_max >= double_max : 0x1
+double_max >= float_min : 0x1
+double_max >= float_max : 0x1
+double_max <= zero_min : 0x0
+double_max <= zero_plus : 0x0
+double_max <= zero : 0x0
+double_max <= NaN : 0x0
+double_max <= Inf_plus : 0x1
+double_max <= Inf_min : 0x0
+double_max <= Inf : 0x1
+double_max <= long_max : 0x0
+double_max <= long_min : 0x0
+double_max <= int_max : 0x0
+double_max <= int_min : 0x0
+double_max <= uint_max : 0x0
+double_max <= ulong_max : 0x0
+double_max <= double_min : 0x0
+double_max <= double_max : 0x1
+double_max <= float_min : 0x0
+double_max <= float_max : 0x0
+double_max == zero_min : 0x0
+double_max == zero_plus : 0x0
+double_max == zero : 0x0
+double_max == NaN : 0x0
+double_max == Inf_plus : 0x0
+double_max == Inf_min : 0x0
+double_max == Inf : 0x0
+double_max == long_max : 0x0
+double_max == long_min : 0x0
+double_max == int_max : 0x0
+double_max == int_min : 0x0
+double_max == uint_max : 0x0
+double_max == ulong_max : 0x0
+double_max == double_min : 0x0
+double_max == double_max : 0x1
+double_max == float_min : 0x0
+double_max == float_max : 0x0
+double_max != zero_min : 0x1
+double_max != zero_plus : 0x1
+double_max != zero : 0x1
+double_max != NaN : 0x1
+double_max != Inf_plus : 0x1
+double_max != Inf_min : 0x1
+double_max != Inf : 0x1
+double_max != long_max : 0x1
+double_max != long_min : 0x1
+double_max != int_max : 0x1
+double_max != int_min : 0x1
+double_max != uint_max : 0x1
+double_max != ulong_max : 0x1
+double_max != double_min : 0x1
+double_max != double_max : 0x0
+double_max != float_min : 0x1
+double_max != float_max : 0x1
+double_max * double_max * zero_min : NaN
+double_max * double_max * zero_plus : NaN
+double_max * double_max * zero : NaN
+double_max * double_max * NaN : NaN
+double_max * double_max * Inf_plus : Inf
+double_max * double_max * Inf_min : -Inf
+double_max * double_max * Inf : Inf
+double_max * double_max * long_max : Inf
+double_max * double_max * long_min : -Inf
+double_max * double_max * int_max : Inf
+double_max * double_max * int_min : -Inf
+double_max * double_max * uint_max : Inf
+double_max * double_max * ulong_max : Inf
+double_max * double_max * double_min : Inf
+double_max * double_max * double_max : Inf
+double_max * double_max * float_min : Inf
+double_max * double_max * float_max : Inf
+float_min / zero_min : -Inf
+float_min / zero_plus : Inf
+float_min / zero : Inf
+float_min / NaN : NaN
+float_min / Inf_plus : 0x0
+float_min / Inf_min : 0x0
+float_min / Inf : 0x0
+float_min / long_max : 0x.080000001e-38
+float_min / long_min : 0x.8e-39
+float_min / int_max : 0x.080000001e-38
+float_min / int_min : 0x.8e-39
+float_min / uint_max : 0x.400000004e-39
+float_min / ulong_max : 0x.400000004e-39
+float_min / double_min : 0x1e+224
+float_min / double_max : 0x0
+float_min / float_min : 0x1
+float_min / float_max : 0x.4000004000004e-63
+float_min * zero_min : 0x0
+float_min * zero_plus : 0x0
+float_min * zero : 0x0
+float_min * NaN : NaN
+float_min * Inf_plus : Inf
+float_min * Inf_min : -Inf
+float_min * Inf : Inf
+float_min * long_max : 0x.1fffffffce-23
+float_min * long_min : 0x.ee-23
+float_min * int_max : 0x.1fffffffce-23
+float_min * int_min : 0x.ee-23
+float_min * uint_max : 0x.3fffffffce-23
+float_min * ulong_max : 0x.3fffffffce-23
+float_min * double_min : 0x0
+float_min * double_max : 0x3ffffffffffffee+211
+float_min * float_min : 0x.1e-62
+float_min * float_max : 0x3.fffffc
+float_min + zero_min : 0x.4e-31
+float_min + zero_plus : 0x.4e-31
+float_min + zero : 0x.4e-31
+float_min + NaN : NaN
+float_min + Inf_plus : Inf
+float_min + Inf_min : -Inf
+float_min + Inf : Inf
+float_min + long_max : 0x7fffffff
+float_min + long_min : 0x8e+7
+float_min + int_max : 0x7fffffff
+float_min + int_min : 0x8e+7
+float_min + uint_max : 0x0ffffffff
+float_min + ulong_max : 0x0ffffffff
+float_min + double_min : 0x.4e-31
+float_min + double_max : 0x0fffffffffffff8e+242
+float_min + float_min : 0x.08e-30
+float_min + float_max : 0x0ffffffe+26
+float_min - zero_min : 0x.4e-31
+float_min - zero_plus : 0x.4e-31
+float_min - zero : 0x.4e-31
+float_min - NaN : NaN
+float_min - Inf_plus : -Inf
+float_min - Inf_min : Inf
+float_min - Inf : -Inf
+float_min - long_max : 0x80000001
+float_min - long_min : 0x08e+7
+float_min - int_max : 0x80000001
+float_min - int_min : 0x08e+7
+float_min - uint_max : 0xf00000001
+float_min - ulong_max : 0xf00000001
+float_min - double_min : 0x.4e-31
+float_min - double_max : 0xf00000000000008e+242
+float_min - float_min : 0x0
+float_min - float_max : 0xf000001e+26
+float_min > zero_min : 0x1
+float_min > zero_plus : 0x1
+float_min > zero : 0x1
+float_min > NaN : 0x0
+float_min > Inf_plus : 0x0
+float_min > Inf_min : 0x1
+float_min > Inf : 0x0
+float_min > long_max : 0x0
+float_min > long_min : 0x1
+float_min > int_max : 0x0
+float_min > int_min : 0x1
+float_min > uint_max : 0x0
+float_min > ulong_max : 0x0
+float_min > double_min : 0x1
+float_min > double_max : 0x0
+float_min > float_min : 0x0
+float_min > float_max : 0x0
+float_min < zero_min : 0x0
+float_min < zero_plus : 0x0
+float_min < zero : 0x0
+float_min < NaN : 0x0
+float_min < Inf_plus : 0x1
+float_min < Inf_min : 0x0
+float_min < Inf : 0x1
+float_min < long_max : 0x1
+float_min < long_min : 0x0
+float_min < int_max : 0x1
+float_min < int_min : 0x0
+float_min < uint_max : 0x1
+float_min < ulong_max : 0x1
+float_min < double_min : 0x0
+float_min < double_max : 0x1
+float_min < float_min : 0x0
+float_min < float_max : 0x1
+float_min >= zero_min : 0x1
+float_min >= zero_plus : 0x1
+float_min >= zero : 0x1
+float_min >= NaN : 0x0
+float_min >= Inf_plus : 0x0
+float_min >= Inf_min : 0x1
+float_min >= Inf : 0x0
+float_min >= long_max : 0x0
+float_min >= long_min : 0x1
+float_min >= int_max : 0x0
+float_min >= int_min : 0x1
+float_min >= uint_max : 0x0
+float_min >= ulong_max : 0x0
+float_min >= double_min : 0x1
+float_min >= double_max : 0x0
+float_min >= float_min : 0x1
+float_min >= float_max : 0x0
+float_min <= zero_min : 0x0
+float_min <= zero_plus : 0x0
+float_min <= zero : 0x0
+float_min <= NaN : 0x0
+float_min <= Inf_plus : 0x1
+float_min <= Inf_min : 0x0
+float_min <= Inf : 0x1
+float_min <= long_max : 0x1
+float_min <= long_min : 0x0
+float_min <= int_max : 0x1
+float_min <= int_min : 0x0
+float_min <= uint_max : 0x1
+float_min <= ulong_max : 0x1
+float_min <= double_min : 0x0
+float_min <= double_max : 0x1
+float_min <= float_min : 0x1
+float_min <= float_max : 0x1
+float_min == zero_min : 0x0
+float_min == zero_plus : 0x0
+float_min == zero : 0x0
+float_min == NaN : 0x0
+float_min == Inf_plus : 0x0
+float_min == Inf_min : 0x0
+float_min == Inf : 0x0
+float_min == long_max : 0x0
+float_min == long_min : 0x0
+float_min == int_max : 0x0
+float_min == int_min : 0x0
+float_min == uint_max : 0x0
+float_min == ulong_max : 0x0
+float_min == double_min : 0x0
+float_min == double_max : 0x0
+float_min == float_min : 0x1
+float_min == float_max : 0x0
+float_min != zero_min : 0x1
+float_min != zero_plus : 0x1
+float_min != zero : 0x1
+float_min != NaN : 0x1
+float_min != Inf_plus : 0x1
+float_min != Inf_min : 0x1
+float_min != Inf : 0x1
+float_min != long_max : 0x1
+float_min != long_min : 0x1
+float_min != int_max : 0x1
+float_min != int_min : 0x1
+float_min != uint_max : 0x1
+float_min != ulong_max : 0x1
+float_min != double_min : 0x1
+float_min != double_max : 0x1
+float_min != float_min : 0x0
+float_min != float_max : 0x1
+float_min * float_min * zero_min : 0x0
+float_min * float_min * zero_plus : 0x0
+float_min * float_min * zero : 0x0
+float_min * float_min * NaN : NaN
+float_min * float_min * Inf_plus : Inf
+float_min * float_min * Inf_min : -Inf
+float_min * float_min * Inf : Inf
+float_min * float_min * long_max : 0x.7fffffffe-55
+float_min * float_min * long_min : 0x.8e-55
+float_min * float_min * int_max : 0x.7fffffffe-55
+float_min * float_min * int_min : 0x.8e-55
+float_min * float_min * uint_max : 0x.0ffffffffe-54
+float_min * float_min * ulong_max : 0x.0ffffffffe-54
+float_min * float_min * double_min : 0x0
+float_min * float_min * double_max : 0x0fffffffffffff8e+179
+float_min * float_min * float_min : 0x.4e-94
+float_min * float_min * float_max : 0x.0ffffffe-30
+float_max / zero_min : -Inf
+float_max / zero_plus : Inf
+float_max / zero : Inf
+float_max / NaN : NaN
+float_max / Inf_plus : 0x0
+float_max / Inf_min : 0x0
+float_max / Inf : 0x0
+float_max / long_max : 0x1fffffe04e+16
+float_max / long_min : 0xe000002e+18
+float_max / int_max : 0x1fffffe04e+16
+float_max / int_min : 0xe000002e+18
+float_max / uint_max : 0x0ffffff01e+16
+float_max / ulong_max : 0x0ffffff01e+16
+float_max / double_min : Inf
+float_max / double_max : 0x.0ffffff00000008e-223
+float_max / float_min : 0x3fffffce+57
+float_max / float_max : 0x1
+float_max * zero_min : 0x0
+float_max * zero_plus : 0x0
+float_max * zero : 0x0
+float_max * NaN : NaN
+float_max * Inf_plus : Inf
+float_max * Inf_min : -Inf
+float_max * Inf : Inf
+float_max * long_max : 0x7fffff7fe+32
+float_max * long_min : 0x8000008e+33
+float_max * int_max : 0x7fffff7fe+32
+float_max * int_min : 0x8000008e+33
+float_max * uint_max : 0x0fffffeffe+32
+float_max * ulong_max : 0x0fffffeffe+32
+float_max * double_min : 0x.3fffffce-223
+float_max * double_max : Inf
+float_max * float_min : 0x3.fffffc
+float_max * float_max : 0x0fffffe000001e+52
+float_max + zero_min : 0x0ffffffe+26
+float_max + zero_plus : 0x0ffffffe+26
+float_max + zero : 0x0ffffffe+26
+float_max + NaN : NaN
+float_max + Inf_plus : Inf
+float_max + Inf_min : -Inf
+float_max + Inf : Inf
+float_max + long_max : 0x0ffffffe+26
+float_max + long_min : 0x0ffffffe+26
+float_max + int_max : 0x0ffffffe+26
+float_max + int_min : 0x0ffffffe+26
+float_max + uint_max : 0x0ffffffe+26
+float_max + ulong_max : 0x0ffffffe+26
+float_max + double_min : 0x0ffffffe+26
+float_max + double_max : 0x0fffffffffffff8e+242
+float_max + float_min : 0x0ffffffe+26
+float_max + float_max : 0x1fffffee+26
+float_max - zero_min : 0x0ffffffe+26
+float_max - zero_plus : 0x0ffffffe+26
+float_max - zero : 0x0ffffffe+26
+float_max - NaN : NaN
+float_max - Inf_plus : -Inf
+float_max - Inf_min : Inf
+float_max - Inf : -Inf
+float_max - long_max : 0x0ffffffe+26
+float_max - long_min : 0x0ffffffe+26
+float_max - int_max : 0x0ffffffe+26
+float_max - int_min : 0x0ffffffe+26
+float_max - uint_max : 0x0ffffffe+26
+float_max - ulong_max : 0x0ffffffe+26
+float_max - double_min : 0x0ffffffe+26
+float_max - double_max : 0xf00000000000008e+242
+float_max - float_min : 0x0ffffffe+26
+float_max - float_max : 0x0
+float_max > zero_min : 0x1
+float_max > zero_plus : 0x1
+float_max > zero : 0x1
+float_max > NaN : 0x0
+float_max > Inf_plus : 0x0
+float_max > Inf_min : 0x1
+float_max > Inf : 0x0
+float_max > long_max : 0x1
+float_max > long_min : 0x1
+float_max > int_max : 0x1
+float_max > int_min : 0x1
+float_max > uint_max : 0x1
+float_max > ulong_max : 0x1
+float_max > double_min : 0x1
+float_max > double_max : 0x0
+float_max > float_min : 0x1
+float_max > float_max : 0x0
+float_max < zero_min : 0x0
+float_max < zero_plus : 0x0
+float_max < zero : 0x0
+float_max < NaN : 0x0
+float_max < Inf_plus : 0x1
+float_max < Inf_min : 0x0
+float_max < Inf : 0x1
+float_max < long_max : 0x0
+float_max < long_min : 0x0
+float_max < int_max : 0x0
+float_max < int_min : 0x0
+float_max < uint_max : 0x0
+float_max < ulong_max : 0x0
+float_max < double_min : 0x0
+float_max < double_max : 0x1
+float_max < float_min : 0x0
+float_max < float_max : 0x0
+float_max >= zero_min : 0x1
+float_max >= zero_plus : 0x1
+float_max >= zero : 0x1
+float_max >= NaN : 0x0
+float_max >= Inf_plus : 0x0
+float_max >= Inf_min : 0x1
+float_max >= Inf : 0x0
+float_max >= long_max : 0x1
+float_max >= long_min : 0x1
+float_max >= int_max : 0x1
+float_max >= int_min : 0x1
+float_max >= uint_max : 0x1
+float_max >= ulong_max : 0x1
+float_max >= double_min : 0x1
+float_max >= double_max : 0x0
+float_max >= float_min : 0x1
+float_max >= float_max : 0x1
+float_max <= zero_min : 0x0
+float_max <= zero_plus : 0x0
+float_max <= zero : 0x0
+float_max <= NaN : 0x0
+float_max <= Inf_plus : 0x1
+float_max <= Inf_min : 0x0
+float_max <= Inf : 0x1
+float_max <= long_max : 0x0
+float_max <= long_min : 0x0
+float_max <= int_max : 0x0
+float_max <= int_min : 0x0
+float_max <= uint_max : 0x0
+float_max <= ulong_max : 0x0
+float_max <= double_min : 0x0
+float_max <= double_max : 0x1
+float_max <= float_min : 0x0
+float_max <= float_max : 0x1
+float_max == zero_min : 0x0
+float_max == zero_plus : 0x0
+float_max == zero : 0x0
+float_max == NaN : 0x0
+float_max == Inf_plus : 0x0
+float_max == Inf_min : 0x0
+float_max == Inf : 0x0
+float_max == long_max : 0x0
+float_max == long_min : 0x0
+float_max == int_max : 0x0
+float_max == int_min : 0x0
+float_max == uint_max : 0x0
+float_max == ulong_max : 0x0
+float_max == double_min : 0x0
+float_max == double_max : 0x0
+float_max == float_min : 0x0
+float_max == float_max : 0x1
+float_max != zero_min : 0x1
+float_max != zero_plus : 0x1
+float_max != zero : 0x1
+float_max != NaN : 0x1
+float_max != Inf_plus : 0x1
+float_max != Inf_min : 0x1
+float_max != Inf : 0x1
+float_max != long_max : 0x1
+float_max != long_min : 0x1
+float_max != int_max : 0x1
+float_max != int_min : 0x1
+float_max != uint_max : 0x1
+float_max != ulong_max : 0x1
+float_max != double_min : 0x1
+float_max != double_max : 0x1
+float_max != float_min : 0x1
+float_max != float_max : 0x0
+float_max * float_max * zero_min : 0x0
+float_max * float_max * zero_plus : 0x0
+float_max * float_max * zero : 0x0
+float_max * float_max * NaN : NaN
+float_max * float_max * Inf_plus : Inf
+float_max * float_max * Inf_min : -Inf
+float_max * float_max * Inf : Inf
+float_max * float_max * long_max : 0x7ffffeff00008e+59
+float_max * float_max * long_min : 0x800000ffffff8e+59
+float_max * float_max * int_max : 0x7ffffeff00008e+59
+float_max * float_max * int_min : 0x800000ffffff8e+59
+float_max * float_max * uint_max : 0x0fffffdff0001e+60
+float_max * float_max * ulong_max : 0x0fffffdff0001e+60
+float_max * float_max * double_min : 0x.3fffff8000004e-191
+float_max * float_max * double_max : Inf
+float_max * float_max * float_min : 0x3fffff8000004e+20
+float_max * float_max * float_max : 0x0fffffd000003e+84
+double_min / NaN : NaN
+****************** limits fx_ufix
+****************** limits fx_ufix_zero
+zero_min : 0x000000000
+zero_plus : 0x000000000
+zero : 0x000000000
+long_max : 0x07fffffff
+long_min : 0x080000000
+int_max : 0x07fffffff
+int_min : 0x080000000
+uint_max : 0x0ffffffff
+ulong_max : 0x0ffffffff
+double_min : 0x000000000
+double_max : 0x000000000
+float_min : 0x000000000
+float_max : 0x000000000
+****************** limits fx_ufix_Inf
+zero_min : 0x000000000
+zero_plus : 0x000000000
+zero : 0x000000000
+long_max : 0x07fffffff
+long_min : 0x080000000
+int_max : 0x07fffffff
+int_min : 0x080000000
+uint_max : 0x0ffffffff
+ulong_max : 0x0ffffffff
+double_min : 0x000000000
+double_max : 0x000000000
+float_min : 0x000000000
+float_max : 0x000000000
+****************** limits fx_ufix_long
+zero_min : 0x000000000
+zero_plus : 0x000000000
+zero : 0x000000000
+long_max : 0x07fffffff
+long_min : 0x080000000
+int_max : 0x07fffffff
+int_min : 0x080000000
+uint_max : 0x0ffffffff
+ulong_max : 0x0ffffffff
+double_min : 0x000000000
+double_max : 0x000000000
+float_min : 0x000000000
+float_max : 0x000000000
+****************** limits fx_ufix_double
+zero_min : 0x000000000
+zero_plus : 0x000000000
+zero : 0x000000000
+long_max : 0x07fffffff
+long_min : 0x080000000
+int_max : 0x07fffffff
+int_min : 0x080000000
+uint_max : 0x0ffffffff
+ulong_max : 0x0ffffffff
+double_min : 0x000000000
+double_max : 0x000000000
+float_min : 0x000000000
+float_max : 0x000000000
+****************** limits fx_fix
+****************** limits fx_fix_zero
+zero_min : 0x00000000
+zero_plus : 0x00000000
+zero : 0x00000000
+long_max : 0x7fffffff
+long_min : 0x80000000
+int_max : 0x7fffffff
+int_min : 0x80000000
+uint_max : 0xffffffff
+ulong_max : 0xffffffff
+double_min : 0x00000000
+double_max : 0x00000000
+float_min : 0x00000000
+float_max : 0x00000000
+****************** limits fx_fix_Inf
+zero_min : 0x00000000
+zero_plus : 0x00000000
+zero : 0x00000000
+long_max : 0x7fffffff
+long_min : 0x80000000
+int_max : 0x7fffffff
+int_min : 0x80000000
+uint_max : 0xffffffff
+ulong_max : 0xffffffff
+double_min : 0x00000000
+double_max : 0x00000000
+float_min : 0x00000000
+float_max : 0x00000000
+****************** limits fx_fix_long
+zero_min : 0x00000000
+zero_plus : 0x00000000
+zero : 0x00000000
+long_max : 0x7fffffff
+long_min : 0x80000000
+int_max : 0x7fffffff
+int_min : 0x80000000
+uint_max : 0xffffffff
+ulong_max : 0xffffffff
+double_min : 0x00000000
+double_max : 0x00000000
+float_min : 0x00000000
+float_max : 0x00000000
+****************** limits fx_fix_double
+zero_min : 0x00000000
+zero_plus : 0x00000000
+zero : 0x00000000
+long_max : 0x7fffffff
+long_min : 0x80000000
+int_max : 0x7fffffff
+int_min : 0x80000000
+uint_max : 0xffffffff
+ulong_max : 0xffffffff
+double_min : 0x00000000
+double_max : 0x00000000
+float_min : 0x00000000
+float_max : 0x00000000
+****************** limits fx_fixed<8, 5>
+****************** limits fx_fixed<8, 5>_zero
+zero_min : 0x00.0
+zero_plus : 0x00.0
+zero : 0x00.0
+long_max : 0xff.0
+long_min : 0x00.0
+int_max : 0xff.0
+int_min : 0x00.0
+uint_max : 0xff.0
+ulong_max : 0xff.0
+double_min : 0x00.0
+double_max : 0x00.0
+float_min : 0x00.0
+float_max : 0x00.0
+****************** limits fx_fixed<8, 5>_Inf
+zero_min : 0x00.0
+zero_plus : 0x00.0
+zero : 0x00.0
+long_max : 0xff.0
+long_min : 0x00.0
+int_max : 0xff.0
+int_min : 0x00.0
+uint_max : 0xff.0
+ulong_max : 0xff.0
+double_min : 0x00.0
+double_max : 0x00.0
+float_min : 0x00.0
+float_max : 0x00.0
+****************** limits fx_fixed<8, 5>_long
+zero_min : 0x00.0
+zero_plus : 0x00.0
+zero : 0x00.0
+long_max : 0xff.0
+long_min : 0x00.0
+int_max : 0xff.0
+int_min : 0x00.0
+uint_max : 0xff.0
+ulong_max : 0xff.0
+double_min : 0x00.0
+double_max : 0x00.0
+float_min : 0x00.0
+float_max : 0x00.0
+****************** limits fx_fixed<8, 5>_double
+zero_min : 0x00.0
+zero_plus : 0x00.0
+zero : 0x00.0
+long_max : 0xff.0
+long_min : 0x00.0
+int_max : 0xff.0
+int_min : 0x00.0
+uint_max : 0xff.0
+ulong_max : 0xff.0
+double_min : 0x00.0
+double_max : 0x00.0
+float_min : 0x00.0
+float_max : 0x00.0
+****************** limits fx_ufixed<8, 5>
+****************** limits fx_ufixed<8, 5>_zero
+zero_min : 0x00.0
+zero_plus : 0x00.0
+zero : 0x00.0
+long_max : 0x1f.0
+long_min : 0x00.0
+int_max : 0x1f.0
+int_min : 0x00.0
+uint_max : 0x1f.0
+ulong_max : 0x1f.0
+double_min : 0x00.0
+double_max : 0x00.0
+float_min : 0x00.0
+float_max : 0x00.0
+****************** limits fx_ufixed<8, 5>_Inf
+zero_min : 0x00.0
+zero_plus : 0x00.0
+zero : 0x00.0
+long_max : 0x1f.0
+long_min : 0x00.0
+int_max : 0x1f.0
+int_min : 0x00.0
+uint_max : 0x1f.0
+ulong_max : 0x1f.0
+double_min : 0x00.0
+double_max : 0x00.0
+float_min : 0x00.0
+float_max : 0x00.0
+****************** limits fx_ufixed<8, 5>_long
+zero_min : 0x00.0
+zero_plus : 0x00.0
+zero : 0x00.0
+long_max : 0x1f.0
+long_min : 0x00.0
+int_max : 0x1f.0
+int_min : 0x00.0
+uint_max : 0x1f.0
+ulong_max : 0x1f.0
+double_min : 0x00.0
+double_max : 0x00.0
+float_min : 0x00.0
+float_max : 0x00.0
+****************** limits fx_ufixed<8, 5>_double
+zero_min : 0x00.0
+zero_plus : 0x00.0
+zero : 0x00.0
+long_max : 0x1f.0
+long_min : 0x00.0
+int_max : 0x1f.0
+int_min : 0x00.0
+uint_max : 0x1f.0
+ulong_max : 0x1f.0
+double_min : 0x00.0
+double_max : 0x00.0
+float_min : 0x00.0
+float_max : 0x00.0

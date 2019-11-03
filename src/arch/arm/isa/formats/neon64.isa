@@ -181,6 +181,8 @@ namespace Aarch64
                     else
                         return new OrnDX<uint64_t>(machInst, vd, vn, vm);
                 }
+              default:
+                M5_UNREACHABLE;
             }
           case 0x04:
             if (size == 0x3)
@@ -1211,6 +1213,8 @@ namespace Aarch64
                     return new DupGprXQX<uint64_t>(machInst, vd, vn);
                 else
                     return new Unknown64(machInst);
+              default:
+                return new Unknown64(machInst);
             }
           case 0x3:
             index1 = imm5 >> (imm5_pos + 1);
@@ -2065,17 +2069,17 @@ namespace Aarch64
                 return decodeNeonUTwoMiscScFpReg<FcmltZeroScX>(
                     size & 0x1, machInst, vd, vn);
           case 0x14:
-            if (size == 0x3) {
+            switch (size) {
+              case 0x0:
+                return new SqxtnScX<int8_t>(machInst, vd, vn);
+              case 0x1:
+                return new SqxtnScX<int16_t>(machInst, vd, vn);
+              case 0x2:
+                return new SqxtnScX<int32_t>(machInst, vd, vn);
+              case 0x3:
                 return new Unknown64(machInst);
-            } else {
-                switch (size) {
-                  case 0x0:
-                    return new SqxtnScX<int8_t>(machInst, vd, vn);
-                  case 0x1:
-                    return new SqxtnScX<int16_t>(machInst, vd, vn);
-                  case 0x2:
-                    return new SqxtnScX<int32_t>(machInst, vd, vn);
-                }
+              default:
+                M5_UNREACHABLE;
             }
           case 0x1a:
             if (size < 0x2)
@@ -2145,30 +2149,30 @@ namespace Aarch64
                 return decodeNeonUTwoMiscScFpReg<FcmleZeroScX>(
                     size & 0x1, machInst, vd, vn);
           case 0x32:
-            if (size == 0x3) {
+            switch (size) {
+              case 0x0:
+                return new SqxtunScX<int8_t>(machInst, vd, vn);
+              case 0x1:
+                return new SqxtunScX<int16_t>(machInst, vd, vn);
+              case 0x2:
+                return new SqxtunScX<int32_t>(machInst, vd, vn);
+              case 0x3:
                 return new Unknown64(machInst);
-            } else {
-                switch (size) {
-                  case 0x0:
-                    return new SqxtunScX<int8_t>(machInst, vd, vn);
-                  case 0x1:
-                    return new SqxtunScX<int16_t>(machInst, vd, vn);
-                  case 0x2:
-                    return new SqxtunScX<int32_t>(machInst, vd, vn);
-                }
+              default:
+                M5_UNREACHABLE;
             }
           case 0x34:
-            if (size == 0x3) {
+            switch (size) {
+              case 0x0:
+                return new UqxtnScX<uint8_t>(machInst, vd, vn);
+              case 0x1:
+                return new UqxtnScX<uint16_t>(machInst, vd, vn);
+              case 0x2:
+                return new UqxtnScX<uint32_t>(machInst, vd, vn);
+              case 0x3:
                 return new Unknown64(machInst);
-            } else {
-                switch (size) {
-                  case 0x0:
-                    return new UqxtnScX<uint8_t>(machInst, vd, vn);
-                  case 0x1:
-                    return new UqxtnScX<uint16_t>(machInst, vd, vn);
-                  case 0x2:
-                    return new UqxtnScX<uint32_t>(machInst, vd, vn);
-                }
+              default:
+                M5_UNREACHABLE;
             }
           case 0x36:
             if (size != 0x1) {

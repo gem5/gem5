@@ -1,0 +1,181 @@
+
+$timescale
+     1 ps
+$end
+
+$scope module SystemC $end
+$var wire    4  aaaaa  Char [3:0]  $end
+$var wire    4  aaaab  Short [3:0]  $end
+$var wire   12  aaaac  Int [11:0]  $end
+$var wire   10  aaaad  Long [9:0]  $end
+$var wire   43  aaaae  Uint64 [42:0]  $end
+$var wire    1  aaaaf  Clock       $end
+$upscope $end
+$enddefinitions  $end
+
+$comment
+All initial values are dumped below at time 0 sec = 0 timescale units.
+$end
+
+$dumpvars
+b111 aaaaa
+bx aaaab
+b1111111111 aaaac
+b111111 aaaad
+b1000000000000000000000000000000000000000000 aaaae
+1aaaaf
+$end
+
+#10000
+b1 aaaaa
+b11 aaaab
+b10000000000 aaaac
+bx aaaad
+bx aaaae
+0aaaaf
+
+#20000
+b111 aaaaa
+bx aaaab
+b1111111111 aaaac
+b111111 aaaad
+b1000000000000000000000000000000000000000000 aaaae
+1aaaaf
+
+#30000
+b1 aaaaa
+b11 aaaab
+b10000000000 aaaac
+bx aaaad
+bx aaaae
+0aaaaf
+
+#40000
+b111 aaaaa
+bx aaaab
+b1111111111 aaaac
+b111111 aaaad
+b1000000000000000000000000000000000000000000 aaaae
+1aaaaf
+
+#50000
+b1 aaaaa
+b11 aaaab
+b10000000000 aaaac
+bx aaaad
+bx aaaae
+0aaaaf
+
+#60000
+b111 aaaaa
+bx aaaab
+b1111111111 aaaac
+b111111 aaaad
+b1000000000000000000000000000000000000000000 aaaae
+1aaaaf
+
+#70000
+b1 aaaaa
+b11 aaaab
+b10000000000 aaaac
+bx aaaad
+bx aaaae
+0aaaaf
+
+#80000
+b111 aaaaa
+bx aaaab
+b1111111111 aaaac
+b111111 aaaad
+b1000000000000000000000000000000000000000000 aaaae
+1aaaaf
+
+#90000
+b1 aaaaa
+b11 aaaab
+b10000000000 aaaac
+bx aaaad
+bx aaaae
+0aaaaf
+
+#100000
+b111 aaaaa
+bx aaaab
+b1111111111 aaaac
+b111111 aaaad
+b1000000000000000000000000000000000000000000 aaaae
+1aaaaf
+
+#110000
+b1 aaaaa
+b11 aaaab
+b10000000000 aaaac
+bx aaaad
+bx aaaae
+0aaaaf
+
+#120000
+b111 aaaaa
+bx aaaab
+b1111111111 aaaac
+b111111 aaaad
+b1000000000000000000000000000000000000000000 aaaae
+1aaaaf
+
+#130000
+b1 aaaaa
+b11 aaaab
+b10000000000 aaaac
+bx aaaad
+bx aaaae
+0aaaaf
+
+#140000
+b111 aaaaa
+bx aaaab
+b1111111111 aaaac
+b111111 aaaad
+b1000000000000000000000000000000000000000000 aaaae
+1aaaaf
+
+#150000
+b1 aaaaa
+b11 aaaab
+b10000000000 aaaac
+bx aaaad
+bx aaaae
+0aaaaf
+
+#160000
+b111 aaaaa
+bx aaaab
+b1111111111 aaaac
+b111111 aaaad
+b1000000000000000000000000000000000000000000 aaaae
+1aaaaf
+
+#170000
+b1 aaaaa
+b11 aaaab
+b10000000000 aaaac
+bx aaaad
+bx aaaae
+0aaaaf
+
+#180000
+b111 aaaaa
+bx aaaab
+b1111111111 aaaac
+b111111 aaaad
+b1000000000000000000000000000000000000000000 aaaae
+1aaaaf
+
+#190000
+b1 aaaaa
+b11 aaaab
+b10000000000 aaaac
+bx aaaad
+bx aaaae
+0aaaaf
+
+#200000

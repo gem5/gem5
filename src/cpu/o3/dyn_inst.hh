@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2016 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -65,18 +65,11 @@ class BaseO3DynInst : public BaseDynInst<Impl>
 
     /** Binary machine instruction type. */
     typedef TheISA::MachInst MachInst;
-    /** Extended machine instruction type. */
-    typedef TheISA::ExtMachInst ExtMachInst;
-    /** Logical register index type. */
-    typedef TheISA::RegIndex RegIndex;
-    /** Integer register index type. */
-    typedef TheISA::IntReg   IntReg;
-    typedef TheISA::FloatReg FloatReg;
-    typedef TheISA::FloatRegBits FloatRegBits;
-    typedef TheISA::CCReg   CCReg;
-
-    /** Misc register index type. */
-    typedef TheISA::MiscReg  MiscReg;
+    /** Register types. */
+    using VecRegContainer = TheISA::VecRegContainer;
+    using VecElem = TheISA::VecElem;
+    static constexpr auto NumVecElemPerVecReg = TheISA::NumVecElemPerVecReg;
+    using VecPredRegContainer = TheISA::VecPredRegContainer;
 
     enum {
         MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        //< Max source regs
@@ -85,9 +78,9 @@ class BaseO3DynInst : public BaseDynInst<Impl>
 
   public:
     /** BaseDynInst constructor given a binary instruction. */
-    BaseO3DynInst(const StaticInstPtr &staticInst, const StaticInstPtr &macroop,
-                  TheISA::PCState pc, TheISA::PCState predPC,
-                  InstSeqNum seq_num, O3CPU *cpu);
+    BaseO3DynInst(const StaticInstPtr &staticInst, const StaticInstPtr
+            &macroop, TheISA::PCState pc, TheISA::PCState predPC,
+            InstSeqNum seq_num, O3CPU *cpu);
 
     /** BaseDynInst constructor given a static inst pointer. */
     BaseO3DynInst(const StaticInstPtr &_staticInst,
@@ -109,8 +102,13 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     void initVars();
 
   protected:
+    /** Explicitation of dependent names. */
+    using BaseDynInst<Impl>::cpu;
+    using BaseDynInst<Impl>::_srcRegIdx;
+    using BaseDynInst<Impl>::_destRegIdx;
+
     /** Values to be written to the destination misc. registers. */
-    std::array<MiscReg, TheISA::MaxMiscDestRegs> _destMiscRegVal;
+    std::array<RegVal, TheISA::MaxMiscDestRegs> _destMiscRegVal;
 
     /** Indexes of the destination misc. registers. They are needed to defer
      * the write accesses to the misc. registers until the commit stage, when
@@ -125,7 +123,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
   public:
 #if TRACING_ON
     /** Tick records used for the pipeline activity viewer. */
-    Tick fetchTick;	     // instruction fetch is completed.
+    Tick fetchTick;      // instruction fetch is completed.
     int32_t decodeTick;  // instruction enters decode phase
     int32_t renameTick;  // instruction enters rename phase
     int32_t dispatchTick;
@@ -138,7 +136,8 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Reads a misc. register, including any side-effects the read
      * might have as defined by the architecture.
      */
-    MiscReg readMiscReg(int misc_reg)
+    RegVal
+    readMiscReg(int misc_reg) override
     {
         return this->cpu->readMiscReg(misc_reg, this->threadNumber);
     }
@@ -146,7 +145,8 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Sets a misc. register, including any side-effects the write
      * might have as defined by the architecture.
      */
-    void setMiscReg(int misc_reg, const MiscReg &val)
+    void
+    setMiscReg(int misc_reg, RegVal val) override
     {
         /** Writes to misc. registers are recorded and deferred until the
          * commit stage, when updateMiscRegs() is called. First, check if
@@ -170,25 +170,28 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Reads a misc. register, including any side-effects the read
      * might have as defined by the architecture.
      */
-    TheISA::MiscReg readMiscRegOperand(const StaticInst *si, int idx)
+    RegVal
+    readMiscRegOperand(const StaticInst *si, int idx) override
     {
-        return this->cpu->readMiscReg(
-                si->srcRegIdx(idx) - TheISA::Misc_Reg_Base,
-                this->threadNumber);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isMiscReg());
+        return this->cpu->readMiscReg(reg.index(), this->threadNumber);
     }
 
     /** Sets a misc. register, including any side-effects the write
      * might have as defined by the architecture.
      */
-    void setMiscRegOperand(const StaticInst *si, int idx,
-                                     const MiscReg &val)
+    void
+    setMiscRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
-        int misc_reg = si->destRegIdx(idx) - TheISA::Misc_Reg_Base;
-        setMiscReg(misc_reg, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isMiscReg());
+        setMiscReg(reg.index(), val);
     }
 
     /** Called at the commit stage to update the misc. registers. */
-    void updateMiscRegs()
+    void
+    updateMiscRegs()
     {
         // @todo: Pretty convoluted way to avoid squashing from happening when
         // using the TC during an instruction's execution (specifically for
@@ -208,36 +211,48 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     {
 
         for (int idx = 0; idx < this->numDestRegs(); idx++) {
-            PhysRegIndex prev_phys_reg = this->prevDestRegIdx(idx);
-            TheISA::RegIndex original_dest_reg =
+            PhysRegIdPtr prev_phys_reg = this->prevDestRegIdx(idx);
+            const RegId& original_dest_reg =
                 this->staticInst->destRegIdx(idx);
-            switch (regIdxToClass(original_dest_reg)) {
+            switch (original_dest_reg.classValue()) {
               case IntRegClass:
                 this->setIntRegOperand(this->staticInst.get(), idx,
-                                       this->cpu->readIntReg(prev_phys_reg));
+                               this->cpu->readIntReg(prev_phys_reg));
                 break;
               case FloatRegClass:
                 this->setFloatRegOperandBits(this->staticInst.get(), idx,
-                                             this->cpu->readFloatRegBits(prev_phys_reg));
+                               this->cpu->readFloatReg(prev_phys_reg));
+                break;
+              case VecRegClass:
+                this->setVecRegOperand(this->staticInst.get(), idx,
+                               this->cpu->readVecReg(prev_phys_reg));
+                break;
+              case VecElemClass:
+                this->setVecElemOperand(this->staticInst.get(), idx,
+                               this->cpu->readVecElem(prev_phys_reg));
+                break;
+              case VecPredRegClass:
+                this->setVecPredRegOperand(this->staticInst.get(), idx,
+                               this->cpu->readVecPredReg(prev_phys_reg));
                 break;
               case CCRegClass:
                 this->setCCRegOperand(this->staticInst.get(), idx,
-                                      this->cpu->readCCReg(prev_phys_reg));
+                               this->cpu->readCCReg(prev_phys_reg));
                 break;
               case MiscRegClass:
                 // no need to forward misc reg values
                 break;
+              default:
+                panic("Unknown register class: %d",
+                        (int)original_dest_reg.classValue());
             }
         }
     }
-    /** Calls hardware return from error interrupt. */
-    Fault hwrei();
     /** Traps to handle specified fault. */
     void trap(const Fault &fault);
-    bool simPalCheck(int palFunc);
 
     /** Emulates a syscall. */
-    void syscall(int64_t callnum);
+    void syscall(int64_t callnum, Fault *fault) override;
 
   public:
 
@@ -252,22 +267,115 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     // storage (which is pretty hard to imagine they would have reason
     // to do).
 
-    IntReg readIntRegOperand(const StaticInst *si, int idx)
+    RegVal
+    readIntRegOperand(const StaticInst *si, int idx) override
     {
         return this->cpu->readIntReg(this->_srcRegIdx[idx]);
     }
 
-    FloatReg readFloatRegOperand(const StaticInst *si, int idx)
+    RegVal
+    readFloatRegOperandBits(const StaticInst *si, int idx) override
     {
         return this->cpu->readFloatReg(this->_srcRegIdx[idx]);
     }
 
-    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx)
+    const VecRegContainer&
+    readVecRegOperand(const StaticInst *si, int idx) const override
     {
-        return this->cpu->readFloatRegBits(this->_srcRegIdx[idx]);
+        return this->cpu->readVecReg(this->_srcRegIdx[idx]);
     }
 
-    CCReg readCCRegOperand(const StaticInst *si, int idx)
+    /**
+     * Read destination vector register operand for modification.
+     */
+    VecRegContainer&
+    getWritableVecRegOperand(const StaticInst *si, int idx) override
+    {
+        return this->cpu->getWritableVecReg(this->_destRegIdx[idx]);
+    }
+
+    /** Vector Register Lane Interfaces. */
+    /** @{ */
+    /** Reads source vector 8bit operand. */
+    ConstVecLane8
+    readVec8BitLaneOperand(const StaticInst *si, int idx) const override
+    {
+        return cpu->template readVecLane<uint8_t>(_srcRegIdx[idx]);
+    }
+
+    /** Reads source vector 16bit operand. */
+    ConstVecLane16
+    readVec16BitLaneOperand(const StaticInst *si, int idx) const override
+    {
+        return cpu->template readVecLane<uint16_t>(_srcRegIdx[idx]);
+    }
+
+    /** Reads source vector 32bit operand. */
+    ConstVecLane32
+    readVec32BitLaneOperand(const StaticInst *si, int idx) const override
+    {
+        return cpu->template readVecLane<uint32_t>(_srcRegIdx[idx]);
+    }
+
+    /** Reads source vector 64bit operand. */
+    ConstVecLane64
+    readVec64BitLaneOperand(const StaticInst *si, int idx) const override
+    {
+        return cpu->template readVecLane<uint64_t>(_srcRegIdx[idx]);
+    }
+
+    /** Write a lane of the destination vector operand. */
+    template <typename LD>
+    void
+    setVecLaneOperandT(const StaticInst *si, int idx, const LD& val)
+    {
+        return cpu->template setVecLane(_destRegIdx[idx], val);
+    }
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::Byte>& val) override
+    {
+        return setVecLaneOperandT(si, idx, val);
+    }
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::TwoByte>& val) override
+    {
+        return setVecLaneOperandT(si, idx, val);
+    }
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::FourByte>& val) override
+    {
+        return setVecLaneOperandT(si, idx, val);
+    }
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::EightByte>& val) override
+    {
+        return setVecLaneOperandT(si, idx, val);
+    }
+    /** @} */
+
+    VecElem readVecElemOperand(const StaticInst *si, int idx) const override
+    {
+        return this->cpu->readVecElem(this->_srcRegIdx[idx]);
+    }
+
+    const VecPredRegContainer&
+    readVecPredRegOperand(const StaticInst *si, int idx) const override
+    {
+        return this->cpu->readVecPredReg(this->_srcRegIdx[idx]);
+    }
+
+    VecPredRegContainer&
+    getWritableVecPredRegOperand(const StaticInst *si, int idx) override
+    {
+        return this->cpu->getWritableVecPredReg(this->_destRegIdx[idx]);
+    }
+
+    RegVal
+    readCCRegOperand(const StaticInst *si, int idx) override
     {
         return this->cpu->readCCReg(this->_srcRegIdx[idx]);
     }
@@ -275,61 +383,48 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** @todo: Make results into arrays so they can handle multiple dest
      *  registers.
      */
-    void setIntRegOperand(const StaticInst *si, int idx, IntReg val)
+    void
+    setIntRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         this->cpu->setIntReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setIntRegOperand(si, idx, val);
     }
 
-    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
+    void
+    setFloatRegOperandBits(const StaticInst *si, int idx, RegVal val) override
     {
         this->cpu->setFloatReg(this->_destRegIdx[idx], val);
-        BaseDynInst<Impl>::setFloatRegOperand(si, idx, val);
-    }
-
-    void setFloatRegOperandBits(const StaticInst *si, int idx,
-                                FloatRegBits val)
-    {
-        this->cpu->setFloatRegBits(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setFloatRegOperandBits(si, idx, val);
     }
 
-    void setCCRegOperand(const StaticInst *si, int idx, CCReg val)
+    void
+    setVecRegOperand(const StaticInst *si, int idx,
+                     const VecRegContainer& val) override
+    {
+        this->cpu->setVecReg(this->_destRegIdx[idx], val);
+        BaseDynInst<Impl>::setVecRegOperand(si, idx, val);
+    }
+
+    void setVecElemOperand(const StaticInst *si, int idx,
+                           const VecElem val) override
+    {
+        int reg_idx = idx;
+        this->cpu->setVecElem(this->_destRegIdx[reg_idx], val);
+        BaseDynInst<Impl>::setVecElemOperand(si, idx, val);
+    }
+
+    void
+    setVecPredRegOperand(const StaticInst *si, int idx,
+                         const VecPredRegContainer& val) override
+    {
+        this->cpu->setVecPredReg(this->_destRegIdx[idx], val);
+        BaseDynInst<Impl>::setVecPredRegOperand(si, idx, val);
+    }
+
+    void setCCRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         this->cpu->setCCReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setCCRegOperand(si, idx, val);
-    }
-
-#if THE_ISA == MIPS_ISA
-    MiscReg readRegOtherThread(int misc_reg, ThreadID tid)
-    {
-        panic("MIPS MT not defined for O3 CPU.\n");
-        return 0;
-    }
-
-    void setRegOtherThread(int misc_reg, MiscReg val, ThreadID tid)
-    {
-        panic("MIPS MT not defined for O3 CPU.\n");
-    }
-#endif
-
-  public:
-    /** Calculates EA part of a memory instruction. Currently unused,
-     * though it may be useful in the future if we want to split
-     * memory operations into EA calculation and memory access parts.
-     */
-    Fault calcEA()
-    {
-        return this->staticInst->eaCompInst()->execute(this, this->traceData);
-    }
-
-    /** Does the memory access part of a memory instruction. Currently unused,
-     * though it may be useful in the future if we want to split
-     * memory operations into EA calculation and memory access parts.
-     */
-    Fault memAccess()
-    {
-        return this->staticInst->memAccInst()->execute(this, this->traceData);
     }
 };
 

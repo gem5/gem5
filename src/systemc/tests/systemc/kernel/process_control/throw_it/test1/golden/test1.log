@@ -1,0 +1,5 @@
+SystemC Simulation
+0 s: starting victim thread
+10 ns: in perpetrator throwing exception in victim 
+10 ns: in victim thread, caught exception from pepetrator, exiting
+10 ns: in perpetrator after throwing exception in victim 

@@ -61,4 +61,4 @@ if env['TARGET_ISA'] == 'sparc':
     DebugFlag('Sparc', "Generic SPARC ISA stuff")
     DebugFlag('RegisterWindows', "Register window manipulation")
 
-    env.ISADesc('isa/main.isa')
+    ISADesc('isa/main.isa')

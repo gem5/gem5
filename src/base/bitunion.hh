@@ -31,8 +31,12 @@
 #ifndef __BASE_BITUNION_HH__
 #define __BASE_BITUNION_HH__
 
+#include <functional>
+#include <iostream>
+#include <type_traits>
+#include <typeinfo>
+
 #include "base/bitfield.hh"
-#include "base/types.hh"
 
 //      The following implements the BitUnion system of defining bitfields
 //on top of an underlying class. This is done through the pervasive use of
@@ -42,163 +46,185 @@
 //without having to have access to each other. More details are provided with
 //the individual components.
 
+//This class wraps around another which defines getter/setter functions which
+//manipulate the underlying data. The type of the underlying data and the type
+//of the bitfield itself are inferred from the argument types of the setter
+//function.
+template<class Base>
+class BitfieldTypeImpl : public Base
+{
+    static_assert(std::is_empty<Base>::value,
+                  "Bitfield base class must be empty.");
+
+  private:
+
+    struct TypeDeducer
+    {
+        template<typename>
+        struct T;
+
+        template<typename C, typename Type1, typename Type2>
+        struct T<void (C::*)(Type1 &, Type2)>
+        {
+            typedef Type1 Storage;
+            typedef Type2 Type;
+        };
+
+        struct Wrapper : public Base
+        {
+            using Base::setter;
+        };
+
+        typedef typename T<decltype(&Wrapper::setter)>::Storage Storage;
+        typedef typename T<decltype(&Wrapper::setter)>::Type Type;
+    };
+
+  protected:
+    typedef typename TypeDeducer::Storage Storage;
+    typedef typename TypeDeducer::Type Type;
+
+    Type getter(const Storage &storage) const = delete;
+    void setter(Storage &storage, Type val) = delete;
+
+    Storage __storage;
+
+    operator Type () const
+    {
+        return Base::getter(__storage);
+    }
+
+    Type
+    operator=(const Type val)
+    {
+        Base::setter(__storage, val);
+        return val;
+    }
+
+    Type
+    operator=(BitfieldTypeImpl<Base> const & other)
+    {
+        return *this = (Type)other;
+    }
+};
+
+//A wrapper for the above class which allows setting and getting.
+template<class Base>
+class BitfieldType : public BitfieldTypeImpl<Base>
+{
+  protected:
+    using Impl = BitfieldTypeImpl<Base>;
+    using typename Impl::Type;
+
+  public:
+    operator Type () const { return Impl::operator Type(); }
+    Type operator=(const Type val) { return Impl::operator=(val); }
+    Type
+    operator=(BitfieldType<Base> const & other)
+    {
+        return Impl::operator=(other);
+    }
+};
+
+//A wrapper which only supports getting.
+template<class Base>
+class BitfieldROType : public BitfieldTypeImpl<Base>
+{
+  public:
+    using Impl = BitfieldTypeImpl<Base>;
+    using typename Impl::Type;
+
+    Type operator=(BitfieldROType<Base> const &other) = delete;
+    operator Type () const { return Impl::operator Type(); }
+};
+
+//A wrapper which only supports setting.
+template <class Base>
+class BitfieldWOType : public BitfieldTypeImpl<Base>
+{
+  protected:
+    using Impl = BitfieldTypeImpl<Base>;
+    using typename Impl::Type;
+
+  public:
+    Type operator=(const Type val) { return Impl::operator=(val); }
+    Type
+    operator=(BitfieldWOType<Base> const & other)
+    {
+        return Impl::operator=(other);
+    }
+};
+
 //This namespace is for classes which implement the backend of the BitUnion
-//stuff. Don't use any of these directly, except for the Bitfield classes in
-//the *BitfieldTypes class(es).
+//stuff. Don't use any of these directly.
 namespace BitfieldBackend
 {
-    //A base class for all bitfields. It instantiates the actual storage,
-    //and provides getBits and setBits functions for manipulating it. The
-    //Data template parameter is type of the underlying storage.
-    template<class Data>
-    class BitfieldBase
+    template<class Storage, int first, int last>
+    class Unsigned
     {
-      protected:
-        Data __data;
+        static_assert(first >= last,
+                      "Bitfield ranges must be specified as <msb, lsb>");
 
-        //This function returns a range of bits from the underlying storage.
-        //It relies on the "bits" function above. It's the user's
-        //responsibility to make sure that there is a properly overloaded
-        //version of this function for whatever type they want to overlay.
-        inline uint64_t
-        getBits(int first, int last) const
+      protected:
+        uint64_t
+        getter(const Storage &storage) const
         {
-            return bits(__data, first, last);
+            return bits(storage, first, last);
         }
 
-        //Similar to the above, but for settings bits with replaceBits.
-        inline void
-        setBits(int first, int last, uint64_t val)
+        void
+        setter(Storage &storage, uint64_t val)
         {
-            replaceBits(__data, first, last, val);
+            replaceBits(storage, first, last, val);
         }
     };
 
-    //This class contains all the "regular" bitfield classes. It is inherited
-    //by all BitUnions which give them access to those types.
-    template<class Type>
-    class RegularBitfieldTypes
+    template<class Storage, int first, int last>
+    class Signed
     {
+        static_assert(first >= last,
+                      "Bitfield ranges must be specified as <msb, lsb>");
+
       protected:
-        //This class implements ordinary bitfields, that is a span of bits
-        //who's msb is "first", and who's lsb is "last".
-        template<int first, int last=first>
-        class Bitfield : public BitfieldBase<Type>
+        int64_t
+        getter(const Storage &storage) const
         {
-            static_assert(first >= last,
-                          "Bitfield ranges must be specified as <msb, lsb>");
+            return sext<first - last + 1>(bits(storage, first, last));
+        }
 
-          public:
-            operator uint64_t () const
-            {
-                return this->getBits(first, last);
-            }
-
-            uint64_t
-            operator=(const uint64_t _data)
-            {
-                this->setBits(first, last, _data);
-                return _data;
-            }
-
-            uint64_t
-            operator=(Bitfield<first, last> const & other)
-            {
-                return *this = (uint64_t)other;
-            }
-        };
-
-        //A class which specializes the above so that it can only be read
-        //from. This is accomplished explicitly making sure the assignment
-        //operator is blocked. The conversion operator is carried through
-        //inheritance. This will unfortunately need to be copied into each
-        //bitfield type due to limitations with how templates work
-        template<int first, int last=first>
-        class BitfieldRO : public Bitfield<first, last>
+        void
+        setter(Storage &storage, int64_t val)
         {
-          private:
-            uint64_t
-            operator=(const uint64_t _data);
-
-            uint64_t
-            operator=(const Bitfield<first, last>& other);
-        };
-
-        //Similar to the above, but only allows writing.
-        template<int first, int last=first>
-        class BitfieldWO : public Bitfield<first, last>
-        {
-          private:
-            operator uint64_t () const;
-
-          public:
-            using Bitfield<first, last>::operator=;
-        };
+            replaceBits(storage, first, last, val);
+        }
     };
 
-    //This class contains all the "regular" bitfield classes. It is inherited
-    //by all BitUnions which give them access to those types.
-    template<class Type>
-    class SignedBitfieldTypes
+    //This class contains the basic bitfield types which are automatically
+    //available within a BitUnion. They inherit their Storage type from the
+    //containing BitUnion.
+    template<class Storage>
+    class BitfieldTypes
     {
       protected:
-        //This class implements ordinary bitfields, that is a span of bits
-        //who's msb is "first", and who's lsb is "last".
+
         template<int first, int last=first>
-        class SignedBitfield : public BitfieldBase<Type>
-        {
-          public:
-            operator int64_t () const
-            {
-                return sext<first - last + 1>(this->getBits(first, last));
-            }
-
-            int64_t
-            operator=(const int64_t _data)
-            {
-                this->setBits(first, last, _data);
-                return _data;
-            }
-
-            int64_t
-            operator=(SignedBitfield<first, last> const & other)
-            {
-                return *this = (int64_t)other;
-            }
-        };
-
-        //A class which specializes the above so that it can only be read
-        //from. This is accomplished explicitly making sure the assignment
-        //operator is blocked. The conversion operator is carried through
-        //inheritance. This will unfortunately need to be copied into each
-        //bitfield type due to limitations with how templates work
+        using Bitfield = BitfieldType<Unsigned<Storage, first, last> >;
         template<int first, int last=first>
-        class SignedBitfieldRO : public SignedBitfield<first, last>
-        {
-          private:
-            int64_t
-            operator=(const int64_t _data);
-
-            int64_t
-            operator=(const SignedBitfield<first, last>& other);
-        };
-
-        //Similar to the above, but only allows writing.
+        using BitfieldRO =
+                BitfieldROType<Unsigned<Storage, first, last> >;
         template<int first, int last=first>
-        class SignedBitfieldWO : public SignedBitfield<first, last>
-        {
-          private:
-            operator int64_t () const;
+        using BitfieldWO =
+                BitfieldWOType<Unsigned<Storage, first, last> >;
 
-          public:
-            using SignedBitfield<first, last>::operator=;
-        };
+        template<int first, int last=first>
+        using SignedBitfield =
+                BitfieldType<Signed<Storage, first, last> >;
+        template<int first, int last=first>
+        using SignedBitfieldRO =
+                BitfieldROType<Signed<Storage, first, last> >;
+        template<int first, int last=first>
+        using SignedBitfieldWO =
+                BitfieldWOType<Signed<Storage, first, last> >;
     };
-
-    template<class Type>
-    class BitfieldTypes : public RegularBitfieldTypes<Type>,
-                          public SignedBitfieldTypes<Type>
-    {};
 
     //When a BitUnion is set up, an underlying class is created which holds
     //the actual union. This class then inherits from it, and provids the
@@ -206,46 +232,49 @@ namespace BitfieldBackend
     //prevents having to redefine these functions in every different BitUnion
     //type. More operators could be implemented in the future, as the need
     //arises.
-    template <class Type, class Base>
+    template <class Base>
     class BitUnionOperators : public Base
     {
+        static_assert(sizeof(Base) == sizeof(typename Base::__StorageType),
+                      "BitUnion larger than its storage type.");
+
       public:
-        BitUnionOperators(Type const & _data)
+        BitUnionOperators(typename Base::__StorageType const &val)
         {
-            Base::__data = _data;
+            Base::__storage = val;
         }
 
         BitUnionOperators() {}
 
-        operator const Type () const
+        operator const typename Base::__StorageType () const
         {
-            return Base::__data;
+            return Base::__storage;
         }
 
-        Type
-        operator=(Type const & _data)
+        typename Base::__StorageType
+        operator=(typename Base::__StorageType const &val)
         {
-            Base::__data = _data;
-            return _data;
+            Base::__storage = val;
+            return val;
         }
 
-        Type
-        operator=(BitUnionOperators const & other)
+        typename Base::__StorageType
+        operator=(BitUnionOperators const &other)
         {
-            Base::__data = other;
-            return Base::__data;
-        }
-
-        bool
-        operator<(Base const & base) const
-        {
-            return Base::__data < base.__data;
+            Base::__storage = other;
+            return Base::__storage;
         }
 
         bool
-        operator==(Base const & base) const
+        operator<(Base const &base) const
         {
-            return Base::__data == base.__data;
+            return Base::__storage < base.__storage;
+        }
+
+        bool
+        operator==(Base const &base) const
+        {
+            return Base::__storage == base.__storage;
         }
     };
 }
@@ -257,22 +286,28 @@ namespace BitfieldBackend
 //namespace ensures that there will be no collisions with other names as long
 //as the BitUnion names themselves are all distinct and nothing else uses
 //the BitfieldUnderlyingClasses namespace, which is unlikely. The class itself
-//creates a typedef of the "type" parameter called __DataType. This allows
+//creates a typedef of the "type" parameter called __StorageType. This allows
 //the type to propagate outside of the macro itself in a controlled way.
 //Finally, the base storage is defined which BitfieldOperators will refer to
 //in the operators it defines. This macro is intended to be followed by
 //bitfield definitions which will end up inside it's union. As explained
-//above, these is overlayed the __data member in its entirety by each of the
+//above, these is overlayed the __storage member in its entirety by each of the
 //bitfields which are defined in the union, creating shared storage with no
 //overhead.
 #define __BitUnion(type, name) \
     class BitfieldUnderlyingClasses##name : \
         public BitfieldBackend::BitfieldTypes<type> \
     { \
+      protected: \
+        typedef type __StorageType; \
+        friend BitfieldBackend::BitUnionBaseType< \
+            BitfieldBackend::BitUnionOperators< \
+                BitfieldUnderlyingClasses##name> >; \
+        friend BitfieldBackend::BitUnionBaseType< \
+                BitfieldUnderlyingClasses##name>; \
       public: \
-        typedef type __DataType; \
         union { \
-            type __data;\
+            type __storage;
 
 //This closes off the class and union started by the above macro. It is
 //followed by a typedef which makes "name" refer to a BitfieldOperator
@@ -282,20 +317,19 @@ namespace BitfieldBackend
         }; \
     }; \
     typedef BitfieldBackend::BitUnionOperators< \
-        BitfieldUnderlyingClasses##name::__DataType, \
         BitfieldUnderlyingClasses##name> name;
 
 //This sets up a bitfield which has other bitfields nested inside of it. The
-//__data member functions like the "underlying storage" of the top level
+//__storage member functions like the "underlying storage" of the top level
 //BitUnion. Like everything else, it overlays with the top level storage, so
 //making it a regular bitfield type makes the entire thing function as a
 //regular bitfield when referred to by itself.
-#define __SubBitUnion(fieldType, first, last, name) \
-    class : public BitfieldBackend::BitfieldTypes<__DataType> \
+#define __SubBitUnion(name, fieldType, ...) \
+    class \
     { \
       public: \
         union { \
-            fieldType<first, last> __data;
+            fieldType<__VA_ARGS__> __storage;
 
 //This closes off the union created above and gives it a name. Unlike the top
 //level BitUnion, we're interested in creating an object instead of a type.
@@ -304,22 +338,22 @@ namespace BitfieldBackend
 //do so.
 #define EndSubBitUnion(name) \
         }; \
-        inline operator __DataType () const \
-        { return __data; } \
+        inline operator __StorageType () const \
+        { return __storage; } \
         \
-        inline __DataType operator = (const __DataType & _data) \
-        { return __data = _data;} \
+        inline __StorageType operator = (const __StorageType & _storage) \
+        { return __storage = _storage;} \
     } name;
 
 //Regular bitfields
 //These define macros for read/write regular bitfield based subbitfields.
 #define SubBitUnion(name, first, last) \
-    __SubBitUnion(Bitfield, first, last, name)
+    __SubBitUnion(name, Bitfield, first, last)
 
 //Regular bitfields
 //These define macros for read/write regular bitfield based subbitfields.
 #define SignedSubBitUnion(name, first, last) \
-    __SubBitUnion(SignedBitfield, first, last, name)
+    __SubBitUnion(name, SignedBitfield, first, last)
 
 //Use this to define an arbitrary type overlayed with bitfields.
 #define BitUnion(type, name) __BitUnion(type, name)
@@ -329,5 +363,99 @@ namespace BitfieldBackend
 #define BitUnion32(name) __BitUnion(uint32_t, name)
 #define BitUnion16(name) __BitUnion(uint16_t, name)
 #define BitUnion8(name) __BitUnion(uint8_t, name)
+
+
+//These templates make it possible to define other templates related to
+//BitUnions without having to refer to internal typedefs or the BitfieldBackend
+//namespace.
+
+//To build a template specialization which works for all BitUnions, accept a
+//template argument T, and then use BitUnionType<T> as an argument in the
+//template. To refer to the basic type the BitUnion wraps, use
+//BitUnionBaseType<T>.
+
+//For example:
+//template <typename T>
+//void func(BitUnionType<T> u) { BitUnionBaseType<T> b = u; }
+
+//Also, BitUnionBaseType can be used on a BitUnion type directly.
+
+template <typename T>
+using BitUnionType = BitfieldBackend::BitUnionOperators<T>;
+
+namespace BitfieldBackend
+{
+    template<typename T>
+    struct BitUnionBaseType
+    {
+        typedef typename BitUnionType<T>::__StorageType Type;
+    };
+
+    template<typename T>
+    struct BitUnionBaseType<BitUnionType<T> >
+    {
+        typedef typename BitUnionType<T>::__StorageType Type;
+    };
+}
+
+template <typename T>
+using BitUnionBaseType = typename BitfieldBackend::BitUnionBaseType<T>::Type;
+
+
+//An STL style hash structure for hashing BitUnions based on their base type.
+namespace std
+{
+    template <typename T>
+    struct hash<BitUnionType<T> > : public hash<BitUnionBaseType<T> >
+    {
+        size_t
+        operator() (const BitUnionType<T> &val) const
+        {
+            return hash<BitUnionBaseType<T> >::operator()(val);
+        }
+    };
+}
+
+
+namespace BitfieldBackend
+{
+
+    template<typename T>
+    static inline std::ostream &
+    bitfieldBackendPrinter(std::ostream &os, const T &t)
+    {
+        os << t;
+        return os;
+    }
+
+    //Since BitUnions are generally numerical values and not character codes,
+    //these specializations attempt to ensure that they get cast to integers
+    //of the appropriate type before printing.
+    template <>
+    inline std::ostream &
+    bitfieldBackendPrinter(std::ostream &os, const char &t)
+    {
+        os << (int)t;
+        return os;
+    }
+
+    template <>
+    inline std::ostream &
+    bitfieldBackendPrinter(std::ostream &os, const unsigned char &t)
+    {
+        os << (unsigned int)t;
+        return os;
+    }
+}
+
+//A default << operator which casts a bitunion to its underlying type and
+//passes it to BitfieldBackend::bitfieldBackendPrinter.
+template <typename T>
+std::ostream &
+operator << (std::ostream &os, const BitUnionType<T> &bu)
+{
+    return BitfieldBackend::bitfieldBackendPrinter(
+            os, (BitUnionBaseType<T>)bu);
+}
 
 #endif // __BASE_BITUNION_HH__

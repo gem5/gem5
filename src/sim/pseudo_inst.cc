@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2015 ARM Limited
+ * Copyright (c) 2010-2012, 2015, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,6 +41,8 @@
  * Authors: Nathan Binkert
  */
 
+#include "sim/pseudo_inst.hh"
+
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -49,10 +51,11 @@
 #include <string>
 #include <vector>
 
-#include "arch/kernel_stats.hh"
+#include <gem5/asm/generic/m5ops.h>
+
+#include "arch/pseudo_inst.hh"
 #include "arch/utility.hh"
 #include "arch/vtophys.hh"
-#include "arch/pseudo_inst.hh"
 #include "base/debug.hh"
 #include "base/output.hh"
 #include "config/the_isa.hh"
@@ -64,11 +67,11 @@
 #include "debug/Quiesce.hh"
 #include "debug/WorkItems.hh"
 #include "dev/net/dist_iface.hh"
+#include "kern/kernel_stats.hh"
 #include "params/BaseCPU.hh"
 #include "sim/full_system.hh"
 #include "sim/initparam_keys.hh"
 #include "sim/process.hh"
-#include "sim/pseudo_inst.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
@@ -108,107 +111,112 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
     }
 
     switch (func) {
-      case 0x00: // arm_func
+      case M5OP_ARM:
         arm(tc);
         break;
 
-      case 0x01: // quiesce_func
+      case M5OP_QUIESCE:
         quiesce(tc);
         break;
 
-      case 0x02: // quiescens_func
-        quiesceSkip(tc);
-        break;
-
-      case 0x03: // quiescecycle_func
+      case M5OP_QUIESCE_NS:
         quiesceNs(tc, args[0]);
         break;
 
-      case 0x04: // quiescetime_func
+      case M5OP_QUIESCE_CYCLE:
+        quiesceCycles(tc, args[0]);
+        break;
+
+      case M5OP_QUIESCE_TIME:
         return quiesceTime(tc);
 
-      case 0x07: // rpns_func
+      case M5OP_RPNS:
         return rpns(tc);
 
-      case 0x09: // wakecpu_func
+      case M5OP_WAKE_CPU:
         wakeCPU(tc, args[0]);
         break;
 
-      case 0x21: // exit_func
+      case M5OP_EXIT:
         m5exit(tc, args[0]);
         break;
 
-      case 0x22:
+      case M5OP_FAIL:
         m5fail(tc, args[0], args[1]);
         break;
 
-      case 0x30: // initparam_func
+      case M5OP_INIT_PARAM:
         return initParam(tc, args[0], args[1]);
 
-      case 0x31: // loadsymbol_func
+      case M5OP_LOAD_SYMBOL:
         loadsymbol(tc);
         break;
 
-      case 0x40: // resetstats_func
+      case M5OP_RESET_STATS:
         resetstats(tc, args[0], args[1]);
         break;
 
-      case 0x41: // dumpstats_func
+      case M5OP_DUMP_STATS:
         dumpstats(tc, args[0], args[1]);
         break;
 
-      case 0x42: // dumprststats_func
+      case M5OP_DUMP_RESET_STATS:
         dumpresetstats(tc, args[0], args[1]);
         break;
 
-      case 0x43: // ckpt_func
+      case M5OP_CHECKPOINT:
         m5checkpoint(tc, args[0], args[1]);
         break;
 
-      case 0x4f: // writefile_func
+      case M5OP_WRITE_FILE:
         return writefile(tc, args[0], args[1], args[2], args[3]);
 
-      case 0x50: // readfile_func
+      case M5OP_READ_FILE:
         return readfile(tc, args[0], args[1], args[2]);
 
-      case 0x51: // debugbreak_func
+      case M5OP_DEBUG_BREAK:
         debugbreak(tc);
         break;
 
-      case 0x52: // switchcpu_func
+      case M5OP_SWITCH_CPU:
         switchcpu(tc);
         break;
 
-      case 0x53: // addsymbol_func
+      case M5OP_ADD_SYMBOL:
         addsymbol(tc, args[0], args[1]);
         break;
 
-      case 0x54: // panic_func
+      case M5OP_PANIC:
         panic("M5 panic instruction called at %s\n", tc->pcState());
 
-      case 0x5a: // work_begin_func
+      case M5OP_WORK_BEGIN:
         workbegin(tc, args[0], args[1]);
         break;
 
-      case 0x5b: // work_end_func
+      case M5OP_WORK_END:
         workend(tc, args[0], args[1]);
         break;
 
-      case 0x55: // annotate_func
-      case 0x56: // reserved2_func
-      case 0x57: // reserved3_func
-      case 0x58: // reserved4_func
-      case 0x59: // reserved5_func
+      case M5OP_ANNOTATE:
+      case M5OP_RESERVED2:
+      case M5OP_RESERVED3:
+      case M5OP_RESERVED4:
+      case M5OP_RESERVED5:
         warn("Unimplemented m5 op (0x%x)\n", func);
         break;
 
       /* SE mode functions */
-      case 0x60: // syscall_func
+      case M5OP_SE_SYSCALL:
         m5Syscall(tc);
         break;
 
-      case 0x61: // pagefault_func
+      case M5OP_SE_PAGE_FAULT:
         m5PageFault(tc);
+        break;
+
+      /* dist-gem5 functions */
+      case M5OP_DIST_TOGGLE_SYNC:
+        togglesync(tc);
         break;
 
       default:
@@ -234,105 +242,34 @@ void
 quiesce(ThreadContext *tc)
 {
     DPRINTF(PseudoInst, "PseudoInst::quiesce()\n");
-    if (!FullSystem)
-        panicFsOnlyPseudoInst("quiesce");
-
-    if (!tc->getCpuPtr()->params()->do_quiesce)
-        return;
-
-    DPRINTF(Quiesce, "%s: quiesce()\n", tc->getCpuPtr()->name());
-
-    tc->suspend();
-    if (tc->getKernelStats())
-        tc->getKernelStats()->quiesce();
+    tc->quiesce();
 }
 
 void
 quiesceSkip(ThreadContext *tc)
 {
     DPRINTF(PseudoInst, "PseudoInst::quiesceSkip()\n");
-    if (!FullSystem)
-        panicFsOnlyPseudoInst("quiesceSkip");
-
-    BaseCPU *cpu = tc->getCpuPtr();
-
-    if (!cpu->params()->do_quiesce)
-        return;
-
-    EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
-
-    Tick resume = curTick() + 1;
-
-    cpu->reschedule(quiesceEvent, resume, true);
-
-    DPRINTF(Quiesce, "%s: quiesceSkip() until %d\n",
-            cpu->name(), resume);
-
-    tc->suspend();
-    if (tc->getKernelStats())
-        tc->getKernelStats()->quiesce();
+    tc->quiesceTick(tc->getCpuPtr()->nextCycle() + 1);
 }
 
 void
 quiesceNs(ThreadContext *tc, uint64_t ns)
 {
     DPRINTF(PseudoInst, "PseudoInst::quiesceNs(%i)\n", ns);
-    if (!FullSystem)
-        panicFsOnlyPseudoInst("quiesceNs");
-
-    BaseCPU *cpu = tc->getCpuPtr();
-
-    if (!cpu->params()->do_quiesce)
-        return;
-
-    EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
-
-    Tick resume = curTick() + SimClock::Int::ns * ns;
-
-    cpu->reschedule(quiesceEvent, resume, true);
-
-    DPRINTF(Quiesce, "%s: quiesceNs(%d) until %d\n",
-            cpu->name(), ns, resume);
-
-    tc->suspend();
-    if (tc->getKernelStats())
-        tc->getKernelStats()->quiesce();
+    tc->quiesceTick(curTick() + SimClock::Int::ns * ns);
 }
 
 void
 quiesceCycles(ThreadContext *tc, uint64_t cycles)
 {
     DPRINTF(PseudoInst, "PseudoInst::quiesceCycles(%i)\n", cycles);
-    if (!FullSystem)
-        panicFsOnlyPseudoInst("quiesceCycles");
-
-    BaseCPU *cpu = tc->getCpuPtr();
-
-    if (!cpu->params()->do_quiesce)
-        return;
-
-    EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
-
-    Tick resume = cpu->clockEdge(Cycles(cycles));
-
-    cpu->reschedule(quiesceEvent, resume, true);
-
-    DPRINTF(Quiesce, "%s: quiesceCycles(%d) until %d\n",
-            cpu->name(), cycles, resume);
-
-    tc->suspend();
-    if (tc->getKernelStats())
-        tc->getKernelStats()->quiesce();
+    tc->quiesceTick(tc->getCpuPtr()->clockEdge(Cycles(cycles)));
 }
 
 uint64_t
 quiesceTime(ThreadContext *tc)
 {
     DPRINTF(PseudoInst, "PseudoInst::quiesceTime()\n");
-    if (!FullSystem) {
-        panicFsOnlyPseudoInst("quiesceTime");
-        return 0;
-    }
 
     return (tc->readLastActivate() - tc->readLastSuspend()) /
         SimClock::Int::ns;
@@ -350,6 +287,13 @@ wakeCPU(ThreadContext *tc, uint64_t cpuid)
 {
     DPRINTF(PseudoInst, "PseudoInst::wakeCPU(%i)\n", cpuid);
     System *sys = tc->getSystemPtr();
+
+    if (sys->numContexts() <= cpuid) {
+        warn("PseudoInst::wakeCPU(%i), cpuid greater than number of contexts"
+             "(%i)\n",cpuid, sys->numContexts());
+        return;
+    }
+
     ThreadContext *other_tc = sys->threadContexts[cpuid];
     if (other_tc->status() == ThreadContext::Suspended)
         other_tc->activate();
@@ -433,9 +377,8 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
     if (!FullSystem)
         panicFsOnlyPseudoInst("addSymbol");
 
-    char symb[100];
-    CopyStringOut(tc, symb, symbolAddr, 100);
-    std::string symbol(symb);
+    std::string symbol;
+    tc->getVirtProxy().readString(symbol, symbolAddr);
 
     DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
 
@@ -581,7 +524,7 @@ readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
     }
 
     close(fd);
-    CopyIn(tc, vaddr, buf, result);
+    tc->getVirtProxy().writeBlob(vaddr, buf, result);
     delete [] buf;
     return result;
 }
@@ -594,10 +537,8 @@ writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
             vaddr, len, offset, filename_addr);
 
     // copy out target filename
-    char fn[100];
     std::string filename;
-    CopyStringOut(tc, fn, filename_addr, 100);
-    filename = std::string(fn);
+    tc->getVirtProxy().readString(filename, filename_addr);
 
     OutputStream *out;
     if (offset == 0) {
@@ -619,7 +560,7 @@ writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
 
     // copy out data and write to file
     char *buf = new char[len];
-    CopyOut(tc, buf, vaddr, len);
+    tc->getVirtProxy().readBlob(vaddr, buf, len);
     os->write(buf, len);
     if (os->fail() || os->bad())
         panic("Error while doing writefile!\n");
@@ -643,6 +584,13 @@ switchcpu(ThreadContext *tc)
 {
     DPRINTF(PseudoInst, "PseudoInst::switchcpu()\n");
     exitSimLoop("switchcpu");
+}
+
+void
+togglesync(ThreadContext *tc)
+{
+    DPRINTF(PseudoInst, "PseudoInst::togglesync()\n");
+    DistIface::toggleSync(tc);
 }
 
 //

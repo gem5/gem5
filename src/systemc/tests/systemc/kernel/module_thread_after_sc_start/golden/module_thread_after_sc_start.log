@@ -1,0 +1,5 @@
+SystemC Simulation
+
+Error: (E542) call to SC_THREAD in sc_module while simulation running: y.comb.dork
+In file: <removed by verify.pl>
+In process: y.comb @ 0 s

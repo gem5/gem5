@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012,2015 ARM Limited
+ * Copyright (c) 2010-2012, 2015, 2017, 2018 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -41,21 +41,20 @@
  * Authors: Steve Reinhardt
  */
 
-#include "arch/kernel_stats.hh"
+#include "cpu/simple/base.hh"
+
 #include "arch/stacktrace.hh"
-#include "arch/tlb.hh"
 #include "arch/utility.hh"
 #include "arch/vtophys.hh"
-#include "base/loader/symtab.hh"
 #include "base/cp_annotate.hh"
 #include "base/cprintf.hh"
 #include "base/inifile.hh"
-#include "base/misc.hh"
+#include "base/loader/symtab.hh"
+#include "base/logging.hh"
 #include "base/pollevent.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
-#include "cpu/simple/base.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/checker/thread_context.hh"
@@ -70,7 +69,6 @@
 #include "debug/Decode.hh"
 #include "debug/Fetch.hh"
 #include "debug/Quiesce.hh"
-#include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "params/BaseSimpleCPU.hh"
@@ -146,7 +144,8 @@ BaseSimpleCPU::checkPcEventQueue()
     Addr oldpc, pc = threadInfo[curThread]->thread->instAddr();
     do {
         oldpc = pc;
-        system->pcEventQueue.service(threadContexts[curThread]);
+        threadInfo[curThread]->thread->pcEventQueue.service(
+                oldpc, threadContexts[curThread]);
         pc = threadInfo[curThread]->thread->instAddr();
     } while (oldpc != pc);
 }
@@ -175,12 +174,12 @@ BaseSimpleCPU::countInst()
     if (!curStaticInst->isMicroop() || curStaticInst->isLastMicroop()) {
         t_info.numInst++;
         t_info.numInsts++;
+
+        system->totalNumInsts++;
+        t_info.thread->funcExeInst++;
     }
     t_info.numOp++;
     t_info.numOps++;
-
-    system->totalNumInsts++;
-    t_info.thread->funcExeInst++;
 }
 
 Counter
@@ -214,6 +213,7 @@ BaseSimpleCPU::haltContext(ThreadID thread_num)
 {
     // for now, these are equivalent
     suspendContext(thread_num);
+    updateCycleCounters(BaseCPU::CPU_STATE_SLEEP);
 }
 
 
@@ -251,6 +251,11 @@ BaseSimpleCPU::regStats()
             .desc("Number of float alu accesses")
             ;
 
+        t_info.numVecAluAccesses
+            .name(thread_str + ".num_vec_alu_accesses")
+            .desc("Number of vector alu accesses")
+            ;
+
         t_info.numCallsReturns
             .name(thread_str + ".num_func_calls")
             .desc("number of times a function call or return occured")
@@ -271,6 +276,11 @@ BaseSimpleCPU::regStats()
             .desc("number of float instructions")
             ;
 
+        t_info.numVecInsts
+            .name(thread_str + ".num_vec_insts")
+            .desc("number of vector instructions")
+            ;
+
         t_info.numIntRegReads
             .name(thread_str + ".num_int_register_reads")
             .desc("number of times the integer registers were read")
@@ -289,6 +299,16 @@ BaseSimpleCPU::regStats()
         t_info.numFpRegWrites
             .name(thread_str + ".num_fp_register_writes")
             .desc("number of times the floating registers were written")
+            ;
+
+        t_info.numVecRegReads
+            .name(thread_str + ".num_vec_register_reads")
+            .desc("number of times the vector registers were read")
+            ;
+
+        t_info.numVecRegWrites
+            .name(thread_str + ".num_vec_register_writes")
+            .desc("number of times the vector registers were written")
             ;
 
         t_info.numCCRegReads
@@ -447,19 +467,19 @@ BaseSimpleCPU::checkForInterrupts()
 
 
 void
-BaseSimpleCPU::setupFetchRequest(Request *req)
+BaseSimpleCPU::setupFetchRequest(const RequestPtr &req)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
 
     Addr instAddr = thread->instAddr();
+    Addr fetchPC = (instAddr & PCMask) + t_info.fetchOffset;
 
     // set up memory request for instruction fetch
-    DPRINTF(Fetch, "Fetch: PC:%08p\n", instAddr);
+    DPRINTF(Fetch, "Fetch: Inst PC:%08p, Fetch PC:%08p\n", instAddr, fetchPC);
 
-    Addr fetchPC = (instAddr & PCMask) + t_info.fetchOffset;
-    req->setVirt(0, fetchPC, sizeof(MachInst), Request::INST_FETCH, instMasterId(),
-            instAddr);
+    req->setVirt(0, fetchPC, sizeof(MachInst), Request::INST_FETCH,
+                 instMasterId(), instAddr);
 }
 
 
@@ -472,16 +492,17 @@ BaseSimpleCPU::preExecute()
     // maintain $r0 semantics
     thread->setIntReg(ZeroReg, 0);
 #if THE_ISA == ALPHA_ISA
-    thread->setFloatReg(ZeroReg, 0.0);
+    thread->setFloatReg(ZeroReg, 0);
 #endif // ALPHA_ISA
 
+    // resets predicates
+    t_info.setPredicate(true);
+    t_info.setMemAccPredicate(true);
+
     // check for instruction-count-based events
-    comInstEventQueue[curThread]->serviceEvents(t_info.numInst);
-    system->instEventQueue.serviceEvents(system->totalNumInsts);
+    thread->comInstEventQueue.serviceEvents(t_info.numInst);
 
     // decode the instruction
-    inst = gtoh(inst);
-
     TheISA::PCState pcState = thread->pcState();
 
     if (isRomMicroPC(pcState.microPC())) {
@@ -578,7 +599,6 @@ BaseSimpleCPU::postExecute()
 
     if (curStaticInst->isLoad()) {
         ++t_info.numLoad;
-        comLoadEventQueue[curThread]->serviceEvents(t_info.numLoad);
     }
 
     if (CPA::available()) {
@@ -602,6 +622,12 @@ BaseSimpleCPU::postExecute()
         t_info.numFpInsts++;
     }
 
+    //vector alu accesses
+    if (curStaticInst->isVector()){
+        t_info.numVecAluAccesses++;
+        t_info.numVecInsts++;
+    }
+
     //number of function calls/returns to get window accesses
     if (curStaticInst->isCall() || curStaticInst->isReturn()){
         t_info.numCallsReturns++;
@@ -617,7 +643,7 @@ BaseSimpleCPU::postExecute()
         t_info.numLoadInsts++;
     }
 
-    if (curStaticInst->isStore()){
+    if (curStaticInst->isStore() || curStaticInst->isAtomic()){
         t_info.numStoreInsts++;
     }
     /* End power model statistics */
@@ -634,7 +660,7 @@ BaseSimpleCPU::postExecute()
     }
 
     // Call CPU instruction commit probes
-    probeInstCommit(curStaticInst);
+    probeInstCommit(curStaticInst, instAddr);
 }
 
 void

@@ -1,0 +1,385 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2015 RISC-V Foundation
+// Copyright (c) 2016-2017 The University of Virginia
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Alec Roelke
+
+////////////////////////////////////////////////////////////////////
+//
+// Integer instructions
+//
+
+def template ImmDeclare {{
+    //
+    // Static instruction class for "%(mnemonic)s".
+    //
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        /// Constructor.
+        %(class_name)s(MachInst machInst);
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        std::string generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const override;
+    };
+}};
+
+def template ImmConstructor {{
+    %(class_name)s::%(class_name)s(MachInst machInst)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        %(constructor)s;
+        %(imm_code)s;
+    }
+}};
+
+def template ImmExecute {{
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        if (fault == NoFault) {
+            %(code)s;
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+        return fault;
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::vector<RegId> indices = {%(regs)s};
+        std::stringstream ss;
+        ss << mnemonic << ' ';
+        for (const RegId& idx: indices)
+            ss << registerName(idx) << ", ";
+        ss << imm;
+        return ss.str();
+    }
+}};
+
+def template BranchDeclare {{
+    //
+    // Static instruction class for "%(mnemonic)s".
+    //
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        /// Constructor.
+        %(class_name)s(MachInst machInst);
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const override;
+
+        RiscvISA::PCState
+        branchTarget(const RiscvISA::PCState &branchPC) const override;
+
+        using StaticInst::branchTarget;
+    };
+}};
+
+def template BranchExecute {{
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        if (fault == NoFault) {
+            %(code)s;
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+        return fault;
+    }
+
+    RiscvISA::PCState
+    %(class_name)s::branchTarget(const RiscvISA::PCState &branchPC) const
+    {
+        return branchPC.pc() + imm;
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::vector<RegId> indices = {%(regs)s};
+        std::stringstream ss;
+        ss << mnemonic << ' ';
+        for (const RegId& idx: indices)
+            ss << registerName(idx) << ", ";
+        ss << imm;
+        return ss.str();
+    }
+}};
+
+def template JumpDeclare {{
+    //
+    // Static instruction class for "%(mnemonic)s".
+    //
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        /// Constructor.
+        %(class_name)s(MachInst machInst);
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const override;
+
+        RiscvISA::PCState
+        branchTarget(ThreadContext *tc) const override;
+
+        using StaticInst::branchTarget;
+    };
+}};
+
+def template JumpExecute {{
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        if (fault == NoFault) {
+            %(code)s;
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+        return fault;
+    }
+
+    RiscvISA::PCState
+    %(class_name)s::branchTarget(ThreadContext *tc) const
+    {
+        PCState pc = tc->pcState();
+        pc.set((tc->readIntReg(_srcRegIdx[0].index()) + imm)&~0x1);
+        return pc;
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::vector<RegId> indices = {%(regs)s};
+        std::stringstream ss;
+        ss << mnemonic << ' ';
+        for (const RegId& idx: indices)
+            ss << registerName(idx) << ", ";
+        ss << imm;
+        return ss.str();
+    }
+}};
+
+def template CSRExecute {{
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+        RegVal data, olddata;
+        switch (csr) {
+          case CSR_FCSR:
+            olddata = xc->readMiscReg(MISCREG_FFLAGS) |
+                      (xc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
+            break;
+          default:
+            if (CSRData.find(csr) != CSRData.end()) {
+                olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
+            } else {
+                std::string error = csprintf("Illegal CSR index %#x\n", csr);
+                fault = make_shared<IllegalInstFault>(error, machInst);
+                olddata = 0;
+            }
+            break;
+        }
+        auto mask = CSRMasks.find(csr);
+        if (mask != CSRMasks.end())
+            olddata &= mask->second;
+        DPRINTF(RiscvMisc, "Reading CSR %s: %#x\n", CSRData.at(csr).name,
+                olddata);
+        data = olddata;
+
+        if (fault == NoFault) {
+            %(code)s;
+            if (fault == NoFault) {
+                if (mask != CSRMasks.end())
+                    data &= mask->second;
+                if (data != olddata) {
+                    if (bits(csr, 11, 10) == 0x3) {
+                        std::string error = csprintf("CSR %s is read-only\n",
+                                                     CSRData.at(csr).name);
+                        fault = make_shared<IllegalInstFault>(error, machInst);
+                    } else {
+                        DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n", data,
+                                CSRData.at(csr).name);
+                        INTERRUPT oldinterrupt = olddata;
+                        INTERRUPT newinterrupt = data;
+                        switch (csr) {
+                          case CSR_FCSR:
+                            xc->setMiscReg(MISCREG_FFLAGS, bits(data, 4, 0));
+                            xc->setMiscReg(MISCREG_FRM, bits(data, 7, 5));
+                            break;
+                          case CSR_MIP: case CSR_MIE:
+                            if (oldinterrupt.mei == newinterrupt.mei &&
+                                oldinterrupt.mti == newinterrupt.mti &&
+                                oldinterrupt.msi == newinterrupt.msi) {
+                                xc->setMiscReg(CSRData.at(csr).physIndex,data);
+                            } else {
+                                std::string error = "Interrupt m bits are "
+                                                    "read-only\n";
+                                fault = make_shared<IllegalInstFault>(error,
+                                                                     machInst);
+                            }
+                            break;
+                          default:
+                            xc->setMiscReg(CSRData.at(csr).physIndex, data);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+        return fault;
+    }
+}};
+
+def format ROp(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'RegOp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+
+def format IOp(code, imm_type='int64_t', *opt_flags) {{
+    regs = ['_destRegIdx[0]','_srcRegIdx[0]']
+    iop = InstObjParams(name, Name, 'ImmOp<%s>' % imm_type,
+        {'code': code, 'imm_code': 'imm = sext<12>(IMM12);',
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = ImmDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = ImmExecute.subst(iop)
+}};
+
+def format BOp(code, *opt_flags) {{
+    imm_code = """
+                imm = BIMM12BITS4TO1 << 1  |
+                      BIMM12BITS10TO5 << 5 |
+                      BIMM12BIT11 << 11    |
+                      IMMSIGN << 12;
+                imm = sext<13>(imm);
+               """
+    regs = ['_srcRegIdx[0]','_srcRegIdx[1]']
+    iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
+        {'code': code, 'imm_code': imm_code,
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = BranchDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BranchExecute.subst(iop)
+}};
+
+def format Jump(code, *opt_flags) {{
+    regs = ['_destRegIdx[0]', '_srcRegIdx[0]']
+    iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
+        {'code': code, 'imm_code': 'imm = sext<12>(IMM12);',
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = JumpDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = JumpExecute.subst(iop)
+}};
+
+def format UOp(code, *opt_flags) {{
+    regs = ['_destRegIdx[0]']
+    iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
+        {'code': code, 'imm_code': 'imm = sext<20>(IMM20) << 12;',
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = ImmDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = ImmExecute.subst(iop)
+}};
+
+def format JOp(code, *opt_flags) {{
+    imm_code = """
+                imm = UJIMMBITS10TO1 << 1   |
+                      UJIMMBIT11 << 11      |
+                      UJIMMBITS19TO12 << 12 |
+                      IMMSIGN << 20;
+                imm = sext<21>(imm);
+               """
+    pc = 'pc.set(pc.pc() + imm);'
+    regs = ['_destRegIdx[0]']
+    iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
+        {'code': code, 'imm_code': imm_code,
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = BranchDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BranchExecute.subst(iop)
+}};
+
+def format SystemOp(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'SystemOp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+
+def format CSROp(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'CSROp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = CSRExecute.subst(iop)
+}};

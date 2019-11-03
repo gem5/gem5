@@ -1,0 +1,4 @@
+SystemC Simulation
+
+Error: (E109) complete binding failed: port not bound: port 'tb.one' (sc_port)
+In file: <removed by verify.pl>

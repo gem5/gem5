@@ -36,9 +36,12 @@
 #ifndef __ARCH_HSAIL_INSTS_MEM_HH__
 #define __ARCH_HSAIL_INSTS_MEM_HH__
 
+#include <type_traits>
+
 #include "arch/hsail/insts/decl.hh"
 #include "arch/hsail/insts/gpu_static_inst.hh"
 #include "arch/hsail/operand.hh"
+#include "gpu-compute/compute_unit.hh"
 
 namespace HsailISA
 {
@@ -96,6 +99,8 @@ namespace HsailISA
         {
             using namespace Brig;
 
+            setFlag(ALU);
+
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             dest.init(op_offs, obj);
             op_offs = obj->getOperandPtr(ib->operands, 1);
@@ -141,7 +146,8 @@ namespace HsailISA
             return((operandIndex == 0) ? dest.opSize() :
                    this->addr.opSize());
         }
-        int getRegisterIndex(int operandIndex) override
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.regIndex() :
@@ -211,131 +217,6 @@ namespace HsailISA
         Brig::BrigMemoryOrder memoryOrder;
         Brig::BrigMemoryScope memoryScope;
         unsigned int equivClass;
-        bool isArgLoad()
-        {
-            return segment == Brig::BRIG_SEGMENT_KERNARG ||
-                   segment == Brig::BRIG_SEGMENT_ARG;
-        }
-        void
-        initLd(const Brig::BrigInstBase *ib, const BrigObject *obj,
-               const char *_opcode)
-        {
-            using namespace Brig;
-
-            const BrigInstMem *ldst = (const BrigInstMem*)ib;
-
-            segment = (BrigSegment)ldst->segment;
-            memoryOrder = BRIG_MEMORY_ORDER_NONE;
-            memoryScope = BRIG_MEMORY_SCOPE_NONE;
-            equivClass = ldst->equivClass;
-
-            switch (segment) {
-              case BRIG_SEGMENT_GLOBAL:
-                o_type = Enums::OT_GLOBAL_READ;
-                break;
-
-              case BRIG_SEGMENT_GROUP:
-                o_type = Enums::OT_SHARED_READ;
-                break;
-
-              case BRIG_SEGMENT_PRIVATE:
-                o_type = Enums::OT_PRIVATE_READ;
-                break;
-
-              case BRIG_SEGMENT_READONLY:
-                o_type = Enums::OT_READONLY_READ;
-                break;
-
-              case BRIG_SEGMENT_SPILL:
-                o_type = Enums::OT_SPILL_READ;
-                break;
-
-              case BRIG_SEGMENT_FLAT:
-                o_type = Enums::OT_FLAT_READ;
-                break;
-
-              case BRIG_SEGMENT_KERNARG:
-                o_type = Enums::OT_KERN_READ;
-                break;
-
-              case BRIG_SEGMENT_ARG:
-                o_type = Enums::OT_ARG;
-                break;
-
-              default:
-                panic("Ld: segment %d not supported\n", segment);
-            }
-
-            width = ldst->width;
-            unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
-            const Brig::BrigOperand *brigOp = obj->getOperand(op_offs);
-            if (brigOp->kind == BRIG_KIND_OPERAND_REGISTER)
-                dest.init(op_offs, obj);
-
-            op_offs = obj->getOperandPtr(ib->operands, 1);
-            addr.init(op_offs, obj);
-        }
-
-        void
-        initAtomicLd(const Brig::BrigInstBase *ib, const BrigObject *obj,
-                     const char *_opcode)
-        {
-            using namespace Brig;
-
-            const BrigInstAtomic *at = (const BrigInstAtomic*)ib;
-
-            segment = (BrigSegment)at->segment;
-            memoryOrder = (BrigMemoryOrder)at->memoryOrder;
-            memoryScope = (BrigMemoryScope)at->memoryScope;
-            equivClass = 0;
-
-            switch (segment) {
-              case BRIG_SEGMENT_GLOBAL:
-                o_type = Enums::OT_GLOBAL_READ;
-                break;
-
-              case BRIG_SEGMENT_GROUP:
-                o_type = Enums::OT_SHARED_READ;
-                break;
-
-              case BRIG_SEGMENT_PRIVATE:
-                o_type = Enums::OT_PRIVATE_READ;
-                break;
-
-              case BRIG_SEGMENT_READONLY:
-                o_type = Enums::OT_READONLY_READ;
-                break;
-
-              case BRIG_SEGMENT_SPILL:
-                o_type = Enums::OT_SPILL_READ;
-                break;
-
-              case BRIG_SEGMENT_FLAT:
-                o_type = Enums::OT_FLAT_READ;
-                break;
-
-              case BRIG_SEGMENT_KERNARG:
-                o_type = Enums::OT_KERN_READ;
-                break;
-
-              case BRIG_SEGMENT_ARG:
-                o_type = Enums::OT_ARG;
-                break;
-
-              default:
-                panic("Ld: segment %d not supported\n", segment);
-            }
-
-            width = BRIG_WIDTH_1;
-            unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
-            const Brig::BrigOperand *brigOp = obj->getOperand(op_offs);
-
-            if (brigOp->kind == BRIG_KIND_OPERAND_REGISTER)
-                dest.init(op_offs, obj);
-
-            op_offs = obj->getOperandPtr(ib->operands,1);
-            addr.init(op_offs, obj);
-        }
 
         LdInstBase(const Brig::BrigInstBase *ib, const BrigObject *obj,
                    const char *_opcode)
@@ -343,10 +224,111 @@ namespace HsailISA
         {
             using namespace Brig;
 
+            setFlag(MemoryRef);
+            setFlag(Load);
+
             if (ib->opcode == BRIG_OPCODE_LD) {
-                initLd(ib, obj, _opcode);
+                const BrigInstMem *ldst = (const BrigInstMem*)ib;
+
+                segment = (BrigSegment)ldst->segment;
+                memoryOrder = BRIG_MEMORY_ORDER_NONE;
+                memoryScope = BRIG_MEMORY_SCOPE_NONE;
+                equivClass = ldst->equivClass;
+
+                width = ldst->width;
+                unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
+                const Brig::BrigOperand *brigOp = obj->getOperand(op_offs);
+                if (brigOp->kind == BRIG_KIND_OPERAND_REGISTER)
+                    dest.init(op_offs, obj);
+
+                op_offs = obj->getOperandPtr(ib->operands, 1);
+                addr.init(op_offs, obj);
             } else {
-                initAtomicLd(ib, obj, _opcode);
+                const BrigInstAtomic *at = (const BrigInstAtomic*)ib;
+
+                segment = (BrigSegment)at->segment;
+                memoryOrder = (BrigMemoryOrder)at->memoryOrder;
+                memoryScope = (BrigMemoryScope)at->memoryScope;
+                equivClass = 0;
+
+                width = BRIG_WIDTH_1;
+                unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
+                const Brig::BrigOperand *brigOp = obj->getOperand(op_offs);
+
+                if (brigOp->kind == BRIG_KIND_OPERAND_REGISTER)
+                    dest.init(op_offs, obj);
+
+                op_offs = obj->getOperandPtr(ib->operands,1);
+                addr.init(op_offs, obj);
+            }
+
+            switch (memoryOrder) {
+              case BRIG_MEMORY_ORDER_NONE:
+                setFlag(NoOrder);
+                break;
+              case BRIG_MEMORY_ORDER_RELAXED:
+                setFlag(RelaxedOrder);
+                break;
+              case BRIG_MEMORY_ORDER_SC_ACQUIRE:
+                setFlag(Acquire);
+                break;
+              case BRIG_MEMORY_ORDER_SC_RELEASE:
+                setFlag(Release);
+                break;
+              case BRIG_MEMORY_ORDER_SC_ACQUIRE_RELEASE:
+                setFlag(AcquireRelease);
+                break;
+              default:
+                fatal("LdInst has bad memory order type\n");
+            }
+
+            switch (memoryScope) {
+              case BRIG_MEMORY_SCOPE_NONE:
+                setFlag(NoScope);
+                break;
+              case BRIG_MEMORY_SCOPE_WORKITEM:
+                setFlag(WorkitemScope);
+                break;
+              case BRIG_MEMORY_SCOPE_WORKGROUP:
+                setFlag(WorkgroupScope);
+                break;
+              case BRIG_MEMORY_SCOPE_AGENT:
+                setFlag(DeviceScope);
+                break;
+              case BRIG_MEMORY_SCOPE_SYSTEM:
+                setFlag(SystemScope);
+                break;
+              default:
+                fatal("LdInst has bad memory scope type\n");
+            }
+
+            switch (segment) {
+              case BRIG_SEGMENT_GLOBAL:
+                setFlag(GlobalSegment);
+                break;
+              case BRIG_SEGMENT_GROUP:
+                setFlag(GroupSegment);
+                break;
+              case BRIG_SEGMENT_PRIVATE:
+                setFlag(PrivateSegment);
+                break;
+              case BRIG_SEGMENT_READONLY:
+                setFlag(ReadOnlySegment);
+                break;
+              case BRIG_SEGMENT_SPILL:
+                setFlag(SpillSegment);
+                break;
+              case BRIG_SEGMENT_FLAT:
+                setFlag(Flat);
+                break;
+              case BRIG_SEGMENT_KERNARG:
+                setFlag(KernArgSegment);
+                break;
+              case BRIG_SEGMENT_ARG:
+                setFlag(ArgSegment);
+                break;
+              default:
+                panic("Ld: segment %d not supported\n", segment);
             }
         }
 
@@ -396,7 +378,8 @@ namespace HsailISA
             return((operandIndex == 0) ? dest.opSize() :
                    this->addr.opSize());
         }
-        int getRegisterIndex(int operandIndex) override
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.regIndex() :
@@ -473,14 +456,15 @@ namespace HsailISA
                     if (gpuDynInst->exec_mask[i]) {
                         Addr vaddr = gpuDynInst->addr[i] + k * sizeof(c0);
 
-                        if (isLocalMem()) {
+                        if (this->isLocalMem()) {
                             // load from shared memory
                             *d = gpuDynInst->wavefront()->ldsChunk->
                                 read<c0>(vaddr);
                         } else {
-                            Request *req = new Request(0, vaddr, sizeof(c0), 0,
-                                          gpuDynInst->computeUnit()->masterId(),
-                                          0, gpuDynInst->wfDynId);
+                            RequestPtr req = std::make_shared<Request>(0,
+                                vaddr, sizeof(c0), 0,
+                                gpuDynInst->computeUnit()->masterId(),
+                                0, gpuDynInst->wfDynId);
 
                             gpuDynInst->setRequestFlags(req);
                             PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
@@ -488,8 +472,7 @@ namespace HsailISA
 
                             if (gpuDynInst->computeUnit()->shader->
                                 separate_acquire_release &&
-                                gpuDynInst->memoryOrder ==
-                                Enums::MEMORY_ORDER_SC_ACQUIRE) {
+                                gpuDynInst->isAcquire()) {
                                 // if this load has acquire semantics,
                                 // set the response continuation function
                                 // to perform an Acquire request
@@ -514,20 +497,99 @@ namespace HsailISA
             gpuDynInst->updateStats();
         }
 
+        void
+        completeAcc(GPUDynInstPtr gpuDynInst) override
+        {
+            typedef typename MemDataType::CType c1;
+
+            constexpr bool is_vt_32 = DestDataType::vgprType == VT_32;
+
+            /**
+              * this code essentially replaces the long if-else chain
+              * that was in used GlobalMemPipeline::exec() to infer the
+              * size (single/double) and type (floating point/integer) of
+              * the destination register. this is needed for load
+              * instructions because the loaded value and the
+              * destination type can be of different sizes, and we also
+              * need to know if the value we're writing back is floating
+              * point and signed/unsigned, so we can properly cast the
+              * writeback value
+              */
+            typedef typename std::conditional<is_vt_32,
+                typename std::conditional<std::is_floating_point<c1>::value,
+                    float, typename std::conditional<std::is_signed<c1>::value,
+                    int32_t, uint32_t>::type>::type,
+                typename std::conditional<std::is_floating_point<c1>::value,
+                    double, typename std::conditional<std::is_signed<c1>::value,
+                    int64_t, uint64_t>::type>::type>::type c0;
+
+
+            Wavefront *w = gpuDynInst->wavefront();
+
+            std::vector<uint32_t> regVec;
+            // iterate over number of destination register operands since
+            // this is a load
+            for (int k = 0; k < num_dest_operands; ++k) {
+                assert((sizeof(c1) * num_dest_operands)
+                       <= MAX_WIDTH_FOR_MEM_INST);
+
+                int dst = this->dest.regIndex() + k;
+                if (num_dest_operands > MAX_REGS_FOR_NON_VEC_MEM_INST)
+                    dst = dest_vect[k].regIndex();
+                // virtual->physical VGPR mapping
+                int physVgpr = w->remap(dst, sizeof(c0), 1);
+                // save the physical VGPR index
+                regVec.push_back(physVgpr);
+
+                c1 *p1 =
+                    &((c1*)gpuDynInst->d_data)[k * w->computeUnit->wfSize()];
+
+                for (int i = 0; i < w->computeUnit->wfSize(); ++i) {
+                    if (gpuDynInst->exec_mask[i]) {
+                        DPRINTF(GPUReg, "CU%d, WF[%d][%d], lane %d: "
+                                "$%s%d <- %d global ld done (src = wavefront "
+                                "ld inst)\n", w->computeUnit->cu_id, w->simdId,
+                                w->wfSlotId, i, sizeof(c0) == 4 ? "s" : "d",
+                                dst, *p1);
+                        // write the value into the physical VGPR. This is a
+                        // purely functional operation. No timing is modeled.
+                        w->computeUnit->vrf[w->simdId]->write<c0>(physVgpr,
+                                                                    *p1, i);
+                    }
+                    ++p1;
+                }
+            }
+
+            // Schedule the write operation of the load data on the VRF.
+            // This simply models the timing aspect of the VRF write operation.
+            // It does not modify the physical VGPR.
+            int loadVrfBankConflictCycles = gpuDynInst->computeUnit()->
+                vrf[w->simdId]->exec(gpuDynInst->seqNum(), w, regVec,
+                                     sizeof(c0), gpuDynInst->time);
+
+            if (this->isGlobalMem()) {
+                gpuDynInst->computeUnit()->globalMemoryPipe
+                    .incLoadVRFBankConflictCycles(loadVrfBankConflictCycles);
+            } else {
+                assert(this->isLocalMem());
+                gpuDynInst->computeUnit()->localMemoryPipe
+                    .incLoadVRFBankConflictCycles(loadVrfBankConflictCycles);
+            }
+        }
+
       private:
         void
         execLdAcq(GPUDynInstPtr gpuDynInst) override
         {
             // after the load has complete and if the load has acquire
             // semantics, issue an acquire request.
-            if (!isLocalMem()) {
+            if (!this->isLocalMem()) {
                 if (gpuDynInst->computeUnit()->shader->separate_acquire_release
-                    && gpuDynInst->memoryOrder ==
-                    Enums::MEMORY_ORDER_SC_ACQUIRE) {
+                    && gpuDynInst->isAcquire()) {
                     gpuDynInst->statusBitVector = VectorMask(1);
                     gpuDynInst->useContinuation = false;
                     // create request
-                    Request *req = new Request(0, 0, 0, 0,
+                    RequestPtr req = std::make_shared<Request>(0, 0, 0, 0,
                                   gpuDynInst->computeUnit()->masterId(),
                                   0, gpuDynInst->wfDynId);
                     req->setFlags(Request::ACQUIRE);
@@ -537,12 +599,6 @@ namespace HsailISA
         }
 
       public:
-        bool
-        isLocalMem() const override
-        {
-            return this->segment == Brig::BRIG_SEGMENT_GROUP;
-        }
-
         bool isVectorRegister(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
@@ -617,7 +673,8 @@ namespace HsailISA
                        AddrOperandType>::dest.opSize());
             return 0;
         }
-        int getRegisterIndex(int operandIndex) override
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if ((num_dest_operands != getNumOperands()) &&
@@ -731,127 +788,112 @@ namespace HsailISA
         Brig::BrigMemoryOrder memoryOrder;
         unsigned int equivClass;
 
-        void
-        initSt(const Brig::BrigInstBase *ib, const BrigObject *obj,
-               const char *_opcode)
-        {
-            using namespace Brig;
-
-            const BrigInstMem *ldst = (const BrigInstMem*)ib;
-
-            segment = (BrigSegment)ldst->segment;
-            memoryOrder = BRIG_MEMORY_ORDER_NONE;
-            memoryScope = BRIG_MEMORY_SCOPE_NONE;
-            equivClass = ldst->equivClass;
-
-            switch (segment) {
-              case BRIG_SEGMENT_GLOBAL:
-                o_type = Enums::OT_GLOBAL_WRITE;
-                break;
-
-              case BRIG_SEGMENT_GROUP:
-                o_type = Enums::OT_SHARED_WRITE;
-                break;
-
-              case BRIG_SEGMENT_PRIVATE:
-                o_type = Enums::OT_PRIVATE_WRITE;
-                break;
-
-              case BRIG_SEGMENT_READONLY:
-                o_type = Enums::OT_READONLY_WRITE;
-                break;
-
-              case BRIG_SEGMENT_SPILL:
-                o_type = Enums::OT_SPILL_WRITE;
-                break;
-
-              case BRIG_SEGMENT_FLAT:
-                o_type = Enums::OT_FLAT_WRITE;
-                break;
-
-              case BRIG_SEGMENT_ARG:
-                o_type = Enums::OT_ARG;
-                break;
-
-              default:
-                panic("St: segment %d not supported\n", segment);
-            }
-
-            unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
-            const BrigOperand *baseOp = obj->getOperand(op_offs);
-
-            if ((baseOp->kind == BRIG_KIND_OPERAND_CONSTANT_BYTES) ||
-                (baseOp->kind == BRIG_KIND_OPERAND_REGISTER)) {
-                src.init(op_offs, obj);
-            }
-
-            op_offs = obj->getOperandPtr(ib->operands, 1);
-            addr.init(op_offs, obj);
-        }
-
-        void
-        initAtomicSt(const Brig::BrigInstBase *ib, const BrigObject *obj,
-                     const char *_opcode)
-        {
-            using namespace Brig;
-
-            const BrigInstAtomic *at = (const BrigInstAtomic*)ib;
-
-            segment = (BrigSegment)at->segment;
-            memoryScope = (BrigMemoryScope)at->memoryScope;
-            memoryOrder = (BrigMemoryOrder)at->memoryOrder;
-            equivClass = 0;
-
-            switch (segment) {
-              case BRIG_SEGMENT_GLOBAL:
-                o_type = Enums::OT_GLOBAL_WRITE;
-                break;
-
-              case BRIG_SEGMENT_GROUP:
-                o_type = Enums::OT_SHARED_WRITE;
-                break;
-
-              case BRIG_SEGMENT_PRIVATE:
-                o_type = Enums::OT_PRIVATE_WRITE;
-                break;
-
-              case BRIG_SEGMENT_READONLY:
-                o_type = Enums::OT_READONLY_WRITE;
-                break;
-
-              case BRIG_SEGMENT_SPILL:
-                o_type = Enums::OT_SPILL_WRITE;
-                break;
-
-              case BRIG_SEGMENT_FLAT:
-                o_type = Enums::OT_FLAT_WRITE;
-                break;
-
-              case BRIG_SEGMENT_ARG:
-                o_type = Enums::OT_ARG;
-                break;
-
-              default:
-                panic("St: segment %d not supported\n", segment);
-            }
-
-            unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
-            addr.init(op_offs, obj);
-
-            op_offs = obj->getOperandPtr(ib->operands, 1);
-            src.init(op_offs, obj);
-        }
-
         StInstBase(const Brig::BrigInstBase *ib, const BrigObject *obj,
                    const char *_opcode)
            : HsailGPUStaticInst(obj, _opcode)
         {
             using namespace Brig;
 
+            setFlag(MemoryRef);
+            setFlag(Store);
+
             if (ib->opcode == BRIG_OPCODE_ST) {
-                initSt(ib, obj, _opcode);
+                const BrigInstMem *ldst = (const BrigInstMem*)ib;
+
+                segment = (BrigSegment)ldst->segment;
+                memoryOrder = BRIG_MEMORY_ORDER_NONE;
+                memoryScope = BRIG_MEMORY_SCOPE_NONE;
+                equivClass = ldst->equivClass;
+
+                unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
+                const BrigOperand *baseOp = obj->getOperand(op_offs);
+
+                if ((baseOp->kind == BRIG_KIND_OPERAND_CONSTANT_BYTES) ||
+                    (baseOp->kind == BRIG_KIND_OPERAND_REGISTER)) {
+                    src.init(op_offs, obj);
+                }
+
+                op_offs = obj->getOperandPtr(ib->operands, 1);
+                addr.init(op_offs, obj);
             } else {
-                initAtomicSt(ib, obj, _opcode);
+                const BrigInstAtomic *at = (const BrigInstAtomic*)ib;
+
+                segment = (BrigSegment)at->segment;
+                memoryScope = (BrigMemoryScope)at->memoryScope;
+                memoryOrder = (BrigMemoryOrder)at->memoryOrder;
+                equivClass = 0;
+
+                unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
+                addr.init(op_offs, obj);
+
+                op_offs = obj->getOperandPtr(ib->operands, 1);
+                src.init(op_offs, obj);
+            }
+
+            switch (memoryOrder) {
+              case BRIG_MEMORY_ORDER_NONE:
+                setFlag(NoOrder);
+                break;
+              case BRIG_MEMORY_ORDER_RELAXED:
+                setFlag(RelaxedOrder);
+                break;
+              case BRIG_MEMORY_ORDER_SC_ACQUIRE:
+                setFlag(Acquire);
+                break;
+              case BRIG_MEMORY_ORDER_SC_RELEASE:
+                setFlag(Release);
+                break;
+              case BRIG_MEMORY_ORDER_SC_ACQUIRE_RELEASE:
+                setFlag(AcquireRelease);
+                break;
+              default:
+                fatal("StInst has bad memory order type\n");
+            }
+
+            switch (memoryScope) {
+              case BRIG_MEMORY_SCOPE_NONE:
+                setFlag(NoScope);
+                break;
+              case BRIG_MEMORY_SCOPE_WORKITEM:
+                setFlag(WorkitemScope);
+                break;
+              case BRIG_MEMORY_SCOPE_WORKGROUP:
+                setFlag(WorkgroupScope);
+                break;
+              case BRIG_MEMORY_SCOPE_AGENT:
+                setFlag(DeviceScope);
+                break;
+              case BRIG_MEMORY_SCOPE_SYSTEM:
+                setFlag(SystemScope);
+                break;
+              default:
+                fatal("StInst has bad memory scope type\n");
+            }
+
+            switch (segment) {
+              case BRIG_SEGMENT_GLOBAL:
+                setFlag(GlobalSegment);
+                break;
+              case BRIG_SEGMENT_GROUP:
+                setFlag(GroupSegment);
+                break;
+              case BRIG_SEGMENT_PRIVATE:
+                setFlag(PrivateSegment);
+                break;
+              case BRIG_SEGMENT_READONLY:
+                setFlag(ReadOnlySegment);
+                break;
+              case BRIG_SEGMENT_SPILL:
+                setFlag(SpillSegment);
+                break;
+              case BRIG_SEGMENT_FLAT:
+                setFlag(Flat);
+                break;
+              case BRIG_SEGMENT_ARG:
+                setFlag(ArgSegment);
+                break;
+              default:
+                panic("St: segment %d not supported\n", segment);
             }
         }
 
@@ -896,7 +938,8 @@ namespace HsailISA
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return !operandIndex ? src.opSize() : this->addr.opSize();
         }
-        int getRegisterIndex(int operandIndex) override
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
         {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return !operandIndex ? src.regIndex() : this->addr.regIndex();
@@ -964,16 +1007,15 @@ namespace HsailISA
         {
             // before performing a store, check if this store has
             // release semantics, and if so issue a release first
-            if (!isLocalMem()) {
+            if (!this->isLocalMem()) {
                 if (gpuDynInst->computeUnit()->shader->separate_acquire_release
-                    && gpuDynInst->memoryOrder ==
-                    Enums::MEMORY_ORDER_SC_RELEASE) {
+                    && gpuDynInst->isRelease()) {
 
                     gpuDynInst->statusBitVector = VectorMask(1);
                     gpuDynInst->execContinuation = &GPUStaticInst::execSt;
                     gpuDynInst->useContinuation = true;
                     // create request
-                    Request *req = new Request(0, 0, 0, 0,
+                    RequestPtr req = std::make_shared<Request>(0, 0, 0, 0,
                                   gpuDynInst->computeUnit()->masterId(),
                                   0, gpuDynInst->wfDynId);
                     req->setFlags(Request::RELEASE);
@@ -987,11 +1029,10 @@ namespace HsailISA
             execSt(gpuDynInst);
         }
 
-        bool
-        isLocalMem() const override
-        {
-            return this->segment == Brig::BRIG_SEGMENT_GROUP;
-        }
+        // stores don't write anything back, so there is nothing
+        // to do here. we only override this method to avoid the
+        // fatal in the base class implementation
+        void completeAcc(GPUDynInstPtr gpuDynInst) override { }
 
       private:
         // execSt may be called through a continuation
@@ -1020,15 +1061,15 @@ namespace HsailISA
                     if (gpuDynInst->exec_mask[i]) {
                         Addr vaddr = gpuDynInst->addr[i] + k * sizeof(c0);
 
-                        if (isLocalMem()) {
+                        if (this->isLocalMem()) {
                             //store to shared memory
                             gpuDynInst->wavefront()->ldsChunk->write<c0>(vaddr,
                                                                          *d);
                         } else {
-                            Request *req =
-                              new Request(0, vaddr, sizeof(c0), 0,
-                                          gpuDynInst->computeUnit()->masterId(),
-                                          0, gpuDynInst->wfDynId);
+                            RequestPtr req = std::make_shared<Request>(
+                                0, vaddr, sizeof(c0), 0,
+                                gpuDynInst->computeUnit()->masterId(),
+                                0, gpuDynInst->wfDynId);
 
                             gpuDynInst->setRequestFlags(req);
                             PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
@@ -1108,7 +1149,8 @@ namespace HsailISA
                        AddrOperandType>::src.opSize();
             return 0;
         }
-        int getRegisterIndex(int operandIndex) override
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (operandIndex == num_src_operands)
@@ -1166,9 +1208,6 @@ namespace HsailISA
         }
     }
 
-    Enums::MemOpType brigAtomicToMemOpType(Brig::BrigOpcode brigOpCode,
-                                           Brig::BrigAtomicOperation brigOp);
-
     template<typename OperandType, typename AddrOperandType, int NumSrcOperands,
              bool HasDst>
     class AtomicInstBase : public HsailGPUStaticInst
@@ -1183,7 +1222,6 @@ namespace HsailISA
         Brig::BrigAtomicOperation atomicOperation;
         Brig::BrigMemoryScope memoryScope;
         Brig::BrigOpcode opcode;
-        Enums::MemOpType opType;
 
         AtomicInstBase(const Brig::BrigInstBase *ib, const BrigObject *obj,
                        const char *_opcode)
@@ -1198,21 +1236,106 @@ namespace HsailISA
             memoryOrder = (BrigMemoryOrder)at->memoryOrder;
             atomicOperation = (BrigAtomicOperation)at->atomicOperation;
             opcode = (BrigOpcode)ib->opcode;
-            opType = brigAtomicToMemOpType(opcode, atomicOperation);
+
+            assert(opcode == Brig::BRIG_OPCODE_ATOMICNORET ||
+                   opcode == Brig::BRIG_OPCODE_ATOMIC);
+
+            setFlag(MemoryRef);
+
+            if (opcode == Brig::BRIG_OPCODE_ATOMIC) {
+                setFlag(AtomicReturn);
+            } else {
+                setFlag(AtomicNoReturn);
+            }
+
+            switch (memoryOrder) {
+              case BRIG_MEMORY_ORDER_NONE:
+                setFlag(NoOrder);
+                break;
+              case BRIG_MEMORY_ORDER_RELAXED:
+                setFlag(RelaxedOrder);
+                break;
+              case BRIG_MEMORY_ORDER_SC_ACQUIRE:
+                setFlag(Acquire);
+                break;
+              case BRIG_MEMORY_ORDER_SC_RELEASE:
+                setFlag(Release);
+                break;
+              case BRIG_MEMORY_ORDER_SC_ACQUIRE_RELEASE:
+                setFlag(AcquireRelease);
+                break;
+              default:
+                fatal("AtomicInst has bad memory order type\n");
+            }
+
+            switch (memoryScope) {
+              case BRIG_MEMORY_SCOPE_NONE:
+                setFlag(NoScope);
+                break;
+              case BRIG_MEMORY_SCOPE_WORKITEM:
+                setFlag(WorkitemScope);
+                break;
+              case BRIG_MEMORY_SCOPE_WORKGROUP:
+                setFlag(WorkgroupScope);
+                break;
+              case BRIG_MEMORY_SCOPE_AGENT:
+                setFlag(DeviceScope);
+                break;
+              case BRIG_MEMORY_SCOPE_SYSTEM:
+                setFlag(SystemScope);
+                break;
+              default:
+                fatal("AtomicInst has bad memory scope type\n");
+            }
+
+            switch (atomicOperation) {
+              case Brig::BRIG_ATOMIC_AND:
+                setFlag(AtomicAnd);
+                break;
+              case Brig::BRIG_ATOMIC_OR:
+                setFlag(AtomicOr);
+                break;
+              case Brig::BRIG_ATOMIC_XOR:
+                setFlag(AtomicXor);
+                break;
+              case Brig::BRIG_ATOMIC_CAS:
+                setFlag(AtomicCAS);
+                break;
+              case Brig::BRIG_ATOMIC_EXCH:
+                setFlag(AtomicExch);
+                break;
+              case Brig::BRIG_ATOMIC_ADD:
+                setFlag(AtomicAdd);
+                break;
+              case Brig::BRIG_ATOMIC_WRAPINC:
+                setFlag(AtomicInc);
+                break;
+              case Brig::BRIG_ATOMIC_WRAPDEC:
+                setFlag(AtomicDec);
+                break;
+              case Brig::BRIG_ATOMIC_MIN:
+                setFlag(AtomicMin);
+                break;
+              case Brig::BRIG_ATOMIC_MAX:
+                setFlag(AtomicMax);
+                break;
+              case Brig::BRIG_ATOMIC_SUB:
+                setFlag(AtomicSub);
+                break;
+              default:
+                fatal("Bad BrigAtomicOperation code %d\n", atomicOperation);
+            }
 
             switch (segment) {
               case BRIG_SEGMENT_GLOBAL:
-                o_type = Enums::OT_GLOBAL_ATOMIC;
+                setFlag(GlobalSegment);
                 break;
-
               case BRIG_SEGMENT_GROUP:
-                o_type = Enums::OT_SHARED_ATOMIC;
+                setFlag(GroupSegment);
                 break;
-
               case BRIG_SEGMENT_FLAT:
-                o_type = Enums::OT_FLAT_ATOMIC;
+                setFlag(Flat);
                 break;
-
               default:
                 panic("Atomic: segment %d not supported\n", segment);
             }
@@ -1316,7 +1439,8 @@ namespace HsailISA
             else
                 return(dest.opSize());
         }
-        int getRegisterIndex(int operandIndex)
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (operandIndex < NumSrcOperands)
@@ -1354,11 +1478,10 @@ namespace HsailISA
         {
             // before doing the RMW, check if this atomic has
             // release semantics, and if so issue a release first
-            if (!isLocalMem()) {
+            if (!this->isLocalMem()) {
                 if (gpuDynInst->computeUnit()->shader->separate_acquire_release
-                    && (gpuDynInst->memoryOrder ==
-                    Enums::MEMORY_ORDER_SC_RELEASE || gpuDynInst->memoryOrder ==
-                    Enums::MEMORY_ORDER_SC_ACQUIRE_RELEASE)) {
+                    && (gpuDynInst->isRelease()
+                    || gpuDynInst->isAcquireRelease())) {
 
                     gpuDynInst->statusBitVector = VectorMask(1);
 
@@ -1366,7 +1489,7 @@ namespace HsailISA
                     gpuDynInst->useContinuation = true;
 
                     // create request
-                    Request *req = new Request(0, 0, 0, 0,
+                    RequestPtr req = std::make_shared<Request>(0, 0, 0, 0,
                                   gpuDynInst->computeUnit()->masterId(),
                                   0, gpuDynInst->wfDynId);
                     req->setFlags(Request::RELEASE);
@@ -1381,13 +1504,59 @@ namespace HsailISA
 
         }
 
-        void execute(GPUDynInstPtr gpuDynInst) override;
-
-        bool
-        isLocalMem() const override
+        void
+        completeAcc(GPUDynInstPtr gpuDynInst) override
         {
-            return this->segment == Brig::BRIG_SEGMENT_GROUP;
+            // if this is not an atomic return op, then we
+            // have nothing more to do.
+            if (this->isAtomicRet()) {
+                // the size of the src operands and the
+                // memory being operated on must match
+                // for HSAIL atomics - this assumption may
+                // not apply to all ISAs
+                typedef typename MemDataType::CType CType;
+
+                Wavefront *w = gpuDynInst->wavefront();
+                int dst = this->dest.regIndex();
+                std::vector<uint32_t> regVec;
+                // virtual->physical VGPR mapping
+                int physVgpr = w->remap(dst, sizeof(CType), 1);
+                regVec.push_back(physVgpr);
+                CType *p1 = &((CType*)gpuDynInst->d_data)[0];
+
+                for (int i = 0; i < w->computeUnit->wfSize(); ++i) {
+                    if (gpuDynInst->exec_mask[i]) {
+                        DPRINTF(GPUReg, "CU%d, WF[%d][%d], lane %d: "
+                                "$%s%d <- %d global ld done (src = wavefront "
+                                "ld inst)\n", w->computeUnit->cu_id, w->simdId,
+                                w->wfSlotId, i, sizeof(CType) == 4 ? "s" : "d",
+                                dst, *p1);
+                        // write the value into the physical VGPR. This is a
+                        // purely functional operation. No timing is modeled.
+                        w->computeUnit->vrf[w->simdId]->write<CType>(physVgpr, *p1, i);
+                    }
+                    ++p1;
+                }
+
+                // Schedule the write operation of the load data on the VRF.
+                // This simply models the timing aspect of the VRF write operation.
+                // It does not modify the physical VGPR.
+                int loadVrfBankConflictCycles = gpuDynInst->computeUnit()->
+                    vrf[w->simdId]->exec(gpuDynInst->seqNum(), w, regVec,
+                                         sizeof(CType), gpuDynInst->time);
+
+                if (this->isGlobalMem()) {
+                    gpuDynInst->computeUnit()->globalMemoryPipe
+                        .incLoadVRFBankConflictCycles(loadVrfBankConflictCycles);
+                } else {
+                    assert(this->isLocalMem());
+                    gpuDynInst->computeUnit()->localMemoryPipe
+                        .incLoadVRFBankConflictCycles(loadVrfBankConflictCycles);
+                }
+            }
         }
+
+        void execute(GPUDynInstPtr gpuDynInst) override;
 
       private:
         // execAtomic may be called through a continuation
@@ -1408,80 +1577,56 @@ namespace HsailISA
                 if (gpuDynInst->exec_mask[i]) {
                     Addr vaddr = gpuDynInst->addr[i];
 
-                    if (isLocalMem()) {
+                    if (this->isLocalMem()) {
                         Wavefront *wavefront = gpuDynInst->wavefront();
                         *d = wavefront->ldsChunk->read<c0>(vaddr);
 
-                        switch (this->opType) {
-                          case Enums::MO_AADD:
-                          case Enums::MO_ANRADD:
+                        if (this->isAtomicAdd()) {
                             wavefront->ldsChunk->write<c0>(vaddr,
                             wavefront->ldsChunk->read<c0>(vaddr) + (*e));
-                            break;
-                          case Enums::MO_ASUB:
-                          case Enums::MO_ANRSUB:
+                        } else if (this->isAtomicSub()) {
                             wavefront->ldsChunk->write<c0>(vaddr,
                             wavefront->ldsChunk->read<c0>(vaddr) - (*e));
-                            break;
-                          case Enums::MO_AMAX:
-                          case Enums::MO_ANRMAX:
+                        } else if (this->isAtomicMax()) {
                             wavefront->ldsChunk->write<c0>(vaddr,
                             std::max(wavefront->ldsChunk->read<c0>(vaddr),
                             (*e)));
-                            break;
-                          case Enums::MO_AMIN:
-                          case Enums::MO_ANRMIN:
+                        } else if (this->isAtomicMin()) {
                             wavefront->ldsChunk->write<c0>(vaddr,
                             std::min(wavefront->ldsChunk->read<c0>(vaddr),
                             (*e)));
-                            break;
-                          case Enums::MO_AAND:
-                          case Enums::MO_ANRAND:
+                        } else if (this->isAtomicAnd()) {
                             wavefront->ldsChunk->write<c0>(vaddr,
                             wavefront->ldsChunk->read<c0>(vaddr) & (*e));
-                            break;
-                          case Enums::MO_AOR:
-                          case Enums::MO_ANROR:
+                        } else if (this->isAtomicOr()) {
                             wavefront->ldsChunk->write<c0>(vaddr,
                             wavefront->ldsChunk->read<c0>(vaddr) | (*e));
-                            break;
-                          case Enums::MO_AXOR:
-                          case Enums::MO_ANRXOR:
+                        } else if (this->isAtomicXor()) {
                             wavefront->ldsChunk->write<c0>(vaddr,
                             wavefront->ldsChunk->read<c0>(vaddr) ^ (*e));
-                            break;
-                          case Enums::MO_AINC:
-                          case Enums::MO_ANRINC:
+                        } else if (this->isAtomicInc()) {
                             wavefront->ldsChunk->write<c0>(vaddr,
                             wavefront->ldsChunk->read<c0>(vaddr) + 1);
-                            break;
-                          case Enums::MO_ADEC:
-                          case Enums::MO_ANRDEC:
+                        } else if (this->isAtomicDec()) {
                             wavefront->ldsChunk->write<c0>(vaddr,
                             wavefront->ldsChunk->read<c0>(vaddr) - 1);
-                            break;
-                          case Enums::MO_AEXCH:
-                          case Enums::MO_ANREXCH:
+                        } else if (this->isAtomicExch()) {
                             wavefront->ldsChunk->write<c0>(vaddr, (*e));
-                            break;
-                          case Enums::MO_ACAS:
-                          case Enums::MO_ANRCAS:
+                        } else if (this->isAtomicCAS()) {
                             wavefront->ldsChunk->write<c0>(vaddr,
                             (wavefront->ldsChunk->read<c0>(vaddr) == (*e)) ?
                             (*f) : wavefront->ldsChunk->read<c0>(vaddr));
-                            break;
-                          default:
+                        } else {
                             fatal("Unrecognized or invalid HSAIL atomic op "
                                   "type.\n");
-                            break;
                         }
                     } else {
-                        Request *req =
-                            new Request(0, vaddr, sizeof(c0), 0,
+                        RequestPtr req =
+                            std::make_shared<Request>(0, vaddr, sizeof(c0), 0,
                                         gpuDynInst->computeUnit()->masterId(),
                                         0, gpuDynInst->wfDynId,
                                         gpuDynInst->makeAtomicOpFunctor<c0>(e,
-                                        f, this->opType));
+                                        f));
 
                         gpuDynInst->setRequestFlags(req);
                         PacketPtr pkt = new Packet(req, MemCmd::SwapReq);
@@ -1489,8 +1634,7 @@ namespace HsailISA
 
                         if (gpuDynInst->computeUnit()->shader->
                             separate_acquire_release &&
-                            (gpuDynInst->memoryOrder ==
-                             Enums::MEMORY_ORDER_SC_ACQUIRE)) {
+                            (gpuDynInst->isAcquire())) {
                             // if this atomic has acquire semantics,
                             // schedule the continuation to perform an
                             // acquire after the RMW completes
@@ -1523,17 +1667,16 @@ namespace HsailISA
         {
             // after performing the RMW, check to see if this instruction
             // has acquire semantics, and if so, issue an acquire
-            if (!isLocalMem()) {
+            if (!this->isLocalMem()) {
                 if (gpuDynInst->computeUnit()->shader->separate_acquire_release
-                     && gpuDynInst->memoryOrder ==
-                     Enums::MEMORY_ORDER_SC_ACQUIRE) {
+                     && gpuDynInst->isAcquire()) {
                     gpuDynInst->statusBitVector = VectorMask(1);
 
                     // the request will be finished when
                     // the acquire completes
                     gpuDynInst->useContinuation = false;
                     // create request
-                    Request *req = new Request(0, 0, 0, 0,
+                    RequestPtr req = std::make_shared<Request>(0, 0, 0, 0,
                                   gpuDynInst->computeUnit()->masterId(),
                                   0, gpuDynInst->wfDynId);
                     req->setFlags(Request::ACQUIRE);
@@ -1556,11 +1699,11 @@ namespace HsailISA
               case Brig::BRIG_TYPE_B8:
                 return decodeSt<S8,S8>(ib, obj);
               case Brig::BRIG_TYPE_B16:
-                return decodeSt<S8,S16>(ib, obj);
+                return decodeSt<S16,S16>(ib, obj);
               case Brig::BRIG_TYPE_B32:
-                return decodeSt<S8,S32>(ib, obj);
+                return decodeSt<S32,S32>(ib, obj);
               case Brig::BRIG_TYPE_B64:
-                return decodeSt<S8,S64>(ib, obj);
+                return decodeSt<S64,S64>(ib, obj);
               default: fatal("AtomicSt: Operand type mismatch %d\n", ib->type);
             }
         } else {

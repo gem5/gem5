@@ -28,9 +28,11 @@
  * Authors: Gabe Black
  */
 
+#include "arch/sparc/isa.hh"
+
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/decoder.hh"
-#include "arch/sparc/isa.hh"
+#include "arch/sparc/interrupts.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
@@ -172,7 +174,7 @@ ISA::clear()
         panic("Tick comparison event active when clearing the ISA object.\n");
 }
 
-MiscReg
+RegVal
 ISA::readMiscRegNoEffect(int miscReg) const
 {
 
@@ -247,7 +249,7 @@ ISA::readMiscRegNoEffect(int miscReg) const
       case MISCREG_TBA:
         return tba;
       case MISCREG_PSTATE:
-        return (MiscReg)pstate;
+        return (RegVal)pstate;
       case MISCREG_TL:
         return tl;
       case MISCREG_PIL:
@@ -270,7 +272,7 @@ ISA::readMiscRegNoEffect(int miscReg) const
 
         /** Hyper privileged registers */
       case MISCREG_HPSTATE:
-        return (MiscReg)hpstate;
+        return (RegVal)hpstate;
       case MISCREG_HTSTATE:
         return htstate[tl-1];
       case MISCREG_HINTP:
@@ -333,7 +335,7 @@ ISA::readMiscRegNoEffect(int miscReg) const
     }
 }
 
-MiscReg
+RegVal
 ISA::readMiscReg(int miscReg, ThreadContext * tc)
 {
     switch (miscReg) {
@@ -382,7 +384,7 @@ ISA::readMiscReg(int miscReg, ThreadContext * tc)
 }
 
 void
-ISA::setMiscRegNoEffect(int miscReg, MiscReg val)
+ISA::setMiscRegNoEffect(int miscReg, RegVal val)
 {
     switch (miscReg) {
 //      case MISCREG_Y:
@@ -479,6 +481,7 @@ ISA::setMiscRegNoEffect(int miscReg, MiscReg val)
         break;
       case MISCREG_HINTP:
         hintp = val;
+        break;
       case MISCREG_HTBA:
         htba = val;
         break;
@@ -562,9 +565,9 @@ ISA::setMiscRegNoEffect(int miscReg, MiscReg val)
 }
 
 void
-ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
+ISA::setMiscReg(int miscReg, RegVal val, ThreadContext * tc)
 {
-    MiscReg new_val = val;
+    RegVal new_val = val;
 
     switch (miscReg) {
       case MISCREG_ASI:
@@ -653,12 +656,12 @@ ISA::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(tstate,MaxTL);
     SERIALIZE_ARRAY(tt,MaxTL);
     SERIALIZE_SCALAR(tba);
-    SERIALIZE_SCALAR((uint16_t)pstate);
+    SERIALIZE_SCALAR(pstate);
     SERIALIZE_SCALAR(tl);
     SERIALIZE_SCALAR(pil);
     SERIALIZE_SCALAR(cwp);
     SERIALIZE_SCALAR(gl);
-    SERIALIZE_SCALAR((uint64_t)hpstate);
+    SERIALIZE_SCALAR(hpstate);
     SERIALIZE_ARRAY(htstate,MaxTL);
     SERIALIZE_SCALAR(hintp);
     SERIALIZE_SCALAR(htba);

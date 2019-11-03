@@ -48,9 +48,8 @@
 #include <string>
 #include <vector>
 
-#include <sst/core/serialization.h>
-#include <sst/core/component.h>
-#include <sst/core/output.h>
+#include <core/sst_config.h>
+#include <core/component.h>
 
 #include <sim/simulate.hh>
 

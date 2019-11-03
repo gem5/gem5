@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -40,12 +40,13 @@
  * Authors: Ali Saidi
  */
 
-#include "arch/arm/linux/atag.hh"
 #include "arch/arm/linux/system.hh"
+
 #include "arch/arm/isa_traits.hh"
+#include "arch/arm/linux/atag.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/linux/threadinfo.hh"
-#include "base/loader/dtb_object.hh"
+#include "base/loader/dtb_file.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
@@ -53,6 +54,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "kern/linux/events.hh"
+#include "kern/linux/helpers.hh"
 #include "mem/fs_translating_port_proxy.hh"
 #include "mem/physical.hh"
 #include "sim/stat_control.hh"
@@ -65,14 +67,21 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
       enableContextSwitchStatsDump(p->enable_context_switch_stats_dump),
       taskFile(nullptr), kernelPanicEvent(nullptr), kernelOopsEvent(nullptr)
 {
+    const std::string dmesg_output = name() + ".dmesg";
     if (p->panic_on_panic) {
-        kernelPanicEvent = addKernelFuncEventOrPanic<PanicPCEvent>(
-            "panic", "Kernel panic in simulated kernel");
+        kernelPanicEvent = addKernelFuncEventOrPanic<Linux::KernelPanicEvent>(
+            "panic", "Kernel panic in simulated kernel", dmesg_output);
+    } else {
+        kernelPanicEvent = addKernelFuncEventOrPanic<Linux::DmesgDumpEvent>(
+            "panic", "Kernel panic in simulated kernel", dmesg_output);
     }
 
     if (p->panic_on_oops) {
-        kernelOopsEvent = addKernelFuncEventOrPanic<PanicPCEvent>(
-            "oops_exit", "Kernel oops in guest");
+        kernelOopsEvent = addKernelFuncEventOrPanic<Linux::KernelPanicEvent>(
+            "oops_exit", "Kernel oops in guest", dmesg_output);
+    } else {
+        kernelOopsEvent = addKernelFuncEventOrPanic<Linux::DmesgDumpEvent>(
+            "oops_exit", "Kernel oops in guest", dmesg_output);
     }
 
     // With ARM udelay() is #defined to __udelay
@@ -124,26 +133,16 @@ LinuxArmSystem::initState()
         inform("Loading DTB file: %s at address %#x\n", params()->dtb_filename,
                 params()->atags_addr + loadAddrOffset);
 
-        ObjectFile *dtb_file = createObjectFile(params()->dtb_filename, true);
-        if (!dtb_file) {
-            fatal("couldn't load DTB file: %s\n", params()->dtb_filename);
+        DtbFile *dtb_file = new DtbFile(params()->dtb_filename);
+
+        if (!dtb_file->addBootCmdLine(params()->boot_osflags.c_str(),
+                                      params()->boot_osflags.size())) {
+            warn("couldn't append bootargs to DTB file: %s\n",
+                 params()->dtb_filename);
         }
 
-        DtbObject *_dtb_file = dynamic_cast<DtbObject*>(dtb_file);
-
-        if (_dtb_file) {
-            if (!_dtb_file->addBootCmdLine(params()->boot_osflags.c_str(),
-                                           params()->boot_osflags.size())) {
-                warn("couldn't append bootargs to DTB file: %s\n",
-                     params()->dtb_filename);
-            }
-        } else {
-            warn("dtb_file cast failed; couldn't append bootargs "
-                 "to DTB file: %s\n", params()->dtb_filename);
-        }
-
-        dtb_file->setTextBase(params()->atags_addr + loadAddrOffset);
-        dtb_file->loadSections(physProxy);
+        dtb_file->buildImage().
+            offset(params()->atags_addr + loadAddrOffset).write(physProxy);
         delete dtb_file;
     } else {
         // Using ATAGS
@@ -227,15 +226,21 @@ void
 LinuxArmSystem::startup()
 {
     if (enableContextSwitchStatsDump) {
-        dumpStatsPCEvent = addKernelFuncEvent<DumpStatsPCEvent>("__switch_to");
+        if (!highestELIs64()) {
+            dumpStatsPCEvent =
+                addKernelFuncEvent<DumpStatsPCEvent>("__switch_to");
+        } else {
+            dumpStatsPCEvent =
+                addKernelFuncEvent<DumpStatsPCEvent64>("__switch_to");
+        }
+
         if (!dumpStatsPCEvent)
            panic("dumpStatsPCEvent not created!");
 
         std::string task_filename = "tasks.txt";
         taskFile = simout.create(name() + "." + task_filename);
 
-        for (int i = 0; i < _numContexts; i++) {
-            ThreadContext *tc = threadContexts[i];
+        for (const auto tc : threadContexts) {
             uint32_t pid = tc->getCpuPtr()->getPid();
             if (pid != BaseCPU::invldPid) {
                 mapPid(tc, pid);
@@ -261,25 +266,70 @@ LinuxArmSystem::mapPid(ThreadContext *tc, uint32_t pid)
     }
 }
 
-/** This function is called whenever the the kernel function
- *  "__switch_to" is called to change running tasks.
+void
+LinuxArmSystem::dumpDmesg()
+{
+    Linux::dumpDmesg(getThreadContext(0), std::cout);
+}
+
+/**
+ * Extracts the information used by the DumpStatsPCEvent by reading the
+ * thread_info pointer passed to __switch_to() in 32 bit ARM Linux
  *
  *  r0 = task_struct of the previously running process
- *  r1 = task_info of the previously running process
- *  r2 = task_info of the next process to run
+ *  r1 = thread_info of the previously running process
+ *  r2 = thread_info of the next process to run
+ */
+void
+DumpStatsPCEvent::getTaskDetails(ThreadContext *tc, uint32_t &pid,
+    uint32_t &tgid, std::string &next_task_str, int32_t &mm) {
+
+    Linux::ThreadInfo ti(tc);
+    Addr task_descriptor = tc->readIntReg(2);
+    pid = ti.curTaskPID(task_descriptor);
+    tgid = ti.curTaskTGID(task_descriptor);
+    next_task_str = ti.curTaskName(task_descriptor);
+
+    // Streamline treats pid == -1 as the kernel process.
+    // Also pid == 0 implies idle process (except during Linux boot)
+    mm = ti.curTaskMm(task_descriptor);
+}
+
+/**
+ * Extracts the information used by the DumpStatsPCEvent64 by reading the
+ * task_struct pointer passed to __switch_to() in 64 bit ARM Linux
+ *
+ *  r0 = task_struct of the previously running process
+ *  r1 = task_struct of next process to run
+ */
+void
+DumpStatsPCEvent64::getTaskDetails(ThreadContext *tc, uint32_t &pid,
+    uint32_t &tgid, std::string &next_task_str, int32_t &mm) {
+
+    Linux::ThreadInfo ti(tc);
+    Addr task_struct = tc->readIntReg(1);
+    pid = ti.curTaskPIDFromTaskStruct(task_struct);
+    tgid = ti.curTaskTGIDFromTaskStruct(task_struct);
+    next_task_str = ti.curTaskNameFromTaskStruct(task_struct);
+
+    // Streamline treats pid == -1 as the kernel process.
+    // Also pid == 0 implies idle process (except during Linux boot)
+    mm = ti.curTaskMmFromTaskStruct(task_struct);
+}
+
+/** This function is called whenever the the kernel function
+ *  "__switch_to" is called to change running tasks.
  */
 void
 DumpStatsPCEvent::process(ThreadContext *tc)
 {
-    Linux::ThreadInfo ti(tc);
-    Addr task_descriptor = tc->readIntReg(2);
-    uint32_t pid = ti.curTaskPID(task_descriptor);
-    uint32_t tgid = ti.curTaskTGID(task_descriptor);
-    std::string next_task_str = ti.curTaskName(task_descriptor);
+    uint32_t pid = 0;
+    uint32_t tgid = 0;
+    std::string next_task_str;
+    int32_t mm = 0;
 
-    // Streamline treats pid == -1 as the kernel process.
-    // Also pid == 0 implies idle process (except during Linux boot)
-    int32_t mm = ti.curTaskMm(task_descriptor);
+    getTaskDetails(tc, pid, tgid, next_task_str, mm);
+
     bool is_kernel = (mm == 0);
     if (is_kernel && (pid != 0)) {
         pid = -1;

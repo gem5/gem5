@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2015-2017 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,7 +30,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: John Kalamatianos
+ * Authors: John Kalamatianos,
+ *          Mark Wyse
  */
 
 #ifndef __VECTOR_REGISTER_FILE_HH__
@@ -39,7 +40,9 @@
 #include <list>
 
 #include "base/statistics.hh"
+#include "base/trace.hh"
 #include "base/types.hh"
+#include "debug/GPUVRF.hh"
 #include "gpu-compute/vector_register_state.hh"
 #include "sim/sim_object.hh"
 
@@ -71,6 +74,7 @@ class VectorRegisterFile : public SimObject
     read(int regIdx, int threadId=0)
     {
         T p0 = vgprState->read<T>(regIdx, threadId);
+        DPRINTF(GPUVRF, "reading vreg[%d][%d] = %u\n", regIdx, threadId, (uint64_t)p0);
 
         return p0;
     }
@@ -80,6 +84,7 @@ class VectorRegisterFile : public SimObject
     void
     write(int regIdx, T value, int threadId=0)
     {
+        DPRINTF(GPUVRF, "writing vreg[%d][%d] = %u\n", regIdx, threadId, (uint64_t)value);
         vgprState->write<T>(regIdx, value, threadId);
     }
 

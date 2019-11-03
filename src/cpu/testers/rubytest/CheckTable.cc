@@ -27,10 +27,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "cpu/testers/rubytest/CheckTable.hh"
+
 #include "base/intmath.hh"
 #include "base/random.hh"
+#include "base/trace.hh"
 #include "cpu/testers/rubytest/Check.hh"
-#include "cpu/testers/rubytest/CheckTable.hh"
 #include "debug/RubyTest.hh"
 
 CheckTable::CheckTable(int _num_writers, int _num_readers, RubyTester* _tester)

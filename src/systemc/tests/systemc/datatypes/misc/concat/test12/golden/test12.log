@@ -1,0 +1,23 @@
+SystemC Simulation
+
+sc_int test
+i37 = 01fc070000
+i37(33,0) = 1fc070000
+(sc_uint<6>(0),i37(33,0)) = 001fc070000
+
+sc_uint test
+u37 = 01fc070000
+u37(33,0) = 1fc070000
+(sc_uint<6>(0),u37(33,0)) = 001fc070000
+
+sc_bigint test
+bi37 = 01fc070000
+bi37(33,0) = 1fc070000
+(sc_uint<6>(0),bi37(33,0)) = 001fc070000
+
+sc_biguint test
+bu37 = 01fc070000
+bu37(33,0) = 1fc070000
+(sc_uint<6>(0),bu37(33,0)) = 001fc070000
+
+Program completed

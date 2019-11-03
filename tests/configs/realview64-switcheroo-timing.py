@@ -41,7 +41,7 @@ import switcheroo
 
 root = LinuxArmFSSwitcheroo(
     machine_type='VExpress_EMM64',
-    mem_class=DDR3_1600_x64,
+    mem_class=DDR3_1600_8x8,
     cpu_classes=(TimingSimpleCPU, TimingSimpleCPU)
     ).create_root()
 

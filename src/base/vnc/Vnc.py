@@ -37,11 +37,16 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
+from m5.objects.Graphics import *
+
 
 class VncInput(SimObject):
     type = 'VncInput'
     cxx_header = "base/vnc/vncinput.hh"
     frame_capture = Param.Bool(False, "capture changed frames to files")
+    img_format = Param.ImageFormat(
+        "Auto", "Format of the dumped Framebuffer"
+    )
 
 class VncServer(VncInput):
     type = 'VncServer'

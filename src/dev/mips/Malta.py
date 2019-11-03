@@ -29,10 +29,10 @@
 from m5.params import *
 from m5.proxy import *
 
-from BadDevice import BadDevice
-from Device import BasicPioDevice
-from Platform import Platform
-from Uart import Uart8250
+from m5.objects.BadDevice import BadDevice
+from m5.objects.Device import BasicPioDevice
+from m5.objects.Platform import Platform
+from m5.objects.Uart import Uart8250
 
 class MaltaCChip(BasicPioDevice):
     type = 'MaltaCChip'

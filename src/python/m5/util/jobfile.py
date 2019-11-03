@@ -26,6 +26,9 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 import sys
 
 class Data(object):
@@ -36,9 +39,9 @@ class Data(object):
 
     def update(self, obj):
         if not isinstance(obj, Data):
-            raise AttributeError, "can only update from Data object"
+            raise AttributeError("can only update from Data object")
 
-        for key,val in obj.__dict__.iteritems():
+        for key,val in obj.__dict__.items():
             if key.startswith('_') or key in ('name', 'desc'):
                 continue
 
@@ -50,31 +53,31 @@ class Data(object):
                 if self.__dict__[key] == val:
                     continue
 
-                raise AttributeError, \
-                      "%s specified more than once old: %s new: %s" % \
-                      (key, self.__dict__[key], val)
+                raise AttributeError(
+                    "%s specified more than once old: %s new: %s" % \
+                    (key, self.__dict__[key], val))
 
             d = self.__dict__[key]
-            for k,v in val.iteritems():
+            for k,v in val.items():
                 if k in d:
-                    raise AttributeError, \
-                          "%s specified more than once in %s" % (k, key)
+                    raise AttributeError(
+                        "%s specified more than once in %s" % (k, key))
                 d[k] = v
 
         if hasattr(self, 'system') and hasattr(obj, 'system'):
             if self.system != obj.system:
-                raise AttributeError, \
-                      "conflicting values for system: '%s'/'%s'" % \
-                      (self.system, obj.system)
+                raise AttributeError(
+                    "conflicting values for system: '%s'/'%s'" % \
+                    (self.system, obj.system))
 
     def printinfo(self):
         if self.name:
-            print 'name: %s' % self.name
+            print('name: %s' % self.name)
         if self.desc:
-            print 'desc: %s' % self.desc
+            print('desc: %s' % self.desc)
         try:
             if self.system:
-                print 'system: %s' % self.system
+                print('system: %s' % self.system)
         except AttributeError:
             pass
 
@@ -84,8 +87,8 @@ class Data(object):
             if isinstance(val, dict):
                 import pprint
                 val = pprint.pformat(val)
-            print '%-20s = %s' % (key, val)
-        print
+            print('%-20s = %s' % (key, val))
+        print()
 
     def __contains__(self, attr):
         if attr.startswith('_'):
@@ -94,11 +97,11 @@ class Data(object):
 
     def __getitem__(self, key):
         if key.startswith('_'):
-            raise KeyError, "Key '%s' not found" % attr
+            raise KeyError("Key '%s' not found" % attr)
         return self.__dict__[key]
 
     def __iter__(self):
-        keys = self.__dict__.keys()
+        keys = list(self.__dict__.keys())
         keys.sort()
         for key in keys:
             if not key.startswith('_'):
@@ -113,7 +116,7 @@ class Data(object):
 
     def __repr__(self):
         d = {}
-        for key,value in self.__dict__.iteritems():
+        for key,value in self.__dict__.items():
             if not key.startswith('_'):
                 d[key] = value
 
@@ -129,8 +132,8 @@ class Job(Data):
         config = options[0]._config
         for opt in options:
             if opt._config != config:
-                raise AttributeError, \
-                      "All options are not from the same Configuration"
+                raise AttributeError(
+                    "All options are not from the same Configuration")
 
         self._config = config
         self._groups = [ opt._group for opt in options ]
@@ -186,10 +189,10 @@ class Job(Data):
     def printinfo(self):
         super(Job, self).printinfo()
         if self._checkpoint:
-            print 'checkpoint: %s' % self._checkpoint.name
-        print 'config: %s' % self._config.name
-        print 'groups: %s' % [ g.name for g in self._groups ]
-        print 'options: %s' % [ o.name for o in self._options ]
+            print('checkpoint: %s' % self._checkpoint.name)
+        print('config: %s' % self._config.name)
+        print('groups: %s' % [ g.name for g in self._groups ])
+        print('options: %s' % [ o.name for o in self._options ])
         super(Job, self).printverbose()
 
 class SubOption(Data):
@@ -253,7 +256,7 @@ class Option(Data):
 
     def printinfo(self):
         super(Option, self).printinfo()
-        print 'config: %s' % self._config.name
+        print('config: %s' % self._config.name)
         super(Option, self).printverbose()
 
 class Group(Data):
@@ -283,8 +286,8 @@ class Group(Data):
 
     def printinfo(self):
         super(Group, self).printinfo()
-        print 'config: %s' % self._config.name
-        print 'options: %s' % [ o.name for o in self._options ]
+        print('config: %s' % self._config.name)
+        print('options: %s' % [ o.name for o in self._options ])
         super(Group, self).printverbose()
 
 class Configuration(Data):
@@ -307,7 +310,7 @@ class Configuration(Data):
     def checkchildren(self, kids):
         for kid in kids:
             if kid._config != self:
-                raise AttributeError, "child from the wrong configuration"
+                raise AttributeError("child from the wrong configuration")
 
     def sortgroups(self, groups):
         groups = [ (grp._number, grp) for grp in groups ]
@@ -385,7 +388,7 @@ class Configuration(Data):
             if job.name == jobname:
                 return job
         else:
-            raise AttributeError, "job '%s' not found" % jobname
+            raise AttributeError("job '%s' not found" % jobname)
 
     def job(self, options):
         self.checkchildren(options)
@@ -397,7 +400,7 @@ class Configuration(Data):
 
     def printinfo(self):
         super(Configuration, self).printinfo()
-        print 'groups: %s' % [ g.name for g in self._groups ]
+        print('groups: %s' % [ g.name for g in self._groups ])
         super(Configuration, self).printverbose()
 
 def JobFile(jobfile):
@@ -412,13 +415,12 @@ def JobFile(jobfile):
                 filename = testname
                 break
         else:
-            raise AttributeError, \
-                  "Could not find file '%s'" % jobfile
+            raise AttributeError("Could not find file '%s'" % jobfile)
 
     data = {}
-    execfile(filename, data)
+    exec(compile(open(filename).read(), filename, 'exec'), data)
     if 'conf' not in data:
-        raise ImportError, 'cannot import name conf from %s' % jobfile
+        raise ImportError('cannot import name conf from %s' % jobfile)
     return data['conf']
 
 def main(conf=None):
@@ -446,11 +448,11 @@ def main(conf=None):
 
     if conf is None:
         if len(args) != 1:
-            raise AttributeError, usage
+            raise AttributeError(usage)
         conf = JobFile(args[0])
     else:
         if len(args) != 0:
-            raise AttributeError, usage
+            raise AttributeError(usage)
 
     if both:
         jobs = conf.alljobs()
@@ -466,7 +468,7 @@ def main(conf=None):
             cpt = ''
             if job._checkpoint:
                 cpt = job._checkpoint.name
-            print job.name, cpt
+            print(job.name, cpt)
 
 if __name__ == '__main__':
     main()

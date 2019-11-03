@@ -35,7 +35,7 @@
 #
 # Authors: David Guillen Fandos
 
-from m5.SimObject import SimObject
+from m5.SimObject import *
 from m5.params import *
 
 # Represents a power model for a simobj
@@ -45,11 +45,10 @@ class PowerModelState(SimObject):
     abstract = True
     cxx_class = 'PowerModelState'
 
-    @classmethod
-    def export_methods(cls, code):
-        code('''
-      double getDynamicPower() const;
-      double getStaticPower() const;
-''')
+    cxx_exports = [
+        PyBindMethod("getDynamicPower"),
+        PyBindMethod("getStaticPower"),
+    ]
+
 
 

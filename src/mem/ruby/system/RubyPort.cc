@@ -39,19 +39,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/system/RubyPort.hh"
+
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/Config.hh"
 #include "debug/Drain.hh"
 #include "debug/Ruby.hh"
-#include "mem/protocol/AccessPermission.hh"
+#include "mem/ruby/protocol/AccessPermission.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
-#include "mem/ruby/system/RubyPort.hh"
 #include "mem/simple_mem.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
 RubyPort::RubyPort(const Params *p)
-    : MemObject(p), m_ruby_system(p->ruby_system), m_version(p->version),
+    : ClockedObject(p), m_ruby_system(p->ruby_system), m_version(p->version),
       m_controller(NULL), m_mandatory_q_ptr(NULL),
       m_usingRubyTester(p->using_ruby_tester), system(p->system),
       pioMasterPort(csprintf("%s.pio-master-port", name()), this),
@@ -86,53 +87,37 @@ RubyPort::init()
     m_mandatory_q_ptr = m_controller->getMandatoryQueue();
 }
 
-BaseMasterPort &
-RubyPort::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+RubyPort::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "mem_master_port") {
         return memMasterPort;
-    }
-
-    if (if_name == "pio_master_port") {
+    } else if (if_name == "pio_master_port") {
         return pioMasterPort;
-    }
-
-    // used by the x86 CPUs to connect the interrupt PIO and interrupt slave
-    // port
-    if (if_name != "master") {
-        // pass it along to our super class
-        return MemObject::getMasterPort(if_name, idx);
-    } else {
+    } else if (if_name == "mem_slave_port") {
+        return memSlavePort;
+    } else if (if_name == "pio_slave_port") {
+        return pioSlavePort;
+    } else if (if_name == "master") {
+        // used by the x86 CPUs to connect the interrupt PIO and interrupt
+        // slave port
         if (idx >= static_cast<PortID>(master_ports.size())) {
-            panic("RubyPort::getMasterPort: unknown index %d\n", idx);
+            panic("RubyPort::getPort master: unknown index %d\n", idx);
         }
 
         return *master_ports[idx];
-    }
-}
-
-BaseSlavePort &
-RubyPort::getSlavePort(const std::string &if_name, PortID idx)
-{
-    if (if_name == "mem_slave_port") {
-        return memSlavePort;
-    }
-
-    if (if_name == "pio_slave_port")
-        return pioSlavePort;
-
-    // used by the CPUs to connect the caches to the interconnect, and
-    // for the x86 case also the interrupt master
-    if (if_name != "slave") {
-        // pass it along to our super class
-        return MemObject::getSlavePort(if_name, idx);
-    } else {
+    } else if (if_name == "slave") {
+        // used by the CPUs to connect the caches to the interconnect, and
+        // for the x86 case also the interrupt master
         if (idx >= static_cast<PortID>(slave_ports.size())) {
-            panic("RubyPort::getSlavePort: unknown index %d\n", idx);
+            panic("RubyPort::getPort slave: unknown index %d\n", idx);
         }
 
         return *slave_ports[idx];
     }
+
+    // pass it along to our super class
+    return ClockedObject::getPort(if_name, idx);
 }
 
 RubyPort::PioMasterPort::PioMasterPort(const std::string &_name,
@@ -225,6 +210,26 @@ RubyPort::PioSlavePort::recvTimingReq(PacketPtr pkt)
     panic("Should never reach here!\n");
 }
 
+Tick
+RubyPort::PioSlavePort::recvAtomic(PacketPtr pkt)
+{
+    RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
+    // Only atomic_noncaching mode supported!
+    if (!ruby_port->system->bypassCaches()) {
+        panic("Ruby supports atomic accesses only in noncaching mode\n");
+    }
+
+    for (size_t i = 0; i < ruby_port->master_ports.size(); ++i) {
+        AddrRangeList l = ruby_port->master_ports[i]->getAddrRanges();
+        for (auto it = l.begin(); it != l.end(); ++it) {
+            if (it->contains(pkt->getAddr())) {
+                return ruby_port->master_ports[i]->sendAtomic(pkt);
+            }
+        }
+    }
+    panic("Could not find address in Ruby PIO address ranges!\n");
+}
+
 bool
 RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
 {
@@ -236,6 +241,14 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
         panic("RubyPort should never see request with the "
               "cacheResponding flag set\n");
 
+    // ruby doesn't support cache maintenance operations at the
+    // moment, as a workaround, we respond right away
+    if (pkt->req->isCacheMaintenance()) {
+        warn_once("Cache maintenance operations are not supported in Ruby.\n");
+        pkt->makeResponse();
+        schedTimingResp(pkt, curTick());
+        return true;
+    }
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     if (pkt->cmd != MemCmd::MemFenceReq) {
@@ -270,20 +283,63 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
         // route the response
         pkt->pushSenderState(new SenderState(this));
 
-        DPRINTF(RubyPort, "Request %s 0x%x issued\n", pkt->cmdString(),
+        DPRINTF(RubyPort, "Request %s address %#x issued\n", pkt->cmdString(),
                 pkt->getAddr());
         return true;
     }
 
     if (pkt->cmd != MemCmd::MemFenceReq) {
         DPRINTF(RubyPort,
-                "Request for address %#x did not issued because %s\n",
-                pkt->getAddr(), RequestStatus_to_string(requestStatus));
+                "Request %s for address %#x did not issue because %s\n",
+                pkt->cmdString(), pkt->getAddr(),
+                RequestStatus_to_string(requestStatus));
     }
 
     addToRetryList();
 
     return false;
+}
+
+Tick
+RubyPort::MemSlavePort::recvAtomic(PacketPtr pkt)
+{
+    RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
+    // Only atomic_noncaching mode supported!
+    if (!ruby_port->system->bypassCaches()) {
+        panic("Ruby supports atomic accesses only in noncaching mode\n");
+    }
+
+    // Check for pio requests and directly send them to the dedicated
+    // pio port.
+    if (pkt->cmd != MemCmd::MemFenceReq) {
+        if (!isPhysMemAddress(pkt->getAddr())) {
+            assert(ruby_port->memMasterPort.isConnected());
+            DPRINTF(RubyPort, "Request address %#x assumed to be a "
+                    "pio address\n", pkt->getAddr());
+
+            // Save the port in the sender state object to be used later to
+            // route the response
+            pkt->pushSenderState(new SenderState(this));
+
+            // send next cycle
+            Tick req_ticks = ruby_port->memMasterPort.sendAtomic(pkt);
+            return ruby_port->ticksToCycles(req_ticks);
+        }
+
+        assert(getOffset(pkt->getAddr()) + pkt->getSize() <=
+               RubySystem::getBlockSizeBytes());
+    }
+
+    // Find appropriate directory for address
+    // This assumes that protocols have a Directory machine,
+    // which has its memPort hooked up to memory. This can
+    // fail for some custom protocols.
+    MachineID id = ruby_port->m_controller->mapAddressToMachine(
+                    pkt->getAddr(), MachineType_Directory);
+    RubySystem *rs = ruby_port->m_ruby_system;
+    AbstractController *directory =
+        rs->m_abstract_controls[id.getType()][id.getNum()];
+    return directory->recvAtomic(pkt);
 }
 
 void
@@ -312,9 +368,10 @@ RubyPort::MemSlavePort::recvFunctional(PacketPtr pkt)
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     if (!isPhysMemAddress(pkt->getAddr())) {
-        assert(rp->memMasterPort.isConnected());
         DPRINTF(RubyPort, "Pio Request for address: 0x%#x\n", pkt->getAddr());
-        panic("RubyPort::PioMasterPort::recvFunctional() not implemented!\n");
+        assert(rp->pioMasterPort.isConnected());
+        rp->pioMasterPort.sendFunctional(pkt);
+        return;
     }
 
     assert(pkt->getAddr() + pkt->getSize() <=
@@ -535,11 +592,13 @@ RubyPort::ruby_eviction_callback(Addr address)
     // Allocate the invalidate request and packet on the stack, as it is
     // assumed they will not be modified or deleted by receivers.
     // TODO: should this really be using funcMasterId?
-    Request request(address, RubySystem::getBlockSizeBytes(), 0,
-                    Request::funcMasterId);
+    auto request = std::make_shared<Request>(
+        address, RubySystem::getBlockSizeBytes(), 0,
+        Request::funcMasterId);
+
     // Use a single packet to signal all snooping ports of the invalidation.
     // This assumes that snooping ports do NOT modify the packet/request
-    Packet pkt(&request, MemCmd::InvalidateReq);
+    Packet pkt(request, MemCmd::InvalidateReq);
     for (CpuPortIter p = slave_ports.begin(); p != slave_ports.end(); ++p) {
         // check if the connected master port is snooping
         if ((*p)->isSnooping()) {

@@ -117,15 +117,15 @@
  * "Stub" to allow remote cpu to debug over a serial line using gdb.
  */
 
+#include "arch/alpha/remote_gdb.hh"
+
 #include <sys/signal.h>
 #include <unistd.h>
 
 #include <string>
 
-
 #include "arch/alpha/decoder.hh"
 #include "arch/alpha/regredir.hh"
-#include "arch/alpha/remote_gdb.hh"
 #include "arch/alpha/utility.hh"
 #include "arch/alpha/vtophys.hh"
 #include "base/intmath.hh"
@@ -138,15 +138,17 @@
 #include "debug/GDBMisc.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
-#include "sim/system.hh"
 #include "sim/full_system.hh"
+#include "sim/system.hh"
 
 using namespace std;
 using namespace AlphaISA;
 
-RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc)
+RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc, int _port)
+    : BaseRemoteGDB(_system, tc, _port)
 {
+    warn_once("Breakpoints do not work in Alpha PAL mode.\n"
+              "      See PCEventQueue::doService() in cpu/pc_event.cc.\n");
 }
 
 /*
@@ -165,7 +167,7 @@ RemoteGDB::acc(Addr va, size_t len)
 
     do  {
         if (IsK0Seg(va)) {
-            if (va < (K0SegBase + system->memSize())) {
+            if (va < (K0SegBase + system()->memSize())) {
                 DPRINTF(GDBAcc, "acc:   Mapping is valid  K0SEG <= "
                         "%#x < K0SEG + size\n", va);
                 return true;
@@ -187,9 +189,9 @@ RemoteGDB::acc(Addr va, size_t len)
         if (PcPAL(va) || va < 0x10000)
             return true;
 
-        Addr ptbr = context->readMiscRegNoEffect(IPR_PALtemp20);
+        Addr ptbr = context()->readMiscRegNoEffect(IPR_PALtemp20);
         PageTableEntry pte =
-            kernel_pte_lookup(context->getPhysProxy(), ptbr, va);
+            kernel_pte_lookup(context()->getPhysProxy(), ptbr, va);
         if (!pte.valid()) {
             DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
             return false;
@@ -218,7 +220,7 @@ RemoteGDB::AlphaGdbRegCache::getRegs(ThreadContext *context)
 
     for (int i = 0; i < 32; ++i)
 #ifdef KGDB_FP_REGS
-       r.fpr[i] = context->readFloatRegBits(i);
+       r.fpr[i] = context->readFloatReg(i);
 #else
        r.fpr[i] = 0;
 #endif
@@ -241,37 +243,16 @@ RemoteGDB::AlphaGdbRegCache::setRegs(ThreadContext *context) const
 
 #ifdef KGDB_FP_REGS
     for (int i = 0; i < NumFloatArchRegs; ++i) {
-        context->setFloatRegBits(i, gdbregs.regs64[i + KGDB_REG_F0]);
+        context->setFloatReg(i, gdbregs.regs64[i + KGDB_REG_F0]);
     }
 #endif
     context->pcState(r.pc);
 }
 
-// Write bytes to kernel address space for debugger.
-bool
-RemoteGDB::write(Addr vaddr, size_t size, const char *data)
+
+BaseGdbRegCache*
+RemoteGDB::gdbRegs()
 {
-    if (BaseRemoteGDB::write(vaddr, size, data)) {
-#ifdef IMB
-        alpha_pal_imb();
-#endif
-        return true;
-    } else {
-        return false;
-    }
-}
-
-
-bool
-RemoteGDB::insertHardBreak(Addr addr, size_t len)
-{
-    warn_once("Breakpoints do not work in Alpha PAL mode.\n"
-              "      See PCEventQueue::doService() in cpu/pc_event.cc.\n");
-    return BaseRemoteGDB::insertHardBreak(addr, len);
-}
-
-RemoteGDB::BaseGdbRegCache*
-RemoteGDB::gdbRegs() {
-            return new AlphaGdbRegCache(this);
+    return new AlphaGdbRegCache(this);
 }
 

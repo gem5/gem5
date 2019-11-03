@@ -38,8 +38,9 @@
  *          Curtis Dunham
  */
 
-#include "base/output.hh"
 #include "cpu/simple/probes/simpoint.hh"
+
+#include "base/output.hh"
 
 SimPoint::SimPoint(const SimPointParams *p)
     : ProbeListenerObject(p),

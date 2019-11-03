@@ -52,6 +52,8 @@ class SubSystem(SimObject):
     cxx_header = "sim/sub_system.hh"
     abstract = False
 
-    # Thermal doamin associated to this object, inheriting the parent's
+    # Thermal domain associated to this object, inheriting the parent's
     # clock domain by default
     thermal_domain = Param.ThermalDomain(NULL, "Thermal domain")
+
+    generateDeviceTree = SimObject.recurseDeviceTree

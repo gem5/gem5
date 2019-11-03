@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2014 ARM Limited
+# Copyright (c) 2014, 2016 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -40,8 +40,8 @@
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
-from Device import PioDevice
-from PciDevice import PciDevice
+from m5.objects.Device import PioDevice
+from m5.objects.PciDevice import PciDevice
 
 
 class VirtIODeviceBase(SimObject):
@@ -53,11 +53,15 @@ class VirtIODeviceBase(SimObject):
 
     system = Param.System(Parent.any, "system object")
 
+class VirtIODummyDevice(VirtIODeviceBase):
+    type = 'VirtIODummyDevice'
+    cxx_header = 'dev/virtio/base.hh'
+
 class PciVirtIO(PciDevice):
     type = 'PciVirtIO'
     cxx_header = 'dev/virtio/pci.hh'
 
-    vio = Param.VirtIODeviceBase("VirtIO device")
+    vio = Param.VirtIODeviceBase(VirtIODummyDevice(), "VirtIO device")
 
     VendorID = 0x1AF4
     SubsystemVendorID = VendorID;

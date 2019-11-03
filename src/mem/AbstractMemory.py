@@ -40,9 +40,9 @@
 #          Andreas Hansson
 
 from m5.params import *
-from MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 
-class AbstractMemory(MemObject):
+class AbstractMemory(ClockedObject):
     type = 'AbstractMemory'
     abstract = True
     cxx_header = "mem/abstract_mem.hh"
@@ -56,6 +56,12 @@ class AbstractMemory(MemObject):
     # certain memories may be excluded from the global address map,
     # e.g. by the testers that use shadow memories as a reference
     in_addr_map = Param.Bool(True, "Memory part of the global address map")
+
+    # When KVM acceleration is used, memory is mapped into the guest process
+    # address space and accessed directly. Some memories may need to be
+    # excluded from this mapping if they overlap with other memory ranges or
+    # are not accessible by the CPU.
+    kvm_map = Param.Bool(True, "Should KVM map this memory for the guest")
 
     # Should the bootloader include this memory when passing
     # configuration information about the physical memory layout to

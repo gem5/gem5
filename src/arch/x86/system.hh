@@ -44,11 +44,7 @@
 #include <vector>
 
 #include "arch/x86/regs/misc.hh"
-#include "base/loader/symtab.hh"
-#include "cpu/pc_event.hh"
-#include "kern/system_events.hh"
 #include "params/X86System.hh"
-#include "sim/sim_object.hh"
 #include "sim/system.hh"
 
 namespace X86ISA
@@ -68,21 +64,14 @@ namespace X86ISA
 
     /* memory mappings for KVMCpu in SE mode */
     const uint64_t syscallCodeVirtAddr = 0xffff800000000000;
-    const uint64_t syscallCodePhysAddr = 0x60000;
     const uint64_t GDTVirtAddr = 0xffff800000001000;
-    const uint64_t GDTPhysAddr = 0x61000;
     const uint64_t IDTVirtAddr = 0xffff800000002000;
-    const uint64_t IDTPhysAddr = 0x62000;
     const uint64_t TSSVirtAddr = 0xffff800000003000;
     const uint64_t TSSPhysAddr = 0x63000;
     const uint64_t ISTVirtAddr = 0xffff800000004000;
-    const uint64_t ISTPhysAddr = 0x64000;
     const uint64_t PFHandlerVirtAddr = 0xffff800000005000;
-    const uint64_t PFHandlerPhysAddr = 0x65000;
     const uint64_t MMIORegionVirtAddr = 0xffffc90000000000;
     const uint64_t MMIORegionPhysAddr = 0xffff0000;
-
-    const uint64_t pageTablePhysAddr = 0x70000;
 }
 
 class X86System : public System
@@ -116,7 +105,7 @@ class X86System : public System
 
     virtual Addr fixFuncEventAddr(Addr addr)
     {
-        //XXX This may eventually have to do something useful.
+        // XXX This may eventually have to do something useful.
         return addr;
     }
 };

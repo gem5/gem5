@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 ARM Limited
+ * Copyright (c) 2012-2014,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,6 +47,7 @@
 #include "arch/arm/utility.hh"
 #include "base/trace.hh"
 #include "debug/Decoder.hh"
+#include "sim/full_system.hh"
 
 namespace ArmISA
 {
@@ -54,11 +55,13 @@ namespace ArmISA
 GenericISA::BasicDecodeCache Decoder::defaultCache;
 
 Decoder::Decoder(ISA* isa)
-    : data(0), fpscrLen(0), fpscrStride(0), decoderFlavour(isa
-            ? isa->decoderFlavour()
-            : Enums::Generic)
+    : data(0), fpscrLen(0), fpscrStride(0),
+      decoderFlavour(isa->decoderFlavour())
 {
     reset();
+
+    // Initialize SVE vector length
+    sveLen = (isa->getCurSveVecLenInBitsAtReset() >> 7) - 1;
 }
 
 void
@@ -151,12 +154,13 @@ Decoder::consumeBytes(int numBytes)
 void
 Decoder::moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
 {
-    data = inst;
+    data = letoh(inst);
     offset = (fetchPC >= pc.instAddr()) ? 0 : pc.instAddr() - fetchPC;
     emi.thumb = pc.thumb();
     emi.aarch64 = pc.aarch64();
     emi.fpscrLen = fpscrLen;
     emi.fpscrStride = fpscrStride;
+    emi.sveLen = sveLen;
 
     const Addr alignment(pc.thumb() ? 0x1 : 0x3);
     emi.decoderFault = static_cast<uint8_t>(
@@ -179,6 +183,8 @@ Decoder::decode(ArmISA::PCState &pc)
     if (foundIt)
         pc.nextItstate(itBits);
     this_emi.itstate = pc.itstate();
+    this_emi.illegalExecution = pc.illegalExec() ? 1 : 0;
+
     pc.size(inst_size);
 
     emi = 0;

@@ -28,11 +28,12 @@
  */
 
 #include "cpu/testers/directedtest/DirectedGenerator.hh"
+
 #include "sim/system.hh"
 
 DirectedGenerator::DirectedGenerator(const Params *p)
     : SimObject(p),
-      masterId(p->system->getMasterId(name()))
+      masterId(p->system->getMasterId(this))
 {
     m_num_cpus = p->num_cpus;
     m_directed_tester = NULL;

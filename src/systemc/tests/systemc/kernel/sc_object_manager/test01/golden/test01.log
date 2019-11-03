@@ -1,0 +1,18 @@
+SystemC Simulation
+External: 
+   a.a: sc_signal
+   a.b: sc_signal
+   a.c: sc_signal
+   a.signal_0: sc_signal
+   a.signal_1: sc_signal
+   a.signal_2: sc_signal
+
+Internal: 
+   a.a: sc_signal
+   a.b: sc_signal
+   a.c: sc_signal
+   a.signal_0: sc_signal
+   a.signal_1: sc_signal
+   a.signal_2: sc_signal
+
+Program completed

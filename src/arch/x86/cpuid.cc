@@ -29,6 +29,7 @@
  */
 
 #include "arch/x86/cpuid.hh"
+
 #include "base/bitfield.hh"
 #include "cpu/thread_context.hh"
 
@@ -36,6 +37,12 @@ namespace X86ISA {
     enum StandardCpuidFunction {
         VendorAndLargestStdFunc,
         FamilyModelStepping,
+        CacheAndTLB,
+        SerialNumber,
+        CacheParams,
+        MonitorMwait,
+        ThermalPowerMgmt,
+        ExtendedFeatures,
         NumStandardCpuidFuncs
     };
 
@@ -155,7 +162,11 @@ namespace X86ISA {
                 break;
               case FamilyModelStepping:
                 result = CpuidResult(0x00020f51, 0x00000805,
-                                     0xe7dbfbff, 0x04000209);
+                                     0xe7dbfbff, 0x00000209);
+                break;
+              case ExtendedFeatures:
+                result = CpuidResult(0x00000000, 0x01800000,
+                                     0x00000000, 0x00000000);
                 break;
               default:
                 warn("x86 cpuid family 0x0000: unimplemented function %u",

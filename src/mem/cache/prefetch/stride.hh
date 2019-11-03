@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2018 Inria
  * Copyright (c) 2012-2013, 2015 ARM Limited
  * All rights reserved
  *
@@ -38,6 +39,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ron Dreslinski
+ *          Daniel Carvalho
  */
 
 /**
@@ -48,10 +50,17 @@
 #ifndef __MEM_CACHE_PREFETCH_STRIDE_HH__
 #define __MEM_CACHE_PREFETCH_STRIDE_HH__
 
+#include <string>
 #include <unordered_map>
+#include <vector>
 
+#include "base/types.hh"
 #include "mem/cache/prefetch/queued.hh"
-#include "params/StridePrefetcher.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
+#include "mem/packet.hh"
+
+class BaseReplacementPolicy;
+struct StridePrefetcherParams;
 
 class StridePrefetcher : public QueuedPrefetcher
 {
@@ -68,11 +77,16 @@ class StridePrefetcher : public QueuedPrefetcher
 
     const int degree;
 
-    struct StrideEntry
+    /** Replacement policy used in the PC tables. */
+    BaseReplacementPolicy* replacementPolicy;
+
+    struct StrideEntry : public ReplaceableEntry
     {
-        StrideEntry() : instAddr(0), lastAddr(0), isSecure(false), stride(0),
-                        confidence(0)
-        { }
+        /** Default constructor */
+        StrideEntry();
+
+        /** Invalidate the entry */
+        void invalidate();
 
         Addr instAddr;
         Addr lastAddr;
@@ -84,38 +98,82 @@ class StridePrefetcher : public QueuedPrefetcher
     class PCTable
     {
       public:
-        PCTable(int assoc, int sets, const std::string name) :
-            pcTableAssoc(assoc), pcTableSets(sets), _name(name) {}
-        StrideEntry** operator[] (int context) {
-            auto it = entries.find(context);
-            if (it != entries.end())
-                return it->second;
+        /**
+         * Default constructor. Create a table with given parameters.
+         *
+         * @param assoc Associativity of the table.
+         * @param sets Number of sets in the table.
+         * @param name Name of the prefetcher.
+         * @param replacementPolicy Replacement policy used by the table.
+         */
+        PCTable(int assoc, int sets, const std::string name,
+                BaseReplacementPolicy* replacementPolicy);
 
-            return allocateNewContext(context);
-        }
-
+        /**
+         * Default destructor.
+         */
         ~PCTable();
+
+        /**
+         * Search for an entry in the pc table.
+         *
+         * @param pc The PC to look for.
+         * @param is_secure True if the target memory space is secure.
+         * @return Pointer to the entry.
+         */
+        StrideEntry* findEntry(Addr pc, bool is_secure);
+
+        /**
+         * Find a replacement victim to make room for given PC.
+         *
+         * @param pc The PC value.
+         * @return The victimized entry.
+         */
+        StrideEntry* findVictim(Addr pc);
+
       private:
         const std::string name() {return _name; }
-        const int pcTableAssoc;
         const int pcTableSets;
         const std::string _name;
-        std::unordered_map<int, StrideEntry**> entries;
+        std::vector<std::vector<StrideEntry>> entries;
 
-        StrideEntry** allocateNewContext(int context);
+        /**
+         * Replacement policy used by StridePrefetcher.
+         */
+        BaseReplacementPolicy* replacementPolicy;
+
+        /**
+         * PC hashing function to index sets in the table.
+         *
+         * @param pc The PC value.
+         * @return The set to which this PC maps.
+         */
+        Addr pcHash(Addr pc) const;
     };
-    PCTable pcTable;
+    std::unordered_map<int, PCTable> pcTables;
 
-    bool pcTableHit(Addr pc, bool is_secure, int master_id, StrideEntry* &entry);
-    StrideEntry* pcTableVictim(Addr pc, int master_id);
+    /**
+     * Try to find a table of entries for the given context. If none is
+     * found, a new table is created.
+     *
+     * @param context The context to be searched for.
+     * @return The table corresponding to the given context.
+     */
+    PCTable* findTable(int context);
 
-    Addr pcHash(Addr pc) const;
+    /**
+     * Create a PC table for the given context.
+     *
+     * @param context The context of the new PC table.
+     * @return The new PC table
+     */
+    PCTable* allocateNewContext(int context);
+
   public:
-
     StridePrefetcher(const StridePrefetcherParams *p);
 
-    void calculatePrefetch(const PacketPtr &pkt,
-                           std::vector<AddrPriority> &addresses);
+    void calculatePrefetch(const PrefetchInfo &pfi,
+                           std::vector<AddrPriority> &addresses) override;
 };
 
 #endif // __MEM_CACHE_PREFETCH_STRIDE_HH__

@@ -26,9 +26,9 @@
 #
 # Authors: Gabe Black
 
-from m5.SimObject import SimObject
+from m5.objects.BaseInterrupts import BaseInterrupts
 
-class PowerInterrupts(SimObject):
+class PowerInterrupts(BaseInterrupts):
     type = 'PowerInterrupts'
     cxx_class = 'PowerISA::Interrupts'
     cxx_header = 'arch/power/interrupts.hh'

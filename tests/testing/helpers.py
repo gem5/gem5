@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #
 # Copyright (c) 2016 ARM Limited
 # All rights reserved
@@ -37,9 +37,12 @@
 #
 # Authors: Andreas Sandberg
 
+from __future__ import print_function
+
 import subprocess
 from threading import Timer
 import time
+import re
 
 class CallTimeoutException(Exception):
     """Exception that indicates that a process call timed out"""
@@ -105,6 +108,47 @@ class ProcessHelper(subprocess.Popen):
         else:
             return status, stdout, stderr
 
+class FileIgnoreList(object):
+    """Helper class to implement file ignore lists.
+
+    This class implements ignore lists using plain string matching and
+    regular expressions. In the simplest use case, rules are created
+    statically upon initialization:
+
+        ignore_list = FileIgnoreList(name=("ignore_me.txt", ), rex=(r".*~", )
+
+    Ignores can be queried using in the same ways as normal Python
+    containers:
+
+        if file_name in ignore_list:
+            print "Ignoring %s" % file_name
+
+
+    New rules can be added at runtime by extending the list in the
+    rules attribute:
+
+        ignore_list.rules.append(FileIgnoreList.simple("bar.txt"))
+    """
+
+    @staticmethod
+    def simple(r):
+        return lambda f: f == r
+
+    @staticmethod
+    def rex(r):
+        re_obj = r if hasattr(r, "search") else re.compile(r)
+        return lambda name: re_obj.search(name)
+
+    def __init__(self, names=(), rex=()):
+        self.rules = [ FileIgnoreList.simple(n) for n in names ] + \
+                     [ FileIgnoreList.rex(r) for r in rex ]
+
+    def __contains__(self, name):
+        for rule in self.rules:
+            if rule(name):
+                return True
+        return False
+
 if __name__ == "__main__":
     # Run internal self tests to ensure that the helpers are working
     # properly. The expected output when running this script is
@@ -129,4 +173,20 @@ if __name__ == "__main__":
     except CallTimeoutException:
         pass
 
-    print "SUCCESS!"
+    ignore_list = FileIgnoreList(
+        names=("ignore.txt", "foo/test.txt"),
+        rex=(r"~$", re.compile("^#")))
+
+    assert "ignore.txt" in ignore_list
+    assert "bar.txt" not in ignore_list
+    assert "foo/test.txt" in ignore_list
+    assert "test.txt" not in ignore_list
+    assert "file1.c~" in ignore_list
+    assert "file1.c" not in ignore_list
+    assert "#foo" in ignore_list
+    assert "foo#" not in ignore_list
+
+    ignore_list.rules.append(FileIgnoreList.simple("bar.txt"))
+    assert "bar.txt" in ignore_list
+
+    print("SUCCESS!")

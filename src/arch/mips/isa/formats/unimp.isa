@@ -53,10 +53,10 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
     };
     class CP0Unimplemented : public MipsStaticInst
     {
@@ -70,10 +70,10 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
     };
     class CP1Unimplemented : public MipsStaticInst
     {
@@ -87,10 +87,10 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
     };
     class CP2Unimplemented : public MipsStaticInst
     {
@@ -104,10 +104,10 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
     };
 
     /**
@@ -135,10 +135,10 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
     };
 }};
 
@@ -180,7 +180,7 @@ output decoder {{
 
 output exec {{
     Fault
-    FailUnimplemented::execute(CPU_EXEC_CONTEXT *xc,
+    FailUnimplemented::execute(ExecContext *xc,
                                Trace::InstRecord *traceData) const
     {
         panic("attempt to execute unimplemented instruction '%s' "
@@ -190,7 +190,7 @@ output exec {{
     }
 
     Fault
-    CP0Unimplemented::execute(CPU_EXEC_CONTEXT *xc,
+    CP0Unimplemented::execute(ExecContext *xc,
                                Trace::InstRecord *traceData) const
     {
         if (FullSystem) {
@@ -207,7 +207,7 @@ output exec {{
     }
 
     Fault
-    CP1Unimplemented::execute(CPU_EXEC_CONTEXT *xc,
+    CP1Unimplemented::execute(ExecContext *xc,
                                Trace::InstRecord *traceData) const
     {
         if (FullSystem) {
@@ -224,7 +224,7 @@ output exec {{
     }
 
     Fault
-    CP2Unimplemented::execute(CPU_EXEC_CONTEXT *xc,
+    CP2Unimplemented::execute(ExecContext *xc,
                                Trace::InstRecord *traceData) const
     {
         if (FullSystem) {
@@ -241,7 +241,7 @@ output exec {{
     }
 
     Fault
-    WarnUnimplemented::execute(CPU_EXEC_CONTEXT *xc,
+    WarnUnimplemented::execute(ExecContext *xc,
                                Trace::InstRecord *traceData) const
     {
         if (!warned) {

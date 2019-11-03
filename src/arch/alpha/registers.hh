@@ -33,6 +33,9 @@
 
 #include "arch/alpha/generated/max_inst_regs.hh"
 #include "arch/alpha/ipr.hh"
+#include "arch/generic/types.hh"
+#include "arch/generic/vec_pred_reg.hh"
+#include "arch/generic/vec_reg.hh"
 #include "base/types.hh"
 
 namespace AlphaISA {
@@ -43,25 +46,20 @@ using AlphaISAInst::MaxInstDestRegs;
 // Locked read/write flags are can't be detected by the ISA parser
 const int MaxMiscDestRegs = AlphaISAInst::MaxMiscDestRegs + 1;
 
-typedef uint8_t RegIndex;
-typedef uint64_t IntReg;
+// Not applicable to Alpha
+using VecElem = ::DummyVecElem;
+using VecReg = ::DummyVecReg;
+using ConstVecReg = ::DummyConstVecReg;
+using VecRegContainer = ::DummyVecRegContainer;
+constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
+constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;
 
-// floating point register file entry type
-typedef double FloatReg;
-typedef uint64_t FloatRegBits;
-
-// control register file contents
-typedef uint64_t MiscReg;
-
-// dummy typedef since we don't have CC regs
-typedef uint8_t CCReg;
-
-union AnyReg
-{
-    IntReg  intreg;
-    FloatReg   fpreg;
-    MiscReg ctrlreg;
-};
+// Not applicable to Alpha
+using VecPredReg = ::DummyVecPredReg;
+using ConstVecPredReg = ::DummyConstVecPredReg;
+using VecPredRegContainer = ::DummyVecPredRegContainer;
+constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
+constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
 
 enum MiscRegIndex
 {
@@ -94,21 +92,15 @@ const int NumFloatArchRegs = 32;
 
 const int NumIntRegs = NumIntArchRegs + NumPALShadowRegs;
 const int NumFloatRegs = NumFloatArchRegs;
+const int NumVecRegs = 1;  // Not applicable to Alpha
+                           // (1 to prevent warnings)
+const int NumVecPredRegs = 1;  // Not applicable to Alpha
+                               // (1 to prevent warnings)
 const int NumCCRegs = 0;
 const int NumMiscRegs = NUM_MISCREGS;
 
 const int TotalNumRegs =
     NumIntRegs + NumFloatRegs + NumMiscRegs;
-
-// These enumerate all the registers for dependence tracking.
-enum DependenceTags {
-    // 0..31 are the integer regs 0..31
-    // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Reg_Base)
-    FP_Reg_Base = NumIntRegs,
-    CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
-    Misc_Reg_Base = CC_Reg_Base + NumCCRegs, // NumCCRegs == 0
-    Max_Reg_Index = Misc_Reg_Base + NumMiscRegs + NumInternalProcRegs
-};
 
 } // namespace AlphaISA
 

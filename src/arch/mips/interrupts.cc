@@ -32,6 +32,7 @@
  */
 
 #include "arch/mips/interrupts.hh"
+
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/pra_constants.hh"
 #include "base/trace.hh"
@@ -105,11 +106,11 @@ Interrupts::clearAll()
 }
 
 
-
-Fault
-Interrupts::getInterrupt(ThreadContext * tc)
+bool
+Interrupts::checkInterrupts(ThreadContext *tc) const
 {
-    DPRINTF(Interrupt, "Interrupts getInterrupt\n");
+    if (!interruptsPending(tc))
+        return false;
 
     //Check if there are any outstanding interrupts
     StatusReg status = tc->readMiscRegNoEffect(MISCREG_STATUS);
@@ -120,28 +121,39 @@ Interrupts::getInterrupt(ThreadContext * tc)
         // So if any interrupt that isn't masked is detected, jump to interrupt
         // handler
         CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
-        if (status.im && cause.ip) {
-            DPRINTF(Interrupt, "Interrupt! IM[7:0]=%d IP[7:0]=%d \n",
-                    (unsigned)status.im, (unsigned)cause.ip);
-            return std::make_shared<InterruptFault>();
-        }
+        if (status.im && cause.ip)
+            return true;
+
     }
 
-    return NoFault;
+    return false;
+}
+
+Fault
+Interrupts::getInterrupt(ThreadContext * tc)
+{
+    assert(checkInterrupts(tc));
+
+    StatusReg M5_VAR_USED status = tc->readMiscRegNoEffect(MISCREG_STATUS);
+    CauseReg M5_VAR_USED cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
+    DPRINTF(Interrupt, "Interrupt! IM[7:0]=%d IP[7:0]=%d \n",
+            (unsigned)status.im, (unsigned)cause.ip);
+
+    return std::make_shared<InterruptFault>();
 }
 
 bool
 Interrupts::onCpuTimerInterrupt(ThreadContext * tc) const
 {
-    MiscReg compare = tc->readMiscRegNoEffect(MISCREG_COMPARE);
-    MiscReg count = tc->readMiscRegNoEffect(MISCREG_COUNT);
+    RegVal compare = tc->readMiscRegNoEffect(MISCREG_COMPARE);
+    RegVal count = tc->readMiscRegNoEffect(MISCREG_COUNT);
     if (compare == count && count != 0)
         return true;
     return false;
 }
 
 void
-Interrupts::updateIntrInfo(ThreadContext *tc) const
+Interrupts::updateIntrInfo(ThreadContext *tc)
 {
     //Nothing needs to be done.
 }

@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,20 +30,29 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Lisa Hsu
+ * Authors: Lisa Hsu
  */
 
 #include "gpu-compute/tlb_coalescer.hh"
 
 #include <cstring>
 
+#include "base/logging.hh"
 #include "debug/GPUTLB.hh"
+#include "sim/process.hh"
 
-TLBCoalescer::TLBCoalescer(const Params *p) : MemObject(p),
-    clock(p->clk_domain->clockPeriod()), TLBProbesPerCycle(p->probesPerCycle),
-    coalescingWindow(p->coalescingWindow),
-    disableCoalescing(p->disableCoalescing), probeTLBEvent(this),
-    cleanupEvent(this)
+TLBCoalescer::TLBCoalescer(const Params *p)
+    : ClockedObject(p),
+      clock(p->clk_domain->clockPeriod()),
+      TLBProbesPerCycle(p->probesPerCycle),
+      coalescingWindow(p->coalescingWindow),
+      disableCoalescing(p->disableCoalescing),
+      probeTLBEvent([this]{ processProbeTLBEvent(); },
+                    "Probe the TLB below",
+                    false, Event::CPU_Tick_Pri),
+      cleanupEvent([this]{ processCleanupEvent(); },
+                   "Cleanup issuedTranslationsTable hashmap",
+                   false, Event::Maximum_Pri)
 {
     // create the slave ports based on the number of connected ports
     for (size_t i = 0; i < p->port_slave_connection_count; ++i) {
@@ -58,31 +67,23 @@ TLBCoalescer::TLBCoalescer(const Params *p) : MemObject(p),
     }
 }
 
-BaseSlavePort&
-TLBCoalescer::getSlavePort(const std::string &if_name, PortID idx)
+Port &
+TLBCoalescer::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "slave") {
         if (idx >= static_cast<PortID>(cpuSidePort.size())) {
-            panic("TLBCoalescer::getSlavePort: unknown index %d\n", idx);
+            panic("TLBCoalescer::getPort: unknown index %d\n", idx);
         }
 
         return *cpuSidePort[idx];
-    } else {
-        panic("TLBCoalescer::getSlavePort: unknown port %s\n", if_name);
-    }
-}
-
-BaseMasterPort&
-TLBCoalescer::getMasterPort(const std::string &if_name, PortID idx)
-{
-    if (if_name == "master") {
+    } else  if (if_name == "master") {
         if (idx >= static_cast<PortID>(memSidePort.size())) {
-            panic("TLBCoalescer::getMasterPort: unknown index %d\n", idx);
+            panic("TLBCoalescer::getPort: unknown index %d\n", idx);
         }
 
         return *memSidePort[idx];
     } else {
-        panic("TLBCoalescer::getMasterPort: unknown port %s\n", if_name);
+        panic("TLBCoalescer::getPort: unknown port %s\n", if_name);
     }
 }
 
@@ -148,14 +149,13 @@ TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
     TheISA::GpuTLB::TranslationState *sender_state =
         safe_cast<TheISA::GpuTLB::TranslationState*>(pkt->senderState);
 
-    TheISA::GpuTlbEntry *tlb_entry = sender_state->tlbEntry;
+    TheISA::TlbEntry *tlb_entry = sender_state->tlbEntry;
     assert(tlb_entry);
     Addr first_entry_vaddr = tlb_entry->vaddr;
     Addr first_entry_paddr = tlb_entry->paddr;
     int page_size = tlb_entry->size();
     bool uncacheable = tlb_entry->uncacheable;
     int first_hit_level = sender_state->hitLevel;
-    bool valid = tlb_entry->valid;
 
     // Get the physical page address of the translated request
     // Using the page_size specified in the TLBEntry allows us
@@ -190,9 +190,10 @@ TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
 
             // update senderState->tlbEntry, so we can insert
             // the correct TLBEentry in the TLBs above.
+            auto p = sender_state->tc->getProcessPtr();
             sender_state->tlbEntry =
-                new TheISA::GpuTlbEntry(0, first_entry_vaddr, first_entry_paddr,
-                                        valid);
+                new TheISA::TlbEntry(p->pid(), first_entry_vaddr,
+                    first_entry_paddr, false, false);
 
             // update the hitLevel for all uncoalesced reqs
             // so that each packet knows where it hit
@@ -327,7 +328,7 @@ TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
 void
 TLBCoalescer::CpuSidePort::recvReqRetry()
 {
-    assert(false);
+    panic("recvReqRetry called");
 }
 
 void
@@ -390,17 +391,6 @@ TLBCoalescer::MemSidePort::recvFunctional(PacketPtr pkt)
     fatal("Memory side recvFunctional() not implemented in TLB coalescer.\n");
 }
 
-TLBCoalescer::IssueProbeEvent::IssueProbeEvent(TLBCoalescer * _coalescer)
-    : Event(CPU_Tick_Pri), coalescer(_coalescer)
-{
-}
-
-const char*
-TLBCoalescer::IssueProbeEvent::description() const
-{
-    return "Probe the TLB below";
-}
-
 /*
  * Here we scan the coalescer FIFO and issue the max
  * number of permitted probes to the TLB below. We
@@ -414,7 +404,7 @@ TLBCoalescer::IssueProbeEvent::description() const
  * track of the outstanding reqs)
  */
 void
-TLBCoalescer::IssueProbeEvent::process()
+TLBCoalescer::processProbeTLBEvent()
 {
     // number of TLB probes sent so far
     int sent_probes = 0;
@@ -425,10 +415,10 @@ TLBCoalescer::IssueProbeEvent::process()
     // returns false or when there is another outstanding request for the
     // same virt. page.
 
-    DPRINTF(GPUTLB, "triggered TLBCoalescer IssueProbeEvent\n");
+    DPRINTF(GPUTLB, "triggered TLBCoalescer %s\n", __func__);
 
-    for (auto iter = coalescer->coalescerFIFO.begin();
-         iter != coalescer->coalescerFIFO.end() && !rejected; ) {
+    for (auto iter = coalescerFIFO.begin();
+         iter != coalescerFIFO.end() && !rejected; ) {
         int coalescedReq_cnt = iter->second.size();
         int i = 0;
         int vector_index = 0;
@@ -446,7 +436,7 @@ TLBCoalescer::IssueProbeEvent::process()
 
             // is there another outstanding request for the same page addr?
             int pending_reqs =
-                coalescer->issuedTranslationsTable.count(virt_page_addr);
+                issuedTranslationsTable.count(virt_page_addr);
 
             if (pending_reqs) {
                 DPRINTF(GPUTLB, "Cannot issue - There are pending reqs for "
@@ -459,7 +449,7 @@ TLBCoalescer::IssueProbeEvent::process()
             }
 
             // send the coalesced request for virt_page_addr
-            if (!coalescer->memSidePort[0]->sendTimingReq(first_packet)) {
+            if (!memSidePort[0]->sendTimingReq(first_packet)) {
                 DPRINTF(GPUTLB, "Failed to send TLB request for page %#x",
                        virt_page_addr);
 
@@ -479,22 +469,22 @@ TLBCoalescer::IssueProbeEvent::process()
                     // by the one we just sent counting all the way from
                     // the top of TLB hiearchy (i.e., from the CU)
                     int req_cnt = tmp_sender_state->reqCnt.back();
-                    coalescer->queuingCycles += (curTick() * req_cnt);
+                    queuingCycles += (curTick() * req_cnt);
 
                     DPRINTF(GPUTLB, "%s sending pkt w/ req_cnt %d\n",
-                            coalescer->name(), req_cnt);
+                            name(), req_cnt);
 
                     // pkt_cnt is number of packets we coalesced into the one
                     // we just sent but only at this coalescer level
                     int pkt_cnt = iter->second[vector_index].size();
-                    coalescer->localqueuingCycles += (curTick() * pkt_cnt);
+                    localqueuingCycles += (curTick() * pkt_cnt);
                 }
 
                 DPRINTF(GPUTLB, "Successfully sent TLB request for page %#x",
                        virt_page_addr);
 
                 //copy coalescedReq to issuedTranslationsTable
-                coalescer->issuedTranslationsTable[virt_page_addr]
+                issuedTranslationsTable[virt_page_addr]
                     = iter->second[vector_index];
 
                 //erase the entry of this coalesced req
@@ -504,7 +494,7 @@ TLBCoalescer::IssueProbeEvent::process()
                     assert(i == coalescedReq_cnt);
 
                 sent_probes++;
-                if (sent_probes == coalescer->TLBProbesPerCycle)
+                if (sent_probes == TLBProbesPerCycle)
                    return;
             }
         }
@@ -512,31 +502,20 @@ TLBCoalescer::IssueProbeEvent::process()
         //if there are no more coalesced reqs for this tick_index
         //erase the hash_map with the first iterator
         if (iter->second.empty()) {
-            coalescer->coalescerFIFO.erase(iter++);
+            coalescerFIFO.erase(iter++);
         } else {
             ++iter;
         }
     }
 }
 
-TLBCoalescer::CleanupEvent::CleanupEvent(TLBCoalescer* _coalescer)
-    : Event(Maximum_Pri), coalescer(_coalescer)
-{
-}
-
-const char*
-TLBCoalescer::CleanupEvent::description() const
-{
-    return "Cleanup issuedTranslationsTable hashmap";
-}
-
 void
-TLBCoalescer::CleanupEvent::process()
+TLBCoalescer::processCleanupEvent()
 {
-    while (!coalescer->cleanupQueue.empty()) {
-        Addr cleanup_addr = coalescer->cleanupQueue.front();
-        coalescer->cleanupQueue.pop();
-        coalescer->issuedTranslationsTable.erase(cleanup_addr);
+    while (!cleanupQueue.empty()) {
+        Addr cleanup_addr = cleanupQueue.front();
+        cleanupQueue.pop();
+        issuedTranslationsTable.erase(cleanup_addr);
 
         DPRINTF(GPUTLB, "Cleanup - Delete coalescer entry with key %#x\n",
                 cleanup_addr);
@@ -546,7 +525,7 @@ TLBCoalescer::CleanupEvent::process()
 void
 TLBCoalescer::regStats()
 {
-    MemObject::regStats();
+    ClockedObject::regStats();
 
     uncoalescedAccesses
         .name(name() + ".uncoalesced_accesses")

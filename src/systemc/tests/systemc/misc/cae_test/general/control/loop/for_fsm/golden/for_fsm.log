@@ -1,0 +1,180 @@
+SystemC Simulation
+Stimuli1 : in_valid = true in_value 1 at 6 ns
+Stimuli1 : in_valid = true in_value 2 at 7 ns
+Stimuli1 : in_valid = true in_value 3 at 8 ns
+Display : 0  at 8 ns
+Stimuli1 : in_valid = true in_value 4 at 9 ns
+Display : 2  at 9 ns
+Stimuli1 : in_valid = true in_value 5 at 10 ns
+Display : 3  at 10 ns
+Stimuli1 : in_valid = true in_value 6 at 11 ns
+Display : 4  at 11 ns
+Stimuli1 : in_valid = true in_value 7 at 12 ns
+Display : 5  at 12 ns
+Stimuli1 : in_valid = true in_value 8 at 13 ns
+Display : 6  at 13 ns
+Stimuli1 : in_valid = true in_value 9 at 14 ns
+Display : 7  at 14 ns
+Stimuli1 : in_valid = true in_value 10 at 15 ns
+Display : 8  at 15 ns
+Display : 9  at 16 ns
+Display : 10  at 17 ns
+Display : 10  at 18 ns
+Stimuli2 : in_valid = true in_value 1 at 21 ns
+Stimuli2 : in_valid = true in_value 2 at 22 ns
+Stimuli2 : in_valid = true in_value 3 at 23 ns
+Stimuli2 : in_valid = true in_value 4 at 24 ns
+Display : 10  at 24 ns
+Stimuli2 : in_valid = true in_value 5 at 25 ns
+Display : 3  at 25 ns
+Stimuli2 : in_valid = true in_value 6 at 26 ns
+Display : 3  at 26 ns
+Stimuli2 : in_valid = true in_value 7 at 27 ns
+Display : 5  at 27 ns
+Stimuli2 : in_valid = true in_value 8 at 28 ns
+Display : 6  at 28 ns
+Stimuli2 : in_valid = true in_value 9 at 29 ns
+Display : 7  at 29 ns
+Stimuli2 : in_valid = true in_value 10 at 30 ns
+Display : 8  at 30 ns
+Display : 9  at 31 ns
+Display : 9  at 32 ns
+Display : 10  at 33 ns
+Display : 10  at 34 ns
+Stimuli3 : in_valid = true in_value 0 at 36 ns
+Stimuli3 : in_valid = true in_value 1 at 37 ns
+Stimuli3 : in_valid = true in_value 2 at 38 ns
+Stimuli3 : in_valid = true in_value 3 at 39 ns
+Stimuli3 : in_valid = true in_value 4 at 40 ns
+Display : 10  at 40 ns
+Stimuli3 : in_valid = true in_value 5 at 41 ns
+Display : 3  at 41 ns
+Stimuli3 : in_valid = true in_value 6 at 42 ns
+Display : 4  at 42 ns
+Stimuli3 : in_valid = true in_value 7 at 43 ns
+Display : 5  at 43 ns
+Stimuli3 : in_valid = true in_value 8 at 44 ns
+Display : 6  at 44 ns
+Stimuli3 : in_valid = true in_value 9 at 45 ns
+Display : 6  at 45 ns
+Stimuli3 : in_valid = true in_value 10 at 46 ns
+Stimuli1 : in_valid = true in_value 1 at 57 ns
+Stimuli1 : in_valid = true in_value 2 at 58 ns
+Stimuli1 : in_valid = true in_value 3 at 59 ns
+Display : 6  at 59 ns
+Stimuli1 : in_valid = true in_value 4 at 60 ns
+Display : 2  at 60 ns
+Stimuli1 : in_valid = true in_value 5 at 61 ns
+Display : 3  at 61 ns
+Stimuli1 : in_valid = true in_value 6 at 62 ns
+Display : 4  at 62 ns
+Stimuli1 : in_valid = true in_value 7 at 63 ns
+Display : 5  at 63 ns
+Stimuli1 : in_valid = true in_value 8 at 64 ns
+Display : 6  at 64 ns
+Stimuli1 : in_valid = true in_value 9 at 65 ns
+Display : 7  at 65 ns
+Stimuli1 : in_valid = true in_value 10 at 66 ns
+Display : 8  at 66 ns
+Display : 9  at 67 ns
+Display : 10  at 68 ns
+Display : 10  at 69 ns
+Stimuli2 : in_valid = true in_value 1 at 72 ns
+Stimuli2 : in_valid = true in_value 2 at 73 ns
+Stimuli2 : in_valid = true in_value 3 at 74 ns
+Stimuli2 : in_valid = true in_value 4 at 75 ns
+Display : 10  at 75 ns
+Stimuli2 : in_valid = true in_value 5 at 76 ns
+Display : 3  at 76 ns
+Stimuli2 : in_valid = true in_value 6 at 77 ns
+Display : 3  at 77 ns
+Stimuli2 : in_valid = true in_value 7 at 78 ns
+Display : 5  at 78 ns
+Stimuli2 : in_valid = true in_value 8 at 79 ns
+Display : 6  at 79 ns
+Stimuli2 : in_valid = true in_value 9 at 80 ns
+Display : 7  at 80 ns
+Stimuli2 : in_valid = true in_value 10 at 81 ns
+Display : 8  at 81 ns
+Display : 9  at 82 ns
+Display : 9  at 83 ns
+Display : 10  at 84 ns
+Display : 10  at 85 ns
+Stimuli3 : in_valid = true in_value 0 at 87 ns
+Stimuli3 : in_valid = true in_value 1 at 88 ns
+Stimuli3 : in_valid = true in_value 2 at 89 ns
+Stimuli3 : in_valid = true in_value 3 at 90 ns
+Stimuli3 : in_valid = true in_value 4 at 91 ns
+Display : 10  at 91 ns
+Stimuli3 : in_valid = true in_value 5 at 92 ns
+Display : 3  at 92 ns
+Stimuli3 : in_valid = true in_value 6 at 93 ns
+Display : 4  at 93 ns
+Stimuli3 : in_valid = true in_value 7 at 94 ns
+Display : 5  at 94 ns
+Stimuli3 : in_valid = true in_value 8 at 95 ns
+Display : 6  at 95 ns
+Stimuli3 : in_valid = true in_value 9 at 96 ns
+Display : 6  at 96 ns
+Stimuli3 : in_valid = true in_value 10 at 97 ns
+Stimuli1 : in_valid = true in_value 1 at 108 ns
+Stimuli1 : in_valid = true in_value 2 at 109 ns
+Stimuli1 : in_valid = true in_value 3 at 110 ns
+Display : 6  at 110 ns
+Stimuli1 : in_valid = true in_value 4 at 111 ns
+Display : 2  at 111 ns
+Stimuli1 : in_valid = true in_value 5 at 112 ns
+Display : 3  at 112 ns
+Stimuli1 : in_valid = true in_value 6 at 113 ns
+Display : 4  at 113 ns
+Stimuli1 : in_valid = true in_value 7 at 114 ns
+Display : 5  at 114 ns
+Stimuli1 : in_valid = true in_value 8 at 115 ns
+Display : 6  at 115 ns
+Stimuli1 : in_valid = true in_value 9 at 116 ns
+Display : 7  at 116 ns
+Stimuli1 : in_valid = true in_value 10 at 117 ns
+Display : 8  at 117 ns
+Display : 9  at 118 ns
+Display : 10  at 119 ns
+Display : 10  at 120 ns
+Stimuli2 : in_valid = true in_value 1 at 123 ns
+Stimuli2 : in_valid = true in_value 2 at 124 ns
+Stimuli2 : in_valid = true in_value 3 at 125 ns
+Stimuli2 : in_valid = true in_value 4 at 126 ns
+Display : 10  at 126 ns
+Stimuli2 : in_valid = true in_value 5 at 127 ns
+Display : 3  at 127 ns
+Stimuli2 : in_valid = true in_value 6 at 128 ns
+Display : 3  at 128 ns
+Stimuli2 : in_valid = true in_value 7 at 129 ns
+Display : 5  at 129 ns
+Stimuli2 : in_valid = true in_value 8 at 130 ns
+Display : 6  at 130 ns
+Stimuli2 : in_valid = true in_value 9 at 131 ns
+Display : 7  at 131 ns
+Stimuli2 : in_valid = true in_value 10 at 132 ns
+Display : 8  at 132 ns
+Display : 9  at 133 ns
+Display : 9  at 134 ns
+Display : 10  at 135 ns
+Display : 10  at 136 ns
+Stimuli3 : in_valid = true in_value 0 at 138 ns
+Stimuli3 : in_valid = true in_value 1 at 139 ns
+Stimuli3 : in_valid = true in_value 2 at 140 ns
+Stimuli3 : in_valid = true in_value 3 at 141 ns
+Stimuli3 : in_valid = true in_value 4 at 142 ns
+Display : 10  at 142 ns
+Stimuli3 : in_valid = true in_value 5 at 143 ns
+Display : 3  at 143 ns
+Stimuli3 : in_valid = true in_value 6 at 144 ns
+Display : 4  at 144 ns
+Stimuli3 : in_valid = true in_value 7 at 145 ns
+Display : 5  at 145 ns
+Stimuli3 : in_valid = true in_value 8 at 146 ns
+Display : 6  at 146 ns
+Stimuli3 : in_valid = true in_value 9 at 147 ns
+Display : 6  at 147 ns
+Stimuli3 : in_valid = true in_value 10 at 148 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.

@@ -31,16 +31,53 @@
  */
 
 #include "arch/sparc/linux/process.hh"
+
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/registers.hh"
+#include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
 #include "sim/process.hh"
+#include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
 
 using namespace std;
 using namespace SparcISA;
+
+namespace
+{
+
+class SparcLinuxObjectFileLoader : public Process::Loader
+{
+  public:
+    Process *
+    load(ProcessParams *params, ObjectFile *obj_file) override
+    {
+        auto arch = obj_file->getArch();
+        auto opsys = obj_file->getOpSys();
+
+        if (arch != ObjectFile::SPARC64 && arch != ObjectFile::SPARC32)
+            return nullptr;
+
+        if (opsys == ObjectFile::UnknownOpSys) {
+            warn("Unknown operating system; assuming Linux.");
+            opsys = ObjectFile::Linux;
+        }
+
+        if (opsys != ObjectFile::Linux)
+            return nullptr;
+
+        if (arch == ObjectFile::SPARC64)
+            return new Sparc64LinuxProcess(params, obj_file);
+        else
+            return new Sparc32LinuxProcess(params, obj_file);
+    }
+};
+
+SparcLinuxObjectFileLoader loader;
+
+} // anonymous namespace
 
 SyscallDesc*
 SparcLinuxProcess::getDesc(int callnum)
@@ -58,35 +95,37 @@ SparcLinuxProcess::getDesc32(int callnum)
     return &syscall32Descs[callnum];
 }
 
-Sparc32LinuxProcess::Sparc32LinuxProcess(LiveProcessParams * params,
+Sparc32LinuxProcess::Sparc32LinuxProcess(ProcessParams * params,
                                          ObjectFile *objFile)
-    : Sparc32LiveProcess(params, objFile)
+    : Sparc32Process(params, objFile)
 {}
 
-void Sparc32LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
+void Sparc32LinuxProcess::handleTrap(int trapNum, ThreadContext *tc,
+                                     Fault *fault)
 {
     switch (trapNum) {
       case 0x10: //Linux 32 bit syscall trap
-        tc->syscall(tc->readIntReg(1));
+        tc->syscall(tc->readIntReg(1), fault);
         break;
       default:
-        SparcLiveProcess::handleTrap(trapNum, tc);
+        SparcProcess::handleTrap(trapNum, tc, fault);
     }
 }
 
-Sparc64LinuxProcess::Sparc64LinuxProcess(LiveProcessParams * params,
+Sparc64LinuxProcess::Sparc64LinuxProcess(ProcessParams * params,
                                          ObjectFile *objFile)
-    : Sparc64LiveProcess(params, objFile)
+    : Sparc64Process(params, objFile)
 {}
 
-void Sparc64LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
+void Sparc64LinuxProcess::handleTrap(int trapNum, ThreadContext *tc,
+                                     Fault *fault)
 {
     switch (trapNum) {
       // case 0x10: // Linux 32 bit syscall trap
       case 0x6d: // Linux 64 bit syscall trap
-        tc->syscall(tc->readIntReg(1));
+        tc->syscall(tc->readIntReg(1), fault);
         break;
       default:
-        SparcLiveProcess::handleTrap(trapNum, tc);
+        SparcProcess::handleTrap(trapNum, tc, fault);
     }
 }

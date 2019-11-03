@@ -26,7 +26,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import orderdict
+from collections import OrderedDict
 
 from slicc.symbols.Symbol import Symbol
 from slicc.symbols.Var import Var
@@ -78,10 +78,10 @@ class StateMachine(Symbol):
             if str(param.type_ast.type) == "Prefetcher":
                 self.prefetchers.append(var)
 
-        self.states = orderdict()
-        self.events = orderdict()
-        self.actions = orderdict()
-        self.request_types = orderdict()
+        self.states = OrderedDict()
+        self.events = OrderedDict()
+        self.actions = OrderedDict()
+        self.request_types = OrderedDict()
         self.transitions = []
         self.in_ports = []
         self.functions = []
@@ -226,11 +226,11 @@ class StateMachine(Symbol):
         code('''
 from m5.params import *
 from m5.SimObject import SimObject
-from Controller import RubyController
+from m5.objects.Controller import RubyController
 
 class $py_ident(RubyController):
     type = '$py_ident'
-    cxx_header = 'mem/protocol/${c_ident}.hh'
+    cxx_header = 'mem/ruby/protocol/${c_ident}.hh'
 ''')
         code.indent()
         for param in self.config_parameters:
@@ -239,7 +239,7 @@ class $py_ident(RubyController):
             if param.rvalue is not None:
                 dflt_str = str(param.rvalue.inline()) + ', '
 
-            if python_class_map.has_key(param.type_ast.type.c_ident):
+            if param.type_ast.type.c_ident in python_class_map:
                 python_type = python_class_map[param.type_ast.type.c_ident]
                 code('${{param.ident}} = Param.${{python_type}}(${dflt_str}"")')
 
@@ -272,9 +272,9 @@ class $py_ident(RubyController):
 #include <sstream>
 #include <string>
 
-#include "mem/protocol/TransitionResult.hh"
-#include "mem/protocol/Types.hh"
 #include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/protocol/TransitionResult.hh"
+#include "mem/ruby/protocol/Types.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "params/$c_ident.hh"
 
@@ -283,7 +283,7 @@ class $py_ident(RubyController):
         seen_types = set()
         for var in self.objects:
             if var.type.ident not in seen_types and not var.type.isPrimitive:
-                code('#include "mem/protocol/${{var.type.c_ident}}.hh"')
+                code('#include "mem/ruby/protocol/${{var.type.c_ident}}.hh"')
                 seen_types.add(var.type.ident)
 
         # for adding information to the protocol debug trace
@@ -460,15 +460,17 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 
 #include "base/compiler.hh"
 #include "base/cprintf.hh"
+#include "mem/ruby/common/BoolVec.hh"
 
 ''')
         for f in self.debug_flags:
             code('#include "debug/${{f}}.hh"')
         code('''
-#include "mem/protocol/${ident}_Controller.hh"
-#include "mem/protocol/${ident}_Event.hh"
-#include "mem/protocol/${ident}_State.hh"
-#include "mem/protocol/Types.hh"
+#include "mem/ruby/network/Network.hh"
+#include "mem/ruby/protocol/${ident}_Controller.hh"
+#include "mem/ruby/protocol/${ident}_Event.hh"
+#include "mem/ruby/protocol/${ident}_State.hh"
+#include "mem/ruby/protocol/Types.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 ''')
@@ -484,7 +486,7 @@ using namespace std;
         seen_types = set()
         for var in self.objects:
             if var.type.ident not in seen_types and not var.type.isPrimitive:
-                code('#include "mem/protocol/${{var.type.c_ident}}.hh"')
+                code('#include "mem/ruby/protocol/${{var.type.c_ident}}.hh"')
             seen_types.add(var.type.ident)
 
         num_in_ports = len(self.in_ports)
@@ -1049,23 +1051,23 @@ $c_ident::functionalWriteBuffers(PacketPtr& pkt)
 #include <cassert>
 #include <typeinfo>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 ''')
         for f in self.debug_flags:
             code('#include "debug/${{f}}.hh"')
         code('''
-#include "mem/protocol/${ident}_Controller.hh"
-#include "mem/protocol/${ident}_Event.hh"
-#include "mem/protocol/${ident}_State.hh"
+#include "mem/ruby/protocol/${ident}_Controller.hh"
+#include "mem/ruby/protocol/${ident}_Event.hh"
+#include "mem/ruby/protocol/${ident}_State.hh"
 
 ''')
 
         if outputRequest_types:
-            code('''#include "mem/protocol/${ident}_RequestType.hh"''')
+            code('''#include "mem/ruby/protocol/${ident}_RequestType.hh"''')
 
         code('''
-#include "mem/protocol/Types.hh"
+#include "mem/ruby/protocol/Types.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 ''')
@@ -1107,7 +1109,7 @@ ${ident}_Controller::wakeup()
         for port in self.in_ports:
             code.indent()
             code('// ${ident}InPort $port')
-            if port.pairs.has_key("rank"):
+            if "rank" in port.pairs:
                 code('m_cur_in_port = ${{port.pairs["rank"]}};')
             else:
                 code('m_cur_in_port = 0;')
@@ -1166,14 +1168,14 @@ ${ident}_Controller::wakeup()
 
 #include <cassert>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/ProtocolTrace.hh"
 #include "debug/RubyGenerated.hh"
-#include "mem/protocol/${ident}_Controller.hh"
-#include "mem/protocol/${ident}_Event.hh"
-#include "mem/protocol/${ident}_State.hh"
-#include "mem/protocol/Types.hh"
+#include "mem/ruby/protocol/${ident}_Controller.hh"
+#include "mem/ruby/protocol/${ident}_Event.hh"
+#include "mem/ruby/protocol/${ident}_State.hh"
+#include "mem/ruby/protocol/Types.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 #define HASH_FUN(state, event)  ((int(state)*${ident}_Event_NUM)+int(event))
@@ -1301,7 +1303,7 @@ ${ident}_Controller::doTransitionWorker(${ident}_Event event,
 ''')
 
         # This map will allow suppress generating duplicate code
-        cases = orderdict()
+        cases = OrderedDict()
 
         for trans in self.transitions:
             case_string = "%s_State_%s, %s_Event_%s" % \
@@ -1398,7 +1400,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
         code('''
       default:
         panic("Invalid transition\\n"
-              "%s time: %d addr: %s event: %s state: %s\\n",
+              "%s time: %d addr: %#x event: %s state: %s\\n",
               name(), curCycle(), addr, event, state);
     }
 

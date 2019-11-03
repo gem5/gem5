@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2014-2017 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,28 +30,46 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Sooraj Puthoor
+ * Authors: Sooraj Puthoor,
+ *          Anthony Gutierrez
  */
 
-#ifndef __SCHEDULING_POLICY_HH__
-#define __SCHEDULING_POLICY_HH__
+#ifndef __GPU_COMPUTE_SCHEDULING_POLICY_HH__
+#define __GPU_COMPUTE_SCHEDULING_POLICY_HH__
 
 #include <vector>
 
-template<typename Impl>
+class Wavefront;
+
+/**
+ * Interface class for the wave scheduling policy.
+ */
 class SchedulingPolicy
 {
   public:
-    Wavefront* chooseWave() { return policyImpl.chooseWave(); }
-
-    void
-    bindList(std::vector<Wavefront*> *list)
-    {
-        return policyImpl.bindList(list);
-    }
-
-  private:
-    Impl policyImpl;
+    SchedulingPolicy() { }
+    virtual Wavefront *chooseWave(std::vector<Wavefront*> *sched_list) = 0;
 };
 
-#endif // __SCHEDULING_POLICY_HH__
+/**
+ * Intermediate class that derives from the i-face class, and implements
+ * its API. It uses the CRTP to take in the actual scheduling policy
+ * implementation as a template parameter. This allows us to use a pointer
+ * to SchedulingPolicy and instantiate whichever policy we want. The
+ * derived policies implement the scheduler arbitration logic using
+ * the static member method called __chooseWave();
+ */
+template<typename Policy>
+class __SchedulingPolicy : public SchedulingPolicy
+{
+  public:
+    __SchedulingPolicy() { }
+
+    Wavefront*
+    chooseWave(std::vector<Wavefront*> *sched_list) override
+    {
+        return Policy::__chooseWave(sched_list);
+    }
+};
+
+#endif // __GPU_COMPUTE_SCHEDULING_POLICY_HH__

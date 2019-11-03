@@ -39,7 +39,7 @@
 microcode = '''
 def macroop LGDT_M
 {
-    .serializing
+    .serialize_after
     .adjust_env maxOsz
 
     # Get the limit
@@ -52,7 +52,7 @@ def macroop LGDT_M
 
 def macroop LGDT_P
 {
-    .serializing
+    .serialize_after
     .adjust_env maxOsz
 
     rdip t7
@@ -71,7 +71,7 @@ def macroop LGDT_P
 
 def macroop LGDT_16_M
 {
-    .serializing
+    .serialize_after
     .adjust_env maxOsz
 
     # Get the limit
@@ -85,7 +85,7 @@ def macroop LGDT_16_M
 
 def macroop LGDT_16_P
 {
-    .serializing
+    .serialize_after
     .adjust_env maxOsz
 
     rdip t7
@@ -100,7 +100,7 @@ def macroop LGDT_16_P
 
 def macroop LIDT_M
 {
-    .serializing
+    .serialize_after
     .adjust_env maxOsz
 
     # Get the limit
@@ -113,7 +113,7 @@ def macroop LIDT_M
 
 def macroop LIDT_P
 {
-    .serializing
+    .serialize_after
     .adjust_env maxOsz
 
     rdip t7
@@ -132,7 +132,7 @@ def macroop LIDT_P
 
 def macroop LIDT_16_M
 {
-    .serializing
+    .serialize_after
     .adjust_env maxOsz
 
     # Get the limit
@@ -146,7 +146,7 @@ def macroop LIDT_16_M
 
 def macroop LIDT_16_P
 {
-    .serializing
+    .serialize_after
     .adjust_env maxOsz
 
     rdip t7
@@ -161,7 +161,7 @@ def macroop LIDT_16_P
 
 def macroop LTR_R
 {
-    .serializing
+    .serialize_after
     chks reg, t0, TRCheck
     limm t4, 0, dataSize=8
     srli t4, reg, 3, dataSize=2
@@ -178,7 +178,7 @@ def macroop LTR_R
 
 def macroop LTR_M
 {
-    .serializing
+    .serialize_after
     ld t5, seg, sib, disp, dataSize=2
     chks t5, t0, TRCheck
     limm t4, 0, dataSize=8
@@ -196,7 +196,7 @@ def macroop LTR_M
 
 def macroop LTR_P
 {
-    .serializing
+    .serialize_after
     rdip t7
     ld t5, seg, riprel, disp, dataSize=2
     chks t5, t0, TRCheck
@@ -215,7 +215,7 @@ def macroop LTR_P
 
 def macroop LLDT_R
 {
-    .serializing
+    .serialize_after
     chks reg, t0, InGDTCheck, flags=(EZF,)
     br label("end"), flags=(CEZF,)
     limm t4, 0, dataSize=8
@@ -232,7 +232,7 @@ end:
 
 def macroop LLDT_M
 {
-    .serializing
+    .serialize_after
     ld t5, seg, sib, disp, dataSize=2
     chks t5, t0, InGDTCheck, flags=(EZF,)
     br label("end"), flags=(CEZF,)
@@ -250,7 +250,7 @@ end:
 
 def macroop LLDT_P
 {
-    .serializing
+    .serialize_after
     rdip t7
     ld t5, seg, riprel, disp, dataSize=2
     chks t5, t0, InGDTCheck, flags=(EZF,)

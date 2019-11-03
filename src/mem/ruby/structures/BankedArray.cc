@@ -29,8 +29,9 @@
  *
  */
 
-#include "base/intmath.hh"
 #include "mem/ruby/structures/BankedArray.hh"
+
+#include "base/intmath.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 BankedArray::BankedArray(unsigned int banks, Cycles accessLatency,

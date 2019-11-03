@@ -49,33 +49,42 @@
 class EthPacketData
 {
   public:
-    /*
+    /**
      * Pointer to packet data will be deleted
      */
     uint8_t *data;
 
-    /*
-     * Length of the current packet
+    /**
+     * Total size of the allocated data buffer.
+     */
+    unsigned bufLength;
+
+    /**
+     * Amount of space occupied by the payload in the data buffer
      */
     unsigned length;
 
-  public:
+    /**
+     * Effective length, used for modeling timing in the simulator.
+     * This could be different from length if the packets are assumed
+     * to use a tightly packed or compressed format, but it's not worth
+     * the performance/complexity hit to perform that packing or compression
+     * in the simulation.
+     */
+    unsigned simLength;
+
     EthPacketData()
-        : data(NULL), length(0)
+        : data(nullptr), bufLength(0), length(0), simLength(0)
     { }
 
     explicit EthPacketData(unsigned size)
-        : data(new uint8_t[size]), length(0)
+        : data(new uint8_t[size]), bufLength(size), length(0), simLength(0)
     { }
 
     ~EthPacketData() { if (data) delete [] data; }
 
-  public:
-
     void serialize(const std::string &base, CheckpointOut &cp) const;
     void unserialize(const std::string &base, CheckpointIn &cp);
-
-    unsigned size() const { return length; }
 };
 
 typedef std::shared_ptr<EthPacketData> EthPacketPtr;

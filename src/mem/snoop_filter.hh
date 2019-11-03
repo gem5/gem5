@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 ARM Limited
+ * Copyright (c) 2013-2016,2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@
 #ifndef __MEM_SNOOP_FILTER_HH__
 #define __MEM_SNOOP_FILTER_HH__
 
+#include <bitset>
 #include <unordered_map>
 #include <utility>
 
@@ -86,10 +87,14 @@
  */
 class SnoopFilter : public SimObject {
   public:
+
+    // Change for systems with more than 256 ports tracked by this object
+    static const int SNOOP_MASK_SIZE = 256;
+
     typedef std::vector<QueuedSlavePort*> SnoopList;
 
     SnoopFilter (const SnoopFilterParams *p) :
-        SimObject(p), reqLookupResult(cachedLocations.end()), retryItem{0, 0},
+        SimObject(p), reqLookupResult(cachedLocations.end()),
         linesize(p->system->cacheLineSize()), lookupLatency(p->lookup_latency),
         maxEntryCount(p->max_capacity / p->system->cacheLineSize())
     {
@@ -114,9 +119,9 @@ class SnoopFilter : public SimObject {
         }
 
         // make sure we can deal with this many ports
-        fatal_if(id > 8 * sizeof(SnoopMask),
+        fatal_if(id > SNOOP_MASK_SIZE,
                  "Snoop filter only supports %d snooping ports, got %d\n",
-                 8 * sizeof(SnoopMask), id);
+                 SNOOP_MASK_SIZE, id);
     }
 
     /**
@@ -141,9 +146,9 @@ class SnoopFilter : public SimObject {
      * reqLookupResult.
      *
      * @param will_retry    This request will retry on this bus / snoop filter
-     * @param cpkt          Request packet, merely for sanity checking
+     * @param addr          Packet address, merely for sanity checking
      */
-    void finishRequest(bool will_retry, const Packet* cpkt);
+    void finishRequest(bool will_retry, Addr addr, bool is_secure);
 
     /**
      * Handle an incoming snoop from below (the master port). These
@@ -198,13 +203,9 @@ class SnoopFilter : public SimObject {
 
     /**
      * The underlying type for the bitmask we use for tracking. This
-     * limits the number of snooping ports supported per crossbar. For
-     * the moment it is an uint64_t to offer maximum
-     * scalability. However, it is possible to use e.g. a uint16_t or
-     * uint32_to slim down the footprint of the hash map (and
-     * ultimately improve the simulation performance).
+     * limits the number of snooping ports supported per crossbar.
      */
-    typedef uint64_t SnoopMask;
+    typedef std::bitset<SNOOP_MASK_SIZE> SnoopMask;
 
     /**
     * Per cache line item tracking a bitmask of SlavePorts who have an
@@ -260,17 +261,37 @@ class SnoopFilter : public SimObject {
 
     /** Simple hash set of cached addresses. */
     SnoopFilterCache cachedLocations;
+
     /**
-     * Iterator used to store the result from lookupRequest until we
-     * call finishRequest.
+     * A request lookup must be followed by a call to finishRequest to inform
+     * the operation's success. If a retry is needed, however, all changes
+     * made to the snoop filter while performing the lookup must be undone.
+     * This structure keeps track of the state previous to such changes.
      */
-    SnoopFilterCache::iterator reqLookupResult;
-    /**
-     * Variable to temporarily store value of snoopfilter entry
-     * incase finishRequest needs to undo changes made in lookupRequest
-     * (because of crossbar retry)
-     */
-    SnoopItem retryItem;
+    struct ReqLookupResult {
+        /** Iterator used to store the result from lookupRequest. */
+        SnoopFilterCache::iterator it;
+
+        /**
+         * Variable to temporarily store value of snoopfilter entry
+         * in case finishRequest needs to undo changes made in lookupRequest
+         * (because of crossbar retry)
+         */
+        SnoopItem retryItem;
+
+        /**
+         * The constructor must be informed of the internal cache's end
+         * iterator, so do not allow the compiler to implictly define it.
+         *
+         * @param end_it Iterator to the end of the internal cache.
+         */
+        ReqLookupResult(SnoopFilterCache::iterator end_it)
+            : it(end_it), retryItem{0, 0}
+        {
+        }
+        ReqLookupResult() = delete;
+    } reqLookupResult;
+
     /** List of all attached snooping slave ports. */
     SnoopList slavePorts;
     /** Track the mapping from port ids to the local mask ids. */
@@ -281,6 +302,14 @@ class SnoopFilter : public SimObject {
     const Cycles lookupLatency;
     /** Max capacity in terms of cache blocks tracked, for sanity checking */
     const unsigned maxEntryCount;
+
+    /**
+     * Use the lower bits of the address to keep track of the line status
+     */
+    enum LineStatus {
+        /** block holds data from the secure memory space */
+        LineSecure = 0x01,
+    };
 
     /** Statistics */
     Stats::Scalar totRequests;
@@ -306,7 +335,7 @@ SnoopFilter::maskToPortList(SnoopMask port_mask) const
 {
     SnoopList res;
     for (const auto& p : slavePorts)
-        if (port_mask & portToMask(*p))
+        if ((port_mask & portToMask(*p)).any())
             res.push_back(p);
     return res;
 }

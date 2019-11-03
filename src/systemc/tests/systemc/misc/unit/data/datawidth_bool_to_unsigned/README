@@ -1,0 +1,9 @@
+bits_to_bits		7-bit = 6-bit + 6-bit
+lost_carry		6-bit = 6-bit + 6-bit
+extension		9-bit = 6-bit + 6-bit
+truncation		4-bit = 6-bit + 6-bit
+
+promote			7-bit = 4-bit + 6-bit
+promote_lost_carry	6-bit = 4-bit + 6-bit
+promote_extension	9-bit = 4-bit + 6-bit
+promote_truncation	4-bit = 4-bit + 6-bit

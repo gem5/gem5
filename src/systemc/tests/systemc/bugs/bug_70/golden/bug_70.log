@@ -1,0 +1,9 @@
+SystemC Simulation
+a: 0x05a6c
+b: 0x00000 - So far so good
+c: 0x00000 - So far so good
+a: 0x05a6c
+b: 0x0005a
+c: 0x0005a
+
+Info: /OSCI/SystemC: Simulation stopped by user.

@@ -50,8 +50,9 @@
 #include <queue>
 #include <sstream>
 
-#include "cpu/minor/trace.hh"
+#include "base/logging.hh"
 #include "cpu/activity.hh"
+#include "cpu/minor/trace.hh"
 #include "cpu/timebuf.hh"
 
 namespace Minor
@@ -117,7 +118,11 @@ class NoBubbleTraits
 {
   public:
     static bool isBubble(const ElemType &) { return false; }
-    static ElemType bubble() { assert(false); }
+    static ElemType
+    bubble()
+    {
+        panic("bubble called but no bubble interface");
+    }
 };
 
 /** Pass on call to the element */
@@ -376,6 +381,8 @@ class Reservable
 
     /** Free a reserved slot */
     virtual void freeReservation() = 0;
+
+    virtual ~Reservable() {};
 };
 
 /** Wrapper for a queue type to act as a pipeline stage input queue.
@@ -412,8 +419,6 @@ class Queue : public Named, public Reservable
         capacity(capacity_),
         dataName(data_name)
     { }
-
-    virtual ~Queue() { }
 
   public:
     /** Push an element into the buffer if it isn't a bubble.  Bubbles are

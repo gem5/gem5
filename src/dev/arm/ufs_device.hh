@@ -373,6 +373,10 @@ class UFSHostDevice : public DmaDevice
      * build a SCSI reply.
      */
     struct SCSIReply {
+        void reset() {
+            memset(static_cast<void*>(this), 0, sizeof(*this));
+        }
+
         uint8_t status;
         uint32_t msgSize;
         uint8_t LUN;
@@ -1129,10 +1133,8 @@ class UFSHostDevice : public DmaDevice
      * because the flow of the events is completely in the control of these
      * classes. (Whereas in the DMA case we rely on an external class)
      */
-    std::deque<EventWrapper<UFSHostDevice, &UFSHostDevice::readDone> >
-    readDoneEvent;
-    std::deque<EventWrapper<UFSHostDevice, &UFSHostDevice::writeDone> >
-    writeDoneEvent;
+    std::deque<EventFunctionWrapper> readDoneEvent;
+    std::deque<EventFunctionWrapper> writeDoneEvent;
 
     /**
      * Callbacks for the logic units. One to indicate the completion of a
@@ -1152,28 +1154,25 @@ class UFSHostDevice : public DmaDevice
     /**
      * Wait for the SCSI specific data to arive
      */
-    EventWrapper<UFSHostDevice, &UFSHostDevice::SCSIStart> SCSIResumeEvent;
+    EventFunctionWrapper SCSIResumeEvent;
 
     /**
      * Wait for the moment where we can send the last frame
      */
-    EventWrapper<UFSHostDevice, &UFSHostDevice::finalUTP> UTPEvent;
+    EventFunctionWrapper UTPEvent;
 
     /**
      * Event after a read to clean up the UTP data structures
      */
-    std::deque<EventWrapper<UFSHostDevice, &UFSHostDevice::readGarbage> >
-    readGarbageEventQueue;
+    std::deque<EventFunctionWrapper> readGarbageEventQueue;
 
     /**
      * Multiple tasks transfers can be scheduled at once for the device, the
      * only thing we know for sure about them is that they will happen in a
      * first come first serve order; hence we need to queue.
      */
-    std::deque<EventWrapper<UFSHostDevice, &UFSHostDevice::taskStart> >
-    taskEventQueue;
-    std::deque<EventWrapper<UFSHostDevice, &UFSHostDevice::transferStart> >
-    transferEventQueue;
+    std::deque<EventFunctionWrapper> taskEventQueue;
+    std::deque<EventFunctionWrapper> transferEventQueue;
 
     /**
      * Bits of interest within UFS data packages

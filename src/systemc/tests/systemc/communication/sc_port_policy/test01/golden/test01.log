@@ -1,0 +1,13 @@
+SystemC Simulation
+1 ns:
+    all[0] = 1
+    all[1] = 0
+    one    = 1
+2 ns:
+    all[0] = 1
+    all[1] = 1
+    one    = 1
+3 ns:
+    all[0] = 0
+    all[1] = 0
+    one    = 0

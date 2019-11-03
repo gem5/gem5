@@ -67,7 +67,7 @@ class ClockedObject(SimObject):
     clk_domain = Param.ClockDomain(Parent.clk_domain, "Clock domain")
 
     # Power model for this ClockedObject
-    power_model = Param.PowerModel(NULL, "Power model")
+    power_model = VectorParam.PowerModel([], "Power models")
 
     # Provide initial power state, should ideally get redefined in startup
     # routine

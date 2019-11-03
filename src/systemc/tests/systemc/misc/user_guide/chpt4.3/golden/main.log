@@ -1,0 +1,10 @@
+SystemC Simulation
+Clk Pos 1
+Clk2 Pos 1
+Clk2 Neg 1
+Clk Neg 1
+Clk Pos 0
+Clk2 Pos 0
+Clk2 Neg 0
+Clk Neg 0
+Example run successfully

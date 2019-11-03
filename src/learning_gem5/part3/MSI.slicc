@@ -1,0 +1,5 @@
+protocol "MSI";
+include "RubySlicc_interfaces.slicc";
+include "MSI-msg.sm";
+include "MSI-cache.sm";
+include "MSI-dir.sm";

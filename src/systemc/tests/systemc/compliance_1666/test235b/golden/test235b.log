@@ -1,0 +1,25 @@
+SystemC Simulation
+Should be 7 errors but no aborts ...
+
+Error: (E107) bind interface to port failed: interface already bound to port: port 'top.m.p7' (sc_port)
+In file: <removed by verify.pl>
+
+Error: (E109) complete binding failed: 0 actual binds is less than required 5: port 'top.m.p6' (sc_port)
+In file: <removed by verify.pl>
+
+Error: (E109) complete binding failed: 6 binds exceeds maximum of 5 allowed: port 'top.m.p5' (sc_port)
+In file: <removed by verify.pl>
+
+Error: (E109) complete binding failed: 2 binds exceeds maximum of 1 allowed: port 'top.m.p4' (sc_port)
+In file: <removed by verify.pl>
+
+Error: (E109) complete binding failed: 3 binds exceeds maximum of 2 allowed: port 'top.m.p3' (sc_port)
+In file: <removed by verify.pl>
+
+Error: (E109) complete binding failed: 1 actual binds is less than required 2: port 'top.m.p2' (sc_port)
+In file: <removed by verify.pl>
+
+Error: (E109) complete binding failed: port not bound: port 'top.m.p1' (sc_port)
+In file: <removed by verify.pl>
+
+Success

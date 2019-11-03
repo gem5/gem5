@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2014 ARM Limited
+ * Copyright (c) 2012, 2014, 2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,12 +45,13 @@
 #ifndef __BASE_ADDR_RANGE_HH__
 #define __BASE_ADDR_RANGE_HH__
 
+#include <algorithm>
 #include <list>
 #include <vector>
 
 #include "base/bitfield.hh"
 #include "base/cprintf.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 
 /**
@@ -62,9 +63,8 @@
  * allowing a number of bits of the address, at an arbitrary bit
  * position, to be used as interleaving bits with an associated
  * matching value. In addition, to prevent uniformly strided address
- * patterns from a very biased interleaving, we also allow basic
- * XOR-based hashing by specifying an additional set of bits to XOR
- * with before matching.
+ * patterns from a very biased interleaving, we also allow XOR-based
+ * hashing by specifying a set of bits to XOR with before matching.
  *
  * The AddrRange is also able to coalesce a number of interleaved
  * ranges to a contiguous range.
@@ -79,59 +79,124 @@ class AddrRange
     Addr _start;
     Addr _end;
 
-    /// The high bit of the slice that is used for interleaving
-    uint8_t intlvHighBit;
+    /**
+     * Each mask determines the bits we need to xor to get one bit of
+     * sel. The first (0) mask is used to get the LSB and the last for
+     * the MSB of sel.
+     */
+    std::vector<Addr> masks;
 
-    /// The high bit of the slice used to XOR hash the value we match
-    /// against, set to 0 to disable.
-    uint8_t xorHighBit;
-
-    /// The number of bits used for interleaving, set to 0 to disable
-    uint8_t intlvBits;
-
-    /// The value to compare the slice addr[high:(high - bits + 1)]
-    /// with.
+    /** The value to compare sel with. */
     uint8_t intlvMatch;
 
   public:
 
     AddrRange()
-        : _start(1), _end(0), intlvHighBit(0), xorHighBit(0), intlvBits(0),
-          intlvMatch(0)
+        : _start(1), _end(0), intlvMatch(0)
     {}
 
-    AddrRange(Addr _start, Addr _end, uint8_t _intlv_high_bit,
-              uint8_t _xor_high_bit, uint8_t _intlv_bits,
+    /**
+     * Construct an address range
+     *
+     * If the user provides a non empty vector of masks then the
+     * address range is interleaved. Each mask determines a set of
+     * bits that are xored to determine one bit of the sel value,
+     * starting from the least significant bit (i.e., masks[0]
+     * determines the least significant bit of sel, ...). If sel
+     * matches the provided _intlv_match then the address a is in the
+     * range.
+     *
+     * For example if the input mask is
+     * _masks = { 1 << 8 | 1 << 11 | 1 << 13,
+     *            1 << 15 | 1 << 17 | 1 << 19}
+     *
+     * Then a belongs to the address range if
+     * _start <= a < _end
+     * and
+     * sel == _intlv_match
+     * where
+     * sel[0] = a[8] ^ a[11] ^ a[13]
+     * sel[1] = a[15] ^ a[17] ^ a[19]
+     *
+     * @param _start The start address of this range
+     * @param _end The end address of this range (not included in  the range)
+     * @param _masks The input vector of masks
+     * @param intlv_math The matching value of the xor operations
+     */
+    AddrRange(Addr _start, Addr _end, const std::vector<Addr> &_masks,
               uint8_t _intlv_match)
-        : _start(_start), _end(_end), intlvHighBit(_intlv_high_bit),
-          xorHighBit(_xor_high_bit), intlvBits(_intlv_bits),
+        : _start(_start), _end(_end), masks(_masks),
           intlvMatch(_intlv_match)
     {
         // sanity checks
-        fatal_if(intlvBits && intlvMatch >= ULL(1) << intlvBits,
+        fatal_if(!masks.empty() && _intlv_match >= ULL(1) << masks.size(),
                  "Match value %d does not fit in %d interleaving bits\n",
-                 intlvMatch, intlvBits);
+                 _intlv_match, masks.size());
+    }
+
+    /**
+     * Legacy constructor of AddrRange
+     *
+     * If the user provides a non-zero value in _intlv_high_bit the
+     * address range is interleaved.
+     *
+     * An address a belongs to the address range if
+     * _start <= a < _end
+     * and
+     * sel == _intlv_match
+     * where
+     * sel = sel1 ^ sel2
+     * sel1 = a[_intlv_low_bit:_intlv_high_bit]
+     * sel2 = a[_xor_low_bit:_xor_high_bit]
+     * _intlv_low_bit = _intlv_high_bit - intv_bits
+     * _xor_low_bit = _xor_high_bit - intv_bits
+     *
+     * @param _start The start address of this range
+     * @param _end The end address of this range (not included in  the range)
+     * @param _intlv_high_bit The MSB of the intlv bits (disabled if 0)
+     * @param _xor_high_bit The MSB of the xor bit (disabled if 0)
+     * @param intlv_math The matching value of the xor operations
+     */
+    AddrRange(Addr _start, Addr _end, uint8_t _intlv_high_bit,
+              uint8_t _xor_high_bit, uint8_t _intlv_bits,
+              uint8_t _intlv_match)
+        : _start(_start), _end(_end), masks(_intlv_bits),
+          intlvMatch(_intlv_match)
+    {
+        // sanity checks
+        fatal_if(_intlv_bits && _intlv_match >= ULL(1) << _intlv_bits,
+                 "Match value %d does not fit in %d interleaving bits\n",
+                 _intlv_match, _intlv_bits);
 
         // ignore the XOR bits if not interleaving
-        if (intlvBits && xorHighBit) {
-            if (xorHighBit == intlvHighBit) {
+        if (_intlv_bits && _xor_high_bit) {
+            if (_xor_high_bit == _intlv_high_bit) {
                 fatal("XOR and interleave high bit must be different\n");
-            }  else if (xorHighBit > intlvHighBit) {
-                if ((xorHighBit - intlvHighBit) < intlvBits)
+            }  else if (_xor_high_bit > _intlv_high_bit) {
+                if ((_xor_high_bit - _intlv_high_bit) < _intlv_bits)
                     fatal("XOR and interleave high bit must be at least "
-                          "%d bits apart\n", intlvBits);
+                          "%d bits apart\n", _intlv_bits);
             } else {
-                if ((intlvHighBit - xorHighBit) < intlvBits) {
+                if ((_intlv_high_bit - _xor_high_bit) < _intlv_bits) {
                     fatal("Interleave and XOR high bit must be at least "
-                          "%d bits apart\n", intlvBits);
+                          "%d bits apart\n", _intlv_bits);
                 }
             }
+        }
+
+        for (auto i = 0; i < _intlv_bits; i++) {
+            uint8_t bit1 = _intlv_high_bit - i;
+            Addr mask = (1ULL << bit1);
+            if (_xor_high_bit) {
+                uint8_t bit2 = _xor_high_bit - i;
+                mask |= (1ULL << bit2);
+            }
+            masks[_intlv_bits - i - 1] = mask;
         }
     }
 
     AddrRange(Addr _start, Addr _end)
-        : _start(_start), _end(_end), intlvHighBit(0), xorHighBit(0),
-          intlvBits(0), intlvMatch(0)
+        : _start(_start), _end(_end), intlvMatch(0)
     {}
 
     /**
@@ -141,38 +206,37 @@ class AddrRange
      * @param ranges Interleaved ranges to be merged
      */
     AddrRange(const std::vector<AddrRange>& ranges)
-        : _start(1), _end(0), intlvHighBit(0), xorHighBit(0), intlvBits(0),
-          intlvMatch(0)
+        : _start(1), _end(0), intlvMatch(0)
     {
         if (!ranges.empty()) {
             // get the values from the first one and check the others
             _start = ranges.front()._start;
             _end = ranges.front()._end;
-            intlvHighBit = ranges.front().intlvHighBit;
-            xorHighBit = ranges.front().xorHighBit;
-            intlvBits = ranges.front().intlvBits;
+            masks = ranges.front().masks;
+            intlvMatch = ranges.front().intlvMatch;
+        }
+        // either merge if got all ranges or keep this equal to the single
+        // interleaved range
+        if (ranges.size() > 1) {
 
-            if (ranges.size() != (ULL(1) << intlvBits))
+            if (ranges.size() != (ULL(1) << masks.size()))
                 fatal("Got %d ranges spanning %d interleaving bits\n",
-                      ranges.size(), intlvBits);
+                      ranges.size(), masks.size());
 
             uint8_t match = 0;
             for (const auto& r : ranges) {
                 if (!mergesWith(r))
                     fatal("Can only merge ranges with the same start, end "
-                          "and interleaving bits\n");
+                          "and interleaving bits, %s %s\n", to_string(),
+                          r.to_string());
 
                 if (r.intlvMatch != match)
                     fatal("Expected interleave match %d but got %d when "
                           "merging\n", match, r.intlvMatch);
                 ++match;
             }
-
-            // our range is complete and we can turn this into a
-            // non-interleaved range
-            intlvHighBit = 0;
-            xorHighBit = 0;
-            intlvBits = 0;
+            masks.clear();
+            intlvMatch = 0;
         }
     }
 
@@ -181,12 +245,7 @@ class AddrRange
      *
      * @return true if interleaved
      */
-    bool interleaved() const { return intlvBits != 0; }
-
-    /**
-     * Determine if the range interleaving is hashed or not.
-     */
-    bool hashed() const { return interleaved() && xorHighBit != 0; }
+    bool interleaved() const { return masks.size() > 0; }
 
     /**
      * Determing the interleaving granularity of the range.
@@ -195,7 +254,16 @@ class AddrRange
      */
     uint64_t granularity() const
     {
-        return ULL(1) << (intlvHighBit - intlvBits + 1);
+        if (interleaved()) {
+            auto combined_mask = 0;
+            for (auto mask: masks) {
+                combined_mask |= mask;
+            }
+            const uint8_t lowest_bit = ctz64(combined_mask);
+            return ULL(1) << lowest_bit;
+        } else {
+            return size();
+        }
     }
 
     /**
@@ -204,7 +272,7 @@ class AddrRange
      *
      * @return The number of stripes spanned by the interleaving bits
      */
-    uint32_t stripes() const { return ULL(1) << intlvBits; }
+    uint32_t stripes() const { return ULL(1) << masks.size(); }
 
     /**
      * Get the size of the address range. For a case where
@@ -213,7 +281,7 @@ class AddrRange
      */
     Addr size() const
     {
-        return (_end - _start + 1) >> intlvBits;
+        return (_end - _start + 1) >> masks.size();
     }
 
     /**
@@ -239,20 +307,20 @@ class AddrRange
     std::string to_string() const
     {
         if (interleaved()) {
-            if (hashed()) {
-                return csprintf("[%#llx : %#llx], [%d : %d] XOR [%d : %d] = %d",
-                                _start, _end,
-                                intlvHighBit, intlvHighBit - intlvBits + 1,
-                                xorHighBit, xorHighBit - intlvBits + 1,
-                                intlvMatch);
-            } else {
-                return csprintf("[%#llx : %#llx], [%d : %d] = %d",
-                                _start, _end,
-                                intlvHighBit, intlvHighBit - intlvBits + 1,
-                                intlvMatch);
+            std::string str;
+            for (int i = 0; i < masks.size(); i++) {
+                str += " ";
+                Addr mask = masks[i];
+                while (mask) {
+                    auto bit = ctz64(mask);
+                    mask &= ~(1ULL << bit);
+                    str += csprintf("a[%d]^", bit);
+                }
+                str += csprintf("\b=%d", bits(intlvMatch, i));
             }
+            return csprintf("[%#llx:%#llx]%s", _start, _end, str);
         } else {
-            return csprintf("[%#llx : %#llx]", _start, _end);
+            return csprintf("[%#llx:%#llx]", _start, _end);
         }
     }
 
@@ -267,9 +335,7 @@ class AddrRange
     bool mergesWith(const AddrRange& r) const
     {
         return r._start == _start && r._end == _end &&
-            r.intlvHighBit == intlvHighBit &&
-            r.xorHighBit == xorHighBit &&
-            r.intlvBits == intlvBits;
+            r.masks == masks;
     }
 
     /**
@@ -316,7 +382,17 @@ class AddrRange
     {
         if (interleaved())
             panic("Cannot test subset of interleaved range %s\n", to_string());
-        return _start >= r._start && _end <= r._end;
+
+        // This address range is not interleaved and therefore it
+        // suffices to check the upper bound, the lower bound and
+        // whether it would fit in a continuous segment of the input
+        // addr range.
+        if (r.interleaved()) {
+            return r.contains(_start) && r.contains(_end) &&
+                size() <= r.granularity();
+        } else {
+            return _start >= r._start && _end <= r._end;
+        }
     }
 
     /**
@@ -331,25 +407,130 @@ class AddrRange
         // no interleaving, or with interleaving also if the selected
         // bits from the address match the interleaving value
         bool in_range = a >= _start && a <= _end;
-        if (!interleaved()) {
-            return in_range;
-        } else if (in_range) {
-            if (!hashed()) {
-                return bits(a, intlvHighBit, intlvHighBit - intlvBits + 1) ==
-                    intlvMatch;
-            } else {
-                return (bits(a, intlvHighBit, intlvHighBit - intlvBits + 1) ^
-                        bits(a, xorHighBit, xorHighBit - intlvBits + 1)) ==
-                    intlvMatch;
+        if (in_range) {
+            auto sel = 0;
+            for (int i = 0; i < masks.size(); i++) {
+                Addr masked = a & masks[i];
+                // The result of an xor operation is 1 if the number
+                // of bits set is odd or 0 othersize, thefore it
+                // suffices to count the number of bits set to
+                // determine the i-th bit of sel.
+                sel |= (popCount(masked) % 2) << i;
             }
+            return sel == intlvMatch;
         }
         return false;
     }
 
-/**
- * Keep the operators away from SWIG.
- */
-#ifndef SWIG
+    /**
+     * Remove the interleaving bits from an input address.
+     *
+     * This function returns a new address in a continous range [
+     * start, start + size / intlv_bits). We can achieve this by
+     * discarding the LSB in each mask.
+     *
+     * e.g., if the input address is of the form:
+     * ------------------------------------
+     * | a_high | x1 | a_mid | x0 | a_low |
+     * ------------------------------------
+     * where x0 is the LSB set in masks[0]
+     * and x1 is the LSB set in masks[1]
+     *
+     * this function will return:
+     * ---------------------------------
+     * |    0 | a_high | a_mid | a_low |
+     * ---------------------------------
+     *
+     * @param the input address
+     * @return the new address
+     */
+    inline Addr removeIntlvBits(Addr a) const
+    {
+        // Get the LSB set from each mask
+        int masks_lsb[masks.size()];
+        for (int i = 0; i < masks.size(); i++) {
+            masks_lsb[i] = ctz64(masks[i]);
+        }
+
+        // we need to sort the list of bits we will discard as we
+        // discard them one by one starting.
+        std::sort(masks_lsb, masks_lsb + masks.size());
+
+        for (int i = 0; i < masks.size(); i++) {
+            const int intlv_bit = masks_lsb[i];
+            if (intlv_bit > 0) {
+                // on every iteration we remove one bit from the input
+                // address, and therefore the lowest invtl_bit has
+                // also shifted to the right by i positions.
+                a = insertBits(a >> 1, intlv_bit - i - 1, 0, a);
+            } else {
+                a >>= 1;
+            }
+        }
+        return a;
+    }
+
+    /**
+     * This method adds the interleaving bits removed by
+     * removeIntlvBits.
+     */
+    inline Addr addIntlvBits(Addr a) const
+    {
+        // Get the LSB set from each mask
+        int masks_lsb[masks.size()];
+        for (int i = 0; i < masks.size(); i++) {
+            masks_lsb[i] = ctz64(masks[i]);
+        }
+
+        // Add bits one-by-one from the LSB side.
+        std::sort(masks_lsb, masks_lsb + masks.size());
+        for (int i = 0; i < masks.size(); i++) {
+            const int intlv_bit = masks_lsb[i];
+            if (intlv_bit > 0) {
+                // on every iteration we add one bit from the input
+                // address, and therefore the lowest invtl_bit has
+                // also shifted to the left by i positions.
+                a = insertBits(a << 1, intlv_bit + i - 1, 0, a);
+            } else {
+                a <<= 1;
+            }
+        }
+
+        for (int i = 0; i < masks.size(); i++) {
+            const int lsb = ctz64(masks[i]);
+            const Addr intlv_bit = bits(intlvMatch, i);
+            // Calculate the mask ignoring the LSB
+            const Addr masked = a & masks[i] & ~(1 << lsb);
+            // Set the LSB of the mask to whatever satisfies the selector bit
+            a = insertBits(a, lsb, intlv_bit ^ popCount(masked));
+        }
+
+        return a;
+    }
+
+    /**
+     * Determine the offset of an address within the range.
+     *
+     * This function returns the offset of the given address from the
+     * starting address discarding any bits that are used for
+     * interleaving. This way we can convert the input address to a
+     * new unique address in a continuous range that starts from 0.
+     *
+     * @param the input address
+     * @return the flat offset in the address range
+     */
+    Addr getOffset(const Addr& a) const
+    {
+        bool in_range = a >= _start && a <= _end;
+        if (!in_range) {
+            return MaxAddr;
+        }
+        if (interleaved()) {
+            return removeIntlvBits(a) - removeIntlvBits(_start);
+        } else {
+            return a - _start;
+        }
+    }
 
     /**
      * Less-than operator used to turn an STL map into a binary search
@@ -370,13 +551,11 @@ class AddrRange
 
     bool operator==(const AddrRange& r) const
     {
-        if (_start    != r._start)    return false;
-        if (_end      != r._end)      return false;
-        if (intlvBits != r.intlvBits) return false;
-        if (intlvBits != 0) {
-            if (intlvHighBit != r.intlvHighBit) return false;
-            if (intlvMatch   != r.intlvMatch)   return false;
-        }
+        if (_start != r._start)    return false;
+        if (_end != r._end)      return false;
+        if (masks != r.masks)         return false;
+        if (intlvMatch != r.intlvMatch)   return false;
+
         return true;
     }
 
@@ -384,7 +563,6 @@ class AddrRange
     {
         return !(*this == r);
     }
-#endif // SWIG
 };
 
 /**

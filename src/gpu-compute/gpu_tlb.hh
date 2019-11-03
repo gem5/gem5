@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,7 +30,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Lisa Hsu
+ * Authors: Lisa Hsu
  */
 
 #ifndef __GPU_TLB_HH__
@@ -47,13 +47,13 @@
 #include "arch/x86/pagetable_walker.hh"
 #include "arch/x86/regs/segment.hh"
 #include "base/callback.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/statistics.hh"
 #include "gpu-compute/compute_unit.hh"
-#include "mem/mem_object.hh"
 #include "mem/port.hh"
 #include "mem/request.hh"
 #include "params/X86GPUTLB.hh"
+#include "sim/clocked_object.hh"
 #include "sim/sim_object.hh"
 
 class BaseTLB;
@@ -62,23 +62,12 @@ class ThreadContext;
 
 namespace X86ISA
 {
-    class GpuTlbEntry : public TlbEntry
-    {
-      public:
-        GpuTlbEntry(Addr asn, Addr _vaddr, Addr _paddr, bool _valid)
-          : TlbEntry(asn, _vaddr, _paddr, false, false), valid(_valid) { }
-
-        GpuTlbEntry() : TlbEntry() { }
-
-        bool valid;
-    };
-
-    class GpuTLB : public MemObject
+    class GpuTLB : public ClockedObject
     {
       protected:
         friend class Walker;
 
-        typedef std::list<GpuTlbEntry*> EntryList;
+        typedef std::list<TlbEntry*> EntryList;
 
         uint32_t configAddress;
 
@@ -124,12 +113,12 @@ namespace X86ISA
              * may be responsible for cleaning itslef up which will happen in
              * this function. Once it's called the object is no longer valid.
              */
-            virtual void finish(Fault fault, RequestPtr req, ThreadContext *tc,
-                    Mode mode) = 0;
+            virtual void finish(Fault fault, const RequestPtr &req,
+                                ThreadContext *tc, Mode mode) = 0;
         };
 
         void dumpAll();
-        GpuTlbEntry *lookup(Addr va, bool update_lru=true);
+        TlbEntry *lookup(Addr va, bool update_lru=true);
         void setConfigAddress(uint32_t addr);
 
       protected:
@@ -170,7 +159,7 @@ namespace X86ISA
          */
         bool accessDistance;
 
-        GpuTlbEntry *tlb;
+        std::vector<TlbEntry> tlb;
 
         /*
          * It's a per-set list. As long as we have not reached
@@ -188,9 +177,9 @@ namespace X86ISA
          */
         std::vector<EntryList> entryList;
 
-        Fault translateInt(RequestPtr req, ThreadContext *tc);
+        Fault translateInt(const RequestPtr &req, ThreadContext *tc);
 
-        Fault translate(RequestPtr req, ThreadContext *tc,
+        Fault translate(const RequestPtr &req, ThreadContext *tc,
                 Translation *translation, Mode mode, bool &delayedResponse,
                 bool timing, int &latency);
 
@@ -228,29 +217,30 @@ namespace X86ISA
         // the avg. over all pages.
         Stats::Scalar avgReuseDistance;
 
-        void regStats();
+        void regStats() override;
         void updatePageFootprint(Addr virt_page_addr);
         void printAccessPattern();
 
 
-        Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode,
-                              int &latency);
+        Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                              Mode mode, int &latency);
 
-        void translateTiming(RequestPtr req, ThreadContext *tc,
+        void translateTiming(const RequestPtr &req, ThreadContext *tc,
                              Translation *translation, Mode mode,
                              int &latency);
 
         Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
         Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
 
-        GpuTlbEntry *insert(Addr vpn, GpuTlbEntry &entry);
+        TlbEntry *insert(Addr vpn, TlbEntry &entry);
 
         // Checkpointing
-        virtual void serialize(CheckpointOut& cp) const;
-        virtual void unserialize(CheckpointIn& cp);
+        virtual void serialize(CheckpointOut& cp) const override;
+        virtual void unserialize(CheckpointIn& cp) override;
         void issueTranslation();
         enum tlbOutcome {TLB_HIT, TLB_MISS, PAGE_WALK, MISS_RETURN};
-        bool tlbLookup(RequestPtr req, ThreadContext *tc, bool update_stats);
+        bool tlbLookup(const RequestPtr &req,
+                       ThreadContext *tc, bool update_stats);
 
         void handleTranslationReturn(Addr addr, tlbOutcome outcome,
                                      PacketPtr pkt);
@@ -258,9 +248,9 @@ namespace X86ISA
         void handleFuncTranslationReturn(PacketPtr pkt, tlbOutcome outcome);
 
         void pagingProtectionChecks(ThreadContext *tc, PacketPtr pkt,
-                                    GpuTlbEntry *tlb_entry, Mode mode);
+                                    TlbEntry *tlb_entry, Mode mode);
 
-        void updatePhysAddresses(Addr virt_page_addr, GpuTlbEntry *tlb_entry,
+        void updatePhysAddresses(Addr virt_page_addr, TlbEntry *tlb_entry,
                                  Addr phys_page_addr);
 
         void issueTLBLookup(PacketPtr pkt);
@@ -282,7 +272,7 @@ namespace X86ISA
             virtual void recvFunctional(PacketPtr pkt);
             virtual void recvRangeChange() { }
             virtual void recvReqRetry();
-            virtual void recvRespRetry() { assert(false); }
+            virtual void recvRespRetry() { panic("recvRespRetry called"); }
             virtual AddrRangeList getAddrRanges() const;
         };
 
@@ -318,11 +308,8 @@ namespace X86ISA
         // TLB ports on the memory side
         std::vector<MemSidePort*> memSidePort;
 
-        BaseMasterPort &getMasterPort(const std::string &if_name,
-                                      PortID idx=InvalidPortID);
-
-        BaseSlavePort &getSlavePort(const std::string &if_name,
-                                    PortID idx=InvalidPortID);
+        Port &getPort(const std::string &if_name,
+                      PortID idx=InvalidPortID) override;
 
         /**
          * TLB TranslationState: this currently is a somewhat bastardization of
@@ -352,7 +339,7 @@ namespace X86ISA
             * previous TLBs.  Equivalent to the data cache concept of
             * "data return."
             */
-            GpuTlbEntry *tlbEntry;
+            TlbEntry *tlbEntry;
             // Is this a TLB prefetch request?
             bool prefetch;
             // When was the req for this translation issued
@@ -425,7 +412,7 @@ namespace X86ISA
         // free memory and do the required clean-up
         void cleanup();
 
-        EventWrapper<GpuTLB, &GpuTLB::cleanup> cleanupEvent;
+        EventFunctionWrapper cleanupEvent;
 
         /**
          * This hash map will use the virtual page address as a key
@@ -458,7 +445,7 @@ namespace X86ISA
         // Called at the end of simulation to dump page access stats.
         void exitCallback();
 
-        EventWrapper<GpuTLB, &GpuTLB::exitCallback> exitEvent;
+        EventFunctionWrapper exitEvent;
     };
 }
 

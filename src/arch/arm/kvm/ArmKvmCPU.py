@@ -36,7 +36,7 @@
 # Authors: Andreas Sandberg
 
 from m5.params import *
-from BaseKvmCPU import BaseKvmCPU
+from m5.objects.BaseKvmCPU import BaseKvmCPU
 
 class ArmKvmCPU(BaseKvmCPU):
     type = 'ArmKvmCPU'

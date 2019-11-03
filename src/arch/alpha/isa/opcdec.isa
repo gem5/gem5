@@ -48,10 +48,10 @@ output header {{
         {
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
     };
 }};
 
@@ -66,8 +66,7 @@ output decoder {{
 
 output exec {{
     Fault
-    OpcdecFault::execute(CPU_EXEC_CONTEXT *xc,
-                     Trace::InstRecord *traceData) const
+    OpcdecFault::execute(ExecContext *xc, Trace::InstRecord *traceData) const
     {
         return std::make_shared<UnimplementedOpcodeFault>();
     }

@@ -1,0 +1,11 @@
+SystemC Simulation
+
+Warning: (W556) throw_it on method/non-running process is being ignored : top.target4
+In file: <removed by verify.pl>
+In process: top.target4 @ 0 s
+
+Warning: (W556) throw_it on method/non-running process is being ignored : top.target4
+In file: <removed by verify.pl>
+In process: top.calling @ 20 ns
+
+Success

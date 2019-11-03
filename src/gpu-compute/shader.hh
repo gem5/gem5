@@ -47,7 +47,6 @@
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
-#include "enums/MemOpType.hh"
 #include "enums/MemType.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_tlb.hh"
@@ -74,7 +73,7 @@ static const int LDS_SIZE = 65536;
 // Class Shader: This describes a single shader instance. Most
 // configurations will only have a single shader.
 
-class Shader : public SimObject
+class Shader : public ClockedObject
 {
   protected:
       // Shader's clock period in terms of number of ticks of curTime,
@@ -100,18 +99,8 @@ class Shader : public SimObject
     ThreadContext *gpuTc;
     BaseCPU *cpuPointer;
 
-    class TickEvent : public Event
-    {
-      private:
-        Shader *shader;
-
-      public:
-        TickEvent(Shader*);
-        void process();
-        const char* description() const;
-    };
-
-    TickEvent tickEvent;
+    void processTick();
+    EventFunctionWrapper tickEvent;
 
     // is this simulation going to be timing mode in the memory?
     bool timingSim;
@@ -192,7 +181,7 @@ class Shader : public SimObject
     void WriteMem(uint64_t address, void *ptr, uint32_t sz, int cu_id,
                   bool suppress_func_errors);
 
-    void doFunctionalAccess(RequestPtr req, MemCmd cmd, void *data,
+    void doFunctionalAccess(const RequestPtr &req, MemCmd cmd, void *data,
                             bool suppress_func_errors, int cu_id);
 
     void

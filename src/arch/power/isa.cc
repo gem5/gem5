@@ -38,6 +38,7 @@
  */
 
 #include "arch/power/isa.hh"
+
 #include "params/PowerISA.hh"
 
 namespace PowerISA

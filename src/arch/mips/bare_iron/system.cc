@@ -29,6 +29,7 @@
  */
 
 #include "arch/mips/bare_iron/system.hh"
+
 #include "params/BareIronMipsSystem.hh"
 
 BareIronMipsSystem::BareIronMipsSystem(Params *p)

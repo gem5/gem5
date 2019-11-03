@@ -51,7 +51,6 @@
 
 #include "base/callback.hh"
 #include "base/intmath.hh"
-#include "base/misc.hh"
 #include "enums/PwrState.hh"
 #include "params/ClockedObject.hh"
 #include "sim/core.hh"
@@ -79,7 +78,8 @@ class Clocked
      *  Align cycle and tick to the next clock edge if not already done. When
      *  complete, tick must be at least curTick().
      */
-    void update() const
+    void
+    update() const
     {
         // both tick and cycle are up-to-date and we are done, note
         // that the >= is important as it captures cases where tick
@@ -136,22 +136,30 @@ class Clocked
      * to be used only when the global clock is reset. Currently, this done
      * only when Ruby is done warming up the memory system.
      */
-    void resetClock() const
+    void
+    resetClock() const
     {
         Cycles elapsedCycles(divCeil(curTick(), clockPeriod()));
         cycle = elapsedCycles;
         tick = elapsedCycles * clockPeriod();
     }
 
+    /**
+     * A hook subclasses can implement so they can do any extra work that's
+     * needed when the clock rate is changed.
+     */
+    virtual void clockPeriodUpdated() {}
+
   public:
 
     /**
      * Update the tick to the current tick.
-     *
      */
-    inline void updateClockPeriod() const
+    void
+    updateClockPeriod()
     {
         update();
+        clockPeriodUpdated();
     }
 
     /**
@@ -168,7 +176,8 @@ class Clocked
      * this tick can be
      *     curTick() + [0, clockPeriod()) + clockPeriod() * cycles
      */
-    inline Tick clockEdge(Cycles cycles = Cycles(0)) const
+    Tick
+    clockEdge(Cycles cycles=Cycles(0)) const
     {
         // align tick to the next clock edge
         update();
@@ -185,7 +194,8 @@ class Clocked
      * to that clock edge. When curTick() is not on a clock edge, return the
      * Cycle corresponding to the next clock edge.
      */
-    inline Cycles curCycle() const
+    Cycles
+    curCycle() const
     {
         // align cycle to the next clock edge.
         update();
@@ -203,54 +213,50 @@ class Clocked
      * the future. Precisely, the returned tick can be in the range
      *     curTick() + [clockPeriod(), 2 * clockPeriod())
      */
-    Tick nextCycle() const
-    { return clockEdge(Cycles(1)); }
+    Tick nextCycle() const { return clockEdge(Cycles(1)); }
 
-    inline uint64_t frequency() const
+    uint64_t frequency() const { return SimClock::Frequency / clockPeriod(); }
+
+    Tick clockPeriod() const { return clockDomain.clockPeriod(); }
+
+    double voltage() const { return clockDomain.voltage(); }
+
+    Cycles
+    ticksToCycles(Tick t) const
     {
-        return SimClock::Frequency / clockPeriod();
+        return Cycles(divCeil(t, clockPeriod()));
     }
 
-    inline Tick clockPeriod() const
-    {
-        return clockDomain.clockPeriod();
-    }
-
-    inline double voltage() const
-    {
-        return clockDomain.voltage();
-    }
-
-    inline Cycles ticksToCycles(Tick t) const
-    { return Cycles(divCeil(t, clockPeriod())); }
-
-    inline Tick cyclesToTicks(Cycles c) const
-    { return clockPeriod() * c; }
+    Tick cyclesToTicks(Cycles c) const { return clockPeriod() * c; }
 };
 
 /**
  * The ClockedObject class extends the SimObject with a clock and
  * accessor functions to relate ticks to the cycles of the object.
  */
-class ClockedObject
-    : public SimObject, public Clocked
+class ClockedObject : public SimObject, public Clocked
 {
   public:
     ClockedObject(const ClockedObjectParams *p);
 
     /** Parameters of ClockedObject */
     typedef ClockedObjectParams Params;
-    const Params* params() const
-    { return reinterpret_cast<const Params*>(_params); }
+    const Params *
+    params() const
+    {
+        return reinterpret_cast<const Params*>(_params);
+    }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    inline Enums::PwrState pwrState() const
-    { return _currPwrState; }
+    Enums::PwrState pwrState() const { return _currPwrState; }
 
-    inline std::string pwrStateName() const
-    { return Enums::PwrStateStrings[_currPwrState]; }
+    std::string
+    pwrStateName() const
+    {
+        return Enums::PwrStateStrings[_currPwrState];
+    }
 
     /** Returns the percentage residency for each power state */
     std::vector<double> pwrStateWeights() const;
@@ -264,7 +270,6 @@ class ClockedObject
     void computeStats();
 
     void pwrState(Enums::PwrState);
-    void regStats() override;
 
   protected:
 
@@ -273,18 +278,18 @@ class ClockedObject
 
     Tick prvEvalTick;
 
-    Stats::Scalar numPwrStateTransitions;
-    Stats::Distribution pwrStateClkGateDist;
-    Stats::Vector pwrStateResidencyTicks;
+    struct ClockedObjectStats : public Stats::Group
+    {
+        ClockedObjectStats(ClockedObject &co);
 
-};
+        void regStats() override;
+        void preDumpStats() override;
 
-class ClockedObjectDumpCallback : public Callback
-{
-    ClockedObject *co;
-  public:
-    ClockedObjectDumpCallback(ClockedObject *co_t) : co(co_t) {}
-    virtual void process() { co->computeStats(); };
+        ClockedObject &clockedObject;
+        Stats::Scalar numPwrStateTransitions;
+        Stats::Distribution pwrStateClkGateDist;
+        Stats::Vector pwrStateResidencyTicks;
+    } stats;
 };
 
 #endif //__SIM_CLOCKED_OBJECT_HH__

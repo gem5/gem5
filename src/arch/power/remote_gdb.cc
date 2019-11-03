@@ -133,6 +133,7 @@
  * "Stub" to allow remote cpu to debug over a serial line using gdb.
  */
 
+
 #include "arch/power/remote_gdb.hh"
 
 #include <sys/signal.h>
@@ -144,13 +145,14 @@
 #include "cpu/thread_state.hh"
 #include "debug/GDBAcc.hh"
 #include "debug/GDBMisc.hh"
+#include "mem/page_table.hh"
 #include "sim/byteswap.hh"
 
 using namespace std;
 using namespace PowerISA;
 
-RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc)
+RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc, int _port)
+    : BaseRemoteGDB(_system, tc, _port), regCache(this)
 {
 }
 
@@ -160,16 +162,13 @@ RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
 bool
 RemoteGDB::acc(Addr va, size_t len)
 {
-    TlbEntry entry;
-    //Check to make sure the first byte is mapped into the processes address
-    //space.  At the time of this writing, the acc() check is used when
-    //processing the MemR/MemW packets before actually asking the translating
-    //port proxy to read/writeBlob.  I (bgs) am not convinced the first byte
-    //check is enough.
-    if (FullSystem)
-        panic("acc not implemented for POWER FS!");
-    else
-        return context->getProcessPtr()->pTable->lookup(va, entry);
+    // Check to make sure the first byte is mapped into the processes address
+    // space.  At the time of this writing, the acc() check is used when
+    // processing the MemR/MemW packets before actually asking the translating
+    // port proxy to read/writeBlob.  I (bgs) am not convinced the first byte
+    // check is enough.
+    panic_if(FullSystem, "acc not implemented for POWER FS!");
+    return context()->getProcessPtr()->pTable->lookup(va) != nullptr;
 }
 
 void
@@ -185,7 +184,7 @@ RemoteGDB::PowerGdbRegCache::getRegs(ThreadContext *context)
         r.gpr[i] = htobe((uint32_t)context->readIntReg(i));
 
     for (int i = 0; i < NumFloatArchRegs; i++)
-        r.fpr[i] = context->readFloatRegBits(i);
+        r.fpr[i] = context->readFloatReg(i);
 
     r.pc = htobe((uint32_t)context->pcState().pc());
     r.msr = 0; // Is MSR modeled?
@@ -204,7 +203,7 @@ RemoteGDB::PowerGdbRegCache::setRegs(ThreadContext *context) const
         context->setIntReg(i, betoh(r.gpr[i]));
 
     for (int i = 0; i < NumFloatArchRegs; i++)
-        context->setFloatRegBits(i, r.fpr[i]);
+        context->setFloatReg(i, r.fpr[i]);
 
     context->pcState(betoh(r.pc));
     // Is MSR modeled?
@@ -214,8 +213,9 @@ RemoteGDB::PowerGdbRegCache::setRegs(ThreadContext *context) const
     context->setIntReg(INTREG_XER, betoh(r.xer));
 }
 
-RemoteGDB::BaseGdbRegCache*
-RemoteGDB::gdbRegs() {
-    return new PowerGdbRegCache(this);
+BaseGdbRegCache*
+RemoteGDB::gdbRegs()
+{
+    return &regCache;
 }
 

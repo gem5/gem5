@@ -26,12 +26,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/profiler/AddressProfiler.hh"
+
 #include <vector>
 
+#include "base/bitfield.hh"
 #include "base/stl_helpers.hh"
-#include "mem/protocol/RubyRequest.hh"
-#include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/protocol/RubyRequest.hh"
 
 using namespace std;
 typedef AddressProfiler::AddressMap AddressMap;
@@ -297,7 +299,7 @@ AddressProfiler::addTraceSample(Addr data_addr, Addr pc_addr,
         // record macro data address trace info
 
         // 6 for datablock, 4 to make it 16x more coarse
-        Addr macro_addr = maskLowOrderBits(data_addr, 10);
+        Addr macro_addr = mbits<Addr>(data_addr, 63, 10);
         lookupTraceForAddress(macro_addr, m_macroBlockAccessTrace).
             update(type, access_mode, id, sharing_miss);
 

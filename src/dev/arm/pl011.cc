@@ -48,15 +48,14 @@
 #include "debug/Uart.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/arm/base_gic.hh"
-#include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "sim/sim_exit.hh"
 #include "params/Pl011.hh"
+#include "sim/sim_exit.hh"
 
 Pl011::Pl011(const Pl011Params *p)
-    : Uart(p, 0xfff),
-      intEvent(this),
+    : Uart(p, 0x1000),
+      intEvent([this]{ generateInterrupt(); }, name()),
       control(0x300), fbrd(0), ibrd(0), lcrh(0), ifls(0x12),
       imsc(0), rawInt(0),
       gic(p->gic), endOnEOT(p->end_on_eot), intNum(p->int_num),
@@ -81,18 +80,26 @@ Pl011::read(PacketPtr pkt)
     switch(daddr) {
       case UART_DR:
         data = 0;
-        if (term->dataAvailable()) {
-            data = term->in();
+        if (device->dataAvailable()) {
+            data = device->readData();
             // Since we don't simulate a FIFO for incoming data, we
             // assume it's empty and clear RXINTR and RTINTR.
             clearInterrupts(UART_RXINTR | UART_RTINTR);
+            if (device->dataAvailable()) {
+                DPRINTF(Uart, "Re-raising interrupt due to more data "
+                        "after UART_DR read\n");
+                dataAvailable();
+            }
         }
+        break;
+      case UART_RSR:
+        data = 0x0; // We never have errors
         break;
       case UART_FR:
         data =
             UART_FR_CTS | // Clear To Send
             // Given we do not simulate a FIFO we are either empty or full.
-            (!term->dataAvailable() ? UART_FR_RXFE : UART_FR_RXFF) |
+            (!device->dataAvailable() ? UART_FR_RXFE : UART_FR_RXFF) |
             UART_FR_TXFE; // TX FIFO empty
 
         DPRINTF(Uart,
@@ -126,10 +133,14 @@ Pl011::read(PacketPtr pkt)
         DPRINTF(Uart, "Reading Masked Int status as 0x%x\n", maskInt());
         data = maskInt();
         break;
+      case UART_DMACR:
+        warn("PL011: DMA not supported\n");
+        data = 0x0; // DMA never enabled
+        break;
       default:
         if (readId(pkt, AMBA_ID, pioAddr)) {
             // Hack for variable size accesses
-            data = pkt->get<uint32_t>();
+            data = pkt->getLE<uint32_t>();
             break;
         }
 
@@ -139,13 +150,13 @@ Pl011::read(PacketPtr pkt)
 
     switch(pkt->getSize()) {
       case 1:
-        pkt->set<uint8_t>(data);
+        pkt->setLE<uint8_t>(data);
         break;
       case 2:
-        pkt->set<uint16_t>(data);
+        pkt->setLE<uint16_t>(data);
         break;
       case 4:
-        pkt->set<uint32_t>(data);
+        pkt->setLE<uint32_t>(data);
         break;
       default:
         panic("Uart read size too big?\n");
@@ -166,7 +177,7 @@ Pl011::write(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - pioAddr;
 
     DPRINTF(Uart, " write register %#x value %#x size=%d\n", daddr,
-            pkt->get<uint8_t>(), pkt->getSize());
+            pkt->getLE<uint8_t>(), pkt->getSize());
 
     // use a temporary data since the uart registers are read/written with
     // different size operations
@@ -175,13 +186,13 @@ Pl011::write(PacketPtr pkt)
 
     switch(pkt->getSize()) {
       case 1:
-        data = pkt->get<uint8_t>();
+        data = pkt->getLE<uint8_t>();
         break;
       case 2:
-        data = pkt->get<uint16_t>();
+        data = pkt->getLE<uint16_t>();
         break;
       case 4:
-        data = pkt->get<uint32_t>();
+        data = pkt->getLE<uint32_t>();
         break;
       default:
         panic("Uart write size too big?\n");
@@ -194,12 +205,14 @@ Pl011::write(PacketPtr pkt)
           if ((data & 0xFF) == 0x04 && endOnEOT)
             exitSimLoop("UART received EOT", 0);
 
-        term->out(data & 0xFF);
+        device->writeData(data & 0xFF);
         // We're supposed to clear TXINTR when this register is
         // written to, however. since we're also infinitely fast, we
         // need to immediately raise it again.
         clearInterrupts(UART_TXINTR);
         raiseInterrupts(UART_TXINTR);
+        break;
+      case UART_ECR: // clears errors, ignore
         break;
       case UART_CR:
         control = data;
@@ -224,6 +237,19 @@ Pl011::write(PacketPtr pkt)
       case UART_ICR:
         DPRINTF(Uart, "Clearing interrupts 0x%x\n", data);
         clearInterrupts(data);
+        if (device->dataAvailable()) {
+            DPRINTF(Uart, "Re-raising interrupt due to more data after "
+                    "UART_ICR write\n");
+            dataAvailable();
+        }
+        break;
+      case UART_DMACR:
+        // DMA is not supported, so panic if anyome tries to enable it.
+        // Bits 0, 1, 2 enables DMA on RX, TX, ERR respectively, others res0.
+        if (data & 0x7) {
+            panic("Tried to enable DMA on PL011\n");
+        }
+        warn("PL011: DMA not supported\n");
         break;
       default:
         panic("Tried to write PL011 at offset %#x that doesn't exist\n", daddr);

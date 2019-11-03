@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,17 +44,31 @@
 #ifndef __DEV_ARM_BASE_GIC_H__
 #define __DEV_ARM_BASE_GIC_H__
 
+#include <unordered_map>
+
+#include "arch/arm/system.hh"
 #include "dev/io_device.hh"
 
 class Platform;
+class RealView;
+class ThreadContext;
+class ArmInterruptPin;
+class ArmSPI;
+class ArmPPI;
+
+struct ArmInterruptPinParams;
+struct ArmPPIParams;
+struct ArmSPIParams;
+struct BaseGicParams;
 
 class BaseGic :  public PioDevice
 {
   public:
-    typedef struct BaseGicParams Params;
+    typedef BaseGicParams Params;
 
     BaseGic(const Params *p);
     virtual ~BaseGic();
+    void init() override;
 
     const Params * params() const;
 
@@ -87,9 +101,143 @@ class BaseGic :  public PioDevice
      */
     virtual void clearInt(uint32_t num) = 0;
 
+    ArmSystem *
+    getSystem() const
+    {
+        return (ArmSystem *) sys;
+    }
+
   protected:
     /** Platform this GIC belongs to. */
     Platform *platform;
+};
+
+class BaseGicRegisters
+{
+  public:
+    virtual uint32_t readDistributor(ContextID ctx, Addr daddr) = 0;
+    virtual uint32_t readCpu(ContextID ctx, Addr daddr) = 0;
+
+    virtual void writeDistributor(ContextID ctx, Addr daddr,
+                                  uint32_t data) = 0;
+    virtual void writeCpu(ContextID ctx, Addr daddr, uint32_t data) = 0;
+};
+
+/**
+ * This SimObject is instantiated in the python world and
+ * serves as an ArmInterruptPin generator. In this way it
+ * is possible to instantiate a single generator per component
+ * during configuration, and to dynamically spawn ArmInterruptPins.
+ * See ArmPPIGen for more info on how this is used.
+ */
+class ArmInterruptPinGen : public SimObject
+{
+  public:
+    ArmInterruptPinGen(const ArmInterruptPinParams *p);
+
+    virtual ArmInterruptPin* get(ThreadContext *tc = nullptr) = 0;
+};
+
+/**
+ * Shared Peripheral Interrupt Generator
+ * It is capable of generating one interrupt only: it maintains a pointer
+ * to it and returns it every time it is asked for it (via the get metod)
+ */
+class ArmSPIGen : public ArmInterruptPinGen
+{
+  public:
+    ArmSPIGen(const ArmSPIParams *p);
+
+    ArmInterruptPin* get(ThreadContext *tc = nullptr) override;
+  protected:
+    ArmSPI* pin;
+};
+
+/**
+ * Private Peripheral Interrupt Generator
+ * Since PPIs are banked in the GIC, this class is capable of generating
+ * more than one interrupt (one per ContextID).
+ */
+class ArmPPIGen : public ArmInterruptPinGen
+{
+  public:
+    ArmPPIGen(const ArmPPIParams *p);
+
+    ArmInterruptPin* get(ThreadContext* tc = nullptr) override;
+  protected:
+    std::unordered_map<ContextID, ArmPPI*> pins;
+};
+
+/**
+ * Generic representation of an Arm interrupt pin.
+ */
+class ArmInterruptPin
+{
+    friend class ArmInterruptPinGen;
+  protected:
+    ArmInterruptPin(Platform *platform, ThreadContext *tc,
+                    uint32_t int_num);
+
+  public: /* Public interface */
+    /**
+     * Set the thread context owning this interrupt.
+     *
+     * This method is used to set the thread context for interrupts
+     * that are thread/CPU-specific. Only devices that are used in
+     * such a context are expected to call this method.
+     */
+    void setThreadContext(ThreadContext *tc);
+
+    /** Get interrupt number */
+    uint32_t num() const { return intNum; }
+
+    /** Signal an interrupt */
+    virtual void raise() = 0;
+    /** Clear a signalled interrupt */
+    virtual void clear() = 0;
+
+  protected:
+    /**
+     * Get the target context ID of this interrupt.
+     *
+     * @pre setThreadContext() must have been called prior to calling
+     * this method.
+     */
+    ContextID targetContext() const;
+
+    /**
+     * Pointer to the thread context that owns this interrupt in case
+     * it is a thread-/CPU-private interrupt
+     */
+    const ThreadContext *threadContext;
+
+    /** Arm platform to use for interrupt generation */
+    RealView *const platform;
+
+    /** Interrupt number to generate */
+    const uint32_t intNum;
+};
+
+class ArmSPI : public ArmInterruptPin
+{
+    friend class ArmSPIGen;
+  private:
+    ArmSPI(Platform *platform, uint32_t int_num);
+
+  public:
+    void raise() override;
+    void clear() override;
+};
+
+class ArmPPI : public ArmInterruptPin
+{
+    friend class ArmPPIGen;
+  private:
+    ArmPPI(Platform *platform, ThreadContext *tc, uint32_t int_num);
+
+  public:
+    void raise() override;
+    void clear() override;
 };
 
 #endif

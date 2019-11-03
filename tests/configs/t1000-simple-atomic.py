@@ -28,8 +28,8 @@
 
 import m5
 from m5.objects import *
-m5.util.addToPath('../configs/common')
-import FSConfig
+m5.util.addToPath('../configs/')
+from common import FSConfig
 
 try:
     system = FSConfig.makeSparcSystem('atomic')
@@ -51,7 +51,7 @@ cpu.connectAllPorts(system.membus)
 # the physmem name to avoid bumping all the reference stats
 system.physmem = [SimpleMemory(range = r)
                   for r in system.mem_ranges]
-for i in xrange(len(system.physmem)):
+for i in range(len(system.physmem)):
     system.physmem[i].port = system.membus.master
 
 root = Root(full_system=True, system=system)

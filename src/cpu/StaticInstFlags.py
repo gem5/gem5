@@ -58,10 +58,13 @@ class StaticInstFlags(Enum):
         'IsInteger',        # References integer regs.
         'IsFloating',       # References FP regs.
         'IsCC',             # References CC regs.
+        'IsVector',         # References Vector regs.
+        'IsVectorElem',     # References Vector reg elems.
 
         'IsMemRef',         # References memory (load, store, or prefetch)
         'IsLoad',           # Reads from memory (load or prefetch).
         'IsStore',          # Writes to memory.
+        'IsAtomic',         # Does atomic RMW to memory.
         'IsStoreConditional',   # Store conditional instruction.
         'IsIndexed',        # Accesses memory with an indexed address
                             # computation

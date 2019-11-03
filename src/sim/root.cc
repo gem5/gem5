@@ -31,10 +31,11 @@
  *          Gabe Black
  */
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "debug/TimeSync.hh"
+#include "sim/eventq_impl.hh"
 #include "sim/full_system.hh"
 #include "sim/root.hh"
 
@@ -103,8 +104,9 @@ Root::timeSyncSpinThreshold(Time newThreshold)
     timeSyncEnable(en);
 }
 
-Root::Root(RootParams *p) : SimObject(p), _enabled(false),
-    _periodTick(p->time_sync_period), syncEvent(this)
+Root::Root(RootParams *p)
+    : SimObject(p), _enabled(false), _periodTick(p->time_sync_period),
+      syncEvent([this]{ timeSync(); }, name())
 {
     _period.setTick(p->time_sync_period);
     _spinThreshold.setTick(p->time_sync_spin_threshold);
@@ -117,15 +119,8 @@ Root::Root(RootParams *p) : SimObject(p), _enabled(false),
 }
 
 void
-Root::initState()
+Root::startup()
 {
-    timeSyncEnable(params()->time_sync_enable);
-}
-
-void
-Root::loadState(CheckpointIn &cp)
-{
-    SimObject::loadState(cp);
     timeSyncEnable(params()->time_sync_enable);
 }
 
@@ -136,10 +131,6 @@ Root::serialize(CheckpointOut &cp) const
     std::string isa = THE_ISA_STR;
     SERIALIZE_SCALAR(isa);
 }
-
-void
-Root::unserialize(CheckpointIn &cp)
-{}
 
 
 bool FullSystem;

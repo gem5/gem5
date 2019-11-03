@@ -28,10 +28,10 @@
  * Authors: Nathan Binkert
  */
 
+#include "base/str.hh"
+
 #include <string>
 #include <vector>
-
-#include "base/str.hh"
 
 using namespace std;
 

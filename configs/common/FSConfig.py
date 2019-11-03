@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012, 2015 ARM Limited
+# Copyright (c) 2010-2012, 2015-2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -39,10 +39,13 @@
 #
 # Authors: Kevin Lim
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 from m5.objects import *
-from Benchmarks import *
 from m5.util import *
-import PlatformConfig
+from .Benchmarks import *
+from . import ObjectList
 
 # Populate to reflect supported os types per target ISA
 os_types = { 'alpha' : [ 'linux' ],
@@ -53,7 +56,8 @@ os_types = { 'alpha' : [ 'linux' ],
                          'android-gingerbread',
                          'android-ics',
                          'android-jellybean',
-                         'android-kitkat' ],
+                         'android-kitkat',
+                         'android-nougat', ],
            }
 
 class CowIdeDisk(IdeDisk):
@@ -127,7 +131,6 @@ def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False, cmdline=None):
     self.intrctrl = IntrControl()
     self.mem_mode = mem_mode
     self.terminal = Terminal()
-    self.kernel = binary('vmlinux')
     self.pal = binary('ts_osfpal')
     self.console = binary('console')
     if not cmdline:
@@ -169,7 +172,7 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
     self.partition_desc.port = self.membus.master
     self.intrctrl = IntrControl()
     self.disk0 = CowMmDisk()
-    self.disk0.childImage(disk('disk.s10hw2'))
+    self.disk0.childImage(mdesc.disk())
     self.disk0.pio = self.iobus.master
 
     # The puart0 and hvuart are placed on the IO bus, so create ranges
@@ -203,22 +206,8 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
 
 def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
                   dtb_filename=None, bare_metal=False, cmdline=None,
-                  external_memory=""):
+                  external_memory="", ruby=False, security=False):
     assert machine_type
-
-    default_dtbs = {
-        "RealViewEB": None,
-        "RealViewPBX": None,
-        "VExpress_EMM": "vexpress.aarch32.ll_20131205.0-gem5.%dcpu.dtb" % num_cpus,
-        "VExpress_EMM64": "vexpress.aarch64.20140821.dtb",
-    }
-
-    default_kernels = {
-        "RealViewEB": "vmlinux.arm.smp.fb.2.6.38.8",
-        "RealViewPBX": "vmlinux.arm.smp.fb.2.6.38.8",
-        "VExpress_EMM": "vmlinux.aarch32.ll_20131205.0-gem5",
-        "VExpress_EMM64": "vmlinux.aarch64.20140821",
-    }
 
     pci_devices = []
 
@@ -233,30 +222,26 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
 
     self.readfile = mdesc.script()
     self.iobus = IOXBar()
-    self.membus = MemBus()
-    self.membus.badaddr_responder.warn_access = "warn"
-    self.bridge = Bridge(delay='50ns')
-    self.bridge.master = self.iobus.slave
-    self.bridge.slave = self.membus.master
+    if not ruby:
+        self.bridge = Bridge(delay='50ns')
+        self.bridge.master = self.iobus.slave
+        self.membus = MemBus()
+        self.membus.badaddr_responder.warn_access = "warn"
+        self.bridge.slave = self.membus.master
 
     self.mem_mode = mem_mode
 
-    platform_class = PlatformConfig.get(machine_type)
+    platform_class = ObjectList.platform_list.get(machine_type)
     # Resolve the real platform name, the original machine_type
     # variable might have been an alias.
     machine_type = platform_class.__name__
     self.realview = platform_class()
-
-    if not dtb_filename and not bare_metal:
-        try:
-            dtb_filename = default_dtbs[machine_type]
-        except KeyError:
-            fatal("No DTB specified and no default DTB known for '%s'" % \
-                  machine_type)
+    self._bootmem = self.realview.bootmem
 
     if isinstance(self.realview, VExpress_EMM64):
         if os.path.split(mdesc.disk())[-1] == 'linux-aarch32-ael.img':
-            print "Selected 64-bit ARM architecture, updating default disk image..."
+            print("Selected 64-bit ARM architecture, updating default "
+                  "disk image...")
             mdesc.diskname = 'linaro-minimal-aarch64.img'
 
 
@@ -279,11 +264,11 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
     self.mem_ranges = []
     size_remain = long(Addr(mdesc.mem()))
     for region in self.realview._mem_regions:
-        if size_remain > long(region[1]):
-            self.mem_ranges.append(AddrRange(region[0], size=region[1]))
-            size_remain = size_remain - long(region[1])
+        if size_remain > long(region.size()):
+            self.mem_ranges.append(region)
+            size_remain = size_remain - long(region.size())
         else:
-            self.mem_ranges.append(AddrRange(region[0], size=size_remain))
+            self.mem_ranges.append(AddrRange(region.start, size=size_remain))
             size_remain = 0
             break
         warn("Memory size specified spans more than one region. Creating" \
@@ -294,13 +279,12 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
               " the amount of DRAM you've selected. Please try" \
               " another platform")
 
+    self.have_security = security
+
     if bare_metal:
         # EOT character on UART will end the simulation
-        self.realview.uart.end_on_eot = True
+        self.realview.uart[0].end_on_eot = True
     else:
-        if machine_type in default_kernels:
-            self.kernel = binary(default_kernels[machine_type])
-
         if dtb_filename:
             self.dtb_filename = binary(dtb_filename)
 
@@ -313,16 +297,11 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
                       'lpj=19988480 norandmaps rw loglevel=8 ' + \
                       'mem=%(mem)s root=%(rootdev)s'
 
-        # When using external memory, gem5 writes the boot loader to nvmem
-        # and then SST will read from it, but SST can only get to nvmem from
-        # iobus, as gem5's membus is only used for initialization and
-        # SST doesn't use it.  Attaching nvmem to iobus solves this issue.
-        # During initialization, system_port -> membus -> iobus -> nvmem.
-        if external_memory:
-            self.realview.setupBootLoader(self.iobus,  self, binary)
-        else:
-            self.realview.setupBootLoader(self.membus, self, binary)
-        self.gic_cpu_addr = self.realview.gic.cpu_addr
+        self.realview.setupBootLoader(self, binary)
+
+        if hasattr(self.realview.gic, 'cpu_addr'):
+            self.gic_cpu_addr = self.realview.gic.cpu_addr
+
         self.flags_addr = self.realview.realview_io.pio_addr + 0x30
 
         # This check is for users who have previously put 'android' in
@@ -346,7 +325,14 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
             # release-specific tweaks
             if 'kitkat' in mdesc.os_type():
                 cmdline += " androidboot.hardware=gem5 qemu=1 qemu.gles=0 " + \
-                           "android.bootanim=0"
+                           "android.bootanim=0 "
+            elif 'nougat' in mdesc.os_type():
+                cmdline += " androidboot.hardware=gem5 qemu=1 qemu.gles=0 " + \
+                           "android.bootanim=0 " + \
+                           "vmalloc=640MB " + \
+                           "android.early.fstab=/fstab.gem5 " + \
+                           "androidboot.selinux=permissive " + \
+                           "video=Virtual-1:1920x1080-16"
 
         self.boot_osflags = fillInCmdline(mdesc, cmdline)
 
@@ -366,20 +352,39 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         self.bridge.ranges = [self.realview.nvmem.range]
 
         self.realview.attachOnChipIO(self.iobus)
+        # Attach off-chip devices
+        self.realview.attachIO(self.iobus)
+    elif ruby:
+        self._dma_ports = [ ]
+        self._mem_ports = [ ]
+        self.realview.attachOnChipIO(self.iobus,
+            dma_ports=self._dma_ports, mem_ports=self._mem_ports)
+        self.realview.attachIO(self.iobus, dma_ports=self._dma_ports)
     else:
         self.realview.attachOnChipIO(self.membus, self.bridge)
+        # Attach off-chip devices
+        self.realview.attachIO(self.iobus)
 
-    # Attach off-chip devices
-    self.realview.attachIO(self.iobus)
     for dev_id, dev in enumerate(pci_devices):
         dev.pci_bus, dev.pci_dev, dev.pci_func = (0, dev_id + 1, 0)
-        self.realview.attachPciDevice(dev, self.iobus)
+        self.realview.attachPciDevice(
+            dev, self.iobus,
+            dma_ports=self._dma_ports if ruby else None)
 
     self.intrctrl = IntrControl()
     self.terminal = Terminal()
     self.vncserver = VncServer()
 
-    self.system_port = self.membus.slave
+    if not ruby:
+        self.system_port = self.membus.slave
+
+    if ruby:
+        if buildEnv['PROTOCOL'] == 'MI_example' and num_cpus > 1:
+            fatal("The MI_example protocol cannot implement Load/Store "
+                  "Exclusive operations. Multicore ARM systems configured "
+                  "with the MI_example protocol will not work properly.")
+        warn("You are trying to use Ruby on ARM, which is not working "
+             "properly yet.")
 
     return self
 
@@ -416,7 +421,6 @@ def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
     self.intrctrl = IntrControl()
     self.mem_mode = mem_mode
     self.terminal = Terminal()
-    self.kernel = binary('mips/vmlinux')
     self.console = binary('mips/console')
     if not cmdline:
         cmdline = 'root=/dev/hda1 console=ttyS0'
@@ -536,7 +540,7 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, self=None, Ruby=False):
     # Set up the Intel MP table
     base_entries = []
     ext_entries = []
-    for i in xrange(numCPUs):
+    for i in range(numCPUs):
         bp = X86IntelMPProcessor(
                 local_apic_id = i,
                 local_apic_version = 0x14,
@@ -644,7 +648,6 @@ def makeLinuxX86System(mem_mode, numCPUs=1, mdesc=None, Ruby=False,
     if not cmdline:
         cmdline = 'earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda1'
     self.boot_osflags = fillInCmdline(mdesc, cmdline)
-    self.kernel = binary('x86_64-vmlinux-2.6.22.9')
     return self
 
 

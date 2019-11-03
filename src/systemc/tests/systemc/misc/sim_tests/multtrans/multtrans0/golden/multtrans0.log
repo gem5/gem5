@@ -1,0 +1,59 @@
+SystemC Simulation
+In state 0 :: In state 0 :: going to state 1
+Result = 0
+In state 1 :: staying in state 1
+Result = 0
+In state 1 :: staying in state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0
+In state 2 :: going to state 1
+In state 1 :: going to state 2
+Result = 0

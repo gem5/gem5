@@ -89,13 +89,14 @@ output header {{
             }
         }
 
-        MipsISA::PCState branchTarget(const MipsISA::PCState &branchPC) const;
+        MipsISA::PCState branchTarget(
+                const MipsISA::PCState &branchPC) const override;
 
         /// Explicitly import the otherwise hidden branchTarget
         using StaticInst::branchTarget;
 
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
     };
 
     /**
@@ -119,13 +120,13 @@ output header {{
         {
         }
 
-        MipsISA::PCState branchTarget(ThreadContext *tc) const;
+        MipsISA::PCState branchTarget(ThreadContext *tc) const override;
 
         /// Explicitly import the otherwise hidden branchTarget
         using StaticInst::branchTarget;
 
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
     };
 }};
 

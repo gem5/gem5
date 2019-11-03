@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 ARM Limited
+ * Copyright (c) 2011-2015, 2018-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,15 +47,16 @@
  * Definition of a crossbar object.
  */
 
-#include "base/misc.hh"
+#include "mem/xbar.hh"
+
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/AddrRanges.hh"
 #include "debug/Drain.hh"
 #include "debug/XBar.hh"
-#include "mem/xbar.hh"
 
 BaseXBar::BaseXBar(const BaseXBarParams *p)
-    : MemObject(p),
+    : ClockedObject(p),
       frontendLatency(p->frontend_latency),
       forwardLatency(p->forward_latency),
       responseLatency(p->response_latency),
@@ -63,8 +64,15 @@ BaseXBar::BaseXBar(const BaseXBarParams *p)
       gotAddrRanges(p->port_default_connection_count +
                           p->port_master_connection_count, false),
       gotAllAddrRanges(false), defaultPortID(InvalidPortID),
-      useDefaultRange(p->use_default_range)
-{}
+      useDefaultRange(p->use_default_range),
+
+      transDist(this, "trans_dist", "Transaction distribution"),
+      pktCount(this, "pkt_count",
+                   "Packet count per connected master and slave (bytes)"),
+      pktSize(this, "pkt_size",
+              "Cumulative packet size per connected master and slave (bytes)")
+{
+}
 
 BaseXBar::~BaseXBar()
 {
@@ -75,32 +83,19 @@ BaseXBar::~BaseXBar()
         delete s;
 }
 
-void
-BaseXBar::init()
-{
-}
-
-BaseMasterPort &
-BaseXBar::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+BaseXBar::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "master" && idx < masterPorts.size()) {
         // the master port index translates directly to the vector position
         return *masterPorts[idx];
     } else  if (if_name == "default") {
         return *masterPorts[defaultPortID];
-    } else {
-        return MemObject::getMasterPort(if_name, idx);
-    }
-}
-
-BaseSlavePort &
-BaseXBar::getSlavePort(const std::string &if_name, PortID idx)
-{
-    if (if_name == "slave" && idx < slavePorts.size()) {
+    } else if (if_name == "slave" && idx < slavePorts.size()) {
         // the slave port index translates directly to the vector position
         return *slavePorts[idx];
     } else {
-        return MemObject::getSlavePort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
     }
 }
 
@@ -143,15 +138,26 @@ BaseXBar::calcPacketTiming(PacketPtr pkt, Tick header_delay)
 }
 
 template <typename SrcType, typename DstType>
-BaseXBar::Layer<SrcType,DstType>::Layer(DstType& _port, BaseXBar& _xbar,
+BaseXBar::Layer<SrcType, DstType>::Layer(DstType& _port, BaseXBar& _xbar,
                                        const std::string& _name) :
-    port(_port), xbar(_xbar), _name(_name), state(IDLE),
-    waitingForPeer(NULL), releaseEvent(this)
+    Stats::Group(&_xbar, _name.c_str()),
+    port(_port), xbar(_xbar), _name(xbar.name() + "." + _name), state(IDLE),
+    waitingForPeer(NULL), releaseEvent([this]{ releaseLayer(); }, name()),
+    ADD_STAT(occupancy, "Layer occupancy (ticks)"),
+    ADD_STAT(utilization, "Layer utilization (%)")
 {
+    occupancy
+        .flags(Stats::nozero);
+
+    utilization
+        .precision(1)
+        .flags(Stats::nozero);
+
+    utilization = 100 * occupancy / simTicks;
 }
 
 template <typename SrcType, typename DstType>
-void BaseXBar::Layer<SrcType,DstType>::occupyLayer(Tick until)
+void BaseXBar::Layer<SrcType, DstType>::occupyLayer(Tick until)
 {
     // ensure the state is busy at this point, as the layer should
     // transition from idle as soon as it has decided to forward the
@@ -172,7 +178,7 @@ void BaseXBar::Layer<SrcType,DstType>::occupyLayer(Tick until)
 
 template <typename SrcType, typename DstType>
 bool
-BaseXBar::Layer<SrcType,DstType>::tryTiming(SrcType* src_port)
+BaseXBar::Layer<SrcType, DstType>::tryTiming(SrcType* src_port)
 {
     // if we are in the retry state, we will not see anything but the
     // retrying port (or in the case of the snoop ports the snoop
@@ -203,7 +209,7 @@ BaseXBar::Layer<SrcType,DstType>::tryTiming(SrcType* src_port)
 
 template <typename SrcType, typename DstType>
 void
-BaseXBar::Layer<SrcType,DstType>::succeededTiming(Tick busy_time)
+BaseXBar::Layer<SrcType, DstType>::succeededTiming(Tick busy_time)
 {
     // we should have gone from idle or retry to busy in the tryTiming
     // test
@@ -215,7 +221,7 @@ BaseXBar::Layer<SrcType,DstType>::succeededTiming(Tick busy_time)
 
 template <typename SrcType, typename DstType>
 void
-BaseXBar::Layer<SrcType,DstType>::failedTiming(SrcType* src_port,
+BaseXBar::Layer<SrcType, DstType>::failedTiming(SrcType* src_port,
                                               Tick busy_time)
 {
     // ensure no one got in between and tried to send something to
@@ -237,7 +243,7 @@ BaseXBar::Layer<SrcType,DstType>::failedTiming(SrcType* src_port,
 
 template <typename SrcType, typename DstType>
 void
-BaseXBar::Layer<SrcType,DstType>::releaseLayer()
+BaseXBar::Layer<SrcType, DstType>::releaseLayer()
 {
     // releasing the bus means we should now be idle
     assert(state == BUSY);
@@ -261,7 +267,7 @@ BaseXBar::Layer<SrcType,DstType>::releaseLayer()
 
 template <typename SrcType, typename DstType>
 void
-BaseXBar::Layer<SrcType,DstType>::retryWaiting()
+BaseXBar::Layer<SrcType, DstType>::retryWaiting()
 {
     // this should never be called with no one waiting
     assert(!waitingForLayer.empty());
@@ -296,7 +302,7 @@ BaseXBar::Layer<SrcType,DstType>::retryWaiting()
 
 template <typename SrcType, typename DstType>
 void
-BaseXBar::Layer<SrcType,DstType>::recvRetry()
+BaseXBar::Layer<SrcType, DstType>::recvRetry()
 {
     // we should never get a retry without having failed to forward
     // something to this port
@@ -320,41 +326,34 @@ BaseXBar::Layer<SrcType,DstType>::recvRetry()
 }
 
 PortID
-BaseXBar::findPort(Addr addr)
+BaseXBar::findPort(AddrRange addr_range)
 {
     // we should never see any address lookups before we've got the
     // ranges of all connected slave modules
     assert(gotAllAddrRanges);
 
-    // Check the cache
-    PortID dest_id = checkPortCache(addr);
-    if (dest_id != InvalidPortID)
-        return dest_id;
-
     // Check the address map interval tree
-    auto i = portMap.find(addr);
+    auto i = portMap.contains(addr_range);
     if (i != portMap.end()) {
-        dest_id = i->second;
-        updatePortCache(dest_id, i->first);
-        return dest_id;
+        return i->second;
     }
 
     // Check if this matches the default range
     if (useDefaultRange) {
-        if (defaultRange.contains(addr)) {
-            DPRINTF(AddrRanges, "  found addr %#llx on default\n",
-                    addr);
+        if (addr_range.isSubset(defaultRange)) {
+            DPRINTF(AddrRanges, "  found addr %s on default\n",
+                    addr_range.to_string());
             return defaultPortID;
         }
     } else if (defaultPortID != InvalidPortID) {
-        DPRINTF(AddrRanges, "Unable to find destination for addr %#llx, "
-                "will use default port\n", addr);
+        DPRINTF(AddrRanges, "Unable to find destination for %s, "
+                "will use default port\n", addr_range.to_string());
         return defaultPortID;
     }
 
     // we should use the range for the default port and it did not
     // match, or the default port is not set
-    fatal("Unable to find destination for addr %#llx on %s\n", addr,
+    fatal("Unable to find destination for %s on %s\n", addr_range.to_string(),
           name());
 }
 
@@ -363,7 +362,7 @@ void
 BaseXBar::recvRangeChange(PortID master_port_id)
 {
     DPRINTF(AddrRanges, "Received range change from slave port %s\n",
-            masterPorts[master_port_id]->getSlavePort().name());
+            masterPorts[master_port_id]->getPeer());
 
     // remember that we got a range from this master port and thus the
     // connected slave module
@@ -419,12 +418,13 @@ BaseXBar::recvRangeChange(PortID master_port_id)
             DPRINTF(AddrRanges, "Adding range %s for id %d\n",
                     r.to_string(), master_port_id);
             if (portMap.insert(r, master_port_id) == portMap.end()) {
-                PortID conflict_id = portMap.find(r)->second;
-                fatal("%s has two ports responding within range %s:\n\t%s\n\t%s\n",
+                PortID conflict_id = portMap.intersects(r)->second;
+                fatal("%s has two ports responding within range "
+                      "%s:\n\t%s\n\t%s\n",
                       name(),
                       r.to_string(),
-                      masterPorts[master_port_id]->getSlavePort().name(),
-                      masterPorts[conflict_id]->getSlavePort().name());
+                      masterPorts[master_port_id]->getPeer(),
+                      masterPorts[conflict_id]->getPeer());
             }
         }
     }
@@ -495,7 +495,7 @@ BaseXBar::recvRangeChange(PortID master_port_id)
             }
         }
 
-        // also check that no range partially overlaps with the
+        // also check that no range partially intersects with the
         // default range, this has to be done after all ranges are set
         // as there are no guarantees for when the default range is
         // update with respect to the other ones
@@ -516,8 +516,6 @@ BaseXBar::recvRangeChange(PortID master_port_id)
         for (const auto& s: slavePorts)
             s->sendRangeChange();
     }
-
-    clearPortCache();
 }
 
 AddrRangeList
@@ -547,8 +545,6 @@ BaseXBar::regStats()
 
     transDist
         .init(MemCmd::NUM_MEM_CMDS)
-        .name(name() + ".trans_dist")
-        .desc("Transaction distribution")
         .flags(nozero);
 
     // get the string representation of the commands
@@ -560,14 +556,10 @@ BaseXBar::regStats()
 
     pktCount
         .init(slavePorts.size(), masterPorts.size())
-        .name(name() + ".pkt_count")
-        .desc("Packet count per connected master and slave (bytes)")
         .flags(total | nozero | nonan);
 
     pktSize
         .init(slavePorts.size(), masterPorts.size())
-        .name(name() + ".pkt_size")
-        .desc("Cumulative packet size per connected master and slave (bytes)")
         .flags(total | nozero | nonan);
 
     // both the packet count and total size are two-dimensional
@@ -577,18 +569,18 @@ BaseXBar::regStats()
     // and snoop responses) and what came from the slave and was
     // forwarded to the master (responses and snoop requests)
     for (int i = 0; i < slavePorts.size(); i++) {
-        pktCount.subname(i, slavePorts[i]->getMasterPort().name());
-        pktSize.subname(i, slavePorts[i]->getMasterPort().name());
+        pktCount.subname(i, slavePorts[i]->getPeer().name());
+        pktSize.subname(i, slavePorts[i]->getPeer().name());
         for (int j = 0; j < masterPorts.size(); j++) {
-            pktCount.ysubname(j, masterPorts[j]->getSlavePort().name());
-            pktSize.ysubname(j, masterPorts[j]->getSlavePort().name());
+            pktCount.ysubname(j, masterPorts[j]->getPeer().name());
+            pktSize.ysubname(j, masterPorts[j]->getPeer().name());
         }
     }
 }
 
 template <typename SrcType, typename DstType>
 DrainState
-BaseXBar::Layer<SrcType,DstType>::drain()
+BaseXBar::Layer<SrcType, DstType>::drain()
 {
     //We should check that we're not "doing" anything, and that noone is
     //waiting. We might be idle but have someone waiting if the device we
@@ -601,30 +593,10 @@ BaseXBar::Layer<SrcType,DstType>::drain()
     }
 }
 
-template <typename SrcType, typename DstType>
-void
-BaseXBar::Layer<SrcType,DstType>::regStats()
-{
-    using namespace Stats;
-
-    occupancy
-        .name(name() + ".occupancy")
-        .desc("Layer occupancy (ticks)")
-        .flags(nozero);
-
-    utilization
-        .name(name() + ".utilization")
-        .desc("Layer utilization (%)")
-        .precision(1)
-        .flags(nozero);
-
-    utilization = 100 * occupancy / simTicks;
-}
-
 /**
  * Crossbar layer template instantiations. Could be removed with _impl.hh
  * file, but since there are only two given options (MasterPort and
  * SlavePort) it seems a bit excessive at this point.
  */
-template class BaseXBar::Layer<SlavePort,MasterPort>;
-template class BaseXBar::Layer<MasterPort,SlavePort>;
+template class BaseXBar::Layer<SlavePort, MasterPort>;
+template class BaseXBar::Layer<MasterPort, SlavePort>;

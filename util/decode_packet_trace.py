@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 
 # Copyright (c) 2013-2014 ARM Limited
 # All rights reserved
@@ -38,42 +38,17 @@
 # Authors: Andreas Hansson
 
 # This script is used to dump protobuf packet traces to ASCII
-# format. It assumes that protoc has been executed and already
-# generated the Python package for the packet messages. This can
-# be done manually using:
-# protoc --python_out=. --proto_path=src/proto src/proto/packet.proto
-#
-# The ASCII trace format uses one line per request on the format cmd,
-# addr, size, tick,flags. For example:
-# r,128,64,4000,0
-# w,232123,64,500000,0
+# format.
 
+import os
 import protolib
+import subprocess
 import sys
 
-# Import the packet proto definitions. If they are not found, attempt
-# to generate them automatically. This assumes that the script is
-# executed from the gem5 root.
-try:
-    import packet_pb2
-except:
-    print "Did not find packet proto definitions, attempting to generate"
-    from subprocess import call
-    error = call(['protoc', '--python_out=util', '--proto_path=src/proto',
-                  'src/proto/packet.proto'])
-    if not error:
-        print "Generated packet proto definitions"
-
-        try:
-            import google.protobuf
-        except:
-            print "Please install Python protobuf module"
-            exit(-1)
-
-        import packet_pb2
-    else:
-        print "Failed to import packet proto definitions"
-        exit(-1)
+util_dir = os.path.dirname(os.path.realpath(__file__))
+# Make sure the proto definitions are up to date.
+subprocess.check_call(['make', '--quiet', '-C', util_dir, 'packet_pb2.py'])
+import packet_pb2
 
 def main():
     if len(sys.argv) != 3:
@@ -104,6 +79,9 @@ def main():
 
     print "Object id:", header.obj_id
     print "Tick frequency:", header.tick_freq
+
+    for id_string in header.id_strings:
+        print 'Master id %d: %s' % (id_string.key, id_string.value)
 
     print "Parsing packets"
 

@@ -26,13 +26,8 @@
 #
 # Authors: Nathan Binkert
 
-import internal
-import util
+from __future__ import print_function
+from __future__ import absolute_import
 
-from internal.trace import output, ignore
-
-def disable():
-    internal.trace.disable()
-
-def enable():
-    internal.trace.enable()
+# Export native methods to Python
+from _m5.trace import output, ignore, disable, enable

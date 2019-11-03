@@ -35,11 +35,13 @@
 #
 # Authors: Andrew Bardsley
 #          Curtis Dunham
+#          Christian Menard
 
 from m5.params import *
-from MemObject import MemObject
+from m5.proxy import *
+from m5.SimObject import SimObject
 
-class ExternalMaster(MemObject):
+class ExternalMaster(SimObject):
     type = 'ExternalMaster'
     cxx_header = "mem/external_master.hh"
 
@@ -50,3 +52,5 @@ class ExternalMaster(MemObject):
     port_data = Param.String('stub', 'A string to pass to the port'
         ' handler (in a format specific to the handler) to describe how'
         ' the port should be bound/bindable/discoverable')
+
+    system = Param.System(Parent.any, 'System this external port belongs to')

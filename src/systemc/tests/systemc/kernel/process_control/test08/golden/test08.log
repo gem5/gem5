@@ -1,0 +1,16 @@
+SystemC Simulation
+0 s target: initializing
+10 ns tb: firing event 
+10 ns target: awoke
+20 ns tb: suspending target 
+30 ns tb: firing event while target suspended
+40 ns tb: resetting target 
+40 ns target: initializing
+50 ns tb: resuming target
+60 ns tb: 10ns after resume
+70 ns tb: firing event again
+70 ns target: awoke
+80 ns tb: stopping
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+Program completed

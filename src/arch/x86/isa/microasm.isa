@@ -180,6 +180,11 @@ let {{
         env.dataSize = 4;
     '''
 
+    assembler.symbols["clampOsz"] = '''
+    if (env.dataSize == 2)
+        env.dataSize = 4;
+    '''
+
     def trimImm(width):
         return "adjustedImm = adjustedImm & mask(%s);" % width
 

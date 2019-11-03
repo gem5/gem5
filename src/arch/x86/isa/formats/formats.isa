@@ -72,3 +72,7 @@
 //Include a format which makes instructions who's sole purpose is to generate
 //a syscall.
 ##include "syscall.isa"
+
+//Include a format which is like Inst, except it conditionally decodes to the
+//specified instruction, or if the condition fails decodes to UD2.
+##include "cond.isa"

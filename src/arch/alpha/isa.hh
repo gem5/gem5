@@ -38,6 +38,7 @@
 #include "arch/alpha/registers.hh"
 #include "arch/alpha/types.hh"
 #include "base/types.hh"
+#include "cpu/reg_class.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
@@ -73,13 +74,12 @@ namespace AlphaISA
 
       public:
 
-        MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0) const;
-        MiscReg readMiscReg(int misc_reg, ThreadContext *tc, ThreadID tid = 0);
+        RegVal readMiscRegNoEffect(int misc_reg, ThreadID tid = 0) const;
+        RegVal readMiscReg(int misc_reg, ThreadContext *tc, ThreadID tid = 0);
 
-        void setMiscRegNoEffect(int misc_reg, const MiscReg &val,
-                                ThreadID tid = 0);
-        void setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc,
-                        ThreadID tid = 0);
+        void setMiscRegNoEffect(int misc_reg, RegVal val, ThreadID tid=0);
+        void setMiscReg(int misc_reg, RegVal val, ThreadContext *tc,
+                        ThreadID tid=0);
 
         void
         clear()
@@ -95,6 +95,8 @@ namespace AlphaISA
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
 
+        RegId flattenRegId(const RegId& regId) const { return regId; }
+
         int
         flattenIntIndex(int reg) const
         {
@@ -103,6 +105,24 @@ namespace AlphaISA
 
         int
         flattenFloatIndex(int reg) const
+        {
+            return reg;
+        }
+
+        int
+        flattenVecIndex(int reg) const
+        {
+            return reg;
+        }
+
+        int
+        flattenVecElemIndex(int reg) const
+        {
+            return reg;
+        }
+
+        int
+        flattenVecPredIndex(int reg) const
         {
             return reg;
         }

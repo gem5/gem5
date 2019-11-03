@@ -1,47 +1,48 @@
+# Copyright (c) 2011-2015 Advanced Micro Devices, Inc.
+# All rights reserved.
 #
-#  Copyright (c) 2011-2015 Advanced Micro Devices, Inc.
-#  All rights reserved.
+# For use for simulation and test purposes only
 #
-#  For use for simulation and test purposes only
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
 #
-#  Redistribution and use in source and binary forms, with or without
-#  modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
 #
-#  1. Redistributions of source code must retain the above copyright notice,
-#  this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
 #
-#  2. Redistributions in binary form must reproduce the above copyright notice,
-#  this list of conditions and the following disclaimer in the documentation
-#  and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
 #
-#  3. Neither the name of the copyright holder nor the names of its contributors
-#  may be used to endorse or promote products derived from this software
-#  without specific prior written permission.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 #
-#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-#  POSSIBILITY OF SUCH DAMAGE.
-#
-#  Author: Lisa Hsu
-#
+# Authors: Lisa Hsu
 
 import math
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
+from m5.util import addToPath
 from Ruby import create_topology
 from Ruby import send_evicts
 
-from Cluster import Cluster
-from Crossbar import Crossbar
+addToPath('../')
+
+from topologies.Cluster import Cluster
+from topologies.Crossbar import Crossbar
 
 class CntrlBase:
     _seqs = 0
@@ -73,7 +74,7 @@ class L1Cache(RubyCache):
     def create(self, size, assoc, options):
         self.size = MemorySize(size)
         self.assoc = assoc
-        self.replacement_policy = PseudoLRUReplacementPolicy()
+        self.replacement_policy = TreePLRURP()
 
 class L2Cache(RubyCache):
     resourceStalls = False
@@ -83,7 +84,7 @@ class L2Cache(RubyCache):
     def create(self, size, assoc, options):
         self.size = MemorySize(size)
         self.assoc = assoc
-        self.replacement_policy = PseudoLRUReplacementPolicy()
+        self.replacement_policy = TreePLRURP()
 
 class CPCntrl(CorePair_Controller, CntrlBase):
 
@@ -134,7 +135,7 @@ class TCPCache(RubyCache):
         self.size = MemorySize(options.tcp_size)
         self.assoc = options.tcp_assoc
         self.resourceStalls = options.no_tcc_resource_stalls
-        self.replacement_policy = PseudoLRUReplacementPolicy()
+        self.replacement_policy = TreePLRURP()
 
 class TCPCntrl(TCP_Controller, CntrlBase):
 
@@ -209,7 +210,7 @@ class SQCCache(RubyCache):
     def create(self, options):
         self.size = MemorySize(options.sqc_size)
         self.assoc = options.sqc_assoc
-        self.replacement_policy = PseudoLRUReplacementPolicy()
+        self.replacement_policy = TreePLRURP()
 
 class SQCCntrl(SQC_Controller, CntrlBase):
 
@@ -258,7 +259,7 @@ class TCC(RubyCache):
             self.size.value = long(128 * self.assoc)
         self.start_index_bit = math.log(options.cacheline_size, 2) + \
                                math.log(options.num_tccs, 2)
-        self.replacement_policy = PseudoLRUReplacementPolicy()
+        self.replacement_policy = TreePLRURP()
 
 
 class TCCCntrl(TCC_Controller, CntrlBase):
@@ -288,7 +289,7 @@ class L3Cache(RubyCache):
         self.dataAccessLatency = options.l3_data_latency
         self.tagAccessLatency = options.l3_tag_latency
         self.resourceStalls = False
-        self.replacement_policy = PseudoLRUReplacementPolicy()
+        self.replacement_policy = TreePLRURP()
 
 class L3Cntrl(L3Cache_Controller, CntrlBase):
     def create(self, options, ruby_system, system):
@@ -390,7 +391,8 @@ def define_options(parser):
     parser.add_option("--noL1", action = "store_true", default = False,
                       help = "bypassL1")
 
-def create_system(options, full_system, system, dma_devices, ruby_system):
+def create_system(options, full_system, system, dma_devices, bootmem,
+                  ruby_system):
     if buildEnv['PROTOCOL'] != 'GPU_VIPER':
         panic("This script requires the GPU_VIPER protocol to be built.")
 
@@ -427,7 +429,7 @@ def create_system(options, full_system, system, dma_devices, ruby_system):
         mainCluster = Cluster(intBW=crossbar_bw)
     else:
         mainCluster = Cluster(intBW=8) # 16 GB/s
-    for i in xrange(options.num_dirs):
+    for i in range(options.num_dirs):
 
         dir_cntrl = DirCntrl(noTCCdir = True, TCC_select_num_bits = TCC_bits)
         dir_cntrl.create(options, ruby_system, system)
@@ -465,7 +467,7 @@ def create_system(options, full_system, system, dma_devices, ruby_system):
         cpuCluster = Cluster(extBW = crossbar_bw, intBW = crossbar_bw)
     else:
         cpuCluster = Cluster(extBW = 8, intBW = 8) # 16 GB/s
-    for i in xrange((options.num_cpus + 1) / 2):
+    for i in range((options.num_cpus + 1) // 2):
 
         cp_cntrl = CPCntrl()
         cp_cntrl.create(options, ruby_system, system)
@@ -497,12 +499,64 @@ def create_system(options, full_system, system, dma_devices, ruby_system):
 
         cpuCluster.add(cp_cntrl)
 
+    # Register CPUs and caches for each CorePair and directory (SE mode only)
+    if not full_system:
+        for i in xrange((options.num_cpus + 1) // 2):
+            FileSystemConfig.register_cpu(physical_package_id = 0,
+                                          core_siblings = \
+                                            xrange(options.num_cpus),
+                                          core_id = i*2,
+                                          thread_siblings = [])
+
+            FileSystemConfig.register_cpu(physical_package_id = 0,
+                                          core_siblings = \
+                                            xrange(options.num_cpus),
+                                          core_id = i*2+1,
+                                          thread_siblings = [])
+
+            FileSystemConfig.register_cache(level = 0,
+                                            idu_type = 'Instruction',
+                                            size = options.l1i_size,
+                                            line_size = options.cacheline_size,
+                                            assoc = options.l1i_assoc,
+                                            cpus = [i*2, i*2+1])
+
+            FileSystemConfig.register_cache(level = 0,
+                                            idu_type = 'Data',
+                                            size = options.l1d_size,
+                                            line_size = options.cacheline_size,
+                                            assoc = options.l1d_assoc,
+                                            cpus = [i*2])
+
+            FileSystemConfig.register_cache(level = 0,
+                                            idu_type = 'Data',
+                                            size = options.l1d_size,
+                                            line_size = options.cacheline_size,
+                                            assoc = options.l1d_assoc,
+                                            cpus = [i*2+1])
+
+            FileSystemConfig.register_cache(level = 1,
+                                            idu_type = 'Unified',
+                                            size = options.l2_size,
+                                            line_size = options.cacheline_size,
+                                            assoc = options.l2_assoc,
+                                            cpus = [i*2, i*2+1])
+
+        for i in range(options.num_dirs):
+            FileSystemConfig.register_cache(level = 2,
+                                            idu_type = 'Unified',
+                                            size = options.l3_size,
+                                            line_size = options.cacheline_size,
+                                            assoc = options.l3_assoc,
+                                            cpus = [n for n in
+                                                xrange(options.num_cpus)])
+
     gpuCluster = None
     if hasattr(options, 'bw_scalor') and options.bw_scalor > 0:
       gpuCluster = Cluster(extBW = crossbar_bw, intBW = crossbar_bw)
     else:
       gpuCluster = Cluster(extBW = 8, intBW = 8) # 16 GB/s
-    for i in xrange(options.num_compute_units):
+    for i in range(options.num_compute_units):
 
         tcp_cntrl = TCPCntrl(TCC_select_num_bits = TCC_bits,
                              issue_latency = 1,
@@ -541,7 +595,7 @@ def create_system(options, full_system, system, dma_devices, ruby_system):
 
         gpuCluster.add(tcp_cntrl)
 
-    for i in xrange(options.num_sqc):
+    for i in range(options.num_sqc):
 
         sqc_cntrl = SQCCntrl(TCC_select_num_bits = TCC_bits)
         sqc_cntrl.create(options, ruby_system, system)
@@ -567,7 +621,7 @@ def create_system(options, full_system, system, dma_devices, ruby_system):
         # SQC also in GPU cluster
         gpuCluster.add(sqc_cntrl)
 
-    for i in xrange(options.num_cp):
+    for i in range(options.num_cp):
 
         tcp_ID = options.num_compute_units + i
         sqc_ID = options.num_sqc + i
@@ -621,7 +675,7 @@ def create_system(options, full_system, system, dma_devices, ruby_system):
         # SQC also in GPU cluster
         gpuCluster.add(sqc_cntrl)
 
-    for i in xrange(options.num_tccs):
+    for i in range(options.num_tccs):
 
         tcc_cntrl = TCCCntrl(l2_response_latency = options.TCC_latency)
         tcc_cntrl.create(options, ruby_system, system)

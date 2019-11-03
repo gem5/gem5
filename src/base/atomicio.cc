@@ -28,10 +28,10 @@
  * Authors: Nathan Binkert
  */
 
+#include "base/atomicio.hh"
+
 #include <cerrno>
 #include <cstdio>
-
-#include "base/atomicio.hh"
 
 ssize_t
 atomic_read(int fd, void *s, size_t n)

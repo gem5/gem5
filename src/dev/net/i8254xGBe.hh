@@ -75,6 +75,7 @@ class IGbE : public EtherDevice
     EthPacketPtr txPacket;
 
     // Should to Rx/Tx State machine tick?
+    bool inTick;
     bool rxTick;
     bool txTick;
     bool txFifoTick;
@@ -97,8 +98,7 @@ class IGbE : public EtherDevice
         postInterrupt(iGbReg::IT_RXT);
     }
 
-    //friend class EventWrapper<IGbE, &IGbE::rdtrProcess>;
-    EventWrapper<IGbE, &IGbE::rdtrProcess> rdtrEvent;
+    EventFunctionWrapper rdtrEvent;
 
     // Event and function to deal with RADV timer expiring
     void radvProcess() {
@@ -108,8 +108,7 @@ class IGbE : public EtherDevice
         postInterrupt(iGbReg::IT_RXT);
     }
 
-    //friend class EventWrapper<IGbE, &IGbE::radvProcess>;
-    EventWrapper<IGbE, &IGbE::radvProcess> radvEvent;
+    EventFunctionWrapper radvEvent;
 
     // Event and function to deal with TADV timer expiring
     void tadvProcess() {
@@ -119,8 +118,7 @@ class IGbE : public EtherDevice
         postInterrupt(iGbReg::IT_TXDW);
     }
 
-    //friend class EventWrapper<IGbE, &IGbE::tadvProcess>;
-    EventWrapper<IGbE, &IGbE::tadvProcess> tadvEvent;
+    EventFunctionWrapper tadvEvent;
 
     // Event and function to deal with TIDV timer expiring
     void tidvProcess() {
@@ -129,13 +127,11 @@ class IGbE : public EtherDevice
                 "Posting TXDW interrupt because TIDV timer expired\n");
         postInterrupt(iGbReg::IT_TXDW);
     }
-    //friend class EventWrapper<IGbE, &IGbE::tidvProcess>;
-    EventWrapper<IGbE, &IGbE::tidvProcess> tidvEvent;
+    EventFunctionWrapper tidvEvent;
 
     // Main event to tick the device
     void tick();
-    //friend class EventWrapper<IGbE, &IGbE::tick>;
-    EventWrapper<IGbE, &IGbE::tick> tickEvent;
+    EventFunctionWrapper tickEvent;
 
 
     uint64_t macAddr;
@@ -161,7 +157,7 @@ class IGbE : public EtherDevice
     void delayIntEvent();
     void cpuPostInt();
     // Event to moderate interrupts
-    EventWrapper<IGbE, &IGbE::delayIntEvent> interEvent;
+    EventFunctionWrapper interEvent;
 
     /** Clear the interupt line to the cpu
      */
@@ -283,24 +279,24 @@ class IGbE : public EtherDevice
 
         void writeback(Addr aMask);
         void writeback1();
-        EventWrapper<DescCache, &DescCache::writeback1> wbDelayEvent;
+        EventFunctionWrapper wbDelayEvent;
 
         /** Fetch a chunk of descriptors into the descriptor cache.
          * Calls fetchComplete when the memory system returns the data
          */
         void fetchDescriptors();
         void fetchDescriptors1();
-        EventWrapper<DescCache, &DescCache::fetchDescriptors1> fetchDelayEvent;
+        EventFunctionWrapper fetchDelayEvent;
 
         /** Called by event when dma to read descriptors is completed
          */
         void fetchComplete();
-        EventWrapper<DescCache, &DescCache::fetchComplete> fetchEvent;
+        EventFunctionWrapper fetchEvent;
 
         /** Called by event when dma to writeback descriptors is completed
          */
         void wbComplete();
-        EventWrapper<DescCache, &DescCache::wbComplete> wbEvent;
+        EventFunctionWrapper wbEvent;
 
         /* Return the number of descriptors left in the ring, so the device has
          * a way to figure out if it needs to interrupt.
@@ -383,13 +379,13 @@ class IGbE : public EtherDevice
          */
         bool packetDone();
 
-        EventWrapper<RxDescCache, &RxDescCache::pktComplete> pktEvent;
+        EventFunctionWrapper pktEvent;
 
         // Event to handle issuing header and data write at the same time
         // and only callking pktComplete() when both are completed
         void pktSplitDone();
-        EventWrapper<RxDescCache, &RxDescCache::pktSplitDone> pktHdrEvent;
-        EventWrapper<RxDescCache, &RxDescCache::pktSplitDone> pktDataEvent;
+        EventFunctionWrapper pktHdrEvent;
+        EventFunctionWrapper pktDataEvent;
 
         bool hasOutstandingEvents() override;
 
@@ -483,10 +479,10 @@ class IGbE : public EtherDevice
         /** Called by event when dma to write packet is completed
          */
         void pktComplete();
-        EventWrapper<TxDescCache, &TxDescCache::pktComplete> pktEvent;
+        EventFunctionWrapper pktEvent;
 
         void headerComplete();
-        EventWrapper<TxDescCache, &TxDescCache::headerComplete> headerEvent;
+        EventFunctionWrapper headerEvent;
 
 
         void completionWriteback(Addr a, bool enabled) {
@@ -502,7 +498,7 @@ class IGbE : public EtherDevice
         void nullCallback() {
             DPRINTF(EthernetDesc, "Completion writeback complete\n");
         }
-        EventWrapper<TxDescCache, &TxDescCache::nullCallback> nullEvent;
+        EventFunctionWrapper nullEvent;
 
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
@@ -523,7 +519,8 @@ class IGbE : public EtherDevice
     ~IGbE();
     void init() override;
 
-    EtherInt *getEthPort(const std::string &if_name, int idx) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     Tick lastInterrupt;
 

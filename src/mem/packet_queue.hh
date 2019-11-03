@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012,2015 ARM Limited
+ * Copyright (c) 2012,2015,2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -87,7 +87,7 @@ class PacketQueue : public Drainable
     void processSendEvent();
 
     /** Event used to call processSendEvent. */
-    EventWrapper<PacketQueue, &PacketQueue::processSendEvent> sendEvent;
+    EventFunctionWrapper sendEvent;
 
      /*
       * Optionally disable the sanity check
@@ -95,6 +95,13 @@ class PacketQueue : public Drainable
       * sanity check will be enabled by default.
       */
     bool _disableSanityCheck;
+
+    /**
+     * if true, inserted packets have to be unconditionally scheduled
+     * after the last packet in the queue that references the same
+     * address
+     */
+    bool forceOrder;
 
   protected:
 
@@ -130,10 +137,13 @@ class PacketQueue : public Drainable
      *
      * @param _em Event manager used for scheduling this queue
      * @param _label Label to push on the label stack for print request packets
+     * @param force_order Force insertion order for packets with same address
      * @param disable_sanity_check Flag used to disable the sanity check
      *        on the size of the transmitList. The check is enabled by default.
      */
     PacketQueue(EventManager& _em, const std::string& _label,
+                const std::string& _sendEventName,
+                bool force_order = false,
                 bool disable_sanity_check = false);
 
     /**
@@ -162,13 +172,18 @@ class PacketQueue : public Drainable
     { return transmitList.empty() ? MaxTick : transmitList.front().tick; }
 
     /**
-     * Check if a packets address exists in the queue.
+     * Check if a packet corresponding to the same address exists in the
+     * queue.
+     *
+     * @param pkt The packet to compare against.
+     * @param blk_size Block size in bytes.
+     * @return Whether a corresponding packet is found.
      */
-    bool hasAddr(Addr addr) const;
+    bool checkConflict(const PacketPtr pkt, const int blk_size) const;
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
-    bool checkFunctional(PacketPtr pkt);
+    bool trySatisfyFunctional(PacketPtr pkt);
 
     /**
      * Schedule a send event if we are not already waiting for a
@@ -186,9 +201,8 @@ class PacketQueue : public Drainable
      *
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
-     * @param force_order Force insertion order for packets with same address
      */
-    void schedSendTiming(PacketPtr pkt, Tick when, bool force_order = false);
+    void schedSendTiming(PacketPtr pkt, Tick when);
 
     /**
      * Retry sending a packet from the queue. Note that this is not
@@ -215,6 +229,12 @@ class ReqPacketQueue : public PacketQueue
 
     MasterPort& masterPort;
 
+    // Static definition so it can be called when constructing the parent
+    // without us being completely initialized.
+    static const std::string name(const MasterPort& masterPort,
+                                  const std::string& label)
+    { return masterPort.name() + "-" + label; }
+
   public:
 
     /**
@@ -232,7 +252,7 @@ class ReqPacketQueue : public PacketQueue
     virtual ~ReqPacketQueue() { }
 
     const std::string name() const
-    { return masterPort.name() + "-" + label; }
+    { return name(masterPort, label); }
 
     bool sendTiming(PacketPtr pkt);
 
@@ -245,6 +265,12 @@ class SnoopRespPacketQueue : public PacketQueue
 
     MasterPort& masterPort;
 
+    // Static definition so it can be called when constructing the parent
+    // without us being completely initialized.
+    static const std::string name(const MasterPort& masterPort,
+                                  const std::string& label)
+    { return masterPort.name() + "-" + label; }
+
   public:
 
     /**
@@ -254,15 +280,17 @@ class SnoopRespPacketQueue : public PacketQueue
      *
      * @param _em Event manager used for scheduling this queue
      * @param _masterPort Master port used to send the packets
+     * @param force_order Force insertion order for packets with same address
      * @param _label Label to push on the label stack for print request packets
      */
     SnoopRespPacketQueue(EventManager& _em, MasterPort& _masterPort,
+                         bool force_order = false,
                          const std::string _label = "SnoopRespPacketQueue");
 
     virtual ~SnoopRespPacketQueue() { }
 
     const std::string name() const
-    { return masterPort.name() + "-" + label; }
+    { return name(masterPort, label); }
 
     bool sendTiming(PacketPtr pkt);
 
@@ -275,6 +303,12 @@ class RespPacketQueue : public PacketQueue
 
     SlavePort& slavePort;
 
+    // Static definition so it can be called when constructing the parent
+    // without us being completely initialized.
+    static const std::string name(const SlavePort& slavePort,
+                                  const std::string& label)
+    { return slavePort.name() + "-" + label; }
+
   public:
 
     /**
@@ -284,15 +318,17 @@ class RespPacketQueue : public PacketQueue
      *
      * @param _em Event manager used for scheduling this queue
      * @param _slavePort Slave port used to send the packets
+     * @param force_order Force insertion order for packets with same address
      * @param _label Label to push on the label stack for print request packets
      */
     RespPacketQueue(EventManager& _em, SlavePort& _slavePort,
-                     const std::string _label = "RespPacketQueue");
+                    bool force_order = false,
+                    const std::string _label = "RespPacketQueue");
 
     virtual ~RespPacketQueue() { }
 
     const std::string name() const
-    { return slavePort.name() + "-" + label; }
+    { return name(slavePort, label); }
 
     bool sendTiming(PacketPtr pkt);
 

@@ -26,48 +26,49 @@
 #
 # Authors: Nathan Binkert
 
-from UserDict import DictMixin
+from __future__ import print_function
 
-import internal
+from collections import Mapping
 
-from internal.debug import SimpleFlag, CompoundFlag
-from internal.debug import schedBreak, setRemoteGDBPort
+import _m5.debug
+from _m5.debug import SimpleFlag, CompoundFlag
+from _m5.debug import schedBreak, setRemoteGDBPort
 from m5.util import printList
 
 def help():
-    print "Base Flags:"
+    print("Base Flags:")
     for name in sorted(flags):
         if name == 'All':
             continue
         flag = flags[name]
         children = [c for c in flag.kids() ]
         if not children:
-            print "    %s: %s" % (name, flag.desc())
-    print
-    print "Compound Flags:"
+            print("    %s: %s" % (name, flag.desc()))
+    print()
+    print("Compound Flags:")
     for name in sorted(flags):
         if name == 'All':
             continue
         flag = flags[name]
         children = [c for c in flag.kids() ]
         if children:
-            print "    %s: %s" % (name, flag.desc())
+            print("    %s: %s" % (name, flag.desc()))
             printList([ c.name() for c in children ], indent=8)
-    print
+    print()
 
-class AllFlags(DictMixin):
+class AllFlags(Mapping):
     def __init__(self):
         self._version = -1
         self._dict = {}
 
     def _update(self):
-        current_version = internal.debug.getAllFlagsVersion()
+        current_version = _m5.debug.getAllFlagsVersion()
         if self._version == current_version:
             return
 
         self._dict.clear()
-        for flag in internal.debug.getAllFlags():
-            self._dict[flag.name()] = flag
+        for name, flag in _m5.debug.allFlags().items():
+            self._dict[name] = flag
         self._version = current_version
 
     def __contains__(self, item):
@@ -77,6 +78,14 @@ class AllFlags(DictMixin):
     def __getitem__(self, item):
         self._update()
         return self._dict[item]
+
+    def __iter__(self):
+        self._update()
+        return iter(self._dict)
+
+    def __len__(self):
+        self._update()
+        return len(self._dict)
 
     def keys(self):
         self._update()
@@ -89,17 +98,5 @@ class AllFlags(DictMixin):
     def items(self):
         self._update()
         return self._dict.items()
-
-    def iterkeys(self):
-        self._update()
-        return self._dict.iterkeys()
-
-    def itervalues(self):
-        self._update()
-        return self._dict.itervalues()
-
-    def iteritems(self):
-        self._update()
-        return self._dict.iteritems()
 
 flags = AllFlags()

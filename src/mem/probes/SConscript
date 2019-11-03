@@ -45,6 +45,9 @@ Source('base.cc')
 SimObject('StackDistProbe.py')
 Source('stack_dist.cc')
 
+SimObject('MemFootprintProbe.py')
+Source('mem_footprint.cc')
+
 # Packet tracing requires protobuf support
 if env['HAVE_PROTOBUF']:
     SimObject('MemTraceProbe.py')

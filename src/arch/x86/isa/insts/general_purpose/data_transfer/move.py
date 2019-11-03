@@ -174,19 +174,19 @@ def macroop MOVZX_W_R_P {
 };
 
 def macroop MOV_C_R {
-    .serializing
+    .serialize_after
     .adjust_env maxOsz
     wrcr reg, regm
 };
 
 def macroop MOV_R_C {
-    .serializing
+    .serialize_after
     .adjust_env maxOsz
     rdcr reg, regm
 };
 
 def macroop MOV_D_R {
-    .serializing
+    .serialize_after
     .adjust_env maxOsz
     wrdr reg, regm
 };
@@ -333,10 +333,12 @@ processDescriptor:
 };
 
 def macroop MOVNTI_M_R {
+    warn_once "MOVNTI: Ignoring non-temporal hint, modeling as cacheable!"
     st reg, seg, sib, disp
 };
 
 def macroop MOVNTI_P_R {
+    warn_once "MOVNTI_P: Ignoring non-temporal hint, modeling as cacheable!"
     rdip t7
     st reg, seg, riprel, disp
 };

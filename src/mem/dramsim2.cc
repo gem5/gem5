@@ -37,12 +37,13 @@
  * Authors: Andreas Hansson
  */
 
+#include "mem/dramsim2.hh"
+
 #include "DRAMSim2/Callback.h"
 #include "base/callback.hh"
 #include "base/trace.hh"
 #include "debug/DRAMSim2.hh"
 #include "debug/Drain.hh"
-#include "mem/dramsim2.hh"
 #include "sim/system.hh"
 
 DRAMSim2::DRAMSim2(const Params* p) :
@@ -52,7 +53,8 @@ DRAMSim2::DRAMSim2(const Params* p) :
             p->traceFile, p->range.size() / 1024 / 1024, p->enableDebug),
     retryReq(false), retryResp(false), startTick(0),
     nbrOutstandingReads(0), nbrOutstandingWrites(0),
-    sendResponseEvent(this), tickEvent(this)
+    sendResponseEvent([this]{ sendResponse(); }, name()),
+    tickEvent([this]{ tick(); }, name())
 {
     DPRINTF(DRAMSim2,
             "Instantiated DRAMSim2 with clock %d ns and queue size %d\n",
@@ -167,7 +169,7 @@ DRAMSim2::recvFunctional(PacketPtr pkt)
 
     // potentially update the packets in our response queue as well
     for (auto i = responseQueue.begin(); i != responseQueue.end(); ++i)
-        pkt->checkFunctional(*i);
+        pkt->trySatisfyFunctional(*i);
 
     pkt->popLabel();
 }
@@ -334,11 +336,11 @@ void DRAMSim2::writeComplete(unsigned id, uint64_t addr, uint64_t cycle)
         signalDrainDone();
 }
 
-BaseSlavePort&
-DRAMSim2::getSlavePort(const std::string &if_name, PortID idx)
+Port &
+DRAMSim2::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "port") {
-        return MemObject::getSlavePort(if_name, idx);
+        return AbstractMemory::getPort(if_name, idx);
     } else {
         return port;
     }

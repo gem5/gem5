@@ -1,3 +1,15 @@
+# Copyright (c) 2019 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
 # Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
@@ -31,19 +43,25 @@ import math
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
-from Ruby import create_topology
+from Ruby import create_topology, create_directories
 from Ruby import send_evicts
 
 #
 # Declare caches used by the protocol
 #
-class L1Cache(RubyCache): pass
-class L2Cache(RubyCache): pass
+class L1Cache(RubyCache):
+    dataAccessLatency = 1
+    tagAccessLatency = 1
+
+class L2Cache(RubyCache):
+    dataAccessLatency = 20
+    tagAccessLatency = 20
 
 def define_options(parser):
     return
 
-def create_system(options, full_system, system, dma_ports, ruby_system):
+def create_system(options, full_system, system, dma_ports, bootmem,
+                  ruby_system):
 
     if buildEnv['PROTOCOL'] != 'MOESI_CMP_directory':
         panic("This script requires the MOESI_CMP_directory protocol to be built.")
@@ -57,17 +75,15 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
     #
     l1_cntrl_nodes = []
     l2_cntrl_nodes = []
-    dir_cntrl_nodes = []
     dma_cntrl_nodes = []
 
     #
     # Must create the individual controllers before the network to ensure the
     # controller constructors are called before the network constructor
     #
-    l2_bits = int(math.log(options.num_l2caches, 2))
     block_size_bits = int(math.log(options.cacheline_size, 2))
 
-    for i in xrange(options.num_cpus):
+    for i in range(options.num_cpus):
         #
         # First create the Ruby objects associated with this cpu
         #
@@ -94,7 +110,6 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
 
         l1_cntrl = L1Cache_Controller(version=i, L1Icache=l1i_cache,
                                       L1Dcache=l1d_cache,
-                                      l2_select_num_bits=l2_bits,
                                       send_evictions=send_evicts(options),
                                       transitions_per_cycle=options.ports,
                                       clk_domain=clk_domain,
@@ -124,20 +139,35 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         l1_cntrl.triggerQueue = MessageBuffer(ordered = True)
 
 
-    l2_index_start = block_size_bits + l2_bits
+    # Create the L2s interleaved addr ranges
+    l2_addr_ranges = []
+    l2_bits = int(math.log(options.num_l2caches, 2))
+    numa_bit = block_size_bits + l2_bits - 1
+    sysranges = [] + system.mem_ranges
+    if bootmem: sysranges.append(bootmem.range)
+    for i in range(options.num_l2caches):
+        ranges = []
+        for r in sysranges:
+            addr_range = AddrRange(r.start, size = r.size(),
+                                    intlvHighBit = numa_bit,
+                                    intlvBits = l2_bits,
+                                    intlvMatch = i)
+            ranges.append(addr_range)
+        l2_addr_ranges.append(ranges)
 
-    for i in xrange(options.num_l2caches):
+    for i in range(options.num_l2caches):
         #
         # First create the Ruby objects associated with this cpu
         #
         l2_cache = L2Cache(size = options.l2_size,
                            assoc = options.l2_assoc,
-                           start_index_bit = l2_index_start)
+                           start_index_bit = block_size_bits + l2_bits)
 
         l2_cntrl = L2Cache_Controller(version = i,
                                       L2cache = l2_cache,
                                       transitions_per_cycle = options.ports,
-                                      ruby_system = ruby_system)
+                                      ruby_system = ruby_system,
+                                      addr_ranges = l2_addr_ranges[i])
 
         exec("ruby_system.l2_cntrl%d = l2_cntrl" % i)
         l2_cntrl_nodes.append(l2_cntrl)
@@ -158,12 +188,6 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         l2_cntrl.responseToL2Cache.slave = ruby_system.network.master
         l2_cntrl.triggerQueue = MessageBuffer(ordered = True)
 
-
-    phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
-    assert(phys_mem_size % options.num_dirs == 0)
-    mem_module_size = phys_mem_size / options.num_dirs
-
-
     # Run each of the ruby memory controllers at a ratio of the frequency of
     # the ruby system.
     # clk_divider value is a fix to pass regression.
@@ -171,19 +195,13 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
                                           clk_domain=ruby_system.clk_domain,
                                           clk_divider=3)
 
-    for i in xrange(options.num_dirs):
-        dir_size = MemorySize('0B')
-        dir_size.value = mem_module_size
 
-        dir_cntrl = Directory_Controller(version = i,
-                                         directory = RubyDirectoryMemory(
-                                             version = i, size = dir_size),
-                                         transitions_per_cycle = options.ports,
-                                         ruby_system = ruby_system)
-
-        exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
-        dir_cntrl_nodes.append(dir_cntrl)
-
+    mem_dir_cntrl_nodes, rom_dir_cntrl_node = create_directories(
+        options, bootmem, ruby_system, system)
+    dir_cntrl_nodes = mem_dir_cntrl_nodes[:]
+    if rom_dir_cntrl_node is not None:
+        dir_cntrl_nodes.append(rom_dir_cntrl_node)
+    for dir_cntrl in dir_cntrl_nodes:
         # Connect the directory controllers and the network
         dir_cntrl.requestToDir = MessageBuffer()
         dir_cntrl.requestToDir.slave = ruby_system.network.master
@@ -249,7 +267,6 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
 
         all_cntrls = all_cntrls + [io_controller]
 
-
     ruby_system.network.number_of_virtual_networks = 3
     topology = create_topology(all_cntrls, options)
-    return (cpu_sequencers, dir_cntrl_nodes, topology)
+    return (cpu_sequencers, mem_dir_cntrl_nodes, topology)

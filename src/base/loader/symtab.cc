@@ -28,13 +28,14 @@
  * Authors: Nathan Binkert
  */
 
+#include "base/loader/symtab.hh"
+
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "base/loader/symtab.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/str.hh"
 #include "base/types.hh"
 #include "sim/serialize.hh"
@@ -56,11 +57,12 @@ SymbolTable::insert(Addr address, string symbol)
     if (symbol.empty())
         return false;
 
-    if (!addrTable.insert(make_pair(address, symbol)).second)
-        return false;
-
     if (!symbolTable.insert(make_pair(symbol, address)).second)
         return false;
+
+    // There can be multiple symbols for the same address, so always
+    // update the addrTable multimap when we see a new symbol name.
+    addrTable.insert(make_pair(address, symbol));
 
     return true;
 }

@@ -1,13 +1,14 @@
+Redirecting stdout to build/X86/tests/opt/quick/se/10.mcf/x86/linux/simple-atomic/simout
+Redirecting stderr to build/X86/tests/opt/quick/se/10.mcf/x86/linux/simple-atomic/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 21 2016 14:41:03
-gem5 started Jan 21 2016 14:41:53
-gem5 executing on zizzer, pid 17901
-command line: build/X86/gem5.opt -d build/X86/tests/opt/quick/se/10.mcf/x86/linux/simple-atomic -re /z/atgutier/gem5/gem5-commit/tests/run.py build/X86/tests/opt/quick/se/10.mcf/x86/linux/simple-atomic
+gem5 compiled Apr  3 2017 19:05:53
+gem5 started Apr  3 2017 19:06:21
+gem5 executing on gabeblack-desktop.mtv.corp.google.com, pid 87179
+command line: /usr/local/google/home/gabeblack/gem5/gem5-public/build/X86/gem5.opt -d build/X86/tests/opt/quick/se/10.mcf/x86/linux/simple-atomic --stats-file 'text://stats.txt?desc=False' -re /usr/local/google/home/gabeblack/gem5/gem5-public/tests/testing/../run.py quick/se/10.mcf/x86/linux/simple-atomic
 
 Global frequency set at 1000000000000 ticks per second
-info: Entering event queue @ 0.  Starting simulation...
 
 MCF SPEC version 1.6.I
 by  Andreas Loebel
@@ -24,4 +25,4 @@ simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-Exiting @ tick 168950040000 because target called exit()
+Exiting @ tick 168950040000 because exiting with last active thread context

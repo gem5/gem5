@@ -43,7 +43,7 @@ def macroop FLDCW_M {
 };
 
 def macroop FLDCW_P {
-    ld t1, seg, sib, disp, dataSize=2
+    ld t1, seg, riprel, disp, dataSize=2
     wrval fcw, t1
 };
 
@@ -57,6 +57,6 @@ def macroop FNSTCW_M {
 def macroop FNSTCW_P {
     rdip t7
     rdval t1, fcw
-    st t1, seg, sib, disp, dataSize=2
+    st t1, seg, riprel, disp, dataSize=2
 };
 '''

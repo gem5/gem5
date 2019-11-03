@@ -35,7 +35,6 @@
 #ifndef __DEV_NET_ETHERBUS_HH__
 #define __DEV_NET_ETHERBUS_HH__
 
-#include "dev/net/etherobject.hh"
 #include "dev/net/etherpkt.hh"
 #include "params/EtherBus.hh"
 #include "sim/eventq.hh"
@@ -43,7 +42,7 @@
 
 class EtherDump;
 class EtherInt;
-class EtherBus : public EtherObject
+class EtherBus : public SimObject
 {
   protected:
     typedef std::list<EtherInt *> devlist_t;
@@ -52,19 +51,7 @@ class EtherBus : public EtherObject
     bool loopback;
 
   protected:
-    class DoneEvent : public Event
-    {
-      protected:
-        EtherBus *bus;
-
-      public:
-        DoneEvent(EtherBus *b) : bus(b) {}
-        virtual void process() { bus->txDone(); }
-        virtual const char *description() const
-            { return "ethernet bus completion"; }
-    };
-
-    DoneEvent event;
+    EventFunctionWrapper event;
     EthPacketPtr packet;
     EtherInt *sender;
     EtherDump *dump;
@@ -84,7 +71,8 @@ class EtherBus : public EtherObject
     void reg(EtherInt *dev);
     bool busy() const { return (bool)packet; }
     bool send(EtherInt *sender, EthPacketPtr &packet);
-    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 };
 
 #endif // __DEV_NET_ETHERBUS_HH__

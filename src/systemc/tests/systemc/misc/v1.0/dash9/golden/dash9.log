@@ -1,0 +1,35 @@
+SystemC Simulation
+Driver is up @ 0 s
+Driver started the car @ 10 us
+Driver set the speed to 40 km/h @ 10 us
+Current speed displayed = 18.2769 km/h @ 10625 ns
+Current speedometer angle = 37.9598 degrees @ 10625 ns
+Current speed displayed = 19.8 km/h @ 11225 ns
+Current speedometer angle = 41.1231 degrees @ 11225 ns
+Driver set the speed to 120 km/h @ 20 us
+Current speed displayed = 26.4 km/h @ 20075 ns
+Current speedometer angle = 54.8308 degrees @ 20075 ns
+Current speed displayed = 59.4 km/h @ 20275 ns
+Current speedometer angle = 123.369 degrees @ 20275 ns
+Current total distance displayed = 0.01 km @ 22775 ns
+Current partial distance displayed = 0.01 km @ 22775 ns
+Current total distance displayed = 0.02 km @ 28875 ns
+Current partial distance displayed = 0.02 km @ 28875 ns
+Driver reset the partial distance odometer @ 30 us
+Driver set the speed to 60 km/h @ 30 us
+Current speed displayed = 39.6 km/h @ 30175 ns
+Current speedometer angle = 82.2462 degrees @ 30175 ns
+Current speed displayed = 29.7 km/h @ 30575 ns
+Current speedometer angle = 61.6846 degrees @ 30575 ns
+Current total distance displayed = 0.03 km @ 39975 ns
+Current partial distance displayed = 0 km @ 39975 ns
+Driver set the speed to 40 km/h @ 40 us
+Current speed displayed = 23.76 km/h @ 40275 ns
+Current speedometer angle = 49.3477 degrees @ 40275 ns
+Current speed displayed = 19.8 km/h @ 40875 ns
+Current speedometer angle = 41.1231 degrees @ 40875 ns
+Driver stopped the car @ 50 us
+Current total distance displayed = 0.04 km @ 58275 ns
+Current partial distance displayed = 0.01 km @ 58275 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.

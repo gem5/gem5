@@ -1,0 +1,55 @@
+SystemC Simulation
+
+Exception caught
+Error: (E101) sc_clock period is zero: increase the period: clock 'clk1'
+In file: <removed by verify.pl>
+
+Exception caught
+Error: (E102) sc_clock high time is zero: increase the period or increase the duty cycle: clock 'clk2'
+In file: <removed by verify.pl>
+
+Exception caught
+Error: (E103) sc_clock low time is zero: increase the period or decrease the duty cycle: clock 'clk3'
+In file: <removed by verify.pl>
+
+Exception caught
+Error: (E118) find event failed: port is not bound: port 'a.port_0' (sc_in)
+In file: <removed by verify.pl>
+
+Exception caught
+Error: (E112) get interface failed: port is not bound: port 'b.port_0' (sc_in)
+In file: <removed by verify.pl>
+
+Exception caught
+Error: (E112) get interface failed: port is not bound: port 'c.port_0' (sc_in)
+In file: <removed by verify.pl>
+
+Exception caught
+Error: (E119) sc_semaphore requires an initial value >= 0: semaphore 'semaphore_0'
+In file: <removed by verify.pl>
+
+Exception caught
+Error: (E119) sc_semaphore requires an initial value >= 0: semaphore 'sem2'
+In file: <removed by verify.pl>
+
+Info: (I804) /IEEE_Std_1666/deprecated: notify_delayed(...) is deprecated, use notify(sc_time) instead
+
+Exception caught
+Error: (E531) notify_delayed() cannot be called on events that have pending notifications
+In file: <removed by verify.pl>
+
+Exception caught
+Error: (E531) notify_delayed() cannot be called on events that have pending notifications
+In file: <removed by verify.pl>
+
+Exception caught
+Error: (E532) cannot generate unique name from null string
+In file: <removed by verify.pl>
+
+Info: (I804) /IEEE_Std_1666/deprecated: You can turn off warnings about
+             IEEE 1666 deprecated features by placing this method call
+             as the first statement in your sc_main() function:
+
+  sc_core::sc_report_handler::set_actions( "/IEEE_Std_1666/deprecated",
+                                           sc_core::SC_DO_NOTHING );
+

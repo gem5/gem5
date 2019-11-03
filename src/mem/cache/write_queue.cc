@@ -48,7 +48,9 @@
 
 #include "mem/cache/write_queue.hh"
 
-using namespace std;
+#include <cassert>
+
+#include "mem/cache/write_queue_entry.hh"
 
 WriteQueue::WriteQueue(const std::string &_label,
                        int num_entries, int reserve)

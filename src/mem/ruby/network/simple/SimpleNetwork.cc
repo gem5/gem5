@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/network/simple/SimpleNetwork.hh"
+
 #include <cassert>
 #include <numeric>
 
@@ -34,7 +36,6 @@
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/simple/SimpleLink.hh"
-#include "mem/ruby/network/simple/SimpleNetwork.hh"
 #include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
 #include "mem/ruby/profiler/Profiler.hh"
@@ -78,8 +79,7 @@ SimpleNetwork::~SimpleNetwork()
 
 // From a switch to an endpoint node
 void
-SimpleNetwork::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                           LinkDirection direction,
+SimpleNetwork::makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
                            const NetDest& routing_table_entry)
 {
     assert(dest < m_nodes);
@@ -95,8 +95,7 @@ SimpleNetwork::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
 
 // From an endpoint node to a switch
 void
-SimpleNetwork::makeInLink(NodeID src, SwitchID dest, BasicLink* link,
-                          LinkDirection direction,
+SimpleNetwork::makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                           const NetDest& routing_table_entry)
 {
     assert(src < m_nodes);
@@ -106,8 +105,9 @@ SimpleNetwork::makeInLink(NodeID src, SwitchID dest, BasicLink* link,
 // From a switch to a switch
 void
 SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                                LinkDirection direction,
-                                const NetDest& routing_table_entry)
+                                const NetDest& routing_table_entry,
+                                PortDirection src_outport,
+                                PortDirection dst_inport)
 {
     // Create a set of new MessageBuffers
     std::vector<MessageBuffer*> queues(m_virtual_networks);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010,2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,9 +37,10 @@
  * Authors: Ali Saidi
  */
 
+#include "dev/arm/a9scu.hh"
+
 #include "base/intmath.hh"
 #include "base/trace.hh"
-#include "dev/arm/a9scu.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
@@ -58,7 +59,7 @@ A9SCU::read(PacketPtr pkt)
 
     switch(daddr) {
       case Control:
-        pkt->set(1); // SCU already enabled
+        pkt->setLE(1); // SCU already enabled
         break;
       case Config:
         /* Without making a completely new SCU, we can use the core count field
@@ -72,9 +73,9 @@ A9SCU::read(PacketPtr pkt)
                 fatal("Too many CPUs (%d) for A9SCU!\n", sys->numContexts());
         }
         int smp_bits, core_cnt;
-        smp_bits = power(2,sys->numContexts()) - 1;
+        smp_bits = (1 << sys->numContexts()) - 1;
         core_cnt = sys->numContexts() - 1;
-        pkt->set(smp_bits << 4 | core_cnt);
+        pkt->setLE(smp_bits << 4 | core_cnt);
         break;
       default:
         // Only configuration register is implemented
@@ -95,7 +96,7 @@ A9SCU::write(PacketPtr pkt)
     switch (daddr) {
       default:
         // Nothing implemented at this point
-        panic("Tried to write SCU at offset %#x\n", daddr);
+        warn("Tried to write SCU at offset %#x\n", daddr);
         break;
     }
     pkt->makeAtomicResponse();

@@ -59,6 +59,9 @@ DRAMPowerFile('MemorySpecification.cc')
 DRAMPowerFile('Parameter.cc')
 DRAMPowerFile('Parametrisable.cc')
 DRAMPowerFile('libdrampower/LibDRAMPower.cc')
+DRAMPowerFile('CAHelpers.cc')
+DRAMPowerFile('CmdHandlers.cc')
+DRAMPowerFile('MemBankWiseParams.cc')
 
 main.Library('drampower', [main.SharedObject(f) for f in drampower_files])
 

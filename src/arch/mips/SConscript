@@ -59,4 +59,4 @@ if env['TARGET_ISA'] == 'mips':
 
     DebugFlag('MipsPRA')
 
-    env.ISADesc('isa/main.isa')
+    ISADesc('isa/main.isa')

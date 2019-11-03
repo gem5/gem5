@@ -1,0 +1,139 @@
+
+$timescale
+     1 ps
+$end
+
+$scope module SystemC $end
+$var wire    4  aaaaa  Signed [3:0]  $end
+$var wire    4  aaaab  Unsigned [3:0]  $end
+$var wire    4  aaaac  BV [3:0]  $end
+$var wire    4  aaaad  SV [3:0]  $end
+$upscope $end
+$enddefinitions  $end
+
+$comment
+All initial values are dumped below at time 0 sec = 0 timescale units.
+$end
+
+$dumpvars
+b11 aaaaa
+b111 aaaab
+b11 aaaac
+b1100 aaaad
+$end
+
+#10000
+b1101 aaaaa
+b101 aaaab
+b1111 aaaac
+b1110 aaaad
+
+#20000
+b11 aaaaa
+b111 aaaab
+b11 aaaac
+b1100 aaaad
+
+#30000
+b1101 aaaaa
+b101 aaaab
+b1111 aaaac
+b1110 aaaad
+
+#40000
+b11 aaaaa
+b111 aaaab
+b11 aaaac
+b1100 aaaad
+
+#50000
+b1101 aaaaa
+b101 aaaab
+b1111 aaaac
+b1110 aaaad
+
+#60000
+b11 aaaaa
+b111 aaaab
+b11 aaaac
+b1100 aaaad
+
+#70000
+b1101 aaaaa
+b101 aaaab
+b1111 aaaac
+b1110 aaaad
+
+#80000
+b11 aaaaa
+b111 aaaab
+b11 aaaac
+b1100 aaaad
+
+#90000
+b1101 aaaaa
+b101 aaaab
+b1111 aaaac
+b1110 aaaad
+
+#100000
+b11 aaaaa
+b111 aaaab
+b11 aaaac
+b1100 aaaad
+
+#110000
+b1101 aaaaa
+b101 aaaab
+b1111 aaaac
+b1110 aaaad
+
+#120000
+b11 aaaaa
+b111 aaaab
+b11 aaaac
+b1100 aaaad
+
+#130000
+b1101 aaaaa
+b101 aaaab
+b1111 aaaac
+b1110 aaaad
+
+#140000
+b11 aaaaa
+b111 aaaab
+b11 aaaac
+b1100 aaaad
+
+#150000
+b1101 aaaaa
+b101 aaaab
+b1111 aaaac
+b1110 aaaad
+
+#160000
+b11 aaaaa
+b111 aaaab
+b11 aaaac
+b1100 aaaad
+
+#170000
+b1101 aaaaa
+b101 aaaab
+b1111 aaaac
+b1110 aaaad
+
+#180000
+b11 aaaaa
+b111 aaaab
+b11 aaaac
+b1100 aaaad
+
+#190000
+b1101 aaaaa
+b101 aaaab
+b1111 aaaac
+b1110 aaaad
+
+#200000

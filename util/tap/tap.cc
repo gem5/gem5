@@ -30,36 +30,37 @@
 
 extern "C" {
 #include <pcap.h>
+
 }
 
 #include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <dnet.h>
 #include <fcntl.h>
 #include <libgen.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <poll.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <cerrno>
 #include <csignal>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <list>
 #include <string>
 
-#include "base/cprintf.hh"
-
 #define panic(arg...) \
-  do { cprintf("Panic: " arg); exit(1); } while (0)
+  do { printf("Panic: " arg); exit(1); } while (0)
 
-char *program = "ethertap";
+const char *program = "ethertap";
 void
 usage()
 {
-    cprintf(
+    printf(
         "usage: \n"
         "\t%s [-b bufsize] [-d] [-f filter] [-p port] [-v] <device> <host>\n"
         "\t%s [-b bufsize] [-d] [-f filter] [-l] [-p port] [-v] <device>\n",
@@ -70,7 +71,7 @@ usage()
 int verbose = 0;
 #define DPRINTF(args...) do { \
     if (verbose >= 1) \
-        cprintf(args); \
+        printf(args); \
 } while (0)
 
 #define DDUMP(args...) do { \
@@ -84,26 +85,26 @@ dump(const u_char *data, int len)
         int c, i, j;
 
         for (i = 0; i < len; i += 16) {
-                cprintf("%08x  ", i);
+                printf("%08x  ", i);
                 c = len - i;
                 if (c > 16) c = 16;
 
                 for (j = 0; j < c; j++) {
-                        cprintf("%02x ", data[i + j] & 0xff);
+                        printf("%02x ", data[i + j] & 0xff);
                         if ((j & 0xf) == 7 && j > 0)
-                                cprintf(" ");
+                                printf(" ");
                 }
 
                 for (; j < 16; j++)
-                        cprintf("   ");
-                cprintf("  ");
+                        printf("   ");
+                printf("  ");
 
                 for (j = 0; j < c; j++) {
                         int ch = data[i + j] & 0x7f;
-                        cprintf("%c", (char)(isprint(ch) ? ch : ' '));
+                        printf("%c", (char)(isprint(ch) ? ch : ' '));
                 }
 
-                cprintf("\n");
+                printf("\n");
 
                 if (c < 16)
                         break;
@@ -178,7 +179,7 @@ Connect(int fd, const std::string &host, int port)
         struct hostent *hp;
         hp = ::gethostbyname(host.c_str());
         if (!hp)
-            panic("Host %s not found\n", host);
+            panic("Host %s not found\n", host.c_str());
 
         sockaddr.sin_family = hp->h_addrtype;
         memcpy(&sockaddr.sin_addr, hp->h_addr, hp->h_length);
@@ -186,9 +187,9 @@ Connect(int fd, const std::string &host, int port)
 
     sockaddr.sin_port = htons(port);
     if (::connect(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) != 0)
-        panic("could not connect to %s on port %d\n", host, port);
+        panic("could not connect to %s on port %d\n", host.c_str(), port);
 
-    DPRINTF("connected to %s on port %d\n", host, port);
+    DPRINTF("connected to %s on port %d\n", host.c_str(), port);
 }
 
 class Ethernet
@@ -221,7 +222,6 @@ class PCap : public Ethernet
 {
   private:
     pcap_t *pcap;
-    eth_t *ethernet;
 
   public:
     PCap(char *device, char *filter = NULL);
@@ -253,17 +253,12 @@ PCap::PCap(char *device, char *filter)
             panic("pcap_setfilter failed\n");
     }
 
-    ethernet = eth_open(device);
-    if (!ethernet)
-        panic("cannot open the ethernet device for writing\n");
-
     fd = pcap_fileno(pcap);
 }
 
 PCap::~PCap()
 {
     pcap_close(pcap);
-    eth_close(ethernet);
 }
 
 bool
@@ -281,7 +276,7 @@ PCap::read(const char *&data, int &len)
 bool
 PCap::write(const char *data, int len)
 {
-    eth_send(ethernet, data, len);
+    return pcap_inject(pcap, data, len) == len;
 }
 
 Tap::Tap(char *device)
@@ -335,7 +330,9 @@ main(int argc, char *argv[])
 
     program = basename(argv[0]);
 
-    while ((c = getopt(argc, argv, "b:df:lp:tv")) != -1) {
+    int ret;
+    while ((ret = getopt(argc, argv, "b:df:lp:tv")) != -1) {
+        char c = ret;
         switch (c) {
           case 'b':
             bufsize = atoi(optarg);
@@ -435,7 +432,7 @@ main(int argc, char *argv[])
 
     DPRINTF("Begin poll loop\n");
     while (!quit) {
-        int ret = ::poll(pfds, npfds, INFTIM);
+        int ret = ::poll(pfds, npfds, -1);
         if (ret < 0)
             continue;
 

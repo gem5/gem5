@@ -1,0 +1,80 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2015 RISC-V Foundation
+// Copyright (c) 2016 The University of Virginia
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Maxwell Walter
+//          Alec Roelke
+
+def operand_types {{
+    'sb' : 'int8_t',
+    'ub' : 'uint8_t',
+    'sh' : 'int16_t',
+    'uh' : 'uint16_t',
+    'sw' : 'int32_t',
+    'uw' : 'uint32_t',
+    'sd' : 'int64_t',
+    'ud' : 'uint64_t',
+    'sf' : 'float',
+    'df' : 'double'
+}};
+
+def operands {{
+#General Purpose Integer Reg Operands
+    'Rd': ('IntReg', 'ud', 'RD', 'IsInteger', 1),
+    'Rs1': ('IntReg', 'ud', 'RS1', 'IsInteger', 2),
+    'Rs2': ('IntReg', 'ud', 'RS2', 'IsInteger', 3),
+    'Rt': ('IntReg', 'ud', 'AMOTempReg', 'IsInteger', 4),
+    'Rc1': ('IntReg', 'ud', 'RC1', 'IsInteger', 2),
+    'Rc2': ('IntReg', 'ud', 'RC2', 'IsInteger', 3),
+    'Rp1': ('IntReg', 'ud', 'RP1 + 8', 'IsInteger', 2),
+    'Rp2': ('IntReg', 'ud', 'RP2 + 8', 'IsInteger', 3),
+    'ra': ('IntReg', 'ud', 'ReturnAddrReg', 'IsInteger', 1),
+    'sp': ('IntReg', 'ud', 'StackPointerReg', 'IsInteger', 2),
+
+    'Fd': ('FloatReg', 'df', 'FD', 'IsFloating', 1),
+    'Fd_bits': ('FloatReg', 'ud', 'FD', 'IsFloating', 1),
+    'Fs1': ('FloatReg', 'df', 'FS1', 'IsFloating', 2),
+    'Fs1_bits': ('FloatReg', 'ud', 'FS1', 'IsFloating', 2),
+    'Fs2': ('FloatReg', 'df', 'FS2', 'IsFloating', 3),
+    'Fs2_bits': ('FloatReg', 'ud', 'FS2', 'IsFloating', 3),
+    'Fs3': ('FloatReg', 'df', 'FS3', 'IsFloating', 4),
+    'Fs3_bits': ('FloatReg', 'ud', 'FS3', 'IsFloating', 4),
+    'Fc1': ('FloatReg', 'df', 'FC1', 'IsFloating', 1),
+    'Fc1_bits': ('FloatReg', 'ud', 'FC1', 'IsFloating', 1),
+    'Fc2': ('FloatReg', 'df', 'FC2', 'IsFloatReg', 2),
+    'Fc2_bits': ('FloatReg', 'ud', 'FC2', 'IsFloating', 2),
+    'Fp2': ('FloatReg', 'df', 'FP2 + 8', 'IsFloating', 2),
+    'Fp2_bits': ('FloatReg', 'ud', 'FP2 + 8', 'IsFloating', 2),
+
+#Memory Operand
+    'Mem': ('Mem', 'ud', None, ('IsMemRef', 'IsLoad', 'IsStore'), 5),
+
+#Program Counter Operands
+    'PC': ('PCState', 'ud', 'pc', (None, None, 'IsControl'), 7),
+    'NPC': ('PCState', 'ud', 'npc', (None, None, 'IsControl'), 8),
+}};

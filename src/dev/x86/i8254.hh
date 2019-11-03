@@ -32,13 +32,12 @@
 #define __DEV_X86_I8254_HH__
 
 #include "dev/intel_8254_timer.hh"
+#include "dev/intpin.hh"
 #include "dev/io_device.hh"
 #include "params/I8254.hh"
 
 namespace X86ISA
 {
-
-class IntSourcePin;
 
 class I8254 : public BasicPioDevice
 {
@@ -64,12 +63,21 @@ class I8254 : public BasicPioDevice
 
     X86Intel8254Timer pit;
 
-    IntSourcePin *intPin;
+    std::vector<IntSourcePin<I8254> *> intPin;
 
     void counterInterrupt(unsigned int num);
 
   public:
     typedef I8254Params Params;
+
+    Port &
+    getPort(const std::string &if_name, PortID idx=InvalidPortID) override
+    {
+        if (if_name == "int_pin")
+            return *intPin.at(idx);
+        else
+            return BasicPioDevice::getPort(if_name, idx);
+    }
 
     const Params *
     params() const
@@ -78,8 +86,12 @@ class I8254 : public BasicPioDevice
     }
 
     I8254(Params *p) : BasicPioDevice(p, 4), latency(p->pio_latency),
-            pit(p->name, this), intPin(p->int_pin)
+            pit(p->name, this)
     {
+        for (int i = 0; i < p->port_int_pin_connection_count; i++) {
+            intPin.push_back(new IntSourcePin<I8254>(csprintf(
+                            "%s.int_pin[%d]", name(), i), i, this));
+        }
     }
     Tick read(PacketPtr pkt) override;
 

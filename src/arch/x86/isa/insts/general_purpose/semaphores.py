@@ -132,6 +132,7 @@ def macroop XADD_R_R {
 # of dataSize.
 cmpxchg8bCode = '''
 def macroop CMPXCHG8B_%(suffix)s {
+    .adjust_env clampOsz
     %(rdip)s
     lea t1, seg, %(sib)s, disp, dataSize=asz
     ldsplit%(l)s (t2, t3), seg, [1, t0, t1], disp=0

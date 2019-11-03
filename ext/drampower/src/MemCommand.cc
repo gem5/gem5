@@ -44,15 +44,9 @@
 using namespace Data;
 using namespace std;
 
-MemCommand::MemCommand() :
-  type(MemCommand::PRE),
-  bank(0),
-  timestamp(0)
-{
-}
 
 MemCommand::MemCommand(MemCommand::cmds type,
-                       unsigned bank, double timestamp) :
+                       unsigned bank, int64_t timestamp) :
   type(type),
   bank(bank),
   timestamp(timestamp)
@@ -80,35 +74,35 @@ unsigned MemCommand::getBank() const
 }
 
 // For auto-precharge with read or write - to calculate cycle of precharge
-int MemCommand::getPrechargeOffset(const MemorySpecification& memSpec,
+int64_t MemCommand::getPrechargeOffset(const MemorySpecification& memSpec,
                                    MemCommand::cmds           type) const
 {
-  int precharge_offset = 0;
+  int64_t precharge_offset = 0;
 
-  int BL(static_cast<int>(memSpec.memArchSpec.burstLength));
-  int RTP(static_cast<int>(memSpec.memTimingSpec.RTP));
-  int dataRate(static_cast<int>(memSpec.memArchSpec.dataRate));
-  int AL(static_cast<int>(memSpec.memTimingSpec.AL));
-  int WL(static_cast<int>(memSpec.memTimingSpec.WL));
-  int WR(static_cast<int>(memSpec.memTimingSpec.WR));
-  int B = BL/dataRate;
+  int64_t BL = memSpec.memArchSpec.burstLength;
+  int64_t RTP = memSpec.memTimingSpec.RTP;
+  int64_t dataRate = memSpec.memArchSpec.dataRate;
+  int64_t AL = memSpec.memTimingSpec.AL;
+  int64_t WL = memSpec.memTimingSpec.WL;
+  int64_t WR = memSpec.memTimingSpec.WR;
+  int64_t B = BL/dataRate;
 
   const MemoryType::MemoryType_t& memType = memSpec.memoryType;
 
   // Read with auto-precharge
   if (type == MemCommand::RDA) {
     if (memType == MemoryType::DDR2) {
-      precharge_offset = B + AL - 2 + max(RTP, 2);
+      precharge_offset = B + AL - 2 + max(RTP, int64_t(2));
     } else if (memType == MemoryType::DDR3) {
-      precharge_offset = AL + max(RTP, 4);
+      precharge_offset = AL + max(RTP, int64_t(4));
     } else if (memType == MemoryType::DDR4) {
       precharge_offset = AL + RTP;
     } else if (memType == MemoryType::LPDDR) {
       precharge_offset = B;
     } else if (memType == MemoryType::LPDDR2) {
-      precharge_offset = B + max(0, RTP - 2);
+      precharge_offset = B + max(int64_t(0), RTP - 2);
     } else if (memType == MemoryType::LPDDR3) {
-      precharge_offset = B + max(0, RTP - 4);
+      precharge_offset = B + max(int64_t(0), RTP - 4);
     } else if (memType == MemoryType::WIDEIO_SDR) {
       precharge_offset = B;
     }
@@ -133,19 +127,14 @@ int MemCommand::getPrechargeOffset(const MemorySpecification& memSpec,
   return precharge_offset;
 } // MemCommand::getPrechargeOffset
 
-void MemCommand::setTime(double _timestamp)
+void MemCommand::setTime(int64_t _timestamp)
 {
   timestamp = _timestamp;
 }
 
-double MemCommand::getTime() const
-{
-  return timestamp;
-}
-
 int64_t MemCommand::getTimeInt64() const
 {
-  return static_cast<int64_t>(timestamp);
+  return timestamp;
 }
 
 MemCommand::cmds MemCommand::typeWithoutAutoPrechargeFlag() const

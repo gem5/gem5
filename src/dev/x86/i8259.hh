@@ -31,7 +31,7 @@
 #ifndef __DEV_X86_I8259_HH__
 #define __DEV_X86_I8259_HH__
 
-#include "dev/x86/intdev.hh"
+#include "dev/intpin.hh"
 #include "dev/io_device.hh"
 #include "enums/X86I8259CascadeMode.hh"
 #include "params/I8259.hh"
@@ -39,14 +39,17 @@
 namespace X86ISA
 {
 
-class I8259 : public BasicPioDevice, public IntDevice
+class I8259 : public BasicPioDevice
 {
   protected:
     static const int NumLines = 8;
     bool pinStates[NumLines];
 
+    void init() override;
+
     Tick latency;
-    IntSourcePin *output;
+    std::vector<IntSourcePin<I8259> *> output;
+    std::vector<IntSinkPin<I8259> *> inputs;
     Enums::X86I8259CascadeMode mode;
     I8259 * slave;
 
@@ -89,6 +92,17 @@ class I8259 : public BasicPioDevice, public IntDevice
 
     I8259(Params * p);
 
+    Port &
+    getPort(const std::string &if_name, PortID idx=InvalidPortID) override
+    {
+        if (if_name == "inputs")
+            return *inputs.at(idx);
+        else if (if_name == "output")
+            return *output.at(idx);
+        else
+            return BasicPioDevice::getPort(if_name, idx);
+    }
+
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
 
@@ -104,9 +118,9 @@ class I8259 : public BasicPioDevice, public IntDevice
         IMR = 0x00;
     }
 
-    void signalInterrupt(int line) override;
-    void raiseInterruptPin(int number) override;
-    void lowerInterruptPin(int number) override;
+    void signalInterrupt(int line);
+    void raiseInterruptPin(int number);
+    void lowerInterruptPin(int number);
     int getVector();
 
     void serialize(CheckpointOut &cp) const override;

@@ -57,9 +57,6 @@ namespace ArmISA
 
     StaticInstPtr decodeInst(ExtMachInst);
 
-    // ARM DOES NOT have a delay slot
-    #define ISA_HAS_DELAY_SLOT 0
-
     const Addr PageShift = 12;
     const Addr PageBytes = ULL(1) << PageShift;
     const Addr Page_Mask = ~(PageBytes - 1);
@@ -95,9 +92,6 @@ namespace ArmISA
 
     // Max. physical address range in bits supported by the architecture
     const unsigned MaxPhysAddrRange = 48;
-
-    // return a no-op instruction... used for instruction fetch faults
-    const ExtMachInst NoopMachInst = 0x01E320F000ULL;
 
     const int MachineBytes = 4;
 

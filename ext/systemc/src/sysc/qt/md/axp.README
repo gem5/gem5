@@ -1,0 +1,10 @@
+The handling of varargs is platform-dependent.  Assar Westerlund
+stared at the problem for a while and deduces the following table:
+
+vers / compiler         cc              gcc
+----------------------------------------------------------------------
+1.3                     a0, offset      __base, __offset
+2.0                     _a0, _offset    __base, __offset
+
+The current code should handle both cc and gcc versions, provided
+you configure for the correct compiler.

@@ -44,14 +44,14 @@
 
 #include "base/statistics.hh"
 #include "mem/mem_checker.hh"
-#include "mem/mem_object.hh"
 #include "params/MemCheckerMonitor.hh"
+#include "sim/sim_object.hh"
 #include "sim/system.hh"
 
 /**
  * Implements a MemChecker monitor, to be inserted between two ports.
  */
-class MemCheckerMonitor : public MemObject
+class MemCheckerMonitor : public SimObject
 {
   public:
 
@@ -70,13 +70,10 @@ class MemCheckerMonitor : public MemObject
     /** Destructor */
     ~MemCheckerMonitor();
 
-    virtual BaseMasterPort& getMasterPort(const std::string& if_name,
-                                          PortID idx = InvalidPortID);
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
-    virtual BaseSlavePort& getSlavePort(const std::string& if_name,
-                                        PortID idx = InvalidPortID);
-
-    virtual void init();
+    void init() override;
 
   private:
 

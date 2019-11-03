@@ -42,7 +42,7 @@
 class SymbolTable
 {
   public:
-    typedef std::map<Addr, std::string> ATable;
+    typedef std::multimap<Addr, std::string> ATable;
     typedef std::map<std::string, Addr> STable;
 
   private:
@@ -87,6 +87,8 @@ class SymbolTable
         if (i == addrTable.end())
             return false;
 
+        // There are potentially multiple symbols that map to the same
+        // address. For simplicity, just return the first one.
         symbol = (*i).second;
         return true;
     }

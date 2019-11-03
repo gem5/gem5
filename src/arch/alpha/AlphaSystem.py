@@ -28,7 +28,8 @@
 
 from m5.params import *
 from m5.proxy import *
-from System import System
+
+from m5.objects.System import System
 
 class AlphaSystem(System):
     type = 'AlphaSystem'
@@ -54,9 +55,3 @@ class FreebsdAlphaSystem(AlphaSystem):
     cxx_header = "arch/alpha/freebsd/system.hh"
     system_type = 34
     system_rev = 1 << 10
-
-class Tru64AlphaSystem(AlphaSystem):
-    type = 'Tru64AlphaSystem'
-    cxx_header = "arch/alpha/tru64/system.hh"
-    system_type = 12
-    system_rev = 2<<1

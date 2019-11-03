@@ -51,7 +51,7 @@ namespace HsailISA
     // our model uses to represent an actual instruction. In
     // the case of HSAIL this is just an index into a list of
     // instruction objects.
-    typedef uint64_t RawMachInst;
+    typedef uint32_t RawMachInst;
 
     // The MachInst is a representation of an instruction
     // that has more information than just the machine code.

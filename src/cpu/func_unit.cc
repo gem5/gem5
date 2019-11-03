@@ -28,10 +28,11 @@
  * Authors: Steve Raasch
  */
 
+#include "cpu/func_unit.hh"
+
 #include <sstream>
 
-#include "base/misc.hh"
-#include "cpu/func_unit.hh"
+#include "base/logging.hh"
 
 using namespace std;
 

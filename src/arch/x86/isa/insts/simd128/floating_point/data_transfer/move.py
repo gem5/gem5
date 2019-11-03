@@ -256,13 +256,13 @@ def macroop MOVSS_P_XMM {
 };
 
 def macroop MOVSD_XMM_M {
-    # Zero xmmh
+    lfpimm xmmh, 0
     ldfp xmml, seg, sib, disp, dataSize=8
 };
 
 def macroop MOVSD_XMM_P {
     rdip t7
-    # Zero xmmh
+    lfpimm xmmh, 0
     ldfp xmml, seg, riprel, disp, dataSize=8
 };
 

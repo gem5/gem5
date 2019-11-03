@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -54,6 +54,7 @@
 #include "sim/system.hh"
 
 class GenericTimer;
+class BaseGic;
 class ThreadContext;
 
 class ArmSystem : public System
@@ -89,21 +90,26 @@ class ArmSystem : public System
     const bool _haveVirtualization;
 
     /**
+     * True if this system implements the Crypto Extension
+     */
+    const bool _haveCrypto;
+
+    /**
      * Pointer to the Generic Timer wrapper.
      */
     GenericTimer *_genericTimer;
+    BaseGic *_gic;
+
+    /**
+     * Reset address (ARMv8)
+     */
+    const Addr _resetAddr;
 
     /**
      * True if the register width of the highest implemented exception level is
      * 64 bits (ARMv8)
      */
     bool _highestELIs64;
-
-    /**
-     * Reset address if the highest implemented exception level is 64 bits
-     * (ARMv8)
-     */
-    const Addr _resetAddr64;
 
     /**
      * Supported physical address range in bits if the highest implemented
@@ -115,6 +121,33 @@ class ArmSystem : public System
      * True if ASID is 16 bits in AArch64 (ARMv8)
      */
     const bool _haveLargeAsid64;
+
+    /**
+     * True if SVE is implemented (ARMv8)
+     */
+    const bool _haveSVE;
+
+    /** SVE vector length at reset, in quadwords */
+    const unsigned _sveVL;
+
+    /**
+     * True if LSE is implemented (ARMv8.1)
+     */
+    const bool _haveLSE;
+
+    /** True if Priviledge Access Never is implemented */
+    const unsigned _havePAN;
+
+    /**
+     * Range for memory-mapped m5 pseudo ops. The range will be
+     * invalid/empty if disabled.
+     */
+    const AddrRange _m5opRange;
+
+    /**
+     * True if the Semihosting interface is enabled.
+     */
+    ArmSemihosting *const semihosting;
 
   protected:
     /**
@@ -166,14 +199,28 @@ class ArmSystem : public System
       */
     bool haveVirtualization() const { return _haveVirtualization; }
 
+    /** Returns true if this system implements the Crypto
+      * Extension
+      */
+    bool haveCrypto() const { return _haveCrypto; }
+
     /** Sets the pointer to the Generic Timer. */
     void setGenericTimer(GenericTimer *generic_timer)
     {
         _genericTimer = generic_timer;
     }
 
+    /** Sets the pointer to the GIC. */
+    void setGIC(BaseGic *gic)
+    {
+        _gic = gic;
+    }
+
     /** Get a pointer to the system's generic timer model */
     GenericTimer *getGenericTimer() const { return _genericTimer; }
+
+    /** Get a pointer to the system's GIC */
+    BaseGic *getGIC() const { return _gic; }
 
     /** Returns true if the register width of the highest implemented exception
      * level is 64 bits (ARMv8) */
@@ -184,18 +231,29 @@ class ArmSystem : public System
     {
         if (_haveSecurity)
             return EL3;
-        // @todo: uncomment this to enable Virtualization
-        // if (_haveVirtualization)
-        //     return EL2;
+        if (_haveVirtualization)
+            return EL2;
         return EL1;
     }
 
     /** Returns the reset address if the highest implemented exception level is
      * 64 bits (ARMv8) */
-    Addr resetAddr64() const { return _resetAddr64; }
+    Addr resetAddr() const { return _resetAddr; }
 
     /** Returns true if ASID is 16 bits in AArch64 (ARMv8) */
     bool haveLargeAsid64() const { return _haveLargeAsid64; }
+
+    /** Returns true if SVE is implemented (ARMv8) */
+    bool haveSVE() const { return _haveSVE; }
+
+    /** Returns the SVE vector length at reset, in quadwords */
+    unsigned sveVL() const { return _sveVL; }
+
+    /** Returns true if LSE is implemented (ARMv8.1) */
+    bool haveLSE() const { return _haveLSE; }
+
+    /** Returns true if Priviledge Access Never is implemented */
+    bool havePAN() const { return _havePAN; }
 
     /** Returns the supported physical address range in bits if the highest
      * implemented exception level is 64 bits (ARMv8) */
@@ -216,6 +274,28 @@ class ArmSystem : public System
     {
         return mask(physAddrRange());
     }
+
+    /**
+     * Range used by memory-mapped m5 pseudo-ops if enabled. Returns
+     * an invalid/empty range if disabled.
+     */
+    const AddrRange &m5opRange() const { return _m5opRange; }
+
+    /** Is Arm Semihosting support enabled? */
+    bool haveSemihosting() const { return semihosting != nullptr; }
+
+    /**
+     * Casts the provided System object into a valid ArmSystem, it fails
+     * otherwise.
+     * @param sys System object to cast
+     */
+    static ArmSystem *getArmSystem(System *sys);
+
+    /**
+     * Returns a valid ArmSystem pointer if using ARM ISA, it fails
+     * otherwise.
+     */
+    static ArmSystem* getArmSystem(ThreadContext *tc);
 
     /** Returns true if the system of a specific thread context implements the
      * Security Extensions
@@ -242,10 +322,13 @@ class ArmSystem : public System
      */
     static ExceptionLevel highestEL(ThreadContext *tc);
 
-    /** Returns the reset address if the highest implemented exception level for
-     * the system of a specific thread context is 64 bits (ARMv8)
+    /** Return true if the system implements a specific exception level */
+    static bool haveEL(ThreadContext *tc, ExceptionLevel el);
+
+    /** Returns the reset address if the highest implemented exception level
+     * for the system of a specific thread context is 64 bits (ARMv8)
      */
-    static Addr resetAddr64(ThreadContext *tc);
+    static Addr resetAddr(ThreadContext *tc);
 
     /** Returns the supported physical address range in bits for the system of a
      * specific thread context
@@ -260,6 +343,17 @@ class ArmSystem : public System
     /** Returns true if ASID is 16 bits for the system of a specific thread
      * context while in AArch64 (ARMv8) */
     static bool haveLargeAsid64(ThreadContext *tc);
+
+    /** Is Arm Semihosting support enabled? */
+    static bool haveSemihosting(ThreadContext *tc);
+
+    /** Make a Semihosting call from aarch64 */
+    static uint64_t callSemihosting64(ThreadContext *tc,
+                                      uint32_t op, uint64_t param);
+
+    /** Make a Semihosting call from aarch32 */
+    static uint32_t callSemihosting32(ThreadContext *tc,
+                                      uint32_t op, uint32_t param);
 };
 
 class GenericArmSystem : public ArmSystem

@@ -43,12 +43,13 @@
  *          Stephen Hines
  */
 
+#include "arch/arm/vtophys.hh"
+
 #include <string>
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"
-#include "arch/arm/vtophys.hh"
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
@@ -69,8 +70,8 @@ try_translate(ThreadContext *tc, Addr addr)
     Fault fault;
     // Set up a functional memory Request to pass to the TLB
     // to get it to translate the vaddr to a paddr
-    Request req(0, addr, 64, 0x40, -1, 0, 0);
-    ArmISA::TLB *tlb;
+    auto req = std::make_shared<Request>(0, addr, 64, 0x40, -1, 0, 0);
+    BaseTLB *tlb;
 
     // Check the TLBs for a translation
     // It's possible that there is a valid translation in the tlb
@@ -79,15 +80,15 @@ try_translate(ThreadContext *tc, Addr addr)
     //
     // Calling translateFunctional invokes a table-walk if required
     // so we should always succeed
-    tlb = static_cast<ArmISA::TLB*>(tc->getDTBPtr());
-    fault = tlb->translateFunctional(&req, tc, BaseTLB::Read, TLB::NormalTran);
+    tlb = tc->getDTBPtr();
+    fault = tlb->translateFunctional(req, tc, BaseTLB::Read);
     if (fault == NoFault)
-        return std::make_pair(true, req.getPaddr());
+        return std::make_pair(true, req->getPaddr());
 
-    tlb = static_cast<ArmISA::TLB*>(tc->getITBPtr());
-    fault = tlb->translateFunctional(&req, tc, BaseTLB::Read, TLB::NormalTran);
+    tlb = tc->getITBPtr();
+    fault = tlb->translateFunctional(req, tc, BaseTLB::Read);
     if (fault == NoFault)
-        return std::make_pair(true, req.getPaddr());
+        return std::make_pair(true, req->getPaddr());
 
     return std::make_pair(false, 0);
 }

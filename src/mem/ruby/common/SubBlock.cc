@@ -26,8 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/stl_helpers.hh"
 #include "mem/ruby/common/SubBlock.hh"
+
+#include "base/stl_helpers.hh"
 
 using m5::stl_helpers::operator<<;
 

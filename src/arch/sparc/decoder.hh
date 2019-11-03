@@ -46,7 +46,7 @@ class Decoder
     // The extended machine instruction being generated
     ExtMachInst emi;
     bool instDone;
-    MiscReg asi;
+    RegVal asi;
 
   public:
     Decoder(ISA* isa = nullptr) : instDone(false), asi(0)
@@ -65,7 +65,7 @@ class Decoder
     void
     moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
     {
-        emi = inst;
+        emi = betoh(inst);
         // The I bit, bit 13, is used to figure out where the ASI
         // should come from. Use that in the ExtMachInst. This is
         // slightly redundant, but it removes the need to put a condition
@@ -93,7 +93,7 @@ class Decoder
     }
 
     void
-    setContext(MiscReg _asi)
+    setContext(RegVal _asi)
     {
         asi = _asi;
     }

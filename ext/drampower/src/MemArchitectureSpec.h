@@ -31,12 +31,14 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Karthik Chandrasekar
+ * Authors: Karthik Chandrasekar, Sven Goossens
  *
  */
 
 #ifndef TOOLS_MEM_ARCHITECTURE_SPEC_H
 #define TOOLS_MEM_ARCHITECTURE_SPEC_H
+
+#include <stdint.h>
 
 #include "Parametrisable.h"
 
@@ -46,14 +48,14 @@ class MemArchitectureSpec : public virtual Parametrisable {
   MemArchitectureSpec();
   void processParameters();
 
-  unsigned int burstLength;
-  unsigned nbrOfBanks;
-  unsigned nbrOfRanks;
-  unsigned dataRate;
-  unsigned nbrOfColumns;
-  unsigned nbrOfRows;
-  unsigned width;
-  unsigned nbrOfBankGroups;
+  int64_t burstLength;
+  int64_t nbrOfBanks;
+  int64_t nbrOfRanks;
+  int64_t dataRate;
+  int64_t nbrOfColumns;
+  int64_t nbrOfRows;
+  int64_t width;
+  int64_t nbrOfBankGroups;
   bool dll;
   bool twoVoltageDomains;
   bool termination;

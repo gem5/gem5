@@ -33,7 +33,7 @@
 
 #include <cassert>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 
 // Returns the prime number one less than n.

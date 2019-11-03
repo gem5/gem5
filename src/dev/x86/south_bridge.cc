@@ -28,10 +28,11 @@
  * Authors: Gabe Black
  */
 
+#include "dev/x86/south_bridge.hh"
+
 #include <cassert>
 
 #include "dev/x86/pc.hh"
-#include "dev/x86/south_bridge.hh"
 
 using namespace X86ISA;
 

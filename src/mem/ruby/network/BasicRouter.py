@@ -28,9 +28,13 @@
 #          Brad Beckmann
 
 from m5.params import *
-from ClockedObject import ClockedObject
+
+from m5.objects.ClockedObject import ClockedObject
 
 class BasicRouter(ClockedObject):
     type = 'BasicRouter'
     cxx_header = "mem/ruby/network/BasicRouter.hh"
     router_id = Param.Int("ID in relation to other routers")
+
+    # only used by garnet
+    latency   = Param.Cycles(1, "number of cycles inside router")

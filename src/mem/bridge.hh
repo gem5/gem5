@@ -54,8 +54,9 @@
 #include <deque>
 
 #include "base/types.hh"
-#include "mem/mem_object.hh"
+#include "mem/port.hh"
 #include "params/Bridge.hh"
+#include "sim/clocked_object.hh"
 
 /**
  * A bridge is used to interface two different crossbars (or in general a
@@ -70,7 +71,7 @@
  * the bridge will delay accepting the packet until space becomes
  * available.
  */
-class Bridge : public MemObject
+class Bridge : public ClockedObject
 {
   protected:
 
@@ -156,8 +157,7 @@ class Bridge : public MemObject
         void trySendTiming();
 
         /** Send event for the response queue. */
-        EventWrapper<BridgeSlavePort,
-                     &BridgeSlavePort::trySendTiming> sendEvent;
+        EventFunctionWrapper sendEvent;
 
       public:
 
@@ -255,8 +255,7 @@ class Bridge : public MemObject
         void trySendTiming();
 
         /** Send event for the request queue. */
-        EventWrapper<BridgeMasterPort,
-                     &BridgeMasterPort::trySendTiming> sendEvent;
+        EventFunctionWrapper sendEvent;
 
       public:
 
@@ -297,7 +296,7 @@ class Bridge : public MemObject
          *
          * @return true if we find a match
          */
-        bool checkFunctional(PacketPtr pkt);
+        bool trySatisfyFunctional(PacketPtr pkt);
 
       protected:
 
@@ -318,12 +317,10 @@ class Bridge : public MemObject
 
   public:
 
-    virtual BaseMasterPort& getMasterPort(const std::string& if_name,
-                                          PortID idx = InvalidPortID);
-    virtual BaseSlavePort& getSlavePort(const std::string& if_name,
-                                        PortID idx = InvalidPortID);
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
-    virtual void init();
+    void init() override;
 
     typedef BridgeParams Params;
 

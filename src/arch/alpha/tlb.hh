@@ -114,7 +114,7 @@ class TLB : public BaseTLB
         return unimplBits == 0 || unimplBits == VAddrUnImplMask;
     }
 
-    static Fault checkCacheability(RequestPtr &req, bool itb = false);
+    static Fault checkCacheability(const RequestPtr &req, bool itb = false);
 
     // Checkpointing
     void serialize(CheckpointOut &cp) const override;
@@ -137,18 +137,18 @@ class TLB : public BaseTLB
     }
 
   protected:
-    Fault translateData(RequestPtr req, ThreadContext *tc, bool write);
-    Fault translateInst(RequestPtr req, ThreadContext *tc);
+    Fault translateData(const RequestPtr &req, ThreadContext *tc, bool write);
+    Fault translateInst(const RequestPtr &req, ThreadContext *tc);
 
   public:
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-                         Translation *translation, Mode mode);
-    /**
-     * translateFunctional stub function for future CheckerCPU support
-     */
-    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
-    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
+    Fault translateAtomic(
+            const RequestPtr &req, ThreadContext *tc, Mode mode) override;
+    void translateTiming(
+            const RequestPtr &req, ThreadContext *tc,
+            Translation *translation, Mode mode) override;
+    Fault finalizePhysical(
+            const RequestPtr &req, ThreadContext *tc,
+            Mode mode) const override;
 };
 
 } // namespace AlphaISA

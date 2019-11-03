@@ -1,0 +1,94 @@
+/*
+ * Copyright 2019 Google Inc.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ */
+
+component CortexA76x3
+{
+
+    composition
+    {
+        core : ARMCortexA76x3CT();
+
+        // Clocks.
+        clock1Hz : MasterClock();
+        clockDiv : ClockDivider();
+        clockDivPeriph : ClockDivider(mul=0x01800000);
+    }
+
+    connection
+    {
+        // The main interface with memory.
+        core.pvbus_m0 => self.amba;
+
+        // Connection to the GIC.
+        self.redistributor => core.gicv3_redistributor_s;
+
+        // Core interrupt signals.
+        core.CNTHPIRQ => self.cnthpirq;
+        core.CNTHVIRQ => self.cnthvirq;
+        core.CNTPNSIRQ => self.cntpnsirq;
+        core.CNTPSIRQ => self.cntpsirq;
+        core.CNTVIRQ => self.cntvirq;
+        core.commirq => self.commirq;
+        core.ctidbgirq => self.ctidbgirq;
+        core.pmuirq => self.pmuirq;
+        core.vcpumntirq => self.vcpumntirq;
+
+        // Clocks.
+        clock1Hz.clk_out => clockDiv.clk_in;
+        clock1Hz.clk_out => clockDivPeriph.clk_in;
+        clockDiv.clk_out => core.core_clk_in;
+        clockDivPeriph.clk_out => core.clk_in;
+    }
+
+    properties
+    {
+        component_type = "System";
+    }
+
+    master port<PVBus> amba;
+    slave port<ExportedClockRateControl> clock_rate_s
+    {
+        behavior set_mul_div(uint64_t mul, uint64_t div)
+        {
+            clockDiv.rate.set64(mul, div);
+        }
+    }
+    slave port<GICv3Comms> redistributor[3];
+
+    // External ports for CPU-to-GIC signals
+    master port<Signal> cnthpirq[3];
+    master port<Signal> cnthvirq[3];
+    master port<Signal> cntpsirq[3];
+    master port<Signal> cntvirq[3];
+    master port<Signal> commirq[3];
+    master port<Signal> ctidbgirq[3];
+    master port<Signal> pmuirq[3];
+    master port<Signal> vcpumntirq[3];
+    master port<Signal> cntpnsirq[3];
+}

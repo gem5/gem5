@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,7 +30,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: John Kalamatianos, Anthony Gutierrez
+ * Authors: John Kalamatianos,
+ *          Anthony Gutierrez
  */
 
 #ifndef __COMPUTE_UNIT_HH__
@@ -52,8 +53,8 @@
 #include "gpu-compute/qstruct.hh"
 #include "gpu-compute/schedule_stage.hh"
 #include "gpu-compute/scoreboard_check_stage.hh"
-#include "mem/mem_object.hh"
 #include "mem/port.hh"
+#include "sim/clocked_object.hh"
 
 static const int MAX_REGS_FOR_NON_VEC_MEM_INST = 1;
 static const int MAX_WIDTH_FOR_MEM_INST = 32;
@@ -90,7 +91,7 @@ enum TLB_CACHE
     TLB_HIT_CACHE_HIT
 };
 
-class ComputeUnit : public MemObject
+class ComputeUnit : public ClockedObject
 {
   public:
     FetchStage fetchStage;
@@ -254,14 +255,10 @@ class ComputeUnit : public MemObject
     void exec();
     void initiateFetch(Wavefront *wavefront);
     void fetch(PacketPtr pkt, Wavefront *wavefront);
-    void FillKernelState(Wavefront *w, NDRange *ndr);
+    void fillKernelState(Wavefront *w, NDRange *ndr);
 
-    void StartWF(Wavefront *w, WFContext *wfCtx, int trueWgSize[],
-                 int trueWgSizeTotal);
-
-    void InitializeWFContext(WFContext *wfCtx, NDRange *ndr, int cnt,
-                             int trueWgSize[], int trueWgSizeTotal,
-                             LdsChunk *ldsChunk, uint64_t origSpillMemStart);
+    void startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
+                        NDRange *ndr);
 
     void StartWorkgroup(NDRange *ndr);
     int ReadyWorkgroup(NDRange *ndr);
@@ -283,7 +280,7 @@ class ComputeUnit : public MemObject
     bool cedeSIMD(int simdId, int wfSlotId);
 
     template<typename c0, typename c1> void doSmReturn(GPUDynInstPtr gpuDynInst);
-    virtual void init();
+    virtual void init() override;
     void sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt);
     void sendSyncRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt);
     void injectGlobalMemFence(GPUDynInstPtr gpuDynInst,
@@ -305,6 +302,31 @@ class ComputeUnit : public MemObject
     LdsState &lds;
 
   public:
+    Stats::Scalar vALUInsts;
+    Stats::Formula vALUInstsPerWF;
+    Stats::Scalar sALUInsts;
+    Stats::Formula sALUInstsPerWF;
+    Stats::Scalar instCyclesVALU;
+    Stats::Scalar instCyclesSALU;
+    Stats::Scalar threadCyclesVALU;
+    Stats::Formula vALUUtilization;
+    Stats::Scalar ldsNoFlatInsts;
+    Stats::Formula ldsNoFlatInstsPerWF;
+    Stats::Scalar flatVMemInsts;
+    Stats::Formula flatVMemInstsPerWF;
+    Stats::Scalar flatLDSInsts;
+    Stats::Formula flatLDSInstsPerWF;
+    Stats::Scalar vectorMemWrites;
+    Stats::Formula vectorMemWritesPerWF;
+    Stats::Scalar vectorMemReads;
+    Stats::Formula vectorMemReadsPerWF;
+    Stats::Scalar scalarMemWrites;
+    Stats::Formula scalarMemWritesPerWF;
+    Stats::Scalar scalarMemReads;
+    Stats::Formula scalarMemReadsPerWF;
+
+    void updateInstStats(GPUDynInstPtr gpuDynInst);
+
     // the following stats compute the avg. TLB accesslatency per
     // uncoalesced request (only for data)
     Stats::Scalar tlbRequests;
@@ -358,7 +380,7 @@ class ComputeUnit : public MemObject
     int glbMemInstAvail;
 
     void
-    regStats();
+    regStats() override;
 
     LdsState &
     getLds() const
@@ -368,6 +390,8 @@ class ComputeUnit : public MemObject
 
     int32_t
     getRefCounter(const uint32_t dispatchId, const uint32_t wgId) const;
+
+    int cacheLineSize() const { return _cacheLineSize; }
 
     bool
     sendToLds(GPUDynInstPtr gpuDynInst) __attribute__((warn_unused_result));
@@ -417,39 +441,11 @@ class ComputeUnit : public MemObject
                   saved(sender_state) { }
         };
 
-        class MemReqEvent : public Event
-        {
-          private:
-            DataPort *dataPort;
-            PacketPtr pkt;
+        void processMemReqEvent(PacketPtr pkt);
+        EventFunctionWrapper *createMemReqEvent(PacketPtr pkt);
 
-          public:
-            MemReqEvent(DataPort *_data_port, PacketPtr _pkt)
-                : Event(), dataPort(_data_port), pkt(_pkt)
-            {
-              setFlags(Event::AutoDelete);
-            }
-
-            void process();
-            const char *description() const;
-        };
-
-        class MemRespEvent : public Event
-        {
-          private:
-            DataPort *dataPort;
-            PacketPtr pkt;
-
-          public:
-            MemRespEvent(DataPort *_data_port, PacketPtr _pkt)
-                : Event(), dataPort(_data_port), pkt(_pkt)
-            {
-              setFlags(Event::AutoDelete);
-            }
-
-            void process();
-            const char *description() const;
-        };
+        void processMemRespEvent(PacketPtr pkt);
+        EventFunctionWrapper *createMemRespEvent(PacketPtr pkt);
 
         std::deque<std::pair<PacketPtr, GPUDynInstPtr>> retries;
 
@@ -695,8 +691,8 @@ class ComputeUnit : public MemObject
     // port to the SQC TLB (there's a separate TLB for each I-cache)
     ITLBPort *sqcTLBPort;
 
-    virtual BaseMasterPort&
-    getMasterPort(const std::string &if_name, PortID idx)
+    Port &
+    getPort(const std::string &if_name, PortID idx) override
     {
         if (if_name == "memory_port") {
             memPort[idx] = new DataPort(csprintf("%s-port%d", name(), idx),
@@ -746,8 +742,10 @@ class ComputeUnit : public MemObject
     uint64_t getAndIncSeqNum() { return globalSeqNum++; }
 
   private:
+    const int _cacheLineSize;
     uint64_t globalSeqNum;
     int wavefrontSize;
+    GPUStaticInst *kernelLaunchInst;
 };
 
 #endif // __COMPUTE_UNIT_HH__

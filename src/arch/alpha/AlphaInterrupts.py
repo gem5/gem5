@@ -26,9 +26,9 @@
 #
 # Authors: Gabe Black
 
-from m5.SimObject import SimObject
+from m5.objects.BaseInterrupts import BaseInterrupts
 
-class AlphaInterrupts(SimObject):
+class AlphaInterrupts(BaseInterrupts):
     type = 'AlphaInterrupts'
     cxx_class = 'AlphaISA::Interrupts'
     cxx_header = "arch/alpha/interrupts.hh"

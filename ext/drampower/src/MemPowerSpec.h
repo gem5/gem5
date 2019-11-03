@@ -63,6 +63,7 @@ class MemPowerSpec : public virtual Parametrisable {
   double idd4w2;
   double idd5;
   double idd52;
+  double idd5B;
   double idd6;
   double idd62;
   double vdd;

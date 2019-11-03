@@ -1,0 +1,33 @@
+SystemC Simulation
+bv2a = 01
+bv2b = 10
+bv4a = 0110
+bv4a = 1001
+bv4a = 1011
+bv2a = 10
+bv4a = 1101
+bv2a = 01
+bv4a = 1111
+bv4b = 1001
+bv2a = 00
+bv2b = 11
+bv4a = 0011
+bv4a = 1100
+bv2a = 11
+bv2b = 00
+bv2a = 01
+bv2b = 10
+bv4a = 0000
+bv4b = 1111
+bv2a = 00
+bv2b = 11
+bv4a = 0110
+bv4a = 0000
+bv2a = 11
+bv2b = 00
+11111010
+10101111
+00001
+10000
+00001
+10000

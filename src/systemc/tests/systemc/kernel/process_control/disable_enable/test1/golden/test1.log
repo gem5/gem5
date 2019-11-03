@@ -1,0 +1,29 @@
+SystemC Simulation
+0 s[0]: target_method0: starting
+0 s[0]: target_method0: issuing self disable
+0 s[0]: target_method0: after issuing self disable
+
+0 s[0]: target_thread0: starting
+0 s[0]: target_thread0: issuing self disable
+0 s[0]: target_thread0: after issuing self disable
+
+0 s[1]: target_cthread0: starting
+0 s[1]: target_cthread0: issuing self disable
+0 s[1]: target_cthread0: after issuing self disable
+
+
+10 ns[21]: stimulator: enabling target_cthread0
+
+
+20 ns[51]: stimulator: enabling target_method0
+
+
+30 ns[81]: stimulator: enabling target_thread0
+
+80 ns[231]: target_thread0: terminating
+109 ns[319]: target_cthread0: terminating
+118 ns[346]: target_method0: terminating
+
+1030 ns[3081]: stimulator: terminating
+
+Info: /OSCI/SystemC: Simulation stopped by user.

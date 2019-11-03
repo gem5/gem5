@@ -42,13 +42,13 @@
 #include "base/inet.hh"
 #include "dev/net/etherint.hh"
 #include "dev/net/etherlink.hh"
-#include "dev/net/etherobject.hh"
 #include "dev/net/etherpkt.hh"
 #include "dev/net/pktfifo.hh"
 #include "params/EtherSwitch.hh"
 #include "sim/eventq.hh"
+#include "sim/sim_object.hh"
 
-class EtherSwitch : public EtherObject
+class EtherSwitch : public SimObject
 {
   public:
     typedef EtherSwitchParams Params;
@@ -61,7 +61,8 @@ class EtherSwitch : public EtherObject
         return dynamic_cast<const Params*>(_params);
     }
 
-    EtherInt *getEthPort(const std::string &if_name, int idx) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
   protected:
     /**
@@ -172,7 +173,7 @@ class EtherSwitch : public EtherObject
          */
         PortFifo outputFifo;
         void transmit();
-        EventWrapper<Interface, &Interface::transmit> txEvent;
+        EventFunctionWrapper txEvent;
     };
 
     struct SwitchTableEntry {

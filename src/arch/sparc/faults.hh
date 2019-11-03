@@ -57,13 +57,19 @@ class SparcFaultBase : public FaultBase
         SH = -1,
         ShouldntHappen = SH
     };
+    using PrivilegeLevelSpec = std::array<PrivilegeLevel, NumLevels>;
     struct FaultVals
     {
         const FaultName name;
         const TrapType trapType;
         const FaultPriority priority;
-        const PrivilegeLevel nextPrivilegeLevel[NumLevels];
+        const PrivilegeLevelSpec nextPrivilegeLevel;
         FaultStat count;
+        FaultVals(const FaultName& name_, const TrapType& trapType_,
+                const FaultPriority& priority_, const PrivilegeLevelSpec& il)
+            : name(name_), trapType(trapType_), priority(priority_),
+            nextPrivilegeLevel(il)
+        {}
     };
     void invoke(ThreadContext * tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr);
@@ -122,6 +128,7 @@ class PrivilegedOpcode : public SparcFault<PrivilegedOpcode> {};
 // class UnimplementedSTD : public SparcFault<UnimplementedSTD> {};
 
 class FpDisabled : public SparcFault<FpDisabled> {};
+class VecDisabled : public SparcFault<VecDisabled> {};
 
 class FpExceptionIEEE754 : public SparcFault<FpExceptionIEEE754> {};
 
@@ -276,18 +283,83 @@ class TrapInstruction : public EnumeratedFault<TrapInstruction>
                 StaticInst::nullStaticInstPtr);
 };
 
+/*
+ * Explicitly declare template static member variables to avoid warnings
+ * in some clang versions
+ */
+template<> SparcFaultBase::FaultVals SparcFault<PowerOnReset>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<WatchDogReset>::vals;
+template<> SparcFaultBase::FaultVals
+    SparcFault<ExternallyInitiatedReset>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<SoftwareInitiatedReset>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<REDStateException>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<StoreError>::vals;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionAccessException>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<InstructionAccessError>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<IllegalInstruction>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<PrivilegedOpcode>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<FpDisabled>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<VecDisabled>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<FpExceptionIEEE754>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<FpExceptionOther>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<TagOverflow>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<CleanWindow>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<DivisionByZero>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<InternalProcessorError>::vals;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionInvalidTSBEntry>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<DataInvalidTSBEntry>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<DataAccessException>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<DataAccessError>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<DataAccessProtection>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<MemAddressNotAligned>::vals;
+template<> SparcFaultBase::FaultVals
+    SparcFault<LDDFMemAddressNotAligned>::vals;
+template<> SparcFaultBase::FaultVals
+    SparcFault<STDFMemAddressNotAligned>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<PrivilegedAction>::vals;
+template<> SparcFaultBase::FaultVals
+    SparcFault<LDQFMemAddressNotAligned>::vals;
+template<> SparcFaultBase::FaultVals
+    SparcFault<STQFMemAddressNotAligned>::vals;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionRealTranslationMiss>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<DataRealTranslationMiss>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<InterruptLevelN>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<HstickMatch>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<TrapLevelZero>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<InterruptVector>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<PAWatchpoint>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<VAWatchpoint>::vals;
+template<> SparcFaultBase::FaultVals
+    SparcFault<FastInstructionAccessMMUMiss>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<FastDataAccessMMUMiss>::vals;
+template<>
+     SparcFaultBase::FaultVals SparcFault<FastDataAccessProtection>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<InstructionBreakpoint>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<CpuMondo>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<DevMondo>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<ResumableError>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<SpillNNormal>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<SpillNOther>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<FillNNormal>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<FillNOther>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<TrapInstruction>::vals;
+
+
 void enterREDState(ThreadContext *tc);
 
 void doREDFault(ThreadContext *tc, TrapType tt);
 
 void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv);
 
-void getREDVector(MiscReg TT, Addr &PC, Addr &NPC);
+void getREDVector(RegVal TT, Addr &PC, Addr &NPC);
 
-void getHyperVector(ThreadContext * tc, Addr &PC, Addr &NPC, MiscReg TT);
+void getHyperVector(ThreadContext * tc, Addr &PC, Addr &NPC, RegVal TT);
 
-void getPrivVector(ThreadContext *tc, Addr &PC, Addr &NPC, MiscReg TT,
-                   MiscReg TL);
+void getPrivVector(ThreadContext *tc, Addr &PC, Addr &NPC, RegVal TT,
+                   RegVal TL);
 
 } // namespace SparcISA
 

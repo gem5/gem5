@@ -1,0 +1,153 @@
+Copyright (c) 2015-Present Advanced Micro Devices, Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met: redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer;
+redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution;
+neither the name of the copyright holders nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Authors: Brandon Potter
+
+===============================================================================
+
+This file exists to educate users and notify them that some filesystem open
+system calls may have been redirected by system call emulation mode
+(henceforth se-mode).
+
+To provide background, system calls to open files with SYS_OPEN (man 2 open)
+inside se-mode will resolve by pass-through to glibc calls (man 3 open) on the
+host machine. The host machine will open the file on behalf of the simulator.
+Subsequently, se-mode acts as a shim for file access to the opened file. By
+utilizing the host machine, se-mode gains quite a bit of utility without
+needing to implement an actual filesystem.
+
+A scenario for using normal files might be `/bin/cat $HOME/my_data_file`
+as the simulated application (and option). The simulator leverages the host
+file system to provide access to my_data_file in this case. Several things
+happen inside the simulator:
+    1) The cat command will open $HOME/my_data_file by invoking the open
+system call (SYS_OPEN). In se-mode, SYS_OPEN is trapped by the simulator and
+the syscall_emul.hh:openImpl implementation is provided as a drop-in
+replacement for what normally occurs inside a real operating system.
+    2) The openImpl code will pass through several path checks and realize
+that the file needs to be handled in the 'normal' case where se-mode utilizes
+the host filesystem.
+    3) The openImpl code will use the glibc open library call on
+$HOME/my_data_file after normalizing invocation options.
+    4) If the file successfully opens, se-mode will record the file descriptor
+returned from the glibc open and provide a translated file descriptor to the
+application. (If the glibc's file descriptor was passed back to the
+application, it would be noticable that the application runtime environment
+was wonky. The gem5.{opt,debug,fast} process needs to open files for its own
+purposes and the file descriptors for the simulated application perspective
+would appear out-of-order and arbitrary. They should appear in-order with the
+lowest available file-desciptor assigned on calls to SYS_OPEN. So, se-mode
+adds a level of indirection to resolve this problem.)
+
+However, there are files which users might not want to open on the host
+machine; providing file access and/or file visibility to the simulated
+application may not make sense in these cases. Historically, these files
+have been handled by os-specific code in se-mode. The os-specific
+implementation has been referred to as 'special files'. Examples of
+special file implementations include /proc/meminfo and /etc/passwd. (See
+src/kern/linux/linux.cc for more details.)
+
+A scenario for using special files might be running `/bin/cat /proc/meminfo`
+as the simulated application (and option). Several things will happen inside
+the simulator:
+    1) The cat command will open the /proc/meminfo file by invoking the open
+system call (SYS_OPEN). In se-mode, SYS_OPEN is trapped by the simulator and
+the syscall_emul.hh:openImpl implementation is provided as a drop-in
+replacement for what normally occurs inside a real operating system.
+    2) The openImpl code checks to see if /proc/meminfo matches a special
+file. When it notices the match, it invokes code to generate a replacement
+file rather than open the file on the host machine. (As it turns out, opening
+the host's version of /proc/meminfo will resolve to the gem5 executable which
+is probably not what the application intended.)
+    3) The generated file is provided a file descriptor (which itself has
+special handling to preserve the illusion that the application is not running
+inside a simulator under weird conditions). The file descriptor is passed
+back to the application and it can subsequently use the file descriptor to
+access the redirected /proc/meminfo file.
+
+Regarding special files, a subtle but important point is that these files
+are generated dynamically during simulation (in C++ code). Certain files,
+such as /proc/meminfo depend on the application state inside the simulator to
+have valid contents. With some files, you generally cannot anticipate what
+file contents should be before the application actually tries to inspect the
+contents. These types of files should all be handled using the special files
+method.
+
+As an aside, users might also want to restrict the contents of a file to
+prevent non-determinism in the simulation. (This is another case for special
+handling of files.) It can be annoying to try to generate statistics for your
+new hardware widget (which of course will improve performance by some
+non-trivial percentage) when variance in the statistics is caused by
+randomness of file contents. A specific example which comes to mind is
+reading the contents of /dev/random. Ideally, se-mode should introduce no
+non-determinism. However, that is difficult (if not impossible) to achieve in
+practice for every application thrown at the simulator.
+
+In addition to special files, there is another method to handle filesystem
+redirection. Instead of dynamically generating a file and providing it to
+the application, it is possible to pregenerate files on the host filesystem
+and redirect open calls to the pregenerated files. This is achieved by
+capturing the paths provided by the application SYS_OPEN and modifying the
+path before issuing the pass-through call to the host filesystem glibc open.
+The name for this feature is 'faux filesystem' (henceforth faux-fs).
+
+With faux-fs, users can add paths via command line (via --chroot) or by
+modifying their configuration file to use the RedirectPath class. These
+paths take the form of original_path-->set_of_modified_paths. For instance,
+/proc/cpuinfo might be redirected to /usr/local/gem5_fs/cpuinfo __OR__
+/home/me/gem5_folder/cpuinfo __OR__ /nonsensical_name/foo_bar, etc.. The
+matching pattern and directory/file-structure is controlled by the user. The
+pattern match hits on the first available file which actually exists on the
+host machine.
+
+As another subtle point, the faux-fs handling is fixed at simulator
+configuration time. The path redirection becomes static after configuration
+and the Python generated files in simout/fs/.. also exist after configuration.
+The faux-fs mechanism is __NOT__ suitable for files such a /proc/meminfo
+since those types of files rely on runtime application characteristics.
+
+Currently, faux-fs is setup to create a few files on behalf of the average
+user. These files are all stuffed into the simout directory under a 'fs'
+folder. By default, the path is $gem5_dir/m5out/fs. These files are all
+hardcoded in the configuration since it is unlikely that an application wants
+to see the host version of the files. At the time of writing, the list can be
+viewed in configs/example/se.py by searching for RedirectPath. Most of
+the faux-fs Python generated files depend on simulator configuration (i.e.
+number of cores, caches, nodes, etc..). Sophisiticated runtimes might query
+these files for hardware information in certain applications (i.e.
+applications using MPI or ROCm since these runtimes utilize libnuma.so).
+
+Of note, dynamically executables will open shared object files in the same
+manner as normal files. It is possible and maybe enen preferential to utilize
+the faux-fs to create a platform independent way of running applications in
+se-mode. Users can stuff all the shared libraries into a folder and commit the
+folder as part of their repository state. The chroot option can be made to
+point to the shared library folder (for each library) and these libraries will
+be redirected away from host libraries. This can help to alleviate environment
+problems between machines.
+
+If there is any confusion on path redirection, the system call debug traces
+can be used to emit information regarding path redirection.

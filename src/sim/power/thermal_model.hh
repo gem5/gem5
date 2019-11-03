@@ -42,33 +42,16 @@
 
 #include <vector>
 
-#include "base/statistics.hh"
 #include "params/ThermalCapacitor.hh"
 #include "params/ThermalModel.hh"
 #include "params/ThermalReference.hh"
 #include "params/ThermalResistor.hh"
 #include "sim/clocked_object.hh"
+#include "sim/power/thermal_domain.hh"
 #include "sim/power/thermal_entity.hh"
+#include "sim/power/thermal_node.hh"
 #include "sim/sim_object.hh"
 
-class ThermalDomain;
-
-
-/**
- * A ThermalNode is used to connect thermal entities, such as
- * resistors, capacitors, references and domains. It is the circuital
- * equivalent to a voltage node.
- */
-class ThermalNode : public SimObject
-{
-  public:
-    typedef SimObjectParams Params;
-    ThermalNode(const Params *p);
-
-    int id;
-    bool isref;
-    double temp;
-};
 
 /**
  * A ThermalResistor is used to model a thermal resistance between two
@@ -156,6 +139,8 @@ class ThermalReference : public SimObject, public ThermalEntity
 
 
 /**
+ * @sa \ref gem5PowerModel "gem5 Thermal Model"
+ *
  * A ThermalModel is the element which ties all thermal objects
  * together and provides the thermal solver to the system.
  * It is reponsible for updating temperature for all Thermal
@@ -196,7 +181,7 @@ class ThermalModel : public ClockedObject
     std::vector <ThermalNode*> eq_nodes;
 
     /** Stepping event to update the model values */
-    EventWrapper<ThermalModel, &ThermalModel::doStep> stepEvent;
+    EventFunctionWrapper stepEvent;
 
     /** Step in seconds for thermal updates */
     double _step;

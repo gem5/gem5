@@ -61,7 +61,6 @@
 #include "dev/net/etherdump.hh"
 #include "dev/net/etherint.hh"
 #include "dev/net/etherlink.hh"
-#include "dev/net/etherobject.hh"
 #include "dev/net/etherpkt.hh"
 #include "dev/net/tcp_iface.hh"
 #include "params/EtherLink.hh"
@@ -72,7 +71,7 @@
 using namespace std;
 
 DistEtherLink::DistEtherLink(const Params *p)
-    : EtherObject(p), linkDelay(p->delay)
+    : SimObject(p), linkDelay(p->delay)
 {
     DPRINTF(DistEthernet,"DistEtherLink::DistEtherLink() "
             "link delay:%llu ticksPerByte:%f\n", p->delay, p->speed);
@@ -94,7 +93,8 @@ DistEtherLink::DistEtherLink(const Params *p)
     // create the dist (TCP) interface to talk to the peer gem5 processes.
     distIface = new TCPIface(p->server_name, p->server_port,
                              p->dist_rank, p->dist_size,
-                             p->sync_start, sync_repeat, this, p->is_switch,
+                             p->sync_start, sync_repeat, this,
+                             p->dist_sync_on_pseudo_op, p->is_switch,
                              p->num_nodes);
 
     localIface = new LocalIface(name() + ".int0", txLink, rxLink, distIface);
@@ -108,15 +108,12 @@ DistEtherLink::~DistEtherLink()
     delete distIface;
 }
 
-EtherInt*
-DistEtherLink::getEthPort(const std::string &if_name, int idx)
+Port &
+DistEtherLink::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name != "int0") {
-        return nullptr;
-    } else {
-        panic_if(localIface->getPeer(), "interface already connected to");
-    }
-    return localIface;
+    if (if_name == "int0")
+        return *localIface;
+    return SimObject::getPort(if_name, idx);
 }
 
 void
@@ -197,7 +194,7 @@ DistEtherLink::TxLink::transmit(EthPacketPtr pkt)
     }
 
     packet = pkt;
-    Tick delay = (Tick)ceil(((double)pkt->length * ticksPerByte) + 1.0);
+    Tick delay = (Tick)ceil(((double)pkt->simLength * ticksPerByte) + 1.0);
     if (delayVar != 0)
         delay += random_mt.random<Tick>(0, delayVar);
 
@@ -233,7 +230,7 @@ DistEtherLink::Link::unserialize(CheckpointIn &cp)
     bool packet_exists;
     UNSERIALIZE_SCALAR(packet_exists);
     if (packet_exists) {
-        packet = make_shared<EthPacketData>(16384);
+        packet = make_shared<EthPacketData>();
         packet->unserialize("packet", cp);
     }
 

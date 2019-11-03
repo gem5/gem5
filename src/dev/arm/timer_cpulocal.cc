@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -38,34 +38,53 @@
  *          Geoffrey Blake
  */
 
+#include "dev/arm/timer_cpulocal.hh"
+
+#include "arch/arm/system.hh"
 #include "base/intmath.hh"
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/Timer.hh"
 #include "dev/arm/base_gic.hh"
-#include "dev/arm/timer_cpulocal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
 CpuLocalTimer::CpuLocalTimer(Params *p)
-    : BasicPioDevice(p, 0x38), gic(p->gic)
+    : BasicPioDevice(p, 0x38)
 {
-   // Initialize the timer registers for each per cpu timer
-   for (int i = 0; i < CPU_MAX; i++) {
-        std::stringstream oss;
-        oss << name() << ".timer" << i;
-        localTimer[i]._name = oss.str();
-        localTimer[i].parent = this;
-        localTimer[i].intNumTimer = p->int_num_timer;
-        localTimer[i].intNumWatchdog = p->int_num_watchdog;
-        localTimer[i].cpuNum = i;
-    }
 }
 
-CpuLocalTimer::Timer::Timer()
-    : timerControl(0x0), watchdogControl(0x0), rawIntTimer(false), rawIntWatchdog(false),
-      rawResetWatchdog(false), watchdogDisableReg(0x0), pendingIntTimer(false), pendingIntWatchdog(false),
-      timerLoadValue(0x0), watchdogLoadValue(0x0), timerZeroEvent(this), watchdogZeroEvent(this)
+void
+CpuLocalTimer::init()
+{
+   auto p = params();
+   // Initialize the timer registers for each per cpu timer
+   for (int i = 0; i < sys->numContexts(); i++) {
+        ThreadContext* tc = sys->getThreadContext(i);
+        std::stringstream oss;
+        oss << name() << ".timer" << i;
+
+        localTimer.emplace_back(
+            new Timer(oss.str(), this,
+                      p->int_timer->get(tc),
+                      p->int_watchdog->get(tc)));
+    }
+
+    BasicPioDevice::init();
+}
+
+CpuLocalTimer::Timer::Timer(const std::string &timer_name,
+                            CpuLocalTimer* _parent,
+                            ArmInterruptPin* int_timer,
+                            ArmInterruptPin* int_watchdog)
+    : _name(timer_name), parent(_parent), intTimer(int_timer),
+      intWatchdog(int_watchdog), timerControl(0x0), watchdogControl(0x0),
+      rawIntTimer(false), rawIntWatchdog(false),
+      rawResetWatchdog(false), watchdogDisableReg(0x0),
+      pendingIntTimer(false), pendingIntWatchdog(false),
+      timerLoadValue(0x0), watchdogLoadValue(0x0),
+      timerZeroEvent([this]{ timerAtZero(); }, name()),
+      watchdogZeroEvent([this]{ watchdogAtZero(); }, name())
 {
 }
 
@@ -78,10 +97,10 @@ CpuLocalTimer::read(PacketPtr pkt)
     ContextID cpu_id = pkt->req->contextId();
     DPRINTF(Timer, "Reading from CpuLocalTimer at offset: %#x\n", daddr);
     assert(cpu_id >= 0);
-    assert(cpu_id < CPU_MAX);
+    assert(cpu_id < localTimer.size());
 
     if (daddr < Timer::Size)
-        localTimer[cpu_id].read(pkt, daddr);
+        localTimer[cpu_id]->read(pkt, daddr);
     else
         panic("Tried to read CpuLocalTimer at offset %#x that doesn't exist\n", daddr);
     pkt->makeAtomicResponse();
@@ -97,7 +116,7 @@ CpuLocalTimer::Timer::read(PacketPtr pkt, Addr daddr)
 
     switch(daddr) {
       case TimerLoadReg:
-        pkt->set<uint32_t>(timerLoadValue);
+        pkt->setLE<uint32_t>(timerLoadValue);
         break;
       case TimerCounterReg:
         DPRINTF(Timer, "Event schedule for timer %d, clock=%d, prescale=%d\n",
@@ -107,16 +126,16 @@ CpuLocalTimer::Timer::read(PacketPtr pkt, Addr daddr)
         time = time / parent->clockPeriod() /
             power(16, timerControl.prescalar);
         DPRINTF(Timer, "-- returning counter at %d\n", time);
-        pkt->set<uint32_t>(time);
+        pkt->setLE<uint32_t>(time);
         break;
       case TimerControlReg:
-        pkt->set<uint32_t>(timerControl);
+        pkt->setLE<uint32_t>(timerControl);
         break;
       case TimerIntStatusReg:
-        pkt->set<uint32_t>(rawIntTimer);
+        pkt->setLE<uint32_t>(rawIntTimer);
         break;
       case WatchdogLoadReg:
-        pkt->set<uint32_t>(watchdogLoadValue);
+        pkt->setLE<uint32_t>(watchdogLoadValue);
         break;
       case WatchdogCounterReg:
         DPRINTF(Timer,
@@ -127,16 +146,16 @@ CpuLocalTimer::Timer::read(PacketPtr pkt, Addr daddr)
         time = time / parent->clockPeriod() /
             power(16, watchdogControl.prescalar);
         DPRINTF(Timer, "-- returning counter at %d\n", time);
-        pkt->set<uint32_t>(time);
+        pkt->setLE<uint32_t>(time);
         break;
       case WatchdogControlReg:
-        pkt->set<uint32_t>(watchdogControl);
+        pkt->setLE<uint32_t>(watchdogControl);
         break;
       case WatchdogIntStatusReg:
-        pkt->set<uint32_t>(rawIntWatchdog);
+        pkt->setLE<uint32_t>(rawIntWatchdog);
         break;
       case WatchdogResetStatusReg:
-        pkt->set<uint32_t>(rawResetWatchdog);
+        pkt->setLE<uint32_t>(rawResetWatchdog);
         break;
       case WatchdogDisableReg:
         panic("Tried to read from WatchdogDisableRegister\n");
@@ -156,10 +175,10 @@ CpuLocalTimer::write(PacketPtr pkt)
     ContextID cpu_id = pkt->req->contextId();
     DPRINTF(Timer, "Writing to CpuLocalTimer at offset: %#x\n", daddr);
     assert(cpu_id >= 0);
-    assert(cpu_id < CPU_MAX);
+    assert(cpu_id < localTimer.size());
 
     if (daddr < Timer::Size)
-        localTimer[cpu_id].write(pkt, daddr);
+        localTimer[cpu_id]->write(pkt, daddr);
     else
         panic("Tried to write CpuLocalTimer at offset %#x that doesn't exist\n", daddr);
     pkt->makeAtomicResponse();
@@ -178,16 +197,16 @@ CpuLocalTimer::Timer::write(PacketPtr pkt, Addr daddr)
       case TimerLoadReg:
         // Writing to this register also resets the counter register and
         // starts decrementing if the counter is enabled.
-        timerLoadValue = pkt->get<uint32_t>();
+        timerLoadValue = pkt->getLE<uint32_t>();
         restartTimerCounter(timerLoadValue);
         break;
       case TimerCounterReg:
         // Can be written, doesn't start counting unless the timer is enabled
-        restartTimerCounter(pkt->get<uint32_t>());
+        restartTimerCounter(pkt->getLE<uint32_t>());
         break;
       case TimerControlReg:
         old_enable = timerControl.enable;
-        timerControl = pkt->get<uint32_t>();
+        timerControl = pkt->getLE<uint32_t>();
         if ((old_enable == 0) && timerControl.enable)
             restartTimerCounter(timerLoadValue);
         break;
@@ -199,19 +218,19 @@ CpuLocalTimer::Timer::write(PacketPtr pkt, Addr daddr)
         }
         break;
       case WatchdogLoadReg:
-        watchdogLoadValue = pkt->get<uint32_t>();
+        watchdogLoadValue = pkt->getLE<uint32_t>();
         restartWatchdogCounter(watchdogLoadValue);
         break;
       case WatchdogCounterReg:
         // Can't be written when in watchdog mode, but can in timer mode
         if (!watchdogControl.watchdogMode) {
-            restartWatchdogCounter(pkt->get<uint32_t>());
+            restartWatchdogCounter(pkt->getLE<uint32_t>());
         }
         break;
       case WatchdogControlReg:
         old_enable = watchdogControl.enable;
         old_wd_mode = watchdogControl.watchdogMode;
-        watchdogControl = pkt->get<uint32_t>();
+        watchdogControl = pkt->getLE<uint32_t>();
         if ((old_enable == 0) && watchdogControl.enable)
             restartWatchdogCounter(watchdogLoadValue);
         // cannot disable watchdog using control register
@@ -231,7 +250,7 @@ CpuLocalTimer::Timer::write(PacketPtr pkt, Addr daddr)
         break;
       case WatchdogDisableReg:
         old_val = watchdogDisableReg;
-        watchdogDisableReg = pkt->get<uint32_t>();
+        watchdogDisableReg = pkt->getLE<uint32_t>();
         // if this sequence is observed, turn off watchdog mode
         if (old_val == 0x12345678 && watchdogDisableReg == 0x87654321)
             watchdogControl.watchdogMode = 0;
@@ -294,7 +313,7 @@ CpuLocalTimer::Timer::timerAtZero()
         pendingIntTimer = true;
     if (pendingIntTimer && !old_pending) {
         DPRINTF(Timer, "-- Causing interrupt\n");
-        parent->gic->sendPPInt(intNumTimer, cpuNum);
+        intTimer->raise();
     }
 
     if (!timerControl.autoReload)
@@ -325,7 +344,7 @@ CpuLocalTimer::Timer::watchdogAtZero()
 
     if (pendingIntWatchdog && !old_pending) {
         DPRINTF(Timer, "-- Causing interrupt\n");
-        parent->gic->sendPPInt(intNumWatchdog, cpuNum);
+        intWatchdog->raise();
     }
 
     if (watchdogControl.watchdogMode)
@@ -338,8 +357,6 @@ void
 CpuLocalTimer::Timer::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing Arm CpuLocalTimer\n");
-    SERIALIZE_SCALAR(intNumTimer);
-    SERIALIZE_SCALAR(intNumWatchdog);
 
     uint32_t timer_control_serial = timerControl;
     uint32_t watchdog_control_serial = watchdogControl;
@@ -376,9 +393,6 @@ void
 CpuLocalTimer::Timer::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Arm CpuLocalTimer\n");
-
-    UNSERIALIZE_SCALAR(intNumTimer);
-    UNSERIALIZE_SCALAR(intNumWatchdog);
 
     uint32_t timer_control_serial;
     UNSERIALIZE_SCALAR(timer_control_serial);
@@ -418,15 +432,15 @@ CpuLocalTimer::Timer::unserialize(CheckpointIn &cp)
 void
 CpuLocalTimer::serialize(CheckpointOut &cp) const
 {
-    for (int i = 0; i < CPU_MAX; i++)
-        localTimer[i].serializeSection(cp, csprintf("timer%d", i));
+    for (int i = 0; i < sys->numContexts(); i++)
+        localTimer[i]->serializeSection(cp, csprintf("timer%d", i));
 }
 
 void
 CpuLocalTimer::unserialize(CheckpointIn &cp)
 {
-    for (int i = 0; i < CPU_MAX; i++)
-        localTimer[i].unserializeSection(cp, csprintf("timer%d", i));
+    for (int i = 0; i < sys->numContexts(); i++)
+        localTimer[i]->unserializeSection(cp, csprintf("timer%d", i));
 }
 
 CpuLocalTimer *

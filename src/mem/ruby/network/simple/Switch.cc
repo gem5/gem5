@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/network/simple/Switch.hh"
+
 #include <numeric>
 
 #include "base/cast.hh"
@@ -33,7 +35,6 @@
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/simple/PerfectSwitch.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
-#include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
 
 using namespace std;

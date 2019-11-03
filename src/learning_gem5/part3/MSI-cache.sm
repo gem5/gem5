@@ -1,0 +1,853 @@
+/*
+ * Copyright (c) 2017 Jason Lowe-Power
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * This file contains a simple example MSI protocol.
+ *
+ * The protocol in this file is based off of the MSI protocol found in
+ * A Primer on Memory Consistency and Cache Coherence
+ *      Daniel J. Sorin, Mark D. Hill, and David A. Wood
+ *      Synthesis Lectures on Computer Architecture 2011 6:3, 141-149
+ *
+ * Table 8.1 contains the transitions and actions found in this file and
+ * section 8.2.4 explains the protocol in detail.
+ *
+ * See Learning gem5 Part 3: Ruby for more details.
+ *
+ * Authors: Jason Lowe-Power
+ */
+
+/// Declare a machine with type L1Cache.
+machine(MachineType:L1Cache, "MSI cache")
+    : Sequencer *sequencer; // Incoming request from CPU come from this
+      CacheMemory *cacheMemory; // This stores the data and cache states
+      bool send_evictions; // Needed to support O3 CPU and mwait
+
+      // Other declarations
+      // Message buffers are required to send and receive data from the Ruby
+      // network. The from/to and request/response can be confusing!
+      // Virtual networks are needed to prevent deadlock (e.g., it is bad if a
+      // response gets stuck behind a stalled request). In this protocol, we are
+      // using three virtual networks. The highest priority is responses,
+      // followed by forwarded requests, then requests have the lowest priority.
+
+      // Requests *to* the directory
+      MessageBuffer * requestToDir, network="To", virtual_network="0",
+            vnet_type="request";
+      // Responses *to* the directory or other caches
+      MessageBuffer * responseToDirOrSibling, network="To", virtual_network="2",
+            vnet_type="response";
+
+      // Requests *from* the directory for fwds, invs, and put acks.
+      MessageBuffer * forwardFromDir, network="From", virtual_network="1",
+            vnet_type="forward";
+      // Responses *from* directory and other caches for this cache's reqs.
+      MessageBuffer * responseFromDirOrSibling, network="From",
+            virtual_network="2", vnet_type="response";
+
+      // This is all of the incoming requests from the core via the sequencer
+      MessageBuffer * mandatoryQueue;
+{
+    // Declare the states that this cache will use. These are both stable
+    // states (no underscore) and transient states (with underscore). Letters
+    // after the underscores are superscript in Sorin et al.
+    // Underscores and "desc" are used when generating HTML tables.
+    // Access permissions are used for functional accesses. For reads, the
+    // functional access reads *all* of the blocks with a matching address that
+    // have read-only or read-write permission. For functional writes, all
+    // blocks are updated with new data if they have busy, read-only, or
+    // read-write permission.
+    state_declaration(State, desc="Cache states") {
+        I,      AccessPermission:Invalid,
+                    desc="Not present/Invalid";
+
+        // States moving out of I
+        IS_D,   AccessPermission:Invalid,
+                    desc="Invalid, moving to S, waiting for data";
+        IM_AD,  AccessPermission:Invalid,
+                    desc="Invalid, moving to M, waiting for acks and data";
+        IM_A,   AccessPermission:Busy,
+                    desc="Invalid, moving to M, waiting for acks";
+
+        S,      AccessPermission:Read_Only,
+                    desc="Shared. Read-only, other caches may have the block";
+
+        // States moving out of S
+        SM_AD,  AccessPermission:Read_Only,
+                    desc="Shared, moving to M, waiting for acks and 'data'";
+        SM_A,   AccessPermission:Read_Only,
+                    desc="Shared, moving to M, waiting for acks";
+
+        M,      AccessPermission:Read_Write,
+                    desc="Modified. Read & write permissions. Owner of block";
+
+        // States moving to Invalid
+        MI_A,   AccessPermission:Busy,
+                    desc="Was modified, moving to I, waiting for put ack";
+        SI_A,   AccessPermission:Busy,
+                    desc="Was shared, moving to I, waiting for put ack";
+        II_A,   AccessPermission:Invalid,
+                    desc="Sent valid data before receiving put ack. ";
+                         //"Waiting for put ack.";
+    }
+
+    // Events that can be triggered on incoming messages. These are the events
+    // that will trigger transitions
+    enumeration(Event, desc="Cache events") {
+        // From the processor/sequencer/mandatory queue
+        Load,           desc="Load from processor";
+        Store,          desc="Store from processor";
+
+        // Internal event (only triggered from processor requests)
+        Replacement,    desc="Triggered when block is chosen as victim";
+
+        // Forwarded reqeust from other cache via dir on the forward network
+        FwdGetS,        desc="Directory sent us a request to satisfy GetS. ";
+                             //"We must have the block in M to respond to this.";
+        FwdGetM,        desc="Directory sent us a request to satisfy GetM. ";
+                             //"We must have the block in M to respond to this.";
+        Inv,            desc="Invalidate from the directory.";
+        PutAck,         desc="Response from directory after we issue a put. ";
+                             //"This must be on the fwd network to avoid";
+                             //"deadlock.";
+
+        // Responses from directory
+        DataDirNoAcks,  desc="Data from directory (acks = 0)";
+        DataDirAcks,    desc="Data from directory (acks > 0)";
+
+        // Responses from other caches
+        DataOwner,      desc="Data from owner";
+        InvAck,         desc="Invalidation ack from other cache after Inv";
+
+        // Special internally triggered event to simplify implementation
+        LastInvAck,     desc="Triggered after the last ack is received";
+    }
+
+    // A structure for the cache entry. This stores the cache data and state
+    // as defined above. You can put any other information here you like.
+    // The AbstractCacheEntry is defined in
+    // src/mem/ruby/slic_interface/AbstractCacheEntry.hh
+    // If you want to use any of the functions in the abstract entry declare
+    // them here.
+    structure(Entry, desc="Cache entry", interface="AbstractCacheEntry") {
+        State CacheState,        desc="cache state";
+        DataBlock DataBlk,       desc="Data in the block";
+    }
+
+    // TBE is the "transaction buffer entry". This stores information needed
+    // during transient states. This is *like* an MSHR. It functions as an MSHR
+    // in this protocol, but the entry is also allocated for other uses.
+    structure(TBE, desc="Entry for transient requests") {
+        State TBEState,         desc="State of block";
+        DataBlock DataBlk,      desc="Data for the block. Needed for MI_A";
+        int AcksOutstanding, default=0, desc="Number of acks left to receive.";
+    }
+
+    // Table of TBE entries. This is defined externally in
+    // src/mem/ruby/structures/TBETable.hh. It is templatized on the TBE
+    // structure defined above.
+    structure(TBETable, external="yes") {
+      TBE lookup(Addr);
+      void allocate(Addr);
+      void deallocate(Addr);
+      bool isPresent(Addr);
+    }
+
+    /*************************************************************************/
+    // Some declarations of member functions and member variables.
+
+    // The TBE table for this machine. It is templatized under the covers.
+    // NOTE: SLICC mangles names with the machine type. Thus, the TBE declared
+    //       above will be L1Cache_TBE in C++.
+    // We also have to pass through a parameter to the machine to the TBETable.
+    TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
+
+    // Declare all of the functions of the AbstractController that we may use
+    // in this file.
+    // Functions from clocked object
+    Tick clockEdge();
+
+    // Functions we must use to set things up for the transitions to execute
+    // correctly.
+    // These next set/unset functions are used to populate the implicit
+    // variables used in actions. This is required when a transition has
+    // multiple actions.
+    void set_cache_entry(AbstractCacheEntry a);
+    void unset_cache_entry();
+    void set_tbe(TBE b);
+    void unset_tbe();
+
+    // Given an address and machine type this queries the network to check
+    // where it should be sent. In a real implementation, this might be fixed
+    // at design time, but this function gives us flexibility at runtime.
+    // For example, if you have multiple memory channels, this function will
+    // tell you which addresses to send to which memory controller.
+    MachineID mapAddressToMachine(Addr addr, MachineType mtype);
+
+    // Convience function to look up the cache entry.
+    // Needs a pointer so it will be a reference and can be updated in actions
+    Entry getCacheEntry(Addr address), return_by_pointer="yes" {
+        return static_cast(Entry, "pointer", cacheMemory.lookup(address));
+    }
+
+    /*************************************************************************/
+    // Functions that we need to define/override to use our specific structures
+    // in this implementation.
+
+    // Required function for getting the current state of the block.
+    // This is called from the transition to know which transition to execute
+    State getState(TBE tbe, Entry cache_entry, Addr addr) {
+        // The TBE state will override the state in cache memory, if valid
+        if (is_valid(tbe)) { return tbe.TBEState; }
+        // Next, if the cache entry is valid, it holds the state
+        else if (is_valid(cache_entry)) { return cache_entry.CacheState; }
+        // If the block isn't present, then it's state must be I.
+        else { return State:I; }
+    }
+
+
+    // Required function for setting the current state of the block.
+    // This is called from the transition to set the ending state.
+    // Needs to set both the TBE and the cache entry state.
+    // This is also called when transitioning to I so it's possible the TBE and/
+    // or the cache_entry is invalid.
+    void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
+      if (is_valid(tbe)) { tbe.TBEState := state; }
+      if (is_valid(cache_entry)) { cache_entry.CacheState := state; }
+    }
+
+    // Required function to override. Used for functional access to know where
+    // the valid data is. NOTE: L1Cache_State_to_permission is automatically
+    // created based on the access permissions in the state_declaration.
+    // This is mangled by both the MachineType and the name of the state
+    // declaration ("State" in this case)
+    AccessPermission getAccessPermission(Addr addr) {
+        TBE tbe := TBEs[addr];
+        if(is_valid(tbe)) {
+            return L1Cache_State_to_permission(tbe.TBEState);
+        }
+
+        Entry cache_entry := getCacheEntry(addr);
+        if(is_valid(cache_entry)) {
+            return L1Cache_State_to_permission(cache_entry.CacheState);
+        }
+
+        return AccessPermission:NotPresent;
+    }
+
+    // Required function to override. Like above function, but sets thte state.
+    void setAccessPermission(Entry cache_entry, Addr addr, State state) {
+        if (is_valid(cache_entry)) {
+            cache_entry.changePermission(L1Cache_State_to_permission(state));
+        }
+    }
+
+    // Required function to override for functionally reading/writing data.
+    // NOTE: testAndRead/Write defined in src/mem/ruby/slicc_interface/Util.hh
+    void functionalRead(Addr addr, Packet *pkt) {
+        TBE tbe := TBEs[addr];
+        if(is_valid(tbe)) {
+            testAndRead(addr, tbe.DataBlk, pkt);
+        } else {
+            testAndRead(addr, getCacheEntry(addr).DataBlk, pkt);
+        }
+    }
+
+    int functionalWrite(Addr addr, Packet *pkt) {
+        TBE tbe := TBEs[addr];
+        if(is_valid(tbe)) {
+            if (testAndWrite(addr, tbe.DataBlk, pkt)) {
+                return 1;
+            } else {
+                return 0;
+            }
+        } else {
+            if (testAndWrite(addr, getCacheEntry(addr).DataBlk, pkt)) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    /*************************************************************************/
+    // Input/output network definitions
+
+    // Output ports. This defines the message types that will flow ocross the
+    // output buffers as defined above. These must be "to" networks.
+    // "request_out" is the name we'll use later to send requests.
+    // "RequestMsg" is the message type we will send (see MSI-msg.sm)
+    // "requestToDir" is the name of the MessageBuffer declared above that
+    //      we are sending these requests out of.
+    out_port(request_out, RequestMsg, requestToDir);
+    out_port(response_out, ResponseMsg, responseToDirOrSibling);
+
+    // Input ports. The order here is/(can be) important. The code in each
+    // in_port is executed in the order specified in this file (or by the rank
+    // parameter). Thus, we must sort these based on the network priority.
+    // In this cache, the order is responses from other caches, forwards, then
+    // requests from the CPU.
+
+    // Like the out_port above
+    // "response_in" is the name we'll use later when we refer to this port
+    // "ResponseMsg" is the type of message we expect on this port
+    // "responseFromDirOrSibling" is the name of the buffer this in_port is
+    // connected to for responses from other caches and the directory.
+    in_port(response_in, ResponseMsg, responseFromDirOrSibling) {
+        // NOTE: You have to check to make sure the message buffer has a valid
+        // message at the head. The code in in_port is executed either way.
+        if (response_in.isReady(clockEdge())) {
+            // Peek is a special function. Any code inside a peek statement has
+            // a special variable declared and populated: in_msg. This contains
+            // the message (of type RequestMsg in this case) at the head.
+            // "forward_in" is the port we want to peek into
+            // "RequestMsg" is the type of message we expect.
+            peek(response_in, ResponseMsg) {
+                // Grab the entry and tbe if they exist.
+                Entry cache_entry := getCacheEntry(in_msg.addr);
+                TBE tbe := TBEs[in_msg.addr];
+                // The TBE better exist since this is a response and we need to
+                // be able to check the remaining acks.
+                assert(is_valid(tbe));
+
+                // If it's from the directory...
+                if (machineIDToMachineType(in_msg.Sender) ==
+                            MachineType:Directory) {
+                    if (in_msg.Type != CoherenceResponseType:Data) {
+                        error("Directory should only reply with data");
+                    }
+                    // Take the in_msg acks and add (sub) the Acks we've seen.
+                    // The InvAck will decrement the acks we're waiting for in
+                    // tbe.AcksOutstanding to below 0 if we haven't gotten the
+                    // dir resp yet. So, if this is 0 we don't need to wait
+                    assert(in_msg.Acks + tbe.AcksOutstanding >= 0);
+                    if (in_msg.Acks + tbe.AcksOutstanding == 0) {
+                        trigger(Event:DataDirNoAcks, in_msg.addr, cache_entry,
+                                tbe);
+                    } else {
+                        // If it's not 0, then we need to wait for more acks
+                        // and we'll trigger LastInvAck later.
+                        trigger(Event:DataDirAcks, in_msg.addr, cache_entry,
+                                tbe);
+                    }
+                } else {
+                    // This is from another cache.
+                    if (in_msg.Type == CoherenceResponseType:Data) {
+                        trigger(Event:DataOwner, in_msg.addr, cache_entry,
+                                tbe);
+                    } else if (in_msg.Type == CoherenceResponseType:InvAck) {
+                        DPRINTF(RubySlicc, "Got inv ack. %d left\n",
+                                tbe.AcksOutstanding);
+                        if (tbe.AcksOutstanding == 1) {
+                            // If there is exactly one ack remaining then we
+                            // know it is the last ack.
+                            trigger(Event:LastInvAck, in_msg.addr, cache_entry,
+                                    tbe);
+                        } else {
+                            trigger(Event:InvAck, in_msg.addr, cache_entry,
+                                    tbe);
+                        }
+                    } else {
+                        error("Unexpected response from other cache");
+                    }
+                }
+            }
+        }
+    }
+
+    // Forward requests for other caches.
+    in_port(forward_in, RequestMsg, forwardFromDir) {
+        if (forward_in.isReady(clockEdge())) {
+            peek(forward_in, RequestMsg) {
+                // Grab the entry and tbe if they exist.
+                Entry cache_entry := getCacheEntry(in_msg.addr);
+                TBE tbe := TBEs[in_msg.addr];
+
+                if (in_msg.Type == CoherenceRequestType:GetS) {
+                    // This is a special function that will trigger a
+                    // transition (as defined below). It *must* have these
+                    // parameters.
+                    trigger(Event:FwdGetS, in_msg.addr, cache_entry, tbe);
+                } else if (in_msg.Type == CoherenceRequestType:GetM) {
+                    trigger(Event:FwdGetM, in_msg.addr, cache_entry, tbe);
+                } else if (in_msg.Type == CoherenceRequestType:Inv) {
+                    trigger(Event:Inv, in_msg.addr, cache_entry, tbe);
+                } else if (in_msg.Type == CoherenceRequestType:PutAck) {
+                    trigger(Event:PutAck, in_msg.addr, cache_entry, tbe);
+                } else {
+                    error("Unexpected forward message!");
+                }
+            }
+        }
+    }
+
+    // The "mandatory queue" is the port/queue from the CPU or other processor.
+    // This is *always* a RubyRequest
+    in_port(mandatory_in, RubyRequest, mandatoryQueue) {
+        if (mandatory_in.isReady(clockEdge())) {
+            // Block all requests if there is already an outstanding request
+            // that has the same line address. This is unblocked when we
+            // finally respond to the request.
+            peek(mandatory_in, RubyRequest, block_on="LineAddress") {
+                // NOTE: Using LineAddress here to promote smaller requests to
+                // full cache block requests.
+                Entry cache_entry := getCacheEntry(in_msg.LineAddress);
+                TBE tbe := TBEs[in_msg.LineAddress];
+                // If there isn't a matching entry and no room in the cache,
+                // then we need to find a victim.
+                if (is_invalid(cache_entry) &&
+                        cacheMemory.cacheAvail(in_msg.LineAddress) == false ) {
+                    // make room for the block
+                    // The "cacheProbe" function looks at the cache set for
+                    // the address and queries the replacement protocol for
+                    // the address to replace. It returns the address to repl.
+                    Addr addr := cacheMemory.cacheProbe(in_msg.LineAddress);
+                    Entry victim_entry := getCacheEntry(addr);
+                    TBE victim_tbe := TBEs[addr];
+                    trigger(Event:Replacement, addr, victim_entry, victim_tbe);
+                } else {
+                    if (in_msg.Type == RubyRequestType:LD ||
+                            in_msg.Type == RubyRequestType:IFETCH) {
+                        trigger(Event:Load, in_msg.LineAddress, cache_entry,
+                                tbe);
+                    } else if (in_msg.Type == RubyRequestType:ST) {
+                        trigger(Event:Store, in_msg.LineAddress, cache_entry,
+                                tbe);
+                    } else {
+                        error("Unexpected type from processor");
+                    }
+                }
+            }
+        }
+    }
+
+
+    /*************************************************************************/
+    // Below are all of the actions that might be taken on a transition.
+
+    // Each actions has a name, a shorthand, and a description.
+    // The shorthand is used when generating the HTML tables for the protocol.
+    // "\" in the shorthand cause that letter to be bold. Underscores insert a
+    // space, ^ makes the rest of the letters superscript.
+    // The description is also shown in the HTML table when clicked
+
+    // The first set of actions are things we will do to interact with the
+    // rest of the system. Things like sending requests/responses.
+
+    // Action blocks define a number of implicit variables that are useful.
+    // These variables come straight from the trigger() call in the in_port
+    // blocks.
+    // address: The address passed in the trigger (usually the in_msg.addr,
+    //          though it can be different. E.g., on a replacement it is the
+    //          victim address).
+    // cache_entry: The cache entry passed in the trigger call
+    // tbe: The TBE passed in the trigger call
+    action(sendGetS, 'gS', desc="Send GetS to the directory") {
+        // The syntax for enqueue is a lot like peek. Instead of populating
+        // in_msg, enqueue has an out_msg reference. Whatever you set on out_msg
+        // is sent through the out port specified.  "request_out" is the port
+        // we're sending the message out of "RequestMsg" is the type of message
+        // we're sending "1" is the latency (in cycles) the port waits before
+        // sending the message.
+        enqueue(request_out, RequestMsg, 1) {
+            out_msg.addr := address;
+            // This type is defined in MSI-msg.sm for this protocol.
+            out_msg.Type := CoherenceRequestType:GetS;
+            // The destination may change depending on the address striping
+            // across different directories, so query the network.
+            out_msg.Destination.add(mapAddressToMachine(address,
+                                    MachineType:Directory));
+            // See mem/ruby/protocol/RubySlicc_Exports.sm for possible sizes.
+            out_msg.MessageSize := MessageSizeType:Control;
+            // Set that the reqeustor is this machine so we get the response.
+            out_msg.Requestor := machineID;
+        }
+    }
+
+    action(sendGetM, "gM", desc="Send GetM to the directory") {
+        enqueue(request_out, RequestMsg, 1) {
+            out_msg.addr := address;
+            out_msg.Type := CoherenceRequestType:GetM;
+            out_msg.Destination.add(mapAddressToMachine(address,
+                                    MachineType:Directory));
+            out_msg.MessageSize := MessageSizeType:Control;
+            out_msg.Requestor := machineID;
+        }
+    }
+
+    // NOTE: Clean evict. Required to keep the directory state up-to-date
+    action(sendPutS, "pS", desc="Send PutS to the directory") {
+        enqueue(request_out, RequestMsg, 1) {
+            out_msg.addr := address;
+            out_msg.Type := CoherenceRequestType:PutS;
+            out_msg.Destination.add(mapAddressToMachine(address,
+                                    MachineType:Directory));
+            out_msg.MessageSize := MessageSizeType:Control;
+            out_msg.Requestor := machineID;
+        }
+    }
+
+    action(sendPutM, "pM", desc="Send putM+data to the directory") {
+        enqueue(request_out, RequestMsg, 1) {
+            out_msg.addr := address;
+            out_msg.Type := CoherenceRequestType:PutM;
+            out_msg.Destination.add(mapAddressToMachine(address,
+                                    MachineType:Directory));
+            out_msg.DataBlk := cache_entry.DataBlk;
+            out_msg.MessageSize := MessageSizeType:Data;
+            out_msg.Requestor := machineID;
+        }
+    }
+
+    action(sendCacheDataToReq, "cdR", desc="Send cache data to requestor") {
+        // We have to peek into the request to see who to send to.
+        // If we are in both the peek and the enqueue block then we have access
+        // to both in_msg and out_msg.
+        assert(is_valid(cache_entry));
+        peek(forward_in, RequestMsg) {
+            enqueue(response_out, ResponseMsg, 1) {
+                out_msg.addr := address;
+                out_msg.Type := CoherenceResponseType:Data;
+                out_msg.Destination.add(in_msg.Requestor);
+                out_msg.DataBlk := cache_entry.DataBlk;
+                out_msg.MessageSize := MessageSizeType:Data;
+                out_msg.Sender := machineID;
+            }
+        }
+    }
+
+    action(sendCacheDataToDir, "cdD", desc="Send the cache data to the dir") {
+        enqueue(response_out, ResponseMsg, 1) {
+            out_msg.addr := address;
+            out_msg.Type := CoherenceResponseType:Data;
+            out_msg.Destination.add(mapAddressToMachine(address,
+                                    MachineType:Directory));
+            out_msg.DataBlk := cache_entry.DataBlk;
+            out_msg.MessageSize := MessageSizeType:Data;
+            out_msg.Sender := machineID;
+        }
+    }
+
+    action(sendInvAcktoReq, "iaR", desc="Send inv-ack to requestor") {
+        peek(forward_in, RequestMsg) {
+            enqueue(response_out, ResponseMsg, 1) {
+                out_msg.addr := address;
+                out_msg.Type := CoherenceResponseType:InvAck;
+                out_msg.Destination.add(in_msg.Requestor);
+                out_msg.DataBlk := cache_entry.DataBlk;
+                out_msg.MessageSize := MessageSizeType:Control;
+                out_msg.Sender := machineID;
+            }
+        }
+    }
+
+    action(decrAcks, "da", desc="Decrement the number of acks") {
+        assert(is_valid(tbe));
+        tbe.AcksOutstanding := tbe.AcksOutstanding - 1;
+        // This annotates the protocol trace
+        APPEND_TRANSITION_COMMENT("Acks: ");
+        APPEND_TRANSITION_COMMENT(tbe.AcksOutstanding);
+    }
+
+    action(storeAcks, "sa", desc="Store the needed acks to the TBE") {
+        assert(is_valid(tbe));
+        peek(response_in, ResponseMsg) {
+            tbe.AcksOutstanding := in_msg.Acks + tbe.AcksOutstanding;
+        }
+        assert(tbe.AcksOutstanding > 0);
+    }
+
+    // Responses to CPU requests (e.g., hits and store acks)
+
+    action(loadHit, "Lh", desc="Load hit") {
+        assert(is_valid(cache_entry));
+        // Set this entry as the most recently used for the replacement policy
+        cacheMemory.setMRU(cache_entry);
+        // Send the data back to the sequencer/CPU. NOTE: False means it was
+        // not an "external hit", but hit in this local cache.
+        sequencer.readCallback(address, cache_entry.DataBlk, false);
+    }
+
+    action(externalLoadHit, "xLh", desc="External load hit (was a miss)") {
+        assert(is_valid(cache_entry));
+        peek(response_in, ResponseMsg) {
+            cacheMemory.setMRU(cache_entry);
+            // Forward the type of machine that responded to this request
+            // E.g., another cache or the directory. This is used for tracking
+            // statistics.
+            sequencer.readCallback(address, cache_entry.DataBlk, true,
+                                   machineIDToMachineType(in_msg.Sender));
+        }
+    }
+
+    action(storeHit, "Sh", desc="Store hit") {
+        assert(is_valid(cache_entry));
+        cacheMemory.setMRU(cache_entry);
+        // The same as the read callback above.
+        sequencer.writeCallback(address, cache_entry.DataBlk, false);
+    }
+
+    action(externalStoreHit, "xSh", desc="External store hit (was a miss)") {
+        assert(is_valid(cache_entry));
+        peek(response_in, ResponseMsg) {
+            cacheMemory.setMRU(cache_entry);
+            sequencer.writeCallback(address, cache_entry.DataBlk, true,
+                                   // Note: this could be the last ack.
+                                   machineIDToMachineType(in_msg.Sender));
+        }
+    }
+
+    action(forwardEviction, "e", desc="sends eviction notification to CPU") {
+        if (send_evictions) {
+            sequencer.evictionCallback(address);
+        }
+    }
+
+    // Cache management actions
+
+    action(allocateCacheBlock, "a", desc="Allocate a cache block") {
+        assert(is_invalid(cache_entry));
+        assert(cacheMemory.cacheAvail(address));
+        // Create a new entry and update cache_entry to the new entry
+        set_cache_entry(cacheMemory.allocate(address, new Entry));
+    }
+
+    action(deallocateCacheBlock, "d", desc="Deallocate a cache block") {
+        assert(is_valid(cache_entry));
+        cacheMemory.deallocate(address);
+        // clear the cache_entry variable (now it's invalid)
+        unset_cache_entry();
+    }
+
+    action(writeDataToCache, "wd", desc="Write data to the cache") {
+        peek(response_in, ResponseMsg) {
+            assert(is_valid(cache_entry));
+            cache_entry.DataBlk := in_msg.DataBlk;
+        }
+    }
+
+    action(allocateTBE, "aT", desc="Allocate TBE") {
+        assert(is_invalid(tbe));
+        TBEs.allocate(address);
+        // this updates the tbe variable for other actions
+        set_tbe(TBEs[address]);
+    }
+
+    action(deallocateTBE, "dT", desc="Deallocate TBE") {
+        assert(is_valid(tbe));
+        TBEs.deallocate(address);
+        // this makes the tbe varible invalid
+        unset_tbe();
+    }
+
+    // Queue management actions
+
+    action(popMandatoryQueue, "pQ", desc="Pop the mandatory queue") {
+        mandatory_in.dequeue(clockEdge());
+    }
+
+    action(popResponseQueue, "pR", desc="Pop the response queue") {
+        response_in.dequeue(clockEdge());
+    }
+
+    action(popForwardQueue, "pF", desc="Pop the forward queue") {
+        forward_in.dequeue(clockEdge());
+    }
+
+    // Stalling actions
+
+    action(stall, "z", desc="Stall the incoming request") {
+        // Do nothing. However, the transition must have some action to be
+        // valid which is why this is needed.
+        // NOTE: There are other more complicated but higher performing stalls
+        // in Ruby like recycle() or stall_and_wait.
+        // z_stall stalls everything in the queue behind this request.
+    }
+
+
+    /*************************************************************************/
+    // These are the transition definition. These are simply each cell in the
+    // table from Sorin et al. These are mostly in upper-left to bottom-right
+    // order
+
+    // Each transtiion has (up to) 3 parameters, the current state, the
+    // triggering event and the final state. Thus, the below transition reads
+    // "Move from state I on a Load event to state IS_D". Below are other
+    // examples of transition statements.
+    // Within the transition statement is a set of action to take during the
+    // transition. These actions are executed atomically (i.e., all or nothing)
+    transition(I, Load, IS_D) {
+        // Make sure there is room in the cache to put the block whenever the
+        // miss returns. Otherwise we could deadlock.
+        allocateCacheBlock;
+        // We may need to track acks for this block and only the TBE holds an
+        // ack count. Thus, we need to allocate both a TBE and cache block.
+        allocateTBE;
+        // Actually send the request to the directory
+        sendGetS;
+        // Since we have handled this request on the mandatory queue, we can pop
+        popMandatoryQueue;
+    }
+
+    transition(I, Store, IM_AD) {
+        allocateCacheBlock;
+        allocateTBE;
+        sendGetM;
+        popMandatoryQueue;
+    }
+
+    // You can use {} to specify multiple states or events for which the
+    // transition applies. For instance, below. If we are in IS_D, then on any
+    // of the following Events (Load, Store, Replacement, Inv) we should stall
+    // When there is no third parameter to transition, it means that we want
+    // to stay in the initial state.
+    transition(IS_D, {Load, Store, Replacement, Inv}) {
+        stall;
+    }
+
+    // Similarly, on either DataDirNoAcks or DataOwner we should go to S
+    transition(IS_D, {DataDirNoAcks, DataOwner}, S) {
+        writeDataToCache;
+        deallocateTBE;
+        externalLoadHit;
+        popResponseQueue;
+    }
+
+    transition({IM_AD, IM_A}, {Load, Store, Replacement, FwdGetS, FwdGetM}) {
+        stall;
+    }
+
+    transition({IM_AD, SM_AD}, {DataDirNoAcks, DataOwner}, M) {
+        writeDataToCache;
+        deallocateTBE;
+        externalStoreHit;
+        popResponseQueue;
+    }
+
+    transition(IM_AD, DataDirAcks, IM_A) {
+        writeDataToCache;
+        storeAcks;
+        popResponseQueue;
+    }
+
+    transition({IM_AD, IM_A, SM_AD, SM_A}, InvAck) {
+        decrAcks;
+        popResponseQueue;
+    }
+
+    transition({IM_A, SM_A}, LastInvAck, M) {
+        deallocateTBE;
+        externalStoreHit;
+        popResponseQueue;
+    }
+
+    transition({S, SM_AD, SM_A, M}, Load) {
+        loadHit;
+        popMandatoryQueue;
+    }
+
+    transition(S, Store, SM_AD) {
+        allocateTBE;
+        sendGetM;
+        popMandatoryQueue;
+    }
+
+    transition(S, Replacement, SI_A) {
+        sendPutS;
+    }
+
+    transition(S, Inv, I) {
+        sendInvAcktoReq;
+        forwardEviction;
+        deallocateCacheBlock;
+        popForwardQueue;
+    }
+
+    transition({SM_AD, SM_A}, {Store, Replacement, FwdGetS, FwdGetM}) {
+        stall;
+    }
+
+    transition(SM_AD, Inv, IM_AD) {
+        sendInvAcktoReq;
+        popForwardQueue;
+    }
+
+    transition(SM_AD, DataDirAcks, SM_A) {
+        writeDataToCache;
+        storeAcks;
+        popResponseQueue;
+    }
+
+    transition(M, Store) {
+        storeHit;
+        forwardEviction;
+        popMandatoryQueue;
+    }
+
+    transition(M, Replacement, MI_A) {
+        sendPutM;
+    }
+
+    transition(M, FwdGetS, S) {
+        sendCacheDataToReq;
+        sendCacheDataToDir;
+        popForwardQueue;
+    }
+
+    transition(M, FwdGetM, I) {
+        sendCacheDataToReq;
+        deallocateCacheBlock;
+        popForwardQueue;
+    }
+
+    transition({MI_A, SI_A, II_A}, {Load, Store, Replacement}) {
+        stall;
+    }
+
+    transition(MI_A, FwdGetS, SI_A) {
+        sendCacheDataToReq;
+        sendCacheDataToDir;
+        popForwardQueue;
+    }
+
+    transition(MI_A, FwdGetM, II_A) {
+        sendCacheDataToReq;
+        popForwardQueue;
+    }
+
+    transition({MI_A, SI_A, II_A}, PutAck, I) {
+        deallocateCacheBlock;
+        popForwardQueue;
+    }
+
+    transition(SI_A, Inv, II_A) {
+        sendInvAcktoReq;
+        popForwardQueue;
+    }
+
+}

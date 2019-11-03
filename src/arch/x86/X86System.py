@@ -36,11 +36,12 @@
 # Authors: Gabe Black
 
 from m5.params import *
-from E820 import X86E820Table, X86E820Entry
-from SMBios import X86SMBiosSMBiosTable
-from IntelMP import X86IntelMPFloatingPointer, X86IntelMPConfigTable
-from ACPI import X86ACPIRSDP
-from System import System
+
+from m5.objects.E820 import X86E820Table, X86E820Entry
+from m5.objects.SMBios import X86SMBiosSMBiosTable
+from m5.objects.IntelMP import X86IntelMPFloatingPointer, X86IntelMPConfigTable
+from m5.objects.ACPI import X86ACPIRSDP
+from m5.objects.System import System
 
 class X86System(System):
     type = 'X86System'

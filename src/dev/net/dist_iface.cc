@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,24 +48,28 @@
 
 #include "base/random.hh"
 #include "base/trace.hh"
+#include "cpu/thread_context.hh"
 #include "debug/DistEthernet.hh"
 #include "debug/DistEthernetPkt.hh"
 #include "dev/net/etherpkt.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
+#include "sim/system.hh"
 
 using namespace std;
 DistIface::Sync *DistIface::sync = nullptr;
+System *DistIface::sys = nullptr;
 DistIface::SyncEvent *DistIface::syncEvent = nullptr;
 unsigned DistIface::distIfaceNum = 0;
 unsigned DistIface::recvThreadsNum = 0;
 DistIface *DistIface::master = nullptr;
+bool DistIface::isSwitch = false;
 
 void
 DistIface::Sync::init(Tick start_tick, Tick repeat_tick)
 {
-    if (start_tick < firstAt) {
-        firstAt = start_tick;
+    if (start_tick < nextAt) {
+        nextAt = start_tick;
         inform("Next dist synchronisation tick is changed to %lu.\n", nextAt);
     }
 
@@ -79,17 +83,29 @@ DistIface::Sync::init(Tick start_tick, Tick repeat_tick)
     }
 }
 
+void
+DistIface::Sync::abort()
+{
+    std::unique_lock<std::mutex> sync_lock(lock);
+    waitNum = 0;
+    isAbort = true;
+    sync_lock.unlock();
+    cv.notify_one();
+}
+
 DistIface::SyncSwitch::SyncSwitch(int num_nodes)
 {
     numNodes = num_nodes;
     waitNum = num_nodes;
     numExitReq = 0;
     numCkptReq = 0;
+    numStopSyncReq = 0;
     doExit = false;
     doCkpt = false;
-    firstAt = std::numeric_limits<Tick>::max();
-    nextAt = 0;
+    doStopSync = false;
+    nextAt = std::numeric_limits<Tick>::max();
     nextRepeat = std::numeric_limits<Tick>::max();
+    isAbort = false;
 }
 
 DistIface::SyncNode::SyncNode()
@@ -97,41 +113,48 @@ DistIface::SyncNode::SyncNode()
     waitNum = 0;
     needExit = ReqType::none;
     needCkpt = ReqType::none;
+    needStopSync = ReqType::none;
     doExit = false;
     doCkpt = false;
-    firstAt = std::numeric_limits<Tick>::max();
-    nextAt = 0;
+    doStopSync = false;
+    nextAt = std::numeric_limits<Tick>::max();
     nextRepeat = std::numeric_limits<Tick>::max();
+    isAbort = false;
 }
 
-void
+bool
 DistIface::SyncNode::run(bool same_tick)
 {
     std::unique_lock<std::mutex> sync_lock(lock);
     Header header;
 
     assert(waitNum == 0);
+    assert(!isAbort);
     waitNum = DistIface::recvThreadsNum;
     // initiate the global synchronisation
     header.msgType = MsgType::cmdSyncReq;
     header.sendTick = curTick();
     header.syncRepeat = nextRepeat;
     header.needCkpt = needCkpt;
+    header.needStopSync = needStopSync;
     if (needCkpt != ReqType::none)
         needCkpt = ReqType::pending;
     header.needExit = needExit;
     if (needExit != ReqType::none)
         needExit = ReqType::pending;
+    if (needStopSync != ReqType::none)
+        needStopSync = ReqType::pending;
     DistIface::master->sendCmd(header);
     // now wait until all receiver threads complete the synchronisation
     auto lf = [this]{ return waitNum == 0; };
     cv.wait(sync_lock, lf);
-    // global synchronisation is done
-    assert(!same_tick || (nextAt == curTick()));
+    // global synchronisation is done.
+    assert(isAbort || !same_tick || (nextAt == curTick()));
+    return !isAbort;
 }
 
 
-void
+bool
 DistIface::SyncSwitch::run(bool same_tick)
 {
     std::unique_lock<std::mutex> sync_lock(lock);
@@ -142,6 +165,8 @@ DistIface::SyncSwitch::run(bool same_tick)
         cv.wait(sync_lock, lf);
     }
     assert(waitNum == 0);
+    if (isAbort) // sync aborted
+        return false;
     assert(!same_tick || (nextAt == curTick()));
     waitNum = numNodes;
     // Complete the global synchronisation
@@ -161,16 +186,27 @@ DistIface::SyncSwitch::run(bool same_tick)
     } else {
         header.needExit = ReqType::none;
     }
+    if (doStopSync || numStopSyncReq == numNodes) {
+        doStopSync = true;
+        numStopSyncReq = 0;
+        header.needStopSync = ReqType::immediate;
+    } else {
+        header.needStopSync = ReqType::none;
+    }
     DistIface::master->sendCmd(header);
+    return true;
 }
 
-void
+bool
 DistIface::SyncSwitch::progress(Tick send_tick,
                                  Tick sync_repeat,
                                  ReqType need_ckpt,
-                                 ReqType need_exit)
+                                 ReqType need_exit,
+                                 ReqType need_stop_sync)
 {
     std::unique_lock<std::mutex> sync_lock(lock);
+    if (isAbort) // sync aborted
+        return false;
     assert(waitNum > 0);
 
     if (send_tick > nextAt)
@@ -186,6 +222,10 @@ DistIface::SyncSwitch::progress(Tick send_tick,
         numExitReq++;
     else if (need_exit == ReqType::immediate)
         doExit = true;
+    if (need_stop_sync == ReqType::collective)
+        numStopSyncReq++;
+    else if (need_stop_sync == ReqType::immediate)
+        doStopSync = true;
 
     waitNum--;
     // Notify the simulation thread if the on-going sync is complete
@@ -193,21 +233,28 @@ DistIface::SyncSwitch::progress(Tick send_tick,
         sync_lock.unlock();
         cv.notify_one();
     }
+    // The receive thread must keep alive in the switch until the node
+    // closes the connection. Thus, we always return true here.
+    return true;
 }
 
-void
+bool
 DistIface::SyncNode::progress(Tick max_send_tick,
                                Tick next_repeat,
                                ReqType do_ckpt,
-                               ReqType do_exit)
+                               ReqType do_exit,
+                               ReqType do_stop_sync)
 {
     std::unique_lock<std::mutex> sync_lock(lock);
+    if (isAbort) // sync aborted
+        return false;
     assert(waitNum > 0);
 
     nextAt = max_send_tick;
     nextRepeat = next_repeat;
     doCkpt = (do_ckpt != ReqType::none);
     doExit = (do_exit != ReqType::none);
+    doStopSync = (do_stop_sync != ReqType::none);
 
     waitNum--;
     // Notify the simulation thread if the on-going sync is complete
@@ -215,6 +262,8 @@ DistIface::SyncNode::progress(Tick max_send_tick,
         sync_lock.unlock();
         cv.notify_one();
     }
+    // The receive thread must finish when simulation is about to exit
+    return !doExit;
 }
 
 void
@@ -288,29 +337,28 @@ DistIface::SyncEvent::start()
     // At this point, all DistIface objects has already called Sync::init() so
     // we have a local minimum of the start tick and repeat for the periodic
     // sync.
-    Tick firstAt  = DistIface::sync->firstAt;
     repeat = DistIface::sync->nextRepeat;
     // Do a global barrier to agree on a common repeat value (the smallest
-    // one from all participating nodes
-    DistIface::sync->run(curTick() == 0);
+    // one from all participating nodes.
+    if (!DistIface::sync->run(false))
+        panic("DistIface::SyncEvent::start() aborted\n");
 
     assert(!DistIface::sync->doCkpt);
     assert(!DistIface::sync->doExit);
+    assert(!DistIface::sync->doStopSync);
     assert(DistIface::sync->nextAt >= curTick());
     assert(DistIface::sync->nextRepeat <= repeat);
 
-    // if this is called at tick 0 then we use the config start param otherwise
-    // the maximum of the current tick of all participating nodes
-    if (curTick() == 0) {
+    if (curTick() == 0)
         assert(!scheduled());
-        assert(DistIface::sync->nextAt == 0);
-        schedule(firstAt);
-    } else {
-        if (scheduled())
-            reschedule(DistIface::sync->nextAt);
-        else
-            schedule(DistIface::sync->nextAt);
-    }
+
+    // Use the maximum of the current tick for all participating nodes or a
+    // user provided starting tick.
+    if (scheduled())
+        reschedule(DistIface::sync->nextAt);
+    else
+        schedule(DistIface::sync->nextAt);
+
     inform("Dist sync scheduled at %lu and repeats %lu\n",  when(),
            DistIface::sync->nextRepeat);
 }
@@ -345,14 +393,37 @@ DistIface::SyncEvent::process()
         EventQueue::ScopedRelease sr(curEventQueue());
         // we do a global sync here that is supposed to happen at the same
         // tick in all gem5 peers
-        DistIface::sync->run(true);
+        if (!DistIface::sync->run(true))
+            return; // global sync aborted
         // global sync completed
     }
     if (DistIface::sync->doCkpt)
         exitSimLoop("checkpoint");
-    if (DistIface::sync->doExit)
+    if (DistIface::sync->doExit) {
         exitSimLoop("exit request from gem5 peers");
+        return;
+    }
+    if (DistIface::sync->doStopSync) {
+        DistIface::sync->doStopSync = false;
+        inform("synchronization disabled at %lu\n", curTick());
 
+        // The switch node needs to wait for the next sync immediately.
+        if (DistIface::isSwitch) {
+            start();
+        } else {
+            // Wake up thread contexts on non-switch nodes.
+            for (int i = 0; i < DistIface::master->sys->numContexts(); i++) {
+                ThreadContext *tc =
+                    DistIface::master->sys->getThreadContext(i);
+                if (tc->status() == ThreadContext::Suspended)
+                    tc->activate();
+                else
+                    warn_once("Tried to wake up thread in dist-gem5, but it "
+                              "was already awake!\n");
+            }
+        }
+        return;
+    }
     // schedule the next periodic sync
     repeat = DistIface::sync->nextRepeat;
     schedule(curTick() + repeat);
@@ -407,7 +478,7 @@ DistIface::RecvScheduler::resumeRecvTicks()
         Desc d = descQueue.front();
         descQueue.pop();
         d.sendTick = curTick();
-        d.sendDelay = d.packet->size(); // assume 1 tick/byte max link speed
+        d.sendDelay = d.packet->simLength; // assume 1 tick/byte max link speed
         v.push_back(d);
     }
 
@@ -493,7 +564,7 @@ DistIface::RecvScheduler::Desc::unserialize(CheckpointIn &cp)
 {
         UNSERIALIZE_SCALAR(sendTick);
         UNSERIALIZE_SCALAR(sendDelay);
-        packet = std::make_shared<EthPacketData>(16384);
+        packet = std::make_shared<EthPacketData>();
         packet->unserialize("rxPacket", cp);
 }
 
@@ -537,9 +608,10 @@ DistIface::DistIface(unsigned dist_rank,
                      Tick sync_start,
                      Tick sync_repeat,
                      EventManager *em,
+                     bool use_pseudo_op,
                      bool is_switch, int num_nodes) :
     syncStart(sync_start), syncRepeat(sync_repeat),
-    recvThread(nullptr), recvScheduler(em),
+    recvThread(nullptr), recvScheduler(em), syncStartOnPseudoOp(use_pseudo_op),
     rank(dist_rank), size(dist_size)
 {
     DPRINTF(DistEthernet, "DistIface() ctor rank:%d\n",dist_rank);
@@ -547,6 +619,7 @@ DistIface::DistIface(unsigned dist_rank,
     if (master == nullptr) {
         assert(sync == nullptr);
         assert(syncEvent == nullptr);
+        isSwitch = is_switch;
         if (is_switch)
             sync = new SyncSwitch(num_nodes);
         else
@@ -562,14 +635,16 @@ DistIface::DistIface(unsigned dist_rank,
 DistIface::~DistIface()
 {
     assert(recvThread);
+    recvThread->join();
     delete recvThread;
-    if (this == master) {
+    if (distIfaceNum-- == 0) {
         assert(syncEvent);
         delete syncEvent;
         assert(sync);
         delete sync;
-        master = nullptr;
     }
+    if (this == master)
+        master = nullptr;
 }
 
 void
@@ -583,14 +658,15 @@ DistIface::packetOut(EthPacketPtr pkt, Tick send_delay)
     header.sendTick  = curTick();
     header.sendDelay = send_delay;
 
-    header.dataPacketLength = pkt->size();
+    header.dataPacketLength = pkt->length;
+    header.simLength = pkt->simLength;
 
     // Send out the packet and the meta info.
     sendPacket(header, pkt);
 
     DPRINTF(DistEthernetPkt,
             "DistIface::sendDataPacket() done size:%d send_delay:%llu\n",
-            pkt->size(), send_delay);
+            pkt->length, send_delay);
 }
 
 void
@@ -610,10 +686,14 @@ DistIface::recvThreadFunc(Event *recv_done, Tick link_delay)
             // because one of them called m5 exit. So we stop here.
             // Grab the eventq lock to stop the simulation thread
             curEventQueue()->lock();
-            exit_message("info",
-                         0,
-                         "Message server closed connection, "
-                         "simulation is exiting");
+            exitSimLoop("connection to gem5 peer got closed");
+            curEventQueue()->unlock();
+            // The simulation thread may be blocked in processing an on-going
+            // global synchronisation. Abort the sync to give the simulation
+            // thread a chance to make progress and process the exit event.
+            sync->abort();
+            // Finish receiver thread
+            break;
         }
 
         // We got a valid dist header packet, let's process it
@@ -624,10 +704,13 @@ DistIface::recvThreadFunc(Event *recv_done, Tick link_delay)
                                      header.sendDelay);
         } else {
             // everything else must be synchronisation related command
-            sync->progress(header.sendTick,
-                           header.syncRepeat,
-                           header.needCkpt,
-                           header.needExit);
+            if (!sync->progress(header.sendTick,
+                                header.syncRepeat,
+                                header.needCkpt,
+                                header.needExit,
+                                header.needStopSync))
+                // Finish receiver thread if simulation is about to exit
+                break;
         }
     }
 }
@@ -731,7 +814,8 @@ void
 DistIface::startup()
 {
     DPRINTF(DistEthernet, "DistIface::startup() started\n");
-    if (this == master)
+    // Schedule synchronization unless we are not a switch in pseudo_op mode.
+    if (this == master && (!syncStartOnPseudoOp || isSwitch))
         syncEvent->start();
     DPRINTF(DistEthernet, "DistIface::startup() done\n");
 }
@@ -760,6 +844,56 @@ DistIface::readyToCkpt(Tick delay, Tick period)
     return ret;
 }
 
+void
+DistIface::SyncNode::requestStopSync(ReqType req)
+{
+   std::lock_guard<std::mutex> sync_lock(lock);
+   needStopSync = req;
+}
+
+void
+DistIface::toggleSync(ThreadContext *tc)
+{
+    // Unforunate that we have to populate the system pointer member this way.
+    master->sys = tc->getSystemPtr();
+
+    // The invariant for both syncing and "unsyncing" is that all threads will
+    // stop executing intructions until the desired sync state has been reached
+    // for all nodes.  This is the easiest way to prevent deadlock (in the case
+    // of "unsyncing") and causality errors (in the case of syncing).
+    if (master->syncEvent->scheduled()) {
+        inform("Request toggling syncronization off\n");
+        master->sync->requestStopSync(ReqType::collective);
+
+        // At this point, we have no clue when everyone will reach the sync
+        // stop point.  Suspend execution of all local thread contexts.
+        // Dist-gem5 will reactivate all thread contexts when everyone has
+        // reached the sync stop point.
+#if THE_ISA != NULL_ISA
+        for (int i = 0; i < master->sys->numContexts(); i++) {
+            ThreadContext *tc = master->sys->getThreadContext(i);
+            if (tc->status() == ThreadContext::Active)
+                tc->quiesce();
+        }
+#endif
+    } else {
+        inform("Request toggling syncronization on\n");
+        master->syncEvent->start();
+
+        // We need to suspend all CPUs until the sync point is reached by all
+        // nodes to prevent causality errors.  We can also schedule CPU
+        // activation here, since we know exactly when the next sync will
+        // occur.
+#if THE_ISA != NULL_ISA
+        for (int i = 0; i < master->sys->numContexts(); i++) {
+            ThreadContext *tc = master->sys->getThreadContext(i);
+            if (tc->status() == ThreadContext::Active)
+                tc->quiesceTick(master->syncEvent->when() + 1);
+        }
+#endif
+    }
+}
+
 bool
 DistIface::readyToExit(Tick delay)
 {
@@ -767,6 +901,10 @@ DistIface::readyToExit(Tick delay)
     DPRINTF(DistEthernet, "DistIface::readyToExit() called, delay:%lu\n",
             delay);
     if (master) {
+        // To successfully coordinate an exit, all nodes must be synchronising
+        if (!master->syncEvent->scheduled())
+            master->syncEvent->start();
+
         if (delay == 0) {
             inform("m5 exit called with zero delay => triggering collaborative "
                    "exit\n");

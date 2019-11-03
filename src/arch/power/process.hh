@@ -36,30 +36,26 @@
 #include <string>
 #include <vector>
 
+#include "mem/page_table.hh"
 #include "sim/process.hh"
 
-class LiveProcess;
 class ObjectFile;
-class System;
 
-class PowerLiveProcess : public LiveProcess
+class PowerProcess : public Process
 {
   protected:
-    PowerLiveProcess(LiveProcessParams * params, ObjectFile *objFile);
+    PowerProcess(ProcessParams * params, ObjectFile *objFile);
 
     void initState();
 
   public:
     void argsInit(int intSize, int pageSize);
-    PowerISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
+    RegVal getSyscallArg(ThreadContext *tc, int &i);
     /// Explicitly import the otherwise hidden getSyscallArg
-    using LiveProcess::getSyscallArg;
-    void setSyscallArg(ThreadContext *tc, int i, PowerISA::IntReg val);
+    using Process::getSyscallArg;
+    void setSyscallArg(ThreadContext *tc, int i, RegVal val);
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
-
-/* No architectural page table defined for this ISA */
-typedef NoArchPageTable ArchPageTable;
 
 #endif // __POWER_PROCESS_HH__
 

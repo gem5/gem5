@@ -35,37 +35,71 @@
 #include <sys/mman.h>
 #include <sys/param.h>
 #include <sys/syscall.h>
+#if !defined ( __GNU_LIBRARY__ )
 #include <sys/sysctl.h>
+#endif
 #include <sys/types.h>
 #include <utime.h>
 
 #include "arch/arm/freebsd/freebsd.hh"
 #include "arch/arm/isa_traits.hh"
+#include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/freebsd/freebsd.hh"
 #include "sim/process.hh"
+#include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
 #include "sim/system.hh"
 
 using namespace std;
 using namespace ArmISA;
 
-static SyscallReturn
-issetugidFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
-              ThreadContext *tc)
+namespace
 {
 
+class ArmFreebsdObjectFileLoader : public Process::Loader
+{
+  public:
+    Process *
+    load(ProcessParams *params, ObjectFile *obj_file) override
+    {
+        auto arch = obj_file->getArch();
+        auto opsys = obj_file->getOpSys();
+
+        if (arch != ObjectFile::Arm && arch != ObjectFile::Thumb &&
+                arch != ObjectFile::Arm64) {
+            return nullptr;
+        }
+
+        if (opsys != ObjectFile::FreeBSD)
+            return nullptr;
+
+        if (arch == ObjectFile::Arm64)
+            return new ArmFreebsdProcess64(params, obj_file, arch);
+        else
+            return new ArmFreebsdProcess32(params, obj_file, arch);
+    }
+};
+
+ArmFreebsdObjectFileLoader loader;
+
+} // anonymous namespace
+
+static SyscallReturn
+issetugidFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+{
     return 0;
 }
 
+#if !defined ( __GNU_LIBRARY__ )
 static SyscallReturn
-sysctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
-           ThreadContext *tc)
+sysctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
     uint64_t ret;
 
+    auto process = tc->getProcessPtr();
     Addr namep = process->getSyscallArg(tc, index);
     size_t namelen = process->getSyscallArg(tc, index);
     Addr oldp = process->getSyscallArg(tc, index);
@@ -78,13 +112,13 @@ sysctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     BufferArg buf3(oldlenp, sizeof(size_t));
     BufferArg buf4(newp, sizeof(size_t));
 
-    buf.copyIn(tc->getMemProxy());
-    buf2.copyIn(tc->getMemProxy());
-    buf3.copyIn(tc->getMemProxy());
+    buf.copyIn(tc->getVirtProxy());
+    buf2.copyIn(tc->getVirtProxy());
+    buf3.copyIn(tc->getVirtProxy());
 
     void *hnewp = NULL;
     if (newp) {
-        buf4.copyIn(tc->getMemProxy());
+        buf4.copyIn(tc->getVirtProxy());
         hnewp = (void *)buf4.bufferPtr();
     }
 
@@ -94,14 +128,15 @@ sysctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     ret = sysctl((int *)hnamep, namelen, holdp, holdlenp, hnewp, newlen);
 
-    buf.copyOut(tc->getMemProxy());
-    buf2.copyOut(tc->getMemProxy());
-    buf3.copyOut(tc->getMemProxy());
+    buf.copyOut(tc->getVirtProxy());
+    buf2.copyOut(tc->getVirtProxy());
+    buf3.copyOut(tc->getVirtProxy());
     if (newp)
-        buf4.copyOut(tc->getMemProxy());
+        buf4.copyOut(tc->getVirtProxy());
 
     return (ret);
 }
+#endif
 
 static SyscallDesc syscallDescs32[] = {
     /*    0 */ SyscallDesc("unused#000", unimplementedFunc),
@@ -658,8 +693,8 @@ static SyscallDesc syscallDescs64[] = {
     /*    0 */ SyscallDesc("unused#000", unimplementedFunc),
     /*    1 */ SyscallDesc("exit", exitFunc),
     /*    2 */ SyscallDesc("unused#002", unimplementedFunc),
-    /*    3 */ SyscallDesc("read", readFunc),
-    /*    4 */ SyscallDesc("write", writeFunc),
+    /*    3 */ SyscallDesc("read", readFunc<ArmFreebsd64>),
+    /*    4 */ SyscallDesc("write", writeFunc<ArmFreebsd64>),
     /*    5 */ SyscallDesc("unused#005", unimplementedFunc),
     /*    6 */ SyscallDesc("unused#006", unimplementedFunc),
     /*    7 */ SyscallDesc("unused#007", unimplementedFunc),
@@ -857,7 +892,11 @@ static SyscallDesc syscallDescs64[] = {
     /*  199 */ SyscallDesc("unused#199", unimplementedFunc),
     /*  200 */ SyscallDesc("unused#200", unimplementedFunc),
     /*  201 */ SyscallDesc("unused#201", unimplementedFunc),
+#if !defined ( __GNU_LIBRARY__ )
     /*  202 */ SyscallDesc("sysctl", sysctlFunc),
+#else
+    /*  202 */ SyscallDesc("sysctl", unimplementedFunc),
+#endif
     /*  203 */ SyscallDesc("unused#203", unimplementedFunc),
     /*  204 */ SyscallDesc("unused#204", unimplementedFunc),
     /*  205 */ SyscallDesc("unused#205", unimplementedFunc),
@@ -1205,9 +1244,9 @@ static SyscallDesc syscallDescs64[] = {
     /*  547 */ SyscallDesc("unused#547", unimplementedFunc),
 };
 
-ArmFreebsdProcess32::ArmFreebsdProcess32(LiveProcessParams * params,
+ArmFreebsdProcess32::ArmFreebsdProcess32(ProcessParams * params,
         ObjectFile *objFile, ObjectFile::Arch _arch)
-    : ArmLiveProcess32(params, objFile, _arch)
+    : ArmProcess32(params, objFile, _arch)
 {
     SyscallTable table;
 
@@ -1217,9 +1256,9 @@ ArmFreebsdProcess32::ArmFreebsdProcess32(LiveProcessParams * params,
     syscallTables.push_back(table);
 }
 
-ArmFreebsdProcess64::ArmFreebsdProcess64(LiveProcessParams * params,
+ArmFreebsdProcess64::ArmFreebsdProcess64(ProcessParams * params,
         ObjectFile *objFile, ObjectFile::Arch _arch)
-    : ArmLiveProcess64(params, objFile, _arch)
+    : ArmProcess64(params, objFile, _arch)
 {
     SyscallTable table;
 
@@ -1268,13 +1307,13 @@ ArmFreebsdProcess64::getDesc(int callnum)
 void
 ArmFreebsdProcess32::initState()
 {
-    ArmLiveProcess32::initState();
+    ArmProcess32::initState();
     // The 32 bit equivalent of the comm page would be set up here.
 }
 
 void
 ArmFreebsdProcess64::initState()
 {
-    ArmLiveProcess64::initState();
+    ArmProcess64::initState();
     // The 64 bit equivalent of the comm page would be set up here.
 }

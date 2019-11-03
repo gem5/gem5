@@ -28,7 +28,8 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-from CPUTracers import NativeTrace
+
+from m5.objects.CPUTracers import NativeTrace
 
 class SparcNativeTrace(NativeTrace):
     type = 'SparcNativeTrace'

@@ -1,0 +1,14 @@
+SystemC Simulation
+
+Warning: (W807) sc_vector::bind called with empty range: target `dut.sub_modules' (sc_vector_assembly) not initialised yet
+In file: <removed by verify.pl>
+
+Warning: (W807) sc_vector::bind called with empty range: target `dut.sub_modules' (sc_vector_assembly) empty destination range given
+In file: <removed by verify.pl>
+
+Warning: (W807) sc_vector::bind called with empty range: target `dut.in_vec' (sc_vector) empty destination range given
+In file: <removed by verify.pl>
+
+Warning: (W807) sc_vector::bind called with empty range: target `dut.in_vec' (sc_vector) empty destination range given
+In file: <removed by verify.pl>
+Success

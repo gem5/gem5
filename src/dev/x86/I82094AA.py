@@ -28,8 +28,8 @@
 
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice
-from X86IntPin import X86IntSinkPin
+from m5.objects.Device import BasicPioDevice
+from m5.objects.IntPin import VectorIntSinkPin
 
 class I82094AA(BasicPioDevice):
     type = 'I82094AA'
@@ -41,5 +41,4 @@ class I82094AA(BasicPioDevice):
             "Latency for an interrupt to propagate through this device.")
     external_int_pic = Param.I8259(NULL, "External PIC, if any")
 
-    def pin(self, line):
-        return X86IntSinkPin(device=self, number=line)
+    inputs = VectorIntSinkPin('The pins that drive this IO APIC')

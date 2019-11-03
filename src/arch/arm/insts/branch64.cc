@@ -95,7 +95,7 @@ BranchReg64::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     return ss.str();
 }
 
@@ -106,7 +106,7 @@ BranchRet64::generateDisassembly(
     std::stringstream ss;
     printMnemonic(ss, "", false);
     if (op1 != INTREG_X30)
-        printReg(ss, op1);
+        printIntReg(ss, op1);
     return ss.str();
 }
 
@@ -125,7 +125,7 @@ BranchImmReg64::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ccprintf(ss, ", ");
     printTarget(ss, pc + imm, symtab);
     return ss.str();
@@ -137,7 +137,7 @@ BranchImmImmReg64::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ccprintf(ss, ", #%#x, ", imm1);
     printTarget(ss, pc + imm2, symtab);
     return ss.str();

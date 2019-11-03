@@ -52,6 +52,8 @@
 
 #include "mem/qport.hh"
 
+class SimObject;
+
 /**
  * The simple timing port uses a queued port to implement
  * recvFunctional and recvTimingReq through recvAtomic. It is always a
@@ -99,7 +101,7 @@ class SimpleTimingPort : public QueuedSlavePort
      * @param name port name
      * @param owner structural owner
      */
-    SimpleTimingPort(const std::string& name, MemObject* owner);
+    SimpleTimingPort(const std::string& name, SimObject* owner);
 
     virtual ~SimpleTimingPort() { }
 

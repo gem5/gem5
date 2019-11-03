@@ -44,10 +44,6 @@
 
 class EtherInt;
 
-/**
- * The base EtherObject class, allows for an accesor function to a
- * simobj that returns the Port.
- */
 class EtherDevice : public PciDevice
 {
   public:
@@ -61,10 +57,6 @@ class EtherDevice : public PciDevice
     {
         return dynamic_cast<const Params *>(_params);
     }
-
-  public:
-    /** Additional function to return the Port of a memory object. */
-    virtual EtherInt *getEthPort(const std::string &if_name, int idx = -1) = 0;
 
   public:
     void regStats();
@@ -128,10 +120,8 @@ class EtherDevice : public PciDevice
  * The Python object hierarchy includes the EtherDevBase class which
  * is used by some ethernet devices as a way to share common
  * configuration information in the generated param structs. Since the
- * Python hierarchy is used to generate a SWIG interface for all C++
- * SimObjects, we need to reflect this in the C++ object hierarchy. If
- * we don't, SWIG might end up doing 'bad things' when it down casts
- * ethernet objects to their base class(es).
+ * Python hierarchy is used to generate a Python interfaces for all C++
+ * SimObjects, we need to reflect this in the C++ object hierarchy.
  */
 class EtherDevBase : public EtherDevice
 {

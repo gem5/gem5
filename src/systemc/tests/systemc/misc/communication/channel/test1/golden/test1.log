@@ -1,0 +1,25 @@
+SystemC Simulation
+Proc1:: Waiting 10 cycles before reading
+Proc2:: Write
+Proc2:: Write completed
+Proc2:: Wait 10 cycles before write
+Proc1:: Wait completed
+Proc1:: Read. Value = 1
+Proc1:: Read
+Proc2:: Wait completed
+Proc2:: Write
+Proc2:: Write Completed
+Proc2:: Write
+Proc2:: Write Completed
+Proc2:: Loop start
+Proc1:: Read completed. Value = 2
+Proc1:: Read. Value = 3
+Proc1:: Loop start
+Proc1:: Read. Value = 4
+Proc1:: Read. Value = 5
+Proc1:: Read. Value = 6
+Proc1:: Read. Value = 7
+Proc1:: Read. Value = 8
+Proc1:: Read. Value = 9
+
+Info: /OSCI/SystemC: Simulation stopped by user.

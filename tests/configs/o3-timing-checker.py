@@ -38,6 +38,6 @@
 from m5.objects import *
 from base_config import *
 
-root = BaseSESystemUniprocessor(mem_mode='timing', mem_class=DDR3_1600_x64,
+root = BaseSESystemUniprocessor(mem_mode='timing', mem_class=DDR3_1600_8x8,
                                 cpu_class=DerivO3CPU,
                                 checker=True).create_root()

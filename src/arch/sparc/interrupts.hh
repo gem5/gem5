@@ -32,6 +32,7 @@
 #ifndef __ARCH_SPARC_INTERRUPT_HH__
 #define __ARCH_SPARC_INTERRUPT_HH__
 
+#include "arch/generic/interrupts.hh"
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/registers.hh"
@@ -43,7 +44,19 @@
 namespace SparcISA
 {
 
-class Interrupts : public SimObject
+enum InterruptTypes
+{
+    IT_TRAP_LEVEL_ZERO,
+    IT_HINTP,
+    IT_INT_VEC,
+    IT_CPU_MONDO,
+    IT_DEV_MONDO,
+    IT_RES_ERROR,
+    IT_SOFT_INT,
+    NumInterruptTypes
+};
+
+class Interrupts : public BaseInterrupts
 {
   private:
     BaseCPU * cpu;
@@ -67,7 +80,7 @@ class Interrupts : public SimObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    Interrupts(Params * p) : SimObject(p), cpu(NULL)
+    Interrupts(Params * p) : BaseInterrupts(p), cpu(NULL)
     {
         clearAll();
     }
@@ -121,12 +134,66 @@ class Interrupts : public SimObject
     bool
     checkInterrupts(ThreadContext *tc) const
     {
-        return intStatus;
+        if (!intStatus)
+            return false;
+
+        HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
+        PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
+
+        // THESE ARE IN ORDER OF PRIORITY
+        // since there are early returns, and the highest
+        // priority interrupts should get serviced,
+        // it is v. important that new interrupts are inserted
+        // in the right order of processing
+        if (hpstate.hpriv) {
+            if (pstate.ie) {
+                if (interrupts[IT_HINTP]) {
+                    // This will be cleaned by a HINTP write
+                    return true;
+                }
+                if (interrupts[IT_INT_VEC]) {
+                    // this will be cleared by an ASI read (or write)
+                    return true;
+                }
+            }
+        } else {
+            if (interrupts[IT_TRAP_LEVEL_ZERO]) {
+                    // this is cleared by deasserting HPSTATE::tlz
+                return true;
+            }
+            // HStick matches always happen in priv mode (ie doesn't matter)
+            if (interrupts[IT_HINTP]) {
+                return true;
+            }
+            if (interrupts[IT_INT_VEC]) {
+                // this will be cleared by an ASI read (or write)
+                return true;
+            }
+            if (pstate.ie) {
+                if (interrupts[IT_CPU_MONDO]) {
+                    return true;
+                }
+                if (interrupts[IT_DEV_MONDO]) {
+                    return true;
+                }
+                if (interrupts[IT_SOFT_INT]) {
+                    return true;
+                }
+
+                if (interrupts[IT_RES_ERROR]) {
+                    return true;
+                }
+            } // !hpriv && pstate.ie
+        }  // !hpriv
+
+        return false;
     }
 
     Fault
     getInterrupt(ThreadContext *tc)
     {
+        assert(checkInterrupts(tc));
+
         HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
         PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
 

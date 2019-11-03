@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 Arm Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -28,6 +40,8 @@
  * Authors: Nathan Binkert
  */
 
+#include "base/statistics.hh"
+
 #include <fstream>
 #include <iomanip>
 #include <list>
@@ -38,8 +52,7 @@
 #include "base/cprintf.hh"
 #include "base/debug.hh"
 #include "base/hostinfo.hh"
-#include "base/misc.hh"
-#include "base/statistics.hh"
+#include "base/logging.hh"
 #include "base/str.hh"
 #include "base/time.hh"
 #include "base/trace.hh"
@@ -66,10 +79,18 @@ statsMap()
 }
 
 void
-InfoAccess::setInfo(Info *info)
+InfoAccess::setInfo(Group *parent, Info *info)
 {
-    if (statsMap().find(this) != statsMap().end())
-        panic("shouldn't register stat twice!");
+    panic_if(statsMap().find(this) != statsMap().end() ||
+             _info != nullptr,
+             "shouldn't register stat twice!");
+
+    // New-style stats are reachable through the hierarchy and
+    // shouldn't be added to the global lists.
+    if (parent) {
+        _info = info;
+        return;
+    }
 
     statsList().push_back(info);
 
@@ -96,17 +117,29 @@ InfoAccess::setInit()
 Info *
 InfoAccess::info()
 {
-    MapType::const_iterator i = statsMap().find(this);
-    assert(i != statsMap().end());
-    return (*i).second;
+    if (_info) {
+        // New-style stats
+        return _info;
+    } else {
+        // Legacy stats
+        MapType::const_iterator i = statsMap().find(this);
+        assert(i != statsMap().end());
+        return (*i).second;
+    }
 }
 
 const Info *
 InfoAccess::info() const
 {
-    MapType::const_iterator i = statsMap().find(this);
-    assert(i != statsMap().end());
-    return (*i).second;
+    if (_info) {
+        // New-style stats
+        return _info;
+    } else {
+        // Legacy stats
+        MapType::const_iterator i = statsMap().find(this);
+        assert(i != statsMap().end());
+        return (*i).second;
+    }
 }
 
 StorageParams::~StorageParams()
@@ -170,19 +203,25 @@ validateStatName(const string &name)
 void
 Info::setName(const string &name)
 {
+    setName(nullptr, name);
+}
+
+void
+Info::setName(const Group *parent, const string &name)
+{
     if (!validateStatName(name))
         panic("invalid stat name '%s'", name);
 
-    pair<NameMapType::iterator, bool> p =
-        nameMap().insert(make_pair(name, this));
+    // We only register the stat with the nameMap() if we are using
+    // old-style stats without a parent group. New-style stats should
+    // be unique since their names should correspond to a member
+    // variable.
+    if (!parent) {
+        auto p = nameMap().insert(make_pair(name, this));
 
-    Info *other = p.first->second;
-    bool result = p.second;
-
-    if (!result) {
-        // using other->name instead of just name to avoid a compiler
-        // warning.  They should be the same.
-        panic("same statistic name used twice! name=%s\n", other->name);
+        if (!p.second)
+            panic("same statistic name used twice! name=%s\n",
+                  name);
     }
 
     this->name = name;
@@ -221,7 +260,10 @@ Info::baseCheck() const
 #ifdef DEBUG
         cprintf("this is stat number %d\n", id);
 #endif
-        panic("Not all stats have been initialized");
+        panic("Not all stats have been initialized.\n"
+              "You may need to add <ParentClass>::regStats() to a"
+              " new SimObject's regStats() function. Name: %s",
+              name);
         return false;
     }
 
@@ -373,19 +415,23 @@ HistStor::add(HistStor *hs)
         cvec[i] += hs->cvec[i];
 }
 
-Formula::Formula()
+Formula::Formula(Group *parent, const char *name, const char *desc)
+    : DataWrapVec<Formula, FormulaInfoProxy>(parent, name, desc)
+
 {
 }
 
-Formula::Formula(Temp r)
+
+
+Formula::Formula(Group *parent, const char *name, const char *desc,
+                 const Temp &r)
+    : DataWrapVec<Formula, FormulaInfoProxy>(parent, name, desc)
 {
-    root = r.getNodePtr();
-    setInit();
-    assert(size());
+    *this = r;
 }
 
 const Formula &
-Formula::operator=(Temp r)
+Formula::operator=(const Temp &r)
 {
     assert(!root && "Can't change formulas");
     root = r.getNodePtr();
@@ -417,6 +463,7 @@ Formula::operator/=(Temp r)
     assert(size());
     return *this;
 }
+
 
 void
 Formula::result(VResult &vec) const

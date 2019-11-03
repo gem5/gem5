@@ -38,11 +38,9 @@
 
 #include <cmath>
 
-#include "arch/hsail/generic_types.hh"
 #include "arch/hsail/insts/gpu_static_inst.hh"
 #include "arch/hsail/operand.hh"
 #include "debug/HSAIL.hh"
-#include "enums/OpType.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
 #include "gpu-compute/shader.hh"
 
@@ -127,6 +125,8 @@ namespace HsailISA
                        const char *opcode)
             : HsailGPUStaticInst(obj, opcode)
         {
+            setFlag(ALU);
+
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
 
             dest.init(op_offs, obj);
@@ -178,7 +178,9 @@ namespace HsailISA
             else
                 return dest.opSize();
         }
-        int getRegisterIndex(int operandIndex) {
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
 
             if (operandIndex < NumSrcOperands)
@@ -240,6 +242,8 @@ namespace HsailISA
                                       const char *opcode)
             : HsailGPUStaticInst(obj, opcode)
         {
+            setFlag(ALU);
+
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             dest.init(op_offs, obj);
 
@@ -311,7 +315,10 @@ namespace HsailISA
             else
                 return dest.opSize();
         }
-        int getRegisterIndex(int operandIndex) {
+
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (!operandIndex)
                 return src0.regIndex();
@@ -414,6 +421,8 @@ namespace HsailISA
                                     const BrigObject *obj, const char *opcode)
             : HsailGPUStaticInst(obj, opcode)
         {
+            setFlag(ALU);
+
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             dest.init(op_offs, obj);
 
@@ -473,7 +482,10 @@ namespace HsailISA
             else
                 return dest.opSize();
         }
-        int getRegisterIndex(int operandIndex) {
+
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (!operandIndex)
                 return src0.regIndex();
@@ -639,7 +651,7 @@ namespace HsailISA
             return -1;
 
         //handle positive and negative numbers
-        T tmp = (src0 < 0) ? (~src0) : (src0);
+        T tmp = ((int64_t)src0 < 0) ? (~src0) : (src0);
 
         //the starting pos is MSB
         int pos = 8 * sizeof(T) - 1;
@@ -713,6 +725,58 @@ namespace HsailISA
         }
     };
 
+    template<typename DestDataType, typename SrcDataType>
+    class PopcountInst :
+        public CommonInstBase<typename DestDataType::OperandType,
+                              typename SrcDataType::OperandType, 1>
+    {
+      public:
+        std::string opcode_suffix()
+        {
+            return csprintf("_%s_%s", DestDataType::label, SrcDataType::label);
+        }
+
+        PopcountInst(const Brig::BrigInstBase *ib, const BrigObject *obj,
+                     const char *_opcode)
+            : CommonInstBase<typename DestDataType::OperandType,
+                             typename SrcDataType::OperandType,
+                             1>(ib, obj, _opcode)
+        {
+        }
+    };
+
+    class Stub : public HsailGPUStaticInst
+    {
+      public:
+        Stub(const Brig::BrigInstBase *ib, const BrigObject *obj,
+             const char *_opcode)
+            : HsailGPUStaticInst(obj, _opcode)
+        {
+        }
+
+        void generateDisassembly() override
+        {
+            disassembly = csprintf("%s", opcode);
+        }
+
+        bool isVectorRegister(int operandIndex) override { return false; }
+        bool isCondRegister(int operandIndex) override { return false; }
+        bool isScalarRegister(int operandIndex) override { return false; }
+        bool isSrcOperand(int operandIndex) override { return false; }
+        bool isDstOperand(int operandIndex) override { return false; }
+        int getOperandSize(int operandIndex) override { return 0; }
+
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
+        {
+            return -1;
+        }
+
+        int numSrcRegOperands() override { return 0; }
+        int numDstRegOperands() override { return 0; }
+        int getNumOperands() override { return 0; }
+    };
+
     class SpecialInstNoSrcNoDest : public HsailGPUStaticInst
     {
       public:
@@ -722,17 +786,22 @@ namespace HsailISA
         {
         }
 
-        bool isVectorRegister(int operandIndex) { return false; }
-        bool isCondRegister(int operandIndex) { return false; }
-        bool isScalarRegister(int operandIndex) { return false; }
-        bool isSrcOperand(int operandIndex) { return false; }
-        bool isDstOperand(int operandIndex) { return false; }
-        int getOperandSize(int operandIndex) { return 0; }
-        int getRegisterIndex(int operandIndex) { return -1; }
+        bool isVectorRegister(int operandIndex) override { return false; }
+        bool isCondRegister(int operandIndex) override { return false; }
+        bool isScalarRegister(int operandIndex) override { return false; }
+        bool isSrcOperand(int operandIndex) override { return false; }
+        bool isDstOperand(int operandIndex) override { return false; }
+        int getOperandSize(int operandIndex) override { return 0; }
 
-        int numSrcRegOperands() { return 0; }
-        int numDstRegOperands() { return 0; }
-        int getNumOperands() { return 0; }
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
+        {
+            return -1;
+        }
+
+        int numSrcRegOperands() override { return 0; }
+        int numDstRegOperands() override { return 0; }
+        int getNumOperands() override { return 0; }
     };
 
     template<typename DestOperandType>
@@ -773,10 +842,14 @@ namespace HsailISA
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return dest.opSize();
         }
-        int getRegisterIndex(int operandIndex) {
+
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return dest.regIndex();
         }
+
         int numSrcRegOperands() { return 0; }
         int numDstRegOperands() { return dest.isVectorRegister(); }
         int getNumOperands() { return 1; }
@@ -818,6 +891,8 @@ namespace HsailISA
                             const BrigObject *obj, const char *_opcode)
             : HsailGPUStaticInst(obj, _opcode)
         {
+            setFlag(ALU);
+
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             dest.init(op_offs, obj);
 
@@ -842,10 +917,14 @@ namespace HsailISA
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return dest.opSize();
         }
-        int getRegisterIndex(int operandIndex) {
+
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return dest.regIndex();
         }
+
         int numSrcRegOperands() { return 0; }
         int numDstRegOperands() { return dest.isVectorRegister(); }
         int getNumOperands() { return 1; }
@@ -874,7 +953,7 @@ namespace HsailISA
         Ret(const Brig::BrigInstBase *ib, const BrigObject *obj)
            : Base(ib, obj, "ret")
         {
-            o_type = Enums::OT_RET;
+            setFlag(GPUStaticInst::Return);
         }
 
         void execute(GPUDynInstPtr gpuDynInst);
@@ -889,7 +968,7 @@ namespace HsailISA
         Barrier(const Brig::BrigInstBase *ib, const BrigObject *obj)
             : Base(ib, obj, "barrier")
         {
-            o_type = Enums::OT_BARRIER;
+            setFlag(GPUStaticInst::MemBarrier);
             assert(ib->base.kind == Brig::BRIG_KIND_INST_BR);
             width = (uint8_t)((Brig::BrigInstBr*)ib)->width;
         }
@@ -924,14 +1003,105 @@ namespace HsailISA
             memFenceMemOrder = (Brig::BrigMemoryOrder)
                 ((Brig::BrigInstMemFence*)ib)->memoryOrder;
 
-            // set o_type based on scopes
+            setFlag(MemoryRef);
+            setFlag(GPUStaticInst::MemFence);
+
+            switch (memFenceMemOrder) {
+              case Brig::BRIG_MEMORY_ORDER_NONE:
+                setFlag(NoOrder);
+                break;
+              case Brig::BRIG_MEMORY_ORDER_RELAXED:
+                setFlag(RelaxedOrder);
+                break;
+              case Brig::BRIG_MEMORY_ORDER_SC_ACQUIRE:
+                setFlag(Acquire);
+                break;
+              case Brig::BRIG_MEMORY_ORDER_SC_RELEASE:
+                setFlag(Release);
+                break;
+              case Brig::BRIG_MEMORY_ORDER_SC_ACQUIRE_RELEASE:
+                setFlag(AcquireRelease);
+                break;
+              default:
+                fatal("MemInst has bad BrigMemoryOrder\n");
+            }
+
+            // set inst flags based on scopes
             if (memFenceScopeSegGlobal != Brig::BRIG_MEMORY_SCOPE_NONE &&
                 memFenceScopeSegGroup != Brig::BRIG_MEMORY_SCOPE_NONE) {
-                o_type = Enums::OT_BOTH_MEMFENCE;
+                setFlag(GPUStaticInst::GlobalSegment);
+
+                /**
+                 * A memory fence that has scope for
+                 * both segments will use the global
+                 * segment, and be executed in the
+                 * global memory pipeline, therefore,
+                 * we set the segment to match the
+                 * global scope only
+                 */
+                switch (memFenceScopeSegGlobal) {
+                  case Brig::BRIG_MEMORY_SCOPE_NONE:
+                    setFlag(NoScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_WORKITEM:
+                    setFlag(WorkitemScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_WORKGROUP:
+                    setFlag(WorkgroupScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_AGENT:
+                    setFlag(DeviceScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_SYSTEM:
+                    setFlag(SystemScope);
+                    break;
+                  default:
+                    fatal("MemFence has bad global scope type\n");
+                }
             } else if (memFenceScopeSegGlobal != Brig::BRIG_MEMORY_SCOPE_NONE) {
-                o_type = Enums::OT_GLOBAL_MEMFENCE;
+                setFlag(GPUStaticInst::GlobalSegment);
+
+                switch (memFenceScopeSegGlobal) {
+                  case Brig::BRIG_MEMORY_SCOPE_NONE:
+                    setFlag(NoScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_WORKITEM:
+                    setFlag(WorkitemScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_WORKGROUP:
+                    setFlag(WorkgroupScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_AGENT:
+                    setFlag(DeviceScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_SYSTEM:
+                    setFlag(SystemScope);
+                    break;
+                  default:
+                    fatal("MemFence has bad global scope type\n");
+                }
             } else if (memFenceScopeSegGroup != Brig::BRIG_MEMORY_SCOPE_NONE) {
-                o_type = Enums::OT_SHARED_MEMFENCE;
+                setFlag(GPUStaticInst::GroupSegment);
+
+                switch (memFenceScopeSegGroup) {
+                  case Brig::BRIG_MEMORY_SCOPE_NONE:
+                    setFlag(NoScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_WORKITEM:
+                    setFlag(WorkitemScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_WORKGROUP:
+                    setFlag(WorkgroupScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_AGENT:
+                    setFlag(DeviceScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_SYSTEM:
+                    setFlag(SystemScope);
+                    break;
+                  default:
+                    fatal("MemFence has bad group scope type\n");
+                }
             } else {
                 fatal("MemFence constructor: bad scope specifiers\n");
             }
@@ -955,30 +1125,25 @@ namespace HsailISA
             //     etc.). We send a packet, tagged with the memory order and
             //     scope, and let the GPU coalescer handle it.
 
-            if (o_type == Enums::OT_GLOBAL_MEMFENCE ||
-                o_type == Enums::OT_BOTH_MEMFENCE) {
+            if (isGlobalSeg()) {
                 gpuDynInst->simdId = w->simdId;
                 gpuDynInst->wfSlotId = w->wfSlotId;
                 gpuDynInst->wfDynId = w->wfDynId;
-                gpuDynInst->kern_id = w->kern_id;
+                gpuDynInst->kern_id = w->kernId;
                 gpuDynInst->cu_id = w->computeUnit->cu_id;
 
-                gpuDynInst->memoryOrder =
-                    getGenericMemoryOrder(memFenceMemOrder);
-                gpuDynInst->scope =
-                    getGenericMemoryScope(memFenceScopeSegGlobal);
                 gpuDynInst->useContinuation = false;
                 GlobalMemPipeline* gmp = &(w->computeUnit->globalMemoryPipe);
-                gmp->getGMReqFIFO().push(gpuDynInst);
+                gmp->issueRequest(gpuDynInst);
 
-                w->wr_gm_reqs_in_pipe--;
-                w->rd_gm_reqs_in_pipe--;
-                w->mem_reqs_in_pipe--;
-                w->outstanding_reqs++;
-            } else if (o_type == Enums::OT_SHARED_MEMFENCE) {
+                w->wrGmReqsInPipe--;
+                w->rdGmReqsInPipe--;
+                w->memReqsInPipe--;
+                w->outstandingReqs++;
+            } else if (isGroupSeg()) {
                 // no-op
             } else {
-                fatal("MemFence execute: bad o_type\n");
+                fatal("MemFence execute: bad op type\n");
             }
         }
     };
@@ -1054,6 +1219,7 @@ namespace HsailISA
         Call(const Brig::BrigInstBase *ib, const BrigObject *obj)
             : HsailGPUStaticInst(obj, "call")
         {
+            setFlag(ALU);
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             dest.init(op_offs, obj);
             op_offs = obj->getOperandPtr(ib->operands, 1);
@@ -1078,8 +1244,13 @@ namespace HsailISA
         bool isScalarRegister(int operandIndex) { return false; }
         bool isSrcOperand(int operandIndex) { return false; }
         bool isDstOperand(int operandIndex) { return false; }
-        int  getOperandSize(int operandIndex) { return 0; }
-        int  getRegisterIndex(int operandIndex) { return -1; }
+        int getOperandSize(int operandIndex) { return 0; }
+
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        {
+            return -1;
+        }
 
         void
         execute(GPUDynInstPtr gpuDynInst)
@@ -1101,6 +1272,27 @@ namespace HsailISA
 
     template<typename T> T heynot(T arg) { return ~arg; }
     template<> inline bool heynot<bool>(bool arg) { return !arg; }
+
+
+    /* Explicitly declare template static member variables to avoid
+     * warnings in some clang versions
+     */
+    template<> const char *B1::label;
+    template<> const char *B8::label;
+    template<> const char *B16::label;
+    template<> const char *B32::label;
+    template<> const char *B64::label;
+    template<> const char *S8::label;
+    template<> const char *S16::label;
+    template<> const char *S32::label;
+    template<> const char *S64::label;
+    template<> const char *U8::label;
+    template<> const char *U16::label;
+    template<> const char *U32::label;
+    template<> const char *U64::label;
+    template<> const char *F32::label;
+    template<> const char *F64::label;
+
 } // namespace HsailISA
 
 #endif // __ARCH_HSAIL_INSTS_DECL_HH__

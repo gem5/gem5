@@ -1,0 +1,664 @@
+/*
+ * Copyright 2019 Google Inc.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ *          Chun-Chen TK Hsu
+ */
+
+component GIC
+{
+    composition
+    {
+        gic : GIC_IRI();
+
+        // Bridges
+        // For the main interface with memory.
+        mem_out : PVBus2AMBAPV();
+        mem_in : AMBAPV2PVBus();
+
+        // For the CPU interfaces.
+        gic_gic2pv : GICv3CommsPVBus();
+        gic_pv2amba : PVBus2AMBAPV();
+        gic_amba2pv : AMBAPV2PVBus();
+    }
+
+    connection
+    {
+        // For the main interface with memory.
+        gic.pvbus_m => mem_out.pvbus_s;
+        mem_out.amba_pv_m => self.amba_m;
+        self.amba_s => mem_in.amba_pv_s;
+        mem_in.pvbus_m => gic.pvbus_s;
+
+        // For the CPU interface.
+        gic.redistributor_m => self.redistributor;
+
+        // Internal ports for PPI and SPI programmatic access.
+        self.ppi_0 => gic.ppi_in_0;
+        self.ppi_1 => gic.ppi_in_1;
+        self.ppi_2 => gic.ppi_in_2;
+        self.ppi_3 => gic.ppi_in_3;
+        self.ppi_4 => gic.ppi_in_4;
+        self.ppi_5 => gic.ppi_in_5;
+        self.ppi_6 => gic.ppi_in_6;
+        self.ppi_7 => gic.ppi_in_7;
+        self.ppi_8 => gic.ppi_in_8;
+        self.ppi_9 => gic.ppi_in_9;
+        self.ppi_10 => gic.ppi_in_10;
+        self.ppi_11 => gic.ppi_in_11;
+        self.ppi_12 => gic.ppi_in_12;
+        self.ppi_13 => gic.ppi_in_13;
+        self.ppi_14 => gic.ppi_in_14;
+        self.ppi_15 => gic.ppi_in_15;
+        self.ppi_16 => gic.ppi_in_16;
+        self.ppi_17 => gic.ppi_in_17;
+        self.ppi_18 => gic.ppi_in_18;
+        self.ppi_19 => gic.ppi_in_19;
+        self.ppi_20 => gic.ppi_in_20;
+        self.ppi_21 => gic.ppi_in_21;
+        self.ppi_22 => gic.ppi_in_22;
+        self.ppi_23 => gic.ppi_in_23;
+        self.ppi_24 => gic.ppi_in_24;
+        self.ppi_25 => gic.ppi_in_25;
+        self.ppi_26 => gic.ppi_in_26;
+        self.ppi_27 => gic.ppi_in_27;
+        self.ppi_28 => gic.ppi_in_28;
+        self.ppi_29 => gic.ppi_in_29;
+        self.ppi_30 => gic.ppi_in_30;
+        self.ppi_31 => gic.ppi_in_31;
+        self.ppi_32 => gic.ppi_in_32;
+        self.ppi_33 => gic.ppi_in_33;
+        self.ppi_34 => gic.ppi_in_34;
+        self.ppi_35 => gic.ppi_in_35;
+        self.ppi_36 => gic.ppi_in_36;
+        self.ppi_37 => gic.ppi_in_37;
+        self.ppi_38 => gic.ppi_in_38;
+        self.ppi_39 => gic.ppi_in_39;
+        self.ppi_40 => gic.ppi_in_40;
+        self.ppi_41 => gic.ppi_in_41;
+        self.ppi_42 => gic.ppi_in_42;
+        self.ppi_43 => gic.ppi_in_43;
+        self.ppi_44 => gic.ppi_in_44;
+        self.ppi_45 => gic.ppi_in_45;
+        self.ppi_46 => gic.ppi_in_46;
+        self.ppi_47 => gic.ppi_in_47;
+        self.ppi_48 => gic.ppi_in_48;
+        self.ppi_49 => gic.ppi_in_49;
+        self.ppi_50 => gic.ppi_in_50;
+        self.ppi_51 => gic.ppi_in_51;
+        self.ppi_52 => gic.ppi_in_52;
+        self.ppi_53 => gic.ppi_in_53;
+        self.ppi_54 => gic.ppi_in_54;
+        self.ppi_55 => gic.ppi_in_55;
+        self.ppi_56 => gic.ppi_in_56;
+        self.ppi_57 => gic.ppi_in_57;
+        self.ppi_58 => gic.ppi_in_58;
+        self.ppi_59 => gic.ppi_in_59;
+        self.ppi_60 => gic.ppi_in_60;
+        self.ppi_61 => gic.ppi_in_61;
+        self.ppi_62 => gic.ppi_in_62;
+        self.ppi_63 => gic.ppi_in_63;
+        self.ppi_64 => gic.ppi_in_64;
+        self.ppi_65 => gic.ppi_in_65;
+        self.ppi_66 => gic.ppi_in_66;
+        self.ppi_67 => gic.ppi_in_67;
+        self.ppi_68 => gic.ppi_in_68;
+        self.ppi_69 => gic.ppi_in_69;
+        self.ppi_70 => gic.ppi_in_70;
+        self.ppi_71 => gic.ppi_in_71;
+        self.ppi_72 => gic.ppi_in_72;
+        self.ppi_73 => gic.ppi_in_73;
+        self.ppi_74 => gic.ppi_in_74;
+        self.ppi_75 => gic.ppi_in_75;
+        self.ppi_76 => gic.ppi_in_76;
+        self.ppi_77 => gic.ppi_in_77;
+        self.ppi_78 => gic.ppi_in_78;
+        self.ppi_79 => gic.ppi_in_79;
+        self.ppi_80 => gic.ppi_in_80;
+        self.ppi_81 => gic.ppi_in_81;
+        self.ppi_82 => gic.ppi_in_82;
+        self.ppi_83 => gic.ppi_in_83;
+        self.ppi_84 => gic.ppi_in_84;
+        self.ppi_85 => gic.ppi_in_85;
+        self.ppi_86 => gic.ppi_in_86;
+        self.ppi_87 => gic.ppi_in_87;
+        self.ppi_88 => gic.ppi_in_88;
+        self.ppi_89 => gic.ppi_in_89;
+        self.ppi_90 => gic.ppi_in_90;
+        self.ppi_91 => gic.ppi_in_91;
+        self.ppi_92 => gic.ppi_in_92;
+        self.ppi_93 => gic.ppi_in_93;
+        self.ppi_94 => gic.ppi_in_94;
+        self.ppi_95 => gic.ppi_in_95;
+        self.ppi_96 => gic.ppi_in_96;
+        self.ppi_97 => gic.ppi_in_97;
+        self.ppi_98 => gic.ppi_in_98;
+        self.ppi_99 => gic.ppi_in_99;
+        self.ppi_100 => gic.ppi_in_100;
+        self.ppi_101 => gic.ppi_in_101;
+        self.ppi_102 => gic.ppi_in_102;
+        self.ppi_103 => gic.ppi_in_103;
+        self.ppi_104 => gic.ppi_in_104;
+        self.ppi_105 => gic.ppi_in_105;
+        self.ppi_106 => gic.ppi_in_106;
+        self.ppi_107 => gic.ppi_in_107;
+        self.ppi_108 => gic.ppi_in_108;
+        self.ppi_109 => gic.ppi_in_109;
+        self.ppi_110 => gic.ppi_in_110;
+        self.ppi_111 => gic.ppi_in_111;
+        self.ppi_112 => gic.ppi_in_112;
+        self.ppi_113 => gic.ppi_in_113;
+        self.ppi_114 => gic.ppi_in_114;
+        self.ppi_115 => gic.ppi_in_115;
+        self.ppi_116 => gic.ppi_in_116;
+        self.ppi_117 => gic.ppi_in_117;
+        self.ppi_118 => gic.ppi_in_118;
+        self.ppi_119 => gic.ppi_in_119;
+        self.ppi_120 => gic.ppi_in_120;
+        self.ppi_121 => gic.ppi_in_121;
+        self.ppi_122 => gic.ppi_in_122;
+        self.ppi_123 => gic.ppi_in_123;
+        self.ppi_124 => gic.ppi_in_124;
+        self.ppi_125 => gic.ppi_in_125;
+        self.ppi_126 => gic.ppi_in_126;
+        self.ppi_127 => gic.ppi_in_127;
+        self.ppi_128 => gic.ppi_in_128;
+        self.ppi_129 => gic.ppi_in_129;
+        self.ppi_130 => gic.ppi_in_130;
+        self.ppi_131 => gic.ppi_in_131;
+        self.ppi_132 => gic.ppi_in_132;
+        self.ppi_133 => gic.ppi_in_133;
+        self.ppi_134 => gic.ppi_in_134;
+        self.ppi_135 => gic.ppi_in_135;
+        self.ppi_136 => gic.ppi_in_136;
+        self.ppi_137 => gic.ppi_in_137;
+        self.ppi_138 => gic.ppi_in_138;
+        self.ppi_139 => gic.ppi_in_139;
+        self.ppi_140 => gic.ppi_in_140;
+        self.ppi_141 => gic.ppi_in_141;
+        self.ppi_142 => gic.ppi_in_142;
+        self.ppi_143 => gic.ppi_in_143;
+        self.ppi_144 => gic.ppi_in_144;
+        self.ppi_145 => gic.ppi_in_145;
+        self.ppi_146 => gic.ppi_in_146;
+        self.ppi_147 => gic.ppi_in_147;
+        self.ppi_148 => gic.ppi_in_148;
+        self.ppi_149 => gic.ppi_in_149;
+        self.ppi_150 => gic.ppi_in_150;
+        self.ppi_151 => gic.ppi_in_151;
+        self.ppi_152 => gic.ppi_in_152;
+        self.ppi_153 => gic.ppi_in_153;
+        self.ppi_154 => gic.ppi_in_154;
+        self.ppi_155 => gic.ppi_in_155;
+        self.ppi_156 => gic.ppi_in_156;
+        self.ppi_157 => gic.ppi_in_157;
+        self.ppi_158 => gic.ppi_in_158;
+        self.ppi_159 => gic.ppi_in_159;
+        self.ppi_160 => gic.ppi_in_160;
+        self.ppi_161 => gic.ppi_in_161;
+        self.ppi_162 => gic.ppi_in_162;
+        self.ppi_163 => gic.ppi_in_163;
+        self.ppi_164 => gic.ppi_in_164;
+        self.ppi_165 => gic.ppi_in_165;
+        self.ppi_166 => gic.ppi_in_166;
+        self.ppi_167 => gic.ppi_in_167;
+        self.ppi_168 => gic.ppi_in_168;
+        self.ppi_169 => gic.ppi_in_169;
+        self.ppi_170 => gic.ppi_in_170;
+        self.ppi_171 => gic.ppi_in_171;
+        self.ppi_172 => gic.ppi_in_172;
+        self.ppi_173 => gic.ppi_in_173;
+        self.ppi_174 => gic.ppi_in_174;
+        self.ppi_175 => gic.ppi_in_175;
+        self.ppi_176 => gic.ppi_in_176;
+        self.ppi_177 => gic.ppi_in_177;
+        self.ppi_178 => gic.ppi_in_178;
+        self.ppi_179 => gic.ppi_in_179;
+        self.ppi_180 => gic.ppi_in_180;
+        self.ppi_181 => gic.ppi_in_181;
+        self.ppi_182 => gic.ppi_in_182;
+        self.ppi_183 => gic.ppi_in_183;
+        self.ppi_184 => gic.ppi_in_184;
+        self.ppi_185 => gic.ppi_in_185;
+        self.ppi_186 => gic.ppi_in_186;
+        self.ppi_187 => gic.ppi_in_187;
+        self.ppi_188 => gic.ppi_in_188;
+        self.ppi_189 => gic.ppi_in_189;
+        self.ppi_190 => gic.ppi_in_190;
+        self.ppi_191 => gic.ppi_in_191;
+        self.ppi_192 => gic.ppi_in_192;
+        self.ppi_193 => gic.ppi_in_193;
+        self.ppi_194 => gic.ppi_in_194;
+        self.ppi_195 => gic.ppi_in_195;
+        self.ppi_196 => gic.ppi_in_196;
+        self.ppi_197 => gic.ppi_in_197;
+        self.ppi_198 => gic.ppi_in_198;
+        self.ppi_199 => gic.ppi_in_199;
+        self.ppi_200 => gic.ppi_in_200;
+        self.ppi_201 => gic.ppi_in_201;
+        self.ppi_202 => gic.ppi_in_202;
+        self.ppi_203 => gic.ppi_in_203;
+        self.ppi_204 => gic.ppi_in_204;
+        self.ppi_205 => gic.ppi_in_205;
+        self.ppi_206 => gic.ppi_in_206;
+        self.ppi_207 => gic.ppi_in_207;
+        self.ppi_208 => gic.ppi_in_208;
+        self.ppi_209 => gic.ppi_in_209;
+        self.ppi_210 => gic.ppi_in_210;
+        self.ppi_211 => gic.ppi_in_211;
+        self.ppi_212 => gic.ppi_in_212;
+        self.ppi_213 => gic.ppi_in_213;
+        self.ppi_214 => gic.ppi_in_214;
+        self.ppi_215 => gic.ppi_in_215;
+        self.ppi_216 => gic.ppi_in_216;
+        self.ppi_217 => gic.ppi_in_217;
+        self.ppi_218 => gic.ppi_in_218;
+        self.ppi_219 => gic.ppi_in_219;
+        self.ppi_220 => gic.ppi_in_220;
+        self.ppi_221 => gic.ppi_in_221;
+        self.ppi_222 => gic.ppi_in_222;
+        self.ppi_223 => gic.ppi_in_223;
+        self.ppi_224 => gic.ppi_in_224;
+        self.ppi_225 => gic.ppi_in_225;
+        self.ppi_226 => gic.ppi_in_226;
+        self.ppi_227 => gic.ppi_in_227;
+        self.ppi_228 => gic.ppi_in_228;
+        self.ppi_229 => gic.ppi_in_229;
+        self.ppi_230 => gic.ppi_in_230;
+        self.ppi_231 => gic.ppi_in_231;
+        self.ppi_232 => gic.ppi_in_232;
+        self.ppi_233 => gic.ppi_in_233;
+        self.ppi_234 => gic.ppi_in_234;
+        self.ppi_235 => gic.ppi_in_235;
+        self.ppi_236 => gic.ppi_in_236;
+        self.ppi_237 => gic.ppi_in_237;
+        self.ppi_238 => gic.ppi_in_238;
+        self.ppi_239 => gic.ppi_in_239;
+        self.ppi_240 => gic.ppi_in_240;
+        self.ppi_241 => gic.ppi_in_241;
+        self.ppi_242 => gic.ppi_in_242;
+        self.ppi_243 => gic.ppi_in_243;
+        self.ppi_244 => gic.ppi_in_244;
+        self.ppi_245 => gic.ppi_in_245;
+        self.ppi_246 => gic.ppi_in_246;
+        self.ppi_247 => gic.ppi_in_247;
+        self.ppi_248 => gic.ppi_in_248;
+        self.ppi_249 => gic.ppi_in_249;
+        self.ppi_250 => gic.ppi_in_250;
+        self.ppi_251 => gic.ppi_in_251;
+        self.ppi_252 => gic.ppi_in_252;
+        self.ppi_253 => gic.ppi_in_253;
+        self.ppi_254 => gic.ppi_in_254;
+        self.ppi_255 => gic.ppi_in_255;
+
+        self.spi => gic.spi_in;
+    }
+
+    properties
+    {
+        component_type = "System";
+    }
+
+    master port<AMBAPV> amba_m;
+    slave port<AMBAPV> amba_s;
+
+    master port<GICv3Comms> redistributor[256];
+
+    #define setPPI(C) \
+          case C: ppi_##C[num].setValue(state); \
+          break
+    slave port<SignalInterrupt> signal_interrupt
+    {
+        behavior ppi(uint8_t cpu, uint32_t num, bool state_val)
+        {
+            sg::Signal::State state =
+                state_val ? sg::Signal::Set : sg::Signal::Clear;
+
+            switch (cpu) {
+              setPPI(0); setPPI(1); setPPI(2); setPPI(3); setPPI(4);
+              setPPI(5); setPPI(6); setPPI(7); setPPI(8); setPPI(9);
+              setPPI(10); setPPI(11); setPPI(12); setPPI(13); setPPI(14);
+              setPPI(15); setPPI(16); setPPI(17); setPPI(18); setPPI(19);
+              setPPI(20); setPPI(21); setPPI(22); setPPI(23); setPPI(24);
+              setPPI(25); setPPI(26); setPPI(27); setPPI(28); setPPI(29);
+              setPPI(30); setPPI(31); setPPI(32); setPPI(33); setPPI(34);
+              setPPI(35); setPPI(36); setPPI(37); setPPI(38); setPPI(39);
+              setPPI(40); setPPI(41); setPPI(42); setPPI(43); setPPI(44);
+              setPPI(45); setPPI(46); setPPI(47); setPPI(48); setPPI(49);
+              setPPI(50); setPPI(51); setPPI(52); setPPI(53); setPPI(54);
+              setPPI(55); setPPI(56); setPPI(57); setPPI(58); setPPI(59);
+              setPPI(60); setPPI(61); setPPI(62); setPPI(63); setPPI(64);
+              setPPI(65); setPPI(66); setPPI(67); setPPI(68); setPPI(69);
+              setPPI(70); setPPI(71); setPPI(72); setPPI(73); setPPI(74);
+              setPPI(75); setPPI(76); setPPI(77); setPPI(78); setPPI(79);
+              setPPI(80); setPPI(81); setPPI(82); setPPI(83); setPPI(84);
+              setPPI(85); setPPI(86); setPPI(87); setPPI(88); setPPI(89);
+              setPPI(90); setPPI(91); setPPI(92); setPPI(93); setPPI(94);
+              setPPI(95); setPPI(96); setPPI(97); setPPI(98); setPPI(99);
+              setPPI(100); setPPI(101); setPPI(102); setPPI(103); setPPI(104);
+              setPPI(105); setPPI(106); setPPI(107); setPPI(108); setPPI(109);
+              setPPI(110); setPPI(111); setPPI(112); setPPI(113); setPPI(114);
+              setPPI(115); setPPI(116); setPPI(117); setPPI(118); setPPI(119);
+              setPPI(120); setPPI(121); setPPI(122); setPPI(123); setPPI(124);
+              setPPI(125); setPPI(126); setPPI(127); setPPI(128); setPPI(129);
+              setPPI(130); setPPI(131); setPPI(132); setPPI(133); setPPI(134);
+              setPPI(135); setPPI(136); setPPI(137); setPPI(138); setPPI(139);
+              setPPI(140); setPPI(141); setPPI(142); setPPI(143); setPPI(144);
+              setPPI(145); setPPI(146); setPPI(147); setPPI(148); setPPI(149);
+              setPPI(150); setPPI(151); setPPI(152); setPPI(153); setPPI(154);
+              setPPI(155); setPPI(156); setPPI(157); setPPI(158); setPPI(159);
+              setPPI(160); setPPI(161); setPPI(162); setPPI(163); setPPI(164);
+              setPPI(165); setPPI(166); setPPI(167); setPPI(168); setPPI(169);
+              setPPI(170); setPPI(171); setPPI(172); setPPI(173); setPPI(174);
+              setPPI(175); setPPI(176); setPPI(177); setPPI(178); setPPI(179);
+              setPPI(180); setPPI(181); setPPI(182); setPPI(183); setPPI(184);
+              setPPI(185); setPPI(186); setPPI(187); setPPI(188); setPPI(189);
+              setPPI(190); setPPI(191); setPPI(192); setPPI(193); setPPI(194);
+              setPPI(195); setPPI(196); setPPI(197); setPPI(198); setPPI(199);
+              setPPI(200); setPPI(201); setPPI(202); setPPI(203); setPPI(204);
+              setPPI(205); setPPI(206); setPPI(207); setPPI(208); setPPI(209);
+              setPPI(210); setPPI(211); setPPI(212); setPPI(213); setPPI(214);
+              setPPI(215); setPPI(216); setPPI(217); setPPI(218); setPPI(219);
+              setPPI(220); setPPI(221); setPPI(222); setPPI(223); setPPI(224);
+              setPPI(225); setPPI(226); setPPI(227); setPPI(228); setPPI(229);
+              setPPI(230); setPPI(231); setPPI(232); setPPI(233); setPPI(234);
+              setPPI(235); setPPI(236); setPPI(237); setPPI(238); setPPI(239);
+              setPPI(240); setPPI(241); setPPI(242); setPPI(243); setPPI(244);
+              setPPI(245); setPPI(246); setPPI(247); setPPI(248); setPPI(249);
+              setPPI(250); setPPI(251); setPPI(252); setPPI(253); setPPI(254);
+              setPPI(255);
+              default:
+                sc_assert(false);
+            }
+        }
+
+        behavior spi(uint32_t num, bool state_val)
+        {
+            sg::Signal::State state =
+                state_val ? sg::Signal::Set : sg::Signal::Clear;
+            spi[num].setValue(state);
+        }
+    }
+
+    internal slave port<Signal> spi[988];
+
+    internal slave port<Signal> ppi_0[16];
+    internal slave port<Signal> ppi_1[16];
+    internal slave port<Signal> ppi_2[16];
+    internal slave port<Signal> ppi_3[16];
+    internal slave port<Signal> ppi_4[16];
+    internal slave port<Signal> ppi_5[16];
+    internal slave port<Signal> ppi_6[16];
+    internal slave port<Signal> ppi_7[16];
+    internal slave port<Signal> ppi_8[16];
+    internal slave port<Signal> ppi_9[16];
+    internal slave port<Signal> ppi_10[16];
+    internal slave port<Signal> ppi_11[16];
+    internal slave port<Signal> ppi_12[16];
+    internal slave port<Signal> ppi_13[16];
+    internal slave port<Signal> ppi_14[16];
+    internal slave port<Signal> ppi_15[16];
+    internal slave port<Signal> ppi_16[16];
+    internal slave port<Signal> ppi_17[16];
+    internal slave port<Signal> ppi_18[16];
+    internal slave port<Signal> ppi_19[16];
+    internal slave port<Signal> ppi_20[16];
+    internal slave port<Signal> ppi_21[16];
+    internal slave port<Signal> ppi_22[16];
+    internal slave port<Signal> ppi_23[16];
+    internal slave port<Signal> ppi_24[16];
+    internal slave port<Signal> ppi_25[16];
+    internal slave port<Signal> ppi_26[16];
+    internal slave port<Signal> ppi_27[16];
+    internal slave port<Signal> ppi_28[16];
+    internal slave port<Signal> ppi_29[16];
+    internal slave port<Signal> ppi_30[16];
+    internal slave port<Signal> ppi_31[16];
+    internal slave port<Signal> ppi_32[16];
+    internal slave port<Signal> ppi_33[16];
+    internal slave port<Signal> ppi_34[16];
+    internal slave port<Signal> ppi_35[16];
+    internal slave port<Signal> ppi_36[16];
+    internal slave port<Signal> ppi_37[16];
+    internal slave port<Signal> ppi_38[16];
+    internal slave port<Signal> ppi_39[16];
+    internal slave port<Signal> ppi_40[16];
+    internal slave port<Signal> ppi_41[16];
+    internal slave port<Signal> ppi_42[16];
+    internal slave port<Signal> ppi_43[16];
+    internal slave port<Signal> ppi_44[16];
+    internal slave port<Signal> ppi_45[16];
+    internal slave port<Signal> ppi_46[16];
+    internal slave port<Signal> ppi_47[16];
+    internal slave port<Signal> ppi_48[16];
+    internal slave port<Signal> ppi_49[16];
+    internal slave port<Signal> ppi_50[16];
+    internal slave port<Signal> ppi_51[16];
+    internal slave port<Signal> ppi_52[16];
+    internal slave port<Signal> ppi_53[16];
+    internal slave port<Signal> ppi_54[16];
+    internal slave port<Signal> ppi_55[16];
+    internal slave port<Signal> ppi_56[16];
+    internal slave port<Signal> ppi_57[16];
+    internal slave port<Signal> ppi_58[16];
+    internal slave port<Signal> ppi_59[16];
+    internal slave port<Signal> ppi_60[16];
+    internal slave port<Signal> ppi_61[16];
+    internal slave port<Signal> ppi_62[16];
+    internal slave port<Signal> ppi_63[16];
+    internal slave port<Signal> ppi_64[16];
+    internal slave port<Signal> ppi_65[16];
+    internal slave port<Signal> ppi_66[16];
+    internal slave port<Signal> ppi_67[16];
+    internal slave port<Signal> ppi_68[16];
+    internal slave port<Signal> ppi_69[16];
+    internal slave port<Signal> ppi_70[16];
+    internal slave port<Signal> ppi_71[16];
+    internal slave port<Signal> ppi_72[16];
+    internal slave port<Signal> ppi_73[16];
+    internal slave port<Signal> ppi_74[16];
+    internal slave port<Signal> ppi_75[16];
+    internal slave port<Signal> ppi_76[16];
+    internal slave port<Signal> ppi_77[16];
+    internal slave port<Signal> ppi_78[16];
+    internal slave port<Signal> ppi_79[16];
+    internal slave port<Signal> ppi_80[16];
+    internal slave port<Signal> ppi_81[16];
+    internal slave port<Signal> ppi_82[16];
+    internal slave port<Signal> ppi_83[16];
+    internal slave port<Signal> ppi_84[16];
+    internal slave port<Signal> ppi_85[16];
+    internal slave port<Signal> ppi_86[16];
+    internal slave port<Signal> ppi_87[16];
+    internal slave port<Signal> ppi_88[16];
+    internal slave port<Signal> ppi_89[16];
+    internal slave port<Signal> ppi_90[16];
+    internal slave port<Signal> ppi_91[16];
+    internal slave port<Signal> ppi_92[16];
+    internal slave port<Signal> ppi_93[16];
+    internal slave port<Signal> ppi_94[16];
+    internal slave port<Signal> ppi_95[16];
+    internal slave port<Signal> ppi_96[16];
+    internal slave port<Signal> ppi_97[16];
+    internal slave port<Signal> ppi_98[16];
+    internal slave port<Signal> ppi_99[16];
+    internal slave port<Signal> ppi_100[16];
+    internal slave port<Signal> ppi_101[16];
+    internal slave port<Signal> ppi_102[16];
+    internal slave port<Signal> ppi_103[16];
+    internal slave port<Signal> ppi_104[16];
+    internal slave port<Signal> ppi_105[16];
+    internal slave port<Signal> ppi_106[16];
+    internal slave port<Signal> ppi_107[16];
+    internal slave port<Signal> ppi_108[16];
+    internal slave port<Signal> ppi_109[16];
+    internal slave port<Signal> ppi_110[16];
+    internal slave port<Signal> ppi_111[16];
+    internal slave port<Signal> ppi_112[16];
+    internal slave port<Signal> ppi_113[16];
+    internal slave port<Signal> ppi_114[16];
+    internal slave port<Signal> ppi_115[16];
+    internal slave port<Signal> ppi_116[16];
+    internal slave port<Signal> ppi_117[16];
+    internal slave port<Signal> ppi_118[16];
+    internal slave port<Signal> ppi_119[16];
+    internal slave port<Signal> ppi_120[16];
+    internal slave port<Signal> ppi_121[16];
+    internal slave port<Signal> ppi_122[16];
+    internal slave port<Signal> ppi_123[16];
+    internal slave port<Signal> ppi_124[16];
+    internal slave port<Signal> ppi_125[16];
+    internal slave port<Signal> ppi_126[16];
+    internal slave port<Signal> ppi_127[16];
+    internal slave port<Signal> ppi_128[16];
+    internal slave port<Signal> ppi_129[16];
+    internal slave port<Signal> ppi_130[16];
+    internal slave port<Signal> ppi_131[16];
+    internal slave port<Signal> ppi_132[16];
+    internal slave port<Signal> ppi_133[16];
+    internal slave port<Signal> ppi_134[16];
+    internal slave port<Signal> ppi_135[16];
+    internal slave port<Signal> ppi_136[16];
+    internal slave port<Signal> ppi_137[16];
+    internal slave port<Signal> ppi_138[16];
+    internal slave port<Signal> ppi_139[16];
+    internal slave port<Signal> ppi_140[16];
+    internal slave port<Signal> ppi_141[16];
+    internal slave port<Signal> ppi_142[16];
+    internal slave port<Signal> ppi_143[16];
+    internal slave port<Signal> ppi_144[16];
+    internal slave port<Signal> ppi_145[16];
+    internal slave port<Signal> ppi_146[16];
+    internal slave port<Signal> ppi_147[16];
+    internal slave port<Signal> ppi_148[16];
+    internal slave port<Signal> ppi_149[16];
+    internal slave port<Signal> ppi_150[16];
+    internal slave port<Signal> ppi_151[16];
+    internal slave port<Signal> ppi_152[16];
+    internal slave port<Signal> ppi_153[16];
+    internal slave port<Signal> ppi_154[16];
+    internal slave port<Signal> ppi_155[16];
+    internal slave port<Signal> ppi_156[16];
+    internal slave port<Signal> ppi_157[16];
+    internal slave port<Signal> ppi_158[16];
+    internal slave port<Signal> ppi_159[16];
+    internal slave port<Signal> ppi_160[16];
+    internal slave port<Signal> ppi_161[16];
+    internal slave port<Signal> ppi_162[16];
+    internal slave port<Signal> ppi_163[16];
+    internal slave port<Signal> ppi_164[16];
+    internal slave port<Signal> ppi_165[16];
+    internal slave port<Signal> ppi_166[16];
+    internal slave port<Signal> ppi_167[16];
+    internal slave port<Signal> ppi_168[16];
+    internal slave port<Signal> ppi_169[16];
+    internal slave port<Signal> ppi_170[16];
+    internal slave port<Signal> ppi_171[16];
+    internal slave port<Signal> ppi_172[16];
+    internal slave port<Signal> ppi_173[16];
+    internal slave port<Signal> ppi_174[16];
+    internal slave port<Signal> ppi_175[16];
+    internal slave port<Signal> ppi_176[16];
+    internal slave port<Signal> ppi_177[16];
+    internal slave port<Signal> ppi_178[16];
+    internal slave port<Signal> ppi_179[16];
+    internal slave port<Signal> ppi_180[16];
+    internal slave port<Signal> ppi_181[16];
+    internal slave port<Signal> ppi_182[16];
+    internal slave port<Signal> ppi_183[16];
+    internal slave port<Signal> ppi_184[16];
+    internal slave port<Signal> ppi_185[16];
+    internal slave port<Signal> ppi_186[16];
+    internal slave port<Signal> ppi_187[16];
+    internal slave port<Signal> ppi_188[16];
+    internal slave port<Signal> ppi_189[16];
+    internal slave port<Signal> ppi_190[16];
+    internal slave port<Signal> ppi_191[16];
+    internal slave port<Signal> ppi_192[16];
+    internal slave port<Signal> ppi_193[16];
+    internal slave port<Signal> ppi_194[16];
+    internal slave port<Signal> ppi_195[16];
+    internal slave port<Signal> ppi_196[16];
+    internal slave port<Signal> ppi_197[16];
+    internal slave port<Signal> ppi_198[16];
+    internal slave port<Signal> ppi_199[16];
+    internal slave port<Signal> ppi_200[16];
+    internal slave port<Signal> ppi_201[16];
+    internal slave port<Signal> ppi_202[16];
+    internal slave port<Signal> ppi_203[16];
+    internal slave port<Signal> ppi_204[16];
+    internal slave port<Signal> ppi_205[16];
+    internal slave port<Signal> ppi_206[16];
+    internal slave port<Signal> ppi_207[16];
+    internal slave port<Signal> ppi_208[16];
+    internal slave port<Signal> ppi_209[16];
+    internal slave port<Signal> ppi_210[16];
+    internal slave port<Signal> ppi_211[16];
+    internal slave port<Signal> ppi_212[16];
+    internal slave port<Signal> ppi_213[16];
+    internal slave port<Signal> ppi_214[16];
+    internal slave port<Signal> ppi_215[16];
+    internal slave port<Signal> ppi_216[16];
+    internal slave port<Signal> ppi_217[16];
+    internal slave port<Signal> ppi_218[16];
+    internal slave port<Signal> ppi_219[16];
+    internal slave port<Signal> ppi_220[16];
+    internal slave port<Signal> ppi_221[16];
+    internal slave port<Signal> ppi_222[16];
+    internal slave port<Signal> ppi_223[16];
+    internal slave port<Signal> ppi_224[16];
+    internal slave port<Signal> ppi_225[16];
+    internal slave port<Signal> ppi_226[16];
+    internal slave port<Signal> ppi_227[16];
+    internal slave port<Signal> ppi_228[16];
+    internal slave port<Signal> ppi_229[16];
+    internal slave port<Signal> ppi_230[16];
+    internal slave port<Signal> ppi_231[16];
+    internal slave port<Signal> ppi_232[16];
+    internal slave port<Signal> ppi_233[16];
+    internal slave port<Signal> ppi_234[16];
+    internal slave port<Signal> ppi_235[16];
+    internal slave port<Signal> ppi_236[16];
+    internal slave port<Signal> ppi_237[16];
+    internal slave port<Signal> ppi_238[16];
+    internal slave port<Signal> ppi_239[16];
+    internal slave port<Signal> ppi_240[16];
+    internal slave port<Signal> ppi_241[16];
+    internal slave port<Signal> ppi_242[16];
+    internal slave port<Signal> ppi_243[16];
+    internal slave port<Signal> ppi_244[16];
+    internal slave port<Signal> ppi_245[16];
+    internal slave port<Signal> ppi_246[16];
+    internal slave port<Signal> ppi_247[16];
+    internal slave port<Signal> ppi_248[16];
+    internal slave port<Signal> ppi_249[16];
+    internal slave port<Signal> ppi_250[16];
+    internal slave port<Signal> ppi_251[16];
+    internal slave port<Signal> ppi_252[16];
+    internal slave port<Signal> ppi_253[16];
+    internal slave port<Signal> ppi_254[16];
+    internal slave port<Signal> ppi_255[16];
+}

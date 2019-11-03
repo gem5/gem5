@@ -60,6 +60,7 @@ lang_types = {
     '.txt'   : "text",
     '.tex'   : "tex",
     '.mk'    : "make",
+    '.dts'    : "dts",
     }
 
 # languages based on file prefix

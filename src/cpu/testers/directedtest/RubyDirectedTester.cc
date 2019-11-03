@@ -39,13 +39,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
+
+#include "base/trace.hh"
+#include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "debug/DirectedTest.hh"
 #include "sim/sim_exit.hh"
 
 RubyDirectedTester::RubyDirectedTester(const Params *p)
-  : MemObject(p), directedStartEvent(this),
+  : ClockedObject(p),
+    directedStartEvent([this]{ wakeup(); }, "Directed tick",
+                       false, Event::CPU_Tick_Pri),
     m_requests_to_complete(p->requests_to_complete),
     generator(p->generator)
 {
@@ -74,15 +78,15 @@ RubyDirectedTester::init()
     generator->setDirectedTester(this);
 }
 
-BaseMasterPort &
-RubyDirectedTester::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+RubyDirectedTester::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "cpuPort") {
         // pass it along to our super class
-        return MemObject::getMasterPort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
     } else {
         if (idx >= static_cast<int>(ports.size())) {
-            panic("RubyDirectedTester::getMasterPort: unknown index %d\n", idx);
+            panic("RubyDirectedTester::getPort: unknown index %d\n", idx);
         }
 
         return *ports[idx];
@@ -97,7 +101,6 @@ RubyDirectedTester::CpuPort::recvTimingResp(PacketPtr pkt)
     //
     // Now that the tester has completed, delete the packet, then return
     //
-    delete pkt->req;
     delete pkt;
     return true;
 }

@@ -40,9 +40,33 @@
 #ifndef __ARCH_X86_LINUX_LINUX_HH__
 #define __ARCH_X86_LINUX_LINUX_HH__
 
+#include "arch/x86/utility.hh"
 #include "kern/linux/linux.hh"
 
-class X86Linux64 : public Linux
+class X86Linux : public Linux
+{
+  public:
+    static const ByteOrder byteOrder = LittleEndianByteOrder;
+
+    static void
+    archClone(uint64_t flags,
+                          Process *pp, Process *cp,
+                          ThreadContext *ptc, ThreadContext *ctc,
+                          uint64_t stack, uint64_t tls)
+    {
+        X86ISA::copyRegs(ptc, ctc);
+
+        if (flags & TGT_CLONE_SETTLS) {
+            ctc->setMiscRegNoEffect(X86ISA::MISCREG_FS_BASE, tls);
+            ctc->setMiscRegNoEffect(X86ISA::MISCREG_FS_EFF_BASE, tls);
+        }
+
+        if (stack)
+            ctc->setIntReg(X86ISA::StackPointerReg, stack);
+    }
+};
+
+class X86Linux64 : public X86Linux
 {
   public:
 
@@ -66,6 +90,24 @@ class X86Linux64 : public Linux
         uint64_t st_ctime_nsec;
         int64_t unused0[3];
     } tgt_stat64;
+
+    typedef struct {
+        long val[2];
+    } tgt_fsid;
+
+    typedef struct {
+        long f_type;
+        long f_bsize;
+        long f_blocks;
+        long f_bfree;
+        long f_bavail;
+        long f_files;
+        long f_ffree;
+        tgt_fsid f_fsid;
+        long f_namelen;
+        long f_frsize;
+        long f_spare[5];
+    } tgt_statfs;
 
     static const int TGT_SIGHUP         = 0x000001;
     static const int TGT_SIGINT         = 0x000002;
@@ -167,7 +209,7 @@ class X86Linux64 : public Linux
 
 };
 
-class X86Linux32 : public Linux
+class X86Linux32 : public X86Linux
 {
   public:
 

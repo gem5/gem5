@@ -1,0 +1,75 @@
+SystemC Simulation
+writing to bus: 00000000;    reading from bus=00000000
+datawidth writing to bus: 10101010
+writing to bus: 10101010;    reading from bus=10101010
+datawidth writing to bus: 10101010
+writing to bus: Z0Z0Z0Z0;    reading from bus=10101010
+datawidth writing to bus: 10101010
+writing to bus: X0X0X0X0;    reading from bus=X0X0X0X0
+datawidth writing to bus: 10101010
+writing to bus: 00000000;    reading from bus=X0X0X0X0
+datawidth writing to bus: 10101010
+writing to bus: 10101010;    reading from bus=10101010
+datawidth writing to bus: 10101010
+writing to bus: 01010101;    reading from bus=XXXXXXXX
+datawidth writing to bus: 10101010
+writing to bus: 11111111;    reading from bus=1X1X1X1X
+datawidth writing to bus: 10101010
+writing to bus: Z1Z1Z1Z1;    reading from bus=1X1X1X1X
+datawidth writing to bus: 10101010
+writing to bus: X1X1X1X1;    reading from bus=XXXXXXXX
+datawidth writing to bus: 10101010
+writing to bus: 01010101;    reading from bus=XXXXXXXX
+datawidth writing to bus: 10101010
+writing to bus: 11111111;    reading from bus=1X1X1X1X
+datawidth writing to bus: 10101010
+writing to bus: 0Z0Z0Z0Z;    reading from bus=X0X0X0X0
+datawidth writing to bus: 10101010
+writing to bus: 1Z1Z1Z1Z;    reading from bus=10101010
+datawidth writing to bus: 10101010
+writing to bus: ZZZZZZZZ;    reading from bus=10101010
+datawidth writing to bus: 10101010
+writing to bus: XZXZXZXZ;    reading from bus=X0X0X0X0
+datawidth writing to bus: 10101010
+writing to bus: 0Z0Z0Z0Z;    reading from bus=X0X0X0X0
+datawidth writing to bus: 10101010
+writing to bus: 1Z1Z1Z1Z;    reading from bus=10101010
+datawidth writing to bus: 10101010
+writing to bus: 0X0X0X0X;    reading from bus=XXXXXXXX
+datawidth writing to bus: 10101010
+writing to bus: 1X1X1X1X;    reading from bus=1X1X1X1X
+datawidth writing to bus: 10101010
+writing to bus: ZXZXZXZX;    reading from bus=1X1X1X1X
+datawidth writing to bus: 10101010
+writing to bus: XXXXXXXX;    reading from bus=XXXXXXXX
+datawidth writing to bus: 10101010
+writing to bus: 0X0X0X0X;    reading from bus=XXXXXXXX
+datawidth writing to bus: 10101010
+writing to bus: 1X1X1X1X;    reading from bus=1X1X1X1X
+datawidth writing to bus: 10101010
+writing to bus: 00000000;    reading from bus=X0X0X0X0
+datawidth writing to bus: 10101010
+writing to bus: 10101010;    reading from bus=10101010
+datawidth writing to bus: 10101010
+writing to bus: Z0Z0Z0Z0;    reading from bus=10101010
+datawidth writing to bus: 10101010
+writing to bus: X0X0X0X0;    reading from bus=X0X0X0X0
+datawidth writing to bus: 10101010
+writing to bus: 00000000;    reading from bus=X0X0X0X0
+datawidth writing to bus: 10101010
+writing to bus: 10101010;    reading from bus=10101010
+datawidth writing to bus: 10101010
+writing to bus: 01010101;    reading from bus=XXXXXXXX
+datawidth writing to bus: 10101010
+writing to bus: 11111111;    reading from bus=1X1X1X1X
+datawidth writing to bus: 10101010
+writing to bus: Z1Z1Z1Z1;    reading from bus=1X1X1X1X
+datawidth writing to bus: 10101010
+writing to bus: X1X1X1X1;    reading from bus=XXXXXXXX
+datawidth writing to bus: 10101010
+writing to bus: 01010101;    reading from bus=XXXXXXXX
+datawidth writing to bus: 10101010
+writing to bus: 11111111;    reading from bus=1X1X1X1X
+datawidth writing to bus: 10101010
+
+Info: /OSCI/SystemC: Simulation stopped by user.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,7 +48,7 @@
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/types.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
@@ -117,6 +117,10 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 
 void initCPU(ThreadContext *tc, int cpuId);
 
+/** Send an event (SEV) to a specific PE if there isn't
+ * already a pending event */
+void sendEvent(ThreadContext *tc);
+
 static inline bool
 inUserMode(CPSR cpsr)
 {
@@ -153,13 +157,64 @@ currOpMode(ThreadContext *tc)
 static inline ExceptionLevel
 currEL(ThreadContext *tc)
 {
-    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    return (ExceptionLevel) (uint8_t) cpsr.el;
+    return opModeToEL(currOpMode(tc));
 }
+
+inline ExceptionLevel
+currEL(CPSR cpsr)
+{
+    return opModeToEL((OperatingMode) (uint8_t)cpsr.mode);
+}
+
+/**
+ * This function checks whether selected EL provided as an argument
+ * is using the AArch32 ISA. This information might be unavailable
+ * at the current EL status: it hence returns a pair of boolean values:
+ * a first boolean, true if information is available (known),
+ * and a second one, true if EL is using AArch32, false for AArch64.
+ *
+ * @param tc The thread context.
+ * @param el The target exception level.
+ * @retval known is FALSE for EL0 if the current Exception level
+ *               is not EL0 and EL1 is using AArch64, since it cannot
+ *               determine the state of EL0; TRUE otherwise.
+ * @retval aarch32 is TRUE if the specified Exception level is using AArch32;
+ *                 FALSE otherwise.
+ */
+std::pair<bool, bool>
+ELUsingAArch32K(ThreadContext *tc, ExceptionLevel el);
+
+bool ELIs32(ThreadContext *tc, ExceptionLevel el);
 
 bool ELIs64(ThreadContext *tc, ExceptionLevel el);
 
+/**
+ * Returns true if the current exception level `el` is executing a Host OS or
+ * an application of a Host OS (Armv8.1 Virtualization Host Extensions).
+ */
+bool ELIsInHost(ThreadContext *tc, ExceptionLevel el);
+
 bool isBigEndian64(ThreadContext *tc);
+
+/**
+ * badMode is checking if the execution mode provided as an argument is
+ * valid and implemented for AArch32
+ *
+ * @param tc ThreadContext
+ * @param mode OperatingMode to check
+ * @return false if mode is valid and implemented, true otherwise
+ */
+bool badMode32(ThreadContext *tc, OperatingMode mode);
+
+/**
+ * badMode is checking if the execution mode provided as an argument is
+ * valid and implemented.
+ *
+ * @param tc ThreadContext
+ * @param mode OperatingMode to check
+ * @return false if mode is valid and implemented, true otherwise
+ */
+bool badMode(ThreadContext *tc, OperatingMode mode);
 
 static inline uint8_t
 itState(CPSR psr)
@@ -199,11 +254,24 @@ inSecureState(SCR scr, CPSR cpsr)
     }
 }
 
-bool longDescFormatInUse(ThreadContext *tc);
-
 bool inSecureState(ThreadContext *tc);
 
-uint32_t getMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
+/**
+ * Return TRUE if an Exception level below EL3 is in Secure state.
+ * Differs from inSecureState in that it ignores the current EL
+ * or Mode in considering security state.
+ */
+inline bool isSecureBelowEL3(ThreadContext *tc);
+
+bool longDescFormatInUse(ThreadContext *tc);
+
+/** This helper function is either returing the value of
+ * MPIDR_EL1 (by calling getMPIDR), or it is issuing a read
+ * to VMPIDR_EL2 (as it happens in virtualized systems) */
+RegVal readMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
+
+/** This helper function is returing the value of MPIDR_EL1 */
+RegVal getMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
 
 static inline uint32_t
 mcrMrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, uint32_t crn,
@@ -254,21 +322,14 @@ msrMrs64IssBuild(bool isRead, uint32_t op0, uint32_t op1, uint32_t crn,
 }
 
 bool
-mcrMrc15TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
-                  HDCR hdcr, HSTR hstr, HCPTR hcptr, uint32_t iss);
+mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc, uint32_t iss);
+
 bool
 mcrMrc14TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
                   HDCR hdcr, HSTR hstr, HCPTR hcptr, uint32_t iss);
 bool
 mcrrMrrc15TrapToHyp(const MiscRegIndex miscReg, CPSR cpsr, SCR scr, HSTR hstr,
                     HCR hcr, uint32_t iss);
-
-bool msrMrs64TrapToSup(const MiscRegIndex miscReg, ExceptionLevel el,
-                       CPACR cpacr);
-bool msrMrs64TrapToHyp(const MiscRegIndex miscReg, bool isRead, CPTR cptr,
-                       HCR hcr, bool * isVfpNeon);
-bool msrMrs64TrapToMon(const MiscRegIndex miscReg, CPTR cptr,
-                       ExceptionLevel el, bool * isVfpNeon);
 
 bool SPAlignmentCheckEnabled(ThreadContext* tc);
 
@@ -320,6 +381,11 @@ int decodePhysAddrRange64(uint8_t pa_enc);
  * Returns the encoding corresponding to the specified n. of PA bits.
  */
 uint8_t encodePhysAddrRange64(int pa_size);
+
+inline ByteOrder byteOrder(ThreadContext *tc)
+{
+    return isBigEndian64(tc) ? BigEndianByteOrder : LittleEndianByteOrder;
+};
 
 }
 

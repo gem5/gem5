@@ -37,9 +37,10 @@
  * Authors: Andrew Bardsley
  */
 
+#include "cpu/minor/activity.hh"
+
 #include <sstream>
 
-#include "cpu/minor/activity.hh"
 #include "cpu/minor/trace.hh"
 
 namespace Minor

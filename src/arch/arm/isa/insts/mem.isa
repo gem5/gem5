@@ -106,10 +106,13 @@ let {{
             if rasPop:
                 is_ras_pop = "1"
             codeBlobsCopy['is_ras_pop'] = is_ras_pop
+            if 'memacc_epilog_code' in codeBlobsCopy:
+                del codeBlobsCopy['memacc_epilog_code']
 
             iop = InstObjParams(name, Name, base,
                                 codeBlobsCopy, instFlagsCopy)
-
+            if 'memacc_epilog_code' in codeBlobs:
+                iop.snippets['memacc_code'] += codeBlobs['memacc_epilog_code']
             header_output = self.declareTemplate.subst(iop)
             decoder_output = self.constructTemplate.subst(iop)
             exec_output = self.fullExecTemplate.subst(iop) + \

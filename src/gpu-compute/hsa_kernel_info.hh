@@ -48,6 +48,7 @@ static const int HSA_GET_CODE = 0x4804;
 static const int HSA_GET_READONLY_DATA = 0x4805;
 static const int HSA_GET_CU_CNT = 0x4806;
 static const int HSA_GET_VSZ = 0x4807;
+static const int HSA_GET_HW_STATIC_CONTEXT_SIZE = 0x4808;
 
 // Return value (via buffer ptr) for HSA_GET_SIZES
 struct HsaDriverSizes

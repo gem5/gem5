@@ -1,0 +1,19 @@
+SystemC Simulation
+caught exception for sc_int<-3>
+caught exception for sc_int<0>
+caught exception for sc_int<100>
+caught exception for sc_int<8>[-1]
+caught exception for sc_int<8>[8]
+caught exception for sc_int<8>( 3, -1 )
+caught exception for sc_int<8>( 8, 4 )
+caught exception for sc_int<8>( 0, 3 )
+0
+caught exception for sc_uint<-3>
+caught exception for sc_uint<0>
+caught exception for sc_uint<100>
+caught exception for sc_uint<8>[-1]
+caught exception for sc_uint<8>[8]
+caught exception for sc_uint<8>( 3, -1 )
+caught exception for sc_uint<8>( 8, 4 )
+caught exception for sc_uint<8>( 0, 3 )
+0

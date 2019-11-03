@@ -1,0 +1,160 @@
+
+$timescale
+     1 ps
+$end
+
+$scope module SystemC $end
+$var wire    1  aaaaa  Clock       $end
+$var wire   32  aaaab  Int [31:0]  $end
+$var wire    8  aaaac  Char [7:0]  $end
+$var real    1  aaaad  Float       $end
+$var wire    1  aaaae  Logic       $end
+$upscope $end
+$enddefinitions  $end
+
+$comment
+All initial values are dumped below at time 0 sec = 0 timescale units.
+$end
+
+$dumpvars
+1aaaaa
+b1111111111 aaaab
+b1111 aaaac
+r-4 aaaad
+xaaaae
+$end
+
+#10000
+0aaaaa
+b1010 aaaab
+b1000 aaaac
+r1000.234558105469 aaaad
+zaaaae
+
+#20000
+1aaaaa
+b1111111111 aaaab
+b1111 aaaac
+r-4 aaaad
+xaaaae
+
+#30000
+0aaaaa
+b1010 aaaab
+b1000 aaaac
+r1000.234558105469 aaaad
+zaaaae
+
+#40000
+1aaaaa
+b1111111111 aaaab
+b1111 aaaac
+r-4 aaaad
+xaaaae
+
+#50000
+0aaaaa
+b1010 aaaab
+b1000 aaaac
+r1000.234558105469 aaaad
+zaaaae
+
+#60000
+1aaaaa
+b1111111111 aaaab
+b1111 aaaac
+r-4 aaaad
+xaaaae
+
+#70000
+0aaaaa
+b1010 aaaab
+b1000 aaaac
+r1000.234558105469 aaaad
+zaaaae
+
+#80000
+1aaaaa
+b1111111111 aaaab
+b1111 aaaac
+r-4 aaaad
+xaaaae
+
+#90000
+0aaaaa
+b1010 aaaab
+b1000 aaaac
+r1000.234558105469 aaaad
+zaaaae
+
+#100000
+1aaaaa
+b1111111111 aaaab
+b1111 aaaac
+r-4 aaaad
+xaaaae
+
+#110000
+0aaaaa
+b1010 aaaab
+b1000 aaaac
+r1000.234558105469 aaaad
+zaaaae
+
+#120000
+1aaaaa
+b1111111111 aaaab
+b1111 aaaac
+r-4 aaaad
+xaaaae
+
+#130000
+0aaaaa
+b1010 aaaab
+b1000 aaaac
+r1000.234558105469 aaaad
+zaaaae
+
+#140000
+1aaaaa
+b1111111111 aaaab
+b1111 aaaac
+r-4 aaaad
+xaaaae
+
+#150000
+0aaaaa
+b1010 aaaab
+b1000 aaaac
+r1000.234558105469 aaaad
+zaaaae
+
+#160000
+1aaaaa
+b1111111111 aaaab
+b1111 aaaac
+r-4 aaaad
+xaaaae
+
+#170000
+0aaaaa
+b1010 aaaab
+b1000 aaaac
+r1000.234558105469 aaaad
+zaaaae
+
+#180000
+1aaaaa
+b1111111111 aaaab
+b1111 aaaac
+r-4 aaaad
+xaaaae
+
+#190000
+0aaaaa
+b1010 aaaab
+b1000 aaaac
+r1000.234558105469 aaaad
+zaaaae
+
+#200000

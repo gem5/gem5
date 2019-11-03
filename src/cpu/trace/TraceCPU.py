@@ -1,4 +1,4 @@
-# Copyright (c) 2013 - 2015 ARM Limited
+# Copyright (c) 2013 - 2016 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -38,7 +38,7 @@
 #          Thomas Grass
 
 from m5.params import *
-from BaseCPU import BaseCPU
+from m5.objects.BaseCPU import BaseCPU
 
 class TraceCPU(BaseCPU):
     """Trace CPU model which replays traces generated in a prior simulation
@@ -69,3 +69,21 @@ class TraceCPU(BaseCPU):
     sizeLoadBuffer = Param.Unsigned(16, "Number of entries in the load buffer")
     sizeROB =  Param.Unsigned(40, "Number of entries in the re-order buffer")
 
+    # Frequency multiplier used to effectively scale the Trace CPU frequency
+    # either up or down. Note that the Trace CPU's clock domain must also be
+    # changed when frequency is scaled. A default value of 1.0 means the same
+    # frequency as was used for generating the traces.
+    freqMultiplier = Param.Float(1.0, "Multiplier scale the Trace CPU "\
+                                 "frequency up or down")
+
+    # Enable exiting when any one Trace CPU completes execution which is set to
+    # false by default
+    enableEarlyExit = Param.Bool(False, "Exit when any one Trace CPU "\
+                                 "completes execution")
+
+    # If progress msg interval is set to a non-zero value, it is treated as
+    # the interval of committed instructions at which an info message is
+    # printed.
+    progressMsgInterval = Param.Unsigned(0, "Interval of committed "\
+                                         "instructions at which to print a"\
+                                         " progress msg")

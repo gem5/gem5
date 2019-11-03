@@ -1,0 +1,9 @@
+SystemC Simulation
+10 ns : ready = 0		 (RDY) 
+30 ns : ready = 0		 (RDY) 
+40 ns : POSEDGE READY DETECTED
+50 ns : ready = 1		 (RDY) 
+70 ns : ready = 0		 (RDY) 
+80 ns : POSEDGE READY DETECTED
+90 ns : ready = 1		 (RDY) 
+Terminating process TB1.RD1.entry
