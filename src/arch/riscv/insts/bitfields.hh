@@ -10,4 +10,10 @@
 #define IMMSIGN bits(machInst, 31)
 #define OPCODE  bits(machInst, 6, 0)
 
+#define AQ      bits(machInst, 26)
+#define RD      bits(machInst, 11, 7)
+#define RL      bits(machInst, 25)
+#define RS1     bits(machInst, 19, 15)
+#define RS2     bits(machInst, 24, 20)
+
 #endif // __ARCH_RISCV_BITFIELDS_HH__
