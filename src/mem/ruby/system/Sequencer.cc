@@ -114,6 +114,7 @@ Sequencer::wakeup()
 
 void Sequencer::resetStats()
 {
+    m_outstandReqHist.reset();
     m_latencyHist.reset();
     m_hitLatencyHist.reset();
     m_missLatencyHist.reset();
