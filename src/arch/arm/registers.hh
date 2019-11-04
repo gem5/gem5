@@ -83,14 +83,13 @@ const int NumIntArchRegs = NUM_ARCH_INTREGS;
 // The number of single precision floating point registers
 const int NumFloatV7ArchRegs  = 64;
 const int NumFloatV8ArchRegs  = 128;
-const int NumFloatSpecialRegs = 32;
 const int NumVecV7ArchRegs  = 64;
 const int NumVecV8ArchRegs  = 32;
 const int NumVecSpecialRegs = 8;
 
 const int NumVecIntrlvRegs = 4;
 const int NumIntRegs = NUM_INTREGS;
-const int NumFloatRegs = NumFloatV8ArchRegs + NumFloatSpecialRegs;
+const int NumFloatRegs = 0; // Float values are stored in the VecRegs
 const int NumVecRegs = NumVecV8ArchRegs + NumVecSpecialRegs + NumVecIntrlvRegs;
 const int VECREG_UREG0 = 32;
 const int NumVecPredRegs = 18;  // P0-P15, FFR, UREG0
