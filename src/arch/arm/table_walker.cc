@@ -134,6 +134,7 @@ TableWalker::WalkerState::WalkerState() :
     sctlr(0), scr(0), cpsr(0), tcr(0),
     htcr(0), hcr(0), vtcr(0),
     isWrite(false), isFetch(false), isSecure(false),
+    isUncacheable(false),
     secureLookup(false), rwTable(false), userTable(false), xnTable(false),
     pxnTable(false), hpd(false), stage2Req(false),
     stage2Tran(nullptr), timing(false), functional(false),
@@ -574,10 +575,12 @@ TableWalker::processWalkLPAE()
         ttbr = currState->tc->readMiscReg(MISCREG_VTTBR);
         tsz  = sext<4>(currState->vtcr.t0sz);
         start_lookup_level = currState->vtcr.sl0 ? L1 : L2;
+        currState->isUncacheable = currState->vtcr.irgn0 == 0;
     } else if (currState->isHyp) {
         DPRINTF(TLB, " - Selecting HTTBR (long-desc.)\n");
         ttbr = currState->tc->readMiscReg(MISCREG_HTTBR);
         tsz  = currState->htcr.t0sz;
+        currState->isUncacheable = currState->htcr.irgn0 == 0;
     } else {
         assert(longDescFormatInUse(currState->tc));
 
@@ -622,6 +625,7 @@ TableWalker::processWalkLPAE()
             ttbr = currState->tc->readMiscReg(snsBankedIndex(
                 MISCREG_TTBR0, currState->tc, !currState->isSecure));
             tsz = currState->ttbcr.t0sz;
+            currState->isUncacheable = currState->ttbcr.irgn0 == 0;
             if (ttbr0_max < (1ULL << 30))  // Upper limit < 1 GB
                 start_lookup_level = L2;
         } else if (currState->vaddr >= ttbr1_min) {
@@ -646,7 +650,9 @@ TableWalker::processWalkLPAE()
             ttbr = currState->tc->readMiscReg(snsBankedIndex(
                 MISCREG_TTBR1, currState->tc, !currState->isSecure));
             tsz = currState->ttbcr.t1sz;
-            if (ttbr1_min >= (1ULL << 31) + (1ULL << 30))  // Lower limit >= 3 GB
+            currState->isUncacheable = currState->ttbcr.irgn1 == 0;
+            // Lower limit >= 3 GB
+            if (ttbr1_min >= (1ULL << 31) + (1ULL << 30))
                 start_lookup_level = L2;
         } else {
             // Out of boundaries -> translation fault
@@ -699,7 +705,7 @@ TableWalker::processWalkLPAE()
         return f;
     }
 
-    if (currState->sctlr.c == 0) {
+    if (currState->sctlr.c == 0 || currState->isUncacheable) {
         flag.set(Request::UNCACHEABLE);
     }
 
@@ -781,6 +787,7 @@ TableWalker::processWalkAArch64()
             panic_if(start_lookup_level == MAX_LOOKUP_LEVELS,
                      "Cannot discern lookup level from vtcr.{sl0,tg0}");
             ps = currState->vtcr.ps;
+            currState->isUncacheable = currState->vtcr.irgn0 == 0;
         } else {
             switch (bits(currState->vaddr, 63,48)) {
               case 0:
@@ -789,6 +796,7 @@ TableWalker::processWalkAArch64()
                 tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
                 tg = GrainMap_tg0[currState->tcr.tg0];
                 currState->hpd = currState->tcr.hpd0;
+                currState->isUncacheable = currState->tcr.irgn0 == 0;
                 if (bits(currState->vaddr, 63, tsz) != 0x0 ||
                     currState->tcr.epd0)
                   fault = true;
@@ -799,6 +807,7 @@ TableWalker::processWalkAArch64()
                 tsz = adjustTableSizeAArch64(64 - currState->tcr.t1sz);
                 tg = GrainMap_tg1[currState->tcr.tg1];
                 currState->hpd = currState->tcr.hpd1;
+                currState->isUncacheable = currState->tcr.irgn1 == 0;
                 if (bits(currState->vaddr, 63, tsz) != mask(64-tsz) ||
                     currState->tcr.epd1)
                   fault = true;
@@ -819,6 +828,7 @@ TableWalker::processWalkAArch64()
             tg = GrainMap_tg0[currState->tcr.tg0];
             currState->hpd = currState->hcr.e2h ?
                 currState->tcr.hpd0 : currState->tcr.hpd;
+            currState->isUncacheable = currState->tcr.irgn0 == 0;
             break;
 
           case 0xffff:
@@ -827,6 +837,7 @@ TableWalker::processWalkAArch64()
             tsz = adjustTableSizeAArch64(64 - currState->tcr.t1sz);
             tg = GrainMap_tg1[currState->tcr.tg1];
             currState->hpd = currState->tcr.hpd1;
+            currState->isUncacheable = currState->tcr.irgn1 == 0;
             if (bits(currState->vaddr, 63, tsz) != mask(64-tsz) ||
                 currState->tcr.epd1 || !currState->hcr.e2h)
               fault = true;
@@ -846,6 +857,7 @@ TableWalker::processWalkAArch64()
                 tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
                 tg = GrainMap_tg0[currState->tcr.tg0];
                 currState->hpd = currState->tcr.hpd;
+                currState->isUncacheable = currState->tcr.irgn0 == 0;
                 break;
             default:
                 // invalid addr if top two bytes are not all 0s
@@ -994,7 +1006,7 @@ TableWalker::processWalkAArch64()
     }
 
     Request::Flags flag = Request::PT_WALK;
-    if (currState->sctlr.c == 0) {
+    if (currState->sctlr.c == 0 || currState->isUncacheable) {
         flag.set(Request::UNCACHEABLE);
     }
 
@@ -1700,6 +1712,10 @@ TableWalker::doLongDescriptor()
             Request::Flags flag = Request::PT_WALK;
             if (currState->secureLookup)
                 flag.set(Request::SECURE);
+
+            if (currState->sctlr.c == 0 || currState->isUncacheable) {
+                flag.set(Request::UNCACHEABLE);
+            }
 
             LookupLevel L = currState->longDesc.lookupLevel =
                 (LookupLevel) (currState->longDesc.lookupLevel + 1);

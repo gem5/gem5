@@ -756,6 +756,9 @@ class TableWalker : public ClockedObject
         /** If the access comes from the secure state. */
         bool isSecure;
 
+        /** True if table walks are uncacheable (for table descriptors) */
+        bool isUncacheable;
+
         /** Helper variables used to implement hierarchical access permissions
          * when the long-desc. format is used (LPAE only) */
         bool secureLookup;
