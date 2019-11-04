@@ -693,39 +693,20 @@ namespace ArmISA
         static void zeroSveVecRegUpperPart(VecRegContainer &vc,
                                            unsigned eCount);
 
-        void serialize(CheckpointOut &cp) const
+        void
+        serialize(CheckpointOut &cp) const
         {
             DPRINTF(Checkpoint, "Serializing Arm Misc Registers\n");
             SERIALIZE_ARRAY(miscRegs, NUM_PHYS_MISCREGS);
-
-            SERIALIZE_SCALAR(highestELIs64);
-            SERIALIZE_SCALAR(haveSecurity);
-            SERIALIZE_SCALAR(haveLPAE);
-            SERIALIZE_SCALAR(haveVirtualization);
-            SERIALIZE_SCALAR(haveLargeAsid64);
-            SERIALIZE_SCALAR(physAddrRange);
-            SERIALIZE_SCALAR(haveSVE);
-            SERIALIZE_SCALAR(sveVL);
-            SERIALIZE_SCALAR(haveLSE);
-            SERIALIZE_SCALAR(havePAN);
         }
-        void unserialize(CheckpointIn &cp)
+
+        void
+        unserialize(CheckpointIn &cp)
         {
             DPRINTF(Checkpoint, "Unserializing Arm Misc Registers\n");
             UNSERIALIZE_ARRAY(miscRegs, NUM_PHYS_MISCREGS);
             CPSR tmp_cpsr = miscRegs[MISCREG_CPSR];
             updateRegMap(tmp_cpsr);
-
-            UNSERIALIZE_SCALAR(highestELIs64);
-            UNSERIALIZE_SCALAR(haveSecurity);
-            UNSERIALIZE_SCALAR(haveLPAE);
-            UNSERIALIZE_SCALAR(haveVirtualization);
-            UNSERIALIZE_SCALAR(haveLargeAsid64);
-            UNSERIALIZE_SCALAR(physAddrRange);
-            UNSERIALIZE_SCALAR(haveSVE);
-            UNSERIALIZE_SCALAR(sveVL);
-            UNSERIALIZE_SCALAR(haveLSE);
-            UNSERIALIZE_SCALAR(havePAN);
         }
 
         void startup(ThreadContext *tc);
