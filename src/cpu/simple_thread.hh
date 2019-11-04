@@ -45,6 +45,8 @@
 #ifndef __CPU_SIMPLE_THREAD_HH__
 #define __CPU_SIMPLE_THREAD_HH__
 
+#include <array>
+
 #include "arch/decoder.hh"
 #include "arch/generic/tlb.hh"
 #include "arch/isa.hh"
@@ -103,12 +105,12 @@ class SimpleThread : public ThreadState, public ThreadContext
     typedef ThreadContext::Status Status;
 
   protected:
-    RegVal floatRegs[TheISA::NumFloatRegs];
-    RegVal intRegs[TheISA::NumIntRegs];
-    VecRegContainer vecRegs[TheISA::NumVecRegs];
-    VecPredRegContainer vecPredRegs[TheISA::NumVecPredRegs];
+    std::array<RegVal, TheISA::NumFloatRegs> floatRegs;
+    std::array<RegVal, TheISA::NumIntRegs> intRegs;
+    std::array<VecRegContainer, TheISA::NumVecRegs> vecRegs;
+    std::array<VecPredRegContainer, TheISA::NumVecPredRegs> vecPredRegs;
 #ifdef ISA_HAS_CC_REGS
-    RegVal ccRegs[TheISA::NumCCRegs];
+    std::array<RegVal, TheISA::NumCCRegs> ccRegs;
 #endif
     TheISA::ISA *const isa;    // one "instance" of the current ISA.
 
@@ -287,19 +289,18 @@ class SimpleThread : public ThreadState, public ThreadContext
 
     void copyArchRegs(ThreadContext *tc) override;
 
-    void clearArchRegs() override
+    void
+    clearArchRegs() override
     {
         _pcState = 0;
-        memset(intRegs, 0, sizeof(intRegs));
-        memset(floatRegs, 0, sizeof(floatRegs));
-        for (int i = 0; i < TheISA::NumVecRegs; i++) {
-            vecRegs[i].zero();
-        }
-        for (int i = 0; i < TheISA::NumVecPredRegs; i++) {
-            vecPredRegs[i].reset();
-        }
+        intRegs.fill(0);
+        floatRegs.fill(0);
+        for (auto &vec_reg: vecRegs)
+            vec_reg.zero();
+        for (auto &pred_reg: vecPredRegs)
+            pred_reg.reset();
 #ifdef ISA_HAS_CC_REGS
-        memset(ccRegs, 0, sizeof(ccRegs));
+        ccRegs.fill(0);
 #endif
         isa->clear();
     }
