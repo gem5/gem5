@@ -61,20 +61,6 @@ isPrime(const T& n)
     return true;
 }
 
-template <class T>
-inline T
-leastSigBit(const T& n)
-{
-    return n & ~(n - 1);
-}
-
-template <class T>
-inline bool
-isPowerOf2(const T& n)
-{
-    return n != 0 && leastSigBit(n) == n;
-}
-
 inline uint64_t
 power(uint32_t n, uint32_t e)
 {
@@ -177,6 +163,13 @@ ceilLog2(const T& n)
         return 0;
 
     return floorLog2(n - (T)1) + 1;
+}
+
+template <class T>
+inline bool
+isPowerOf2(const T& n)
+{
+    return n != 0 && floorLog2(n) == ceilLog2(n);
 }
 
 template <class T>
