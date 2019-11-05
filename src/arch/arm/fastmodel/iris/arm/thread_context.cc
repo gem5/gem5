@@ -201,6 +201,12 @@ ArmThreadContext::readVecReg(const RegId &reg_id) const
     return reg;
 }
 
+const ArmISA::VecRegContainer &
+ArmThreadContext::readVecRegFlat(RegIndex idx) const
+{
+    return readVecReg(RegId(VecRegClass, idx));
+}
+
 Iris::ThreadContext::IdxNameMap ArmThreadContext::miscRegIdxNameMap({
         { ArmISA::MISCREG_CPSR, "CPSR" },
         { ArmISA::MISCREG_SPSR, "SPSR" },

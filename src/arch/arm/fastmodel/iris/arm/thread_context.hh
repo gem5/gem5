@@ -83,6 +83,7 @@ class ArmThreadContext : public Iris::ThreadContext
     }
 
     const VecRegContainer &readVecReg(const RegId &reg) const override;
+    const VecRegContainer &readVecRegFlat(RegIndex idx) const override;
 };
 
 } // namespace Iris
