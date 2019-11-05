@@ -125,7 +125,7 @@ class PerfectCompressor(BaseCacheCompressor):
     cxx_header = "mem/cache/compressors/perfect.hh"
 
     chunk_size_bits = 64
-    max_compression_ratio = Param.Int(2,
+    max_compression_ratio = Param.Int(Parent.max_compression_ratio,
         "Maximum compression ratio allowed")
     compression_latency = Param.Cycles(1,
         "Number of cycles to perform data compression")
