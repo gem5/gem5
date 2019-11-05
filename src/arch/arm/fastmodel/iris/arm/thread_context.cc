@@ -190,6 +190,11 @@ const ArmISA::VecRegContainer &
 ArmThreadContext::readVecReg(const RegId &reg_id) const
 {
     const RegIndex idx = reg_id.index();
+    // Ignore accesses to registers which aren't architected. gem5 defines a
+    // few extra registers which it uses internally in the implementation of
+    // some instructions.
+    if (idx >= vecRegIds.size())
+        return vecRegs.at(idx);
     ArmISA::VecRegContainer &reg = vecRegs.at(idx);
 
     iris::ResourceReadResult result;
