@@ -31,6 +31,7 @@
 
 #include "arch/arm/fastmodel/iris/thread_context.hh"
 #include "scx/scx.h"
+#include "sim/serialize.hh"
 
 namespace Iris
 {
@@ -91,6 +92,12 @@ BaseCPU::init()
     ::BaseCPU::init();
     for (auto *tc: threadContexts)
         tc->initMemProxies(tc);
+}
+
+void
+BaseCPU::serializeThread(CheckpointOut &cp, ThreadID tid) const
+{
+    ::serialize(*threadContexts[tid], cp);
 }
 
 } // namespace Iris
