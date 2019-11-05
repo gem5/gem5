@@ -191,12 +191,12 @@ serialize(const ThreadContext &tc, CheckpointOut &cp)
         intRegs[i] = tc.readIntRegFlat(i);
     SERIALIZE_ARRAY(intRegs, NumIntRegs);
 
-#ifdef ISA_HAS_CC_REGS
-    RegVal ccRegs[NumCCRegs];
-    for (int i = 0; i < NumCCRegs; ++i)
-        ccRegs[i] = tc.readCCRegFlat(i);
-    SERIALIZE_ARRAY(ccRegs, NumCCRegs);
-#endif
+    if (NumCCRegs) {
+        RegVal ccRegs[NumCCRegs];
+        for (int i = 0; i < NumCCRegs; ++i)
+            ccRegs[i] = tc.readCCRegFlat(i);
+        SERIALIZE_ARRAY(ccRegs, NumCCRegs);
+    }
 
     tc.pcState().serialize(cp);
 
@@ -232,12 +232,12 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
     for (int i = 0; i < NumIntRegs; ++i)
         tc.setIntRegFlat(i, intRegs[i]);
 
-#ifdef ISA_HAS_CC_REGS
-    RegVal ccRegs[NumCCRegs];
-    UNSERIALIZE_ARRAY(ccRegs, NumCCRegs);
-    for (int i = 0; i < NumCCRegs; ++i)
-        tc.setCCRegFlat(i, ccRegs[i]);
-#endif
+    if (NumCCRegs) {
+        RegVal ccRegs[NumCCRegs];
+        UNSERIALIZE_ARRAY(ccRegs, NumCCRegs);
+        for (int i = 0; i < NumCCRegs; ++i)
+            tc.setCCRegFlat(i, ccRegs[i]);
+    }
 
     PCState pcState;
     pcState.unserialize(cp);

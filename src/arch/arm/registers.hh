@@ -102,8 +102,6 @@ const int INTRLVREG1 = INTRLVREG0 + 1;
 const int INTRLVREG2 = INTRLVREG0 + 2;
 const int INTRLVREG3 = INTRLVREG0 + 3;
 
-#define ISA_HAS_CC_REGS
-
 const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumVecRegs +
     NumVecPredRegs + NumMiscRegs;
 

@@ -109,9 +109,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     std::array<RegVal, TheISA::NumIntRegs> intRegs;
     std::array<VecRegContainer, TheISA::NumVecRegs> vecRegs;
     std::array<VecPredRegContainer, TheISA::NumVecPredRegs> vecPredRegs;
-#ifdef ISA_HAS_CC_REGS
     std::array<RegVal, TheISA::NumCCRegs> ccRegs;
-#endif
     TheISA::ISA *const isa;    // one "instance" of the current ISA.
 
     TheISA::PCState _pcState;
@@ -299,9 +297,7 @@ class SimpleThread : public ThreadState, public ThreadContext
             vec_reg.zero();
         for (auto &pred_reg: vecPredRegs)
             pred_reg.reset();
-#ifdef ISA_HAS_CC_REGS
         ccRegs.fill(0);
-#endif
         isa->clear();
     }
 
@@ -468,7 +464,6 @@ class SimpleThread : public ThreadState, public ThreadContext
     RegVal
     readCCReg(RegIndex reg_idx) const override
     {
-#ifdef ISA_HAS_CC_REGS
         int flatIndex = isa->flattenCCIndex(reg_idx);
         assert(0 <= flatIndex);
         assert(flatIndex < TheISA::NumCCRegs);
@@ -476,10 +471,6 @@ class SimpleThread : public ThreadState, public ThreadContext
         DPRINTF(CCRegs, "Reading CC reg %d (%d) as %#x.\n",
                 reg_idx, flatIndex, regVal);
         return regVal;
-#else
-        panic("Tried to read a CC register.");
-        return 0;
-#endif
     }
 
     void
@@ -538,15 +529,11 @@ class SimpleThread : public ThreadState, public ThreadContext
     void
     setCCReg(RegIndex reg_idx, RegVal val) override
     {
-#ifdef ISA_HAS_CC_REGS
         int flatIndex = isa->flattenCCIndex(reg_idx);
         assert(flatIndex < TheISA::NumCCRegs);
         DPRINTF(CCRegs, "Setting CC reg %d (%d) to %#x.\n",
                 reg_idx, flatIndex, val);
         setCCRegFlat(flatIndex, val);
-#else
-        panic("Tried to set a CC register.");
-#endif
     }
 
     TheISA::PCState pcState() const override { return _pcState; }
@@ -707,22 +694,8 @@ class SimpleThread : public ThreadState, public ThreadContext
         vecPredRegs[reg] = val;
     }
 
-#ifdef ISA_HAS_CC_REGS
     RegVal readCCRegFlat(RegIndex idx) const override { return ccRegs[idx]; }
     void setCCRegFlat(RegIndex idx, RegVal val) override { ccRegs[idx] = val; }
-#else
-    RegVal
-    readCCRegFlat(RegIndex idx) const override
-    {
-        panic("readCCRegFlat w/no CC regs!\n");
-    }
-
-    void
-    setCCRegFlat(RegIndex idx, RegVal val) override
-    {
-        panic("setCCRegFlat w/no CC regs!\n");
-    }
-#endif
 };
 
 
