@@ -290,6 +290,34 @@ getMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
 }
 
 bool
+HaveSecureEL2Ext(ThreadContext *tc)
+{
+    AA64PFR0 id_aa64pfr0 = tc->readMiscReg(MISCREG_ID_AA64PFR0_EL1);
+    return id_aa64pfr0.sel2;
+}
+
+bool
+IsSecureEL2Enabled(ThreadContext *tc)
+{
+    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+    if (ArmSystem::haveEL(tc, EL2) && HaveSecureEL2Ext(tc)) {
+        if (ArmSystem::haveEL(tc, EL3))
+            return !ELIs32(tc, EL3) && scr.eel2;
+        else
+            return inSecureState(tc);
+    }
+    return false;
+}
+
+bool
+EL2Enabled(ThreadContext *tc)
+{
+    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+    return ArmSystem::haveEL(tc, EL2) &&
+           (!ArmSystem::haveEL(tc, EL3) || scr.ns || IsSecureEL2Enabled(tc));
+}
+
+bool
 ELIs64(ThreadContext *tc, ExceptionLevel el)
 {
     return !ELIs32(tc, el);

@@ -166,6 +166,10 @@ currEL(CPSR cpsr)
     return opModeToEL((OperatingMode) (uint8_t)cpsr.mode);
 }
 
+bool HaveSecureEL2Ext(ThreadContext *tc);
+bool IsSecureEL2Enabled(ThreadContext *tc);
+bool EL2Enabled(ThreadContext *tc);
+
 /**
  * This function checks whether selected EL provided as an argument
  * is using the AArch32 ISA. This information might be unavailable

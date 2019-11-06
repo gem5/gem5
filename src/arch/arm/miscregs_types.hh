@@ -294,14 +294,15 @@ namespace ArmISA
     EndBitUnion(NSACR)
 
     BitUnion32(SCR)
+        Bitfield<18> eel2; // AArch64 (Armv8.4-SecEL2)
         Bitfield<13> twe;
         Bitfield<12> twi;
-        Bitfield<11> st;  // AArch64
-        Bitfield<10> rw;  // AArch64
+        Bitfield<11> st;   // AArch64
+        Bitfield<10> rw;   // AArch64
         Bitfield<9> sif;
         Bitfield<8> hce;
         Bitfield<7> scd;
-        Bitfield<7> smd;  // AArch64
+        Bitfield<7> smd;   // AArch64
         Bitfield<6> nEt;
         Bitfield<5> aw;
         Bitfield<4> fw;
