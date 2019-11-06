@@ -134,18 +134,21 @@ class Interrupts : public BaseInterrupts
     void
     serialize(CheckpointOut &cp) const
     {
-        SERIALIZE_SCALAR(ip.to_ulong());
-        SERIALIZE_SCALAR(ie.to_ulong());
+        unsigned long ip_ulong = ip.to_ulong();
+        unsigned long ie_ulong = ie.to_ulong();
+        SERIALIZE_SCALAR(ip_ulong);
+        SERIALIZE_SCALAR(ie_ulong);
     }
 
     void
     unserialize(CheckpointIn &cp)
     {
-        long reg;
-        UNSERIALIZE_SCALAR(reg);
-        ip = reg;
-        UNSERIALIZE_SCALAR(reg);
-        ie = reg;
+        unsigned long ip_ulong;
+        unsigned long ie_ulong;
+        UNSERIALIZE_SCALAR(ip_ulong);
+        ip = ip_ulong;
+        UNSERIALIZE_SCALAR(ie_ulong);
+        ie = ie_ulong;
     }
 };
 
