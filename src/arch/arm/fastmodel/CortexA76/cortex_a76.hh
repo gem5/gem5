@@ -30,8 +30,8 @@
 #ifndef __ARCH_ARM_FASTMODEL_CORTEXA76_CORETEX_A76_HH__
 #define __ARCH_ARM_FASTMODEL_CORTEXA76_CORETEX_A76_HH__
 
+#include "arch/arm/fastmodel/CortexA76/thread_context.hh"
 #include "arch/arm/fastmodel/amba_ports.hh"
-#include "arch/arm/fastmodel/iris/arm/thread_context.hh"
 #include "arch/arm/fastmodel/iris/cpu.hh"
 #include "params/FastModelCortexA76.hh"
 #include "params/FastModelCortexA76Cluster.hh"
@@ -51,11 +51,11 @@ namespace FastModel
 // the work.
 class CortexA76Cluster;
 
-class CortexA76 : public Iris::CPU<Iris::ArmThreadContext>
+class CortexA76 : public Iris::CPU<CortexA76TC>
 {
   protected:
     typedef FastModelCortexA76Params Params;
-    typedef Iris::CPU<Iris::ArmThreadContext> Base;
+    typedef Iris::CPU<CortexA76TC> Base;
     const Params &_params;
 
     CortexA76Cluster *cluster = nullptr;

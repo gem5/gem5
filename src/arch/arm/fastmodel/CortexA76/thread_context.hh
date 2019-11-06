@@ -27,17 +27,17 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_ARM_FASTMODEL_IRIS_ARM_THREAD_CONTEXT_HH__
-#define __ARCH_ARM_FASTMODEL_IRIS_ARM_THREAD_CONTEXT_HH__
+#ifndef __ARCH_ARM_FASTMODEL_CORTEXA76_THREAD_CONTEXT_HH__
+#define __ARCH_ARM_FASTMODEL_CORTEXA76_THREAD_CONTEXT_HH__
 
 #include "arch/arm/fastmodel/iris/thread_context.hh"
 
-namespace Iris
+namespace FastModel
 {
 
 // This ThreadContext class translates accesses to state using gem5's native
 // to the Iris API. This includes extracting and translating register indices.
-class ArmThreadContext : public Iris::ThreadContext
+class CortexA76TC : public Iris::ThreadContext
 {
   protected:
     static IdxNameMap miscRegIdxNameMap;
@@ -51,10 +51,10 @@ class ArmThreadContext : public Iris::ThreadContext
     mutable std::vector<ArmISA::VecRegContainer> vecRegs;
 
   public:
-    ArmThreadContext(::BaseCPU *cpu, int id, System *system,
-                     ::BaseTLB *dtb, ::BaseTLB *itb,
-                     iris::IrisConnectionInterface *iris_if,
-                     const std::string &iris_path);
+    CortexA76TC(::BaseCPU *cpu, int id, System *system,
+                ::BaseTLB *dtb, ::BaseTLB *itb,
+                iris::IrisConnectionInterface *iris_if,
+                const std::string &iris_path);
 
     bool translateAddress(Addr &paddr, Addr vaddr) override;
 
@@ -86,6 +86,6 @@ class ArmThreadContext : public Iris::ThreadContext
     const VecRegContainer &readVecRegFlat(RegIndex idx) const override;
 };
 
-} // namespace Iris
+} // namespace FastModel
 
-#endif // __ARCH_ARM_FASTMODEL_IRIS_ARM_THREAD_CONTEXT_HH__
+#endif // __ARCH_ARM_FASTMODEL_CORTEXA76_THREAD_CONTEXT_HH__

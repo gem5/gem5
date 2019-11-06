@@ -27,16 +27,16 @@
  * Authors: Gabe Black
  */
 
-#include "arch/arm/fastmodel/iris/arm/thread_context.hh"
+#include "arch/arm/fastmodel/CortexA76/thread_context.hh"
 
 #include "arch/arm/fastmodel/iris/memory_spaces.hh"
 #include "iris/detail/IrisCppAdapter.h"
 #include "iris/detail/IrisObjects.h"
 
-namespace Iris
+namespace FastModel
 {
 
-ArmThreadContext::ArmThreadContext(
+CortexA76TC::CortexA76TC(
         ::BaseCPU *cpu, int id, System *system, ::BaseTLB *dtb, ::BaseTLB *itb,
         iris::IrisConnectionInterface *iris_if,
         const std::string &iris_path) :
@@ -45,24 +45,24 @@ ArmThreadContext::ArmThreadContext(
 {}
 
 bool
-ArmThreadContext::translateAddress(Addr &paddr, Addr vaddr)
+CortexA76TC::translateAddress(Addr &paddr, Addr vaddr)
 {
     // Determine what memory spaces are currently active.
-    CanonicalMsn in_msn;
+    Iris::CanonicalMsn in_msn;
     switch (currEL(this)) {
       case EL3:
-        in_msn = SecureMonitorMsn;
+        in_msn = Iris::SecureMonitorMsn;
         break;
       case EL2:
-        in_msn = NsHypMsn;
+        in_msn = Iris::NsHypMsn;
         break;
       default:
-        in_msn = GuestMsn;
+        in_msn = Iris::GuestMsn;
         break;
     }
 
-    CanonicalMsn out_msn = inSecureState(this) ?
-        PhysicalMemorySecureMsn : PhysicalMemoryNonSecureMsn;
+    Iris::CanonicalMsn out_msn = inSecureState(this) ?
+        Iris::PhysicalMemorySecureMsn : Iris::PhysicalMemoryNonSecureMsn;
 
     // Figure out what memory spaces match the canonical numbers we need.
     iris::MemorySpaceId in = iris::IRIS_UINT64_MAX;
@@ -82,7 +82,7 @@ ArmThreadContext::translateAddress(Addr &paddr, Addr vaddr)
 }
 
 void
-ArmThreadContext::initFromIrisInstance(const ResourceMap &resources)
+CortexA76TC::initFromIrisInstance(const ResourceMap &resources)
 {
     ThreadContext::initFromIrisInstance(resources);
 
@@ -98,7 +98,7 @@ ArmThreadContext::initFromIrisInstance(const ResourceMap &resources)
 }
 
 TheISA::PCState
-ArmThreadContext::pcState() const
+CortexA76TC::pcState() const
 {
     ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
     ArmISA::PCState pc;
@@ -121,7 +121,7 @@ ArmThreadContext::pcState() const
     return pc;
 }
 void
-ArmThreadContext::pcState(const TheISA::PCState &val)
+CortexA76TC::pcState(const TheISA::PCState &val)
 {
     Addr pc = val.pc();
 
@@ -134,19 +134,19 @@ ArmThreadContext::pcState(const TheISA::PCState &val)
 }
 
 Addr
-ArmThreadContext::instAddr() const
+CortexA76TC::instAddr() const
 {
     return pcState().instAddr();
 }
 
 Addr
-ArmThreadContext::nextInstAddr() const
+CortexA76TC::nextInstAddr() const
 {
     return pcState().nextInstAddr();
 }
 
 iris::MemorySpaceId
-ArmThreadContext::getBpSpaceId(Addr pc) const
+CortexA76TC::getBpSpaceId(Addr pc) const
 {
     if (bpSpaceId == iris::IRIS_UINT64_MAX) {
         for (auto &space: memorySpaces) {
@@ -162,7 +162,7 @@ ArmThreadContext::getBpSpaceId(Addr pc) const
 }
 
 uint64_t
-ArmThreadContext::readIntReg(RegIndex reg_idx) const
+CortexA76TC::readIntReg(RegIndex reg_idx) const
 {
     ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
 
@@ -175,7 +175,7 @@ ArmThreadContext::readIntReg(RegIndex reg_idx) const
 }
 
 void
-ArmThreadContext::setIntReg(RegIndex reg_idx, uint64_t val)
+CortexA76TC::setIntReg(RegIndex reg_idx, uint64_t val)
 {
     ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
 
@@ -187,7 +187,7 @@ ArmThreadContext::setIntReg(RegIndex reg_idx, uint64_t val)
 }
 
 const ArmISA::VecRegContainer &
-ArmThreadContext::readVecReg(const RegId &reg_id) const
+CortexA76TC::readVecReg(const RegId &reg_id) const
 {
     const RegIndex idx = reg_id.index();
     // Ignore accesses to registers which aren't architected. gem5 defines a
@@ -207,12 +207,12 @@ ArmThreadContext::readVecReg(const RegId &reg_id) const
 }
 
 const ArmISA::VecRegContainer &
-ArmThreadContext::readVecRegFlat(RegIndex idx) const
+CortexA76TC::readVecRegFlat(RegIndex idx) const
 {
     return readVecReg(RegId(VecRegClass, idx));
 }
 
-Iris::ThreadContext::IdxNameMap ArmThreadContext::miscRegIdxNameMap({
+Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
         { ArmISA::MISCREG_CPSR, "CPSR" },
         { ArmISA::MISCREG_SPSR, "SPSR" },
         { ArmISA::MISCREG_SPSR_FIQ, "SPSR_fiq" },
@@ -844,7 +844,7 @@ Iris::ThreadContext::IdxNameMap ArmThreadContext::miscRegIdxNameMap({
         { ArmISA::MISCREG_VDISR_EL2, "VDISR_EL2" }
 });
 
-Iris::ThreadContext::IdxNameMap ArmThreadContext::intReg32IdxNameMap({
+Iris::ThreadContext::IdxNameMap CortexA76TC::intReg32IdxNameMap({
         { ArmISA::INTREG_R0, "R0" },
         { ArmISA::INTREG_R1, "R1" },
         { ArmISA::INTREG_R2, "R2" },
@@ -863,7 +863,7 @@ Iris::ThreadContext::IdxNameMap ArmThreadContext::intReg32IdxNameMap({
         { ArmISA::INTREG_R15, "R15" }
 });
 
-Iris::ThreadContext::IdxNameMap ArmThreadContext::intReg64IdxNameMap({
+Iris::ThreadContext::IdxNameMap CortexA76TC::intReg64IdxNameMap({
         { ArmISA::INTREG_X0, "X0" },
         { ArmISA::INTREG_X1, "X1" },
         { ArmISA::INTREG_X2, "X2" },
@@ -898,7 +898,7 @@ Iris::ThreadContext::IdxNameMap ArmThreadContext::intReg64IdxNameMap({
         { ArmISA::INTREG_SPX, "SP" },
 });
 
-Iris::ThreadContext::IdxNameMap ArmThreadContext::vecRegIdxNameMap({
+Iris::ThreadContext::IdxNameMap CortexA76TC::vecRegIdxNameMap({
         { 0, "V0" }, { 1, "V1" }, { 2, "V2" }, { 3, "V3" },
         { 4, "V4" }, { 5, "V5" }, { 6, "V6" }, { 7, "V7" },
         { 8, "V8" }, { 9, "V9" }, { 10, "V10" }, { 11, "V11" },
@@ -909,6 +909,6 @@ Iris::ThreadContext::IdxNameMap ArmThreadContext::vecRegIdxNameMap({
         { 28, "V28" }, { 29, "V29" }, { 30, "V30" }, { 31, "V31" }
 });
 
-iris::MemorySpaceId ArmThreadContext::bpSpaceId = iris::IRIS_UINT64_MAX;
+iris::MemorySpaceId CortexA76TC::bpSpaceId = iris::IRIS_UINT64_MAX;
 
-} // namespace Iris
+} // namespace FastModel
