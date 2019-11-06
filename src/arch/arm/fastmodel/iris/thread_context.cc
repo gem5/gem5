@@ -244,7 +244,7 @@ ThreadContext::ThreadContext(
         BaseCPU *cpu, int id, System *system, ::BaseTLB *dtb, ::BaseTLB *itb,
         iris::IrisConnectionInterface *iris_if, const std::string &iris_path) :
     _cpu(cpu), _threadId(id), _system(system), _dtb(dtb), _itb(itb),
-    _irisPath(iris_path), _instId(iris::IRIS_UINT64_MAX), _status(Active),
+    _irisPath(iris_path), vecRegs(TheISA::NumVecRegs),
     comInstEventQueue("instruction-based event queue"),
     client(iris_if, "client." + iris_path)
 {
@@ -431,6 +431,54 @@ ThreadContext::setStatus(Status new_status)
     _status = new_status;
 }
 
+ArmISA::PCState
+ThreadContext::pcState() const
+{
+    ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
+    ArmISA::PCState pc;
+
+    pc.thumb(cpsr.t);
+    pc.nextThumb(pc.thumb());
+    pc.jazelle(cpsr.j);
+    pc.nextJazelle(cpsr.j);
+    pc.aarch64(!cpsr.width);
+    pc.nextAArch64(!cpsr.width);
+    pc.illegalExec(false);
+
+    iris::ResourceReadResult result;
+    call().resource_read(_instId, result, pcRscId);
+    Addr addr = result.data.at(0);
+    if (cpsr.width && cpsr.t)
+        addr = addr & ~0x1;
+    pc.set(addr);
+
+    return pc;
+}
+void
+ThreadContext::pcState(const ArmISA::PCState &val)
+{
+    Addr pc = val.pc();
+
+    ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
+    if (cpsr.width && cpsr.t)
+        pc = pc | 0x1;
+
+    iris::ResourceWriteResult result;
+    call().resource_write(_instId, result, pcRscId, pc);
+}
+
+Addr
+ThreadContext::instAddr() const
+{
+    return pcState().instAddr();
+}
+
+Addr
+ThreadContext::nextInstAddr() const
+{
+    return pcState().nextInstAddr();
+}
+
 RegVal
 ThreadContext::readMiscRegNoEffect(RegIndex misc_reg) const
 {
@@ -449,16 +497,52 @@ ThreadContext::setMiscRegNoEffect(RegIndex misc_reg, const RegVal val)
 RegVal
 ThreadContext::readIntReg(RegIndex reg_idx) const
 {
+    ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
+
     iris::ResourceReadResult result;
-    call().resource_read(_instId, result, intRegIds.at(reg_idx));
+    if (cpsr.width)
+        call().resource_read(_instId, result, intReg32Ids.at(reg_idx));
+    else
+        call().resource_read(_instId, result, intReg64Ids.at(reg_idx));
     return result.data.at(0);
 }
 
 void
 ThreadContext::setIntReg(RegIndex reg_idx, RegVal val)
 {
+    ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
+
     iris::ResourceWriteResult result;
-    call().resource_write(_instId, result, intRegIds.at(reg_idx), val);
+    if (cpsr.width)
+        call().resource_write(_instId, result, intReg32Ids.at(reg_idx), val);
+    else
+        call().resource_write(_instId, result, intReg64Ids.at(reg_idx), val);
+}
+
+const ArmISA::VecRegContainer &
+ThreadContext::readVecReg(const RegId &reg_id) const
+{
+    const RegIndex idx = reg_id.index();
+    // Ignore accesses to registers which aren't architected. gem5 defines a
+    // few extra registers which it uses internally in the implementation of
+    // some instructions.
+    if (idx >= vecRegIds.size())
+        return vecRegs.at(idx);
+    ArmISA::VecRegContainer &reg = vecRegs.at(idx);
+
+    iris::ResourceReadResult result;
+    call().resource_read(_instId, result, vecRegIds.at(idx));
+    size_t data_size = result.data.size() * (sizeof(*result.data.data()));
+    size_t size = std::min(data_size, reg.SIZE);
+    memcpy(reg.raw_ptr<void>(), (void *)result.data.data(), size);
+
+    return reg;
+}
+
+const ArmISA::VecRegContainer &
+ThreadContext::readVecRegFlat(RegIndex idx) const
+{
+    return readVecReg(RegId(VecRegClass, idx));
 }
 
 } // namespace Iris

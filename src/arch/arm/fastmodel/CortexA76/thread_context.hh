@@ -46,10 +46,6 @@ class CortexA76TC : public Iris::ThreadContext
     static IdxNameMap vecRegIdxNameMap;
     static iris::MemorySpaceId bpSpaceId;
 
-    // Temporary holding places for the vector reg accessors to return.
-    // These are not updated live, only when requested.
-    mutable std::vector<ArmISA::VecRegContainer> vecRegs;
-
   public:
     CortexA76TC(::BaseCPU *cpu, int id, System *system,
                 ::BaseTLB *dtb, ::BaseTLB *itb,
@@ -60,30 +56,7 @@ class CortexA76TC : public Iris::ThreadContext
 
     void initFromIrisInstance(const ResourceMap &resources) override;
 
-    TheISA::PCState pcState() const override;
-    void pcState(const TheISA::PCState &val) override;
-    Addr instAddr() const override;
-    Addr nextInstAddr() const override;
-
-    iris::ResourceId pcRscId;
-    iris::ResourceId icountRscId;
-
-    ResourceIds intReg32Ids;
-    ResourceIds intReg64Ids;
-    ResourceIds vecRegIds;
-
     iris::MemorySpaceId getBpSpaceId(Addr pc) const override;
-
-    void setIntReg(RegIndex reg_idx, RegVal val) override;
-    RegVal readIntReg(RegIndex reg_idx) const override;
-    TheISA::ISA *
-    getIsaPtr() override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-
-    const VecRegContainer &readVecReg(const RegId &reg) const override;
-    const VecRegContainer &readVecRegFlat(RegIndex idx) const override;
 };
 
 } // namespace FastModel

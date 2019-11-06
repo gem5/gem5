@@ -40,8 +40,7 @@ CortexA76TC::CortexA76TC(
         ::BaseCPU *cpu, int id, System *system, ::BaseTLB *dtb, ::BaseTLB *itb,
         iris::IrisConnectionInterface *iris_if,
         const std::string &iris_path) :
-    ThreadContext(cpu, id, system, dtb, itb, iris_if, iris_path),
-    vecRegs(TheISA::NumVecRegs), pcRscId(iris::IRIS_UINT64_MAX)
+    ThreadContext(cpu, id, system, dtb, itb, iris_if, iris_path)
 {}
 
 bool
@@ -87,7 +86,6 @@ CortexA76TC::initFromIrisInstance(const ResourceMap &resources)
     ThreadContext::initFromIrisInstance(resources);
 
     pcRscId = extractResourceId(resources, "PC");
-    icountRscId = extractResourceId(resources, "icount");
 
     extractResourceMap(miscRegIds, resources, miscRegIdxNameMap);
 
@@ -95,54 +93,6 @@ CortexA76TC::initFromIrisInstance(const ResourceMap &resources)
     extractResourceMap(intReg64Ids, resources, intReg64IdxNameMap);
 
     extractResourceMap(vecRegIds, resources, vecRegIdxNameMap);
-}
-
-TheISA::PCState
-CortexA76TC::pcState() const
-{
-    ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
-    ArmISA::PCState pc;
-
-    pc.thumb(cpsr.t);
-    pc.nextThumb(pc.thumb());
-    pc.jazelle(cpsr.j);
-    pc.nextJazelle(cpsr.j);
-    pc.aarch64(!cpsr.width);
-    pc.nextAArch64(!cpsr.width);
-    pc.illegalExec(false);
-
-    iris::ResourceReadResult result;
-    call().resource_read(_instId, result, pcRscId);
-    Addr addr = result.data.at(0);
-    if (cpsr.width && cpsr.t)
-        addr = addr & ~0x1;
-    pc.set(addr);
-
-    return pc;
-}
-void
-CortexA76TC::pcState(const TheISA::PCState &val)
-{
-    Addr pc = val.pc();
-
-    ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
-    if (cpsr.width && cpsr.t)
-        pc = pc | 0x1;
-
-    iris::ResourceWriteResult result;
-    call().resource_write(_instId, result, pcRscId, pc);
-}
-
-Addr
-CortexA76TC::instAddr() const
-{
-    return pcState().instAddr();
-}
-
-Addr
-CortexA76TC::nextInstAddr() const
-{
-    return pcState().nextInstAddr();
 }
 
 iris::MemorySpaceId
@@ -159,57 +109,6 @@ CortexA76TC::getBpSpaceId(Addr pc) const
                 "Unable to find address space for breakpoints.");
     }
     return bpSpaceId;
-}
-
-uint64_t
-CortexA76TC::readIntReg(RegIndex reg_idx) const
-{
-    ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
-
-    iris::ResourceReadResult result;
-    if (cpsr.width)
-        call().resource_read(_instId, result, intReg32Ids.at(reg_idx));
-    else
-        call().resource_read(_instId, result, intReg64Ids.at(reg_idx));
-    return result.data.at(0);
-}
-
-void
-CortexA76TC::setIntReg(RegIndex reg_idx, uint64_t val)
-{
-    ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
-
-    iris::ResourceWriteResult result;
-    if (cpsr.width)
-        call().resource_write(_instId, result, intReg32Ids.at(reg_idx), val);
-    else
-        call().resource_write(_instId, result, intReg64Ids.at(reg_idx), val);
-}
-
-const ArmISA::VecRegContainer &
-CortexA76TC::readVecReg(const RegId &reg_id) const
-{
-    const RegIndex idx = reg_id.index();
-    // Ignore accesses to registers which aren't architected. gem5 defines a
-    // few extra registers which it uses internally in the implementation of
-    // some instructions.
-    if (idx >= vecRegIds.size())
-        return vecRegs.at(idx);
-    ArmISA::VecRegContainer &reg = vecRegs.at(idx);
-
-    iris::ResourceReadResult result;
-    call().resource_read(_instId, result, vecRegIds.at(idx));
-    size_t data_size = result.data.size() * (sizeof(*result.data.data()));
-    size_t size = std::min(data_size, reg.SIZE);
-    memcpy(reg.raw_ptr<void>(), (void *)result.data.data(), size);
-
-    return reg;
-}
-
-const ArmISA::VecRegContainer &
-CortexA76TC::readVecRegFlat(RegIndex idx) const
-{
-    return readVecReg(RegId(VecRegClass, idx));
 }
 
 Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({

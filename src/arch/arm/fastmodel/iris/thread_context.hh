@@ -63,9 +63,13 @@ class ThreadContext : public ::ThreadContext
     ::BaseTLB *_itb;
 
     std::string _irisPath;
-    iris::InstanceId _instId;
+    iris::InstanceId _instId = iris::IRIS_UINT64_MAX;
 
-    Status _status;
+    // Temporary holding places for the vector reg accessors to return.
+    // These are not updated live, only when requested.
+    mutable std::vector<ArmISA::VecRegContainer> vecRegs;
+
+    Status _status = Active;
 
     virtual void initFromIrisInstance(const ResourceMap &resources);
 
@@ -76,7 +80,13 @@ class ThreadContext : public ::ThreadContext
 
 
     ResourceIds miscRegIds;
-    ResourceIds intRegIds;
+    ResourceIds intReg32Ids;
+    ResourceIds intReg64Ids;
+
+    iris::ResourceId pcRscId = iris::IRIS_UINT64_MAX;
+    iris::ResourceId icountRscId;
+
+    ResourceIds vecRegIds;
 
     std::vector<iris::MemorySpaceInfo> memorySpaces;
     std::vector<iris::MemorySupportedAddressTranslationResult> translations;
@@ -188,13 +198,19 @@ class ThreadContext : public ::ThreadContext
     {
         panic("%s not implemented.", __FUNCTION__);
     }
-    TheISA::Decoder *
+    ArmISA::Decoder *
     getDecoderPtr() override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
     System *getSystemPtr() override { return _cpu->system; }
+
+    ArmISA::ISA *
+    getIsaPtr() override
+    {
+        panic("%s not implemented.", __FUNCTION__);
+    }
 
     Kernel::Statistics *
     getKernelStats() override
@@ -289,11 +305,7 @@ class ThreadContext : public ::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const VecRegContainer &
-    readVecReg(const RegId &reg) const override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
+    const VecRegContainer &readVecReg(const RegId &reg) const override;
     VecRegContainer &
     getWritableVecReg(const RegId &reg) override
     {
@@ -412,8 +424,13 @@ class ThreadContext : public ::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    void pcStateNoRecord(const TheISA::PCState &val) override { pcState(val); }
+    void pcStateNoRecord(const ArmISA::PCState &val) override { pcState(val); }
     MicroPC microPC() const override { return 0; }
+
+    ArmISA::PCState pcState() const override;
+    void pcState(const ArmISA::PCState &val) override;
+    Addr instAddr() const override;
+    Addr nextInstAddr() const override;
 
     RegVal readMiscRegNoEffect(RegIndex misc_reg) const override;
     RegVal
@@ -496,11 +513,7 @@ class ThreadContext : public ::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const VecRegContainer &
-    readVecRegFlat(RegIndex idx) const override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
+    const VecRegContainer &readVecRegFlat(RegIndex idx) const override;
     VecRegContainer &
     getWritableVecRegFlat(RegIndex idx) override
     {
