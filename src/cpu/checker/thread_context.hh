@@ -102,7 +102,11 @@ class CheckerThreadContext : public ThreadContext
     {
         actualTC->descheduleInstCountEvent(event);
     }
-    Tick getCurrentInstCount() override { return getCurrentInstCount(); }
+    Tick
+    getCurrentInstCount() override
+    {
+        return actualTC->getCurrentInstCount();
+    }
 
     BaseCPU *getCpuPtr() override { return actualTC->getCpuPtr(); }
 
