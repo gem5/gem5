@@ -37,8 +37,7 @@
 #ifndef PAYLOAD_EVENT_H_
 #define PAYLOAD_EVENT_H_
 
-// TLM includes
-#include <tlm.h>
+#include "systemc/ext/core/sc_main.hh"
 
 // gem5 includes
 #include <sim/eventq.hh>
