@@ -30,6 +30,4 @@ Import('*')
 if not env['USE_ARM_FASTMODEL'] or env['TARGET_ISA'] != 'arm':
     Return()
 
-SimObject('IrisArch.py')
-
 Source('thread_context.cc')

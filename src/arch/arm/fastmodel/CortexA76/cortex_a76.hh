@@ -31,7 +31,8 @@
 #define __ARCH_ARM_FASTMODEL_CORTEXA76_CORETEX_A76_HH__
 
 #include "arch/arm/fastmodel/amba_ports.hh"
-#include "arch/arm/fastmodel/arm/cpu.hh"
+#include "arch/arm/fastmodel/iris/arm/thread_context.hh"
+#include "arch/arm/fastmodel/iris/cpu.hh"
 #include "params/FastModelCortexA76.hh"
 #include "params/FastModelCortexA76Cluster.hh"
 #include "scx/scx.h"
@@ -50,10 +51,11 @@ namespace FastModel
 // the work.
 class CortexA76Cluster;
 
-class CortexA76 : public ArmCPU
+class CortexA76 : public Iris::CPU<Iris::ArmThreadContext>
 {
   protected:
     typedef FastModelCortexA76Params Params;
+    typedef Iris::CPU<Iris::ArmThreadContext> Base;
     const Params &_params;
 
     CortexA76Cluster *cluster = nullptr;
@@ -62,7 +64,24 @@ class CortexA76 : public ArmCPU
     const Params &params() { return _params; }
 
   public:
-    CortexA76(Params &p) : ArmCPU(&p), _params(p) {}
+    CortexA76(Params &p) : Base(&p, scx::scx_get_iris_connection_interface()),
+        _params(p)
+    {}
+
+    void
+    clockPeriodUpdated() override
+    {
+        Base::clockPeriodUpdated();
+
+        // FIXME(b/139447397): this is a workaround since CNTFRQ_EL0 should not
+        // be modified after clock is changed in real hardwares. Remove or
+        // modify this after a more reasonable solution is found.
+        for (auto *tc : threadContexts) {
+            tc->setMiscRegNoEffect(ArmISA::MISCREG_CNTFRQ_EL0, frequency());
+        }
+    }
+
+    void initState() override;
 
     template <class T>
     void set_evs_param(const std::string &n, T val);

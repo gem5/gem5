@@ -32,17 +32,17 @@ from m5.SimObject import SimObject
 from m5.objects.ArmInterrupts import ArmInterrupts
 from m5.objects.ArmISA import ArmISA
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
-from m5.objects.FastModelArch import FastModelArmCPU
 from m5.objects.FastModelGIC import Gicv3CommsTargetSocket
 from m5.objects.Gic import ArmPPI
+from m5.objects.Iris import IrisBaseCPU
 from m5.objects.SystemC import SystemC_ScModule
 
-class FastModelCortexA76(FastModelArmCPU):
+class FastModelCortexA76(IrisBaseCPU):
     type = 'FastModelCortexA76'
     cxx_class = 'FastModel::CortexA76'
     cxx_header = 'arch/arm/fastmodel/CortexA76/cortex_a76.hh'
 
-    cntfrq = 0x1800000
+    cntfrq = Param.UInt64(0x1800000, "Value for the CNTFRQ timer register")
 
     # We shouldn't need these, but gem5 gets mad without them.
     interrupts = [ ArmInterrupts() ]

@@ -29,7 +29,6 @@
 
 #include "arch/arm/fastmodel/CortexA76/cortex_a76.hh"
 
-#include "arch/arm/fastmodel/arm/cpu.hh"
 #include "arch/arm/fastmodel/iris/cpu.hh"
 #include "base/logging.hh"
 #include "dev/arm/base_gic.hh"
@@ -38,6 +37,13 @@
 
 namespace FastModel
 {
+
+void
+CortexA76::initState()
+{
+    for (auto *tc : threadContexts)
+        tc->setMiscRegNoEffect(ArmISA::MISCREG_CNTFRQ_EL0, params().cntfrq);
+}
 
 void
 CortexA76::setCluster(CortexA76Cluster *_cluster, int _num)
@@ -91,7 +97,7 @@ CortexA76::getPort(const std::string &if_name, PortID idx)
     if (if_name == "redistributor")
         return cluster->getEvs()->gem5_getPort(if_name, num);
     else
-        return ArmCPU::getPort(if_name, idx);
+        return Base::getPort(if_name, idx);
 }
 
 CortexA76Cluster::CortexA76Cluster(Params &p) :

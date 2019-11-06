@@ -30,7 +30,7 @@
 #include "arch/arm/fastmodel/CortexA76/evs.hh"
 
 #include "arch/arm/fastmodel/CortexA76/cortex_a76.hh"
-#include "arch/arm/fastmodel/arm/cpu.hh"
+#include "arch/arm/fastmodel/iris/cpu.hh"
 #include "base/logging.hh"
 #include "dev/arm/base_gic.hh"
 #include "sim/core.hh"
