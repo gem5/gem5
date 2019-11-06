@@ -68,6 +68,7 @@ class ThreadContext : public ::ThreadContext
     // Temporary holding places for the vector reg accessors to return.
     // These are not updated live, only when requested.
     mutable std::vector<ArmISA::VecRegContainer> vecRegs;
+    mutable std::vector<ArmISA::VecPredRegContainer> vecPredRegs;
 
     Status _status = Active;
 
@@ -87,6 +88,7 @@ class ThreadContext : public ::ThreadContext
     iris::ResourceId icountRscId;
 
     ResourceIds vecRegIds;
+    ResourceIds vecPredRegIds;
 
     std::vector<iris::MemorySpaceInfo> memorySpaces;
     std::vector<iris::MemorySupportedAddressTranslationResult> translations;
@@ -374,11 +376,7 @@ class ThreadContext : public ::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const VecPredRegContainer &
-    readVecPredReg(const RegId &reg) const override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
+    const VecPredRegContainer &readVecPredReg(const RegId &reg) const override;
     VecPredRegContainer &
     getWritableVecPredReg(const RegId &reg) override
     {
@@ -537,11 +535,7 @@ class ThreadContext : public ::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const VecPredRegContainer &
-    readVecPredRegFlat(RegIndex idx) const override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
+    const VecPredRegContainer &readVecPredRegFlat(RegIndex idx) const override;
     VecPredRegContainer &
     getWritableVecPredRegFlat(RegIndex idx) override
     {

@@ -244,7 +244,8 @@ ThreadContext::ThreadContext(
         BaseCPU *cpu, int id, System *system, ::BaseTLB *dtb, ::BaseTLB *itb,
         iris::IrisConnectionInterface *iris_if, const std::string &iris_path) :
     _cpu(cpu), _threadId(id), _system(system), _dtb(dtb), _itb(itb),
-    _irisPath(iris_path), vecRegs(TheISA::NumVecRegs),
+    _irisPath(iris_path), vecRegs(ArmISA::NumVecRegs),
+    vecPredRegs(ArmISA::NumVecPredRegs),
     comInstEventQueue("instruction-based event queue"),
     client(iris_if, "client." + iris_path)
 {
@@ -543,6 +544,39 @@ const ArmISA::VecRegContainer &
 ThreadContext::readVecRegFlat(RegIndex idx) const
 {
     return readVecReg(RegId(VecRegClass, idx));
+}
+
+const ArmISA::VecPredRegContainer &
+ThreadContext::readVecPredReg(const RegId &reg_id) const
+{
+    RegIndex idx = reg_id.index();
+    if (idx >= vecPredRegIds.size())
+        return vecPredRegs.at(idx);
+
+    ArmISA::VecPredRegContainer &reg = vecPredRegs.at(idx);
+
+    iris::ResourceReadResult result;
+    call().resource_read(_instId, result, vecPredRegIds.at(idx));
+
+    size_t offset = 0;
+    size_t num_bits = reg.NUM_BITS;
+    uint8_t *bytes = (uint8_t *)result.data.data();
+    while (num_bits > 8) {
+        reg.set_bits(offset, 8, *bytes);
+        offset += 8;
+        num_bits -= 8;
+        bytes++;
+    }
+    if (num_bits)
+        reg.set_bits(offset, num_bits, *bytes);
+
+    return reg;
+}
+
+const ArmISA::VecPredRegContainer &
+ThreadContext::readVecPredRegFlat(RegIndex idx) const
+{
+    return readVecPredReg(RegId(VecPredRegClass, idx));
 }
 
 } // namespace Iris
