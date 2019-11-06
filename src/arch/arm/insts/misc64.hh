@@ -133,13 +133,16 @@ class MiscRegOp64 : public ArmStaticInst
                ExceptionLevel el, uint32_t immediate) const;
   private:
     bool checkEL1Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
-                      ExceptionLevel el) const;
+                      ExceptionLevel el, ExceptionClass &ec,
+                      uint32_t &immediate) const;
 
     bool checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
-                      ExceptionLevel el, bool *is_vfp_neon) const;
+                      ExceptionLevel el, ExceptionClass &ec,
+                      uint32_t &immediate) const;
 
     bool checkEL3Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
-                      ExceptionLevel el, bool *is_vfp_neon) const;
+                      ExceptionLevel el, ExceptionClass &ec,
+                      uint32_t &immediate) const;
 
 };
 

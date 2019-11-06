@@ -87,32 +87,23 @@ Fault
 MiscRegOp64::trap(ThreadContext *tc, MiscRegIndex misc_reg,
                   ExceptionLevel el, uint32_t immediate) const
 {
-    bool is_vfp_neon = false;
+    ExceptionClass ec = EC_TRAPPED_MSR_MRS_64;
 
     // Check for traps to supervisor (FP/SIMD regs)
-    if (el <= EL1 && checkEL1Trap(tc, misc_reg, el)) {
-
-        return std::make_shared<SupervisorTrap>(machInst, 0x1E00000,
-                                                EC_TRAPPED_SIMD_FP);
+    if (el <= EL1 && checkEL1Trap(tc, misc_reg, el, ec, immediate)) {
+        return std::make_shared<SupervisorTrap>(machInst, immediate, ec);
     }
 
     // Check for traps to hypervisor
     if ((ArmSystem::haveVirtualization(tc) && el <= EL2) &&
-        checkEL2Trap(tc, misc_reg, el, &is_vfp_neon)) {
-
-        return std::make_shared<HypervisorTrap>(
-            machInst, is_vfp_neon ? 0x1E00000 : immediate,
-            is_vfp_neon ? EC_TRAPPED_SIMD_FP : EC_TRAPPED_MSR_MRS_64);
+        checkEL2Trap(tc, misc_reg, el, ec, immediate)) {
+        return std::make_shared<HypervisorTrap>(machInst, immediate, ec);
     }
 
     // Check for traps to secure monitor
     if ((ArmSystem::haveSecurity(tc) && el <= EL3) &&
-        checkEL3Trap(tc, misc_reg, el, &is_vfp_neon)) {
-
-        return std::make_shared<SecureMonitorTrap>(
-            machInst,
-            is_vfp_neon ? 0x1E00000 : immediate,
-            is_vfp_neon ? EC_TRAPPED_SIMD_FP : EC_TRAPPED_MSR_MRS_64);
+        checkEL3Trap(tc, misc_reg, el, ec, immediate)) {
+        return std::make_shared<SecureMonitorTrap>(machInst, immediate, ec);
     }
 
     return NoFault;
@@ -120,7 +111,8 @@ MiscRegOp64::trap(ThreadContext *tc, MiscRegIndex misc_reg,
 
 bool
 MiscRegOp64::checkEL1Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
-                          ExceptionLevel el) const
+                          ExceptionLevel el, ExceptionClass &ec,
+                          uint32_t &immediate) const
 {
     const CPACR cpacr = tc->readMiscReg(MISCREG_CPACR_EL1);
 
@@ -130,8 +122,11 @@ MiscRegOp64::checkEL1Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
       case MISCREG_FPSR:
       case MISCREG_FPEXC32_EL2:
         if ((el == EL0 && cpacr.fpen != 0x3) ||
-            (el == EL1 && !(cpacr.fpen & 0x1)))
+            (el == EL1 && !(cpacr.fpen & 0x1))) {
             trap_to_sup = true;
+            ec = EC_TRAPPED_SIMD_FP;
+            immediate = 0x1E00000;
+        }
         break;
       default:
         break;
@@ -141,7 +136,8 @@ MiscRegOp64::checkEL1Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
 
 bool
 MiscRegOp64::checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
-                          ExceptionLevel el, bool * is_vfp_neon) const
+                          ExceptionLevel el, ExceptionClass &ec,
+                          uint32_t &immediate) const
 {
     const CPTR cptr = tc->readMiscReg(MISCREG_CPTR_EL2);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
@@ -149,7 +145,6 @@ MiscRegOp64::checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
     const CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
 
     bool trap_to_hyp = false;
-    *is_vfp_neon = false;
 
     if (!inSecureState(scr, cpsr) && (el != EL2)) {
         switch (misc_reg) {
@@ -158,7 +153,8 @@ MiscRegOp64::checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
           case MISCREG_FPSR:
           case MISCREG_FPEXC32_EL2:
             trap_to_hyp = cptr.tfp;
-            *is_vfp_neon = true;
+            ec = EC_TRAPPED_SIMD_FP;
+            immediate = 0x1E00000;
             break;
           // CPACR
           case MISCREG_CPACR_EL1:
@@ -290,12 +286,12 @@ MiscRegOp64::checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
 
 bool
 MiscRegOp64::checkEL3Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
-                          ExceptionLevel el, bool * is_vfp_neon) const
+                          ExceptionLevel el, ExceptionClass &ec,
+                          uint32_t &immediate) const
 {
     const CPTR cptr = tc->readMiscReg(MISCREG_CPTR_EL3);
 
     bool trap_to_mon = false;
-    *is_vfp_neon = false;
 
     switch (misc_reg) {
       // FP/SIMD regs
@@ -303,7 +299,8 @@ MiscRegOp64::checkEL3Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
       case MISCREG_FPSR:
       case MISCREG_FPEXC32_EL2:
         trap_to_mon = cptr.tfp;
-        *is_vfp_neon = true;
+        ec = EC_TRAPPED_SIMD_FP;
+        immediate = 0x1E00000;
         break;
       // CPACR, CPTR
       case MISCREG_CPACR_EL1:
