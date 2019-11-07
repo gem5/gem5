@@ -104,7 +104,7 @@ DictionaryCompressor<T>::compressValue(const T data)
     }
 
     // Update stats
-    patternStats[pattern->getPatternNumber()]++;
+    dictionaryStats.patterns[pattern->getPatternNumber()]++;
 
     // Push into dictionary
     if (pattern->shouldAllocate()) {

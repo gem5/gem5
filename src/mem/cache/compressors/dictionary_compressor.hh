@@ -51,6 +51,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "base/statistics.hh"
 #include "base/types.hh"
 #include "mem/cache/compressors/base.hh"
 
@@ -67,17 +68,18 @@ class BaseDictionaryCompressor : public Base
     /** Number of valid entries in the dictionary. */
     std::size_t numEntries;
 
-    /**
-     * @defgroup CompressionStats Compression specific statistics.
-     * @{
-     */
+    struct DictionaryStats : public Stats::Group
+    {
+        const BaseDictionaryCompressor& compressor;
 
-    /** Number of data entries that were compressed to each pattern. */
-    Stats::Vector patternStats;
+        DictionaryStats(BaseStats &base_group,
+            BaseDictionaryCompressor& _compressor);
 
-    /**
-     * @}
-     */
+        void regStats() override;
+
+        /** Number of data entries that were compressed to each pattern. */
+        Stats::Vector patterns;
+    } dictionaryStats;
 
     /**
      * Trick function to get the number of patterns.
@@ -98,8 +100,6 @@ class BaseDictionaryCompressor : public Base
     typedef BaseDictionaryCompressorParams Params;
     BaseDictionaryCompressor(const Params *p);
     ~BaseDictionaryCompressor() = default;
-
-    void regStats() override;
 };
 
 /**
