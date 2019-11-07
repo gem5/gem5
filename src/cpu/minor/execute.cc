@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014,2018 ARM Limited
+ * Copyright (c) 2013-2014,2018-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -498,12 +498,15 @@ Execute::executeMemRefInst(MinorDynInstPtr inst, BranchData &branch,
             if (inst->traceData)
                 inst->traceData->setPredicate(passed_predicate);
 
-            /* If the instruction didn't pass its predicate (and so will not
-             *  progress from here)  Try to branch to correct and branch
-             *  mis-prediction. */
-            if (!passed_predicate) {
+            /* If the instruction didn't pass its predicate
+             * or it is a predicated vector instruction and the
+             * associated predicate register is all-false (and so will not
+             * progress from here)  Try to branch to correct and branch
+             * mis-prediction. */
+            if (!inst->inLSQ) {
                 /* Leave it up to commit to handle the fault */
                 lsq.pushFailedRequest(inst);
+                inst->inLSQ = true;
             }
         }
 
