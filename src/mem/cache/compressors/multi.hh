@@ -37,6 +37,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "base/statistics.hh"
 #include "base/types.hh"
 #include "mem/cache/compressors/base.hh"
 
@@ -57,24 +58,24 @@ class Multi : public Base
     /** List of sub-compressors. */
     std::vector<Base*> compressors;
 
-    /**
-     * @defgroup CompressionStats Compression specific statistics.
-     * @{
-     */
+    struct MultiStats : public Stats::Group
+    {
+        const Multi& compressor;
 
-    /** Number of times each compressor provided the nth best compression. */
-    Stats::Vector2d rankStats;
+        MultiStats(BaseStats &base_group, Multi& _compressor);
 
-    /**
-     * @}
-     */
+        void regStats() override;
+
+        /**
+         * Number of times each compressor provided the nth best compression.
+         */
+        Stats::Vector2d ranks;
+    } multiStats;
 
   public:
     typedef MultiCompressorParams Params;
     Multi(const Params *p);
     ~Multi();
-
-    void regStats() override;
 
     std::unique_ptr<Base::CompressionData> compress(
         const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat) override;

@@ -37,6 +37,7 @@
 #include <queue>
 
 #include "base/bitfield.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/CacheComp.hh"
 #include "params/MultiCompressor.hh"
@@ -57,7 +58,8 @@ Multi::MultiCompData::getIndex() const
 }
 
 Multi::Multi(const Params *p)
-    : Base(p), compressors(p->compressors)
+  : Base(p), compressors(p->compressors),
+    multiStats(stats, *this)
 {
     fatal_if(compressors.size() == 0, "There must be at least one compressor");
 }
@@ -137,7 +139,7 @@ Multi::compress(const uint64_t* cache_line, Cycles& comp_lat,
 
     // Update compressor ranking stats
     for (int rank = 0; rank < compressors.size(); rank++) {
-        rankStats[results.top()->index][rank]++;
+        multiStats.ranks[results.top()->index][rank]++;
         results.pop();
     }
 
@@ -158,23 +160,26 @@ Multi::decompress(const CompressionData* comp_data,
         casted_comp_data->compData.get(), cache_line);
 }
 
-void
-Multi::regStats()
+Multi::MultiStats::MultiStats(BaseStats& base_group, Multi& _compressor)
+  : Stats::Group(&base_group), compressor(_compressor),
+    ranks(this, "ranks",
+        "Number of times each compressor had the nth best compression")
 {
-    Base::regStats();
+}
 
-    rankStats
-        .init(compressors.size(), compressors.size())
-        .name(name() + ".rank")
-        .desc("Number of times each compressor had the nth best compression.")
-        ;
+void
+Multi::MultiStats::regStats()
+{
+    Stats::Group::regStats();
 
-    for (int compressor = 0; compressor < compressors.size(); compressor++) {
-        rankStats.subname(compressor, std::to_string(compressor));
-        rankStats.subdesc(compressor, "Number of times compressor " +
+    const std::size_t num_compressors = compressor.compressors.size();
+    ranks.init(num_compressors, num_compressors);
+    for (unsigned compressor = 0; compressor < num_compressors; compressor++) {
+        ranks.subname(compressor, std::to_string(compressor));
+        ranks.subdesc(compressor, "Number of times compressor " +
             std::to_string(compressor) + " had the nth best compression.");
-        for (unsigned rank = 0; rank < compressors.size(); rank++) {
-            rankStats.ysubname(rank, std::to_string(rank));
+        for (unsigned rank = 0; rank < num_compressors; rank++) {
+            ranks.ysubname(rank, std::to_string(rank));
         }
     }
 }
