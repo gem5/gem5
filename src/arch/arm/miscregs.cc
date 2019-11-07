@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015-2019 ARM Limited
+ * Copyright (c) 2010-2013, 2015-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1117,7 +1117,8 @@ unflattenMiscReg(int reg)
 }
 
 bool
-canReadAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
+canReadAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
+                     ThreadContext *tc)
 {
     // Check for SP_EL0 access while SPSEL == 0
     if ((reg == MISCREG_SP_EL0) && (tc->readMiscReg(MISCREG_SPSEL) == 0))
@@ -1136,6 +1137,7 @@ canReadAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
     }
 
     bool secure = ArmSystem::haveSecurity(tc) && !scr.ns;
+    bool el2_host = EL2Enabled(tc) && hcr.e2h;
 
     switch (currEL(cpsr)) {
       case EL0:
@@ -1145,9 +1147,11 @@ canReadAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
         return secure ? miscRegInfo[reg][MISCREG_PRI_S_RD] :
             miscRegInfo[reg][MISCREG_PRI_NS_RD];
       case EL2:
-        return miscRegInfo[reg][MISCREG_HYP_RD];
+        return el2_host ? miscRegInfo[reg][MISCREG_HYP_E2H_RD] :
+            miscRegInfo[reg][MISCREG_HYP_RD];
       case EL3:
-        return secure ? miscRegInfo[reg][MISCREG_MON_NS0_RD] :
+        return el2_host ? miscRegInfo[reg][MISCREG_MON_E2H_RD] :
+            secure ? miscRegInfo[reg][MISCREG_MON_NS0_RD] :
             miscRegInfo[reg][MISCREG_MON_NS1_RD];
       default:
         panic("Invalid exception level");
@@ -1155,7 +1159,8 @@ canReadAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
 }
 
 bool
-canWriteAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
+canWriteAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
+                      ThreadContext *tc)
 {
     // Check for SP_EL0 access while SPSEL == 0
     if ((reg == MISCREG_SP_EL0) && (tc->readMiscReg(MISCREG_SPSEL) == 0))
@@ -1180,6 +1185,7 @@ canWriteAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
     }
 
     bool secure = ArmSystem::haveSecurity(tc) && !scr.ns;
+    bool el2_host = EL2Enabled(tc) && hcr.e2h;
 
     switch (el) {
       case EL0:
@@ -1189,9 +1195,11 @@ canWriteAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
         return secure ? miscRegInfo[reg][MISCREG_PRI_S_WR] :
             miscRegInfo[reg][MISCREG_PRI_NS_WR];
       case EL2:
-        return miscRegInfo[reg][MISCREG_HYP_WR];
+        return el2_host ? miscRegInfo[reg][MISCREG_HYP_E2H_WR] :
+            miscRegInfo[reg][MISCREG_HYP_WR];
       case EL3:
-        return secure ? miscRegInfo[reg][MISCREG_MON_NS0_WR] :
+        return el2_host ? miscRegInfo[reg][MISCREG_MON_E2H_WR] :
+            secure ? miscRegInfo[reg][MISCREG_MON_NS0_WR] :
             miscRegInfo[reg][MISCREG_MON_NS1_WR];
       default:
         panic("Invalid exception level");

@@ -250,11 +250,26 @@ namespace ArmISA
                 privNonSecureRead(v);
                 return *this;
             }
+            chain hypE2HRead(bool v = true) const {
+                info[MISCREG_HYP_E2H_RD] = v;
+                return *this;
+            }
+            chain hypE2HWrite(bool v = true) const {
+                info[MISCREG_HYP_E2H_WR] = v;
+                return *this;
+            }
+            chain hypE2H(bool v = true) const {
+                hypE2HRead(v);
+                hypE2HWrite(v);
+                return *this;
+            }
             chain hypRead(bool v = true) const {
+                hypE2HRead(v);
                 info[MISCREG_HYP_RD] = v;
                 return *this;
             }
             chain hypWrite(bool v = true) const {
+                hypE2HWrite(v);
                 info[MISCREG_HYP_WR] = v;
                 return *this;
             }
@@ -263,19 +278,36 @@ namespace ArmISA
                 hypWrite(v);
                 return *this;
             }
+            chain monE2HRead(bool v = true) const {
+                info[MISCREG_MON_E2H_RD] = v;
+                return *this;
+            }
+            chain monE2HWrite(bool v = true) const {
+                info[MISCREG_MON_E2H_WR] = v;
+                return *this;
+            }
+            chain monE2H(bool v = true) const {
+                monE2HRead(v);
+                monE2HWrite(v);
+                return *this;
+            }
             chain monSecureRead(bool v = true) const {
+                monE2HRead(v);
                 info[MISCREG_MON_NS0_RD] = v;
                 return *this;
             }
             chain monSecureWrite(bool v = true) const {
+                monE2HWrite(v);
                 info[MISCREG_MON_NS0_WR] = v;
                 return *this;
             }
             chain monNonSecureRead(bool v = true) const {
+                monE2HRead(v);
                 info[MISCREG_MON_NS1_RD] = v;
                 return *this;
             }
             chain monNonSecureWrite(bool v = true) const {
+                monE2HWrite(v);
                 info[MISCREG_MON_NS1_WR] = v;
                 return *this;
             }

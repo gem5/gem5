@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 ARM Limited
+ * Copyright (c) 2010-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -971,12 +971,18 @@ namespace ArmISA
         // Hypervisor mode
         MISCREG_HYP_RD,
         MISCREG_HYP_WR,
+        // Hypervisor mode, HCR_EL2.E2H == 1
+        MISCREG_HYP_E2H_RD,
+        MISCREG_HYP_E2H_WR,
         // Monitor mode, SCR.NS == 0
         MISCREG_MON_NS0_RD,
         MISCREG_MON_NS0_WR,
         // Monitor mode, SCR.NS == 1
         MISCREG_MON_NS1_RD,
         MISCREG_MON_NS1_WR,
+        // Monitor mode, HCR_EL2.E2H == 1
+        MISCREG_MON_E2H_RD,
+        MISCREG_MON_E2H_WR,
 
         NUM_MISCREG_INFOS
     };
@@ -1927,11 +1933,11 @@ namespace ArmISA
                                              CPSR cpsr);
 
     // Checks read access permissions to AArch64 system registers
-    bool canReadAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr,
+    bool canReadAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
                               ThreadContext *tc);
 
     // Checks write access permissions to AArch64 system registers
-    bool canWriteAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr,
+    bool canWriteAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
                                ThreadContext *tc);
 
     // Uses just the scr.ns bit to pre flatten the misc regs. This is useful
