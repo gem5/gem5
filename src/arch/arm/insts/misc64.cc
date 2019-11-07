@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2017-2019 ARM Limited
+ * Copyright (c) 2011-2013,2017-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -124,6 +124,11 @@ MiscRegOp64::checkEL1Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
             ec = EC_TRAPPED_SIMD_FP;
             immediate = 0x1E00000;
         }
+        break;
+      // Generic Timer
+      case MISCREG_CNTFRQ_EL0 ... MISCREG_CNTVOFF_EL2:
+        trap_to_sup = el == EL0 &&
+                      isGenericTimerSystemAccessTrapEL1(misc_reg, tc);
         break;
       default:
         break;
@@ -292,6 +297,11 @@ MiscRegOp64::checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
                     trap_to_hyp = hcr.imo && el == EL1;
             }
             break;
+          // Generic Timer
+          case MISCREG_CNTFRQ_EL0 ... MISCREG_CNTVOFF_EL2:
+            trap_to_hyp = el <= EL1 &&
+                          isGenericTimerSystemAccessTrapEL2(misc_reg, tc);
+            break;
           default:
             break;
         }
@@ -339,6 +349,11 @@ MiscRegOp64::checkEL3Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
       case MISCREG_APIBKeyHi_EL1:
       case MISCREG_APIBKeyLo_EL1:
         trap_to_mon = (el==EL1 || el==EL2) && scr.apk==0 && ELIs64(tc, EL3);
+        break;
+      // Generic Timer
+      case MISCREG_CNTFRQ_EL0 ... MISCREG_CNTVOFF_EL2:
+        trap_to_mon = el == EL1 &&
+                      isGenericTimerSystemAccessTrapEL3(misc_reg, tc);
         break;
       default:
         break;

@@ -46,6 +46,7 @@
 
 #include "arch/arm/miscregs_types.hh"
 #include "base/compiler.hh"
+#include "dev/arm/generic_timer_miscregs_types.hh"
 
 class ThreadContext;
 
@@ -343,19 +344,29 @@ namespace ArmISA
         MISCREG_TPIDRPRW_NS,
         MISCREG_TPIDRPRW_S,
         MISCREG_HTPIDR,
+        // BEGIN Generic Timer (AArch32)
         MISCREG_CNTFRQ,
-        MISCREG_CNTKCTL,
-        MISCREG_CNTP_TVAL,
-        MISCREG_CNTP_TVAL_NS,
-        MISCREG_CNTP_TVAL_S,
+        MISCREG_CNTPCT,
+        MISCREG_CNTVCT,
         MISCREG_CNTP_CTL,
         MISCREG_CNTP_CTL_NS,
         MISCREG_CNTP_CTL_S,
-        MISCREG_CNTV_TVAL,
+        MISCREG_CNTP_CVAL,
+        MISCREG_CNTP_CVAL_NS,
+        MISCREG_CNTP_CVAL_S,
+        MISCREG_CNTP_TVAL,
+        MISCREG_CNTP_TVAL_NS,
+        MISCREG_CNTP_TVAL_S,
         MISCREG_CNTV_CTL,
+        MISCREG_CNTV_CVAL,
+        MISCREG_CNTV_TVAL,
+        MISCREG_CNTKCTL,
         MISCREG_CNTHCTL,
-        MISCREG_CNTHP_TVAL,
         MISCREG_CNTHP_CTL,
+        MISCREG_CNTHP_CVAL,
+        MISCREG_CNTHP_TVAL,
+        MISCREG_CNTVOFF,
+        // END Generic Timer (AArch32)
         MISCREG_IL1DATA0,
         MISCREG_IL1DATA1,
         MISCREG_IL1DATA2,
@@ -370,14 +381,6 @@ namespace ArmISA
         MISCREG_CBAR,
         MISCREG_HTTBR,
         MISCREG_VTTBR,
-        MISCREG_CNTPCT,
-        MISCREG_CNTVCT,
-        MISCREG_CNTP_CVAL,
-        MISCREG_CNTP_CVAL_NS,
-        MISCREG_CNTP_CVAL_S,
-        MISCREG_CNTV_CVAL,
-        MISCREG_CNTVOFF,
-        MISCREG_CNTHP_CVAL,
         MISCREG_CPUMERRSR,
         MISCREG_L2MERRSR,
 
@@ -618,16 +621,38 @@ namespace ArmISA
         MISCREG_TPIDRRO_EL0,
         MISCREG_TPIDR_EL2,
         MISCREG_TPIDR_EL3,
-        MISCREG_CNTKCTL_EL1,
+        // BEGIN Generic Timer (AArch64)
         MISCREG_CNTFRQ_EL0,
         MISCREG_CNTPCT_EL0,
         MISCREG_CNTVCT_EL0,
-        MISCREG_CNTP_TVAL_EL0,
         MISCREG_CNTP_CTL_EL0,
         MISCREG_CNTP_CVAL_EL0,
-        MISCREG_CNTV_TVAL_EL0,
+        MISCREG_CNTP_TVAL_EL0,
         MISCREG_CNTV_CTL_EL0,
         MISCREG_CNTV_CVAL_EL0,
+        MISCREG_CNTV_TVAL_EL0,
+        MISCREG_CNTP_CTL_EL02,
+        MISCREG_CNTP_CVAL_EL02,
+        MISCREG_CNTP_TVAL_EL02,
+        MISCREG_CNTV_CTL_EL02,
+        MISCREG_CNTV_CVAL_EL02,
+        MISCREG_CNTV_TVAL_EL02,
+        MISCREG_CNTKCTL_EL1,
+        MISCREG_CNTKCTL_EL12,
+        MISCREG_CNTPS_CTL_EL1,
+        MISCREG_CNTPS_CVAL_EL1,
+        MISCREG_CNTPS_TVAL_EL1,
+        MISCREG_CNTHCTL_EL2,
+        MISCREG_CNTHP_CTL_EL2,
+        MISCREG_CNTHP_CVAL_EL2,
+        MISCREG_CNTHP_TVAL_EL2,
+        // IF Armv8.1-VHE
+        MISCREG_CNTHV_CTL_EL2,
+        MISCREG_CNTHV_CVAL_EL2,
+        MISCREG_CNTHV_TVAL_EL2,
+        // ENDIF Armv8.1-VHE
+        MISCREG_CNTVOFF_EL2,
+        // END Generic Timer (AArch64)
         MISCREG_PMEVCNTR0_EL0,
         MISCREG_PMEVCNTR1_EL0,
         MISCREG_PMEVCNTR2_EL0,
@@ -640,14 +665,6 @@ namespace ArmISA
         MISCREG_PMEVTYPER3_EL0,
         MISCREG_PMEVTYPER4_EL0,
         MISCREG_PMEVTYPER5_EL0,
-        MISCREG_CNTVOFF_EL2,
-        MISCREG_CNTHCTL_EL2,
-        MISCREG_CNTHP_TVAL_EL2,
-        MISCREG_CNTHP_CTL_EL2,
-        MISCREG_CNTHP_CVAL_EL2,
-        MISCREG_CNTPS_TVAL_EL1,
-        MISCREG_CNTPS_CTL_EL1,
-        MISCREG_CNTPS_CVAL_EL1,
         MISCREG_IL1DATA0_EL1,
         MISCREG_IL1DATA1_EL1,
         MISCREG_IL1DATA2_EL1,
@@ -667,9 +684,6 @@ namespace ArmISA
 
         // Introduced in ARMv8.1
         MISCREG_TTBR1_EL2,
-        MISCREG_CNTHV_CTL_EL2,
-        MISCREG_CNTHV_CVAL_EL2,
-        MISCREG_CNTHV_TVAL_EL2,
 
         MISCREG_ID_AA64MMFR2_EL1,
 
@@ -1308,18 +1322,26 @@ namespace ArmISA
         "tpidrprw_s",
         "htpidr",
         "cntfrq",
-        "cntkctl",
-        "cntp_tval",
-        "cntp_tval_ns",
-        "cntp_tval_s",
+        "cntpct",
+        "cntvct",
         "cntp_ctl",
         "cntp_ctl_ns",
         "cntp_ctl_s",
-        "cntv_tval",
+        "cntp_cval",
+        "cntp_cval_ns",
+        "cntp_cval_s",
+        "cntp_tval",
+        "cntp_tval_ns",
+        "cntp_tval_s",
         "cntv_ctl",
+        "cntv_cval",
+        "cntv_tval",
+        "cntkctl",
         "cnthctl",
-        "cnthp_tval",
         "cnthp_ctl",
+        "cnthp_cval",
+        "cnthp_tval",
+        "cntvoff",
         "il1data0",
         "il1data1",
         "il1data2",
@@ -1334,14 +1356,6 @@ namespace ArmISA
         "cbar",
         "httbr",
         "vttbr",
-        "cntpct",
-        "cntvct",
-        "cntp_cval",
-        "cntp_cval_ns",
-        "cntp_cval_s",
-        "cntv_cval",
-        "cntvoff",
-        "cnthp_cval",
         "cpumerrsr",
         "l2merrsr",
 
@@ -1582,16 +1596,34 @@ namespace ArmISA
         "tpidrro_el0",
         "tpidr_el2",
         "tpidr_el3",
-        "cntkctl_el1",
         "cntfrq_el0",
         "cntpct_el0",
         "cntvct_el0",
-        "cntp_tval_el0",
         "cntp_ctl_el0",
         "cntp_cval_el0",
-        "cntv_tval_el0",
+        "cntp_tval_el0",
         "cntv_ctl_el0",
         "cntv_cval_el0",
+        "cntv_tval_el0",
+        "cntp_ctl_el02",
+        "cntp_cval_el02",
+        "cntp_tval_el02",
+        "cntv_ctl_el02",
+        "cntv_cval_el02",
+        "cntv_tval_el02",
+        "cntkctl_el1",
+        "cntkctl_el12",
+        "cntps_ctl_el1",
+        "cntps_cval_el1",
+        "cntps_tval_el1",
+        "cnthctl_el2",
+        "cnthp_ctl_el2",
+        "cnthp_cval_el2",
+        "cnthp_tval_el2",
+        "cnthv_ctl_el2",
+        "cnthv_cval_el2",
+        "cnthv_tval_el2",
+        "cntvoff_el2",
         "pmevcntr0_el0",
         "pmevcntr1_el0",
         "pmevcntr2_el0",
@@ -1604,14 +1636,6 @@ namespace ArmISA
         "pmevtyper3_el0",
         "pmevtyper4_el0",
         "pmevtyper5_el0",
-        "cntvoff_el2",
-        "cnthctl_el2",
-        "cnthp_tval_el2",
-        "cnthp_ctl_el2",
-        "cnthp_cval_el2",
-        "cntps_tval_el1",
-        "cntps_ctl_el1",
-        "cntps_cval_el1",
         "il1data0_el1",
         "il1data1_el1",
         "il1data2_el1",
@@ -1630,9 +1654,6 @@ namespace ArmISA
         "contextidr_el2",
 
         "ttbr1_el2",
-        "cnthv_ctl_el2",
-        "cnthv_cval_el2",
-        "cnthv_tval_el2",
         "id_aa64mmfr2_el1",
 
         "apdakeyhi_el1",
@@ -1931,10 +1952,11 @@ namespace ArmISA
      * @param the misc reg indicating the coprocessor
      * @param the SCR
      * @param the CPSR
+     * @param the thread context on the core
      * @return a tuple of booleans: can_read, undefined
      */
     std::tuple<bool, bool> canReadCoprocReg(MiscRegIndex reg, SCR scr,
-                                           CPSR cpsr);
+                                            CPSR cpsr, ThreadContext *tc);
 
     /**
      * Check for permission to write coprocessor registers.
@@ -1947,10 +1969,15 @@ namespace ArmISA
      * @param the misc reg indicating the coprocessor
      * @param the SCR
      * @param the CPSR
+     * @param the thread context on the core
      * @return a tuple of booleans: can_write, undefined
      */
     std::tuple<bool, bool> canWriteCoprocReg(MiscRegIndex reg, SCR scr,
-                                             CPSR cpsr);
+                                             CPSR cpsr, ThreadContext *tc);
+
+    // Checks for UNDEFINED behaviours when accessing AArch32
+    // Generic Timer system registers
+    bool AArch32isUndefinedGenericTimer(MiscRegIndex reg, ThreadContext *tc);
 
     // Checks read access permissions to AArch64 system registers
     bool canReadAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,

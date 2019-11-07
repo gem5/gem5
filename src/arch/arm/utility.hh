@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016-2019 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -307,15 +307,80 @@ msrMrs64IssBuild(bool isRead, uint32_t op0, uint32_t op1, uint32_t crn,
         (op0 << 20);
 }
 
+Fault
+mcrMrc15Trap(const MiscRegIndex miscReg, ExtMachInst machInst,
+             ThreadContext *tc, uint32_t imm);
 bool
-mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc, uint32_t iss);
+mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc, uint32_t iss,
+                  ExceptionClass *ec = nullptr);
 
 bool
 mcrMrc14TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
                   HDCR hdcr, HSTR hstr, HCPTR hcptr, uint32_t iss);
+
+Fault
+mcrrMrrc15Trap(const MiscRegIndex miscReg, ExtMachInst machInst,
+               ThreadContext *tc, uint32_t imm);
 bool
-mcrrMrrc15TrapToHyp(const MiscRegIndex miscReg, CPSR cpsr, SCR scr, HSTR hstr,
-                    HCR hcr, uint32_t iss);
+mcrrMrrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc,
+                    uint32_t iss, ExceptionClass *ec = nullptr);
+
+Fault
+AArch64AArch32SystemAccessTrap(const MiscRegIndex miscReg,
+                               ExtMachInst machInst, ThreadContext *tc,
+                               uint32_t imm, ExceptionClass ec);
+bool
+isAArch64AArch32SystemAccessTrapEL1(const MiscRegIndex miscReg,
+                                    ThreadContext *tc);
+bool
+isAArch64AArch32SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                    ThreadContext *tc);
+bool
+isGenericTimerHypTrap(const MiscRegIndex miscReg, ThreadContext *tc,
+                      ExceptionClass *ec);
+bool condGenericTimerPhysHypTrap(const MiscRegIndex miscReg,
+                                 ThreadContext *tc);
+bool
+isGenericTimerCommonEL0HypTrap(const MiscRegIndex miscReg, ThreadContext *tc,
+                               ExceptionClass *ec);
+bool
+isGenericTimerPhysHypTrap(const MiscRegIndex miscReg, ThreadContext *tc,
+                          ExceptionClass *ec);
+bool
+condGenericTimerPhysHypTrap(const MiscRegIndex miscReg, ThreadContext *tc);
+bool
+isGenericTimerSystemAccessTrapEL1(const MiscRegIndex miscReg,
+                                  ThreadContext *tc);
+bool
+condGenericTimerSystemAccessTrapEL1(const MiscRegIndex miscReg,
+                                    ThreadContext *tc);
+bool
+isGenericTimerSystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                  ThreadContext *tc);
+bool
+isGenericTimerCommonEL0SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                           ThreadContext *tc);
+bool
+isGenericTimerPhysEL0SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                         ThreadContext *tc);
+bool
+isGenericTimerPhysEL1SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                         ThreadContext *tc);
+bool
+isGenericTimerVirtSystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                      ThreadContext *tc);
+bool
+condGenericTimerCommonEL0SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                             ThreadContext *tc);
+bool
+condGenericTimerCommonEL1SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                             ThreadContext *tc);
+bool
+condGenericTimerPhysEL1SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                           ThreadContext *tc);
+bool
+isGenericTimerSystemAccessTrapEL3(const MiscRegIndex miscReg,
+                                  ThreadContext *tc);
 
 bool SPAlignmentCheckEnabled(ThreadContext* tc);
 

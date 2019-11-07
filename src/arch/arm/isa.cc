@@ -749,13 +749,8 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
         return 0; // bits [63:0] RES0 (reserved for future use)
 
       // Generic Timer registers
-      case MISCREG_CNTHV_CTL_EL2:
-      case MISCREG_CNTHV_CVAL_EL2:
-      case MISCREG_CNTHV_TVAL_EL2:
-      case MISCREG_CNTFRQ ... MISCREG_CNTHP_CTL:
-      case MISCREG_CNTPCT ... MISCREG_CNTHP_CVAL:
-      case MISCREG_CNTKCTL_EL1 ... MISCREG_CNTV_CVAL_EL0:
-      case MISCREG_CNTVOFF_EL2 ... MISCREG_CNTPS_CVAL_EL1:
+      case MISCREG_CNTFRQ ... MISCREG_CNTVOFF:
+      case MISCREG_CNTFRQ_EL0 ... MISCREG_CNTVOFF_EL2:
         return getGenericTimer(tc).readMiscReg(misc_reg);
 
       case MISCREG_ICC_AP0R0 ... MISCREG_ICH_LRC15:
@@ -2085,13 +2080,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
             break;
 
           // Generic Timer registers
-          case MISCREG_CNTHV_CTL_EL2:
-          case MISCREG_CNTHV_CVAL_EL2:
-          case MISCREG_CNTHV_TVAL_EL2:
-          case MISCREG_CNTFRQ ... MISCREG_CNTHP_CTL:
-          case MISCREG_CNTPCT ... MISCREG_CNTHP_CVAL:
-          case MISCREG_CNTKCTL_EL1 ... MISCREG_CNTV_CVAL_EL0:
-          case MISCREG_CNTVOFF_EL2 ... MISCREG_CNTPS_CVAL_EL1:
+          case MISCREG_CNTFRQ ... MISCREG_CNTVOFF:
+          case MISCREG_CNTFRQ_EL0 ... MISCREG_CNTVOFF_EL2:
             getGenericTimer(tc).setMiscReg(misc_reg, newVal);
             break;
           case MISCREG_ICC_AP0R0 ... MISCREG_ICH_LRC15:

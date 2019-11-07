@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2014, 2016-2019 ARM Limited
+ * Copyright (c) 2009-2014, 2016-2020 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -511,8 +511,19 @@ roundPage(Addr addr)
     return (addr + PageBytes - 1) & ~(PageBytes - 1);
 }
 
+Fault
+mcrMrc15Trap(const MiscRegIndex miscReg, ExtMachInst machInst,
+             ThreadContext *tc, uint32_t imm)
+{
+    ExceptionClass ec = EC_TRAPPED_CP15_MCR_MRC;
+    if (mcrMrc15TrapToHyp(miscReg, tc, imm, &ec))
+        return std::make_shared<HypervisorTrap>(machInst, imm, ec);
+    return AArch64AArch32SystemAccessTrap(miscReg, machInst, tc, imm, ec);
+}
+
 bool
-mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc, uint32_t iss)
+mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc, uint32_t iss,
+                  ExceptionClass *ec)
 {
     bool        isRead;
     uint32_t    crm;
@@ -647,6 +658,14 @@ mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc, uint32_t iss)
                         trapToHype = hcr.imo;
                 }
                 break;
+              case MISCREG_CNTFRQ ... MISCREG_CNTV_TVAL:
+                // CNTFRQ may be trapped only on reads
+                // CNTPCT and CNTVCT are read-only
+                if (MISCREG_CNTFRQ <= miscReg && miscReg <= MISCREG_CNTVCT &&
+                    !isRead)
+                    break;
+                trapToHype = isGenericTimerHypTrap(miscReg, tc, ec);
+                break;
               // No default action needed
               default:
                 break;
@@ -707,9 +726,19 @@ mcrMrc14TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
     return trapToHype;
 }
 
+Fault
+mcrrMrrc15Trap(const MiscRegIndex miscReg, ExtMachInst machInst,
+               ThreadContext *tc, uint32_t imm)
+{
+    ExceptionClass ec = EC_TRAPPED_CP15_MCRR_MRRC;
+    if (mcrrMrrc15TrapToHyp(miscReg, tc, imm, &ec))
+        return std::make_shared<HypervisorTrap>(machInst, imm, ec);
+    return AArch64AArch32SystemAccessTrap(miscReg, machInst, tc, imm, ec);
+}
+
 bool
-mcrrMrrc15TrapToHyp(const MiscRegIndex miscReg, CPSR cpsr, SCR scr, HSTR hstr,
-                    HCR hcr, uint32_t iss)
+mcrrMrrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc,
+                    uint32_t iss, ExceptionClass *ec)
 {
     uint32_t    crm;
     IntRegIndex rt;
@@ -718,6 +747,11 @@ mcrrMrrc15TrapToHyp(const MiscRegIndex miscReg, CPSR cpsr, SCR scr, HSTR hstr,
     uint32_t    opc2;
     bool        isRead;
     bool        trapToHype = false;
+
+    const CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR);
+    const SCR scr = tc->readMiscReg(MISCREG_SCR);
+    const HSTR hstr = tc->readMiscReg(MISCREG_HSTR);
 
     if (!inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP)) {
         // This is technically the wrong function, but we can re-use it for
@@ -746,6 +780,14 @@ mcrrMrrc15TrapToHyp(const MiscRegIndex miscReg, CPSR cpsr, SCR scr, HSTR hstr,
               case MISCREG_CONTEXTIDR:
                 trapToHype = hcr.tvm & !isRead;
                 break;
+              case MISCREG_CNTFRQ ... MISCREG_CNTV_TVAL:
+                // CNTFRQ may be trapped only on reads
+                // CNTPCT and CNTVCT are read-only
+                if (MISCREG_CNTFRQ <= miscReg && miscReg <= MISCREG_CNTVCT &&
+                    !isRead)
+                    break;
+                trapToHype = isGenericTimerHypTrap(miscReg, tc, ec);
+                break;
               // No default action needed
               default:
                 break;
@@ -753,6 +795,337 @@ mcrrMrrc15TrapToHyp(const MiscRegIndex miscReg, CPSR cpsr, SCR scr, HSTR hstr,
         }
     }
     return trapToHype;
+}
+
+Fault
+AArch64AArch32SystemAccessTrap(const MiscRegIndex miscReg,
+                               ExtMachInst machInst, ThreadContext *tc,
+                               uint32_t imm, ExceptionClass ec)
+{
+    if (currEL(tc) <= EL1 && !ELIs32(tc, EL1) &&
+        isAArch64AArch32SystemAccessTrapEL1(miscReg, tc))
+        return std::make_shared<SupervisorTrap>(machInst, imm, ec);
+    if (currEL(tc) <= EL2 && EL2Enabled(tc) && !ELIs32(tc, EL2) &&
+        isAArch64AArch32SystemAccessTrapEL2(miscReg, tc))
+        return std::make_shared<HypervisorTrap>(machInst, imm, ec);
+    return NoFault;
+}
+
+bool
+isAArch64AArch32SystemAccessTrapEL1(const MiscRegIndex miscReg,
+                                    ThreadContext *tc)
+{
+    switch (miscReg) {
+      case MISCREG_CNTFRQ ... MISCREG_CNTVOFF:
+        return currEL(tc) == EL0 &&
+               isGenericTimerSystemAccessTrapEL1(miscReg, tc);
+      default:
+        break;
+    }
+    return false;
+}
+
+bool
+isGenericTimerHypTrap(const MiscRegIndex miscReg, ThreadContext *tc,
+                      ExceptionClass *ec)
+{
+    if (currEL(tc) <= EL2 && EL2Enabled(tc) && ELIs32(tc, EL2)) {
+        switch (miscReg) {
+          case MISCREG_CNTFRQ ... MISCREG_CNTV_TVAL:
+            if (currEL(tc) == EL0 &&
+                isGenericTimerCommonEL0HypTrap(miscReg, tc, ec))
+                return true;
+            switch (miscReg) {
+              case MISCREG_CNTPCT:
+              case MISCREG_CNTP_CTL ... MISCREG_CNTP_TVAL_S:
+                return currEL(tc) <= EL1 &&
+                       isGenericTimerPhysHypTrap(miscReg, tc, ec);
+              default:
+                break;
+            }
+            break;
+          default:
+            break;
+        }
+    }
+    return false;
+}
+
+bool
+isGenericTimerCommonEL0HypTrap(const MiscRegIndex miscReg, ThreadContext *tc,
+                               ExceptionClass *ec)
+{
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    bool trap_cond = condGenericTimerSystemAccessTrapEL1(miscReg, tc);
+    if (ELIs32(tc, EL1) && trap_cond && hcr.tge) {
+        // As per the architecture, this hyp trap should have uncategorized
+        // exception class
+        if (ec)
+            *ec = EC_UNKNOWN;
+        return true;
+    }
+    return false;
+}
+
+bool
+isGenericTimerPhysHypTrap(const MiscRegIndex miscReg, ThreadContext *tc,
+                          ExceptionClass *ec)
+{
+    return condGenericTimerPhysHypTrap(miscReg, tc);
+}
+
+bool
+condGenericTimerPhysHypTrap(const MiscRegIndex miscReg, ThreadContext *tc)
+{
+    const CNTHCTL cnthctl = tc->readMiscReg(MISCREG_CNTHCTL_EL2);
+    switch (miscReg) {
+      case MISCREG_CNTPCT:
+        return !cnthctl.el1pcten;
+      case MISCREG_CNTP_CTL ... MISCREG_CNTP_TVAL_S:
+        return !cnthctl.el1pcen;
+      default:
+        break;
+    }
+    return false;
+}
+
+bool
+isGenericTimerSystemAccessTrapEL1(const MiscRegIndex miscReg,
+                                  ThreadContext *tc)
+{
+    switch (miscReg) {
+      case MISCREG_CNTFRQ ... MISCREG_CNTV_TVAL:
+      case MISCREG_CNTFRQ_EL0 ... MISCREG_CNTV_TVAL_EL0:
+      {
+        const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+        bool trap_cond = condGenericTimerSystemAccessTrapEL1(miscReg, tc);
+        return !(EL2Enabled(tc) && hcr.e2h && hcr.tge) && trap_cond &&
+               !(EL2Enabled(tc) && !ELIs32(tc, EL2) && hcr.tge);
+      }
+      default:
+        break;
+    }
+    return false;
+}
+
+bool
+condGenericTimerSystemAccessTrapEL1(const MiscRegIndex miscReg,
+                                    ThreadContext *tc)
+{
+    const CNTKCTL cntkctl = tc->readMiscReg(MISCREG_CNTKCTL_EL1);
+    switch (miscReg) {
+      case MISCREG_CNTFRQ:
+      case MISCREG_CNTFRQ_EL0:
+        return !cntkctl.el0pcten && !cntkctl.el0vcten;
+      case MISCREG_CNTPCT:
+      case MISCREG_CNTPCT_EL0:
+        return !cntkctl.el0pcten;
+      case MISCREG_CNTVCT:
+      case MISCREG_CNTVCT_EL0:
+        return !cntkctl.el0vcten;
+      case MISCREG_CNTP_CTL ... MISCREG_CNTP_TVAL_S:
+      case MISCREG_CNTP_CTL_EL0 ... MISCREG_CNTP_TVAL_EL0:
+        return !cntkctl.el0pten;
+      case MISCREG_CNTV_CTL ... MISCREG_CNTV_TVAL:
+      case MISCREG_CNTV_CTL_EL0 ... MISCREG_CNTV_TVAL_EL0:
+        return !cntkctl.el0vten;
+      default:
+        break;
+    }
+    return false;
+}
+
+bool
+isAArch64AArch32SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                    ThreadContext *tc)
+{
+    switch (miscReg) {
+      case MISCREG_CNTFRQ ... MISCREG_CNTVOFF:
+        return currEL(tc) <= EL1 &&
+               isGenericTimerSystemAccessTrapEL2(miscReg, tc);
+      default:
+        break;
+    }
+    return false;
+}
+
+bool
+isGenericTimerSystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                  ThreadContext *tc)
+{
+    switch (miscReg) {
+      case MISCREG_CNTFRQ ... MISCREG_CNTV_TVAL:
+      case MISCREG_CNTFRQ_EL0 ... MISCREG_CNTV_TVAL_EL0:
+        if (currEL(tc) == EL0 &&
+            isGenericTimerCommonEL0SystemAccessTrapEL2(miscReg, tc))
+            return true;
+        switch (miscReg) {
+          case MISCREG_CNTPCT:
+          case MISCREG_CNTPCT_EL0:
+          case MISCREG_CNTP_CTL ... MISCREG_CNTP_TVAL_S:
+          case MISCREG_CNTP_CTL_EL0 ... MISCREG_CNTP_TVAL_EL0:
+            return (currEL(tc) == EL0 &&
+                    isGenericTimerPhysEL0SystemAccessTrapEL2(miscReg, tc)) ||
+                   (currEL(tc) == EL1 &&
+                    isGenericTimerPhysEL1SystemAccessTrapEL2(miscReg, tc));
+          case MISCREG_CNTVCT:
+          case MISCREG_CNTVCT_EL0:
+          case MISCREG_CNTV_CTL ... MISCREG_CNTV_TVAL:
+          case MISCREG_CNTV_CTL_EL0 ... MISCREG_CNTV_TVAL_EL0:
+            return isGenericTimerVirtSystemAccessTrapEL2(miscReg, tc);
+          default:
+            break;
+        }
+        break;
+      default:
+        break;
+    }
+    return false;
+}
+
+bool
+isGenericTimerCommonEL0SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                           ThreadContext *tc)
+{
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    bool trap_cond_el1 = condGenericTimerSystemAccessTrapEL1(miscReg, tc);
+    bool trap_cond_el2 = condGenericTimerCommonEL0SystemAccessTrapEL2(miscReg,
+                                                                      tc);
+    return (!ELIs32(tc, EL1) && !hcr.e2h && trap_cond_el1 && hcr.tge) ||
+           (ELIs32(tc, EL1) && trap_cond_el1 && hcr.tge) ||
+           (hcr.e2h && hcr.tge && trap_cond_el2);
+}
+
+bool
+isGenericTimerPhysEL0SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                         ThreadContext *tc)
+{
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    bool trap_cond_0 = condGenericTimerPhysEL1SystemAccessTrapEL2(miscReg, tc);
+    bool trap_cond_1 = condGenericTimerCommonEL1SystemAccessTrapEL2(miscReg,
+                                                                    tc);
+    switch (miscReg) {
+      case MISCREG_CNTPCT:
+      case MISCREG_CNTPCT_EL0:
+        return !hcr.e2h && trap_cond_1;
+      case MISCREG_CNTP_CTL ... MISCREG_CNTP_TVAL_S:
+      case MISCREG_CNTP_CTL_EL0 ... MISCREG_CNTP_TVAL_EL0:
+        return (!hcr.e2h && trap_cond_0) ||
+               (hcr.e2h && !hcr.tge && trap_cond_1);
+      default:
+        break;
+    }
+
+    return false;
+}
+
+bool
+isGenericTimerPhysEL1SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                         ThreadContext *tc)
+{
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    bool trap_cond_0 = condGenericTimerPhysEL1SystemAccessTrapEL2(miscReg, tc);
+    bool trap_cond_1 = condGenericTimerCommonEL1SystemAccessTrapEL2(miscReg,
+                                                                    tc);
+    switch (miscReg) {
+      case MISCREG_CNTPCT:
+      case MISCREG_CNTPCT_EL0:
+        return trap_cond_1;
+      case MISCREG_CNTP_CTL ... MISCREG_CNTP_TVAL_S:
+      case MISCREG_CNTP_CTL_EL0 ... MISCREG_CNTP_TVAL_EL0:
+        return (!hcr.e2h && trap_cond_0) ||
+               (hcr.e2h && trap_cond_1);
+      default:
+        break;
+    }
+    return false;
+}
+
+bool
+isGenericTimerVirtSystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                      ThreadContext *tc)
+{
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    bool trap_cond = condGenericTimerCommonEL1SystemAccessTrapEL2(miscReg, tc);
+    return !ELIs32(tc, EL1) && !(hcr.e2h && hcr.tge) && trap_cond;
+}
+
+bool
+condGenericTimerCommonEL0SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                             ThreadContext *tc)
+{
+    const CNTHCTL_E2H cnthctl = tc->readMiscReg(MISCREG_CNTHCTL_EL2);
+    switch (miscReg) {
+      case MISCREG_CNTFRQ:
+      case MISCREG_CNTFRQ_EL0:
+        return !cnthctl.el0pcten && !cnthctl.el0vcten;
+      case MISCREG_CNTPCT:
+      case MISCREG_CNTPCT_EL0:
+        return !cnthctl.el0pcten;
+      case MISCREG_CNTVCT:
+      case MISCREG_CNTVCT_EL0:
+        return !cnthctl.el0vcten;
+      case MISCREG_CNTP_CTL ... MISCREG_CNTP_TVAL_S:
+      case MISCREG_CNTP_CTL_EL0 ... MISCREG_CNTP_TVAL_EL0:
+        return !cnthctl.el0pten;
+      case MISCREG_CNTV_CTL ... MISCREG_CNTV_TVAL:
+      case MISCREG_CNTV_CTL_EL0 ... MISCREG_CNTV_TVAL_EL0:
+        return !cnthctl.el0vten;
+      default:
+        break;
+    }
+    return false;
+}
+
+bool
+condGenericTimerCommonEL1SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                             ThreadContext *tc)
+{
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    const RegVal cnthctl_val = tc->readMiscReg(MISCREG_CNTHCTL_EL2);
+    const CNTHCTL cnthctl = cnthctl_val;
+    const CNTHCTL_E2H cnthctl_e2h = cnthctl_val;
+    switch (miscReg) {
+      case MISCREG_CNTPCT:
+      case MISCREG_CNTPCT_EL0:
+        return hcr.e2h ? !cnthctl_e2h.el1pcten : !cnthctl.el1pcten;
+      case MISCREG_CNTVCT:
+      case MISCREG_CNTVCT_EL0:
+        return hcr.e2h ? cnthctl_e2h.el1tvct : cnthctl.el1tvct;
+      case MISCREG_CNTP_CTL ... MISCREG_CNTP_TVAL_S:
+      case MISCREG_CNTP_CTL_EL0 ... MISCREG_CNTP_TVAL_EL0:
+        return hcr.e2h ? !cnthctl_e2h.el1pten : false;
+      case MISCREG_CNTV_CTL ... MISCREG_CNTV_TVAL:
+      case MISCREG_CNTV_CTL_EL0 ... MISCREG_CNTV_TVAL_EL0:
+        return hcr.e2h ? cnthctl_e2h.el1tvt : cnthctl.el1tvt;
+      default:
+        break;
+    }
+    return false;
+}
+
+bool
+condGenericTimerPhysEL1SystemAccessTrapEL2(const MiscRegIndex miscReg,
+                                           ThreadContext *tc)
+{
+    const CNTHCTL cnthctl = tc->readMiscReg(MISCREG_CNTHCTL_EL2);
+    return !cnthctl.el1pcen;
+}
+
+bool
+isGenericTimerSystemAccessTrapEL3(const MiscRegIndex miscReg,
+                                  ThreadContext *tc)
+{
+    switch (miscReg) {
+      case MISCREG_CNTPS_CTL_EL1 ... MISCREG_CNTPS_TVAL_EL1:
+      {
+        const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        return currEL(tc) == EL1 && !scr.ns && !scr.st;
+      }
+      default:
+        break;
+    }
+    return false;
 }
 
 bool
