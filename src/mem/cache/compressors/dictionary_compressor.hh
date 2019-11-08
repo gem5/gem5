@@ -222,6 +222,14 @@ class DictionaryCompressor : public BaseDictionaryCompressor
     virtual void addToDictionary(const DictionaryEntry data) = 0;
 
     /**
+     * Instantiate a compression data of the sub-class compressor.
+     *
+     * @return The new compression data entry.
+     */
+    virtual std::unique_ptr<DictionaryCompressor::CompData>
+    instantiateDictionaryCompData() const;
+
+    /**
      * Apply compression.
      *
      * @param data The cache line to be compressed.

@@ -80,6 +80,13 @@ DictionaryCompressor<T>::resetDictionary()
 }
 
 template <typename T>
+std::unique_ptr<typename DictionaryCompressor<T>::CompData>
+DictionaryCompressor<T>::instantiateDictionaryCompData() const
+{
+    return std::unique_ptr<DictionaryCompressor<T>::CompData>(new CompData());
+}
+
+template <typename T>
 std::unique_ptr<typename DictionaryCompressor<T>::Pattern>
 DictionaryCompressor<T>::compressValue(const T data)
 {
@@ -119,7 +126,7 @@ std::unique_ptr<Base::CompressionData>
 DictionaryCompressor<T>::compress(const uint64_t* data)
 {
     std::unique_ptr<Base::CompressionData> comp_data =
-        std::unique_ptr<CompData>(new CompData());
+        instantiateDictionaryCompData();
 
     // Reset dictionary
     resetDictionary();
