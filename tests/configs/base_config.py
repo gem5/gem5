@@ -218,10 +218,10 @@ class BaseSESystem(BaseSystem):
     """Basic syscall-emulation builder."""
 
     def __init__(self, **kwargs):
-        BaseSystem.__init__(self, **kwargs)
+        super(BaseSESystem, self).__init__(**kwargs)
 
     def init_system(self, system):
-        BaseSystem.init_system(self, system)
+        super(BaseSESystem, self).init_system(system)
 
     def create_system(self):
         system = System(physmem = self.mem_class(),
@@ -247,7 +247,7 @@ class BaseSESystemUniprocessor(BaseSESystem):
     """
 
     def __init__(self, **kwargs):
-        BaseSESystem.__init__(self, **kwargs)
+        super(BaseSESystemUniprocessor, self).__init__(**kwargs)
 
     def create_caches_private(self, cpu):
         # The atomic SE configurations do not use caches
@@ -264,10 +264,10 @@ class BaseFSSystem(BaseSystem):
     """Basic full system builder."""
 
     def __init__(self, **kwargs):
-        BaseSystem.__init__(self, **kwargs)
+        super(BaseFSSystem, self).__init__(**kwargs)
 
     def init_system(self, system):
-        BaseSystem.init_system(self, system)
+        super(BaseFSSystem, self).init_system(system)
 
         if self.use_ruby:
             # Connect the ruby io port to the PIO bus,
@@ -299,7 +299,7 @@ class BaseFSSystemUniprocessor(BaseFSSystem):
     """
 
     def __init__(self, **kwargs):
-        BaseFSSystem.__init__(self, **kwargs)
+        super(BaseFSSystemUniprocessor, self).__init__(**kwargs)
 
     def create_caches_private(self, cpu):
         cpu.addTwoLevelCacheHierarchy(L1_ICache(size='32kB', assoc=1),
@@ -313,7 +313,7 @@ class BaseFSSwitcheroo(BaseFSSystem):
     """Uniprocessor system prepared for CPU switching"""
 
     def __init__(self, cpu_classes, **kwargs):
-        BaseFSSystem.__init__(self, **kwargs)
+        super(BaseFSSwitcheroo, self).__init__(**kwargs)
         self.cpu_classes = tuple(cpu_classes)
 
     def create_cpus(self, cpu_clk_domain):
