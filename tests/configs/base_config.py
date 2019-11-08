@@ -278,19 +278,8 @@ class BaseFSSystem(BaseSystem):
             # the physmem name to avoid bumping all the reference stats
             system.physmem = [self.mem_class(range = r)
                               for r in system.mem_ranges]
-            system.llc = [NoncoherentCache(addr_ranges = [r],
-                                           size = '4kB',
-                                           assoc = 2,
-                                           mshrs = 128,
-                                           tag_latency = 10,
-                                           data_latency = 10,
-                                           sequential_access = True,
-                                           response_latency = 20,
-                                           tgts_per_mshr = 8)
-                          for r in system.mem_ranges]
             for i in range(len(system.physmem)):
-                system.physmem[i].port = system.llc[i].mem_side
-                system.llc[i].cpu_side = system.membus.master
+                system.physmem[i].port = system.membus.master
 
             # create the iocache, which by default runs at the system clock
             system.iocache = IOCache(addr_ranges=system.mem_ranges)
