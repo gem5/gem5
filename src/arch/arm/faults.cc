@@ -800,9 +800,9 @@ UndefinedInstruction::routeToHyp(ThreadContext *tc) const
     CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
 
     // if in Hyp mode then stay in Hyp mode
-    toHyp  = scr.ns && (cpsr.mode == MODE_HYP);
+    toHyp  = scr.ns && (currEL(tc) == EL2);
     // if HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector
-    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (cpsr.mode == MODE_USER);
+    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (currEL(tc) == EL0);
     return toHyp;
 }
 
@@ -874,7 +874,7 @@ SupervisorCall::routeToHyp(ThreadContext *tc) const
     // if in Hyp mode then stay in Hyp mode
     toHyp  = scr.ns && (cpsr.mode == MODE_HYP);
     // if HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector
-    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (cpsr.mode == MODE_USER);
+    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (currEL(tc) == EL0);
     return toHyp;
 }
 
@@ -1283,16 +1283,15 @@ PrefetchAbort::routeToHyp(ThreadContext *tc) const
 
     SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR);
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
-    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
     HDCR hdcr = tc->readMiscRegNoEffect(MISCREG_HDCR);
 
     // if in Hyp mode then stay in Hyp mode
-    toHyp  = scr.ns && (cpsr.mode == MODE_HYP);
+    toHyp = scr.ns && (currEL(tc) == EL2);
     // otherwise, check whether to take to Hyp mode through Hyp Trap vector
     toHyp |= (stage2 ||
-                ( (source ==               DebugEvent) && hdcr.tde && (cpsr.mode !=  MODE_HYP)) ||
-                ( (source == SynchronousExternalAbort) && hcr.tge  && (cpsr.mode == MODE_USER))
-             ) && !inSecureState(tc);
+              ((source == DebugEvent) && hdcr.tde && (currEL(tc) != EL2)) ||
+               ((source == SynchronousExternalAbort) && hcr.tge &&
+                (currEL(tc) == EL0))) && !inSecureState(tc);
     return toHyp;
 }
 
@@ -1344,21 +1343,18 @@ DataAbort::routeToHyp(ThreadContext *tc) const
 
     SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR);
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
-    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
     HDCR hdcr = tc->readMiscRegNoEffect(MISCREG_HDCR);
 
     // if in Hyp mode then stay in Hyp mode
-    toHyp  = scr.ns && (cpsr.mode == MODE_HYP);
+    toHyp = scr.ns && (currEL(tc) == EL2);
     // otherwise, check whether to take to Hyp mode through Hyp Trap vector
     toHyp |= (stage2 ||
-                ( (cpsr.mode != MODE_HYP) && ( ((source == AsynchronousExternalAbort) && hcr.amo) ||
-                                               ((source == DebugEvent) && hdcr.tde) )
-                ) ||
-                ( (cpsr.mode == MODE_USER) && hcr.tge &&
-                  ((source == AlignmentFault)            ||
-                   (source == SynchronousExternalAbort))
-                )
-             ) && !inSecureState(tc);
+              ((currEL(tc) != EL2) &&
+               (((source == AsynchronousExternalAbort) && hcr.amo) ||
+                ((source == DebugEvent) && hdcr.tde))) ||
+               ((currEL(tc) == EL0) && hcr.tge &&
+                ((source == AlignmentFault) ||
+                 (source == SynchronousExternalAbort)))) && !inSecureState(tc);
     return toHyp;
 }
 
