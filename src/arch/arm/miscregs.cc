@@ -257,6 +257,8 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                     return MISCREG_HDCR;
                   case 2:
                     return MISCREG_HCPTR;
+                  case 4:
+                    return MISCREG_HCR2;
                   case 3:
                     return MISCREG_HSTR;
                   case 7:
@@ -3215,7 +3217,11 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_HACTLR)
       .hyp().monNonSecure();
     InitReg(MISCREG_HCR)
-      .hyp().monNonSecure();
+      .hyp().monNonSecure()
+      .res0(0x90000000);
+    InitReg(MISCREG_HCR2)
+      .hyp().monNonSecure()
+      .res0(0xffa9ff8c);
     InitReg(MISCREG_HDCR)
       .hyp().monNonSecure();
     InitReg(MISCREG_HCPTR)
@@ -4003,7 +4009,7 @@ ISA::initializeMiscRegMetadata()
       .mapsTo(MISCREG_HACTLR);
     InitReg(MISCREG_HCR_EL2)
       .hyp().mon()
-      .mapsTo(MISCREG_HCR /*, MISCREG_HCR2*/);
+      .mapsTo(MISCREG_HCR, MISCREG_HCR2);
     InitReg(MISCREG_MDCR_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_HDCR);

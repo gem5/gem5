@@ -168,6 +168,7 @@ TarmacParserRecord::MiscRegMap TarmacParserRecord::miscRegMap = {
     { "hsctlr", MISCREG_HSCTLR },
     { "hactlr", MISCREG_HACTLR },
     { "hcr", MISCREG_HCR },
+    { "hcr2", MISCREG_HCR2 },
     { "hdcr", MISCREG_HDCR },
     { "hcptr", MISCREG_HCPTR },
     { "hstr", MISCREG_HSTR },

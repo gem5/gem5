@@ -234,8 +234,8 @@ namespace ArmISA
 
     BitUnion64(HCR)
         Bitfield<34>     e2h;   // AArch64
-        Bitfield<33>     id;    // AArch64
-        Bitfield<32>     cd;    // AArch64
+        Bitfield<33>     id;
+        Bitfield<32>     cd;
         Bitfield<31>     rw;    // AArch64
         Bitfield<30>     trvm;  // AArch64
         Bitfield<29>     hcd;   // AArch64

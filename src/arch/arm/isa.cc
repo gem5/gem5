@@ -479,12 +479,10 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
 
     switch (unflattenMiscReg(misc_reg)) {
       case MISCREG_HCR:
-        {
+      case MISCREG_HCR2:
             if (!haveVirtualization)
                 return 0;
-            else
-                return readMiscRegNoEffect(MISCREG_HCR);
-        }
+            break;
       case MISCREG_CPACR:
         {
             const uint32_t ones = (uint32_t)(-1);
@@ -1028,11 +1026,10 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
             }
             break;
           case MISCREG_HCR:
-            {
+          case MISCREG_HCR2:
                 if (!haveVirtualization)
                     return;
-            }
-            break;
+                break;
           case MISCREG_IFSR:
             {
                 // ARM ARM (ARM DDI 0406C.b) B4.1.96
