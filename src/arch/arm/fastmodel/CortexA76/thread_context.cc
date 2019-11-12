@@ -93,7 +93,49 @@ CortexA76TC::initFromIrisInstance(const ResourceMap &resources)
     extractResourceMap(intReg32Ids, resources, intReg32IdxNameMap);
     extractResourceMap(intReg64Ids, resources, intReg64IdxNameMap);
 
+    extractResourceMap(ccRegIds, resources, ccRegIdxNameMap);
+
     extractResourceMap(vecRegIds, resources, vecRegIdxNameMap);
+}
+
+RegVal
+CortexA76TC::readCCRegFlat(RegIndex idx) const
+{
+    RegVal result = Iris::ThreadContext::readCCRegFlat(idx);
+    switch (idx) {
+      case ArmISA::CCREG_NZ:
+        result = ((CPSR)result).nz;
+        break;
+      case ArmISA::CCREG_FP:
+        result = bits(result, 31, 28);
+        break;
+      default:
+        break;
+    }
+    return result;
+}
+
+void
+CortexA76TC::setCCRegFlat(RegIndex idx, RegVal val)
+{
+    switch (idx) {
+      case ArmISA::CCREG_NZ:
+        {
+            CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
+            cpsr.nz = val;
+            val = cpsr;
+        }
+        break;
+      case ArmISA::CCREG_FP:
+        {
+            FPSCR fpscr = readMiscRegNoEffect(ArmISA::MISCREG_FPSCR);
+            val = insertBits(fpscr, 31, 28, val);
+        }
+        break;
+      default:
+        break;
+    }
+    Iris::ThreadContext::setCCRegFlat(idx, val);
 }
 
 iris::MemorySpaceId
@@ -796,6 +838,14 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::intReg64IdxNameMap({
         { ArmISA::INTREG_X29, "X29" },
         { ArmISA::INTREG_X30, "X30" },
         { ArmISA::INTREG_SPX, "SP" },
+});
+
+Iris::ThreadContext::IdxNameMap CortexA76TC::ccRegIdxNameMap({
+        { ArmISA::CCREG_NZ, "CPSR" },
+        { ArmISA::CCREG_C, "CPSR.C" },
+        { ArmISA::CCREG_V, "CPSR.V" },
+        { ArmISA::CCREG_GE, "CPSR.GE" },
+        { ArmISA::CCREG_FP, "FPSCR" },
 });
 
 Iris::ThreadContext::IdxNameMap CortexA76TC::vecRegIdxNameMap({

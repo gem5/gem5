@@ -43,6 +43,7 @@ class CortexA76TC : public Iris::ThreadContext
     static IdxNameMap miscRegIdxNameMap;
     static IdxNameMap intReg32IdxNameMap;
     static IdxNameMap intReg64IdxNameMap;
+    static IdxNameMap ccRegIdxNameMap;
     static IdxNameMap vecRegIdxNameMap;
     static iris::MemorySpaceId bpSpaceId;
 
@@ -55,6 +56,9 @@ class CortexA76TC : public Iris::ThreadContext
     bool translateAddress(Addr &paddr, Addr vaddr) override;
 
     void initFromIrisInstance(const ResourceMap &resources) override;
+
+    RegVal readCCRegFlat(RegIndex idx) const override;
+    void setCCRegFlat(RegIndex idx, RegVal val) override;
 
     iris::MemorySpaceId getBpSpaceId(Addr pc) const override;
 };

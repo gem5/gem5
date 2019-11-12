@@ -520,6 +520,25 @@ ThreadContext::setIntReg(RegIndex reg_idx, RegVal val)
         call().resource_write(_instId, result, intReg64Ids.at(reg_idx), val);
 }
 
+RegVal
+ThreadContext::readCCRegFlat(RegIndex idx) const
+{
+    if (idx >= ccRegIds.size())
+        return 0;
+    iris::ResourceReadResult result;
+    call().resource_read(_instId, result, ccRegIds.at(idx));
+    return result.data.at(0);
+}
+
+void
+ThreadContext::setCCRegFlat(RegIndex idx, RegVal val)
+{
+    panic_if(idx >= ccRegIds.size(),
+            "CC reg %d is not supported by fast model.", idx);
+    iris::ResourceWriteResult result;
+    call().resource_write(_instId, result, ccRegIds.at(idx), val);
+}
+
 const ArmISA::VecRegContainer &
 ThreadContext::readVecReg(const RegId &reg_id) const
 {

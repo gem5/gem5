@@ -83,6 +83,7 @@ class ThreadContext : public ::ThreadContext
     ResourceIds miscRegIds;
     ResourceIds intReg32Ids;
     ResourceIds intReg64Ids;
+    ResourceIds ccRegIds;
 
     iris::ResourceId pcRscId = iris::IRIS_UINT64_MAX;
     iris::ResourceId icountRscId;
@@ -386,7 +387,7 @@ class ThreadContext : public ::ThreadContext
     RegVal
     readCCReg(RegIndex reg_idx) const override
     {
-        panic("%s not implemented.", __FUNCTION__);
+        return readCCRegFlat(reg_idx);
     }
 
     void setIntReg(RegIndex reg_idx, RegVal val) override;
@@ -419,7 +420,7 @@ class ThreadContext : public ::ThreadContext
     void
     setCCReg(RegIndex reg_idx, RegVal val) override
     {
-        panic("%s not implemented.", __FUNCTION__);
+        setCCRegFlat(reg_idx, val);
     }
 
     void pcStateNoRecord(const ArmISA::PCState &val) override { pcState(val); }
@@ -547,16 +548,8 @@ class ThreadContext : public ::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    RegVal
-    readCCRegFlat(RegIndex idx) const override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-    void
-    setCCRegFlat(RegIndex idx, RegVal val) override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
+    RegVal readCCRegFlat(RegIndex idx) const override;
+    void setCCRegFlat(RegIndex idx, RegVal val) override;
     /** @} */
 
 };
