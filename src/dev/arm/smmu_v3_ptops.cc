@@ -273,7 +273,7 @@ V8PageTableOps16k::nextLevelPointer(pte_t pte, unsigned level) const
             default: panic("bad level %d", level);
         }
     } else {
-        return mbits(pte, 47, 12);
+        return mbits(pte, 47, 14);
     }
 }
 
