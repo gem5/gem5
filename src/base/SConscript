@@ -84,6 +84,8 @@ Source('loader/dtb_file.cc')
 Source('loader/ecoff_object.cc')
 Source('loader/elf_object.cc')
 Source('loader/image_file_data.cc')
+GTest('loader/image_file_data.test', 'loader/image_file_data.test.cc',
+'loader/image_file_data.cc')
 Source('loader/memory_image.cc')
 Source('loader/object_file.cc')
 Source('loader/symtab.cc')
