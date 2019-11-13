@@ -114,9 +114,9 @@ Addr
 V7LPageTableOps::walkMask(unsigned level) const
 {
     switch (level) {
-        case 1: return mask(39, 30);
-        case 2: return mask(39, 21);
-        case 3: return mask(39, 12);
+        case 1: return ~mask(30);
+        case 2: return ~mask(21);
+        case 3: return ~mask(12);
         default: panic("bad level %d", level);
     }
 }
@@ -207,10 +207,10 @@ Addr
 V8PageTableOps4k::walkMask(unsigned level) const
 {
     switch (level) {
-        case 0: return mask(47, 39);
-        case 1: return mask(47, 30);
-        case 2: return mask(47, 21);
-        case 3: return mask(47, 12);
+        case 0: return ~mask(39);
+        case 1: return ~mask(30);
+        case 2: return ~mask(21);
+        case 3: return ~mask(12);
         default: panic("bad level %d", level);
     }
 }
@@ -401,9 +401,9 @@ Addr
 V8PageTableOps64k::walkMask(unsigned level) const
 {
     switch (level) {
-        case 1: return mask(47, 42);
-        case 2: return mask(47, 29);
-        case 3: return mask(47, 16);
+        case 1: return ~mask(42);
+        case 2: return ~mask(29);
+        case 3: return ~mask(16);
         default: panic("bad level %d", level);
     }
 }
