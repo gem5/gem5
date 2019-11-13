@@ -83,6 +83,7 @@ class ThreadContext : public ::ThreadContext
     ResourceIds miscRegIds;
     ResourceIds intReg32Ids;
     ResourceIds intReg64Ids;
+    ResourceIds flattenedIntIds;
     ResourceIds ccRegIds;
 
     iris::ResourceId pcRscId = iris::IRIS_UINT64_MAX;
@@ -490,16 +491,8 @@ class ThreadContext : public ::ThreadContext
      * serialization code to access all registers.
      */
 
-    uint64_t
-    readIntRegFlat(RegIndex idx) const override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-    void
-    setIntRegFlat(RegIndex idx, uint64_t val) override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
+    RegVal readIntRegFlat(RegIndex idx) const override;
+    void setIntRegFlat(RegIndex idx, uint64_t val) override;
 
     RegVal
     readFloatRegFlat(RegIndex idx) const override

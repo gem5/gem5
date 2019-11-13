@@ -93,9 +93,53 @@ CortexA76TC::initFromIrisInstance(const ResourceMap &resources)
     extractResourceMap(intReg32Ids, resources, intReg32IdxNameMap);
     extractResourceMap(intReg64Ids, resources, intReg64IdxNameMap);
 
+    extractResourceMap(flattenedIntIds, resources, flattenedIntIdxNameMap);
+
     extractResourceMap(ccRegIds, resources, ccRegIdxNameMap);
 
     extractResourceMap(vecRegIds, resources, vecRegIdxNameMap);
+}
+
+RegVal
+CortexA76TC::readIntRegFlat(RegIndex idx) const
+{
+    ArmISA::CPSR orig_cpsr;
+
+    auto *non_const_this = const_cast<CortexA76TC *>(this);
+
+    if (idx == ArmISA::INTREG_R13_MON || idx == ArmISA::INTREG_R14_MON) {
+        orig_cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
+        ArmISA::CPSR new_cpsr = orig_cpsr;
+        new_cpsr.mode = MODE_MON;
+        non_const_this->setMiscReg(ArmISA::MISCREG_CPSR, new_cpsr);
+    }
+
+    RegVal val = ThreadContext::readIntRegFlat(idx);
+
+    if (idx == ArmISA::INTREG_R13_MON || idx == ArmISA::INTREG_R14_MON) {
+        non_const_this->setMiscReg(ArmISA::MISCREG_CPSR, orig_cpsr);
+    }
+
+    return val;
+}
+
+void
+CortexA76TC::setIntRegFlat(RegIndex idx, RegVal val)
+{
+    ArmISA::CPSR orig_cpsr;
+
+    if (idx == ArmISA::INTREG_R13_MON || idx == ArmISA::INTREG_R14_MON) {
+        orig_cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
+        ArmISA::CPSR new_cpsr = orig_cpsr;
+        new_cpsr.mode = MODE_MON;
+        setMiscReg(ArmISA::MISCREG_CPSR, new_cpsr);
+    }
+
+    ThreadContext::setIntRegFlat(idx, val);
+
+    if (idx == ArmISA::INTREG_R13_MON || idx == ArmISA::INTREG_R14_MON) {
+        setMiscReg(ArmISA::MISCREG_CPSR, orig_cpsr);
+    }
 }
 
 RegVal
@@ -838,6 +882,48 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::intReg64IdxNameMap({
         { ArmISA::INTREG_X29, "X29" },
         { ArmISA::INTREG_X30, "X30" },
         { ArmISA::INTREG_SPX, "SP" },
+});
+
+Iris::ThreadContext::IdxNameMap CortexA76TC::flattenedIntIdxNameMap({
+        { ArmISA::INTREG_R0, "X0" },
+        { ArmISA::INTREG_R1, "X1" },
+        { ArmISA::INTREG_R2, "X2" },
+        { ArmISA::INTREG_R3, "X3" },
+        { ArmISA::INTREG_R4, "X4" },
+        { ArmISA::INTREG_R5, "X5" },
+        { ArmISA::INTREG_R6, "X6" },
+        { ArmISA::INTREG_R7, "X7" },
+        { ArmISA::INTREG_R8, "X8" },
+        { ArmISA::INTREG_R9, "X9" },
+        { ArmISA::INTREG_R10, "X10" },
+        { ArmISA::INTREG_R11, "X11" },
+        { ArmISA::INTREG_R12, "X12" },
+        { ArmISA::INTREG_R13, "X13" },
+        { ArmISA::INTREG_R14, "X14" },
+        // Skip PC.
+        { ArmISA::INTREG_R13_SVC, "X19" },
+        { ArmISA::INTREG_R14_SVC, "X18" },
+        { ArmISA::INTREG_R13_MON, "R13" }, // Need to be in monitor mode?
+        { ArmISA::INTREG_R14_MON, "R14" }, // Need to be in monitor mode?
+        { ArmISA::INTREG_R13_HYP, "X15" },
+        { ArmISA::INTREG_R13_ABT, "X21" },
+        { ArmISA::INTREG_R14_ABT, "X20" },
+        { ArmISA::INTREG_R13_UND, "X23" },
+        { ArmISA::INTREG_R14_UND, "X22" },
+        { ArmISA::INTREG_R13_IRQ, "X17" },
+        { ArmISA::INTREG_R14_IRQ, "X16" },
+        { ArmISA::INTREG_R8_FIQ, "X24" },
+        { ArmISA::INTREG_R9_FIQ, "X25" },
+        { ArmISA::INTREG_R10_FIQ, "X26" },
+        { ArmISA::INTREG_R11_FIQ, "X27" },
+        { ArmISA::INTREG_R12_FIQ, "X28" },
+        { ArmISA::INTREG_R13_FIQ, "X29" },
+        { ArmISA::INTREG_R14_FIQ, "X30" },
+        // Skip zero, ureg0-2, and dummy regs.
+        { INTREG_SP0, "SP_EL0" },
+        { INTREG_SP1, "SP_EL1" },
+        { INTREG_SP2, "SP_EL2" },
+        { INTREG_SP3, "SP_EL3" },
 });
 
 Iris::ThreadContext::IdxNameMap CortexA76TC::ccRegIdxNameMap({

@@ -520,6 +520,35 @@ ThreadContext::setIntReg(RegIndex reg_idx, RegVal val)
         call().resource_write(_instId, result, intReg64Ids.at(reg_idx), val);
 }
 
+/*
+ * The 64 bit version of registers gives us a pre-flattened view of the reg
+ * file, no matter what mode we're in or if we're currently 32 or 64 bit.
+ */
+RegVal
+ThreadContext::readIntRegFlat(RegIndex idx) const
+{
+    if (idx >= flattenedIntIds.size())
+        return 0;
+    iris::ResourceId res_id = flattenedIntIds.at(idx);
+    if (res_id == iris::IRIS_UINT64_MAX)
+        return 0;
+    iris::ResourceReadResult result;
+    call().resource_read(_instId, result, res_id);
+    return result.data.at(0);
+}
+
+void
+ThreadContext::setIntRegFlat(RegIndex idx, uint64_t val)
+{
+    iris::ResourceId res_id =
+        (idx >= flattenedIntIds.size()) ? iris::IRIS_UINT64_MAX :
+        flattenedIntIds.at(idx);
+    panic_if(res_id == iris::IRIS_UINT64_MAX,
+            "Int reg %d is not supported by fast model.", idx);
+    iris::ResourceWriteResult result;
+    call().resource_write(_instId, result, flattenedIntIds.at(idx), val);
+}
+
 RegVal
 ThreadContext::readCCRegFlat(RegIndex idx) const
 {
