@@ -46,4 +46,5 @@ cd git/jenkins-gem5-prod/tests
 
 # Build with 4 threads (i.e., pass -j4 to scons)
 # Run 4 tests in parallel
-./main.py run -j4 -t4
+# Look for tests in the gem5 subdirectory
+./main.py run -j4 -t4 gem5
