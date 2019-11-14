@@ -90,6 +90,54 @@ def template ImmExecute {{
     }
 }};
 
+def template FenceExecute {{
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        if (fault == NoFault) {
+            %(code)s;
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+        return fault;
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic;
+        if (!FUNCT3) {
+            ss << ' ';
+            if (PRED & 0x8)
+                ss << 'i';
+            if (PRED & 0x4)
+                ss << 'o';
+            if (PRED & 0x2)
+                ss << 'r';
+            if (PRED & 0x1)
+                ss << 'w';
+            ss << ", ";
+            if (SUCC & 0x8)
+                ss << 'i';
+            if (SUCC & 0x4)
+                ss << 'o';
+            if (SUCC & 0x2)
+                ss << 'r';
+            if (SUCC & 0x1)
+                ss << 'w';
+        }
+        return ss.str();
+    }
+}};
+
 def template BranchDeclare {{
     //
     // Static instruction class for "%(mnemonic)s".
@@ -305,6 +353,17 @@ def format IOp(code, imm_type='int64_t', *opt_flags) {{
     decoder_output = ImmConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
     exec_output = ImmExecute.subst(iop)
+}};
+
+def format FenceOp(code, imm_type='int64_t', *opt_flags) {{
+    regs = ['_destRegIdx[0]','_srcRegIdx[0]']
+    iop = InstObjParams(name, Name, 'ImmOp<%s>' % imm_type,
+        {'code': code, 'imm_code': 'imm = sext<12>(IMM12);',
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = ImmDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = FenceExecute.subst(iop)
 }};
 
 def format BOp(code, *opt_flags) {{

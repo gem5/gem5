@@ -54,6 +54,10 @@ def bitfield SHAMT6 <25:20>;
 // I-Type
 def bitfield IMM12  <31:20>;
 
+// Sync
+def bitfield SUCC  <23:20>;
+def bitfield PRED  <27:24>;
+
 // S-Type
 def bitfield IMM5   <11:7>;
 def bitfield IMM7   <31:25>;
