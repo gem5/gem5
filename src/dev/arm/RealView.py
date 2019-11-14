@@ -892,12 +892,15 @@ Memory map:
        0x1c0a0000-0x1c0affff: UART1 (reserved)
        0x1c0b0000-0x1c0bffff: UART2 (reserved)
        0x1c0c0000-0x1c0cffff: UART3 (reserved)
+       0x1c0f0000-0x1c0fffff: Watchdog (SP805)
        0x1c130000-0x1c13ffff: VirtIO (gem5/FM extension)
        0x1c140000-0x1c14ffff: VirtIO (gem5/FM extension)
        0x1c170000-0x1c17ffff: RTC
 
    0x20000000-0x3fffffff: On-chip peripherals:
        0x2b000000-0x2b00ffff: HDLCD
+
+       0x2b060000-0x2b060fff: System Watchdog (SP805)
 
        0x2b400000-0x2b41ffff: SMMUv3
 
@@ -927,7 +930,7 @@ Interrupts:
         30   : generic_timer (phys, non-sec)
         31   : Reserved (Legacy IRQ)
     32- 95: Mother board peripherals (SPIs)
-        32   : Reserved (SP805)
+        32   : Watchdog (SP805)
         33   : Reserved (IOFPGA SW int)
         34-35: Reserved (SP804)
         36   : RTC
@@ -945,6 +948,7 @@ Interrupts:
          95    : HDLCD
          96- 98: GPU (reserved)
         100-103: PCI
+        130    : System Watchdog (SP805)
    256-319: MSI frame 0 (gem5-specific, SPIs)
    320-511: Unused
 
@@ -975,9 +979,12 @@ Interrupts:
                                  int_virt=ArmPPI(num=27),
                                  int_hyp=ArmPPI(num=26))
 
+    system_watchdog = Sp805(pio_addr=0x2b060000, int_num=130)
+
     def _on_chip_devices(self):
         return [
             self.generic_timer,
+            self.system_watchdog
         ]
 
     def _on_chip_memory(self):
@@ -997,6 +1004,8 @@ Interrupts:
 
     kmi0 = Pl050(pio_addr=0x1c060000, int_num=44, ps2=PS2Keyboard())
     kmi1 = Pl050(pio_addr=0x1c070000, int_num=45, ps2=PS2TouchKit())
+
+    watchdog = Sp805(pio_addr=0x1c0f0000, int_num=32)
 
     rtc = PL031(pio_addr=0x1c170000, int_num=36)
 
@@ -1021,6 +1030,7 @@ Interrupts:
             self.uart[0],
             self.kmi0,
             self.kmi1,
+            self.watchdog,
             self.rtc,
             self.pci_host,
             self.energy_ctrl,
@@ -1034,6 +1044,8 @@ Interrupts:
         super(VExpress_GEM5_Base, self).__init__(**kwargs)
         self.clock32KHz.voltage_domain = self.io_voltage
         self.clock24MHz.voltage_domain = self.io_voltage
+        self.system_watchdog.clk_domain = self.dcc.osc_sys
+        self.watchdog.clk_domain = self.clock32KHz
 
     def attachPciDevice(self, device, *args, **kwargs):
         device.host = self.pci_host
