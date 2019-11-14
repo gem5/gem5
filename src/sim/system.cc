@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014,2017-2018 ARM Limited
+ * Copyright (c) 2011-2014,2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -354,14 +354,14 @@ System::initState()
             }
             // Load program sections into memory
             kernelImage.write(physProxy);
-            for (const auto &extra_kernel : kernelExtras)
-                extra_kernel->buildImage().move(mapper).write(physProxy);
 
             DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
             DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
             DPRINTF(Loader, "Kernel entry = %#x\n", kernelEntry);
             DPRINTF(Loader, "Kernel loaded...\n");
         }
+        for (const auto &extra_kernel : kernelExtras)
+            extra_kernel->buildImage().move(mapper).write(physProxy);
     }
 }
 
