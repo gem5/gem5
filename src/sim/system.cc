@@ -192,10 +192,15 @@ System::System(Params *p)
             // connected so it will happen in initState()
         }
 
-        for (const auto &obj_name : p->kernel_extras) {
-            inform("Loading additional kernel object: %s", obj_name);
-            ObjectFile *obj = createObjectFile(obj_name);
-            fatal_if(!obj, "Failed to additional kernel object '%s'.\n",
+        if (p->kernel_extras_addrs.empty())
+            p->kernel_extras_addrs.resize(p->kernel_extras.size(), MaxAddr);
+        fatal_if(p->kernel_extras.size() != p->kernel_extras_addrs.size(),
+            "Additional kernel objects, not all load addresses specified\n");
+        for (int ker_idx = 0; ker_idx < p->kernel_extras.size(); ker_idx++) {
+            const std::string &obj_name = p->kernel_extras[ker_idx];
+            const bool raw = p->kernel_extras_addrs[ker_idx] != MaxAddr;
+            ObjectFile *obj = createObjectFile(obj_name, raw);
+            fatal_if(!obj, "Failed to build additional kernel object '%s'.\n",
                      obj_name);
             kernelExtras.push_back(obj);
         }
@@ -360,8 +365,16 @@ System::initState()
             DPRINTF(Loader, "Kernel entry = %#x\n", kernelEntry);
             DPRINTF(Loader, "Kernel loaded...\n");
         }
-        for (const auto &extra_kernel : kernelExtras)
-            extra_kernel->buildImage().move(mapper).write(physProxy);
+        std::function<Addr(Addr)> extra_mapper;
+        for (auto ker_idx = 0; ker_idx < kernelExtras.size(); ker_idx++) {
+            const Addr load_addr = params()->kernel_extras_addrs[ker_idx];
+            auto image = kernelExtras[ker_idx]->buildImage();
+            if (load_addr != MaxAddr)
+                image = image.offset(load_addr);
+            else
+                image = image.move(mapper);
+            image.write(physProxy);
+        }
     }
 }
 
