@@ -454,11 +454,11 @@ ArmSemihosting::callFLen(ThreadContext *tc, bool aarch64,
     if (argv[1] > files.size() || !files[argv[1]])
         return retError(EBADF);
 
-    int64_t ret = files[argv[1]]->isTTY();
+    int64_t ret = files[argv[1]]->flen();
     if (ret < 0) {
         return retError(-ret);
     } else {
-        return retOK(0);
+        return retOK(ret);
     }
 }
 
