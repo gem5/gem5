@@ -443,7 +443,7 @@ decode QUADRANT default Unknown::unknown() {
         }
 
         0x05: UOp::auipc({{
-            Rd = PC + imm;
+            Rd = PC + (sext<20>(imm) << 12);
         }});
 
         0x06: decode FUNCT3 {
@@ -787,7 +787,7 @@ decode QUADRANT default Unknown::unknown() {
         }
 
         0x0d: UOp::lui({{
-            Rd = (uint64_t)imm;
+            Rd = (uint64_t)(sext<20>(imm) << 12);
         }});
 
         0x0e: decode FUNCT3 {

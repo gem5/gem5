@@ -341,7 +341,7 @@ def format Jump(code, *opt_flags) {{
 def format UOp(code, *opt_flags) {{
     regs = ['_destRegIdx[0]']
     iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
-        {'code': code, 'imm_code': 'imm = sext<20>(IMM20) << 12;',
+        {'code': code, 'imm_code': 'imm = IMM20;',
          'regs': ','.join(regs)}, opt_flags)
     header_output = ImmDeclare.subst(iop)
     decoder_output = ImmConstructor.subst(iop)
