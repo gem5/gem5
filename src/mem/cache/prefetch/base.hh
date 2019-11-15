@@ -249,7 +249,7 @@ class BasePrefetcher : public ClockedObject
 
         ~PrefetchInfo()
         {
-            delete data;
+            delete[] data;
         }
     };
 
