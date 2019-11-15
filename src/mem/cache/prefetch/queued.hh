@@ -80,7 +80,8 @@ class QueuedPrefetcher : public BasePrefetcher
          */
         DeferredPacket(QueuedPrefetcher *o, PrefetchInfo const &pfi, Tick t,
             int32_t prio) : owner(o), pfInfo(pfi), tick(t), pkt(nullptr),
-            priority(prio), translationRequest() {
+            priority(prio), translationRequest(), tc(nullptr),
+            ongoingTranslation(false) {
         }
 
         bool operator>(const DeferredPacket& that) const
