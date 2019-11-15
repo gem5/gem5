@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 ARM Limited
+ * Copyright (c) 2018, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -243,6 +243,7 @@ class ArmSemihosting : public SimObject
         FILE *file;
     };
 
+    std::string filesRootDir;
     std::vector<std::unique_ptr<FileBase>> files;
     FILE *stdin;
     FILE *stdout;

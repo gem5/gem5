@@ -1,4 +1,4 @@
-# Copyright (c) 2018 ARM Limited
+# Copyright (c) 2018, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -52,6 +52,8 @@ class ArmSemihosting(SimObject):
                           "Standard output (stdout for gem5's terminal)")
     stderr = Param.String("stderr",
                           "Standard error (stderr for gem5's terminal)")
+    files_root_dir = Param.String("",
+        "Host root directory for files handled by Semihosting")
 
     mem_reserve = Param.MemorySize("32MB",
         "Amount of memory to reserve at the start of the address map. This "
