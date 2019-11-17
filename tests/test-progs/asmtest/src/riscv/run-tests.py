@@ -109,6 +109,8 @@ for test in tests:
     test_name = test + '-' + model
     job_names.append(test_name)
     job_cmds.append([gem5_bin,
+                     '-d', 'm5out/' + test_name,
+                     '--listener-mode', 'off',
                      config,
                      '-m', str(args.max_tick),
                      '--cpu-type', model,
