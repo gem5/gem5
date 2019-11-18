@@ -603,6 +603,9 @@ class RealView(Platform):
     def _on_chip_memory(self):
         return []
 
+    def _off_chip_memory(self):
+        return []
+
     _off_chip_ranges = []
 
     def _attach_memory(self, mem, bus, mem_ports=None):
@@ -653,6 +656,7 @@ class RealView(Platform):
             bridge.ranges = self._off_chip_ranges
 
     def attachIO(self, *args, **kwargs):
+        self._attach_mem(self._off_chip_memory(), *args, **kwargs)
         self._attach_io(self._off_chip_devices(), *args, **kwargs)
 
     def setupBootLoader(self, cur_sys, boot_loader, atags_addr, load_offset):
