@@ -88,8 +88,8 @@ const int NumMiscRegs = NUM_MISCREGS;
 
 // Vec, PredVec
 const int NumFloatV7ArchRegs  = 64;
-const int NumVecV7ArchRegs  = 64;
-const int NumVecV8ArchRegs  = 32;
+const int NumVecV7ArchRegs  = 16; // Q0-Q15
+const int NumVecV8ArchRegs  = 32; // V0-V31
 const int NumVecSpecialRegs = 8;
 const int NumVecIntrlvRegs = 4;
 const int NumVecRegs = NumVecV8ArchRegs + NumVecSpecialRegs + NumVecIntrlvRegs;
