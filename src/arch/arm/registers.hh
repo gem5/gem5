@@ -79,32 +79,26 @@ using ConstVecPredReg = ::VecPredRegT<VecElem, NumVecElemPerVecReg,
 using VecPredRegContainer = VecPredReg::Container;
 
 // Constants Related to the number of registers
+// Int, Float, CC, Misc
 const int NumIntArchRegs = NUM_ARCH_INTREGS;
-// The number of single precision floating point registers
+const int NumIntRegs = NUM_INTREGS;
+const int NumFloatRegs = 0; // Float values are stored in the VecRegs
+const int NumCCRegs = NUM_CCREGS;
+const int NumMiscRegs = NUM_MISCREGS;
+
+// Vec, PredVec
 const int NumFloatV7ArchRegs  = 64;
 const int NumVecV7ArchRegs  = 64;
 const int NumVecV8ArchRegs  = 32;
 const int NumVecSpecialRegs = 8;
-
 const int NumVecIntrlvRegs = 4;
-const int NumIntRegs = NUM_INTREGS;
-const int NumFloatRegs = 0; // Float values are stored in the VecRegs
 const int NumVecRegs = NumVecV8ArchRegs + NumVecSpecialRegs + NumVecIntrlvRegs;
-const int VECREG_UREG0 = 32;
 const int NumVecPredRegs = 18;  // P0-P15, FFR, UREG0
-const int PREDREG_FFR = 16;
-const int PREDREG_UREG0 = 17;
-const int NumCCRegs = NUM_CCREGS;
-const int NumMiscRegs = NUM_MISCREGS;
-const int INTRLVREG0 = NumVecV8ArchRegs + NumVecSpecialRegs;
-const int INTRLVREG1 = INTRLVREG0 + 1;
-const int INTRLVREG2 = INTRLVREG0 + 2;
-const int INTRLVREG3 = INTRLVREG0 + 3;
 
 const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumVecRegs +
     NumVecPredRegs + NumMiscRegs;
 
-// semantically meaningful register indices
+// Semantically meaningful register indices
 const int ReturnValueReg = 0;
 const int ReturnValueReg1 = 1;
 const int ReturnValueReg2 = 2;
@@ -120,6 +114,15 @@ const int ReturnAddressReg = INTREG_LR;
 const int PCReg = INTREG_PC;
 
 const int ZeroReg = INTREG_ZERO;
+
+// Vec, PredVec indices
+const int INTRLVREG0 = NumVecV8ArchRegs + NumVecSpecialRegs;
+const int INTRLVREG1 = INTRLVREG0 + 1;
+const int INTRLVREG2 = INTRLVREG0 + 2;
+const int INTRLVREG3 = INTRLVREG0 + 3;
+const int VECREG_UREG0 = 32;
+const int PREDREG_FFR = 16;
+const int PREDREG_UREG0 = 17;
 
 const int SyscallNumReg = ReturnValueReg;
 const int SyscallPseudoReturnReg = ReturnValueReg;
