@@ -51,7 +51,7 @@ static_assert(NUM_XREGS == 31, "Unexpected number of aarch64 int. regs.");
 
 // The KVM interface accesses vector registers of 4 single precision
 // floats instead of individual registers.
-constexpr static unsigned NUM_QREGS = NumFloatV8ArchRegs / 4;
+constexpr static unsigned NUM_QREGS = NumVecV8ArchRegs;
 static_assert(NUM_QREGS == 32, "Unexpected number of aarch64 vector regs.");
 
 #define EXTRACT_FIELD(v, name) \

@@ -82,7 +82,6 @@ using VecPredRegContainer = VecPredReg::Container;
 const int NumIntArchRegs = NUM_ARCH_INTREGS;
 // The number of single precision floating point registers
 const int NumFloatV7ArchRegs  = 64;
-const int NumFloatV8ArchRegs  = 128;
 const int NumVecV7ArchRegs  = 64;
 const int NumVecV8ArchRegs  = 32;
 const int NumVecSpecialRegs = 8;

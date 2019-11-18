@@ -1123,7 +1123,7 @@ VldMultOp64::VldMultOp64(const char *mnem, ExtMachInst machInst,
                          uint8_t numStructElems, uint8_t numRegs, bool wb) :
     PredMacroOp(mnem, machInst, __opClass)
 {
-    RegIndex vx = NumFloatV8ArchRegs / 4;
+    RegIndex vx = NumVecV8ArchRegs;
     RegIndex rnsp = (RegIndex) makeSP((IntRegIndex) rn);
     bool baseIsSP = isSP((IntRegIndex) rnsp);
 
@@ -1208,7 +1208,7 @@ VstMultOp64::VstMultOp64(const char *mnem, ExtMachInst machInst,
                          uint8_t numStructElems, uint8_t numRegs, bool wb) :
     PredMacroOp(mnem, machInst, __opClass)
 {
-    RegIndex vx = NumFloatV8ArchRegs / 4;
+    RegIndex vx = NumVecV8ArchRegs;
     RegIndex rnsp = (RegIndex) makeSP((IntRegIndex) rn);
     bool baseIsSP = isSP((IntRegIndex) rnsp);
 
@@ -1297,7 +1297,7 @@ VldSingleOp64::VldSingleOp64(const char *mnem, ExtMachInst machInst,
     wb(false), replicate(false)
 
 {
-    RegIndex vx = NumFloatV8ArchRegs / 4;
+    RegIndex vx = NumVecV8ArchRegs;
     RegIndex rnsp = (RegIndex) makeSP((IntRegIndex) rn);
     bool baseIsSP = isSP((IntRegIndex) rnsp);
 
@@ -1370,7 +1370,7 @@ VstSingleOp64::VstSingleOp64(const char *mnem, ExtMachInst machInst,
     eSize(0), dataSize(0), numStructElems(0), index(0),
     wb(false), replicate(false)
 {
-    RegIndex vx = NumFloatV8ArchRegs / 4;
+    RegIndex vx = NumVecV8ArchRegs;
     RegIndex rnsp = (RegIndex) makeSP((IntRegIndex) rn);
     bool baseIsSP = isSP((IntRegIndex) rnsp);
 
