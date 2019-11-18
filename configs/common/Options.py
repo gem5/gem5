@@ -444,6 +444,8 @@ def addFSOptions(parser):
                 action="store_true", help="Enable stats dump at context "\
                 "switches and dump tasks file (required for Streamline)")
         parser.add_option("--vio-9p", action="store_true", help=vio_9p_help)
+        parser.add_option("--bootloader", action='append',
+                help="executable file that runs before the --kernel")
 
     # Benchmark options
     parser.add_option("--dual", action="store_true",

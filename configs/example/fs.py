@@ -104,6 +104,7 @@ def build_test_system(np):
             ruby=options.ruby,
             security=options.enable_security_extensions,
             vio_9p=options.vio_9p,
+            bootloader=options.bootloader,
         )
         if options.enable_context_switch_stats_dump:
             test_sys.enable_context_switch_stats_dump = True

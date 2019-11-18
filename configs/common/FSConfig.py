@@ -221,7 +221,7 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
 def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
                   dtb_filename=None, bare_metal=False, cmdline=None,
                   external_memory="", ruby=False, security=False,
-                  vio_9p=None):
+                  vio_9p=None, bootloader=None):
     assert machine_type
 
     pci_devices = []
@@ -312,7 +312,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
                       'lpj=19988480 norandmaps rw loglevel=8 ' + \
                       'mem=%(mem)s root=%(rootdev)s'
 
-        self.realview.setupBootLoader(self, binary)
+        self.realview.setupBootLoader(self, binary, bootloader)
 
         if hasattr(self.realview.gic, 'cpu_addr'):
             self.gic_cpu_addr = self.realview.gic.cpu_addr
