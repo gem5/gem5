@@ -1873,10 +1873,29 @@ def format ThumbNeonData() {{
 
 let {{
     header_output = '''
+    bool
+    wrongVLdmStmRegs(IntRegIndex start_reg, uint8_t count, bool single);
+
     StaticInstPtr
     decodeExtensionRegLoadStore(ExtMachInst machInst);
     '''
     decoder_output = '''
+    bool
+    wrongVLdmStmRegs(RegIndex start_reg, uint8_t count, bool single)
+    {
+        if (single) {
+            const auto regs = count;
+            if (regs == 0 || start_reg + regs > NumFloatV7ArchRegs)
+                return true;
+        } else {
+            const auto regs = count/2;
+            if (regs == 0 || start_reg + regs > NumFloatV7ArchRegs ||
+                regs > 16)
+                return true;
+        }
+        return false;
+    }
+
     StaticInstPtr
     decodeExtensionRegLoadStore(ExtMachInst machInst)
     {
@@ -1923,7 +1942,7 @@ let {{
             break;
           case 0x1:
             {
-                if (offset == 0 || vd + offset/2 > NumFloatV7ArchRegs) {
+                if (wrongVLdmStmRegs(vd, offset, single)) {
                     break;
                 }
                 switch (bits(opcode, 1, 0)) {
@@ -1946,12 +1965,20 @@ let {{
             }
           case 0x2:
             if (bits(opcode, 1, 0) == 0x2) {
-                // If rn == sp, then this is called vpush.
-                return new VLdmStm(machInst, rn, vd, single,
-                                   false, true, false, offset);
+                if (wrongVLdmStmRegs(vd, offset, single)) {
+                    break;
+                } else {
+                    // If rn == sp, then this is called vpush.
+                    return new VLdmStm(machInst, rn, vd, single,
+                                       false, true, false, offset);
+                }
             } else if (bits(opcode, 1, 0) == 0x3) {
-                return new VLdmStm(machInst, rn, vd, single,
-                                   false, true, true, offset);
+                if (wrongVLdmStmRegs(vd, offset, single)) {
+                    break;
+                } else {
+                    return new VLdmStm(machInst, rn, vd, single,
+                                       false, true, true, offset);
+                }
             }
             M5_FALLTHROUGH;
           case 0x3:

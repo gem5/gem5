@@ -1446,15 +1446,6 @@ MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
     // to be functionally identical except that fldmx is deprecated. For now
     // we'll assume they're otherwise interchangable.
     int count = (single ? offset : (offset / 2));
-    if (count == 0 || count > NumFloatV7ArchRegs)
-        warn_once("Bad offset field for VFP load/store multiple.\n");
-    if (count == 0) {
-        // Force there to be at least one microop so the macroop makes sense.
-        writeback = true;
-    }
-    if (count > NumFloatV7ArchRegs)
-        count = NumFloatV7ArchRegs;
-
     numMicroops = count * (single ? 1 : 2) + (writeback ? 1 : 0);
     microOps = new StaticInstPtr[numMicroops];
 
