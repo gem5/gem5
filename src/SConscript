@@ -54,7 +54,7 @@ from os.path import basename, dirname, exists, isdir, isfile, join as joinpath
 
 import SCons
 
-from gem5_scons import Transform
+from gem5_scons import Transform, warning, error
 
 # This file defines how to build a particular configuration of gem5
 # based on variable settings in the 'env' build environment.
@@ -1020,8 +1020,7 @@ if env['HAVE_PROTOC'] and env['HAVE_PROTOBUF']:
         # Add the C++ source file
         Source(proto.cc_file, tags=proto.tags)
 elif ProtoBuf.all:
-    print('Got protobuf to build, but lacks support!')
-    Exit(1)
+    error('Got protobuf to build, but lacks support!')
 
 #
 # Handle debug flags
@@ -1334,8 +1333,7 @@ elif env['CLANG']:
     for target in ['opt', 'fast', 'prof', 'perf']:
         ccflags[target] += ['-O3']
 else:
-    print('Unknown compiler, please fix compiler options')
-    Exit(1)
+    error('Unknown compiler, please fix compiler options')
 
 
 # To speed things up, we only instantiate the build environments we
