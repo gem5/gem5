@@ -1901,14 +1901,8 @@ let {{
         const uint32_t offset = bits(machInst, 7, 0);
         const bool single = (bits(machInst, 8) == 0);
         const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        RegIndex vd;
-        if (single) {
-            vd = (RegIndex)(uint32_t)((bits(machInst, 15, 12) << 1) |
-                                      bits(machInst, 22));
-        } else {
-            vd = (RegIndex)(uint32_t)((bits(machInst, 15, 12) << 1) |
-                                      (bits(machInst, 22) << 5));
-        }
+        RegIndex vd = decodeFpVd(machInst, single ? 0x2 : 0x3, false);
+
         switch (bits(opcode, 4, 3)) {
           case 0x0:
             if (bits(opcode, 4, 1) == 0x2 &&
@@ -1982,13 +1976,6 @@ let {{
           case 0x3:
             const bool up = (bits(machInst, 23) == 1);
             const uint32_t imm = bits(machInst, 7, 0) << 2;
-            if (single) {
-                vd = (RegIndex)(uint32_t)((bits(machInst, 15, 12) << 1) |
-                                          (bits(machInst, 22)));
-            } else {
-                vd = (RegIndex)(uint32_t)((bits(machInst, 15, 12) << 1) |
-                                          (bits(machInst, 22) << 5));
-            }
             if (bits(opcode, 1, 0) == 0x0) {
                 if (single) {
                     if (up) {
@@ -2047,6 +2034,10 @@ let {{
     header_output = '''
     StaticInstPtr
     decodeShortFpTransfer(ExtMachInst machInst);
+
+    IntRegIndex decodeFpVd(ExtMachInst machInst, uint32_t size, bool isInt);
+    IntRegIndex decodeFpVm(ExtMachInst machInst, uint32_t size, bool isInt);
+    IntRegIndex decodeFpVn(ExtMachInst machInst, uint32_t size);
     '''
     decoder_output = '''
     IntRegIndex decodeFpVd(ExtMachInst machInst, uint32_t size, bool isInt)
