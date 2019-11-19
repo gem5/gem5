@@ -87,7 +87,11 @@ const int NumCCRegs = NUM_CCREGS;
 const int NumMiscRegs = NUM_MISCREGS;
 
 // Vec, PredVec
-const int NumFloatV7ArchRegs  = 64;
+// NumFloatV7ArchRegs: This in theory should be 32.
+// However in A32 gem5 is splitting double register accesses in two
+// subsequent single register ones. This means we would use a index
+// bigger than 31 when accessing D16-D31.
+const int NumFloatV7ArchRegs = 64; // S0-S31, D0-D31
 const int NumVecV7ArchRegs  = 16; // Q0-Q15
 const int NumVecV8ArchRegs  = 32; // V0-V31
 const int NumVecSpecialRegs = 8;
@@ -116,6 +120,7 @@ const int PCReg = INTREG_PC;
 const int ZeroReg = INTREG_ZERO;
 
 // Vec, PredVec indices
+const int VecSpecialElem = NumVecV8ArchRegs * NumVecElemPerNeonVecReg;
 const int INTRLVREG0 = NumVecV8ArchRegs + NumVecSpecialRegs;
 const int INTRLVREG1 = INTRLVREG0 + 1;
 const int INTRLVREG2 = INTRLVREG0 + 2;

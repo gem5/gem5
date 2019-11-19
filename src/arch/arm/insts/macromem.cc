@@ -472,7 +472,7 @@ VldMultOp::VldMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
     if (deinterleave) numMicroops += (regs / elems);
     microOps = new StaticInstPtr[numMicroops];
 
-    RegIndex rMid = deinterleave ? NumFloatV7ArchRegs : vd * 2;
+    RegIndex rMid = deinterleave ? VecSpecialElem : vd * 2;
 
     uint32_t noAlign = TLB::MustBeOne;
 
@@ -575,7 +575,7 @@ VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
     numMicroops += (regs / elems);
     microOps = new StaticInstPtr[numMicroops];
 
-    RegIndex ufp0 = NumFloatV7ArchRegs;
+    RegIndex ufp0 = VecSpecialElem;
 
     unsigned uopIdx = 0;
     switch (loadSize) {
@@ -837,7 +837,7 @@ VstMultOp::VstMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
 
     uint32_t noAlign = TLB::MustBeOne;
 
-    RegIndex rMid = interleave ? NumFloatV7ArchRegs : vd * 2;
+    RegIndex rMid = interleave ? VecSpecialElem : vd * 2;
 
     unsigned uopIdx = 0;
     if (interleave) {
@@ -939,7 +939,7 @@ VstSingleOp::VstSingleOp(const char *mnem, ExtMachInst machInst,
     numMicroops += (regs / elems);
     microOps = new StaticInstPtr[numMicroops];
 
-    RegIndex ufp0 = NumFloatV7ArchRegs;
+    RegIndex ufp0 = VecSpecialElem;
 
     unsigned uopIdx = 0;
     switch (elems) {
