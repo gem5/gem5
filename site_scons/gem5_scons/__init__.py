@@ -38,9 +38,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import os
 
 from gem5_scons.util import get_termcap
+import SCons.Script
 
 termcap = get_termcap()
 
@@ -124,4 +127,18 @@ class Transform(object):
             return ', '.join(f)
         return self.format % (com_pfx, fmt(srcs), fmt(tgts))
 
-__all__ = ['Transform']
+def print_message(prefix, color, message, **kwargs):
+    lines = message.split('\n')
+    message = prefix + ('\n' + ' ' * len(prefix)).join(lines)
+    print(color + termcap.Bold + message + termcap.Normal, **kwargs)
+
+def warning(*args, **kwargs):
+    message = ' '.join(args)
+    print_message('Warning: ', termcap.Yellow, message, **kwargs)
+
+def error(*args, **kwargs):
+    message = ' '.join(args)
+    print_message('Error: ', termcap.Red, message, **kwargs)
+    SCons.Script.Exit(1)
+
+__all__ = ['Transform', 'warning', 'error']
