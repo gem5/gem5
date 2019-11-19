@@ -1006,14 +1006,14 @@ if env['USE_PYTHON']:
         Source(cc_file)
 
 # Build all protocol buffers if we have got protoc and protobuf available
-if env['HAVE_PROTOBUF']:
+if env['HAVE_PROTOC'] and env['HAVE_PROTOBUF']:
     for proto in ProtoBuf.all:
         # Use both the source and header as the target, and the .proto
         # file as the source. When executing the protoc compiler, also
         # specify the proto_path to avoid having the generated files
         # include the path.
         env.Command([proto.cc_file, proto.hh_file], proto.tnode,
-                    MakeAction('$PROTOC --cpp_out ${TARGET.dir} '
+                    MakeAction('${PROTOC} --cpp_out ${TARGET.dir} '
                                '--proto_path ${SOURCE.dir} $SOURCE',
                                Transform("PROTOC")))
 
