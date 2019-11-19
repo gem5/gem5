@@ -595,44 +595,49 @@ if sys.platform == 'cygwin':
 have_pkg_config = readCommand(['pkg-config', '--version'], exception='')
 
 # Check for the protobuf compiler
-protoc_version = readCommand([main['PROTOC'], '--version'],
-                             exception='').split()
+try:
+    main['HAVE_PROTOC'] = True
+    protoc_version = readCommand([main['PROTOC'], '--version']).split()
 
-# First two words should be "libprotoc x.y.z"
-if len(protoc_version) < 2 or protoc_version[0] != 'libprotoc':
-    print(termcap.Yellow + termcap.Bold +
-        'Warning: Protocol buffer compiler (protoc) not found.\n' +
-        '         Please install protobuf-compiler for tracing support.' +
-        termcap.Normal)
-    main['PROTOC'] = False
-else:
-    # Based on the availability of the compress stream wrappers,
-    # require 2.1.0
-    min_protoc_version = '2.1.0'
-    if compareVersions(protoc_version[1], min_protoc_version) < 0:
+    # First two words should be "libprotoc x.y.z"
+    if len(protoc_version) < 2 or protoc_version[0] != 'libprotoc':
         print(termcap.Yellow + termcap.Bold +
-            'Warning: protoc version', min_protoc_version,
-            'or newer required.\n' +
-            '         Installed version:', protoc_version[1],
+            'Warning: Protocol buffer compiler (protoc) not found.\n' +
+            '         Please install protobuf-compiler for tracing support.' +
             termcap.Normal)
-        main['PROTOC'] = False
+        main['HAVE_PROTOC'] = False
     else:
-        # Attempt to determine the appropriate include path and
-        # library path using pkg-config, that means we also need to
-        # check for pkg-config. Note that it is possible to use
-        # protobuf without the involvement of pkg-config. Later on we
-        # check go a library config check and at that point the test
-        # will fail if libprotobuf cannot be found.
-        if have_pkg_config:
-            try:
-                # Attempt to establish what linking flags to add for protobuf
-                # using pkg-config
-                main.ParseConfig('pkg-config --cflags --libs-only-L protobuf')
-            except:
-                print(termcap.Yellow + termcap.Bold +
-                    'Warning: pkg-config could not get protobuf flags.' +
-                    termcap.Normal)
-
+        # Based on the availability of the compress stream wrappers,
+        # require 2.1.0
+        min_protoc_version = '2.1.0'
+        if compareVersions(protoc_version[1], min_protoc_version) < 0:
+            print(termcap.Yellow + termcap.Bold +
+                'Warning: protoc version', min_protoc_version,
+                'or newer required.\n' +
+                '         Installed version:', protoc_version[1],
+                termcap.Normal)
+            main['HAVE_PROTOC'] = False
+        else:
+            # Attempt to determine the appropriate include path and
+            # library path using pkg-config, that means we also need to
+            # check for pkg-config. Note that it is possible to use
+            # protobuf without the involvement of pkg-config. Later on we
+            # check go a library config check and at that point the test
+            # will fail if libprotobuf cannot be found.
+            if have_pkg_config:
+                try:
+                    # Attempt to establish what linking flags to add for
+                    # protobuf
+                    # using pkg-config
+                    main.ParseConfig(
+                            'pkg-config --cflags --libs-only-L protobuf')
+                except:
+                    print(termcap.Yellow + termcap.Bold +
+                        'Warning: pkg-config could not get protobuf flags.' +
+                        termcap.Normal)
+except Exception as e:
+    print(termcap.Yellow + termcap.Bold + str(e) + termcap.Normal)
+    main['HAVE_PROTOC'] = False
 
 # Check for 'timeout' from GNU coreutils. If present, regressions will
 # be run with a time limit. We require version 8.13 since we rely on
@@ -787,7 +792,7 @@ if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
 # automatically added to the LIBS environment variable. After
 # this, we can use the HAVE_PROTOBUF flag to determine if we have
 # got both protoc and libprotobuf available.
-main['HAVE_PROTOBUF'] = main['PROTOC'] and \
+main['HAVE_PROTOBUF'] = main['HAVE_PROTOC'] and \
     conf.CheckLibWithHeader('protobuf', 'google/protobuf/message.h',
                             'C++', 'GOOGLE_PROTOBUF_VERIFY_VERSION;')
 
@@ -796,7 +801,7 @@ main['HAVE_PROTOBUF'] = main['PROTOC'] and \
 main['HAVE_VALGRIND'] = conf.CheckCHeader('valgrind/valgrind.h')
 
 # If we have the compiler but not the library, print another warning.
-if main['PROTOC'] and not main['HAVE_PROTOBUF']:
+if main['HAVE_PROTOC'] and not main['HAVE_PROTOBUF']:
     print(termcap.Yellow + termcap.Bold +
         'Warning: did not find protocol buffer library and/or headers.\n' +
     '       Please install libprotobuf-dev for tracing support.' +
