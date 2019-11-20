@@ -158,7 +158,7 @@ class FutexMap : public std::unordered_map<FutexKey, WaiterList>
             // must only count threads that were actually
             // woken up by this syscall.
             auto& tc = waiterList.front().tc;
-            if (tc->status() != ThreadContext::Active) {
+            if (tc->status() == ThreadContext::Suspended) {
                 tc->activate();
                 woken_up++;
             }
