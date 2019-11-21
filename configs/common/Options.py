@@ -369,7 +369,7 @@ def addSEOptions(parser):
                       help="Redirect stdout to a file.")
     parser.add_option("--errout", default="",
                       help="Redirect stderr to a file.")
-    parser.add_option("--chroot", action="store", type="string", default="/",
+    parser.add_option("--chroot", action="store", type="string", default=None,
                       help="The chroot option allows a user to alter the "    \
                            "search path for processes running in SE mode. "   \
                            "Normally, the search path would begin at the "    \

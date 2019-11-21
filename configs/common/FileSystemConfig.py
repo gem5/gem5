@@ -140,11 +140,7 @@ def config_filesystem(system, options = None):
     tmpdir = joinpath(fsdir, 'tmp')
     replace_tree(tmpdir)
 
-    if options and hasattr(options, 'chroot'):
-        chroot = os.path.expanduser(options.chroot)
-    else:
-        chroot = '/'
-    system.redirect_paths = _redirect_paths(chroot)
+    system.redirect_paths = _redirect_paths(options)
 
 def register_node(cpu_list, mem, node_number):
     nodebasedir = joinpath(m5.options.outdir, 'fs', 'sys', 'devices',
@@ -201,14 +197,20 @@ def register_cache(level, idu_type, size, line_size, assoc, cpus):
         file_append((indexdir, 'physical_line_partition'), '1')
         file_append((indexdir, 'shared_cpu_map'), hex_mask(cpus))
 
-def _redirect_paths(chroot):
+def _redirect_paths(options):
     # Redirect filesystem syscalls from src to the first matching dests
     redirect_paths = [RedirectPath(app_path = "/proc",
                           host_paths = ["%s/fs/proc" % m5.options.outdir]),
                       RedirectPath(app_path = "/sys",
                           host_paths = ["%s/fs/sys"  % m5.options.outdir]),
                       RedirectPath(app_path = "/tmp",
-                          host_paths = ["%s/fs/tmp"  % m5.options.outdir]),
-                      RedirectPath(app_path = "/",
-                          host_paths = ["%s"         % chroot])]
+                          host_paths = ["%s/fs/tmp"  % m5.options.outdir])]
+
+    chroot = getattr(options, 'chroot', None)
+    if chroot:
+        redirect_paths.append(
+            RedirectPath(
+                app_path = "/",
+                host_paths = ["%s" % os.path.expanduser(chroot)]))
+
     return redirect_paths
