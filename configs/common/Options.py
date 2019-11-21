@@ -1,4 +1,4 @@
-# Copyright (c) 2013 ARM Limited
+# Copyright (c) 2013-2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -381,6 +381,13 @@ def addSEOptions(parser):
                            "for information or functionality. Instead of "    \
                            "finding files on the __HOST__ filesystem, the "   \
                            "process will find the user's replacment files.")
+    parser.add_option("--redirects", action="append", type="string",
+                      default=[],
+                      help="A collection of one or more redirect paths "
+                           "to be used in syscall emulation."
+                           "Usage: gem5.opt [...] --redirects /dir1=/path/"
+                           "to/host/dir1 --redirects /dir2=/path/to/host/dir2")
+
 
 
 def addFSOptions(parser):
