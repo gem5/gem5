@@ -69,6 +69,7 @@ class ThreadContext : public ::ThreadContext
     mutable std::vector<ArmISA::VecPredRegContainer> vecPredRegs;
 
     Status _status = Active;
+    Event *enableAfterPseudoEvent;
 
     virtual void initFromIrisInstance(const ResourceMap &resources);
 
@@ -147,11 +148,15 @@ class ThreadContext : public ::ThreadContext
     iris::IrisErrorCode breakpointHit(
             uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
             uint64_t sInstId, bool syncEc, std::string &error_message_out);
+    iris::IrisErrorCode semihostingEvent(
+            uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
+            uint64_t sInstId, bool syncEc, std::string &error_message_out);
 
     iris::EventStreamId regEventStreamId;
     iris::EventStreamId initEventStreamId;
     iris::EventStreamId timeEventStreamId;
     iris::EventStreamId breakpointEventStreamId;
+    iris::EventStreamId semihostingEventStreamId;
 
     mutable iris::IrisInstance client;
     iris::IrisCppAdapter &call() const { return client.irisCall(); }

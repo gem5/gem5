@@ -29,11 +29,13 @@
 
 #include <utility>
 
+#include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
 #include "iris/detail/IrisCppAdapter.h"
 #include "iris/detail/IrisObjects.h"
 #include "mem/se_translating_port_proxy.hh"
 #include "mem/translating_port_proxy.hh"
+#include "sim/pseudo_inst.hh"
 
 namespace Iris
 {
@@ -62,6 +64,17 @@ ThreadContext::initFromIrisInstance(const ResourceMap &resources)
 
     for (auto it = bps.begin(); it != bps.end(); it++)
         installBp(it);
+
+    client.registerEventCallback<Self, &Self::semihostingEvent>(
+            this, "ec_IRIS_SEMIHOSTING_CALL_EXTENSION",
+            "Handle a semihosting call", "Iris::ThreadContext");
+    call().event_getEventSource(_instId, evSrcInfo,
+            "IRIS_SEMIHOSTING_CALL_EXTENSION");
+    call().eventStream_create(_instId, semihostingEventStreamId,
+            evSrcInfo.evSrcId, client.getInstId(),
+            // Set all arguments to their defaults, except syncEc which is
+            // changed to true.
+            nullptr, "", false, 0, nullptr, false, false, true);
 }
 
 iris::ResourceId
@@ -243,6 +256,28 @@ ThreadContext::breakpointHit(
     return iris::E_ok;
 }
 
+iris::IrisErrorCode
+ThreadContext::semihostingEvent(
+        uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
+        uint64_t sInstId, bool syncEc, std::string &error_message_out)
+{
+    if (ArmSystem::callSemihosting(this, true)) {
+        // Stop execution in case an exit of the sim loop was scheduled. We
+        // don't want to keep executing instructions in the mean time.
+        call().perInstanceExecution_setState(_instId, false);
+
+        // Schedule an event to resume execution right after any exit has
+        // had a chance to happen.
+        if (!enableAfterPseudoEvent->scheduled())
+            getCpuPtr()->schedule(enableAfterPseudoEvent, curTick());
+
+        call().semihosting_return(_instId, readIntReg(0));
+    } else {
+        call().semihosting_notImplemented(_instId);
+    }
+    return iris::E_ok;
+}
+
 ThreadContext::ThreadContext(
         BaseCPU *cpu, int id, System *system, ::BaseTLB *dtb, ::BaseTLB *itb,
         iris::IrisConnectionInterface *iris_if, const std::string &iris_path) :
@@ -299,6 +334,14 @@ ThreadContext::ThreadContext(
             evSrcInfo.evSrcId, client.getInstId());
 
     breakpointEventStreamId = iris::IRIS_UINT64_MAX;
+    semihostingEventStreamId = iris::IRIS_UINT64_MAX;
+
+    auto enable_lambda = [this]{
+        call().perInstanceExecution_setState(_instId, true);
+    };
+    enableAfterPseudoEvent = new EventFunctionWrapper(
+            enable_lambda, "resume after pseudo inst",
+            false, Event::Sim_Exit_Pri + 1);
 }
 
 ThreadContext::~ThreadContext()
@@ -317,6 +360,10 @@ ThreadContext::~ThreadContext()
             iris::IrisInstIdGlobalInstance, timeEventStreamId);
     timeEventStreamId = iris::IRIS_UINT64_MAX;
     client.unregisterEventCallback("ec_IRIS_SIMULATION_TIME_EVENT");
+
+    if (enableAfterPseudoEvent->scheduled())
+        getCpuPtr()->deschedule(enableAfterPseudoEvent);
+    delete enableAfterPseudoEvent;
 }
 
 bool
@@ -424,6 +471,8 @@ ThreadContext::status() const
 void
 ThreadContext::setStatus(Status new_status)
 {
+    if (enableAfterPseudoEvent->scheduled())
+        getCpuPtr()->deschedule(enableAfterPseudoEvent);
     if (new_status == Active) {
         if (_status != Active)
             call().perInstanceExecution_setState(_instId, true);
