@@ -877,9 +877,9 @@ Interrupts:
 
     _off_chip_ranges = [
         # CS1-CS5
-        AddrRange(0x0c000000, 0x1fffffff),
+        AddrRange(0x0c000000, 0x20000000),
         # External AXI interface (PCI)
-        AddrRange(0x2f000000, 0x7fffffff),
+        AddrRange(0x2f000000, 0x80000000),
     ]
 
     bootmem = SimpleMemory(range=AddrRange(0, size='64MB'),
