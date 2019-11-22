@@ -2131,7 +2131,6 @@ template <class OS>
 SyscallReturn
 execveFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
-    desc->setFlags(0);
     auto p = tc->getProcessPtr();
 
     int index = 0;
@@ -2215,8 +2214,7 @@ execveFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     TheISA::PCState pcState = tc->pcState();
     tc->setNPC(pcState.instAddr());
 
-    desc->setFlags(SyscallDesc::SuppressReturnValue);
-    return 0;
+    return SyscallReturn();
 }
 
 /// Target getrusage() function.

@@ -81,7 +81,7 @@ SyscallDesc::doSyscall(int callnum, ThreadContext *tc, Fault *fault)
     } else
         DPRINTF_SYSCALL(Base, "%s returns %d\n", _name, retval.encodedValue());
 
-    if (!(_flags & SyscallDesc::SuppressReturnValue) && !retval.needsRetry())
+    if (!retval.suppressed() && !retval.needsRetry())
         process->setSyscallReturn(tc, retval);
 }
 
