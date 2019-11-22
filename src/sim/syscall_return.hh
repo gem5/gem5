@@ -63,9 +63,10 @@ class SyscallReturn
     /// conversion, so a bare integer is used where a SyscallReturn
     /// value is expected, e.g., as the return value from a system
     /// call emulation function ('return 0;' or 'return -EFAULT;').
-    SyscallReturn(int64_t v)
-        : value(v), retryFlag(false)
-    {}
+    SyscallReturn(int64_t v) : value(v) {}
+
+    /// A SyscallReturn constructed with no value means don't return anything.
+    SyscallReturn() : suppressedFlag(true) {}
 
     /// Pseudo-constructor to create an instance with the retry flag set.
     static SyscallReturn
@@ -87,6 +88,9 @@ class SyscallReturn
 
     /// Does the syscall need to be retried?
     bool needsRetry() const { return retryFlag; }
+
+    /// Should returning this value be suppressed?
+    bool suppressed() const { return suppressedFlag; }
 
     /// The return value
     int64_t
@@ -110,7 +114,8 @@ class SyscallReturn
   private:
     int64_t value;
 
-    bool retryFlag;
+    bool retryFlag = false;
+    bool suppressedFlag =  false;
 };
 
 #endif
