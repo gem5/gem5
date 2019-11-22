@@ -68,7 +68,8 @@ class SyscallReturn
     {}
 
     /// Pseudo-constructor to create an instance with the retry flag set.
-    static SyscallReturn retry()
+    static SyscallReturn
+    retry()
     {
         SyscallReturn s(0);
         s.retryFlag = true;
@@ -78,7 +79,8 @@ class SyscallReturn
     ~SyscallReturn() {}
 
     /// Was the system call successful?
-    bool successful() const
+    bool
+    successful() const
     {
         return (value >= 0 || value <= -4096);
     }
@@ -87,27 +89,25 @@ class SyscallReturn
     bool needsRetry() const { return retryFlag; }
 
     /// The return value
-    int64_t returnValue() const
+    int64_t
+    returnValue() const
     {
         assert(successful());
         return value;
     }
 
     /// The errno value
-    int errnoValue() const
+    int
+    errnoValue() const
     {
         assert(!successful());
         return -value;
     }
 
     /// The encoded value (as described above)
-    int64_t encodedValue() const
-    {
-        return value;
-    }
+    int64_t encodedValue() const { return value; }
 
   private:
-
     int64_t value;
 
     bool retryFlag;
