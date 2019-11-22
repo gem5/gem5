@@ -127,9 +127,12 @@ SyscallReturn unimplementedFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 
 /// Handler for unimplemented syscalls that we never intend to
 /// implement (signal handling, etc.) and should not affect the correct
-/// behavior of the program.  Print a warning only if the appropriate
-/// trace flag is enabled.  Return success to the target program.
+/// behavior of the program.  Prints a warning.  Return success to the target
+/// program.
 SyscallReturn ignoreFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+/// Like above, but only prints a warning once per syscall desc it's used with.
+SyscallReturn
+ignoreWarnOnceFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 
 // Target fallocateFunc() handler.
 SyscallReturn fallocateFunc(SyscallDesc *desc, int num, ThreadContext *tc);

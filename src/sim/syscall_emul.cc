@@ -39,6 +39,7 @@
 #include <iostream>
 #include <mutex>
 #include <string>
+#include <unordered_map>
 
 #include "arch/utility.hh"
 #include "base/chunk_generator.hh"
@@ -75,9 +76,20 @@ unimplementedFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 SyscallReturn
 ignoreFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
-    if (desc->needWarning()) {
-        warn("ignoring syscall %s(...)%s", desc->name(), desc->warnOnce() ?
-             "\n      (further warnings will be suppressed)" : "");
+    warn("ignoring syscall %s(...)", desc->name());
+    return 0;
+}
+
+SyscallReturn
+ignoreWarnOnceFunc(SyscallDesc *desc, int num, ThreadContext *tc)
+{
+    static std::unordered_map<SyscallDesc *, bool> bool_map;
+
+    bool &warned = bool_map[desc];
+    if (!warned) {
+        warn("ignoring syscall %s(...)\n"
+             "      (further warnings will be suppressed)", desc->name());
+        warned = true;
     }
 
     return 0;
