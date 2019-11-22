@@ -284,6 +284,9 @@ class Event : public EventBase, public Serializable
     // This function isn't really useful if TRACING_ON is not defined
     virtual void trace(const char *action);     //!< trace event activity
 
+    /// Return the instance number as a string.
+    const std::string instanceString() const;
+
   protected: /* Memory management */
     /**
      * @{
