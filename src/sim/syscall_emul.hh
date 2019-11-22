@@ -1890,7 +1890,10 @@ mmapImpl(SyscallDesc *desc, int num, ThreadContext *tc, bool is_mmap2)
         if (p->interpImage.contains(tc->pcState().instAddr())) {
             std::shared_ptr<FDEntry> fdep = (*p->fds)[tgt_fd];
             auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
-            ObjectFile *lib = createObjectFile(ffdp->getFileName());
+            auto process = tc->getProcessPtr();
+            ObjectFile *lib = createObjectFile(
+                process->checkPathRedirect(
+                    ffdp->getFileName()));
 
             if (lib) {
                 lib->loadAllSymbols(debugSymbolTable,
