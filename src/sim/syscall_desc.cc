@@ -43,7 +43,6 @@
 #include "sim/faults.hh"
 #include "sim/process.hh"
 #include "sim/syscall_debug_macros.hh"
-#include "sim/syscall_return.hh"
 
 void
 SyscallDesc::doSyscall(int callnum, ThreadContext *tc, Fault *fault)
@@ -69,7 +68,7 @@ SyscallDesc::doSyscall(int callnum, ThreadContext *tc, Fault *fault)
                     _name, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5]);
 
     /** Invoke the system call */
-    SyscallReturn retval = (*executor)(this, callnum, tc);
+    SyscallReturn retval = executor(this, callnum, tc);
 
     /**
      * If the system call needs to be restarted, most likely due to

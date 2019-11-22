@@ -46,13 +46,14 @@
 #ifndef __SIM_SYSCALL_DESC_HH__
 #define __SIM_SYSCALL_DESC_HH__
 
+#include <functional>
 #include <string>
 
 #include "base/types.hh"
+#include "sim/syscall_return.hh"
 
 class Process;
 class SyscallDesc;
-class SyscallReturn;
 class ThreadContext;
 
 SyscallReturn unimplementedFunc(SyscallDesc *desc, int num,
@@ -66,15 +67,13 @@ SyscallReturn unimplementedFunc(SyscallDesc *desc, int num,
  */
 class SyscallDesc {
   public:
-    /** Typedef the function pointer here to clean up code below */
-    typedef SyscallReturn (*SyscallExecutor)(SyscallDesc*, int num,
-                                             ThreadContext*);
+    using SyscallExecutor =
+        std::function<SyscallReturn(SyscallDesc *, int num, ThreadContext *)>;
 
     SyscallDesc(const char *name,
-                SyscallExecutor sys_exec=unimplementedFunc, int flags=0)
+            SyscallExecutor sys_exec=unimplementedFunc, int flags=0)
         : _name(name), executor(sys_exec), _flags(flags), _warned(false)
-    {
-    }
+    {}
 
     /** Provide a mechanism to specify behavior for abnormal system calls */
     enum Flags {
