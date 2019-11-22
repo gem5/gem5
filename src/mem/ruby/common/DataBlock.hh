@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2021 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -35,6 +47,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include "mem/packet.hh"
+
 class WriteMask;
 
 class DataBlock
@@ -63,6 +77,7 @@ class DataBlock
     uint8_t *getDataMod(int offset);
     void setByte(int whichByte, uint8_t data);
     void setData(const uint8_t *data, int offset, int len);
+    void setData(PacketPtr pkt);
     void copyPartial(const DataBlock &dblk, int offset, int len);
     void copyPartial(const DataBlock &dblk, const WriteMask &mask);
     void atomicPartial(const DataBlock & dblk, const WriteMask & mask);

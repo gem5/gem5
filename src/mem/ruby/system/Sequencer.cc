@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 ARM Limited
+ * Copyright (c) 2019-2021 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -575,8 +575,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
 
     // update the data unless it is a non-data-carrying flush
     if (RubySystem::getWarmupEnabled()) {
-        data.setData(pkt->getConstPtr<uint8_t>(),
-                     getOffset(request_address), pkt->getSize());
+        data.setData(pkt);
     } else if (!pkt->isFlush()) {
         if ((type == RubyRequestType_LD) ||
             (type == RubyRequestType_IFETCH) ||
@@ -587,6 +586,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
                 data.getData(getOffset(request_address), pkt->getSize()));
             DPRINTF(RubySequencer, "read data %s\n", data);
         } else if (pkt->req->isSwap()) {
+            assert(!pkt->isMaskedWrite());
             std::vector<uint8_t> overwrite_val(pkt->getSize());
             pkt->writeData(&overwrite_val[0]);
             pkt->setData(
@@ -597,8 +597,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
         } else if (type != RubyRequestType_Store_Conditional || llscSuccess) {
             // Types of stores set the actual data here, apart from
             // failed Store Conditional requests
-            data.setData(pkt->getConstPtr<uint8_t>(),
-                         getOffset(request_address), pkt->getSize());
+            data.setData(pkt);
             DPRINTF(RubySequencer, "set data %s\n", data);
         }
     }

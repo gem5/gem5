@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2021 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -69,6 +81,9 @@ DMASequencer::makeRequest(PacketPtr pkt)
     uint8_t* data =  pkt->getPtr<uint8_t>();
     int len = pkt->getSize();
     bool write = pkt->isWrite();
+
+    // Should DMA be allowed to generate this ?
+    assert(!pkt->isMaskedWrite());
 
     assert(m_outstanding_count < m_max_outstanding_requests);
     Addr line_addr = makeLineAddress(paddr);
