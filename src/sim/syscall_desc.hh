@@ -50,6 +50,7 @@
 #include <string>
 
 #include "base/types.hh"
+#include "sim/guest_abi.hh"
 #include "sim/syscall_return.hh"
 
 class Process;
@@ -92,6 +93,65 @@ class SyscallDesc {
 
     /** Mechanism for ISAs to connect to the emul function definitions */
     SyscallExecutor executor;
+};
+
+/*
+ * This SyscallDesc subclass template adapts a given syscall implementation so
+ * that some arguments can come from the simulator (desc, num and tc) while the
+ * rest can come from the guest using the GuestABI mechanism.
+ */
+template <typename ABI>
+class SyscallDescABI : public SyscallDesc
+{
+  private:
+    // Aliases to make the code below a little more concise.
+    template <typename ...Args>
+    using SyscallABIExecutor =
+        std::function<SyscallReturn(SyscallDesc *, int,
+                                    ThreadContext *, Args...)>;
+
+    template <typename ...Args>
+    using SyscallABIExecutorPtr =
+        SyscallReturn (*)(SyscallDesc *, int, ThreadContext *, Args...);
+
+
+    // Wrap an executor with guest arguments with a normal executor that gets
+    // those additional arguments from the guest context.
+    template <typename ...Args>
+    static inline SyscallExecutor
+    buildExecutor(SyscallABIExecutor<Args...> target)
+    {
+        return [target](SyscallDesc *desc, int num,
+                        ThreadContext *tc) -> SyscallReturn {
+            // Create a partial function which will stick desc and num to the
+            // front of the parameter list.
+            auto partial = [target,desc,num](
+                    ThreadContext *tc, Args... args) -> SyscallReturn {
+                return target(desc, num, tc, args...);
+            };
+
+            // Use invokeSimcall to gather the other arguments based on the
+            // given ABI and pass them to the syscall implementation.
+            return invokeSimcall<ABI, SyscallReturn, Args...>(tc,
+                    std::function<SyscallReturn(ThreadContext *, Args...)>(
+                        partial));
+        };
+    }
+
+
+  public:
+    // Constructors which plumb in buildExecutor.
+    template <typename ...Args>
+    SyscallDescABI(const char *name, SyscallABIExecutor<Args...> target) :
+        SyscallDesc(name, buildExecutor<Args...>(target))
+    {}
+
+    template <typename ...Args>
+    SyscallDescABI(const char *name, SyscallABIExecutorPtr<Args...> target) :
+        SyscallDescABI(name, SyscallABIExecutor<Args...>(target))
+    {}
+
+    using SyscallDesc::SyscallDesc;
 };
 
 #endif // __SIM_SYSCALL_DESC_HH__
