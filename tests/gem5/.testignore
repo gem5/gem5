@@ -1,0 +1,12 @@
+test-hello-RISCV-opt
+test-hello-RISCV-debug
+test-hello-RISCV-fast
+test-hello-SPARC-opt
+test-hello-SPARC-debug
+test-hello-SPARC-fast
+test-hello-MIPS-opt
+test-hello-MIPS-debug
+test-hello-MIPS-fast
+test-hello-ALPHA-opt
+test-hello-ALPHA-debug
+test-hello-ALPHA-fast

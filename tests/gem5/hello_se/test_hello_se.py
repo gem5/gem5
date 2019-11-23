@@ -34,9 +34,13 @@ from testlib import *
 test_progs = {
     'x86': ('hello64-static', 'hello64-dynamic', 'hello32-static'),
     'arm': ('hello64-static', 'hello32-static'),
+    'alpha': ('hello',),
+    'mips': ('hello',),
+    'riscv': ('hello',),
+    'sparc': ('hello',)
 }
 
-urlbase = 'http://gem5.org/dist/current/test-progs/hello/bin/'
+urlbase = 'http://dist.gem5.org/dist/current/test-progs/hello/bin/'
 for isa in test_progs:
     for binary in test_progs[isa]:
         import os
@@ -52,7 +56,7 @@ for isa in test_progs:
         )
 
         gem5_verify_config(
-                name='test'+binary,
+                name='test-'+binary,
                 fixtures=(hello_program,),
                 verifiers=verifiers,
                 config=joinpath(config.base_dir, 'configs', 'example','se.py'),
