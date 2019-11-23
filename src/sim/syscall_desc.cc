@@ -84,11 +84,3 @@ SyscallDesc::doSyscall(int callnum, ThreadContext *tc, Fault *fault)
     if (!retval.suppressed() && !retval.needsRetry())
         process->setSyscallReturn(tc, retval);
 }
-
-bool
-SyscallDesc::needWarning()
-{
-    bool suppress_warning = warnOnce() && _warned;
-    _warned = true;
-    return !suppress_warning;
-}

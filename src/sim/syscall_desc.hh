@@ -70,24 +70,9 @@ class SyscallDesc {
     using SyscallExecutor =
         std::function<SyscallReturn(SyscallDesc *, int num, ThreadContext *)>;
 
-    SyscallDesc(const char *name,
-            SyscallExecutor sys_exec=unimplementedFunc, int flags=0)
-        : _name(name), executor(sys_exec), _flags(flags), _warned(false)
+    SyscallDesc(const char *name, SyscallExecutor sys_exec=unimplementedFunc)
+        : _name(name), executor(sys_exec)
     {}
-
-    /** Provide a mechanism to specify behavior for abnormal system calls */
-    enum Flags {
-        /**
-         * Do not set return registers according to executor return value.
-         * Used for system calls with non-standard return conventions that
-         * explicitly set the thread context regs (e.g., sigreturn, clone)
-         */
-        SuppressReturnValue = 1,
-        /** Warn only once for unimplemented system calls */
-        WarnOnce = 2
-        /* X2 = 4, // Remove these comments when the next field is added; */
-        /* X3 = 8, // point is to make it obvious that this defines vector */
-    };
 
     /**
      * Interface for invoking the system call funcion pointer. Note that
@@ -99,20 +84,7 @@ class SyscallDesc {
      */
     void doSyscall(int callnum, ThreadContext *tc, Fault *fault);
 
-    /**
-     * Return false if WarnOnce is set and a warning has already been issued.
-     * Otherwise, return true. Updates state as a side effect to help
-     * keep track of issued warnings.
-     */
-    bool needWarning();
-
-    bool warnOnce() const { return (_flags & WarnOnce); }
-
     std::string name() { return _name; }
-
-    int getFlags() const { return _flags; }
-
-    void setFlags(int flags) { _flags = flags; }
 
   private:
     /** System call name (e.g., open, mmap, clone, socket, etc.) */
@@ -120,16 +92,6 @@ class SyscallDesc {
 
     /** Mechanism for ISAs to connect to the emul function definitions */
     SyscallExecutor executor;
-
-    /**
-     * Holds values set with the preceding enum; note that this has been
-     * used primarily for features that are mutually exclusive, but there's
-     * no reason that this needs to be true going forward.
-     */
-    int _flags;
-
-    /** Set if WarnOnce is specified in flags AFTER first call */
-    bool _warned;
 };
 
 #endif // __SIM_SYSCALL_DESC_HH__
