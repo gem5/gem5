@@ -53,6 +53,7 @@
 
 #include "base/addr_range.hh"
 #include "base/inet.hh"
+#include "base/loader/elf_object.hh"
 #include "base/logging.hh"
 #include "base/random.hh"
 #include "base/socket.hh"
@@ -202,6 +203,14 @@ init_net(py::module &m_native)
         ;
 }
 
+static void
+init_loader(py::module &m_native)
+{
+    py::module m = m_native.def_submodule("loader");
+
+    m.def("setInterpDir", &setInterpDir);
+}
+
 void
 pybind_init_core(py::module &m_native)
 {
@@ -281,5 +290,6 @@ pybind_init_core(py::module &m_native)
     init_serialize(m_native);
     init_range(m_native);
     init_net(m_native);
+    init_loader(m_native);
 }
 

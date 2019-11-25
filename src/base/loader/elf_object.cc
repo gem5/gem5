@@ -90,8 +90,17 @@ namespace
 {
 
 ElfObjectFormat elfObjectFormat;
+std::string interpDir;
 
 } // anonymous namespace
+
+void
+setInterpDir(const std::string &dirname)
+{
+    fatal_if(!interpDir.empty(),
+        "Error: setInterpDir has already been called once\n");
+    interpDir = dirname;
+}
 
 ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
 {
@@ -119,7 +128,7 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
             handleLoadableSegment(phdr, i);
         if (phdr.p_type == PT_INTERP) {
             // Make sure the interpreter is an valid ELF file.
-            char *interp_path = (char *)imageData->data() + phdr.p_offset;
+            auto interp_path = getInterpPath(phdr);
             ObjectFile *obj = createObjectFile(interp_path);
             interpreter = dynamic_cast<ElfObject *>(obj);
             assert(interpreter != nullptr);
@@ -135,6 +144,17 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
         DPRINTFR(Loader, "%s\n", seg);
 
     // We will actually read the sections when we need to load them
+}
+
+std::string
+ElfObject::getInterpPath(const GElf_Phdr &phdr) const
+{
+    // This is the interpreter path as specified in the elf file
+    const std::string elf_path = (char *)imageData->data() + phdr.p_offset;
+    if (!interpDir.empty())
+        return interpDir + elf_path;
+    else
+        return elf_path;
 }
 
 void

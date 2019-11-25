@@ -154,6 +154,18 @@ def config_filesystem(system, options = None):
 
     system.redirect_paths = _redirect_paths(options)
 
+    # Setting the interpreter path. This is used to load the
+    # guest dynamic linker itself from the elf file.
+    interp = getattr(options, 'interp_dir', None)
+    if interp:
+        from m5.core import setInterpDir
+        setInterpDir(interp)
+
+        print("Setting the interpreter path to:", interp,
+              "\nFor dynamically linked applications you might still "
+              "need to setup the --redirects so that libraries are "
+              "found\n")
+
 def register_node(cpu_list, mem, node_number):
     nodebasedir = joinpath(m5.options.outdir, 'fs', 'sys', 'devices',
                            'system', 'node')

@@ -381,6 +381,15 @@ def addSEOptions(parser):
                            "for information or functionality. Instead of "    \
                            "finding files on the __HOST__ filesystem, the "   \
                            "process will find the user's replacment files.")
+    parser.add_option("--interp-dir", action="store", type="string",
+                      default=None,
+                      help="The interp-dir option is used for "
+                           "setting the interpreter's path. This will "
+                           "allow to load the guest dynamic linker/loader "
+                           "itself from the elf binary. The option points to "
+                           "the parent folder of the guest /lib in the "
+                           "host fs")
+
     parser.add_option("--redirects", action="append", type="string",
                       default=[],
                       help="A collection of one or more redirect paths "

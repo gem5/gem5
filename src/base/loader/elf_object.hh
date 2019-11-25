@@ -116,6 +116,8 @@ class ElfObject : public ObjectFile
 
 
     ObjectFile *getInterpreter() const override { return interpreter; }
+    std::string getInterpPath(const GElf_Phdr &phdr) const;
+
     Addr bias() const override { return ldBias; }
     bool relocatable() const override { return relocate; }
     Addr mapSize() const override { return ldMax - ldMin; }
@@ -127,5 +129,14 @@ class ElfObject : public ObjectFile
     uint16_t programHeaderSize() {return _programHeaderSize;}
     uint16_t programHeaderCount() {return _programHeaderCount;}
 };
+
+/**
+ * This is the interface for setting up a base path for the
+ * elf interpreter. This is needed when loading a
+ * cross-compiled (guest ISA != host ISA) dynamically
+ * linked application.
+ * @param dirname base path for the interpreter
+ */
+void setInterpDir(const std::string &dirname);
 
 #endif // __BASE_LOADER_ELF_OBJECT_HH__
