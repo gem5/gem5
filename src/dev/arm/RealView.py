@@ -600,6 +600,9 @@ class RealView(Platform):
     def _off_chip_devices(self):
         return []
 
+    def _on_chip_memory(self):
+        return []
+
     _off_chip_ranges = []
 
     def _attach_memory(self, mem, bus, mem_ports=None):
