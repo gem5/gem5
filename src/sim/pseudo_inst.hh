@@ -43,25 +43,48 @@
 #ifndef __SIM_PSEUDO_INST_HH__
 #define __SIM_PSEUDO_INST_HH__
 
+#include <gem5/asm/generic/m5ops.h>
+
 class ThreadContext;
 
-//We need the "Tick" and "Addr" data types from here
-#include "base/types.hh"
+#include "arch/pseudo_inst.hh"
+#include "arch/utility.hh"
+#include "base/types.hh" // For Tick and Addr data types.
+#include "debug/PseudoInst.hh"
+#include "sim/guest_abi.hh"
 
-namespace PseudoInst {
+struct PseudoInstABI
+{
+    using Position = int;
+};
 
-/**
- * Execute a decoded M5 pseudo instruction
- *
- * The ISA-specific code is responsible to decode the pseudo inst
- * function number and subfunction number. After that has been done,
- * the rest of the instruction can be implemented in an ISA-agnostic
- * manner using the ISA-specific getArguments functions.
- *
- * @param func M5 pseudo op major function number (see utility/m5/m5ops.h)
- * @param subfunc M5 minor function number. Mainly used for annotations.
- */
-uint64_t pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc);
+namespace GuestABI
+{
+
+template <typename T>
+struct Result<PseudoInstABI, T>
+{
+    static void
+    store(ThreadContext *tc, const T &ret)
+    {
+        // Don't do anything with the pseudo inst results by default.
+    }
+};
+
+template <>
+struct Argument<PseudoInstABI, uint64_t>
+{
+    static uint64_t
+    get(ThreadContext *tc, PseudoInstABI::Position &position)
+    {
+        return TheISA::getArgument(tc, position, sizeof(uint64_t), false);
+    }
+};
+
+} // namespace GuestABI
+
+namespace PseudoInst
+{
 
 void arm(ThreadContext *tc);
 void quiesce(ThreadContext *tc);
@@ -90,6 +113,141 @@ void workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid);
 void workend(ThreadContext *tc, uint64_t workid, uint64_t threadid);
 void m5Syscall(ThreadContext *tc);
 void togglesync(ThreadContext *tc);
+
+/**
+ * Execute a decoded M5 pseudo instruction
+ *
+ * The ISA-specific code is responsible to decode the pseudo inst
+ * function number and subfunction number. After that has been done,
+ * the rest of the instruction can be implemented in an ISA-agnostic
+ * manner using the ISA-specific getArguments functions.
+ *
+ * @param func M5 pseudo op major function number (see utility/m5/m5ops.h)
+ * @param subfunc M5 minor function number. Mainly used for annotations.
+ */
+
+template <typename ABI>
+uint64_t
+pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
+{
+    DPRINTF(PseudoInst, "PseudoInst::pseudoInst(%i, %i)\n", func, subfunc);
+
+    switch (func) {
+      case M5OP_ARM:
+        invokeSimcall<ABI>(tc, arm);
+        break;
+
+      case M5OP_QUIESCE:
+        invokeSimcall<ABI>(tc, quiesce);
+        break;
+
+      case M5OP_QUIESCE_NS:
+        invokeSimcall<ABI>(tc, quiesceNs);
+        break;
+
+      case M5OP_QUIESCE_CYCLE:
+        invokeSimcall<ABI>(tc, quiesceCycles);
+        break;
+
+      case M5OP_QUIESCE_TIME:
+        return invokeSimcall<ABI>(tc, quiesceTime);
+
+      case M5OP_RPNS:
+        return invokeSimcall<ABI>(tc, rpns);
+
+      case M5OP_WAKE_CPU:
+        invokeSimcall<ABI>(tc, wakeCPU);
+        break;
+
+      case M5OP_EXIT:
+        invokeSimcall<ABI>(tc, m5exit);
+        break;
+
+      case M5OP_FAIL:
+        invokeSimcall<ABI>(tc, m5fail);
+        break;
+
+      case M5OP_INIT_PARAM:
+        return invokeSimcall<ABI>(tc, initParam);
+
+      case M5OP_LOAD_SYMBOL:
+        invokeSimcall<ABI>(tc, loadsymbol);
+        break;
+
+      case M5OP_RESET_STATS:
+        invokeSimcall<ABI>(tc, resetstats);
+        break;
+
+      case M5OP_DUMP_STATS:
+        invokeSimcall<ABI>(tc, dumpstats);
+        break;
+
+      case M5OP_DUMP_RESET_STATS:
+        invokeSimcall<ABI>(tc, dumpresetstats);
+        break;
+
+      case M5OP_CHECKPOINT:
+        invokeSimcall<ABI>(tc, m5checkpoint);
+        break;
+
+      case M5OP_WRITE_FILE:
+        return invokeSimcall<ABI>(tc, writefile);
+
+      case M5OP_READ_FILE:
+        return invokeSimcall<ABI>(tc, readfile);
+
+      case M5OP_DEBUG_BREAK:
+        invokeSimcall<ABI>(tc, debugbreak);
+        break;
+
+      case M5OP_SWITCH_CPU:
+        invokeSimcall<ABI>(tc, switchcpu);
+        break;
+
+      case M5OP_ADD_SYMBOL:
+        invokeSimcall<ABI>(tc, addsymbol);
+        break;
+
+      case M5OP_PANIC:
+        panic("M5 panic instruction called at %s\n", tc->pcState());
+
+      case M5OP_WORK_BEGIN:
+        invokeSimcall<ABI>(tc, workbegin);
+        break;
+
+      case M5OP_WORK_END:
+        invokeSimcall<ABI>(tc, workend);
+        break;
+
+      case M5OP_ANNOTATE:
+      case M5OP_RESERVED2:
+      case M5OP_RESERVED3:
+      case M5OP_RESERVED4:
+      case M5OP_RESERVED5:
+        warn("Unimplemented m5 op (%#x)\n", func);
+        break;
+
+      /* SE mode functions */
+      case M5OP_SE_SYSCALL:
+        invokeSimcall<ABI>(tc, m5Syscall);
+        break;
+
+      case M5OP_SE_PAGE_FAULT:
+        invokeSimcall<ABI>(tc, TheISA::m5PageFault);
+        break;
+
+      /* dist-gem5 functions */
+      case M5OP_DIST_TOGGLE_SYNC:
+        invokeSimcall<ABI>(tc, togglesync);
+        break;
+
+      default:
+        warn("Unhandled m5 op: %#x\n", func);
+        break;
+    }
+
+    return 0;
+}
 
 } // namespace PseudoInst
 

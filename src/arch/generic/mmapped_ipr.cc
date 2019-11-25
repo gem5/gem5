@@ -47,7 +47,7 @@ handlePseudoInst(ThreadContext *xc, Packet *pkt)
     uint64_t ret;
 
     assert((offset >> 16) == 0);
-    ret = PseudoInst::pseudoInst(xc, func, subfunc);
+    ret = PseudoInst::pseudoInst<PseudoInstABI>(xc, func, subfunc);
     if (pkt->isRead())
         pkt->set(ret, TheISA::GuestByteOrder);
 }

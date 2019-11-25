@@ -51,10 +51,6 @@
 #include <string>
 #include <vector>
 
-#include <gem5/asm/generic/m5ops.h>
-
-#include "arch/pseudo_inst.hh"
-#include "arch/utility.hh"
 #include "arch/vtophys.hh"
 #include "base/debug.hh"
 #include "base/output.hh"
@@ -63,7 +59,6 @@
 #include "cpu/quiesce_event.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
-#include "debug/PseudoInst.hh"
 #include "debug/Quiesce.hh"
 #include "debug/WorkItems.hh"
 #include "dev/net/dist_iface.hh"
@@ -81,150 +76,15 @@
 #include "sim/vptr.hh"
 
 using namespace std;
-
 using namespace Stats;
-using namespace TheISA;
 
-namespace PseudoInst {
+namespace PseudoInst
+{
 
 static inline void
 panicFsOnlyPseudoInst(const char *name)
 {
     panic("Pseudo inst \"%s\" is only available in Full System mode.");
-}
-
-uint64_t
-pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
-{
-    uint64_t args[4];
-
-    DPRINTF(PseudoInst, "PseudoInst::pseudoInst(%i, %i)\n", func, subfunc);
-
-    // We need to do this in a slightly convoluted way since
-    // getArgument() might have side-effects on arg_num. We could have
-    // used the Argument class, but due to the possible side effects
-    // from getArgument, it'd most likely break.
-    int arg_num(0);
-    for (int i = 0; i < sizeof(args) / sizeof(*args); ++i) {
-        args[arg_num] = getArgument(tc, arg_num, sizeof(uint64_t), false);
-        ++arg_num;
-    }
-
-    switch (func) {
-      case M5OP_ARM:
-        arm(tc);
-        break;
-
-      case M5OP_QUIESCE:
-        quiesce(tc);
-        break;
-
-      case M5OP_QUIESCE_NS:
-        quiesceNs(tc, args[0]);
-        break;
-
-      case M5OP_QUIESCE_CYCLE:
-        quiesceCycles(tc, args[0]);
-        break;
-
-      case M5OP_QUIESCE_TIME:
-        return quiesceTime(tc);
-
-      case M5OP_RPNS:
-        return rpns(tc);
-
-      case M5OP_WAKE_CPU:
-        wakeCPU(tc, args[0]);
-        break;
-
-      case M5OP_EXIT:
-        m5exit(tc, args[0]);
-        break;
-
-      case M5OP_FAIL:
-        m5fail(tc, args[0], args[1]);
-        break;
-
-      case M5OP_INIT_PARAM:
-        return initParam(tc, args[0], args[1]);
-
-      case M5OP_LOAD_SYMBOL:
-        loadsymbol(tc);
-        break;
-
-      case M5OP_RESET_STATS:
-        resetstats(tc, args[0], args[1]);
-        break;
-
-      case M5OP_DUMP_STATS:
-        dumpstats(tc, args[0], args[1]);
-        break;
-
-      case M5OP_DUMP_RESET_STATS:
-        dumpresetstats(tc, args[0], args[1]);
-        break;
-
-      case M5OP_CHECKPOINT:
-        m5checkpoint(tc, args[0], args[1]);
-        break;
-
-      case M5OP_WRITE_FILE:
-        return writefile(tc, args[0], args[1], args[2], args[3]);
-
-      case M5OP_READ_FILE:
-        return readfile(tc, args[0], args[1], args[2]);
-
-      case M5OP_DEBUG_BREAK:
-        debugbreak(tc);
-        break;
-
-      case M5OP_SWITCH_CPU:
-        switchcpu(tc);
-        break;
-
-      case M5OP_ADD_SYMBOL:
-        addsymbol(tc, args[0], args[1]);
-        break;
-
-      case M5OP_PANIC:
-        panic("M5 panic instruction called at %s\n", tc->pcState());
-
-      case M5OP_WORK_BEGIN:
-        workbegin(tc, args[0], args[1]);
-        break;
-
-      case M5OP_WORK_END:
-        workend(tc, args[0], args[1]);
-        break;
-
-      case M5OP_ANNOTATE:
-      case M5OP_RESERVED2:
-      case M5OP_RESERVED3:
-      case M5OP_RESERVED4:
-      case M5OP_RESERVED5:
-        warn("Unimplemented m5 op (0x%x)\n", func);
-        break;
-
-      /* SE mode functions */
-      case M5OP_SE_SYSCALL:
-        m5Syscall(tc);
-        break;
-
-      case M5OP_SE_PAGE_FAULT:
-        m5PageFault(tc);
-        break;
-
-      /* dist-gem5 functions */
-      case M5OP_DIST_TOGGLE_SYNC:
-        togglesync(tc);
-        break;
-
-      default:
-        warn("Unhandled m5 op: 0x%x\n", func);
-        break;
-    }
-
-    return 0;
 }
 
 void
