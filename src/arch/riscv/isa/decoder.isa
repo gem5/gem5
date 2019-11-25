@@ -414,8 +414,8 @@ decode QUADRANT default Unknown::unknown() {
                     Rd_sd = Rs1_sd + imm;
                 }});
                 0x1: slli({{
-                    Rd = Rs1 << SHAMT6;
-                }});
+                    Rd = Rs1 << imm;
+                }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
                 0x2: slti({{
                     Rd = (Rs1_sd < imm) ? 1 : 0;
                 }});
@@ -427,11 +427,11 @@ decode QUADRANT default Unknown::unknown() {
                 }}, uint64_t);
                 0x5: decode SRTYPE {
                     0x0: srli({{
-                        Rd = Rs1 >> SHAMT6;
-                    }});
+                        Rd = Rs1 >> imm;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
                     0x1: srai({{
-                        Rd_sd = Rs1_sd >> SHAMT6;
-                    }});
+                        Rd_sd = Rs1_sd >> imm;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
                 }
                 0x6: ori({{
                     Rd = Rs1 | imm;
@@ -452,15 +452,15 @@ decode QUADRANT default Unknown::unknown() {
                     Rd_sd = Rs1_sw + imm;
                 }}, int32_t);
                 0x1: slliw({{
-                    Rd_sd = Rs1_sw << SHAMT5;
-                }});
+                    Rd_sd = Rs1_sw << imm;
+                }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
                 0x5: decode SRTYPE {
                     0x0: srliw({{
-                        Rd_sd = (int32_t)(Rs1_uw >> SHAMT5);
-                    }});
+                        Rd_sd = (int32_t)(Rs1_uw >> imm);
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
                     0x1: sraiw({{
-                        Rd_sd = Rs1_sw >> SHAMT5;
-                    }});
+                        Rd_sd = Rs1_sw >> imm;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
                 }
             }
         }
