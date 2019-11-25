@@ -138,7 +138,6 @@ namespace X86ISA
         RegVal getSyscallArg(ThreadContext *tc, int &i) override;
         /// Explicitly import the otherwise hidden getSyscallArg
         using Process::getSyscallArg;
-        void setSyscallArg(ThreadContext *tc, int i, RegVal val) override;
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,
                    Process *process, RegVal flags) override;
     };
@@ -181,7 +180,6 @@ namespace X86ISA
                      Fault *fault) override;
         RegVal getSyscallArg(ThreadContext *tc, int &i) override;
         RegVal getSyscallArg(ThreadContext *tc, int &i, int width) override;
-        void setSyscallArg(ThreadContext *tc, int i, RegVal val) override;
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,
                    Process *process, RegVal flags) override;
     };

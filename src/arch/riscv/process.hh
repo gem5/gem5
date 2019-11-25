@@ -54,7 +54,6 @@ class RiscvProcess : public Process
     RegVal getSyscallArg(ThreadContext *tc, int &i) override;
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;
-    void setSyscallArg(ThreadContext *tc, int i, RegVal val) override;
     void setSyscallReturn(ThreadContext *tc,
                           SyscallReturn return_value) override;
 

@@ -505,25 +505,11 @@ Sparc32Process::getSyscallArg(ThreadContext *tc, int &i)
     return bits(tc->readIntReg(FirstArgumentReg + i++), 31, 0);
 }
 
-void
-Sparc32Process::setSyscallArg(ThreadContext *tc, int i, RegVal val)
-{
-    assert(i < 6);
-    tc->setIntReg(FirstArgumentReg + i, bits(val, 31, 0));
-}
-
 RegVal
 Sparc64Process::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 6);
     return tc->readIntReg(FirstArgumentReg + i++);
-}
-
-void
-Sparc64Process::setSyscallArg(ThreadContext *tc, int i, RegVal val)
-{
-    assert(i < 6);
-    tc->setIntReg(FirstArgumentReg + i, val);
 }
 
 void

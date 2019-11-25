@@ -111,8 +111,6 @@ class Sparc32Process : public SparcProcess
     RegVal getSyscallArg(ThreadContext *tc, int &i);
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;
-
-    void setSyscallArg(ThreadContext *tc, int i, RegVal val);
 };
 
 class Sparc64Process : public SparcProcess
@@ -154,8 +152,6 @@ class Sparc64Process : public SparcProcess
     RegVal getSyscallArg(ThreadContext *tc, int &i);
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;
-
-    void setSyscallArg(ThreadContext *tc, int i, RegVal val);
 };
 
 #endif // __SPARC_PROCESS_HH__

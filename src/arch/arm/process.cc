@@ -512,21 +512,6 @@ ArmProcess64::getSyscallArg(ThreadContext *tc, int &i, int width)
     return getSyscallArg(tc, i);
 }
 
-
-void
-ArmProcess32::setSyscallArg(ThreadContext *tc, int i, RegVal val)
-{
-    assert(i < 6);
-    tc->setIntReg(ArgumentReg0 + i, val);
-}
-
-void
-ArmProcess64::setSyscallArg(ThreadContext *tc, int i, RegVal val)
-{
-    assert(i < 8);
-    tc->setIntReg(ArgumentReg0 + i, val);
-}
-
 void
 ArmProcess32::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {

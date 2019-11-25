@@ -223,13 +223,6 @@ AlphaProcess::getSyscallArg(ThreadContext *tc, int &i)
 }
 
 void
-AlphaProcess::setSyscallArg(ThreadContext *tc, int i, RegVal val)
-{
-    assert(i < 6);
-    tc->setIntReg(FirstArgumentReg + i, val);
-}
-
-void
 AlphaProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
     // check for error condition.  Alpha syscall convention is to

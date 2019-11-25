@@ -260,12 +260,6 @@ RiscvProcess::getSyscallArg(ThreadContext *tc, int &i)
 }
 
 void
-RiscvProcess::setSyscallArg(ThreadContext *tc, int i, RegVal val)
-{
-    tc->setIntReg(SyscallArgumentRegs[i], val);
-}
-
-void
 RiscvProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
     if (sysret.successful()) {

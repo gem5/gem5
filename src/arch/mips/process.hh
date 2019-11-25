@@ -54,7 +54,6 @@ class MipsProcess : public Process
     RegVal getSyscallArg(ThreadContext *tc, int &i);
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;
-    void setSyscallArg(ThreadContext *tc, int i, RegVal val);
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
 

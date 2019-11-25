@@ -1069,13 +1069,6 @@ X86_64Process::getSyscallArg(ThreadContext *tc, int &i)
 }
 
 void
-X86_64Process::setSyscallArg(ThreadContext *tc, int i, RegVal val)
-{
-    assert(i < NumArgumentRegs);
-    return tc->setIntReg(ArgumentReg[i], val);
-}
-
-void
 X86_64Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
                      Process *p, RegVal flags)
 {
@@ -1099,13 +1092,6 @@ I386Process::getSyscallArg(ThreadContext *tc, int &i, int width)
     if (width == 64)
         retVal |= ((uint64_t)tc->readIntReg(ArgumentReg[i++]) << 32);
     return retVal;
-}
-
-void
-I386Process::setSyscallArg(ThreadContext *tc, int i, RegVal val)
-{
-    assert(i < NumArgumentRegs);
-    return tc->setIntReg(ArgumentReg[i], val);
 }
 
 void

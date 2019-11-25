@@ -280,13 +280,6 @@ PowerProcess::getSyscallArg(ThreadContext *tc, int &i)
 }
 
 void
-PowerProcess::setSyscallArg(ThreadContext *tc, int i, RegVal val)
-{
-    assert(i < 5);
-    tc->setIntReg(ArgumentReg0 + i, val);
-}
-
-void
 PowerProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
     Cr cr = tc->readIntReg(INTREG_CR);

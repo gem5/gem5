@@ -201,13 +201,6 @@ MipsProcess::getSyscallArg(ThreadContext *tc, int &i)
 }
 
 void
-MipsProcess::setSyscallArg(ThreadContext *tc, int i, RegVal val)
-{
-    assert(i < 6);
-    tc->setIntReg(FirstArgumentReg + i, val);
-}
-
-void
 MipsProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
     if (sysret.successful()) {

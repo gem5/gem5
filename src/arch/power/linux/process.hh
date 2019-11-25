@@ -48,7 +48,6 @@ class PowerLinuxProcess : public PowerProcess
     RegVal getSyscallArg(ThreadContext *tc, int &i);
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;
-    void setSyscallArg(ThreadContext *tc, int i, RegVal val);
 
     /// Array of syscall descriptors, indexed by call number.
     static SyscallDesc syscallDescs[];

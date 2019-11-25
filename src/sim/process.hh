@@ -77,7 +77,6 @@ class Process : public SimObject
     virtual void syscall(int64_t callnum, ThreadContext *tc, Fault *fault);
     virtual RegVal getSyscallArg(ThreadContext *tc, int &i) = 0;
     virtual RegVal getSyscallArg(ThreadContext *tc, int &i, int width);
-    virtual void setSyscallArg(ThreadContext *tc, int i, RegVal val) = 0;
     virtual void setSyscallReturn(ThreadContext *tc,
                                   SyscallReturn return_value) = 0;
     virtual SyscallDesc *getDesc(int callnum) = 0;

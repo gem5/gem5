@@ -476,12 +476,3 @@ PowerLinuxProcess::getSyscallArg(ThreadContext *tc, int &i)
     assert(i < 6);
     return tc->readIntReg(ArgumentReg0 + i++);
 }
-
-void
-PowerLinuxProcess::setSyscallArg(ThreadContext *tc, int i, RegVal val)
-{
-    // Linux apparently allows more parameter than the ABI says it should.
-    // This limit may need to be increased even further.
-    assert(i < 6);
-    tc->setIntReg(ArgumentReg0 + i, val);
-}
