@@ -70,11 +70,11 @@ class Decoder
         // should come from. Use that in the ExtMachInst. This is
         // slightly redundant, but it removes the need to put a condition
         // into all the execute functions
-        if (inst & (1 << 13)) {
+        if (emi & (1 << 13)) {
             emi |= (static_cast<ExtMachInst>(
                         asi << (sizeof(MachInst) * 8)));
         } else {
-            emi |= (static_cast<ExtMachInst>(bits(inst, 12, 5))
+            emi |= (static_cast<ExtMachInst>(bits(emi, 12, 5))
                     << (sizeof(MachInst) * 8));
         }
         instDone = true;
