@@ -586,6 +586,18 @@ switchcpu(ThreadContext *tc)
     exitSimLoop("switchcpu");
 }
 
+/*
+ * This function is executed when the simulation is executing the syscall
+ * handler in System Emulation mode.
+ */
+void
+m5Syscall(ThreadContext *tc)
+{
+    DPRINTF(PseudoInst, "PseudoInst::m5Syscall()\n");
+    Fault fault;
+    tc->syscall(&fault);
+}
+
 void
 togglesync(ThreadContext *tc)
 {

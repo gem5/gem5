@@ -37,12 +37,6 @@ class ThreadContext;
 using namespace GenericISA;
 
 void
-GenericISA::m5Syscall(ThreadContext *tc)
-{
-    panic("m5Syscall not implemented for current ISA");
-}
-
-void
 GenericISA::m5PageFault(ThreadContext *tc)
 {
     panic("m5PageFault not implemented for current ISA");

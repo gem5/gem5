@@ -32,14 +32,12 @@
 #define __ARCH_RISCV_PSEUDO_INST_HH__
 
 #include "arch/generic/pseudo_inst.hh"
-#include "base/logging.hh"
 
-class ThreadContext;
+namespace RiscvISA
+{
 
-namespace RiscvISA {
-    using GenericISA::m5Syscall;
-    using GenericISA::m5PageFault;
-}
+using GenericISA::m5PageFault;
+
+} // namespace RiscvISA
 
 #endif // __ARCH_RISCV_PSEUDO_INST_HH__
-

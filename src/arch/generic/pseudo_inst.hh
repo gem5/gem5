@@ -36,13 +36,6 @@ class ThreadContext;
 namespace GenericISA {
 
 /*
- * This function is executed when the simulation is executing the syscall
- * handler in System Emulation mode.
- */
-void
-m5Syscall(ThreadContext *tc);
-
-/*
  * This function is executed when the simulation is executing the pagefault
  * handler in System Emulation mode.
  */

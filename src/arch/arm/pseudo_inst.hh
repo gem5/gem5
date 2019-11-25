@@ -32,14 +32,13 @@
 #define __ARCH_ARM_PSEUDO_INST_HH__
 
 #include "arch/generic/pseudo_inst.hh"
-#include "base/logging.hh"
 
-class ThreadContext;
+namespace ArmISA
+{
 
-namespace ArmISA {
-    using GenericISA::m5Syscall;
-    using GenericISA::m5PageFault;
-}
+using GenericISA::m5PageFault;
+
+} // namespace ArmISA
 
 #endif // __ARCH_ARM_PSEUDO_INST_HH__
 

@@ -32,14 +32,13 @@
 #define __ARCH_MIPS_PSEUDO_INST_HH__
 
 #include "arch/generic/pseudo_inst.hh"
-#include "base/logging.hh"
 
-class ThreadContext;
+namespace MipsISA
+{
 
-namespace MipsISA {
-    using GenericISA::m5Syscall;
-    using GenericISA::m5PageFault;
-}
+using GenericISA::m5PageFault;
+
+} // namespace MipsISA
 
 #endif // __ARCH_MIPS_PSEUDO_INST_HH__
 

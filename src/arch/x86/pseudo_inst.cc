@@ -41,19 +41,6 @@ using namespace X86ISA;
 namespace X86ISA {
 
 /*
- * This function is executed when the simulation is executing the syscall
- * handler in System Emulation mode.
- */
-void
-m5Syscall(ThreadContext *tc)
-{
-    DPRINTF(PseudoInst, "PseudoInst::m5Syscall()\n");
-
-    Fault fault;
-    tc->syscall(&fault);
-}
-
-/*
  * This function is executed when the simulation is executing the pagefault
  * handler in System Emulation mode.
  */
