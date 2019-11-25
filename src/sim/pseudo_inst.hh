@@ -123,14 +123,13 @@ void togglesync(ThreadContext *tc);
  * manner using the ISA-specific getArguments functions.
  *
  * @param func M5 pseudo op major function number (see utility/m5/m5ops.h)
- * @param subfunc M5 minor function number. Mainly used for annotations.
  */
 
 template <typename ABI>
 uint64_t
-pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
+pseudoInst(ThreadContext *tc, uint8_t func)
 {
-    DPRINTF(PseudoInst, "PseudoInst::pseudoInst(%i, %i)\n", func, subfunc);
+    DPRINTF(PseudoInst, "PseudoInst::pseudoInst(%i)\n", func);
 
     switch (func) {
       case M5OP_ARM:

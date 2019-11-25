@@ -43,11 +43,10 @@ handlePseudoInst(ThreadContext *xc, Packet *pkt)
 {
     const Addr offset(pkt->getAddr() & IPR_IN_CLASS_MASK);
     const uint8_t func((offset >> 8) & 0xFF);
-    const uint8_t subfunc(offset & 0xFF);
     uint64_t ret;
 
     assert((offset >> 16) == 0);
-    ret = PseudoInst::pseudoInst<PseudoInstABI>(xc, func, subfunc);
+    ret = PseudoInst::pseudoInst<PseudoInstABI>(xc, func);
     if (pkt->isRead())
         pkt->set(ret, TheISA::GuestByteOrder);
 }

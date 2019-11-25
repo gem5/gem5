@@ -318,11 +318,10 @@ ArmKvmCPU::onKvmExitHypercall()
     ThreadContext *tc(getContext(0));
     const uint32_t reg_ip(tc->readIntRegFlat(INTREG_R12));
     const uint8_t func((reg_ip >> 8) & 0xFF);
-    const uint8_t subfunc(reg_ip & 0xFF);
 
     DPRINTF(Kvm, "KVM Hypercall: %#x/%#x\n", func, subfunc);
     const uint64_t ret =
-        PseudoInst::pseudoInst<PseudoInstABI>(getContext(0), func, subfunc);
+        PseudoInst::pseudoInst<PseudoInstABI>(getContext(0), func);
 
     // Just set the return value using the KVM API instead of messing
     // with the context. We could have used the context, but that
