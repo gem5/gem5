@@ -192,13 +192,13 @@ BaseO3DynInst<Impl>::trap(const Fault &fault)
 
 template <class Impl>
 void
-BaseO3DynInst<Impl>::syscall(int64_t callnum, Fault *fault)
+BaseO3DynInst<Impl>::syscall(Fault *fault)
 {
     // HACK: check CPU's nextPC before and after syscall. If it
     // changes, update this instruction's nextPC because the syscall
     // must have changed the nextPC.
     TheISA::PCState curPC = this->cpu->pcState(this->threadNumber);
-    this->cpu->syscall(callnum, this->threadNumber, fault);
+    this->cpu->syscall(this->threadNumber, fault);
     TheISA::PCState newPC = this->cpu->pcState(this->threadNumber);
     if (!(curPC == newPC)) {
         this->pcState(newPC);

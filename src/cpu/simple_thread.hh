@@ -609,10 +609,9 @@ class SimpleThread : public ThreadState, public ThreadContext
     }
 
     void
-    syscall(int64_t callnum, Fault *fault) override
+    syscall(Fault *fault) override
     {
-        fatal_if(FullSystem, "System call emulation is unavailable!");
-        process->syscall(callnum, this, fault);
+        process->syscall(this, fault);
     }
 
     RegVal readIntRegFlat(RegIndex idx) const override { return intRegs[idx]; }

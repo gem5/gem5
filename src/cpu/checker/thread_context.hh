@@ -184,9 +184,9 @@ class CheckerThreadContext : public ThreadContext
 
     /** Executes a syscall in SE mode. */
     void
-    syscall(int64_t callnum, Fault *fault) override
+    syscall(Fault *fault) override
     {
-        return actualTC->syscall(callnum, fault);
+        return actualTC->syscall(fault);
     }
 
     Status status() const override { return actualTC->status(); }

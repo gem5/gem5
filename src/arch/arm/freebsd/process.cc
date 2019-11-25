@@ -1317,3 +1317,15 @@ ArmFreebsdProcess64::initState()
     ArmProcess64::initState();
     // The 64 bit equivalent of the comm page would be set up here.
 }
+
+void
+ArmFreebsdProcess32::syscall(ThreadContext *tc, Fault *fault)
+{
+    doSyscall(tc->readIntReg(INTREG_R7), tc, fault);
+}
+
+void
+ArmFreebsdProcess64::syscall(ThreadContext *tc, Fault *fault)
+{
+    doSyscall(tc->readIntReg(INTREG_X8), tc, fault);
+}

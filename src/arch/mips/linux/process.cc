@@ -509,7 +509,8 @@ MipsLinuxProcess::getDesc(int callnum)
     return &syscallDescs[m5_sys_idx];
 }
 
-
-
-
-
+void
+MipsLinuxProcess::syscall(ThreadContext *tc, Fault *fault)
+{
+    doSyscall(tc->readIntReg(2), tc, fault);
+}

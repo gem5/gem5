@@ -387,9 +387,9 @@ class ExecContext : public ::ExecContext
     }
 
     void
-    syscall(int64_t callnum, Fault *fault) override
+    syscall(Fault *fault) override
     {
-        thread.syscall(callnum, fault);
+        thread.syscall(fault);
     }
 
     ThreadContext *tcBase() override { return thread.getTC(); }

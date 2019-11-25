@@ -252,7 +252,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     void trap(const Fault &fault);
 
     /** Emulates a syscall. */
-    void syscall(int64_t callnum, Fault *fault) override;
+    void syscall(Fault *fault) override;
 
   public:
 

@@ -620,3 +620,10 @@ AlphaLinuxProcess::getDesc(int callnum)
         return NULL;
     return &syscallDescs[callnum];
 }
+
+void
+AlphaLinuxProcess::syscall(ThreadContext *tc, Fault *fault)
+{
+    doSyscall(tc->readIntReg(0), tc, fault);
+}
+

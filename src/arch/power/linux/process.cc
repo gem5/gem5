@@ -468,6 +468,12 @@ PowerLinuxProcess::initState()
     PowerProcess::initState();
 }
 
+void
+PowerLinuxProcess::syscall(ThreadContext *tc, Fault *fault)
+{
+    doSyscall(tc->readIntReg(0), tc, fault);
+}
+
 RegVal
 PowerLinuxProcess::getSyscallArg(ThreadContext *tc, int &i)
 {

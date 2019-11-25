@@ -42,6 +42,8 @@ class AlphaLinuxProcess : public AlphaProcess
     /// Constructor.
     AlphaLinuxProcess(ProcessParams * params, ObjectFile *objFile);
 
+    void syscall(ThreadContext *tc, Fault *fault) override;
+
     virtual SyscallDesc* getDesc(int callnum);
 
      /// Array of syscall descriptors, indexed by call number.

@@ -419,7 +419,7 @@ class ThreadContext : public ::ThreadContext
     }
 
     void
-    syscall(int64_t callnum, Fault *fault) override
+    syscall(Fault *fault) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }

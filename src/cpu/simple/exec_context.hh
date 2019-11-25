@@ -497,9 +497,9 @@ class SimpleExecContext : public ExecContext {
      * Executes a syscall specified by the callnum.
      */
     void
-    syscall(int64_t callnum, Fault *fault) override
+    syscall(Fault *fault) override
     {
-        thread->syscall(callnum, fault);
+        thread->syscall(fault);
     }
 
     /** Returns a pointer to the ThreadContext. */

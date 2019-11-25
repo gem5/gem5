@@ -845,15 +845,8 @@ SupervisorCall::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     // As of now, there isn't a 32 bit thumb version of this instruction.
     assert(!machInst.bigThumb);
-    uint32_t callNum;
-    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    OperatingMode mode = (OperatingMode)(uint8_t)cpsr.mode;
-    if (opModeIs64(mode))
-        callNum = tc->readIntReg(INTREG_X8);
-    else
-        callNum = tc->readIntReg(INTREG_R7);
     Fault fault;
-    tc->syscall(callNum, &fault);
+    tc->syscall(&fault);
 
     // Advance the PC since that won't happen automatically.
     PCState pc = tc->pcState();

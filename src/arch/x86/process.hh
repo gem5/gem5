@@ -176,8 +176,6 @@ namespace X86ISA
         void argsInit(int pageSize);
         void initState() override;
 
-        void syscall(int64_t callnum, ThreadContext *tc,
-                     Fault *fault) override;
         RegVal getSyscallArg(ThreadContext *tc, int &i) override;
         RegVal getSyscallArg(ThreadContext *tc, int &i, int width) override;
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,

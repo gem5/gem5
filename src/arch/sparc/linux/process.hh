@@ -70,6 +70,8 @@ class Sparc32LinuxProcess : public SparcLinuxProcess, public Sparc32Process
         return SparcLinuxProcess::getDesc32(callnum);
     }
 
+    void syscall(ThreadContext *tc, Fault *fault) override;
+
     void handleTrap(int trapNum, ThreadContext *tc, Fault *fault);
 };
 
@@ -85,6 +87,8 @@ class Sparc64LinuxProcess : public SparcLinuxProcess, public Sparc64Process
     {
         return SparcLinuxProcess::getDesc(callnum);
     }
+
+    void syscall(ThreadContext *tc, Fault *fault) override;
 
     void handleTrap(int trapNum, ThreadContext *tc, Fault *fault);
 };

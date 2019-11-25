@@ -840,7 +840,7 @@ decode OPCODE default Unknown::unknown() {
                     exitSimLoop("halt instruction encountered");
                 }}, IsNonSpeculative);
                 0x83: callsys({{
-                    xc->syscall(R0, &fault);
+                    xc->syscall(&fault);
                 }}, IsSerializeAfter, IsNonSpeculative, IsSyscall);
                 // Read uniq reg into ABI return value register (r0)
                 0x9e: rduniq({{ R0 = Runiq; }}, IsIprAccess);

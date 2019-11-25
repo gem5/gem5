@@ -45,6 +45,8 @@ class PowerLinuxProcess : public PowerProcess
 
     void initState();
 
+    void syscall(ThreadContext *tc, Fault *fault) override;
+
     RegVal getSyscallArg(ThreadContext *tc, int &i);
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;

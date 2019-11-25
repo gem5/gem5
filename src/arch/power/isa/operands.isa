@@ -75,7 +75,4 @@ def operands {{
     'Rsv': ('IntReg', 'uw', 'INTREG_RSV', 'IsInteger', 9),
     'RsvLen': ('IntReg', 'uw', 'INTREG_RSV_LEN', 'IsInteger', 9),
     'RsvAddr': ('IntReg', 'uw', 'INTREG_RSV_ADDR', 'IsInteger', 9),
-
-    # Hack for non-full-system syscall emulation
-    'R0':  ('IntReg', 'uw', '0', None, 1),
 }};

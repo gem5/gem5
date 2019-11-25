@@ -146,19 +146,6 @@ X86_64Process::X86_64Process(ProcessParams *params, ObjectFile *objFile,
                                      next_thread_stack_base, mmap_end);
 }
 
-void
-I386Process::syscall(int64_t callnum, ThreadContext *tc, Fault *fault)
-{
-    PCState pc = tc->pcState();
-    Addr eip = pc.pc();
-    if (eip >= vsyscallPage.base &&
-            eip < vsyscallPage.base + vsyscallPage.size) {
-        pc.npc(vsyscallPage.base + vsyscallPage.vsysexitOffset);
-        tc->pcState(pc);
-    }
-    X86Process::syscall(callnum, tc, fault);
-}
-
 
 I386Process::I386Process(ProcessParams *params, ObjectFile *objFile,
                          SyscallDesc *_syscallDescs, int _numSyscallDescs)

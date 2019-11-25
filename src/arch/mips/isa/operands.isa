@@ -51,9 +51,8 @@ def operands {{
     #Immediate Value operand
     'IntImm': ('IntReg', 'uw', 'INTIMM', 'IsInteger', 3),
 
-    #Operands used for Link or Syscall Insts
+    #Operands used for Link Insts
     'R31': ('IntReg', 'uw','31','IsInteger', 4),
-    'R2':  ('IntReg', 'uw','2', 'IsInteger', 5),
 
     #Special Integer Reg operands
     'LO0':  ('IntReg', 'uw','INTREG_LO', 'IsInteger', 6),

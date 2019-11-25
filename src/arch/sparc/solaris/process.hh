@@ -49,6 +49,8 @@ class SparcSolarisProcess : public Sparc64Process
     /// The target system's hostname.
     static const char *hostname;
 
+    void syscall(ThreadContext *tc, Fault *fault) override;
+
      /// Array of syscall descriptors, indexed by call number.
     static SyscallDesc syscallDescs[];
 

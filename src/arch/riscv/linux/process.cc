@@ -795,6 +795,12 @@ RiscvLinuxProcess64::getDesc(int callnum)
         &syscallDescs.at(callnum) : nullptr;
 }
 
+void
+RiscvLinuxProcess64::syscall(ThreadContext *tc, Fault *fault)
+{
+    doSyscall(tc->readIntReg(SyscallNumReg), tc, fault);
+}
+
 RiscvLinuxProcess32::RiscvLinuxProcess32(ProcessParams * params,
     ObjectFile *objFile) : RiscvProcess32(params, objFile)
 {}
@@ -804,4 +810,10 @@ RiscvLinuxProcess32::getDesc(int callnum)
 {
     return syscallDescs.find(callnum) != syscallDescs.end() ?
         &syscallDescs.at(callnum) : nullptr;
+}
+
+void
+RiscvLinuxProcess32::syscall(ThreadContext *tc, Fault *fault)
+{
+    doSyscall(tc->readIntReg(SyscallNumReg), tc, fault);
 }

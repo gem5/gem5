@@ -437,7 +437,7 @@ Process::map(Addr vaddr, Addr paddr, int size, bool cacheable)
 }
 
 void
-Process::syscall(int64_t callnum, ThreadContext *tc, Fault *fault)
+Process::doSyscall(int64_t callnum, ThreadContext *tc, Fault *fault)
 {
     numSyscalls++;
 

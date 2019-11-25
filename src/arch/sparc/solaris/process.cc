@@ -368,3 +368,9 @@ SparcSolarisProcess::getDesc(int callnum)
         return NULL;
     return &syscallDescs[callnum];
 }
+
+void
+SparcSolarisProcess::syscall(ThreadContext *tc, Fault *fault)
+{
+    doSyscall(tc->readIntReg(1), tc, fault);
+}

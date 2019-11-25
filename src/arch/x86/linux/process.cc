@@ -584,8 +584,15 @@ X86_64LinuxProcess::X86_64LinuxProcess(ProcessParams * params,
                     sizeof(syscallDescs64) / sizeof(SyscallDesc))
 {}
 
-void X86_64LinuxProcess::clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                               Process *process, RegVal flags)
+void
+X86_64LinuxProcess::syscall(ThreadContext *tc, Fault *fault)
+{
+    doSyscall(tc->readIntReg(INTREG_RAX), tc, fault);
+}
+
+void
+X86_64LinuxProcess::clone(ThreadContext *old_tc, ThreadContext *new_tc,
+                          Process *process, RegVal flags)
 {
     X86_64Process::clone(old_tc, new_tc, (X86_64Process*)process, flags);
 }
@@ -926,8 +933,22 @@ I386LinuxProcess::I386LinuxProcess(ProcessParams * params, ObjectFile *objFile)
                   sizeof(syscallDescs32) / sizeof(SyscallDesc))
 {}
 
-void I386LinuxProcess::clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                             Process *process, RegVal flags)
+void
+I386LinuxProcess::syscall(ThreadContext *tc, Fault *fault)
+{
+    PCState pc = tc->pcState();
+    Addr eip = pc.pc();
+    if (eip >= vsyscallPage.base &&
+            eip < vsyscallPage.base + vsyscallPage.size) {
+        pc.npc(vsyscallPage.base + vsyscallPage.vsysexitOffset);
+        tc->pcState(pc);
+    }
+    doSyscall(tc->readIntReg(INTREG_RAX), tc, fault);
+}
+
+void
+I386LinuxProcess::clone(ThreadContext *old_tc, ThreadContext *new_tc,
+                        Process *process, RegVal flags)
 {
     I386Process::clone(old_tc, new_tc, (I386Process*)process, flags);
 }

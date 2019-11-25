@@ -63,6 +63,8 @@ class ArmFreebsdProcess32 : public ArmProcess32, public ArmFreebsdProcessBits
 
     void initState();
 
+    void syscall(ThreadContext *tc, Fault *fault) override;
+
     /// Explicitly import the otherwise hidden getSyscallArg
     using ArmProcess::getSyscallArg;
 
@@ -80,6 +82,7 @@ class ArmFreebsdProcess64 : public ArmProcess64, public ArmFreebsdProcessBits
                         ObjectFile::Arch _arch);
 
     void initState();
+    void syscall(ThreadContext *tc, Fault *fault) override;
     SyscallDesc* getDesc(int callnum);
 };
 

@@ -73,6 +73,8 @@ class ArmLinuxProcess32 : public ArmProcess32, public ArmLinuxProcessBits
 
     void initState();
 
+    void syscall(ThreadContext *tc, Fault *fault) override;
+
     /// Explicitly import the otherwise hidden getSyscallArg
     using ArmProcess::getSyscallArg;
 
@@ -90,6 +92,7 @@ class ArmLinuxProcess64 : public ArmProcess64, public ArmLinuxProcessBits
                       ObjectFile::Arch _arch);
 
     void initState();
+    void syscall(ThreadContext *tc, Fault *fault) override;
     SyscallDesc* getDesc(int callnum);
 };
 

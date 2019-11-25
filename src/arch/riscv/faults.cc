@@ -191,7 +191,7 @@ void
 SyscallFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
     Fault *fault = NoFault;
-    tc->syscall(tc->readIntReg(SyscallNumReg), fault);
+    tc->syscall(fault);
 }
 
 } // namespace RiscvISA

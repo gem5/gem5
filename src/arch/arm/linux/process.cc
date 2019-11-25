@@ -1777,3 +1777,15 @@ ArmLinuxProcess64::initState()
     ArmProcess64::initState();
     // The 64 bit equivalent of the comm page would be set up here.
 }
+
+void
+ArmLinuxProcess32::syscall(ThreadContext *tc, Fault *fault)
+{
+    doSyscall(tc->readIntReg(INTREG_R7), tc, fault);
+}
+
+void
+ArmLinuxProcess64::syscall(ThreadContext *tc, Fault *fault)
+{
+    doSyscall(tc->readIntReg(INTREG_X8), tc, fault);
+}

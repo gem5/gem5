@@ -50,7 +50,7 @@ m5Syscall(ThreadContext *tc)
     DPRINTF(PseudoInst, "PseudoInst::m5Syscall()\n");
 
     Fault fault;
-    tc->syscall(tc->readIntReg(INTREG_RAX), &fault);
+    tc->syscall(&fault);
 }
 
 /*

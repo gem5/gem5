@@ -148,10 +148,9 @@ struct O3ThreadState : public ThreadState {
     ThreadContext *getTC() { return tc; }
 
     /** Handles the syscall. */
-    void syscall(int64_t callnum, Fault *fault)
+    void syscall(Fault *fault)
     {
-        fatal_if(FullSystem, "System call emulation is unavailable!");
-        process->syscall(callnum, tc, fault);
+        process->syscall(tc, fault);
     }
 
     void dumpFuncProfile()
