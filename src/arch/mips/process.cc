@@ -185,8 +185,8 @@ MipsProcess::argsInit(int pageSize)
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
 
-    setSyscallArg(tc, 0, argc);
-    setSyscallArg(tc, 1, argv_array_base);
+    tc->setIntReg(FirstArgumentReg, argc);
+    tc->setIntReg(FirstArgumentReg + 1, argv_array_base);
     tc->setIntReg(StackPointerReg, memState->getStackMin());
 
     tc->pcState(getStartPC());
