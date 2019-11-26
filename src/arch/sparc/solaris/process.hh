@@ -34,6 +34,7 @@
 #include "arch/sparc/solaris/solaris.hh"
 #include "arch/sparc/process.hh"
 #include "sim/process.hh"
+#include "sim/syscall_desc.hh"
 
 namespace SparcISA {
 
@@ -52,7 +53,7 @@ class SparcSolarisProcess : public Sparc64Process
     void syscall(ThreadContext *tc, Fault *fault) override;
 
      /// Array of syscall descriptors, indexed by call number.
-    static SyscallDesc syscallDescs[];
+    static SyscallDescABI<DefaultSyscallABI> syscallDescs[];
 
     const int Num_Syscall_Descs;
 };

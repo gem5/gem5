@@ -35,6 +35,7 @@
 #include "arch/mips/linux/linux.hh"
 #include "arch/mips/process.hh"
 #include "sim/eventq.hh"
+#include "sim/syscall_desc.hh"
 
 /// A process with emulated Mips/Linux syscalls.
 class MipsLinuxProcess : public MipsProcess
@@ -54,7 +55,7 @@ class MipsLinuxProcess : public MipsProcess
     void syscall(ThreadContext *tc, Fault *fault) override;
 
     /// Array of syscall descriptors, indexed by call number.
-    static SyscallDesc syscallDescs[];
+    static SyscallDescABI<DefaultSyscallABI> syscallDescs[];
     const int Num_Syscall_Descs;
 };
 

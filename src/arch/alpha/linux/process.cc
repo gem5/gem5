@@ -155,7 +155,7 @@ osf_setsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 }
 
 
-SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
+SyscallDescABI<DefaultSyscallABI> AlphaLinuxProcess::syscallDescs[] = {
     /*  0 */ { "osf_syscall" },
     /*  1 */ { "exit", exitFunc },
     /*  2 */ { "fork" },

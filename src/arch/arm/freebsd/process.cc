@@ -138,7 +138,7 @@ sysctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 }
 #endif
 
-static SyscallDesc syscallDescs32[] = {
+static SyscallDescABI<DefaultSyscallABI> syscallDescs32[] = {
     /*    0 */ { "unused#000" },
     /*    1 */ { "unused#001" },
     /*    2 */ { "unused#002" },
@@ -689,7 +689,7 @@ static SyscallDesc syscallDescs32[] = {
     /*  547 */ { "unused#547" },
 };
 
-static SyscallDesc syscallDescs64[] = {
+static SyscallDescABI<DefaultSyscallABI> syscallDescs64[] = {
     /*    0 */ { "unused#000" },
     /*    1 */ { "exit", exitFunc },
     /*    2 */ { "unused#002" },

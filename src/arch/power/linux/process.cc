@@ -96,7 +96,7 @@ unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     return 0;
 }
 
-SyscallDesc PowerLinuxProcess::syscallDescs[] = {
+SyscallDescABI<DefaultSyscallABI> PowerLinuxProcess::syscallDescs[] = {
     /*  0 */ { "syscall" },
     /*  1 */ { "exit", exitFunc },
     /*  2 */ { "fork" },

@@ -257,7 +257,7 @@ setThreadArea32Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
     return 0;
 }
 
-static SyscallDesc syscallDescs64[] = {
+static SyscallDescABI<DefaultSyscallABI> syscallDescs64[] = {
     /*   0 */ { "read", readFunc<X86Linux64> },
     /*   1 */ { "write", writeFunc<X86Linux64> },
     /*   2 */ { "open", openFunc<X86Linux64> },
@@ -597,7 +597,7 @@ X86_64LinuxProcess::clone(ThreadContext *old_tc, ThreadContext *new_tc,
     X86_64Process::clone(old_tc, new_tc, (X86_64Process*)process, flags);
 }
 
-static SyscallDesc syscallDescs32[] = {
+static SyscallDescABI<DefaultSyscallABI> syscallDescs32[] = {
     /*   0 */ { "restart_syscall" },
     /*   1 */ { "exit", exitFunc },
     /*   2 */ { "fork" },

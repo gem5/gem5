@@ -164,7 +164,7 @@ setTLSFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc)
     return 0;
 }
 
-static SyscallDesc syscallDescs32[] = {
+static SyscallDescABI<DefaultSyscallABI> syscallDescs32[] = {
     /*  0 */ { "syscall" },
     /*  1 */ { "exit", exitFunc },
     /*  2 */ { "fork" },
@@ -541,7 +541,7 @@ static SyscallDesc syscallDescs32[] = {
     /* 365 */ { "sys_recvmmsg" },
 };
 
-static SyscallDesc syscallDescs64[] = {
+static SyscallDescABI<DefaultSyscallABI> syscallDescs64[] = {
     /*    0 */ { "io_setup" },
     /*    1 */ { "io_destroy" },
     /*    2 */ { "io_submit" },
@@ -1632,7 +1632,7 @@ static SyscallDesc syscallDescs64[] = {
     /* 1079 */ { "fork" }
 };
 
-static SyscallDesc privSyscallDescs32[] = {
+static SyscallDescABI<DefaultSyscallABI> privSyscallDescs32[] = {
     /*  1 */ { "breakpoint" },
     /*  2 */ { "cacheflush" },
     /*  3 */ { "usr26" },
@@ -1641,7 +1641,7 @@ static SyscallDesc privSyscallDescs32[] = {
 };
 
 // Indices 1, 3 and 4 are unallocated.
-static SyscallDesc privSyscallDescs64[] = {
+static SyscallDescABI<DefaultSyscallABI> privSyscallDescs64[] = {
     /*  1 */ { "unallocated" },
     /*  2 */ { "cacheflush" },
     /*  3 */ { "unallocated" },

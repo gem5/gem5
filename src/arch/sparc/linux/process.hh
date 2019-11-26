@@ -34,6 +34,7 @@
 #include "arch/sparc/linux/linux.hh"
 #include "arch/sparc/process.hh"
 #include "sim/process.hh"
+#include "sim/syscall_desc.hh"
 
 namespace SparcISA {
 
@@ -44,11 +45,11 @@ class SparcLinuxProcess
 {
   public:
      /// Array of syscall descriptors, indexed by call number.
-    static SyscallDesc syscallDescs[];
+    static SyscallDescABI<DefaultSyscallABI> syscallDescs[];
 
      /// Array of 32 bit compatibility syscall descriptors,
      /// indexed by call number.
-    static SyscallDesc syscall32Descs[];
+    static SyscallDescABI<DefaultSyscallABI> syscall32Descs[];
 
     SyscallDesc* getDesc(int callnum);
     SyscallDesc* getDesc32(int callnum);
