@@ -138,12 +138,8 @@ TLB::finalizePhysical(const RequestPtr &req,
 {
     const Addr paddr = req->getPaddr();
 
-    if (m5opRange.contains(paddr)) {
-        req->setFlags(Request::MMAPPED_IPR | Request::GENERIC_IPR);
-        req->setPaddr(GenericISA::iprAddressPseudoInst(
-                          (paddr >> 8) & 0xFF,
-                          paddr & 0xFF));
-    }
+    if (m5opRange.contains(paddr))
+        req->setFlags(Request::MMAPPED_IPR);
 
     return NoFault;
 }
