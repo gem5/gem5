@@ -59,11 +59,13 @@
 #include "debug/Checkpoint.hh"
 #include "debug/TLB.hh"
 #include "debug/TLBVerbose.hh"
+#include "mem/packet_access.hh"
 #include "mem/page_table.hh"
 #include "mem/request.hh"
 #include "params/ArmTLB.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
+#include "sim/pseudo_inst.hh"
 
 using namespace std;
 using namespace ArmISA;
@@ -133,8 +135,19 @@ TLB::finalizePhysical(const RequestPtr &req,
 {
     const Addr paddr = req->getPaddr();
 
-    if (m5opRange.contains(paddr))
-        req->setFlags(Request::MMAPPED_IPR);
+    if (m5opRange.contains(paddr)) {
+        uint8_t func;
+        PseudoInst::decodeAddrOffset(paddr - m5opRange.start(), func);
+        req->setLocalAccessor(
+            [func, mode](ThreadContext *tc, PacketPtr pkt) -> Cycles
+            {
+                uint64_t ret = PseudoInst::pseudoInst<PseudoInstABI>(tc, func);
+                if (mode == Read)
+                    pkt->setLE(ret);
+                return Cycles(1);
+            }
+        );
+    }
 
     return NoFault;
 }

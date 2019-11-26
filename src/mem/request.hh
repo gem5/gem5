@@ -76,7 +76,9 @@ namespace ContextSwitchTaskId {
     };
 }
 
+class Packet;
 class Request;
+class ThreadContext;
 
 typedef std::shared_ptr<Request> RequestPtr;
 typedef uint16_t MasterID;
@@ -119,8 +121,6 @@ class Request
          * the UNCACHEABLE flag is set as well.
          */
         STRICT_ORDER                = 0x00000800,
-        /** This request is to a memory mapped register. */
-        MMAPPED_IPR                 = 0x00002000,
         /** This request is made in privileged mode. */
         PRIVILEGED                  = 0x00008000,
 
@@ -246,6 +246,9 @@ class Request
         /** Arg Segment */
         ARG_SEGMENT            = 0x00000800,
     };
+
+    using LocalAccessor =
+        std::function<Cycles(ThreadContext *tc, Packet *pkt)>;
 
   private:
     typedef uint16_t PrivateFlagsType;
@@ -382,6 +385,8 @@ class Request
     /** A pointer to an atomic operation */
     AtomicOpFunctorPtr atomicOpFunctor;
 
+    LocalAccessor _localAccessor;
+
   public:
 
     /**
@@ -478,10 +483,10 @@ class Request
           _taskId(other._taskId), _asid(other._asid), _vaddr(other._vaddr),
           _extraData(other._extraData), _contextId(other._contextId),
           _pc(other._pc), _reqInstSeqNum(other._reqInstSeqNum),
+          _localAccessor(other._localAccessor),
           translateDelta(other.translateDelta),
           accessDelta(other.accessDelta), depth(other.depth)
     {
-
         atomicOpFunctor.reset(other.atomicOpFunctor ?
                                 other.atomicOpFunctor->clone() : nullptr);
     }
@@ -536,6 +541,7 @@ class Request
         accessDelta = 0;
         translateDelta = 0;
         atomicOpFunctor = std::move(amo_op);
+        _localAccessor = nullptr;
     }
 
     /**
@@ -661,6 +667,17 @@ class Request
     {
         assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
         return _time;
+    }
+
+    /** Is this request for a local memory mapped resource/register? */
+    bool isLocalAccess() { return (bool)_localAccessor; }
+    /** Set the function which will enact that access. */
+    void setLocalAccessor(LocalAccessor acc) { _localAccessor = acc; }
+    /** Perform the installed local access. */
+    Cycles
+    localAccessor(ThreadContext *tc, Packet *pkt)
+    {
+        return _localAccessor(tc, pkt);
     }
 
     /**
@@ -895,7 +912,6 @@ class Request
     bool isLockedRMW() const { return _flags.isSet(LOCKED_RMW); }
     bool isSwap() const { return _flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
-    bool isMmappedIpr() const { return _flags.isSet(MMAPPED_IPR); }
     bool isSecure() const { return _flags.isSet(SECURE); }
     bool isPTWalk() const { return _flags.isSet(PT_WALK); }
     bool isAcquire() const { return _flags.isSet(ACQUIRE); }

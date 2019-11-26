@@ -42,7 +42,6 @@
 #include "cpu/simple/atomic.hh"
 
 #include "arch/locked_mem.hh"
-#include "arch/mmapped_ipr.hh"
 #include "arch/utility.hh"
 #include "base/output.hh"
 #include "config/the_isa.hh"
@@ -406,8 +405,8 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data, unsigned size,
             Packet pkt(req, Packet::makeReadCmd(req));
             pkt.dataStatic(data);
 
-            if (req->isMmappedIpr()) {
-                dcache_latency += TheISA::handleIprRead(thread->getTC(), &pkt);
+            if (req->isLocalAccess()) {
+                dcache_latency += req->localAccessor(thread->getTC(), &pkt);
             } else {
                 dcache_latency += sendPacket(dcachePort, &pkt);
             }
@@ -511,9 +510,9 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
                 Packet pkt(req, Packet::makeWriteCmd(req));
                 pkt.dataStatic(data);
 
-                if (req->isMmappedIpr()) {
+                if (req->isLocalAccess()) {
                     dcache_latency +=
-                        TheISA::handleIprWrite(thread->getTC(), &pkt);
+                        req->localAccessor(thread->getTC(), &pkt);
                 } else {
                     dcache_latency += sendPacket(dcachePort, &pkt);
 
@@ -607,8 +606,8 @@ AtomicSimpleCPU::amoMem(Addr addr, uint8_t* data, unsigned size,
         Packet pkt(req, Packet::makeWriteCmd(req));
         pkt.dataStatic(data);
 
-        if (req->isMmappedIpr())
-            dcache_latency += TheISA::handleIprRead(thread->getTC(), &pkt);
+        if (req->isLocalAccess())
+            dcache_latency += req->localAccessor(thread->getTC(), &pkt);
         else {
             dcache_latency += sendPacket(dcachePort, &pkt);
         }

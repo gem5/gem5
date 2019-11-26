@@ -825,8 +825,13 @@ handleSparcErrorRegAccess:
 
 regAccessOk:
 handleMmuRegAccess:
-    DPRINTF(TLB, "TLB: DTB Translating MM IPR access\n");
-    req->setFlags(Request::MMAPPED_IPR);
+    DPRINTF(TLB, "TLB: DTB Translating local access\n");
+    req->setLocalAccessor(
+        [this,write](ThreadContext *tc, PacketPtr pkt) -> Cycles
+        {
+            return write ? doMmuRegWrite(tc, pkt) : doMmuRegRead(tc, pkt);
+        }
+    );
     req->setPaddr(req->getVaddr());
     return NoFault;
 };

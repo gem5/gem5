@@ -41,7 +41,6 @@
 #include <sstream>
 
 #include "arch/locked_mem.hh"
-#include "arch/mmapped_ipr.hh"
 #include "base/logging.hh"
 #include "cpu/minor/cpu.hh"
 #include "cpu/minor/exec_context.hh"
@@ -1045,7 +1044,7 @@ LSQ::tryToSendToTransfers(LSQRequestPtr request)
         }
     } else {
         /* Store.  Can it be sent to the store buffer? */
-        if (bufferable && !request->request->isMmappedIpr()) {
+        if (bufferable && !request->request->isLocalAccess()) {
             request->setState(LSQRequest::StoreToStoreBuffer);
             moveFromRequestsToTransfers(request);
             DPRINTF(MinorMem, "Moving store into transfers queue\n");
@@ -1184,18 +1183,17 @@ LSQ::tryToSend(LSQRequestPtr request)
          *  so the response can be correctly handled */
         assert(packet->findNextSenderState<LSQRequest>());
 
-        if (request->request->isMmappedIpr()) {
+        if (request->request->isLocalAccess()) {
             ThreadContext *thread =
                 cpu.getContext(cpu.contextToThread(
                                 request->request->contextId()));
 
-            if (request->isLoad) {
+            if (request->isLoad)
                 DPRINTF(MinorMem, "IPR read inst: %s\n", *(request->inst));
-                TheISA::handleIprRead(thread, packet);
-            } else {
+            else
                 DPRINTF(MinorMem, "IPR write inst: %s\n", *(request->inst));
-                TheISA::handleIprWrite(thread, packet);
-            }
+
+            request->request->localAccessor(thread, packet);
 
             request->stepToNextPacket();
             ret = request->sentAllPackets();

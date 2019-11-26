@@ -46,7 +46,6 @@
 #include <csignal>
 #include <ostream>
 
-#include "arch/mmapped_ipr.hh"
 #include "arch/utility.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/Drain.hh"
@@ -1128,13 +1127,11 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
     PacketPtr pkt = new Packet(mmio_req, cmd);
     pkt->dataStatic(data);
 
-    if (mmio_req->isMmappedIpr()) {
+    if (mmio_req->isLocalAccess()) {
         // We currently assume that there is no need to migrate to a
-        // different event queue when doing IPRs. Currently, IPRs are
-        // only used for m5ops, so it should be a valid assumption.
-        const Cycles ipr_delay(write ?
-                             TheISA::handleIprWrite(tc, pkt) :
-                             TheISA::handleIprRead(tc, pkt));
+        // different event queue when doing local accesses. Currently, they
+        // are only used for m5ops, so it should be a valid assumption.
+        const Cycles ipr_delay = mmio_req->localAccessor(tc, pkt);
         threadContextDirty = true;
         delete pkt;
         return clockPeriod() * ipr_delay;

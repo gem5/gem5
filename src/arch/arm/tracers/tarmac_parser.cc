@@ -1198,8 +1198,8 @@ TarmacParserRecord::readMemNoEffect(Addr addr, uint8_t *data, unsigned size,
     // Now do the access
     if (fault == NoFault &&
         !req->getFlags().isSet(Request::NO_ACCESS)) {
-        if (req->isLLSC() || req->isMmappedIpr())
-            // LLSCs and mem. mapped IPRs are ignored
+        if (req->isLLSC() || req->isLocalAccess())
+            // LLSCs and local accesses are ignored
             return false;
         // the translating proxy will perform the virtual to physical
         // translation again

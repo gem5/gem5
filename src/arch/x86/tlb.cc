@@ -43,16 +43,19 @@
 #include "arch/x86/faults.hh"
 #include "arch/x86/insts/microldstop.hh"
 #include "arch/x86/pagetable_walker.hh"
+#include "arch/x86/pseudo_inst_abi.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/regs/msr.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/TLB.hh"
+#include "mem/packet_access.hh"
 #include "mem/page_table.hh"
 #include "mem/request.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
+#include "sim/pseudo_inst.hh"
 
 namespace X86ISA {
 
@@ -166,8 +169,30 @@ TLB::demapPage(Addr va, uint64_t asn)
     }
 }
 
+namespace
+{
+
+Cycles
+localMiscRegAccess(bool read, MiscRegIndex regNum,
+                   ThreadContext *tc, PacketPtr pkt)
+{
+    if (read) {
+        RegVal data = htole(tc->readMiscReg(regNum));
+        assert(pkt->getSize() <= sizeof(RegVal));
+        pkt->setData((uint8_t *)&data);
+    } else {
+        RegVal data = htole(tc->readMiscRegNoEffect(regNum));
+        assert(pkt->getSize() <= sizeof(RegVal));
+        pkt->writeData((uint8_t *)&data);
+        tc->setMiscReg(regNum, letoh(data));
+    }
+    return Cycles(1);
+}
+
+} // anonymous namespace
+
 Fault
-TLB::translateInt(const RequestPtr &req, ThreadContext *tc)
+TLB::translateInt(bool read, RequestPtr req, ThreadContext *tc)
 {
     DPRINTF(TLB, "Addresses references internal memory.\n");
     Addr vaddr = req->getVaddr();
@@ -176,16 +201,18 @@ TLB::translateInt(const RequestPtr &req, ThreadContext *tc)
         panic("CPUID memory space not yet implemented!\n");
     } else if (prefix == IntAddrPrefixMSR) {
         vaddr = (vaddr >> 3) & ~IntAddrPrefixMask;
-        req->setFlags(Request::MMAPPED_IPR);
 
         MiscRegIndex regNum;
         if (!msrAddrToIndex(regNum, vaddr))
             return std::make_shared<GeneralProtection>(0);
 
-        //The index is multiplied by the size of a RegVal so that
-        //any memory dependence calculations will not see these as
-        //overlapping.
-        req->setPaddr((Addr)regNum * sizeof(RegVal));
+        req->setLocalAccessor(
+            [read,regNum](ThreadContext *tc, PacketPtr pkt)
+            {
+                return localMiscRegAccess(read, regNum, tc, pkt);
+            }
+        );
+
         return NoFault;
     } else if (prefix == IntAddrPrefixIO) {
         // TODO If CPL > IOPL or in virtual mode, check the I/O permission
@@ -196,8 +223,13 @@ TLB::translateInt(const RequestPtr &req, ThreadContext *tc)
         // space.
         assert(!(IOPort & ~0xFFFF));
         if (IOPort == 0xCF8 && req->getSize() == 4) {
-            req->setFlags(Request::MMAPPED_IPR);
-            req->setPaddr(MISCREG_PCI_CONFIG_ADDRESS * sizeof(RegVal));
+            req->setLocalAccessor(
+                [read](ThreadContext *tc, PacketPtr pkt)
+                {
+                    return localMiscRegAccess(
+                            read, MISCREG_PCI_CONFIG_ADDRESS, tc, pkt);
+                }
+            );
         } else if ((IOPort & ~mask(2)) == 0xCFC) {
             req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
             Addr configAddress =
@@ -227,7 +259,19 @@ TLB::finalizePhysical(const RequestPtr &req,
     Addr paddr = req->getPaddr();
 
     if (m5opRange.contains(paddr)) {
-        req->setFlags(Request::MMAPPED_IPR | Request::STRICT_ORDER);
+        req->setFlags(Request::STRICT_ORDER);
+        uint8_t func;
+        PseudoInst::decodeAddrOffset(paddr - m5opRange.start(), func);
+        req->setLocalAccessor(
+            [func, mode](ThreadContext *tc, PacketPtr pkt) -> Cycles
+            {
+                uint64_t ret =
+                    PseudoInst::pseudoInst<X86PseudoInstABI>(tc, func);
+                if (mode == Read)
+                    pkt->setLE(ret);
+                return Cycles(1);
+            }
+        );
     } else if (FullSystem) {
         // Check for an access to the local APIC
         LocalApicBase localApicBase =
@@ -271,7 +315,7 @@ TLB::translate(const RequestPtr &req,
     // If this is true, we're dealing with a request to a non-memory address
     // space.
     if (seg == SEGMENT_REG_MS) {
-        return translateInt(req, tc);
+        return translateInt(mode == Read, req, tc);
     }
 
     Addr vaddr = req->getVaddr();

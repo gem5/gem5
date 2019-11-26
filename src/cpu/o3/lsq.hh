@@ -549,8 +549,8 @@ class LSQ
         /**
          * Memory mapped IPR accesses
          */
-        virtual void handleIprWrite(ThreadContext *thread, PacketPtr pkt) = 0;
-        virtual Cycles handleIprRead(ThreadContext *thread, PacketPtr pkt) = 0;
+        virtual Cycles handleLocalAccess(
+                ThreadContext *thread, PacketPtr pkt) = 0;
 
         /**
          * Test if the request accesses a particular cache line.
@@ -737,8 +737,7 @@ class LSQ
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual void sendPacketToCache();
         virtual void buildPackets();
-        virtual void handleIprWrite(ThreadContext *thread, PacketPtr pkt);
-        virtual Cycles handleIprRead(ThreadContext *thread, PacketPtr pkt);
+        virtual Cycles handleLocalAccess(ThreadContext *thread, PacketPtr pkt);
         virtual bool isCacheBlockHit(Addr blockAddr, Addr cacheBlockMask);
     };
 
@@ -811,8 +810,7 @@ class LSQ
         virtual void sendPacketToCache();
         virtual void buildPackets();
 
-        virtual void handleIprWrite(ThreadContext *thread, PacketPtr pkt);
-        virtual Cycles handleIprRead(ThreadContext *thread, PacketPtr pkt);
+        virtual Cycles handleLocalAccess(ThreadContext *thread, PacketPtr pkt);
         virtual bool isCacheBlockHit(Addr blockAddr, Addr cacheBlockMask);
 
         virtual RequestPtr mainRequest();

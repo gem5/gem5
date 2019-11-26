@@ -1093,48 +1093,26 @@ LSQ<Impl>::SplitDataRequest::sendPacketToCache()
 }
 
 template<class Impl>
-void
-LSQ<Impl>::SingleDataRequest::handleIprWrite(ThreadContext *thread,
-                                             PacketPtr pkt)
+Cycles
+LSQ<Impl>::SingleDataRequest::handleLocalAccess(
+        ThreadContext *thread, PacketPtr pkt)
 {
-    TheISA::handleIprWrite(thread, pkt);
-}
-
-template<class Impl>
-void
-LSQ<Impl>::SplitDataRequest::handleIprWrite(ThreadContext *thread,
-                                            PacketPtr mainPkt)
-{
-    unsigned offset = 0;
-    for (auto r: _requests) {
-        PacketPtr pkt = new Packet(r, MemCmd::WriteReq);
-        pkt->dataStatic(mainPkt->getPtr<uint8_t>() + offset);
-        TheISA::handleIprWrite(thread, pkt);
-        offset += r->getSize();
-        delete pkt;
-    }
+    return pkt->req->localAccessor(thread, pkt);
 }
 
 template<class Impl>
 Cycles
-LSQ<Impl>::SingleDataRequest::handleIprRead(ThreadContext *thread,
-                                            PacketPtr pkt)
-{
-    return TheISA::handleIprRead(thread, pkt);
-}
-
-template<class Impl>
-Cycles
-LSQ<Impl>::SplitDataRequest::handleIprRead(ThreadContext *thread,
-                                           PacketPtr mainPkt)
+LSQ<Impl>::SplitDataRequest::handleLocalAccess(
+        ThreadContext *thread, PacketPtr mainPkt)
 {
     Cycles delay(0);
     unsigned offset = 0;
 
     for (auto r: _requests) {
-        PacketPtr pkt = new Packet(r, MemCmd::ReadReq);
+        PacketPtr pkt =
+            new Packet(r, isLoad() ? MemCmd::ReadReq : MemCmd::WriteReq);
         pkt->dataStatic(mainPkt->getPtr<uint8_t>() + offset);
-        Cycles d = TheISA::handleIprRead(thread, pkt);
+        Cycles d = r->localAccessor(thread, pkt);
         if (d > delay)
             delay = d;
         offset += r->getSize();

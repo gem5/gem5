@@ -814,13 +814,13 @@ LSQUnit<Impl>::writebackStores()
             }
         }
 
-        if (req->request()->isMmappedIpr()) {
+        if (req->request()->isLocalAccess()) {
             assert(!inst->isStoreConditional());
             ThreadContext *thread = cpu->tcBase(lsqID);
             PacketPtr main_pkt = new Packet(req->mainRequest(),
                                             MemCmd::WriteReq);
             main_pkt->dataStatic(inst->memData);
-            req->handleIprWrite(thread, main_pkt);
+            req->request()->localAccessor(thread, main_pkt);
             delete main_pkt;
             completeStore(storeWBIt);
             storeWBIt++;
