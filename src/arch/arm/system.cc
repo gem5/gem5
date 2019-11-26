@@ -75,9 +75,6 @@ ArmSystem::ArmSystem(Params *p)
       _sveVL(p->sve_vl),
       _haveLSE(p->have_lse),
       _havePAN(p->have_pan),
-      _m5opRange(p->m5ops_base ?
-                 RangeSize(p->m5ops_base, 0x10000) :
-                 AddrRange(1, 0)), // Create an empty range if disabled
       semihosting(p->semihosting),
       multiProc(p->multi_proc)
 {

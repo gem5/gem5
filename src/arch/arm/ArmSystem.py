@@ -93,10 +93,6 @@ class ArmSystem(System):
     semihosting = Param.ArmSemihosting(NULL,
         "Enable support for the Arm semihosting by settings this parameter")
 
-    m5ops_base = Param.Addr(0,
-        "Base of the 64KiB PA range used for memory-mapped m5ops. Set to 0 "
-        "to disable.")
-
     dtb_filename = Param.String("",
         "File that contains the Device Tree Blob. Don't use DTB if empty.")
 

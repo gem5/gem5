@@ -125,5 +125,12 @@ class System(SimObject):
     # Provide list of domains that need to be controlled by the handler
     dvfs_handler = DVFSHandler()
 
+    # SE mode doesn't use the ISA System subclasses, and so we need to set an
+    # ISA specific value in this class directly.
+    m5ops_base = Param.Addr(
+        0xffff0000 if buildEnv['TARGET_ISA'] == 'x86' else 0,
+        "Base of the 64KiB PA range used for memory-mapped m5ops. Set to 0 "
+        "to disable.")
+
     if buildEnv['USE_KVM']:
         kvm_vm = Param.KvmVM(NULL, 'KVM VM (i.e., shared memory domain)')

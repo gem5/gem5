@@ -567,6 +567,12 @@ class System : public SimObject, public PCEventScope
   protected:
     Params *_params;
 
+    /**
+     * Range for memory-mapped m5 pseudo ops. The range will be
+     * invalid/empty if disabled.
+     */
+    const AddrRange _m5opRange;
+
   public:
     System(Params *p);
     ~System();

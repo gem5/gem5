@@ -139,12 +139,6 @@ class ArmSystem : public System
     const unsigned _havePAN;
 
     /**
-     * Range for memory-mapped m5 pseudo ops. The range will be
-     * invalid/empty if disabled.
-     */
-    const AddrRange _m5opRange;
-
-    /**
      * True if the Semihosting interface is enabled.
      */
     ArmSemihosting *const semihosting;
