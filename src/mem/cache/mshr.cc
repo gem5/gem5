@@ -111,6 +111,52 @@ MSHR::TargetList::populateFlags()
     }
 }
 
+void
+MSHR::TargetList::updateWriteFlags(PacketPtr pkt)
+{
+    if (isWholeLineWrite()) {
+        // if we have already seen writes for the full block
+        // stop here, this might be a full line write followed
+        // by other compatible requests (e.g., reads)
+        return;
+    }
+
+    if (canMergeWrites) {
+        if (!pkt->isWrite()) {
+            // We won't allow further merging if this hasn't
+            // been a write
+            canMergeWrites = false;
+            return;
+        }
+
+        // Avoid merging requests with special flags (e.g.,
+        // strictly ordered)
+        const Request::FlagsType no_merge_flags =
+            Request::UNCACHEABLE | Request::STRICT_ORDER |
+            Request::MMAPPED_IPR | Request::PRIVILEGED |
+            Request::LLSC | Request::MEM_SWAP |
+            Request::MEM_SWAP_COND | Request::SECURE;
+        const auto &req_flags = pkt->req->getFlags();
+        bool compat_write = !req_flags.isSet(no_merge_flags);
+
+        // if this is the first write, it might be a whole
+        // line write and even if we can't merge any
+        // subsequent write requests, we still need to service
+        // it as a whole line write (e.g., SECURE whole line
+        // write)
+        bool first_write = empty();
+        if (first_write || compat_write) {
+            auto offset = pkt->getOffset(blkSize);
+            auto begin = writesBitmap.begin() + offset;
+            std::fill(begin, begin + pkt->getSize(), true);
+        }
+
+        // We won't allow further merging if this has been a
+        // special write
+        canMergeWrites &= compat_write;
+    }
+}
+
 inline void
 MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
                       Counter order, Target::Source source, bool markPending,

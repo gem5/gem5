@@ -227,38 +227,7 @@ class MSHR : public QueueEntry, public Printable
          *
          * @param pkt Packet considered for adding
          */
-        void
-        updateWriteFlags(PacketPtr pkt)
-        {
-            // if we have already seen writes for the full block stop
-            // here, this might be a full line write followed by
-            // other compatible requests (e.g., reads)
-            if (!isWholeLineWrite()) {
-                // Avoid merging requests with special flags (e.g.,
-                // strictly ordered)
-                const Request::FlagsType no_merge_flags =
-                    Request::UNCACHEABLE | Request::STRICT_ORDER |
-                    Request::MMAPPED_IPR | Request::PRIVILEGED |
-                    Request::LLSC | Request::MEM_SWAP |
-                    Request::MEM_SWAP_COND | Request::SECURE;
-                const auto &req_flags = pkt->req->getFlags();
-                bool compat_write = pkt->isWrite() &&
-                    !req_flags.isSet(no_merge_flags);
-                canMergeWrites &= compat_write;
-
-                // if this request is the first target in this list
-                // and additionally a whole-line write, we need to
-                // service it as a whole-line even if we won't allow
-                // any further merging (e.g., SECURE whole line
-                // write).
-                bool first_write = pkt->isWrite() && (size() == 0);
-                if (first_write || compat_write) {
-                    auto offset = pkt->getOffset(blkSize);
-                    auto begin = writesBitmap.begin() + offset;
-                    std::fill(begin, begin + pkt->getSize(), true);
-                }
-            }
-         }
+        void updateWriteFlags(PacketPtr pkt);
 
         /**
          * Tests if the flags of this TargetList have their default
