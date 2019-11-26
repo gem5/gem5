@@ -46,47 +46,55 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
-#include "arch/generic/mmapped_ipr.hh"
 #include "arch/x86/regs/misc.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "mem/packet.hh"
+#include "mem/packet_access.hh"
+#include "sim/pseudo_inst.hh"
 
 namespace X86ISA
 {
     inline Cycles
-    handleIprRead(ThreadContext *xc, Packet *pkt)
+    handleIprRead(ThreadContext *tc, Packet *pkt)
     {
-        if (GenericISA::isGenericIprAccess(pkt)) {
-            return GenericISA::handleGenericIprRead(xc, pkt);
+        Addr addr = pkt->getAddr();
+        auto m5opRange = tc->getSystemPtr()->m5opRange();
+        if (m5opRange.contains(addr)) {
+            uint8_t func;
+            PseudoInst::decodeAddrOffset(addr - m5opRange.start(), func);
+            uint64_t ret = PseudoInst::pseudoInst<PseudoInstABI>(tc, func);
+            pkt->setLE(ret);
         } else {
-            Addr offset = pkt->getAddr() & mask(3);
-            MiscRegIndex index = (MiscRegIndex)(
-                pkt->getAddr() / sizeof(RegVal));
-            RegVal data = htole(xc->readMiscReg(index));
+            Addr offset = addr & mask(3);
+            MiscRegIndex index = (MiscRegIndex)(addr / sizeof(RegVal));
+            RegVal data = htole(tc->readMiscReg(index));
             // Make sure we don't trot off the end of data.
             assert(offset + pkt->getSize() <= sizeof(RegVal));
             pkt->setData(((uint8_t *)&data) + offset);
-            return Cycles(1);
         }
+        return Cycles(1);
     }
 
     inline Cycles
-    handleIprWrite(ThreadContext *xc, Packet *pkt)
+    handleIprWrite(ThreadContext *tc, Packet *pkt)
     {
-        if (GenericISA::isGenericIprAccess(pkt)) {
-            return GenericISA::handleGenericIprWrite(xc, pkt);
+        Addr addr = pkt->getAddr();
+        auto m5opRange = tc->getSystemPtr()->m5opRange();
+        if (m5opRange.contains(addr)) {
+            uint8_t func;
+            PseudoInst::decodeAddrOffset(addr - m5opRange.start(), func);
+            PseudoInst::pseudoInst<PseudoInstABI>(tc, func);
         } else {
-            Addr offset = pkt->getAddr() & mask(3);
-            MiscRegIndex index = (MiscRegIndex)(
-                pkt->getAddr() / sizeof(RegVal));
-            RegVal data = htole(xc->readMiscRegNoEffect(index));
+            Addr offset = addr & mask(3);
+            MiscRegIndex index = (MiscRegIndex)(addr / sizeof(RegVal));
+            RegVal data = htole(tc->readMiscRegNoEffect(index));
             // Make sure we don't trot off the end of data.
             assert(offset + pkt->getSize() <= sizeof(RegVal));
             pkt->writeData(((uint8_t *)&data) + offset);
-            xc->setMiscReg(index, letoh(data));
-            return Cycles(1);
+            tc->setMiscReg(index, letoh(data));
         }
+        return Cycles(1);
     }
 }
 

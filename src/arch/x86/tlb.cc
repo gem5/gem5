@@ -230,10 +230,7 @@ TLB::finalizePhysical(const RequestPtr &req,
     Addr paddr = req->getPaddr();
 
     if (m5opRange.contains(paddr)) {
-        req->setFlags(Request::MMAPPED_IPR | Request::GENERIC_IPR |
-                      Request::STRICT_ORDER);
-        req->setPaddr(GenericISA::iprAddressPseudoInst((paddr >> 8) & 0xFF,
-                                                       paddr & 0xFF));
+        req->setFlags(Request::MMAPPED_IPR | Request::STRICT_ORDER);
     } else if (FullSystem) {
         // Check for an access to the local APIC
         LocalApicBase localApicBase =
