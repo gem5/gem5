@@ -269,12 +269,6 @@ class ArmSystem : public System
         return mask(physAddrRange());
     }
 
-    /**
-     * Range used by memory-mapped m5 pseudo-ops if enabled. Returns
-     * an invalid/empty range if disabled.
-     */
-    const AddrRange &m5opRange() const { return _m5opRange; }
-
     /** Is Arm Semihosting support enabled? */
     bool haveSemihosting() const { return semihosting != nullptr; }
 

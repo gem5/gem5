@@ -584,6 +584,12 @@ class System : public SimObject, public PCEventScope
 
     const Params *params() const { return (const Params *)_params; }
 
+    /**
+     * Range used by memory-mapped m5 pseudo-ops if enabled. Returns
+     * an invalid/empty range if disabled.
+     */
+    const AddrRange &m5opRange() const { return _m5opRange; }
+
   public:
 
     /**
