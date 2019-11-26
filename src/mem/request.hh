@@ -172,12 +172,6 @@ class Request
           */
         KERNEL                      = 0x00001000,
 
-        /**
-         * The request should be handled by the generic IPR code (only
-         * valid together with MMAPPED_IPR)
-         */
-        GENERIC_IPR                 = 0x08000000,
-
         /** The request targets the secure memory space. */
         SECURE                      = 0x10000000,
         /** The request is a page table walk */
