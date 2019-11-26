@@ -44,7 +44,6 @@ if env['TARGET_ISA'] == 'null':
     Return()
 
 Source('decode_cache.cc')
-Source('mmapped_ipr.cc')
 
 SimObject('BaseInterrupts.py')
 SimObject('BaseISA.py')

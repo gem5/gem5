@@ -42,7 +42,6 @@
 #include <cstring>
 #include <memory>
 
-#include "arch/generic/mmapped_ipr.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/insts/microldstop.hh"
 #include "arch/x86/pagetable_walker.hh"

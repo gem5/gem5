@@ -55,7 +55,6 @@
 #include "arch/arm/system.hh"
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/utility.hh"
-#include "arch/generic/mmapped_ipr.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"

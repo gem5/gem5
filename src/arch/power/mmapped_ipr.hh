@@ -41,14 +41,17 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
-#include "arch/generic/mmapped_ipr.hh"
+#include "base/types.hh"
 
+class Packet;
 class ThreadContext;
 
 namespace PowerISA
 {
-    using GenericISA::handleIprRead;
-    using GenericISA::handleIprWrite;
+
+inline Cycles handleIprRead(ThreadContext *, Packet *) { return Cycles(1); }
+inline Cycles handleIprWrite(ThreadContext *, Packet *) { return Cycles(1); }
+
 } // namespace PowerISA
 
 #endif // __ARCH_POWER_MMAPPED_IPR_HH__
