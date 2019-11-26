@@ -2645,13 +2645,10 @@ readFunc(SyscallDesc *desc, int num, ThreadContext *tc)
 
 template <class OS>
 SyscallReturn
-writeFunc(SyscallDesc *desc, int num, ThreadContext *tc)
+writeFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+        int tgt_fd, Addr buf_ptr, int nbytes)
 {
-    int index = 0;
     auto p = tc->getProcessPtr();
-    int tgt_fd = p->getSyscallArg(tc, index);
-    Addr buf_ptr = p->getSyscallArg(tc, index);
-    int nbytes = p->getSyscallArg(tc, index);
 
     auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
     if (!hbfdp)
