@@ -86,6 +86,12 @@ struct Argument<PseudoInstABI, uint64_t>
 namespace PseudoInst
 {
 
+static inline void
+decodeAddrOffset(Addr offset, uint8_t &func)
+{
+    func = bits(offset, 15, 8);
+}
+
 void arm(ThreadContext *tc);
 void quiesce(ThreadContext *tc);
 void quiesceSkip(ThreadContext *tc);
