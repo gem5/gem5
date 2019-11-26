@@ -61,7 +61,7 @@ namespace X86ISA {
 
 TLB::TLB(const Params *p)
     : BaseTLB(p), configAddress(0), size(p->size),
-      tlb(size), lruSeq(0)
+      tlb(size), lruSeq(0), m5opRange(p->system->m5opRange())
 {
     if (!size)
         fatal("TLBs must have a non-zero size.\n");
@@ -228,8 +228,6 @@ TLB::finalizePhysical(const RequestPtr &req,
                       ThreadContext *tc, Mode mode) const
 {
     Addr paddr = req->getPaddr();
-
-    AddrRange m5opRange(0xFFFF0000, 0x100000000);
 
     if (m5opRange.contains(paddr)) {
         req->setFlags(Request::MMAPPED_IPR | Request::GENERIC_IPR |

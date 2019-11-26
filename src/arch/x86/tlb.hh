@@ -100,6 +100,8 @@ namespace X86ISA
         TlbEntryTrie trie;
         uint64_t lruSeq;
 
+        AddrRange m5opRange;
+
         // Statistics
         Stats::Scalar rdAccesses;
         Stats::Scalar wrAccesses;
