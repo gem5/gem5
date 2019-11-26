@@ -90,6 +90,40 @@ def template ImmExecute {{
     }
 }};
 
+def template CILuiExecute {{
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        if (fault == NoFault) {
+            %(code)s;
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+        return fault;
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::vector<RegId> indices = {%(regs)s};
+        std::stringstream ss;
+        ss << mnemonic << ' ';
+        for (const RegId& idx: indices)
+            ss << registerName(idx) << ", ";
+        // To be compliant with GCC, the immediate is formated to a 20-bit
+        // signed integer.
+        ss << ((((uint64_t)imm) >> 12) & 0xFFFFF);
+        return ss.str();
+    }
+}};
+
 def template FenceExecute {{
     Fault
     %(class_name)s::execute(

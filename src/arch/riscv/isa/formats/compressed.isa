@@ -54,7 +54,10 @@ def format CIOp(imm_code, code, imm_type='int64_t', *opt_flags) {{
     header_output = ImmDeclare.subst(iop)
     decoder_output = ImmConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
-    exec_output = ImmExecute.subst(iop)
+    if (name == "c_lui"):
+        exec_output = CILuiExecute.subst(iop)
+    else:
+        exec_output = ImmExecute.subst(iop)
 }};
 
 def format CJOp(code, *opt_flags) {{
