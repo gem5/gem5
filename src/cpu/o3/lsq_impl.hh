@@ -715,9 +715,7 @@ LSQ<Impl>::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                     size, flags, data, res, std::move(amo_op));
         }
         assert(req);
-        if (!byte_enable.empty()) {
-            req->_byteEnable = byte_enable;
-        }
+        req->_byteEnable = byte_enable;
         inst->setRequest();
         req->taskId(cpu->taskId());
 
@@ -894,9 +892,7 @@ LSQ<Impl>::SplitDataRequest::initiateTranslation()
     mainReq = std::make_shared<Request>(base_addr,
                 _size, _flags, _inst->requestorId(),
                 _inst->instAddr(), _inst->contextId());
-    if (!_byteEnable.empty()) {
-        mainReq->setByteEnable(_byteEnable);
-    }
+    mainReq->setByteEnable(_byteEnable);
 
     // Paddr is not used in mainReq. However, we will accumulate the flags
     // from the sub requests into mainReq by calling setFlags() in finish().
@@ -905,41 +901,29 @@ LSQ<Impl>::SplitDataRequest::initiateTranslation()
     mainReq->setPaddr(0);
 
     /* Get the pre-fix, possibly unaligned. */
-    if (_byteEnable.empty()) {
-        this->addRequest(base_addr, next_addr - base_addr, _byteEnable);
-    } else {
-        auto it_start = _byteEnable.begin();
-        auto it_end = _byteEnable.begin() + (next_addr - base_addr);
-        this->addRequest(base_addr, next_addr - base_addr,
-                         std::vector<bool>(it_start, it_end));
-    }
+    auto it_start = _byteEnable.begin();
+    auto it_end = _byteEnable.begin() + (next_addr - base_addr);
+    this->addRequest(base_addr, next_addr - base_addr,
+                     std::vector<bool>(it_start, it_end));
     size_so_far = next_addr - base_addr;
 
     /* We are block aligned now, reading whole blocks. */
     base_addr = next_addr;
     while (base_addr != final_addr) {
-        if (_byteEnable.empty()) {
-            this->addRequest(base_addr, cacheLineSize, _byteEnable);
-        } else {
-            auto it_start = _byteEnable.begin() + size_so_far;
-            auto it_end = _byteEnable.begin() + size_so_far + cacheLineSize;
-            this->addRequest(base_addr, cacheLineSize,
-                             std::vector<bool>(it_start, it_end));
-        }
+        auto it_start = _byteEnable.begin() + size_so_far;
+        auto it_end = _byteEnable.begin() + size_so_far + cacheLineSize;
+        this->addRequest(base_addr, cacheLineSize,
+                         std::vector<bool>(it_start, it_end));
         size_so_far += cacheLineSize;
         base_addr += cacheLineSize;
     }
 
     /* Deal with the tail. */
     if (size_so_far < _size) {
-        if (_byteEnable.empty()) {
-            this->addRequest(base_addr, _size - size_so_far, _byteEnable);
-        } else {
-            auto it_start = _byteEnable.begin() + size_so_far;
-            auto it_end = _byteEnable.end();
-            this->addRequest(base_addr, _size - size_so_far,
-                             std::vector<bool>(it_start, it_end));
-        }
+        auto it_start = _byteEnable.begin() + size_so_far;
+        auto it_end = _byteEnable.end();
+        this->addRequest(base_addr, _size - size_so_far,
+                         std::vector<bool>(it_start, it_end));
     }
 
     if (_requests.size() > 0) {

@@ -467,9 +467,7 @@ TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size,
 
     RequestPtr req = std::make_shared<Request>(
         addr, size, flags, dataRequestorId(), pc, thread->contextId());
-    if (!byte_enable.empty()) {
-        req->setByteEnable(byte_enable);
-    }
+    req->setByteEnable(byte_enable);
 
     req->taskId(taskId());
 
@@ -551,9 +549,7 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
 
     RequestPtr req = std::make_shared<Request>(
         addr, size, flags, dataRequestorId(), pc, thread->contextId());
-    if (!byte_enable.empty()) {
-        req->setByteEnable(byte_enable);
-    }
+    req->setByteEnable(byte_enable);
 
     req->taskId(taskId());
 

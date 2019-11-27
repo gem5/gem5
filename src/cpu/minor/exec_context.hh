@@ -105,10 +105,9 @@ class ExecContext : public ::ExecContext
     Fault
     initiateMemRead(Addr addr, unsigned int size,
                     Request::Flags flags,
-                    const std::vector<bool>& byte_enable =
-                        std::vector<bool>()) override
+                    const std::vector<bool>& byte_enable) override
     {
-        assert(byte_enable.empty() || byte_enable.size() == size);
+        assert(byte_enable.size() == size);
         return execute.getLSQ().pushRequest(inst, true /* load */, nullptr,
             size, addr, flags, nullptr, nullptr, byte_enable);
     }
@@ -123,10 +122,10 @@ class ExecContext : public ::ExecContext
     Fault
     writeMem(uint8_t *data, unsigned int size, Addr addr,
              Request::Flags flags, uint64_t *res,
-             const std::vector<bool>& byte_enable = std::vector<bool>())
+             const std::vector<bool>& byte_enable)
         override
     {
-        assert(byte_enable.empty() || byte_enable.size() == size);
+        assert(byte_enable.size() == size);
         return execute.getLSQ().pushRequest(inst, false /* store */, data,
             size, addr, flags, res, nullptr, byte_enable);
     }
@@ -137,7 +136,8 @@ class ExecContext : public ::ExecContext
     {
         // AMO requests are pushed through the store path
         return execute.getLSQ().pushRequest(inst, false /* amo */, nullptr,
-            size, addr, flags, nullptr, std::move(amo_op));
+            size, addr, flags, nullptr, std::move(amo_op),
+            std::vector<bool>(size, true));
     }
 
     RegVal

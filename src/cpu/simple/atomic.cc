@@ -345,21 +345,15 @@ AtomicSimpleCPU::genMemFragmentRequest(const RequestPtr& req, Addr frag_addr,
         (Addr) size_left);
     size_left -= frag_size;
 
-    if (!byte_enable.empty()) {
-        // Set up byte-enable mask for the current fragment
-        auto it_start = byte_enable.begin() + (size - (frag_size + size_left));
-        auto it_end = byte_enable.begin() + (size - size_left);
-        if (isAnyActiveElement(it_start, it_end)) {
-            req->setVirt(frag_addr, frag_size, flags, dataRequestorId(),
-                         inst_addr);
-            req->setByteEnable(std::vector<bool>(it_start, it_end));
-        } else {
-            predicate = false;
-        }
-    } else {
+    // Set up byte-enable mask for the current fragment
+    auto it_start = byte_enable.begin() + (size - (frag_size + size_left));
+    auto it_end = byte_enable.begin() + (size - size_left);
+    if (isAnyActiveElement(it_start, it_end)) {
         req->setVirt(frag_addr, frag_size, flags, dataRequestorId(),
                      inst_addr);
-        req->setByteEnable(std::vector<bool>());
+        req->setByteEnable(std::vector<bool>(it_start, it_end));
+    } else {
+        predicate = false;
     }
 
     return predicate;

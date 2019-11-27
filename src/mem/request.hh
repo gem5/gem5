@@ -432,6 +432,7 @@ class Request
     {
         _flags.set(flags);
         privateFlags.set(VALID_PADDR|VALID_SIZE);
+        _byteEnable = std::vector<bool>(size, true);
     }
 
     Request(Addr vaddr, unsigned size, Flags flags,
@@ -440,6 +441,7 @@ class Request
     {
         setVirt(vaddr, size, flags, id, pc, std::move(atomic_op));
         setContext(cid);
+        _byteEnable = std::vector<bool>(size, true);
     }
 
     Request(const Request& other)
@@ -541,14 +543,12 @@ class Request
         req1->_size = split_addr - _vaddr;
         req2->_vaddr = split_addr;
         req2->_size = _size - req1->_size;
-        if (!_byteEnable.empty()) {
-            req1->_byteEnable = std::vector<bool>(
-                _byteEnable.begin(),
-                _byteEnable.begin() + req1->_size);
-            req2->_byteEnable = std::vector<bool>(
-                _byteEnable.begin() + req1->_size,
-                _byteEnable.end());
-        }
+        req1->_byteEnable = std::vector<bool>(
+            _byteEnable.begin(),
+            _byteEnable.begin() + req1->_size);
+        req2->_byteEnable = std::vector<bool>(
+            _byteEnable.begin() + req1->_size,
+            _byteEnable.end());
     }
 
     /**
@@ -624,7 +624,7 @@ class Request
     void
     setByteEnable(const std::vector<bool>& be)
     {
-        assert(be.empty() || be.size() == _size);
+        assert(be.size() == _size);
         _byteEnable = be;
     }
 

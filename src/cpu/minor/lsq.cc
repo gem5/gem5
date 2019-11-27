@@ -301,8 +301,7 @@ LSQ::SingleDataRequest::startAddrTranslation()
         inst->id.threadId);
 
     const auto &byte_enable = request->getByteEnable();
-    if (byte_enable.size() == 0 ||
-        isAnyActiveElement(byte_enable.cbegin(), byte_enable.cend())) {
+    if (isAnyActiveElement(byte_enable.cbegin(), byte_enable.cend())) {
         port.numAccessesInDTLB++;
 
         setState(LSQ::LSQRequest::InTranslation);
@@ -495,24 +494,19 @@ LSQ::SplitDataRequest::makeFragmentRequests()
         bool disabled_fragment = false;
 
         fragment->setContext(request->contextId());
-        if (byte_enable.empty()) {
+        // Set up byte-enable mask for the current fragment
+        auto it_start = byte_enable.begin() +
+            (fragment_addr - base_addr);
+        auto it_end = byte_enable.begin() +
+            (fragment_addr - base_addr) + fragment_size;
+        if (isAnyActiveElement(it_start, it_end)) {
             fragment->setVirt(
                 fragment_addr, fragment_size, request->getFlags(),
-                request->requestorId(), request->getPC());
+                request->requestorId(),
+                request->getPC());
+            fragment->setByteEnable(std::vector<bool>(it_start, it_end));
         } else {
-            // Set up byte-enable mask for the current fragment
-            auto it_start = byte_enable.begin() +
-                (fragment_addr - base_addr);
-            auto it_end = byte_enable.begin() +
-                (fragment_addr - base_addr) + fragment_size;
-            if (isAnyActiveElement(it_start, it_end)) {
-                fragment->setVirt(
-                    fragment_addr, fragment_size, request->getFlags(),
-                    request->requestorId(), request->getPC());
-                fragment->setByteEnable(std::vector<bool>(it_start, it_end));
-            } else {
-                disabled_fragment = true;
-            }
+            disabled_fragment = true;
         }
 
         if (!disabled_fragment) {

@@ -308,14 +308,13 @@ class BaseDynInst : public ExecContext, public RefCounted
     }
 
     Fault initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
-            const std::vector<bool> &byte_enable=std::vector<bool>()) override;
+            const std::vector<bool> &byte_enable) override;
 
     Fault initiateHtmCmd(Request::Flags flags) override;
 
     Fault writeMem(uint8_t *data, unsigned size, Addr addr,
                    Request::Flags flags, uint64_t *res,
-                   const std::vector<bool> &byte_enable=std::vector<bool>())
-                   override;
+                   const std::vector<bool> &byte_enable) override;
 
     Fault initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
                          AtomicOpFunctorPtr amo_op) override;
@@ -1069,11 +1068,11 @@ BaseDynInst<Impl>::initiateMemRead(Addr addr, unsigned size,
                                    Request::Flags flags,
                                    const std::vector<bool> &byte_enable)
 {
-    assert(byte_enable.empty() || byte_enable.size() == size);
+    assert(byte_enable.size() == size);
     return cpu->pushRequest(
-            dynamic_cast<typename DynInstPtr::PtrType>(this),
-            /* ld */ true, nullptr, size, addr, flags, nullptr, nullptr,
-            byte_enable);
+        dynamic_cast<typename DynInstPtr::PtrType>(this),
+        /* ld */ true, nullptr, size, addr, flags, nullptr, nullptr,
+        byte_enable);
 }
 
 template<class Impl>
@@ -1091,11 +1090,11 @@ BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size, Addr addr,
                             Request::Flags flags, uint64_t *res,
                             const std::vector<bool> &byte_enable)
 {
-    assert(byte_enable.empty() || byte_enable.size() == size);
+    assert(byte_enable.size() == size);
     return cpu->pushRequest(
-            dynamic_cast<typename DynInstPtr::PtrType>(this),
-            /* st */ false, data, size, addr, flags, res, nullptr,
-            byte_enable);
+        dynamic_cast<typename DynInstPtr::PtrType>(this),
+        /* st */ false, data, size, addr, flags, res, nullptr,
+        byte_enable);
 }
 
 template<class Impl>
@@ -1112,7 +1111,7 @@ BaseDynInst<Impl>::initiateMemAMO(Addr addr, unsigned size,
     return cpu->pushRequest(
             dynamic_cast<typename DynInstPtr::PtrType>(this),
             /* atomic */ false, nullptr, size, addr, flags, nullptr,
-            std::move(amo_op));
+            std::move(amo_op), std::vector<bool>(size, true));
 }
 
 #endif // __CPU_BASE_DYN_INST_HH__

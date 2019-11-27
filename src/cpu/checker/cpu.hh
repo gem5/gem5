@@ -587,12 +587,12 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     Fault readMem(Addr addr, uint8_t *data, unsigned size,
                   Request::Flags flags,
-                  const std::vector<bool>& byte_enable = std::vector<bool>())
+                  const std::vector<bool>& byte_enable)
         override;
 
     Fault writeMem(uint8_t *data, unsigned size, Addr addr,
                    Request::Flags flags, uint64_t *res,
-                   const std::vector<bool>& byte_enable = std::vector<bool>())
+                   const std::vector<bool>& byte_enable)
         override;
 
     Fault amoMem(Addr addr, uint8_t* data, unsigned size,

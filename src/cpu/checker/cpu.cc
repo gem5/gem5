@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011,2013,2017-2018 ARM Limited
+ * Copyright (c) 2011,2013,2017-2018, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -147,21 +147,15 @@ CheckerCPU::genMemFragmentRequest(Addr frag_addr, int size,
 
     RequestPtr mem_req;
 
-    if (!byte_enable.empty()) {
-        // Set up byte-enable mask for the current fragment
-        auto it_start = byte_enable.cbegin() + (size - (frag_size +
-                                                        size_left));
-        auto it_end = byte_enable.cbegin() + (size - size_left);
-        if (isAnyActiveElement(it_start, it_end)) {
-            mem_req = std::make_shared<Request>(frag_addr, frag_size,
-                    flags, requestorId, thread->pcState().instAddr(),
-                    tc->contextId());
-            mem_req->setByteEnable(std::vector<bool>(it_start, it_end));
-        }
-    } else {
+    // Set up byte-enable mask for the current fragment
+    auto it_start = byte_enable.cbegin() + (size - (frag_size +
+                                                    size_left));
+    auto it_end = byte_enable.cbegin() + (size - size_left);
+    if (isAnyActiveElement(it_start, it_end)) {
         mem_req = std::make_shared<Request>(frag_addr, frag_size,
-                    flags, requestorId, thread->pcState().instAddr(),
-                    tc->contextId());
+                flags, requestorId, thread->pcState().instAddr(),
+                tc->contextId());
+        mem_req->setByteEnable(std::vector<bool>(it_start, it_end));
     }
 
     return mem_req;
@@ -172,7 +166,7 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
                     Request::Flags flags,
                     const std::vector<bool>& byte_enable)
 {
-    assert(byte_enable.empty() || byte_enable.size() == size);
+    assert(byte_enable.size() == size);
 
     Fault fault = NoFault;
     bool checked_flags = false;
@@ -256,7 +250,7 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
                      Addr addr, Request::Flags flags, uint64_t *res,
                      const std::vector<bool>& byte_enable)
 {
-    assert(byte_enable.empty() || byte_enable.size() == size);
+    assert(byte_enable.size() == size);
 
     Fault fault = NoFault;
     bool checked_flags = false;
