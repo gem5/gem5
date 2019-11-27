@@ -1305,7 +1305,7 @@ class Packet : public Printable
     bool
     isMaskedWrite() const
     {
-        return (cmd == MemCmd::WriteReq && !req->getByteEnable().empty());
+        return (cmd == MemCmd::WriteReq && req->isMasked());
     }
 
     /**
