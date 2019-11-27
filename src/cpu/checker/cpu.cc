@@ -178,6 +178,8 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
                     Request::Flags flags,
                     const std::vector<bool>& byteEnable)
 {
+    assert(byteEnable.empty() || byteEnable.size() == size);
+
     Fault fault = NoFault;
     bool checked_flags = false;
     bool flags_match = true;

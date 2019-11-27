@@ -965,6 +965,7 @@ BaseDynInst<Impl>::initiateMemRead(Addr addr, unsigned size,
                                    Request::Flags flags,
                                    const std::vector<bool>& byteEnable)
 {
+    assert(byteEnable.empty() || byteEnable.size() == size);
     return cpu->pushRequest(
             dynamic_cast<typename DynInstPtr::PtrType>(this),
             /* ld */ true, nullptr, size, addr, flags, nullptr, nullptr,
@@ -977,6 +978,7 @@ BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size, Addr addr,
                             Request::Flags flags, uint64_t *res,
                             const std::vector<bool>& byteEnable)
 {
+    assert(byteEnable.empty() || byteEnable.size() == size);
     return cpu->pushRequest(
             dynamic_cast<typename DynInstPtr::PtrType>(this),
             /* st */ false, data, size, addr, flags, res, nullptr, byteEnable);

@@ -440,6 +440,7 @@ class SimpleExecContext : public ExecContext {
             const std::vector<bool>& byteEnable = std::vector<bool>())
         override
     {
+        assert(byteEnable.empty() || byteEnable.size() == size);
         return cpu->readMem(addr, data, size, flags, byteEnable);
     }
 
@@ -449,6 +450,7 @@ class SimpleExecContext : public ExecContext {
                     const std::vector<bool>& byteEnable = std::vector<bool>())
         override
     {
+        assert(byteEnable.empty() || byteEnable.size() == size);
         return cpu->initiateMemRead(addr, size, flags, byteEnable);
     }
 
