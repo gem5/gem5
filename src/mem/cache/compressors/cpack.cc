@@ -63,7 +63,7 @@ CPack::compress(const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat)
     decomp_lat = Cycles(blkSize/8);
 
     // Return compressed line
-    return std::move(comp_data);
+    return comp_data;
 }
 
 CPack*
