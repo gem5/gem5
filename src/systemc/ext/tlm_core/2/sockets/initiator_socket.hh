@@ -169,6 +169,9 @@ class tlm_base_initiator_socket :
 
   protected:
     export_type m_export;
+
+  private:
+    using port_type::bind;
 };
 
 //
