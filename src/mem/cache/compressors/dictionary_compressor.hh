@@ -230,6 +230,8 @@ class DictionaryCompressor : public BaseDictionaryCompressor
     std::unique_ptr<BaseCacheCompressor::CompressionData> compress(
         const uint64_t* data);
 
+    using BaseDictionaryCompressor::compress;
+
     /**
      * Decompress data.
      *
