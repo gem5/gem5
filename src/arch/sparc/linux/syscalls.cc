@@ -112,7 +112,7 @@ SyscallDescABI<DefaultSyscallABI> SparcLinuxProcess::syscall32Descs[] = {
     /*  20 */ { "getpid", getpidFunc },
     /*  21 */ { "capget" },
     /*  22 */ { "capset" },
-    /*  23 */ { "setuid", setuidFunc }, // 32 bit
+    /*  23 */ { "setuid", ignoreFunc }, // 32 bit
     /*  24 */ { "getuid", getuidFunc }, // 32 bit
     /*  25 */ { "time" },
     /*  26 */ { "ptrace" },
@@ -418,7 +418,7 @@ SyscallDescABI<DefaultSyscallABI> SparcLinuxProcess::syscallDescs[] = {
     /* 20 */ { "getpid", getpidFunc },
     /* 21 */ { "capget" },
     /* 22 */ { "capset" },
-    /* 23 */ { "setuid", setuidFunc },
+    /* 23 */ { "setuid", ignoreFunc },
     /* 24 */ { "getuid", getuidFunc },
     /* 25 */ { "time" },
     /* 26 */ { "ptrace" },

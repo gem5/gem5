@@ -179,7 +179,7 @@ SyscallDescABI<DefaultSyscallABI> AlphaLinuxProcess::syscallDescs[] = {
     /* 20 */ { "getxpid", getpidPseudoFunc },
     /* 21 */ { "osf_mount" },
     /* 22 */ { "umount" },
-    /* 23 */ { "setuid", setuidFunc },
+    /* 23 */ { "setuid", ignoreFunc },
     /* 24 */ { "getxuid", getuidPseudoFunc },
     /* 25 */ { "exec_with_loader" },
     /* 26 */ { "osf_ptrace" },

@@ -275,10 +275,6 @@ SyscallReturn fcntlFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 /// Target fcntl64() handler.
 SyscallReturn fcntl64Func(SyscallDesc *desc, int num, ThreadContext *tc);
 
-/// Target setuid() handler.
-SyscallReturn setuidFunc(SyscallDesc *desc, int num, ThreadContext *tc,
-                         int uid);
-
 /// Target pipe() handler.
 SyscallReturn pipeFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 

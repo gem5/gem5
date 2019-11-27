@@ -1014,14 +1014,6 @@ getgidPseudoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
 
 SyscallReturn
-setuidFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, int uid)
-{
-    // can't fathom why a benchmark would call this.
-    warn("Ignoring call to setuid(%d)\n", uid);
-    return 0;
-}
-
-SyscallReturn
 getpidFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     auto process = tc->getProcessPtr();

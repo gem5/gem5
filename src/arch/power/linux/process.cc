@@ -120,7 +120,7 @@ SyscallDescABI<DefaultSyscallABI> PowerLinuxProcess::syscallDescs[] = {
     /* 20 */ { "getpid", getpidFunc },
     /* 21 */ { "mount" },
     /* 22 */ { "umount" },
-    /* 23 */ { "setuid", setuidFunc },
+    /* 23 */ { "setuid", ignoreFunc },
     /* 24 */ { "getuid", getuidFunc },
     /* 25 */ { "stime" },
     /* 26 */ { "ptrace" },
