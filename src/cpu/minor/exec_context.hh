@@ -113,23 +113,23 @@ class ExecContext : public ::ExecContext
     Fault
     initiateMemRead(Addr addr, unsigned int size,
                     Request::Flags flags,
-                    const std::vector<bool>& byteEnable = std::vector<bool>())
-        override
+                    const std::vector<bool>& byte_enable =
+                        std::vector<bool>()) override
     {
-        assert(byteEnable.empty() || byteEnable.size() == size);
+        assert(byte_enable.empty() || byte_enable.size() == size);
         return execute.getLSQ().pushRequest(inst, true /* load */, nullptr,
-            size, addr, flags, nullptr, nullptr, byteEnable);
+            size, addr, flags, nullptr, nullptr, byte_enable);
     }
 
     Fault
     writeMem(uint8_t *data, unsigned int size, Addr addr,
              Request::Flags flags, uint64_t *res,
-             const std::vector<bool>& byteEnable = std::vector<bool>())
+             const std::vector<bool>& byte_enable = std::vector<bool>())
         override
     {
-        assert(byteEnable.empty() || byteEnable.size() == size);
+        assert(byte_enable.empty() || byte_enable.size() == size);
         return execute.getLSQ().pushRequest(inst, false /* store */, data,
-            size, addr, flags, res, nullptr, byteEnable);
+            size, addr, flags, res, nullptr, byte_enable);
     }
 
     Fault

@@ -236,7 +236,7 @@ class ExecContext {
      */
     virtual Fault readMem(Addr addr, uint8_t *data, unsigned int size,
             Request::Flags flags,
-            const std::vector<bool>& byteEnable = std::vector<bool>())
+            const std::vector<bool>& byte_enable = std::vector<bool>())
     {
         panic("ExecContext::readMem() should be overridden\n");
     }
@@ -250,7 +250,7 @@ class ExecContext {
      */
     virtual Fault initiateMemRead(Addr addr, unsigned int size,
             Request::Flags flags,
-            const std::vector<bool>& byteEnable = std::vector<bool>())
+            const std::vector<bool>& byte_enable = std::vector<bool>())
     {
         panic("ExecContext::initiateMemRead() should be overridden\n");
     }
@@ -261,7 +261,7 @@ class ExecContext {
      */
     virtual Fault writeMem(uint8_t *data, unsigned int size, Addr addr,
                            Request::Flags flags, uint64_t *res,
-                           const std::vector<bool>& byteEnable =
+                           const std::vector<bool>& byte_enable =
                                std::vector<bool>()) = 0;
 
     /**

@@ -295,9 +295,9 @@ LSQ::SingleDataRequest::startAddrTranslation()
     ThreadContext *thread = port.cpu.getContext(
         inst->id.threadId);
 
-    const auto &byteEnable = request->getByteEnable();
-    if (byteEnable.size() == 0 ||
-        isAnyActiveElement(byteEnable.cbegin(), byteEnable.cend())) {
+    const auto &byte_enable = request->getByteEnable();
+    if (byte_enable.size() == 0 ||
+        isAnyActiveElement(byte_enable.cbegin(), byte_enable.cend())) {
         port.numAccessesInDTLB++;
 
         setState(LSQ::LSQRequest::InTranslation);
@@ -1574,7 +1574,7 @@ Fault
 LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
                  unsigned int size, Addr addr, Request::Flags flags,
                  uint64_t *res, AtomicOpFunctorPtr amo_op,
-                 const std::vector<bool>& byteEnable)
+                 const std::vector<bool>& byte_enable)
 {
     assert(inst->translationFault == NoFault || inst->inLSQ);
 
@@ -1636,7 +1636,7 @@ LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
         addr, size, flags, cpu.dataMasterId(),
         /* I've no idea why we need the PC, but give it */
         inst->pc.instAddr(), std::move(amo_op));
-    request->request->setByteEnable(byteEnable);
+    request->request->setByteEnable(byte_enable);
 
     requests.push(request);
     inst->inLSQ = true;

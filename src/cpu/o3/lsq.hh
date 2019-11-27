@@ -406,16 +406,16 @@ class LSQ
          */
         void
         addRequest(Addr addr, unsigned size,
-                   const std::vector<bool>& byteEnable)
+                   const std::vector<bool>& byte_enable)
         {
-            if (byteEnable.empty() ||
-                isAnyActiveElement(byteEnable.begin(), byteEnable.end())) {
+            if (byte_enable.empty() ||
+                isAnyActiveElement(byte_enable.begin(), byte_enable.end())) {
                 auto request = std::make_shared<Request>(_inst->getASID(),
                         addr, size, _flags, _inst->masterId(),
                         _inst->instAddr(), _inst->contextId(),
                         std::move(_amo_op));
-                if (!byteEnable.empty()) {
-                    request->setByteEnable(byteEnable);
+                if (!byte_enable.empty()) {
+                    request->setByteEnable(byte_enable);
                 }
                 _requests.push_back(request);
             }
@@ -1040,7 +1040,7 @@ class LSQ
     Fault pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                       unsigned int size, Addr addr, Request::Flags flags,
                       uint64_t *res, AtomicOpFunctorPtr amo_op,
-                      const std::vector<bool>& byteEnable);
+                      const std::vector<bool>& byte_enable);
 
     /** The CPU pointer. */
     O3CPU *cpu;

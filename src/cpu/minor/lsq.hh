@@ -709,7 +709,7 @@ class LSQ : public Named
     Fault pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
                       unsigned int size, Addr addr, Request::Flags flags,
                       uint64_t *res, AtomicOpFunctorPtr amo_op,
-                      const std::vector<bool>& byteEnable =
+                      const std::vector<bool>& byte_enable =
                           std::vector<bool>());
 
     /** Push a predicate failed-representing request into the queues just

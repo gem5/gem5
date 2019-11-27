@@ -688,7 +688,7 @@ Fault
 LSQ<Impl>::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                        unsigned int size, Addr addr, Request::Flags flags,
                        uint64_t *res, AtomicOpFunctorPtr amo_op,
-                       const std::vector<bool>& byteEnable)
+                       const std::vector<bool>& byte_enable)
 {
     // This comming request can be either load, store or atomic.
     // Atomic request has a corresponding pointer to its atomic memory
@@ -720,8 +720,8 @@ LSQ<Impl>::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                     size, flags, data, res, std::move(amo_op));
         }
         assert(req);
-        if (!byteEnable.empty()) {
-            req->_byteEnable = byteEnable;
+        if (!byte_enable.empty()) {
+            req->_byteEnable = byte_enable;
         }
         inst->setRequest();
         req->taskId(cpu->taskId());

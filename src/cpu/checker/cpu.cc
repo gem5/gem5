@@ -176,9 +176,9 @@ CheckerCPU::genMemFragmentRequest(Addr frag_addr, int size,
 Fault
 CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
                     Request::Flags flags,
-                    const std::vector<bool>& byteEnable)
+                    const std::vector<bool>& byte_enable)
 {
-    assert(byteEnable.empty() || byteEnable.size() == size);
+    assert(byte_enable.empty() || byte_enable.size() == size);
 
     Fault fault = NoFault;
     bool checked_flags = false;
@@ -193,7 +193,7 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
     // Need to account for multiple accesses like the Atomic and TimingSimple
     while (1) {
         RequestPtr mem_req = genMemFragmentRequest(frag_addr, size, flags,
-                                                   byteEnable, frag_size,
+                                                   byte_enable, frag_size,
                                                    size_left);
 
         predicate = (mem_req != nullptr);
@@ -260,9 +260,9 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
 Fault
 CheckerCPU::writeMem(uint8_t *data, unsigned size,
                      Addr addr, Request::Flags flags, uint64_t *res,
-                     const std::vector<bool>& byteEnable)
+                     const std::vector<bool>& byte_enable)
 {
-    assert(byteEnable.empty() || byteEnable.size() == size);
+    assert(byte_enable.empty() || byte_enable.size() == size);
 
     Fault fault = NoFault;
     bool checked_flags = false;
@@ -278,7 +278,7 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
     // Need to account for a multiple access like Atomic and Timing CPUs
     while (1) {
         RequestPtr mem_req = genMemFragmentRequest(frag_addr, size, flags,
-                                                   byteEnable, frag_size,
+                                                   byte_enable, frag_size,
                                                    size_left);
 
         predicate = (mem_req != nullptr);

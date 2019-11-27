@@ -371,7 +371,7 @@ AtomicSimpleCPU::genMemFragmentRequest(const RequestPtr& req, Addr frag_addr,
 Fault
 AtomicSimpleCPU::readMem(Addr addr, uint8_t * data, unsigned size,
                          Request::Flags flags,
-                         const std::vector<bool>& byteEnable)
+                         const std::vector<bool>& byte_enable)
 {
     SimpleExecContext& t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
@@ -394,7 +394,7 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data, unsigned size,
 
     while (1) {
         predicate = genMemFragmentRequest(req, frag_addr, size, flags,
-                                          byteEnable, frag_size, size_left);
+                                          byte_enable, frag_size, size_left);
 
         // translate to physical address
         if (predicate) {
@@ -453,7 +453,7 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data, unsigned size,
 Fault
 AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
                           Request::Flags flags, uint64_t *res,
-                          const std::vector<bool>& byteEnable)
+                          const std::vector<bool>& byte_enable)
 {
     SimpleExecContext& t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
@@ -485,7 +485,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
 
     while (1) {
         predicate = genMemFragmentRequest(req, frag_addr, size, flags,
-                                          byteEnable, frag_size, size_left);
+                                          byte_enable, frag_size, size_left);
 
         // translate to physical address
         if (predicate)
@@ -541,7 +541,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
         if (fault != NoFault || size_left == 0)
         {
             if (req->isLockedRMW() && fault == NoFault) {
-                assert(byteEnable.empty());
+                assert(byte_enable.empty());
                 locked = false;
             }
 

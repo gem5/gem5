@@ -304,11 +304,11 @@ class BaseDynInst : public ExecContext, public RefCounted
     }
 
     Fault initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
-            const std::vector<bool>& byteEnable = std::vector<bool>());
+            const std::vector<bool>& byte_enable = std::vector<bool>());
 
     Fault writeMem(uint8_t *data, unsigned size, Addr addr,
                    Request::Flags flags, uint64_t *res,
-                   const std::vector<bool>& byteEnable = std::vector<bool>());
+                   const std::vector<bool>& byte_enable = std::vector<bool>());
 
     Fault initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
                          AtomicOpFunctorPtr amo_op);
@@ -963,25 +963,26 @@ template<class Impl>
 Fault
 BaseDynInst<Impl>::initiateMemRead(Addr addr, unsigned size,
                                    Request::Flags flags,
-                                   const std::vector<bool>& byteEnable)
+                                   const std::vector<bool>& byte_enable)
 {
-    assert(byteEnable.empty() || byteEnable.size() == size);
+    assert(byte_enable.empty() || byte_enable.size() == size);
     return cpu->pushRequest(
             dynamic_cast<typename DynInstPtr::PtrType>(this),
             /* ld */ true, nullptr, size, addr, flags, nullptr, nullptr,
-            byteEnable);
+            byte_enable);
 }
 
 template<class Impl>
 Fault
 BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size, Addr addr,
                             Request::Flags flags, uint64_t *res,
-                            const std::vector<bool>& byteEnable)
+                            const std::vector<bool>& byte_enable)
 {
-    assert(byteEnable.empty() || byteEnable.size() == size);
+    assert(byte_enable.empty() || byte_enable.size() == size);
     return cpu->pushRequest(
             dynamic_cast<typename DynInstPtr::PtrType>(this),
-            /* st */ false, data, size, addr, flags, res, nullptr, byteEnable);
+            /* st */ false, data, size, addr, flags, res, nullptr,
+            byte_enable);
 }
 
 template<class Impl>

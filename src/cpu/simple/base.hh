@@ -144,19 +144,19 @@ class BaseSimpleCPU : public BaseCPU
 
     virtual Fault readMem(Addr addr, uint8_t* data, unsigned size,
                           Request::Flags flags,
-                          const std::vector<bool>& byteEnable =
+                          const std::vector<bool>& byte_enable =
                               std::vector<bool>())
     { panic("readMem() is not implemented\n"); }
 
     virtual Fault initiateMemRead(Addr addr, unsigned size,
                                   Request::Flags flags,
-                                  const std::vector<bool>& byteEnable =
+                                  const std::vector<bool>& byte_enable =
                                       std::vector<bool>())
     { panic("initiateMemRead() is not implemented\n"); }
 
     virtual Fault writeMem(uint8_t* data, unsigned size, Addr addr,
                            Request::Flags flags, uint64_t* res,
-                           const std::vector<bool>& byteEnable =
+                           const std::vector<bool>& byte_enable =
                                std::vector<bool>())
     { panic("writeMem() is not implemented\n"); }
 

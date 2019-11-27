@@ -418,7 +418,7 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
 Fault
 TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size,
                                  Request::Flags flags,
-                                 const std::vector<bool>& byteEnable)
+                                 const std::vector<bool>& byte_enable)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
@@ -435,8 +435,8 @@ TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size,
     RequestPtr req = std::make_shared<Request>(
         asid, addr, size, flags, dataMasterId(), pc,
         thread->contextId());
-    if (!byteEnable.empty()) {
-        req->setByteEnable(byteEnable);
+    if (!byte_enable.empty()) {
+        req->setByteEnable(byte_enable);
     }
 
     req->taskId(taskId());
@@ -496,7 +496,7 @@ TimingSimpleCPU::handleWritePacket()
 Fault
 TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
                           Addr addr, Request::Flags flags, uint64_t *res,
-                          const std::vector<bool>& byteEnable)
+                          const std::vector<bool>& byte_enable)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
@@ -521,8 +521,8 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
     RequestPtr req = std::make_shared<Request>(
         asid, addr, size, flags, dataMasterId(), pc,
         thread->contextId());
-    if (!byteEnable.empty()) {
-        req->setByteEnable(byteEnable);
+    if (!byte_enable.empty()) {
+        req->setByteEnable(byte_enable);
     }
 
     req->taskId(taskId());

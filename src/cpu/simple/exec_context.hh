@@ -437,31 +437,31 @@ class SimpleExecContext : public ExecContext {
     Fault
     readMem(Addr addr, uint8_t *data, unsigned int size,
             Request::Flags flags,
-            const std::vector<bool>& byteEnable = std::vector<bool>())
+            const std::vector<bool>& byte_enable = std::vector<bool>())
         override
     {
-        assert(byteEnable.empty() || byteEnable.size() == size);
-        return cpu->readMem(addr, data, size, flags, byteEnable);
+        assert(byte_enable.empty() || byte_enable.size() == size);
+        return cpu->readMem(addr, data, size, flags, byte_enable);
     }
 
     Fault
     initiateMemRead(Addr addr, unsigned int size,
                     Request::Flags flags,
-                    const std::vector<bool>& byteEnable = std::vector<bool>())
+                    const std::vector<bool>& byte_enable = std::vector<bool>())
         override
     {
-        assert(byteEnable.empty() || byteEnable.size() == size);
-        return cpu->initiateMemRead(addr, size, flags, byteEnable);
+        assert(byte_enable.empty() || byte_enable.size() == size);
+        return cpu->initiateMemRead(addr, size, flags, byte_enable);
     }
 
     Fault
     writeMem(uint8_t *data, unsigned int size, Addr addr,
              Request::Flags flags, uint64_t *res,
-             const std::vector<bool>& byteEnable = std::vector<bool>())
+             const std::vector<bool>& byte_enable = std::vector<bool>())
         override
     {
-        assert(byteEnable.empty() || byteEnable.size() == size);
-        return cpu->writeMem(data, size, addr, flags, res, byteEnable);
+        assert(byte_enable.empty() || byte_enable.size() == size);
+        return cpu->writeMem(data, size, addr, flags, res, byte_enable);
     }
 
     Fault amoMem(Addr addr, uint8_t *data, unsigned int size,
