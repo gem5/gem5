@@ -28,13 +28,13 @@ namespace tlm
 {
 
 template <class IF, class T>
-class tlm_event_finder_t : public sc_core::sc_event_finder
+class tlm_event_finder_t : public sc_core::sc_event_finder_t<IF>
 {
   public:
     tlm_event_finder_t(const sc_core::sc_port_base &port_,
                        const sc_core::sc_event &(IF::*event_method_)(
                            tlm_tag<T> *) const) :
-        sc_core::sc_event_finder(port_), m_event_method(event_method_)
+        sc_core::sc_event_finder_t<IF>(port_), m_event_method(event_method_)
     {}
 
     virtual ~tlm_event_finder_t() {}
@@ -57,11 +57,11 @@ inline const sc_core::sc_event &
 tlm_event_finder_t<IF, T>::find_event(sc_core::sc_interface *if_p) const
 {
     const IF *iface = if_p ? dynamic_cast<const IF *>(if_p) :
-        dynamic_cast<const IF *>(port()->_gem5Interface(0));
+        dynamic_cast<const IF *>(this->port()->_gem5Interface(0));
     if (iface == nullptr) {
         std::ostringstream out;
-        out << "port is not bound: port '" << port()->name() <<
-            "' (" << port()->kind() << ")";
+        out << "port is not bound: port '" << this->port()->name() <<
+            "' (" << this->port()->kind() << ")";
         SC_REPORT_ERROR(sc_core::SC_ID_FIND_EVENT_, out.str().c_str());
         static sc_core::sc_event none;
         return none;
