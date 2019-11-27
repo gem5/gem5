@@ -180,10 +180,10 @@ class sc_port_b : public sc_port_base
     }
 
   protected:
-    void before_end_of_elaboration() {}
-    void end_of_elaboration() {}
-    void start_of_simulation() {}
-    void end_of_simulation() {}
+    void before_end_of_elaboration() override {}
+    void end_of_elaboration() override {}
+    void start_of_simulation() override {}
+    void end_of_simulation() override {}
 
     explicit sc_port_b(int n, sc_port_policy p) :
             sc_port_base(sc_gen_unique_name("port"), n, p)
@@ -195,7 +195,7 @@ class sc_port_b : public sc_port_base
 
     // Implementation defined, but depended on by the tests.
     int
-    vbind(sc_interface &i)
+    vbind(sc_interface &i) override
     {
         IF *interface = dynamic_cast<IF *>(&i);
         if (!interface)
@@ -204,7 +204,7 @@ class sc_port_b : public sc_port_base
         return 0;
     }
     int
-    vbind(sc_port_base &pb)
+    vbind(sc_port_base &pb) override
     {
         sc_port_b<IF> *p = dynamic_cast<sc_port_b<IF> *>(&pb);
         if (!p)
@@ -217,7 +217,7 @@ class sc_port_b : public sc_port_base
     std::vector<IF *> _interfaces;
 
     sc_interface *
-    _gem5Interface(int n) const
+    _gem5Interface(int n) const override
     {
         if (n < 0 || n >= size()) {
             report_error(SC_ID_GET_IF_, "index out of range");
@@ -226,7 +226,7 @@ class sc_port_b : public sc_port_base
         return _interfaces[n];
     }
     void
-    _gem5AddInterface(sc_interface *iface)
+    _gem5AddInterface(sc_interface *iface) override
     {
         IF *interface = dynamic_cast<IF *>(iface);
         sc_assert(interface);
@@ -239,7 +239,7 @@ class sc_port_b : public sc_port_base
         _interfaces.push_back(interface);
     }
 
-    const char *_ifTypeName() const { return typeid(IF).name(); }
+    const char *_ifTypeName() const override { return typeid(IF).name(); }
 
     // Disabled
     sc_port_b() {}
@@ -289,14 +289,14 @@ class sc_port : public sc_port_b<IF>
         sc_port_b<IF>::bind(parent);
     }
 
-    virtual const char *kind() const { return "sc_port"; }
+    virtual const char *kind() const override { return "sc_port"; }
 
   private:
     // Disabled
     sc_port(const sc_port<IF, N, P> &) {}
     sc_port<IF, N, P> &operator = (const sc_port<IF, N, P> &) { return *this; }
 
-    virtual sc_port_policy _portPolicy() const { return P; }
+    virtual sc_port_policy _portPolicy() const override { return P; }
 };
 
 } // namespace sc_core
