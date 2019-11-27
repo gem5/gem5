@@ -232,6 +232,7 @@ class Named
 #define DDUMPN(data, count) do {} while (0)
 #define DPRINTFN(...) do {} while (0)
 #define DPRINTFNR(...) do {} while (0)
+#define DPRINTF_UNCONDITIONAL(x, ...) do {} while (0)
 
 #endif  // TRACING_ON
 
