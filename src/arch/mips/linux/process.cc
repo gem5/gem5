@@ -77,11 +77,10 @@ MipsLinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 {
-    int index = 0;
     auto process = tc->getProcessPtr();
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
+    TypedBufferArg<Linux::utsname> name(utsname);
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename,"sim.gem5.org");
@@ -97,14 +96,9 @@ unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 /// borrowed from Tru64, the subcases that get used appear to be
 /// different in practice from those used by Tru64 processes.
 static SyscallReturn
-sys_getsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+sys_getsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+                   unsigned op, unsigned bufPtr, unsigned nbytes)
 {
-    int index = 0;
-    auto process = tc->getProcessPtr();
-    unsigned op = process->getSyscallArg(tc, index);
-    unsigned bufPtr = process->getSyscallArg(tc, index);
-    // unsigned nbytes = process->getSyscallArg(tc, index);
-
     switch (op) {
       case 45:
         {
@@ -126,14 +120,9 @@ sys_getsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
 /// Target sys_setsysinfo() handler.
 static SyscallReturn
-sys_setsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+sys_setsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+                   unsigned op, Addr bufPtr, unsigned nbytes)
 {
-    int index = 0;
-    auto process = tc->getProcessPtr();
-    unsigned op = process->getSyscallArg(tc, index);
-    Addr bufPtr = process->getSyscallArg(tc, index);
-    // unsigned nbytes = process->getSyscallArg(tc, index);
-
     switch (op) {
 
       case 14:
@@ -156,11 +145,8 @@ sys_setsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 }
 
 static SyscallReturn
-setThreadAreaFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+setThreadAreaFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr addr)
 {
-    int index = 0;
-    auto process = tc->getProcessPtr();
-    Addr addr = process->getSyscallArg(tc, index);
     tc->setMiscRegNoEffect(MISCREG_TP_VALUE, addr);
     return 0;
 }
