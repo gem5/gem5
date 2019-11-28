@@ -1,0 +1,277 @@
+/*
+ * Copyright 2019 Google, Inc.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ */
+
+#include <gtest/gtest.h>
+
+#include <type_traits>
+#include <utility>
+
+#include "sim/guest_abi.hh"
+
+// Fake ThreadContext which holds data and captures results.
+class ThreadContext
+{
+  public:
+    static const int ints[];
+    static const double floats[];
+
+    static const int DefaultIntResult;
+    static const double DefaultFloatResult;
+
+    int intResult = DefaultIntResult;
+    double floatResult = DefaultFloatResult;
+};
+
+const int ThreadContext::ints[] = {
+    0, 1, 2, 3, 4, 5, 6, 7
+};
+const double ThreadContext::floats[] = {
+    10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0
+};
+
+const int ThreadContext::DefaultIntResult = 0;
+const double ThreadContext::DefaultFloatResult = 0.0;
+
+// ABI anchor for an ABI which has 1D progress. Conceptually, this could be
+// because integer and floating point arguments are stored in the same
+// registers.
+struct TestABI_1D
+{
+    using Position = int;
+};
+
+// ABI anchor for an ABI which has 2D progress. Conceptually, this could be
+// because integer and floating point arguments are stored in separate
+// registers.
+struct TestABI_2D
+{
+    using Position = std::pair<int, int>;
+};
+
+namespace GuestABI
+{
+
+// Hooks for the 1D ABI arguments and return value. Add 1 or 1.0 to return
+// values so we can tell they went through the right set of hooks.
+template <>
+struct Argument<TestABI_1D, int>
+{
+    static int
+    get(ThreadContext *tc, TestABI_1D::Position &position)
+    {
+        return tc->ints[position++];
+    }
+};
+
+template <typename Arg>
+struct Argument<TestABI_1D, Arg,
+    typename std::enable_if<std::is_floating_point<Arg>::value>::type>
+{
+    static Arg
+    get(ThreadContext *tc, TestABI_1D::Position &position)
+    {
+        return tc->floats[position++];
+    }
+};
+
+template <>
+struct Result<TestABI_1D, int>
+{
+    static void
+    store(ThreadContext *tc, const int &ret)
+    {
+        tc->intResult = ret + 1;
+    }
+};
+
+template <typename Ret>
+struct Result<TestABI_1D, Ret,
+    typename std::enable_if<std::is_floating_point<Ret>::value>::type>
+{
+    static void
+    store(ThreadContext *tc, const Ret &ret)
+    {
+        tc->floatResult = ret + 1.0;
+    }
+};
+
+// Hooks for the 2D ABI arguments and return value. Add 2 or 2.0 to return
+// values so we can tell they went through the right set of hooks.
+
+template <>
+struct Argument<TestABI_2D, int>
+{
+    static int
+    get(ThreadContext *tc, TestABI_2D::Position &position)
+    {
+        return tc->ints[position.first++];
+    }
+};
+
+template <typename Arg>
+struct Argument<TestABI_2D, Arg,
+    typename std::enable_if<std::is_floating_point<Arg>::value>::type>
+{
+    static Arg
+    get(ThreadContext *tc, TestABI_2D::Position &position)
+    {
+        return tc->floats[position.second++];
+    }
+};
+
+template <>
+struct Result<TestABI_2D, int>
+{
+    static void
+    store(ThreadContext *tc, const int &ret)
+    {
+        tc->intResult = ret + 2;
+    }
+};
+
+template <typename Ret>
+struct Result<TestABI_2D, Ret,
+    typename std::enable_if<std::is_floating_point<Ret>::value>::type>
+{
+    static void
+    store(ThreadContext *tc, const Ret &ret)
+    {
+        tc->floatResult = ret + 2.0;
+    }
+};
+
+} // namespace GuestABI
+
+// Test function which verifies that its arguments reflect the 1D ABI and
+// which doesn't return anything.
+void
+testIntVoid(ThreadContext *tc, int a, float b, int c, double d,
+            GuestABI::VarArgs<int,float,double> varargs)
+{
+    EXPECT_EQ(a, tc->ints[0]);
+    EXPECT_EQ(b, tc->floats[1]);
+    EXPECT_EQ(c, tc->ints[2]);
+    EXPECT_EQ(d, tc->floats[3]);
+
+    EXPECT_EQ(varargs.get<int>(), tc->ints[4]);
+    EXPECT_EQ(varargs.get<float>(), tc->floats[5]);
+    EXPECT_EQ(varargs.get<double>(), tc->floats[6]);
+}
+
+// Test function which verifies that its arguments reflect the 2D ABI and
+// which doesn't return anything.
+void
+test2DVoid(ThreadContext *tc, int a, float b, int c, double d,
+           GuestABI::VarArgs<int,float,double> varargs)
+{
+    EXPECT_EQ(a, tc->ints[0]);
+    EXPECT_EQ(b, tc->floats[0]);
+    EXPECT_EQ(c, tc->ints[1]);
+    EXPECT_EQ(d, tc->floats[1]);
+
+    EXPECT_EQ(varargs.get<int>(), tc->ints[2]);
+    EXPECT_EQ(varargs.get<float>(), tc->floats[2]);
+    EXPECT_EQ(varargs.get<double>(), tc->floats[3]);
+}
+
+// Test functions which returns various types of values.
+const int IntRetValue = 50;
+const float FloatRetValue = 3.14;
+const double DoubleRetValue = 12.34;
+
+int testIntRet(ThreadContext *tc) { return IntRetValue; }
+float testFloatRet(ThreadContext *tc) { return FloatRetValue; }
+double testDoubleRet(ThreadContext *tc) { return DoubleRetValue; }
+
+
+// The actual test bodies.
+TEST(GuestABI, ABI_1D_args)
+{
+    ThreadContext tc;
+    invokeSimcall<TestABI_1D>(&tc, testIntVoid);
+    EXPECT_EQ(tc.intResult, tc.DefaultIntResult);
+    EXPECT_EQ(tc.floatResult, tc.DefaultFloatResult);
+}
+
+TEST(GuestABI, ABI_2D_args)
+{
+    ThreadContext tc;
+    invokeSimcall<TestABI_2D>(&tc, test2DVoid);
+    EXPECT_EQ(tc.intResult, tc.DefaultIntResult);
+    EXPECT_EQ(tc.floatResult, tc.DefaultFloatResult);
+}
+
+TEST(GuestABI, ABI_returns)
+{
+    // 1D returns.
+    {
+        ThreadContext tc;
+        int ret = invokeSimcall<TestABI_1D>(&tc, testIntRet);
+        EXPECT_EQ(ret, IntRetValue);
+        EXPECT_EQ(tc.intResult, IntRetValue + 1);
+        EXPECT_EQ(tc.floatResult, tc.DefaultFloatResult);
+    }
+    {
+        ThreadContext tc;
+        float ret = invokeSimcall<TestABI_1D>(&tc, testFloatRet);
+        EXPECT_EQ(ret, FloatRetValue);
+        EXPECT_EQ(tc.intResult, tc.DefaultIntResult);
+        EXPECT_EQ(tc.floatResult, FloatRetValue + 1.0);
+    }
+    {
+        ThreadContext tc;
+        double ret = invokeSimcall<TestABI_1D>(&tc, testDoubleRet);
+        EXPECT_EQ(ret, DoubleRetValue);
+        EXPECT_EQ(tc.intResult, tc.DefaultIntResult);
+        EXPECT_EQ(tc.floatResult, DoubleRetValue + 1.0);
+    }
+
+    // 2D returns.
+    {
+        ThreadContext tc;
+        int ret = invokeSimcall<TestABI_2D>(&tc, testIntRet);
+        EXPECT_EQ(ret, IntRetValue);
+        EXPECT_EQ(tc.intResult, IntRetValue + 2);
+        EXPECT_EQ(tc.floatResult, tc.DefaultFloatResult);
+    }
+    {
+        ThreadContext tc;
+        float ret = invokeSimcall<TestABI_2D>(&tc, testFloatRet);
+        EXPECT_EQ(ret, FloatRetValue);
+        EXPECT_EQ(tc.intResult, tc.DefaultIntResult);
+        EXPECT_EQ(tc.floatResult, FloatRetValue + 2.0);
+    }
+    {
+        ThreadContext tc;
+        double ret = invokeSimcall<TestABI_2D>(&tc, testDoubleRet);
+        EXPECT_EQ(ret, DoubleRetValue);
+        EXPECT_EQ(tc.intResult, tc.DefaultIntResult);
+        EXPECT_EQ(tc.floatResult, DoubleRetValue + 2.0);
+    }
+}
