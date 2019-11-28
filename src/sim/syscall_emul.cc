@@ -740,13 +740,10 @@ dup2Func(SyscallDesc *desc, int num, ThreadContext *tc,
 }
 
 SyscallReturn
-fcntlFunc(SyscallDesc *desc, int num, ThreadContext *tc)
+fcntlFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+          int tgt_fd, int cmd, GuestABI::VarArgs<int> varargs)
 {
-    int arg;
-    int index = 0;
     auto p = tc->getProcessPtr();
-    int tgt_fd = p->getSyscallArg(tc, index);
-    int cmd = p->getSyscallArg(tc, index);
 
     auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
     if (!hbfdp)
@@ -760,7 +757,7 @@ fcntlFunc(SyscallDesc *desc, int num, ThreadContext *tc)
         return coe & FD_CLOEXEC;
 
       case F_SETFD: {
-        arg = p->getSyscallArg(tc, index);
+        int arg = varargs.get<int>();
         arg ? hbfdp->setCOE(true) : hbfdp->setCOE(false);
         return 0;
       }
@@ -773,7 +770,7 @@ fcntlFunc(SyscallDesc *desc, int num, ThreadContext *tc)
       // subsequent fcntls.
       case F_GETFL:
       case F_SETFL: {
-        arg = p->getSyscallArg(tc, index);
+        int arg = varargs.get<int>();
         int rv = fcntl(sim_fd, cmd, arg);
         return (rv == -1) ? -errno : rv;
       }
@@ -785,18 +782,16 @@ fcntlFunc(SyscallDesc *desc, int num, ThreadContext *tc)
 }
 
 SyscallReturn
-fcntl64Func(SyscallDesc *desc, int num, ThreadContext *tc)
+fcntl64Func(SyscallDesc *desc, int num, ThreadContext *tc,
+            int tgt_fd, int cmd)
 {
-    int index = 0;
     auto p = tc->getProcessPtr();
-    int tgt_fd = p->getSyscallArg(tc, index);
 
     auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
     if (!hbfdp)
         return -EBADF;
     int sim_fd = hbfdp->getSimFD();
 
-    int cmd = p->getSyscallArg(tc, index);
     switch (cmd) {
       case 33: //F_GETLK64
         warn("fcntl64(%d, F_GETLK64) not supported, error returned\n", tgt_fd);

@@ -99,6 +99,7 @@
 #include "params/Process.hh"
 #include "sim/emul_driver.hh"
 #include "sim/futex_map.hh"
+#include "sim/guest_abi.hh"
 #include "sim/process.hh"
 #include "sim/syscall_debug_macros.hh"
 #include "sim/syscall_desc.hh"
@@ -267,10 +268,12 @@ SyscallReturn dup2Func(SyscallDesc *desc, int num, ThreadContext *tc,
                        int old_tgt_fd, int new_tgt_fd);
 
 /// Target fcntl() handler.
-SyscallReturn fcntlFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn fcntlFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+                        int tgt_fd, int cmd, GuestABI::VarArgs<int> varargs);
 
 /// Target fcntl64() handler.
-SyscallReturn fcntl64Func(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn fcntl64Func(SyscallDesc *desc, int num, ThreadContext *tc,
+                          int tgt_fd, int cmd);
 
 /// Target pipe() handler.
 SyscallReturn pipeFunc(SyscallDesc *desc, int num, ThreadContext *tc);
@@ -709,13 +712,10 @@ copyOutStatfsBuf(PortProxy &mem, Addr addr,
 /// not TTYs to provide repeatable results.
 template <class OS>
 SyscallReturn
-ioctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+ioctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+        int tgt_fd, unsigned req, GuestABI::VarArgs<Addr> varargs)
 {
-    int index = 0;
     auto p = tc->getProcessPtr();
-
-    int tgt_fd = p->getSyscallArg(tc, index);
-    unsigned req = p->getSyscallArg(tc, index);
 
     DPRINTF_SYSCALL(Verbose, "ioctl(%d, 0x%x, ...)\n", tgt_fd, req);
 
@@ -735,7 +735,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
         switch (req) {
           case SIOCGIFCONF: {
-            Addr conf_addr = p->getSyscallArg(tc, index);
+            Addr conf_addr = varargs.get<Addr>();
             BufferArg conf_arg(conf_addr, sizeof(ifconf));
             conf_arg.copyIn(tc->getVirtProxy());
 
@@ -765,7 +765,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
           case SIOCGIFHWADDR:
 #endif
           case SIOCGIFMTU: {
-            Addr req_addr = p->getSyscallArg(tc, index);
+            Addr req_addr = varargs.get<Addr>();
             BufferArg req_arg(req_addr, sizeof(ifreq));
             req_arg.copyIn(tc->getVirtProxy());
 
@@ -1134,19 +1134,16 @@ fchmodFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target mremap() handler.
 template <class OS>
 SyscallReturn
-mremapFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+mremapFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+        Addr start, uint64_t old_length, uint64_t new_length, uint64_t flags,
+        GuestABI::VarArgs<uint64_t> varargs)
 {
-    int index = 0;
     auto process = tc->getProcessPtr();
-    Addr start = process->getSyscallArg(tc, index);
-    uint64_t old_length = process->getSyscallArg(tc, index);
-    uint64_t new_length = process->getSyscallArg(tc, index);
-    uint64_t flags = process->getSyscallArg(tc, index);
     uint64_t provided_address = 0;
     bool use_provided_address = flags & OS::TGT_MREMAP_FIXED;
 
     if (use_provided_address)
-        provided_address = process->getSyscallArg(tc, index);
+        provided_address = varargs.get<uint64_t>();
 
     if ((start % TheISA::PageBytes != 0) ||
         (provided_address % TheISA::PageBytes != 0)) {
