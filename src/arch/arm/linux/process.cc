@@ -100,11 +100,10 @@ ArmLinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc)
+unameFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 {
-    int index = 0;
     auto process = tc->getProcessPtr();
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
+    TypedBufferArg<Linux::utsname> name(utsname);
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -118,11 +117,10 @@ unameFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc)
+unameFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 {
-    int index = 0;
     auto process = tc->getProcessPtr();
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
+    TypedBufferArg<Linux::utsname> name(utsname);
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "gem5");
@@ -136,25 +134,19 @@ unameFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
 /// Target set_tls() handler.
 static SyscallReturn
-setTLSFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc)
+setTLSFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc,
+             uint32_t tlsPtr)
 {
-    int index = 0;
-    auto process = tc->getProcessPtr();
-    uint32_t tlsPtr = process->getSyscallArg(tc, index);
-
     tc->getVirtProxy().writeBlob(ArmLinuxProcess32::commPage + 0x0ff0,
                                 &tlsPtr, sizeof(tlsPtr));
-    tc->setMiscReg(MISCREG_TPIDRURO,tlsPtr);
+    tc->setMiscReg(MISCREG_TPIDRURO, tlsPtr);
     return 0;
 }
 
 static SyscallReturn
-setTLSFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc)
+setTLSFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc,
+             uint32_t tlsPtr)
 {
-    int index = 0;
-    auto process = tc->getProcessPtr();
-    uint32_t tlsPtr = process->getSyscallArg(tc, index);
-
     tc->setMiscReg(MISCREG_TPIDRRO_EL0, tlsPtr);
     return 0;
 }

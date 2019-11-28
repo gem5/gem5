@@ -94,18 +94,11 @@ issetugidFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
 #if !defined ( __GNU_LIBRARY__ )
 static SyscallReturn
-sysctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+sysctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+           Addr namep, size_t nameLen, Addr oldp, Addr oldlenp,
+           Addr newp, size_t newlen)
 {
-    int index = 0;
     uint64_t ret;
-
-    auto process = tc->getProcessPtr();
-    Addr namep = process->getSyscallArg(tc, index);
-    size_t namelen = process->getSyscallArg(tc, index);
-    Addr oldp = process->getSyscallArg(tc, index);
-    Addr oldlenp = process->getSyscallArg(tc, index);
-    Addr newp = process->getSyscallArg(tc, index);
-    size_t newlen = process->getSyscallArg(tc, index);
 
     BufferArg buf(namep, sizeof(size_t));
     BufferArg buf2(oldp, sizeof(size_t));
