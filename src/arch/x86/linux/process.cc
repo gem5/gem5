@@ -89,11 +89,10 @@ X86LinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 {
-    int index = 0;
     auto process = tc->getProcessPtr();
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
+    TypedBufferArg<Linux::utsname> name(utsname);
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "sim.gem5.org");
@@ -107,7 +106,8 @@ unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 }
 
 static SyscallReturn
-archPrctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+archPrctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+              int code, uint64_t addr)
 {
     enum ArchPrctlCodes
     {
@@ -117,11 +117,6 @@ archPrctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         GetGS = 0x1004
     };
 
-    // First argument is the code, second is the address
-    int index = 0;
-    auto process = tc->getProcessPtr();
-    int code = process->getSyscallArg(tc, index);
-    uint64_t addr = process->getSyscallArg(tc, index);
     uint64_t fsBase, gsBase;
     PortProxy &p = tc->getVirtProxy();
     switch(code)
@@ -173,7 +168,8 @@ struct UserDesc64 {
 };
 
 static SyscallReturn
-setThreadArea32Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
+setThreadArea32Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
+                    Addr userDescPtr)
 {
     const int minTLSEntry = 6;
     const int numTLSEntries = 3;
@@ -186,8 +182,7 @@ setThreadArea32Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
     assert((maxTLSEntry + 1) * sizeof(uint64_t) <= x86p->gdtSize());
 
-    int argIndex = 0;
-    TypedBufferArg<UserDesc32> userDesc(process->getSyscallArg(tc, argIndex));
+    TypedBufferArg<UserDesc32> userDesc(userDescPtr);
     TypedBufferArg<uint64_t>
         gdt(x86p->gdtStart() + minTLSEntry * sizeof(uint64_t),
             numTLSEntries * sizeof(uint64_t));
