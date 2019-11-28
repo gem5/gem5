@@ -1446,27 +1446,11 @@ statfsFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-cloneFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+cloneFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+          RegVal flags, RegVal newStack, Addr ptidPtr,
+          Addr ctidPtr, Addr tlsPtr)
 {
-    int index = 0;
-
     auto p = tc->getProcessPtr();
-    RegVal flags = p->getSyscallArg(tc, index);
-    RegVal newStack = p->getSyscallArg(tc, index);
-    Addr ptidPtr = p->getSyscallArg(tc, index);
-
-#if THE_ISA == RISCV_ISA or THE_ISA == ARM_ISA
-    /**
-     * Linux sets CLONE_BACKWARDS flag for RISC-V and Arm.
-     * The flag defines the list of clone() arguments in the following
-     * order: flags -> newStack -> ptidPtr -> tlsPtr -> ctidPtr
-     */
-    Addr tlsPtr = p->getSyscallArg(tc, index);
-    Addr ctidPtr = p->getSyscallArg(tc, index);
-#else
-    Addr ctidPtr = p->getSyscallArg(tc, index);
-    Addr tlsPtr = p->getSyscallArg(tc, index);
-#endif
 
     if (((flags & OS::TGT_CLONE_SIGHAND)&& !(flags & OS::TGT_CLONE_VM)) ||
         ((flags & OS::TGT_CLONE_THREAD) && !(flags & OS::TGT_CLONE_SIGHAND)) ||
@@ -1581,6 +1565,16 @@ cloneFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     ctc->activate();
 
     return cp->pid();
+}
+
+template <class OS>
+SyscallReturn
+cloneBackwardsFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+                   RegVal flags, RegVal newStack, Addr ptidPtr,
+                   Addr tlsPtr, Addr ctidPtr)
+{
+    return cloneFunc<OS>(desc, callnum, tc, flags, newStack, ptidPtr,
+                         ctidPtr, tlsPtr);
 }
 
 /// Target fstatfs() handler.
