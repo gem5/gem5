@@ -1551,17 +1551,10 @@ cloneFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
     ctc->setIntReg(TheISA::SyscallPseudoReturnReg, 1);
 #endif
 
-    if (p->kvmInSE) {
-#if THE_ISA == X86_ISA
-        ctc->pcState(tc->readIntReg(TheISA::INTREG_RCX));
-#else
-        panic("KVM CPU model is not supported for this ISA");
-#endif
-    } else {
-        TheISA::PCState cpc = tc->pcState();
+    TheISA::PCState cpc = tc->pcState();
+    if (!p->kvmInSE)
         cpc.advance();
-        ctc->pcState(cpc);
-    }
+    ctc->pcState(cpc);
     ctc->activate();
 
     return cp->pid();
