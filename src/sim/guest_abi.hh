@@ -31,6 +31,7 @@
 #define __SIM_GUEST_ABI_HH__
 
 #include <functional>
+#include <memory>
 #include <type_traits>
 
 class ThreadContext;
@@ -86,6 +87,146 @@ struct Argument
      * the expected method signature.
      */
     static Arg get(ThreadContext *tc, typename ABI::Position &position);
+};
+
+
+/*
+ * These templates implement a variadic argument mechanism for guest ABI
+ * functions. A function might be written like this:
+ *
+ * void
+ * func(ThreadContext *tc, VarArgs<Addr, int> varargs)
+ * {
+ *     warn("Address = %#x, int = %d.",
+ *          varargs.get<Addr>(), varargs.get<int>());
+ * }
+ *
+ * where an object of type VarArgs<...> is its last argument. The types given
+ * to the template specify what types the function might need to retrieve from
+ * varargs. The varargs object will then have get<> methods for each of those
+ * types.
+ *
+ * Note that each get<> will happen live. If you modify values through the
+ * ThreadContext *tc and then run get<>(), you may alter one of your arguments.
+ * If you're going to use tc to modify state, it would be a good idea to use
+ * get<>() as soon as possible to avoid corrupting the functions arguments.
+ */
+
+// A recursive template which defines virtual functions to retrieve each of the
+// requested types. This provides the ABI agnostic interface the function uses.
+template <typename ...Types>
+class VarArgsBase;
+
+template <typename First, typename ...Types>
+class VarArgsBase<First, Types...> : public VarArgsBase<Types...>
+{
+  public:
+    // The virtual function takes a reference parameter so that the different
+    // _getImpl methods can co-exist through overloading.
+    virtual void _getImpl(First &) = 0;
+
+    // Make sure base class _getImpl-es aren't hidden by this one.
+    using VarArgsBase<Types...>::_getImpl;
+};
+
+// The base case of the recursion.
+template <>
+class VarArgsBase<>
+{
+  protected:
+    // This just gives the "using" statement in the non base case something to
+    // refer to.
+    void _getImpl();
+};
+
+
+// A recursive template which defines the ABI specific implementation of the
+// interface defined above.
+//
+// The types in Types are consumed one by one, and by
+// the time we get down to the base case we'd have lost track of the complete
+// set we need to know what interface to inherit. The Base parameter keeps
+// track of that through the recursion.
+template <typename ABI, typename Base, typename ...Types>
+class VarArgsImpl;
+
+template <typename ABI, typename Base, typename First, typename ...Types>
+class VarArgsImpl<ABI, Base, First, Types...> :
+    public VarArgsImpl<ABI, Base, Types...>
+{
+  protected:
+    // Bring forward the base class constructor.
+    using VarArgsImpl<ABI, Base, Types...>::VarArgsImpl;
+    // Make sure base class _getImpl-es don't get hidden by ours.
+    using VarArgsImpl<ABI, Base, Types...>::_getImpl;
+
+    // Implement a version of _getImple, using the ABI specialized version of
+    // the Argument class.
+    void
+    _getImpl(First &first) override
+    {
+        first = Argument<ABI, First>::get(this->tc, this->position);
+    }
+};
+
+// The base case of the recursion, which inherits from the interface class.
+template <typename ABI, typename Base>
+class VarArgsImpl<ABI, Base> : public Base
+{
+  protected:
+    // Declare state to pass to the Argument<>::get methods.
+    ThreadContext *tc;
+    typename ABI::Position position;
+
+    // Give the "using" statement in our subclass something to refer to.
+    void _getImpl();
+
+  public:
+    VarArgsImpl(ThreadContext *_tc, const typename ABI::Position &_pos) :
+        tc(_tc), position(_pos)
+    {}
+};
+
+// A wrapper which provides a nice interface to the virtual functions, and a
+// hook for the Argument template mechanism.
+template <typename ...Types>
+class VarArgs
+{
+  private:
+    // This points to the implementation which knows how to read arguments
+    // based on the ABI being used.
+    std::shared_ptr<VarArgsBase<Types...>> _ptr;
+
+  public:
+    VarArgs(VarArgsBase<Types...> *ptr) : _ptr(ptr) {}
+
+    // This template is a friendlier wrapper around the virtual functions the
+    // raw interface provides. This version lets you pick a type which it then
+    // returns, instead of having to pre-declare a variable to pass in.
+    template <typename Arg>
+    Arg
+    get()
+    {
+        Arg arg;
+        _ptr->_getImpl(arg);
+        return arg;
+    }
+};
+
+// The ABI independent hook which tells the GuestABI mechanism what to do with
+// a VarArgs argument. It constructs the underlying implementation which knows
+// about the ABI, and installs it in the VarArgs wrapper to give to the
+// function.
+template <typename ABI, typename ...Types>
+struct Argument<ABI, VarArgs<Types...>>
+{
+    static VarArgs<Types...>
+    get(ThreadContext *tc, typename ABI::Position &position)
+    {
+        using Base = VarArgsBase<Types...>;
+        using Impl = VarArgsImpl<ABI, Base, Types...>;
+        return VarArgs<Types...>(new Impl(tc, position));
+    }
 };
 
 
