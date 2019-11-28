@@ -478,6 +478,7 @@ class Request
 
     Request(const Request& other)
         : _paddr(other._paddr), _size(other._size),
+          _byteEnable(other._byteEnable),
           _masterId(other._masterId),
           _flags(other._flags),
           _memSpaceConfigFlags(other._memSpaceConfigFlags),
