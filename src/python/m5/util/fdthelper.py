@@ -43,6 +43,7 @@ from m5.ext.pyfdt import pyfdt
 import re
 import os
 from m5.SimObject import SimObject
+from m5.util import fatal
 
 class FdtProperty(pyfdt.FdtProperty):
     """Create a property without values."""
