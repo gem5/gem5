@@ -37,11 +37,10 @@ namespace SparcISA {
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 {
-    int index = 0;
     auto process = tc->getProcessPtr();
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
+    TypedBufferArg<Linux::utsname> name(utsname);
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "sim.gem5.org");
@@ -56,14 +55,10 @@ unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
 
 SyscallReturn
-getresuidFunc(SyscallDesc *desc, int num, ThreadContext *tc)
+getresuidFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+              Addr ruid, Addr euid, Addr suid)
 {
     const uint64_t id = htobe(100);
-    int index = 0;
-    auto p = tc->getProcessPtr();
-    Addr ruid = p->getSyscallArg(tc, index);
-    Addr euid = p->getSyscallArg(tc, index);
-    Addr suid = p->getSyscallArg(tc, index);
     // Handle the EFAULT case
     // Set the ruid
     if (ruid) {
