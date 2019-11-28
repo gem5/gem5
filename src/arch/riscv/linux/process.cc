@@ -84,11 +84,10 @@ RiscvLinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc)
+unameFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 {
-    int index = 0;
     auto process = tc->getProcessPtr();
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
+    TypedBufferArg<Linux::utsname> name(utsname);
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename,"sim.gem5.org");
@@ -102,11 +101,10 @@ unameFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc)
+unameFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 {
-    int index = 0;
     auto process = tc->getProcessPtr();
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
+    TypedBufferArg<Linux::utsname> name(utsname);
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename,"sim.gem5.org");
