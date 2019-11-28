@@ -76,11 +76,10 @@ PowerLinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 {
-    int index = 0;
     auto process = tc->getProcessPtr();
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
+    TypedBufferArg<Linux::utsname> name(utsname);
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "sim.gem5.org");
