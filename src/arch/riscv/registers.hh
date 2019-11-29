@@ -67,7 +67,7 @@ namespace RiscvISA {
 
 using RiscvISAInst::MaxInstSrcRegs;
 using RiscvISAInst::MaxInstDestRegs;
-const int MaxMiscDestRegs = 1;
+const int MaxMiscDestRegs = 2;
 
 // Not applicable to RISC-V
 using VecElem = ::DummyVecElem;
