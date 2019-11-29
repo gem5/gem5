@@ -342,11 +342,9 @@ ELIs32(ThreadContext *tc, ExceptionLevel el)
 bool
 ELIsInHost(ThreadContext *tc, ExceptionLevel el)
 {
-    if (!ArmSystem::haveVirtualization(tc)) {
-        return false;
-    }
-    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-    return (!isSecureBelowEL3(tc) && !ELIs32(tc, EL2) && hcr.e2h == 1 &&
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    return ((IsSecureEL2Enabled(tc) || !isSecureBelowEL3(tc)) &&
+            HaveVirtHostExt(tc) && !ELIs32(tc, EL2) && hcr.e2h == 1 &&
             (el == EL2 || (el == EL0 && hcr.tge == 1)));
 }
 
