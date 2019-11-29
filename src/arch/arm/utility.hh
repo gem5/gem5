@@ -166,6 +166,7 @@ currEL(CPSR cpsr)
     return opModeToEL((OperatingMode) (uint8_t)cpsr.mode);
 }
 
+bool HaveVirtHostExt(ThreadContext *tc);
 bool HaveSecureEL2Ext(ThreadContext *tc);
 bool IsSecureEL2Enabled(ThreadContext *tc);
 bool EL2Enabled(ThreadContext *tc);

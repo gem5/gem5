@@ -290,6 +290,13 @@ getMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
 }
 
 bool
+HaveVirtHostExt(ThreadContext *tc)
+{
+    AA64MMFR1 id_aa64mmfr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
+    return id_aa64mmfr1.vh;
+}
+
+bool
 HaveSecureEL2Ext(ThreadContext *tc)
 {
     AA64PFR0 id_aa64pfr0 = tc->readMiscReg(MISCREG_ID_AA64PFR0_EL1);
