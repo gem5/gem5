@@ -1,0 +1,43 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+
+Global frequency set at 1000000000000 ticks per second
+**** REAL SIMULATION ****
+mul: PASS
+mul, overflow: PASS
+mulh: PASS
+mulh, negative: PASS
+mulh, all bits set: PASS
+mulhsu, all bits set: PASS
+mulhsu: PASS
+mulhu: PASS
+mulhu, all bits set: PASS
+div: PASS
+div/0: PASS
+div, overflow: PASS
+divu: PASS
+divu/0: PASS
+divu, "overflow": PASS
+rem: PASS
+rem/0: PASS
+rem, overflow: PASS
+remu: PASS
+remu/0: PASS
+remu, "overflow": PASS
+mulw, truncate: PASS
+mulw, overflow: PASS
+divw, truncate: PASS
+divw/0: PASS
+divw, overflow: PASS
+divuw, truncate: PASS
+divuw/0: PASS
+divuw, "overflow": PASS
+divuw, sign extend: PASS
+remw, truncate: PASS
+remw/0: PASS
+remw, overflow: PASS
+remuw, truncate: PASS
+remuw/0: PASS
+remuw, "overflow": PASS
+remuw, sign extend: PASS
