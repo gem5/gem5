@@ -45,7 +45,6 @@
 
 #include "base/cp_annotate.hh"
 #include "cpu/o3/dyn_inst.hh"
-#include "sim/full_system.hh"
 #include "debug/O3PipeView.hh"
 
 template <class Impl>
@@ -195,9 +194,6 @@ template <class Impl>
 void
 BaseO3DynInst<Impl>::syscall(int64_t callnum, Fault *fault)
 {
-    if (FullSystem)
-        panic("Syscall emulation isn't available in FS mode.\n");
-
     // HACK: check CPU's nextPC before and after syscall. If it
     // changes, update this instruction's nextPC because the syscall
     // must have changed the nextPC.

@@ -150,6 +150,7 @@ struct O3ThreadState : public ThreadState {
     /** Handles the syscall. */
     void syscall(int64_t callnum, Fault *fault)
     {
+        fatal_if(FullSystem, "System call emulation is unavailable!");
         process->syscall(callnum, tc, fault);
     }
 

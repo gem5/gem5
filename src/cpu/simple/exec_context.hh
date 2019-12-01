@@ -499,9 +499,6 @@ class SimpleExecContext : public ExecContext {
     void
     syscall(int64_t callnum, Fault *fault) override
     {
-        if (FullSystem)
-            panic("Syscall emulation isn't available in FS mode.");
-
         thread->syscall(callnum, fault);
     }
 

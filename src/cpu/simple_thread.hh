@@ -66,6 +66,7 @@
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
 #include "sim/eventq.hh"
+#include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/serialize.hh"
 #include "sim/system.hh"
@@ -610,6 +611,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     void
     syscall(int64_t callnum, Fault *fault) override
     {
+        fatal_if(FullSystem, "System call emulation is unavailable!");
         process->syscall(callnum, this, fault);
     }
 
