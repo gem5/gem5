@@ -1,6 +1,7 @@
 Authors: Jason Lowe-Power
          Andreas Sandberg
          Steve Reinhardt
+         Bobby R. Bruce
 
 If you've made changes to gem5 that might benefit others, we strongly encourage
 you to contribute those changes to the public gem5 repository. There are
@@ -178,6 +179,11 @@ It is encouraged for the author of the patch and the submitter to add a
 Signed-off-by tag to the commit message. By adding this line, the contributor
 certifies the contribution is made under the terms of the Developer Certificate
 of Origin (DCO) [https://developercertificate.org/].
+
+If your change relates to a [Jira Issue](https://gem5.atlassian.net), it is
+advised that you provide a link to the issue in the commit message (or messages
+if the Jira Issue relates to multiple commits). Though optional, doing this
+can help reviewers understand the context of a change.
 
 It is imperative that you use your real name and your real email address in
 both tags and in the author field of the changeset.
