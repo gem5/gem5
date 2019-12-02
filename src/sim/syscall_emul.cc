@@ -422,11 +422,11 @@ getcwdFunc(SyscallDesc *desc, int num, ThreadContext *tc)
 SyscallReturn
 readlinkFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
-    return readlinkFunc(desc, callnum, tc, 0);
+    return readlinkImpl(desc, callnum, tc, 0);
 }
 
 SyscallReturn
-readlinkFunc(SyscallDesc *desc, int num, ThreadContext *tc, int index)
+readlinkImpl(SyscallDesc *desc, int num, ThreadContext *tc, int index)
 {
     string path;
     auto p = tc->getProcessPtr();
@@ -1147,7 +1147,7 @@ fallocateFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 }
 
 SyscallReturn
-accessFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, int index)
+accessImpl(SyscallDesc *desc, int callnum, ThreadContext *tc, int index)
 {
     string path;
     auto p = tc->getProcessPtr();
@@ -1166,7 +1166,7 @@ accessFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, int index)
 SyscallReturn
 accessFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
-    return accessFunc(desc, callnum, tc, 0);
+    return accessImpl(desc, callnum, tc, 0);
 }
 
 SyscallReturn

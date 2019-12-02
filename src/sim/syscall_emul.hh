@@ -171,8 +171,8 @@ SyscallReturn gethostnameFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 SyscallReturn getcwdFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 
 /// Target readlink() handler.
-SyscallReturn readlinkFunc(SyscallDesc *desc, int num, ThreadContext *tc,
-                           int index = 0);
+SyscallReturn readlinkImpl(SyscallDesc *desc, int num, ThreadContext *tc,
+                           int index);
 SyscallReturn readlinkFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 
 /// Target unlink() handler.
@@ -313,9 +313,9 @@ SyscallReturn geteuidFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 SyscallReturn getegidFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 
 /// Target access() handler
-SyscallReturn accessFunc(SyscallDesc *desc, int num, ThreadContext *tc);
-SyscallReturn accessFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn accessImpl(SyscallDesc *desc, int num, ThreadContext *tc,
                          int index);
+SyscallReturn accessFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 
 // Target getsockopt() handler.
 SyscallReturn getsockoptFunc(SyscallDesc *desc, int num, ThreadContext *tc);
@@ -953,7 +953,7 @@ faccessatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     int dirfd = process->getSyscallArg(tc, index);
     if (dirfd != OS::TGT_AT_FDCWD)
         warn("faccessat: first argument not AT_FDCWD; unlikely to work");
-    return accessFunc(desc, callnum, tc, 1);
+    return accessImpl(desc, callnum, tc, 1);
 }
 
 /// Target readlinkat() handler
@@ -966,7 +966,7 @@ readlinkatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     int dirfd = process->getSyscallArg(tc, index);
     if (dirfd != OS::TGT_AT_FDCWD)
         warn("openat: first argument not AT_FDCWD; unlikely to work");
-    return readlinkFunc(desc, callnum, tc, 1);
+    return readlinkImpl(desc, callnum, tc, 1);
 }
 
 /// Target renameat() handler.
