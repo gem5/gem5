@@ -1067,7 +1067,7 @@
                 }
                 // repne (0xF2)
                 0x8: decode OPCODE_OP_BOTTOM3 {
-                    0x0: WarnUnimpl::lddqu_Vo_Mo();
+                    0x0: LDDQU(Vo,Mq);
                     default: UD2();
                 }
                 default: UD2();

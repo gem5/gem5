@@ -123,5 +123,15 @@ def macroop MOVDQU_P_XMM {
     stfp xmml, seg, riprel, "DISPLACEMENT", dataSize=8
     stfp xmmh, seg, riprel, "DISPLACEMENT + 8", dataSize=8
 };
+
+def macroop LDDQU_XMM_M {
+    ldfp xmml, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8
+};
+
+def macroop LDDQU_XMM_P {
+    rdip t7
+    ldfp xmml, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8
+};
 '''
-# LDDQU
