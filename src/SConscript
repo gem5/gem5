@@ -606,6 +606,7 @@ for extra_dir in extras_dir_list:
 
         if 'SConscript' in files:
             build_dir = joinpath(env['BUILDDIR'], root[prefix_len:])
+            Source.set_group(build_dir)
             SConscript(joinpath(root, 'SConscript'), variant_dir=build_dir)
 
 for opt in export_vars:
