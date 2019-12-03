@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2019 ARM Limited
+# Copyright (c) 2009-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -959,8 +959,9 @@ Interrupts:
         return memories
 
     ### Off-chip devices ###
-    clock24MHz = SrcClockDomain(clock="24MHz",
-        voltage_domain=VoltageDomain(voltage="3.3V"))
+    io_voltage = VoltageDomain(voltage="3.3V")
+    clock32KHz = SrcClockDomain(clock="32kHz")
+    clock24MHz = SrcClockDomain(clock="24MHz")
 
     uart = [
         Pl011(pio_addr=0x1c090000, int_num=37),
@@ -995,10 +996,16 @@ Interrupts:
             self.rtc,
             self.pci_host,
             self.energy_ctrl,
+            self.clock32KHz,
             self.clock24MHz,
             self.vio[0],
             self.vio[1],
         ]
+
+    def __init__(self, **kwargs):
+        super(VExpress_GEM5_Base, self).__init__(**kwargs)
+        self.clock32KHz.voltage_domain = self.io_voltage
+        self.clock24MHz.voltage_domain = self.io_voltage
 
     def attachPciDevice(self, device, *args, **kwargs):
         device.host = self.pci_host
