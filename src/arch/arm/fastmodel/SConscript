@@ -29,18 +29,15 @@ from __future__ import print_function
 
 Import('*')
 
-from m5.util.terminal import termcap
 from m5.util.grammar import Grammar
 
-from gem5_scons import Transform
+from gem5_scons import Transform, warning, error
 
 import os.path
 
 if env['USE_ARM_FASTMODEL']:
     if not env['USE_SYSTEMC']:
-        print(termcap.Yellow + termcap.Bold +
-                'Warning: ARM Fast Models require systemc support' +
-                termcap.Normal)
+        warning('ARM Fast Models require systemc support')
         env['USE_ARM_FASTMODEL'] = False
         Return()
 
@@ -53,10 +50,7 @@ env['ENV']['SYSTEMC_HOME'] = systemc_home.abspath
 
 def extract_var(name):
     if name not in env:
-        print(termcap.Red + termcap.Bold +
-                ('Error: %s is not set' % name) +
-                termcap.Normal)
-        Exit(1)
+        error('Error: %s is not set' % name)
     print('%s = %s' % (name, env[name]))
     # Make sure the value of this variable shows up as an environment variable
     # for commands scons runs.
