@@ -120,6 +120,8 @@ class tlm_base_initiator_socket :
         (s.get_base_export())(get_base_export());
     }
 
+    using port_type::bind;
+
     void operator() (base_type &s) { bind(s); }
 
     //
@@ -169,9 +171,6 @@ class tlm_base_initiator_socket :
 
   protected:
     export_type m_export;
-
-  private:
-    using port_type::bind;
 };
 
 //
