@@ -61,7 +61,7 @@ def common_config(env):
         "M5",              # M5 configuration (e.g., path to kernels)
         ]
 
-    for key,val in sorted(os.environ.iteritems()):
+    for key,val in sorted(os.environ.items()):
         if key in use_vars or \
                 any([key.startswith(prefix) for prefix in use_prefixes]):
             env['ENV'][key] = val

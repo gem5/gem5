@@ -54,7 +54,7 @@ def install_style_hooks(env):
     try:
         gitdir = env.Dir(readCommand(
             ["git", "rev-parse", "--git-dir"]).strip("\n"))
-    except Exception, e:
+    except Exception as e:
         print("Warning: Failed to find git repo directory: %s" % e)
         return
 

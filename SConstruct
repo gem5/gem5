@@ -206,7 +206,7 @@ def rfind(l, elt, offs = -1):
     for i in range(len(l)+offs, 0, -1):
         if l[i] == elt:
             return i
-    raise ValueError, "element not found"
+    raise ValueError("element not found")
 
 # Take a list of paths (or SCons Nodes) and return a list with all
 # paths made absolute and ~-expanded.  Paths will be interpreted
@@ -717,7 +717,8 @@ if main['USE_PYTHON']:
 
     # verify that this stuff works
     if not conf.CheckHeader('Python.h', '<>'):
-        error("Check failed for Python.h header in", py_includes, "\n"
+        error("Check failed for Python.h header in",
+                ' '.join(py_includes), "\n"
               "Two possible reasons:\n"
               "1. Python headers are not installed (You can install the "
               "package python-dev on Ubuntu and RedHat)\n"
@@ -941,7 +942,7 @@ class CpuModel(object):
 
         # Add self to dict
         if name in CpuModel.dict:
-            raise AttributeError, "CpuModel '%s' already registered" % name
+            raise AttributeError("CpuModel '%s' already registered" % name)
         CpuModel.dict[name] = self
 
 Export('CpuModel')
