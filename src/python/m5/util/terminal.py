@@ -75,7 +75,7 @@ try:
     def cap_string(s, *args):
         cap = curses.tigetstr(s)
         if cap:
-            return curses.tparm(cap, *args)
+            return curses.tparm(cap, *args).decode('utf-8')
         else:
             return ''
 except:
