@@ -30,10 +30,10 @@
 #ifndef __ARCH_ARM_FASTMODEL_AMBA_FROM_TLM_BRIDGE_HH__
 #define __ARCH_ARM_FASTMODEL_AMBA_FROM_TLM_BRIDGE_HH__
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Woverloaded-virtual"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #include "amba_pv.h"
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 #include "arch/arm/fastmodel/amba_ports.hh"
 #include "systemc/tlm_port_wrapper.hh"
 
