@@ -196,7 +196,7 @@ class Interrupts : public BaseInterrupts
      */
     typedef X86LocalApicParams Params;
 
-    void setCPU(BaseCPU * newCPU);
+    void setCPU(BaseCPU * newCPU) override;
 
     const Params *
     params() const
@@ -264,7 +264,7 @@ class Interrupts : public BaseInterrupts
      * Functions for retrieving interrupts for the CPU to handle.
      */
 
-    bool checkInterrupts(ThreadContext *tc) const;
+    bool checkInterrupts(ThreadContext *tc) const override;
     /**
      * Check if there are pending interrupts without ignoring the
      * interrupts disabled flag.
@@ -278,8 +278,8 @@ class Interrupts : public BaseInterrupts
      * @return true there are unmaskable interrupts pending.
      */
     bool hasPendingUnmaskable() const { return pendingUnmaskableInt; }
-    Fault getInterrupt(ThreadContext *tc);
-    void updateIntrInfo(ThreadContext *tc);
+    Fault getInterrupt(ThreadContext *tc) override;
+    void updateIntrInfo(ThreadContext *tc) override;
 
     /*
      * Serialization.
@@ -292,19 +292,19 @@ class Interrupts : public BaseInterrupts
      * eventually.
      */
     void
-    post(int int_num, int index)
+    post(int int_num, int index) override
     {
         panic("Interrupts::post unimplemented!\n");
     }
 
     void
-    clear(int int_num, int index)
+    clear(int int_num, int index) override
     {
         panic("Interrupts::clear unimplemented!\n");
     }
 
     void
-    clearAll()
+    clearAll() override
     {
         panic("Interrupts::clearAll unimplemented!\n");
     }
