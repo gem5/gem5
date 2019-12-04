@@ -390,82 +390,93 @@ let {{
         LoadPost64(mnem, NameBase + "_POST", size, sign, flavor=flavor).emit()
         LoadReg64(mnem, NameBase + "_REG", size, sign, flavor=flavor).emit()
 
+    LoadPre64("ldraa", "LDRAA_PRE", size=8, sign=False, flavor="authDA").emit()
+    LoadImm64("ldraa", "LDRAA_REG", size=8, sign=False, flavor="authDA").emit()
+    LoadPre64("ldrab", "LDRAB_PRE", size=8, sign=False, flavor="authDB").emit()
+    LoadImm64("ldrab", "LDRAB_REG", size=8, sign=False, flavor="authDB").emit()
 
-    LoadPre64("ldraa", "LDRAA_PRE", 8, False, flavor="authDA").emit()
-    LoadImm64("ldraa", "LDRAA_REG", 8, False, flavor="authDA").emit()
-    LoadPre64("ldrab", "LDRAB_PRE", 8, False, flavor="authDB").emit()
-    LoadImm64("ldrab", "LDRAB_REG", 8, False, flavor="authDB").emit()
+    buildLoads64("ldrb", "LDRB64", size=1, sign=False)
+    buildLoads64("ldrsb", "LDRSBW64", size=1, sign=True)
+    buildLoads64("ldrsb", "LDRSBX64", size=1, sign=True, flavor="widen")
+    buildLoads64("ldrh", "LDRH64", size=2, sign=False)
+    buildLoads64("ldrsh", "LDRSHW64", size=2, sign=True)
+    buildLoads64("ldrsh", "LDRSHX64", size=2, sign=True, flavor="widen")
+    buildLoads64("ldrsw", "LDRSW64", size=4, sign=True, flavor="widen")
+    buildLoads64("ldr", "LDRW64", size=4, sign=False)
+    buildLoads64("ldr", "LDRX64", size=8, sign=False)
+    buildLoads64("ldr", "LDRBFP64", size=1, sign=False, flavor="fp")
+    buildLoads64("ldr", "LDRHFP64", size=2, sign=False, flavor="fp")
+    buildLoads64("ldr", "LDRSFP64", size=4, sign=False, flavor="fp")
+    buildLoads64("ldr", "LDRDFP64", size=8, sign=False, flavor="fp")
 
-    buildLoads64("ldrb", "LDRB64", 1, False)
-    buildLoads64("ldrsb", "LDRSBW64", 1, True)
-    buildLoads64("ldrsb", "LDRSBX64", 1, True, flavor="widen")
-    buildLoads64("ldrh", "LDRH64", 2, False)
-    buildLoads64("ldrsh", "LDRSHW64", 2, True)
-    buildLoads64("ldrsh", "LDRSHX64", 2, True, flavor="widen")
-    buildLoads64("ldrsw", "LDRSW64", 4, True, flavor="widen")
-    buildLoads64("ldr", "LDRW64", 4, False)
-    buildLoads64("ldr", "LDRX64", 8, False)
-    buildLoads64("ldr", "LDRBFP64", 1, False, flavor="fp")
-    buildLoads64("ldr", "LDRHFP64", 2, False, flavor="fp")
-    buildLoads64("ldr", "LDRSFP64", 4, False, flavor="fp")
-    buildLoads64("ldr", "LDRDFP64", 8, False, flavor="fp")
-
-    LoadImm64("prfm", "PRFM64_IMM", 8, flavor="mprefetch").emit()
-    LoadReg64("prfm", "PRFM64_REG", 8, flavor="mprefetch").emit()
-    LoadLit64("prfm", "PRFM64_LIT", 8, literal=True,
+    LoadImm64("prfm", "PRFM64_IMM", size=8, flavor="mprefetch").emit()
+    LoadReg64("prfm", "PRFM64_REG", size=8, flavor="mprefetch").emit()
+    LoadLit64("prfm", "PRFM64_LIT", size=8, literal=True,
               flavor="mprefetch").emit()
-    LoadImm64("prfum", "PRFUM64_IMM", 8, flavor="mprefetch").emit()
+    LoadImm64("prfum", "PRFUM64_IMM", size=8, flavor="mprefetch").emit()
 
-    LoadImm64("ldurb", "LDURB64_IMM", 1, False).emit()
-    LoadImm64("ldursb", "LDURSBW64_IMM", 1, True).emit()
-    LoadImm64("ldursb", "LDURSBX64_IMM", 1, True, flavor="widen").emit()
-    LoadImm64("ldurh", "LDURH64_IMM", 2, False).emit()
-    LoadImm64("ldursh", "LDURSHW64_IMM", 2, True).emit()
-    LoadImm64("ldursh", "LDURSHX64_IMM", 2, True, flavor="widen").emit()
-    LoadImm64("ldursw", "LDURSW64_IMM", 4, True, flavor="widen").emit()
-    LoadImm64("ldur", "LDURW64_IMM", 4, False).emit()
-    LoadImm64("ldur", "LDURX64_IMM", 8, False).emit()
-    LoadImm64("ldur", "LDURBFP64_IMM", 1, flavor="fp").emit()
-    LoadImm64("ldur", "LDURHFP64_IMM", 2, flavor="fp").emit()
-    LoadImm64("ldur", "LDURSFP64_IMM", 4, flavor="fp").emit()
-    LoadImm64("ldur", "LDURDFP64_IMM", 8, flavor="fp").emit()
+    LoadImm64("ldurb", "LDURB64_IMM", size=1, sign=False).emit()
+    LoadImm64("ldursb", "LDURSBW64_IMM", size=1, sign=True).emit()
+    LoadImm64("ldursb", "LDURSBX64_IMM", size=1,
+              sign=True, flavor="widen").emit()
+    LoadImm64("ldurh", "LDURH64_IMM", size=2, sign=False).emit()
+    LoadImm64("ldursh", "LDURSHW64_IMM", size=2, sign=True).emit()
+    LoadImm64("ldursh", "LDURSHX64_IMM", size=2,
+              sign=True, flavor="widen").emit()
+    LoadImm64("ldursw", "LDURSW64_IMM", size=4,
+              sign=True, flavor="widen").emit()
+    LoadImm64("ldur", "LDURW64_IMM", size=4, sign=False).emit()
+    LoadImm64("ldur", "LDURX64_IMM", size=8, sign=False).emit()
+    LoadImm64("ldur", "LDURBFP64_IMM", size=1, flavor="fp").emit()
+    LoadImm64("ldur", "LDURHFP64_IMM", size=2, flavor="fp").emit()
+    LoadImm64("ldur", "LDURSFP64_IMM", size=4, flavor="fp").emit()
+    LoadImm64("ldur", "LDURDFP64_IMM", size=8, flavor="fp").emit()
 
-    LoadImm64("ldtrb", "LDTRB64_IMM", 1, False, True).emit()
-    LoadImm64("ldtrsb", "LDTRSBW64_IMM", 1, True, True).emit()
-    LoadImm64("ldtrsb", "LDTRSBX64_IMM", 1, True, True, flavor="widen").emit()
-    LoadImm64("ldtrh", "LDTRH64_IMM", 2, False, True).emit()
-    LoadImm64("ldtrsh", "LDTRSHW64_IMM", 2, True, True).emit()
-    LoadImm64("ldtrsh", "LDTRSHX64_IMM", 2, True, True, flavor="widen").emit()
-    LoadImm64("ldtrsw", "LDTRSW64_IMM", 4, True, True, flavor="widen").emit()
-    LoadImm64("ldtr", "LDTRW64_IMM", 4, False, True).emit()
-    LoadImm64("ldtr", "LDTRX64_IMM", 8, False, True).emit()
+    LoadImm64("ldtrb", "LDTRB64_IMM", size=1,
+              sign=False, user=True).emit()
+    LoadImm64("ldtrsb", "LDTRSBW64_IMM", size=1,
+              sign=True, user=True).emit()
+    LoadImm64("ldtrsb", "LDTRSBX64_IMM", size=1,
+              sign=True, user=True, flavor="widen").emit()
+    LoadImm64("ldtrh", "LDTRH64_IMM", size=2,
+              sign=False, user=True).emit()
+    LoadImm64("ldtrsh", "LDTRSHW64_IMM", size=2,
+              sign=True, user=True).emit()
+    LoadImm64("ldtrsh", "LDTRSHX64_IMM", size=2,
+              sign=True, user=True, flavor="widen").emit()
+    LoadImm64("ldtrsw", "LDTRSW64_IMM", size=4,
+              sign=True, user=True, flavor="widen").emit()
+    LoadImm64("ldtr", "LDTRW64_IMM", size=4,
+              sign=False, user=True).emit()
+    LoadImm64("ldtr", "LDTRX64_IMM", size=8,
+              sign=False, user=True).emit()
 
-    LoadLit64("ldrsw", "LDRSWL64_LIT", 4, True, \
+    LoadLit64("ldrsw", "LDRSWL64_LIT", size=4, sign=True, \
               literal=True, flavor="widen").emit()
-    LoadLit64("ldr", "LDRWL64_LIT", 4, False, literal=True).emit()
-    LoadLit64("ldr", "LDRXL64_LIT", 8, False, literal=True).emit()
-    LoadLit64("ldr", "LDRSFP64_LIT", 4, literal=True, flavor="fp").emit()
-    LoadLit64("ldr", "LDRDFP64_LIT", 8, literal=True, flavor="fp").emit()
+    LoadLit64("ldr", "LDRWL64_LIT", size=4, sign=False, literal=True).emit()
+    LoadLit64("ldr", "LDRXL64_LIT", size=8, sign=False, literal=True).emit()
+    LoadLit64("ldr", "LDRSFP64_LIT", size=4, literal=True, flavor="fp").emit()
+    LoadLit64("ldr", "LDRDFP64_LIT", size=8, literal=True, flavor="fp").emit()
 
-    LoadRaw64("ldar", "LDARX64", 8, flavor="acquire").emit()
-    LoadRaw64("ldar", "LDARW64", 4, flavor="acquire").emit()
-    LoadRaw64("ldarh", "LDARH64", 2, flavor="acquire").emit()
-    LoadRaw64("ldarb", "LDARB64", 1, flavor="acquire").emit()
+    LoadRaw64("ldar", "LDARX64", size=8, flavor="acquire").emit()
+    LoadRaw64("ldar", "LDARW64", size=4, flavor="acquire").emit()
+    LoadRaw64("ldarh", "LDARH64", size=2, flavor="acquire").emit()
+    LoadRaw64("ldarb", "LDARB64", size=1, flavor="acquire").emit()
 
-    LoadEx64("ldaxr", "LDAXRX64", 8, flavor="acex").emit()
-    LoadEx64("ldaxr", "LDAXRW64", 4, flavor="acex").emit()
-    LoadEx64("ldaxrh", "LDAXRH64", 2, flavor="acex").emit()
-    LoadEx64("ldaxrb", "LDAXRB64", 1, flavor="acex").emit()
+    LoadEx64("ldaxr", "LDAXRX64", size=8, flavor="acex").emit()
+    LoadEx64("ldaxr", "LDAXRW64", size=4, flavor="acex").emit()
+    LoadEx64("ldaxrh", "LDAXRH64", size=2, flavor="acex").emit()
+    LoadEx64("ldaxrb", "LDAXRB64", size=1, flavor="acex").emit()
 
-    LoadEx64("ldxr", "LDXRX64", 8, flavor="exclusive").emit()
-    LoadEx64("ldxr", "LDXRW64", 4, flavor="exclusive").emit()
-    LoadEx64("ldxrh", "LDXRH64", 2, flavor="exclusive").emit()
-    LoadEx64("ldxrb", "LDXRB64", 1, flavor="exclusive").emit()
+    LoadEx64("ldxr", "LDXRX64", size=8, flavor="exclusive").emit()
+    LoadEx64("ldxr", "LDXRW64", size=4, flavor="exclusive").emit()
+    LoadEx64("ldxrh", "LDXRH64", size=2, flavor="exclusive").emit()
+    LoadEx64("ldxrb", "LDXRB64", size=1, flavor="exclusive").emit()
 
-    LoadRaw64("ldapr", "LDAPRX64", 8, flavor="acquire").emit()
-    LoadRaw64("ldapr", "LDAPRW64", 4, flavor="acquire").emit()
-    LoadRaw64("ldaprh", "LDAPRH64", 2, flavor="acquire").emit()
-    LoadRaw64("ldaprb", "LDAPRB64", 1, flavor="acquire").emit()
+    LoadRaw64("ldapr", "LDAPRX64", size=8, flavor="acquire").emit()
+    LoadRaw64("ldapr", "LDAPRW64", size=4, flavor="acquire").emit()
+    LoadRaw64("ldaprh", "LDAPRH64", size=2, flavor="acquire").emit()
+    LoadRaw64("ldaprb", "LDAPRB64", size=1, flavor="acquire").emit()
 
     class LoadImmU64(LoadImm64):
         decConstBase = 'LoadStoreImmU64'
@@ -493,26 +504,28 @@ let {{
         decConstBase = 'LoadStoreLitU64'
         micro = True
 
-    LoadImmDU64("ldp_uop", "MicroLdPairUop", 8).emit()
-    LoadImmDU64("ldp_fp8_uop", "MicroLdPairFp8Uop", 8, flavor="fp").emit()
-    LoadImmU64("ldfp16_uop", "MicroLdFp16Uop", 16, flavor="fp").emit()
-    LoadReg64("ldfp16reg_uop", "MicroLdFp16RegUop", 16, flavor="fp").emit()
+    LoadImmDU64("ldp_uop", "MicroLdPairUop", size=8).emit()
+    LoadImmDU64("ldp_fp8_uop", "MicroLdPairFp8Uop", size=8, flavor="fp").emit()
+    LoadImmU64("ldfp16_uop", "MicroLdFp16Uop", size=16, flavor="fp").emit()
+    LoadReg64("ldfp16reg_uop", "MicroLdFp16RegUop", size=16,
+              flavor="fp").emit()
 
-    LoadImmDouble64("ldaxp", "LDAXPW64", 4, flavor="acexp").emit()
-    LoadImmDouble64("ldaxp", "LDAXPX64", 8, flavor="acexp").emit()
-    LoadImmDouble64("ldxp", "LDXPW64", 4, flavor="exp").emit()
-    LoadImmDouble64("ldxp", "LDXPX64", 8, flavor="exp").emit()
+    LoadImmDouble64("ldaxp", "LDAXPW64", size=4, flavor="acexp").emit()
+    LoadImmDouble64("ldaxp", "LDAXPX64", size=8, flavor="acexp").emit()
+    LoadImmDouble64("ldxp", "LDXPW64", size=4, flavor="exp").emit()
+    LoadImmDouble64("ldxp", "LDXPX64", size=8, flavor="exp").emit()
 
-    LoadImmU64("ldrxi_uop", "MicroLdrXImmUop", 8).emit()
-    LoadRegU64("ldrxr_uop", "MicroLdrXRegUop", 8).emit()
-    LoadLitU64("ldrxl_uop", "MicroLdrXLitUop", 8, literal=True).emit()
-    LoadImmU64("ldrfpxi_uop", "MicroLdrFpXImmUop", 8, flavor="fp").emit()
-    LoadRegU64("ldrfpxr_uop", "MicroLdrFpXRegUop", 8, flavor="fp").emit()
-    LoadLitU64("ldrfpxl_uop", "MicroLdrFpXLitUop", 8, literal=True,
+    LoadImmU64("ldrxi_uop", "MicroLdrXImmUop", size=8).emit()
+    LoadRegU64("ldrxr_uop", "MicroLdrXRegUop", size=8).emit()
+    LoadLitU64("ldrxl_uop", "MicroLdrXLitUop", size=8, literal=True).emit()
+    LoadImmU64("ldrfpxi_uop", "MicroLdrFpXImmUop", size=8, flavor="fp").emit()
+    LoadRegU64("ldrfpxr_uop", "MicroLdrFpXRegUop", size=8, flavor="fp").emit()
+    LoadLitU64("ldrfpxl_uop", "MicroLdrFpXLitUop", size=8, literal=True,
                flavor="fp").emit()
     LoadLitU64("ldfp16_lit__uop", "MicroLdFp16LitUop",
-               16, literal=True, flavor="fp").emit()
-    LoadImmDU64("ldrduxi_uop", "MicroLdrDUXImmUop", 4, sign=False).emit()
-    LoadImmDU64("ldrdsxi_uop", "MicroLdrDSXImmUop", 4, sign=True).emit()
-    LoadImmDU64("ldrdfpxi_uop", "MicroLdrDFpXImmUop", 4, flavor="fp").emit()
+               size=16, literal=True, flavor="fp").emit()
+    LoadImmDU64("ldrduxi_uop", "MicroLdrDUXImmUop", size=4, sign=False).emit()
+    LoadImmDU64("ldrdsxi_uop", "MicroLdrDSXImmUop", size=4, sign=True).emit()
+    LoadImmDU64("ldrdfpxi_uop", "MicroLdrDFpXImmUop", size=4,
+                flavor="fp").emit()
 }};
