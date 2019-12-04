@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2014, 2017 ARM Limited
+// Copyright (c) 2011-2014, 2017, 2019 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -436,7 +436,7 @@ let {{
     LoadImm64("ldtrh", "LDTRH64_IMM", 2, False, True).emit()
     LoadImm64("ldtrsh", "LDTRSHW64_IMM", 2, True, True).emit()
     LoadImm64("ldtrsh", "LDTRSHX64_IMM", 2, True, True, flavor="widen").emit()
-    LoadImm64("ldtrsw", "LDTRSW64_IMM", 4, True, flavor="widen").emit()
+    LoadImm64("ldtrsw", "LDTRSW64_IMM", 4, True, True, flavor="widen").emit()
     LoadImm64("ldtr", "LDTRW64_IMM", 4, False, True).emit()
     LoadImm64("ldtr", "LDTRX64_IMM", 8, False, True).emit()
 
