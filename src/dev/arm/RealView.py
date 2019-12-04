@@ -45,7 +45,7 @@ from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *
-from m5.objects.ClockDomain import ClockDomain
+from m5.objects.ClockDomain import ClockDomain, SrcClockDomain
 from m5.objects.VoltageDomain import VoltageDomain
 from m5.objects.Device import \
     BasicPioDevice, PioDevice, IsaFake, BadAddr, DmaDevice
@@ -59,7 +59,6 @@ from m5.objects.SimpleMemory import SimpleMemory
 from m5.objects.Gic import *
 from m5.objects.EnergyCtrl import EnergyCtrl
 from m5.objects.ClockedObject import ClockedObject
-from m5.objects.ClockDomain import SrcClockDomain
 from m5.objects.SubSystem import SubSystem
 from m5.objects.Graphics import ImageFormat
 from m5.objects.ClockedObject import ClockedObject
@@ -350,6 +349,26 @@ class AmbaFake(AmbaPioDevice):
     cxx_header = "dev/arm/amba_fake.hh"
     ignore_access = Param.Bool(False, "Ignore reads/writes to this device, (e.g. IsaFake + AMBA)")
     amba_id = 0;
+
+# Simple fixed-rate clock source. Intended to be instantiated in Platform
+# instances for definition of clock bindings on DTB auto-generation
+class FixedClock(SrcClockDomain):
+    # Keep track of the number of FixedClock instances in the system
+    # to provide unique names
+    _index = 0
+
+    def generateDeviceTree(self, state):
+        if len(self.clock) > 1:
+            fatal('FixedClock configured with multiple frequencies')
+        node = FdtNode('clock{}'.format(FixedClock._index))
+        node.appendCompatible('fixed-clock')
+        node.append(FdtPropertyWords('#clock-cells', 0))
+        node.append(FdtPropertyWords('clock-frequency',
+                                     self.clock[0].frequency))
+        node.appendPhandle(self)
+        FixedClock._index += 1
+
+        yield node
 
 class Pl011(Uart):
     type = 'Pl011'
