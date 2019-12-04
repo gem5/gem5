@@ -235,6 +235,7 @@ X86_64Process::initState()
         initDesc.p = 1;               // present
         initDesc.l = 1;               // longmode - 64 bit
         initDesc.d = 0;               // operand size
+        initDesc.g = 1;
         initDesc.s = 1;               // system segment
         initDesc.limit = 0xFFFFFFFF;
         initDesc.base = 0;
@@ -376,8 +377,8 @@ X86_64Process::initState()
             efer.sce = 1; // Enable system call extensions.
             efer.lme = 1; // Enable long mode.
             efer.lma = 1; // Activate long mode.
-            efer.nxe = 0; // Enable nx support.
-            efer.svme = 1; // Enable svm support for now.
+            efer.nxe = 1; // Enable nx support.
+            efer.svme = 0; // Enable svm support for now.
             efer.ffxsr = 0; // Turn on fast fxsave and fxrstor.
             tc->setMiscReg(MISCREG_EFER, efer);
 
@@ -406,8 +407,8 @@ X86_64Process::initState()
 
             CR4 cr4 = 0;
             //Turn on pae.
-            cr4.osxsave = 1; // Enable XSAVE and Proc Extended States
-            cr4.osxmmexcpt = 1; // Operating System Unmasked Exception
+            cr4.osxsave = 0; // Enable XSAVE and Proc Extended States
+            cr4.osxmmexcpt = 0; // Operating System Unmasked Exception
             cr4.osfxsr = 1; // Operating System FXSave/FSRSTOR Support
             cr4.pce = 0; // Performance-Monitoring Counter Enable
             cr4.pge = 0; // Page-Global Enable
