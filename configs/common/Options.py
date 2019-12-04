@@ -183,8 +183,7 @@ def addCommonOptions(parser):
                       type of branch predictor to run with
                       (if not set, use the default branch predictor of
                       the selected CPU)""")
-    parser.add_option("--indirect-bp-type", type="choice",
-                      default="SimpleIndirectPredictor",
+    parser.add_option("--indirect-bp-type", type="choice", default=None,
                       choices=ObjectList.indirect_bp_list.get_names(),
                       help = "type of indirect branch predictor to run with")
     parser.add_option("--list-hwp-types",
