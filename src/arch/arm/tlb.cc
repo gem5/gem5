@@ -164,7 +164,7 @@ TLB::finalizePhysical(const RequestPtr &req,
 }
 
 TlbEntry*
-TLB::lookup(Addr va, uint16_t asn, uint8_t vmid, bool hyp, bool secure,
+TLB::lookup(Addr va, uint16_t asn, vmid_t vmid, bool hyp, bool secure,
             bool functional, bool ignore_asn, ExceptionLevel target_el,
             bool in_host, BaseTLB::Mode mode)
 {

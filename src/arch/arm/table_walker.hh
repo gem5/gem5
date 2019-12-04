@@ -44,6 +44,7 @@
 #include "arch/arm/regs/misc.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
+#include "arch/arm/types.hh"
 #include "mem/request.hh"
 #include "params/ArmTableWalker.hh"
 #include "sim/clocked_object.hh"
@@ -744,7 +745,7 @@ class TableWalker : public ClockedObject
 
         /** ASID that we're servicing the request under */
         uint16_t asid;
-        uint8_t vmid;
+        vmid_t vmid;
         bool    isHyp;
 
         /** Translation state for delayed requests */
@@ -941,7 +942,7 @@ class TableWalker : public ClockedObject
                   PortID idx=InvalidPortID) override;
 
     Fault walk(const RequestPtr &req, ThreadContext *tc,
-               uint16_t asid, uint8_t _vmid,
+               uint16_t asid, vmid_t _vmid,
                bool _isHyp, TLB::Mode mode, TLB::Translation *_trans,
                bool timing, bool functional, bool secure,
                TLB::ArmTranslationType tranType, bool _stage2Req);

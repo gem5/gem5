@@ -222,7 +222,7 @@ class TLB : public BaseTLB
      * @param mode to differentiate between read/writes/fetches.
      * @return pointer to TLB entry if it exists
      */
-    TlbEntry *lookup(Addr vpn, uint16_t asn, uint8_t vmid, bool hyp,
+    TlbEntry *lookup(Addr vpn, uint16_t asn, vmid_t vmid, bool hyp,
                      bool secure, bool functional,
                      bool ignore_asn, ExceptionLevel target_el,
                      bool in_host, BaseTLB::Mode mode);
@@ -423,7 +423,7 @@ protected:
     bool isHyp;
     TTBCR ttbcr;
     uint16_t asid;
-    uint8_t vmid;
+    vmid_t vmid;
     PRRR prrr;
     NMRR nmrr;
     HCR hcr;

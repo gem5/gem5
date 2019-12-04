@@ -51,6 +51,8 @@ namespace ArmISA
 {
     typedef uint32_t MachInst;
 
+    typedef uint16_t vmid_t;
+
     BitUnion8(ITSTATE)
         /* Note that the split (cond, mask) below is not as in ARM ARM.
          * But it is more convenient for simulation. The condition
