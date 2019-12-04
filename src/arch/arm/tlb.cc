@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016-2020 ARM Limited
+ * Copyright (c) 2010-2013, 2016-2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1373,6 +1373,35 @@ TLB::getTableWalkerPort()
     return &stage2Mmu->getDMAPort();
 }
 
+vmid_t
+TLB::getVMID(ThreadContext *tc) const
+{
+    AA64MMFR1 mmfr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
+    VTCR_t vtcr = tc->readMiscReg(MISCREG_VTCR_EL2);
+    vmid_t vmid = 0;
+
+    switch (mmfr1.vmidbits) {
+      case 0b0000:
+        // 8 bits
+        vmid = bits(tc->readMiscReg(MISCREG_VTTBR_EL2), 55, 48);
+        break;
+      case 0b0010:
+        if (vtcr.vs && ELIs64(tc, EL2)) {
+            // 16 bits
+            vmid = bits(tc->readMiscReg(MISCREG_VTTBR_EL2), 63, 48);
+        } else {
+            // 8 bits
+            vmid = bits(tc->readMiscReg(MISCREG_VTTBR_EL2), 55, 48);
+        }
+        break;
+      default:
+        panic("Reserved ID_AA64MMFR1_EL1.VMIDBits value: %#x",
+              mmfr1.vmidbits);
+    }
+
+    return vmid;
+}
+
 void
 TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
 {
@@ -1457,7 +1486,7 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
         scr = tc->readMiscReg(MISCREG_SCR_EL3);
         isPriv = aarch64EL != EL0;
         if (haveVirtualization) {
-            vmid = bits(tc->readMiscReg(MISCREG_VTTBR_EL2), 55, 48);
+            vmid = getVMID(tc);
             isHyp = aarch64EL == EL2;
             isHyp |= tranType & HypMode;
             isHyp &= (tranType & S1S2NsTran) == 0;

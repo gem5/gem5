@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016, 2019-2020 ARM Limited
+ * Copyright (c) 2010-2013, 2016, 2019-2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -442,6 +442,10 @@ protected:
 
     void updateMiscReg(ThreadContext *tc,
                        ArmTranslationType tranType = NormalTran);
+
+    /** Returns the current VMID
+     * (information stored in the VTTBR_EL2 register) */
+    vmid_t getVMID(ThreadContext *tc) const;
 
 public:
     void invalidateMiscReg() { miscRegValid = false; }

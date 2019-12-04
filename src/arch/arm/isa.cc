@@ -2177,6 +2177,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
           case MISCREG_TCR_EL1:
           case MISCREG_TCR_EL2:
           case MISCREG_TCR_EL3:
+          case MISCREG_VTCR_EL2:
           case MISCREG_SCTLR_EL2:
           case MISCREG_SCTLR_EL3:
           case MISCREG_HSCTLR:

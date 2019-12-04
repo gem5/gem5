@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2020 ARM Limited
+ * Copyright (c) 2010-2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -563,6 +563,7 @@ namespace ArmISA
         Bitfield<13, 12> sh0;
         Bitfield<15, 14> tg0;
         Bitfield<18, 16> ps; // Only defined for VTCR_EL2
+        Bitfield<19> vs;     // Only defined for VTCR_EL2
         Bitfield<21> ha;     // Only defined for VTCR_EL2
         Bitfield<22> hd;     // Only defined for VTCR_EL2
     EndBitUnion(VTCR_t)
