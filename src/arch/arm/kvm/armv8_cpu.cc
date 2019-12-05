@@ -249,10 +249,10 @@ ArmV8KvmCPU::updateKvmState()
     }
 
     for (int i = 0; i < NUM_QREGS; ++i) {
-        const RegIndex reg_base(i * FP_REGS_PER_VFP_REG);
         KvmFPReg reg;
+        auto v = tc->readVecReg(RegId(VecRegClass, i)).as<VecElem>();
         for (int j = 0; j < FP_REGS_PER_VFP_REG; j++)
-            reg.s[j].i = tc->readFloatReg(reg_base + j);
+            reg.s[j].i = v[j];
 
         setOneReg(kvmFPReg(i), reg.data);
         DPRINTF(KvmContext, "  Q%i: %s\n", i, getAndFormatOneReg(kvmFPReg(i)));
@@ -321,12 +321,12 @@ ArmV8KvmCPU::updateThreadContext()
     }
 
     for (int i = 0; i < NUM_QREGS; ++i) {
-        const RegIndex reg_base(i * FP_REGS_PER_VFP_REG);
         KvmFPReg reg;
         DPRINTF(KvmContext, "  Q%i: %s\n", i, getAndFormatOneReg(kvmFPReg(i)));
         getOneReg(kvmFPReg(i), reg.data);
+        auto v = tc->getWritableVecReg(RegId(VecRegClass, i)).as<VecElem>();
         for (int j = 0; j < FP_REGS_PER_VFP_REG; j++)
-            tc->setFloatReg(reg_base + j, reg.s[j].i);
+            v[j] = reg.s[j].i;
     }
 
     for (const auto &ri : getSysRegMap()) {
