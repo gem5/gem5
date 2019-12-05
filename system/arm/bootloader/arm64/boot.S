@@ -40,6 +40,8 @@
 
         .globl	_start
 _start:
+        ldr	x0, =CNTFRQ
+        msr	cntfrq_el0, x0
         /*
          * EL3 initialisation
          */
@@ -54,9 +56,6 @@ _start:
         msr	scr_el3, x0
 
         msr	cptr_el3, xzr			// Disable copro. traps to EL3
-
-        ldr	x0, =CNTFRQ
-        msr	cntfrq_el0, x0
 
         /*
          * Check for the primary CPU to avoid a race on the distributor
@@ -179,10 +178,6 @@ start_ns:
         ldr	w5, =(1 << 31) | (1 << 30) | (7 << 20) | (0 << 16)	// START|WRITE|MUXFPGA|SITE_MB
         str	wzr, [x4, #0xa0]		// V2M_SYS_CFGDATA
         str	w5, [x4, #0xa4]			// V2M_SYS_CFGCTRL
-
-        // set up the arch timer frequency
-        //ldr	x0, =CNTFRQ
-        //msr	cntfrq_el0, x0
 
         /*
          * Primary CPU
