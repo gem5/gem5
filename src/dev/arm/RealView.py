@@ -484,7 +484,7 @@ class PL031(AmbaIntDevice):
     type = 'PL031'
     cxx_header = "dev/arm/rtc_pl031.hh"
     time = Param.Time('01/01/2009', "System time to use ('Now' for actual time)")
-    amba_id = 0x00341031
+    amba_id = 0x00041031
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(state, 'rtc', self.pio_addr,
@@ -493,6 +493,7 @@ class PL031(AmbaIntDevice):
         node.appendCompatible(["arm,pl031", "arm,primecell"])
         clock = state.phandle(self.clk_domain.unproxy(self))
         node.append(FdtPropertyWords("clocks", clock))
+        node.append(FdtPropertyStrings("clock-names", ["apb_pclk"]))
 
         yield node
 
