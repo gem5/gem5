@@ -46,6 +46,69 @@ struct TypedAtomicOpFunctor : public AtomicOpFunctor
     virtual void execute(T * p) = 0;
 };
 
+template<typename T>
+class AtomicGeneric2Op : public TypedAtomicOpFunctor<T>
+{
+  public:
+    AtomicGeneric2Op(T _a, std::function<void(T*,T)> _op)
+        : a(_a), op(_op)
+    {}
+    AtomicOpFunctor* clone() override
+    {
+        return new AtomicGeneric2Op<T>(*this);
+    }
+    void execute(T *b) override
+    {
+        op(b, a);
+    }
+  private:
+    T a;
+    std::function<void(T*,T)> op;
+ };
+
+template<typename T>
+class AtomicGeneric3Op : public TypedAtomicOpFunctor<T>
+{
+  public:
+    AtomicGeneric3Op(T _a, T _c, std::function<void(T*, T, T)> _op)
+        : a(_a), c(_c), op(_op)
+    {}
+    AtomicOpFunctor* clone() override
+    {
+        return new AtomicGeneric3Op<T>(*this);
+    }
+    void execute(T *b) override
+    {
+        op(b, a, c);
+    }
+  private:
+    T a;
+    T c;
+    std::function<void(T*, T, T)> op;
+};
+
+template<typename T>
+class AtomicGenericPair3Op : public TypedAtomicOpFunctor<T>
+{
+  public:
+    AtomicGenericPair3Op(std::array<T, 2>& _a, std::array<T, 2> _c,
+           std::function<void(T*, std::array<T, 2>&, std::array<T, 2>)> _op)
+        : a(_a), c(_c), op(_op)
+    {}
+    AtomicOpFunctor* clone() override
+    {
+        return new AtomicGenericPair3Op<T>(*this);
+    }
+    void execute(T* b) override
+    {
+        op(b, a, c);
+    }
+  private:
+    std::array<T, 2> a;
+    std::array<T, 2> c;
+    std::function<void(T*, std::array<T, 2>&, std::array<T, 2>)> op;
+};
+
 typedef std::unique_ptr<AtomicOpFunctor> AtomicOpFunctorPtr;
 
 #endif // __BASE_AMO_HH__
