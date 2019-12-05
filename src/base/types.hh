@@ -244,23 +244,6 @@ typedef std::shared_ptr<FaultBase> Fault;
 // we just create an alias.
 constexpr decltype(nullptr) NoFault = nullptr;
 
-struct AtomicOpFunctor
-{
-    virtual void operator()(uint8_t *p) = 0;
-    virtual AtomicOpFunctor* clone() = 0;
-    virtual ~AtomicOpFunctor() {}
-};
-
-template <class T>
-struct TypedAtomicOpFunctor : public AtomicOpFunctor
-{
-    void operator()(uint8_t *p) { execute((T *)p); }
-    virtual AtomicOpFunctor* clone() = 0;
-    virtual void execute(T * p) = 0;
-};
-
-typedef std::unique_ptr<AtomicOpFunctor> AtomicOpFunctorPtr;
-
 enum ByteOrder {
     BigEndianByteOrder,
     LittleEndianByteOrder

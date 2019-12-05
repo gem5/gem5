@@ -55,6 +55,7 @@
 #include <cassert>
 #include <climits>
 
+#include "base/amo.hh"
 #include "base/flags.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
