@@ -39,6 +39,7 @@
 #include <cstdint>
 #include <string>
 
+#include "base/amo.hh"
 #include "base/logging.hh"
 #include "enums/MemType.hh"
 #include "enums/StorageClassType.hh"
@@ -46,37 +47,6 @@
 #include "gpu-compute/gpu_exec_context.hh"
 
 class GPUStaticInst;
-
-template<typename T>
-class AtomicOpAnd : public TypedAtomicOpFunctor<T>
-{
-  public:
-    T a;
-
-    AtomicOpAnd(T _a) : a(_a) { }
-    void execute(T *b) { *b &= a; }
-    AtomicOpFunctor* clone () { return new AtomicOpAnd(a); }
-};
-
-template<typename T>
-class AtomicOpOr : public TypedAtomicOpFunctor<T>
-{
-  public:
-    T a;
-    AtomicOpOr(T _a) : a(_a) { }
-    void execute(T *b) { *b |= a; }
-    AtomicOpFunctor* clone () { return new AtomicOpOr(a); }
-};
-
-template<typename T>
-class AtomicOpXor : public TypedAtomicOpFunctor<T>
-{
-  public:
-    T a;
-    AtomicOpXor(T _a) : a(_a) {}
-    void execute(T *b) { *b ^= a; }
-    AtomicOpFunctor* clone () { return new AtomicOpXor(a); }
-};
 
 template<typename T>
 class AtomicOpCAS : public TypedAtomicOpFunctor<T>
@@ -106,86 +76,6 @@ class AtomicOpCAS : public TypedAtomicOpFunctor<T>
         }
     }
     AtomicOpFunctor* clone () { return new AtomicOpCAS(c, s, computeUnit); }
-};
-
-template<typename T>
-class AtomicOpExch : public TypedAtomicOpFunctor<T>
-{
-  public:
-    T a;
-    AtomicOpExch(T _a) : a(_a) { }
-    void execute(T *b) { *b = a; }
-    AtomicOpFunctor* clone () { return new AtomicOpExch(a); }
-};
-
-template<typename T>
-class AtomicOpAdd : public TypedAtomicOpFunctor<T>
-{
-  public:
-    T a;
-    AtomicOpAdd(T _a) : a(_a) { }
-    void execute(T *b) { *b += a; }
-    AtomicOpFunctor* clone () { return new AtomicOpAdd(a); }
-};
-
-template<typename T>
-class AtomicOpSub : public TypedAtomicOpFunctor<T>
-{
-  public:
-    T a;
-    AtomicOpSub(T _a) : a(_a) { }
-    void execute(T *b) { *b -= a; }
-    AtomicOpFunctor* clone () { return new AtomicOpSub(a); }
-};
-
-template<typename T>
-class AtomicOpInc : public TypedAtomicOpFunctor<T>
-{
-  public:
-    AtomicOpInc() { }
-    void execute(T *b) { *b += 1; }
-    AtomicOpFunctor* clone () { return new AtomicOpInc(); }
-};
-
-template<typename T>
-class AtomicOpDec : public TypedAtomicOpFunctor<T>
-{
-  public:
-    AtomicOpDec() {}
-    void execute(T *b) { *b -= 1; }
-    AtomicOpFunctor* clone () { return new AtomicOpDec(); }
-};
-
-template<typename T>
-class AtomicOpMax : public TypedAtomicOpFunctor<T>
-{
-  public:
-    T a;
-    AtomicOpMax(T _a) : a(_a) { }
-
-    void
-    execute(T *b)
-    {
-        if (a > *b)
-            *b = a;
-    }
-    AtomicOpFunctor* clone () { return new AtomicOpMax(a); }
-};
-
-template<typename T>
-class AtomicOpMin : public TypedAtomicOpFunctor<T>
-{
-  public:
-    T a;
-    AtomicOpMin(T _a) : a(_a) {}
-
-    void
-    execute(T *b)
-    {
-        if (a < *b)
-            *b = a;
-    }
-    AtomicOpFunctor* clone () { return new AtomicOpMin(a); }
 };
 
 typedef enum
