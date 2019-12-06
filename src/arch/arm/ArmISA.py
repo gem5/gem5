@@ -113,8 +113,8 @@ class ArmISA(BaseISA):
     # 4K | 64K | !16K | !BigEndEL0 | !SNSMem | !BigEnd | 8b ASID | 40b PA
     id_aa64mmfr0_el1 = Param.UInt64(0x0000000000f00002,
         "AArch64 Memory Model Feature Register 0")
-    # PAN | HPDS | !VHE
-    id_aa64mmfr1_el1 = Param.UInt64(0x0000000000101000,
+    # PAN | HPDS | !VHE | VMIDBits
+    id_aa64mmfr1_el1 = Param.UInt64(0x0000000000101020,
         "AArch64 Memory Model Feature Register 1")
     # |VARANGE
     id_aa64mmfr2_el1 = Param.UInt64(0x0000000000010000,
