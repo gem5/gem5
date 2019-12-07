@@ -65,9 +65,7 @@ class X86Linux : public Linux
             ctc->setIntReg(X86ISA::StackPointerReg, stack);
     }
 
-    class SyscallABI
-    {
-    };
+    class SyscallABI {};
 };
 
 namespace GuestABI
@@ -81,7 +79,10 @@ struct Result<ABI, SyscallReturn,
     static void
     store(ThreadContext *tc, const SyscallReturn &ret)
     {
-        tc->setIntReg(ABI::ReturnValueReg, ret.encodedValue());
+        if (ret.suppressed() || ret.needsRetry())
+            return;
+
+        tc->setIntReg(X86ISA::INTREG_RAX, ret.encodedValue());
     }
 };
 

@@ -41,6 +41,7 @@
 #include "arch/x86/linux/linux.hh"
 #include "arch/x86/process.hh"
 #include "sim/process.hh"
+#include "sim/syscall_abi.hh"
 
 struct ProcessParams;
 struct ThreadContext;
@@ -55,6 +56,11 @@ class X86_64LinuxProcess : public X86_64Process
     void syscall(ThreadContext *tc, Fault *fault) override;
     void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *process,
                RegVal flags) override;
+
+    struct SyscallABI : public GenericSyscallABI64, public X86Linux::SyscallABI
+    {
+        static const std::vector<IntRegIndex> ArgumentRegs;
+    };
 };
 
 class I386LinuxProcess : public I386Process
@@ -65,7 +71,36 @@ class I386LinuxProcess : public I386Process
     void syscall(ThreadContext *tc, Fault *fault) override;
     void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *process,
                RegVal flags) override;
+
+    struct SyscallABI : public GenericSyscallABI32, public X86Linux::SyscallABI
+    {
+        static const std::vector<IntRegIndex> ArgumentRegs;
+    };
 };
 
 } // namespace X86ISA
+
+namespace GuestABI
+{
+
+template <typename Arg>
+struct Argument<X86ISA::I386LinuxProcess::SyscallABI, Arg,
+    typename std::enable_if<
+        X86ISA::I386LinuxProcess::SyscallABI::IsWide<Arg>::value>::type>
+{
+    using ABI = X86ISA::I386LinuxProcess::SyscallABI;
+
+    static Arg
+    get(ThreadContext *tc, typename ABI::Position &position)
+    {
+        panic_if(position + 1 >= ABI::ArgumentRegs.size(),
+                "Ran out of syscall argument registers.");
+        auto low = ABI::ArgumentRegs[position++];
+        auto high = ABI::ArgumentRegs[position++];
+        return (Arg)ABI::mergeRegs(tc, low, high);
+    }
+};
+
+} // namespace GuestABI
+
 #endif // __X86_LINUX_PROCESS_HH__

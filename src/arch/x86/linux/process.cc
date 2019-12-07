@@ -250,7 +250,11 @@ setThreadArea32Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
     return 0;
 }
 
-static SyscallDescABI<DefaultSyscallABI> syscallDescs64[] = {
+const std::vector<IntRegIndex> X86_64LinuxProcess::SyscallABI::ArgumentRegs = {
+    INTREG_RDI, INTREG_RSI, INTREG_RDX, INTREG_R10W, INTREG_R8W, INTREG_R9W
+};
+
+static SyscallDescABI<X86_64LinuxProcess::SyscallABI> syscallDescs64[] = {
     /*   0 */ { "read", readFunc<X86Linux64> },
     /*   1 */ { "write", writeFunc<X86Linux64> },
     /*   2 */ { "open", openFunc<X86Linux64> },
@@ -590,7 +594,11 @@ X86_64LinuxProcess::clone(ThreadContext *old_tc, ThreadContext *new_tc,
     X86_64Process::clone(old_tc, new_tc, (X86_64Process*)process, flags);
 }
 
-static SyscallDescABI<DefaultSyscallABI> syscallDescs32[] = {
+const std::vector<IntRegIndex> I386LinuxProcess::SyscallABI::ArgumentRegs = {
+    INTREG_EBX, INTREG_ECX, INTREG_EDX, INTREG_ESI, INTREG_EDI, INTREG_EBP
+};
+
+static SyscallDescABI<I386LinuxProcess::SyscallABI> syscallDescs32[] = {
     /*   0 */ { "restart_syscall" },
     /*   1 */ { "exit", exitFunc },
     /*   2 */ { "fork" },
