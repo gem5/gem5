@@ -235,8 +235,8 @@ SyscallReturn truncate64Func(SyscallDesc *desc, int num, ThreadContext *tc,
                              Addr pathname, int64_t length);
 
 /// Target ftruncate64() handler.
-SyscallReturn ftruncate64Func(SyscallDesc *desc, int num, ThreadContext *tc);
-
+SyscallReturn ftruncate64Func(SyscallDesc *desc, int num, ThreadContext *tc,
+                              int tgt_fd, int64_t length);
 
 /// Target umask() handler.
 SyscallReturn umaskFunc(SyscallDesc *desc, int num, ThreadContext *tc);

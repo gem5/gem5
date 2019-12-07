@@ -613,12 +613,10 @@ truncate64Func(SyscallDesc *desc, int num, ThreadContext *tc,
 }
 
 SyscallReturn
-ftruncate64Func(SyscallDesc *desc, int num, ThreadContext *tc)
+ftruncate64Func(SyscallDesc *desc, int num, ThreadContext *tc,
+                int tgt_fd, int64_t length)
 {
-    int index = 0;
     auto p = tc->getProcessPtr();
-    int tgt_fd = p->getSyscallArg(tc, index);
-    int64_t length = p->getSyscallArg(tc, index, 64);
 
     auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
     if (!ffdp)
