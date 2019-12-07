@@ -34,10 +34,12 @@
 #include <vector>
 
 #include "arch/sparc/isa_traits.hh"
+#include "arch/sparc/miscregs.hh"
 #include "base/loader/object_file.hh"
 #include "mem/page_table.hh"
 #include "sim/byteswap.hh"
 #include "sim/process.hh"
+#include "sim/syscall_abi.hh"
 
 class SparcProcess : public Process
 {
@@ -67,7 +69,51 @@ class SparcProcess : public Process
     virtual void flushWindows(ThreadContext *tc) = 0;
     void setSyscallReturn(ThreadContext *tc,
             SyscallReturn return_value) override;
+
+    struct SyscallABI
+    {
+        static const std::vector<int> ArgumentRegs;
+    };
 };
+
+namespace GuestABI
+{
+
+template <typename ABI>
+struct Result<ABI, SyscallReturn,
+    typename std::enable_if<std::is_base_of<
+        SparcProcess::SyscallABI, ABI>::value>::type>
+{
+    static void
+    store(ThreadContext *tc, const SyscallReturn &ret)
+    {
+        if (ret.suppressed() || ret.needsRetry())
+            return;
+
+        // check for error condition.  SPARC syscall convention is to
+        // indicate success/failure in reg the carry bit of the ccr
+        // and put the return value itself in the standard return value reg.
+        SparcISA::PSTATE pstate =
+            tc->readMiscRegNoEffect(SparcISA::MISCREG_PSTATE);
+        SparcISA::CCR ccr = tc->readIntReg(SparcISA::INTREG_CCR);
+        RegVal val;
+        if (ret.successful()) {
+            ccr.xcc.c = ccr.icc.c = 0;
+            val = ret.returnValue();
+        } else {
+            ccr.xcc.c = ccr.icc.c = 1;
+            val = ret.errnoValue();
+        }
+        tc->setIntReg(SparcISA::INTREG_CCR, ccr);
+        if (pstate.am)
+            val = bits(val, 31, 0);
+        tc->setIntReg(SparcISA::ReturnValueReg, val);
+        if (ret.count() == 2)
+            tc->setIntReg(SparcISA::SyscallPseudoReturnReg, ret.value2());
+    }
+};
+
+} // namespace GuestABI
 
 class Sparc32Process : public SparcProcess
 {
@@ -109,7 +155,34 @@ class Sparc32Process : public SparcProcess
     RegVal getSyscallArg(ThreadContext *tc, int &i) override;
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;
+
+    struct SyscallABI : public GenericSyscallABI32,
+                        public SparcProcess::SyscallABI
+    {};
 };
+
+namespace GuestABI
+{
+
+template <typename Arg>
+struct Argument<Sparc32Process::SyscallABI, Arg,
+    typename std::enable_if<
+        Sparc32Process::SyscallABI::IsWide<Arg>::value>::type>
+{
+    using ABI = Sparc32Process::SyscallABI;
+
+    static Arg
+    get(ThreadContext *tc, typename ABI::Position &position)
+    {
+        panic_if(position + 1 >= ABI::ArgumentRegs.size(),
+                "Ran out of syscall argument registers.");
+        auto high = ABI::ArgumentRegs[position++];
+        auto low = ABI::ArgumentRegs[position++];
+        return (Arg)ABI::mergeRegs(tc, low, high);
+    }
+};
+
+} // namespace GuestABI
 
 class Sparc64Process : public SparcProcess
 {
@@ -150,6 +223,10 @@ class Sparc64Process : public SparcProcess
     RegVal getSyscallArg(ThreadContext *tc, int &i) override;
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;
+
+    struct SyscallABI : public GenericSyscallABI64,
+                        public SparcProcess::SyscallABI
+    {};
 };
 
 #endif // __SPARC_PROCESS_HH__

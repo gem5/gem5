@@ -81,7 +81,8 @@ getresuidFunc(SyscallDesc *desc, int num, ThreadContext *tc,
     return 0;
 }
 
-SyscallDescABI<DefaultSyscallABI> SparcLinuxProcess::syscall32Descs[] = {
+SyscallDescABI<Sparc32Process::SyscallABI>
+    SparcLinuxProcess::syscall32Descs[] = {
     /*   0 */ { "restart_syscall" },
     /*   1 */ { "exit", exitFunc }, // 32 bit
     /*   2 */ { "fork" },
@@ -387,7 +388,8 @@ SyscallDescABI<DefaultSyscallABI> SparcLinuxProcess::syscall32Descs[] = {
 const int SparcLinuxProcess::Num_Syscall32_Descs =
     sizeof(SparcLinuxProcess::syscall32Descs) / sizeof(SyscallDesc);
 
-SyscallDescABI<DefaultSyscallABI> SparcLinuxProcess::syscallDescs[] = {
+SyscallDescABI<Sparc64Process::SyscallABI>
+    SparcLinuxProcess::syscallDescs[] = {
     /*  0 */ { "restart_syscall" },
     /*  1 */ { "exit", exitFunc },
     /*  2 */ { "fork" },

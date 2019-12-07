@@ -87,7 +87,8 @@ unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 }
 
 
-SyscallDescABI<DefaultSyscallABI> SparcSolarisProcess::syscallDescs[] = {
+SyscallDescABI<Sparc64Process::SyscallABI>
+    SparcSolarisProcess::syscallDescs[] = {
     /* 0 */ { "syscall" },
     /* 1 */ { "exit", exitFunc },
     /* 2 */ { "fork" },

@@ -43,11 +43,11 @@ class SparcLinuxProcess
 {
   public:
      /// Array of syscall descriptors, indexed by call number.
-    static SyscallDescABI<DefaultSyscallABI> syscallDescs[];
+    static SyscallDescABI<Sparc64Process::SyscallABI> syscallDescs[];
 
      /// Array of 32 bit compatibility syscall descriptors,
      /// indexed by call number.
-    static SyscallDescABI<DefaultSyscallABI> syscall32Descs[];
+    static SyscallDescABI<Sparc32Process::SyscallABI> syscall32Descs[];
 
     SyscallDesc *getDesc(int callnum);
     SyscallDesc *getDesc32(int callnum);

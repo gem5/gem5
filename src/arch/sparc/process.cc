@@ -48,8 +48,9 @@
 using namespace std;
 using namespace SparcISA;
 
-static const int FirstArgumentReg = 8;
-
+const std::vector<int> SparcProcess::SyscallABI::ArgumentRegs = {
+    INTREG_O0, INTREG_O1, INTREG_O2, INTREG_O3, INTREG_O4, INTREG_O5
+};
 
 SparcProcess::SparcProcess(ProcessParams *params, ObjectFile *objFile,
                            Addr _StackBias)
@@ -489,6 +490,8 @@ Sparc64Process::flushWindows(ThreadContext *tc)
     tc->setIntReg(INTREG_CANRESTORE, Canrestore);
     tc->setMiscReg(MISCREG_CWP, origCWP);
 }
+
+static const int FirstArgumentReg = 8;
 
 RegVal
 Sparc32Process::getSyscallArg(ThreadContext *tc, int &i)
