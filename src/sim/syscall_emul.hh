@@ -508,15 +508,10 @@ futexFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 SyscallReturn pipePseudoFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 
 
-/// A readable name for 1,000,000, for converting microseconds to seconds.
-const int one_million = 1000000;
-/// A readable name for 1,000,000,000, for converting nanoseconds to seconds.
-const int one_billion = 1000000000;
-
 /// Approximate seconds since the epoch (1/1/1970).  About a billion,
 /// by my reckoning.  We want to keep this a constant (not use the
 /// real-world time) to keep simulations repeatable.
-const unsigned seconds_since_epoch = 1000000000;
+const unsigned seconds_since_epoch = 1000 * 1000 * 1000;
 
 /// Helper function to convert current elapsed time to seconds and
 /// microseconds.
@@ -524,9 +519,11 @@ template <class T1, class T2>
 void
 getElapsedTimeMicro(T1 &sec, T2 &usec)
 {
+    static const int OneMillion = 1000 * 1000;
+
     uint64_t elapsed_usecs = curTick() / SimClock::Int::us;
-    sec = elapsed_usecs / one_million;
-    usec = elapsed_usecs % one_million;
+    sec = elapsed_usecs / OneMillion;
+    usec = elapsed_usecs % OneMillion;
 }
 
 /// Helper function to convert current elapsed time to seconds and
@@ -535,9 +532,11 @@ template <class T1, class T2>
 void
 getElapsedTimeNano(T1 &sec, T2 &nsec)
 {
+    static const int OneBillion = 1000 * 1000 * 1000;
+
     uint64_t elapsed_nsecs = curTick() / SimClock::Int::ns;
-    sec = elapsed_nsecs / one_billion;
-    nsec = elapsed_nsecs % one_billion;
+    sec = elapsed_nsecs / OneBillion;
+    nsec = elapsed_nsecs % OneBillion;
 }
 
 //////////////////////////////////////////////////////////////////////
