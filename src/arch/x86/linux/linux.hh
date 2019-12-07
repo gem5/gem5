@@ -40,6 +40,8 @@
 
 #include "arch/x86/utility.hh"
 #include "kern/linux/linux.hh"
+#include "sim/guest_abi.hh"
+#include "sim/syscall_return.hh"
 
 class X86Linux : public Linux
 {
@@ -62,6 +64,27 @@ class X86Linux : public Linux
         if (stack)
             ctc->setIntReg(X86ISA::StackPointerReg, stack);
     }
+
+    class SyscallABI
+    {
+    };
+};
+
+namespace GuestABI
+{
+
+template <typename ABI>
+struct Result<ABI, SyscallReturn,
+    typename std::enable_if<std::is_base_of<
+        X86Linux::SyscallABI, ABI>::value>::type>
+{
+    static void
+    store(ThreadContext *tc, const SyscallReturn &ret)
+    {
+        tc->setIntReg(ABI::ReturnValueReg, ret.encodedValue());
+    }
+};
+
 };
 
 class X86Linux64 : public X86Linux
