@@ -810,19 +810,22 @@ fcntl64Func(SyscallDesc *desc, int num, ThreadContext *tc,
 }
 
 SyscallReturn
-pipeImpl(SyscallDesc *desc, int callnum, ThreadContext *tc, bool pseudo_pipe,
-         bool is_pipe2)
+pipePseudoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
-    Addr tgt_addr = 0;
-    int flags = 0;
+    return pipe2Func(desc, callnum, tc, 0, 0);
+}
+
+SyscallReturn
+pipeFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr tgt_addr)
+{
+    return pipe2Func(desc, callnum, tc, tgt_addr, 0);
+}
+
+SyscallReturn
+pipe2Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
+          Addr tgt_addr, int flags)
+{
     auto p = tc->getProcessPtr();
-    if (!pseudo_pipe) {
-        int index = 0;
-        tgt_addr = p->getSyscallArg(tc, index);
-        if (is_pipe2) {
-            flags = p->getSyscallArg(tc, index);
-        }
-    }
 
     int sim_fds[2], tgt_fds[2];
 
@@ -847,13 +850,12 @@ pipeImpl(SyscallDesc *desc, int callnum, ThreadContext *tc, bool pseudo_pipe,
     rpfd->setPipeReadSource(tgt_fds[1]);
 
     /**
-     * Alpha Linux convention for pipe() is that fd[0] is returned as
-     * the return value of the function, and fd[1] is returned in r20.
+     * On some architectures, it's possible to use more than one register for
+     * a return value. In those cases, pipe returns its values rather than
+     * write them into a buffer.
      */
-    if (pseudo_pipe) {
-        tc->setIntReg(SyscallPseudoReturnReg, tgt_fds[1]);
-        return tgt_fds[0];
-    }
+    if (tgt_addr == 0)
+        return SyscallReturn(tgt_fds[0], tgt_fds[1]);
 
     /**
      * Copy the target file descriptors into buffer space and then copy
@@ -865,8 +867,7 @@ pipeImpl(SyscallDesc *desc, int callnum, ThreadContext *tc, bool pseudo_pipe,
     buf_ptr[1] = tgt_fds[1];
     tgt_handle.copyOut(tc->getVirtProxy());
 
-    // pipe2 has additional behavior if flags != 0
-    if (is_pipe2 && flags) {
+    if (flags) {
         // pipe2 only uses O_NONBLOCK, O_CLOEXEC, and (O_NONBLOCK | O_CLOEXEC)
         // if flags set to anything else, return EINVAL
         if ((flags != O_CLOEXEC) && (flags != O_NONBLOCK) &&
@@ -904,26 +905,6 @@ pipeImpl(SyscallDesc *desc, int callnum, ThreadContext *tc, bool pseudo_pipe,
     }
 
     return 0;
-}
-
-SyscallReturn
-pipePseudoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
-{
-    return pipeImpl(desc, callnum, tc, true);
-}
-
-SyscallReturn
-pipeFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
-{
-    return pipeImpl(desc, callnum, tc, false);
-}
-
-SyscallReturn
-pipe2Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
-{
-    // call pipeImpl since the only difference between pipe and pipe2 is
-    // the flags values and what they do (at the end of pipeImpl)
-    return pipeImpl(desc, callnum, tc, false, true);
 }
 
 SyscallReturn

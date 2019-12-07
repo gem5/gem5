@@ -276,14 +276,12 @@ SyscallReturn fcntl64Func(SyscallDesc *desc, int num, ThreadContext *tc,
                           int tgt_fd, int cmd);
 
 /// Target pipe() handler.
-SyscallReturn pipeFunc(SyscallDesc *desc, int num, ThreadContext *tc);
-
-/// Internal pipe() handler.
-SyscallReturn pipeImpl(SyscallDesc *desc, int num, ThreadContext *tc,
-                       bool pseudo_pipe, bool is_pipe2=false);
+SyscallReturn pipeFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+                       Addr tgt_addr);
 
 /// Target pipe() handler.
-SyscallReturn pipe2Func(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn pipe2Func(SyscallDesc *desc, int num, ThreadContext *tc,
+                        Addr tgt_addr, int flags);
 
 /// Target getpid() handler.
 SyscallReturn getpidFunc(SyscallDesc *desc, int num, ThreadContext *tc);
