@@ -133,6 +133,21 @@ BitUnion16(PSTATE)
     Bitfield<11> pid1;
 EndBitUnion(PSTATE)
 
+BitUnion8(CCR)
+    SubBitUnion(xcc, 7, 4)
+        Bitfield<7> n;
+        Bitfield<6> z;
+        Bitfield<5> v;
+        Bitfield<4> c;
+    EndSubBitUnion(xcc)
+    SubBitUnion(icc, 3, 0)
+        Bitfield<3> n;
+        Bitfield<2> z;
+        Bitfield<1> v;
+        Bitfield<0> c;
+    EndSubBitUnion(icc)
+EndBitUnion(CCR)
+
 struct STS
 {
     const static int st_idle     = 0x00;
