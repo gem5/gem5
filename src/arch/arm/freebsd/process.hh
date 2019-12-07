@@ -52,7 +52,39 @@ class ArmFreebsdProcessBits
     };
 
     std::vector<SyscallTable> syscallTables;
+
+    struct SyscallABI {};
 };
+
+namespace GuestABI
+{
+
+template <typename ABI>
+struct Result<ABI, SyscallReturn,
+    typename std::enable_if<std::is_base_of<
+        ArmFreebsdProcessBits::SyscallABI, ABI>::value>::type>
+{
+    static void
+    store(ThreadContext *tc, const SyscallReturn &ret)
+    {
+        if (ret.suppressed() || ret.needsRetry())
+            return;
+
+        RegVal val;
+        if (ret.successful()) {
+            tc->setCCReg(ArmISA::CCREG_C, 0);
+            val = ret.returnValue();
+        } else {
+            tc->setCCReg(ArmISA::CCREG_C, 1);
+            val = ret.encodedValue();
+        }
+        tc->setIntReg(ArmISA::ReturnValueReg, val);
+        if (ret.count() > 1)
+            tc->setIntReg(ArmISA::SyscallPseudoReturnReg, ret.value2());
+    }
+};
+
+} // namespace GuestABI
 
 /// A process with emulated Arm/Freebsd syscalls.
 class ArmFreebsdProcess32 : public ArmProcess32, public ArmFreebsdProcessBits
@@ -72,6 +104,10 @@ class ArmFreebsdProcess32 : public ArmProcess32, public ArmFreebsdProcessBits
     static const Addr commPage;
 
     SyscallDesc* getDesc(int callnum) override;
+
+    struct SyscallABI : public ArmProcess32::SyscallABI,
+                        public ArmFreebsdProcessBits::SyscallABI
+    {};
 };
 
 /// A process with emulated Arm/Freebsd syscalls.
@@ -84,6 +120,10 @@ class ArmFreebsdProcess64 : public ArmProcess64, public ArmFreebsdProcessBits
     void initState() override;
     void syscall(ThreadContext *tc, Fault *fault) override;
     SyscallDesc* getDesc(int callnum) override;
+
+    struct SyscallABI : public ArmProcess64::SyscallABI,
+                        public ArmFreebsdProcessBits::SyscallABI
+    {};
 };
 
 #endif // __ARCH_ARM_FREEBSD_PROCESS_HH__

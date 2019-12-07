@@ -48,6 +48,7 @@
 #include "base/loader/object_file.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"
+#include "sim/syscall_abi.hh"
 
 class ObjectFile;
 
@@ -89,7 +90,37 @@ class ArmProcess32 : public ArmProcess
     RegVal getSyscallArg(ThreadContext *tc, int &i) override;
     void setSyscallReturn(ThreadContext *tc,
             SyscallReturn return_value) override;
+
+    struct SyscallABI : public GenericSyscallABI32
+    {
+        static const std::vector<int> ArgumentRegs;
+    };
 };
+
+namespace GuestABI
+{
+
+template <typename ABI, typename Arg>
+struct Argument<ABI, Arg,
+    typename std::enable_if<
+        std::is_base_of<ArmProcess32::SyscallABI, ABI>::value &&
+        ABI::template IsWide<Arg>::value>::type>
+{
+    static Arg
+    get(ThreadContext *tc, typename ABI::Position &position)
+    {
+        // 64 bit arguments are passed starting in an even register.
+        if (position % 2)
+            position++;
+        panic_if(position + 1 >= ABI::ArgumentRegs.size(),
+                "Ran out of syscall argument registers.");
+        auto low = ABI::ArgumentRegs[position++];
+        auto high = ABI::ArgumentRegs[position++];
+        return (Arg)ABI::mergeRegs(tc, low, high);
+    }
+};
+
+} // namespace GuestABI
 
 class ArmProcess64 : public ArmProcess
 {
@@ -108,6 +139,11 @@ class ArmProcess64 : public ArmProcess
     RegVal getSyscallArg(ThreadContext *tc, int &i) override;
     void setSyscallReturn(ThreadContext *tc,
             SyscallReturn return_value) override;
+
+    struct SyscallABI : public GenericSyscallABI64
+    {
+        static const std::vector<int> ArgumentRegs;
+    };
 };
 
 #endif // __ARM_PROCESS_HH__

@@ -131,7 +131,7 @@ sysctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 }
 #endif
 
-static SyscallDescABI<DefaultSyscallABI> syscallDescs32[] = {
+static SyscallDescABI<ArmFreebsdProcess32::SyscallABI> syscallDescs32[] = {
     /*    0 */ { "unused#000" },
     /*    1 */ { "unused#001" },
     /*    2 */ { "unused#002" },
@@ -682,7 +682,7 @@ static SyscallDescABI<DefaultSyscallABI> syscallDescs32[] = {
     /*  547 */ { "unused#547" },
 };
 
-static SyscallDescABI<DefaultSyscallABI> syscallDescs64[] = {
+static SyscallDescABI<ArmFreebsdProcess64::SyscallABI> syscallDescs64[] = {
     /*    0 */ { "unused#000" },
     /*    1 */ { "exit", exitFunc },
     /*    2 */ { "unused#002" },
