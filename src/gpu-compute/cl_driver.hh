@@ -54,7 +54,7 @@ class ClDriver final : public EmulatedDriver
     ClDriver(ClDriverParams *p);
     void handshake(GpuDispatcher *_dispatcher);
     int open(ThreadContext *tc, int mode, int flags);
-    int ioctl(ThreadContext *tc, unsigned req);
+    int ioctl(ThreadContext *tc, unsigned req, Addr buf);
     const char* codeOffToKernelName(uint64_t code_ptr);
 
   private:

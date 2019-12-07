@@ -103,11 +103,10 @@ ClDriver::open(ThreadContext *tc, int mode, int flags)
 }
 
 int
-ClDriver::ioctl(ThreadContext *tc, unsigned req)
+ClDriver::ioctl(ThreadContext *tc, unsigned req, Addr buf_addr)
 {
     int index = 2;
     auto process = tc->getProcessPtr();
-    Addr buf_addr = process->getSyscallArg(tc, index);
 
     switch (req) {
       case HSA_GET_SIZES:

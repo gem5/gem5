@@ -83,7 +83,7 @@ class EmulatedDriver : public SimObject
      * @return The return code for the ioctl, or the negation of the errno
      * (see the SyscallReturn class).
      */
-    virtual int ioctl(ThreadContext *tc, unsigned req) = 0;
+    virtual int ioctl(ThreadContext *tc, unsigned req, Addr buf) = 0;
 
     /**
      * Virtual method, invoked when the user program calls mmap() on

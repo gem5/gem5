@@ -702,7 +702,7 @@ copyOutStatfsBuf(PortProxy &mem, Addr addr,
 template <class OS>
 SyscallReturn
 ioctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-        int tgt_fd, unsigned req, GuestABI::VarArgs<Addr> varargs)
+        int tgt_fd, unsigned req, Addr addr)
 {
     auto p = tc->getProcessPtr();
 
@@ -715,7 +715,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
     if (dfdp) {
         EmulatedDriver *emul_driver = dfdp->getDriver();
         if (emul_driver)
-            return emul_driver->ioctl(tc, req);
+            return emul_driver->ioctl(tc, req, addr);
     }
 
     auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
@@ -724,8 +724,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 
         switch (req) {
           case SIOCGIFCONF: {
-            Addr conf_addr = varargs.get<Addr>();
-            BufferArg conf_arg(conf_addr, sizeof(ifconf));
+            BufferArg conf_arg(addr, sizeof(ifconf));
             conf_arg.copyIn(tc->getVirtProxy());
 
             ifconf *conf = (ifconf*)conf_arg.bufferPtr();
@@ -754,8 +753,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
           case SIOCGIFHWADDR:
 #endif
           case SIOCGIFMTU: {
-            Addr req_addr = varargs.get<Addr>();
-            BufferArg req_arg(req_addr, sizeof(ifreq));
+            BufferArg req_arg(addr, sizeof(ifreq));
             req_arg.copyIn(tc->getVirtProxy());
 
             status = ioctl(sfdp->getSimFD(), req, req_arg.bufferPtr());
