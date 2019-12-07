@@ -39,10 +39,6 @@ const int MaxPGL = 2;
 
 // Number of register windows, can legally be 3 to 32
 const int NWindows = 8;
-const int NumMicroIntRegs = 9;
-
-const int NumFloatRegs = 64;
-const int NumFloatArchRegs = NumFloatRegs;
 }
 
 #endif // __ARCH_SPARC_SPARC_TRAITS_HH__

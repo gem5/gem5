@@ -82,7 +82,7 @@ Trace::SparcNativeTrace::check(NativeTraceRecord *record)
     // CCR
     read(&realRegVal, sizeof(realRegVal));
     realRegVal = betoh(realRegVal);
-    regVal = tc->readIntReg(SparcISA::NumIntArchRegs + 2);
+    regVal = tc->readIntReg(SparcISA::INTREG_CCR);
     checkReg("ccr", regVal, realRegVal);
 }
 

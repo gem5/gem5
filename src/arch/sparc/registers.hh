@@ -59,23 +59,54 @@ constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
 constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
 
 // semantically meaningful register indices
+enum {
+    // Globals
+    INTREG_G0, INTREG_G1, INTREG_G2, INTREG_G3,
+    INTREG_G4, INTREG_G5, INTREG_G6, INTREG_G7,
+    // Outputs
+    INTREG_O0, INTREG_O1, INTREG_O2, INTREG_O3,
+    INTREG_O4, INTREG_O5, INTREG_O6, INTREG_O7,
+    // Locals
+    INTREG_L0, INTREG_L1, INTREG_L2, INTREG_L3,
+    INTREG_L4, INTREG_L5, INTREG_L6, INTREG_L7,
+    // Inputs
+    INTREG_I0, INTREG_I1, INTREG_I2, INTREG_I3,
+    INTREG_I4, INTREG_I5, INTREG_I6, INTREG_I7,
+
+    NumIntArchRegs,
+
+    INTREG_UREG0 = NumIntArchRegs,
+    INTREG_Y,
+    INTREG_CCR,
+    INTREG_CANSAVE,
+    INTREG_CANRESTORE,
+    INTREG_CLEANWIN,
+    INTREG_OTHERWIN,
+    INTREG_WSTATE,
+    INTREG_GSR,
+
+    NumMicroIntRegs = INTREG_GSR - INTREG_UREG0 + 1
+};
 const int ZeroReg = 0;      // architecturally meaningful
+
 // the rest of these depend on the ABI
-const int ReturnAddressReg = 31; // post call, precall is 15
-const int ReturnValueReg = 8;  // Post return, 24 is pre-return.
-const int StackPointerReg = 14;
-const int FramePointerReg = 30;
+const int ReturnAddressReg = INTREG_I7; // post call, precall is 15
+const int ReturnValueReg = INTREG_O0;  // Post return, 24 is pre-return.
+const int StackPointerReg = INTREG_O6;
+const int FramePointerReg = INTREG_I6;
 
-// Some OS syscall use a second register (o1) to return a second value
-const int SyscallPseudoReturnReg = 9;
+// Some OS syscall use a second register to return a second value
+const int SyscallPseudoReturnReg = INTREG_O1;
 
-const int NumIntArchRegs = 32;
 const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
 const int NumVecRegs = 1;  // Not applicable to SPARC
                            // (1 to prevent warnings)
 const int NumVecPredRegs = 1;  // Not applicable to SPARC
                                // (1 to prevent warnings)
 const int NumCCRegs = 0;
+
+const int NumFloatRegs = 64;
+const int NumFloatArchRegs = NumFloatRegs;
 
 const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
 

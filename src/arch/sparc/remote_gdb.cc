@@ -176,11 +176,11 @@ RemoteGDB::SPARCGdbRegCache::getRegs(ThreadContext *context)
     PCState pc = context->pcState();
     r.pc = htobe((uint32_t)pc.pc());
     r.npc = htobe((uint32_t)pc.npc());
-    r.y = htobe((uint32_t)context->readIntReg(NumIntArchRegs + 1));
+    r.y = htobe((uint32_t)context->readIntReg(INTREG_Y));
     PSTATE pstate = context->readMiscReg(MISCREG_PSTATE);
     r.psr = htobe((uint32_t)pstate);
     r.fsr = htobe((uint32_t)context->readMiscReg(MISCREG_FSR));
-    r.csr = htobe((uint32_t)context->readIntReg(NumIntArchRegs + 2));
+    r.csr = htobe((uint32_t)context->readIntReg(INTREG_CCR));
 }
 
 void
@@ -194,13 +194,13 @@ RemoteGDB::SPARC64GdbRegCache::getRegs(ThreadContext *context)
     r.npc = htobe(pc.npc());
     r.fsr = htobe(context->readMiscReg(MISCREG_FSR));
     r.fprs = htobe(context->readMiscReg(MISCREG_FPRS));
-    r.y = htobe(context->readIntReg(NumIntArchRegs + 1));
+    r.y = htobe(context->readIntReg(INTREG_Y));
     PSTATE pstate = context->readMiscReg(MISCREG_PSTATE);
     r.state = htobe(
         context->readMiscReg(MISCREG_CWP) |
         pstate << 8 |
         context->readMiscReg(MISCREG_ASI) << 24 |
-        context->readIntReg(NumIntArchRegs + 2) << 32);
+        context->readIntReg(INTREG_CCR) << 32);
 }
 
 void

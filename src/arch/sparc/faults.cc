@@ -303,10 +303,10 @@ doREDFault(ThreadContext *tc, TrapType tt)
     RegVal TSTATE = tc->readMiscRegNoEffect(MISCREG_TSTATE);
     PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
     HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
-    RegVal CCR = tc->readIntReg(NumIntArchRegs + 2);
+    RegVal CCR = tc->readIntReg(INTREG_CCR);
     RegVal ASI = tc->readMiscRegNoEffect(MISCREG_ASI);
     RegVal CWP = tc->readMiscRegNoEffect(MISCREG_CWP);
-    RegVal CANSAVE = tc->readMiscRegNoEffect(NumIntArchRegs + 3);
+    RegVal CANSAVE = tc->readMiscRegNoEffect(INTREG_CANSAVE);
     RegVal GL = tc->readMiscRegNoEffect(MISCREG_GL);
     PCState pc = tc->pcState();
 
@@ -382,10 +382,10 @@ doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     RegVal TSTATE = tc->readMiscRegNoEffect(MISCREG_TSTATE);
     PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
     HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
-    RegVal CCR = tc->readIntReg(NumIntArchRegs + 2);
+    RegVal CCR = tc->readIntReg(INTREG_CCR);
     RegVal ASI = tc->readMiscRegNoEffect(MISCREG_ASI);
     RegVal CWP = tc->readMiscRegNoEffect(MISCREG_CWP);
-    RegVal CANSAVE = tc->readIntReg(NumIntArchRegs + 3);
+    RegVal CANSAVE = tc->readIntReg(INTREG_CANSAVE);
     RegVal GL = tc->readMiscRegNoEffect(MISCREG_GL);
     PCState pc = tc->pcState();
 

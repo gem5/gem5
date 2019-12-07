@@ -123,22 +123,17 @@ SparcProcess::initState()
      */
 
     // No windows contain info from other programs
-    // tc->setMiscRegNoEffect(MISCREG_OTHERWIN, 0);
-    tc->setIntReg(NumIntArchRegs + 6, 0);
+    tc->setIntReg(INTREG_OTHERWIN, 0);
     // There are no windows to pop
-    // tc->setMiscRegNoEffect(MISCREG_CANRESTORE, 0);
-    tc->setIntReg(NumIntArchRegs + 4, 0);
+    tc->setIntReg(INTREG_CANRESTORE, 0);
     // All windows are available to save into
-    // tc->setMiscRegNoEffect(MISCREG_CANSAVE, NWindows - 2);
-    tc->setIntReg(NumIntArchRegs + 3, NWindows - 2);
+    tc->setIntReg(INTREG_CANSAVE, NWindows - 2);
     // All windows are "clean"
-    // tc->setMiscRegNoEffect(MISCREG_CLEANWIN, NWindows);
-    tc->setIntReg(NumIntArchRegs + 5, NWindows);
+    tc->setIntReg(INTREG_CLEANWIN, NWindows);
     // Start with register window 0
     tc->setMiscReg(MISCREG_CWP, 0);
     // Always use spill and fill traps 0
-    // tc->setMiscRegNoEffect(MISCREG_WSTATE, 0);
-    tc->setIntReg(NumIntArchRegs + 7, 0);
+    tc->setIntReg(INTREG_WSTATE, 0);
     // Set the trap level to 0
     tc->setMiscRegNoEffect(MISCREG_TL, 0);
     // Set the ASI register to something fixed
@@ -428,9 +423,9 @@ Sparc32Process::argsInit(int intSize, int pageSize)
 
 void Sparc32Process::flushWindows(ThreadContext *tc)
 {
-    RegVal Cansave = tc->readIntReg(NumIntArchRegs + 3);
-    RegVal Canrestore = tc->readIntReg(NumIntArchRegs + 4);
-    RegVal Otherwin = tc->readIntReg(NumIntArchRegs + 6);
+    RegVal Cansave = tc->readIntReg(INTREG_CANSAVE);
+    RegVal Canrestore = tc->readIntReg(INTREG_CANRESTORE);
+    RegVal Otherwin = tc->readIntReg(INTREG_OTHERWIN);
     RegVal CWP = tc->readMiscReg(MISCREG_CWP);
     RegVal origCWP = CWP;
     CWP = (CWP + Cansave + 2) % NWindows;
@@ -455,17 +450,17 @@ void Sparc32Process::flushWindows(ThreadContext *tc)
             CWP = (CWP + 1) % NWindows;
         }
     }
-    tc->setIntReg(NumIntArchRegs + 3, Cansave);
-    tc->setIntReg(NumIntArchRegs + 4, Canrestore);
+    tc->setIntReg(INTREG_CANSAVE, Cansave);
+    tc->setIntReg(INTREG_CANRESTORE, Canrestore);
     tc->setMiscReg(MISCREG_CWP, origCWP);
 }
 
 void
 Sparc64Process::flushWindows(ThreadContext *tc)
 {
-    RegVal Cansave = tc->readIntReg(NumIntArchRegs + 3);
-    RegVal Canrestore = tc->readIntReg(NumIntArchRegs + 4);
-    RegVal Otherwin = tc->readIntReg(NumIntArchRegs + 6);
+    RegVal Cansave = tc->readIntReg(INTREG_CANSAVE);
+    RegVal Canrestore = tc->readIntReg(INTREG_CANRESTORE);
+    RegVal Otherwin = tc->readIntReg(INTREG_OTHERWIN);
     RegVal CWP = tc->readMiscReg(MISCREG_CWP);
     RegVal origCWP = CWP;
     CWP = (CWP + Cansave + 2) % NWindows;
@@ -490,8 +485,8 @@ Sparc64Process::flushWindows(ThreadContext *tc)
             CWP = (CWP + 1) % NWindows;
         }
     }
-    tc->setIntReg(NumIntArchRegs + 3, Cansave);
-    tc->setIntReg(NumIntArchRegs + 4, Canrestore);
+    tc->setIntReg(INTREG_CANSAVE, Cansave);
+    tc->setIntReg(INTREG_CANRESTORE, Canrestore);
     tc->setMiscReg(MISCREG_CWP, origCWP);
 }
 
@@ -518,16 +513,14 @@ SparcProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
     PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
     if (sysret.successful()) {
         // no error, clear XCC.C
-        tc->setIntReg(NumIntArchRegs + 2,
-                      tc->readIntReg(NumIntArchRegs + 2) & 0xEE);
+        tc->setIntReg(INTREG_CCR, tc->readIntReg(INTREG_CCR) & 0xEE);
         RegVal val = sysret.returnValue();
         if (pstate.am)
             val = bits(val, 31, 0);
         tc->setIntReg(ReturnValueReg, val);
     } else {
         // got an error, set XCC.C
-        tc->setIntReg(NumIntArchRegs + 2,
-                      tc->readIntReg(NumIntArchRegs + 2) | 0x11);
+        tc->setIntReg(INTREG_CCR, tc->readIntReg(INTREG_CCR) | 0x11);
         RegVal val = sysret.errnoValue();
         if (pstate.am)
             val = bits(val, 31, 0);
