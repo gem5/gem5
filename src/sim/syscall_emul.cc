@@ -969,37 +969,6 @@ setpgidFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
     return 0;
 }
 
-SyscallReturn
-getpidPseudoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
-{
-    // Make up a PID.  There's no interprocess communication in
-    // fake_syscall mode, so there's no way for a process to know it's
-    // not getting a unique value.
-
-    auto process = tc->getProcessPtr();
-    return SyscallReturn(process->pid(), process->ppid());
-}
-
-
-SyscallReturn
-getuidPseudoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
-{
-    // Make up a UID and EUID... it shouldn't matter, and we want the
-    // simulation to be deterministic.
-
-    auto process = tc->getProcessPtr();
-    return SyscallReturn(process->uid(), process->euid());
-}
-
-
-SyscallReturn
-getgidPseudoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
-{
-    // Get current group ID.
-    auto process = tc->getProcessPtr();
-    return SyscallReturn(process->gid(), process->egid());
-}
-
 
 SyscallReturn
 getpidFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)

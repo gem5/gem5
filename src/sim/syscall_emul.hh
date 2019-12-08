@@ -503,19 +503,9 @@ futexFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
     return -ENOSYS;
 }
 
-
 /// Pseudo Funcs  - These functions use a different return convension,
 /// returning a second value in a register other than the normal return register
 SyscallReturn pipePseudoFunc(SyscallDesc *desc, int num, ThreadContext *tc);
-
-/// Target getpidPseudo() handler.
-SyscallReturn getpidPseudoFunc(SyscallDesc *desc, int num, ThreadContext *tc);
-
-/// Target getuidPseudo() handler.
-SyscallReturn getuidPseudoFunc(SyscallDesc *desc, int num, ThreadContext *tc);
-
-/// Target getgidPseudo() handler.
-SyscallReturn getgidPseudoFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 
 
 /// A readable name for 1,000,000, for converting microseconds to seconds.
