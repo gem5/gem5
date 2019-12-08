@@ -35,6 +35,7 @@
 
 #include "mem/page_table.hh"
 #include "sim/process.hh"
+#include "sim/syscall_abi.hh"
 
 class ObjectFile;
 
@@ -52,7 +53,37 @@ class PowerProcess : public Process
     using Process::getSyscallArg;
     void setSyscallReturn(ThreadContext *tc,
             SyscallReturn return_value) override;
+
+    struct SyscallABI : public GenericSyscallABI64
+    {
+        static const std::vector<int> ArgumentRegs;
+    };
 };
+
+namespace GuestABI
+{
+
+template <>
+struct Result<PowerProcess::SyscallABI, SyscallReturn>
+{
+    static void
+    store(ThreadContext *tc, const SyscallReturn &ret)
+    {
+        if (ret.suppressed() || ret.needsRetry())
+            return;
+
+        PowerISA::Cr cr = tc->readIntReg(PowerISA::INTREG_CR);
+        if (ret.successful()) {
+            cr.cr0.so = 0;
+        } else {
+            cr.cr0.so = 1;
+        }
+        tc->setIntReg(PowerISA::INTREG_CR, cr);
+        tc->setIntReg(PowerISA::ReturnValueReg, ret.encodedValue());
+    }
+};
+
+} // namespace GuestABI
 
 #endif // __POWER_PROCESS_HH__
 

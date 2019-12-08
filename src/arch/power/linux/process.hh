@@ -51,7 +51,7 @@ class PowerLinuxProcess : public PowerProcess
     using Process::getSyscallArg;
 
     /// Array of syscall descriptors, indexed by call number.
-    static SyscallDescABI<DefaultSyscallABI> syscallDescs[];
+    static SyscallDescABI<SyscallABI> syscallDescs[];
 
     const int Num_Syscall_Descs;
 };

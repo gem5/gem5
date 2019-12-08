@@ -288,3 +288,7 @@ PowerProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
     tc->setIntReg(INTREG_CR, cr);
     tc->setIntReg(ReturnValueReg, sysret.encodedValue());
 }
+
+const std::vector<int> PowerProcess::SyscallABI::ArgumentRegs = {
+    3, 4, 5, 6, 7, 8
+};
