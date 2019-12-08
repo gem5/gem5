@@ -533,4 +533,6 @@ SparcProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
             val = bits(val, 31, 0);
         tc->setIntReg(ReturnValueReg, val);
     }
+    if (sysret.count() > 1)
+        tc->setIntReg(SyscallPseudoReturnReg, sysret.value2());
 }

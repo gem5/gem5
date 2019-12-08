@@ -977,8 +977,7 @@ getpidPseudoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     // not getting a unique value.
 
     auto process = tc->getProcessPtr();
-    tc->setIntReg(SyscallPseudoReturnReg, process->ppid());
-    return process->pid();
+    return SyscallReturn(process->pid(), process->ppid());
 }
 
 
@@ -988,20 +987,17 @@ getuidPseudoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     // Make up a UID and EUID... it shouldn't matter, and we want the
     // simulation to be deterministic.
 
-    // EUID goes in r20.
     auto process = tc->getProcessPtr();
-    tc->setIntReg(SyscallPseudoReturnReg, process->euid()); // EUID
-    return process->uid(); // UID
+    return SyscallReturn(process->uid(), process->euid());
 }
 
 
 SyscallReturn
 getgidPseudoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
-    // Get current group ID.  EGID goes in r20.
+    // Get current group ID.
     auto process = tc->getProcessPtr();
-    tc->setIntReg(SyscallPseudoReturnReg, process->egid()); // EGID
-    return process->gid();
+    return SyscallReturn(process->gid(), process->egid());
 }
 
 

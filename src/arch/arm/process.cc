@@ -524,6 +524,8 @@ ArmProcess32::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
     }
 
     tc->setIntReg(ReturnValueReg, sysret.encodedValue());
+    if (sysret.count() > 1)
+        tc->setIntReg(SyscallPseudoReturnReg, sysret.value2());
 }
 
 void
@@ -541,4 +543,6 @@ ArmProcess64::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
     }
 
     tc->setIntReg(ReturnValueReg, sysret.encodedValue());
+    if (sysret.count() > 1)
+        tc->setIntReg(SyscallPseudoReturnReg, sysret.value2());
 }
