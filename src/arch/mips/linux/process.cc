@@ -151,7 +151,7 @@ setThreadAreaFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr addr)
     return 0;
 }
 
-SyscallDescABI<DefaultSyscallABI> MipsLinuxProcess::syscallDescs[] = {
+SyscallDescABI<MipsProcess::SyscallABI> MipsLinuxProcess::syscallDescs[] = {
     /*  0 */ { "syscall" },
     /*  1 */ { "exit", exitFunc },
     /*  2 */ { "fork" },

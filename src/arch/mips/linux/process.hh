@@ -52,7 +52,7 @@ class MipsLinuxProcess : public MipsProcess
     void syscall(ThreadContext *tc, Fault *fault) override;
 
     /// Array of syscall descriptors, indexed by call number.
-    static SyscallDescABI<DefaultSyscallABI> syscallDescs[];
+    static SyscallDescABI<SyscallABI> syscallDescs[];
     const int Num_Syscall_Descs;
 };
 

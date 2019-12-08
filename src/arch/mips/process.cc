@@ -211,3 +211,7 @@ MipsProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
     if (sysret.count() > 1)
         tc->setIntReg(SyscallPseudoReturnReg, sysret.value2());
 }
+
+const std::vector<int> MipsProcess::SyscallABI::ArgumentRegs = {
+    4, 5, 6, 7, 8, 9
+};
