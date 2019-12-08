@@ -266,3 +266,7 @@ RiscvProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
         tc->setIntReg(SyscallPseudoReturnReg, sysret.encodedValue());
     }
 }
+
+const std::vector<int> RiscvProcess::SyscallABI::ArgumentRegs = {
+    10, 11, 12, 13, 14, 15, 16
+};

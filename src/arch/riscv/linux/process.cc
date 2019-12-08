@@ -116,7 +116,7 @@ unameFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
     return 0;
 }
 
-std::map<int, SyscallDescABI<DefaultSyscallABI>>
+std::map<int, SyscallDescABI<RiscvProcess::SyscallABI>>
         RiscvLinuxProcess64::syscallDescs = {
     {0,    { "io_setup" }},
     {1,    { "io_destroy" }},
@@ -448,7 +448,7 @@ std::map<int, SyscallDescABI<DefaultSyscallABI>>
     {2011, { "getmainvars" }}
 };
 
-std::map<int, SyscallDescABI<DefaultSyscallABI>>
+std::map<int, SyscallDescABI<RiscvProcess::SyscallABI>>
         RiscvLinuxProcess32::syscallDescs = {
     {0,    { "io_setup" }},
     {1,    { "io_destroy" }},

@@ -55,7 +55,7 @@ class RiscvLinuxProcess64 : public RiscvProcess64
     void syscall(ThreadContext *tc, Fault *fault) override;
 
     /// Array of syscall descriptors, indexed by call number.
-    static std::map<int, SyscallDescABI<DefaultSyscallABI>> syscallDescs;
+    static std::map<int, SyscallDescABI<SyscallABI>> syscallDescs;
 };
 
 class RiscvLinuxProcess32 : public RiscvProcess32
@@ -75,7 +75,7 @@ class RiscvLinuxProcess32 : public RiscvProcess32
     void syscall(ThreadContext *tc, Fault *fault) override;
 
     /// Array of syscall descriptors, indexed by call number.
-    static std::map<int, SyscallDescABI<DefaultSyscallABI>> syscallDescs;
+    static std::map<int, SyscallDescABI<SyscallABI>> syscallDescs;
 };
 
 #endif // __RISCV_LINUX_PROCESS_HH__

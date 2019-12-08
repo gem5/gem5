@@ -35,6 +35,7 @@
 
 #include "mem/page_table.hh"
 #include "sim/process.hh"
+#include "sim/syscall_abi.hh"
 
 class ObjectFile;
 class System;
@@ -54,6 +55,36 @@ class RiscvProcess : public Process
                           SyscallReturn return_value) override;
 
     virtual bool mmapGrowsDown() const override { return false; }
+
+    //FIXME RISCV needs to handle 64 bit arguments in its 32 bit ISA.
+    struct SyscallABI : public GenericSyscallABI64
+    {
+        static const std::vector<int> ArgumentRegs;
+    };
+};
+
+namespace GuestABI
+{
+
+template <>
+struct Result<RiscvProcess::SyscallABI, SyscallReturn>
+{
+    static void
+    store(ThreadContext *tc, const SyscallReturn &ret)
+    {
+        if (ret.suppressed() || ret.needsRetry())
+            return;
+
+        if (ret.successful()) {
+            // no error
+            tc->setIntReg(RiscvISA::ReturnValueReg, ret.returnValue());
+        } else {
+            // got an error, return details
+            tc->setIntReg(RiscvISA::ReturnValueReg, ret.encodedValue());
+        }
+    }
+};
+
 };
 
 class RiscvProcess64 : public RiscvProcess
