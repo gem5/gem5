@@ -46,6 +46,8 @@
 #ifndef __SIM_SYSCALL_DEBUG_MACROS_HH__
 #define __SIM_SYSCALL_DEBUG_MACROS_HH__
 
+#include "cpu/base.hh"
+#include "cpu/thread_context.hh"
 #include "debug/SyscallBase.hh"
 #include "debug/SyscallVerbose.hh"
 
