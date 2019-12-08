@@ -32,6 +32,7 @@
 
 #include <functional>
 #include <memory>
+#include <sstream>
 #include <type_traits>
 
 class ThreadContext;
@@ -213,6 +214,14 @@ class VarArgs
     }
 };
 
+template <typename ...Types>
+std::ostream &
+operator << (std::ostream &os, const VarArgs<Types...> &va)
+{
+    os << "...";
+    return os;
+}
+
 // The ABI independent hook which tells the GuestABI mechanism what to do with
 // a VarArgs argument. It constructs the underlying implementation which knows
 // about the ABI, and installs it in the VarArgs wrapper to give to the
@@ -301,6 +310,44 @@ callFrom(ThreadContext *tc, typename ABI::Position &position,
     callFrom<ABI, Args...>(tc, position, partial);
 }
 
+
+
+/*
+ * These functions are like the ones above, except they print the arguments
+ * a target function would be called with instead of actually calling it.
+ */
+
+// With no arguments to print, add the closing parenthesis and return.
+template <typename ABI, typename Ret>
+static void
+dumpArgsFrom(int count, std::ostream &os, ThreadContext *tc,
+             typename ABI::Position &position)
+{
+    os << ")";
+}
+
+// Recursively gather arguments for target from tc until we get to the base
+// case above, and append those arguments to the string stream being
+// constructed.
+template <typename ABI, typename Ret, typename NextArg, typename ...Args>
+static void
+dumpArgsFrom(int count, std::ostream &os, ThreadContext *tc,
+             typename ABI::Position &position)
+{
+    // Either open the parenthesis or add a comma, depending on where we are
+    // in the argument list.
+    os << (count ? ", " : "(");
+
+    // Extract the next argument from the thread context.
+    NextArg next = Argument<ABI, NextArg>::get(tc, position);
+
+    // Add this argument to the list.
+    os << next;
+
+    // Recursively handle any remaining arguments.
+    dumpArgsFrom<ABI, Ret, Args...>(count + 1, os, tc, position);
+}
+
 } // namespace GuestABI
 
 
@@ -345,6 +392,34 @@ invokeSimcall(ThreadContext *tc, void (*target)(ThreadContext *, Args...))
 {
     invokeSimcall<ABI>(
             tc, std::function<void(ThreadContext *, Args...)>(target));
+}
+
+
+// These functions also wrap a simulator level function. Instead of running the
+// function, they return a string which shows what arguments the function would
+// be invoked with if it were called from the given context.
+
+template <typename ABI, typename Ret, typename ...Args>
+std::string
+dumpSimcall(std::string name, ThreadContext *tc,
+            std::function<Ret(ThreadContext *, Args...)> target=
+            std::function<Ret(ThreadContext *, Args...)>())
+{
+    auto position = typename ABI::Position();
+    std::ostringstream ss;
+
+    ss << name;
+    GuestABI::dumpArgsFrom<ABI, Ret, Args...>(0, ss, tc, position);
+    return ss.str();
+}
+
+template <typename ABI, typename Ret, typename ...Args>
+std::string
+dumpSimcall(std::string name, ThreadContext *tc,
+            Ret (*target)(ThreadContext *, Args...))
+{
+    return dumpSimcall<ABI>(
+            name, tc, std::function<Ret(ThreadContext *, Args...)>(target));
 }
 
 #endif // __SIM_GUEST_ABI_HH__

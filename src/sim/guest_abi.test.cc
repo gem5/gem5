@@ -275,3 +275,10 @@ TEST(GuestABI, ABI_returns)
         EXPECT_EQ(tc.floatResult, DoubleRetValue + 2.0);
     }
 }
+
+TEST(GuestABI, dumpSimcall)
+{
+    ThreadContext tc;
+    std::string dump = dumpSimcall<TestABI_1D>("test", &tc, testIntVoid);
+    EXPECT_EQ(dump, "test(0, 11, 2, 13, ...)");
+}
