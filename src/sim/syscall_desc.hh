@@ -64,13 +64,6 @@ SyscallReturn unimplementedFunc(SyscallDesc *desc, int num,
  */
 class SyscallDesc {
   public:
-    using SyscallExecutor =
-        std::function<SyscallReturn(SyscallDesc *, int num, ThreadContext *)>;
-
-    SyscallDesc(const char *name, SyscallExecutor sys_exec=unimplementedFunc)
-        : _name(name), executor(sys_exec)
-    {}
-
     /**
      * Interface for invoking the system call funcion pointer. Note that
      * this acts as a gateway for all system calls and serves a good point
@@ -83,12 +76,22 @@ class SyscallDesc {
 
     std::string name() { return _name; }
 
+  protected:
+    using Executor =
+        std::function<SyscallReturn(SyscallDesc *, int num, ThreadContext *)>;
+    using Dumper = std::function<std::string(std::string, ThreadContext *)>;
+
+    SyscallDesc(const char *name, Executor exec, Dumper dump) :
+        _name(name), executor(exec), dumper(dump)
+    {}
+
   private:
     /** System call name (e.g., open, mmap, clone, socket, etc.) */
     std::string _name;
 
     /** Mechanism for ISAs to connect to the emul function definitions */
-    SyscallExecutor executor;
+    Executor executor;
+    Dumper dumper;
 };
 
 /*
@@ -102,20 +105,20 @@ class SyscallDescABI : public SyscallDesc
   private:
     // Aliases to make the code below a little more concise.
     template <typename ...Args>
-    using SyscallABIExecutor =
+    using ABIExecutor =
         std::function<SyscallReturn(SyscallDesc *, int,
                                     ThreadContext *, Args...)>;
 
     template <typename ...Args>
-    using SyscallABIExecutorPtr =
+    using ABIExecutorPtr =
         SyscallReturn (*)(SyscallDesc *, int, ThreadContext *, Args...);
 
 
     // Wrap an executor with guest arguments with a normal executor that gets
     // those additional arguments from the guest context.
     template <typename ...Args>
-    static inline SyscallExecutor
-    buildExecutor(SyscallABIExecutor<Args...> target)
+    static inline Executor
+    buildExecutor(ABIExecutor<Args...> target)
     {
         return [target](SyscallDesc *desc, int num,
                         ThreadContext *tc) -> SyscallReturn {
@@ -134,20 +137,31 @@ class SyscallDescABI : public SyscallDesc
         };
     }
 
+    template <typename ...Args>
+    static inline Dumper
+    buildDumper()
+    {
+        return [](std::string name, ThreadContext *tc) -> std::string {
+            return dumpSimcall<ABI, SyscallReturn, Args...>(name, tc);
+        };
+    }
 
   public:
     // Constructors which plumb in buildExecutor.
     template <typename ...Args>
-    SyscallDescABI(const char *name, SyscallABIExecutor<Args...> target) :
-        SyscallDesc(name, buildExecutor<Args...>(target))
+    SyscallDescABI(const char *name, ABIExecutor<Args...> target) :
+        SyscallDesc(name, buildExecutor<Args...>(target),
+                          buildDumper<Args...>())
     {}
 
     template <typename ...Args>
-    SyscallDescABI(const char *name, SyscallABIExecutorPtr<Args...> target) :
-        SyscallDescABI(name, SyscallABIExecutor<Args...>(target))
+    SyscallDescABI(const char *name, ABIExecutorPtr<Args...> target) :
+        SyscallDescABI(name, ABIExecutor<Args...>(target))
     {}
 
-    using SyscallDesc::SyscallDesc;
+    SyscallDescABI(const char *name) :
+        SyscallDescABI(name, ABIExecutor<>(unimplementedFunc))
+    {}
 };
 
 #endif // __SIM_SYSCALL_DESC_HH__

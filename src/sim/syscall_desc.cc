@@ -29,54 +29,22 @@
 
 #include "sim/syscall_desc.hh"
 
-#include <memory>
-
-#include "base/trace.hh"
 #include "base/types.hh"
-#include "config/the_isa.hh"
-#include "cpu/base.hh"
-#include "cpu/thread_context.hh"
-#include "sim/faults.hh"
-#include "sim/process.hh"
 #include "sim/syscall_debug_macros.hh"
+
+class ThreadContext;
 
 void
 SyscallDesc::doSyscall(int callnum, ThreadContext *tc, Fault *fault)
 {
-    RegVal arg[6] M5_VAR_USED;
-    auto process = tc->getProcessPtr();
+    DPRINTF_SYSCALL(Base, "Calling %s...\n", dumper(name(), tc));
 
-    /**
-     * Step through the first six parameters for the system call and
-     * retrieve their values. Note that index is incremented as a
-     * side-effect of the getSyscallArg method.
-     */
-    int index = 0;
-    for (int i = 0; i < 6; i++)
-        arg[i] = process->getSyscallArg(tc, index);
-
-    /**
-     * Linux supports up to six system call arguments through registers
-     * so we want to print all six. Check to the relevant man page to
-     * verify how many are actually used by a given system call.
-     */
-    DPRINTF_SYSCALL(Base, "%s called w/arguments %d, %d, %d, %d, %d, %d\n",
-                    _name, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5]);
-
-    /** Invoke the system call */
     SyscallReturn retval = executor(this, callnum, tc);
 
-    /**
-     * If the system call needs to be restarted, most likely due to
-     * blocking behavior, warn that the system call will retry;
-     * alternatively, print the return value.
-     */
-    if (retval.needsRetry()) {
-        *fault = std::make_shared<SyscallRetryFault>();
-        DPRINTF_SYSCALL(Base, "%s needs retry\n", _name);
-    } else
-        DPRINTF_SYSCALL(Base, "%s returns %d\n", _name, retval.encodedValue());
-
-    if (!retval.suppressed() && !retval.needsRetry())
-        process->setSyscallReturn(tc, retval);
+    if (retval.needsRetry())
+        DPRINTF_SYSCALL(Base, "Needs retry.\n", name());
+    else if (retval.suppressed())
+        DPRINTF_SYSCALL(Base, "No return value.\n", name());
+    else
+        DPRINTF_SYSCALL(Base, "Returned %d.\n", retval.encodedValue());
 }
