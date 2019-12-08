@@ -48,9 +48,6 @@ class PowerProcess : public Process
 
   public:
     void argsInit(int intSize, int pageSize);
-    RegVal getSyscallArg(ThreadContext *tc, int &i) override;
-    /// Explicitly import the otherwise hidden getSyscallArg
-    using Process::getSyscallArg;
     void setSyscallReturn(ThreadContext *tc,
             SyscallReturn return_value) override;
 

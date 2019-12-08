@@ -493,20 +493,6 @@ Sparc64Process::flushWindows(ThreadContext *tc)
 
 static const int FirstArgumentReg = 8;
 
-RegVal
-Sparc32Process::getSyscallArg(ThreadContext *tc, int &i)
-{
-    assert(i < 6);
-    return bits(tc->readIntReg(FirstArgumentReg + i++), 31, 0);
-}
-
-RegVal
-Sparc64Process::getSyscallArg(ThreadContext *tc, int &i)
-{
-    assert(i < 6);
-    return tc->readIntReg(FirstArgumentReg + i++);
-}
-
 void
 SparcProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {

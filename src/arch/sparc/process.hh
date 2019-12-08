@@ -152,10 +152,6 @@ class Sparc32Process : public SparcProcess
 
     void flushWindows(ThreadContext *tc) override;
 
-    RegVal getSyscallArg(ThreadContext *tc, int &i) override;
-    /// Explicitly import the otherwise hidden getSyscallArg
-    using Process::getSyscallArg;
-
     struct SyscallABI : public GenericSyscallABI32,
                         public SparcProcess::SyscallABI
     {};
@@ -219,10 +215,6 @@ class Sparc64Process : public SparcProcess
     void argsInit(int intSize, int pageSize);
 
     void flushWindows(ThreadContext *tc) override;
-
-    RegVal getSyscallArg(ThreadContext *tc, int &i) override;
-    /// Explicitly import the otherwise hidden getSyscallArg
-    using Process::getSyscallArg;
 
     struct SyscallABI : public GenericSyscallABI64,
                         public SparcProcess::SyscallABI

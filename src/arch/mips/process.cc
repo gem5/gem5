@@ -189,13 +189,6 @@ MipsProcess::argsInit(int pageSize)
 }
 
 
-RegVal
-MipsProcess::getSyscallArg(ThreadContext *tc, int &i)
-{
-    assert(i < 6);
-    return tc->readIntReg(FirstArgumentReg + i++);
-}
-
 void
 MipsProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {

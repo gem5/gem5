@@ -49,9 +49,6 @@ class MipsProcess : public Process
     void argsInit(int pageSize);
 
   public:
-    RegVal getSyscallArg(ThreadContext *tc, int &i);
-    /// Explicitly import the otherwise hidden getSyscallArg
-    using Process::getSyscallArg;
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 
     struct SyscallABI : public GenericSyscallABI64

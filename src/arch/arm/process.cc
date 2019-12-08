@@ -478,45 +478,6 @@ const std::vector<int> ArmProcess64::SyscallABI::ArgumentRegs = {
     0, 1, 2, 3, 4, 5, 6
 };
 
-RegVal
-ArmProcess32::getSyscallArg(ThreadContext *tc, int &i)
-{
-    assert(i < 6);
-    return tc->readIntReg(ArgumentReg0 + i++);
-}
-
-RegVal
-ArmProcess64::getSyscallArg(ThreadContext *tc, int &i)
-{
-    assert(i < 8);
-    return tc->readIntReg(ArgumentReg0 + i++);
-}
-
-RegVal
-ArmProcess32::getSyscallArg(ThreadContext *tc, int &i, int width)
-{
-    assert(width == 32 || width == 64);
-    if (width == 32)
-        return getSyscallArg(tc, i);
-
-    // 64 bit arguments are passed starting in an even register
-    if (i % 2 != 0)
-       i++;
-
-    // Registers r0-r6 can be used
-    assert(i < 5);
-    uint64_t val;
-    val = tc->readIntReg(ArgumentReg0 + i++);
-    val |= ((uint64_t)tc->readIntReg(ArgumentReg0 + i++) << 32);
-    return val;
-}
-
-RegVal
-ArmProcess64::getSyscallArg(ThreadContext *tc, int &i, int width)
-{
-    return getSyscallArg(tc, i);
-}
-
 void
 ArmProcess32::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {

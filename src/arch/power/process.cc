@@ -269,13 +269,6 @@ PowerProcess::argsInit(int intSize, int pageSize)
     memState->setStackMin(roundDown(stack_min, pageSize));
 }
 
-RegVal
-PowerProcess::getSyscallArg(ThreadContext *tc, int &i)
-{
-    assert(i < 5);
-    return tc->readIntReg(ArgumentReg0 + i++);
-}
-
 void
 PowerProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {

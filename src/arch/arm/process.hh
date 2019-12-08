@@ -86,8 +86,6 @@ class ArmProcess32 : public ArmProcess
 
   public:
 
-    RegVal getSyscallArg(ThreadContext *tc, int &i, int width) override;
-    RegVal getSyscallArg(ThreadContext *tc, int &i) override;
     void setSyscallReturn(ThreadContext *tc,
             SyscallReturn return_value) override;
 
@@ -135,8 +133,6 @@ class ArmProcess64 : public ArmProcess
 
   public:
 
-    RegVal getSyscallArg(ThreadContext *tc, int &i, int width) override;
-    RegVal getSyscallArg(ThreadContext *tc, int &i) override;
     void setSyscallReturn(ThreadContext *tc,
             SyscallReturn return_value) override;
 

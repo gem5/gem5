@@ -433,12 +433,6 @@ Process::doSyscall(int64_t callnum, ThreadContext *tc, Fault *fault)
     desc->doSyscall(callnum, tc, fault);
 }
 
-RegVal
-Process::getSyscallArg(ThreadContext *tc, int &i, int width)
-{
-    return getSyscallArg(tc, i);
-}
-
 EmulatedDriver *
 Process::findDriver(std::string filename)
 {

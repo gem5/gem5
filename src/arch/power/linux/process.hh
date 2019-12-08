@@ -46,10 +46,6 @@ class PowerLinuxProcess : public PowerProcess
 
     void syscall(ThreadContext *tc, Fault *fault) override;
 
-    RegVal getSyscallArg(ThreadContext *tc, int &i) override;
-    /// Explicitly import the otherwise hidden getSyscallArg
-    using Process::getSyscallArg;
-
     /// Array of syscall descriptors, indexed by call number.
     static SyscallDescABI<SyscallABI> syscallDescs[];
 

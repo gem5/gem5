@@ -468,12 +468,3 @@ PowerLinuxProcess::syscall(ThreadContext *tc, Fault *fault)
 {
     doSyscall(tc->readIntReg(0), tc, fault);
 }
-
-RegVal
-PowerLinuxProcess::getSyscallArg(ThreadContext *tc, int &i)
-{
-    // Linux apparently allows more parameter than the ABI says it should.
-    // This limit may need to be increased even further.
-    assert(i < 6);
-    return tc->readIntReg(ArgumentReg0 + i++);
-}

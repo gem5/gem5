@@ -97,9 +97,6 @@ class ArmFreebsdProcess32 : public ArmProcess32, public ArmFreebsdProcessBits
 
     void syscall(ThreadContext *tc, Fault *fault) override;
 
-    /// Explicitly import the otherwise hidden getSyscallArg
-    using ArmProcess::getSyscallArg;
-
     /// A page to hold "kernel" provided functions. The name might be wrong.
     static const Addr commPage;
 

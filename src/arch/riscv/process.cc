@@ -243,18 +243,6 @@ RiscvProcess::argsInit(int pageSize)
     memState->setStackMin(roundDown(memState->getStackMin(), pageSize));
 }
 
-RegVal
-RiscvProcess::getSyscallArg(ThreadContext *tc, int &i)
-{
-    // If a larger index is requested than there are syscall argument
-    // registers, return 0
-    RegVal retval = 0;
-    if (i < SyscallArgumentRegs.size())
-        retval = tc->readIntReg(SyscallArgumentRegs[i]);
-    i++;
-    return retval;
-}
-
 void
 RiscvProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {

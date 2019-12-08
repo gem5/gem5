@@ -1047,37 +1047,12 @@ X86Process::setSyscallReturn(ThreadContext *tc, SyscallReturn retval)
     tc->setIntReg(INTREG_RAX, retval.encodedValue());
 }
 
-RegVal
-X86_64Process::getSyscallArg(ThreadContext *tc, int &i)
-{
-    assert(i < NumArgumentRegs);
-    return tc->readIntReg(ArgumentReg[i++]);
-}
-
 void
 X86_64Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
                      Process *p, RegVal flags)
 {
     X86Process::clone(old_tc, new_tc, p, flags);
     ((X86_64Process*)p)->vsyscallPage = vsyscallPage;
-}
-
-RegVal
-I386Process::getSyscallArg(ThreadContext *tc, int &i)
-{
-    assert(i < NumArgumentRegs32);
-    return tc->readIntReg(ArgumentReg32[i++]);
-}
-
-RegVal
-I386Process::getSyscallArg(ThreadContext *tc, int &i, int width)
-{
-    assert(width == 32 || width == 64);
-    assert(i < NumArgumentRegs);
-    uint64_t retVal = tc->readIntReg(ArgumentReg32[i++]) & mask(32);
-    if (width == 64)
-        retVal |= ((uint64_t)tc->readIntReg(ArgumentReg[i++]) << 32);
-    return retVal;
 }
 
 void

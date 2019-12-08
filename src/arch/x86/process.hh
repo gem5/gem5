@@ -133,9 +133,6 @@ namespace X86ISA
         void argsInit(int pageSize);
         void initState() override;
 
-        RegVal getSyscallArg(ThreadContext *tc, int &i) override;
-        /// Explicitly import the otherwise hidden getSyscallArg
-        using Process::getSyscallArg;
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,
                    Process *process, RegVal flags) override;
     };
@@ -174,8 +171,6 @@ namespace X86ISA
         void argsInit(int pageSize);
         void initState() override;
 
-        RegVal getSyscallArg(ThreadContext *tc, int &i) override;
-        RegVal getSyscallArg(ThreadContext *tc, int &i, int width) override;
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,
                    Process *process, RegVal flags) override;
     };
