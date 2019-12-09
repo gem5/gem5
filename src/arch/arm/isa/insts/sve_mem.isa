@@ -774,7 +774,7 @@ let {{
         EA = XBase + ((int64_t) imm * %(memacc_size)s)''' % {
             'memacc_size': 'eCount / 8' if isPred else 'eCount'}
         loadRdEnableCode = '''
-        auto rdEn = std::vector<bool>();
+        auto rdEn = std::vector<bool>(memAccessSize, true);
         '''
         if isPred:
             loadMemAccCode = '''
