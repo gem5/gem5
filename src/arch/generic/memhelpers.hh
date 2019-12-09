@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 ARM Limited
+ * Copyright (c) 2013, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,6 +47,15 @@
 #include "sim/byteswap.hh"
 #include "sim/insttracer.hh"
 
+template <class XC>
+Fault
+initiateMemRead(XC *xc, Addr addr, std::size_t size,
+                Request::Flags flags,
+                const std::vector<bool> &byte_enable)
+{
+    return xc->initiateMemRead(addr, size, flags, byte_enable);
+}
+
 /// Initiate a read from memory in timing mode.  Note that the 'mem'
 /// parameter is unused; only the type of that parameter is used
 /// to determine the size of the access.
@@ -55,7 +64,9 @@ Fault
 initiateMemRead(XC *xc, Trace::InstRecord *traceData, Addr addr,
                 MemT &mem, Request::Flags flags)
 {
-    return xc->initiateMemRead(addr, sizeof(MemT), flags);
+    static const std::vector<bool> byte_enable(sizeof(MemT), true);
+    return initiateMemRead(xc, addr, sizeof(MemT),
+                           flags, byte_enable);
 }
 
 /// Extract the data returned from a timing mode read.
@@ -83,13 +94,25 @@ getMemBE(PacketPtr pkt, MemT &mem, Trace::InstRecord *traceData)
 }
 
 /// Read from memory in atomic mode.
+template <class XC>
+Fault
+readMemAtomic(XC *xc, Addr addr, uint8_t *mem,
+              std::size_t size, Request::Flags flags,
+              const std::vector<bool> &byte_enable)
+{
+    return xc->readMem(addr, mem, size, flags, byte_enable);
+}
+
+/// Read from memory in atomic mode.
 template <ByteOrder Order, class XC, class MemT>
 Fault
 readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr, MemT &mem,
               Request::Flags flags)
 {
     memset(&mem, 0, sizeof(mem));
-    Fault fault = xc->readMem(addr, (uint8_t *)&mem, sizeof(MemT), flags);
+    static const std::vector<bool> byte_enable(sizeof(MemT), true);
+    Fault fault = readMemAtomic(xc, addr, (uint8_t*)&mem,
+                                sizeof(MemT), flags, byte_enable);
     if (fault == NoFault) {
         mem = gtoh(mem, Order);
         if (traceData)
@@ -116,6 +139,15 @@ readMemAtomicBE(XC *xc, Trace::InstRecord *traceData, Addr addr, MemT &mem,
 }
 
 /// Write to memory in timing mode.
+template <class XC>
+Fault
+writeMemTiming(XC *xc, uint8_t *mem, Addr addr,
+               std::size_t size, Request::Flags flags, uint64_t *res,
+               const std::vector<bool> &byte_enable)
+{
+    return xc->writeMem(mem, size, addr, flags, res, byte_enable);
+}
+
 template <ByteOrder Order, class XC, class MemT>
 Fault
 writeMemTiming(XC *xc, Trace::InstRecord *traceData, MemT mem, Addr addr,
@@ -125,7 +157,9 @@ writeMemTiming(XC *xc, Trace::InstRecord *traceData, MemT mem, Addr addr,
         traceData->setData(mem);
     }
     mem = htog(mem, Order);
-    return xc->writeMem((uint8_t *)&mem, sizeof(MemT), addr, flags, res);
+    static const std::vector<bool> byte_enable(sizeof(MemT), true);
+    return writeMemTiming(xc, (uint8_t*)&mem, addr,
+                          sizeof(MemT), flags, res, byte_enable);
 }
 
 template <class XC, class MemT>
@@ -147,6 +181,15 @@ writeMemTimingBE(XC *xc, Trace::InstRecord *traceData, MemT mem, Addr addr,
 }
 
 /// Write to memory in atomic mode.
+template <class XC>
+Fault
+writeMemAtomic(XC *xc, uint8_t *mem, Addr addr,
+               std::size_t size, Request::Flags flags,
+               uint64_t *res, const std::vector<bool> &byte_enable)
+{
+    return xc->writeMem(mem, size, addr, flags, res, byte_enable);
+}
+
 template <ByteOrder Order, class XC, class MemT>
 Fault
 writeMemAtomic(XC *xc, Trace::InstRecord *traceData, const MemT &mem,
@@ -156,8 +199,9 @@ writeMemAtomic(XC *xc, Trace::InstRecord *traceData, const MemT &mem,
         traceData->setData(mem);
     }
     MemT host_mem = htog(mem, Order);
-    Fault fault =
-          xc->writeMem((uint8_t *)&host_mem, sizeof(MemT), addr, flags, res);
+    static const std::vector<bool> byte_enable(sizeof(MemT), true);
+    Fault fault = writeMemAtomic(xc, (uint8_t*)&host_mem,
+                                 addr, sizeof(MemT), flags, res, byte_enable);
     if (fault == NoFault && res != NULL) {
         if (flags & Request::MEM_SWAP || flags & Request::MEM_SWAP_COND)
             *(MemT *)res = gtoh(*(MemT *)res, Order);
