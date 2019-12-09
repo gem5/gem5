@@ -314,7 +314,7 @@ def template SveLoadAndReplExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        MemElemType memData;
+        MemElemType memData = 0;
 
         if (fault == NoFault) {
             fault = readMemAtomicLE(xc, traceData, EA, memData,
@@ -344,7 +344,7 @@ def template SveLoadAndReplInitiateAcc {{
 
         %(ea_code)s;
 
-        MemElemType memData;
+        MemElemType memData = 0;
 
         if (fault == NoFault) {
             fault = initiateMemRead(xc, traceData, EA, memData,
@@ -368,7 +368,7 @@ def template SveLoadAndReplCompleteAcc {{
         %(op_decl)s;
         %(op_rd)s;
 
-        MemElemType memData;
+        MemElemType memData = 0;
         getMemLE(pkt, memData, traceData);
 
         if (fault == NoFault) {
@@ -597,7 +597,7 @@ def template SveGatherLoadMicroopInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        MemElemType memData;
+        MemElemType memData = 0;
 
         int index = elemIndex;
         if (%(pred_check_code)s) {
@@ -663,7 +663,7 @@ def template SveScatterStoreMicroopExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        MemElemType memData;
+        MemElemType memData = 0;
         %(memacc_code)s;
 
         int index = elemIndex;
@@ -693,7 +693,7 @@ def template SveScatterStoreMicroopInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        MemElemType memData;
+        MemElemType memData = 0;
         %(memacc_code)s;
 
         int index = elemIndex;
