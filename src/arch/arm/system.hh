@@ -327,6 +327,16 @@ class ArmSystem : public System
 
     /** Make a call to notify the power controller of STANDBYWFI deassertion */
     static void callClearStandByWfi(ThreadContext *tc);
+
+    /**
+     * Notify the power controller of WAKEREQUEST assertion. Returns true
+     * if WAKEREQUEST is enabled as a power-on mechanism, and the core is now
+     * powered, false otherwise
+     */
+    static bool callSetWakeRequest(ThreadContext *tc);
+
+    /** Notify the power controller of WAKEREQUEST deassertion */
+    static void callClearWakeRequest(ThreadContext *tc);
 };
 
 #endif

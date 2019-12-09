@@ -221,6 +221,18 @@ Gicv3::deassertInt(uint32_t cpu, ArmISA::InterruptTypes int_type)
     platform->intrctrl->clear(cpu, int_type, 0);
 }
 
+void
+Gicv3::deassertAll(uint32_t cpu)
+{
+    platform->intrctrl->clearAll(cpu);
+}
+
+bool
+Gicv3::haveAsserted(uint32_t cpu) const
+{
+    return platform->intrctrl->havePosted(cpu);
+}
+
 Gicv3Redistributor *
 Gicv3::getRedistributorByAffinity(uint32_t affinity) const
 {

@@ -40,6 +40,7 @@
 
 #include "dev/arm/gic_v3_cpu_interface.hh"
 
+#include "arch/arm/faults.hh"
 #include "arch/arm/isa.hh"
 #include "debug/GIC.hh"
 #include "dev/arm/gic_v3.hh"
@@ -2568,6 +2569,36 @@ Gicv3CPUInterface::bpr1(Gicv3::GroupId group)
     }
 
     return bpr;
+}
+
+bool
+Gicv3CPUInterface::havePendingInterrupts() const
+{
+    return gic->haveAsserted(cpuId) || hppi.prio != 0xff;
+}
+
+void
+Gicv3CPUInterface::clearPendingInterrupts()
+{
+    gic->deassertAll(cpuId);
+    resetHppi(hppi.intid);
+}
+
+void
+Gicv3CPUInterface::assertWakeRequest()
+{
+    ThreadContext *tc = gic->getSystem()->getThreadContext(cpuId);
+    if (ArmSystem::callSetWakeRequest(tc)) {
+        Reset().invoke(tc);
+        tc->activate();
+    }
+}
+
+void
+Gicv3CPUInterface::deassertWakeRequest()
+{
+    ThreadContext *tc = gic->getSystem()->getThreadContext(cpuId);
+    ArmSystem::callClearWakeRequest(tc);
 }
 
 void

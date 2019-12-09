@@ -129,6 +129,8 @@ class Gicv3 : public BaseGic
 
     Gicv3(const Params * p);
     void deassertInt(uint32_t cpu, ArmISA::InterruptTypes int_type);
+    void deassertAll(uint32_t cpu);
+    bool haveAsserted(uint32_t cpu) const;
 
     inline Gicv3CPUInterface *
     getCPUInterface(int cpu_id) const

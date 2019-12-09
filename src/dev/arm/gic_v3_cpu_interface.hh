@@ -335,6 +335,10 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     bool virtualIsEOISplitMode() const;
     void virtualUpdate();
     RegVal bpr1(Gicv3::GroupId group);
+    bool havePendingInterrupts(void) const;
+    void clearPendingInterrupts(void);
+    void assertWakeRequest(void);
+    void deassertWakeRequest(void);
 
     RegVal readBankedMiscReg(MiscRegIndex misc_reg) const;
     void setBankedMiscReg(MiscRegIndex misc_reg, RegVal val) const;

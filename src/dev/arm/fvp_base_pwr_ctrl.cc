@@ -91,6 +91,34 @@ FVPBasePwrCtrl::clearStandByWfi(ThreadContext *const tc)
     pwrs->pwfi = 0;
 }
 
+bool
+FVPBasePwrCtrl::setWakeRequest(ThreadContext *const tc)
+{
+    PwrStatus *pwrs = getCorePwrStatus(tc);
+
+    if (!pwrs->pwk)
+        DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::setWakeRequest: WakeRequest "
+                "asserted for core %d\n", tc->contextId());
+    pwrs->pwk = 1;
+    if (!pwrs->l0 && pwrs->wen) {
+        pwrs->wk = WK_GICWR;
+        powerCoreOn(tc, pwrs);
+        return true;
+    }
+    return false;
+}
+
+void
+FVPBasePwrCtrl::clearWakeRequest(ThreadContext *const tc)
+{
+    PwrStatus *pwrs = getCorePwrStatus(tc);
+
+    if (pwrs->pwk)
+        DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::clearWakeRequest: "
+                "WakeRequest deasserted for core %d\n", tc->contextId());
+    pwrs->pwk = 0;
+}
+
 Tick
 FVPBasePwrCtrl::read(PacketPtr pkt)
 {
@@ -276,6 +304,7 @@ FVPBasePwrCtrl::startCoreUp(ThreadContext *const tc)
     DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::startCoreUp: Starting core %d "
             "from the power controller\n", tc->contextId());
     clearStandByWfi(tc);
+    clearWakeRequest(tc);
 
     // InitCPU
     Reset().invoke(tc);

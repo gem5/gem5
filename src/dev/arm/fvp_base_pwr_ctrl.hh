@@ -51,11 +51,6 @@ class ThreadContext;
  * @file
  * This class implements the base power controller for FVP-based
  * platforms. Based on Fast Models version 11.8.
- *
- * Limitations:
- *     - Level 2 affinity is not implemented -> PSYSR.L2 is RAZ
- *     - WakeRequests are not modelled by GICv3 -> PSYSR.WEN is always 0
- *     - PSYSR.WK can only be 0b00 (Cold power-on) and 0b10 (Wake by PPONR)
  */
 class FVPBasePwrCtrl : public BasicPioDevice
 {
@@ -77,6 +72,21 @@ class FVPBasePwrCtrl : public BasicPioDevice
      * @param tc Thread context representing the core
      */
     void clearStandByWfi(ThreadContext *const tc);
+
+    /**
+     * Triggered by the GIC when GICR_WAKER.ProcessorSleep is 1 and there are
+     * pending interrupts for the core
+     * @param tc Thread context representing the core
+     * @return true if the core is powered ON when PwrStatus.WEN is enabled,
+     * false otherwise
+     */
+    bool setWakeRequest(ThreadContext *const tc);
+
+    /**
+     * Triggered by the GIC when GICR_WAKER.ProcessorSleep becomes 0
+     * @param tc Thread context representing the core
+     */
+    void clearWakeRequest(ThreadContext *const tc);
 
     void init() override;
 

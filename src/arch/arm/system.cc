@@ -214,6 +214,22 @@ ArmSystem::callClearStandByWfi(ThreadContext *tc)
         pwr_ctrl->clearStandByWfi(tc);
 }
 
+bool
+ArmSystem::callSetWakeRequest(ThreadContext *tc)
+{
+    if (FVPBasePwrCtrl *pwr_ctrl = getArmSystem(tc)->getPowerController())
+        return pwr_ctrl->setWakeRequest(tc);
+    else
+        return true;
+}
+
+void
+ArmSystem::callClearWakeRequest(ThreadContext *tc)
+{
+    if (FVPBasePwrCtrl *pwr_ctrl = getArmSystem(tc)->getPowerController())
+        pwr_ctrl->clearWakeRequest(tc);
+}
+
 ArmSystem *
 ArmSystemParams::create()
 {
