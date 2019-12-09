@@ -68,8 +68,12 @@ class ISA : public BaseISA
   public:
     typedef RiscvISAParams Params;
 
+    void clear(ThreadContext *tc) { clear(); }
+
+  protected:
     void clear();
 
+  public:
     RegVal readMiscRegNoEffect(int misc_reg) const;
     RegVal readMiscReg(int misc_reg, ThreadContext *tc);
     void setMiscRegNoEffect(int misc_reg, RegVal val);

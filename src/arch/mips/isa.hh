@@ -72,8 +72,12 @@ namespace MipsISA
         std::vector<BankType> bankType;
 
       public:
+        void clear(ThreadContext *tc) { clear(); }
+
+      protected:
         void clear();
 
+      public:
         void configCP();
 
         unsigned getVPENum(ThreadID tid) const;

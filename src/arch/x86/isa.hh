@@ -54,11 +54,12 @@ namespace X86ISA
         void updateHandyM5Reg(Efer efer, CR0 cr0,
                 SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags,
                 ThreadContext *tc);
+        void clear();
 
       public:
         typedef X86ISAParams Params;
 
-        void clear();
+        void clear(ThreadContext *tc) { clear(); }
 
         ISA(Params *p);
         const Params *params() const;

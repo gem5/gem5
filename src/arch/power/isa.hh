@@ -55,10 +55,18 @@ class ISA : public BaseISA
     typedef PowerISAParams Params;
 
     void
+    clear(ThreadContext *tc)
+    {
+        clear();
+    }
+
+  protected:
+    void
     clear()
     {
     }
 
+  public:
     RegVal
     readMiscRegNoEffect(int misc_reg) const
     {

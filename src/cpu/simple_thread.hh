@@ -296,7 +296,7 @@ class SimpleThread : public ThreadState, public ThreadContext
         for (auto &pred_reg: vecPredRegs)
             pred_reg.reset();
         ccRegs.fill(0);
-        isa->clear();
+        isa->clear(this);
     }
 
     //

@@ -165,7 +165,7 @@ class ISA : public BaseISA
 
   public:
 
-    void clear();
+    void clear(ThreadContext *tc) { clear(); }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -176,6 +176,7 @@ class ISA : public BaseISA
     using BaseISA::startup;
 
   protected:
+    void clear();
     bool isHyperPriv() { return hpstate.hpriv; }
     bool isPriv() { return hpstate.hpriv || pstate.priv; }
     bool isNonPriv() { return !isPriv(); }
