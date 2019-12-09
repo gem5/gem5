@@ -287,7 +287,9 @@ def template NeonLoadExecute64 {{
         uint8_t *dataPtr = memUnion.bytes;
 
         if (fault == NoFault) {
-            fault = xc->readMem(EA, dataPtr, accSize, memAccessFlags);
+            fault = readMemAtomic(xc, EA, dataPtr,
+                                  accSize, memAccessFlags,
+                                  std::vector<bool>(accSize, true));
             %(memacc_code)s;
         }
 
@@ -312,7 +314,9 @@ def template NeonLoadInitiateAcc64 {{
         %(ea_code)s;
 
         if (fault == NoFault) {
-            fault = xc->initiateMemRead(EA, accSize, memAccessFlags);
+            fault = initiateMemRead(xc, EA, accSize,
+                                    memAccessFlags,
+                                    std::vector<bool>(accSize, true));
         }
 
         return fault;
@@ -364,8 +368,9 @@ def template NeonStoreExecute64 {{
         }
 
         if (fault == NoFault) {
-            fault = xc->writeMem(dataPtr, accSize, EA, memAccessFlags,
-                                 NULL);
+            fault = writeMemAtomic(xc, dataPtr, EA, accSize,
+                                   memAccessFlags, nullptr,
+                                   std::vector<bool>(accSize, true));
         }
 
         if (fault == NoFault) {
@@ -394,8 +399,9 @@ def template NeonStoreInitiateAcc64 {{
         }
 
         if (fault == NoFault) {
-            fault = xc->writeMem(memUnion.bytes, accSize, EA, memAccessFlags,
-                                 NULL);
+            fault = writeMemTiming(xc, memUnion.bytes, EA,
+                                   accSize, memAccessFlags, NULL,
+                                   std::vector<bool>(accSize, true));
         }
 
         return fault;

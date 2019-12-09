@@ -206,7 +206,10 @@ def template NeonLoadExecute {{
         if (%(predicate_test)s)
         {
             if (fault == NoFault) {
-                fault = xc->readMem(EA, dataPtr, %(size)d, memAccessFlags);
+                const auto size = %(size)d;
+                fault = readMemAtomic(xc, EA, dataPtr,
+                                      size, memAccessFlags,
+                                      std::vector<bool>(size, true));
                 %(memacc_code)s;
             }
 
@@ -277,8 +280,10 @@ def template NeonStoreExecute {{
             }
 
             if (fault == NoFault) {
-                fault = xc->writeMem(dataPtr, %(size)d, EA,
-                                     memAccessFlags, NULL);
+                const auto size = %(size)d;
+                fault = writeMemAtomic(xc, dataPtr, EA, size,
+                                       memAccessFlags, NULL,
+                                       std::vector<bool>(size, true));
             }
 
             if (fault == NoFault) {
@@ -410,8 +415,10 @@ def template NeonStoreInitiateAcc {{
             }
 
             if (fault == NoFault) {
-                fault = xc->writeMem(memUnion.bytes, %(size)d, EA,
-                                     memAccessFlags, NULL);
+                const auto size = %(size)d;
+                fault = writeMemTiming(xc, memUnion.bytes, EA,
+                                       size, memAccessFlags, nullptr,
+                                       std::vector<bool>(size, true));
             }
         } else {
             xc->setPredicate(false);
@@ -462,7 +469,9 @@ def template NeonLoadInitiateAcc {{
         if (%(predicate_test)s)
         {
             if (fault == NoFault) {
-                fault = xc->initiateMemRead(EA, %(size)d, memAccessFlags);
+                const auto size = %(size)d;
+                fault = initiateMemRead(xc, EA, size, memAccessFlags,
+                                        std::vector<bool>(size, true));
             }
         } else {
             xc->setPredicate(false);

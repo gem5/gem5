@@ -322,7 +322,9 @@ def template DCStore64Execute {{
         }
 
         if (fault == NoFault) {
-            fault = xc->writeMem(NULL, op_size, EA, memAccessFlags, NULL);
+            fault = writeMemAtomic(xc, NULL, EA,
+                                   op_size, memAccessFlags, NULL,
+                                   std::vector<bool>(op_size, true));
         }
 
         if (fault == NoFault) {
@@ -349,7 +351,9 @@ def template DCStore64InitiateAcc {{
         }
 
         if (fault == NoFault) {
-            fault = xc->writeMem(NULL, op_size, EA, memAccessFlags, NULL);
+            fault = writeMemTiming(xc, NULL, EA, op_size,
+                                   memAccessFlags, NULL,
+                                   std::vector<bool>(op_size, true));
         }
 
         return fault;

@@ -155,8 +155,8 @@ def template SveContigLoadExecute {{
 
         %(rden_code)s;
 
-        fault = xc->readMem(EA, memData.raw_ptr<uint8_t>(), memAccessSize,
-            this->memAccessFlags, rdEn);
+        fault = readMemAtomic(xc, EA, memData.raw_ptr<uint8_t>(),
+            memAccessSize, this->memAccessFlags, rdEn);
 
         %(fault_code)s;
 
@@ -186,8 +186,8 @@ def template SveContigLoadInitiateAcc {{
 
         %(rden_code)s;
 
-        fault = xc->initiateMemRead(EA, memAccessSize, this->memAccessFlags,
-            rdEn);
+        fault = initiateMemRead(xc, EA, memAccessSize,
+            this->memAccessFlags, rdEn);
 
         %(fault_code)s;
 
@@ -247,8 +247,8 @@ def template SveContigStoreExecute {{
         }
 
         if (fault == NoFault) {
-            fault = xc->writeMem(memData.raw_ptr<uint8_t>(), memAccessSize, EA,
-                this->memAccessFlags, NULL, wrEn);
+            fault = writeMemAtomic(xc, memData.raw_ptr<uint8_t>(),
+                EA, memAccessSize, this->memAccessFlags, NULL, wrEn);
         }
 
         if (fault == NoFault) {
@@ -284,8 +284,8 @@ def template SveContigStoreInitiateAcc {{
         }
 
         if (fault == NoFault) {
-            fault = xc->writeMem(memData.raw_ptr<uint8_t>(), memAccessSize, EA,
-                this->memAccessFlags, NULL, wrEn);
+            fault = writeMemTiming(xc, memData.raw_ptr<uint8_t>(),
+                EA, memAccessSize, this->memAccessFlags, NULL, wrEn);
         }
 
         return fault;
@@ -945,8 +945,9 @@ def template SveStructLoadExecute {{
         auto memDataView = memData.as<Element>();
 
         if (fault == NoFault) {
-            fault = xc->readMem(EA, memData.raw_ptr<uint8_t>(), memAccessSize,
-                this->memAccessFlags);
+            fault = readMemAtomic(xc, EA, memData.raw_ptr<uint8_t>(),
+                memAccessSize, this->memAccessFlags,
+                std::vector<bool>(memAccessSize, true));
             %(memacc_code)s;
         }
 
@@ -975,8 +976,9 @@ def template SveStructLoadInitiateAcc {{
         %(ea_code)s;
 
         if (fault == NoFault) {
-            fault = xc->initiateMemRead(EA, memAccessSize,
-                this->memAccessFlags);
+            fault = initiateMemRead(xc, EA,
+                memAccessSize, this->memAccessFlags,
+                std::vector<bool>(memAccessSize, true));
         }
 
         return fault;
@@ -1039,8 +1041,8 @@ def template SveStructStoreExecute {{
         }
 
         if (fault == NoFault) {
-            fault = xc->writeMem(memData.raw_ptr<uint8_t>(), memAccessSize, EA,
-                this->memAccessFlags, NULL, wrEn);
+            fault = writeMemAtomic(xc, memData.raw_ptr<uint8_t>(),
+                EA, memAccessSize, this->memAccessFlags, NULL, wrEn);
         }
 
         if (fault == NoFault) {
@@ -1076,8 +1078,8 @@ def template SveStructStoreInitiateAcc {{
         }
 
         if (fault == NoFault) {
-            fault = xc->writeMem(memData.raw_ptr<uint8_t>(), memAccessSize, EA,
-                this->memAccessFlags, NULL, wrEn);
+            fault = writeMemTiming(xc, memData.raw_ptr<uint8_t>(),
+                EA, memAccessSize, this->memAccessFlags, NULL, wrEn);
         }
 
         return fault;

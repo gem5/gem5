@@ -647,7 +647,8 @@ def template Mcr15Execute {{
             if (fault == NoFault) {
                 Addr op_size = xc->tcBase()->getSystemPtr()->cacheLineSize();
                 EA &= ~(op_size - 1);
-                fault = xc->writeMem(NULL, op_size, EA, memAccessFlags, NULL);
+                fault = writeMemAtomic(xc, NULL, EA, op_size,
+                    memAccessFlags, NULL, std::vector<bool>(op_size, true));
             }
         } else {
             xc->setPredicate(false);
@@ -676,7 +677,8 @@ def template Mcr15InitiateAcc {{
             if (fault == NoFault) {
                 Addr op_size = xc->tcBase()->getSystemPtr()->cacheLineSize();
                 EA &= ~(op_size - 1);
-                fault = xc->writeMem(NULL, op_size, EA, memAccessFlags, NULL);
+                fault = writeMemTiming(xc, NULL, EA, op_size,
+                    memAccessFlags, NULL, std::vector<bool>(op_size, true));
             }
         } else {
             xc->setPredicate(false);
