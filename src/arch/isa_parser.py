@@ -1076,7 +1076,7 @@ class MemOperand(Operand):
 
     def makeDecl(self):
         # Declare memory data variable.
-        return '%s %s;\n' % (self.ctype, self.base_name)
+        return '%s %s = {};\n' % (self.ctype, self.base_name)
 
     def makeRead(self, predRead):
         if self.read_code != None:
