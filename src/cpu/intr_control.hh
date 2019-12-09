@@ -45,6 +45,8 @@ class IntrControl : public SimObject
 
     void clear(int cpu_id, int int_num, int index);
     void post(int cpu_id, int int_num, int index);
+    void clearAll(int cpu_id);
+    bool havePosted(int cpu_id) const;
 
     void
     clear(int int_num, int index = 0)
