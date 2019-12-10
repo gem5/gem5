@@ -76,6 +76,12 @@ class SyscallDesc {
 
     std::string name() { return _name; }
 
+    /**
+     * For use within the system call executor if new threads are created and
+     * need something returned into them.
+     */
+    virtual void returnInto(ThreadContext *tc, const SyscallReturn &ret) = 0;
+
   protected:
     using Executor =
         std::function<SyscallReturn(SyscallDesc *, int num, ThreadContext *)>;
@@ -162,6 +168,12 @@ class SyscallDescABI : public SyscallDesc
     SyscallDescABI(const char *name) :
         SyscallDescABI(name, ABIExecutor<>(unimplementedFunc))
     {}
+
+    void
+    returnInto(ThreadContext *tc, const SyscallReturn &ret) override
+    {
+        GuestABI::Result<ABI, SyscallReturn>::store(tc, ret);
+    }
 };
 
 #endif // __SIM_SYSCALL_DESC_HH__
