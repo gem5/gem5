@@ -256,8 +256,11 @@ bool longDescFormatInUse(ThreadContext *tc);
  * to VMPIDR_EL2 (as it happens in virtualized systems) */
 RegVal readMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
 
-/** This helper function is returing the value of MPIDR_EL1 */
+/** This helper function is returning the value of MPIDR_EL1 */
 RegVal getMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
+
+/** Retrieves MPIDR_EL1.{Aff2,Aff1,Aff0} affinity numbers */
+RegVal getAffinity(ArmSystem *arm_sys, ThreadContext *tc);
 
 static inline uint32_t
 mcrMrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, uint32_t crn,

@@ -263,18 +263,42 @@ getMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
     // for simulation of larger systems
     assert((0 <= tc->cpuId()) && (tc->cpuId() < 256));
     assert(tc->socketId() < 65536);
-    if (arm_sys->multiThread) {
-       return 0x80000000 | // multiprocessor extensions available
-              0x01000000 | // multi-threaded cores
-              tc->contextId();
-    } else if (arm_sys->multiProc) {
-       return 0x80000000 | // multiprocessor extensions available
-              tc->cpuId() | tc->socketId() << 8;
-    } else {
-       return 0x80000000 |  // multiprocessor extensions available
-              0x40000000 |  // in up system
-              tc->cpuId() | tc->socketId() << 8;
-    }
+
+    RegVal mpidr = 0x80000000;
+
+    if (!arm_sys->multiProc)
+        replaceBits(mpidr, 30, 1);
+
+    if (arm_sys->multiThread)
+        replaceBits(mpidr, 24, 1);
+
+    // Get Affinity numbers
+    mpidr |= getAffinity(arm_sys, tc);
+    return mpidr;
+}
+
+static RegVal
+getAff2(ArmSystem *arm_sys, ThreadContext *tc)
+{
+    return arm_sys->multiThread ? tc->socketId() << 16 : 0;
+}
+
+static RegVal
+getAff1(ArmSystem *arm_sys, ThreadContext *tc)
+{
+    return arm_sys->multiThread ? tc->cpuId() << 8 : tc->socketId() << 8;
+}
+
+static RegVal
+getAff0(ArmSystem *arm_sys, ThreadContext *tc)
+{
+    return arm_sys->multiThread ? tc->threadId() : tc->cpuId();
+}
+
+RegVal
+getAffinity(ArmSystem *arm_sys, ThreadContext *tc)
+{
+    return getAff2(arm_sys, tc) | getAff1(arm_sys, tc) | getAff0(arm_sys, tc);
 }
 
 bool
