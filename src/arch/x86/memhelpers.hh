@@ -45,7 +45,8 @@ static Fault
 initiateMemRead(ExecContext *xc, Trace::InstRecord *traceData, Addr addr,
                 unsigned dataSize, Request::Flags flags)
 {
-    return xc->initiateMemRead(addr, dataSize, flags);
+    const std::vector<bool> byte_enable(dataSize, true);
+    return xc->initiateMemRead(addr, dataSize, flags, byte_enable);
 }
 
 static void
@@ -106,7 +107,9 @@ readMemAtomic(ExecContext *xc, Trace::InstRecord *traceData, Addr addr,
               uint64_t &mem, unsigned dataSize, Request::Flags flags)
 {
     memset(&mem, 0, sizeof(mem));
-    Fault fault = xc->readMem(addr, (uint8_t *)&mem, dataSize, flags);
+    const std::vector<bool> byte_enable(dataSize, true);
+    Fault fault = xc->readMem(addr, (uint8_t *)&mem, dataSize,
+                              flags, byte_enable);
     if (fault == NoFault) {
         // If LE to LE, this is a nop, if LE to BE, the actual data ends up
         // in the right place because the LSBs where at the low addresses on
@@ -124,8 +127,11 @@ readPackedMemAtomic(ExecContext *xc, Addr addr, std::array<uint64_t, N> &mem,
                     unsigned flags)
 {
     std::array<T, N> real_mem;
+    // Size is fixed at compilation time. Make a static vector.
+    constexpr auto size = sizeof(T) * N;
+    static const std::vector<bool> byte_enable(size, true);
     Fault fault = xc->readMem(addr, (uint8_t *)&real_mem,
-                              sizeof(T) * N, flags);
+                              size, flags, byte_enable);
     if (fault == NoFault) {
         real_mem = letoh(real_mem);
         for (int i = 0; i < N; i++)
@@ -166,8 +172,11 @@ writePackedMem(ExecContext *xc, std::array<uint64_t, N> &mem, Addr addr,
     for (int i = 0; i < N; i++)
         real_mem[i] = mem[i];
     real_mem = htole(real_mem);
-    return xc->writeMem((uint8_t *)&real_mem, sizeof(T) * N,
-                        addr, flags, res);
+    // Size is fixed at compilation time. Make a static vector.
+    constexpr auto size = sizeof(T) * N;
+    static const std::vector<bool> byte_enable(size, true);
+    return xc->writeMem((uint8_t *)&real_mem, size,
+                        addr, flags, res, byte_enable);
 }
 
 static Fault
@@ -178,7 +187,9 @@ writeMemTiming(ExecContext *xc, Trace::InstRecord *traceData, uint64_t mem,
     if (traceData)
         traceData->setData(mem);
     mem = htole(mem);
-    return xc->writeMem((uint8_t *)&mem, dataSize, addr, flags, res);
+    const std::vector<bool> byte_enable(dataSize, true);
+    return xc->writeMem((uint8_t *)&mem, dataSize, addr, flags,
+                        res, byte_enable);
 }
 
 template <size_t N>
@@ -208,8 +219,9 @@ writeMemAtomic(ExecContext *xc, Trace::InstRecord *traceData, uint64_t mem,
     if (traceData)
         traceData->setData(mem);
     uint64_t host_mem = htole(mem);
-    Fault fault =
-          xc->writeMem((uint8_t *)&host_mem, dataSize, addr, flags, res);
+    const std::vector<bool> byte_enable(dataSize, true);
+    Fault fault = xc->writeMem((uint8_t *)&host_mem, dataSize, addr,
+                               flags, res, byte_enable);
     if (fault == NoFault && res)
         *res = letoh(*res);
     return fault;
