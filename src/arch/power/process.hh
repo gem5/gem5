@@ -48,8 +48,6 @@ class PowerProcess : public Process
 
   public:
     void argsInit(int intSize, int pageSize);
-    void setSyscallReturn(ThreadContext *tc,
-            SyscallReturn return_value) override;
 
     struct SyscallABI : public GenericSyscallABI64
     {

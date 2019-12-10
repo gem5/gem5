@@ -490,29 +490,3 @@ Sparc64Process::flushWindows(ThreadContext *tc)
     tc->setIntReg(INTREG_CANRESTORE, Canrestore);
     tc->setMiscReg(MISCREG_CWP, origCWP);
 }
-
-static const int FirstArgumentReg = 8;
-
-void
-SparcProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
-{
-    // check for error condition.  SPARC syscall convention is to
-    // indicate success/failure in reg the carry bit of the ccr
-    // and put the return value itself in the standard return value reg.
-    PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
-    CCR ccr = tc->readIntReg(INTREG_CCR);
-    RegVal val;
-    if (sysret.successful()) {
-        ccr.xcc.c = ccr.icc.c = 0;
-        val = sysret.returnValue();
-    } else {
-        ccr.xcc.c = ccr.icc.c = 1;
-        val = sysret.errnoValue();
-    }
-    tc->setIntReg(INTREG_CCR, ccr);
-    if (pstate.am)
-        val = bits(val, 31, 0);
-    tc->setIntReg(ReturnValueReg, val);
-    if (sysret.count() > 1)
-        tc->setIntReg(SyscallPseudoReturnReg, sysret.value2());
-}

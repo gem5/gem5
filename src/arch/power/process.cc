@@ -269,19 +269,6 @@ PowerProcess::argsInit(int intSize, int pageSize)
     memState->setStackMin(roundDown(stack_min, pageSize));
 }
 
-void
-PowerProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
-{
-    Cr cr = tc->readIntReg(INTREG_CR);
-    if (sysret.successful()) {
-        cr.cr0.so = 0;
-    } else {
-        cr.cr0.so = 1;
-    }
-    tc->setIntReg(INTREG_CR, cr);
-    tc->setIntReg(ReturnValueReg, sysret.encodedValue());
-}
-
 const std::vector<int> PowerProcess::SyscallABI::ArgumentRegs = {
     3, 4, 5, 6, 7, 8
 };

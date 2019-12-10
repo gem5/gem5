@@ -48,9 +48,6 @@ class RiscvProcess : public Process
     void argsInit(int pageSize);
 
   public:
-    void setSyscallReturn(ThreadContext *tc,
-                          SyscallReturn return_value) override;
-
     virtual bool mmapGrowsDown() const override { return false; }
 
     //FIXME RISCV needs to handle 64 bit arguments in its 32 bit ISA.

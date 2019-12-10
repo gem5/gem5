@@ -1042,12 +1042,6 @@ I386Process::argsInit(int pageSize)
 }
 
 void
-X86Process::setSyscallReturn(ThreadContext *tc, SyscallReturn retval)
-{
-    tc->setIntReg(INTREG_RAX, retval.encodedValue());
-}
-
-void
 X86_64Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
                      Process *p, RegVal flags)
 {

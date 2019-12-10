@@ -49,8 +49,6 @@ class MipsProcess : public Process
     void argsInit(int pageSize);
 
   public:
-    void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
-
     struct SyscallABI : public GenericSyscallABI64
     {
         static const std::vector<int> ArgumentRegs;

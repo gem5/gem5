@@ -80,8 +80,6 @@ namespace X86ISA
 
         SyscallDesc* getDesc(int callnum) override;
 
-        void setSyscallReturn(ThreadContext *tc,
-                              SyscallReturn return_value) override;
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,
                    Process *process, RegVal flags) override;
 

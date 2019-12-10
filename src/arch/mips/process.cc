@@ -188,23 +188,6 @@ MipsProcess::argsInit(int pageSize)
     tc->pcState(getStartPC());
 }
 
-
-void
-MipsProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
-{
-    if (sysret.successful()) {
-        // no error
-        tc->setIntReg(SyscallSuccessReg, 0);
-        tc->setIntReg(ReturnValueReg, sysret.returnValue());
-    } else {
-        // got an error, return details
-        tc->setIntReg(SyscallSuccessReg, (uint32_t)(-1));
-        tc->setIntReg(ReturnValueReg, sysret.errnoValue());
-    }
-    if (sysret.count() > 1)
-        tc->setIntReg(SyscallPseudoReturnReg, sysret.value2());
-}
-
 const std::vector<int> MipsProcess::SyscallABI::ArgumentRegs = {
     4, 5, 6, 7, 8, 9
 };

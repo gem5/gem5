@@ -85,10 +85,6 @@ class ArmProcess32 : public ArmProcess
     uint32_t armHwcapImpl() const override;
 
   public:
-
-    void setSyscallReturn(ThreadContext *tc,
-            SyscallReturn return_value) override;
-
     struct SyscallABI : public GenericSyscallABI32
     {
         static const std::vector<int> ArgumentRegs;
@@ -132,10 +128,6 @@ class ArmProcess64 : public ArmProcess
     uint32_t armHwcapImpl() const override;
 
   public:
-
-    void setSyscallReturn(ThreadContext *tc,
-            SyscallReturn return_value) override;
-
     struct SyscallABI : public GenericSyscallABI64
     {
         static const std::vector<int> ArgumentRegs;

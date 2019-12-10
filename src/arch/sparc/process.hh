@@ -67,8 +67,6 @@ class SparcProcess : public Process
     Addr readSpillStart() { return spillStart; }
 
     virtual void flushWindows(ThreadContext *tc) = 0;
-    void setSyscallReturn(ThreadContext *tc,
-            SyscallReturn return_value) override;
 
     struct SyscallABI
     {

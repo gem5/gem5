@@ -243,18 +243,6 @@ RiscvProcess::argsInit(int pageSize)
     memState->setStackMin(roundDown(memState->getStackMin(), pageSize));
 }
 
-void
-RiscvProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
-{
-    if (sysret.successful()) {
-        // no error
-        tc->setIntReg(SyscallPseudoReturnReg, sysret.returnValue());
-    } else {
-        // got an error, return details
-        tc->setIntReg(SyscallPseudoReturnReg, sysret.encodedValue());
-    }
-}
-
 const std::vector<int> RiscvProcess::SyscallABI::ArgumentRegs = {
     10, 11, 12, 13, 14, 15, 16
 };
