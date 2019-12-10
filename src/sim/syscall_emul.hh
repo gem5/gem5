@@ -1529,7 +1529,7 @@ cloneFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 
     OS::archClone(flags, p, cp, tc, ctc, newStack, tlsPtr);
 
-    cp->setSyscallReturn(ctc, 0);
+    desc->returnInto(ctc, 0);
 
 #if THE_ISA == SPARC_ISA
     tc->setIntReg(TheISA::SyscallPseudoReturnReg, 0);
