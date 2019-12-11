@@ -66,6 +66,12 @@ struct TestABI_1D
     using Position = int;
 };
 
+// ABI anchor for an ABI which allocates a register for non-void return types.
+struct TestABI_RetReg
+{
+    using Position = int;
+};
+
 // ABI anchor for an ABI which has 2D progress. Conceptually, this could be
 // because integer and floating point arguments are stored in separate
 // registers.
@@ -118,6 +124,22 @@ struct Result<TestABI_1D, Ret,
     store(ThreadContext *tc, const Ret &ret)
     {
         tc->floatResult = ret + 1.0;
+    }
+};
+
+// Hooks for the return value allocating ABI. It uses the same rules as the
+// 1D ABI for arguments, but allocates space for and discards return values.
+template <typename Arg>
+struct Argument<TestABI_RetReg, Arg> : public Argument<TestABI_1D, Arg> {};
+
+template <typename Ret>
+struct Result<TestABI_RetReg, Ret>
+{
+    static void store(ThreadContext *tc, const Ret &ret) {}
+    static void
+    allocate(ThreadContext *tc, TestABI_RetReg::Position &position)
+    {
+        position++;
     }
 };
 
@@ -184,6 +206,21 @@ testIntVoid(ThreadContext *tc, int a, float b, int c, double d,
     EXPECT_EQ(varargs.get<double>(), tc->floats[6]);
 }
 
+// Test functions which verify that the return allocating ABI allocates space
+// for its return value successfully.
+void
+testRetRegVoid(ThreadContext *tc, int a)
+{
+    EXPECT_EQ(a, tc->ints[0]);
+}
+
+int
+testRetRegInt(ThreadContext *tc, int a)
+{
+    EXPECT_EQ(a, tc->ints[1]);
+    return 0;
+}
+
 // Test function which verifies that its arguments reflect the 2D ABI and
 // which doesn't return anything.
 void
@@ -217,6 +254,13 @@ TEST(GuestABI, ABI_1D_args)
     invokeSimcall<TestABI_1D>(&tc, testIntVoid);
     EXPECT_EQ(tc.intResult, tc.DefaultIntResult);
     EXPECT_EQ(tc.floatResult, tc.DefaultFloatResult);
+}
+
+TEST(GuestABI, ABI_RetReg)
+{
+    ThreadContext tc;
+    invokeSimcall<TestABI_RetReg>(&tc, testRetRegVoid);
+    invokeSimcall<TestABI_RetReg>(&tc, testRetRegInt);
 }
 
 TEST(GuestABI, ABI_2D_args)

@@ -74,7 +74,22 @@ struct Result
      * of this method which actually does something and is public.
      */
     static void store(ThreadContext *tc, const Ret &ret);
+
+    /*
+     * Adjust the position of arguments based on the return type, if necessary.
+     *
+     * This method can be excluded if no adjustment is necessary.
+     */
+    static void allocate(ThreadContext *tc, typename ABI::Position &position);
 };
+
+/*
+ * This partial specialization prevents having to special case 'void' when
+ * working with return types.
+ */
+template <typename ABI>
+struct Result<ABI, void>
+{};
 
 template <typename ABI, typename Arg, typename Enabled=void>
 struct Argument
@@ -88,6 +103,35 @@ struct Argument
      * the expected method signature.
      */
     static Arg get(ThreadContext *tc, typename ABI::Position &position);
+};
+
+
+/*
+ * This struct template provides a default allocate() method in case the
+ * Result template doesn't provide one. This is the default in cases where the
+ * return type doesn't affect how arguments are laid out.
+ */
+template <typename ABI, typename Ret, typename Enabled=void>
+struct ResultAllocator
+{
+    static void
+    allocate(ThreadContext *tc, typename ABI::Position &position)
+    {}
+};
+
+/*
+ * If the return type *does* affect how the arguments are laid out, the ABI
+ * can implement an allocate() method for the various return types, and this
+ * specialization will call into it.
+ */
+template <typename ABI, typename Ret>
+struct ResultAllocator<ABI, Ret, decltype((void)&Result<ABI, Ret>::allocate)>
+{
+    static void
+    allocate(ThreadContext *tc, typename ABI::Position &position)
+    {
+        Result<ABI, Ret>::allocate(tc, position);
+    }
 };
 
 
@@ -364,6 +408,7 @@ invokeSimcall(ThreadContext *tc,
     // Default construct a Position to track consumed resources. Built in
     // types will be zero initialized.
     auto position = typename ABI::Position();
+    GuestABI::ResultAllocator<ABI, Ret>::allocate(tc, position);
     return GuestABI::callFrom<ABI, Ret, Args...>(tc, position, target);
 }
 
@@ -408,6 +453,7 @@ dumpSimcall(std::string name, ThreadContext *tc,
     auto position = typename ABI::Position();
     std::ostringstream ss;
 
+    GuestABI::ResultAllocator<ABI, Ret>::allocate(tc, position);
     ss << name;
     GuestABI::dumpArgsFrom<ABI, Ret, Args...>(0, ss, tc, position);
     return ss.str();
