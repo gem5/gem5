@@ -34,6 +34,8 @@
 #include <cstdint>
 #include <memory>
 
+#include "base/cprintf.hh"
+
 /**
  * The replacement data needed by replacement policies. Each replacement policy
  * should have its own implementation of replacement data.
@@ -99,6 +101,17 @@ class ReplaceableEntry
      * @return The way to which this entry belongs.
      */
     uint32_t getWay() const { return _way; }
+
+    /**
+     * Prints relevant information about this entry.
+     *
+     * @return A string containg the contents of this entry.
+     */
+    virtual std::string
+    print() const
+    {
+        return csprintf("set: %#x way: %#x", getSet(), getWay());
+    }
 };
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_REPLACEABLE_ENTRY_HH_
