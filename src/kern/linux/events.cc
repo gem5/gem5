@@ -52,7 +52,7 @@
 #include "kern/linux/printk.hh"
 #include "kern/system_events.hh"
 #include "sim/arguments.hh"
-#include "sim/pseudo_inst.hh"
+#include "sim/core.hh"
 #include "sim/system.hh"
 
 namespace Linux {
@@ -90,9 +90,8 @@ UDelayEvent::process(ThreadContext *tc)
     // __delay and __loop_delay functions. One form involves setting quiesce
     // time to 0 with the assumption that quiesce will not happen. To avoid
     // the quiesce handling in this case, only execute the quiesce if time > 0.
-    if (time > 0) {
-        PseudoInst::quiesceNs(tc, time);
-    }
+    if (time > 0)
+        tc->quiesceTick(curTick() + SimClock::Int::ns * time);
 }
 
 void
