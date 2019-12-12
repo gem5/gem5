@@ -465,6 +465,10 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         return true;
     }
 
+    // Start by determining if we will eventually respond or not,
+    // matching the conditions checked in Cache::handleSnoop
+    const bool will_respond = isPendingModified() && pkt->needsResponse() &&
+        !pkt->isClean();
     if (isPendingModified() || pkt->isInvalidate()) {
         // We need to save and replay the packet in two cases:
         // 1. We're awaiting a writable copy (Modified or Exclusive),
@@ -473,11 +477,6 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         // 2. It's an invalidation (e.g., UpgradeReq), and we need
         //    to forward the snoop up the hierarchy after the current
         //    transaction completes.
-
-        // Start by determining if we will eventually respond or not,
-        // matching the conditions checked in Cache::handleSnoop
-        bool will_respond = isPendingModified() && pkt->needsResponse() &&
-                      !pkt->isClean();
 
         // The packet we are snooping may be deleted by the time we
         // actually process the target, and we consequently need to
@@ -535,7 +534,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         pkt->setHasSharers();
     }
 
-    return true;
+    return will_respond;
 }
 
 MSHR::TargetList
