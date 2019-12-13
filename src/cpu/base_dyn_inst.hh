@@ -1053,7 +1053,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     void
     mwaitAtomic(ThreadContext *tc) override
     {
-        return cpu->mwaitAtomic(threadNumber, tc, cpu->dtb);
+        return cpu->mwaitAtomic(threadNumber, tc, cpu->mmu);
     }
     AddressMonitor *
     getAddrMonitor() override

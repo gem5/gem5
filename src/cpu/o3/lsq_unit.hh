@@ -401,7 +401,7 @@ class LSQUnit
     /** Schedule event for the cpu. */
     void schedule(Event& ev, Tick when) { cpu->schedule(ev, when); }
 
-    BaseTLB* dTLB() { return cpu->dtb; }
+    BaseMMU* getMMUPtr() { return cpu->mmu; }
 
   private:
     /** Pointer to the CPU. */

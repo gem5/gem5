@@ -304,10 +304,10 @@ ThreadContext::semihostingEvent(
 }
 
 ThreadContext::ThreadContext(
-        BaseCPU *cpu, int id, System *system, ::BaseTLB *dtb, ::BaseTLB *itb,
+        BaseCPU *cpu, int id, System *system, ::BaseMMU *mmu,
         BaseISA *isa, iris::IrisConnectionInterface *iris_if,
         const std::string &iris_path) :
-    _cpu(cpu), _threadId(id), _system(system), _dtb(dtb), _itb(itb), _isa(isa),
+    _cpu(cpu), _threadId(id), _system(system), _mmu(mmu), _isa(isa),
     _irisPath(iris_path), vecRegs(ArmISA::NumVecRegs),
     vecPredRegs(ArmISA::NumVecPredRegs),
     comInstEventQueue("instruction-based event queue"),

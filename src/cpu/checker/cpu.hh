@@ -132,8 +132,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     ThreadContext *tc;
 
-    BaseTLB *itb;
-    BaseTLB *dtb;
+    BaseMMU *mmu;
 
     // ISAs like ARM can have multiple destination registers to check,
     // keep them all in a std::queue
@@ -153,8 +152,10 @@ class CheckerCPU : public BaseCPU, public ExecContext
     // Primary thread being run.
     SimpleThread *thread;
 
-    BaseTLB* getITBPtr() { return itb; }
-    BaseTLB* getDTBPtr() { return dtb; }
+    BaseTLB* getITBPtr() { return mmu->itb; }
+    BaseTLB* getDTBPtr() { return mmu->dtb; }
+
+    BaseMMU* getMMUPtr() { return mmu; }
 
     virtual Counter totalInsts() const override
     {
@@ -540,28 +541,32 @@ class CheckerCPU : public BaseCPU, public ExecContext
     void
     demapPage(Addr vaddr, uint64_t asn) override
     {
-        this->itb->demapPage(vaddr, asn);
-        this->dtb->demapPage(vaddr, asn);
+        mmu->demapPage(vaddr, asn);
     }
 
     // monitor/mwait funtions
     void armMonitor(Addr address) override { BaseCPU::armMonitor(0, address); }
     bool mwait(PacketPtr pkt) override { return BaseCPU::mwait(0, pkt); }
-    void mwaitAtomic(ThreadContext *tc) override
-    { return BaseCPU::mwaitAtomic(0, tc, thread->dtb); }
+
+    void
+    mwaitAtomic(ThreadContext *tc) override
+    {
+        return BaseCPU::mwaitAtomic(0, tc, thread->mmu);
+    }
+
     AddressMonitor *getAddrMonitor() override
     { return BaseCPU::getCpuAddrMonitor(0); }
 
     void
     demapInstPage(Addr vaddr, uint64_t asn)
     {
-        this->itb->demapPage(vaddr, asn);
+        mmu->itb->demapPage(vaddr, asn);
     }
 
     void
     demapDataPage(Addr vaddr, uint64_t asn)
     {
-        this->dtb->demapPage(vaddr, asn);
+        mmu->dtb->demapPage(vaddr, asn);
     }
 
     /**

@@ -55,11 +55,11 @@ MinorCPU::MinorCPU(const MinorCPUParams &params) :
     for (ThreadID i = 0; i < numThreads; i++) {
         if (FullSystem) {
             thread = new Minor::MinorThread(this, i, params.system,
-                    params.itb, params.dtb, params.isa[i]);
+                    params.mmu, params.isa[i]);
             thread->setStatus(ThreadContext::Halted);
         } else {
             thread = new Minor::MinorThread(this, i, params.system,
-                    params.workload[i], params.itb, params.dtb,
+                    params.workload[i], params.mmu,
                     params.isa[i]);
         }
 

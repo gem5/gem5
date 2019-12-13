@@ -179,7 +179,8 @@ class CpuCluster(SubSystem):
             int_cls = ArmPPI if pint < 32 else ArmSPI
             for isa in cpu.isa:
                 isa.pmu = ArmPMU(interrupt=int_cls(num=pint))
-                isa.pmu.addArchEvents(cpu=cpu, itb=cpu.itb, dtb=cpu.dtb,
+                isa.pmu.addArchEvents(cpu=cpu,
+                                      itb=cpu.mmu.itb, dtb=cpu.mmu.dtb,
                                       icache=getattr(cpu, 'icache', None),
                                       dcache=getattr(cpu, 'dcache', None),
                                       l2cache=getattr(self, 'l2', None))

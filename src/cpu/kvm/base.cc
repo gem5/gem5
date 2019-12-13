@@ -82,14 +82,13 @@ BaseKvmCPU::BaseKvmCPU(const BaseKvmCPUParams &params)
         panic("KVM: Failed to determine host page size (%i)\n",
               errno);
 
-    if (FullSystem) {
-        thread = new SimpleThread(this, 0, params.system, params.itb,
-                                  params.dtb, params.isa[0]);
-    } else {
+    if (FullSystem)
+        thread = new SimpleThread(this, 0, params.system, params.mmu,
+                                  params.isa[0]);
+    else
         thread = new SimpleThread(this, /* thread_num */ 0, params.system,
-                                  params.workload[0], params.itb,
-                                  params.dtb, params.isa[0]);
-    }
+                                  params.workload[0], params.mmu,
+                                  params.isa[0]);
 
     thread->setStatus(ThreadContext::Halted);
     tc = thread->getTC();
@@ -1082,7 +1081,7 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
     // APIC accesses on x86 and m5ops where supported through a MMIO
     // interface.
     BaseTLB::Mode tlb_mode(write ? BaseTLB::Write : BaseTLB::Read);
-    Fault fault(tc->getDTBPtr()->finalizePhysical(mmio_req, tc, tlb_mode));
+    Fault fault(tc->getMMUPtr()->finalizePhysical(mmio_req, tc, tlb_mode));
     if (fault != NoFault)
         warn("Finalization of MMIO address failed: %s\n", fault->name());
 

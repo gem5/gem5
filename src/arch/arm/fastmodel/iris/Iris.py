@@ -90,8 +90,7 @@ class IrisBaseCPU(BaseCPU):
     thread_paths = VectorParam.String(
             "Sub-paths to elements in the EVS which support a thread context")
 
-    dtb = IrisTLB()
-    itb = IrisTLB()
+    mmu = IrisMMU()
 
     def createThreads(self):
         if len(self.isa) == 0:

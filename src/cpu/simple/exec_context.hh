@@ -577,7 +577,7 @@ class SimpleExecContext : public ExecContext {
     void
     mwaitAtomic(ThreadContext *tc) override
     {
-        cpu->mwaitAtomic(thread->threadId(), tc, thread->dtb);
+        cpu->mwaitAtomic(thread->threadId(), tc, thread->mmu);
     }
 
     AddressMonitor *

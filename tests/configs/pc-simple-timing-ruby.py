@@ -80,8 +80,8 @@ for (i, cpu) in enumerate(system.cpu):
     # Tie the cpu ports to the correct ruby system ports
     cpu.icache_port = system.ruby._cpu_ports[i].slave
     cpu.dcache_port = system.ruby._cpu_ports[i].slave
-    cpu.itb.walker.port = system.ruby._cpu_ports[i].slave
-    cpu.dtb.walker.port = system.ruby._cpu_ports[i].slave
+    cpu.mmu.connectWalkerPorts(
+        system.ruby._cpu_ports[i].slave, system.ruby._cpu_ports[i].slave)
 
     cpu.interrupts[0].pio = system.ruby._cpu_ports[i].master
     cpu.interrupts[0].int_master = system.ruby._cpu_ports[i].slave

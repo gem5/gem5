@@ -36,10 +36,10 @@ namespace FastModel
 {
 
 CortexA76TC::CortexA76TC(::BaseCPU *cpu, int id, System *system,
-        ::BaseTLB *dtb, ::BaseTLB *itb, ::BaseISA *isa,
+        ::BaseMMU *mmu, ::BaseISA *isa,
         iris::IrisConnectionInterface *iris_if,
         const std::string &iris_path) :
-    ThreadContext(cpu, id, system, dtb, itb, isa, iris_if, iris_path)
+    ThreadContext(cpu, id, system, mmu, isa, iris_if, iris_path)
 {}
 
 bool

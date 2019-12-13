@@ -44,3 +44,11 @@ class RiscvMMU(BaseMMU):
     cxx_header = 'arch/riscv/mmu.hh'
     itb = RiscvTLB()
     dtb = RiscvTLB()
+
+    @classmethod
+    def walkerPorts(cls):
+        return ["mmu.itb.walker.port", "mmu.dtb.walker.port"]
+
+    def connectWalkerPorts(self, iport, dport):
+        self.itb.walker.port = iport
+        self.dtb.walker.port = dport

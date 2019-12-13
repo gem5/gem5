@@ -184,7 +184,7 @@ Fetch1::fetchLine(ThreadID tid)
     /* Submit the translation request.  The response will come
      *  through finish/markDelayed on this request as it bears
      *  the Translation interface */
-    cpu.threads[request->id.threadId]->itb->translateTiming(
+    cpu.threads[request->id.threadId]->mmu->translateTiming(
         request->request,
         cpu.getContext(request->id.threadId),
         request, BaseTLB::Execute);

@@ -119,8 +119,7 @@ class FullO3CPU : public BaseO3CPU
         SwitchedOut
     };
 
-    BaseTLB *itb;
-    BaseTLB *dtb;
+    BaseMMU *mmu;
     using LSQRequest = typename LSQ<Impl>::LSQRequest;
 
     /** Overall CPU status. */
@@ -192,20 +191,20 @@ class FullO3CPU : public BaseO3CPU
     /** Register probe points. */
     void regProbePoints() override;
 
-    void demapPage(Addr vaddr, uint64_t asn)
+    void
+    demapPage(Addr vaddr, uint64_t asn)
     {
-        this->itb->demapPage(vaddr, asn);
-        this->dtb->demapPage(vaddr, asn);
+        mmu->demapPage(vaddr, asn);
     }
 
     void demapInstPage(Addr vaddr, uint64_t asn)
     {
-        this->itb->demapPage(vaddr, asn);
+        mmu->itb->demapPage(vaddr, asn);
     }
 
     void demapDataPage(Addr vaddr, uint64_t asn)
     {
-        this->dtb->demapPage(vaddr, asn);
+        mmu->dtb->demapPage(vaddr, asn);
     }
 
     /** Ticks CPU, calling tick() on each stage, and checking the overall

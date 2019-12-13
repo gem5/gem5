@@ -175,9 +175,9 @@ def build_test_system(np):
             cpu.icache_port = test_sys.ruby._cpu_ports[i].slave
             cpu.dcache_port = test_sys.ruby._cpu_ports[i].slave
 
-            if buildEnv['TARGET_ISA'] in ("x86", "arm"):
-                cpu.itb.walker.port = test_sys.ruby._cpu_ports[i].slave
-                cpu.dtb.walker.port = test_sys.ruby._cpu_ports[i].slave
+            cpu.mmu.connectWalkerPorts(
+                test_sys.ruby._cpu_ports[i].slave,
+                test_sys.ruby._cpu_ports[i].slave)
 
             if buildEnv['TARGET_ISA'] in "x86":
                 cpu.interrupts[0].pio = test_sys.ruby._cpu_ports[i].master

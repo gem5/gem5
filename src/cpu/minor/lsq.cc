@@ -310,7 +310,7 @@ LSQ::SingleDataRequest::startAddrTranslation()
         /* Submit the translation request.  The response will come through
          *  finish/markDelayed on the LSQRequest as it bears the Translation
          *  interface */
-        thread->getDTBPtr()->translateTiming(
+        thread->getMMUPtr()->translateTiming(
             request, thread, this, (isLoad ? BaseTLB::Read : BaseTLB::Write));
     } else {
         disableMemAccess();
@@ -708,7 +708,7 @@ LSQ::SplitDataRequest::sendNextFragmentToTranslation()
     port.numAccessesInDTLB++;
     numInTranslationFragments++;
 
-    thread->getDTBPtr()->translateTiming(
+    thread->getMMUPtr()->translateTiming(
         fragmentRequests[fragment_index], thread, this, (isLoad ?
         BaseTLB::Read : BaseTLB::Write));
 }

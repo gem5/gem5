@@ -46,6 +46,7 @@
 
 #include "arch/decoder.hh"
 #include "arch/generic/htm.hh"
+#include "arch/generic/mmu.hh"
 #include "arch/generic/tlb.hh"
 #include "arch/isa.hh"
 #include "arch/registers.hh"
@@ -130,8 +131,7 @@ class SimpleThread : public ThreadState, public ThreadContext
 
     System *system;
 
-    BaseTLB *itb;
-    BaseTLB *dtb;
+    BaseMMU *mmu;
 
     TheISA::Decoder decoder;
 
@@ -142,10 +142,10 @@ class SimpleThread : public ThreadState, public ThreadContext
     // constructor: initialize SimpleThread from given process structure
     // FS
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-                 BaseTLB *_itb, BaseTLB *_dtb, BaseISA *_isa);
+                 BaseMMU *_mmu, BaseISA *_isa);
     // SE
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-                 Process *_process, BaseTLB *_itb, BaseTLB *_dtb,
+                 Process *_process, BaseMMU *_mmu,
                  BaseISA *_isa);
 
     virtual ~SimpleThread() {}
@@ -168,20 +168,20 @@ class SimpleThread : public ThreadState, public ThreadContext
      */
     ThreadContext *getTC() { return this; }
 
-    void demapPage(Addr vaddr, uint64_t asn)
+    void
+    demapPage(Addr vaddr, uint64_t asn)
     {
-        itb->demapPage(vaddr, asn);
-        dtb->demapPage(vaddr, asn);
+        mmu->demapPage(vaddr, asn);
     }
 
     void demapInstPage(Addr vaddr, uint64_t asn)
     {
-        itb->demapPage(vaddr, asn);
+        mmu->itb->demapPage(vaddr, asn);
     }
 
     void demapDataPage(Addr vaddr, uint64_t asn)
     {
-        dtb->demapPage(vaddr, asn);
+        mmu->dtb->demapPage(vaddr, asn);
     }
 
     /*******************************************
@@ -216,9 +216,11 @@ class SimpleThread : public ThreadState, public ThreadContext
     ContextID contextId() const override { return ThreadState::contextId(); }
     void setContextId(ContextID id) override { ThreadState::setContextId(id); }
 
-    BaseTLB *getITBPtr() override { return itb; }
+    BaseTLB *getITBPtr() override { return mmu->itb; }
 
-    BaseTLB *getDTBPtr() override { return dtb; }
+    BaseTLB *getDTBPtr() override { return mmu->dtb; }
+
+    BaseMMU *getMMUPtr() override { return mmu; }
 
     CheckerCPU *getCheckerCpuPtr() override { return NULL; }
 

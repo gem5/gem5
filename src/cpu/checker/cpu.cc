@@ -80,8 +80,7 @@ CheckerCPU::CheckerCPU(const Params &p)
 
     exitOnError = p.exitOnError;
     warnOnlyOnLoadError = p.warnOnlyOnLoadError;
-    itb = p.itb;
-    dtb = p.dtb;
+    mmu = p.mmu;
     workload = p.workload;
 
     updateOnError = true;
@@ -99,11 +98,11 @@ CheckerCPU::setSystem(System *system)
     systemPtr = system;
 
     if (FullSystem) {
-        thread = new SimpleThread(this, 0, systemPtr, itb, dtb, p.isa[0]);
+        thread = new SimpleThread(this, 0, systemPtr, mmu, p.isa[0]);
     } else {
         thread = new SimpleThread(this, 0, systemPtr,
                                   workload.size() ? workload[0] : NULL,
-                                  itb, dtb, p.isa[0]);
+                                  mmu, p.isa[0]);
     }
 
     tc = thread->getTC();
@@ -188,7 +187,7 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
 
         // translate to physical address
         if (predicate) {
-            fault = dtb->translateFunctional(mem_req, tc, BaseTLB::Read);
+            fault = mmu->translateFunctional(mem_req, tc, BaseTLB::Read);
         }
 
         if (predicate && !checked_flags && fault == NoFault && unverifiedReq) {
@@ -272,7 +271,7 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
         predicate = (mem_req != nullptr);
 
         if (predicate) {
-            fault = dtb->translateFunctional(mem_req, tc, BaseTLB::Write);
+            fault = mmu->translateFunctional(mem_req, tc, BaseTLB::Write);
         }
 
         if (predicate && !checked_flags && fault == NoFault && unverifiedReq) {

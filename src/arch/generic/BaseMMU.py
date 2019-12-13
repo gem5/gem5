@@ -45,3 +45,27 @@ class BaseMMU(SimObject):
     cxx_header = "arch/generic/mmu.hh"
     itb = Param.BaseTLB("Instruction TLB")
     dtb = Param.BaseTLB("Data TLB")
+
+    @classmethod
+    def walkerPorts(cls):
+        # This classmethod is used by the BaseCPU. It should return
+        # a list of strings: the table walker ports to be assigned
+        # to the _cached_ports variable. The method should be removed once
+        # we remove the _cached_ports methodology of composing
+        # cache hierarchies
+        return []
+
+    def connectWalkerPorts(self, iport, dport):
+        """
+        Connect the instruction and data table walkers
+        to the ports passed as arguments.
+        An ISA specific MMU should override
+        this method, which is doing nothing to support ISAs
+        not implementing a table walker
+
+        :param iport: Port to be connected to the instruction
+                      table walker port
+        :param dport: Port to be connected to the data
+                      table walker port
+        """
+        pass

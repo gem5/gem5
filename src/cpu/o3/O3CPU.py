@@ -179,14 +179,15 @@ class DerivO3CPU(BaseCPU):
 
     def addCheckerCpu(self):
         if buildEnv['TARGET_ISA'] in ['arm']:
-            from m5.objects.ArmTLB import ArmDTB, ArmITB
+            from m5.objects.ArmTLB import ArmMMU
 
             self.checker = O3Checker(workload=self.workload,
                                      exitOnError=False,
                                      updateOnError=True,
                                      warnOnlyOnLoadError=True)
-            self.checker.itb = ArmITB(size = self.itb.size)
-            self.checker.dtb = ArmDTB(size = self.dtb.size)
+            self.checker.mmu = ArmMMU()
+            self.checker.mmu.itb.size = self.mmu.itb.size
+            self.checker.mmu.dtb.size = self.mmu.dtb.size
             self.checker.cpu_id = self.cpu_id
 
         else:

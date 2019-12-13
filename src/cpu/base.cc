@@ -235,7 +235,7 @@ BaseCPU::mwait(ThreadID tid, PacketPtr pkt)
 }
 
 void
-BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseTLB *dtb)
+BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseMMU *mmu)
 {
     assert(tid < numThreads);
     AddressMonitor &monitor = addressMonitor[tid];
@@ -256,7 +256,7 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseTLB *dtb)
     req->setVirt(addr, size, 0x0, dataRequestorId(), tc->instAddr());
 
     // translate to physical address
-    Fault fault = dtb->translateAtomic(req, tc, BaseTLB::Read);
+    Fault fault = mmu->translateAtomic(req, tc, BaseTLB::Read);
     assert(fault == NoFault);
 
     monitor.pAddr = req->getPaddr() & mask;
@@ -588,41 +588,14 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
             ThreadContext::compare(oldTC, newTC);
         */
 
-        Port *old_itb_port = oldTC->getITBPtr()->getTableWalkerPort();
-        Port *old_dtb_port = oldTC->getDTBPtr()->getTableWalkerPort();
-        Port *new_itb_port = newTC->getITBPtr()->getTableWalkerPort();
-        Port *new_dtb_port = newTC->getDTBPtr()->getTableWalkerPort();
-
-        // Move over any table walker ports if they exist
-        if (new_itb_port)
-            new_itb_port->takeOverFrom(old_itb_port);
-        if (new_dtb_port)
-            new_dtb_port->takeOverFrom(old_dtb_port);
-        newTC->getITBPtr()->takeOverFrom(oldTC->getITBPtr());
-        newTC->getDTBPtr()->takeOverFrom(oldTC->getDTBPtr());
+        newTC->getMMUPtr()->takeOverFrom(oldTC->getMMUPtr());
 
         // Checker whether or not we have to transfer CheckerCPU
         // objects over in the switch
-        CheckerCPU *oldChecker = oldTC->getCheckerCpuPtr();
-        CheckerCPU *newChecker = newTC->getCheckerCpuPtr();
-        if (oldChecker && newChecker) {
-            Port *old_checker_itb_port =
-                oldChecker->getITBPtr()->getTableWalkerPort();
-            Port *old_checker_dtb_port =
-                oldChecker->getDTBPtr()->getTableWalkerPort();
-            Port *new_checker_itb_port =
-                newChecker->getITBPtr()->getTableWalkerPort();
-            Port *new_checker_dtb_port =
-                newChecker->getDTBPtr()->getTableWalkerPort();
-
-            newChecker->getITBPtr()->takeOverFrom(oldChecker->getITBPtr());
-            newChecker->getDTBPtr()->takeOverFrom(oldChecker->getDTBPtr());
-
-            // Move over any table walker ports if they exist for checker
-            if (new_checker_itb_port)
-                new_checker_itb_port->takeOverFrom(old_checker_itb_port);
-            if (new_checker_dtb_port)
-                new_checker_dtb_port->takeOverFrom(old_checker_dtb_port);
+        CheckerCPU *old_checker = oldTC->getCheckerCpuPtr();
+        CheckerCPU *new_checker = newTC->getCheckerCpuPtr();
+        if (old_checker && new_checker) {
+            new_checker->getMMUPtr()->takeOverFrom(old_checker->getMMUPtr());
         }
     }
 
@@ -647,11 +620,9 @@ BaseCPU::flushTLBs()
         ThreadContext &tc(*threadContexts[i]);
         CheckerCPU *checker(tc.getCheckerCpuPtr());
 
-        tc.getITBPtr()->flushAll();
-        tc.getDTBPtr()->flushAll();
+        tc.getMMUPtr()->flushAll();
         if (checker) {
-            checker->getITBPtr()->flushAll();
-            checker->getDTBPtr()->flushAll();
+            checker->getMMUPtr()->flushAll();
         }
     }
 }

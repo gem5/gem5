@@ -61,6 +61,7 @@ namespace TheISA
     class Decoder;
 }
 class BaseCPU;
+class BaseMMU;
 class BaseTLB;
 class CheckerCPU;
 class Checkpoint;
@@ -132,6 +133,8 @@ class ThreadContext : public PCEventScope
     virtual BaseTLB *getITBPtr() = 0;
 
     virtual BaseTLB *getDTBPtr() = 0;
+
+    virtual BaseMMU *getMMUPtr() = 0;
 
     virtual CheckerCPU *getCheckerCpuPtr() = 0;
 

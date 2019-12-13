@@ -551,8 +551,8 @@ for i in range(options.num_cpus):
         system.cpu[i].interrupts[0].int_master = system.piobus.slave
         system.cpu[i].interrupts[0].int_slave = system.piobus.master
         if fast_forward:
-            system.cpu[i].itb.walker.port = ruby_port.slave
-            system.cpu[i].dtb.walker.port = ruby_port.slave
+            system.cpu[i].mmu.connectWalkerPorts(
+                ruby_port.slave, ruby_port.slave)
 
 # attach CU ports to Ruby
 # Because of the peculiarities of the CP core, you may have 1 CPU but 2

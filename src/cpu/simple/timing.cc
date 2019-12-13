@@ -488,14 +488,14 @@ TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size,
         DataTranslation<TimingSimpleCPU *> *trans2 =
             new DataTranslation<TimingSimpleCPU *>(this, state, 1);
 
-        thread->dtb->translateTiming(req1, thread->getTC(), trans1, mode);
-        thread->dtb->translateTiming(req2, thread->getTC(), trans2, mode);
+        thread->mmu->translateTiming(req1, thread->getTC(), trans1, mode);
+        thread->mmu->translateTiming(req2, thread->getTC(), trans2, mode);
     } else {
         WholeTranslationState *state =
             new WholeTranslationState(req, new uint8_t[size], NULL, mode);
         DataTranslation<TimingSimpleCPU *> *translation
             = new DataTranslation<TimingSimpleCPU *>(this, state);
-        thread->dtb->translateTiming(req, thread->getTC(), translation, mode);
+        thread->mmu->translateTiming(req, thread->getTC(), translation, mode);
     }
 
     return NoFault;
@@ -573,14 +573,14 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
         DataTranslation<TimingSimpleCPU *> *trans2 =
             new DataTranslation<TimingSimpleCPU *>(this, state, 1);
 
-        thread->dtb->translateTiming(req1, thread->getTC(), trans1, mode);
-        thread->dtb->translateTiming(req2, thread->getTC(), trans2, mode);
+        thread->mmu->translateTiming(req1, thread->getTC(), trans1, mode);
+        thread->mmu->translateTiming(req2, thread->getTC(), trans2, mode);
     } else {
         WholeTranslationState *state =
             new WholeTranslationState(req, newData, res, mode);
         DataTranslation<TimingSimpleCPU *> *translation =
             new DataTranslation<TimingSimpleCPU *>(this, state);
-        thread->dtb->translateTiming(req, thread->getTC(), translation, mode);
+        thread->mmu->translateTiming(req, thread->getTC(), translation, mode);
     }
 
     // Translation faults will be returned via finishTranslation()
@@ -630,7 +630,7 @@ TimingSimpleCPU::initiateMemAMO(Addr addr, unsigned size,
         new WholeTranslationState(req, new uint8_t[size], NULL, mode);
     DataTranslation<TimingSimpleCPU *> *translation
         = new DataTranslation<TimingSimpleCPU *>(this, state);
-    thread->dtb->translateTiming(req, thread->getTC(), translation, mode);
+    thread->mmu->translateTiming(req, thread->getTC(), translation, mode);
 
     return NoFault;
 }
@@ -706,7 +706,7 @@ TimingSimpleCPU::fetch()
         ifetch_req->setContext(thread->contextId());
         setupFetchRequest(ifetch_req);
         DPRINTF(SimpleCPU, "Translating address %#x\n", ifetch_req->getVaddr());
-        thread->itb->translateTiming(ifetch_req, thread->getTC(),
+        thread->mmu->translateTiming(ifetch_req, thread->getTC(),
                 &fetchTranslation, BaseTLB::Execute);
     } else {
         _status = IcacheWaitResponse;

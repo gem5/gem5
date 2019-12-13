@@ -954,7 +954,7 @@ void
 LSQ<Impl>::LSQRequest::sendFragmentToTranslation(int i)
 {
     numInTranslationFragments++;
-    _port.dTLB()->translateTiming(
+    _port.getMMUPtr()->translateTiming(
             this->request(i),
             this->_inst->thread->getTC(), this,
             this->isLoad() ? BaseTLB::Read : BaseTLB::Write);

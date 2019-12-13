@@ -66,13 +66,13 @@ using namespace std;
 
 // constructor
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
-                           Process *_process, BaseTLB *_itb,
-                           BaseTLB *_dtb, BaseISA *_isa)
+                           Process *_process, BaseMMU *_mmu,
+                           BaseISA *_isa)
     : ThreadState(_cpu, _thread_num, _process),
       isa(dynamic_cast<TheISA::ISA *>(_isa)),
       predicate(true), memAccPredicate(true),
       comInstEventQueue("instruction-based event queue"),
-      system(_sys), itb(_itb), dtb(_dtb), decoder(isa),
+      system(_sys), mmu(_mmu), decoder(isa),
       htmTransactionStarts(0), htmTransactionStops(0)
 {
     assert(isa);
@@ -80,12 +80,12 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 }
 
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
-                           BaseTLB *_itb, BaseTLB *_dtb, BaseISA *_isa)
+                           BaseMMU *_mmu, BaseISA *_isa)
     : ThreadState(_cpu, _thread_num, NULL),
       isa(dynamic_cast<TheISA::ISA *>(_isa)),
       predicate(true), memAccPredicate(true),
       comInstEventQueue("instruction-based event queue"),
-      system(_sys), itb(_itb), dtb(_dtb), decoder(isa),
+      system(_sys), mmu(_mmu), decoder(isa),
       htmTransactionStarts(0), htmTransactionStops(0)
 {
     assert(isa);

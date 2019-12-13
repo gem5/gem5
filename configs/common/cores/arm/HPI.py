@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2017 ARM Limited
+# Copyright (c) 2014-2017, 2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -1337,6 +1337,10 @@ class HPI_DTB(ArmDTB):
 class HPI_ITB(ArmITB):
     size = 256
 
+class HPI_MMU(ArmMMU):
+    itb = HPI_ITB()
+    dtb = HPI_DTB()
+
 class HPI_WalkCache(Cache):
     data_latency = 4
     tag_latency = 4
@@ -1443,8 +1447,7 @@ class HPI(MinorCPU):
 
     branchPred = HPI_BP()
 
-    itb = HPI_ITB()
-    dtb = HPI_DTB()
+    mmu = HPI_MMU()
 
 __all__ = [
     "HPI_BP",

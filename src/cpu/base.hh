@@ -615,7 +615,7 @@ class BaseCPU : public ClockedObject
   public:
     void armMonitor(ThreadID tid, Addr address);
     bool mwait(ThreadID tid, PacketPtr pkt);
-    void mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseTLB *dtb);
+    void mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseMMU *mmu);
     AddressMonitor *getCpuAddrMonitor(ThreadID tid)
     {
         assert(tid < numThreads);

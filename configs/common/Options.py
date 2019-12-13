@@ -364,8 +364,8 @@ def addCommonOptions(parser):
     parser.add_option("--stats-root", action="append", default=[], help=
         "If given, dump only stats of objects under the given SimObject. "
         "SimObjects are identified with Python notation as in: "
-        "system.cpu[0].dtb. All elements of an array can be selected at "
-        "once with: system.cpu[:].dtb. If given multiple times, dump stats "
+        "system.cpu[0].mmu. All elements of an array can be selected at "
+        "once with: system.cpu[:].mmu. If given multiple times, dump stats "
         "that are present under any of the roots. If not given, dump all "
         "stats. "
     )

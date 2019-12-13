@@ -389,7 +389,7 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data, unsigned size,
 
         // translate to physical address
         if (predicate) {
-            fault = thread->dtb->translateAtomic(req, thread->getTC(),
+            fault = thread->mmu->translateAtomic(req, thread->getTC(),
                                                  BaseTLB::Read);
         }
 
@@ -480,7 +480,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
 
         // translate to physical address
         if (predicate)
-            fault = thread->dtb->translateAtomic(req, thread->getTC(),
+            fault = thread->mmu->translateAtomic(req, thread->getTC(),
                                                  BaseTLB::Write);
 
         // Now do the access.
@@ -590,8 +590,8 @@ AtomicSimpleCPU::amoMem(Addr addr, uint8_t* data, unsigned size,
                  thread->pcState().instAddr(), std::move(amo_op));
 
     // translate to physical address
-    Fault fault = thread->dtb->translateAtomic(req, thread->getTC(),
-                                                      BaseTLB::Write);
+    Fault fault = thread->mmu->translateAtomic(
+        req, thread->getTC(), BaseTLB::Write);
 
     // Now do the access.
     if (fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
@@ -667,7 +667,7 @@ AtomicSimpleCPU::tick()
         if (needToFetch) {
             ifetch_req->taskId(taskId());
             setupFetchRequest(ifetch_req);
-            fault = thread->itb->translateAtomic(ifetch_req, thread->getTC(),
+            fault = thread->mmu->translateAtomic(ifetch_req, thread->getTC(),
                                                  BaseTLB::Execute);
         }
 

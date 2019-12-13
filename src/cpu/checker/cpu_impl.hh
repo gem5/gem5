@@ -244,7 +244,7 @@ Checker<Impl>::verify(const DynInstPtr &completed_inst)
                                  Request::INST_FETCH, requestorId,
                                  thread->instAddr());
 
-                fault = itb->translateFunctional(
+                fault = mmu->translateFunctional(
                     mem_req, tc, BaseTLB::Execute);
 
                 if (fault != NoFault) {

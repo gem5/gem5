@@ -432,8 +432,7 @@ class ExecContext : public ::ExecContext
     void
     demapPage(Addr vaddr, uint64_t asn) override
     {
-        thread.getITBPtr()->demapPage(vaddr, asn);
-        thread.getDTBPtr()->demapPage(vaddr, asn);
+        thread.getMMUPtr()->demapPage(vaddr, asn);
     }
 
     RegVal
@@ -468,17 +467,29 @@ class ExecContext : public ::ExecContext
 
   public:
     // monitor/mwait funtions
-    void armMonitor(Addr address) override
-    { getCpuPtr()->armMonitor(inst->id.threadId, address); }
+    void
+    armMonitor(Addr address) override
+    {
+        getCpuPtr()->armMonitor(inst->id.threadId, address);
+    }
 
-    bool mwait(PacketPtr pkt) override
-    { return getCpuPtr()->mwait(inst->id.threadId, pkt); }
+    bool
+    mwait(PacketPtr pkt) override
+    {
+        return getCpuPtr()->mwait(inst->id.threadId, pkt);
+    }
 
-    void mwaitAtomic(ThreadContext *tc) override
-    { return getCpuPtr()->mwaitAtomic(inst->id.threadId, tc, thread.dtb); }
+    void
+    mwaitAtomic(ThreadContext *tc) override
+    {
+        return getCpuPtr()->mwaitAtomic(inst->id.threadId, tc, thread.mmu);
+    }
 
-    AddressMonitor *getAddrMonitor() override
-    { return getCpuPtr()->getCpuAddrMonitor(inst->id.threadId); }
+    AddressMonitor *
+    getAddrMonitor() override
+    {
+        return getCpuPtr()->getCpuAddrMonitor(inst->id.threadId);
+    }
 };
 
 }
