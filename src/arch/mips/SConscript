@@ -38,6 +38,7 @@ if env['TARGET_ISA'] == 'mips':
     Source('isa.cc')
     Source('linux/linux.cc')
     Source('linux/process.cc')
+    Source('mmu.cc')
     Source('pagetable.cc')
     Source('process.cc')
     Source('remote_gdb.cc')
@@ -46,6 +47,7 @@ if env['TARGET_ISA'] == 'mips':
 
     SimObject('MipsInterrupts.py')
     SimObject('MipsISA.py')
+    SimObject('MipsMMU.py')
     SimObject('MipsTLB.py')
 
     DebugFlag('MipsPRA')

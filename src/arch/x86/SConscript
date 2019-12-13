@@ -59,6 +59,7 @@ if env['TARGET_ISA'] == 'x86':
     Source('linux/fs_workload.cc')
     Source('linux/linux.cc')
     Source('linux/process.cc')
+    Source('mmu.cc')
     Source('nativetrace.cc')
     Source('pagetable.cc')
     Source('pagetable_walker.cc')
@@ -72,6 +73,7 @@ if env['TARGET_ISA'] == 'x86':
     SimObject('X86FsWorkload.py')
     SimObject('X86ISA.py')
     SimObject('X86LocalApic.py')
+    SimObject('X86MMU.py')
     SimObject('X86NativeTrace.py')
     SimObject('X86TLB.py')
 

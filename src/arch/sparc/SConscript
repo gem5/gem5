@@ -38,6 +38,7 @@ if env['TARGET_ISA'] == 'sparc':
     Source('linux/linux.cc')
     Source('linux/process.cc')
     Source('linux/syscalls.cc')
+    Source('mmu.cc')
     Source('nativetrace.cc')
     Source('pagetable.cc')
     Source('process.cc')
@@ -51,6 +52,7 @@ if env['TARGET_ISA'] == 'sparc':
     SimObject('SparcFsWorkload.py')
     SimObject('SparcInterrupts.py')
     SimObject('SparcISA.py')
+    SimObject('SparcMMU.py')
     SimObject('SparcNativeTrace.py')
     SimObject('SparcTLB.py')
 

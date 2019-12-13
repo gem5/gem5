@@ -261,5 +261,5 @@ TLB::index(bool advance)
 MipsISA::TLB *
 MipsTLBParams::create()
 {
-    return new TLB(this);
+    return new MipsISA::TLB(this);
 }
