@@ -261,6 +261,30 @@ TEST(AddrRangeTest, isSubsetPartialSubset)
     EXPECT_FALSE(r2.isSubset(r1));
 }
 
+TEST(AddrRangeTest, isSubsetInterleavedCompleteOverlap)
+{
+    AddrRange r1(0x00, 0x100, {0x40}, 0);
+    AddrRange r2(0x00, 0x40);
+
+    EXPECT_TRUE(r2.isSubset(r1));
+}
+
+TEST(AddrRangeTest, isSubsetInterleavedNoOverlap)
+{
+    AddrRange r1(0x00, 0x100, {0x40}, 1);
+    AddrRange r2(0x00, 0x40);
+
+    EXPECT_FALSE(r2.isSubset(r1));
+}
+
+TEST(AddrRangeTest, isSubsetInterleavedPartialOverlap)
+{
+    AddrRange r1(0x00, 0x100, {0x40}, 0);
+    AddrRange r2(0x10, 0x50);
+
+    EXPECT_FALSE(r2.isSubset(r1));
+}
+
 TEST(AddrRangeTest, Contains)
 {
     AddrRange r(0xF0, 0xF5);

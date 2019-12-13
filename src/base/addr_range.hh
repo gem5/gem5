@@ -390,7 +390,7 @@ class AddrRange
         // whether it would fit in a continuous segment of the input
         // addr range.
         if (r.interleaved()) {
-            return r.contains(_start) && r.contains(_end) &&
+            return r.contains(_start) && r.contains(_end - 1) &&
                 size() <= r.granularity();
         } else {
             return _start >= r._start && _end <= r._end;
