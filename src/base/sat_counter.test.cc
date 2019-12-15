@@ -28,6 +28,7 @@
  * Authors: Daniel Carvalho
  */
 
+#include <gtest/gtest-spi.h>
 #include <gtest/gtest.h>
 
 #include <utility>
@@ -184,6 +185,11 @@ TEST(SatCounterTest, Shift)
     ASSERT_EQ(counter, value);
     counter >>= saturated_counter;
     ASSERT_EQ(counter, 0);
+
+    // Make sure the counters cannot be shifted by negative numbers, since
+    // that is undefined behaviour
+    ASSERT_DEATH(counter >>= -1, "");
+    ASSERT_DEATH(counter <<= -1, "");
 }
 
 /**
@@ -317,5 +323,38 @@ TEST(SatCounterTest, AddSubAssignment)
     ASSERT_EQ(counter, value);
     counter -= saturated_counter;
     ASSERT_EQ(counter, 0);
+}
+
+/**
+ * Test add-assignment and subtract assignment using negative numbers.
+ */
+TEST(SatCounterTest, NegativeAddSubAssignment)
+{
+    const unsigned bits = 3;
+    const unsigned max_value = (1 << bits) - 1;
+    SatCounter counter(bits, max_value);
+    int value = max_value;
+
+    // Test add-assignment for a few negative values until zero is reached
+    counter += -2;
+    value += -2;
+    ASSERT_EQ(counter, value);
+    counter += -3;
+    value += -3;
+    ASSERT_EQ(counter, value);
+    counter += (int)-max_value;
+    value = 0;
+    ASSERT_EQ(counter, value);
+
+    // Test subtract-assignment for a few negative values until saturation
+    counter -= -2;
+    value -= -2;
+    ASSERT_EQ(counter, value);
+    counter -= -3;
+    value -= -3;
+    ASSERT_EQ(counter, value);
+    counter -= (int)-max_value;
+    value = max_value;
+    ASSERT_EQ(counter, value);
 }
 

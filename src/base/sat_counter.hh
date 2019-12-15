@@ -44,6 +44,7 @@
 #ifndef __BASE_SAT_COUNTER_HH__
 #define __BASE_SAT_COUNTER_HH__
 
+#include <cassert>
 #include <cstdint>
 
 #include "base/logging.hh"
@@ -172,6 +173,7 @@ class SatCounter
     SatCounter&
     operator>>=(const int& shift)
     {
+        assert(shift >= 0);
         this->counter >>= shift;
         return *this;
     }
@@ -180,6 +182,7 @@ class SatCounter
     SatCounter&
     operator<<=(const int& shift)
     {
+        assert(shift >= 0);
         this->counter <<= shift;
         if (this->counter > maxVal) {
             this->counter = maxVal;
@@ -191,10 +194,14 @@ class SatCounter
     SatCounter&
     operator+=(const int& value)
     {
-        if (maxVal - this->counter >= value) {
-            this->counter += value;
+        if (value >= 0) {
+            if (maxVal - this->counter >= value) {
+                this->counter += value;
+            } else {
+                this->counter = maxVal;
+            }
         } else {
-            this->counter = maxVal;
+            *this -= -value;
         }
         return *this;
     }
@@ -203,10 +210,14 @@ class SatCounter
     SatCounter&
     operator-=(const int& value)
     {
-        if (this->counter > value) {
-            this->counter -= value;
+        if (value >= 0) {
+            if (this->counter > value) {
+                this->counter -= value;
+            } else {
+                this->counter = 0;
+            }
         } else {
-            this->counter = 0;
+            *this += -value;
         }
         return *this;
     }
