@@ -47,4 +47,5 @@ cd git/jenkins-gem5-prod/tests
 # Build with 4 threads (i.e., pass -j4 to scons)
 # Run 4 tests in parallel
 # Look for tests in the gem5 subdirectory
-./main.py run -j4 -t4 gem5
+# Once complete, run the Google Tests
+./main.py run -j4 -t4 gem5 && scons -C .. build/NULL/unittests.opt
