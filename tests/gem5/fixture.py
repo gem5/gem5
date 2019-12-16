@@ -42,6 +42,7 @@
 import os
 import tempfile
 import shutil
+import sys
 import threading
 import urllib
 import urllib2
@@ -157,7 +158,7 @@ class SConsFixture(UniqueFixture):
         command.extend(self.targets)
         if self.options:
             command.extend(self.options)
-        log_call(log.test_log, command)
+        log_call(log.test_log, command, stderr=sys.stderr)
 
 class Gem5Fixture(SConsFixture):
     def __new__(cls, isa, variant, protocol=None):

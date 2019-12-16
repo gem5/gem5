@@ -29,6 +29,7 @@
 import os
 import copy
 import subprocess
+import sys
 
 from testlib.test import TestFunction
 from testlib.suite import TestSuite
@@ -161,6 +162,6 @@ def _create_test_run_gem5(config, config_args, gem5_args):
         command.append(config)
         # Config_args should set up the program args.
         command.extend(config_args)
-        returncode.value = log_call(params.log, command)
+        returncode.value = log_call(params.log, command, stderr=sys.stderr)
 
     return test_run_gem5
