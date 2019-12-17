@@ -362,3 +362,14 @@ TEST(GuestABI, dumpSimcall)
     std::string dump = dumpSimcall<TestABI_1D>("test", &tc, testIntVoid);
     EXPECT_EQ(dump, "test(0, 11, 2, 13, ...)");
 }
+
+TEST(GuestABI, isVarArgs)
+{
+    EXPECT_TRUE(GuestABI::IsVarArgs<GuestABI::VarArgs<int>>::value);
+    EXPECT_FALSE(GuestABI::IsVarArgs<int>::value);
+    EXPECT_FALSE(GuestABI::IsVarArgs<double>::value);
+    struct FooStruct {};
+    EXPECT_FALSE(GuestABI::IsVarArgs<FooStruct>::value);
+    union FooUnion {};
+    EXPECT_FALSE(GuestABI::IsVarArgs<FooUnion>::value);
+}

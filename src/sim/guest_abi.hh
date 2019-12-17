@@ -284,6 +284,12 @@ class VarArgs
     }
 };
 
+template <typename T>
+struct IsVarArgs : public std::false_type {};
+
+template <typename ...Types>
+struct IsVarArgs<VarArgs<Types...>> : public std::true_type {};
+
 template <typename ...Types>
 std::ostream &
 operator << (std::ostream &os, const VarArgs<Types...> &va)
