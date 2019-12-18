@@ -124,7 +124,6 @@ packet2payload(PacketPtr packet)
 template <unsigned int BITWIDTH>
 void
 Gem5ToTlmBridge<BITWIDTH>::pec(
-        Gem5SystemC::PayloadEvent<Gem5ToTlmBridge<BITWIDTH>> *pe,
         tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase)
 {
     sc_core::sc_time delay;
@@ -176,7 +175,6 @@ Gem5ToTlmBridge<BITWIDTH>::pec(
             }
         }
     }
-    delete pe;
 }
 
 template <unsigned int BITWIDTH>
@@ -354,12 +352,9 @@ Gem5ToTlmBridge<BITWIDTH>::recvTimingReq(PacketPtr packet)
     } else if (status == tlm::TLM_UPDATED) {
         // The Timing annotation must be honored:
         sc_assert(phase == tlm::END_REQ || phase == tlm::BEGIN_RESP);
-
-        auto *pe = new Gem5SystemC::PayloadEvent<Gem5ToTlmBridge>(
-                *this, &Gem5ToTlmBridge::pec, "PEQ");
-        Tick nextEventTick = curTick() + delay.value();
-        system->wakeupEventQueue(nextEventTick);
-        system->schedule(pe, nextEventTick);
+        auto cb = [this, trans, phase]() { pec(*trans, phase); };
+        system->schedule(new EventFunctionWrapper(cb, "pec", true),
+                         curTick() + delay.value());
     } else if (status == tlm::TLM_COMPLETED) {
         // Transaction is over nothing has do be done.
         sc_assert(phase == tlm::END_RESP);
@@ -432,11 +427,9 @@ tlm::tlm_sync_enum
 Gem5ToTlmBridge<BITWIDTH>::nb_transport_bw(tlm::tlm_generic_payload &trans,
     tlm::tlm_phase &phase, sc_core::sc_time &delay)
 {
-    auto *pe = new Gem5SystemC::PayloadEvent<Gem5ToTlmBridge>(
-            *this, &Gem5ToTlmBridge::pec, "PE");
-    Tick nextEventTick = curTick() + delay.value();
-    system->wakeupEventQueue(nextEventTick);
-    system->schedule(pe, nextEventTick);
+    auto cb = [this, &trans, phase]() { pec(trans, phase); };
+    system->schedule(new EventFunctionWrapper(cb, "pec", true),
+                     curTick() + delay.value());
     return tlm::TLM_ACCEPTED;
 }
 

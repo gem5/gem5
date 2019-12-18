@@ -72,7 +72,6 @@
 #include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/ext/tlm_core/2/generic_payload/gp.hh"
 #include "systemc/ext/tlm_utils/simple_initiator_socket.h"
-#include "systemc/tlm_bridge/sc_peq.hh"
 #include "systemc/tlm_port_wrapper.hh"
 
 namespace sc_gem5
@@ -167,8 +166,7 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
     AddrRangeList addrRanges;
 
   protected:
-    void pec(Gem5SystemC::PayloadEvent<Gem5ToTlmBridge<BITWIDTH>> *pe,
-             tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase);
+    void pec(tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase);
 
     MemBackdoorPtr getBackdoor(tlm::tlm_generic_payload &trans);
     AddrRangeMap<MemBackdoorPtr> backdoorMap;
