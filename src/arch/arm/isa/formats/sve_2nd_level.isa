@@ -3132,10 +3132,6 @@ namespace Aarch64
         IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
         IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
 
-        if (rm == 0x1f) {
-            return new Unknown64(machInst);
-        }
-
         return decodeSveContigLoadSSInsts<SveContigFFLoadSS>(
             bits(machInst, 24, 21), machInst, zt, pg, rn, rm, true);
     }  // decodeSveContigFFLoadSS
