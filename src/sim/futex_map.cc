@@ -26,7 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <debug/Thread.hh>
 #include <sim/futex_map.hh>
 
 FutexKey::FutexKey(uint64_t addr_in, uint64_t tgid_in)
@@ -53,9 +52,6 @@ namespace std {
 WaiterState::WaiterState(ThreadContext* _tc, int _bitmask)
       : tc(_tc), bitmask(_bitmask) { }
 
-WaiterState::WaiterState(ThreadContext* _tc)
-      : tc(_tc), bitmask(0xffffffff) { }
-
 bool
 WaiterState::checkMask(int wakeup_bitmask) const
 {
@@ -65,18 +61,7 @@ WaiterState::checkMask(int wakeup_bitmask) const
 void
 FutexMap::suspend(Addr addr, uint64_t tgid, ThreadContext *tc)
 {
-    FutexKey key(addr, tgid);
-    auto it = find(key);
-
-    if (it == end()) {
-        WaiterList waiterList {WaiterState(tc)};
-        insert({key, waiterList});
-    } else {
-        it->second.push_back(WaiterState(tc));
-    }
-
-    /** Suspend the thread context */
-    tc->suspend();
+    suspend_bitset(addr, tgid, tc, 0xffffffff);
 }
 
 int

@@ -75,11 +75,6 @@ class WaiterState {
     WaiterState(ThreadContext* _tc, int _bitmask);
 
     /**
-     * if bitset is not defined, just set bitmask to 0xffffffff
-     */
-    WaiterState(ThreadContext* _tc);
-
-    /**
      * return true if the bit-wise AND of the wakeup_bitmask given by
      * a waking thread and this thread's internal bitmask is non-zero
      */
