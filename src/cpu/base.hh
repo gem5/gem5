@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013, 2017 ARM Limited
+ * Copyright (c) 2011-2013, 2017, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -232,12 +232,7 @@ class BaseCPU : public ClockedObject
     virtual void wakeup(ThreadID tid) = 0;
 
     void
-    postInterrupt(ThreadID tid, int int_num, int index)
-    {
-        interrupts[tid]->post(int_num, index);
-        if (FullSystem)
-            wakeup(tid);
-    }
+    postInterrupt(ThreadID tid, int int_num, int index);
 
     void
     clearInterrupt(ThreadID tid, int int_num, int index)

@@ -30,6 +30,7 @@
 #define __FUTEX_MAP_HH__
 
 #include <unordered_map>
+#include <unordered_set>
 
 #include <cpu/thread_context.hh>
 
@@ -111,6 +112,16 @@ class FutexMap : public std::unordered_map<FutexKey, WaiterList>
      * requeued.
      */
     int requeue(Addr addr1, uint64_t tgid, int count, int count2, Addr addr2);
+
+    /**
+     * Determine if the given thread context is currently waiting on a
+     * futex wait operation on any of the futexes tracked by this FutexMap.
+     */
+    bool is_waiting(ThreadContext *tc);
+
+  private:
+
+    std::unordered_set<ThreadContext *> waitingTcs;
 };
 
 #endif // __FUTEX_MAP_HH__

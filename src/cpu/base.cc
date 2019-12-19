@@ -186,6 +186,17 @@ BaseCPU::~BaseCPU()
 }
 
 void
+BaseCPU::postInterrupt(ThreadID tid, int int_num, int index)
+{
+    interrupts[tid]->post(int_num, index);
+    // Only wake up syscall emulation if it is not waiting on a futex.
+    // This is to model the fact that instructions such as ARM SEV
+    // should wake up a WFE sleep, but not a futex syscall WAIT. */
+    if (FullSystem || !system->futexMap.is_waiting(threadContexts[tid]))
+        wakeup(tid);
+}
+
+void
 BaseCPU::armMonitor(ThreadID tid, Addr address)
 {
     assert(tid < numThreads);

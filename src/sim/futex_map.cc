@@ -82,11 +82,10 @@ FutexMap::wakeup(Addr addr, uint64_t tgid, int count)
         // must only count threads that were actually
         // woken up by this syscall.
         auto& tc = waiterList.front().tc;
-        if (tc->status() == ThreadContext::Suspended) {
-            tc->activate();
-            woken_up++;
-        }
+        tc->activate();
+        woken_up++;
         waiterList.pop_front();
+        waitingTcs.erase(tc);
     }
 
     if (waiterList.empty())
@@ -108,6 +107,7 @@ FutexMap::suspend_bitset(Addr addr, uint64_t tgid, ThreadContext *tc,
     } else {
         it->second.push_back(WaiterState(tc, bitmask));
     }
+    waitingTcs.emplace(tc);
 
     /** Suspend the thread context */
     tc->suspend();
@@ -133,6 +133,7 @@ FutexMap::wakeup_bitset(Addr addr, uint64_t tgid, int bitmask)
         if (waiter.checkMask(bitmask)) {
             waiter.tc->activate();
             iter = waiterList.erase(iter);
+            waitingTcs.erase(waiter.tc);
             woken_up++;
         } else {
             ++iter;
@@ -187,4 +188,10 @@ FutexMap::requeue(Addr addr1, uint64_t tgid, int count, int count2, Addr addr2)
         erase(it1);
 
     return woken_up + requeued;
+}
+
+bool
+FutexMap::is_waiting(ThreadContext *tc)
+{
+    return waitingTcs.find(tc) != waitingTcs.end();
 }
