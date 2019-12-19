@@ -71,7 +71,7 @@ class ArmLinuxProcess32 : public ArmProcess32, public ArmLinuxProcessBits
     ArmLinuxProcess32(ProcessParams * params, ObjectFile *objFile,
                       ObjectFile::Arch _arch);
 
-    void initState();
+    void initState() override;
 
     void syscall(ThreadContext *tc, Fault *fault) override;
 
@@ -81,7 +81,7 @@ class ArmLinuxProcess32 : public ArmProcess32, public ArmLinuxProcessBits
     /// A page to hold "kernel" provided functions. The name might be wrong.
     static const Addr commPage;
 
-    SyscallDesc* getDesc(int callnum);
+    SyscallDesc* getDesc(int callnum) override;
 };
 
 /// A process with emulated Arm/Linux syscalls.
@@ -91,9 +91,9 @@ class ArmLinuxProcess64 : public ArmProcess64, public ArmLinuxProcessBits
     ArmLinuxProcess64(ProcessParams * params, ObjectFile *objFile,
                       ObjectFile::Arch _arch);
 
-    void initState();
+    void initState() override;
     void syscall(ThreadContext *tc, Fault *fault) override;
-    SyscallDesc* getDesc(int callnum);
+    SyscallDesc* getDesc(int callnum) override;
 };
 
 #endif // __ARM_LINUX_PROCESS_HH__

@@ -61,7 +61,7 @@ class ArmFreebsdProcess32 : public ArmProcess32, public ArmFreebsdProcessBits
     ArmFreebsdProcess32(ProcessParams * params, ObjectFile *objFile,
                         ObjectFile::Arch _arch);
 
-    void initState();
+    void initState() override;
 
     void syscall(ThreadContext *tc, Fault *fault) override;
 
@@ -71,7 +71,7 @@ class ArmFreebsdProcess32 : public ArmProcess32, public ArmFreebsdProcessBits
     /// A page to hold "kernel" provided functions. The name might be wrong.
     static const Addr commPage;
 
-    SyscallDesc* getDesc(int callnum);
+    SyscallDesc* getDesc(int callnum) override;
 };
 
 /// A process with emulated Arm/Freebsd syscalls.
@@ -81,9 +81,9 @@ class ArmFreebsdProcess64 : public ArmProcess64, public ArmFreebsdProcessBits
     ArmFreebsdProcess64(ProcessParams * params, ObjectFile *objFile,
                         ObjectFile::Arch _arch);
 
-    void initState();
+    void initState() override;
     void syscall(ThreadContext *tc, Fault *fault) override;
-    SyscallDesc* getDesc(int callnum);
+    SyscallDesc* getDesc(int callnum) override;
 };
 
 #endif // __ARCH_ARM_FREEBSD_PROCESS_HH__
