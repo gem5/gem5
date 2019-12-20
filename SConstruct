@@ -435,12 +435,6 @@ if main['GCC']:
             main.Append(PSHLINKFLAGS='-flinker-output=rel')
             main.Append(PLINKFLAGS='-flinker-output=rel')
 
-    # Make sure we warn if the user has requested to compile with the
-    # Undefined Benahvior Sanitizer and this version of gcc does not
-    # support it.
-    if GetOption('with_ubsan') and compareVersions(gcc_version, '4.9') < 0:
-        warning('UBSan is only supported using gcc 4.9 and later.')
-
     disable_lto = GetOption('no_lto')
     if not disable_lto and main.get('BROKEN_INCREMENTAL_LTO', False) and \
             not GetOption('force_lto'):
@@ -465,25 +459,6 @@ if main['GCC']:
 
     main.Append(TCMALLOC_CCFLAGS=['-fno-builtin-malloc', '-fno-builtin-calloc',
                                   '-fno-builtin-realloc', '-fno-builtin-free'])
-
-    # The address sanitizer is available for gcc >= 4.8
-    if GetOption('with_asan'):
-        if GetOption('with_ubsan') and \
-                compareVersions(main['GCC_VERSION'], '4.9') >= 0:
-            main.Append(CCFLAGS=['-fsanitize=address,undefined',
-                                 '-fno-omit-frame-pointer'],
-                        LINKFLAGS='-fsanitize=address,undefined')
-        else:
-            main.Append(CCFLAGS=['-fsanitize=address',
-                                 '-fno-omit-frame-pointer'],
-                        LINKFLAGS='-fsanitize=address')
-    # Only gcc >= 4.9 supports UBSan, so check both the version
-    # and the command-line option before adding the compiler and
-    # linker flags.
-    elif GetOption('with_ubsan') and \
-            compareVersions(main['GCC_VERSION'], '4.9') >= 0:
-        main.Append(CCFLAGS='-fsanitize=undefined')
-        main.Append(LINKFLAGS='-fsanitize=undefined')
 
 elif main['CLANG']:
     # Check for a supported version of clang, >= 3.1 is needed to
@@ -523,21 +498,27 @@ elif main['CLANG']:
     if sys.platform.startswith('freebsd'):
         main.Append(LIBS=['thr'])
 
-    # We require clang >= 3.1, so there is no need to check any
-    # versions here.
-    if GetOption('with_ubsan'):
-        if GetOption('with_asan'):
-            main.Append(CCFLAGS=['-fsanitize=address,undefined',
-                                 '-fno-omit-frame-pointer'],
-                       LINKFLAGS='-fsanitize=address,undefined')
-        else:
-            main.Append(CCFLAGS='-fsanitize=undefined',
-                        LINKFLAGS='-fsanitize=undefined')
-
-    elif GetOption('with_asan'):
-        main.Append(CCFLAGS=['-fsanitize=address',
+# Add sanitizers flags
+sanitizers=[]
+if GetOption('with_ubsan'):
+    # Only gcc >= 4.9 supports UBSan, so check both the version
+    # and the command-line option before adding the compiler and
+    # linker flags.
+    if not main['GCC'] or compareVersions(main['GCC_VERSION'], '4.9') >= 0:
+        sanitizers.append('undefined')
+if GetOption('with_asan'):
+    # Available for gcc >= 4.8 or llvm >= 3.1 both a requirement
+    # by the build system
+    sanitizers.append('address')
+if sanitizers:
+    sanitizers = ','.join(sanitizers)
+    if main['GCC'] or main['CLANG']:
+        main.Append(CCFLAGS=['-fsanitize=%s' % sanitizers,
                              '-fno-omit-frame-pointer'],
-                   LINKFLAGS='-fsanitize=address')
+                    LINKFLAGS='-fsanitize=%s' % sanitizers)
+    else:
+        warning("Don't know how to enable %s sanitizer(s) for your "
+                "compiler." % sanitizers)
 
 # Set up common yacc/bison flags (needed for Ruby)
 main['YACCFLAGS'] = '-d'
