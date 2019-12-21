@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2020 ARM Limited
  * All rights reserved
  *
@@ -45,6 +46,7 @@
 
 #include <bitset>
 
+#include "base/circular_queue.hh"
 #include "base/statistics.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
@@ -124,6 +126,19 @@ class RubyPrefetcher : public SimObject
         void regStats();
 
     private:
+        struct UnitFilterEntry
+        {
+            /** Address to which this filter entry refers. */
+            Addr addr;
+            /** Counter of the number of times this entry has been hit. */
+            uint32_t hits;
+
+            UnitFilterEntry(Addr _addr = 0)
+              : addr(_addr), hits(0)
+            {
+            }
+        };
+
         /**
          * Returns an unused stream buffer (or if all are used, returns the
          * least recently used (accessed) stream buffer).
@@ -143,10 +158,18 @@ class RubyPrefetcher : public SimObject
         PrefetchEntry* getPrefetchEntry(Addr address,
             uint32_t &index);
 
-        /// access a unit stride filter to determine if there is a hit
-        bool accessUnitFilter(std::vector<Addr>& filter_table,
-            uint32_t *hit_table, uint32_t &index, Addr address,
-            int stride, bool &alloc);
+        /**
+         * Access a unit stride filter to determine if there is a hit, and
+         * update it otherwise.
+         *
+         * @param filter Unit filter being accessed.
+         * @param line_addr Address being accessed, block aligned.
+         * @param stride The stride value.
+         * @param alloc Whether a stream should be allocated on a hit.
+         * @return True if a corresponding entry was found.
+         */
+        bool accessUnitFilter(CircularQueue<UnitFilterEntry>* const filter,
+            Addr line_addr, int stride, bool &alloc);
 
         /// access a unit stride filter to determine if there is a hit
         bool accessNonunitFilter(Addr address, int *stride,
@@ -164,28 +187,20 @@ class RubyPrefetcher : public SimObject
         uint32_t m_train_misses;
         //! number of initial prefetches to startup a stream
         uint32_t m_num_startup_pfs;
-        //! number of stride filters
-        uint32_t m_num_unit_filters;
         //! number of non-stride filters
         uint32_t m_num_nonunit_filters;
 
-        /// a unit stride filter array: helps reduce BW requirement of
-        /// prefetching
-        std::vector<Addr> m_unit_filter;
-        /// a round robin pointer into the unit filter group
-        uint32_t m_unit_filter_index;
-        //! An array used to count the of times particular filter entries
-        //! have been hit
-        uint32_t *m_unit_filter_hit;
+        /**
+         * A unit stride filter array: helps reduce BW requirement
+         * of prefetching.
+         */
+        CircularQueue<UnitFilterEntry> unitFilter;
 
-        //! a negative unit stride filter array: helps reduce BW requirement
-        //! of prefetching
-        std::vector<Addr> m_negative_filter;
-        /// a round robin pointer into the negative filter group
-        uint32_t m_negative_filter_index;
-        /// An array used to count the of times particular filter entries
-        /// have been hit
-        uint32_t *m_negative_filter_hit;
+        /**
+         * A negative unit stride filter array: helps reduce BW requirement
+         * of prefetching.
+         */
+        CircularQueue<UnitFilterEntry> negativeFilter;
 
         /// a non-unit stride filter array: helps reduce BW requirement of
         /// prefetching

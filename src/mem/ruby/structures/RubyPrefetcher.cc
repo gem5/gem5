@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2020 ARM Limited
  * All rights reserved
  *
@@ -40,6 +41,8 @@
 
 #include "mem/ruby/structures/RubyPrefetcher.hh"
 
+#include <cassert>
+
 #include "base/bitfield.hh"
 #include "debug/RubyPrefetcher.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
@@ -54,30 +57,16 @@ RubyPrefetcherParams::create()
 RubyPrefetcher::RubyPrefetcher(const Params *p)
     : SimObject(p), m_num_streams(p->num_streams),
     m_array(p->num_streams), m_train_misses(p->train_misses),
-    m_num_startup_pfs(p->num_startup_pfs), m_num_unit_filters(p->unit_filter),
+    m_num_startup_pfs(p->num_startup_pfs),
     m_num_nonunit_filters(p->nonunit_filter),
-    m_unit_filter(p->unit_filter, 0),
-    m_negative_filter(p->unit_filter, 0),
+    unitFilter(p->unit_filter),
+    negativeFilter(p->unit_filter),
     m_nonunit_filter(p->nonunit_filter, 0),
     m_prefetch_cross_pages(p->cross_page),
     m_page_shift(p->sys->getPageShift())
 {
     assert(m_num_streams > 0);
     assert(m_num_startup_pfs <= MAX_PF_INFLIGHT);
-
-    // create +1 stride filter
-    m_unit_filter_index = 0;
-    m_unit_filter_hit = new uint32_t[m_num_unit_filters];
-    for (uint32_t i =0; i < m_num_unit_filters; i++) {
-        m_unit_filter_hit[i] = 0;
-    }
-
-    // create -1 stride filter
-    m_negative_filter_index = 0;
-    m_negative_filter_hit = new uint32_t[m_num_unit_filters];
-    for (int i =0; i < m_num_unit_filters; i++) {
-        m_negative_filter_hit[i] = 0;
-    }
 
     // create nonunit stride filter
     m_nonunit_index = 0;
@@ -91,8 +80,6 @@ RubyPrefetcher::RubyPrefetcher(const Params *p)
 
 RubyPrefetcher::~RubyPrefetcher()
 {
-    delete m_unit_filter_hit;
-    delete m_negative_filter_hit;
     delete m_nonunit_stride;
     delete m_nonunit_hit;
 }
@@ -171,8 +158,7 @@ RubyPrefetcher::observeMiss(Addr address, const RubyRequestType& type)
 
     // check to see if this address is in the unit stride filter
     bool alloc = false;
-    bool hit = accessUnitFilter(m_unit_filter, m_unit_filter_hit,
-                                m_unit_filter_index, line_addr, 1, alloc);
+    bool hit = accessUnitFilter(&unitFilter, line_addr, 1, alloc);
     if (alloc) {
         // allocate a new prefetch stream
         initializeStream(line_addr, 1, getLRUindex(), type);
@@ -182,8 +168,7 @@ RubyPrefetcher::observeMiss(Addr address, const RubyRequestType& type)
         return;
     }
 
-    hit = accessUnitFilter(m_negative_filter, m_negative_filter_hit,
-        m_negative_filter_index, line_addr, -1, alloc);
+    hit = accessUnitFilter(&negativeFilter, line_addr, -1, alloc);
     if (alloc) {
         // allocate a new prefetch stream
         initializeStream(line_addr, -1, getLRUindex(), type);
@@ -348,35 +333,27 @@ RubyPrefetcher::getPrefetchEntry(Addr address, uint32_t &index)
 }
 
 bool
-RubyPrefetcher::accessUnitFilter(std::vector<Addr>& filter_table,
-    uint32_t *filter_hit, uint32_t &index, Addr address,
-    int stride, bool &alloc)
+RubyPrefetcher::accessUnitFilter(CircularQueue<UnitFilterEntry>* const filter,
+    Addr line_addr, int stride, bool &alloc)
 {
     //reset the alloc flag
     alloc = false;
 
-    Addr line_addr = makeLineAddress(address);
-    for (int i = 0; i < m_num_unit_filters; i++) {
-        if (filter_table[i] == line_addr) {
-            filter_table[i] = makeNextStrideAddress(filter_table[i], stride);
-            filter_hit[i]++;
-            if (filter_hit[i] >= m_train_misses) {
+    for (auto& entry : *filter) {
+        if (entry.addr == line_addr) {
+            entry.addr = makeNextStrideAddress(entry.addr, stride);
+            entry.hits++;
+            if (entry.hits >= m_train_misses) {
                 alloc = true;
             }
             return true;
         }
     }
 
-    // enter this address in the table
-    int local_index = index;
-    filter_table[local_index] = makeNextStrideAddress(line_addr, stride);
-    filter_hit[local_index] = 0;
-    local_index = local_index + 1;
-    if (local_index >= m_num_unit_filters) {
-        local_index = 0;
-    }
+    // Enter this address in the filter
+    filter->push_back(UnitFilterEntry(
+        makeNextStrideAddress(line_addr, stride)));
 
-    index = local_index;
     return false;
 }
 
@@ -449,13 +426,13 @@ RubyPrefetcher::print(std::ostream& out) const
     out << name() << " Prefetcher State\n";
     // print out unit filter
     out << "unit table:\n";
-    for (int i = 0; i < m_num_unit_filters; i++) {
-        out << m_unit_filter[i] << std::endl;
+    for (const auto& entry : unitFilter) {
+        out << entry.addr << std::endl;
     }
 
     out << "negative table:\n";
-    for (int i = 0; i < m_num_unit_filters; i++) {
-        out << m_negative_filter[i] << std::endl;
+    for (const auto& entry : negativeFilter) {
+        out << entry.addr << std::endl;
     }
 
     // print out non-unit stride filter
