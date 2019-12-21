@@ -181,23 +181,22 @@ class RubyPrefetcher : public SimObject
          * @param filter Unit filter being accessed.
          * @param line_addr Address being accessed, block aligned.
          * @param stride The stride value.
-         * @param alloc Whether a stream should be allocated on a hit.
+         * @param type Type of the request that generated the access.
          * @return True if a corresponding entry was found.
          */
         bool accessUnitFilter(CircularQueue<UnitFilterEntry>* const filter,
-            Addr line_addr, int stride, bool &alloc);
+            Addr line_addr, int stride, const RubyRequestType& type);
 
         /**
          * Access a non-unit stride filter to determine if there is a hit, and
          * update it otherwise.
          *
          * @param line_addr Address being accessed, block aligned.
-         * @param stride The stride value.
-         * @param alloc Whether a stream should be allocated on a hit.
+         * @param type Type of the request that generated the access.
          * @return True if a corresponding entry was found and its stride is
          *         not zero.
          */
-        bool accessNonunitFilter(Addr line_addr, int *stride, bool &alloc);
+        bool accessNonunitFilter(Addr line_addr, const RubyRequestType& type);
 
         /// determine the page aligned address
         Addr pageAddress(Addr addr) const;

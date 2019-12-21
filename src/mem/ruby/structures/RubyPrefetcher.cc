@@ -140,36 +140,16 @@ RubyPrefetcher::observeMiss(Addr address, const RubyRequestType& type)
         }
     }
 
-    // check to see if this address is in the unit stride filter
-    bool alloc = false;
-    bool hit = accessUnitFilter(&unitFilter, line_addr, 1, alloc);
-    if (alloc) {
-        // allocate a new prefetch stream
-        initializeStream(line_addr, 1, getLRUindex(), type);
-    }
-    if (hit) {
+    // Check if address is in any of the stride filters
+    if (accessUnitFilter(&unitFilter, line_addr, 1, type)) {
         DPRINTF(RubyPrefetcher, "  *** hit in unit stride buffer\n");
         return;
     }
-
-    hit = accessUnitFilter(&negativeFilter, line_addr, -1, alloc);
-    if (alloc) {
-        // allocate a new prefetch stream
-        initializeStream(line_addr, -1, getLRUindex(), type);
-    }
-    if (hit) {
+    if (accessUnitFilter(&negativeFilter, line_addr, -1, type)) {
         DPRINTF(RubyPrefetcher, "  *** hit in unit negative unit buffer\n");
         return;
     }
-
-    // check to see if this address is in the non-unit stride filter
-    int stride = 0;  // NULL value
-    hit = accessNonunitFilter(line_addr, &stride, alloc);
-    if (alloc) {
-        assert(stride != 0);  // ensure non-zero stride prefetches
-        initializeStream(line_addr, stride, getLRUindex(), type);
-    }
-    if (hit) {
+    if (accessNonunitFilter(line_addr, type)) {
         DPRINTF(RubyPrefetcher, "  *** hit in non-unit stride buffer\n");
         return;
     }
@@ -310,17 +290,15 @@ RubyPrefetcher::getPrefetchEntry(Addr address, uint32_t &index)
 
 bool
 RubyPrefetcher::accessUnitFilter(CircularQueue<UnitFilterEntry>* const filter,
-    Addr line_addr, int stride, bool &alloc)
+    Addr line_addr, int stride, const RubyRequestType& type)
 {
-    //reset the alloc flag
-    alloc = false;
-
     for (auto& entry : *filter) {
         if (entry.addr == line_addr) {
             entry.addr = makeNextStrideAddress(entry.addr, stride);
             entry.hits++;
             if (entry.hits >= m_train_misses) {
-                alloc = true;
+                // Allocate a new prefetch stream
+                initializeStream(line_addr, stride, getLRUindex(), type);
             }
             return true;
         }
@@ -334,11 +312,9 @@ RubyPrefetcher::accessUnitFilter(CircularQueue<UnitFilterEntry>* const filter,
 }
 
 bool
-RubyPrefetcher::accessNonunitFilter(Addr line_addr, int *stride, bool &alloc)
+RubyPrefetcher::accessNonunitFilter(Addr line_addr,
+    const RubyRequestType& type)
 {
-    //reset the alloc flag
-    alloc = false;
-
     /// look for non-unit strides based on a (user-defined) page size
     Addr page_addr = pageAddress(line_addr);
 
@@ -359,12 +335,14 @@ RubyPrefetcher::accessNonunitFilter(Addr line_addr, int *stride, bool &alloc)
                         // This stride HAS to be the multiplicative constant of
                         // dataBlockBytes (bc makeNextStrideAddress is
                         // calculated based on this multiplicative constant!)
-                        *stride = entry.stride /
+                        const int stride = entry.stride /
                             RubySystem::getBlockSizeBytes();
 
                         // clear this filter entry
                         entry.clear();
-                        alloc = true;
+
+                        initializeStream(line_addr, stride, getLRUindex(),
+                            type);
                     }
                 } else {
                     // If delta didn't match reset entry's hit count
