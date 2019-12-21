@@ -97,7 +97,7 @@ class RubyPrefetcher : public SimObject
     public:
         typedef RubyPrefetcherParams Params;
         RubyPrefetcher(const Params *p);
-        ~RubyPrefetcher();
+        ~RubyPrefetcher() = default;
 
         void issueNextPrefetch(Addr address, PrefetchEntry *stream);
         /**
@@ -139,15 +139,31 @@ class RubyPrefetcher : public SimObject
             }
         };
 
+        struct NonUnitFilterEntry : public UnitFilterEntry
+        {
+            /** Stride (in # of cache lines). */
+            int stride;
+
+            NonUnitFilterEntry(Addr _addr = 0)
+              : UnitFilterEntry(_addr), stride(0)
+            {
+            }
+
+            void
+            clear()
+            {
+                addr = 0;
+                stride = 0;
+                hits = 0;
+            }
+        };
+
         /**
          * Returns an unused stream buffer (or if all are used, returns the
          * least recently used (accessed) stream buffer).
          * @return  The index of the least recently used stream buffer.
          */
         uint32_t getLRUindex(void);
-
-        //! clear a non-unit stride prefetcher entry
-        void clearNonunitEntry(uint32_t index);
 
         //! allocate a new stream buffer at a specific index
         void initializeStream(Addr address, int stride,
@@ -171,9 +187,17 @@ class RubyPrefetcher : public SimObject
         bool accessUnitFilter(CircularQueue<UnitFilterEntry>* const filter,
             Addr line_addr, int stride, bool &alloc);
 
-        /// access a unit stride filter to determine if there is a hit
-        bool accessNonunitFilter(Addr address, int *stride,
-            bool &alloc);
+        /**
+         * Access a non-unit stride filter to determine if there is a hit, and
+         * update it otherwise.
+         *
+         * @param line_addr Address being accessed, block aligned.
+         * @param stride The stride value.
+         * @param alloc Whether a stream should be allocated on a hit.
+         * @return True if a corresponding entry was found and its stride is
+         *         not zero.
+         */
+        bool accessNonunitFilter(Addr line_addr, int *stride, bool &alloc);
 
         /// determine the page aligned address
         Addr pageAddress(Addr addr) const;
@@ -187,8 +211,6 @@ class RubyPrefetcher : public SimObject
         uint32_t m_train_misses;
         //! number of initial prefetches to startup a stream
         uint32_t m_num_startup_pfs;
-        //! number of non-stride filters
-        uint32_t m_num_nonunit_filters;
 
         /**
          * A unit stride filter array: helps reduce BW requirement
@@ -202,16 +224,11 @@ class RubyPrefetcher : public SimObject
          */
         CircularQueue<UnitFilterEntry> negativeFilter;
 
-        /// a non-unit stride filter array: helps reduce BW requirement of
-        /// prefetching
-        std::vector<Addr> m_nonunit_filter;
-        /// An array of strides (in # of cache lines) for the filter entries
-        int *m_nonunit_stride;
-        /// An array used to count the of times particular filter entries
-        /// have been hit
-        uint32_t *m_nonunit_hit;
-        /// a round robin pointer into the unit filter group
-        uint32_t m_nonunit_index;
+        /**
+         * A non-unit stride filter array: helps reduce BW requirement of
+         * prefetching.
+         */
+        CircularQueue<NonUnitFilterEntry> nonUnitFilter;
 
         /// Used for allowing prefetches across pages.
         bool m_prefetch_cross_pages;
