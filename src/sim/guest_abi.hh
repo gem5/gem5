@@ -127,16 +127,25 @@ struct Argument
      * the expected method signature.
      */
     static Arg get(ThreadContext *tc, typename ABI::Position &position);
-};
 
+    /*
+     * Adjust the position of arguments based on the argument type, if
+     * necessary.
+     *
+     * This method can be excluded if no adjustment is necessary.
+     */
+    static void allocate(ThreadContext *tc, typename ABI::Position &position);
+};
 
 /*
  * This struct template provides a default allocate() method in case the
- * Result template doesn't provide one. This is the default in cases where the
- * return type doesn't affect how arguments are laid out.
+ * Result or Argument template doesn't provide one. This is the default in
+ * cases where the return or argument type doesn't affect where things are
+ * stored.
  */
-template <typename ABI, typename Ret, typename Enabled=void>
-struct ResultAllocator
+template <typename ABI, template <class ...> class Role,
+          typename Type, typename Enabled=void>
+struct Allocator
 {
     static void
     allocate(ThreadContext *tc, typename ABI::Position &position)
@@ -144,19 +153,60 @@ struct ResultAllocator
 };
 
 /*
- * If the return type *does* affect how the arguments are laid out, the ABI
- * can implement an allocate() method for the various return types, and this
- * specialization will call into it.
+ * If the return type is void, don't allocate anything.
  */
-template <typename ABI, typename Ret>
-struct ResultAllocator<ABI, Ret, decltype((void)&Result<ABI, Ret>::allocate)>
+template <typename ABI, template <class ...> class Role>
+struct Allocator<ABI, Role, void>
+{
+    static void
+    allocate(ThreadContext *tc, typename ABI::Position &position)
+    {}
+};
+
+/*
+ * If the return or argument type isn't void and does affect where things
+ * are stored, the ABI can implement an allocate() method for the various
+ * argument and/or return types, and this specialization will call into it.
+ */
+template <typename ABI, template <class ...> class Role, typename Type>
+struct Allocator<ABI, Role, Type, decltype((void)&Role<ABI, Type>::allocate)>
 {
     static void
     allocate(ThreadContext *tc, typename ABI::Position &position)
     {
-        Result<ABI, Ret>::allocate(tc, position);
+        Role<ABI, Type>::allocate(tc, position);
     }
 };
+
+template <typename ABI, typename Ret, typename Enabled=void>
+static void
+allocateResult(ThreadContext *tc, typename ABI::Position &position)
+{
+    Allocator<ABI, Result, Ret>::allocate(tc, position);
+}
+
+template <typename ABI>
+static void
+allocateArguments(ThreadContext *tc, typename ABI::Position &position)
+{
+    return;
+}
+
+template <typename ABI, typename NextArg, typename ...Args>
+static void
+allocateArguments(ThreadContext *tc, typename ABI::Position &position)
+{
+    Allocator<ABI, Argument, NextArg>::allocate(tc, position);
+    allocateArguments<ABI, Args...>(tc, position);
+}
+
+template <typename ABI, typename Ret, typename ...Args>
+static void
+allocateSignature(ThreadContext *tc, typename ABI::Position &position)
+{
+    allocateResult<ABI, Ret>(tc, position);
+    allocateArguments<ABI, Args...>(tc, position);
+}
 
 
 /*
@@ -438,7 +488,7 @@ invokeSimcall(ThreadContext *tc,
     // Default construct a Position to track consumed resources. Built in
     // types will be zero initialized.
     auto position = GuestABI::PositionInitializer<ABI>::init(tc);
-    GuestABI::ResultAllocator<ABI, Ret>::allocate(tc, position);
+    GuestABI::allocateSignature<ABI, Ret, Args...>(tc, position);
     return GuestABI::callFrom<ABI, Ret, Args...>(tc, position, target);
 }
 
@@ -458,6 +508,7 @@ invokeSimcall(ThreadContext *tc,
     // Default construct a Position to track consumed resources. Built in
     // types will be zero initialized.
     auto position = GuestABI::PositionInitializer<ABI>::init(tc);
+    GuestABI::allocateArguments<ABI, Args...>(tc, position);
     GuestABI::callFrom<ABI, Args...>(tc, position, target);
 }
 
@@ -483,7 +534,7 @@ dumpSimcall(std::string name, ThreadContext *tc,
     auto position = GuestABI::PositionInitializer<ABI>::init(tc);
     std::ostringstream ss;
 
-    GuestABI::ResultAllocator<ABI, Ret>::allocate(tc, position);
+    GuestABI::allocateSignature<ABI, Ret, Args...>(tc, position);
     ss << name;
     GuestABI::dumpArgsFrom<ABI, Ret, Args...>(0, ss, tc, position);
     return ss.str();
