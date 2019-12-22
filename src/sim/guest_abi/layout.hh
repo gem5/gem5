@@ -130,6 +130,59 @@ allocateSignature(ThreadContext *tc, typename ABI::Position &position)
     allocateArguments<ABI, Args...>(tc, position);
 }
 
+/*
+ * This struct template provides a way to call the Result store method and
+ * optionally pass it the position.
+ */
+
+template <typename ABI, typename Ret, typename Enabled=void>
+struct ResultStorer
+{
+    static void
+    store(ThreadContext *tc, const Ret &ret, typename ABI::Position &position)
+    {
+        Result<ABI, Ret>::store(tc, ret);
+    }
+};
+
+template <typename Ret, typename State>
+std::true_type foo(void (*)(ThreadContext *, const Ret &ret, State &state));
+
+template <typename Ret>
+std::false_type foo(void (*)(ThreadContext *, const Ret &ret));
+
+template <typename ABI, typename Ret>
+struct ResultStorer<ABI, Ret, typename std::enable_if<
+    std::is_same<void (*)(ThreadContext *, const Ret &,
+                          typename ABI::Position &),
+                 decltype(&Result<ABI, Ret>::store)>::value>::type>
+{
+    static void
+    store(ThreadContext *tc, const Ret &ret, typename ABI::Position &position)
+    {
+        Result<ABI, Ret>::store(tc, ret, position);
+    }
+};
+
+/*
+ * Function templates to wrap the Result::store and Argument::get methods.
+ */
+
+template <typename ABI, typename Ret>
+static void
+storeResult(ThreadContext *tc, const Ret &ret,
+            typename ABI::Position &position)
+{
+    ResultStorer<ABI, Ret>::store(tc, ret, position);
+}
+
+template <typename ABI, typename Arg>
+static Arg
+getArgument(ThreadContext *tc, typename ABI::Position &position)
+{
+    return Argument<ABI, Arg>::get(tc, position);
+}
+
 } // namespace GuestABI
 
 #endif // __SIM_GUEST_ABI_LAYOUT_HH__

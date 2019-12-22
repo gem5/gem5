@@ -33,6 +33,7 @@
 #include <type_traits>
 
 #include "sim/guest_abi/definition.hh"
+#include "sim/guest_abi/layout.hh"
 
 class ThreadContext;
 
@@ -57,7 +58,7 @@ callFrom(ThreadContext *tc, typename ABI::Position &position,
         std::function<Ret(ThreadContext *)> target)
 {
     Ret ret = target(tc);
-    Result<ABI, Ret>::store(tc, ret);
+    storeResult<ABI, Ret>(tc, ret, position);
     return ret;
 }
 
@@ -78,7 +79,7 @@ callFrom(ThreadContext *tc, typename ABI::Position &position,
         std::function<Ret(ThreadContext *, NextArg, Args...)> target)
 {
     // Extract the next argument from the thread context.
-    NextArg next = Argument<ABI, NextArg>::get(tc, position);
+    NextArg next = getArgument<ABI, NextArg>(tc, position);
 
     // Build a partial function which adds the next argument to the call.
     std::function<Ret(ThreadContext *, Args...)> partial =
@@ -98,7 +99,7 @@ callFrom(ThreadContext *tc, typename ABI::Position &position,
         std::function<void(ThreadContext *, NextArg, Args...)> target)
 {
     // Extract the next argument from the thread context.
-    NextArg next = Argument<ABI, NextArg>::get(tc, position);
+    NextArg next = getArgument<ABI, NextArg>(tc, position);
 
     // Build a partial function which adds the next argument to the call.
     std::function<void(ThreadContext *, Args...)> partial =
@@ -139,7 +140,7 @@ dumpArgsFrom(int count, std::ostream &os, ThreadContext *tc,
     os << (count ? ", " : "(");
 
     // Extract the next argument from the thread context.
-    NextArg next = Argument<ABI, NextArg>::get(tc, position);
+    NextArg next = getArgument<ABI, NextArg>(tc, position);
 
     // Add this argument to the list.
     os << next;

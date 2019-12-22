@@ -59,7 +59,8 @@ struct Result
 {
   private:
     /*
-     * Store result "ret" into the state accessible through tc.
+     * Store result "ret" into the state accessible through tc. Optionally
+     * accept "position" in case it holds some signature wide information.
      *
      * Note that the declaration below is only to document the expected
      * signature and is private so it won't be used by accident.
@@ -67,6 +68,8 @@ struct Result
      * of this method which actually does something and is public.
      */
     static void store(ThreadContext *tc, const Ret &ret);
+    static void store(ThreadContext *tc, const Ret &ret,
+                      typename ABI::Position &position);
 
     /*
      * Adjust the position of arguments based on the return type, if necessary.
