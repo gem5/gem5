@@ -44,7 +44,7 @@ class ThreadContext;
 
 struct Aapcs64
 {
-    struct Position
+    struct State
     {
         int ngrn=0; // Next general purpose register number.
         int nsrn=0; // Next SIMD and floating point register number.
@@ -55,7 +55,7 @@ struct Aapcs64
         // The maximum allowed SIMD and floating point register number.
         static const int MAX_SRN = 7;
 
-        explicit Position(const ThreadContext *tc) :
+        explicit State(const ThreadContext *tc) :
             nsaa(tc->readIntReg(ArmISA::INTREG_SPX))
         {}
     };
@@ -161,7 +161,7 @@ struct Aapcs64ArgumentBase
 {
     template <typename T>
     static T
-    loadFromStack(ThreadContext *tc, Aapcs64::Position &position)
+    loadFromStack(ThreadContext *tc, Aapcs64::State &state)
     {
         // The alignment is the larger of 8 or the natural alignment of T.
         size_t align = std::max<size_t>(8, alignof(T));
@@ -169,14 +169,14 @@ struct Aapcs64ArgumentBase
         size_t size = roundUp(sizeof(T), 8);
 
         // Align the stack.
-        position.nsaa = roundUp(position.nsaa, align);
+        state.nsaa = roundUp(state.nsaa, align);
 
         // Extract the value from it.
-        TypedBufferArg<T> val(position.nsaa);
+        TypedBufferArg<T> val(state.nsaa);
         val.copyIn(tc->getVirtProxy());
 
         // Move the nsaa past this argument.
-        position.nsaa += size;
+        state.nsaa += size;
 
         // Return the value we extracted.
         return gtoh(*val, ArmISA::byteOrder(tc));
@@ -195,14 +195,14 @@ struct Argument<Aapcs64, Float, typename std::enable_if<
     public Aapcs64ArgumentBase
 {
     static Float
-    get(ThreadContext *tc, Aapcs64::Position &position)
+    get(ThreadContext *tc, Aapcs64::State &state)
     {
-        if (position.nsrn <= position.MAX_SRN) {
-            RegId id(VecRegClass, position.nsrn++);
+        if (state.nsrn <= state.MAX_SRN) {
+            RegId id(VecRegClass, state.nsrn++);
             return tc->readVecReg(id).laneView<Float, 0>();
         }
 
-        return loadFromStack<Float>(tc, position);
+        return loadFromStack<Float>(tc, state);
     }
 };
 
@@ -232,25 +232,25 @@ struct Argument<Aapcs64, Integer, typename std::enable_if<
     std::is_integral<Integer>::value>::type> : public Aapcs64ArgumentBase
 {
     static Integer
-    get(ThreadContext *tc, Aapcs64::Position &position)
+    get(ThreadContext *tc, Aapcs64::State &state)
     {
-        if (sizeof(Integer) <= 8 && position.ngrn <= position.MAX_GRN)
-            return tc->readIntReg(position.ngrn++);
+        if (sizeof(Integer) <= 8 && state.ngrn <= state.MAX_GRN)
+            return tc->readIntReg(state.ngrn++);
 
-        if (alignof(Integer) == 16 && (position.ngrn % 2))
-            position.ngrn++;
+        if (alignof(Integer) == 16 && (state.ngrn % 2))
+            state.ngrn++;
 
-        if (sizeof(Integer) == 16 && position.ngrn + 1 <= position.MAX_GRN) {
-            Integer low = tc->readIntReg(position.ngrn++);
-            Integer high = tc->readIntReg(position.ngrn++);
+        if (sizeof(Integer) == 16 && state.ngrn + 1 <= state.MAX_GRN) {
+            Integer low = tc->readIntReg(state.ngrn++);
+            Integer high = tc->readIntReg(state.ngrn++);
             high = high << 64;
             return high | low;
         }
 
         // Max out ngrn since we've effectively saturated it.
-        position.ngrn = position.MAX_GRN + 1;
+        state.ngrn = state.MAX_GRN + 1;
 
-        return loadFromStack<Integer>(tc, position);
+        return loadFromStack<Integer>(tc, state);
     }
 };
 
@@ -287,22 +287,22 @@ struct Argument<Aapcs64, HA, typename std::enable_if<
     IsAapcs64Hxa<HA>::value>::type> : public Aapcs64ArgumentBase
 {
     static HA
-    get(ThreadContext *tc, Aapcs64::Position &position)
+    get(ThreadContext *tc, Aapcs64::State &state)
     {
         using Elem = typename Aapcs64ArrayType<HA>::Type;
         constexpr size_t Count = sizeof(HA) / sizeof(Elem);
 
-        if (position.nsrn + Count - 1 <= position.MAX_SRN) {
+        if (state.nsrn + Count - 1 <= state.MAX_SRN) {
             HA ha;
             for (int i = 0; i < Count; i++)
-                ha[i] = Argument<Aapcs64, Elem>::get(tc, position);
+                ha[i] = Argument<Aapcs64, Elem>::get(tc, state);
             return ha;
         }
 
         // Max out the nsrn since we effectively exhausted it.
-        position.nsrn = position.MAX_SRN + 1;
+        state.nsrn = state.MAX_SRN + 1;
 
-        return loadFromStack<HA>(tc, position);
+        return loadFromStack<HA>(tc, state);
     }
 };
 
@@ -332,13 +332,13 @@ struct Argument<Aapcs64, Composite, typename std::enable_if<
     >::type> : public Aapcs64ArgumentBase
 {
     static Composite
-    get(ThreadContext *tc, Aapcs64::Position &position)
+    get(ThreadContext *tc, Aapcs64::State &state)
     {
         if (sizeof(Composite) > 16) {
             // Composite values larger than 16 which aren't HFAs or HVAs are
             // kept in a buffer, and the argument is actually a pointer to that
             // buffer.
-            Addr addr = Argument<Aapcs64, Addr>::get(tc, position);
+            Addr addr = Argument<Aapcs64, Addr>::get(tc, state);
             TypedBufferArg<Composite> composite(addr);
             composite.copyIn(tc->getVirtProxy());
             return gtoh(*composite, ArmISA::byteOrder(tc));
@@ -353,10 +353,10 @@ struct Argument<Aapcs64, Composite, typename std::enable_if<
         const int regs = (bytes + chunk_size - 1) / chunk_size;
 
         // Can it fit in GPRs?
-        if (position.ngrn + regs - 1 <= position.MAX_GRN) {
+        if (state.ngrn + regs - 1 <= state.MAX_GRN) {
             alignas(alignof(Composite)) uint8_t buf[bytes];
             for (int i = 0; i < regs; i++) {
-                Chunk val = tc->readIntReg(position.ngrn++);
+                Chunk val = tc->readIntReg(state.ngrn++);
                 val = htog(val, ArmISA::byteOrder(tc));
                 size_t to_copy = std::min<size_t>(bytes, chunk_size);
                 memcpy(buf + i * chunk_size, &val, to_copy);
@@ -366,9 +366,9 @@ struct Argument<Aapcs64, Composite, typename std::enable_if<
         }
 
         // Max out the ngrn since we effectively exhausted it.
-        position.ngrn = position.MAX_GRN;
+        state.ngrn = state.MAX_GRN;
 
-        return loadFromStack<Composite>(tc, position);
+        return loadFromStack<Composite>(tc, state);
     }
 };
 

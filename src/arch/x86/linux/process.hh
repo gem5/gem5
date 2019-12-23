@@ -91,12 +91,12 @@ struct Argument<X86ISA::I386LinuxProcess::SyscallABI, Arg,
     using ABI = X86ISA::I386LinuxProcess::SyscallABI;
 
     static Arg
-    get(ThreadContext *tc, typename ABI::Position &position)
+    get(ThreadContext *tc, typename ABI::State &state)
     {
-        panic_if(position + 1 >= ABI::ArgumentRegs.size(),
+        panic_if(state + 1 >= ABI::ArgumentRegs.size(),
                 "Ran out of syscall argument registers.");
-        auto low = ABI::ArgumentRegs[position++];
-        auto high = ABI::ArgumentRegs[position++];
+        auto low = ABI::ArgumentRegs[state++];
+        auto high = ABI::ArgumentRegs[state++];
         return (Arg)ABI::mergeRegs(tc, low, high);
     }
 };

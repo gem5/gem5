@@ -38,36 +38,36 @@ namespace GuestABI
 {
 
 /*
- * Position may need to be initialized based on the ThreadContext, for instance
+ * State may need to be initialized based on the ThreadContext, for instance
  * to find out where the stack pointer is initially.
  */
 template <typename ABI, typename Enabled=void>
-struct PositionInitializer
+struct StateInitializer
 {
-    static typename ABI::Position
+    static typename ABI::State
     init(const ThreadContext *tc)
     {
-        return typename ABI::Position();
+        return typename ABI::State();
     }
 };
 
 template <typename ABI>
-struct PositionInitializer<ABI, typename std::enable_if<
-    std::is_constructible<typename ABI::Position, const ThreadContext *>::value
+struct StateInitializer<ABI, typename std::enable_if<
+    std::is_constructible<typename ABI::State, const ThreadContext *>::value
     >::type>
 {
-    static typename ABI::Position
+    static typename ABI::State
     init(const ThreadContext *tc)
     {
-        return typename ABI::Position(tc);
+        return typename ABI::State(tc);
     }
 };
 
 template <typename ABI>
-static typename ABI::Position
-initializePosition(const ThreadContext *tc)
+static typename ABI::State
+initializeState(const ThreadContext *tc)
 {
-    return PositionInitializer<ABI>::init(tc);
+    return StateInitializer<ABI>::init(tc);
 }
 
 /*
@@ -81,7 +81,7 @@ template <typename ABI, template <class ...> class Role,
 struct Preparer
 {
     static void
-    prepare(ThreadContext *tc, typename ABI::Position &position)
+    prepare(ThreadContext *tc, typename ABI::State &state)
     {}
 };
 
@@ -94,52 +94,52 @@ template <typename ABI, template <class ...> class Role, typename Type>
 struct Preparer<ABI, Role, Type, decltype((void)&Role<ABI, Type>::prepare)>
 {
     static void
-    prepare(ThreadContext *tc, typename ABI::Position &position)
+    prepare(ThreadContext *tc, typename ABI::State &state)
     {
-        Role<ABI, Type>::prepare(tc, position);
+        Role<ABI, Type>::prepare(tc, state);
     }
 };
 
 template <typename ABI, typename Ret, typename Enabled=void>
 static void
-prepareForResult(ThreadContext *tc, typename ABI::Position &position)
+prepareForResult(ThreadContext *tc, typename ABI::State &state)
 {
-    Preparer<ABI, Result, Ret>::prepare(tc, position);
+    Preparer<ABI, Result, Ret>::prepare(tc, state);
 }
 
 template <typename ABI>
 static void
-prepareForArguments(ThreadContext *tc, typename ABI::Position &position)
+prepareForArguments(ThreadContext *tc, typename ABI::State &state)
 {
     return;
 }
 
 template <typename ABI, typename NextArg, typename ...Args>
 static void
-prepareForArguments(ThreadContext *tc, typename ABI::Position &position)
+prepareForArguments(ThreadContext *tc, typename ABI::State &state)
 {
-    Preparer<ABI, Argument, NextArg>::prepare(tc, position);
-    prepareForArguments<ABI, Args...>(tc, position);
+    Preparer<ABI, Argument, NextArg>::prepare(tc, state);
+    prepareForArguments<ABI, Args...>(tc, state);
 }
 
 template <typename ABI, typename Ret, typename ...Args>
 static void
-prepareForFunction(ThreadContext *tc, typename ABI::Position &position)
+prepareForFunction(ThreadContext *tc, typename ABI::State &state)
 {
-    prepareForResult<ABI, Ret>(tc, position);
-    prepareForArguments<ABI, Args...>(tc, position);
+    prepareForResult<ABI, Ret>(tc, state);
+    prepareForArguments<ABI, Args...>(tc, state);
 }
 
 /*
  * This struct template provides a way to call the Result store method and
- * optionally pass it the position.
+ * optionally pass it the state.
  */
 
 template <typename ABI, typename Ret, typename Enabled=void>
 struct ResultStorer
 {
     static void
-    store(ThreadContext *tc, const Ret &ret, typename ABI::Position &position)
+    store(ThreadContext *tc, const Ret &ret, typename ABI::State &state)
     {
         Result<ABI, Ret>::store(tc, ret);
     }
@@ -153,14 +153,13 @@ std::false_type foo(void (*)(ThreadContext *, const Ret &ret));
 
 template <typename ABI, typename Ret>
 struct ResultStorer<ABI, Ret, typename std::enable_if<
-    std::is_same<void (*)(ThreadContext *, const Ret &,
-                          typename ABI::Position &),
+    std::is_same<void (*)(ThreadContext *, const Ret &, typename ABI::State &),
                  decltype(&Result<ABI, Ret>::store)>::value>::type>
 {
     static void
-    store(ThreadContext *tc, const Ret &ret, typename ABI::Position &position)
+    store(ThreadContext *tc, const Ret &ret, typename ABI::State &state)
     {
-        Result<ABI, Ret>::store(tc, ret, position);
+        Result<ABI, Ret>::store(tc, ret, state);
     }
 };
 
@@ -170,17 +169,16 @@ struct ResultStorer<ABI, Ret, typename std::enable_if<
 
 template <typename ABI, typename Ret>
 static void
-storeResult(ThreadContext *tc, const Ret &ret,
-            typename ABI::Position &position)
+storeResult(ThreadContext *tc, const Ret &ret, typename ABI::State &state)
 {
-    ResultStorer<ABI, Ret>::store(tc, ret, position);
+    ResultStorer<ABI, Ret>::store(tc, ret, state);
 }
 
 template <typename ABI, typename Arg>
 static Arg
-getArgument(ThreadContext *tc, typename ABI::Position &position)
+getArgument(ThreadContext *tc, typename ABI::State &state)
 {
-    return Argument<ABI, Arg>::get(tc, position);
+    return Argument<ABI, Arg>::get(tc, state);
 }
 
 } // namespace GuestABI

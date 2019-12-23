@@ -53,7 +53,7 @@ class ThreadContext;
 
 struct PseudoInstABI
 {
-    using Position = int;
+    using State = int;
 };
 
 namespace GuestABI
@@ -73,11 +73,11 @@ template <>
 struct Argument<PseudoInstABI, uint64_t>
 {
     static uint64_t
-    get(ThreadContext *tc, PseudoInstABI::Position &position)
+    get(ThreadContext *tc, PseudoInstABI::State &state)
     {
-        uint64_t result = TheISA::getArgument(tc, position, sizeof(uint64_t),
-                                              false);
-        position++;
+        uint64_t result =
+            TheISA::getArgument(tc, state, sizeof(uint64_t), false);
+        state++;
         return result;
     }
 };

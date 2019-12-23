@@ -63,13 +63,13 @@ const double ThreadContext::DefaultFloatResult = 0.0;
 // registers.
 struct TestABI_1D
 {
-    using Position = int;
+    using State = int;
 };
 
 // ABI anchor for an ABI which uses the prepare() hook.
 struct TestABI_Prepare
 {
-    using Position = int;
+    using State = int;
 };
 
 // ABI anchor for an ABI which has 2D progress. Conceptually, this could be
@@ -77,15 +77,15 @@ struct TestABI_Prepare
 // registers.
 struct TestABI_2D
 {
-    using Position = std::pair<int, int>;
+    using State = std::pair<int, int>;
 };
 
 struct TestABI_TcInit
 {
-    struct Position
+    struct State
     {
         int pos;
-        Position(const ThreadContext *tc) : pos(tc->intOffset) {}
+        State(const ThreadContext *tc) : pos(tc->intOffset) {}
     };
 };
 
@@ -98,9 +98,9 @@ template <>
 struct Argument<TestABI_1D, int>
 {
     static int
-    get(ThreadContext *tc, TestABI_1D::Position &position)
+    get(ThreadContext *tc, TestABI_1D::State &state)
     {
-        return tc->ints[position++];
+        return tc->ints[state++];
     }
 };
 
@@ -109,9 +109,9 @@ struct Argument<TestABI_1D, Arg,
     typename std::enable_if<std::is_floating_point<Arg>::value>::type>
 {
     static Arg
-    get(ThreadContext *tc, TestABI_1D::Position &position)
+    get(ThreadContext *tc, TestABI_1D::State &state)
     {
-        return tc->floats[position++];
+        return tc->floats[state++];
     }
 };
 
@@ -143,15 +143,15 @@ template <>
 struct Argument<TestABI_Prepare, int>
 {
     static int
-    get(ThreadContext *tc, TestABI_Prepare::Position &position)
+    get(ThreadContext *tc, TestABI_Prepare::State &state)
     {
-        return tc->ints[--position];
+        return tc->ints[--state];
     }
 
     static void
-    prepare(ThreadContext *tc, TestABI_Prepare::Position &position)
+    prepare(ThreadContext *tc, TestABI_Prepare::State &state)
     {
-        position++;
+        state++;
     }
 };
 
@@ -160,9 +160,9 @@ struct Result<TestABI_Prepare, Ret>
 {
     static void store(ThreadContext *tc, const Ret &ret) {}
     static void
-    prepare(ThreadContext *tc, TestABI_Prepare::Position &position)
+    prepare(ThreadContext *tc, TestABI_Prepare::State &state)
     {
-        position++;
+        state++;
     }
 };
 
@@ -173,9 +173,9 @@ template <>
 struct Argument<TestABI_2D, int>
 {
     static int
-    get(ThreadContext *tc, TestABI_2D::Position &position)
+    get(ThreadContext *tc, TestABI_2D::State &state)
     {
-        return tc->ints[position.first++];
+        return tc->ints[state.first++];
     }
 };
 
@@ -184,9 +184,9 @@ struct Argument<TestABI_2D, Arg,
     typename std::enable_if<std::is_floating_point<Arg>::value>::type>
 {
     static Arg
-    get(ThreadContext *tc, TestABI_2D::Position &position)
+    get(ThreadContext *tc, TestABI_2D::State &state)
     {
-        return tc->floats[position.second++];
+        return tc->floats[state.second++];
     }
 };
 
@@ -216,9 +216,9 @@ template <>
 struct Argument<TestABI_TcInit, int>
 {
     static int
-    get(ThreadContext *tc, TestABI_TcInit::Position &position)
+    get(ThreadContext *tc, TestABI_TcInit::State &state)
     {
-        return tc->ints[position.pos++];
+        return tc->ints[state.pos++];
     }
 };
 

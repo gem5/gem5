@@ -36,9 +36,9 @@ namespace GuestABI
 /*
  * To implement an ABI, a subclass needs to implement a system of
  * specializations of these two templates Result and Argument, and define a
- * "Position" type.
+ * "State" type.
  *
- * The Position type carries information about, for instance, how many
+ * The State type carries information about, for instance, how many
  * integer registers have been consumed gathering earlier arguments. It
  * may contain multiple elements if there are multiple dimensions to track,
  * for instance the number of integer and floating point registers used so far.
@@ -60,7 +60,7 @@ struct Result
   private:
     /*
      * Store result "ret" into the state accessible through tc. Optionally
-     * accept "position" in case it holds some signature wide information.
+     * accept "state" in case it holds some signature wide information.
      *
      * Note that the declaration below is only to document the expected
      * signature and is private so it won't be used by accident.
@@ -69,7 +69,7 @@ struct Result
      */
     static void store(ThreadContext *tc, const Ret &ret);
     static void store(ThreadContext *tc, const Ret &ret,
-                      typename ABI::Position &position);
+                      typename ABI::State &state);
 
     /*
      * Prepare for a result of type Ret. This might mean, for instance,
@@ -77,7 +77,7 @@ struct Result
      *
      * This method can be excluded if no preparation is necessary.
      */
-    static void prepare(ThreadContext *tc, typename ABI::Position &position);
+    static void prepare(ThreadContext *tc, typename ABI::State &state);
 };
 
 /*
@@ -93,13 +93,13 @@ struct Argument
 {
     /*
      * Retrieve an argument of type Arg from the state accessible through tc,
-     * assuming the state represented by "position" has already been used.
-     * Also update position to account for this argument as well.
+     * assuming the state represented by "state" has already been used.
+     * Also update state to account for this argument as well.
      *
      * Like Result::store above, the declaration below is only to document
      * the expected method signature.
      */
-    static Arg get(ThreadContext *tc, typename ABI::Position &position);
+    static Arg get(ThreadContext *tc, typename ABI::State &state);
 
     /*
      * Prepare for an argument of type Arg. This might mean, for instance,
@@ -107,7 +107,7 @@ struct Argument
      *
      * This method can be excluded if no preparation is necessary.
      */
-    static void allocate(ThreadContext *tc, typename ABI::Position &position);
+    static void allocate(ThreadContext *tc, typename ABI::State &state);
 };
 
 } // namespace GuestABI

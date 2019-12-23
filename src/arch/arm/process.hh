@@ -101,15 +101,15 @@ struct Argument<ABI, Arg,
         ABI::template IsWide<Arg>::value>::type>
 {
     static Arg
-    get(ThreadContext *tc, typename ABI::Position &position)
+    get(ThreadContext *tc, typename ABI::State &state)
     {
         // 64 bit arguments are passed starting in an even register.
-        if (position % 2)
-            position++;
-        panic_if(position + 1 >= ABI::ArgumentRegs.size(),
+        if (state % 2)
+            state++;
+        panic_if(state + 1 >= ABI::ArgumentRegs.size(),
                 "Ran out of syscall argument registers.");
-        auto low = ABI::ArgumentRegs[position++];
-        auto high = ABI::ArgumentRegs[position++];
+        auto low = ABI::ArgumentRegs[state++];
+        auto high = ABI::ArgumentRegs[state++];
         return (Arg)ABI::mergeRegs(tc, low, high);
     }
 };

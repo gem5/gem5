@@ -54,18 +54,18 @@ namespace GuestABI
 // result.
 template <typename ABI, typename Ret>
 static typename std::enable_if<!std::is_void<Ret>::value, Ret>::type
-callFrom(ThreadContext *tc, typename ABI::Position &position,
+callFrom(ThreadContext *tc, typename ABI::State &state,
         std::function<Ret(ThreadContext *)> target)
 {
     Ret ret = target(tc);
-    storeResult<ABI, Ret>(tc, ret, position);
+    storeResult<ABI, Ret>(tc, ret, state);
     return ret;
 }
 
 // With no arguments to gather and nothing to return, call the target function.
 template <typename ABI>
 static void
-callFrom(ThreadContext *tc, typename ABI::Position &position,
+callFrom(ThreadContext *tc, typename ABI::State &state,
         std::function<void(ThreadContext *)> target)
 {
     target(tc);
@@ -75,11 +75,11 @@ callFrom(ThreadContext *tc, typename ABI::Position &position,
 // case above.
 template <typename ABI, typename Ret, typename NextArg, typename ...Args>
 static typename std::enable_if<!std::is_void<Ret>::value, Ret>::type
-callFrom(ThreadContext *tc, typename ABI::Position &position,
+callFrom(ThreadContext *tc, typename ABI::State &state,
         std::function<Ret(ThreadContext *, NextArg, Args...)> target)
 {
     // Extract the next argument from the thread context.
-    NextArg next = getArgument<ABI, NextArg>(tc, position);
+    NextArg next = getArgument<ABI, NextArg>(tc, state);
 
     // Build a partial function which adds the next argument to the call.
     std::function<Ret(ThreadContext *, Args...)> partial =
@@ -88,18 +88,18 @@ callFrom(ThreadContext *tc, typename ABI::Position &position,
         };
 
     // Recursively handle any remaining arguments.
-    return callFrom<ABI, Ret, Args...>(tc, position, partial);
+    return callFrom<ABI, Ret, Args...>(tc, state, partial);
 }
 
 // Recursively gather arguments for target from tc until we get to the base
 // case above. This version is for functions that don't return anything.
 template <typename ABI, typename NextArg, typename ...Args>
 static void
-callFrom(ThreadContext *tc, typename ABI::Position &position,
+callFrom(ThreadContext *tc, typename ABI::State &state,
         std::function<void(ThreadContext *, NextArg, Args...)> target)
 {
     // Extract the next argument from the thread context.
-    NextArg next = getArgument<ABI, NextArg>(tc, position);
+    NextArg next = getArgument<ABI, NextArg>(tc, state);
 
     // Build a partial function which adds the next argument to the call.
     std::function<void(ThreadContext *, Args...)> partial =
@@ -108,7 +108,7 @@ callFrom(ThreadContext *tc, typename ABI::Position &position,
         };
 
     // Recursively handle any remaining arguments.
-    callFrom<ABI, Args...>(tc, position, partial);
+    callFrom<ABI, Args...>(tc, state, partial);
 }
 
 
@@ -122,7 +122,7 @@ callFrom(ThreadContext *tc, typename ABI::Position &position,
 template <typename ABI, typename Ret>
 static void
 dumpArgsFrom(int count, std::ostream &os, ThreadContext *tc,
-             typename ABI::Position &position)
+             typename ABI::State &state)
 {
     os << ")";
 }
@@ -133,20 +133,20 @@ dumpArgsFrom(int count, std::ostream &os, ThreadContext *tc,
 template <typename ABI, typename Ret, typename NextArg, typename ...Args>
 static void
 dumpArgsFrom(int count, std::ostream &os, ThreadContext *tc,
-             typename ABI::Position &position)
+             typename ABI::State &state)
 {
     // Either open the parenthesis or add a comma, depending on where we are
     // in the argument list.
     os << (count ? ", " : "(");
 
     // Extract the next argument from the thread context.
-    NextArg next = getArgument<ABI, NextArg>(tc, position);
+    NextArg next = getArgument<ABI, NextArg>(tc, state);
 
     // Add this argument to the list.
     os << next;
 
     // Recursively handle any remaining arguments.
-    dumpArgsFrom<ABI, Ret, Args...>(count + 1, os, tc, position);
+    dumpArgsFrom<ABI, Ret, Args...>(count + 1, os, tc, state);
 }
 
 } // namespace GuestABI

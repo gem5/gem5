@@ -47,11 +47,11 @@ Ret
 invokeSimcall(ThreadContext *tc,
               std::function<Ret(ThreadContext *, Args...)> target)
 {
-    // Default construct a Position to track consumed resources. Built in
+    // Default construct a State to track consumed resources. Built in
     // types will be zero initialized.
-    auto position = GuestABI::initializePosition<ABI>(tc);
-    GuestABI::prepareForFunction<ABI, Ret, Args...>(tc, position);
-    return GuestABI::callFrom<ABI, Ret, Args...>(tc, position, target);
+    auto state = GuestABI::initializeState<ABI>(tc);
+    GuestABI::prepareForFunction<ABI, Ret, Args...>(tc, state);
+    return GuestABI::callFrom<ABI, Ret, Args...>(tc, state, target);
 }
 
 template <typename ABI, typename Ret, typename ...Args>
@@ -67,11 +67,11 @@ void
 invokeSimcall(ThreadContext *tc,
               std::function<void(ThreadContext *, Args...)> target)
 {
-    // Default construct a Position to track consumed resources. Built in
+    // Default construct a State to track consumed resources. Built in
     // types will be zero initialized.
-    auto position = GuestABI::initializePosition<ABI>(tc);
-    GuestABI::prepareForArguments<ABI, Args...>(tc, position);
-    GuestABI::callFrom<ABI, Args...>(tc, position, target);
+    auto state = GuestABI::initializeState<ABI>(tc);
+    GuestABI::prepareForArguments<ABI, Args...>(tc, state);
+    GuestABI::callFrom<ABI, Args...>(tc, state, target);
 }
 
 template <typename ABI, typename ...Args>
@@ -93,12 +93,12 @@ dumpSimcall(std::string name, ThreadContext *tc,
             std::function<Ret(ThreadContext *, Args...)> target=
             std::function<Ret(ThreadContext *, Args...)>())
 {
-    auto position = GuestABI::initializePosition<ABI>(tc);
+    auto state = GuestABI::initializeState<ABI>(tc);
     std::ostringstream ss;
 
-    GuestABI::prepareForFunction<ABI, Ret, Args...>(tc, position);
+    GuestABI::prepareForFunction<ABI, Ret, Args...>(tc, state);
     ss << name;
-    GuestABI::dumpArgsFrom<ABI, Ret, Args...>(0, ss, tc, position);
+    GuestABI::dumpArgsFrom<ABI, Ret, Args...>(0, ss, tc, state);
     return ss.str();
 }
 

@@ -49,7 +49,7 @@ struct IsConforming<Addr> : public std::true_type {};
 
 struct GenericSyscallABI
 {
-    using Position = int;
+    using State = int;
 };
 
 struct GenericSyscallABI64 : public GenericSyscallABI
@@ -100,11 +100,11 @@ struct Argument<ABI, Arg,
         std::is_integral<Arg>::value>::type>
 {
     static Arg
-    get(ThreadContext *tc, typename ABI::Position &position)
+    get(ThreadContext *tc, typename ABI::State &state)
     {
-        panic_if(position >= ABI::ArgumentRegs.size(),
+        panic_if(state >= ABI::ArgumentRegs.size(),
                 "Ran out of syscall argument registers.");
-        return tc->readIntReg(ABI::ArgumentRegs[position++]);
+        return tc->readIntReg(ABI::ArgumentRegs[state++]);
     }
 };
 
@@ -115,11 +115,11 @@ struct Argument<ABI, Arg,
     typename std::enable_if<!ABI::template IsWide<Arg>::value>::type>
 {
     static Arg
-    get(ThreadContext *tc, typename ABI::Position &position)
+    get(ThreadContext *tc, typename ABI::State &state)
     {
-        panic_if(position >= ABI::ArgumentRegs.size(),
+        panic_if(state >= ABI::ArgumentRegs.size(),
                 "Ran out of syscall argument registers.");
-        return bits(tc->readIntReg(ABI::ArgumentRegs[position++]), 31, 0);
+        return bits(tc->readIntReg(ABI::ArgumentRegs[state++]), 31, 0);
     }
 };
 

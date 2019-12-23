@@ -114,7 +114,7 @@ class VarArgsImpl<ABI, Base, First, Types...> :
     void
     _getImpl(First &first) override
     {
-        first = Argument<ABI, First>::get(this->tc, this->position);
+        first = Argument<ABI, First>::get(this->tc, this->state);
     }
 };
 
@@ -125,14 +125,14 @@ class VarArgsImpl<ABI, Base> : public Base
   protected:
     // Declare state to pass to the Argument<>::get methods.
     ThreadContext *tc;
-    typename ABI::Position position;
+    typename ABI::State state;
 
     // Give the "using" statement in our subclass something to refer to.
     void _getImpl();
 
   public:
-    VarArgsImpl(ThreadContext *_tc, const typename ABI::Position &_pos) :
-        tc(_tc), position(_pos)
+    VarArgsImpl(ThreadContext *_tc, const typename ABI::State &_state) :
+        tc(_tc), state(_state)
     {}
 };
 
@@ -184,11 +184,11 @@ template <typename ABI, typename ...Types>
 struct Argument<ABI, VarArgs<Types...>>
 {
     static VarArgs<Types...>
-    get(ThreadContext *tc, typename ABI::Position &position)
+    get(ThreadContext *tc, typename ABI::State &state)
     {
         using Base = VarArgsBase<Types...>;
         using Impl = VarArgsImpl<ABI, Base, Types...>;
-        return VarArgs<Types...>(new Impl(tc, position));
+        return VarArgs<Types...>(new Impl(tc, state));
     }
 };
 
