@@ -72,11 +72,12 @@ struct Result
                       typename ABI::Position &position);
 
     /*
-     * Adjust the position of arguments based on the return type, if necessary.
+     * Prepare for a result of type Ret. This might mean, for instance,
+     * allocating an argument register for a result pointer.
      *
-     * This method can be excluded if no adjustment is necessary.
+     * This method can be excluded if no preparation is necessary.
      */
-    static void allocate(ThreadContext *tc, typename ABI::Position &position);
+    static void prepare(ThreadContext *tc, typename ABI::Position &position);
 };
 
 /*
@@ -101,10 +102,10 @@ struct Argument
     static Arg get(ThreadContext *tc, typename ABI::Position &position);
 
     /*
-     * Adjust the position of arguments based on the argument type, if
-     * necessary.
+     * Prepare for an argument of type Arg. This might mean, for instance,
+     * allocating an argument register for a result pointer.
      *
-     * This method can be excluded if no adjustment is necessary.
+     * This method can be excluded if no preparation is necessary.
      */
     static void allocate(ThreadContext *tc, typename ABI::Position &position);
 };

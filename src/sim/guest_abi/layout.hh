@@ -71,63 +71,63 @@ initializePosition(const ThreadContext *tc)
 }
 
 /*
- * This struct template provides a default allocate() method in case the
+ * This struct template provides a default prepare() method in case the
  * Result or Argument template doesn't provide one. This is the default in
  * cases where the return or argument type doesn't affect where things are
  * stored.
  */
 template <typename ABI, template <class ...> class Role,
           typename Type, typename Enabled=void>
-struct Allocator
+struct Preparer
 {
     static void
-    allocate(ThreadContext *tc, typename ABI::Position &position)
+    prepare(ThreadContext *tc, typename ABI::Position &position)
     {}
 };
 
 /*
  * If the return or argument type isn't void and does affect where things
- * are stored, the ABI can implement an allocate() method for the various
+ * are stored, the ABI can implement a prepare() method for the various
  * argument and/or return types, and this specialization will call into it.
  */
 template <typename ABI, template <class ...> class Role, typename Type>
-struct Allocator<ABI, Role, Type, decltype((void)&Role<ABI, Type>::allocate)>
+struct Preparer<ABI, Role, Type, decltype((void)&Role<ABI, Type>::prepare)>
 {
     static void
-    allocate(ThreadContext *tc, typename ABI::Position &position)
+    prepare(ThreadContext *tc, typename ABI::Position &position)
     {
-        Role<ABI, Type>::allocate(tc, position);
+        Role<ABI, Type>::prepare(tc, position);
     }
 };
 
 template <typename ABI, typename Ret, typename Enabled=void>
 static void
-allocateResult(ThreadContext *tc, typename ABI::Position &position)
+prepareForResult(ThreadContext *tc, typename ABI::Position &position)
 {
-    Allocator<ABI, Result, Ret>::allocate(tc, position);
+    Preparer<ABI, Result, Ret>::prepare(tc, position);
 }
 
 template <typename ABI>
 static void
-allocateArguments(ThreadContext *tc, typename ABI::Position &position)
+prepareForArguments(ThreadContext *tc, typename ABI::Position &position)
 {
     return;
 }
 
 template <typename ABI, typename NextArg, typename ...Args>
 static void
-allocateArguments(ThreadContext *tc, typename ABI::Position &position)
+prepareForArguments(ThreadContext *tc, typename ABI::Position &position)
 {
-    Allocator<ABI, Argument, NextArg>::allocate(tc, position);
-    allocateArguments<ABI, Args...>(tc, position);
+    Preparer<ABI, Argument, NextArg>::prepare(tc, position);
+    prepareForArguments<ABI, Args...>(tc, position);
 }
 
 template <typename ABI, typename Ret, typename ...Args>
 static void
-allocateSignature(ThreadContext *tc, typename ABI::Position &position)
+prepareForFunction(ThreadContext *tc, typename ABI::Position &position)
 {
-    allocateResult<ABI, Ret>(tc, position);
-    allocateArguments<ABI, Args...>(tc, position);
+    prepareForResult<ABI, Ret>(tc, position);
+    prepareForArguments<ABI, Args...>(tc, position);
 }
 
 /*

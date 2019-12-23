@@ -66,8 +66,8 @@ struct TestABI_1D
     using Position = int;
 };
 
-// ABI anchor for an ABI which uses the allocate() hook.
-struct TestABI_Allocate
+// ABI anchor for an ABI which uses the prepare() hook.
+struct TestABI_Prepare
 {
     using Position = int;
 };
@@ -136,31 +136,31 @@ struct Result<TestABI_1D, Ret,
     }
 };
 
-// Hooks for the ABI which uses allocate(). It uses the same rules as the
+// Hooks for the ABI which uses prepare(). It uses the same rules as the
 // 1D ABI for arguments, but allocates space for and discards return values
 // and returns integer arguments in reverse order.
 template <>
-struct Argument<TestABI_Allocate, int>
+struct Argument<TestABI_Prepare, int>
 {
     static int
-    get(ThreadContext *tc, TestABI_Allocate::Position &position)
+    get(ThreadContext *tc, TestABI_Prepare::Position &position)
     {
         return tc->ints[--position];
     }
 
     static void
-    allocate(ThreadContext *tc, TestABI_Allocate::Position &position)
+    prepare(ThreadContext *tc, TestABI_Prepare::Position &position)
     {
         position++;
     }
 };
 
 template <typename Ret>
-struct Result<TestABI_Allocate, Ret>
+struct Result<TestABI_Prepare, Ret>
 {
     static void store(ThreadContext *tc, const Ret &ret) {}
     static void
-    allocate(ThreadContext *tc, TestABI_Allocate::Position &position)
+    prepare(ThreadContext *tc, TestABI_Prepare::Position &position)
     {
         position++;
     }
@@ -243,14 +243,14 @@ testIntVoid(ThreadContext *tc, int a, float b, int c, double d,
 // Test functions which verify that the return allocating ABI allocates space
 // for its return value successfully.
 void
-testAllocateVoid(ThreadContext *tc, int a, int b)
+testPrepareVoid(ThreadContext *tc, int a, int b)
 {
     EXPECT_EQ(a, tc->ints[1]);
     EXPECT_EQ(b, tc->ints[0]);
 }
 
 int
-testAllocateInt(ThreadContext *tc, int a, int b)
+testPrepareInt(ThreadContext *tc, int a, int b)
 {
     EXPECT_EQ(a, tc->ints[2]);
     EXPECT_EQ(b, tc->ints[1]);
@@ -299,11 +299,11 @@ TEST(GuestABI, ABI_1D_args)
     EXPECT_EQ(tc.floatResult, tc.DefaultFloatResult);
 }
 
-TEST(GuestABI, ABI_Allocate)
+TEST(GuestABI, ABI_Prepare)
 {
     ThreadContext tc;
-    invokeSimcall<TestABI_Allocate>(&tc, testAllocateVoid);
-    invokeSimcall<TestABI_Allocate>(&tc, testAllocateInt);
+    invokeSimcall<TestABI_Prepare>(&tc, testPrepareVoid);
+    invokeSimcall<TestABI_Prepare>(&tc, testPrepareInt);
 }
 
 TEST(GuestABI, ABI_2D_args)

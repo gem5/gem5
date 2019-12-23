@@ -50,7 +50,7 @@ invokeSimcall(ThreadContext *tc,
     // Default construct a Position to track consumed resources. Built in
     // types will be zero initialized.
     auto position = GuestABI::initializePosition<ABI>(tc);
-    GuestABI::allocateSignature<ABI, Ret, Args...>(tc, position);
+    GuestABI::prepareForFunction<ABI, Ret, Args...>(tc, position);
     return GuestABI::callFrom<ABI, Ret, Args...>(tc, position, target);
 }
 
@@ -70,7 +70,7 @@ invokeSimcall(ThreadContext *tc,
     // Default construct a Position to track consumed resources. Built in
     // types will be zero initialized.
     auto position = GuestABI::initializePosition<ABI>(tc);
-    GuestABI::allocateArguments<ABI, Args...>(tc, position);
+    GuestABI::prepareForArguments<ABI, Args...>(tc, position);
     GuestABI::callFrom<ABI, Args...>(tc, position, target);
 }
 
@@ -96,7 +96,7 @@ dumpSimcall(std::string name, ThreadContext *tc,
     auto position = GuestABI::initializePosition<ABI>(tc);
     std::ostringstream ss;
 
-    GuestABI::allocateSignature<ABI, Ret, Args...>(tc, position);
+    GuestABI::prepareForFunction<ABI, Ret, Args...>(tc, position);
     ss << name;
     GuestABI::dumpArgsFrom<ABI, Ret, Args...>(0, ss, tc, position);
     return ss.str();
