@@ -37,7 +37,7 @@ class SkipFuncEvent : public PCEvent
     SkipFuncEvent(PCEventScope *s, const std::string &desc, Addr addr)
         : PCEvent(s, desc, addr)
     {}
-    virtual void process(ThreadContext *tc);
+    void process(ThreadContext *tc) override;
 };
 
 #endif // __SYSTEM_EVENTS_HH__

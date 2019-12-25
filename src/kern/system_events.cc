@@ -28,14 +28,11 @@
 
 #include "kern/system_events.hh"
 
-#include "arch/isa_traits.hh"
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "debug/PCEvent.hh"
-
-using namespace TheISA;
 
 void
 SkipFuncEvent::process(ThreadContext *tc)
