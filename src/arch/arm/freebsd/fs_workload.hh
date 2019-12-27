@@ -88,7 +88,7 @@ class FsFreebsd : public ArmISA::FsWorkload
      * processor for the appropriate amount of time. This is not functionally
      * required but does speed up simulation.
      */
-    FreeBSD::SkipUDelay<SkipFunc> *skipUDelay = nullptr;
+    PCEvent *skipUDelay = nullptr;
 
     /** These variables store addresses of important data structures
      * that are normaly kept coherent at boot with cache mainetence operations.
