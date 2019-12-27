@@ -69,7 +69,7 @@ FsFreebsd::FsFreebsd(Params *p) : ArmISA::FsWorkload(p),
             "oops_exit", "Kernel oops in guest");
     }
 
-    uDelaySkipEvent = addKernelFuncEvent<UDelayEvent>(
+    uDelaySkipEvent = addKernelFuncEvent<UDelayEvent<ArmISA::SkipFunc>>(
         "DELAY", "DELAY", 1000, 0);
 }
 

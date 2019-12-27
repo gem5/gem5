@@ -40,6 +40,20 @@
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
+
+namespace MipsISA
+{
+
+class SkipFunc : public SkipFuncBase
+{
+  public:
+    using SkipFuncBase::SkipFuncBase;
+
+    void returnFromFuncIn(ThreadContext *tc) override;
+};
+
+} // namespace MipsaISA
+
 class MipsSystem : public System
 {
   public:

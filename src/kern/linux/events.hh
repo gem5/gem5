@@ -45,12 +45,20 @@
 
 namespace Linux {
 
-class DebugPrintkEvent : public SkipFuncEvent
+void onDebugPrintk(ThreadContext *tc);
+
+template <typename Base>
+class DebugPrintkEvent : public Base
 {
   public:
     DebugPrintkEvent(PCEventScope *s, const std::string &desc, Addr addr)
-        : SkipFuncEvent(s, desc, addr) {}
-    virtual void process(ThreadContext *xc);
+        : Base(s, desc, addr) {}
+    virtual void
+    process(ThreadContext *tc)
+    {
+        onDebugPrintk(tc);
+        Base::process(tc);
+    }
 };
 
 /**
@@ -70,7 +78,7 @@ class DmesgDumpEvent : public PCEvent
     DmesgDumpEvent(PCEventScope *s, const std::string &desc, Addr addr,
                    const std::string &_fname)
         : PCEvent(s, desc, addr), fname(_fname) {}
-    virtual void process(ThreadContext *xc);
+    virtual void process(ThreadContext *tc);
 };
 
 /**
@@ -90,15 +98,19 @@ class KernelPanicEvent : public PCEvent
     KernelPanicEvent(PCEventScope *s, const std::string &desc, Addr addr,
                const std::string &_fname)
         : PCEvent(s, desc, addr), fname(_fname) {}
-    virtual void process(ThreadContext *xc);
+    virtual void process(ThreadContext *tc);
 };
 
-/** A class to skip udelay() and related calls in the kernel.
- * This class has two additional parameters that take the argument to udelay and
- * manipulated it to come up with ns and eventually ticks to quiesce for.
+void onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul);
+
+/**
+ * A class to skip udelay() and related calls in the kernel.
+ * This class has two additional parameters that take the argument to udelay
+ * and manipulated it to come up with ns and eventually ticks to quiesce for.
  * See descriptions of argDivToNs and argMultToNs below.
  */
-class UDelayEvent : public SkipFuncEvent
+template <typename Base>
+class UDelayEvent : public Base
 {
   private:
     /** value to divide arg by to create ns. This is present beacues the linux
@@ -115,10 +127,15 @@ class UDelayEvent : public SkipFuncEvent
   public:
     UDelayEvent(PCEventScope *s, const std::string &desc, Addr addr,
             uint64_t mult, uint64_t div)
-        : SkipFuncEvent(s, desc, addr), argDivToNs(div), argMultToNs(mult) {}
-    virtual void process(ThreadContext *xc);
-};
+        : Base(s, desc, addr), argDivToNs(div), argMultToNs(mult) {}
 
+    virtual void
+    process(ThreadContext *tc)
+    {
+        onUDelay(tc, argDivToNs, argMultToNs);
+        Base::process(tc);
+    }
+};
 
 }
 

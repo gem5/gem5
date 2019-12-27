@@ -31,12 +31,16 @@
 
 #include "cpu/pc_event.hh"
 
-class SkipFuncEvent : public PCEvent
+class SkipFuncBase : public PCEvent
 {
+  protected:
+    virtual void returnFromFuncIn(ThreadContext *tc) = 0;
+
   public:
-    SkipFuncEvent(PCEventScope *s, const std::string &desc, Addr addr)
+    SkipFuncBase(PCEventScope *s, const std::string &desc, Addr addr)
         : PCEvent(s, desc, addr)
     {}
+
     void process(ThreadContext *tc) override;
 };
 

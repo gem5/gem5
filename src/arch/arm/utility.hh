@@ -389,8 +389,6 @@ bool SPAlignmentCheckEnabled(ThreadContext* tc);
 
 uint64_t getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);
 
-void skipFunction(ThreadContext *tc);
-
 inline void
 advancePC(PCState &pc, const StaticInstPtr &inst)
 {

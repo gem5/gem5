@@ -63,7 +63,7 @@ class FsLinux : public ArmISA::FsWorkload
      * PC based event to skip the dprink() call and emulate its
      * functionality
      */
-    Linux::DebugPrintkEvent *debugPrintkEvent = nullptr;
+    Linux::DebugPrintkEvent<SkipFunc> *debugPrintkEvent = nullptr;
 
     DumpStatsPCEvent *dumpStatsPCEvent = nullptr;
 
@@ -119,14 +119,14 @@ class FsLinux : public ArmISA::FsWorkload
      * processor for the appropriate amount of time. This is not functionally
      * required but does speed up simulation.
      */
-    Linux::UDelayEvent *uDelaySkipEvent;
+    Linux::UDelayEvent<SkipFunc> *uDelaySkipEvent = nullptr;
 
     /** Another PC based skip event for const_udelay(). Similar to the udelay
      * skip, but this function precomputes the first multiply that is done
      * in the generic case since the parameter is known at compile time.
      * Thus we need to do some division to get back to us.
      */
-    Linux::UDelayEvent *constUDelaySkipEvent;
+    Linux::UDelayEvent<SkipFunc> *constUDelaySkipEvent = nullptr;
 
 };
 

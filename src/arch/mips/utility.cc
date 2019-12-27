@@ -242,13 +242,5 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 {
     panic("Copy Misc. Regs Not Implemented Yet\n");
 }
-void
-skipFunction(ThreadContext *tc)
-{
-    PCState newPC = tc->pcState();
-    newPC.set(tc->readIntReg(ReturnAddressReg));
-    tc->pcState(newPC);
-}
-
 
 } // namespace MipsISA

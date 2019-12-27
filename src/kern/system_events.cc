@@ -28,19 +28,17 @@
 
 #include "kern/system_events.hh"
 
-#include "arch/utility.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "debug/PCEvent.hh"
 
 void
-SkipFuncEvent::process(ThreadContext *tc)
+SkipFuncBase::process(ThreadContext *tc)
 {
     TheISA::PCState oldPC M5_VAR_USED = tc->pcState();
 
-    // Call ISA specific code to do the skipping
-    TheISA::skipFunction(tc);
+    returnFromFuncIn(tc);
+
     DPRINTF(PCEvent, "skipping %s: pc = %s, newpc = %s\n", description,
             oldPC, tc->pcState());
 }

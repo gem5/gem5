@@ -51,6 +51,24 @@
 namespace ArmISA
 {
 
+void
+SkipFunc::returnFromFuncIn(ThreadContext *tc)
+{
+    PCState newPC = tc->pcState();
+    if (inAArch64(tc)) {
+        newPC.set(tc->readIntReg(INTREG_X30));
+    } else {
+        newPC.set(tc->readIntReg(ReturnAddressReg) & ~ULL(1));
+    }
+
+    CheckerCPU *checker = tc->getCheckerCpuPtr();
+    if (checker) {
+        tc->pcStateNoRecord(newPC);
+    } else {
+        tc->pcState(newPC);
+    }
+}
+
 FsWorkload::FsWorkload(Params *p) : OsKernel(*p)
 {
     bootLoaders.reserve(p->boot_loader.size());

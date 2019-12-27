@@ -47,11 +47,13 @@ class IdleStartEvent;
 class LinuxMipsSystem : public MipsSystem
 {
   private:
-    class SkipDelayLoopEvent : public SkipFuncEvent
+    using SkipFunc = MipsISA::SkipFunc;
+
+    class SkipDelayLoopEvent : public SkipFunc
     {
       public:
         SkipDelayLoopEvent(PCEventScope *s, const std::string &desc, Addr addr)
-            : SkipFuncEvent(s, desc, addr) {}
+            : SkipFunc(s, desc, addr) {}
         virtual void process(ThreadContext *tc);
     };
 

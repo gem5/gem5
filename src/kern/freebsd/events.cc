@@ -45,7 +45,7 @@
 namespace FreeBSD {
 
 void
-UDelayEvent::process(ThreadContext *tc)
+onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul)
 {
     int arg_num;
 
@@ -57,12 +57,10 @@ UDelayEvent::process(ThreadContext *tc)
     //DPRINTFN("DELAY(%d)\n", time);
 
     // convert parameter to ns
-    if (argDivToNs)
-        time /= argDivToNs;
+    if (div)
+        time /= div;
 
-    time *= argMultToNs;
-
-    SkipFuncEvent::process(tc);
+    time *= mul;
 
     // Currently, only ARM full-system simulation uses UDelayEvents to skip
     // __delay and __loop_delay functions. One form involves setting quiesce

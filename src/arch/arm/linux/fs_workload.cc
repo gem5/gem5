@@ -224,21 +224,23 @@ FsLinux::startup()
 
     // With ARM udelay() is #defined to __udelay
     // newer kernels use __loop_udelay and __loop_const_udelay symbols
-    uDelaySkipEvent = addKernelFuncEvent<UDelayEvent>(
+    uDelaySkipEvent = addKernelFuncEvent<UDelayEvent<SkipFunc>>(
         "__loop_udelay", "__udelay", 1000, 0);
     if (!uDelaySkipEvent)
-        uDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent>(
+        uDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent<SkipFunc>>(
          "__udelay", "__udelay", 1000, 0);
 
     // constant arguments to udelay() have some precomputation done ahead of
     // time. Constant comes from code.
-    constUDelaySkipEvent = addKernelFuncEvent<UDelayEvent>(
+    constUDelaySkipEvent = addKernelFuncEvent<UDelayEvent<SkipFunc>>(
         "__loop_const_udelay", "__const_udelay", 1000, 107374);
     if (!constUDelaySkipEvent)
-        constUDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent>(
+        constUDelaySkipEvent =
+            addKernelFuncEventOrPanic<UDelayEvent<SkipFunc>>(
          "__const_udelay", "__const_udelay", 1000, 107374);
 
-    debugPrintkEvent = addKernelFuncEvent<DebugPrintkEvent>("dprintk");
+    debugPrintkEvent =
+        addKernelFuncEvent<DebugPrintkEvent<SkipFunc>>("dprintk");
 }
 
 void

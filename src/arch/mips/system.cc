@@ -29,13 +29,22 @@
 
 #include "arch/mips/system.hh"
 
-#include "arch/vtophys.hh"
+#include "arch/mips/registers.hh"
+#include "arch/mips/vtophys.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "mem/physical.hh"
 #include "params/MipsSystem.hh"
 #include "sim/byteswap.hh"
+
+void
+MipsISA::SkipFunc::returnFromFuncIn(ThreadContext *tc)
+{
+    MipsISA::PCState newPC = tc->pcState();
+    newPC.set(tc->readIntReg(MipsISA::ReturnAddressReg));
+    tc->pcState(newPC);
+}
 
 MipsSystem::MipsSystem(Params *p) : System(p)
 {

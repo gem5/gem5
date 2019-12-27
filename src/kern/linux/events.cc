@@ -58,7 +58,7 @@
 namespace Linux {
 
 void
-DebugPrintkEvent::process(ThreadContext *tc)
+onDebugPrintk(ThreadContext *tc)
 {
     if (DTRACE(DebugPrintf)) {
         std::stringstream ss;
@@ -67,38 +67,11 @@ DebugPrintkEvent::process(ThreadContext *tc)
         StringWrap name(tc->getSystemPtr()->name() + ".dprintk");
         DPRINTFN("%s", ss.str());
     }
-    SkipFuncEvent::process(tc);
-}
-
-void
-UDelayEvent::process(ThreadContext *tc)
-{
-    int arg_num  = 0;
-
-    // Get the time in native size
-    uint64_t time = TheISA::getArgument(tc, arg_num,  (uint16_t)-1, false);
-
-    // convert parameter to ns
-    if (argDivToNs)
-        time /= argDivToNs;
-
-    time *= argMultToNs;
-
-    SkipFuncEvent::process(tc);
-
-    // Currently, only ARM full-system simulation uses UDelayEvents to skip
-    // __delay and __loop_delay functions. One form involves setting quiesce
-    // time to 0 with the assumption that quiesce will not happen. To avoid
-    // the quiesce handling in this case, only execute the quiesce if time > 0.
-    if (time > 0)
-        tc->quiesceTick(curTick() + SimClock::Int::ns * time);
 }
 
 void
 DmesgDumpEvent::process(ThreadContext *tc)
 {
-    StringWrap name(tc->getCpuPtr()->name() + ".dmesg_dump_event");
-
     inform("Dumping kernel dmesg buffer to %s...\n", fname);
     OutputStream *os = simout.create(fname);
     dumpDmesg(tc, *os->stream());
@@ -110,14 +83,34 @@ DmesgDumpEvent::process(ThreadContext *tc)
 void
 KernelPanicEvent::process(ThreadContext *tc)
 {
-    StringWrap name(tc->getCpuPtr()->name() + ".dmesg_dump_event");
-
     inform("Dumping kernel dmesg buffer to %s...\n", fname);
     OutputStream *os = simout.create(fname);
     dumpDmesg(tc, *os->stream());
     simout.close(os);
 
     panic(descr());
+}
+
+void
+onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul)
+{
+    int arg_num = 0;
+
+    // Get the time in native size
+    uint64_t time = TheISA::getArgument(tc, arg_num, (uint16_t)-1, false);
+
+    // convert parameter to ns
+    if (div)
+        time /= div;
+
+    time *= mul;
+
+    // Currently, only ARM full-system simulation uses UDelayEvents to skip
+    // __delay and __loop_delay functions. One form involves setting quiesce
+    // time to 0 with the assumption that quiesce will not happen. To avoid
+    // the quiesce handling in this case, only execute the quiesce if time > 0.
+    if (time > 0)
+        tc->quiesceTick(curTick() + SimClock::Int::ns * time);
 }
 
 } // namespace linux

@@ -115,24 +115,6 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
     panic("getArgument() should always return\n");
 }
 
-void
-skipFunction(ThreadContext *tc)
-{
-    PCState newPC = tc->pcState();
-    if (inAArch64(tc)) {
-        newPC.set(tc->readIntReg(INTREG_X30));
-    } else {
-        newPC.set(tc->readIntReg(ReturnAddressReg) & ~ULL(1));
-    }
-
-    CheckerCPU *checker = tc->getCheckerCpuPtr();
-    if (checker) {
-        tc->pcStateNoRecord(newPC);
-    } else {
-        tc->pcState(newPC);
-    }
-}
-
 static void
 copyVecRegs(ThreadContext *src, ThreadContext *dest)
 {

@@ -106,12 +106,6 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     dest->pcState(src->pcState());
 }
 
-void
-skipFunction(ThreadContext *tc)
-{
-    panic("Not implemented for x86\n");
-}
-
 uint64_t
 getRFlags(ThreadContext *tc)
 {

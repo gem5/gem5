@@ -62,10 +62,4 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
     return 0;
 }
 
-void
-skipFunction(ThreadContext *tc)
-{
-    panic("Not Implemented for POWER");
-}
-
 } // namespace PowerISA

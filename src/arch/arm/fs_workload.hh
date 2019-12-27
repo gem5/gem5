@@ -52,6 +52,13 @@
 namespace ArmISA
 {
 
+class SkipFunc : public SkipFuncBase
+{
+  public:
+    using SkipFuncBase::SkipFuncBase;
+    void returnFromFuncIn(ThreadContext *tc) override;
+};
+
 class FsWorkload : public OsKernel
 {
   protected:

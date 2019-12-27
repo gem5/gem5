@@ -71,8 +71,6 @@ namespace X86ISA
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
-    void skipFunction(ThreadContext *tc);
-
     inline void
     advancePC(PCState &pc, const StaticInstPtr &inst)
     {

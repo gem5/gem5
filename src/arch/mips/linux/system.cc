@@ -77,7 +77,7 @@ LinuxMipsSystem::setDelayLoop(ThreadContext *tc)
 void
 LinuxMipsSystem::SkipDelayLoopEvent::process(ThreadContext *tc)
 {
-    SkipFuncEvent::process(tc);
+    MipsISA::SkipFunc::process(tc);
     // calculate and set loops_per_jiffy
     ((LinuxMipsSystem *)tc->getSystemPtr())->setDelayLoop(tc);
 }

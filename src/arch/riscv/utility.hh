@@ -153,12 +153,6 @@ registerName(RegId reg)
 }
 
 inline void
-skipFunction(ThreadContext *tc)
-{
-    panic("Not Implemented for Riscv");
-}
-
-inline void
 advancePC(PCState &pc, const StaticInstPtr &inst)
 {
     inst->advancePC(pc);
