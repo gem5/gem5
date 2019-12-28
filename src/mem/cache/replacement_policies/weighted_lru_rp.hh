@@ -41,7 +41,9 @@
 
 struct WeightedLRURPParams;
 
-class WeightedLRUPolicy : public BaseReplacementPolicy
+namespace ReplacementPolicy {
+
+class WeightedLRU : public Base
 {
   protected:
     /** Weighted LRU implementation of replacement data. */
@@ -61,8 +63,8 @@ class WeightedLRUPolicy : public BaseReplacementPolicy
     };
   public:
     typedef WeightedLRURPParams Params;
-    WeightedLRUPolicy(const Params* p);
-    ~WeightedLRUPolicy() {}
+    WeightedLRU(const Params* p);
+    ~WeightedLRU() = default;
 
     /**
      * Invalidate replacement data to set it as the next probable victim.
@@ -108,5 +110,7 @@ class WeightedLRUPolicy : public BaseReplacementPolicy
     ReplaceableEntry* getVictim(const ReplacementCandidates&
                                               candidates) const override;
 };
+
+} // namespace ReplacementPolicy
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_WEIGHTED_LRU_RP_HH__

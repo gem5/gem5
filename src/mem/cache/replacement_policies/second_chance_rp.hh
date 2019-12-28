@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 Inria
+ * Copyright (c) 2018-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,9 @@
 
 struct SecondChanceRPParams;
 
-class SecondChanceRP : public FIFORP
+namespace ReplacementPolicy {
+
+class SecondChance : public FIFO
 {
   protected:
     /** Second-Chance-specific implementation of replacement data. */
@@ -52,7 +54,7 @@ class SecondChanceRP : public FIFORP
         /**
          * This is different from isTouched because isTouched accounts only
          * for insertion, while this bit is reset every new re-insertion.
-         * @sa SecondChanceRP.
+         * @sa SecondChance.
          */
         bool hasSecondChance;
 
@@ -71,18 +73,9 @@ class SecondChanceRP : public FIFORP
         const std::shared_ptr<SecondChanceReplData>& replacement_data) const;
 
   public:
-    /** Convenience typedef. */
     typedef SecondChanceRPParams Params;
-
-    /**
-     * Construct and initiliaze this replacement policy.
-     */
-    SecondChanceRP(const Params *p);
-
-    /**
-     * Destructor.
-     */
-    ~SecondChanceRP() {}
+    SecondChance(const Params *p);
+    ~SecondChance() = default;
 
     /**
      * Invalidate replacement data to set it as the next probable victim.
@@ -129,5 +122,7 @@ class SecondChanceRP : public FIFORP
      */
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
+
+} // namespace ReplacementPolicy
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_SECOND_CHANCE_RP_HH__

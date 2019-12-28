@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 Inria
+ * Copyright (c) 2018-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,27 +32,29 @@
 
 #include "params/SecondChanceRP.hh"
 
-SecondChanceRP::SecondChanceRP(const Params *p)
-    : FIFORP(p)
+namespace ReplacementPolicy {
+
+SecondChance::SecondChance(const Params *p)
+  : FIFO(p)
 {
 }
 
 void
-SecondChanceRP::useSecondChance(
+SecondChance::useSecondChance(
     const std::shared_ptr<SecondChanceReplData>& replacement_data) const
 {
     // Reset FIFO data
-    FIFORP::reset(replacement_data);
+    FIFO::reset(replacement_data);
 
     // Use second chance
     replacement_data->hasSecondChance = false;
 }
 
 void
-SecondChanceRP::invalidate(
+SecondChance::invalidate(
     const std::shared_ptr<ReplacementData>& replacement_data) const
 {
-    FIFORP::invalidate(replacement_data);
+    FIFO::invalidate(replacement_data);
 
     // Do not give a second chance to invalid entries
     std::static_pointer_cast<SecondChanceReplData>(
@@ -60,10 +62,10 @@ SecondChanceRP::invalidate(
 }
 
 void
-SecondChanceRP::touch(const std::shared_ptr<ReplacementData>&
-                                                    replacement_data) const
+SecondChance::touch(
+    const std::shared_ptr<ReplacementData>& replacement_data) const
 {
-    FIFORP::touch(replacement_data);
+    FIFO::touch(replacement_data);
 
     // Whenever an entry is touched, it is given a second chance
     std::static_pointer_cast<SecondChanceReplData>(
@@ -71,10 +73,10 @@ SecondChanceRP::touch(const std::shared_ptr<ReplacementData>&
 }
 
 void
-SecondChanceRP::reset(const std::shared_ptr<ReplacementData>&
-                                                    replacement_data) const
+SecondChance::reset(
+    const std::shared_ptr<ReplacementData>& replacement_data) const
 {
-    FIFORP::reset(replacement_data);
+    FIFO::reset(replacement_data);
 
     // Entries are inserted with a second chance
     std::static_pointer_cast<SecondChanceReplData>(
@@ -82,7 +84,7 @@ SecondChanceRP::reset(const std::shared_ptr<ReplacementData>&
 }
 
 ReplaceableEntry*
-SecondChanceRP::getVictim(const ReplacementCandidates& candidates) const
+SecondChance::getVictim(const ReplacementCandidates& candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
@@ -106,7 +108,7 @@ SecondChanceRP::getVictim(const ReplacementCandidates& candidates) const
     bool search_victim = true;
     while (search_victim) {
         // Do a FIFO victim search
-        victim = FIFORP::getVictim(candidates);
+        victim = FIFO::getVictim(candidates);
 
         // Cast victim's replacement data for code readability
         std::shared_ptr<SecondChanceReplData> victim_replacement_data =
@@ -126,13 +128,15 @@ SecondChanceRP::getVictim(const ReplacementCandidates& candidates) const
 }
 
 std::shared_ptr<ReplacementData>
-SecondChanceRP::instantiateEntry()
+SecondChance::instantiateEntry()
 {
     return std::shared_ptr<ReplacementData>(new SecondChanceReplData());
 }
 
-SecondChanceRP*
+} // namespace ReplacementPolicy
+
+ReplacementPolicy::SecondChance*
 SecondChanceRPParams::create()
 {
-    return new SecondChanceRP(this);
+    return new ReplacementPolicy::SecondChance(this);
 }

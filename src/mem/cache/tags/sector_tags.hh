@@ -44,7 +44,9 @@
 #include "mem/packet.hh"
 #include "params/SectorTags.hh"
 
-class BaseReplacementPolicy;
+namespace ReplacementPolicy {
+    class Base;
+}
 class ReplaceableEntry;
 
 /**
@@ -71,7 +73,7 @@ class SectorTags : public BaseTags
     const bool sequentialAccess;
 
     /** Replacement policy */
-    BaseReplacementPolicy *replacementPolicy;
+    ReplacementPolicy::Base *replacementPolicy;
 
     /** Number of data blocks per sector. */
     const unsigned numBlocksPerSector;

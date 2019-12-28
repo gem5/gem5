@@ -61,7 +61,9 @@
 #include "params/StridePrefetcherHashedSetAssociative.hh"
 
 class BaseIndexingPolicy;
-class BaseReplacementPolicy;
+namespace ReplacementPolicy {
+    class Base;
+}
 struct StridePrefetcherParams;
 
 namespace Prefetcher {
@@ -107,11 +109,11 @@ class Stride : public Queued
         const int numEntries;
 
         BaseIndexingPolicy* const indexingPolicy;
-        BaseReplacementPolicy* const replacementPolicy;
+        ReplacementPolicy::Base* const replacementPolicy;
 
         PCTableInfo(int assoc, int num_entries,
             BaseIndexingPolicy* indexing_policy,
-            BaseReplacementPolicy* replacement_policy)
+            ReplacementPolicy::Base* replacement_policy)
           : assoc(assoc), numEntries(num_entries),
             indexingPolicy(indexing_policy),
             replacementPolicy(replacement_policy)

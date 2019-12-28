@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 Inria
+ * Copyright (c) 2018-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,9 @@
 
 struct BRRIPRPParams;
 
-class BRRIPRP : public BaseReplacementPolicy
+namespace ReplacementPolicy {
+
+class BRRIP : public Base
 {
   protected:
     /** BRRIP-specific implementation of replacement data. */
@@ -106,18 +108,9 @@ class BRRIPRP : public BaseReplacementPolicy
     const unsigned btp;
 
   public:
-    /** Convenience typedef. */
     typedef BRRIPRPParams Params;
-
-    /**
-     * Construct and initiliaze this replacement policy.
-     */
-    BRRIPRP(const Params *p);
-
-    /**
-     * Destructor.
-     */
-    ~BRRIPRP() {}
+    BRRIP(const Params *p);
+    ~BRRIP() = default;
 
     /**
      * Invalidate replacement data to set it as the next probable victim.
@@ -161,5 +154,7 @@ class BRRIPRP : public BaseReplacementPolicy
      */
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
+
+} // namespace ReplacementPolicy
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_BRRIP_RP_HH__

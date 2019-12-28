@@ -82,7 +82,7 @@ class BaseSetAssoc : public BaseTags
     const bool sequentialAccess;
 
     /** Replacement policy */
-    BaseReplacementPolicy *replacementPolicy;
+    ReplacementPolicy::Base *replacementPolicy;
 
   public:
     /** Convenience typedef. */

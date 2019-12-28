@@ -64,7 +64,7 @@ class CacheMemory : public SimObject
 {
   public:
     typedef RubyCacheParams Params;
-    typedef std::shared_ptr<ReplacementData> ReplData;
+    typedef std::shared_ptr<ReplacementPolicy::ReplacementData> ReplData;
     CacheMemory(const Params *p);
     ~CacheMemory();
 
@@ -200,11 +200,8 @@ class CacheMemory : public SimObject
     std::unordered_map<Addr, int> m_tag_index;
     std::vector<std::vector<AbstractCacheEntry*> > m_cache;
 
-    /**
-     * We use BaseReplacementPolicy from Classic system here, hence we can use
-     * different replacement policies from Classic system in Ruby system.
-     */
-    BaseReplacementPolicy *m_replacementPolicy_ptr;
+    /** We use the replacement policies from the Classic memory system. */
+    ReplacementPolicy::Base *m_replacementPolicy_ptr;
 
     BankedArray dataArray;
     BankedArray tagArray;

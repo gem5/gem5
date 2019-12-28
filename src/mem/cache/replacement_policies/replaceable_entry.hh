@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 Inria
+ * Copyright (c) 2018-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,11 +34,15 @@
 
 #include "base/cprintf.hh"
 
+namespace ReplacementPolicy {
+
 /**
  * The replacement data needed by replacement policies. Each replacement policy
  * should have its own implementation of replacement data.
  */
 struct ReplacementData {};
+
+} // namespace ReplacementPolicy
 
 /**
  * A replaceable entry is a basic entry in a 2d table-like structure that needs
@@ -71,7 +75,7 @@ class ReplaceableEntry
      * Replacement data associated to this entry.
      * It must be instantiated by the replacement policy before being used.
      */
-    std::shared_ptr<ReplacementData> replacementData;
+    std::shared_ptr<ReplacementPolicy::ReplacementData> replacementData;
 
     /**
      * Set both the set and way. Should be called only once.

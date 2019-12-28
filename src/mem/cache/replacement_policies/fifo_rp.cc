@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 Inria
+ * Copyright (c) 2018-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,13 +34,15 @@
 #include "params/FIFORP.hh"
 #include "sim/core.hh"
 
-FIFORP::FIFORP(const Params *p)
-    : BaseReplacementPolicy(p)
+namespace ReplacementPolicy {
+
+FIFO::FIFO(const Params *p)
+  : Base(p)
 {
 }
 
 void
-FIFORP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+FIFO::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 const
 {
     // Reset insertion tick
@@ -49,13 +51,13 @@ const
 }
 
 void
-FIFORP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+FIFO::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
     // A touch does not modify the insertion tick
 }
 
 void
-FIFORP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+FIFO::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
     // Set insertion tick
     std::static_pointer_cast<FIFOReplData>(
@@ -63,7 +65,7 @@ FIFORP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 }
 
 ReplaceableEntry*
-FIFORP::getVictim(const ReplacementCandidates& candidates) const
+FIFO::getVictim(const ReplacementCandidates& candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
@@ -84,13 +86,15 @@ FIFORP::getVictim(const ReplacementCandidates& candidates) const
 }
 
 std::shared_ptr<ReplacementData>
-FIFORP::instantiateEntry()
+FIFO::instantiateEntry()
 {
     return std::shared_ptr<ReplacementData>(new FIFOReplData());
 }
 
-FIFORP*
+} // namespace ReplacementPolicy
+
+ReplacementPolicy::FIFO*
 FIFORPParams::create()
 {
-    return new FIFORP(this);
+    return new ReplacementPolicy::FIFO(this);
 }

@@ -38,19 +38,15 @@
 #include "params/WeightedLRURP.hh"
 #include "sim/core.hh"
 
-WeightedLRUPolicy::WeightedLRUPolicy(const Params* p)
-    : BaseReplacementPolicy(p)
-{
-}
+namespace ReplacementPolicy {
 
-WeightedLRUPolicy *
-WeightedLRURPParams::create()
+WeightedLRU::WeightedLRU(const Params* p)
+  : Base(p)
 {
-    return new WeightedLRUPolicy(this);
 }
 
 void
-WeightedLRUPolicy::touch(const std::shared_ptr<ReplacementData>&
+WeightedLRU::touch(const std::shared_ptr<ReplacementData>&
                                                   replacement_data) const
 {
     std::static_pointer_cast<WeightedLRUReplData>(replacement_data)->
@@ -58,7 +54,7 @@ WeightedLRUPolicy::touch(const std::shared_ptr<ReplacementData>&
 }
 
 void
-WeightedLRUPolicy::touch(const std::shared_ptr<ReplacementData>&
+WeightedLRU::touch(const std::shared_ptr<ReplacementData>&
                         replacement_data, int occupancy) const
 {
     std::static_pointer_cast<WeightedLRUReplData>(replacement_data)->
@@ -68,7 +64,7 @@ WeightedLRUPolicy::touch(const std::shared_ptr<ReplacementData>&
 }
 
 ReplaceableEntry*
-WeightedLRUPolicy::getVictim(const ReplacementCandidates& candidates) const
+WeightedLRU::getVictim(const ReplacementCandidates& candidates) const
 {
     assert(candidates.size() > 0);
 
@@ -102,13 +98,13 @@ WeightedLRUPolicy::getVictim(const ReplacementCandidates& candidates) const
 }
 
 std::shared_ptr<ReplacementData>
-WeightedLRUPolicy::instantiateEntry()
+WeightedLRU::instantiateEntry()
 {
     return std::shared_ptr<ReplacementData>(new WeightedLRUReplData);
 }
 
 void
-WeightedLRUPolicy::reset(const std::shared_ptr<ReplacementData>&
+WeightedLRU::reset(const std::shared_ptr<ReplacementData>&
                                                     replacement_data) const
 {
     // Set last touch timestamp
@@ -117,10 +113,18 @@ WeightedLRUPolicy::reset(const std::shared_ptr<ReplacementData>&
 }
 
 void
-WeightedLRUPolicy::invalidate(const std::shared_ptr<ReplacementData>&
+WeightedLRU::invalidate(const std::shared_ptr<ReplacementData>&
                                                     replacement_data) const
 {
     // Reset last touch timestamp
     std::static_pointer_cast<WeightedLRUReplData>(
         replacement_data)->last_touch_tick = Tick(0);
+}
+
+} // namespace ReplacementPolicy
+
+ReplacementPolicy::WeightedLRU*
+WeightedLRURPParams::create()
+{
+    return new ReplacementPolicy::WeightedLRU(this);
 }
