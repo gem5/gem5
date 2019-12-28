@@ -43,7 +43,9 @@
 
 struct BOPPrefetcherParams;
 
-class BOPPrefetcher : public QueuedPrefetcher
+namespace Prefetcher {
+
+class BOP : public Queued
 {
     private:
 
@@ -145,11 +147,13 @@ class BOPPrefetcher : public QueuedPrefetcher
 
     public:
 
-        BOPPrefetcher(const BOPPrefetcherParams *p);
-        ~BOPPrefetcher() {}
+        BOP(const BOPPrefetcherParams *p);
+        ~BOP() = default;
 
         void calculatePrefetch(const PrefetchInfo &pfi,
                                std::vector<AddrPriority> &addresses) override;
 };
+
+} // namespace Prefetcher
 
 #endif /* __MEM_CACHE_PREFETCH_BOP_HH__ */

@@ -33,6 +33,9 @@
 #include "mem/cache/prefetch/queued.hh"
 
 struct DeltaCorrelatingPredictionTablesParams;
+struct DCPTPrefetcherParams;
+
+namespace Prefetcher {
 
 /**
  * Delta Correlating Prediction Tables Prefetcher
@@ -95,7 +98,7 @@ class DeltaCorrelatingPredictionTables : public SimObject
          * @param mask_bits the number of lower bits that should be masked
          *        (ignored) when comparing deltas
          */
-        void getCandidates(std::vector<QueuedPrefetcher::AddrPriority> &pfs,
+        void getCandidates(std::vector<Queued::AddrPriority> &pfs,
                            unsigned int mask_bits) const;
 
     };
@@ -105,31 +108,31 @@ class DeltaCorrelatingPredictionTables : public SimObject
   public:
     DeltaCorrelatingPredictionTables(
         DeltaCorrelatingPredictionTablesParams *p);
-    ~DeltaCorrelatingPredictionTables()
-    {}
+    ~DeltaCorrelatingPredictionTables() = default;
 
     /**
      * Computes the prefetch candidates given a prefetch event.
      * @param pfi The prefetch event information
      * @param addresses prefetch candidates generated
      */
-    void calculatePrefetch(const BasePrefetcher::PrefetchInfo &pfi,
-        std::vector<QueuedPrefetcher::AddrPriority> &addresses);
+    void calculatePrefetch(const Base::PrefetchInfo &pfi,
+        std::vector<Queued::AddrPriority> &addresses);
 
 };
 
-struct DCPTPrefetcherParams;
-
 /** The prefetcher object using the DCPT */
-class DCPTPrefetcher : public QueuedPrefetcher
+class DCPT : public Queued
 {
     /** DCPT object */
     DeltaCorrelatingPredictionTables &dcpt;
   public:
-    DCPTPrefetcher(const DCPTPrefetcherParams *p);
-    ~DCPTPrefetcher()
-    {}
+    DCPT(const DCPTPrefetcherParams *p);
+    ~DCPT() = default;
+
     void calculatePrefetch(const PrefetchInfo &pfi,
         std::vector<AddrPriority> &addresses) override;
 };
+
+} // namespace Prefetcher
+
 #endif//__MEM_CACHE_PREFETCH_DELTA_CORRELATING_PREDICTION_TABLES_HH_

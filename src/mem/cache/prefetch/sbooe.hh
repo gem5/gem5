@@ -44,7 +44,9 @@
 
 struct SBOOEPrefetcherParams;
 
-class SBOOEPrefetcher : public QueuedPrefetcher
+namespace Prefetcher {
+
+class SBOOE : public Queued
 {
     private:
 
@@ -147,10 +149,12 @@ class SBOOEPrefetcher : public QueuedPrefetcher
         void notifyFill(const PacketPtr& pkt) override;
 
     public:
-        SBOOEPrefetcher(const SBOOEPrefetcherParams *p);
+        SBOOE(const SBOOEPrefetcherParams *p);
 
         void calculatePrefetch(const PrefetchInfo &pfi,
                                std::vector<AddrPriority> &addresses) override;
 };
+
+} // namespace Prefetcher
 
 #endif // __MEM_CACHE_PREFETCH_SBOOE_HH__

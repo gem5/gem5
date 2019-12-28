@@ -32,34 +32,36 @@
 #include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/IrregularStreamBufferPrefetcher.hh"
 
-IrregularStreamBufferPrefetcher::IrregularStreamBufferPrefetcher(
+namespace Prefetcher {
+
+IrregularStreamBuffer::IrregularStreamBuffer(
     const IrregularStreamBufferPrefetcherParams *p)
-    : QueuedPrefetcher(p),
-        chunkSize(p->chunk_size),
-        prefetchCandidatesPerEntry(p->prefetch_candidates_per_entry),
-        degree(p->degree),
-        trainingUnit(p->training_unit_assoc, p->training_unit_entries,
-                     p->training_unit_indexing_policy,
-                     p->training_unit_replacement_policy),
-        psAddressMappingCache(p->address_map_cache_assoc,
-                              p->address_map_cache_entries,
-                              p->ps_address_map_cache_indexing_policy,
-                              p->ps_address_map_cache_replacement_policy,
-                              AddressMappingEntry(prefetchCandidatesPerEntry,
-                                                  p->num_counter_bits)),
-        spAddressMappingCache(p->address_map_cache_assoc,
-                              p->address_map_cache_entries,
-                              p->sp_address_map_cache_indexing_policy,
-                              p->sp_address_map_cache_replacement_policy,
-                              AddressMappingEntry(prefetchCandidatesPerEntry,
-                                                  p->num_counter_bits)),
-        structuralAddressCounter(0)
+  : Queued(p),
+    chunkSize(p->chunk_size),
+    prefetchCandidatesPerEntry(p->prefetch_candidates_per_entry),
+    degree(p->degree),
+    trainingUnit(p->training_unit_assoc, p->training_unit_entries,
+                 p->training_unit_indexing_policy,
+                 p->training_unit_replacement_policy),
+    psAddressMappingCache(p->address_map_cache_assoc,
+                          p->address_map_cache_entries,
+                          p->ps_address_map_cache_indexing_policy,
+                          p->ps_address_map_cache_replacement_policy,
+                          AddressMappingEntry(prefetchCandidatesPerEntry,
+                                              p->num_counter_bits)),
+    spAddressMappingCache(p->address_map_cache_assoc,
+                          p->address_map_cache_entries,
+                          p->sp_address_map_cache_indexing_policy,
+                          p->sp_address_map_cache_replacement_policy,
+                          AddressMappingEntry(prefetchCandidatesPerEntry,
+                                              p->num_counter_bits)),
+    structuralAddressCounter(0)
 {
     assert(isPowerOf2(prefetchCandidatesPerEntry));
 }
 
 void
-IrregularStreamBufferPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
+IrregularStreamBuffer::calculatePrefetch(const PrefetchInfo &pfi,
     std::vector<AddrPriority> &addresses)
 {
     // This prefetcher requires a PC
@@ -165,8 +167,8 @@ IrregularStreamBufferPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     }
 }
 
-IrregularStreamBufferPrefetcher::AddressMapping&
-IrregularStreamBufferPrefetcher::getPSMapping(Addr paddr, bool is_secure)
+IrregularStreamBuffer::AddressMapping&
+IrregularStreamBuffer::getPSMapping(Addr paddr, bool is_secure)
 {
     Addr amc_address = paddr / prefetchCandidatesPerEntry;
     Addr map_index   = paddr % prefetchCandidatesPerEntry;
@@ -185,7 +187,7 @@ IrregularStreamBufferPrefetcher::getPSMapping(Addr paddr, bool is_secure)
 }
 
 void
-IrregularStreamBufferPrefetcher::addStructuralToPhysicalEntry(
+IrregularStreamBuffer::addStructuralToPhysicalEntry(
     Addr structural_address, bool is_secure, Addr physical_address)
 {
     Addr amc_address = structural_address / prefetchCandidatesPerEntry;
@@ -206,8 +208,10 @@ IrregularStreamBufferPrefetcher::addStructuralToPhysicalEntry(
     mapping.counter++;
 }
 
-IrregularStreamBufferPrefetcher*
+} // namespace Prefetcher
+
+Prefetcher::IrregularStreamBuffer*
 IrregularStreamBufferPrefetcherParams::create()
 {
-    return new IrregularStreamBufferPrefetcher(this);
+    return new Prefetcher::IrregularStreamBuffer(this);
 }

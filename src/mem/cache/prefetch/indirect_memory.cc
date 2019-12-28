@@ -32,8 +32,10 @@
  #include "mem/cache/prefetch/associative_set_impl.hh"
  #include "params/IndirectMemoryPrefetcher.hh"
 
-IndirectMemoryPrefetcher::IndirectMemoryPrefetcher(
-    const IndirectMemoryPrefetcherParams *p) : QueuedPrefetcher(p),
+namespace Prefetcher {
+
+IndirectMemory::IndirectMemory(const IndirectMemoryPrefetcherParams *p)
+  : Queued(p),
     maxPrefetchDistance(p->max_prefetch_distance),
     shiftValues(p->shift_values), prefetchThreshold(p->prefetch_threshold),
     streamCounterThreshold(p->stream_counter_threshold),
@@ -56,7 +58,7 @@ IndirectMemoryPrefetcher::IndirectMemoryPrefetcher(
 }
 
 void
-IndirectMemoryPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
+IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
     std::vector<AddrPriority> &addresses)
 {
     // This prefetcher requires a PC
@@ -164,7 +166,7 @@ IndirectMemoryPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 void
-IndirectMemoryPrefetcher::allocateOrUpdateIPDEntry(
+IndirectMemory::allocateOrUpdateIPDEntry(
     const PrefetchTableEntry *pt_entry, int64_t index)
 {
     // The address of the pt_entry is used to index the IPD
@@ -194,7 +196,7 @@ IndirectMemoryPrefetcher::allocateOrUpdateIPDEntry(
 }
 
 void
-IndirectMemoryPrefetcher::trackMissIndex1(Addr miss_addr)
+IndirectMemory::trackMissIndex1(Addr miss_addr)
 {
     IndirectPatternDetectorEntry *entry = ipdEntryTrackingMisses;
     // If the second index is not set, we are just filling the baseAddr
@@ -213,7 +215,7 @@ IndirectMemoryPrefetcher::trackMissIndex1(Addr miss_addr)
     }
 }
 void
-IndirectMemoryPrefetcher::trackMissIndex2(Addr miss_addr)
+IndirectMemory::trackMissIndex2(Addr miss_addr)
 {
     IndirectPatternDetectorEntry *entry = ipdEntryTrackingMisses;
     // Second index is filled, compare the addresses generated during
@@ -246,7 +248,7 @@ IndirectMemoryPrefetcher::trackMissIndex2(Addr miss_addr)
 }
 
 void
-IndirectMemoryPrefetcher::checkAccessMatchOnActiveEntries(Addr addr)
+IndirectMemory::checkAccessMatchOnActiveEntries(Addr addr)
 {
     for (auto &pt_entry : prefetchTable) {
         if (pt_entry.enabled) {
@@ -259,8 +261,10 @@ IndirectMemoryPrefetcher::checkAccessMatchOnActiveEntries(Addr addr)
     }
 }
 
-IndirectMemoryPrefetcher*
+} // namespace Prefetcher
+
+Prefetcher::IndirectMemory*
 IndirectMemoryPrefetcherParams::create()
 {
-    return new IndirectMemoryPrefetcher(this);
+    return new Prefetcher::IndirectMemory(this);
 }

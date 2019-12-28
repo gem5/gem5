@@ -59,7 +59,9 @@
 class BaseReplacementPolicy;
 struct StridePrefetcherParams;
 
-class StridePrefetcher : public QueuedPrefetcher
+namespace Prefetcher {
+
+class Stride : public Queued
 {
   protected:
     const int maxConf;
@@ -167,10 +169,12 @@ class StridePrefetcher : public QueuedPrefetcher
     PCTable* allocateNewContext(int context);
 
   public:
-    StridePrefetcher(const StridePrefetcherParams *p);
+    Stride(const StridePrefetcherParams *p);
 
     void calculatePrefetch(const PrefetchInfo &pfi,
                            std::vector<AddrPriority> &addresses) override;
 };
+
+} // namespace Prefetcher
 
 #endif // __MEM_CACHE_PREFETCH_STRIDE_HH__

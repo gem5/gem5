@@ -45,18 +45,22 @@
 
 struct SlimAMPMPrefetcherParams;
 
-class SlimAMPMPrefetcher : public QueuedPrefetcher
+namespace Prefetcher {
+
+class SlimAMPM : public Queued
 {
    /** AMPM prefetcher object */
    AccessMapPatternMatching &ampm;
    /** DCPT prefetcher object */
    DeltaCorrelatingPredictionTables &dcpt;
  public:
-   SlimAMPMPrefetcher(const SlimAMPMPrefetcherParams *p);
-   ~SlimAMPMPrefetcher()
-   {}
+   SlimAMPM(const SlimAMPMPrefetcherParams *p);
+   ~SlimAMPM() = default;
 
    void calculatePrefetch(const PrefetchInfo &pfi,
                           std::vector<AddrPriority> &addresses) override;
 };
+
+} // namespace Prefetcher
+
 #endif//__MEM_CACHE_PREFETCH_SLIM_AMPM_HH__

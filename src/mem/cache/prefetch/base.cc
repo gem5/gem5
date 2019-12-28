@@ -53,7 +53,9 @@
 #include "params/BasePrefetcher.hh"
 #include "sim/system.hh"
 
-BasePrefetcher::PrefetchInfo::PrefetchInfo(PacketPtr pkt, Addr addr, bool miss)
+namespace Prefetcher {
+
+Base::PrefetchInfo::PrefetchInfo(PacketPtr pkt, Addr addr, bool miss)
   : address(addr), pc(pkt->req->hasPC() ? pkt->req->getPC() : 0),
     masterId(pkt->req->masterId()), validPC(pkt->req->hasPC()),
     secure(pkt->isSecure()), size(pkt->req->getSize()), write(pkt->isWrite()),
@@ -69,7 +71,7 @@ BasePrefetcher::PrefetchInfo::PrefetchInfo(PacketPtr pkt, Addr addr, bool miss)
     }
 }
 
-BasePrefetcher::PrefetchInfo::PrefetchInfo(PrefetchInfo const &pfi, Addr addr)
+Base::PrefetchInfo::PrefetchInfo(PrefetchInfo const &pfi, Addr addr)
   : address(addr), pc(pfi.pc), masterId(pfi.masterId), validPC(pfi.validPC),
     secure(pfi.secure), size(pfi.size), write(pfi.write),
     paddress(pfi.paddress), cacheMiss(pfi.cacheMiss), data(nullptr)
@@ -77,7 +79,7 @@ BasePrefetcher::PrefetchInfo::PrefetchInfo(PrefetchInfo const &pfi, Addr addr)
 }
 
 void
-BasePrefetcher::PrefetchListener::notify(const PacketPtr &pkt)
+Base::PrefetchListener::notify(const PacketPtr &pkt)
 {
     if (isFill) {
         parent.notifyFill(pkt);
@@ -86,7 +88,7 @@ BasePrefetcher::PrefetchListener::notify(const PacketPtr &pkt)
     }
 }
 
-BasePrefetcher::BasePrefetcher(const BasePrefetcherParams *p)
+Base::Base(const BasePrefetcherParams *p)
     : ClockedObject(p), listeners(), cache(nullptr), blkSize(p->block_size),
       lBlkSize(floorLog2(blkSize)), onMiss(p->on_miss), onRead(p->on_read),
       onWrite(p->on_write), onData(p->on_data), onInst(p->on_inst),
@@ -98,7 +100,7 @@ BasePrefetcher::BasePrefetcher(const BasePrefetcherParams *p)
 }
 
 void
-BasePrefetcher::setCache(BaseCache *_cache)
+Base::setCache(BaseCache *_cache)
 {
     assert(!cache);
     cache = _cache;
@@ -109,7 +111,7 @@ BasePrefetcher::setCache(BaseCache *_cache)
 }
 
 void
-BasePrefetcher::regStats()
+Base::regStats()
 {
     ClockedObject::regStats();
 
@@ -121,7 +123,7 @@ BasePrefetcher::regStats()
 }
 
 bool
-BasePrefetcher::observeAccess(const PacketPtr &pkt, bool miss) const
+Base::observeAccess(const PacketPtr &pkt, bool miss) const
 {
     bool fetch = pkt->req->isInstFetch();
     bool read = pkt->isRead();
@@ -143,61 +145,61 @@ BasePrefetcher::observeAccess(const PacketPtr &pkt, bool miss) const
 }
 
 bool
-BasePrefetcher::inCache(Addr addr, bool is_secure) const
+Base::inCache(Addr addr, bool is_secure) const
 {
     return cache->inCache(addr, is_secure);
 }
 
 bool
-BasePrefetcher::inMissQueue(Addr addr, bool is_secure) const
+Base::inMissQueue(Addr addr, bool is_secure) const
 {
     return cache->inMissQueue(addr, is_secure);
 }
 
 bool
-BasePrefetcher::hasBeenPrefetched(Addr addr, bool is_secure) const
+Base::hasBeenPrefetched(Addr addr, bool is_secure) const
 {
     return cache->hasBeenPrefetched(addr, is_secure);
 }
 
 bool
-BasePrefetcher::samePage(Addr a, Addr b) const
+Base::samePage(Addr a, Addr b) const
 {
     return roundDown(a, pageBytes) == roundDown(b, pageBytes);
 }
 
 Addr
-BasePrefetcher::blockAddress(Addr a) const
+Base::blockAddress(Addr a) const
 {
     return a & ~((Addr)blkSize-1);
 }
 
 Addr
-BasePrefetcher::blockIndex(Addr a) const
+Base::blockIndex(Addr a) const
 {
     return a >> lBlkSize;
 }
 
 Addr
-BasePrefetcher::pageAddress(Addr a) const
+Base::pageAddress(Addr a) const
 {
     return roundDown(a, pageBytes);
 }
 
 Addr
-BasePrefetcher::pageOffset(Addr a) const
+Base::pageOffset(Addr a) const
 {
     return a & (pageBytes - 1);
 }
 
 Addr
-BasePrefetcher::pageIthBlockAddress(Addr page, uint32_t blockIndex) const
+Base::pageIthBlockAddress(Addr page, uint32_t blockIndex) const
 {
     return page + (blockIndex << lBlkSize);
 }
 
 void
-BasePrefetcher::probeNotify(const PacketPtr &pkt, bool miss)
+Base::probeNotify(const PacketPtr &pkt, bool miss)
 {
     // Don't notify prefetcher on SWPrefetch, cache maintenance
     // operations or for writes that we are coaslescing.
@@ -225,7 +227,7 @@ BasePrefetcher::probeNotify(const PacketPtr &pkt, bool miss)
 }
 
 void
-BasePrefetcher::regProbeListeners()
+Base::regProbeListeners()
 {
     /**
      * If no probes were added by the configuration scripts, connect to the
@@ -246,15 +248,17 @@ BasePrefetcher::regProbeListeners()
 }
 
 void
-BasePrefetcher::addEventProbe(SimObject *obj, const char *name)
+Base::addEventProbe(SimObject *obj, const char *name)
 {
     ProbeManager *pm(obj->getProbeManager());
     listeners.push_back(new PrefetchListener(*this, pm, name));
 }
 
 void
-BasePrefetcher::addTLB(BaseTLB *t)
+Base::addTLB(BaseTLB *t)
 {
     fatal_if(tlb != nullptr, "Only one TLB can be registered");
     tlb = t;
 }
+
+} // namespace Prefetcher

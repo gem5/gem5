@@ -49,7 +49,9 @@
 
 struct STeMSPrefetcherParams;
 
-class STeMSPrefetcher : public QueuedPrefetcher
+namespace Prefetcher {
+
+class STeMS : public Queued
 {
     /** Size of each spatial region */
     const size_t spatialRegionSize;
@@ -190,10 +192,13 @@ class STeMSPrefetcher : public QueuedPrefetcher
     void reconstructSequence(unsigned int rmob_idx,
                              std::vector<AddrPriority> &addresses);
   public:
-    STeMSPrefetcher(const STeMSPrefetcherParams* p);
-    ~STeMSPrefetcher() {}
+    STeMS(const STeMSPrefetcherParams* p);
+    ~STeMS() = default;
+
     void calculatePrefetch(const PrefetchInfo &pfi,
                            std::vector<AddrPriority> &addresses) override;
 };
+
+} // namespace Prefetcher
 
 #endif//__MEM_CACHE_PREFETCH_SPATIO_TEMPORAL_MEMORY_STREAMING_HH__

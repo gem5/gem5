@@ -34,8 +34,10 @@
 #include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/PIFPrefetcher.hh"
 
-PIFPrefetcher::PIFPrefetcher(const PIFPrefetcherParams *p)
-    : QueuedPrefetcher(p),
+namespace Prefetcher {
+
+PIF::PIF(const PIFPrefetcherParams *p)
+    : Queued(p),
       precSize(p->prec_spatial_region_bits),
       succSize(p->succ_spatial_region_bits),
       maxCompactorEntries(p->compactor_entries),
@@ -48,7 +50,7 @@ PIFPrefetcher::PIFPrefetcher(const PIFPrefetcherParams *p)
 {
 }
 
-PIFPrefetcher::CompactorEntry::CompactorEntry(Addr addr,
+PIF::CompactorEntry::CompactorEntry(Addr addr,
     unsigned int prec_size, unsigned int succ_size)
 {
     trigger = addr;
@@ -57,7 +59,7 @@ PIFPrefetcher::CompactorEntry::CompactorEntry(Addr addr,
 }
 
 Addr
-PIFPrefetcher::CompactorEntry::distanceFromTrigger(Addr target,
+PIF::CompactorEntry::distanceFromTrigger(Addr target,
         unsigned int log_blk_size) const
 {
     const Addr target_blk = target >> log_blk_size;
@@ -68,7 +70,7 @@ PIFPrefetcher::CompactorEntry::distanceFromTrigger(Addr target,
 }
 
 bool
-PIFPrefetcher::CompactorEntry::inSameSpatialRegion(Addr pc,
+PIF::CompactorEntry::inSameSpatialRegion(Addr pc,
         unsigned int log_blk_size, bool update)
 {
     Addr blk_distance = distanceFromTrigger(pc, log_blk_size);
@@ -86,7 +88,7 @@ PIFPrefetcher::CompactorEntry::inSameSpatialRegion(Addr pc,
 }
 
 bool
-PIFPrefetcher::CompactorEntry::hasAddress(Addr target,
+PIF::CompactorEntry::hasAddress(Addr target,
                                           unsigned int log_blk_size) const
 {
     Addr blk_distance = distanceFromTrigger(target, log_blk_size);
@@ -102,7 +104,7 @@ PIFPrefetcher::CompactorEntry::hasAddress(Addr target,
 }
 
 void
-PIFPrefetcher::CompactorEntry::getPredictedAddresses(unsigned int log_blk_size,
+PIF::CompactorEntry::getPredictedAddresses(unsigned int log_blk_size,
     std::vector<AddrPriority> &addresses) const
 {
     // Calculate the addresses of the instruction blocks that are encoded
@@ -128,7 +130,7 @@ PIFPrefetcher::CompactorEntry::getPredictedAddresses(unsigned int log_blk_size,
 }
 
 void
-PIFPrefetcher::notifyRetiredInst(const Addr pc)
+PIF::notifyRetiredInst(const Addr pc)
 {
     // First access to the prefetcher
     if (temporalCompactor.size() == 0) {
@@ -195,7 +197,7 @@ PIFPrefetcher::notifyRetiredInst(const Addr pc)
 }
 
 void
-PIFPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
+PIF::calculatePrefetch(const PrefetchInfo &pfi,
     std::vector<AddrPriority> &addresses)
 {
     const Addr addr = pfi.getAddr();
@@ -239,20 +241,22 @@ PIFPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 void
-PIFPrefetcher::PrefetchListenerPC::notify(const Addr& pc)
+PIF::PrefetchListenerPC::notify(const Addr& pc)
 {
     parent.notifyRetiredInst(pc);
 }
 
 void
-PIFPrefetcher::addEventProbeRetiredInsts(SimObject *obj, const char *name)
+PIF::addEventProbeRetiredInsts(SimObject *obj, const char *name)
 {
     ProbeManager *pm(obj->getProbeManager());
     listenersPC.push_back(new PrefetchListenerPC(*this, pm, name));
 }
 
-PIFPrefetcher*
+} // namespace Prefetcher
+
+Prefetcher::PIF*
 PIFPrefetcherParams::create()
 {
-    return new PIFPrefetcher(this);
+    return new Prefetcher::PIF(this);
 }

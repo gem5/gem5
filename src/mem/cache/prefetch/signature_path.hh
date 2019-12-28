@@ -47,7 +47,9 @@
 
 struct SignaturePathPrefetcherParams;
 
-class SignaturePathPrefetcher : public QueuedPrefetcher
+namespace Prefetcher {
+
+class SignaturePath : public Queued
 {
   protected:
     /** Signature type */
@@ -277,10 +279,13 @@ class SignaturePathPrefetcher : public QueuedPrefetcher
     }
 
   public:
-    SignaturePathPrefetcher(const SignaturePathPrefetcherParams* p);
-    ~SignaturePathPrefetcher() {}
+    SignaturePath(const SignaturePathPrefetcherParams* p);
+    ~SignaturePath() = default;
+
     void calculatePrefetch(const PrefetchInfo &pfi,
                            std::vector<AddrPriority> &addresses) override;
 };
+
+} // namespace Prefetcher
 
 #endif//__MEM_CACHE_PREFETCH_SIGNATURE_PATH_HH__

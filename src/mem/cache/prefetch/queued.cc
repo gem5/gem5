@@ -47,8 +47,10 @@
 #include "mem/request.hh"
 #include "params/QueuedPrefetcher.hh"
 
+namespace Prefetcher {
+
 void
-QueuedPrefetcher::DeferredPacket::createPkt(Addr paddr, unsigned blk_size,
+Queued::DeferredPacket::createPkt(Addr paddr, unsigned blk_size,
                                             MasterID mid, bool tag_prefetch,
                                             Tick t) {
     /* Create a prefetch memory request */
@@ -68,7 +70,7 @@ QueuedPrefetcher::DeferredPacket::createPkt(Addr paddr, unsigned blk_size,
 }
 
 void
-QueuedPrefetcher::DeferredPacket::startTranslation(BaseTLB *tlb)
+Queued::DeferredPacket::startTranslation(BaseTLB *tlb)
 {
     assert(translationRequest != nullptr);
     if (!ongoingTranslation) {
@@ -79,7 +81,7 @@ QueuedPrefetcher::DeferredPacket::startTranslation(BaseTLB *tlb)
 }
 
 void
-QueuedPrefetcher::DeferredPacket::finish(const Fault &fault,
+Queued::DeferredPacket::finish(const Fault &fault,
     const RequestPtr &req, ThreadContext *tc, BaseTLB::Mode mode)
 {
     assert(ongoingTranslation);
@@ -88,8 +90,8 @@ QueuedPrefetcher::DeferredPacket::finish(const Fault &fault,
     owner->translationComplete(this, failed);
 }
 
-QueuedPrefetcher::QueuedPrefetcher(const QueuedPrefetcherParams *p)
-    : BasePrefetcher(p), queueSize(p->queue_size),
+Queued::Queued(const QueuedPrefetcherParams *p)
+    : Base(p), queueSize(p->queue_size),
       missingTranslationQueueSize(
         p->max_prefetch_requests_with_pending_translation),
       latency(p->latency), queueSquash(p->queue_squash),
@@ -99,7 +101,7 @@ QueuedPrefetcher::QueuedPrefetcher(const QueuedPrefetcherParams *p)
 {
 }
 
-QueuedPrefetcher::~QueuedPrefetcher()
+Queued::~Queued()
 {
     // Delete the queued prefetch packets
     for (DeferredPacket &p : pfq) {
@@ -108,7 +110,7 @@ QueuedPrefetcher::~QueuedPrefetcher()
 }
 
 size_t
-QueuedPrefetcher::getMaxPermittedPrefetches(size_t total) const
+Queued::getMaxPermittedPrefetches(size_t total) const
 {
     /**
      * Throttle generated prefetches based in the accuracy of the prefetcher.
@@ -138,7 +140,7 @@ QueuedPrefetcher::getMaxPermittedPrefetches(size_t total) const
 }
 
 void
-QueuedPrefetcher::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
+Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
 {
     Addr blk_addr = blockAddress(pfi.getAddr());
     bool is_secure = pfi.isSecure();
@@ -194,7 +196,7 @@ QueuedPrefetcher::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
 }
 
 PacketPtr
-QueuedPrefetcher::getPacket()
+Queued::getPacket()
 {
     DPRINTF(HWPrefetch, "Requesting a prefetch to issue.\n");
 
@@ -222,9 +224,9 @@ QueuedPrefetcher::getPacket()
 }
 
 void
-QueuedPrefetcher::regStats()
+Queued::regStats()
 {
-    BasePrefetcher::regStats();
+    Base::regStats();
 
     pfIdentified
         .name(name() + ".pfIdentified")
@@ -249,7 +251,7 @@ QueuedPrefetcher::regStats()
 
 
 void
-QueuedPrefetcher::processMissingTranslations(unsigned max)
+Queued::processMissingTranslations(unsigned max)
 {
     unsigned count = 0;
     iterator it = pfqMissingTranslation.begin();
@@ -264,7 +266,7 @@ QueuedPrefetcher::processMissingTranslations(unsigned max)
 }
 
 void
-QueuedPrefetcher::translationComplete(DeferredPacket *dp, bool failed)
+Queued::translationComplete(DeferredPacket *dp, bool failed)
 {
     auto it = pfqMissingTranslation.begin();
     while (it != pfqMissingTranslation.end()) {
@@ -301,7 +303,7 @@ QueuedPrefetcher::translationComplete(DeferredPacket *dp, bool failed)
 }
 
 bool
-QueuedPrefetcher::alreadyInQueue(std::list<DeferredPacket> &queue,
+Queued::alreadyInQueue(std::list<DeferredPacket> &queue,
                                  const PrefetchInfo &pfi, int32_t priority)
 {
     bool found = false;
@@ -336,7 +338,7 @@ QueuedPrefetcher::alreadyInQueue(std::list<DeferredPacket> &queue,
 }
 
 RequestPtr
-QueuedPrefetcher::createPrefetchRequest(Addr addr, PrefetchInfo const &pfi,
+Queued::createPrefetchRequest(Addr addr, PrefetchInfo const &pfi,
                                         PacketPtr pkt)
 {
     RequestPtr translation_req = std::make_shared<Request>(
@@ -347,7 +349,7 @@ QueuedPrefetcher::createPrefetchRequest(Addr addr, PrefetchInfo const &pfi,
 }
 
 void
-QueuedPrefetcher::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi,
+Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi,
                          int32_t priority)
 {
     if (queueFilter) {
@@ -445,7 +447,7 @@ QueuedPrefetcher::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi,
 }
 
 void
-QueuedPrefetcher::addToQueue(std::list<DeferredPacket> &queue,
+Queued::addToQueue(std::list<DeferredPacket> &queue,
                              DeferredPacket &dpp)
 {
     /* Verify prefetch buffer space for request */
@@ -490,3 +492,5 @@ QueuedPrefetcher::addToQueue(std::list<DeferredPacket> &queue,
         queue.insert(it, dpp);
     }
 }
+
+} // namespace Prefetcher

@@ -47,7 +47,9 @@
 
 struct IndirectMemoryPrefetcherParams;
 
-class IndirectMemoryPrefetcher : public QueuedPrefetcher
+namespace Prefetcher {
+
+class IndirectMemory : public Queued
 {
     /** Maximum number of prefetches generated per event */
     const unsigned int maxPrefetchDistance;
@@ -191,10 +193,13 @@ class IndirectMemoryPrefetcher : public QueuedPrefetcher
     void checkAccessMatchOnActiveEntries(Addr addr);
 
   public:
-    IndirectMemoryPrefetcher(const IndirectMemoryPrefetcherParams *p);
-    ~IndirectMemoryPrefetcher() {}
+    IndirectMemory(const IndirectMemoryPrefetcherParams *p);
+    ~IndirectMemory() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
                            std::vector<AddrPriority> &addresses) override;
 };
+
+} // namespace Prefetcher
+
 #endif//__MEM_CACHE_PREFETCH_INDIRECT_MEMORY_HH__

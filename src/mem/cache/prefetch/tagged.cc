@@ -35,15 +35,17 @@
 
 #include "params/TaggedPrefetcher.hh"
 
-TaggedPrefetcher::TaggedPrefetcher(const TaggedPrefetcherParams *p)
-    : QueuedPrefetcher(p), degree(p->degree)
+namespace Prefetcher {
+
+Tagged::Tagged(const TaggedPrefetcherParams *p)
+    : Queued(p), degree(p->degree)
 {
 
 }
 
 void
-TaggedPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
-        std::vector<AddrPriority> &addresses)
+Tagged::calculatePrefetch(const PrefetchInfo &pfi,
+    std::vector<AddrPriority> &addresses)
 {
     Addr blkAddr = blockAddress(pfi.getAddr());
 
@@ -53,8 +55,10 @@ TaggedPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     }
 }
 
-TaggedPrefetcher*
+} // namespace Prefetcher
+
+Prefetcher::Tagged*
 TaggedPrefetcherParams::create()
 {
-   return new TaggedPrefetcher(this);
+   return new Prefetcher::Tagged(this);
 }

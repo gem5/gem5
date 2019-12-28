@@ -39,21 +39,23 @@
 
 #include "params/MultiPrefetcher.hh"
 
-MultiPrefetcher::MultiPrefetcher(const MultiPrefetcherParams *p)
-    : BasePrefetcher(p),
-      prefetchers(p->prefetchers.begin(), p->prefetchers.end())
+namespace Prefetcher {
+
+Multi::Multi(const MultiPrefetcherParams *p)
+  : Base(p),
+    prefetchers(p->prefetchers.begin(), p->prefetchers.end())
 {
 }
 
 void
-MultiPrefetcher::setCache(BaseCache *_cache)
+Multi::setCache(BaseCache *_cache)
 {
     for (auto pf : prefetchers)
         pf->setCache(_cache);
 }
 
 Tick
-MultiPrefetcher::nextPrefetchReadyTime() const
+Multi::nextPrefetchReadyTime() const
 {
     Tick next_ready = MaxTick;
 
@@ -64,7 +66,7 @@ MultiPrefetcher::nextPrefetchReadyTime() const
 }
 
 PacketPtr
-MultiPrefetcher::getPacket()
+Multi::getPacket()
 {
     for (auto pf : prefetchers) {
         if (pf->nextPrefetchReadyTime() <= curTick()) {
@@ -77,9 +79,10 @@ MultiPrefetcher::getPacket()
     return nullptr;
 }
 
+} // namespace Prefetcher
 
-MultiPrefetcher*
+Prefetcher::Multi*
 MultiPrefetcherParams::create()
 {
-    return new MultiPrefetcher(this);
+    return new Prefetcher::Multi(this);
 }

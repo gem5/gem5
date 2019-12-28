@@ -45,7 +45,9 @@
 
 struct PIFPrefetcherParams;
 
-class PIFPrefetcher : public QueuedPrefetcher
+namespace Prefetcher {
+
+class PIF : public Queued
 {
     private:
         /** Number of preceding and subsequent spatial addresses to compact */
@@ -158,13 +160,13 @@ class PIFPrefetcher : public QueuedPrefetcher
         class PrefetchListenerPC : public ProbeListenerArgBase<Addr>
         {
           public:
-            PrefetchListenerPC(PIFPrefetcher &_parent, ProbeManager *pm,
+            PrefetchListenerPC(PIF &_parent, ProbeManager *pm,
                              const std::string &name)
                 : ProbeListenerArgBase(pm, name),
                   parent(_parent) {}
             void notify(const Addr& pc) override;
           protected:
-            PIFPrefetcher &parent;
+            PIF &parent;
         };
 
         /** Array of probe listeners */
@@ -172,8 +174,8 @@ class PIFPrefetcher : public QueuedPrefetcher
 
 
     public:
-        PIFPrefetcher(const PIFPrefetcherParams *p);
-        ~PIFPrefetcher() {}
+        PIF(const PIFPrefetcherParams *p);
+        ~PIF() = default;
 
         void calculatePrefetch(const PrefetchInfo &pfi,
                                std::vector<AddrPriority> &addresses);
@@ -185,5 +187,7 @@ class PIFPrefetcher : public QueuedPrefetcher
          */
         void addEventProbeRetiredInsts(SimObject *obj, const char *name);
 };
+
+} // namespace Prefetcher
 
 #endif // __MEM_CACHE_PREFETCH_PIF_HH__

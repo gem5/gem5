@@ -44,6 +44,9 @@
 #include "sim/clocked_object.hh"
 
 struct AccessMapPatternMatchingParams;
+struct AMPMPrefetcherParams;
+
+namespace Prefetcher {
 
 class AccessMapPatternMatching : public ClockedObject
 {
@@ -179,23 +182,24 @@ class AccessMapPatternMatching : public ClockedObject
 
   public:
     AccessMapPatternMatching(const AccessMapPatternMatchingParams* p);
-    ~AccessMapPatternMatching()
-    {}
+    ~AccessMapPatternMatching() = default;
+
     void startup() override;
-    void calculatePrefetch(const BasePrefetcher::PrefetchInfo &pfi,
-        std::vector<QueuedPrefetcher::AddrPriority> &addresses);
+    void calculatePrefetch(const Base::PrefetchInfo &pfi,
+        std::vector<Queued::AddrPriority> &addresses);
 };
 
-struct AMPMPrefetcherParams;
-
-class AMPMPrefetcher : public QueuedPrefetcher
+class AMPM : public Queued
 {
     AccessMapPatternMatching &ampm;
   public:
-    AMPMPrefetcher(const AMPMPrefetcherParams* p);
-    ~AMPMPrefetcher()
-    {}
+    AMPM(const AMPMPrefetcherParams* p);
+    ~AMPM() = default;
+
     void calculatePrefetch(const PrefetchInfo &pfi,
                            std::vector<AddrPriority> &addresses) override;
 };
+
+} // namespace Prefetcher
+
 #endif//__MEM_CACHE_PREFETCH_ACCESS_MAP_PATTERN_MATCHING_HH__

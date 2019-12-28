@@ -33,6 +33,8 @@
 #include "params/DCPTPrefetcher.hh"
 #include "params/DeltaCorrelatingPredictionTables.hh"
 
+namespace Prefetcher {
+
 DeltaCorrelatingPredictionTables::DeltaCorrelatingPredictionTables(
    DeltaCorrelatingPredictionTablesParams *p) : SimObject(p),
    deltaBits(p->delta_bits), deltaMaskBits(p->delta_mask_bits),
@@ -80,7 +82,7 @@ DeltaCorrelatingPredictionTables::DCPTEntry::addAddress(Addr address,
 
 void
 DeltaCorrelatingPredictionTables::DCPTEntry::getCandidates(
-    std::vector<QueuedPrefetcher::AddrPriority> &pfs, unsigned int mask) const
+    std::vector<Queued::AddrPriority> &pfs, unsigned int mask) const
 {
     // most recent index
     unsigned int last = (deltaPointer - 1) % deltas.size();
@@ -115,7 +117,7 @@ DeltaCorrelatingPredictionTables::DCPTEntry::getCandidates(
             do {
                 int pf_delta = deltas[(idx_0 + i) % deltas.size()];
                 addr += pf_delta;
-                pfs.push_back(QueuedPrefetcher::AddrPriority(addr, 0));
+                pfs.push_back(Queued::AddrPriority(addr, 0));
                 i += 1;
             } while (i < deltas.size() - 2);
         }
@@ -124,8 +126,8 @@ DeltaCorrelatingPredictionTables::DCPTEntry::getCandidates(
 
 void
 DeltaCorrelatingPredictionTables::calculatePrefetch(
-    const BasePrefetcher::PrefetchInfo &pfi,
-    std::vector<QueuedPrefetcher::AddrPriority> &addresses)
+    const Base::PrefetchInfo &pfi,
+    std::vector<Queued::AddrPriority> &addresses)
 {
     if (!pfi.hasPC()) {
         DPRINTF(HWPrefetch, "Ignoring request with no PC.\n");
@@ -149,26 +151,28 @@ DeltaCorrelatingPredictionTables::calculatePrefetch(
     }
 }
 
-DeltaCorrelatingPredictionTables *
-DeltaCorrelatingPredictionTablesParams::create()
-{
-   return new DeltaCorrelatingPredictionTables(this);
-}
-
-DCPTPrefetcher::DCPTPrefetcher(const DCPTPrefetcherParams *p)
-  : QueuedPrefetcher(p), dcpt(*p->dcpt)
+DCPT::DCPT(const DCPTPrefetcherParams *p)
+  : Queued(p), dcpt(*p->dcpt)
 {
 }
 
 void
-DCPTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
+DCPT::calculatePrefetch(const PrefetchInfo &pfi,
     std::vector<AddrPriority> &addresses)
 {
     dcpt.calculatePrefetch(pfi, addresses);
 }
 
-DCPTPrefetcher*
+} // namespace Prefetcher
+
+Prefetcher::DeltaCorrelatingPredictionTables*
+DeltaCorrelatingPredictionTablesParams::create()
+{
+   return new Prefetcher::DeltaCorrelatingPredictionTables(this);
+}
+
+Prefetcher::DCPT*
 DCPTPrefetcherParams::create()
 {
-    return new DCPTPrefetcher(this);
+    return new Prefetcher::DCPT(this);
 }

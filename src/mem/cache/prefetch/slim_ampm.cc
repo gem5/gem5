@@ -30,13 +30,15 @@
 
 #include "params/SlimAMPMPrefetcher.hh"
 
-SlimAMPMPrefetcher::SlimAMPMPrefetcher(const SlimAMPMPrefetcherParams* p)
-  : QueuedPrefetcher(p), ampm(*p->ampm), dcpt(*p->dcpt)
+namespace Prefetcher {
+
+SlimAMPM::SlimAMPM(const SlimAMPMPrefetcherParams* p)
+  : Queued(p), ampm(*p->ampm), dcpt(*p->dcpt)
 {
 }
 
 void
-SlimAMPMPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
+SlimAMPM::calculatePrefetch(const PrefetchInfo &pfi,
                   std::vector<AddrPriority> &addresses)
 {
     dcpt.calculatePrefetch(pfi, addresses);
@@ -45,8 +47,10 @@ SlimAMPMPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     }
 }
 
-SlimAMPMPrefetcher*
+} // namespace Prefetcher
+
+Prefetcher::SlimAMPM*
 SlimAMPMPrefetcherParams::create()
 {
-    return new SlimAMPMPrefetcher(this);
+    return new Prefetcher::SlimAMPM(this);
 }

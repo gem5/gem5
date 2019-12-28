@@ -31,8 +31,10 @@
 #include "debug/HWPrefetch.hh"
 #include "params/SBOOEPrefetcher.hh"
 
-SBOOEPrefetcher::SBOOEPrefetcher(const SBOOEPrefetcherParams *p)
-    : QueuedPrefetcher(p),
+namespace Prefetcher {
+
+SBOOE::SBOOE(const SBOOEPrefetcherParams *p)
+    : Queued(p),
       latencyBufferSize(p->latency_buffer_size),
       sequentialPrefetchers(p->sequential_prefetchers),
       scoreThreshold((p->sandbox_entries*p->score_threshold_pct)/100),
@@ -52,7 +54,7 @@ SBOOEPrefetcher::SBOOEPrefetcher(const SBOOEPrefetcherParams *p)
 }
 
 void
-SBOOEPrefetcher::Sandbox::insert(Addr addr, Tick tick)
+SBOOE::Sandbox::insert(Addr addr, Tick tick)
 {
     entries[index].valid = true;
     entries[index].line = addr + stride;
@@ -66,7 +68,7 @@ SBOOEPrefetcher::Sandbox::insert(Addr addr, Tick tick)
 }
 
 bool
-SBOOEPrefetcher::access(Addr access_line)
+SBOOE::access(Addr access_line)
 {
     for (Sandbox &sb : sandboxes) {
         // Search for the address in the FIFO queue
@@ -92,7 +94,7 @@ SBOOEPrefetcher::access(Addr access_line)
 }
 
 void
-SBOOEPrefetcher::notifyFill(const PacketPtr& pkt)
+SBOOE::notifyFill(const PacketPtr& pkt)
 {
     // (1) Look for the address in the demands list
     // (2) Calculate the elapsed cycles until it was filled (curTick)
@@ -119,7 +121,7 @@ SBOOEPrefetcher::notifyFill(const PacketPtr& pkt)
 }
 
 void
-SBOOEPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
+SBOOE::calculatePrefetch(const PrefetchInfo &pfi,
                                    std::vector<AddrPriority> &addresses)
 {
     const Addr pfi_addr = pfi.getAddr();
@@ -139,8 +141,10 @@ SBOOEPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     }
 }
 
-SBOOEPrefetcher*
+} // namespace Prefetcher
+
+Prefetcher::SBOOE*
 SBOOEPrefetcherParams::create()
 {
-    return new SBOOEPrefetcher(this);
+    return new Prefetcher::SBOOE(this);
 }

@@ -35,9 +35,10 @@
 #include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/SignaturePathPrefetcher.hh"
 
-SignaturePathPrefetcher::SignaturePathPrefetcher(
-    const SignaturePathPrefetcherParams *p)
-    : QueuedPrefetcher(p),
+namespace Prefetcher {
+
+SignaturePath::SignaturePath(const SignaturePathPrefetcherParams *p)
+    : Queued(p),
       stridesPerPatternEntry(p->strides_per_pattern_entry),
       signatureShift(p->signature_shift),
       signatureBits(p->signature_bits),
@@ -61,8 +62,8 @@ SignaturePathPrefetcher::SignaturePathPrefetcher(
         "The lookahead confidence threshold must be less than 1\n");
 }
 
-SignaturePathPrefetcher::PatternStrideEntry &
-SignaturePathPrefetcher::PatternEntry::getStrideEntry(stride_t stride)
+SignaturePath::PatternStrideEntry &
+SignaturePath::PatternEntry::getStrideEntry(stride_t stride)
 {
     PatternStrideEntry *pstride_entry = findStride(stride);
     if (pstride_entry == nullptr) {
@@ -89,7 +90,7 @@ SignaturePathPrefetcher::PatternEntry::getStrideEntry(stride_t stride)
 }
 
 void
-SignaturePathPrefetcher::addPrefetch(Addr ppn, stride_t last_block,
+SignaturePath::addPrefetch(Addr ppn, stride_t last_block,
     stride_t delta, double path_confidence, signature_t signature,
     bool is_secure, std::vector<AddrPriority> &addresses)
 {
@@ -130,7 +131,7 @@ SignaturePathPrefetcher::addPrefetch(Addr ppn, stride_t last_block,
 }
 
 void
-SignaturePathPrefetcher::handleSignatureTableMiss(stride_t current_block,
+SignaturePath::handleSignatureTableMiss(stride_t current_block,
     signature_t &new_signature, double &new_conf, stride_t &new_stride)
 {
     new_signature = current_block;
@@ -139,14 +140,14 @@ SignaturePathPrefetcher::handleSignatureTableMiss(stride_t current_block,
 }
 
 void
-SignaturePathPrefetcher::increasePatternEntryCounter(
+SignaturePath::increasePatternEntryCounter(
         PatternEntry &pattern_entry, PatternStrideEntry &pstride_entry)
 {
     pstride_entry.counter++;
 }
 
 void
-SignaturePathPrefetcher::updatePatternTable(Addr signature, stride_t stride)
+SignaturePath::updatePatternTable(Addr signature, stride_t stride)
 {
     assert(stride != 0);
     // The pattern table is indexed by signatures
@@ -155,8 +156,8 @@ SignaturePathPrefetcher::updatePatternTable(Addr signature, stride_t stride)
     increasePatternEntryCounter(p_entry, ps_entry);
 }
 
-SignaturePathPrefetcher::SignatureEntry &
-SignaturePathPrefetcher::getSignatureEntry(Addr ppn, bool is_secure,
+SignaturePath::SignatureEntry &
+SignaturePath::getSignatureEntry(Addr ppn, bool is_secure,
         stride_t block, bool &miss, stride_t &stride,
         double &initial_confidence)
 {
@@ -180,8 +181,8 @@ SignaturePathPrefetcher::getSignatureEntry(Addr ppn, bool is_secure,
     return *signature_entry;
 }
 
-SignaturePathPrefetcher::PatternEntry &
-SignaturePathPrefetcher::getPatternEntry(Addr signature)
+SignaturePath::PatternEntry &
+SignaturePath::getPatternEntry(Addr signature)
 {
     PatternEntry* pattern_entry = patternTable.findEntry(signature, false);
     if (pattern_entry != nullptr) {
@@ -198,14 +199,14 @@ SignaturePathPrefetcher::getPatternEntry(Addr signature)
 }
 
 double
-SignaturePathPrefetcher::calculatePrefetchConfidence(PatternEntry const &sig,
+SignaturePath::calculatePrefetchConfidence(PatternEntry const &sig,
         PatternStrideEntry const &entry) const
 {
     return entry.counter.calcSaturation();
 }
 
 double
-SignaturePathPrefetcher::calculateLookaheadConfidence(PatternEntry const &sig,
+SignaturePath::calculateLookaheadConfidence(PatternEntry const &sig,
         PatternStrideEntry const &lookahead) const
 {
     double lookahead_confidence = lookahead.counter.calcSaturation();
@@ -221,7 +222,7 @@ SignaturePathPrefetcher::calculateLookaheadConfidence(PatternEntry const &sig,
 }
 
 void
-SignaturePathPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
+SignaturePath::calculatePrefetch(const PrefetchInfo &pfi,
                                  std::vector<AddrPriority> &addresses)
 {
     Addr request_addr = pfi.getAddr();
@@ -305,7 +306,7 @@ SignaturePathPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 void
-SignaturePathPrefetcher::auxiliaryPrefetcher(Addr ppn, stride_t current_block,
+SignaturePath::auxiliaryPrefetcher(Addr ppn, stride_t current_block,
         bool is_secure, std::vector<AddrPriority> &addresses)
 {
     if (addresses.empty()) {
@@ -315,8 +316,10 @@ SignaturePathPrefetcher::auxiliaryPrefetcher(Addr ppn, stride_t current_block,
     }
 }
 
-SignaturePathPrefetcher*
+} // namespace Prefetcher
+
+Prefetcher::SignaturePath*
 SignaturePathPrefetcherParams::create()
 {
-    return new SignaturePathPrefetcher(this);
+    return new Prefetcher::SignaturePath(this);
 }

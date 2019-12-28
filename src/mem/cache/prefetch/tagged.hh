@@ -39,18 +39,21 @@
 
 struct TaggedPrefetcherParams;
 
-class TaggedPrefetcher : public QueuedPrefetcher
+namespace Prefetcher {
+
+class Tagged : public Queued
 {
   protected:
       const int degree;
 
   public:
-    TaggedPrefetcher(const TaggedPrefetcherParams *p);
-
-    ~TaggedPrefetcher() {}
+    Tagged(const TaggedPrefetcherParams *p);
+    ~Tagged() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
                            std::vector<AddrPriority> &addresses) override;
 };
+
+} // namespace Prefetcher
 
 #endif // __MEM_CACHE_PREFETCH_TAGGED_HH__

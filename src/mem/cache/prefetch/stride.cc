@@ -56,13 +56,15 @@
 #include "mem/cache/replacement_policies/base.hh"
 #include "params/StridePrefetcher.hh"
 
-StridePrefetcher::StrideEntry::StrideEntry()
+namespace Prefetcher {
+
+Stride::StrideEntry::StrideEntry()
 {
     invalidate();
 }
 
 void
-StridePrefetcher::StrideEntry::invalidate()
+Stride::StrideEntry::invalidate()
 {
     instAddr = 0;
     lastAddr = 0;
@@ -71,8 +73,8 @@ StridePrefetcher::StrideEntry::invalidate()
     confidence = 0;
 }
 
-StridePrefetcher::StridePrefetcher(const StridePrefetcherParams *p)
-    : QueuedPrefetcher(p),
+Stride::Stride(const StridePrefetcherParams *p)
+    : Queued(p),
       maxConf(p->max_conf),
       threshConf(p->thresh_conf),
       minConf(p->min_conf),
@@ -86,8 +88,8 @@ StridePrefetcher::StridePrefetcher(const StridePrefetcherParams *p)
     assert(isPowerOf2(pcTableSets));
 }
 
-StridePrefetcher::PCTable*
-StridePrefetcher::findTable(int context)
+Stride::PCTable*
+Stride::findTable(int context)
 {
     // Check if table for given context exists
     auto it = pcTables.find(context);
@@ -98,8 +100,8 @@ StridePrefetcher::findTable(int context)
     return allocateNewContext(context);
 }
 
-StridePrefetcher::PCTable*
-StridePrefetcher::allocateNewContext(int context)
+Stride::PCTable*
+Stride::allocateNewContext(int context)
 {
     // Create new table
     auto insertion_result = pcTables.insert(std::make_pair(context,
@@ -111,7 +113,7 @@ StridePrefetcher::allocateNewContext(int context)
     return &(insertion_result.first->second);
 }
 
-StridePrefetcher::PCTable::PCTable(int assoc, int sets, const std::string name,
+Stride::PCTable::PCTable(int assoc, int sets, const std::string name,
                                    BaseReplacementPolicy* replacementPolicy)
     : pcTableSets(sets), _name(name), entries(pcTableSets),
       replacementPolicy(replacementPolicy)
@@ -129,12 +131,12 @@ StridePrefetcher::PCTable::PCTable(int assoc, int sets, const std::string name,
     }
 }
 
-StridePrefetcher::PCTable::~PCTable()
+Stride::PCTable::~PCTable()
 {
 }
 
 void
-StridePrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
+Stride::calculatePrefetch(const PrefetchInfo &pfi,
                                     std::vector<AddrPriority> &addresses)
 {
     if (!pfi.hasPC()) {
@@ -214,15 +216,15 @@ StridePrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 inline Addr
-StridePrefetcher::PCTable::pcHash(Addr pc) const
+Stride::PCTable::pcHash(Addr pc) const
 {
     Addr hash1 = pc >> 1;
     Addr hash2 = hash1 >> floorLog2(pcTableSets);
     return (hash1 ^ hash2) & (Addr)(pcTableSets - 1);
 }
 
-inline StridePrefetcher::StrideEntry*
-StridePrefetcher::PCTable::findVictim(Addr pc)
+inline Stride::StrideEntry*
+Stride::PCTable::findVictim(Addr pc)
 {
     // Rand replacement for now
     int set = pcHash(pc);
@@ -243,8 +245,8 @@ StridePrefetcher::PCTable::findVictim(Addr pc)
     return victim;
 }
 
-inline StridePrefetcher::StrideEntry*
-StridePrefetcher::PCTable::findEntry(Addr pc, bool is_secure)
+inline Stride::StrideEntry*
+Stride::PCTable::findEntry(Addr pc, bool is_secure)
 {
     int set = pcHash(pc);
     for (auto& entry : entries[set]) {
@@ -259,8 +261,10 @@ StridePrefetcher::PCTable::findEntry(Addr pc, bool is_secure)
     return nullptr;
 }
 
-StridePrefetcher*
+} // namespace Prefetcher
+
+Prefetcher::Stride*
 StridePrefetcherParams::create()
 {
-    return new StridePrefetcher(this);
+    return new Prefetcher::Stride(this);
 }

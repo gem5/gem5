@@ -75,7 +75,9 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
-class BasePrefetcher;
+namespace Prefetcher {
+    class Base;
+}
 class MSHR;
 class MasterPort;
 class QueueEntry;
@@ -321,7 +323,7 @@ class BaseCache : public ClockedObject
     BaseCacheCompressor* compressor;
 
     /** Prefetcher */
-    BasePrefetcher *prefetcher;
+    Prefetcher::Base *prefetcher;
 
     /** To probe when a cache hit occurs */
     ProbePointArg<PacketPtr> *ppHit;

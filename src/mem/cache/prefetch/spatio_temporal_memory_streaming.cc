@@ -32,8 +32,10 @@
 #include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/STeMSPrefetcher.hh"
 
-STeMSPrefetcher::STeMSPrefetcher(const STeMSPrefetcherParams *p)
-  : QueuedPrefetcher(p), spatialRegionSize(p->spatial_region_size),
+namespace Prefetcher {
+
+STeMS::STeMS(const STeMSPrefetcherParams *p)
+  : Queued(p), spatialRegionSize(p->spatial_region_size),
     spatialRegionSizeBits(floorLog2(p->spatial_region_size)),
     reconstructionEntries(p->reconstruction_entries),
     activeGenerationTable(p->active_generation_table_assoc,
@@ -55,7 +57,8 @@ STeMSPrefetcher::STeMSPrefetcher(const STeMSPrefetcherParams *p)
 }
 
 void
-STeMSPrefetcher::checkForActiveGenerationsEnd() {
+STeMS::checkForActiveGenerationsEnd()
+{
     // This prefetcher operates attached to the L1 and it observes all
     // accesses, this guarantees that no evictions are missed
 
@@ -101,7 +104,7 @@ STeMSPrefetcher::checkForActiveGenerationsEnd() {
 }
 
 void
-STeMSPrefetcher::addToRMOB(Addr sr_addr, Addr pst_addr, unsigned int delta)
+STeMS::addToRMOB(Addr sr_addr, Addr pst_addr, unsigned int delta)
 {
     RegionMissOrderBufferEntry &rmob_entry = rmob[rmobHead];
     rmobHead = (rmobHead + 1) % rmob.size();
@@ -113,7 +116,7 @@ STeMSPrefetcher::addToRMOB(Addr sr_addr, Addr pst_addr, unsigned int delta)
 }
 
 void
-STeMSPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
+STeMS::calculatePrefetch(const PrefetchInfo &pfi,
                                    std::vector<AddrPriority> &addresses)
 {
     if (!pfi.hasPC()) {
@@ -182,7 +185,7 @@ STeMSPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 void
-STeMSPrefetcher::reconstructSequence(unsigned int rmob_idx,
+STeMS::reconstructSequence(unsigned int rmob_idx,
     std::vector<AddrPriority> &addresses)
 {
     std::vector<Addr> reconstruction(reconstructionEntries, MaxAddr);
@@ -248,8 +251,10 @@ STeMSPrefetcher::reconstructSequence(unsigned int rmob_idx,
     }
 }
 
-STeMSPrefetcher *
+} // namespace Prefetcher
+
+Prefetcher::STeMS*
 STeMSPrefetcherParams::create()
 {
-   return new STeMSPrefetcher(this);
+   return new Prefetcher::STeMS(this);
 }

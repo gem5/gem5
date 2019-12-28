@@ -61,19 +61,21 @@
 class BaseCache;
 struct BasePrefetcherParams;
 
-class BasePrefetcher : public ClockedObject
+namespace Prefetcher {
+
+class Base : public ClockedObject
 {
     class PrefetchListener : public ProbeListenerArgBase<PacketPtr>
     {
       public:
-        PrefetchListener(BasePrefetcher &_parent, ProbeManager *pm,
+        PrefetchListener(Base &_parent, ProbeManager *pm,
                          const std::string &name, bool _isFill = false,
                          bool _miss = false)
             : ProbeListenerArgBase(pm, name),
               parent(_parent), isFill(_isFill), miss(_miss) {}
         void notify(const PacketPtr &pkt) override;
       protected:
-        BasePrefetcher &parent;
+        Base &parent;
         const bool isFill;
         const bool miss;
     };
@@ -328,10 +330,8 @@ class BasePrefetcher : public ClockedObject
     BaseTLB * tlb;
 
   public:
-
-    BasePrefetcher(const BasePrefetcherParams *p);
-
-    virtual ~BasePrefetcher() {}
+    Base(const BasePrefetcherParams *p);
+    virtual ~Base() = default;
 
     virtual void setCache(BaseCache *_cache);
 
@@ -381,4 +381,7 @@ class BasePrefetcher : public ClockedObject
      */
     void addTLB(BaseTLB *tlb);
 };
+
+} // namespace Prefetcher
+
 #endif //__MEM_CACHE_PREFETCH_BASE_HH__
