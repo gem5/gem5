@@ -39,7 +39,6 @@
 #include "cpu/thread_context.hh"
 #include "debug/DebugPrintf.hh"
 #include "kern/system_events.hh"
-#include "sim/arguments.hh"
 #include "sim/system.hh"
 
 namespace FreeBSD

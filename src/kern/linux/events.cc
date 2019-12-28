@@ -49,7 +49,6 @@
 #include "cpu/thread_context.hh"
 #include "kern/linux/helpers.hh"
 #include "kern/system_events.hh"
-#include "sim/arguments.hh"
 #include "sim/core.hh"
 #include "sim/system.hh"
 

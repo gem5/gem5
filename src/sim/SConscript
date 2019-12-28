@@ -39,7 +39,6 @@ SimObject('DVFSHandler.py')
 SimObject('SubSystem.py')
 SimObject('RedirectPath.py')
 
-Source('arguments.cc')
 Source('async.cc')
 Source('backtrace_%s.cc' % env['BACKTRACE_IMPL'])
 Source('core.cc')

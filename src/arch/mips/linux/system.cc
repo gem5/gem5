@@ -49,7 +49,6 @@
 #include "kern/linux/printk.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
-#include "sim/arguments.hh"
 #include "sim/byteswap.hh"
 
 using namespace std;
