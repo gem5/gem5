@@ -45,7 +45,10 @@
 #include <map>
 #include <string>
 
+#include "arch/arm/aapcs32.hh"
+#include "arch/arm/aapcs64.hh"
 #include "arch/arm/fs_workload.hh"
+#include "arch/arm/system.hh"
 #include "base/output.hh"
 #include "kern/linux/events.hh"
 #include "params/ArmFsLinux.hh"
@@ -54,7 +57,19 @@
 namespace ArmISA
 {
 
-class DumpStats;
+class SkipFuncLinux32 : public SkipFunc
+{
+  public:
+    using SkipFunc::SkipFunc;
+    using ABI = Aapcs32Vfp;
+};
+
+class SkipFuncLinux64 : public SkipFunc
+{
+  public:
+    using SkipFunc::SkipFunc;
+    using ABI = Aapcs64;
+};
 
 class FsLinux : public ArmISA::FsWorkload
 {

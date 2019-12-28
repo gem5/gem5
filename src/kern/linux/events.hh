@@ -41,12 +41,19 @@
 #ifndef __KERN_LINUX_EVENTS_HH__
 #define __KERN_LINUX_EVENTS_HH__
 
+#include <functional>
+#include <string>
+
+#include "base/trace.hh"
+#include "debug/DebugPrintf.hh"
+#include "kern/linux/printk.hh"
 #include "kern/system_events.hh"
+#include "sim/guest_abi.hh"
+
+class ThreadContext;
 
 namespace Linux
 {
-
-void onDebugPrintk(ThreadContext *tc);
 
 template <typename Base>
 class DebugPrintk : public Base
@@ -56,7 +63,16 @@ class DebugPrintk : public Base
     void
     process(ThreadContext *tc) override
     {
-        onDebugPrintk(tc);
+        if (DTRACE(DebugPrintf)) {
+            std::string str;
+            std::function<int(ThreadContext *, Addr, PrintkVarArgs)> func =
+                [&str](ThreadContext *tc, Addr format_ptr,
+                    PrintkVarArgs args) -> int {
+                return printk(str, tc, format_ptr, args);
+            };
+            invokeSimcall<typename Base::ABI>(tc, func);
+            DPRINTFN("%s", str);
+        }
         Base::process(tc);
     }
 };

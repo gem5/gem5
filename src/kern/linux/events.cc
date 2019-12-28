@@ -47,9 +47,7 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "debug/DebugPrintf.hh"
 #include "kern/linux/helpers.hh"
-#include "kern/linux/printk.hh"
 #include "kern/system_events.hh"
 #include "sim/arguments.hh"
 #include "sim/core.hh"
@@ -57,18 +55,6 @@
 
 namespace Linux
 {
-
-void
-onDebugPrintk(ThreadContext *tc)
-{
-    if (DTRACE(DebugPrintf)) {
-        std::stringstream ss;
-        Arguments args(tc);
-        Printk(ss, args);
-        StringWrap name(tc->getSystemPtr()->name() + ".dprintk");
-        DPRINTFN("%s", ss.str());
-    }
-}
 
 void
 DmesgDump::process(ThreadContext *tc)

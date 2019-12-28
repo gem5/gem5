@@ -168,6 +168,7 @@ FsLinux::initState()
 
 FsLinux::~FsLinux()
 {
+    delete debugPrintk;
     delete skipUDelay;
     delete skipConstUDelay;
     delete kernelOops;
@@ -237,7 +238,13 @@ FsLinux::startup()
             "__const_udelay", "__const_udelay", 1000, 107374);
     }
 
-    debugPrintk = addKernelFuncEvent<DebugPrintk<SkipFunc>>("dprintk");
+    if (highestELIs64()) {
+        debugPrintk = addKernelFuncEvent<
+            DebugPrintk<SkipFuncLinux64>>("dprintk");
+    } else {
+        debugPrintk = addKernelFuncEvent<
+            DebugPrintk<SkipFuncLinux32>>("dprintk");
+    }
 }
 
 void
