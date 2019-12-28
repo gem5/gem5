@@ -155,12 +155,11 @@ CPA::getFrame(ThreadContext *tc)
 }
 
 void
-CPA::swSmBegin(ThreadContext *tc)
+CPA::swSmBegin(ThreadContext *tc, Addr sm_string, int32_t sm_id, int32_t flags)
 {
     if (!enabled())
         return;
 
-    Arguments args(tc);
     std::string st;
     Addr junk;
     char sm[50];
@@ -168,7 +167,7 @@ CPA::swSmBegin(ThreadContext *tc)
         debugSymbolTable->findNearestSymbol(
             tc->readIntReg(ReturnAddressReg), st, junk);
 
-    tc->getVirtProxy().readString(sm, args[0], 50);
+    tc->getVirtProxy().readString(sm, sm_string, 50);
     System *sys = tc->getSystemPtr();
     StringWrap name(sys->name());
 
@@ -176,9 +175,9 @@ CPA::swSmBegin(ThreadContext *tc)
         warn("Got null SM at tick %d\n", curTick());
 
     int sysi = getSys(sys);
-    int smi = getSm(sysi, sm, args[1]);
+    int smi = getSm(sysi, sm, sm_id);
     DPRINTF(Annotate,  "Starting machine: %s(%d) sysi: %d id: %#x\n", sm,
-            smi, sysi, args[1]);
+            smi, sysi, sm_id);
     DPRINTF(Annotate, "smMap[%d] = %d, %s, %#x\n", smi,
             smMap[smi-1].first, smMap[smi-1].second.first,
             smMap[smi-1].second.second);
@@ -187,12 +186,11 @@ CPA::swSmBegin(ThreadContext *tc)
     StackId sid = StackId(sysi, frame);
 
     // check if we need to link to the previous state machine
-    int flags = args[2];
     if (flags & FL_LINK) {
         if (smStack[sid].size()) {
             int prev_smi = smStack[sid].back();
             DPRINTF(Annotate, "Linking from %d to state machine %s(%d) [%#x]\n",
-                    prev_smi, sm, smi, args[1]);
+                    prev_smi, sm, smi, sm_id);
 
             if (lnMap[smi])
                 DPRINTF(Annotate, "LnMap already contains entry for %d of %d\n",
@@ -203,7 +201,7 @@ CPA::swSmBegin(ThreadContext *tc)
             add(OP_LINK, FL_NONE, tc->contextId(), prev_smi, smi);
         } else {
             DPRINTF(Annotate, "Not Linking to state machine %s(%d) [%#x]\n",
-                    sm, smi, args[1]);
+                    sm, smi, sm_id);
         }
     }
 
@@ -247,14 +245,13 @@ CPA::swSmBegin(ThreadContext *tc)
 }
 
 void
-CPA::swSmEnd(ThreadContext *tc)
+CPA::swSmEnd(ThreadContext *tc, Addr sm_string)
 {
     if (!enabled())
         return;
 
-    Arguments args(tc);
     char sm[50];
-    tc->getVirtProxy().readString(sm, args[0], 50);
+    tc->getVirtProxy().readString(sm, sm_string, 50);
     System *sys = tc->getSystemPtr();
     doSwSmEnd(sys, tc->contextId(), sm, getFrame(tc));
 }
@@ -315,21 +312,20 @@ CPA::doSwSmEnd(System *sys, int cpuid, string sm, uint64_t frame)
 
 
 void
-CPA::swExplictBegin(ThreadContext *tc)
+CPA::swExplictBegin(ThreadContext *tc, int32_t flags, Addr st_string)
 {
     if (!enabled())
         return;
 
-    Arguments args(tc);
     char st[50];
-    tc->getVirtProxy().readString(st, args[1], 50);
+    tc->getVirtProxy().readString(st, st_string, 50);
 
     StringWrap name(tc->getSystemPtr()->name());
     DPRINTF(Annotate, "Explict begin of state %s\n", st);
-    uint32_t flags = args[0];
     if (flags & FL_BAD)
         warn("BAD state encountered: at cycle %d: %s\n", curTick(), st);
-    swBegin(tc->getSystemPtr(), tc->contextId(), st, getFrame(tc), true, args[0]);
+    swBegin(tc->getSystemPtr(), tc->contextId(),
+            st, getFrame(tc), true, flags);
 }
 
 void
@@ -418,16 +414,13 @@ CPA::swEnd(ThreadContext *tc)
 }
 
 void
-CPA::swQ(ThreadContext *tc)
+CPA::swQ(ThreadContext *tc, Addr id, Addr q_string, int32_t count)
 {
     if (!enabled())
         return;
 
     char q[50];
-    Arguments args(tc);
-    uint64_t id = args[0];
-    tc->getVirtProxy().readString(q, args[1], 50);
-    int32_t count = args[2];
+    tc->getVirtProxy().readString(q, q_string, 50);
     System *sys = tc->getSystemPtr();
 
     int sysi = getSys(sys);
@@ -449,16 +442,13 @@ CPA::swQ(ThreadContext *tc)
 }
 
 void
-CPA::swDq(ThreadContext *tc)
+CPA::swDq(ThreadContext *tc, Addr id, Addr q_string, int32_t count)
 {
     if (!enabled())
         return;
 
     char q[50];
-    Arguments args(tc);
-    uint64_t id = args[0];
-    tc->getVirtProxy().readString(q, args[1], 50);
-    int32_t count = args[2];
+    tc->getVirtProxy().readString(q, q_string, 50);
     System *sys = tc->getSystemPtr();
 
     int sysi = getSys(sys);
@@ -478,17 +468,14 @@ CPA::swDq(ThreadContext *tc)
 }
 
 void
-CPA::swPq(ThreadContext *tc)
+CPA::swPq(ThreadContext *tc, Addr id, Addr q_string, int32_t count)
 {
     if (!enabled())
         return;
 
     char q[50];
-    Arguments args(tc);
-    uint64_t id = args[0];
-    tc->getVirtProxy().readString(q, args[1], 50);
+    tc->getVirtProxy().readString(q, q_string, 50);
     System *sys = tc->getSystemPtr();
-    int32_t count = args[2];
 
     int sysi = getSys(sys);
     StackId sid = StackId(sysi, getFrame(tc));
@@ -513,17 +500,14 @@ CPA::swPq(ThreadContext *tc)
 }
 
 void
-CPA::swRq(ThreadContext *tc)
+CPA::swRq(ThreadContext *tc, Addr id, Addr q_string, int32_t count)
 {
     if (!enabled())
         return;
 
     char q[50];
-    Arguments args(tc);
-    uint64_t id = args[0];
-    tc->getVirtProxy().readString(q, args[1], 50);
+    tc->getVirtProxy().readString(q, q_string, 50);
     System *sys = tc->getSystemPtr();
-    int32_t count = args[2];
 
     int sysi = getSys(sys);
     StackId sid = StackId(sysi, getFrame(tc));
@@ -544,17 +528,15 @@ CPA::swRq(ThreadContext *tc)
 
 
 void
-CPA::swWf(ThreadContext *tc)
+CPA::swWf(ThreadContext *tc, Addr id, Addr q_string, Addr sm_string,
+        int32_t count)
 {
     if (!enabled())
         return;
 
     char q[50];
-    Arguments args(tc);
-    uint64_t id = args[0];
-    tc->getVirtProxy().readString(q, args[1], 50);
+    tc->getVirtProxy().readString(q, q_string, 50);
     System *sys = tc->getSystemPtr();
-    int32_t count = args[3];
 
     int sysi = getSys(sys);
     StackId sid = StackId(sysi, getFrame(tc));
@@ -564,25 +546,23 @@ CPA::swWf(ThreadContext *tc)
     int qi = getQ(sysi, q, id);
     add(OP_WAIT_FULL, FL_NONE, tc->contextId(), smi, qi, count);
 
-    if (!!args[2]) {
+    if (!!sm_string) {
         char sm[50];
-        tc->getVirtProxy().readString(sm, args[2], 50);
+        tc->getVirtProxy().readString(sm, sm_string, 50);
         doSwSmEnd(tc->getSystemPtr(), tc->contextId(), sm, getFrame(tc));
     }
 }
 
 void
-CPA::swWe(ThreadContext *tc)
+CPA::swWe(ThreadContext *tc, Addr id, Addr q_string, Addr sm_string,
+        int32_t count)
 {
     if (!enabled())
         return;
 
     char q[50];
-    Arguments args(tc);
-    uint64_t id = args[0];
-    tc->getVirtProxy().readString(q, args[1], 50);
+    tc->getVirtProxy().readString(q, q_string, 50);
     System *sys = tc->getSystemPtr();
-    int32_t count = args[3];
 
     int sysi = getSys(sys);
     StackId sid = StackId(sysi, getFrame(tc));
@@ -592,27 +572,24 @@ CPA::swWe(ThreadContext *tc)
     int qi = getQ(sysi, q, id);
     add(OP_WAIT_EMPTY, FL_NONE, tc->contextId(), smi, qi, count);
 
-    if (!!args[2]) {
+    if (!!sm_string) {
         char sm[50];
-        tc->getVirtProxy().readString(sm, args[2], 50);
+        tc->getVirtProxy().readString(sm, sm_string, 50);
         doSwSmEnd(tc->getSystemPtr(), tc->contextId(), sm, getFrame(tc));
     }
 }
 
 void
-CPA::swSq(ThreadContext *tc)
+CPA::swSq(ThreadContext *tc, Addr id, Addr q_string, int32_t size,
+        int32_t flags)
 {
     if (!enabled())
         return;
 
     char q[50];
-    Arguments args(tc);
-    uint64_t id = args[0];
-    tc->getVirtProxy().readString(q, args[1], 50);
+    tc->getVirtProxy().readString(q, q_string, 50);
     System *sys = tc->getSystemPtr();
     StringWrap name(sys->name());
-    int32_t size = args[2];
-    int flags = args[3];
 
     int sysi = getSys(sys);
     StackId sid = StackId(sysi, getFrame(tc));
@@ -668,18 +645,15 @@ CPA::swSq(ThreadContext *tc)
 }
 
 void
-CPA::swAq(ThreadContext *tc)
+CPA::swAq(ThreadContext *tc, Addr id, Addr q_string, int32_t size)
 {
     if (!enabled())
         return;
 
     char q[50];
-    Arguments args(tc);
-    uint64_t id = args[0];
-    tc->getVirtProxy().readString(q, args[1], 50);
+    tc->getVirtProxy().readString(q, q_string, 50);
     System *sys = tc->getSystemPtr();
     StringWrap name(sys->name());
-    int32_t size = args[2];
 
     int sysi = getSys(sys);
     int qi = getQ(sysi, q, id);
@@ -705,14 +679,13 @@ CPA::swAq(ThreadContext *tc)
 }
 
 void
-CPA::swLink(ThreadContext *tc)
+CPA::swLink(ThreadContext *tc, Addr lsm_string, Addr lsm_id, Addr sm_string)
 {
     if (!enabled())
         return;
 
     char lsm[50];
-    Arguments args(tc);
-    tc->getVirtProxy().readString(lsm, args[0], 50);
+    tc->getVirtProxy().readString(lsm, lsm_string, 50);
     System *sys = tc->getSystemPtr();
     StringWrap name(sys->name());
 
@@ -721,10 +694,10 @@ CPA::swLink(ThreadContext *tc)
     if (!smStack[sid].size())
         return;
     int smi = smStack[sid].back();
-    int lsmi = getSm(sysi, lsm, args[1]);
+    int lsmi = getSm(sysi, lsm, lsm_id);
 
     DPRINTF(Annotate, "Linking from %d to state machine %s(%d) [%#x]\n",
-            smi, lsm, lsmi, args[1]);
+            smi, lsm, lsmi, lsm_id);
 
     if (lnMap[lsmi])
         DPRINTF(Annotate, "LnMap already contains entry for %d of %d\n",
@@ -734,29 +707,28 @@ CPA::swLink(ThreadContext *tc)
 
     add(OP_LINK, FL_NONE, tc->contextId(), smi, lsmi);
 
-    if (!!args[2]) {
+    if (!!sm_string) {
         char sm[50];
-        tc->getVirtProxy().readString(sm, args[2], 50);
+        tc->getVirtProxy().readString(sm, sm_string, 50);
         doSwSmEnd(tc->getSystemPtr(), tc->contextId(), sm, getFrame(tc));
     }
 }
 
 void
-CPA::swIdentify(ThreadContext *tc)
+CPA::swIdentify(ThreadContext *tc, Addr smi_string)
 {
     if (!enabled())
         return;
 
-    Arguments args(tc);
     int sysi = getSys(tc->getSystemPtr());
     StackId sid = StackId(sysi, getFrame(tc));
     if (!smStack[sid].size())
         return;
     int smi = smStack[sid].back();
 
-    DPRINTFS(Annotate, tc->getSystemPtr(), "swIdentify: id %#X\n", args[0]);
+    DPRINTFS(Annotate, tc->getSystemPtr(), "swIdentify: id %#X\n", smi_string);
 
-    add(OP_IDENT, FL_NONE, tc->contextId(), smi, 0, args[0]);
+    add(OP_IDENT, FL_NONE, tc->contextId(), smi, 0, smi_string);
 }
 
 uint64_t
@@ -780,14 +752,13 @@ CPA::swGetId(ThreadContext *tc)
 
 
 void
-CPA::swSyscallLink(ThreadContext  *tc)
+CPA::swSyscallLink(ThreadContext  *tc, Addr lsm_string, Addr sm_string)
 {
     if (!enabled())
         return;
 
     char lsm[50];
-    Arguments args(tc);
-    tc->getVirtProxy().readString(lsm, args[0], 50);
+    tc->getVirtProxy().readString(lsm, lsm_string, 50);
     System *sys = tc->getSystemPtr();
     StringWrap name(sys->name());
     int sysi = getSys(sys);
@@ -811,9 +782,9 @@ CPA::swSyscallLink(ThreadContext  *tc)
     scLinks[sysi-1][id] = add(OP_LINK, FL_NONE, tc->contextId(), smi, 0xFFFF);
     scLinks[sysi-1][id]->dump = false;
 
-    if (!!args[1]) {
+    if (!!sm_string) {
         char sm[50];
-        tc->getVirtProxy().readString(sm, args[1], 50);
+        tc->getVirtProxy().readString(sm, sm_string, 50);
         doSwSmEnd(tc->getSystemPtr(), tc->contextId(), sm, getFrame(tc));
     }
 }

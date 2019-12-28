@@ -82,23 +82,35 @@ class CPA
     static CPA *cpa()                                        { return NULL; }
     static bool available()                                 { return false; }
     bool enabled()                                          { return false; }
-    void swSmBegin(ThreadContext *tc)                             { return; }
-    void swSmEnd(ThreadContext *tc)                               { return; }
-    void swExplictBegin(ThreadContext *tc)                        { return; }
+    void swSmBegin(ThreadContext *tc, Addr sm_string,
+                   int32_t sm_id, int32_t flags)                  { return; }
+    void swSmEnd(ThreadContext *tc, Addr sm_string)               { return; }
+    void swExplictBegin(ThreadContext *tc, int32_t flags,
+                        Addr st_string)                           { return; }
     void swAutoBegin(ThreadContext *tc, Addr next_pc)             { return; }
     void swEnd(ThreadContext *tc)                                 { return; }
-    void swQ(ThreadContext *tc)                                   { return; }
-    void swDq(ThreadContext *tc)                                  { return; }
-    void swPq(ThreadContext *tc)                                  { return; }
-    void swRq(ThreadContext *tc)                                  { return; }
-    void swWf(ThreadContext *tc)                                  { return; }
-    void swWe(ThreadContext *tc)                                  { return; }
-    void swSq(ThreadContext *tc)                                  { return; }
-    void swAq(ThreadContext *tc)                                  { return; }
-    void swLink(ThreadContext *tc)                                { return; }
-    void swIdentify(ThreadContext *tc)                            { return; }
+    void swQ(ThreadContext *tc, Addr id, Addr q_string,
+             int32_t count)                                       { return; }
+    void swDq(ThreadContext *tc, Addr id, Addr q_string,
+              int32_t count)                                      { return; }
+    void swPq(ThreadContext *tc, Addr id, Addr q_string,
+              int32_t count)                                      { return; }
+    void swRq(ThreadContext *tc, Addr id, Addr q_string,
+              int32_t count)                                      { return; }
+    void swWf(ThreadContext *tc, Addr id, Addr q_string,
+              Addr sm_string, int32_t count)                      { return; }
+    void swWe(ThreadContext *tc, Addr id, Addr q_string,
+              Addr sm_string, int32_t count)                      { return; }
+    void swSq(ThreadContext *tc, Addr id, Addr q_string,
+              int32_t size, int32_t flags)                        { return; }
+    void swAq(ThreadContext *tc, Addr id, Addr q_string,
+              int32_t size)                                       { return; }
+    void swLink(ThreadContext *tc, Addr lsm_string,
+                Addr lsm_id, Addr sm_string)                      { return; }
+    void swIdentify(ThreadContext *tc, Addr smi_string)           { return; }
     uint64_t swGetId(ThreadContext *tc)                         { return 0; }
-    void swSyscallLink(ThreadContext *tc)                         { return; }
+    void swSyscallLink(ThreadContext *tc, Addr lsm_string,
+                       Addr sm_string)                            { return; }
     void hwBegin(flags f, System *sys, uint64_t frame, std::string sm,
                  std::string st)                                  { return; }
     void hwQ(flags f, System *sys, uint64_t frame, std::string sm,
