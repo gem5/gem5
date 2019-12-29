@@ -50,7 +50,7 @@ STeMS::STeMS(const STeMSPrefetcherParams *p)
                          p->pattern_sequence_table_replacement_policy,
                          ActiveGenerationTableEntry(
                              spatialRegionSize / blkSize)),
-    rmob(p->region_miss_order_buffer_entries), rmobHead(0)
+    rmob(p->region_miss_order_buffer_entries)
 {
     fatal_if(!isPowerOf2(spatialRegionSize),
         "The spatial region size must be a power of 2.");
@@ -106,13 +106,12 @@ STeMS::checkForActiveGenerationsEnd()
 void
 STeMS::addToRMOB(Addr sr_addr, Addr pst_addr, unsigned int delta)
 {
-    RegionMissOrderBufferEntry &rmob_entry = rmob[rmobHead];
-    rmobHead = (rmobHead + 1) % rmob.size();
-
+    RegionMissOrderBufferEntry rmob_entry;
     rmob_entry.srAddress = sr_addr;
     rmob_entry.pstAddress = pst_addr;
     rmob_entry.delta = delta;
-    rmob_entry.valid = true;
+
+    rmob.push_back(rmob_entry);
 }
 
 void
@@ -171,13 +170,12 @@ STeMS::calculatePrefetch(const PrefetchInfo &pfi,
     // Prefetch generation: if this is a miss, search for the most recent
     // entry in the RMOB, and reconstruct the registered access sequence
     if (pfi.isCacheMiss()) {
-        for (unsigned int idx = (rmobHead - 1) % rmob.size();
-             idx != rmobHead && rmob[idx].valid;
-             idx = (idx - 1) % rmob.size())
-        {
-            if (rmob[idx].srAddress == sr_addr) {
+        auto it = rmob.end();
+        while (it != rmob.begin()) {
+            --it;
+            if (it->srAddress == sr_addr) {
                 // reconstruct the access sequence
-                reconstructSequence(idx, addresses);
+                reconstructSequence(it, addresses);
                 break;
             }
         }
@@ -185,37 +183,34 @@ STeMS::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 void
-STeMS::reconstructSequence(unsigned int rmob_idx,
+STeMS::reconstructSequence(
+    CircularQueue<RegionMissOrderBufferEntry>::iterator rmob_it,
     std::vector<AddrPriority> &addresses)
 {
     std::vector<Addr> reconstruction(reconstructionEntries, MaxAddr);
     unsigned int idx = 0;
-    // process rmob entries from rmob_idx (most recent with
-    // address = sr_addr) to the last one (rmobHead)
-    for (int i = rmob_idx;
-         i != rmobHead && idx < reconstructionEntries;
-         i = (i + 1) % rmob.size())
-    {
-        reconstruction[idx] = rmob[i].srAddress * spatialRegionSize;
-        unsigned int next_i = (i + 1) % rmob.size();
-        idx += rmob[next_i].delta + 1;
+
+    // Process rmob entries from rmob_it (most recent with address = sr_addr)
+    // to the latest one
+    for (auto it = rmob_it; it != rmob.end() && (idx < reconstructionEntries);
+        it++) {
+        reconstruction[idx] = it->srAddress * spatialRegionSize;
+        idx += (it+1)->delta + 1;
     }
+
     // Now query the PST with the PC of each RMOB entry
     idx = 0;
-    for (int i = rmob_idx;
-         i != rmobHead && idx < reconstructionEntries;
-         i = (i + 1) % rmob.size())
-    {
+    for (auto it = rmob_it; it != rmob.end() && (idx < reconstructionEntries);
+        it++) {
         ActiveGenerationTableEntry *pst_entry =
-            patternSequenceTable.findEntry(rmob[i].pstAddress,
-                                           false /* unused */);
+            patternSequenceTable.findEntry(it->pstAddress, false /* unused */);
         if (pst_entry != nullptr) {
             patternSequenceTable.accessEntry(pst_entry);
             for (auto &seq_entry : pst_entry->sequence) {
                 if (seq_entry.counter > 1) {
                     // 2-bit counter: high enough confidence with a
                     // value greater than 1
-                    Addr rec_addr = rmob[i].srAddress * spatialRegionSize +
+                    Addr rec_addr = it->srAddress * spatialRegionSize +
                         seq_entry.offset;
                     unsigned ridx = idx + seq_entry.delta;
                     // Try to use the corresponding position, if it has been
@@ -241,9 +236,9 @@ STeMS::reconstructSequence(unsigned int rmob_idx,
                 }
             }
         }
-        unsigned int next_i = (i + 1) % rmob.size();
-        idx += rmob[next_i].delta + 1;
+        idx += (it+1)->delta + 1;
     }
+
     for (Addr pf_addr : reconstruction) {
         if (pf_addr != MaxAddr) {
             addresses.push_back(AddrPriority(pf_addr, 0));
