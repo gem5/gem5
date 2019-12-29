@@ -41,12 +41,11 @@ PIF::PIF(const PIFPrefetcherParams *p)
       precSize(p->prec_spatial_region_bits),
       succSize(p->succ_spatial_region_bits),
       maxCompactorEntries(p->compactor_entries),
-      maxStreamAddressBufferEntries(p->stream_address_buffer_entries),
       historyBuffer(p->history_buffer_size),
-      historyBufferTail(0),
       index(p->index_assoc, p->index_entries, p->index_indexing_policy,
             p->index_replacement_policy),
-      streamAddressBuffer(), listenersPC()
+      streamAddressBuffer(p->stream_address_buffer_entries),
+      listenersPC()
 {
 }
 
@@ -169,8 +168,8 @@ PIF::notifyRetiredInst(const Addr pc)
             // updating the trigger address and resetting the vector bits
             if (!is_in_temporal_compactor) {
                 // Insert the spatial entry into the history buffer and update
-                // the 'index' table to point to the new entry
-                historyBuffer[historyBufferTail] = spatialCompactor;
+                // the 'iterator' table to point to the new entry
+                historyBuffer.push_back(spatialCompactor);
 
                 IndexEntry *idx_entry =
                     index.findEntry(spatialCompactor.trigger, false);
@@ -182,12 +181,8 @@ PIF::notifyRetiredInst(const Addr pc)
                     index.insertEntry(spatialCompactor.trigger, false,
                                       idx_entry);
                 }
-                idx_entry->historyIndex = historyBufferTail;
-
-                historyBufferTail++;
-                if (historyBufferTail == historyBuffer.size()) {
-                    historyBufferTail = 0;
-                }
+                idx_entry->historyIt =
+                    historyBuffer.getIterator(historyBuffer.tail());
 
                 // Reset the spatial compactor fields with the new address
                 spatialCompactor = CompactorEntry(pc, precSize, succSize);
@@ -206,13 +201,7 @@ PIF::calculatePrefetch(const PrefetchInfo &pfi,
     // comparing the access against the active Stream Address Buffers
     for (auto &sabEntry : streamAddressBuffer) {
         if (sabEntry->hasAddress(addr, lBlkSize)) {
-            // Advance to the next entry (first check if we have reached the
-            // end of the history buffer)
-            if (sabEntry == &(historyBuffer[historyBuffer.size() - 1])) {
-                sabEntry = &(historyBuffer[0]);
-            } else {
-                sabEntry++;
-            }
+            sabEntry++;
             sabEntry->getPredictedAddresses(lBlkSize, addresses);
             // We are done
             return;
@@ -227,13 +216,9 @@ PIF::calculatePrefetch(const PrefetchInfo &pfi,
         index.accessEntry(idx_entry);
         // Trigger address from the 'index' table and index to the history
         // buffer
-        const unsigned int hb_entry = idx_entry->historyIndex;
-        CompactorEntry *entry = &historyBuffer[hb_entry];
+        auto entry = idx_entry->historyIt;
 
         // Track the block in the Stream Address Buffer
-        if (streamAddressBuffer.size() == maxStreamAddressBufferEntries) {
-            streamAddressBuffer.pop_front();
-        }
         streamAddressBuffer.push_back(entry);
 
         entry->getPredictedAddresses(lBlkSize, addresses);

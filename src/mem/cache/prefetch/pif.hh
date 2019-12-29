@@ -40,6 +40,7 @@
 #include <deque>
 #include <vector>
 
+#include "base/circular_queue.hh"
 #include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 
@@ -55,8 +56,6 @@ class PIF : public Queued
         const unsigned int succSize;
         /** Number of entries used for the temporal compactor */
         const unsigned int maxCompactorEntries;
-        /** Max number of entries to be used in the Stream Address Buffer */
-        const unsigned int maxStreamAddressBufferEntries;
 
         /**
          * The compactor tracks retired instructions addresses, leveraging the
@@ -127,12 +126,12 @@ class PIF : public Queued
          * History buffer is a circular buffer that stores the sequence of
          * retired instructions in FIFO order.
          */
-        std::vector<CompactorEntry> historyBuffer;
-        unsigned int historyBufferTail;
+        using HistoryBuffer = CircularQueue<CompactorEntry>;
+        HistoryBuffer historyBuffer;
 
         struct IndexEntry : public TaggedEntry
         {
-            unsigned int historyIndex;
+            HistoryBuffer::iterator historyIt;
         };
         /**
          * The index table is a small cache-like structure that facilitates
@@ -146,7 +145,7 @@ class PIF : public Queued
          * history buffer, initiallly set to the pointer taken from the index
          * table
          */
-        std::deque<CompactorEntry*> streamAddressBuffer;
+        CircularQueue<HistoryBuffer::iterator> streamAddressBuffer;
 
         /**
          * Updates the prefetcher structures upon an instruction retired
