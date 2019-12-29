@@ -58,7 +58,8 @@
 
 namespace Prefetcher {
 
-Stride::StrideEntry::StrideEntry()
+Stride::StrideEntry::StrideEntry(const SatCounter& init_confidence)
+  : ReplaceableEntry(), confidence(init_confidence)
 {
     invalidate();
 }
@@ -70,20 +71,18 @@ Stride::StrideEntry::invalidate()
     lastAddr = 0;
     isSecure = false;
     stride = 0;
-    confidence = 0;
+    confidence.reset();
 }
 
 Stride::Stride(const StridePrefetcherParams *p)
-    : Queued(p),
-      maxConf(p->max_conf),
-      threshConf(p->thresh_conf),
-      minConf(p->min_conf),
-      startConf(p->start_conf),
-      pcTableAssoc(p->table_assoc),
-      pcTableSets(p->table_sets),
-      useMasterId(p->use_master_id),
-      degree(p->degree),
-      replacementPolicy(p->replacement_policy)
+  : Queued(p),
+    initConfidence(p->confidence_counter_bits, p->initial_confidence),
+    threshConf(p->confidence_threshold/100.0),
+    pcTableAssoc(p->table_assoc),
+    pcTableSets(p->table_sets),
+    useMasterId(p->use_master_id),
+    degree(p->degree),
+    replacementPolicy(p->replacement_policy)
 {
     assert(isPowerOf2(pcTableSets));
 }
@@ -105,7 +104,8 @@ Stride::allocateNewContext(int context)
 {
     // Create new table
     auto insertion_result = pcTables.insert(std::make_pair(context,
-        PCTable(pcTableAssoc, pcTableSets, name(), replacementPolicy)));
+        PCTable(pcTableAssoc, pcTableSets, name(), replacementPolicy,
+        StrideEntry(initConfidence))));
 
     DPRINTF(HWPrefetch, "Adding context %i with stride entries\n", context);
 
@@ -114,12 +114,12 @@ Stride::allocateNewContext(int context)
 }
 
 Stride::PCTable::PCTable(int assoc, int sets, const std::string name,
-                                   BaseReplacementPolicy* replacementPolicy)
+    BaseReplacementPolicy* replacementPolicy, StrideEntry init_confidence)
     : pcTableSets(sets), _name(name), entries(pcTableSets),
       replacementPolicy(replacementPolicy)
 {
     for (int set = 0; set < sets; set++) {
-        entries[set].resize(assoc);
+        entries[set].resize(assoc, init_confidence);
         for (int way = 0; way < assoc; way++) {
             // Inform the entry its position
             entries[set][way].setPosition(set, way);
@@ -163,26 +163,26 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
 
         // Adjust confidence for stride entry
         if (stride_match && new_stride != 0) {
-            if (entry->confidence < maxConf)
-                entry->confidence++;
+            entry->confidence++;
         } else {
-            if (entry->confidence > minConf)
-                entry->confidence--;
+            entry->confidence--;
             // If confidence has dropped below the threshold, train new stride
-            if (entry->confidence < threshConf)
+            if (entry->confidence.calcSaturation() < threshConf) {
                 entry->stride = new_stride;
+            }
         }
 
         DPRINTF(HWPrefetch, "Hit: PC %x pkt_addr %x (%s) stride %d (%s), "
                 "conf %d\n", pc, pf_addr, is_secure ? "s" : "ns",
                 new_stride, stride_match ? "match" : "change",
-                entry->confidence);
+                (int)entry->confidence);
 
         entry->lastAddr = pf_addr;
 
         // Abort prefetch generation if below confidence threshold
-        if (entry->confidence < threshConf)
+        if (entry->confidence.calcSaturation() < threshConf) {
             return;
+        }
 
         // Generate up to degree prefetches
         for (int d = 1; d <= degree; d++) {
@@ -210,7 +210,6 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
         entry->instAddr = pc;
         entry->lastAddr = pf_addr;
         entry->isSecure = is_secure;
-        entry->confidence = startConf;
         replacementPolicy->reset(entry->replacementData);
     }
 }

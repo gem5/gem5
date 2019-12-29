@@ -51,6 +51,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "base/sat_counter.hh"
 #include "base/types.hh"
 #include "mem/cache/prefetch/queued.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
@@ -64,10 +65,11 @@ namespace Prefetcher {
 class Stride : public Queued
 {
   protected:
-    const int maxConf;
-    const int threshConf;
-    const int minConf;
-    const int startConf;
+    /** Initial confidence counter value for the pc tables. */
+    const SatCounter initConfidence;
+
+    /** Confidence threshold for prefetch generation. */
+    const double threshConf;
 
     const int pcTableAssoc;
     const int pcTableSets;
@@ -81,8 +83,7 @@ class Stride : public Queued
 
     struct StrideEntry : public ReplaceableEntry
     {
-        /** Default constructor */
-        StrideEntry();
+        StrideEntry(const SatCounter& init_confidence);
 
         /** Invalidate the entry */
         void invalidate();
@@ -91,7 +92,7 @@ class Stride : public Queued
         Addr lastAddr;
         bool isSecure;
         int stride;
-        int confidence;
+        SatCounter confidence;
     };
 
     class PCTable
@@ -106,7 +107,8 @@ class Stride : public Queued
          * @param replacementPolicy Replacement policy used by the table.
          */
         PCTable(int assoc, int sets, const std::string name,
-                BaseReplacementPolicy* replacementPolicy);
+                BaseReplacementPolicy* replacementPolicy,
+                StrideEntry init_confidence);
 
         /**
          * Default destructor.

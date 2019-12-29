@@ -147,10 +147,12 @@ class StridePrefetcher(QueuedPrefetcher):
     # Do not consult stride prefetcher on instruction accesses
     on_inst = False
 
-    max_conf = Param.Int(7, "Maximum confidence level")
-    thresh_conf = Param.Int(4, "Threshold confidence level")
-    min_conf = Param.Int(0, "Minimum confidence level")
-    start_conf = Param.Int(4, "Starting confidence for new entries")
+    confidence_counter_bits = Param.Unsigned(3,
+        "Number of bits of the confidence counter")
+    initial_confidence = Param.Unsigned(4,
+        "Starting confidence of new entries")
+    confidence_threshold = Param.Percent(50,
+        "Prefetch generation confidence threshold")
 
     table_sets = Param.Int(16, "Number of sets in PC lookup table")
     table_assoc = Param.Int(4, "Associativity of PC lookup table")
