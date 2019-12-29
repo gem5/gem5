@@ -35,17 +35,13 @@ namespace Prefetcher {
 
 SBOOE::SBOOE(const SBOOEPrefetcherParams *p)
     : Queued(p),
-      latencyBufferSize(p->latency_buffer_size),
       sequentialPrefetchers(p->sequential_prefetchers),
       scoreThreshold((p->sandbox_entries*p->score_threshold_pct)/100),
+      latencyBuffer(p->latency_buffer_size),
       averageAccessLatency(0), latencyBufferSum(0),
       bestSandbox(NULL),
       accesses(0)
 {
-    if (!(p->score_threshold_pct >= 0 && p->score_threshold_pct <= 100)) {
-        fatal("%s: the score threshold should be between 0 and 100\n", name());
-    }
-
     // Initialize a sandbox for every sequential prefetcher between
     // -1 and the number of sequential prefetchers defined
     for (int i = 0; i < sequentialPrefetchers; i++) {
@@ -54,34 +50,31 @@ SBOOE::SBOOE(const SBOOEPrefetcherParams *p)
 }
 
 void
-SBOOE::Sandbox::insert(Addr addr, Tick tick)
+SBOOE::Sandbox::access(Addr addr, Tick tick)
 {
-    entries[index].valid = true;
-    entries[index].line = addr + stride;
-    entries[index].expectedArrivalTick = tick;
-
-    index++;
-
-    if (index == entries.size()) {
-        index = 0;
+    // Search for the address in the FIFO queue to update the score
+    for (const SandboxEntry &entry: entries) {
+        if (entry.valid && entry.line == addr) {
+            sandboxScore++;
+            if (entry.expectedArrivalTick > curTick()) {
+                lateScore++;
+            }
+        }
     }
+
+    // Insert new access in this sandbox
+    SandboxEntry entry;
+    entry.valid = true;
+    entry.line = addr + stride;
+    entry.expectedArrivalTick = tick;
+    entries.push_back(entry);
 }
 
 bool
 SBOOE::access(Addr access_line)
 {
     for (Sandbox &sb : sandboxes) {
-        // Search for the address in the FIFO queue
-        for (const SandboxEntry &entry: sb.entries) {
-            if (entry.valid && entry.line == access_line) {
-                sb.sandboxScore++;
-                if (entry.expectedArrivalTick > curTick()) {
-                    sb.lateScore++;
-                }
-            }
-        }
-
-        sb.insert(access_line, curTick() + averageAccessLatency);
+        sb.access(access_line, curTick() + averageAccessLatency);
 
         if (bestSandbox == NULL || sb.score() > bestSandbox->score()) {
             bestSandbox = &sb;
@@ -106,13 +99,11 @@ SBOOE::notifyFill(const PacketPtr& pkt)
     if (it != demandAddresses.end()) {
         Tick elapsed_ticks = curTick() - it->second;
 
+        if (latencyBuffer.full()) {
+            latencyBufferSum -= latencyBuffer.front();
+        }
         latencyBuffer.push_back(elapsed_ticks);
         latencyBufferSum += elapsed_ticks;
-
-        if (latencyBuffer.size() > latencyBufferSize) {
-            latencyBufferSum -= latencyBuffer.front();
-            latencyBuffer.pop_front();
-        }
 
         averageAccessLatency = latencyBufferSum / latencyBuffer.size();
 

@@ -35,10 +35,10 @@
 #ifndef __MEM_CACHE_PREFETCH_SBOOE_HH__
 #define __MEM_CACHE_PREFETCH_SBOOE_HH__
 
-#include <deque>
 #include <unordered_map>
 #include <vector>
 
+#include "base/circular_queue.hh"
 #include "mem/cache/prefetch/queued.hh"
 #include "mem/packet.hh"
 
@@ -51,7 +51,6 @@ class SBOOE : public Queued
     private:
 
         /** Prefetcher parameters */
-        const int latencyBufferSize;
         const int sequentialPrefetchers;
 
         /** Threshold used to issue prefetchers */
@@ -70,7 +69,7 @@ class SBOOE : public Queued
          * calculate the average access latency which is later used to
          * predict if a prefetcher would be filled on time if issued.
          */
-        std::deque<Tick> latencyBuffer;
+        CircularQueue<Tick> latencyBuffer;
 
         /** Holds the current average access latency */
         Tick averageAccessLatency;
@@ -91,48 +90,51 @@ class SBOOE : public Queued
             {}
         };
 
-        struct Sandbox {
-            /** FIFO queue. Max entries is 'sandboxEntries' */
-            std::vector<SandboxEntry> entries;
+        class Sandbox
+        {
+          private:
+            /** FIFO queue containing the sandbox entries. */
+            CircularQueue<SandboxEntry> entries;
+
             /**
              * Accesses during the eval period that were present
              * in the sandbox
              */
             unsigned int sandboxScore;
+
             /** Hits in the sandbox that wouldn't have been filled on time */
             unsigned int lateScore;
-            /** Index of the oldest entry in the FIFO */
-            unsigned int index;
+
+          public:
             /** Sequential stride for this prefetcher */
             const int stride;
 
             Sandbox(unsigned int max_entries, int _stride)
-                : sandboxScore(0), lateScore(0), index(0), stride(_stride)
+              : entries(max_entries), sandboxScore(0), lateScore(0),
+                stride(_stride)
             {
-                entries.resize(max_entries);
             }
 
             /**
-             * Insert the line address being accessed to the cache into the
+             * Update score and insert the line address being accessed into the
              * FIFO queue of the sandbox.
+             *
              * @param line Line address being accessed
              * @param tick Tick in which the access is expected to be filled
              */
-            void insert(Addr line, Tick tick);
+            void access(Addr line, Tick tick);
 
             /** Calculate the useful score
              *  @return Useful score of the sandbox. Sandbox score adjusted by
              *          by the late score
              */
-            unsigned int score() const {
-                return (sandboxScore - lateScore);
-            }
+            unsigned int score() const { return (sandboxScore - lateScore); }
         };
 
         std::vector<Sandbox> sandboxes;
 
         /** Current best sandbox */
-        Sandbox * bestSandbox;
+        const Sandbox* bestSandbox;
 
         /** Number of accesses notified to the prefetcher */
         unsigned int accesses;
