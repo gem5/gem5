@@ -139,6 +139,11 @@ class QueuedPrefetcher(BasePrefetcher):
     throttle_control_percentage = Param.Percent(0, "Percentage of requests \
         that can be throttled depending on the accuracy of the prefetcher.")
 
+class StridePrefetcherHashedSetAssociative(SetAssociative):
+    type = 'StridePrefetcherHashedSetAssociative'
+    cxx_class = 'Prefetcher::StridePrefetcherHashedSetAssociative'
+    cxx_header = "mem/cache/prefetch/stride.hh"
+
 class StridePrefetcher(QueuedPrefetcher):
     type = 'StridePrefetcher'
     cxx_class = 'Prefetcher::Stride'
@@ -154,15 +159,18 @@ class StridePrefetcher(QueuedPrefetcher):
     confidence_threshold = Param.Percent(50,
         "Prefetch generation confidence threshold")
 
-    table_sets = Param.Int(16, "Number of sets in PC lookup table")
-    table_assoc = Param.Int(4, "Associativity of PC lookup table")
     use_master_id = Param.Bool(True, "Use master id based history")
 
     degree = Param.Int(4, "Number of prefetches to generate")
 
-    # Get replacement policy
-    replacement_policy = Param.BaseReplacementPolicy(RandomRP(),
-        "Replacement policy")
+    table_assoc = Param.Int(4, "Associativity of the PC table")
+    table_entries = Param.MemorySize("64", "Number of entries of the PC table")
+    table_indexing_policy = Param.BaseIndexingPolicy(
+        StridePrefetcherHashedSetAssociative(entry_size = 1,
+        assoc = Parent.table_assoc, size = Parent.table_entries),
+        "Indexing policy of the PC table")
+    table_replacement_policy = Param.BaseReplacementPolicy(RandomRP(),
+        "Replacement policy of the PC table")
 
 class TaggedPrefetcher(QueuedPrefetcher):
     type = 'TaggedPrefetcher'

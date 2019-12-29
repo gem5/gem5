@@ -53,14 +53,37 @@
 
 #include "base/sat_counter.hh"
 #include "base/types.hh"
+#include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
+#include "mem/cache/tags/indexing_policies/set_associative.hh"
 #include "mem/packet.hh"
+#include "params/StridePrefetcherHashedSetAssociative.hh"
 
+class BaseIndexingPolicy;
 class BaseReplacementPolicy;
 struct StridePrefetcherParams;
 
 namespace Prefetcher {
+
+/**
+ * Override the default set associative to apply a specific hash function
+ * when extracting a set.
+ */
+class StridePrefetcherHashedSetAssociative : public SetAssociative
+{
+  protected:
+    uint32_t extractSet(const Addr addr) const override;
+    Addr extractTag(const Addr addr) const override;
+
+  public:
+    StridePrefetcherHashedSetAssociative(
+        const StridePrefetcherHashedSetAssociativeParams *p)
+      : SetAssociative(p)
+    {
+    }
+    ~StridePrefetcherHashedSetAssociative() = default;
+};
 
 class Stride : public Queued
 {
@@ -71,86 +94,43 @@ class Stride : public Queued
     /** Confidence threshold for prefetch generation. */
     const double threshConf;
 
-    const int pcTableAssoc;
-    const int pcTableSets;
-
     const bool useMasterId;
 
     const int degree;
 
-    /** Replacement policy used in the PC tables. */
-    BaseReplacementPolicy* replacementPolicy;
+    /**
+     * Information used to create a new PC table. All of them behave equally.
+     */
+    const struct PCTableInfo
+    {
+        const int assoc;
+        const int numEntries;
 
-    struct StrideEntry : public ReplaceableEntry
+        BaseIndexingPolicy* const indexingPolicy;
+        BaseReplacementPolicy* const replacementPolicy;
+
+        PCTableInfo(int assoc, int num_entries,
+            BaseIndexingPolicy* indexing_policy,
+            BaseReplacementPolicy* replacement_policy)
+          : assoc(assoc), numEntries(num_entries),
+            indexingPolicy(indexing_policy),
+            replacementPolicy(replacement_policy)
+        {
+        }
+    } pcTableInfo;
+
+    /** Tagged by hashed PCs. */
+    struct StrideEntry : public TaggedEntry
     {
         StrideEntry(const SatCounter& init_confidence);
 
-        /** Invalidate the entry */
-        void invalidate();
+        void invalidate() override;
 
-        Addr instAddr;
         Addr lastAddr;
-        bool isSecure;
         int stride;
         SatCounter confidence;
     };
-
-    class PCTable
-    {
-      public:
-        /**
-         * Default constructor. Create a table with given parameters.
-         *
-         * @param assoc Associativity of the table.
-         * @param sets Number of sets in the table.
-         * @param name Name of the prefetcher.
-         * @param replacementPolicy Replacement policy used by the table.
-         */
-        PCTable(int assoc, int sets, const std::string name,
-                BaseReplacementPolicy* replacementPolicy,
-                StrideEntry init_confidence);
-
-        /**
-         * Default destructor.
-         */
-        ~PCTable();
-
-        /**
-         * Search for an entry in the pc table.
-         *
-         * @param pc The PC to look for.
-         * @param is_secure True if the target memory space is secure.
-         * @return Pointer to the entry.
-         */
-        StrideEntry* findEntry(Addr pc, bool is_secure);
-
-        /**
-         * Find a replacement victim to make room for given PC.
-         *
-         * @param pc The PC value.
-         * @return The victimized entry.
-         */
-        StrideEntry* findVictim(Addr pc);
-
-      private:
-        const std::string name() {return _name; }
-        const int pcTableSets;
-        const std::string _name;
-        std::vector<std::vector<StrideEntry>> entries;
-
-        /**
-         * Replacement policy used by StridePrefetcher.
-         */
-        BaseReplacementPolicy* replacementPolicy;
-
-        /**
-         * PC hashing function to index sets in the table.
-         *
-         * @param pc The PC value.
-         * @return The set to which this PC maps.
-         */
-        Addr pcHash(Addr pc) const;
-    };
+    typedef AssociativeSet<StrideEntry> PCTable;
     std::unordered_map<int, PCTable> pcTables;
 
     /**

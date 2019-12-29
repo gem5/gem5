@@ -133,7 +133,7 @@ class BaseIndexingPolicy : public SimObject
      * @param addr The address to get the tag from.
      * @return The tag of the address.
      */
-    Addr extractTag(const Addr addr) const;
+    virtual Addr extractTag(const Addr addr) const;
 
     /**
      * Find all possible entries for insertion and replacement of an address.
