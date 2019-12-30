@@ -48,11 +48,11 @@ DeltaCorrelatingPredictionTables::DCPTEntry::invalidate()
 {
     TaggedEntry::invalidate();
 
-    for (auto &delta : deltas) {
-        delta = 0;
+    deltas.flush();
+    while (!deltas.full()) {
+        deltas.push_back(0);
     }
     lastAddress = 0;
-    deltaPointer = 0;
 }
 
 void
@@ -74,8 +74,7 @@ DeltaCorrelatingPredictionTables::DCPTEntry::addAddress(Addr address,
                 delta = 0;
             }
         }
-        deltas[deltaPointer] = delta;
-        deltaPointer = (deltaPointer + 1) % deltas.size();
+        deltas.push_back(delta);
         lastAddress = address;
     }
 }
@@ -84,15 +83,14 @@ void
 DeltaCorrelatingPredictionTables::DCPTEntry::getCandidates(
     std::vector<Queued::AddrPriority> &pfs, unsigned int mask) const
 {
-    // most recent index
-    unsigned int last = (deltaPointer - 1) % deltas.size();
-    // second most recent index
-    unsigned int last_prev = (deltaPointer - 2) % deltas.size();
-    int delta_0 = deltas[last_prev];
-    int delta_1 = deltas[last];
+    assert(deltas.full());
+
+    // Get the two most recent deltas
+    const int delta_penultimate = *(deltas.end() - 2);
+    const int delta_last = *(deltas.end() - 1);
 
     // a delta 0 means that it overflowed, we can not match it
-    if (delta_0 == 0 || delta_1 == 0) {
+    if (delta_last == 0 || delta_penultimate == 0) {
         return;
     }
 
@@ -100,26 +98,22 @@ DeltaCorrelatingPredictionTables::DCPTEntry::getCandidates(
     // delta circular array, if found, start issuing prefetches using the
     // remaining deltas (adding each delta to the last Addr to generate the
     // prefetched address.
-
-    // oldest index
-    int idx_0 = deltaPointer + 1;
-    // second oldest index
-    int idx_1 = deltaPointer + 2;
-    for (int i = 0; i < deltas.size() - 2; i += 1) {
-        int this_delta_0 = deltas[(idx_0 + i) % deltas.size()];
-        int this_delta_1 = deltas[(idx_1 + i) % deltas.size()];
-        if ((this_delta_0 >> mask) == (delta_0 >> mask) &&
-            (this_delta_1 >> mask) == (delta_1 >> mask)) {
+    auto it = deltas.begin();
+    for (; it != (deltas.end() - 2); ++it) {
+        const int prev_delta_penultimate = *it;
+        const int prev_delta_last = *(it + 1);
+        if ((prev_delta_penultimate >> mask) == (delta_penultimate >> mask) &&
+            (prev_delta_last >> mask) == (delta_last >> mask)) {
+            // Pattern found. Skip the matching pair and issue prefetches with
+            // the remaining deltas
+            it += 2;
             Addr addr = lastAddress;
-            // Pattern found, issue prefetches with the remaining deltas after
-            // this pair
-            i += 2; // skip the matching pair
-            do {
-                int pf_delta = deltas[(idx_0 + i) % deltas.size()];
+            while (it != deltas.end()) {
+                const int pf_delta = *(it++);
                 addr += pf_delta;
                 pfs.push_back(Queued::AddrPriority(addr, 0));
-                i += 1;
-            } while (i < deltas.size() - 2);
+            }
+            break;
         }
     }
 }
