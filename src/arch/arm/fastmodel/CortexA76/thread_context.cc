@@ -30,6 +30,7 @@
 #include "arch/arm/fastmodel/CortexA76/thread_context.hh"
 
 #include "arch/arm/fastmodel/iris/memory_spaces.hh"
+#include "arch/arm/utility.hh"
 #include "iris/detail/IrisCppAdapter.h"
 #include "iris/detail/IrisObjects.h"
 
@@ -100,7 +101,7 @@ CortexA76TC::getBpSpaceId(Addr pc) const
 {
     if (bpSpaceId == iris::IRIS_UINT64_MAX) {
         for (auto &space: memorySpaces) {
-            if (space.canonicalMsn == CurrentMsn) {
+            if (space.canonicalMsn == Iris::CurrentMsn) {
                 bpSpaceId = space.spaceId;
                 break;
             }
