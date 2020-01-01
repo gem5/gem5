@@ -180,7 +180,7 @@ CacheMemory::tryCacheAccess(Addr address, RubyRequestType type,
     if (loc != -1) {
         // Do we even have a tag match?
         AbstractCacheEntry* entry = m_cache[cacheSet][loc];
-        m_replacementPolicy_ptr->touch(replacement_data[cacheSet][loc]);
+        m_replacementPolicy_ptr->touch(entry->replacementData);
         m_cache[cacheSet][loc]->setLastAccess(curTick());
         data_ptr = &(entry->getDataBlk());
 
@@ -209,7 +209,7 @@ CacheMemory::testCacheAccess(Addr address, RubyRequestType type,
     if (loc != -1) {
         // Do we even have a tag match?
         AbstractCacheEntry* entry = m_cache[cacheSet][loc];
-        m_replacementPolicy_ptr->touch(replacement_data[cacheSet][loc]);
+        m_replacementPolicy_ptr->touch(entry->replacementData);
         m_cache[cacheSet][loc]->setLastAccess(curTick());
         data_ptr = &(entry->getDataBlk());
 
@@ -291,10 +291,13 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry)
             set[i]->m_locked = -1;
             m_tag_index[address] = i;
             set[i]->setPosition(cacheSet, i);
+            set[i]->replacementData = replacement_data[cacheSet][i];
+            set[i]->setLastAccess(curTick());
+
             // Call reset function here to set initial value for different
             // replacement policies.
-            m_replacementPolicy_ptr->reset(replacement_data[cacheSet][i]);
-            set[i]->setLastAccess(curTick());
+            m_replacementPolicy_ptr->reset(entry->replacementData);
+
             return entry;
         }
     }
@@ -304,17 +307,15 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry)
 void
 CacheMemory::deallocate(Addr address)
 {
-    assert(address == makeLineAddress(address));
-    assert(isTagPresent(address));
     DPRINTF(RubyCache, "address: %#x\n", address);
-    int64_t cacheSet = addressToCacheSet(address);
-    int loc = findTagInSet(cacheSet, address);
-    if (loc != -1) {
-        m_replacementPolicy_ptr->invalidate(replacement_data[cacheSet][loc]);
-        delete m_cache[cacheSet][loc];
-        m_cache[cacheSet][loc] = NULL;
-        m_tag_index.erase(address);
-    }
+    AbstractCacheEntry* entry = lookup(address);
+    assert(entry != nullptr);
+    m_replacementPolicy_ptr->invalidate(entry->replacementData);
+    uint32_t cache_set = entry->getSet();
+    uint32_t way = entry->getWay();
+    delete entry;
+    m_cache[cache_set][way] = NULL;
+    m_tag_index.erase(address);
 }
 
 // Returns with the physical address of the conflicting cache line
@@ -327,9 +328,6 @@ CacheMemory::cacheProbe(Addr address) const
     int64_t cacheSet = addressToCacheSet(address);
     std::vector<ReplaceableEntry*> candidates;
     for (int i = 0; i < m_cache_assoc; i++) {
-        // Pass the value of replacement_data to the cache entry so that we
-        // can use it in the getVictim() function.
-        m_cache[cacheSet][i]->replacementData = replacement_data[cacheSet][i];
         candidates.push_back(static_cast<ReplaceableEntry*>(
                                                        m_cache[cacheSet][i]));
     }
@@ -363,42 +361,36 @@ CacheMemory::lookup(Addr address) const
 void
 CacheMemory::setMRU(Addr address)
 {
-    int64_t cacheSet = addressToCacheSet(address);
-    int loc = findTagInSet(cacheSet, address);
-
-    if (loc != -1) {
-        m_replacementPolicy_ptr->touch(replacement_data[cacheSet][loc]);
-        m_cache[cacheSet][loc]->setLastAccess(curTick());
+    AbstractCacheEntry* entry = lookup(makeLineAddress(address));
+    if (entry != nullptr) {
+        m_replacementPolicy_ptr->touch(entry->replacementData);
+        entry->setLastAccess(curTick());
     }
 }
 
 void
-CacheMemory::setMRU(const AbstractCacheEntry *e)
+CacheMemory::setMRU(AbstractCacheEntry *entry)
 {
-    uint32_t cacheSet = e->getSet();
-    uint32_t loc = e->getWay();
-    m_replacementPolicy_ptr->touch(replacement_data[cacheSet][loc]);
-    m_cache[cacheSet][loc]->setLastAccess(curTick());
+    assert(entry != nullptr);
+    m_replacementPolicy_ptr->touch(entry->replacementData);
+    entry->setLastAccess(curTick());
 }
 
 void
 CacheMemory::setMRU(Addr address, int occupancy)
 {
-    int64_t cacheSet = addressToCacheSet(address);
-    int loc = findTagInSet(cacheSet, address);
-
-    if (loc != -1) {
+    AbstractCacheEntry* entry = lookup(makeLineAddress(address));
+    if (entry != nullptr) {
         // m_use_occupancy can decide whether we are using WeightedLRU
         // replacement policy. Depending on different replacement policies,
         // use different touch() function.
         if (m_use_occupancy) {
             static_cast<WeightedLRUPolicy*>(m_replacementPolicy_ptr)->touch(
-                replacement_data[cacheSet][loc], occupancy);
+                entry->replacementData, occupancy);
         } else {
-            m_replacementPolicy_ptr->
-                touch(replacement_data[cacheSet][loc]);
+            m_replacementPolicy_ptr->touch(entry->replacementData);
         }
-        m_cache[cacheSet][loc]->setLastAccess(curTick());
+        entry->setLastAccess(curTick());
     }
 }
 

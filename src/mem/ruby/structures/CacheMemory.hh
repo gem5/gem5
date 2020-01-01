@@ -111,8 +111,8 @@ class CacheMemory : public SimObject
     // Set this address to most recently used
     void setMRU(Addr address);
     void setMRU(Addr addr, int occupancy);
+    void setMRU(AbstractCacheEntry* entry);
     int getReplacementWeight(int64_t set, int64_t loc);
-    void setMRU(const AbstractCacheEntry *e);
 
     // Functions for locking and unlocking cache lines corresponding to the
     // provided address.  These are required for supporting atomic memory
