@@ -40,8 +40,6 @@ class PowerLinuxProcess : public PowerProcess
   public:
     PowerLinuxProcess(ProcessParams * params, ObjectFile *objFile);
 
-    SyscallDesc *getDesc(int callnum) override;
-
     void initState() override;
 
     void syscall(ThreadContext *tc, Fault *fault) override;

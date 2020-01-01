@@ -479,14 +479,9 @@ MipsLinuxProcess::MipsLinuxProcess(ProcessParams * params,
     MipsProcess(params, objFile)
 {}
 
-SyscallDesc*
-MipsLinuxProcess::getDesc(int callnum)
-{
-    return syscallDescs.get(callnum);
-}
-
 void
 MipsLinuxProcess::syscall(ThreadContext *tc, Fault *fault)
 {
-    doSyscall(tc->readIntReg(2), tc, fault);
+    MipsProcess::syscall(tc, fault);
+    syscallDescs.get(tc->readIntReg(2))->doSyscall(tc, fault);
 }

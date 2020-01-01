@@ -47,12 +47,6 @@ class SparcLinuxProcess
 
     /// 32 bit compatibility syscall descriptors, indexed by call number.
     static SyscallDescTable<Sparc32Process::SyscallABI> syscall32Descs;
-
-    SyscallDesc *getDesc(int callnum);
-    SyscallDesc *getDesc32(int callnum);
-
-    static const int Num_Syscall_Descs;
-    static const int Num_Syscall32_Descs;
 };
 
 /// A process with emulated SPARC/Linux syscalls.
@@ -61,12 +55,6 @@ class Sparc32LinuxProcess : public SparcLinuxProcess, public Sparc32Process
   public:
     /// Constructor.
     Sparc32LinuxProcess(ProcessParams * params, ObjectFile *objFile);
-
-    SyscallDesc*
-    getDesc(int callnum) override
-    {
-        return SparcLinuxProcess::getDesc32(callnum);
-    }
 
     void syscall(ThreadContext *tc, Fault *fault) override;
 
@@ -79,12 +67,6 @@ class Sparc64LinuxProcess : public SparcLinuxProcess, public Sparc64Process
   public:
     /// Constructor.
     Sparc64LinuxProcess(ProcessParams * params, ObjectFile *objFile);
-
-    SyscallDesc*
-    getDesc(int callnum) override
-    {
-        return SparcLinuxProcess::getDesc(callnum);
-    }
 
     void syscall(ThreadContext *tc, Fault *fault) override;
 

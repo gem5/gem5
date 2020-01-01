@@ -60,9 +60,6 @@ class ThreadContext;
 
 class Process : public SimObject
 {
-  protected:
-    void doSyscall(int64_t callnum, ThreadContext *tc, Fault *fault);
-
   public:
     Process(ProcessParams *params, EmulationPageTable *pTable,
             ObjectFile *obj_file);
@@ -74,8 +71,7 @@ class Process : public SimObject
     void initState() override;
     DrainState drain() override;
 
-    virtual void syscall(ThreadContext *tc, Fault *fault) = 0;
-    virtual SyscallDesc *getDesc(int callnum) = 0;
+    virtual void syscall(ThreadContext *tc, Fault *fault) { numSyscalls++; }
 
     inline uint64_t uid() { return _uid; }
     inline uint64_t euid() { return _euid; }

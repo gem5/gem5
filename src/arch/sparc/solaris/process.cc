@@ -352,14 +352,9 @@ SparcSolarisProcess::SparcSolarisProcess(ProcessParams * params,
     : Sparc64Process(params, objFile)
 {}
 
-SyscallDesc*
-SparcSolarisProcess::getDesc(int callnum)
-{
-    return syscallDescs.get(callnum);
-}
-
 void
 SparcSolarisProcess::syscall(ThreadContext *tc, Fault *fault)
 {
-    doSyscall(tc->readIntReg(1), tc, fault);
+    Sparc64Process::syscall(tc, fault);
+    syscallDescs.get(tc->readIntReg(1))->doSyscall(tc, fault);
 }

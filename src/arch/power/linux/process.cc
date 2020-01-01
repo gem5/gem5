@@ -446,12 +446,6 @@ PowerLinuxProcess::PowerLinuxProcess(ProcessParams * params,
     PowerProcess(params, objFile)
 {}
 
-SyscallDesc*
-PowerLinuxProcess::getDesc(int callnum)
-{
-    return syscallDescs.get(callnum);
-}
-
 void
 PowerLinuxProcess::initState()
 {
@@ -461,5 +455,6 @@ PowerLinuxProcess::initState()
 void
 PowerLinuxProcess::syscall(ThreadContext *tc, Fault *fault)
 {
-    doSyscall(tc->readIntReg(0), tc, fault);
+    PowerProcess::syscall(tc, fault);
+    syscallDescs.get(tc->readIntReg(0))->doSyscall(tc, fault);
 }

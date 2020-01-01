@@ -43,8 +43,6 @@ class SparcSolarisProcess : public Sparc64Process
     /// Constructor.
     SparcSolarisProcess(ProcessParams * params, ObjectFile *objFile);
 
-    SyscallDesc *getDesc(int callnum) override;
-
     /// The target system's hostname.
     static const char *hostname;
 

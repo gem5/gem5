@@ -87,8 +87,6 @@ class ArmLinuxProcess32 : public ArmProcess32, public ArmLinuxProcessBits
     /// A page to hold "kernel" provided functions. The name might be wrong.
     static const Addr commPage;
 
-    SyscallDesc* getDesc(int callnum) override;
-
     struct SyscallABI : public ArmProcess32::SyscallABI,
                         public ArmLinuxProcessBits::SyscallABI
     {};
@@ -103,7 +101,6 @@ class ArmLinuxProcess64 : public ArmProcess64, public ArmLinuxProcessBits
 
     void initState() override;
     void syscall(ThreadContext *tc, Fault *fault) override;
-    SyscallDesc* getDesc(int callnum) override;
 
     struct SyscallABI : public ArmProcess64::SyscallABI,
                         public ArmLinuxProcessBits::SyscallABI

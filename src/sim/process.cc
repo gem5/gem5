@@ -419,18 +419,6 @@ Process::map(Addr vaddr, Addr paddr, int size, bool cacheable)
     return true;
 }
 
-void
-Process::doSyscall(int64_t callnum, ThreadContext *tc, Fault *fault)
-{
-    numSyscalls++;
-
-    SyscallDesc *desc = getDesc(callnum);
-    if (desc == nullptr)
-        fatal("Syscall %d out of range", callnum);
-
-    desc->doSyscall(tc, fault);
-}
-
 EmulatedDriver *
 Process::findDriver(std::string filename)
 {

@@ -75,18 +75,6 @@ SparcLinuxObjectFileLoader loader;
 
 } // anonymous namespace
 
-SyscallDesc*
-SparcLinuxProcess::getDesc(int callnum)
-{
-    return syscallDescs.get(callnum);
-}
-
-SyscallDesc*
-SparcLinuxProcess::getDesc32(int callnum)
-{
-    return syscall32Descs.get(callnum);
-}
-
 Sparc32LinuxProcess::Sparc32LinuxProcess(ProcessParams * params,
                                          ObjectFile *objFile)
     : Sparc32Process(params, objFile)
@@ -95,7 +83,8 @@ Sparc32LinuxProcess::Sparc32LinuxProcess(ProcessParams * params,
 void
 Sparc32LinuxProcess::syscall(ThreadContext *tc, Fault *fault)
 {
-    doSyscall(tc->readIntReg(1), tc, fault);
+    Sparc32Process::syscall(tc, fault);
+    syscall32Descs.get(tc->readIntReg(1))->doSyscall(tc, fault);
 }
 
 void
@@ -118,7 +107,8 @@ Sparc64LinuxProcess::Sparc64LinuxProcess(ProcessParams * params,
 void
 Sparc64LinuxProcess::syscall(ThreadContext *tc, Fault *fault)
 {
-    doSyscall(tc->readIntReg(1), tc, fault);
+    Sparc64Process::syscall(tc, fault);
+    syscallDescs.get(tc->readIntReg(1))->doSyscall(tc, fault);
 }
 
 void

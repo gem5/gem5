@@ -192,11 +192,15 @@ class SyscallDescTable
     }
 
     SyscallDesc
-    *get(int num)
+    *get(int num, bool fatal_if_missing=true)
     {
         auto it = _descs.find(num);
-        if (it == _descs.end())
-            return nullptr;
+        if (it == _descs.end()) {
+            if (fatal_if_missing)
+                fatal("Syscall %d out of range", num);
+            else
+                return nullptr;
+        }
         return &it->second;
     }
 };

@@ -861,30 +861,6 @@ ArmLinuxProcess64::ArmLinuxProcess64(ProcessParams * params,
 
 const Addr ArmLinuxProcess32::commPage = 0xffff0000;
 
-SyscallDesc*
-ArmLinuxProcess32::getDesc(int callnum)
-{
-    SyscallDesc *desc = syscallDescs32Low.get(callnum);
-    if (desc)
-        return desc;
-    desc = syscallDescs32Low.get(callnum);
-    if (desc)
-        return desc;
-    return privSyscallDescs32.get(callnum);
-}
-
-SyscallDesc*
-ArmLinuxProcess64::getDesc(int callnum)
-{
-    SyscallDesc *desc = syscallDescs64Low.get(callnum);
-    if (desc)
-        return desc;
-    desc = syscallDescs64Low.get(callnum);
-    if (desc)
-        return desc;
-    return privSyscallDescs64.get(callnum);
-}
-
 void
 ArmLinuxProcess32::initState()
 {
@@ -942,11 +918,27 @@ ArmLinuxProcess64::initState()
 void
 ArmLinuxProcess32::syscall(ThreadContext *tc, Fault *fault)
 {
-    doSyscall(tc->readIntReg(INTREG_R7), tc, fault);
+    ArmProcess32::syscall(tc, fault);
+
+    int num = tc->readIntReg(INTREG_R7);
+    SyscallDesc *desc = syscallDescs32Low.get(num, false);
+    if (!desc)
+        desc = syscallDescs32Low.get(num, false);
+    if (!desc)
+        desc = privSyscallDescs32.get(num);
+    desc->doSyscall(tc, fault);
 }
 
 void
 ArmLinuxProcess64::syscall(ThreadContext *tc, Fault *fault)
 {
-    doSyscall(tc->readIntReg(INTREG_X8), tc, fault);
+    ArmProcess64::syscall(tc, fault);
+
+    int num = tc->readIntReg(INTREG_X8);
+    SyscallDesc *desc = syscallDescs64Low.get(num, false);
+    if (!desc)
+        desc = syscallDescs64Low.get(num, false);
+    if (!desc)
+        desc = privSyscallDescs64.get(num);
+    desc->doSyscall(tc, fault);
 }

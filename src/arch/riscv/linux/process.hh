@@ -44,8 +44,6 @@ class RiscvLinuxProcess64 : public RiscvProcess64
     /// Constructor.
     RiscvLinuxProcess64(ProcessParams * params, ObjectFile *objFile);
 
-    SyscallDesc* getDesc(int callnum) override;
-
     /// The target system's hostname.
     static const char *hostname;
 
@@ -63,8 +61,6 @@ class RiscvLinuxProcess32 : public RiscvProcess32
   public:
     /// Constructor.
     RiscvLinuxProcess32(ProcessParams * params, ObjectFile *objFile);
-
-    SyscallDesc* getDesc(int callnum) override;
 
     /// The target system's hostname.
     static const char *hostname;
