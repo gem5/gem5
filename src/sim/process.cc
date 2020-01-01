@@ -428,7 +428,7 @@ Process::doSyscall(int64_t callnum, ThreadContext *tc, Fault *fault)
     if (desc == nullptr)
         fatal("Syscall %d out of range", callnum);
 
-    desc->doSyscall(callnum, tc, fault);
+    desc->doSyscall(tc, fault);
 }
 
 EmulatedDriver *

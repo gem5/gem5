@@ -121,248 +121,240 @@
 void warnUnsupportedOS(std::string syscall_name);
 
 /// Handler for unimplemented syscalls that we haven't thought about.
-SyscallReturn unimplementedFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn unimplementedFunc(SyscallDesc *desc, ThreadContext *tc);
 
 /// Handler for unimplemented syscalls that we never intend to
 /// implement (signal handling, etc.) and should not affect the correct
 /// behavior of the program.  Prints a warning.  Return success to the target
 /// program.
-SyscallReturn ignoreFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn ignoreFunc(SyscallDesc *desc, ThreadContext *tc);
 /// Like above, but only prints a warning once per syscall desc it's used with.
 SyscallReturn
-ignoreWarnOnceFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+ignoreWarnOnceFunc(SyscallDesc *desc, ThreadContext *tc);
 
 // Target fallocateFunc() handler.
-SyscallReturn fallocateFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn fallocateFunc(SyscallDesc *desc, ThreadContext *tc,
                             int tgt_fd, int mode, off_t offset, off_t len);
 
 /// Target exit() handler: terminate current context.
-SyscallReturn exitFunc(SyscallDesc *desc, int num, ThreadContext *tc,
-                       int status);
+SyscallReturn exitFunc(SyscallDesc *desc, ThreadContext *tc, int status);
 
 /// Target exit_group() handler: terminate simulation. (exit all threads)
-SyscallReturn exitGroupFunc(SyscallDesc *desc, int num, ThreadContext *tc,
-                            int status);
+SyscallReturn exitGroupFunc(SyscallDesc *desc, ThreadContext *tc, int status);
 
 /// Target set_tid_address() handler.
-SyscallReturn setTidAddressFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn setTidAddressFunc(SyscallDesc *desc, ThreadContext *tc,
                                 uint64_t tidPtr);
 
 /// Target getpagesize() handler.
-SyscallReturn getpagesizeFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn getpagesizeFunc(SyscallDesc *desc, ThreadContext *tc);
 
 /// Target brk() handler: set brk address.
-SyscallReturn brkFunc(SyscallDesc *desc, int num, ThreadContext *tc,
-                      Addr new_brk);
+SyscallReturn brkFunc(SyscallDesc *desc, ThreadContext *tc, Addr new_brk);
 
 /// Target close() handler.
-SyscallReturn closeFunc(SyscallDesc *desc, int num, ThreadContext *tc,
-                        int tgt_fd);
+SyscallReturn closeFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd);
 
 /// Target lseek() handler.
-SyscallReturn lseekFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn lseekFunc(SyscallDesc *desc, ThreadContext *tc,
                         int tgt_fd, uint64_t offs, int whence);
 
 /// Target _llseek() handler.
-SyscallReturn _llseekFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn _llseekFunc(SyscallDesc *desc, ThreadContext *tc,
                           int tgt_fd, uint64_t offset_high,
                           uint32_t offset_low, Addr result_ptr, int whence);
 
 /// Target munmap() handler.
-SyscallReturn munmapFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn munmapFunc(SyscallDesc *desc, ThreadContext *tc);
 
 /// Target shutdown() handler.
-SyscallReturn shutdownFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn shutdownFunc(SyscallDesc *desc, ThreadContext *tc,
                            int tgt_fd, int how);
 
 /// Target gethostname() handler.
-SyscallReturn gethostnameFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn gethostnameFunc(SyscallDesc *desc, ThreadContext *tc,
                               Addr buf_ptr, int name_len);
 
 /// Target getcwd() handler.
-SyscallReturn getcwdFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn getcwdFunc(SyscallDesc *desc, ThreadContext *tc,
                          Addr buf_ptr, unsigned long size);
 
 /// Target readlink() handler.
-SyscallReturn readlinkFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn readlinkFunc(SyscallDesc *desc, ThreadContext *tc,
                            Addr pathname, Addr buf, size_t bufsiz);
 
 /// Target unlink() handler.
-SyscallReturn unlinkFunc(SyscallDesc *desc, int num, ThreadContext *tc,
-                         Addr pathname);
+SyscallReturn unlinkFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname);
 
 /// Target link() handler
-SyscallReturn linkFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn linkFunc(SyscallDesc *desc, ThreadContext *tc,
                        Addr pathname, Addr new_pathname);
 
 /// Target symlink() handler.
-SyscallReturn symlinkFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn symlinkFunc(SyscallDesc *desc, ThreadContext *tc,
                           Addr pathname, Addr new_pathname);
 
 /// Target mkdir() handler.
-SyscallReturn mkdirFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn mkdirFunc(SyscallDesc *desc, ThreadContext *tc,
                         Addr pathname, mode_t mode);
 
 /// Target mknod() handler.
-SyscallReturn mknodFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn mknodFunc(SyscallDesc *desc, ThreadContext *tc,
                         Addr pathname, mode_t mode, dev_t dev);
 
 /// Target chdir() handler.
-SyscallReturn chdirFunc(SyscallDesc *desc, int num, ThreadContext *tc,
-                        Addr pathname);
+SyscallReturn chdirFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname);
 
 // Target rmdir() handler.
-SyscallReturn rmdirFunc(SyscallDesc *desc, int num, ThreadContext *tc,
-                        Addr pathname);
+SyscallReturn rmdirFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname);
 
 /// Target rename() handler.
-SyscallReturn renameFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn renameFunc(SyscallDesc *desc, ThreadContext *tc,
                          Addr oldpath, Addr newpath);
 
 
 /// Target truncate() handler.
-SyscallReturn truncateFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn truncateFunc(SyscallDesc *desc, ThreadContext *tc,
                            Addr pathname, off_t length);
 
 
 /// Target ftruncate() handler.
-SyscallReturn ftruncateFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn ftruncateFunc(SyscallDesc *desc, ThreadContext *tc,
                             int tgt_fd, off_t length);
 
 
 /// Target truncate64() handler.
-SyscallReturn truncate64Func(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn truncate64Func(SyscallDesc *desc, ThreadContext *tc,
                              Addr pathname, int64_t length);
 
 /// Target ftruncate64() handler.
-SyscallReturn ftruncate64Func(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn ftruncate64Func(SyscallDesc *desc, ThreadContext *tc,
                               int tgt_fd, int64_t length);
 
 /// Target umask() handler.
-SyscallReturn umaskFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn umaskFunc(SyscallDesc *desc, ThreadContext *tc);
 
 /// Target gettid() handler.
-SyscallReturn gettidFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn gettidFunc(SyscallDesc *desc, ThreadContext *tc);
 
 /// Target chown() handler.
-SyscallReturn chownFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn chownFunc(SyscallDesc *desc, ThreadContext *tc,
                         Addr pathname, uint32_t owner, uint32_t group);
 
 /// Target getpgrpFunc() handler.
-SyscallReturn getpgrpFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn getpgrpFunc(SyscallDesc *desc, ThreadContext *tc);
 
 /// Target setpgid() handler.
-SyscallReturn setpgidFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn setpgidFunc(SyscallDesc *desc, ThreadContext *tc,
                           int pid, int pgid);
 
 /// Target fchown() handler.
-SyscallReturn fchownFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn fchownFunc(SyscallDesc *desc, ThreadContext *tc,
                          int tgt_fd, uint32_t owner, uint32_t group);
 
 /// Target dup() handler.
-SyscallReturn dupFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn dupFunc(SyscallDesc *desc, ThreadContext *tc,
                       int tgt_fd);
 
 /// Target dup2() handler.
-SyscallReturn dup2Func(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn dup2Func(SyscallDesc *desc, ThreadContext *tc,
                        int old_tgt_fd, int new_tgt_fd);
 
 /// Target fcntl() handler.
-SyscallReturn fcntlFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn fcntlFunc(SyscallDesc *desc, ThreadContext *tc,
                         int tgt_fd, int cmd, GuestABI::VarArgs<int> varargs);
 
 /// Target fcntl64() handler.
-SyscallReturn fcntl64Func(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn fcntl64Func(SyscallDesc *desc, ThreadContext *tc,
                           int tgt_fd, int cmd);
 
 /// Target pipe() handler.
-SyscallReturn pipeFunc(SyscallDesc *desc, int num, ThreadContext *tc,
-                       Addr tgt_addr);
+SyscallReturn pipeFunc(SyscallDesc *desc, ThreadContext *tc, Addr tgt_addr);
 
 /// Target pipe() handler.
-SyscallReturn pipe2Func(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn pipe2Func(SyscallDesc *desc, ThreadContext *tc,
                         Addr tgt_addr, int flags);
 
 /// Target getpid() handler.
-SyscallReturn getpidFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn getpidFunc(SyscallDesc *desc, ThreadContext *tc);
 
 // Target getpeername() handler.
-SyscallReturn getpeernameFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn getpeernameFunc(SyscallDesc *desc, ThreadContext *tc,
                               int tgt_fd, Addr sockAddrPtr, Addr addrlenPtr);
 
 // Target bind() handler.
-SyscallReturn bindFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn bindFunc(SyscallDesc *desc, ThreadContext *tc,
                        int tgt_fd, Addr buf_ptr, int addrlen);
 
 // Target listen() handler.
-SyscallReturn listenFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn listenFunc(SyscallDesc *desc, ThreadContext *tc,
                          int tgt_fd, int backlog);
 
 // Target connect() handler.
-SyscallReturn connectFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn connectFunc(SyscallDesc *desc, ThreadContext *tc,
                           int tgt_fd, Addr buf_ptr, int addrlen);
 
 #if defined(SYS_getdents)
 // Target getdents() handler.
-SyscallReturn getdentsFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn getdentsFunc(SyscallDesc *desc, ThreadContext *tc,
                            int tgt_fd, Addr buf_ptr, unsigned count);
 #endif
 
 #if defined(SYS_getdents64)
 // Target getdents() handler.
-SyscallReturn getdents64Func(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn getdents64Func(SyscallDesc *desc, ThreadContext *tc,
                              int tgt_fd, Addr buf_ptr, unsigned count);
 #endif
 
 // Target sendto() handler.
-SyscallReturn sendtoFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn sendtoFunc(SyscallDesc *desc, ThreadContext *tc,
                          int tgt_fd, Addr bufrPtr, size_t bufrLen, int flags,
                          Addr addrPtr, socklen_t addrLen);
 
 // Target recvfrom() handler.
-SyscallReturn recvfromFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn recvfromFunc(SyscallDesc *desc, ThreadContext *tc,
                            int tgt_fd, Addr bufrPtr, size_t bufrLen,
                            int flags, Addr addrPtr, Addr addrlenPtr);
 
 // Target recvmsg() handler.
-SyscallReturn recvmsgFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
                           int tgt_fd, Addr msgPtr, int flags);
 
 // Target sendmsg() handler.
-SyscallReturn sendmsgFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn sendmsgFunc(SyscallDesc *desc, ThreadContext *tc,
                           int tgt_fd, Addr msgPtr, int flags);
 
 // Target getuid() handler.
-SyscallReturn getuidFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn getuidFunc(SyscallDesc *desc, ThreadContext *tc);
 
 /// Target getgid() handler.
-SyscallReturn getgidFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn getgidFunc(SyscallDesc *desc, ThreadContext *tc);
 
 /// Target getppid() handler.
-SyscallReturn getppidFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn getppidFunc(SyscallDesc *desc, ThreadContext *tc);
 
 /// Target geteuid() handler.
-SyscallReturn geteuidFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn geteuidFunc(SyscallDesc *desc, ThreadContext *tc);
 
 /// Target getegid() handler.
-SyscallReturn getegidFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn getegidFunc(SyscallDesc *desc, ThreadContext *tc);
 
 /// Target access() handler
-SyscallReturn accessFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn accessFunc(SyscallDesc *desc, ThreadContext *tc,
                          Addr pathname, mode_t mode);
 
 // Target getsockopt() handler.
-SyscallReturn getsockoptFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn getsockoptFunc(SyscallDesc *desc, ThreadContext *tc,
                              int tgt_fd, int level, int optname,
                              Addr valPtr, Addr lenPtr);
 
 // Target setsockopt() handler.
-SyscallReturn setsockoptFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn setsockoptFunc(SyscallDesc *desc, ThreadContext *tc,
                              int tgt_fd, int level, int optname,
                              Addr valPtr, socklen_t len);
 
 // Target getsockname() handler.
-SyscallReturn getsocknameFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn getsocknameFunc(SyscallDesc *desc, ThreadContext *tc,
                               int tgt_fd, Addr addrPtr, Addr lenPtr);
 
 /// Futex system call
@@ -370,7 +362,7 @@ SyscallReturn getsocknameFunc(SyscallDesc *desc, int num, ThreadContext *tc,
 /// Used by printf's in multi-threaded apps
 template <class OS>
 SyscallReturn
-futexFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+futexFunc(SyscallDesc *desc, ThreadContext *tc,
         Addr uaddr, int op, int val, int timeout, Addr uaddr2, int val3)
 {
     using namespace std;
@@ -503,7 +495,7 @@ futexFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 
 /// Pseudo Funcs  - These functions use a different return convension,
 /// returning a second value in a register other than the normal return register
-SyscallReturn pipePseudoFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+SyscallReturn pipePseudoFunc(SyscallDesc *desc, ThreadContext *tc);
 
 
 /// Approximate seconds since the epoch (1/1/1970).  About a billion,
@@ -699,8 +691,8 @@ copyOutStatfsBuf(PortProxy &mem, Addr addr,
 /// not TTYs to provide repeatable results.
 template <class OS>
 SyscallReturn
-ioctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-        int tgt_fd, unsigned req, Addr addr)
+ioctlFunc(SyscallDesc *desc, ThreadContext *tc,
+          int tgt_fd, unsigned req, Addr addr)
 {
     auto p = tc->getProcessPtr();
 
@@ -774,7 +766,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target open() handler.
 template <class OS>
 SyscallReturn
-openatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+openatFunc(SyscallDesc *desc, ThreadContext *tc,
            int tgt_dirfd, Addr pathname, int tgt_flags, int mode)
 {
     auto p = tc->getProcessPtr();
@@ -921,51 +913,50 @@ openatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target open() handler.
 template <class OS>
 SyscallReturn
-openFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+openFunc(SyscallDesc *desc, ThreadContext *tc,
          Addr pathname, int tgt_flags, int mode)
 {
-    return openatFunc<OS>(desc, callnum, tc, OS::TGT_AT_FDCWD,
-                      pathname, tgt_flags, mode);
+    return openatFunc<OS>(
+            desc, tc, OS::TGT_AT_FDCWD, pathname, tgt_flags, mode);
 }
 
 /// Target unlinkat() handler.
 template <class OS>
 SyscallReturn
-unlinkatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-             int dirfd, Addr pathname)
+unlinkatFunc(SyscallDesc *desc, ThreadContext *tc, int dirfd, Addr pathname)
 {
     if (dirfd != OS::TGT_AT_FDCWD)
         warn("unlinkat: first argument not AT_FDCWD; unlikely to work");
 
-    return unlinkFunc(desc, callnum, tc, pathname);
+    return unlinkFunc(desc, tc, pathname);
 }
 
 /// Target facessat() handler
 template <class OS>
 SyscallReturn
-faccessatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+faccessatFunc(SyscallDesc *desc, ThreadContext *tc,
               int dirfd, Addr pathname, int mode)
 {
     if (dirfd != OS::TGT_AT_FDCWD)
         warn("faccessat: first argument not AT_FDCWD; unlikely to work");
-    return accessFunc(desc, callnum, tc, pathname, mode);
+    return accessFunc(desc, tc, pathname, mode);
 }
 
 /// Target readlinkat() handler
 template <class OS>
 SyscallReturn
-readlinkatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+readlinkatFunc(SyscallDesc *desc, ThreadContext *tc,
                int dirfd, Addr pathname, Addr buf, size_t bufsiz)
 {
     if (dirfd != OS::TGT_AT_FDCWD)
         warn("openat: first argument not AT_FDCWD; unlikely to work");
-    return readlinkFunc(desc, callnum, tc, pathname, buf, bufsiz);
+    return readlinkFunc(desc, tc, pathname, buf, bufsiz);
 }
 
 /// Target renameat() handler.
 template <class OS>
 SyscallReturn
-renameatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+renameatFunc(SyscallDesc *desc, ThreadContext *tc,
              int olddirfd, Addr oldpath, int newdirfd, Addr newpath)
 {
     if (olddirfd != OS::TGT_AT_FDCWD)
@@ -974,13 +965,13 @@ renameatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
     if (newdirfd != OS::TGT_AT_FDCWD)
         warn("renameat: third argument not AT_FDCWD; unlikely to work");
 
-    return renameFunc(desc, callnum, tc, oldpath, newpath);
+    return renameFunc(desc, tc, oldpath, newpath);
 }
 
 /// Target sysinfo() handler.
 template <class OS>
 SyscallReturn
-sysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr info)
+sysinfoFunc(SyscallDesc *desc, ThreadContext *tc, Addr info)
 {
     auto process = tc->getProcessPtr();
 
@@ -998,8 +989,7 @@ sysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr info)
 /// Target chmod() handler.
 template <class OS>
 SyscallReturn
-chmodFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-          Addr pathname, mode_t mode)
+chmodFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, mode_t mode)
 {
     std::string path;
     auto process = tc->getProcessPtr();
@@ -1025,7 +1015,7 @@ chmodFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-pollFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+pollFunc(SyscallDesc *desc, ThreadContext *tc,
          Addr fdsPtr, int nfds, int tmout)
 {
     auto p = tc->getProcessPtr();
@@ -1099,8 +1089,7 @@ pollFunc(SyscallDesc *desc, int num, ThreadContext *tc,
 /// Target fchmod() handler.
 template <class OS>
 SyscallReturn
-fchmodFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-           int tgt_fd, uint32_t mode)
+fchmodFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, uint32_t mode)
 {
     auto p = tc->getProcessPtr();
 
@@ -1119,7 +1108,7 @@ fchmodFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target mremap() handler.
 template <class OS>
 SyscallReturn
-mremapFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+mremapFunc(SyscallDesc *desc, ThreadContext *tc,
         Addr start, uint64_t old_length, uint64_t new_length, uint64_t flags,
         GuestABI::VarArgs<uint64_t> varargs)
 {
@@ -1196,8 +1185,7 @@ mremapFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target stat() handler.
 template <class OS>
 SyscallReturn
-statFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-         Addr pathname, Addr bufPtr)
+statFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
 {
     std::string path;
     auto process = tc->getProcessPtr();
@@ -1223,8 +1211,7 @@ statFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target stat64() handler.
 template <class OS>
 SyscallReturn
-stat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
-           Addr pathname, Addr bufPtr)
+stat64Func(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
 {
     std::string path;
     auto process = tc->getProcessPtr();
@@ -1255,7 +1242,7 @@ stat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target fstatat64() handler.
 template <class OS>
 SyscallReturn
-fstatat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
+fstatat64Func(SyscallDesc *desc, ThreadContext *tc,
               int dirfd, Addr pathname, Addr bufPtr)
 {
     auto process = tc->getProcessPtr();
@@ -1289,8 +1276,7 @@ fstatat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target fstat64() handler.
 template <class OS>
 SyscallReturn
-fstat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
-            int tgt_fd, Addr bufPtr)
+fstat64Func(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, Addr bufPtr)
 {
     auto p = tc->getProcessPtr();
 
@@ -1319,8 +1305,7 @@ fstat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target lstat() handler.
 template <class OS>
 SyscallReturn
-lstatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-          Addr pathname, Addr bufPtr)
+lstatFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
 {
     std::string path;
     auto process = tc->getProcessPtr();
@@ -1345,8 +1330,7 @@ lstatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target lstat64() handler.
 template <class OS>
 SyscallReturn
-lstat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
-            Addr pathname, Addr bufPtr)
+lstat64Func(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
 {
     std::string path;
     auto process = tc->getProcessPtr();
@@ -1376,8 +1360,7 @@ lstat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target fstat() handler.
 template <class OS>
 SyscallReturn
-fstatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-          int tgt_fd, Addr bufPtr)
+fstatFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, Addr bufPtr)
 {
     auto p = tc->getProcessPtr();
 
@@ -1402,8 +1385,7 @@ fstatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target statfs() handler.
 template <class OS>
 SyscallReturn
-statfsFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-           Addr pathname, Addr bufPtr)
+statfsFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
 {
 #if defined(__linux__)
     std::string path;
@@ -1431,9 +1413,8 @@ statfsFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-cloneFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-          RegVal flags, RegVal newStack, Addr ptidPtr,
-          Addr ctidPtr, Addr tlsPtr)
+cloneFunc(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
+          Addr ptidPtr, Addr ctidPtr, Addr tlsPtr)
 {
     auto p = tc->getProcessPtr();
 
@@ -1547,19 +1528,16 @@ cloneFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-cloneBackwardsFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-                   RegVal flags, RegVal newStack, Addr ptidPtr,
-                   Addr tlsPtr, Addr ctidPtr)
+cloneBackwardsFunc(SyscallDesc *desc, ThreadContext *tc, RegVal flags,
+                   RegVal newStack, Addr ptidPtr, Addr tlsPtr, Addr ctidPtr)
 {
-    return cloneFunc<OS>(desc, callnum, tc, flags, newStack, ptidPtr,
-                         ctidPtr, tlsPtr);
+    return cloneFunc<OS>(desc, tc, flags, newStack, ptidPtr, ctidPtr, tlsPtr);
 }
 
 /// Target fstatfs() handler.
 template <class OS>
 SyscallReturn
-fstatfsFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-            int tgt_fd, Addr bufPtr)
+fstatfsFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, Addr bufPtr)
 {
     auto p = tc->getProcessPtr();
 
@@ -1582,7 +1560,7 @@ fstatfsFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target readv() handler.
 template <class OS>
 SyscallReturn
-readvFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+readvFunc(SyscallDesc *desc, ThreadContext *tc,
           int tgt_fd, uint64_t tiov_base, size_t count)
 {
     auto p = tc->getProcessPtr();
@@ -1619,7 +1597,7 @@ readvFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target writev() handler.
 template <class OS>
 SyscallReturn
-writevFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+writevFunc(SyscallDesc *desc, ThreadContext *tc,
            int tgt_fd, uint64_t tiov_base, size_t count)
 {
     auto p = tc->getProcessPtr();
@@ -1653,7 +1631,7 @@ writevFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target mmap() handler.
 template <class OS>
 SyscallReturn
-mmapFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+mmapFunc(SyscallDesc *desc, ThreadContext *tc,
          Addr start, uint64_t length, int prot, int tgt_flags,
          int tgt_fd, int offset)
 {
@@ -1818,7 +1796,7 @@ mmapFunc(SyscallDesc *desc, int num, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-pread64Func(SyscallDesc *desc, int num, ThreadContext *tc,
+pread64Func(SyscallDesc *desc, ThreadContext *tc,
             int tgt_fd, Addr bufPtr, int nbytes, int offset)
 {
     auto p = tc->getProcessPtr();
@@ -1839,7 +1817,7 @@ pread64Func(SyscallDesc *desc, int num, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-pwrite64Func(SyscallDesc *desc, int num, ThreadContext *tc,
+pwrite64Func(SyscallDesc *desc, ThreadContext *tc,
              int tgt_fd, Addr bufPtr, int nbytes, int offset)
 {
     auto p = tc->getProcessPtr();
@@ -1860,18 +1838,18 @@ pwrite64Func(SyscallDesc *desc, int num, ThreadContext *tc,
 /// Target mmap2() handler.
 template <class OS>
 SyscallReturn
-mmap2Func(SyscallDesc *desc, int num, ThreadContext *tc,
+mmap2Func(SyscallDesc *desc, ThreadContext *tc,
           Addr start, uint64_t length, int prot, int tgt_flags,
           int tgt_fd, int offset)
 {
-    return mmapFunc<OS>(desc, num, tc, start, length, prot, tgt_flags,
+    return mmapFunc<OS>(desc, tc, start, length, prot, tgt_flags,
                         tgt_fd, offset * tc->getSystemPtr()->getPageBytes());
 }
 
 /// Target getrlimit() handler.
 template <class OS>
 SyscallReturn
-getrlimitFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+getrlimitFunc(SyscallDesc *desc, ThreadContext *tc,
               unsigned resource, Addr rlim)
 {
     TypedBufferArg<typename OS::rlimit> rlp(rlim);
@@ -1910,7 +1888,7 @@ getrlimitFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-prlimitFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+prlimitFunc(SyscallDesc *desc, ThreadContext *tc,
             int pid, int resource, Addr n, Addr o)
 {
     if (pid != 0) {
@@ -1948,7 +1926,7 @@ prlimitFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target clock_gettime() function.
 template <class OS>
 SyscallReturn
-clock_gettimeFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+clock_gettimeFunc(SyscallDesc *desc, ThreadContext *tc,
                   int clk_id, Addr tp_ptr)
 {
     TypedBufferArg<typename OS::timespec> tp(tp_ptr);
@@ -1966,8 +1944,7 @@ clock_gettimeFunc(SyscallDesc *desc, int num, ThreadContext *tc,
 /// Target clock_getres() function.
 template <class OS>
 SyscallReturn
-clock_getresFunc(SyscallDesc *desc, int num, ThreadContext *tc,
-                 int clk_id, Addr tp_ptr)
+clock_getresFunc(SyscallDesc *desc, ThreadContext *tc, int clk_id, Addr tp_ptr)
 {
     TypedBufferArg<typename OS::timespec> tp(tp_ptr);
 
@@ -1983,7 +1960,7 @@ clock_getresFunc(SyscallDesc *desc, int num, ThreadContext *tc,
 /// Target gettimeofday() handler.
 template <class OS>
 SyscallReturn
-gettimeofdayFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+gettimeofdayFunc(SyscallDesc *desc, ThreadContext *tc,
                  Addr tv_ptr, Addr tz_ptr)
 {
     TypedBufferArg<typename OS::timeval> tp(tv_ptr);
@@ -2002,8 +1979,7 @@ gettimeofdayFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target utimes() handler.
 template <class OS>
 SyscallReturn
-utimesFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-           Addr pathname, Addr times)
+utimesFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr times)
 {
     std::string path;
     auto process = tc->getProcessPtr();
@@ -2033,7 +2009,7 @@ utimesFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-execveFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+execveFunc(SyscallDesc *desc, ThreadContext *tc,
            Addr pathname, Addr argv_mem_loc, Addr envp_mem_loc)
 {
     auto p = tc->getProcessPtr();
@@ -2122,7 +2098,7 @@ execveFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target getrusage() function.
 template <class OS>
 SyscallReturn
-getrusageFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+getrusageFunc(SyscallDesc *desc, ThreadContext *tc,
               int who /* THREAD, SELF, or CHILDREN */, Addr usage)
 {
     TypedBufferArg<typename OS::rusage> rup(usage);
@@ -2172,7 +2148,7 @@ getrusageFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 /// Target times() function.
 template <class OS>
 SyscallReturn
-timesFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr bufPtr)
+timesFunc(SyscallDesc *desc, ThreadContext *tc, Addr bufPtr)
 {
     TypedBufferArg<typename OS::tms> bufp(bufPtr);
 
@@ -2196,7 +2172,7 @@ timesFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr bufPtr)
 /// Target time() function.
 template <class OS>
 SyscallReturn
-timeFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr taddr)
+timeFunc(SyscallDesc *desc, ThreadContext *tc, Addr taddr)
 {
     typename OS::time_t sec, usec;
     getElapsedTimeMicro(sec, usec);
@@ -2213,8 +2189,7 @@ timeFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr taddr)
 
 template <class OS>
 SyscallReturn
-tgkillFunc(SyscallDesc *desc, int num, ThreadContext *tc,
-           int tgid, int tid, int sig)
+tgkillFunc(SyscallDesc *desc, ThreadContext *tc, int tgid, int tid, int sig)
 {
     /**
      * This system call is intended to allow killing a specific thread
@@ -2251,14 +2226,14 @@ tgkillFunc(SyscallDesc *desc, int num, ThreadContext *tc,
         return -ESRCH;
 
     if (sig == OS::TGT_SIGABRT)
-        exitGroupFunc(desc, num, tc, 0);
+        exitGroupFunc(desc, tc, 0);
 
     return 0;
 }
 
 template <class OS>
 SyscallReturn
-socketFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+socketFunc(SyscallDesc *desc, ThreadContext *tc,
            int domain, int type, int prot)
 {
     auto p = tc->getProcessPtr();
@@ -2275,7 +2250,7 @@ socketFunc(SyscallDesc *desc, int num, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-socketpairFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+socketpairFunc(SyscallDesc *desc, ThreadContext *tc,
                int domain, int type, int prot, Addr svPtr)
 {
     auto p = tc->getProcessPtr();
@@ -2298,7 +2273,7 @@ socketpairFunc(SyscallDesc *desc, int num, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-selectFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
+selectFunc(SyscallDesc *desc, ThreadContext *tc,
            int nfds_t, Addr fds_read_ptr, Addr fds_writ_ptr,
            Addr fds_excp_ptr, Addr time_val_ptr)
 {
@@ -2490,7 +2465,7 @@ selectFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-readFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+readFunc(SyscallDesc *desc, ThreadContext *tc,
         int tgt_fd, Addr buf_ptr, int nbytes)
 {
     auto p = tc->getProcessPtr();
@@ -2518,7 +2493,7 @@ readFunc(SyscallDesc *desc, int num, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-writeFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+writeFunc(SyscallDesc *desc, ThreadContext *tc,
         int tgt_fd, Addr buf_ptr, int nbytes)
 {
     auto p = tc->getProcessPtr();
@@ -2557,7 +2532,7 @@ writeFunc(SyscallDesc *desc, int num, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-wait4Func(SyscallDesc *desc, int num, ThreadContext *tc,
+wait4Func(SyscallDesc *desc, ThreadContext *tc,
           pid_t pid, Addr statPtr, int options, Addr rusagePtr)
 {
     auto p = tc->getProcessPtr();
@@ -2615,7 +2590,7 @@ success:
 
 template <class OS>
 SyscallReturn
-acceptFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+acceptFunc(SyscallDesc *desc, ThreadContext *tc,
            int tgt_fd, Addr addrPtr, Addr lenPtr)
 {
     struct sockaddr sa;
@@ -2682,7 +2657,7 @@ acceptFunc(SyscallDesc *desc, int num, ThreadContext *tc,
 /// Target eventfd() function.
 template <class OS>
 SyscallReturn
-eventfdFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+eventfdFunc(SyscallDesc *desc, ThreadContext *tc,
             unsigned initval, int in_flags)
 {
 #if defined(__linux__)

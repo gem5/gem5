@@ -35,11 +35,11 @@
 class ThreadContext;
 
 void
-SyscallDesc::doSyscall(int callnum, ThreadContext *tc, Fault *fault)
+SyscallDesc::doSyscall(ThreadContext *tc, Fault *fault)
 {
     DPRINTF_SYSCALL(Base, "Calling %s...\n", dumper(name(), tc));
 
-    SyscallReturn retval = executor(this, callnum, tc);
+    SyscallReturn retval = executor(this, tc);
 
     if (retval.needsRetry())
         DPRINTF_SYSCALL(Base, "Needs retry.\n", name());

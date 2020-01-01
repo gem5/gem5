@@ -89,7 +89,7 @@ X86LinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
+unameFunc(SyscallDesc *desc, ThreadContext *tc, Addr utsname)
 {
     auto process = tc->getProcessPtr();
     TypedBufferArg<Linux::utsname> name(utsname);
@@ -106,8 +106,7 @@ unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 }
 
 static SyscallReturn
-archPrctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-              int code, uint64_t addr)
+archPrctlFunc(SyscallDesc *desc, ThreadContext *tc, int code, uint64_t addr)
 {
     enum ArchPrctlCodes
     {
@@ -168,8 +167,7 @@ struct UserDesc64 {
 };
 
 static SyscallReturn
-setThreadArea32Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
-                    Addr userDescPtr)
+setThreadArea32Func(SyscallDesc *desc, ThreadContext *tc, Addr userDescPtr)
 {
     const int minTLSEntry = 6;
     const int numTLSEntries = 3;

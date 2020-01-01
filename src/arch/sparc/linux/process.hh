@@ -91,7 +91,7 @@ class Sparc64LinuxProcess : public SparcLinuxProcess, public Sparc64Process
     void handleTrap(int trapNum, ThreadContext *tc, Fault *fault) override;
 };
 
-SyscallReturn getresuidFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+SyscallReturn getresuidFunc(SyscallDesc *desc, ThreadContext *tc,
                             Addr ruid, Addr euid, Addr suid);
 
 } // namespace SparcISA

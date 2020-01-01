@@ -100,7 +100,7 @@ ArmLinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
+unameFunc32(SyscallDesc *desc, ThreadContext *tc, Addr utsname)
 {
     auto process = tc->getProcessPtr();
     TypedBufferArg<Linux::utsname> name(utsname);
@@ -117,7 +117,7 @@ unameFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
+unameFunc64(SyscallDesc *desc, ThreadContext *tc, Addr utsname)
 {
     auto process = tc->getProcessPtr();
     TypedBufferArg<Linux::utsname> name(utsname);
@@ -134,8 +134,7 @@ unameFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 
 /// Target set_tls() handler.
 static SyscallReturn
-setTLSFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc,
-             uint32_t tlsPtr)
+setTLSFunc32(SyscallDesc *desc, ThreadContext *tc, uint32_t tlsPtr)
 {
     tc->getVirtProxy().writeBlob(ArmLinuxProcess32::commPage + 0x0ff0,
                                 &tlsPtr, sizeof(tlsPtr));
@@ -144,8 +143,7 @@ setTLSFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc,
 }
 
 static SyscallReturn
-setTLSFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc,
-             uint32_t tlsPtr)
+setTLSFunc64(SyscallDesc *desc, ThreadContext *tc, uint32_t tlsPtr)
 {
     tc->setMiscReg(MISCREG_TPIDRRO_EL0, tlsPtr);
     return 0;

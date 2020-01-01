@@ -37,7 +37,7 @@ namespace SparcISA {
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
+unameFunc(SyscallDesc *desc, ThreadContext *tc, Addr utsname)
 {
     auto process = tc->getProcessPtr();
     TypedBufferArg<Linux::utsname> name(utsname);
@@ -55,7 +55,7 @@ unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 
 
 SyscallReturn
-getresuidFunc(SyscallDesc *desc, int num, ThreadContext *tc,
+getresuidFunc(SyscallDesc *desc, ThreadContext *tc,
               Addr ruid, Addr euid, Addr suid)
 {
     const uint64_t id = htobe(100);

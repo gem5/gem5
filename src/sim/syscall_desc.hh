@@ -55,8 +55,7 @@
 
 class SyscallDesc;
 
-SyscallReturn unimplementedFunc(SyscallDesc *desc, int num,
-                                ThreadContext *tc);
+SyscallReturn unimplementedFunc(SyscallDesc *desc, ThreadContext *tc);
 
 /**
  * This class provides the wrapper interface for the system call
@@ -70,11 +69,9 @@ class SyscallDesc {
      * Interface for invoking the system call funcion pointer. Note that
      * this acts as a gateway for all system calls and serves a good point
      * to add filters for behaviors or apply checks for all system calls.
-     * @param callnum Number associated with call (by operating system)
-     * @param proc Handle for the owning Process to pass information
      * @param tc Handle for owning ThreadContext to pass information
      */
-    void doSyscall(int callnum, ThreadContext *tc, Fault *fault);
+    void doSyscall(ThreadContext *tc, Fault *fault);
 
     std::string name() const { return _name; }
     int num() const { return _num; }
@@ -87,7 +84,7 @@ class SyscallDesc {
 
   protected:
     using Executor =
-        std::function<SyscallReturn(SyscallDesc *, int num, ThreadContext *)>;
+        std::function<SyscallReturn(SyscallDesc *, ThreadContext *)>;
     using Dumper = std::function<std::string(std::string, ThreadContext *)>;
 
     SyscallDesc(int num, const char *name, Executor exec, Dumper dump) :
@@ -116,12 +113,11 @@ class SyscallDescABI : public SyscallDesc
     // Aliases to make the code below a little more concise.
     template <typename ...Args>
     using ABIExecutor =
-        std::function<SyscallReturn(SyscallDesc *, int,
-                                    ThreadContext *, Args...)>;
+        std::function<SyscallReturn(SyscallDesc *, ThreadContext *, Args...)>;
 
     template <typename ...Args>
     using ABIExecutorPtr =
-        SyscallReturn (*)(SyscallDesc *, int, ThreadContext *, Args...);
+        SyscallReturn (*)(SyscallDesc *, ThreadContext *, Args...);
 
 
     // Wrap an executor with guest arguments with a normal executor that gets
@@ -130,13 +126,13 @@ class SyscallDescABI : public SyscallDesc
     static inline Executor
     buildExecutor(ABIExecutor<Args...> target)
     {
-        return [target](SyscallDesc *desc, int num,
+        return [target](SyscallDesc *desc,
                         ThreadContext *tc) -> SyscallReturn {
-            // Create a partial function which will stick desc and num to the
-            // front of the parameter list.
-            auto partial = [target,desc,num](
+            // Create a partial function which will stick desc to the front of
+            // the parameter list.
+            auto partial = [target,desc](
                     ThreadContext *tc, Args... args) -> SyscallReturn {
-                return target(desc, num, tc, args...);
+                return target(desc, tc, args...);
             };
 
             // Use invokeSimcall to gather the other arguments based on the

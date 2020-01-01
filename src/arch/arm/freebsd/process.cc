@@ -87,16 +87,15 @@ ArmFreebsdObjectFileLoader loader;
 } // anonymous namespace
 
 static SyscallReturn
-issetugidFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+issetugidFunc(SyscallDesc *desc, ThreadContext *tc)
 {
     return 0;
 }
 
 #if !defined ( __GNU_LIBRARY__ )
 static SyscallReturn
-sysctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-           Addr namep, size_t nameLen, Addr oldp, Addr oldlenp,
-           Addr newp, size_t newlen)
+sysctlFunc(SyscallDesc *desc, ThreadContext *tc, Addr namep, size_t nameLen,
+           Addr oldp, Addr oldlenp, Addr newp, size_t newlen)
 {
     uint64_t ret;
 

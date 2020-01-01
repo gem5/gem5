@@ -77,7 +77,7 @@ MipsLinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
+unameFunc(SyscallDesc *desc, ThreadContext *tc, Addr utsname)
 {
     auto process = tc->getProcessPtr();
     TypedBufferArg<Linux::utsname> name(utsname);
@@ -96,8 +96,8 @@ unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr utsname)
 /// borrowed from Tru64, the subcases that get used appear to be
 /// different in practice from those used by Tru64 processes.
 static SyscallReturn
-sys_getsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-                   unsigned op, unsigned bufPtr, unsigned nbytes)
+sys_getsysinfoFunc(SyscallDesc *desc, ThreadContext *tc, unsigned op,
+                   unsigned bufPtr, unsigned nbytes)
 {
     switch (op) {
       case 45:
@@ -120,8 +120,8 @@ sys_getsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 
 /// Target sys_setsysinfo() handler.
 static SyscallReturn
-sys_setsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
-                   unsigned op, Addr bufPtr, unsigned nbytes)
+sys_setsysinfoFunc(SyscallDesc *desc, ThreadContext *tc, unsigned op,
+                   Addr bufPtr, unsigned nbytes)
 {
     switch (op) {
 
@@ -145,7 +145,7 @@ sys_setsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
 }
 
 static SyscallReturn
-setThreadAreaFunc(SyscallDesc *desc, int callnum, ThreadContext *tc, Addr addr)
+setThreadAreaFunc(SyscallDesc *desc, ThreadContext *tc, Addr addr)
 {
     tc->setMiscRegNoEffect(MISCREG_TP_VALUE, addr);
     return 0;
