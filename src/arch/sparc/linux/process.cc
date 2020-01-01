@@ -78,17 +78,13 @@ SparcLinuxObjectFileLoader loader;
 SyscallDesc*
 SparcLinuxProcess::getDesc(int callnum)
 {
-    if (callnum < 0 || callnum >= Num_Syscall_Descs)
-        return NULL;
-    return &syscallDescs[callnum];
+    return syscallDescs.get(callnum);
 }
 
 SyscallDesc*
 SparcLinuxProcess::getDesc32(int callnum)
 {
-    if (callnum < 0 || callnum >= Num_Syscall32_Descs)
-        return NULL;
-    return &syscall32Descs[callnum];
+    return syscall32Descs.get(callnum);
 }
 
 Sparc32LinuxProcess::Sparc32LinuxProcess(ProcessParams * params,

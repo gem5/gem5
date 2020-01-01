@@ -103,16 +103,14 @@ typedef MultiLevelPageTable<LongModePTE<47, 39>,
                             LongModePTE<29, 21>,
                             LongModePTE<20, 12> > ArchPageTable;
 
-X86Process::X86Process(ProcessParams *params, ObjectFile *objFile,
-                       SyscallDesc *_syscallDescs, int _numSyscallDescs)
-    : Process(params, params->useArchPT ?
-                      static_cast<EmulationPageTable *>(
+X86Process::X86Process(ProcessParams *params, ObjectFile *objFile) :
+    Process(params, params->useArchPT ?
+                    static_cast<EmulationPageTable *>(
                               new ArchPageTable(params->name, params->pid,
                                                 params->system, PageBytes)) :
-                      new EmulationPageTable(params->name, params->pid,
-                                             PageBytes),
-              objFile),
-      syscallDescs(_syscallDescs), numSyscallDescs(_numSyscallDescs)
+                    new EmulationPageTable(params->name, params->pid,
+                                           PageBytes),
+            objFile)
 {
 }
 
@@ -124,11 +122,9 @@ void X86Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
     *process = *this;
 }
 
-X86_64Process::X86_64Process(ProcessParams *params, ObjectFile *objFile,
-                             SyscallDesc *_syscallDescs, int _numSyscallDescs)
-    : X86Process(params, objFile, _syscallDescs, _numSyscallDescs)
+X86_64Process::X86_64Process(ProcessParams *params, ObjectFile *objFile) :
+    X86Process(params, objFile)
 {
-
     vsyscallPage.base = 0xffffffffff600000ULL;
     vsyscallPage.size = PageBytes;
     vsyscallPage.vtimeOffset = 0x400;
@@ -145,9 +141,8 @@ X86_64Process::X86_64Process(ProcessParams *params, ObjectFile *objFile,
 }
 
 
-I386Process::I386Process(ProcessParams *params, ObjectFile *objFile,
-                         SyscallDesc *_syscallDescs, int _numSyscallDescs)
-    : X86Process(params, objFile, _syscallDescs, _numSyscallDescs)
+I386Process::I386Process(ProcessParams *params, ObjectFile *objFile) :
+    X86Process(params, objFile)
 {
     if (kvmInSE)
         panic("KVM CPU model does not support 32 bit processes");
@@ -168,14 +163,6 @@ I386Process::I386Process(ProcessParams *params, ObjectFile *objFile,
 
     memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
                                      next_thread_stack_base, mmap_end);
-}
-
-SyscallDesc*
-X86Process::getDesc(int callnum)
-{
-    if (callnum < 0 || callnum >= numSyscallDescs)
-        return NULL;
-    return &syscallDescs[callnum];
 }
 
 void

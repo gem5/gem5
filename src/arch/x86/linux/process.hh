@@ -46,14 +46,15 @@
 struct ProcessParams;
 struct ThreadContext;
 
-namespace X86ISA {
+namespace X86ISA
+{
 
 class X86_64LinuxProcess : public X86_64Process
 {
   public:
-    /// Constructor.
-    X86_64LinuxProcess(ProcessParams * params, ObjectFile *objFile);
+    using X86_64Process::X86_64Process;
     void syscall(ThreadContext *tc, Fault *fault) override;
+    SyscallDesc *getDesc(int callnum) override;
     void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *process,
                RegVal flags) override;
 
@@ -66,9 +67,9 @@ class X86_64LinuxProcess : public X86_64Process
 class I386LinuxProcess : public I386Process
 {
   public:
-    /// Constructor.
-    I386LinuxProcess(ProcessParams * params, ObjectFile *objFile);
+    using I386Process::I386Process;
     void syscall(ThreadContext *tc, Fault *fault) override;
+    SyscallDesc *getDesc(int callnum) override;
     void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *process,
                RegVal flags) override;
 

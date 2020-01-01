@@ -46,10 +46,8 @@ class PowerLinuxProcess : public PowerProcess
 
     void syscall(ThreadContext *tc, Fault *fault) override;
 
-    /// Array of syscall descriptors, indexed by call number.
-    static SyscallDescABI<SyscallABI> syscallDescs[];
-
-    const int Num_Syscall_Descs;
+    /// Syscall descriptors, indexed by call number.
+    static SyscallDescTable<SyscallABI> syscallDescs;
 };
 
 #endif // __POWER_LINUX_PROCESS_HH__

@@ -43,8 +43,10 @@
 #define __SIM_SYSCALL_DESC_HH__
 
 #include <functional>
+#include <map>
 #include <string>
 
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "cpu/thread_context.hh"
 #include "sim/guest_abi.hh"
@@ -74,7 +76,8 @@ class SyscallDesc {
      */
     void doSyscall(int callnum, ThreadContext *tc, Fault *fault);
 
-    std::string name() { return _name; }
+    std::string name() const { return _name; }
+    int num() const { return _num; }
 
     /**
      * For use within the system call executor if new threads are created and
@@ -87,13 +90,14 @@ class SyscallDesc {
         std::function<SyscallReturn(SyscallDesc *, int num, ThreadContext *)>;
     using Dumper = std::function<std::string(std::string, ThreadContext *)>;
 
-    SyscallDesc(const char *name, Executor exec, Dumper dump) :
-        _name(name), executor(exec), dumper(dump)
+    SyscallDesc(int num, const char *name, Executor exec, Dumper dump) :
+        _name(name), _num(num), executor(exec), dumper(dump)
     {}
 
   private:
     /** System call name (e.g., open, mmap, clone, socket, etc.) */
     std::string _name;
+    int _num;
 
     /** Mechanism for ISAs to connect to the emul function definitions */
     Executor executor;
@@ -155,24 +159,49 @@ class SyscallDescABI : public SyscallDesc
   public:
     // Constructors which plumb in buildExecutor.
     template <typename ...Args>
-    SyscallDescABI(const char *name, ABIExecutor<Args...> target) :
-        SyscallDesc(name, buildExecutor<Args...>(target),
-                          buildDumper<Args...>())
+    SyscallDescABI(int num, const char *name, ABIExecutor<Args...> target) :
+        SyscallDesc(num, name, buildExecutor<Args...>(target),
+                               buildDumper<Args...>())
     {}
 
     template <typename ...Args>
-    SyscallDescABI(const char *name, ABIExecutorPtr<Args...> target) :
-        SyscallDescABI(name, ABIExecutor<Args...>(target))
+    SyscallDescABI(int num, const char *name, ABIExecutorPtr<Args...> target) :
+        SyscallDescABI(num, name, ABIExecutor<Args...>(target))
     {}
 
-    SyscallDescABI(const char *name) :
-        SyscallDescABI(name, ABIExecutor<>(unimplementedFunc))
+    SyscallDescABI(int num, const char *name) :
+        SyscallDescABI(num, name, ABIExecutor<>(unimplementedFunc))
     {}
 
     void
     returnInto(ThreadContext *tc, const SyscallReturn &ret) override
     {
         GuestABI::Result<ABI, SyscallReturn>::store(tc, ret);
+    }
+};
+
+template <typename ABI>
+class SyscallDescTable
+{
+  private:
+    std::map<int, SyscallDescABI<ABI>> _descs;
+
+  public:
+    SyscallDescTable(std::initializer_list<SyscallDescABI<ABI>> descs)
+    {
+        for (auto &desc: descs) {
+            auto res = _descs.insert({desc.num(), desc});
+            panic_if(!res.second, "Failed to insert desc %s", desc.name());
+        }
+    }
+
+    SyscallDesc
+    *get(int num)
+    {
+        auto it = _descs.find(num);
+        if (it == _descs.end())
+            return nullptr;
+        return &it->second;
     }
 };
 

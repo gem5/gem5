@@ -40,19 +40,6 @@
 class ArmFreebsdProcessBits
 {
   protected:
-    SyscallDesc* getFreebsdDesc(int callnum);
-
-    struct SyscallTable
-    {
-        int base;
-        SyscallDesc *descs;
-        int size;
-
-        SyscallDesc *getDesc(int offset) const;
-    };
-
-    std::vector<SyscallTable> syscallTables;
-
     struct SyscallABI {};
 };
 
