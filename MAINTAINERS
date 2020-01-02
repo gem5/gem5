@@ -62,6 +62,9 @@ dev-arm:
 
 ext: Components external to gem5
 
+fastmodel: Changes relating to ARM Fast Models
+  Gabe Black <gabeblack@google.com>
+
 gpu-compute:
   Tony Gutierrez <anthony.gutierrez@amd.com>
 
