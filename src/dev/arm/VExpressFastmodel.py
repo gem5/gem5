@@ -51,4 +51,4 @@ class VExpressFastmodel(VExpress_GEM5_Base):
     def setupBootLoader(self, cur_sys, loc):
         super(VExpressFastmodel,self).setupBootLoader(cur_sys, loc)
         # Override the boot_loader setting
-        cur_sys.boot_loader = [ loc('boot_emm_v2.arm64') ]
+        cur_sys.boot_loader = [ loc('boot_v2.arm64') ]

@@ -1,4 +1,4 @@
-# Copyright (c) 2011 ARM Limited
+# Copyright (c) 2011, 2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -52,7 +52,7 @@ boot.o: simple.S
 	$(CC) -mfloat-abi=softfp -march=armv7-a -fno-builtin -nostdinc -o $@ -c $<
 
 boot.arm: boot.o
-	$(LD) -o $@ -N -Ttext 0x80000000 $< -non_shared -static
+	$(LD) -o $@ -N -Ttext 0x00000010 $< -non_shared -static
 boot_emm.arm: boot.o
 	$(LD) -o $@ -N -Ttext 0x00000010 $< -non_shared -static
 

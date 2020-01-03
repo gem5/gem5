@@ -252,7 +252,7 @@ run_cmd("compile arm64 bootloader",
     ["make"])
 run_cmd("copy arm64 bootloader",
     bootloader_arm64_dir,
-    ["cp", "boot_emm.arm64", binaries_dir])
+    ["cp", "boot.arm64", "boot_emm.arm64", "boot_v2.arm64", binaries_dir])
 
 # Build bootloaders arm
 bootloader_arm_dir = gem5_dir + "/system/arm/simple_bootloader"

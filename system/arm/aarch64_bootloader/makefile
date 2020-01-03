@@ -1,4 +1,4 @@
-# Copyright (c) 2019 ARM Limited
+# Copyright (c) 2019-2020 ARM Limited
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -41,13 +41,16 @@ LDFLAGS = -N -Ttext 0x00000010 -non_shared -static
 
 .PHONY: all clean install mkdir
 
-all: mkdir $(BUILDDIR)/boot_emm.arm64 $(BUILDDIR)/boot_emm_v2.arm64
+all: mkdir $(BUILDDIR)/boot_emm.arm64 \
+	$(BUILDDIR)/boot.arm64  \
+	$(BUILDDIR)/boot_v2.arm64
 
 #v1 has a GIC V2
 $(BUILDDIR)/boot_emm.o: CPPFLAGS += -UGICV3 -DGIC_CPU_BASE=0x2c002000
+$(BUILDDIR)/boot.o: CPPFLAGS += -UGICV3 -DGIC_CPU_BASE=0x2c002000
 
 #V2 has a GIC V3
-$(BUILDDIR)/boot_emm_v2.o: CPPFLAGS += -DGICV3 -DGIC_REDIST_BASE=0x2c010000
+$(BUILDDIR)/boot_v2.o: CPPFLAGS += -DGICV3 -DGIC_REDIST_BASE=0x2c010000
 
 $(BUILDDIR)/%.arm64: $(BUILDDIR)/%.o
 	$(LD) -o $@ $< $(LDFLAGS)
@@ -57,11 +60,14 @@ $(BUILDDIR)/%.o: boot.S
 
 install:
 	mkdir -p $(DESTDIR)
-	install -m 644 $(BUILDDIR)/boot_emm.arm64 $(BUILDDIR)/boot_emm_v2.arm64 $(DESTDIR)/.
+	install -m 644 $(BUILDDIR)/boot_emm.arm64 \
+		$(BUILDDIR)/boot.arm64 \
+		$(BUILDDIR)/boot_v2.arm64 \
+		$(DESTDIR)/.
 
 mkdir:
 	mkdir -p $(BUILDDIR)
 
 clean:
 	rm -f $(BUILDDIR)/*.o
-	rm -f $(BUILDDIR)/boot_emm.arm64 $(BUILDDIR)/boot_emm_v2.arm64
+	rm -f $(BUILDDIR)/boot_emm.arm64 $(BUILDDIR)/boot.arm64 $(BUILDDIR)/boot_v2.arm64
