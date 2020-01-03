@@ -48,7 +48,7 @@ LD=$(CROSS_COMPILE)ld
 
 all: boot.arm boot_emm.arm
 
-boot.o: simple.S
+boot.o: boot.S
 	$(CC) -mfloat-abi=softfp -march=armv7-a -fno-builtin -nostdinc -o $@ -c $<
 
 boot.arm: boot.o
@@ -57,7 +57,7 @@ boot_emm.arm: boot.o
 	$(LD) -o $@ -N -Ttext 0x00000010 $< -non_shared -static
 
 
-clean:	
+clean:
 	$(RM) -f *.o boot.arm boot_emm.arm
 
 .PHONY: all clean
