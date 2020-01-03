@@ -92,12 +92,12 @@ class Port
      */
     Port(const std::string& _name, PortID _id);
 
+  public:
+
     /**
      * Virtual destructor due to inheritance.
      */
     virtual ~Port();
-
-  public:
 
     /** Return a reference to this port's peer. */
     Port &getPeer() { return *_peer; }
