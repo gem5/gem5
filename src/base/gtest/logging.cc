@@ -61,7 +61,7 @@ class GTestExitLogger : public Logger
     void
     log(const Loc &loc, std::string s) override
     {
-        ADD_FAILURE_AT(loc.file, loc.line) << s;
+        std::cerr << loc.file << ":" << loc.line << ": " << s;
     }
     // Throw an exception to escape down to the gtest framework.
     void exit() override { throw GTestException(); }
