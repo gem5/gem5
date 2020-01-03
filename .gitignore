@@ -21,10 +21,10 @@ m5out
 /util/term/m5term
 /system/arm/dt/*.dtb
 /system/arm/dt/.gen
-/system/arm/simple_bootloader/*.o
-/system/arm/simple_bootloader/boot.arm
-/system/arm/simple_bootloader/boot_emm.arm
-/system/arm/aarch64_bootloader/*.o
-/system/arm/aarch64_bootloader/boot.arm64
-/system/arm/aarch64_bootloader/boot_emm.arm64
-/system/arm/aarch64_bootloader/boot_v2.arm64
+/system/arm/bootloader/arm/*.o
+/system/arm/bootloader/arm/boot.arm
+/system/arm/bootloader/arm/boot_emm.arm
+/system/arm/bootloader/arm64/*.o
+/system/arm/bootloader/arm64/boot.arm64
+/system/arm/bootloader/arm64/boot_emm.arm64
+/system/arm/bootloader/arm64/boot_v2.arm64
