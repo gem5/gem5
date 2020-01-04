@@ -49,6 +49,12 @@ class ListenSocket
     bool listening;
     int fd;
 
+    /*
+     * cleanup resets the static variables back to their default values.
+     */
+    static void cleanup();
+
+
   public:
     ListenSocket();
     virtual ~ListenSocket();

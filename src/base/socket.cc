@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2020 The Regents of the University of California
+ * All rights reserved
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,6 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Bobby R. Bruce
  */
 
 #include "base/socket.hh"
@@ -48,6 +52,14 @@ bool ListenSocket::listeningDisabled = false;
 bool ListenSocket::anyListening = false;
 
 bool ListenSocket::bindToLoopback = false;
+
+void
+ListenSocket::cleanup()
+{
+    listeningDisabled = false;
+    anyListening = false;
+    bindToLoopback = false;
+}
 
 void
 ListenSocket::disableAll()

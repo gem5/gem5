@@ -70,6 +70,7 @@ Source('random.cc')
 if env['TARGET_ISA'] != 'null':
     Source('remote_gdb.cc')
 Source('socket.cc')
+GTest('socket.test', 'socket.test.cc', 'socket.cc')
 Source('statistics.cc')
 Source('str.cc')
 GTest('str.test', 'str.test.cc', 'str.cc')
