@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014,2017-2018 ARM Limited
+ * Copyright (c) 2012-2014,2017-2018,2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -208,6 +208,14 @@ class LSQUnit
         /** @} */
     };
     using LQEntry = LSQEntry;
+
+    /** Coverage of one address range with another */
+    enum class AddrRangeCoverage
+    {
+        PartialAddrRangeCoverage, /* Two ranges partly overlap */
+        FullAddrRangeCoverage, /* One range fully covers another */
+        NoAddrRangeCoverage /* Two ranges are disjoint */
+    };
 
   public:
     using LoadQueue = CircularQueue<LQEntry>;
@@ -707,6 +715,8 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
             bool lower_load_has_store_part = req_s < st_e;
             bool upper_load_has_store_part = req_e > st_s;
 
+            auto coverage = AddrRangeCoverage::NoAddrRangeCoverage;
+
             // If the store entry is not atomic (atomic does not have valid
             // data), the store has all of the data needed, and
             // the load is not LLSC, then
@@ -715,6 +725,29 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
                 store_has_lower_limit && store_has_upper_limit &&
                 !req->mainRequest()->isLLSC()) {
 
+                coverage = AddrRangeCoverage::FullAddrRangeCoverage;
+            } else if (
+                // This is the partial store-load forwarding case where a store
+                // has only part of the load's data and the load isn't LLSC
+                (!req->mainRequest()->isLLSC() &&
+                 ((store_has_lower_limit && lower_load_has_store_part) ||
+                  (store_has_upper_limit && upper_load_has_store_part) ||
+                  (lower_load_has_store_part && upper_load_has_store_part))) ||
+                // The load is LLSC, and the store has all or part of the
+                // load's data
+                (req->mainRequest()->isLLSC() &&
+                 ((store_has_lower_limit || upper_load_has_store_part) &&
+                  (store_has_upper_limit || lower_load_has_store_part))) ||
+                // The store entry is atomic and has all or part of the load's
+                // data
+                (store_it->instruction()->isAtomic() &&
+                 ((store_has_lower_limit || upper_load_has_store_part) &&
+                  (store_has_upper_limit || lower_load_has_store_part)))) {
+
+                coverage = AddrRangeCoverage::PartialAddrRangeCoverage;
+            }
+
+            if (coverage == AddrRangeCoverage::FullAddrRangeCoverage) {
                 // Get shift amount for offset into the store's data.
                 int shift_amt = req->mainRequest()->getVaddr() -
                     store_it->instruction()->effAddr;
@@ -761,24 +794,7 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
                 ++lsqForwLoads;
 
                 return NoFault;
-            } else if (
-                // This is the partial store-load forwarding case where a store
-                // has only part of the load's data and the load isn't LLSC
-                (!req->mainRequest()->isLLSC() &&
-                 ((store_has_lower_limit && lower_load_has_store_part) ||
-                  (store_has_upper_limit && upper_load_has_store_part) ||
-                  (lower_load_has_store_part && upper_load_has_store_part))) ||
-                // The load is LLSC, and the store has all or part of the
-                // load's data
-                (req->mainRequest()->isLLSC() &&
-                 ((store_has_lower_limit || upper_load_has_store_part) &&
-                  (store_has_upper_limit || lower_load_has_store_part))) ||
-                // The store entry is atomic and has all or part of the load's
-                // data
-                (store_it->instruction()->isAtomic() &&
-                 ((store_has_lower_limit || upper_load_has_store_part) &&
-                  (store_has_upper_limit || lower_load_has_store_part)))) {
-
+            } else if (coverage == AddrRangeCoverage::PartialAddrRangeCoverage) {
                 // If it's already been written back, then don't worry about
                 // stalling on it.
                 if (store_it->completed()) {
