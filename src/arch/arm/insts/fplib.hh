@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2013, 2017-2018 ARM Limited
+ * Copyright (c) 2020 Metempsy Technology Consulting
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -174,6 +175,8 @@ T fplibInfinity(int sgn);
 /** Foating-point value for default NaN. */
 template <class T>
 T fplibDefaultNaN();
+/** Floating-point  JS convert to a signed integer, with rounding to zero. */
+uint32_t fplibFPToFixedJS(uint64_t op, FPSCR &fpscr, bool Is64, uint8_t &nz);
 
 /* Function specializations... */
 template <>

@@ -2761,6 +2761,14 @@ let {{
                         return new VcvtSIntFpD(machInst, vd, vm);
                     }
                 }
+              case 0x9:
+                if (bits(machInst, 31, 28) != 0xF
+                    && bits(machInst, 27, 23) == 0x1D) {
+                    vd = (IntRegIndex)(bits(machInst, 22) |
+                         (bits(machInst, 15, 12) << 1));
+                    return new VjcvtSFixedFpD(machInst, vd, vm);
+                }
+                break;
               case 0xa:
                 {
                     const bool half = (bits(machInst, 7) == 0);

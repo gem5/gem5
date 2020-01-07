@@ -837,6 +837,29 @@ let {{
         decoder_output += AA64FpRegRegImmOpConstructor.subst(fcvtFpFixedIop);
         exec_output    += BasicExecute.subst(fcvtFpFixedIop);
 
+    def buildFpJsCvtFixedOp():
+        global header_output, decoder_output, exec_output
+
+        fcvtFpFixedCode = vfp64EnabledCheckCode + '''
+            FPSCR fpscr = (FPSCR) FpscrExc;
+            uint64_t cOp1 = AA64FpOp1P0_uw | (uint64_t)AA64FpOp1P1_uw << 32;
+            uint8_t nz;
+            WDest = fplibFPToFixedJS(cOp1, fpscr, true, nz);
+            CondCodesNZ = nz;
+            CondCodesV = 0;
+            CondCodesC = 0;
+            FpscrExc = fpscr;
+        ''';
+
+        instName = "FJcvtFpSFixedDW"
+        mnem = "fjcvtzs"
+        fcvtFpFixedIop = InstObjParams(mnem, instName, "FpRegRegOp",
+                                       { "code": fcvtFpFixedCode,
+                                         "op_class": "FloatCvtOp" }, [])
+        header_output  += FpRegRegOpDeclare.subst(fcvtFpFixedIop);
+        decoder_output += AA64FpRegRegOpConstructor.subst(fcvtFpFixedIop);
+        exec_output    += BasicExecute.subst(fcvtFpFixedIop);
+
     # Generates the variants of the fixed to floating point instructions
     def buildFixedCvtFpOp(isSigned, isDouble, isXReg):
         global header_output, decoder_output, exec_output
@@ -886,6 +909,7 @@ let {{
             for isSigned in True, False:
                 buildFpCvtFixedOp(isSigned, isDouble, isXReg)
                 buildFixedCvtFpOp(isSigned, isDouble, isXReg)
+    buildFpJsCvtFixedOp();
 }};
 
 let {{
