@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2008 Princeton University
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2016 Georgia Institute of Technology
+ * Copyright (c) 2008 Princeton University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,12 +34,9 @@
 
 #include "mem/ruby/network/garnet2.0/CrossbarSwitch.hh"
 
-#include "base/stl_helpers.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet2.0/OutputUnit.hh"
 #include "mem/ruby/network/garnet2.0/Router.hh"
-
-using m5::stl_helpers::deletePointers;
 
 CrossbarSwitch::CrossbarSwitch(Router *router)
     : Consumer(router)
@@ -46,11 +44,6 @@ CrossbarSwitch::CrossbarSwitch(Router *router)
     m_router = router;
     m_num_vcs = m_router->get_num_vcs();
     m_crossbar_activity = 0;
-}
-
-CrossbarSwitch::~CrossbarSwitch()
-{
-    deletePointers(m_switch_buffer);
 }
 
 void
@@ -61,7 +54,7 @@ CrossbarSwitch::init()
     m_num_inports = m_router->get_num_inports();
     m_switch_buffer.resize(m_num_inports);
     for (int i = 0; i < m_num_inports; i++) {
-        m_switch_buffer[i] = new flitBuffer();
+        m_switch_buffer[i].reset(new flitBuffer());
     }
 }
 
