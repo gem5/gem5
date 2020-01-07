@@ -46,8 +46,6 @@ CrossbarSwitch::CrossbarSwitch(Router *router)
 void
 CrossbarSwitch::init()
 {
-    m_output_unit = m_router->get_outputUnit_ref();
-
     m_num_inports = m_router->get_num_inports();
     m_switch_buffer.resize(m_num_inports);
     for (int i = 0; i < m_num_inports; i++) {
@@ -82,7 +80,7 @@ CrossbarSwitch::wakeup()
 
             // This will take care of waking up the Network Link
             // in the next cycle
-            m_output_unit[outport]->insert_flit(t_flit);
+            m_router->getOutputUnit(outport)->insert_flit(t_flit);
             m_switch_buffer[inport]->getTopFlit();
             m_crossbar_activity++;
         }

@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2008 Princeton University
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2016 Georgia Institute of Technology
+ * Copyright (c) 2008 Princeton University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,8 +81,6 @@ class SwitchAllocator : public Consumer
     std::vector<int> m_round_robin_inport;
     std::vector<std::vector<bool>> m_port_requests;
     std::vector<std::vector<int>> m_vc_winners; // a list for each outport
-    std::vector<InputUnit *> m_input_unit;
-    std::vector<OutputUnit *> m_output_unit;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET2_0_SWITCHALLOCATOR_HH__

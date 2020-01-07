@@ -66,7 +66,6 @@ class CrossbarSwitch : public Consumer
     double m_crossbar_activity;
     Router *m_router;
     std::vector<std::unique_ptr<flitBuffer>> m_switch_buffer;
-    std::vector<OutputUnit *> m_output_unit;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET2_0_CROSSBARSWITCH_HH__

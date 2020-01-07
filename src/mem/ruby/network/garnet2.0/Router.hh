@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2008 Princeton University
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2016 Georgia Institute of Technology
+ * Copyright (c) 2008 Princeton University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,13 +33,17 @@
 #define __MEM_RUBY_NETWORK_GARNET2_0_ROUTER_HH__
 
 #include <iostream>
+#include <memory>
 #include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/BasicRouter.hh"
 #include "mem/ruby/network/garnet2.0/CommonTypes.hh"
+#include "mem/ruby/network/garnet2.0/CrossbarSwitch.hh"
 #include "mem/ruby/network/garnet2.0/GarnetNetwork.hh"
+#include "mem/ruby/network/garnet2.0/RoutingUnit.hh"
+#include "mem/ruby/network/garnet2.0/SwitchAllocator.hh"
 #include "mem/ruby/network/garnet2.0/flit.hh"
 #include "params/GarnetRouter.hh"
 
@@ -46,9 +51,6 @@ class NetworkLink;
 class CreditLink;
 class InputUnit;
 class OutputUnit;
-class RoutingUnit;
-class SwitchAllocator;
-class CrossbarSwitch;
 class FaultModel;
 
 class Router : public BasicRouter, public Consumer
@@ -57,7 +59,7 @@ class Router : public BasicRouter, public Consumer
     typedef GarnetRouterParams Params;
     Router(const Params *p);
 
-    ~Router();
+    ~Router() = default;
 
     void wakeup();
     void print(std::ostream& out) const {};
@@ -83,8 +85,21 @@ class Router : public BasicRouter, public Consumer
     }
 
     GarnetNetwork* get_net_ptr()                    { return m_network_ptr; }
-    std::vector<InputUnit *>& get_inputUnit_ref()   { return m_input_unit; }
-    std::vector<OutputUnit *>& get_outputUnit_ref() { return m_output_unit; }
+
+    InputUnit*
+    getInputUnit(unsigned port)
+    {
+        assert(port < m_input_unit.size());
+        return m_input_unit[port].get();
+    }
+
+    OutputUnit*
+    getOutputUnit(unsigned port)
+    {
+        assert(port < m_output_unit.size());
+        return m_output_unit[port].get();
+    }
+
     PortDirection getOutportDirection(int outport);
     PortDirection getInportDirection(int inport);
 
@@ -115,14 +130,15 @@ class Router : public BasicRouter, public Consumer
 
   private:
     Cycles m_latency;
-    int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
+    int m_virtual_networks, m_vc_per_vnet, m_num_vcs;
     GarnetNetwork *m_network_ptr;
 
-    std::vector<InputUnit *> m_input_unit;
-    std::vector<OutputUnit *> m_output_unit;
-    RoutingUnit *m_routing_unit;
-    SwitchAllocator *m_sw_alloc;
-    CrossbarSwitch *m_switch;
+    RoutingUnit routingUnit;
+    SwitchAllocator switchAllocator;
+    CrossbarSwitch crossbarSwitch;
+
+    std::vector<std::shared_ptr<InputUnit>> m_input_unit;
+    std::vector<std::shared_ptr<OutputUnit>> m_output_unit;
 
     // Statistical variables required for power computations
     Stats::Scalar m_buffer_reads;
