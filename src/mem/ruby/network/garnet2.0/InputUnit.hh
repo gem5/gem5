@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2008 Princeton University
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2016 Georgia Institute of Technology
+ * Copyright (c) 2008 Princeton University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +47,7 @@ class InputUnit : public Consumer
 {
   public:
     InputUnit(int id, PortDirection direction, Router *router);
-    ~InputUnit();
+    ~InputUnit() = default;
 
     void wakeup();
     void print(std::ostream& out) const {};
@@ -56,43 +57,43 @@ class InputUnit : public Consumer
     inline void
     set_vc_idle(int vc, Cycles curTime)
     {
-        m_vcs[vc]->set_idle(curTime);
+        virtualChannels[vc].set_idle(curTime);
     }
 
     inline void
     set_vc_active(int vc, Cycles curTime)
     {
-        m_vcs[vc]->set_active(curTime);
+        virtualChannels[vc].set_active(curTime);
     }
 
     inline void
     grant_outport(int vc, int outport)
     {
-        m_vcs[vc]->set_outport(outport);
+        virtualChannels[vc].set_outport(outport);
     }
 
     inline void
     grant_outvc(int vc, int outvc)
     {
-        m_vcs[vc]->set_outvc(outvc);
+        virtualChannels[vc].set_outvc(outvc);
     }
 
     inline int
     get_outport(int invc)
     {
-        return m_vcs[invc]->get_outport();
+        return virtualChannels[invc].get_outport();
     }
 
     inline int
     get_outvc(int invc)
     {
-        return m_vcs[invc]->get_outvc();
+        return virtualChannels[invc].get_outvc();
     }
 
     inline Cycles
     get_enqueue_time(int invc)
     {
-        return m_vcs[invc]->get_enqueue_time();
+        return virtualChannels[invc].get_enqueue_time();
     }
 
     void increment_credit(int in_vc, bool free_signal, Cycles curTime);
@@ -100,28 +101,28 @@ class InputUnit : public Consumer
     inline flit*
     peekTopFlit(int vc)
     {
-        return m_vcs[vc]->peekTopFlit();
+        return virtualChannels[vc].peekTopFlit();
     }
 
     inline flit*
     getTopFlit(int vc)
     {
-        return m_vcs[vc]->getTopFlit();
+        return virtualChannels[vc].getTopFlit();
     }
 
     inline bool
     need_stage(int vc, flit_stage stage, Cycles time)
     {
-        return m_vcs[vc]->need_stage(stage, time);
+        return virtualChannels[vc].need_stage(stage, time);
     }
 
     inline bool
     isReady(int invc, Cycles curTime)
     {
-        return m_vcs[invc]->isReady(curTime);
+        return virtualChannels[invc].isReady(curTime);
     }
 
-    flitBuffer* getCreditQueue() { return creditQueue; }
+    flitBuffer* getCreditQueue() { return &creditQueue; }
 
     inline void
     set_in_link(NetworkLink *link)
@@ -146,18 +147,16 @@ class InputUnit : public Consumer
     void resetStats();
 
   private:
+    Router *m_router;
     int m_id;
     PortDirection m_direction;
-    int m_num_vcs;
     int m_vc_per_vnet;
-
-    Router *m_router;
     NetworkLink *m_in_link;
     CreditLink *m_credit_link;
-    flitBuffer *creditQueue;
+    flitBuffer creditQueue;
 
     // Input Virtual channels
-    std::vector<VirtualChannel *> m_vcs;
+    std::vector<VirtualChannel> virtualChannels;
 
     // Statistical variables
     std::vector<double> m_num_buffer_writes;
