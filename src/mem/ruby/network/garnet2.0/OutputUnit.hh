@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2008 Princeton University
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2016 Georgia Institute of Technology
+ * Copyright (c) 2008 Princeton University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,17 +37,17 @@
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/garnet2.0/CommonTypes.hh"
-#include "mem/ruby/network/garnet2.0/CreditLink.hh"
 #include "mem/ruby/network/garnet2.0/NetworkLink.hh"
 #include "mem/ruby/network/garnet2.0/OutVcState.hh"
-#include "mem/ruby/network/garnet2.0/Router.hh"
-#include "mem/ruby/network/garnet2.0/flitBuffer.hh"
+
+class CreditLink;
+class Router;
 
 class OutputUnit : public Consumer
 {
   public:
     OutputUnit(int id, PortDirection direction, Router *router);
-    ~OutputUnit();
+    ~OutputUnit() = default;
     void set_out_link(NetworkLink *link);
     void set_credit_link(CreditLink *credit_link);
     void wakeup();
@@ -63,7 +64,7 @@ class OutputUnit : public Consumer
     int
     get_credit_count(int vc)
     {
-        return m_outvc_state[vc]->get_credit_count();
+        return outVcState[vc].get_credit_count();
     }
 
     inline int
@@ -75,36 +76,31 @@ class OutputUnit : public Consumer
     inline void
     set_vc_state(VC_state_type state, int vc, Cycles curTime)
     {
-      m_outvc_state[vc]->setState(state, curTime);
+      outVcState[vc].setState(state, curTime);
     }
 
     inline bool
     is_vc_idle(int vc, Cycles curTime)
     {
-        return (m_outvc_state[vc]->isInState(IDLE_, curTime));
+        return (outVcState[vc].isInState(IDLE_, curTime));
     }
 
-    inline void
-    insert_flit(flit *t_flit)
-    {
-        m_out_buffer->insert(t_flit);
-        m_out_link->scheduleEventAbsolute(m_router->clockEdge(Cycles(1)));
-    }
+    void insert_flit(flit *t_flit);
 
     uint32_t functionalWrite(Packet *pkt);
 
   private:
+    Router *m_router;
     int m_id;
     PortDirection m_direction;
-    int m_num_vcs;
     int m_vc_per_vnet;
-    Router *m_router;
     NetworkLink *m_out_link;
     CreditLink *m_credit_link;
 
-    flitBuffer *m_out_buffer; // This is for the network link to consume
-    std::vector<OutVcState *> m_outvc_state; // vc state of downstream router
-
+    // This is for the network link to consume
+    flitBuffer outBuffer;
+    // vc state of downstream router
+    std::vector<OutVcState> outVcState;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET2_0_OUTPUTUNIT_HH__

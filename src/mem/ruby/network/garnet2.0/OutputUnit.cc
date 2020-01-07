@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2008 Princeton University
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2016 Georgia Institute of Technology
+ * Copyright (c) 2008 Princeton University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,33 +31,21 @@
 
 #include "mem/ruby/network/garnet2.0/OutputUnit.hh"
 
-#include "base/stl_helpers.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet2.0/Credit.hh"
+#include "mem/ruby/network/garnet2.0/CreditLink.hh"
 #include "mem/ruby/network/garnet2.0/Router.hh"
-
-using namespace std;
-using m5::stl_helpers::deletePointers;
+#include "mem/ruby/network/garnet2.0/flitBuffer.hh"
 
 OutputUnit::OutputUnit(int id, PortDirection direction, Router *router)
-    : Consumer(router)
+  : Consumer(router), m_router(router), m_id(id), m_direction(direction),
+    m_vc_per_vnet(m_router->get_vc_per_vnet())
 {
-    m_id = id;
-    m_direction = direction;
-    m_router = router;
-    m_num_vcs = m_router->get_num_vcs();
-    m_vc_per_vnet = m_router->get_vc_per_vnet();
-    m_out_buffer = new flitBuffer();
-
+    const int m_num_vcs = m_router->get_num_vcs();
+    outVcState.reserve(m_num_vcs);
     for (int i = 0; i < m_num_vcs; i++) {
-        m_outvc_state.push_back(new OutVcState(i, m_router->get_net_ptr()));
+        outVcState.emplace_back(i, m_router->get_net_ptr());
     }
-}
-
-OutputUnit::~OutputUnit()
-{
-    delete m_out_buffer;
-    deletePointers(m_outvc_state);
 }
 
 void
@@ -66,7 +55,7 @@ OutputUnit::decrement_credit(int out_vc)
             "outvc %d at time: %lld\n",
             m_router->get_id(), m_id, out_vc, m_router->curCycle());
 
-    m_outvc_state[out_vc]->decrement_credit();
+    outVcState[out_vc].decrement_credit();
 }
 
 void
@@ -76,7 +65,7 @@ OutputUnit::increment_credit(int out_vc)
             "outvc %d at time: %lld\n",
             m_router->get_id(), m_id, out_vc, m_router->curCycle());
 
-    m_outvc_state[out_vc]->increment_credit();
+    outVcState[out_vc].increment_credit();
 }
 
 // Check if the output VC (i.e., input VC at next router)
@@ -85,8 +74,8 @@ OutputUnit::increment_credit(int out_vc)
 bool
 OutputUnit::has_credit(int out_vc)
 {
-    assert(m_outvc_state[out_vc]->isInState(ACTIVE_, m_router->curCycle()));
-    return m_outvc_state[out_vc]->has_credit();
+    assert(outVcState[out_vc].isInState(ACTIVE_, m_router->curCycle()));
+    return outVcState[out_vc].has_credit();
 }
 
 
@@ -110,7 +99,7 @@ OutputUnit::select_free_vc(int vnet)
     int vc_base = vnet*m_vc_per_vnet;
     for (int vc = vc_base; vc < vc_base + m_vc_per_vnet; vc++) {
         if (is_vc_idle(vc, m_router->curCycle())) {
-            m_outvc_state[vc]->setState(ACTIVE_, m_router->curCycle());
+            outVcState[vc].setState(ACTIVE_, m_router->curCycle());
             return vc;
         }
     }
@@ -143,7 +132,7 @@ OutputUnit::wakeup()
 flitBuffer*
 OutputUnit::getOutQueue()
 {
-    return m_out_buffer;
+    return &outBuffer;
 }
 
 void
@@ -158,8 +147,15 @@ OutputUnit::set_credit_link(CreditLink *credit_link)
     m_credit_link = credit_link;
 }
 
+void
+OutputUnit::insert_flit(flit *t_flit)
+{
+    outBuffer.insert(t_flit);
+    m_out_link->scheduleEventAbsolute(m_router->clockEdge(Cycles(1)));
+}
+
 uint32_t
 OutputUnit::functionalWrite(Packet *pkt)
 {
-    return m_out_buffer->functionalWrite(pkt);
+    return outBuffer.functionalWrite(pkt);
 }
