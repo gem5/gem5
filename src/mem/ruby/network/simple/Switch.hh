@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2020 Inria
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -40,34 +41,33 @@
 #define __MEM_RUBY_NETWORK_SIMPLE_SWITCH_HH__
 
 #include <iostream>
+#include <list>
 #include <vector>
 
 #include "mem/packet.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/network/BasicRouter.hh"
+#include "mem/ruby/network/simple/PerfectSwitch.hh"
+#include "mem/ruby/network/simple/Throttle.hh"
 #include "mem/ruby/protocol/MessageSizeType.hh"
 #include "params/Switch.hh"
 
 class MessageBuffer;
-class PerfectSwitch;
 class NetDest;
 class SimpleNetwork;
-class Throttle;
 
 class Switch : public BasicRouter
 {
   public:
     typedef SwitchParams Params;
     Switch(const Params *p);
-    ~Switch();
+    ~Switch() = default;
     void init();
 
     void addInPort(const std::vector<MessageBuffer*>& in);
     void addOutPort(const std::vector<MessageBuffer*>& out,
                     const NetDest& routing_table_entry,
                     Cycles link_latency, int bw_multiplier);
-
-    const Throttle* getThrottle(LinkID link_number) const;
 
     void resetStats();
     void collateStats();
@@ -86,11 +86,12 @@ class Switch : public BasicRouter
     Switch(const Switch& obj);
     Switch& operator=(const Switch& obj);
 
-    PerfectSwitch* m_perfect_switch;
+    PerfectSwitch perfectSwitch;
     SimpleNetwork* m_network_ptr;
-    std::vector<Throttle*> m_throttles;
-    std::vector<MessageBuffer*> m_port_buffers;
+    std::list<Throttle> throttles;
+
     unsigned m_num_connected_buffers;
+    std::vector<MessageBuffer*> m_port_buffers;
 
     // Statistical variables
     Stats::Formula m_avg_utilization;
