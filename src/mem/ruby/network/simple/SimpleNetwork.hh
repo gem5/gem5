@@ -45,7 +45,7 @@ class SimpleNetwork : public Network
   public:
     typedef SimpleNetworkParams Params;
     SimpleNetwork(const Params *p);
-    ~SimpleNetwork();
+    ~SimpleNetwork() = default;
 
     void init();
 
