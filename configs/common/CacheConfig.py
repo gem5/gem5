@@ -44,7 +44,7 @@ from __future__ import absolute_import
 
 import m5
 from m5.objects import *
-from .Caches import *
+from common.Caches import *
 from common import ObjectList
 
 def config_cache(options, system):

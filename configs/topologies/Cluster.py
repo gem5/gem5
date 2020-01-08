@@ -27,7 +27,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
-from .BaseTopology import BaseTopology
+from topologies.BaseTopology import BaseTopology
 
 class Cluster(BaseTopology):
     """ A cluster is a group of nodes which are all one hop from eachother

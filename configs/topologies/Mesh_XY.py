@@ -33,7 +33,7 @@ from m5.objects import *
 
 from common import FileSystemConfig
 
-from .BaseTopology import SimpleTopology
+from topologies.BaseTopology import SimpleTopology
 
 # Creates a generic Mesh assuming an equal number of cache
 # and directory controllers.

@@ -43,8 +43,8 @@ from __future__ import absolute_import
 import m5
 from m5.objects import *
 from m5.util import *
-from .Benchmarks import *
-from . import ObjectList
+from common.Benchmarks import *
+from common import ObjectList
 
 # Populate to reflect supported os types per target ISA
 os_types = { 'mips'  : [ 'linux' ],

@@ -31,7 +31,7 @@ from __future__ import absolute_import
 from m5.params import *
 from m5.objects import *
 
-from .BaseTopology import SimpleTopology
+from topologies.BaseTopology import SimpleTopology
 
 # Creates a generic Mesh assuming an equal number of cache
 # and directory controllers.

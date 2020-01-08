@@ -43,8 +43,8 @@ import m5
 from m5.defines import buildEnv
 from m5.objects import *
 
-from .Benchmarks import *
-from . import ObjectList
+from common.Benchmarks import *
+from common import ObjectList
 
 vio_9p_help = """\
 Enable the Virtio 9P device and set the path to share. The default 9p path is
@@ -407,7 +407,7 @@ def addSEOptions(parser):
 
 
 def addFSOptions(parser):
-    from .FSConfig import os_types
+    from common.FSConfig import os_types
 
     # Simulation options
     parser.add_option("--timesync", action="store_true",

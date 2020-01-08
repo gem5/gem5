@@ -38,7 +38,7 @@ from __future__ import absolute_import
 
 import m5.objects
 from common import ObjectList
-from . import HMC
+from common import HMC
 
 def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size):
     """

@@ -30,7 +30,7 @@ from __future__ import absolute_import
 from m5.params import *
 from m5.objects import *
 
-from .BaseTopology import SimpleTopology
+from topologies.BaseTopology import SimpleTopology
 
 class Crossbar(SimpleTopology):
     description='Crossbar'

@@ -45,7 +45,7 @@ from os import getcwd
 from os.path import join as joinpath
 
 from common import CpuConfig
-from . import ObjectList
+from common import ObjectList
 
 import m5
 from m5.defines import buildEnv

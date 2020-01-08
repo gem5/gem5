@@ -32,7 +32,7 @@ from m5.objects import *
 
 from common import FileSystemConfig
 
-from .BaseTopology import SimpleTopology
+from topologies.BaseTopology import SimpleTopology
 
 # Creates a Mesh topology with 4 directories, one at each corner.
 # One L1 (and L2, depending on the protocol) are connected to each router.
