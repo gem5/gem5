@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2008 Princeton University
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2016 Georgia Institute of Technology
+ * Copyright (c) 2008 Princeton University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +52,7 @@ class NetworkInterface : public ClockedObject, public Consumer
   public:
     typedef GarnetNetworkInterfaceParams Params;
     NetworkInterface(const Params *p);
-    ~NetworkInterface();
+    ~NetworkInterface() = default;
 
     void init();
 
@@ -74,14 +75,15 @@ class NetworkInterface : public ClockedObject, public Consumer
   private:
     GarnetNetwork *m_net_ptr;
     const NodeID m_id;
-    const int m_virtual_networks, m_vc_per_vnet, m_num_vcs;
+    const int m_virtual_networks, m_vc_per_vnet;
     int m_router_id; // id of my router
-    std::vector<OutVcState *> m_out_vc_state;
     std::vector<int> m_vc_allocator;
     int m_vc_round_robin; // For round robin scheduling
-    flitBuffer *outFlitQueue; // For modeling link contention
-    flitBuffer *outCreditQueue;
+    /** Used to model link contention. */
+    flitBuffer outFlitQueue;
+    flitBuffer outCreditQueue;
     int m_deadlock_threshold;
+    std::vector<OutVcState> outVcState;
 
     NetworkLink *inNetLink;
     NetworkLink *outNetLink;
@@ -94,7 +96,7 @@ class NetworkInterface : public ClockedObject, public Consumer
 
     // Input Flit Buffers
     // The flit buffers which will serve the Consumer
-    std::vector<flitBuffer *>  m_ni_out_vcs;
+    std::vector<flitBuffer>  niOutVcs;
     std::vector<Cycles> m_ni_out_vcs_enqueue_time;
 
     // The Message buffers that takes messages from the protocol
