@@ -51,8 +51,8 @@ class GarnetNetwork : public Network
   public:
     typedef GarnetNetworkParams Params;
     GarnetNetwork(const Params *p);
+    ~GarnetNetwork() = default;
 
-    ~GarnetNetwork();
     void init();
 
     // Configuration (set externally)

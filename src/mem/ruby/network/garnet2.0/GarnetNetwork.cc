@@ -33,7 +33,6 @@
 #include <cassert>
 
 #include "base/cast.hh"
-#include "base/stl_helpers.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/garnet2.0/CommonTypes.hh"
@@ -45,7 +44,6 @@
 #include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;
-using m5::stl_helpers::deletePointers;
 
 /*
  * GarnetNetwork sets up the routers and links and collects stats.
@@ -138,14 +136,6 @@ GarnetNetwork::init()
             router->printFaultVector(cout);
         }
     }
-}
-
-GarnetNetwork::~GarnetNetwork()
-{
-    deletePointers(m_routers);
-    deletePointers(m_nis);
-    deletePointers(m_networklinks);
-    deletePointers(m_creditlinks);
 }
 
 /*
