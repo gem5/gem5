@@ -222,7 +222,7 @@ class UPCState : public SimplePCState<MachInst>
         nupc(1);
     }
 
-    UPCState() : _upc(0), _nupc(0) {}
+    UPCState() : _upc(0), _nupc(1) {}
     UPCState(Addr val) : _upc(0), _nupc(0) { set(val); }
 
     bool
