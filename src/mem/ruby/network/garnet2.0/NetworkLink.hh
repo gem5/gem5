@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2008 Princeton University
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2016 Georgia Institute of Technology
+ * Copyright (c) 2008 Princeton University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,10 +48,10 @@ class NetworkLink : public ClockedObject, public Consumer
   public:
     typedef NetworkLinkParams Params;
     NetworkLink(const Params *p);
-    ~NetworkLink();
+    ~NetworkLink() = default;
 
     void setLinkConsumer(Consumer *consumer);
-    void setSourceQueue(flitBuffer *srcQueue);
+    void setSourceQueue(flitBuffer *src_queue);
     void setType(link_type type) { m_type = type; }
     link_type getType() { return m_type; }
     void print(std::ostream& out) const {}
@@ -60,11 +61,10 @@ class NetworkLink : public ClockedObject, public Consumer
     unsigned int getLinkUtilization() const { return m_link_utilized; }
     const std::vector<unsigned int> & getVcLoad() const { return m_vc_load; }
 
-    inline bool isReady(Cycles curTime)
-    { return linkBuffer->isReady(curTime); }
+    inline bool isReady(Cycles curTime) { return linkBuffer.isReady(curTime); }
 
-    inline flit* peekLink()       { return linkBuffer->peekTopFlit(); }
-    inline flit* consumeLink()    { return linkBuffer->getTopFlit(); }
+    inline flit* peekLink() { return linkBuffer.peekTopFlit(); }
+    inline flit* consumeLink() { return linkBuffer.getTopFlit(); }
 
     uint32_t functionalWrite(Packet *);
     void resetStats();
@@ -74,7 +74,7 @@ class NetworkLink : public ClockedObject, public Consumer
     link_type m_type;
     const Cycles m_latency;
 
-    flitBuffer *linkBuffer;
+    flitBuffer linkBuffer;
     Consumer *link_consumer;
     flitBuffer *link_srcQueue;
 

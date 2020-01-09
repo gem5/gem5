@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2008 Princeton University
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2016 Georgia Institute of Technology
+ * Copyright (c) 2008 Princeton University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,15 +37,10 @@ NetworkLink::NetworkLink(const Params *p)
     : ClockedObject(p), Consumer(this), m_id(p->link_id),
       m_type(NUM_LINK_TYPES_),
       m_latency(p->link_latency),
-      linkBuffer(new flitBuffer()), link_consumer(nullptr),
+      linkBuffer(), link_consumer(nullptr),
       link_srcQueue(nullptr), m_link_utilized(0),
       m_vc_load(p->vcs_per_vnet * p->virt_nets)
 {
-}
-
-NetworkLink::~NetworkLink()
-{
-    delete linkBuffer;
 }
 
 void
@@ -54,18 +50,19 @@ NetworkLink::setLinkConsumer(Consumer *consumer)
 }
 
 void
-NetworkLink::setSourceQueue(flitBuffer *srcQueue)
+NetworkLink::setSourceQueue(flitBuffer* src_queue)
 {
-    link_srcQueue = srcQueue;
+    link_srcQueue = src_queue;
 }
 
 void
 NetworkLink::wakeup()
 {
+    assert(link_srcQueue != nullptr);
     if (link_srcQueue->isReady(curCycle())) {
         flit *t_flit = link_srcQueue->getTopFlit();
         t_flit->set_time(curCycle() + m_latency);
-        linkBuffer->insert(t_flit);
+        linkBuffer.insert(t_flit);
         link_consumer->scheduleEventAbsolute(clockEdge(m_latency));
         m_link_utilized++;
         m_vc_load[t_flit->get_vc()]++;
@@ -97,5 +94,5 @@ CreditLinkParams::create()
 uint32_t
 NetworkLink::functionalWrite(Packet *pkt)
 {
-    return linkBuffer->functionalWrite(pkt);
+    return linkBuffer.functionalWrite(pkt);
 }
