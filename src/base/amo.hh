@@ -35,6 +35,10 @@
 #ifndef __BASE_AMO_HH__
 #define __BASE_AMO_HH__
 
+#include <array>
+#include <cstdint>
+#include <functional>
+
 struct AtomicOpFunctor
 {
     virtual void operator()(uint8_t *p) = 0;
