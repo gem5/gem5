@@ -108,8 +108,29 @@ ISA::clear()
     // Blank everything. 0 might not be an appropriate value for some things,
     // but it is for most.
     memset(regVal, 0, NumMiscRegs * sizeof(RegVal));
+
+    // If some state should be non-zero after a reset, set those values here.
+    regVal[MISCREG_CR0] = 0x0000000060000010ULL;
+
+    regVal[MISCREG_MTRRCAP] = 0x0508;
+
+    regVal[MISCREG_MCG_CAP] = 0x104;
+
+    regVal[MISCREG_PAT] = 0x0007040600070406ULL;
+
+    regVal[MISCREG_SYSCFG] = 0x20601;
+
+    regVal[MISCREG_TOP_MEM] = 0x4000000;
+
     regVal[MISCREG_DR6] = (mask(8) << 4) | (mask(16) << 16);
     regVal[MISCREG_DR7] = 1 << 10;
+
+    LocalApicBase lApicBase = 0;
+    lApicBase.base = 0xFEE00000 >> 12;
+    lApicBase.enable = 1;
+    // The "bsp" bit will be set when this register is read, since then we'll
+    // have a ThreadContext to check the contextId from.
+    regVal[MISCREG_APIC_BASE] = lApicBase;
 }
 
 ISA::ISA(Params *p)
@@ -146,6 +167,12 @@ ISA::readMiscReg(int miscReg, ThreadContext * tc)
         RegVal fsw = regVal[MISCREG_FSW];
         RegVal top = regVal[MISCREG_X87_TOP];
         return insertBits(fsw, 13, 11, top);
+    }
+
+    if (miscReg == MISCREG_APIC_BASE) {
+        LocalApicBase base = regVal[MISCREG_APIC_BASE];
+        base.bsp = (tc->contextId() == 0);
+        return base;
     }
 
     return readMiscRegNoEffect(miscReg);
