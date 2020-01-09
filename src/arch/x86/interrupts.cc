@@ -614,6 +614,8 @@ X86ISA::Interrupts::Interrupts(Params * p)
     regs[APIC_DESTINATION_FORMAT] = (uint32_t)(-1);
     ISRV = 0;
     IRRV = 0;
+
+    regs[APIC_VERSION] = (5 << 16) | 0x14;
 }
 
 

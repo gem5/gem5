@@ -84,14 +84,6 @@ initCPU(ThreadContext *tc, int cpuId)
     // passed. No BIST actually runs, but software may still check this
     // register for errors.
     tc->setIntReg(INTREG_RAX, 0);
-
-    Interrupts * interrupts = dynamic_cast<Interrupts *>(
-            tc->getCpuPtr()->getInterruptController(0));
-    assert(interrupts);
-
-    interrupts->setRegNoEffect(APIC_ID, cpuId << 24);
-
-    interrupts->setRegNoEffect(APIC_VERSION, (5 << 16) | 0x14);
 }
 
 void startupCPU(ThreadContext *tc, int cpuId)
