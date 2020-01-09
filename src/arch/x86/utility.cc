@@ -74,16 +74,7 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 void
 initCPU(ThreadContext *tc, int cpuId)
 {
-    // This function is essentially performing a reset. The actual INIT
-    // interrupt does a subset of this, so we'll piggyback on some of its
-    // functionality.
-    InitInterrupt init(0);
-    init.invoke(tc);
-
-    // Set integer register EAX to 0 to indicate that the optional BIST
-    // passed. No BIST actually runs, but software may still check this
-    // register for errors.
-    tc->setIntReg(INTREG_RAX, 0);
+    InitInterrupt(0).invoke(tc);
 }
 
 void startupCPU(ThreadContext *tc, int cpuId)
