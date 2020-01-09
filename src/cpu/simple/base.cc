@@ -130,11 +130,6 @@ BaseSimpleCPU::init()
     for (auto tc : threadContexts) {
         // Initialise the ThreadContext's memory proxies
         tc->initMemProxies(tc);
-
-        if (FullSystem && !params()->switched_out) {
-            // initialize CPU, including PC
-            TheISA::initCPU(tc, tc->contextId());
-        }
     }
 }
 

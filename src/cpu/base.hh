@@ -314,6 +314,7 @@ class BaseCPU : public ClockedObject
     virtual ~BaseCPU();
 
     void init() override;
+    void initState() override;
     void startup() override;
     void regStats() override;
 

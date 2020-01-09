@@ -114,10 +114,6 @@ BaseKvmCPU::init()
         fatal("KVM: Multithreading not supported");
 
     tc->initMemProxies(tc);
-
-    // initialize CPU, including PC
-    if (FullSystem && !switchedOut())
-        TheISA::initCPU(tc, tc->contextId());
 }
 
 void

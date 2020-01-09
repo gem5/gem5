@@ -321,6 +321,15 @@ BaseCPU::init()
 }
 
 void
+BaseCPU::initState()
+{
+    if (FullSystem && !params()->switched_out) {
+        for (auto *tc: threadContexts)
+            TheISA::initCPU(tc, tc->contextId());
+    }
+}
+
+void
 BaseCPU::startup()
 {
     if (FullSystem) {
