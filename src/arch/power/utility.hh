@@ -49,13 +49,6 @@ buildRetPC(const PCState &curPC, const PCState &callPC)
     return retPC;
 }
 
-/**
- * Function to ensure ISA semantics about 0 registers.
- * @param tc The thread context.
- */
-template <class TC>
-void zeroRegisters(TC *tc);
-
 inline void
 startupCPU(ThreadContext *tc, int cpuId)
 {

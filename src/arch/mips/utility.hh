@@ -87,9 +87,6 @@ inUserMode(ThreadContext *tc)
     }
 }
 
-template <class CPU>
-void zeroRegisters(CPU *cpu);
-
 ////////////////////////////////////////////////////////////////////////
 //
 //  Translation stuff

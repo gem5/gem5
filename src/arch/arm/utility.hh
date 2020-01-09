@@ -95,13 +95,6 @@ testPredicate(uint32_t nz, uint32_t c, uint32_t v, ConditionCode code)
     }
 }
 
-/**
- * Function to insure ISA semantics about 0 registers.
- * @param tc The thread context.
- */
-template <class TC>
-void zeroRegisters(TC *tc);
-
 inline void startupCPU(ThreadContext *tc, int cpuId)
 {
     tc->activate();

@@ -69,13 +69,6 @@ namespace X86ISA
         }
     }
 
-    /**
-     * Function to insure ISA semantics about 0 registers.
-     * @param tc The thread context.
-     */
-    template <class TC>
-    void zeroRegisters(TC *tc);
-
     void initCPU(ThreadContext *tc, int cpuId);
 
     void startupCPU(ThreadContext *tc, int cpuId);
