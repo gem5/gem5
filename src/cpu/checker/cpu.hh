@@ -434,6 +434,41 @@ class CheckerCPU : public BaseCPU, public ExecContext
         thread->setMemAccPredicate(val);
     }
 
+    uint64_t
+    getHtmTransactionUid() const override
+    {
+        panic("not yet supported!");
+        return 0;
+    };
+
+    uint64_t
+    newHtmTransactionUid() const override
+    {
+        panic("not yet supported!");
+        return 0;
+    };
+
+    Fault
+    initiateHtmCmd(Request::Flags flags) override
+    {
+        panic("not yet supported!");
+        return NoFault;
+    }
+
+    bool
+    inHtmTransactionalState() const override
+    {
+        panic("not yet supported!");
+        return false;
+    }
+
+    uint64_t
+    getHtmTransactionalDepth() const override
+    {
+        panic("not yet supported!");
+        return 0;
+    }
+
     TheISA::PCState pcState() const override { return thread->pcState(); }
     void
     pcState(const TheISA::PCState &val) override

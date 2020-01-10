@@ -253,6 +253,11 @@ class ExecContext {
     }
 
     /**
+     * Initiate an HTM command,
+     * e.g. tell Ruby we're starting/stopping a transaction
+     */
+    virtual Fault initiateHtmCmd(Request::Flags flags) = 0;
+    /**
      * For atomic-mode contexts, perform an atomic memory write operation.
      * For timing-mode contexts, initiate a timing memory write operation.
      */
@@ -319,6 +324,12 @@ class ExecContext {
     virtual void setPredicate(bool val) = 0;
     virtual bool readMemAccPredicate() const = 0;
     virtual void setMemAccPredicate(bool val) = 0;
+
+    // hardware transactional memory
+    virtual uint64_t newHtmTransactionUid() const = 0;
+    virtual uint64_t getHtmTransactionUid() const = 0;
+    virtual bool inHtmTransactionalState() const = 0;
+    virtual uint64_t getHtmTransactionalDepth() const = 0;
 
     /** @} */
 

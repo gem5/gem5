@@ -300,6 +300,8 @@ class BaseDynInst : public ExecContext, public RefCounted
     Fault initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
             const std::vector<bool>& byte_enable = std::vector<bool>());
 
+    Fault initiateHtmCmd(Request::Flags flags) override;
+
     Fault writeMem(uint8_t *data, unsigned size, Addr addr,
                    Request::Flags flags, uint64_t *res,
                    const std::vector<bool>& byte_enable = std::vector<bool>());
@@ -538,6 +540,30 @@ class BaseDynInst : public ExecContext, public RefCounted
     bool isLastMicroop() const { return staticInst->isLastMicroop(); }
     bool isFirstMicroop() const { return staticInst->isFirstMicroop(); }
     bool isMicroBranch() const { return staticInst->isMicroBranch(); }
+
+    uint64_t getHtmTransactionUid() const override
+    {
+        panic("Not yet implemented\n");
+        return 0;
+    }
+
+    uint64_t newHtmTransactionUid() const override
+    {
+        panic("Not yet implemented\n");
+        return 0;
+    }
+
+    bool inHtmTransactionalState() const override
+    {
+        panic("Not yet implemented\n");
+        return false;
+    }
+
+    uint64_t getHtmTransactionalDepth() const override
+    {
+        panic("Not yet implemented\n");
+        return 0;
+    }
 
     /** Temporarily sets this instruction as a serialize before instruction. */
     void setSerializeBefore() { status.set(SerializeBefore); }
@@ -960,6 +986,14 @@ BaseDynInst<Impl>::initiateMemRead(Addr addr, unsigned size,
             dynamic_cast<typename DynInstPtr::PtrType>(this),
             /* ld */ true, nullptr, size, addr, flags, nullptr, nullptr,
             byte_enable);
+}
+
+template<class Impl>
+Fault
+BaseDynInst<Impl>::initiateHtmCmd(Request::Flags flags)
+{
+    panic("Not yet implemented\n");
+    return NoFault;
 }
 
 template<class Impl>

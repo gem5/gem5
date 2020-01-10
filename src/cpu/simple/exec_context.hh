@@ -473,6 +473,12 @@ class SimpleExecContext : public ExecContext {
         return cpu->initiateMemAMO(addr, size, flags, std::move(amo_op));
     }
 
+    Fault initiateHtmCmd(Request::Flags flags) override
+    {
+        panic("Not yet supported\n");
+        return NoFault;
+    }
+
     /**
      * Sets the number of consecutive store conditional failures.
      */
@@ -525,6 +531,34 @@ class SimpleExecContext : public ExecContext {
     setMemAccPredicate(bool val) override
     {
         thread->setMemAccPredicate(val);
+    }
+
+    uint64_t
+    getHtmTransactionUid() const override
+    {
+        panic("Not yet supported\n");
+        return 0;
+    }
+
+    uint64_t
+    newHtmTransactionUid() const override
+    {
+        panic("Not yet supported\n");
+        return 0;
+    }
+
+    bool
+    inHtmTransactionalState() const override
+    {
+        panic("Not yet supported\n");
+        return false;
+    }
+
+    uint64_t
+    getHtmTransactionalDepth() const override
+    {
+        panic("Not yet supported\n");
+        return 0;
     }
 
     /**
