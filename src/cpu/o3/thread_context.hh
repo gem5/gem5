@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, 2016-2018 ARM Limited
+ * Copyright (c) 2011-2012, 2016-2018, 2020 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -479,6 +479,12 @@ class O3ThreadContext : public ThreadContext
 
     RegVal readCCRegFlat(RegIndex idx) const override;
     void setCCRegFlat(RegIndex idx, RegVal val) override;
+
+    // hardware transactional memory
+    void htmAbortTransaction(uint64_t htm_uid,
+                             HtmFailureFaultCause cause) override;
+    BaseHTMCheckpointPtr& getHtmCheckpointPtr() override;
+    void setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt) override;
 };
 
 #endif

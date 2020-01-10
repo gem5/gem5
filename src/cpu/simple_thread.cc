@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 ARM Limited
+ * Copyright (c) 2018, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -50,6 +50,7 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
+#include "cpu/simple/base.hh"
 #include "cpu/thread_context.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "mem/translating_port_proxy.hh"
@@ -168,4 +169,23 @@ void
 SimpleThread::copyArchRegs(ThreadContext *src_tc)
 {
     TheISA::copyRegs(src_tc, this);
+}
+
+// hardware transactional memory
+void
+SimpleThread::htmAbortTransaction(uint64_t htm_uid, HtmFailureFaultCause cause)
+{
+    panic("function not implemented\n");
+}
+
+BaseHTMCheckpointPtr&
+SimpleThread::getHtmCheckpointPtr()
+{
+    panic("function not implemented\n");
+}
+
+void
+SimpleThread::setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt)
+{
+    panic("function not implemented\n");
 }

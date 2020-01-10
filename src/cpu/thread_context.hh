@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, 2016-2018 ARM Limited
+ * Copyright (c) 2011-2012, 2016-2018, 2020 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -45,6 +45,7 @@
 #include <iostream>
 #include <string>
 
+#include "arch/generic/htm.hh"
 #include "arch/generic/isa.hh"
 #include "arch/registers.hh"
 #include "arch/types.hh"
@@ -340,6 +341,11 @@ class ThreadContext : public PCEventScope
     virtual void setCCRegFlat(RegIndex idx, RegVal val) = 0;
     /** @} */
 
+    // hardware transactional memory
+    virtual void htmAbortTransaction(uint64_t htm_uid,
+                                     HtmFailureFaultCause cause) = 0;
+    virtual BaseHTMCheckpointPtr& getHtmCheckpointPtr() = 0;
+    virtual void setHtmCheckpointPtr(BaseHTMCheckpointPtr cpt) = 0;
 };
 
 /** @{ */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2016-2017 ARM Limited
+ * Copyright (c) 2010-2012, 2016-2017, 2019 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -323,6 +323,29 @@ O3ThreadContext<Impl>::setMiscReg(RegIndex misc_reg, RegVal val)
     cpu->setMiscReg(misc_reg, val, thread->threadId());
 
     conditionalSquash();
+}
+
+// hardware transactional memory
+template <class Impl>
+void
+O3ThreadContext<Impl>::htmAbortTransaction(uint64_t htmUid,
+                                           HtmFailureFaultCause cause)
+{
+    panic("function not implemented\n");
+}
+
+template <class Impl>
+BaseHTMCheckpointPtr&
+O3ThreadContext<Impl>::getHtmCheckpointPtr()
+{
+    panic("function not implemented\n");
+}
+
+template <class Impl>
+void
+O3ThreadContext<Impl>::setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt)
+{
+    panic("function not implemented\n");
 }
 
 #endif //__CPU_O3_THREAD_CONTEXT_IMPL_HH__
