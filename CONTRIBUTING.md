@@ -308,6 +308,38 @@ gerrit (e.g., reviewers, labels). The gerrit documentation has more
 information.
 https://gerrit-review.googlesource.com/Documentation/user-upload.html
 
+Branches
+========
+
+By default, contributions to gem5 should be made on the master branch. Branches
+are generally discouraged due to their tendency to bloat git repositories with
+abandoned code. However, the creation of branches is permitted for development
+of a specific feature or improvement if one or more of the following criteria
+are met:
+
+1. The feature/improvement is likely to be of a large size, consisting of many
+commits, with little logic in these commits being contributed separately.
+2. The feature/improvement will be developed over a long period of time.
+3. There is sufficient reason that a feature/improvement should not be merged
+into the master branch yet (e.g., the feature/improvement is not intended for
+the next release but a future release).
+
+If a branch is required it can only be created by a project maintainer.
+Therefore, if a gem5 contributor desires a separate branch for their work, they
+should request one from the maintainer of the component the work relates to
+(see MAINTAINERS for the list of maintainers and the components they are
+responsible for). **The maintainer shall use their discretion to determine
+whether the creation of a branch is necessary**. If approved, the maintainer
+shall create the branch which the contributor may then use.
+
+Development on a branch within Gerrit functions in exactly the same way as
+contributing to the master branch. When contributors to a branch are satisfied,
+they should create a merge commit into the master branch. The maintainer should
+then be notified that the branch they created can now be deleted.
+
+**Abandonment of changes within branches may result in these branches being
+removed from the repository. All branches within a repo should be under active
+development.**
 
 Reviewing patches
 =================
