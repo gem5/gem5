@@ -1055,6 +1055,19 @@ TimingSimpleCPU::printAddr(Addr a)
     dcachePort.printAddr(a);
 }
 
+Fault
+TimingSimpleCPU::initiateHtmCmd(Request::Flags flags)
+{
+    panic("not yet supported!");
+    return NoFault;
+}
+
+void
+TimingSimpleCPU::htmSendAbortSignal(HtmFailureFaultCause cause)
+{
+    panic("not yet supported!");
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 //

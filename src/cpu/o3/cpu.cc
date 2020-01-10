@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, 2014, 2016, 2017, 2019 ARM Limited
+ * Copyright (c) 2011-2012, 2014, 2016, 2017, 2019-2020 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -1825,6 +1825,14 @@ FullO3CPU<Impl>::exitThreads()
             it++;
         }
     }
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::htmSendAbortSignal(ThreadID tid, uint64_t htmUid,
+     HtmFailureFaultCause cause)
+{
+    panic("not yet supported!");
 }
 
 // Forward declaration of FullO3CPU.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2015,2018 ARM Limited
+ * Copyright (c) 2012-2013,2015,2018,2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -319,6 +319,11 @@ class TimingSimpleCPU : public BaseSimpleCPU
      * @param state The DTB translation state.
      */
     void finishTranslation(WholeTranslationState *state);
+
+    /** hardware transactional memory **/
+    Fault initiateHtmCmd(Request::Flags flags) override;
+
+    void htmSendAbortSignal(HtmFailureFaultCause) override;
 
   private:
 

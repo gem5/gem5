@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013, 2016-2019 ARM Limited
+ * Copyright (c) 2011-2013, 2016-2020 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -788,6 +788,11 @@ class FullO3CPU : public BaseO3CPU
     //number of misc
     Stats::Scalar miscRegfileReads;
     Stats::Scalar miscRegfileWrites;
+
+  public:
+    // hardware transactional memory
+    void htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
+                            HtmFailureFaultCause cause);
 };
 
 #endif // __CPU_O3_CPU_HH__

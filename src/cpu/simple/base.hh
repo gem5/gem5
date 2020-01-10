@@ -176,6 +176,21 @@ class BaseSimpleCPU : public BaseCPU
     void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
     void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
 
+    /** Hardware transactional memory commands (HtmCmds), e.g. start a
+     * transaction and commit a transaction, are memory operations but are
+     * neither really (true) loads nor stores. For this reason the interface
+     * is extended and initiateHtmCmd() is used to instigate the command. */
+    virtual Fault initiateHtmCmd(Request::Flags flags) = 0;
+
+    /** This function is used to instruct the memory subsystem that a
+     * transaction should be aborted and the speculative state should be
+     * thrown away.  This is called in the transaction's very last breath in
+     * the core.  Afterwards, the core throws away its speculative state and
+     * resumes execution at the point the transaction started, i.e. reverses
+     * time.  When instruction execution resumes, the core expects the
+     * memory subsystem to be in a stable, i.e. pre-speculative, state as
+     * well. */
+    virtual void htmSendAbortSignal(HtmFailureFaultCause cause) = 0;
 };
 
 #endif // __CPU_SIMPLE_BASE_HH__
