@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2017-2019 ARM Limited
+ * Copyright (c) 2012-2013,2017-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -56,6 +56,7 @@
 #include "base/logging.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "mem/htm.hh"
 #include "sim/core.hh"
 
 /**
@@ -187,6 +188,42 @@ class Request
         /** Bits to define the destination of a request */
         DST_BITS                    = 0x0000003000000000,
 
+        /** hardware transactional memory **/
+
+        /** The request starts a HTM transaction */
+        HTM_START                   = 0x0000010000000000,
+
+        /** The request commits a HTM transaction */
+        HTM_COMMIT                  = 0x0000020000000000,
+
+        /** The request cancels a HTM transaction */
+        HTM_CANCEL                  = 0x0000040000000000,
+
+        /** The request aborts a HTM transaction */
+        HTM_ABORT                   = 0x0000080000000000,
+
+        // What is the different between HTM cancel and abort?
+        //
+        // HTM_CANCEL will originate from a user instruction, e.g.
+        // Arm's TCANCEL or x86's XABORT. This is an explicit request
+        // to end a transaction and restore from the last checkpoint.
+        //
+        // HTM_ABORT is an internally generated request used to synchronize
+        // a transaction's failure between the core and memory subsystem.
+        // If a transaction fails in the core, e.g. because an instruction
+        // within the transaction generates an exception, the core will prepare
+        // itself to stop fetching/executing more instructions and send an
+        // HTM_ABORT to the memory subsystem before restoring the checkpoint.
+        // Similarly, the transaction could fail in the memory subsystem and
+        // this will be communicated to the core via the Packet object.
+        // Once the core notices, it will do the same as the above and send
+        // a HTM_ABORT to the memory subsystem.
+        // A HTM_CANCEL sent to the memory subsystem will ultimately return
+        // to the core which in turn will send a HTM_ABORT.
+        //
+        // This separation is necessary to ensure the disjoint components
+        // of the system work correctly together.
+
         /**
          * These flags are *not* cleared when a Request object is
          * reused (assigned a new address).
@@ -195,6 +232,9 @@ class Request
     };
     static const FlagsType STORE_NO_DATA = CACHE_BLOCK_ZERO |
         CLEAN | INVALIDATE;
+
+    static const FlagsType HTM_CMD = HTM_START | HTM_COMMIT |
+        HTM_CANCEL | HTM_ABORT;
 
     /** Master Ids that are statically allocated
      * @{*/
@@ -274,6 +314,11 @@ class Request
         /** Whether or not the stream ID and substream ID is valid. */
         VALID_STREAM_ID      = 0x00000100,
         VALID_SUBSTREAM_ID   = 0x00000200,
+        // hardware transactional memory
+        /** Whether or not the abort cause is valid. */
+        VALID_HTM_ABORT_CAUSE = 0x00000400,
+        /** Whether or not the instruction count is valid. */
+        VALID_INST_COUNT      = 0x00000800,
         /**
          * These flags are *not* cleared when a Request object is reused
          * (assigned a new address).
@@ -361,6 +406,12 @@ class Request
     AtomicOpFunctorPtr atomicOpFunctor = nullptr;
 
     LocalAccessor _localAccessor;
+
+    /** The instruction count at the time this request is created */
+    Counter _instCount = 0;
+
+    /** The cause for HTM transaction abort */
+    HtmFailureFaultCause _htmAbortCause = HtmFailureFaultCause::INVALID;
 
   public:
 
@@ -517,6 +568,21 @@ class Request
     }
 
     /**
+     * Accessor for instruction count.
+     */
+    Counter getInstCount() const
+    {
+        assert(privateFlags.isSet(VALID_INST_COUNT));
+        return _instCount;
+    }
+
+    void setInstCount(Counter val)
+    {
+        privateFlags.set(VALID_INST_COUNT);
+        _instCount = val;
+    }
+
+    /**
      * Time for the TLB/table walker to successfully translate this request.
      */
     Tick translateDelta = 0;
@@ -609,6 +675,24 @@ class Request
     {
         assert(atomicOpFunctor);
         return atomicOpFunctor.get();
+    }
+
+    /**
+     * Accessor for hardware transactional memory abort cause.
+     */
+    HtmFailureFaultCause
+    getHtmAbortCause() const
+    {
+        assert(privateFlags.isSet(VALID_HTM_ABORT_CAUSE));
+        return _htmAbortCause;
+    }
+
+    void
+    setHtmAbortCause(HtmFailureFaultCause val)
+    {
+        assert(isHTMAbort());
+        privateFlags.set(VALID_HTM_ABORT_CAUSE);
+        _htmAbortCause = val;
     }
 
     /** Accessor for flags. */
@@ -819,6 +903,17 @@ class Request
     bool isKernel() const { return _flags.isSet(KERNEL); }
     bool isAtomicReturn() const { return _flags.isSet(ATOMIC_RETURN_OP); }
     bool isAtomicNoReturn() const { return _flags.isSet(ATOMIC_NO_RETURN_OP); }
+    // hardware transactional memory
+    bool isHTMStart() const { return _flags.isSet(HTM_START); }
+    bool isHTMCommit() const { return _flags.isSet(HTM_COMMIT); }
+    bool isHTMCancel() const { return _flags.isSet(HTM_CANCEL); }
+    bool isHTMAbort() const { return _flags.isSet(HTM_ABORT); }
+    bool
+    isHTMCmd() const
+    {
+        return (isHTMStart() || isHTMCommit() ||
+                isHTMCancel() || isHTMAbort());
+    }
 
     bool
     isAtomic() const
