@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 ARM Limited
+ * Copyright (c) 2017, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -202,6 +202,18 @@ class StaticInst : public RefCounted, public StaticInstFlags
     bool isFirstMicroop() const { return flags[IsFirstMicroop]; }
     //This flag doesn't do anything yet
     bool isMicroBranch() const { return flags[IsMicroBranch]; }
+    // hardware transactional memory
+    // HtmCmds must be identified as such in order
+    // to provide them with necessary memory ordering semantics.
+    bool isHtmStart() const { return flags[IsHtmStart]; }
+    bool isHtmStop() const { return flags[IsHtmStop]; }
+    bool isHtmCancel() const { return flags[IsHtmCancel]; }
+
+    bool
+    isHtmCmd() const
+    {
+        return isHtmStart() || isHtmStop() || isHtmCancel();
+    }
     //@}
 
     void setFirstMicroop() { flags[IsFirstMicroop] = true; }
