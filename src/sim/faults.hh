@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -31,6 +43,7 @@
 
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
+#include "mem/htm.hh"
 #include "sim/stats.hh"
 
 class ThreadContext;
@@ -44,7 +57,6 @@ class FaultBase
     virtual FaultName name() const = 0;
     virtual void invoke(ThreadContext * tc, const StaticInstPtr &inst=
                         StaticInst::nullStaticInstPtr);
-
     virtual ~FaultBase() {};
 };
 
@@ -119,6 +131,25 @@ class GenericAlignmentFault : public FaultBase
     void invoke(ThreadContext *tc, const StaticInstPtr &inst=
                 StaticInst::nullStaticInstPtr) override;
     Addr getFaultVAddr() const { return vaddr; }
+};
+
+class GenericHtmFailureFault : public FaultBase
+{
+  protected:
+    uint64_t htmUid; // unique identifier used for debugging
+    HtmFailureFaultCause cause;
+
+  public:
+    GenericHtmFailureFault(uint64_t htm_uid, HtmFailureFaultCause _cause)
+      : htmUid(htm_uid), cause(_cause)
+    {}
+
+    FaultName name() const override { return "Generic HTM failure fault"; }
+
+    uint64_t getHtmUid() const { return htmUid; }
+    HtmFailureFaultCause getHtmFailureFaultCause() const { return cause; }
+    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr) override;
 };
 
 #endif // __FAULTS_HH__

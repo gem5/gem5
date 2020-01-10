@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -28,6 +40,8 @@
 
 #include "sim/faults.hh"
 
+#include "arch/decoder.hh"
+#include "arch/locked_mem.hh"
 #include "base/logging.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
@@ -89,4 +103,25 @@ void
 GenericAlignmentFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     panic("Alignment fault when accessing virtual address %#x\n", vaddr);
+}
+
+void GenericHtmFailureFault::invoke(ThreadContext *tc,
+                                    const StaticInstPtr &inst)
+{
+    // reset decoder
+    TheISA::Decoder* dcdr = tc->getDecoderPtr();
+    dcdr->reset();
+
+    // restore transaction checkpoint
+    const auto& checkpoint = tc->getHtmCheckpointPtr();
+    assert(checkpoint);
+    assert(checkpoint->valid());
+
+    checkpoint->restore(tc, getHtmFailureFaultCause());
+
+    // reset the global monitor
+    TheISA::globalClearExclusive(tc);
+
+    // send abort packet to ruby (in final breath)
+    tc->htmAbortTransaction(htmUid, cause);
 }
