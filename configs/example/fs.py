@@ -130,9 +130,6 @@ def build_test_system(np):
 
     if options.kernel is not None:
         test_sys.kernel = binary(options.kernel)
-    else:
-        print("Error: a kernel must be provided to run in full system mode")
-        sys.exit(1)
 
     if options.script is not None:
         test_sys.readfile = options.script
@@ -281,9 +278,6 @@ def build_drive_system(np):
     drive_sys.cpu.connectAllPorts(drive_sys.membus)
     if options.kernel is not None:
         drive_sys.kernel = binary(options.kernel)
-    else:
-        print("Error: a kernel must be provided to run in full system mode")
-        sys.exit(1)
 
     if ObjectList.is_kvm_cpu(DriveCPUClass):
         drive_sys.kvm_vm = KvmVM()
