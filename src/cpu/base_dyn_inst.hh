@@ -540,6 +540,11 @@ class BaseDynInst : public ExecContext, public RefCounted
     bool isLastMicroop() const { return staticInst->isLastMicroop(); }
     bool isFirstMicroop() const { return staticInst->isFirstMicroop(); }
     bool isMicroBranch() const { return staticInst->isMicroBranch(); }
+    // hardware transactional memory
+    bool isHtmStart() const { return staticInst->isHtmStart(); }
+    bool isHtmStop() const { return staticInst->isHtmStop(); }
+    bool isHtmCancel() const { return staticInst->isHtmCancel(); }
+    bool isHtmCmd() const { return staticInst->isHtmCmd(); }
 
     uint64_t getHtmTransactionUid() const override
     {
