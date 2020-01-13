@@ -29,7 +29,6 @@
 Import('*')
 
 if env['TARGET_ISA'] == 'mips':
-    Source('bare_iron/system.cc')
     Source('decoder.cc')
     Source('dsp.cc')
     Source('faults.cc')
@@ -38,18 +37,15 @@ if env['TARGET_ISA'] == 'mips':
     Source('isa.cc')
     Source('linux/linux.cc')
     Source('linux/process.cc')
-    Source('linux/system.cc')
     Source('pagetable.cc')
     Source('process.cc')
     Source('remote_gdb.cc')
     Source('stacktrace.cc')
-    Source('system.cc')
     Source('tlb.cc')
     Source('utility.cc')
 
     SimObject('MipsInterrupts.py')
     SimObject('MipsISA.py')
-    SimObject('MipsSystem.py')
     SimObject('MipsTLB.py')
 
     DebugFlag('MipsPRA')

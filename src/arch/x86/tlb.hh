@@ -46,6 +46,7 @@
 #include "base/trie.hh"
 #include "mem/request.hh"
 #include "params/X86TLB.hh"
+#include "sim/stats.hh"
 
 class ThreadContext;
 

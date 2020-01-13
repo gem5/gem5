@@ -36,7 +36,6 @@
 #include "arch/riscv/fs_workload.hh"
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/pra_constants.hh"
-#include "arch/riscv/system.hh"
 #include "arch/riscv/utility.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
@@ -48,6 +47,7 @@
 #include "params/RiscvTLB.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
+#include "sim/system.hh"
 
 using namespace std;
 using namespace RiscvISA;

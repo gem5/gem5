@@ -39,7 +39,7 @@ class ThreadContext;
 class Workload : public SimObject
 {
   protected:
-    Addr fixFuncEventAddr(Addr);
+    virtual Addr fixFuncEventAddr(Addr addr) const { return addr; }
 
   public:
     using SimObject::SimObject;

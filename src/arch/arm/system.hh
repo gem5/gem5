@@ -143,14 +143,6 @@ class ArmSystem : public System
 
     ArmSystem(Params *p);
 
-    Addr
-    fixFuncEventAddr(Addr addr) override
-    {
-        // Remove the low bit that thumb symbols have set
-        // but that aren't actually odd aligned
-        return addr & ~1;
-    }
-
     /** true if this a multiprocessor system */
     bool multiProc;
 

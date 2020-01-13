@@ -44,7 +44,6 @@ if env['TARGET_ISA'] == 'sparc':
     Source('remote_gdb.cc')
     Source('solaris/process.cc')
     Source('solaris/solaris.cc')
-    Source('system.cc')
     Source('tlb.cc')
     Source('ua2005.cc')
     Source('utility.cc')
@@ -53,7 +52,6 @@ if env['TARGET_ISA'] == 'sparc':
     SimObject('SparcInterrupts.py')
     SimObject('SparcISA.py')
     SimObject('SparcNativeTrace.py')
-    SimObject('SparcSystem.py')
     SimObject('SparcTLB.py')
 
     DebugFlag('Sparc', "Generic SPARC ISA stuff")

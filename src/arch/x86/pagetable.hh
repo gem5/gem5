@@ -43,11 +43,12 @@
 #include <string>
 #include <vector>
 
+#include "arch/x86/isa_traits.hh"
 #include "base/bitunion.hh"
 #include "base/types.hh"
 #include "base/trie.hh"
-#include "arch/x86/system.hh"
 #include "debug/MMU.hh"
+#include "mem/port_proxy.hh"
 
 class Checkpoint;
 class ThreadContext;

@@ -434,16 +434,6 @@ class System : public SimObject, public PCEventScope
 
     void workItemEnd(uint32_t tid, uint32_t workid);
 
-    /**
-     * Fix up an address used to match PCs for hooking simulator
-     * events on to target function executions.  See comment in
-     * system.cc for details.
-     */
-    virtual Addr fixFuncEventAddr(Addr addr)
-    {
-        panic("Base fixFuncEventAddr not implemented.\n");
-    }
-
   public:
     std::vector<BaseRemoteGDB *> remoteGDB;
     bool breakpoint();

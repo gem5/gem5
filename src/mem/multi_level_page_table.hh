@@ -38,8 +38,7 @@
 
 #include "base/types.hh"
 #include "mem/page_table.hh"
-
-class System;
+#include "sim/system.hh"
 
 /**
  * This class implements an in-memory multi-level page table that can be

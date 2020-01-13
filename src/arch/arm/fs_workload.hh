@@ -117,6 +117,14 @@ class FsWorkload : public KernelWorkload
     FsWorkload(Params *p);
 
     void initState() override;
+
+    Addr
+    fixFuncEventAddr(Addr addr) const override
+    {
+        // Remove the low bit that thumb symbols have set
+        // but that aren't actually odd aligned
+        return addr & ~1;
+    }
 };
 
 } // namespace ArmISA

@@ -108,7 +108,7 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
         def childImage(self, ci):
             self.image.child.image_file = ci
 
-    self = SparcSystem()
+    self = System()
     if not mdesc:
         # generic system
         mdesc = SysConfig()
@@ -362,7 +362,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
         ide = IdeController(disks=Parent.disks,
                             pci_func=0, pci_dev=0, pci_bus=0)
 
-    self = LinuxMipsSystem()
+    self = System()
     if not mdesc:
         # generic system
         mdesc = SysConfig()
@@ -453,7 +453,7 @@ def connectX86RubySystem(x86_sys):
 
 
 def makeX86System(mem_mode, numCPUs=1, mdesc=None, workload=None, Ruby=False):
-    self = X86System()
+    self = System()
 
     if workload is None:
         workload = X86FsWorkload()

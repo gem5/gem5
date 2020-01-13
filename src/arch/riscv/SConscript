@@ -52,7 +52,6 @@ if env['TARGET_ISA'] == 'riscv':
     Source('remote_gdb.cc')
     Source('stacktrace.cc')
     Source('tlb.cc')
-    Source('system.cc')
 
     Source('linux/process.cc')
     Source('linux/linux.cc')
@@ -63,7 +62,6 @@ if env['TARGET_ISA'] == 'riscv':
     SimObject('RiscvInterrupts.py')
     SimObject('RiscvISA.py')
     SimObject('RiscvTLB.py')
-    SimObject('RiscvSystem.py')
 
     DebugFlag('RiscvMisc')
     DebugFlag('RiscvTLB')

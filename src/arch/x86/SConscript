@@ -66,7 +66,6 @@ if env['TARGET_ISA'] == 'x86':
     Source('pseudo_inst.cc')
     Source('remote_gdb.cc')
     Source('stacktrace.cc')
-    Source('system.cc')
     Source('tlb.cc')
     Source('types.cc')
     Source('utility.cc')
@@ -75,7 +74,6 @@ if env['TARGET_ISA'] == 'x86':
     SimObject('X86ISA.py')
     SimObject('X86LocalApic.py')
     SimObject('X86NativeTrace.py')
-    SimObject('X86System.py')
     SimObject('X86TLB.py')
 
     DebugFlag('Faults', "Trace all faults/exceptions/traps")
