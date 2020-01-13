@@ -1541,6 +1541,14 @@ PCAlignmentFault::routeToHyp(ThreadContext *tc) const
 SPAlignmentFault::SPAlignmentFault()
 {}
 
+bool
+SPAlignmentFault::routeToHyp(ThreadContext *tc) const
+{
+    assert(from64);
+    HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    return EL2Enabled(tc) && hcr.tge==1;
+}
+
 SystemError::SystemError()
 {}
 

@@ -571,6 +571,7 @@ class SPAlignmentFault : public ArmFaultVals<SPAlignmentFault>
 {
   public:
     SPAlignmentFault();
+    bool routeToHyp(ThreadContext *tc) const override;
 };
 
 /// System error (AArch64 only)
