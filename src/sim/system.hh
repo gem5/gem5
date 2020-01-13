@@ -60,10 +60,10 @@
 #include "mem/port_proxy.hh"
 #include "params/System.hh"
 #include "sim/futex_map.hh"
-#include "sim/os_kernel.hh"
 #include "sim/redirect_path.hh"
 #include "sim/se_signal.hh"
 #include "sim/sim_object.hh"
+#include "sim/workload.hh"
 
 class BaseRemoteGDB;
 class KvmVM;
@@ -211,7 +211,7 @@ class System : public SimObject, public PCEventScope
     PortProxy physProxy;
 
     /** OS kernel */
-    OsKernel *workload = nullptr;
+    Workload *workload = nullptr;
 
   public:
     /**

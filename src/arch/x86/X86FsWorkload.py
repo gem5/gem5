@@ -39,9 +39,9 @@ from m5.objects.E820 import X86E820Table, X86E820Entry
 from m5.objects.SMBios import X86SMBiosSMBiosTable
 from m5.objects.IntelMP import X86IntelMPFloatingPointer, X86IntelMPConfigTable
 from m5.objects.ACPI import X86ACPIRSDP
-from m5.objects.OsKernel import OsKernel
+from m5.objects.Workload import KernelWorkload
 
-class X86FsWorkload(OsKernel):
+class X86FsWorkload(KernelWorkload):
     type = 'X86FsWorkload'
     cxx_header = 'arch/x86/fs_workload.hh'
     cxx_class = 'X86ISA::FsWorkload'

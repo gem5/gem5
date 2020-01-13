@@ -46,7 +46,7 @@
 
 #include "kern/linux/events.hh"
 #include "params/ArmFsWorkload.hh"
-#include "sim/os_kernel.hh"
+#include "sim/kernel_workload.hh"
 #include "sim/sim_object.hh"
 
 namespace ArmISA
@@ -59,7 +59,7 @@ class SkipFunc : public SkipFuncBase
     void returnFromFuncIn(ThreadContext *tc) override;
 };
 
-class FsWorkload : public OsKernel
+class FsWorkload : public KernelWorkload
 {
   protected:
     /** Bootloaders */
@@ -69,11 +69,6 @@ class FsWorkload : public OsKernel
      * Pointer to the bootloader object
      */
     ObjectFile *bootldr = nullptr;
-
-    /**
-     * Whether the highest exception level in software is 64 it.
-     */
-    bool _highestELIs64 = true;
 
     /**
      * This differs from entry since it takes into account where
@@ -99,19 +94,29 @@ class FsWorkload : public OsKernel
         return dynamic_cast<const Params *>(&_params);
     }
 
+    Addr
+    getEntry() const override
+    {
+        if (bootldr)
+            return bootldr->entryPoint();
+        else
+            return kernelEntry;
+    }
+
+    ObjectFile::Arch
+    getArch() const override
+    {
+        if (bootldr)
+            return bootldr->getArch();
+        else if (kernelObj)
+            return kernelObj->getArch();
+        else
+            return ObjectFile::Arm64;
+    }
+
     FsWorkload(Params *p);
 
     void initState() override;
-
-    /**
-     * Returns the reset address to be used by an ArmSystem.
-     * It the workload is using a bootloader, it will return
-     * the bootloader entry point.
-     * @returns Arm reset address
-     */
-    Addr resetAddr() const;
-
-    bool highestELIs64() const { return _highestELIs64; }
 };
 
 } // namespace ArmISA

@@ -36,7 +36,7 @@
 from m5.params import *
 from m5.options import *
 from m5.SimObject import *
-from m5.objects.OsKernel import OsKernel
+from m5.objects.Workload import KernelWorkload
 
 class ArmMachineType(Enum):
     map = {
@@ -45,7 +45,7 @@ class ArmMachineType(Enum):
         'DTOnly' : -1,
     }
 
-class ArmFsWorkload(OsKernel):
+class ArmFsWorkload(KernelWorkload):
     type = 'ArmFsWorkload'
     cxx_header = "arch/arm/fs_workload.hh"
     cxx_class = "ArmISA::FsWorkload"

@@ -31,13 +31,13 @@
 #define __ARCH_RISCV_FS_WORKLOAD_HH__
 
 #include "params/RiscvFsWorkload.hh"
-#include "sim/os_kernel.hh"
 #include "sim/sim_object.hh"
+#include "sim/workload.hh"
 
 namespace RiscvISA
 {
 
-class FsWorkload : public OsKernel
+class FsWorkload : public Workload
 {
   protected:
     // checker for bare metal application
@@ -46,7 +46,7 @@ class FsWorkload : public OsKernel
     Addr _resetVect;
 
   public:
-    FsWorkload(RiscvFsWorkloadParams *p) : OsKernel(*p),
+    FsWorkload(RiscvFsWorkloadParams *p) : Workload(p),
         _isBareMetal(p->bare_metal), _resetVect(p->reset_vect)
     {}
 
@@ -55,6 +55,8 @@ class FsWorkload : public OsKernel
 
     // return bare metal checker
     bool isBareMetal() const { return _isBareMetal; }
+
+    Addr getEntry() const override { return _resetVect; }
 };
 
 } // namespace RiscvISA

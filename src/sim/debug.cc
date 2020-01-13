@@ -35,6 +35,7 @@
 #include "cpu/pc_event.hh"
 #include "sim/eventq_impl.hh"
 #include "sim/global_event.hh"
+#include "sim/kernel_workload.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"

@@ -28,6 +28,7 @@
 
 #include "arch/riscv/bare_metal/fs_workload.hh"
 
+#include "arch/riscv/faults.hh"
 #include "base/loader/object_file.hh"
 #include "sim/system.hh"
 
@@ -51,6 +52,12 @@ void
 BareMetal::initState()
 {
     RiscvISA::FsWorkload::initState();
+
+    for (auto *tc: system->threadContexts) {
+        RiscvISA::Reset().invoke(tc);
+        tc->activate();
+    }
+
     warn_if(!bootloader->buildImage().write(system->physProxy),
             "Could not load sections to memory.");
 }

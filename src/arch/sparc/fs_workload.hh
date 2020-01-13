@@ -29,17 +29,42 @@
 #ifndef __ARCH_SPARC_FS_WORKLOAD_HH__
 #define __ARCH_SPARC_FS_WORKLOAD_HH__
 
+#include "arch/sparc/faults.hh"
 #include "params/SparcFsWorkload.hh"
-#include "sim/os_kernel.hh"
+#include "sim/workload.hh"
 
 namespace SparcISA
 {
 
-class FsWorkload : public OsKernel
+class FsWorkload : public Workload
 {
+  protected:
+    SymbolTable defaultSymtab;
+
   public:
-    FsWorkload(SparcFsWorkloadParams *p) : OsKernel(*p) {}
+    FsWorkload(SparcFsWorkloadParams *params) : Workload(params) {}
     void initState() override;
+
+    Addr
+    getEntry() const override
+    {
+        Addr pc, npc;
+        getREDVector(0x001, pc, npc);
+        return pc;
+    }
+    ObjectFile::Arch getArch() const override { return ObjectFile::SPARC64; }
+
+    const SymbolTable *
+    symtab(ThreadContext *tc) override
+    {
+        return &defaultSymtab;
+    }
+
+    bool
+    insertSymbol(Addr address, const std::string &symbol) override
+    {
+        return defaultSymtab.insert(address, symbol);
+    }
 };
 
 } // namespace SparcISA

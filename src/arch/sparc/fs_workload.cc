@@ -38,7 +38,7 @@ namespace SparcISA
 void
 FsWorkload::initState()
 {
-    OsKernel::initState();
+    Workload::initState();
 
     if (system->threadContexts.empty())
         return;

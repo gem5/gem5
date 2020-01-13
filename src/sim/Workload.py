@@ -28,9 +28,14 @@ from m5.SimObject import SimObject
 
 from m5.objects.SimpleMemory import *
 
-class OsKernel(SimObject):
-    type = 'OsKernel'
-    cxx_header = "sim/os_kernel.hh"
+class Workload(SimObject):
+    type = 'Workload'
+    cxx_header = "sim/workload.hh"
+    abstract = True
+
+class KernelWorkload(Workload):
+    type = 'KernelWorkload'
+    cxx_header = "sim/kernel_workload.hh"
 
     object_file = Param.String("", "File that contains the kernel code")
     extras = VectorParam.String([], "Additional object files to load")

@@ -25,68 +25,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SIM_OS_KERNEL_HH__
-#define __SIM_OS_KERNEL_HH__
+#ifndef __SIM_WORKLOAD_HH__
+#define __SIM_WORKLOAD_HH__
 
-#include "base/loader/memory_image.hh"
+#include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
-#include "params/OsKernel.hh"
+#include "params/Workload.hh"
 #include "sim/sim_object.hh"
 
-class ObjectFile;
-class SymbolTable;
 class System;
+class ThreadContext;
 
-class OsKernel : public SimObject
+class Workload : public SimObject
 {
-  public:
-    using Params = OsKernelParams;
-
   protected:
-    const Params &_params;
-
     Addr fixFuncEventAddr(Addr);
 
   public:
-    OsKernel(const Params &p);
-    ~OsKernel();
-
-    const Params &params() { return _params; }
-
-    void initState() override;
-
-    const std::string commandLine;
-
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
+    using SimObject::SimObject;
 
     System *system = nullptr;
 
-    ObjectFile *obj = nullptr;
-    SymbolTable *symtab = nullptr;
+    virtual Addr getEntry() const = 0;
+    virtual ObjectFile::Arch getArch() const = 0;
 
-    MemoryImage image;
-
-    Addr start = 0;
-    Addr end = MaxAddr;
-    Addr entry = 0;
-
-    /** Mask that should be anded for binary/symbol loading.
-     * This allows one two different OS requirements for the same ISA to be
-     * handled.  Some OSes are compiled for a virtual address and need to be
-     * loaded into physical memory that starts at address 0, while other
-     * bare metal tools generate images that start at address 0.
-     */
-    Addr loadAddrMask;
-
-    /** Offset that should be used for binary/symbol loading.
-     * This further allows more flexibility than the loadAddrMask allows alone
-     * in loading kernels and similar. The loadAddrOffset is applied after the
-     * loadAddrMask.
-     */
-    Addr loadAddrOffset;
-
-    std::vector<ObjectFile *> extras;
+    virtual const SymbolTable *symtab(ThreadContext *tc) = 0;
+    virtual bool insertSymbol(Addr address, const std::string &symbol) = 0;
 
     /** @{ */
     /**
@@ -133,57 +97,6 @@ class OsKernel : public SimObject
         return e;
     }
     /** @} */
-
-    /** @{ */
-    /**
-     * Add a function-based event to a kernel symbol.
-     *
-     * These functions work like their addFuncEvent() and
-     * addFuncEventOrPanic() counterparts. The only difference is that
-     * they automatically use the kernel symbol table. All arguments
-     * are forwarded to the underlying method.
-     *
-     * @see addFuncEvent()
-     * @see addFuncEventOrPanic()
-     *
-     * @param lbl Function to hook the event to.
-     * @param args Arguments to be passed to addFuncEvent
-     */
-    template <class T, typename... Args>
-    T *
-    addKernelFuncEvent(const char *lbl, Args... args)
-    {
-        return addFuncEvent<T>(symtab, lbl, std::forward<Args>(args)...);
-    }
-
-    template <class T, typename... Args>
-    T *
-    addKernelFuncEventOrPanic(const char *lbl, Args... args)
-    {
-        T *e(addFuncEvent<T>(symtab, lbl, std::forward<Args>(args)...));
-        if (!e)
-            panic("Failed to find kernel symbol '%s'", lbl);
-        return e;
-    }
-    /** @} */
-
-  protected:
-    /**
-     * If needed, serialize additional symbol table entries for a
-     * specific subclass of this system.
-     *
-     * @param os stream to serialize to
-     */
-    virtual void serializeSymtab(CheckpointOut &os) const {}
-
-    /**
-     * If needed, unserialize additional symbol table entries for a
-     * specific subclass of this system.
-     *
-     * @param cp checkpoint to unserialize from
-     * @param section relevant section in the checkpoint
-     */
-    virtual void unserializeSymtab(CheckpointIn &cp) {}
 };
 
-#endif // __SIM_OS_KERNEL_HH__
+#endif // __SIM_WORKLOAD_HH__

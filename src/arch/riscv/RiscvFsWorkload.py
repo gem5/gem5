@@ -30,9 +30,9 @@
 from m5.params import *
 
 from m5.objects.System import System
-from m5.objects.OsKernel import OsKernel
+from m5.objects.Workload import Workload
 
-class RiscvFsWorkload(OsKernel):
+class RiscvFsWorkload(Workload):
     type = 'RiscvFsWorkload'
     cxx_class = 'RiscvISA::FsWorkload'
     cxx_header = 'arch/riscv/fs_workload.hh'

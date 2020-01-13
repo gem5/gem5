@@ -50,7 +50,7 @@
 namespace X86ISA
 {
 
-FsWorkload::FsWorkload(Params *p) : OsKernel(*p),
+FsWorkload::FsWorkload(Params *p) : KernelWorkload(*p),
     smbiosTable(p->smbios_table),
     mpFloatingPointer(p->intel_mp_pointer),
     mpConfigTable(p->intel_mp_table),
@@ -104,7 +104,7 @@ installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
 void
 FsWorkload::initState()
 {
-    OsKernel::initState();
+    KernelWorkload::initState();
 
     for (auto *tc: system->threadContexts) {
         X86ISA::InitInterrupt(0).invoke(tc);
@@ -119,9 +119,9 @@ FsWorkload::initState()
         }
     }
 
-    fatal_if(!obj, "No kernel to load.");
+    fatal_if(!kernelObj, "No kernel to load.");
 
-    fatal_if(obj->getArch() == ObjectFile::I386,
+    fatal_if(kernelObj->getArch() == ObjectFile::I386,
              "Loading a 32 bit x86 kernel is not supported.");
 
     ThreadContext *tc = system->threadContexts[0];
@@ -304,7 +304,7 @@ FsWorkload::initState()
     cr0.pg = 1;
     tc->setMiscReg(MISCREG_CR0, cr0);
 
-    tc->pcState(entry);
+    tc->pcState(kernelObj->entryPoint());
 
     // We should now be in long mode. Yay!
 

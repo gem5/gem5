@@ -81,21 +81,21 @@ FsFreebsd::initState()
     // to do this permanently, for but early bootup work
     // it is helpful.
     if (params()->early_kernel_symbols) {
-        obj->loadGlobalSymbols(symtab, 0, 0, loadAddrMask);
-        obj->loadGlobalSymbols(debugSymbolTable, 0, 0, loadAddrMask);
+        kernelObj->loadGlobalSymbols(kernelSymtab, 0, 0, _loadAddrMask);
+        kernelObj->loadGlobalSymbols(debugSymbolTable, 0, 0, _loadAddrMask);
     }
 
     // Check if the kernel image has a symbol that tells us it supports
     // device trees.
     Addr addr;
-    fatal_if(!symtab->findAddress("fdt_get_range", addr),
+    fatal_if(!kernelSymtab->findAddress("fdt_get_range", addr),
              "Kernel must have fdt support.");
     fatal_if(params()->dtb_filename == "", "dtb file is not specified.");
 
     // Kernel supports flattened device tree and dtb file specified.
     // Using Device Tree Blob to describe system configuration.
     inform("Loading DTB file: %s at address %#x\n", params()->dtb_filename,
-            params()->atags_addr + loadAddrOffset);
+            params()->atags_addr + _loadAddrOffset);
 
     DtbFile *dtb_file = new DtbFile(params()->dtb_filename);
 
@@ -108,7 +108,7 @@ FsFreebsd::initState()
         bootReleaseAddr = ra & ~ULL(0x7F);
 
     dtb_file->buildImage().
-        offset(params()->atags_addr + loadAddrOffset).
+        offset(params()->atags_addr + _loadAddrOffset).
         write(system->physProxy);
     delete dtb_file;
 
@@ -116,7 +116,7 @@ FsFreebsd::initState()
     for (auto tc: system->threadContexts) {
         tc->setIntReg(0, 0);
         tc->setIntReg(1, params()->machine_type);
-        tc->setIntReg(2, params()->atags_addr + loadAddrOffset);
+        tc->setIntReg(2, params()->atags_addr + _loadAddrOffset);
     }
 }
 

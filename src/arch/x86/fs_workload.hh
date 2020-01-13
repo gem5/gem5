@@ -46,7 +46,7 @@
 #include "base/types.hh"
 #include "cpu/thread_context.hh"
 #include "params/X86FsWorkload.hh"
-#include "sim/os_kernel.hh"
+#include "sim/kernel_workload.hh"
 
 namespace X86ISA
 {
@@ -79,7 +79,7 @@ const Addr MMIORegionPhysAddr = 0xffff0000;
 void installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
                     SegDescriptor desc, bool longmode);
 
-class FsWorkload : public OsKernel
+class FsWorkload : public KernelWorkload
 {
   public:
     typedef X86FsWorkloadParams Params;

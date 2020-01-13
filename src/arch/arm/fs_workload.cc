@@ -69,9 +69,8 @@ SkipFunc::returnFromFuncIn(ThreadContext *tc)
     }
 }
 
-FsWorkload::FsWorkload(Params *p)
-  : OsKernel(*p),
-    kernelEntry((entry & loadAddrMask) + loadAddrOffset)
+FsWorkload::FsWorkload(Params *p) : KernelWorkload(*p),
+    kernelEntry((kernelObj->entryPoint() & loadAddrMask()) + loadAddrOffset())
 {
     bootLoaders.reserve(p->boot_loader.size());
     for (const auto &bl : p->boot_loader) {
@@ -82,29 +81,19 @@ FsWorkload::FsWorkload(Params *p)
         bootLoaders.emplace_back(std::move(bl_obj));
     }
 
-    if (obj) {
-        bootldr = getBootLoader(obj);
-    } else if (!bootLoaders.empty()) {
-        // No kernel specified, default to the first boot loader
-        bootldr = bootLoaders[0].get();
-    }
+    bootldr = getBootLoader(kernelObj);
 
     fatal_if(!bootLoaders.empty() && !bootldr,
              "Can't find a matching boot loader / kernel combination!");
 
-    if (bootldr) {
+    if (bootldr)
         bootldr->loadGlobalSymbols(debugSymbolTable);
-
-        _highestELIs64 = (bootldr->getArch() == ObjectFile::Arm64);
-    } else if (obj) {
-        _highestELIs64 = (obj->getArch() == ObjectFile::Arm64);
-    }
 }
 
 void
 FsWorkload::initState()
 {
-    OsKernel::initState();
+    KernelWorkload::initState();
 
     // Reset CP15?? What does that mean -- ali
 
@@ -144,29 +133,23 @@ FsWorkload::initState()
     } else {
         // Set the initial PC to be at start of the kernel code
         if (!arm_sys->highestELIs64())
-            arm_sys->threadContexts[0]->pcState(entry);
+            arm_sys->threadContexts[0]->pcState(kernelObj->entryPoint());
     }
 }
 
 ObjectFile *
 FsWorkload::getBootLoader(ObjectFile *const obj)
 {
-    for (auto &bl : bootLoaders) {
-        if (bl->getArch() == obj->getArch())
-            return bl.get();
+    if (obj) {
+        for (auto &bl : bootLoaders) {
+            if (bl->getArch() == obj->getArch())
+                return bl.get();
+        }
+    } else if (!bootLoaders.empty()) {
+        return bootLoaders[0].get();
     }
 
     return nullptr;
-}
-
-Addr
-FsWorkload::resetAddr() const
-{
-    if (bootldr) {
-        return bootldr->entryPoint();
-    } else {
-        return kernelEntry;
-    }
 }
 
 } // namespace ArmISA

@@ -47,6 +47,22 @@ class BareMetal : public RiscvISA::FsWorkload
     ~BareMetal();
 
     void initState() override;
+
+    ObjectFile::Arch
+    getArch() const override
+    {
+        return bootloader->getArch();
+    }
+    const SymbolTable *
+    symtab(ThreadContext *tc) override
+    {
+        return bootloaderSymtab;
+    }
+    bool
+    insertSymbol(Addr address, const std::string &symbol) override
+    {
+        return bootloaderSymtab->insert(address, symbol);
+    }
 };
 
 } // namespace RiscvISA

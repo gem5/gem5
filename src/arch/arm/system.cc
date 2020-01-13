@@ -73,25 +73,21 @@ ArmSystem::ArmSystem(Params *p)
       semihosting(p->semihosting),
       multiProc(p->multi_proc)
 {
-    auto *arm_workload = dynamic_cast<ArmISA::FsWorkload *>(p->workload);
-    panic_if(!arm_workload,
-            "Workload was not the expected type (ArmISA::FsWorkload).");
-
     if (p->auto_reset_addr) {
-        _resetAddr = arm_workload->resetAddr();
+        _resetAddr = workload->getEntry();
     } else {
         _resetAddr = p->reset_addr;
-        warn_if(arm_workload->resetAddr() != _resetAddr,
+        warn_if(workload->getEntry() != _resetAddr,
                 "Workload entry point %#x and reset address %#x are different",
-                arm_workload->resetAddr(), _resetAddr);
+                workload->getEntry(), _resetAddr);
     }
 
-    if (arm_workload->highestELIs64() != _highestELIs64) {
+    bool wl_is_64 = (workload->getArch() == ObjectFile::Arm64);
+    if (wl_is_64 != _highestELIs64) {
         warn("Highest ARM exception-level set to AArch%d but the workload "
               "is for AArch%d. Assuming you wanted these to match.",
-              _highestELIs64 ? 64 : 32,
-              arm_workload->highestELIs64() ? 64 : 32);
-        _highestELIs64 = arm_workload->highestELIs64();
+              _highestELIs64 ? 64 : 32, wl_is_64 ? 64 : 32);
+        _highestELIs64 = wl_is_64;
     }
 
     if (_highestELIs64 && (

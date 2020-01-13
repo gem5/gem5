@@ -25,59 +25,52 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "sim/os_kernel.hh"
+#include "sim/kernel_workload.hh"
 
-#include "base/loader/object_file.hh"
-#include "base/loader/symtab.hh"
 #include "debug/Loader.hh"
-#include "params/OsKernel.hh"
+#include "params/KernelWorkload.hh"
 #include "sim/system.hh"
 
-OsKernel::OsKernel(const Params &p) : SimObject(&p), _params(p),
-    commandLine(p.command_line), symtab(new SymbolTable),
-    loadAddrMask(p.load_addr_mask), loadAddrOffset(p.load_addr_offset)
+KernelWorkload::KernelWorkload(const Params &p) : Workload(&p), _params(p),
+    _loadAddrMask(p.load_addr_mask), _loadAddrOffset(p.load_addr_offset),
+    kernelSymtab(new SymbolTable), commandLine(p.command_line)
 {
     if (!debugSymbolTable)
         debugSymbolTable = new SymbolTable;
 
-    if (params().object_file == "") {
-        inform("No kernel set for full system simulation. "
-               "Assuming you know what you're doing.");
-    } else {
-        obj = createObjectFile(params().object_file);
-        inform("kernel located at: %s", params().object_file);
+    kernelObj = createObjectFile(params().object_file);
+    inform("kernel located at: %s", params().object_file);
 
-        fatal_if(!obj, "Could not load kernel file %s", params().object_file);
+    fatal_if(!kernelObj,
+            "Could not load kernel file %s", params().object_file);
 
-        image = obj->buildImage();
+    image = kernelObj->buildImage();
 
-        start = image.minAddr();
-        end = image.maxAddr();
-        entry = obj->entryPoint();
+    _start = image.minAddr();
+    _end = image.maxAddr();
 
-        // If load_addr_mask is set to 0x0, then calculate the smallest mask to
-        // cover all kernel addresses so gem5 can relocate the kernel to a new
-        // offset.
-        if (loadAddrMask == 0)
-            loadAddrMask = mask(findMsbSet(end - start) + 1);
+    // If load_addr_mask is set to 0x0, then calculate the smallest mask to
+    // cover all kernel addresses so gem5 can relocate the kernel to a new
+    // offset.
+    if (_loadAddrMask == 0)
+        _loadAddrMask = mask(findMsbSet(_end - _start) + 1);
 
-        image.move([this](Addr a) {
-            return (a & loadAddrMask) + loadAddrOffset;
-        });
+    image.move([this](Addr a) {
+        return (a & _loadAddrMask) + _loadAddrOffset;
+    });
 
-        // load symbols
-        fatal_if(!obj->loadGlobalSymbols(symtab),
-                "Could not load kernel symbols.");
+    // load symbols
+    fatal_if(!kernelObj->loadGlobalSymbols(kernelSymtab),
+            "Could not load kernel symbols.");
 
-        fatal_if(!obj->loadLocalSymbols(symtab),
-                "Could not load kernel local symbols.");
+    fatal_if(!kernelObj->loadLocalSymbols(kernelSymtab),
+            "Could not load kernel local symbols.");
 
-        fatal_if(!obj->loadGlobalSymbols(debugSymbolTable),
-                "Could not load kernel symbols.");
+    fatal_if(!kernelObj->loadGlobalSymbols(debugSymbolTable),
+            "Could not load kernel symbols.");
 
-        fatal_if(!obj->loadLocalSymbols(debugSymbolTable),
-                "Could not load kernel local symbols.");
-    }
+    fatal_if(!kernelObj->loadLocalSymbols(debugSymbolTable),
+            "Could not load kernel local symbols.");
 
     // Loading only needs to happen once and after memory system is
     // connected so it will happen in initState()
@@ -97,42 +90,36 @@ OsKernel::OsKernel(const Params &p) : SimObject(&p), _params(p),
     }
 }
 
-Addr
-OsKernel::fixFuncEventAddr(Addr addr)
+KernelWorkload::~KernelWorkload()
 {
-    return system->fixFuncEventAddr(addr);
-}
-
-OsKernel::~OsKernel()
-{
-    delete symtab;
+    delete kernelSymtab;
 }
 
 void
-OsKernel::initState()
+KernelWorkload::initState()
 {
     auto &phys_mem = system->physProxy;
     /**
      * Load the kernel code into memory.
      */
     auto mapper = [this](Addr a) {
-        return (a & loadAddrMask) + loadAddrOffset;
+        return (a & _loadAddrMask) + _loadAddrOffset;
     };
     if (params().object_file != "")  {
         if (params().addr_check) {
             // Validate kernel mapping before loading binary
-            fatal_if(!system->isMemAddr(mapper(start)) ||
-                    !system->isMemAddr(mapper(end)),
+            fatal_if(!system->isMemAddr(mapper(_start)) ||
+                    !system->isMemAddr(mapper(_end)),
                     "Kernel is mapped to invalid location (not memory). "
                     "start (%#x) - end (%#x) %#x:%#x\n",
-                    start, end, mapper(start), mapper(end));
+                    _start, _end, mapper(_start), mapper(_end));
         }
         // Load program sections into memory
         image.write(phys_mem);
 
-        DPRINTF(Loader, "Kernel start = %#x\n", start);
-        DPRINTF(Loader, "Kernel end   = %#x\n", end);
-        DPRINTF(Loader, "Kernel entry = %#x\n", entry);
+        DPRINTF(Loader, "Kernel start = %#x\n", _start);
+        DPRINTF(Loader, "Kernel end   = %#x\n", _end);
+        DPRINTF(Loader, "Kernel entry = %#x\n", kernelObj->entryPoint());
         DPRINTF(Loader, "Kernel loaded...\n");
     }
 
@@ -151,21 +138,19 @@ OsKernel::initState()
 }
 
 void
-OsKernel::serialize(CheckpointOut &cp) const
+KernelWorkload::serialize(CheckpointOut &cp) const
 {
-    symtab->serialize("symtab", cp);
-    serializeSymtab(cp);
+    kernelSymtab->serialize("symtab", cp);
 }
 
 void
-OsKernel::unserialize(CheckpointIn &cp)
+KernelWorkload::unserialize(CheckpointIn &cp)
 {
-    symtab->unserialize("symtab", cp);
-    unserializeSymtab(cp);
+    kernelSymtab->unserialize("symtab", cp);
 }
 
-OsKernel *
-OsKernelParams::create()
+KernelWorkload *
+KernelWorkloadParams::create()
 {
-    return new OsKernel(*this);
+    return new KernelWorkload(*this);
 }

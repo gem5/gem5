@@ -45,7 +45,7 @@ static int32_t
 readSymbol(ThreadContext *tc, const std::string name)
 {
     PortProxy &vp = tc->getVirtProxy();
-    SymbolTable *symtab = tc->getSystemPtr()->workload->symtab;
+    const SymbolTable *symtab = tc->getSystemPtr()->workload->symtab(tc);
 
     Addr addr;
     if (!symtab->findAddress(name, addr))

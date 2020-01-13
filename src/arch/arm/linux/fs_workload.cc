@@ -76,8 +76,8 @@ FsLinux::initState()
     // to do this permanently, for but early bootup work
     // it is helpful.
     if (params()->early_kernel_symbols) {
-        obj->loadGlobalSymbols(symtab, 0, 0, loadAddrMask);
-        obj->loadGlobalSymbols(debugSymbolTable, 0, 0, loadAddrMask);
+        kernelObj->loadGlobalSymbols(kernelSymtab, 0, 0, _loadAddrMask);
+        kernelObj->loadGlobalSymbols(debugSymbolTable, 0, 0, _loadAddrMask);
     }
 
     // Setup boot data structure
@@ -85,14 +85,14 @@ FsLinux::initState()
     // Check if the kernel image has a symbol that tells us it supports
     // device trees.
     bool kernel_has_fdt_support =
-        symtab->findAddress("unflatten_device_tree", addr);
+        kernelSymtab->findAddress("unflatten_device_tree", addr);
     bool dtb_file_specified = params()->dtb_filename != "";
 
     if (kernel_has_fdt_support && dtb_file_specified) {
         // Kernel supports flattened device tree and dtb file specified.
         // Using Device Tree Blob to describe system configuration.
         inform("Loading DTB file: %s at address %#x\n", params()->dtb_filename,
-                params()->atags_addr + loadAddrOffset);
+                params()->atags_addr + _loadAddrOffset);
 
         DtbFile *dtb_file = new DtbFile(params()->dtb_filename);
 
@@ -103,7 +103,7 @@ FsLinux::initState()
         }
 
         dtb_file->buildImage().
-            offset(params()->atags_addr + loadAddrOffset).
+            offset(params()->atags_addr + _loadAddrOffset).
             write(system->physProxy);
         delete dtb_file;
     } else {
@@ -152,7 +152,7 @@ FsLinux::initState()
         DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
         DDUMP(Loader, boot_data, size << 2);
 
-        system->physProxy.writeBlob(params()->atags_addr + loadAddrOffset,
+        system->physProxy.writeBlob(params()->atags_addr + _loadAddrOffset,
                                     boot_data, size << 2);
 
         delete[] boot_data;
@@ -162,7 +162,7 @@ FsLinux::initState()
     for (auto tc: system->threadContexts) {
         tc->setIntReg(0, 0);
         tc->setIntReg(1, params()->machine_type);
-        tc->setIntReg(2, params()->atags_addr + loadAddrOffset);
+        tc->setIntReg(2, params()->atags_addr + _loadAddrOffset);
     }
 }
 
@@ -183,19 +183,18 @@ FsLinux::startup()
 {
     FsWorkload::startup();
 
-    auto *arm_sys = dynamic_cast<ArmSystem *>(system);
     if (enableContextSwitchStatsDump) {
-        if (!arm_sys->highestELIs64())
-            dumpStats = addKernelFuncEvent<DumpStats>("__switch_to");
-        else
+        if (getArch() == ObjectFile::Arm64)
             dumpStats = addKernelFuncEvent<DumpStats64>("__switch_to");
+        else
+            dumpStats = addKernelFuncEvent<DumpStats>("__switch_to");
 
         panic_if(!dumpStats, "dumpStats not created!");
 
         std::string task_filename = "tasks.txt";
         taskFile = simout.create(name() + "." + task_filename);
 
-        for (const auto tc : arm_sys->threadContexts) {
+        for (const auto tc : system->threadContexts) {
             uint32_t pid = tc->getCpuPtr()->getPid();
             if (pid != BaseCPU::invldPid) {
                 mapPid(tc, pid);
@@ -238,7 +237,7 @@ FsLinux::startup()
             "__const_udelay", "__const_udelay", 1000, 107374);
     }
 
-    if (highestELIs64()) {
+    if (getArch() == ObjectFile::Arm64) {
         debugPrintk = addKernelFuncEvent<
             DebugPrintk<SkipFuncLinux64>>("dprintk");
     } else {

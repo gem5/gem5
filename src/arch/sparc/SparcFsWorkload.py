@@ -26,11 +26,9 @@
 
 from m5.params import *
 
-from m5.objects.OsKernel import OsKernel
+from m5.objects.Workload import Workload
 
-class SparcFsWorkload(OsKernel):
+class SparcFsWorkload(Workload):
     type = 'SparcFsWorkload'
     cxx_header = 'arch/sparc/fs_workload.hh'
     cxx_class = 'SparcISA::FsWorkload'
-
-    load_addr_mask = 0xffffffffff

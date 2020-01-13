@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2018 TU Dresden
- * All rights reserved
+ * Copyright 2019 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,47 +25,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/riscv/bare_metal/system.hh"
+#include "sim/workload.hh"
 
-#include "arch/riscv/faults.hh"
-#include "base/loader/object_file.hh"
+#include "params/Workload.hh"
+#include "sim/system.hh"
 
-BareMetalRiscvSystem::BareMetalRiscvSystem(Params *p)
-    : RiscvSystem(p),
-      bootloader(createObjectFile(p->bootloader))
+Addr
+Workload::fixFuncEventAddr(Addr addr)
 {
-    if (bootloader == NULL) {
-         fatal("Could not load bootloader file %s", p->bootloader);
-    }
-
-    _resetVect = bootloader->entryPoint();
+    return system->fixFuncEventAddr(addr);
 }
-
-BareMetalRiscvSystem::~BareMetalRiscvSystem()
-{
-    delete bootloader;
-}
-
-void
-BareMetalRiscvSystem::initState()
-{
-    // Call the initialisation of the super class
-    RiscvSystem::initState();
-
-    for (auto *tc: threadContexts) {
-        RiscvISA::Reset().invoke(tc);
-        tc->activate();
-    }
-
-    // load program sections into memory
-    if (!bootloader->buildImage().write(physProxy)) {
-        warn("could not load sections to memory");
-    }
-}
-
-BareMetalRiscvSystem *
-BareMetalRiscvSystemParams::create()
-{
-    return new BareMetalRiscvSystem(this);
-}
-
