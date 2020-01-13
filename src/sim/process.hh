@@ -129,9 +129,6 @@ class Process : public SimObject
         contextIds.push_back(context_id);
     }
 
-    // Find a free context to use
-    ThreadContext *findFreeContext();
-
     /**
      * After delegating a thread context to a child process
      * no longer should relate to the ThreadContext

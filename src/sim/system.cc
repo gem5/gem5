@@ -302,6 +302,16 @@ System::registerThreadContext(ThreadContext *tc, ContextID assigned)
     return id;
 }
 
+ThreadContext *
+System::findFreeContext()
+{
+    for (auto &it : threadContexts) {
+        if (ThreadContext::Halted == it->status())
+            return it;
+    }
+    return nullptr;
+}
+
 bool
 System::schedule(PCEvent *event)
 {

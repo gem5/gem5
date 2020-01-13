@@ -280,16 +280,6 @@ Process::regStats()
         ;
 }
 
-ThreadContext *
-Process::findFreeContext()
-{
-    for (auto &it : system->threadContexts) {
-        if (ThreadContext::Halted == it->status())
-            return it;
-    }
-    return nullptr;
-}
-
 void
 Process::revokeThreadContext(int context_id)
 {

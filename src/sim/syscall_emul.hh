@@ -1527,7 +1527,7 @@ cloneFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         return -EINVAL;
 
     ThreadContext *ctc;
-    if (!(ctc = p->findFreeContext())) {
+    if (!(ctc = tc->getSystemPtr()->findFreeContext())) {
         DPRINTF_SYSCALL(Verbose, "clone: no spare thread context in system"
                         "[cpu %d, thread %d]", tc->cpuId(), tc->threadId());
         return -EAGAIN;

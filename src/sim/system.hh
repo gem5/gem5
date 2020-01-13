@@ -188,17 +188,20 @@ class System : public SimObject, public PCEventScope
     unsigned int cacheLineSize() const { return _cacheLineSize; }
 
     std::vector<ThreadContext *> threadContexts;
+    ThreadContext *findFreeContext();
+
+    ThreadContext *
+    getThreadContext(ContextID tid) const
+    {
+        return threadContexts[tid];
+    }
+
     const bool multiThread;
 
     using SimObject::schedule;
 
     bool schedule(PCEvent *event) override;
     bool remove(PCEvent *event) override;
-
-    ThreadContext *getThreadContext(ContextID tid) const
-    {
-        return threadContexts[tid];
-    }
 
     unsigned numContexts() const { return threadContexts.size(); }
 
