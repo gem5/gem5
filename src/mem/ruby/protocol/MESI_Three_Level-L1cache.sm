@@ -130,6 +130,14 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     Ack_all,      desc="Last ack for processor";
 
     WB_Ack,        desc="Ack for replacement";
+
+    // hardware transactional memory
+    L0_DataCopy,     desc="Data Block from L0. Should remain in M state.";
+
+    // L0 cache received the invalidation message and has
+    // sent a NAK (because of htm abort) saying that the data
+    // in L1 is the latest value.
+    L0_DataNak,      desc="L0 received INV message, specifies its data is also stale";
   }
 
   // TYPES
@@ -361,6 +369,10 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 
         if(in_msg.Class == CoherenceClass:INV_DATA) {
             trigger(Event:L0_DataAck, in_msg.addr, cache_entry, tbe);
+        }  else if (in_msg.Class == CoherenceClass:NAK) {
+              trigger(Event:L0_DataNak, in_msg.addr, cache_entry, tbe);
+        }  else if (in_msg.Class == CoherenceClass:PUTX_COPY) {
+              trigger(Event:L0_DataCopy, in_msg.addr, cache_entry, tbe);
         }  else if (in_msg.Class == CoherenceClass:INV_ACK) {
             trigger(Event:L0_Ack, in_msg.addr, cache_entry, tbe);
         }  else {
@@ -808,18 +820,6 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     k_popL0RequestQueue;
   }
 
-  transition(EE, Load, E) {
-    hh_xdata_to_l0;
-    uu_profileHit;
-    k_popL0RequestQueue;
-  }
-
-  transition(MM, Load, M) {
-    hh_xdata_to_l0;
-    uu_profileHit;
-    k_popL0RequestQueue;
-  }
-
   transition({S,SS}, Store, SM) {
     i_allocateTBE;
     c_issueUPGRADE;
@@ -1034,7 +1034,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     kd_wakeUpDependents;
   }
 
-  transition(SM, L0_Invalidate_Else, SM_IL0) {
+  transition(SM, {Inv,L0_Invalidate_Else}, SM_IL0) {
     forward_eviction_to_L0_else;
   }
 
@@ -1092,5 +1092,56 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 
   transition({S_IL0, M_IL0, E_IL0, MM_IL0}, {Inv, Fwd_GETX, Fwd_GETS}) {
     z2_stallAndWaitL2Queue;
+  }
+
+  // hardware transactional memory
+
+  // If a transaction has aborted, the L0 could re-request
+  // data which is in E or EE state in L1.
+  transition({EE,E}, Load, E) {
+    hh_xdata_to_l0;
+    uu_profileHit;
+    k_popL0RequestQueue;
+  }
+
+  // If a transaction has aborted, the L0 could re-request
+  // data which is in M or MM state in L1.
+  transition({MM,M}, Load, M) {
+    hh_xdata_to_l0;
+    uu_profileHit;
+    k_popL0RequestQueue;
+  }
+
+  // If a transaction has aborted, the L0 could re-request
+  // data which is in M state in L1.
+  transition({E,M}, Store, M) {
+    hh_xdata_to_l0;
+    uu_profileHit;
+    k_popL0RequestQueue;
+  }
+
+  // A transaction may have tried to modify a cache block in M state with
+  // non-speculative (pre-transactional) data. This needs to be copied
+  // to the L1 before any further modifications occur at the L0.
+  transition({M,E}, L0_DataCopy, M) {
+    u_writeDataFromL0Request;
+    k_popL0RequestQueue;
+  }
+
+  transition({M_IL0, E_IL0}, L0_DataCopy, M_IL0) {
+    u_writeDataFromL0Request;
+    k_popL0RequestQueue;
+  }
+
+  // A NAK from the L0 means that the L0 invalidated its
+  // modified line (due to an abort) so it is therefore necessary
+  // to use the L1's correct version instead
+  transition({M_IL0, E_IL0}, L0_DataNak, MM) {
+    k_popL0RequestQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(I, L1_Replacement) {
+    ff_deallocateCacheBlock;
   }
 }

@@ -1,4 +1,5 @@
 # Copyright (c) 2009 Advanced Micro Devices, Inc.
+# Copyright (c) 2020 ARM Limited
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -69,6 +70,11 @@ class RubySequencer(RubyPort):
    # id used by protocols that support multiple sequencers per controller
    # 99 is the dummy default value
    coreid = Param.Int(99, "CorePair core id")
+
+class RubyHTMSequencer(RubySequencer):
+   type = 'RubyHTMSequencer'
+   cxx_class = 'HTMSequencer'
+   cxx_header = "mem/ruby/system/HTMSequencer.hh"
 
 class DMASequencer(RubyPort):
    type = 'DMASequencer'

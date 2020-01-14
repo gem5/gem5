@@ -1,0 +1,1606 @@
+/*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2013 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+machine(MachineType:L0Cache, "MESI Directory L0 Cache")
+ : HTMSequencer * sequencer;
+   CacheMemory * Icache;
+   CacheMemory * Dcache;
+   Cycles request_latency := 2;
+   Cycles response_latency := 2;
+   bool send_evictions;
+
+   RubyPrefetcher * prefetcher;
+   bool enable_prefetch := "False";
+
+   // From this node's L0 cache to the network
+   MessageBuffer * bufferToL1, network="To";
+
+   // To this node's L0 cache FROM the network
+   MessageBuffer * bufferFromL1, network="From";
+
+   // Message queue between this controller and the processor
+   MessageBuffer * mandatoryQueue;
+
+   // Request Buffer for prefetches
+   MessageBuffer * prefetchQueue;
+{
+  // hardware transactional memory
+  bool htmTransactionalState, default="false";
+  bool htmFailed, default="false";
+  int htmUid, default=0;
+  HtmFailedInCacheReason htmFailedRc, default=HtmFailedInCacheReason_NO_FAIL;
+
+  // STATES
+  state_declaration(State, desc="Cache states", default="L0Cache_State_I") {
+    // Base states
+
+    // The cache entry has not been allocated.
+    I, AccessPermission:Invalid, desc="Invalid";
+
+    // The cache entry is in shared mode. The processor can read this entry
+    // but it cannot write to it.
+    S, AccessPermission:Read_Only, desc="Shared";
+
+    // The cache entry is in exclusive mode. The processor can read this
+    // entry. It can write to this entry without informing the directory.
+    // On writing, the entry moves to M state.
+    E, AccessPermission:Read_Only, desc="Exclusive";
+
+    // The processor has read and write permissions on this entry.
+    M, AccessPermission:Read_Write, desc="Modified";
+
+    // Transient States
+
+    // The cache controller has requested an instruction.  It will be stored
+    // in the shared state so that the processor can read it.
+    Inst_IS, AccessPermission:Busy, desc="Issued GETS, have not seen response yet";
+
+    // The cache controller has requested that this entry be fetched in
+    // shared state so that the processor can read it.
+    IS, AccessPermission:Busy, desc="Issued GETS, have not seen response yet";
+
+    // The cache controller has requested that this entry be fetched in
+    // modify state so that the processor can read/write it.
+    IM, AccessPermission:Busy, desc="Issued GETX, have not seen response yet";
+
+    // The cache controller had read permission over the entry. But now the
+    // processor needs to write to it. So, the controller has requested for
+    // write permission.
+    SM, AccessPermission:Read_Only, desc="Issued GETX, have not seen response yet";
+
+    // Transient states in which block is being prefetched
+    PF_Inst_IS, AccessPermission:Busy, desc="Issued GETS, have not seen response yet";
+    PF_IS, AccessPermission:Busy, desc="Issued GETS, have not seen response yet";
+    PF_IE, AccessPermission:Busy, desc="Issued GETX, have not seen response yet";
+  }
+
+  // EVENTS
+  enumeration(Event, desc="Cache events") {
+    // Events from core
+    Load,            desc="Load request from the home processor";
+    Ifetch,          desc="I-fetch request from the home processor";
+    Store,           desc="Store request from the home processor";
+
+    // invalidations from L1 (due to self or other core)
+    InvOwn,          desc="Invalidate request from L1 (own)";
+    InvElse,         desc="Invalidate request from L1 (else)";
+
+    // internal generated request
+    L0_Replacement,  desc="L0 Replacement", format="!r";
+
+    // requests forwarded from other processors
+    Fwd_GETX,   desc="GETX from other processor";
+    Fwd_GETS,   desc="GETS from other processor";
+    Fwd_GET_INSTR,   desc="GET_INSTR from other processor";
+
+    // data arrives from L1 cache
+    Data,               desc="Data for processor";
+    Data_Exclusive,     desc="Data for processor";
+    Data_Stale,         desc="Data for processor, but not for storage";
+
+    Ack,        desc="Ack for processor";
+
+    WB_Ack,        desc="Ack for replacement";
+
+    Failed_SC,        desc="Store conditional request that will fail";
+
+    // Prefetch events (generated by prefetcher)
+    PF_L0_Replacement, desc="L0 Replacement caused by pretcher", format="!pr";
+    PF_Load,         desc="Load request from prefetcher";
+    PF_Ifetch,       desc="Instruction fetch request from prefetcher";
+    PF_Store,        desc="Exclusive load request from prefetcher";
+    PF_Bad_Addr,     desc="Throw away prefetch request due to bad address generation";
+
+    // hardware transactional memory
+    HTM_Abort,        desc="Abort HTM transaction and rollback cache to pre-transactional state";
+    HTM_Start,        desc="Place cache in HTM transactional state";
+    HTM_Commit,       desc="Commit speculative loads/stores and place cache in normal state";
+    HTM_Cancel,       desc="Fail HTM transaction explicitely without aborting";
+    HTM_notifyCMD,    desc="Notify core via HTM CMD that HTM transaction has failed";
+    HTM_notifyLD,     desc="Notify core via LD that HTM transaction has failed";
+    HTM_notifyST,     desc="Notify core via ST that HTM transaction has failed";
+  }
+
+  // TYPES
+
+  // CacheEntry
+  structure(Entry, desc="...", interface="AbstractCacheEntry" ) {
+    State CacheState,        desc="cache state";
+    DataBlock DataBlk,       desc="data for the block";
+    bool Dirty, default="false",   desc="data is dirty";
+    bool isPrefetched, default="false", desc="Set if this block was prefetched";
+
+    // hardware transactional memory
+    // read/write set state
+    void setInHtmReadSet(bool), external="yes";
+    void setInHtmWriteSet(bool), external="yes";
+    bool getInHtmReadSet(), external="yes";
+    bool getInHtmWriteSet(), external="yes";
+
+    // override invalidateEntry
+    void invalidateEntry() {
+      CacheState := State:I;
+      Dirty := false;
+    }
+  }
+
+  // TBE fields
+  structure(TBE, desc="...") {
+    Addr addr,              desc="Physical address for this TBE";
+    State TBEState,        desc="Transient state";
+    DataBlock DataBlk,                desc="Buffer for the data block";
+    bool Dirty, default="false",   desc="data is dirty";
+    int pendingAcks, default="0", desc="number of pending acks";
+  }
+
+  structure(TBETable, external="yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+    TBE getNullEntry();
+  }
+
+  TBETable TBEs, template="<L0Cache_TBE>", constructor="m_number_of_TBEs";
+
+  Tick clockEdge();
+  Cycles ticksToCycles(Tick t);
+  void set_cache_entry(AbstractCacheEntry a);
+  void unset_cache_entry();
+  void set_tbe(TBE a);
+  void unset_tbe();
+  void wakeUpBuffers(Addr a);
+  void wakeUpAllBuffers(Addr a);
+  void profileMsgDelay(int virtualNetworkType, Cycles c);
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
+
+  // inclusive cache returns L0 entries only
+  Entry getCacheEntry(Addr addr), return_by_pointer="yes" {
+    Entry Dcache_entry := static_cast(Entry, "pointer", Dcache[addr]);
+    if(is_valid(Dcache_entry)) {
+      return Dcache_entry;
+    }
+
+    Entry Icache_entry := static_cast(Entry, "pointer", Icache[addr]);
+    return Icache_entry;
+  }
+
+  Entry getDCacheEntry(Addr addr), return_by_pointer="yes" {
+    Entry Dcache_entry := static_cast(Entry, "pointer", Dcache[addr]);
+    return Dcache_entry;
+  }
+
+  Entry getICacheEntry(Addr addr), return_by_pointer="yes" {
+    Entry Icache_entry := static_cast(Entry, "pointer", Icache[addr]);
+    return Icache_entry;
+  }
+
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
+    assert((Dcache.isTagPresent(addr) && Icache.isTagPresent(addr)) == false);
+
+    if(is_valid(tbe)) {
+      return tbe.TBEState;
+    } else if (is_valid(cache_entry)) {
+      return cache_entry.CacheState;
+    }
+    return State:I;
+  }
+
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
+    assert((Dcache.isTagPresent(addr) && Icache.isTagPresent(addr)) == false);
+
+    // MUST CHANGE
+    if(is_valid(tbe)) {
+      tbe.TBEState := state;
+    }
+
+    if (is_valid(cache_entry)) {
+      cache_entry.CacheState := state;
+    }
+  }
+
+  AccessPermission getAccessPermission(Addr addr) {
+    TBE tbe := TBEs[addr];
+    if(is_valid(tbe)) {
+      DPRINTF(RubySlicc, "%s\n", L0Cache_State_to_permission(tbe.TBEState));
+      return L0Cache_State_to_permission(tbe.TBEState);
+    }
+
+    Entry cache_entry := getCacheEntry(addr);
+    if(is_valid(cache_entry)) {
+      DPRINTF(RubySlicc, "%s\n", L0Cache_State_to_permission(cache_entry.CacheState));
+      return L0Cache_State_to_permission(cache_entry.CacheState);
+    }
+
+    DPRINTF(RubySlicc, "%s\n", AccessPermission:NotPresent);
+    return AccessPermission:NotPresent;
+  }
+
+  void functionalRead(Addr addr, Packet *pkt) {
+    TBE tbe := TBEs[addr];
+    if(is_valid(tbe)) {
+      testAndRead(addr, tbe.DataBlk, pkt);
+    } else {
+      testAndRead(addr, getCacheEntry(addr).DataBlk, pkt);
+    }
+  }
+
+  int functionalWrite(Addr addr, Packet *pkt) {
+    int num_functional_writes := 0;
+
+    TBE tbe := TBEs[addr];
+    if(is_valid(tbe)) {
+      num_functional_writes := num_functional_writes +
+        testAndWrite(addr, tbe.DataBlk, pkt);
+      return num_functional_writes;
+    }
+
+    num_functional_writes := num_functional_writes +
+        testAndWrite(addr, getCacheEntry(addr).DataBlk, pkt);
+    return num_functional_writes;
+  }
+
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
+    if (is_valid(cache_entry)) {
+      cache_entry.changePermission(L0Cache_State_to_permission(state));
+    }
+  }
+
+  Event mandatory_request_type_to_event(RubyRequestType type) {
+    if (type == RubyRequestType:LD) {
+      return Event:Load;
+    } else if (type == RubyRequestType:IFETCH) {
+      return Event:Ifetch;
+    } else if ((type == RubyRequestType:ST) || (type == RubyRequestType:ATOMIC)
+               || (type == RubyRequestType:Store_Conditional)) {
+      return Event:Store;
+    } else {
+      error("Invalid RubyRequestType");
+    }
+  }
+
+  Event prefetch_request_type_to_event(RubyRequestType type) {
+    if (type == RubyRequestType:LD) {
+      return Event:PF_Load;
+    } else if (type == RubyRequestType:IFETCH) {
+      return Event:PF_Ifetch;
+    } else if (type == RubyRequestType:ST) {
+      return Event:PF_Store;
+    } else {
+      error("Invalid RubyRequestType");
+    }
+  }
+
+  int getPendingAcks(TBE tbe) {
+    return tbe.pendingAcks;
+  }
+
+  out_port(requestNetwork_out, CoherenceMsg, bufferToL1);
+  out_port(optionalQueue_out, RubyRequest, prefetchQueue);
+
+  void enqueuePrefetch(Addr address, RubyRequestType type) {
+    enqueue(optionalQueue_out, RubyRequest, 1) {
+      out_msg.LineAddress := address;
+      out_msg.Type := type;
+      out_msg.Prefetch := PrefetchBit:Yes;
+      out_msg.AccessMode := RubyAccessMode:Supervisor;
+    }
+  }
+
+  // Prefetch queue between the controller and the prefetcher
+  // As per Spracklen et al. (HPCA 2005), the prefetch queue should be
+  // implemented as a LIFO structure.  The structure would allow for fast
+  // searches of all entries in the queue, not just the head msg. All
+  // msgs in the structure can be invalidated if a demand miss matches.
+  in_port(optionalQueue_in, RubyRequest, prefetchQueue, desc="...", rank = 2) {
+    if (optionalQueue_in.isReady(clockEdge())) {
+      peek(optionalQueue_in, RubyRequest) {
+        // first check for valid address
+        MachineID mid := mapAddressToMachine(in_msg.LineAddress, MachineType:Directory);
+        NodeID nid := machineIDToNodeID(mid);
+        int nidint := IDToInt(nid);
+        int numDirs := machineCount(MachineType:Directory);
+        if (nidint >= numDirs) {
+          Entry cache_entry := static_cast(Entry, "pointer", Dcache.getNullEntry());
+          TBE tbe := TBEs.getNullEntry();
+          trigger(Event:PF_Bad_Addr, in_msg.LineAddress, cache_entry, tbe);
+        } else if (in_msg.Type == RubyRequestType:IFETCH) {
+          // Instruction Prefetch
+          Entry icache_entry := getICacheEntry(in_msg.LineAddress);
+          if (is_valid(icache_entry)) {
+            // The block to be prefetched is already present in the
+            // cache. This request will be made benign and cause the
+            // prefetch queue to be popped.
+            trigger(prefetch_request_type_to_event(in_msg.Type),
+                    in_msg.LineAddress,
+                    icache_entry, TBEs[in_msg.LineAddress]);
+          }
+
+          // Check to see if it is in the L0-D
+          Entry cache_entry := getDCacheEntry(in_msg.LineAddress);
+          if (is_valid(cache_entry)) {
+            // The block is in the wrong L0 cache. We should drop
+            // this request.
+            trigger(prefetch_request_type_to_event(in_msg.Type),
+                    in_msg.LineAddress,
+                    cache_entry, TBEs[in_msg.LineAddress]);
+          }
+
+          if (Icache.cacheAvail(in_msg.LineAddress)) {
+            // L0-I does't have the line, but we have space for it
+            // in the L0-I so let's see if the L1 has it
+            trigger(prefetch_request_type_to_event(in_msg.Type),
+                    in_msg.LineAddress,
+                    icache_entry, TBEs[in_msg.LineAddress]);
+          } else {
+            // No room in the L0-I, so we need to make room in the L0-I
+            Addr addr := Icache.cacheProbe(in_msg.LineAddress);
+            check_on_cache_probe(optionalQueue_in, addr);
+
+            trigger(Event:PF_L0_Replacement, addr,
+                    getICacheEntry(addr),
+                    TBEs[addr]);
+          }
+        } else {
+          // Data prefetch
+          Entry cache_entry := getDCacheEntry(in_msg.LineAddress);
+          if (is_valid(cache_entry)) {
+            // The block to be prefetched is already present in the
+            // cache. This request will be made benign and cause the
+            // prefetch queue to be popped.
+            trigger(prefetch_request_type_to_event(in_msg.Type),
+                    in_msg.LineAddress,
+                    cache_entry, TBEs[in_msg.LineAddress]);
+          }
+
+          // Check to see if it is in the L0-I
+          Entry icache_entry := getICacheEntry(in_msg.LineAddress);
+          if (is_valid(icache_entry)) {
+            // The block is in the wrong L0. Just drop the prefetch
+            // request.
+            trigger(prefetch_request_type_to_event(in_msg.Type),
+                    in_msg.LineAddress,
+                    icache_entry, TBEs[in_msg.LineAddress]);
+          }
+
+          if (Dcache.cacheAvail(in_msg.LineAddress)) {
+            // L0-D does't have the line, but we have space for it in
+            // the L0-D let's see if the L1 has it
+            trigger(prefetch_request_type_to_event(in_msg.Type),
+                    in_msg.LineAddress,
+                    cache_entry, TBEs[in_msg.LineAddress]);
+          } else {
+            // No room in the L0-D, so we need to make room in the L0-D
+            Addr addr := Dcache.cacheProbe(in_msg.LineAddress);
+            check_on_cache_probe(optionalQueue_in, addr);
+
+            trigger(Event:PF_L0_Replacement, addr,
+                    getDCacheEntry(addr),
+                    TBEs[addr]);
+          }
+        }
+      }
+    }
+  }
+
+  // Messages for this L0 cache from the L1 cache
+  in_port(messgeBuffer_in, CoherenceMsg, bufferFromL1, rank = 1) {
+    if (messgeBuffer_in.isReady(clockEdge())) {
+      peek(messgeBuffer_in, CoherenceMsg, block_on="addr") {
+        assert(in_msg.Dest == machineID);
+
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := TBEs[in_msg.addr];
+
+        if(in_msg.Class == CoherenceClass:DATA_EXCLUSIVE) {
+            trigger(Event:Data_Exclusive, in_msg.addr, cache_entry, tbe);
+        } else if(in_msg.Class == CoherenceClass:DATA) {
+            trigger(Event:Data, in_msg.addr, cache_entry, tbe);
+        } else if(in_msg.Class == CoherenceClass:STALE_DATA) {
+            trigger(Event:Data_Stale, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Class == CoherenceClass:ACK) {
+            trigger(Event:Ack, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Class == CoherenceClass:WB_ACK) {
+            trigger(Event:WB_Ack, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Class == CoherenceClass:INV_OWN) {
+          trigger(Event:InvOwn, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Class == CoherenceClass:INV_ELSE) {
+          trigger(Event:InvElse, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Class == CoherenceClass:GETX ||
+                   in_msg.Class == CoherenceClass:UPGRADE) {
+          // upgrade transforms to GETX due to race
+          trigger(Event:Fwd_GETX, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Class == CoherenceClass:GETS) {
+          trigger(Event:Fwd_GETS, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Class == CoherenceClass:GET_INSTR) {
+          trigger(Event:Fwd_GET_INSTR, in_msg.addr, cache_entry, tbe);
+        } else {
+          error("Invalid forwarded request type");
+        }
+      }
+    }
+  }
+
+  // Mandatory Queue betweens Node's CPU and it's L0 caches
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...", rank = 0) {
+    if (mandatoryQueue_in.isReady(clockEdge())) {
+      peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
+
+        // hardware transactional memory support begins here
+
+        // If this cache controller is in a transactional state/mode,
+        // ensure that its failure status is something recognisable.
+        if (htmFailed) {
+          assert(htmFailedRc == HtmFailedInCacheReason:FAIL_SELF ||
+            htmFailedRc == HtmFailedInCacheReason:FAIL_REMOTE ||
+            htmFailedRc == HtmFailedInCacheReason:FAIL_OTHER);
+        }
+
+        // HTM_Start commands set a new htmUid
+        // This is used for debugging and sanity checks
+        if (in_msg.Type == RubyRequestType:HTM_Start) {
+            assert (htmUid != in_msg.htmTransactionUid);
+            htmUid := in_msg.htmTransactionUid;
+        }
+
+        // If the incoming memory request was generated within a transaction,
+        // ensure that the request's htmUid matches the htmUid of this
+        // cache controller. A mismatch here is fatal and implies there was
+        // a reordering that should never have taken place.
+        if (in_msg.htmFromTransaction &&
+            (htmUid != in_msg.htmTransactionUid)) {
+          DPRINTF(HtmMem,
+            "mandatoryQueue_in: (%u) 0x%lx mismatch between cache htmUid=%u and message htmUid=%u\n",
+            in_msg.Type, in_msg.LineAddress, htmUid, in_msg.htmTransactionUid);
+        }
+
+        // special/rare case which hopefully won't occur
+        if (htmFailed && in_msg.Type == RubyRequestType:HTM_Start) {
+          error("cannot handle this special HTM case yet");
+        }
+
+        // The transaction is to be aborted--
+        // Aborting a transaction returns the cache to a non-transactional
+        // state/mode, resets the read/write sets, and invalidates any
+        // speculatively written lines.
+        if (in_msg.Type == RubyRequestType:HTM_Abort) {
+          Entry cache_entry := static_cast(Entry, "pointer", Dcache.getNullEntry());
+          TBE tbe := TBEs.getNullEntry();
+          trigger(Event:HTM_Abort, in_msg.LineAddress, cache_entry, tbe);
+        }
+        // The transaction has failed but not yet aborted--
+        // case 1:
+        // If memory request is transactional but the transaction has failed,
+        // it is necessary to inform the CPU of the failure.
+        // case 2:
+        // If load/store memory request is transactional and cache is not
+        // in transactional state, it's likely that the transaction aborted
+        // and Ruby is still receiving scheduled memory operations.
+        // The solution is to make these requests benign.
+        else if ((in_msg.htmFromTransaction && htmFailed) || (in_msg.htmFromTransaction && !isHtmCmdRequest(in_msg.Type) && !htmTransactionalState)) {
+          if (isHtmCmdRequest(in_msg.Type)) {
+            Entry cache_entry := static_cast(Entry, "pointer", Dcache.getNullEntry());
+            TBE tbe := TBEs.getNullEntry();
+            trigger(Event:HTM_notifyCMD, in_msg.LineAddress, cache_entry, tbe);
+          } else if (isDataReadRequest(in_msg.Type)) {
+            Entry cache_entry := getDCacheEntry(in_msg.LineAddress);
+            TBE tbe := TBEs[in_msg.LineAddress];
+            trigger(Event:HTM_notifyLD, in_msg.LineAddress, cache_entry, tbe);
+          } else if (isWriteRequest(in_msg.Type)) {
+            Entry cache_entry := getDCacheEntry(in_msg.LineAddress);
+            TBE tbe := TBEs[in_msg.LineAddress];
+            trigger(Event:HTM_notifyST, in_msg.LineAddress, cache_entry, tbe);
+          } else {
+            error("unknown message type");
+          }
+        }
+        // The transaction has not failed and this is
+        // one of three HTM commands--
+        // (1) start a transaction
+        // (2) commit a transaction
+        // (3) cancel/fail a transaction (but don't yet abort it)
+        else if (isHtmCmdRequest(in_msg.Type) && in_msg.Type != RubyRequestType:HTM_Abort) {
+          Entry cache_entry := static_cast(Entry, "pointer", Dcache.getNullEntry());
+          TBE tbe := TBEs.getNullEntry();
+          if (in_msg.Type == RubyRequestType:HTM_Start) {
+            DPRINTF(HtmMem,
+              "mandatoryQueue_in: Starting htm transaction htmUid=%u\n",
+              htmUid);
+            trigger(Event:HTM_Start, in_msg.LineAddress, cache_entry, tbe);
+          } else if (in_msg.Type == RubyRequestType:HTM_Commit) {
+            DPRINTF(HtmMem,
+              "mandatoryQueue_in: Committing transaction htmUid=%d\n",
+              htmUid);
+            trigger(Event:HTM_Commit, in_msg.LineAddress, cache_entry, tbe);
+          } else if (in_msg.Type == RubyRequestType:HTM_Cancel) {
+            DPRINTF(HtmMem,
+              "mandatoryQueue_in: Cancelling transaction htmUid=%d\n",
+              htmUid);
+            trigger(Event:HTM_Cancel, in_msg.LineAddress, cache_entry, tbe);
+          }
+        }
+        // end: hardware transactional memory
+        else if (in_msg.Type == RubyRequestType:IFETCH) {
+          // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
+          // ** INSTRUCTION ACCESS ***
+
+          Entry Icache_entry := getICacheEntry(in_msg.LineAddress);
+          if (is_valid(Icache_entry)) {
+            // The tag matches for the L0, so the L0 asks the L2 for it.
+            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
+                    Icache_entry, TBEs[in_msg.LineAddress]);
+          } else {
+
+            // Check to see if it is in the OTHER L0
+            Entry Dcache_entry := getDCacheEntry(in_msg.LineAddress);
+            if (is_valid(Dcache_entry)) {
+              // The block is in the wrong L0, put the request on the queue to the shared L2
+              trigger(Event:L0_Replacement, in_msg.LineAddress,
+                      Dcache_entry, TBEs[in_msg.LineAddress]);
+            }
+
+            if (Icache.cacheAvail(in_msg.LineAddress)) {
+              // L0 does't have the line, but we have space for it
+              // in the L0 so let's see if the L2 has it
+              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
+                      Icache_entry, TBEs[in_msg.LineAddress]);
+            } else {
+              // No room in the L0, so we need to make room in the L0
+              // Check if the line we want to evict is not locked
+              Addr addr := Icache.cacheProbe(in_msg.LineAddress);
+              check_on_cache_probe(mandatoryQueue_in, addr);
+              trigger(Event:L0_Replacement, addr,
+                      getICacheEntry(addr),
+                      TBEs[addr]);
+            }
+          }
+        } else {
+          // *** DATA ACCESS ***
+          Entry Dcache_entry := getDCacheEntry(in_msg.LineAddress);
+
+          // early out for failed store conditionals
+
+          if (in_msg.Type == RubyRequestType:Store_Conditional) {
+              if (!sequencer.llscCheckMonitor(in_msg.LineAddress)) {
+                trigger(Event:Failed_SC, in_msg.LineAddress,
+                        Dcache_entry, TBEs[in_msg.LineAddress]);
+            }
+          }
+
+          if (is_valid(Dcache_entry)) {
+            // The tag matches for the L0, so the L0 ask the L1 for it
+            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
+                    Dcache_entry, TBEs[in_msg.LineAddress]);
+          } else {
+            // if the request is not valid, the store conditional will fail
+            if (in_msg.Type == RubyRequestType:Store_Conditional) {
+                // if the line is not valid, it can't be locked
+                trigger(Event:Failed_SC, in_msg.LineAddress,
+                        Dcache_entry, TBEs[in_msg.LineAddress]);
+            } else {
+              // Check to see if it is in the OTHER L0
+              Entry Icache_entry := getICacheEntry(in_msg.LineAddress);
+              if (is_valid(Icache_entry)) {
+                // The block is in the wrong L0, put the request on the queue to the private L1
+                trigger(Event:L0_Replacement, in_msg.LineAddress,
+                        Icache_entry, TBEs[in_msg.LineAddress]);
+              }
+
+              if (Dcache.cacheAvail(in_msg.LineAddress)) {
+                // L1 does't have the line, but we have space for it
+                // in the L0 let's see if the L1 has it
+                trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
+                        Dcache_entry, TBEs[in_msg.LineAddress]);
+              } else {
+                // No room in the L1, so we need to make room in the L0
+                // Check if the line we want to evict is not locked
+                Addr addr := Dcache.cacheProbe(in_msg.LineAddress);
+                check_on_cache_probe(mandatoryQueue_in, addr);
+                trigger(Event:L0_Replacement, addr,
+                        getDCacheEntry(addr),
+                        TBEs[addr]);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ACTIONS
+  action(a_issueGETS, "a", desc="Issue GETS") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      enqueue(requestNetwork_out, CoherenceMsg, request_latency) {
+        out_msg.addr := address;
+        out_msg.Class := CoherenceClass:GETS;
+        out_msg.Sender := machineID;
+        out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
+                address, out_msg.Dest);
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.AccessMode := in_msg.AccessMode;
+      }
+    }
+  }
+
+  action(b_issueGETX, "b", desc="Issue GETX") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      enqueue(requestNetwork_out, CoherenceMsg, request_latency) {
+        out_msg.addr := address;
+        out_msg.Class := CoherenceClass:GETX;
+        out_msg.Sender := machineID;
+        DPRINTF(RubySlicc, "%s\n", machineID);
+        out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
+                address, out_msg.Dest);
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.AccessMode := in_msg.AccessMode;
+      }
+    }
+  }
+
+  action(c_issueUPGRADE, "c", desc="Issue GETX") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      enqueue(requestNetwork_out, CoherenceMsg, request_latency) {
+        out_msg.addr := address;
+        out_msg.Class := CoherenceClass:UPGRADE;
+        out_msg.Sender := machineID;
+        out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
+                address, out_msg.Dest);
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.AccessMode := in_msg.AccessMode;
+      }
+    }
+  }
+
+  action(f_sendDataToL1, "f", desc="Send data to the L1 cache") {
+    // hardware transactional memory
+    // Cannot write speculative data to L1 cache
+    if (cache_entry.getInHtmWriteSet()) {
+      // If in HTM write set then send NAK to L1
+      enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
+        assert(is_valid(cache_entry));
+        out_msg.addr := address;
+        out_msg.Class := CoherenceClass:NAK;
+        out_msg.Sender := machineID;
+        out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+      }
+    } else {
+      enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
+        assert(is_valid(cache_entry));
+        out_msg.addr := address;
+        out_msg.Class := CoherenceClass:INV_DATA;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.Dirty := cache_entry.Dirty;
+        out_msg.Sender := machineID;
+        out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+      }
+      cache_entry.Dirty := false;
+    }
+  }
+
+  action(fi_sendInvAck, "fi", desc="Send data to the L1 cache") {
+    peek(messgeBuffer_in, CoherenceMsg) {
+      enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
+        out_msg.addr := address;
+        out_msg.Class := CoherenceClass:INV_ACK;
+        out_msg.Sender := machineID;
+        out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+      }
+    }
+  }
+
+  action(forward_eviction_to_cpu, "\cc", desc="Send eviction information to the processor") {
+    if (send_evictions) {
+      DPRINTF(RubySlicc, "Sending invalidation for %#x to the CPU\n", address);
+      sequencer.evictionCallback(address);
+    }
+  }
+
+  action(g_issuePUTE, "\ge", desc="Relinquish line to the L1 cache") {
+    enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
+      assert(is_valid(cache_entry));
+      out_msg.addr := address;
+      out_msg.Class := CoherenceClass:PUTX;
+      out_msg.Dirty := cache_entry.Dirty;
+      out_msg.Sender:= machineID;
+      out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+      out_msg.MessageSize := MessageSizeType:Writeback_Control;
+    }
+  }
+
+  action(g_issuePUTM, "\gm", desc="Send modified line to the L1 cache") {
+    if (!cache_entry.getInHtmWriteSet()) {
+      enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
+        assert(is_valid(cache_entry));
+        out_msg.addr := address;
+        out_msg.Class := CoherenceClass:PUTX;
+        out_msg.Dirty := cache_entry.Dirty;
+        out_msg.Sender:= machineID;
+        out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := cache_entry.DataBlk;
+      }
+    }
+  }
+
+  action(h_load_hit, "hd", desc="Notify sequencer the load completed (cache hit)") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    Dcache.setMRU(cache_entry);
+    sequencer.readCallback(address, cache_entry.DataBlk);
+  }
+
+  action(h_ifetch_hit, "hi", desc="Notify sequencer the ifetch completed (cache hit)") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    Icache.setMRU(cache_entry);
+    sequencer.readCallback(address, cache_entry.DataBlk);
+  }
+
+  // The action name uses a counterintuitive _hit prefix when it is only
+  // called due to a cache miss. It is technically now a hit after having
+  // serviced the miss.
+  action(hx_load_hit, "hxd", desc="Notify sequencer the load completed (cache miss)") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    Dcache.setMRU(cache_entry);
+    sequencer.readCallback(address, cache_entry.DataBlk, true);
+  }
+
+  // The action name uses a counterintuitive _hit prefix when it is only
+  // called due to a cache miss. It is technically now a hit after having
+  // serviced the miss.
+  action(hx_ifetch_hit, "hxi", desc="Notify sequencer the ifetch completed (cache miss)") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    Icache.setMRU(cache_entry);
+    sequencer.readCallback(address, cache_entry.DataBlk, true);
+  }
+
+  action(hh_store_hit, "\h", desc="Notify sequencer that store completed (cache hit)") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    Dcache.setMRU(cache_entry);
+    sequencer.writeCallback(address, cache_entry.DataBlk);
+    cache_entry.Dirty := true;
+  }
+
+  // The action name uses a counterintuitive _hit prefix when it is only
+  // called due to a cache miss. It is technically now a hit after having
+  // serviced the miss.
+  action(hhx_store_hit, "\hx", desc="Notify sequencer that store completed (cache miss)") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    Dcache.setMRU(cache_entry);
+    sequencer.writeCallback(address, cache_entry.DataBlk, true);
+    cache_entry.Dirty := true;
+  }
+
+  action(i_allocateTBE, "i", desc="Allocate TBE (number of invalidates=0)") {
+    check_allocate(TBEs);
+    assert(is_valid(cache_entry));
+    TBEs.allocate(address);
+    set_tbe(TBEs[address]);
+    tbe.Dirty := cache_entry.Dirty;
+    tbe.DataBlk := cache_entry.DataBlk;
+  }
+
+  action(k_popMandatoryQueue, "k", desc="Pop mandatory queue") {
+    mandatoryQueue_in.dequeue(clockEdge());
+  }
+
+  action(l_popRequestQueue, "l",
+         desc="Pop incoming request queue and profile the delay within this virtual network") {
+    Tick delay := messgeBuffer_in.dequeue(clockEdge());
+    profileMsgDelay(2, ticksToCycles(delay));
+  }
+
+  action(o_popIncomingResponseQueue, "o",
+         desc="Pop Incoming Response queue and profile the delay within this virtual network") {
+    Tick delay := messgeBuffer_in.dequeue(clockEdge());
+    profileMsgDelay(1, ticksToCycles(delay));
+  }
+
+  action(s_deallocateTBE, "s", desc="Deallocate TBE") {
+    TBEs.deallocate(address);
+    unset_tbe();
+  }
+
+  action(u_writeDataToCache, "u", desc="Write data to cache") {
+    peek(messgeBuffer_in, CoherenceMsg) {
+      assert(is_valid(cache_entry));
+      cache_entry.DataBlk := in_msg.DataBlk;
+    }
+  }
+
+  action(u_writeInstToCache, "ui", desc="Write data to cache") {
+    peek(messgeBuffer_in, CoherenceMsg) {
+      assert(is_valid(cache_entry));
+      cache_entry.DataBlk := in_msg.DataBlk;
+    }
+  }
+
+  action(ff_deallocateCacheBlock, "\f",
+         desc="Deallocate L1 cache block.") {
+    if (Dcache.isTagPresent(address)) {
+      Dcache.deallocate(address);
+    } else {
+      Icache.deallocate(address);
+    }
+    unset_cache_entry();
+  }
+
+  action(oo_allocateDCacheBlock, "\o", desc="Set L1 D-cache tag equal to tag of block B") {
+    if (is_invalid(cache_entry)) {
+      set_cache_entry(Dcache.allocate(address, new Entry));
+    }
+  }
+
+  action(pp_allocateICacheBlock, "\p", desc="Set L1 I-cache tag equal to tag of block B") {
+    if (is_invalid(cache_entry)) {
+      set_cache_entry(Icache.allocate(address, new Entry));
+    }
+  }
+
+  action(z_stallAndWaitMandatoryQueue, "\z", desc="Stall cpu request queue") {
+    stall_and_wait(mandatoryQueue_in, address);
+  }
+
+  action(kd_wakeUpDependents, "kd", desc="Wake-up dependents") {
+    wakeUpAllBuffers(address);
+  }
+
+  action(uu_profileInstMiss, "\ui", desc="Profile the demand miss") {
+        ++Icache.demand_misses;
+  }
+
+  action(uu_profileInstHit, "\uih", desc="Profile the demand hit") {
+        ++Icache.demand_hits;
+  }
+
+  action(uu_profileDataMiss, "\ud", desc="Profile the demand miss") {
+        ++Dcache.demand_misses;
+  }
+
+  action(uu_profileDataHit, "\udh", desc="Profile the demand hit") {
+        ++Dcache.demand_hits;
+  }
+
+  // store conditionals
+
+  action(hhc_storec_fail, "\hc",
+         desc="Notify sequencer that store conditional failed") {
+    sequencer.writeCallbackScFail(address, cache_entry.DataBlk);
+  }
+
+  // prefetching
+
+  action(pa_issuePfGETS, "pa", desc="Issue prefetch GETS") {
+    peek(optionalQueue_in, RubyRequest) {
+      enqueue(requestNetwork_out, CoherenceMsg, request_latency) {
+        out_msg.addr := address;
+        out_msg.Class := CoherenceClass:GETS;
+        out_msg.Sender := machineID;
+        out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
+                address, out_msg.Dest);
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.Prefetch := in_msg.Prefetch;
+        out_msg.AccessMode := in_msg.AccessMode;
+      }
+    }
+  }
+
+  action(pb_issuePfGETX, "pb", desc="Issue prefetch GETX") {
+    peek(optionalQueue_in, RubyRequest) {
+      enqueue(requestNetwork_out, CoherenceMsg, request_latency) {
+        out_msg.addr := address;
+        out_msg.Class := CoherenceClass:GETX;
+        out_msg.Sender := machineID;
+        DPRINTF(RubySlicc, "%s\n", machineID);
+        out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
+                address, out_msg.Dest);
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.Prefetch := in_msg.Prefetch;
+        out_msg.AccessMode := in_msg.AccessMode;
+      }
+    }
+  }
+
+  action(pq_popPrefetchQueue, "\pq", desc="Pop the prefetch request queue") {
+    optionalQueue_in.dequeue(clockEdge());
+  }
+
+  action(mp_markPrefetched, "mp", desc="Write data from response queue to cache") {
+      assert(is_valid(cache_entry));
+      cache_entry.isPrefetched := true;
+  }
+
+  action(po_observeMiss, "\po", desc="Inform the prefetcher about a cache miss") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      if (enable_prefetch) {
+        prefetcher.observeMiss(in_msg.LineAddress, in_msg.Type);
+      }
+    }
+  }
+
+  action(ppm_observePfMiss, "\ppm",
+         desc="Inform the prefetcher about a cache miss with in-flight prefetch") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      prefetcher.observePfMiss(in_msg.LineAddress);
+    }
+  }
+
+  action(pph_observePfHit, "\pph",
+         desc="Inform the prefetcher if a cache hit was the result of a prefetch") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      if (cache_entry.isPrefetched) {
+        prefetcher.observePfHit(in_msg.LineAddress);
+        cache_entry.isPrefetched := false;
+      }
+    }
+  }
+
+  action(z_stallAndWaitOptionalQueue, "\pz", desc="recycle prefetch request queue") {
+    stall_and_wait(optionalQueue_in, address);
+  }
+
+  // hardware transactional memory
+
+  action(hars_htmAddToReadSet, "\hars", desc="add to HTM read set") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      if (htmTransactionalState && in_msg.htmFromTransaction) {
+        assert(!htmFailed);
+        if (!cache_entry.getInHtmReadSet()) {
+          DPRINTF(HtmMem,
+              "Adding 0x%lx to transactional read set htmUid=%u.\n",
+              address, htmUid);
+          cache_entry.setInHtmReadSet(true);
+        }
+      }
+    }
+  }
+
+  action(haws_htmAddToWriteSet, "\haws", desc="add to HTM write set") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      if (htmTransactionalState && in_msg.htmFromTransaction) {
+        assert(!htmFailed);
+        assert(!((cache_entry.getInHtmWriteSet() == false) &&
+          (cache_entry.CacheState == State:IM)));
+        assert(!((cache_entry.getInHtmWriteSet() == false) &&
+          (cache_entry.CacheState == State:SM)));
+        // ON DEMAND write-back
+        // if modified and not in write set,
+        // write back and retain M state
+        if((cache_entry.CacheState == State:M) &&
+           !cache_entry.getInHtmWriteSet()) {
+          // code copied from issuePUTX
+          enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
+            assert(is_valid(cache_entry));
+            out_msg.addr := address;
+            out_msg.Class := CoherenceClass:PUTX_COPY;
+            out_msg.DataBlk := cache_entry.DataBlk;
+            out_msg.Dirty := cache_entry.Dirty;
+            out_msg.Sender:= machineID;
+            out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+            out_msg.MessageSize := MessageSizeType:Writeback_Data;
+          }
+        }
+        if (!cache_entry.getInHtmWriteSet()) {
+          DPRINTF(HtmMem,
+              "Adding 0x%lx to transactional write set htmUid=%u.\n",
+              address, htmUid);
+          cache_entry.setInHtmWriteSet(true);
+        }
+      }
+    }
+  }
+
+  action(hfts_htmFailTransactionSize, "\hfts^",
+  desc="Fail transaction due to cache associativity/capacity conflict") {
+    if (htmTransactionalState &&
+        (cache_entry.getInHtmReadSet() || cache_entry.getInHtmWriteSet())) {
+      DPRINTF(HtmMem,
+          "Failure of a transaction due to cache associativity/capacity: rs=%s, ws=%s, addr=0x%lx, htmUid=%u\n",
+          cache_entry.getInHtmReadSet(), cache_entry.getInHtmWriteSet(),
+          address, htmUid);
+      htmFailed := true;
+      htmFailedRc := HtmFailedInCacheReason:FAIL_SELF;
+    }
+  }
+
+  action(hftm_htmFailTransactionMem, "\hftm^",
+  desc="Fail transaction due to memory conflict") {
+    if (htmTransactionalState &&
+        (cache_entry.getInHtmReadSet() || cache_entry.getInHtmWriteSet())) {
+      DPRINTF(HtmMem,
+          "Failure of a transaction due to memory conflict: rs=%s, ws=%s, addr=0x%lx, htmUid=%u\n",
+          cache_entry.getInHtmReadSet(), cache_entry.getInHtmWriteSet(),
+          address, htmUid);
+      htmFailed := true;
+      htmFailedRc := HtmFailedInCacheReason:FAIL_REMOTE;
+    }
+  }
+
+  action(hvu_htmVerifyUid, "\hvu",
+  desc="Ensure cache htmUid is equivalent to message htmUid") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      if (htmUid != in_msg.htmTransactionUid) {
+        DPRINTF(HtmMem, "cache's htmUid=%u and request's htmUid=%u\n",
+            htmUid, in_msg.htmTransactionUid);
+        error("mismatch between cache's htmUid and request's htmUid");
+      }
+    }
+  }
+
+  action(hcs_htmCommandSucceed, "\hcs",
+  desc="Notify sequencer HTM command succeeded") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      assert(is_invalid(cache_entry) && is_invalid(tbe));
+      DPRINTF(RubySlicc, "htm command successful\n");
+      sequencer.htmCallback(in_msg.LineAddress,
+        HtmCallbackMode:HTM_CMD, HtmFailedInCacheReason:NO_FAIL);
+    }
+  }
+
+  action(hcs_htmCommandFail, "\hcf",
+  desc="Notify sequencer HTM command failed") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      assert(is_invalid(cache_entry) && is_invalid(tbe));
+      DPRINTF(RubySlicc, "htm command failure\n");
+      sequencer.htmCallback(in_msg.LineAddress,
+        HtmCallbackMode:HTM_CMD, htmFailedRc);
+    }
+  }
+
+  action(hcs_htmLoadFail, "\hlf",
+  desc="Notify sequencer HTM transactional load failed") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      DPRINTF(RubySlicc, "htm transactional load failure\n");
+      sequencer.htmCallback(in_msg.LineAddress,
+        HtmCallbackMode:LD_FAIL, htmFailedRc);
+    }
+  }
+
+  action(hcs_htmStoreFail, "\hsf",
+  desc="Notify sequencer HTM transactional store failed") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      DPRINTF(RubySlicc, "htm transactional store failure\n");
+      sequencer.htmCallback(in_msg.LineAddress,
+        HtmCallbackMode:ST_FAIL, htmFailedRc);
+    }
+  }
+
+  action(hat_htmAbortTransaction, "\hat",
+  desc="Abort HTM transaction and rollback cache to pre-transactional state") {
+    assert(is_invalid(cache_entry) && is_invalid(tbe));
+    assert (htmTransactionalState);
+    Dcache.htmAbortTransaction();
+    htmTransactionalState := false;
+    htmFailed := false;
+    sequencer.llscClearLocalMonitor();
+    DPRINTF(RubySlicc, "Aborted htm transaction\n");
+  }
+
+  action(hst_htmStartTransaction, "\hst",
+  desc="Place cache in HTM transactional state") {
+    assert(is_invalid(cache_entry) && is_invalid(tbe));
+    assert (!htmTransactionalState);
+    htmTransactionalState := true;
+    htmFailedRc := HtmFailedInCacheReason:NO_FAIL;
+    sequencer.llscClearLocalMonitor();
+    DPRINTF(RubySlicc, "Started htm transaction\n");
+  }
+
+  action(hct_htmCommitTransaction, "\hct",
+  desc="Commit speculative loads/stores and place cache in normal state") {
+    assert(is_invalid(cache_entry) && is_invalid(tbe));
+    assert (htmTransactionalState);
+    assert (!htmFailed);
+    Dcache.htmCommitTransaction();
+    sequencer.llscClearLocalMonitor();
+    htmTransactionalState := false;
+    DPRINTF(RubySlicc, "Committed htm transaction\n");
+  }
+
+  action(hcnt_htmCancelTransaction, "\hcnt",
+  desc="Fail HTM transaction explicitely without aborting") {
+    assert(is_invalid(cache_entry) && is_invalid(tbe));
+    assert (htmTransactionalState);
+    htmFailed := true;
+    htmFailedRc := HtmFailedInCacheReason:FAIL_OTHER;
+    DPRINTF(RubySlicc, "Cancelled htm transaction\n");
+  }
+
+  //*****************************************************
+  // TRANSITIONS
+  //*****************************************************
+
+  // Transitions for Load/Store/Replacement/WriteBack from transient states
+  transition({Inst_IS, IS, IM, SM}, {Load, Ifetch, Store, L0_Replacement}) {
+    z_stallAndWaitMandatoryQueue;
+  }
+
+  // Transitions from Idle
+  transition(I, Load, IS) {
+    oo_allocateDCacheBlock;
+    i_allocateTBE;
+    hars_htmAddToReadSet;
+    a_issueGETS;
+    uu_profileDataMiss;
+    po_observeMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(I, Ifetch, Inst_IS) {
+    pp_allocateICacheBlock;
+    i_allocateTBE;
+    a_issueGETS;
+    uu_profileInstMiss;
+    po_observeMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(I, Store, IM) {
+    oo_allocateDCacheBlock;
+    i_allocateTBE;
+    haws_htmAddToWriteSet;
+    b_issueGETX;
+    uu_profileDataMiss;
+    po_observeMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition({I, Inst_IS}, {InvOwn, InvElse}) {
+    forward_eviction_to_cpu;
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  transition({IS, IM}, InvOwn) {
+    hfts_htmFailTransactionSize;
+    forward_eviction_to_cpu;
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  transition({IS, IM}, InvElse) {
+    hftm_htmFailTransactionMem;
+    forward_eviction_to_cpu;
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  transition(SM, InvOwn, IM) {
+    hfts_htmFailTransactionSize;
+    forward_eviction_to_cpu;
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  transition(SM, InvElse, IM) {
+    hftm_htmFailTransactionMem;
+    forward_eviction_to_cpu;
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  // Transitions from Shared
+  transition({S,E,M}, Load) {
+    hars_htmAddToReadSet;
+    h_load_hit;
+    uu_profileDataHit;
+    pph_observePfHit;
+    k_popMandatoryQueue;
+  }
+
+  transition({S,E,M}, Ifetch) {
+    h_ifetch_hit;
+    uu_profileInstHit;
+    pph_observePfHit;
+    k_popMandatoryQueue;
+  }
+
+  transition(S, Store, SM) {
+    i_allocateTBE;
+    haws_htmAddToWriteSet;
+    c_issueUPGRADE;
+    uu_profileDataMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(S, {L0_Replacement,PF_L0_Replacement}, I) {
+    hfts_htmFailTransactionSize;
+    forward_eviction_to_cpu;
+    ff_deallocateCacheBlock;
+  }
+
+  transition(S, InvOwn, I) {
+    hfts_htmFailTransactionSize;
+    forward_eviction_to_cpu;
+    fi_sendInvAck;
+    ff_deallocateCacheBlock;
+    l_popRequestQueue;
+  }
+
+  transition(S, InvElse, I) {
+    hftm_htmFailTransactionMem;
+    forward_eviction_to_cpu;
+    fi_sendInvAck;
+    ff_deallocateCacheBlock;
+    l_popRequestQueue;
+  }
+
+  // Transitions from Exclusive
+  transition({E,M}, Store, M) {
+    haws_htmAddToWriteSet;
+    hh_store_hit;
+    uu_profileDataHit;
+    pph_observePfHit;
+    k_popMandatoryQueue;
+  }
+
+  transition(E, {L0_Replacement,PF_L0_Replacement}, I) {
+    hfts_htmFailTransactionSize;
+    forward_eviction_to_cpu;
+    g_issuePUTE;
+    ff_deallocateCacheBlock;
+  }
+
+  transition(E, {InvElse, Fwd_GETX}, I) {
+    hftm_htmFailTransactionMem;
+    // don't send data
+    forward_eviction_to_cpu;
+    fi_sendInvAck;
+    ff_deallocateCacheBlock;
+    l_popRequestQueue;
+  }
+
+  transition(E, InvOwn, I) {
+    hfts_htmFailTransactionSize;
+    // don't send data
+    forward_eviction_to_cpu;
+    fi_sendInvAck;
+    ff_deallocateCacheBlock;
+    l_popRequestQueue;
+  }
+
+  transition(E, {Fwd_GETS, Fwd_GET_INSTR}, S) {
+    f_sendDataToL1;
+    l_popRequestQueue;
+  }
+
+  // Transitions from Modified
+  transition(M, {L0_Replacement,PF_L0_Replacement}, I) {
+    hfts_htmFailTransactionSize;
+    forward_eviction_to_cpu;
+    g_issuePUTM;
+    ff_deallocateCacheBlock;
+  }
+
+  transition(M, InvOwn, I) {
+    hfts_htmFailTransactionSize;
+    forward_eviction_to_cpu;
+    f_sendDataToL1;
+    ff_deallocateCacheBlock;
+    l_popRequestQueue;
+  }
+
+  transition(M, {InvElse, Fwd_GETX}, I) {
+    hftm_htmFailTransactionMem;
+    forward_eviction_to_cpu;
+    f_sendDataToL1;
+    ff_deallocateCacheBlock;
+    l_popRequestQueue;
+  }
+
+  transition(M, {Fwd_GETS, Fwd_GET_INSTR}, S) {
+    hftm_htmFailTransactionMem;
+    f_sendDataToL1;
+    l_popRequestQueue;
+  }
+
+  transition(IS, Data, S) {
+    u_writeDataToCache;
+    hx_load_hit;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(IS, Data_Exclusive, E) {
+    u_writeDataToCache;
+    hx_load_hit;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(IS, Data_Stale, I) {
+    hftm_htmFailTransactionMem;
+    u_writeDataToCache;
+    forward_eviction_to_cpu;
+    hx_load_hit;
+    s_deallocateTBE;
+    ff_deallocateCacheBlock;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(Inst_IS, Data, S) {
+    u_writeInstToCache;
+    hx_ifetch_hit;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(Inst_IS, Data_Exclusive, E) {
+    u_writeInstToCache;
+    hx_ifetch_hit;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(Inst_IS, Data_Stale, I) {
+    u_writeInstToCache;
+    hx_ifetch_hit;
+    s_deallocateTBE;
+    ff_deallocateCacheBlock;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition({IM,SM}, Data_Exclusive, M) {
+    u_writeDataToCache;
+    hhx_store_hit;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  // store conditionals
+
+  transition({I,S,E,M}, Failed_SC) {
+    // IS,IM,SM don't handle store conditionals
+    hhc_storec_fail;
+    k_popMandatoryQueue;
+  }
+
+  // prefetcher
+
+  transition({Inst_IS, IS, IM, SM, PF_Inst_IS, PF_IS, PF_IE}, PF_L0_Replacement) {
+     z_stallAndWaitOptionalQueue;
+  }
+
+  transition({PF_Inst_IS, PF_IS}, {Store, L0_Replacement}) {
+    z_stallAndWaitMandatoryQueue;
+  }
+
+  transition({PF_IE}, {Load, Ifetch, L0_Replacement}) {
+    z_stallAndWaitMandatoryQueue;
+  }
+
+  transition({S,E,M,Inst_IS,IS,IM,SM,PF_Inst_IS,PF_IS,PF_IE},
+             {PF_Load, PF_Store, PF_Ifetch}) {
+      pq_popPrefetchQueue;
+  }
+
+  transition(I, PF_Load, PF_IS) {
+    oo_allocateDCacheBlock;
+    i_allocateTBE;
+    pa_issuePfGETS;
+    pq_popPrefetchQueue;
+  }
+
+  transition(PF_IS, Load, IS) {
+    hars_htmAddToReadSet;
+    uu_profileDataMiss;
+    ppm_observePfMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(I, PF_Ifetch, PF_Inst_IS) {
+    pp_allocateICacheBlock;
+    i_allocateTBE;
+    pa_issuePfGETS;
+    pq_popPrefetchQueue;
+  }
+
+  transition(PF_Inst_IS, Ifetch, Inst_IS) {
+    uu_profileInstMiss;
+    ppm_observePfMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(I, PF_Store, PF_IE) {
+    oo_allocateDCacheBlock;
+    i_allocateTBE;
+    pb_issuePfGETX;
+    pq_popPrefetchQueue;
+  }
+
+  transition(PF_IE, Store, IM) {
+    haws_htmAddToWriteSet;
+    uu_profileDataMiss;
+    ppm_observePfMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition({PF_Inst_IS, PF_IS, PF_IE}, {InvOwn, InvElse}) {
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  transition(PF_IS, Data, S) {
+    u_writeDataToCache;
+    s_deallocateTBE;
+    mp_markPrefetched;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(PF_IS, Data_Exclusive, E) {
+    u_writeDataToCache;
+    s_deallocateTBE;
+    mp_markPrefetched;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(PF_IS, Data_Stale, I) {
+    u_writeDataToCache;
+    s_deallocateTBE;
+    mp_markPrefetched;
+    ff_deallocateCacheBlock;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(PF_Inst_IS, Data, S) {
+    u_writeInstToCache;
+    s_deallocateTBE;
+    mp_markPrefetched;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(PF_Inst_IS, Data_Exclusive, E) {
+    u_writeInstToCache;
+    s_deallocateTBE;
+    mp_markPrefetched;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(PF_IE, Data_Exclusive, E) {
+    u_writeDataToCache;
+    s_deallocateTBE;
+    mp_markPrefetched;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(I, PF_Bad_Addr) {
+    pq_popPrefetchQueue;
+  }
+
+  // hardware transactional memory
+
+  transition(I, HTM_Abort) {
+    hvu_htmVerifyUid;
+    hat_htmAbortTransaction;
+    hcs_htmCommandSucceed;
+    k_popMandatoryQueue;
+  }
+
+  transition(I, HTM_Start) {
+    hvu_htmVerifyUid;
+    hst_htmStartTransaction;
+    hcs_htmCommandSucceed;
+    k_popMandatoryQueue;
+  }
+
+  transition(I, HTM_Commit) {
+    hvu_htmVerifyUid;
+    hct_htmCommitTransaction;
+    hcs_htmCommandSucceed;
+    k_popMandatoryQueue;
+  }
+
+  transition(I, HTM_Cancel) {
+    hvu_htmVerifyUid;
+    hcnt_htmCancelTransaction;
+    hcs_htmCommandSucceed;
+    k_popMandatoryQueue;
+  }
+
+  transition(I, HTM_notifyCMD) {
+    hvu_htmVerifyUid;
+    hcs_htmCommandFail;
+    k_popMandatoryQueue;
+  }
+
+  transition({I,S,E,M,IS,IM,SM,PF_IS,PF_IE}, HTM_notifyLD) {
+    hvu_htmVerifyUid;
+    hcs_htmLoadFail;
+    k_popMandatoryQueue;
+  }
+
+  transition({I,S,E,M,IS,IM,SM,PF_IS,PF_IE}, HTM_notifyST) {
+    hvu_htmVerifyUid;
+    hcs_htmStoreFail;
+    k_popMandatoryQueue;
+  }
+
+  transition(I, {L0_Replacement,PF_L0_Replacement}) {
+    ff_deallocateCacheBlock;
+  }
+}

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2012 Mark D. Hill and David A. Wood
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -121,6 +133,7 @@ class CacheMemory : public SimObject
     // provided by the AbstractCacheEntry class.
     void setLocked (Addr addr, int context);
     void clearLocked (Addr addr);
+    void clearLockedAll (int context);
     bool isLocked (Addr addr, int context);
 
     // Print cache contents
@@ -130,6 +143,10 @@ class CacheMemory : public SimObject
     void regStats();
     bool checkResourceAvailable(CacheResourceType res, Addr addr);
     void recordRequestType(CacheRequestType requestType, Addr addr);
+
+    // hardware transactional memory
+    void htmAbortTransaction();
+    void htmCommitTransaction();
 
   public:
     Stats::Scalar m_demand_hits;
@@ -149,6 +166,12 @@ class CacheMemory : public SimObject
 
     Stats::Scalar numTagArrayStalls;
     Stats::Scalar numDataArrayStalls;
+
+    // hardware transactional memory
+    Stats::Histogram htmTransCommitReadSet;
+    Stats::Histogram htmTransCommitWriteSet;
+    Stats::Histogram htmTransAbortReadSet;
+    Stats::Histogram htmTransAbortWriteSet;
 
     int getCacheSize() const { return m_cache_size; }
     int getCacheAssoc() const { return m_cache_assoc; }

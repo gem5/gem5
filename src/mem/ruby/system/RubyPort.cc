@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2019 ARM Limited
+ * Copyright (c) 2012-2013,2020 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -169,6 +169,7 @@ bool RubyPort::MemMasterPort::recvTimingResp(PacketPtr pkt)
 {
     // got a response from a device
     assert(pkt->isResponse());
+    assert(!pkt->htmTransactionFailedInCache());
 
     // First we must retrieve the request port from the sender State
     RubyPort::SenderState *senderState =
@@ -253,6 +254,7 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
     // pio port.
     if (pkt->cmd != MemCmd::MemSyncReq) {
         if (!isPhysMemAddress(pkt)) {
+            assert(!pkt->req->isHTMCmd());
             assert(ruby_port->memMasterPort.isConnected());
             DPRINTF(RubyPort, "Request address %#x assumed to be a "
                     "pio address\n", pkt->getAddr());
@@ -637,7 +639,6 @@ RubyPort::PioMasterPort::recvRangeChange()
         r.pioSlavePort.sendRangeChange();
     }
 }
-
 
 int
 RubyPort::functionalWrite(Packet *func_pkt)

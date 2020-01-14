@@ -48,6 +48,7 @@ enumeration(CoherenceClass, desc="...") {
   INV_OWN,   desc="Invalidate (own)";
   INV_ELSE,  desc="Invalidate (else)";
   PUTX,      desc="Replacement message";
+  PUTX_COPY, desc="Data block to be copied in L1. L0 will still be in M state";
 
   WB_ACK,    desc="Writeback ack";
 
@@ -59,6 +60,7 @@ enumeration(CoherenceClass, desc="...") {
   DATA, desc="Data block for L1 cache in S state";
   DATA_EXCLUSIVE, desc="Data block for L1 cache in M/E state";
   ACK, desc="Generic invalidate ack";
+  NAK, desc="Used by L0 to tell L1 that it cannot provide the latest value";
 
   // This is a special case in which the L1 cache lost permissions to the
   // shared block before it got the data. So the L0 cache can use the data

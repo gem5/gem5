@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2012 Mark D. Hill and David A. Wood
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -31,6 +43,7 @@
 
 #include "base/intmath.hh"
 #include "base/logging.hh"
+#include "debug/HtmMem.hh"
 #include "debug/RubyCache.hh"
 #include "debug/RubyCacheTrace.hh"
 #include "debug/RubyResourceStalls.hh"
@@ -479,6 +492,23 @@ CacheMemory::clearLocked(Addr address)
     entry->clearLocked();
 }
 
+void
+CacheMemory::clearLockedAll(int context)
+{
+    // iterate through every set and way to get a cache line
+    for (auto i = m_cache.begin(); i != m_cache.end(); ++i) {
+        std::vector<AbstractCacheEntry*> set = *i;
+        for (auto j = set.begin(); j != set.end(); ++j) {
+            AbstractCacheEntry *line = *j;
+            if (line && line->isLocked(context)) {
+                DPRINTF(RubyCache, "Clear Lock for addr: %#x\n",
+                    line->m_Address);
+                line->clearLocked();
+            }
+        }
+    }
+}
+
 bool
 CacheMemory::isLocked(Addr address, int context)
 {
@@ -578,6 +608,34 @@ CacheMemory::regStats()
         .desc("number of stalls caused by data array")
         .flags(Stats::nozero)
         ;
+
+    htmTransCommitReadSet
+        .init(8)
+        .name(name() + ".htm_transaction_committed_read_set")
+        .desc("read set size of a committed transaction")
+        .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan)
+        ;
+
+    htmTransCommitWriteSet
+        .init(8)
+        .name(name() + ".htm_transaction_committed_write_set")
+        .desc("write set size of a committed transaction")
+        .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan)
+        ;
+
+    htmTransAbortReadSet
+        .init(8)
+        .name(name() + ".htm_transaction_aborted_read_set")
+        .desc("read set size of a aborted transaction")
+        .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan)
+        ;
+
+    htmTransAbortWriteSet
+        .init(8)
+        .name(name() + ".htm_transaction_aborted_write_set")
+        .desc("write set size of a aborted transaction")
+        .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan)
+        ;
 }
 
 // assumption: SLICC generated files will only call this function
@@ -654,4 +712,70 @@ bool
 CacheMemory::isBlockNotBusy(int64_t cache_set, int64_t loc)
 {
   return (m_cache[cache_set][loc]->m_Permission != AccessPermission_Busy);
+}
+
+/* hardware transactional memory */
+
+void
+CacheMemory::htmAbortTransaction()
+{
+    uint64_t htmReadSetSize = 0;
+    uint64_t htmWriteSetSize = 0;
+
+    // iterate through every set and way to get a cache line
+    for (auto i = m_cache.begin(); i != m_cache.end(); ++i)
+    {
+        std::vector<AbstractCacheEntry*> set = *i;
+
+        for (auto j = set.begin(); j != set.end(); ++j)
+        {
+            AbstractCacheEntry *line = *j;
+
+            if (line != nullptr) {
+                htmReadSetSize += (line->getInHtmReadSet() ? 1 : 0);
+                htmWriteSetSize += (line->getInHtmWriteSet() ? 1 : 0);
+                if (line->getInHtmWriteSet()) {
+                    line->invalidateEntry();
+                }
+                line->setInHtmWriteSet(false);
+                line->setInHtmReadSet(false);
+                line->clearLocked();
+            }
+        }
+    }
+
+    htmTransAbortReadSet.sample(htmReadSetSize);
+    htmTransAbortWriteSet.sample(htmWriteSetSize);
+    DPRINTF(HtmMem, "htmAbortTransaction: read set=%u write set=%u\n",
+        htmReadSetSize, htmWriteSetSize);
+}
+
+void
+CacheMemory::htmCommitTransaction()
+{
+    uint64_t htmReadSetSize = 0;
+    uint64_t htmWriteSetSize = 0;
+
+    // iterate through every set and way to get a cache line
+    for (auto i = m_cache.begin(); i != m_cache.end(); ++i)
+    {
+        std::vector<AbstractCacheEntry*> set = *i;
+
+        for (auto j = set.begin(); j != set.end(); ++j)
+        {
+            AbstractCacheEntry *line = *j;
+            if (line != nullptr) {
+                htmReadSetSize += (line->getInHtmReadSet() ? 1 : 0);
+                htmWriteSetSize += (line->getInHtmWriteSet() ? 1 : 0);
+                line->setInHtmWriteSet(false);
+                line->setInHtmReadSet(false);
+                line->clearLocked();
+             }
+        }
+    }
+
+    htmTransCommitReadSet.sample(htmReadSetSize);
+    htmTransCommitWriteSet.sample(htmWriteSetSize);
+    DPRINTF(HtmMem, "htmCommitTransaction: read set=%u write set=%u\n",
+        htmReadSetSize, htmWriteSetSize);
 }

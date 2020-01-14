@@ -132,10 +132,16 @@ structure (Sequencer, external = "yes") {
   // ll/sc support
   void writeCallbackScFail(Addr, DataBlock);
   bool llscCheckMonitor(Addr);
+  void llscClearLocalMonitor();
 
   void evictionCallback(Addr);
   void recordRequestType(SequencerRequestType);
   bool checkResourceAvailable(CacheResourceType, Addr);
+}
+
+structure (HTMSequencer, interface="Sequencer", external = "yes") {
+  // hardware transactional memory
+  void htmCallback(Addr, HtmCallbackMode, HtmFailedInCacheReason);
 }
 
 structure(RubyRequest, desc="...", interface="Message", external="yes") {
@@ -152,6 +158,8 @@ structure(RubyRequest, desc="...", interface="Message", external="yes") {
   int wfid,                  desc="Writethrough wavefront";
   uint64_t instSeqNum,       desc="Instruction sequence number";
   PacketPtr pkt,             desc="Packet associated with this request";
+  bool htmFromTransaction,   desc="Memory request originates within a HTM transaction";
+  int htmTransactionUid,     desc="Used to identify the unique HTM transaction that produced this request";
 }
 
 structure(AbstractCacheEntry, primitive="yes", external = "yes") {
@@ -184,6 +192,10 @@ structure (CacheMemory, external = "yes") {
   void setMRU(AbstractCacheEntry);
   void recordRequestType(CacheRequestType, Addr);
   bool checkResourceAvailable(CacheResourceType, Addr);
+
+  // hardware transactional memory
+  void htmCommitTransaction();
+  void htmAbortTransaction();
 
   int getCacheSize();
   int getNumBlocks();

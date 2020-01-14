@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2020 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -167,6 +167,31 @@ enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
   Release,           desc="Release operation";
   Acquire,           desc="Acquire opertion";
   AcquireRelease,    desc="Acquire and Release opertion";
+  HTM_Start,         desc="hardware memory transaction: begin";
+  HTM_Commit,        desc="hardware memory transaction: commit";
+  HTM_Cancel,        desc="hardware memory transaction: cancel";
+  HTM_Abort,         desc="hardware memory transaction: abort";
+}
+
+bool isWriteRequest(RubyRequestType type);
+bool isDataReadRequest(RubyRequestType type);
+bool isReadRequest(RubyRequestType type);
+bool isHtmCmdRequest(RubyRequestType type);
+
+// hardware transactional memory
+RubyRequestType htmCmdToRubyRequestType(Packet *pkt);
+
+enumeration(HtmCallbackMode, desc="...", default="HtmCallbackMode_NULL") {
+  HTM_CMD,          desc="htm command";
+  LD_FAIL,          desc="htm transaction failed - inform via read";
+  ST_FAIL,          desc="htm transaction failed - inform via write";
+}
+
+enumeration(HtmFailedInCacheReason, desc="...", default="HtmFailedInCacheReason_NO_FAIL") {
+  NO_FAIL,          desc="no failure in cache";
+  FAIL_SELF,        desc="failed due local cache's replacement policy";
+  FAIL_REMOTE,      desc="failed due remote invalidation";
+  FAIL_OTHER,       desc="failed due other circumstances";
 }
 
 enumeration(SequencerRequestType, desc="...", default="SequencerRequestType_NULL") {

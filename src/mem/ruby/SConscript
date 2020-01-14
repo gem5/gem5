@@ -138,4 +138,5 @@ MakeInclude('system/Sequencer.hh')
 # <# include "mem/ruby/protocol/header.hh"> in any file
 # generated_dir = Dir('protocol')
 MakeInclude('system/GPUCoalescer.hh')
+MakeInclude('system/HTMSequencer.hh')
 MakeInclude('system/VIPERCoalescer.hh')

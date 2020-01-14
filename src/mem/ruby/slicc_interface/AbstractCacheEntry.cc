@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -37,6 +49,8 @@ AbstractCacheEntry::AbstractCacheEntry() : ReplaceableEntry()
     m_Address = 0;
     m_locked = -1;
     m_last_touch_tick = 0;
+    m_htmInReadSet = false;
+    m_htmInWriteSet = false;
 }
 
 AbstractCacheEntry::~AbstractCacheEntry()
@@ -80,4 +94,28 @@ AbstractCacheEntry::isLocked(int context) const
     DPRINTF(RubyCache, "Testing Lock for addr: %#llx cur %d con %d\n",
             m_Address, m_locked, context);
     return m_locked == context;
+}
+
+void
+AbstractCacheEntry::setInHtmReadSet(bool val)
+{
+    m_htmInReadSet = val;
+}
+
+void
+AbstractCacheEntry::setInHtmWriteSet(bool val)
+{
+    m_htmInWriteSet = val;
+}
+
+bool
+AbstractCacheEntry::getInHtmReadSet() const
+{
+    return m_htmInReadSet;
+}
+
+bool
+AbstractCacheEntry::getInHtmWriteSet() const
+{
+    return m_htmInWriteSet;
 }

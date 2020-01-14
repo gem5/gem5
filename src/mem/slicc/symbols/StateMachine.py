@@ -1,4 +1,4 @@
-# Copyright (c) 2019 ARM Limited
+# Copyright (c) 2019-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -54,6 +54,7 @@ python_class_map = {
                     "CacheMemory": "RubyCache",
                     "WireBuffer": "RubyWireBuffer",
                     "Sequencer": "RubySequencer",
+                    "HTMSequencer": "RubyHTMSequencer",
                     "GPUCoalescer" : "RubyGPUCoalescer",
                     "VIPERCoalescer" : "VIPERCoalescer",
                     "DirectoryMemory": "RubyDirectoryMemory",

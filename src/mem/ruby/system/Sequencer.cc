@@ -55,6 +55,7 @@
 #include "mem/ruby/protocol/PrefetchBit.hh"
 #include "mem/ruby/protocol/RubyAccessMode.hh"
 #include "mem/ruby/slicc_interface/RubyRequest.hh"
+#include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 #include "mem/ruby/system/RubySystem.hh"
 #include "sim/system.hh"
 
@@ -146,6 +147,12 @@ Sequencer::llscCheckMonitor(const Addr address)
     } else {
         return false;
     }
+}
+
+void
+Sequencer::llscClearLocalMonitor()
+{
+    m_dataCache_ptr->clearLockedAll(m_version);
 }
 
 void
@@ -243,7 +250,8 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType primary_type,
     // Check if there is any outstanding request for the same cache line.
     auto &seq_req_list = m_RequestTable[line_addr];
     // Create a default entry
-    seq_req_list.emplace_back(pkt, primary_type, secondary_type, curCycle());
+    seq_req_list.emplace_back(pkt, primary_type,
+        secondary_type, curCycle());
     m_outstanding_count++;
 
     if (seq_req_list.size() > 1) {
@@ -569,7 +577,10 @@ Sequencer::empty() const
 RequestStatus
 Sequencer::makeRequest(PacketPtr pkt)
 {
-    if (m_outstanding_count >= m_max_outstanding_requests) {
+    // HTM abort signals must be allowed to reach the Sequencer
+    // the same cycle they are issued. They cannot be retried.
+    if ((m_outstanding_count >= m_max_outstanding_requests) &&
+        !pkt->req->isHTMAbort()) {
         return RequestStatus_BufferFull;
     }
 
@@ -590,7 +601,7 @@ Sequencer::makeRequest(PacketPtr pkt)
         if (pkt->isWrite()) {
             DPRINTF(RubySequencer, "Issuing SC\n");
             primary_type = RubyRequestType_Store_Conditional;
-#ifdef PROTOCOL_MESI_Three_Level
+#if defined (PROTOCOL_MESI_Three_Level) || defined (PROTOCOL_MESI_Three_Level_HTM)
             secondary_type = RubyRequestType_Store_Conditional;
 #else
             secondary_type = RubyRequestType_ST;
@@ -629,7 +640,10 @@ Sequencer::makeRequest(PacketPtr pkt)
             //
             primary_type = secondary_type = RubyRequestType_ST;
         } else if (pkt->isRead()) {
-            if (pkt->req->isInstFetch()) {
+            // hardware transactional memory commands
+            if (pkt->req->isHTMCmd()) {
+                primary_type = secondary_type = htmCmdToRubyRequestType(pkt);
+            } else if (pkt->req->isInstFetch()) {
                 primary_type = secondary_type = RubyRequestType_IFETCH;
             } else {
                 bool storeCheck = false;
@@ -705,6 +719,14 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
             curTick(), m_version, "Seq", "Begin", "", "",
             printAddress(msg->getPhysicalAddress()),
             RubyRequestType_to_string(secondary_type));
+
+    // hardware transactional memory
+    // If the request originates in a transaction,
+    // then mark the Ruby message as such.
+    if (pkt->isHtmTransactional()) {
+        msg->m_htmFromTransaction = true;
+        msg->m_htmTransactionUid = pkt->getHtmTransactionUid();
+    }
 
     Tick latency = cyclesToTicks(
                         m_controller->mandatoryQueueLatency(secondary_type));
