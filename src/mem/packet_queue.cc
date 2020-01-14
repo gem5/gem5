@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012,2015,2018 ARM Limited
+ * Copyright (c) 2012,2015,2018-2020 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -115,8 +115,8 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when)
 
     // add a very basic sanity check on the port to ensure the
     // invisible buffer is not growing beyond reasonable limits
-    if (!_disableSanityCheck && transmitList.size() > 100) {
-        panic("Packet queue %s has grown beyond 100 packets\n",
+    if (!_disableSanityCheck && transmitList.size() > 128) {
+        panic("Packet queue %s has grown beyond 128 packets\n",
               name());
     }
 
