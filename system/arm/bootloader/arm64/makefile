@@ -28,6 +28,8 @@ CROSS_COMPILE = aarch64-linux-gnu-
 CC = $(CROSS_COMPILE)gcc
 LD = $(CROSS_COMPILE)ld
 
+.SUFFIXES:
+
 BUILDDIR = .
 DESTDIR = $(error Please set DESTDIR to wanted installation directory)
 
@@ -37,7 +39,7 @@ CPPFLAGS = -DPHYS_OFFSET=0x80000000 -DCNTFRQ=0x01800000 \
 		   -Dkernel=0x80080000 \
 		   -Dmbox=0x8000fff8 -Ddtb=0x80000100
 
-LDFLAGS = -N -Ttext 0x00000010 -non_shared -static
+LDFLAGS = -N -Ttext 0x00000010 -static
 
 .PHONY: all clean install mkdir
 
