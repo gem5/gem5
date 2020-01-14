@@ -383,10 +383,6 @@ class TLB : public BaseTLB
 
     void drainResume() override;
 
-    // Checkpointing
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
-
     void regStats() override;
 
     void regProbePoints() override;

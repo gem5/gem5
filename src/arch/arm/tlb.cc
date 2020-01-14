@@ -405,40 +405,6 @@ TLB::takeOverFrom(BaseTLB *_otlb)
 }
 
 void
-TLB::serialize(CheckpointOut &cp) const
-{
-    DPRINTF(Checkpoint, "Serializing Arm TLB\n");
-
-    SERIALIZE_SCALAR(_attr);
-    SERIALIZE_SCALAR(haveLPAE);
-    SERIALIZE_SCALAR(directToStage2);
-    SERIALIZE_SCALAR(stage2Req);
-    SERIALIZE_SCALAR(stage2DescReq);
-
-    int num_entries = size;
-    SERIALIZE_SCALAR(num_entries);
-    for (int i = 0; i < size; i++)
-        table[i].serializeSection(cp, csprintf("TlbEntry%d", i));
-}
-
-void
-TLB::unserialize(CheckpointIn &cp)
-{
-    DPRINTF(Checkpoint, "Unserializing Arm TLB\n");
-
-    UNSERIALIZE_SCALAR(_attr);
-    UNSERIALIZE_SCALAR(haveLPAE);
-    UNSERIALIZE_SCALAR(directToStage2);
-    UNSERIALIZE_SCALAR(stage2Req);
-    UNSERIALIZE_SCALAR(stage2DescReq);
-
-    int num_entries;
-    UNSERIALIZE_SCALAR(num_entries);
-    for (int i = 0; i < min(size, num_entries); i++)
-        table[i].unserializeSection(cp, csprintf("TlbEntry%d", i));
-}
-
-void
 TLB::regStats()
 {
     BaseTLB::regStats();
