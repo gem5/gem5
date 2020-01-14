@@ -1,113 +1,0 @@
-M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
-Got Configuration 623
-memsize 8000000 pages 4000 
-First free page after ROM 0xFFFFFC0000018000
-HWRPB 0xFFFFFC0000018000 l1pt 0xFFFFFC0000040000 l2pt 0xFFFFFC0000042000 l3pt_rpb 0xFFFFFC0000044000 l3pt_kernel 0xFFFFFC0000048000 l2reserv 0xFFFFFC0000046000
-kstart = 0xFFFFFC0000310000, kend = 0xFFFFFC0000855898, kentry = 0xFFFFFC0000310000, numCPUs = 0x2
-CPU Clock at 2000 MHz IntrClockFrequency=1024 
-Booting with 2 processor(s) 
-KSP: 0x20043FE8 PTBR 0x20
-KSP: 0x20043FE8 PTBR 0x20
-Console Callback at 0x0, fixup at 0x0, crb offset: 0x790
-Memory cluster 0 [0 - 392]
-Memory cluster 1 [392 - 15992]
-Initalizing mdt_bitmap addr 0xFFFFFC0000038000 mem_pages 4000 
-ConsoleDispatch at virt 100008D8 phys 188D8 val FFFFFC00000100A8
-Bootstraping CPU 1 with sp=0xFFFFFC0000076000
-unix_boot_mem ends at FFFFFC0000078000 
-k_argc = 0 
-jumping to kernel at 0xFFFFFC0000310000, (PCBB 0xFFFFFC0000018180 pfn 1067)
-CallbackFixup 0 18000, t7=FFFFFC000070C000
-Entering slaveloop for cpu 1 my_rpb=FFFFFC0000018400
-Linux version 2.6.13 (hsul@zed.eecs.umich.edu) (gcc version 3.4.3) #1 SMP Sun Oct 8 19:52:07 EDT 2006
-Booting GENERIC on Tsunami variation DP264 using machine vector DP264 from SRM
-Major Options: SMP LEGACY_START VERBOSE_MCHECK 
-Command line: root=/dev/hda1 console=ttyS0
-memcluster 0, usage 1, start        0, end      392
-memcluster 1, usage 0, start      392, end    16384
-freeing pages 1069:16384
-reserving pages 1069:1070
-4096K Bcache detected; load hit latency 30 cycles, load miss latency 167 cycles
-SMP: 2 CPUs probed -- cpu_present_mask = 3
-Built 1 zonelists
-Kernel command line: root=/dev/hda1 console=ttyS0
-PID hash table entries: 1024 (order: 10, 32768 bytes)
-Using epoch = 1900
-Console: colour dummy device 80x25
-Dentry cache hash table entries: 32768 (order: 5, 262144 bytes)
-Inode-cache hash table entries: 16384 (order: 4, 131072 bytes)
-Memory: 118784k/131072k available (3314k kernel code, 8952k reserved, 983k data, 224k init)
-Mount-cache hash table entries: 512
-SMP starting up secondaries.
-Slave CPU 1 console command START
-SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000018400 my_rpb_phys 18400
-Brought up 2 CPUs
-SMP: Total of 2 processors activated (8000.15 BogoMIPS).
-NET: Registered protocol family 16
-EISA bus registered
-pci: enabling save/restore of SRM state
-SCSI subsystem initialized
-srm_env: version 0.0.5 loaded successfully
-Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
-Initializing Cryptographic API
-rtc: Standard PC (1900) epoch (1900) detected
-Real Time Clock Driver v1.12
-Serial: 8250/16550 driver $Revision: 1.90 $ 1 ports, IRQ sharing disabled
-ttyS0 at I/O 0x3f8 (irq = 4) is a 8250
-io scheduler noop registered
-io scheduler anticipatory registered
-io scheduler deadline registered
-io scheduler cfq registered
-loop: loaded (max 8 devices)
-nbd: registered device at major 43
-ns83820.c: National Semiconductor DP83820 10/100/1000 driver.
-PCI: Setting latency timer of device 0000:00:01.0 to 64
-eth0: ns83820.c: 0x22c: 00000000, subsystem: 0000:0000
-eth0: enabling optical transceiver
-eth0: using 64 bit addressing.
-eth0: ns83820 v0.22: DP83820 v1.3: 00:90:00:00:00:01 io=0x09000000 irq=30 f=h,sg
-tun: Universal TUN/TAP device driver, 1.6
-tun: (C) 1999-2004 Max Krasnyansky <maxk@qualcomm.com>
-Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-PIIX4: IDE controller at PCI slot 0000:00:00.0
-PIIX4: chipset revision 0
-PIIX4: 100% native mode on irq 31
-PCI: Setting latency timer of device 0000:00:00.0 to 64
-    ide0: BM-DMA at 0x8400-0x8407, BIOS settings: hda:DMA, hdb:DMA
-    ide1: BM-DMA at 0x8408-0x840f, BIOS settings: hdc:DMA, hdd:DMA
-hda: M5 IDE Disk, ATA DISK drive
-hdb: M5 IDE Disk, ATA DISK drive
-ide0 at 0x8410-0x8417,0x8422 on irq 31
-hda: max request size: 128KiB
-hda: 101808 sectors (52 MB), CHS=101/16/63, UDMA(33)
-hda: cache flushes not supported
- hda: hda1
-hdb: max request size: 128KiB
-hdb: 4177920 sectors (2139 MB), CHS=4144/16/63, UDMA(33)
-hdb: cache flushes not supported
- hdb: unknown partition table
-mice: PS/2 mouse device common for all mice
-NET: Registered protocol family 2
-IP route cache hash table entries: 4096 (order: 2, 32768 bytes)
-TCP established hash table entries: 16384 (order: 5, 262144 bytes)
-TCP bind hash table entries: 16384 (order: 5, 262144 bytes)
-TCP: Hash tables configured (established 16384 bind 16384)
-TCP reno registered
-ip_conntrack version 2.1 (512 buckets, 4096 max) - 296 bytes per conntrack
-ip_tables: (C) 2000-2002 Netfilter core team
-arp_tables: (C) 2002 David S. Miller
-TCP bic registered
-Initializing IPsec netlink socket
-NET: Registered protocol family 1
-NET: Registered protocol family 17
-NET: Registered protocol family 15
-Bridge firewalling registered
-802.1Q VLAN Support v1.8 Ben Greear <greearb@candelatech.com>
-All bugs added by David S. Miller <davem@redhat.com>
-VFS: Mounted root (ext2 filesystem) readonly.
-Freeing unused kernel memory: 224k freed
-init started:  BusyBox v1.1.0 (2007.03.04-01:07+0000) multi-call binary
-mounting filesystems...
-EXT2-fs warning: checktime reached, running e2fsck is recommended
-loading script...

@@ -1,7 +1,0 @@
-warn: DRAM device capacity (8192 Mbytes) does not match the address range assigned (128 Mbytes)
-warn: Sockets disabled, not accepting terminal connections
-warn: Sockets disabled, not accepting gdb connections
-warn: ClockedObject: More than one power state change request encountered within the same simulation tick
-warn: ClockedObject: More than one power state change request encountered within the same simulation tick
-warn: Prefetch instructions in Alpha do not do anything
-warn: Prefetch instructions in Alpha do not do anything

@@ -1,3 +1,0 @@
-warn: DRAM device capacity (8192 Mbytes) does not match the address range assigned (512 Mbytes)
-warn: Sockets disabled, not accepting gdb connections
-warn: ClockedObject: More than one power state change request encountered within the same simulation tick
