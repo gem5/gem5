@@ -443,6 +443,8 @@ ThreadContext::pcState() const
     pc.aarch64(!cpsr.width);
     pc.nextAArch64(!cpsr.width);
     pc.illegalExec(false);
+    pc.itstate(itState(cpsr));
+    pc.nextItstate(0);
 
     iris::ResourceReadResult result;
     call().resource_read(_instId, result, pcRscId);
