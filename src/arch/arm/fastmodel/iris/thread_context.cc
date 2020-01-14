@@ -572,12 +572,14 @@ const ArmISA::VecRegContainer &
 ThreadContext::readVecReg(const RegId &reg_id) const
 {
     const RegIndex idx = reg_id.index();
+    ArmISA::VecRegContainer &reg = vecRegs.at(idx);
+    reg.zero();
+
     // Ignore accesses to registers which aren't architected. gem5 defines a
     // few extra registers which it uses internally in the implementation of
     // some instructions.
     if (idx >= vecRegIds.size())
-        return vecRegs.at(idx);
-    ArmISA::VecRegContainer &reg = vecRegs.at(idx);
+        return reg;
 
     iris::ResourceReadResult result;
     call().resource_read(_instId, result, vecRegIds.at(idx));
@@ -598,10 +600,12 @@ const ArmISA::VecPredRegContainer &
 ThreadContext::readVecPredReg(const RegId &reg_id) const
 {
     RegIndex idx = reg_id.index();
-    if (idx >= vecPredRegIds.size())
-        return vecPredRegs.at(idx);
 
     ArmISA::VecPredRegContainer &reg = vecPredRegs.at(idx);
+    reg.reset();
+
+    if (idx >= vecPredRegIds.size())
+        return reg;
 
     iris::ResourceReadResult result;
     call().resource_read(_instId, result, vecPredRegIds.at(idx));
