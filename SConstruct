@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2013, 2015-2019 ARM Limited
+# Copyright (c) 2013, 2015-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -377,7 +377,7 @@ if main['GCC'] or main['CLANG']:
     main['PSHLINKFLAGS'] = main.subst('${FILTER_PSHLINKFLAGS(SHLINKFLAGS)}')
     if GetOption('gold_linker'):
         main.Append(LINKFLAGS='-fuse-ld=gold')
-    main['PLINKFLAGS'] = main.subst('${LINKFLAGS}')
+    main['PLINKFLAGS'] = main.get('LINKFLAGS')
     shared_partial_flags = ['-r', '-nostdlib']
     main.Append(PSHLINKFLAGS=shared_partial_flags)
     main.Append(PLINKFLAGS=shared_partial_flags)
