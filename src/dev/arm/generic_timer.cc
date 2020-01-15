@@ -83,7 +83,6 @@ SystemCounter::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(_regCntkctl);
     SERIALIZE_SCALAR(_regCnthctl);
     SERIALIZE_SCALAR(_freq);
-    SERIALIZE_SCALAR(_period);
     SERIALIZE_SCALAR(_resetTick);
 }
 
@@ -97,7 +96,7 @@ SystemCounter::unserialize(CheckpointIn &cp)
     if (!UNSERIALIZE_OPT_SCALAR(_regCnthctl))
         _regCnthctl = 0;
     UNSERIALIZE_SCALAR(_freq);
-    UNSERIALIZE_SCALAR(_period);
+    _period = (1.0 / _freq) * SimClock::Frequency;
     UNSERIALIZE_SCALAR(_resetTick);
 }
 
