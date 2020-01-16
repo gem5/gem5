@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2019 ARM Limited
+# Copyright (c) 2012, 2019-2020 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -59,7 +59,7 @@ def run_test(root):
     print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())
 
 config = sys.argv[1]
-os.environ['M5_PATH'] = os.path.dirname(__file__)
+os.environ['M5_PATH'] = sys.argv[2]
 
 # path setup
 gem5_root = joinpath(os.path.dirname(__file__), '..', '..', '..', '..', '..')

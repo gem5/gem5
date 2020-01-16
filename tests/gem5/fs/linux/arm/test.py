@@ -1,4 +1,4 @@
-# Copyright (c) 2019 ARM Limited
+# Copyright (c) 2019-2020 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -89,7 +89,10 @@ path = os.path.dirname(os.path.abspath(__file__))
 arm_fs_binaries = DownloadedArchive(url, path, tarball)
 
 for name in arm_fs_quick_tests:
-    args = [ joinpath(config.base_dir, 'tests', 'configs', name + '.py') ]
+    args = [
+        joinpath(config.base_dir, 'tests', 'configs', name + '.py'),
+        path
+    ]
     gem5_verify_config(
         name=name,
         verifiers=(), # Add basic stat verifiers
@@ -101,7 +104,10 @@ for name in arm_fs_quick_tests:
     )
 
 for name in arm_fs_long_tests:
-    args = [ joinpath(config.base_dir, 'tests', 'configs', name + '.py') ]
+    args = [
+        joinpath(config.base_dir, 'tests', 'configs', name + '.py'),
+        path
+    ]
     gem5_verify_config(
         name=name,
         verifiers=(), # TODO: Add basic stat verifiers
