@@ -1,3 +1,15 @@
+# Copyright (c) 2020 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2017 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
@@ -521,6 +533,13 @@ def define_common_args(config):
             action='store',
             help='The path to store results in.'
         ),
+        Argument(
+            '--bin-path',
+            action='store',
+            default=None,
+            help='Path where binaries are stored (downloaded if not present)'
+        ),
+
     ]
 
     # NOTE: There is a limitation which arises due to this format. If you have
@@ -576,6 +595,7 @@ class RunParser(ArgParser):
         common_args.directory.add_to(parser)
         common_args.build_dir.add_to(parser)
         common_args.base_dir.add_to(parser)
+        common_args.bin_path.add_to(parser)
         common_args.threads.add_to(parser)
         common_args.test_threads.add_to(parser)
         common_args.isa.add_to(parser)
@@ -629,6 +649,7 @@ class ListParser(ArgParser):
         ).add_to(parser)
 
         common_args.directory.add_to(parser)
+        common_args.bin_path.add_to(parser)
         common_args.isa.add_to(parser)
         common_args.variant.add_to(parser)
         common_args.length.add_to(parser)
@@ -648,6 +669,7 @@ class RerunParser(ArgParser):
         common_args.directory.add_to(parser)
         common_args.build_dir.add_to(parser)
         common_args.base_dir.add_to(parser)
+        common_args.bin_path.add_to(parser)
         common_args.threads.add_to(parser)
         common_args.test_threads.add_to(parser)
         common_args.isa.add_to(parser)

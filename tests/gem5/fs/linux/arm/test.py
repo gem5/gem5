@@ -85,7 +85,8 @@ arm_fs_long_tests = [
 
 tarball = 'aarch-system-201901106.tar.bz2'
 url = "http://dist.gem5.org/dist/current/arm/" + tarball
-path = os.path.dirname(os.path.abspath(__file__))
+filepath = os.path.dirname(os.path.abspath(__file__))
+path = config.bin_path if config.bin_path else filepath
 arm_fs_binaries = DownloadedArchive(url, path, tarball)
 
 for name in arm_fs_quick_tests:
@@ -96,7 +97,7 @@ for name in arm_fs_quick_tests:
     gem5_verify_config(
         name=name,
         verifiers=(), # Add basic stat verifiers
-        config=joinpath(path, 'run.py'),
+        config=joinpath(filepath, 'run.py'),
         config_args=args,
         valid_isas=(constants.arm_tag,),
         length=constants.quick_tag,
@@ -111,7 +112,7 @@ for name in arm_fs_long_tests:
     gem5_verify_config(
         name=name,
         verifiers=(), # TODO: Add basic stat verifiers
-        config=joinpath(path, 'run.py'),
+        config=joinpath(filepath, 'run.py'),
         config_args=args,
         valid_isas=(constants.arm_tag,),
         length=constants.long_tag,
