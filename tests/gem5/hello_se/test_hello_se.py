@@ -43,13 +43,17 @@ Test file for the util m5 exit assembly instruction.
 '''
 from testlib import *
 
-test_progs = {
-    'x86': ('hello64-static', 'hello64-dynamic', 'hello32-static'),
+static_progs = {
+    'x86': ('hello64-static', 'hello32-static'),
     'arm': ('hello64-static', 'hello32-static'),
     'alpha': ('hello',),
     'mips': ('hello',),
     'riscv': ('hello',),
     'sparc': ('hello',)
+}
+
+dynamic_progs = {
+    'x86': ('hello64-dynamic',)
 }
 
 if config.bin_path:
@@ -59,24 +63,32 @@ else:
         'bin')
 
 urlbase = 'http://dist.gem5.org/dist/current/test-progs/hello/bin/'
-for isa in test_progs:
-    for binary in test_progs[isa]:
-        import os
-        url = urlbase + isa + '/linux/' + binary
-        path = joinpath(base_path, isa, 'linux')
-        hello_program = DownloadedProgram(url, path, binary)
+ref_path = joinpath(getcwd(), 'ref')
+verifiers = (
+        verifier.MatchStdoutNoPerf(joinpath(ref_path, 'simout')),
+)
 
-        ref_path = joinpath(getcwd(), 'ref')
+def verify_config(isa, binary, hosts):
+    url = urlbase + isa + '/linux/' + binary
+    path = joinpath(base_path, isa, 'linux')
+    hello_program = DownloadedProgram(url, path, binary)
 
-        verifiers = (
-                verifier.MatchStdoutNoPerf(joinpath(ref_path, 'simout')),
-        )
+    gem5_verify_config(
+            name='test-'+binary,
+            fixtures=(hello_program,),
+            verifiers=verifiers,
+            config=joinpath(config.base_dir, 'configs', 'example','se.py'),
+            config_args=['--cmd', joinpath(path, binary)],
+            valid_isas=(isa.upper(),),
+            valid_hosts=hosts,
+    )
 
-        gem5_verify_config(
-                name='test-'+binary,
-                fixtures=(hello_program,),
-                verifiers=verifiers,
-                config=joinpath(config.base_dir, 'configs', 'example','se.py'),
-                config_args=['--cmd', joinpath(path, binary)],
-                valid_isas=(isa.upper(),),
-        )
+# Run statically linked hello worlds
+for isa in static_progs:
+    for binary in static_progs[isa]:
+        verify_config(isa, binary, constants.supported_hosts)
+
+# Run dynamically linked hello worlds
+for isa in dynamic_progs:
+    for binary in dynamic_progs[isa]:
+        verify_config(isa, binary, constants.target_host[isa.upper()])
