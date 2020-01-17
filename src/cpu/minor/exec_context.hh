@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014, 2016-2018 ARM Limited
+ * Copyright (c) 2011-2014, 2016-2018, 2020 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -390,7 +390,7 @@ class ExecContext : public ::ExecContext
         thread.syscall(fault);
     }
 
-    ThreadContext *tcBase() override { return thread.getTC(); }
+    ThreadContext *tcBase() const override { return thread.getTC(); }
 
     /* @todo, should make stCondFailures persistent somewhere */
     unsigned int readStCondFailures() const override { return 0; }

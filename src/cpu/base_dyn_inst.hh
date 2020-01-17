@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2013, 2016-2019 ARM Limited
+ * Copyright (c) 2011, 2013, 2016-2020 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -919,7 +919,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     void setThreadState(ImplState *state) { thread = state; }
 
     /** Returns the thread context. */
-    ThreadContext *tcBase() { return thread->getTC(); }
+    ThreadContext *tcBase() const { return thread->getTC(); }
 
   public:
     /** Returns whether or not the eff. addr. source registers are ready. */

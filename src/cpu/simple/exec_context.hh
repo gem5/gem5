@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2018 ARM Limited
+ * Copyright (c) 2014-2018, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -505,7 +505,7 @@ class SimpleExecContext : public ExecContext {
     }
 
     /** Returns a pointer to the ThreadContext. */
-    ThreadContext *tcBase() override { return thread->getTC(); }
+    ThreadContext *tcBase() const override { return thread->getTC(); }
 
     bool
     readPredicate() const override
