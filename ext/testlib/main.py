@@ -114,6 +114,7 @@ def filter_with_config_tags(loaded_library):
     special_tags = (
         cfg.constants.isa_tag_type,
         cfg.constants.length_tag_type,
+        cfg.constants.host_isa_tag_type,
         cfg.constants.variant_tag_type
     )
 

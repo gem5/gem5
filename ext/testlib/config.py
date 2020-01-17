@@ -251,6 +251,11 @@ def define_constants(constants):
     constants.quick_tag = 'quick'
     constants.long_tag = 'long'
 
+    constants.host_isa_tag_type = 'host'
+    constants.host_x86_64_tag = 'x86_64'
+    constants.host_i386_tag = 'i386'
+    constants.host_arm_tag = 'aarch64'
+
     constants.supported_tags = {
         constants.isa_tag_type : (
             constants.x86_tag,
@@ -271,11 +276,30 @@ def define_constants(constants):
             constants.quick_tag,
             constants.long_tag,
         ),
+        constants.host_isa_tag_type: (
+            constants.host_x86_64_tag,
+            constants.host_i386_tag,
+            constants.host_arm_tag,
+        ),
+    }
+
+    # Binding target ISA with host ISA. This is useful for the
+    # case where host ISA and target ISA need to coincide
+    constants.target_host = {
+        constants.arm_tag   : (constants.host_arm_tag,),
+        constants.x86_tag   : (constants.host_x86_64_tag, constants.host_i386_tag),
+        constants.sparc_tag : (constants.host_x86_64_tag, constants.host_i386_tag),
+        constants.alpha_tag : (constants.host_x86_64_tag, constants.host_i386_tag),
+        constants.riscv_tag : (constants.host_x86_64_tag, constants.host_i386_tag),
+        constants.mips_tag  : (constants.host_x86_64_tag, constants.host_i386_tag),
+        constants.power_tag : (constants.host_x86_64_tag, constants.host_i386_tag),
+        constants.null_tag  : (None,)
     }
 
     constants.supported_isas = constants.supported_tags['isa']
     constants.supported_variants = constants.supported_tags['variant']
     constants.supported_lengths = constants.supported_tags['length']
+    constants.supported_hosts = constants.supported_tags['host']
 
     constants.tempdir_fixture_name = 'tempdir'
     constants.gem5_simulation_stderr = 'simerr'
@@ -347,6 +371,19 @@ def define_post_processors(config):
         else:
             return length
 
+    def default_host(host):
+        if not host[0]:
+            try:
+                import platform
+                host_machine = platform.machine()
+                if host_machine not in constants.supported_hosts:
+                    raise ValueError("Invalid host machine")
+                return [[host_machine]]
+            except:
+                return [[constants.host_x86_64_tag]]
+        else:
+            return host
+
     def compile_tag_regex(positional_tags):
         if not positional_tags:
             return positional_tags
@@ -370,6 +407,7 @@ def define_post_processors(config):
     config._add_post_processor('isa', default_isa)
     config._add_post_processor('variant', default_variant)
     config._add_post_processor('length', default_length)
+    config._add_post_processor('host', default_host)
     config._add_post_processor('threads', threads_as_int)
     config._add_post_processor('test_threads', test_threads_as_int)
     config._add_post_processor(StorePositionalTagsAction.position_kword,
@@ -487,6 +525,11 @@ def define_common_args(config):
             default=[],
             help="Only tests that are one of these lengths. Comma separated."),
         Argument(
+            '--host',
+            action='append',
+            default=[],
+            help="Only tests that are meant to runnable on the selected host"),
+        Argument(
             '--uid',
             action='store',
             default=None,
@@ -601,6 +644,7 @@ class RunParser(ArgParser):
         common_args.isa.add_to(parser)
         common_args.variant.add_to(parser)
         common_args.length.add_to(parser)
+        common_args.host.add_to(parser)
         common_args.include_tags.add_to(parser)
         common_args.exclude_tags.add_to(parser)
 
@@ -653,6 +697,7 @@ class ListParser(ArgParser):
         common_args.isa.add_to(parser)
         common_args.variant.add_to(parser)
         common_args.length.add_to(parser)
+        common_args.host.add_to(parser)
         common_args.include_tags.add_to(parser)
         common_args.exclude_tags.add_to(parser)
 
@@ -675,6 +720,7 @@ class RerunParser(ArgParser):
         common_args.isa.add_to(parser)
         common_args.variant.add_to(parser)
         common_args.length.add_to(parser)
+        common_args.host.add_to(parser)
 
 config = _Config()
 define_constants(config.constants)
