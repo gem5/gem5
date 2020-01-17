@@ -39,5 +39,5 @@ env.Program('example', ['example.cc', systemc])
 ```
 
 [sysc]: http://accellera.org/downloads/standards/systemc
-[gem5]: http://www.gem5.org/Main_Page
+[gem5]: http://www.gem5.org/
 [doulos]: https://www.doulos.com/knowhow/systemc/tlm2/base_protocol_checker/

@@ -31,7 +31,8 @@
 simple multi-threaded application with false sharing to stress the Ruby
 protocol.
 
-See Part 3 in the Learning gem5 book: learning.gem5.org/book/part3
+See Part 3 in the Learning gem5 book:
+http://gem5.org/documentation/learning_gem5/part3/MSIintro
 
 IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
            also needs to be updated. For now, email Jason <jason@lowepower.com>

@@ -52,7 +52,7 @@ try:
 except SystemExit as e:
     print("""
 For more details, see:
-    http://gem5.org/Dependencies
+    http://gem5.org/documentation/general_docs/building
 """)
     raise
 
@@ -64,9 +64,6 @@ except SystemExit as e:
 You can use a non-default installation of the Python interpreter by
 rearranging your PATH so that scons finds the non-default 'python' and
 'python-config' first.
-
-For more details, see:
-    http://gem5.org/wiki/index.php/Using_a_non-default_Python_installation
 """)
     raise
 

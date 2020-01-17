@@ -172,7 +172,7 @@ VI. Elastic Trace Setup
 Elastic traces can also be replayed into the SystemC world.
 For more information on elastic traces please refer to:
 
- - http://www.gem5.org/TraceCPU
+ - http://www.gem5.org/documentation/general_docs/cpu_models/TraceCPU
 
  - Exploring System Performance using Elastic Traces:
    Fast, Accurate and Portable

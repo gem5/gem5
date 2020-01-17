@@ -8,7 +8,7 @@ only and should not be used for architectural research as-is.
 "Learning gem5" is a work-in-progress book that is frequently updated. For the
 most up-to-date version of the book, see the website.
 
-http://learning.gem5.org/book/
+http://gem5.org/documentation/learning_gem5/introduction
 
 This directory is broken into one subdirectory per part of the book.
 

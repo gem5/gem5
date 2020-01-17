@@ -16,6 +16,6 @@ protocol-checker from Doulos [[4]][doulos].
 
 
 [sysc]: http://accellera.org/downloads/standards/systemc
-[gem5]: http://www.gem5.org/Main_Page
+[gem5]: http://www.gem5.org/
 [doulos]: https://www.doulos.com/knowhow/systemc/tlm2/base_protocol_checker/
 [strip]: https://github.com/tud-ccc/systemc-scons/commit/913a7451939dc4d4bd752df7081064f9f870517a

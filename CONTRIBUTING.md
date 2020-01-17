@@ -23,7 +23,7 @@ https://gem5-review.googlesource.com/. This documents describes the details of
 how to create code changes, upload your changes, have your changes
 reviewed, and finally push your changes to gem5. More information can be found
 from the following sources:
- * http://gem5.org/Submitting_Contributions
+ * http://gem5.org/contributing
  * https://gerrit-review.googlesource.com/Documentation/index.html
  * https://git-scm.com/book
 
@@ -370,8 +370,9 @@ below.
    the patch can be merged. The patch will receive a +1 if gem5 builds and
    runs, and it will receive a +2 if the stats match.
  * Style-Check: This is automatically generated and tests the patch against the
-   gem5 code style (http://www.gem5.org/Coding_Style). The patch must receive a
-   +1 from the style checker to be pushed.
+   gem5 code style
+   (http://www.gem5.org/documentation/general_docs/development/coding_style/).
+   The patch must receive a +1 from the style checker to be pushed.
 
 Note: Whenever the patch creator updates the patch all reviewers must re-review
 the patch. There is no longer a "Fix it, then Ship It" option.

@@ -41,7 +41,6 @@
 # This script converts gem5 output to ARM DS-5 Streamline .apc project file
 # (Requires the gem5 runs to be run with ContextSwitchStatsDump enabled and
 # some patches applied to target Linux kernel.)
-# Visit http://www.gem5.org/Streamline for more details.
 #
 # Usage:
 # m5stats2streamline.py <stat_config.ini> <gem5 run folder> <dest .apc folder>
@@ -75,8 +74,6 @@ parser = argparse.ArgumentParser(
         Converts gem5 runs to ARM DS-5 Streamline .apc project file.
         (NOTE: Requires gem5 runs to be run with ContextSwitchStatsDump
         enabled and some patches applied to the target Linux kernel.)
-
-        Visit http://www.gem5.org/Streamline for more details.
 
         APC project generation based on Gator v17 (DS-5 v5.17)
         Subsequent versions should be backward compatible

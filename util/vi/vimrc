@@ -37,7 +37,7 @@
 
 
 " this vimrc file helps users follow the gem5 style guide see:
-" www.gem5.org/Coding_Style
+" www.gem5.org/documentation/general_docs/development/coding_style
 " it highlights extraneaous whitespace and tabs (so you can easily remove
 " them), sets column length to a max of 78 characters, expands tabs, and sets
 " a tab width of 4 spaces.
