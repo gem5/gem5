@@ -99,12 +99,16 @@ class SignaturePathPrefetcher : public QueuedPrefetcher
         /** use counter, used by SPPv2 */
         SatCounter counter;
         PatternEntry(size_t num_strides, unsigned counter_bits)
-            : strideEntries(num_strides, counter_bits), counter(counter_bits)
-        {}
+          : TaggedEntry(), strideEntries(num_strides, counter_bits),
+            counter(counter_bits)
+        {
+        }
 
         /** Reset the entries to their initial values */
-        void reset() override
+        void
+        invalidate() override
         {
+            TaggedEntry::invalidate();
             for (auto &entry : strideEntries) {
                 entry.counter.reset();
                 entry.stride = 0;

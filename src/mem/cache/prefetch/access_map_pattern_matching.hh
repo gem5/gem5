@@ -89,12 +89,15 @@ class AccessMapPatternMatching : public ClockedObject
         /** vector containing the state of the cachelines in this zone */
         std::vector<AccessMapState> states;
 
-        AccessMapEntry(size_t num_entries) : states(num_entries, AM_INIT)
-        {}
-
-        /** Reset the entries to their initial values */
-        void reset() override
+        AccessMapEntry(size_t num_entries)
+          : TaggedEntry(), states(num_entries, AM_INIT)
         {
+        }
+
+        void
+        invalidate() override
+        {
+            TaggedEntry::invalidate();
             for (auto &entry : states) {
                 entry = AM_INIT;
             }

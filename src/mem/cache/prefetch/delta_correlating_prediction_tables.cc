@@ -44,8 +44,10 @@ DeltaCorrelatingPredictionTables::DeltaCorrelatingPredictionTables(
 }
 
 void
-DeltaCorrelatingPredictionTables::DCPTEntry::reset()
+DeltaCorrelatingPredictionTables::DCPTEntry::invalidate()
 {
+    TaggedEntry::invalidate();
+
     for (auto &delta : deltas) {
         delta = 0;
     }

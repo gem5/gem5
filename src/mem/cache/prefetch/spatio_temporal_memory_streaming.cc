@@ -96,7 +96,7 @@ STeMSPrefetcher::checkForActiveGenerationsEnd() {
                 // this also sets the values of the entry
                 pst_entry->update(agt_entry);
                 // Free the AGT entry
-                agt_entry.setInvalid();
+                activeGenerationTable.invalidate(&agt_entry);
             }
         }
     }

@@ -75,12 +75,12 @@ class DeltaCorrelatingPredictionTables : public SimObject
          * Constructor
          * @param num_deltas number of deltas stored in the entry
          */
-        DCPTEntry(unsigned int num_deltas) : lastAddress(0), deltaPointer(0),
-            deltas(num_deltas)
-        {}
+        DCPTEntry(unsigned int num_deltas)
+          : TaggedEntry(), lastAddress(0), deltaPointer(0), deltas(num_deltas)
+        {
+        }
 
-        /** Reset callback called when invalidating the entry */
-        void reset() override;
+        void invalidate() override;
 
         /**
          * Adds an address to the entry, if the entry already existed, a delta

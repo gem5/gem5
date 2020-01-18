@@ -101,7 +101,10 @@ class IndirectMemoryPrefetcher : public QueuedPrefetcher
               increasedIndirectCounter(false)
         {}
 
-        void reset() override {
+        void
+        invalidate() override
+        {
+            TaggedEntry::invalidate();
             address = 0;
             secure = false;
             streamCounter = 0;
@@ -136,16 +139,20 @@ class IndirectMemoryPrefetcher : public QueuedPrefetcher
 
         IndirectPatternDetectorEntry(unsigned int num_addresses,
                                      unsigned int num_shifts)
-          : idx1(0), idx2(0), secondIndexSet(false), numMisses(0),
+          : TaggedEntry(), idx1(0), idx2(0), secondIndexSet(false),
+            numMisses(0),
             baseAddr(num_addresses, std::vector<Addr>(num_shifts))
-        {}
+        {
+        }
 
-        void reset() override {
+        void
+        invalidate() override
+        {
+            TaggedEntry::invalidate();
             idx1 = 0;
             idx2 = 0;
             secondIndexSet = false;
             numMisses = 0;
-            setInvalid();
         }
     };
     /** Indirect Pattern Detector (IPD) table */

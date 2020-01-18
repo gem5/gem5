@@ -183,7 +183,7 @@ IndirectMemoryPrefetcher::allocateOrUpdateIPDEntry(
         } else {
             // Third access! no pattern has been found so far,
             // release the IPD entry
-            ipd_entry->reset();
+            ipd.invalidate(ipd_entry);
             ipdEntryTrackingMisses = nullptr;
         }
     } else {
@@ -237,7 +237,7 @@ IndirectMemoryPrefetcher::trackMissIndex2(Addr miss_addr)
                 pt_entry->enabled = true;
                 pt_entry->indirectCounter.reset();
                 // Release the current IPD Entry
-                entry->reset();
+                ipd.invalidate(entry);
                 // Do not track more misses
                 ipdEntryTrackingMisses = nullptr;
                 return;

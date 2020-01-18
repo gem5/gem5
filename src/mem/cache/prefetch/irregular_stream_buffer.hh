@@ -79,13 +79,18 @@ class IrregularStreamBufferPrefetcher : public QueuedPrefetcher
      * Maps a set of contiguous addresses to another set of (not necessarily
      * contiguos) addresses, with their corresponding confidence counters
      */
-    struct AddressMappingEntry : public TaggedEntry {
+    struct AddressMappingEntry : public TaggedEntry
+    {
         std::vector<AddressMapping> mappings;
         AddressMappingEntry(size_t num_mappings, unsigned counter_bits)
-            : mappings(num_mappings, counter_bits)
-        {}
-        void reset() override
+          : TaggedEntry(), mappings(num_mappings, counter_bits)
         {
+        }
+
+        void
+        invalidate() override
+        {
+            TaggedEntry::invalidate();
             for (auto &entry : mappings) {
                 entry.address = 0;
                 entry.counter.reset();
