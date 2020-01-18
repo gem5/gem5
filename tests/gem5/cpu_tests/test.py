@@ -43,7 +43,7 @@ valid_isas = {
 
 
 base_path = joinpath(absdirpath(__file__), 'benchmarks', 'bin')
-base_url = 'http://gem5.org/dist/current/gem5/cpu_tests/benchmarks/bin/'
+base_url = 'http://dist.gem5.org/dist/current/gem5/cpu_tests/benchmarks/bin/'
 for isa in valid_isas:
     path = joinpath(base_path, isa)
     for workload in workloads:
