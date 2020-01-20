@@ -37,13 +37,17 @@
 #include "sim/process.hh"
 #include "sim/syscall_abi.hh"
 
+namespace Loader
+{
 class ObjectFile;
+} // namespace Loader
+
 class System;
 
 class RiscvProcess : public Process
 {
   protected:
-    RiscvProcess(ProcessParams * params, ObjectFile *objFile);
+    RiscvProcess(ProcessParams * params, ::Loader::ObjectFile *objFile);
     template<class IntType>
     void argsInit(int pageSize);
 
@@ -84,14 +88,14 @@ struct Result<RiscvProcess::SyscallABI, SyscallReturn>
 class RiscvProcess64 : public RiscvProcess
 {
   protected:
-    RiscvProcess64(ProcessParams * params, ObjectFile *objFile);
+    RiscvProcess64(ProcessParams * params, ::Loader::ObjectFile *objFile);
     void initState() override;
 };
 
 class RiscvProcess32 : public RiscvProcess
 {
   protected:
-    RiscvProcess32(ProcessParams * params, ObjectFile *objFile);
+    RiscvProcess32(ProcessParams * params, ::Loader::ObjectFile *objFile);
     void initState() override;
 };
 

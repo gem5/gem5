@@ -65,7 +65,8 @@ class SveIndexIIOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), imm1(_imm1), imm2(_imm2)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 class SveIndexIROp : public ArmStaticInst {
@@ -80,7 +81,8 @@ class SveIndexIROp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
           dest(_dest), imm1(_imm1), op2(_op2)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 class SveIndexRIOp : public ArmStaticInst {
@@ -95,7 +97,8 @@ class SveIndexRIOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm2(_imm2)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 class SveIndexRROp : public ArmStaticInst {
@@ -110,7 +113,8 @@ class SveIndexRROp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 // Predicate count SVE instruction.
@@ -128,7 +132,8 @@ class SvePredCountOp : public ArmStaticInst {
         dest(_dest), gp(_gp),
         srcIs32b(_srcIs32b), destIsVec(_destIsVec)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 // Predicate count SVE instruction (predicated).
@@ -144,7 +149,8 @@ class SvePredCountPredOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), gp(_gp)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// While predicate generation SVE instruction.
@@ -159,7 +165,8 @@ class SveWhileOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), srcIs32b(_srcIs32b)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Compare and terminate loop SVE instruction.
@@ -172,7 +179,8 @@ class SveCompTermOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         op1(_op1), op2(_op2)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Unary, constructive, predicated (merging) SVE instruction.
@@ -186,7 +194,8 @@ class SveUnaryPredOp : public ArmStaticInst {
         dest(_dest), op1(_op1), gp(_gp)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Unary, constructive, unpredicated SVE instruction.
@@ -200,7 +209,8 @@ class SveUnaryUnpredOp : public ArmStaticInst {
         dest(_dest), op1(_op1)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Unary with wide immediate, constructive, unpredicated SVE instruction.
@@ -216,7 +226,8 @@ class SveUnaryWideImmUnpredOp : public ArmStaticInst {
         dest(_dest), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Unary with wide immediate, constructive, predicated SVE instruction.
@@ -235,7 +246,8 @@ class SveUnaryWideImmPredOp : public ArmStaticInst {
         dest(_dest), imm(_imm), gp(_gp), isMerging(_isMerging)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Binary with immediate, destructive, unpredicated SVE instruction.
@@ -251,7 +263,8 @@ class SveBinImmUnpredConstrOp : public ArmStaticInst {
         dest(_dest), op1(_op1), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Binary with immediate, destructive, predicated (merging) SVE instruction.
@@ -266,7 +279,8 @@ class SveBinImmPredOp : public ArmStaticInst {
         dest(_dest), gp(_gp), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Binary with wide immediate, destructive, unpredicated SVE instruction.
@@ -282,7 +296,8 @@ class SveBinWideImmUnpredOp : public ArmStaticInst {
         dest(_dest), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Binary, destructive, predicated (merging) SVE instruction.
@@ -297,7 +312,8 @@ class SveBinDestrPredOp : public ArmStaticInst {
         dest(_dest), op2(_op2), gp(_gp)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Binary, constructive, predicated SVE instruction.
@@ -314,7 +330,8 @@ class SveBinConstrPredOp : public ArmStaticInst {
         dest(_dest), op1(_op1), op2(_op2), gp(_gp), predType(_predType)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Binary, unpredicated SVE instruction with indexed operand
@@ -328,7 +345,8 @@ class SveBinUnpredOp : public ArmStaticInst {
         dest(_dest), op1(_op1), op2(_op2)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Binary, unpredicated SVE instruction
@@ -344,7 +362,8 @@ class SveBinIdxUnpredOp : public ArmStaticInst {
         dest(_dest), op1(_op1), op2(_op2), index(_index)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Predicate logical instruction.
@@ -360,7 +379,8 @@ class SvePredLogicalOp : public ArmStaticInst {
         dest(_dest), op1(_op1), op2(_op2), gp(_gp), isSel(_isSel)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Predicate binary permute instruction.
@@ -375,7 +395,8 @@ class SvePredBinPermOp : public ArmStaticInst {
         dest(_dest), op1(_op1), op2(_op2)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE compare instructions, predicated (zeroing).
@@ -390,7 +411,8 @@ class SveCmpOp : public ArmStaticInst {
         dest(_dest), gp(_gp), op1(_op1), op2(_op2)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE compare-with-immediate instructions, predicated (zeroing).
@@ -406,7 +428,8 @@ class SveCmpImmOp : public ArmStaticInst {
         dest(_dest), gp(_gp), op1(_op1), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Ternary, destructive, predicated (merging) SVE instruction.
@@ -421,7 +444,8 @@ class SveTerPredOp : public ArmStaticInst {
         dest(_dest), op1(_op1), op2(_op2), gp(_gp)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Ternary with immediate, destructive, unpredicated SVE instruction.
@@ -437,7 +461,8 @@ class SveTerImmUnpredOp : public ArmStaticInst {
         dest(_dest), op2(_op2), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE reductions.
@@ -451,7 +476,8 @@ class SveReducOp : public ArmStaticInst {
         dest(_dest), op1(_op1), gp(_gp)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE ordered reductions.
@@ -465,7 +491,8 @@ class SveOrdReducOp : public ArmStaticInst {
         dest(_dest), op1(_op1), gp(_gp)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// PTRUE, PTRUES.
@@ -480,7 +507,8 @@ class SvePtrueOp : public ArmStaticInst {
         dest(_dest), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Integer compare SVE instruction.
@@ -497,7 +525,8 @@ class SveIntCmpOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), gp(_gp), op2IsWide(_op2IsWide)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Integer compare with immediate SVE instruction.
@@ -514,7 +543,8 @@ class SveIntCmpImmOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm(_imm), gp(_gp)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// ADR.
@@ -539,7 +569,8 @@ class SveAdrOp : public ArmStaticInst {
         dest(_dest), op1(_op1), op2(_op2), mult(_mult),
         offsetFormat(_offsetFormat)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Element count SVE instruction.
@@ -559,7 +590,8 @@ class SveElemCountOp : public ArmStaticInst {
         dest(_dest), pattern(_pattern), imm(_imm), dstIsVec(_dstIsVec),
         dstIs32b(_dstIs32b)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Partition break SVE instruction.
@@ -576,7 +608,8 @@ class SvePartBrkOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), gp(_gp), op1(_op1), isMerging(_isMerging)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Partition break with propagation SVE instruction.
@@ -593,7 +626,8 @@ class SvePartBrkPropOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), gp(_gp)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Scalar element select SVE instruction.
@@ -616,7 +650,8 @@ class SveSelectOp : public ArmStaticInst {
         dest(_dest), op1(_op1), gp(_gp), conditional(_conditional),
         scalar(_scalar), simdFp(_simdFp)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE unary operation on predicate (predicated)
@@ -632,7 +667,8 @@ class SveUnaryPredPredOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), gp(_gp)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE table lookup/permute using vector of element indices (TBL)
@@ -647,7 +683,8 @@ class SveTblOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE unpack and widen predicate
@@ -661,7 +698,8 @@ class SveUnpackOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE predicate test
@@ -675,7 +713,8 @@ class SvePredTestOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         op1(_op1), gp(_gp)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE unary predicate instructions with implicit source operand
@@ -688,7 +727,8 @@ class SvePredUnaryWImplicitSrcOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE unary predicate instructions, predicated, with implicit source operand
@@ -703,7 +743,8 @@ class SvePredUnaryWImplicitSrcPredOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), gp(_gp)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE unary predicate instructions with implicit destination operand
@@ -716,7 +757,8 @@ class SvePredUnaryWImplicitDstOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         op1(_op1)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE unary predicate instructions with implicit destination operand
@@ -726,7 +768,8 @@ class SveWImplicitSrcDstOp : public ArmStaticInst {
                          OpClass __opClass) :
         ArmStaticInst(mnem, _machInst, __opClass)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE vector - immediate binary operation
@@ -742,7 +785,8 @@ class SveBinImmUnpredDestrOp : public ArmStaticInst {
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm(_imm)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Binary with immediate index, destructive, unpredicated SVE instruction.
@@ -758,7 +802,8 @@ class SveBinImmIdxUnpredOp : public ArmStaticInst {
         dest(_dest), op1(_op1), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// Unary unpredicated scalar to vector instruction
@@ -774,7 +819,8 @@ class SveUnarySca2VecUnpredOp : public ArmStaticInst {
         dest(_dest), op1(_op1), simdFp(_simdFp)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE dot product instruction (indexed)
@@ -792,7 +838,8 @@ class SveDotProdIdxOp : public ArmStaticInst {
         dest(_dest), op1(_op1), op2(_op2), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE dot product instruction (vectors)
@@ -809,7 +856,8 @@ class SveDotProdOp : public ArmStaticInst {
         dest(_dest), op1(_op1), op2(_op2)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE Complex Instructions (vectors)
@@ -826,7 +874,8 @@ class SveComplexOp : public ArmStaticInst {
         dest(_dest), op1(_op1), op2(_op2), gp(_gp), rot(_rot)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 /// SVE Complex Instructions (indexed)
@@ -843,7 +892,8 @@ class SveComplexIdxOp : public ArmStaticInst {
         dest(_dest), op1(_op1), op2(_op2), rot(_rot), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
 

@@ -64,30 +64,30 @@ class ArmLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ObjectFile *obj_file) override
+    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
     {
         auto arch = obj_file->getArch();
         auto opsys = obj_file->getOpSys();
 
-        if (arch != ObjectFile::Arm && arch != ObjectFile::Thumb &&
-                arch != ObjectFile::Arm64) {
+        if (arch != ::Loader::Arm && arch != ::Loader::Thumb &&
+                arch != ::Loader::Arm64) {
             return nullptr;
         }
 
-        if (opsys == ObjectFile::UnknownOpSys) {
+        if (opsys == ::Loader::UnknownOpSys) {
             warn("Unknown operating system; assuming Linux.");
-            opsys = ObjectFile::Linux;
+            opsys = ::Loader::Linux;
         }
 
-        if (opsys == ObjectFile::LinuxArmOABI) {
+        if (opsys == ::Loader::LinuxArmOABI) {
             fatal("gem5 does not support ARM OABI binaries. Please recompile "
                     "with an EABI compiler.");
         }
 
-        if (opsys != ObjectFile::Linux)
+        if (opsys != ::Loader::Linux)
             return nullptr;
 
-        if (arch == ObjectFile::Arm64)
+        if (arch == ::Loader::Arm64)
             return new ArmLinuxProcess64(params, obj_file, arch);
         else
             return new ArmLinuxProcess32(params, obj_file, arch);
@@ -850,12 +850,12 @@ static SyscallDescTable<ArmLinuxProcess64::SyscallABI> privSyscallDescs64 = {
 };
 
 ArmLinuxProcess32::ArmLinuxProcess32(ProcessParams * params,
-        ObjectFile *objFile, ObjectFile::Arch _arch) :
+        ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
     ArmProcess32(params, objFile, _arch)
 {}
 
 ArmLinuxProcess64::ArmLinuxProcess64(ProcessParams * params,
-        ObjectFile *objFile, ObjectFile::Arch _arch) :
+        ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
     ArmProcess64(params, objFile, _arch)
 {}
 

@@ -55,7 +55,7 @@ output header {{
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
         std::string generateDisassembly(
-                Addr pc, const SymbolTable *symtab) const override;
+                Addr pc, const Loader::SymbolTable *symtab) const override;
     };
 
     /**
@@ -86,21 +86,21 @@ output header {{
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
         std::string generateDisassembly(
-                Addr pc, const SymbolTable *symtab) const override;
+                Addr pc, const Loader::SymbolTable *symtab) const override;
     };
 }};
 
 output decoder {{
     std::string
-    FailUnimplemented::generateDisassembly(Addr pc,
-                                           const SymbolTable *symtab) const
+    FailUnimplemented::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         return csprintf("%-10s (unimplemented)", mnemonic);
     }
 
     std::string
-    WarnUnimplemented::generateDisassembly(Addr pc,
-                                           const SymbolTable *symtab) const
+    WarnUnimplemented::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         return csprintf("%-10s (unimplemented)", mnemonic);
     }

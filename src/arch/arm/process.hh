@@ -50,14 +50,12 @@
 #include "sim/process.hh"
 #include "sim/syscall_abi.hh"
 
-class ObjectFile;
-
 class ArmProcess : public Process
 {
   protected:
-    ObjectFile::Arch arch;
-    ArmProcess(ProcessParams * params, ObjectFile *objFile,
-               ObjectFile::Arch _arch);
+    ::Loader::Arch arch;
+    ArmProcess(ProcessParams * params, ::Loader::ObjectFile *objFile,
+               ::Loader::Arch _arch);
     template<class IntType>
     void argsInit(int pageSize, ArmISA::IntRegIndex spIndex);
 
@@ -76,8 +74,8 @@ class ArmProcess : public Process
 class ArmProcess32 : public ArmProcess
 {
   protected:
-    ArmProcess32(ProcessParams * params, ObjectFile *objFile,
-                 ObjectFile::Arch _arch);
+    ArmProcess32(ProcessParams * params, ::Loader::ObjectFile *objFile,
+                 ::Loader::Arch _arch);
 
     void initState() override;
 
@@ -119,8 +117,8 @@ struct Argument<ABI, Arg,
 class ArmProcess64 : public ArmProcess
 {
   protected:
-    ArmProcess64(ProcessParams * params, ObjectFile *objFile,
-                 ObjectFile::Arch _arch);
+    ArmProcess64(ProcessParams * params, ::Loader::ObjectFile *objFile,
+                 ::Loader::Arch _arch);
 
     void initState() override;
 

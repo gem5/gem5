@@ -48,10 +48,14 @@
 #include "sim/mem_state.hh"
 #include "sim/sim_object.hh"
 
+namespace Loader
+{
+class ObjectFile;
+} // namespace Loader
+
 struct ProcessParams;
 
 class EmulatedDriver;
-class ObjectFile;
 class EmulationPageTable;
 class SyscallDesc;
 class SyscallReturn;
@@ -62,7 +66,7 @@ class Process : public SimObject
 {
   public:
     Process(ProcessParams *params, EmulationPageTable *pTable,
-            ObjectFile *obj_file);
+            ::Loader::ObjectFile *obj_file);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -99,7 +103,7 @@ class Process : public SimObject
     void updateBias();
     Addr getBias();
     Addr getStartPC();
-    ObjectFile *getInterpreter();
+    ::Loader::ObjectFile *getInterpreter();
 
     // override of virtual SimObject method: register statistics
     void regStats() override;
@@ -197,16 +201,18 @@ class Process : public SimObject
          * error like file IO errors, etc., those should fail non-silently
          * with a panic or fail as normal.
          */
-        virtual Process *load(ProcessParams *params, ObjectFile *obj_file) = 0;
+        virtual Process *load(ProcessParams *params,
+                              ::Loader::ObjectFile *obj_file) = 0;
     };
 
     // Try all the Loader instance's "load" methods one by one until one is
     // successful. If none are, complain and fail.
-    static Process *tryLoaders(ProcessParams *params, ObjectFile *obj_file);
+    static Process *tryLoaders(ProcessParams *params,
+                               ::Loader::ObjectFile *obj_file);
 
-    ObjectFile *objFile;
-    MemoryImage image;
-    MemoryImage interpImage;
+    ::Loader::ObjectFile *objFile;
+    ::Loader::MemoryImage image;
+    ::Loader::MemoryImage interpImage;
     std::vector<std::string> argv;
     std::vector<std::string> envp;
     std::string executable;

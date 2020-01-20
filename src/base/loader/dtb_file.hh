@@ -31,6 +31,9 @@
 
 #include "base/loader/image_file.hh"
 
+namespace Loader
+{
+
 /** @file
  * This implements an image file format to support loading
  * and modifying flattened device tree blobs for use with
@@ -66,5 +69,7 @@ class DtbFile : public ImageFile
 
     MemoryImage buildImage() const override;
 };
+
+} // namespace Loader
 
 #endif //__BASE_LOADER_DTB_FILE_HH__

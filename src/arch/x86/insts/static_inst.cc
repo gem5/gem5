@@ -264,8 +264,9 @@ namespace X86ISA
         os << "]";
     }
 
-    std::string X86StaticInst::generateDisassembly(Addr pc,
-        const SymbolTable *symtab) const
+    std::string
+    X86StaticInst::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 

@@ -77,8 +77,8 @@ struct Result<ABI, SyscallReturn,
 class ArmFreebsdProcess32 : public ArmProcess32, public ArmFreebsdProcessBits
 {
   public:
-    ArmFreebsdProcess32(ProcessParams * params, ObjectFile *objFile,
-                        ObjectFile::Arch _arch);
+    ArmFreebsdProcess32(ProcessParams * params, ::Loader::ObjectFile *objFile,
+                        ::Loader::Arch _arch);
 
     void initState() override;
 
@@ -96,8 +96,8 @@ class ArmFreebsdProcess32 : public ArmProcess32, public ArmFreebsdProcessBits
 class ArmFreebsdProcess64 : public ArmProcess64, public ArmFreebsdProcessBits
 {
   public:
-    ArmFreebsdProcess64(ProcessParams * params, ObjectFile *objFile,
-                        ObjectFile::Arch _arch);
+    ArmFreebsdProcess64(ProcessParams * params, ::Loader::ObjectFile *objFile,
+                        ::Loader::Arch _arch);
 
     void initState() override;
     void syscall(ThreadContext *tc, Fault *fault) override;

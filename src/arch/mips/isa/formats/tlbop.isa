@@ -32,49 +32,47 @@
 //
 
 output header {{
-        /**
-         * Base class for integer operations.
-         */
-        class TlbOp : public MipsStaticInst
-        {
-                protected:
+    /**
+     * Base class for integer operations.
+     */
+    class TlbOp : public MipsStaticInst
+    {
+      protected:
+        using MipsStaticInst::MipsStaticInst;
 
-                /// Constructor
-                TlbOp(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(
-                        Addr pc, const SymbolTable *symtab) const override;
-        };
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+    };
 }};
 
 output decoder {{
-        std::string TlbOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-                return "Disassembly of integer instruction\n";
-        }
+    std::string
+    TlbOp::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        return "Disassembly of integer instruction\n";
+    }
 }};
 
 def template TlbOpExecute {{
-        Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
-        {
-                //Write the resulting state to the execution context
-                %(op_wb)s;
+    Fault %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        //Write the resulting state to the execution context
+        %(op_wb)s;
 
-                //Call into the trap handler with the appropriate fault
-                return No_Fault;
-        }
+        //Call into the trap handler with the appropriate fault
+        return No_Fault;
+    }
 }};
 
 // Primary format for integer operate instructions:
 def format TlbOp(code, *opt_flags) {{
-        orig_code = code
-        cblk = code
-        iop = InstObjParams(name, Name, 'MipsStaticInst', cblk, opt_flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecodeWithMnemonic.subst(iop)
-        exec_output = TlbOpExecute.subst(iop)
+    orig_code = code
+    cblk = code
+    iop = InstObjParams(name, Name, 'MipsStaticInst', cblk, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecodeWithMnemonic.subst(iop)
+    exec_output = TlbOpExecute.subst(iop)
 }};

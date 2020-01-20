@@ -48,23 +48,23 @@ class SparcLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ObjectFile *obj_file) override
+    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
     {
         auto arch = obj_file->getArch();
         auto opsys = obj_file->getOpSys();
 
-        if (arch != ObjectFile::SPARC64 && arch != ObjectFile::SPARC32)
+        if (arch != ::Loader::SPARC64 && arch != ::Loader::SPARC32)
             return nullptr;
 
-        if (opsys == ObjectFile::UnknownOpSys) {
+        if (opsys == ::Loader::UnknownOpSys) {
             warn("Unknown operating system; assuming Linux.");
-            opsys = ObjectFile::Linux;
+            opsys = ::Loader::Linux;
         }
 
-        if (opsys != ObjectFile::Linux)
+        if (opsys != ::Loader::Linux)
             return nullptr;
 
-        if (arch == ObjectFile::SPARC64)
+        if (arch == ::Loader::SPARC64)
             return new Sparc64LinuxProcess(params, obj_file);
         else
             return new Sparc32LinuxProcess(params, obj_file);
@@ -76,7 +76,7 @@ SparcLinuxObjectFileLoader loader;
 } // anonymous namespace
 
 Sparc32LinuxProcess::Sparc32LinuxProcess(ProcessParams * params,
-                                         ObjectFile *objFile)
+                                         ::Loader::ObjectFile *objFile)
     : Sparc32Process(params, objFile)
 {}
 
@@ -100,7 +100,7 @@ Sparc32LinuxProcess::handleTrap(int trapNum, ThreadContext *tc, Fault *fault)
 }
 
 Sparc64LinuxProcess::Sparc64LinuxProcess(ProcessParams * params,
-                                         ObjectFile *objFile)
+                                         ::Loader::ObjectFile *objFile)
     : Sparc64Process(params, objFile)
 {}
 

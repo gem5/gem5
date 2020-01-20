@@ -391,7 +391,7 @@ ArmStaticInst::printMnemonic(std::ostream &os,
 
 void
 ArmStaticInst::printTarget(std::ostream &os, Addr target,
-                           const SymbolTable *symtab) const
+                           const Loader::SymbolTable *symtab) const
 {
     Addr symbolAddr;
     std::string symbol;
@@ -472,7 +472,7 @@ ArmStaticInst::printCondition(std::ostream &os,
 
 void
 ArmStaticInst::printMemSymbol(std::ostream &os,
-                              const SymbolTable *symtab,
+                              const Loader::SymbolTable *symtab,
                               const std::string &prefix,
                               const Addr addr,
                               const std::string &suffix) const
@@ -617,7 +617,7 @@ ArmStaticInst::printDataInst(std::ostream &os, bool withImm,
 
 std::string
 ArmStaticInst::generateDisassembly(Addr pc,
-                                   const SymbolTable *symtab) const
+                                   const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);

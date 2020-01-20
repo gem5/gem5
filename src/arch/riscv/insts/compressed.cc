@@ -39,7 +39,8 @@ namespace RiscvISA
 {
 
 std::string
-CompRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+CompRegOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", " <<

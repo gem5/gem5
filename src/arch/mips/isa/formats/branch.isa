@@ -52,7 +52,7 @@ output header {{
         mutable Addr cachedPC;
 
         /// Cached symbol table pointer from last disassembly
-        mutable const SymbolTable *cachedSymtab;
+        mutable const Loader::SymbolTable *cachedSymtab;
 
         /// Constructor
         PCDependentDisassembly(const char *mnem, MachInst _machInst,
@@ -63,7 +63,7 @@ output header {{
         }
 
         const std::string &
-        disassemble(Addr pc, const SymbolTable *symtab) const;
+        disassemble(Addr pc, const Loader::SymbolTable *symtab) const;
     };
 
     /**
@@ -94,7 +94,7 @@ output header {{
         using StaticInst::branchTarget;
 
         std::string generateDisassembly(
-                Addr pc, const SymbolTable *symtab) const override;
+                Addr pc, const Loader::SymbolTable *symtab) const override;
     };
 
     /**
@@ -124,7 +124,7 @@ output header {{
         using StaticInst::branchTarget;
 
         std::string generateDisassembly(
-                Addr pc, const SymbolTable *symtab) const override;
+                Addr pc, const Loader::SymbolTable *symtab) const override;
     };
 }};
 
@@ -151,8 +151,8 @@ output decoder {{
     }
 
     const std::string &
-    PCDependentDisassembly::disassemble(Addr pc,
-                                        const SymbolTable *symtab) const
+    PCDependentDisassembly::disassemble(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         if (!cachedDisassembly ||
             pc != cachedPC || symtab != cachedSymtab)
@@ -170,7 +170,8 @@ output decoder {{
     }
 
     std::string
-    Branch::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    Branch::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 
@@ -202,7 +203,7 @@ output decoder {{
     }
 
     std::string
-    Jump::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    Jump::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 

@@ -37,6 +37,9 @@
 #include "libfdt.h"
 #include "sim/byteswap.hh"
 
+namespace Loader
+{
+
 DtbFile::DtbFile(const std::string &filename) :
     ImageFile(ImageFileDataPtr(new ImageFileData(filename)))
 {
@@ -152,3 +155,5 @@ DtbFile::buildImage() const
     else
         return {{ "data", 0, fileData, length }};
 }
+
+} // namespace Loader

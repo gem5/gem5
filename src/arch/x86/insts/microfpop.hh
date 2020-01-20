@@ -74,8 +74,8 @@ namespace X86ISA
                 bool subtract = false) const;
         bool checkCondition(uint64_t flags) const;*/
 
-        std::string generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const;
     };
 }
 

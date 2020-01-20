@@ -82,7 +82,7 @@ class MacroopBase : public X86StaticInst
     }
 
     std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     {
         return mnemonic;
     }

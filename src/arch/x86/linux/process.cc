@@ -60,23 +60,23 @@ class X86LinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ObjectFile *obj_file) override
+    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
     {
         auto arch = obj_file->getArch();
         auto opsys = obj_file->getOpSys();
 
-        if (arch != ObjectFile::X86_64 && arch != ObjectFile::I386)
+        if (arch != ::Loader::X86_64 && arch != ::Loader::I386)
             return nullptr;
 
-        if (opsys == ObjectFile::UnknownOpSys) {
+        if (opsys == ::Loader::UnknownOpSys) {
             warn("Unknown operating system; assuming Linux.");
-            opsys = ObjectFile::Linux;
+            opsys = ::Loader::Linux;
         }
 
-        if (opsys != ObjectFile::Linux)
+        if (opsys != ::Loader::Linux)
             return nullptr;
 
-        if (arch == ObjectFile::X86_64)
+        if (arch == ::Loader::X86_64)
             return new X86_64LinuxProcess(params, obj_file);
         else
             return new I386LinuxProcess(params, obj_file);

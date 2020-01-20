@@ -35,6 +35,9 @@
 #include "base/loader/image_file_data.hh"
 #include "base/loader/memory_image.hh"
 
+namespace Loader
+{
+
 class ImageFile
 {
   protected:
@@ -45,5 +48,7 @@ class ImageFile
   public:
     virtual MemoryImage buildImage() const = 0;
 };
+
+} // namespace Loader
 
 #endif // __BASE_LOADER_IMAGE_FILE_HH__

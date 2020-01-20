@@ -41,7 +41,7 @@ class SparcSolarisProcess : public Sparc64Process
 {
   public:
     /// Constructor.
-    SparcSolarisProcess(ProcessParams * params, ObjectFile *objFile);
+    SparcSolarisProcess(ProcessParams * params, ::Loader::ObjectFile *objFile);
 
     /// The target system's hostname.
     static const char *hostname;

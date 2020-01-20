@@ -43,7 +43,8 @@
 namespace ArmISA
 {
 std::string
-PredIntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+PredIntOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     unsigned rotate = machInst.rotate * 2;
@@ -60,7 +61,8 @@ PredIntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-PredImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+PredImmOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printDataInst(ss, true, machInst.opcode4 == 0, machInst.sField,
@@ -74,7 +76,8 @@ PredImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-DataImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+DataImmOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printDataInst(ss, true, false, /*XXX not really s*/ false, dest, op1,
@@ -83,7 +86,8 @@ DataImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-DataRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+DataRegOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printDataInst(ss, false, true, /*XXX not really s*/ false, dest, op1,
@@ -92,7 +96,8 @@ DataRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-DataRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+DataRegRegOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printDataInst(ss, false, false, /*XXX not really s*/ false, dest, op1,
@@ -101,7 +106,8 @@ DataRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-PredMacroOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+PredMacroOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

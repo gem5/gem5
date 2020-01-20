@@ -31,7 +31,8 @@
 using namespace PowerISA;
 
 std::string
-CondLogicOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+CondLogicOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
@@ -44,7 +45,8 @@ CondLogicOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-CondMoveOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+CondMoveOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

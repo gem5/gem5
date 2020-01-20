@@ -51,19 +51,19 @@ class PowerLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ObjectFile *obj_file) override
+    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
     {
-        if (obj_file->getArch() != ObjectFile::Power)
+        if (obj_file->getArch() != ::Loader::Power)
             return nullptr;
 
         auto opsys = obj_file->getOpSys();
 
-        if (opsys == ObjectFile::UnknownOpSys) {
+        if (opsys == ::Loader::UnknownOpSys) {
             warn("Unknown operating system; assuming Linux.");
-            opsys = ObjectFile::Linux;
+            opsys = ::Loader::Linux;
         }
 
-        if (opsys != ObjectFile::Linux)
+        if (opsys != ::Loader::Linux)
             return nullptr;
 
         return new PowerLinuxProcess(params, obj_file);
@@ -442,7 +442,7 @@ SyscallDescTable<PowerProcess::SyscallABI> PowerLinuxProcess::syscallDescs = {
 };
 
 PowerLinuxProcess::PowerLinuxProcess(ProcessParams * params,
-                                     ObjectFile *objFile) :
+        ::Loader::ObjectFile *objFile) :
     PowerProcess(params, objFile)
 {}
 

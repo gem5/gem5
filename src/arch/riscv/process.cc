@@ -57,7 +57,8 @@
 using namespace std;
 using namespace RiscvISA;
 
-RiscvProcess::RiscvProcess(ProcessParams *params, ObjectFile *objFile) :
+RiscvProcess::RiscvProcess(ProcessParams *params,
+        ::Loader::ObjectFile *objFile) :
         Process(params,
                 new EmulationPageTable(params->name, params->pid, PageBytes),
                 objFile)
@@ -65,7 +66,8 @@ RiscvProcess::RiscvProcess(ProcessParams *params, ObjectFile *objFile) :
     fatal_if(params->useArchPT, "Arch page tables not implemented.");
 }
 
-RiscvProcess64::RiscvProcess64(ProcessParams *params, ObjectFile *objFile) :
+RiscvProcess64::RiscvProcess64(ProcessParams *params,
+        ::Loader::ObjectFile *objFile) :
         RiscvProcess(params, objFile)
 {
     const Addr stack_base = 0x7FFFFFFFFFFFFFFFL;
@@ -77,7 +79,8 @@ RiscvProcess64::RiscvProcess64(ProcessParams *params, ObjectFile *objFile) :
             max_stack_size, next_thread_stack_base, mmap_end);
 }
 
-RiscvProcess32::RiscvProcess32(ProcessParams *params, ObjectFile *objFile) :
+RiscvProcess32::RiscvProcess32(ProcessParams *params,
+        ::Loader::ObjectFile *objFile) :
         RiscvProcess(params, objFile)
 {
     const Addr stack_base = 0x7FFFFFFF;
@@ -119,7 +122,7 @@ RiscvProcess::argsInit(int pageSize)
     const int RandomBytes = 16;
     const int addrSize = sizeof(IntType);
 
-    ElfObject* elfObject = dynamic_cast<ElfObject*>(objFile);
+    auto *elfObject = dynamic_cast<::Loader::ElfObject*>(objFile);
     memState->setStackMin(memState->getStackBase());
 
     // Determine stack size and populate auxv

@@ -33,298 +33,277 @@
 output header {{
 #include <iostream>
     using namespace std;
-        /**
-         * Base class for integer operations.
-         */
-        class IntOp : public MipsStaticInst
+    /**
+     * Base class for integer operations.
+     */
+    class IntOp : public MipsStaticInst
+    {
+      protected:
+        using MipsStaticInst::MipsStaticInst;
+
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+    };
+
+
+    class HiLoOp: public IntOp
+    {
+      protected:
+        using IntOp::IntOp;
+
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+    };
+
+    class HiLoRsSelOp: public HiLoOp
+    {
+      protected:
+        using HiLoOp::HiLoOp;
+
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+    };
+
+    class HiLoRdSelOp: public HiLoOp
+    {
+      protected:
+        using HiLoOp::HiLoOp;
+
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+    };
+
+    class HiLoRdSelValOp: public HiLoOp
+    {
+      protected:
+        using HiLoOp::HiLoOp;
+
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+    };
+
+    class IntImmOp : public MipsStaticInst
+    {
+      protected:
+        int16_t imm;
+        int32_t sextImm;
+        uint32_t zextImm;
+
+        IntImmOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+            MipsStaticInst(mnem, _machInst, __opClass), imm(INTIMM),
+            sextImm(INTIMM), zextImm(0x0000FFFF & INTIMM)
         {
-                protected:
+            // If Bit 15 is 1 then sign extend.
+            int32_t temp = sextImm & 0x00008000;
+            if (temp > 0 && strcmp(mnemonic,"lui") != 0) {
+                sextImm |= 0xFFFF0000;
+            }
+        }
 
-                /// Constructor
-                IntOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                                MipsStaticInst(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(
-                        Addr pc, const SymbolTable *symtab) const override;
-        };
-
-
-        class HiLoOp: public IntOp
-        {
-                protected:
-
-                /// Constructor
-                HiLoOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                                IntOp(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(
-                        Addr pc, const SymbolTable *symtab) const override;
-        };
-
-        class HiLoRsSelOp: public HiLoOp
-        {
-                protected:
-
-                /// Constructor
-                HiLoRsSelOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                                HiLoOp(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(
-                        Addr pc, const SymbolTable *symtab) const override;
-        };
-
-        class HiLoRdSelOp: public HiLoOp
-        {
-                protected:
-
-                /// Constructor
-                HiLoRdSelOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                                HiLoOp(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(
-                        Addr pc, const SymbolTable *symtab) const override;
-        };
-
-        class HiLoRdSelValOp: public HiLoOp
-        {
-                protected:
-
-                /// Constructor
-                HiLoRdSelValOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                                HiLoOp(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(
-                        Addr pc, const SymbolTable *symtab) const override;
-        };
-
-        class IntImmOp : public MipsStaticInst
-        {
-                protected:
-
-                int16_t imm;
-                int32_t sextImm;
-                uint32_t zextImm;
-
-                /// Constructor
-                IntImmOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                    MipsStaticInst(mnem, _machInst, __opClass),imm(INTIMM),
-                    sextImm(INTIMM),zextImm(0x0000FFFF & INTIMM)
-                {
-                    //If Bit 15 is 1 then Sign Extend
-                    int32_t temp = sextImm & 0x00008000;
-                    if (temp > 0 && strcmp(mnemonic,"lui") != 0) {
-                        sextImm |= 0xFFFF0000;
-                    }
-                }
-
-                std::string generateDisassembly(
-                        Addr pc, const SymbolTable *symtab) const override;
-        };
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+    };
 
 }};
 
 // HiLo instruction class execute method template.
 def template HiLoExecute {{
-        Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
-        {
-                Fault fault = NoFault;
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
 
-                %(fp_enable_check)s;
-                %(op_decl)s;
-                %(op_rd)s;
-                %(code)s;
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
 
-                if(fault == NoFault)
-                {
-                    %(op_wb)s;
-                }
-                return fault;
+        if(fault == NoFault) {
+            %(op_wb)s;
         }
+        return fault;
+    }
 }};
 
 // HiLoRsSel instruction class execute method template.
 def template HiLoRsSelExecute {{
-        Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
-        {
-                Fault fault = NoFault;
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
 
-                %(op_decl)s;
+        %(op_decl)s;
 
-                if( ACSRC > 0 && !isDspEnabled(xc) )
-                {
-                    fault = std::make_shared<DspStateDisabledFault>();
-                }
-                else
-                {
-                    %(op_rd)s;
-                    %(code)s;
-                }
-
-                if(fault == NoFault)
-                {
-                    %(op_wb)s;
-                }
-                return fault;
+        if (ACSRC > 0 && !isDspEnabled(xc)) {
+            fault = std::make_shared<DspStateDisabledFault>();
+        } else {
+            %(op_rd)s;
+            %(code)s;
         }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+        return fault;
+    }
 }};
 
 // HiLoRdSel instruction class execute method template.
 def template HiLoRdSelExecute {{
-        Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
-        {
-                Fault fault = NoFault;
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
 
-                %(op_decl)s;
+        %(op_decl)s;
 
-                if( ACDST > 0 && !isDspEnabled(xc) )
-                {
-                    fault = std::make_shared<DspStateDisabledFault>();
-                }
-                else
-                {
-                    %(op_rd)s;
-                    %(code)s;
-                }
-
-                if(fault == NoFault)
-                {
-                    %(op_wb)s;
-                }
-                return fault;
+        if (ACDST > 0 && !isDspEnabled(xc)) {
+            fault = std::make_shared<DspStateDisabledFault>();
+        } else {
+            %(op_rd)s;
+            %(code)s;
         }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+        return fault;
+    }
 }};
 
 //Outputs to decoder.cc
 output decoder {{
-        std::string IntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
+    std::string
+    IntOp::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
 
-            ccprintf(ss, "%-10s ", mnemonic);
+        ccprintf(ss, "%-10s ", mnemonic);
 
-            // just print the first dest... if there's a second one,
-            // it's generally implicit
-            if (_numDestRegs > 0) {
-                printReg(ss, _destRegIdx[0]);
-                ss << ", ";
-            }
-
-            // just print the first two source regs... if there's
-            // a third one, it's a read-modify-write dest (Rc),
-            // e.g. for CMOVxx
-            if (_numSrcRegs > 0) {
-                printReg(ss, _srcRegIdx[0]);
-            }
-
-            if (_numSrcRegs > 1) {
-                ss << ", ";
-                printReg(ss, _srcRegIdx[1]);
-            }
-
-            return ss.str();
-        }
-
-        std::string HiLoOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
-
-            ccprintf(ss, "%-10s ", mnemonic);
-
-            //Destination Registers are implicit for HI/LO ops
-            if (_numSrcRegs > 0) {
-                printReg(ss, _srcRegIdx[0]);
-            }
-
-            if (_numSrcRegs > 1) {
-                ss << ", ";
-                printReg(ss, _srcRegIdx[1]);
-            }
-
-            return ss.str();
-        }
-
-        std::string HiLoRsSelOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
-
-            ccprintf(ss, "%-10s ", mnemonic);
-
-            if (_numDestRegs > 0 && _destRegIdx[0].index() < 32) {
-                printReg(ss, _destRegIdx[0]);
-            } else if (_numSrcRegs > 0 && _srcRegIdx[0].index() < 32) {
-                printReg(ss, _srcRegIdx[0]);
-            }
-
-            return ss.str();
-        }
-
-        std::string HiLoRdSelOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
-
-            ccprintf(ss, "%-10s ", mnemonic);
-
-            if (_numDestRegs > 0 && _destRegIdx[0].index() < 32) {
-                printReg(ss, _destRegIdx[0]);
-            } else if (_numSrcRegs > 0 && _srcRegIdx[0].index() < 32) {
-                printReg(ss, _srcRegIdx[0]);
-            }
-
-            return ss.str();
-        }
-
-        std::string HiLoRdSelValOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
-
-            ccprintf(ss, "%-10s ", mnemonic);
-
-            if (_numDestRegs > 0 && _destRegIdx[0].index() < 32) {
-                printReg(ss, _destRegIdx[0]);
-            } else if (_numSrcRegs > 0 && _srcRegIdx[0].index() < 32) {
-                printReg(ss, _srcRegIdx[0]);
-            }
-
-            return ss.str();
-        }
-
-        std::string IntImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
-
-            ccprintf(ss, "%-10s ", mnemonic);
-
-            if (_numDestRegs > 0) {
-                printReg(ss, _destRegIdx[0]);
-            }
-
+        // just print the first dest... if there's a second one,
+        // it's generally implicit
+        if (_numDestRegs > 0) {
+            printReg(ss, _destRegIdx[0]);
             ss << ", ";
-
-            if (_numSrcRegs > 0) {
-                printReg(ss, _srcRegIdx[0]);
-                ss << ", ";
-            }
-
-            if(strcmp(mnemonic,"lui") == 0)
-                ccprintf(ss, "0x%x ", sextImm);
-            else
-                ss << (int) sextImm;
-
-            return ss.str();
         }
+
+        // just print the first two source regs... if there's
+        // a third one, it's a read-modify-write dest (Rc),
+        // e.g. for CMOVxx
+        if (_numSrcRegs > 0) {
+            printReg(ss, _srcRegIdx[0]);
+        }
+
+        if (_numSrcRegs > 1) {
+            ss << ", ";
+            printReg(ss, _srcRegIdx[1]);
+        }
+
+        return ss.str();
+    }
+
+    std::string
+    HiLoOp::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+
+        ccprintf(ss, "%-10s ", mnemonic);
+
+        // Destination Registers are implicit for HI/LO ops
+        if (_numSrcRegs > 0) {
+            printReg(ss, _srcRegIdx[0]);
+        }
+
+        if (_numSrcRegs > 1) {
+            ss << ", ";
+            printReg(ss, _srcRegIdx[1]);
+        }
+
+        return ss.str();
+    }
+
+    std::string
+    HiLoRsSelOp::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+
+        ccprintf(ss, "%-10s ", mnemonic);
+
+        if (_numDestRegs > 0 && _destRegIdx[0].index() < 32) {
+            printReg(ss, _destRegIdx[0]);
+        } else if (_numSrcRegs > 0 && _srcRegIdx[0].index() < 32) {
+            printReg(ss, _srcRegIdx[0]);
+        }
+
+        return ss.str();
+    }
+
+    std::string
+    HiLoRdSelOp::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+
+        ccprintf(ss, "%-10s ", mnemonic);
+
+        if (_numDestRegs > 0 && _destRegIdx[0].index() < 32) {
+            printReg(ss, _destRegIdx[0]);
+        } else if (_numSrcRegs > 0 && _srcRegIdx[0].index() < 32) {
+            printReg(ss, _srcRegIdx[0]);
+        }
+
+        return ss.str();
+    }
+
+    std::string
+    HiLoRdSelValOp::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+
+        ccprintf(ss, "%-10s ", mnemonic);
+
+        if (_numDestRegs > 0 && _destRegIdx[0].index() < 32) {
+            printReg(ss, _destRegIdx[0]);
+        } else if (_numSrcRegs > 0 && _srcRegIdx[0].index() < 32) {
+            printReg(ss, _srcRegIdx[0]);
+        }
+
+        return ss.str();
+    }
+
+    std::string
+    IntImmOp::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+
+        ccprintf(ss, "%-10s ", mnemonic);
+
+        if (_numDestRegs > 0) {
+            printReg(ss, _destRegIdx[0]);
+        }
+
+        ss << ", ";
+
+        if (_numSrcRegs > 0) {
+            printReg(ss, _srcRegIdx[0]);
+            ss << ", ";
+        }
+
+        if(strcmp(mnemonic,"lui") == 0)
+            ccprintf(ss, "0x%x ", sextImm);
+        else
+            ss << (int) sextImm;
+
+        return ss.str();
+    }
 
 }};
 

@@ -39,6 +39,9 @@
 
 #include "base/logging.hh"
 
+namespace Loader
+{
+
 static bool
 hasGzipMagic(int fd)
 {
@@ -125,3 +128,5 @@ ImageFileData::~ImageFileData()
 {
     munmap((void *)_data, _len);
 }
+
+} // namespace Loader

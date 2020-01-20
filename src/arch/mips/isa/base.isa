@@ -54,7 +54,7 @@ output header {{
         void printReg(std::ostream &os, RegId reg) const;
 
         std::string generateDisassembly(
-                Addr pc, const SymbolTable *symtab) const override;
+                Addr pc, const Loader::SymbolTable *symtab) const override;
 
       public:
         void
@@ -75,17 +75,19 @@ output header {{
 //Ouputs to decoder.cc
 output decoder {{
 
-    void MipsStaticInst::printReg(std::ostream &os, RegId reg) const
+    void
+    MipsStaticInst::printReg(std::ostream &os, RegId reg) const
     {
         if (reg.isIntReg()) {
             ccprintf(os, "r%d", reg.index());
-        }
-        else {
+        } else {
             ccprintf(os, "f%d", reg.index());
         }
     }
 
-    std::string MipsStaticInst::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    std::string
+    MipsStaticInst::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 

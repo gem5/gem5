@@ -58,8 +58,8 @@
 using namespace std;
 using namespace ArmISA;
 
-ArmProcess::ArmProcess(ProcessParams *params, ObjectFile *objFile,
-                       ObjectFile::Arch _arch)
+ArmProcess::ArmProcess(ProcessParams *params, ::Loader::ObjectFile *objFile,
+                       ::Loader::Arch _arch)
     : Process(params,
               new EmulationPageTable(params->name, params->pid, PageBytes),
               objFile),
@@ -68,8 +68,8 @@ ArmProcess::ArmProcess(ProcessParams *params, ObjectFile *objFile,
     fatal_if(params->useArchPT, "Arch page tables not implemented.");
 }
 
-ArmProcess32::ArmProcess32(ProcessParams *params, ObjectFile *objFile,
-                           ObjectFile::Arch _arch)
+ArmProcess32::ArmProcess32(ProcessParams *params,
+        ::Loader::ObjectFile *objFile, ::Loader::Arch _arch)
     : ArmProcess(params, objFile, _arch)
 {
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
@@ -83,8 +83,9 @@ ArmProcess32::ArmProcess32(ProcessParams *params, ObjectFile *objFile,
                                      mmap_end);
 }
 
-ArmProcess64::ArmProcess64(ProcessParams *params, ObjectFile *objFile,
-                           ObjectFile::Arch _arch)
+ArmProcess64::ArmProcess64(
+        ProcessParams *params, ::Loader::ObjectFile *objFile,
+        ::Loader::Arch _arch)
     : ArmProcess(params, objFile, _arch)
 {
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
@@ -267,10 +268,10 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
 
     //Setup the auxilliary vectors. These will already have endian conversion.
     //Auxilliary vectors are loaded only for elf formatted executables.
-    ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
+    auto *elfObject = dynamic_cast<::Loader::ElfObject *>(objFile);
     if (elfObject) {
 
-        if (objFile->getOpSys() == ObjectFile::Linux) {
+        if (objFile->getOpSys() == ::Loader::Linux) {
             IntType features = armHwcap<IntType>();
 
             //Bits which describe the system hardware capabilities
@@ -461,9 +462,9 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
     }
 
     PCState pc;
-    pc.thumb(arch == ObjectFile::Thumb);
+    pc.thumb(arch == ::Loader::Thumb);
     pc.nextThumb(pc.thumb());
-    pc.aarch64(arch == ObjectFile::Arm64);
+    pc.aarch64(arch == ::Loader::Arm64);
     pc.nextAArch64(pc.aarch64());
     pc.set(getStartPC() & ~mask(1));
     tc->pcState(pc);

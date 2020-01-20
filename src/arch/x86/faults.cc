@@ -168,7 +168,8 @@ namespace X86ISA
             } else {
                 panic("Tried to %s unmapped address %#x.\nPC: %#x, Instr: %s",
                       modeStr, addr, tc->pcState().pc(),
-                      inst->disassemble(tc->pcState().pc(), debugSymbolTable));
+                      inst->disassemble(tc->pcState().pc(),
+                          Loader::debugSymbolTable));
             }
         }
     }

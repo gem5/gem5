@@ -1713,13 +1713,13 @@ mmapFunc(SyscallDesc *desc, ThreadContext *tc,
         if (p->interpImage.contains(tc->pcState().instAddr())) {
             std::shared_ptr<FDEntry> fdep = (*p->fds)[tgt_fd];
             auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
-            ObjectFile *lib = createObjectFile(p->checkPathRedirect(
+            auto *lib = Loader::createObjectFile(p->checkPathRedirect(
                     ffdp->getFileName()));
             DPRINTF_SYSCALL(Verbose, "Loading symbols from %s\n",
                 ffdp->getFileName());
 
             if (lib) {
-                lib->loadAllSymbols(debugSymbolTable,
+                lib->loadAllSymbols(Loader::debugSymbolTable,
                                 lib->buildImage().minAddr(), start);
             }
         }

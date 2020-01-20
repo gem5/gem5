@@ -32,187 +32,182 @@
 //
 
 output header {{
-        /**
-         * Base class for FP operations.
-         */
-        class FPOp : public MipsStaticInst
-        {
-                protected:
+    /**
+     * Base class for FP operations.
+     */
+    class FPOp : public MipsStaticInst
+    {
+      protected:
+        using MipsStaticInst::MipsStaticInst;
 
-                /// Constructor
-                FPOp(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
-                {
-                }
+        //needs function to check for fpEnable or not
+    };
 
-                //needs function to check for fpEnable or not
-        };
+    class FPCompareOp : public FPOp
+    {
+      protected:
+        using FPOp::FPOp;
 
-        class FPCompareOp : public FPOp
-        {
-          protected:
-            FPCompareOp(const char *mnem, MachInst _machInst, OpClass __opClass) : FPOp(mnem, _machInst, __opClass)
-                {
-                }
-
-            std::string generateDisassembly(
-                    Addr pc, const SymbolTable *symtab) const override;
-        };
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+    };
 }};
 
 output decoder {{
-        std::string FPCompareOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
+    std::string
+    FPCompareOp::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
 
-            ccprintf(ss, "%-10s ", mnemonic);
+        ccprintf(ss, "%-10s ", mnemonic);
 
-            ccprintf(ss,"%d",CC);
+        ccprintf(ss,"%d",CC);
 
-            if(_numSrcRegs > 0) {
-                ss << ", ";
-                printReg(ss, _srcRegIdx[0]);
-            }
-
-            if(_numSrcRegs > 1) {
-                ss << ", ";
-                printReg(ss, _srcRegIdx[1]);
-            }
-
-            return ss.str();
+        if (_numSrcRegs > 0) {
+            ss << ", ";
+            printReg(ss, _srcRegIdx[0]);
         }
+
+        if (_numSrcRegs > 1) {
+            ss << ", ";
+            printReg(ss, _srcRegIdx[1]);
+        }
+
+        return ss.str();
+    }
 }};
 
 output header {{
-        void fpResetCauseBits(ExecContext *cpu);
-
+    void fpResetCauseBits(ExecContext *cpu);
 }};
 
 output exec {{
-        inline Fault checkFpEnableFault(ExecContext *xc)
-        {
-            //@TODO: Implement correct CP0 checks to see if the CP1
-            // unit is enable or not
-          if (!isCoprocessorEnabled(xc, 1))
-              return std::make_shared<CoprocessorUnusableFault>(1);
+    inline Fault
+    checkFpEnableFault(ExecContext *xc)
+    {
+        //@TODO: Implement correct CP0 checks to see if the CP1
+        // unit is enable or not
+        if (!isCoprocessorEnabled(xc, 1))
+            return std::make_shared<CoprocessorUnusableFault>(1);
 
-          return NoFault;
-        }
+        return NoFault;
+    }
 
-        //If any operand is Nan return the appropriate QNaN
-        template <class T>
-        bool
-        fpNanOperands(FPOp *inst, ExecContext *xc, const T &src_type,
-                      Trace::InstRecord *traceData)
-        {
-            uint64_t mips_nan = 0;
-            assert(sizeof(T) == 4);
+    //If any operand is Nan return the appropriate QNaN
+    template <class T>
+    bool
+    fpNanOperands(FPOp *inst, ExecContext *xc, const T &src_type,
+                  Trace::InstRecord *traceData)
+    {
+        uint64_t mips_nan = 0;
+        assert(sizeof(T) == 4);
 
-            for (int i = 0; i < inst->numSrcRegs(); i++) {
-                uint64_t src_bits = xc->readFloatRegOperandBits(inst, 0);
+        for (int i = 0; i < inst->numSrcRegs(); i++) {
+            uint64_t src_bits = xc->readFloatRegOperandBits(inst, 0);
 
-                if (isNan(&src_bits, 32) ) {
-                    mips_nan = MIPS32_QNAN;
-                    xc->setFloatRegOperandBits(inst, 0, mips_nan);
-                    if (traceData) { traceData->setData(mips_nan); }
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        template <class T>
-        bool
-        fpInvalidOp(FPOp *inst, ExecContext *cpu, const T dest_val,
-                    Trace::InstRecord *traceData)
-        {
-            uint64_t mips_nan = 0;
-            T src_op = dest_val;
-            assert(sizeof(T) == 4);
-
-            if (isNan(&src_op, 32)) {
+            if (isNan(&src_bits, 32) ) {
                 mips_nan = MIPS32_QNAN;
-
-                //Set value to QNAN
-                cpu->setFloatRegOperandBits(inst, 0, mips_nan);
-
-                //Read FCSR from FloatRegFile
-                uint32_t fcsr_bits =
-                    cpu->tcBase()->readFloatReg(FLOATREG_FCSR);
-
-                uint32_t new_fcsr = genInvalidVector(fcsr_bits);
-
-                //Write FCSR from FloatRegFile
-                cpu->tcBase()->setFloatReg(FLOATREG_FCSR, new_fcsr);
-
+                xc->setFloatRegOperandBits(inst, 0, mips_nan);
                 if (traceData) { traceData->setData(mips_nan); }
                 return true;
             }
-
-            return false;
         }
+        return false;
+    }
 
-        void
-        fpResetCauseBits(ExecContext *cpu)
-        {
+    template <class T>
+    bool
+    fpInvalidOp(FPOp *inst, ExecContext *cpu, const T dest_val,
+                Trace::InstRecord *traceData)
+    {
+        uint64_t mips_nan = 0;
+        T src_op = dest_val;
+        assert(sizeof(T) == 4);
+
+        if (isNan(&src_op, 32)) {
+            mips_nan = MIPS32_QNAN;
+
+            //Set value to QNAN
+            cpu->setFloatRegOperandBits(inst, 0, mips_nan);
+
             //Read FCSR from FloatRegFile
-            uint32_t fcsr = cpu->tcBase()->readFloatReg(FLOATREG_FCSR);
+            uint32_t fcsr_bits =
+                cpu->tcBase()->readFloatReg(FLOATREG_FCSR);
 
-            // TODO: Use utility function here
-            fcsr = bits(fcsr, 31, 18) << 18 | bits(fcsr, 11, 0);
+            uint32_t new_fcsr = genInvalidVector(fcsr_bits);
 
             //Write FCSR from FloatRegFile
-            cpu->tcBase()->setFloatReg(FLOATREG_FCSR, fcsr);
+            cpu->tcBase()->setFloatReg(FLOATREG_FCSR, new_fcsr);
+
+            if (traceData) { traceData->setData(mips_nan); }
+            return true;
         }
+
+        return false;
+    }
+
+    void
+    fpResetCauseBits(ExecContext *cpu)
+    {
+        //Read FCSR from FloatRegFile
+        uint32_t fcsr = cpu->tcBase()->readFloatReg(FLOATREG_FCSR);
+
+        // TODO: Use utility function here
+        fcsr = bits(fcsr, 31, 18) << 18 | bits(fcsr, 11, 0);
+
+        //Write FCSR from FloatRegFile
+        cpu->tcBase()->setFloatReg(FLOATREG_FCSR, fcsr);
+    }
 }};
 
 def template FloatingPointExecute {{
-        Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
-        {
-                Fault fault = NoFault;
+    Fault %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
 
-                %(fp_enable_check)s;
+        %(fp_enable_check)s;
 
+        //When is the right time to reset cause bits?
+        //start of every instruction or every cycle?
+        if (FullSystem)
+            fpResetCauseBits(xc);
+        %(op_decl)s;
+        %(op_rd)s;
 
-                //When is the right time to reset cause bits?
-                //start of every instruction or every cycle?
-                if (FullSystem)
-                    fpResetCauseBits(xc);
-                %(op_decl)s;
-                %(op_rd)s;
+        //Check if any FP operand is a NaN value
+        if (!fpNanOperands((FPOp*)this, xc, Fd, traceData)) {
+            %(code)s;
 
-                //Check if any FP operand is a NaN value
-                if (!fpNanOperands((FPOp*)this, xc, Fd, traceData)) {
-                    %(code)s;
-
-                    //Change this code for Full-System/Sycall Emulation
-                    //separation
-                    //----
-                    //Should Full System-Mode throw a fault here?
-                    //----
-                    //Check for IEEE 754 FP Exceptions
-                    //fault = fpNanOperands((FPOp*)this, xc, Fd, traceData);
-                    bool invalid_op = false;
-                    if (FullSystem) {
-                        invalid_op =
-                            fpInvalidOp((FPOp*)this, xc, Fd, traceData);
-                    }
-                    if (!invalid_op && fault == NoFault) {
-                        %(op_wb)s;
-                    }
-                }
-
-                return fault;
+            //Change this code for Full-System/Sycall Emulation
+            //separation
+            //----
+            //Should Full System-Mode throw a fault here?
+            //----
+            //Check for IEEE 754 FP Exceptions
+            //fault = fpNanOperands((FPOp*)this, xc, Fd, traceData);
+            bool invalid_op = false;
+            if (FullSystem) {
+                invalid_op =
+                    fpInvalidOp((FPOp*)this, xc, Fd, traceData);
+            }
+            if (!invalid_op && fault == NoFault) {
+                %(op_wb)s;
+            }
         }
+
+        return fault;
+    }
 }};
 
 // Primary format for float point operate instructions:
 def format FloatOp(code, *flags) {{
-        iop = InstObjParams(name, Name, 'FPOp', code, flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = FloatingPointExecute.subst(iop)
+    iop = InstObjParams(name, Name, 'FPOp', code, flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = FloatingPointExecute.subst(iop)
 }};
 
 def format FloatCompareOp(cond_code, *flags) {{
@@ -306,20 +301,20 @@ def format FloatConvertOp(code, *flags) {{
 }};
 
 def format FloatAccOp(code, *flags) {{
-        iop = InstObjParams(name, Name, 'FPOp', code, flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+    iop = InstObjParams(name, Name, 'FPOp', code, flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
 
 // Primary format for float64 operate instructions:
 def format Float64Op(code, *flags) {{
-        iop = InstObjParams(name, Name, 'MipsStaticInst', code, flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+    iop = InstObjParams(name, Name, 'MipsStaticInst', code, flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
 
 def format FloatPSCompareOp(cond_code1, cond_code2, *flags) {{

@@ -47,6 +47,9 @@
 #include "base/loader/object_file.hh"
 #include "gelf.h"
 
+namespace Loader
+{
+
 class ElfObjectFormat : public ObjectFileFormat
 {
   public:
@@ -136,5 +139,7 @@ class ElfObject : public ObjectFile
  * @param dirname base path for the interpreter
  */
 void setInterpDir(const std::string &dirname);
+
+} // namespace Loader
 
 #endif // __BASE_LOADER_ELF_OBJECT_HH__

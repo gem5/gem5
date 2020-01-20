@@ -42,30 +42,29 @@
 
 // Execute method for macroops.
 def template MacroExecPanic {{
-        Fault execute(ExecContext *, Trace::InstRecord *) const
-        {
-            panic("Tried to execute macroop directly!");
-            return NoFault;
-        }
+    Fault execute(ExecContext *, Trace::InstRecord *) const
+    {
+        panic("Tried to execute macroop directly!");
+        return NoFault;
+    }
 }};
 
 output header {{
+    // Base class for combinationally generated macroops
+    class Macroop : public X86ISA::MacroopBase
+    {
+      public:
+        Macroop(const char *mnem, ExtMachInst _machInst,
+                uint32_t _numMicroops, X86ISA::EmulEnv _env)
+                    : MacroopBase(mnem, _machInst, _numMicroops, _env)
+        {}
 
-        // Base class for combinationally generated macroops
-        class Macroop : public X86ISA::MacroopBase
+        Fault
+        execute(ExecContext *, Trace::InstRecord *) const
         {
-          public:
-            Macroop(const char *mnem, ExtMachInst _machInst,
-                    uint32_t _numMicroops, X86ISA::EmulEnv _env)
-                        : MacroopBase(mnem, _machInst, _numMicroops, _env)
-            {}
-
-            Fault
-            execute(ExecContext *, Trace::InstRecord *) const
-            {
-                panic("Tried to execute macroop directly!");
-            }
-        };
+            panic("Tried to execute macroop directly!");
+        }
+    };
 }};
 
 //////////////////////////////////////////////////////////////////////////////
@@ -76,29 +75,29 @@ output header {{
 
 // Basic instruction class declaration template.
 def template MacroDeclare {{
-        namespace X86Macroop
+    namespace X86Macroop
+    {
+        /**
+         * Static instruction class for "%(mnemonic)s".
+         */
+        class %(class_name)s : public %(base_class)s
         {
-            /**
-             * Static instruction class for "%(mnemonic)s".
-             */
-            class %(class_name)s : public %(base_class)s
-            {
-              private:
-                %(declareLabels)s
-              public:
-                // Constructor.
-                %(class_name)s(ExtMachInst machInst, X86ISA::EmulEnv _env);
+          private:
+            %(declareLabels)s
+          public:
+            // Constructor.
+            %(class_name)s(ExtMachInst machInst, X86ISA::EmulEnv _env);
 
-                std::string
-                generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-            };
-        }
+            std::string generateDisassembly(
+                    Addr pc, const Loader::SymbolTable *symtab) const;
+        };
+    }
 }};
 
 def template MacroDisassembly {{
     std::string
-    X86Macroop::%(class_name)s::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
+    X86Macroop::%(class_name)s::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream out;
         out << mnemonic << "\t";

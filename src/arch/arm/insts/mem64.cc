@@ -47,7 +47,7 @@ namespace ArmISA
 {
 
 std::string
-SysDC64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+SysDC64::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -86,7 +86,8 @@ Memory64::setExcAcRel(bool exclusive, bool acrel)
 }
 
 std::string
-MemoryImm64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MemoryImm64::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     startDisassembly(ss);
@@ -97,7 +98,8 @@ MemoryImm64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MemoryDImm64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MemoryDImm64::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -113,7 +115,8 @@ MemoryDImm64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MemoryDImmEx64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MemoryDImmEx64::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -131,7 +134,8 @@ MemoryDImmEx64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MemoryPreIndex64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MemoryPreIndex64::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     startDisassembly(ss);
@@ -140,7 +144,8 @@ MemoryPreIndex64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MemoryPostIndex64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MemoryPostIndex64::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     startDisassembly(ss);
@@ -151,7 +156,8 @@ MemoryPostIndex64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MemoryReg64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MemoryReg64::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     startDisassembly(ss);
@@ -161,7 +167,8 @@ MemoryReg64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MemoryRaw64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MemoryRaw64::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     startDisassembly(ss);
@@ -170,7 +177,8 @@ MemoryRaw64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MemoryEx64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MemoryEx64::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -184,7 +192,8 @@ MemoryEx64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MemoryLiteral64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MemoryLiteral64::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);

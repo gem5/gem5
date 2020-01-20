@@ -57,6 +57,9 @@
 #include "gelf.h"
 #include "sim/byteswap.hh"
 
+namespace Loader
+{
+
 ObjectFile *
 ElfObjectFormat::load(ImageFileDataPtr ifd)
 {
@@ -455,3 +458,5 @@ ElfObject::updateBias(Addr bias_addr)
     // Patch segments with the bias_addr.
     image.offset(bias_addr);
 }
+
+} // namespace Loader

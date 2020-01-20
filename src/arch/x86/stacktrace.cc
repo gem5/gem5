@@ -45,7 +45,7 @@ static int32_t
 readSymbol(ThreadContext *tc, const std::string name)
 {
     PortProxy &vp = tc->getVirtProxy();
-    const SymbolTable *symtab = tc->getSystemPtr()->workload->symtab(tc);
+    const auto *symtab = tc->getSystemPtr()->workload->symtab(tc);
 
     Addr addr;
     if (!symtab->findAddress(name, addr))
@@ -189,7 +189,7 @@ void
 StackTrace::dump()
 {
     StringWrap name(tc->getCpuPtr()->name());
-    const SymbolTable *symtab = tc->getSystemPtr()->workload->symtab(tc);
+    const auto *symtab = tc->getSystemPtr()->workload->symtab(tc);
 
     DPRINTFN("------ Stack ------\n");
 

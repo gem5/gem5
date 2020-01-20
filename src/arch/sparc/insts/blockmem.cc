@@ -32,7 +32,8 @@ namespace SparcISA
 {
 
 std::string
-BlockMemMicro::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+BlockMemMicro::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream response;
     bool load = flags[IsLoad];
@@ -57,7 +58,8 @@ BlockMemMicro::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-BlockMemImmMicro::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+BlockMemImmMicro::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream response;
     bool load = flags[IsLoad];

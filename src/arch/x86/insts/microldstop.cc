@@ -42,8 +42,9 @@
 
 namespace X86ISA
 {
-    std::string LdStOp::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
+    std::string
+    LdStOp::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream response;
 
@@ -58,8 +59,9 @@ namespace X86ISA
         return response.str();
     }
 
-    std::string LdStSplitOp::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
+    std::string
+    LdStSplitOp::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream response;
 

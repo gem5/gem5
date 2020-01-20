@@ -36,6 +36,9 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
+namespace Loader
+{
+
 class SymbolTable
 {
   public:
@@ -171,5 +174,7 @@ class SymbolTable
 /// and per Process object for non-full-system, but so far one big
 /// global one has worked well enough.
 extern SymbolTable *debugSymbolTable;
+
+} // namespace Loader
 
 #endif // __SYMTAB_HH__

@@ -90,7 +90,7 @@ class SparcStaticInst : public StaticInst
     using StaticInst::StaticInst;
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 
     static void printMnemonic(std::ostream &os, const char *mnemonic);
     static void printReg(std::ostream &os, RegId reg);

@@ -42,6 +42,9 @@
 
 class PortProxy;
 
+namespace Loader
+{
+
 class MemoryImage
 {
   public:
@@ -162,5 +165,6 @@ operator << (std::ostream &os, const MemoryImage::Segment &seg)
     return os;
 }
 
+} // namespace Loader
 
 #endif // __BASE_LOADER_MEMORY_IMAGE_HH__

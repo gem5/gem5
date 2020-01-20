@@ -76,8 +76,9 @@ namespace X86ISA
         return flags;
     }
 
-    std::string RegOp::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
+    std::string
+    RegOp::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream response;
 
@@ -90,8 +91,9 @@ namespace X86ISA
         return response.str();
     }
 
-    std::string RegOpImm::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
+    std::string
+    RegOpImm::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream response;
 

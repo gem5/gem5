@@ -41,8 +41,8 @@ namespace ArmISA
 {
 
 std::string
-SveMemVecFillSpill::generateDisassembly(Addr pc,
-                                        const SymbolTable *symtab) const
+SveMemVecFillSpill::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -57,8 +57,8 @@ SveMemVecFillSpill::generateDisassembly(Addr pc,
 }
 
 std::string
-SveMemPredFillSpill::generateDisassembly(Addr pc,
-                                         const SymbolTable *symtab) const
+SveMemPredFillSpill::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -73,7 +73,8 @@ SveMemPredFillSpill::generateDisassembly(Addr pc,
 }
 
 std::string
-SveContigMemSS::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+SveContigMemSS::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     // TODO: add suffix to transfer register and scaling factor (LSL #<x>)
     std::stringstream ss;
@@ -92,7 +93,8 @@ SveContigMemSS::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-SveContigMemSI::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+SveContigMemSI::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     // TODO: add suffix to transfer register
     std::stringstream ss;

@@ -56,7 +56,7 @@ class CondLogicOp : public PowerStaticInst
     }
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -78,7 +78,7 @@ class CondMoveOp : public PowerStaticInst
     }
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

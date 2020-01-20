@@ -63,12 +63,12 @@ class FsWorkload : public KernelWorkload
 {
   protected:
     /** Bootloaders */
-    std::vector<std::unique_ptr<ObjectFile>> bootLoaders;
+    std::vector<std::unique_ptr<Loader::ObjectFile>> bootLoaders;
 
     /**
      * Pointer to the bootloader object
      */
-    ObjectFile *bootldr = nullptr;
+    Loader::ObjectFile *bootldr = nullptr;
 
     /**
      * This differs from entry since it takes into account where
@@ -84,7 +84,7 @@ class FsWorkload : public KernelWorkload
      * @return Pointer to boot loader ObjectFile or nullptr if there
      *         is no matching boot loader.
      */
-    ObjectFile *getBootLoader(ObjectFile *const obj);
+    Loader::ObjectFile *getBootLoader(Loader::ObjectFile *const obj);
 
   public:
     typedef ArmFsWorkloadParams Params;
@@ -103,7 +103,7 @@ class FsWorkload : public KernelWorkload
             return kernelEntry;
     }
 
-    ObjectFile::Arch
+    Loader::Arch
     getArch() const override
     {
         if (bootldr)
@@ -111,7 +111,7 @@ class FsWorkload : public KernelWorkload
         else if (kernelObj)
             return kernelObj->getArch();
         else
-            return ObjectFile::Arm64;
+            return Loader::Arm64;
     }
 
     FsWorkload(Params *p);

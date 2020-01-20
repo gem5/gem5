@@ -36,12 +36,15 @@
 #include "sim/process.hh"
 #include "sim/syscall_abi.hh"
 
+namespace Loader
+{
 class ObjectFile;
+} // namespace Loader
 
 class MipsProcess : public Process
 {
   protected:
-    MipsProcess(ProcessParams * params, ObjectFile *objFile);
+    MipsProcess(ProcessParams * params, ::Loader::ObjectFile *objFile);
 
     void initState();
 

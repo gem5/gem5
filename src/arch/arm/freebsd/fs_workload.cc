@@ -82,7 +82,8 @@ FsFreebsd::initState()
     // it is helpful.
     if (params()->early_kernel_symbols) {
         kernelObj->loadGlobalSymbols(kernelSymtab, 0, 0, _loadAddrMask);
-        kernelObj->loadGlobalSymbols(debugSymbolTable, 0, 0, _loadAddrMask);
+        kernelObj->loadGlobalSymbols(
+                Loader::debugSymbolTable, 0, 0, _loadAddrMask);
     }
 
     // Check if the kernel image has a symbol that tells us it supports
@@ -97,7 +98,7 @@ FsFreebsd::initState()
     inform("Loading DTB file: %s at address %#x\n", params()->dtb_filename,
             params()->atags_addr + _loadAddrOffset);
 
-    DtbFile *dtb_file = new DtbFile(params()->dtb_filename);
+    auto *dtb_file = new ::Loader::DtbFile(params()->dtb_filename);
 
     warn_if(!dtb_file->addBootCmdLine(commandLine.c_str(), commandLine.size()),
             "Couldn't append bootargs to DTB file: %s",

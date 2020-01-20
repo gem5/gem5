@@ -52,13 +52,14 @@ output header {{
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
         std::string generateDisassembly(
-                Addr pc, const SymbolTable *symtab) const override;
+                Addr pc, const Loader::SymbolTable *symtab) const override;
     };
 }};
 
 output decoder {{
     std::string
-    Unknown::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    Unknown::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         return csprintf("%-10s (inst 0x%x, opcode 0x%x, binary:%s)",
                         "unknown", machInst, OPCODE, inst2string(machInst));

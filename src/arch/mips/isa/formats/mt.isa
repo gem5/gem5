@@ -32,40 +32,34 @@
 //
 
 output header {{
-        /**
-         * Base class for MIPS MT ASE operations.
-         */
-        class MTOp : public MipsStaticInst
+    /**
+     * Base class for MIPS MT ASE operations.
+     */
+    class MTOp : public MipsStaticInst
+    {
+      protected:
+        using MipsStaticInst::MipsStaticInst;
+
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+
+        bool user_mode = false;
+    };
+
+    class MTUserModeOp : public MTOp
+    {
+      protected:
+        MTUserModeOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+            MTOp(mnem, _machInst, __opClass)
         {
-                protected:
-
-                /// Constructor
-                MTOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                    MipsStaticInst(mnem, _machInst, __opClass), user_mode(false)
-                {
-                }
-
-               std::string generateDisassembly(
-                       Addr pc, const SymbolTable *symtab) const override;
-
-                bool user_mode;
-        };
-
-        class MTUserModeOp : public MTOp
-        {
-                protected:
-
-                /// Constructor
-                MTUserModeOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                    MTOp(mnem, _machInst, __opClass)
-                {
-                    user_mode = true;
-                }
-        };
+            user_mode = true;
+        }
+    };
 }};
 
 output decoder {{
-    std::string MTOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    std::string
+    MTOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 

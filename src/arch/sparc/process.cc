@@ -52,8 +52,8 @@ const std::vector<int> SparcProcess::SyscallABI::ArgumentRegs = {
     INTREG_O0, INTREG_O1, INTREG_O2, INTREG_O3, INTREG_O4, INTREG_O5
 };
 
-SparcProcess::SparcProcess(ProcessParams *params, ObjectFile *objFile,
-                           Addr _StackBias)
+SparcProcess::SparcProcess(ProcessParams *params,
+                           ::Loader::ObjectFile *objFile, Addr _StackBias)
     : Process(params,
               new EmulationPageTable(params->name, params->pid, PageBytes),
               objFile),
@@ -220,7 +220,7 @@ SparcProcess::argsInit(int pageSize)
 
     // Setup the auxilliary vectors. These will already have endian conversion.
     // Auxilliary vectors are loaded only for elf formatted executables.
-    ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
+    auto *elfObject = dynamic_cast<::Loader::ElfObject *>(objFile);
     if (elfObject) {
         // Bits which describe the system hardware capabilities
         auxv.emplace_back(M5_AT_HWCAP, hwcap);

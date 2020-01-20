@@ -32,14 +32,14 @@
 #include <vector>
 
 #include "base/loader/raw_image.hh"
-#include "base/loader/symtab.hh"
-#include "mem/port_proxy.hh"
 
-using namespace std;
+namespace Loader
+{
 
 ObjectFile::ObjectFile(ImageFileDataPtr ifd) : ImageFile(ifd) {}
 
-namespace {
+namespace
+{
 
 typedef std::vector<ObjectFileFormat *> ObjectFileFormatList;
 
@@ -73,3 +73,5 @@ createObjectFile(const std::string &fname, bool raw)
 
     return nullptr;
 }
+
+} // namespace Loader

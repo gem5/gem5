@@ -57,7 +57,7 @@ output header {{
         }
 
         std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
         {
             std::stringstream response;
 

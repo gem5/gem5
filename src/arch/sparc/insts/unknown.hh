@@ -53,7 +53,8 @@ class Unknown : public SparcStaticInst
     }
 
     std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const override
+    generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const override
     {
         return "Unknown instruction";
     }

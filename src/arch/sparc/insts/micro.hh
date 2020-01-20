@@ -56,7 +56,7 @@ class SparcMacroInst : public SparcStaticInst
     }
 
     std::string generateDisassembly(
-        Addr pc, const SymbolTable *symtab) const override;
+        Addr pc, const Loader::SymbolTable *symtab) const override;
 
     StaticInstPtr *microops;
 

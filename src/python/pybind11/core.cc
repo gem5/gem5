@@ -203,7 +203,7 @@ init_loader(py::module &m_native)
 {
     py::module m = m_native.def_submodule("loader");
 
-    m.def("setInterpDir", &setInterpDir);
+    m.def("setInterpDir", &Loader::setInterpDir);
 }
 
 void

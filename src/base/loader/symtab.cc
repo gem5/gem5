@@ -40,6 +40,9 @@
 
 using namespace std;
 
+namespace Loader
+{
+
 SymbolTable *debugSymbolTable = NULL;
 
 void
@@ -136,3 +139,5 @@ SymbolTable::unserialize(const string &base, CheckpointIn &cp)
         insert(addr, symbol);
     }
 }
+
+} // namespace Loader

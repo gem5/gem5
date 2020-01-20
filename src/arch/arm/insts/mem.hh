@@ -108,7 +108,7 @@ class RfeOp : public MightBeMicro
     }
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 // The address is a base register plus an immediate.
@@ -149,7 +149,7 @@ class SrsOp : public MightBeMicro
     }
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 class Memory : public MightBeMicro
@@ -372,7 +372,7 @@ class MemoryOffset : public Base
     {}
 
     std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
         this->printInst(ss, Memory::AddrMd_Offset);
@@ -422,7 +422,7 @@ class MemoryPreIndex : public Base
     {}
 
     std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
         this->printInst(ss, Memory::AddrMd_PreIndex);
@@ -472,7 +472,7 @@ class MemoryPostIndex : public Base
     {}
 
     std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
         this->printInst(ss, Memory::AddrMd_PostIndex);

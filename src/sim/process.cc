@@ -90,7 +90,7 @@ Process::Loader::Loader()
 }
 
 Process *
-Process::tryLoaders(ProcessParams *params, ObjectFile *obj_file)
+Process::tryLoaders(ProcessParams *params, ::Loader::ObjectFile *obj_file)
 {
     for (auto &loader: process_loaders()) {
         Process *p = loader->load(params, obj_file);
@@ -110,7 +110,7 @@ normalize(std::string& directory)
 }
 
 Process::Process(ProcessParams *params, EmulationPageTable *pTable,
-                 ObjectFile *obj_file)
+                 ::Loader::ObjectFile *obj_file)
     : SimObject(params), system(params->system),
       useArchPT(params->useArchPT),
       kvmInSE(params->kvmInSE),
@@ -155,13 +155,13 @@ Process::Process(ProcessParams *params, EmulationPageTable *pTable,
 
     image = objFile->buildImage();
 
-    if (!debugSymbolTable) {
-        debugSymbolTable = new SymbolTable();
-        if (!objFile->loadGlobalSymbols(debugSymbolTable) ||
-            !objFile->loadLocalSymbols(debugSymbolTable) ||
-            !objFile->loadWeakSymbols(debugSymbolTable)) {
-            delete debugSymbolTable;
-            debugSymbolTable = nullptr;
+    if (!::Loader::debugSymbolTable) {
+        ::Loader::debugSymbolTable = new ::Loader::SymbolTable();
+        if (!objFile->loadGlobalSymbols(::Loader::debugSymbolTable) ||
+            !objFile->loadLocalSymbols(::Loader::debugSymbolTable) ||
+            !objFile->loadWeakSymbols(::Loader::debugSymbolTable)) {
+            delete ::Loader::debugSymbolTable;
+            ::Loader::debugSymbolTable = nullptr;
         }
     }
 }
@@ -442,7 +442,7 @@ Process::checkPathRedirect(const std::string &filename)
 void
 Process::updateBias()
 {
-    ObjectFile *interp = objFile->getInterpreter();
+    auto *interp = objFile->getInterpreter();
 
     if (!interp || !interp->relocatable())
         return;
@@ -465,7 +465,7 @@ Process::updateBias()
     interp->updateBias(ld_bias);
 }
 
-ObjectFile *
+Loader::ObjectFile *
 Process::getInterpreter()
 {
     return objFile->getInterpreter();
@@ -474,7 +474,7 @@ Process::getInterpreter()
 Addr
 Process::getBias()
 {
-    ObjectFile *interp = getInterpreter();
+    auto *interp = getInterpreter();
 
     return interp ? interp->bias() : objFile->bias();
 }
@@ -482,7 +482,7 @@ Process::getBias()
 Addr
 Process::getStartPC()
 {
-    ObjectFile *interp = getInterpreter();
+    auto *interp = getInterpreter();
 
     return interp ? interp->entryPoint() : objFile->entryPoint();
 }
@@ -523,7 +523,7 @@ ProcessParams::create()
         executable = cmd[0];
     }
 
-    ObjectFile *obj_file = createObjectFile(executable);
+    auto *obj_file = Loader::createObjectFile(executable);
     fatal_if(!obj_file, "Cannot load object file %s.", executable);
 
     Process *process = Process::tryLoaders(this, obj_file);

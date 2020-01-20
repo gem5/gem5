@@ -74,8 +74,8 @@ FsWorkload::FsWorkload(Params *p) : KernelWorkload(*p),
 {
     bootLoaders.reserve(p->boot_loader.size());
     for (const auto &bl : p->boot_loader) {
-        std::unique_ptr<ObjectFile> bl_obj;
-        bl_obj.reset(createObjectFile(bl));
+        std::unique_ptr<Loader::ObjectFile> bl_obj;
+        bl_obj.reset(Loader::createObjectFile(bl));
 
         fatal_if(!bl_obj, "Could not read bootloader: %s", bl);
         bootLoaders.emplace_back(std::move(bl_obj));
@@ -87,7 +87,7 @@ FsWorkload::FsWorkload(Params *p) : KernelWorkload(*p),
              "Can't find a matching boot loader / kernel combination!");
 
     if (bootldr)
-        bootldr->loadGlobalSymbols(debugSymbolTable);
+        bootldr->loadGlobalSymbols(Loader::debugSymbolTable);
 }
 
 void
@@ -137,8 +137,8 @@ FsWorkload::initState()
     }
 }
 
-ObjectFile *
-FsWorkload::getBootLoader(ObjectFile *const obj)
+    Loader::ObjectFile *
+FsWorkload::getBootLoader(Loader::ObjectFile *const obj)
 {
     if (obj) {
         for (auto &bl : bootLoaders) {

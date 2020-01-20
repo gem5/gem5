@@ -76,7 +76,7 @@ MemoryReg::printOffset(std::ostream &os) const
 }
 
 string
-RfeOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+RfeOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
     switch (mode) {
@@ -101,7 +101,7 @@ RfeOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 string
-SrsOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+SrsOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
     switch (mode) {

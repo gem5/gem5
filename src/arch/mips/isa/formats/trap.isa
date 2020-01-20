@@ -32,82 +32,76 @@
 //
 
 output header {{
-        /**
-         * Base class for integer operations.
-         */
-        class Trap : public MipsStaticInst
-        {
-                protected:
+    /**
+     * Base class for integer operations.
+     */
+    class Trap : public MipsStaticInst
+    {
+      protected:
+        using MipsStaticInst::MipsStaticInst;
 
-                /// Constructor
-                Trap(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
-                {
-                }
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+    };
+    class TrapImm : public MipsStaticInst
+    {
+      protected:
+        int16_t imm;
 
-                std::string generateDisassembly(
-                        Addr pc, const SymbolTable *symtab) const override;
-        };
-        class TrapImm : public MipsStaticInst
-        {
-                protected:
+        TrapImm(const char *mnem, MachInst _machInst, OpClass __opClass) :
+            MipsStaticInst(mnem, _machInst, __opClass), imm(INTIMM)
+        {}
 
-                int16_t imm;
-
-                /// Constructor
-                TrapImm(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                    MipsStaticInst(mnem, _machInst, __opClass),imm(INTIMM)
-                {
-                }
-
-                std::string generateDisassembly(
-                        Addr pc, const SymbolTable *symtab) const override;
-        };
-
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+    };
 }};
 
 output decoder {{
-        std::string Trap::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-                return "Disassembly of trap instruction\n";
-        }
-        std::string TrapImm::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-                return "Disassembly of trap instruction\n";
-        }
+    std::string
+    Trap::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        return "Disassembly of trap instruction\n";
+    }
+    std::string
+    TrapImm::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        return "Disassembly of trap instruction\n";
+    }
 }};
 
 def template TrapExecute {{
-        //Edit This Template When Traps Are Implemented
-        Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
-        {
-                //Write the resulting state to the execution context
-                %(op_wb)s;
+    // Edit This Template When Traps Are Implemented
+    Fault %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        //Write the resulting state to the execution context
+        %(op_wb)s;
 
-                //Call into the trap handler with the appropriate fault
-                return No_Fault;
-        }
+        //Call into the trap handler with the appropriate fault
+        return No_Fault;
+    }
 }};
 def format Trap(code, *flags) {{
+    code ='bool cond;\n' + code
+    code += 'if (cond) {\n'
+    code += 'fault = std::make_shared<TrapFault>();\n};'
 
-        code ='bool cond;\n' + code
-        code += 'if (cond) {\n'
-        code += 'fault = std::make_shared<TrapFault>();\n};'
-
-        iop = InstObjParams(name, Name, 'MipsStaticInst', code, flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+    iop = InstObjParams(name, Name, 'MipsStaticInst', code, flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
 def format TrapImm(code, *flags) {{
-
-        code ='bool cond;\n' + code
-        code += 'if (cond) {\n'
-        code += 'fault = std::make_shared<TrapFault>();\n};'
-        iop = InstObjParams(name, Name, 'MipsStaticInst', code, flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+    code ='bool cond;\n' + code
+    code += 'if (cond) {\n'
+    code += 'fault = std::make_shared<TrapFault>();\n};'
+    iop = InstObjParams(name, Name, 'MipsStaticInst', code, flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};

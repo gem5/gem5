@@ -67,7 +67,6 @@
 
 class BaseRemoteGDB;
 class KvmVM;
-class ObjectFile;
 class ThreadContext;
 
 class System : public SimObject, public PCEventScope

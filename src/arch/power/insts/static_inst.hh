@@ -60,7 +60,7 @@ class PowerStaticInst : public StaticInst
     printReg(std::ostream &os, RegId reg) const;
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 
     void
     advancePC(PowerISA::PCState &pcState) const override

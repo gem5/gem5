@@ -55,7 +55,8 @@ class NopStaticInst : public StaticInst
     }
 
     std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+            const Loader::SymbolTable *symtab) const override
     {
         return mnemonic;
     }
@@ -117,7 +118,7 @@ StaticInst::branchTarget(ThreadContext *tc) const
 }
 
 const string &
-StaticInst::disassemble(Addr pc, const SymbolTable *symtab) const
+StaticInst::disassemble(Addr pc, const Loader::SymbolTable *symtab) const
 {
     if (!cachedDisassembly)
         cachedDisassembly = new string(generateDisassembly(pc, symtab));

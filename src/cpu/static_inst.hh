@@ -64,11 +64,15 @@ class Packet;
 
 class ExecContext;
 
+namespace Loader
+{
 class SymbolTable;
+} // namespace Loader
 
-namespace Trace {
-    class InstRecord;
-}
+namespace Trace
+{
+class InstRecord;
+} // namespace Trace
 
 /**
  * Base, ISA-independent static instruction class.
@@ -251,7 +255,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
      * Internal function to generate disassembly string.
      */
     virtual std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const = 0;
+    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const = 0;
 
     /// Constructor.
     /// It's important to initialize everything here to a sane
@@ -322,7 +326,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
      * should not be cached, this function should be overridden directly.
      */
     virtual const std::string &disassemble(Addr pc,
-        const SymbolTable *symtab = 0) const;
+        const Loader::SymbolTable *symtab=nullptr) const;
 
     /**
      * Print a separator separated list of this instruction's set flag

@@ -90,7 +90,7 @@ class IntOp : public PowerStaticInst
     }
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 
@@ -113,7 +113,7 @@ class IntImmOp : public IntOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 
@@ -134,7 +134,7 @@ class IntShiftOp : public IntOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 
@@ -170,7 +170,7 @@ class IntRotateOp : public IntShiftOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

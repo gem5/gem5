@@ -51,8 +51,9 @@ namespace X86ISA
     }
     */
 
-    std::string FpOp::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
+    std::string
+    FpOp::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream response;
 

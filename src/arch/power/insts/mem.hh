@@ -52,7 +52,7 @@ class MemOp : public PowerStaticInst
     }
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 
@@ -72,7 +72,7 @@ class MemDispOp : public MemOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

@@ -41,7 +41,7 @@ template class BranchNBits<22>;
 template class BranchNBits<30>;
 
 std::string
-Branch::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+Branch::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream response;
 
@@ -55,7 +55,8 @@ Branch::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-BranchImm13::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+BranchImm13::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream response;
 
@@ -72,7 +73,8 @@ BranchImm13::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-BranchDisp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+BranchDisp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream response;
     std::string symbol;

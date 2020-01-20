@@ -46,7 +46,7 @@ usage(const char *progname)
 int
 main(int argc, char *argv[])
 {
-    SymbolTable symtab;
+    Loader::SymbolTable symtab;
 
     if (argc != 3)
         usage(argv[0]);

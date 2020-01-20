@@ -61,7 +61,7 @@ namespace X86ISA
         Addr _gdtStart;
         Addr _gdtSize;
 
-        X86Process(ProcessParams * params, ObjectFile *objFile);
+        X86Process(ProcessParams *params, ::Loader::ObjectFile *objFile);
 
         template<class IntType>
         void argsInit(int pageSize,
@@ -118,7 +118,7 @@ namespace X86ISA
         VSyscallPage vsyscallPage;
 
       public:
-        X86_64Process(ProcessParams *params, ObjectFile *objFile);
+        X86_64Process(ProcessParams *params, ::Loader::ObjectFile *objFile);
 
         void argsInit(int pageSize);
         void initState() override;
@@ -155,7 +155,7 @@ namespace X86ISA
         VSyscallPage vsyscallPage;
 
       public:
-        I386Process(ProcessParams *params, ObjectFile *objFile);
+        I386Process(ProcessParams *params, ::Loader::ObjectFile *objFile);
 
         void argsInit(int pageSize);
         void initState() override;

@@ -64,7 +64,7 @@ class BlockMemMicro : public SparcMicroInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 
     const int8_t offset;
 };
@@ -79,7 +79,7 @@ class BlockMemImmMicro : public BlockMemMicro
     {}
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 
     const int32_t imm;
 };

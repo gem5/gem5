@@ -43,7 +43,7 @@ def template ImmDeclare {{
         %(class_name)s(MachInst machInst);
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
         std::string generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const override;
+            const Loader::SymbolTable *symtab) const override;
     };
 }};
 
@@ -76,7 +76,7 @@ def template ImmExecute {{
 
     std::string
     %(class_name)s::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
+            const Loader::SymbolTable *symtab) const
     {
         std::vector<RegId> indices = {%(regs)s};
         std::stringstream ss;
@@ -108,7 +108,7 @@ def template CILuiExecute {{
 
     std::string
     %(class_name)s::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
+            const Loader::SymbolTable *symtab) const
     {
         std::vector<RegId> indices = {%(regs)s};
         std::stringstream ss;
@@ -142,7 +142,7 @@ def template FenceExecute {{
 
     std::string
     %(class_name)s::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
+            const Loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
         ss << mnemonic;
@@ -182,7 +182,8 @@ def template BranchDeclare {{
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
         std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const override;
+        generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
 
         RiscvISA::PCState
         branchTarget(const RiscvISA::PCState &branchPC) const override;
@@ -216,8 +217,8 @@ def template BranchExecute {{
     }
 
     std::string
-    %(class_name)s::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
+    %(class_name)s::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::vector<RegId> indices = {%(regs)s};
         std::stringstream ss;
@@ -241,7 +242,8 @@ def template JumpDeclare {{
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
         std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const override;
+        generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
 
         RiscvISA::PCState
         branchTarget(ThreadContext *tc) const override;
@@ -277,8 +279,8 @@ def template JumpExecute {{
     }
 
     std::string
-    %(class_name)s::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
+    %(class_name)s::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::vector<RegId> indices = {%(regs)s};
         std::stringstream ss;

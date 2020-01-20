@@ -33,6 +33,9 @@
 #include <memory>
 #include <string>
 
+namespace Loader
+{
+
 class ImageFileData
 {
   private:
@@ -50,5 +53,7 @@ class ImageFileData
 };
 
 typedef std::shared_ptr<ImageFileData> ImageFileDataPtr;
+
+} // namespace Loader
 
 #endif // __BASE_LOADER_IMAGE_FILE_DATA_HH__

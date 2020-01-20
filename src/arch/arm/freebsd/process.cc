@@ -62,20 +62,20 @@ class ArmFreebsdObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ObjectFile *obj_file) override
+    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
     {
         auto arch = obj_file->getArch();
         auto opsys = obj_file->getOpSys();
 
-        if (arch != ObjectFile::Arm && arch != ObjectFile::Thumb &&
-                arch != ObjectFile::Arm64) {
+        if (arch != ::Loader::Arm && arch != ::Loader::Thumb &&
+                arch != ::Loader::Arm64) {
             return nullptr;
         }
 
-        if (opsys != ObjectFile::FreeBSD)
+        if (opsys != ::Loader::FreeBSD)
             return nullptr;
 
-        if (arch == ObjectFile::Arm64)
+        if (arch == ::Loader::Arm64)
             return new ArmFreebsdProcess64(params, obj_file, arch);
         else
             return new ArmFreebsdProcess32(params, obj_file, arch);
@@ -151,12 +151,12 @@ static SyscallDescTable<ArmFreebsdProcess64::SyscallABI> syscallDescs64 = {
 };
 
 ArmFreebsdProcess32::ArmFreebsdProcess32(ProcessParams * params,
-        ObjectFile *objFile, ObjectFile::Arch _arch) :
+        ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
     ArmProcess32(params, objFile, _arch)
 {}
 
 ArmFreebsdProcess64::ArmFreebsdProcess64(ProcessParams * params,
-        ObjectFile *objFile, ObjectFile::Arch _arch) :
+        ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
     ArmProcess64(params, objFile, _arch)
 {}
 

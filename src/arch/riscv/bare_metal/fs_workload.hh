@@ -38,8 +38,8 @@ namespace RiscvISA
 class BareMetal : public RiscvISA::FsWorkload
 {
   protected:
-    ObjectFile *bootloader;
-    SymbolTable *bootloaderSymtab;
+    Loader::ObjectFile *bootloader;
+    Loader::SymbolTable *bootloaderSymtab;
 
   public:
     typedef RiscvBareMetalParams Params;
@@ -48,12 +48,8 @@ class BareMetal : public RiscvISA::FsWorkload
 
     void initState() override;
 
-    ObjectFile::Arch
-    getArch() const override
-    {
-        return bootloader->getArch();
-    }
-    const SymbolTable *
+    Loader::Arch getArch() const override { return bootloader->getArch(); }
+    const Loader::SymbolTable *
     symtab(ThreadContext *tc) override
     {
         return bootloaderSymtab;

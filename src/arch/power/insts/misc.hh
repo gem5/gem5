@@ -40,15 +40,10 @@ namespace PowerISA
 class MiscOp : public PowerStaticInst
 {
   protected:
-
-    /// Constructor
-    MiscOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : PowerStaticInst(mnem, _machInst, __opClass)
-    {
-    }
+    using PowerStaticInst::PowerStaticInst;
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

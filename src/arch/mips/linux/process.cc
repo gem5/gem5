@@ -52,19 +52,19 @@ class MipsLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ObjectFile *obj_file) override
+    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
     {
-        if (obj_file->getArch() != ObjectFile::Mips)
+        if (obj_file->getArch() != ::Loader::Mips)
             return nullptr;
 
         auto opsys = obj_file->getOpSys();
 
-        if (opsys == ObjectFile::UnknownOpSys) {
+        if (opsys == ::Loader::UnknownOpSys) {
             warn("Unknown operating system; assuming Linux.");
-            opsys = ObjectFile::Linux;
+            opsys = ::Loader::Linux;
         }
 
-        if (opsys != ObjectFile::Linux)
+        if (opsys != ::Loader::Linux)
             return nullptr;
 
         return new MipsLinuxProcess(params, obj_file);
@@ -475,7 +475,7 @@ SyscallDescTable<MipsProcess::SyscallABI> MipsLinuxProcess::syscallDescs = {
 };
 
 MipsLinuxProcess::MipsLinuxProcess(ProcessParams * params,
-                                   ObjectFile *objFile) :
+                                   ::Loader::ObjectFile *objFile) :
     MipsProcess(params, objFile)
 {}
 

@@ -48,10 +48,10 @@ class IntOp : public SparcStaticInst
     using SparcStaticInst::SparcStaticInst;
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 
     virtual bool printPseudoOps(std::ostream &os, Addr pc,
-                                const SymbolTable *symtab) const;
+                                const Loader::SymbolTable *symtab) const;
 };
 
 /**
@@ -69,10 +69,10 @@ class IntOpImm : public IntOp
     int64_t imm;
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 
     bool printPseudoOps(std::ostream &os, Addr pc,
-                        const SymbolTable *symtab) const override;
+                        const Loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -121,7 +121,7 @@ class SetHi : public IntOpImm
     {}
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 }

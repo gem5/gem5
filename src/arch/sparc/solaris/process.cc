@@ -48,15 +48,15 @@ class SparcSolarisObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ObjectFile *obj_file) override
+    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
     {
         auto arch = obj_file->getArch();
         auto opsys = obj_file->getOpSys();
 
-        if (arch != ObjectFile::SPARC64 && arch != ObjectFile::SPARC32)
+        if (arch != ::Loader::SPARC64 && arch != ::Loader::SPARC32)
             return nullptr;
 
-        if (opsys != ObjectFile::Solaris)
+        if (opsys != ::Loader::Solaris)
             return nullptr;
 
         return new SparcSolarisProcess(params, obj_file);
@@ -347,9 +347,9 @@ SyscallDescTable<Sparc64Process::SyscallABI>
     { 255, "umount2" }
 };
 
-SparcSolarisProcess::SparcSolarisProcess(ProcessParams * params,
-                                         ObjectFile *objFile)
-    : Sparc64Process(params, objFile)
+SparcSolarisProcess::SparcSolarisProcess(ProcessParams *params,
+                                         ::Loader::ObjectFile *objFile) :
+    Sparc64Process(params, objFile)
 {}
 
 void

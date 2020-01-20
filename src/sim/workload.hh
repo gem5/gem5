@@ -47,9 +47,9 @@ class Workload : public SimObject
     System *system = nullptr;
 
     virtual Addr getEntry() const = 0;
-    virtual ObjectFile::Arch getArch() const = 0;
+    virtual Loader::Arch getArch() const = 0;
 
-    virtual const SymbolTable *symtab(ThreadContext *tc) = 0;
+    virtual const Loader::SymbolTable *symtab(ThreadContext *tc) = 0;
     virtual bool insertSymbol(Addr address, const std::string &symbol) = 0;
 
     /** @{ */
@@ -67,7 +67,7 @@ class Workload : public SimObject
      */
     template <class T, typename... Args>
     T *
-    addFuncEvent(const SymbolTable *symtab, const char *lbl,
+    addFuncEvent(const Loader::SymbolTable *symtab, const char *lbl,
                  const std::string &desc, Args... args)
     {
         Addr addr M5_VAR_USED = 0; // initialize only to avoid compiler warning
@@ -82,14 +82,14 @@ class Workload : public SimObject
 
     template <class T>
     T *
-    addFuncEvent(const SymbolTable *symtab, const char *lbl)
+    addFuncEvent(const Loader::SymbolTable *symtab, const char *lbl)
     {
         return addFuncEvent<T>(symtab, lbl, lbl);
     }
 
     template <class T, typename... Args>
     T *
-    addFuncEventOrPanic(const SymbolTable *symtab, const char *lbl,
+    addFuncEventOrPanic(const Loader::SymbolTable *symtab, const char *lbl,
                         Args... args)
     {
         T *e = addFuncEvent<T>(symtab, lbl, std::forward<Args>(args)...);

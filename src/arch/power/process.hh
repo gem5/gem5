@@ -37,12 +37,15 @@
 #include "sim/process.hh"
 #include "sim/syscall_abi.hh"
 
+namespace Loader
+{
 class ObjectFile;
+} // namespace Loader;
 
 class PowerProcess : public Process
 {
   protected:
-    PowerProcess(ProcessParams * params, ObjectFile *objFile);
+    PowerProcess(ProcessParams * params, ::Loader::ObjectFile *objFile);
 
     void initState() override;
 

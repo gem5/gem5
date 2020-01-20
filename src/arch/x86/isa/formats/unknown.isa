@@ -42,43 +42,44 @@
 //
 
 output header {{
-        /**
-         * Class for Unknown/Illegal instructions
-         */
-        class Unknown : public X86ISA::X86StaticInst
+    /**
+     * Class for Unknown/Illegal instructions
+     */
+    class Unknown : public X86ISA::X86StaticInst
+    {
+      public:
+
+        // Constructor
+        Unknown(ExtMachInst _machInst) :
+                X86ISA::X86StaticInst("unknown", _machInst, No_OpClass)
         {
-          public:
+        }
 
-            // Constructor
-            Unknown(ExtMachInst _machInst) :
-                    X86ISA::X86StaticInst("unknown", _machInst, No_OpClass)
-            {
-            }
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
 
-            Fault execute(ExecContext *, Trace::InstRecord *) const;
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const;
 
-            std::string generateDisassembly(Addr pc,
-                    const SymbolTable *symtab) const;
-
-        };
+    };
 }};
 
 output decoder {{
-        std::string Unknown::generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
-        {
-            return "Unknown instruction";
-        }
+    std::string
+    Unknown::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        return "Unknown instruction";
+    }
 }};
 
 output exec {{
-        Fault Unknown::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
-        {
-            return std::make_shared<InvalidOpcode>();
-        }
+    Fault
+    Unknown::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        return std::make_shared<InvalidOpcode>();
+    }
 }};
 
 def format Unknown() {{
-        decode_block = 'return new Unknown(machInst);\n'
+    decode_block = 'return new Unknown(machInst);\n'
 }};

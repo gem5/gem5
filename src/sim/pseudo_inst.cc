@@ -240,7 +240,7 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
     DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
 
     tc->getSystemPtr()->workload->insertSymbol(addr, symbol);
-    debugSymbolTable->insert(addr,symbol);
+    Loader::debugSymbolTable->insert(addr, symbol);
 }
 
 uint64_t

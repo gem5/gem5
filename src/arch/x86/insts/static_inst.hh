@@ -86,8 +86,8 @@ namespace X86ISA
             {
             }
 
-        std::string generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const;
 
         void printMnemonic(std::ostream &os, const char * mnemonic) const;
         void printMnemonic(std::ostream &os, const char * instMnemonic,

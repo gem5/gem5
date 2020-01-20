@@ -246,7 +246,8 @@ SparcStaticInst::printReg(std::ostream &os, RegId reg)
 }
 
 std::string
-SparcStaticInst::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+SparcStaticInst::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

@@ -57,7 +57,7 @@ class DecoderFaultInst : public ArmStaticInst
                   Trace::InstRecord *traceData) const override;
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -83,7 +83,7 @@ class FailUnimplemented : public ArmStaticInst
                   Trace::InstRecord *traceData) const override;
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -113,7 +113,7 @@ class WarnUnimplemented : public ArmStaticInst
                   Trace::InstRecord *traceData) const override;
 
     std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 /**

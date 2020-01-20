@@ -93,7 +93,7 @@ class SveLdStructSS : public PredMacroOp
     }
 
     std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -165,7 +165,7 @@ class SveStStructSS : public PredMacroOp
     }
 
     std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -237,7 +237,7 @@ class SveLdStructSI : public PredMacroOp
     }
 
     std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -310,7 +310,7 @@ class SveStStructSI : public PredMacroOp
     }
 
     std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -409,7 +409,7 @@ class SveIndexedMemVI : public PredMacroOp
     }
 
     std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     {
         // TODO: add suffix to transfer and base registers
         std::stringstream ss;
@@ -513,7 +513,7 @@ class SveIndexedMemSV : public PredMacroOp
     }
 
     std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     {
         // TODO: add suffix to transfer and base registers
         std::stringstream ss;

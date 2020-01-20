@@ -55,23 +55,23 @@ class RiscvLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ObjectFile *obj_file) override
+    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
     {
         auto arch = obj_file->getArch();
         auto opsys = obj_file->getOpSys();
 
-        if (arch != ObjectFile::Riscv64 && arch != ObjectFile::Riscv32)
+        if (arch != ::Loader::Riscv64 && arch != ::Loader::Riscv32)
             return nullptr;
 
-        if (opsys == ObjectFile::UnknownOpSys) {
+        if (opsys == ::Loader::UnknownOpSys) {
             warn("Unknown operating system; assuming Linux.");
-            opsys = ObjectFile::Linux;
+            opsys = ::Loader::Linux;
         }
 
-        if (opsys != ObjectFile::Linux)
+        if (opsys != ::Loader::Linux)
             return nullptr;
 
-        if (arch == ObjectFile::Riscv64)
+        if (arch == ::Loader::Riscv64)
             return new RiscvLinuxProcess64(params, obj_file);
         else
             return new RiscvLinuxProcess32(params, obj_file);
@@ -781,7 +781,7 @@ SyscallDescTable<RiscvProcess::SyscallABI>
 };
 
 RiscvLinuxProcess64::RiscvLinuxProcess64(ProcessParams * params,
-    ObjectFile *objFile) : RiscvProcess64(params, objFile)
+    ::Loader::ObjectFile *objFile) : RiscvProcess64(params, objFile)
 {}
 
 void
@@ -792,7 +792,7 @@ RiscvLinuxProcess64::syscall(ThreadContext *tc, Fault *fault)
 }
 
 RiscvLinuxProcess32::RiscvLinuxProcess32(ProcessParams * params,
-    ObjectFile *objFile) : RiscvProcess32(params, objFile)
+    ::Loader::ObjectFile *objFile) : RiscvProcess32(params, objFile)
 {}
 
 void

@@ -63,7 +63,7 @@ output header {{
         Fault execute(ExecContext *, Trace::InstRecord *) const;
 
         std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const;
     };
 
     /**
@@ -79,12 +79,12 @@ output header {{
     {
       private:
         /// Have we warned on this instruction yet?
-        mutable bool warned;
+        mutable bool warned = false;
 
       public:
         /// Constructor
         WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst)
-            : X86ISA::X86StaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
+            : X86ISA::X86StaticInst(_mnemonic, _machInst, No_OpClass)
         {
             // don't call execute() (which panics) if we're on a
             // speculative path
@@ -94,21 +94,21 @@ output header {{
         Fault execute(ExecContext *, Trace::InstRecord *) const;
 
         std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const;
     };
 }};
 
 output decoder {{
     std::string
-    FailUnimplemented::generateDisassembly(Addr pc,
-                                           const SymbolTable *symtab) const
+    FailUnimplemented::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         return csprintf("%-10s (unimplemented)", mnemonic);
     }
 
     std::string
-    WarnUnimplemented::generateDisassembly(Addr pc,
-                                           const SymbolTable *symtab) const
+    WarnUnimplemented::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
     {
         return csprintf("%-10s (unimplemented)", mnemonic);
     }

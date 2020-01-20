@@ -431,7 +431,7 @@ def template SveIndexedMemVIMicroopDeclare {{
         }
 
         std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
         {
             // TODO: add suffix to transfer register
             std::stringstream ss;
@@ -510,7 +510,7 @@ def template SveIndexedMemSVMicroopDeclare {{
         }
 
         std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
         {
             // TODO: add suffix to transfer and base registers
             std::stringstream ss;
@@ -735,7 +735,7 @@ def template SveFirstFaultWritebackMicroopDeclare {{
         Fault execute(ExecContext *, Trace::InstRecord *) const;
 
         std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
         {
             std::stringstream ss;
             ccprintf(ss, "%s", macroOp->disassemble(pc, symtab));
@@ -790,7 +790,7 @@ def template SveGatherLoadCpySrcVecMicroopDeclare {{
         Fault execute(ExecContext *, Trace::InstRecord *) const;
 
         std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
         {
             std::stringstream ss;
             ccprintf(ss, "%s", macroOp->disassemble(pc, symtab));
@@ -862,7 +862,7 @@ def template SveStructMemSIMicroopDeclare {{
         }
 
         std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
         {
             std::stringstream ss;
             printMnemonic(ss, "", false);
@@ -1125,7 +1125,7 @@ def template SveStructMemSSMicroopDeclare {{
         }
 
         std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
         {
             std::stringstream ss;
             printMnemonic(ss, "", false);
@@ -1190,7 +1190,7 @@ def template SveIntrlvMicroopDeclare {{
         Fault execute(ExecContext *, Trace::InstRecord *) const;
 
         std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
         {
             std::stringstream ss;
             ccprintf(ss, "%s", macroOp->disassemble(pc, symtab));
@@ -1227,7 +1227,7 @@ def template SveDeIntrlvMicroopDeclare {{
         Fault execute(ExecContext *, Trace::InstRecord *) const;
 
         std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
         {
             std::stringstream ss;
             ccprintf(ss, "%s", macroOp->disassemble(pc, symtab));

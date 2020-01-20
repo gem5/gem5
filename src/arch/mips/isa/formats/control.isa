@@ -33,146 +33,134 @@
 
 //Outputs to decoder.hh
 output header {{
+    class CP0Control : public MipsStaticInst
+    {
+      protected:
+        using MipsStaticInst::MipsStaticInst;
 
-        class CP0Control : public MipsStaticInst
-        {
-                protected:
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+    };
+    class CP0TLB : public MipsStaticInst
+    {
+      protected:
+        using MipsStaticInst::MipsStaticInst;
 
-                /// Constructor
-                CP0Control(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                           MipsStaticInst(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(
-                        Addr pc, const SymbolTable *symtab) const override;
-        };
-        class CP0TLB : public MipsStaticInst
-        {
-                protected:
-
-                /// Constructor
-                CP0TLB(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                           MipsStaticInst(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(
-                        Addr pc, const SymbolTable *symtab) const override;
-        };
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+    };
 
 
-        class CP1Control : public MipsStaticInst
-        {
-                protected:
+    class CP1Control : public MipsStaticInst
+    {
+      protected:
+        using MipsStaticInst::MipsStaticInst;
 
-                /// Constructor
-                CP1Control(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                           MipsStaticInst(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(
-                        Addr pc, const SymbolTable *symtab) const override;
-        };
-
+        std::string generateDisassembly(
+                Addr pc, const Loader::SymbolTable *symtab) const override;
+    };
 }};
 
 // Basic instruction class execute method template.
 def template CP0Execute {{
-        Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
-        {
-                Fault fault = NoFault;
-                %(op_decl)s;
-                %(op_rd)s;
+    Fault %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        %(op_decl)s;
+        %(op_rd)s;
 
-                if (isCoprocessorEnabled(xc, 0)) {
-                    %(code)s;
+        if (isCoprocessorEnabled(xc, 0)) {
+            %(code)s;
 
-                    if(fault == NoFault)
-                    {
-                        %(op_wb)s;
-                    }
-                } else {
-                    fault = std::make_shared<CoprocessorUnusableFault>(0);
-                }
-                return fault;
+            if(fault == NoFault)
+            {
+                %(op_wb)s;
+            }
+        } else {
+            fault = std::make_shared<CoprocessorUnusableFault>(0);
         }
+        return fault;
+    }
 }};
 
 def template CP1Execute {{
-        Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
-        {
-                Fault fault = NoFault;
-                %(op_decl)s;
-                %(op_rd)s;
+    Fault %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        %(op_decl)s;
+        %(op_rd)s;
 
-                if (isCoprocessorEnabled(xc, 1)) {
-                    %(code)s;
-                } else {
-                    fault = std::make_shared<CoprocessorUnusableFault>(1);
-                }
-
-                if(fault == NoFault)
-                {
-                    %(op_wb)s;
-                }
-                return fault;
+        if (isCoprocessorEnabled(xc, 1)) {
+            %(code)s;
+        } else {
+            fault = std::make_shared<CoprocessorUnusableFault>(1);
         }
+
+        if(fault == NoFault)
+        {
+            %(op_wb)s;
+        }
+        return fault;
+    }
 }};
 // Basic instruction class execute method template.
 def template ControlTLBExecute {{
-        Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
-        {
-            Fault fault = NoFault;
-            %(op_decl)s;
-            %(op_rd)s;
+    Fault %(class_name)s::execute(
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        %(op_decl)s;
+        %(op_rd)s;
 
-            if (FullSystem) {
-                if (isCoprocessor0Enabled(xc)) {
-                    if(isMMUTLB(xc)){
-                        %(code)s;
-                    } else {
-                        fault = std::make_shared<ReservedInstructionFault>();
-                    }
+        if (FullSystem) {
+            if (isCoprocessor0Enabled(xc)) {
+                if(isMMUTLB(xc)){
+                    %(code)s;
                 } else {
-                    fault = std::make_shared<CoprocessorUnusableFault>(0);
+                    fault = std::make_shared<ReservedInstructionFault>();
                 }
-            } else { // Syscall Emulation Mode - No TLB Instructions
-                fault = std::make_shared<ReservedInstructionFault>();
+            } else {
+                fault = std::make_shared<CoprocessorUnusableFault>(0);
             }
-
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
-            return fault;
+        } else { // Syscall Emulation Mode - No TLB Instructions
+            fault = std::make_shared<ReservedInstructionFault>();
         }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+        return fault;
+    }
 }};
 
 //Outputs to decoder.cc
 output decoder {{
-        std::string CP0Control::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
-            ccprintf(ss, "%-10s r%d, %d, %d", mnemonic, RT, RD, SEL);
-            return ss.str();
-        }
-        std::string CP0TLB::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
-            ccprintf(ss, "%-10s r%d, %d, %d", mnemonic, RT, RD, SEL);
-            return ss.str();
-        }
-        std::string CP1Control::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
-            ccprintf(ss, "%-10s r%d, f%d", mnemonic, RT, FS);
-            return ss.str();
-        }
-
+    std::string
+    CP0Control::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ccprintf(ss, "%-10s r%d, %d, %d", mnemonic, RT, RD, SEL);
+        return ss.str();
+    }
+    std::string
+    CP0TLB::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ccprintf(ss, "%-10s r%d, %d, %d", mnemonic, RT, RD, SEL);
+        return ss.str();
+    }
+    std::string
+    CP1Control::generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ccprintf(ss, "%-10s r%d, f%d", mnemonic, RT, FS);
+        return ss.str();
+    }
 }};
 
 output header {{

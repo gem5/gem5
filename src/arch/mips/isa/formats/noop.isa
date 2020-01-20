@@ -52,15 +52,15 @@ output header {{
         ~Nop() { }
 
         std::string generateDisassembly(
-                Addr pc, const SymbolTable *symtab) const override;
+                Addr pc, const Loader::SymbolTable *symtab) const override;
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
 output decoder {{
-    std::string Nop::generateDisassembly(Addr pc,
-                                         const SymbolTable *symtab) const
+    std::string
+    Nop::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     {
         return csprintf("%-10s %s", "nop", originalDisassembly);
     }

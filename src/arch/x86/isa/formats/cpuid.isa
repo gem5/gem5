@@ -48,13 +48,14 @@ output header {{
         }
 
         std::string generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const;
+                const Loader::SymbolTable *symtab) const;
     };
 }};
 
 output decoder {{
-    std::string CPUIDInst::generateDisassembly(Addr PC,
-            const SymbolTable *symtab) const
+    std::string
+    CPUIDInst::generateDisassembly(
+            Addr PC, const Loader::SymbolTable *symtab) const
     {
         std::stringstream response;
 

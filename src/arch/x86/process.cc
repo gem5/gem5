@@ -102,11 +102,11 @@ typedef MultiLevelPageTable<LongModePTE<47, 39>,
                             LongModePTE<29, 21>,
                             LongModePTE<20, 12> > ArchPageTable;
 
-X86Process::X86Process(ProcessParams *params, ObjectFile *objFile) :
+X86Process::X86Process(ProcessParams *params, ::Loader::ObjectFile *objFile) :
     Process(params, params->useArchPT ?
                     static_cast<EmulationPageTable *>(
-                              new ArchPageTable(params->name, params->pid,
-                                                params->system, PageBytes)) :
+                            new ArchPageTable(params->name, params->pid,
+                                              params->system, PageBytes)) :
                     new EmulationPageTable(params->name, params->pid,
                                            PageBytes),
             objFile)
@@ -121,7 +121,8 @@ void X86Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
     *process = *this;
 }
 
-X86_64Process::X86_64Process(ProcessParams *params, ObjectFile *objFile) :
+X86_64Process::X86_64Process(ProcessParams *params,
+                             ::Loader::ObjectFile *objFile) :
     X86Process(params, objFile)
 {
     vsyscallPage.base = 0xffffffffff600000ULL;
@@ -141,7 +142,8 @@ X86_64Process::X86_64Process(ProcessParams *params, ObjectFile *objFile) :
 }
 
 
-I386Process::I386Process(ProcessParams *params, ObjectFile *objFile) :
+I386Process::I386Process(ProcessParams *params,
+                         ::Loader::ObjectFile *objFile) :
     X86Process(params, objFile)
 {
     if (kvmInSE)
@@ -788,7 +790,7 @@ X86Process::argsInit(int pageSize,
     // conversion. Auxiliary vectors are loaded only for elf formatted
     // executables; the auxv is responsible for passing information from
     // the OS to the interpreter.
-    ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
+    auto *elfObject = dynamic_cast<::Loader::ElfObject *>(objFile);
     if (elfObject) {
         uint64_t features =
             X86_OnboardFPU |

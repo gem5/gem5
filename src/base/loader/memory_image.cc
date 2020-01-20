@@ -29,6 +29,9 @@
 #include "base/loader/memory_image.hh"
 #include "mem/port_proxy.hh"
 
+namespace Loader
+{
+
 bool
 MemoryImage::writeSegment(const Segment &seg, const PortProxy &proxy) const
 {
@@ -59,3 +62,5 @@ MemoryImage::move(std::function<Addr(Addr)> mapper)
         seg.base = mapper(seg.base);
     return *this;
 }
+
+} // namespace Loader

@@ -31,6 +31,9 @@
 
 #include "base/loader/object_file.hh"
 
+namespace Loader
+{
+
 class RawImage: public ObjectFile
 {
   public:
@@ -47,6 +50,6 @@ class RawImage: public ObjectFile
     }
 };
 
-
+} // namespace Loader
 
 #endif // __BASE_LOADER_RAW_IMAGE_HH__

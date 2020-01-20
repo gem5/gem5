@@ -77,13 +77,13 @@ AbstractMemory::initState()
     if (file == "")
         return;
 
-    auto *object = createObjectFile(file, true);
+    auto *object = Loader::createObjectFile(file, true);
     fatal_if(!object, "%s: Could not load %s.", name(), file);
 
-    panic_if(!object->loadGlobalSymbols(debugSymbolTable),
+    panic_if(!object->loadGlobalSymbols(Loader::debugSymbolTable),
              "%s: Could not load symbols from %s.", name(), file);
 
-    MemoryImage image = object->buildImage();
+    Loader::MemoryImage image = object->buildImage();
 
     AddrRange image_range(image.minAddr(), image.maxAddr());
     if (!range.contains(image_range.start())) {

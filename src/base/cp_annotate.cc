@@ -113,14 +113,14 @@ CPA::CPA(Params *p)
     i = p->user_apps.begin();
 
     while (i != p->user_apps.end()) {
-        ObjectFile *of = createObjectFile(*i);
+        auto *of = createObjectFile(*i);
         string sf;
         if (!of)
             fatal("Couldn't load symbols from file: %s\n", *i);
         sf = *i;
         sf.erase(0, sf.rfind('/') + 1);;
         DPRINTFN("file %s short: %s\n", *i, sf);
-        userApp[sf] = new SymbolTable;
+        userApp[sf] = new Loader::SymbolTable;
         bool result1 = of->loadGlobalSymbols(userApp[sf]);
         bool result2 = of->loadLocalSymbols(userApp[sf]);
         if (!result1 || !result2)
@@ -163,7 +163,7 @@ CPA::swSmBegin(ThreadContext *tc, Addr sm_string, int32_t sm_id, int32_t flags)
     Addr junk;
     char sm[50];
     if (!TheISA::inUserMode(tc))
-        debugSymbolTable->findNearestSymbol(
+        Loader::debugSymbolTable->findNearestSymbol(
             tc->readIntReg(ReturnAddressReg), st, junk);
 
     tc->getVirtProxy().readString(sm, sm_string, 50);
@@ -337,7 +337,7 @@ CPA::swAutoBegin(ThreadContext *tc, Addr next_pc)
     Addr sym_addr = 0;
 
     if (!TheISA::inUserMode(tc)) {
-        debugSymbolTable->findNearestSymbol(next_pc, sym, sym_addr);
+        Loader::debugSymbolTable->findNearestSymbol(next_pc, sym, sym_addr);
     } else {
         Linux::ThreadInfo ti(tc);
         string app = ti.curTaskName();
@@ -390,7 +390,7 @@ CPA::swEnd(ThreadContext *tc)
     std::string st;
     Addr junk;
     if (!TheISA::inUserMode(tc))
-        debugSymbolTable->findNearestSymbol(
+        Loader::debugSymbolTable->findNearestSymbol(
             tc->readIntReg(ReturnAddressReg), st, junk);
     System *sys = tc->getSystemPtr();
     StringWrap name(sys->name());

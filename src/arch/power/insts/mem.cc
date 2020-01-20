@@ -33,13 +33,14 @@
 using namespace PowerISA;
 
 std::string
-MemOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MemOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s", mnemonic);
 }
 
 std::string
-MemDispOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MemDispOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

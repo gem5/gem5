@@ -32,11 +32,11 @@
 #include <vector>
 
 #include "base/loader/object_file.hh"
+#include "base/loader/symtab.hh"
 #include "base/types.hh"
 #include "params/KernelWorkload.hh"
 #include "sim/workload.hh"
 
-class SymbolTable;
 class System;
 
 class KernelWorkload : public Workload
@@ -47,7 +47,7 @@ class KernelWorkload : public Workload
   protected:
     const Params &_params;
 
-    MemoryImage image;
+    Loader::MemoryImage image;
 
     /** Mask that should be anded for binary/symbol loading.
      * This allows one two different OS requirements for the same ISA to be
@@ -66,10 +66,10 @@ class KernelWorkload : public Workload
 
     Addr _start, _end;
 
-    std::vector<ObjectFile *> extras;
+    std::vector<Loader::ObjectFile *> extras;
 
-    ObjectFile *kernelObj = nullptr;
-    SymbolTable *kernelSymtab = nullptr;
+    Loader::ObjectFile *kernelObj = nullptr;
+    Loader::SymbolTable *kernelSymtab = nullptr;
 
     const std::string commandLine;
 
@@ -85,8 +85,13 @@ class KernelWorkload : public Workload
     ~KernelWorkload();
 
     Addr getEntry() const override { return kernelObj->entryPoint(); }
-    ObjectFile::Arch getArch() const override { return kernelObj->getArch(); }
-    const SymbolTable *
+    Loader::Arch
+    getArch() const override
+    {
+        return kernelObj->getArch();
+    }
+
+    const Loader::SymbolTable *
     symtab(ThreadContext *tc) override
     {
         return kernelSymtab;

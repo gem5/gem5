@@ -43,8 +43,9 @@ namespace RiscvISA
 {
 
 // memfence micro instruction
-string MemFenceMicro::generateDisassembly(Addr pc,
-    const SymbolTable *symtab) const
+string
+MemFenceMicro::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
     ss << csprintf("0x%08x", machInst) << ' ' << mnemonic;
@@ -58,8 +59,9 @@ Fault MemFenceMicro::execute(ExecContext *xc,
 }
 
 // load-reserved
-string LoadReserved::generateDisassembly(Addr pc,
-    const SymbolTable *symtab) const
+string
+LoadReserved::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
     ss << mnemonic;
@@ -74,8 +76,9 @@ string LoadReserved::generateDisassembly(Addr pc,
     return ss.str();
 }
 
-string LoadReservedMicro::generateDisassembly(Addr pc,
-    const SymbolTable *symtab) const
+string
+LoadReservedMicro::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
     ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", ("
@@ -84,8 +87,9 @@ string LoadReservedMicro::generateDisassembly(Addr pc,
 }
 
 // store-conditional
-string StoreCond::generateDisassembly(Addr pc,
-    const SymbolTable *symtab) const
+string
+StoreCond::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
     ss << mnemonic;
@@ -101,8 +105,9 @@ string StoreCond::generateDisassembly(Addr pc,
     return ss.str();
 }
 
-string StoreCondMicro::generateDisassembly(Addr pc,
-    const SymbolTable *symtab) const
+string
+StoreCondMicro::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
     ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", "
@@ -112,8 +117,9 @@ string StoreCondMicro::generateDisassembly(Addr pc,
 }
 
 // AMOs
-string AtomicMemOp::generateDisassembly(Addr pc,
-    const SymbolTable *symtab) const
+string
+AtomicMemOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
     ss << mnemonic;
@@ -129,8 +135,9 @@ string AtomicMemOp::generateDisassembly(Addr pc,
     return ss.str();
 }
 
-string AtomicMemOpMicro::generateDisassembly(Addr pc,
-    const SymbolTable *symtab) const
+string
+AtomicMemOpMicro::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
     ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", "

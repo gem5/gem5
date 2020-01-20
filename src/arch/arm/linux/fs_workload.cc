@@ -77,7 +77,8 @@ FsLinux::initState()
     // it is helpful.
     if (params()->early_kernel_symbols) {
         kernelObj->loadGlobalSymbols(kernelSymtab, 0, 0, _loadAddrMask);
-        kernelObj->loadGlobalSymbols(debugSymbolTable, 0, 0, _loadAddrMask);
+        kernelObj->loadGlobalSymbols(
+                Loader::debugSymbolTable, 0, 0, _loadAddrMask);
     }
 
     // Setup boot data structure
@@ -94,7 +95,7 @@ FsLinux::initState()
         inform("Loading DTB file: %s at address %#x\n", params()->dtb_filename,
                 params()->atags_addr + _loadAddrOffset);
 
-        DtbFile *dtb_file = new DtbFile(params()->dtb_filename);
+        auto *dtb_file = new ::Loader::DtbFile(params()->dtb_filename);
 
         if (!dtb_file->addBootCmdLine(
                     commandLine.c_str(), commandLine.size())) {
@@ -184,7 +185,7 @@ FsLinux::startup()
     FsWorkload::startup();
 
     if (enableContextSwitchStatsDump) {
-        if (getArch() == ObjectFile::Arm64)
+        if (getArch() == Loader::Arm64)
             dumpStats = addKernelFuncEvent<DumpStats64>("__switch_to");
         else
             dumpStats = addKernelFuncEvent<DumpStats>("__switch_to");
@@ -237,7 +238,7 @@ FsLinux::startup()
             "__const_udelay", "__const_udelay", 1000, 107374);
     }
 
-    if (getArch() == ObjectFile::Arm64) {
+    if (getArch() == Loader::Arm64) {
         debugPrintk = addKernelFuncEvent<
             DebugPrintk<SkipFuncLinux64>>("dprintk");
     } else {

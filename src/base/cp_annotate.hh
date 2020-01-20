@@ -417,7 +417,7 @@ class CPA : SimObject
     static CPA *_cpa;
 
 
-    std::map<std::string, SymbolTable*> userApp;
+    std::map<std::string, Loader::SymbolTable*> userApp;
 
   public:
     static CPA *cpa() { return _cpa; }

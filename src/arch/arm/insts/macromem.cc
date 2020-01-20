@@ -1506,7 +1506,8 @@ MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
 }
 
 std::string
-MicroIntImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MicroIntImmOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1519,7 +1520,8 @@ MicroIntImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MicroIntImmXOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MicroIntImmXOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1532,7 +1534,8 @@ MicroIntImmXOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MicroSetPCCPSR::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MicroSetPCCPSR::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1541,7 +1544,8 @@ MicroSetPCCPSR::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MicroIntRegXOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MicroIntRegXOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1553,7 +1557,8 @@ MicroIntRegXOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MicroIntMov::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MicroIntMov::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1564,7 +1569,8 @@ MicroIntMov::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MicroIntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MicroIntOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1577,7 +1583,8 @@ MicroIntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MicroMemOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MicroMemOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1594,7 +1601,8 @@ MicroMemOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-MicroMemPairOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MicroMemPairOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
