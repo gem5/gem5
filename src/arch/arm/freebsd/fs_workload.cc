@@ -83,7 +83,7 @@ FsFreebsd::initState()
     if (params()->early_kernel_symbols) {
         kernelObj->loadGlobalSymbols(kernelSymtab, 0, 0, _loadAddrMask);
         kernelObj->loadGlobalSymbols(
-                Loader::debugSymbolTable, 0, 0, _loadAddrMask);
+                &Loader::debugSymbolTable, 0, 0, _loadAddrMask);
     }
 
     // Check if the kernel image has a symbol that tells us it supports

@@ -44,7 +44,7 @@ using namespace std;
 namespace Loader
 {
 
-SymbolTable *debugSymbolTable = NULL;
+SymbolTable debugSymbolTable;
 
 void
 SymbolTable::clear()

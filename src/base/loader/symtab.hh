@@ -93,6 +93,7 @@ class SymbolTable
     bool insert(const Symbol &symbol);
     bool insert(const SymbolTable &other);
     bool load(const std::string &file);
+    bool empty() const { return symbols.empty(); }
 
     void serialize(const std::string &base, CheckpointOut &cp) const;
     void unserialize(const std::string &base, CheckpointIn &cp,
@@ -156,7 +157,7 @@ class SymbolTable
 /// there should be one of these per System object for full system,
 /// and per Process object for non-full-system, but so far one big
 /// global one has worked well enough.
-extern SymbolTable *debugSymbolTable;
+extern SymbolTable debugSymbolTable;
 
 } // namespace Loader
 

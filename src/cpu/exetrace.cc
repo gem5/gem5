@@ -78,10 +78,9 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
 
     Addr cur_pc = pc.instAddr();
     Loader::SymbolTable::const_iterator it;
-    if (Loader::debugSymbolTable && Debug::ExecSymbol &&
-            (!FullSystem || !inUserMode(thread)) &&
-            (it = Loader::debugSymbolTable->findNearest(cur_pc)) !=
-                Loader::debugSymbolTable->end()) {
+    if (Debug::ExecSymbol && (!FullSystem || !inUserMode(thread)) &&
+            (it = Loader::debugSymbolTable.findNearest(cur_pc)) !=
+                Loader::debugSymbolTable.end()) {
         Addr delta = cur_pc - it->address;
         if (delta)
             ccprintf(outs, "@%s+%d", it->name, delta);
@@ -104,7 +103,7 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     //
 
     outs << setw(26) << left;
-    outs << inst->disassemble(cur_pc, Loader::debugSymbolTable);
+    outs << inst->disassemble(cur_pc, &Loader::debugSymbolTable);
 
     if (ran) {
         outs << " : ";

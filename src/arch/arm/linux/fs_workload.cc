@@ -78,7 +78,7 @@ FsLinux::initState()
     if (params()->early_kernel_symbols) {
         kernelObj->loadGlobalSymbols(kernelSymtab, 0, 0, _loadAddrMask);
         kernelObj->loadGlobalSymbols(
-                Loader::debugSymbolTable, 0, 0, _loadAddrMask);
+                &Loader::debugSymbolTable, 0, 0, _loadAddrMask);
     }
 
     // Setup boot data structure

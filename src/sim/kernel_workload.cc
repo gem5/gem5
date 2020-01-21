@@ -35,9 +35,6 @@ KernelWorkload::KernelWorkload(const Params &p) : Workload(&p), _params(p),
     _loadAddrMask(p.load_addr_mask), _loadAddrOffset(p.load_addr_offset),
     kernelSymtab(new Loader::SymbolTable), commandLine(p.command_line)
 {
-    if (!Loader::debugSymbolTable)
-        Loader::debugSymbolTable = new Loader::SymbolTable;
-
     if (params().object_file == "") {
         inform("No kernel set for full system simulation. "
                "Assuming you know what you're doing.");
@@ -70,10 +67,10 @@ KernelWorkload::KernelWorkload(const Params &p) : Workload(&p), _params(p),
         fatal_if(!kernelObj->loadLocalSymbols(kernelSymtab),
                 "Could not load kernel local symbols.");
 
-        fatal_if(!kernelObj->loadGlobalSymbols(Loader::debugSymbolTable),
+        fatal_if(!kernelObj->loadGlobalSymbols(&Loader::debugSymbolTable),
                 "Could not load kernel symbols.");
 
-        fatal_if(!kernelObj->loadLocalSymbols(Loader::debugSymbolTable),
+        fatal_if(!kernelObj->loadLocalSymbols(&Loader::debugSymbolTable),
                 "Could not load kernel local symbols.");
     }
 

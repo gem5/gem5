@@ -267,7 +267,7 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
 
     tc->getSystemPtr()->workload->insertSymbol(
             { Loader::Symbol::Binding::Global, symbol, addr });
-    Loader::debugSymbolTable->insert(
+    Loader::debugSymbolTable.insert(
             { Loader::Symbol::Binding::Global, symbol, addr });
 }
 

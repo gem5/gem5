@@ -163,7 +163,7 @@ CPA::swSmBegin(ThreadContext *tc, Addr sm_string, int32_t sm_id, int32_t flags)
     Addr junk;
     char sm[50];
     if (!TheISA::inUserMode(tc))
-        Loader::debugSymbolTable->findNearestSymbol(
+        Loader::debugSymbolTable.findNearestSymbol(
             tc->readIntReg(ReturnAddressReg), st, junk);
 
     tc->getVirtProxy().readString(sm, sm_string, 50);
@@ -337,7 +337,7 @@ CPA::swAutoBegin(ThreadContext *tc, Addr next_pc)
     Addr sym_addr = 0;
 
     if (!TheISA::inUserMode(tc)) {
-        Loader::debugSymbolTable->findNearestSymbol(next_pc, sym, sym_addr);
+        Loader::debugSymbolTable.findNearestSymbol(next_pc, sym, sym_addr);
     } else {
         Linux::ThreadInfo ti(tc);
         string app = ti.curTaskName();
@@ -390,7 +390,7 @@ CPA::swEnd(ThreadContext *tc)
     std::string st;
     Addr junk;
     if (!TheISA::inUserMode(tc))
-        Loader::debugSymbolTable->findNearestSymbol(
+        Loader::debugSymbolTable.findNearestSymbol(
             tc->readIntReg(ReturnAddressReg), st, junk);
     System *sys = tc->getSystemPtr();
     StringWrap name(sys->name());
