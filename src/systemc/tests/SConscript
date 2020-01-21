@@ -27,7 +27,7 @@ from __future__ import print_function
 
 Import('*')
 
-if env['USE_SYSTEMC']:
+if env['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
 
     from gem5_scons import Transform
 

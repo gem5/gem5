@@ -55,7 +55,7 @@ json_rel_path = os.path.join(tests_rel_path, 'tests.json')
 
 
 def scons(*args):
-    args = ['scons'] + list(args)
+    args = ['scons', '--with-systemc-tests'] + list(args)
     subprocess.check_call(args)
 
 

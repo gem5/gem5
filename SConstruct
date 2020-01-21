@@ -165,6 +165,8 @@ AddLocalOption('--with-ubsan', dest='with_ubsan', action='store_true',
                help='Build with Undefined Behavior Sanitizer if available')
 AddLocalOption('--with-asan', dest='with_asan', action='store_true',
                help='Build with Address Sanitizer if available')
+AddLocalOption('--with-systemc-tests', dest='with_systemc_tests',
+               action='store_true', help='Build systemc tests')
 
 from gem5_scons import Transform, error, warning
 
