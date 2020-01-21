@@ -757,15 +757,18 @@ BaseCPU::traceFunctionsInternal(Addr pc)
     // if pc enters different function, print new function symbol and
     // update saved range.  Otherwise do nothing.
     if (pc < currentFunctionStart || pc >= currentFunctionEnd) {
-        string sym_str;
-        bool found = Loader::debugSymbolTable->findNearestSymbol(
-                pc, sym_str, currentFunctionStart, currentFunctionEnd);
+        auto it = Loader::debugSymbolTable->findNearest(
+                pc, currentFunctionEnd);
 
-        if (!found) {
+        string sym_str;
+        if (it == Loader::debugSymbolTable->end()) {
             // no symbol found: use addr as label
-            sym_str = csprintf("0x%x", pc);
+            sym_str = csprintf("%#x", pc);
             currentFunctionStart = pc;
             currentFunctionEnd = pc + 1;
+        } else {
+            sym_str = it->name;
+            currentFunctionStart = it->address;
         }
 
         ccprintf(*functionTraceStream, " (%d)\n%d: %s",

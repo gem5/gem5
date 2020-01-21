@@ -76,27 +76,28 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     if (Debug::ExecThread)
         outs << "T" << thread->threadId() << " : ";
 
-    std::string sym_str;
-    Addr sym_addr;
     Addr cur_pc = pc.instAddr();
+    Loader::SymbolTable::const_iterator it;
     if (Loader::debugSymbolTable && Debug::ExecSymbol &&
             (!FullSystem || !inUserMode(thread)) &&
-            Loader::debugSymbolTable->findNearestSymbol(
-                cur_pc, sym_str, sym_addr)) {
-        if (cur_pc != sym_addr)
-            sym_str += csprintf("+%d",cur_pc - sym_addr);
-        outs << "@" << sym_str;
+            (it = Loader::debugSymbolTable->findNearest(cur_pc)) !=
+                Loader::debugSymbolTable->end()) {
+        Addr delta = cur_pc - it->address;
+        if (delta)
+            ccprintf(outs, "@%s+%d", it->name, delta);
+        else
+            ccprintf(outs, "@%s", it->name);
     } else {
-        outs << "0x" << hex << cur_pc;
+        ccprintf(outs, "%#x", cur_pc);
     }
 
     if (inst->isMicroop()) {
-        outs << "." << setw(2) << dec << pc.microPC();
+        ccprintf(outs, ".%2d", pc.microPC());
     } else {
-        outs << "   ";
+        ccprintf(outs, "   ");
     }
 
-    outs << " : ";
+    ccprintf(outs, " : ");
 
     //
     //  Print decoded instruction

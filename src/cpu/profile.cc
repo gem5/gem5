@@ -57,6 +57,7 @@ ProfileNode::dump(const string &symbol, uint64_t id,
 
     ccprintf(os, "\n");
 
+    Loader::SymbolTable::const_iterator it;
     for (i = children.begin(); i != end; ++i) {
         Addr addr = i->first;
         string symbol;
@@ -66,7 +67,9 @@ ProfileNode::dump(const string &symbol, uint64_t id,
             symbol = "console";
         else if (addr == 3)
             symbol = "unknown";
-        else if (!symtab->findSymbol(addr, symbol))
+        else if ((it = symtab->find(addr)) != symtab->end())
+            symbol = it->name;
+        else
             panic("could not find symbol for address %#x\n", addr);
 
         const ProfileNode *node = i->second;
@@ -127,13 +130,15 @@ FunctionProfile::dump(ThreadContext *tc, ostream &os) const
         Addr pc = i->first;
         Counter count = i->second;
 
-        std::string symbol;
-        if (pc == 1)
+        Loader::SymbolTable::const_iterator it;
+        if (pc == 1) {
             ccprintf(os, "user %d\n", count);
-        else if (symtab->findSymbol(pc, symbol) && !symbol.empty())
-            ccprintf(os, "%s %d\n", symbol, count);
-        else
+        } else if ((it = symtab->find(pc)) != symtab->end() &&
+                !it->name.empty()) {
+            ccprintf(os, "%s %d\n", it->name, count);
+        } else {
             ccprintf(os, "%#x %d\n", pc, count);
+        }
     }
 
     ccprintf(os, ">>>function data\n");
@@ -145,9 +150,9 @@ FunctionProfile::sample(ProfileNode *node, Addr pc)
 {
     node->count++;
 
-    Addr symaddr;
-    if (symtab->findNearestAddr(pc, symaddr)) {
-        pc_count[symaddr]++;
+    auto it = symtab->findNearest(pc);
+    if (it != symtab->end()) {
+        pc_count[it->address]++;
     } else {
         // record PC even if we don't have a symbol to avoid
         // silently biasing the histogram

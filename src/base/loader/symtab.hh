@@ -32,140 +32,123 @@
 #include <iosfwd>
 #include <map>
 #include <string>
+#include <vector>
 
+#include "base/trace.hh"
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
 namespace Loader
 {
 
+struct Symbol
+{
+    enum class Binding {
+        Global,
+        Local,
+        Weak
+    };
+
+    Binding binding;
+    std::string name;
+    Addr address;
+};
+
 class SymbolTable
 {
-  public:
-    typedef std::multimap<Addr, std::string> ATable;
-    typedef std::map<std::string, Addr> STable;
-
   private:
-    ATable addrTable;
-    STable symbolTable;
+    typedef std::vector<Symbol> SymbolVector;
+    // Map addresses to an index into the symbol vector.
+    typedef std::multimap<Addr, int> AddrMap;
+    // Map a symbol name to an index into the symbol vector.
+    typedef std::map<std::string, int> NameMap;
 
-  private:
+    SymbolVector symbols;
+    AddrMap addrMap;
+    NameMap nameMap;
+
     bool
-    upperBound(Addr addr, ATable::const_iterator &iter) const
+    upperBound(Addr addr, AddrMap::const_iterator &iter) const
     {
         // find first key *larger* than desired address
-        iter = addrTable.upper_bound(addr);
+        iter = addrMap.upper_bound(addr);
 
         // if very first key is larger, we're out of luck
-        if (iter == addrTable.begin())
+        if (iter == addrMap.begin())
             return false;
 
         return true;
     }
 
   public:
-    SymbolTable() {}
-    SymbolTable(const std::string &file) { load(file); }
-    ~SymbolTable() {}
+    typedef SymbolVector::iterator iterator;
+    typedef SymbolVector::const_iterator const_iterator;
+
+    const_iterator begin() const { return symbols.begin(); }
+    const_iterator end() const { return symbols.end(); }
 
     void clear();
-    bool insert(Addr address, std::string symbol);
+    // Insert either a single symbol or the contents of an entire symbol table
+    // into this one.
+    bool insert(const Symbol &symbol);
+    bool insert(const SymbolTable &other);
     bool load(const std::string &file);
 
-    const ATable &getAddrTable() const { return addrTable; }
-    const STable &getSymbolTable() const { return symbolTable; }
-
-  public:
     void serialize(const std::string &base, CheckpointOut &cp) const;
-    void unserialize(const std::string &base, CheckpointIn &cp);
+    void unserialize(const std::string &base, CheckpointIn &cp,
+                     Symbol::Binding default_binding=Symbol::Binding::Global);
 
-  public:
-    bool
-    findSymbol(Addr address, std::string &symbol) const
+    const_iterator
+    find(Addr address) const
     {
-        ATable::const_iterator i = addrTable.find(address);
-        if (i == addrTable.end())
-            return false;
+        AddrMap::const_iterator i = addrMap.find(address);
+        if (i == addrMap.end())
+            return end();
 
         // There are potentially multiple symbols that map to the same
         // address. For simplicity, just return the first one.
-        symbol = (*i).second;
-        return true;
+        return symbols.begin() + i->second;
     }
 
-    bool
-    findAddress(const std::string &symbol, Addr &address) const
+    const_iterator
+    find(const std::string &name) const
     {
-        STable::const_iterator i = symbolTable.find(symbol);
-        if (i == symbolTable.end())
-            return false;
+        NameMap::const_iterator i = nameMap.find(name);
+        if (i == nameMap.end())
+            return end();
 
-        address = (*i).second;
-        return true;
+        return symbols.begin() + i->second;
     }
 
     /// Find the nearest symbol equal to or less than the supplied
     /// address (e.g., the label for the enclosing function).
     /// @param addr     The address to look up.
-    /// @param symbol   Return reference for symbol string.
-    /// @param symaddr  Return reference for symbol address.
     /// @param nextaddr Address of following symbol (for
     ///                 determining valid range of symbol).
-    /// @retval True if a symbol was found.
-    bool
-    findNearestSymbol(Addr addr, std::string &symbol, Addr &symaddr,
-                      Addr &nextaddr) const
+    /// @retval A const_iterator which points to the symbol if found, or end.
+    const_iterator
+    findNearest(Addr addr, Addr &nextaddr) const
     {
-        ATable::const_iterator i;
+        AddrMap::const_iterator i = addrMap.end();
         if (!upperBound(addr, i))
-            return false;
+            return end();
 
         nextaddr = i->first;
         --i;
-        symaddr = i->first;
-        symbol = i->second;
-        return true;
+        return symbols.begin() + i->second;
     }
 
     /// Overload for findNearestSymbol() for callers who don't care
     /// about nextaddr.
-    bool
-    findNearestSymbol(Addr addr, std::string &symbol, Addr &symaddr) const
+    const_iterator
+    findNearest(Addr addr) const
     {
-        ATable::const_iterator i;
+        AddrMap::const_iterator i = addrMap.end();
         if (!upperBound(addr, i))
-            return false;
+            return end();
 
         --i;
-        symaddr = i->first;
-        symbol = i->second;
-        return true;
-    }
-
-
-    bool
-    findNearestAddr(Addr addr, Addr &symaddr, Addr &nextaddr) const
-    {
-        ATable::const_iterator i;
-        if (!upperBound(addr, i))
-            return false;
-
-        nextaddr = i->first;
-        --i;
-        symaddr = i->first;
-        return true;
-    }
-
-    bool
-    findNearestAddr(Addr addr, Addr &symaddr) const
-    {
-        ATable::const_iterator i;
-        if (!upperBound(addr, i))
-            return false;
-
-        --i;
-        symaddr = i->first;
-        return true;
+        return symbols.begin() + i->second;
     }
 };
 

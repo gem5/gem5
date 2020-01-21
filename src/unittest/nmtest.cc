@@ -52,27 +52,24 @@ main(int argc, char *argv[])
     obj->loadLocalSymbols(&symtab);
 
     if (argc == 2) {
-        Loader::SymbolTable::ATable::const_iterator i =
-            symtab.getAddrTable().begin();
-        Loader::SymbolTable::ATable::const_iterator end =
-            symtab.getAddrTable().end();
-        while (i != end) {
-            cprintf("%#x %s\n", i->first, i->second);
-            ++i;
-        }
+        for (const Loader::Symbol &symbol: symtab)
+            cprintf("%#x %s\n", symbol.address, symbol.name);
     } else {
         string symbol = argv[2];
         Addr address;
 
         if (symbol[0] == '0' && symbol[1] == 'x') {
+            Loader::SymbolTable::const_iterator it;
             if (to_number(symbol, address) &&
-                symtab.findSymbol(address, symbol))
-                cprintf("address = %#x, symbol = %s\n", address, symbol);
-            else
+                (it = symtab.find(address)) != symtab.end()) {
+                cprintf("address = %#x, symbol = %s\n", address, it->name);
+            } else {
                 cprintf("address = %#x was not found\n", address);
+            }
         } else {
-            if (symtab.findAddress(symbol, address))
-                cprintf("symbol = %s address = %#x\n", symbol, address);
+            auto it = symtab.find(symbol);
+            if (it != symtab.end())
+                cprintf("symbol = %s address = %#x\n", symbol, it->address);
             else
                 cprintf("symbol = %s was not found\n", symbol);
         }

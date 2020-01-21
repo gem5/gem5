@@ -47,11 +47,10 @@ readSymbol(ThreadContext *tc, const std::string name)
     PortProxy &vp = tc->getVirtProxy();
     const auto *symtab = tc->getSystemPtr()->workload->symtab(tc);
 
-    Addr addr;
-    if (!symtab->findAddress(name, addr))
-        panic("thread info not compiled into kernel\n");
+    auto it = symtab->find(name);
+    panic_if(it == symtab->end(), "Thread info not compiled into kernel.");
 
-    return vp.read<int32_t>(addr, GuestByteOrder);
+    return vp.read<int32_t>(it->address, GuestByteOrder);
 }
 
 ProcessInfo::ProcessInfo(ThreadContext *_tc) : tc(_tc)

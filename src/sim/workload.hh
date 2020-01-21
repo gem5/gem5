@@ -50,7 +50,7 @@ class Workload : public SimObject
     virtual Loader::Arch getArch() const = 0;
 
     virtual const Loader::SymbolTable *symtab(ThreadContext *tc) = 0;
-    virtual bool insertSymbol(Addr address, const std::string &symbol) = 0;
+    virtual bool insertSymbol(const Loader::Symbol &symbol) = 0;
 
     /** @{ */
     /**
@@ -70,14 +70,12 @@ class Workload : public SimObject
     addFuncEvent(const Loader::SymbolTable *symtab, const char *lbl,
                  const std::string &desc, Args... args)
     {
-        Addr addr M5_VAR_USED = 0; // initialize only to avoid compiler warning
+        auto it = symtab->find(lbl);
+        if (it == symtab->end())
+            return nullptr;
 
-        if (symtab->findAddress(lbl, addr)) {
-            return new T(system, desc, fixFuncEventAddr(addr),
-                          std::forward<Args>(args)...);
-        }
-
-        return nullptr;
+        return new T(system, desc, fixFuncEventAddr(it->address),
+                      std::forward<Args>(args)...);
     }
 
     template <class T>

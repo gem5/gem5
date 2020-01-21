@@ -55,9 +55,9 @@ class BareMetal : public RiscvISA::FsWorkload
         return bootloaderSymtab;
     }
     bool
-    insertSymbol(Addr address, const std::string &symbol) override
+    insertSymbol(const Loader::Symbol &symbol) override
     {
-        return bootloaderSymtab->insert(address, symbol);
+        return bootloaderSymtab->insert(symbol);
     }
 };
 

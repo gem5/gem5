@@ -393,18 +393,19 @@ void
 ArmStaticInst::printTarget(std::ostream &os, Addr target,
                            const Loader::SymbolTable *symtab) const
 {
-    Addr symbolAddr;
-    std::string symbol;
-
-    if (symtab && symtab->findNearestSymbol(target, symbol, symbolAddr)) {
-        ccprintf(os, "<%s", symbol);
-        if (symbolAddr != target)
-            ccprintf(os, "+%d>", target - symbolAddr);
-        else
-            ccprintf(os, ">");
-    } else {
-        ccprintf(os, "%#x", target);
+    if (symtab) {
+        auto it = symtab->findNearest(target);
+        if (it != symtab->end()) {
+            ccprintf(os, "<%s", it->name);
+            Addr delta = target - it->address;
+            if (delta)
+                ccprintf(os, "+%d>", delta);
+            else
+                ccprintf(os, ">");
+            return;
+        }
     }
+    ccprintf(os, "%#x", target);
 }
 
 void
@@ -477,13 +478,14 @@ ArmStaticInst::printMemSymbol(std::ostream &os,
                               const Addr addr,
                               const std::string &suffix) const
 {
-    Addr symbolAddr;
-    std::string symbol;
-    if (symtab && symtab->findNearestSymbol(addr, symbol, symbolAddr)) {
-        ccprintf(os, "%s%s", prefix, symbol);
-        if (symbolAddr != addr)
-            ccprintf(os, "+%d", addr - symbolAddr);
-        ccprintf(os, suffix);
+    if (symtab) {
+        auto it = symtab->findNearest(addr);
+        if (it != symtab->end()) {
+            ccprintf(os, "%s%s", prefix, it->name);
+            if (it->address != addr)
+                ccprintf(os, "+%d", addr - it->address);
+            ccprintf(os, suffix);
+        }
     }
 }
 

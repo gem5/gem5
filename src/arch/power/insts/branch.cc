@@ -68,11 +68,11 @@ BranchPCRel::generateDisassembly(
 
     Addr target = pc + disp;
 
-    std::string str;
-    if (symtab && symtab->findSymbol(target, str))
-        ss << str;
+    Loader::SymbolTable::const_iterator it;
+    if (symtab && (it = symtab->find(target)) != symtab->end())
+        ss << it->name;
     else
-        ccprintf(ss, "0x%x", target);
+        ccprintf(ss, "%#x", target);
 
     return ss.str();
 }
@@ -91,11 +91,11 @@ BranchNonPCRel::generateDisassembly(
 
     ccprintf(ss, "%-10s ", mnemonic);
 
-    std::string str;
-    if (symtab && symtab->findSymbol(targetAddr, str))
-        ss << str;
+    Loader::SymbolTable::const_iterator it;
+    if (symtab && (it = symtab->find(targetAddr)) != symtab->end())
+        ss << it->name;
     else
-        ccprintf(ss, "0x%x", targetAddr);
+        ccprintf(ss, "%#x", targetAddr);
 
     return ss.str();
 }
@@ -118,11 +118,11 @@ BranchPCRelCond::generateDisassembly(
 
     Addr target = pc + disp;
 
-    std::string str;
-    if (symtab && symtab->findSymbol(target, str))
-        ss << str;
+    Loader::SymbolTable::const_iterator it;
+    if (symtab && (it = symtab->find(target)) != symtab->end())
+        ss << it->name;
     else
-        ccprintf(ss, "0x%x", target);
+        ccprintf(ss, "%#x", target);
 
     return ss.str();
 }
@@ -143,11 +143,11 @@ BranchNonPCRelCond::generateDisassembly(
 
     ss << bo << ", " << bi << ", ";
 
-    std::string str;
-    if (symtab && symtab->findSymbol(targetAddr, str))
-        ss << str;
+    Loader::SymbolTable::const_iterator it;
+    if (symtab && (it = symtab->find(targetAddr)) != symtab->end())
+        ss << it->name;
     else
-        ccprintf(ss, "0x%x", targetAddr);
+        ccprintf(ss, "%#x", targetAddr);
 
     return ss.str();
 }

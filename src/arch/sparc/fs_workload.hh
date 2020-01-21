@@ -61,9 +61,9 @@ class FsWorkload : public Workload
     }
 
     bool
-    insertSymbol(Addr address, const std::string &symbol) override
+    insertSymbol(const Loader::Symbol &symbol) override
     {
-        return defaultSymtab.insert(address, symbol);
+        return defaultSymtab.insert(symbol);
     }
 };
 

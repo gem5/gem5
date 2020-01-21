@@ -82,11 +82,10 @@ FsLinux::initState()
     }
 
     // Setup boot data structure
-    Addr addr;
     // Check if the kernel image has a symbol that tells us it supports
     // device trees.
     bool kernel_has_fdt_support =
-        kernelSymtab->findAddress("unflatten_device_tree", addr);
+        kernelSymtab->find("unflatten_device_tree") != kernelSymtab->end();
     bool dtb_file_specified = params()->dtb_filename != "";
 
     if (kernel_has_fdt_support && dtb_file_specified) {

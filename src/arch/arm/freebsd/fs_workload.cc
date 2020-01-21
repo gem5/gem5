@@ -88,8 +88,7 @@ FsFreebsd::initState()
 
     // Check if the kernel image has a symbol that tells us it supports
     // device trees.
-    Addr addr;
-    fatal_if(!kernelSymtab->findAddress("fdt_get_range", addr),
+    fatal_if(kernelSymtab->find("fdt_get_range") == kernelSymtab->end(),
              "Kernel must have fdt support.");
     fatal_if(params()->dtb_filename == "", "dtb file is not specified.");
 

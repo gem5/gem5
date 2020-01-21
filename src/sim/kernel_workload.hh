@@ -98,9 +98,9 @@ class KernelWorkload : public Workload
     }
 
     bool
-    insertSymbol(Addr address, const std::string &symbol) override
+    insertSymbol(const Loader::Symbol &symbol) override
     {
-        return kernelSymtab->insert(address, symbol);
+        return kernelSymtab->insert(symbol);
     }
 
     void initState() override;

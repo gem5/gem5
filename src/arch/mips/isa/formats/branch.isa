@@ -193,11 +193,11 @@ output decoder {{
 
         Addr target = pc + 4 + disp;
 
-        std::string str;
-        if (symtab && symtab->findSymbol(target, str))
-            ss << str;
+        Loader::SymbolTable::const_iterator it;
+        if (symtab && (it = symtab->find(target)) != symtab->end())
+            ss << it->name;
         else
-            ccprintf(ss, "0x%x", target);
+            ccprintf(ss, "%#x", target);
 
         return ss.str();
     }
@@ -213,9 +213,9 @@ output decoder {{
             Addr npc = pc + 4;
             ccprintf(ss,"0x%x",(npc & 0xF0000000) | disp);
         } else if (_numSrcRegs == 0) {
-            std::string str;
-            if (symtab && symtab->findSymbol(disp, str))
-                ss << str;
+            Loader::SymbolTable::const_iterator it;
+            if (symtab && (it = symtab->find(disp)) != symtab->end())
+                ss << it->name;
             else
                 ccprintf(ss, "0x%x", disp);
         } else if (_numSrcRegs == 1) {

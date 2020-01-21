@@ -341,7 +341,23 @@ ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask,
                         elf_strptr(elf, shdr.sh_link, sym.st_name);
                     if (sym_name && sym_name[0] != '$') {
                         Addr value = sym.st_value - base + offset;
-                        if (symtab->insert(value & mask, sym_name)) {
+                        Loader::Symbol symbol;
+                        symbol.address = value & mask;
+                        symbol.name = sym_name;
+                        switch (binding) {
+                          case STB_GLOBAL:
+                            symbol.binding = Loader::Symbol::Binding::Global;
+                            break;
+                          case STB_LOCAL:
+                            symbol.binding = Loader::Symbol::Binding::Local;
+                            break;
+                          case STB_WEAK:
+                            symbol.binding = Loader::Symbol::Binding::Weak;
+                            break;
+                          default:
+                            panic("Unrecognized binding type");
+                        }
+                        if (symtab->insert(symbol)) {
                             DPRINTF(Loader, "Symbol: %-40s value %#x\n",
                                     sym_name, value);
                         }
