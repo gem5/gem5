@@ -132,6 +132,7 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
             ObjectFile *obj = createObjectFile(interp_path);
             interpreter = dynamic_cast<ElfObject *>(obj);
             assert(interpreter != nullptr);
+            _symtab.insert(obj->symtab());
         }
     }
 
@@ -144,6 +145,61 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
         DPRINTFR(Loader, "%s\n", seg);
 
     // We will actually read the sections when we need to load them
+
+    // check that header matches library version
+    if (elf_version(EV_CURRENT) == EV_NONE)
+        panic("wrong elf version number!");
+
+    // Get the first section
+    int sec_idx = 1; // there is a 0 but it is nothing, go figure
+    Elf_Scn *section = elf_getscn(elf, sec_idx);
+
+    // While there are no more sections
+    while (section) {
+        GElf_Shdr shdr;
+        gelf_getshdr(section, &shdr);
+
+        if (shdr.sh_type == SHT_SYMTAB) {
+            Elf_Data *data = elf_getdata(section, nullptr);
+            int count = shdr.sh_size / shdr.sh_entsize;
+            DPRINTF(Loader, "Found Symbol Table, %d symbols present.", count);
+
+            // Loop through all the symbols.
+            for (int i = 0; i < count; ++i) {
+                GElf_Sym sym;
+                gelf_getsym(data, i, &sym);
+
+                char *sym_name = elf_strptr(elf, shdr.sh_link, sym.st_name);
+                if (!sym_name || sym_name[0] == '$')
+                    continue;
+
+                Loader::Symbol symbol;
+                symbol.address = sym.st_value;
+                symbol.name = sym_name;
+
+                switch (GELF_ST_BIND(sym.st_info)) {
+                  case STB_GLOBAL:
+                    symbol.binding = Loader::Symbol::Binding::Global;
+                    break;
+                  case STB_LOCAL:
+                    symbol.binding = Loader::Symbol::Binding::Local;
+                    break;
+                  case STB_WEAK:
+                    symbol.binding = Loader::Symbol::Binding::Weak;
+                    break;
+                  default:
+                    continue;
+                }
+
+                if (_symtab.insert(symbol)) {
+                    DPRINTF(Loader, "Symbol: %-40s value %#x.\n",
+                            symbol.name, symbol.address);
+                }
+            }
+        }
+        ++sec_idx;
+        section = elf_getscn(elf, sec_idx);
+    }
 }
 
 std::string
@@ -298,122 +354,6 @@ ElfObject::handleLoadableSegment(GElf_Phdr phdr, int seg_num)
 ElfObject::~ElfObject()
 {
     elf_end(elf);
-}
-
-bool
-ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask,
-                           Addr base, Addr offset)
-{
-    if (!symtab)
-        return false;
-
-    // check that header matches library version
-    if (elf_version(EV_CURRENT) == EV_NONE)
-        panic("wrong elf version number!");
-
-    // get a pointer to elf structure
-    Elf *elf = elf_memory((char *)const_cast<uint8_t *>(
-                imageData->data()), imageData->len());
-    assert(elf != NULL);
-
-    // Get the first section
-    int sec_idx = 1; // there is a 0 but it is nothing, go figure
-    Elf_Scn *section = elf_getscn(elf, sec_idx);
-
-    // While there are no more sections
-    bool found = false;
-    while (section != NULL) {
-        GElf_Shdr shdr;
-        gelf_getshdr(section, &shdr);
-
-        if (shdr.sh_type == SHT_SYMTAB) {
-            found = true;
-            Elf_Data *data = elf_getdata(section, NULL);
-            int count = shdr.sh_size / shdr.sh_entsize;
-            DPRINTF(Loader, "Found Symbol Table, %d symbols present\n", count);
-
-            // loop through all the symbols, only loading global ones
-            for (int i = 0; i < count; ++i) {
-                GElf_Sym sym;
-                gelf_getsym(data, i, &sym);
-                if (GELF_ST_BIND(sym.st_info) == binding) {
-                    char *sym_name =
-                        elf_strptr(elf, shdr.sh_link, sym.st_name);
-                    if (sym_name && sym_name[0] != '$') {
-                        Addr value = sym.st_value - base + offset;
-                        Loader::Symbol symbol;
-                        symbol.address = value & mask;
-                        symbol.name = sym_name;
-                        switch (binding) {
-                          case STB_GLOBAL:
-                            symbol.binding = Loader::Symbol::Binding::Global;
-                            break;
-                          case STB_LOCAL:
-                            symbol.binding = Loader::Symbol::Binding::Local;
-                            break;
-                          case STB_WEAK:
-                            symbol.binding = Loader::Symbol::Binding::Weak;
-                            break;
-                          default:
-                            panic("Unrecognized binding type");
-                        }
-                        if (symtab->insert(symbol)) {
-                            DPRINTF(Loader, "Symbol: %-40s value %#x\n",
-                                    sym_name, value);
-                        }
-                    }
-                }
-            }
-        }
-        ++sec_idx;
-        section = elf_getscn(elf, sec_idx);
-    }
-
-    elf_end(elf);
-
-    return found;
-}
-
-bool
-ElfObject::loadAllSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                          Addr addr_mask)
-{
-    return (loadGlobalSymbols(symtab, base, offset, addr_mask) &&
-            loadLocalSymbols(symtab, base, offset, addr_mask) &&
-            loadWeakSymbols(symtab, base, offset, addr_mask));
-}
-
-bool
-ElfObject::loadGlobalSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                             Addr addr_mask)
-{
-    if (interpreter) {
-        interpreter->loadSomeSymbols(symtab, STB_GLOBAL, addr_mask,
-                                     base, offset);
-    }
-    return loadSomeSymbols(symtab, STB_GLOBAL, addr_mask, base, offset);
-}
-
-bool
-ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                            Addr addr_mask)
-{
-    if (interpreter) {
-        interpreter->loadSomeSymbols(symtab, STB_LOCAL, addr_mask,
-                                     base, offset);
-    }
-    return loadSomeSymbols(symtab, STB_LOCAL, addr_mask, base, offset);
-}
-
-bool
-ElfObject::loadWeakSymbols(SymbolTable *symtab, Addr base, Addr offset,
-                           Addr addr_mask)
-{
-    if (interpreter) {
-        interpreter->loadSomeSymbols(symtab, STB_WEAK, addr_mask,
-                                     base, offset);
-    }
-    return loadSomeSymbols(symtab, STB_WEAK, addr_mask, base, offset);
 }
 
 void

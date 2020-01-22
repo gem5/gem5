@@ -37,11 +37,11 @@ namespace RiscvISA
 {
 
 BareMetal::BareMetal(Params *p) : RiscvISA::FsWorkload(p),
-      bootloader(Loader::createObjectFile(p->bootloader)),
-      bootloaderSymtab(new Loader::SymbolTable)
+      bootloader(Loader::createObjectFile(p->bootloader))
 {
     fatal_if(!bootloader, "Could not load bootloader file %s.", p->bootloader);
     _resetVect = bootloader->entryPoint();
+    bootloaderSymtab = bootloader->symtab();
 }
 
 BareMetal::~BareMetal()

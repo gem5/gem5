@@ -80,9 +80,7 @@ AbstractMemory::initState()
     auto *object = Loader::createObjectFile(file, true);
     fatal_if(!object, "%s: Could not load %s.", name(), file);
 
-    panic_if(!object->loadGlobalSymbols(&Loader::debugSymbolTable),
-             "%s: Could not load symbols from %s.", name(), file);
-
+    Loader::debugSymbolTable.insert(*object->symtab().globals());
     Loader::MemoryImage image = object->buildImage();
 
     AddrRange image_range(image.minAddr(), image.maxAddr());

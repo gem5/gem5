@@ -91,7 +91,7 @@ FsWorkload::FsWorkload(Params *p) : KernelWorkload(*p)
              "Can't find a matching boot loader / kernel combination!");
 
     if (bootldr)
-        bootldr->loadGlobalSymbols(&Loader::debugSymbolTable);
+        Loader::debugSymbolTable.insert(*bootldr->symtab().globals());
 }
 
 void

@@ -45,10 +45,10 @@ static int32_t
 readSymbol(ThreadContext *tc, const std::string name)
 {
     PortProxy &vp = tc->getVirtProxy();
-    const auto *symtab = tc->getSystemPtr()->workload->symtab(tc);
+    const auto &symtab = tc->getSystemPtr()->workload->symtab(tc);
 
-    auto it = symtab->find(name);
-    panic_if(it == symtab->end(), "Thread info not compiled into kernel.");
+    auto it = symtab.find(name);
+    panic_if(it == symtab.end(), "Thread info not compiled into kernel.");
 
     return vp.read<int32_t>(it->address, GuestByteOrder);
 }
@@ -188,7 +188,7 @@ void
 StackTrace::dump()
 {
     StringWrap name(tc->getCpuPtr()->name());
-    const auto *symtab = tc->getSystemPtr()->workload->symtab(tc);
+    const auto &symtab = tc->getSystemPtr()->workload->symtab(tc);
 
     DPRINTFN("------ Stack ------\n");
 
@@ -202,7 +202,7 @@ StackTrace::dump()
             symbol = "console";
         else if (addr == unknown)
             symbol = "unknown";
-        else if ((it = symtab->find(addr)) != symtab->end())
+        else if ((it = symtab.find(addr)) != symtab.end())
             symbol = it->name;
 
         DPRINTFN("%#x: %s\n", addr, symbol);

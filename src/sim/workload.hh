@@ -49,7 +49,7 @@ class Workload : public SimObject
     virtual Addr getEntry() const = 0;
     virtual Loader::Arch getArch() const = 0;
 
-    virtual const Loader::SymbolTable *symtab(ThreadContext *tc) = 0;
+    virtual const Loader::SymbolTable &symtab(ThreadContext *tc) = 0;
     virtual bool insertSymbol(const Loader::Symbol &symbol) = 0;
 
     /** @{ */
@@ -67,11 +67,11 @@ class Workload : public SimObject
      */
     template <class T, typename... Args>
     T *
-    addFuncEvent(const Loader::SymbolTable *symtab, const char *lbl,
+    addFuncEvent(const Loader::SymbolTable &symtab, const char *lbl,
                  const std::string &desc, Args... args)
     {
-        auto it = symtab->find(lbl);
-        if (it == symtab->end())
+        auto it = symtab.find(lbl);
+        if (it == symtab.end())
             return nullptr;
 
         return new T(system, desc, fixFuncEventAddr(it->address),
@@ -80,14 +80,14 @@ class Workload : public SimObject
 
     template <class T>
     T *
-    addFuncEvent(const Loader::SymbolTable *symtab, const char *lbl)
+    addFuncEvent(const Loader::SymbolTable &symtab, const char *lbl)
     {
         return addFuncEvent<T>(symtab, lbl, lbl);
     }
 
     template <class T, typename... Args>
     T *
-    addFuncEventOrPanic(const Loader::SymbolTable *symtab, const char *lbl,
+    addFuncEventOrPanic(const Loader::SymbolTable &symtab, const char *lbl,
                         Args... args)
     {
         T *e = addFuncEvent<T>(symtab, lbl, std::forward<Args>(args)...);

@@ -53,7 +53,7 @@ class ProfileNode
     ProfileNode();
 
     void dump(const std::string &symbol, uint64_t id,
-              const Loader::SymbolTable *symtab, std::ostream &os) const;
+              const Loader::SymbolTable &symtab, std::ostream &os) const;
     void clear();
 };
 
@@ -62,13 +62,13 @@ class FunctionProfile
 {
   private:
     Callback *reset;
-    const Loader::SymbolTable *symtab;
+    const Loader::SymbolTable &symtab;
     ProfileNode top;
     std::map<Addr, Counter> pc_count;
     TheISA::StackTrace trace;
 
   public:
-    FunctionProfile(const Loader::SymbolTable *symtab);
+    FunctionProfile(const Loader::SymbolTable &symtab);
     ~FunctionProfile();
 
     ProfileNode *consume(ThreadContext *tc, const StaticInstPtr &inst);

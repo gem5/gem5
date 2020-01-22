@@ -155,13 +155,8 @@ Process::Process(ProcessParams *params, EmulationPageTable *pTable,
 
     image = objFile->buildImage();
 
-    if (::Loader::debugSymbolTable.empty()) {
-        if (!objFile->loadGlobalSymbols(&::Loader::debugSymbolTable) ||
-            !objFile->loadLocalSymbols(&::Loader::debugSymbolTable) ||
-            !objFile->loadWeakSymbols(&::Loader::debugSymbolTable)) {
-            ::Loader::debugSymbolTable.clear();
-        }
-    }
+    if (::Loader::debugSymbolTable.empty())
+        ::Loader::debugSymbolTable = objFile->symtab();
 }
 
 void

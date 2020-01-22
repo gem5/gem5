@@ -106,16 +106,6 @@ class ElfObject : public ObjectFile
 
     MemoryImage buildImage() const override { return image; }
 
-    bool loadAllSymbols(SymbolTable *symtab, Addr base=0,
-                        Addr offset=0, Addr addr_mask=MaxAddr) override;
-    bool loadGlobalSymbols(SymbolTable *symtab, Addr base=0,
-                           Addr offset=0, Addr addr_mask=MaxAddr) override;
-    bool loadLocalSymbols(SymbolTable *symtab, Addr base=0,
-                          Addr offset=0, Addr addr_mask=MaxAddr) override;
-    bool loadWeakSymbols(SymbolTable *symtab, Addr base=0,
-                         Addr offset=0, Addr addr_mask=MaxAddr) override;
-
-
     ObjectFile *getInterpreter() const override { return interpreter; }
     std::string getInterpPath(const GElf_Phdr &phdr) const;
 

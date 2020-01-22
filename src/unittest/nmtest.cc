@@ -31,7 +31,6 @@
 #include <vector>
 
 #include "base/loader/object_file.hh"
-#include "base/loader/symtab.hh"
 #include "base/logging.hh"
 #include "base/str.hh"
 
@@ -47,12 +46,8 @@ main(int argc, char *argv[])
     if (!obj)
         panic("file not found\n");
 
-    Loader::SymbolTable symtab;
-    obj->loadGlobalSymbols(&symtab);
-    obj->loadLocalSymbols(&symtab);
-
     if (argc == 2) {
-        for (const Loader::Symbol &symbol: symtab)
+        for (const Loader::Symbol &symbol: obj->symtab())
             cprintf("%#x %s\n", symbol.address, symbol.name);
     } else {
         string symbol = argv[2];
@@ -61,14 +56,14 @@ main(int argc, char *argv[])
         if (symbol[0] == '0' && symbol[1] == 'x') {
             Loader::SymbolTable::const_iterator it;
             if (to_number(symbol, address) &&
-                (it = symtab.find(address)) != symtab.end()) {
+                (it = obj->symtab().find(address)) != obj->symtab().end()) {
                 cprintf("address = %#x, symbol = %s\n", address, it->name);
             } else {
                 cprintf("address = %#x was not found\n", address);
             }
         } else {
-            auto it = symtab.find(symbol);
-            if (it != symtab.end())
+            auto it = obj->symtab().find(symbol);
+            if (it != obj->symtab().end())
                 cprintf("symbol = %s address = %#x\n", symbol, it->address);
             else
                 cprintf("symbol = %s was not found\n", symbol);

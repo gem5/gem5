@@ -33,7 +33,7 @@
 
 KernelWorkload::KernelWorkload(const Params &p) : Workload(&p), _params(p),
     _loadAddrMask(p.load_addr_mask), _loadAddrOffset(p.load_addr_offset),
-    kernelSymtab(new Loader::SymbolTable), commandLine(p.command_line)
+    commandLine(p.command_line)
 {
     if (params().object_file == "") {
         inform("No kernel set for full system simulation. "
@@ -60,18 +60,8 @@ KernelWorkload::KernelWorkload(const Params &p) : Workload(&p), _params(p),
             return (a & _loadAddrMask) + _loadAddrOffset;
         });
 
-        // load symbols
-        fatal_if(!kernelObj->loadGlobalSymbols(kernelSymtab),
-                "Could not load kernel symbols.");
-
-        fatal_if(!kernelObj->loadLocalSymbols(kernelSymtab),
-                "Could not load kernel local symbols.");
-
-        fatal_if(!kernelObj->loadGlobalSymbols(&Loader::debugSymbolTable),
-                "Could not load kernel symbols.");
-
-        fatal_if(!kernelObj->loadLocalSymbols(&Loader::debugSymbolTable),
-                "Could not load kernel local symbols.");
+        kernelSymtab = kernelObj->symtab();
+        Loader::debugSymbolTable.insert(kernelSymtab);
     }
 
     // Loading only needs to happen once and after memory system is
@@ -90,11 +80,6 @@ KernelWorkload::KernelWorkload(const Params &p) : Workload(&p), _params(p),
                  obj_name);
         extras.push_back(obj);
     }
-}
-
-KernelWorkload::~KernelWorkload()
-{
-    delete kernelSymtab;
 }
 
 void
@@ -142,13 +127,13 @@ KernelWorkload::initState()
 void
 KernelWorkload::serialize(CheckpointOut &cp) const
 {
-    kernelSymtab->serialize("symtab", cp);
+    kernelSymtab.serialize("symtab", cp);
 }
 
 void
 KernelWorkload::unserialize(CheckpointIn &cp)
 {
-    kernelSymtab->unserialize("symtab", cp);
+    kernelSymtab.unserialize("symtab", cp);
 }
 
 KernelWorkload *

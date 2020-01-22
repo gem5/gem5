@@ -54,10 +54,10 @@ class FsWorkload : public Workload
     }
     Loader::Arch getArch() const override { return Loader::SPARC64; }
 
-    const Loader::SymbolTable *
+    const Loader::SymbolTable &
     symtab(ThreadContext *tc) override
     {
-        return &defaultSymtab;
+        return defaultSymtab;
     }
 
     bool

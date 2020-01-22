@@ -76,16 +76,16 @@ FsLinux::initState()
     // to do this permanently, for but early bootup work
     // it is helpful.
     if (params()->early_kernel_symbols) {
-        kernelObj->loadGlobalSymbols(kernelSymtab, 0, 0, _loadAddrMask);
-        kernelObj->loadGlobalSymbols(
-                &Loader::debugSymbolTable, 0, 0, _loadAddrMask);
+        auto phys_globals = kernelObj->symtab().globals()->mask(_loadAddrMask);
+        kernelSymtab.insert(*phys_globals);
+        Loader::debugSymbolTable.insert(*phys_globals);
     }
 
     // Setup boot data structure
     // Check if the kernel image has a symbol that tells us it supports
     // device trees.
     bool kernel_has_fdt_support =
-        kernelSymtab->find("unflatten_device_tree") != kernelSymtab->end();
+        kernelSymtab.find("unflatten_device_tree") != kernelSymtab.end();
     bool dtb_file_specified = params()->dtb_filename != "";
 
     if (kernel_has_fdt_support && dtb_file_specified) {

@@ -39,7 +39,7 @@ class BareMetal : public RiscvISA::FsWorkload
 {
   protected:
     Loader::ObjectFile *bootloader;
-    Loader::SymbolTable *bootloaderSymtab;
+    Loader::SymbolTable bootloaderSymtab;
 
   public:
     typedef RiscvBareMetalParams Params;
@@ -49,7 +49,7 @@ class BareMetal : public RiscvISA::FsWorkload
     void initState() override;
 
     Loader::Arch getArch() const override { return bootloader->getArch(); }
-    const Loader::SymbolTable *
+    const Loader::SymbolTable &
     symtab(ThreadContext *tc) override
     {
         return bootloaderSymtab;
@@ -57,7 +57,7 @@ class BareMetal : public RiscvISA::FsWorkload
     bool
     insertSymbol(const Loader::Symbol &symbol) override
     {
-        return bootloaderSymtab->insert(symbol);
+        return bootloaderSymtab.insert(symbol);
     }
 };
 

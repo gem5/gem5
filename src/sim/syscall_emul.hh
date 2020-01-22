@@ -1722,8 +1722,8 @@ mmapFunc(SyscallDesc *desc, ThreadContext *tc,
                 ffdp->getFileName());
 
             if (lib) {
-                lib->loadAllSymbols(&Loader::debugSymbolTable,
-                                lib->buildImage().minAddr(), start);
+                Addr offset = lib->buildImage().minAddr() + start;
+                Loader::debugSymbolTable.insert(*lib->symtab().offset(offset));
             }
         }
     }

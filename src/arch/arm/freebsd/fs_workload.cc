@@ -81,14 +81,14 @@ FsFreebsd::initState()
     // to do this permanently, for but early bootup work
     // it is helpful.
     if (params()->early_kernel_symbols) {
-        kernelObj->loadGlobalSymbols(kernelSymtab, 0, 0, _loadAddrMask);
-        kernelObj->loadGlobalSymbols(
-                &Loader::debugSymbolTable, 0, 0, _loadAddrMask);
+        auto phys_globals = kernelObj->symtab().globals()->mask(_loadAddrMask);
+        kernelSymtab.insert(*phys_globals);
+        Loader::debugSymbolTable.insert(*phys_globals);
     }
 
     // Check if the kernel image has a symbol that tells us it supports
     // device trees.
-    fatal_if(kernelSymtab->find("fdt_get_range") == kernelSymtab->end(),
+    fatal_if(kernelSymtab.find("fdt_get_range") == kernelSymtab.end(),
              "Kernel must have fdt support.");
     fatal_if(params()->dtb_filename == "", "dtb file is not specified.");
 

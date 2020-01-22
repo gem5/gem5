@@ -69,7 +69,9 @@ class KernelWorkload : public Workload
     std::vector<Loader::ObjectFile *> extras;
 
     Loader::ObjectFile *kernelObj = nullptr;
-    Loader::SymbolTable *kernelSymtab = nullptr;
+    // Keep a separate copy of the kernel's symbol table so we can add things
+    // to it.
+    Loader::SymbolTable kernelSymtab;
 
     const std::string commandLine;
 
@@ -82,7 +84,6 @@ class KernelWorkload : public Workload
     Addr loadAddrOffset() const { return _loadAddrOffset; }
 
     KernelWorkload(const Params &p);
-    ~KernelWorkload();
 
     Addr getEntry() const override { return kernelObj->entryPoint(); }
     Loader::Arch
@@ -91,7 +92,7 @@ class KernelWorkload : public Workload
         return kernelObj->getArch();
     }
 
-    const Loader::SymbolTable *
+    const Loader::SymbolTable &
     symtab(ThreadContext *tc) override
     {
         return kernelSymtab;
@@ -100,7 +101,7 @@ class KernelWorkload : public Workload
     bool
     insertSymbol(const Loader::Symbol &symbol) override
     {
-        return kernelSymtab->insert(symbol);
+        return kernelSymtab.insert(symbol);
     }
 
     void initState() override;

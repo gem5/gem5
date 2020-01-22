@@ -46,7 +46,7 @@ ProfileNode::ProfileNode()
 
 void
 ProfileNode::dump(const string &symbol, uint64_t id,
-                  const Loader::SymbolTable *symtab, ostream &os) const
+                  const Loader::SymbolTable &symtab, ostream &os) const
 {
     ccprintf(os, "%#x %s %d ", id, symbol, count);
     ChildList::const_iterator i, end = children.end();
@@ -67,7 +67,7 @@ ProfileNode::dump(const string &symbol, uint64_t id,
             symbol = "console";
         else if (addr == 3)
             symbol = "unknown";
-        else if ((it = symtab->find(addr)) != symtab->end())
+        else if ((it = symtab.find(addr)) != symtab.end())
             symbol = it->name;
         else
             panic("could not find symbol for address %#x\n", addr);
@@ -86,7 +86,7 @@ ProfileNode::clear()
         i->second->clear();
 }
 
-FunctionProfile::FunctionProfile(const Loader::SymbolTable *_symtab)
+FunctionProfile::FunctionProfile(const Loader::SymbolTable &_symtab)
     : reset(0), symtab(_symtab)
 {
     reset = new MakeCallback<FunctionProfile, &FunctionProfile::clear>(this);
@@ -133,7 +133,7 @@ FunctionProfile::dump(ThreadContext *tc, ostream &os) const
         Loader::SymbolTable::const_iterator it;
         if (pc == 1) {
             ccprintf(os, "user %d\n", count);
-        } else if ((it = symtab->find(pc)) != symtab->end() &&
+        } else if ((it = symtab.find(pc)) != symtab.end() &&
                 !it->name.empty()) {
             ccprintf(os, "%s %d\n", it->name, count);
         } else {
@@ -150,8 +150,8 @@ FunctionProfile::sample(ProfileNode *node, Addr pc)
 {
     node->count++;
 
-    auto it = symtab->findNearest(pc);
-    if (it != symtab->end()) {
+    auto it = symtab.findNearest(pc);
+    if (it != symtab.end()) {
         pc_count[it->address]++;
     } else {
         // record PC even if we don't have a symbol to avoid

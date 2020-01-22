@@ -93,15 +93,15 @@ Linux::dumpDmesg(ThreadContext *tc, std::ostream &os)
 {
     System *system = tc->getSystemPtr();
     const ByteOrder bo = system->getGuestByteOrder();
-    const auto *symtab = system->workload->symtab(tc);
+    const auto &symtab = system->workload->symtab(tc);
     PortProxy &proxy = tc->getVirtProxy();
 
-    auto lb = symtab->find("__log_buf");
-    auto lb_len = symtab->find("log_buf_len");
-    auto first = symtab->find("log_first_idx");
-    auto next = symtab->find("log_next_idx");
+    auto lb = symtab.find("__log_buf");
+    auto lb_len = symtab.find("log_buf_len");
+    auto first = symtab.find("log_first_idx");
+    auto next = symtab.find("log_next_idx");
 
-    auto end_it = symtab->end();
+    auto end_it = symtab.end();
 
     if (lb == end_it || lb_len == end_it ||
             first == end_it || next == end_it) {
