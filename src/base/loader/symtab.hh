@@ -29,8 +29,10 @@
 #ifndef __SYMTAB_HH__
 #define __SYMTAB_HH__
 
+#include <functional>
 #include <iosfwd>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -56,6 +58,9 @@ struct Symbol
 
 class SymbolTable
 {
+  public:
+    typedef std::shared_ptr<SymbolTable> SymbolTablePtr;
+
   private:
     typedef std::vector<Symbol> SymbolVector;
     // Map addresses to an index into the symbol vector.
@@ -80,6 +85,39 @@ class SymbolTable
         return true;
     }
 
+    typedef std::function<void(SymbolTable &symtab,
+                               const Symbol &symbol)> SymTabOp;
+    SymbolTablePtr
+    operate(SymTabOp op) const
+    {
+        SymbolTablePtr symtab(new SymbolTable);
+        for (const auto &symbol: symbols)
+            op(*symtab, symbol);
+        return symtab;
+    }
+
+    typedef std::function<bool(const Symbol &symbol)> SymTabFilter;
+    SymbolTablePtr
+    filter(SymTabFilter filter) const
+    {
+        SymTabOp apply_filter =
+            [filter](SymbolTable &symtab, const Symbol &symbol) {
+            if (filter(symbol)) {
+                symtab.insert(symbol);
+            }
+        };
+        return operate(apply_filter);
+    }
+
+    SymbolTablePtr
+    filterByBinding(Symbol::Binding binding) const
+    {
+        auto filt = [binding](const Symbol &symbol) {
+            return symbol.binding == binding;
+        };
+        return filter(filt);
+    }
+
   public:
     typedef SymbolVector::iterator iterator;
     typedef SymbolVector::const_iterator const_iterator;
@@ -94,6 +132,46 @@ class SymbolTable
     bool insert(const SymbolTable &other);
     bool load(const std::string &file);
     bool empty() const { return symbols.empty(); }
+
+    SymbolTablePtr
+    offset(Addr by) const
+    {
+        SymTabOp op = [by](SymbolTable &symtab, const Symbol &symbol) {
+            Symbol sym = symbol;
+            sym.address += by;
+            symtab.insert(sym);
+        };
+        return operate(op);
+    }
+
+    SymbolTablePtr
+    mask(Addr m) const
+    {
+        SymTabOp op = [m](SymbolTable &symtab, const Symbol &symbol) {
+            Symbol sym = symbol;
+            sym.address &= m;
+            symtab.insert(sym);
+        };
+        return operate(op);
+    }
+
+    SymbolTablePtr
+    globals() const
+    {
+        return filterByBinding(Symbol::Binding::Global);
+    }
+
+    SymbolTablePtr
+    locals() const
+    {
+        return filterByBinding(Symbol::Binding::Local);
+    }
+
+    SymbolTablePtr
+    weaks() const
+    {
+        return filterByBinding(Symbol::Binding::Weak);
+    }
 
     void serialize(const std::string &base, CheckpointOut &cp) const;
     void unserialize(const std::string &base, CheckpointIn &cp,
