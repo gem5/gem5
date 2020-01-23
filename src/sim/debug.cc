@@ -96,14 +96,6 @@ schedRelBreak(Tick delta)
     schedBreak(curTick() + delta);
 }
 
-void
-breakAtKernelFunction(const char* funcName)
-{
-    System* curSystem = System::systemList[0];
-    curSystem->addKernelFuncEvent<BreakPCEvent>(funcName,
-                                                "GDB scheduled break", true);
-}
-
 ///
 /// Function to cause the simulator to take a checkpoint from the debugger
 ///
