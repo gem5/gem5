@@ -199,11 +199,6 @@ ElfObject::determineArch()
         fatal("The binary you're trying to load is compiled for 64-bit "
               "Power. M5\n only supports 32-bit Power. Please "
               "recompile your binary.\n");
-    } else if (eclass == ELFCLASS64) {
-        // Since we don't know how to check for alpha right now, we'll
-        // just assume if it wasn't something else and it's 64 bit, that's
-        // what it must be.
-        arch = Alpha;
     } else {
         warn("Unknown architecture: %d\n", emach);
     }

@@ -48,7 +48,6 @@ class ObjectFile : public ImageFile
 
     enum Arch {
         UnknownArch,
-        Alpha,
         SPARC64,
         SPARC32,
         Mips,

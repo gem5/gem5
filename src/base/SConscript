@@ -80,9 +80,7 @@ GTest('trie.test', 'trie.test.cc')
 Source('types.cc')
 GTest('types.test', 'types.test.cc', 'types.cc')
 
-Source('loader/aout_object.cc')
 Source('loader/dtb_file.cc')
-Source('loader/ecoff_object.cc')
 Source('loader/elf_object.cc')
 Source('loader/image_file_data.cc')
 GTest('loader/image_file_data.test', 'loader/image_file_data.test.cc',
@@ -104,8 +102,6 @@ GTest('circlebuf.test', 'circlebuf.test.cc')
 GTest('circular_queue.test', 'circular_queue.test.cc')
 GTest('sat_counter.test', 'sat_counter.test.cc')
 GTest('refcnt.test','refcnt.test.cc')
-GTest('loader/exec_ecoff.test', 'loader/exec_ecoff.test.cc')
-GTest('loader/exec_aout.test', 'loader/exec_aout.test.cc')
 GTest('condcodes.test', 'condcodes.test.cc')
 GTest('chunk_generator.test', 'chunk_generator.test.cc')
 
