@@ -1568,9 +1568,7 @@ cloneFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
     cp->setSyscallReturn(ctc, 0);
 
-#if THE_ISA == ALPHA_ISA
-    ctc->setIntReg(TheISA::SyscallSuccessReg, 0);
-#elif THE_ISA == SPARC_ISA
+#if THE_ISA == SPARC_ISA
     tc->setIntReg(TheISA::SyscallPseudoReturnReg, 0);
     ctc->setIntReg(TheISA::SyscallPseudoReturnReg, 1);
 #endif

@@ -28,8 +28,8 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __ARCH_ALPHA_VPTR_HH__
-#define __ARCH_ALPHA_VPTR_HH__
+#ifndef __SIM_VPTR_HH__
+#define __SIM_VPTR_HH__
 
 #include "mem/fs_translating_port_proxy.hh"
 
@@ -132,4 +132,4 @@ class VPtr
     }
 };
 
-#endif // __ARCH_ALPHA_VPTR_HH__
+#endif // __SIM_VPTR_HH__
