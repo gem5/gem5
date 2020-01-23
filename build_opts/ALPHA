@@ -1,3 +1,0 @@
-TARGET_ISA = 'alpha'
-CPU_MODELS = 'AtomicSimpleCPU,TimingSimpleCPU,O3CPU,MinorCPU'
-PROTOCOL = 'MI_example'

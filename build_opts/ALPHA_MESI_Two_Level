@@ -1,2 +1,0 @@
-CPU_MODELS = 'AtomicSimpleCPU,TimingSimpleCPU,O3CPU,MinorCPU'
-PROTOCOL = 'MESI_Two_Level'
