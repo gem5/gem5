@@ -38,7 +38,6 @@
 #include <string>
 
 #include "dev/io_device.hh"
-// #include "dev/alpha/tsunami.hh"
 #include "mem/packet.hh"
 #include "params/IsaFake.hh"
 
