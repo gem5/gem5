@@ -1053,11 +1053,8 @@ DefaultCommit<Impl>::commitInsts()
                 // Set the doneSeqNum to the youngest committed instruction.
                 toIEW->commitInfo[tid].doneSeqNum = head_inst->seqNum;
 
-                if (tid == 0) {
-                    canHandleInterrupts =  (!head_inst->isDelayedCommit()) &&
-                                           ((THE_ISA != ALPHA_ISA) ||
-                                             (!(pc[0].instAddr() & 0x3)));
-                }
+                if (tid == 0)
+                    canHandleInterrupts = !head_inst->isDelayedCommit();
 
                 // at this point store conditionals should either have
                 // been completed or predicated false

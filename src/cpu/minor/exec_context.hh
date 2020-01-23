@@ -99,9 +99,6 @@ class ExecContext : public ::ExecContext
         setPredicate(inst->readPredicate());
         setMemAccPredicate(inst->readMemAccPredicate());
         thread.setIntReg(TheISA::ZeroReg, 0);
-#if THE_ISA == ALPHA_ISA
-        thread.setFloatReg(TheISA::ZeroReg, 0);
-#endif
     }
 
     ~ExecContext()

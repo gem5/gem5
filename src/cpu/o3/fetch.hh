@@ -325,7 +325,7 @@ class DefaultFetch
     bool
     checkInterrupt(Addr pc)
     {
-        return (interruptPending && (THE_ISA != ALPHA_ISA || !(pc & 0x3)));
+        return interruptPending;
     }
 
     /** Squashes a specific thread and resets the PC. */

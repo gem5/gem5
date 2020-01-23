@@ -140,9 +140,7 @@ class RegId {
 
     inline bool isZeroReg() const
     {
-        return ((regClass == IntRegClass && regIdx == TheISA::ZeroReg) ||
-               (THE_ISA == ALPHA_ISA && regClass == FloatRegClass &&
-                regIdx == TheISA::ZeroReg));
+        return regClass == IntRegClass && regIdx == TheISA::ZeroReg;
     }
 
     /** @return true if it is an integer physical register. */

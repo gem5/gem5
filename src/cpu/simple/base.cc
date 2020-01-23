@@ -486,9 +486,6 @@ BaseSimpleCPU::preExecute()
 
     // maintain $r0 semantics
     thread->setIntReg(ZeroReg, 0);
-#if THE_ISA == ALPHA_ISA
-    thread->setFloatReg(ZeroReg, 0);
-#endif // ALPHA_ISA
 
     // resets predicates
     t_info.setPredicate(true);

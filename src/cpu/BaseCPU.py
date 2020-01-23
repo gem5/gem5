@@ -62,11 +62,7 @@ from m5.objects.Platform import Platform
 
 default_tracer = ExeTracer()
 
-if buildEnv['TARGET_ISA'] == 'alpha':
-    from m5.objects.AlphaTLB import AlphaDTB as ArchDTB, AlphaITB as ArchITB
-    from m5.objects.AlphaInterrupts import AlphaInterrupts as ArchInterrupts
-    from m5.objects.AlphaISA import AlphaISA as ArchISA
-elif buildEnv['TARGET_ISA'] == 'sparc':
+if buildEnv['TARGET_ISA'] == 'sparc':
     from m5.objects.SparcTLB import SparcTLB as ArchDTB, SparcTLB as ArchITB
     from m5.objects.SparcInterrupts import SparcInterrupts as ArchInterrupts
     from m5.objects.SparcISA import SparcISA as ArchISA
