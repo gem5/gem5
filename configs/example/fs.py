@@ -81,10 +81,7 @@ def cmd_line_template():
 
 def build_test_system(np):
     cmdline = cmd_line_template()
-    if buildEnv['TARGET_ISA'] == "alpha":
-        test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0], options.ruby,
-                                        cmdline=cmdline)
-    elif buildEnv['TARGET_ISA'] == "mips":
+    if buildEnv['TARGET_ISA'] == "mips":
         test_sys = makeLinuxMipsSystem(test_mem_mode, bm[0], cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == "sparc":
         test_sys = makeSparcSystem(test_mem_mode, bm[0], cmdline=cmdline)
@@ -243,10 +240,7 @@ def build_drive_system(np):
     DriveMemClass = SimpleMemory
 
     cmdline = cmd_line_template()
-    if buildEnv['TARGET_ISA'] == 'alpha':
-        drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1],
-                                         cmdline=cmdline)
-    elif buildEnv['TARGET_ISA'] == 'mips':
+    if buildEnv['TARGET_ISA'] == 'mips':
         drive_sys = makeLinuxMipsSystem(drive_mem_mode, bm[1], cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == 'sparc':
         drive_sys = makeSparcSystem(drive_mem_mode, bm[1], cmdline=cmdline)

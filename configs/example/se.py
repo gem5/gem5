@@ -143,10 +143,7 @@ if options.bench:
 
     for app in apps:
         try:
-            if buildEnv['TARGET_ISA'] == 'alpha':
-                exec("workload = %s('alpha', 'tru64', '%s')" % (
-                        app, options.spec_input))
-            elif buildEnv['TARGET_ISA'] == 'arm':
+            if buildEnv['TARGET_ISA'] == 'arm':
                 exec("workload = %s('arm_%s', 'linux', '%s')" % (
                         app, options.arm_iset, options.spec_input))
             else:

@@ -57,8 +57,6 @@ class SysConfig:
     def disks(self):
         if self.disknames:
             return [disk(diskname) for diskname in self.disknames]
-        elif buildEnv['TARGET_ISA'] == 'alpha':
-            return [env.get('LINUX_IMAGE', disk('linux-latest.img'))]
         elif buildEnv['TARGET_ISA'] == 'x86':
             return [env.get('LINUX_IMAGE', disk('x86root.img'))]
         elif buildEnv['TARGET_ISA'] == 'arm':

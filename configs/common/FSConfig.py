@@ -49,8 +49,7 @@ from .Benchmarks import *
 from . import ObjectList
 
 # Populate to reflect supported os types per target ISA
-os_types = { 'alpha' : [ 'linux' ],
-             'mips'  : [ 'linux' ],
+os_types = { 'mips'  : [ 'linux' ],
              'sparc' : [ 'linux' ],
              'x86'   : [ 'linux' ],
              'arm'   : [ 'linux',
@@ -98,64 +97,6 @@ def makeCowDisks(disk_paths):
         disk.childImage(disk_path);
         disks.append(disk)
     return disks
-
-def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False, cmdline=None):
-
-    class BaseTsunami(Tsunami):
-        ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
-        ide = IdeController(disks=Parent.disks,
-                            pci_func=0, pci_dev=0, pci_bus=0)
-
-    self = LinuxAlphaSystem()
-    if not mdesc:
-        # generic system
-        mdesc = SysConfig()
-    self.readfile = mdesc.script()
-
-    self.tsunami = BaseTsunami()
-
-    # Create the io bus to connect all device ports
-    self.iobus = IOXBar()
-    self.tsunami.attachIO(self.iobus)
-
-    self.tsunami.ide.pio = self.iobus.master
-
-    self.tsunami.ethernet.pio = self.iobus.master
-
-    if ruby:
-        # Store the dma devices for later connection to dma ruby ports.
-        # Append an underscore to dma_ports to avoid the SimObjectVector check.
-        self._dma_ports = [self.tsunami.ide.dma, self.tsunami.ethernet.dma]
-    else:
-        self.membus = MemBus()
-
-        # By default the bridge responds to all addresses above the I/O
-        # base address (including the PCI config space)
-        IO_address_space_base = 0x80000000000
-        self.bridge = Bridge(delay='50ns',
-                         ranges = [AddrRange(IO_address_space_base, Addr.max)])
-        self.bridge.master = self.iobus.slave
-        self.bridge.slave = self.membus.master
-
-        self.tsunami.ide.dma = self.iobus.slave
-        self.tsunami.ethernet.dma = self.iobus.slave
-
-        self.system_port = self.membus.slave
-
-    self.mem_ranges = [AddrRange(mdesc.mem())]
-    self.disks = makeCowDisks(mdesc.disks())
-    self.simple_disk = SimpleDisk(disk=RawDiskImage(
-        image_file = mdesc.disks()[0], read_only = True))
-    self.intrctrl = IntrControl()
-    self.mem_mode = mem_mode
-    self.terminal = Terminal()
-    self.pal = binary('ts_osfpal')
-    self.console = binary('console')
-    if not cmdline:
-        cmdline = 'root=/dev/hda1 console=ttyS0'
-    self.boot_osflags = fillInCmdline(mdesc, cmdline)
-
-    return self
 
 def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
     # Constants from iob.cc and uart8250.cc
