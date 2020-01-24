@@ -78,19 +78,6 @@ submit your code to the mainline of gem5, the code is reviewed by others in the
 community. Additionally, the maintainer for that part of the code must sign off
 on it.
 
-Contributing long-lived feature branches
-----------------------------------------
-Oftentimes users or institutions add features that are necessarily complex,
-and require many changes on long-lived feature branches. In this case,
-maintaining a perfect history where all changes work individually is infeasible.
-When contributing long-lived feature branches back to gem5's public repository
-users may merge entire long-lived branches into a single changeset and contribute
-their code back as long as 1) the changes have been reviewed by the maintainer
-2) the maintainer agrees to allow such a change, and 3) the changes are passing
-the public tests. Changes that affect common code (outside of a specific
-maintainer's purview) will still need to follow the standard gem5 protocol.
-
-
 Cloning the gem5 repo to contribute
 ===================================
 
@@ -111,10 +98,6 @@ There are a few repositories other than the main gem5 development repository.
  * public/m5threads: The code for a pthreads implementation that works with
    gem5's syscall emulation mode.
 
-Other gem5 branches
--------------------
-
-None right now.
 
 Making changes to gem5
 ======================
