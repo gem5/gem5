@@ -36,21 +36,15 @@
 #include "mem/ruby/network/garnet2.0/Router.hh"
 
 CrossbarSwitch::CrossbarSwitch(Router *router)
-    : Consumer(router)
+  : Consumer(router), m_router(router), m_num_vcs(m_router->get_num_vcs()),
+    m_crossbar_activity(0), switchBuffers(0)
 {
-    m_router = router;
-    m_num_vcs = m_router->get_num_vcs();
-    m_crossbar_activity = 0;
 }
 
 void
 CrossbarSwitch::init()
 {
-    m_num_inports = m_router->get_num_inports();
-    m_switch_buffer.resize(m_num_inports);
-    for (int i = 0; i < m_num_inports; i++) {
-        m_switch_buffer[i].reset(new flitBuffer());
-    }
+    switchBuffers.resize(m_router->get_num_inports());
 }
 
 /*
@@ -66,11 +60,12 @@ CrossbarSwitch::wakeup()
             "at time: %lld\n",
             m_router->get_id(), m_router->curCycle());
 
-    for (int inport = 0; inport < m_num_inports; inport++) {
-        if (!m_switch_buffer[inport]->isReady(m_router->curCycle()))
+    for (auto& switch_buffer : switchBuffers) {
+        if (!switch_buffer.isReady(m_router->curCycle())) {
             continue;
+        }
 
-        flit *t_flit = m_switch_buffer[inport]->peekTopFlit();
+        flit *t_flit = switch_buffer.peekTopFlit();
         if (t_flit->is_stage(ST_, m_router->curCycle())) {
             int outport = t_flit->get_outport();
 
@@ -81,7 +76,7 @@ CrossbarSwitch::wakeup()
             // This will take care of waking up the Network Link
             // in the next cycle
             m_router->getOutputUnit(outport)->insert_flit(t_flit);
-            m_switch_buffer[inport]->getTopFlit();
+            switch_buffer.getTopFlit();
             m_crossbar_activity++;
         }
     }
@@ -92,8 +87,8 @@ CrossbarSwitch::functionalWrite(Packet *pkt)
 {
    uint32_t num_functional_writes = 0;
 
-   for (uint32_t i = 0; i < m_switch_buffer.size(); ++i) {
-       num_functional_writes += m_switch_buffer[i]->functionalWrite(pkt);
+   for (auto& switch_buffer : switchBuffers) {
+       num_functional_writes += switch_buffer.functionalWrite(pkt);
    }
 
    return num_functional_writes;

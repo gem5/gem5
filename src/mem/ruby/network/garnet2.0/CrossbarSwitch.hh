@@ -33,7 +33,6 @@
 #define __MEM_RUBY_NETWORK_GARNET2_0_CROSSBARSWITCH_HH__
 
 #include <iostream>
-#include <memory>
 #include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
@@ -41,7 +40,6 @@
 #include "mem/ruby/network/garnet2.0/flitBuffer.hh"
 
 class Router;
-class OutputUnit;
 
 class CrossbarSwitch : public Consumer
 {
@@ -52,8 +50,11 @@ class CrossbarSwitch : public Consumer
     void init();
     void print(std::ostream& out) const {};
 
-    inline void update_sw_winner(int inport, flit *t_flit)
-    { m_switch_buffer[inport]->insert(t_flit); }
+    inline void
+    update_sw_winner(int inport, flit *t_flit)
+    {
+        switchBuffers[inport].insert(t_flit);
+    }
 
     inline double get_crossbar_activity() { return m_crossbar_activity; }
 
@@ -61,11 +62,10 @@ class CrossbarSwitch : public Consumer
     void resetStats();
 
   private:
-    int m_num_vcs;
-    int m_num_inports;
-    double m_crossbar_activity;
     Router *m_router;
-    std::vector<std::unique_ptr<flitBuffer>> m_switch_buffer;
+    int m_num_vcs;
+    double m_crossbar_activity;
+    std::vector<flitBuffer> switchBuffers;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET2_0_CROSSBARSWITCH_HH__
