@@ -82,13 +82,30 @@ Cloning the gem5 repo to contribute
 ===================================
 
 If you plan on contributing, it is strongly encouraged for you to clone the
-repository directly from our gerrit instance at
-https://gem5.googlesource.com/.
+repository directly, and checkout the `develop` branch from our gerrit instance
+at https://gem5.googlesource.com/.
 
-To clone the master gem5 repository:
+To clone the gem5 repository:
+
 ```
  git clone https://gem5.googlesource.com/public/gem5
 ```
+
+By default, the master branch is checked out. The master branch is stable,
+containing the latest released version of gem5. To obtain code still
+under-development (and which contributions can be made):
+
+```
+cd gem5
+git checkout --track origin/develop
+```
+
+Changes should be made to this develop branch. Changes to the master branch
+will be blocked. Once a change on the develop branch is properly incorporated
+into the gem5 repo it will be merged into the master Branch upon the next
+release of gem5. New releases of gem5 occur three times a year. Ergo, changes
+made to the develop branch should appear on the master branch within three to
+four months as part of a stable release.
 
 Other gem5 repositories
 -----------------------
@@ -219,12 +236,12 @@ Push change to gerrit review
 ----------------------------
 
 ```
- git push origin HEAD:refs/for/master
+ git push origin HEAD:refs/for/develop
 ```
 
 Assuming origin is https://gem5.googlesource.com/public/gem5 and you want to
 push the changeset at HEAD, this will create a new review request on top of the
-master branch. More generally,
+develop branch. More generally,
 
 ```
  git push <gem5 gerrit instance> <changeset>:refs/for/<branch>
@@ -266,7 +283,7 @@ See https://gerrit-review.googlesource.com/Documentation/intro-user.html#private
 for details on private gerrit changes.
 
 ```
- git push origin HEAD:refs/for/master%private
+ git push origin HEAD:refs/for/develop%private
 ```
 
 Once you have pushed your change as "private", you can log onto [gerrit]
@@ -280,7 +297,7 @@ Push change bypassing gerrit
 Only maintainers can bypass gerrit review. This should very rarely be used.
 
 ```
- git push origin HEAD:refs/heads/master
+ git push origin HEAD:refs/heads/develop
 ```
 
 Other gerrit push options
@@ -294,18 +311,21 @@ https://gerrit-review.googlesource.com/Documentation/user-upload.html
 Branches
 ========
 
-By default, contributions to gem5 should be made on the master branch. Branches
-are generally discouraged due to their tendency to bloat git repositories with
-abandoned code. However, the creation of branches is permitted for development
-of a specific feature or improvement if one or more of the following criteria
-are met:
+By default, contributions to gem5 should be made on the develop branch. The
+master branch is maintained as a stable release branch (i.e., it can be pulled
+to obtain the latest official release of gem5). Creation of additional branches
+is generally discouraged due to their tendency to bloat git repositories with
+abandoned code. However, the creation of new branches is permitted for
+development of a specific feature or improvement if one or more of the
+following criteria are met:
 
 1. The feature/improvement is likely to be of a large size, consisting of many
 commits, with little logic in these commits being contributed separately.
 2. The feature/improvement will be developed over a long period of time.
-3. There is sufficient reason that a feature/improvement should not be merged
-into the master branch yet (e.g., the feature/improvement is not intended for
-the next release but a future release).
+3. There is sufficient reason that a feature/improvement should not be part
+of the next gem5 release (e.g., the change should be held within a feature
+branch until ready for the next release, at which point it will be merged
+into the develop branch).
 
 If a branch is required it can only be created by a project maintainer.
 Therefore, if a gem5 contributor desires a separate branch for their work, they
@@ -316,9 +336,10 @@ whether the creation of a branch is necessary**. If approved, the maintainer
 shall create the branch which the contributor may then use.
 
 Development on a branch within Gerrit functions in exactly the same way as
-contributing to the master branch. When contributors to a branch are satisfied,
-they should create a merge commit into the master branch. The maintainer should
-then be notified that the branch they created can now be deleted.
+contributing to the develop branch. When contributors to a branch are
+satisfied, they should create a merge commit into the develop branch. The
+maintainer should then be notified that the branch they created can now be
+deleted.
 
 **Abandonment of changes within branches may result in these branches being
 removed from the repository. All branches within a repo should be under active
@@ -366,7 +387,7 @@ can simply push the changeset again to the same Gerrit branch to update the
 review request.
 
 ```
- git push origin HEAD:refs/for/master
+ git push origin HEAD:refs/for/develop
 ```
 
 Committing changes
