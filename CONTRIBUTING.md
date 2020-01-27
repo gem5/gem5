@@ -276,20 +276,35 @@ changeset.
  git commit --amend
 ```
 
-Push change to gerrit as a draft/private
-----------------------------------------
+Push change to gerrit as a Work In Progress
+-------------------------------------------
 
-See https://gerrit-review.googlesource.com/Documentation/intro-user.html#private-changes
-for details on private gerrit changes.
+It is acceptable to push commits as "Work In Progress" (WIP) changes within
+gerrit. WIP changes are publicly visible though no one will be able to review
+the changes or be directly notified they have been submitted. WIP changes can
+be useful for backing up code currently under-development or for sharing
+incomplete code with the wider community (i.e., the link to the gerrit change
+may be shared, and others may download the change, comment on it, and track
+alterations over time).
+
+See https://gerrit-review.googlesource.com/Documentation/intro-user.html#wip
+for details on WIP gerrit changes.
+
+To push a change as a WIP:
 
 ```
- git push origin HEAD:refs/for/develop%private
+ git push origin HEAD:refs/for/develop%wip
 ```
 
-Once you have pushed your change as "private", you can log onto [gerrit]
-(https://gem5-review.googlesource.com) and once you're happy with the commit
-click the "unmark private" which may be hidden in the "more options" dropdown
-in the upper right corner.
+Once you have pushed your change as a WIP, you can log onto [gerrit](
+https://gem5-review.googlesource.com) and view it. Once you're happy with the
+change you can add reviewers which shall move your change from WIP status
+to be considered for submission by the wider gem5 community. Switching from a
+WIP to a regular change does not notify the gem5 community, via the gem5-dev
+mailing-list, that a change has been submitted (as would occur if a change were
+submitted directly for review). It is therefore important to include reviewers
+and CC those who you wish to view the change (they will be notified
+automatically via email).
 
 Push change bypassing gerrit
 -----------------------------
