@@ -481,3 +481,65 @@ contributors and reviewers to follow.
    intervention by the PMC are undesirable. Attempts should be made to resolve
    disagreements via respectful and polite discourse before being escalated to
    this level.
+
+Releases
+========
+
+gem5 releases occur 3 times per year. The procedure for releasing gem5 is as
+follows:
+
+1. Developers will be notified, via the gem5-dev mailing list, that a new
+release of gem5 will occur. This should be no sooner than 2 weeks prior to the
+expected release date. This gives time for developers to ensure their changes
+for the next release are submitted to the develop branch.
+2. When a release is ready, a new staging branch shall be created by a project
+maintainer, from develop, with the name "release-staging-{VERSION}".
+The gem5-dev mailing list will be notified that, unless justifiable objections
+are made, the staging branch will be merged into the master branch within the
+next week, thus marking the new release.
+3. The staging branch will have the full suite of gem5 tests run on it to
+ensure all tests pass and the to-be-released code is in a decent state.
+4. If reasonable concerns about the state of the staging branch are made by
+members of the gem5 community, then time shall be given for project
+contributors to rectify these concerns on the develop branch. After these
+changes have been incorporated, the develop branch will be re-merged into the
+staging branch. The staging branch will be re-evaluated via the tests, and the
+gem5 community informed of the changes with additional time given for more
+feedback on the new release.
+5. Once signed off by members of the PMC the staging branch shall be merged
+into the master branch, and the staging branch deleted.
+6. The master branch shall be tagged with the correct version number for that
+release. gem5 conforms to a "v{YY}.{MAJOR}.{MINOR}.{HOTFIX}" versioning system.
+E.g., the first major release of 2022 will be "v22.0.0.0", followed by
+"v22.1.0.0". All the releases (with the exemption hotfixes) are considered
+major releases. For the meantime, there are no minor releases though we keep
+the minor release numbers in case this policy changes in the future.
+7. The gem5-dev and gem5-user mailing lists shall be notified of the new gem5
+release.
+
+Hotfixes
+--------
+
+There may be circumstances in which a change to gem5 is deemed critical and
+cannot wait for an official release (e.g., a high-priority bug fix). In these
+circumstances a hotfix shall be made.
+
+First, if a developer suspects a hotfix may be necessary then the issue
+should be discussed on the gem5-dev mailing list. The community will decide
+whether the issue is worthy of a hotfix, and the final decision should be
+made by members of the PMC if there is no consensus. Assuming the hotfix is
+permitted, the following steps will be taken:
+
+1. A new branch with the prefix "hotfix-" will be created from the master
+branch. Only gem5 maintainers can create branches. If a non-maintainer requires
+the creation of a hotfix branch then they should contact a gem5 maintainer.
+2. The change shall be submitted to the hotfix branch via gerrit. Full review,
+as with any other change, will be required.
+3. Once fully submitted, the hotfix branch shall be merged into both the
+develop and the master branch by a gem5 maintainer.
+4. The master branch will be tagged with the new version number; the same as
+the last but with an incremented hotfix number (e.g., "v20.2.0.0" would
+transition to "v20.2.0.1").
+4. The hotfix branch will then be deleted.
+5. The gem5-dev and the gem5-user mailing lists shall be notified of this
+hotfix.
