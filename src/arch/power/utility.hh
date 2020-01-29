@@ -49,14 +49,7 @@ buildRetPC(const PCState &curPC, const PCState &callPC)
     return retPC;
 }
 
-inline void
-startupCPU(ThreadContext *tc, int cpuId)
-{
-    tc->activate();
-}
-
-void
-copyRegs(ThreadContext *src, ThreadContext *dest);
+void copyRegs(ThreadContext *src, ThreadContext *dest);
 
 static inline void
 copyMiscRegs(ThreadContext *src, ThreadContext *dest)

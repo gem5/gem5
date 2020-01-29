@@ -218,14 +218,10 @@ isSnan(void *val_ptr, int size)
 }
 
 void
-startupCPU(ThreadContext *tc, int cpuId)
+initCPU(ThreadContext *tc, int cpuId)
 {
     tc->activate();
 }
-
-void
-initCPU(ThreadContext *tc, int cpuId)
-{}
 
 void
 copyRegs(ThreadContext *src, ThreadContext *dest)

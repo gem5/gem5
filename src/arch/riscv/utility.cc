@@ -37,8 +37,8 @@ namespace RiscvISA
 
 void initCPU(ThreadContext *tc, int cpuId)
 {
-    static Fault reset = std::make_shared<Reset>();
-    reset->invoke(tc);
+    Reset().invoke(tc);
+    tc->activate();
 }
 
 }

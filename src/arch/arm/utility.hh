@@ -95,11 +95,6 @@ testPredicate(uint32_t nz, uint32_t c, uint32_t v, ConditionCode code)
     }
 }
 
-inline void startupCPU(ThreadContext *tc, int cpuId)
-{
-    tc->activate();
-}
-
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 
 static inline void

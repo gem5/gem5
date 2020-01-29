@@ -75,11 +75,8 @@ void
 initCPU(ThreadContext *tc, int cpuId)
 {
     InitInterrupt(0).invoke(tc);
-}
 
-void startupCPU(ThreadContext *tc, int cpuId)
-{
-    if (cpuId == 0 || !FullSystem) {
+    if (cpuId == 0) {
         tc->activate();
     } else {
         // This is an application processor (AP). It should be initialized to

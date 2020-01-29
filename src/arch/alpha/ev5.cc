@@ -73,11 +73,12 @@ initCPU(ThreadContext *tc, int cpuId)
     tc->setIntReg(16, cpuId);
     tc->setIntReg(0, cpuId);
 
-    AlphaFault *reset = new ResetFault;
+    Addr base = tc->readMiscRegNoEffect(IPR_PAL_BASE);
+    Addr offset = ResetFault().vect();
 
-    tc->pcState(tc->readMiscRegNoEffect(IPR_PAL_BASE) + reset->vect());
+    tc->pcState(base + offset);
 
-    delete reset;
+    tc->activate();
 }
 
 ////////////////////////////////////////////////////////////////////////

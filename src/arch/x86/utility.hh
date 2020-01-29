@@ -71,8 +71,6 @@ namespace X86ISA
 
     void initCPU(ThreadContext *tc, int cpuId);
 
-    void startupCPU(ThreadContext *tc, int cpuId);
-
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);

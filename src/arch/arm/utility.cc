@@ -61,8 +61,8 @@ initCPU(ThreadContext *tc, int cpuId)
 
     // FPEXC.EN = 0
 
-    static Fault reset = std::make_shared<Reset>();
-    reset->invoke(tc);
+    Reset().invoke(tc);
+    tc->activate();
 }
 
 uint64_t

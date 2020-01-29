@@ -99,7 +99,8 @@ class SparcFault : public SparcFaultBase
 
 class PowerOnReset : public SparcFault<PowerOnReset>
 {
-    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+  public:
+    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr);
 };
 
