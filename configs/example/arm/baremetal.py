@@ -225,11 +225,21 @@ def main():
                         "(default: gem5's stderr)")
     parser.add_argument("args", default=[], nargs="*",
                         help="Semihosting arguments to pass to benchmark")
+    parser.add_argument("-P", "--param", action="append", default=[],
+        help="Set a SimObject parameter relative to the root node. "
+             "An extended Python multi range slicing syntax can be used "
+             "for arrays. For example: "
+             "'system.cpu[0,1,3:8:2].max_insts_all_threads = 42' "
+             "sets max_insts_all_threads for cpus 0, 1, 3, 5 and 7 "
+             "Direct parameters of the root object are not accessible, "
+             "only parameters of its children.")
 
     args = parser.parse_args()
 
     root = Root(full_system=True)
     root.system = create(args)
+
+    root.apply_config(args.param)
 
     if args.restore is not None:
         m5.instantiate(args.restore)
