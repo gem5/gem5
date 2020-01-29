@@ -48,6 +48,7 @@ namespace NullISA {
 inline uint64_t getArgument(ThreadContext *tc, int &number, uint16_t size,
                             bool fp) { return 0; }
 
+inline void initCPU(ThreadContext *tc, int cpuId) {}
 inline void startupCPU(ThreadContext *tc, int cpuId) {}
 
 }

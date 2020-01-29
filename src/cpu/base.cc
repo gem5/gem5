@@ -318,12 +318,6 @@ BaseCPU::init()
 
         verifyMemoryMode();
     }
-
-    //These calls eventually need to be moved to initState
-    if (FullSystem && !params()->switched_out) {
-        for (auto *tc: threadContexts)
-            TheISA::initCPU(tc, tc->contextId());
-    }
 }
 
 void

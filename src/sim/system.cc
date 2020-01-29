@@ -349,8 +349,10 @@ void
 System::initState()
 {
     if (FullSystem) {
-        for (int i = 0; i < threadContexts.size(); i++)
-            TheISA::startupCPU(threadContexts[i], i);
+        for (auto *tc: threadContexts) {
+            TheISA::initCPU(tc, tc->contextId());
+            TheISA::startupCPU(tc, tc->contextId());
+        }
         // Moved from the constructor to here since it relies on the
         // address map being resolved in the interconnect
         /**
