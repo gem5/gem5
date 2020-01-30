@@ -45,6 +45,7 @@ struct VAddr
 
     Addr addr;
 
+    VAddr(const VAddr &) = default;
     VAddr(Addr a) : addr(a) {}
     operator Addr() const { return addr; }
     const VAddr &operator=(Addr a) { addr = a; return *this; }
@@ -63,6 +64,7 @@ struct VAddr
 
 struct PageTableEntry
 {
+    PageTableEntry(const PageTableEntry &) = default;
     PageTableEntry(uint64_t e) : entry(e) {}
     uint64_t entry;
     operator uint64_t() const { return entry; }
@@ -102,6 +104,8 @@ struct TlbEntry : public Serializable
     bool fonw;              // fault on write
     bool valid;             // valid page table entry
 
+
+    TlbEntry(const TlbEntry &) = default;
 
     //Construct an entry that maps to physical address addr.
     TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr,

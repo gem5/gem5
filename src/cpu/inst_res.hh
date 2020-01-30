@@ -75,6 +75,7 @@ class InstResult {
   public:
     /** Default constructor creates an invalid result. */
     InstResult() : type(ResultType::Invalid) { }
+    InstResult(const InstResult &) = default;
     /** Scalar result from scalar. */
     template<typename T>
     explicit InstResult(T i, const ResultType& t) : type(t) {

@@ -284,6 +284,7 @@ class VecRegContainer
 
   public:
     VecRegContainer() {}
+    VecRegContainer(const VecRegContainer &) = default;
     /* This is required for de-serialisation. */
     VecRegContainer(const std::vector<uint8_t>& that)
     {

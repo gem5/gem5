@@ -248,6 +248,7 @@ class VecPredRegContainer
 
   public:
     VecPredRegContainer() {}
+    VecPredRegContainer(const VecPredRegContainer &) = default;
 
     MyClass&
     operator=(const MyClass& that)
