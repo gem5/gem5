@@ -691,7 +691,7 @@ let {{
                                          'MicroSetPCCPSR',
                                          {'code': setPCCPSRDecl,
                                           'predicate_test': predicateTest},
-                                         ['IsMicroop'])
+                                         ['IsMicroop', 'IsSerializeAfter'])
 
     header_output = MicroIntImmDeclare.subst(microAddiUopIop) + \
                     MicroIntImmDeclare.subst(microAddXiUopIop) + \
