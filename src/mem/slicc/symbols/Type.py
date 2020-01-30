@@ -258,6 +258,13 @@ $klass ${{self.c_ident}}$parent
 
             code.dedent()
             code('}')
+        else:
+            code('${{self.c_ident}}(const ${{self.c_ident}}&) = default;')
+
+        # ******** Assignment operator ********
+
+        code('${{self.c_ident}}')
+        code('&operator=(const ${{self.c_ident}}&) = default;')
 
         # ******** Full init constructor ********
         if not self.isGlobal:
