@@ -154,7 +154,7 @@ class SourceFile(object):
     static_objs = {}
     shared_objs = {}
 
-    def __init__(self, source, tags=None, add_tags=None):
+    def __init__(self, source, tags=None, add_tags=None, append=None):
         if tags is None:
             tags='gem5 lib'
         if isinstance(tags, basestring):
@@ -170,6 +170,8 @@ class SourceFile(object):
                 add_tags = set(add_tags)
             self.tags |= add_tags
 
+        self.append = append
+
         tnode = source
         if not isinstance(source, SCons.Node.FS.File):
             tnode = File(source)
@@ -183,12 +185,18 @@ class SourceFile(object):
 
     def static(self, env):
         key = (self.tnode, env['OBJSUFFIX'])
+        if self.append:
+            env = env.Clone()
+            env.Append(**self.append)
         if not key in self.static_objs:
             self.static_objs[key] = env.StaticObject(self.tnode)
         return self.static_objs[key]
 
     def shared(self, env):
         key = (self.tnode, env['OBJSUFFIX'])
+        if self.append:
+            env = env.Clone()
+            env.Append(**self.append)
         if not key in self.shared_objs:
             self.shared_objs[key] = env.SharedObject(self.tnode)
         return self.shared_objs[key]
@@ -315,9 +323,9 @@ class Source(SourceFile):
         self.tags.add(Source._current_group_tag)
 
     '''Add a c/c++ source file to the build'''
-    def __init__(self, source, tags=None, add_tags=None):
+    def __init__(self, source, tags=None, add_tags=None, append=None):
         '''specify the source file, and any tags'''
-        super(Source, self).__init__(source, tags, add_tags)
+        super(Source, self).__init__(source, tags, add_tags, append)
         self._add_link_group_tag()
 
 class PySource(SourceFile):
