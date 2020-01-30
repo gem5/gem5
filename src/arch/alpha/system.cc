@@ -34,6 +34,7 @@
 #include <sys/signal.h>
 
 #include "arch/alpha/ev5.hh"
+#include "arch/alpha/faults.hh"
 #include "arch/vtophys.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
@@ -107,6 +108,21 @@ AlphaSystem::initState()
 
     // Call the initialisation of the super class
     System::initState();
+
+    for (auto *tc: threadContexts) {
+        int cpuId = tc->contextId();
+        initIPRs(tc, cpuId);
+
+        tc->setIntReg(16, cpuId);
+        tc->setIntReg(0, cpuId);
+
+        Addr base = tc->readMiscRegNoEffect(IPR_PAL_BASE);
+        Addr offset = ResetFault().vect();
+
+        tc->pcState(base + offset);
+
+        tc->activate();
+    }
 
     // Load program sections into memory
     pal->buildImage().mask(loadAddrMask).write(physProxy);

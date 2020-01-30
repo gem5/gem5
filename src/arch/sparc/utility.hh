@@ -62,8 +62,6 @@ inUserMode(ThreadContext *tc)
     return !(pstate.priv || hpstate.hpriv);
 }
 
-void initCPU(ThreadContext *tc, int cpuId);
-
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 
 void copyMiscRegs(ThreadContext *src, ThreadContext *dest);

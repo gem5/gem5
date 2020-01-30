@@ -52,18 +52,8 @@
 #include "mem/fs_translating_port_proxy.hh"
 #include "sim/full_system.hh"
 
-namespace ArmISA {
-
-void
-initCPU(ThreadContext *tc, int cpuId)
+namespace ArmISA
 {
-    // Reset CP15?? What does that mean -- ali
-
-    // FPEXC.EN = 0
-
-    Reset().invoke(tc);
-    tc->activate();
-}
 
 uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)

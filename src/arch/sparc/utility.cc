@@ -253,16 +253,4 @@ skipFunction(ThreadContext *tc)
     tc->pcState(newPC);
 }
 
-
-void
-initCPU(ThreadContext *tc, int cpuId)
-{
-    // Other CPUs will get activated by IPIs.
-    if (cpuId != 0)
-        return;
-
-    PowerOnReset().invoke(tc);
-    tc->activate();
-}
-
 } // namespace SPARC_ISA

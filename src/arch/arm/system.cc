@@ -44,6 +44,7 @@
 
 #include <iostream>
 
+#include "arch/arm/faults.hh"
 #include "arch/arm/semihosting.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
@@ -135,6 +136,15 @@ ArmSystem::initState()
 
     // Call the initialisation of the super class
     System::initState();
+
+    // Reset CP15?? What does that mean -- ali
+
+    // FPEXC.EN = 0
+
+    for (auto *tc: threadContexts) {
+        Reset().invoke(tc);
+        tc->activate();
+    }
 
     const Params* p = params();
 

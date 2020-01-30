@@ -218,12 +218,6 @@ isSnan(void *val_ptr, int size)
 }
 
 void
-initCPU(ThreadContext *tc, int cpuId)
-{
-    tc->activate();
-}
-
-void
 copyRegs(ThreadContext *src, ThreadContext *dest)
 {
     // First loop through the integer registers.

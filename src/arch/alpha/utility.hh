@@ -87,7 +87,6 @@ RoundPage(Addr addr)
 { return (addr + PageBytes - 1) & ~(PageBytes - 1); }
 
 void initIPRs(ThreadContext *tc, int cpuId);
-void initCPU(ThreadContext *tc, int cpuId);
 
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 

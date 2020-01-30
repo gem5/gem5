@@ -93,17 +93,15 @@ inUserMode(ThreadContext *tc)
 //
 inline Addr
 TruncPage(Addr addr)
-{ return addr & ~(PageBytes - 1); }
+{
+    return addr & ~(PageBytes - 1);
+}
 
 inline Addr
 RoundPage(Addr addr)
-{ return (addr + PageBytes - 1) & ~(PageBytes - 1); }
-
-////////////////////////////////////////////////////////////////////////
-//
-// CPU Utility
-//
-void initCPU(ThreadContext *tc, int cpuId);
+{
+    return (addr + PageBytes - 1) & ~(PageBytes - 1);
+}
 
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 void copyMiscRegs(ThreadContext *src, ThreadContext *dest);

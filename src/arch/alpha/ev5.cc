@@ -63,26 +63,6 @@ getDTBPtr(T *tc)
 
 ////////////////////////////////////////////////////////////////////////
 //
-//  Machine dependent functions
-//
-void
-initCPU(ThreadContext *tc, int cpuId)
-{
-    initIPRs(tc, cpuId);
-
-    tc->setIntReg(16, cpuId);
-    tc->setIntReg(0, cpuId);
-
-    Addr base = tc->readMiscRegNoEffect(IPR_PAL_BASE);
-    Addr offset = ResetFault().vect();
-
-    tc->pcState(base + offset);
-
-    tc->activate();
-}
-
-////////////////////////////////////////////////////////////////////////
-//
 //
 //
 void

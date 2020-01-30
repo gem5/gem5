@@ -72,21 +72,6 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 }
 
 void
-initCPU(ThreadContext *tc, int cpuId)
-{
-    InitInterrupt(0).invoke(tc);
-
-    if (cpuId == 0) {
-        tc->activate();
-    } else {
-        // This is an application processor (AP). It should be initialized to
-        // look like only the BIOS POST has run on it and put then put it into
-        // a halted state.
-        tc->suspend();
-    }
-}
-
-void
 copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 {
     // This function assumes no side effects other than TLB invalidation

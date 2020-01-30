@@ -181,11 +181,6 @@ getExecutingAsid(ThreadContext *tc)
     return 0;
 }
 
-/**
- * init Cpu function
- */
-void initCPU(ThreadContext *tc, int cpuId);
-
 } // namespace RiscvISA
 
 #endif // __ARCH_RISCV_UTILITY_HH__

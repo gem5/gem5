@@ -52,8 +52,6 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
     return 0;
 }
 
-inline void initCPU(ThreadContext *tc, int cpuId) {}
-
 }
 
 #endif // __ARCH_NULL_UTILITY_HH__
