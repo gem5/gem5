@@ -1027,7 +1027,8 @@ if env['HAVE_PROTOC'] and env['HAVE_PROTOBUF']:
                                Transform("PROTOC")))
 
         # Add the C++ source file
-        Source(proto.cc_file, tags=proto.tags)
+        Source(proto.cc_file, tags=proto.tags,
+                append={'CXXFLAGS': '-Wno-array-bounds'})
 elif ProtoBuf.all:
     error('Got protobuf to build, but lacks support!')
 
