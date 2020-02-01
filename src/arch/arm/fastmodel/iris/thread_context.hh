@@ -293,7 +293,7 @@ class ThreadContext : public ::ThreadContext
     void
     clearArchRegs() override
     {
-        panic("%s not implemented.", __FUNCTION__);
+        warn("Ignoring clearArchRegs()");
     }
 
     //
