@@ -228,8 +228,9 @@ ThreadContext::breakpointHit(
 
     auto it = getOrAllocBp(pc);
 
-    auto e_it = it->second->events.begin();
-    while (e_it != it->second->events.end()) {
+    std::shared_ptr<BpInfo::EventList> events = it->second->events;
+    auto e_it = events->begin();
+    while (e_it != events->end()) {
         PCEvent *e = *e_it;
         // Advance e_it here since e might remove itself from the list.
         e_it++;
@@ -319,7 +320,7 @@ bool
 ThreadContext::schedule(PCEvent *e)
 {
     auto it = getOrAllocBp(e->pc());
-    it->second->events.push_back(e);
+    it->second->events->push_back(e);
 
     if (_instId != iris::IRIS_UINT64_MAX && !it->second->validId())
         installBp(it);
@@ -331,7 +332,7 @@ bool
 ThreadContext::remove(PCEvent *e)
 {
     auto it = getOrAllocBp(e->pc());
-    it->second->events.remove(e);
+    it->second->events->remove(e);
 
     if (it->second->empty())
         delBp(it);

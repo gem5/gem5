@@ -110,11 +110,14 @@ class ThreadContext : public ::ThreadContext
     {
         Addr pc;
         BpId id;
-        std::list<PCEvent *> events;
+        using EventList = std::list<PCEvent *>;
+        std::shared_ptr<EventList> events;
 
-        BpInfo(Addr _pc) : pc(_pc), id(iris::IRIS_UINT64_MAX) {}
+        BpInfo(Addr _pc) : pc(_pc), id(iris::IRIS_UINT64_MAX),
+                           events(new EventList)
+        {}
 
-        bool empty() const { return events.empty(); }
+        bool empty() const { return events->empty(); }
         bool validId() const { return id != iris::IRIS_UINT64_MAX; }
         void clearId() { id = iris::IRIS_UINT64_MAX; }
     };
