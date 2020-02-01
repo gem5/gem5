@@ -589,7 +589,7 @@ ThreadContext::readVecReg(const RegId &reg_id) const
     iris::ResourceReadResult result;
     call().resource_read(_instId, result, vecRegIds.at(idx));
     size_t data_size = result.data.size() * (sizeof(*result.data.data()));
-    size_t size = std::min(data_size, reg.SIZE);
+    size_t size = std::min(data_size, reg.size());
     memcpy(reg.raw_ptr<void>(), (void *)result.data.data(), size);
 
     return reg;
