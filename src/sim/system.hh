@@ -99,11 +99,8 @@ class System : public SimObject, public PCEventScope
 
   public:
 
-    /**
-     * After all objects have been created and all ports are
-     * connected, check that the system port is connected.
-     */
     void init() override;
+    void startup() override;
 
     /**
      * Get a reference to the system port that can be used by

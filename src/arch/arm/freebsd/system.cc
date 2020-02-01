@@ -147,8 +147,3 @@ FreebsdArmSystemParams::create()
 {
     return new FreebsdArmSystem(this);
 }
-
-void
-FreebsdArmSystem::startup()
-{
-}

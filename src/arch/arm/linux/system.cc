@@ -223,6 +223,8 @@ LinuxArmSystemParams::create()
 void
 LinuxArmSystem::startup()
 {
+    GenericArmSystem::startup();
+
     if (enableContextSwitchStatsDump) {
         if (!highestELIs64()) {
             dumpStatsPCEvent =

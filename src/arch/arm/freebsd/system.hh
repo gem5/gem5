@@ -74,8 +74,6 @@ class FreebsdArmSystem : public GenericArmSystem
 
     void initState();
 
-    void startup();
-
     /** This function creates a new task Id for the given pid.
      * @param tc thread context that is currentyl executing  */
     void mapPid(ThreadContext* tc, uint32_t pid);

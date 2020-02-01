@@ -228,6 +228,31 @@ System::init()
         panic("System port on %s is not connected.\n", name());
 }
 
+void
+System::startup()
+{
+    SimObject::startup();
+
+    // Now that we're about to start simulation, wait for GDB connections if
+    // requested.
+#if THE_ISA != NULL_ISA
+    for (auto *tc: threadContexts) {
+        auto *cpu = tc->getCpuPtr();
+        auto id = tc->contextId();
+        if (remoteGDB.size() <= id)
+            continue;
+        auto *rgdb = remoteGDB[id];
+
+        if (cpu->waitForRemoteGDB()) {
+            inform("%s: Waiting for a remote GDB connection on port %d.\n",
+                   cpu->name(), rgdb->port());
+
+            rgdb->connect();
+        }
+    }
+#endif
+}
+
 Port &
 System::getPort(const std::string &if_name, PortID idx)
 {
@@ -276,16 +301,8 @@ System::registerThreadContext(ThreadContext *tc, ContextID assigned)
         RemoteGDB *rgdb = new RemoteGDB(this, tc, port + id);
         rgdb->listen();
 
-        BaseCPU *cpu = tc->getCpuPtr();
-        if (cpu->waitForRemoteGDB()) {
-            inform("%s: Waiting for a remote GDB connection on port %d.\n",
-                   cpu->name(), rgdb->port());
-
-            rgdb->connect();
-        }
-        if (remoteGDB.size() <= id) {
+        if (remoteGDB.size() <= id)
             remoteGDB.resize(id + 1);
-        }
 
         remoteGDB[id] = rgdb;
     }
