@@ -195,11 +195,7 @@ class ThreadContext : public ::ThreadContext
     {
         return _dtb;
     }
-    CheckerCPU *
-    getCheckerCpuPtr() override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
+    CheckerCPU *getCheckerCpuPtr() override { return nullptr; }
     ArmISA::Decoder *
     getDecoderPtr() override
     {
