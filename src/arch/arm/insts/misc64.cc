@@ -269,13 +269,19 @@ MiscRegOp64::checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
             break;
           // GICv3 regs
           case MISCREG_ICC_SGI0R_EL1:
-            if (tc->getIsaPtr()->haveGICv3CpuIfc())
-                trap_to_hyp = hcr.fmo && el == EL1;
+            {
+                auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+                if (isa->haveGICv3CpuIfc())
+                    trap_to_hyp = hcr.fmo && el == EL1;
+            }
             break;
           case MISCREG_ICC_SGI1R_EL1:
           case MISCREG_ICC_ASGI1R_EL1:
-            if (tc->getIsaPtr()->haveGICv3CpuIfc())
-                trap_to_hyp = hcr.imo && el == EL1;
+            {
+                auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+                if (isa->haveGICv3CpuIfc())
+                    trap_to_hyp = hcr.imo && el == EL1;
+            }
             break;
           default:
             break;

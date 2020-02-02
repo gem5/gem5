@@ -612,13 +612,19 @@ mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc, uint32_t iss)
                 break;
               // GICv3 regs
               case MISCREG_ICC_SGI0R:
-                if (tc->getIsaPtr()->haveGICv3CpuIfc())
-                    trapToHype = hcr.fmo;
+                {
+                    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+                    if (isa->haveGICv3CpuIfc())
+                        trapToHype = hcr.fmo;
+                }
                 break;
               case MISCREG_ICC_SGI1R:
               case MISCREG_ICC_ASGI1R:
-                if (tc->getIsaPtr()->haveGICv3CpuIfc())
-                    trapToHype = hcr.imo;
+                {
+                    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+                    if (isa->haveGICv3CpuIfc())
+                        trapToHype = hcr.imo;
+                }
                 break;
               // No default action needed
               default:

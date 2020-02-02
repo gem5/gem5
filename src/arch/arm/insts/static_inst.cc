@@ -1166,7 +1166,8 @@ ArmStaticInst::generalExceptionsToAArch64(ThreadContext *tc,
 unsigned
 ArmStaticInst::getCurSveVecLenInBits(ThreadContext *tc)
 {
-    return tc->getIsaPtr()->getCurSveVecLenInBits(tc);
+    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+    return isa->getCurSveVecLenInBits(tc);
 }
 
 }

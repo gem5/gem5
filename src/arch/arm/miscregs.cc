@@ -1080,8 +1080,9 @@ snsBankedIndex(MiscRegIndex reg, ThreadContext *tc, bool ns)
 int
 snsBankedIndex64(MiscRegIndex reg, ThreadContext *tc)
 {
+    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
     SCR scr = tc->readMiscReg(MISCREG_SCR);
-    return tc->getIsaPtr()->snsBankedIndex64(reg, scr.ns);
+    return isa->snsBankedIndex64(reg, scr.ns);
 }
 
 /**
