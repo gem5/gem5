@@ -44,6 +44,7 @@
 #define __ARCH_ARM_TLB_HH__
 
 
+#include "arch/arm/faults.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/pagetable.hh"
 #include "arch/arm/utility.hh"
@@ -350,6 +351,12 @@ class TLB : public BaseTLB
     {
         return _attr;
     }
+
+    Fault translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
+        TLB::ArmTranslationType tranType, Addr vaddr, bool long_desc_format);
+    Fault translateMmuOn(ThreadContext *tc, const RequestPtr &req, Mode mode,
+        Translation *translation, bool &delay, bool timing, bool functional,
+        Addr vaddr, ArmFault::TranMethod tranMethod);
 
     Fault translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
             Translation *translation, bool &delay,
