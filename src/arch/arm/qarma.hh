@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010, 2012, 2017-2018 ARM Limited
+// Copyright (c) 2020 Metempsy Technology Consulting
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -11,9 +11,6 @@
 // terms below provided that you ensure that this notice is replicated
 // unmodified and in its entirety in all distributions of the software,
 // modified or unmodified, in source code or in binary form.
-//
-// Copyright (c) 2007-2008 The Florida State University
-// All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -38,87 +35,61 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Authors: Stephen Hines
+// Authors: Jordi Vaquero
 
-////////////////////////////////////////////////////////////////////
-//
-// Output include file directives.
-//
+#ifndef __ARCH_ARM_QARMA_HH__
+#define __ARCH_ARM_QARMA_HH__
 
-output header {{
-#include <iostream>
-#include <sstream>
+#include "base/bitfield.hh"
+#include "base/bitunion.hh"
 
-#include "arch/arm/insts/branch.hh"
-#include "arch/arm/insts/branch64.hh"
-#include "arch/arm/insts/crypto.hh"
-#include "arch/arm/insts/data64.hh"
-#include "arch/arm/insts/fplib.hh"
-#include "arch/arm/insts/macromem.hh"
-#include "arch/arm/insts/mem.hh"
-#include "arch/arm/insts/mem64.hh"
-#include "arch/arm/insts/misc.hh"
-#include "arch/arm/insts/misc64.hh"
-#include "arch/arm/insts/mult.hh"
-#include "arch/arm/insts/neon64_mem.hh"
-#include "arch/arm/insts/pred_inst.hh"
-#include "arch/arm/insts/pseudo.hh"
-#include "arch/arm/insts/static_inst.hh"
-#include "arch/arm/insts/sve.hh"
-#include "arch/arm/insts/sve_mem.hh"
-#include "arch/arm/insts/vfp.hh"
-#include "arch/arm/isa_traits.hh"
-#include "enums/DecoderFlavour.hh"
-#include "mem/packet.hh"
-#include "sim/faults.hh"
+namespace QARMA
+{
 
-}};
+  BitUnion64(BIT64)
+      Bitfield<63, 60> b15;
+      Bitfield<59, 56> b14;
+      Bitfield<55, 52> b13;
+      Bitfield<51, 48> b12;
+      Bitfield<47, 44> b11;
+      Bitfield<43, 40> b10;
+      Bitfield<39, 36> b9;
+      Bitfield<35, 32> b8;
+      Bitfield<31, 28> b7;
+      Bitfield<27, 24> b6;
+      Bitfield<23, 20> b5;
+      Bitfield<19, 16> b4;
+      Bitfield<15, 12> b3;
+      Bitfield<11, 8>  b2;
+      Bitfield<7, 4>   b1;
+      Bitfield<3, 0>   b0;
+  EndBitUnion(BIT64)
 
-output decoder {{
-#include <string>
 
-#include <gem5/asm/generic/m5ops.h>
+  uint8_t rotCell(uint8_t incell, int amount);
 
-#include "arch/arm/decoder.hh"
-#include "arch/arm/faults.hh"
-#include "arch/arm/insts/sve_macromem.hh"
-#include "arch/arm/intregs.hh"
-#include "arch/arm/isa_traits.hh"
-#include "arch/arm/utility.hh"
-#include "base/cprintf.hh"
-#include "base/loader/symtab.hh"
-#include "cpu/thread_context.hh"
+  uint8_t tweakCellInvRot(uint8_t incell);
 
-using namespace ArmISA;
-}};
+  uint8_t tweakCellRot(uint8_t incell);
 
-output exec {{
-#include <cmath>
+  BIT64 tweakInvShuffle(BIT64 indata);
 
-#include "arch/arm/faults.hh"
-#include "arch/arm/interrupts.hh"
-#include "arch/arm/isa.hh"
-#include "arch/arm/isa_traits.hh"
-#include "arch/arm/pauth_helpers.hh"
-#include "arch/arm/utility.hh"
-#include "arch/generic/memhelpers.hh"
-#include "base/condcodes.hh"
-#include "base/crc.hh"
-#include "cpu/base.hh"
-#include "sim/pseudo_inst.hh"
+  BIT64
+  tweakShuffle(BIT64 indata);
 
-#if defined(linux)
-#include <fenv.h>
+  BIT64
+  PACCellInvShuffle(BIT64 indata);
 
-#endif
+  BIT64
+  PACCellShuffle(BIT64 indata);
 
-#include "base/cp_annotate.hh"
-#include "debug/Arm.hh"
-#include "mem/packet.hh"
-#include "mem/packet_access.hh"
-#include "sim/sim_exit.hh"
+  uint64_t PACInvSub(uint64_t tInput);
 
-using namespace ArmISA;
+  uint64_t PACSub(uint64_t tInput);
 
-}};
+  uint64_t PACMult(uint64_t tInput);
 
+  BIT64
+  computePAC(BIT64 data, BIT64 modifier, BIT64 key0, BIT64 key1);
+};
+#endif //__ARCH_ARM_QARMA_HH__

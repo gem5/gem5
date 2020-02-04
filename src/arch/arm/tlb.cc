@@ -535,7 +535,8 @@ TLB::translateSe(const RequestPtr &req, ThreadContext *tc, Mode mode,
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = 0;
     if (aarch64)
-        vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, ttbcr);
+        vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, (TCR)ttbcr,
+                                 mode==Execute);
     else
         vaddr = vaddr_tainted;
     Request::Flags flags = req->getFlags();
@@ -761,7 +762,8 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
     }
 
     Addr vaddr_tainted = req->getVaddr();
-    Addr vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, ttbcr);
+    Addr vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, (TCR)ttbcr,
+                                  mode==Execute);
 
     Request::Flags flags = req->getFlags();
     bool is_fetch  = (mode == Execute);
@@ -1131,7 +1133,8 @@ TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = 0;
     if (aarch64)
-        vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, ttbcr);
+        vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, (TCR)ttbcr,
+                                 mode==Execute);
     else
         vaddr = vaddr_tainted;
     Request::Flags flags = req->getFlags();
@@ -1454,7 +1457,8 @@ TLB::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
     Addr vaddr = 0;
     ExceptionLevel target_el = aarch64 ? aarch64EL : EL1;
     if (aarch64) {
-        vaddr = purifyTaggedAddr(vaddr_tainted, tc, target_el, ttbcr);
+        vaddr = purifyTaggedAddr(vaddr_tainted, tc, target_el, (TCR)ttbcr,
+                                 mode==Execute);
     } else {
         vaddr = vaddr_tainted;
     }

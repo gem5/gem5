@@ -693,7 +693,7 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     ArmStaticInst *arm_inst M5_VAR_USED = instrAnnotate(inst);
 
     // Set PC to start of exception handler
-    Addr new_pc = purifyTaggedAddr(vec_address, tc, toEL);
+    Addr new_pc = purifyTaggedAddr(vec_address, tc, toEL, true);
     DPRINTF(Faults, "Invoking Fault (AArch64 target EL):%s cpsr:%#x PC:%#x "
             "elr:%#x newVec: %#x %s\n", name(), cpsr, curr_pc, ret_addr,
             new_pc, arm_inst ? csprintf("inst: %#x", arm_inst->encoding()) :

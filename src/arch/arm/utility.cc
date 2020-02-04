@@ -286,6 +286,21 @@ HaveVirtHostExt(ThreadContext *tc)
     return id_aa64mmfr1.vh;
 }
 
+ExceptionLevel
+s1TranslationRegime(ThreadContext* tc, ExceptionLevel el)
+{
+
+    SCR scr = tc->readMiscReg(MISCREG_SCR);
+    if (el != EL0)
+        return el;
+    else if (ArmSystem::haveEL(tc, EL3) && ELIs32(tc, EL3) && scr.ns == 0)
+        return EL3;
+    else if (ArmSystem::haveVirtualization(tc) && ELIsInHost(tc, el))
+        return EL2;
+    else
+        return EL1;
+}
+
 bool
 HaveSecureEL2Ext(ThreadContext *tc)
 {
@@ -413,69 +428,77 @@ badMode(ThreadContext *tc, OperatingMode mode)
     return unknownMode(mode) || !ArmSystem::haveEL(tc, opModeToEL(mode));
 }
 
+int
+computeAddrTop(ThreadContext *tc, bool selbit, bool isInstr,
+               TCR tcr, ExceptionLevel el)
+{
+    bool tbi = false;
+    bool tbid = false;
+    ExceptionLevel regime = s1TranslationRegime(tc, el);
+    if (ELIs32(tc, regime)) {
+        return 31;
+    } else {
+        switch (regime) {
+          case EL1:
+          {
+            //TCR tcr = tc->readMiscReg(MISCREG_TCR_EL1);
+            tbi = selbit? tcr.tbi1 : tcr.tbi0;
+            tbid = selbit? tcr.tbid1 : tcr.tbid0;
+            break;
+          }
+          case EL2:
+          {
+            TCR tcr = tc->readMiscReg(MISCREG_TCR_EL2);
+            if (ArmSystem::haveVirtualization(tc) && ELIsInHost(tc, el)) {
+                tbi = selbit? tcr.tbi1 : tcr.tbi0;
+                tbid = selbit? tcr.tbid1 : tcr.tbid0;
+            } else {
+                tbi = tcr.tbi;
+                tbid = tcr.tbid;
+            }
+            break;
+          }
+          case EL3:
+          {
+            TCR tcr = tc->readMiscReg(MISCREG_TCR_EL3);
+            tbi = tcr.tbi;
+            tbid = tcr.tbid;
+            break;
+          }
+          default:
+            break;
+        }
+
+    }
+    int res = (tbi && (!tbid || !isInstr))? 55: 63;
+    return res;
+}
 Addr
 purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
-                 TTBCR tcr)
+                 TCR tcr, bool isInstr)
 {
-    switch (el) {
-      case EL0:
-      case EL1:
-        if (bits(addr, 55, 48) == 0xFF && tcr.tbi1)
-            return addr | mask(63, 55);
-        else if (!bits(addr, 55, 48) && tcr.tbi0)
-            return bits(addr,55, 0);
-        break;
-      case EL2:
-        assert(ArmSystem::haveVirtualization(tc));
-        tcr = tc->readMiscReg(MISCREG_TCR_EL2);
-        if (tcr.tbi)
-            return addr & mask(56);
-        break;
-      case EL3:
-        assert(ArmSystem::haveSecurity(tc));
-        if (tcr.tbi)
-            return addr & mask(56);
-        break;
-      default:
-        panic("Invalid exception level");
-        break;
-    }
+    bool selbit = bits(addr, 55);
+//    TCR tcr = tc->readMiscReg(MISCREG_TCR_EL1);
+    int topbit = computeAddrTop(tc, selbit, isInstr, tcr, el);
 
+    if (topbit == 63) {
+        return addr;
+    } else if (selbit && (el == EL1 || el == EL0 || ELIsInHost(tc, el))) {
+        uint64_t mask = ((uint64_t)0x1 << topbit) -1;
+        addr = addr | ~mask;
+    } else {
+        addr = bits(addr, topbit, 0);
+    }
     return addr;  // Nothing to do if this is not a tagged address
 }
 
 Addr
-purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el)
+purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
+                 bool isInstr)
 {
-    TTBCR tcr;
 
-    switch (el) {
-      case EL0:
-      case EL1:
-        tcr = tc->readMiscReg(MISCREG_TCR_EL1);
-        if (bits(addr, 55, 48) == 0xFF && tcr.tbi1)
-            return addr | mask(63, 55);
-        else if (!bits(addr, 55, 48) && tcr.tbi0)
-            return bits(addr,55, 0);
-        break;
-      case EL2:
-        assert(ArmSystem::haveVirtualization(tc));
-        tcr = tc->readMiscReg(MISCREG_TCR_EL2);
-        if (tcr.tbi)
-            return addr & mask(56);
-        break;
-      case EL3:
-        assert(ArmSystem::haveSecurity(tc));
-        tcr = tc->readMiscReg(MISCREG_TCR_EL3);
-        if (tcr.tbi)
-            return addr & mask(56);
-        break;
-      default:
-        panic("Invalid exception level");
-        break;
-    }
-
-    return addr;  // Nothing to do if this is not a tagged address
+    TCR tcr = tc->readMiscReg(MISCREG_TCR_EL1);
+    return purifyTaggedAddr(addr, tc, el, tcr, isInstr);
 }
 
 Addr

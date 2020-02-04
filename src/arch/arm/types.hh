@@ -620,6 +620,7 @@ namespace ArmISA
         EC_TRAPPED_HCPTR           = 0x7,
         EC_TRAPPED_SIMD_FP         = 0x7,   // AArch64 alias
         EC_TRAPPED_CP10_MRC_VMRS   = 0x8,
+        EC_TRAPPED_PAC             = 0x9,
         EC_TRAPPED_BXJ             = 0xA,
         EC_TRAPPED_CP14_MCRR_MRRC  = 0xC,
         EC_ILLEGAL_INST            = 0xE,

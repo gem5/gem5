@@ -90,6 +90,9 @@ split exec;
 ##include "fp.isa"
 ##include "fp64.isa"
 
+//AArch64 pointer authentification operations
+##include "pauth.isa"
+
 split exec;
 
 //Neon

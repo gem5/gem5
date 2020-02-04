@@ -216,6 +216,18 @@ MiscRegOp64::checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
             trap_to_hyp = hcr.tacr && el == EL1;
             break;
 
+          case MISCREG_APDAKeyHi_EL1:
+          case MISCREG_APDAKeyLo_EL1:
+          case MISCREG_APDBKeyHi_EL1:
+          case MISCREG_APDBKeyLo_EL1:
+          case MISCREG_APGAKeyHi_EL1:
+          case MISCREG_APGAKeyLo_EL1:
+          case MISCREG_APIAKeyHi_EL1:
+          case MISCREG_APIAKeyLo_EL1:
+          case MISCREG_APIBKeyHi_EL1:
+          case MISCREG_APIBKeyLo_EL1:
+            trap_to_hyp = el==EL1 && hcr.apk == 0;
+            break;
           // @todo: Trap implementation-dependent functionality based on
           // hcr.tidcp
 
@@ -296,7 +308,7 @@ MiscRegOp64::checkEL3Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
                           uint32_t &immediate) const
 {
     const CPTR cptr = tc->readMiscReg(MISCREG_CPTR_EL3);
-
+    const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     bool trap_to_mon = false;
 
     switch (misc_reg) {
@@ -318,6 +330,18 @@ MiscRegOp64::checkEL3Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
         if (el == EL2) {
             trap_to_mon = cptr.tcpac;
         }
+        break;
+      case MISCREG_APDAKeyHi_EL1:
+      case MISCREG_APDAKeyLo_EL1:
+      case MISCREG_APDBKeyHi_EL1:
+      case MISCREG_APDBKeyLo_EL1:
+      case MISCREG_APGAKeyHi_EL1:
+      case MISCREG_APGAKeyLo_EL1:
+      case MISCREG_APIAKeyHi_EL1:
+      case MISCREG_APIAKeyLo_EL1:
+      case MISCREG_APIBKeyHi_EL1:
+      case MISCREG_APIBKeyLo_EL1:
+        trap_to_mon = (el==EL1 || el==EL2) && scr.apk==0 && ELIs64(tc, EL3);
         break;
       default:
         break;

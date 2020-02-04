@@ -179,6 +179,20 @@ class RegRegOp : public PredOp
             Addr pc, const SymbolTable *symtab) const override;
 };
 
+class RegOp : public PredOp
+{
+  protected:
+    IntRegIndex dest;
+
+    RegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+             IntRegIndex _dest) :
+        PredOp(mnem, _machInst, __opClass), dest(_dest)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
+};
+
 class RegImmRegOp : public PredOp
 {
   protected:

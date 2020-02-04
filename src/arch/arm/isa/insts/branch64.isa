@@ -47,7 +47,7 @@ let {{
     # B, BL
     for (mnem, link) in (("b", False), ("bl", True)):
         bCode = ('NPC = purifyTaggedAddr(RawPC + imm, xc->tcBase(), '
-                 'currEL(xc->tcBase()));\n')
+                 'currEL(xc->tcBase()), true);\n')
         instFlags = ['IsDirectControl', 'IsUncondControl']
         if (link):
             bCode += 'XLR = RawPC + 4;\n'
@@ -62,7 +62,7 @@ let {{
     # BR, BLR
     for (mnem, link) in (("br", False), ("blr", True)):
         bCode = ('NPC = purifyTaggedAddr(XOp1, xc->tcBase(), '
-                 'currEL(xc->tcBase()));\n')
+                 'currEL(xc->tcBase()), true);\n')
         instFlags = ['IsIndirectControl', 'IsUncondControl']
         if (link):
             bCode += 'XLR = RawPC + 4;\n'
@@ -74,11 +74,84 @@ let {{
         decoder_output += BranchReg64Constructor.subst(bIop)
         exec_output += BasicExecute.subst(bIop)
 
+    # BRAA, BLRAA
+    for (mnem, link) in (("Braa", False), ("Blraa", True)):
+        bCode = ' fault = authIA(xc->tcBase(), XOp1, XOp2, &XOp1);\n'
+        bCode += ('if (fault == NoFault)\n'
+                  '    NPC = purifyTaggedAddr(XOp1, xc->tcBase(), '
+                  '                     currEL(xc->tcBase()), true);\n')
+        instFlags = ['IsIndirectControl', 'IsUncondControl']
+        if (link):
+            bCode += 'XLR = RawPC + 4;\n'
+            instFlags += ['IsCall']
+
+        bIop = InstObjParams(mnem, mnem.capitalize(),
+                             "BranchRegReg64", bCode, instFlags)
+        header_output += BranchRegReg64Declare.subst(bIop)
+        decoder_output += BranchRegReg64Constructor.subst(bIop)
+        exec_output += BasicExecute.subst(bIop)
+
+    # BRAAZ, BLRAAZ
+    for (mnem, link) in (("Braaz", False), ("Blraaz", True)):
+        bCode = '''
+                fault = authIA(xc->tcBase(), XOp1, 0, &XOp1);
+                '''
+        bCode += ('if (fault == NoFault)\n'
+                  '    NPC = purifyTaggedAddr(XOp1, xc->tcBase(), '
+                  '                       currEL(xc->tcBase()), true);\n')
+        instFlags = ['IsIndirectControl', 'IsUncondControl']
+        if (link):
+            bCode += 'XLR = RawPC + 4;\n'
+            instFlags += ['IsCall']
+
+        bIop = InstObjParams(mnem, mnem.capitalize(),
+                             "BranchReg64", bCode, instFlags)
+        header_output += BranchReg64Declare.subst(bIop)
+        decoder_output += BranchReg64Constructor.subst(bIop)
+        exec_output += BasicExecute.subst(bIop)
+
+    # BRAB, BLRAB
+    for (mnem, link) in (("Brab", False), ("Blrab", True)):
+        bCode = ' fault = authIB(xc->tcBase(), XOp1, XOp2, &XOp1);\n'
+        bCode += ('if (fault == NoFault)\n'
+                  '    NPC = purifyTaggedAddr(XOp1, xc->tcBase(), '
+                  '                        currEL(xc->tcBase()), true);\n')
+        instFlags = ['IsIndirectControl', 'IsUncondControl']
+        if (link):
+            bCode += 'XLR = RawPC + 4;\n'
+            instFlags += ['IsCall']
+
+        bIop = InstObjParams(mnem, mnem.capitalize(),
+                             "BranchRegReg64", bCode, instFlags)
+        header_output += BranchRegReg64Declare.subst(bIop)
+        decoder_output += BranchRegReg64Constructor.subst(bIop)
+        exec_output += BasicExecute.subst(bIop)
+
+    # BRABZ, BLRABZ
+    for (mnem, link) in (("Brabz", False), ("Blrabz", True)):
+        bCode = '''
+                fault = authIB(xc->tcBase(), XOp1, 0, &XOp1);
+                '''
+        bCode += ('if (fault == NoFault)\n'
+                  '    NPC = purifyTaggedAddr(XOp1, xc->tcBase(), '
+                  '                        currEL(xc->tcBase()), true);\n')
+        instFlags = ['IsIndirectControl', 'IsUncondControl']
+        if (link):
+            bCode += 'XLR = RawPC + 4;\n'
+            instFlags += ['IsCall']
+
+        bIop = InstObjParams(mnem, mnem.capitalize(),
+                             "BranchReg64", bCode, instFlags)
+        header_output += BranchReg64Declare.subst(bIop)
+        decoder_output += BranchReg64Constructor.subst(bIop)
+        exec_output += BasicExecute.subst(bIop)
+
+
     # B conditional
     bCode = '''
         if (testPredicate(CondCodesNZ, CondCodesC, CondCodesV, condCode))
             NPC = purifyTaggedAddr(RawPC + imm, xc->tcBase(),
-                                   currEL(xc->tcBase()));
+                                   currEL(xc->tcBase()), true);
         else
             NPC = NPC;
     '''
@@ -90,12 +163,36 @@ let {{
 
     # RET
     bCode = ('NPC = purifyTaggedAddr(XOp1, xc->tcBase(), '
-             'currEL(xc->tcBase()));\n')
+             'currEL(xc->tcBase()), true);\n')
     instFlags = ['IsIndirectControl', 'IsUncondControl', 'IsReturn']
 
     bIop = InstObjParams('ret', 'Ret64', "BranchRet64", bCode, instFlags)
     header_output += BranchReg64Declare.subst(bIop)
     decoder_output += BranchReg64Constructor.subst(bIop)
+    exec_output += BasicExecute.subst(bIop)
+
+    # RETAA
+    bCode = '''
+                fault = authIA(xc->tcBase(), XOp1, XOp2, &XOp1);
+                '''
+    bCode += (' if (fault == NoFault)\n'
+              '    NPC = purifyTaggedAddr(XOp1, xc->tcBase(), '
+             'currEL(xc->tcBase()), true);\n')
+    bIop = InstObjParams('retaa', 'Retaa', "BranchRetA64", bCode, instFlags)
+    header_output += BasicDeclare.subst(bIop)
+    decoder_output += BasicConstructor64.subst(bIop)
+    exec_output += BasicExecute.subst(bIop)
+
+    # RETAB
+    bCode = '''
+                fault = authIB(xc->tcBase(), XOp1, XOp2, &XOp1);
+                '''
+    bCode += (' if (fault == NoFault)\n'
+              '    NPC = purifyTaggedAddr(XOp1, xc->tcBase(), '
+             'currEL(xc->tcBase()), true);\n')
+    bIop = InstObjParams('retab', 'Retab', "BranchRetA64", bCode, instFlags)
+    header_output += BasicDeclare.subst(bIop)
+    decoder_output += BasicConstructor64.subst(bIop)
     exec_output += BasicExecute.subst(bIop)
 
     # ERET
@@ -120,38 +217,64 @@ let {{
                                                                   mnemonic);
                     break;
                 }
-                if (spsr.width) {
-                    // Exception return to AArch32.
-                    // 32 most significant bits are ignored
-                    newPc &= mask(32);
 
-                    if (newPc & mask(2)) {
-                        // Mask bits to avoid PC Alignment fault when returning
-                        // to AArch32
-                        if (spsr.t)
-                            newPc = newPc & ~mask(1);
-                        else
-                            newPc = newPc & ~mask(2);
+                %(op)s
+
+                if (fault == NoFault){
+                    if (spsr.width) {
+                        // Exception return to AArch32.
+                        // 32 most significant bits are ignored
+                        newPc &= mask(32);
+
+                        if (newPc & mask(2)) {
+                            // Mask bits to avoid PC Alignment fault
+                            // when returning  to AArch32
+                            if (spsr.t)
+                                newPc = newPc & ~mask(1);
+                            else
+                                newPc = newPc & ~mask(2);
+                        }
                     }
+
+                    CPSR new_cpsr = getPSTATEFromPSR(xc->tcBase(), cpsr, spsr);
+
+                    Cpsr = new_cpsr;
+                    CondCodesNZ = new_cpsr.nz;
+                    CondCodesC  = new_cpsr.c;
+                    CondCodesV  = new_cpsr.v;
+
+                    NextAArch64 = !new_cpsr.width;
+                    NextItState = itState(new_cpsr);
+                    NPC = purifyTaggedAddr(newPc, xc->tcBase(),
+                        currEL(new_cpsr), true);
+
+                    LLSCLock = 0;  // Clear exclusive monitor
+                    SevMailbox = 1; //Set Event Register
                 }
-
-                CPSR new_cpsr = getPSTATEFromPSR(xc->tcBase(), cpsr, spsr);
-
-                Cpsr = new_cpsr;
-                CondCodesNZ = new_cpsr.nz;
-                CondCodesC  = new_cpsr.c;
-                CondCodesV  = new_cpsr.v;
-
-                NextAArch64 = !new_cpsr.width;
-                NextItState = itState(new_cpsr);
-                NPC = purifyTaggedAddr(newPc, xc->tcBase(),
-                    currEL(new_cpsr));
-
-                LLSCLock = 0;  // Clear exclusive monitor
-                SevMailbox = 1; //Set Event Register
     '''
     instFlags = ['IsSerializeAfter', 'IsNonSpeculative', 'IsSquashAfter']
-    bIop = InstObjParams('eret', 'Eret64', "BranchEret64", bCode, instFlags)
+    bIop = InstObjParams('eret', 'Eret64', "BranchEret64",
+                          bCode%{'op': ''}, instFlags)
+    header_output += BasicDeclare.subst(bIop)
+    decoder_output += BasicConstructor64.subst(bIop)
+    exec_output += BasicExecute.subst(bIop)
+
+    # ERETAA
+    pac_code = '''
+                fault = authIA(xc->tcBase(), newPc, XOp1, &newPc);
+                '''
+    bIop = InstObjParams('eretaa', 'Eretaa', "BranchEretA64",
+                         bCode % {'op': pac_code} , instFlags)
+    header_output  += BasicDeclare.subst(bIop)
+    decoder_output += BasicConstructor64.subst(bIop)
+    exec_output    += BasicExecute.subst(bIop)
+
+    # ERETAB
+    pac_code = '''
+                fault = authIB(xc->tcBase(), newPc, XOp1, &newPc);
+                '''
+    bIop = InstObjParams('eretab', 'Eretab', "BranchEretA64",
+                         bCode % {'op': pac_code} , instFlags)
     header_output += BasicDeclare.subst(bIop)
     decoder_output += BasicConstructor64.subst(bIop)
     exec_output += BasicExecute.subst(bIop)
@@ -160,7 +283,7 @@ let {{
     for (mnem, test) in (("cbz", "=="), ("cbnz", "!=")):
         code = ('NPC = (Op164 %(test)s 0) ? '
                 'purifyTaggedAddr(RawPC + imm, xc->tcBase(), '
-                'currEL(xc->tcBase())) : NPC;\n')
+                'currEL(xc->tcBase()), true) : NPC;\n')
         code = code % {"test": test}
         iop = InstObjParams(mnem, mnem.capitalize() + "64",
                             "BranchImmReg64", code,
@@ -173,7 +296,7 @@ let {{
     for (mnem, test) in (("tbz", "=="), ("tbnz", "!=")):
         code = ('NPC = ((Op164 & imm1) %(test)s 0) ? '
                 'purifyTaggedAddr(RawPC + imm2, xc->tcBase(), '
-                'currEL(xc->tcBase())) : NPC;\n')
+                'currEL(xc->tcBase()), true) : NPC;\n')
         code = code % {"test": test}
         iop = InstObjParams(mnem, mnem.capitalize() + "64",
                             "BranchImmImmReg64", code,

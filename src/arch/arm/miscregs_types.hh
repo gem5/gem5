@@ -233,6 +233,18 @@ namespace ArmISA
     EndBitUnion(HSTR)
 
     BitUnion64(HCR)
+        Bitfield<47>     fien;
+        Bitfield<46>     fwb;
+        Bitfield<45>     nv2;
+        Bitfield<44>     at;
+        Bitfield<43>     nv1;
+        Bitfield<42>     nv;
+        Bitfield<41>     api;
+        Bitfield<40>     apk;
+        Bitfield<38>     miocnce;
+        Bitfield<37>     tea;
+        Bitfield<36>     terr;
+        Bitfield<35>     tlor;
         Bitfield<34>     e2h;   // AArch64
         Bitfield<33>     id;
         Bitfield<32>     cd;
@@ -240,7 +252,6 @@ namespace ArmISA
         Bitfield<30>     trvm;  // AArch64
         Bitfield<29>     hcd;   // AArch64
         Bitfield<28>     tdz;   // AArch64
-
         Bitfield<27>     tge;
         Bitfield<26>     tvm;
         Bitfield<25>     ttlb;
@@ -294,7 +305,14 @@ namespace ArmISA
     EndBitUnion(NSACR)
 
     BitUnion32(SCR)
+        Bitfield<21> fien;
+        Bitfield<20> nmea;
+        Bitfield<19> ease;
         Bitfield<18> eel2; // AArch64 (Armv8.4-SecEL2)
+        Bitfield<17> api;
+        Bitfield<16> apk;
+        Bitfield<15> teer;
+        Bitfield<14> tlor;
         Bitfield<13> twe;
         Bitfield<12> twi;
         Bitfield<11> st;   // AArch64
@@ -313,10 +331,13 @@ namespace ArmISA
     EndBitUnion(SCR)
 
     BitUnion32(SCTLR)
+        Bitfield<31>   enia;    // ARMv8.3 PAuth
+        Bitfield<30>   enib;    // ARMv8.3 PAuth
         Bitfield<30>   te;      // Thumb Exception Enable (AArch32 only)
         Bitfield<29>   afe;     // Access flag enable (AArch32 only)
         Bitfield<28>   tre;     // TEX remap enable (AArch32 only)
         Bitfield<27>   nmfi;    // Non-maskable FIQ support (ARMv7 only)
+        Bitfield<27>   enda;    // ARMv8.3 PAuth
         Bitfield<26>   uci;     // Enable EL0 access to DC CVAU, DC CIVAC,
                                 // DC CVAC and IC IVAU instructions
                                 // (AArch64 SCTLR_EL1 only)
@@ -346,6 +367,7 @@ namespace ArmISA
         Bitfield<14>   dze;     // Enable EL0 access to DC ZVA
                                 // (AArch64 SCTLR_EL1 only)
         Bitfield<13>   v;       // Vectors bit (AArch32 only)
+        Bitfield<13>   endb;    // ARMv8.3 PAuth
         Bitfield<12>   i;       // Instruction cache enable
         Bitfield<11>   z;       // Branch prediction enable (ARMv7 only)
         Bitfield<10>   sw;      // SWP/SWPB enable (ARMv7 only)
@@ -509,6 +531,7 @@ namespace ArmISA
         Bitfield<25, 24> irgn1; // EL1
         Bitfield<27, 26> orgn1; // EL1
         Bitfield<29, 28> sh1; // EL1
+        Bitfield<29> tbid; // EL2
         Bitfield<31, 30> tg1; // EL1
         Bitfield<34, 32> ips; // EL1
         Bitfield<36> as; // EL1
@@ -518,6 +541,8 @@ namespace ArmISA
         Bitfield<40> hd;
         Bitfield<41> hpd0;
         Bitfield<42> hpd1;
+        Bitfield<51> tbid0; // EL1
+        Bitfield<52> tbid1; // EL1
     EndBitUnion(TCR)
 
     BitUnion32(HTCR)

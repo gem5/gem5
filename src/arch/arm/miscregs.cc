@@ -1937,6 +1937,39 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_TCR_EL1;
                     }
                     break;
+                  case 0x1:
+                    switch (op2) {
+                      case 0x0:
+                        return MISCREG_APIAKeyLo_EL1;
+                      case 0x1:
+                        return MISCREG_APIAKeyHi_EL1;
+                      case 0x2:
+                        return MISCREG_APIBKeyLo_EL1;
+                      case 0x3:
+                        return MISCREG_APIBKeyHi_EL1;
+                    }
+                    break;
+                  case 0x2:
+                    switch (op2) {
+                      case 0x0:
+                        return MISCREG_APDAKeyLo_EL1;
+                      case 0x1:
+                        return MISCREG_APDAKeyHi_EL1;
+                      case 0x2:
+                        return MISCREG_APDBKeyLo_EL1;
+                      case 0x3:
+                        return MISCREG_APDBKeyHi_EL1;
+                    }
+                    break;
+
+                  case 0x3:
+                    switch (op2) {
+                      case 0x0:
+                        return MISCREG_APGAKeyLo_EL1;
+                      case 0x1:
+                        return MISCREG_APGAKeyHi_EL1;
+                    }
+                    break;
                 }
                 break;
               case 4:
@@ -2883,10 +2916,10 @@ ISA::initializeMiscRegMetadata()
     bool nTLSMD = false;
 
     // Pointer authentication (Arm 8.3+), unsupported
-    bool EnDA = false; // using APDAKey_EL1 key of instr addrs in ELs 0,1
-    bool EnDB = false; // using APDBKey_EL1 key of instr addrs in ELs 0,1
-    bool EnIA = false; // using APIAKey_EL1 key of instr addrs in ELs 0,1
-    bool EnIB = false; // using APIBKey_EL1 key of instr addrs in ELs 0,1
+    bool EnDA = true; // using APDAKey_EL1 key of instr addrs in ELs 0,1
+    bool EnDB = true; // using APDBKey_EL1 key of instr addrs in ELs 0,1
+    bool EnIA = true; // using APIAKey_EL1 key of instr addrs in ELs 0,1
+    bool EnIB = true; // using APIBKey_EL1 key of instr addrs in ELs 0,1
 
     /**
      * Some registers alias with others, and therefore need to be translated.
@@ -3968,6 +4001,28 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64MMFR2_EL1)
       .allPrivileges().exceptUserMode().writes(0);
+
+    InitReg(MISCREG_APDAKeyHi_EL1)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_APDAKeyLo_EL1)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_APDBKeyHi_EL1)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_APDBKeyLo_EL1)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_APGAKeyHi_EL1)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_APGAKeyLo_EL1)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_APIAKeyHi_EL1)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_APIAKeyLo_EL1)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_APIBKeyHi_EL1)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_APIBKeyLo_EL1)
+      .allPrivileges().exceptUserMode();
+
     InitReg(MISCREG_CCSIDR_EL1)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_CLIDR_EL1)

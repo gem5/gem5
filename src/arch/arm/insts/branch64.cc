@@ -100,6 +100,18 @@ BranchReg64::generateDisassembly(
 }
 
 std::string
+BranchRegReg64::generateDisassembly(
+        Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printIntReg(ss, op1);
+    ccprintf(ss, ", ");
+    printIntReg(ss, op2);
+    return ss.str();
+}
+
+std::string
 BranchRet64::generateDisassembly(
         Addr pc, const SymbolTable *symtab) const
 {
@@ -111,7 +123,27 @@ BranchRet64::generateDisassembly(
 }
 
 std::string
+BranchRetA64::generateDisassembly(
+        Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    if (op1 != INTREG_X30)
+        printIntReg(ss, op1);
+    return ss.str();
+}
+
+std::string
 BranchEret64::generateDisassembly(
+        Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    return ss.str();
+}
+
+std::string
+BranchEretA64::generateDisassembly(
         Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;

@@ -675,6 +675,18 @@ namespace ArmISA
 
         MISCREG_ID_AA64MMFR2_EL1,
 
+        //PAuth Key Regsiters
+        MISCREG_APDAKeyHi_EL1,
+        MISCREG_APDAKeyLo_EL1,
+        MISCREG_APDBKeyHi_EL1,
+        MISCREG_APDBKeyLo_EL1,
+        MISCREG_APGAKeyHi_EL1,
+        MISCREG_APGAKeyLo_EL1,
+        MISCREG_APIAKeyHi_EL1,
+        MISCREG_APIAKeyLo_EL1,
+        MISCREG_APIBKeyHi_EL1,
+        MISCREG_APIBKeyLo_EL1,
+
         // GICv3, CPU interface
         MISCREG_ICC_PMR_EL1,
         MISCREG_ICC_IAR0_EL1,
@@ -1625,6 +1637,16 @@ namespace ArmISA
         "cnthv_tval_el2",
         "id_aa64mmfr2_el1",
 
+        "apdakeyhi_el1",
+        "apdakeylo_el1",
+        "apdbkeyhi_el1",
+        "apdbkeylo_el1",
+        "apgakeyhi_el1",
+        "apgakeylo_el1",
+        "apiakeyhi_el1",
+        "apiakeylo_el1",
+        "apibkeyhi_el1",
+        "apibkeylo_el1",
         // GICv3, CPU interface
         "icc_pmr_el1",
         "icc_iar0_el1",

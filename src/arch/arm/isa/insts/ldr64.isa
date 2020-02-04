@@ -122,6 +122,15 @@ let {{
                     eaCode += " + (isBigEndian64(xc->tcBase()) ? 0 : 8)"
                 else:
                     eaCode += " + (isBigEndian64(xc->tcBase()) ? 8 : 0)"
+
+            if self.flavor in ("authDA", "authDB"):
+                eaCode += ";\n"
+                eaCode += "fault = %s(xc->tcBase(), "\
+                          "EA, 0, &EA);\n" % self.flavor
+                if self.writeback:
+                    eaCode += "XBase = EA;\n"
+                eaCode += "EA = EA"
+
             if not self.post:
                 eaCode += self.offset
             eaCode += ";"
@@ -380,6 +389,12 @@ let {{
         LoadPre64(mnem, NameBase + "_PRE", size, sign, flavor=flavor).emit()
         LoadPost64(mnem, NameBase + "_POST", size, sign, flavor=flavor).emit()
         LoadReg64(mnem, NameBase + "_REG", size, sign, flavor=flavor).emit()
+
+
+    LoadPre64("ldraa", "LDRAA_PRE", 8, False, flavor="authDA").emit()
+    LoadImm64("ldraa", "LDRAA_REG", 8, False, flavor="authDA").emit()
+    LoadPre64("ldrab", "LDRAB_PRE", 8, False, flavor="authDB").emit()
+    LoadImm64("ldrab", "LDRAB_REG", 8, False, flavor="authDB").emit()
 
     buildLoads64("ldrb", "LDRB64", 1, False)
     buildLoads64("ldrsb", "LDRSBW64", 1, True)

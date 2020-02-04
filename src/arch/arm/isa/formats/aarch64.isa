@@ -311,22 +311,24 @@ namespace Aarch64
                                 return new SevInst(machInst);
                               case 0x5:
                                 return new SevlInst(machInst);
+                              case 0x7:
+                                return new Xpaclri(machInst, INTREG_X30);
                             }
                             break;
                           case 0x1:
                             switch (op2) {
                               case 0x0:
-                                return new WarnUnimplemented(
-                                        "pacia", machInst);
+                                return new Pacia1716(machInst, INTREG_X17,
+                                                               INTREG_X16);
                               case 0x2:
-                                return new WarnUnimplemented(
-                                        "pacib", machInst);
+                                return new Pacib1716(machInst, INTREG_X17,
+                                                               INTREG_X16);
                               case 0x4:
-                                return new WarnUnimplemented(
-                                        "autia", machInst);
+                                return new Autia1716(machInst, INTREG_X17,
+                                                               INTREG_X16);
                               case 0x6:
-                                return new WarnUnimplemented(
-                                        "autib", machInst);
+                                return new Autib1716(machInst, INTREG_X17,
+                                                               INTREG_X16);
                             }
                             break;
                           case 0x2:
@@ -348,21 +350,29 @@ namespace Aarch64
                           case 0x3:
                             switch (op2) {
                               case 0x0:
+                                return new Paciaz(machInst,
+                                         INTREG_X30, makeZero(INTREG_X31));
                               case 0x1:
-                                return new WarnUnimplemented(
-                                        "pacia", machInst);
+                                return new Paciasp(machInst,
+                                         INTREG_X30, makeSP(INTREG_SPX));
                               case 0x2:
+                                return new Pacibz(machInst,
+                                         INTREG_X30, makeZero(INTREG_X31));
                               case 0x3:
-                                return new WarnUnimplemented(
-                                        "pacib", machInst);
+                                return new Pacibsp(machInst,
+                                         INTREG_X30, makeSP(INTREG_SPX));
                               case 0x4:
+                                return new Autiaz(machInst,
+                                         INTREG_X30, makeZero(INTREG_X31));
                               case 0x5:
-                                return new WarnUnimplemented(
-                                        "autia", machInst);
+                                return new Autiasp(machInst,
+                                         INTREG_X30, makeSP(INTREG_SPX));
                               case 0x6:
+                                return new Autibz(machInst,
+                                         INTREG_X30, makeZero(INTREG_X31));
                               case 0x7:
-                                return new WarnUnimplemented(
-                                        "autib", machInst);
+                                return new Autibsp(machInst,
+                                         INTREG_X30, makeSP(INTREG_SPX));
                             }
                             break;
                           case 0x4:
@@ -504,26 +514,72 @@ namespace Aarch64
             } else if (bits(machInst, 25) == 0x1) {
                 uint8_t opc = bits(machInst, 24, 21);
                 uint8_t op2 = bits(machInst, 20, 16);
-                uint8_t op3 = bits(machInst, 15, 10);
+                uint8_t op3 = bits(machInst, 15, 12);
                 IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
+                IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
                 uint8_t op4 = bits(machInst, 4, 0);
-                if (op2 != 0x1f || op3 != 0x0 || op4 != 0x0)
+                if (op2 != 0x1f || op3 != 0x0)
                     return new Unknown64(machInst);
                 switch (opc) {
                   case 0x0:
-                    return new Br64(machInst, rn);
+                    if (bits(machInst, 11) == 0)
+                        return new Br64(machInst, rn);
+                    else if (op4 != 0x1f)
+                        return new Unknown64(machInst);
+                    // 24(Z):0, 11(A):1
+                    if (bits(machInst, 10) == 0)
+                        return new Braaz(machInst, rn);
+                    else
+                        return new Brabz(machInst, rn);
                   case 0x1:
-                    return new Blr64(machInst, rn);
+                    if (bits(machInst, 11) == 0)
+                        return new Blr64(machInst, rn);
+                    else if (op4 != 0x1f)
+                        return new Unknown64(machInst);
+                    // 24(Z):0, 11(A):1
+                    if (bits(machInst, 10) == 0)
+                        return new Blraaz(machInst, rn);
+                    else
+                        return new Blrabz(machInst, rn);
                   case 0x2:
-                    return new Ret64(machInst, rn);
+                    if (op4 == 0x1f) {
+                        bool m = bits(machInst, 10);
+                        if (m)
+                            return new Retab(machInst);
+                        else
+                            return new Retaa(machInst);
+                    } else
+                        return new Ret64(machInst, rn);
                   case 0x4:
                     if (rn != 0x1f)
                         return new Unknown64(machInst);
-                    return new Eret64(machInst);
+                    if (bits(machInst, 11) == 0)
+                        return new Eret64(machInst);
+                    else if (op4 != 0x1f)
+                        return new Unknown64(machInst);
+                    // 24(Z):0, 11(A):1
+                    if (bits(machInst, 10) == 0)
+                        return new Eretaa(machInst);
+                    else
+                        return new Eretab(machInst);
                   case 0x5:
                     if (rn != 0x1f)
                         return new Unknown64(machInst);
                     return new FailUnimplemented("dret", machInst);
+                  case 0x8:
+                    if (bits(machInst, 11) == 0)
+                        return new Unknown64(machInst);
+                    if (bits(machInst, 10) == 0)
+                        return new Braa(machInst, rn, makeSP(rm));
+                    else
+                        return new Brab(machInst, rn, makeSP(rm));
+                  case 0x9:
+                    if (bits(machInst, 11) == 0)
+                        return new Unknown64(machInst);
+                    if (bits(machInst, 10) == 0)
+                        return new Blraa(machInst, rn, makeSP(rm));
+                    else
+                        return new Blrab(machInst, rn, makeSP(rm));
                   default:
                     return new Unknown64(machInst);
                 }
@@ -1482,6 +1538,35 @@ namespace Aarch64
                             return decodeAtomicArithOp(machInst);
                         }
                     }
+                  case 0x1:
+                  case 0x3:
+                    {
+                        IntRegIndex rt = (IntRegIndex)(uint32_t)
+                                           bits(machInst, 4, 0);
+                        IntRegIndex rn = (IntRegIndex)(uint32_t)
+                                           bits(machInst, 9, 5);
+                        uint8_t  s = bits(machInst, 22);
+                        uint64_t imm9 = bits(machInst, 20, 12);
+                        uint64_t imm10 = sext<10>(s<<9 | imm9)<<3;
+                        uint8_t val = bits(machInst, 23)<<1
+                                      | bits(machInst, 11);
+                        switch (val) {
+                          case 0x0:
+                            return new LDRAA_REG(machInst, rt,
+                                                 makeSP(rn), imm10);
+                          case 0x1:
+                            return new LDRAA_PRE(machInst, rt,
+                                                 makeSP(rn), imm10);
+                          case 0x2:
+                            return new LDRAB_REG(machInst, rt,
+                                                 makeSP(rn), imm10);
+                          case 0x3:
+                            return new LDRAB_PRE(machInst, rt,
+                                                 makeSP(rn), imm10);
+                          default:
+                            M5_UNREACHABLE;
+                        }
+                    }
                   case 0x2:
                     {
                         if (!bits(machInst, 14))
@@ -2016,6 +2101,8 @@ namespace Aarch64
                         return new Asrv64(machInst, rdzr, rn, rm);
                       case 0xb:
                         return new Rorv64(machInst, rdzr, rn, rm);
+                     case 0xc:
+                        return new Pacga(machInst, rd, rn, makeSP(rm));
                       case 0x10:
                         return new Crc32b64(machInst, rdzr, rn, rm);
                       case 0x11:
@@ -2036,8 +2123,93 @@ namespace Aarch64
                         return new Unknown64(machInst);
                     }
                 } else {
-                    if (bits(machInst, 20, 16) != 0 ||
-                            bits(machInst, 29) != 0) {
+                    uint8_t dm = bits(machInst, 20, 14);
+                    switch(dm){
+                        case 0x4:
+                        {
+                          uint8_t zflags = bits(machInst, 13, 10);
+                          switch (zflags) {
+                            case 0x0:
+                                return new Pacia(machInst, rd, makeSP(rn));
+                            case 0x1:
+                                return new Pacib(machInst, rd, makeSP(rn));
+                            case 0x2:
+                                return new Pacda(machInst, rd, makeSP(rn));
+                            case 0x3:
+                                return new Pacdb(machInst, rd, makeSP(rn));
+                            case 0x4:
+                                return new Autia(machInst, rd, makeSP(rn));
+                            case 0x5:
+                                return new Autib(machInst, rd, makeSP(rn));
+                            case 0x6:
+                                return new Autda(machInst, rd, makeSP(rn));
+                            case 0x7:
+                                return new Autdb(machInst, rd, makeSP(rn));
+                            case 0x8:
+                                if (rn == 0x1f)
+                                    return new Paciza(machInst, rd,
+                                                      makeZero(INTREG_X31));
+                                else
+                                    return new Unknown64(machInst);
+                            case 0x9:
+                                if (rn == 0x1f)
+                                    return new Pacizb(machInst, rd,
+                                                      makeZero(INTREG_X31));
+                                else
+                                    return new Unknown64(machInst);
+                            case 0xa:
+                                if (rn == 0x1f)
+                                    return new Pacdza(machInst, rd,
+                                                      makeZero(INTREG_X31));
+                                else
+                                    return new Unknown64(machInst);
+                            case 0xb:
+                                if (rn == 0x1f)
+                                    return new Pacdzb(machInst, rd,
+                                                      makeZero(INTREG_X31));
+                                else
+                                    return new Unknown64(machInst);
+                            case 0xc:
+                                if (rn == 0x1f)
+                                    return new Autiza(machInst, rd,
+                                                      makeZero(INTREG_X31));
+                                else
+                                    return new Unknown64(machInst);
+                            case 0xd:
+                                if (rn == 0x1f)
+                                    return new Autizb(machInst, rd,
+                                                      makeZero(INTREG_X31));
+                                else
+                                    return new Unknown64(machInst);
+                            case 0xe:
+                                if (rn == 0x1f)
+                                    return new Autdza(machInst, rd,
+                                                      makeZero(INTREG_X31));
+                                else
+                                    return new Unknown64(machInst);
+                            case 0xf:
+                                if (rn == 0x1f)
+                                    return new Autdzb(machInst, rd,
+                                                      makeZero(INTREG_X31));
+                                else
+                                    return new Unknown64(machInst);
+                            default:
+                                return new Unknown64(machInst);
+                          }
+                        }
+                        case 0x5:
+                          {
+                            if (rn != 0x1f)
+                                return new Unknown64(machInst);
+                            bool d = bits(machInst,10);
+                            if (d)
+                                return new Xpacd(machInst, rd);
+                            else
+                                return new Xpaci(machInst, rd);
+                          }
+                    }
+                    if (dm != 0 || bits(machInst, 29) != 0) {
+                        // dm !=0 and dm != 0x1
                         return new Unknown64(machInst);
                     }
                     uint8_t switchVal = bits(machInst, 15, 10);
