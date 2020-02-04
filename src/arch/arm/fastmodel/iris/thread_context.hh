@@ -209,7 +209,7 @@ class ThreadContext : public ::ThreadContext
 
     System *getSystemPtr() override { return _cpu->system; }
 
-    ArmISA::ISA *
+    BaseISA *
     getIsaPtr() override
     {
         panic("%s not implemented.", __FUNCTION__);

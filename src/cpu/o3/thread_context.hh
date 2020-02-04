@@ -113,7 +113,7 @@ class O3ThreadContext : public ThreadContext
 
     CheckerCPU *getCheckerCpuPtr() override { return NULL; }
 
-    TheISA::ISA *
+    BaseISA *
     getIsaPtr() override
     {
         return cpu->isa[thread->threadId()];
