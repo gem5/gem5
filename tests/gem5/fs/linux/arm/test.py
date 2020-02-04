@@ -44,17 +44,16 @@ from os.path import join as joinpath
 from testlib import *
 
 arm_fs_quick_tests = [
+    'realview64-simple-atomic',
     'realview64-simple-atomic-dual',
     'realview64-simple-atomic-checkpoint',
+    'realview64-simple-timing',
     'realview64-simple-timing-dual',
     'realview64-switcheroo-atomic',
     'realview64-switcheroo-timing',
-
 ]
 
 arm_fs_long_tests = [
-    'realview64-simple-atomic', # TODO: Move this to quick regressions
-    'realview64-simple-timing', # TODO: Move this to quick regressions
     'realview-simple-atomic',
     'realview-simple-atomic-dual',
     'realview-simple-atomic-checkpoint',
