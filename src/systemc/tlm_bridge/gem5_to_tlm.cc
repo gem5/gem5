@@ -105,13 +105,10 @@ packet2payload(PacketPtr packet)
         trans->set_command(tlm::TLM_IGNORE_COMMAND);
     } else if (packet->isRead()) {
         trans->set_command(tlm::TLM_READ_COMMAND);
-    } else if (packet->isInvalidate()) {
-        /* Do nothing */
-        trans->set_command(tlm::TLM_IGNORE_COMMAND);
     } else if (packet->isWrite()) {
         trans->set_command(tlm::TLM_WRITE_COMMAND);
     } else {
-        SC_REPORT_FATAL("Gem5ToTlmBridge", "No R/W packet");
+        trans->set_command(tlm::TLM_IGNORE_COMMAND);
     }
 
     // Attach the packet pointer to the TLM transaction to keep track.
@@ -283,10 +280,6 @@ Gem5ToTlmBridge<BITWIDTH>::recvTimingReq(PacketPtr packet)
 {
     panic_if(packet->cacheResponding(),
              "Should not see packets where cache is responding");
-
-    panic_if(!(packet->isRead() || packet->isWrite()),
-             "Should only see read and writes at TLM memory\n");
-
 
     // We should never get a second request after noting that a retry is
     // required.
