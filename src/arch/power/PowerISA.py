@@ -35,9 +35,9 @@
 #
 # Authors: Andreas Sandberg
 
-from m5.SimObject import SimObject
+from m5.objects.BaseISA import BaseISA
 
-class PowerISA(SimObject):
+class PowerISA(BaseISA):
     type = 'PowerISA'
     cxx_class = 'PowerISA::ISA'
     cxx_header = "arch/power/isa.hh"

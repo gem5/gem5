@@ -133,8 +133,7 @@ ISA::clear()
     regVal[MISCREG_APIC_BASE] = lApicBase;
 }
 
-ISA::ISA(Params *p)
-    : SimObject(p)
+ISA::ISA(Params *p) : BaseISA(p)
 {
     clear();
 }

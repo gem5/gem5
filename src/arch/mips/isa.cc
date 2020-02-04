@@ -89,8 +89,8 @@ ISA::miscRegNames[NumMiscRegs] =
     "LLFlag"
 };
 
-ISA::ISA(Params *p)
-    : SimObject(p), numThreads(p->num_threads), numVpes(p->num_vpes)
+ISA::ISA(Params *p) : BaseISA(p), numThreads(p->num_threads),
+    numVpes(p->num_vpes)
 {
     miscRegFile.resize(NumMiscRegs);
     bankType.resize(NumMiscRegs);

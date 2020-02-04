@@ -41,6 +41,7 @@
 #include <map>
 #include <string>
 
+#include "arch/generic/isa.hh"
 #include "arch/riscv/registers.hh"
 #include "arch/riscv/types.hh"
 #include "base/bitfield.hh"
@@ -62,7 +63,7 @@ enum PrivilegeMode {
     PRV_M = 3
 };
 
-class ISA : public SimObject
+class ISA : public BaseISA
 {
   protected:
     std::vector<RegVal> miscRegFile;
@@ -91,7 +92,7 @@ class ISA : public SimObject
     void startup(ThreadContext *tc) {}
 
     /// Explicitly import the otherwise hidden startup
-    using SimObject::startup;
+    using BaseISA::startup;
 
     const Params *params() const;
 

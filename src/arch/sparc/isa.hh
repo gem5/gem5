@@ -34,6 +34,7 @@
 #include <ostream>
 #include <string>
 
+#include "arch/generic/isa.hh"
 #include "arch/sparc/registers.hh"
 #include "arch/sparc/types.hh"
 #include "cpu/cpuevent.hh"
@@ -47,7 +48,7 @@ class ThreadContext;
 
 namespace SparcISA
 {
-class ISA : public SimObject
+class ISA : public BaseISA
 {
   private:
 
@@ -174,7 +175,7 @@ class ISA : public SimObject
     void startup(ThreadContext *tc) {}
 
     /// Explicitly import the otherwise hidden startup
-    using SimObject::startup;
+    using BaseISA::startup;
 
   protected:
     bool isHyperPriv() { return hpstate.hpriv; }

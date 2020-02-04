@@ -37,6 +37,7 @@
 
 #include "arch/alpha/registers.hh"
 #include "arch/alpha/types.hh"
+#include "arch/generic/isa.hh"
 #include "base/types.hh"
 #include "cpu/reg_class.hh"
 #include "sim/sim_object.hh"
@@ -50,7 +51,7 @@ class ThreadContext;
 
 namespace AlphaISA
 {
-    class ISA : public SimObject
+    class ISA : public BaseISA
     {
       public:
         typedef uint64_t InternalProcReg;
@@ -147,7 +148,7 @@ namespace AlphaISA
         void startup(ThreadContext *tc) {}
 
         /// Explicitly import the otherwise hidden startup
-        using SimObject::startup;
+        using BaseISA::startup;
     };
 }
 

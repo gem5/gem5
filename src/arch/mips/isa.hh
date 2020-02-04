@@ -35,6 +35,7 @@
 #include <string>
 #include <vector>
 
+#include "arch/generic/isa.hh"
 #include "arch/mips/registers.hh"
 #include "arch/mips/types.hh"
 #include "cpu/reg_class.hh"
@@ -49,7 +50,7 @@ class ThreadContext;
 
 namespace MipsISA
 {
-    class ISA : public SimObject
+    class ISA : public BaseISA
     {
       public:
         // The MIPS name for this file is CP0 or Coprocessor 0
@@ -132,7 +133,7 @@ namespace MipsISA
         void startup(ThreadContext *tc) {}
 
         /// Explicitly import the otherwise hidden startup
-        using SimObject::startup;
+        using BaseISA::startup;
 
         const Params *params() const;
 

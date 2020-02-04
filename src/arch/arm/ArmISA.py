@@ -38,16 +38,16 @@
 
 from m5.params import *
 from m5.proxy import *
-from m5.SimObject import SimObject
 
 from m5.objects.ArmPMU import ArmPMU
 from m5.objects.ArmSystem import SveVectorLength
+from m5.objects.BaseISA import BaseISA
 from m5.objects.ISACommon import VecRegRenameMode
 
 # Enum for DecoderFlavour
 class DecoderFlavour(Enum): vals = ['Generic']
 
-class ArmISA(SimObject):
+class ArmISA(BaseISA):
     type = 'ArmISA'
     cxx_class = 'ArmISA::ISA'
     cxx_header = "arch/arm/isa.hh"

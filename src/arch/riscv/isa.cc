@@ -46,7 +46,7 @@
 namespace RiscvISA
 {
 
-ISA::ISA(Params *p) : SimObject(p)
+ISA::ISA(Params *p) : BaseISA(p)
 {
     miscRegFile.resize(NumMiscRegs);
     clear();

@@ -37,9 +37,9 @@
 
 from m5.params import *
 from m5.proxy import *
-from m5.SimObject import SimObject
+from m5.objects.BaseISA import BaseISA
 
-class AlphaISA(SimObject):
+class AlphaISA(BaseISA):
     type = 'AlphaISA'
     cxx_class = 'AlphaISA::ISA'
     cxx_header = "arch/alpha/isa.hh"

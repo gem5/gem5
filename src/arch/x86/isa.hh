@@ -34,9 +34,10 @@
 #include <iostream>
 #include <string>
 
+#include "arch/generic/isa.hh"
+#include "arch/x86/registers.hh"
 #include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/misc.hh"
-#include "arch/x86/registers.hh"
 #include "base/types.hh"
 #include "cpu/reg_class.hh"
 #include "sim/sim_object.hh"
@@ -48,7 +49,7 @@ struct X86ISAParams;
 
 namespace X86ISA
 {
-    class ISA : public SimObject
+    class ISA : public BaseISA
     {
       protected:
         RegVal regVal[NUM_MISCREGS];
@@ -140,7 +141,7 @@ namespace X86ISA
         void startup(ThreadContext *tc);
 
         /// Explicitly import the otherwise hidden startup
-        using SimObject::startup;
+        using BaseISA::startup;
 
     };
 }

@@ -35,9 +35,9 @@
 #
 # Authors: Andreas Sandberg
 
-from m5.SimObject import SimObject
+from m5.objects.BaseISA import BaseISA
 
-class X86ISA(SimObject):
+class X86ISA(BaseISA):
     type = 'X86ISA'
     cxx_class = 'X86ISA::ISA'
     cxx_header = "arch/x86/isa.hh"

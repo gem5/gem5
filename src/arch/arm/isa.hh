@@ -49,6 +49,7 @@
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/arm/types.hh"
+#include "arch/generic/isa.hh"
 #include "arch/generic/traits.hh"
 #include "debug/Checkpoint.hh"
 #include "enums/VecRegRenameMode.hh"
@@ -63,7 +64,7 @@ class EventManager;
 
 namespace ArmISA
 {
-    class ISA : public SimObject
+    class ISA : public BaseISA
     {
       protected:
         // Parent system
@@ -763,7 +764,7 @@ namespace ArmISA
         }
 
         /// Explicitly import the otherwise hidden startup
-        using SimObject::startup;
+        using BaseISA::startup;
 
         typedef ArmISAParams Params;
 

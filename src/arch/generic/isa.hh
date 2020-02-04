@@ -1,15 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
- * All rights reserved
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -34,32 +24,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Andreas Sandberg
+ * Authors: Gabe Black
  */
 
-#include "arch/power/isa.hh"
+#ifndef __ARCH_GENERIC_ISA_HH__
+#define __ARCH_GENERIC_ISA_HH__
 
-#include "params/PowerISA.hh"
+#include "sim/sim_object.hh"
 
-namespace PowerISA
+class BaseISA : public SimObject
 {
+  protected:
+    using SimObject::SimObject;
+};
 
-ISA::ISA(Params *p) : BaseISA(p)
-{
-    clear();
-}
-
-const PowerISAParams *
-ISA::params() const
-{
-    return dynamic_cast<const Params *>(_params);
-}
-
-}
-
-PowerISA::ISA *
-PowerISAParams::create()
-{
-    return new PowerISA::ISA(this);
-}
-
+#endif // __ARCH_GENERIC_ISA_HH__

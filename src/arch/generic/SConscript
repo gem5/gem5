@@ -47,6 +47,7 @@ Source('decode_cache.cc')
 Source('mmapped_ipr.cc')
 
 SimObject('BaseInterrupts.py')
+SimObject('BaseISA.py')
 SimObject('BaseTLB.py')
 SimObject('ISACommon.py')
 

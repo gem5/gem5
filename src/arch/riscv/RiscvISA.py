@@ -42,9 +42,9 @@
 #          Sven Karlsson
 #          Alec Roelke
 
-from m5.SimObject import SimObject
+from m5.objects.BaseISA import BaseISA
 
-class RiscvISA(SimObject):
+class RiscvISA(BaseISA):
     type = 'RiscvISA'
     cxx_class = 'RiscvISA::ISA'
     cxx_header = "arch/riscv/isa.hh"

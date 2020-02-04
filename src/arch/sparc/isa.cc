@@ -61,8 +61,7 @@ buildPstateMask()
 
 static const PSTATE PstateMask = buildPstateMask();
 
-ISA::ISA(Params *p)
-    : SimObject(p)
+ISA::ISA(Params *p) : BaseISA(p)
 {
     tickCompare = NULL;
     sTickCompare = NULL;

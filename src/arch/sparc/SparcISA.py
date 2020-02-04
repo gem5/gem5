@@ -35,9 +35,9 @@
 #
 # Authors: Andreas Sandberg
 
-from m5.SimObject import SimObject
+from m5.objects.BaseISA import BaseISA
 
-class SparcISA(SimObject):
+class SparcISA(BaseISA):
     type = 'SparcISA'
     cxx_class = 'SparcISA::ISA'
     cxx_header = "arch/sparc/isa.hh"
