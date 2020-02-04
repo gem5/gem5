@@ -44,8 +44,8 @@ from m5.objects.ArmSystem import SveVectorLength
 from m5.objects.BaseISA import BaseISA
 from m5.objects.ISACommon import VecRegRenameMode
 
-# Enum for DecoderFlavour
-class DecoderFlavour(Enum): vals = ['Generic']
+# Enum for DecoderFlavor
+class DecoderFlavor(Enum): vals = ['Generic']
 
 class ArmISA(BaseISA):
     type = 'ArmISA'
@@ -55,7 +55,8 @@ class ArmISA(BaseISA):
     system = Param.System(Parent.any, "System this ISA object belongs to")
 
     pmu = Param.ArmPMU(NULL, "Performance Monitoring Unit")
-    decoderFlavour = Param.DecoderFlavour('Generic', "Decoder flavour specification")
+    decoderFlavor = Param.DecoderFlavor(
+            'Generic', "Decoder flavor specification")
 
     # If no MIDR value is provided, 0x0 is treated by gem5 as follows:
     # When 'highest_el_is_64' (AArch64 support) is:

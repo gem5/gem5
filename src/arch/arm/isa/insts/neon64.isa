@@ -3388,11 +3388,11 @@ let {{
     threeRegScrambleInstX("zip2", "Zip2QX", "SimdAluOp", unsignedTypes, 4,
                           zipCode % "eCount / 2")
 
-    for decoderFlavour, type_dict in decoders.iteritems():
+    for decoderFlavor, type_dict in decoders.iteritems():
         header_output += '''
-        class %(decoder_flavour)sDecoder {
+        class %(decoder_flavor)sDecoder {
         public:
-        ''' % { "decoder_flavour" : decoderFlavour }
+        ''' % { "decoder_flavor" : decoderFlavor }
         for type,name in type_dict.iteritems():
             header_output += '''
             template<typename Elem> using %(type)s = %(new_name)s<Elem>;''' % {

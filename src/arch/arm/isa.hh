@@ -52,9 +52,9 @@
 #include "arch/generic/isa.hh"
 #include "arch/generic/traits.hh"
 #include "debug/Checkpoint.hh"
+#include "enums/DecoderFlavor.hh"
 #include "enums/VecRegRenameMode.hh"
 #include "sim/sim_object.hh"
-#include "enums/DecoderFlavour.hh"
 
 struct ArmISAParams;
 struct DummyArmISADeviceParams;
@@ -71,7 +71,7 @@ namespace ArmISA
         ArmSystem *system;
 
         // Micro Architecture
-        const Enums::DecoderFlavour _decoderFlavour;
+        const Enums::DecoderFlavor _decoderFlavor;
         const Enums::VecRegRenameMode _vecRegRenameMode;
 
         /** Dummy device for to handle non-existing ISA devices */
@@ -745,7 +745,7 @@ namespace ArmISA
 
         void startup(ThreadContext *tc);
 
-        Enums::DecoderFlavour decoderFlavour() const { return _decoderFlavour; }
+        Enums::DecoderFlavor decoderFlavor() const { return _decoderFlavor; }
 
         /** Getter for haveGICv3CPUInterface */
         bool haveGICv3CpuIfc() const

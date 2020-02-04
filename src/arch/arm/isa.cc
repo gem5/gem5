@@ -62,7 +62,7 @@ namespace ArmISA
 {
 
 ISA::ISA(Params *p) : BaseISA(p), system(NULL),
-    _decoderFlavour(p->decoderFlavour), _vecRegRenameMode(Enums::Full),
+    _decoderFlavor(p->decoderFlavor), _vecRegRenameMode(Enums::Full),
     pmu(p->pmu), haveGICv3CPUInterface(false), impdefAsNop(p->impdef_nop),
     afterStartup(false)
 {

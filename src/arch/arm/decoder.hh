@@ -50,7 +50,7 @@
 #include "arch/generic/decode_cache.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
-#include "enums/DecoderFlavour.hh"
+#include "enums/DecoderFlavor.hh"
 
 namespace ArmISA
 {
@@ -78,7 +78,7 @@ class Decoder
      */
     int sveLen;
 
-    Enums::DecoderFlavour decoderFlavour;
+    Enums::DecoderFlavor decoderFlavor;
 
     /// A cache of decoded instruction objects.
     static GenericISA::BasicDecodeCache defaultCache;

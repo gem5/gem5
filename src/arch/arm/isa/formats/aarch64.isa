@@ -3010,10 +3010,10 @@ let {{
     decoder_output ='''
 namespace Aarch64
 {'''
-    for decoderFlavour, type_dict in decoders.iteritems():
+    for decoderFlavor, type_dict in decoders.iteritems():
         decoder_output +='''
 template StaticInstPtr decodeFpAdvSIMD<%(df)sDecoder>(ExtMachInst machInst);
-''' % { "df" : decoderFlavour }
+''' % { "df" : decoderFlavor }
     decoder_output +='''
 }'''
 }};
@@ -3096,7 +3096,7 @@ def format Aarch64() {{
             return decodeGem5Ops(machInst);
         } else {
             // bit 27:25=111
-            switch(decoderFlavour){
+            switch(decoderFlavor){
             default:
                 return decodeFpAdvSIMD<GenericDecoder>(machInst);
             }
