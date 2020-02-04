@@ -144,12 +144,12 @@ class SimpleThread : public ThreadState, public ThreadContext
     // constructor: initialize SimpleThread from given process structure
     // FS
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-                 BaseTLB *_itb, BaseTLB *_dtb, TheISA::ISA *_isa,
+                 BaseTLB *_itb, BaseTLB *_dtb, BaseISA *_isa,
                  bool use_kernel_stats = true);
     // SE
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
                  Process *_process, BaseTLB *_itb, BaseTLB *_dtb,
-                 TheISA::ISA *_isa);
+                 BaseISA *_isa);
 
     virtual ~SimpleThread() {}
 
