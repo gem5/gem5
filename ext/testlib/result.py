@@ -269,6 +269,20 @@ class JUnitTestCase(XMLElement):
             LargeFileElement('system-out', test_result.stdout),
         ]
 
+        if str(test_result.result) == 'Failed':
+            self.elements.append(JUnitFailure('Test failed', 'ERROR'))
+
+
+class JUnitFailure(XMLElement):
+    name = 'failure'
+    def __init__(self, message, fail_type):
+        self.attributes = [
+            XMLAttribute('message', message),
+            XMLAttribute('type', fail_type),
+        ]
+        self.elements = []
+
+
 class LargeFileElement(XMLElement):
     def __init__(self, name, filename):
         self.name = name
