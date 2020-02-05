@@ -150,7 +150,6 @@ output decoder {{
     {
         std::string mnem_str(mnemonic);
 
-#ifndef SS_COMPATIBLE_DISASSEMBLY
         std::string suffix("");
         suffix += ((_destRegIdx[0].isFloatReg())
                    ? fpTrappingModeSuffix[trappingMode]
@@ -160,7 +159,6 @@ output decoder {{
         if (suffix != "") {
             mnem_str = csprintf("%s/%s", mnemonic, suffix);
         }
-#endif
 
         std::stringstream ss;
         ccprintf(ss, "%-10s ", mnem_str.c_str());

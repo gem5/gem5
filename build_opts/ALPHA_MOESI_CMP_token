@@ -1,3 +1,2 @@
-SS_COMPATIBLE_FP = 1
 CPU_MODELS = 'AtomicSimpleCPU,TimingSimpleCPU,O3CPU,MinorCPU'
 PROTOCOL = 'MOESI_CMP_token'

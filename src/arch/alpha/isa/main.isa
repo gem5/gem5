@@ -47,7 +47,6 @@ output header {{
 
 #include "arch/alpha/faults.hh"
 #include "arch/alpha/types.hh"
-#include "config/ss_compatible_fp.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"  // some constructors use MemReq flags
@@ -64,7 +63,6 @@ output decoder {{
 #include "base/cprintf.hh"
 #include "base/fenv.hh"
 #include "base/loader/symtab.hh"
-#include "config/ss_compatible_fp.hh"
 #include "cpu/thread_context.hh"  // for Jump::branchTarget()
 #include "mem/packet.hh"
 #include "sim/full_system.hh"
@@ -83,7 +81,6 @@ output exec {{
 #include "arch/generic/memhelpers.hh"
 #include "base/cp_annotate.hh"
 #include "base/fenv.hh"
-#include "config/ss_compatible_fp.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "mem/packet.hh"
@@ -215,10 +212,6 @@ def operands {{
 //
 
 output header {{
-// uncomment the following to get SimpleScalar-compatible disassembly
-// (useful for diffing output traces).
-// #define SS_COMPATIBLE_DISASSEMBLY
-
     /**
      * Base class for all Alpha static instructions.
      */
@@ -409,11 +402,7 @@ output decoder {{
     std::string Nop::generateDisassembly(Addr pc,
                                          const SymbolTable *symtab) const
     {
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-        return originalDisassembly;
-#else
         return csprintf("%-10s (%s)", "nop", originalDisassembly);
-#endif
     }
 }};
 

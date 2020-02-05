@@ -59,11 +59,7 @@ output decoder {{
     EmulatedCallPal::generateDisassembly(Addr pc,
                                          const SymbolTable *symtab) const
     {
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-        return csprintf("%s %s", "call_pal", mnemonic);
-#else
         return csprintf("%-10s %s", "call_pal", mnemonic);
-#endif
     }
 }};
 
@@ -179,9 +175,6 @@ output decoder {{
     std::string
     HwLoadStore::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-        return csprintf("%-10s r%d,%d(r%d)", mnemonic, RA, disp, RB);
-#else
         // HW_LDST_LOCK and HW_LDST_COND are the same bit.
         const char *lock_str =
             (HW_LDST_LOCK) ? (flags[IsLoad] ? ",LOCK" : ",COND") : "";
@@ -193,7 +186,6 @@ output decoder {{
                         HW_LDST_QUAD ? ",QUAD" : "",
                         HW_LDST_VPTE ? ",VPTE" : "",
                         lock_str);
-#endif
     }
 }};
 

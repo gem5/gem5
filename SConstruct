@@ -971,9 +971,6 @@ sticky_vars.AddVariables(
                  sorted(CpuModel.dict.keys())),
     BoolVariable('EFENCE', 'Link with Electric Fence malloc debugger',
                  False),
-    BoolVariable('SS_COMPATIBLE_FP',
-                 'Make floating-point results compatible with SimpleScalar',
-                 False),
     BoolVariable('USE_SSE2',
                  'Compile for SSE2 (-msse2) to get IEEE FP on x86 hosts',
                  False),
@@ -998,9 +995,9 @@ sticky_vars.AddVariables(
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
-export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP', 'TARGET_ISA', 'TARGET_GPU_ISA',
-                'CP_ANNOTATE', 'USE_POSIX_CLOCK', 'USE_KVM', 'USE_TUNTAP',
-                'PROTOCOL', 'HAVE_PROTOBUF', 'HAVE_VALGRIND',
+export_vars += ['USE_FENV', 'TARGET_ISA', 'TARGET_GPU_ISA', 'CP_ANNOTATE',
+                'USE_POSIX_CLOCK', 'USE_KVM', 'USE_TUNTAP', 'PROTOCOL',
+                'HAVE_PROTOBUF', 'HAVE_VALGRIND',
                 'HAVE_PERF_ATTR_EXCLUDE_HOST', 'USE_PNG',
                 'NUMBER_BITS_PER_SET', 'USE_HDF5']
 

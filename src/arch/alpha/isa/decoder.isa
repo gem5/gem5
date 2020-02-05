@@ -600,19 +600,11 @@ decode OPCODE default Unknown::unknown() {
         0xb: decode FA {
             31: decode FP_TYPEFUNC {
                 format FloatingPointOperate {
-#if SS_COMPATIBLE_FP
-                    0x0b: sqrts({{
-                        if (Fb < 0.0)
-                            fault = std::make_shared<ArithmeticFault>();
-                        Fc = sqrt(Fb);
-                    }}, FloatSqrtOp);
-#else
                     0x0b: sqrts({{
                         if (Fb_sf < 0.0)
                             fault = std::make_shared<ArithmeticFault>();
                         Fc_sf = sqrt(Fb_sf);
                     }}, FloatSqrtOp);
-#endif
                     0x2b: sqrtt({{
                         if (Fb < 0.0)
                             fault = std::make_shared<ArithmeticFault>();
@@ -644,17 +636,10 @@ decode OPCODE default Unknown::unknown() {
             // check for valid trapping modes here
             0,1,5,7: decode FP_TYPEFUNC {
                    format FloatingPointOperate {
-#if SS_COMPATIBLE_FP
-                       0x00: adds({{ Fc = Fa + Fb; }});
-                       0x01: subs({{ Fc = Fa - Fb; }});
-                       0x02: muls({{ Fc = Fa * Fb; }}, FloatMultOp);
-                       0x03: divs({{ Fc = Fa / Fb; }}, FloatDivOp);
-#else
                        0x00: adds({{ Fc_sf = Fa_sf + Fb_sf; }});
                        0x01: subs({{ Fc_sf = Fa_sf - Fb_sf; }});
                        0x02: muls({{ Fc_sf = Fa_sf * Fb_sf; }}, FloatMultOp);
                        0x03: divs({{ Fc_sf = Fa_sf / Fb_sf; }}, FloatDivOp);
-#endif
 
                        0x20: addt({{ Fc = Fa + Fb; }});
                        0x21: subt({{ Fc = Fa - Fb; }});

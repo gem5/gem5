@@ -175,13 +175,6 @@ output decoder {{
             ss << ",";
         }
 
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-        if (_numSrcRegs == 0 && _numDestRegs == 0) {
-            printReg(ss, 31);
-            ss << ",";
-        }
-#endif
-
         Addr target = pc + 4 + disp;
 
         std::string str;
@@ -199,13 +192,6 @@ output decoder {{
         std::stringstream ss;
 
         ccprintf(ss, "%-10s ", mnemonic);
-
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-        if (_numDestRegs == 0) {
-            printReg(ss, 31);
-            ss << ",";
-        }
-#endif
 
         if (_numDestRegs > 0) {
             printReg(ss, _destRegIdx[0]);
