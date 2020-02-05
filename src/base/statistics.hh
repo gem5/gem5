@@ -3414,11 +3414,6 @@ std::list<Info *> &statsList();
 typedef std::map<const void *, Info *> MapType;
 MapType &statsMap();
 
-typedef std::map<std::string, Info *> NameMapType;
-NameMapType &nameMap();
-
-bool validateStatName(const std::string &name);
-
 } // namespace Stats
 
 void debugDumpStats();

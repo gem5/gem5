@@ -80,14 +80,6 @@ Source('types.cc')
 GTest('types.test', 'types.test.cc', 'types.cc')
 GTest('uncontended_mutex.test', 'uncontended_mutex.test.cc')
 
-Source('stats/group.cc')
-Source('stats/text.cc')
-if env['USE_HDF5']:
-    if main['GCC']:
-        Source('stats/hdf5.cc', append={'CXXFLAGS': '-Wno-deprecated-copy'})
-    else:
-        Source('stats/hdf5.cc')
-
 GTest('addr_range.test', 'addr_range.test.cc')
 GTest('addr_range_map.test', 'addr_range_map.test.cc')
 GTest('bitunion.test', 'bitunion.test.cc')

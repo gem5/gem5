@@ -40,25 +40,17 @@
 
 #include "base/statistics.hh"
 
-#include <fstream>
-#include <iomanip>
+#include <cassert>
 #include <list>
 #include <map>
 #include <string>
+#include <utility>
 
 #include "base/callback.hh"
-#include "base/cprintf.hh"
-#include "base/debug.hh"
-#include "base/hostinfo.hh"
 #include "base/logging.hh"
-#include "base/str.hh"
-#include "base/time.hh"
-#include "base/trace.hh"
 #include "sim/root.hh"
 
 namespace Stats {
-
-std::string Info::separatorString = "::";
 
 // We wrap these in a function to make sure they're built in time.
 std::list<Info *> &
@@ -141,171 +133,6 @@ InfoAccess::info() const
 
 StorageParams::~StorageParams()
 {
-}
-
-NameMapType &
-nameMap()
-{
-    static NameMapType the_map;
-    return the_map;
-}
-
-int Info::id_count = 0;
-
-int debug_break_id = -1;
-
-Info::Info()
-    : flags(none), precision(-1), prereq(0), storageParams(NULL)
-{
-    id = id_count++;
-    if (debug_break_id >= 0 and debug_break_id == id)
-        Debug::breakpoint();
-}
-
-Info::~Info()
-{
-}
-
-bool
-validateStatName(const std::string &name)
-{
-    if (name.empty())
-        return false;
-
-    std::vector<std::string> vec;
-    tokenize(vec, name, '.');
-    std::vector<std::string>::const_iterator item = vec.begin();
-    while (item != vec.end()) {
-        if (item->empty())
-            return false;
-
-        std::string::const_iterator c = item->begin();
-
-        // The first character is different
-        if (!isalpha(*c) && *c != '_')
-            return false;
-
-        // The rest of the characters have different rules.
-        while (++c != item->end()) {
-            if (!isalnum(*c) && *c != '_')
-                return false;
-        }
-
-        ++item;
-    }
-
-    return true;
-}
-
-void
-Info::setName(const std::string &name)
-{
-    setName(nullptr, name);
-}
-
-void
-Info::setName(const Group *parent, const std::string &name)
-{
-    if (!validateStatName(name))
-        panic("invalid stat name '%s'", name);
-
-    // We only register the stat with the nameMap() if we are using
-    // old-style stats without a parent group. New-style stats should
-    // be unique since their names should correspond to a member
-    // variable.
-    if (!parent) {
-        auto p = nameMap().insert(make_pair(name, this));
-
-        if (!p.second)
-            panic("same statistic name used twice! name=%s\n",
-                  name);
-    }
-
-    this->name = name;
-}
-
-bool
-Info::less(Info *stat1, Info *stat2)
-{
-    const std::string &name1 = stat1->name;
-    const std::string &name2 = stat2->name;
-
-    std::vector<std::string> v1;
-    std::vector<std::string> v2;
-
-    tokenize(v1, name1, '.');
-    tokenize(v2, name2, '.');
-
-    size_type last = std::min(v1.size(), v2.size()) - 1;
-    for (off_type i = 0; i < last; ++i)
-        if (v1[i] != v2[i])
-            return v1[i] < v2[i];
-
-    // Special compare for last element.
-    if (v1[last] == v2[last])
-        return v1.size() < v2.size();
-    else
-        return v1[last] < v2[last];
-
-    return false;
-}
-
-bool
-Info::baseCheck() const
-{
-    if (!(flags & Stats::init)) {
-#ifdef DEBUG
-        cprintf("this is stat number %d\n", id);
-#endif
-        panic("Not all stats have been initialized.\n"
-              "You may need to add <ParentClass>::regStats() to a"
-              " new SimObject's regStats() function. Name: %s",
-              name);
-        return false;
-    }
-
-    if ((flags & display) && name.empty()) {
-        panic("all printable stats must be named");
-        return false;
-    }
-
-    return true;
-}
-
-void
-Info::enable()
-{
-}
-
-void
-VectorInfo::enable()
-{
-    size_type s = size();
-    if (subnames.size() < s)
-        subnames.resize(s);
-    if (subdescs.size() < s)
-        subdescs.resize(s);
-}
-
-void
-VectorDistInfo::enable()
-{
-    size_type s = size();
-    if (subnames.size() < s)
-        subnames.resize(s);
-    if (subdescs.size() < s)
-        subdescs.resize(s);
-}
-
-void
-Vector2dInfo::enable()
-{
-    if (subnames.size() < x)
-        subnames.resize(x);
-    if (subdescs.size() < x)
-        subdescs.resize(x);
-    if (y_subnames.size() < y)
-        y_subnames.resize(y);
 }
 
 void

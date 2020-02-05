@@ -255,6 +255,9 @@ class SparseHistInfo : public Info
     SparseHistData data;
 };
 
+typedef std::map<std::string, Info *> NameMapType;
+NameMapType &nameMap();
+
 } // namespace Stats
 
 #endif // __BASE_STATS_INFO_HH__
