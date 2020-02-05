@@ -1,3 +1,6 @@
+# Copyright (c) 2020 The Regents of the University of California
+# All Rights Reserved.
+#
 # Copyright (c) 2020 ARM Limited
 # All rights reserved
 #
@@ -54,6 +57,24 @@ dynamic_progs = {
     'x86': ('hello64-dynamic',)
 }
 
+cpu_types = {
+    'x86': ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU'),
+    'arm' :  ('TimingSimpleCPU', 'AtomicSimpleCPU','DerivO3CPU'),
+    'alpha': ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU', 'MinorCPU'),
+    'mips' : ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU'),
+    'riscv' : ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU', 'MinorCPU'),
+    'sparc' : ('TimingSimpleCPU', 'AtomicSimpleCPU')
+}
+
+supported_os = {
+    'x86': ('linux',),
+    'arm' : ('linux',),
+    'alpha' : ('linux',),
+    'mips' : ('linux',),
+    'riscv' : ('linux',),
+    'sparc' : ('linux',)
+}
+
 if config.bin_path:
     base_path = config.bin_path
 else:
@@ -61,32 +82,40 @@ else:
         'bin')
 
 urlbase = 'http://dist.gem5.org/dist/current/test-progs/hello/bin/'
+
 ref_path = joinpath(getcwd(), 'ref')
 verifiers = (
-        verifier.MatchStdoutNoPerf(joinpath(ref_path, 'simout')),
+    verifier.MatchStdoutNoPerf(joinpath(ref_path, 'simout')),
 )
 
-def verify_config(isa, binary, hosts):
-    url = urlbase + isa + '/linux/' + binary
-    path = joinpath(base_path, isa, 'linux')
+def verify_config(isa, binary, operating_s, cpu, hosts):
+    url = urlbase + isa + '/' + operating_s + '/' + binary
+    path = joinpath(base_path, isa, operating_s)
     hello_program = DownloadedProgram(url, path, binary)
 
     gem5_verify_config(
-            name='test-'+binary,
-            fixtures=(hello_program,),
-            verifiers=verifiers,
-            config=joinpath(config.base_dir, 'configs', 'example','se.py'),
-            config_args=['--cmd', joinpath(path, binary)],
-            valid_isas=(isa.upper(),),
-            valid_hosts=hosts,
+        name='test-' + binary + '-' + operating_s + "-" + cpu,
+        fixtures=(hello_program,),
+        verifiers=verifiers,
+        config=joinpath(config.base_dir, 'configs', 'example','se.py'),
+        config_args=['--cmd', joinpath(path, binary), '--cpu-type', cpu,
+            '--caches'],
+        valid_isas=(isa.upper(),),
+        valid_hosts=hosts,
     )
 
 # Run statically linked hello worlds
 for isa in static_progs:
     for binary in static_progs[isa]:
-        verify_config(isa, binary, constants.supported_hosts)
+        for operating_s in supported_os[isa]:
+            for cpu in cpu_types[isa]:
+                verify_config(isa, binary, operating_s, cpu,
+                        constants.supported_hosts)
 
 # Run dynamically linked hello worlds
 for isa in dynamic_progs:
     for binary in dynamic_progs[isa]:
-        verify_config(isa, binary, constants.target_host[isa.upper()])
+        for operating_s in supported_os[isa]:
+            for cpu in cpu_types[isa]:
+               verify_config(isa, binary, operating_s, cpu,
+                       constants.target_host[isa.upper()])
