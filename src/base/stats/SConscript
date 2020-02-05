@@ -30,6 +30,7 @@ Import('*')
 
 Source('group.cc')
 Source('info.cc')
+Source('storage.cc')
 Source('text.cc')
 
 if env['USE_HDF5']:
@@ -38,3 +39,5 @@ if env['USE_HDF5']:
     else:
         Source('hdf5.cc')
 
+GTest('storage.test', 'storage.test.cc', '../debug.cc', '../str.cc', 'info.cc',
+    'storage.cc', '../../sim/cur_tick.cc')
