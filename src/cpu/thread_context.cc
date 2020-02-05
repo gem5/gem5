@@ -130,9 +130,6 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
 void
 ThreadContext::quiesce()
 {
-    if (!getCpuPtr()->params()->do_quiesce)
-        return;
-
     DPRINTF(Quiesce, "%s: quiesce()\n", getCpuPtr()->name());
 
     suspend();
@@ -145,9 +142,6 @@ void
 ThreadContext::quiesceTick(Tick resume)
 {
     BaseCPU *cpu = getCpuPtr();
-
-    if (!cpu->params()->do_quiesce)
-        return;
 
     EndQuiesceEvent *quiesceEvent = getQuiesceEvent();
 

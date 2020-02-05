@@ -149,7 +149,6 @@ class BaseCPU(ClockedObject):
         "enable statistics pseudo instructions")
 
     profile = Param.Latency('0ns', "trace the kernel stack")
-    do_quiesce = Param.Bool(True, "enable quiesce instructions")
 
     wait_for_remote_gdb = Param.Bool(False,
         "Wait for a remote GDB connection");
