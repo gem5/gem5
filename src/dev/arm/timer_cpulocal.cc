@@ -56,8 +56,8 @@ CpuLocalTimer::init()
 {
    auto p = params();
    // Initialize the timer registers for each per cpu timer
-   for (int i = 0; i < sys->numContexts(); i++) {
-        ThreadContext* tc = sys->getThreadContext(i);
+   for (int i = 0; i < sys->threads.size(); i++) {
+        ThreadContext* tc = sys->threads[i];
         std::stringstream oss;
         oss << name() << ".timer" << i;
 
@@ -429,14 +429,14 @@ CpuLocalTimer::Timer::unserialize(CheckpointIn &cp)
 void
 CpuLocalTimer::serialize(CheckpointOut &cp) const
 {
-    for (int i = 0; i < sys->numContexts(); i++)
+    for (int i = 0; i < sys->threads.size(); i++)
         localTimer[i]->serializeSection(cp, csprintf("timer%d", i));
 }
 
 void
 CpuLocalTimer::unserialize(CheckpointIn &cp)
 {
-    for (int i = 0; i < sys->numContexts(); i++)
+    for (int i = 0; i < sys->threads.size(); i++)
         localTimer[i]->unserializeSection(cp, csprintf("timer%d", i));
 }
 

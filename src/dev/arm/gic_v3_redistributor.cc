@@ -158,7 +158,7 @@ Gicv3Redistributor::read(Addr addr, size_t size, bool is_secure_access)
            * (physical LPIs supported)
            */
           uint64_t affinity = getAffinity();
-          int last = cpuId == (gic->getSystem()->numContexts() - 1);
+          int last = cpuId == (gic->getSystem()->threads.size() - 1);
           return (affinity << 32) | (1 << 24) | (cpuId << 8) |
               (1 << 5) | (last << 4) | (1 << 3) | (1 << 0);
       }
@@ -990,7 +990,7 @@ Gicv3Redistributor::deactivateIRQ(uint32_t int_id)
 uint32_t
 Gicv3Redistributor::getAffinity() const
 {
-    ThreadContext * tc = gic->getSystem()->getThreadContext(cpuId);
+    ThreadContext *tc = gic->getSystem()->threads[cpuId];
     uint64_t mpidr = getMPIDR(gic->getSystem(), tc);
     /*
      * Aff3 = MPIDR[39:32]

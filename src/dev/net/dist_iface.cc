@@ -410,9 +410,7 @@ DistIface::SyncEvent::process()
             start();
         } else {
             // Wake up thread contexts on non-switch nodes.
-            for (int i = 0; i < DistIface::master->sys->numContexts(); i++) {
-                ThreadContext *tc =
-                    DistIface::master->sys->getThreadContext(i);
+            for (auto *tc: master->sys->threads) {
                 if (tc->status() == ThreadContext::Suspended)
                     tc->activate();
                 else
@@ -868,8 +866,7 @@ DistIface::toggleSync(ThreadContext *tc)
         // Dist-gem5 will reactivate all thread contexts when everyone has
         // reached the sync stop point.
 #if THE_ISA != NULL_ISA
-        for (int i = 0; i < master->sys->numContexts(); i++) {
-            ThreadContext *tc = master->sys->getThreadContext(i);
+        for (auto *tc: master->sys->threads) {
             if (tc->status() == ThreadContext::Active)
                 tc->quiesce();
         }
@@ -883,8 +880,7 @@ DistIface::toggleSync(ThreadContext *tc)
         // activation here, since we know exactly when the next sync will
         // occur.
 #if THE_ISA != NULL_ISA
-        for (int i = 0; i < master->sys->numContexts(); i++) {
-            ThreadContext *tc = master->sys->getThreadContext(i);
+        for (auto *tc: master->sys->threads) {
             if (tc->status() == ThreadContext::Active)
                 tc->quiesceTick(master->syncEvent->when() + 1);
         }

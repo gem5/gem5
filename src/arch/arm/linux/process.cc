@@ -866,7 +866,7 @@ ArmLinuxProcess32::initState()
 {
     ArmProcess32::initState();
     allocateMem(commPage, PageBytes);
-    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+    ThreadContext *tc = system->threads[contextIds[0]];
 
     uint8_t swiNeg1[] = {
         0xff, 0xff, 0xff, 0xef  // swi -1

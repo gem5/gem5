@@ -68,11 +68,8 @@ class TLBIOp
     void
     broadcast(ThreadContext *tc)
     {
-        System *sys = tc->getSystemPtr();
-        for (int x = 0; x < sys->numContexts(); x++) {
-            ThreadContext *oc = sys->getThreadContext(x);
+        for (auto *oc: tc->getSystemPtr()->threads)
             (*this)(oc);
-        }
     }
 
   protected:

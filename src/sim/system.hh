@@ -52,6 +52,7 @@
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
+#include "cpu/base.hh"
 #include "cpu/pc_event.hh"
 #include "enums/MemoryMode.hh"
 #include "mem/mem_master.hh"
@@ -99,6 +100,123 @@ class System : public SimObject, public PCEventScope
 
   public:
 
+    class Threads
+    {
+      private:
+        struct Thread
+        {
+            ThreadContext *context = nullptr;
+            bool active = false;
+            BaseRemoteGDB *gdb = nullptr;
+        };
+
+        std::vector<Thread> threads;
+
+        Thread &
+        thread(ContextID id)
+        {
+            assert(id < size());
+            return threads[id];
+        }
+
+        const Thread &
+        thread(ContextID id) const
+        {
+            assert(id < size());
+            return threads[id];
+        }
+
+        ContextID insert(ThreadContext *tc, ContextID id=InvalidContextID);
+        void replace(ThreadContext *tc, ContextID id);
+
+        friend class System;
+
+      public:
+        class const_iterator
+        {
+          private:
+            const Threads &threads;
+            int pos;
+
+            friend class Threads;
+
+            const_iterator(const Threads &_threads, int _pos) :
+                threads(_threads), pos(_pos)
+            {}
+
+          public:
+            const_iterator(const const_iterator &) = default;
+            const_iterator &operator = (const const_iterator &) = default;
+
+            using iterator_category = std::forward_iterator_tag;
+            using value_type = ThreadContext *;
+            using difference_type = int;
+            using pointer = const value_type *;
+            using reference = const value_type &;
+
+            const_iterator &
+            operator ++ ()
+            {
+                pos++;
+                return *this;
+            }
+
+            const_iterator
+            operator ++ (int)
+            {
+                return const_iterator(threads, pos++);
+            }
+
+            reference operator * () { return threads.thread(pos).context; }
+            pointer operator -> () { return &threads.thread(pos).context; }
+
+            bool
+            operator == (const const_iterator &other) const
+            {
+                return &threads == &other.threads && pos == other.pos;
+            }
+
+            bool
+            operator != (const const_iterator &other) const
+            {
+                return !(*this == other);
+            }
+        };
+
+        ThreadContext *findFree();
+
+        ThreadContext *
+        operator [](ContextID id) const
+        {
+            return thread(id).context;
+        }
+
+        void markActive(ContextID id) { thread(id).active = true; }
+
+        int size() const { return threads.size(); }
+        bool empty() const { return threads.empty(); }
+        int numRunning() const;
+        int
+        numActive() const
+        {
+            int count = 0;
+            for (auto &thread: threads) {
+                if (thread.active)
+                    count++;
+            }
+            return count;
+        }
+
+        void resume(ContextID id, Tick when);
+
+        const_iterator begin() const { return const_iterator(*this, 0); }
+        const_iterator end() const { return const_iterator(*this, size()); }
+    };
+
+    /**
+     * After all objects have been created and all ports are
+     * connected, check that the system port is connected.
+     */
     void init() override;
     void startup() override;
 
@@ -179,14 +297,7 @@ class System : public SimObject, public PCEventScope
      */
     unsigned int cacheLineSize() const { return _cacheLineSize; }
 
-    std::vector<ThreadContext *> threadContexts;
-    ThreadContext *findFreeContext();
-
-    ThreadContext *
-    getThreadContext(ContextID tid) const
-    {
-        return threadContexts[tid];
-    }
+    Threads threads;
 
     const bool multiThread;
 
@@ -194,12 +305,6 @@ class System : public SimObject, public PCEventScope
 
     bool schedule(PCEvent *event) override;
     bool remove(PCEvent *event) override;
-
-    unsigned numContexts() const { return threadContexts.size(); }
-
-    /** Return number of running (non-halted) thread contexts in
-     * system.  These threads could be Active or Suspended. */
-    int numRunningContexts();
 
     Addr pagePtr;
 
@@ -288,7 +393,6 @@ class System : public SimObject, public PCEventScope
     uint64_t workItemsBegin;
     uint64_t workItemsEnd;
     uint32_t numWorkIds;
-    std::vector<bool> activeCpus;
 
     /** This array is a per-system list of all devices capable of issuing a
      * memory system request and an associated string for each master id.
@@ -415,14 +519,8 @@ class System : public SimObject, public PCEventScope
     int
     markWorkItem(int index)
     {
-        int count = 0;
-        assert(index < activeCpus.size());
-        activeCpus[index] = true;
-        for (std::vector<bool>::iterator i = activeCpus.begin();
-             i < activeCpus.end(); i++) {
-            if (*i) count++;
-        }
-        return count;
+        threads.markActive(index);
+        return threads.numActive();
     }
 
     inline void workItemBegin(uint32_t tid, uint32_t workid)
@@ -467,8 +565,8 @@ class System : public SimObject, public PCEventScope
     /// @return Starting address of first page
     Addr allocPhysPages(int npages);
 
-    ContextID registerThreadContext(ThreadContext *tc,
-                                    ContextID assigned = InvalidContextID);
+    ContextID registerThreadContext(
+            ThreadContext *tc, ContextID assigned=InvalidContextID);
     void replaceThreadContext(ThreadContext *tc, ContextID context_id);
 
     void serialize(CheckpointOut &cp) const override;

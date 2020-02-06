@@ -439,7 +439,7 @@ Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi,
     } else {
         // Add the translation request and try to resolve it later
         dpp.setTranslationRequest(translation_req);
-        dpp.tc = cache->system->getThreadContext(translation_req->contextId());
+        dpp.tc = cache->system->threads[translation_req->contextId()];
         DPRINTF(HWPrefetch, "Prefetch queued with no translation. "
                 "addr:%#x priority: %3d\n", new_pfi.getAddr(), priority);
         addToQueue(pfqMissingTranslation, dpp);

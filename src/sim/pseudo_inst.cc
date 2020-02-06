@@ -170,13 +170,13 @@ wakeCPU(ThreadContext *tc, uint64_t cpuid)
     DPRINTF(PseudoInst, "PseudoInst::wakeCPU(%i)\n", cpuid);
     System *sys = tc->getSystemPtr();
 
-    if (sys->numContexts() <= cpuid) {
+    if (sys->threads.size() <= cpuid) {
         warn("PseudoInst::wakeCPU(%i), cpuid greater than number of contexts"
-             "(%i)\n",cpuid, sys->numContexts());
+             "(%i)\n", cpuid, sys->threads.size());
         return;
     }
 
-    ThreadContext *other_tc = sys->threadContexts[cpuid];
+    ThreadContext *other_tc = sys->threads[cpuid];
     if (other_tc->status() == ThreadContext::Suspended)
         other_tc->activate();
 }

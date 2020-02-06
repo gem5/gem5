@@ -99,7 +99,7 @@ RiscvProcess64::initState()
 
     argsInit<uint64_t>(PageBytes);
     for (ContextID ctx: contextIds)
-        system->getThreadContext(ctx)->setMiscRegNoEffect(MISCREG_PRV, PRV_U);
+        system->threads[ctx]->setMiscRegNoEffect(MISCREG_PRV, PRV_U);
 }
 
 void
@@ -109,10 +109,11 @@ RiscvProcess32::initState()
 
     argsInit<uint32_t>(PageBytes);
     for (ContextID ctx: contextIds) {
-        system->getThreadContext(ctx)->setMiscRegNoEffect(MISCREG_PRV, PRV_U);
-        PCState pc = system->getThreadContext(ctx)->pcState();
+        auto *tc = system->threads[ctx];
+        tc->setMiscRegNoEffect(MISCREG_PRV, PRV_U);
+        PCState pc = tc->pcState();
         pc.rv32(true);
-        system->getThreadContext(ctx)->pcState(pc);
+        tc->pcState(pc);
     }
 }
 
@@ -239,7 +240,7 @@ RiscvProcess::argsInit(int pageSize)
         pushOntoStack(aux.val);
     }
 
-    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+    ThreadContext *tc = system->threads[contextIds[0]];
     tc->setIntReg(StackPointerReg, memState->getStackMin());
     tc->pcState(getStartPC());
 

@@ -1440,7 +1440,7 @@ cloneFunc(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
         return -EINVAL;
 
     ThreadContext *ctc;
-    if (!(ctc = tc->getSystemPtr()->findFreeContext())) {
+    if (!(ctc = tc->getSystemPtr()->threads.findFree())) {
         DPRINTF_SYSCALL(Verbose, "clone: no spare thread context in system"
                         "[cpu %d, thread %d]", tc->cpuId(), tc->threadId());
         return -EAGAIN;
@@ -1861,7 +1861,7 @@ getrlimitFunc(SyscallDesc *desc, ThreadContext *tc,
         break;
 
       case OS::TGT_RLIMIT_NPROC:
-        rlp->rlim_cur = rlp->rlim_max = tc->getSystemPtr()->numContexts();
+        rlp->rlim_cur = rlp->rlim_max = tc->getSystemPtr()->threads.size();
         rlp->rlim_cur = htog(rlp->rlim_cur, bo);
         rlp->rlim_max = htog(rlp->rlim_max, bo);
         break;
@@ -2198,8 +2198,8 @@ tgkillFunc(SyscallDesc *desc, ThreadContext *tc, int tgid, int tid, int sig)
 
     System *sys = tc->getSystemPtr();
     Process *tgt_proc = nullptr;
-    for (int i = 0; i < sys->numContexts(); i++) {
-        Process *temp = sys->threadContexts[i]->getProcessPtr();
+    for (auto *tc: sys->threads) {
+        Process *temp = tc->getProcessPtr();
         if (temp->pid() == tid) {
             tgt_proc = temp;
             break;

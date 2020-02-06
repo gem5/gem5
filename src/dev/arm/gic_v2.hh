@@ -297,7 +297,7 @@ class GicV2 : public BaseGic, public BaseGicRegisters
     uint8_t cpuTarget[GLOBAL_INT_LINES];
 
     uint8_t getCpuTarget(ContextID ctx, uint32_t ix) {
-        assert(ctx < sys->numRunningContexts());
+        assert(ctx < sys->threads.numRunning());
         assert(ix < INT_LINES_MAX);
         if (ix < SGI_MAX + PPI_MAX) {
             // "GICD_ITARGETSR0 to GICD_ITARGETSR7 are read-only, and each

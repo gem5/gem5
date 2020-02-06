@@ -1372,8 +1372,8 @@ TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         }
         break;
       case ASI_SWVR_UDB_INTR_W:
-            tc->getSystemPtr()->threadContexts[bits(data,12,8)]->getCpuPtr()->
-            postInterrupt(0, bits(data, 5, 0), 0);
+            tc->getSystemPtr()->threads[bits(data,12,8)]->
+                getCpuPtr()->postInterrupt(0, bits(data, 5, 0), 0);
         break;
       default:
 doMmuWriteError:

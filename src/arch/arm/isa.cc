@@ -683,7 +683,7 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
             // mostly unimplemented, just set NumCPUs field from sim and return
             L2CTLR l2ctlr = 0;
             // b00:1CPU to b11:4CPUs
-            l2ctlr.numCPUs = tc->getSystemPtr()->numContexts() - 1;
+            l2ctlr.numCPUs = tc->getSystemPtr()->threads.size() - 1;
             return l2ctlr;
         }
       case MISCREG_DBGDIDR:

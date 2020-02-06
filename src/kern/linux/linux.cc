@@ -110,8 +110,7 @@ Linux::procSelfMaps(Process *process, ThreadContext *tc)
 std::string
 Linux::cpuOnline(Process *process, ThreadContext *tc)
 {
-    return csprintf("0-%d\n",
-                    tc->getSystemPtr()->numContexts() - 1);
+    return csprintf("0-%d\n", tc->getSystemPtr()->threads.size() - 1);
 }
 
 std::string

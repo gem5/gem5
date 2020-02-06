@@ -56,7 +56,7 @@ VGic::VGic(const Params *p)
         maintIntPosted[x] = false;
         vIntPosted[x] = false;
     }
-    assert(sys->numRunningContexts() <= VGIC_CPU_MAX);
+    assert(sys->threads.numRunning() <= VGIC_CPU_MAX);
 }
 
 VGic::~VGic()
@@ -414,8 +414,8 @@ VGic::updateIntState(ContextID ctx_id)
         }
     }
 
-    assert(sys->numRunningContexts() <= VGIC_CPU_MAX);
-    for (int i = 0; i < sys->numRunningContexts(); i++) {
+    assert(sys->threads.numRunning() <= VGIC_CPU_MAX);
+    for (int i = 0; i < sys->threads.numRunning(); i++) {
         struct vcpuIntData *vid = &vcpuData[i];
         // Are any LRs active that weren't before?
         if (!vIntPosted[i]) {

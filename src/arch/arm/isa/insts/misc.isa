@@ -780,8 +780,8 @@ let {{
     sevCode = '''
     SevMailbox = 1;
     System *sys = xc->tcBase()->getSystemPtr();
-    for (int x = 0; x < sys->numContexts(); x++) {
-        ThreadContext *oc = sys->getThreadContext(x);
+    for (int x = 0; x < sys->threads.size(); x++) {
+        ThreadContext *oc = sys->threads[x];
         if (oc == xc->tcBase())
             continue;
 

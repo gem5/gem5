@@ -287,12 +287,12 @@ ISA::readFSReg(int miscReg, ThreadContext * tc)
         temp = readMiscRegNoEffect(miscReg) & (STS::active | STS::speculative);
         // Check that the CPU array is fully populated
         // (by calling getNumCPus())
-        assert(sys->numContexts() > tc->contextId());
+        assert(sys->threads.size() > tc->contextId());
 
         temp |= tc->contextId()  << STS::shft_id;
 
-        for (x = tc->contextId() & ~3; x < sys->threadContexts.size(); x++) {
-            switch (sys->threadContexts[x]->status()) {
+        for (x = tc->contextId() & ~3; x < sys->threads.size(); x++) {
+            switch (sys->threads[x]->status()) {
               case ThreadContext::Active:
                 temp |= STS::st_run << (STS::shft_fsm0 -
                         ((x & 0x3) * (STS::shft_fsm0-STS::shft_fsm1)));

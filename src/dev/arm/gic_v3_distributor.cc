@@ -1021,7 +1021,7 @@ Gicv3Distributor::route(uint32_t int_id)
 
     if (affinity_routing.IRM) {
         // Interrupts routed to any PE defined as a participating node
-        for (int i = 0; i < gic->getSystem()->numContexts(); i++) {
+        for (int i = 0; i < gic->getSystem()->threads.size(); i++) {
             Gicv3Redistributor * redistributor_i =
                 gic->getRedistributor(i);
 
@@ -1086,7 +1086,7 @@ Gicv3Distributor::update()
     }
 
     // Update all redistributors
-    for (int i = 0; i < gic->getSystem()->numContexts(); i++) {
+    for (int i = 0; i < gic->getSystem()->threads.size(); i++) {
         gic->getRedistributor(i)->update();
     }
 }

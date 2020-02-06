@@ -193,7 +193,7 @@ MipsProcess::argsInit(int pageSize)
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
-    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+    ThreadContext *tc = system->threads[contextIds[0]];
 
     tc->setIntReg(FirstArgumentReg, argc);
     tc->setIntReg(FirstArgumentReg + 1, argv_array_base);

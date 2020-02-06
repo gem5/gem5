@@ -1776,7 +1776,7 @@ Gicv3CPUInterface::generateSGI(RegVal val, Gicv3::GroupId group)
 
     bool ns = !inSecureState();
 
-    for (int i = 0; i < gic->getSystem()->numContexts(); i++) {
+    for (int i = 0; i < gic->getSystem()->threads.size(); i++) {
         Gicv3Redistributor * redistributor_i =
             gic->getRedistributor(i);
         uint32_t affinity_i = redistributor_i->getAffinity();
@@ -2587,7 +2587,7 @@ Gicv3CPUInterface::clearPendingInterrupts()
 void
 Gicv3CPUInterface::assertWakeRequest()
 {
-    ThreadContext *tc = gic->getSystem()->getThreadContext(cpuId);
+    auto *tc = gic->getSystem()->threads[cpuId];
     if (ArmSystem::callSetWakeRequest(tc)) {
         Reset().invoke(tc);
         tc->activate();
@@ -2597,7 +2597,7 @@ Gicv3CPUInterface::assertWakeRequest()
 void
 Gicv3CPUInterface::deassertWakeRequest()
 {
-    ThreadContext *tc = gic->getSystem()->getThreadContext(cpuId);
+    auto *tc = gic->getSystem()->threads[cpuId];
     ArmSystem::callClearWakeRequest(tc);
 }
 

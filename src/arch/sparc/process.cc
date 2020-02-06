@@ -111,7 +111,7 @@ SparcProcess::initState()
 {
     Process::initState();
 
-    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+    ThreadContext *tc = system->threads[contextIds[0]];
     // From the SPARC ABI
 
     // Setup default FP state
@@ -155,7 +155,7 @@ Sparc32Process::initState()
 {
     SparcProcess::initState();
 
-    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+    ThreadContext *tc = system->threads[contextIds[0]];
     // The process runs in user mode with 32 bit addresses
     PSTATE pstate = 0;
     pstate.ie = 1;
@@ -170,7 +170,7 @@ Sparc64Process::initState()
 {
     SparcProcess::initState();
 
-    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+    ThreadContext *tc = system->threads[contextIds[0]];
     // The process runs in user mode
     PSTATE pstate = 0;
     pstate.ie = 1;
@@ -393,7 +393,7 @@ SparcProcess::argsInit(int pageSize)
     fillStart = memState->getStackBase();
     spillStart = fillStart + sizeof(MachInst) * numFillInsts;
 
-    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+    ThreadContext *tc = system->threads[contextIds[0]];
     // Set up the thread context to start running the process
     // assert(NumArgumentRegs >= 2);
     // tc->setIntReg(ArgumentReg[0], argc);

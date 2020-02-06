@@ -198,7 +198,7 @@ X86ISA::I82094AA::signalInterrupt(int line)
         message.level = entry.polarity;
         message.trigger = entry.trigger;
         std::list<int> apics;
-        int numContexts = sys->numContexts();
+        int numContexts = sys->threads.size();
         if (message.destMode == 0) {
             if (message.deliveryMode == DeliveryMode::LowestPriority) {
                 panic("Lowest priority delivery mode from the "
@@ -214,7 +214,7 @@ X86ISA::I82094AA::signalInterrupt(int line)
             }
         } else {
             for (int i = 0; i < numContexts; i++) {
-                BaseInterrupts *base_int = sys->getThreadContext(i)->
+                BaseInterrupts *base_int = sys->threads[i]->
                     getCpuPtr()->getInterruptController(0);
                 auto *localApic = dynamic_cast<Interrupts *>(base_int);
                 if ((localApic->readReg(APIC_LOGICAL_DESTINATION) >> 24) &

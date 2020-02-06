@@ -479,7 +479,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
             message.level = low.level;
             message.trigger = low.trigger;
             std::list<int> apics;
-            int numContexts = sys->numContexts();
+            int numContexts = sys->threads.size();
             switch (low.destShorthand) {
               case 0:
                 if (message.deliveryMode == DeliveryMode::LowestPriority) {

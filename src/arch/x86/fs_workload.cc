@@ -106,7 +106,7 @@ FsWorkload::initState()
 {
     KernelWorkload::initState();
 
-    for (auto *tc: system->threadContexts) {
+    for (auto *tc: system->threads) {
         X86ISA::InitInterrupt(0).invoke(tc);
 
         if (tc->contextId() == 0) {
@@ -124,7 +124,7 @@ FsWorkload::initState()
     fatal_if(kernelObj->getArch() == Loader::I386,
              "Loading a 32 bit x86 kernel is not supported.");
 
-    ThreadContext *tc = system->threadContexts[0];
+    ThreadContext *tc = system->threads[0];
     auto phys_proxy = system->physProxy;
 
     // This is the boot strap processor (BSP). Initialize it to look like

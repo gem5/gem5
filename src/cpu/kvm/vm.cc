@@ -539,7 +539,7 @@ KvmVM::contextIdToVCpuId(ContextID ctx) const
 {
     assert(system != nullptr);
     return dynamic_cast<BaseKvmCPU*>
-        (system->getThreadContext(ctx)->getCpuPtr())->getVCpuID();
+        (system->threads[ctx]->getCpuPtr())->getVCpuID();
 }
 
 int

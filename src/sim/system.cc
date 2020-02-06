@@ -57,6 +57,7 @@
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
+#include "debug/Quiesce.hh"
 #include "debug/WorkItems.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/physical.hh"
@@ -79,6 +80,68 @@ using namespace std;
 using namespace TheISA;
 
 vector<System *> System::systemList;
+
+ContextID
+System::Threads::insert(ThreadContext *tc, ContextID id)
+{
+    if (id == InvalidContextID) {
+        for (id = 0; id < size(); id++) {
+            if (!threads[id].context)
+                break;
+        }
+    }
+
+    if (id >= size())
+        threads.resize(id + 1);
+
+    fatal_if(threads[id].context,
+            "Cannot have two thread contexts with the same id (%d).", id);
+
+    auto &t = thread(id);
+    t.context = tc;
+#   if THE_ISA != NULL_ISA
+    int port = getRemoteGDBPort();
+    if (port) {
+        t.gdb = new RemoteGDB(tc->getSystemPtr(), tc, port + id);
+        t.gdb->listen();
+    }
+#   endif
+
+    return id;
+}
+
+void
+System::Threads::replace(ThreadContext *tc, ContextID id)
+{
+    auto &t = thread(id);
+    t.context = tc;
+    if (t.gdb)
+        t.gdb->replaceThreadContext(tc);
+}
+
+ThreadContext *
+System::Threads::findFree()
+{
+    for (auto &thread: threads) {
+        if (thread.context->status() == ThreadContext::Halted)
+            return thread.context;
+    }
+    return nullptr;
+}
+
+int
+System::Threads::numRunning() const
+{
+    int count = 0;
+    for (auto &thread: threads) {
+        auto status = thread.context->status();
+        if (status != ThreadContext::Halted &&
+                status != ThreadContext::Halting) {
+            count++;
+        }
+    }
+    return count;
+}
 
 int System::numSystemsRunning = 0;
 
@@ -164,18 +227,13 @@ System::startup()
     // Now that we're about to start simulation, wait for GDB connections if
     // requested.
 #if THE_ISA != NULL_ISA
-    for (auto *tc: threadContexts) {
-        auto *cpu = tc->getCpuPtr();
-        auto id = tc->contextId();
-        if (remoteGDB.size() <= id)
-            continue;
-        auto *rgdb = remoteGDB[id];
-
-        if (cpu->waitForRemoteGDB()) {
-            inform("%s: Waiting for a remote GDB connection on port %d.\n",
-                   cpu->name(), rgdb->port());
-
-            rgdb->connect();
+    for (int i = 0; i < threads.size(); i++) {
+        auto *gdb = threads.thread(i).gdb;
+        auto *cpu = threads[i]->getCpuPtr();
+        if (gdb && cpu->waitForRemoteGDB()) {
+            inform("%s: Waiting for a remote GDB connection on port %d.",
+                   cpu->name(), gdb->port());
+            gdb->connect();
         }
     }
 #endif
@@ -197,58 +255,23 @@ System::setMemoryMode(Enums::MemoryMode mode)
 
 bool System::breakpoint()
 {
-    if (remoteGDB.size())
-        return remoteGDB[0]->breakpoint();
-    return false;
+    if (!threads.size())
+        return false;
+    auto *gdb = threads.thread(0).gdb;
+    if (!gdb)
+        return false;
+    return gdb->breakpoint();
 }
 
 ContextID
 System::registerThreadContext(ThreadContext *tc, ContextID assigned)
 {
-    int id = assigned;
-    if (id == InvalidContextID) {
-        // Find an unused context ID for this thread.
-        id = 0;
-        while (id < threadContexts.size() && threadContexts[id])
-            id++;
-    }
+    ContextID id = threads.insert(tc, assigned);
 
-    if (threadContexts.size() <= id)
-        threadContexts.resize(id + 1);
-
-    fatal_if(threadContexts[id],
-             "Cannot have two CPUs with the same id (%d)\n", id);
-
-    threadContexts[id] = tc;
     for (auto *e: liveEvents)
         tc->schedule(e);
 
-#if THE_ISA != NULL_ISA
-    int port = getRemoteGDBPort();
-    if (port) {
-        RemoteGDB *rgdb = new RemoteGDB(this, tc, port + id);
-        rgdb->listen();
-
-        if (remoteGDB.size() <= id)
-            remoteGDB.resize(id + 1);
-
-        remoteGDB[id] = rgdb;
-    }
-#endif
-
-    activeCpus.push_back(false);
-
     return id;
-}
-
-ThreadContext *
-System::findFreeContext()
-{
-    for (auto &it : threadContexts) {
-        if (ThreadContext::Halted == it->status())
-            return it;
-    }
-    return nullptr;
 }
 
 bool
@@ -256,7 +279,7 @@ System::schedule(PCEvent *event)
 {
     bool all = true;
     liveEvents.push_back(event);
-    for (auto *tc: threadContexts)
+    for (auto *tc: threads)
         all = tc->schedule(event) && all;
     return all;
 }
@@ -266,53 +289,35 @@ System::remove(PCEvent *event)
 {
     bool all = true;
     liveEvents.remove(event);
-    for (auto *tc: threadContexts)
+    for (auto *tc: threads)
         all = tc->remove(event) && all;
     return all;
-}
-
-int
-System::numRunningContexts()
-{
-    return std::count_if(
-        threadContexts.cbegin(),
-        threadContexts.cend(),
-        [] (ThreadContext* tc) {
-            return ((tc->status() != ThreadContext::Halted) &&
-                    (tc->status() != ThreadContext::Halting));
-        }
-    );
 }
 
 void
 System::replaceThreadContext(ThreadContext *tc, ContextID context_id)
 {
-    if (context_id >= threadContexts.size()) {
-        panic("replaceThreadContext: bad id, %d >= %d\n",
-              context_id, threadContexts.size());
-    }
+    auto *otc = threads[context_id];
+    threads.replace(tc, context_id);
 
     for (auto *e: liveEvents) {
-        threadContexts[context_id]->remove(e);
+        otc->remove(e);
         tc->schedule(e);
     }
-    threadContexts[context_id] = tc;
-    if (context_id < remoteGDB.size())
-        remoteGDB[context_id]->replaceThreadContext(tc);
 }
 
 bool
 System::validKvmEnvironment() const
 {
 #if USE_KVM
-    if (threadContexts.empty())
+    if (threads.empty())
         return false;
 
-    for (auto tc : threadContexts) {
-        if (dynamic_cast<BaseKvmCPU*>(tc->getCpuPtr()) == nullptr) {
+    for (auto *tc: threads) {
+        if (!dynamic_cast<BaseKvmCPU *>(tc->getCpuPtr()))
             return false;
-        }
     }
+
     return true;
 #else
     return false;

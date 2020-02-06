@@ -303,7 +303,7 @@ X86_64Process::initState()
         tss_attr.unusable = 0;
 
         for (int i = 0; i < contextIds.size(); i++) {
-            ThreadContext * tc = system->getThreadContext(contextIds[i]);
+            ThreadContext *tc = system->threads[contextIds[i]];
 
             tc->setMiscReg(MISCREG_CS, cs);
             tc->setMiscReg(MISCREG_DS, ds);
@@ -514,7 +514,7 @@ X86_64Process::initState()
                     16 * PageBytes, false);
     } else {
         for (int i = 0; i < contextIds.size(); i++) {
-            ThreadContext * tc = system->getThreadContext(contextIds[i]);
+            ThreadContext * tc = system->threads[contextIds[i]];
 
             SegAttr dataAttr = 0;
             dataAttr.dpl = 3;
@@ -625,7 +625,7 @@ I386Process::initState()
             vsysexitBlob, sizeof(vsysexitBlob));
 
     for (int i = 0; i < contextIds.size(); i++) {
-        ThreadContext * tc = system->getThreadContext(contextIds[i]);
+        ThreadContext * tc = system->threads[contextIds[i]];
 
         SegAttr dataAttr = 0;
         dataAttr.dpl = 3;
@@ -975,7 +975,7 @@ X86Process::argsInit(int pageSize,
 
     initVirtMem->writeBlob(argc_base, &guestArgc, intSize);
 
-    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+    ThreadContext *tc = system->threads[contextIds[0]];
     // Set the stack pointer register
     tc->setIntReg(StackPointerReg, stack_min);
 

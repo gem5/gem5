@@ -123,7 +123,7 @@ FsLinux::initState()
      * Pass the location of the real mode data structure to the kernel
      * using register %esi. We'll use %rsi which should be equivalent.
      */
-    system->threadContexts[0]->setIntReg(INTREG_RSI, realModeData);
+    system->threads[0]->setIntReg(INTREG_RSI, realModeData);
 }
 
 } // namespace X86ISA

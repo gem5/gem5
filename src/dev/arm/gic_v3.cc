@@ -60,15 +60,15 @@ void
 Gicv3::init()
 {
     distributor = new Gicv3Distributor(this, params()->it_lines);
-    redistributors.resize(sys->numContexts(), nullptr);
-    cpuInterfaces.resize(sys->numContexts(), nullptr);
+    int threads = sys->threads.size();
+    redistributors.resize(threads, nullptr);
+    cpuInterfaces.resize(threads, nullptr);
 
-    panic_if(sys->numContexts() > params()->cpu_max,
+    panic_if(threads > params()->cpu_max,
         "Exceeding maximum number of PEs supported by GICv3: "
-        "using %u while maximum is %u\n", sys->numContexts(),
-        params()->cpu_max);
+        "using %u while maximum is %u.", threads, params()->cpu_max);
 
-    for (int i = 0; i < sys->numContexts(); i++) {
+    for (int i = 0; i < threads; i++) {
         redistributors[i] = new Gicv3Redistributor(this, i);
         cpuInterfaces[i] = new Gicv3CPUInterface(this, i);
     }
@@ -77,14 +77,13 @@ Gicv3::init()
         Gicv3Distributor::ADDR_RANGE_SIZE - 1);
 
     redistSize = redistributors[0]->addrRangeSize;
-    redistRange = RangeSize(params()->redist_addr,
-         redistSize * sys->numContexts() - 1);
+    redistRange = RangeSize(params()->redist_addr, redistSize * threads - 1);
 
     addrRanges = {distRange, redistRange};
 
     distributor->init();
 
-    for (int i = 0; i < sys->numContexts(); i++) {
+    for (int i = 0; i < threads; i++) {
         redistributors[i]->init();
         cpuInterfaces[i]->init();
     }
@@ -205,7 +204,7 @@ void
 Gicv3::postInt(uint32_t cpu, ArmISA::InterruptTypes int_type)
 {
     platform->intrctrl->post(cpu, int_type, 0);
-    ArmSystem::callClearStandByWfi(sys->getThreadContext(cpu));
+    ArmSystem::callClearStandByWfi(sys->threads[cpu]);
 }
 
 bool

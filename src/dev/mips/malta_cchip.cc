@@ -102,7 +102,7 @@ MaltaCChip::postRTC()
 void
 MaltaCChip::postIntr(uint32_t interrupt)
 {
-    uint64_t size = sys->threadContexts.size();
+    uint64_t size = sys->threads.size();
     assert(size <= Malta::Max_CPUs);
 
     for (int i=0; i < size; i++) {
@@ -117,7 +117,7 @@ MaltaCChip::postIntr(uint32_t interrupt)
 void
 MaltaCChip::clearIntr(uint32_t interrupt)
 {
-    uint64_t size = sys->threadContexts.size();
+    uint64_t size = sys->threads.size();
     assert(size <= Malta::Max_CPUs);
 
     for (int i=0; i < size; i++) {

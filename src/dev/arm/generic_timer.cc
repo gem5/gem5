@@ -440,7 +440,7 @@ GenericTimer::createTimers(unsigned cpus)
     timers.resize(cpus);
     for (unsigned i = old_cpu_count; i < cpus; ++i) {
 
-        ThreadContext *tc = system.getThreadContext(i);
+        ThreadContext *tc = system.threads[i];
 
         timers[i].reset(
             new CoreTimers(*this, system, i,
@@ -481,7 +481,7 @@ void
 GenericTimer::setMiscReg(int reg, unsigned cpu, RegVal val)
 {
     CoreTimers &core(getTimers(cpu));
-    ThreadContext *tc = system.getThreadContext(cpu);
+    ThreadContext *tc = system.threads[cpu];
 
     switch (reg) {
       case MISCREG_CNTFRQ:
@@ -695,7 +695,7 @@ GenericTimer::CoreTimers::CoreTimers(GenericTimer &_parent,
     ArmInterruptPin *_irqVirt, ArmInterruptPin *_irqHyp)
       : parent(_parent),
         cntfrq(parent.params()->cntfrq),
-        threadContext(system.getThreadContext(cpu)),
+        threadContext(system.threads[cpu]),
         irqPhysS(_irqPhysS),
         irqPhysNS(_irqPhysNS),
         irqVirt(_irqVirt),

@@ -60,20 +60,23 @@ A9SCU::read(PacketPtr pkt)
         pkt->setLE(1); // SCU already enabled
         break;
       case Config:
-        /* Without making a completely new SCU, we can use the core count field
-         * as 4 bits and inform the OS of up to 16 CPUs.  Although the core
-         * count is technically bits [1:0] only, bits [3:2] are SBZ for future
-         * expansion like this.
-         */
-        if (sys->numContexts() > 4) {
-            warn_once("A9SCU with >4 CPUs is unsupported\n");
-            if (sys->numContexts() > 15)
-                fatal("Too many CPUs (%d) for A9SCU!\n", sys->numContexts());
+        {
+            /* Without making a completely new SCU, we can use the core count
+             * field as 4 bits and inform the OS of up to 16 CPUs.  Although
+             * the core count is technically bits [1:0] only, bits [3:2] are
+             * SBZ for future expansion like this.
+             */
+            int threads = sys->threads.size();
+            if (threads > 4) {
+                warn_once("A9SCU with >4 CPUs is unsupported");
+                fatal_if(threads > 15,
+                        "Too many CPUs (%d) for A9SCU!", threads);
+            }
+            int smp_bits, core_cnt;
+            smp_bits = (1 << threads) - 1;
+            core_cnt = threads - 1;
+            pkt->setLE(smp_bits << 4 | core_cnt);
         }
-        int smp_bits, core_cnt;
-        smp_bits = (1 << sys->numContexts()) - 1;
-        core_cnt = sys->numContexts() - 1;
-        pkt->setLE(smp_bits << 4 | core_cnt);
         break;
       default:
         // Only configuration register is implemented

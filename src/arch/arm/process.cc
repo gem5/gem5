@@ -104,8 +104,8 @@ ArmProcess32::initState()
 {
     Process::initState();
     argsInit<uint32_t>(PageBytes, INTREG_SP);
-    for (int i = 0; i < contextIds.size(); i++) {
-        ThreadContext * tc = system->getThreadContext(contextIds[i]);
+    for (auto id: contextIds) {
+        ThreadContext *tc = system->threads[id];
         CPACR cpacr = tc->readMiscReg(MISCREG_CPACR);
         // Enable the floating point coprocessors.
         cpacr.cp10 = 0x3;
@@ -123,8 +123,8 @@ ArmProcess64::initState()
 {
     Process::initState();
     argsInit<uint64_t>(PageBytes, INTREG_SP0);
-    for (int i = 0; i < contextIds.size(); i++) {
-        ThreadContext * tc = system->getThreadContext(contextIds[i]);
+    for (auto id: contextIds) {
+        ThreadContext *tc = system->threads[id];
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
         cpsr.mode = MODE_EL0T;
         tc->setMiscReg(MISCREG_CPSR, cpsr);
@@ -206,7 +206,7 @@ ArmProcess64::armHwcapImpl() const
 
     uint32_t hwcap = 0;
 
-    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+    ThreadContext *tc = system->threads[contextIds[0]];
 
     const AA64PFR0 pf_r0 = tc->readMiscReg(MISCREG_ID_AA64PFR0_EL1);
 
@@ -441,7 +441,7 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
 
     initVirtMem->writeBlob(argc_base, &guestArgc, intSize);
 
-    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+    ThreadContext *tc = system->threads[contextIds[0]];
     //Set the stack pointer register
     tc->setIntReg(spIndex, memState->getStackMin());
     //A pointer to a function to run when the program exits. We'll set this

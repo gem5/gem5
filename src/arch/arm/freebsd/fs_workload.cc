@@ -113,7 +113,7 @@ FsFreebsd::initState()
     delete dtb_file;
 
     // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
-    for (auto tc: system->threadContexts) {
+    for (auto *tc: system->threads) {
         tc->setIntReg(0, 0);
         tc->setIntReg(1, params()->machine_type);
         tc->setIntReg(2, params()->atags_addr + _loadAddrOffset);

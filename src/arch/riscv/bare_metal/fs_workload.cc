@@ -54,7 +54,7 @@ BareMetal::initState()
 {
     RiscvISA::FsWorkload::initState();
 
-    for (auto *tc: system->threadContexts) {
+    for (auto *tc: system->threads) {
         RiscvISA::Reset().invoke(tc);
         tc->activate();
     }
@@ -62,7 +62,7 @@ BareMetal::initState()
     warn_if(!bootloader->buildImage().write(system->physProxy),
             "Could not load sections to memory.");
 
-    for (auto *tc: system->threadContexts) {
+    for (auto *tc: system->threads) {
         RiscvISA::Reset().invoke(tc);
         tc->activate();
     }

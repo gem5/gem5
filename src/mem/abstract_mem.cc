@@ -328,7 +328,7 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
                                            req->contextId() :
                                            InvalidContextID;
                 if (owner_cid != requester_cid) {
-                    ThreadContext* ctx = system()->getThreadContext(owner_cid);
+                    ThreadContext* ctx = system()->threads[owner_cid];
                     TheISA::globalClearExclusive(ctx);
                 }
                 i = lockedAddrList.erase(i);

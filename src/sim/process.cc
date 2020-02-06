@@ -293,7 +293,7 @@ Process::initState()
         fatal("Process %s is not associated with any HW contexts!\n", name());
 
     // first thread context for this process... initialize & enable
-    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+    ThreadContext *tc = system->threads[contextIds[0]];
 
     // mark this context as active so it will start ticking.
     tc->activate();

@@ -159,7 +159,7 @@ FsLinux::initState()
     }
 
     // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
-    for (auto tc: system->threadContexts) {
+    for (auto *tc: system->threads) {
         tc->setIntReg(0, 0);
         tc->setIntReg(1, params()->machine_type);
         tc->setIntReg(2, params()->atags_addr + _loadAddrOffset);
@@ -194,7 +194,7 @@ FsLinux::startup()
         std::string task_filename = "tasks.txt";
         taskFile = simout.create(name() + "." + task_filename);
 
-        for (const auto tc : system->threadContexts) {
+        for (auto *tc: system->threads) {
             uint32_t pid = tc->getCpuPtr()->getPid();
             if (pid != BaseCPU::invldPid) {
                 mapPid(tc, pid);
@@ -265,7 +265,7 @@ FsLinux::mapPid(ThreadContext *tc, uint32_t pid)
 void
 FsLinux::dumpDmesg()
 {
-    Linux::dumpDmesg(system->getThreadContext(0), std::cout);
+    Linux::dumpDmesg(system->threads[0], std::cout);
 }
 
 /**
