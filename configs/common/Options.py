@@ -434,7 +434,7 @@ def addFSOptions(parser):
                       help="List available platform types")
         parser.add_option("--machine-type", action="store", type="choice",
                 choices=ObjectList.platform_list.get_names(),
-                default="VExpress_EMM")
+                default="VExpress_GEM5_V1")
         parser.add_option("--dtb-filename", action="store", type="string",
               help="Specifies device tree blob file to use with device-tree-"\
               "enabled kernels")
