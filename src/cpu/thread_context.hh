@@ -64,7 +64,6 @@ class BaseCPU;
 class BaseTLB;
 class CheckerCPU;
 class Checkpoint;
-class EndQuiesceEvent;
 class PortProxy;
 class Process;
 class System;
@@ -183,8 +182,6 @@ class ThreadContext : public PCEventScope
     virtual void takeOverFrom(ThreadContext *old_context) = 0;
 
     virtual void regStats(const std::string &name) {};
-
-    virtual EndQuiesceEvent *getQuiesceEvent() = 0;
 
     virtual void scheduleInstCountEvent(Event *event, Tick count) = 0;
     virtual void descheduleInstCountEvent(Event *event) = 0;

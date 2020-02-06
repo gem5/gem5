@@ -36,7 +36,6 @@
 #include "cpu/thread_context.hh"
 #include "sim/process.hh"
 
-class EndQuiesceEvent;
 class FunctionProfile;
 class ProfileNode;
 
@@ -84,8 +83,6 @@ struct ThreadState : public Serializable {
     void initMemProxies(ThreadContext *tc);
 
     void dumpFuncProfile();
-
-    EndQuiesceEvent *getQuiesceEvent() { return quiesceEvent; }
 
     void profileClear();
 
@@ -159,7 +156,6 @@ struct ThreadState : public Serializable {
     FunctionProfile *profile;
     ProfileNode *profileNode;
     Addr profilePC;
-    EndQuiesceEvent *quiesceEvent;
 
   protected:
     Process *process;

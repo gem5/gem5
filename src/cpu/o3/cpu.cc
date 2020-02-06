@@ -49,7 +49,6 @@
 #include "cpu/checker/thread_context.hh"
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/thread_context.hh"
-#include "cpu/quiesce_event.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Activity.hh"
@@ -339,9 +338,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
         o3_tc->cpu = (typename Impl::O3CPU *)(this);
         assert(o3_tc->cpu);
         o3_tc->thread = this->thread[tid];
-
-        // Setup quiesce event.
-        this->thread[tid]->quiesceEvent = new EndQuiesceEvent(tc);
 
         // Give the thread the TC.
         this->thread[tid]->tc = tc;

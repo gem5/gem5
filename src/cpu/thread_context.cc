@@ -46,7 +46,6 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
-#include "cpu/quiesce_event.hh"
 #include "debug/Context.hh"
 #include "debug/Quiesce.hh"
 #include "params/BaseCPU.hh"

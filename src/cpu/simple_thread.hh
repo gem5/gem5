@@ -249,12 +249,6 @@ class SimpleThread : public ThreadState, public ThreadContext
     /// Set the status to Halted.
     void halt() override;
 
-    EndQuiesceEvent *
-    getQuiesceEvent() override
-    {
-        return ThreadState::getQuiesceEvent();
-    }
-
     Tick
     readLastActivate() override
     {

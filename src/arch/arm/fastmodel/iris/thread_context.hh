@@ -251,12 +251,6 @@ class ThreadContext : public ::ThreadContext
 
     void regStats(const std::string &name) override {}
 
-    EndQuiesceEvent *
-    getQuiesceEvent() override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-
     // Not necessarily the best location for these...
     // Having an extra function just to read these is obnoxious
     Tick

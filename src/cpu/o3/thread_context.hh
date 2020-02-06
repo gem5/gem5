@@ -46,8 +46,6 @@
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/thread_context.hh"
 
-class EndQuiesceEvent;
-
 /**
  * Derived ThreadContext class for use with the O3CPU.  It
  * provides the interface for any external objects to access a
@@ -441,12 +439,6 @@ class O3ThreadContext : public ThreadContext
     /** Reads the funcExeInst counter. */
     Counter readFuncExeInst() const override { return thread->funcExeInst; }
 
-    /** Returns pointer to the quiesce event. */
-    EndQuiesceEvent *
-    getQuiesceEvent() override
-    {
-        return this->thread->quiesceEvent;
-    }
     /** check if the cpu is currently in state update mode and squash if not.
      * This function will return true if a trap is pending or if a fault or
      * similar is currently writing to the thread context and doesn't want

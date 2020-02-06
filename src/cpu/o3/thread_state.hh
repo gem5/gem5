@@ -48,7 +48,6 @@
 #include "sim/full_system.hh"
 #include "sim/sim_exit.hh"
 
-class EndQuiesceEvent;
 class Event;
 class FunctionalMemory;
 class FunctionProfile;

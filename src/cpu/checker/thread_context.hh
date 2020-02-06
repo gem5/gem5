@@ -49,7 +49,6 @@
 #include "cpu/thread_context.hh"
 #include "debug/Checker.hh"
 
-class EndQuiesceEvent;
 namespace TheISA
 {
     class Decoder;
@@ -211,12 +210,6 @@ class CheckerThreadContext : public ThreadContext
     {
         actualTC->regStats(name);
         checkerTC->regStats(name);
-    }
-
-    EndQuiesceEvent *
-    getQuiesceEvent() override
-    {
-        return actualTC->getQuiesceEvent();
     }
 
     Tick readLastActivate() override { return actualTC->readLastActivate(); }

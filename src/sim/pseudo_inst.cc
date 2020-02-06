@@ -55,7 +55,6 @@
 #include "base/output.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
-#include "cpu/quiesce_event.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "debug/Quiesce.hh"

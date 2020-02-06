@@ -52,7 +52,6 @@
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/profile.hh"
-#include "cpu/quiesce_event.hh"
 #include "cpu/thread_context.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "mem/translating_port_proxy.hh"
@@ -78,7 +77,6 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 {
     assert(isa);
     clearArchRegs();
-    quiesceEvent = new EndQuiesceEvent(this);
 }
 
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
@@ -90,8 +88,6 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
       system(_sys), itb(_itb), dtb(_dtb), decoder(TheISA::Decoder(isa))
 {
     assert(isa);
-
-    quiesceEvent = new EndQuiesceEvent(this);
 
     clearArchRegs();
 
