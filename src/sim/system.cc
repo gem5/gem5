@@ -72,6 +72,32 @@ using namespace TheISA;
 
 vector<System *> System::systemList;
 
+void
+System::Threads::Thread::resume()
+{
+#   if THE_ISA != NULL_ISA
+    DPRINTFS(Quiesce, context->getCpuPtr(), "activating\n");
+    context->activate();
+#   endif
+}
+
+std::string
+System::Threads::Thread::name() const
+{
+    assert(context);
+    return csprintf("%s.threads[%d]", context->getSystemPtr()->name(),
+            context->contextId());
+}
+
+void
+System::Threads::Thread::quiesce() const
+{
+    context->suspend();
+    auto *workload = context->getSystemPtr()->workload;
+    if (workload)
+        workload->recordQuiesce();
+}
+
 ContextID
 System::Threads::insert(ThreadContext *tc, ContextID id)
 {
@@ -88,12 +114,18 @@ System::Threads::insert(ThreadContext *tc, ContextID id)
     fatal_if(threads[id].context,
             "Cannot have two thread contexts with the same id (%d).", id);
 
+    auto *sys = tc->getSystemPtr();
+
     auto &t = thread(id);
     t.context = tc;
+    // Look up this thread again on resume, in case the threads vector has
+    // been reallocated.
+    t.resumeEvent = new EventFunctionWrapper(
+            [this, id](){ thread(id).resume(); }, sys->name());
 #   if THE_ISA != NULL_ISA
     int port = getRemoteGDBPort();
     if (port) {
-        t.gdb = new RemoteGDB(tc->getSystemPtr(), tc, port + id);
+        t.gdb = new RemoteGDB(sys, tc, port + id);
         t.gdb->listen();
     }
 #   endif
@@ -105,9 +137,17 @@ void
 System::Threads::replace(ThreadContext *tc, ContextID id)
 {
     auto &t = thread(id);
-    t.context = tc;
+    panic_if(!t.context, "Can't replace a context which doesn't exist.");
     if (t.gdb)
         t.gdb->replaceThreadContext(tc);
+#   if THE_ISA != NULL_ISA
+    if (t.resumeEvent->scheduled()) {
+        Tick when = t.resumeEvent->when();
+        t.context->getCpuPtr()->deschedule(t.resumeEvent);
+        tc->getCpuPtr()->schedule(t.resumeEvent, when);
+    }
+#   endif
+    t.context = tc;
 }
 
 ThreadContext *
@@ -132,6 +172,31 @@ System::Threads::numRunning() const
         }
     }
     return count;
+}
+
+void
+System::Threads::quiesce(ContextID id)
+{
+    auto &t = thread(id);
+#   if THE_ISA != NULL_ISA
+    BaseCPU *cpu = t.context->getCpuPtr();
+    DPRINTFS(Quiesce, cpu, "quiesce()\n");
+#   endif
+    t.quiesce();
+}
+
+void
+System::Threads::quiesceTick(ContextID id, Tick when)
+{
+#   if THE_ISA != NULL_ISA
+    auto &t = thread(id);
+    BaseCPU *cpu = t.context->getCpuPtr();
+
+    DPRINTFS(Quiesce, cpu, "quiesceTick until %u\n", when);
+    t.quiesce();
+
+    cpu->reschedule(t.resumeEvent, when, true);
+#   endif
 }
 
 int System::numSystemsRunning = 0;
@@ -363,6 +428,14 @@ System::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(pagePtr);
 
+    for (auto &t: threads.threads) {
+        Tick when = 0;
+        if (t.resumeEvent && t.resumeEvent->scheduled())
+            when = t.resumeEvent->when();
+        ContextID id = t.context->contextId();
+        paramOut(cp, csprintf("quiesceEndTick_%d", id), when);
+    }
+
     // also serialize the memories in the system
     physmem.serializeSection(cp, "physmem");
 }
@@ -372,6 +445,18 @@ void
 System::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(pagePtr);
+
+    for (auto &t: threads.threads) {
+        Tick when;
+        ContextID id = t.context->contextId();
+        if (!optParamIn(cp, csprintf("quiesceEndTick_%d", id), when) ||
+                !when || !t.resumeEvent) {
+            continue;
+        }
+#       if THE_ISA != NULL_ISA
+        t.context->getCpuPtr()->schedule(t.resumeEvent, when);
+#       endif
+    }
 
     // also unserialize the memories in the system
     physmem.unserializeSection(cp, "physmem");

@@ -108,6 +108,11 @@ class System : public SimObject, public PCEventScope
             ThreadContext *context = nullptr;
             bool active = false;
             BaseRemoteGDB *gdb = nullptr;
+            Event *resumeEvent = nullptr;
+
+            void resume();
+            std::string name() const;
+            void quiesce() const;
         };
 
         std::vector<Thread> threads;
@@ -207,7 +212,8 @@ class System : public SimObject, public PCEventScope
             return count;
         }
 
-        void resume(ContextID id, Tick when);
+        void quiesce(ContextID id);
+        void quiesceTick(ContextID id, Tick when);
 
         const_iterator begin() const { return const_iterator(*this, 0); }
         const_iterator end() const { return const_iterator(*this, size()); }

@@ -129,30 +129,14 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
 void
 ThreadContext::quiesce()
 {
-    DPRINTF(Quiesce, "%s: quiesce()\n", getCpuPtr()->name());
-
-    suspend();
-    auto *workload = getSystemPtr()->workload;
-    if (workload)
-        workload->recordQuiesce();
+    getSystemPtr()->threads.quiesce(contextId());
 }
 
 
 void
 ThreadContext::quiesceTick(Tick resume)
 {
-    BaseCPU *cpu = getCpuPtr();
-
-    EndQuiesceEvent *quiesceEvent = getQuiesceEvent();
-
-    cpu->reschedule(quiesceEvent, resume, true);
-
-    DPRINTF(Quiesce, "%s: quiesceTick until %lu\n", cpu->name(), resume);
-
-    suspend();
-    auto *workload = getSystemPtr()->workload;
-    if (workload)
-        workload->recordQuiesce();
+    getSystemPtr()->threads.quiesceTick(contextId(), resume);
 }
 
 void
@@ -249,26 +233,8 @@ takeOverFrom(ThreadContext &ntc, ThreadContext &otc)
     ntc.setContextId(otc.contextId());
     ntc.setThreadId(otc.threadId());
 
-    if (FullSystem) {
+    if (FullSystem)
         assert(ntc.getSystemPtr() == otc.getSystemPtr());
-
-        BaseCPU *ncpu(ntc.getCpuPtr());
-        assert(ncpu);
-        EndQuiesceEvent *oqe(otc.getQuiesceEvent());
-        assert(oqe);
-        assert(oqe->tc == &otc);
-
-        BaseCPU *ocpu(otc.getCpuPtr());
-        assert(ocpu);
-        EndQuiesceEvent *nqe(ntc.getQuiesceEvent());
-        assert(nqe);
-        assert(nqe->tc == &ntc);
-
-        if (oqe->scheduled()) {
-            ncpu->schedule(nqe, oqe->when());
-            ocpu->deschedule(oqe);
-        }
-    }
 
     otc.setStatus(ThreadContext::Halted);
 }
