@@ -532,7 +532,6 @@ class System : public SimObject, public PCEventScope
     void workItemEnd(uint32_t tid, uint32_t workid);
 
   public:
-    std::vector<BaseRemoteGDB *> remoteGDB;
     bool breakpoint();
 
   public:
