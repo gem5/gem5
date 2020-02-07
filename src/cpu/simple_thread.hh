@@ -74,10 +74,6 @@ class CheckerCPU;
 class FunctionProfile;
 class ProfileNode;
 
-namespace Kernel {
-    class Statistics;
-}
-
 /**
  * The SimpleThread object provides a combination of the ThreadState
  * object and the ThreadContext interface. It implements the
@@ -141,8 +137,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     // constructor: initialize SimpleThread from given process structure
     // FS
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-                 BaseTLB *_itb, BaseTLB *_dtb, BaseISA *_isa,
-                 bool use_kernel_stats = true);
+                 BaseTLB *_itb, BaseTLB *_dtb, BaseISA *_isa);
     // SE
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
                  Process *_process, BaseTLB *_itb, BaseTLB *_dtb,
@@ -151,8 +146,6 @@ class SimpleThread : public ThreadState, public ThreadContext
     virtual ~SimpleThread() {}
 
     void takeOverFrom(ThreadContext *oldContext) override;
-
-    void regStats(const std::string &name) override;
 
     void copyState(ThreadContext *oldContext);
 
@@ -231,12 +224,6 @@ class SimpleThread : public ThreadState, public ThreadContext
     TheISA::Decoder *getDecoderPtr() override { return &decoder; }
 
     System *getSystemPtr() override { return system; }
-
-    Kernel::Statistics *
-    getKernelStats() override
-    {
-        return ThreadState::getKernelStats();
-    }
 
     PortProxy &getPhysProxy() override { return ThreadState::getPhysProxy(); }
     PortProxy &getVirtProxy() override { return ThreadState::getVirtProxy(); }

@@ -99,8 +99,7 @@ CheckerCPU::setSystem(System *system)
     systemPtr = system;
 
     if (FullSystem) {
-        thread = new SimpleThread(this, 0, systemPtr, itb, dtb,
-                                  p->isa[0], false);
+        thread = new SimpleThread(this, 0, systemPtr, itb, dtb, p->isa[0]);
     } else {
         thread = new SimpleThread(this, 0, systemPtr,
                                   workload.size() ? workload[0] : NULL,
@@ -109,7 +108,6 @@ CheckerCPU::setSystem(System *system)
 
     tc = thread->getTC();
     threadContexts.push_back(tc);
-    thread->kernelStats = NULL;
     // Thread should never be null after this
     assert(thread != NULL);
 }

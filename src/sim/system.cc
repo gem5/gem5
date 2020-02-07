@@ -67,15 +67,6 @@
 #include "sim/full_system.hh"
 #include "sim/redirect_path.hh"
 
-/**
- * To avoid linking errors with LTO, only include the header if we
- * actually have a definition.
- */
-#if THE_ISA != NULL_ISA
-#include "kern/kernel_stats.hh"
-
-#endif
-
 using namespace std;
 using namespace TheISA;
 

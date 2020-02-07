@@ -216,12 +216,6 @@ class ThreadContext : public ::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    Kernel::Statistics *
-    getKernelStats() override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-
     PortProxy &getPhysProxy() override { return *physProxy; }
     PortProxy &getVirtProxy() override { return *virtProxy; }
     void initMemProxies(::ThreadContext *tc) override;

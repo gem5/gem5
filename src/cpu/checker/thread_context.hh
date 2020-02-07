@@ -50,12 +50,10 @@
 #include "debug/Checker.hh"
 
 class EndQuiesceEvent;
-namespace Kernel {
-    class Statistics;
-};
-namespace TheISA {
+namespace TheISA
+{
     class Decoder;
-};
+} // namespace TheISA
 
 /**
  * Derived ThreadContext class for use with the Checker.  The template
@@ -149,12 +147,6 @@ class CheckerThreadContext : public ThreadContext
     }
 
     System *getSystemPtr() override { return actualTC->getSystemPtr(); }
-
-    ::Kernel::Statistics *
-    getKernelStats() override
-    {
-        return actualTC->getKernelStats();
-    }
 
     Process *getProcessPtr() override { return actualTC->getProcessPtr(); }
 

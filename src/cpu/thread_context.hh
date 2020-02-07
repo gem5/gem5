@@ -68,9 +68,6 @@ class EndQuiesceEvent;
 class PortProxy;
 class Process;
 class System;
-namespace Kernel {
-    class Statistics;
-}
 
 /**
  * ThreadContext is the external interface to all thread state for
@@ -146,8 +143,6 @@ class ThreadContext : public PCEventScope
 
     virtual System *getSystemPtr() = 0;
 
-    virtual ::Kernel::Statistics *getKernelStats() = 0;
-
     virtual PortProxy &getPhysProxy() = 0;
 
     virtual PortProxy &getVirtProxy() = 0;
@@ -187,7 +182,7 @@ class ThreadContext : public PCEventScope
 
     virtual void takeOverFrom(ThreadContext *old_context) = 0;
 
-    virtual void regStats(const std::string &name) = 0;
+    virtual void regStats(const std::string &name) {};
 
     virtual EndQuiesceEvent *getQuiesceEvent() = 0;
 

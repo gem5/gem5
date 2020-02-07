@@ -32,7 +32,6 @@
 #include "cpu/base.hh"
 #include "cpu/profile.hh"
 #include "cpu/quiesce_event.hh"
-#include "kern/kernel_stats.hh"
 #include "mem/port.hh"
 #include "mem/port_proxy.hh"
 #include "mem/se_translating_port_proxy.hh"
@@ -46,7 +45,7 @@ ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
       _status(ThreadContext::Halted), baseCpu(cpu),
       _contextId(0), _threadId(_tid), lastActivate(0), lastSuspend(0),
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
-      kernelStats(NULL), process(_process), physProxy(NULL), virtProxy(NULL),
+      process(_process), physProxy(NULL), virtProxy(NULL),
       funcExeInst(0), storeCondFailures(0)
 {
 }
@@ -73,8 +72,6 @@ ThreadState::serialize(CheckpointOut &cp) const
     if (quiesceEvent->scheduled())
         quiesceEndTick = quiesceEvent->when();
     SERIALIZE_SCALAR(quiesceEndTick);
-    if (kernelStats)
-        kernelStats->serialize(cp);
 }
 
 void
@@ -92,8 +89,6 @@ ThreadState::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(quiesceEndTick);
     if (quiesceEndTick)
         baseCpu->schedule(quiesceEvent, quiesceEndTick);
-    if (kernelStats)
-        kernelStats->unserialize(cp);
 }
 
 void

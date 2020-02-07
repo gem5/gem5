@@ -49,7 +49,6 @@
 #include "cpu/quiesce_event.hh"
 #include "debug/Context.hh"
 #include "debug/Quiesce.hh"
-#include "kern/kernel_stats.hh"
 #include "params/BaseCPU.hh"
 #include "sim/full_system.hh"
 

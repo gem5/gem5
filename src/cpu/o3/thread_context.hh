@@ -47,9 +47,6 @@
 #include "cpu/thread_context.hh"
 
 class EndQuiesceEvent;
-namespace Kernel {
-    class Statistics;
-}
 
 /**
  * Derived ThreadContext class for use with the O3CPU.  It
@@ -143,13 +140,6 @@ class O3ThreadContext : public ThreadContext
     /** Returns a pointer to the system. */
     System *getSystemPtr() override { return cpu->system; }
 
-    /** Returns a pointer to this thread's kernel statistics. */
-    ::Kernel::Statistics *
-    getKernelStats() override
-    {
-        return thread->kernelStats;
-    }
-
     /** Returns a pointer to this thread's process. */
     Process *getProcessPtr() override { return thread->getProcessPtr(); }
 
@@ -191,9 +181,6 @@ class O3ThreadContext : public ThreadContext
 
     /** Takes over execution of a thread from another CPU. */
     void takeOverFrom(ThreadContext *old_context) override;
-
-    /** Registers statistics associated with this TC. */
-    void regStats(const std::string &name) override;
 
     /** Reads the last tick that this thread was activated on. */
     Tick readLastActivate() override;

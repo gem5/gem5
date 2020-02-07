@@ -43,7 +43,6 @@
 #define __CPU_O3_THREAD_CONTEXT_IMPL_HH__
 
 #include "arch/generic/traits.hh"
-#include "arch/kernel_stats.hh"
 #include "arch/registers.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/thread_context.hh"
@@ -76,7 +75,6 @@ O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
     TheISA::Decoder *oldDecoder = old_context->getDecoderPtr();
     newDecoder->takeOverFrom(oldDecoder);
 
-    thread->kernelStats = old_context->getKernelStats();
     thread->funcExeInst = old_context->readFuncExeInst();
 
     thread->noSquashFromTC = false;
@@ -140,16 +138,6 @@ O3ThreadContext<Impl>::halt()
 
     // add this thread to the exiting list to mark that it is trying to exit.
     cpu->addThreadToExitingList(thread->threadId());
-}
-
-template <class Impl>
-void
-O3ThreadContext<Impl>::regStats(const std::string &name)
-{
-    if (FullSystem) {
-        thread->kernelStats = new TheISA::Kernel::Statistics();
-        thread->kernelStats->regStats(name + ".kern");
-    }
 }
 
 template <class Impl>

@@ -28,7 +28,6 @@
 
 #include "arch/mips/idle_event.hh"
 
-#include "arch/mips/kernel_stats.hh"
 #include "cpu/thread_context.hh"
 
 using namespace MipsISA;

@@ -43,7 +43,6 @@
 #include <string>
 
 #include "arch/isa_traits.hh"
-#include "arch/kernel_stats.hh"
 #include "arch/stacktrace.hh"
 #include "arch/utility.hh"
 #include "base/callback.hh"
@@ -83,8 +82,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 }
 
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
-                           BaseTLB *_itb, BaseTLB *_dtb,
-                           BaseISA *_isa, bool use_kernel_stats)
+                           BaseTLB *_itb, BaseTLB *_dtb, BaseISA *_isa)
     : ThreadState(_cpu, _thread_num, NULL),
       isa(dynamic_cast<TheISA::ISA *>(_isa)),
       predicate(true), memAccPredicate(true),
@@ -110,9 +108,6 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
     static ProfileNode dummyNode;
     profileNode = &dummyNode;
     profilePC = 3;
-
-    if (use_kernel_stats)
-        kernelStats = new TheISA::Kernel::Statistics();
 }
 
 void
@@ -123,7 +118,6 @@ SimpleThread::takeOverFrom(ThreadContext *oldContext)
 
     isa->takeOverFrom(this, oldContext);
 
-    kernelStats = oldContext->getKernelStats();
     funcExeInst = oldContext->readFuncExeInst();
     storeCondFailures = 0;
 }
@@ -196,14 +190,6 @@ SimpleThread::halt()
 
     _status = ThreadContext::Halted;
     baseCpu->haltContext(_threadId);
-}
-
-
-void
-SimpleThread::regStats(const string &name)
-{
-    if (FullSystem && kernelStats)
-        kernelStats->regStats(name + ".kern");
 }
 
 void

@@ -60,7 +60,6 @@ env.SwitchingHeaders(
         decoder.hh
         isa.hh
         isa_traits.hh
-        kernel_stats.hh
         locked_mem.hh
         microcode_rom.hh
         pseudo_inst.hh

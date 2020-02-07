@@ -39,9 +39,6 @@
 class EndQuiesceEvent;
 class FunctionProfile;
 class ProfileNode;
-namespace Kernel {
-    class Statistics;
-}
 
 class Checkpoint;
 
@@ -93,8 +90,6 @@ struct ThreadState : public Serializable {
     void profileClear();
 
     void profileSample();
-
-    Kernel::Statistics *getKernelStats() { return kernelStats; }
 
     PortProxy &getPhysProxy();
 
@@ -165,8 +160,6 @@ struct ThreadState : public Serializable {
     ProfileNode *profileNode;
     Addr profilePC;
     EndQuiesceEvent *quiesceEvent;
-
-    Kernel::Statistics *kernelStats;
 
   protected:
     Process *process;
