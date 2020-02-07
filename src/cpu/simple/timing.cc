@@ -148,8 +148,6 @@ TimingSimpleCPU::drainResume()
 
     // Reschedule any power gating event (if any)
     schedulePowerGatingEvent();
-
-    system->totalNumInsts = 0;
 }
 
 bool

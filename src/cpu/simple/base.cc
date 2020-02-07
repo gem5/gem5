@@ -166,7 +166,6 @@ BaseSimpleCPU::countInst()
         t_info.numInst++;
         t_info.execContextStats.numInsts++;
 
-        system->totalNumInsts++;
         t_info.thread->funcExeInst++;
     }
     t_info.numOp++;

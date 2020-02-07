@@ -766,7 +766,6 @@ BaseKvmCPU::kvmRun(Tick ticks)
         baseStats.numCycles += simCyclesExecuted;;
         stats.committedInsts += instsExecuted;
         ctrInsts += instsExecuted;
-        system->totalNumInsts += instsExecuted;
 
         DPRINTF(KvmRun,
                 "KVM: Executed %i instructions in %i cycles "

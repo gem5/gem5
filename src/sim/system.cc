@@ -229,7 +229,6 @@ System::System(const Params &p)
       _m5opRange(p.m5ops_base ?
                  RangeSize(p.m5ops_base, 0x10000) :
                  AddrRange(1, 0)), // Create an empty range if disabled
-      totalNumInsts(0),
       redirectPaths(p.redirect_paths)
 {
     if (workload)
@@ -437,12 +436,6 @@ System::getDeviceMemory(RequestorID id) const
     panic_if(!deviceMemMap.count(id),
              "No device memory found for RequestorID %d\n", id);
     return deviceMemMap.at(id);
-}
-
-void
-System::drainResume()
-{
-    totalNumInsts = 0;
 }
 
 void

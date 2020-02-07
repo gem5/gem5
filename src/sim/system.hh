@@ -592,10 +592,7 @@ class System : public SimObject, public PCEventScope
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    void drainResume() override;
-
   public:
-    Counter totalNumInsts;
     std::map<std::pair<uint32_t,uint32_t>, Tick>  lastWorkItemStarted;
     std::map<uint32_t, Stats::Histogram*> workItemStats;
 
