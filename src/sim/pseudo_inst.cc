@@ -61,7 +61,6 @@
 #include "debug/Quiesce.hh"
 #include "debug/WorkItems.hh"
 #include "dev/net/dist_iface.hh"
-#include "kern/kernel_stats.hh"
 #include "params/BaseCPU.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
@@ -116,8 +115,9 @@ arm(ThreadContext *tc)
     if (!FullSystem)
         panicFsOnlyPseudoInst("arm");
 
-    if (tc->getKernelStats())
-        tc->getKernelStats()->arm();
+    auto *workload = tc->getSystemPtr()->workload;
+    if (workload)
+        workload->recordArm();
 }
 
 void

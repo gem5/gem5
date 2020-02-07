@@ -35,28 +35,20 @@
 #include "sim/stats.hh"
 
 // What does kernel stats expect is included?
-namespace Kernel {
+namespace Kernel
+{
 
 class Statistics : public Serializable
 {
   protected:
     std::string myname;
 
-  protected:
-    Stats::Scalar _arm;
-    Stats::Scalar _quiesce;
-
   public:
     virtual ~Statistics() {}
 
     const std::string name() const { return myname; }
-    virtual void regStats(const std::string &name);
+    virtual void regStats(const std::string &name) { myname = name; };
 
-  public:
-    void arm() { _arm++; }
-    void quiesce() { _quiesce++; }
-
-  public:
     void serialize(CheckpointOut &cp) const override {}
     void unserialize(CheckpointIn &cp) override {}
 };

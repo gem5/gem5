@@ -32,6 +32,7 @@
 #include "base/loader/symtab.hh"
 #include "params/Workload.hh"
 #include "sim/sim_object.hh"
+#include "sim/stats.hh"
 
 class System;
 class ThreadContext;
@@ -41,8 +42,24 @@ class Workload : public SimObject
   protected:
     virtual Addr fixFuncEventAddr(Addr addr) const { return addr; }
 
+    struct WorkloadStats : public Stats::Group
+    {
+        Stats::Scalar arm;
+        Stats::Scalar quiesce;
+
+        WorkloadStats(Workload *workload) : Stats::Group(workload),
+            arm(this, "inst.arm", "number of arm instructions executed"),
+            quiesce(this, "inst.quiesce",
+                    "number of quiesce instructions executed")
+        {}
+    } stats;
+
   public:
-    using SimObject::SimObject;
+    Workload(const WorkloadParams *_params) : SimObject(_params), stats(this)
+    {}
+
+    void recordQuiesce() { stats.quiesce++; }
+    void recordArm() { stats.arm++; }
 
     System *system = nullptr;
 

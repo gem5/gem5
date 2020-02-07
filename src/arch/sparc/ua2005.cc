@@ -28,7 +28,6 @@
 
 #include "arch/sparc/interrupts.hh"
 #include "arch/sparc/isa.hh"
-#include "arch/sparc/kernel_stats.hh"
 #include "arch/sparc/registers.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
@@ -36,7 +35,6 @@
 #include "cpu/thread_context.hh"
 #include "debug/Quiesce.hh"
 #include "debug/Timer.hh"
-#include "sim/full_system.hh"
 #include "sim/system.hh"
 
 using namespace SparcISA;
@@ -232,8 +230,9 @@ ISA::setFSReg(int miscReg, RegVal val)
             DPRINTF(Quiesce, "Cpu executed quiescing instruction\n");
             // Time to go to sleep
             tc->suspend();
-            if (FullSystem && tc->getKernelStats())
-                tc->getKernelStats()->quiesce();
+            auto *workload = tc->getSystemPtr()->workload;
+            if (workload)
+                workload->recordQuiesce();
         }
         break;
 

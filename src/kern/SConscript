@@ -31,7 +31,6 @@ Import('*')
 if env['TARGET_ISA'] == 'null':
     Return()
 
-Source('kernel_stats.cc')
 Source('linux/events.cc')
 Source('linux/linux.cc')
 Source('linux/helpers.cc')

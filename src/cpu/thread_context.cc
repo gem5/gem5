@@ -133,8 +133,9 @@ ThreadContext::quiesce()
     DPRINTF(Quiesce, "%s: quiesce()\n", getCpuPtr()->name());
 
     suspend();
-    if (getKernelStats())
-        getKernelStats()->quiesce();
+    auto *workload = getSystemPtr()->workload;
+    if (workload)
+        workload->recordQuiesce();
 }
 
 
@@ -150,8 +151,9 @@ ThreadContext::quiesceTick(Tick resume)
     DPRINTF(Quiesce, "%s: quiesceTick until %lu\n", cpu->name(), resume);
 
     suspend();
-    if (getKernelStats())
-        getKernelStats()->quiesce();
+    auto *workload = getSystemPtr()->workload;
+    if (workload)
+        workload->recordQuiesce();
 }
 
 void
