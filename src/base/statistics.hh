@@ -1724,9 +1724,8 @@ class SampleStor
     void
     sample(Counter val, int number)
     {
-        Counter value = val * number;
-        sum += value;
-        squares += value * value;
+        sum += val * number;
+        squares += val * val * number;
         samples += number;
     }
 
@@ -1801,9 +1800,8 @@ class AvgSampleStor
     void
     sample(Counter val, int number)
     {
-        Counter value = val * number;
-        sum += value;
-        squares += value * value;
+        sum += val * number;
+        squares += val * val * number;
     }
 
     /**
