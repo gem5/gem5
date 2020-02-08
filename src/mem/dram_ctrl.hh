@@ -55,11 +55,14 @@
 #include "enums/AddrMap.hh"
 #include "enums/MemSched.hh"
 #include "enums/PageManage.hh"
+#include "mem/abstract_mem.hh"
 #include "mem/drampower.hh"
 #include "mem/qos/mem_ctrl.hh"
 #include "mem/qport.hh"
 #include "params/DRAMCtrl.hh"
 #include "sim/eventq.hh"
+
+class DRAMInterfaceParams;
 
 /**
  * A basic class to track the bank state, i.e. what row is
@@ -242,7 +245,7 @@ typedef std::deque<DRAMPacket*> DRAMPacketQueue;
  * The DRAMInterface includes a class for individual ranks
  * and per rank functions.
  */
-class DRAMInterface : public SimObject
+class DRAMInterface : public AbstractMemory
 {
   private:
     /**
@@ -342,7 +345,7 @@ class DRAMInterface : public SimObject
     class Rank;
     struct RankStats : public Stats::Group
     {
-        RankStats(DRAMCtrl &ctrl, Rank &rank);
+        RankStats(DRAMInterface &dram, Rank &rank);
 
         void regStats() override;
         void resetStats() override;
@@ -408,13 +411,6 @@ class DRAMInterface : public SimObject
      */
     class Rank : public EventManager
     {
-      protected:
-
-        /**
-         * A reference to the parent DRAMCtrl instance
-         */
-        DRAMCtrl& ctrl;
-
       private:
 
         /**
@@ -534,10 +530,10 @@ class DRAMInterface : public SimObject
          */
         Tick lastBurstTick;
 
-        Rank(DRAMCtrl& _ctrl, const DRAMCtrlParams* _p, int _rank,
+        Rank(const DRAMInterfaceParams* _p, int _rank,
              DRAMInterface& _dram);
 
-        const std::string name() const { return csprintf("dram_%d", rank); }
+        const std::string name() const { return csprintf("%d", rank); }
 
         /**
          * Kick off accounting for power and refresh states and
@@ -659,15 +655,16 @@ class DRAMInterface : public SimObject
      * @param next Memory Command
      * @return true if timeStamp of Command 1 < timeStamp of Command 2
      */
-    static bool sortTime(const Command& cmd, const Command& cmd_next)
+    static bool
+    sortTime(const Command& cmd, const Command& cmd_next)
     {
         return cmd.timeStamp < cmd_next.timeStamp;
-    };
+    }
 
     /**
-     * A reference to the parent DRAMCtrl instance
+     * A pointer to the parent DRAMCtrl instance
      */
-    DRAMCtrl& ctrl;
+    DRAMCtrl* ctrl;
 
     /**
      * Memory controller configuration initialized based on parameter
@@ -698,6 +695,7 @@ class DRAMInterface : public SimObject
      * DRAM timing requirements
      */
     const Tick M5_CLASS_VAR_USED tCK;
+    const Tick tCS;
     const Tick tCL;
     const Tick tBURST;
     const Tick tBURST_MIN;
@@ -781,7 +779,7 @@ class DRAMInterface : public SimObject
 
     struct DRAMStats : public Stats::Group
     {
-        DRAMStats(DRAMCtrl &ctrl, DRAMInterface &dram);
+        DRAMStats(DRAMInterface &dram);
 
         void regStats() override;
         void resetStats() override;
@@ -798,10 +796,12 @@ class DRAMInterface : public SimObject
 
         // Latencies summed over all requests
         Stats::Scalar totQLat;
+        Stats::Scalar totBusLat;
         Stats::Scalar totMemAccLat;
 
         // Average latencies per request
         Stats::Formula avgQLat;
+        Stats::Formula avgBusLat;
         Stats::Formula avgMemAccLat;
 
         // Row hit count and rate
@@ -817,6 +817,11 @@ class DRAMInterface : public SimObject
         // Average bandwidth
         Stats::Formula avgRdBW;
         Stats::Formula avgWrBW;
+        Stats::Formula peakBW;
+        // bus utilization
+        Stats::Formula busUtil;
+        Stats::Formula busUtilRead;
+        Stats::Formula busUtilWrite;
         Stats::Formula pageHitRate;
     };
 
@@ -828,16 +833,28 @@ class DRAMInterface : public SimObject
     std::vector<Rank*> ranks;
 
   public:
+
+    /**
+      * Buffer sizes for read and write queues in the controller
+      * These are passed to the controller on instantiation
+      * Defining them here allows for buffers to be resized based
+      * on memory type / configuration.
+      */
+    const uint32_t readBufferSize;
+    const uint32_t writeBufferSize;
+
+    /** Setting a pointer to the controller */
+    void setCtrl(DRAMCtrl* _ctrl) { ctrl = _ctrl; }
+
     /**
      * Initialize the DRAM interface and verify parameters
-     * @param range is the address range for this interface
      */
-    void init(AddrRange range);
+    void init() override;
 
     /**
      * Iterate through dram ranks and instantiate per rank startup routine
      */
-    void startupRanks();
+    void startup() override;
 
     /**
      * Iterate through dram ranks to exit self-refresh in order to drain
@@ -861,15 +878,26 @@ class DRAMInterface : public SimObject
     void suspend();
 
     /**
+     * Get an address in a dense range which starts from 0. The input
+     * address is the physical address of the request in an address
+     * space that contains other SimObjects apart from this
+     * controller.
+     *
+     * @param addr The intput address which should be in the addrRange
+     * @return An address in the continues range [0, max)
+     */
+    Addr getCtrlAddr(Addr addr) { return range.getOffset(addr); }
+
+    /**
      * @return number of bytes in a burst for this interface
      */
-    uint32_t bytesPerBurst() const { return burstSize; };
+    uint32_t bytesPerBurst() const { return burstSize; }
 
     /**
      *
      * @return number of ranks per channel for this interface
      */
-    uint32_t numRanks() const { return ranksPerChannel; };
+    uint32_t numRanks() const { return ranksPerChannel; }
 
     /*
      * @return time to send a burst of data
@@ -879,7 +907,8 @@ class DRAMInterface : public SimObject
     /*
      * @return time to send a burst of data without gaps
      */
-    Tick burstDataDelay() const
+    Tick
+    burstDataDelay() const
     {
         return (burstInterleave ? tBURST_MAX / 2 : tBURST);
     }
@@ -893,7 +922,14 @@ class DRAMInterface : public SimObject
      *
      * @return additional bus turnaround required for read-to-write
      */
-    Tick minRdToWr() const { return tRTW; };
+    Tick minRdToWr() const { return tRTW; }
+
+    /**
+     * Determine the required delay for an access to a different rank
+     *
+     * @return required rank to rank delay
+     */
+    Tick rankDelay() const { return tCS; }
 
     /*
      * Function to calulate RAS cycle time for use within and
@@ -957,7 +993,8 @@ class DRAMInterface : public SimObject
      *                    This requires the DRAM to be in the
      *                    REF IDLE state
      */
-    bool burstReady(uint8_t rank) const
+    bool
+    burstReady(uint8_t rank) const
     {
         return ranks[rank]->inRefIdleState();
     }
@@ -979,7 +1016,7 @@ class DRAMInterface : public SimObject
      *
      * @param rank Specifies rank associated with read burst
      */
-    void respondEventDRAM(uint8_t rank);
+    void respondEvent(uint8_t rank);
 
     /**
      * Check the refresh state to determine if refresh needs
@@ -989,8 +1026,7 @@ class DRAMInterface : public SimObject
      */
     void checkRefreshState(uint8_t rank);
 
-    DRAMInterface(DRAMCtrl& _ctrl, const DRAMCtrlParams* _p,
-                 uint64_t capacity, AddrRange range);
+    DRAMInterface(const DRAMInterfaceParams* _p);
 };
 
 /**
@@ -1141,20 +1177,6 @@ class DRAMCtrl : public QoS::MemCtrl
     void accessAndRespond(PacketPtr pkt, Tick static_latency);
 
     /**
-     * Get an address in a dense range which starts from 0. The input
-     * address is the physical address of the request in an address
-     * space that contains other SimObjects apart from this
-     * controller.
-     *
-     * @param addr The intput address which should be in the addrRange
-     * @return An address in the continues range [0, max)
-     */
-    Addr getCtrlAddr(Addr addr)
-    {
-        return range.getOffset(addr);
-    }
-
-    /**
      * The memory schduler/arbiter - picks which request needs to
      * go next, based on the specified policy such as FCFS or FR-FCFS
      * and moves it to the head of the queue.
@@ -1237,6 +1259,11 @@ class DRAMCtrl : public QoS::MemCtrl
     std::unordered_multiset<Tick> burstTicks;
 
     /**
+     * Create pointer to interface of the actual dram media
+     */
+    DRAMInterface* const dram;
+
+    /**
      * The following are basic design parameters of the memory
      * controller, and are initialized based on parameter values.
      * The rowsPerBank is determined based on the capacity, number of
@@ -1249,12 +1276,6 @@ class DRAMCtrl : public QoS::MemCtrl
     const uint32_t minWritesPerSwitch;
     uint32_t writesThisTime;
     uint32_t readsThisTime;
-
-    /**
-     * Basic memory timing parameters initialized based on parameter
-     * values. These will be used across memory interfaces.
-     */
-    const Tick tCS;
 
     /**
      * Memory controller configuration initialized based on parameter
@@ -1310,10 +1331,6 @@ class DRAMCtrl : public QoS::MemCtrl
         // Average queue lengths
         Stats::Average avgRdQLen;
         Stats::Average avgWrQLen;
-        // Latencies summed over all requests
-        Stats::Scalar totBusLat;
-        // Average latencies per request
-        Stats::Formula avgBusLat;
 
         Stats::Scalar numRdRetry;
         Stats::Scalar numWrRetry;
@@ -1324,21 +1341,12 @@ class DRAMCtrl : public QoS::MemCtrl
         Stats::Histogram rdPerTurnAround;
         Stats::Histogram wrPerTurnAround;
 
-        Stats::Scalar bytesRead;
         Stats::Scalar bytesReadWrQ;
-        Stats::Scalar bytesWritten;
         Stats::Scalar bytesReadSys;
         Stats::Scalar bytesWrittenSys;
         // Average bandwidth
-        Stats::Formula avgRdBW;
-        Stats::Formula avgWrBW;
         Stats::Formula avgRdBWSys;
         Stats::Formula avgWrBWSys;
-        Stats::Formula peakBW;
-        // bus utilization
-        Stats::Formula busUtil;
-        Stats::Formula busUtilRead;
-        Stats::Formula busUtilWrite;
 
         Stats::Scalar totGap;
         Stats::Formula avgGap;
@@ -1365,11 +1373,6 @@ class DRAMCtrl : public QoS::MemCtrl
     };
 
     CtrlStats stats;
-
-    /**
-     * Create pointer to interfasce to the actual media
-     */
-    DRAMInterface* dram;
 
     /**
      * Upstream caches need this packet until true is returned, so
@@ -1447,13 +1450,6 @@ class DRAMCtrl : public QoS::MemCtrl
      * @param Tick to schedule next event
      */
     void restartScheduler(Tick tick) { schedule(nextReqEvent, tick); }
-
-    /**
-     * Determine the required delay for an access to a different rank
-     *
-     * @return required rank to rank delay
-     */
-    Tick rankDelay() const { return tCS; }
 
     /**
      * Check the current direction of the memory channel

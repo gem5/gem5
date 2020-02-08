@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 ARM Limited
+ * Copyright (c) 2018-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -40,6 +40,7 @@
 #include "debug/Drain.hh"
 #include "debug/QOS.hh"
 #include "mem_sink.hh"
+#include "params/QoSMemSinkInterface.hh"
 #include "sim/system.hh"
 
 namespace QoS {
@@ -50,12 +51,15 @@ MemSinkCtrl::MemSinkCtrl(const QoSMemSinkCtrlParams* p)
     memoryPacketSize(p->memory_packet_size),
     readBufferSize(p->read_buffer_size),
     writeBufferSize(p->write_buffer_size), port(name() + ".port", *this),
+    interface(p->interface),
     retryRdReq(false), retryWrReq(false), nextRequest(0), nextReqEvent(this)
 {
     // Resize read and write queue to allocate space
     // for configured QoS priorities
     readQueue.resize(numPriorities());
     writeQueue.resize(numPriorities());
+
+    interface->setMemCtrl(this);
 }
 
 MemSinkCtrl::~MemSinkCtrl()
@@ -92,7 +96,7 @@ MemSinkCtrl::recvAtomic(PacketPtr pkt)
              "%s Should not see packets where cache is responding\n",
              __func__);
 
-    access(pkt);
+    interface->access(pkt);
     return responseLatency;
 }
 
@@ -101,7 +105,7 @@ MemSinkCtrl::recvFunctional(PacketPtr pkt)
 {
     pkt->pushLabel(name());
 
-    functionalAccess(pkt);
+    interface->functionalAccess(pkt);
 
     pkt->popLabel();
 }
@@ -279,7 +283,7 @@ MemSinkCtrl::processNextReqEvent()
 
     // Do the actual memory access which also turns the packet
     // into a response
-    access(pkt);
+    interface->access(pkt);
 
     // Log the response
     logResponse(pkt->isRead()? READ : WRITE,
@@ -351,7 +355,7 @@ AddrRangeList
 MemSinkCtrl::MemoryPort::getAddrRanges() const
 {
     AddrRangeList ranges;
-    ranges.push_back(memory.getAddrRange());
+    ranges.push_back(memory.interface->getAddrRange());
     return ranges;
 }
 
@@ -390,3 +394,13 @@ QoSMemSinkCtrlParams::create()
     return new QoS::MemSinkCtrl(this);
 }
 
+QoSMemSinkInterface::QoSMemSinkInterface(const QoSMemSinkInterfaceParams* _p)
+    : AbstractMemory(_p)
+{
+}
+
+QoSMemSinkInterface*
+QoSMemSinkInterfaceParams::create()
+{
+    return new QoSMemSinkInterface(this);
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -36,10 +36,10 @@
  */
 
 #include "debug/QOS.hh"
-#include "mem/abstract_mem.hh"
-#include "mem/qos/q_policy.hh"
 #include "mem/qos/policy.hh"
+#include "mem/qos/q_policy.hh"
 #include "params/QoSMemCtrl.hh"
+#include "sim/clocked_object.hh"
 #include "sim/system.hh"
 
 #include <unordered_map>
@@ -56,7 +56,7 @@ namespace QoS {
  * which support QoS - it provides access to a set of QoS
  * scheduling policies
  */
-class MemCtrl: public AbstractMemory
+class MemCtrl : public ClockedObject
 {
   public:
     /** Bus Direction */
@@ -150,6 +150,9 @@ class MemCtrl: public AbstractMemory
         /** Count the number of times bus staying in WRITE state */
         Stats::Scalar numStayWriteState;
     } stats;
+
+    /** Pointer to the System object */
+    System* _system;
 
     /**
      * Initializes dynamically counters and
@@ -266,11 +269,6 @@ class MemCtrl: public AbstractMemory
     virtual ~MemCtrl();
 
     /**
-     * Initializes this object
-     */
-    void init() override;
-
-    /**
      * Gets the current bus state
      *
      * @return current bus state
@@ -346,6 +344,10 @@ class MemCtrl: public AbstractMemory
      * @return total number of priority levels
      */
     uint8_t numPriorities() const { return _numPriorities; }
+
+    /** read the system pointer
+     * @return pointer to the system object */
+    System* system() const { return _system; }
 };
 
 template<typename Queues>

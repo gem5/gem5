@@ -132,8 +132,9 @@ if m5.defines.buildEnv['TARGET_ISA'] == "x86":
 system.system_port = system.membus.slave
 
 # Create a DDR3 memory controller
-system.mem_ctrl = DDR3_1600_8x8()
-system.mem_ctrl.range = system.mem_ranges[0]
+system.mem_ctrl = DRAMCtrl()
+system.mem_ctrl.dram = DDR3_1600_8x8()
+system.mem_ctrl.dram.range = system.mem_ranges[0]
 system.mem_ctrl.port = system.membus.master
 
 # Create a process for a simple "Hello World" application

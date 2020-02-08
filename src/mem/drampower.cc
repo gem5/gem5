@@ -40,13 +40,13 @@
 #include "base/intmath.hh"
 #include "sim/core.hh"
 
-DRAMPower::DRAMPower(const DRAMCtrlParams* p, bool include_io) :
+DRAMPower::DRAMPower(const DRAMInterfaceParams* p, bool include_io) :
     powerlib(libDRAMPower(getMemSpec(p), include_io))
 {
 }
 
 Data::MemArchitectureSpec
-DRAMPower::getArchParams(const DRAMCtrlParams* p)
+DRAMPower::getArchParams(const DRAMInterfaceParams* p)
 {
     Data::MemArchitectureSpec archSpec;
     archSpec.burstLength = p->burst_length;
@@ -68,7 +68,7 @@ DRAMPower::getArchParams(const DRAMCtrlParams* p)
 }
 
 Data::MemTimingSpec
-DRAMPower::getTimingParams(const DRAMCtrlParams* p)
+DRAMPower::getTimingParams(const DRAMInterfaceParams* p)
 {
     // Set the values that are used for power calculations and ignore
     // the ones only used by the controller functionality in DRAMPower
@@ -100,7 +100,7 @@ DRAMPower::getTimingParams(const DRAMCtrlParams* p)
 }
 
 Data::MemPowerSpec
-DRAMPower::getPowerParams(const DRAMCtrlParams* p)
+DRAMPower::getPowerParams(const DRAMInterfaceParams* p)
 {
     // All DRAMPower currents are in mA
     Data::MemPowerSpec powerSpec;
@@ -132,7 +132,7 @@ DRAMPower::getPowerParams(const DRAMCtrlParams* p)
 }
 
 Data::MemorySpecification
-DRAMPower::getMemSpec(const DRAMCtrlParams* p)
+DRAMPower::getMemSpec(const DRAMInterfaceParams* p)
 {
     Data::MemorySpecification memSpec;
     memSpec.memArchSpec = getArchParams(p);
@@ -142,7 +142,18 @@ DRAMPower::getMemSpec(const DRAMCtrlParams* p)
 }
 
 bool
-DRAMPower::hasTwoVDD(const DRAMCtrlParams* p)
+DRAMPower::hasTwoVDD(const DRAMInterfaceParams* p)
 {
     return p->VDD2 == 0 ? false : true;
+}
+
+uint8_t
+DRAMPower::getDataRate(const DRAMInterfaceParams* p)
+{
+    uint32_t burst_cycles = divCeil(p->tBURST_MAX, p->tCK);
+    uint8_t data_rate = p->burst_length / burst_cycles;
+    // 4 for GDDR5
+    if (data_rate != 1 && data_rate != 2 && data_rate != 4 && data_rate != 8)
+        fatal("Got unexpected data rate %d, should be 1 or 2 or 4 or 8\n");
+    return data_rate;
 }

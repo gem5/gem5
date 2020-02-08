@@ -1,4 +1,4 @@
-# Copyright (c) 2018 ARM Limited
+# Copyright (c) 2018-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,17 +34,20 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.params import *
-from m5.objects.AbstractMemory import AbstractMemory
+from m5.proxy import *
+from m5.objects.ClockedObject import ClockedObject
 from m5.objects.QoSTurnaround import *
 
 # QoS Queue Selection policy used to select packets among same-QoS queues
 class QoSQPolicy(Enum): vals = ["fifo", "lifo", "lrg"]
 
-class QoSMemCtrl(AbstractMemory):
+class QoSMemCtrl(ClockedObject):
     type = 'QoSMemCtrl'
     cxx_header = "mem/qos/mem_ctrl.hh"
     cxx_class = 'QoS::MemCtrl'
     abstract = True
+
+    system = Param.System(Parent.any, "System that the controller belongs to.")
 
     ##### QoS support parameters ####
 

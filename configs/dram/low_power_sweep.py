@@ -111,14 +111,19 @@ MemConfig.config_mem(args, system)
 
 # Sanity check for memory controller class.
 if not isinstance(system.mem_ctrls[0], m5.objects.DRAMCtrl):
-    fatal("This script assumes the memory is a DRAMCtrl subclass")
+    fatal("This script assumes the controller is a DRAMCtrl subclass")
+if not isinstance(system.mem_ctrls[0].dram, m5.objects.DRAMInterface):
+    fatal("This script assumes the memory is a DRAMInterface subclass")
 
 # There is no point slowing things down by saving any data.
-system.mem_ctrls[0].null = True
+system.mem_ctrls[0].dram.null = True
+
+# enable DRAM low power states
+system.mem_ctrls[0].dram.enable_dram_powerdown = True
 
 # Set the address mapping based on input argument
-system.mem_ctrls[0].addr_mapping = args.addr_map
-system.mem_ctrls[0].page_policy = args.page_policy
+system.mem_ctrls[0].dram.addr_mapping = args.addr_map
+system.mem_ctrls[0].dram.page_policy = args.page_policy
 
 # We create a traffic generator state for each param combination we want to
 # test. Each traffic generator state is specified in the config file and the
@@ -132,22 +137,22 @@ cfg_file_path = os.path.dirname(__file__) + "/" +cfg_file_name
 cfg_file = open(cfg_file_path, 'w')
 
 # Get the number of banks
-nbr_banks = int(system.mem_ctrls[0].banks_per_rank.value)
+nbr_banks = int(system.mem_ctrls[0].dram.banks_per_rank.value)
 
 # determine the burst size in bytes
-burst_size = int((system.mem_ctrls[0].devices_per_rank.value *
-                  system.mem_ctrls[0].device_bus_width.value *
-                  system.mem_ctrls[0].burst_length.value) / 8)
+burst_size = int((system.mem_ctrls[0].dram.devices_per_rank.value *
+                  system.mem_ctrls[0].dram.device_bus_width.value *
+                  system.mem_ctrls[0].dram.burst_length.value) / 8)
 
 # next, get the page size in bytes (the rowbuffer size is already in bytes)
-page_size = system.mem_ctrls[0].devices_per_rank.value * \
-    system.mem_ctrls[0].device_rowbuffer_size.value
+page_size = system.mem_ctrls[0].dram.devices_per_rank.value * \
+    system.mem_ctrls[0].dram.device_rowbuffer_size.value
 
 # Inter-request delay should be such that we can hit as many transitions
 # to/from low power states as possible to. We provide a min and max itt to the
 # traffic generator and it randomises in the range. The parameter is in
 # seconds and we need it in ticks (ps).
-itt_min = system.mem_ctrls[0].tBURST.value * 1000000000000
+itt_min = system.mem_ctrls[0].dram.tBURST.value * 1000000000000
 
 #The itt value when set to (tRAS + tRP + tCK) covers the case where
 # a read command is delayed beyond the delay from ACT to PRE_PDN entry of the
@@ -155,9 +160,9 @@ itt_min = system.mem_ctrls[0].tBURST.value * 1000000000000
 # between a write and power down entry will be tRCD + tCL + tWR + tRP + tCK.
 # As we use this delay as a unit and create multiples of it as bigger delays
 # for the sweep, this parameter works for reads, writes and mix of them.
-pd_entry_time = (system.mem_ctrls[0].tRAS.value +
-                 system.mem_ctrls[0].tRP.value +
-                 system.mem_ctrls[0].tCK.value) * 1000000000000
+pd_entry_time = (system.mem_ctrls[0].dram.tRAS.value +
+                 system.mem_ctrls[0].dram.tRP.value +
+                 system.mem_ctrls[0].dram.tCK.value) * 1000000000000
 
 # We sweep itt max using the multipliers specified by the user.
 itt_max_str = args.itt_list.strip().split()

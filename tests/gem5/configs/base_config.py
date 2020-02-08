@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2017-2018 ARM Limited
+# Copyright (c) 2012-2013, 2017-2018, 2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -220,7 +220,12 @@ class BaseSESystem(BaseSystem):
         super(BaseSESystem, self).init_system(system)
 
     def create_system(self):
-        system = System(physmem = self.mem_class(),
+        if issubclass(self.mem_class, m5.objects.DRAMInterface):
+            mem_ctrl = DRAMCtrl()
+            mem_ctrl.dram = self.mem_class()
+        else:
+            mem_ctrl = self.mem_class()
+        system = System(physmem = mem_ctrl,
                         membus = SystemXBar(),
                         mem_mode = self.mem_mode,
                         multi_thread = (self.num_threads > 1))
@@ -272,8 +277,16 @@ class BaseFSSystem(BaseSystem):
         else:
             # create the memory controllers and connect them, stick with
             # the physmem name to avoid bumping all the reference stats
-            system.physmem = [self.mem_class(range = r)
-                              for r in system.mem_ranges]
+            if issubclass(self.mem_class, m5.objects.DRAMInterface):
+                mem_ctrls = []
+                for r in system.mem_ranges:
+                    mem_ctrl = DRAMCtrl()
+                    mem_ctrl.dram = self.mem_class(range = r)
+                    mem_ctrls.append(mem_ctrl)
+                system.physmem = mem_ctrls
+            else:
+                system.physmem = [self.mem_class(range = r)
+                                  for r in system.mem_ranges]
             for i in range(len(system.physmem)):
                 system.physmem[i].port = system.membus.master
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 ARM Limited
+ * Copyright (c) 2017-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -42,7 +42,7 @@
 namespace QoS {
 
 MemCtrl::MemCtrl(const QoSMemCtrlParams * p)
-  : AbstractMemory(p),
+  : ClockedObject(p),
     policy(p->qos_policy),
     turnPolicy(p->qos_turnaround_policy),
     queuePolicy(QueuePolicy::create(p)),
@@ -51,7 +51,8 @@ MemCtrl::MemCtrl(const QoSMemCtrlParams * p)
     qosSyncroScheduler(p->qos_syncro_scheduler),
     totalReadQueueSize(0), totalWriteQueueSize(0),
     busState(READ), busStateNext(READ),
-    stats(*this)
+    stats(*this),
+    _system(p->system)
 {
     // Set the priority policy
     if (policy) {
@@ -75,12 +76,6 @@ MemCtrl::MemCtrl(const QoSMemCtrlParams * p)
 
 MemCtrl::~MemCtrl()
 {}
-
-void
-MemCtrl::init()
-{
-    AbstractMemory::init();
-}
 
 void
 MemCtrl::logRequest(BusState dir, MasterID m_id, uint8_t qos,

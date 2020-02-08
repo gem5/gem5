@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 ARM Limited
+ * Copyright (c) 2018-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,9 +41,13 @@
 #ifndef __MEM_QOS_MEM_SINK_HH__
 #define __MEM_QOS_MEM_SINK_HH__
 
+#include "mem/abstract_mem.hh"
 #include "mem/qos/mem_ctrl.hh"
 #include "mem/qport.hh"
 #include "params/QoSMemSinkCtrl.hh"
+
+class QoSMemSinkInterfaceParams;
+class QoSMemSinkInterface;
 
 namespace QoS {
 
@@ -163,6 +167,11 @@ class MemSinkCtrl : public MemCtrl
     /** Memory slave port */
     MemoryPort port;
 
+    /**
+     * Create pointer to interface of actual media
+     */
+    QoSMemSinkInterface* const interface;
+
     /** Read request pending */
     bool retryRdReq;
 
@@ -243,5 +252,18 @@ class MemSinkCtrl : public MemCtrl
 };
 
 } // namespace QoS
+
+class QoSMemSinkInterface : public AbstractMemory
+{
+  public:
+    /** Setting a pointer to the interface */
+    void setMemCtrl(QoS::MemSinkCtrl* _ctrl) { ctrl = _ctrl; };
+
+    /** Pointer to the controller */
+    QoS::MemSinkCtrl* ctrl;
+
+    QoSMemSinkInterface(const QoSMemSinkInterfaceParams* _p);
+};
+
 
 #endif /* __MEM_QOS_MEM_SINK_HH__ */

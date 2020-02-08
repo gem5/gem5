@@ -130,15 +130,16 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
         dir_ranges = []
         for r in system.mem_ranges:
             mem_type = ObjectList.mem_list.get(options.mem_type)
-            mem_ctrl = MemConfig.create_mem_ctrl(mem_type, r, index,
+            dram_intf = MemConfig.create_mem_intf(mem_type, r, index,
                 options.num_dirs, int(math.log(options.num_dirs, 2)),
                 intlv_size, options.xor_low_bit)
+            mem_ctrl = m5.objects.DRAMCtrl(dram = dram_intf)
 
             if options.access_backing_store:
                 mem_ctrl.kvm_map=False
 
             mem_ctrls.append(mem_ctrl)
-            dir_ranges.append(mem_ctrl.range)
+            dir_ranges.append(mem_ctrl.dram.range)
 
             if crossbar != None:
                 mem_ctrl.port = crossbar.master

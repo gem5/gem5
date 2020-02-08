@@ -1,5 +1,5 @@
-# Copyright (c) 2018-2020 ARM Limited
-# All rights reserved
+# Copyright (c) 2020 ARM Limited
+# All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
@@ -33,18 +33,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.AbstractMemory import AbstractMemory
 
-SimObject('QoSMemCtrl.py')
-SimObject('QoSMemSinkCtrl.py')
-SimObject('QoSMemSinkInterface.py')
-SimObject('QoSPolicy.py')
-SimObject('QoSTurnaround.py')
-
-Source('policy.cc')
-Source('policy_fixed_prio.cc')
-Source('policy_pf.cc')
-Source('turnaround_policy_ideal.cc')
-Source('q_policy.cc')
-Source('mem_ctrl.cc')
-Source('mem_sink.cc')
+class QoSMemSinkInterface(AbstractMemory):
+    type = 'QoSMemSinkInterface'
+    cxx_header = "mem/qos/mem_sink.hh"

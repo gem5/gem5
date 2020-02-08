@@ -44,7 +44,7 @@
 #define __MEM_DRAM_POWER_HH__
 
 #include "libdrampower/LibDRAMPower.h"
-#include "params/DRAMCtrl.hh"
+#include "params/DRAMInterface.hh"
 
 /**
  * DRAMPower is a standalone tool which calculates the power consumed by a
@@ -57,38 +57,44 @@ class DRAMPower
 
     /**
      * Transform the architechture parameters defined in
-     * DRAMCtrlParams to the memSpec of DRAMPower
+     * DRAMInterfaceParams to the memSpec of DRAMPower
      */
-    static Data::MemArchitectureSpec getArchParams(const DRAMCtrlParams* p);
+    static Data::MemArchitectureSpec getArchParams(
+                                     const DRAMInterfaceParams* p);
 
     /**
-     * Transforms the timing parameters defined in DRAMCtrlParams to
+     * Transforms the timing parameters defined in DRAMInterfaceParams to
      * the memSpec of DRAMPower
      */
-    static Data::MemTimingSpec getTimingParams(const DRAMCtrlParams* p);
+    static Data::MemTimingSpec getTimingParams(const DRAMInterfaceParams* p);
 
     /**
      * Transforms the power and current parameters defined in
-     * DRAMCtrlParam to the memSpec of DRAMPower
+     * DRAMInterfaceParams to the memSpec of DRAMPower
      */
-    static Data::MemPowerSpec getPowerParams(const DRAMCtrlParams* p);
+    static Data::MemPowerSpec getPowerParams(const DRAMInterfaceParams* p);
+
+    /**
+     * Determine data rate, either one or two.
+     */
+    static uint8_t getDataRate(const DRAMInterfaceParams* p);
 
     /**
      * Determine if DRAM has two voltage domains (or one)
      */
-    static bool hasTwoVDD(const DRAMCtrlParams* p);
+    static bool hasTwoVDD(const DRAMInterfaceParams* p);
 
     /**
-     * Return an instance of MemSpec based on the DRAMCtrlParams
+     * Return an instance of MemSpec based on the DRAMInterfaceParams
      */
-    static Data::MemorySpecification getMemSpec(const DRAMCtrlParams* p);
+    static Data::MemorySpecification getMemSpec(const DRAMInterfaceParams* p);
 
  public:
 
     // Instance of DRAMPower Library
     libDRAMPower powerlib;
 
-    DRAMPower(const DRAMCtrlParams* p, bool include_io);
+    DRAMPower(const DRAMInterfaceParams* p, bool include_io);
 
 };
 

@@ -116,13 +116,15 @@ MemConfig.config_mem(options, system)
 # the following assumes that we are using the native DRAM
 # controller, check to be sure
 if not isinstance(system.mem_ctrls[0], m5.objects.DRAMCtrl):
-    fatal("This script assumes the memory is a DRAMCtrl subclass")
+    fatal("This script assumes the controller is a DRAMCtrl subclass")
+if not isinstance(system.mem_ctrls[0].dram, m5.objects.DRAMInterface):
+    fatal("This script assumes the memory is a DRAMInterface subclass")
 
 # there is no point slowing things down by saving any data
-system.mem_ctrls[0].null = True
+system.mem_ctrls[0].dram.null = True
 
 # Set the address mapping based on input argument
-system.mem_ctrls[0].addr_mapping = options.addr_map
+system.mem_ctrls[0].dram.addr_mapping = options.addr_map
 
 # stay in each state for 0.25 ms, long enough to warm things up, and
 # short enough to avoid hitting a refresh
@@ -133,21 +135,21 @@ period = 250000000
 # the DRAM maximum bandwidth to ensure that it is saturated
 
 # get the number of banks
-nbr_banks = system.mem_ctrls[0].banks_per_rank.value
+nbr_banks = system.mem_ctrls[0].dram.banks_per_rank.value
 
 # determine the burst length in bytes
-burst_size = int((system.mem_ctrls[0].devices_per_rank.value *
-                  system.mem_ctrls[0].device_bus_width.value *
-                  system.mem_ctrls[0].burst_length.value) / 8)
+burst_size = int((system.mem_ctrls[0].dram.devices_per_rank.value *
+                  system.mem_ctrls[0].dram.device_bus_width.value *
+                  system.mem_ctrls[0].dram.burst_length.value) / 8)
 
 # next, get the page size in bytes
-page_size = system.mem_ctrls[0].devices_per_rank.value * \
-    system.mem_ctrls[0].device_rowbuffer_size.value
+page_size = system.mem_ctrls[0].dram.devices_per_rank.value * \
+    system.mem_ctrls[0].dram.device_rowbuffer_size.value
 
 # match the maximum bandwidth of the memory, the parameter is in seconds
 # and we need it in ticks (ps)
-itt =  getattr(system.mem_ctrls[0].tBURST_MIN, 'value',
-               system.mem_ctrls[0].tBURST.value) * 1000000000000
+itt =  getattr(system.mem_ctrls[0].dram.tBURST_MIN, 'value',
+               system.mem_ctrls[0].dram.tBURST.value) * 1000000000000
 
 # assume we start at 0
 max_addr = mem_range.end

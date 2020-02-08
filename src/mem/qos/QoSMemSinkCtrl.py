@@ -1,4 +1,4 @@
-# Copyright (c) 2018 ARM Limited
+# Copyright (c) 2018-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -37,12 +37,17 @@
 
 from m5.params import *
 from m5.objects.QoSMemCtrl import *
+from m5.objects.QoSMemSinkInterface import *
 
 class QoSMemSinkCtrl(QoSMemCtrl):
     type = 'QoSMemSinkCtrl'
     cxx_header = "mem/qos/mem_sink.hh"
     cxx_class = "QoS::MemSinkCtrl"
     port = ResponsePort("Response ports")
+
+
+    interface = Param.QoSMemSinkInterface(QoSMemSinkInterface(),
+                "Interface to memory")
 
     # the basic configuration of the controller architecture, note
     # that each entry corresponds to a burst for the specific DRAM
@@ -59,5 +64,3 @@ class QoSMemSinkCtrl(QoSMemCtrl):
 
     # response latency - time to issue a response once a request is serviced
     response_latency = Param.Latency("20ns", "Memory response latency")
-
-

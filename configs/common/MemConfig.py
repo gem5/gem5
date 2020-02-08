@@ -40,7 +40,7 @@ import m5.objects
 from common import ObjectList
 from common import HMC
 
-def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size,\
+def create_mem_intf(intf, r, i, nbr_mem_ctrls, intlv_bits, intlv_size,
                     xor_low_bit):
     """
     Helper function for creating a single memoy controller from the given
@@ -63,32 +63,32 @@ def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size,\
 
     # Create an instance so we can figure out the address
     # mapping and row-buffer size
-    ctrl = cls()
+    interface = intf()
 
     # Only do this for DRAMs
-    if issubclass(cls, m5.objects.DRAMCtrl):
+    if issubclass(intf, m5.objects.DRAMInterface):
         # If the channel bits are appearing after the column
         # bits, we need to add the appropriate number of bits
         # for the row buffer size
-        if ctrl.addr_mapping.value == 'RoRaBaChCo':
+        if interface.addr_mapping.value == 'RoRaBaChCo':
             # This computation only really needs to happen
             # once, but as we rely on having an instance we
             # end up having to repeat it for each and every
             # one
-            rowbuffer_size = ctrl.device_rowbuffer_size.value * \
-                ctrl.devices_per_rank.value
+            rowbuffer_size = interface.device_rowbuffer_size.value * \
+                interface.devices_per_rank.value
 
             intlv_low_bit = int(math.log(rowbuffer_size, 2))
 
     # We got all we need to configure the appropriate address
     # range
-    ctrl.range = m5.objects.AddrRange(r.start, size = r.size(),
+    interface.range = m5.objects.AddrRange(r.start, size = r.size(),
                                       intlvHighBit = \
                                           intlv_low_bit + intlv_bits - 1,
                                       xorHighBit = xor_high_bit,
                                       intlvBits = intlv_bits,
                                       intlvMatch = i)
-    return ctrl
+    return interface
 
 def config_mem(options, system):
     """
@@ -148,10 +148,10 @@ def config_mem(options, system):
     if 2 ** intlv_bits != nbr_mem_ctrls:
         fatal("Number of memory channels must be a power of 2")
 
-    cls = ObjectList.mem_list.get(opt_mem_type)
+    intf = ObjectList.mem_list.get(opt_mem_type)
     mem_ctrls = []
 
-    if opt_elastic_trace_en and not issubclass(cls, m5.objects.SimpleMemory):
+    if opt_elastic_trace_en and not issubclass(intf, m5.objects.SimpleMemory):
         fatal("When elastic trace is enabled, configure mem-type as "
                 "simple-mem.")
 
@@ -162,36 +162,53 @@ def config_mem(options, system):
     intlv_size = max(opt_mem_channels_intlv, system.cache_line_size.value)
 
     # For every range (most systems will only have one), create an
-    # array of controllers and set their parameters to match their
-    # address mapping in the case of a DRAM
+    # array of memory interfaces and set their parameters to match
+    # their address mapping in the case of a DRAM
     for r in system.mem_ranges:
         for i in range(nbr_mem_ctrls):
-            mem_ctrl = create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits,
+            # Create the DRAM interface
+            dram_intf = create_mem_intf(intf, r, i, nbr_mem_ctrls, intlv_bits,
                                        intlv_size, opt_xor_low_bit)
+
             # Set the number of ranks based on the command-line
             # options if it was explicitly set
-            if issubclass(cls, m5.objects.DRAMCtrl) and opt_mem_ranks:
-                mem_ctrl.ranks_per_channel = opt_mem_ranks
+            if issubclass(intf, m5.objects.DRAMInterface) and opt_mem_ranks:
+                dram_intf.ranks_per_channel = opt_mem_ranks
 
             # Enable low-power DRAM states if option is set
-            if issubclass(cls, m5.objects.DRAMCtrl):
-                mem_ctrl.enable_dram_powerdown = opt_dram_powerdown
+            if issubclass(intf, m5.objects.DRAMInterface):
+                dram_intf.enable_dram_powerdown = opt_dram_powerdown
 
             if opt_elastic_trace_en:
-                mem_ctrl.latency = '1ns'
+                dram_intf.latency = '1ns'
                 print("For elastic trace, over-riding Simple Memory "
                     "latency to 1ns.")
 
+            # Create the controller that will drive the interface
+            if opt_mem_type == "HMC_2500_1x32":
+                # The static latency of the vault controllers is estimated
+                # to be smaller than a full DRAM channel controller
+                mem_ctrl = m5.objects.DRAMCtrl(min_writes_per_switch = 8,
+                                               static_backend_latency = '4ns',
+                                               static_frontend_latency = '4ns')
+            else:
+                mem_ctrl = m5.objects.DRAMCtrl()
+
+            # Hookup the controller to the interface and add to the list
+            mem_ctrl.dram = dram_intf
             mem_ctrls.append(mem_ctrl)
+
+    # Create a controller and connect the interfaces to a controller
+    for i in range(len(mem_ctrls)):
+        if opt_mem_type == "HMC_2500_1x32":
+            # Connect the controllers to the membus
+            mem_ctrls[i].port = xbar[i/4].master
+            # Set memory device size. There is an independent controller for
+            # each vault. All vaults are same size.
+            mem_ctrls[i].dram.device_size = options.hmc_dev_vault_size
+        else:
+            # Connect the controllers to the membus
+            mem_ctrls[i].port = xbar.master
 
     subsystem.mem_ctrls = mem_ctrls
 
-    # Connect the controllers to the membus
-    for i in range(len(subsystem.mem_ctrls)):
-        if opt_mem_type == "HMC_2500_1x32":
-            subsystem.mem_ctrls[i].port = xbar[i/4].master
-            # Set memory device size. There is an independent controller for
-            # each vault. All vaults are same size.
-            subsystem.mem_ctrls[i].device_size = options.hmc_dev_vault_size
-        else:
-            subsystem.mem_ctrls[i].port = xbar.master
