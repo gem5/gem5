@@ -389,7 +389,7 @@ if main['GCC'] or main['CLANG']:
                          '-Wno-error=deprecated',
                         ])
 else:
-    error('\n'.join(
+    error('\n'.join((
           "Don't know what compiler options to use for your compiler.",
           "compiler: " + main['CXX'],
           "version: " + CXX_version.replace('\n', '<nl>') if
@@ -400,7 +400,7 @@ else:
           "",
           "If you are trying to use a compiler other than those listed",
           "above you will need to ease fix SConstruct and ",
-          "src/SConscript to support that compiler."))
+          "src/SConscript to support that compiler.")))
 
 if main['GCC']:
     # Check for a supported version of gcc. >= 4.8 is chosen for its
