@@ -2986,10 +2986,10 @@ let {{
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());'''
         code += '''
-        uint32_t sel_a = rot & 0x1;
+        uint32_t sel_a = bits(rot, 0);
         uint32_t sel_b = sel_a ? 0 : 1;
-        bool neg_i = (rot & 0x2) == 1;
-        bool neg_r = (rot & 0x1) != (rot & 0x2);'''
+        bool neg_i = bits(rot, 1);
+        bool neg_r = bits(rot, 0) != bits(rot, 1);'''
         if predType == PredType.NONE:
             code += '''
         uint32_t eltspersegment = 16 / (2 * sizeof(Element));'''
