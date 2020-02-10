@@ -475,7 +475,10 @@ elif main['CLANG']:
                          # use struct hash and class hash
                          # interchangeably.
                          '-Wno-mismatched-tags',
+                         '-Wno-defaulted-function-deleted',
                          ])
+    if compareVersions(clang_version, "10.0") >= 0:
+        main.Append(CCFLAGS=['-Wno-c99-designator'])
 
     main.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
