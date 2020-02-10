@@ -45,10 +45,19 @@ def _printErrorQuit(error_message):
             failure.
     """
     print(error_message)
-    print("""
-The commit has been canceled, but a copy of it can be found in
-.git/COMMIT_EDITMSG
 
+    print("The commit has been cancelled, but a copy of it can be found in "
+            + sys.argv[1] + " : ")
+
+    print("""
+--------------------------------------------------------------------------
+    """)
+    print(open(sys.argv[1], "r").read())
+    print("""
+--------------------------------------------------------------------------
+    """)
+
+    print("""
 The first line of a commit must contain one or more gem5 tags separated by
 commas (see MAINTAINERS for the possible tags), followed by a colon and a
 commit title. There must be no leading nor trailing whitespaces.
@@ -67,7 +76,6 @@ e.g.:
 
     The packet class...
 """)
-    print("A copy of your commit message can be found in " + sys.argv[1])
     sys.exit(1)
 
 def _validateTags(commit_header):
