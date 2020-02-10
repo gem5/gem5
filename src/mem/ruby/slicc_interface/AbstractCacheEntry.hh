@@ -56,6 +56,7 @@ class AbstractCacheEntry : public ReplaceableEntry
     AccessPermission getPermission() const;
     void changePermission(AccessPermission new_perm);
 
+    using ReplaceableEntry::print;
     virtual void print(std::ostream& out) const = 0;
 
     // The methods below are those called by ruby runtime, add when it
