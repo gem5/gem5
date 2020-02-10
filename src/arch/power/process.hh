@@ -46,14 +46,15 @@ class PowerProcess : public Process
   protected:
     PowerProcess(ProcessParams * params, ObjectFile *objFile);
 
-    void initState();
+    void initState() override;
 
   public:
     void argsInit(int intSize, int pageSize);
-    RegVal getSyscallArg(ThreadContext *tc, int &i);
+    RegVal getSyscallArg(ThreadContext *tc, int &i) override;
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;
-    void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
+    void setSyscallReturn(ThreadContext *tc,
+            SyscallReturn return_value) override;
 };
 
 #endif // __POWER_PROCESS_HH__

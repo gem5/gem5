@@ -67,7 +67,7 @@ class Interrupts : public BaseInterrupts
   public:
 
     void
-    setCPU(BaseCPU * _cpu)
+    setCPU(BaseCPU * _cpu) override
     {
         cpu = _cpu;
     }
@@ -100,7 +100,7 @@ class Interrupts : public BaseInterrupts
     }
 
     void
-    post(int int_num, int index)
+    post(int int_num, int index) override
     {
         DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
         assert(int_num >= 0 && int_num < NumInterruptTypes);
@@ -111,7 +111,7 @@ class Interrupts : public BaseInterrupts
     }
 
     void
-    clear(int int_num, int index)
+    clear(int int_num, int index) override
     {
         DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
         assert(int_num >= 0 && int_num < NumInterruptTypes);
@@ -123,7 +123,7 @@ class Interrupts : public BaseInterrupts
     }
 
     void
-    clearAll()
+    clearAll() override
     {
         for (int i = 0; i < NumInterruptTypes; ++i) {
             interrupts[i] = 0;
@@ -132,7 +132,7 @@ class Interrupts : public BaseInterrupts
     }
 
     bool
-    checkInterrupts(ThreadContext *tc) const
+    checkInterrupts(ThreadContext *tc) const override
     {
         if (!intStatus)
             return false;
@@ -190,7 +190,7 @@ class Interrupts : public BaseInterrupts
     }
 
     Fault
-    getInterrupt(ThreadContext *tc)
+    getInterrupt(ThreadContext *tc) override
     {
         assert(checkInterrupts(tc));
 
@@ -246,9 +246,7 @@ class Interrupts : public BaseInterrupts
         return NoFault;
     }
 
-    void
-    updateIntrInfo(ThreadContext *tc)
-    {}
+    void updateIntrInfo(ThreadContext *tc) override {}
 
     uint64_t
     get_vec(int int_num)

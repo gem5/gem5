@@ -44,7 +44,7 @@ class MipsLinuxProcess : public MipsProcess
     /// Constructor.
     MipsLinuxProcess(ProcessParams * params, ObjectFile *objFile);
 
-    virtual SyscallDesc* getDesc(int callnum);
+    SyscallDesc* getDesc(int callnum) override;
 
     /// The target system's hostname.
     static const char *hostname;

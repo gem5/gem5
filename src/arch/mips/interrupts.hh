@@ -61,9 +61,7 @@ class Interrupts : public BaseInterrupts
     {
     }
 
-    void
-    setCPU(BaseCPU *_cpu)
-    {}
+    void setCPU(BaseCPU *_cpu) override {}
 
     //  post(int int_num, int index) is responsible
     //  for posting an interrupt. It sets a bit
@@ -72,7 +70,7 @@ class Interrupts : public BaseInterrupts
     //  which is called by checkInterrupts
     //
     void post(int int_num, ThreadContext *tc);
-    void post(int int_num, int index);
+    void post(int int_num, int index) override;
 
     // clear(int int_num, int index) is responsible
     //  for clearing an interrupt. It clear a bit
@@ -81,7 +79,7 @@ class Interrupts : public BaseInterrupts
     //  which is called by checkInterrupts
     //
     void clear(int int_num, ThreadContext* tc);
-    void clear(int int_num, int index);
+    void clear(int int_num, int index) override;
 
     //  clearAll() is responsible
     //  for clearing all interrupts. It clears all bits
@@ -90,7 +88,7 @@ class Interrupts : public BaseInterrupts
     //  which is called by checkInterrupts
     //
     void clearAll(ThreadContext *tc);
-    void clearAll();
+    void clearAll() override;
 
     // getInterrupt(ThreadContext * tc) checks if an interrupt
     //  should be returned. It ands the interrupt mask and
@@ -98,16 +96,16 @@ class Interrupts : public BaseInterrupts
     //  also makes sure interrupts are enabled (IE) and
     //  that ERL and ERX are not set
     //
-    Fault getInterrupt(ThreadContext *tc);
+    Fault getInterrupt(ThreadContext *tc) override;
 
     // updateIntrInfo(ThreadContext *tc) const syncs the
     //  MIPS cause register with the instatus variable. instatus
     //  is essentially a copy of the MIPS cause[IP7:IP0]
     //
-    void updateIntrInfo(ThreadContext *tc);
+    void updateIntrInfo(ThreadContext *tc) override;
     bool interruptsPending(ThreadContext *tc) const;
     bool onCpuTimerInterrupt(ThreadContext *tc) const;
-    bool checkInterrupts(ThreadContext *tc) const;
+    bool checkInterrupts(ThreadContext *tc) const override;
 
     void
     serialize(CheckpointOut &cp) const override

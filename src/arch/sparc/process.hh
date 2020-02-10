@@ -54,7 +54,7 @@ class SparcProcess : public Process
     SparcProcess(ProcessParams * params, ObjectFile *objFile,
                  Addr _StackBias);
 
-    void initState();
+    void initState() override;
 
     template<class IntType>
     void argsInit(int pageSize);
@@ -68,7 +68,8 @@ class SparcProcess : public Process
     Addr readSpillStart() { return spillStart; }
 
     virtual void flushWindows(ThreadContext *tc) = 0;
-    void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
+    void setSyscallReturn(ThreadContext *tc,
+            SyscallReturn return_value) override;
 };
 
 class Sparc32Process : public SparcProcess
@@ -100,15 +101,15 @@ class Sparc32Process : public SparcProcess
                                               mmap_end);
     }
 
-    void initState();
+    void initState() override;
 
   public:
 
     void argsInit(int intSize, int pageSize);
 
-    void flushWindows(ThreadContext *tc);
+    void flushWindows(ThreadContext *tc) override;
 
-    RegVal getSyscallArg(ThreadContext *tc, int &i);
+    RegVal getSyscallArg(ThreadContext *tc, int &i) override;
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;
 };
@@ -141,15 +142,15 @@ class Sparc64Process : public SparcProcess
                                               mmap_end);
     }
 
-    void initState();
+    void initState() override;
 
   public:
 
     void argsInit(int intSize, int pageSize);
 
-    void flushWindows(ThreadContext *tc);
+    void flushWindows(ThreadContext *tc) override;
 
-    RegVal getSyscallArg(ThreadContext *tc, int &i);
+    RegVal getSyscallArg(ThreadContext *tc, int &i) override;
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;
 };

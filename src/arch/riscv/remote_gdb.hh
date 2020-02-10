@@ -53,7 +53,7 @@ class RemoteGDB : public BaseRemoteGDB
     static const int NumGDBRegs = 4162;
     static const int NumCSRs = 4096;
 
-    bool acc(Addr addr, size_t len);
+    bool acc(Addr addr, size_t len) override;
     // A breakpoint will be 2 bytes if it is compressed and 4 if not
     bool checkBpLen(size_t len) override { return len == 2 || len == 4; }
 
@@ -82,7 +82,7 @@ class RemoteGDB : public BaseRemoteGDB
 
   public:
     RemoteGDB(System *_system, ThreadContext *tc, int _port);
-    BaseGdbRegCache *gdbRegs();
+    BaseGdbRegCache *gdbRegs() override;
 };
 
 } // namespace RiscvISA

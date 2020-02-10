@@ -81,7 +81,7 @@ class Statistics : public ::Kernel::Statistics
   public:
     Statistics();
 
-    void regStats(const std::string &name);
+    void regStats(const std::string &name) override;
 
   public:
     void mode(cpu_mode newmode, ThreadContext *tc);

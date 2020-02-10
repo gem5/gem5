@@ -43,13 +43,13 @@ class PowerLinuxProcess : public PowerProcess
   public:
     PowerLinuxProcess(ProcessParams * params, ObjectFile *objFile);
 
-    virtual SyscallDesc* getDesc(int callnum);
+    SyscallDesc *getDesc(int callnum) override;
 
-    void initState();
+    void initState() override;
 
     void syscall(ThreadContext *tc, Fault *fault) override;
 
-    RegVal getSyscallArg(ThreadContext *tc, int &i);
+    RegVal getSyscallArg(ThreadContext *tc, int &i) override;
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;
 

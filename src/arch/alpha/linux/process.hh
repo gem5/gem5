@@ -46,7 +46,7 @@ class AlphaLinuxProcess : public AlphaProcess
 
     void syscall(ThreadContext *tc, Fault *fault) override;
 
-    virtual SyscallDesc* getDesc(int callnum);
+    SyscallDesc *getDesc(int callnum) override;
 
      /// Array of syscall descriptors, indexed by call number.
     static SyscallDescABI<DefaultSyscallABI> syscallDescs[];
