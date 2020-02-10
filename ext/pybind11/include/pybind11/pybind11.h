@@ -9,6 +9,10 @@
 */
 
 #pragma once
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-value"
+#endif
 
 #if defined(__INTEL_COMPILER)
 #  pragma warning push
@@ -2173,4 +2177,8 @@ NAMESPACE_END(PYBIND11_NAMESPACE)
 #  pragma warning(pop)
 #elif defined(__GNUG__) && !defined(__clang__)
 #  pragma GCC diagnostic pop
+#endif
+
+#ifdef __clang__
+#pragma clang diagnostic pop
 #endif
