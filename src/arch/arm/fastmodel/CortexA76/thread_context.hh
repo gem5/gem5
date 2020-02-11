@@ -44,7 +44,7 @@ class CortexA76TC : public Iris::ThreadContext
     static IdxNameMap flattenedIntIdxNameMap;
     static IdxNameMap ccRegIdxNameMap;
     static IdxNameMap vecRegIdxNameMap;
-    static iris::MemorySpaceId bpSpaceId;
+    static std::vector<iris::MemorySpaceId> bpSpaceIds;
 
   public:
     CortexA76TC(::BaseCPU *cpu, int id, System *system,
@@ -62,7 +62,7 @@ class CortexA76TC : public Iris::ThreadContext
     RegVal readCCRegFlat(RegIndex idx) const override;
     void setCCRegFlat(RegIndex idx, RegVal val) override;
 
-    iris::MemorySpaceId getBpSpaceId(Addr pc) const override;
+    const std::vector<iris::MemorySpaceId> &getBpSpaceIds() const override;
 };
 
 } // namespace FastModel

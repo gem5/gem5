@@ -109,17 +109,15 @@ class ThreadContext : public ::ThreadContext
     struct BpInfo
     {
         Addr pc;
-        BpId id;
+        std::vector<BpId> ids;
         using EventList = std::list<PCEvent *>;
         std::shared_ptr<EventList> events;
 
-        BpInfo(Addr _pc) : pc(_pc), id(iris::IRIS_UINT64_MAX),
-                           events(new EventList)
-        {}
+        BpInfo(Addr _pc) : pc(_pc), events(new EventList) {}
 
         bool empty() const { return events->empty(); }
-        bool validId() const { return id != iris::IRIS_UINT64_MAX; }
-        void clearId() { id = iris::IRIS_UINT64_MAX; }
+        bool validIds() const { return !ids.empty(); }
+        void clearIds() { ids.clear(); }
     };
 
     using BpInfoPtr = std::unique_ptr<BpInfo>;
@@ -134,7 +132,7 @@ class ThreadContext : public ::ThreadContext
     void uninstallBp(BpInfoIt it);
     void delBp(BpInfoIt it);
 
-    virtual iris::MemorySpaceId getBpSpaceId(Addr pc) const = 0;
+    virtual const std::vector<iris::MemorySpaceId> &getBpSpaceIds() const = 0;
 
 
     iris::IrisErrorCode instanceRegistryChanged(

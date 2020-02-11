@@ -132,18 +132,21 @@ ThreadContext::getOrAllocBp(Addr pc)
 void
 ThreadContext::installBp(BpInfoIt it)
 {
-    BpId id;
     Addr pc = it->second->pc;
-    auto space_id = getBpSpaceId(pc);
-    call().breakpoint_set_code(_instId, id, pc, space_id, 0, true);
-    it->second->id = id;
+    const auto &space_ids = getBpSpaceIds();
+    for (auto sid: space_ids) {
+        BpId id;
+        call().breakpoint_set_code(_instId, id, pc, sid, 0, true);
+        it->second->ids.push_back(id);
+    }
 }
 
 void
 ThreadContext::uninstallBp(BpInfoIt it)
 {
-    call().breakpoint_delete(_instId, it->second->id);
-    it->second->clearId();
+    for (auto id: it->second->ids)
+        call().breakpoint_delete(_instId, id);
+    it->second->clearIds();
 }
 
 void
@@ -152,7 +155,7 @@ ThreadContext::delBp(BpInfoIt it)
     panic_if(!it->second->empty(),
              "BP info still had events associated with it.");
 
-    if (it->second->validId())
+    if (it->second->validIds())
         uninstallBp(it);
 
     bps.erase(it);
@@ -322,7 +325,7 @@ ThreadContext::schedule(PCEvent *e)
     auto it = getOrAllocBp(e->pc());
     it->second->events->push_back(e);
 
-    if (_instId != iris::IRIS_UINT64_MAX && !it->second->validId())
+    if (_instId != iris::IRIS_UINT64_MAX && !it->second->validIds())
         installBp(it);
 
     return true;

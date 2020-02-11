@@ -180,20 +180,23 @@ CortexA76TC::setCCRegFlat(RegIndex idx, RegVal val)
     Iris::ThreadContext::setCCRegFlat(idx, val);
 }
 
-iris::MemorySpaceId
-CortexA76TC::getBpSpaceId(Addr pc) const
+const std::vector<iris::MemorySpaceId> &
+CortexA76TC::getBpSpaceIds() const
 {
-    if (bpSpaceId == iris::IRIS_UINT64_MAX) {
+    if (bpSpaceIds.empty()) {
         for (auto &space: memorySpaces) {
-            if (space.canonicalMsn == Iris::CurrentMsn) {
-                bpSpaceId = space.spaceId;
-                break;
+            auto cmsn = space.canonicalMsn;
+            if (cmsn == Iris::SecureMonitorMsn ||
+                    cmsn == Iris::GuestMsn ||
+                    cmsn == Iris::NsHypMsn ||
+                    cmsn == Iris::HypAppMsn) {
+                bpSpaceIds.push_back(space.spaceId);
             }
         }
-        panic_if(bpSpaceId == iris::IRIS_UINT64_MAX,
-                "Unable to find address space for breakpoints.");
+        panic_if(bpSpaceIds.empty(),
+                "Unable to find address space(s) for breakpoints.");
     }
-    return bpSpaceId;
+    return bpSpaceIds;
 }
 
 Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
@@ -943,6 +946,6 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::vecRegIdxNameMap({
         { 28, "V28" }, { 29, "V29" }, { 30, "V30" }, { 31, "V31" }
 });
 
-iris::MemorySpaceId CortexA76TC::bpSpaceId = iris::IRIS_UINT64_MAX;
+std::vector<iris::MemorySpaceId> CortexA76TC::bpSpaceIds;
 
 } // namespace FastModel
