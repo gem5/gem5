@@ -90,6 +90,7 @@ if env['TARGET_ISA'] != 'null':
     Source('pseudo_inst.cc')
     Source('syscall_emul.cc')
     Source('syscall_desc.cc')
+    Source('vma.cc')
 
 if env['TARGET_ISA'] != 'x86':
     Source('microcode_rom.cc')
@@ -117,5 +118,6 @@ DebugFlag('WorkItems')
 DebugFlag('ClockDomain')
 DebugFlag('VoltageDomain')
 DebugFlag('DVFS')
+DebugFlag('Vma')
 
 CompoundFlag('SyscallAll', [ 'SyscallBase', 'SyscallVerbose'])
