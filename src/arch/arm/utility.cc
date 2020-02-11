@@ -179,11 +179,40 @@ inSecureState(ThreadContext *tc)
         scr, tc->readMiscReg(MISCREG_CPSR));
 }
 
-inline bool
+bool
 isSecureBelowEL3(ThreadContext *tc)
 {
     SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     return ArmSystem::haveEL(tc, EL3) && scr.ns == 0;
+}
+
+ExceptionLevel
+debugTargetFrom(ThreadContext *tc, bool secure)
+{
+    bool route_to_el2;
+    if (ArmSystem::haveEL(tc, EL2) && !secure){
+        if (ELIs32(tc, EL2)){
+            const HCR hcr = tc->readMiscReg(MISCREG_HCR);
+            const HDCR hdcr  = tc->readMiscRegNoEffect(MISCREG_HDCR);
+            route_to_el2 = (hdcr.tde == 1 || hcr.tge == 1);
+        }else{
+            const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
+            route_to_el2 = (mdcr.tde == 1 || hcr.tge == 1);
+        }
+    }else{
+        route_to_el2 = false;
+    }
+    ExceptionLevel target;
+    if (route_to_el2) {
+        target = EL2;
+    }else if (ArmSystem::haveEL(tc, EL3) && !ArmSystem::highestELIs64(tc)
+              && secure){
+        target = EL3;
+    }else{
+        target = EL1;
+    }
+    return target;
 }
 
 bool
@@ -359,6 +388,13 @@ ELIsInHost(ThreadContext *tc, ExceptionLevel el)
 std::pair<bool, bool>
 ELUsingAArch32K(ThreadContext *tc, ExceptionLevel el)
 {
+    bool secure  = isSecureBelowEL3(tc);
+    return ELStateUsingAArch32K(tc, el, secure);
+}
+
+std::pair<bool, bool>
+ELStateUsingAArch32K(ThreadContext *tc, ExceptionLevel el, bool secure)
+{
     // Return true if the specified EL is in aarch32 state.
     const bool have_el3 = ArmSystem::haveSecurity(tc);
     const bool have_el2 = ArmSystem::haveVirtualization(tc);
@@ -382,7 +418,7 @@ ELUsingAArch32K(ThreadContext *tc, ExceptionLevel el)
         HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
         bool aarch32_at_el1 = (aarch32_below_el3
                                || (have_el2
-                               && !isSecureBelowEL3(tc) && hcr.rw == 0));
+                               && !secure && hcr.rw == 0));
 
         // Only know if EL0 using AArch32 from PSTATE
         if (el == EL0 && !aarch32_at_el1) {
@@ -399,6 +435,15 @@ ELUsingAArch32K(ThreadContext *tc, ExceptionLevel el)
     }
 
     return std::make_pair(known, aarch32);
+}
+
+bool ELStateUsingAArch32(ThreadContext *tc, ExceptionLevel el, bool secure)
+{
+
+    bool known, aarch32;
+    std::tie(known, aarch32) = ELStateUsingAArch32K(tc, el, secure);
+    panic_if(!known, "EL state is UNKNOWN");
+    return aarch32;
 }
 
 bool

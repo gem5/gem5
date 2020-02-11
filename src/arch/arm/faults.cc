@@ -281,6 +281,10 @@ template<> ArmFault::FaultVals ArmFaultVals<SoftwareBreakpoint>::vals(
     "Software Breakpoint",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
     0, 0, 0, 0, true, false, false,  EC_SOFTWARE_BREAKPOINT
 );
+template<> ArmFault::FaultVals ArmFaultVals<HardwareBreakpoint>::vals(
+    "Hardware Breakpoint",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
+    0, 0, 0, 0, true, false, false,  EC_HW_BREAKPOINT
+);
 template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals(
     // Some dummy values
     "ArmSev Flush",          0x000, 0x000, 0x000, 0x000, 0x000, MODE_SVC,
@@ -1075,6 +1079,16 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         } else if (stage2) {
             tc->setMiscReg(MISCREG_HPFAR, (faultAddr >> 8) & ~0xf);
             tc->setMiscReg(T::HFarIndex,  OVAddr);
+        } else if (debug > ArmFault::NODEBUG) {
+            DBGDS32 Rext =  tc->readMiscReg(MISCREG_DBGDSCRext);
+            tc->setMiscReg(T::FarIndex, faultAddr);
+            if (debug == ArmFault::BRKPOINT){
+                Rext.moe = 0x1;
+            }
+
+            tc->setMiscReg(T::FsrIndex, fsr);
+            tc->setMiscReg(MISCREG_DBGDSCRext, Rext);
+
         } else {
             tc->setMiscReg(T::FsrIndex, fsr);
             tc->setMiscReg(T::FarIndex, faultAddr);
@@ -1277,9 +1291,10 @@ PrefetchAbort::routeToHyp(ThreadContext *tc) const
     toHyp = scr.ns && (currEL(tc) == EL2);
     // otherwise, check whether to take to Hyp mode through Hyp Trap vector
     toHyp |= (stage2 ||
-              ((source == DebugEvent) && hdcr.tde && (currEL(tc) != EL2)) ||
-               ((source == SynchronousExternalAbort) && hcr.tge &&
-                (currEL(tc) == EL0))) && !inSecureState(tc);
+              ((source == DebugEvent) && (hdcr.tde || hcr.tge) &&
+               (currEL(tc) != EL2)) ||
+              ((source == SynchronousExternalAbort) && hcr.tge  &&
+               (currEL(tc) == EL0))) && !inSecureState(tc);
     return toHyp;
 }
 
@@ -1598,6 +1613,59 @@ ExceptionClass
 SoftwareBreakpoint::ec(ThreadContext *tc) const
 {
     return from64 ? EC_SOFTWARE_BREAKPOINT_64 : vals.ec;
+}
+
+HardwareBreakpoint::HardwareBreakpoint(Addr _vaddr,  uint32_t _iss)
+    : ArmFaultVals<HardwareBreakpoint>(0x0, _iss), vAddr(_vaddr)
+{}
+
+bool
+HardwareBreakpoint::routeToHyp(ThreadContext *tc) const
+{
+    const bool have_el2 = ArmSystem::haveVirtualization(tc);
+
+    const HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
+
+    return have_el2 && !inSecureState(tc) && fromEL <= EL1 &&
+        (hcr.tge || mdcr.tde);
+}
+
+ExceptionClass
+HardwareBreakpoint::ec(ThreadContext *tc) const
+{
+        // AArch64
+    if (toEL == fromEL)
+        return EC_HW_BREAKPOINT_CURR_EL;
+    else
+        return EC_HW_BREAKPOINT_LOWER_EL;
+}
+
+void
+HardwareBreakpoint::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+{
+
+    ArmFaultVals<HardwareBreakpoint>::invoke(tc, inst);
+    MiscRegIndex elr_idx;
+    switch (toEL) {
+      case EL1:
+        elr_idx = MISCREG_ELR_EL1;
+        break;
+      case EL2:
+        assert(ArmSystem::haveVirtualization(tc));
+        elr_idx = MISCREG_ELR_EL2;
+        break;
+      case EL3:
+        assert(ArmSystem::haveSecurity(tc));
+        elr_idx = MISCREG_ELR_EL3;
+        break;
+      default:
+        panic("Invalid target exception level");
+        break;
+    }
+
+    tc->setMiscReg(elr_idx, vAddr);
+
 }
 
 void

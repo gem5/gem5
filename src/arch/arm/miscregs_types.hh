@@ -676,6 +676,51 @@ namespace ArmISA
         Bitfield<3, 0> len;
     EndBitUnion(ZCR)
 
+   BitUnion32(OSL)
+        Bitfield<64, 4> res0;
+        Bitfield<3> oslm_3;
+        Bitfield<2> nTT;
+        Bitfield<1> oslk;
+        Bitfield<0> oslm_0;
+   EndBitUnion(OSL)
+
+   BitUnion64(DBGBCR)
+        Bitfield<63, 24> res0_2;
+        Bitfield<23, 20> bt;
+        Bitfield<19, 16> lbn;
+        Bitfield<15, 14> ssc;
+        Bitfield<13> hmc;
+        Bitfield<12, 9> res0_1;
+        Bitfield<8, 5> bas;
+        Bitfield<4, 3> res0_0;
+        Bitfield<2, 1> pmc;
+        Bitfield<0> e;
+   EndBitUnion(DBGBCR)
+
+   BitUnion32(DBGDS32)
+        Bitfield<31> tfo;
+        Bitfield<30> rxfull;
+        Bitfield<29> txfull;
+        Bitfield<28> res0_5;
+        Bitfield<27> rxo;
+        Bitfield<26> txu;
+        Bitfield<25, 24> res0_4;
+        Bitfield<23, 22> intdis;
+        Bitfield<21> tda;
+        Bitfield<20> res0_3;
+        Bitfield<19> sc2;
+        Bitfield<18> ns;
+        Bitfield<17> spniddis;
+        Bitfield<16> spiddis;
+        Bitfield<15> mdbgen;
+        Bitfield<14> hde;
+        Bitfield<13> res0_;
+        Bitfield<12> udccdis;
+        Bitfield<11, 7> res0_2;
+        Bitfield<6> err;
+        Bitfield<5, 2> moe;
+        Bitfield<1, 0> res0_1;
+   EndBitUnion(DBGDS32)
 }
 
 #endif // __ARCH_ARM_MISCREGS_TYPES_HH__

@@ -45,6 +45,8 @@
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/utility.hh"
+#include "arch/arm/isa.hh"
+#include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
@@ -198,6 +200,14 @@ class ArmStaticInst : public StaticInst
     std::string generateDisassembly(
             Addr pc, const Loader::SymbolTable *symtab) const override;
 
+    static void
+    activateBreakpoint(ThreadContext *tc)
+    {
+        auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+        SelfDebug * sd = isa->getSelfDebug();
+        sd->activateDebug();
+    }
+
     static inline uint32_t
     cpsrWriteByInstr(CPSR cpsr, uint32_t val, SCR scr, NSACR nsacr,
             uint8_t byteMask, bool affectState, bool nmfi, ThreadContext *tc)
@@ -209,6 +219,9 @@ class ArmStaticInst : public StaticInst
 
         uint32_t bitMask = 0;
 
+        if (affectState && byteMask==0xF){
+            activateBreakpoint(tc);
+        }
         if (bits(byteMask, 3)) {
             unsigned lowIdx = affectState ? 24 : 27;
             bitMask = bitMask | mask(31, lowIdx);

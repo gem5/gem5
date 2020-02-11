@@ -149,6 +149,12 @@ class ArmFault : public FaultBase
         UnknownTran
     };
 
+    enum DebugType
+    {
+        NODEBUG = 0,
+        BRKPOINT,
+    };
+
     struct FaultVals
     {
         const FaultName name;
@@ -428,14 +434,16 @@ class AbortFault : public ArmFaultVals<T>
     bool stage2;
     bool s1ptw;
     ArmFault::TranMethod tranMethod;
+    ArmFault::DebugType debug;
 
   public:
     AbortFault(Addr _faultAddr, bool _write, TlbEntry::DomainType _domain,
                uint8_t _source, bool _stage2,
-               ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran) :
+               ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran,
+               ArmFault::DebugType _debug = ArmFault::NODEBUG) :
         faultAddr(_faultAddr), OVAddr(0), write(_write),
         domain(_domain), source(_source), srcEncoded(0),
-        stage2(_stage2), s1ptw(false), tranMethod(_tranMethod)
+        stage2(_stage2), s1ptw(false), tranMethod(_tranMethod), debug(_debug)
     {}
 
     bool getFaultVAddr(Addr &va) const override;
@@ -461,9 +469,10 @@ class PrefetchAbort : public AbortFault<PrefetchAbort>
     static const MiscRegIndex HFarIndex = MISCREG_HIFAR;
 
     PrefetchAbort(Addr _addr, uint8_t _source, bool _stage2 = false,
-                  ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran) :
+                  ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran,
+                  ArmFault::DebugType _debug = ArmFault::NODEBUG) :
         AbortFault<PrefetchAbort>(_addr, false, TlbEntry::DomainType::NoAccess,
-                _source, _stage2, _tranMethod)
+                _source, _stage2, _tranMethod, _debug)
     {}
 
     ExceptionClass ec(ThreadContext *tc) const override;
@@ -590,6 +599,18 @@ class SoftwareBreakpoint : public ArmFaultVals<SoftwareBreakpoint>
     ExceptionClass ec(ThreadContext *tc) const override;
 };
 
+class HardwareBreakpoint : public ArmFaultVals<HardwareBreakpoint>
+{
+  private:
+    Addr vAddr;
+  public:
+    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr) override;
+    HardwareBreakpoint(Addr _vaddr, uint32_t _iss);
+    bool routeToHyp(ThreadContext *tc) const override;
+    ExceptionClass ec(ThreadContext *tc) const override;
+};
+
 // A fault that flushes the pipe, excluding the faulting instructions
 class ArmSev : public ArmFaultVals<ArmSev>
 {
@@ -630,6 +651,7 @@ template<> ArmFault::FaultVals ArmFaultVals<PCAlignmentFault>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<SPAlignmentFault>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<SystemError>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<SoftwareBreakpoint>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<HardwareBreakpoint>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals;
 
 /**

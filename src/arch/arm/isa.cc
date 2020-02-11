@@ -40,6 +40,7 @@
 #include "arch/arm/faults.hh"
 #include "arch/arm/interrupts.hh"
 #include "arch/arm/pmu.hh"
+#include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/arm/tlbi_op.hh"
@@ -105,6 +106,7 @@ ISA::ISA(Params *p) : BaseISA(p), system(NULL),
     const_cast<Enums::VecRegRenameMode&>(_vecRegRenameMode) =
         highestELIs64 ? Enums::Full : Enums::Elem;
 
+    selfDebug = new SelfDebug();
     initializeMiscRegMetadata();
     preUnflattenMiscReg();
 
@@ -426,6 +428,7 @@ ISA::startup()
         setupThreadContext();
 
     afterStartup = true;
+    selfDebug->init(tc);
 }
 
 void
@@ -698,7 +701,7 @@ ISA::readMiscReg(int misc_reg)
          */
         return 0x5 << 16;
       case MISCREG_DBGDSCRint:
-        return 0;
+        return readMiscRegNoEffect(MISCREG_DBGDSCRint);
       case MISCREG_ISR:
         {
             auto ic = dynamic_cast<ArmISA::Interrupts *>(
@@ -1047,11 +1050,172 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                          (readMiscRegNoEffect(MISCREG_FPEXC) & ~fpexcMask);
             }
             break;
-          case MISCREG_HCR:
           case MISCREG_HCR2:
                 if (!haveVirtualization)
                     return;
                 break;
+          case MISCREG_HCR:
+            {
+                const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
+                selfDebug->setenableTDETGE((HCR)val, mdcr);
+                if (!haveVirtualization)
+                    return;
+            }
+            break;
+
+          case MISCREG_HDCR:
+            {
+                const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+                selfDebug->setenableTDETGE(hcr, (HDCR)val);
+            }
+            break;
+          case MISCREG_DBGOSLAR:
+            {
+                OSL r = tc->readMiscReg(MISCREG_DBGOSLSR);
+                const uint32_t temp = (val == 0xC5ACCE55)? 0x1 : 0x0;
+                selfDebug->updateOSLock((RegVal) temp);
+                r.oslk = bits(temp,0);
+                tc->setMiscReg(MISCREG_DBGOSLSR, r);
+            }
+            break;
+          case MISCREG_DBGBCR0:
+            selfDebug->updateDBGBCR(0, val);
+            break;
+          case MISCREG_DBGBCR1:
+            selfDebug->updateDBGBCR(1, val);
+            break;
+          case MISCREG_DBGBCR2:
+            selfDebug->updateDBGBCR(2, val);
+            break;
+          case MISCREG_DBGBCR3:
+            selfDebug->updateDBGBCR(3, val);
+            break;
+          case MISCREG_DBGBCR4:
+            selfDebug->updateDBGBCR(4, val);
+            break;
+          case MISCREG_DBGBCR5:
+            selfDebug->updateDBGBCR(5, val);
+            break;
+          case MISCREG_DBGBCR6:
+            selfDebug->updateDBGBCR(6, val);
+            break;
+          case MISCREG_DBGBCR7:
+            selfDebug->updateDBGBCR(7, val);
+            break;
+          case MISCREG_DBGBCR8:
+            selfDebug->updateDBGBCR(8, val);
+            break;
+          case MISCREG_DBGBCR9:
+            selfDebug->updateDBGBCR(9, val);
+            break;
+          case MISCREG_DBGBCR10:
+            selfDebug->updateDBGBCR(10, val);
+            break;
+          case MISCREG_DBGBCR11:
+            selfDebug->updateDBGBCR(11, val);
+            break;
+          case MISCREG_DBGBCR12:
+            selfDebug->updateDBGBCR(12, val);
+            break;
+          case MISCREG_DBGBCR13:
+            selfDebug->updateDBGBCR(13, val);
+            break;
+          case MISCREG_DBGBCR14:
+            selfDebug->updateDBGBCR(14, val);
+            break;
+          case MISCREG_DBGBCR15:
+            selfDebug->updateDBGBCR(15, val);
+            break;
+
+          case MISCREG_MDCR_EL2:
+            {
+                const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+                selfDebug->setenableTDETGE(hcr, (HDCR)val);
+            }
+            break;
+          case MISCREG_SDCR:
+          case MISCREG_MDCR_EL3:
+            {
+                selfDebug->setbSDD(val);
+            }
+            break;
+          case MISCREG_DBGDSCRext:
+            {
+                selfDebug->setMDBGen(val);
+                DBGDS32 r = tc->readMiscReg(MISCREG_DBGDSCRint);
+                DBGDS32 v = val;
+                r.moe = v.moe;
+                r.udccdis = v.udccdis;
+                r.mdbgen = v.mdbgen;
+                tc->setMiscReg(MISCREG_DBGDSCRint, r);
+                r = tc->readMiscReg(MISCREG_DBGDSCRint);
+            }
+
+            break;
+          case MISCREG_MDSCR_EL1:
+            {
+                selfDebug->setMDSCRvals(val);
+            }
+            break;
+
+          case MISCREG_OSLAR_EL1:
+            {
+                selfDebug->updateOSLock(val);
+                OSL r = tc->readMiscReg(MISCREG_OSLSR_EL1);
+                r.oslk = bits(val, 0);
+                r.oslm_3 = 1;
+                tc->setMiscReg(MISCREG_OSLSR_EL1, r);
+            }
+            break;
+
+          case MISCREG_DBGBCR0_EL1:
+            selfDebug->updateDBGBCR(0, val);
+            break;
+          case MISCREG_DBGBCR1_EL1:
+            selfDebug->updateDBGBCR(1, val);
+            break;
+          case MISCREG_DBGBCR2_EL1:
+            selfDebug->updateDBGBCR(2, val);
+            break;
+          case MISCREG_DBGBCR3_EL1:
+            selfDebug->updateDBGBCR(3, val);
+            break;
+          case MISCREG_DBGBCR4_EL1:
+            selfDebug->updateDBGBCR(4, val);
+            break;
+          case MISCREG_DBGBCR5_EL1:
+            selfDebug->updateDBGBCR(5, val);
+            break;
+          case MISCREG_DBGBCR6_EL1:
+            selfDebug->updateDBGBCR(6, val);
+            break;
+          case MISCREG_DBGBCR7_EL1:
+            selfDebug->updateDBGBCR(7, val);
+            break;
+          case MISCREG_DBGBCR8_EL1:
+            selfDebug->updateDBGBCR(8, val);
+            break;
+          case MISCREG_DBGBCR9_EL1:
+            selfDebug->updateDBGBCR(9, val);
+            break;
+          case MISCREG_DBGBCR10_EL1:
+            selfDebug->updateDBGBCR(10, val);
+            break;
+          case MISCREG_DBGBCR11_EL1:
+            selfDebug->updateDBGBCR(11, val);
+            break;
+          case MISCREG_DBGBCR12_EL1:
+            selfDebug->updateDBGBCR(12, val);
+            break;
+          case MISCREG_DBGBCR13_EL1:
+            selfDebug->updateDBGBCR(13, val);
+            break;
+          case MISCREG_DBGBCR14_EL1:
+            selfDebug->updateDBGBCR(14, val);
+            break;
+          case MISCREG_DBGBCR15_EL1:
+            selfDebug->updateDBGBCR(15, val);
+            break;
           case MISCREG_IFSR:
             {
                 // ARM ARM (ARM DDI 0406C.b) B4.1.96
@@ -1868,7 +2032,6 @@ ISA::setMiscReg(int misc_reg, RegVal val)
           case MISCREG_DACR:
           case MISCREG_VTTBR:
           case MISCREG_SCR_EL3:
-          case MISCREG_HCR_EL2:
           case MISCREG_TCR_EL1:
           case MISCREG_TCR_EL2:
           case MISCREG_TCR_EL3:
@@ -1882,6 +2045,14 @@ ISA::setMiscReg(int misc_reg, RegVal val)
           case MISCREG_TTBR0_EL3:
             getITBPtr(tc)->invalidateMiscReg();
             getDTBPtr(tc)->invalidateMiscReg();
+            break;
+          case MISCREG_HCR_EL2:
+            {
+                const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
+                selfDebug->setenableTDETGE((HCR)val, mdcr);
+                getITBPtr(tc)->invalidateMiscReg();
+                getDTBPtr(tc)->invalidateMiscReg();
+            }
             break;
           case MISCREG_NZCV:
             {
@@ -2070,7 +2241,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
           case MISCREG_SPSR_EL1:
             {
                 RegVal spsr_mask = havePAN ?
-                    ~(0x5 << 21) : ~(0x7 << 21);
+                    ~(0x2 << 22) : ~(0x3 << 22);
 
                 newVal = val & spsr_mask;
                 break;

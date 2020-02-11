@@ -640,7 +640,10 @@ ArmStaticInst::softwareBreakpoint32(ExecContext *xc, uint16_t imm) const
     } else {
         // Execute AArch32 Software Breakpoint
         return std::make_shared<PrefetchAbort>(readPC(xc),
-                                               ArmFault::DebugEvent);
+                                               ArmFault::DebugEvent,
+                                               false,
+                                               ArmFault::UnknownTran,
+                                               ArmFault::BRKPOINT);
     }
 }
 

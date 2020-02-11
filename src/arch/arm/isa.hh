@@ -44,6 +44,7 @@
 #include "arch/arm/isa_device.hh"
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/registers.hh"
+#include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/arm/types.hh"
@@ -105,6 +106,8 @@ namespace ArmISA
         bool impdefAsNop;
 
         bool afterStartup;
+
+        SelfDebug * selfDebug;
 
         /** MiscReg metadata **/
         struct MiscRegLUTEntry {
@@ -462,6 +465,10 @@ namespace ArmISA
         void initID64(const ArmISAParams *p);
 
       public:
+        SelfDebug * getSelfDebug()
+        {
+            return selfDebug;
+        }
         RegVal readMiscRegNoEffect(int misc_reg) const;
         RegVal readMiscReg(int misc_reg);
         void setMiscRegNoEffect(int misc_reg, RegVal val);

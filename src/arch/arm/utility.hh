@@ -172,6 +172,12 @@ bool EL2Enabled(ThreadContext *tc);
 std::pair<bool, bool>
 ELUsingAArch32K(ThreadContext *tc, ExceptionLevel el);
 
+std::pair<bool, bool>
+ELStateUsingAArch32K(ThreadContext *tc, ExceptionLevel el, bool secure);
+
+bool
+ELStateUsingAArch32(ThreadContext *tc, ExceptionLevel el, bool secure);
+
 bool ELIs32(ThreadContext *tc, ExceptionLevel el);
 
 bool ELIs64(ThreadContext *tc, ExceptionLevel el);
@@ -182,7 +188,9 @@ bool ELIs64(ThreadContext *tc, ExceptionLevel el);
  */
 bool ELIsInHost(ThreadContext *tc, ExceptionLevel el);
 
+ExceptionLevel debugTargetFrom(ThreadContext *tc, bool secure);
 bool isBigEndian64(const ThreadContext *tc);
+
 
 /**
  * badMode is checking if the execution mode provided as an argument is
@@ -248,6 +256,8 @@ inSecureState(SCR scr, CPSR cpsr)
 }
 
 bool inSecureState(ThreadContext *tc);
+
+bool isSecureBelowEL3(ThreadContext *tc);
 
 bool longDescFormatInUse(ThreadContext *tc);
 

@@ -63,6 +63,90 @@ decodeCP14Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                     return MISCREG_DBGDSCRint;
                 }
                 break;
+              case 2:
+                switch (crm) {
+                  case 0:
+                    return MISCREG_DBGDTRRXext;
+                  case 2:
+                    return MISCREG_DBGDSCRext;
+                  case 3:
+                    return MISCREG_DBGDTRTXext;
+                  case 6:
+                    return MISCREG_DBGOSECCR;
+                }
+                break;
+              case 4:
+                switch (crm) {
+                  case 0:
+                    return MISCREG_DBGBVR0;
+                  case 1:
+                    return MISCREG_DBGBVR1;
+                  case 2:
+                    return MISCREG_DBGBVR2;
+                  case 3:
+                    return MISCREG_DBGBVR3;
+                  case 4:
+                    return MISCREG_DBGBVR4;
+                  case 5:
+                    return MISCREG_DBGBVR5;
+                  case 6:
+                    return MISCREG_DBGBVR6;
+                  case 7:
+                    return MISCREG_DBGBVR7;
+                  case 8:
+                    return MISCREG_DBGBVR8;
+                  case 9:
+                    return MISCREG_DBGBVR9;
+                  case 10:
+                    return MISCREG_DBGBVR10;
+                  case 11:
+                    return MISCREG_DBGBVR11;
+                  case 12:
+                    return MISCREG_DBGBVR12;
+                  case 13:
+                    return MISCREG_DBGBVR13;
+                  case 14:
+                    return MISCREG_DBGBVR14;
+                  case 15:
+                    return MISCREG_DBGBVR15;
+                }
+                break;
+              case 5:
+                switch (crm) {
+                  case 0:
+                    return MISCREG_DBGBCR0;
+                  case 1:
+                    return MISCREG_DBGBCR1;
+                  case 2:
+                    return MISCREG_DBGBCR2;
+                  case 3:
+                    return MISCREG_DBGBCR3;
+                  case 4:
+                    return MISCREG_DBGBCR4;
+                  case 5:
+                    return MISCREG_DBGBCR5;
+                  case 6:
+                    return MISCREG_DBGBCR6;
+                  case 7:
+                    return MISCREG_DBGBCR7;
+                  case 8:
+                    return MISCREG_DBGBCR8;
+                  case 9:
+                    return MISCREG_DBGBCR9;
+                  case 10:
+                    return MISCREG_DBGBCR10;
+                  case 11:
+                    return MISCREG_DBGBCR11;
+                  case 12:
+                    return MISCREG_DBGBCR12;
+                  case 13:
+                    return MISCREG_DBGBCR13;
+                  case 14:
+                    return MISCREG_DBGBCR14;
+                  case 15:
+                    return MISCREG_DBGBCR15;
+                }
+                break;
             }
             break;
           case 7:
@@ -79,6 +163,59 @@ decodeCP14Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
         break;
       case 1:
         switch (opc1) {
+          case 0:
+            switch(opc2) {
+              case 1:
+                switch(crm) {
+                  case 0:
+                      return MISCREG_DBGBXVR0;
+                  case 1:
+                      return MISCREG_DBGBXVR1;
+                  case 2:
+                      return MISCREG_DBGBXVR2;
+                  case 3:
+                      return MISCREG_DBGBXVR3;
+                  case 4:
+                      return MISCREG_DBGBXVR4;
+                  case 5:
+                      return MISCREG_DBGBXVR5;
+                  case 6:
+                      return MISCREG_DBGBXVR6;
+                  case 7:
+                      return MISCREG_DBGBXVR7;
+                  case 8:
+                      return MISCREG_DBGBXVR8;
+                  case 9:
+                      return MISCREG_DBGBXVR9;
+                  case 10:
+                      return MISCREG_DBGBXVR10;
+                  case 11:
+                      return MISCREG_DBGBXVR11;
+                  case 12:
+                      return MISCREG_DBGBXVR12;
+                  case 13:
+                      return MISCREG_DBGBXVR13;
+                  case 14:
+                      return MISCREG_DBGBXVR14;
+                  case 15:
+                      return MISCREG_DBGBXVR15;
+                }
+                break;
+            }
+            switch (opc2) {
+              case 4:
+                switch (crm) {
+                  case 0:
+                    return MISCREG_DBGOSLAR;
+                  case 1:
+                    return MISCREG_DBGOSLSR;
+                  case 3:
+                    return MISCREG_DBGOSDLR;
+                  case 4:
+                    return MISCREG_DBGPRCR;
+                }
+                break;
+            }
           case 6:
             switch (crm) {
               case 0:
@@ -238,6 +375,9 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                   case 2:
                     return MISCREG_NSACR;
                 }
+            } else if (crm == 3) {
+                if ( opc2 == 1)
+                    return MISCREG_SDCR;
             }
         } else if (opc1 == 4) {
             if (crm == 0) {
@@ -1562,6 +1702,82 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                     switch (op2) {
                       case 2:
                         return MISCREG_OSECCR_EL1;
+                      case 4:
+                        return MISCREG_DBGBVR6_EL1;
+                      case 5:
+                        return MISCREG_DBGBCR6_EL1;
+                    }
+                    break;
+                  case 7:
+                    switch (op2) {
+                      case 4:
+                        return MISCREG_DBGBVR7_EL1;
+                      case 5:
+                        return MISCREG_DBGBCR7_EL1;
+                    }
+                    break;
+                  case 8:
+                    switch (op2) {
+                      case 4:
+                        return MISCREG_DBGBVR8_EL1;
+                      case 5:
+                        return MISCREG_DBGBCR8_EL1;
+                    }
+                    break;
+                  case 9:
+                    switch (op2) {
+                      case 4:
+                        return MISCREG_DBGBVR9_EL1;
+                      case 5:
+                        return MISCREG_DBGBCR9_EL1;
+                    }
+                    break;
+                  case 10:
+                    switch (op2) {
+                      case 4:
+                        return MISCREG_DBGBVR10_EL1;
+                      case 5:
+                        return MISCREG_DBGBCR10_EL1;
+                    }
+                    break;
+                  case 11:
+                    switch (op2) {
+                      case 4:
+                        return MISCREG_DBGBVR11_EL1;
+                      case 5:
+                        return MISCREG_DBGBCR11_EL1;
+                    }
+                    break;
+                  case 12:
+                    switch (op2) {
+                      case 4:
+                        return MISCREG_DBGBVR12_EL1;
+                      case 5:
+                        return MISCREG_DBGBCR12_EL1;
+                    }
+                    break;
+                  case 13:
+                    switch (op2) {
+                      case 4:
+                        return MISCREG_DBGBVR13_EL1;
+                      case 5:
+                        return MISCREG_DBGBCR13_EL1;
+                    }
+                    break;
+                  case 14:
+                    switch (op2) {
+                      case 4:
+                        return MISCREG_DBGBVR14_EL1;
+                      case 5:
+                        return MISCREG_DBGBCR14_EL1;
+                    }
+                    break;
+                  case 15:
+                    switch (op2) {
+                      case 4:
+                        return MISCREG_DBGBVR15_EL1;
+                      case 5:
+                        return MISCREG_DBGBCR15_EL1;
                     }
                     break;
                 }
@@ -3087,8 +3303,6 @@ ISA::initializeMiscRegMetadata()
       .unimplemented()
       .allPrivileges();
     InitReg(MISCREG_DBGDSCRext)
-      .unimplemented()
-      .warnNotFail()
       .allPrivileges();
     InitReg(MISCREG_DBGDTRTXext)
       .unimplemented()
@@ -3097,41 +3311,69 @@ ISA::initializeMiscRegMetadata()
       .unimplemented()
       .allPrivileges();
     InitReg(MISCREG_DBGBVR0)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGBVR1)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGBVR2)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGBVR3)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGBVR4)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGBVR5)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBVR6)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBVR7)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBVR8)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBVR9)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBVR10)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBVR11)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBVR12)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBVR13)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBVR14)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBVR15)
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGBCR0)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGBCR1)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGBCR2)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGBCR3)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGBCR4)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGBCR5)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBCR6)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBCR7)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBCR8)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBCR9)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBCR10)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBCR11)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBCR12)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBCR13)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBCR14)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBCR15)
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGWVR0)
       .unimplemented()
       .allPrivileges();
@@ -3159,20 +3401,47 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_DBGDRAR)
       .unimplemented()
       .allPrivileges().monSecureWrite(0).monNonSecureWrite(0);
+    InitReg(MISCREG_DBGBXVR0)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR1)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR2)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR3)
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGBXVR4)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGBXVR5)
-      .unimplemented()
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR0)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR6)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR7)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR8)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR9)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR10)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR11)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR12)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR13)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR14)
+      .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_DBGBXVR15)
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_DBGOSLAR)
-      .unimplemented()
-      .allPrivileges().monSecureRead(0).monNonSecureRead(0);
+       .allPrivileges().monSecureRead(0).monNonSecureRead(0);
     InitReg(MISCREG_DBGOSLSR)
-      .unimplemented()
       .allPrivileges().monSecureWrite(0).monNonSecureWrite(0);
     InitReg(MISCREG_DBGOSDLR)
       .unimplemented()
+      .warnNotFail()
       .allPrivileges();
     InitReg(MISCREG_DBGPRCR)
       .unimplemented()
@@ -3298,6 +3567,8 @@ ISA::initializeMiscRegMetadata()
       .secure().exceptUserMode();
     InitReg(MISCREG_CPACR)
       .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_SDCR)
+      .mon();
     InitReg(MISCREG_SCR)
       .mon().secure().exceptUserMode()
       .res0(0xff40)  // [31:16], [6]
@@ -3900,41 +4171,101 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges()
       .mapsTo(MISCREG_DBGOSECCR);
     InitReg(MISCREG_DBGBVR0_EL1)
-      .allPrivileges()
-      .mapsTo(MISCREG_DBGBVR0 /*, MISCREG_DBGBXVR0 */);
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR0, MISCREG_DBGBXVR0);
     InitReg(MISCREG_DBGBVR1_EL1)
-      .allPrivileges()
-      .mapsTo(MISCREG_DBGBVR1 /*, MISCREG_DBGBXVR1 */);
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR1, MISCREG_DBGBXVR1);
     InitReg(MISCREG_DBGBVR2_EL1)
-      .allPrivileges()
-      .mapsTo(MISCREG_DBGBVR2 /*, MISCREG_DBGBXVR2 */);
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR2, MISCREG_DBGBXVR2);
     InitReg(MISCREG_DBGBVR3_EL1)
-      .allPrivileges()
-      .mapsTo(MISCREG_DBGBVR3 /*, MISCREG_DBGBXVR3 */);
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR3, MISCREG_DBGBXVR3);
     InitReg(MISCREG_DBGBVR4_EL1)
-      .allPrivileges()
-      .mapsTo(MISCREG_DBGBVR4 /*, MISCREG_DBGBXVR4 */);
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR4, MISCREG_DBGBXVR4);
     InitReg(MISCREG_DBGBVR5_EL1)
-      .allPrivileges()
-      .mapsTo(MISCREG_DBGBVR5 /*, MISCREG_DBGBXVR5 */);
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR5, MISCREG_DBGBXVR5);
+    InitReg(MISCREG_DBGBVR6_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR6, MISCREG_DBGBXVR6);
+    InitReg(MISCREG_DBGBVR7_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR7, MISCREG_DBGBXVR7);
+    InitReg(MISCREG_DBGBVR8_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR8, MISCREG_DBGBXVR8);
+    InitReg(MISCREG_DBGBVR9_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR9, MISCREG_DBGBXVR9);
+    InitReg(MISCREG_DBGBVR10_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR10, MISCREG_DBGBXVR10);
+    InitReg(MISCREG_DBGBVR11_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR11, MISCREG_DBGBXVR11);
+    InitReg(MISCREG_DBGBVR12_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR12, MISCREG_DBGBXVR12);
+    InitReg(MISCREG_DBGBVR13_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR13, MISCREG_DBGBXVR13);
+    InitReg(MISCREG_DBGBVR14_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR14, MISCREG_DBGBXVR14);
+    InitReg(MISCREG_DBGBVR15_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBVR15, MISCREG_DBGBXVR15);
     InitReg(MISCREG_DBGBCR0_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGBCR0);
     InitReg(MISCREG_DBGBCR1_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGBCR1);
     InitReg(MISCREG_DBGBCR2_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGBCR2);
     InitReg(MISCREG_DBGBCR3_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGBCR3);
     InitReg(MISCREG_DBGBCR4_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGBCR4);
     InitReg(MISCREG_DBGBCR5_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGBCR5);
+    InitReg(MISCREG_DBGBCR6_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBCR6);
+    InitReg(MISCREG_DBGBCR7_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBCR7);
+    InitReg(MISCREG_DBGBCR8_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBCR8);
+    InitReg(MISCREG_DBGBCR9_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBCR9);
+    InitReg(MISCREG_DBGBCR10_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBCR10);
+    InitReg(MISCREG_DBGBCR11_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBCR11);
+    InitReg(MISCREG_DBGBCR12_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBCR12);
+    InitReg(MISCREG_DBGBCR13_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBCR13);
+    InitReg(MISCREG_DBGBCR14_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBCR14);
+    InitReg(MISCREG_DBGBCR15_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DBGBCR15);
     InitReg(MISCREG_DBGWVR0_EL1)
       .allPrivileges()
       .mapsTo(MISCREG_DBGWVR0);
@@ -4179,7 +4510,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_CPTR_EL3)
       .mon();
     InitReg(MISCREG_MDCR_EL3)
-      .mon();
+      .mon()
+      .mapsTo(MISCREG_SDCR);
     InitReg(MISCREG_TTBR0_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_TTBR0_NS);

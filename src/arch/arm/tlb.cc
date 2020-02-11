@@ -45,7 +45,9 @@
 #include <vector>
 
 #include "arch/arm/faults.hh"
+#include "arch/arm/isa.hh"
 #include "arch/arm/pagetable.hh"
+#include "arch/arm/self_debug.hh"
 #include "arch/arm/stage2_lookup.hh"
 #include "arch/arm/stage2_mmu.hh"
 #include "arch/arm/system.hh"
@@ -1177,17 +1179,29 @@ TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
         }
     }
 
+    Fault fault = NoFault;
     // If guest MMU is off or hcr.vm=0 go straight to stage2
     if ((isStage2 && !hcr.vm) || (!isStage2 && !sctlr.m)) {
-        return translateMmuOff(tc, req, mode, tranType, vaddr,
-                               long_desc_format);
+        fault = translateMmuOff(tc, req, mode, tranType, vaddr,
+                                long_desc_format);
     } else {
         DPRINTF(TLBVerbose, "Translating %s=%#x context=%d\n",
                 isStage2 ? "IPA" : "VA", vaddr_tainted, asid);
         // Translation enabled
-        return translateMmuOn(tc, req, mode, translation, delay, timing,
-                              functional, vaddr, tranMethod);
+        fault = translateMmuOn(tc, req, mode, translation, delay, timing,
+                               functional, vaddr, tranMethod);
     }
+
+    //Check for Debug Exceptions
+    if (fault == NoFault) {
+        auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+        SelfDebug * sd = isa->getSelfDebug();
+        if (mode == Execute) {
+            fault = sd->testBreakPoints(tc, req->getVaddr());
+        }
+    }
+
+    return fault;
 }
 
 Fault
