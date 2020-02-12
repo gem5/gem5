@@ -113,9 +113,8 @@ ArmISA::calculateBottomPACBit(ThreadContext* tc, ExceptionLevel el,
 Fault
 ArmISA::trapPACUse(ThreadContext *tc, ExceptionLevel target_el)
 {
-    ExceptionLevel curr_el = currEL(tc);
     assert(ArmSystem::haveEL(tc, target_el) &&
-           target_el != EL0 && (target_el >= curr_el));
+           target_el != EL0 && (target_el >= currEL(tc)));
 
     switch (target_el) {
        case EL2:
@@ -149,7 +148,7 @@ ArmISA::addPAC (ThreadContext* tc, ExceptionLevel el, uint64_t  ptr,
     if (upperAndLowerRange(tc, el)) {
         ExceptionLevel s1_el = s1TranslationRegime(tc, el);
         assert (s1_el == EL1 || s1_el == EL2);
-        if (s1TranslationRegime(tc, el) == EL1) {
+        if (s1_el == EL1) {
             // EL1 translation regime registers
             TCR tcr = tc->readMiscReg(MISCREG_TCR_EL1);
             if (data) {
