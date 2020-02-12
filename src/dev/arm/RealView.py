@@ -1075,10 +1075,13 @@ Interrupts:
 
         self.smmu = SMMUv3(reg_map=AddrRange(0x2b400000, size=0x00020000))
 
+        self.smmu.master = bus.slave
+        self.smmu.control = bus.master
+
         dma_ports = []
         for dev in devices:
             self._attach_device(dev, bus, dma_ports)
-            self.smmu.connect(dev, bus)
+            self.smmu.connect(dev)
 
     def setupBootLoader(self, cur_sys, boot_loader):
         super(VExpress_GEM5_Base, self).setupBootLoader(

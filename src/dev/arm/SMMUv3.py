@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2018-2019 ARM Limited
+# Copyright (c) 2013, 2018-2020 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -182,16 +182,13 @@ class SMMUv3(ClockedObject):
         node.appendPhandle(self)
         yield node
 
-    def connect(self, device, bus):
+    def connect(self, device):
         """
         Helper method used to connect the SMMU. The master could
         be either a dma port (if the SMMU is attached directly to a
         dma device), or to a master port (this is the case where the SMMU
         is attached to a bridge).
         """
-
-        self.master = bus.slave
-        self.control = bus.master
 
         slave_interface = SMMUv3SlaveInterface()
 
