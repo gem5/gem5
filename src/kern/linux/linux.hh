@@ -29,10 +29,10 @@
 #ifndef __LINUX_HH__
 #define __LINUX_HH__
 
-#include "base/types.hh"
-
 #include <string>
 
+#include "base/random.hh"
+#include "base/types.hh"
 #include "kern/operatingsystem.hh"
 #include "sim/process.hh"
 
@@ -230,11 +230,16 @@ class Linux : public OperatingSystem
         int64_t ru_nivcsw;              //!< involuntary "
     };
 
+    // For /dev/urandom accesses
+    static Random random;
+
     static int openSpecialFile(std::string path, Process *process,
                                ThreadContext *tc);
     static std::string procMeminfo(Process *process, ThreadContext *tc);
     static std::string etcPasswd(Process *process, ThreadContext *tc);
+    static std::string procSelfMaps(Process *process, ThreadContext *tc);
     static std::string cpuOnline(Process *process, ThreadContext *tc);
+    static std::string devRandom(Process *process, ThreadContext *tc);
 
     // For futex system call
     static const unsigned TGT_FUTEX_WAIT                = 0;

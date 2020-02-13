@@ -33,8 +33,14 @@
 
 #include "cpu/base.hh"
 #include "debug/SyscallVerbose.hh"
+#include "sim/mem_state.hh"
 #include "sim/process.hh"
 #include "sim/system.hh"
+#include "sim/vma.hh"
+
+// The OS methods are called statically. Instantiate the random number
+// generator for access to /dev/urandom here.
+Random Linux::random;
 
 int
 Linux::openSpecialFile(std::string path, Process *process,
@@ -52,6 +58,15 @@ Linux::openSpecialFile(std::string path, Process *process,
         matched = true;
     } else if (path.compare(0, 11, "/etc/passwd") == 0) {
         data = Linux::etcPasswd(process, tc);
+        matched = true;
+    } else if (path.compare(0, 15, "/proc/self/maps") == 0) {
+        data = Linux::procSelfMaps(process, tc);
+        matched = true;
+    } else if (path.compare(0, 30, "/sys/devices/system/cpu/online") == 0) {
+        data = Linux::cpuOnline(process, tc);
+        matched = true;
+    } else if (path.compare(0, 12 ,"/dev/urandom") == 0) {
+        data = Linux::devRandom(process, tc);
         matched = true;
     }
 
@@ -84,4 +99,34 @@ Linux::etcPasswd(Process *process, ThreadContext *tc)
 {
     return csprintf("gem5-user:x:1000:1000:gem5-user,,,:%s:/bin/bash\n",
                     process->tgtCwd);
+}
+
+std::string
+Linux::procSelfMaps(Process *process, ThreadContext *tc)
+{
+    return process->memState->printVmaList();
+}
+
+std::string
+Linux::cpuOnline(Process *process, ThreadContext *tc)
+{
+    return csprintf("0-%d\n",
+                    tc->getSystemPtr()->numContexts() - 1);
+}
+
+std::string
+Linux::devRandom(Process *process, ThreadContext *tc)
+{
+    DPRINTFR(SyscallVerbose,
+             "%d: %s: open: generating urandom\n",
+             curTick(), tc->getCpuPtr()->name());
+
+    std::stringstream line;
+    int max = 1E5;
+    for (int i = 0; i < max; i++) {
+        uint8_t rand_uint = random.random<uint8_t>(0, 255);
+
+        line << rand_uint;
+    }
+    return line.str();
 }

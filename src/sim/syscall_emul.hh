@@ -876,7 +876,9 @@ openatFunc(SyscallDesc *desc, ThreadContext *tc,
     int sim_fd = -1;
     std::string used_path;
     std::vector<std::string> special_paths =
-            { "/proc/meminfo/", "/system/", "/platform/", "/etc/passwd" };
+            { "/proc/meminfo/", "/system/", "/platform/", "/etc/passwd",
+              "/proc/self/maps", "/dev/urandom",
+              "/sys/devices/system/cpu/online" };
     for (auto entry : special_paths) {
         if (startswith(path, entry)) {
             sim_fd = OS::openSpecialFile(abs_path, p, tc);

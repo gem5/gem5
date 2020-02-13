@@ -203,6 +203,11 @@ class MemState : public Serializable
         paramIn(cp, "mmapEnd", _mmapEnd);
     }
 
+    /**
+     * Print the list of VMAs in a format similar to /proc/self/maps
+     */
+    std::string printVmaList();
+
   private:
     /**
      * Owner process of MemState. Used to manipulate page tables.

@@ -473,3 +473,20 @@ MemState::extendMmap(Addr length)
 
     return start;
 }
+
+std::string
+MemState::printVmaList()
+{
+    std::stringstream file_content;
+
+    for (auto vma : _vmaList) {
+        std::stringstream line;
+        line << std::hex << vma.start() << "-";
+        line << std::hex << vma.end() << " ";
+        line << "r-xp 00000000 00:00 0 ";
+        line << "[" << vma.getName() << "]" << std::endl;
+        file_content << line.str();
+    }
+
+    return file_content.str();
+}
