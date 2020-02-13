@@ -130,7 +130,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         tc->setMiscReg(MISCREG_STATUS, status);
 
         // Set PC to fault handler address
-        Addr addr = tc->readMiscReg(tvec) >> 2;
+        Addr addr = mbits(tc->readMiscReg(tvec), 63, 2);
         if (isInterrupt() && bits(tc->readMiscReg(tvec), 1, 0) == 1)
             addr += 4 * _code;
         pcState.set(addr);
