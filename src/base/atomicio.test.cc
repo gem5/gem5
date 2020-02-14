@@ -115,9 +115,9 @@ TEST(AtomicioTest, AtomicWrite)
 
     EXPECT_EQ(file_contents.size(), size);
 
-    char c;
+    int c;
     for (unsigned int i = 0; (c = fgetc(file)) != EOF; i++) {
-        EXPECT_EQ(file_contents[i], c);
+        EXPECT_EQ(file_contents[i], (unsigned char)c);
     }
 
     fclose(file);
