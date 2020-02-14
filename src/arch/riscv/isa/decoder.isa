@@ -50,6 +50,11 @@ decode QUADRANT default Unknown::unknown() {
             0x1: c_fld({{
                 offset = CIMM3 << 3 | CIMM2 << 6;
             }}, {{
+                STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                if (status.fs == FPUStatus::OFF)
+                    fault = make_shared<IllegalInstFault>("FPU is off",
+                                                          machInst);
+
                 Fp2_bits = Mem;
             }}, {{
                 EA = Rp1 + offset;
@@ -75,6 +80,11 @@ decode QUADRANT default Unknown::unknown() {
             0x5: c_fsd({{
                 offset = CIMM3 << 3 | CIMM2 << 6;
             }}, {{
+                STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                if (status.fs == FPUStatus::OFF)
+                    fault = make_shared<IllegalInstFault>("FPU is off",
+                                                          machInst);
+
                 Mem = Fp2_bits;
             }}, {{
                 EA = Rp1 + offset;
@@ -390,9 +400,19 @@ decode QUADRANT default Unknown::unknown() {
         0x01: decode FUNCT3 {
             format Load {
                 0x2: flw({{
+                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                    if (status.fs == FPUStatus::OFF)
+                        fault = make_shared<IllegalInstFault>("FPU is off",
+                                                              machInst);
+
                     Fd_bits = (uint64_t)Mem_uw;
                 }}, inst_flags=FloatMemReadOp);
                 0x3: fld({{
+                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                    if (status.fs == FPUStatus::OFF)
+                        fault = make_shared<IllegalInstFault>("FPU is off",
+                                                              machInst);
+
                     Fd_bits = Mem;
                 }}, inst_flags=FloatMemReadOp);
             }
@@ -484,9 +504,19 @@ decode QUADRANT default Unknown::unknown() {
         0x09: decode FUNCT3 {
             format Store {
                 0x2: fsw({{
+                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                    if (status.fs == FPUStatus::OFF)
+                        fault = make_shared<IllegalInstFault>("FPU is off",
+                                                              machInst);
+
                     Mem_uw = (uint32_t)Fs2_bits;
                 }}, inst_flags=FloatMemWriteOp);
                 0x3: fsd({{
+                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                    if (status.fs == FPUStatus::OFF)
+                        fault = make_shared<IllegalInstFault>("FPU is off",
+                                                              machInst);
+
                     Mem_ud = Fs2_bits;
                 }}, inst_flags=FloatMemWriteOp);
             }

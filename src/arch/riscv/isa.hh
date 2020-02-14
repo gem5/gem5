@@ -60,6 +60,14 @@ enum PrivilegeMode
     PRV_M = 3
 };
 
+enum FPUStatus
+{
+    OFF = 0,
+    INITIAL = 1,
+    CLEAN = 2,
+    DIRTY = 3,
+};
+
 class ISA : public BaseISA
 {
   protected:
