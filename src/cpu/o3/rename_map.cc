@@ -215,5 +215,10 @@ UnifiedRenameMap::switchMode(VecMode newVecMode)
             regFile->setVecReg(regFile->getTrueId(&pregId), new_RF[i]);
         }
 
+        auto range = regFile->getRegIds(VecRegClass);
+        for (uint32_t i = 0; i < TheISA::NumVecRegs; i++) {
+            setEntry(RegId(VecRegClass, i), &(*(range.first + i)));
+        }
+
     }
 }
