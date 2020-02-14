@@ -2,6 +2,7 @@
 
 // Copyright (c) 2015 RISC-V Foundation
 // Copyright (c) 2016-2017 The University of Virginia
+// Copyright (c) 2020 Barkhausen Institut
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -306,6 +307,18 @@ def template CSRExecute {{
             olddata = xc->readMiscReg(MISCREG_FFLAGS) |
                       (xc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
             break;
+          case CSR_MSTATUS: {
+            auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
+            if (pm != PrivilegeMode::PRV_M) {
+                std::string error = csprintf(
+                    "MSTATUS is only accessibly in machine mode\n");
+                fault = make_shared<IllegalInstFault>(error, machInst);
+                olddata = 0;
+            } else {
+                olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
+            }
+            break;
+          }
           default:
             if (CSRData.find(csr) != CSRData.end()) {
                 olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
