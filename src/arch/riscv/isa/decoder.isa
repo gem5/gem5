@@ -1779,13 +1779,16 @@ decode QUADRANT default Unknown::unknown() {
                     }
                     0x8: decode RS2 {
                         0x2: sret({{
-                            if (xc->readMiscReg(MISCREG_PRV) == PRV_U) {
+                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            auto pm = (PrivilegeMode)xc->readMiscReg(
+                                MISCREG_PRV);
+                            if (pm == PRV_U ||
+                                (pm == PRV_S && status.tsr == 1)) {
                                 fault = make_shared<IllegalInstFault>(
-                                            "sret in user mode", machInst);
+                                            "sret in user mode or TSR enabled",
+                                            machInst);
                                 NPC = NPC;
                             } else {
-                                STATUS status = xc->readMiscReg(
-                                    MISCREG_STATUS);
                                 xc->setMiscReg(MISCREG_PRV, status.spp);
                                 status.sie = status.spie;
                                 status.spie = 1;
@@ -1795,10 +1798,26 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }}, IsReturn);
                         0x5: wfi({{
+                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            auto pm = (PrivilegeMode)xc->readMiscReg(
+                                MISCREG_PRV);
+                            if (pm == PRV_U ||
+                                (pm == PRV_S && status.tw == 1)) {
+                                fault = make_shared<IllegalInstFault>(
+                                            "wfi in user mode or TW enabled",
+                                            machInst);
+                            }
                             // don't do anything for now
                         }}, No_OpClass);
                     }
                     0x9: sfence_vma({{
+                        STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                        auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
+                        if (pm == PRV_U || (pm == PRV_S && status.tvm == 1)) {
+                            fault = make_shared<IllegalInstFault>(
+                                        "sfence in user mode or TVM enabled",
+                                        machInst);
+                        }
                         xc->tcBase()->getITBPtr()->demapPage(Rs1, Rs2);
                         xc->tcBase()->getDTBPtr()->demapPage(Rs1, Rs2);
                     }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);

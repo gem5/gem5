@@ -307,6 +307,19 @@ def template CSRExecute {{
             olddata = xc->readMiscReg(MISCREG_FFLAGS) |
                       (xc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
             break;
+          case CSR_SATP: {
+            auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
+            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+            if (pm == PRV_U || (pm == PRV_S && status.tvm == 1)) {
+                std::string error = csprintf(
+                    "SATP access in user mode or with TVM enabled\n");
+                fault = make_shared<IllegalInstFault>(error, machInst);
+                olddata = 0;
+            } else {
+                olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
+            }
+            break;
+          }
           case CSR_MSTATUS: {
             auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
             if (pm != PrivilegeMode::PRV_M) {
