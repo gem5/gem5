@@ -39,6 +39,7 @@
 #include "arch/riscv/registers.hh"
 #include "base/bitfield.hh"
 #include "cpu/base.hh"
+#include "debug/Checkpoint.hh"
 #include "debug/RiscvMisc.hh"
 #include "params/RiscvISA.hh"
 #include "sim/core.hh"
@@ -350,6 +351,20 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
             setMiscRegNoEffect(misc_reg, val);
         }
     }
+}
+
+void
+ISA::serialize(CheckpointOut &cp) const
+{
+    DPRINTF(Checkpoint, "Serializing Riscv Misc Registers\n");
+    SERIALIZE_CONTAINER(miscRegFile);
+}
+
+void
+ISA::unserialize(CheckpointIn &cp)
+{
+    DPRINTF(Checkpoint, "Unserializing Riscv Misc Registers\n");
+    UNSERIALIZE_CONTAINER(miscRegFile);
 }
 
 }

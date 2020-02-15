@@ -92,6 +92,9 @@ class ISA : public BaseISA
 
     void startup(ThreadContext *tc) {}
 
+    void serialize(CheckpointOut &cp) const;
+    void unserialize(CheckpointIn &cp);
+
     /// Explicitly import the otherwise hidden startup
     using BaseISA::startup;
 
