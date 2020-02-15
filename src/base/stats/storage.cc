@@ -54,10 +54,7 @@ DistStor::sample(Counter val, int number)
     else if (val > max_track)
         overflow += number;
     else {
-        size_type index =
-            (size_type)std::floor((val - min_track) / bucket_size);
-        assert(index < size());
-        cvec[index] += number;
+        cvec[std::floor((val - min_track) / bucket_size)] += number;
     }
 
     if (val < min_val)

@@ -266,18 +266,12 @@ TEST(StatsAvgStorTest, ZeroReset)
     ASSERT_FALSE(stor.zero());
 }
 
-/**
- * Test that an assertion is thrown when no bucket size is provided before
- * sampling.
- */
-TEST(StatsDistStorDeathTest, NoBucketSize)
+/** Test that an assertion is thrown when bucket size is 0. */
+TEST(StatsDistStorDeathTest, BucketSize0)
 {
-    Stats::Counter val = 10;
-    Stats::Counter num_samples = 5;
-    Stats::DistStor::Params params;
-    MockInfo info(&params);
-    Stats::DistStor stor(&info);
-    ASSERT_DEATH(stor.sample(val, num_samples), ".+");
+    testing::internal::CaptureStderr();
+    EXPECT_ANY_THROW(Stats::DistStor::Params params(0, 5, 0));
+    testing::internal::GetCapturedStderr();
 }
 
 /**
@@ -287,8 +281,7 @@ TEST(StatsDistStorDeathTest, NoBucketSize)
  */
 TEST(StatsDistStorTest, ZeroReset)
 {
-    Stats::DistStor::Params params;
-    params.bucket_size = 10;
+    Stats::DistStor::Params params(0, 99, 10);
     MockInfo info(&params);
     Stats::DistStor stor(&info);
     Stats::Counter val = 10;
@@ -315,9 +308,7 @@ TEST(StatsDistStorTest, Size)
     Stats::Counter size = 20;
     Stats::DistData data;
 
-    Stats::DistStor::Params params;
-    params.bucket_size = 1;
-    params.buckets = size;
+    Stats::DistStor::Params params(0, 19, 1);
     MockInfo info(&params);
     Stats::DistStor stor(&info);
 
@@ -406,11 +397,7 @@ prepareCheckDistStor(Stats::DistStor::Params& params, ValueSamples* values,
 /** Test setting and getting value from storage. */
 TEST(StatsDistStorTest, SamplePrepareSingle)
 {
-    Stats::DistStor::Params params;
-    params.min = 0;
-    params.max = 99;
-    params.bucket_size = 5;
-    params.buckets = 20;
+    Stats::DistStor::Params params(0, 99, 5);
 
     ValueSamples values[] = {{10, 5}};
     int num_values = sizeof(values) / sizeof(ValueSamples);
@@ -433,11 +420,7 @@ TEST(StatsDistStorTest, SamplePrepareSingle)
 /** Test setting and getting value from storage with multiple values. */
 TEST(StatsDistStorTest, SamplePrepareMultiple)
 {
-    Stats::DistStor::Params params;
-    params.min = 0;
-    params.max = 99;
-    params.bucket_size = 5;
-    params.buckets = 20;
+    Stats::DistStor::Params params(0, 99, 5);
 
     // There are 20 buckets: [0,5[, [5,10[, [10,15[, ..., [95,100[.
     // We test that values that pass the maximum bucket value (1234, 12345678,
@@ -474,11 +457,7 @@ TEST(StatsDistStorTest, SamplePrepareMultiple)
 /** Test resetting storage. */
 TEST(StatsDistStorTest, Reset)
 {
-    Stats::DistStor::Params params;
-    params.min = 0;
-    params.max = 99;
-    params.bucket_size = 5;
-    params.buckets = 20;
+    Stats::DistStor::Params params(0, 99, 5);
     MockInfo info(&params);
     Stats::DistStor stor(&info);
 
@@ -513,20 +492,20 @@ TEST(StatsDistStorTest, Reset)
     checkExpectedDistData(data, expected_data, true);
 }
 
-/**
- * Test that an assertion is thrown when no bucket size is provided before
- * sampling.
- */
-TEST(StatsHistStorDeathTest, NoBucketSize)
+/** Test that an assertion is thrown when not enough buckets are provided. */
+TEST(StatsHistStorDeathTest, NotEnoughBuckets0)
 {
-    Stats::Counter val = 10;
-    Stats::Counter num_samples = 5;
+    testing::internal::CaptureStderr();
+    EXPECT_ANY_THROW(Stats::HistStor::Params params(0));
+    testing::internal::GetCapturedStderr();
+}
 
-    // If no bucket size is specified, it is 0 by default
-    Stats::HistStor::Params params;
-    MockInfo info(&params);
-    Stats::HistStor stor(&info);
-    ASSERT_DEATH(stor.sample(val, num_samples), ".+");
+/** Test that an assertion is thrown when not enough buckets are provided. */
+TEST(StatsHistStorDeathTest, NotEnoughBuckets1)
+{
+    testing::internal::CaptureStderr();
+    EXPECT_ANY_THROW(Stats::HistStor::Params params(1));
+    testing::internal::GetCapturedStderr();
 }
 
 /**
@@ -536,8 +515,7 @@ TEST(StatsHistStorDeathTest, NoBucketSize)
  */
 TEST(StatsHistStorTest, ZeroReset)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 10;
+    Stats::HistStor::Params params(10);
     MockInfo info(&params);
     Stats::HistStor stor(&info);
     Stats::Counter val = 10;
@@ -564,24 +542,8 @@ TEST(StatsHistStorTest, Size)
     Stats::DistData data;
     Stats::size_type sizes[] = {2, 10, 1234};
 
-    // If no bucket size is specified, it is 0 by default
-    {
-        Stats::HistStor::Params params;
-        MockInfo info(&params);
-        Stats::HistStor stor(&info);
-
-        ASSERT_EQ(stor.size(), 0);
-        stor.prepare(&info, data);
-        ASSERT_EQ(stor.size(), 0);
-        stor.reset(&info);
-        ASSERT_EQ(stor.size(), 0);
-        stor.zero();
-        ASSERT_EQ(stor.size(), 0);
-    }
-
     for (int i = 0; i < (sizeof(sizes) / sizeof(Stats::size_type)); i++) {
-        Stats::HistStor::Params params;
-        params.buckets = sizes[i];
+        Stats::HistStor::Params params(sizes[i]);
         MockInfo info(&params);
         Stats::HistStor stor(&info);
 
@@ -651,8 +613,7 @@ prepareCheckHistStor(Stats::HistStor::Params& params, ValueSamples* values,
  */
 TEST(StatsHistStorTest, SamplePrepareFit)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 4;
+    Stats::HistStor::Params params(4);
 
     // Setup expected data for the hand-carved values given. The final buckets
     // will be divided at:
@@ -680,8 +641,7 @@ TEST(StatsHistStorTest, SamplePrepareFit)
  */
 TEST(StatsHistStorTest, SamplePrepareSingleGrowUp)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 4;
+    Stats::HistStor::Params params(4);
 
     // Setup expected data for the hand-carved values given. Since there
     // are four buckets, and the highest value is 4, the bucket size will
@@ -710,8 +670,7 @@ TEST(StatsHistStorTest, SamplePrepareSingleGrowUp)
  */
 TEST(StatsHistStorTest, SamplePrepareMultipleGrowUp)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 4;
+    Stats::HistStor::Params params(4);
 
     // Setup expected data for the hand-carved values given. Since there
     // are four buckets, and the highest value is 4, the bucket size will
@@ -741,8 +700,7 @@ TEST(StatsHistStorTest, SamplePrepareMultipleGrowUp)
  */
 TEST(StatsHistStorTest, SamplePrepareGrowDownOddBuckets)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 5;
+    Stats::HistStor::Params params(5);
 
     // Setup expected data for the hand-carved values given. Since there
     // is a negative value, the min bucket will change, and the bucket size
@@ -774,8 +732,7 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownOddBuckets)
  */
 TEST(StatsHistStorTest, SamplePrepareGrowDownEvenBuckets)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 4;
+    Stats::HistStor::Params params(4);
 
     // Setup expected data for the hand-carved values given. Since there
     // is a negative value, the min bucket will change, and the bucket size
@@ -805,8 +762,7 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownEvenBuckets)
  */
 TEST(StatsHistStorTest, SamplePrepareGrowDownGrowOutOddBuckets)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 5;
+    Stats::HistStor::Params params(5);
 
     // Setup expected data for the hand-carved values given. Since there
     // is a negative value, the min bucket will change, and the bucket size
@@ -838,8 +794,7 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownGrowOutOddBuckets)
  */
 TEST(StatsHistStorTest, SamplePrepareGrowDownGrowOutEvenBuckets)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 4;
+    Stats::HistStor::Params params(4);
 
     // Setup expected data for the hand-carved values given. Since there
     // is a negative value, the min bucket will change, and the bucket size
@@ -870,8 +825,7 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownGrowOutEvenBuckets)
  */
 TEST(StatsHistStorTest, SamplePrepareMultipleGrowOddBuckets)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 5;
+    Stats::HistStor::Params params(5);
 
     // Setup expected data for the hand-carved values given. This adds quite
     // a few positive and negative samples, and the bucket size will grow to
@@ -904,8 +858,7 @@ TEST(StatsHistStorTest, SamplePrepareMultipleGrowOddBuckets)
  */
 TEST(StatsHistStorTest, SamplePrepareMultipleGrowEvenBuckets)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 4;
+    Stats::HistStor::Params params(4);
 
     // Setup expected data for the hand-carved values given. This adds quite
     // a few positive and negative samples, and the bucket size will grow to
@@ -932,8 +885,7 @@ TEST(StatsHistStorTest, SamplePrepareMultipleGrowEvenBuckets)
 /** Test resetting storage. */
 TEST(StatsHistStorTest, Reset)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 4;
+    Stats::HistStor::Params params(4);
     MockInfo info(&params);
     Stats::HistStor stor(&info);
 
@@ -964,13 +916,11 @@ TEST(StatsHistStorTest, Reset)
 /** Test whether adding storages with different sizes triggers an assertion. */
 TEST(StatsHistStorDeathTest, AddDifferentSize)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 4;
+    Stats::HistStor::Params params(4);
     MockInfo info(&params);
     Stats::HistStor stor(&info);
 
-    Stats::HistStor::Params params2;
-    params2.buckets = 5;
+    Stats::HistStor::Params params2(5);
     MockInfo info2(&params2);
     Stats::HistStor stor2(&info2);
 
@@ -980,15 +930,13 @@ TEST(StatsHistStorDeathTest, AddDifferentSize)
 /** Test whether adding storages with different min triggers an assertion. */
 TEST(StatsHistStorDeathTest, AddDifferentMin)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 4;
+    Stats::HistStor::Params params(4);
     MockInfo info(&params);
     Stats::HistStor stor(&info);
     stor.sample(-1, 3);
 
     // On creation, the storage's min is zero
-    Stats::HistStor::Params params2;
-    params2.buckets = 4;
+    Stats::HistStor::Params params2(4);
     MockInfo info2(&params2);
     Stats::HistStor stor2(&info2);
 
@@ -998,8 +946,7 @@ TEST(StatsHistStorDeathTest, AddDifferentMin)
 /** Test merging two histograms. */
 TEST(StatsHistStorTest, Add)
 {
-    Stats::HistStor::Params params;
-    params.buckets = 4;
+    Stats::HistStor::Params params(4);
     MockInfo info(&params);
 
     // Setup first storage. Buckets are:

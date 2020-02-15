@@ -31,6 +31,7 @@
 #define __BASE_STATS_STORAGE_HH__
 
 #include <cassert>
+#include <cmath>
 
 #include "base/cast.hh"
 #include "base/logging.hh"
@@ -265,8 +266,19 @@ class DistStor
         /** The number of buckets. Equal to (max-min)/bucket_size. */
         size_type buckets;
 
-        Params() : DistParams(Dist), min(0), max(0), bucket_size(0),
-                   buckets(0) {}
+        Params(Counter _min, Counter _max, Counter _bucket_size)
+          : DistParams(Dist), min(_min), max(_max), bucket_size(_bucket_size),
+            buckets(0)
+        {
+            fatal_if(bucket_size <= 0,
+                "Bucket size (%f) must be greater than zero", bucket_size);
+            warn_if(std::floor((max - min + 1.0) / bucket_size) !=
+                std::ceil((max - min + 1.0) / bucket_size),
+                "Bucket size (%f) does not divide range [%f:%f] into equal-" \
+                "sized buckets. Rounding up.", bucket_size, min + 1.0, max);
+
+            buckets = std::ceil((max - min + 1.0) / bucket_size);
+        }
     };
 
     DistStor(Info *info)
@@ -446,14 +458,18 @@ class HistStor
         /** The number of buckets. */
         size_type buckets;
 
-        Params() : DistParams(Hist), buckets(0) {}
+        Params(size_type _buckets)
+          : DistParams(Hist)
+        {
+            fatal_if(_buckets < 2,
+                "There must be at least two buckets in a histogram");
+            buckets = _buckets;
+        }
     };
 
     HistStor(Info *info)
         : cvec(safe_cast<const Params *>(info->storageParams)->buckets)
     {
-        fatal_if(cvec.size() == 1,
-            "There must be at least two buckets in a histogram");
         reset(info);
     }
 

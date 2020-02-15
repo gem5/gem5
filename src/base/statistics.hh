@@ -2005,14 +2005,7 @@ class Distribution : public DistBase<Distribution, DistStor>
     Distribution &
     init(Counter min, Counter max, Counter bkt)
     {
-        DistStor::Params *params = new DistStor::Params;
-        params->min = min;
-        params->max = max;
-        params->bucket_size = bkt;
-        // Division by zero is especially serious in an Aarch64 host,
-        // where it gets rounded to allocate 32GiB RAM.
-        assert(bkt > 0);
-        params->buckets = (size_type)ceil((max - min + 1.0) / bkt);
+        DistStor::Params *params = new DistStor::Params(min, max, bkt);
         this->setParams(params);
         this->doInit();
         return this->self();
@@ -2040,8 +2033,7 @@ class Histogram : public DistBase<Histogram, HistStor>
     Histogram &
     init(size_type size)
     {
-        HistStor::Params *params = new HistStor::Params;
-        params->buckets = size;
+        HistStor::Params *params = new HistStor::Params(size);
         this->setParams(params);
         this->doInit();
         return this->self();
@@ -2112,11 +2104,7 @@ class VectorDistribution : public VectorDistBase<VectorDistribution, DistStor>
     VectorDistribution &
     init(size_type size, Counter min, Counter max, Counter bkt)
     {
-        DistStor::Params *params = new DistStor::Params;
-        params->min = min;
-        params->max = max;
-        params->bucket_size = bkt;
-        params->buckets = (size_type)ceil((max - min + 1.0) / bkt);
+        DistStor::Params *params = new DistStor::Params(min, max, bkt);
         this->setParams(params);
         this->doInit(size);
         return this->self();
