@@ -1,8 +1,3 @@
-Authors: Jason Lowe-Power
-         Andreas Sandberg
-         Steve Reinhardt
-         Bobby R. Bruce
-
 If you've made changes to gem5 that might benefit others, we strongly encourage
 you to contribute those changes to the public gem5 repository. There are
 several reasons to do this:

@@ -1,6 +1,3 @@
-:Authors: Jason Lowe-Power
-          Sean Wilson
-
 This file explains how to use gem5's updated testing infrastructure. Running
 tests before submitting a patch is *incredibly important* so unexpected bugs
 don't creep into gem5.
