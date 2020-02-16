@@ -38,8 +38,6 @@
  * section 8.2.4 explains the protocol in detail.
  *
  * See Learning gem5 Part 3: Ruby for more details.
- *
- * Authors: Jason Lowe-Power
  */
 
 /// Declare a machine with type L1Cache.

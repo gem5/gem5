@@ -35,8 +35,6 @@
  *      Synthesis Lectures on Computer Architecture 2011 6:3, 141-149
  *
  * See Learning gem5 Part 3: Ruby for more details.
- *
- * Authors: Jason Lowe-Power
  */
 
 enumeration(CoherenceRequestType, desc="Types of request messages") {
