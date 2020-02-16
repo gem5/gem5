@@ -24,10 +24,6 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OF THE SOFTWARE, EVEN
  * IF IT HAS BEEN OR IS HEREAFTER ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGES.
- *
- * Authors: Ali G. Saidi
- *          Andrew L. Schultz
- *          Miguel J. Serrano
  */
 
 #include "dev/intel_8254_timer.hh"
