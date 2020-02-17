@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 ARM Limited
+ * Copyright (c) 2016, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -40,6 +40,7 @@
 #ifndef __ARCH_COMMON_TRAITS_HH__
 #define __ARCH_COMMON_TRAITS_HH__
 
+#include "arch/generic/isa.hh"
 #include "arch/types.hh"
 #include "enums/VecRegRenameMode.hh"
 
@@ -51,7 +52,7 @@
 template <typename ISA>
 struct RenameMode
 {
-    static Enums::VecRegRenameMode init(const ISA*) { return Enums::Full; }
+    static Enums::VecRegRenameMode init(const BaseISA*) { return Enums::Full; }
 
     static Enums::VecRegRenameMode
     mode(const TheISA::PCState&)
@@ -61,7 +62,7 @@ struct RenameMode
      * Compare the initial rename mode of two instances of the ISA.
      * Result is true by definition, as the default mode is Full.
      * */
-    static bool equalsInit(const ISA*, const ISA*) { return true; }
+    static bool equalsInit(const BaseISA*, const BaseISA*) { return true; }
 };
 
 #endif /* __ARCH_COMMON_TRAITS_HH__ */

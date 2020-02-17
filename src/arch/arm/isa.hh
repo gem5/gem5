@@ -776,9 +776,11 @@ template<>
 struct RenameMode<ArmISA::ISA>
 {
     static Enums::VecRegRenameMode
-    init(const ArmISA::ISA* isa)
+    init(const BaseISA* isa)
     {
-        return isa->vecRegRenameMode();
+        auto arm_isa = dynamic_cast<const ArmISA::ISA *>(isa);
+        assert(arm_isa);
+        return arm_isa->vecRegRenameMode();
     }
 
     static Enums::VecRegRenameMode
@@ -792,7 +794,7 @@ struct RenameMode<ArmISA::ISA>
     }
 
     static bool
-    equalsInit(const ArmISA::ISA* isa1, const ArmISA::ISA* isa2)
+    equalsInit(const BaseISA* isa1, const BaseISA* isa2)
     {
         return init(isa1) == init(isa2);
     }
