@@ -14,9 +14,9 @@ support. Please see http://www.gem5.org/documentation/general_docs/building
 for more details concerning the minimum versions of the aforementioned tools.
 
 Once you have all dependencies resolved, type 'scons
-build/<ARCH>/gem5.opt' where ARCH is one of ALPHA, ARM, NULL, MIPS,
-POWER, SPARC, or X86. This will build an optimized version of the gem5
-binary (gem5.opt) for the the specified architecture. See
+build/<ARCH>/gem5.opt' where ARCH is one of ARM, NULL, MIPS, POWER, SPARC,
+or X86. This will build an optimized version of the gem5 binary (gem5.opt)
+for the the specified architecture. See
 http://www.gem5.org/documentation/general_docs/building for more details and
 options.
 
