@@ -99,6 +99,9 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
       iew(this, params),
       commit(this, params),
 
+      /* It is mandatory that all SMT threads use the same renaming mode as
+       * they are sharing registers and rename */
+      vecMode(RenameMode<TheISA::ISA>::init(params->isa[0])),
       regFile(params->numPhysIntRegs,
               params->numPhysFloatRegs,
               params->numPhysVecRegs,
@@ -128,12 +131,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
       system(params->system),
       lastRunningCycle(curCycle())
 {
-    auto *the_isa = dynamic_cast<TheISA::ISA *>(params->isa[0]);
-    assert(the_isa);
-    /* It is mandatory that all SMT threads use the same renaming mode as
-     * they are sharing registers and rename */
-    vecMode = RenameMode<TheISA::ISA>::init(the_isa);
-
     if (!params->switched_out) {
         _status = Running;
     } else {
