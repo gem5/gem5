@@ -38,7 +38,7 @@ add_option = optparser.add_option
 add_option('-v', '--verbose', action='store_true', default=False,
            help='echo commands before executing')
 add_option('--builds',
-           default='ALPHA,' \
+           default='ARM,' \
            'MIPS,' \
            'NULL,' \
            'NULL_MOESI_hammer,' \
@@ -48,7 +48,6 @@ add_option('--builds',
            'POWER,' \
            'SPARC,' \
            'X86,X86_MESI_Two_Level,' \
-           'ARM,' \
            'RISCV,' \
            'HSAIL_X86',
            help="comma-separated build targets to test (default: '%default')")
