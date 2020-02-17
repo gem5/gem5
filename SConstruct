@@ -46,7 +46,7 @@
 #
 # While in this directory ('gem5'), just type 'scons' to build the default
 # configuration (see below), or type 'scons build/<CONFIG>/<binary>'
-# to build some other configuration (e.g., 'build/ALPHA/gem5.opt' for
+# to build some other configuration (e.g., 'build/X86/gem5.opt' for
 # the optimized full-system version).
 #
 # You can build gem5 in a different directory as long as there is a
@@ -58,15 +58,15 @@
 #
 #   The following two commands are equivalent.  The '-u' option tells
 #   scons to search up the directory tree for this SConstruct file.
-#   % cd <path-to-src>/gem5 ; scons build/ALPHA/gem5.debug
-#   % cd <path-to-src>/gem5/build/ALPHA; scons -u gem5.debug
+#   % cd <path-to-src>/gem5 ; scons build/X86/gem5.debug
+#   % cd <path-to-src>/gem5/build/X86; scons -u gem5.debug
 #
 #   The following two commands are equivalent and demonstrate building
 #   in a directory outside of the source tree.  The '-C' option tells
 #   scons to chdir to the specified directory to find this SConstruct
 #   file.
-#   % cd <path-to-src>/gem5 ; scons /local/foo/build/ALPHA/gem5.debug
-#   % cd /local/foo/build/ALPHA; scons -C <path-to-src>/gem5 gem5.debug
+#   % cd <path-to-src>/gem5 ; scons /local/foo/build/X86/gem5.debug
+#   % cd /local/foo/build/X86; scons -C <path-to-src>/gem5 gem5.debug
 #
 # You can use 'scons -H' to print scons options.  If you're in this
 # 'gem5' directory (or use -u or -C to tell scons where to find this
@@ -196,7 +196,7 @@ if not ('CC' in main_dict_keys and 'CXX' in main_dict_keys):
 ###################################################
 
 # Find default configuration & binary.
-Default(environ.get('M5_DEFAULT_BINARY', 'build/ALPHA/gem5.debug'))
+Default(environ.get('M5_DEFAULT_BINARY', 'build/ARM/gem5.debug'))
 
 # helper function: find last occurrence of element in list
 def rfind(l, elt, offs = -1):
@@ -227,8 +227,8 @@ def find_first_prog(prog_names):
 
 # Each target must have 'build' in the interior of the path; the
 # directory below this will determine the build parameters.  For
-# example, for target 'foo/bar/build/ALPHA_SE/arch/alpha/blah.do' we
-# recognize that ALPHA_SE specifies the configuration because it
+# example, for target 'foo/bar/build/X86/arch/x86/blah.do' we
+# recognize that X86 specifies the configuration because it
 # follow 'build' in the build path.
 
 # The funky assignment to "[:]" is needed to replace the list contents
@@ -274,7 +274,7 @@ main.SetOption('duplicate', 'soft-copy')
 
 #
 # Set up global sticky variables... these are common to an entire build
-# tree (not specific to a particular build like ALPHA_SE)
+# tree (not specific to a particular build like X86)
 #
 
 global_vars_file = joinpath(build_root, 'variables.global')
@@ -1151,7 +1151,7 @@ for variant_path in variant_paths:
     env['BUILDDIR'] = variant_path
 
     # variant_dir is the tail component of build path, and is used to
-    # determine the build parameters (e.g., 'ALPHA_SE')
+    # determine the build parameters (e.g., 'X86')
     (build_root, variant_dir) = splitpath(variant_path)
 
     # Set env variables according to the build directory config.
