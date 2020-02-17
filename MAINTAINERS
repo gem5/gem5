@@ -25,7 +25,6 @@ PMC Members (general maintainers):
 
 arch: General architecture-specific components
   Gabe Black <gabeblack@google.com>
-arch-alpha:
 arch-arm:
   Andreas Sandberg <andreas.sandberg@arm.com>
   Giacomo Travaglini <giacomo.travaglini@arm.com>
