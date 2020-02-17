@@ -120,6 +120,15 @@ ISA::params() const
 }
 
 void
+ISA::clear(ThreadContext *tc)
+{
+    clear();
+    // Invalidate cached copies of miscregs in the TLBs
+    getITBPtr(tc)->invalidateMiscReg();
+    getDTBPtr(tc)->invalidateMiscReg();
+}
+
+void
 ISA::clear()
 {
     const Params *p(params());

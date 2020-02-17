@@ -463,7 +463,7 @@ namespace ArmISA
         }
 
       public:
-        void clear(ThreadContext *tc) { clear(); }
+        void clear(ThreadContext *tc);
 
       protected:
         void clear();
