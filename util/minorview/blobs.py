@@ -33,8 +33,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Andrew Bardsley
-#
 # blobs.py: Blobs are the visual blocks, arrows and other coloured
 #   objects on the visualiser.  This file contains Blob definition and
 #   their rendering instructions in pygtk/cairo.

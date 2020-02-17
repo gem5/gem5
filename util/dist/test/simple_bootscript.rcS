@@ -37,9 +37,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Gabor Dozsa
-#
-#
 # This is an example boot script to use for dist-gem5 runs. The important
 # task here is to extract the rank and size information through the m5
 # initparam utility and use those to configure MAC/IP addresses and hostname.
