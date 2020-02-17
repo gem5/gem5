@@ -36,10 +36,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Radhika Jagtap
-#          Jason Lowe-Power
-#          Andreas Hansson
-#
 # A wrapper around configs/dram/low_power_sweep.py
 
 # For some reason, this is implicitly needed by run.py
