@@ -28,9 +28,6 @@
  *
  * AMD's contributions to the MOESI hammer protocol do not constitute an
  * endorsement of its similarity to any AMD products.
- *
- * Authors: Milo Martin
- *          Brad Beckmann
  */
 
 machine(MachineType:L1Cache, "AMD Hammer-like protocol")
