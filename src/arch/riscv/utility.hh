@@ -2,6 +2,7 @@
  * Copyright (c) 2013 ARM Limited
  * Copyright (c) 2014-2015 Sven Karlsson
  * Copyright (c) 2018 TU Dresden
+ * Copyright (c) 2020 Barkhausen Institut
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -109,7 +110,14 @@ buildRetPC(const PCState &curPC, const PCState &callPC)
 inline uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {
-    return 0;
+    panic_if(fp, "getArgument(): Floating point arguments not implemented");
+    panic_if(size != 8, "getArgument(): Can only handle 64-bit arguments.");
+    panic_if(number >= ArgumentRegs.size(),
+             "getArgument(): Don't know how to handle stack arguments");
+
+    // The first 8 integer arguments are passed in registers, the rest
+    // are passed on the stack.
+    return tc->readIntReg(ArgumentRegs[number]);
 }
 
 inline void

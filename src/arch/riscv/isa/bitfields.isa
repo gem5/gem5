@@ -2,6 +2,7 @@
 
 // Copyright (c) 2015 RISC-V Foundation
 // Copyright (c) 2016 The University of Virginia
+// Copyright (c) 2020 Barkhausen Institut
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -119,3 +120,6 @@ def bitfield CIMM5 <6:2>;
 def bitfield CIMM3 <12:10>;
 def bitfield CIMM2 <6:5>;
 def bitfield CIMM1 <12>;
+
+// Pseudo instructions
+def bitfield M5FUNC <31:25>;
