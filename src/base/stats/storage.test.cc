@@ -55,28 +55,6 @@ struct ValueSamples
     }
 };
 
-/**
- * A mocked info class.
- * @todo There is no real dependency on the info class, so this must be
- * removed on a cleanup.
- */
-class MockInfo : public statistics::Info
-{
-  public:
-    MockInfo(statistics::StorageParams* storage_params)
-      : statistics::Info()
-    {
-        this->storageParams = storage_params;
-    }
-    ~MockInfo() = default;
-
-    bool check() const override { return true; }
-    void prepare() override { }
-    void reset() override { }
-    bool zero() const override { return true; }
-    void visit(statistics::Output &visitor) override { }
-};
-
 /** Test setting and getting a value to the storage. */
 TEST(StatsStatStorTest, SetValueResult)
 {
@@ -287,18 +265,17 @@ TEST(StatsDistStorDeathTest, BucketSize0)
 TEST(StatsDistStorTest, ZeroReset)
 {
     statistics::DistStor::Params params(0, 99, 10);
-    MockInfo info(&params);
-    statistics::DistStor stor(&info);
+    statistics::DistStor stor(&params);
     statistics::Counter val = 10;
     statistics::Counter num_samples = 5;
 
     ASSERT_TRUE(stor.zero());
 
-    stor.reset(&info);
+    stor.reset(&params);
     stor.sample(val, num_samples);
     ASSERT_FALSE(stor.zero());
 
-    stor.reset(&info);
+    stor.reset(&params);
     ASSERT_TRUE(stor.zero());
 }
 
@@ -314,15 +291,14 @@ TEST(StatsDistStorTest, Size)
     statistics::DistData data;
 
     statistics::DistStor::Params params(0, 19, 1);
-    MockInfo info(&params);
-    statistics::DistStor stor(&info);
+    statistics::DistStor stor(&params);
 
     ASSERT_EQ(stor.size(), size);
     stor.sample(val, num_samples);
     ASSERT_EQ(stor.size(), size);
-    stor.prepare(&info, data);
+    stor.prepare(&params, data);
     ASSERT_EQ(stor.size(), size);
-    stor.reset(&info);
+    stor.reset(&params);
     ASSERT_EQ(stor.size(), size);
     stor.zero();
     ASSERT_EQ(stor.size(), size);
@@ -371,8 +347,7 @@ void
 prepareCheckDistStor(statistics::DistStor::Params& params,
     ValueSamples* values, int num_values, statistics::DistData& expected_data)
 {
-    MockInfo info(&params);
-    statistics::DistStor stor(&info);
+    statistics::DistStor stor(&params);
 
     statistics::Counter val;
     statistics::DistData data;
@@ -393,7 +368,7 @@ prepareCheckDistStor(statistics::DistStor::Params& params,
         expected_data.squares += values[i].value * val;
         expected_data.samples += values[i].numSamples;
     }
-    stor.prepare(&info, data);
+    stor.prepare(&params, data);
 
     // DistStor does not use log
     checkExpectedDistData(data, expected_data, true);
@@ -463,8 +438,7 @@ TEST(StatsDistStorTest, SamplePrepareMultiple)
 TEST(StatsDistStorTest, Reset)
 {
     statistics::DistStor::Params params(0, 99, 5);
-    MockInfo info(&params);
-    statistics::DistStor stor(&info);
+    statistics::DistStor stor(&params);
 
     // Populate storage with random samples
     ValueSamples values[] = {{10, 5}, {1234, 2}, {12345678, 99}, {-10, 4},
@@ -475,9 +449,9 @@ TEST(StatsDistStorTest, Reset)
     }
 
     // Reset storage, and make sure all data has been cleared
-    stor.reset(&info);
+    stor.reset(&params);
     statistics::DistData data;
-    stor.prepare(&info, data);
+    stor.prepare(&params, data);
 
     statistics::DistData expected_data;
     expected_data.type = statistics::Dist;
@@ -519,18 +493,17 @@ TEST(StatsHistStorDeathTest, NotEnoughBuckets1)
 TEST(StatsHistStorTest, ZeroReset)
 {
     statistics::HistStor::Params params(10);
-    MockInfo info(&params);
-    statistics::HistStor stor(&info);
+    statistics::HistStor stor(&params);
     statistics::Counter val = 10;
     statistics::Counter num_samples = 5;
 
     ASSERT_TRUE(stor.zero());
 
-    stor.reset(&info);
+    stor.reset(&params);
     stor.sample(val, num_samples);
     ASSERT_FALSE(stor.zero());
 
-    stor.reset(&info);
+    stor.reset(&params);
     ASSERT_TRUE(stor.zero());
 }
 
@@ -547,15 +520,14 @@ TEST(StatsHistStorTest, Size)
 
     for (int i = 0; i < (sizeof(sizes) / sizeof(statistics::size_type)); i++) {
         statistics::HistStor::Params params(sizes[i]);
-        MockInfo info(&params);
-        statistics::HistStor stor(&info);
+        statistics::HistStor stor(&params);
 
         ASSERT_EQ(stor.size(), sizes[i]);
         stor.sample(val, num_samples);
         ASSERT_EQ(stor.size(), sizes[i]);
-        stor.prepare(&info, data);
+        stor.prepare(&params, data);
         ASSERT_EQ(stor.size(), sizes[i]);
-        stor.reset(&info);
+        stor.reset(&params);
         ASSERT_EQ(stor.size(), sizes[i]);
         stor.zero();
         ASSERT_EQ(stor.size(), sizes[i]);
@@ -576,8 +548,7 @@ void
 prepareCheckHistStor(statistics::HistStor::Params& params,
     ValueSamples* values, int num_values, statistics::DistData& expected_data)
 {
-    MockInfo info(&params);
-    statistics::HistStor stor(&info);
+    statistics::HistStor stor(&params);
 
     statistics::Counter val;
     statistics::DistData data;
@@ -606,7 +577,7 @@ prepareCheckHistStor(statistics::HistStor::Params& params,
         }
         expected_data.samples += values[i].numSamples;
     }
-    stor.prepare(&info, data);
+    stor.prepare(&params, data);
     checkExpectedDistData(data, expected_data, no_log);
 }
 
@@ -889,8 +860,7 @@ TEST(StatsHistStorTest, SamplePrepareMultipleGrowEvenBuckets)
 TEST(StatsHistStorTest, Reset)
 {
     statistics::HistStor::Params params(4);
-    MockInfo info(&params);
-    statistics::HistStor stor(&info);
+    statistics::HistStor stor(&params);
 
     // Setup expected data for the hand-carved values given. This adds quite
     // a few positive and negative samples, and the bucket size will grow to
@@ -905,7 +875,7 @@ TEST(StatsHistStorTest, Reset)
 
     // Reset storage, and make sure all data has been cleared:
     //   Bkt0=[0,1[ , Bkt1=[1,2[, Bkt2=[2,3[, Bkt3=[3,4[
-    stor.reset(&info);
+    stor.reset(&params);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
     expected_data.bucket_size = 1;
@@ -921,12 +891,10 @@ TEST(StatsHistStorTest, Reset)
 TEST(StatsHistStorDeathTest, AddDifferentSize)
 {
     statistics::HistStor::Params params(4);
-    MockInfo info(&params);
-    statistics::HistStor stor(&info);
+    statistics::HistStor stor(&params);
 
     statistics::HistStor::Params params2(5);
-    MockInfo info2(&params2);
-    statistics::HistStor stor2(&info2);
+    statistics::HistStor stor2(&params2);
 
     ASSERT_DEATH(stor.add(&stor2), ".+");
 }
@@ -935,14 +903,12 @@ TEST(StatsHistStorDeathTest, AddDifferentSize)
 TEST(StatsHistStorDeathTest, AddDifferentMin)
 {
     statistics::HistStor::Params params(4);
-    MockInfo info(&params);
-    statistics::HistStor stor(&info);
+    statistics::HistStor stor(&params);
     stor.sample(-1, 3);
 
     // On creation, the storage's min is zero
     statistics::HistStor::Params params2(4);
-    MockInfo info2(&params2);
-    statistics::HistStor stor2(&info2);
+    statistics::HistStor stor2(&params2);
 
     ASSERT_DEATH(stor.add(&stor2), ".+");
 }
@@ -952,34 +918,33 @@ TEST(StatsHistStorDeathTest, AddDifferentMin)
 TEST(StatsHistStorTest, Add)
 {
     statistics::HistStor::Params params(4);
-    MockInfo info(&params);
 
     // Setup first storage. Buckets are:
     //   Bkt0=[0,16[, Bkt1=[16,32[, Bkt2=[32,48[, Bkt3=[58,64[
-    statistics::HistStor stor(&info);
+    statistics::HistStor stor(&params);
     ValueSamples values[] = {{0, 5}, {3, 2}, {20, 37}, {32, 18}};
     int num_values = sizeof(values) / sizeof(ValueSamples);
     for (int i = 0; i < num_values; i++) {
         stor.sample(values[i].value, values[i].numSamples);
     }
     statistics::DistData data;
-    stor.prepare(&info, data);
+    stor.prepare(&params, data);
 
     // Setup second storage. Buckets are:
     //   Bkt0=[0,32[, Bkt1=[32,64[, Bkt2=[64,96[, Bkt3=[96,128[
-    statistics::HistStor stor2(&info);
+    statistics::HistStor stor2(&params);
     ValueSamples values2[] = {{10, 10}, {0, 1}, {80, 4}, {17, 100}, {95, 79}};
     int num_values2 = sizeof(values2) / sizeof(ValueSamples);
     for (int i = 0; i < num_values2; i++) {
         stor2.sample(values2[i].value, values2[i].numSamples);
     }
     statistics::DistData data2;
-    stor2.prepare(&info, data2);
+    stor2.prepare(&params, data2);
 
     // Perform the merge
     stor.add(&stor2);
     statistics::DistData merge_data;
-    stor.prepare(&info, merge_data);
+    stor.prepare(&params, merge_data);
 
     // Setup expected data. Buckets are:
     //   Bkt0=[0,32[, Bkt1=[32,64[, Bkt2=[64,96[, Bkt3=[96,128[
@@ -1036,11 +1001,10 @@ TEST(StatsSampleStorTest, SamplePrepare)
     statistics::DistData data;
     statistics::DistData expected_data;
     statistics::SampleStor::Params params;
-    MockInfo info(&params);
 
     // Simple test with one value being sampled
     stor.sample(values[0].value, values[0].numSamples);
-    stor.prepare(&info, data);
+    stor.prepare(&params, data);
     val = values[0].value * values[0].numSamples;
     expected_data.type = statistics::Deviation;
     expected_data.sum = val;
@@ -1056,7 +1020,7 @@ TEST(StatsSampleStorTest, SamplePrepare)
     expected_data.squares = 0;
     expected_data.samples = 0;
     stor.reset(nullptr);
-    stor.prepare(&info, data);
+    stor.prepare(&params, data);
     ASSERT_EQ(data.type, expected_data.type);
     ASSERT_EQ(data.sum, expected_data.sum);
     ASSERT_EQ(data.squares, expected_data.squares);
@@ -1071,7 +1035,7 @@ TEST(StatsSampleStorTest, SamplePrepare)
         expected_data.squares += values[i].value * val;
         expected_data.samples += values[i].numSamples;
     }
-    stor.prepare(&info, data);
+    stor.prepare(&params, data);
     ASSERT_EQ(data.type, expected_data.type);
     ASSERT_EQ(data.sum, expected_data.sum);
     ASSERT_EQ(data.squares, expected_data.squares);
@@ -1086,12 +1050,11 @@ TEST(StatsSampleStorTest, Size)
     statistics::Counter num_samples = 5;
     statistics::DistData data;
     statistics::SampleStor::Params params;
-    MockInfo info(&params);
 
     ASSERT_EQ(stor.size(), 1);
     stor.sample(val, num_samples);
     ASSERT_EQ(stor.size(), 1);
-    stor.prepare(&info, data);
+    stor.prepare(&params, data);
     ASSERT_EQ(stor.size(), 1);
     stor.reset(nullptr);
     ASSERT_EQ(stor.size(), 1);
@@ -1130,11 +1093,10 @@ TEST(StatsAvgSampleStorTest, SamplePrepare)
     statistics::DistData data;
     statistics::DistData expected_data;
     statistics::AvgSampleStor::Params params;
-    MockInfo info(&params);
 
     // Simple test with one value being sampled
     stor.sample(values[0].value, values[0].numSamples);
-    stor.prepare(&info, data);
+    stor.prepare(&params, data);
     val = values[0].value * values[0].numSamples;
     expected_data.type = statistics::Deviation;
     expected_data.sum = val;
@@ -1150,7 +1112,7 @@ TEST(StatsAvgSampleStorTest, SamplePrepare)
     expected_data.sum = 0;
     expected_data.squares = 0;
     stor.reset(nullptr);
-    stor.prepare(&info, data);
+    stor.prepare(&params, data);
     ASSERT_EQ(data.type, expected_data.type);
     ASSERT_EQ(data.sum, expected_data.sum);
     ASSERT_EQ(data.squares, expected_data.squares);
@@ -1166,7 +1128,7 @@ TEST(StatsAvgSampleStorTest, SamplePrepare)
         expected_data.sum += val;
         expected_data.squares += values[i].value * val;
     }
-    stor.prepare(&info, data);
+    stor.prepare(&params, data);
     ASSERT_EQ(data.type, expected_data.type);
     ASSERT_EQ(data.sum, expected_data.sum);
     ASSERT_EQ(data.squares, expected_data.squares);
@@ -1181,12 +1143,11 @@ TEST(StatsAvgSampleStorTest, Size)
     statistics::Counter num_samples = 5;
     statistics::DistData data;
     statistics::AvgSampleStor::Params params;
-    MockInfo info(&params);
 
     ASSERT_EQ(stor.size(), 1);
     stor.sample(val, num_samples);
     ASSERT_EQ(stor.size(), 1);
-    stor.prepare(&info, data);
+    stor.prepare(&params, data);
     ASSERT_EQ(stor.size(), 1);
     stor.reset(nullptr);
     ASSERT_EQ(stor.size(), 1);

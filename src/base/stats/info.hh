@@ -188,26 +188,6 @@ class VectorInfo : public Info
     virtual Result total() const = 0;
 };
 
-enum DistType { Deviation, Dist, Hist };
-
-struct DistData
-{
-    DistType type;
-    Counter min;
-    Counter max;
-    Counter bucket_size;
-
-    Counter min_val;
-    Counter max_val;
-    Counter underflow;
-    Counter overflow;
-    VCounter cvec;
-    Counter sum;
-    Counter squares;
-    Counter logs;
-    Counter samples;
-};
-
 class DistInfo : public Info
 {
   public:
@@ -257,14 +237,6 @@ class FormulaInfo : public VectorInfo
   public:
     virtual std::string str() const = 0;
 };
-
-/** Data structure of sparse histogram */
-struct SparseHistData
-{
-    MCounter cmap;
-    Counter samples;
-};
-
 
 class SparseHistInfo : public Info
 {

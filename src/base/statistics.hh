@@ -439,7 +439,7 @@ class DataWrapVec : public DataWrap<Derived, InfoProxyType>
 
         size_t size = self.size();
         for (off_type i = 0; i < size; ++i)
-            self.data(i)->prepare(info);
+            self.data(i)->prepare(info->storageParams);
     }
 
     void
@@ -450,7 +450,7 @@ class DataWrapVec : public DataWrap<Derived, InfoProxyType>
 
         size_t size = self.size();
         for (off_type i = 0; i < size; ++i)
-            self.data(i)->reset(info);
+            self.data(i)->reset(info->storageParams);
     }
 };
 
@@ -550,7 +550,7 @@ class ScalarBase : public DataWrap<Derived, ScalarInfoProxy>
     void
     doInit()
     {
-        new (storage) Storage(this->info());
+        new (storage) Storage(this->info()->storageParams);
         this->setInit();
     }
 
@@ -623,8 +623,8 @@ class ScalarBase : public DataWrap<Derived, ScalarInfoProxy>
 
     bool zero() const { return result() == 0.0; }
 
-    void reset() { data()->reset(this->info()); }
-    void prepare() { data()->prepare(this->info()); }
+    void reset() { data()->reset(this->info()->storageParams); }
+    void prepare() { data()->prepare(this->info()->storageParams); }
 };
 
 class ProxyInfo : public ScalarInfo
@@ -957,7 +957,7 @@ class VectorBase : public DataWrapVec<Derived, VectorInfoProxy>
         storage = reinterpret_cast<Storage *>(ptr);
 
         for (off_type i = 0; i < _size; ++i)
-            new (&storage[i]) Storage(this->info());
+            new (&storage[i]) Storage(this->info()->storageParams);
 
         this->setInit();
     }
@@ -1196,7 +1196,7 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
         storage = reinterpret_cast<Storage *>(ptr);
 
         for (off_type i = 0; i < _size; ++i)
-            new (&storage[i]) Storage(info);
+            new (&storage[i]) Storage(info->storageParams);
 
         this->setInit();
 
@@ -1244,7 +1244,7 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
         size_type size = this->size();
 
         for (off_type i = 0; i < size; ++i)
-            data(i)->prepare(info);
+            data(i)->prepare(info->storageParams);
 
         info->cvec.resize(size);
         for (off_type i = 0; i < size; ++i)
@@ -1260,7 +1260,7 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
         Info *info = this->info();
         size_type size = this->size();
         for (off_type i = 0; i < size; ++i)
-            data(i)->reset(info);
+            data(i)->reset(info->storageParams);
     }
 
     bool
@@ -1316,7 +1316,7 @@ class DistBase : public DataWrap<Derived, DistInfoProxy>
     void
     doInit()
     {
-        new (storage) Storage(this->info());
+        new (storage) Storage(this->info()->storageParams);
         this->setInit();
     }
 
@@ -1352,7 +1352,7 @@ class DistBase : public DataWrap<Derived, DistInfoProxy>
     prepare()
     {
         Info *info = this->info();
-        data()->prepare(info, info->data);
+        data()->prepare(info->storageParams, info->data);
     }
 
     /**
@@ -1361,7 +1361,7 @@ class DistBase : public DataWrap<Derived, DistInfoProxy>
     void
     reset()
     {
-        data()->reset(this->info());
+        data()->reset(this->info()->storageParams);
     }
 
     /**
@@ -1413,7 +1413,7 @@ class VectorDistBase : public DataWrapVec<Derived, VectorDistInfoProxy>
 
         Info *info = this->info();
         for (off_type i = 0; i < _size; ++i)
-            new (&storage[i]) Storage(info);
+            new (&storage[i]) Storage(info->storageParams);
 
         this->setInit();
     }
@@ -1464,7 +1464,7 @@ class VectorDistBase : public DataWrapVec<Derived, VectorDistInfoProxy>
         size_type size = this->size();
         info->data.resize(size);
         for (off_type i = 0; i < size; ++i)
-            data(i)->prepare(info, info->data[i]);
+            data(i)->prepare(info->storageParams, info->data[i]);
     }
 
     bool
@@ -2461,7 +2461,7 @@ class SparseHistBase : public DataWrap<Derived, SparseHistInfoProxy>
     void
     doInit()
     {
-        new (storage) Storage(this->info());
+        new (storage) Storage(this->info()->storageParams);
         this->setInit();
     }
 
@@ -2497,7 +2497,7 @@ class SparseHistBase : public DataWrap<Derived, SparseHistInfoProxy>
     prepare()
     {
         Info *info = this->info();
-        data()->prepare(info, info->data);
+        data()->prepare(info->storageParams, info->data);
     }
 
     /**
@@ -2506,7 +2506,7 @@ class SparseHistBase : public DataWrap<Derived, SparseHistInfoProxy>
     void
     reset()
     {
-        data()->reset(this->info());
+        data()->reset(this->info()->storageParams);
     }
 };
 
