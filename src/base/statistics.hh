@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2019-2020 Arm Limited
  * All rights reserved.
  *
@@ -928,8 +929,7 @@ class VectorBase : public DataWrapVec<Derived, VectorInfoProxy>
 
   protected:
     /** The storage of this stat. */
-    Storage *storage;
-    size_type _size;
+    std::vector<Storage*> storage;
 
   protected:
     /**
@@ -937,28 +937,22 @@ class VectorBase : public DataWrapVec<Derived, VectorInfoProxy>
      * @param index The vector index to access.
      * @return The storage object at the given index.
      */
-    Storage *data(off_type index) { return &storage[index]; }
+    Storage *data(off_type index) { return storage[index]; }
 
     /**
      * Retrieve a const pointer to the storage.
      * @param index The vector index to access.
      * @return A const pointer to the storage object at the given index.
      */
-    const Storage *data(off_type index) const { return &storage[index]; }
+    const Storage *data(off_type index) const { return storage[index]; }
 
     void
     doInit(size_type s)
     {
-        assert(s > 0 && "size must be positive!");
-        assert(!storage && "already initialized");
-        _size = s;
+        fatal_if(s <= 0, "Storage size must be positive");
+        fatal_if(check(), "Stat has already been initialized");
 
-        char *ptr = new char[_size * sizeof(Storage)];
-        storage = reinterpret_cast<Storage *>(ptr);
-
-        for (off_type i = 0; i < _size; ++i)
-            new (&storage[i]) Storage(this->info()->storageParams);
-
+        storage.resize(s, new Storage(this->info()->storageParams));
         this->setInit();
     }
 
@@ -999,7 +993,7 @@ class VectorBase : public DataWrapVec<Derived, VectorInfoProxy>
     /**
      * @return the number of elements in this vector.
      */
-    size_type size() const { return _size; }
+    size_type size() const { return storage.size(); }
 
     bool
     zero() const
@@ -1013,7 +1007,7 @@ class VectorBase : public DataWrapVec<Derived, VectorInfoProxy>
     bool
     check() const
     {
-        return storage != NULL;
+        return size() > 0;
     }
 
   public:
@@ -1021,17 +1015,14 @@ class VectorBase : public DataWrapVec<Derived, VectorInfoProxy>
                const units::Base *unit,
                const char *desc)
         : DataWrapVec<Derived, VectorInfoProxy>(parent, name, unit, desc),
-          storage(nullptr), _size(0)
+          storage()
     {}
 
     ~VectorBase()
     {
-        if (!storage)
-            return;
-
-        for (off_type i = 0; i < _size; ++i)
-            data(i)->~Storage();
-        delete [] reinterpret_cast<char *>(storage);
+        for (auto& stor : storage) {
+            delete stor;
+        }
     }
 
     /**
@@ -1152,36 +1143,32 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
   protected:
     size_type x;
     size_type y;
-    size_type _size;
-    Storage *storage;
+    std::vector<Storage*> storage;
 
   protected:
-    Storage *data(off_type index) { return &storage[index]; }
-    const Storage *data(off_type index) const { return &storage[index]; }
+    Storage *data(off_type index) { return storage[index]; }
+    const Storage *data(off_type index) const { return storage[index]; }
 
   public:
     Vector2dBase(Group *parent, const char *name,
                  const units::Base *unit,
                  const char *desc)
         : DataWrapVec2d<Derived, Vector2dInfoProxy>(parent, name, unit, desc),
-          x(0), y(0), _size(0), storage(nullptr)
+          x(0), y(0), storage()
     {}
 
     ~Vector2dBase()
     {
-        if (!storage)
-            return;
-
-        for (off_type i = 0; i < _size; ++i)
-            data(i)->~Storage();
-        delete [] reinterpret_cast<char *>(storage);
+        for (auto& stor : storage) {
+            delete stor;
+        }
     }
 
     Derived &
     init(size_type _x, size_type _y)
     {
-        assert(_x > 0 && _y > 0 && "sizes must be positive!");
-        assert(!storage && "already initialized");
+        fatal_if((_x <= 0) || (_y <= 0), "Storage sizes must be positive");
+        fatal_if(check(), "Stat has already been initialized");
 
         Derived &self = this->self();
         Info *info = this->info();
@@ -1190,14 +1177,8 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
         y = _y;
         info->x = _x;
         info->y = _y;
-        _size = x * y;
 
-        char *ptr = new char[_size * sizeof(Storage)];
-        storage = reinterpret_cast<Storage *>(ptr);
-
-        for (off_type i = 0; i < _size; ++i)
-            new (&storage[i]) Storage(info->storageParams);
-
+        storage.resize(x * y, new Storage(info->storageParams));
         this->setInit();
 
         return self;
@@ -1215,7 +1196,7 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
     size_type
     size() const
     {
-        return _size;
+        return storage.size();
     }
 
     bool
@@ -1266,7 +1247,7 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
     bool
     check() const
     {
-        return storage != NULL;
+        return size() > 0;
     }
 };
 
@@ -1385,36 +1366,28 @@ class VectorDistBase : public DataWrapVec<Derived, VectorDistInfoProxy>
     friend class DataWrapVec<Derived, VectorDistInfoProxy>;
 
   protected:
-    Storage *storage;
-    size_type _size;
+    std::vector<Storage*> storage;
 
   protected:
     Storage *
     data(off_type index)
     {
-        return &storage[index];
+        return storage[index];
     }
 
     const Storage *
     data(off_type index) const
     {
-        return &storage[index];
+        return storage[index];
     }
 
     void
     doInit(size_type s)
     {
-        assert(s > 0 && "size must be positive!");
-        assert(!storage && "already initialized");
-        _size = s;
+        fatal_if(s <= 0, "Storage size must be positive");
+        fatal_if(check(), "Stat has already been initialized");
 
-        char *ptr = new char[_size * sizeof(Storage)];
-        storage = reinterpret_cast<Storage *>(ptr);
-
-        Info *info = this->info();
-        for (off_type i = 0; i < _size; ++i)
-            new (&storage[i]) Storage(info->storageParams);
-
+        storage.resize(s, new Storage(this->info()->storageParams));
         this->setInit();
     }
 
@@ -1423,17 +1396,14 @@ class VectorDistBase : public DataWrapVec<Derived, VectorDistInfoProxy>
                    const units::Base *unit,
                    const char *desc)
         : DataWrapVec<Derived, VectorDistInfoProxy>(parent, name, unit, desc),
-          storage(NULL)
+          storage()
     {}
 
     ~VectorDistBase()
     {
-        if (!storage)
-            return ;
-
-        for (off_type i = 0; i < _size; ++i)
-            data(i)->~Storage();
-        delete [] reinterpret_cast<char *>(storage);
+        for (auto& stor : storage) {
+            delete stor;
+        }
     }
 
     Proxy operator[](off_type index)
@@ -1445,7 +1415,7 @@ class VectorDistBase : public DataWrapVec<Derived, VectorDistInfoProxy>
     size_type
     size() const
     {
-        return _size;
+        return storage.size();
     }
 
     bool
@@ -1470,7 +1440,7 @@ class VectorDistBase : public DataWrapVec<Derived, VectorDistInfoProxy>
     bool
     check() const
     {
-        return storage != NULL;
+        return size() > 0;
     }
 };
 
