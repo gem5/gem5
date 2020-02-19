@@ -523,13 +523,6 @@ class ScalarBase : public DataWrap<Derived, ScalarInfoProxy>
     }
 
   public:
-    /**
-     * Return the current value of this stat as its base type.
-     * @return The current value.
-     */
-    Counter value() const { return data()->value(); }
-
-  public:
     ScalarBase(Group *parent = nullptr, const char *name = nullptr,
                const char *desc = nullptr)
         : DataWrap<Derived, ScalarInfoProxy>(parent, name, desc)
@@ -585,13 +578,17 @@ class ScalarBase : public DataWrap<Derived, ScalarInfoProxy>
      */
     size_type size() const { return 1; }
 
-    Counter value() { return data()->value(); }
+    /**
+     * Return the current value of this stat as its base type.
+     * @return The current value.
+     */
+    Counter value() const { return data()->value(); }
 
-    Result result() { return data()->result(); }
+    Result result() const { return data()->result(); }
 
-    Result total() { return result(); }
+    Result total() const { return result(); }
 
-    bool zero() { return result() == 0.0; }
+    bool zero() const { return result() == 0.0; }
 
     void reset() { data()->reset(this->info()); }
     void prepare() { data()->prepare(this->info()); }
