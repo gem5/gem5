@@ -233,7 +233,6 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                     "RAS predicted target: %s, RAS index: %i\n",
                     tid, seqNum, pc, target, predict_record.RASIndex);
         } else {
-            ++BTBLookups;
 
             if (inst->isCall()) {
                 RAS[tid].push(pc);
@@ -250,6 +249,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             }
 
             if (inst->isDirectCtrl() || !iPred) {
+                ++BTBLookups;
                 // Check BTB on direct branches
                 if (BTB.valid(pc.instAddr(), tid)) {
                     ++BTBHits;
