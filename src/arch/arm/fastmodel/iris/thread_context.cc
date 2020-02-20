@@ -29,6 +29,7 @@
 
 #include <utility>
 
+#include "arch/arm/utility.hh"
 #include "iris/detail/IrisCppAdapter.h"
 #include "iris/detail/IrisObjects.h"
 #include "mem/fs_translating_port_proxy.hh"
@@ -443,7 +444,7 @@ ThreadContext::pcState() const
     pc.aarch64(!cpsr.width);
     pc.nextAArch64(!cpsr.width);
     pc.illegalExec(false);
-    pc.itstate(itState(cpsr));
+    pc.itstate(ArmISA::itState(cpsr));
     pc.nextItstate(0);
 
     iris::ResourceReadResult result;
