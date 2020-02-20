@@ -118,7 +118,7 @@ FALRU::invalidate(CacheBlk *blk)
 {
     // Erase block entry reference in the hash table
     M5_VAR_USED auto num_erased =
-        tagHash.erase(std::make_pair(blk->tag, blk->isSecure()));
+        tagHash.erase(std::make_pair(blk->getTag(), blk->isSecure()));
 
     // Sanity check; only one block reference should be erased
     assert(num_erased == 1);
@@ -177,7 +177,7 @@ FALRU::findBlock(Addr addr, bool is_secure) const
     }
 
     if (blk && blk->isValid()) {
-        assert(blk->tag == tag);
+        assert(blk->getTag() == tag);
         assert(blk->isSecure() == is_secure);
     }
 
@@ -222,7 +222,7 @@ FALRU::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     moveToHead(falruBlk);
 
     // Insert new block in the hash table
-    tagHash[std::make_pair(blk->tag, blk->isSecure())] = falruBlk;
+    tagHash[std::make_pair(blk->getTag(), blk->isSecure())] = falruBlk;
 }
 
 void

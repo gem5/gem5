@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 Inria
+ * Copyright (c) 2018, 2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,7 +66,21 @@ SectorSubBlk::getSectorOffset() const
 Addr
 SectorSubBlk::getTag() const
 {
-    return _sectorBlk->getTag();
+    // If the sub-block is valid its tag must match its sector's
+    const Addr tag = _sectorBlk->getTag();
+    assert(!isValid() || (CacheBlk::getTag() == tag));
+    return tag;
+}
+
+void
+SectorSubBlk::setTag(Addr tag)
+{
+    CacheBlk::setTag(tag);
+
+    // The sector block handles its own tag's invalidation
+    if (tag != MaxAddr) {
+        _sectorBlk->setTag(tag);
+    }
 }
 
 void
@@ -95,15 +109,10 @@ SectorSubBlk::insert(const Addr tag, const bool is_secure,
                      const int src_requestor_ID, const uint32_t task_ID)
 {
     // Make sure it is not overwriting another sector
-    panic_if((_sectorBlk && _sectorBlk->isValid()) &&
-             ((_sectorBlk->getTag() != tag) ||
-              (_sectorBlk->isSecure() != is_secure)),
-              "Overwriting valid sector!");
+    panic_if(_sectorBlk && _sectorBlk->isValid() &&
+        !_sectorBlk->matchTag(tag, is_secure), "Overwriting valid sector!");
 
     CacheBlk::insert(tag, is_secure, src_requestor_ID, task_ID);
-
-    // Set sector tag
-    _sectorBlk->setTag(tag);
 }
 
 std::string
@@ -163,6 +172,7 @@ SectorBlk::invalidateSubBlk()
     // so clear secure bit
     if (--_validCounter == 0) {
         _secureBit = false;
+        setTag(MaxAddr);
     }
 }
 
@@ -179,4 +189,10 @@ SectorBlk::setPosition(const uint32_t set, const uint32_t way)
     for (auto& blk : blks) {
         blk->setPosition(set, way);
     }
+}
+
+bool
+SectorBlk::matchTag(Addr tag, bool is_secure) const
+{
+    return isValid() && (getTag() == tag) && (isSecure() == is_secure);
 }

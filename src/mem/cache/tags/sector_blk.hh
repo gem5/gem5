@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 Inria
+ * Copyright (c) 2018, 2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -92,12 +92,8 @@ class SectorSubBlk : public CacheBlk
      */
     int getSectorOffset() const;
 
-    /**
-     * Get tag associated to this block.
-     *
-     * @return The tag value.
-     */
-    Addr getTag() const;
+    Addr getTag() const override;
+    void setTag(Addr tag) override;
 
     /**
      * Set valid bit and inform sector block.
@@ -228,6 +224,14 @@ class SectorBlk : public ReplaceableEntry
      * @param way The way of this entry and sub-entries.
      */
     void setPosition(const uint32_t set, const uint32_t way) override;
+
+    /**
+     * Checks if the given information corresponds to this block's.
+     *
+     * @param tag The tag value to compare to.
+     * @param is_secure Whether secure bit is set.
+     */
+    virtual bool matchTag(Addr tag, bool is_secure) const;
 };
 
 #endif //__MEM_CACHE_TAGS_SECTOR_BLK_HH__

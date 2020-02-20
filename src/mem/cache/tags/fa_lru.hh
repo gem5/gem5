@@ -251,7 +251,7 @@ class FALRU : public BaseTags
      */
     Addr regenerateBlkAddr(const CacheBlk* blk) const override
     {
-        return blk->tag;
+        return blk->getTag();
     }
 
     void forEachBlk(std::function<void(CacheBlk &)> visitor) override {

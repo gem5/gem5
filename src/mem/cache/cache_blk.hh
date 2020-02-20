@@ -11,6 +11,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -87,8 +88,6 @@ class CacheBlk : public ReplaceableEntry
     /** Task Id associated with this block */
     uint32_t task_id;
 
-    /** Data block tag value. */
-    Addr tag;
     /**
      * Contains a copy of the data in this block for easy access. This is used
      * for efficient execution when the data could be actually stored in
@@ -210,7 +209,7 @@ class CacheBlk : public ReplaceableEntry
      */
     virtual void invalidate()
     {
-        tag = MaxAddr;
+        setTag(MaxAddr);
         task_id = ContextSwitchTaskId::Unknown;
         status = 0;
         whenReady = MaxTick;
@@ -237,6 +236,20 @@ class CacheBlk : public ReplaceableEntry
     {
         return (status & BlkHWPrefetched) != 0;
     }
+
+    /**
+     * Get tag associated to this block.
+     *
+     * @return The tag value.
+     */
+    virtual Addr getTag() const { return _tag; }
+
+    /**
+     * Set tag associated to this block.
+     *
+     * @param The tag value.
+     */
+    virtual void setTag(Addr tag) { _tag = tag; }
 
     /**
      * Check if this block holds data from the secure memory space.
@@ -287,6 +300,14 @@ class CacheBlk : public ReplaceableEntry
         assert(tick >= tickInserted);
         whenReady = tick;
     }
+
+    /**
+     * Checks if the given information corresponds to this block's.
+     *
+     * @param tag The tag value to compare to.
+     * @param is_secure Whether secure bit is set.
+     */
+    virtual bool matchTag(Addr tag, bool is_secure) const;
 
     /**
      * Set member variables when a block insertion occurs. Resets reference
@@ -380,9 +401,8 @@ class CacheBlk : public ReplaceableEntry
           default:    s = 'T'; break; // @TODO add other types
         }
         return csprintf("state: %x (%c) valid: %d writable: %d readable: %d "
-                        "dirty: %d | tag: %#x %s", status, s,
-                        isValid(), isWritable(), isReadable(), isDirty(), tag,
-                        ReplaceableEntry::print());
+            "dirty: %d | tag: %#x %s", status, s, isValid(), isWritable(),
+            isReadable(), isDirty(), getTag(), ReplaceableEntry::print());
     }
 
     /**
@@ -431,6 +451,10 @@ class CacheBlk : public ReplaceableEntry
             return true;
         }
     }
+
+  private:
+    /** Data block tag value. */
+    Addr _tag;
 };
 
 /**

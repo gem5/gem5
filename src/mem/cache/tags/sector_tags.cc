@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Inria
+ * Copyright (c) 2018, 2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -209,8 +209,7 @@ SectorTags::findBlock(Addr addr, bool is_secure) const
     // Search for block
     for (const auto& sector : entries) {
         auto blk = static_cast<SectorBlk*>(sector)->blks[offset];
-        if (blk->getTag() == tag && blk->isValid() &&
-            blk->isSecure() == is_secure) {
+        if (blk->matchTag(tag, is_secure)) {
             return blk;
         }
     }
@@ -232,8 +231,7 @@ SectorTags::findVictim(Addr addr, const bool is_secure, const std::size_t size,
     SectorBlk* victim_sector = nullptr;
     for (const auto& sector : sector_entries) {
         SectorBlk* sector_blk = static_cast<SectorBlk*>(sector);
-        if ((tag == sector_blk->getTag()) && sector_blk->isValid() &&
-            (is_secure == sector_blk->isSecure())){
+        if (sector_blk->matchTag(tag, is_secure)) {
             victim_sector = sector_blk;
             break;
         }
@@ -251,8 +249,7 @@ SectorTags::findVictim(Addr addr, const bool is_secure, const std::size_t size,
 
     // Get evicted blocks. Blocks are only evicted if the sectors mismatch and
     // the currently existing sector is valid.
-    if ((tag == victim_sector->getTag()) &&
-        (is_secure == victim_sector->isSecure())){
+    if (victim_sector->matchTag(tag, is_secure)) {
         // It would be a hit if victim was valid, and upgrades do not call
         // findVictim, so it cannot happen
         assert(!victim->isValid());
@@ -282,7 +279,8 @@ SectorTags::regenerateBlkAddr(const CacheBlk* blk) const
 {
     const SectorSubBlk* blk_cast = static_cast<const SectorSubBlk*>(blk);
     const SectorBlk* sec_blk = blk_cast->getSectorBlock();
-    const Addr sec_addr = indexingPolicy->regenerateAddr(blk->tag, sec_blk);
+    const Addr sec_addr =
+        indexingPolicy->regenerateAddr(blk->getTag(), sec_blk);
     return sec_addr | ((Addr)blk_cast->getSectorOffset() << sectorShift);
 }
 

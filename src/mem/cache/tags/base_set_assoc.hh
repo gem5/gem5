@@ -226,7 +226,7 @@ class BaseSetAssoc : public BaseTags
      */
     Addr regenerateBlkAddr(const CacheBlk* blk) const override
     {
-        return indexingPolicy->regenerateAddr(blk->tag, blk);
+        return indexingPolicy->regenerateAddr(blk->getTag(), blk);
     }
 
     void forEachBlk(std::function<void(CacheBlk &)> visitor) override {

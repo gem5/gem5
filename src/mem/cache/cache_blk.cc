@@ -11,6 +11,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
+ * Copyright (c) 2020 Inria
  * Copyright (c) 2007 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -42,6 +43,12 @@
 
 #include "base/cprintf.hh"
 
+bool
+CacheBlk::matchTag(Addr tag, bool is_secure) const
+{
+    return isValid() && (getTag() == tag) && (isSecure() == is_secure);
+}
+
 void
 CacheBlk::insert(const Addr tag, const bool is_secure,
                  const int src_requestor_ID, const uint32_t task_ID)
@@ -50,7 +57,7 @@ CacheBlk::insert(const Addr tag, const bool is_secure,
     assert(status == 0);
 
     // Set block tag
-    this->tag = tag;
+    setTag(tag);
 
     // Set source requestor ID
     srcRequestorId = src_requestor_ID;

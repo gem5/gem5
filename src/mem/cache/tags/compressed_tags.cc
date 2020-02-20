@@ -115,8 +115,7 @@ CompressedTags::findVictim(Addr addr, const bool is_secure,
     const uint64_t offset = extractSectorOffset(addr);
     for (const auto& entry : superblock_entries){
         SuperBlk* superblock = static_cast<SuperBlk*>(entry);
-        if ((tag == superblock->getTag()) && superblock->isValid() &&
-            (is_secure == superblock->isSecure()) &&
+        if (superblock->matchTag(tag, is_secure) &&
             !superblock->blks[offset]->isValid() &&
             superblock->isCompressed() &&
             superblock->canCoAllocate(compressed_size))
