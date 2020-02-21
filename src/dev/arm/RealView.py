@@ -879,7 +879,7 @@ References:
 Memory map:
    0x00000000-0x03ffffff: Boot memory (CS0)
    0x04000000-0x07ffffff: Reserved
-   0x08000000-0x0bffffff: Reserved (CS0 alias)
+   0x08000000-0x0bffffff: NOR FLASH0 (CS0 alias)
    0x0c000000-0x0fffffff: Reserved (Off-chip, CS4)
    0x10000000-0x13ffffff: gem5-specific peripherals (Off-chip, CS5)
        0x10000000-0x1000ffff: gem5 energy controller
@@ -970,6 +970,10 @@ Interrupts:
     bootmem = SimpleMemory(range=AddrRange(0, size='64MB'),
                            conf_table_reported=False)
 
+    # NOR flash, flash0
+    flash0 = SimpleMemory(range=AddrRange(0x08000000, size='64MB'),
+                          conf_table_reported=False)
+
     # Platform control device (off-chip)
     realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000,
                                idreg=0x02250000, pio_addr=0x1c010000)
@@ -993,6 +997,7 @@ Interrupts:
     def _on_chip_memory(self):
         memories = [
             self.bootmem,
+            self.flash0,
         ]
         return memories
 
