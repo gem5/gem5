@@ -1775,7 +1775,7 @@ decode QUADRANT default Unknown::unknown() {
                             status.upie = 1;
                             xc->setMiscReg(MISCREG_STATUS, status);
                             NPC = xc->readMiscReg(MISCREG_UEPC);
-                        }}, IsReturn);
+                        }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
                     }
                     0x8: decode RS2 {
                         0x2: sret({{
@@ -1796,7 +1796,7 @@ decode QUADRANT default Unknown::unknown() {
                                 xc->setMiscReg(MISCREG_STATUS, status);
                                 NPC = xc->readMiscReg(MISCREG_SEPC);
                             }
-                        }}, IsReturn);
+                        }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
                         0x5: wfi({{
                             STATUS status = xc->readMiscReg(MISCREG_STATUS);
                             auto pm = (PrivilegeMode)xc->readMiscReg(
@@ -1835,7 +1835,7 @@ decode QUADRANT default Unknown::unknown() {
                             xc->setMiscReg(MISCREG_STATUS, status);
                             NPC = xc->readMiscReg(MISCREG_MEPC);
                         }
-                    }}, IsReturn);
+                    }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
                 }
             }
             format CSROp {
