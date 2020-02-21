@@ -46,6 +46,7 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
+#include "arch/x86/pseudo_inst_abi.hh"
 #include "arch/x86/regs/misc.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
@@ -63,7 +64,7 @@ namespace X86ISA
         if (m5opRange.contains(addr)) {
             uint8_t func;
             PseudoInst::decodeAddrOffset(addr - m5opRange.start(), func);
-            uint64_t ret = PseudoInst::pseudoInst<PseudoInstABI>(tc, func);
+            uint64_t ret = PseudoInst::pseudoInst<X86PseudoInstABI>(tc, func);
             pkt->setLE(ret);
         } else {
             Addr offset = addr & mask(3);
@@ -84,7 +85,7 @@ namespace X86ISA
         if (m5opRange.contains(addr)) {
             uint8_t func;
             PseudoInst::decodeAddrOffset(addr - m5opRange.start(), func);
-            PseudoInst::pseudoInst<PseudoInstABI>(tc, func);
+            PseudoInst::pseudoInst<X86PseudoInstABI>(tc, func);
         } else {
             Addr offset = addr & mask(3);
             MiscRegIndex index = (MiscRegIndex)(addr / sizeof(RegVal));
