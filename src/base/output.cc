@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2020 Barkhausen Institut
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -142,6 +143,11 @@ OutputDirectory::checkForStdio(const string &name)
 void
 OutputDirectory::close(OutputStream *file)
 {
+    if (file == &stdout || file == &stderr) {
+        file->stream()->flush();
+        return;
+    }
+
     auto i = files.find(file->name());
     if (i == files.end())
         fatal("Attempted to close an unregistred file stream");

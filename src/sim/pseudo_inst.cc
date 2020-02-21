@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2010-2012, 2015, 2017 ARM Limited
+ * Copyright (c) 2020 Barkhausen Institut
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -425,8 +426,10 @@ writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
     if (!os)
         panic("could not open file %s\n", filename);
 
-    // seek to offset
-    os->seekp(offset);
+    if (offset != 0) {
+        // seek to offset
+        os->seekp(offset);
+    }
 
     // copy out data and write to file
     char *buf = new char[len];
