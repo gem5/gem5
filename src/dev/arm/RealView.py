@@ -974,6 +974,10 @@ Interrupts:
     flash0 = SimpleMemory(range=AddrRange(0x08000000, size='64MB'),
                           conf_table_reported=False)
 
+    # Trusted SRAM
+    trusted_sram = SimpleMemory(range=AddrRange(0x04000000, size='256kB'),
+                                conf_table_reported=False)
+
     # Platform control device (off-chip)
     realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000,
                                idreg=0x02250000, pio_addr=0x1c010000)
@@ -997,6 +1001,7 @@ Interrupts:
     def _on_chip_memory(self):
         memories = [
             self.bootmem,
+            self.trusted_sram,
             self.flash0,
         ]
         return memories
