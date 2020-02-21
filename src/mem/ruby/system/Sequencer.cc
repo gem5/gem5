@@ -360,20 +360,22 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
             } else {
                 aliased_stores++;
             }
+            markRemoved();
+            ruby_request = false;
             hitCallback(&seq_req, data, success, mach, externalHit,
                         initialRequestTime, forwardRequestTime,
                         firstResponseTime);
         } else {
             // handle read request
             assert(!ruby_request);
+            markRemoved();
+            ruby_request = false;
             aliased_loads++;
             hitCallback(&seq_req, data, true, mach, externalHit,
                         initialRequestTime, forwardRequestTime,
                         firstResponseTime);
         }
         seq_req_list.pop_front();
-        markRemoved();
-        ruby_request = false;
     }
 
     // free all outstanding requests corresponding to this address
@@ -421,12 +423,12 @@ Sequencer::readCallback(Addr address, DataBlock& data,
                               initialRequestTime, forwardRequestTime,
                               firstResponseTime);
         }
+        markRemoved();
+        ruby_request = false;
         hitCallback(&seq_req, data, true, mach, externalHit,
                     initialRequestTime, forwardRequestTime,
                     firstResponseTime);
         seq_req_list.pop_front();
-        markRemoved();
-        ruby_request = false;
     }
 
     // free all outstanding requests corresponding to this address
