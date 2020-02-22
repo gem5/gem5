@@ -200,6 +200,9 @@ void ISA::clear()
                                   (1ULL << FS_OFFSET);
     miscRegFile[MISCREG_MCOUNTEREN] = 0x7;
     miscRegFile[MISCREG_SCOUNTEREN] = 0x7;
+    // don't set it to zero; software may try to determine the supported
+    // triggers, starting at zero. simply set a different value here.
+    miscRegFile[MISCREG_TSELECT] = 1;
 }
 
 bool
@@ -357,6 +360,13 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
                     new_val.mode != AddrXlateMode::SV39)
                     new_val.mode = cur_val.mode;
                 setMiscRegNoEffect(misc_reg, new_val);
+            }
+            break;
+          case MISCREG_TSELECT:
+            {
+                // we don't support debugging, so always set a different value
+                // than written
+                setMiscRegNoEffect(misc_reg, val + 1);
             }
             break;
           case MISCREG_ISA:
