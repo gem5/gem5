@@ -339,7 +339,10 @@ RubyPort::MemSlavePort::recvAtomic(PacketPtr pkt)
     RubySystem *rs = ruby_port->m_ruby_system;
     AbstractController *directory =
         rs->m_abstract_controls[id.getType()][id.getNum()];
-    return directory->recvAtomic(pkt);
+    Tick latency = directory->recvAtomic(pkt);
+    if (access_backing_store)
+        rs->getPhysMem()->access(pkt);
+    return latency;
 }
 
 void
