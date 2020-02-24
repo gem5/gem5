@@ -892,9 +892,9 @@ Memory map:
        0x1c060000-0x1c06ffff: KMI0 (keyboard)
        0x1c070000-0x1c07ffff: KMI1 (mouse)
        0x1c090000-0x1c09ffff: UART0
-       0x1c0a0000-0x1c0affff: UART1 (reserved)
-       0x1c0b0000-0x1c0bffff: UART2 (reserved)
-       0x1c0c0000-0x1c0cffff: UART3 (reserved)
+       0x1c0a0000-0x1c0affff: UART1
+       0x1c0b0000-0x1c0bffff: UART2
+       0x1c0c0000-0x1c0cffff: UART3
        0x1c0f0000-0x1c0fffff: Watchdog (SP805)
        0x1c130000-0x1c13ffff: VirtIO (gem5/FM extension)
        0x1c140000-0x1c14ffff: VirtIO (gem5/FM extension)
@@ -1020,6 +1020,9 @@ Interrupts:
 
     uart = [
         Pl011(pio_addr=0x1c090000, int_num=37),
+        Pl011(pio_addr=0x1c0a0000, int_num=38, device=Terminal()),
+        Pl011(pio_addr=0x1c0b0000, int_num=39, device=Terminal()),
+        Pl011(pio_addr=0x1c0c0000, int_num=40, device=Terminal())
     ]
 
     kmi0 = Pl050(pio_addr=0x1c060000, int_num=44, ps2=PS2Keyboard())
@@ -1047,7 +1050,6 @@ Interrupts:
     def _off_chip_devices(self):
         return [
             self.realview_io,
-            self.uart[0],
             self.kmi0,
             self.kmi1,
             self.watchdog,
@@ -1058,7 +1060,7 @@ Interrupts:
             self.clock24MHz,
             self.vio[0],
             self.vio[1],
-        ]
+        ] + self.uart
 
     def __init__(self, **kwargs):
         super(VExpress_GEM5_Base, self).__init__(**kwargs)
