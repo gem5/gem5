@@ -1433,7 +1433,8 @@ module_init(py::module &m_internal)
         for val in cls.vals:
             code('.value("${val}", ${wrapper_name}::${val})')
         code('.value("Num_${name}", ${wrapper_name}::Num_${enum_name})')
-        code('.export_values()')
+        if not cls.is_class:
+            code('.export_values()')
         code(';')
         code.dedent()
 
