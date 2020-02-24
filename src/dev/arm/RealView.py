@@ -901,6 +901,7 @@ Memory map:
        0x1c170000-0x1c17ffff: RTC
 
    0x20000000-0x3fffffff: On-chip peripherals:
+       0x2a490000-0x2a49ffff: Trusted Watchdog (SP805)
        0x2b000000-0x2b00ffff: HDLCD
 
        0x2b060000-0x2b060fff: System Watchdog (SP805)
@@ -944,6 +945,7 @@ Interrupts:
         46   : Reserved (CLCD)
         47   : Reserved (Ethernet)
         48   : Reserved (USB)
+        56   : Trusted Watchdog (SP805)
     95-255: On-chip interrupt sources (we use these for
             gem5-specific devices, SPIs)
          74    : VirtIO (gem5/FM extension)
@@ -985,6 +987,10 @@ Interrupts:
     dcc = CoreTile2A15DCC()
 
     ### On-chip devices ###
+
+    # Trusted Watchdog, SP805
+    trusted_watchdog = Sp805(pio_addr=0x2a490000, int_num=56)
+
     generic_timer = GenericTimer(int_phys_s=ArmPPI(num=29),
                                  int_phys_ns=ArmPPI(num=30),
                                  int_virt=ArmPPI(num=27),
@@ -995,6 +1001,7 @@ Interrupts:
     def _on_chip_devices(self):
         return [
             self.generic_timer,
+            self.trusted_watchdog,
             self.system_watchdog
         ]
 
