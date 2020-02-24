@@ -2,6 +2,7 @@
  * Copyright (c) 2016 RISC-V Foundation
  * Copyright (c) 2016 The University of Virginia
  * Copyright (c) 2018 TU Dresden
+ * Copyright (c) 2020 Barkhausen Institut
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +37,7 @@
 #include "arch/riscv/utility.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Fault.hh"
 #include "sim/debug.hh"
 #include "sim/full_system.hh"
 
@@ -52,6 +54,9 @@ void
 RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     PCState pcState = tc->pcState();
+
+    DPRINTFS(Fault, tc->getCpuPtr(), "Fault (%s) at PC: %s\n",
+             name(), pcState);
 
     if (FullSystem) {
         PrivilegeMode pp = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
