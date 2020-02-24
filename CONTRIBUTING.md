@@ -485,28 +485,30 @@ follows:
 
 1. Developers will be notified, via the gem5-dev mailing list, that a new
 release of gem5 will occur. This should be no sooner than 2 weeks prior to the
-expected release date. This gives time for developers to ensure their changes
-for the next release are submitted to the develop branch.
+creation of the staging branch (the first step in releasing a new version of
+gem5). This gives time for developers to ensure their changes for the next
+release are submitted to the develop branch.
 2. When a release is ready, a new staging branch shall be created by a project
-maintainer, from develop, with the name "release-staging-{VERSION}".
-The gem5-dev mailing list will be notified that, unless justifiable objections
-are made, the staging branch will be merged into the master branch within the
-next week, thus marking the new release.
+maintainer, from develop, with the name "release-staging-{VERSION}". The
+gem5-dev mailing list will be notified that the staging branch will be merged
+into the master branch after two weeks, thus marking the new release.
 3. The staging branch will have the full suite of gem5 tests run on it to
 ensure all tests pass and the to-be-released code is in a decent state.
-4. If reasonable concerns about the state of the staging branch are made by
-members of the gem5 community, then time shall be given for project
-contributors to rectify these concerns on the develop branch. After these
-changes have been incorporated, the develop branch will be re-merged into the
-staging branch. The staging branch will be re-evaluated via the tests, and the
-gem5 community informed of the changes with additional time given for more
-feedback on the new release.
+4. If a user submits a changeset to the staging branch, it will be considered
+and undergo the standard Gerrit review process. However, only alterations that
+cannot wait until the following release will be accepted for submission into
+the branch (i.e., submissions to the staging branch for "last minute"
+inclusions to the release should be of a high priority, such as a critical bug
+fix). The project maintainers will use their discretion in deciding whether a
+change may be submitted directly to the staging branch. All other submissions
+to gem5 will continue to be made to the develop branch. Patches submitted
+into the staging branch do not need to be re-added to the develop branch.
 5. Once signed off by members of the PMC the staging branch shall be merged
-into the master branch, and the staging branch deleted.
+into the master and develop branch. The staging branch will then be deleted.
 6. The master branch shall be tagged with the correct version number for that
 release. gem5 conforms to a "v{YY}.{MAJOR}.{MINOR}.{HOTFIX}" versioning system.
 E.g., the first major release of 2022 will be "v22.0.0.0", followed by
-"v22.1.0.0". All the releases (with the exemption hotfixes) are considered
+"v22.1.0.0". All the releases (with the exception of hotfixes) are considered
 major releases. For the meantime, there are no minor releases though we keep
 the minor release numbers in case this policy changes in the future.
 7. The gem5-dev and gem5-user mailing lists shall be notified of the new gem5

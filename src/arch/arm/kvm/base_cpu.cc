@@ -39,6 +39,7 @@
 
 #include <linux/kvm.h>
 
+#include "arch/arm/interrupts.hh"
 #include "debug/KvmInt.hh"
 #include "params/BaseArmKvmCPU.hh"
 
@@ -86,8 +87,9 @@ BaseArmKvmCPU::startup()
 Tick
 BaseArmKvmCPU::kvmRun(Tick ticks)
 {
-    const bool simFIQ(interrupts[0]->checkRaw(INT_FIQ));
-    const bool simIRQ(interrupts[0]->checkRaw(INT_IRQ));
+    auto interrupt = static_cast<ArmISA::Interrupts *>(interrupts[0]);
+    const bool simFIQ(interrupt->checkRaw(INT_FIQ));
+    const bool simIRQ(interrupt->checkRaw(INT_IRQ));
 
     if (!vm.hasKernelIRQChip()) {
         if (fiqAsserted != simFIQ) {

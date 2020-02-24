@@ -3703,8 +3703,9 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_HTPIDR)
       .hyp().monNonSecure();
     InitReg(MISCREG_CNTFRQ)
-      .unverifiable()
-      .reads(1).mon();
+      .reads(1)
+      .highest(system)
+      .privSecureWrite(aarch32EL3);
     InitReg(MISCREG_CNTKCTL)
       .allPrivileges().exceptUserMode();
     InitReg(MISCREG_CNTP_TVAL)
@@ -4449,7 +4450,9 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_CNTKCTL);
     InitReg(MISCREG_CNTFRQ_EL0)
-      .reads(1).mon()
+      .reads(1)
+      .highest(system)
+      .privSecureWrite(aarch32EL3)
       .mapsTo(MISCREG_CNTFRQ);
     InitReg(MISCREG_CNTPCT_EL0)
       .reads(1)
