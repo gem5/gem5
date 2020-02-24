@@ -150,11 +150,26 @@ class CPUList(ObjectList):
                     self._is_obj_class):
                     self._sub_classes[name] = cls
 
+class EnumList(ObjectList):
+    """ Creates a list of possible values for a given enum class. """
+
+    def _add_objects(self):
+        """ Add all enum values to the ObjectList """
+        self._sub_classes = {}
+        for (key, value) in self.base_cls.__members__.items():
+            # All Enums have a value Num_NAME at the end which we
+            # do not want to include
+            if not key.startswith("Num_"):
+                self._sub_classes[key] = value
+
+
 bp_list = ObjectList(getattr(m5.objects, 'BranchPredictor', None))
 cpu_list = CPUList(getattr(m5.objects, 'BaseCPU', None))
 hwp_list = ObjectList(getattr(m5.objects, 'BasePrefetcher', None))
 indirect_bp_list = ObjectList(getattr(m5.objects, 'IndirectPredictor', None))
 mem_list = ObjectList(getattr(m5.objects, 'AbstractMemory', None))
+dram_addr_map_list = EnumList(getattr(m5.internal.params, 'enum_AddrMap',
+                                      None))
 
 # Platform aliases. The platforms listed here might not be compiled,
 # we make sure they exist before we add them to the platform list.
