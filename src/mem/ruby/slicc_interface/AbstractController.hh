@@ -153,6 +153,13 @@ class AbstractController : public ClockedObject, public Consumer
     Stats::Histogram& getDelayVCHist(uint32_t index)
     { return *(m_delayVCHistogram[index]); }
 
+    bool respondsTo(Addr addr)
+    {
+        for (auto &range: addrRanges)
+            if (range.contains(addr)) return true;
+        return false;
+    }
+
     /**
      * Map an address to the correct MachineID
      *
