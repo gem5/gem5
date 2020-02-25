@@ -33,7 +33,7 @@ gem5_verify_config(
     verifiers = (),
     config=joinpath(config_path, 'simple.py'),
     config_args = [],
-    valid_isas=('X86', 'RISCV', 'ARM'),
+    valid_isas=('X86', 'RISCV', 'ARM', 'MIPS'),
 )
 
 gem5_verify_config(
@@ -41,6 +41,6 @@ gem5_verify_config(
     verifiers = (),
     config=joinpath(config_path, 'two_level.py'),
     config_args = [],
-    valid_isas=('X86', 'RISCV', 'ARM'),
+    valid_isas=('X86', 'RISCV', 'ARM', 'MIPS'),
 )
 
