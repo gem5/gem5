@@ -397,17 +397,17 @@ ELUsingAArch32K(ThreadContext *tc, ExceptionLevel el)
 }
 
 bool
-isBigEndian64(ThreadContext *tc)
+isBigEndian64(const ThreadContext *tc)
 {
     switch (currEL(tc)) {
       case EL3:
-        return ((SCTLR) tc->readMiscReg(MISCREG_SCTLR_EL3)).ee;
+        return ((SCTLR) tc->readMiscRegNoEffect(MISCREG_SCTLR_EL3)).ee;
       case EL2:
-        return ((SCTLR) tc->readMiscReg(MISCREG_SCTLR_EL2)).ee;
+        return ((SCTLR) tc->readMiscRegNoEffect(MISCREG_SCTLR_EL2)).ee;
       case EL1:
-        return ((SCTLR) tc->readMiscReg(MISCREG_SCTLR_EL1)).ee;
+        return ((SCTLR) tc->readMiscRegNoEffect(MISCREG_SCTLR_EL1)).ee;
       case EL0:
-        return ((SCTLR) tc->readMiscReg(MISCREG_SCTLR_EL1)).e0e;
+        return ((SCTLR) tc->readMiscRegNoEffect(MISCREG_SCTLR_EL1)).e0e;
       default:
         panic("Invalid exception level");
         break;

@@ -131,14 +131,14 @@ inPrivilegedMode(ThreadContext *tc)
 bool inAArch64(ThreadContext *tc);
 
 static inline OperatingMode
-currOpMode(ThreadContext *tc)
+currOpMode(const ThreadContext *tc)
 {
-    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
     return (OperatingMode) (uint8_t) cpsr.mode;
 }
 
 static inline ExceptionLevel
-currEL(ThreadContext *tc)
+currEL(const ThreadContext *tc)
 {
     return opModeToEL(currOpMode(tc));
 }
@@ -182,7 +182,7 @@ bool ELIs64(ThreadContext *tc, ExceptionLevel el);
  */
 bool ELIsInHost(ThreadContext *tc, ExceptionLevel el);
 
-bool isBigEndian64(ThreadContext *tc);
+bool isBigEndian64(const ThreadContext *tc);
 
 /**
  * badMode is checking if the execution mode provided as an argument is
@@ -368,7 +368,7 @@ int decodePhysAddrRange64(uint8_t pa_enc);
  */
 uint8_t encodePhysAddrRange64(int pa_size);
 
-inline ByteOrder byteOrder(ThreadContext *tc)
+inline ByteOrder byteOrder(const ThreadContext *tc)
 {
     return isBigEndian64(tc) ? BigEndianByteOrder : LittleEndianByteOrder;
 };
