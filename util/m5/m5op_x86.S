@@ -28,6 +28,14 @@
 
 #include <gem5/asm/generic/m5ops.h>
 
+/*
+  Note: The ABI for pseudo ops using the M5OP_ADDR is defined in
+  src/arch/x86/pseudo_inst_abi.hh. If the ABI is changed below, it's likely
+  that the ABI in the arch directory will also need to be updated.
+
+  The ABI for the magic instruction-based pseudo ops is not affected by this.
+*/
+
 #if defined(M5OP_ADDR) && defined(M5OP_PIC)
 /* Use the memory mapped m5op interface */
 #define TWO_BYTE_OP(name, number)         \
