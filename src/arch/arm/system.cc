@@ -179,20 +179,16 @@ ArmSystem::haveSemihosting(ThreadContext *tc)
     return FullSystem && getArmSystem(tc)->haveSemihosting();
 }
 
-uint64_t
-ArmSystem::callSemihosting64(ThreadContext *tc,
-                             uint32_t op, uint64_t param)
+void
+ArmSystem::callSemihosting64(ThreadContext *tc)
 {
-    ArmSystem *sys = getArmSystem(tc);
-    return sys->semihosting->call64(tc, op, param);
+    getArmSystem(tc)->semihosting->call64(tc);
 }
 
-uint32_t
-ArmSystem::callSemihosting32(ThreadContext *tc,
-                             uint32_t op, uint32_t param)
+void
+ArmSystem::callSemihosting32(ThreadContext *tc)
 {
-    ArmSystem *sys = getArmSystem(tc);
-    return sys->semihosting->call32(tc, op, param);
+    getArmSystem(tc)->semihosting->call32(tc);
 }
 
 void

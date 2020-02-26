@@ -314,12 +314,10 @@ class ArmSystem : public System
     static bool haveSemihosting(ThreadContext *tc);
 
     /** Make a Semihosting call from aarch64 */
-    static uint64_t callSemihosting64(ThreadContext *tc,
-                                      uint32_t op, uint64_t param);
+    static void callSemihosting64(ThreadContext *tc);
 
     /** Make a Semihosting call from aarch32 */
-    static uint32_t callSemihosting32(ThreadContext *tc,
-                                      uint32_t op, uint32_t param);
+    static void callSemihosting32(ThreadContext *tc);
 
     /** Make a call to notify the power controller of STANDBYWFI assertion */
     static void callSetStandByWfi(ThreadContext *tc);
