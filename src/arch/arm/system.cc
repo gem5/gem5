@@ -183,9 +183,8 @@ ArmSystem::initState()
 ArmSystem*
 ArmSystem::getArmSystem(ThreadContext *tc)
 {
-    ArmSystem *a_sys = dynamic_cast<ArmSystem *>(tc->getSystemPtr());
-    assert(a_sys);
-    return a_sys;
+    assert(FullSystem);
+    return static_cast<ArmSystem *>(tc->getSystemPtr());
 }
 
 bool
