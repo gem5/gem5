@@ -48,6 +48,7 @@
 #include "mem/secure_port_proxy.hh"
 #include "params/ArmSemihosting.hh"
 #include "sim/byteswap.hh"
+#include "sim/pseudo_inst.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
@@ -83,6 +84,9 @@ const std::map<uint32_t, ArmSemihosting::SemiCall> ArmSemihosting::calls{
     { SYS_ELAPSED,  { "SYS_ELAPSED", &ArmSemihosting::callElapsed32,
                                      &ArmSemihosting::callElapsed64 } },
     { SYS_TICKFREQ, { "SYS_TICKFREQ", &ArmSemihosting::callTickFreq } },
+    { SYS_GEM5_PSEUDO_OP,
+        { "SYS_GEM5_PSEUDO_OP", &ArmSemihosting::callGem5PseudoOp32,
+                                &ArmSemihosting::callGem5PseudoOp64 } },
 };
 
 const std::vector<const char *> ArmSemihosting::fmodes{
@@ -651,6 +655,87 @@ ArmSemihosting::RetErrno
 ArmSemihosting::callTickFreq(ThreadContext *tc)
 {
     return retOK(semiTick(SimClock::Frequency));
+}
+
+
+struct SemiPseudoAbi32 : public ArmSemihosting::Abi32
+{
+    class State : public ArmSemihosting::Abi32::State
+    {
+      public:
+        State(const ThreadContext *tc) : ArmSemihosting::Abi32::State(tc)
+        {
+            // Use getAddr() to skip the func number in the first slot.
+            getAddr();
+        }
+    };
+};
+
+struct SemiPseudoAbi64 : public ArmSemihosting::Abi64
+{
+    class State : public ArmSemihosting::Abi64::State
+    {
+      public:
+        State(const ThreadContext *tc) : ArmSemihosting::Abi64::State(tc)
+        {
+            // Use getAddr() to skip the func number in the first slot.
+            getAddr();
+        }
+    };
+};
+
+namespace GuestABI
+{
+
+// Ignore return values since those will be handled by semihosting.
+template <typename T>
+struct Result<SemiPseudoAbi32, T>
+{
+    static void store(ThreadContext *tc, const T &ret) {}
+};
+template <typename T>
+struct Result<SemiPseudoAbi64, T>
+{
+    static void store(ThreadContext *tc, const T &ret) {}
+};
+
+// Handle arguments the same as for semihosting operations. Skipping the first
+// slot is handled internally by the State type.
+template <typename T>
+struct Argument<SemiPseudoAbi32, T> :
+    public Argument<ArmSemihosting::Abi32, T>
+{};
+template <typename T>
+struct Argument<SemiPseudoAbi64, T> :
+    public Argument<ArmSemihosting::Abi64, T>
+{};
+
+} // namespace GuestABI
+
+ArmSemihosting::RetErrno
+ArmSemihosting::callGem5PseudoOp32(ThreadContext *tc, uint32_t encoded_func)
+{
+    uint8_t func;
+    PseudoInst::decodeAddrOffset(encoded_func, func);
+
+    uint64_t ret;
+    if (PseudoInst::pseudoInst<SemiPseudoAbi32>(tc, func, ret))
+        return retOK(ret);
+    else
+        return retError(EINVAL);
+}
+
+ArmSemihosting::RetErrno
+ArmSemihosting::callGem5PseudoOp64(ThreadContext *tc, uint64_t encoded_func)
+{
+    uint8_t func;
+    PseudoInst::decodeAddrOffset(encoded_func, func);
+
+    uint64_t ret;
+    if (PseudoInst::pseudoInst<SemiPseudoAbi64>(tc, func, ret))
+        return retOK(ret);
+    else
+        return retError(EINVAL);
 }
 
 FILE *

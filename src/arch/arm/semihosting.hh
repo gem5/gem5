@@ -208,7 +208,9 @@ class ArmSemihosting : public SimObject
         SYS_ELAPSED = 0x30,
         SYS_TICKFREQ = 0x31,
 
-        MaxStandardOp = 0xFF
+        MaxStandardOp = 0xFF,
+
+        SYS_GEM5_PSEUDO_OP = 0x100
     };
 
     ArmSemihosting(const ArmSemihostingParams *p);
@@ -546,6 +548,9 @@ class ArmSemihosting : public SimObject
     RetErrno callElapsed32(ThreadContext *tc, InPlaceArg low, InPlaceArg high);
     RetErrno callElapsed64(ThreadContext *tc, InPlaceArg ticks);
     RetErrno callTickFreq(ThreadContext *tc);
+
+    RetErrno callGem5PseudoOp32(ThreadContext *tc, uint32_t encoded_func);
+    RetErrno callGem5PseudoOp64(ThreadContext *tc, uint64_t encoded_func);
 
     template <typename Abi>
     void
