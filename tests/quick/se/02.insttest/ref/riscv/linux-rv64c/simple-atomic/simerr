@@ -1,5 +1,0 @@
-warn: Sockets disabled, not accepting gdb connections
-info: Entering event queue @ 0.  Starting simulation...
-warn: readlink() called on '/proc/self/exe' may yield unexpected results in various settings.
-      Returning '/home/ar4jc/gem5/tests/test-progs/insttest/bin/riscv/linux-rv64c/insttest'
-info: Increasing stack size by one page.
