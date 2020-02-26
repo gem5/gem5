@@ -154,9 +154,14 @@ ArmSemihosting::ArmSemihosting(const ArmSemihostingParams *p)
 }
 
 void
-ArmSemihosting::call64(ThreadContext *tc)
+ArmSemihosting::call64(ThreadContext *tc, bool gem5_ops)
 {
     RegVal op = tc->readIntReg(ArmISA::INTREG_X0 & mask(32));
+    if (op > MaxStandardOp && !gem5_ops) {
+        unrecognizedCall<Abi64>(
+                tc, "Gem5 semihosting op (0x%x) disabled from here.", op);
+        return;
+    }
 
     auto it = calls.find(op);
     if (it == calls.end()) {
@@ -173,9 +178,14 @@ ArmSemihosting::call64(ThreadContext *tc)
 }
 
 void
-ArmSemihosting::call32(ThreadContext *tc)
+ArmSemihosting::call32(ThreadContext *tc, bool gem5_ops)
 {
     RegVal op = tc->readIntReg(ArmISA::INTREG_R0);
+    if (op > MaxStandardOp && !gem5_ops) {
+        unrecognizedCall<Abi32>(
+                tc, "Gem5 semihosting op (0x%x) disabled from here.", op);
+        return;
+    }
 
     auto it = calls.find(op);
     if (it == calls.end()) {
