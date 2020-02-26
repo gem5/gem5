@@ -52,37 +52,39 @@
 #include "sim/system.hh"
 
 const std::map<uint32_t, ArmSemihosting::SemiCall> ArmSemihosting::calls{
-    { 0x01, { "SYS_OPEN", &ArmSemihosting::callOpen, 3, 3 } },
-    { 0x02, { "SYS_CLOSE", &ArmSemihosting::callClose, 1, 1 } },
+    { SYS_OPEN,     { "SYS_OPEN", &ArmSemihosting::callOpen, 3, 3 } },
+    { SYS_CLOSE,    { "SYS_CLOSE", &ArmSemihosting::callClose, 1, 1 } },
 
     // Write(C|0) are special since we want to read the character
     // manually. We therefore declare them as having 0 params.
-    { 0x03, { "SYS_WRITEC", &ArmSemihosting::callWriteC, 0, 0 } },
-    { 0x04, { "SYS_WRITE0", &ArmSemihosting::callWrite0, 1, 1 } },
+    { SYS_WRITEC,   { "SYS_WRITEC", &ArmSemihosting::callWriteC, 0, 0 } },
+    { SYS_WRITE0,   { "SYS_WRITE0", &ArmSemihosting::callWrite0, 1, 1 } },
 
-    { 0x05, { "SYS_WRITE", &ArmSemihosting::callWrite, 3, 3 } },
-    { 0x06, { "SYS_READ", &ArmSemihosting::callRead, 3, 3 } },
-    { 0x07, { "SYS_READC", &ArmSemihosting::callReadC, 0, 0 } },
-    { 0x08, { "SYS_ISERROR", &ArmSemihosting::callIsError, 1, 1 } },
-    { 0x09, { "SYS_ISTTY", &ArmSemihosting::callIsTTY, 1, 1 } },
-    { 0x0A, { "SYS_SEEK", &ArmSemihosting::callSeek, 2, 2 } },
-    { 0x0C, { "SYS_FLEN", &ArmSemihosting::callFLen, 1, 1 } },
-    { 0x0D, { "SYS_TMPNAM", &ArmSemihosting::callTmpNam, 3, 3 } },
-    { 0x0E, { "SYS_REMOVE", &ArmSemihosting::callRemove, 2, 2} },
-    { 0x0F, { "SYS_RENAME", &ArmSemihosting::callRename, 4, 4} },
-    { 0x10, { "SYS_CLOCK", &ArmSemihosting::callClock, 0, 0} },
-    { 0x11, { "SYS_TIME", &ArmSemihosting::callTime, 0, 0} },
-    { 0x12, { "SYS_SYSTEM", &ArmSemihosting::callSystem, 2, 2} },
-    { 0x13, { "SYS_ERRNO", &ArmSemihosting::callErrno, 0, 0 } },
-    { 0x15, { "SYS_GET_CMDLINE", &ArmSemihosting::callGetCmdLine, 2, 2} },
-    { 0x16, { "SYS_HEAPINFO", &ArmSemihosting::callHeapInfo, 1, 1} },
+    { SYS_WRITE,    { "SYS_WRITE", &ArmSemihosting::callWrite, 3, 3 } },
+    { SYS_READ,     { "SYS_READ", &ArmSemihosting::callRead, 3, 3 } },
+    { SYS_READC,    { "SYS_READC", &ArmSemihosting::callReadC, 0, 0 } },
+    { SYS_ISERROR,  { "SYS_ISERROR", &ArmSemihosting::callIsError, 1, 1 } },
+    { SYS_ISTTY,    { "SYS_ISTTY", &ArmSemihosting::callIsTTY, 1, 1 } },
+    { SYS_SEEK,     { "SYS_SEEK", &ArmSemihosting::callSeek, 2, 2 } },
+    { SYS_FLEN,     { "SYS_FLEN", &ArmSemihosting::callFLen, 1, 1 } },
+    { SYS_TMPNAM,   { "SYS_TMPNAM", &ArmSemihosting::callTmpNam, 3, 3 } },
+    { SYS_REMOVE,   { "SYS_REMOVE", &ArmSemihosting::callRemove, 2, 2} },
+    { SYS_RENAME,   { "SYS_RENAME", &ArmSemihosting::callRename, 4, 4} },
+    { SYS_CLOCK,    { "SYS_CLOCK", &ArmSemihosting::callClock, 0, 0} },
+    { SYS_TIME,     { "SYS_TIME", &ArmSemihosting::callTime, 0, 0} },
+    { SYS_SYSTEM,   { "SYS_SYSTEM", &ArmSemihosting::callSystem, 2, 2} },
+    { SYS_ERRNO,    { "SYS_ERRNO", &ArmSemihosting::callErrno, 0, 0 } },
+    { SYS_GET_CMDLINE,
+        { "SYS_GET_CMDLINE", &ArmSemihosting::callGetCmdLine, 2, 2} },
+    { SYS_HEAPINFO, { "SYS_HEAPINFO", &ArmSemihosting::callHeapInfo, 1, 1} },
 
     // Exit is special and requires custom handling in aarch32.
-    { 0x18, { "SYS_EXIT", &ArmSemihosting::callExit, 0, 2 } },
-    { 0x20, { "SYS_EXIT_EXTENDED", &ArmSemihosting::callExitExtended, 2, 2 } },
+    { SYS_EXIT,     { "SYS_EXIT", &ArmSemihosting::callExit, 0, 2 } },
+    { SYS_EXIT_EXTENDED,
+        { "SYS_EXIT_EXTENDED", &ArmSemihosting::callExitExtended, 2, 2 } },
 
-    { 0x30, { "SYS_ELAPSED", &ArmSemihosting::callElapsed, 0, 0 } },
-    { 0x31, { "SYS_TICKFREQ", &ArmSemihosting::callTickFreq, 0, 0 } },
+    { SYS_ELAPSED,  { "SYS_ELAPSED", &ArmSemihosting::callElapsed, 0, 0 } },
+    { SYS_TICKFREQ, { "SYS_TICKFREQ", &ArmSemihosting::callTickFreq, 0, 0 } },
 };
 
 const std::vector<const char *> ArmSemihosting::fmodes{
