@@ -464,7 +464,7 @@ class DictionaryCompressor<T>::MaskedPattern
         const DictionaryEntry bytes,
         const bool allocate = true)
       : DictionaryCompressor<T>::Pattern(number, code, metadata_length,
-            popCount(~mask), match_location, allocate),
+            popCount(static_cast<T>(~mask)), match_location, allocate),
         bits(DictionaryCompressor<T>::fromDictionaryEntry(bytes) & ~mask)
     {
     }
