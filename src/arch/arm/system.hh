@@ -271,13 +271,6 @@ class ArmSystem : public System
     bool haveSemihosting() const { return semihosting != nullptr; }
 
     /**
-     * Casts the provided System object into a valid ArmSystem, it fails
-     * otherwise.
-     * @param sys System object to cast
-     */
-    static ArmSystem *getArmSystem(System *sys);
-
-    /**
      * Returns a valid ArmSystem pointer if using ARM ISA, it fails
      * otherwise.
      */
