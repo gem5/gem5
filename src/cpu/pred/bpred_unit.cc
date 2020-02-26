@@ -263,6 +263,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                     DPRINTF(Branch, "[tid:%i] [sn:%llu] BTB doesn't have a "
                             "valid entry\n",tid,seqNum);
                     pred_taken = false;
+                    predict_record.predTaken = pred_taken;
                     // The Direction of the branch predictor is altered
                     // because the BTB did not have an entry
                     // The predictor needs to be updated accordingly
@@ -293,6 +294,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                 } else {
                     ++indirectMisses;
                     pred_taken = false;
+                    predict_record.predTaken = pred_taken;
                     DPRINTF(Branch,
                             "[tid:%i] [sn:%llu] "
                             "Instruction %s no indirect "
