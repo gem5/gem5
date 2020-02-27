@@ -191,6 +191,15 @@ ArmSystem::callSemihosting32(ThreadContext *tc, bool gem5_ops)
     return getArmSystem(tc)->semihosting->call32(tc, gem5_ops);
 }
 
+bool
+ArmSystem::callSemihosting(ThreadContext *tc, bool gem5_ops)
+{
+    if (ArmISA::inAArch64(tc))
+        return callSemihosting64(tc, gem5_ops);
+    else
+        return callSemihosting32(tc, gem5_ops);
+}
+
 void
 ArmSystem::callSetStandByWfi(ThreadContext *tc)
 {

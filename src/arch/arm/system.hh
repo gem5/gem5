@@ -319,6 +319,9 @@ class ArmSystem : public System
     /** Make a Semihosting call from aarch32 */
     static bool callSemihosting32(ThreadContext *tc, bool gem5_ops=false);
 
+    /** Make a Semihosting call from either aarch64 or aarch32 */
+    static bool callSemihosting(ThreadContext *tc, bool gem5_ops=false);
+
     /** Make a call to notify the power controller of STANDBYWFI assertion */
     static void callSetStandByWfi(ThreadContext *tc);
 
