@@ -194,8 +194,9 @@ for scale in cachespec[:-1]:
      cache_proto.insert(0, next)
 
 # Create a config to be used by all the traffic generators
-cfg_file_name = "configs/example/memcheck.cfg"
-cfg_file = open(cfg_file_name, 'w')
+cfg_file_name = "memcheck.cfg"
+cfg_file_path = os.path.dirname(__file__) + "/" +cfg_file_name
+cfg_file = open(cfg_file_path, 'w')
 
 # Three states, with random, linear and idle behaviours. The random
 # and linear states access memory in the range [0 : 16 Mbyte] with 8
@@ -213,7 +214,7 @@ cfg_file.write("TRANSITION 2 1 0.5\n")
 cfg_file.close()
 
 # Make a prototype for the tester to be used throughout
-proto_tester = TrafficGen(config_file = cfg_file_name)
+proto_tester = TrafficGen(config_file = cfg_file_path)
 
 # Set up the system along with a DRAM controller
 system = System(physmem = DDR3_1600_8x8())
