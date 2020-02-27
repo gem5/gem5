@@ -36,7 +36,7 @@ GoodbyeObject::GoodbyeObject(GoodbyeObjectParams *params) :
     bandwidth(params->write_bandwidth), bufferSize(params->buffer_size),
     buffer(nullptr), bufferUsed(0)
 {
-    buffer = new char[bufferSize];
+    buffer = new char[bufferSize]();
     DPRINTF(HelloExample, "Created the goodbye object\n");
 }
 
