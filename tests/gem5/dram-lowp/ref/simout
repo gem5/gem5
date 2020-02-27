@@ -1,0 +1,14 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+
+Global frequency set at 1000000000000 ticks per second
+--- Done DRAM low power sweep ---
+Fixed params - 
+	burst: 64, banks: 16, max stride: 512, itt min: 3332.0 ns
+Swept params - 
+	itt max multiples input: [1, 20, 100]
+	itt max values [46993.0, 939860.0, 4699300.0]
+	bank utilization values [1, 8, 16]
+	stride values: [64, 256, 512]
+Traffic gen config file: lowp_sweep.cfg

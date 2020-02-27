@@ -127,8 +127,9 @@ system.mem_ctrls[0].page_policy = args.page_policy
 period = 250000000
 
 # We specify the states in a config file input to the traffic generator.
-cfg_file_name = "configs/dram/lowp_sweep.cfg"
-cfg_file = open(cfg_file_name, 'w')
+cfg_file_name = "lowp_sweep.cfg"
+cfg_file_path = os.path.dirname(__file__) + "/" +cfg_file_name
+cfg_file = open(cfg_file_path, 'w')
 
 # Get the number of banks
 nbr_banks = int(system.mem_ctrls[0].banks_per_rank.value)
@@ -214,7 +215,7 @@ cfg_file.write("TRANSITION %d %d 1\n" % (nxt_state, nxt_state))
 cfg_file.close()
 
 # create a traffic generator, and point it to the file we just created
-system.tgen = TrafficGen(config_file = cfg_file_name)
+system.tgen = TrafficGen(config_file = cfg_file_path)
 
 # add a communication monitor
 system.monitor = CommMonitor()
