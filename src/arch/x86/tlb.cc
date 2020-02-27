@@ -265,8 +265,8 @@ TLB::finalizePhysical(const RequestPtr &req,
         req->setLocalAccessor(
             [func, mode](ThreadContext *tc, PacketPtr pkt) -> Cycles
             {
-                uint64_t ret =
-                    PseudoInst::pseudoInst<X86PseudoInstABI>(tc, func);
+                uint64_t ret;
+                PseudoInst::pseudoInst<X86PseudoInstABI>(tc, func, ret);
                 if (mode == Read)
                     pkt->setLE(ret);
                 return Cycles(1);
