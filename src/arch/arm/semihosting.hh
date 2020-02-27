@@ -214,9 +214,9 @@ class ArmSemihosting : public SimObject
     ArmSemihosting(const ArmSemihostingParams *p);
 
     /** Perform an Arm Semihosting call from aarch64 code. */
-    void call64(ThreadContext *tc, bool gem5_ops);
+    bool call64(ThreadContext *tc, bool gem5_ops);
     /** Perform an Arm Semihosting call from aarch32 code. */
-    void call32(ThreadContext *tc, bool gem5_ops);
+    bool call32(ThreadContext *tc, bool gem5_ops);
 
   public: // SimObject and related interfaces
     void serialize(CheckpointOut &cp) const override;

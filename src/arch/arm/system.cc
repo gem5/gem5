@@ -179,16 +179,16 @@ ArmSystem::haveSemihosting(ThreadContext *tc)
     return FullSystem && getArmSystem(tc)->haveSemihosting();
 }
 
-void
+bool
 ArmSystem::callSemihosting64(ThreadContext *tc, bool gem5_ops)
 {
-    getArmSystem(tc)->semihosting->call64(tc, gem5_ops);
+    return getArmSystem(tc)->semihosting->call64(tc, gem5_ops);
 }
 
-void
+bool
 ArmSystem::callSemihosting32(ThreadContext *tc, bool gem5_ops)
 {
-    getArmSystem(tc)->semihosting->call32(tc, gem5_ops);
+    return getArmSystem(tc)->semihosting->call32(tc, gem5_ops);
 }
 
 void

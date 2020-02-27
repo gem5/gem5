@@ -153,21 +153,21 @@ ArmSemihosting::ArmSemihosting(const ArmSemihostingParams *p)
                tickShift);
 }
 
-void
+bool
 ArmSemihosting::call64(ThreadContext *tc, bool gem5_ops)
 {
     RegVal op = tc->readIntReg(ArmISA::INTREG_X0 & mask(32));
     if (op > MaxStandardOp && !gem5_ops) {
         unrecognizedCall<Abi64>(
                 tc, "Gem5 semihosting op (0x%x) disabled from here.", op);
-        return;
+        return false;
     }
 
     auto it = calls.find(op);
     if (it == calls.end()) {
         unrecognizedCall<Abi64>(
                 tc, "Unknown aarch64 semihosting call: op = 0x%x", op);
-        return;
+        return false;
     }
     const SemiCall &call = it->second;
 
@@ -175,23 +175,25 @@ ArmSemihosting::call64(ThreadContext *tc, bool gem5_ops)
     auto err = call.call64(this, tc);
     semiErrno = err.second;
     DPRINTF(Semihosting, "\t ->: 0x%x, %i\n", err.first, err.second);
+
+    return true;
 }
 
-void
+bool
 ArmSemihosting::call32(ThreadContext *tc, bool gem5_ops)
 {
     RegVal op = tc->readIntReg(ArmISA::INTREG_R0);
     if (op > MaxStandardOp && !gem5_ops) {
         unrecognizedCall<Abi32>(
                 tc, "Gem5 semihosting op (0x%x) disabled from here.", op);
-        return;
+        return false;
     }
 
     auto it = calls.find(op);
     if (it == calls.end()) {
         unrecognizedCall<Abi32>(
                 tc, "Unknown aarch32 semihosting call: op = 0x%x", op);
-        return;
+        return false;
     }
     const SemiCall &call = it->second;
 
@@ -199,6 +201,8 @@ ArmSemihosting::call32(ThreadContext *tc, bool gem5_ops)
     auto err = call.call32(this, tc);
     semiErrno = err.second;
     DPRINTF(Semihosting, "\t ->: 0x%x, %i\n", err.first, err.second);
+
+    return true;
 }
 
 void
