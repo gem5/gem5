@@ -98,17 +98,16 @@ class Grammar(object):
             raise AttributeError(
                 "argument must be a string, was '%s'" % type(f))
 
-        import new
         lexer = self.lex.clone()
         lexer.input(data)
         self.lexers.append((lexer, source))
-        dict = {
-            'productions' : self.yacc.productions,
-            'action'      : self.yacc.action,
-            'goto'        : self.yacc.goto,
-            'errorfunc'   : self.yacc.errorfunc,
-            }
-        parser = new.instance(ply.yacc.LRParser, dict)
+
+        lrtab = ply.yacc.LRTable()
+        lrtab.lr_productions = self.yacc.productions
+        lrtab.lr_action = self.yacc.action
+        lrtab.lr_goto = self.yacc.goto
+
+        parser = ply.yacc.LRParser(lrtab, self.yacc.errorfunc)
         result = parser.parse(lexer=lexer, debug=debug, tracking=tracking)
         self.lexers.pop()
         return result
