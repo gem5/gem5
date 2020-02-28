@@ -156,14 +156,14 @@ class SourceFile(object):
     def __init__(self, source, tags=None, add_tags=None, append=None):
         if tags is None:
             tags='gem5 lib'
-        if isinstance(tags, basestring):
+        if isinstance(tags, six.string_types):
             tags = set([tags])
         if not isinstance(tags, set):
             tags = set(tags)
         self.tags = tags
 
         if add_tags:
-            if isinstance(add_tags, basestring):
+            if isinstance(add_tags, six.string_types):
                 add_tags = set([add_tags])
             if not isinstance(add_tags, set):
                 add_tags = set(add_tags)
