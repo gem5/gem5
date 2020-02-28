@@ -73,7 +73,7 @@ def LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
 
     if mem_flags:
         mem_flags = [ 'Request::%s' % flag for flag in mem_flags ]
-        s = '\n\tmemAccessFlags = ' + string.join(mem_flags, '|') + ';'
+        s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
         iop.constructor += s
 
     # select templates

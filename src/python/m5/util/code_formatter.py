@@ -35,7 +35,6 @@ except ImportError:
 import inspect
 import os
 import re
-import string
 
 class lookup(object):
     def __init__(self, formatter, frame, *args, **kwargs):
@@ -164,7 +163,7 @@ class code_formatter(object):
         f.close()
 
     def __str__(self):
-        data = string.join(self._data, '')
+        data = ''.join(self._data)
         self._data = [ data ]
         return data
 

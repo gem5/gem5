@@ -57,7 +57,7 @@ let {{
             # This shouldn't be part of the eaCode, but until the exec templates
             # are converted over it's the easiest place to put it.
             eaCode += '\n    unsigned memAccessFlags = '
-            eaCode += (string.join(memFlags, '|') + ';')
+            eaCode += ('|'.join(memFlags) + ';')
 
             codeBlobs["ea_code"] = eaCode
 

@@ -100,7 +100,7 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                         inst_flags)
 
     if mem_flags:
-        s = '\n\tmemAccessFlags = ' + string.join(mem_flags, '|') + ';'
+        s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
         iop.constructor += s
 
     fullExecTemplate = eval(exec_template_base + 'Execute')
