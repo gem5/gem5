@@ -36,7 +36,7 @@ class AssignStatementAST(StatementAST):
     def __repr__(self):
         return "[AssignStatementAST: %r := %r]" % (self.lvalue, self.rvalue)
 
-    def generate(self, code, return_type):
+    def generate(self, code, return_type, **kwargs):
         lcode = self.slicc.codeFormatter()
         rcode = self.slicc.codeFormatter()
 

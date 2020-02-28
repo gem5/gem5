@@ -39,7 +39,7 @@ class InfixOperatorExprAST(ExprAST):
     def __repr__(self):
         return "[InfixExpr: %r %s %r]" % (self.left, self.op, self.right)
 
-    def generate(self, code):
+    def generate(self, code, **kwargs):
         lcode = self.slicc.codeFormatter()
         rcode = self.slicc.codeFormatter()
 
@@ -104,7 +104,7 @@ class PrefixOperatorExprAST(ExprAST):
     def __repr__(self):
         return "[PrefixExpr: %s %r]" % (self.op, self.operand)
 
-    def generate(self, code):
+    def generate(self, code, **kwargs):
         opcode = self.slicc.codeFormatter()
         optype = self.operand.generate(opcode)
 

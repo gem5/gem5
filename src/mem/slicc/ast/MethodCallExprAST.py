@@ -33,7 +33,7 @@ class MethodCallExprAST(ExprAST):
         self.proc_name = proc_name
         self.expr_ast_vec = expr_ast_vec
 
-    def generate(self, code):
+    def generate(self, code, **kwargs):
         tmp = self.slicc.codeFormatter()
         paramTypes = []
         for expr_ast in self.expr_ast_vec:

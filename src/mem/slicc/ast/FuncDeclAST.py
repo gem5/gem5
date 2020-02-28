@@ -43,7 +43,7 @@ class FuncDeclAST(DeclAST):
     def files(self, parent=None):
         return set()
 
-    def generate(self, parent = None):
+    def generate(self, parent = None, **kwargs):
         types = []
         params = []
         void_type = self.symtab.find("void", Type)

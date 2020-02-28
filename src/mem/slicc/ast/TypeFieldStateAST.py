@@ -40,7 +40,7 @@ class TypeFieldStateAST(TypeFieldAST):
     def __repr__(self):
         return "[TypeFieldState: %r]" % self.field_id
 
-    def generate(self, type):
+    def generate(self, type, **kwargs):
         if not str(type) == "State":
             self.error("State Declaration must be of type State.")
 

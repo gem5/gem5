@@ -60,7 +60,7 @@ class VarExprAST(ExprAST):
                        "'%s' is expected to be type '%s' not '%s'",
                        self.var.ident, expected_type, self.var.type)
 
-    def generate(self, code):
+    def generate(self, code, **kwargs):
         fix = code.nofix()
         code("${{self.var.code}}")
         code.fix(fix)

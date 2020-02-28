@@ -35,6 +35,6 @@ class CheckNextCycleAST(StatementAST):
     def __repr__(self):
         return "[CheckNextCycleAST]"
 
-    def generate(self, code, return_type):
+    def generate(self, code, return_type, **kwargs):
         code("scheduleEvent(Cycles(1));")
         return "CheckNextCycle"

@@ -36,7 +36,7 @@ class ReturnStatementAST(StatementAST):
     def __repr__(self):
         return "[ReturnStatementAST: %r]" % self.expr_ast
 
-    def generate(self, code, return_type):
+    def generate(self, code, return_type, **kwargs):
         actual_type, ecode = self.expr_ast.inline(True)
         code('return $ecode;')
 

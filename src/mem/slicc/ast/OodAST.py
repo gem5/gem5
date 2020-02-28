@@ -35,6 +35,6 @@ class OodAST(ExprAST):
     def __repr__(self):
         return "[Ood:]"
 
-    def generate(self, code):
+    def generate(self, code, **kwargs):
         code += "NULL"
         return "OOD"

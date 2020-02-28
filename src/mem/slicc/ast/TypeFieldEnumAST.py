@@ -38,7 +38,7 @@ class TypeFieldEnumAST(TypeFieldAST):
     def __repr__(self):
         return "[TypeFieldEnum: %r]" % self.field_id
 
-    def generate(self, type):
+    def generate(self, type, **kwargs):
         if str(type) == "State":
             self.error("States must in a State Declaration, not a normal enum.")
 

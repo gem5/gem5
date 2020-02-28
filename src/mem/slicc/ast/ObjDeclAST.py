@@ -40,7 +40,7 @@ class ObjDeclAST(DeclAST):
     def __repr__(self):
         return "[ObjDecl: %r]" % self.ident
 
-    def generate(self, parent = None):
+    def generate(self, parent = None, **kwargs):
         if "network" in self and not ("virtual_network" in self or
                                       "physical_network" in self) :
             self.error("Network queues require a 'virtual_network' attribute")

@@ -40,7 +40,7 @@ class EnumExprAST(ExprAST):
     def __repr__(self):
         return "[EnumExpr: %s:%s]" % (self.type_ast, self.value)
 
-    def generate(self, code):
+    def generate(self, code, **kwargs):
         fix = code.nofix()
         code('${{self.type_ast.type.c_ident}}_${{self.value}}')
         code.fix(fix)

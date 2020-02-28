@@ -1,3 +1,15 @@
+# Copyright (c) 2020 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
 # Copyright (c) 2009 The Hewlett-Packard Development Company
 # Copyright (c) 2013 Advanced Micro Devices, Inc.
@@ -38,7 +50,9 @@ class FuncCallExprAST(ExprAST):
     def __repr__(self):
         return "[FuncCallExpr: %s %s]" % (self.proc_name, self.exprs)
 
-    def generate(self, code):
+    # When calling generate for statements in a in_port, the reference to
+    # the port must be provided as the in_port kwarg (see InPortDeclAST)
+    def generate(self, code, **kwargs):
         machine = self.state_machine
 
         if self.proc_name == "DPRINTF":
@@ -148,18 +162,53 @@ class FuncCallExprAST(ExprAST):
     TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[1]}});
 ''')
 
+            assert('in_port' in kwargs)
+            in_port = kwargs['in_port']
+
             code('''
     if (result == TransitionResult_Valid) {
         counter++;
         continue; // Check the first port again
-    }
-
-    if (result == TransitionResult_ResourceStall ||
-        result == TransitionResult_ProtocolStall) {
+    } else if (result == TransitionResult_ResourceStall) {
+''')
+            if 'rsc_stall_handler' in in_port.pairs:
+                stall_func_name = in_port.pairs['rsc_stall_handler']
+                code('''
+        if (${{stall_func_name}}()) {
+            counter++;
+            continue; // Check the first port again
+        } else {
+            scheduleEvent(Cycles(1));
+            // Cannot do anything with this transition, go check next doable transition (mostly likely of next port)
+        }
+''')
+            else:
+                code('''
         scheduleEvent(Cycles(1));
-
         // Cannot do anything with this transition, go check next doable transition (mostly likely of next port)
+''')
+            code('''
+    } else if (result == TransitionResult_ProtocolStall) {
+''')
+            if 'prot_stall_handler' in in_port.pairs:
+                stall_func_name = in_port.pairs['prot_stall_handler']
+                code('''
+        if (${{stall_func_name}}()) {
+            counter++;
+            continue; // Check the first port again
+        } else {
+            scheduleEvent(Cycles(1));
+            // Cannot do anything with this transition, go check next doable transition (mostly likely of next port)
+        }
+''')
+            else:
+                code('''
+        scheduleEvent(Cycles(1));
+        // Cannot do anything with this transition, go check next doable transition (mostly likely of next port)
+''')
+            code('''
     }
+
 }
 ''')
         elif self.proc_name == "error":

@@ -35,7 +35,7 @@ class CheckAllocateStatementAST(StatementAST):
     def __repr__(self):
         return "[CheckAllocateStatementAst: %r]" % self.variable
 
-    def generate(self, code, return_type):
+    def generate(self, code, return_type, **kwargs):
         # FIXME - check the type of the variable
 
         # Make sure the variable is valid

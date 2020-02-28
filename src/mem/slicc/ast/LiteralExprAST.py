@@ -37,7 +37,7 @@ class LiteralExprAST(ExprAST):
     def __repr__(self):
         return "[Literal: %s]" % self.literal
 
-    def generate(self, code):
+    def generate(self, code, **kwargs):
         fix = code.nofix()
         if self.type == "std::string":
             code('("${{self.literal}}")')

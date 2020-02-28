@@ -42,7 +42,7 @@ class PeekStatementAST(StatementAST):
         return "[PeekStatementAST: %r queue_name: %r type: %r %r]" % \
                (self.method, self.queue_name, self.type_ast, self.statements)
 
-    def generate(self, code, return_type):
+    def generate(self, code, return_type, **kwargs):
         self.symtab.pushFrame()
 
         msg_type = self.type_ast.type
@@ -91,7 +91,7 @@ class PeekStatementAST(StatementAST):
             ''')
 
         # The other statements
-        self.statements.generate(code, return_type)
+        self.statements.generate(code, return_type, **kwargs)
         self.symtab.popFrame()
         code("}")
 

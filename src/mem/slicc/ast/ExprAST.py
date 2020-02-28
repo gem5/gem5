@@ -34,9 +34,9 @@ class ExprAST(AST):
         # The default is no resources
         pass
 
-    def inline(self, get_type=False):
+    def inline(self, get_type=False, **kwargs):
         code = self.slicc.codeFormatter(fix_newlines=False)
-        return_type = self.generate(code)
+        return_type = self.generate(code, **kwargs)
         if get_type:
             return return_type, code
         else:

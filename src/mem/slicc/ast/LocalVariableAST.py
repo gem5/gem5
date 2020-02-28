@@ -52,7 +52,7 @@ class LocalVariableAST(StatementAST):
         else:
             return code
 
-    def generate(self, code):
+    def generate(self, code, **kwargs):
         type = self.type_ast.type;
         ident = "%s" % self.ident;
 

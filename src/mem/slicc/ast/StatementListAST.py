@@ -37,9 +37,9 @@ class StatementListAST(AST):
     def __repr__(self):
         return "[StatementListAST: %r]" % self.statements
 
-    def generate(self, code, return_type):
+    def generate(self, code, return_type, **kwargs):
         for statement in self.statements:
-            statement.generate(code, return_type)
+            statement.generate(code, return_type, **kwargs)
 
     def findResources(self, resources):
         for statement in self.statements:

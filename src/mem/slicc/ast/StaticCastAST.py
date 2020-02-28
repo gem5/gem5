@@ -37,7 +37,7 @@ class StaticCastAST(ExprAST):
     def __repr__(self):
         return "[StaticCastAST: %r]" % self.expr_ast
 
-    def generate(self, code):
+    def generate(self, code, **kwargs):
         actual_type, ecode = self.expr_ast.inline(True)
         if self.type_modifier == "pointer":
             code('static_cast<${{self.type_ast.type.c_ident}} *>($ecode)')

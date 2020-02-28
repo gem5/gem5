@@ -39,7 +39,7 @@ class NewExprAST(ExprAST):
     def name(self):
         return str(self.type_ast)
 
-    def generate(self, code):
+    def generate(self, code, **kwargs):
         type = self.type_ast.type
         fix = code.nofix()
         code("new ${{type.c_ident}}")

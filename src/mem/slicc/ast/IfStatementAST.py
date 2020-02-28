@@ -42,7 +42,7 @@ class IfStatementAST(StatementAST):
     def __repr__(self):
         return "[IfStatement: %r%r%r]" % (self.cond, self.then, self.else_)
 
-    def generate(self, code, return_type):
+    def generate(self, code, return_type, **kwargs):
         cond_code = self.slicc.codeFormatter()
         cond_type = self.cond.generate(cond_code)
 
@@ -56,7 +56,7 @@ class IfStatementAST(StatementAST):
         # Then part
         code.indent()
         self.symtab.pushFrame()
-        self.then.generate(code, return_type)
+        self.then.generate(code, return_type, **kwargs)
         self.symtab.popFrame()
         code.dedent()
         # Else part
@@ -64,7 +64,7 @@ class IfStatementAST(StatementAST):
             code('} else {')
             code.indent()
             self.symtab.pushFrame()
-            self.else_.generate(code, return_type)
+            self.else_.generate(code, return_type, **kwargs)
             self.symtab.popFrame()
             code.dedent()
         code('}') # End scope
