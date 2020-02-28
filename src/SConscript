@@ -45,6 +45,7 @@ import functools
 import imp
 import os
 import re
+import six
 import sys
 import zlib
 
@@ -142,12 +143,12 @@ class SourceMeta(type):
         super(SourceMeta, cls).__init__(name, bases, dict)
         cls.all = SourceList()
 
+@six.add_metaclass(SourceMeta)
 class SourceFile(object):
     '''Base object that encapsulates the notion of a source file.
     This includes, the source node, target node, various manipulations
     of those.  A source file also specifies a set of tags which
     describing arbitrary properties of the source file.'''
-    __metaclass__ = SourceMeta
 
     static_objs = {}
     shared_objs = {}
@@ -413,9 +414,9 @@ class ExecutableMeta(type):
 
         cls.all = []
 
+@six.add_metaclass(ExecutableMeta)
 class Executable(object):
     '''Base class for creating an executable from sources.'''
-    __metaclass__ = ExecutableMeta
 
     abstract = True
 

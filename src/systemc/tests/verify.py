@@ -38,6 +38,7 @@ import multiprocessing.pool
 import os
 import re
 import subprocess
+import six
 import sys
 
 script_path = os.path.abspath(inspect.getfile(inspect.currentframe()))
@@ -109,8 +110,8 @@ class TestPhaseMeta(type):
 
         super(TestPhaseMeta, cls).__init__(name, bases, d)
 
+@six.add_metaclass(TestPhaseMeta)
 class TestPhaseBase(object):
-    __metaclass__ = TestPhaseMeta
     abstract = True
 
     def __init__(self, main_args, *args):

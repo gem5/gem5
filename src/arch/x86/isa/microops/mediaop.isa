@@ -194,8 +194,8 @@ let {{
             return cls
 
 
+    @six.add_metaclass(MediaOpMeta)
     class MediaOp(X86Microop):
-        __metaclass__ = MediaOpMeta
         # This class itself doesn't act as a microop
         abstract = True
 

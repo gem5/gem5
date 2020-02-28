@@ -373,8 +373,8 @@ let {{
             return cls
 
 
+    @six.add_metaclass(RegOpMeta)
     class RegOp(X86Microop):
-        __metaclass__ = RegOpMeta
         # This class itself doesn't act as a microop
         abstract = True
 
