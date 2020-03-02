@@ -54,7 +54,7 @@ class Transition(Symbol):
         self.resources = {}
 
         for action in self.actions:
-            for var,value in action.resources.iteritems():
+            for var,value in action.resources.items():
                 num = int(value)
                 if var in self.resources:
                     num += int(value)

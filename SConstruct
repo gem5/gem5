@@ -677,10 +677,12 @@ if main['USE_PYTHON']:
     print("Info: Using Python config: %s" % (python_config, ))
     py_includes = readCommand([python_config, '--includes'],
                               exception='').split()
-    py_includes = filter(lambda s: match(r'.*\/include\/.*',s), py_includes)
+    py_includes = list(filter(
+        lambda s: match(r'.*\/include\/.*',s), py_includes))
     # Strip the -I from the include folders before adding them to the
     # CPPPATH
-    py_includes = map(lambda s: s[2:] if s.startswith('-I') else s, py_includes)
+    py_includes = list(map(
+        lambda s: s[2:] if s.startswith('-I') else s, py_includes))
     main.Append(CPPPATH=py_includes)
 
     # Read the linker flags and split them into libraries and other link
@@ -966,7 +968,7 @@ sticky_vars.AddVariables(
     EnumVariable('TARGET_ISA', 'Target ISA', 'alpha', all_isa_list),
     EnumVariable('TARGET_GPU_ISA', 'Target GPU ISA', 'hsail', all_gpu_isa_list),
     ListVariable('CPU_MODELS', 'CPU models',
-                 sorted(n for n,m in CpuModel.dict.iteritems() if m.default),
+                 sorted(n for n,m in CpuModel.dict.items() if m.default),
                  sorted(CpuModel.dict.keys())),
     BoolVariable('EFENCE', 'Link with Electric Fence malloc debugger',
                  False),
@@ -1187,7 +1189,7 @@ for variant_path in variant_paths:
                                   joinpath(opts_dir, default)]
         else:
             default_vars_files = [joinpath(opts_dir, variant_dir)]
-        existing_files = filter(isfile, default_vars_files)
+        existing_files = list(filter(isfile, default_vars_files))
         if existing_files:
             default_vars_file = existing_files[0]
             sticky_vars.files.append(default_vars_file)

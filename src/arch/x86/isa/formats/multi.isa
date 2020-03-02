@@ -49,7 +49,7 @@ def format Inst(*opTypeSet) {{
 
 def format MultiInst(switchVal, *opTypeSets) {{
     switcher = {}
-    for (count, opTypeSet) in zip(xrange(len(opTypeSets)), opTypeSets):
+    for (count, opTypeSet) in zip(range(len(opTypeSets)), opTypeSets):
         switcher[count] = (specializeInst, Name, opTypeSet, EmulEnv())
     blocks = doSplitDecode(switchVal, switcher)
     (header_output, decoder_output,

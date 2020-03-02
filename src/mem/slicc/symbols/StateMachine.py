@@ -111,7 +111,7 @@ class StateMachine(Symbol):
         assert self.table is None
 
         # Check for duplicate action
-        for other in self.actions.itervalues():
+        for other in self.actions.values():
             if action.ident == other.ident:
                 action.warning("Duplicate action definition: %s" % action.ident)
                 action.error("Duplicate action definition: %s" % action.ident)
@@ -186,7 +186,7 @@ class StateMachine(Symbol):
             table[index] = trans
 
         # Look at all actions to make sure we used them all
-        for action in self.actions.itervalues():
+        for action in self.actions.values():
             if not action.used:
                 error_msg = "Unused action: %s" % action.ident
                 if "desc" in action:
@@ -402,23 +402,23 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 // Actions
 ''')
         if self.TBEType != None and self.EntryType != None:
-            for action in self.actions.itervalues():
+            for action in self.actions.values():
                 code('/** \\brief ${{action.desc}} */')
                 code('void ${{action.ident}}(${{self.TBEType.c_ident}}*& '
                      'm_tbe_ptr, ${{self.EntryType.c_ident}}*& '
                      'm_cache_entry_ptr, Addr addr);')
         elif self.TBEType != None:
-            for action in self.actions.itervalues():
+            for action in self.actions.values():
                 code('/** \\brief ${{action.desc}} */')
                 code('void ${{action.ident}}(${{self.TBEType.c_ident}}*& '
                      'm_tbe_ptr, Addr addr);')
         elif self.EntryType != None:
-            for action in self.actions.itervalues():
+            for action in self.actions.values():
                 code('/** \\brief ${{action.desc}} */')
                 code('void ${{action.ident}}(${{self.EntryType.c_ident}}*& '
                      'm_cache_entry_ptr, Addr addr);')
         else:
-            for action in self.actions.itervalues():
+            for action in self.actions.values():
                 code('/** \\brief ${{action.desc}} */')
                 code('void ${{action.ident}}(Addr addr);')
 
@@ -937,7 +937,7 @@ $c_ident::recordCacheTrace(int cntrl, CacheRecorder* tr)
 // Actions
 ''')
         if self.TBEType != None and self.EntryType != None:
-            for action in self.actions.itervalues():
+            for action in self.actions.values():
                 if "c_code" not in action:
                  continue
 
@@ -958,7 +958,7 @@ $c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.Entry
 
 ''')
         elif self.TBEType != None:
-            for action in self.actions.itervalues():
+            for action in self.actions.values():
                 if "c_code" not in action:
                  continue
 
@@ -973,7 +973,7 @@ $c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, Addr addr)
 
 ''')
         elif self.EntryType != None:
-            for action in self.actions.itervalues():
+            for action in self.actions.values():
                 if "c_code" not in action:
                  continue
 
@@ -988,7 +988,7 @@ $c_ident::${{action.ident}}(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, Add
 
 ''')
         else:
-            for action in self.actions.itervalues():
+            for action in self.actions.values():
                 if "c_code" not in action:
                  continue
 
@@ -1330,7 +1330,7 @@ ${ident}_Controller::doTransitionWorker(${ident}_Event event,
             # Check for resources
             case_sorter = []
             res = trans.resources
-            for key,val in res.iteritems():
+            for key,val in res.items():
                 val = '''
 if (!%s.areNSlotsAvailable(%s, clockEdge()))
     return TransitionResult_ResourceStall;
@@ -1390,7 +1390,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
 
         # Walk through all of the unique code blocks and spit out the
         # corresponding case statement elements
-        for case,transitions in cases.iteritems():
+        for case,transitions in cases.items():
             # Iterative over all the multiple transitions that share
             # the same code
             for trans in transitions:
@@ -1428,23 +1428,23 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
         self.printHTMLTransitions(path, None)
 
         # Generate transition tables
-        for state in self.states.itervalues():
+        for state in self.states.values():
             self.printHTMLTransitions(path, state)
 
         # Generate action descriptions
-        for action in self.actions.itervalues():
+        for action in self.actions.values():
             name = "%s_action_%s.html" % (self.ident, action.ident)
             code = html.createSymbol(action, "Action")
             code.write(path, name)
 
         # Generate state descriptions
-        for state in self.states.itervalues():
+        for state in self.states.values():
             name = "%s_State_%s.html" % (self.ident, state.ident)
             code = html.createSymbol(state, "State")
             code.write(path, name)
 
         # Generate event descriptions
-        for event in self.events.itervalues():
+        for event in self.events.values():
             name = "%s_Event_%s.html" % (self.ident, event.ident)
             code = html.createSymbol(event, "Event")
             code.write(path, name)
@@ -1479,14 +1479,14 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
   <TH> </TH>
 """)
 
-        for event in self.events.itervalues():
+        for event in self.events.values():
             href = "%s_Event_%s.html" % (self.ident, event.ident)
             ref = self.frameRef(href, "Status", href, "1", event.short)
             code('<TH bgcolor=white>$ref</TH>')
 
         code('</TR>')
         # -- Body of table
-        for state in self.states.itervalues():
+        for state in self.states.values():
             # -- Each row
             if state == active_state:
                 color = "yellow"
@@ -1503,7 +1503,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
 ''')
 
             # -- One column for each event
-            for event in self.events.itervalues():
+            for event in self.events.values():
                 trans = self.table.get((state,event), None)
                 if trans is None:
                     # This is the no transition case
@@ -1572,7 +1572,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
   <TH> </TH>
 ''')
 
-        for event in self.events.itervalues():
+        for event in self.events.values():
             href = "%s_Event_%s.html" % (self.ident, event.ident)
             ref = self.frameRef(href, "Status", href, "1", event.short)
             code('<TH bgcolor=white>$ref</TH>')

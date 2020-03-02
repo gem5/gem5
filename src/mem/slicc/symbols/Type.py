@@ -269,7 +269,7 @@ $klass ${{self.c_ident}}$parent
         # ******** Full init constructor ********
         if not self.isGlobal:
             params = [ 'const %s& local_%s' % (dm.type.c_ident, dm.ident) \
-                       for dm in self.data_members.itervalues() ]
+                       for dm in self.data_members.values() ]
             params = ', '.join(params)
 
             if self.isMessage:
@@ -485,7 +485,7 @@ enum ${{self.c_ident}} {
 
         code.indent()
         # For each field
-        for i,(ident,enum) in enumerate(self.enums.iteritems()):
+        for i,(ident,enum) in enumerate(self.enums.items()):
             desc = enum.get("desc", "No description avaliable")
             if i == 0:
                 init = ' = %s_FIRST' % self.c_ident
@@ -530,7 +530,7 @@ int ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj);
 int ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj);
 ''')
 
-            for enum in self.enums.itervalues():
+            for enum in self.enums.values():
                 code('''
 
 MachineID get${{enum.ident}}MachineID(NodeID RubyNode);
@@ -594,7 +594,7 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
 ''')
 
         if self.isMachineType:
-            for enum in self.enums.itervalues():
+            for enum in self.enums.values():
                 if enum.primary:
                     code('#include "mem/ruby/protocol/${{enum.ident}}'
                             '_Controller.hh"')
@@ -619,7 +619,7 @@ ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj)
 
         # For each field
         code.indent()
-        for enum in self.enums.itervalues():
+        for enum in self.enums.values():
             code('  case ${{self.c_ident}}_${{enum.ident}}:')
             code('    return "${{enum.ident}}";')
         code.dedent()
@@ -640,7 +640,7 @@ string_to_${{self.c_ident}}(const string& str)
         # For each field
         start = ""
         code.indent()
-        for enum in self.enums.itervalues():
+        for enum in self.enums.values():
             code('${start}if (str == "${{enum.ident}}") {')
             code('    return ${{self.c_ident}}_${{enum.ident}};')
             start = "} else "
@@ -679,7 +679,7 @@ ${{self.c_ident}}_base_level(const ${{self.c_ident}}& obj)
 
             # For each field
             code.indent()
-            for i,enum in enumerate(self.enums.itervalues()):
+            for i,enum in enumerate(self.enums.values()):
                 code('  case ${{self.c_ident}}_${{enum.ident}}:')
                 code('    return $i;')
             code.dedent()
@@ -706,7 +706,7 @@ ${{self.c_ident}}_from_base_level(int type)
 
             # For each field
             code.indent()
-            for i,enum in enumerate(self.enums.itervalues()):
+            for i,enum in enumerate(self.enums.values()):
                 code('  case $i:')
                 code('    return ${{self.c_ident}}_${{enum.ident}};')
             code.dedent()
@@ -762,7 +762,7 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
 ''')
 
             # For each field
-            for enum in self.enums.itervalues():
+            for enum in self.enums.values():
                 code('case ${{self.c_ident}}_${{enum.ident}}:')
                 if enum.primary:
                     code('return ${{enum.ident}}_Controller::getNumControllers();')
@@ -778,7 +778,7 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
 }
 ''')
 
-            for enum in self.enums.itervalues():
+            for enum in self.enums.values():
                 code('''
 
 MachineID

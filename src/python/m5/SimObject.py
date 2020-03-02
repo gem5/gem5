@@ -686,7 +686,7 @@ class MetaSimObject(type):
         # the object itself, not including inherited params (which
         # will also be inherited from the base class's param struct
         # here). Sort the params based on their key
-        params = map(lambda k_v: k_v[1], sorted(cls._params.local.items()))
+        params = list(map(lambda k_v: k_v[1], sorted(cls._params.local.items())))
         ports = cls._ports.local
 
         code('''#include "pybind11/pybind11.h"
@@ -783,7 +783,7 @@ module_init(py::module &m_internal)
         # the object itself, not including inherited params (which
         # will also be inherited from the base class's param struct
         # here). Sort the params based on their key
-        params = map(lambda k_v: k_v[1], sorted(cls._params.local.items()))
+        params = list(map(lambda k_v: k_v[1], sorted(cls._params.local.items())))
         ports = cls._ports.local
         try:
             ptypes = [p.ptype for p in params]

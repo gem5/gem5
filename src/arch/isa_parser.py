@@ -146,7 +146,7 @@ class Template(object):
 
             myDict.update(snippets)
 
-            compositeCode = ' '.join(map(str, snippets.values()))
+            compositeCode = ' '.join(list(map(str, snippets.values())))
 
             # Add in template itself in case it references any
             # operands explicitly (like Mem)
@@ -253,7 +253,7 @@ class Format(object):
             if debug:
                 raise
             error(lineno, 'error defining "%s": %s.' % (name, exc))
-        for k in vars.keys():
+        for k in list(vars.keys()):
             if k not in ('header_output', 'decoder_output',
                          'exec_output', 'decode_block'):
                 del vars[k]
@@ -1415,7 +1415,7 @@ class InstObjParams(object):
         self.base_class = base_class
         if not isinstance(snippets, dict):
             snippets = {'code' : snippets}
-        compositeCode = ' '.join(map(str, snippets.values()))
+        compositeCode = ' '.join(list(map(str, snippets.values())))
         self.snippets = snippets
 
         self.operands = OperandList(parser, compositeCode)
@@ -1916,10 +1916,10 @@ class ISAParser(Grammar):
     def p_specification(self, t):
         'specification : opt_defs_and_outputs top_level_decode_block'
 
-        for f in self.splits.iterkeys():
+        for f in self.splits.keys():
             f.write('\n#endif\n')
 
-        for f in self.files.itervalues(): # close ALL the files;
+        for f in self.files.values(): # close ALL the files;
             f.close() # not doing so can cause compilation to fail
 
         self.write_top_level_files()
@@ -2368,7 +2368,7 @@ StaticInstPtr
         # Pass the ID and arg list to the current format class to deal with.
         currentFormat = self.formatStack.top()
         codeObj = currentFormat.defineInst(self, t[1], t[3], t.lexer.lineno)
-        args = ','.join(map(str, t[3]))
+        args = ','.join(list(map(str, t[3])))
         args = re.sub('(?m)^', '//', args)
         args = re.sub('^//', '', args)
         comment = '\n// %s::%s(%s)\n' % (currentFormat.id, t[1], args)
@@ -2507,7 +2507,7 @@ StaticInstPtr
 
     def buildOperandNameMap(self, user_dict, lineno):
         operand_name = {}
-        for op_name, val in user_dict.iteritems():
+        for op_name, val in user_dict.items():
 
             # Check if extra attributes have been specified.
             if len(val) > 9:
@@ -2580,7 +2580,7 @@ StaticInstPtr
         self.operandNameMap = operand_name
 
         # Define operand variables.
-        operands = user_dict.keys()
+        operands = list(user_dict.keys())
         # Add the elems defined in the vector operands and
         # build a map elem -> vector (used in OperandList)
         elem_to_vec = {}

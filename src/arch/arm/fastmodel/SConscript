@@ -270,8 +270,8 @@ class ArmFastModelComponent(object):
             '%s-%s' % (tlc, config_name),
         ]
 
-        static_lib_nodes = map(simgen_static, static_libs)
-        shared_lib_nodes = map(simgen_shared, shared_libs)
+        static_lib_nodes = list(map(simgen_static, static_libs))
+        shared_lib_nodes = list(map(simgen_shared, shared_libs))
         # We need to use the static libraries as files so that the linker
         # doesn't use the shared versions of them instead. We need to use
         # the shared libraries by name so that the linker will apply RPATH
