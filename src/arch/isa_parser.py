@@ -1289,7 +1289,7 @@ class OperandList(object):
         return self.__internalConcatAttrs(attr_name, filter, [])
 
     def sort(self):
-        self.items.sort(lambda a, b: a.sort_pri - b.sort_pri)
+        self.items.sort(key=lambda a: a.sort_pri)
 
 class SubOperandList(OperandList):
     '''Find all the operands in the given code block.  Returns an operand
