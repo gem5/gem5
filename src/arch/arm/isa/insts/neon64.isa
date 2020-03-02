@@ -552,7 +552,7 @@ let {{
         %(op)s
         destReg.elements[0] = htole(destElem);
         ''' % { "op" : op }
-        destCnt = rCount / 2
+        destCnt = rCount // 2
         for reg in range(destCnt):
             eWalkCode += '''
         AA64FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);

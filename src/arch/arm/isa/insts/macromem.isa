@@ -580,7 +580,7 @@ let {{
     exec_output = ''
     for typeSize in (8, 16, 32):
         for sRegs in 1, 2:
-            for dRegs in range(sRegs, min(sRegs * 64 / typeSize + 1, 5)):
+            for dRegs in range(sRegs, min(sRegs * 64 // typeSize + 1, 5)):
                 for format in ("MicroUnpackNeon%(sRegs)dto%(dRegs)dUop",
                                "MicroUnpackAllNeon%(sRegs)dto%(dRegs)dUop",
                                "MicroPackNeon%(dRegs)dto%(sRegs)dUop"):
