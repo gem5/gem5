@@ -99,10 +99,9 @@ def do_embed_text(target, source, env):
 generated_dir = Dir('protocol')
 
 def MakeIncludeAction(target, source, env):
-    f = file(str(target[0]), 'w')
-    for s in source:
-        print('#include "%s"' % str(s.abspath), file=f)
-    f.close()
+    with open(str(target[0]), 'w') as f:
+        for s in source:
+            print('#include "%s"' % str(s.abspath), file=f)
 
 def MakeInclude(source):
     target = generated_dir.File(basename(source))

@@ -284,7 +284,8 @@ def Blob(blob_path, symbol):
     cpp_path = path_noext + '.cc'
     hpp_path = path_noext + '.hh'
     def embedBlob(target, source, env):
-        data = file(str(source[0]), 'r').read()
+        with open(str(source[0]), 'rb') as f:
+            data = f.read()
         cpp_code = code_formatter()
         hpp_code = code_formatter()
         blobToCpp(data, symbol, cpp_code, hpp_code, namespace='Blobs')
@@ -767,7 +768,8 @@ class DictImporter(object):
             mod.__path__ = source.modpath
         mod.__file__ = source.abspath
 
-        exec file(source.abspath, 'r') in mod.__dict__
+        compiled = compile(open(source.abspath).read(), source.abspath, 'exec')
+        exec(compiled, mod.__dict__)
 
         return mod
 
@@ -850,7 +852,8 @@ PySource('m5', 'python/m5/defines.py')
 def makeInfoPyFile(target, source, env):
     code = code_formatter()
     for src in source:
-        data = ''.join(file(src.srcnode().abspath, 'r').xreadlines())
+        with open(src.srcnode().abspath, 'r') as f:
+            data = ''.join(f)
         code('$src = ${{repr(data)}}')
     code.write(str(target[0]))
 

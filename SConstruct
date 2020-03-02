@@ -1014,9 +1014,8 @@ export_vars += ['USE_FENV', 'TARGET_ISA', 'TARGET_GPU_ISA', 'CP_ANNOTATE',
 # value of the variable.
 def build_config_file(target, source, env):
     (variable, value) = [s.get_contents() for s in source]
-    f = file(str(target[0]), 'w')
-    print('#define', variable, value, file=f)
-    f.close()
+    with open(str(target[0]), 'w') as f:
+        print('#define', variable, value, file=f)
     return None
 
 # Combine the two functions into a scons Action object.
