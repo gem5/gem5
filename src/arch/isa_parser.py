@@ -233,10 +233,10 @@ class Format(object):
         param_list = ", ".join(params)
         f = '''def defInst(_code, _context, %s):
                 my_locals = vars().copy()
-                exec _code in _context, my_locals
+                exec(_code, _context, my_locals)
                 return my_locals\n''' % param_list
         c = compile(f, label + ' wrapper', 'exec')
-        exec c
+        exec(c, globals())
         self.func = defInst
 
     def defineInst(self, parser, name, args, lineno):
@@ -2039,7 +2039,7 @@ del wrap
         # next split's #define from the parser and add it to the current
         # emission-in-progress.
         try:
-            exec split_setup+fixPythonIndentation(t[2]) in self.exportContext
+            exec(split_setup+fixPythonIndentation(t[2]), self.exportContext)
         except Exception as exc:
             traceback.print_exc(file=sys.stdout)
             if debug:
