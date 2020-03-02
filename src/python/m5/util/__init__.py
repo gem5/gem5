@@ -43,6 +43,8 @@ import os
 import re
 import sys
 
+from six import string_types
+
 from . import convert
 from . import jobfile
 
@@ -122,7 +124,7 @@ def compareVersions(v1, v2):
     def make_version_list(v):
         if isinstance(v, (list,tuple)):
             return v
-        elif isinstance(v, str):
+        elif isinstance(v, string_types):
             return map(lambda x: int(re.match('\d+', x).group()), v.split('.'))
         else:
             raise TypeError()
@@ -196,7 +198,7 @@ def readCommand(cmd, **kwargs):
             return exception
         raise
 
-    return subp.communicate()[0]
+    return subp.communicate()[0].decode('utf-8')
 
 def makeDir(path):
     """Make a directory if it doesn't exist.  If the path does exist,

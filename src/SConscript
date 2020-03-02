@@ -621,7 +621,7 @@ for opt in export_vars:
     env.ConfigFile(opt)
 
 def makeTheISA(source, target, env):
-    isas = [ src.get_contents() for src in source ]
+    isas = [ src.get_contents().decode('utf-8') for src in source ]
     target_isa = env['TARGET_ISA']
     def define(isa):
         return isa.upper() + '_ISA'
@@ -823,7 +823,7 @@ depends.sort(key = lambda x: x.name)
 # Generate Python file containing a dict specifying the current
 # buildEnv flags.
 def makeDefinesPyFile(target, source, env):
-    build_env = source[0].get_contents()
+    build_env = source[0].get_contents().decode('utf-8')
 
     code = code_formatter()
     code("""
@@ -882,7 +882,7 @@ def createSimObjectCxxConfig(is_header):
     def body(target, source, env):
         assert len(target) == 1 and len(source) == 1
 
-        name = str(source[0].get_contents())
+        name = source[0].get_contents().decode('utf-8')
         obj = sim_objects[name]
 
         code = code_formatter()

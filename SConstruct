@@ -1013,7 +1013,7 @@ export_vars += ['USE_FENV', 'TARGET_ISA', 'TARGET_GPU_ISA', 'CP_ANNOTATE',
 # operands are the name of the variable and a Value node containing the
 # value of the variable.
 def build_config_file(target, source, env):
-    (variable, value) = [s.get_contents() for s in source]
+    (variable, value) = [s.get_contents().decode('utf-8') for s in source]
     with open(str(target[0]), 'w') as f:
         print('#define', variable, value, file=f)
     return None
