@@ -40,6 +40,7 @@ gem5_verify_config(
     config_args = [],
     protocol = 'MSI',
     valid_isas=("X86",), # Currently only x86 has the threads test
+    valid_hosts=constants.target_host["X86"], # dynamically linked
 )
 
 gem5_verify_config(
