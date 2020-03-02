@@ -302,7 +302,7 @@ let {{
             elif self.size == 'z':
                 self.dataSize = "((OPSIZE == 8) ? 4 : OPSIZE)"
             elif self.size:
-                raise Exception, "Unrecognized size type %s!" % self.size
+                raise Exception("Unrecognized size type {}!".format(self.size))
             return '''EmulEnv(%(reg)s,
                               %(regm)s,
                               %(dataSize)s,
@@ -318,14 +318,15 @@ let {{
                 self.regm = reg
                 self.regmUsed = True
             else:
-                raise Exception, "EmulEnv is out of register specialization spots."
+                raise Exception("EmulEnv is out of register specialization " +
+                    "spots.")
         def setSize(self, size):
             if not self.size:
                 self.size = size
             else:
                 if self.size != size:
-                    raise Exception, "Conflicting register sizes %s and %s!" %\
-                        (self.size, size)
+                    raise Exception("Conflicting register sizes " +
+                        "{} and {}!".format(self.size, size))
 }};
 
 let {{
@@ -334,7 +335,7 @@ let {{
     def genMacroop(Name, env):
         blocks = OutputBlocks()
         if not Name in macroopDict:
-            raise Exception, "Unrecognized instruction: %s" % Name
+            raise Exception("Unrecognized instruction: {}".format(Name))
         macroop = macroopDict[Name]
         if not macroop.declared:
             if env.doModRM:

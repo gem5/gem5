@@ -137,7 +137,7 @@ let {{
             self.once = once
             self.flags = flags
             if flags and not isinstance(flags, (list, tuple)):
-                raise Exception, "flags must be a list or tuple of flags"
+                raise Exception("flags must be a list or tuple of flags")
 
             self.className = "MicroDebugFlags" if flags else "MicroDebug"
 

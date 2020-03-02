@@ -382,7 +382,7 @@ class SimObject(PySource):
         the m5.objects package)'''
         super(SimObject, self).__init__('m5.objects', source, tags, add_tags)
         if self.fixed:
-            raise AttributeError, "Too late to call SimObject now."
+            raise AttributeError("Too late to call SimObject now.")
 
         bisect.insort_right(SimObject.modnames, self.modname)
 
@@ -552,12 +552,12 @@ Export('GTest')
 debug_flags = {}
 def DebugFlag(name, desc=None):
     if name in debug_flags:
-        raise AttributeError, "Flag %s already specified" % name
+        raise AttributeError("Flag {} already specified".format(name))
     debug_flags[name] = (name, (), desc)
 
 def CompoundFlag(name, flags, desc=None):
     if name in debug_flags:
-        raise AttributeError, "Flag %s already specified" % name
+        raise AttributeError("Flag {} already specified".format(name))
 
     compound = tuple(flags)
     debug_flags[name] = (name, compound, desc)

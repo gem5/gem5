@@ -212,9 +212,9 @@ let {{
             if destSize is not None:
                 self.destSize = destSize
             if self.srcSize is None:
-                raise Exception, "Source size not set."
+                raise Exception("Source size not set.")
             if self.destSize is None:
-                raise Exception, "Dest size not set."
+                raise Exception("Dest size not set.")
             if ext is None:
                 self.ext = 0
             else:

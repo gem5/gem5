@@ -210,7 +210,7 @@ class Template(object):
             # if the argument is an object, we use its attribute map.
             myDict.update(d.__dict__)
         else:
-            raise TypeError, "Template.subst() arg must be or have dictionary"
+            raise TypeError("Template.subst() arg must be or have dictionary")
         return template % myDict
 
     # Convert to string.
@@ -249,7 +249,7 @@ class Format(object):
         context.update({ 'name' : name, 'Name' : Name })
         try:
             vars = self.func(self.user_code, context, *args[0], **args[1])
-        except Exception, exc:
+        except Exception as exc:
             if debug:
                 raise
             error(lineno, 'error defining "%s": %s.' % (name, exc))
@@ -2037,7 +2037,7 @@ del wrap
         # emission-in-progress.
         try:
             exec split_setup+fixPythonIndentation(t[2]) in self.exportContext
-        except Exception, exc:
+        except Exception as exc:
             traceback.print_exc(file=sys.stdout)
             if debug:
                 raise
@@ -2054,7 +2054,7 @@ del wrap
         'def_operand_types : DEF OPERAND_TYPES CODELIT SEMI'
         try:
             self.operandTypeMap = eval('{' + t[3] + '}')
-        except Exception, exc:
+        except Exception as exc:
             if debug:
                 raise
             error(t.lineno(1),
@@ -2069,7 +2069,7 @@ del wrap
                   'error: operand types must be defined before operands')
         try:
             user_dict = eval('{' + t[3] + '}', self.exportContext)
-        except Exception, exc:
+        except Exception as exc:
             if debug:
                 raise
             error(t.lineno(1), 'In def operands: %s' % exc)
@@ -2709,7 +2709,7 @@ StaticInstPtr
     def parse_isa_desc(self, *args, **kwargs):
         try:
             self._parse_isa_desc(*args, **kwargs)
-        except ISAParserError, e:
+        except ISAParserError as e:
             print(backtrace(self.fileNameStack))
             print("At %s:" % e.lineno)
             print(e)

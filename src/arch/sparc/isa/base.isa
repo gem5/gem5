@@ -75,7 +75,7 @@ let {{
                 is_dest = is_dest or is_dest_local
                 is_src = is_src or not is_dest_local
                 if extension and extension != op_ext:
-                    raise Exception, "Inconsistent extensions in double filter."
+                    raise Exception("Inconsistent extensions in double filter")
                 extension = op_ext
                 next_pos = match.end()
             if foundOne:

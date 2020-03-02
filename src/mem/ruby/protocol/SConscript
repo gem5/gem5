@@ -96,7 +96,8 @@ for path in protocol_dirs:
         break
 
 if not protocol_dir:
-    raise ValueError, "Could not find %s.slicc in protocol_dirs" % protocol
+    raise ValueError("Could not find {}.slicc in protocol_dirs".format(
+        protocol))
 
 sources = [ protocol_dir.File("%s.slicc" % protocol) ]
 

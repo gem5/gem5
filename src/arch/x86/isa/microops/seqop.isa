@@ -122,7 +122,7 @@ let {{
             self.target = target
             if flags:
                 if not isinstance(flags, (list, tuple)):
-                    raise Exception, "flags must be a list or tuple of flags"
+                    raise Exception("flags must be a list or tuple of flags")
                 self.cond = " | ".join(flags)
                 self.className += "Flags"
             else:
@@ -154,7 +154,7 @@ let {{
         def __init__(self, flags=None):
             if flags:
                 if not isinstance(flags, (list, tuple)):
-                    raise Exception, "flags must be a list or tuple of flags"
+                    raise Exception("flags must be a list or tuple of flags")
                 self.cond = " | ".join(flags)
                 self.className += "Flags"
             else:

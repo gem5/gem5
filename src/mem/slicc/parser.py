@@ -46,7 +46,7 @@ class SLICC(Grammar):
 
         try:
             self.decl_list = self.parse_file(filename, **kwargs)
-        except ParseError, e:
+        except ParseError as e:
             if not self.traceback:
                 sys.exit(str(e))
             raise

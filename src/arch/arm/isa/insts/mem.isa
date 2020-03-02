@@ -214,7 +214,7 @@ let {{
             else:
                 memSuffix = '_ub'
         else:
-            raise Exception, "Unrecognized size for access %d" % size
+            raise Exception("Unrecognized size for access {}".format(size))
 
         return memSuffix
 
@@ -226,7 +226,7 @@ let {{
         elif not post and not writeback:
             base = "MemoryOffset<%s>" % base
         else:
-            raise Exception, "Illegal combination of post and writeback"
+            raise Exception("Illegal combination of post and writeback")
         return base
 }};
 

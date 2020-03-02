@@ -108,7 +108,8 @@ let {{
         def __init__(self, opTypeString):
             match = OpType.parser.search(opTypeString)
             if match == None:
-                raise Exception, "Problem parsing operand type %s" % opTypeString
+                raise Exception("Problem parsing operand type {}".format(
+                    opTypeString))
             self.reg = match.group("reg")
             self.tag = match.group("tag")
             self.size = match.group("size")
@@ -163,7 +164,8 @@ let {{
                         {"3" : (doBadInstDecode,) },
                         (doRipRelativeDecode, Name, opTypes, env))
             elif opType.tag == None or opType.size == None:
-                raise Exception, "Problem parsing operand tag: %s" % opType.tag
+                raise Exception("Problem parsing operand tag: {}".format(
+                    opType.tag))
             elif opType.tag == "C":
                 # A control register indexed by the "reg" field
                 env.addReg(ModRMRegIndex)
@@ -257,7 +259,7 @@ let {{
                                 env.addressSize, false);''')
                 Name += "_M"
             else:
-                raise Exception, "Unrecognized tag %s." % opType.tag
+                raise Exception("Unrecognized tag {}.".format(opType.tag))
 
         # Generate code to return a macroop of the given name which will
         # operate in the "emulation environment" env
