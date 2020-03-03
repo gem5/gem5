@@ -75,12 +75,6 @@ class FSTranslatingPortProxy : public PortProxy
   public:
 
     FSTranslatingPortProxy(ThreadContext* tc);
-
-    FSTranslatingPortProxy(SendFunctionalFunc func,
-                           unsigned int cacheLineSize);
-    FSTranslatingPortProxy(MasterPort &port,
-                           unsigned int cacheLineSize);
-
     ~FSTranslatingPortProxy() {}
 
     /** Version of tryReadblob that translates virt->phys and deals

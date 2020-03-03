@@ -57,29 +57,13 @@ FSTranslatingPortProxy::FSTranslatingPortProxy(ThreadContext *tc)
 {
 }
 
-FSTranslatingPortProxy::FSTranslatingPortProxy(
-        SendFunctionalFunc func, unsigned int cacheLineSize)
-    : PortProxy(func, cacheLineSize), _tc(NULL)
-{
-}
-
-FSTranslatingPortProxy::FSTranslatingPortProxy(
-        MasterPort &port, unsigned int cacheLineSize)
-    : PortProxy(port, cacheLineSize), _tc(NULL)
-{
-}
-
 bool
 FSTranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
 {
-    Addr paddr;
     for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
          gen.next())
     {
-        if (_tc)
-            paddr = TheISA::vtophys(_tc,gen.addr());
-        else
-            paddr = TheISA::vtophys(gen.addr());
+        Addr paddr = TheISA::vtophys(_tc, gen.addr());
 
         PortProxy::readBlobPhys(paddr, 0, p, gen.size());
         p = static_cast<uint8_t *>(p) + gen.size();
@@ -91,14 +75,10 @@ bool
 FSTranslatingPortProxy::tryWriteBlob(
         Addr addr, const void *p, int size) const
 {
-    Addr paddr;
     for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
          gen.next())
     {
-        if (_tc)
-            paddr = TheISA::vtophys(_tc,gen.addr());
-        else
-            paddr = TheISA::vtophys(gen.addr());
+        Addr paddr = TheISA::vtophys(_tc, gen.addr());
 
         PortProxy::writeBlobPhys(paddr, 0, p, gen.size());
         p = static_cast<const uint8_t *>(p) + gen.size();
@@ -109,14 +89,10 @@ FSTranslatingPortProxy::tryWriteBlob(
 bool
 FSTranslatingPortProxy::tryMemsetBlob(Addr address, uint8_t v, int size) const
 {
-    Addr paddr;
     for (ChunkGenerator gen(address, size, TheISA::PageBytes); !gen.done();
          gen.next())
     {
-        if (_tc)
-            paddr = TheISA::vtophys(_tc,gen.addr());
-        else
-            paddr = TheISA::vtophys(gen.addr());
+        Addr paddr = TheISA::vtophys(_tc, gen.addr());
 
         PortProxy::memsetBlobPhys(paddr, 0, v, gen.size());
     }
