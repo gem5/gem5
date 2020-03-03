@@ -691,7 +691,7 @@
                 // operand size (0x66)
                 0x1: decode OPCODE_OP_BOTTOM3 {
                     0x4: HADDPD(Vo,Wo);
-                    0x5: WarnUnimpl::hsubpd_Vo_Wo();
+                    0x5: HSUBPD(Vo, Wo);
                     0x6: MOVD(Edp,Vd);
                     0x7: MOVDQA(Wo,Vo);
                     default: UD2();
@@ -699,7 +699,7 @@
                 // repne (0xF2)
                 0x8: decode OPCODE_OP_BOTTOM3 {
                     0x4: HADDPS(Vo,Wo);
-                    0x5: WarnUnimpl::hsubps_Vo_Wo();
+                    0x5: HSUBPS(Vo, Wo);
                     default: UD2();
                 }
                 default: UD2();

@@ -34,6 +34,51 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 microcode = '''
-# HSUBPS
-# HSUBPD
+def macroop HSUBPS_XMM_XMM {
+    shuffle ufp1, xmml, xmmh, ext=((0 << 0) | (2 << 2)), size=4
+    shuffle ufp2, xmml, xmmh, ext=((1 << 0) | (3 << 2)), size=4
+    shuffle ufp3, xmmlm, xmmhm, ext=((0 << 0) | (2 << 2)), size=4
+    shuffle ufp4, xmmlm, xmmhm, ext=((1 << 0) | (3 << 2)), size=4
+    msubf xmml, ufp1, ufp2, size=4
+    msubf xmmh, ufp3, ufp4, size=4
+};
+def macroop HSUBPS_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT+8", dataSize=8
+    shuffle ufp3, xmml, xmmh, ext=((0 << 0) | (2 << 2)), size=4
+    shuffle ufp4, xmml, xmmh, ext=((1 << 0) | (3 << 2)), size=4
+    shuffle ufp5, ufp1, ufp2, ext=((0 << 0) | (2 << 2)), size=4
+    shuffle ufp6, ufp1, ufp2, ext=((1 << 0) | (3 << 2)), size=4
+    msubf xmml, ufp3, ufp4, size=4
+    msubf xmmh, ufp5, ufp6, size=4
+};
+def macroop HSUBPS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT+8", dataSize=8
+    shuffle ufp3, xmml, xmmh, ext=((0 << 0) | (2 << 2)), size=4
+    shuffle ufp4, xmml, xmmh, ext=((1 << 0) | (3 << 2)), size=4
+    shuffle ufp5, ufp1, ufp2, ext=((0 << 0) | (2 << 2)), size=4
+    shuffle ufp6, ufp1, ufp2, ext=((1 << 0) | (3 << 2)), size=4
+    msubf xmml, ufp3, ufp4, size=4
+    msubf xmmh, ufp5, ufp6, size=4
+};
+def macroop HSUBPD_XMM_XMM {
+    msubf ufp1, xmmh , xmml, size=8, ext=Scalar
+    msubf xmmh, xmmlm, xmmhm, size=8, ext=Scalar
+    movfp xmml, ufp1
+};
+def macroop HSUBPD_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT+8", dataSize=8
+    msubf xmml, xmml, xmmh, size=8, ext=Scalar
+    msubf xmmh, ufp1, ufp2, size=8, ext=Scalar
+};
+def macroop HSUBPD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT+8", dataSize=8
+    msubf xmml, xmml, xmmh, size=8, ext=Scalar
+    msubf xmmh, ufp1, ufp2, size=8, ext=Scalar
+};
 '''
