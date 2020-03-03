@@ -41,5 +41,5 @@ microcode = '''
 # SSE instructions
 '''
 for category in categories:
-    exec("import %s as cat" % category)
+    exec("from . import %s as cat" % category)
     microcode += cat.microcode
