@@ -26,19 +26,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_SPARC_VTOPHYS_H__
-#define __ARCH_SPARC_VTOPHYS_H__
+#ifndef __ARCH_SPARC_VTOPHYS_HH__
+#define __ARCH_SPARC_VTOPHYS_HH__
 
 #include "arch/sparc/isa_traits.hh"
-#include "arch/sparc/pagetable.hh"
 
 class ThreadContext;
 
-namespace SparcISA {
+namespace SparcISA
+{
 
-Addr vtophys(Addr vaddr);
 Addr vtophys(ThreadContext *tc, Addr vaddr);
 
-};
-#endif // __ARCH_SPARC_VTOPHYS_H__
+}; // namespace SparcISA
+
+#endif // __ARCH_SPARC_VTOPHYS_HH__
 

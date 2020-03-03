@@ -29,22 +29,7 @@
 
 #include "arch/mips/vtophys.hh"
 
-#include <string>
-
-#include "base/chunk_generator.hh"
-#include "base/trace.hh"
-#include "cpu/thread_context.hh"
-#include "debug/VtoPhys.hh"
-
-using namespace std;
-using namespace MipsISA;
-
-Addr
-MipsISA::vtophys(Addr vaddr)
-{
-    fatal("VTOPHYS: Unimplemented on MIPS\n");
-    return 0;
-}
+#include "base/logging.hh"
 
 Addr
 MipsISA::vtophys(ThreadContext *tc, Addr addr)

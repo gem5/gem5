@@ -143,15 +143,6 @@ MinorCPU::unserialize(CheckpointIn &cp)
     BaseCPU::unserialize(cp);
 }
 
-Addr
-MinorCPU::dbg_vtophys(Addr addr)
-{
-    /* Note that this gives you the translation for thread 0 */
-    panic("No implementation for vtophy\n");
-
-    return 0;
-}
-
 void
 MinorCPU::wakeup(ThreadID tid)
 {

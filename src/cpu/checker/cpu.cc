@@ -356,12 +356,6 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
    return fault;
 }
 
-Addr
-CheckerCPU::dbg_vtophys(Addr addr)
-{
-    return vtophys(tc, addr);
-}
-
 /**
  * Checks if the flags set by the Checker and Checkee match.
  */

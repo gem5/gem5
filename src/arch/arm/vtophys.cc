@@ -54,12 +54,6 @@
 using namespace std;
 using namespace ArmISA;
 
-Addr
-ArmISA::vtophys(Addr vaddr)
-{
-    fatal("VTOPHYS: Can't convert vaddr to paddr on ARM without a thread context");
-}
-
 static std::pair<bool, Addr>
 try_translate(ThreadContext *tc, Addr addr)
 {
@@ -97,7 +91,8 @@ ArmISA::vtophys(ThreadContext *tc, Addr addr)
     if (translation.first)
         return translation.second;
     else
-        panic("Table walkers support functional accesses. We should never get here\n");
+        panic("Table walkers support functional accesses. "
+                "We should never get here.");
 }
 
 bool

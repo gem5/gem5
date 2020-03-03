@@ -135,8 +135,6 @@ class CheckerCPU : public BaseCPU, public ExecContext
     BaseTLB *itb;
     BaseTLB *dtb;
 
-    Addr dbg_vtophys(Addr addr);
-
     // ISAs like ARM can have multiple destination registers to check,
     // keep them all in a std::queue
     std::queue<InstResult> result;

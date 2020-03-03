@@ -121,9 +121,6 @@ class BaseSimpleCPU : public BaseCPU
     Status _status;
 
   public:
-    Addr dbg_vtophys(Addr addr);
-
-
     void checkForInterrupts();
     void setupFetchRequest(const RequestPtr &req);
     void preExecute();

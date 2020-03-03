@@ -37,20 +37,13 @@
 
 class ThreadContext;
 
-namespace RiscvISA {
-
-inline Addr
-vtophys(Addr vaddr)
+namespace RiscvISA
 {
-    fatal("VTOPHYS: Unimplemented on RISC-V\n");
-    return vaddr;
-}
 
-inline Addr
+static inline Addr
 vtophys(ThreadContext *tc, Addr vaddr)
 {
     fatal("VTOPHYS: Unimplemented on RISC-V\n");
-    return vtophys(vaddr);
 }
 
 } // namespace RiscvISA

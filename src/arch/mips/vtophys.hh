@@ -27,18 +27,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_MIPS_VTOPHYS_H__
-#define __ARCH_MIPS_VTOPHYS_H__
+#ifndef __ARCH_MIPS_VTOPHYS_HH__
+#define __ARCH_MIPS_VTOPHYS_HH__
 
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/utility.hh"
 
 class ThreadContext;
 
-namespace MipsISA {
-    Addr vtophys(Addr vaddr);
-    Addr vtophys(ThreadContext *tc, Addr vaddr);
+namespace MipsISA
+{
 
-};
-#endif // __ARCH_MIPS_VTOPHYS_H__
+Addr vtophys(ThreadContext *tc, Addr vaddr);
+
+} // namespace MipsISA
+
+#endif // __ARCH_MIPS_VTOPHYS_HH__
 

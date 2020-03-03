@@ -45,7 +45,6 @@ class ThreadContext;
 namespace X86ISA
 {
 
-Addr vtophys(Addr vaddr);
 Addr vtophys(ThreadContext *tc, Addr vaddr);
 
 }

@@ -128,8 +128,6 @@ class MinorCPU : public BaseCPU
     void startup() override;
     void wakeup(ThreadID tid) override;
 
-    Addr dbg_vtophys(Addr addr);
-
     /** Processor-specific statistics */
     Minor::MinorStats stats;
 

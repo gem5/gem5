@@ -27,21 +27,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_ARM_VTOPHYS_H__
-#define __ARCH_ARM_VTOPHYS_H__
+#ifndef __ARCH_ARM_VTOPHYS_HH__
+#define __ARCH_ARM_VTOPHYS_HH__
 
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
 
 class ThreadContext;
 
-namespace ArmISA {
-    inline Addr PteAddr(Addr a) { return (a & PteMask) << PteShift; }
+namespace ArmISA
+{
 
-    Addr vtophys(Addr vaddr);
-    Addr vtophys(ThreadContext *tc, Addr vaddr);
-    bool virtvalid(ThreadContext *tc, Addr vaddr);
-}
+inline Addr PteAddr(Addr a) { return (a & PteMask) << PteShift; }
 
-#endif // __ARCH_ARM_VTOPHYS_H__
+Addr vtophys(ThreadContext *tc, Addr vaddr);
+bool virtvalid(ThreadContext *tc, Addr vaddr);
+
+} // namespace ArmISA
+
+#endif // __ARCH_ARM_VTOPHYS_HH__
 

@@ -30,6 +30,7 @@
 
 #include <string>
 
+#include "arch/sparc/pagetable.hh"
 #include "arch/sparc/tlb.hh"
 #include "base/chunk_generator.hh"
 #include "base/compiler.hh"
@@ -40,20 +41,8 @@
 
 using namespace std;
 
-namespace SparcISA {
-
-Addr
-vtophys(Addr vaddr)
+namespace SparcISA
 {
-    // In SPARC it's almost always impossible to turn a VA->PA w/o a
-    // context The only times we can kinda do it are if we have a
-    // SegKPM mapping and can find the real address in the tlb or we
-    // have a physical adddress already (beacuse we are looking at the
-    // hypervisor) Either case is rare, so we'll just panic.
-
-    panic("vtophys() without context on SPARC largly worthless\n");
-    M5_DUMMY_RETURN;
-}
 
 Addr
 vtophys(ThreadContext *tc, Addr addr)

@@ -31,12 +31,6 @@
 using namespace std;
 
 Addr
-PowerISA::vtophys(Addr vaddr)
-{
-    fatal("vtophys: Unimplemented on POWER\n");
-}
-
-Addr
 PowerISA::vtophys(ThreadContext *tc, Addr addr)
 {
     fatal("vtophys: Unimplemented on POWER\n");

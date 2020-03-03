@@ -47,27 +47,18 @@
 
 using namespace std;
 
-namespace X86ISA
+Addr
+X86ISA::vtophys(ThreadContext *tc, Addr vaddr)
 {
-    Addr
-    vtophys(Addr vaddr)
-    {
-        panic("Need access to page tables\n");
-    }
-
-    Addr
-    vtophys(ThreadContext *tc, Addr vaddr)
-    {
-        Walker *walker = dynamic_cast<TLB *>(tc->getDTBPtr())->getWalker();
-        unsigned logBytes;
-        Addr addr = vaddr;
-        Fault fault = walker->startFunctional(
-                tc, addr, logBytes, BaseTLB::Read);
-        if (fault != NoFault)
-            panic("vtophys page walk returned fault\n");
-        Addr masked_addr = vaddr & mask(logBytes);
-        Addr paddr = addr | masked_addr;
-        DPRINTF(VtoPhys, "vtophys(%#x) -> %#x\n", vaddr, paddr);
-        return paddr;
-    }
+    Walker *walker = dynamic_cast<TLB *>(tc->getDTBPtr())->getWalker();
+    unsigned logBytes;
+    Addr addr = vaddr;
+    Fault fault = walker->startFunctional(
+            tc, addr, logBytes, BaseTLB::Read);
+    if (fault != NoFault)
+        panic("vtophys page walk returned fault\n");
+    Addr masked_addr = vaddr & mask(logBytes);
+    Addr paddr = addr | masked_addr;
+    DPRINTF(VtoPhys, "vtophys(%#x) -> %#x\n", vaddr, paddr);
+    return paddr;
 }
