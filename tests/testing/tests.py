@@ -39,7 +39,8 @@ from abc import ABCMeta, abstractmethod
 import os
 from collections import namedtuple
 from units import *
-from results import TestResult
+from .helpers import FileIgnoreList
+from .results import TestResult
 import shutil
 
 _test_base = os.path.join(os.path.dirname(__file__), "..")
