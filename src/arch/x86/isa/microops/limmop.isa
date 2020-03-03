@@ -101,6 +101,10 @@ def template MicroLimmOpConstructor {{
 }};
 
 let {{
+    import six
+    if six.PY3:
+        long = int
+
     class LimmOp(X86Microop):
         def __init__(self, dest, imm, dataSize="env.dataSize"):
             self.className = "Limm"
