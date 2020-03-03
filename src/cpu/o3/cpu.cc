@@ -846,6 +846,28 @@ FullO3CPU<Impl>::removeThread(ThreadID tid)
 
 template <class Impl>
 void
+FullO3CPU<Impl>::setVectorsAsReady(ThreadID tid)
+{
+    if (vecMode == Enums::Elem) {
+        for (auto v = 0; v < TheISA::NumVecRegs; v++)
+            for (auto e = 0; e < TheISA::NumVecElemPerVecReg; e++)
+                scoreboard.setReg(
+                    commitRenameMap[tid].lookup(
+                        RegId(VecElemClass, v, e)
+                    )
+                );
+    } else if (vecMode == Enums::Full) {
+        for (auto v = 0; v < TheISA::NumVecRegs; v++)
+            scoreboard.setReg(
+                commitRenameMap[tid].lookup(
+                    RegId(VecRegClass, v)
+                )
+            );
+    }
+}
+
+template <class Impl>
+void
 FullO3CPU<Impl>::switchRenameMode(ThreadID tid, UnifiedFreeList* freelist)
 {
     auto pc = this->pcState(tid);
@@ -860,6 +882,7 @@ FullO3CPU<Impl>::switchRenameMode(ThreadID tid, UnifiedFreeList* freelist)
         renameMap[tid].switchMode(vecMode);
         commitRenameMap[tid].switchMode(vecMode);
         renameMap[tid].switchFreeList(freelist);
+        setVectorsAsReady(tid);
     }
 }
 
