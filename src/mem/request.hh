@@ -440,18 +440,6 @@ class Request
         setPhys(paddr, size, flags, mid, time);
     }
 
-    Request(Addr paddr, unsigned size, Flags flags, MasterID mid, Tick time,
-            Addr pc)
-        : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
-          _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
-          _extraData(0), _contextId(0), _pc(pc),
-          _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
-          accessDelta(0), depth(0)
-    {
-        setPhys(paddr, size, flags, mid, time);
-        privateFlags.set(VALID_PC);
-    }
-
     Request(uint64_t asid, Addr vaddr, unsigned size, Flags flags,
             MasterID mid, Addr pc, ContextID cid)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
