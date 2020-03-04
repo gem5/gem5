@@ -71,6 +71,7 @@ class FSTranslatingPortProxy : public PortProxy
 {
   private:
     ThreadContext* _tc;
+    const Addr pageBytes;
 
   public:
 

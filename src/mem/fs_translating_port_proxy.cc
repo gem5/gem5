@@ -45,27 +45,38 @@
 
 #include "mem/fs_translating_port_proxy.hh"
 
-#include "arch/vtophys.hh"
+#include "arch/generic/tlb.hh"
 #include "base/chunk_generator.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "sim/system.hh"
 
-FSTranslatingPortProxy::FSTranslatingPortProxy(ThreadContext *tc)
-    : PortProxy(tc->getCpuPtr()->getSendFunctional(),
-                tc->getSystemPtr()->cacheLineSize()), _tc(tc)
-{
-}
+FSTranslatingPortProxy::FSTranslatingPortProxy(ThreadContext *tc) :
+    PortProxy(tc->getCpuPtr()->getSendFunctional(),
+              tc->getSystemPtr()->cacheLineSize()), _tc(tc),
+              pageBytes(tc->getSystemPtr()->getPageBytes())
+{}
 
 bool
 FSTranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
 {
-    for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
+    BaseTLB *dtb = _tc->getDTBPtr();
+    BaseTLB *itb = _tc->getDTBPtr();
+
+    for (ChunkGenerator gen(addr, size, pageBytes); !gen.done();
          gen.next())
     {
-        Addr paddr = TheISA::vtophys(_tc, gen.addr());
+        auto req = std::make_shared<Request>(
+                gen.addr(), gen.size(), 0, Request::funcMasterId, 0,
+                _tc->contextId());
+        if (dtb->translateFunctional(req, _tc, BaseTLB::Read) != NoFault &&
+            itb->translateFunctional(req, _tc, BaseTLB::Read) != NoFault) {
+            return false;
+        }
 
-        PortProxy::readBlobPhys(paddr, 0, p, gen.size());
+        PortProxy::readBlobPhys(
+                req->getPaddr(), req->getFlags(), p, gen.size());
+
         p = static_cast<uint8_t *>(p) + gen.size();
     }
     return true;
@@ -75,12 +86,22 @@ bool
 FSTranslatingPortProxy::tryWriteBlob(
         Addr addr, const void *p, int size) const
 {
-    for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
+    BaseTLB *dtb = _tc->getDTBPtr();
+    BaseTLB *itb = _tc->getDTBPtr();
+
+    for (ChunkGenerator gen(addr, size, pageBytes); !gen.done();
          gen.next())
     {
-        Addr paddr = TheISA::vtophys(_tc, gen.addr());
+        auto req = std::make_shared<Request>(
+                gen.addr(), gen.size(), 0, Request::funcMasterId, 0,
+                _tc->contextId());
+        if (dtb->translateFunctional(req, _tc, BaseTLB::Write) != NoFault &&
+            itb->translateFunctional(req, _tc, BaseTLB::Write) != NoFault) {
+            return false;
+        }
 
-        PortProxy::writeBlobPhys(paddr, 0, p, gen.size());
+        PortProxy::writeBlobPhys(
+                req->getPaddr(), req->getFlags(), p, gen.size());
         p = static_cast<const uint8_t *>(p) + gen.size();
     }
     return true;
@@ -89,12 +110,22 @@ FSTranslatingPortProxy::tryWriteBlob(
 bool
 FSTranslatingPortProxy::tryMemsetBlob(Addr address, uint8_t v, int size) const
 {
-    for (ChunkGenerator gen(address, size, TheISA::PageBytes); !gen.done();
+    BaseTLB *dtb = _tc->getDTBPtr();
+    BaseTLB *itb = _tc->getDTBPtr();
+
+    for (ChunkGenerator gen(address, size, pageBytes); !gen.done();
          gen.next())
     {
-        Addr paddr = TheISA::vtophys(_tc, gen.addr());
+        auto req = std::make_shared<Request>(
+                gen.addr(), gen.size(), 0, Request::funcMasterId, 0,
+                _tc->contextId());
+        if (dtb->translateFunctional(req, _tc, BaseTLB::Write) != NoFault &&
+            itb->translateFunctional(req, _tc, BaseTLB::Write) != NoFault) {
+            return false;
+        }
 
-        PortProxy::memsetBlobPhys(paddr, 0, v, gen.size());
+        PortProxy::memsetBlobPhys(
+                req->getPaddr(), req->getFlags(), v, gen.size());
     }
     return true;
 }
