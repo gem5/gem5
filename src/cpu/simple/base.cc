@@ -471,7 +471,7 @@ BaseSimpleCPU::setupFetchRequest(const RequestPtr &req)
     // set up memory request for instruction fetch
     DPRINTF(Fetch, "Fetch: Inst PC:%08p, Fetch PC:%08p\n", instAddr, fetchPC);
 
-    req->setVirt(0, fetchPC, sizeof(MachInst), Request::INST_FETCH,
+    req->setVirt(fetchPC, sizeof(MachInst), Request::INST_FETCH,
                  instMasterId(), instAddr);
 }
 

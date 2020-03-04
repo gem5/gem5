@@ -167,7 +167,7 @@ Fetch1::fetchLine(ThreadID tid)
         request_id, aligned_pc, thread.pc, line_offset, request_size);
 
     request->request->setContext(cpu.threads[tid]->getTC()->contextId());
-    request->request->setVirt(0 /* asid */,
+    request->request->setVirt(
         aligned_pc, request_size, Request::INST_FETCH, cpu.instMasterId(),
         /* I've no idea why we need the PC, but give it */
         thread.pc.instAddr());

@@ -91,7 +91,7 @@ class Stage2MMU : public SimObject
         void setVirt(Addr vaddr, int size, Request::Flags flags, int masterId)
         {
             numBytes = size;
-            req->setVirt(0, vaddr, size, flags, masterId, 0);
+            req->setVirt(vaddr, size, flags, masterId, 0);
         }
 
         void translateTiming(ThreadContext *tc)

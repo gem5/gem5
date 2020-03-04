@@ -1185,7 +1185,7 @@ TarmacParserRecord::readMemNoEffect(Addr addr, uint8_t *data, unsigned size,
     const RequestPtr &req = memReq;
     ArmISA::TLB* dtb = static_cast<TLB*>(thread->getDTBPtr());
 
-    req->setVirt(0, addr, size, flags, thread->pcState().instAddr(),
+    req->setVirt(addr, size, flags, thread->pcState().instAddr(),
                  Request::funcMasterId);
 
     // Translate to physical address

@@ -338,7 +338,7 @@ Shader::AccessMem(uint64_t address, void *ptr, uint32_t size, int cu_id,
          !gen.done(); gen.next()) {
 
         RequestPtr req = std::make_shared<Request>(
-            0, gen.addr(), gen.size(), 0,
+            gen.addr(), gen.size(), 0,
             cuList[0]->masterId(), 0, 0, nullptr);
 
         doFunctionalAccess(req, cmd, data_buf, suppress_func_errors, cu_id);

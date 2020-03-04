@@ -80,7 +80,7 @@ class Stage2LookUp : public BaseTLB::Translation
         fault(NoFault), complete(false), selfDelete(false)
     {
         req = std::make_shared<Request>();
-        req->setVirt(0, s1Te.pAddr(s1Req->getVaddr()), s1Req->getSize(),
+        req->setVirt(s1Te.pAddr(s1Req->getVaddr()), s1Req->getSize(),
                      s1Req->getFlags(), s1Req->masterId(), 0);
     }
 

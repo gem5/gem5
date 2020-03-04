@@ -66,7 +66,7 @@ try_translate(ThreadContext *tc, Addr addr)
     Fault fault;
     // Set up a functional memory Request to pass to the TLB
     // to get it to translate the vaddr to a paddr
-    auto req = std::make_shared<Request>(0, addr, 64, 0x40, -1, 0, 0);
+    auto req = std::make_shared<Request>(addr, 64, 0x40, -1, 0, 0);
     BaseTLB *tlb;
 
     // Check the TLBs for a translation

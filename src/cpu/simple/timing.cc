@@ -421,7 +421,6 @@ TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size,
     SimpleThread* thread = t_info.thread;
 
     Fault fault;
-    const int asid = 0;
     const Addr pc = thread->instAddr();
     unsigned block_size = cacheLineSize();
     BaseTLB::Mode mode = BaseTLB::Read;
@@ -430,8 +429,7 @@ TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size,
         traceData->setMem(addr, size, flags);
 
     RequestPtr req = std::make_shared<Request>(
-        asid, addr, size, flags, dataMasterId(), pc,
-        thread->contextId());
+        addr, size, flags, dataMasterId(), pc, thread->contextId());
     if (!byte_enable.empty()) {
         req->setByteEnable(byte_enable);
     }
@@ -499,7 +497,6 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
     SimpleThread* thread = t_info.thread;
 
     uint8_t *newData = new uint8_t[size];
-    const int asid = 0;
     const Addr pc = thread->instAddr();
     unsigned block_size = cacheLineSize();
     BaseTLB::Mode mode = BaseTLB::Write;
@@ -516,8 +513,7 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
         traceData->setMem(addr, size, flags);
 
     RequestPtr req = std::make_shared<Request>(
-        asid, addr, size, flags, dataMasterId(), pc,
-        thread->contextId());
+        addr, size, flags, dataMasterId(), pc, thread->contextId());
     if (!byte_enable.empty()) {
         req->setByteEnable(byte_enable);
     }
@@ -567,7 +563,6 @@ TimingSimpleCPU::initiateMemAMO(Addr addr, unsigned size,
     SimpleThread* thread = t_info.thread;
 
     Fault fault;
-    const int asid = 0;
     const Addr pc = thread->instAddr();
     unsigned block_size = cacheLineSize();
     BaseTLB::Mode mode = BaseTLB::Write;
@@ -575,7 +570,7 @@ TimingSimpleCPU::initiateMemAMO(Addr addr, unsigned size,
     if (traceData)
         traceData->setMem(addr, size, flags);
 
-    RequestPtr req = make_shared<Request>(asid, addr, size, flags,
+    RequestPtr req = make_shared<Request>(addr, size, flags,
                             dataMasterId(), pc, thread->contextId(),
                             std::move(amo_op));
 

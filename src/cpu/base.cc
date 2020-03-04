@@ -260,7 +260,7 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseTLB *dtb)
     if (secondAddr > addr)
         size = secondAddr - addr;
 
-    req->setVirt(0, addr, size, 0x0, dataMasterId(), tc->instAddr());
+    req->setVirt(addr, size, 0x0, dataMasterId(), tc->instAddr());
 
     // translate to physical address
     Fault fault = dtb->translateAtomic(req, tc, BaseTLB::Read);

@@ -1149,9 +1149,8 @@ TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
     ArmFault::TranMethod tranMethod = long_desc_format ? ArmFault::LpaeTran
                                                        : ArmFault::VmsaTran;
 
-    req->setAsid(asid);
-
-    DPRINTF(TLBVerbose, "CPSR is priv:%d UserMode:%d secure:%d S1S2NsTran:%d\n",
+    DPRINTF(TLBVerbose,
+            "CPSR is priv:%d UserMode:%d secure:%d S1S2NsTran:%d\n",
             isPriv, flags & UserMode, isSecure, tranType & S1S2NsTran);
 
     DPRINTF(TLB, "translateFs addr %#x, mode %d, st2 %d, scr %#x sctlr %#x "

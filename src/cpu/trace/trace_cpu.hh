@@ -602,9 +602,6 @@ class TraceCPU : public BaseCPU
             /** The virtual address for the request if any */
             Addr virtAddr;
 
-            /** The address space id which is set if the virtual address is set */
-            uint32_t asid;
-
             /** Size of request if any */
             uint32_t size;
 

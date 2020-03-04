@@ -142,7 +142,7 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
 
     // set up virtual request
     RequestPtr req = std::make_shared<Request>(
-        0, vaddr, size, Request::INST_FETCH,
+        vaddr, size, Request::INST_FETCH,
         computeUnit->masterId(), 0, 0, nullptr);
 
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq);

@@ -109,9 +109,6 @@ BaseDynInst<Impl>::initVars()
     // Eventually make this a parameter.
     threadNumber = 0;
 
-    // Also make this a parameter, or perhaps get it from xc or cpu.
-    asid = 0;
-
     // Initialize the fault to be NoFault.
     fault = NoFault;
 

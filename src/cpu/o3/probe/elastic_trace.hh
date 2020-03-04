@@ -289,8 +289,6 @@ class ElasticTrace : public ProbeListenerObject
         Addr physAddr;
         /* Request virtual address in case of a load/store instruction */
         Addr virtAddr;
-        /* Address space id in case of a load/store instruction */
-        uint32_t asid;
         /* Request size in case of a load/store instruction */
         unsigned size;
         /** Default Constructor */

@@ -156,13 +156,13 @@ CheckerCPU::genMemFragmentRequest(Addr frag_addr, int size,
                                                         size_left));
         auto it_end = byte_enable.cbegin() + (size - size_left);
         if (isAnyActiveElement(it_start, it_end)) {
-            mem_req = std::make_shared<Request>(0, frag_addr, frag_size,
+            mem_req = std::make_shared<Request>(frag_addr, frag_size,
                     flags, masterId, thread->pcState().instAddr(),
                     tc->contextId());
             mem_req->setByteEnable(std::vector<bool>(it_start, it_end));
         }
     } else {
-        mem_req = std::make_shared<Request>(0, frag_addr, frag_size,
+        mem_req = std::make_shared<Request>(frag_addr, frag_size,
                     flags, masterId, thread->pcState().instAddr(),
                     tc->contextId());
     }

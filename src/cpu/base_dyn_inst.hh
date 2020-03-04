@@ -214,9 +214,6 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** The memory request flags (from translation). */
     unsigned memReqFlags;
 
-    /** data address space ID, for loads & stores. */
-    short asid;
-
     /** The size of the request */
     unsigned effSize;
 
@@ -904,10 +901,6 @@ class BaseDynInst : public ExecContext, public RefCounted
     {
         instFlags[MemAccPredicate] = val;
     }
-
-    /** Sets the ASID. */
-    void setASID(short addr_space_id) { asid = addr_space_id; }
-    short getASID() { return asid; }
 
     /** Sets the thread id. */
     void setTid(ThreadID tid) { threadNumber = tid; }

@@ -350,14 +350,14 @@ AtomicSimpleCPU::genMemFragmentRequest(const RequestPtr& req, Addr frag_addr,
         auto it_start = byte_enable.begin() + (size - (frag_size + size_left));
         auto it_end = byte_enable.begin() + (size - size_left);
         if (isAnyActiveElement(it_start, it_end)) {
-            req->setVirt(0, frag_addr, frag_size, flags, dataMasterId(),
+            req->setVirt(frag_addr, frag_size, flags, dataMasterId(),
                          inst_addr);
             req->setByteEnable(std::vector<bool>(it_start, it_end));
         } else {
             predicate = false;
         }
     } else {
-        req->setVirt(0, frag_addr, frag_size, flags, dataMasterId(),
+        req->setVirt(frag_addr, frag_size, flags, dataMasterId(),
                      inst_addr);
         req->setByteEnable(std::vector<bool>());
     }
@@ -592,7 +592,7 @@ AtomicSimpleCPU::amoMem(Addr addr, uint8_t* data, unsigned size,
     dcache_latency = 0;
 
     req->taskId(taskId());
-    req->setVirt(0, addr, size, flags, dataMasterId(),
+    req->setVirt(addr, size, flags, dataMasterId(),
                  thread->pcState().instAddr(), std::move(amo_op));
 
     // translate to physical address

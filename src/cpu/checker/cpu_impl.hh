@@ -239,11 +239,10 @@ Checker<Impl>::verify(const DynInstPtr &completed_inst)
             if (!curMacroStaticInst) {
                 // set up memory request for instruction fetch
                 auto mem_req = std::make_shared<Request>(
-                    unverifiedInst->threadNumber, fetch_PC,
-                    sizeof(MachInst), 0, masterId, fetch_PC,
+                    fetch_PC, sizeof(MachInst), 0, masterId, fetch_PC,
                     thread->contextId());
 
-                mem_req->setVirt(0, fetch_PC, sizeof(MachInst),
+                mem_req->setVirt(fetch_PC, sizeof(MachInst),
                                  Request::INST_FETCH, masterId,
                                  thread->instAddr());
 

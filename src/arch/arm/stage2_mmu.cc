@@ -66,7 +66,7 @@ Stage2MMU::readDataUntimed(ThreadContext *tc, Addr oVAddr, Addr descAddr,
 
     // translate to physical address using the second stage MMU
     auto req = std::make_shared<Request>();
-    req->setVirt(0, descAddr, numBytes, flags | Request::PT_WALK, masterId, 0);
+    req->setVirt(descAddr, numBytes, flags | Request::PT_WALK, masterId, 0);
     if (isFunctional) {
         fault = stage2Tlb()->translateFunctional(req, tc, BaseTLB::Read);
     } else {

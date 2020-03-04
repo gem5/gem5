@@ -942,7 +942,7 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst, bool kernelLaunch,
 
     if (!req) {
         req = std::make_shared<Request>(
-            0, 0, 0, 0, masterId(), 0, gpuDynInst->wfDynId);
+            0, 0, 0, masterId(), 0, gpuDynInst->wfDynId);
     }
     req->setPaddr(0);
     if (kernelLaunch) {
@@ -1174,7 +1174,7 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
                 break;
 
             RequestPtr prefetch_req = std::make_shared<Request>(
-                0, vaddr + stride * pf * TheISA::PageBytes,
+                vaddr + stride * pf * TheISA::PageBytes,
                 sizeof(uint8_t), 0,
                 computeUnit->masterId(),
                 0, 0, nullptr);

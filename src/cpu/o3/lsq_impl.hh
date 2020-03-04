@@ -894,7 +894,7 @@ LSQ<Impl>::SplitDataRequest::initiateTranslation()
     Addr final_addr = addrBlockAlign(_addr + _size, cacheLineSize);
     uint32_t size_so_far = 0;
 
-    mainReq = std::make_shared<Request>(_inst->getASID(), base_addr,
+    mainReq = std::make_shared<Request>(base_addr,
                 _size, _flags, _inst->masterId(),
                 _inst->instAddr(), _inst->contextId());
     if (!_byteEnable.empty()) {
