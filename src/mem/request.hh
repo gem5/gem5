@@ -305,14 +305,14 @@ class Request
      * The physical address of the request. Valid only if validPaddr
      * is set.
      */
-    Addr _paddr;
+    Addr _paddr = 0;
 
     /**
      * The size of the request. This field must be set when vaddr or
      * paddr is written via setVirt() or setPhys(), so it is always
      * valid as long as one of the address fields is valid.
      */
-    unsigned _size;
+    unsigned _size = 0;
 
     /** Byte-enable mask for writes. */
     std::vector<bool> _byteEnable;
@@ -320,7 +320,7 @@ class Request
     /** The requestor ID which is unique in the system for all ports
      * that are capable of issuing a transaction
      */
-    MasterID _masterId;
+    MasterID _masterId = invldMasterId;
 
     /** Flag structure for the request. */
     Flags _flags;
@@ -336,12 +336,12 @@ class Request
      * latencies. This field is set to curTick() any time paddr or vaddr
      * is written.
      */
-    Tick _time;
+    Tick _time = 0;
 
     /**
      * The task id associated with this request
      */
-    uint32_t _taskId;
+    uint32_t _taskId = ContextSwitchTaskId::Unknown;
 
     union {
         struct {
@@ -362,28 +362,28 @@ class Request
         };
 
         /** The address space ID. */
-        uint64_t _asid;
+        uint64_t _asid = 0;
     };
 
     /** The virtual address of the request. */
-    Addr _vaddr;
+    Addr _vaddr = 0;
 
     /**
      * Extra data for the request, such as the return value of
      * store conditional or the compare value for a CAS. */
-    uint64_t _extraData;
+    uint64_t _extraData = 0;
 
     /** The context ID (for statistics, locks, and wakeups). */
-    ContextID _contextId;
+    ContextID _contextId = 0;
 
     /** program counter of initiating access; for tracing/debugging */
-    Addr _pc;
+    Addr _pc = 0;
 
     /** Sequence number of the instruction that creates the request */
-    InstSeqNum _reqInstSeqNum;
+    InstSeqNum _reqInstSeqNum = 0;
 
     /** A pointer to an atomic operation */
-    AtomicOpFunctorPtr atomicOpFunctor;
+    AtomicOpFunctorPtr atomicOpFunctor = nullptr;
 
     LocalAccessor _localAccessor;
 
@@ -394,21 +394,10 @@ class Request
      *  _flags and privateFlags are cleared by Flags default
      *  constructor.)
      */
-    Request()
-        : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
-          _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
-          _extraData(0), _contextId(0), _pc(0),
-          _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
-          accessDelta(0), depth(0)
-    {}
+    Request() {}
 
     Request(Addr paddr, unsigned size, Flags flags, MasterID mid,
-            InstSeqNum seq_num, ContextID cid)
-        : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
-          _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
-          _extraData(0), _contextId(0), _pc(0),
-          _reqInstSeqNum(seq_num), atomicOpFunctor(nullptr), translateDelta(0),
-          accessDelta(0), depth(0)
+            InstSeqNum seq_num, ContextID cid) : _reqInstSeqNum(seq_num)
     {
         setPhys(paddr, size, flags, mid, curTick());
         setContext(cid);
@@ -421,32 +410,17 @@ class Request
      * These fields are adequate to perform a request.
      */
     Request(Addr paddr, unsigned size, Flags flags, MasterID mid)
-        : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
-          _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
-          _extraData(0), _contextId(0), _pc(0),
-          _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
-          accessDelta(0), depth(0)
     {
         setPhys(paddr, size, flags, mid, curTick());
     }
 
     Request(Addr paddr, unsigned size, Flags flags, MasterID mid, Tick time)
-        : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
-          _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
-          _extraData(0), _contextId(0), _pc(0),
-          _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
-          accessDelta(0), depth(0)
     {
         setPhys(paddr, size, flags, mid, time);
     }
 
     Request(uint64_t asid, Addr vaddr, unsigned size, Flags flags,
             MasterID mid, Addr pc, ContextID cid)
-        : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
-          _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
-          _extraData(0), _contextId(0), _pc(0),
-          _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
-          accessDelta(0), depth(0)
     {
         setVirt(asid, vaddr, size, flags, mid, pc);
         setContext(cid);
@@ -592,19 +566,19 @@ class Request
     /**
      * Time for the TLB/table walker to successfully translate this request.
      */
-    Tick translateDelta;
+    Tick translateDelta = 0;
 
     /**
      * Access latency to complete this memory transaction not including
      * translation time.
      */
-    Tick accessDelta;
+    Tick accessDelta = 0;
 
     /**
      * Level of the cache hierachy where this request was responded to
      * (e.g. 0 = L1; 1 = L2).
      */
-    mutable int depth;
+    mutable int depth = 0;
 
     /**
      *  Accessor for size.
