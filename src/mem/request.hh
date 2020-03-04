@@ -286,11 +286,11 @@ class Request
      * allocated Request object.
      */
     void
-    setPhys(Addr paddr, unsigned size, Flags flags, MasterID mid, Tick time)
+    setPhys(Addr paddr, unsigned size, Flags flags, MasterID mid)
     {
         _paddr = paddr;
         _size = size;
-        _time = time;
+        _time = curTick();
         _masterId = mid;
         _flags.clear(~STICKY_FLAGS);
         _flags.set(flags);
@@ -399,7 +399,7 @@ class Request
     Request(Addr paddr, unsigned size, Flags flags, MasterID mid,
             InstSeqNum seq_num, ContextID cid) : _reqInstSeqNum(seq_num)
     {
-        setPhys(paddr, size, flags, mid, curTick());
+        setPhys(paddr, size, flags, mid);
         setContext(cid);
         privateFlags.set(VALID_INST_SEQ_NUM);
     }
@@ -411,12 +411,7 @@ class Request
      */
     Request(Addr paddr, unsigned size, Flags flags, MasterID mid)
     {
-        setPhys(paddr, size, flags, mid, curTick());
-    }
-
-    Request(Addr paddr, unsigned size, Flags flags, MasterID mid, Tick time)
-    {
-        setPhys(paddr, size, flags, mid, time);
+        setPhys(paddr, size, flags, mid);
     }
 
     Request(uint64_t asid, Addr vaddr, unsigned size, Flags flags,
