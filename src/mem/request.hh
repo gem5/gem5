@@ -389,15 +389,8 @@ class Request
     }
 
     Request(uint64_t asid, Addr vaddr, unsigned size, Flags flags,
-            MasterID mid, Addr pc, ContextID cid)
-    {
-        setVirt(asid, vaddr, size, flags, mid, pc);
-        setContext(cid);
-    }
-
-    Request(uint64_t asid, Addr vaddr, unsigned size, Flags flags,
             MasterID mid, Addr pc, ContextID cid,
-            AtomicOpFunctorPtr atomic_op)
+            AtomicOpFunctorPtr atomic_op=nullptr)
     {
         setVirt(asid, vaddr, size, flags, mid, pc, std::move(atomic_op));
         setContext(cid);
@@ -455,7 +448,7 @@ class Request
      */
     void
     setVirt(uint64_t asid, Addr vaddr, unsigned size, Flags flags,
-            MasterID mid, Addr pc, AtomicOpFunctorPtr amo_op = nullptr)
+            MasterID mid, Addr pc, AtomicOpFunctorPtr amo_op=nullptr)
     {
         _asid = asid;
         _vaddr = vaddr;
