@@ -70,7 +70,6 @@ if env['TARGET_ISA'] == 'x86':
     Source('tlb.cc')
     Source('types.cc')
     Source('utility.cc')
-    Source('vtophys.cc')
 
     SimObject('X86FsWorkload.py')
     SimObject('X86ISA.py')

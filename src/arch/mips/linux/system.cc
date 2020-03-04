@@ -40,7 +40,6 @@
 #include "arch/generic/linux/threadinfo.hh"
 #include "arch/mips/idle_event.hh"
 #include "arch/mips/system.hh"
-#include "arch/vtophys.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"

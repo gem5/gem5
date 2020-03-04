@@ -29,7 +29,6 @@
 #include "arch/sparc/fs_workload.hh"
 
 #include "arch/sparc/faults.hh"
-#include "arch/vtophys.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"

@@ -30,7 +30,6 @@
 #include "arch/mips/system.hh"
 
 #include "arch/mips/registers.hh"
-#include "arch/mips/vtophys.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"

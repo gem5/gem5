@@ -69,7 +69,6 @@ env.SwitchingHeaders(
         stacktrace.hh
         types.hh
         utility.hh
-        vtophys.hh
         '''),
     env.subst('${TARGET_ISA}'))
 

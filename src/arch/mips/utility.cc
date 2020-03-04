@@ -32,7 +32,6 @@
 
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/registers.hh"
-#include "arch/mips/vtophys.hh"
 #include "base/bitfield.hh"
 #include "base/logging.hh"
 #include "cpu/static_inst.hh"

@@ -140,7 +140,7 @@
 #include "arch/arm/registers.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
-#include "arch/arm/vtophys.hh"
+#include "arch/generic/tlb.hh"
 #include "base/chunk_generator.hh"
 #include "base/intmath.hh"
 #include "base/remote_gdb.hh"
@@ -166,6 +166,26 @@
 using namespace std;
 using namespace ArmISA;
 
+static bool
+tryTranslate(ThreadContext *tc, Addr addr)
+{
+    // Set up a functional memory Request to pass to the TLB
+    // to get it to translate the vaddr to a paddr
+    auto req = std::make_shared<Request>(addr, 64, 0x40, -1, 0, 0);
+
+    // Check the TLBs for a translation
+    // It's possible that there is a valid translation in the tlb
+    // that is no loger valid in the page table in memory
+    // so we need to check here first
+    //
+    // Calling translateFunctional invokes a table-walk if required
+    // so we should always succeed
+    auto *dtb = tc->getDTBPtr();
+    auto *itb = tc->getITBPtr();
+    return dtb->translateFunctional(req, tc, BaseTLB::Read) == NoFault ||
+           itb->translateFunctional(req, tc, BaseTLB::Read) == NoFault;
+}
+
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc, int _port)
     : BaseRemoteGDB(_system, tc, _port), regCache32(this), regCache64(this)
 {
@@ -179,7 +199,7 @@ RemoteGDB::acc(Addr va, size_t len)
 {
     if (FullSystem) {
         for (ChunkGenerator gen(va, len, PageBytes); !gen.done(); gen.next()) {
-            if (!virtvalid(context(), gen.addr())) {
+            if (!tryTranslate(context(), gen.addr())) {
                 DPRINTF(GDBAcc, "acc:   %#x mapping is invalid\n", va);
                 return false;
             }

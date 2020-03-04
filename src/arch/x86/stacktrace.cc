@@ -31,7 +31,6 @@
 #include <string>
 
 #include "arch/x86/isa_traits.hh"
-#include "arch/x86/vtophys.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"

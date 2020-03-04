@@ -34,9 +34,11 @@
 
 #include "arch/power/isa_traits.hh"
 #include "arch/power/utility.hh"
-#include "arch/power/vtophys.hh"
 
-namespace PowerISA {
+namespace PowerISA
+{
+
+static inline Addr PteAddr(Addr a) { return (a & PteMask) << PteShift; }
 
 struct VAddr
 {

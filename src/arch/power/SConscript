@@ -49,7 +49,6 @@ if env['TARGET_ISA'] == 'power':
     Source('stacktrace.cc')
     Source('tlb.cc')
     Source('utility.cc')
-    Source('vtophys.cc')
 
     SimObject('PowerInterrupts.py')
     SimObject('PowerISA.py')

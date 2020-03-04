@@ -136,7 +136,6 @@
 
 #include <string>
 
-#include "arch/power/vtophys.hh"
 #include "cpu/thread_state.hh"
 #include "debug/GDBAcc.hh"
 #include "debug/GDBMisc.hh"

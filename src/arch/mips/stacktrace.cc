@@ -31,7 +31,6 @@
 #include <string>
 
 #include "arch/mips/isa_traits.hh"
-#include "arch/mips/vtophys.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"

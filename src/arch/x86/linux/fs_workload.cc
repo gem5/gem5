@@ -37,7 +37,6 @@
 
 #include "arch/x86/linux/fs_workload.hh"
 
-#include "arch/vtophys.hh"
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/regs/int.hh"
 #include "base/trace.hh"

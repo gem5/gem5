@@ -88,7 +88,6 @@ if env['TARGET_ISA'] == 'arm':
     Source('tlb.cc')
     Source('tlbi_op.cc')
     Source('utility.cc')
-    Source('vtophys.cc')
 
     SimObject('ArmFsWorkload.py')
     SimObject('ArmInterrupts.py')

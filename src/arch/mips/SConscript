@@ -46,7 +46,6 @@ if env['TARGET_ISA'] == 'mips':
     Source('system.cc')
     Source('tlb.cc')
     Source('utility.cc')
-    Source('vtophys.cc')
 
     SimObject('MipsInterrupts.py')
     SimObject('MipsISA.py')

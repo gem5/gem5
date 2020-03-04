@@ -124,7 +124,6 @@
 #include <csignal>
 #include <string>
 
-#include "arch/vtophys.hh"
 #include "base/intmath.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"

@@ -44,7 +44,6 @@
 
 #include <string>
 
-#include "arch/vtophys.hh"
 #include "arch/x86/pagetable_walker.hh"
 #include "arch/x86/process.hh"
 #include "arch/x86/regs/int.hh"

@@ -36,7 +36,6 @@
 #include "arch/riscv/isa_traits.hh"
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/utility.hh"
-#include "arch/riscv/vtophys.hh"
 #include "base/statistics.hh"
 #include "mem/request.hh"
 #include "params/RiscvTLB.hh"
