@@ -650,9 +650,8 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
 
     // Create a request and the packet containing request
     auto req = std::make_shared<Request>(
-        node_ptr->physAddr, node_ptr->size,
-        node_ptr->flags, masterID, node_ptr->seqNum,
-        ContextID(0));
+        node_ptr->physAddr, node_ptr->size, node_ptr->flags, masterID);
+    req->setReqInstSeqNum(node_ptr->seqNum);
 
     req->setPC(node_ptr->pc);
     // If virtual address is valid, set the asid and virtual address fields
