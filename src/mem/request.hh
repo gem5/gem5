@@ -282,26 +282,6 @@ class Request
   private:
 
     /**
-     * Set up a physical (e.g. device) request in a previously
-     * allocated Request object.
-     */
-    void
-    setPhys(Addr paddr, unsigned size, Flags flags, MasterID mid)
-    {
-        _paddr = paddr;
-        _size = size;
-        _time = curTick();
-        _masterId = mid;
-        _flags.clear(~STICKY_FLAGS);
-        _flags.set(flags);
-        privateFlags.clear(~STICKY_PRIVATE_FLAGS);
-        privateFlags.set(VALID_PADDR|VALID_SIZE);
-        depth = 0;
-        accessDelta = 0;
-        //translateDelta = 0;
-    }
-
-    /**
      * The physical address of the request. Valid only if validPaddr
      * is set.
      */
@@ -309,8 +289,8 @@ class Request
 
     /**
      * The size of the request. This field must be set when vaddr or
-     * paddr is written via setVirt() or setPhys(), so it is always
-     * valid as long as one of the address fields is valid.
+     * paddr is written via setVirt() or a phys basec constructor, so it is
+     * always valid as long as one of the address fields is valid.
      */
     unsigned _size = 0;
 
@@ -396,22 +376,16 @@ class Request
      */
     Request() {}
 
-    Request(Addr paddr, unsigned size, Flags flags, MasterID mid,
-            InstSeqNum seq_num, ContextID cid) : _reqInstSeqNum(seq_num)
-    {
-        setPhys(paddr, size, flags, mid);
-        setContext(cid);
-        privateFlags.set(VALID_INST_SEQ_NUM);
-    }
-
     /**
      * Constructor for physical (e.g. device) requests.  Initializes
      * just physical address, size, flags, and timestamp (to curTick()).
      * These fields are adequate to perform a request.
      */
-    Request(Addr paddr, unsigned size, Flags flags, MasterID mid)
+    Request(Addr paddr, unsigned size, Flags flags, MasterID mid) :
+        _paddr(paddr), _size(size), _masterId(mid), _time(curTick())
     {
-        setPhys(paddr, size, flags, mid);
+        _flags.set(flags);
+        privateFlags.set(VALID_PADDR|VALID_SIZE);
     }
 
     Request(uint64_t asid, Addr vaddr, unsigned size, Flags flags,
@@ -502,11 +476,8 @@ class Request
     }
 
     /**
-     * Set just the physical address.  This usually used to record the
-     * result of a translation. However, when using virtualized CPUs
-     * setPhys() is sometimes called to finalize a physical address
-     * without a virtual address, so we can't check if the virtual
-     * address is valid.
+     * Set just the physical address. This usually used to record the
+     * result of a translation.
      */
     void
     setPaddr(Addr paddr)
