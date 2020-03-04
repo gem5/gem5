@@ -138,7 +138,6 @@
 #include <sstream>
 #include <string>
 
-#include "arch/vtophys.hh"
 #include "base/intmath.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"

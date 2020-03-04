@@ -43,7 +43,6 @@
 
 #include "arch/stacktrace.hh"
 #include "arch/utility.hh"
-#include "arch/vtophys.hh"
 #include "base/cp_annotate.hh"
 #include "base/cprintf.hh"
 #include "base/inifile.hh"

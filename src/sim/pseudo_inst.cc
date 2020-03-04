@@ -49,7 +49,6 @@
 #include <string>
 #include <vector>
 
-#include "arch/vtophys.hh"
 #include "base/debug.hh"
 #include "base/output.hh"
 #include "config/the_isa.hh"

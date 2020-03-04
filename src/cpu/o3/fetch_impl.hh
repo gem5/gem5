@@ -51,7 +51,6 @@
 #include "arch/generic/tlb.hh"
 #include "arch/isa_traits.hh"
 #include "arch/utility.hh"
-#include "arch/vtophys.hh"
 #include "base/random.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
