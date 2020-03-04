@@ -30,6 +30,8 @@
 #define __BASE_INTMATH_HH__
 
 #include <cassert>
+#include <cstdint>
+#include <type_traits>
 
 #include "base/logging.hh"
 #include "base/types.hh"
@@ -37,95 +39,39 @@
 inline uint64_t
 power(uint32_t n, uint32_t e)
 {
-    if (e > 20)
-        warn("Warning, power() function is quite slow for large exponents\n");
-
-    if (e == 0)
-        return 1;
-
-    uint64_t result = n;
-    uint64_t old_result = 0;
-    for (int x = 1; x < e; x++) {
-        old_result = result;
-        result *= n;
-        if (old_result > result)
-            warn("power() overflowed!\n");
+    uint64_t result = 1;
+    uint64_t component = n;
+    while (e) {
+        uint64_t last = result;
+        if (e & 0x1)
+            result *= component;
+        warn_if(result < last, "power() overflowed!");
+        e >>= 1;
+        component *= component;
     }
     return result;
 }
 
-
-inline int
-floorLog2(unsigned x)
+template <class T>
+inline typename std::enable_if<std::is_integral<T>::value, int>::type
+floorLog2(T x)
 {
     assert(x > 0);
+
+    // A guaranteed unsigned version of x.
+    uint64_t ux = (typename std::make_unsigned<T>::type)x;
 
     int y = 0;
+    constexpr auto ts = sizeof(T);
 
-    if (x & 0xffff0000) { y += 16; x >>= 16; }
-    if (x & 0x0000ff00) { y +=  8; x >>=  8; }
-    if (x & 0x000000f0) { y +=  4; x >>=  4; }
-    if (x & 0x0000000c) { y +=  2; x >>=  2; }
-    if (x & 0x00000002) { y +=  1; }
-
-    return y;
-}
-
-inline int
-floorLog2(unsigned long x)
-{
-    assert(x > 0);
-
-    int y = 0;
-
-#if defined(__LP64__)
-    if (x & ULL(0xffffffff00000000)) { y += 32; x >>= 32; }
-#endif
-    if (x & 0xffff0000) { y += 16; x >>= 16; }
-    if (x & 0x0000ff00) { y +=  8; x >>=  8; }
-    if (x & 0x000000f0) { y +=  4; x >>=  4; }
-    if (x & 0x0000000c) { y +=  2; x >>=  2; }
-    if (x & 0x00000002) { y +=  1; }
+    if (ts >= 8 && (ux & ULL(0xffffffff00000000))) { y += 32; ux >>= 32; }
+    if (ts >= 4 && (ux & ULL(0x00000000ffff0000))) { y += 16; ux >>= 16; }
+    if (ts >= 2 && (ux & ULL(0x000000000000ff00))) { y +=  8; ux >>=  8; }
+    if (ux & ULL(0x00000000000000f0)) { y +=  4; ux >>=  4; }
+    if (ux & ULL(0x000000000000000c)) { y +=  2; ux >>=  2; }
+    if (ux & ULL(0x0000000000000002)) { y +=  1; }
 
     return y;
-}
-
-inline int
-floorLog2(unsigned long long x)
-{
-    assert(x > 0);
-
-    int y = 0;
-
-    if (x & ULL(0xffffffff00000000)) { y += 32; x >>= 32; }
-    if (x & ULL(0x00000000ffff0000)) { y += 16; x >>= 16; }
-    if (x & ULL(0x000000000000ff00)) { y +=  8; x >>=  8; }
-    if (x & ULL(0x00000000000000f0)) { y +=  4; x >>=  4; }
-    if (x & ULL(0x000000000000000c)) { y +=  2; x >>=  2; }
-    if (x & ULL(0x0000000000000002)) { y +=  1; }
-
-    return y;
-}
-
-inline int
-floorLog2(int x)
-{
-    assert(x > 0);
-    return floorLog2((unsigned)x);
-}
-
-inline int
-floorLog2(long x)
-{
-    assert(x > 0);
-    return floorLog2((unsigned long)x);
-}
-
-inline int
-floorLog2(long long x)
-{
-    assert(x > 0);
-    return floorLog2((unsigned long long)x);
 }
 
 template <class T>
@@ -143,7 +89,9 @@ template <class T>
 inline bool
 isPowerOf2(const T& n)
 {
-    return n != 0 && floorLog2(n) == ceilLog2(n);
+    // If n is non-zero, and subtracting one borrows all the way to the MSB
+    // and flips all bits, then this is a power of 2.
+    return n && !(n & (n - 1));
 }
 
 template <class T, class U>

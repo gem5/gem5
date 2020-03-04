@@ -58,6 +58,24 @@ TEST(IntmathTest, floorLog2)
     EXPECT_EQ(16, floorLog2(65537));
     EXPECT_EQ(20, floorLog2(1783592));
     EXPECT_EQ(41, floorLog2(2821109907456));
+
+    // Test unsigned integers of various sizes.
+    EXPECT_EQ(0, floorLog2((uint8_t)1));
+    EXPECT_EQ(0, floorLog2((uint16_t)1));
+    EXPECT_EQ(0, floorLog2((uint32_t)1));
+    EXPECT_EQ(0, floorLog2((uint64_t)1));
+
+    // Test signed integers of various sizes.
+    EXPECT_EQ(0, floorLog2((int8_t)1));
+    EXPECT_EQ(0, floorLog2((int16_t)1));
+    EXPECT_EQ(0, floorLog2((int32_t)1));
+    EXPECT_EQ(0, floorLog2((int64_t)1));
+}
+
+TEST(IntmathDeathTest, floorLog2)
+{
+    // Verify a non-positive input triggers an assert.
+    EXPECT_DEATH_IF_SUPPORTED(floorLog2(0), "x > 0");
 }
 
 TEST(IntmathTest, ceilLog2)
