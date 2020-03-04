@@ -63,7 +63,6 @@ env.SwitchingHeaders(
         kernel_stats.hh
         locked_mem.hh
         microcode_rom.hh
-        process.hh
         pseudo_inst.hh
         registers.hh
         remote_gdb.hh
