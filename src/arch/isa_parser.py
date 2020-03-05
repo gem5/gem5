@@ -2006,20 +2006,23 @@ class ISAParser(Grammar):
         kwargs = { t[2]+'_output' : self.process_output(t[3]) }
         GenCode(self, **kwargs).emit()
 
+    def make_split(self):
+        def _split(sec):
+            return self.split(sec)
+        return _split
+
     # global let blocks 'let {{...}}' (Python code blocks) are
     # executed directly when seen.  Note that these execute in a
     # special variable context 'exportContext' to prevent the code
     # from polluting this script's namespace.
     def p_global_let(self, t):
         'global_let : LET CODELIT SEMI'
-        def _split(sec):
-            return self.split(sec)
         self.updateExportContext()
         self.exportContext["header_output"] = ''
         self.exportContext["decoder_output"] = ''
         self.exportContext["exec_output"] = ''
         self.exportContext["decode_block"] = ''
-        self.exportContext["split"] = _split
+        self.exportContext["split"] = self.make_split()
         split_setup = '''
 def wrap(func):
     def split(sec):
