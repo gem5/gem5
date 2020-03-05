@@ -316,7 +316,7 @@ class Request
      * latencies. This field is set to curTick() any time paddr or vaddr
      * is written.
      */
-    Tick _time = 0;
+    Tick _time = MaxTick;
 
     /**
      * The task id associated with this request
@@ -339,7 +339,7 @@ class Request
     uint32_t _substreamId = 0;
 
     /** The virtual address of the request. */
-    Addr _vaddr = 0;
+    Addr _vaddr = MaxAddr;
 
     /**
      * Extra data for the request, such as the return value of
@@ -347,10 +347,10 @@ class Request
     uint64_t _extraData = 0;
 
     /** The context ID (for statistics, locks, and wakeups). */
-    ContextID _contextId = 0;
+    ContextID _contextId = InvalidContextID;
 
     /** program counter of initiating access; for tracing/debugging */
-    Addr _pc = 0;
+    Addr _pc = MaxAddr;
 
     /** Sequence number of the instruction that creates the request */
     InstSeqNum _reqInstSeqNum = 0;
