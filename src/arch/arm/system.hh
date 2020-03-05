@@ -48,6 +48,7 @@
 #include "kern/linux/events.hh"
 #include "params/ArmSystem.hh"
 #include "params/GenericArmSystem.hh"
+#include "sim/full_system.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
@@ -274,7 +275,12 @@ class ArmSystem : public System
      * Returns a valid ArmSystem pointer if using ARM ISA, it fails
      * otherwise.
      */
-    static ArmSystem* getArmSystem(ThreadContext *tc);
+    static ArmSystem*
+    getArmSystem(ThreadContext *tc)
+    {
+        assert(FullSystem);
+        return static_cast<ArmSystem *>(tc->getSystemPtr());
+    }
 
     /** Returns true if the system of a specific thread context implements the
      * Security Extensions

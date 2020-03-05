@@ -50,7 +50,6 @@
 #include "dev/arm/gic_v2.hh"
 #include "mem/fs_translating_port_proxy.hh"
 #include "mem/physical.hh"
-#include "sim/full_system.hh"
 
 using namespace std;
 using namespace Linux;
@@ -178,13 +177,6 @@ ArmSystem::initState()
             threadContexts[0]->pcState((kernelEntry & loadAddrMask) +
                     loadAddrOffset);
     }
-}
-
-ArmSystem*
-ArmSystem::getArmSystem(ThreadContext *tc)
-{
-    assert(FullSystem);
-    return static_cast<ArmSystem *>(tc->getSystemPtr());
 }
 
 bool
