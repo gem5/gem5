@@ -90,7 +90,7 @@ Source('loader/symtab.cc')
 Source('stats/group.cc')
 Source('stats/text.cc')
 if env['USE_HDF5']:
-    Source('stats/hdf5.cc')
+    Source('stats/hdf5.cc', append={'CXXFLAGS': '-Wno-deprecated-copy'})
 
 GTest('addr_range.test', 'addr_range.test.cc')
 GTest('addr_range_map.test', 'addr_range_map.test.cc')
