@@ -97,17 +97,10 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
 {
     MapIter i;
     TlbEntry *new_entry = NULL;
-//    TlbRange tr;
     int x;
 
     cacheValid = false;
     va &= ~(PTE.size()-1);
- /*   tr.va = va;
-    tr.size = PTE.size() - 1;
-    tr.contextId = context_id;
-    tr.partitionId = partition_id;
-    tr.real = real;
-*/
 
     DPRINTF(TLB,
         "TLB: Inserting Entry; va=%#x pa=%#x pid=%d cid=%d r=%d entryid=%d\n",
@@ -658,12 +651,6 @@ TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
     if (!implicit && asi != ASI_P && asi != ASI_S) {
         if (asiIsLittle(asi))
             panic("Little Endian ASIs not supported\n");
-
-        //XXX It's unclear from looking at the documentation how a no fault
-        // load differs from a regular one, other than what happens concerning
-        // nfo and e bits in the TTE
-//        if (asiIsNoFault(asi))
-//            panic("No Fault ASIs not supported\n");
 
         if (asiIsPartialStore(asi))
             panic("Partial Store ASIs not supported\n");
