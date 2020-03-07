@@ -832,6 +832,102 @@ TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode)
         return translateData(req, tc, mode == Write);
 }
 
+Fault
+TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
+{
+    Addr vaddr = req->getVaddr();
+
+    // Here we have many options and are really implementing something like
+    // a fill handler to find the address since there isn't a multilevel
+    // table for us to walk around.
+    //
+    // 1. We are currently hyperpriv, return the address unmodified
+    // 2. The mmu is off return(ra->pa)
+    // 3. We are currently priv, use ctx0* tsbs to find the page
+    // 4. We are not priv, use ctxN0* tsbs to find the page
+    // For all accesses we check the tlbs first since it's possible that
+    // long standing pages (e.g. locked kernel mappings) won't be in the tsb
+    uint64_t tlbdata = tc->readMiscRegNoEffect(MISCREG_TLB_DATA);
+
+    bool hpriv = bits(tlbdata,0,0);
+    // bool priv = bits(tlbdata,2,2);
+    bool addr_mask = bits(tlbdata,3,3);
+    bool data_real = !bits(tlbdata,5,5);
+    bool inst_real = !bits(tlbdata,4,4);
+    bool ctx_zero  = bits(tlbdata,18,16) > 0;
+    int part_id = bits(tlbdata,15,8);
+    int pri_context = bits(tlbdata,47,32);
+    // int sec_context = bits(tlbdata,63,48);
+
+    bool real = (mode == Execute) ? inst_real : data_real;
+
+    PortProxy &mem = tc->getPhysProxy();
+    TlbEntry* tbe;
+    PageTableEntry pte;
+    Addr tsbs[4];
+    Addr va_tag;
+    TteTag ttetag;
+
+    if (hpriv) {
+        req->setPaddr(vaddr);
+        return NoFault;
+    }
+
+    if (vaddr & (size - 1))
+        return std::make_shared<MemAddressNotAligned>();
+
+    if (addr_mask)
+        vaddr = vaddr & VAddrAMask;
+
+    if (!validVirtualAddress(vaddr, addr_mask)) {
+        if (mode == Execute)
+            return std::make_shared<InstructionAccessException>();
+        else
+            return std::make_shared<DataAccessException>();
+    }
+
+    tbe = lookup(vaddr, part_id, real, ctx_zero ? 0 : pri_context, false);
+    if (tbe) {
+        pte = tbe->pte;
+        DPRINTF(TLB, "Virtual(%#x)->Physical(%#x) found in TLB\n", vaddr,
+                pte.translate(vaddr));
+        req->setPaddr(pte.translate(vaddr));
+        return NoFault;
+    }
+
+    // We didn't find it in the tlbs, so lets look at the TSBs
+    GetTsbPtr(tc, vaddr, ctx_zero ? 0 : pri_context, tsbs);
+    va_tag = bits(vaddr, 63, 22);
+    for (int x = 0; x < 4; x++) {
+        ttetag = betoh(mem.read<uint64_t>(tsbs[x]));
+        if (ttetag.valid() && ttetag.va() == va_tag) {
+            uint64_t entry = mem.read<uint64_t>(tsbs[x]) + sizeof(uint64_t);
+            // I think it's sun4v at least!
+            pte.populate(betoh(entry), PageTableEntry::sun4v);
+            DPRINTF(TLB, "Virtual(%#x)->Physical(%#x) found in TTE\n",
+                    vaddr, pte.translate(vaddr));
+            req->setPaddr(pte.translate(vaddr));
+            return NoFault;
+        }
+    }
+
+    if (mode == Execute) {
+        if (real)
+            return std::make_shared<InstructionRealTranslationMiss>();
+        else if (FullSystem)
+            return std::make_shared<FastInstructionAccessMMUMiss>();
+        else
+            return std::make_shared<FastInstructionAccessMMUMiss>(vaddr);
+    } else {
+        if (real)
+            return std::make_shared<DataRealTranslationMiss>();
+        else if (FullSystem)
+            return std::make_shared<FastDataAccessMMUMiss>();
+        else
+            return std::make_shared<FastDataAccessMMUMiss>(vaddr);
+    }
+}
+
 void
 TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
         Translation *translation, Mode mode)
