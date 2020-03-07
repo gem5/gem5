@@ -124,6 +124,8 @@ namespace X86ISA
 
         Fault translateAtomic(
             const RequestPtr &req, ThreadContext *tc, Mode mode) override;
+        Fault translateFunctional(
+            const RequestPtr &req, ThreadContext *tc, Mode mode) override;
         void translateTiming(
             const RequestPtr &req, ThreadContext *tc,
             Translation *translation, Mode mode) override;

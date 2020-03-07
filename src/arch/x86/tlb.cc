@@ -469,6 +469,40 @@ TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode)
     return TLB::translate(req, tc, NULL, mode, delayedResponse, false);
 }
 
+Fault
+TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
+{
+    unsigned logBytes;
+    const Addr vaddr = req->getVaddr();
+    Addr addr = vaddr;
+    Addr paddr = 0;
+    if (FullSystem) {
+        Fault fault = walker->startFunctional(tc, addr, logBytes, mode);
+        if (fault != NoFault)
+            return fault;
+        paddr = insertBits(addr, logBytes, 0, vaddr);
+    } else {
+        Process *process = tc->getProcessPtr();
+        const auto *pte = process->pTable->lookup(vaddr);
+
+        if (!pte && mode != Execute) {
+            // Check if we just need to grow the stack.
+            if (process->fixupStackFault(vaddr)) {
+                // If we did, lookup the entry for the new page.
+                pte = process->pTable->lookup(vaddr);
+            }
+        }
+
+        if (!pte)
+            return std::make_shared<PageFault>(vaddr, true, mode, true, false);
+
+        paddr = pte->paddr | process->pTable->pageOffset(vaddr);
+    }
+    DPRINTF(TLB, "Translated (functional) %#x -> %#x.\n", vaddr, paddr);
+    req->setPaddr(paddr);
+    return NoFault;
+}
+
 void
 TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
         Translation *translation, Mode mode)
