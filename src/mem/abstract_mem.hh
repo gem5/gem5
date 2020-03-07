@@ -210,11 +210,6 @@ class AbstractMemory : public ClockedObject
     virtual ~AbstractMemory() {}
 
     /**
-     * Initialise this memory.
-     */
-    void init() override;
-
-    /**
      * See if this is a null memory that should never store data and
      * always return zero.
      *

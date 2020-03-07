@@ -61,15 +61,9 @@ AbstractMemory::AbstractMemory(const Params *p) :
     kvmMap(p->kvm_map), _system(NULL),
     stats(*this)
 {
-}
-
-void
-AbstractMemory::init()
-{
-    assert(system());
-
-    if (size() % _system->getPageBytes() != 0)
-        panic("Memory Size not divisible by page size\n");
+    panic_if(!range.valid() || !range.size(),
+             "Memory range %s must be valid with non-zero size.",
+             range.to_string());
 }
 
 void
