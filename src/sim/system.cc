@@ -213,7 +213,8 @@ System::System(Params *p)
 #else
       kvmVM(nullptr),
 #endif
-      physmem(name() + ".physmem", p->memories, p->mmap_using_noreserve),
+      physmem(name() + ".physmem", p->memories, p->mmap_using_noreserve,
+              p->shared_backstore),
       memoryMode(p->mem_mode),
       _cacheLineSize(p->cache_line_size),
       workItemsBegin(0),

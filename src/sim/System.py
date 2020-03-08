@@ -78,6 +78,10 @@ class System(SimObject):
     # I/O bridge or cache
     mem_ranges = VectorParam.AddrRange([], "Ranges that constitute main memory")
 
+    shared_backstore = Param.String("", "backstore's shmem segment filename, "
+        "use to directly address the backstore from another host-OS process. "
+        "Leave this empty to unset the MAP_SHARED flag.")
+
     cache_line_size = Param.Unsigned(64, "Cache line size in bytes")
 
     redirect_paths = VectorParam.RedirectPath([], "Path redirections")
