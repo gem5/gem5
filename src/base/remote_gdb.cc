@@ -604,14 +604,6 @@ BaseRemoteGDB::send(const char *bp)
 bool
 BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 {
-    static Addr lastaddr = 0;
-    static size_t lastsize = 0;
-
-    if (vaddr < 10) {
-      DPRINTF(GDBRead, "read:  reading memory location zero!\n");
-      vaddr = lastaddr + lastsize;
-    }
-
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 
     PortProxy &proxy = tc->getVirtProxy();
@@ -635,14 +627,6 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 bool
 BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
 {
-    static Addr lastaddr = 0;
-    static size_t lastsize = 0;
-
-    if (vaddr < 10) {
-      DPRINTF(GDBWrite, "write: writing memory location zero!\n");
-      vaddr = lastaddr + lastsize;
-    }
-
     if (DTRACE(GDBWrite)) {
         DPRINTFN("write: addr=%#x, size=%d", vaddr, size);
         if (DTRACE(GDBExtra)) {
