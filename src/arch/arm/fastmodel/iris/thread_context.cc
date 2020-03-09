@@ -410,8 +410,7 @@ ThreadContext::initMemProxies(::ThreadContext *tc)
         virtProxy.reset(new FSTranslatingPortProxy(tc));
     } else {
         assert(!virtProxy);
-        virtProxy.reset(new SETranslatingPortProxy(
-                        _cpu->getSendFunctional(), getProcessPtr(),
+        virtProxy.reset(new SETranslatingPortProxy(this,
                         SETranslatingPortProxy::NextPage));
     }
 }

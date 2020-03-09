@@ -41,26 +41,9 @@
 #ifndef __MEM_SE_TRANSLATING_PORT_PROXY_HH__
 #define __MEM_SE_TRANSLATING_PORT_PROXY_HH__
 
-#include "mem/port_proxy.hh"
+#include "mem/fs_translating_port_proxy.hh"
 
-class EmulationPageTable;
-class Process;
-
-/**
- * @file
- * TranslatingPortProxy Object Declaration for SE.
- *
- * Port proxies are used when non structural entities need access to
- * the memory system. Proxy objects replace the previous
- * FunctionalPort, TranslatingPort and VirtualPort objects, which
- * provided the same functionality as the proxies, but were instances
- * of ports not corresponding to real structural ports of the
- * simulated system. Via the port proxies all the accesses go through
- * an actual port and thus are transparent to a potentially
- * distributed memory and automatically adhere to the memory map of
- * the system.
- */
-class SETranslatingPortProxy : public PortProxy
+class SETranslatingPortProxy : public FSTranslatingPortProxy
 {
 
   public:
@@ -71,21 +54,13 @@ class SETranslatingPortProxy : public PortProxy
     };
 
   private:
-    EmulationPageTable *pTable;
-    Process *process;
     AllocType allocating;
 
-  public:
-    SETranslatingPortProxy(SendFunctionalFunc func,
-                           Process* p, AllocType alloc);
-    SETranslatingPortProxy(MasterPort &port, Process* p, AllocType alloc);
-    ~SETranslatingPortProxy() {}
+  protected:
+    bool fixupAddr(Addr addr, BaseTLB::Mode mode) const override;
 
-    void setPageTable(EmulationPageTable *p) { pTable = p; }
-    void setProcess(Process *p) { process = p; }
-    bool tryReadBlob(Addr addr, void *p, int size) const override;
-    bool tryWriteBlob(Addr addr, const void *p, int size) const override;
-    bool tryMemsetBlob(Addr addr, uint8_t val, int size) const override;
+  public:
+    SETranslatingPortProxy(ThreadContext *tc, AllocType alloc);
 };
 
 #endif // __MEM_SE_TRANSLATING_PORT_PROXY_HH__

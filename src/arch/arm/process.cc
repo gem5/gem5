@@ -404,16 +404,16 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
 
     //Write out the sentry void *
     IntType sentry_NULL = 0;
-    initVirtMem.writeBlob(sentry_base, &sentry_NULL, sentry_size);
+    initVirtMem->writeBlob(sentry_base, &sentry_NULL, sentry_size);
 
     //Fix up the aux vectors which point to other data
     for (int i = auxv.size() - 1; i >= 0; i--) {
         if (auxv[i].type == M5_AT_PLATFORM) {
             auxv[i].val = platform_base;
-            initVirtMem.writeString(platform_base, platform.c_str());
+            initVirtMem->writeString(platform_base, platform.c_str());
         } else if (auxv[i].type == M5_AT_EXECFN) {
             auxv[i].val = aux_data_base;
-            initVirtMem.writeString(aux_data_base, filename.c_str());
+            initVirtMem->writeString(aux_data_base, filename.c_str());
         } else if (auxv[i].type == M5_AT_RANDOM) {
             auxv[i].val = aux_random_base;
             // Just leave the value 0, we don't want randomness
@@ -423,20 +423,20 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
     //Copy the aux stuff
     Addr auxv_array_end = auxv_array_base;
     for (const auto &aux: auxv) {
-        initVirtMem.write(auxv_array_end, aux, GuestByteOrder);
+        initVirtMem->write(auxv_array_end, aux, GuestByteOrder);
         auxv_array_end += sizeof(aux);
     }
     //Write out the terminating zeroed auxillary vector
     const AuxVector<IntType> zero(0, 0);
-    initVirtMem.write(auxv_array_end, zero);
+    initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
     copyStringArray(envp, envp_array_base, env_data_base,
-                    LittleEndianByteOrder, initVirtMem);
+                    LittleEndianByteOrder, *initVirtMem);
     copyStringArray(argv, argv_array_base, arg_data_base,
-                    LittleEndianByteOrder, initVirtMem);
+                    LittleEndianByteOrder, *initVirtMem);
 
-    initVirtMem.writeBlob(argc_base, &guestArgc, intSize);
+    initVirtMem->writeBlob(argc_base, &guestArgc, intSize);
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     //Set the stack pointer register

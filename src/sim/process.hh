@@ -33,6 +33,7 @@
 #include <inttypes.h>
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -172,7 +173,8 @@ class Process : public SimObject
 
     EmulationPageTable *pTable;
 
-    SETranslatingPortProxy initVirtMem; // memory proxy for initial image load
+    // Memory proxy for initial image load.
+    std::unique_ptr<SETranslatingPortProxy> initVirtMem;
 
     /**
      * Each instance of a Loader subclass will have a chance to try to load

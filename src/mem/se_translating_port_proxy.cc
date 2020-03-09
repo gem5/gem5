@@ -40,98 +40,28 @@
 
 #include "mem/se_translating_port_proxy.hh"
 
-#include <string>
-
-#include "arch/isa_traits.hh"
-#include "base/chunk_generator.hh"
-#include "config/the_isa.hh"
-#include "mem/page_table.hh"
 #include "sim/process.hh"
 #include "sim/system.hh"
 
-using namespace TheISA;
-
 SETranslatingPortProxy::SETranslatingPortProxy(
-        SendFunctionalFunc func, Process *p, AllocType alloc)
-    : PortProxy(func, p->system->cacheLineSize()), pTable(p->pTable),
-      process(p), allocating(alloc)
-{ }
-SETranslatingPortProxy::SETranslatingPortProxy(MasterPort &port,
-                                               Process *p, AllocType alloc)
-    : PortProxy(port, p->system->cacheLineSize()), pTable(p->pTable),
-      process(p), allocating(alloc)
-{ }
+        ThreadContext *tc, AllocType alloc)
+    : FSTranslatingPortProxy(tc), allocating(alloc)
+{}
 
 bool
-SETranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
+SETranslatingPortProxy::fixupAddr(Addr addr, BaseTLB::Mode mode) const
 {
-    int prevSize = 0;
-    auto *bytes = static_cast<uint8_t *>(p);
+    auto *process = _tc->getProcessPtr();
 
-    for (ChunkGenerator gen(addr, size, PageBytes); !gen.done(); gen.next()) {
-        Addr paddr;
-
-        if (!pTable->translate(gen.addr(),paddr))
-            return false;
-
-        PortProxy::readBlobPhys(paddr, 0, bytes + prevSize, gen.size());
-        prevSize += gen.size();
-    }
-
-    return true;
-}
-
-
-bool
-SETranslatingPortProxy::tryWriteBlob(Addr addr, const void *p, int size) const
-{
-    int prevSize = 0;
-    auto *bytes = static_cast<const uint8_t *>(p);
-
-    for (ChunkGenerator gen(addr, size, PageBytes); !gen.done(); gen.next()) {
-        Addr paddr;
-
-        if (!pTable->translate(gen.addr(), paddr)) {
-            if (allocating == Always) {
-                process->allocateMem(roundDown(gen.addr(), PageBytes),
-                                     PageBytes);
-            } else if (allocating == NextPage) {
-                // check if we've accessed the next page on the stack
-                if (!process->fixupStackFault(gen.addr()))
-                    panic("Page table fault when accessing virtual address %#x "
-                            "during functional write\n", gen.addr());
-            } else {
-                return false;
-            }
-            pTable->translate(gen.addr(), paddr);
+    if (mode == BaseTLB::Write) {
+        if (allocating == Always) {
+            process->allocateMem(roundDown(addr, pageBytes), pageBytes);
+            return true;
+        } else if (allocating == NextPage && process->fixupStackFault(addr)) {
+            // We've accessed the next page on the stack.
+            return true;
         }
-
-        PortProxy::writeBlobPhys(paddr, 0, bytes + prevSize, gen.size());
-        prevSize += gen.size();
     }
-
-    return true;
-}
-
-
-bool
-SETranslatingPortProxy::tryMemsetBlob(Addr addr, uint8_t val, int size) const
-{
-    for (ChunkGenerator gen(addr, size, PageBytes); !gen.done(); gen.next()) {
-        Addr paddr;
-
-        if (!pTable->translate(gen.addr(), paddr)) {
-            if (allocating == Always) {
-                process->allocateMem(roundDown(gen.addr(), PageBytes),
-                                     PageBytes);
-                pTable->translate(gen.addr(), paddr);
-            } else {
-                return false;
-            }
-        }
-
-        PortProxy::memsetBlobPhys(paddr, 0, val, gen.size());
-    }
-
-    return true;
+    panic("Page table fault when accessing virtual address %#x "
+          "during functional write.", addr);
 }

@@ -351,29 +351,29 @@ SparcProcess::argsInit(int pageSize)
 
     // Write out the sentry void *
     uint64_t sentry_NULL = 0;
-    initVirtMem.writeBlob(sentry_base, &sentry_NULL, sentry_size);
+    initVirtMem->writeBlob(sentry_base, &sentry_NULL, sentry_size);
 
     // Write the file name
-    initVirtMem.writeString(file_name_base, filename.c_str());
+    initVirtMem->writeString(file_name_base, filename.c_str());
 
     // Copy the aux stuff
     Addr auxv_array_end = auxv_array_base;
     for (const auto &aux: auxv) {
-        initVirtMem.write(auxv_array_end, aux, GuestByteOrder);
+        initVirtMem->write(auxv_array_end, aux, GuestByteOrder);
         auxv_array_end += sizeof(aux);
     }
 
     // Write out the terminating zeroed auxilliary vector
     const AuxVector<IntType> zero(0, 0);
-    initVirtMem.write(auxv_array_end, zero);
+    initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
     copyStringArray(envp, envp_array_base, env_data_base,
-                    BigEndianByteOrder, initVirtMem);
+                    BigEndianByteOrder, *initVirtMem);
     copyStringArray(argv, argv_array_base, arg_data_base,
-                    BigEndianByteOrder, initVirtMem);
+                    BigEndianByteOrder, *initVirtMem);
 
-    initVirtMem.writeBlob(argc_base, &guestArgc, intSize);
+    initVirtMem->writeBlob(argc_base, &guestArgc, intSize);
 
     // Set up space for the trap handlers into the processes address space.
     // Since the stack grows down and there is reserved address space abov
@@ -404,9 +404,9 @@ Sparc64Process::argsInit(int intSize, int pageSize)
     SparcProcess::argsInit<uint64_t>(pageSize);
 
     // Stuff the trap handlers into the process address space
-    initVirtMem.writeBlob(fillStart,
+    initVirtMem->writeBlob(fillStart,
             fillHandler64, sizeof(MachInst) * numFillInsts);
-    initVirtMem.writeBlob(spillStart,
+    initVirtMem->writeBlob(spillStart,
             spillHandler64, sizeof(MachInst) *  numSpillInsts);
 }
 
@@ -416,9 +416,9 @@ Sparc32Process::argsInit(int intSize, int pageSize)
     SparcProcess::argsInit<uint32_t>(pageSize);
 
     // Stuff the trap handlers into the process address space
-    initVirtMem.writeBlob(fillStart,
+    initVirtMem->writeBlob(fillStart,
             fillHandler32, sizeof(MachInst) * numFillInsts);
-    initVirtMem.writeBlob(spillStart,
+    initVirtMem->writeBlob(spillStart,
             spillHandler32, sizeof(MachInst) *  numSpillInsts);
 }
 

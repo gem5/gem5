@@ -56,22 +56,32 @@
 #ifndef __MEM_FS_TRANSLATING_PORT_PROXY_HH__
 #define __MEM_FS_TRANSLATING_PORT_PROXY_HH__
 
+#include "arch/generic/tlb.hh"
 #include "mem/port_proxy.hh"
 
 class ThreadContext;
 
 /**
- * A TranslatingPortProxy in FS mode translates a virtual address to a
- * physical address and then calls the read/write functions of the
- * port. If a thread context is provided the address can alway be
- * translated, If not it can only be translated if it is a simple
- * address masking operation (such as alpha super page accesses).
+ * This proxy attempts to translate virtual addresses using the TLBs. If it
+ * fails, subclasses can override the fixupAddr virtual method to try to
+ * recover, and then attempt the translation again. If it still fails then the
+ * access as a whole fails.
  */
 class FSTranslatingPortProxy : public PortProxy
 {
   private:
+    bool tryTLBsOnce(RequestPtr req, BaseTLB::Mode) const;
+    bool tryTLBs(RequestPtr req, BaseTLB::Mode) const;
+
+  protected:
     ThreadContext* _tc;
     const Addr pageBytes;
+
+    virtual bool
+    fixupAddr(Addr addr, BaseTLB::Mode mode) const
+    {
+        return false;
+    }
 
   public:
 

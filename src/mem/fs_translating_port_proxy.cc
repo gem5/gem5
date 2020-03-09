@@ -45,7 +45,6 @@
 
 #include "mem/fs_translating_port_proxy.hh"
 
-#include "arch/generic/tlb.hh"
 #include "base/chunk_generator.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
@@ -58,21 +57,35 @@ FSTranslatingPortProxy::FSTranslatingPortProxy(ThreadContext *tc) :
 {}
 
 bool
-FSTranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
+FSTranslatingPortProxy::tryTLBsOnce(RequestPtr req, BaseTLB::Mode mode) const
 {
     BaseTLB *dtb = _tc->getDTBPtr();
     BaseTLB *itb = _tc->getDTBPtr();
+    return dtb->translateFunctional(req, _tc, mode) == NoFault ||
+           itb->translateFunctional(req, _tc, BaseTLB::Read) == NoFault;
+}
 
+bool
+FSTranslatingPortProxy::tryTLBs(RequestPtr req, BaseTLB::Mode mode) const
+{
+    // If at first this doesn't succeed, try to fixup and translate again. If
+    // it still fails, report failure.
+    return tryTLBsOnce(req, mode) ||
+        (fixupAddr(req->getVaddr(), mode) && tryTLBsOnce(req, mode));
+}
+
+bool
+FSTranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
+{
     for (ChunkGenerator gen(addr, size, pageBytes); !gen.done();
          gen.next())
     {
         auto req = std::make_shared<Request>(
                 gen.addr(), gen.size(), 0, Request::funcMasterId, 0,
                 _tc->contextId());
-        if (dtb->translateFunctional(req, _tc, BaseTLB::Read) != NoFault &&
-            itb->translateFunctional(req, _tc, BaseTLB::Read) != NoFault) {
+
+        if (!tryTLBs(req, BaseTLB::Read))
             return false;
-        }
 
         PortProxy::readBlobPhys(
                 req->getPaddr(), req->getFlags(), p, gen.size());
@@ -86,19 +99,15 @@ bool
 FSTranslatingPortProxy::tryWriteBlob(
         Addr addr, const void *p, int size) const
 {
-    BaseTLB *dtb = _tc->getDTBPtr();
-    BaseTLB *itb = _tc->getDTBPtr();
-
     for (ChunkGenerator gen(addr, size, pageBytes); !gen.done();
          gen.next())
     {
         auto req = std::make_shared<Request>(
                 gen.addr(), gen.size(), 0, Request::funcMasterId, 0,
                 _tc->contextId());
-        if (dtb->translateFunctional(req, _tc, BaseTLB::Write) != NoFault &&
-            itb->translateFunctional(req, _tc, BaseTLB::Write) != NoFault) {
+
+        if (!tryTLBs(req, BaseTLB::Write))
             return false;
-        }
 
         PortProxy::writeBlobPhys(
                 req->getPaddr(), req->getFlags(), p, gen.size());
@@ -110,19 +119,15 @@ FSTranslatingPortProxy::tryWriteBlob(
 bool
 FSTranslatingPortProxy::tryMemsetBlob(Addr address, uint8_t v, int size) const
 {
-    BaseTLB *dtb = _tc->getDTBPtr();
-    BaseTLB *itb = _tc->getDTBPtr();
-
     for (ChunkGenerator gen(address, size, pageBytes); !gen.done();
          gen.next())
     {
         auto req = std::make_shared<Request>(
                 gen.addr(), gen.size(), 0, Request::funcMasterId, 0,
                 _tc->contextId());
-        if (dtb->translateFunctional(req, _tc, BaseTLB::Write) != NoFault &&
-            itb->translateFunctional(req, _tc, BaseTLB::Write) != NoFault) {
+
+        if (!tryTLBs(req, BaseTLB::Write))
             return false;
-        }
 
         PortProxy::memsetBlobPhys(
                 req->getPaddr(), req->getFlags(), v, gen.size());

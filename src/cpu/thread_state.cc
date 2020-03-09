@@ -115,9 +115,8 @@ ThreadState::initMemProxies(ThreadContext *tc)
         virtProxy = new FSTranslatingPortProxy(tc);
     } else {
         assert(virtProxy == NULL);
-        virtProxy = new SETranslatingPortProxy(baseCpu->getSendFunctional(),
-                                           process,
-                                           SETranslatingPortProxy::NextPage);
+        virtProxy = new SETranslatingPortProxy(
+                tc, SETranslatingPortProxy::NextPage);
     }
 }
 

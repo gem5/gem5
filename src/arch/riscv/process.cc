@@ -155,17 +155,17 @@ RiscvProcess::argsInit(int pageSize)
     uint8_t at_random[RandomBytes];
     generate(begin(at_random), end(at_random),
              [&]{ return random_mt.random(0, 0xFF); });
-    initVirtMem.writeBlob(memState->getStackMin(), at_random, RandomBytes);
+    initVirtMem->writeBlob(memState->getStackMin(), at_random, RandomBytes);
 
     // Copy argv to stack
     vector<Addr> argPointers;
     for (const string& arg: argv) {
         memState->setStackMin(memState->getStackMin() - (arg.size() + 1));
-        initVirtMem.writeString(memState->getStackMin(), arg.c_str());
+        initVirtMem->writeString(memState->getStackMin(), arg.c_str());
         argPointers.push_back(memState->getStackMin());
         if (DTRACE(Stack)) {
             string wrote;
-            initVirtMem.readString(wrote, argPointers.back());
+            initVirtMem->readString(wrote, argPointers.back());
             DPRINTFN("Wrote arg \"%s\" to address %p\n",
                     wrote, (void*)memState->getStackMin());
         }
@@ -176,7 +176,7 @@ RiscvProcess::argsInit(int pageSize)
     vector<Addr> envPointers;
     for (const string& env: envp) {
         memState->setStackMin(memState->getStackMin() - (env.size() + 1));
-        initVirtMem.writeString(memState->getStackMin(), env.c_str());
+        initVirtMem->writeString(memState->getStackMin(), env.c_str());
         envPointers.push_back(memState->getStackMin());
         DPRINTF(Stack, "Wrote env \"%s\" to address %p\n",
                 env, (void*)memState->getStackMin());
@@ -195,7 +195,7 @@ RiscvProcess::argsInit(int pageSize)
     Addr sp = memState->getStackMin();
     const auto pushOntoStack =
         [this, &sp](IntType data) {
-            initVirtMem.write(sp, data, GuestByteOrder);
+            initVirtMem->write(sp, data, GuestByteOrder);
             sp += sizeof(data);
         };
 

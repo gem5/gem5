@@ -116,8 +116,6 @@ Process::Process(ProcessParams *params, EmulationPageTable *pTable,
       kvmInSE(params->kvmInSE),
       useForClone(false),
       pTable(pTable),
-      initVirtMem(system->getSystemPort(), this,
-                  SETranslatingPortProxy::Always),
       objFile(obj_file),
       argv(params->cmd), envp(params->env),
       executable(params->executable),
@@ -189,9 +187,6 @@ Process::clone(ThreadContext *otc, ThreadContext *ntc,
          */
         delete np->pTable;
         np->pTable = pTable;
-        auto &proxy = dynamic_cast<SETranslatingPortProxy &>(
-                ntc->getVirtProxy());
-        proxy.setPageTable(np->pTable);
 
         np->memState = memState;
     } else {
@@ -312,9 +307,12 @@ Process::initState()
 
     pTable->initState();
 
+    initVirtMem.reset(new SETranslatingPortProxy(
+                tc, SETranslatingPortProxy::Always));
+
     // load object file into target memory
-    image.write(initVirtMem);
-    interpImage.write(initVirtMem);
+    image.write(*initVirtMem);
+    interpImage.write(*initVirtMem);
 }
 
 DrainState

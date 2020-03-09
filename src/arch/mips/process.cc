@@ -159,24 +159,24 @@ MipsProcess::argsInit(int pageSize)
 
     argc = htole((IntType)argc);
 
-    initVirtMem.writeBlob(memState->getStackMin(), &argc, intSize);
+    initVirtMem->writeBlob(memState->getStackMin(), &argc, intSize);
 
     copyStringArray(argv, argv_array_base, arg_data_base,
-                    LittleEndianByteOrder, initVirtMem);
+                    LittleEndianByteOrder, *initVirtMem);
 
     copyStringArray(envp, envp_array_base, env_data_base,
-                    LittleEndianByteOrder, initVirtMem);
+                    LittleEndianByteOrder, *initVirtMem);
 
     // Copy the aux vector
     Addr auxv_array_end = auxv_array_base;
     for (const auto &aux: auxv) {
-        initVirtMem.write(auxv_array_end, aux, GuestByteOrder);
+        initVirtMem->write(auxv_array_end, aux, GuestByteOrder);
         auxv_array_end += sizeof(aux);
     }
 
     // Write out the terminating zeroed auxilliary vector
     const AuxVector<IntType> zero(0, 0);
-    initVirtMem.write(auxv_array_end, zero);
+    initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
