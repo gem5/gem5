@@ -1,5 +1,5 @@
 # -*- mode:python -*-
-# Copyright (c) 2009-2014, 2017 ARM Limited
+# Copyright (c) 2009-2014, 2017, 2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -128,7 +128,7 @@ class ArmPMU(SimObject):
         # 0x09: EXC_TAKEN
         # 0x0A: EXC_RETURN
         # 0x0B: CID_WRITE_RETIRED
-        self.addEvent(ProbeEvent(self,0x0C, cpu, "RetiredBranches"))
+        # 0x0C: PC_WRITE_RETIRED
         # 0x0D: BR_IMMED_RETIRED
         # 0x0E: BR_RETURN_RETIRED
         # 0x0F: UNALIGEND_LDST_RETIRED
@@ -151,7 +151,7 @@ class ArmPMU(SimObject):
         # 0x1E: CHAIN
         # 0x1F: L1D_CACHE_ALLOCATE
         # 0x20: L2D_CACHE_ALLOCATE
-        # 0x21: BR_RETIRED
+        self.addEvent(ProbeEvent(self,0x21, cpu, "RetiredBranches"))
         # 0x22: BR_MIS_PRED_RETIRED
         # 0x23: STALL_FRONTEND
         # 0x24: STALL_BACKEND
