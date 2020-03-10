@@ -44,8 +44,8 @@
 #include "sim/system.hh"
 
 SETranslatingPortProxy::SETranslatingPortProxy(
-        ThreadContext *tc, AllocType alloc)
-    : FSTranslatingPortProxy(tc), allocating(alloc)
+        ThreadContext *tc, AllocType alloc) :
+    TranslatingPortProxy(tc), allocating(alloc)
 {}
 
 bool

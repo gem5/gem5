@@ -43,7 +43,6 @@
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "kern/freebsd/events.hh"
-#include "mem/fs_translating_port_proxy.hh"
 #include "mem/physical.hh"
 #include "sim/stat_control.hh"
 

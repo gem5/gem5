@@ -38,23 +38,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * TranslatingPortProxy Object Declaration for FS.
- *
- * Port proxies are used when non structural entities need access to
- * the memory system. Proxy objects replace the previous
- * FunctionalPort, TranslatingPort and VirtualPort objects, which
- * provided the same functionality as the proxies, but were instances
- * of ports not corresponding to real structural ports of the
- * simulated system. Via the port proxies all the accesses go through
- * an actual port and thus are transparent to a potentially
- * distributed memory and automatically adhere to the memory map of
- * the system.
- */
-
-#ifndef __MEM_FS_TRANSLATING_PORT_PROXY_HH__
-#define __MEM_FS_TRANSLATING_PORT_PROXY_HH__
+#ifndef __MEM_TRANSLATING_PORT_PROXY_HH__
+#define __MEM_TRANSLATING_PORT_PROXY_HH__
 
 #include "arch/generic/tlb.hh"
 #include "mem/port_proxy.hh"
@@ -67,7 +52,7 @@ class ThreadContext;
  * recover, and then attempt the translation again. If it still fails then the
  * access as a whole fails.
  */
-class FSTranslatingPortProxy : public PortProxy
+class TranslatingPortProxy : public PortProxy
 {
   private:
     bool tryTLBsOnce(RequestPtr req, BaseTLB::Mode) const;
@@ -85,8 +70,7 @@ class FSTranslatingPortProxy : public PortProxy
 
   public:
 
-    FSTranslatingPortProxy(ThreadContext* tc);
-    ~FSTranslatingPortProxy() {}
+    TranslatingPortProxy(ThreadContext* tc);
 
     /** Version of tryReadblob that translates virt->phys and deals
       * with page boundries. */
@@ -102,4 +86,4 @@ class FSTranslatingPortProxy : public PortProxy
     bool tryMemsetBlob(Addr address, uint8_t  v, int size) const override;
 };
 
-#endif //__MEM_FS_TRANSLATING_PORT_PROXY_HH__
+#endif //__MEM_TRANSLATING_PORT_PROXY_HH__

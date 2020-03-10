@@ -43,21 +43,21 @@
  * Port object definitions.
  */
 
-#include "mem/fs_translating_port_proxy.hh"
+#include "mem/translating_port_proxy.hh"
 
 #include "base/chunk_generator.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "sim/system.hh"
 
-FSTranslatingPortProxy::FSTranslatingPortProxy(ThreadContext *tc) :
+TranslatingPortProxy::TranslatingPortProxy(ThreadContext *tc) :
     PortProxy(tc->getCpuPtr()->getSendFunctional(),
               tc->getSystemPtr()->cacheLineSize()), _tc(tc),
               pageBytes(tc->getSystemPtr()->getPageBytes())
 {}
 
 bool
-FSTranslatingPortProxy::tryTLBsOnce(RequestPtr req, BaseTLB::Mode mode) const
+TranslatingPortProxy::tryTLBsOnce(RequestPtr req, BaseTLB::Mode mode) const
 {
     BaseTLB *dtb = _tc->getDTBPtr();
     BaseTLB *itb = _tc->getDTBPtr();
@@ -66,7 +66,7 @@ FSTranslatingPortProxy::tryTLBsOnce(RequestPtr req, BaseTLB::Mode mode) const
 }
 
 bool
-FSTranslatingPortProxy::tryTLBs(RequestPtr req, BaseTLB::Mode mode) const
+TranslatingPortProxy::tryTLBs(RequestPtr req, BaseTLB::Mode mode) const
 {
     // If at first this doesn't succeed, try to fixup and translate again. If
     // it still fails, report failure.
@@ -75,7 +75,7 @@ FSTranslatingPortProxy::tryTLBs(RequestPtr req, BaseTLB::Mode mode) const
 }
 
 bool
-FSTranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
+TranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
 {
     for (ChunkGenerator gen(addr, size, pageBytes); !gen.done();
          gen.next())
@@ -96,7 +96,7 @@ FSTranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
 }
 
 bool
-FSTranslatingPortProxy::tryWriteBlob(
+TranslatingPortProxy::tryWriteBlob(
         Addr addr, const void *p, int size) const
 {
     for (ChunkGenerator gen(addr, size, pageBytes); !gen.done();
@@ -117,7 +117,7 @@ FSTranslatingPortProxy::tryWriteBlob(
 }
 
 bool
-FSTranslatingPortProxy::tryMemsetBlob(Addr address, uint8_t v, int size) const
+TranslatingPortProxy::tryMemsetBlob(Addr address, uint8_t v, int size) const
 {
     for (ChunkGenerator gen(address, size, pageBytes); !gen.done();
          gen.next())

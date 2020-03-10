@@ -29,7 +29,7 @@
 #ifndef __SIM_VPTR_HH__
 #define __SIM_VPTR_HH__
 
-#include "mem/fs_translating_port_proxy.hh"
+#include "mem/port_proxy.hh"
 
 class ThreadContext;
 

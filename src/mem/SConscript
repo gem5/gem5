@@ -81,7 +81,7 @@ Source('serial_link.cc')
 Source('mem_delay.cc')
 
 if env['TARGET_ISA'] != 'null':
-    Source('fs_translating_port_proxy.cc')
+    Source('translating_port_proxy.cc')
     Source('se_translating_port_proxy.cc')
     Source('page_table.cc')
 

@@ -146,9 +146,8 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "debug/GDBAll.hh"
-#include "mem/fs_translating_port_proxy.hh"
 #include "mem/port.hh"
-#include "mem/se_translating_port_proxy.hh"
+#include "mem/port_proxy.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 

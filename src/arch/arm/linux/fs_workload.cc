@@ -55,7 +55,6 @@
 #include "kern/linux/events.hh"
 #include "kern/linux/helpers.hh"
 #include "kern/system_events.hh"
-#include "mem/fs_translating_port_proxy.hh"
 #include "mem/physical.hh"
 #include "sim/stat_control.hh"
 

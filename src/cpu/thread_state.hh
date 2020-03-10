@@ -45,9 +45,6 @@ namespace Kernel {
 
 class Checkpoint;
 
-class FSTranslatingPortProxy;
-class SETranslatingPortProxy;
-
 /**
  *  Struct for holding general thread state that is needed across CPU
  *  models.  This includes things such as pointers to the process,

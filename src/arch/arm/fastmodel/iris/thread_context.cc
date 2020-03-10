@@ -32,8 +32,8 @@
 #include "arch/arm/utility.hh"
 #include "iris/detail/IrisCppAdapter.h"
 #include "iris/detail/IrisObjects.h"
-#include "mem/fs_translating_port_proxy.hh"
 #include "mem/se_translating_port_proxy.hh"
+#include "mem/translating_port_proxy.hh"
 
 namespace Iris
 {
@@ -407,7 +407,7 @@ ThreadContext::initMemProxies(::ThreadContext *tc)
         assert(!physProxy && !virtProxy);
         physProxy.reset(new PortProxy(_cpu->getSendFunctional(),
                                       _cpu->cacheLineSize()));
-        virtProxy.reset(new FSTranslatingPortProxy(tc));
+        virtProxy.reset(new TranslatingPortProxy(tc));
     } else {
         assert(!virtProxy);
         virtProxy.reset(new SETranslatingPortProxy(this,

@@ -40,7 +40,7 @@
 #include "arch/isa_traits.hh"
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
-#include "mem/fs_translating_port_proxy.hh"
+#include "mem/port_proxy.hh"
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
 

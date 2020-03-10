@@ -33,7 +33,7 @@
 #include <memory>
 
 #include "cpu/thread_context.hh"
-#include "mem/fs_translating_port_proxy.hh"
+#include "mem/port_proxy.hh"
 
 class Arguments
 {

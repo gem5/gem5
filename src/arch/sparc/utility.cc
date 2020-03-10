@@ -29,7 +29,7 @@
 #include "arch/sparc/utility.hh"
 
 #include "arch/sparc/faults.hh"
-#include "mem/fs_translating_port_proxy.hh"
+#include "mem/port_proxy.hh"
 
 namespace SparcISA {
 

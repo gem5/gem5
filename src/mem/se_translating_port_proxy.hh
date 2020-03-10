@@ -41,9 +41,9 @@
 #ifndef __MEM_SE_TRANSLATING_PORT_PROXY_HH__
 #define __MEM_SE_TRANSLATING_PORT_PROXY_HH__
 
-#include "mem/fs_translating_port_proxy.hh"
+#include "mem/translating_port_proxy.hh"
 
-class SETranslatingPortProxy : public FSTranslatingPortProxy
+class SETranslatingPortProxy : public TranslatingPortProxy
 {
 
   public:

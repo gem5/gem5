@@ -49,7 +49,6 @@
 #include "cpu/thread_context.hh"
 #include "dev/arm/fvp_base_pwr_ctrl.hh"
 #include "dev/arm/gic_v2.hh"
-#include "mem/fs_translating_port_proxy.hh"
 #include "mem/physical.hh"
 
 using namespace std;
