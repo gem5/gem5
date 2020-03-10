@@ -63,7 +63,7 @@ nb_cores = 8
 
 # ruby does not support atomic, functional, or uncacheable accesses
 cpus = [ MemTest(percent_functional=50,
-                 percent_uncacheable=0, suppress_func_warnings=True) \
+                 percent_uncacheable=0, suppress_func_errors=True) \
          for i in range(nb_cores) ]
 
 # overwrite options.num_cpus with the nb_cores value

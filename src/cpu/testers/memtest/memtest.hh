@@ -165,7 +165,7 @@ class MemTest : public ClockedObject
 
     const bool atomic;
 
-    const bool suppressFuncWarnings;
+    const bool suppressFuncErrors;
 
     Stats::Scalar numReadsStat;
     Stats::Scalar numWritesStat;

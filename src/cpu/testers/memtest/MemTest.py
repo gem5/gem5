@@ -69,5 +69,5 @@ class MemTest(ClockedObject):
 
     # Add the ability to supress error responses on functional
     # accesses as Ruby needs this
-    suppress_func_warnings = Param.Bool(False, "Suppress warnings when "\
+    suppress_func_errors = Param.Bool(False, "Suppress panic when "\
                                             "functional accesses fail.")

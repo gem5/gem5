@@ -99,7 +99,7 @@ MemTest::MemTest(const Params *p)
       nextProgressMessage(p->progress_interval),
       maxLoads(p->max_loads),
       atomic(p->system->isAtomicMode()),
-      suppressFuncWarnings(p->suppress_func_warnings)
+      suppressFuncErrors(p->suppress_func_errors)
 {
     id = TESTER_ALLOCATOR++;
     fatal_if(id >= blockSize, "Too many testers, only %d allowed\n",
@@ -146,10 +146,9 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
     const uint8_t *pkt_data = pkt->getConstPtr<uint8_t>();
 
     if (pkt->isError()) {
-        if (!functional || !suppressFuncWarnings) {
-            warn("%s access failed at %#x\n",
-                 pkt->isWrite() ? "Write" : "Read", req->getPaddr());
-        }
+        if (!functional || !suppressFuncErrors)
+            panic( "%s access failed at %#x\n",
+                pkt->isWrite() ? "Write" : "Read", req->getPaddr());
     } else {
         if (pkt->isRead()) {
             uint8_t ref_data = referenceData[req->getPaddr()];
