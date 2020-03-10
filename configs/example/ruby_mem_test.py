@@ -63,10 +63,6 @@ parser.add_option("--suppress-func-warnings", action="store_true",
 #
 Ruby.define_options(parser)
 
-exec(compile( \
-    open(os.path.join(config_root, "common", "Options.py")).read(), \
-    os.path.join(config_root, "common", "Options.py"), 'exec'))
-
 (options, args) = parser.parse_args()
 
 #
