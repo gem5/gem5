@@ -69,6 +69,8 @@ gem5_verify_config(
 null_tests = [
     ('garnet_synth_traffic', ['--sim-cycles', '5000000']),
     ('memcheck', ['--maxtick', '2000000000', '--prefetchers']),
+    ('ruby_mem_test', ['--abs-max-tick', '20000000',
+        '--functional', '10']),
     ('ruby_random_test', ['--maxloads', '5000']),
     ('ruby_direct_test', ['--requests', '50000']),
 ]
