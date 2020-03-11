@@ -282,37 +282,33 @@ TLB::translateInst(const RequestPtr &req, ThreadContext *tc)
         return std::make_shared<AlignmentFault>();
     }
 
-     Process * p = tc->getProcessPtr();
-
-     Fault fault = p->pTable->translate(req);
-    if (fault != NoFault)
-        return fault;
-
-    return NoFault;
+    return tc->getProcessPtr()->pTable->translate(req);
 }
 
 Fault
 TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
 {
-    Process * p = tc->getProcessPtr();
-
-    Fault fault = p->pTable->translate(req);
-    if (fault != NoFault)
-        return fault;
-
-    return NoFault;
+    return tc->getProcessPtr()->pTable->translate(req);
 }
 
 Fault
 TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode)
 {
-    if (FullSystem)
-        fatal("translate atomic not yet implemented in full system mode.\n");
+    panic_if(FullSystem,
+            "translateAtomic not yet implemented for full system.");
 
     if (mode == Execute)
         return translateInst(req, tc);
     else
         return translateData(req, tc, mode == Write);
+}
+
+Fault
+TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
+{
+    panic_if(FullSystem,
+            "translateFunctional not implemented for full system.");
+    return tc->getProcessPtr()->pTable->translate(req);
 }
 
 void
