@@ -386,8 +386,7 @@ let {{
 
     msrdczva_ea_code = msr_check_code
     msrdczva_ea_code += '''
-           Request::Flags memAccessFlags = Request::CACHE_BLOCK_ZERO |
-               ArmISA::TLB::MustBeOne;
+           Request::Flags memAccessFlags = Request::CACHE_BLOCK_ZERO;
            EA = XBase;
            assert(!(Dczid & 0x10));
            uint64_t op_size = power(2, Dczid + 2);
@@ -418,8 +417,7 @@ let {{
 
     msrdccvau_ea_code = msr_check_code
     msrdccvau_ea_code += '''
-           Request::Flags memAccessFlags = Request::CLEAN | Request::DST_POU |
-              ArmISA::TLB::MustBeOne;
+           Request::Flags memAccessFlags = Request::CLEAN | Request::DST_POU;
            EA = XBase;
            faultAddr = EA;
            System *sys = xc->tcBase()->getSystemPtr();
@@ -443,8 +441,7 @@ let {{
 
     msrdccvac_ea_code = msr_check_code
     msrdccvac_ea_code += '''
-           Request::Flags memAccessFlags = Request::CLEAN | Request::DST_POC |
-              ArmISA::TLB::MustBeOne;
+           Request::Flags memAccessFlags = Request::CLEAN | Request::DST_POC;
            EA = XBase;
            faultAddr = EA;
            System *sys = xc->tcBase()->getSystemPtr();
@@ -469,7 +466,7 @@ let {{
     msrdccivac_ea_code = msr_check_code
     msrdccivac_ea_code += '''
            Request::Flags memAccessFlags = Request::CLEAN |
-              Request::INVALIDATE | Request::DST_POC | ArmISA::TLB::MustBeOne;
+              Request::INVALIDATE | Request::DST_POC;
            EA = XBase;
            faultAddr = EA;
            System *sys = xc->tcBase()->getSystemPtr();
@@ -494,7 +491,7 @@ let {{
     msrdcivac_ea_code = msr_check_code
     msrdcivac_ea_code += '''
            Request::Flags memAccessFlags = Request::INVALIDATE |
-              Request::DST_POC | ArmISA::TLB::MustBeOne;
+              Request::DST_POC;
            EA = XBase;
            faultAddr = EA;
            HCR hcr = Hcr64;

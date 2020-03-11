@@ -113,11 +113,7 @@ class TLB : public BaseTLB
 
         AllowUnaligned = 0x8,
         // Priv code operating as if it wasn't
-        UserMode = 0x10,
-        // Because zero otherwise looks like a valid setting and may be used
-        // accidentally, this bit must be non-zero to show it was used on
-        // purpose.
-        MustBeOne = 0x40
+        UserMode = 0x10
     };
 
     enum ArmTranslationType {

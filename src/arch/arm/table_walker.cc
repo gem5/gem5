@@ -2014,7 +2014,6 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
     // check here.
     if (currState->stage2Req) {
         Fault fault;
-        flags = flags | TLB::MustBeOne;
 
         if (isTiming) {
             Stage2MMU::Stage2Translation *tran = new

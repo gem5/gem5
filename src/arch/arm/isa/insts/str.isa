@@ -63,7 +63,7 @@ let {{
             else:
                 self.op = " -"
 
-            self.memFlags = ["ArmISA::TLB::MustBeOne"]
+            self.memFlags = []
             self.codeBlobs = { "postacc_code" : "" }
 
         def emitHelper(self, base = 'Memory', wbDecl = None):
@@ -137,8 +137,7 @@ let {{
             (newHeader,
              newDecoder,
              newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
-                 ["ArmISA::TLB::AlignWord", "ArmISA::TLB::MustBeOne"], [],
-                 'SrsOp', wbDecl)
+                 ["ArmISA::TLB::AlignWord"], [], 'SrsOp', wbDecl)
 
             header_output += newHeader
             decoder_output += newDecoder

@@ -1120,8 +1120,7 @@ let {{
     '''
 
     McrDcimvacCode = '''
-        const Request::Flags memAccessFlags(ArmISA::TLB::MustBeOne |
-                                            Request::INVALIDATE |
+        const Request::Flags memAccessFlags(Request::INVALIDATE |
                                             Request::DST_POC);
         EA = Op1;
     '''
@@ -1139,8 +1138,7 @@ let {{
                    Mcr15CompleteAcc.subst(McrDcimvacIop)
 
     McrDccmvacCode = '''
-        const Request::Flags memAccessFlags(ArmISA::TLB::MustBeOne |
-                                            Request::CLEAN |
+        const Request::Flags memAccessFlags(Request::CLEAN |
                                             Request::DST_POC);
         EA = Op1;
     '''
@@ -1158,8 +1156,7 @@ let {{
                    Mcr15CompleteAcc.subst(McrDccmvacIop)
 
     McrDccmvauCode = '''
-        const Request::Flags memAccessFlags(ArmISA::TLB::MustBeOne |
-                                            Request::CLEAN |
+        const Request::Flags memAccessFlags(Request::CLEAN |
                                             Request::DST_POU);
         EA = Op1;
     '''
@@ -1177,8 +1174,7 @@ let {{
                    Mcr15CompleteAcc.subst(McrDccmvauIop)
 
     McrDccimvacCode = '''
-        const Request::Flags memAccessFlags(ArmISA::TLB::MustBeOne |
-                                            Request::CLEAN |
+        const Request::Flags memAccessFlags(Request::CLEAN |
                                             Request::INVALIDATE |
                                             Request::DST_POC);
         EA = Op1;

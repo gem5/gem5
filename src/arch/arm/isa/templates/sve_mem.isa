@@ -408,8 +408,7 @@ def template SveIndexedMemVIMicroopDeclare {{
               dest(_dest), gp(_gp), base(_base), imm(_imm),
               elemIndex(_elemIndex), numElems(_numElems),
               firstFault(_firstFault),
-              memAccessFlags(ArmISA::TLB::AllowUnaligned |
-                             ArmISA::TLB::MustBeOne)
+              memAccessFlags(ArmISA::TLB::AllowUnaligned)
         {
             %(constructor)s;
             if (_opClass == MemReadOp && elemIndex == 0) {
@@ -488,8 +487,7 @@ def template SveIndexedMemSVMicroopDeclare {{
               offsetIs32(_offsetIs32), offsetIsSigned(_offsetIsSigned),
               offsetIsScaled(_offsetIsScaled), elemIndex(_elemIndex),
               numElems(_numElems), firstFault(_firstFault),
-              memAccessFlags(ArmISA::TLB::AllowUnaligned |
-                             ArmISA::TLB::MustBeOne)
+              memAccessFlags(ArmISA::TLB::AllowUnaligned)
         {
             %(constructor)s;
             if (_opClass == MemReadOp && elemIndex == 0) {
@@ -847,8 +845,7 @@ def template SveStructMemSIMicroopDeclare {{
             : %(base_class)s(mnem, machInst, %(op_class)s),
               dest(_dest), gp(_gp), base(_base), imm(_imm),
               numRegs(_numRegs), regIndex(_regIndex),
-              memAccessFlags(ArmISA::TLB::AllowUnaligned |
-                             ArmISA::TLB::MustBeOne)
+              memAccessFlags(ArmISA::TLB::AllowUnaligned)
         {
             %(constructor)s;
             baseIsSP = isSP(_base);
@@ -1111,8 +1108,7 @@ def template SveStructMemSSMicroopDeclare {{
             : %(base_class)s(mnem, machInst, %(op_class)s),
               dest(_dest), gp(_gp), base(_base), offset(_offset),
               numRegs(_numRegs), regIndex(_regIndex),
-              memAccessFlags(ArmISA::TLB::AllowUnaligned |
-                             ArmISA::TLB::MustBeOne)
+              memAccessFlags(ArmISA::TLB::AllowUnaligned)
         {
             %(constructor)s;
             baseIsSP = isSP(_base);

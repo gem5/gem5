@@ -75,7 +75,7 @@ let {{
             self.top = top
             self.paired = paired
 
-            self.memFlags = ["ArmISA::TLB::MustBeOne"]
+            self.memFlags = []
             self.instFlags = ["IsAtomic"]
             self.codeBlobs = { "postacc_code" : "" }
             self.codeBlobs['usrDecl'] = ""

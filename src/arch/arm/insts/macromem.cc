@@ -472,7 +472,7 @@ VldMultOp::VldMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
 
     RegIndex rMid = deinterleave ? VecSpecialElem : vd * 2;
 
-    uint32_t noAlign = TLB::MustBeOne;
+    uint32_t noAlign = 0;
 
     unsigned uopIdx = 0;
     switch (regs) {
@@ -833,7 +833,7 @@ VstMultOp::VstMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
     if (interleave) numMicroops += (regs / elems);
     microOps = new StaticInstPtr[numMicroops];
 
-    uint32_t noAlign = TLB::MustBeOne;
+    uint32_t noAlign = 0;
 
     RegIndex rMid = interleave ? VecSpecialElem : vd * 2;
 
@@ -1143,8 +1143,7 @@ VldMultOp64::VldMultOp64(const char *mnem, ExtMachInst machInst,
 
     microOps = new StaticInstPtr[numMicroops];
     unsigned uopIdx = 0;
-    uint32_t memaccessFlags = TLB::MustBeOne | (TLB::ArmFlags) eSize |
-        TLB::AllowUnaligned;
+    uint32_t memaccessFlags = (TLB::ArmFlags)eSize | TLB::AllowUnaligned;
 
     int i = 0;
     for (; i < numMemMicroops - 1; ++i) {
@@ -1251,8 +1250,7 @@ VstMultOp64::VstMultOp64(const char *mnem, ExtMachInst machInst,
         }
     }
 
-    uint32_t memaccessFlags = TLB::MustBeOne | (TLB::ArmFlags) eSize |
-        TLB::AllowUnaligned;
+    uint32_t memaccessFlags = (TLB::ArmFlags)eSize | TLB::AllowUnaligned;
 
     int i = 0;
     for (; i < numMemMicroops - 1; ++i) {
@@ -1319,8 +1317,7 @@ VldSingleOp64::VldSingleOp64(const char *mnem, ExtMachInst machInst,
     microOps = new StaticInstPtr[numMicroops];
     unsigned uopIdx = 0;
 
-    uint32_t memaccessFlags = TLB::MustBeOne | (TLB::ArmFlags) eSize |
-        TLB::AllowUnaligned;
+    uint32_t memaccessFlags = (TLB::ArmFlags)eSize | TLB::AllowUnaligned;
 
     int i = 0;
     for (; i < numMemMicroops - 1; ++i) {
@@ -1398,8 +1395,7 @@ VstSingleOp64::VstSingleOp64(const char *mnem, ExtMachInst machInst,
             numStructElems, index, i /* step */, replicate);
     }
 
-    uint32_t memaccessFlags = TLB::MustBeOne | (TLB::ArmFlags) eSize |
-        TLB::AllowUnaligned;
+    uint32_t memaccessFlags = (TLB::ArmFlags)eSize | TLB::AllowUnaligned;
 
     int i = 0;
     for (; i < numMemMicroops - 1; ++i) {

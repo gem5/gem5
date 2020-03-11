@@ -61,7 +61,7 @@ class SveMemVecFillSpill : public ArmStaticInst
                        IntRegIndex _base, uint64_t _imm)
         : ArmStaticInst(mnem, _machInst, __opClass),
           dest(_dest), base(_base), imm(_imm),
-          memAccessFlags(ArmISA::TLB::AllowUnaligned | ArmISA::TLB::MustBeOne)
+          memAccessFlags(ArmISA::TLB::AllowUnaligned)
     {
         baseIsSP = isSP(_base);
     }
@@ -86,7 +86,7 @@ class SveMemPredFillSpill : public ArmStaticInst
                         IntRegIndex _base, uint64_t _imm)
         : ArmStaticInst(mnem, _machInst, __opClass),
           dest(_dest), base(_base), imm(_imm),
-          memAccessFlags(ArmISA::TLB::AllowUnaligned | ArmISA::TLB::MustBeOne)
+          memAccessFlags(ArmISA::TLB::AllowUnaligned)
     {
         baseIsSP = isSP(_base);
     }
@@ -112,7 +112,7 @@ class SveContigMemSS : public ArmStaticInst
                    IntRegIndex _offset)
         : ArmStaticInst(mnem, _machInst, __opClass),
           dest(_dest), gp(_gp), base(_base), offset(_offset),
-          memAccessFlags(ArmISA::TLB::AllowUnaligned | ArmISA::TLB::MustBeOne)
+          memAccessFlags(ArmISA::TLB::AllowUnaligned)
     {
         baseIsSP = isSP(_base);
     }
@@ -138,7 +138,7 @@ class SveContigMemSI : public ArmStaticInst
                    uint64_t _imm)
         : ArmStaticInst(mnem, _machInst, __opClass),
           dest(_dest), gp(_gp), base(_base), imm(_imm),
-          memAccessFlags(ArmISA::TLB::AllowUnaligned | ArmISA::TLB::MustBeOne)
+          memAccessFlags(ArmISA::TLB::AllowUnaligned)
     {
         baseIsSP = isSP(_base);
     }

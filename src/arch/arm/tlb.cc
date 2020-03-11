@@ -549,7 +549,6 @@ TLB::translateSe(const RequestPtr &req, ThreadContext *tc, Mode mode,
     bool is_write = (mode == Write);
 
     if (!is_fetch) {
-        assert(flags & MustBeOne || req->isPrefetch());
         if (sctlr.a || !(flags & AllowUnaligned)) {
             if (vaddr & mask(flags & AlignmentMask)) {
                 // LPAE is always disabled in SE mode
@@ -1165,7 +1164,6 @@ TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
         req->setFlags(Request::STRICT_ORDER);
     }
     if (!is_fetch) {
-        assert(flags & MustBeOne || req->isPrefetch());
         if (sctlr.a || !(flags & AllowUnaligned)) {
             if (vaddr & mask(flags & AlignmentMask)) {
                 alignFaults++;

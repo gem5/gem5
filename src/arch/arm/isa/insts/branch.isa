@@ -188,8 +188,7 @@ let {{
         if isTbh:
             eaCode = '''
             unsigned memAccessFlags = ArmISA::TLB::AllowUnaligned |
-                                      ArmISA::TLB::AlignHalfWord |
-                                      ArmISA::TLB::MustBeOne;
+                                      ArmISA::TLB::AlignHalfWord;
             EA = Op1 + Op2 * 2
             '''
             accCode = 'NPC = PC + 2 * (Mem_uh);\n'
@@ -197,8 +196,7 @@ let {{
         else:
             eaCode = '''
             unsigned memAccessFlags = ArmISA::TLB::AllowUnaligned |
-                                      ArmISA::TLB::AlignByte |
-                                      ArmISA::TLB::MustBeOne;
+                                      ArmISA::TLB::AlignByte;
             EA = Op1 + Op2
             '''
             accCode = 'NPC = PC + 2 * (Mem_ub)'

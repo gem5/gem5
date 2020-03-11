@@ -58,7 +58,7 @@ let {{
             self.flavor = flavor
             self.top = top
 
-            self.memFlags = ["ArmISA::TLB::MustBeOne"]
+            self.memFlags = []
             self.instFlags = []
             self.codeBlobs = {"postacc_code" : ""}
 

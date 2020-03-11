@@ -64,10 +64,11 @@ let {{
             else:
                 self.op = " -"
 
-            self.memFlags = ["ArmISA::TLB::MustBeOne"]
+            self.memFlags = []
             self.codeBlobs = {"postacc_code" : ""}
 
-        def emitHelper(self, base = 'Memory', wbDecl = None, instFlags = [], pcDecl = None):
+        def emitHelper(self, base='Memory', wbDecl=None, instFlags=[],
+                       pcDecl=None):
 
             global header_output, decoder_output, exec_output
 

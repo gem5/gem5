@@ -1680,60 +1680,54 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
               Fault fault;
               switch(misc_reg) {
                 case MISCREG_ATS1CPR:
-                  flags    = TLB::MustBeOne;
                   tranType = TLB::S1CTran;
                   mode     = BaseTLB::Read;
                   break;
                 case MISCREG_ATS1CPW:
-                  flags    = TLB::MustBeOne;
                   tranType = TLB::S1CTran;
                   mode     = BaseTLB::Write;
                   break;
                 case MISCREG_ATS1CUR:
-                  flags    = TLB::MustBeOne | TLB::UserMode;
+                  flags    = TLB::UserMode;
                   tranType = TLB::S1CTran;
                   mode     = BaseTLB::Read;
                   break;
                 case MISCREG_ATS1CUW:
-                  flags    = TLB::MustBeOne | TLB::UserMode;
+                  flags    = TLB::UserMode;
                   tranType = TLB::S1CTran;
                   mode     = BaseTLB::Write;
                   break;
                 case MISCREG_ATS12NSOPR:
                   if (!haveSecurity)
                       panic("Security Extensions required for ATS12NSOPR");
-                  flags    = TLB::MustBeOne;
                   tranType = TLB::S1S2NsTran;
                   mode     = BaseTLB::Read;
                   break;
                 case MISCREG_ATS12NSOPW:
                   if (!haveSecurity)
                       panic("Security Extensions required for ATS12NSOPW");
-                  flags    = TLB::MustBeOne;
                   tranType = TLB::S1S2NsTran;
                   mode     = BaseTLB::Write;
                   break;
                 case MISCREG_ATS12NSOUR:
                   if (!haveSecurity)
                       panic("Security Extensions required for ATS12NSOUR");
-                  flags    = TLB::MustBeOne | TLB::UserMode;
+                  flags    = TLB::UserMode;
                   tranType = TLB::S1S2NsTran;
                   mode     = BaseTLB::Read;
                   break;
                 case MISCREG_ATS12NSOUW:
                   if (!haveSecurity)
                       panic("Security Extensions required for ATS12NSOUW");
-                  flags    = TLB::MustBeOne | TLB::UserMode;
+                  flags    = TLB::UserMode;
                   tranType = TLB::S1S2NsTran;
                   mode     = BaseTLB::Write;
                   break;
                 case MISCREG_ATS1HR: // only really useful from secure mode.
-                  flags    = TLB::MustBeOne;
                   tranType = TLB::HypMode;
                   mode     = BaseTLB::Read;
                   break;
                 case MISCREG_ATS1HW:
-                  flags    = TLB::MustBeOne;
                   tranType = TLB::HypMode;
                   mode     = BaseTLB::Write;
                   break;
@@ -1947,62 +1941,54 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
                 Fault fault;
                 switch(misc_reg) {
                   case MISCREG_AT_S1E1R_Xt:
-                    flags    = TLB::MustBeOne;
                     tranType = TLB::S1E1Tran;
                     mode     = BaseTLB::Read;
                     break;
                   case MISCREG_AT_S1E1W_Xt:
-                    flags    = TLB::MustBeOne;
                     tranType = TLB::S1E1Tran;
                     mode     = BaseTLB::Write;
                     break;
                   case MISCREG_AT_S1E0R_Xt:
-                    flags    = TLB::MustBeOne | TLB::UserMode;
+                    flags    = TLB::UserMode;
                     tranType = TLB::S1E0Tran;
                     mode     = BaseTLB::Read;
                     break;
                   case MISCREG_AT_S1E0W_Xt:
-                    flags    = TLB::MustBeOne | TLB::UserMode;
+                    flags    = TLB::UserMode;
                     tranType = TLB::S1E0Tran;
                     mode     = BaseTLB::Write;
                     break;
                   case MISCREG_AT_S1E2R_Xt:
-                    flags    = TLB::MustBeOne;
                     tranType = TLB::S1E2Tran;
                     mode     = BaseTLB::Read;
                     break;
                   case MISCREG_AT_S1E2W_Xt:
-                    flags    = TLB::MustBeOne;
                     tranType = TLB::S1E2Tran;
                     mode     = BaseTLB::Write;
                     break;
                   case MISCREG_AT_S12E0R_Xt:
-                    flags    = TLB::MustBeOne | TLB::UserMode;
+                    flags    = TLB::UserMode;
                     tranType = TLB::S12E0Tran;
                     mode     = BaseTLB::Read;
                     break;
                   case MISCREG_AT_S12E0W_Xt:
-                    flags    = TLB::MustBeOne | TLB::UserMode;
+                    flags    = TLB::UserMode;
                     tranType = TLB::S12E0Tran;
                     mode     = BaseTLB::Write;
                     break;
                   case MISCREG_AT_S12E1R_Xt:
-                    flags    = TLB::MustBeOne;
                     tranType = TLB::S12E1Tran;
                     mode     = BaseTLB::Read;
                     break;
                   case MISCREG_AT_S12E1W_Xt:
-                    flags    = TLB::MustBeOne;
                     tranType = TLB::S12E1Tran;
                     mode     = BaseTLB::Write;
                     break;
                   case MISCREG_AT_S1E3R_Xt:
-                    flags    = TLB::MustBeOne;
                     tranType = TLB::S1E3Tran;
                     mode     = BaseTLB::Read;
                     break;
                   case MISCREG_AT_S1E3W_Xt:
-                    flags    = TLB::MustBeOne;
                     tranType = TLB::S1E3Tran;
                     mode     = BaseTLB::Write;
                     break;
