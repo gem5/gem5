@@ -111,6 +111,8 @@ class TLB : public BaseTLB
     void translateTiming(
             const RequestPtr &req, ThreadContext *tc,
             Translation *translation, Mode mode) override;
+    Fault translateFunctional(
+            const RequestPtr &req, ThreadContext *tc, Mode mode) override;
     Fault finalizePhysical(
             const RequestPtr &req,
             ThreadContext *tc, Mode mode) const override;

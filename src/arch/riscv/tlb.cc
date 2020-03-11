@@ -381,6 +381,34 @@ TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
 }
 
 Fault
+TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
+{
+    panic_if(FullSystem,
+            "translateFunctional not implemented for full system.");
+
+    const Addr vaddr = req->getVaddr();
+    Process *process = tc->getProcessPtr();
+    const auto *pte = process->pTable->lookup(vaddr);
+
+    if (!pte && mode != Execute) {
+        // Check if we just need to grow the stack.
+        if (process->fixupStackFault(vaddr)) {
+            // If we did, lookup the entry for the new page.
+            pte = process->pTable->lookup(vaddr);
+        }
+    }
+
+    if (!pte)
+        return std::make_shared<GenericPageTableFault>(req->getVaddr());
+
+    Addr paddr = pte->paddr | process->pTable->pageOffset(vaddr);
+
+    DPRINTF(TLB, "Translated (functional) %#x -> %#x.\n", vaddr, paddr);
+    req->setPaddr(paddr);
+    return NoFault;
+}
+
+Fault
 TLB::finalizePhysical(const RequestPtr &req,
                       ThreadContext *tc, Mode mode) const
 {
