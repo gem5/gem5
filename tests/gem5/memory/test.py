@@ -65,3 +65,13 @@ gem5_verify_config(
     config_args = [],
     valid_isas=(constants.null_tag,),
 )
+
+gem5_verify_config(
+    name='test-memcheck',
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(config.base_dir, 'configs', 'example','memcheck.py'),
+    config_args=['--maxtick', '2000000000', '--prefetchers'],
+    valid_isas=('NULL',),
+    valid_hosts=constants.supported_hosts,
+)
