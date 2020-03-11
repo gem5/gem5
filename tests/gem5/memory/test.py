@@ -66,12 +66,21 @@ gem5_verify_config(
     valid_isas=(constants.null_tag,),
 )
 
-gem5_verify_config(
-    name='test-memcheck',
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(config.base_dir, 'configs', 'example','memcheck.py'),
-    config_args=['--maxtick', '2000000000', '--prefetchers'],
-    valid_isas=('NULL',),
-    valid_hosts=constants.supported_hosts,
-)
+null_tests = [
+    ('garnet_synth_traffic', ['--sim-cycles', '5000000']),
+    ('memcheck', ['--maxtick', '2000000000', '--prefetchers']),
+    ('ruby_random_test', ['--maxloads', '5000']),
+    ('ruby_direct_test', ['--requests', '50000']),
+]
+
+for basename_noext, args in null_tests:
+    gem5_verify_config(
+        name=basename_noext,
+        fixtures=(),
+        verifiers=(),
+        config=joinpath(config.base_dir, 'configs',
+            'example', basename_noext + '.py'),
+        config_args=args,
+        valid_isas=('NULL',),
+        valid_hosts=constants.supported_hosts,
+    )
