@@ -77,6 +77,8 @@ FsWorkload::FsWorkload(Params *p) : OsKernel(*p)
 
         entry = bootldr->entryPoint();
         _highestELIs64 = (bootldr->getArch() == ObjectFile::Arm64);
+    } else {
+        _highestELIs64 = (obj->getArch() == ObjectFile::Arm64);
     }
 }
 
