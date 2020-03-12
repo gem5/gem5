@@ -1818,6 +1818,27 @@ mmapFunc(SyscallDesc *desc, int num, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
+pread64Func(SyscallDesc *desc, int num, ThreadContext *tc,
+            int tgt_fd, Addr bufPtr, int nbytes, int offset)
+{
+    auto p = tc->getProcessPtr();
+
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
+        return -EBADF;
+    int sim_fd = ffdp->getSimFD();
+
+    BufferArg bufArg(bufPtr, nbytes);
+
+    int bytes_read = pread(sim_fd, bufArg.bufferPtr(), nbytes, offset);
+
+    bufArg.copyOut(tc->getVirtProxy());
+
+    return (bytes_read == -1) ? -errno : bytes_read;
+}
+
+template <class OS>
+SyscallReturn
 pwrite64Func(SyscallDesc *desc, int num, ThreadContext *tc,
              int tgt_fd, Addr bufPtr, int nbytes, int offset)
 {
