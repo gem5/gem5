@@ -62,6 +62,8 @@ class TranslatingPortProxy : public PortProxy
     ThreadContext* _tc;
     const Addr pageBytes;
 
+    Request::Flags flags;
+
     virtual bool
     fixupAddr(Addr addr, BaseTLB::Mode mode) const
     {
@@ -70,7 +72,7 @@ class TranslatingPortProxy : public PortProxy
 
   public:
 
-    TranslatingPortProxy(ThreadContext* tc);
+    TranslatingPortProxy(ThreadContext *tc, Request::Flags _flags=0);
 
     /** Version of tryReadblob that translates virt->phys and deals
       * with page boundries. */

@@ -50,10 +50,12 @@
 #include "cpu/thread_context.hh"
 #include "sim/system.hh"
 
-TranslatingPortProxy::TranslatingPortProxy(ThreadContext *tc) :
+TranslatingPortProxy::TranslatingPortProxy(
+        ThreadContext *tc, Request::Flags _flags) :
     PortProxy(tc->getCpuPtr()->getSendFunctional(),
               tc->getSystemPtr()->cacheLineSize()), _tc(tc),
-              pageBytes(tc->getSystemPtr()->getPageBytes())
+              pageBytes(tc->getSystemPtr()->getPageBytes()),
+              flags(_flags)
 {}
 
 bool
@@ -81,7 +83,7 @@ TranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
          gen.next())
     {
         auto req = std::make_shared<Request>(
-                gen.addr(), gen.size(), 0, Request::funcMasterId, 0,
+                gen.addr(), gen.size(), flags, Request::funcMasterId, 0,
                 _tc->contextId());
 
         if (!tryTLBs(req, BaseTLB::Read))
@@ -103,7 +105,7 @@ TranslatingPortProxy::tryWriteBlob(
          gen.next())
     {
         auto req = std::make_shared<Request>(
-                gen.addr(), gen.size(), 0, Request::funcMasterId, 0,
+                gen.addr(), gen.size(), flags, Request::funcMasterId, 0,
                 _tc->contextId());
 
         if (!tryTLBs(req, BaseTLB::Write))
@@ -123,7 +125,7 @@ TranslatingPortProxy::tryMemsetBlob(Addr address, uint8_t v, int size) const
          gen.next())
     {
         auto req = std::make_shared<Request>(
-                gen.addr(), gen.size(), 0, Request::funcMasterId, 0,
+                gen.addr(), gen.size(), flags, Request::funcMasterId, 0,
                 _tc->contextId());
 
         if (!tryTLBs(req, BaseTLB::Write))
