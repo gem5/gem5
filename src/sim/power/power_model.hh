@@ -84,6 +84,8 @@ class PowerModelState : public SimObject
     }
 
     void regStats() {
+        SimObject::regStats();
+
         dynamicPower
           .method(this, &PowerModelState::getDynamicPower)
           .name(params()->name + ".dynamic_power")
@@ -135,6 +137,8 @@ class PowerModel : public SimObject
     double getStaticPower() const;
 
     void regStats() {
+        SimObject::regStats();
+
         dynamicPower
           .method(this, &PowerModel::getDynamicPower)
           .name(params()->name + ".dynamic_power")
