@@ -45,9 +45,11 @@
 #include "debug/Semihosting.hh"
 #include "dev/serial/serial.hh"
 #include "mem/physical.hh"
-#include "mem/secure_port_proxy.hh"
+#include "mem/se_translating_port_proxy.hh"
+#include "mem/translating_port_proxy.hh"
 #include "params/ArmSemihosting.hh"
 #include "sim/byteswap.hh"
+#include "sim/full_system.hh"
 #include "sim/pseudo_inst.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
@@ -237,21 +239,28 @@ ArmSemihosting::unserialize(CheckpointIn &cp)
 }
 
 PortProxy &
-ArmSemihosting::physProxy(ThreadContext *tc)
+ArmSemihosting::portProxy(ThreadContext *tc)
 {
-    static std::unique_ptr<PortProxy> phys_proxy_s;
+    static std::unique_ptr<PortProxy> port_proxy_s;
     static System *secure_sys = nullptr;
 
     if (ArmISA::inSecureState(tc)) {
         System *sys = tc->getSystemPtr();
         if (sys != secure_sys) {
-            phys_proxy_s.reset(new SecurePortProxy(sys->getSystemPort(),
-                                                   sys->cacheLineSize()));
+            if (FullSystem) {
+                port_proxy_s.reset(
+                        new TranslatingPortProxy(tc, Request::SECURE));
+            } else {
+                port_proxy_s.reset(
+                        new SETranslatingPortProxy(
+                            tc, SETranslatingPortProxy::NextPage,
+                            Request::SECURE));
+            }
         }
         secure_sys = sys;
-        return *phys_proxy_s;
+        return *port_proxy_s;
     } else {
-        return tc->getPhysProxy();
+        return tc->getVirtProxy();
     }
 }
 
@@ -262,7 +271,7 @@ ArmSemihosting::readString(ThreadContext *tc, Addr ptr, size_t len)
     std::vector<char> buf(len + 1);
 
     buf[len] = '\0';
-    physProxy(tc).readBlob(ptr, buf.data(), len);
+    portProxy(tc).readBlob(ptr, buf.data(), len);
 
     return std::string(buf.data());
 }
@@ -320,7 +329,7 @@ ArmSemihosting::callClose(ThreadContext *tc, uint64_t handle)
 ArmSemihosting::RetErrno
 ArmSemihosting::callWriteC(ThreadContext *tc, InPlaceArg arg)
 {
-    const char c = physProxy(tc).read<char>(arg.addr);
+    const char c = portProxy(tc).read<char>(arg.addr);
 
     DPRINTF(Semihosting, "Semihosting SYS_WRITEC('%c')\n", c);
     std::cout.put(c);
@@ -332,7 +341,7 @@ ArmSemihosting::RetErrno
 ArmSemihosting::callWrite0(ThreadContext *tc, InPlaceArg arg)
 {
     DPRINTF(Semihosting, "Semihosting SYS_WRITE0(...)\n");
-    PortProxy &proxy = physProxy(tc);
+    PortProxy &proxy = portProxy(tc);
     std::string str;
     proxy.readString(str, arg.addr);
     std::cout.write(str.c_str(), str.size());
@@ -348,7 +357,7 @@ ArmSemihosting::callWrite(ThreadContext *tc, uint64_t handle, Addr addr,
         return RetErrno(size, EBADF);
 
     std::vector<uint8_t> buffer(size);
-    physProxy(tc).readBlob(addr, buffer.data(), buffer.size());
+    portProxy(tc).readBlob(addr, buffer.data(), buffer.size());
 
     int64_t ret = files[handle]->write(buffer.data(), buffer.size());
     if (ret < 0) {
@@ -375,7 +384,7 @@ ArmSemihosting::callRead(ThreadContext *tc, uint64_t handle, Addr addr,
     } else {
         panic_if(ret > buffer.size(), "Read longer than buffer size.");
 
-        physProxy(tc).writeBlob(addr, buffer.data(), ret);
+        portProxy(tc).writeBlob(addr, buffer.data(), ret);
 
         // Return the number of bytes not written
         return retOK(size - ret);
@@ -449,7 +458,7 @@ ArmSemihosting::callTmpNam(ThreadContext *tc, Addr addr, uint64_t id,
     if (path_len >= size)
         return retError(ENOSPC);
 
-    physProxy(tc).writeBlob(addr, path, path_len + 1);
+    portProxy(tc).writeBlob(addr, path, path_len + 1);
     return retOK(0);
 }
 
@@ -512,7 +521,7 @@ ArmSemihosting::RetErrno
 ArmSemihosting::callGetCmdLine(ThreadContext *tc, Addr addr,
                                InPlaceArg size_arg)
 {
-    PortProxy &proxy = physProxy(tc);
+    PortProxy &proxy = portProxy(tc);
     ByteOrder endian = ArmISA::byteOrder(tc);
     size_t size = size_arg.read(tc, endian);
 
@@ -576,7 +585,7 @@ ArmSemihosting::callHeapInfo32(ThreadContext *tc, Addr block_addr)
         (uint32_t)heap_base, (uint32_t)heap_limit,
         (uint32_t)stack_base, (uint32_t)stack_limit
     };
-    physProxy(tc).write(block_addr, block, ArmISA::byteOrder(tc));
+    portProxy(tc).write(block_addr, block, ArmISA::byteOrder(tc));
 
     return retOK(0);
 }
@@ -590,7 +599,7 @@ ArmSemihosting::callHeapInfo64(ThreadContext *tc, Addr block_addr)
     std::array<uint64_t, 4> block = {
         heap_base, heap_limit, stack_base, stack_limit
     };
-    physProxy(tc).write(block_addr, block, ArmISA::byteOrder(tc));
+    portProxy(tc).write(block_addr, block, ArmISA::byteOrder(tc));
 
     return retOK(0);
 }

@@ -73,7 +73,7 @@ class ArmSemihosting : public SimObject
 {
   public:
 
-    static PortProxy &physProxy(ThreadContext *tc);
+    static PortProxy &portProxy(ThreadContext *tc);
 
     struct AbiBase
     {
@@ -110,7 +110,7 @@ class ArmSemihosting : public SimObject
             Arg
             get(ThreadContext *tc)
             {
-                Arg arg = ArmSemihosting::physProxy(tc).read<Arg>(
+                Arg arg = ArmSemihosting::portProxy(tc).read<Arg>(
                         argPointer, endian);
                 argPointer += sizeof(Arg);
                 return arg;
@@ -159,7 +159,7 @@ class ArmSemihosting : public SimObject
         uint64_t
         read(ThreadContext *tc, ByteOrder endian)
         {
-            auto &proxy = ArmSemihosting::physProxy(tc);
+            auto &proxy = ArmSemihosting::portProxy(tc);
             if (size == 8)
                 return proxy.read<uint64_t>(addr, endian);
             else if (size == 4)
@@ -172,7 +172,7 @@ class ArmSemihosting : public SimObject
         void
         write(ThreadContext *tc, uint64_t val, ByteOrder endian)
         {
-            auto &proxy = ArmSemihosting::physProxy(tc);
+            auto &proxy = ArmSemihosting::portProxy(tc);
             if (size == 8)
                 proxy.write<uint64_t>(addr, val, endian);
             else if (size == 4)
