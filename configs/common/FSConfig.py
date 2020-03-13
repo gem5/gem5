@@ -311,7 +311,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
 
         self.workload = workload
 
-        self.realview.setupBootLoader(self, binary)
+        self.realview.setupBootLoader(self, binary, bootloader)
 
     if external_memory:
         # I/O traffic enters iobus
