@@ -69,7 +69,9 @@ SkipFunc::returnFromFuncIn(ThreadContext *tc)
     }
 }
 
-FsWorkload::FsWorkload(Params *p) : OsKernel(*p)
+FsWorkload::FsWorkload(Params *p)
+  : OsKernel(*p),
+    kernelEntry((entry & loadAddrMask) + loadAddrOffset)
 {
     bootLoaders.reserve(p->boot_loader.size());
     for (const auto &bl : p->boot_loader) {
@@ -93,7 +95,6 @@ FsWorkload::FsWorkload(Params *p) : OsKernel(*p)
     if (bootldr) {
         bootldr->loadGlobalSymbols(debugSymbolTable);
 
-        entry = bootldr->entryPoint();
         _highestELIs64 = (bootldr->getArch() == ObjectFile::Arm64);
     } else {
         _highestELIs64 = (obj->getArch() == ObjectFile::Arm64);
@@ -116,8 +117,6 @@ FsWorkload::initState()
 
     auto *arm_sys = dynamic_cast<ArmSystem *>(system);
 
-    Addr kernel_entry = (obj->entryPoint() & loadAddrMask) + loadAddrOffset;
-
     if (bootldr) {
         bool is_gic_v2 =
             arm_sys->getGIC()->supportsVersion(BaseGic::GicVersion::GIC_V2);
@@ -136,12 +135,12 @@ FsWorkload::initState()
 
         for (auto tc: arm_sys->threadContexts) {
             if (!arm_sys->highestELIs64())
-                tc->setIntReg(3, kernel_entry);
+                tc->setIntReg(3, kernelEntry);
             if (is_gic_v2)
                 tc->setIntReg(4, arm_sys->params()->gic_cpu_addr);
             tc->setIntReg(5, arm_sys->params()->flags_addr);
         }
-        inform("Using kernel entry physical address at %#x\n", kernel_entry);
+        inform("Using kernel entry physical address at %#x\n", kernelEntry);
     } else {
         // Set the initial PC to be at start of the kernel code
         if (!arm_sys->highestELIs64())
@@ -158,6 +157,16 @@ FsWorkload::getBootLoader(ObjectFile *const obj)
     }
 
     return nullptr;
+}
+
+Addr
+FsWorkload::resetAddr() const
+{
+    if (bootldr) {
+        return bootldr->entryPoint();
+    } else {
+        return kernelEntry;
+    }
 }
 
 } // namespace ArmISA

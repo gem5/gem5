@@ -73,21 +73,18 @@ ArmSystem::ArmSystem(Params *p)
       semihosting(p->semihosting),
       multiProc(p->multi_proc)
 {
-    if (p->auto_reset_addr) {
-        _resetAddr = (workload->entry & workload->loadAddrMask) +
-            workload->loadAddrOffset;
-    } else {
-        _resetAddr = p->reset_addr;
-    }
-
     auto *arm_workload = dynamic_cast<ArmISA::FsWorkload *>(p->workload);
     panic_if(!arm_workload,
             "Workload was not the expected type (ArmISA::FsWorkload).");
 
-    warn_if(workload->entry != _resetAddr,
-            "Workload entry point %#x overriding reset address %#x",
-            workload->entry, _resetAddr);
-    _resetAddr = workload->entry;
+    if (p->auto_reset_addr) {
+        _resetAddr = arm_workload->resetAddr();
+    } else {
+        _resetAddr = p->reset_addr;
+        warn_if(arm_workload->resetAddr() != _resetAddr,
+                "Workload entry point %#x and reset address %#x are different",
+                arm_workload->resetAddr(), _resetAddr);
+    }
 
     if (arm_workload->highestELIs64() != _highestELIs64) {
         warn("Highest ARM exception-level set to AArch%d but the workload "

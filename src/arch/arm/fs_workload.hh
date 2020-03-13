@@ -76,6 +76,13 @@ class FsWorkload : public OsKernel
     bool _highestELIs64 = true;
 
     /**
+     * This differs from entry since it takes into account where
+     * the kernel is loaded in memory (with loadAddrMask and
+     * loadAddrOffset).
+     */
+    Addr kernelEntry = 0;
+
+    /**
      * Get a boot loader that matches the kernel.
      *
      * @param obj Kernel binary
@@ -95,6 +102,14 @@ class FsWorkload : public OsKernel
     FsWorkload(Params *p);
 
     void initState() override;
+
+    /**
+     * Returns the reset address to be used by an ArmSystem.
+     * It the workload is using a bootloader, it will return
+     * the bootloader entry point.
+     * @returns Arm reset address
+     */
+    Addr resetAddr() const;
 
     bool highestELIs64() const { return _highestELIs64; }
 };

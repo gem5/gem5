@@ -58,7 +58,7 @@ class ArmSystem(System):
     have_lpae = Param.Bool(True, "True if LPAE is implemented")
     reset_addr = Param.Addr(0x0,
         "Reset address (ARMv8)")
-    auto_reset_addr = Param.Bool(False,
+    auto_reset_addr = Param.Bool(True,
         "Determine reset address from kernel entry point if no boot loader")
     highest_el_is_64 = Param.Bool(False,
         "True if the register width of the highest implemented exception level "
