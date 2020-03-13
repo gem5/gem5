@@ -78,17 +78,17 @@ class FsFreebsd : public ArmISA::FsWorkload
 
   private:
     /** Event to halt the simulator if the kernel calls panic()  */
-    PCEvent *kernelPanicEvent = nullptr;
+    PCEvent *kernelPanic = nullptr;
 
     /** Event to halt the simulator if the kernel calls oopses  */
-    PCEvent *kernelOopsEvent = nullptr;
+    PCEvent *kernelOops = nullptr;
 
     /**
      * PC based event to skip udelay(<time>) calls and quiesce the
      * processor for the appropriate amount of time. This is not functionally
      * required but does speed up simulation.
      */
-    FreeBSD::UDelayEvent<SkipFunc> *uDelaySkipEvent = nullptr;
+    FreeBSD::SkipUDelay<SkipFunc> *skipUDelay = nullptr;
 
     /** These variables store addresses of important data structures
      * that are normaly kept coherent at boot with cache mainetence operations.

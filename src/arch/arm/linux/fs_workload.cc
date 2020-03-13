@@ -169,11 +169,13 @@ FsLinux::initState()
 
 FsLinux::~FsLinux()
 {
-    delete uDelaySkipEvent;
-    delete constUDelaySkipEvent;
+    delete skipUDelay;
+    delete skipConstUDelay;
+    delete kernelOops;
+    delete kernelPanic;
 
-    delete dumpStatsPCEvent;
-    delete debugPrintkEvent;
+    delete dumpStats;
+    delete debugPrintk;
 }
 
 void
@@ -183,15 +185,12 @@ FsLinux::startup()
 
     auto *arm_sys = dynamic_cast<ArmSystem *>(system);
     if (enableContextSwitchStatsDump) {
-        if (!arm_sys->highestELIs64()) {
-            dumpStatsPCEvent =
-                addKernelFuncEvent<DumpStatsPCEvent>("__switch_to");
-        } else {
-            dumpStatsPCEvent =
-                addKernelFuncEvent<DumpStatsPCEvent64>("__switch_to");
-        }
+        if (!arm_sys->highestELIs64())
+            dumpStats = addKernelFuncEvent<DumpStats>("__switch_to");
+        else
+            dumpStats = addKernelFuncEvent<DumpStats64>("__switch_to");
 
-        panic_if(!dumpStatsPCEvent, "dumpStatsPCEvent not created!");
+        panic_if(!dumpStats, "dumpStats not created!");
 
         std::string task_filename = "tasks.txt";
         taskFile = simout.create(name() + "." + task_filename);
@@ -207,40 +206,39 @@ FsLinux::startup()
 
     const std::string dmesg_output = name() + ".dmesg";
     if (params()->panic_on_panic) {
-        kernelPanicEvent = addKernelFuncEventOrPanic<Linux::KernelPanicEvent>(
+        kernelPanic = addKernelFuncEventOrPanic<Linux::KernelPanic>(
             "panic", "Kernel panic in simulated kernel", dmesg_output);
     } else {
-        kernelPanicEvent = addKernelFuncEventOrPanic<Linux::DmesgDumpEvent>(
+        kernelPanic = addKernelFuncEventOrPanic<Linux::DmesgDump>(
             "panic", "Kernel panic in simulated kernel", dmesg_output);
     }
 
     if (params()->panic_on_oops) {
-        kernelOopsEvent = addKernelFuncEventOrPanic<Linux::KernelPanicEvent>(
+        kernelOops = addKernelFuncEventOrPanic<Linux::KernelPanic>(
             "oops_exit", "Kernel oops in guest", dmesg_output);
     } else {
-        kernelOopsEvent = addKernelFuncEventOrPanic<Linux::DmesgDumpEvent>(
+        kernelOops = addKernelFuncEventOrPanic<Linux::DmesgDump>(
             "oops_exit", "Kernel oops in guest", dmesg_output);
     }
 
     // With ARM udelay() is #defined to __udelay
     // newer kernels use __loop_udelay and __loop_const_udelay symbols
-    uDelaySkipEvent = addKernelFuncEvent<UDelayEvent<SkipFunc>>(
+    skipUDelay = addKernelFuncEvent<SkipUDelay<SkipFunc>>(
         "__loop_udelay", "__udelay", 1000, 0);
-    if (!uDelaySkipEvent)
-        uDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent<SkipFunc>>(
+    if (!skipUDelay)
+        skipUDelay = addKernelFuncEventOrPanic<SkipUDelay<SkipFunc>>(
          "__udelay", "__udelay", 1000, 0);
 
     // constant arguments to udelay() have some precomputation done ahead of
     // time. Constant comes from code.
-    constUDelaySkipEvent = addKernelFuncEvent<UDelayEvent<SkipFunc>>(
+    skipConstUDelay = addKernelFuncEvent<SkipUDelay<SkipFunc>>(
         "__loop_const_udelay", "__const_udelay", 1000, 107374);
-    if (!constUDelaySkipEvent)
-        constUDelaySkipEvent =
-            addKernelFuncEventOrPanic<UDelayEvent<SkipFunc>>(
-         "__const_udelay", "__const_udelay", 1000, 107374);
+    if (!skipConstUDelay) {
+        skipConstUDelay = addKernelFuncEventOrPanic<SkipUDelay<SkipFunc>>(
+            "__const_udelay", "__const_udelay", 1000, 107374);
+    }
 
-    debugPrintkEvent =
-        addKernelFuncEvent<DebugPrintkEvent<SkipFunc>>("dprintk");
+    debugPrintk = addKernelFuncEvent<DebugPrintk<SkipFunc>>("dprintk");
 }
 
 void
@@ -274,7 +272,7 @@ FsLinux::dumpDmesg()
  *  r2 = thread_info of the next process to run
  */
 void
-DumpStatsPCEvent::getTaskDetails(ThreadContext *tc, uint32_t &pid,
+DumpStats::getTaskDetails(ThreadContext *tc, uint32_t &pid,
     uint32_t &tgid, std::string &next_task_str, int32_t &mm) {
 
     Linux::ThreadInfo ti(tc);
@@ -296,7 +294,7 @@ DumpStatsPCEvent::getTaskDetails(ThreadContext *tc, uint32_t &pid,
  *  r1 = task_struct of next process to run
  */
 void
-DumpStatsPCEvent64::getTaskDetails(ThreadContext *tc, uint32_t &pid,
+DumpStats64::getTaskDetails(ThreadContext *tc, uint32_t &pid,
     uint32_t &tgid, std::string &next_task_str, int32_t &mm) {
 
     Linux::ThreadInfo ti(tc);
@@ -314,7 +312,7 @@ DumpStatsPCEvent64::getTaskDetails(ThreadContext *tc, uint32_t &pid,
  *  "__switch_to" is called to change running tasks.
  */
 void
-DumpStatsPCEvent::process(ThreadContext *tc)
+DumpStats::process(ThreadContext *tc)
 {
     uint32_t pid = 0;
     uint32_t tgid = 0;

@@ -55,7 +55,8 @@
 #include "sim/core.hh"
 #include "sim/system.hh"
 
-namespace Linux {
+namespace Linux
+{
 
 void
 onDebugPrintk(ThreadContext *tc)
@@ -70,7 +71,7 @@ onDebugPrintk(ThreadContext *tc)
 }
 
 void
-DmesgDumpEvent::process(ThreadContext *tc)
+DmesgDump::process(ThreadContext *tc)
 {
     inform("Dumping kernel dmesg buffer to %s...\n", fname);
     OutputStream *os = simout.create(fname);
@@ -81,7 +82,7 @@ DmesgDumpEvent::process(ThreadContext *tc)
 }
 
 void
-KernelPanicEvent::process(ThreadContext *tc)
+KernelPanic::process(ThreadContext *tc)
 {
     inform("Dumping kernel dmesg buffer to %s...\n", fname);
     OutputStream *os = simout.create(fname);

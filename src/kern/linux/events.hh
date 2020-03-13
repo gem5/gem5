@@ -43,18 +43,18 @@
 
 #include "kern/system_events.hh"
 
-namespace Linux {
+namespace Linux
+{
 
 void onDebugPrintk(ThreadContext *tc);
 
 template <typename Base>
-class DebugPrintkEvent : public Base
+class DebugPrintk : public Base
 {
   public:
-    DebugPrintkEvent(PCEventScope *s, const std::string &desc, Addr addr)
-        : Base(s, desc, addr) {}
-    virtual void
-    process(ThreadContext *tc)
+    using Base::Base;
+    void
+    process(ThreadContext *tc) override
     {
         onDebugPrintk(tc);
         Base::process(tc);
@@ -69,16 +69,17 @@ class DebugPrintkEvent : public Base
  * limitations. Most importantly, the kernel's address mappings must
  * be available to the translating proxy.
  */
-class DmesgDumpEvent : public PCEvent
+class DmesgDump : public PCEvent
 {
   protected:
     std::string fname;
 
   public:
-    DmesgDumpEvent(PCEventScope *s, const std::string &desc, Addr addr,
-                   const std::string &_fname)
-        : PCEvent(s, desc, addr), fname(_fname) {}
-    virtual void process(ThreadContext *tc);
+    DmesgDump(PCEventScope *s, const std::string &desc, Addr addr,
+              const std::string &_fname) :
+        PCEvent(s, desc, addr), fname(_fname)
+    {}
+    void process(ThreadContext *tc) override;
 };
 
 /**
@@ -89,16 +90,17 @@ class DmesgDumpEvent : public PCEvent
  * limitations. Most importantly, the kernel's address mappings must
  * be available to the translating proxy.
  */
-class KernelPanicEvent : public PCEvent
+class KernelPanic : public PCEvent
 {
   protected:
     std::string fname;
 
   public:
-    KernelPanicEvent(PCEventScope *s, const std::string &desc, Addr addr,
-               const std::string &_fname)
-        : PCEvent(s, desc, addr), fname(_fname) {}
-    virtual void process(ThreadContext *tc);
+    KernelPanic(PCEventScope *s, const std::string &desc, Addr addr,
+                const std::string &_fname) :
+        PCEvent(s, desc, addr), fname(_fname)
+    {}
+    void process(ThreadContext *tc) override;
 };
 
 void onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul);
@@ -110,33 +112,38 @@ void onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul);
  * See descriptions of argDivToNs and argMultToNs below.
  */
 template <typename Base>
-class UDelayEvent : public Base
+class SkipUDelay : public Base
 {
   private:
-    /** value to divide arg by to create ns. This is present beacues the linux
+    /**
+     * Value to divide arg by to create ns. This is present beacues the linux
      * kernel code sometime precomputes the first multiply that is done in
      * udelay() if the parameter is a constant. We need to undo it so here is
-     * how. */
+     * how.
+     */
     uint64_t argDivToNs;
 
-    /** value to multiple arg by to create ns. Nominally, this is 1000 to
+    /**
+     * Value to multiple arg by to create ns. Nominally, this is 1000 to
      * convert us to ns, but since linux can do some preprocessing of constant
-     * values something else might be required. */
+     * values something else might be required.
+     */
     uint64_t argMultToNs;
 
   public:
-    UDelayEvent(PCEventScope *s, const std::string &desc, Addr addr,
-            uint64_t mult, uint64_t div)
-        : Base(s, desc, addr), argDivToNs(div), argMultToNs(mult) {}
+    SkipUDelay(PCEventScope *s, const std::string &desc, Addr addr,
+            uint64_t mult, uint64_t div) :
+        Base(s, desc, addr), argDivToNs(div), argMultToNs(mult)
+    {}
 
-    virtual void
-    process(ThreadContext *tc)
+    void
+    process(ThreadContext *tc) override
     {
         onUDelay(tc, argDivToNs, argMultToNs);
         Base::process(tc);
     }
 };
 
-}
+} // namespace Linux
 
-#endif
+#endif // __KERN_LINUX_EVENTS_HH__

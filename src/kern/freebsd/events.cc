@@ -42,19 +42,16 @@
 #include "sim/arguments.hh"
 #include "sim/system.hh"
 
-namespace FreeBSD {
+namespace FreeBSD
+{
 
 void
 onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul)
 {
-    int arg_num;
-
-    arg_num = 0;
+    int arg_num = 0;
 
     // Get the time in native size
     uint64_t time = TheISA::getArgument(tc, arg_num,  (uint16_t)-1, false);
-
-    //DPRINTFN("DELAY(%d)\n", time);
 
     // convert parameter to ns
     if (div)

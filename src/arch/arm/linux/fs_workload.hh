@@ -54,7 +54,7 @@
 namespace ArmISA
 {
 
-class DumpStatsPCEvent;
+class DumpStats;
 
 class FsLinux : public ArmISA::FsWorkload
 {
@@ -63,9 +63,9 @@ class FsLinux : public ArmISA::FsWorkload
      * PC based event to skip the dprink() call and emulate its
      * functionality
      */
-    Linux::DebugPrintkEvent<SkipFunc> *debugPrintkEvent = nullptr;
+    Linux::DebugPrintk<SkipFunc> *debugPrintk = nullptr;
 
-    DumpStatsPCEvent *dumpStatsPCEvent = nullptr;
+    DumpStats *dumpStats = nullptr;
 
   public:
     /** Boilerplate params code */
@@ -109,31 +109,30 @@ class FsLinux : public ArmISA::FsWorkload
 
   private:
     /** Event to halt the simulator if the kernel calls panic()  */
-    PCEvent *kernelPanicEvent = nullptr;
+    PCEvent *kernelPanic = nullptr;
 
     /** Event to halt the simulator if the kernel calls oopses  */
-    PCEvent *kernelOopsEvent = nullptr;
+    PCEvent *kernelOops = nullptr;
 
     /**
      * PC based event to skip udelay(<time>) calls and quiesce the
      * processor for the appropriate amount of time. This is not functionally
      * required but does speed up simulation.
      */
-    Linux::UDelayEvent<SkipFunc> *uDelaySkipEvent = nullptr;
+    Linux::SkipUDelay<SkipFunc> *skipUDelay = nullptr;
 
     /** Another PC based skip event for const_udelay(). Similar to the udelay
      * skip, but this function precomputes the first multiply that is done
      * in the generic case since the parameter is known at compile time.
      * Thus we need to do some division to get back to us.
      */
-    Linux::UDelayEvent<SkipFunc> *constUDelaySkipEvent = nullptr;
-
+    Linux::SkipUDelay<SkipFunc> *skipConstUDelay = nullptr;
 };
 
-class DumpStatsPCEvent : public PCEvent
+class DumpStats : public PCEvent
 {
   public:
-    DumpStatsPCEvent(PCEventScope *s, const std::string &desc, Addr addr)
+    DumpStats(PCEventScope *s, const std::string &desc, Addr addr)
         : PCEvent(s, desc, addr)
     {}
 
@@ -144,12 +143,11 @@ class DumpStatsPCEvent : public PCEvent
 
 };
 
-class DumpStatsPCEvent64 : public DumpStatsPCEvent
+class DumpStats64 : public DumpStats
 {
   public:
-    DumpStatsPCEvent64(PCEventScope *s, const std::string &desc, Addr addr)
-        : DumpStatsPCEvent(s, desc, addr)
-    {}
+    using DumpStats::DumpStats;
+
   private:
     void getTaskDetails(ThreadContext *tc, uint32_t &pid, uint32_t &tgid,
                         std::string &next_task_str, int32_t &mm) override;

@@ -56,20 +56,20 @@ FsFreebsd::FsFreebsd(Params *p) : ArmISA::FsWorkload(p),
     enableContextSwitchStatsDump(p->enable_context_switch_stats_dump)
 {
     if (p->panic_on_panic) {
-        kernelPanicEvent = addKernelFuncEventOrPanic<PanicPCEvent>(
+        kernelPanic = addKernelFuncEventOrPanic<PanicPCEvent>(
             "panic", "Kernel panic in simulated kernel");
     } else {
 #ifndef NDEBUG
-        kernelPanicEvent = addKernelFuncEventOrPanic<BreakPCEvent>("panic");
+        kernelPanic = addKernelFuncEventOrPanic<BreakPCEvent>("panic");
 #endif
     }
 
     if (p->panic_on_oops) {
-        kernelOopsEvent = addKernelFuncEventOrPanic<PanicPCEvent>(
+        kernelOops = addKernelFuncEventOrPanic<PanicPCEvent>(
             "oops_exit", "Kernel oops in guest");
     }
 
-    uDelaySkipEvent = addKernelFuncEvent<UDelayEvent<ArmISA::SkipFunc>>(
+    skipUDelay = addKernelFuncEvent<SkipUDelay<ArmISA::SkipFunc>>(
         "DELAY", "DELAY", 1000, 0);
 }
 
@@ -123,7 +123,7 @@ FsFreebsd::initState()
 
 FsFreebsd::~FsFreebsd()
 {
-    delete uDelaySkipEvent;
+    delete skipUDelay;
 }
 
 } // namespace ArmISA

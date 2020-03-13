@@ -35,7 +35,8 @@
 
 #include "kern/system_events.hh"
 
-namespace FreeBSD {
+namespace FreeBSD
+{
 
 void onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul);
 
@@ -45,7 +46,7 @@ void onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul);
  * See descriptions of argDivToNs and argMultToNs below.
  */
 template <typename Base>
-class UDelayEvent : public Base
+class SkipUDelay : public Base
 {
   private:
     /** value to divide arg by to create ns. This is present beacues the linux
@@ -60,9 +61,10 @@ class UDelayEvent : public Base
     uint64_t argMultToNs;
 
   public:
-    UDelayEvent(PCEventScope *s, const std::string &desc, Addr addr,
-            uint64_t mult, uint64_t div)
-        : Base(s, desc, addr), argDivToNs(div), argMultToNs(mult) {}
+    SkipUDelay(PCEventScope *s, const std::string &desc, Addr addr,
+               uint64_t mult, uint64_t div) :
+        Base(s, desc, addr), argDivToNs(div), argMultToNs(mult)
+    {}
 
     void
     process(ThreadContext *tc) override

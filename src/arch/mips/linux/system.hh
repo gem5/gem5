@@ -49,20 +49,22 @@ class LinuxMipsSystem : public MipsSystem
   private:
     using SkipFunc = MipsISA::SkipFunc;
 
-    class SkipDelayLoopEvent : public SkipFunc
+    class SkipDelayLoop : public SkipFunc
     {
       public:
-        SkipDelayLoopEvent(PCEventScope *s, const std::string &desc, Addr addr)
-            : SkipFunc(s, desc, addr) {}
-        virtual void process(ThreadContext *tc);
+        SkipDelayLoop(PCEventScope *s, const std::string &desc, Addr addr) :
+            SkipFunc(s, desc, addr)
+        {}
+        void process(ThreadContext *tc) override;
     };
 
     class PrintThreadInfo : public PCEvent
     {
       public:
-        PrintThreadInfo(PCEventScope *s, const std::string &desc, Addr addr)
-            : PCEvent(s, desc, addr) {}
-        virtual void process(ThreadContext *tc);
+        PrintThreadInfo(PCEventScope *s, const std::string &desc, Addr addr) :
+            PCEvent(s, desc, addr)
+        {}
+        void process(ThreadContext *tc) override;
     };
 
 
