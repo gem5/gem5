@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 ARM Limited
+ * Copyright (c) 2016-2017, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -46,74 +46,38 @@
 #include "sim/sim_object.hh"
 
 MathExprPowerModel::MathExprPowerModel(const Params *p)
-    : PowerModelState(p), dyn_expr(p->dyn), st_expr(p->st), failed(false)
+    : PowerModelState(p), dyn_expr(p->dyn), st_expr(p->st)
 {
-    // Calculate the name of the object we belong to
-    std::vector<std::string> path;
-    tokenize(path, name(), '.', true);
-    // It's something like xyz.power_model.pm2
-    assert(path.size() > 2);
-    for (unsigned i = 0; i < path.size() - 2; i++)
-        basename += path[i] + ".";
 }
 
 void
 MathExprPowerModel::startup()
 {
-    // Create a map with stats and pointers for quick access
-    // Has to be done here, since we need access to the statsList
-    for (auto & i: Stats::statsList()) {
-        if (i->name.find(basename) == 0) {
-            // Add stats for this sim object and its child objects
-            stats_map[i->name.substr(basename.size())] = i;
-        } else if (i->name.find(".") == std::string::npos) {
-            // Add global stats (sim_seconds, for example)
-            stats_map[i->name] = i;
+    for (auto expr: {dyn_expr, st_expr}) {
+        std::vector<std::string> vars = expr.getVariables();
+
+        for (auto var: vars) {
+            // Automatic variables:
+            if (var == "temp" || var == "voltage" || var == "clock_period") {
+                continue;
+            }
+
+            auto *info = Stats::resolve(var);
+            fatal_if(!info, "Failed to evaluate %s in expression:\n%s\n",
+                     var, expr.toStr());
+            statsMap[var] = info;
         }
-    }
-
-    tryEval(st_expr);
-    const bool st_failed = failed;
-
-    tryEval(dyn_expr);
-    const bool dyn_failed = failed;
-
-    if (st_failed || dyn_failed) {
-        const auto *p = dynamic_cast<const Params *>(params());
-        assert(p);
-
-        fatal("Failed to evaluate power expressions:\n%s%s%s\n",
-              st_failed ? p->st : "",
-              st_failed && dyn_failed ? "\n" : "",
-              dyn_failed ? p->dyn : "");
     }
 }
 
 double
 MathExprPowerModel::eval(const MathExpr &expr) const
 {
-    const double value = tryEval(expr);
-
-    // This shouldn't happen unless something went wrong the equations
-    // were verified in startup().
-    panic_if(failed, "Failed to evaluate power expression '%s'\n",
-             expr.toStr());
-
-    return value;
-}
-
-double
-MathExprPowerModel::tryEval(const MathExpr &expr) const
-{
-    failed = false;
-    const double value = expr.eval(
+    return expr.eval(
         std::bind(&MathExprPowerModel::getStatValue,
                   this, std::placeholders::_1)
         );
-
-    return value;
 }
-
 
 double
 MathExprPowerModel::getStatValue(const std::string &name) const
@@ -127,18 +91,13 @@ MathExprPowerModel::getStatValue(const std::string &name) const
         return clocked_object->voltage();
     } else if (name=="clock_period") {
         return clocked_object->clockPeriod();
-    } 
-
-    // Try to cast the stat, only these are supported right now
-    const auto it = stats_map.find(name);
-    if (it == stats_map.cend()) {
-        warn("Failed to find stat '%s'\n", name);
-        failed = true;
-        return 0;
     }
 
+    const auto it = statsMap.find(name);
+    assert(it != statsMap.cend());
     const Info *info = it->second;
 
+    // Try to cast the stat, only these are supported right now
     auto si = dynamic_cast<const ScalarInfo *>(info);
     if (si)
         return si->value();

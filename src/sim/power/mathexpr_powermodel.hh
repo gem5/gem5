@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 ARM Limited
+ * Copyright (c) 2016-2017, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -82,9 +82,8 @@ class MathExprPowerModel : public PowerModelState
      */
     double getStatValue(const std::string & name) const;
 
-    void startup();
-
-    void regStats();
+    void startup() override;
+    void regStats() override;
 
   private:
     /**
@@ -96,27 +95,11 @@ class MathExprPowerModel : public PowerModelState
      */
     double eval(const MathExpr &expr) const;
 
-    /**
-     * Evaluate an expression in the context of this object, set
-     * failed if evaluation failed.
-     *
-     * @param expr Expression to evaluate
-     * @return Value of expression.
-     */
-    double tryEval(const MathExpr &expr) const;
-
     // Math expressions for dynamic and static power
     MathExpr dyn_expr, st_expr;
 
-    // Basename of the object in the gem5 stats hierachy
-    std::string basename;
-
     // Map that contains relevant stats for this power model
-    std::unordered_map<std::string, Stats::Info*> stats_map;
-
-    // Did the expression fail to evaluate (e.g., because a stat value
-    // can't be resolved)
-    mutable bool failed;
+    std::unordered_map<std::string, const Stats::Info*> statsMap;
 };
 
 #endif
