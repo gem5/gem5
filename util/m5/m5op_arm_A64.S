@@ -61,6 +61,3 @@
 .text
 #define M5OP(name, func, subfunc) m5op_func name, func, subfunc
         M5OP_FOREACH
-
-#define M5_ANNOTATION(name, ann) m5op_func name, M5OP_ANNOTATE, ann
-        M5OP_FOREACH_ANNOTATION
