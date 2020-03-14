@@ -126,22 +126,4 @@
     M5OP(m5_work_end, M5OP_WORK_END, 0);                        \
     M5OP(m5_dist_toggle_sync, M5OP_DIST_TOGGLE_SYNC, 0);
 
-#define M5OP_FOREACH_ANNOTATION                      \
-    M5_ANNOTATION(m5a_bsm, M5OP_AN_BSM);             \
-    M5_ANNOTATION(m5a_esm, M5OP_AN_ESM);             \
-    M5_ANNOTATION(m5a_begin, M5OP_AN_BEGIN);         \
-    M5_ANNOTATION(m5a_end, M5OP_AN_END);             \
-    M5_ANNOTATION(m5a_q, M5OP_AN_Q);                 \
-    M5_ANNOTATION(m5a_dq, M5OP_AN_DQ);               \
-    M5_ANNOTATION(m5a_wf, M5OP_AN_WF);               \
-    M5_ANNOTATION(m5a_we, M5OP_AN_WE);               \
-    M5_ANNOTATION(m5a_rq, M5OP_AN_RQ);               \
-    M5_ANNOTATION(m5a_ws, M5OP_AN_WS);               \
-    M5_ANNOTATION(m5a_sq, M5OP_AN_SQ);               \
-    M5_ANNOTATION(m5a_aq, M5OP_AN_AQ);               \
-    M5_ANNOTATION(m5a_pq, M5OP_AN_PQ);               \
-    M5_ANNOTATION(m5a_l, M5OP_AN_L);                 \
-    M5_ANNOTATION(m5a_identify, M5OP_AN_IDENTIFY);   \
-    M5_ANNOTATION(m5a_getid, M5OP_AN_GETID);
-
 #endif //  __GEM5_ASM_GENERIC_M5OPS_H__
