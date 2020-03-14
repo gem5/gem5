@@ -41,23 +41,23 @@
 #include <gem5/asm/generic/m5ops.h>
 
 #ifdef M5OP_ADDR
-.macro	m5op_func, name, func, subfunc
+.macro	m5op_func, name, func
         .globl \name
         \name:
         ldr x9, m5_mem
-        movz x10, #((\func << 8) | \subfunc)
+        movz x10, #(\func << 8)
         ldr x0, [ x9, x10 ]
         ret
 .endm
 #else
-.macro	m5op_func, name, func, subfunc
+.macro	m5op_func, name, func
         .globl \name
         \name:
-        .long 0xff000110 | (\func << 16) | (\subfunc << 12)
+        .long 0xff000110 | (\func << 16)
         ret
 .endm
 #endif
 
 .text
-#define M5OP(name, func, subfunc) m5op_func name, func, subfunc
+#define M5OP(name, func) m5op_func name, func
         M5OP_FOREACH

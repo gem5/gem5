@@ -46,19 +46,19 @@
 
 .text
 
-.macro m5op_func name, func, subfunc
+.macro m5op_func name, func
         .align 2
         .globl \name
 \name:
 #ifdef __thumb__
         .short 0xEE00 | \func
-        .short 0x0110 | (\subfunc << 12)
+        .short 0x0110
 #else
-        .long 0xEE000110 | (\func << 16) | (\subfunc << 12)
+        .long 0xEE000110 | (\func << 16)
 #endif
         mov pc,lr
 .endm
 
 .text
-#define M5OP(name, func, subfunc) m5op_func name, func, subfunc
+#define M5OP(name, func) m5op_func name, func
         M5OP_FOREACH
