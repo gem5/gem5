@@ -38,7 +38,7 @@
 from abc import ABCMeta, abstractmethod
 import os
 from collections import namedtuple
-from units import *
+from .units import *
 from .helpers import FileIgnoreList
 from .results import TestResult
 import shutil

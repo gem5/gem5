@@ -45,8 +45,8 @@ import subprocess
 import sys
 import traceback
 
-from results import UnitResult
-from helpers import *
+from .results import UnitResult
+from .helpers import *
 
 _test_base = os.path.join(os.path.dirname(__file__), "..")
 
