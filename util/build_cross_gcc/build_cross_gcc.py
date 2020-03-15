@@ -54,6 +54,7 @@ description_paragraphs = [
         '''2. gcc''',
         '''3. glibc''',
         '''4. linux kernel''',
+        '''5. gdb''',
         '',
         '''
         The entire process can be configured with a series of settings
@@ -373,6 +374,18 @@ class LinuxSourceDir(SourceDirSetting):
     def set_from_args(self, args):
         return self.set_arg(args.linux_src)
 
+class GdbSourceDir(SourceDirSetting):
+    key = 'GDB_SRC_DIR'
+    default = None
+    pattern = 'gdb-*'
+    project = 'gdb'
+
+    def add_to_argparser(self, parser):
+        parser.add_argument('--gdb-src', help=self.describe())
+
+    def set_from_args(self, args):
+        return self.set_arg(args.gdb_src)
+
 class Parallelism(Setting):
     key = 'J'
     default = None
@@ -646,8 +659,38 @@ class StandardCLib(Step):
                 'make install',
                 )
 
-class StandardCxxLib(Step):
+class BuildGdb(Step):
     number = 7
+
+    def describe(self):
+        return 'Build GDB.'
+
+    def run(self):
+        prefix = Prefix.setting()
+        target = Target.setting()
+        j = Parallelism.setting()
+        source_dir = GdbSourceDir.setting()
+        build_dir = setup_build_dir('gdb')
+
+        if not all((prefix, target, j, source_dir, build_dir)):
+            return False
+
+        prefix = prefix.get()
+        target = target.get()
+        j = j.get()
+        source_dir = os.path.abspath(source_dir.get())
+        build_dir = os.path.abspath(build_dir)
+
+        return run_commands(build_dir,
+                '{configure} --prefix={prefix} --target={target} '
+                '$MACHTYPE'.format(prefix=prefix, target=target,
+                    configure=os.path.join(source_dir, 'configure')),
+                'make -j{j}'.format(j=j),
+                'make install'
+                )
+
+class StandardCxxLib(Step):
+    number = 8
 
     def describe(self):
         return 'Install the standard C++ library.'
