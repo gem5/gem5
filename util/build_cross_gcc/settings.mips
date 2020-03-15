@@ -1,0 +1,2 @@
+TARGET=mipsel-linux-gnu
+LINUX_ARCH=mips

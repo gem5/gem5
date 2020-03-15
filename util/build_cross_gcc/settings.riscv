@@ -1,0 +1,2 @@
+TARGET=riscv64-linux-gnu
+LINUX_ARCH=riscv

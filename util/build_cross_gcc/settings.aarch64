@@ -1,0 +1,2 @@
+TARGET=aarch64-linux-gnu
+LINUX_ARCH=arm64

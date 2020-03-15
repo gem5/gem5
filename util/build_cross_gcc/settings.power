@@ -1,0 +1,2 @@
+TARGET=powerpc-linux-gnu
+LINUX_ARCH=powerpc
