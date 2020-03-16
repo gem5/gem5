@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2019 ARM Limited
+# Copyright (c) 2017-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -131,7 +131,7 @@ def _url_factory(schemes, enable=True):
     return decorator
 
 @_url_factory([ None, "", "text", "file", ])
-def _textFactory(fn, desc=True):
+def _textFactory(fn, desc=True, spaces=True):
     """Output stats in text format.
 
     Text stat files contain one stat per line with an optional
@@ -140,13 +140,14 @@ def _textFactory(fn, desc=True):
 
     Parameters:
       * desc (bool): Output stat descriptions (default: True)
+      * spaces (bool): Output alignment spaces (default: True)
 
     Example:
-      text://stats.txt?desc=False
+      text://stats.txt?desc=False;spaces=False
 
     """
 
-    return _m5.stats.initText(fn, desc)
+    return _m5.stats.initText(fn, desc, spaces)
 
 @_url_factory([ "h5", ], enable=hasattr(_m5.stats, "initHDF5"))
 def _hdf5Factory(fn, chunking=10, desc=True, formulas=True):

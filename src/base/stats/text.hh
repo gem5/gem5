@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Arm Limited
+ * Copyright (c) 2019-2020 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -65,6 +65,7 @@ class Text : public Output
 
   public:
     bool descriptions;
+    bool spaces;
 
   public:
     Text();
@@ -97,7 +98,7 @@ class Text : public Output
 
 std::string ValueToString(Result value, int precision);
 
-Output *initText(const std::string &filename, bool desc);
+Output *initText(const std::string &filename, bool desc, bool spaces);
 
 } // namespace Stats
 
