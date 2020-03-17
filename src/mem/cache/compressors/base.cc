@@ -77,7 +77,7 @@ Base::CompressionData::getSize() const
 
 Base::Base(const Params *p)
   : SimObject(p), blkSize(p->block_size), chunkSizeBits(p->chunk_size_bits),
-    sizeThreshold(p->size_threshold),
+    sizeThreshold((blkSize * p->size_threshold_percentage) / 100),
     stats(*this)
 {
     fatal_if(64 % chunkSizeBits,

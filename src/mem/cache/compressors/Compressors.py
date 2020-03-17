@@ -37,9 +37,9 @@ class BaseCacheCompressor(SimObject):
     block_size = Param.Int(Parent.cache_line_size, "Block size in bytes")
     chunk_size_bits = Param.Unsigned(32,
         "Size of a parsing data chunk (in bits)")
-    size_threshold = Param.Unsigned(Parent.cache_line_size, "Minimum size, "
-        "in bytes, in which a block must be compressed to. Otherwise it is "
-        "stored in its uncompressed state")
+    size_threshold_percentage = Param.Percent(50,
+        "Minimum percentage of the block size, a compressed block must "
+        "achieve to be stored in compressed format")
 
 class BaseDictionaryCompressor(BaseCacheCompressor):
     type = 'BaseDictionaryCompressor'
