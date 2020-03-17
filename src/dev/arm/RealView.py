@@ -850,7 +850,7 @@ Memory map:
    0x00000000-0x03ffffff: Boot memory (CS0)
    0x04000000-0x07ffffff: Reserved
    0x08000000-0x0bffffff: NOR FLASH0 (CS0 alias)
-   0x0c000000-0x0fffffff: Reserved (Off-chip, CS4)
+   0x0c000000-0x0fffffff: NOR FLASH1 (Off-chip, CS4)
    0x10000000-0x13ffffff: gem5-specific peripherals (Off-chip, CS5)
        0x10000000-0x1000ffff: gem5 energy controller
        0x10010000-0x1001ffff: gem5 pseudo-ops
@@ -1038,6 +1038,10 @@ Interrupts:
                    interrupt=ArmSPI(num=75)),
     ]
 
+    # NOR flash, flash1
+    flash1 = SimpleMemory(range=AddrRange(0x0c000000, 0x10000000),
+                          conf_table_reported=False)
+
     def _off_chip_devices(self):
         return [
             self.realview_io,
@@ -1053,6 +1057,11 @@ Interrupts:
             self.vio[0],
             self.vio[1],
         ] + self.uart
+
+    def _off_chip_memory(self):
+        return [
+            self.flash1,
+        ]
 
     def __init__(self, **kwargs):
         super(VExpress_GEM5_Base, self).__init__(**kwargs)
