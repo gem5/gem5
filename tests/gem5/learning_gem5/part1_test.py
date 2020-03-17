@@ -28,19 +28,43 @@ from testlib import *
 
 config_path = joinpath(config.base_dir, 'configs', 'learning_gem5', 'part1')
 
+# The "quick" simple tests.
 gem5_verify_config(
     name='simple_test',
     verifiers = (),
     config=joinpath(config_path, 'simple.py'),
     config_args = [],
-    valid_isas=('X86', 'RISCV', 'ARM', 'MIPS'),
+    length = constants.quick_tag,
+    valid_isas=('X86', 'RISCV', 'ARM'),
 )
 
+# The "long" simple tests.
+gem5_verify_config(
+    name='simple_test',
+    verifiers = (),
+    config=joinpath(config_path, 'simple.py'),
+    config_args = [],
+    length = constants.long_tag,
+    valid_isas=('MIPS',),
+)
+
+# The "quick" two level tests.
 gem5_verify_config(
     name='two_level_test',
     verifiers = (),
     config=joinpath(config_path, 'two_level.py'),
     config_args = [],
-    valid_isas=('X86', 'RISCV', 'ARM', 'MIPS'),
+    length = constants.quick_tag,
+    valid_isas=('X86', 'RISCV', 'ARM'),
+)
+
+# The "long" two level tests.
+gem5_verify_config(
+    name='two_level_test',
+    verifiers = (),
+    config=joinpath(config_path, 'two_level.py'),
+    config_args = [],
+    length = constants.long_tag,
+    valid_isas=('MIPS',),
 )
 
