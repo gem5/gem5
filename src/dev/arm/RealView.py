@@ -546,6 +546,17 @@ class HDLcd(AmbaDmaDevice):
 
         yield node
 
+class FVPBasePwrCtrl(BasicPioDevice):
+    """
+Based on Fast Models Base_PowerController v11.8
+Reference:
+    Fast Models Reference Manual - Section 7.7.2 - Version 11.8
+    Document ID: 100964_1180_00_en
+    """
+
+    type = 'FVPBasePwrCtrl'
+    cxx_header = 'dev/arm/fvp_base_pwr_ctrl.hh'
+
 class RealView(Platform):
     type = 'RealView'
     cxx_header = "dev/arm/realview.hh"
@@ -1018,6 +1029,8 @@ Interrupts:
 
     energy_ctrl = EnergyCtrl(pio_addr=0x10000000)
 
+    pwr_ctrl = FVPBasePwrCtrl(pio_addr=0x1c100000)
+
     vio = [
         MmioVirtIO(pio_addr=0x1c130000, pio_size=0x1000,
                    interrupt=ArmSPI(num=74)),
@@ -1034,6 +1047,7 @@ Interrupts:
             self.rtc,
             self.pci_host,
             self.energy_ctrl,
+            self.pwr_ctrl,
             self.clock32KHz,
             self.clock24MHz,
             self.vio[0],
@@ -1163,13 +1177,3 @@ class VExpress_GEM5_V2(VExpress_GEM5_V2_Base):
                 self.hdlcd,
             ]
 
-class FVPBasePwrCtrl(BasicPioDevice):
-    """
-Based on Fast Models Base_PowerController v11.8
-Reference:
-    Fast Models Reference Manual - Section 7.7.2 - Version 11.8
-    Document ID: 100964_1180_00_en
-    """
-
-    type = 'FVPBasePwrCtrl'
-    cxx_header = 'dev/arm/fvp_base_pwr_ctrl.hh'
