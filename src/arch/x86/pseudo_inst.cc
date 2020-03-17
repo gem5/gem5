@@ -49,7 +49,7 @@ m5PageFault(ThreadContext *tc)
     DPRINTF(PseudoInst, "PseudoInst::m5PageFault()\n");
 
     Process *p = tc->getProcessPtr();
-    if (!p->fixupStackFault(tc->readMiscReg(MISCREG_CR2))) {
+    if (!p->fixupFault(tc->readMiscReg(MISCREG_CR2))) {
         PortProxy &proxy = tc->getVirtProxy();
         // at this point we should have 6 values on the interrupt stack
         int size = 6;

@@ -57,7 +57,7 @@ SETranslatingPortProxy::fixupAddr(Addr addr, BaseTLB::Mode mode) const
         if (allocating == Always) {
             process->allocateMem(roundDown(addr, pageBytes), pageBytes);
             return true;
-        } else if (allocating == NextPage && process->fixupStackFault(addr)) {
+        } else if (allocating == NextPage && process->fixupFault(addr)) {
             // We've accessed the next page on the stack.
             return true;
         }

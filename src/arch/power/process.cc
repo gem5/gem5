@@ -200,8 +200,8 @@ PowerProcess::argsInit(int intSize, int pageSize)
     memState->setStackSize(memState->getStackBase() - stack_min);
 
     // map memory
-    allocateMem(roundDown(stack_min, pageSize),
-                roundUp(memState->getStackSize(), pageSize));
+    memState->mapRegion(roundDown(stack_min, pageSize),
+                        roundUp(memState->getStackSize(), pageSize), "stack");
 
     // map out initial stack contents
     uint32_t sentry_base = memState->getStackBase() - sentry_size;

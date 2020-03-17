@@ -66,7 +66,7 @@ void GenericPageTableFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     bool handled = false;
     if (!FullSystem) {
         Process *p = tc->getProcessPtr();
-        handled = p->fixupStackFault(vaddr);
+        handled = p->fixupFault(vaddr);
     }
     if (!handled)
         panic("Page table fault when accessing virtual address %#x\n", vaddr);

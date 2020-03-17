@@ -178,7 +178,7 @@ X86_64Process::initState()
     argsInit(PageBytes);
 
     // Set up the vsyscall page for this process.
-    allocateMem(vsyscallPage.base, vsyscallPage.size);
+    memState->mapRegion(vsyscallPage.base, vsyscallPage.size, "vsyscall");
     uint8_t vtimeBlob[] = {
         0x48,0xc7,0xc0,0xc9,0x00,0x00,0x00,    // mov    $0xc9,%rax
         0x0f,0x05,                             // syscall
@@ -629,7 +629,7 @@ I386Process::initState()
     }
 
     // Set up the vsyscall page for this process.
-    allocateMem(vsyscallPage.base, vsyscallPage.size);
+    memState->mapRegion(vsyscallPage.base, vsyscallPage.size, "vsyscall");
     uint8_t vsyscallBlob[] = {
         0x51,       // push %ecx
         0x52,       // push %edp
@@ -934,7 +934,7 @@ X86Process::argsInit(int pageSize,
     Addr stack_end = roundDown(stack_base - stack_size, pageSize);
 
     DPRINTF(Stack, "Mapping the stack: 0x%x %dB\n", stack_end, stack_size);
-    allocateMem(stack_end, stack_size);
+    memState->mapRegion(stack_end, stack_size, "stack");
 
     // map out initial stack contents
     IntType sentry_base = stack_base - sentry_size;

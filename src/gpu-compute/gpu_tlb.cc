@@ -521,7 +521,7 @@ namespace X86ISA
                             if (timing)
                                 latency += missLatency2;
 
-                            if (p->fixupStackFault(vaddr))
+                            if (p->fixupFault(vaddr))
                                 pte = p->pTable->lookup(vaddr);
                         }
 
@@ -1044,7 +1044,7 @@ namespace X86ISA
     #endif
             const EmulationPageTable::Entry *pte = p->pTable->lookup(vaddr);
             if (!pte && sender_state->tlbMode != BaseTLB::Execute &&
-                    p->fixupStackFault(vaddr)) {
+                    p->fixupFault(vaddr)) {
                 pte = p->pTable->lookup(vaddr);
             }
 
@@ -1248,7 +1248,7 @@ namespace X86ISA
                 const EmulationPageTable::Entry *pte =
                         p->pTable->lookup(vaddr);
                 if (!pte && sender_state->tlbMode != BaseTLB::Execute &&
-                        p->fixupStackFault(vaddr)) {
+                        p->fixupFault(vaddr)) {
                     pte = p->pTable->lookup(vaddr);
                 }
 

@@ -147,8 +147,8 @@ RiscvProcess::argsInit(int pageSize)
                    addrSize + 2 * sizeof(IntType) * auxv.size();
     stack_top &= -2*addrSize;
     memState->setStackSize(memState->getStackBase() - stack_top);
-    allocateMem(roundDown(stack_top, pageSize),
-            roundUp(memState->getStackSize(), pageSize));
+    memState->mapRegion(roundDown(stack_top, pageSize),
+                        roundUp(memState->getStackSize(), pageSize), "stack");
 
     // Copy random bytes (for AT_RANDOM) to stack
     memState->setStackMin(memState->getStackMin() - RandomBytes);

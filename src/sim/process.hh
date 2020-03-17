@@ -108,7 +108,7 @@ class Process : public SimObject
 
     /// Attempt to fix up a fault at vaddr by allocating a page on the stack.
     /// @return Whether the fault has been fixed.
-    bool fixupStackFault(Addr vaddr);
+    bool fixupFault(Addr vaddr);
 
     // After getting registered with system object, tell process which
     // system-wide context id it is assigned.

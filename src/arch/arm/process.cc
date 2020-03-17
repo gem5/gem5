@@ -371,8 +371,8 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
     memState->setStackSize(memState->getStackBase() - memState->getStackMin());
 
     // map memory
-    allocateMem(roundDown(memState->getStackMin(), pageSize),
-                          roundUp(memState->getStackSize(), pageSize));
+    memState->mapRegion(roundDown(memState->getStackMin(), pageSize),
+                        roundUp(memState->getStackSize(), pageSize), "stack");
 
     // map out initial stack contents
     IntType sentry_base = memState->getStackBase() - sentry_size;

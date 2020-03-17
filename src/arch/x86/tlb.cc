@@ -399,7 +399,7 @@ TLB::translate(const RequestPtr &req,
                         p->pTable->lookup(vaddr);
                     if (!pte && mode != Execute) {
                         // Check if we just need to grow the stack.
-                        if (p->fixupStackFault(vaddr)) {
+                        if (p->fixupFault(vaddr)) {
                             // If we did, lookup the entry for the new page.
                             pte = p->pTable->lookup(vaddr);
                         }
@@ -487,7 +487,7 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
 
         if (!pte && mode != Execute) {
             // Check if we just need to grow the stack.
-            if (process->fixupStackFault(vaddr)) {
+            if (process->fixupFault(vaddr)) {
                 // If we did, lookup the entry for the new page.
                 pte = process->pTable->lookup(vaddr);
             }

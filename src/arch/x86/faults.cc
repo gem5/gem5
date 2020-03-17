@@ -47,6 +47,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/Faults.hh"
 #include "sim/full_system.hh"
+#include "sim/process.hh"
 
 namespace X86ISA
 {
@@ -151,7 +152,7 @@ namespace X86ISA
             } else {
                 tc->setMiscReg(MISCREG_CR2, (uint32_t)addr);
             }
-        } else {
+        } else if (!tc->getProcessPtr()->fixupFault(addr)) {
             PageFaultErrorCode code = errorCode;
             const char *modeStr = "";
             if (code.fetch)

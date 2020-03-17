@@ -254,39 +254,14 @@ brkFunc(SyscallDesc *desc, ThreadContext *tc, Addr new_brk)
 
     // in Linux at least, brk(0) returns the current break value
     // (note that the syscall and the glibc function have different behavior)
-    if (new_brk == 0)
+    if (new_brk == 0 || (new_brk == brk_point))
         return brk_point;
 
-    if (new_brk > brk_point) {
-        // might need to allocate some new pages
-        for (ChunkGenerator gen(brk_point,
-                                new_brk - brk_point,
-                                PageBytes); !gen.done(); gen.next()) {
-            if (!p->pTable->translate(gen.addr()))
-                p->allocateMem(roundDown(gen.addr(), PageBytes), PageBytes);
+    mem_state->updateBrkRegion(brk_point, new_brk);
 
-            // if the address is already there, zero it out
-            else {
-                uint8_t zero = 0;
-                PortProxy &tp = tc->getVirtProxy();
-
-                // split non-page aligned accesses
-                Addr next_page = roundUp(gen.addr(), PageBytes);
-                uint32_t size_needed = next_page - gen.addr();
-                tp.memsetBlob(gen.addr(), zero, size_needed);
-                if (gen.addr() + PageBytes > next_page &&
-                    next_page < new_brk &&
-                    p->pTable->translate(next_page)) {
-                    size_needed = PageBytes - size_needed;
-                    tp.memsetBlob(next_page, zero, size_needed);
-                }
-            }
-        }
-    }
-
-    mem_state->setBrkPoint(new_brk);
     DPRINTF_SYSCALL(Verbose, "brk: break point changed to: %#X\n",
                     mem_state->getBrkPoint());
+
     return mem_state->getBrkPoint();
 }
 

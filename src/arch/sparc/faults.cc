@@ -683,7 +683,7 @@ FastDataAccessMMUMiss::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     Process *p = tc->getProcessPtr();
     const EmulationPageTable::Entry *pte = p->pTable->lookup(vaddr);
-    if (!pte && p->fixupStackFault(vaddr))
+    if (!pte && p->fixupFault(vaddr))
         pte = p->pTable->lookup(vaddr);
     panic_if(!pte, "Tried to access unmapped address %#x.\n", vaddr);
 

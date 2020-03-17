@@ -151,8 +151,8 @@ MipsProcess::argsInit(int pageSize)
     memState->setStackMin(roundDown(memState->getStackMin(), pageSize));
     memState->setStackSize(memState->getStackBase() - memState->getStackMin());
     // map memory
-    allocateMem(memState->getStackMin(), roundUp(memState->getStackSize(),
-                pageSize));
+    memState->mapRegion(memState->getStackMin(),
+                        roundUp(memState->getStackSize(), pageSize), "stack");
 
     // map out initial stack contents; leave room for argc
     IntType argv_array_base = memState->getStackMin() + intSize;

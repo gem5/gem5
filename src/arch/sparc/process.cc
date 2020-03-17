@@ -317,8 +317,8 @@ SparcProcess::argsInit(int pageSize)
     memState->setStackSize(memState->getStackBase() - memState->getStackMin());
 
     // Allocate space for the stack
-    allocateMem(roundDown(memState->getStackMin(), pageSize),
-                roundUp(memState->getStackSize(), pageSize));
+    memState->mapRegion(roundDown(memState->getStackMin(), pageSize),
+                        roundUp(memState->getStackSize(), pageSize), "stack");
 
     // map out initial stack contents
     IntType sentry_base = memState->getStackBase() - sentry_size;

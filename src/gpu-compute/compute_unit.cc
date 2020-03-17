@@ -782,7 +782,7 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt)
             Addr paddr;
 
             if (!p->pTable->translate(vaddr, paddr)) {
-                if (!p->fixupStackFault(vaddr)) {
+                if (!p->fixupFault(vaddr)) {
                     panic("CU%d: WF[%d][%d]: Fault on addr %#x!\n",
                           cu_id, gpuDynInst->simdId, gpuDynInst->wfSlotId,
                           vaddr);

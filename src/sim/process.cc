@@ -352,33 +352,9 @@ Process::replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
 }
 
 bool
-Process::fixupStackFault(Addr vaddr)
+Process::fixupFault(Addr vaddr)
 {
-    Addr stack_min = memState->getStackMin();
-    Addr stack_base = memState->getStackBase();
-    Addr max_stack_size = memState->getMaxStackSize();
-
-    // Check if this is already on the stack and there's just no page there
-    // yet.
-    if (vaddr >= stack_min && vaddr < stack_base) {
-        allocateMem(roundDown(vaddr, PageBytes), PageBytes);
-        return true;
-    }
-
-    // We've accessed the next page of the stack, so extend it to include
-    // this address.
-    if (vaddr < stack_min && vaddr >= stack_base - max_stack_size) {
-        while (vaddr < stack_min) {
-            stack_min -= TheISA::PageBytes;
-            if (stack_base - stack_min > max_stack_size)
-                fatal("Maximum stack size exceeded\n");
-            allocateMem(stack_min, TheISA::PageBytes);
-            inform("Increasing stack size by one page.");
-        }
-        memState->setStackMin(stack_min);
-        return true;
-    }
-    return false;
+    return memState->fixupFault(vaddr);
 }
 
 void
