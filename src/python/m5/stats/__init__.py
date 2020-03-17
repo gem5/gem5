@@ -326,34 +326,44 @@ def prepare():
     # New stats
     _visit_stats(lambda g, s: s.prepare())
 
-def _dump_to_visitor(visitor, root=None):
-    # Legacy stats
-    if root is None:
-        for stat in stats_list:
-            stat.visit(visitor)
-
+def _dump_to_visitor(visitor, roots=None):
     # New stats
     def dump_group(group):
         for stat in group.getStats():
             stat.visit(visitor)
-
         for n, g in group.getStatGroups().items():
             visitor.beginGroup(n)
             dump_group(g)
             visitor.endGroup()
 
-    if root is not None:
-        for p in root.path_list():
-            visitor.beginGroup(p)
-    dump_group(root if root is not None else Root.getInstance())
-    if root is not None:
-        for p in reversed(root.path_list()):
-            visitor.endGroup()
+    if roots:
+        # New stats from selected subroots.
+        for root in roots:
+            for p in root.path_list():
+                visitor.beginGroup(p)
+            dump_group(root)
+            for p in reversed(root.path_list()):
+                visitor.endGroup()
+    else:
+        # Legacy stats
+        for stat in stats_list:
+            stat.visit(visitor)
+
+        # New stats starting from root.
+        dump_group(Root.getInstance())
 
 lastDump = 0
+# List[SimObject].
+global_dump_roots = []
 
-def dump(root=None):
+def dump(roots=None):
     '''Dump all statistics data to the registered outputs'''
+
+    all_roots = []
+    if roots is not None:
+        all_roots.extend(roots)
+    global global_dump_roots
+    all_roots.extend(global_dump_roots)
 
     now = m5.curTick()
     global lastDump
@@ -363,7 +373,7 @@ def dump(root=None):
 
     # Don't allow multiple global stat dumps in the same tick. It's
     # still possible to dump a multiple sub-trees.
-    if not new_dump and root is None:
+    if not new_dump and not all_roots:
         return
 
     # Only prepare stats the first time we dump them in the same tick.
@@ -378,7 +388,7 @@ def dump(root=None):
     for output in outputList:
         if output.valid():
             output.begin()
-            _dump_to_visitor(output, root=root)
+            _dump_to_visitor(output, roots=all_roots)
             output.end()
 
 def reset():

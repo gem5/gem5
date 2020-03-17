@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2019 ARM Limited
+# Copyright (c) 2017-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -1071,6 +1071,9 @@ class SimObjectCliWrapper(object):
                 out.extend(sim_object[i] for i in _range)
         return SimObjectCliWrapper(out)
 
+    def __iter__(self):
+        return iter(self._sim_objects)
+
 # The SimObject class is the root of the special hierarchy.  Most of
 # the code in this class deals with the configuration hierarchy itself
 # (parent/child node relationships).
@@ -1694,6 +1697,18 @@ class SimObject(object):
         d = self._apply_config_get_dict()
         for param in params:
             exec(param, d)
+
+    def get_simobj(self, simobj_path):
+        """
+        Get all sim objects that match a given string.
+
+        The format is the same as that supported by SimObjectCliWrapper.
+
+        :param simobj_path: Current state to be in.
+        :type simobj_path: str
+        """
+        d = self._apply_config_get_dict()
+        return eval(simobj_path, d)
 
 # Function to provide to C++ so it can look up instances based on paths
 def resolveSimObject(name):

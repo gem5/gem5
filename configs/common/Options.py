@@ -361,6 +361,14 @@ def addCommonOptions(parser):
     parser.add_option("--arm-iset", default="arm", type="choice",
                       choices=["arm", "thumb", "aarch64"],
                       help="ARM instruction set.")
+    parser.add_option("--stats-root", action="append", default=[], help=
+        "If given, dump only stats of objects under the given SimObject. "
+        "SimObjects are identified with Python notation as in: "
+        "system.cpu[0].dtb. All elements of an array can be selected at "
+        "once with: system.cpu[:].dtb. If given multiple times, dump stats "
+        "that are present under any of the roots. If not given, dump all "
+        "stats. "
+    )
 
 
 def addSEOptions(parser):

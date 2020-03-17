@@ -1,3 +1,7 @@
+# Version 20.1.0.0
+
+* m5.stats.dump() root argument renamed to roots to reflect the fact that it now takes a list of SimObjects
+
 # Version 20.0.0.2
 
 **[HOTFIX]** A patch was applied to fix the RubyPrefetcher with MESI_Three_Level. Prior to this fix a segfault occurred.
