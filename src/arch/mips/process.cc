@@ -67,8 +67,9 @@ MipsProcess::MipsProcess(ProcessParams *params, ObjectFile *objFile)
     // Set up region for mmaps.  Start it 1GB above the top of the heap.
     Addr mmap_end = brk_point + 0x40000000L;
 
-    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
-                                     next_thread_stack_base, mmap_end);
+    memState = make_shared<MemState>(this, brk_point, stack_base,
+                                     max_stack_size, next_thread_stack_base,
+                                     mmap_end);
 }
 
 void

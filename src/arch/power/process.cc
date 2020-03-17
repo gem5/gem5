@@ -66,8 +66,9 @@ PowerProcess::PowerProcess(ProcessParams *params, ObjectFile *objFile)
     // Set up region for mmaps. For now, start at bottom of kuseg space.
     Addr mmap_end = 0x70000000L;
 
-    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
-                                     next_thread_stack_base, mmap_end);
+    memState = make_shared<MemState>(this, brk_point, stack_base,
+                                     max_stack_size, next_thread_stack_base,
+                                     mmap_end);
 }
 
 void

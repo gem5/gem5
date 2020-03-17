@@ -136,8 +136,9 @@ X86_64Process::X86_64Process(ProcessParams *params, ObjectFile *objFile) :
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x7FFFF7FFF000ULL;
 
-    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
-                                     next_thread_stack_base, mmap_end);
+    memState = make_shared<MemState>(this, brk_point, stack_base,
+                                     max_stack_size, next_thread_stack_base,
+                                     mmap_end);
 }
 
 
@@ -161,8 +162,9 @@ I386Process::I386Process(ProcessParams *params, ObjectFile *objFile) :
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0xB7FFF000ULL;
 
-    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
-                                     next_thread_stack_base, mmap_end);
+    memState = make_shared<MemState>(this, brk_point, stack_base,
+                                     max_stack_size, next_thread_stack_base,
+                                     mmap_end);
 }
 
 void

@@ -73,8 +73,8 @@ RiscvProcess64::RiscvProcess64(ProcessParams *params, ObjectFile *objFile) :
     const Addr next_thread_stack_base = stack_base - max_stack_size;
     const Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     const Addr mmap_end = 0x4000000000000000L;
-    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
-            next_thread_stack_base, mmap_end);
+    memState = make_shared<MemState>(this, brk_point, stack_base,
+            max_stack_size, next_thread_stack_base, mmap_end);
 }
 
 RiscvProcess32::RiscvProcess32(ProcessParams *params, ObjectFile *objFile) :
@@ -85,8 +85,8 @@ RiscvProcess32::RiscvProcess32(ProcessParams *params, ObjectFile *objFile) :
     const Addr next_thread_stack_base = stack_base - max_stack_size;
     const Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     const Addr mmap_end = 0x40000000L;
-    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
-                                     next_thread_stack_base, mmap_end);
+    memState = make_shared<MemState>(this, brk_point, stack_base,
+            max_stack_size, next_thread_stack_base, mmap_end);
 }
 
 void

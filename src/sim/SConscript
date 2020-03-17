@@ -86,6 +86,7 @@ if env['TARGET_ISA'] != 'null':
     Source('process.cc')
     Source('fd_array.cc')
     Source('fd_entry.cc')
+    Source('mem_state.cc')
     Source('pseudo_inst.cc')
     Source('syscall_emul.cc')
     Source('syscall_desc.cc')

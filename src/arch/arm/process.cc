@@ -78,8 +78,9 @@ ArmProcess32::ArmProcess32(ProcessParams *params, ObjectFile *objFile,
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x40000000L;
 
-    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
-                                     next_thread_stack_base, mmap_end);
+    memState = make_shared<MemState>(this, brk_point, stack_base,
+                                     max_stack_size, next_thread_stack_base,
+                                     mmap_end);
 }
 
 ArmProcess64::ArmProcess64(ProcessParams *params, ObjectFile *objFile,
@@ -92,8 +93,9 @@ ArmProcess64::ArmProcess64(ProcessParams *params, ObjectFile *objFile,
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x4000000000L;
 
-    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
-                                     next_thread_stack_base, mmap_end);
+    memState = make_shared<MemState>(this, brk_point, stack_base,
+                                     max_stack_size, next_thread_stack_base,
+                                     mmap_end);
 }
 
 void

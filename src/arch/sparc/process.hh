@@ -136,7 +136,7 @@ class Sparc32Process : public SparcProcess
         // Set up region for mmaps.
         Addr mmap_end = 0x70000000;
 
-        memState = std::make_shared<MemState>(brk_point, stack_base,
+        memState = std::make_shared<MemState>(this, brk_point, stack_base,
                                               max_stack_size,
                                               next_thread_stack_base,
                                               mmap_end);
@@ -200,7 +200,7 @@ class Sparc64Process : public SparcProcess
         // Set up region for mmaps.
         Addr mmap_end = 0xfffff80000000000ULL;
 
-        memState = std::make_shared<MemState>(brk_point, stack_base,
+        memState = std::make_shared<MemState>(this, brk_point, stack_base,
                                               max_stack_size,
                                               next_thread_stack_base,
                                               mmap_end);
