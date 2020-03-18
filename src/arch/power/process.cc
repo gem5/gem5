@@ -131,6 +131,8 @@ PowerProcess::argsInit(int intSize, int pageSize)
         auxv.emplace_back(M5_AT_EGID, egid());
         //Whether to enable "secure mode" in the executable
         auxv.emplace_back(M5_AT_SECURE, 0);
+        //The address of 16 "random" bytes
+        auxv.emplace_back(M5_AT_RANDOM, 0);
         //The filename of the program
         auxv.emplace_back(M5_AT_EXECFN, 0);
         //The string "v51" with unknown meaning
@@ -150,6 +152,9 @@ PowerProcess::argsInit(int intSize, int pageSize)
     // are the ones that were computed ahead of time and include the platform
     // string.
     int aux_data_size = filename.size() + 1;
+
+    const int numRandomBytes = 16;
+    aux_data_size += numRandomBytes;
 
     int env_data_size = 0;
     for (int i = 0; i < envp.size(); ++i) {
@@ -235,8 +240,10 @@ PowerProcess::argsInit(int intSize, int pageSize)
             auxv[i].val = platform_base;
             initVirtMem->writeString(platform_base, platform.c_str());
         } else if (auxv[i].type == M5_AT_EXECFN) {
-            auxv[i].val = aux_data_base;
+            auxv[i].val = aux_data_base + numRandomBytes;
             initVirtMem->writeString(aux_data_base, filename.c_str());
+        } else if (auxv[i].type == M5_AT_RANDOM) {
+            auxv[i].val = aux_data_base;
         }
     }
 
