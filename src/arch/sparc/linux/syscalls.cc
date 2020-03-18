@@ -450,7 +450,7 @@ SyscallDescTable<Sparc64Process::SyscallABI>
     { 60, "umask" },
     { 61, "chroot" },
     { 62, "fstat", fstatFunc<SparcLinux> },
-    { 63, "fstat64" },
+    { 63, "fstat64", fstat64Func<SparcLinux> },
     { 64, "getpagesize" },
     { 65, "msync" },
     { 66, "vfork" },
