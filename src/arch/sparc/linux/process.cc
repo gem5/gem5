@@ -112,12 +112,30 @@ Sparc64LinuxProcess::syscall(ThreadContext *tc, Fault *fault)
 }
 
 void
+Sparc64LinuxProcess::getContext(ThreadContext *tc)
+{
+    warn("The getcontext trap is not implemented on SPARC");
+}
+
+void
+Sparc64LinuxProcess::setContext(ThreadContext *tc)
+{
+    panic("The setcontext trap is not implemented on SPARC");
+}
+
+void
 Sparc64LinuxProcess::handleTrap(int trapNum, ThreadContext *tc, Fault *fault)
 {
     switch (trapNum) {
       // case 0x10: // Linux 32 bit syscall trap
       case 0x6d: // Linux 64 bit syscall trap
         tc->syscall(fault);
+        break;
+      case 0x6e: // Linux 64 bit getcontext trap
+        getContext(tc);
+        break;
+      case 0x6f: // Linux 64 bit setcontext trap
+        setContext(tc);
         break;
       default:
         SparcProcess::handleTrap(trapNum, tc, fault);

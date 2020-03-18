@@ -70,6 +70,9 @@ class Sparc64LinuxProcess : public SparcLinuxProcess, public Sparc64Process
 
     void syscall(ThreadContext *tc, Fault *fault) override;
 
+    void getContext(ThreadContext *tc);
+    void setContext(ThreadContext *tc);
+
     void handleTrap(int trapNum, ThreadContext *tc, Fault *fault) override;
 };
 
