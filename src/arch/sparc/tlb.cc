@@ -42,8 +42,10 @@
 #include "debug/IPR.hh"
 #include "debug/TLB.hh"
 #include "mem/packet_access.hh"
+#include "mem/page_table.hh"
 #include "mem/request.hh"
 #include "sim/full_system.hh"
+#include "sim/process.hh"
 #include "sim/system.hh"
 
 /* @todo remove some of the magic constants.  -- ali
@@ -861,7 +863,6 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
 
     bool real = (mode == Execute) ? inst_real : data_real;
 
-    PortProxy &mem = tc->getPhysProxy();
     TlbEntry* tbe;
     PageTableEntry pte;
     Addr tsbs[4];
@@ -872,9 +873,6 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
         req->setPaddr(vaddr);
         return NoFault;
     }
-
-    if (vaddr & (size - 1))
-        return std::make_shared<MemAddressNotAligned>();
 
     if (addr_mask)
         vaddr = vaddr & VAddrAMask;
@@ -895,6 +893,10 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
         return NoFault;
     }
 
+    if (!FullSystem)
+        return tc->getProcessPtr()->pTable->translate(req);
+
+    PortProxy &mem = tc->getPhysProxy();
     // We didn't find it in the tlbs, so lets look at the TSBs
     GetTsbPtr(tc, vaddr, ctx_zero ? 0 : pri_context, tsbs);
     va_tag = bits(vaddr, 63, 22);
