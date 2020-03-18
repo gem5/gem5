@@ -572,12 +572,12 @@ struct Result<Aapcs32Vfp, HA,
 
         constexpr int lane_per_reg = 16 / sizeof(Elem);
         for (int i = 0; i < Count; i++) {
-            constexpr int reg = i / lane_per_reg;
-            constexpr int lane = i % lane_per_reg;
+            const int reg = i / lane_per_reg;
+            const int lane = i % lane_per_reg;
 
             RegId id(VecRegClass, reg);
             auto val = tc->readVecReg(id);
-            val.laneView<Elem, lane>() = ha[i];
+            val.laneView<Elem>(lane) = ha[i];
             tc->setVecReg(id, val);
         }
     }
