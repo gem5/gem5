@@ -251,6 +251,8 @@ SparcProcess::argsInit(int pageSize)
         auxv.emplace_back(M5_AT_EGID, egid());
         // Whether to enable "secure mode" in the executable
         auxv.emplace_back(M5_AT_SECURE, 0);
+        // The address of 16 "random" bytes.
+        auxv.emplace_back(M5_AT_RANDOM, 0);
     }
 
     // Figure out how big the initial stack needs to be
@@ -261,6 +263,9 @@ SparcProcess::argsInit(int pageSize)
     // This is the name of the file which is present on the initial stack
     // It's purpose is to let the user space linker examine the original file.
     int file_name_size = filename.size() + 1;
+
+    const int numRandomBytes = 16;
+    int aux_data_size = numRandomBytes;
 
     int env_data_size = 0;
     for (int i = 0; i < envp.size(); ++i) {
@@ -303,6 +308,7 @@ SparcProcess::argsInit(int pageSize)
 
     int space_needed =
         info_block_size +
+        aux_data_size +
         aux_padding +
         frame_size;
 
@@ -319,8 +325,8 @@ SparcProcess::argsInit(int pageSize)
     IntType file_name_base = sentry_base - file_name_size;
     IntType env_data_base = file_name_base - env_data_size;
     IntType arg_data_base = env_data_base - arg_data_size;
-    IntType auxv_array_base = arg_data_base -
-        info_block_padding - aux_array_size - aux_padding;
+    IntType aux_data_base = arg_data_base - info_block_padding - aux_data_size;
+    IntType auxv_array_base = aux_data_base - aux_array_size - aux_padding;
     IntType envp_array_base = auxv_array_base - envp_array_size;
     IntType argv_array_base = envp_array_base - argv_array_size;
     IntType argc_base = argv_array_base - argc_size;
@@ -355,6 +361,12 @@ SparcProcess::argsInit(int pageSize)
 
     // Write the file name
     initVirtMem->writeString(file_name_base, filename.c_str());
+
+    // Fix up the aux vectors which point to data.
+    for (auto &aux: auxv) {
+        if (aux.type == M5_AT_RANDOM)
+            aux.val = aux_data_base;
+    }
 
     // Copy the aux stuff
     Addr auxv_array_end = auxv_array_base;
