@@ -177,7 +177,7 @@ SyscallDescTable<PowerProcess::SyscallABI> PowerLinuxProcess::syscallDescs = {
     { 82, "reserved#82" },
     { 83, "symlink" },
     { 84, "unused#84" },
-    { 85, "readlink" },
+    { 85, "readlink", readlinkFunc },
     { 86, "uselib" },
     { 87, "swapon", gethostnameFunc },
     { 88, "reboot" },
