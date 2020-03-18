@@ -115,6 +115,7 @@ MipsProcess::argsInit(int pageSize)
         auxv.emplace_back(M5_AT_EUID, euid());
         auxv.emplace_back(M5_AT_GID, gid());
         auxv.emplace_back(M5_AT_EGID, egid());
+        auxv.emplace_back(M5_AT_RANDOM, 0);
     }
 
     // Calculate how much space we need for arg & env & auxv arrays.
@@ -126,6 +127,10 @@ MipsProcess::argsInit(int pageSize)
     for (vector<string>::size_type i = 0; i < argv.size(); ++i) {
         arg_data_size += argv[i].size() + 1;
     }
+
+    const int numRandomBytes = 16;
+    int aux_data_size = numRandomBytes;
+
     int env_data_size = 0;
     for (vector<string>::size_type i = 0; i < envp.size(); ++i) {
         env_data_size += envp[i].size() + 1;
@@ -136,6 +141,7 @@ MipsProcess::argsInit(int pageSize)
         envp_array_size +
         auxv_array_size +
         arg_data_size +
+        aux_data_size +
         env_data_size;
 
     // set bottom of stack
@@ -152,7 +158,8 @@ MipsProcess::argsInit(int pageSize)
     IntType envp_array_base = argv_array_base + argv_array_size;
     IntType auxv_array_base = envp_array_base + envp_array_size;
     IntType arg_data_base = auxv_array_base + auxv_array_size;
-    IntType env_data_base = arg_data_base + arg_data_size;
+    IntType aux_data_base = arg_data_base - arg_data_size;
+    IntType env_data_base = aux_data_base + aux_data_size;
 
     // write contents to stack
     IntType argc = argv.size();
@@ -166,6 +173,12 @@ MipsProcess::argsInit(int pageSize)
 
     copyStringArray(envp, envp_array_base, env_data_base,
                     LittleEndianByteOrder, *initVirtMem);
+
+    // Fix up the aux vectors which point to data.
+    for (auto &aux: auxv) {
+        if (aux.type == M5_AT_RANDOM)
+            aux.val = aux_data_base;
+    }
 
     // Copy the aux vector
     Addr auxv_array_end = auxv_array_base;
