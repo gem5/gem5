@@ -38,7 +38,8 @@ class SparcLinux : public Linux
 
     static const ByteOrder byteOrder = BigEndianByteOrder;
 
-    typedef struct {
+    struct tgt_stat
+    {
         uint32_t st_dev;
         char __pad1[4];
         uint64_t st_ino;
@@ -55,7 +56,32 @@ class SparcLinux : public Linux
         int64_t st_blksize;
         int64_t st_blocks;
         uint64_t __unused4[2];
-    } tgt_stat;
+    };
+
+    struct tgt_stat64
+    {
+        uint64_t st_dev;
+        uint64_t st_ino;
+        uint64_t st_nlink;
+
+        uint32_t st_mode;
+        uint32_t st_uid;
+        uint32_t st_gid;
+        uint32_t __pad0;
+
+        uint64_t st_rdev;
+        int64_t st_size;
+        int64_t st_blksize;
+        int64_t st_blocks;
+
+        uint64_t st_atimeX;
+        uint64_t st_atime_nsec;
+        uint64_t st_mtimeX;
+        uint64_t st_mtime_nsec;
+        uint64_t st_ctimeX;
+        uint64_t st_ctime_nsec;
+        int64_t __unused[3];
+    };
 
     // SPARC receives weird subsignals for several of its signals. If you
     // find yourself needing to implement these in detail, look at the
