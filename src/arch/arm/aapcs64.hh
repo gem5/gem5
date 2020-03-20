@@ -229,14 +229,30 @@ struct Result<Aapcs64, Float, typename std::enable_if<
 // This will pick up Addr as well, which should be used for guest pointers.
 template <typename Integer>
 struct Argument<Aapcs64, Integer, typename std::enable_if<
-    std::is_integral<Integer>::value>::type> : public Aapcs64ArgumentBase
+    std::is_integral<Integer>::value && (sizeof(Integer) <= 8)
+    >::type> : public Aapcs64ArgumentBase
 {
     static Integer
     get(ThreadContext *tc, Aapcs64::State &state)
     {
-        if (sizeof(Integer) <= 8 && state.ngrn <= state.MAX_GRN)
+        if (state.ngrn <= state.MAX_GRN)
             return tc->readIntReg(state.ngrn++);
 
+        // Max out ngrn since we've effectively saturated it.
+        state.ngrn = state.MAX_GRN + 1;
+
+        return loadFromStack<Integer>(tc, state);
+    }
+};
+
+template <typename Integer>
+struct Argument<Aapcs64, Integer, typename std::enable_if<
+    std::is_integral<Integer>::value && (sizeof(Integer) > 8)
+    >::type> : public Aapcs64ArgumentBase
+{
+    static Integer
+    get(ThreadContext *tc, Aapcs64::State &state)
+    {
         if (alignof(Integer) == 16 && (state.ngrn % 2))
             state.ngrn++;
 
@@ -256,17 +272,26 @@ struct Argument<Aapcs64, Integer, typename std::enable_if<
 
 template <typename Integer>
 struct Result<Aapcs64, Integer, typename std::enable_if<
-    std::is_integral<Integer>::value>::type>
+    std::is_integral<Integer>::value && (sizeof(Integer) <= 8)
+    >::type>
 {
     static void
     store(ThreadContext *tc, const Integer &i)
     {
-        if (sizeof(Integer) <= 8) {
-            tc->setIntReg(0, i);
-        } else {
-            tc->setIntReg(0, (uint64_t)i);
-            tc->setIntReg(1, (uint64_t)(i >> 64));
-        }
+        tc->setIntReg(0, i);
+    }
+};
+
+template <typename Integer>
+struct Result<Aapcs64, Integer, typename std::enable_if<
+    std::is_integral<Integer>::value && (sizeof(Integer) > 8)
+    >::type>
+{
+    static void
+    store(ThreadContext *tc, const Integer &i)
+    {
+        tc->setIntReg(0, (uint64_t)i);
+        tc->setIntReg(1, (uint64_t)(i >> 64));
     }
 };
 

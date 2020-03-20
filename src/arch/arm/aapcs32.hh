@@ -131,39 +131,78 @@ struct Aapcs32ArgumentBase
 
 template <typename Integer>
 struct Result<Aapcs32, Integer, typename std::enable_if<
-    std::is_integral<Integer>::value>::type>
+    std::is_integral<Integer>::value && (sizeof(Integer) < sizeof(uint32_t))
+    >::type>
 {
     static void
     store(ThreadContext *tc, const Integer &i)
     {
-        if (sizeof(Integer) < sizeof(uint32_t)) {
-            uint32_t val = std::is_signed<Integer>::value ?
-                    sext<sizeof(Integer) * 8>(i) : i;
-            tc->setIntReg(ArmISA::INTREG_R0, val);
-        } else if (sizeof(Integer) == sizeof(uint32_t) ||
-                   std::is_same<Integer, Addr>::value) {
+        uint32_t val = std::is_signed<Integer>::value ?
+                sext<sizeof(Integer) * 8>(i) : i;
+        tc->setIntReg(ArmISA::INTREG_R0, val);
+    }
+};
+
+template <typename Integer>
+struct Result<Aapcs32, Integer, typename std::enable_if<
+    std::is_integral<Integer>::value && (sizeof(Integer) == sizeof(uint32_t))
+    >::type>
+{
+    static void
+    store(ThreadContext *tc, const Integer &i)
+    {
+        tc->setIntReg(ArmISA::INTREG_R0, (uint32_t)i);
+    }
+};
+
+template <typename Integer>
+struct Result<Aapcs32, Integer, typename std::enable_if<
+    std::is_integral<Integer>::value && (sizeof(Integer) == sizeof(uint64_t))
+    >::type>
+{
+    static void
+    store(ThreadContext *tc, const Integer &i)
+    {
+        if (std::is_same<Integer, Addr>::value) {
             tc->setIntReg(ArmISA::INTREG_R0, (uint32_t)i);
-        } else if (sizeof(Integer) == sizeof(uint64_t)) {
-            if (ArmISA::byteOrder(tc) == LittleEndianByteOrder) {
-                tc->setIntReg(ArmISA::INTREG_R0, (uint32_t)(i >> 0));
-                tc->setIntReg(ArmISA::INTREG_R1, (uint32_t)(i >> 32));
-            } else {
-                tc->setIntReg(ArmISA::INTREG_R0, (uint32_t)(i >> 32));
-                tc->setIntReg(ArmISA::INTREG_R1, (uint32_t)(i >> 0));
-            }
+        } else if (ArmISA::byteOrder(tc) == LittleEndianByteOrder) {
+            tc->setIntReg(ArmISA::INTREG_R0, (uint32_t)(i >> 0));
+            tc->setIntReg(ArmISA::INTREG_R1, (uint32_t)(i >> 32));
+        } else {
+            tc->setIntReg(ArmISA::INTREG_R0, (uint32_t)(i >> 32));
+            tc->setIntReg(ArmISA::INTREG_R1, (uint32_t)(i >> 0));
         }
     }
 };
 
 template <typename Integer>
 struct Argument<Aapcs32, Integer, typename std::enable_if<
-    std::is_integral<Integer>::value>::type> : public Aapcs32ArgumentBase
+    std::is_integral<Integer>::value && (sizeof(Integer) <= sizeof(uint32_t))
+    >::type> : public Aapcs32ArgumentBase
 {
     static Integer
     get(ThreadContext *tc, Aapcs32::State &state)
     {
-        if ((sizeof(Integer) <= sizeof(uint32_t) ||
-                std::is_same<Integer, Addr>::value) &&
+        if (state.ncrn <= state.MAX_CRN) {
+            return tc->readIntReg(state.ncrn++);
+        }
+
+        // Max out the ncrn since we effectively exhausted it.
+        state.ncrn = state.MAX_CRN + 1;
+
+        return loadFromStack<Integer>(tc, state);
+    }
+};
+
+template <typename Integer>
+struct Argument<Aapcs32, Integer, typename std::enable_if<
+    std::is_integral<Integer>::value && (sizeof(Integer) > sizeof(uint32_t))
+    >::type> : public Aapcs32ArgumentBase
+{
+    static Integer
+    get(ThreadContext *tc, Aapcs32::State &state)
+    {
+        if (std::is_same<Integer, Addr>::value &&
                 state.ncrn <= state.MAX_CRN) {
             return tc->readIntReg(state.ncrn++);
         }
