@@ -104,6 +104,14 @@ def create(args):
 
     MemConfig.config_mem(args, system)
 
+    if args.semi_enable:
+        system.semihosting = ArmSemihosting(
+            stdin=args.semi_stdin,
+            stdout=args.semi_stdout,
+            stderr=args.semi_stderr,
+            cmd_line = " ".join([ args.kernel ] + args.args)
+        )
+
     # Add the PCI devices we need for this system. The base system
     # doesn't have any PCI devices by default since they are assumed
     # to be added by the configurastion scripts needin them.
@@ -203,7 +211,19 @@ def main():
     parser.add_argument("--restore", type=str, default=None)
     parser.add_argument("--dtb-gen", action="store_true",
                         help="Doesn't run simulation, it generates a DTB only")
-
+    parser.add_argument("--semi-enable", action="store_true",
+                        help="Enable semihosting support")
+    parser.add_argument("--semi-stdin", type=str, default="stdin",
+                        help="Standard input for semihosting " \
+                        "(default: gem5's stdin)")
+    parser.add_argument("--semi-stdout", type=str, default="stdout",
+                        help="Standard output for semihosting " \
+                        "(default: gem5's stdout)")
+    parser.add_argument("--semi-stderr", type=str, default="stderr",
+                        help="Standard error for semihosting " \
+                        "(default: gem5's stderr)")
+    parser.add_argument("args", default=[], nargs="*",
+                        help="Semihosting arguments to pass to benchmark")
 
     args = parser.parse_args()
 
