@@ -29,6 +29,7 @@
 Import('*')
 
 SimObject('Graphics.py')
+GTest('amo.test', 'amo.test.cc')
 Source('atomicio.cc')
 GTest('atomicio.test', 'atomicio.test.cc', 'atomicio.cc')
 Source('bitfield.cc')
