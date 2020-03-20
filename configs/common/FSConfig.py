@@ -256,6 +256,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
     if bare_metal:
         # EOT character on UART will end the simulation
         self.realview.uart[0].end_on_eot = True
+        self.workload = ArmFsWorkload(atags_addr=0)
     else:
         workload = ArmFsLinux()
 
