@@ -160,7 +160,7 @@ class GenericArmPciHost(GenericPciHost):
 
         # AXI memory address range
         ranges += self.pciFdtAddr(space=2, addr=0)
-        ranges += state.addrCells(0x40000000) # Fixed offset
+        ranges += state.addrCells(self.pci_mem_base)
         ranges += local_state.sizeCells(0x40000000) # Fixed size
         node.append(FdtPropertyWords("ranges", ranges))
 
@@ -1025,6 +1025,7 @@ Interrupts:
     pci_host = GenericArmPciHost(
         conf_base=0x30000000, conf_size='256MB', conf_device_bits=12,
         pci_pio_base=0x2f000000,
+        pci_mem_base=0x40000000,
         int_policy="ARM_PCI_INT_DEV", int_base=100, int_count=4)
 
     energy_ctrl = EnergyCtrl(pio_addr=0x10000000)
