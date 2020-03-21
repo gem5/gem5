@@ -1758,38 +1758,48 @@ decode QUADRANT default Unknown::unknown() {
 
         0x1c: decode FUNCT3 {
             format SystemOp {
-                0x0: decode FUNCT12 {
-                    0x0: ecall({{
-                        fault = make_shared<SyscallFault>(
+                0x0: decode FUNCT7 {
+                    0x0: decode RS2 {
+                        0x0: ecall({{
+                            fault = make_shared<SyscallFault>(
                                 (PrivilegeMode)xc->readMiscReg(MISCREG_PRV));
-                    }}, IsSerializeAfter, IsNonSpeculative, IsSyscall,
-                        No_OpClass);
-                    0x1: ebreak({{
-                        fault = make_shared<BreakpointFault>(xc->pcState());
-                    }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
-                    0x2: uret({{
-                        STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                        status.uie = status.upie;
-                        status.upie = 1;
-                        xc->setMiscReg(MISCREG_STATUS, status);
-                        NPC = xc->readMiscReg(MISCREG_UEPC);
-                    }}, IsReturn);
-                    0x102: sret({{
-                        if (xc->readMiscReg(MISCREG_PRV) == PRV_U) {
-                            fault = make_shared<IllegalInstFault>(
-                                        "sret in user mode", machInst);
-                            NPC = NPC;
-                        } else {
+                        }}, IsSerializeAfter, IsNonSpeculative, IsSyscall,
+                            No_OpClass);
+                        0x1: ebreak({{
+                            fault = make_shared<BreakpointFault>(
+                                xc->pcState());
+                        }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                        0x2: uret({{
                             STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                            xc->setMiscReg(MISCREG_PRV, status.spp);
-                            status.sie = status.spie;
-                            status.spie = 1;
-                            status.spp = PRV_U;
+                            status.uie = status.upie;
+                            status.upie = 1;
                             xc->setMiscReg(MISCREG_STATUS, status);
-                            NPC = xc->readMiscReg(MISCREG_SEPC);
-                        }
-                    }}, IsReturn);
-                    0x302: mret({{
+                            NPC = xc->readMiscReg(MISCREG_UEPC);
+                        }}, IsReturn);
+                    }
+                    0x8: decode RS2 {
+                        0x2: sret({{
+                            if (xc->readMiscReg(MISCREG_PRV) == PRV_U) {
+                                fault = make_shared<IllegalInstFault>(
+                                            "sret in user mode", machInst);
+                                NPC = NPC;
+                            } else {
+                                STATUS status = xc->readMiscReg(
+                                    MISCREG_STATUS);
+                                xc->setMiscReg(MISCREG_PRV, status.spp);
+                                status.sie = status.spie;
+                                status.spie = 1;
+                                status.spp = PRV_U;
+                                xc->setMiscReg(MISCREG_STATUS, status);
+                                NPC = xc->readMiscReg(MISCREG_SEPC);
+                            }
+                        }}, IsReturn);
+                    }
+                    0x9: sfence_vma({{
+                        xc->tcBase()->getITBPtr()->demapPage(Rs1, Rs2);
+                        xc->tcBase()->getDTBPtr()->demapPage(Rs1, Rs2);
+                    }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+                    0x18: mret({{
                         if (xc->readMiscReg(MISCREG_PRV) != PRV_M) {
                             fault = make_shared<IllegalInstFault>(
                                         "mret at lower privilege", machInst);

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2015 RISC-V Foundation
  * Copyright (c) 2017 The University of Virginia
+ * Copyright (c) 2020 Barkhausen Institut
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,6 +65,19 @@ CSROp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     else
         ss << "?? (" << hex << "0x" << csr << ")";
     return ss.str();
+}
+
+string
+SystemOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+{
+    if (strcmp(mnemonic, "fence_vma") == 0) {
+        stringstream ss;
+        ss << mnemonic << ' ' << registerName(_srcRegIdx[0]) << ", " <<
+            registerName(_srcRegIdx[1]);
+        return ss.str();
+    }
+
+    return mnemonic;
 }
 
 }

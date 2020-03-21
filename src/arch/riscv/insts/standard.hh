@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2015 RISC-V Foundation
  * Copyright (c) 2017 The University of Virginia
+ * Copyright (c) 2020 Barkhausen Institut
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -74,12 +75,8 @@ class SystemOp : public RiscvStaticInst
   protected:
     using RiscvStaticInst::RiscvStaticInst;
 
-    std::string
-    generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override
-    {
-        return mnemonic;
-    }
+    std::string generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 /**
