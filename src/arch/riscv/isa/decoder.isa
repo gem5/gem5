@@ -1794,6 +1794,9 @@ decode QUADRANT default Unknown::unknown() {
                                 NPC = xc->readMiscReg(MISCREG_SEPC);
                             }
                         }}, IsReturn);
+                        0x5: wfi({{
+                            // don't do anything for now
+                        }}, No_OpClass);
                     }
                     0x9: sfence_vma({{
                         xc->tcBase()->getITBPtr()->demapPage(Rs1, Rs2);
