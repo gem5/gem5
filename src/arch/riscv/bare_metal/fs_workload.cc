@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 TU Dresden
+ * Copyright (c) 2020 Barkhausen Institut
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,6 +61,11 @@ BareMetal::initState()
 
     warn_if(!bootloader->buildImage().write(system->physProxy),
             "Could not load sections to memory.");
+
+    for (auto *tc: system->threadContexts) {
+        RiscvISA::Reset().invoke(tc);
+        tc->activate();
+    }
 }
 
 } // namespace RiscvISA

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2007 MIPS Technologies, Inc.
+ * Copyright (c) 2020 Barkhausen Institut
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,81 +32,80 @@
 #define __ARCH_RISCV_PAGETABLE_H__
 
 #include "base/logging.hh"
+#include "base/trie.hh"
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
 namespace RiscvISA {
 
-struct VAddr
+BitUnion64(SATP)
+    Bitfield<63, 60> mode;
+    Bitfield<59, 44> asid;
+    Bitfield<43, 0> ppn;
+EndBitUnion(SATP)
+
+enum AddrXlateMode
 {
+    BARE = 0,
+    SV39 = 8,
+    SV48 = 9,
 };
 
-// ITB/DTB page table entry
-struct PTE
+// Sv39 paging
+const Addr VADDR_BITS  = 39;
+const Addr LEVEL_BITS  = 9;
+const Addr LEVEL_MASK  = (1 << LEVEL_BITS) - 1;
+
+BitUnion64(PTESv39)
+    Bitfield<53, 10> ppn;
+    Bitfield<53, 28> ppn2;
+    Bitfield<27, 19> ppn1;
+    Bitfield<18, 10> ppn0;
+    Bitfield<7> d;
+    Bitfield<6> a;
+    Bitfield<5> g;
+    Bitfield<4> u;
+    Bitfield<3, 1> perm;
+    Bitfield<3> x;
+    Bitfield<2> w;
+    Bitfield<1> r;
+    Bitfield<0> v;
+EndBitUnion(PTESv39)
+
+struct TlbEntry;
+typedef Trie<Addr, TlbEntry> TlbEntryTrie;
+
+struct TlbEntry : public Serializable
 {
-    Addr Mask;
-    Addr VPN;
-    uint8_t asid;
+    // The base of the physical page.
+    Addr paddr;
 
-    bool G;
+    // The beginning of the virtual page this entry maps.
+    Addr vaddr;
+    // The size of the page this represents, in address bits.
+    unsigned logBytes;
 
-    /* Contents of Entry Lo0 */
-    Addr PFN0;  // Physical Frame Number - Even
-    bool D0;    // Even entry Dirty Bit
-    bool V0;    // Even entry Valid Bit
-    uint8_t C0; // Cache Coherency Bits - Even
+    uint16_t asid;
 
-    /* Contents of Entry Lo1 */
-    Addr PFN1;  // Physical Frame Number - Odd
-    bool D1;    // Odd entry Dirty Bit
-    bool V1;    // Odd entry Valid Bit
-    uint8_t C1; // Cache Coherency Bits (3 bits)
+    PTESv39 pte;
 
-    /*
-     * The next few variables are put in as optimizations to reduce
-     * TLB lookup overheads. For a given Mask, what is the address shift
-     * amount, and what is the OffsetMask
-     */
-    int AddrShiftAmount;
-    int OffsetMask;
+    TlbEntryTrie::Handle trieHandle;
 
-    bool Valid() { return (V0 | V1); };
-    void serialize(CheckpointOut &cp) const;
-    void unserialize(CheckpointIn &cp);
-};
+    // A sequence number to keep track of LRU.
+    uint64_t lruSeq;
 
-// WARN: This particular TLB entry is not necessarily conformed to RISC-V ISA
-struct TlbEntry
-{
-    Addr _pageStart;
-    TlbEntry() {}
-    TlbEntry(Addr asn, Addr vaddr, Addr paddr,
-             bool uncacheable, bool read_only)
-        : _pageStart(paddr)
+    TlbEntry()
+        : paddr(0), vaddr(0), logBytes(0), pte(), lruSeq(0)
+    {}
+
+    // Return the page size in bytes
+    Addr size() const
     {
-        if (uncacheable || read_only)
-            warn("RISC-V TlbEntry does not support uncacheable"
-                 " or read-only mappings\n");
+        return (static_cast<Addr>(1) << logBytes);
     }
 
-    Addr pageStart()
-    {
-        return _pageStart;
-    }
-
-    void
-    updateVaddr(Addr new_vaddr) {}
-
-    void serialize(CheckpointOut &cp) const
-    {
-        SERIALIZE_SCALAR(_pageStart);
-    }
-
-    void unserialize(CheckpointIn &cp)
-    {
-        UNSERIALIZE_SCALAR(_pageStart);
-    }
-
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 };

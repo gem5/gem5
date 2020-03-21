@@ -1,6 +1,7 @@
 # -*- mode:python -*-
 
 # Copyright (c) 2007 MIPS Technologies, Inc.
+# Copyright (c) 2020 Barkhausen Institut
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,13 +27,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.SimObject import SimObject
 from m5.params import *
+from m5.proxy import *
 
 from m5.objects.BaseTLB import BaseTLB
+from m5.objects.ClockedObject import ClockedObject
+
+class RiscvPagetableWalker(ClockedObject):
+    type = 'RiscvPagetableWalker'
+    cxx_class = 'RiscvISA::Walker'
+    cxx_header = 'arch/riscv/pagetable_walker.hh'
+    port = MasterPort("Port for the hardware table walker")
+    system = Param.System(Parent.any, "system object")
+    num_squash_per_cycle = Param.Unsigned(4,
+            "Number of outstanding walks that can be squashed per cycle")
 
 class RiscvTLB(BaseTLB):
     type = 'RiscvTLB'
     cxx_class = 'RiscvISA::TLB'
     cxx_header = 'arch/riscv/tlb.hh'
     size = Param.Int(64, "TLB size")
+    walker = Param.RiscvPagetableWalker(\
+            RiscvPagetableWalker(), "page table walker")
