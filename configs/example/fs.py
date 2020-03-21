@@ -1,4 +1,5 @@
 # Copyright (c) 2010-2013, 2016, 2019 ARM Limited
+# Copyright (c) 2020 Barkhausen Institut
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -82,6 +83,9 @@ def build_test_system(np):
         test_sys = makeLinuxMipsSystem(test_mem_mode, bm[0], cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == "sparc":
         test_sys = makeSparcSystem(test_mem_mode, bm[0], cmdline=cmdline)
+    elif buildEnv['TARGET_ISA'] == "riscv":
+        test_sys = makeBareMetalRiscvSystem(test_mem_mode, bm[0],
+                                            cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == "x86":
         test_sys = makeLinuxX86System(test_mem_mode, np, bm[0], options.ruby,
                                       cmdline=cmdline)
@@ -123,7 +127,9 @@ def build_test_system(np):
                                              voltage_domain =
                                              test_sys.cpu_voltage_domain)
 
-    if options.kernel is not None:
+    if buildEnv['TARGET_ISA'] == 'riscv':
+        test_sys.workload.bootloader = options.kernel
+    elif options.kernel is not None:
         test_sys.workload.object_file = binary(options.kernel)
 
     if options.script is not None:

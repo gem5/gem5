@@ -1,4 +1,5 @@
 # Copyright (c) 2010-2012, 2015-2019 ARM Limited
+# Copyright (c) 2020 Barkhausen Institut
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -48,6 +49,7 @@ from common import ObjectList
 
 # Populate to reflect supported os types per target ISA
 os_types = { 'mips'  : [ 'linux' ],
+             'riscv' : [ 'linux' ], # TODO that's a lie
              'sparc' : [ 'linux' ],
              'x86'   : [ 'linux' ],
              'arm'   : [ 'linux',
@@ -614,6 +616,28 @@ def makeLinuxX86System(mem_mode, numCPUs=1, mdesc=None, Ruby=False,
     self.workload.command_line = fillInCmdline(mdesc, cmdline)
     return self
 
+def makeBareMetalRiscvSystem(mem_mode, mdesc=None, cmdline=None):
+    self = System()
+    if not mdesc:
+        # generic system
+        mdesc = SysConfig()
+    self.mem_mode = mem_mode
+    self.mem_ranges = [AddrRange(mdesc.mem())]
+
+    self.workload = RiscvBareMetal()
+
+    self.iobus = IOXBar()
+    self.membus = MemBus()
+
+    self.bridge = Bridge(delay='50ns')
+    self.bridge.master = self.iobus.slave
+    self.bridge.slave = self.membus.master
+    # Sv39 has 56 bit physical addresses; use the upper 8 bit for the IO space
+    IO_address_space_base = 0x00FF000000000000
+    self.bridge.ranges = [AddrRange(IO_address_space_base, Addr.max)]
+
+    self.system_port = self.membus.slave
+    return self
 
 def makeDualRoot(full_system, testSystem, driveSystem, dumpfile):
     self = Root(full_system = full_system)
