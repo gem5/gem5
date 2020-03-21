@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2016 RISC-V Foundation
  * Copyright (c) 2016 The University of Virginia
+ * Copyright (c) 2020 Barkhausen Institut
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +35,7 @@
 #include <sstream>
 
 #include "arch/riscv/interrupts.hh"
+#include "arch/riscv/pagetable.hh"
 #include "arch/riscv/registers.hh"
 #include "base/bitfield.hh"
 #include "cpu/base.hh"
@@ -202,6 +204,18 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
                 auto ic = dynamic_cast<RiscvISA::Interrupts *>(
                     tc->getCpuPtr()->getInterruptController(tc->threadId()));
                 ic->setIE(val);
+            }
+            break;
+          case MISCREG_SATP:
+            {
+                // we only support bare and Sv39 mode; setting a different mode
+                // shall have no effect (see 4.1.12 in priv ISA manual)
+                SATP cur_val = readMiscRegNoEffect(misc_reg);
+                SATP new_val = val;
+                if (new_val.mode != AddrXlateMode::BARE &&
+                    new_val.mode != AddrXlateMode::SV39)
+                    new_val.mode = cur_val.mode;
+                setMiscRegNoEffect(misc_reg, new_val);
             }
             break;
           default:
