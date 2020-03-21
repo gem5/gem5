@@ -1,4 +1,5 @@
 # Copyright (c) 2012-2013, 2015-2017 ARM Limited
+# Copyright (c) 2020 Barkhausen Institut
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -181,7 +182,7 @@ class BaseCPU(ClockedObject):
     dcache_port = MasterPort("Data Port")
     _cached_ports = ['icache_port', 'dcache_port']
 
-    if buildEnv['TARGET_ISA'] in ['x86', 'arm']:
+    if buildEnv['TARGET_ISA'] in ['x86', 'arm', 'riscv']:
         _cached_ports += ["itb.walker.port", "dtb.walker.port"]
 
     _uncached_slave_ports = []
@@ -216,7 +217,7 @@ class BaseCPU(ClockedObject):
         self.icache_port = ic.cpu_side
         self.dcache_port = dc.cpu_side
         self._cached_ports = ['icache.mem_side', 'dcache.mem_side']
-        if buildEnv['TARGET_ISA'] in ['x86', 'arm']:
+        if buildEnv['TARGET_ISA'] in ['x86', 'arm', 'riscv']:
             if iwc and dwc:
                 self.itb_walker_cache = iwc
                 self.dtb_walker_cache = dwc

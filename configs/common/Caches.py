@@ -1,4 +1,5 @@
 # Copyright (c) 2012 ARM Limited
+# Copyright (c) 2020 Barkhausen Institut
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -92,7 +93,7 @@ class PageTableWalkerCache(Cache):
     tgts_per_mshr = 12
 
     # the x86 table walker actually writes to the table-walker cache
-    if buildEnv['TARGET_ISA'] == 'x86':
+    if buildEnv['TARGET_ISA'] in ['x86', 'riscv']:
         is_read_only = False
     else:
         is_read_only = True
