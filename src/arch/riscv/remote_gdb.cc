@@ -2,6 +2,7 @@
  * Copyright 2015 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2020 Barkhausen Institut
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -133,7 +134,9 @@
 
 #include <string>
 
+#include "arch/riscv/pagetable_walker.hh"
 #include "arch/riscv/registers.hh"
+#include "arch/riscv/tlb.hh"
 #include "cpu/thread_state.hh"
 #include "debug/GDBAcc.hh"
 #include "mem/page_table.hh"
@@ -150,7 +153,25 @@ RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc, int _port)
 bool
 RemoteGDB::acc(Addr va, size_t len)
 {
-    panic_if(FullSystem, "acc not implemented for RISCV FS!");
+    if (FullSystem)
+    {
+        TLB *tlb = dynamic_cast<TLB *>(context()->getDTBPtr());
+        unsigned logBytes;
+        Addr paddr = va;
+
+        PrivilegeMode pmode = tlb->getMemPriv(context(), BaseTLB::Read);
+        SATP satp = context()->readMiscReg(MISCREG_SATP);
+        if (pmode != PrivilegeMode::PRV_M &&
+            satp.mode != AddrXlateMode::BARE) {
+            Walker *walker = tlb->getWalker();
+            Fault fault = walker->startFunctional(
+                    context(), paddr, logBytes, BaseTLB::Read);
+            if (fault != NoFault)
+                return false;
+        }
+        return true;
+    }
+
     return context()->getProcessPtr()->pTable->lookup(va) != nullptr;
 }
 
