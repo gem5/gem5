@@ -50,8 +50,6 @@ class ArmFsWorkload(OsKernel):
     cxx_header = "arch/arm/fs_workload.hh"
     cxx_class = "ArmISA::FsWorkload"
 
-    load_addr_mask = 0
-
     boot_loader = VectorParam.String([],
         "File that contains the boot loader code. Zero or more files may be "
         "specified. The first boot loader that matches the kernel's "
@@ -78,6 +76,8 @@ class ArmFsLinux(ArmFsWorkload):
     type = 'ArmFsLinux'
     cxx_header = "arch/arm/linux/fs_workload.hh"
     cxx_class = "ArmISA::FsLinux"
+
+    load_addr_mask = 0
 
     @cxxMethod
     def dumpDmesg(self):
