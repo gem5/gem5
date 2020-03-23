@@ -961,7 +961,7 @@ Interrupts:
 
     # Platform control device (off-chip)
     realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000,
-                               idreg=0x02250000, pio_addr=0x1c010000)
+                               idreg=0x30101100, pio_addr=0x1c010000)
     mcc = VExpressMCC()
     dcc = CoreTile2A15DCC()
 
