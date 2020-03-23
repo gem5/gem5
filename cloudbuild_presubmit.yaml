@@ -23,7 +23,7 @@ steps:
     - name: 'gcr.io/$PROJECT_ID/ubuntu-18.04_all-dependencies:latest'
       dir: 'tests'
       entrypoint: 'python'
-      args: ['main.py', 'run', '-j', '4', '--length', 'quick']
+      args: ['main.py', 'run', '-j', '4', '-t', '8', '--length', 'quick']
 
 images: ['gcr.io/$PROJECT_ID/ubuntu-18.04_all-dependencies:latest']
 options:
