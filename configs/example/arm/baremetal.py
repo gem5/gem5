@@ -99,6 +99,7 @@ def create(args):
                                   platform=VExpress_GEM5_V2(),
                                   mem_mode=mem_mode,
                                   workload=ArmFsWorkload(
+                                      atags_addr=0,
                                       object_file=args.kernel),
                                   readfile=args.readfile)
 
