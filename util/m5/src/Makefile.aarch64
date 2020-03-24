@@ -46,7 +46,6 @@ LD=$(CROSS_COMPILE)ld
 AR=$(CROSS_COMPILE)ar
 
 JC=javac
-JH=javah
 JR=jar
 ### JDK_PATH must be set to build gem5OpJni
 #JDK_PATH=/path/to/jdk/version_number
@@ -81,8 +80,7 @@ gem5OpJni: gem5OpJni.jar $(JNI_OBJS)
 	$(CC) --shared -o lib$@.so $(JNI_OBJS)
 
 gem5OpJni.jar:
-	$(JC) jni/gem5Op.java; \
-	$(JH) jni.gem5Op; \
+	$(JC) jni/gem5Op.java -h .; \
 	$(JR) cvf $@ jni/*.class
 
 lua_gem5Op.o: lua_gem5Op.c
