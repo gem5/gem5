@@ -205,13 +205,6 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
     self.realview = platform_class()
     self._bootmem = self.realview.bootmem
 
-    if isinstance(self.realview, VExpress_EMM64):
-        if os.path.split(mdesc.disks()[0])[-1] == 'linux-aarch32-ael.img':
-            print("Selected 64-bit ARM architecture, updating default "
-                  "disk image...")
-            mdesc.diskname = 'linaro-minimal-aarch64.img'
-
-
     # Attach any PCI devices this platform supports
     self.realview.attachPciDevices()
 
@@ -278,7 +271,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         # the error message below. The disk can have any name now and
         # doesn't need to include 'android' substring.
         if (mdesc.disks() and
-                os.path.split(mdesc.disks()[0])[-1]).lower().count('android'):
+                os.path.split(mdesc.disks()[0])[-1].lower().count('android')):
             if 'android' not in mdesc.os_type():
                 fatal("It looks like you are trying to boot an Android " \
                       "platform.  To boot Android, you must specify " \
