@@ -36,21 +36,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-### If we are not compiling on an arm, we must use cross tools ###    
-ifneq ($(shell uname -m), arm)
-CROSS_COMPILE?=arm-none-linux-gnueabi-
+### If we are not compiling on an arm, we must use cross tools ###
+ifneq ($(shell uname -m), armv7l)
+CROSS_COMPILE?=arm-linux-gnueabi-
 endif
 CC=$(CROSS_COMPILE)gcc
 AS=$(CROSS_COMPILE)as
 LD=$(CROSS_COMPILE)ld
 AR=$(CROSS_COMPILE)ar
 
-#CFLAGS=-O2 -march=armv7 -mthumb -I../../include
-CFLAGS=-O2 -mthumb -I../../include
-LDFLAGS=-L. -lm5
+JC=javac
+JH=javah
+JR=jar
+### JDK_PATH must be set to build gem5OpJni
+#JDK_PATH=/path/to/jdk/version_number
 
-OBJS=m5.o
+CFLAGS=-O2 -I $(JDK_PATH)/include/ -I $(JDK_PATH)/include/linux \
+       -I../../../include -march=armv7-a
+LDFLAGS=-L. -lm5 -static
+
 LIB_OBJS=m5op_arm.o m5_mmap.o
+OBJS=m5.o
+JNI_OBJS=m5op_arm.o jni_gem5Op.o
+LUA_OBJS=lua_gem5Op.o m5op_arm.o m5_mmap.o
+
+### Need to install lua5.1 library to compile gem5OpLua.so
+LUA_HEADER_INCLUDE=$(shell pkg-config --cflags lua51) \
+	-I/usr/include/x86_64-linux-gnu
 
 all: libm5.a m5
 
@@ -61,11 +73,25 @@ all: libm5.a m5
 	$(CC)  $(CFLAGS) -o $@ -c $<
 
 m5: $(OBJS) libm5.a
-	$(CC) -o $@ -march=armv7 -mthumb $(OBJS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 libm5.a: $(LIB_OBJS)
 	$(AR) rcs $@ $^
 
+gem5OpJni: gem5OpJni.jar $(JNI_OBJS)
+	$(CC) --shared -o lib$@.so $(JNI_OBJS)
+
+gem5OpJni.jar:
+	$(JC) jni/gem5Op.java; \
+	$(JH) jni.gem5Op; \
+	$(JR) cvf $@ jni/*.class
+
+lua_gem5Op.o: lua_gem5Op.c
+	$(CC) $(CFLAGS) $(LUA_HEADER_INCLUDE) -o $@ -c $< -fPIC
+
+gem5OpLua.so: $(LUA_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@ -shared
 
 clean:
-	rm -f *.o m5 libm5.a
+	rm -f *.o m5 libgem5OpJni.so gem5OpJni.jar jni/*.class libm5.a \
+	jni_gem5Op.h gem5OpLua.so

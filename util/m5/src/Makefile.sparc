@@ -32,7 +32,7 @@ CC=$(CROSS_COMPILE)gcc
 AS=$(CROSS_COMPILE)as
 LD=$(CROSS_COMPILE)ld
 
-CFLAGS=-O2 -m64 -I../../include
+CFLAGS=-O2 -m64 -I../../../include
 OBJS=m5.o m5op_sparc.o m5_mmap.o
 
 all: m5
