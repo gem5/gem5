@@ -165,7 +165,8 @@ SyscallReturn _llseekFunc(SyscallDesc *desc, ThreadContext *tc,
                           uint32_t offset_low, Addr result_ptr, int whence);
 
 /// Target munmap() handler.
-SyscallReturn munmapFunc(SyscallDesc *desc, ThreadContext *tc);
+SyscallReturn munmapFunc(SyscallDesc *desc, ThreadContext *tc, Addr start,
+                         size_t length);
 
 /// Target shutdown() handler.
 SyscallReturn shutdownFunc(SyscallDesc *desc, ThreadContext *tc,
@@ -1112,32 +1113,32 @@ mremapFunc(SyscallDesc *desc, ThreadContext *tc,
         Addr start, uint64_t old_length, uint64_t new_length, uint64_t flags,
         GuestABI::VarArgs<uint64_t> varargs)
 {
-    auto process = tc->getProcessPtr();
+    auto p = tc->getProcessPtr();
+    Addr page_bytes = tc->getSystemPtr()->getPageBytes();
     uint64_t provided_address = 0;
     bool use_provided_address = flags & OS::TGT_MREMAP_FIXED;
 
     if (use_provided_address)
         provided_address = varargs.get<uint64_t>();
 
-    if ((start % TheISA::PageBytes != 0) ||
-        (provided_address % TheISA::PageBytes != 0)) {
+    if ((start % page_bytes != 0) ||
+        (provided_address % page_bytes != 0)) {
         warn("mremap failing: arguments not page aligned");
         return -EINVAL;
     }
 
-    new_length = roundUp(new_length, TheISA::PageBytes);
+    new_length = roundUp(new_length, page_bytes);
 
     if (new_length > old_length) {
-        std::shared_ptr<MemState> mem_state = process->memState;
-        Addr mmap_end = mem_state->getMmapEnd();
+        Addr mmap_end = p->memState->getMmapEnd();
 
         if ((start + old_length) == mmap_end &&
             (!use_provided_address || provided_address == start)) {
             // This case cannot occur when growing downward, as
             // start is greater than or equal to mmap_end.
             uint64_t diff = new_length - old_length;
-            process->allocateMem(mmap_end, diff);
-            mem_state->setMmapEnd(mmap_end + diff);
+            p->memState->mapRegion(mmap_end, diff, "remapped");
+            p->memState->setMmapEnd(mmap_end + diff);
             return start;
         } else {
             if (!use_provided_address && !(flags & OS::TGT_MREMAP_MAYMOVE)) {
@@ -1146,38 +1147,45 @@ mremapFunc(SyscallDesc *desc, ThreadContext *tc,
             } else {
                 uint64_t new_start = provided_address;
                 if (!use_provided_address) {
-                    new_start = process->mmapGrowsDown() ?
+                    new_start = p->mmapGrowsDown() ?
                                 mmap_end - new_length : mmap_end;
-                    mmap_end = process->mmapGrowsDown() ?
+                    mmap_end = p->mmapGrowsDown() ?
                                new_start : mmap_end + new_length;
-                    mem_state->setMmapEnd(mmap_end);
+                    p->memState->setMmapEnd(mmap_end);
                 }
 
-                process->pTable->remap(start, old_length, new_start);
                 warn("mremapping to new vaddr %08p-%08p, adding %d\n",
                      new_start, new_start + new_length,
                      new_length - old_length);
+
                 // add on the remaining unallocated pages
-                process->allocateMem(new_start + old_length,
-                                     new_length - old_length,
-                                     use_provided_address /* clobber */);
+                p->allocateMem(new_start + old_length,
+                               new_length - old_length,
+                               use_provided_address /* clobber */);
+
                 if (use_provided_address &&
-                    ((new_start + new_length > mem_state->getMmapEnd() &&
-                      !process->mmapGrowsDown()) ||
-                    (new_start < mem_state->getMmapEnd() &&
-                      process->mmapGrowsDown()))) {
+                    ((new_start + new_length > p->memState->getMmapEnd() &&
+                      !p->mmapGrowsDown()) ||
+                    (new_start < p->memState->getMmapEnd() &&
+                      p->mmapGrowsDown()))) {
                     // something fishy going on here, at least notify the user
                     // @todo: increase mmap_end?
                     warn("mmap region limit exceeded with MREMAP_FIXED\n");
                 }
+
                 warn("returning %08p as start\n", new_start);
+                p->memState->remapRegion(start, new_start, old_length);
+                p->memState->mapRegion(new_start, new_length, "remapped");
                 return new_start;
             }
         }
     } else {
+        // Shrink a region
         if (use_provided_address && provided_address != start)
-            process->pTable->remap(start, new_length, provided_address);
-        process->pTable->unmap(start + new_length, old_length - new_length);
+            p->memState->remapRegion(start, provided_address, new_length);
+        if (new_length != old_length)
+            p->memState->unmapRegion(start + new_length,
+                                     old_length - new_length);
         return use_provided_address ? provided_address : start;
     }
 }
@@ -1636,9 +1644,10 @@ mmapFunc(SyscallDesc *desc, ThreadContext *tc,
          int tgt_fd, int offset)
 {
     auto p = tc->getProcessPtr();
+    Addr page_bytes = tc->getSystemPtr()->getPageBytes();
 
-    if (start & (TheISA::PageBytes - 1) ||
-        offset & (TheISA::PageBytes - 1) ||
+    if (start & (page_bytes - 1) ||
+        offset & (page_bytes - 1) ||
         (tgt_flags & OS::TGT_MAP_PRIVATE &&
          tgt_flags & OS::TGT_MAP_SHARED) ||
         (!(tgt_flags & OS::TGT_MAP_PRIVATE) &&
@@ -1668,15 +1677,14 @@ mmapFunc(SyscallDesc *desc, ThreadContext *tc,
         // call. We could force the change through with shared mappings with
         // a call to msync, but that again would require more information
         // than we currently maintain.
-        warn("mmap: writing to shared mmap region is currently "
-             "unsupported. The write succeeds on the target, but it "
-             "will not be propagated to the host or shared mappings");
+        warn_once("mmap: writing to shared mmap region is currently "
+                  "unsupported. The write succeeds on the target, but it "
+                  "will not be propagated to the host or shared mappings");
     }
 
-    length = roundUp(length, TheISA::PageBytes);
+    length = roundUp(length, page_bytes);
 
     int sim_fd = -1;
-    uint8_t *pmap = nullptr;
     if (!(tgt_flags & OS::TGT_MAP_ANONYMOUS)) {
         std::shared_ptr<FDEntry> fdep = (*p->fds)[tgt_fd];
 
@@ -1692,104 +1700,80 @@ mmapFunc(SyscallDesc *desc, ThreadContext *tc,
             return -EBADF;
         sim_fd = ffdp->getSimFD();
 
-        pmap = (decltype(pmap))mmap(nullptr, length, PROT_READ, MAP_PRIVATE,
-                                    sim_fd, offset);
+        /**
+         * Maintain the symbol table for dynamic executables.
+         * The loader will call mmap to map the images into its address
+         * space and we intercept that here. We can verify that we are
+         * executing inside the loader by checking the program counter value.
+         * XXX: with multiprogrammed workloads or multi-node configurations,
+         * this will not work since there is a single global symbol table.
+         */
+        if (p->interpImage.contains(tc->pcState().instAddr())) {
+            std::shared_ptr<FDEntry> fdep = (*p->fds)[tgt_fd];
+            auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
+            ObjectFile *lib = createObjectFile(ffdp->getFileName());
+            DPRINTF_SYSCALL(Verbose, "Loading symbols from %s\n",
+                ffdp->getFileName());
 
-        if (pmap == (decltype(pmap))-1) {
-            warn("mmap: failed to map file into host address space");
-            return -errno;
+            if (lib) {
+                lib->loadAllSymbols(debugSymbolTable,
+                                lib->buildImage().minAddr(), start);
+            }
         }
     }
 
-    // Extend global mmap region if necessary. Note that we ignore the
-    // start address unless MAP_FIXED is specified.
+    /**
+     * Not TGT_MAP_FIXED means we can start wherever we want.
+     */
     if (!(tgt_flags & OS::TGT_MAP_FIXED)) {
-        std::shared_ptr<MemState> mem_state = p->memState;
-        Addr mmap_end = mem_state->getMmapEnd();
-
-        start = p->mmapGrowsDown() ? mmap_end - length : mmap_end;
-        mmap_end = p->mmapGrowsDown() ? start : mmap_end + length;
-
-        mem_state->setMmapEnd(mmap_end);
+        /**
+         * If the application provides us with a hint, we should make some
+         * small amount of effort to accomodate it.  Basically, we check if
+         * every single VA within the requested range is unused.  If it is,
+         * we give the application the range.  If not, we fall back to
+         * extending the global mmap region.
+         */
+        if (!(start && p->memState->isUnmapped(start, length))) {
+            /**
+            * Extend global mmap region to give us some room for the app.
+            */
+            start = p->memState->extendMmap(length);
+        }
     }
 
     DPRINTF_SYSCALL(Verbose, " mmap range is 0x%x - 0x%x\n",
                     start, start + length - 1);
 
-    // We only allow mappings to overwrite existing mappings if
-    // TGT_MAP_FIXED is set. Otherwise it shouldn't be a problem
-    // because we ignore the start hint if TGT_MAP_FIXED is not set.
-    int clobber = tgt_flags & OS::TGT_MAP_FIXED;
-    if (clobber) {
-        for (auto tc : p->system->threadContexts) {
-            // If we might be overwriting old mappings, we need to
-            // invalidate potentially stale mappings out of the TLBs.
-            tc->getDTBPtr()->flushAll();
-            tc->getITBPtr()->flushAll();
-        }
+    /**
+     * We only allow mappings to overwrite existing mappings if
+     * TGT_MAP_FIXED is set. Otherwise it shouldn't be a problem
+     * because we ignore the start hint if TGT_MAP_FIXED is not set.
+     */
+    if (tgt_flags & OS::TGT_MAP_FIXED) {
+        /**
+         * We might already have some old VMAs mapped to this region, so
+         * make sure to clear em out!
+         */
+        p->memState->unmapRegion(start, length);
     }
 
-    // Allocate physical memory and map it in. If the page table is already
-    // mapped and clobber is not set, the simulator will issue throw a
-    // fatal and bail out of the simulation.
-    p->allocateMem(start, length, clobber);
-
-    // Transfer content into target address space.
-    PortProxy &tp = tc->getVirtProxy();
+    /**
+     * Figure out a human-readable name for the mapping.
+     */
+    std::string region_name;
     if (tgt_flags & OS::TGT_MAP_ANONYMOUS) {
-        // In general, we should zero the mapped area for anonymous mappings,
-        // with something like:
-        //     tp.memsetBlob(start, 0, length);
-        // However, given that we don't support sparse mappings, and
-        // some applications can map a couple of gigabytes of space
-        // (intending sparse usage), that can get painfully expensive.
-        // Fortunately, since we don't properly implement munmap either,
-        // there's no danger of remapping used memory, so for now all
-        // newly mapped memory should already be zeroed so we can skip it.
+        region_name = "anon";
     } else {
-        // It is possible to mmap an area larger than a file, however
-        // accessing unmapped portions the system triggers a "Bus error"
-        // on the host. We must know when to stop copying the file from
-        // the host into the target address space.
-        struct stat file_stat;
-        if (fstat(sim_fd, &file_stat) > 0)
-            fatal("mmap: cannot stat file");
-
-        // Copy the portion of the file that is resident. This requires
-        // checking both the mmap size and the filesize that we are
-        // trying to mmap into this space; the mmap size also depends
-        // on the specified offset into the file.
-        uint64_t size = std::min((uint64_t)file_stat.st_size - offset,
-                                 length);
-        tp.writeBlob(start, pmap, size);
-
-        // Cleanup the mmap region before exiting this function.
-        munmap(pmap, length);
-
-        // Maintain the symbol table for dynamic executables.
-        // The loader will call mmap to map the images into its address
-        // space and we intercept that here. We can verify that we are
-        // executing inside the loader by checking the program counter value.
-        // XXX: with multiprogrammed workloads or multi-node configurations,
-        // this will not work since there is a single global symbol table.
-        if (p->interpImage.contains(tc->pcState().instAddr())) {
-            std::shared_ptr<FDEntry> fdep = (*p->fds)[tgt_fd];
-            auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
-            auto process = tc->getProcessPtr();
-            ObjectFile *lib = createObjectFile(
-                process->checkPathRedirect(
-                    ffdp->getFileName()));
-
-            if (lib) {
-                lib->loadAllSymbols(debugSymbolTable,
-                                    lib->buildImage().minAddr(), start);
-            }
-        }
-
-        // Note that we do not zero out the remainder of the mapping. This
-        // is done by a real system, but it probably will not affect
-        // execution (hopefully).
+        std::shared_ptr<FDEntry> fdep = (*p->fds)[tgt_fd];
+        auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
+        region_name = ffdp->getFileName();
     }
+
+    /**
+     * Setup the correct VMA for this region.  The physical pages will be
+     * mapped lazily.
+     */
+    p->memState->mapRegion(start, length, region_name, sim_fd, offset);
 
     return start;
 }

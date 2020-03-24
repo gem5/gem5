@@ -326,11 +326,22 @@ _llseekFunc(SyscallDesc *desc, ThreadContext *tc,
 
 
 SyscallReturn
-munmapFunc(SyscallDesc *desc, ThreadContext *tc)
+munmapFunc(SyscallDesc *desc, ThreadContext *tc, Addr start, size_t length)
 {
-    // With mmap more fully implemented, it might be worthwhile to bite
-    // the bullet and implement munmap. Should allow us to reuse simulated
-    // memory.
+    // Even if the system is currently not capable of recycling physical
+    // pages, there is no reason we can't unmap them so that we trigger
+    // appropriate seg faults when the application mistakenly tries to
+    // access them again.
+    auto p = tc->getProcessPtr();
+
+    if (start & (tc->getSystemPtr()->getPageBytes() - 1) || !length) {
+        return -EINVAL;
+    }
+
+    length = roundUp(length, tc->getSystemPtr()->getPageBytes());
+
+    p->memState->unmapRegion(start, length);
+
     return 0;
 }
 
