@@ -37,42 +37,41 @@
 
 #include <stdint.h>
 
+#include "gem5/m5ops.h"
 #include "jni_gem5Op.h"
-#include "m5op.h"
 
-/**
-   C library interface for gem5Op JNI
-
-*/
+/*
+ * C library interface for gem5Op JNI
+ */
 
 JNIEXPORT void JNICALL
 Java_jni_gem5Op_arm(JNIEnv *env, jobject obj, jlong j_address)
 {
-    arm(j_address);
+    m5_arm(j_address);
 }
 
 JNIEXPORT void JNICALL
 Java_jni_gem5Op_quiesce(JNIEnv *env, jobject obj)
 {
-    quiesce();
+    m5_quiesce();
 }
 
 JNIEXPORT void JNICALL
 Java_jni_gem5Op_quiesceNs(JNIEnv *env, jobject obj, jlong j_ns)
 {
-    quiesceNs(j_ns);
+    m5_quiesce_ns(j_ns);
 }
 
 JNIEXPORT void JNICALL
 Java_jni_gem5Op_quiesceCycle(JNIEnv *env, jobject obj, jlong j_cycles)
 {
-    quiesceCycle(j_cycles);
+    m5_quiesce_cycle(j_cycles);
 }
 
 JNIEXPORT jlong JNICALL
 Java_jni_gem5Op_quiesceTime(JNIEnv *env, jobject obj)
 {
-    uint64_t time = quiesceTime();
+    uint64_t time = m5_quiesce_time();
     if (time & 0x8000000000000000ULL)
         printf("Truncated return value from quiesceTime() to 63 bits\n");
     return (time & 0x7FFFFFFFFFFFFFFFULL);
@@ -81,7 +80,7 @@ Java_jni_gem5Op_quiesceTime(JNIEnv *env, jobject obj)
 JNIEXPORT jlong JNICALL
 Java_jni_gem5Op_rpns(JNIEnv *env, jobject obj)
 {
-    uint64_t time = rpns();
+    uint64_t time = m5_rpns();
     if (time & 0x8000000000000000ULL)
         printf("Truncated return value from rpns() to 63 bits\n");
     return (time & 0x7FFFFFFFFFFFFFFFULL);
@@ -90,7 +89,7 @@ Java_jni_gem5Op_rpns(JNIEnv *env, jobject obj)
 JNIEXPORT void JNICALL
 Java_jni_gem5Op_wakeCPU(JNIEnv *env, jobject obj, jlong j_cpuid)
 {
-    wakeCPU(j_cpuid);
+    m5_wake_cpu(j_cpuid);
 }
 
 JNIEXPORT void JNICALL
@@ -109,7 +108,7 @@ JNIEXPORT jlong JNICALL
 Java_jni_gem5Op_initparam(JNIEnv *env, jobject obj, jlong j_key_str1,
                           jlong j_key_str2)
 {
-    uint64_t param = m5_initparam(j_key_str1, j_key_str2);
+    uint64_t param = m5_init_param(j_key_str1, j_key_str2);
     if (param & 0x8000000000000000ULL)
         printf("Truncated return value from m_initparam() to 63 bits\n");
     return (param & 0x7FFFFFFFFFFFFFFFULL);
@@ -140,19 +139,19 @@ JNIEXPORT void JNICALL
 Java_jni_gem5Op_dumpreset_1stats(JNIEnv *env, jobject obj,
                                  jlong j_ns_delay, jlong j_ns_period)
 {
-    m5_dumpreset_stats(j_ns_delay, j_ns_period);
+    m5_dump_reset_stats(j_ns_delay, j_ns_period);
 }
 
 JNIEXPORT void JNICALL
 Java_jni_gem5Op_debugbreak(JNIEnv *env, jobject obj)
 {
-    m5_debugbreak();
+    m5_debug_break();
 }
 
 JNIEXPORT void JNICALL
 Java_jni_gem5Op_switchcpu (JNIEnv *env, jobject obj)
 {
-    m5_switchcpu();
+    m5_switch_cpu();
 }
 
 JNIEXPORT void JNICALL
