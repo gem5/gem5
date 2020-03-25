@@ -76,23 +76,24 @@ parse_int_args(int argc, char *argv[], uint64_t ints[], int len)
 }
 
 void
-parse_str_args_to_regs(int argc, char *argv[], uint64_t regs[], int len)
+pack_str_into_regs(const char *str, uint64_t regs[], int num_regs)
 {
-    if (argc > 1 || (argc > 0 && strlen(argv[0]) > len * sizeof(uint64_t)))
+    const size_t RegSize = sizeof(regs[0]);
+    const size_t MaxLen = num_regs * RegSize;
+
+    size_t len = strlen(str);
+
+    if (len > MaxLen)
         usage();
 
-    int i;
-    for (i = 0; i < len; i++)
-        regs[i] = 0;
+    memset(regs, 0, MaxLen);
 
-    if (argc == 0)
-        return;
-
-    int n;
-    for (n = 0, i = 0; i < len && n < strlen(argv[0]); n++) {
-        *((char *)(&regs[i]) + (n % 8)) = argv[0][n];
-        if ((n % 8) == 7)
-            i++;
+    while (len) {
+        for (int offset = 0; offset < RegSize && len; offset++, len--) {
+            int shift = offset * 8;
+            *regs |= (uint64_t)(uint8_t)*str++ << shift;
+        }
+        regs++;
     }
 }
 
@@ -277,7 +278,7 @@ do_initparam(int argc, char *argv[])
         usage();
 
     uint64_t key_str[2];
-    parse_str_args_to_regs(argc, argv, key_str, 2);
+    pack_str_into_regs(argc == 0 ? "" : argv[0], key_str, 2);
     uint64_t val = m5_init_param(key_str[0], key_str[1]);
     printf("%"PRIu64, val);
 }
