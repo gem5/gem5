@@ -51,28 +51,29 @@ m5_bin = m5_bin_env.Program('m5', [ m5, m5_mmap, libm5 ])
 # The shared version of the m5 op call sights, used by mutliple targets below.
 m5op_shared = env.SharedObject(m5op)
 
+if env['HAVE_JAVA']:
+    #
+    # A wrapper to make the m5 ops available in Java through the JNI.
+    #
+    java_env = env.Clone()
+    # SCons provides Java and JavaH builders, but the JavaH builder assumes
+    # that the javah tool exists. Java has dropped that tool in favor of a -h
+    # option on javac which the Java builder doesn't know how to use. To get
+    # around this, we set up our own builder which does the "right thing" here.
+    java_env.Command([ 'jni_gem5Op.h', 'gem5OpJni.jar' ], 'jni/gem5Op.java',
+                     [ '${JAVAC} ${JAVACFLAGS} -d ${CWD} ${SOURCES} -h ${CWD}',
+                       '${JAR} cvf ${TARGETS[1]} ${JNI_DIR}/*.class' ],
+                     JNI_DIR=Dir('jni'), CWD=Dir('.'))
+    # Set include paths to the C headers from the JDK which scons found for us.
+    java_env.Append(CPPPATH='${JAVAINCLUDES}')
+    java_env.SharedLibrary('gem5OpJni', [ jni, m5op_shared ])
 
-#
-# A wrapper to make the m5 ops available in Java through the JNI.
-#
-java_env = env.Clone()
-# SCons provides Java and JavaH builders, but the JavaH builder assumes that
-# the javah tool exists. Java has dropped that tool in favor of a -h option on
-# javac which the Java builder doesn't know how to use. To get around this, we
-# set up our own builder which does the "right thing" here.
-java_env.Command([ 'jni_gem5Op.h', 'gem5OpJni.jar' ], 'jni/gem5Op.java',
-                 [ '${JAVAC} ${JAVACFLAGS} -d ${CWD} ${SOURCES} -h ${CWD} ',
-                   '${JAR} cvf ${TARGETS[1]} ${JNI_DIR}/*.class' ],
-                 JNI_DIR=Dir('jni'), CWD=Dir('.'))
-# Set include paths to the C headers from the JDK which scons found for us.
-java_env.Append(CPPPATH='${JAVAINCLUDES}')
-java_env.SharedLibrary('gem5OpJni', [ jni, m5op_shared ])
 
-
-#
-# A wrapper to make the m5 ops available in lua version 5.1.
-#
-lua_env = env.Clone()
-# Extract the include paths needed for lua51 using pkg-config.
-lua_env.ParseConfig('pkg-config --cflags lua51')
-lua_env.SharedLibrary('gem5OpLua', [ lua, m5op_shared, m5_mmap ])
+if env['HAVE_LUA51']:
+    #
+    # A wrapper to make the m5 ops available in lua version 5.1.
+    #
+    lua_env = env.Clone()
+    # Extract the include paths needed for lua51 using pkg-config.
+    lua_env.ParseConfig('pkg-config --cflags lua51')
+    lua_env.SharedLibrary('gem5OpLua', [ lua, m5op_shared, m5_mmap ])
