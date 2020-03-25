@@ -34,28 +34,31 @@ m5 = 'm5.c'
 jni = 'jni_gem5Op.c'
 lua = 'lua_gem5Op.c'
 
+static_env = env.Clone()
+static_env.Append(LINKFLAGS=[ '-no-pie', '-static' ])
+
 #
 # The m5 library for use in other C/C++ programs.
 #
-libm5 = env.StaticLibrary('out/m5', [ m5op, m5_mmap ])
+libm5 = static_env.StaticLibrary('out/m5', [ m5op, m5_mmap ])
 
 
 #
 # The m5 stand alone command line utility.
 #
-m5_bin_env = env.Clone()
-m5_bin_env.Append(LINKFLAGS=[ '-static' ])
-m5_bin = m5_bin_env.Program('out/m5', [ m5, m5_mmap, libm5 ])
+m5_bin = static_env.Program('out/m5', [ m5, m5_mmap, libm5 ])
 
 
 # The shared version of the m5 op call sights, used by mutliple targets below.
-m5op_shared = env.SharedObject(m5op)
+shared_env = env.Clone()
+shared_env.Append(ASFLAGS='-DM5OP_PIC')
+m5op_shared = shared_env.SharedObject(m5op)
 
 if env['HAVE_JAVA']:
     #
     # A wrapper to make the m5 ops available in Java through the JNI.
     #
-    java_env = env.Clone()
+    java_env = shared_env.Clone()
     # SCons provides Java and JavaH builders, but the JavaH builder assumes
     # that the javah tool exists. Java has dropped that tool in favor of a -h
     # option on javac which the Java builder doesn't know how to use. To get
@@ -75,7 +78,7 @@ if env['HAVE_LUA51']:
     #
     # A wrapper to make the m5 ops available in lua version 5.1.
     #
-    lua_env = env.Clone()
+    lua_env = shared_env.Clone()
     # Extract the include paths needed for lua51 using pkg-config.
     lua_env.ParseConfig('pkg-config --cflags lua51')
     lib = lua_env.SharedLibrary('out/gem5OpLua', [ lua, m5op_shared, m5_mmap ])
