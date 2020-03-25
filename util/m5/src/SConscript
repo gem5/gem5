@@ -29,7 +29,7 @@ Import('*')
 
 # Raw source files.
 m5_mmap = 'm5_mmap.c'
-m5op = 'm5op_arm_A64.S'
+m5op = 'aarch64/m5op.S'
 m5 = 'm5.c'
 jni = 'jni_gem5Op.c'
 lua = 'lua_gem5Op.c'
