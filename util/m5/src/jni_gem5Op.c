@@ -57,19 +57,19 @@ Java_jni_gem5Op_quiesce(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_quiesceNs(JNIEnv *env, jobject obj, jlong j_ns)
+Java_jni_gem5Op_quiesce_1ns(JNIEnv *env, jobject obj, jlong j_ns)
 {
     m5_quiesce_ns(j_ns);
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_quiesceCycle(JNIEnv *env, jobject obj, jlong j_cycles)
+Java_jni_gem5Op_quiesce_1cycle(JNIEnv *env, jobject obj, jlong j_cycles)
 {
     m5_quiesce_cycle(j_cycles);
 }
 
 JNIEXPORT jlong JNICALL
-Java_jni_gem5Op_quiesceTime(JNIEnv *env, jobject obj)
+Java_jni_gem5Op_quiesce_1time(JNIEnv *env, jobject obj)
 {
     uint64_t time = m5_quiesce_time();
     if (time & 0x8000000000000000ULL)
@@ -87,7 +87,7 @@ Java_jni_gem5Op_rpns(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_wakeCPU(JNIEnv *env, jobject obj, jlong j_cpuid)
+Java_jni_gem5Op_wake_1cpu(JNIEnv *env, jobject obj, jlong j_cpuid)
 {
     m5_wake_cpu(j_cpuid);
 }
@@ -105,8 +105,8 @@ Java_jni_gem5Op_fail(JNIEnv *env, jobject obj, jlong j_ns_delay, jlong j_code)
 }
 
 JNIEXPORT jlong JNICALL
-Java_jni_gem5Op_initparam(JNIEnv *env, jobject obj, jlong j_key_str1,
-                          jlong j_key_str2)
+Java_jni_gem5Op_init_1param(JNIEnv *env, jobject obj, jlong j_key_str1,
+                           jlong j_key_str2)
 {
     uint64_t param = m5_init_param(j_key_str1, j_key_str2);
     if (param & 0x8000000000000000ULL)
@@ -136,20 +136,20 @@ Java_jni_gem5Op_dump_1stats(JNIEnv *env, jobject obj,
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_dumpreset_1stats(JNIEnv *env, jobject obj,
-                                 jlong j_ns_delay, jlong j_ns_period)
+Java_jni_gem5Op_dump_1reset_1stats(JNIEnv *env, jobject obj,
+                                  jlong j_ns_delay, jlong j_ns_period)
 {
     m5_dump_reset_stats(j_ns_delay, j_ns_period);
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_debugbreak(JNIEnv *env, jobject obj)
+Java_jni_gem5Op_debug_1break(JNIEnv *env, jobject obj)
 {
     m5_debug_break();
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_switchcpu (JNIEnv *env, jobject obj)
+Java_jni_gem5Op_switch_1cpu (JNIEnv *env, jobject obj)
 {
     m5_switch_cpu();
 }
