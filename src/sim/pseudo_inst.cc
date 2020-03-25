@@ -44,6 +44,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <array>
 #include <cerrno>
 #include <fstream>
 #include <string>
@@ -62,7 +63,6 @@
 #include "kern/kernel_stats.hh"
 #include "params/BaseCPU.hh"
 #include "sim/full_system.hh"
-#include "sim/initparam_keys.hh"
 #include "sim/process.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_events.hh"
@@ -77,6 +77,30 @@ using namespace Stats;
 
 namespace PseudoInst
 {
+
+/**
+ * Unique keys to retrieve various params by the initParam pseudo inst.
+ *
+ * @note Each key may be at most 16 characters (because we use
+ * two 64-bit registers to pass in the key to the initparam function).
+ */
+namespace InitParamKey
+{
+
+/**
+ *  The default key (empty string)
+ */
+const std::string DEFAULT = "";
+/**
+ *  Unique key for "rank" param (distributed gem5 runs)
+ */
+const std::string DIST_RANK = "dist-rank";
+/**
+ *  Unique key for "size" param (distributed gem5 runs)
+ */
+const std::string DIST_SIZE = "dist-size";
+
+} // namespace InitParamKey
 
 static inline void
 panicFsOnlyPseudoInst(const char *name)
@@ -254,28 +278,26 @@ initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
     }
 
     // The key parameter string is passed in via two 64-bit registers. We copy
-    // out the characters from the 64-bit integer variables here and concatenate
-    // them in the key_str character buffer
+    // out the characters from the 64-bit integer variables here, and
+    // concatenate them in the key character buffer
     const int len = 2 * sizeof(uint64_t) + 1;
-    char key_str[len];
-    memset(key_str, '\0', len);
+    char key[len];
+    memset(key, '\0', len);
 
-    memcpy(key_str, (char *)&key_str1, sizeof(key_str1));
-    memcpy(key_str + sizeof(uint64_t), (char *)&key_str2, sizeof(key_str2));
+    std::array<uint64_t, 2> key_regs = { key_str1, key_str2 };
+    key_regs = letoh(key_regs);
+    memcpy(key, key_regs.data(), sizeof(key_regs));
 
-    // Compare the key parameter with the known values to select the return
-    // value
-    uint64_t val;
-    if (strcmp(key_str, InitParamKey::DEFAULT) == 0) {
-        val = tc->getCpuPtr()->system->init_param;
-    } else if (strcmp(key_str, InitParamKey::DIST_RANK) == 0) {
-        val = DistIface::rankParam();
-    } else if (strcmp(key_str, InitParamKey::DIST_SIZE) == 0) {
-        val = DistIface::sizeParam();
-    } else {
+    // Check key parameter to figure out what to return.
+    const std::string key_str(key);
+    if (key == InitParamKey::DEFAULT)
+        return tc->getCpuPtr()->system->init_param;
+    else if (key == InitParamKey::DIST_RANK)
+        return DistIface::rankParam();
+    else if (key == InitParamKey::DIST_SIZE)
+        return DistIface::sizeParam();
+    else
         panic("Unknown key for initparam pseudo instruction:\"%s\"", key_str);
-    }
-    return val;
 }
 
 
