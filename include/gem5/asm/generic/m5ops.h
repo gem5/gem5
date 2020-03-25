@@ -80,23 +80,6 @@
 
 // These operations are for critical path annotation
 #define M5OP_ANNOTATE           0x55
-#define M5OP_AN_BSM             0x1
-#define M5OP_AN_ESM             0x2
-#define M5OP_AN_BEGIN           0x3
-#define M5OP_AN_END             0x4
-#define M5OP_AN_Q               0x6
-#define M5OP_AN_DQ              0x7
-#define M5OP_AN_WF              0x8
-#define M5OP_AN_WE              0x9
-#define M5OP_AN_RQ              0xA
-#define M5OP_AN_WS              0xB
-#define M5OP_AN_SQ              0xC
-#define M5OP_AN_AQ              0xD
-#define M5OP_AN_PQ              0xE
-#define M5OP_AN_L               0xF
-#define M5OP_AN_IDENTIFY        0x10
-#define M5OP_AN_GETID           0x11
-
 
 #define M5OP_FOREACH                                            \
     M5OP(m5_arm, M5OP_ARM);                                     \
