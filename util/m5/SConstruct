@@ -43,9 +43,6 @@ main.Append(CPPPATH=[ common_include ])
 # Propogate the environment's PATH setting.
 main['ENV']['PATH'] = os.environ['PATH']
 
-# Cross compiler prefix.
-main['CROSS_COMPILE'] = os.environ.get('CROSS_COMPILE', 'aarch64-linux-gnu-')
-
 main['CC'] = '${CROSS_COMPILE}gcc'
 main['AS'] = '${CROSS_COMPILE}as'
 main['LD'] = '${CROSS_COMPILE}ld'
@@ -62,6 +59,30 @@ main.SConsignFile(os.path.join(abspath(build_dir), 'sconsign'))
 # Use soft links instead of hard links when setting up a build directory.
 main.SetOption('duplicate', 'soft-copy')
 
-env = main.Clone()
-main.SConscript(src_dir.File('SConscript'),
-                variant_dir=build_dir, exports='env')
+for root, dirs, files in os.walk(abspath(src_dir)):
+    # Each SConsopts file describes a variant of the m5 utility.
+    if 'SConsopts' in files:
+        env = main.Clone()
+
+        # The user may override variant settings by setting environment
+        # variables of the form ${VARIANT}.${OPTION}. For instance, to set the
+        # CROSS_COMPILE prefix for variant foo to bar-, the user would set an
+        # environment variable foo.CROSS_COMPILE=bar-.
+        #
+        # This also considers scons command line settings which may look like
+        # environment variables, but are set after "scons" on the command line.
+        def get_variant_opt(name, default):
+            var_name = env.subst('${VARIANT}.%s' % name)
+            env[name] = os.environ.get(
+                    var_name, ARGUMENTS.get(var_name, default))
+
+        # Process the variant's settings in the SConsopts file, storing them
+        # in a copy of the primary environment.
+        env.SConscript(Dir(root).File('SConsopts'),
+                       exports=[ 'env', 'get_variant_opt' ])
+
+        # Once all the options have been configured, set up build targets for
+        # this variant.
+        variant_dir = build_dir.Dir(env.subst('${VARIANT}'))
+        env.SConscript(src_dir.File('SConscript'),
+                       variant_dir=variant_dir, exports='env')

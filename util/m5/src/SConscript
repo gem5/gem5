@@ -29,7 +29,7 @@ Import('*')
 
 # Raw source files.
 m5_mmap = 'm5_mmap.c'
-m5op = 'aarch64/m5op.S'
+m5op = '${VARIANT}/m5op.S'
 m5 = 'm5.c'
 jni = 'jni_gem5Op.c'
 lua = 'lua_gem5Op.c'
@@ -37,7 +37,7 @@ lua = 'lua_gem5Op.c'
 #
 # The m5 library for use in other C/C++ programs.
 #
-libm5 = env.StaticLibrary('m5', [ m5op, m5_mmap ])
+libm5 = env.StaticLibrary('out/m5', [ m5op, m5_mmap ])
 
 
 #
@@ -45,7 +45,7 @@ libm5 = env.StaticLibrary('m5', [ m5op, m5_mmap ])
 #
 m5_bin_env = env.Clone()
 m5_bin_env.Append(LINKFLAGS=[ '-static' ])
-m5_bin = m5_bin_env.Program('m5', [ m5, m5_mmap, libm5 ])
+m5_bin = m5_bin_env.Program('out/m5', [ m5, m5_mmap, libm5 ])
 
 
 # The shared version of the m5 op call sights, used by mutliple targets below.
@@ -60,13 +60,15 @@ if env['HAVE_JAVA']:
     # that the javah tool exists. Java has dropped that tool in favor of a -h
     # option on javac which the Java builder doesn't know how to use. To get
     # around this, we set up our own builder which does the "right thing" here.
-    java_env.Command([ 'jni_gem5Op.h', 'gem5OpJni.jar' ], 'jni/gem5Op.java',
-                     [ '${JAVAC} ${JAVACFLAGS} -d ${CWD} ${SOURCES} -h ${CWD}',
+    java_env.Command([ 'jni_gem5Op.h', 'out/gem5OpJni.jar' ],
+                     'jni/gem5Op.java',
+                     [ '${JAVAC} ${JAVACFLAGS} -d ${OUT} ${SOURCES} -h ${CWD}',
                        '${JAR} cvf ${TARGETS[1]} ${JNI_DIR}/*.class' ],
-                     JNI_DIR=Dir('jni'), CWD=Dir('.'))
+                     JNI_DIR=Dir('out').Dir('jni'),
+                     OUT=Dir('out'), CWD=Dir('.'))
     # Set include paths to the C headers from the JDK which scons found for us.
     java_env.Append(CPPPATH='${JAVAINCLUDES}')
-    java_env.SharedLibrary('gem5OpJni', [ jni, m5op_shared ])
+    java_env.SharedLibrary('out/gem5OpJni', [ jni, m5op_shared ])
 
 
 if env['HAVE_LUA51']:
@@ -76,4 +78,4 @@ if env['HAVE_LUA51']:
     lua_env = env.Clone()
     # Extract the include paths needed for lua51 using pkg-config.
     lua_env.ParseConfig('pkg-config --cflags lua51')
-    lua_env.SharedLibrary('gem5OpLua', [ lua, m5op_shared, m5_mmap ])
+    lib = lua_env.SharedLibrary('out/gem5OpLua', [ lua, m5op_shared, m5_mmap ])
