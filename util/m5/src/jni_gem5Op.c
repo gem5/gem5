@@ -142,6 +142,33 @@ Java_jni_gem5Op_dump_1reset_1stats(JNIEnv *env, jobject obj,
     m5_dump_reset_stats(j_ns_delay, j_ns_period);
 }
 
+JNIEXPORT jlong JNICALL
+Java_jni_gem5Op_read_1file(JNIEnv *env, jobject obj,
+                           jbyteArray j_buffer, jlong j_len, jlong j_offset)
+{
+    jbyte *buffer = (*env)->GetByteArrayElements(env, j_buffer, 0);
+
+    uint64_t result = m5_read_file(buffer, j_len, j_offset);
+
+    (*env)->ReleaseByteArrayElements(env, j_buffer, buffer, JNI_ABORT);
+    return (result & 0x7FFFFFFFFFFFFFFFULL);
+}
+
+JNIEXPORT jlong JNICALL
+Java_jni_gem5Op_write_1file(JNIEnv *env, jobject obj,
+                            jbyteArray j_buffer, jlong j_len, jlong j_offset,
+                            jstring j_filename)
+{
+    jbyte *buffer = (*env)->GetByteArrayElements(env, j_buffer, 0);
+    const char *filename = (*env)->GetStringUTFChars(env, j_filename, NULL);
+
+    uint64_t result = m5_write_file(buffer, j_len, j_offset, filename);
+
+    (*env)->ReleaseStringUTFChars(env, j_filename, filename);
+    (*env)->ReleaseByteArrayElements(env, j_buffer, buffer, JNI_ABORT);
+    return (result & 0x7FFFFFFFFFFFFFFFULL);
+}
+
 JNIEXPORT void JNICALL
 Java_jni_gem5Op_debug_1break(JNIEnv *env, jobject obj)
 {
@@ -152,6 +179,29 @@ JNIEXPORT void JNICALL
 Java_jni_gem5Op_switch_1cpu (JNIEnv *env, jobject obj)
 {
     m5_switch_cpu();
+}
+
+JNIEXPORT void JNICALL
+Java_jni_gem5Op_dist_1toggle_1sync(JNIEnv *env, jobject obj)
+{
+    m5_dist_toggle_sync();
+}
+
+JNIEXPORT void JNICALL
+Java_jni_gem5Op_add_symbol(JNIEnv *env, jobject obj,
+        jlong j_addr, jstring j_symbol)
+{
+    const char *symbol = (*env)->GetStringUTFChars(env, j_symbol, NULL);
+
+    m5_add_symbol(j_addr, symbol);
+
+    (*env)->ReleaseStringUTFChars(env, j_symbol, symbol);
+}
+
+JNIEXPORT void JNICALL
+Java_jni_gem5Op_load_1symbol(JNIEnv *env, jobject obj)
+{
+    m5_load_symbol();
 }
 
 JNIEXPORT void JNICALL

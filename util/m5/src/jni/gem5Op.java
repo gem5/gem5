@@ -57,8 +57,14 @@ public class gem5Op {
     public native void reset_stats(long ns_delay, long ns_period);
     public native void dump_stats(long ns_delay, long ns_period);
     public native void dump_reset_stats(long ns_delay, long ns_period);
+    public native long read_file(byte[] buffer, long len, long offset);
+    public native long write_file(byte[] buffer, long len, long offset,
+                                  String filename);
     public native void debug_break();
     public native void switch_cpu();
+    public native void dist_toggle_sync();
+    public native void add_symbol(long addr, String symbol);
+    public native void load_symbol();
     public native void panic();
     public native void work_begin(long workid, long threadid);
     public native void work_end(long workid, long threadid);
