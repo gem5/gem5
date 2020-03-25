@@ -259,18 +259,9 @@ initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
     const int len = 2 * sizeof(uint64_t) + 1;
     char key_str[len];
     memset(key_str, '\0', len);
-    if (key_str1 == 0) {
-        assert(key_str2 == 0);
-    } else {
-        strncpy(key_str, (char *)&key_str1, sizeof(uint64_t));
-    }
 
-    if (strlen(key_str) == sizeof(uint64_t)) {
-        strncpy(key_str + sizeof(uint64_t), (char *)&key_str2,
-                sizeof(uint64_t));
-    } else {
-        assert(key_str2 == 0);
-    }
+    memcpy(key_str, (char *)&key_str1, sizeof(key_str1));
+    memcpy(key_str + sizeof(uint64_t), (char *)&key_str2, sizeof(key_str2));
 
     // Compare the key parameter with the known values to select the return
     // value
