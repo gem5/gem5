@@ -64,23 +64,6 @@ void m5_panic(void);
 void m5_work_begin(uint64_t workid, uint64_t threadid);
 void m5_work_end(uint64_t workid, uint64_t threadid);
 
-// These operations are for critical path annotation
-void m5a_bsm(char *sm, const void *id, int flags);
-void m5a_esm(char *sm);
-void m5a_begin(int flags, char *st);
-void m5a_end(void);
-void m5a_q(const void *id, char *q, int count);
-void m5a_dq(const void *id, char *q, int count);
-void m5a_wf(const void *id, char *q, char *sm, int count);
-void m5a_we(const void *id, char *q, char *sm, int count);
-void m5a_ws(const void *id, char *q, char *sm);
-void m5a_sq(const void *id, char *q, int count, int flags);
-void m5a_aq(const void *id, char *q, int count);
-void m5a_pq(const void *id, char *q, int count);
-void m5a_l(char *lsm, const void *id, char *sm);
-void m5a_identify(uint64_t id);
-uint64_t m5a_getid(void);
-
 #ifdef __cplusplus
 }
 #endif
