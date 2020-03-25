@@ -35,8 +35,6 @@ extern "C" {
 
 #include <stdint.h>
 
-#include <gem5/asm/generic/m5op_flags.h>
-
 void m5_arm(uint64_t address);
 void m5_quiesce(void);
 void m5_quiesce_ns(uint64_t ns);
