@@ -316,8 +316,8 @@ struct MainFunc mainfuncs[] = {
     { "checkpoint",     do_checkpoint,       "[delay [period]]" },
     { "addsymbol",      do_addsymbol,        "<address> <symbol>" },
     { "loadsymbol",     do_loadsymbol,       "" },
-    { "initparam",      do_initparam,        "[key] // key must be shorter"
-                                             " than 16 chars" },
+    { "initparam",      do_initparam,        "[key] // key may be at most"
+                                             " 16 characters long" },
     { "sw99param",      do_sw99param,        "" }
 };
 int numfuncs = sizeof(mainfuncs) / sizeof(mainfuncs[0]);
