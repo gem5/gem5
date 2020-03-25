@@ -1,5 +1,4 @@
-# Copyright (c) 2005-2006 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2020 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,40 +23,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-CC=gcc
-AS=as
-LD=ld
+Import('*')
 
-CFLAGS?=-O2 -DM5OP_ADDR=0xFFFF0000 -I../../../include
-OBJS=m5.o m5op_x86.o m5_mmap.o
-LUA_HEADER_INCLUDE=$(shell pkg-config --cflags-only-I lua51)
-LUA_OBJS=lua_gem5Op.opic m5op_x86.opic m5_mmap.opic
-
-all: m5
-
-%.o: %.S
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-%.o: %.c
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-%.opic : %.S
-	$(CC) $(CFLAGS) -fPIC -o $@ -c $<
-
-%.opic : %.c
-	$(CC) $(CFLAGS) -fPIC -o $@ -c $<
-
-m5: $(OBJS)
-	$(CC) -o $@ $(OBJS) -no-pie
-
-m5op_x86.opic: m5op_x86.S
-	$(CC) $(CFLAGS) -DM5OP_PIC -fPIC -o $@ -c $<
-
-lua_gem5Op.opic: lua_gem5Op.c
-	$(CC) $(CFLAGS) $(LUA_HEADER_INCLUDE) -fPIC -o $@ -c $<
-
-gem5OpLua.so: $(LUA_OBJS)
-	$(CC) $(CFLAGS) -fPIC $^ -o $@ -shared
-
-clean:
-	rm -f *.o *.opic m5 gem5OpLua.so
+env['VARIANT'] = 'arm'
+get_variant_opt('CROSS_COMPILE', 'arm-linux-gnueabihf-')
+env.Append(CFLAGS='-march=armv7-a')

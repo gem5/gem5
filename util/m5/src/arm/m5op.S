@@ -38,9 +38,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 .syntax unified
-#ifdef __thumb__
-.thumb
-#endif
 
 #include <gem5/asm/generic/m5ops.h>
 
@@ -50,12 +47,7 @@
         .align 2
         .globl \name
 \name:
-#ifdef __thumb__
-        .short 0xEE00 | \func
-        .short 0x0110
-#else
         .long 0xEE000110 | (\func << 16)
-#endif
         mov pc,lr
 .endm
 
