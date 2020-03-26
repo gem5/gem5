@@ -401,27 +401,22 @@ if main['GCC']:
 
     main['GCC_VERSION'] = gcc_version
 
-    if compareVersions(gcc_version, '4.9') >= 0:
+    if compareVersions(gcc_version, '4.9') >= 0 and \
+       compareVersions(gcc_version, '8.1') < 0:
         # Incremental linking with LTO is currently broken in gcc versions
-        # 4.9 and above. A version where everything works completely hasn't
-        # yet been identified.
+        # 4.9 to 8.1.
         #
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67548
-        main['BROKEN_INCREMENTAL_LTO'] = True
-    if compareVersions(gcc_version, '6.0') >= 0:
+        #
         # gcc versions 6.0 and greater accept an -flinker-output flag which
         # selects what type of output the linker should generate. This is
         # necessary for incremental lto to work, but is also broken in
-        # current versions of gcc. It may not be necessary in future
-        # versions. We add it here since it might be, and as a reminder that
-        # it exists. It's excluded if lto is being forced.
+        # versions of gcc up to 8.1.
         #
         # https://gcc.gnu.org/gcc-6/changes.html
         # https://gcc.gnu.org/ml/gcc-patches/2015-11/msg03161.html
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69866
-        if not GetOption('force_lto'):
-            main.Append(PSHLINKFLAGS='-flinker-output=rel')
-            main.Append(PLINKFLAGS='-flinker-output=rel')
+        main['BROKEN_INCREMENTAL_LTO'] = True
 
     disable_lto = GetOption('no_lto')
     if not disable_lto and main.get('BROKEN_INCREMENTAL_LTO', False) and \
