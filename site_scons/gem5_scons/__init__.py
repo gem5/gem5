@@ -169,12 +169,25 @@ def print_message(prefix, color, message, **kwargs):
     # Finally add the prefix and padding on extra lines, and glue it all back
     # together.
     message = prefix + ('\n' + padding).join(wrapped_lines)
-    # Print the message in bold in the requested color.
-    print(color + termcap.Bold + message + termcap.Normal, **kwargs)
+    # Add in terminal escape sequences.
+    message = color + termcap.Bold + message + termcap.Normal
+    # Actually print the message.
+    print(message, **kwargs)
+    return message
+
+all_warnings = []
+def summarize_warnings():
+    if not all_warnings:
+        return
+    print(termcap.Yellow + termcap.Bold +
+            '*** Summary of Warnings ***' +
+            termcap.Normal)
+    list(map(print, all_warnings))
 
 def warning(*args, **kwargs):
     message = ' '.join(args)
-    print_message('Warning: ', termcap.Yellow, message, **kwargs)
+    printed = print_message('Warning: ', termcap.Yellow, message, **kwargs)
+    all_warnings.append(printed)
 
 def error(*args, **kwargs):
     message = ' '.join(args)
