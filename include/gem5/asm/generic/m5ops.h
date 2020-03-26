@@ -66,7 +66,7 @@
 #define M5OP_ADD_SYMBOL         0x53
 #define M5OP_PANIC              0x54
 
-#define M5OP_ANNOTATE           0x55 // deprecated annotate function
+#define M5OP_RESERVED1          0x55 // Reserved for user, used to be annotate
 #define M5OP_RESERVED2          0x56 // Reserved for user
 #define M5OP_RESERVED3          0x57 // Reserved for user
 #define M5OP_RESERVED4          0x58 // Reserved for user

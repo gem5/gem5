@@ -234,7 +234,7 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint64_t &result)
         invokeSimcall<ABI>(tc, workend);
         return true;
 
-      case M5OP_ANNOTATE:
+      case M5OP_RESERVED1:
       case M5OP_RESERVED2:
       case M5OP_RESERVED3:
       case M5OP_RESERVED4:
