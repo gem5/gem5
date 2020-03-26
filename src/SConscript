@@ -1166,7 +1166,8 @@ def embedPyFile(target, source, env):
 
     import subprocess
 
-    marshalled = subprocess.check_output([source[0].abspath, str(source[1])])
+    marshalled = subprocess.check_output(
+            [source[0].abspath, str(source[1])], env=env['ENV'])
 
     compressed = zlib.compress(marshalled)
     data = compressed
