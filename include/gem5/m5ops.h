@@ -62,6 +62,9 @@ void m5_panic(void);
 void m5_work_begin(uint64_t workid, uint64_t threadid);
 void m5_work_end(uint64_t workid, uint64_t threadid);
 
+void m5_se_syscall();
+void m5_se_page_fault();
+
 #ifdef __cplusplus
 }
 #endif
