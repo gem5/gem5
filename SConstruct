@@ -510,6 +510,16 @@ if GetOption('with_asan'):
     # Available for gcc >= 4.8 or llvm >= 3.1 both a requirement
     # by the build system
     sanitizers.append('address')
+    suppressions_file = Dir('util').File('lsan-suppressions').get_abspath()
+    suppressions_opt = 'suppressions=%s' % suppressions_file
+    main['ENV']['LSAN_OPTIONS'] = ':'.join([suppressions_opt,
+                                            'print_suppressions=0'])
+    print()
+    warning('To suppress false positive leaks, set the LSAN_OPTIONS '
+            'environment variable to "%s" when running gem5' %
+            suppressions_opt)
+    warning('LSAN_OPTIONS=suppressions=%s' % suppressions_opt)
+    print()
 if sanitizers:
     sanitizers = ','.join(sanitizers)
     if main['GCC'] or main['CLANG']:
