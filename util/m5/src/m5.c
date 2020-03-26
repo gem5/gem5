@@ -226,23 +226,6 @@ do_write_file(int argc, char *argv[])
 }
 
 void
-do_exec_file(int argc, char *argv[])
-{
-    if (argc > 0)
-        usage();
-
-    const char *destname = "/tmp/execfile";
-
-    int fid = open(destname, O_WRONLY, 0777);
-    int len = read_file(fid);
-    close(fid);
-    if (len > 0) {
-        execl(destname, "execfile", NULL);
-        err(1, "execl failed!");
-    }
-}
-
-void
 do_checkpoint(int argc, char *argv[])
 {
     uint64_t ints[2];
@@ -306,9 +289,6 @@ struct MainFunc mainfuncs[] = {
                                              "delay (default 0) dump the "
                                              "stats, and then optionally "
                                              "every period after" },
-    { "execfile",       do_exec_file,        "read a preselected file into "
-                                             "/tmp/execfile and then exec() "
-                                             "it" },
     { "exit",           do_exit,             "[delay] // Exit after delay, "
                                              "or immediately" },
     { "fail",           do_fail,             "<code> [delay] // Exit with "
