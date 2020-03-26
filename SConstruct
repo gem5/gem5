@@ -425,9 +425,9 @@ if main['GCC']:
     disable_lto = GetOption('no_lto')
     if not disable_lto and main.get('BROKEN_INCREMENTAL_LTO', False) and \
             not GetOption('force_lto'):
-        warning('Warning: Your compiler doesn\'t support incremental linking '
-                'and lto at the same time, so lto is being disabled. To force '
-                'lto on anyway, use the --force-lto option. That will disable '
+        warning('Your compiler doesn\'t support incremental linking and lto '
+                'at the same time, so lto is being disabled. To force lto on '
+                'anyway, use the --force-lto option. That will disable '
                 'partial linking.')
         disable_lto = True
 
