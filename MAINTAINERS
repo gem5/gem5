@@ -87,6 +87,7 @@ python: Python SimObject wrapping and infrastructure
   Andreas Sandberg <andreas.sandberg@arm.com>
 
 scons: Build system
+  Gabe Black <gabeblack@google.com>
 
 sim: General simulation components
   Jason Lowe-Power <jason@lowepower.com>
@@ -110,3 +111,4 @@ tests: testing changes (not stats updates for tests. See stats:)
   Bobby Bruce <bbruce@ucdavis.edu>
 
 util:
+  Gabe Black <gabeblack@google.com>
