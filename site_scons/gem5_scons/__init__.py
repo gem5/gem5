@@ -41,6 +41,7 @@
 from __future__ import print_function
 
 import os
+import textwrap
 
 from gem5_scons.util import get_termcap
 import SCons.Script
@@ -127,9 +128,48 @@ class Transform(object):
             return ', '.join(f)
         return self.format % (com_pfx, fmt(srcs), fmt(tgts))
 
+# The width warning and error messages should be wrapped at.
+text_width = None
+
+# This should work in python 3.3 and above.
+if text_width is None:
+    try:
+        import shutil
+        text_width = shutil.get_terminal_size().columns
+    except:
+        pass
+
+# This should work if the curses python module is installed.
+if text_width is None:
+    try:
+        import curses
+        try:
+            _, text_width = curses.initscr().getmaxyx()
+        finally:
+            curses.endwin()
+    except:
+        pass
+
+# If all else fails, default to 80 columns.
+if text_width is None:
+    text_width = 80
+
 def print_message(prefix, color, message, **kwargs):
+    # Precompute some useful values.
+    prefix_len = len(prefix)
+    wrap_width = text_width - prefix_len
+    padding = ' ' * prefix_len
+
+    # First split on newlines.
     lines = message.split('\n')
-    message = prefix + ('\n' + ' ' * len(prefix)).join(lines)
+    # Then wrap each line to the required width.
+    wrapped_lines = []
+    for line in lines:
+        wrapped_lines.extend(textwrap.wrap(line, wrap_width))
+    # Finally add the prefix and padding on extra lines, and glue it all back
+    # together.
+    message = prefix + ('\n' + padding).join(wrapped_lines)
+    # Print the message in bold in the requested color.
     print(color + termcap.Bold + message + termcap.Normal, **kwargs)
 
 def warning(*args, **kwargs):
