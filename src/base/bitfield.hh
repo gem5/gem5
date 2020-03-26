@@ -50,12 +50,15 @@
 extern const uint8_t reverseLookUpTable[];
 
 /**
- * Generate a 64-bit mask of 'nbits' 1s, right justified.
+ * Generate a 64-bit mask of 'nbits' 1s, right justified. If a number of bits
+ * greater than 64 is given, it is truncated to 64.
+ *
+ * @param nbits The number of bits set in the mask.
  */
 inline uint64_t
 mask(int nbits)
 {
-    return (nbits == 64) ? (uint64_t)-1LL : (1ULL << nbits) - 1;
+    return (nbits >= 64) ? (uint64_t)-1LL : (1ULL << nbits) - 1;
 }
 
 /**
