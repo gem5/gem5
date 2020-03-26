@@ -1,0 +1,2 @@
+# Suppress detection of leaks from within the python 2.7 interpreter.
+leak:libpython2.7.so
