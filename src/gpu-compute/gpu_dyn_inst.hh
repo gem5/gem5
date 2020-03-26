@@ -251,31 +251,31 @@ class GPUDynInst : public GPUExecContext
     // when true, call execContinuation when response arrives
     bool useContinuation;
 
-    template<typename c0> AtomicOpFunctor*
+    template<typename c0> AtomicOpFunctorPtr
     makeAtomicOpFunctor(c0 *reg0, c0 *reg1)
     {
         if (isAtomicAnd()) {
-            return new AtomicOpAnd<c0>(*reg0);
+            return m5::make_unique<AtomicOpAnd<c0>>(*reg0);
         } else if (isAtomicOr()) {
-            return new AtomicOpOr<c0>(*reg0);
+            return m5::make_unique<AtomicOpOr<c0>>(*reg0);
         } else if (isAtomicXor()) {
-            return new AtomicOpXor<c0>(*reg0);
+            return m5::make_unique<AtomicOpXor<c0>>(*reg0);
         } else if (isAtomicCAS()) {
-            return new AtomicOpCAS<c0>(*reg0, *reg1, cu);
+            return m5::make_unique<AtomicOpCAS<c0>>(*reg0, *reg1, cu);
         } else if (isAtomicExch()) {
-            return new AtomicOpExch<c0>(*reg0);
+            return m5::make_unique<AtomicOpExch<c0>>(*reg0);
         } else if (isAtomicAdd()) {
-            return new AtomicOpAdd<c0>(*reg0);
+            return m5::make_unique<AtomicOpAdd<c0>>(*reg0);
         } else if (isAtomicSub()) {
-            return new AtomicOpSub<c0>(*reg0);
+            return m5::make_unique<AtomicOpSub<c0>>(*reg0);
         } else if (isAtomicInc()) {
-            return new AtomicOpInc<c0>();
+            return m5::make_unique<AtomicOpInc<c0>>();
         } else if (isAtomicDec()) {
-            return new AtomicOpDec<c0>();
+            return m5::make_unique<AtomicOpDec<c0>>();
         } else if (isAtomicMax()) {
-            return new AtomicOpMax<c0>(*reg0);
+            return m5::make_unique<AtomicOpMax<c0>>(*reg0);
         } else if (isAtomicMin()) {
-            return new AtomicOpMin<c0>(*reg0);
+            return m5::make_unique<AtomicOpMin<c0>>(*reg0);
         } else {
             fatal("Unrecognized atomic operation");
         }

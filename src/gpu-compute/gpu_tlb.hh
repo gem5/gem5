@@ -175,7 +175,8 @@ namespace X86ISA
          */
         std::vector<EntryList> entryList;
 
-        Fault translateInt(const RequestPtr &req, ThreadContext *tc);
+        Fault translateInt(bool read, const RequestPtr &req,
+                           ThreadContext *tc);
 
         Fault translate(const RequestPtr &req, ThreadContext *tc,
                 Translation *translation, Mode mode, bool &delayedResponse,

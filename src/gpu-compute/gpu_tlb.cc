@@ -43,6 +43,7 @@
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/pagetable_walker.hh"
 #include "arch/x86/regs/misc.hh"
+#include "arch/x86/regs/msr.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/bitfield.hh"
 #include "base/logging.hh"
@@ -426,7 +427,7 @@ namespace X86ISA
         // If this is true, we're dealing with a request
         // to a non-memory address space.
         if (seg == SEGMENT_REG_MS) {
-            return translateInt(mode == Read, req, tc);
+            return translateInt(mode == Mode::Read, req, tc);
         }
 
         delayedResponse = false;
