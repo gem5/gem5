@@ -306,20 +306,46 @@ struct MainFunc
 };
 
 struct MainFunc mainfuncs[] = {
-    { "exit",           do_exit,             "[delay]" },
-    { "fail",           do_fail,             "<code> [delay]" },
-    { "resetstats",     do_reset_stats,      "[delay [period]]" },
-    { "dumpstats",      do_dump_stats,       "[delay [period]]" },
-    { "dumpresetstats", do_dump_reset_stats, "[delay [period]]" },
-    { "readfile",       do_read_file,        "" },
-    { "writefile",      do_write_file,       "<filename> [host filename]" },
-    { "execfile",       do_exec_file,        "" },
-    { "checkpoint",     do_checkpoint,       "[delay [period]]" },
-    { "addsymbol",      do_addsymbol,        "<address> <symbol>" },
-    { "loadsymbol",     do_loadsymbol,       "" },
-    { "initparam",      do_initparam,        "[key] // key may be at most"
-                                             " 16 characters long" },
-    { "sw99param",      do_sw99param,        "" }
+    { "addsymbol",      do_addsymbol,        "<address> <symbol> // Adds a "
+                                             "symbol with address \"address\" "
+                                             "to gem5's symbol table" },
+    { "checkpoint",     do_checkpoint,       "[delay [period]] // After "
+                                             "delay (default 0) take a "
+                                             "checkpoint, and then optionally "
+                                             "every period after" },
+    { "dumpresetstats", do_dump_reset_stats, "[delay [period]] // After "
+                                             "delay (default 0) dump and "
+                                             "reset the stats, and then "
+                                             "optionally every period after" },
+    { "dumpstats",      do_dump_stats,       "[delay [period]] // After "
+                                             "delay (default 0) dump the "
+                                             "stats, and then optionally "
+                                             "every period after" },
+    { "execfile",       do_exec_file,        "read a preselected file into "
+                                             "/tmp/execfile and then exec() "
+                                             "it" },
+    { "exit",           do_exit,             "[delay] // Exit after delay, "
+                                             "or immediately" },
+    { "fail",           do_fail,             "<code> [delay] // Exit with "
+                                             "failure code code after delay, "
+                                             "or immediately" },
+    { "initparam",      do_initparam,        "[key] // optional key may be at "
+                                             "most 16 characters long" },
+    { "loadsymbol",     do_loadsymbol,       "load a preselected symbol file "
+                                             "into gem5's symbol table" },
+    { "readfile",       do_read_file,        "read a preselected file from "
+                                             "the host and write it to "
+                                             "stdout" },
+    { "resetstats",     do_reset_stats,      "[delay [period]] // After "
+                                             "delay (default 0) reset the "
+                                             "stats, and then optionally "
+                                             "every period after" },
+    { "sw99param",      do_sw99param,        "read the default initparam and "
+                                             "display it in 12 bit chunks"}
+    { "writefile",      do_write_file,       "<filename> [host filename] // "
+                                             "Write a file to the host, "
+                                             "optionally with a different "
+                                             "name" },
 };
 int numfuncs = sizeof(mainfuncs) / sizeof(mainfuncs[0]);
 
