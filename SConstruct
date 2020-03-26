@@ -78,6 +78,7 @@
 from __future__ import print_function
 
 # Global Python includes
+import atexit
 import itertools
 import os
 import re
@@ -168,7 +169,7 @@ AddLocalOption('--with-asan', dest='with_asan', action='store_true',
 AddLocalOption('--with-systemc-tests', dest='with_systemc_tests',
                action='store_true', help='Build systemc tests')
 
-from gem5_scons import Transform, error, warning
+from gem5_scons import Transform, error, warning, summarize_warnings
 
 if GetOption('no_lto') and GetOption('force_lto'):
     error('--no-lto and --force-lto are mutually exclusive')
@@ -1274,3 +1275,5 @@ Global build variables:
 
 %(local_vars)s
 ''' % help_texts)
+
+atexit.register(summarize_warnings)
