@@ -283,21 +283,6 @@ do_initparam(int argc, char *argv[])
     printf("%"PRIu64, val);
 }
 
-void
-do_sw99param(int argc, char *argv[])
-{
-    if (argc != 0)
-        usage();
-
-    uint64_t param = m5_init_param(0, 0);
-
-    // run-time, rampup-time, rampdown-time, warmup-time, connections
-    printf("%"PRId64" %"PRId64" %"PRId64" %"PRId64" %"PRId64,
-           (param >> 48) & 0xfff,
-           (param >> 36) & 0xfff, (param >> 24) & 0xfff,
-           (param >> 12) & 0xfff, (param >> 0) & 0xfff);
-}
-
 struct MainFunc
 {
     char *name;
@@ -340,8 +325,6 @@ struct MainFunc mainfuncs[] = {
                                              "delay (default 0) reset the "
                                              "stats, and then optionally "
                                              "every period after" },
-    { "sw99param",      do_sw99param,        "read the default initparam and "
-                                             "display it in 12 bit chunks"}
     { "writefile",      do_write_file,       "<filename> [host filename] // "
                                              "Write a file to the host, "
                                              "optionally with a different "
