@@ -66,6 +66,7 @@
 #define M5OP_ADD_SYMBOL         0x53
 #define M5OP_PANIC              0x54
 
+#define M5OP_ANNOTATE           0x55 // deprecated annotate function
 #define M5OP_RESERVED2          0x56 // Reserved for user
 #define M5OP_RESERVED3          0x57 // Reserved for user
 #define M5OP_RESERVED4          0x58 // Reserved for user
@@ -78,8 +79,6 @@
 #define M5OP_SE_PAGE_FAULT      0x61
 #define M5OP_DIST_TOGGLE_SYNC   0x62
 
-// These operations are for critical path annotation
-#define M5OP_ANNOTATE           0x55
 
 #define M5OP_FOREACH                                            \
     M5OP(m5_arm, M5OP_ARM);                                     \
@@ -97,14 +96,16 @@
     M5OP(m5_dump_stats, M5OP_DUMP_STATS);                       \
     M5OP(m5_dump_reset_stats, M5OP_DUMP_RESET_STATS);           \
     M5OP(m5_checkpoint, M5OP_CHECKPOINT);                       \
-    M5OP(m5_read_file, M5OP_READ_FILE);                         \
     M5OP(m5_write_file, M5OP_WRITE_FILE);                       \
+    M5OP(m5_read_file, M5OP_READ_FILE);                         \
     M5OP(m5_debug_break, M5OP_DEBUG_BREAK);                     \
     M5OP(m5_switch_cpu, M5OP_SWITCH_CPU);                       \
     M5OP(m5_add_symbol, M5OP_ADD_SYMBOL);                       \
     M5OP(m5_panic, M5OP_PANIC);                                 \
     M5OP(m5_work_begin, M5OP_WORK_BEGIN);                       \
     M5OP(m5_work_end, M5OP_WORK_END);                           \
+    M5OP(m5_se_syscall, M5OP_SE_SYSCALL);                       \
+    M5OP(m5_se_page_fault, M5OP_SE_PAGE_FAULT);                 \
     M5OP(m5_dist_toggle_sync, M5OP_DIST_TOGGLE_SYNC);
 
 #endif //  __GEM5_ASM_GENERIC_M5OPS_H__
