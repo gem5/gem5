@@ -214,19 +214,6 @@ def makePathListAbsolute(path_list, root=GetLaunchDir()):
     return [abspath(joinpath(root, expanduser(str(p))))
             for p in path_list]
 
-def find_first_prog(prog_names):
-    """Find the absolute path to the first existing binary in prog_names"""
-
-    if not isinstance(prog_names, (list, tuple)):
-        prog_names = [ prog_names ]
-
-    for p in prog_names:
-        p = main.WhereIs(p)
-        if p is not None:
-            return p
-
-    return None
-
 # Each target must have 'build' in the interior of the path; the
 # directory below this will determine the build parameters.  For
 # example, for target 'foo/bar/build/X86/arch/x86/blah.do' we
@@ -679,7 +666,7 @@ if main['USE_PYTHON']:
     # version of python, see above for instructions on how to invoke
     # scons with the appropriate PATH set.
 
-    python_config = find_first_prog(main['PYTHON_CONFIG'])
+    python_config = main.Detect(main['PYTHON_CONFIG'])
     if python_config is None:
         error("Can't find a suitable python-config, tried %s" % \
               main['PYTHON_CONFIG'])
