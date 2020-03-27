@@ -43,11 +43,23 @@
 .macro	m5op_func, name, func
         .globl \name
         \name:
-        .long 0xff000110 | (\func << 16)
+        // Load the value of m5_mem into x9...
+#if defined(M5OP_PIC)
+        // using the global offset table.
+        adrp x9, :got:m5_mem
+        ldr x9, [ x9, #:got_lo12:m5_mem ]
+        ldr x9, [ x9 ]
+#else
+        // normally.
+        adrp x9, m5_mem
+        ldr x9, [ x9, #:lo12:m5_mem ]
+#endif
+        movz x10, #(\func << 8)
+        ldr x0, [ x9, x10 ]
         ret
 .endm
 
 .text
-#define M5OP(name, func) m5op_func name, func;
+#define M5OP(name, func) m5op_func M5OP_MERGE_TOKENS(name, _addr), func;
         M5OP_FOREACH
 #undef M5OP

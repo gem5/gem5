@@ -28,3 +28,5 @@ Import('*')
 env['VARIANT'] = 'arm'
 get_variant_opt('CROSS_COMPILE', 'arm-linux-gnueabihf-')
 env.Append(CFLAGS='-march=armv7-a')
+
+env['CALL_TYPE']['inst'].impl('m5op.S', default=True)

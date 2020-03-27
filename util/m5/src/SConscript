@@ -29,30 +29,47 @@ Import('*')
 
 # Raw source files.
 m5_mmap = 'm5_mmap.c'
-m5op = '${VARIANT}/m5op.S'
 m5 = 'm5.c'
 jni = 'jni_gem5Op.c'
 lua = 'lua_gem5Op.c'
 
+all_call_types = list(env['CALL_TYPE'].values())
+call_types = list([ ct for ct in all_call_types if ct.enabled ])
+m5ops = list([ '${VARIANT}/%s' % ct.impl_file for ct in call_types ])
+
+default_call_type = list([ ct for ct in call_types if ct.default ])
+assert len(default_call_type) == 1, \
+        'There should be exactly one default call type for %s, found %d' % \
+        (env['VARIANT'], len(default_call_type))
+default_call_type = default_call_type[0]
+
 static_env = env.Clone()
 static_env.Append(LINKFLAGS=[ '-no-pie', '-static' ])
+
+for ct in all_call_types:
+    static_env.Append(CFLAGS='-DENABLE_CT_%s=%d' %
+                (ct.name, 1 if ct.enabled else 0))
+    static_env.Append(CFLAGS='-DDEFAULT_CT_%s=%d' %
+                (ct.name, 1 if ct.default else 0))
+static_env.Append(CFLAGS='-DDEFAULT_CALL_TYPE=%s' % default_call_type.name)
 
 #
 # The m5 library for use in other C/C++ programs.
 #
-libm5 = static_env.StaticLibrary('out/m5', [ m5op, m5_mmap ])
+libm5 = static_env.StaticLibrary('out/m5', [ m5_mmap ] + m5ops)
 
 
 #
 # The m5 stand alone command line utility.
 #
-m5_bin = static_env.Program('out/m5', [ m5, m5_mmap, libm5 ])
+ct_support = list([ File('%s_call_type.c' % ct.name) for ct in call_types ])
+m5_bin = static_env.Program('out/m5', ct_support + [ m5, m5_mmap, libm5 ])
 
 
 # The shared version of the m5 op call sights, used by mutliple targets below.
 shared_env = env.Clone()
 shared_env.Append(ASFLAGS='-DM5OP_PIC')
-m5op_shared = shared_env.SharedObject(m5op)
+m5op_shared = shared_env.SharedObject(m5ops)
 
 if env['HAVE_JAVA']:
     #
@@ -71,7 +88,7 @@ if env['HAVE_JAVA']:
                      OUT=Dir('out'), CWD=Dir('.'))
     # Set include paths to the C headers from the JDK which scons found for us.
     java_env.Append(CPPPATH='${JAVAINCLUDES}')
-    java_env.SharedLibrary('out/gem5OpJni', [ jni, m5op_shared ])
+    java_env.SharedLibrary('out/gem5OpJni', [ jni ] + m5op_shared)
 
 
 if env['HAVE_LUA51']:
@@ -81,4 +98,5 @@ if env['HAVE_LUA51']:
     lua_env = shared_env.Clone()
     # Extract the include paths needed for lua51 using pkg-config.
     lua_env.ParseConfig('pkg-config --cflags lua51')
-    lib = lua_env.SharedLibrary('out/gem5OpLua', [ lua, m5op_shared, m5_mmap ])
+    lib = lua_env.SharedLibrary('out/gem5OpLua',
+                                [ lua, m5_mmap ] + m5op_shared)

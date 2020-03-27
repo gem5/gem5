@@ -28,57 +28,18 @@
 
 #include <gem5/asm/generic/m5ops.h>
 
-/*
-  Note: The ABI for pseudo ops using the M5OP_ADDR is defined in
-  src/arch/x86/pseudo_inst_abi.hh. If the ABI is changed below, it's likely
-  that the ABI in the arch directory will also need to be updated.
+.macro m5op_func, name, func
+        .globl \name
+        .func \name
+\name:
+        .byte 0x0F, 0x04
+        .word \func
+        ret
+        .endfunc
+.endm
 
-  The ABI for the magic instruction-based pseudo ops is not affected by this.
-*/
+.text
 
-#if defined(M5OP_ADDR) && defined(M5OP_PIC)
-/* Use the memory mapped m5op interface */
-#define TWO_BYTE_OP(name, number)         \
-        .globl name;                      \
-        .func name;                       \
-name:                                     \
-        mov m5_mem@gotpcrel(%rip), %r11;  \
-        mov (%r11), %r11;                 \
-        mov $number, %rax;                \
-        shl $8, %rax;                     \
-        mov 0(%r11, %rax, 1), %rax;       \
-        ret;                              \
-        .endfunc;
-
-#elif defined(M5OP_ADDR) && !defined(M5OP_PIC)
-/* Use the memory mapped m5op interface */
-#define TWO_BYTE_OP(name, number)         \
-        .globl name;                      \
-        .func name;                       \
-name:                                     \
-        mov m5_mem, %r11;                 \
-        mov $number, %rax;                \
-        shl $8, %rax;                     \
-        mov 0(%r11, %rax, 1), %rax;       \
-        ret;                              \
-        .endfunc;
-
-#else
-/* Use the magic instruction based m5op interface. This does not work
- * in virtualized environments.
- */
-
-#define TWO_BYTE_OP(name, number)         \
-        .globl name;                      \
-        .func name;                       \
-name:                                     \
-        .byte 0x0F, 0x04;                 \
-        .word number;                     \
-        ret;                              \
-        .endfunc;
-
-#endif
-
-#define M5OP(name, number) TWO_BYTE_OP(name, number)
+#define M5OP(name, func) m5op_func name, func;
         M5OP_FOREACH
 #undef M5OP

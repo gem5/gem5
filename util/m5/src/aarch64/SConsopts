@@ -27,3 +27,6 @@ Import('*')
 
 env['VARIANT'] = 'aarch64'
 get_variant_opt('CROSS_COMPILE', 'aarch64-linux-gnu-')
+
+env['CALL_TYPE']['inst'].impl('m5op.S', default=True)
+env['CALL_TYPE']['addr'].impl('m5op_addr.S')

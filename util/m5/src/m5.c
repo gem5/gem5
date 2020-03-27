@@ -51,18 +51,13 @@
 
 #include <gem5/asm/generic/m5ops.h>
 #include <gem5/m5ops.h>
+#include "call_type.h"
 #include "dispatch_table.h"
 #include "m5_mmap.h"
 
 char *progname;
 char *command = "unspecified";
 void usage();
-
-DispatchTable default_dispatch = {
-#define M5OP(name, func) .name = &name,
-M5OP_FOREACH
-#undef M5OP
-};
 
 void
 parse_int_args(int argc, char *argv[], uint64_t ints[], int len)
@@ -323,13 +318,29 @@ int numfuncs = sizeof(mainfuncs) / sizeof(mainfuncs[0]);
 void
 usage()
 {
-    int i;
-
-    for (i = 0; i < numfuncs; ++i) {
-        char *header = i ? "" : "usage:";
-        fprintf(stderr, "%-6s %s %s %s\n",
-                header, progname, mainfuncs[i].name, mainfuncs[i].usage);
-    }
+    fprintf(stderr, "Usage: %s [call type] <command> [arguments]\n", progname);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Call types:\n");
+#   if ENABLE_CT_addr
+    fprintf(stderr, "    --addr%s\n", DEFAULT_CT_addr ? " (default)" : "");
+    fprintf(stderr, "        Use the address based invocation method.\n");
+#   if defined(M5OP_ADDR)
+    fprintf(stderr, "        The address is %#"PRIx64".\n",
+            (uint64_t)M5OP_ADDR);
+#   endif
+#   endif
+#   if ENABLE_CT_inst
+    fprintf(stderr, "    --inst%s\n", DEFAULT_CT_inst ? " (default)" : "");
+    fprintf(stderr, "        Use the instruction based invocation method.\n");
+#   endif
+#   if ENABLE_CT_semi
+    fprintf(stderr, "    --semi%s\n", DEFAULT_CT_semi ? " (default)" : "");
+    fprintf(stderr, "        Use the semi-hosting based invocation method.\n");
+#   endif
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Commands:\n");
+    for (int i = 0; i < numfuncs; ++i)
+        fprintf(stderr, "    %s %s\n", mainfuncs[i].name, mainfuncs[i].usage);
     fprintf(stderr, "\n");
     fprintf(stderr, "All times in nanoseconds!\n");
 
@@ -340,22 +351,44 @@ int
 main(int argc, char *argv[])
 {
     progname = argv[0];
-    if (argc < 2)
+
+    argv++;
+    argc--;
+
+    DispatchTable *dt = NULL;
+
+#   if ENABLE_CT_inst
+    if (!dt && inst_call_type_detect(&argc, &argv)) {
+        dt = inst_call_type_init();
+    }
+#   endif
+#   if ENABLE_CT_addr
+    if (!dt && addr_call_type_detect(&argc, &argv)) {
+        dt = addr_call_type_init();
+    }
+#   endif
+#   if ENABLE_CT_semi
+    if (!dt && semi_call_type_detect(&argc, &argv)) {
+        dt = semi_call_type_init();
+    }
+#   endif
+    if (!dt)
+        dt = default_call_type_init();
+
+    if (!argc)
         usage(1);
 
-    map_m5_mem();
+    command = argv[0];
 
-    command = argv[1];
-
-    argv += 2;
-    argc -= 2;
+    argv++;
+    argc--;
 
     int i;
     for (i = 0; i < numfuncs; ++i) {
         if (strcmp(command, mainfuncs[i].name) != 0)
             continue;
 
-        mainfuncs[i].func(&default_dispatch, argc, argv);
+        mainfuncs[i].func(dt, argc, argv);
         exit(0);
     }
 

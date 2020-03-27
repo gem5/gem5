@@ -29,6 +29,10 @@
 
 #include "semi_call_type.h"
 
+#define M5OP(name, func) __typeof__(name) M5OP_MERGE_TOKENS(name, _semi);
+M5OP_FOREACH
+#undef M5OP
+
 static DispatchTable semi_dispatch = {
 #define M5OP(name, func) .name = &M5OP_MERGE_TOKENS(name, _semi),
 M5OP_FOREACH

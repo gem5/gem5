@@ -53,5 +53,6 @@ addr_call_type_detect(int *argc, char **argv[])
 DispatchTable *
 addr_call_type_init()
 {
+    map_m5_mem();
     return &addr_dispatch;
 }

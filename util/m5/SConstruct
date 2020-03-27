@@ -23,6 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import copy
 import os
 
 main = Environment()
@@ -59,10 +60,33 @@ main.SConsignFile(os.path.join(abspath(build_dir), 'sconsign'))
 # Use soft links instead of hard links when setting up a build directory.
 main.SetOption('duplicate', 'soft-copy')
 
+class CallType(object):
+    def __init__(self, name):
+        self.name = name
+        self.impl_file = None
+        self.enabled = False
+        self.default = False
+
+    def impl(self, impl, default=False):
+        self.impl_file = impl
+        self.enabled = True
+        self.default = default
+
+call_types = {
+    # Magic instruction.
+    'inst': CallType('inst'),
+    # Magic address.
+    'addr': CallType('addr'),
+    # Semihosting extension.
+    'semi': CallType('semi'),
+}
+
 for root, dirs, files in os.walk(abspath(src_dir)):
     # Each SConsopts file describes a variant of the m5 utility.
     if 'SConsopts' in files:
         env = main.Clone()
+
+        env['CALL_TYPE'] = copy.deepcopy(call_types)
 
         # The user may override variant settings by setting environment
         # variables of the form ${VARIANT}.${OPTION}. For instance, to set the
