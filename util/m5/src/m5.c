@@ -51,6 +51,8 @@
 
 #include <gem5/asm/generic/m5ops.h>
 #include <gem5/m5ops.h>
+
+#include "args.h"
 #include "call_type.h"
 #include "dispatch_table.h"
 #include "m5_mmap.h"
@@ -58,47 +60,6 @@
 char *progname;
 char *command = "unspecified";
 void usage();
-
-void
-parse_int_args(int argc, char *argv[], uint64_t ints[], int len)
-{
-    if (argc > len)
-        usage();
-
-// On 32 bit platforms we need to use strtoull to do the conversion
-#ifdef __LP64__
-#define strto64 strtoul
-#else
-#define strto64 strtoull
-#endif
-    int i;
-    for (i = 0; i < len; ++i)
-        ints[i] = (i < argc) ? strto64(argv[i], NULL, 0) : 0;
-
-#undef strto64
-}
-
-void
-pack_str_into_regs(const char *str, uint64_t regs[], int num_regs)
-{
-    const size_t RegSize = sizeof(regs[0]);
-    const size_t MaxLen = num_regs * RegSize;
-
-    size_t len = strlen(str);
-
-    if (len > MaxLen)
-        usage();
-
-    memset(regs, 0, MaxLen);
-
-    while (len) {
-        for (int offset = 0; offset < RegSize && len; offset++, len--) {
-            int shift = offset * 8;
-            *regs |= (uint64_t)(uint8_t)*str++ << shift;
-        }
-        regs++;
-    }
-}
 
 int
 read_file(DispatchTable *dt, int dest_fid)
@@ -168,7 +129,8 @@ do_exit(DispatchTable *dt, int argc, char *argv[])
         usage();
 
     uint64_t ints[1];
-    parse_int_args(argc, argv, ints, 1);
+    if (!parse_int_args(argc, argv, ints, 1))
+        usage();
     (*dt->m5_exit)(ints[0]);
 }
 
@@ -179,7 +141,8 @@ do_fail(DispatchTable *dt, int argc, char *argv[])
         usage();
 
     uint64_t ints[2] = {0,0};
-    parse_int_args(argc, argv, ints, argc);
+    if (!parse_int_args(argc, argv, ints, argc))
+        usage();
     (*dt->m5_fail)(ints[1], ints[0]);
 }
 
@@ -187,7 +150,8 @@ void
 do_reset_stats(DispatchTable *dt, int argc, char *argv[])
 {
     uint64_t ints[2];
-    parse_int_args(argc, argv, ints, 2);
+    if (!parse_int_args(argc, argv, ints, 2))
+        usage();
     (*dt->m5_reset_stats)(ints[0], ints[1]);
 }
 
@@ -195,7 +159,8 @@ void
 do_dump_stats(DispatchTable *dt, int argc, char *argv[])
 {
     uint64_t ints[2];
-    parse_int_args(argc, argv, ints, 2);
+    if (!parse_int_args(argc, argv, ints, 2))
+        usage();
     (*dt->m5_dump_stats)(ints[0], ints[1]);
 }
 
@@ -203,7 +168,8 @@ void
 do_dump_reset_stats(DispatchTable *dt, int argc, char *argv[])
 {
     uint64_t ints[2];
-    parse_int_args(argc, argv, ints, 2);
+    if (!parse_int_args(argc, argv, ints, 2))
+        usage();
     (*dt->m5_dump_reset_stats)(ints[0], ints[1]);
 }
 
@@ -232,7 +198,8 @@ void
 do_checkpoint(DispatchTable *dt, int argc, char *argv[])
 {
     uint64_t ints[2];
-    parse_int_args(argc, argv, ints, 2);
+    if (!parse_int_args(argc, argv, ints, 2))
+        usage();
     (*dt->m5_checkpoint)(ints[0], ints[1]);
 }
 
@@ -264,7 +231,8 @@ do_initparam(DispatchTable *dt, int argc, char *argv[])
         usage();
 
     uint64_t key_str[2];
-    pack_str_into_regs(argc == 0 ? "" : argv[0], key_str, 2);
+    if (!pack_str_into_regs(argc == 0 ? "" : argv[0], key_str, 2))
+        usage();
     uint64_t val = (*dt->m5_init_param)(key_str[0], key_str[1]);
     printf("%"PRIu64, val);
 }
