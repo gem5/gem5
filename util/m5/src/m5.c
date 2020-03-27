@@ -290,10 +290,16 @@ usage()
     fprintf(stderr, "\n");
     fprintf(stderr, "Call types:\n");
 #   if ENABLE_CT_addr
-    fprintf(stderr, "    --addr%s\n", DEFAULT_CT_addr ? " (default)" : "");
+    fprintf(stderr, "    --addr %s%s\n",
+#   if defined(M5OP_ADDR)
+            "[address override]",
+#   else
+            "<address override>",
+#   endif
+            DEFAULT_CT_addr ? " (default)" : "");
     fprintf(stderr, "        Use the address based invocation method.\n");
 #   if defined(M5OP_ADDR)
-    fprintf(stderr, "        The address is %#"PRIx64".\n",
+    fprintf(stderr, "        The default address is %#"PRIx64".\n",
             (uint64_t)M5OP_ADDR);
 #   endif
 #   endif
@@ -331,8 +337,12 @@ main(int argc, char *argv[])
     }
 #   endif
 #   if ENABLE_CT_addr
-    if (!dt && addr_call_type_detect(&argc, &argv)) {
-        dt = addr_call_type_init();
+    if (!dt) {
+        int detect = addr_call_type_detect(&argc, &argv);
+        if (detect < 0)
+            usage();
+        if (detect > 0)
+            dt = addr_call_type_init();
     }
 #   endif
 #   if ENABLE_CT_semi

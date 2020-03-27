@@ -30,6 +30,7 @@
 
 #include "dispatch_table.h"
 
+// Returns 0 if not detected, 1 if detected successfully, and -1 on error.
 int addr_call_type_detect(int *argc, char **argv[]);
 DispatchTable *addr_call_type_init();
 

@@ -42,9 +42,11 @@
 #define __UTIL_M5_MMAP_H__
 
 #include <fcntl.h>
+#include <stdint.h>
 #include <sys/mman.h>
 
 extern void *m5_mem;
+extern uint64_t m5op_addr;
 
 void map_m5_mem();
 

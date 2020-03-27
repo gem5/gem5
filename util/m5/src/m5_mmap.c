@@ -49,10 +49,14 @@
 
 void *m5_mem = NULL;
 
+#ifndef M5OP_ADDR
+#define M5OP_ADDR 0
+#endif
+uint64_t m5op_addr = M5OP_ADDR;
+
 void
 map_m5_mem()
 {
-#ifdef M5OP_ADDR
     int fd;
 
     fd = open("/dev/mem", O_RDWR | O_SYNC);
@@ -62,10 +66,9 @@ map_m5_mem()
     }
 
     m5_mem = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
-                  M5OP_ADDR);
+                  m5op_addr);
     if (!m5_mem) {
         perror("Can't mmap /dev/mem");
         exit(1);
     }
-#endif
 }
