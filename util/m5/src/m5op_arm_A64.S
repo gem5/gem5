@@ -44,7 +44,17 @@
 .macro	m5op_func, name, func
         .globl \name
         \name:
-        ldr x9, m5_mem
+        // Load the value of m5_mem into x9...
+#if defined(M5OP_PIC)
+        // using the global offset table.
+        adrp x9, :got:m5_mem
+        ldr x9, [ x9, #:got_lo12:m5_mem ]
+        ldr x9, [ x9 ]
+#else
+        // normally.
+        adrp x9, m5_mem
+        ldr x9, [ x9, #:lo12:m5_mem ]
+#endif
         movz x10, #(\func << 8)
         ldr x0, [ x9, x10 ]
         ret
