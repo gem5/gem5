@@ -1146,12 +1146,21 @@ let {{
     allTypes = unsignedTypes + signedTypes
 
     def threeEqualRegInst(name, Name, opClass, types, rCount, op,
-                          readDest=False, pairwise=False,
-                          standardFpcsr=False):
+                          readDest=False, pairwise=False, byElem=False,
+                          standardFpcsr=False, complex=False):
         global header_output, exec_output
         eWalkCode = simdEnabledCheckCode + '''
-        RegVect srcReg1, srcReg2, destReg;
-        '''
+                    RegVect srcReg1, destReg;
+                    '''
+        if byElem:
+            # 2nd register operand has to be read fully
+            eWalkCode += '''
+                FullRegVect srcReg2;
+                '''
+        else:
+            eWalkCode += '''
+            RegVect srcReg2;
+            '''
         for reg in range(rCount):
             eWalkCode += '''
                 srcReg1.regs[%(reg)d] = htole(FpOp1P%(reg)d_uw);
@@ -1161,6 +1170,13 @@ let {{
                 eWalkCode += '''
                     destReg.regs[%(reg)d] = htole(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
+        if byElem:
+            # 2nd operand has to be read fully
+            for reg in range(rCount, 4):
+                eWalkCode += '''
+        srcReg2.regs[%(reg)d] = htole(FpOp2P%(reg)d_uw);
+        ''' % { "reg" : reg }
+
         readDestCode = ''
         if standardFpcsr:
             eWalkCode += '''
@@ -1168,7 +1184,10 @@ let {{
             '''
         if readDest:
             readDestCode = 'destElem = letoh(destReg.elements[i]);'
-        if pairwise:
+
+        if complex:
+            eWalkCode += op
+        elif pairwise:
             eWalkCode += '''
             for (unsigned i = 0; i < eCount; i++) {
                 Element srcElem1 = letoh(2 * i < eCount ?
@@ -1203,12 +1222,15 @@ let {{
             FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
             ''' % { "reg" : reg }
         iop = InstObjParams(name, Name,
-                            "RegRegRegOp",
-                            { "code": eWalkCode,
-                              "r_count": rCount,
-                              "predicate_test": predicateTest,
-                              "op_class": opClass }, [])
-        header_output += NeonRegRegRegOpDeclare.subst(iop)
+                            "RegRegRegImmOp" if byElem else "RegRegRegOp",
+                             { "code": eWalkCode,
+                               "r_count": rCount,
+                               "predicate_test": predicateTest,
+                               "op_class": opClass }, [])
+        if byElem:
+            header_output += NeonRegRegRegImmOpDeclare.subst(iop)
+        else:
+            header_output += NeonRegRegRegOpDeclare.subst(iop)
         exec_output += NeonEqualRegExecute.subst(iop)
         for type in types:
             substDict = { "targs" : type,
@@ -2185,6 +2207,119 @@ let {{
                    (sizeof(Element) * 8);
     '''
     threeRegNarrowInst("vrsubhn", "Vrsubhn", "SimdAddOp", smallTypes, vrsubhnCode)
+
+    vcaddCode = '''
+        bool rot = bits(machInst, 24);
+        Element el1;
+        Element el3;
+
+        for (int i = 0; i < eCount/2; ++i) {
+            Element srcElem1_1 = letoh(srcReg1.elements[2*i]);
+            Element srcElem1_2 = letoh(srcReg1.elements[2*i+1]);
+            Element srcElem2_1 = letoh(srcReg2.elements[2*i]);
+            Element srcElem2_2 = letoh(srcReg2.elements[2*i+1]);
+            Element destElem_1;
+            Element destElem_2;
+            if (rot) {
+                el1 = srcElem2_2;
+                el3 = fplibNeg<Element>(srcElem2_1);
+            } else {
+                el1 = fplibNeg<Element>(srcElem2_2);
+                el3 = srcElem2_1;
+            }
+
+            destElem_1 = fplibAdd<Element>(srcElem1_1, el1, fpscr);
+            destElem_2 = fplibAdd<Element>(srcElem1_2, el3, fpscr);
+            destReg.elements[2*i] = htole(destElem_1);
+            destReg.elements[2*i+1] = htole(destElem_2);
+         }
+         '''
+
+    # VCADD
+    threeEqualRegInst("vcadd", "VcaddD", "SimdFloatAddOp",
+                            ("uint16_t", "uint32_t"), 2, vcaddCode,
+                            standardFpcsr=True, complex=True)
+    threeEqualRegInst("vcadd", "VcaddQ", "SimdFloatAddOp",
+                            ("uint16_t", "uint32_t"), 4,
+                           vcaddCode, standardFpcsr=True, complex=True)
+
+    vcmlaCode = '''
+        uint8_t rot = bits(machInst, %(rot)s);
+        Element el1;
+        Element el2;
+        Element el3;
+        Element el4;
+        for (int i = 0; i < eCount/2; ++i) {
+
+            Element srcElem1_1 = letoh(srcReg1.elements[2*i]);
+            Element srcElem1_2 = letoh(srcReg1.elements[2*i+1]);
+            Element srcElem2_1 = letoh(srcReg2.elements[2*%(index)s]);
+            Element srcElem2_2 = letoh(srcReg2.elements[2*%(index)s+1]);
+            Element destElem_1 = letoh(destReg.elements[2*i]);
+            Element destElem_2 = letoh(destReg.elements[2*i+1]);
+
+            switch (rot) {
+              case 0x0:
+                {
+                  el1 = srcElem2_1;
+                  el2 = srcElem1_1;
+                  el3 = srcElem2_2;
+                  el4 = srcElem1_1;
+                  break;
+                }
+              case 0x1:
+                {
+                  el1 = fplibNeg<Element>(srcElem2_2);
+                  el2 = srcElem1_2;
+                  el3 = srcElem2_1;
+                  el4 = srcElem1_2;
+                  break;
+                }
+              case 0x2:
+                {
+                  el1 = fplibNeg<Element>(srcElem2_1);
+                  el2 = srcElem1_1;
+                  el3 = fplibNeg<Element>(srcElem2_2);
+                  el4 = srcElem1_1;
+                  break;
+                }
+              case 0x3:
+                {
+                  el1 = srcElem2_2;
+                  el2 = srcElem1_2;
+                  el3 = fplibNeg<Element>(srcElem2_1);
+                  el4 = srcElem1_2;
+                  break;
+                }
+            }
+
+            destElem_1 = fplibMulAdd<Element>(destElem_1, el2, el1, fpscr);
+            destElem_2 = fplibMulAdd<Element>(destElem_2, el4, el3, fpscr);
+
+            destReg.elements[2*i] = htole(destElem_1);
+            destReg.elements[2*i+1] = htole(destElem_2);
+         }
+         '''
+
+    # VCMLA (by element)
+    vcmla_imm = vcmlaCode % {'rot': '21, 20', 'index': 'imm'}
+    threeEqualRegInst("vcmla", "VcmlaElemD", "SimdFloatMultAccOp",
+                           ("uint16_t", "uint32_t"), 2, vcmla_imm,
+                           readDest=True, byElem=True, standardFpcsr=True,
+                           complex=True)
+    threeEqualRegInst("vcmla", "VcmlaElemQ", "SimdFloatMultAccOp",
+                           ("uint16_t", "uint32_t"), 4, vcmla_imm,
+                           readDest=True, byElem=True, standardFpcsr=True,
+                           complex=True)
+
+    # FCMLA (vector)
+    vcmla_vec = vcmlaCode % {'rot': '24, 23', 'index': 'i'}
+    threeEqualRegInst("vcmla", "VcmlaD", "SimdFloatMultAccOp",
+                            ("uint16_t", "uint32_t"), 2, vcmla_vec,
+                             readDest=True, standardFpcsr=True, complex=True)
+    threeEqualRegInst("vcmla", "VcmlaQ", "SimdFloatMultAccOp",
+                            ("uint16_t", "uint32_t"), 4, vcmla_vec,
+                             readDest=True, standardFpcsr=True, complex=True)
 
     vqaddSCode = '''
         destElem = srcElem1 + srcElem2;

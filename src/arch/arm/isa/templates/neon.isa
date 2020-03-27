@@ -215,10 +215,16 @@ def template NeonEqualRegExecute {{
 
         const unsigned rCount = %(r_count)d;
         const unsigned eCount = rCount * sizeof(uint32_t) / sizeof(Element);
+        const unsigned eCountFull = 4 * sizeof(uint32_t) / sizeof(Element);
 
         union RegVect {
             uint32_t regs[rCount];
             Element elements[eCount];
+        };
+
+        union FullRegVect {
+            uint32_t regs[4];
+            Element elements[eCountFull];
         };
 
         if (%(predicate_test)s)

@@ -39,6 +39,9 @@ namespace Aarch64
     // AdvSIMD three same
     template <typename DecoderFeatures>
     StaticInstPtr decodeNeon3Same(ExtMachInst machInst);
+    // AdvSIMD three same Extra
+    template <typename DecoderFeatures>
+    StaticInstPtr decodeNeon3SameExtra(ExtMachInst machInst);
     // AdvSIMD three different
     inline StaticInstPtr decodeNeon3Diff(ExtMachInst machInst);
     // AdvSIMD two-reg misc
@@ -495,6 +498,48 @@ namespace Aarch64
                     return decodeNeonUThreeFpReg<FrsqrtsDX, FrsqrtsQX>(
                         q, size & 0x1, machInst, vd, vn, vm);
             }
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    template <typename DecoderFeatures>
+    StaticInstPtr
+    decodeNeon3SameExtra(ExtMachInst machInst)
+    {
+        uint8_t q      = bits(machInst, 30);
+        uint8_t size   = bits(machInst, 23, 22);
+        uint8_t opcode = bits(machInst, 15, 11);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        switch (opcode) {
+          case 0x18:
+          case 0x19:
+          case 0x1a:
+          case 0x1b:
+            if (size == 0x1) {
+               if (q)
+                   return new FcmlaQX<uint16_t>(machInst, vd, vn, vm);
+               else
+                   return new FcmlaDX<uint16_t>(machInst, vd, vn, vm);
+            } else
+            return decodeNeonUThreeFpReg<FcmlaDX, FcmlaQX>(
+                                q, size & 0x1, machInst, vd, vn, vm);
+
+          case 0x1c:
+          case 0x1e:
+            if (size == 0x1) {
+               if (q)
+                   return new FcaddQX<uint16_t>(machInst, vd, vn, vm);
+               else
+                   return new FcaddDX<uint16_t>(machInst, vd, vn, vm);
+            } else
+                return decodeNeonUThreeFpReg<FcaddDX, FcaddQX>(
+                                    q, size & 0x1, machInst, vd, vn, vm);
+
           default:
             return new Unknown64(machInst);
         }
@@ -1324,7 +1369,27 @@ namespace Aarch64
             if (!u && size >= 2 && sz_q != 0x2 && sz_L != 0x3)
                 return decodeNeonUThreeImmFpReg<FmlaElemDX, FmlaElemQX>(
                     q, sz, machInst, vd, vn, vm_fp, index_fp);
-            else
+            else if (u && (size == 1 || size == 2)){
+                // FCMLA by element
+                if (size == 0x2) {
+                    index_fp = H;
+                    if (q)
+                        return new FcmlaElemQX<uint32_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                    else
+                        return new FcmlaElemDX<uint32_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                } else {
+                    index_fp = (H << 1) | L;
+                    if (q)
+                        return new FcmlaElemQX<uint16_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                    else
+                        return new FcmlaElemDX<uint16_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                }
+
+            } else
                 return new Unknown64(machInst);
           case 0x2:
             if (size == 0x0 || size == 0x3)
@@ -1336,7 +1401,26 @@ namespace Aarch64
                 return decodeNeonSThreeImmHAndWReg<SmlalElemX, SmlalElem2X>(
                     q, size, machInst, vd, vn, vm, index);
           case 0x3:
-            if (u || (size == 0x0 || size == 0x3))
+            if (u && (size == 1 || size == 2)){
+                // FCMLA by element
+                if (size == 0x2) {
+                    index_fp = H;
+                    if (q)
+                        return new FcmlaElemQX<uint32_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                    else
+                        return new FcmlaElemDX<uint32_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                } else {
+                    index_fp = (H << 1) | L;
+                    if (q)
+                        return new FcmlaElemQX<uint16_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                    else
+                        return new FcmlaElemDX<uint16_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                }
+            } else if (u || (size == 0x0 || size == 0x3))
                 return new Unknown64(machInst);
             else
                 return decodeNeonSThreeImmHAndWReg<SqdmlalElemX,
@@ -1352,7 +1436,26 @@ namespace Aarch64
             if (!u && size >= 0x2 && sz_L != 0x3 && sz_q != 0x2)
                 return decodeNeonUThreeImmFpReg<FmlsElemDX, FmlsElemQX>(
                     q, sz, machInst, vd, vn, vm_fp, index_fp);
-            else
+            else if (u && (size == 1 || size == 2)){
+                // FCMLA by element
+                if (size == 0x2) {
+                    index_fp = H;
+                    if (q)
+                        return new FcmlaElemQX<uint32_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                    else
+                        return new FcmlaElemDX<uint32_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                } else {
+                    index_fp = (H << 1) | L;
+                    if (q)
+                        return new FcmlaElemQX<uint16_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                    else
+                        return new FcmlaElemDX<uint16_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                }
+            } else
                 return new Unknown64(machInst);
           case 0x6:
             if (size == 0x0 || size == 0x3)
@@ -1364,7 +1467,26 @@ namespace Aarch64
                 return decodeNeonSThreeImmHAndWReg<SmlslElemX, SmlslElem2X>(
                     q, size, machInst, vd, vn, vm, index);
           case 0x7:
-            if (u || (size == 0x0 || size == 0x3))
+             if (u && (size == 1 || size == 2)){
+                // FCMLA by element
+                if (size == 0x2) {
+                    index_fp = H;
+                    if (q)
+                        return new FcmlaElemQX<uint32_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                    else
+                        return new FcmlaElemDX<uint32_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                } else {
+                    index_fp = (H << 1) | L;
+                    if (q)
+                        return new FcmlaElemQX<uint16_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                    else
+                        return new FcmlaElemDX<uint16_t>(machInst, vd, vn,
+                                                        vm_fp, index_fp);
+                }
+             } else if (u || (size == 0x0 || size == 0x3))
                 return new Unknown64(machInst);
             else
                 return decodeNeonSThreeImmHAndWReg<SqdmlslElemX,

@@ -79,7 +79,7 @@ class ArmISA(BaseISA):
     id_isar2 = Param.UInt32(0x21232141, "Instruction Set Attribute Register 2")
     id_isar3 = Param.UInt32(0x01112131, "Instruction Set Attribute Register 3")
     id_isar4 = Param.UInt32(0x10010142, "Instruction Set Attribute Register 4")
-    id_isar5 = Param.UInt32(0x00000000, "Instruction Set Attribute Register 5")
+    id_isar5 = Param.UInt32(0x10000000, "Instruction Set Attribute Register 5")
 
     fpsid = Param.UInt32(0x410430a0, "Floating-point System ID Register")
 
@@ -101,8 +101,8 @@ class ArmISA(BaseISA):
     id_aa64isar0_el1 = Param.UInt64(0x0000000000000000,
         "AArch64 Instruction Set Attribute Register 0")
 
-    # GPI = 0x0 | GPA = 0x1| API=0x0 | APA=0x1
-    id_aa64isar1_el1 = Param.UInt64(0x0000000001000010,
+    # GPI = 0x0 | GPA = 0x1| API=0x0 | APA=0x1 | FCMA
+    id_aa64isar1_el1 = Param.UInt64(0x0000000001010010,
         "AArch64 Instruction Set Attribute Register 1")
 
     # 4K | 64K | !16K | !BigEndEL0 | !SNSMem | !BigEnd | 8b ASID | 40b PA

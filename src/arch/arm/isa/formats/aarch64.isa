@@ -2313,10 +2313,8 @@ namespace Aarch64
             } else {
                 return new Unknown64(machInst);
             }
-        } else if (bits(machInst, 24) ||
-                   bits(machInst, 21) ||
-                   bits(machInst, 15)) {
-            return new Unknown64(machInst);
+        } else if (bits(machInst, 15) == 1) {
+            return decodeNeon3SameExtra<DecoderFeatures>(machInst);
         } else if (bits(machInst, 10) == 1) {
             if (bits(machInst, 23, 22))
                 return new Unknown64(machInst);

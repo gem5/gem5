@@ -237,7 +237,9 @@ def format ArmUnconditional() {{
                     return new BlxImm(machInst, imm, COND_UC);
                 }
               case 0x2:
-                if (bits(op1, 4, 0) != 0) {
+                if (bits(machInst, 31, 25) == 0x7e){
+                    return decodeAdvancedSIMD(machInst);
+                } else if (bits(op1, 4, 0) != 0) {
                     if (CPNUM == 0xa || CPNUM == 0xb) {
                         return decodeExtensionRegLoadStore(machInst);
                     }
@@ -262,7 +264,9 @@ def format ArmUnconditional() {{
                 }
                 break;
               case 0x3:
-                if (bits(op1, 4) == 0) {
+                if (bits(machInst, 31, 24) == 0xfe) {
+                    return decodeAdvancedSIMD(machInst);
+                } else if (bits(op1, 4) == 0) {
                     if (CPNUM == 0xa || CPNUM == 0xb) {
                         return decodeShortFpTransfer(machInst);
                     } else if (CPNUM == 0xe) {

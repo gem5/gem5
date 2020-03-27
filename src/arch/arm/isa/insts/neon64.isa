@@ -52,7 +52,7 @@ let {{
 
     def threeEqualRegInstX(name, Name, opClass, types, rCount, op,
                            readDest=False, pairwise=False, scalar=False,
-                           byElem=False, decoder='Generic'):
+                           byElem=False, decoder='Generic', complex=False):
         assert (not pairwise) or ((not byElem) and (not scalar))
         global header_output, exec_output, decoders
         eWalkCode = simd64EnabledCheckCode + '''
@@ -85,7 +85,10 @@ let {{
         readDestCode = ''
         if readDest:
             readDestCode = 'destElem = letoh(destReg.elements[i]);'
-        if pairwise:
+
+        if complex:
+            eWalkCode += op
+        elif pairwise:
             eWalkCode += '''
         for (unsigned i = 0; i < eCount; i++) {
             Element srcElem1 = letoh(2 * i < eCount ?
@@ -975,6 +978,119 @@ let {{
                        True)
     threeEqualRegInstX("bsl", "BslQX", "SimdAluOp", ("uint64_t",), 4, bslCode,
                        True)
+
+    # FCADD
+    fcaddCode = '''
+        bool rot = bits(machInst, 12);
+        Element el1;
+        Element el3;
+        for (int i = 0; i < eCount/2; ++i) {
+            FPSCR fpscr = (FPSCR) FpscrExc;
+
+            Element srcElem1_1 = letoh(srcReg1.elements[2*i]);
+            Element srcElem1_2 = letoh(srcReg1.elements[2*i+1]);
+            Element srcElem2_1 = letoh(srcReg2.elements[2*i]);
+            Element srcElem2_2 = letoh(srcReg2.elements[2*i+1]);
+            Element destElem_1;
+            Element destElem_2;
+            if (rot) {
+                el1 = srcElem2_2;
+                el3 = fplibNeg<Element>(srcElem2_1);
+            } else {
+                el1 = fplibNeg<Element>(srcElem2_2);
+                el3 = srcElem2_1;
+            }
+
+            destElem_1 = fplibAdd<Element>(srcElem1_1, el1, fpscr);
+            destElem_2 = fplibAdd<Element>(srcElem1_2, el3, fpscr);
+
+            FpscrExc = fpscr;
+
+            destReg.elements[2*i] = htole(destElem_1);
+            destReg.elements[2*i+1] = htole(destElem_2);
+         }
+         '''
+
+    threeEqualRegInstX("fcadd", "FcaddDX", "SimdFloatAddOp",
+                            ("uint16_t", "uint32_t"), 2,
+                            fcaddCode, complex=True)
+    threeEqualRegInstX("fcadd", "FcaddQX", "SimdFloatAddOp", floatTypes, 4,
+                       fcaddCode, complex=True)
+
+    fcmlaCode = '''
+        uint8_t rot = bits(machInst, %(rot)s);
+        Element el1;
+        Element el2;
+        Element el3;
+        Element el4;
+        for (int i = 0; i < eCount/2; ++i) {
+            FPSCR fpscr = (FPSCR) FpscrExc;
+
+            Element srcElem1_1 = letoh(srcReg1.elements[2*i]);
+            Element srcElem1_2 = letoh(srcReg1.elements[2*i+1]);
+            Element srcElem2_1 = letoh(srcReg2.elements[2* %(index)s]);
+            Element srcElem2_2 = letoh(srcReg2.elements[2* %(index)s +1]);
+            Element destElem_1 = letoh(destReg.elements[2*i]);
+            Element destElem_2 = letoh(destReg.elements[2*i+1]);
+
+            switch (rot) {
+              case 0x0:
+                {
+                  el1 = srcElem2_1;
+                  el2 = srcElem1_1;
+                  el3 = srcElem2_2;
+                  el4 = srcElem1_1;
+                  break;
+                }
+              case 0x1:
+                {
+                  el1 = fplibNeg<Element>(srcElem2_2);
+                  el2 = srcElem1_2;
+                  el3 = srcElem2_1;
+                  el4 = srcElem1_2;
+                  break;
+                }
+              case 0x2:
+                {
+                  el1 = fplibNeg<Element>(srcElem2_1);
+                  el2 = srcElem1_1;
+                  el3 = fplibNeg<Element>(srcElem2_2);
+                  el4 = srcElem1_1;
+                  break;
+                }
+              case 0x3:
+                {
+                  el1 = srcElem2_2;
+                  el2 = srcElem1_2;
+                  el3 = fplibNeg<Element>(srcElem2_1);
+                  el4 = srcElem1_2;
+                  break;
+                }
+            }
+            destElem_1 = fplibMulAdd<Element>(destElem_1, el2, el1, fpscr);
+            destElem_2 = fplibMulAdd<Element>(destElem_2, el4, el3, fpscr);
+
+            FpscrExc = fpscr;
+
+            destReg.elements[2*i] = htole(destElem_1);
+            destReg.elements[2*i+1] = htole(destElem_2);
+         }
+         '''
+    # FCMLA (by element)
+    fcmla_imm = fcmlaCode % {'rot': '14, 13', 'index': 'imm'}
+    threeEqualRegInstX("fcmla", "FcmlaElemDX", "SimdFloatMultAccOp",
+                        ("uint16_t", "uint32_t"), 2, fcmla_imm, True,
+                        byElem=True, complex=True)
+    threeEqualRegInstX("fcmla", "FcmlaElemQX", "SimdFloatMultAccOp",
+                       floatTypes, 4, fcmla_imm, True, byElem=True,
+                       complex=True)
+    # FCMLA (vector)
+    fcmla_vec = fcmlaCode % {'rot': '12, 11', 'index': 'i'}
+    threeEqualRegInstX("fcmla", "FcmlaDX", "SimdFloatMultAccOp",
+                       ("uint16_t", "uint32_t"), 2, fcmla_vec, True,
+                       complex=True)
+    threeEqualRegInstX("fcmla", "FcmlaQX", "SimdFloatMultAccOp",
+                       floatTypes, 4, fcmla_vec, True, complex=True)
     # CLS
     clsCode = '''
             unsigned count = 0;

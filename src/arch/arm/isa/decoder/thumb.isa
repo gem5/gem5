@@ -138,9 +138,11 @@ decode BIGTHUMB {
                 0x3: Thumb32LongMulMulAccAndDiv::thumb32LongMulMulAccAndDiv();
                 default: Thumb32DataProcReg::thumb32DataProcReg();
             }
+            0x2: Thumb32NeonSIMD::thumb32NeonSIMD();
             default: decode HTOPCODE_9_8 {
                 0x2: decode LTOPCODE_4 {
                     0x0: decode LTCOPROC {
+                        0x8: Thumb32NeonSIMD::thumb32NeonSIMD();
                         0xa, 0xb: VfpData::vfpData();
                         default: WarnUnimpl::cdp(); // cdp2
                     }

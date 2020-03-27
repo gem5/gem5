@@ -96,6 +96,9 @@ let {{
 
     StaticInstPtr
     decodeNeonData(ExtMachInst machInst);
+
+    StaticInstPtr
+    decodeAdvancedSIMD(ExtMachInst machInst);
     '''
 
     decoder_output = '''
@@ -333,6 +336,84 @@ let {{
         return new Unknown(machInst);
     }
     '''
+    decoder_output += '''
+    StaticInstPtr
+    decodeAdvancedSIMD(ExtMachInst machInst)
+    {
+        uint8_t op_code = (bits(machInst, 25) << 1)
+                          | bits(machInst, 21);
+
+        IntRegIndex vd = (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+                               (bits(machInst, 22) << 4)));
+        IntRegIndex vn = (IntRegIndex)(2 * (bits(machInst, 19, 16) |
+                               (bits(machInst, 7) << 4)));
+        IntRegIndex vm = (IntRegIndex)(2 * (bits(machInst, 3, 0) |
+                               (bits(machInst, 5) << 4)));
+        bool q = bits (machInst, 6);
+        switch (op_code) {
+          case 0x0:
+          {
+            // VCADD
+            bool s = bits (machInst, 20);
+            if (s) {
+               if (q)
+                   return new VcaddQ<uint32_t>(machInst, vd, vn, vm);
+               else
+                   return new VcaddD<uint32_t>(machInst, vd, vn, vm);
+            } else {
+               if (q)
+                   return new VcaddQ<uint16_t>(machInst, vd, vn, vm);
+               else
+                   return new VcaddD<uint16_t>(machInst, vd, vn, vm);
+            }
+          }
+          case 0x1:
+          {
+            // VCMLA
+            bool s = bits (machInst, 20);
+            if (s) {
+               if (q)
+                   return new VcmlaQ<uint32_t>(machInst, vd, vn, vm);
+               else
+                   return new VcmlaD<uint32_t>(machInst, vd, vn, vm);
+            } else {
+               if (q)
+                   return new VcmlaQ<uint16_t>(machInst, vd, vn, vm);
+               else
+                   return new VcmlaD<uint16_t>(machInst, vd, vn, vm);
+            }
+          }
+          case 0x2:
+          case 0x3:
+          {
+            // VCMLA by element
+            bool s = bits (machInst, 23);
+            if (s) {
+               uint8_t index_fp = 0;
+               if (q)
+                   return new VcmlaElemQ<uint32_t>(machInst, vd, vn, vm,
+                                                   index_fp);
+               else
+                   return new VcmlaElemD<uint32_t>(machInst, vd, vn, vm,
+                                                   index_fp);
+            } else {
+               vm = (IntRegIndex)(uint8_t)(2* bits(machInst, 3, 0));
+               uint8_t index_fp = bits(machInst, 5);
+               if (q)
+                   return new VcmlaElemQ<uint16_t>(machInst, vd, vn, vm,
+                                                   index_fp);
+               else
+                   return new VcmlaElemD<uint16_t>(machInst, vd, vn, vm,
+                                                   index_fp);
+            }
+          }
+          default:
+            return new Unknown64(machInst);
+        }
+
+    }
+    '''
+
 
     decoder_output += '''
     static StaticInstPtr
@@ -1866,6 +1947,12 @@ def format ThumbNeonMem() {{
 def format ThumbNeonData() {{
     decode_block = '''
     return decodeNeonData(machInst);
+    '''
+}};
+
+def format Thumb32NeonSIMD() {{
+    decode_block = '''
+    return decodeAdvancedSIMD(machInst);
     '''
 }};
 
