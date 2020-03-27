@@ -49,12 +49,20 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <gem5/asm/generic/m5ops.h>
 #include <gem5/m5ops.h>
+#include "dispatch_table.h"
 #include "m5_mmap.h"
 
 char *progname;
 char *command = "unspecified";
 void usage();
+
+DispatchTable default_dispatch = {
+#define M5OP(name, func) .name = &name,
+M5OP_FOREACH
+#undef M5OP
+};
 
 void
 parse_int_args(int argc, char *argv[], uint64_t ints[], int len)
@@ -98,7 +106,7 @@ pack_str_into_regs(const char *str, uint64_t regs[], int num_regs)
 }
 
 int
-read_file(int dest_fid)
+read_file(DispatchTable *dt, int dest_fid)
 {
     uint8_t buf[256*1024];
     int offset = 0;
@@ -109,7 +117,7 @@ read_file(int dest_fid)
     // Linux does demand paging.
     memset(buf, 0, sizeof(buf));
 
-    while ((len = m5_read_file(buf, sizeof(buf), offset)) > 0) {
+    while ((len = (*dt->m5_read_file)(buf, sizeof(buf), offset)) > 0) {
         uint8_t *base = buf;
         offset += len;
         do {
@@ -132,7 +140,7 @@ read_file(int dest_fid)
 }
 
 void
-write_file(const char *filename, const char *host_filename)
+write_file(DispatchTable *dt, const char *filename, const char *host_filename)
 {
     fprintf(stderr, "opening %s\n", filename);
     int src_fid = open(filename, O_RDONLY);
@@ -150,7 +158,7 @@ write_file(const char *filename, const char *host_filename)
     memset(buf, 0, sizeof(buf));
 
     while ((len = read(src_fid, buf, sizeof(buf))) > 0) {
-        bytes += m5_write_file(buf, len, offset, host_filename);
+        bytes += (*dt->m5_write_file)(buf, len, offset, host_filename);
         offset += len;
     }
     fprintf(stderr, "written %d bytes\n", bytes);
@@ -159,62 +167,62 @@ write_file(const char *filename, const char *host_filename)
 }
 
 void
-do_exit(int argc, char *argv[])
+do_exit(DispatchTable *dt, int argc, char *argv[])
 {
     if (argc > 1)
         usage();
 
     uint64_t ints[1];
     parse_int_args(argc, argv, ints, 1);
-    m5_exit(ints[0]);
+    (*dt->m5_exit)(ints[0]);
 }
 
 void
-do_fail(int argc, char *argv[])
+do_fail(DispatchTable *dt, int argc, char *argv[])
 {
     if (argc < 1 || argc > 2)
         usage();
 
     uint64_t ints[2] = {0,0};
     parse_int_args(argc, argv, ints, argc);
-    m5_fail(ints[1], ints[0]);
+    (*dt->m5_fail)(ints[1], ints[0]);
 }
 
 void
-do_reset_stats(int argc, char *argv[])
+do_reset_stats(DispatchTable *dt, int argc, char *argv[])
 {
     uint64_t ints[2];
     parse_int_args(argc, argv, ints, 2);
-    m5_reset_stats(ints[0], ints[1]);
+    (*dt->m5_reset_stats)(ints[0], ints[1]);
 }
 
 void
-do_dump_stats(int argc, char *argv[])
+do_dump_stats(DispatchTable *dt, int argc, char *argv[])
 {
     uint64_t ints[2];
     parse_int_args(argc, argv, ints, 2);
-    m5_dump_stats(ints[0], ints[1]);
+    (*dt->m5_dump_stats)(ints[0], ints[1]);
 }
 
 void
-do_dump_reset_stats(int argc, char *argv[])
+do_dump_reset_stats(DispatchTable *dt, int argc, char *argv[])
 {
     uint64_t ints[2];
     parse_int_args(argc, argv, ints, 2);
-    m5_dump_reset_stats(ints[0], ints[1]);
+    (*dt->m5_dump_reset_stats)(ints[0], ints[1]);
 }
 
 void
-do_read_file(int argc, char *argv[])
+do_read_file(DispatchTable *dt, int argc, char *argv[])
 {
     if (argc > 0)
         usage();
 
-    read_file(STDOUT_FILENO);
+    read_file(dt, STDOUT_FILENO);
 }
 
 void
-do_write_file(int argc, char *argv[])
+do_write_file(DispatchTable *dt, int argc, char *argv[])
 {
     if (argc != 1 && argc != 2)
         usage();
@@ -222,54 +230,54 @@ do_write_file(int argc, char *argv[])
     const char *filename = argv[0];
     const char *host_filename = (argc == 2) ? argv[1] : argv[0];
 
-    write_file(filename, host_filename);
+    write_file(dt, filename, host_filename);
 }
 
 void
-do_checkpoint(int argc, char *argv[])
+do_checkpoint(DispatchTable *dt, int argc, char *argv[])
 {
     uint64_t ints[2];
     parse_int_args(argc, argv, ints, 2);
-    m5_checkpoint(ints[0], ints[1]);
+    (*dt->m5_checkpoint)(ints[0], ints[1]);
 }
 
 void
-do_addsymbol(int argc, char *argv[])
+do_addsymbol(DispatchTable *dt, int argc, char *argv[])
 {
     if (argc != 2)
         usage();
 
     uint64_t addr = strtoul(argv[0], NULL, 0);
     char *symbol = argv[1];
-    m5_add_symbol(addr, symbol);
+    (*dt->m5_add_symbol)(addr, symbol);
 }
 
 
 void
-do_loadsymbol(int argc, char *argv[])
+do_loadsymbol(DispatchTable *dt, int argc, char *argv[])
 {
     if (argc > 0)
         usage();
 
-    m5_load_symbol();
+    (*dt->m5_load_symbol)();
 }
 
 void
-do_initparam(int argc, char *argv[])
+do_initparam(DispatchTable *dt, int argc, char *argv[])
 {
     if (argc > 1)
         usage();
 
     uint64_t key_str[2];
     pack_str_into_regs(argc == 0 ? "" : argv[0], key_str, 2);
-    uint64_t val = m5_init_param(key_str[0], key_str[1]);
+    uint64_t val = (*dt->m5_init_param)(key_str[0], key_str[1]);
     printf("%"PRIu64, val);
 }
 
 struct MainFunc
 {
     char *name;
-    void (*func)(int argc, char *argv[]);
+    void (*func)(DispatchTable *dt, int argc, char *argv[]);
     char *usage;
 };
 
@@ -347,7 +355,7 @@ main(int argc, char *argv[])
         if (strcmp(command, mainfuncs[i].name) != 0)
             continue;
 
-        mainfuncs[i].func(argc, argv);
+        mainfuncs[i].func(&default_dispatch, argc, argv);
         exit(0);
     }
 
