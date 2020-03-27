@@ -52,8 +52,194 @@ def run_cmd(explanation, working_dir, cmd, stdout = None):
     print "Error running phase %s. Returncode: %d" % (explanation, return_code)
     sys.exit(1)
 
+def linux_clone():
+    kernel_vexpress_gem5_dir = os.path.join(
+        options.dest_dir, "linux-kernel-vexpress_gem5")
+
+    run_cmd("clone linux kernel for VExpress_GEM5_V1 platform",
+        options.dest_dir,
+        ["git", "clone", "https://gem5.googlesource.com/arm/linux",
+         kernel_vexpress_gem5_dir])
+
+def linux64():
+    kernel_vexpress_gem5_dir = os.path.join(
+        options.dest_dir, "linux-kernel-vexpress_gem5")
+
+    linux_bin = os.path.join(
+        binaries_dir, "vmlinux.vexpress_gem5_v1_64")
+
+    with open(revisions_dir + "/linux", "w+") as rev_file:
+        run_cmd("write revision of linux-kernel-vexpress_gem5 repo",
+            kernel_vexpress_gem5_dir,
+            ["git", "rev-parse", "--short", "HEAD"],
+            rev_file)
+
+    run_cmd("configure kernel for arm64",
+        kernel_vexpress_gem5_dir,
+        ["make", "ARCH=arm64", "CROSS_COMPILE=aarch64-linux-gnu-",
+         "gem5_defconfig", make_jobs_str])
+    run_cmd("compile kernel for arm64",
+        kernel_vexpress_gem5_dir,
+        ["make", "ARCH=arm64", "CROSS_COMPILE=aarch64-linux-gnu-",
+        make_jobs_str])
+    run_cmd("copy arm64 vmlinux",
+        kernel_vexpress_gem5_dir,
+        ["cp", "vmlinux", linux_bin])
+    run_cmd("cleanup arm64 kernel compilation",
+        kernel_vexpress_gem5_dir,
+        ["make", "distclean"])
+
+def linux32():
+    kernel_vexpress_gem5_dir = os.path.join(
+        options.dest_dir, "linux-kernel-vexpress_gem5")
+
+    linux_bin = os.path.join(
+        binaries_dir, "vmlinux.vexpress_gem5_v1")
+
+    run_cmd("configure kernel for arm",
+        kernel_vexpress_gem5_dir,
+        ["make", "ARCH=arm", "CROSS_COMPILE=arm-linux-gnueabihf-",
+         "gem5_defconfig"])
+    run_cmd("compile kernel for arm",
+        kernel_vexpress_gem5_dir,
+        ["make", "ARCH=arm", "CROSS_COMPILE=arm-linux-gnueabihf-",
+        make_jobs_str])
+    run_cmd("copy arm vmlinux",
+        kernel_vexpress_gem5_dir,
+        ["cp", "vmlinux", linux_bin])
+
+def linux():
+    """
+    Checkout and build linux kernel for VExpress_GEM5_V1 (arm and arm64)
+    """
+    linux_clone()
+    linux64()
+    linux32()
+
+def linux_legacy():
+    """
+    Checkout and build linux kernel and DTB for VExpress_EMM64/EMM
+    """
+    kernel_vexpress_emm64_dir = os.path.join(options.dest_dir,
+        "linux-kernel-vexpress_emm64")
+    run_cmd("clone linux kernel for VExpress_EMM64 platform",
+        options.dest_dir,
+        ["git", "clone", "https://gem5.googlesource.com/arm/linux-arm64-legacy",
+         kernel_vexpress_emm64_dir])
+    with open(revisions_dir + "/linux-arm64-legacy", "w+") as rev_file:
+        run_cmd("write revision of linux-kernel-vexpress_emm64 repo",
+            kernel_vexpress_emm64_dir,
+            ["git", "rev-parse", "--short", "HEAD"],
+            rev_file)
+    run_cmd("configure kernel",
+        kernel_vexpress_emm64_dir,
+        ["make", "ARCH=arm64", "CROSS_COMPILE=aarch64-linux-gnu-",
+         "CC=aarch64-linux-gnu-gcc-4.8", "gem5_defconfig"])
+    run_cmd("compile kernel",
+        kernel_vexpress_emm64_dir,
+        ["make", "ARCH=arm64", "CROSS_COMPILE=aarch64-linux-gnu-",
+         "CC=aarch64-linux-gnu-gcc-4.8", make_jobs_str])
+    run_cmd("copy vmlinux",
+        kernel_vexpress_emm64_dir,
+        ["cp", "vmlinux", binaries_dir + "/vmlinux.vexpress_emm64"])
+    run_cmd("copy DTB",
+        kernel_vexpress_emm64_dir,
+        ["cp", "arch/arm64/boot/dts/aarch64_gem5_server.dtb", binaries_dir])
+
+    kernel_vexpress_emm_dir = options.dest_dir + "/linux-kernel-vexpress_emm"
+    run_cmd("clone linux kernel for VExpress_EMM platform",
+        options.dest_dir,
+        ["git", "clone", "https://gem5.googlesource.com/arm/linux-arm-legacy",
+         kernel_vexpress_emm_dir])
+    with open(revisions_dir + "/linux-arm-legacy", "w+") as rev_file:
+        run_cmd("write revision of linux-kernel-vexpress_emm64 repo",
+            kernel_vexpress_emm_dir,
+            ["git", "rev-parse", "--short", "HEAD"],
+            rev_file)
+    run_cmd("configure kernel",
+        kernel_vexpress_emm_dir,
+        ["make", "ARCH=arm", "CROSS_COMPILE=arm-linux-gnueabihf-",
+         "CC=arm-linux-gnueabihf-gcc-4.8", "vexpress_gem5_server_defconfig"])
+    run_cmd("compile kernel",
+        kernel_vexpress_emm_dir,
+        ["make", "ARCH=arm", "CROSS_COMPILE=arm-linux-gnueabihf-",
+         "CC=arm-linux-gnueabihf-gcc-4.8", make_jobs_str])
+    run_cmd("copy vmlinux",
+        kernel_vexpress_emm_dir,
+        ["cp", "vmlinux", binaries_dir + "/vmlinux.vexpress_emm"])
+    run_cmd("rename DTB for 1 CPU",
+        kernel_vexpress_emm_dir,
+        ["cp", "arch/arm/boot/dts/vexpress-v2p-ca15-tc1-gem5.dtb",
+         binaries_dir + "/vexpress-v2p-ca15-tc1-gem5_1cpus.dtb"])
+    run_cmd("copy DTBs",
+        kernel_vexpress_emm_dir,
+        ["cp"] + glob(kernel_vexpress_emm_dir + "/arch/arm/boot/dts/*gem5_*dtb") +
+        [binaries_dir])
+
+def dtbs():
+    """
+    Build DTBs for VExpress_GEM5_V1
+    """
+    dt_dir = gem5_dir + "/system/arm/dt"
+    run_cmd("compile DTBs for VExpress_GEM5_V1 platform",
+        dt_dir,
+        ["make", make_jobs_str])
+    run_cmd("copy DTBs",
+        dt_dir,
+        ["cp"] + glob(dt_dir + "/*dtb") + [binaries_dir])
+
+def bootloaders():
+    """
+    Build bootloaders arm64/arm
+    """
+
+    bootloader_arm64_dir = gem5_dir + "/system/arm/bootloader/arm64"
+    run_cmd("compile arm64 bootloader",
+        bootloader_arm64_dir,
+        ["make"])
+    run_cmd("copy arm64 bootloader",
+        bootloader_arm64_dir,
+        ["cp", "boot.arm64", "boot_emm.arm64", "boot_v2.arm64", binaries_dir])
+
+    bootloader_arm_dir = gem5_dir + "/system/arm/bootloader/arm"
+    run_cmd("compile arm bootloader",
+        bootloader_arm_dir,
+        ["make"])
+    run_cmd("copy arm bootloaders",
+        bootloader_arm_dir,
+        ["cp", "boot.arm", "boot_emm.arm", binaries_dir])
+
+def m5():
+    """
+    Build m5 binaries
+    """
+    m5_dir = gem5_dir + "/util/m5"
+    run_cmd("compile arm64 m5",
+        m5_dir,
+        ["make", "-f", "Makefile.aarch64"])
+    run_cmd("copy arm64 m5",
+        m5_dir,
+        ["cp", "m5", binaries_dir + "/m5.aarch64"])
+    run_cmd("clean arm64 m5",
+        m5_dir,
+        ["make", "clean", "-f", "Makefile.aarch64"])
+    run_cmd("compile arm m5",
+        m5_dir,
+        ["make", "-f", "Makefile.arm"])
+    run_cmd("copy arm m5",
+        m5_dir,
+        ["cp", "m5", binaries_dir + "/m5.aarch32"])
+
 script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 gem5_dir = os.path.dirname(script_dir)
+
+all_binaries = {
+    "linux" : linux,
+    "linux-legacy" : linux_legacy,
+    "dtbs" : dtbs,
+    "bootloaders" : bootloaders,
+    "m5" : m5,
+}
 
 parser = OptionParser()
 
@@ -72,6 +258,9 @@ parser.add_option("--make-jobs", type = "int", default = 1,
     metavar = "MAKE_JOBS",
     help = "Number of jobs to use with the 'make' commands. Default value: "
            "%default")
+parser.add_option("-b", "--fs-binaries", action="append",
+    choices=all_binaries.keys(), default=[],
+    help = "List of FS files to be generated. Defaulting to all")
 
 (options, args) = parser.parse_args()
 
@@ -139,145 +328,9 @@ run_cmd("write revision of gem5 repo",
     rev_file)
 rev_file.close()
 
-# Checkout and build linux kernel for VExpress_GEM5_V1 (arm and arm64)
-kernel_vexpress_gem5_dir = options.dest_dir + "/linux-kernel-vexpress_gem5"
-run_cmd("clone linux kernel for VExpress_GEM5_V1 platform",
-    options.dest_dir,
-    ["git", "clone", "https://gem5.googlesource.com/arm/linux",
-     kernel_vexpress_gem5_dir])
-rev_file = open(revisions_dir + "/linux", "w+")
-run_cmd("write revision of linux-kernel-vexpress_gem5 repo",
-    kernel_vexpress_gem5_dir,
-    ["git", "rev-parse", "--short", "HEAD"],
-    rev_file)
-rev_file.close()
-run_cmd("configure kernel for arm64",
-    kernel_vexpress_gem5_dir,
-    ["make", "ARCH=arm64", "CROSS_COMPILE=aarch64-linux-gnu-",
-     "gem5_defconfig", make_jobs_str])
-run_cmd("compile kernel for arm64",
-    kernel_vexpress_gem5_dir,
-    ["make", "ARCH=arm64", "CROSS_COMPILE=aarch64-linux-gnu-", make_jobs_str])
-run_cmd("copy arm64 vmlinux",
-    kernel_vexpress_gem5_dir,
-    ["cp", "vmlinux", binaries_dir + "/vmlinux.vexpress_gem5_v1_64"])
-run_cmd("cleanup arm64 kernel compilation",
-    kernel_vexpress_gem5_dir,
-    ["make", "distclean"])
-run_cmd("configure kernel for arm",
-    kernel_vexpress_gem5_dir,
-    ["make", "ARCH=arm", "CROSS_COMPILE=arm-linux-gnueabihf-",
-     "gem5_defconfig"])
-run_cmd("compile kernel for arm",
-    kernel_vexpress_gem5_dir,
-    ["make", "ARCH=arm", "CROSS_COMPILE=arm-linux-gnueabihf-", make_jobs_str])
-run_cmd("copy arm vmlinux",
-    kernel_vexpress_gem5_dir,
-    ["cp", "vmlinux", binaries_dir + "/vmlinux.vexpress_gem5_v1"])
-
-# Checkout and build linux kernel and DTB for VExpress_EMM64
-kernel_vexpress_emm64_dir = options.dest_dir + "/linux-kernel-vexpress_emm64"
-run_cmd("clone linux kernel for VExpress_EMM64 platform",
-    options.dest_dir,
-    ["git", "clone", "https://gem5.googlesource.com/arm/linux-arm64-legacy",
-     kernel_vexpress_emm64_dir])
-rev_file = open(revisions_dir + "/linux-arm64-legacy", "w+")
-run_cmd("write revision of linux-kernel-vexpress_emm64 repo",
-    kernel_vexpress_emm64_dir,
-    ["git", "rev-parse", "--short", "HEAD"],
-    rev_file)
-rev_file.close()
-run_cmd("configure kernel",
-    kernel_vexpress_emm64_dir,
-    ["make", "ARCH=arm64", "CROSS_COMPILE=aarch64-linux-gnu-",
-     "CC=aarch64-linux-gnu-gcc-4.8", "gem5_defconfig"])
-run_cmd("compile kernel",
-    kernel_vexpress_emm64_dir,
-    ["make", "ARCH=arm64", "CROSS_COMPILE=aarch64-linux-gnu-",
-     "CC=aarch64-linux-gnu-gcc-4.8", make_jobs_str])
-run_cmd("copy vmlinux",
-    kernel_vexpress_emm64_dir,
-    ["cp", "vmlinux", binaries_dir + "/vmlinux.vexpress_emm64"])
-run_cmd("copy DTB",
-    kernel_vexpress_emm64_dir,
-    ["cp", "arch/arm64/boot/dts/aarch64_gem5_server.dtb", binaries_dir])
-
-# Checkout and build linux kernel and DTBs for VExpress_EMM
-kernel_vexpress_emm_dir = options.dest_dir + "/linux-kernel-vexpress_emm"
-run_cmd("clone linux kernel for VExpress_EMM platform",
-    options.dest_dir,
-    ["git", "clone", "https://gem5.googlesource.com/arm/linux-arm-legacy",
-     kernel_vexpress_emm_dir])
-rev_file = open(revisions_dir + "/linux-arm-legacy", "w+")
-run_cmd("write revision of linux-kernel-vexpress_emm64 repo",
-    kernel_vexpress_emm_dir,
-    ["git", "rev-parse", "--short", "HEAD"],
-    rev_file)
-rev_file.close()
-run_cmd("configure kernel",
-    kernel_vexpress_emm_dir,
-    ["make", "ARCH=arm", "CROSS_COMPILE=arm-linux-gnueabihf-",
-     "CC=arm-linux-gnueabihf-gcc-4.8", "vexpress_gem5_server_defconfig"])
-run_cmd("compile kernel",
-    kernel_vexpress_emm_dir,
-    ["make", "ARCH=arm", "CROSS_COMPILE=arm-linux-gnueabihf-",
-     "CC=arm-linux-gnueabihf-gcc-4.8", make_jobs_str])
-run_cmd("copy vmlinux",
-    kernel_vexpress_emm_dir,
-    ["cp", "vmlinux", binaries_dir + "/vmlinux.vexpress_emm"])
-run_cmd("rename DTB for 1 CPU",
-    kernel_vexpress_emm_dir,
-    ["cp", "arch/arm/boot/dts/vexpress-v2p-ca15-tc1-gem5.dtb",
-     binaries_dir + "/vexpress-v2p-ca15-tc1-gem5_1cpus.dtb"])
-run_cmd("copy DTBs",
-    kernel_vexpress_emm_dir,
-    ["cp"] + glob(kernel_vexpress_emm_dir + "/arch/arm/boot/dts/*gem5_*dtb") +
-    [binaries_dir])
-
-# Build DTBs for VExpress_GEM5_V1
-dt_dir = gem5_dir + "/system/arm/dt"
-run_cmd("compile DTBs for VExpress_GEM5_V1 platform",
-    dt_dir,
-    ["make", make_jobs_str])
-run_cmd("copy DTBs",
-    dt_dir,
-    ["cp"] + glob(dt_dir + "/*dtb") + [binaries_dir])
-
-# Build bootloaders arm64
-bootloader_arm64_dir = gem5_dir + "/system/arm/bootloader/arm64"
-run_cmd("compile arm64 bootloader",
-    bootloader_arm64_dir,
-    ["make"])
-run_cmd("copy arm64 bootloader",
-    bootloader_arm64_dir,
-    ["cp", "boot.arm64", "boot_emm.arm64", "boot_v2.arm64", binaries_dir])
-
-# Build bootloaders arm
-bootloader_arm_dir = gem5_dir + "/system/arm/bootloader/arm"
-run_cmd("compile arm bootloader",
-    bootloader_arm_dir,
-    ["make"])
-run_cmd("copy arm bootloaders",
-    bootloader_arm_dir,
-    ["cp", "boot.arm", "boot_emm.arm", binaries_dir])
-
-# Build m5 binaries
-m5_dir = gem5_dir + "/util/m5"
-run_cmd("compile arm64 m5",
-    m5_dir,
-    ["make", "-f", "Makefile.aarch64"])
-run_cmd("copy arm64 m5",
-    m5_dir,
-    ["cp", "m5", binaries_dir + "/m5.aarch64"])
-run_cmd("clean arm64 m5",
-    m5_dir,
-    ["make", "clean", "-f", "Makefile.aarch64"])
-run_cmd("compile arm m5",
-    m5_dir,
-    ["make", "-f", "Makefile.arm"])
-run_cmd("copy arm m5",
-    m5_dir,
-    ["cp", "m5", binaries_dir + "/m5.aarch32"])
+binaries = options.fs_binaries if options.fs_binaries else all_binaries.keys()
+for fs_binary in binaries:
+    all_binaries[fs_binary]()
 
 print "Done! All the generated files can be found in %s" % binaries_dir
 
