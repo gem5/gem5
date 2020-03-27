@@ -54,6 +54,6 @@
 .endm
 
 .text
-#define M5OP(name, func) m5op_func name, func
+#define M5OP(name, func) m5op_func name, func;
         M5OP_FOREACH
 #undef M5OP
