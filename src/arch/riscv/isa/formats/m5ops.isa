@@ -37,8 +37,10 @@
 
 def format M5Op() {{
     iop = InstObjParams(name, Name, 'PseudoOp',
-                        'a0 = PseudoInst::pseudoInst<PseudoInstABI>('
-                            + 'xc->tcBase(), M5FUNC)',
+                        'uint64_t result;\n'
+                        'PseudoInst::pseudoInst<PseudoInstABI>('
+                            'xc->tcBase(), M5FUNC, result);\n'
+                        'a0 = result',
                         ['IsNonSpeculative', 'IsSerializeAfter'])
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
