@@ -724,9 +724,6 @@ class DictImporter(object):
         self.modules = modules
         self.installed = set()
 
-    def __del__(self):
-        self.unload()
-
     def unload(self):
         import sys
         for module in self.installed:
