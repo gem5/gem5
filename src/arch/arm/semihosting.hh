@@ -73,6 +73,17 @@ class ArmSemihosting : public SimObject
 {
   public:
 
+    enum {
+        // Standard ARM immediate values which trigger semihosting.
+        T32Imm = 0xAB,
+        A32Imm = 0x123456,
+        A64Imm = 0xF000,
+
+        // The immediate value which enables gem5 semihosting calls. Use the
+        // standard value for thumb.
+        Gem5Imm = 0x5D57
+    };
+
     static PortProxy &portProxy(ThreadContext *tc);
 
     struct AbiBase

@@ -40,10 +40,14 @@ let {{
     svcCode = '''
     ThreadContext *tc = xc->tcBase();
 
-    const auto semihost_imm = Thumb? 0xAB : 0x123456;
-
-    if (ArmSystem::haveSemihosting(tc) && imm == semihost_imm) {
+    bool have_semi = ArmSystem::haveSemihosting(tc);
+    if (have_semi && Thumb && imm == ArmSemihosting::T32Imm) {
+        // Enable gem5 extensions since we can't distinguish in thumb.
+        ArmSystem::callSemihosting32(tc, true);
+    } else if (have_semi && imm == ArmSemihosting::A32Imm) {
         ArmSystem::callSemihosting32(tc);
+    } else if (have_semi && imm == ArmSemihosting::Gem5Imm) {
+        ArmSystem::callSemihosting32(tc, true);
     } else {
         fault = std::make_shared<SupervisorCall>(machInst, imm);
     }

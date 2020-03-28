@@ -98,6 +98,7 @@ output exec {{
 #include "arch/arm/isa.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/pauth_helpers.hh"
+#include "arch/arm/semihosting.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/memhelpers.hh"
 #include "base/condcodes.hh"

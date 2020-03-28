@@ -185,8 +185,11 @@ let {{
 
     hltCode = '''
     ThreadContext *tc = xc->tcBase();
-    if (ArmSystem::haveSemihosting(tc) && imm == 0xF000) {
+    bool have_semi = ArmSystem::haveSemihosting(tc);
+    if (imm == ArmSemihosting::A64Imm && have_semi) {
         ArmSystem::callSemihosting64(tc);
+    } else if (imm == ArmSemihosting::Gem5Imm && have_semi) {
+        ArmSystem::callSemihosting64(tc, true);
     } else {
         // HLT instructions aren't implemented, so treat them as undefined
         // instructions.
