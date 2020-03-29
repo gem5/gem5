@@ -147,26 +147,20 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
                   self.t1000.hvuart.pio_addr + uart_pio_size - 1)
         ]
 
-    workload = SparcFsWorkload(
-        reset_bin=binary('reset_new.bin'),
-        hypervisor_bin=binary('q_new.bin'),
-        openboot_bin=binary('openboot_new.bin'),
-        nvram_bin=binary('nvram1'),
-        hypervisor_desc_bin=binary('1up-hv.bin'),
-        partition_desc_bin=binary('1up-md.bin'),
-    )
+    workload = SparcFsWorkload()
 
     # ROM for OBP/Reset/Hypervisor
-    self.rom = SimpleMemory(range=AddrRange(workload._rom_base, size='8MB'))
+    self.rom = SimpleMemory(image_file=binary('t1000_rom.bin'),
+            range=AddrRange(0xfff0000000, size='8MB'))
     # nvram
-    self.nvram = SimpleMemory(
-            range=AddrRange(workload._nvram_base, size='8kB'))
+    self.nvram = SimpleMemory(image_file=binary('nvram1'),
+            range=AddrRange(0x1f11000000, size='8kB'))
     # hypervisor description
-    self.hypervisor_desc = SimpleMemory(
-            range=AddrRange(workload._hypervisor_desc_base, size='8kB'))
+    self.hypervisor_desc = SimpleMemory(image_file=binary('1up-hv.bin'),
+            range=AddrRange(0x1f12080000, size='8kB'))
     # partition description
-    self.partition_desc = SimpleMemory(
-            range=AddrRange(workload._partition_desc_base, size='8kB'))
+    self.partition_desc = SimpleMemory(image_file=binary('1up-md.bin'),
+            range=AddrRange(0x1f12000000, size='8kB'))
 
     self.rom.port = self.membus.master
     self.nvram.port = self.membus.master

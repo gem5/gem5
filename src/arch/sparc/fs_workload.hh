@@ -29,12 +29,8 @@
 #ifndef __ARCH_SPARC_FS_WORKLOAD_HH__
 #define __ARCH_SPARC_FS_WORKLOAD_HH__
 
-#include "base/loader/symtab.hh"
-#include "cpu/pc_event.hh"
-#include "kern/system_events.hh"
 #include "params/SparcFsWorkload.hh"
 #include "sim/os_kernel.hh"
-#include "sim/sim_object.hh"
 
 namespace SparcISA
 {
@@ -42,81 +38,8 @@ namespace SparcISA
 class FsWorkload : public OsKernel
 {
   public:
-    typedef SparcFsWorkloadParams Params;
-    FsWorkload(Params *p);
-    ~FsWorkload();
-
+    FsWorkload(SparcFsWorkloadParams *p) : OsKernel(*p) {}
     void initState() override;
-
-/**
- * Serialization stuff
- */
-  public:
-    void serializeSymtab(CheckpointOut &cp) const override;
-    void unserializeSymtab(CheckpointIn &cp) override;
-
-    /** reset binary symbol table */
-    SymbolTable *resetSymtab;
-
-    /** hypervison binary symbol table */
-    SymbolTable *hypervisorSymtab;
-
-    /** openboot symbol table */
-    SymbolTable *openbootSymtab;
-
-    /** nvram symbol table? */
-    SymbolTable *nvramSymtab;
-
-    /** hypervisor desc symbol table? */
-    SymbolTable *hypervisorDescSymtab;
-
-    /** partition desc symbol table? */
-    SymbolTable *partitionDescSymtab;
-
-    /** Object pointer for the reset binary */
-    ObjectFile *reset;
-
-    /** Object pointer for the hypervisor code */
-    ObjectFile *hypervisor;
-
-    /** Object pointer for the openboot code */
-    ObjectFile *openboot;
-
-    /** Object pointer for the nvram image */
-    ObjectFile *nvram;
-
-    /** Object pointer for the hypervisor description image */
-    ObjectFile *hypervisor_desc;
-
-    /** Object pointer for the partition description image */
-    ObjectFile *partition_desc;
-
-  protected:
-    const Params *params() const { return (const Params *)&_params; }
-
-    /** Add a function-based event to reset binary. */
-    template <class T>
-    T *
-    addResetFuncEvent(const char *lbl)
-    {
-        return addFuncEvent<T>(resetSymtab, lbl);
-    }
-
-    /** Add a function-based event to the hypervisor. */
-    template <class T>
-    T *
-    addHypervisorFuncEvent(const char *lbl)
-    {
-        return addFuncEvent<T>(hypervisorSymtab, lbl);
-    }
-
-    /** Add a function-based event to the openboot. */
-    template <class T>
-    T *
-    addOpenbootFuncEvent(const char *lbl)
-    {
-        return addFuncEvent<T>(openbootSymtab, lbl);
-    }
 };
 
 } // namespace SparcISA
