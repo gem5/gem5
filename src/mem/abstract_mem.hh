@@ -209,6 +209,8 @@ class AbstractMemory : public ClockedObject
     AbstractMemory(const Params* p);
     virtual ~AbstractMemory() {}
 
+    void initState() override;
+
     /**
      * See if this is a null memory that should never store data and
      * always return zero.

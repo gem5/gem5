@@ -43,6 +43,8 @@
 #include <vector>
 
 #include "arch/locked_mem.hh"
+#include "base/loader/memory_image.hh"
+#include "base/loader/object_file.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/LLSC.hh"
@@ -64,6 +66,38 @@ AbstractMemory::AbstractMemory(const Params *p) :
     panic_if(!range.valid() || !range.size(),
              "Memory range %s must be valid with non-zero size.",
              range.to_string());
+}
+
+void
+AbstractMemory::initState()
+{
+    ClockedObject::initState();
+
+    const auto &file = params()->image_file;
+    if (file == "")
+        return;
+
+    auto *object = createObjectFile(file, true);
+    fatal_if(!object, "%s: Could not load %s.", name(), file);
+
+    panic_if(!object->loadGlobalSymbols(debugSymbolTable),
+             "%s: Could not load symbols from %s.", name(), file);
+
+    MemoryImage image = object->buildImage();
+
+    AddrRange image_range(image.minAddr(), image.maxAddr());
+    if (!range.contains(image_range.start())) {
+        warn("%s: Moving image from %s to memory address range %s.",
+                name(), image_range.to_string(), range.to_string());
+        image = image.offset(range.start());
+        image_range = AddrRange(image.minAddr(), image.maxAddr());
+    }
+    panic_if(!image_range.isSubset(range), "%s: memory image %s doesn't fit.",
+             name(), file);
+
+    PortProxy proxy([this](PacketPtr pkt) { functionalAccess(pkt); }, size());
+
+    panic_if(!image.write(proxy), "%s: Unable to write image.");
 }
 
 void

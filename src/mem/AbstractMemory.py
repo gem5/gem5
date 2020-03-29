@@ -64,3 +64,8 @@ class AbstractMemory(ClockedObject):
     # configuration information about the physical memory layout to
     # the kernel, e.g. using ATAG or ACPI
     conf_table_reported = Param.Bool(True, "Report to configuration table")
+
+    # Image file to load into this memory as its initial contents. This is
+    # particularly useful for ROMs.
+    image_file = Param.String('',
+            "Image to load into memory as its initial contents")
