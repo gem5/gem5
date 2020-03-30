@@ -115,6 +115,7 @@ namespace ArmISA
     EndBitUnion(AA64ISAR1)
 
     BitUnion64(AA64MMFR0)
+        Bitfield<63, 60> ecv;
         Bitfield<47, 44> exs;
         Bitfield<43, 40> tgran4_2;
         Bitfield<39, 36> tgran64_2;

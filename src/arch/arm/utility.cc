@@ -1086,6 +1086,7 @@ bool
 condGenericTimerCommonEL1SystemAccessTrapEL2(const MiscRegIndex miscReg,
                                              ThreadContext *tc)
 {
+    const AA64MMFR0 mmfr0 = tc->readMiscRegNoEffect(MISCREG_ID_AA64MMFR0_EL1);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const RegVal cnthctl_val = tc->readMiscReg(MISCREG_CNTHCTL_EL2);
     const CNTHCTL cnthctl = cnthctl_val;
@@ -1096,13 +1097,19 @@ condGenericTimerCommonEL1SystemAccessTrapEL2(const MiscRegIndex miscReg,
         return hcr.e2h ? !cnthctl_e2h.el1pcten : !cnthctl.el1pcten;
       case MISCREG_CNTVCT:
       case MISCREG_CNTVCT_EL0:
-        return hcr.e2h ? cnthctl_e2h.el1tvct : cnthctl.el1tvct;
+        if (!mmfr0.ecv)
+            return false;
+        else
+            return hcr.e2h ? cnthctl_e2h.el1tvct : cnthctl.el1tvct;
       case MISCREG_CNTP_CTL ... MISCREG_CNTP_TVAL_S:
       case MISCREG_CNTP_CTL_EL0 ... MISCREG_CNTP_TVAL_EL0:
         return hcr.e2h ? !cnthctl_e2h.el1pten : false;
       case MISCREG_CNTV_CTL ... MISCREG_CNTV_TVAL:
       case MISCREG_CNTV_CTL_EL0 ... MISCREG_CNTV_TVAL_EL0:
-        return hcr.e2h ? cnthctl_e2h.el1tvt : cnthctl.el1tvt;
+        if (!mmfr0.ecv)
+            return false;
+        else
+            return hcr.e2h ? cnthctl_e2h.el1tvt : cnthctl.el1tvt;
       default:
         break;
     }
