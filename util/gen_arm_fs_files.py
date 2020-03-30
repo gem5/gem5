@@ -254,7 +254,7 @@ parser.add_option("--dest-dir", default = "/tmp",
            "repositories. Generated files will be copied to "
            "DEST_DIR/binaries (which must not exist). The default "
            "value is %default")
-parser.add_option("--make-jobs", type = "int", default = 1,
+parser.add_option("-j", "--make-jobs", type = "int", default = 1,
     metavar = "MAKE_JOBS",
     help = "Number of jobs to use with the 'make' commands. Default value: "
            "%default")
