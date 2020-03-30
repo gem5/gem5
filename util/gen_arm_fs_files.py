@@ -1,5 +1,17 @@
 #!/usr/bin/env python2.7
 
+# Copyright (c) 2020 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2017-2018 Metempsy Technology Consulting
 # All rights reserved.
 #
@@ -230,6 +242,73 @@ def m5():
         m5_dir,
         ["cp", "m5", binaries_dir + "/m5.aarch32"])
 
+def xen():
+    """
+    Build Xen for aarch64
+    """
+    xen_dir = os.path.join(options.dest_dir, "xen")
+    bootwrapper_dir = os.path.join(options.dest_dir, "bootwrapper")
+    linux_cmdline = "console=hvc0 root=/dev/vda rw mem=1G"
+    xen_cmdline = "dtuart=/uart@1c090000 console=dtuart no-bootscrub " + \
+                  "dom0_mem=1G loglvl=all guest_loglvl=all"
+
+    run_cmd("clone Xen",
+        options.dest_dir,
+        ["git", "clone", "git://xenbits.xen.org/xen.git",
+         xen_dir])
+
+    run_cmd("clone boot-wrapper-aarch64",
+        options.dest_dir,
+        ["git", "clone", "git://git.kernel.org/pub/" +
+            "scm/linux/kernel/git/mark/boot-wrapper-aarch64.git",
+         bootwrapper_dir])
+
+    # Need to compile arm64 Linux
+    linux_dir = os.path.join(options.dest_dir, "linux-kernel-vexpress_gem5")
+    linux_bin = os.path.join(linux_dir,
+        "arch", "arm64", "boot", "Image")
+    if not os.path.exists(linux_bin):
+        linux_clone()
+        linux64()
+
+    # Need to compile DTBs
+    dtb_bin = os.path.join(binaries_dir, "armv8_gem5_v2_1cpu.dtb")
+    if not os.path.exists(dtb_bin):
+        dtbs()
+
+    # Building Xen
+    run_cmd("building xen for aarch64",
+        xen_dir,
+        ["make", "dist-xen", "XEN_TARGET_ARCH=arm64",
+         "CROSS_COMPILE=aarch64-linux-gnu-",
+         "CONFIG_EARLY_PRINTK=vexpress", make_jobs_str])
+
+    # Building boot-wrapper-aarch64
+    run_cmd("autoreconf boot-wrapper-aarch64",
+        bootwrapper_dir, ["autoreconf", "-i"])
+    run_cmd("configure boot-wrapper-aarch64",
+        bootwrapper_dir, ["./configure",
+            "--host=aarch64-linux-gnu",
+            "--with-kernel-dir={}".format(linux_dir),
+            "--with-dtb={}".format(dtb_bin),
+            "--with-cmdline='{}'".format(linux_cmdline),
+            "--with-xen-cmdline='{}'".format(xen_cmdline),
+            "--with-xen={}".format(os.path.join(xen_dir, "xen", "xen")),
+            "--enable-psci",
+            "--enable-gicv3"])
+    run_cmd("build boot-wrapper-aarch64",
+        bootwrapper_dir, ["make"])
+
+    # Copying the final binary
+    run_cmd("copy xen binary",
+        bootwrapper_dir, ["cp", "xen-system.axf", binaries_dir])
+
+    with open(os.path.join(revisions_dir, "xen"), "w+") as rev_file:
+        run_cmd("write revision of xen repo",
+            xen_dir,
+            ["git", "rev-parse", "--short", "HEAD"],
+            rev_file)
+
 script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 gem5_dir = os.path.dirname(script_dir)
 
@@ -239,6 +318,7 @@ all_binaries = {
     "dtbs" : dtbs,
     "bootloaders" : bootloaders,
     "m5" : m5,
+    "xen" : xen,
 }
 
 parser = OptionParser()
