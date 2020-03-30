@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2012-2013, 2015-2019 ARM Limited
+# Copyright (c) 2009, 2012-2013, 2015-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -82,6 +82,12 @@ class ArmSystem(System):
     m5ops_base = Param.Addr(0,
         "Base of the 64KiB PA range used for memory-mapped m5ops. Set to 0 "
         "to disable.")
+
+    # Set to true if simulation provides a PSCI implementation
+    # This flag will be checked when auto-generating
+    # a PSCI node. A client (e.g Linux) would then be able to
+    # know if it can use the PSCI APIs
+    _have_psci = False
 
     def generateDtb(self, filename):
         """

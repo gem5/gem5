@@ -645,9 +645,13 @@ class RealView(Platform):
         yield node
 
     def annotateCpuDeviceNode(self, cpu, state):
-        cpu.append(FdtPropertyStrings("enable-method", "spin-table"))
-        cpu.append(FdtPropertyWords("cpu-release-addr", \
-                                    state.addrCells(0x8000fff8)))
+        system = self.system.unproxy(self)
+        if system._have_psci:
+            cpu.append(FdtPropertyStrings('enable-method', 'psci'))
+        else:
+            cpu.append(FdtPropertyStrings("enable-method", "spin-table"))
+            cpu.append(FdtPropertyWords("cpu-release-addr", \
+                                        state.addrCells(0x8000fff8)))
 
 class VExpress_EMM(RealView):
     _mem_regions = [ AddrRange('2GB', size='2GB') ]
@@ -1127,6 +1131,24 @@ Interrupts:
         node.append(FdtPropertyStrings("model", ["V2P-CA15"]))
         node.append(FdtPropertyWords("arm,hbi", [0x0]))
         node.append(FdtPropertyWords("arm,vexpress,site", [0xf]))
+
+        system = self.system.unproxy(self)
+        if system._have_psci:
+            # PSCI functions exposed to the kernel
+            if not system.have_security:
+                raise AssertionError("PSCI requires EL3 (have_security)")
+
+            psci_node = FdtNode('psci')
+            psci_node.appendCompatible(['arm,psci-1.0', 'arm,psci-0.2',
+                                        'arm,psci'])
+            method = 'smc'
+            psci_node.append(FdtPropertyStrings('method', method))
+            psci_node.append(FdtPropertyWords('cpu_suspend', 0xc4000001))
+            psci_node.append(FdtPropertyWords('cpu_off', 0x84000002))
+            psci_node.append(FdtPropertyWords('cpu_on', 0xc4000003))
+            psci_node.append(FdtPropertyWords('sys_poweroff', 0x84000008))
+            psci_node.append(FdtPropertyWords('sys_reset', 0x84000009))
+            node.append(psci_node)
 
         yield node
 
