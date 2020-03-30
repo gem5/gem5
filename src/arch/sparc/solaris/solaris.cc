@@ -79,7 +79,6 @@ const int SparcSolaris::NUM_OPEN_FLAGS =
 SyscallFlagTransTable SparcSolaris::mmapFlagTable[] = {
   { TGT_MAP_SHARED, MAP_SHARED },
   { TGT_MAP_PRIVATE, MAP_PRIVATE },
-  { TGT_MAP_32BIT, MAP_32BIT},
   { TGT_MAP_ANON, MAP_ANON },
   { TGT_MAP_DENYWRITE, MAP_DENYWRITE },
   { TGT_MAP_EXECUTABLE, MAP_EXECUTABLE },

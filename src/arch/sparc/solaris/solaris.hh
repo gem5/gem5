@@ -63,7 +63,6 @@ class SparcSolaris : public Solaris
 
     static const unsigned TGT_MAP_SHARED        = 0x00001;
     static const unsigned TGT_MAP_PRIVATE       = 0x00002;
-    static const unsigned TGT_MAP_32BIT         = 0x00040;
     static const unsigned TGT_MAP_ANON          = 0x00020;
     static const unsigned TGT_MAP_DENYWRITE     = 0x00800;
     static const unsigned TGT_MAP_EXECUTABLE    = 0x01000;
