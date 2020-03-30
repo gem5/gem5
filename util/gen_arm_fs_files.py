@@ -292,30 +292,6 @@ if os.path.exists(revisions_dir):
     print "Error: %s already exists." %revisions_dir
     sys.exit(1)
 
-# Some basic dependency checking
-needed_programs = [
-    "make",
-    "aarch64-linux-gnu-gcc",
-    "arm-linux-gnueabihf-gcc",
-    "aarch64-linux-gnu-gcc-4.8",
-    "arm-linux-gnueabihf-gcc-4.8",
-    "gcc",
-    "bc",
-    "dtc",
-    "arm-linux-gnueabi-gcc"
-]
-
-for program in needed_programs:
-    if not spawn.find_executable(program):
-        print "Error: command %s not found in $PATH" % program
-        print ("If running on an Debian-based linux, please try the following "
-               "cmd to get all the necessary packages: ")
-        print ("sudo apt-get install -y make gcc bc gcc-aarch64-linux-gnu "
-              "gcc-4.8-aarch64-linux-gnu gcc-4.8-arm-linux-gnueabihf "
-              "gcc-arm-linux-gnueabihf device-tree-compiler "
-              "gcc-arm-linux-gnueabi")
-        sys.exit(1)
-
 os.mkdir(binaries_dir);
 os.mkdir(revisions_dir);
 
