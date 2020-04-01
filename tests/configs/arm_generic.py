@@ -94,6 +94,7 @@ class LinuxArmSystemBuilder(object):
 
         default_kernels = {
             "VExpress_GEM5_V1": gem5_kernel,
+            "VExpress_GEM5_Foundation": gem5_kernel,
         }
 
         sc = SysConfig(None, self.mem_size, [disk_image], "/dev/sda")
@@ -122,7 +123,7 @@ class LinuxArmFSSystem(LinuxArmSystemBuilder,
     """Basic ARM full system builder."""
 
     def __init__(self,
-                 machine_type='VExpress_GEM5_V1',
+                 machine_type='VExpress_GEM5_Foundation',
                  aarch64_kernel=True,
                  **kwargs):
         """Initialize an ARM system that supports full system simulation.
@@ -153,7 +154,7 @@ class LinuxArmFSSystemUniprocessor(LinuxArmSystemBuilder,
     """
 
     def __init__(self,
-                 machine_type='VExpress_GEM5_V1',
+                 machine_type='VExpress_GEM5_Foundation',
                  aarch64_kernel=True,
                  **kwargs):
         BaseFSSystemUniprocessor.__init__(self, **kwargs)
@@ -164,7 +165,7 @@ class LinuxArmFSSwitcheroo(LinuxArmSystemBuilder, BaseFSSwitcheroo):
     """Uniprocessor ARM system prepared for CPU switching"""
 
     def __init__(self,
-                 machine_type='VExpress_GEM5_V1',
+                 machine_type='VExpress_GEM5_Foundation',
                  aarch64_kernel=True,
                  **kwargs):
         BaseFSSwitcheroo.__init__(self, **kwargs)
