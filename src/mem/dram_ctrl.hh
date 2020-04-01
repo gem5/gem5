@@ -49,6 +49,7 @@
 #include <deque>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "base/statistics.hh"
@@ -60,44 +61,13 @@
 #include "mem/qos/mem_ctrl.hh"
 #include "mem/qport.hh"
 #include "params/DRAMCtrl.hh"
+#include "params/DRAMInterface.hh"
+#include "params/MemInterface.hh"
+#include "params/NVMInterface.hh"
 #include "sim/eventq.hh"
 
 class DRAMInterfaceParams;
-
-/**
- * A basic class to track the bank state, i.e. what row is
- * currently open (if any), when is the bank free to accept a new
- * column (read/write) command, when can it be precharged, and
- * when can it be activated.
- *
- * The bank also keeps track of how many bytes have been accessed
- * in the open row since it was opened.
- */
-class Bank
-{
-
-  public:
-
-    static const uint32_t NO_ROW = -1;
-
-    uint32_t openRow;
-    uint8_t bank;
-    uint8_t bankgr;
-
-    Tick rdAllowedAt;
-    Tick wrAllowedAt;
-    Tick preAllowedAt;
-    Tick actAllowedAt;
-
-    uint32_t rowAccesses;
-    uint32_t bytesAccessed;
-
-    Bank() :
-        openRow(NO_ROW), bank(0), bankgr(0),
-        rdAllowedAt(0), wrAllowedAt(0), preAllowedAt(0), actAllowedAt(0),
-        rowAccesses(0), bytesAccessed(0)
-    { }
-};
+class NVMInterfaceParams;
 
 /**
  * A burst helper helps organize and manage a packet that is larger than
@@ -142,6 +112,9 @@ class DRAMPacket
 
     const bool read;
 
+    /** Does this packet access DRAM?*/
+    const bool dram;
+
     /** Will be populated by address decoder */
     const uint8_t rank;
     const uint8_t bank;
@@ -173,7 +146,6 @@ class DRAMPacket
      * If not a split packet (common case), this is set to NULL
      */
     BurstHelper* burstHelper;
-    Bank& bankRef;
 
     /**
      * QoS value of the encapsulated packet read at queuing time
@@ -222,15 +194,19 @@ class DRAMPacket
      */
     inline bool isWrite() const { return !read; }
 
+    /**
+     * Return true if its a DRAM access
+     */
+    inline bool isDram() const { return dram; }
 
-    DRAMPacket(PacketPtr _pkt, bool is_read, uint8_t _rank, uint8_t _bank,
-               uint32_t _row, uint16_t bank_id, Addr _addr,
-               unsigned int _size, Bank& bank_ref)
+    DRAMPacket(PacketPtr _pkt, bool is_read, bool is_dram, uint8_t _rank,
+               uint8_t _bank, uint32_t _row, uint16_t bank_id, Addr _addr,
+               unsigned int _size)
         : entryTime(curTick()), readyTime(curTick()), pkt(_pkt),
           _masterId(pkt->masterId()),
-          read(is_read), rank(_rank), bank(_bank), row(_row),
+          read(is_read), dram(is_dram), rank(_rank), bank(_bank), row(_row),
           bankId(bank_id), addr(_addr), size(_size), burstHelper(NULL),
-          bankRef(bank_ref), _qosValue(_pkt->qosValue())
+          _qosValue(_pkt->qosValue())
     { }
 
 };
@@ -239,13 +215,234 @@ class DRAMPacket
 // based on their QoS priority
 typedef std::deque<DRAMPacket*> DRAMPacketQueue;
 
+
+/**
+ * General interface to memory device
+ * Includes functions and parameters shared across media types
+ */
+class MemInterface : public AbstractMemory
+{
+  protected:
+    /**
+     * A basic class to track the bank state, i.e. what row is
+     * currently open (if any), when is the bank free to accept a new
+     * column (read/write) command, when can it be precharged, and
+     * when can it be activated.
+     *
+     * The bank also keeps track of how many bytes have been accessed
+     * in the open row since it was opened.
+     */
+    class Bank
+    {
+
+      public:
+
+        static const uint32_t NO_ROW = -1;
+
+        uint32_t openRow;
+        uint8_t bank;
+        uint8_t bankgr;
+
+        Tick rdAllowedAt;
+        Tick wrAllowedAt;
+        Tick preAllowedAt;
+        Tick actAllowedAt;
+
+        uint32_t rowAccesses;
+        uint32_t bytesAccessed;
+
+        Bank() :
+            openRow(NO_ROW), bank(0), bankgr(0),
+            rdAllowedAt(0), wrAllowedAt(0), preAllowedAt(0), actAllowedAt(0),
+            rowAccesses(0), bytesAccessed(0)
+        { }
+    };
+
+    /**
+     * A pointer to the parent DRAMCtrl instance
+     */
+    DRAMCtrl* ctrl;
+
+    /**
+     * Number of commands that can issue in the defined controller
+     * command window, used to verify command bandwidth
+     */
+    unsigned int maxCommandsPerWindow;
+
+    /**
+     * Memory controller configuration initialized based on parameter
+     * values.
+     */
+    Enums::AddrMap addrMapping;
+
+    /**
+     * General device and channel characteristics
+     * The rowsPerBank is determined based on the capacity, number of
+     * ranks and banks, the burst size, and the row buffer size.
+     */
+    const uint32_t burstSize;
+    const uint32_t deviceSize;
+    const uint32_t deviceRowBufferSize;
+    const uint32_t devicesPerRank;
+    const uint32_t rowBufferSize;
+    const uint32_t burstsPerRowBuffer;
+    const uint32_t burstsPerStripe;
+    const uint32_t ranksPerChannel;
+    const uint32_t banksPerRank;
+    uint32_t rowsPerBank;
+
+    /**
+     * General timing requirements
+     */
+    const Tick M5_CLASS_VAR_USED tCK;
+    const Tick tCS;
+    const Tick tBURST;
+    const Tick tRTW;
+    const Tick tWTR;
+
+    /*
+     * @return delay between write and read commands
+     */
+    virtual Tick writeToReadDelay() const { return tBURST + tWTR; }
+
+    /*
+     * @return delay between write and read commands
+     */
+    Tick readToWriteDelay() const { return tBURST + tRTW; }
+
+    /*
+     * @return delay between accesses to different ranks
+     */
+    Tick rankToRankDelay() const { return tBURST + tCS; }
+
+
+  public:
+    /** Set a pointer to the controller and initialize
+     * interface based on controller parameters
+     * @param _ctrl pointer to the parent controller
+     * @param command_window size of command window used to
+     *                       check command bandwidth
+     */
+    void setCtrl(DRAMCtrl* _ctrl, unsigned int command_window);
+
+    /**
+     * Get an address in a dense range which starts from 0. The input
+     * address is the physical address of the request in an address
+     * space that contains other SimObjects apart from this
+     * controller.
+     *
+     * @param addr The intput address which should be in the addrRange
+     * @return An address in the continues range [0, max)
+     */
+    Addr getCtrlAddr(Addr addr) { return range.getOffset(addr); }
+
+    /**
+     * Setup the rank based on packet received
+     *
+     * @param integer value of rank to be setup. used to index ranks vector
+     * @param are we setting up rank for read or write packet?
+     */
+    virtual void setupRank(const uint8_t rank, const bool is_read) = 0;
+
+    /**
+     * Check drain state of interface
+     *
+     * @return true if all ranks are drained and idle
+     *
+     */
+    virtual bool allRanksDrained() const = 0;
+
+    /**
+     * For FR-FCFS policy, find first command that can issue
+     * Function will be overriden by interface to select based
+     * on media characteristics, used to determine when read
+     * or write can issue.
+     *
+     * @param queue Queued requests to consider
+     * @param min_col_at Minimum tick for 'seamless' issue
+     * @return an iterator to the selected packet, else queue.end()
+     * @return the tick when the packet selected will issue
+     */
+    virtual std::pair<DRAMPacketQueue::iterator, Tick>
+    chooseNextFRFCFS(DRAMPacketQueue& queue, Tick min_col_at) const = 0;
+
+    /*
+     * Function to calulate unloaded latency
+     */
+    virtual Tick accessLatency() const = 0;
+
+    /**
+     * @return number of bytes in a burst for this interface
+     */
+    uint32_t bytesPerBurst() const { return burstSize; }
+
+    /*
+     * @return time to offset next command
+     */
+    virtual Tick commandOffset() const = 0;
+
+    /**
+     * Check if a burst operation can be issued to the interface
+     *
+     * @param Return true if RD/WR can issue
+     */
+    virtual bool burstReady(DRAMPacket* pkt) const = 0;
+
+    /**
+     * Determine the required delay for an access to a different rank
+     *
+     * @return required rank to rank delay
+     */
+    Tick rankDelay() const { return tCS; }
+
+    /**
+     *
+     * @return minimum additional bus turnaround required for read-to-write
+     */
+    Tick minReadToWriteDataGap() const { return std::min(tRTW, tCS); }
+
+    /**
+     *
+     * @return minimum additional bus turnaround required for write-to-read
+     */
+    Tick minWriteToReadDataGap() const { return std::min(tWTR, tCS); }
+
+    /**
+     * Address decoder to figure out physical mapping onto ranks,
+     * banks, and rows. This function is called multiple times on the same
+     * system packet if the pakcet is larger than burst of the memory. The
+     * pkt_addr is used for the offset within the packet.
+     *
+     * @param pkt The packet from the outside world
+     * @param pkt_addr The starting address of the DRAM packet
+     * @param size The size of the DRAM packet in bytes
+     * @param is_read Is the request for a read or a write to memory
+     * @param is_dram Is the request to a DRAM interface
+     * @return A DRAMPacket pointer with the decoded information
+     */
+    DRAMPacket* decodePacket(const PacketPtr pkt, Addr pkt_addr,
+                           unsigned int size, bool is_read, bool is_dram);
+
+    /**
+     *  Add rank to rank delay to bus timing to all banks in all ranks
+     *  when access to an alternate interface is issued
+     *
+     *  param cmd_at Time of current command used as starting point for
+     *               addition of rank-to-rank delay
+     */
+    virtual void addRankToRankDelay(Tick cmd_at) = 0;
+
+    typedef MemInterfaceParams Params;
+    MemInterface(const Params* _p);
+};
+
 /**
  * Interface to DRAM devices with media specific parameters,
  * statistics, and functions.
  * The DRAMInterface includes a class for individual ranks
  * and per rank functions.
  */
-class DRAMInterface : public AbstractMemory
+class DRAMInterface : public MemInterface
 {
   private:
     /**
@@ -662,45 +859,17 @@ class DRAMInterface : public AbstractMemory
     }
 
     /**
-     * A pointer to the parent DRAMCtrl instance
+     * DRAM specific device characteristics
      */
-    DRAMCtrl* ctrl;
-
-    /**
-     * Memory controller configuration initialized based on parameter
-     * values.
-     */
-    Enums::AddrMap addrMapping;
-
-
-    /**
-     * DRAM device and channel characteristics
-     * The rowsPerBank is determined based on the capacity, number of
-     * ranks and banks, the burst size, and the row buffer size.
-     */
-    const uint32_t burstSize;
-    const uint32_t deviceSize;
-    const uint32_t deviceRowBufferSize;
-    const uint32_t devicesPerRank;
-    const uint32_t rowBufferSize;
-    const uint32_t columnsPerRowBuffer;
-    const uint32_t columnsPerStripe;
-    const uint32_t ranksPerChannel;
     const uint32_t bankGroupsPerRank;
     const bool bankGroupArch;
-    const uint32_t banksPerRank;
-    uint32_t rowsPerBank;
 
     /**
-     * DRAM timing requirements
+     * DRAM specific timing requirements
      */
-    const Tick M5_CLASS_VAR_USED tCK;
-    const Tick tCS;
     const Tick tCL;
-    const Tick tBURST;
     const Tick tBURST_MIN;
     const Tick tBURST_MAX;
-    const Tick tRTW;
     const Tick tCCD_L_WR;
     const Tick tCCD_L;
     const Tick tRCD;
@@ -718,16 +887,12 @@ class DRAMInterface : public AbstractMemory
     const Tick tXP;
     const Tick tXS;
     const Tick clkResyncDelay;
-    unsigned int maxCommandsPerBurst;
     const bool dataClockSync;
     const bool burstInterleave;
     const uint8_t twoCycleActivate;
     const uint32_t activationLimit;
-    const Tick wrToRdDly;
-    const Tick rdToWrDly;
     const Tick wrToRdDlySameBG;
     const Tick rdToWrDlySameBG;
-    const Tick rankToRankDly;
 
     Enums::PageManage pageMgmt;
     /**
@@ -843,9 +1008,34 @@ class DRAMInterface : public AbstractMemory
     const uint32_t readBufferSize;
     const uint32_t writeBufferSize;
 
-    /** Setting a pointer to the controller */
-    void setCtrl(DRAMCtrl* _ctrl) { ctrl = _ctrl; }
+    /*
+     * @return delay between write and read commands
+     */
+    Tick writeToReadDelay() const override { return tBURST + tWTR + tCL; }
 
+    /**
+     * Find which are the earliest banks ready to issue an activate
+     * for the enqueued requests. Assumes maximum of 32 banks per rank
+     * Also checks if the bank is already prepped.
+     *
+     * @param queue Queued requests to consider
+     * @param min_col_at time of seamless burst command
+     * @return One-hot encoded mask of bank indices
+     * @return boolean indicating burst can issue seamlessly, with no gaps
+     */
+    std::pair<std::vector<uint32_t>, bool>
+    minBankPrep(const DRAMPacketQueue& queue, Tick min_col_at) const;
+
+    /*
+     * @return time to send a burst of data without gaps
+     */
+    Tick
+    burstDelay() const
+    {
+        return (burstInterleave ? tBURST_MAX / 2 : tBURST);
+    }
+
+  public:
     /**
      * Initialize the DRAM interface and verify parameters
      */
@@ -855,6 +1045,14 @@ class DRAMInterface : public AbstractMemory
      * Iterate through dram ranks and instantiate per rank startup routine
      */
     void startup() override;
+
+    /**
+     * Setup the rank based on packet received
+     *
+     * @param integer value of rank to be setup. used to index ranks vector
+     * @param are we setting up rank for read or write packet?
+     */
+    void setupRank(const uint8_t rank, const bool is_read) override;
 
     /**
      * Iterate through dram ranks to exit self-refresh in order to drain
@@ -870,92 +1068,33 @@ class DRAMInterface : public AbstractMemory
      * @return true if all ranks have refreshed, with no commands enqueued
      *
      */
-    bool allRanksDrained() const;
+    bool allRanksDrained() const override;
 
     /**
      * Iterate through DRAM ranks and suspend them
      */
     void suspend();
 
-    /**
-     * Get an address in a dense range which starts from 0. The input
-     * address is the physical address of the request in an address
-     * space that contains other SimObjects apart from this
-     * controller.
-     *
-     * @param addr The intput address which should be in the addrRange
-     * @return An address in the continues range [0, max)
-     */
-    Addr getCtrlAddr(Addr addr) { return range.getOffset(addr); }
-
-    /**
-     * @return number of bytes in a burst for this interface
-     */
-    uint32_t bytesPerBurst() const { return burstSize; }
-
-    /**
-     *
-     * @return number of ranks per channel for this interface
-     */
-    uint32_t numRanks() const { return ranksPerChannel; }
-
     /*
-     * @return time to send a burst of data
+     * @return time to offset next command
      */
-    Tick burstDelay() const { return tBURST; }
-
-    /*
-     * @return time to send a burst of data without gaps
-     */
-    Tick
-    burstDataDelay() const
-    {
-        return (burstInterleave ? tBURST_MAX / 2 : tBURST);
-    }
-
-    /*
-     * @return Maximum number of commands that can issue per burst
-     */
-    Tick maxCmdsPerBst() const { return maxCommandsPerBurst; }
-
-    /**
-     *
-     * @return additional bus turnaround required for read-to-write
-     */
-    Tick minRdToWr() const { return tRTW; }
-
-    /**
-     * Determine the required delay for an access to a different rank
-     *
-     * @return required rank to rank delay
-     */
-    Tick rankDelay() const { return tCS; }
-
-    /*
-     * Function to calulate RAS cycle time for use within and
-     * outside of this class
-     */
-    Tick tRC() const { return (tRP + tRCD); }
+    Tick commandOffset() const override { return (tRP + tRCD); }
 
     /*
      * Function to calulate unloaded, closed bank access latency
      */
-    Tick accessLatency() const { return (tRP + tRCD + tCL); }
+    Tick accessLatency() const override { return (tRP + tRCD + tCL); }
 
     /**
-     * Address decoder to figure out physical mapping onto ranks,
-     * banks, and rows. This function is called multiple times on the same
-     * system packet if the pakcet is larger than burst of the memory. The
-     * dramPktAddr is used for the offset within the packet.
+     * For FR-FCFS policy, find first DRAM command that can issue
      *
-     * @param pkt The packet from the outside world
-     * @param dramPktAddr The starting address of the DRAM packet
-     * @param size The size of the DRAM packet in bytes
-     * @param isRead Is the request for a read or a write to DRAM
-     * @return A DRAMPacket pointer with the decoded information
+     * @param queue Queued requests to consider
+     * @param min_col_at Minimum tick for 'seamless' issue
+     * @return an iterator to the selected packet, else queue.end()
+     * @return the tick when the packet selected will issue
      */
-    DRAMPacket* decodePacket(const PacketPtr pkt, Addr dramPktAddr,
-                           unsigned int size, bool isRead) const;
+    std::pair<DRAMPacketQueue::iterator, Tick>
+    chooseNextFRFCFS(DRAMPacketQueue& queue, Tick min_col_at) const override;
 
     /**
      * Actually do the burst - figure out the latency it
@@ -968,23 +1107,12 @@ class DRAMInterface : public AbstractMemory
      * @param dram_pkt The DRAM packet created from the outside world pkt
      * @param next_burst_at Minimum bus timing requirement from controller
      * @param queue Reference to the read or write queue with the packet
-     * @return tick when burst is issued
+     * @return pair, tick when current burst is issued and
+     *               tick when next burst can issue
      */
-    Tick doBurstAccess(DRAMPacket* dram_pkt, Tick next_burst_at,
-                             const std::vector<DRAMPacketQueue>& queue);
-
-    /**
-     * Find which are the earliest banks ready to issue an activate
-     * for the enqueued requests. Assumes maximum of 32 banks per rank
-     * Also checks if the bank is already prepped.
-     *
-     * @param queue Queued requests to consider
-     * @param min_col_at time of seamless burst command
-     * @return One-hot encoded mask of bank indices
-     * @return boolean indicating burst can issue seamlessly, with no gaps
-     */
-    std::pair<std::vector<uint32_t>, bool>
-    minBankPrep(const DRAMPacketQueue& queue, Tick min_col_at) const;
+    std::pair<Tick, Tick>
+    doBurstAccess(DRAMPacket* dram_pkt, Tick next_burst_at,
+                  const std::vector<DRAMPacketQueue>& queue);
 
     /**
      * Check if a burst operation can be issued to the DRAM
@@ -994,9 +1122,9 @@ class DRAMInterface : public AbstractMemory
      *                    REF IDLE state
      */
     bool
-    burstReady(uint8_t rank) const
+    burstReady(DRAMPacket* pkt) const override
     {
-        return ranks[rank]->inRefIdleState();
+        return ranks[pkt->rank]->inRefIdleState();
     }
 
     /**
@@ -1008,6 +1136,15 @@ class DRAMInterface : public AbstractMemory
      * return boolean if all ranks are in refresh and therefore busy
      */
     bool isBusy();
+
+    /**
+     *  Add rank to rank delay to bus timing to all DRAM banks in alli ranks
+     *  when access to an alternate interface is issued
+     *
+     *  param cmd_at Time of current command used as starting point for
+     *               addition of rank-to-rank delay
+     */
+    void addRankToRankDelay(Tick cmd_at) override;
 
     /**
      * Complete response process for DRAM when read burst is complete
@@ -1027,6 +1164,270 @@ class DRAMInterface : public AbstractMemory
     void checkRefreshState(uint8_t rank);
 
     DRAMInterface(const DRAMInterfaceParams* _p);
+};
+
+/**
+ * Interface to NVM devices with media specific parameters,
+ * statistics, and functions.
+ * The NVMInterface includes a class for individual ranks
+ * and per rank functions.
+ */
+class NVMInterface : public MemInterface
+{
+  private:
+    /**
+     * NVM rank class simply includes a vector of banks.
+     */
+    class Rank : public EventManager
+    {
+      private:
+
+        /**
+         * A reference to the parent NVMInterface instance
+         */
+        NVMInterface& nvm;
+
+      public:
+
+        /**
+         * Current Rank index
+         */
+        uint8_t rank;
+
+        /**
+         * Vector of NVM banks. Each rank is made of several banks
+         * that can be accessed in parallel.
+         */
+        std::vector<Bank> banks;
+
+        Rank(const NVMInterfaceParams* _p, int _rank,
+             NVMInterface& _nvm);
+    };
+
+    /**
+     * NVM specific device and channel characteristics
+     */
+    const uint32_t maxPendingWrites;
+    const uint32_t maxPendingReads;
+    const bool twoCycleRdWr;
+
+    /**
+     * NVM specific timing requirements
+     */
+    const Tick tREAD;
+    const Tick tWRITE;
+    const Tick tSEND;
+
+    struct NVMStats : public Stats::Group
+    {
+        NVMStats(NVMInterface &nvm);
+
+        void regStats() override;
+
+        NVMInterface &nvm;
+
+        /** NVM stats */
+        Stats::Scalar readBursts;
+        Stats::Scalar writeBursts;
+
+        Stats::Vector perBankRdBursts;
+        Stats::Vector perBankWrBursts;
+
+        // Latencies summed over all requests
+        Stats::Scalar totQLat;
+        Stats::Scalar totBusLat;
+        Stats::Scalar totMemAccLat;
+
+        // Average latencies per request
+        Stats::Formula avgQLat;
+        Stats::Formula avgBusLat;
+        Stats::Formula avgMemAccLat;
+
+        Stats::Scalar bytesRead;
+        Stats::Scalar bytesWritten;
+
+        // Average bandwidth
+        Stats::Formula avgRdBW;
+        Stats::Formula avgWrBW;
+        Stats::Formula peakBW;
+        Stats::Formula busUtil;
+        Stats::Formula busUtilRead;
+        Stats::Formula busUtilWrite;
+
+        /** NVM stats */
+        Stats::Histogram pendingReads;
+        Stats::Histogram pendingWrites;
+        Stats::Histogram bytesPerBank;
+    };
+
+    NVMStats stats;
+
+    void processWriteRespondEvent();
+    EventFunctionWrapper writeRespondEvent;
+
+    void processReadReadyEvent();
+    EventFunctionWrapper readReadyEvent;
+
+    /**
+      * Vector of nvm ranks
+      */
+    std::vector<Rank*> ranks;
+
+    /**
+     * Holding queue for non-deterministic write commands, which
+     * maintains writes that have been issued but have not completed
+     * Stored seperately mostly to keep the code clean and help with
+     * events scheduling.
+     * This mimics a buffer on the media controller and therefore is
+     * not added to the main write queue for sizing
+     */
+    std::list<Tick> writeRespQueue;
+
+    std::deque<Tick> readReadyQueue;
+
+    /**
+     * Check if the write response queue is empty
+     *
+     * @param Return true if empty
+     */
+    bool writeRespQueueEmpty() const { return writeRespQueue.empty(); }
+
+    /**
+     * Till when must we wait before issuing next read command?
+     */
+    Tick nextReadAt;
+
+    // keep track of reads that have issued for which data is either
+    // not yet ready or has not yet been transferred to the ctrl
+    uint16_t numPendingReads;
+    uint16_t numReadDataReady;
+
+  public:
+    // keep track of the number of reads that have yet to be issued
+    uint16_t numReadsToIssue;
+
+    // number of writes in the writeQueue for the NVM interface
+    uint32_t numWritesQueued;
+
+    /**
+      * Buffer sizes for read and write queues in the controller
+      * These are passed to the controller on instantiation
+      * Defining them here allows for buffers to be resized based
+      * on memory type / configuration.
+      */
+    const uint32_t readBufferSize;
+    const uint32_t writeBufferSize;
+
+    /**
+     * Initialize the NVM interface and verify parameters
+     */
+    void init() override;
+
+    /**
+     * Setup the rank based on packet received
+     *
+     * @param integer value of rank to be setup. used to index ranks vector
+     * @param are we setting up rank for read or write packet?
+     */
+    void setupRank(const uint8_t rank, const bool is_read) override;
+
+    /**
+     * Check drain state of NVM interface
+     *
+     * @return true if write response queue is empty
+     *
+     */
+    bool allRanksDrained() const override { return writeRespQueueEmpty(); }
+
+    /*
+     * @return time to offset next command
+     */
+    Tick commandOffset() const override { return tBURST; }
+
+    /**
+     * Check if a burst operation can be issued to the NVM
+     *
+     * @param Return true if RD/WR can issue
+     *                    for reads, also verfy that ready count
+     *                    has been updated to a non-zero value to
+     *                    account for race conditions between events
+     */
+    bool burstReady(DRAMPacket* pkt) const override;
+
+    /**
+     * This function checks if ranks are busy.
+     * This state is true when either:
+     * 1) There is no command with read data ready to transmit or
+     * 2) The NVM inteface has reached the maximum number of outstanding
+     *    writes commands.
+     * @param read_queue_empty There are no read queued
+     * @param all_writes_nvm   All writes in queue are for NVM interface
+     * @return true of NVM is busy
+     *
+     */
+    bool isBusy(bool read_queue_empty, bool all_writes_nvm);
+    /**
+     * For FR-FCFS policy, find first NVM command that can issue
+     * default to first command to prepped region
+     *
+     * @param queue Queued requests to consider
+     * @param min_col_at Minimum tick for 'seamless' issue
+     * @return an iterator to the selected packet, else queue.end()
+     * @return the tick when the packet selected will issue
+     */
+    std::pair<DRAMPacketQueue::iterator, Tick>
+    chooseNextFRFCFS(DRAMPacketQueue& queue, Tick min_col_at) const override;
+
+    /**
+     *  Add rank to rank delay to bus timing to all NVM banks in alli ranks
+     *  when access to an alternate interface is issued
+     *
+     *  param cmd_at Time of current command used as starting point for
+     *               addition of rank-to-rank delay
+     */
+    void addRankToRankDelay(Tick cmd_at) override;
+
+
+    /**
+     * Select read command to issue asynchronously
+     */
+    void chooseRead(DRAMPacketQueue& queue);
+
+    /*
+     * Function to calulate unloaded access latency
+     */
+    Tick accessLatency() const override { return (tREAD + tSEND); }
+
+    /**
+     * Check if the write response queue has reached defined threshold
+     *
+     * @param Return true if full
+     */
+    bool
+    writeRespQueueFull() const
+    {
+        return writeRespQueue.size() == maxPendingWrites;
+    }
+
+    bool
+    readsWaitingToIssue() const
+    {
+        return ((numReadsToIssue != 0) &&
+                (numPendingReads < maxPendingReads));
+    }
+
+    /**
+     * Actually do the burst and update stats.
+     *
+     * @param pkt The packet created from the outside world pkt
+     * @param next_burst_at Minimum bus timing requirement from controller
+     * @return pair, tick when current burst is issued and
+     *               tick when next burst can issue
+     */
+    std::pair<Tick, Tick>
+    doBurstAccess(DRAMPacket* pkt, Tick next_burst_at);
+
+    NVMInterface(const NVMInterfaceParams* _p);
 };
 
 /**
@@ -1056,7 +1457,6 @@ class DRAMInterface : public AbstractMemory
  */
 class DRAMCtrl : public QoS::MemCtrl
 {
-
   private:
 
     // For now, make use of a queued slave port to avoid dealing with
@@ -1115,18 +1515,18 @@ class DRAMCtrl : public QoS::MemCtrl
     /**
      * Check if the read queue has room for more entries
      *
-     * @param pktCount The number of entries needed in the read queue
+     * @param pkt_count The number of entries needed in the read queue
      * @return true if read queue is full, false otherwise
      */
-    bool readQueueFull(unsigned int pktCount) const;
+    bool readQueueFull(unsigned int pkt_count) const;
 
     /**
      * Check if the write queue has room for more entries
      *
-     * @param pktCount The number of entries needed in the write queue
+     * @param pkt_count The number of entries needed in the write queue
      * @return true if write queue is full, false otherwise
      */
-    bool writeQueueFull(unsigned int pktCount) const;
+    bool writeQueueFull(unsigned int pkt_count) const;
 
     /**
      * When a new read comes in, first check if the write q has a
@@ -1138,11 +1538,12 @@ class DRAMCtrl : public QoS::MemCtrl
      * servicing it.
      *
      * @param pkt The request packet from the outside world
-     * @param pktCount The number of DRAM bursts the pkt
+     * @param pkt_count The number of DRAM bursts the pkt
+     * @param is_dram Does this packet access DRAM?
      * translate to. If pkt size is larger then one full burst,
-     * then pktCount is greater than one.
+     * then pkt_count is greater than one.
      */
-    void addToReadQueue(PacketPtr pkt, unsigned int pktCount);
+    void addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram);
 
     /**
      * Decode the incoming pkt, create a dram_pkt and push to the
@@ -1151,11 +1552,12 @@ class DRAMCtrl : public QoS::MemCtrl
      * to get full, stop reads, and start draining writes.
      *
      * @param pkt The request packet from the outside world
-     * @param pktCount The number of DRAM bursts the pkt
+     * @param pkt_count The number of DRAM bursts the pkt
+     * @param is_dram Does this packet access DRAM?
      * translate to. If pkt size is larger then one full burst,
-     * then pktCount is greater than one.
+     * then pkt_count is greater than one.
      */
-    void addToWriteQueue(PacketPtr pkt, unsigned int pktCount);
+    void addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram);
 
     /**
      * Actually do the burst based on media specific access function.
@@ -1175,6 +1577,44 @@ class DRAMCtrl : public QoS::MemCtrl
      * @param static_latency Static latency to add before sending the packet
      */
     void accessAndRespond(PacketPtr pkt, Tick static_latency);
+
+    /**
+     * Determine if there is a packet that can issue.
+     *
+     * @param pkt The packet to evaluate
+     */
+    bool
+    packetReady(DRAMPacket* pkt)
+    {
+        return (pkt->isDram() ?
+            dram->burstReady(pkt) : nvm->burstReady(pkt));
+    }
+
+    /**
+     * Calculate the minimum delay used when scheduling a read-to-write
+     * transision.
+     * @param return minimum delay
+     */
+    Tick
+    minReadToWriteDataGap()
+    {
+        Tick dram_min = dram ?  dram->minReadToWriteDataGap() : MaxTick;
+        Tick nvm_min = nvm ?  nvm->minReadToWriteDataGap() : MaxTick;
+        return std::min(dram_min, nvm_min);
+    }
+
+    /**
+     * Calculate the minimum delay used when scheduling a write-to-read
+     * transision.
+     * @param return minimum delay
+     */
+    Tick
+    minWriteToReadDataGap()
+    {
+        Tick dram_min = dram ? dram->minWriteToReadDataGap() : MaxTick;
+        Tick nvm_min = nvm ?  nvm->minWriteToReadDataGap() : MaxTick;
+        return std::min(dram_min, nvm_min);
+    }
 
     /**
      * The memory schduler/arbiter - picks which request needs to
@@ -1218,12 +1658,17 @@ class DRAMCtrl : public QoS::MemCtrl
      * Burst-align an address.
      *
      * @param addr The potentially unaligned address
+     * @param is_dram Does this packet access DRAM?
      *
-     * @return An address aligned to a DRAM burst
+     * @return An address aligned to a memory burst
      */
-    Addr burstAlign(Addr addr) const
+    Addr
+    burstAlign(Addr addr, bool is_dram) const
     {
-        return (addr & ~(Addr(dram->bytesPerBurst() - 1)));
+        if (is_dram)
+            return (addr & ~(Addr(dram->bytesPerBurst() - 1)));
+        else
+            return (addr & ~(Addr(nvm->bytesPerBurst() - 1)));
     }
 
     /**
@@ -1259,9 +1704,14 @@ class DRAMCtrl : public QoS::MemCtrl
     std::unordered_multiset<Tick> burstTicks;
 
     /**
-     * Create pointer to interface of the actual dram media
+     * Create pointer to interface of the actual dram media when connected
      */
     DRAMInterface* const dram;
+
+    /**
+     * Create pointer to interface of the actual nvm media when connected
+     */
+    NVMInterface* const nvm;
 
     /**
      * The following are basic design parameters of the memory
@@ -1296,6 +1746,12 @@ class DRAMCtrl : public QoS::MemCtrl
      * by the DRAM.
      */
     const Tick backendLatency;
+
+    /**
+     * Length of a command window, used to check
+     * command bandwidth
+     */
+    const Tick commandWindow;
 
     /**
      * Till when must we wait before issuing next RD/WR burst?
@@ -1386,7 +1842,8 @@ class DRAMCtrl : public QoS::MemCtrl
      * @param is_read The current burst is a read, select read queue
      * @return a reference to the appropriate queue
      */
-    std::vector<DRAMPacketQueue>& selQueue(bool is_read)
+    std::vector<DRAMPacketQueue>&
+    selQueue(bool is_read)
     {
         return (is_read ? readQueue : writeQueue);
     };
@@ -1397,7 +1854,15 @@ class DRAMCtrl : public QoS::MemCtrl
     void pruneBurstTick();
 
   public:
+
     DRAMCtrl(const DRAMCtrlParams* p);
+
+    /**
+     * Ensure that all interfaced have drained commands
+     *
+     * @return bool flag, set once drain complete
+     */
+    bool allIntfDrained() const;
 
     DrainState drain() override;
 
@@ -1405,28 +1870,33 @@ class DRAMCtrl : public QoS::MemCtrl
      * Check for command bus contention for single cycle command.
      * If there is contention, shift command to next burst.
      * Check verifies that the commands issued per burst is less
-     * than a defined max number, maxCommandsPerBurst.
+     * than a defined max number, maxCommandsPerWindow.
      * Therefore, contention per cycle is not verified and instead
      * is done based on a burst window.
      *
      * @param cmd_tick Initial tick of command, to be verified
+     * @param max_cmds_per_burst Number of commands that can issue
+     *                           in a burst window
      * @return tick for command issue without contention
      */
-    Tick verifySingleCmd(Tick cmd_tick);
+    Tick verifySingleCmd(Tick cmd_tick, Tick max_cmds_per_burst);
 
     /**
      * Check for command bus contention for multi-cycle (2 currently)
      * command. If there is contention, shift command(s) to next burst.
      * Check verifies that the commands issued per burst is less
-     * than a defined max number, maxCommandsPerBurst.
+     * than a defined max number, maxCommandsPerWindow.
      * Therefore, contention per cycle is not verified and instead
      * is done based on a burst window.
      *
      * @param cmd_tick Initial tick of command, to be verified
      * @param max_multi_cmd_split Maximum delay between commands
+     * @param max_cmds_per_burst Number of commands that can issue
+     *                           in a burst window
      * @return tick for command issue without contention
      */
-    Tick verifyMultiCmd(Tick cmd_tick, Tick max_multi_cmd_split = 0);
+    Tick verifyMultiCmd(Tick cmd_tick, Tick max_cmds_per_burst,
+                        Tick max_multi_cmd_split = 0);
 
     /**
      * Is there a respondEvent scheduled?

@@ -38,59 +38,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-from m5.proxy import *
-
-from m5.objects.AbstractMemory import AbstractMemory
-
-# Enum for the address mapping. With Ch, Ra, Ba, Ro and Co denoting
-# channel, rank, bank, row and column, respectively, and going from
-# MSB to LSB.  Available are RoRaBaChCo and RoRaBaCoCh, that are
-# suitable for an open-page policy, optimising for sequential accesses
-# hitting in the open row. For a closed-page policy, RoCoRaBaCh
-# maximises parallelism.
-class AddrMap(Enum): vals = ['RoRaBaChCo', 'RoRaBaCoCh', 'RoCoRaBaCh']
+from m5.objects.MemInterface import *
 
 # Enum for the page policy, either open, open_adaptive, close, or
 # close_adaptive.
 class PageManage(Enum): vals = ['open', 'open_adaptive', 'close',
                                 'close_adaptive']
 
-class DRAMInterface(AbstractMemory):
+class DRAMInterface(MemInterface):
     type = 'DRAMInterface'
     cxx_header = "mem/dram_ctrl.hh"
 
-    # Allow the interface to set required controller buffer sizes
-    # each entry corresponds to a burst for the specific DRAM
-    # configuration (e.g. x32 with burst length 8 is 32 bytes) and not
-    # the cacheline size or request/packet size
-    write_buffer_size = Param.Unsigned(64, "Number of write queue entries")
-    read_buffer_size = Param.Unsigned(32, "Number of read queue entries")
-
-    # scheduler, address map and page policy
-    addr_mapping = Param.AddrMap('RoRaBaCoCh', "Address mapping policy")
+    # scheduler page policy
     page_policy = Param.PageManage('open_adaptive', "Page management policy")
 
     # enforce a limit on the number of accesses per row
     max_accesses_per_row = Param.Unsigned(16, "Max accesses per row before "
                                           "closing");
 
-    # size of DRAM Chip in Bytes
-    device_size = Param.MemorySize("Size of DRAM chip")
-    # the physical organisation of the DRAM
-    device_bus_width = Param.Unsigned("data bus width in bits for each DRAM "\
-                                      "device/chip")
-    burst_length = Param.Unsigned("Burst lenght (BL) in beats")
-    device_rowbuffer_size = Param.MemorySize("Page (row buffer) size per "\
-                                           "device/chip")
-    devices_per_rank = Param.Unsigned("Number of devices/chips per rank")
-    ranks_per_channel = Param.Unsigned("Number of ranks per channel")
-
     # default to 0 bank groups per rank, indicating bank group architecture
     # is not used
     # update per memory class when bank group architecture is supported
     bank_groups_per_rank = Param.Unsigned(0, "Number of bank groups per rank")
-    banks_per_rank = Param.Unsigned("Number of banks per rank")
 
     # Enable DRAM powerdown states if True. This is False by default due to
     # performance being lower when enabled
@@ -106,9 +75,6 @@ class DRAMInterface(AbstractMemory):
     # additional feature in the future.
 
     # timing behaviour and constraints - all in nanoseconds
-
-    # the base clock period of the DRAM
-    tCK = Param.Latency("Clock period")
 
     # the amount of time in nanoseconds from issuing an activate command
     # to the data being available in the row buffer for a read/write
@@ -128,18 +94,6 @@ class DRAMInterface(AbstractMemory):
 
     # minimum time between a read and precharge command
     tRTP = Param.Latency("Read to precharge")
-
-    # time to complete a burst transfer, typically the burst length
-    # divided by two due to the DDR bus, but by making it a parameter
-    # it is easier to also evaluate SDR memories like WideIO.
-    # This parameter has to account for burst length.
-    # Read/Write requests with data size larger than one full burst are broken
-    # down into multiple requests in the controller
-    # tBURST is equivalent to the CAS-to-CAS delay (tCCD)
-    # With bank group architectures, tBURST represents the CAS-to-CAS
-    # delay for bursts to different bank groups (tCCD_S)
-    tBURST = Param.Latency("Burst duration "
-                           "(typically burst length / 2 cycles)")
 
     # tBURST_MAX is the column array cycle delay required before next access,
     # which could be greater than tBURST when the memory access time is greater
@@ -170,21 +124,9 @@ class DRAMInterface(AbstractMemory):
     # to be sent. It is 7.8 us for a 64ms refresh requirement
     tREFI = Param.Latency("Refresh command interval")
 
-    # write-to-read, same rank turnaround penalty
-    tWTR = Param.Latency("Write to read, same rank switching time")
-
     # write-to-read, same rank turnaround penalty for same bank group
     tWTR_L = Param.Latency(Self.tWTR, "Write to read, same rank switching "
                            "time, same bank group")
-
-    # read-to-write, same rank turnaround penalty
-    tRTW = Param.Latency("Read to write, same rank switching time")
-
-    # rank-to-rank bus delay penalty
-    # this does not correlate to a memory timing parameter and encompasses:
-    # 1) RD-to-RD, 2) WR-to-WR, 3) RD-to-WR, and 4) WR-to-RD
-    # different rank bus delay
-    tCS = Param.Latency("Rank to rank switching time")
 
     # minimum precharge to precharge delay time
     tPPD = Param.Latency("0ns", "PRE to PRE delay")
@@ -221,6 +163,7 @@ class DRAMInterface(AbstractMemory):
     tXSDLL = Param.Latency("0ns", "Self-refresh exit latency DLL")
 
     # number of data beats per clock. with DDR, default is 2, one per edge
+    # used in drampower.cc
     beats_per_clock = Param.Unsigned(2, "Data beats per clock")
 
     data_clock_sync = Param.Bool(False, "Synchronization commands required")

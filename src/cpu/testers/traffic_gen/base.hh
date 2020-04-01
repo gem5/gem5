@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2016-2019 ARM Limited
+ * Copyright (c) 2012-2013, 2016-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -274,7 +274,7 @@ class BaseTrafficGen : public ClockedObject
         Tick min_period, Tick max_period,
         uint8_t read_percent, Addr data_limit,
         unsigned int num_seq_pkts, unsigned int page_size,
-        unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
+        unsigned int nbr_of_banks, unsigned int nbr_of_banks_util,
         Enums::AddrMap addr_mapping,
         unsigned int nbr_of_ranks);
 
@@ -284,10 +284,35 @@ class BaseTrafficGen : public ClockedObject
         Tick min_period, Tick max_period,
         uint8_t read_percent, Addr data_limit,
         unsigned int num_seq_pkts, unsigned int page_size,
-        unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
+        unsigned int nbr_of_banks, unsigned int nbr_of_banks_util,
         Enums::AddrMap addr_mapping,
         unsigned int nbr_of_ranks,
         unsigned int max_seq_count_per_rank);
+
+    std::shared_ptr<BaseGen> createHybrid(
+        Tick duration,
+        Addr start_addr_dram, Addr end_addr_dram, Addr blocksize_dram,
+        Addr start_addr_nvm, Addr end_addr_nvm, Addr blocksize_nvm,
+        Tick min_period, Tick max_period,
+        uint8_t read_percent, Addr data_limit,
+        unsigned int num_seq_pkts_dram, unsigned int page_size_dram,
+        unsigned int nbr_of_banks_dram, unsigned int nbr_of_banks_util_dram,
+        unsigned int num_seq_pkts_nvm, unsigned int buffer_size_nvm,
+        unsigned int nbr_of_banks_nvm, unsigned int nbr_of_banks_util_nvm,
+        Enums::AddrMap addr_mapping,
+        unsigned int nbr_of_ranks_dram,
+        unsigned int nbr_of_ranks_nvm,
+        uint8_t nvm_percent);
+
+    std::shared_ptr<BaseGen> createNvm(
+        Tick duration,
+        Addr start_addr, Addr end_addr, Addr blocksize,
+        Tick min_period, Tick max_period,
+        uint8_t read_percent, Addr data_limit,
+        unsigned int num_seq_pkts, unsigned int buffer_size,
+        unsigned int nbr_of_banks, unsigned int nbr_of_banks_util,
+        Enums::AddrMap addr_mapping,
+        unsigned int nbr_of_ranks);
 
     std::shared_ptr<BaseGen> createTrace(
         Tick duration,

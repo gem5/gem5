@@ -147,8 +147,8 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
                 mem_ctrl.port = dir_cntrl.memory
 
             # Enable low-power DRAM states if option is set
-            if issubclass(mem_type, DRAMCtrl):
-                mem_ctrl.enable_dram_powerdown = \
+            if issubclass(mem_type, DRAMInterface):
+                mem_ctrl.dram.enable_dram_powerdown = \
                         options.enable_dram_powerdown
 
         index += 1

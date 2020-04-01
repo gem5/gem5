@@ -59,7 +59,10 @@ class DRAMCtrl(QoSMemCtrl):
     port = SlavePort("Slave port")
 
     # Interface to volatile, DRAM media
-    dram = Param.DRAMInterface("DRAM interface")
+    dram = Param.DRAMInterface(NULL, "DRAM interface")
+
+    # Interface to non-volatile media
+    nvm = Param.NVMInterface(NULL, "NVM interface")
 
     # read and write buffer depths are set in the interface
     # the controller will read these values when instantiated
@@ -85,3 +88,5 @@ class DRAMCtrl(QoSMemCtrl):
     # serviced by the memory seeing the sum of the two
     static_frontend_latency = Param.Latency("10ns", "Static frontend latency")
     static_backend_latency = Param.Latency("10ns", "Static backend latency")
+
+    command_window = Param.Latency("10ns", "Static backend latency")
