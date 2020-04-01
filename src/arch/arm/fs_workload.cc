@@ -96,7 +96,7 @@ FsWorkload::FsWorkload(Params *p)
         bootldr->loadGlobalSymbols(debugSymbolTable);
 
         _highestELIs64 = (bootldr->getArch() == ObjectFile::Arm64);
-    } else {
+    } else if (obj) {
         _highestELIs64 = (obj->getArch() == ObjectFile::Arm64);
     }
 }
