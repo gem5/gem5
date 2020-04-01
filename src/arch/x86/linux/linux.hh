@@ -190,6 +190,14 @@ class X86Linux64 : public X86Linux
 
     static const int NUM_OPEN_FLAGS;
 
+    //@{
+    /// Basic X86_64 Linux types
+    typedef uint64_t size_t;
+    typedef uint64_t off_t;
+    typedef int64_t time_t;
+    typedef int64_t clock_t;
+    //@}
+
     static const unsigned TGT_MAP_SHARED        = 0x00001;
     static const unsigned TGT_MAP_PRIVATE       = 0x00002;
     static const unsigned TGT_MAP_32BIT         = 0x00040;
@@ -317,6 +325,14 @@ class X86Linux32 : public X86Linux
     static const int NUM_OPEN_FLAGS;
 
     static SyscallFlagTransTable mmapFlagTable[];
+
+    //@{
+    /// Basic X86 Linux types
+    typedef uint32_t size_t;
+    typedef uint32_t off_t;
+    typedef int32_t time_t;
+    typedef int32_t clock_t;
+    //@}
 
     static const unsigned TGT_MAP_SHARED        = 0x00001;
     static const unsigned TGT_MAP_PRIVATE       = 0x00002;

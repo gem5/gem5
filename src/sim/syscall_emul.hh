@@ -1642,8 +1642,8 @@ writevFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 mmapFunc(SyscallDesc *desc, ThreadContext *tc,
-         Addr start, uint64_t length, int prot, int tgt_flags,
-         int tgt_fd, int offset)
+         Addr start, typename OS::size_t length, int prot,
+         int tgt_flags, int tgt_fd, typename OS::off_t offset)
 {
     auto p = tc->getProcessPtr();
     Addr page_bytes = tc->getSystemPtr()->getPageBytes();
@@ -1826,8 +1826,8 @@ pwrite64Func(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 mmap2Func(SyscallDesc *desc, ThreadContext *tc,
-          Addr start, uint64_t length, int prot, int tgt_flags,
-          int tgt_fd, int offset)
+          Addr start, typename OS::size_t length, int prot,
+          int tgt_flags, int tgt_fd, typename OS::off_t offset)
 {
     return mmapFunc<OS>(desc, tc, start, length, prot, tgt_flags,
                         tgt_fd, offset * tc->getSystemPtr()->getPageBytes());
