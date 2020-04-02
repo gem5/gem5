@@ -37,6 +37,8 @@
 
 #include "arch/arm/qarma.hh"
 
+#include <array>
+
 #include "base/bitfield.hh"
 
 using namespace QARMA;
