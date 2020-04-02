@@ -148,6 +148,7 @@ Base::compress(const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat)
     if (comp_size_bits > sizeThreshold * CHAR_BIT) {
         comp_size_bits = blkSize * CHAR_BIT;
         comp_data->setSizeBits(comp_size_bits);
+        stats.failedCompressions++;
     }
 
     // Update stats
@@ -209,6 +210,8 @@ Base::BaseStats::BaseStats(Base& _compressor)
   : Stats::Group(&_compressor), compressor(_compressor),
     compressions(this, "compressions",
         "Total number of compressions"),
+    failedCompressions(this, "failed_compressions",
+        "Total number of failed compressions"),
     compressionSize(this, "compression_size",
         "Number of blocks that were compressed to this power of two size"),
     compressionSizeBits(this, "compression_size_bits",

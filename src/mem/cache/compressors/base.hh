@@ -106,6 +106,9 @@ class Base : public SimObject
         /** Number of compressions performed. */
         Stats::Scalar compressions;
 
+        /** Number of failed compressions. */
+        Stats::Scalar failedCompressions;
+
         /** Number of blocks that were compressed to this power of two size. */
         Stats::Vector compressionSize;
 
