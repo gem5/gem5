@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 ARM Limited
+ * Copyright (c) 2016, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -172,5 +172,19 @@ MathExpr::toStr(Node *n, std::string prefix) const {
     if (n->l)
         ret += toStr(n->l, prefix + "|   ");
     return ret;
+}
+
+void
+MathExpr::getVariables(const Node *n,
+                       std::vector<std::string> &variables) const
+{
+    if (!n || n->op == sValue || n->op == nInvalid) {
+        return;
+    } else if (n->op == sVariable) {
+        variables.push_back(n->variable);
+    } else {
+        getVariables(n->l, variables);
+        getVariables(n->r, variables);
+    }
 }
 

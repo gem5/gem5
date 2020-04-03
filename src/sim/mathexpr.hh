@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 ARM Limited
+ * Copyright (c) 2016, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -42,6 +42,7 @@
 #include <array>
 #include <functional>
 #include <string>
+#include <vector>
 
 class MathExpr {
   public:
@@ -65,6 +66,22 @@ class MathExpr {
      * @return The value for this expression
      */
     double eval(EvalCallback fn) const { return eval(root, fn); }
+
+    /**
+     * Return all variables in the this expression.
+     *
+     * This function starts from the root node and traverses all nodes
+     * while adding the variables it finds to a vector. Returns the
+     * found variables in a vector of strings
+     *
+     * @return A Vector with the names of all variables
+    */
+    std::vector<std::string> getVariables() const
+    {
+        std::vector<std::string> vars;
+        getVariables(root, vars);
+        return vars;
+    }
 
   private:
     enum Operator {
@@ -119,8 +136,10 @@ class MathExpr {
 
     /** Eval a node */
     double eval(const Node *n, EvalCallback fn) const;
+
+    /** Return all variable reachable from a node to a vector of
+     * strings */
+    void getVariables(const Node *n, std::vector<std::string> &vars) const;
 };
 
 #endif
-
-
