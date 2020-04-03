@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Arm Limited
+ * Copyright (c) 2019, 2020 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -115,6 +115,38 @@ Group::addStatGroup(const char *name, Group *block)
     assert(statGroups.find(name) == statGroups.end());
 
     statGroups[name] = block;
+}
+
+const Info *
+Group::resolveStat(std::string name) const
+{
+    auto pos = name.find(".");
+    if (pos == std::string::npos) {
+        // look for the stat in this group
+        for (auto &info : stats) {
+            if (info->name == name) {
+                return info;
+            }
+        }
+    } else {
+        // look for the stat in subgroups
+        const std::string gname = name.substr(0, pos);
+        for (auto &g : statGroups) {
+            if (g.first == gname) {
+                return g.second->resolveStat(name.substr(pos + 1));
+            }
+        }
+    }
+
+    // finally look for the stat in groups that have been merged
+    for (auto &g : mergedStatGroups) {
+        auto info = g->resolveStat(name);
+        if (info) {
+            return info;
+        }
+    }
+
+    return nullptr;
 }
 
 void

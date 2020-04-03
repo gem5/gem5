@@ -128,5 +128,6 @@ pybind_init_stats(py::module &m_native)
         .def("getStats", &Stats::Group::getStats)
         .def("getStatGroups", &Stats::Group::getStatGroups)
         .def("addStatGroup", &Stats::Group::addStatGroup)
+        .def("resolveStat", &Stats::Group::resolveStat)
         ;
 }

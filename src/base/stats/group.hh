@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Arm Limited
+ * Copyright (c) 2019, 2020 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -156,6 +156,22 @@ class Group
      * when setting up the SimObject hierarchy.
      */
     void addStatGroup(const char *name, Group *block);
+
+    /**
+     * Resolve a stat by its name within this group.
+     *
+     * This method goes through the stats in this group and sub-groups
+     * and returns a pointer to the the stat that matches the provided
+     * name. The input name has to be relative to the name of this
+     * group. For example, if this group is the SimObject
+     * system.bigCluster.cpus and we want the stat
+     * system.bigCluster.cpus.ipc, the input param should be the
+     * string "ipc".
+     *
+     * @param name Name of the desired stat
+     * @return Pointer to the stat with the provided name
+     */
+    const Info * resolveStat(std::string name) const;
 
   private:
     /**
