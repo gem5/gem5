@@ -572,7 +572,7 @@ class Compilers(Step):
                 '--enable-languages=c,c++ --disable-multilib'.format(
                     configure=os.path.join(source_dir, 'configure'),
                     prefix=prefix, target=target),
-                'make -j{j} all-gcc'.format(j=j),
+                'make -j{j} all-gcc LIMITS_H_TEST=true'.format(j=j),
                 'make install-gcc'
                 )
 
