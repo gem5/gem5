@@ -27,6 +27,8 @@ import os
 
 Import('*')
 
+env.Append(CPPPATH=Dir('.'))
+
 # Raw source files.
 args = 'args.cc'
 call_type = 'call_type.cc'
@@ -65,7 +67,7 @@ for ct in call_types:
     ct_env = static_env.Clone()
     is_default = 'true' if ct.default else 'false'
     ct_env.Append(CXXFLAGS=[ '-DCALL_TYPE_IS_DEFAULT=%s' % is_default ])
-    ct_support.extend(ct_env.StaticObject('%s_call_type.cc' % ct.name))
+    ct_support.extend(ct_env.StaticObject('call_type/%s.cc' % ct.name))
 m5_bin = static_env.Program('out/m5',
         ct_support + [ args, call_type, commands, m5, m5_mmap, libm5, usage ])
 

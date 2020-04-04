@@ -27,9 +27,8 @@
 
 #include <cstring>
 
-#include "m5_mmap.h"
-
 #include "call_type.hh"
+#include "m5_mmap.h"
 #include "usage.hh"
 
 extern "C"
