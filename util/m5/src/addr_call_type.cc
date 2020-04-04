@@ -25,18 +25,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <string.h>
+#include <cstring>
 
-#include "addr_call_type.h"
-#include "args.h"
+#include "addr_call_type.hh"
+#include "args.hh"
 #include "m5_mmap.h"
 
+extern "C"
+{
 #define M5OP(name, func) __typeof__(name) M5OP_MERGE_TOKENS(name, _addr);
 M5OP_FOREACH
 #undef M5OP
+}
 
 static DispatchTable addr_dispatch = {
-#define M5OP(name, func) .name = &M5OP_MERGE_TOKENS(name, _addr),
+#define M5OP(name, func) .name = &::M5OP_MERGE_TOKENS(name, _addr),
 M5OP_FOREACH
 #undef M5OP
 };

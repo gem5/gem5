@@ -27,6 +27,6 @@ Import('*')
 
 env['VARIANT'] = 'sparc'
 get_variant_opt('CROSS_COMPILE', 'sparc64-linux-gnu-')
-env.Append(CFLAGS='-m64')
+env.Append(CXXFLAGS='-m64')
 
 env['CALL_TYPE']['inst'].impl('m5op.S', default=True)

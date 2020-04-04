@@ -38,51 +38,53 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cinttypes>
+#include <cstdlib>
+#include <cstring>
 
-#include "commands.h"
-#include "usage.h"
+#include "args.hh"
 
-const char *progname = "{progname}";
-
-void
-usage()
+int
+parse_int_args(Args *args, uint64_t ints[], int len)
 {
-    fprintf(stderr, "Usage: %s [call type] <command> [arguments]\n", progname);
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Call types:\n");
-#   if ENABLE_CT_addr
-    fprintf(stderr, "    --addr %s%s\n",
-#   if defined(M5OP_ADDR)
-            "[address override]",
-#   else
-            "<address override>",
-#   endif
-            DEFAULT_CT_addr ? " (default)" : "");
-    fprintf(stderr, "        Use the address based invocation method.\n");
-#   if defined(M5OP_ADDR)
-    fprintf(stderr, "        The default address is %#"PRIx64".\n",
-            (uint64_t)M5OP_ADDR);
-#   endif
-#   endif
-#   if ENABLE_CT_inst
-    fprintf(stderr, "    --inst%s\n", DEFAULT_CT_inst ? " (default)" : "");
-    fprintf(stderr, "        Use the instruction based invocation method.\n");
-#   endif
-#   if ENABLE_CT_semi
-    fprintf(stderr, "    --semi%s\n", DEFAULT_CT_semi ? " (default)" : "");
-    fprintf(stderr, "        Use the semi-hosting based invocation method.\n");
-#   endif
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Commands:\n");
-    for (int i = 0; i < num_commands; ++i) {
-        fprintf(stderr, "    %s %s\n",
-                command_table[i].name, command_table[i].usage);
-    }
-    fprintf(stderr, "\n");
-    fprintf(stderr, "All times in nanoseconds!\n");
+    if (args->argc > len)
+        return 0;
 
-    exit(1);
+// On 32 bit platforms we need to use strtoull to do the conversion
+#ifdef __LP64__
+#define strto64 strtoul
+#else
+#define strto64 strtoull
+#endif
+    for (int i = 0; i < len; ++i) {
+        const char *arg = pop_arg(args);
+        ints[i] = arg ? strto64(arg, NULL, 0) : 0;
+    }
+
+#undef strto64
+    return 1;
+}
+
+int
+pack_arg_into_regs(Args *args, uint64_t regs[], int num_regs)
+{
+    const size_t RegSize = sizeof(regs[0]);
+    const size_t MaxLen = num_regs * RegSize;
+    const char *arg = pop_arg(args);
+
+    memset(regs, 0, MaxLen);
+
+    size_t len = arg ? strlen(arg) : 0;
+
+    if (len > MaxLen)
+        return 0;
+
+    while (len) {
+        for (int offset = 0; offset < RegSize && len; offset++, len--) {
+            int shift = offset * 8;
+            *regs |= (uint64_t)(uint8_t)*arg++ << shift;
+        }
+        regs++;
+    }
+    return 1;
 }

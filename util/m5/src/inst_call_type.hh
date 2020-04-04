@@ -25,23 +25,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DISPATCH_TABLE_H__
-#define __DISPATCH_TABLE_H__
+#ifndef __INST_CALL_TYPE_HH__
+#define __INST_CALL_TYPE_HH__
 
-#include <gem5/asm/generic/m5ops.h>
-#include <gem5/m5ops.h>
+#include "args.hh"
+#include "dispatch_table.hh"
 
-/*
- * This structure holds function pointers, one for each m5 operation, which can
- * be filled with different implementations. Conceptually they're like virtual
- * functions. They can then be passed to a consumer which knows which function
- * it wants, but not exactly how/where it's implemented.
- */
-typedef struct DispatchTable
-{
-#define M5OP(name, func) __typeof__(&name) name;
-M5OP_FOREACH
-#undef M5OP
-} DispatchTable;
+int inst_call_type_detect(Args *args);
+DispatchTable *inst_call_type_init();
 
-#endif // __DISPATCH_TABLE_H__
+#endif // __INST_CALL_TYPE_HH__

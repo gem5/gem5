@@ -1,5 +1,6 @@
 /*
- * Copyright 2020 Google Inc.
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,13 +26,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SEMI_CALL_TYPE_H__
-#define __SEMI_CALL_TYPE_H__
+#ifndef __COMMANDS_HH__
+#define __COMMANDS_HH__
 
-#include "args.h"
-#include "dispatch_table.h"
+#include "args.hh"
+#include "dispatch_table.hh"
 
-int semi_call_type_detect(Args *args);
-DispatchTable *semi_call_type_init();
+struct CommandInfo
+{
+    // The name of the command.
+    const char *name;
+    // A function which processes command line arguments and passes them to
+    // the underlying function through the dispatch table.
+    void (*func)(DispatchTable *dt, Args *args);
+    // Help text for this command.
+    const char *usage;
+};
 
-#endif // __SEMI_CALL_TYPE_H__
+// The commands themselves.
+extern CommandInfo command_table[];
+
+// The number of commands.
+extern int num_commands;
+
+#endif // __COMMANDS_HH__

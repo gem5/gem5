@@ -25,40 +25,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "args.h"
-#include "call_type.h"
-#include "usage.h"
+#ifndef __SEMI_CALL_TYPE_HH__
+#define __SEMI_CALL_TYPE_HH__
 
-#if ENABLE_CT_addr
-#include "addr_call_type.h"
-#endif
-#if ENABLE_CT_inst
-#include "inst_call_type.h"
-#endif
-#if ENABLE_CT_semi
-#include "semi_call_type.h"
-#endif
+#include "args.hh"
+#include "dispatch_table.hh"
 
-#define default_call_type_init() \
-    M5OP_MERGE_TOKENS(DEFAULT_CALL_TYPE, _call_type_init())
+int semi_call_type_detect(Args *args);
+DispatchTable *semi_call_type_init();
 
-DispatchTable *
-init_call_type(Args *args)
-{
-#   if ENABLE_CT_inst
-    if (inst_call_type_detect(args))
-        return inst_call_type_init();
-#   endif
-#   if ENABLE_CT_addr
-    int detect = addr_call_type_detect(args);
-    if (detect < 0)
-        usage();
-    if (detect > 0)
-        return addr_call_type_init();
-#   endif
-#   if ENABLE_CT_semi
-    if (semi_call_type_detect(args))
-        return semi_call_type_init();
-#   endif
-    return default_call_type_init();
-}
+#endif // __SEMI_CALL_TYPE_HH__

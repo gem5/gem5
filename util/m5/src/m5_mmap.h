@@ -41,13 +41,19 @@
 #ifndef __UTIL_M5_MMAP_H__
 #define __UTIL_M5_MMAP_H__
 
-#include <fcntl.h>
 #include <stdint.h>
-#include <sys/mman.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern void *m5_mem;
 extern uint64_t m5op_addr;
 
 void map_m5_mem();
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // __UTIL_M5_MMAP_H__

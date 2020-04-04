@@ -25,13 +25,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __INST_CALL_TYPE_H__
-#define __INST_CALL_TYPE_H__
+#include <cstring>
 
-#include "args.h"
-#include "dispatch_table.h"
+#include "inst_call_type.hh"
 
-int inst_call_type_detect(Args *args);
-DispatchTable *inst_call_type_init();
+static DispatchTable inst_dispatch = {
+#define M5OP(name, func) .name = &::name,
+M5OP_FOREACH
+#undef M5OP
+};
 
-#endif // __INST_CALL_TYPE_H__
+int
+inst_call_type_detect(Args *args)
+{
+    if (args->argc && strcmp(args->argv[0], "--inst") == 0) {
+        pop_arg(args);
+        return 1;
+    }
+    return 0;
+}
+
+DispatchTable *
+inst_call_type_init()
+{
+    return &inst_dispatch;
+}

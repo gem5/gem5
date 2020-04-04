@@ -25,28 +25,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <string.h>
+#include "args.hh"
+#include "call_type.hh"
+#include "usage.hh"
 
-#include "inst_call_type.h"
+#if ENABLE_CT_addr
+#include "addr_call_type.hh"
+#endif
+#if ENABLE_CT_inst
+#include "inst_call_type.hh"
+#endif
+#if ENABLE_CT_semi
+#include "semi_call_type.hh"
+#endif
 
-static DispatchTable inst_dispatch = {
-#define M5OP(name, func) .name = &name,
-M5OP_FOREACH
-#undef M5OP
-};
-
-int
-inst_call_type_detect(Args *args)
-{
-    if (args->argc && strcmp(args->argv[0], "--inst") == 0) {
-        pop_arg(args);
-        return 1;
-    }
-    return 0;
-}
+#define default_call_type_init() \
+    M5OP_MERGE_TOKENS(DEFAULT_CALL_TYPE, _call_type_init())
 
 DispatchTable *
-inst_call_type_init()
+init_call_type(Args *args)
 {
-    return &inst_dispatch;
+#   if ENABLE_CT_inst
+    if (inst_call_type_detect(args))
+        return inst_call_type_init();
+#   endif
+#   if ENABLE_CT_addr
+    int detect = addr_call_type_detect(args);
+    if (detect < 0)
+        usage();
+    if (detect > 0)
+        return addr_call_type_init();
+#   endif
+#   if ENABLE_CT_semi
+    if (semi_call_type_detect(args))
+        return semi_call_type_init();
+#   endif
+    return default_call_type_init();
 }

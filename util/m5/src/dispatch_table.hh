@@ -1,18 +1,5 @@
 /*
- * Copyright (c) 2011, 2017 ARM Limited
- * All rights reserved
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,38 +25,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-#include <string.h>
+#ifndef __DISPATCH_TABLE_HH__
+#define __DISPATCH_TABLE_HH__
 
-#include "args.h"
-#include "call_type.h"
-#include "commands.h"
-#include "usage.h"
+#include <gem5/asm/generic/m5ops.h>
+#include <gem5/m5ops.h>
 
-int
-main(int argc, const char *argv[])
+/*
+ * This structure holds function pointers, one for each m5 operation, which can
+ * be filled with different implementations. Conceptually they're like virtual
+ * functions. They can then be passed to a consumer which knows which function
+ * it wants, but not exactly how/where it's implemented.
+ */
+struct DispatchTable
 {
-    Args args = { argc, argv };
+#define M5OP(name, func) __typeof__(&::name) name;
+M5OP_FOREACH
+#undef M5OP
+};
 
-    if (!args.argc)
-        usage();
-
-    progname = pop_arg(&args);
-
-    DispatchTable *dt = init_call_type(&args);
-
-    const char *command = pop_arg(&args);
-
-    if (!command)
-        usage();
-
-    for (int i = 0; i < num_commands; ++i) {
-        if (strcmp(command, command_table[i].name) != 0)
-            continue;
-
-        command_table[i].func(dt, &args);
-        exit(0);
-    }
-
-    usage();
-}
+#endif // __DISPATCH_TABLE_HH__

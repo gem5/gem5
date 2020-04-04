@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,27 +25,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __COMMANDS_H__
-#define __COMMANDS_H__
+#include <cstring>
 
-#include "args.h"
-#include "dispatch_table.h"
+#include "semi_call_type.hh"
 
-typedef struct CommandInfo
+extern "C"
 {
-    // The name of the command.
-    char *name;
-    // A function which processes command line arguments and passes them to
-    // the underlying function through the dispatch table.
-    void (*func)(DispatchTable *dt, Args *args);
-    // Help text for this command.
-    char *usage;
-} CommandInfo;
+#define M5OP(name, func) __typeof__(name) M5OP_MERGE_TOKENS(name, _semi);
+M5OP_FOREACH
+#undef M5OP
+}
 
-// The commands themselves.
-extern CommandInfo command_table[];
+static DispatchTable semi_dispatch = {
+#define M5OP(name, func) .name = &::M5OP_MERGE_TOKENS(name, _semi),
+M5OP_FOREACH
+#undef M5OP
+};
 
-// The number of commands.
-extern int num_commands;
+int
+semi_call_type_detect(Args *args)
+{
+    if (args->argc && strcmp(args->argv[0], "--semi") == 0) {
+        pop_arg(args);
+        return 1;
+    }
+    return 0;
+}
 
-#endif // __COMMANDS_H__
+DispatchTable *
+semi_call_type_init()
+{
+    return &semi_dispatch;
+}

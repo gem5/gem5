@@ -38,6 +38,7 @@ def abspath(d):
     return os.path.abspath(str(d))
 
 # Universal settings.
+main.Append(CXXFLAGS=[ '-O2' ])
 main.Append(CCFLAGS=[ '-O2' ])
 main.Append(CPPPATH=[ common_include ])
 
@@ -45,6 +46,7 @@ main.Append(CPPPATH=[ common_include ])
 main['ENV']['PATH'] = os.environ['PATH']
 
 main['CC'] = '${CROSS_COMPILE}gcc'
+main['CXX'] = '${CROSS_COMPILE}g++'
 main['AS'] = '${CROSS_COMPILE}as'
 main['LD'] = '${CROSS_COMPILE}ld'
 main['AR'] = '${CROSS_COMPILE}ar'

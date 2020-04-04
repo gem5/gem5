@@ -1,5 +1,18 @@
 /*
- * Copyright 2020 Google Inc.
+ * Copyright (c) 2011, 2017 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,32 +38,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <string.h>
+#ifndef __USAGE_HH__
+#define __USAGE_HH__
 
-#include "semi_call_type.h"
+extern const char *progname;
 
-#define M5OP(name, func) __typeof__(name) M5OP_MERGE_TOKENS(name, _semi);
-M5OP_FOREACH
-#undef M5OP
+void usage();
 
-static DispatchTable semi_dispatch = {
-#define M5OP(name, func) .name = &M5OP_MERGE_TOKENS(name, _semi),
-M5OP_FOREACH
-#undef M5OP
-};
-
-int
-semi_call_type_detect(Args *args)
-{
-    if (args->argc && strcmp(args->argv[0], "--semi") == 0) {
-        pop_arg(args);
-        return 1;
-    }
-    return 0;
-}
-
-DispatchTable *
-semi_call_type_init()
-{
-    return &semi_dispatch;
-}
+#endif // __USAGE_HH__

@@ -28,15 +28,16 @@
 
 #include <err.h>
 #include <fcntl.h>
-#include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
-#include "args.h"
-#include "commands.h"
-#include "usage.h"
+#include <cinttypes>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+#include "args.hh"
+#include "commands.hh"
+#include "usage.hh"
 
 static int
 read_file(DispatchTable *dt, int dest_fid)
@@ -213,10 +214,10 @@ do_initparam(DispatchTable *dt, Args *args)
     if (!pack_arg_into_regs(args, key_str, 2))
         usage();
     uint64_t val = (*dt->m5_init_param)(key_str[0], key_str[1]);
-    printf("%"PRIu64, val);
+    std::cout << val;
 }
 
-struct CommandInfo command_table[] = {
+CommandInfo command_table[] = {
     { "addsymbol",      do_addsymbol,        "<address> <symbol> // Adds a "
                                              "symbol with address \"address\" "
                                              "to gem5's symbol table" },

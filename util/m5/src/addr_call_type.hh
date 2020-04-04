@@ -1,18 +1,5 @@
 /*
- * Copyright (c) 2011, 2017 ARM Limited
- * All rights reserved
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,11 +25,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __USAGE_H__
-#define __USAGE_H__
+#ifndef __ADDR_CALL_TYPE_HH__
+#define __ADDR_CALL_TYPE_HH__
 
-extern const char *progname;
+#include "args.hh"
+#include "dispatch_table.hh"
 
-void usage();
+// Returns 0 if not detected, 1 if detected successfully, and -1 on error.
+int addr_call_type_detect(Args *args);
+DispatchTable *addr_call_type_init();
 
-#endif // __USAGE_H__
+#endif // __ADDR_CALL_TYPE_HH__

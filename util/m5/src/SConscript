@@ -28,15 +28,15 @@ import os
 Import('*')
 
 # Raw source files.
-args = 'args.c'
-call_type = 'call_type.c'
-commands = 'commands.c'
-m5 = 'm5.c'
+args = 'args.cc'
+call_type = 'call_type.cc'
+commands = 'commands.cc'
+m5 = 'm5.cc'
 m5_mmap = 'm5_mmap.c'
-usage = 'usage.c'
+usage = 'usage.cc'
 
 jni = 'jni_gem5Op.c'
-lua = 'lua_gem5Op.c'
+lua = 'lua_gem5Op.cc'
 
 all_call_types = list(env['CALL_TYPE'].values())
 call_types = list([ ct for ct in all_call_types if ct.enabled ])
@@ -52,11 +52,11 @@ static_env = env.Clone()
 static_env.Append(LINKFLAGS=[ '-no-pie', '-static' ])
 
 for ct in all_call_types:
-    static_env.Append(CFLAGS='-DENABLE_CT_%s=%d' %
+    static_env.Append(CXXFLAGS='-DENABLE_CT_%s=%d' %
                 (ct.name, 1 if ct.enabled else 0))
-    static_env.Append(CFLAGS='-DDEFAULT_CT_%s=%d' %
+    static_env.Append(CXXFLAGS='-DDEFAULT_CT_%s=%d' %
                 (ct.name, 1 if ct.default else 0))
-static_env.Append(CFLAGS='-DDEFAULT_CALL_TYPE=%s' % default_call_type.name)
+static_env.Append(CXXFLAGS='-DDEFAULT_CALL_TYPE=%s' % default_call_type.name)
 
 #
 # The m5 library for use in other C/C++ programs.
@@ -67,7 +67,7 @@ libm5 = static_env.StaticLibrary('out/m5', [ m5_mmap ] + m5ops)
 #
 # The m5 stand alone command line utility.
 #
-ct_support = list([ File('%s_call_type.c' % ct.name) for ct in call_types ])
+ct_support = list([ File('%s_call_type.cc' % ct.name) for ct in call_types ])
 m5_bin = static_env.Program('out/m5',
         ct_support + [ args, call_type, commands, m5, m5_mmap, libm5, usage ])
 

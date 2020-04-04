@@ -26,11 +26,12 @@
  */
 
 
-#include <assert.h>
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
-#include <stdlib.h>
+
+#include <cassert>
+#include <cstdlib>
 
 #include <gem5/m5ops.h>
 
@@ -158,7 +159,7 @@ do_read_file(lua_State *L)
 {
     uint64_t len = lua_tointeger(L, 1);
     uint64_t offset = lua_tointeger(L, 2);
-    char *buf = malloc(len);
+    char *buf = (char *)malloc(len);
     uint64_t readlen = m5_read_file(buf, len, offset);
     lua_pushlstring(L, buf, readlen);
     return 1;
@@ -237,6 +238,13 @@ do_work_end(lua_State *L)
     uint64_t threadid = lua_tointeger(L, 2);
     m5_work_end(workid, threadid);
     return 0;
+}
+
+extern "C"
+{
+
+int luaopen_gem5OpLua(lua_State *);
+
 }
 
 int
