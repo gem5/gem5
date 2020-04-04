@@ -42,12 +42,12 @@ lua = 'lua_gem5Op.cc'
 
 all_call_types = list(env['CALL_TYPE'].values())
 call_types = list([ ct for ct in all_call_types if ct.enabled ])
-m5ops = list([ '${VARIANT}/%s' % ct.impl_file for ct in call_types ])
+m5ops = list([ 'abi/${ABI}/%s' % ct.impl_file for ct in call_types ])
 
 default_call_type = list([ ct for ct in call_types if ct.default ])
 assert len(default_call_type) == 1, \
         'There should be exactly one default call type for %s, found %d' % \
-        (env['VARIANT'], len(default_call_type))
+        (env['ABI'], len(default_call_type))
 default_call_type = default_call_type[0]
 
 static_env = env.Clone()

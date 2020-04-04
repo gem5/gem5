@@ -25,8 +25,10 @@
 
 Import('*')
 
-env['VARIANT'] = 'arm'
-get_variant_opt('CROSS_COMPILE', 'arm-linux-gnueabihf-')
-env.Append(CXXFLAGS='-march=armv7-a')
+env['ABI'] = 'x86'
+get_abi_opt('CROSS_COMPILE', '')
+env.Append(CXXFLAGS='-DM5OP_ADDR=0xFFFF0000')
+env.Append(CCFLAGS='-DM5OP_ADDR=0xFFFF0000')
 
-env['CALL_TYPE']['inst'].impl('m5op.S', default=True)
+env['CALL_TYPE']['inst'].impl('m5op.S')
+env['CALL_TYPE']['addr'].impl('m5op_addr.S', default=True)

@@ -25,8 +25,8 @@
 
 Import('*')
 
-env['VARIANT'] = 'sparc'
-get_variant_opt('CROSS_COMPILE', 'sparc64-linux-gnu-')
-env.Append(CXXFLAGS='-m64')
+env['ABI'] = 'thumb'
+get_abi_opt('CROSS_COMPILE', 'arm-linux-gnueabihf-')
+env.Append(CXXFLAGS=[ '-mthumb', '-march=armv7' ])
 
 env['CALL_TYPE']['inst'].impl('m5op.S', default=True)

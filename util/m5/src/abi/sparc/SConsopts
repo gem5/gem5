@@ -25,10 +25,8 @@
 
 Import('*')
 
-env['VARIANT'] = 'x86'
-get_variant_opt('CROSS_COMPILE', '')
-env.Append(CXXFLAGS='-DM5OP_ADDR=0xFFFF0000')
-env.Append(CCFLAGS='-DM5OP_ADDR=0xFFFF0000')
+env['ABI'] = 'sparc'
+get_abi_opt('CROSS_COMPILE', 'sparc64-linux-gnu-')
+env.Append(CXXFLAGS='-m64')
 
-env['CALL_TYPE']['inst'].impl('m5op.S')
-env['CALL_TYPE']['addr'].impl('m5op_addr.S', default=True)
+env['CALL_TYPE']['inst'].impl('m5op.S', default=True)

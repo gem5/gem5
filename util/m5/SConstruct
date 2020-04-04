@@ -84,31 +84,31 @@ call_types = {
 }
 
 for root, dirs, files in os.walk(abspath(src_dir)):
-    # Each SConsopts file describes a variant of the m5 utility.
+    # Each SConsopts file describes an ABI of the m5 utility.
     if 'SConsopts' in files:
         env = main.Clone()
 
         env['CALL_TYPE'] = copy.deepcopy(call_types)
 
-        # The user may override variant settings by setting environment
-        # variables of the form ${VARIANT}.${OPTION}. For instance, to set the
-        # CROSS_COMPILE prefix for variant foo to bar-, the user would set an
+        # The user may override ABI settings by setting environment
+        # variables of the form ${ABI}.${OPTION}. For instance, to set the
+        # CROSS_COMPILE prefix for abi foo to bar-, the user would set an
         # environment variable foo.CROSS_COMPILE=bar-.
         #
         # This also considers scons command line settings which may look like
         # environment variables, but are set after "scons" on the command line.
-        def get_variant_opt(name, default):
-            var_name = env.subst('${VARIANT}.%s' % name)
+        def get_abi_opt(name, default):
+            var_name = env.subst('${ABI}.%s' % name)
             env[name] = os.environ.get(
                     var_name, ARGUMENTS.get(var_name, default))
 
-        # Process the variant's settings in the SConsopts file, storing them
+        # Process the ABI's settings in the SConsopts file, storing them
         # in a copy of the primary environment.
         env.SConscript(Dir(root).File('SConsopts'),
-                       exports=[ 'env', 'get_variant_opt' ])
+                       exports=[ 'env', 'get_abi_opt' ])
 
         # Once all the options have been configured, set up build targets for
-        # this variant.
-        variant_dir = build_dir.Dir(env.subst('${VARIANT}'))
+        # this abi.
+        abi_dir = build_dir.Dir(env.subst('${ABI}'))
         env.SConscript(src_dir.File('SConscript'),
-                       variant_dir=variant_dir, exports='env')
+                       variant_dir=abi_dir, exports='env')

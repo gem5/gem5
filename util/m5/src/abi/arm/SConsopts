@@ -25,8 +25,8 @@
 
 Import('*')
 
-env['VARIANT'] = 'thumb'
-get_variant_opt('CROSS_COMPILE', 'arm-linux-gnueabihf-')
-env.Append(CXXFLAGS=[ '-mthumb', '-march=armv7' ])
+env['ABI'] = 'arm'
+get_abi_opt('CROSS_COMPILE', 'arm-linux-gnueabihf-')
+env.Append(CXXFLAGS='-march=armv7-a')
 
 env['CALL_TYPE']['inst'].impl('m5op.S', default=True)
