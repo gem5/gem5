@@ -43,23 +43,37 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <initializer_list>
+#include <string>
+#include <vector>
 
-struct Args
+class Args
 {
-    int argc;
-    const char **argv;
+  private:
+    std::vector<std::string> args;
+    size_t offset = 0;
+
+  public:
+    Args(int argc, const char **argv)
+    {
+        for (int i = 0; i < argc; i++)
+            args.push_back(argv[i]);
+    }
+    Args(std::initializer_list<std::string> strings) : args(strings) {}
+
+    const std::string &
+    pop(const std::string &def = "") {
+        if (!size())
+            return def;
+        return args[offset++];
+    }
+
+    size_t size() { return args.size() - offset; }
+
+    const std::string &operator [] (size_t idx) { return args[offset + idx]; }
 };
 
-static inline const char *
-pop_arg(Args *args)
-{
-    if (!args->argc)
-        return NULL;
-    args->argc--;
-    return (args->argv++)[0];
-}
-
-int parse_int_args(Args *args, uint64_t ints[], int len);
-int pack_arg_into_regs(Args *args, uint64_t regs[], int num_regs);
+bool parse_int_args(Args &args, uint64_t ints[], int len);
+bool pack_arg_into_regs(Args &args, uint64_t regs[], int num_regs);
 
 #endif // __ARGS_HH__

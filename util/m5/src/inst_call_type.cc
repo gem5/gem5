@@ -47,8 +47,8 @@ class InstCallType : public CallType
     bool
     checkArgs(Args &args) override
     {
-        if (args.argc && strcmp(args.argv[0], "--inst") == 0) {
-            pop_arg(&args);
+        if (args.size() && args[0] == "--inst") {
+            args.pop();
             return true;
         }
         return false;

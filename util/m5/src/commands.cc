@@ -102,9 +102,9 @@ write_file(const DispatchTable &dt, const char *filename,
 }
 
 static void
-do_exit(const DispatchTable &dt, Args *args)
+do_exit(const DispatchTable &dt, Args &args)
 {
-    if (args->argc > 1)
+    if (args.size() > 1)
         usage();
 
     uint64_t ints[1];
@@ -114,19 +114,19 @@ do_exit(const DispatchTable &dt, Args *args)
 }
 
 static void
-do_fail(const DispatchTable &dt, Args *args)
+do_fail(const DispatchTable &dt, Args &args)
 {
-    if (args->argc < 1 || args->argc > 2)
+    if (args.size() < 1 || args.size() > 2)
         usage();
 
     uint64_t ints[2] = { 0, 0 };
-    if (!parse_int_args(args, ints, args->argc))
+    if (!parse_int_args(args, ints, args.size()))
         usage();
     (*dt.m5_fail)(ints[1], ints[0]);
 }
 
 static void
-do_reset_stats(const DispatchTable &dt, Args *args)
+do_reset_stats(const DispatchTable &dt, Args &args)
 {
     uint64_t ints[2];
     if (!parse_int_args(args, ints, 2))
@@ -135,7 +135,7 @@ do_reset_stats(const DispatchTable &dt, Args *args)
 }
 
 static void
-do_dump_stats(const DispatchTable &dt, Args *args)
+do_dump_stats(const DispatchTable &dt, Args &args)
 {
     uint64_t ints[2];
     if (!parse_int_args(args, ints, 2))
@@ -144,7 +144,7 @@ do_dump_stats(const DispatchTable &dt, Args *args)
 }
 
 static void
-do_dump_reset_stats(const DispatchTable &dt, Args *args)
+do_dump_reset_stats(const DispatchTable &dt, Args &args)
 {
     uint64_t ints[2];
     if (!parse_int_args(args, ints, 2))
@@ -153,30 +153,28 @@ do_dump_reset_stats(const DispatchTable &dt, Args *args)
 }
 
 static void
-do_read_file(const DispatchTable &dt, Args *args)
+do_read_file(const DispatchTable &dt, Args &args)
 {
-    if (args->argc > 0)
+    if (args.size() > 0)
         usage();
 
     read_file(dt, STDOUT_FILENO);
 }
 
 static void
-do_write_file(const DispatchTable &dt, Args *args)
+do_write_file(const DispatchTable &dt, Args &args)
 {
-    if (args->argc != 1 && args->argc != 2)
+    if (args.size() != 1 && args.size() != 2)
         usage();
 
-    const char *filename = pop_arg(args);
-    const char *host_filename = pop_arg(args);
-    if (!host_filename)
-        host_filename = filename;
+    const std::string &filename = args.pop();
+    const std::string &host_filename = args.pop(filename);
 
-    write_file(dt, filename, host_filename);
+    write_file(dt, filename.c_str(), host_filename.c_str());
 }
 
 static void
-do_checkpoint(const DispatchTable &dt, Args *args)
+do_checkpoint(const DispatchTable &dt, Args &args)
 {
     uint64_t ints[2];
     if (!parse_int_args(args, ints, 2))
@@ -185,30 +183,30 @@ do_checkpoint(const DispatchTable &dt, Args *args)
 }
 
 static void
-do_addsymbol(const DispatchTable &dt, Args *args)
+do_addsymbol(const DispatchTable &dt, Args &args)
 {
-    if (args->argc != 2)
+    if (args.size() != 2)
         usage();
 
-    uint64_t addr = strtoul(pop_arg(args), NULL, 0);
-    const char *symbol = pop_arg(args);
-    (*dt.m5_add_symbol)(addr, symbol);
+    uint64_t addr = strtoul(args.pop().c_str(), NULL, 0);
+    const std::string &symbol = args.pop();
+    (*dt.m5_add_symbol)(addr, symbol.c_str());
 }
 
 
 static void
-do_loadsymbol(const DispatchTable &dt, Args *args)
+do_loadsymbol(const DispatchTable &dt, Args &args)
 {
-    if (args->argc > 0)
+    if (args.size() > 0)
         usage();
 
     (*dt.m5_load_symbol)();
 }
 
 static void
-do_initparam(const DispatchTable &dt, Args *args)
+do_initparam(const DispatchTable &dt, Args &args)
 {
-    if (args->argc > 1)
+    if (args.size() > 1)
         usage();
 
     uint64_t key_str[2];

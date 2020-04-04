@@ -54,8 +54,8 @@ class SemiCallType : public CallType
     bool
     checkArgs(Args &args) override
     {
-        if (args.argc && strcmp(args.argv[0], "--semi") == 0) {
-            pop_arg(&args);
+        if (args.size() && args[0] == "--semi") {
+            args.pop();
             return true;
         }
         return false;

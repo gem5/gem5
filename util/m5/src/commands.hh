@@ -38,7 +38,7 @@ struct CommandInfo
     const char *name;
     // A function which processes command line arguments and passes them to
     // the underlying function through the dispatch table.
-    void (*func)(const DispatchTable &dt, Args *args);
+    void (*func)(const DispatchTable &dt, Args &args);
     // Help text for this command.
     const char *usage;
 };

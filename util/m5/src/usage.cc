@@ -46,12 +46,13 @@
 #include "commands.hh"
 #include "usage.hh"
 
-const char *progname = "{progname}";
+std::string progname;
 
 void
 usage()
 {
-    fprintf(stderr, "Usage: %s [call type] <command> [arguments]\n", progname);
+    fprintf(stderr, "Usage: %s [call type] <command> [arguments]\n",
+            progname.c_str());
     fprintf(stderr, "\n");
     fprintf(stderr, "Call types:\n");
     fprintf(stderr, CallType::usageSummary().c_str());

@@ -49,25 +49,25 @@
 int
 main(int argc, const char *argv[])
 {
-    Args args = { argc, argv };
+    Args args(argc, argv);
 
-    if (!args.argc)
+    if (!args.size())
         usage();
 
-    progname = pop_arg(&args);
+    progname = args.pop("{progname}");
 
     const DispatchTable &dt = CallType::detect(args).getDispatch();
 
-    const char *command = pop_arg(&args);
-
-    if (!command)
+    if (!args.size())
         usage();
 
+    const std::string &command = args.pop();
+
     for (int i = 0; i < num_commands; ++i) {
-        if (strcmp(command, command_table[i].name) != 0)
+        if (command != command_table[i].name)
             continue;
 
-        command_table[i].func(dt, &args);
+        command_table[i].func(dt, args);
         exit(0);
     }
 

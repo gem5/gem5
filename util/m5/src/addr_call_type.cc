@@ -83,25 +83,23 @@ class AddrCallType : public CallType
     bool
     checkArgs(Args &args) override
     {
-        static const char *prefix = "--addr";
-        const size_t prefix_len = strlen(prefix);
+        static const std::string prefix = "--addr";
         uint64_t addr_override;
 
         // If the first argument doesn't start with --addr...
-        if (!args.argc || memcmp(args.argv[0], prefix, prefix_len) != 0)
+        if (!args.size() || args[0].substr(0, prefix.size()) != prefix)
             return false;
 
-        const char *argv0 = pop_arg(&args);
+        const std::string &arg = args.pop().substr(prefix.size());
 
         // If there's more text in this argument...
-        if (strlen(argv0) != prefix_len) {
+        if (arg.size()) {
             // If it doesn't start with '=', it's malformed.
-            if (argv0[prefix_len] != '=')
+            if (arg[0] != '=')
                 usage();
             // Attempt to extract an address after the '='.
-            const char *temp_argv[] = { &argv0[prefix_len + 1] };
-            Args temp_args = { 1, temp_argv };
-            if (!parse_int_args(&temp_args, &addr_override, 1))
+            Args temp_args({ arg.substr(1) });
+            if (!parse_int_args(temp_args, &addr_override, 1))
                 usage();
             // If we found an address, use it to override m5op_addr.
             m5op_addr = addr_override;
@@ -109,7 +107,7 @@ class AddrCallType : public CallType
         }
         // If an address override wasn't part of the first argument, check if
         // it's the second argument. If not, then there's no override.
-        if (args.argc && parse_int_args(&args, &addr_override, 1)) {
+        if (args.size() && parse_int_args(args, &addr_override, 1)) {
             m5op_addr = addr_override;
             return true;
         }

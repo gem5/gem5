@@ -41,7 +41,7 @@
 #ifndef __USAGE_HH__
 #define __USAGE_HH__
 
-extern const char *progname;
+extern std::string progname;
 
 void usage();
 
