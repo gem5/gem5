@@ -27,7 +27,7 @@
 
 #include <cstring>
 
-#include "semi_call_type.hh"
+#include "call_type.hh"
 
 extern "C"
 {
@@ -36,24 +36,37 @@ M5OP_FOREACH
 #undef M5OP
 }
 
-static DispatchTable semi_dispatch = {
+namespace
+{
+
+DispatchTable semi_dispatch = {
 #define M5OP(name, func) .name = &::M5OP_MERGE_TOKENS(name, _semi),
 M5OP_FOREACH
 #undef M5OP
 };
 
-int
-semi_call_type_detect(Args *args)
+class SemiCallType : public CallType
 {
-    if (args->argc && strcmp(args->argv[0], "--semi") == 0) {
-        pop_arg(args);
-        return 1;
-    }
-    return 0;
-}
+  public:
+    bool isDefault() const override { return CALL_TYPE_IS_DEFAULT; }
+    const DispatchTable &getDispatch() const override { return semi_dispatch; }
 
-DispatchTable *
-semi_call_type_init()
-{
-    return &semi_dispatch;
-}
+    bool
+    checkArgs(Args &args) override
+    {
+        if (args.argc && strcmp(args.argv[0], "--semi") == 0) {
+            pop_arg(&args);
+            return true;
+        }
+        return false;
+    }
+
+    void printBrief(std::ostream &os) const override { os << "--semi"; }
+    void
+    printDesc(std::ostream &os) const override
+    {
+        os << "Use the semi-hosting based invocation method.";
+    }
+} semi_call_type;
+
+} // anonymous namespace

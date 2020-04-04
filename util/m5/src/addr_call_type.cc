@@ -27,9 +27,10 @@
 
 #include <cstring>
 
-#include "addr_call_type.hh"
-#include "args.hh"
 #include "m5_mmap.h"
+
+#include "call_type.hh"
+#include "usage.hh"
 
 extern "C"
 {
@@ -38,54 +39,88 @@ M5OP_FOREACH
 #undef M5OP
 }
 
-static DispatchTable addr_dispatch = {
+namespace
+{
+
+DispatchTable addr_dispatch = {
 #define M5OP(name, func) .name = &::M5OP_MERGE_TOKENS(name, _addr),
 M5OP_FOREACH
 #undef M5OP
 };
 
-int
-addr_call_type_detect(Args *args)
-{
-    static const char *prefix = "--addr";
-    const size_t prefix_len = strlen(prefix);
-    uint64_t addr_override;
+#if defined(M5OP_ADDR)
+const bool DefaultAddrDefined = true;
+constexpr uint64_t DefaultAddress = M5OP_ADDR;
+#else
+const bool DefaultAddrDefined = false;
+constexpr uint64_t DefaultAddress = 0;
+#endif
 
-    // If the first argument starts with --addr...
-    if (args->argc && memcmp(args->argv[0], prefix, prefix_len) == 0) {
-        const char *argv0 = pop_arg(args);
+class AddrCallType : public CallType
+{
+  private:
+  public:
+    bool isDefault() const override { return CALL_TYPE_IS_DEFAULT; }
+    const DispatchTable &getDispatch() const override { return addr_dispatch; }
+
+    void
+    printBrief(std::ostream &os) const override
+    {
+        os << "--addr " << (DefaultAddrDefined ? "[address override]" :
+                                                 "<address override>");
+    }
+
+    void
+    printDesc(std::ostream &os) const override
+    {
+        os << "Use the address based invocation method.";
+        if (DefaultAddrDefined) {
+            os << " The default address is 0x" <<
+                std::hex << DefaultAddress << std::dec << ".";
+        }
+    }
+
+    bool
+    checkArgs(Args &args) override
+    {
+        static const char *prefix = "--addr";
+        const size_t prefix_len = strlen(prefix);
+        uint64_t addr_override;
+
+        // If the first argument doesn't start with --addr...
+        if (!args.argc || memcmp(args.argv[0], prefix, prefix_len) != 0)
+            return false;
+
+        const char *argv0 = pop_arg(&args);
 
         // If there's more text in this argument...
         if (strlen(argv0) != prefix_len) {
             // If it doesn't start with '=', it's malformed.
             if (argv0[prefix_len] != '=')
-                return -1;
+                usage();
             // Attempt to extract an address after the '='.
             const char *temp_argv[] = { &argv0[prefix_len + 1] };
             Args temp_args = { 1, temp_argv };
             if (!parse_int_args(&temp_args, &addr_override, 1))
-                return -1;
+                usage();
             // If we found an address, use it to override m5op_addr.
             m5op_addr = addr_override;
-            return 1;
+            return true;
         }
         // If an address override wasn't part of the first argument, check if
         // it's the second argument. If not, then there's no override.
-        if (args->argc && parse_int_args(args, &addr_override, 1)) {
+        if (args.argc && parse_int_args(&args, &addr_override, 1)) {
             m5op_addr = addr_override;
-            return 1;
+            return true;
         }
-        // If the default address was zero, an override is required.
-        if (!m5op_addr)
-            return -1;
-        return 1;
-    }
-    return 0;
-}
+        // If the default address was not defined, an override is required.
+        if (!DefaultAddrDefined)
+            usage();
 
-DispatchTable *
-addr_call_type_init()
-{
-    map_m5_mem();
-    return &addr_dispatch;
-}
+        return true;
+    }
+
+    void init() override { map_m5_mem(); }
+} addr_call_type;
+
+} // anonymous namespace

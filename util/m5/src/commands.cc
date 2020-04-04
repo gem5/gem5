@@ -40,7 +40,7 @@
 #include "usage.hh"
 
 static int
-read_file(DispatchTable *dt, int dest_fid)
+read_file(const DispatchTable &dt, int dest_fid)
 {
     uint8_t buf[256*1024];
     int offset = 0;
@@ -51,7 +51,7 @@ read_file(DispatchTable *dt, int dest_fid)
     // Linux does demand paging.
     memset(buf, 0, sizeof(buf));
 
-    while ((len = (*dt->m5_read_file)(buf, sizeof(buf), offset)) > 0) {
+    while ((len = (*dt.m5_read_file)(buf, sizeof(buf), offset)) > 0) {
         uint8_t *base = buf;
         offset += len;
         do {
@@ -74,7 +74,8 @@ read_file(DispatchTable *dt, int dest_fid)
 }
 
 static void
-write_file(DispatchTable *dt, const char *filename, const char *host_filename)
+write_file(const DispatchTable &dt, const char *filename,
+           const char *host_filename)
 {
     fprintf(stderr, "opening %s\n", filename);
     int src_fid = open(filename, O_RDONLY);
@@ -92,7 +93,7 @@ write_file(DispatchTable *dt, const char *filename, const char *host_filename)
     memset(buf, 0, sizeof(buf));
 
     while ((len = read(src_fid, buf, sizeof(buf))) > 0) {
-        bytes += (*dt->m5_write_file)(buf, len, offset, host_filename);
+        bytes += (*dt.m5_write_file)(buf, len, offset, host_filename);
         offset += len;
     }
     fprintf(stderr, "written %d bytes\n", bytes);
@@ -101,7 +102,7 @@ write_file(DispatchTable *dt, const char *filename, const char *host_filename)
 }
 
 static void
-do_exit(DispatchTable *dt, Args *args)
+do_exit(const DispatchTable &dt, Args *args)
 {
     if (args->argc > 1)
         usage();
@@ -109,11 +110,11 @@ do_exit(DispatchTable *dt, Args *args)
     uint64_t ints[1];
     if (!parse_int_args(args, ints, 1))
         usage();
-    (*dt->m5_exit)(ints[0]);
+    (*dt.m5_exit)(ints[0]);
 }
 
 static void
-do_fail(DispatchTable *dt, Args *args)
+do_fail(const DispatchTable &dt, Args *args)
 {
     if (args->argc < 1 || args->argc > 2)
         usage();
@@ -121,38 +122,38 @@ do_fail(DispatchTable *dt, Args *args)
     uint64_t ints[2] = { 0, 0 };
     if (!parse_int_args(args, ints, args->argc))
         usage();
-    (*dt->m5_fail)(ints[1], ints[0]);
+    (*dt.m5_fail)(ints[1], ints[0]);
 }
 
 static void
-do_reset_stats(DispatchTable *dt, Args *args)
+do_reset_stats(const DispatchTable &dt, Args *args)
 {
     uint64_t ints[2];
     if (!parse_int_args(args, ints, 2))
         usage();
-    (*dt->m5_reset_stats)(ints[0], ints[1]);
+    (*dt.m5_reset_stats)(ints[0], ints[1]);
 }
 
 static void
-do_dump_stats(DispatchTable *dt, Args *args)
+do_dump_stats(const DispatchTable &dt, Args *args)
 {
     uint64_t ints[2];
     if (!parse_int_args(args, ints, 2))
         usage();
-    (*dt->m5_dump_stats)(ints[0], ints[1]);
+    (*dt.m5_dump_stats)(ints[0], ints[1]);
 }
 
 static void
-do_dump_reset_stats(DispatchTable *dt, Args *args)
+do_dump_reset_stats(const DispatchTable &dt, Args *args)
 {
     uint64_t ints[2];
     if (!parse_int_args(args, ints, 2))
         usage();
-    (*dt->m5_dump_reset_stats)(ints[0], ints[1]);
+    (*dt.m5_dump_reset_stats)(ints[0], ints[1]);
 }
 
 static void
-do_read_file(DispatchTable *dt, Args *args)
+do_read_file(const DispatchTable &dt, Args *args)
 {
     if (args->argc > 0)
         usage();
@@ -161,7 +162,7 @@ do_read_file(DispatchTable *dt, Args *args)
 }
 
 static void
-do_write_file(DispatchTable *dt, Args *args)
+do_write_file(const DispatchTable &dt, Args *args)
 {
     if (args->argc != 1 && args->argc != 2)
         usage();
@@ -175,37 +176,37 @@ do_write_file(DispatchTable *dt, Args *args)
 }
 
 static void
-do_checkpoint(DispatchTable *dt, Args *args)
+do_checkpoint(const DispatchTable &dt, Args *args)
 {
     uint64_t ints[2];
     if (!parse_int_args(args, ints, 2))
         usage();
-    (*dt->m5_checkpoint)(ints[0], ints[1]);
+    (*dt.m5_checkpoint)(ints[0], ints[1]);
 }
 
 static void
-do_addsymbol(DispatchTable *dt, Args *args)
+do_addsymbol(const DispatchTable &dt, Args *args)
 {
     if (args->argc != 2)
         usage();
 
     uint64_t addr = strtoul(pop_arg(args), NULL, 0);
     const char *symbol = pop_arg(args);
-    (*dt->m5_add_symbol)(addr, symbol);
+    (*dt.m5_add_symbol)(addr, symbol);
 }
 
 
 static void
-do_loadsymbol(DispatchTable *dt, Args *args)
+do_loadsymbol(const DispatchTable &dt, Args *args)
 {
     if (args->argc > 0)
         usage();
 
-    (*dt->m5_load_symbol)();
+    (*dt.m5_load_symbol)();
 }
 
 static void
-do_initparam(DispatchTable *dt, Args *args)
+do_initparam(const DispatchTable &dt, Args *args)
 {
     if (args->argc > 1)
         usage();
@@ -213,7 +214,7 @@ do_initparam(DispatchTable *dt, Args *args)
     uint64_t key_str[2];
     if (!pack_arg_into_regs(args, key_str, 2))
         usage();
-    uint64_t val = (*dt->m5_init_param)(key_str[0], key_str[1]);
+    uint64_t val = (*dt.m5_init_param)(key_str[0], key_str[1]);
     std::cout << val;
 }
 

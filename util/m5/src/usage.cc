@@ -42,6 +42,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "call_type.hh"
 #include "commands.hh"
 #include "usage.hh"
 
@@ -53,28 +54,7 @@ usage()
     fprintf(stderr, "Usage: %s [call type] <command> [arguments]\n", progname);
     fprintf(stderr, "\n");
     fprintf(stderr, "Call types:\n");
-#   if ENABLE_CT_addr
-    fprintf(stderr, "    --addr %s%s\n",
-#   if defined(M5OP_ADDR)
-            "[address override]",
-#   else
-            "<address override>",
-#   endif
-            DEFAULT_CT_addr ? " (default)" : "");
-    fprintf(stderr, "        Use the address based invocation method.\n");
-#   if defined(M5OP_ADDR)
-    fprintf(stderr, "        The default address is %#" PRIx64 ".\n",
-            (uint64_t)M5OP_ADDR);
-#   endif
-#   endif
-#   if ENABLE_CT_inst
-    fprintf(stderr, "    --inst%s\n", DEFAULT_CT_inst ? " (default)" : "");
-    fprintf(stderr, "        Use the instruction based invocation method.\n");
-#   endif
-#   if ENABLE_CT_semi
-    fprintf(stderr, "    --semi%s\n", DEFAULT_CT_semi ? " (default)" : "");
-    fprintf(stderr, "        Use the semi-hosting based invocation method.\n");
-#   endif
+    fprintf(stderr, CallType::usageSummary().c_str());
     fprintf(stderr, "\n");
     fprintf(stderr, "Commands:\n");
     for (int i = 0; i < num_commands; ++i) {

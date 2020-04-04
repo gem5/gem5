@@ -27,26 +27,39 @@
 
 #include <cstring>
 
-#include "inst_call_type.hh"
+#include "call_type.hh"
 
-static DispatchTable inst_dispatch = {
+namespace
+{
+
+DispatchTable inst_dispatch = {
 #define M5OP(name, func) .name = &::name,
 M5OP_FOREACH
 #undef M5OP
 };
 
-int
-inst_call_type_detect(Args *args)
+class InstCallType : public CallType
 {
-    if (args->argc && strcmp(args->argv[0], "--inst") == 0) {
-        pop_arg(args);
-        return 1;
-    }
-    return 0;
-}
+  public:
+    bool isDefault() const override { return CALL_TYPE_IS_DEFAULT; }
+    const DispatchTable &getDispatch() const override { return inst_dispatch; }
 
-DispatchTable *
-inst_call_type_init()
-{
-    return &inst_dispatch;
-}
+    bool
+    checkArgs(Args &args) override
+    {
+        if (args.argc && strcmp(args.argv[0], "--inst") == 0) {
+            pop_arg(&args);
+            return true;
+        }
+        return false;
+    }
+
+    void printBrief(std::ostream &os) const override { os << "--inst"; }
+    void
+    printDesc(std::ostream &os) const override
+    {
+        os << "Use the instruction based invocation method.";
+    }
+} inst_call_type;
+
+} // anonymous namespace

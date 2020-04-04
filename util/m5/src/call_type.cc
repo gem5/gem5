@@ -25,40 +25,58 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "args.hh"
+#include <cassert>
+#include <sstream>
+
 #include "call_type.hh"
-#include "usage.hh"
 
-#if ENABLE_CT_addr
-#include "addr_call_type.hh"
-#endif
-#if ENABLE_CT_inst
-#include "inst_call_type.hh"
-#endif
-#if ENABLE_CT_semi
-#include "semi_call_type.hh"
-#endif
-
-#define default_call_type_init() \
-    M5OP_MERGE_TOKENS(DEFAULT_CALL_TYPE, _call_type_init())
-
-DispatchTable *
-init_call_type(Args *args)
+std::vector<CallType *> &
+CallType::allTypes()
 {
-#   if ENABLE_CT_inst
-    if (inst_call_type_detect(args))
-        return inst_call_type_init();
-#   endif
-#   if ENABLE_CT_addr
-    int detect = addr_call_type_detect(args);
-    if (detect < 0)
-        usage();
-    if (detect > 0)
-        return addr_call_type_init();
-#   endif
-#   if ENABLE_CT_semi
-    if (semi_call_type_detect(args))
-        return semi_call_type_init();
-#   endif
-    return default_call_type_init();
+    static std::vector<CallType *> all;
+    return all;
+}
+
+CallType &
+CallType::detect(Args &args)
+{
+    CallType *def = nullptr;
+
+    for (auto *ct: allTypes()) {
+        if (ct->checkArgs(args)) {
+            ct->init();
+            return *ct;
+        }
+        if (ct->isDefault())
+            def = ct;
+    }
+
+    assert(def);
+    def->init();
+    return *def;
+}
+
+std::string
+CallType::usageSummary()
+{
+    std::string summary = "";
+    for (auto *ct: allTypes())
+        summary += ct->formattedUsage();
+    return summary;
+}
+
+std::string
+CallType::formattedUsage() const
+{
+    std::ostringstream os;
+    os << "    ";
+    printBrief(os);
+    if (isDefault())
+        os << " (default)";
+    os << std::endl;
+
+    os << "        ";
+    printDesc(os);
+    os << std::endl;
+    return os.str();
 }

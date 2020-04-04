@@ -28,9 +28,34 @@
 #ifndef __CALL_TYPE_HH__
 #define __CALL_TYPE_HH__
 
+#include <iostream>
+#include <string>
+#include <vector>
+
 #include "args.hh"
 #include "dispatch_table.hh"
 
-DispatchTable *init_call_type(Args *args);
+class CallType
+{
+  protected:
+    virtual bool isDefault() const = 0;
+    virtual bool checkArgs(Args &args) = 0;
+    virtual void init() {}
+
+    static std::vector<CallType *> &allTypes();
+
+    virtual void printBrief(std::ostream &os) const = 0;
+    virtual void printDesc(std::ostream &os) const = 0;
+    std::string formattedUsage() const;
+
+  public:
+    CallType() { allTypes().push_back(this); }
+
+    static CallType &detect(Args &args);
+    static std::string usageSummary();
+
+    virtual const DispatchTable &getDispatch() const = 0;
+};
+
 
 #endif // __CALL_TYPE_HH__

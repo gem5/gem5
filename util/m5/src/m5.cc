@@ -56,7 +56,7 @@ main(int argc, const char *argv[])
 
     progname = pop_arg(&args);
 
-    DispatchTable *dt = init_call_type(&args);
+    const DispatchTable &dt = CallType::detect(args).getDispatch();
 
     const char *command = pop_arg(&args);
 
