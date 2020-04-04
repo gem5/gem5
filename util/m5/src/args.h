@@ -41,9 +41,25 @@
 #ifndef __ARGS_H__
 #define __ARGS_H__
 
+#include <stddef.h>
 #include <stdint.h>
 
-int parse_int_args(int argc, char *argv[], uint64_t ints[], int len);
-int pack_str_into_regs(const char *str, uint64_t regs[], int num_regs);
+typedef struct Args
+{
+    int argc;
+    const char **argv;
+} Args;
+
+static inline const char *
+pop_arg(Args *args)
+{
+    if (!args->argc)
+        return NULL;
+    args->argc--;
+    return (args->argv++)[0];
+}
+
+int parse_int_args(Args *args, uint64_t ints[], int len);
+int pack_arg_into_regs(Args *args, uint64_t regs[], int num_regs);
 
 #endif // __ARGS_H__

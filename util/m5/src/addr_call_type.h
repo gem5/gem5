@@ -28,10 +28,11 @@
 #ifndef __ADDR_CALL_TYPE_H__
 #define __ADDR_CALL_TYPE_H__
 
+#include "args.h"
 #include "dispatch_table.h"
 
 // Returns 0 if not detected, 1 if detected successfully, and -1 on error.
-int addr_call_type_detect(int *argc, char **argv[]);
+int addr_call_type_detect(Args *args);
 DispatchTable *addr_call_type_init();
 
 #endif // __ADDR_CALL_TYPE_H__

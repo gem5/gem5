@@ -42,17 +42,15 @@ M5OP_FOREACH
 };
 
 int
-addr_call_type_detect(int *argc, char **argv[])
+addr_call_type_detect(Args *args)
 {
     static const char *prefix = "--addr";
     const size_t prefix_len = strlen(prefix);
     uint64_t addr_override;
 
     // If the first argument starts with --addr...
-    if (*argc > 0 && memcmp((*argv)[0], prefix, prefix_len) == 0) {
-        char *argv0 = (*argv)[0];
-        (*argc)--;
-        (*argv)++;
+    if (args->argc && memcmp(args->argv[0], prefix, prefix_len) == 0) {
+        const char *argv0 = pop_arg(args);
 
         // If there's more text in this argument...
         if (strlen(argv0) != prefix_len) {
@@ -60,8 +58,9 @@ addr_call_type_detect(int *argc, char **argv[])
             if (argv0[prefix_len] != '=')
                 return -1;
             // Attempt to extract an address after the '='.
-            char *temp_argv[] = { &argv0[prefix_len + 1] };
-            if (!parse_int_args(1, temp_argv, &addr_override, 1))
+            const char *temp_argv[] = { &argv0[prefix_len + 1] };
+            Args temp_args = { 1, temp_argv };
+            if (!parse_int_args(&temp_args, &addr_override, 1))
                 return -1;
             // If we found an address, use it to override m5op_addr.
             m5op_addr = addr_override;
@@ -69,10 +68,8 @@ addr_call_type_detect(int *argc, char **argv[])
         }
         // If an address override wasn't part of the first argument, check if
         // it's the second argument. If not, then there's no override.
-        if (*argc > 0 && parse_int_args(1, *argv, &addr_override, 1)) {
+        if (args->argc && parse_int_args(args, &addr_override, 1)) {
             m5op_addr = addr_override;
-            (*argc)--;
-            (*argv)++;
             return 1;
         }
         // If the default address was zero, an override is required.

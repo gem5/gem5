@@ -40,11 +40,10 @@ M5OP_FOREACH
 };
 
 int
-semi_call_type_detect(int *argc, char **argv[])
+semi_call_type_detect(Args *args)
 {
-    if (*argc > 0 && strcmp((*argv)[0], "--semi") == 0) {
-        (*argc)--;
-        (*argv)++;
+    if (args->argc && strcmp(args->argv[0], "--semi") == 0) {
+        pop_arg(args);
         return 1;
     }
     return 0;

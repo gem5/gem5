@@ -28,19 +28,9 @@
 #ifndef __CALL_TYPE_H__
 #define __CALL_TYPE_H__
 
+#include "args.h"
 #include "dispatch_table.h"
 
-#if ENABLE_CT_addr
-#include "addr_call_type.h"
-#endif
-#if ENABLE_CT_inst
-#include "inst_call_type.h"
-#endif
-#if ENABLE_CT_semi
-#include "semi_call_type.h"
-#endif
-
-#define default_call_type_init() \
-    M5OP_MERGE_TOKENS(DEFAULT_CALL_TYPE, _call_type_init())
+DispatchTable *init_call_type(Args *args);
 
 #endif // __CALL_TYPE_H__

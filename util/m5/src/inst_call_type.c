@@ -36,11 +36,10 @@ M5OP_FOREACH
 };
 
 int
-inst_call_type_detect(int *argc, char **argv[])
+inst_call_type_detect(Args *args)
 {
-    if (*argc > 0 && strcmp((*argv)[0], "--inst") == 0) {
-        (*argc)--;
-        (*argv)++;
+    if (args->argc && strcmp(args->argv[0], "--inst") == 0) {
+        pop_arg(args);
         return 1;
     }
     return 0;

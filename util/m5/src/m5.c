@@ -38,337 +38,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <err.h>
-#include <fcntl.h>
-#include <inttypes.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include <gem5/asm/generic/m5ops.h>
-#include <gem5/m5ops.h>
 
 #include "args.h"
 #include "call_type.h"
-#include "dispatch_table.h"
-#include "m5_mmap.h"
-
-char *progname;
-char *command = "unspecified";
-void usage();
+#include "commands.h"
+#include "usage.h"
 
 int
-read_file(DispatchTable *dt, int dest_fid)
+main(int argc, const char *argv[])
 {
-    uint8_t buf[256*1024];
-    int offset = 0;
-    int len, ret;
+    Args args = { argc, argv };
 
-    // Touch all buffer pages to ensure they are mapped in the
-    // page table. This is required in the case of X86_FS, where
-    // Linux does demand paging.
-    memset(buf, 0, sizeof(buf));
-
-    while ((len = (*dt->m5_read_file)(buf, sizeof(buf), offset)) > 0) {
-        uint8_t *base = buf;
-        offset += len;
-        do {
-            ret = write(dest_fid, base, len);
-            if (ret < 0) {
-                perror("Failed to write file");
-                exit(2);
-            } else if (ret == 0) {
-                fprintf(stderr, "Failed to write file: "
-                        "Unhandled short write\n");
-                exit(2);
-            }
-
-            base += ret;
-            len -= ret;
-        } while (len);
-    }
-
-    return offset;
-}
-
-void
-write_file(DispatchTable *dt, const char *filename, const char *host_filename)
-{
-    fprintf(stderr, "opening %s\n", filename);
-    int src_fid = open(filename, O_RDONLY);
-
-    if (src_fid < 0) {
-        fprintf(stderr, "error opening %s\n", filename);
-        return;
-    }
-
-    char buf[256*1024];
-    int offset = 0;
-    int len;
-    int bytes = 0;
-
-    memset(buf, 0, sizeof(buf));
-
-    while ((len = read(src_fid, buf, sizeof(buf))) > 0) {
-        bytes += (*dt->m5_write_file)(buf, len, offset, host_filename);
-        offset += len;
-    }
-    fprintf(stderr, "written %d bytes\n", bytes);
-
-    close(src_fid);
-}
-
-void
-do_exit(DispatchTable *dt, int argc, char *argv[])
-{
-    if (argc > 1)
+    if (!args.argc)
         usage();
 
-    uint64_t ints[1];
-    if (!parse_int_args(argc, argv, ints, 1))
-        usage();
-    (*dt->m5_exit)(ints[0]);
-}
+    progname = pop_arg(&args);
 
-void
-do_fail(DispatchTable *dt, int argc, char *argv[])
-{
-    if (argc < 1 || argc > 2)
+    DispatchTable *dt = init_call_type(&args);
+
+    const char *command = pop_arg(&args);
+
+    if (!command)
         usage();
 
-    uint64_t ints[2] = {0,0};
-    if (!parse_int_args(argc, argv, ints, argc))
-        usage();
-    (*dt->m5_fail)(ints[1], ints[0]);
-}
-
-void
-do_reset_stats(DispatchTable *dt, int argc, char *argv[])
-{
-    uint64_t ints[2];
-    if (!parse_int_args(argc, argv, ints, 2))
-        usage();
-    (*dt->m5_reset_stats)(ints[0], ints[1]);
-}
-
-void
-do_dump_stats(DispatchTable *dt, int argc, char *argv[])
-{
-    uint64_t ints[2];
-    if (!parse_int_args(argc, argv, ints, 2))
-        usage();
-    (*dt->m5_dump_stats)(ints[0], ints[1]);
-}
-
-void
-do_dump_reset_stats(DispatchTable *dt, int argc, char *argv[])
-{
-    uint64_t ints[2];
-    if (!parse_int_args(argc, argv, ints, 2))
-        usage();
-    (*dt->m5_dump_reset_stats)(ints[0], ints[1]);
-}
-
-void
-do_read_file(DispatchTable *dt, int argc, char *argv[])
-{
-    if (argc > 0)
-        usage();
-
-    read_file(dt, STDOUT_FILENO);
-}
-
-void
-do_write_file(DispatchTable *dt, int argc, char *argv[])
-{
-    if (argc != 1 && argc != 2)
-        usage();
-
-    const char *filename = argv[0];
-    const char *host_filename = (argc == 2) ? argv[1] : argv[0];
-
-    write_file(dt, filename, host_filename);
-}
-
-void
-do_checkpoint(DispatchTable *dt, int argc, char *argv[])
-{
-    uint64_t ints[2];
-    if (!parse_int_args(argc, argv, ints, 2))
-        usage();
-    (*dt->m5_checkpoint)(ints[0], ints[1]);
-}
-
-void
-do_addsymbol(DispatchTable *dt, int argc, char *argv[])
-{
-    if (argc != 2)
-        usage();
-
-    uint64_t addr = strtoul(argv[0], NULL, 0);
-    char *symbol = argv[1];
-    (*dt->m5_add_symbol)(addr, symbol);
-}
-
-
-void
-do_loadsymbol(DispatchTable *dt, int argc, char *argv[])
-{
-    if (argc > 0)
-        usage();
-
-    (*dt->m5_load_symbol)();
-}
-
-void
-do_initparam(DispatchTable *dt, int argc, char *argv[])
-{
-    if (argc > 1)
-        usage();
-
-    uint64_t key_str[2];
-    if (!pack_str_into_regs(argc == 0 ? "" : argv[0], key_str, 2))
-        usage();
-    uint64_t val = (*dt->m5_init_param)(key_str[0], key_str[1]);
-    printf("%"PRIu64, val);
-}
-
-struct MainFunc
-{
-    char *name;
-    void (*func)(DispatchTable *dt, int argc, char *argv[]);
-    char *usage;
-};
-
-struct MainFunc mainfuncs[] = {
-    { "addsymbol",      do_addsymbol,        "<address> <symbol> // Adds a "
-                                             "symbol with address \"address\" "
-                                             "to gem5's symbol table" },
-    { "checkpoint",     do_checkpoint,       "[delay [period]] // After "
-                                             "delay (default 0) take a "
-                                             "checkpoint, and then optionally "
-                                             "every period after" },
-    { "dumpresetstats", do_dump_reset_stats, "[delay [period]] // After "
-                                             "delay (default 0) dump and "
-                                             "reset the stats, and then "
-                                             "optionally every period after" },
-    { "dumpstats",      do_dump_stats,       "[delay [period]] // After "
-                                             "delay (default 0) dump the "
-                                             "stats, and then optionally "
-                                             "every period after" },
-    { "exit",           do_exit,             "[delay] // Exit after delay, "
-                                             "or immediately" },
-    { "fail",           do_fail,             "<code> [delay] // Exit with "
-                                             "failure code code after delay, "
-                                             "or immediately" },
-    { "initparam",      do_initparam,        "[key] // optional key may be at "
-                                             "most 16 characters long" },
-    { "loadsymbol",     do_loadsymbol,       "load a preselected symbol file "
-                                             "into gem5's symbol table" },
-    { "readfile",       do_read_file,        "read a preselected file from "
-                                             "the host and write it to "
-                                             "stdout" },
-    { "resetstats",     do_reset_stats,      "[delay [period]] // After "
-                                             "delay (default 0) reset the "
-                                             "stats, and then optionally "
-                                             "every period after" },
-    { "writefile",      do_write_file,       "<filename> [host filename] // "
-                                             "Write a file to the host, "
-                                             "optionally with a different "
-                                             "name" },
-};
-int numfuncs = sizeof(mainfuncs) / sizeof(mainfuncs[0]);
-
-void
-usage()
-{
-    fprintf(stderr, "Usage: %s [call type] <command> [arguments]\n", progname);
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Call types:\n");
-#   if ENABLE_CT_addr
-    fprintf(stderr, "    --addr %s%s\n",
-#   if defined(M5OP_ADDR)
-            "[address override]",
-#   else
-            "<address override>",
-#   endif
-            DEFAULT_CT_addr ? " (default)" : "");
-    fprintf(stderr, "        Use the address based invocation method.\n");
-#   if defined(M5OP_ADDR)
-    fprintf(stderr, "        The default address is %#"PRIx64".\n",
-            (uint64_t)M5OP_ADDR);
-#   endif
-#   endif
-#   if ENABLE_CT_inst
-    fprintf(stderr, "    --inst%s\n", DEFAULT_CT_inst ? " (default)" : "");
-    fprintf(stderr, "        Use the instruction based invocation method.\n");
-#   endif
-#   if ENABLE_CT_semi
-    fprintf(stderr, "    --semi%s\n", DEFAULT_CT_semi ? " (default)" : "");
-    fprintf(stderr, "        Use the semi-hosting based invocation method.\n");
-#   endif
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Commands:\n");
-    for (int i = 0; i < numfuncs; ++i)
-        fprintf(stderr, "    %s %s\n", mainfuncs[i].name, mainfuncs[i].usage);
-    fprintf(stderr, "\n");
-    fprintf(stderr, "All times in nanoseconds!\n");
-
-    exit(1);
-}
-
-int
-main(int argc, char *argv[])
-{
-    progname = argv[0];
-
-    argv++;
-    argc--;
-
-    DispatchTable *dt = NULL;
-
-#   if ENABLE_CT_inst
-    if (!dt && inst_call_type_detect(&argc, &argv)) {
-        dt = inst_call_type_init();
-    }
-#   endif
-#   if ENABLE_CT_addr
-    if (!dt) {
-        int detect = addr_call_type_detect(&argc, &argv);
-        if (detect < 0)
-            usage();
-        if (detect > 0)
-            dt = addr_call_type_init();
-    }
-#   endif
-#   if ENABLE_CT_semi
-    if (!dt && semi_call_type_detect(&argc, &argv)) {
-        dt = semi_call_type_init();
-    }
-#   endif
-    if (!dt)
-        dt = default_call_type_init();
-
-    if (!argc)
-        usage(1);
-
-    command = argv[0];
-
-    argv++;
-    argc--;
-
-    int i;
-    for (i = 0; i < numfuncs; ++i) {
-        if (strcmp(command, mainfuncs[i].name) != 0)
+    for (int i = 0; i < num_commands; ++i) {
+        if (strcmp(command, command_table[i].name) != 0)
             continue;
 
-        mainfuncs[i].func(dt, argc, argv);
+        command_table[i].func(dt, &args);
         exit(0);
     }
 
-    usage(1);
+    usage();
 }

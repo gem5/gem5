@@ -28,9 +28,13 @@ import os
 Import('*')
 
 # Raw source files.
-m5_mmap = 'm5_mmap.c'
 args = 'args.c'
+call_type = 'call_type.c'
+commands = 'commands.c'
 m5 = 'm5.c'
+m5_mmap = 'm5_mmap.c'
+usage = 'usage.c'
+
 jni = 'jni_gem5Op.c'
 lua = 'lua_gem5Op.c'
 
@@ -65,7 +69,7 @@ libm5 = static_env.StaticLibrary('out/m5', [ m5_mmap ] + m5ops)
 #
 ct_support = list([ File('%s_call_type.c' % ct.name) for ct in call_types ])
 m5_bin = static_env.Program('out/m5',
-        ct_support + [ args, m5, m5_mmap, libm5 ])
+        ct_support + [ args, call_type, commands, m5, m5_mmap, libm5, usage ])
 
 
 # The shared version of the m5 op call sights, used by mutliple targets below.

@@ -28,9 +28,10 @@
 #ifndef __INST_CALL_TYPE_H__
 #define __INST_CALL_TYPE_H__
 
+#include "args.h"
 #include "dispatch_table.h"
 
-int inst_call_type_detect(int *argc, char **argv[]);
+int inst_call_type_detect(Args *args);
 DispatchTable *inst_call_type_init();
 
 #endif // __INST_CALL_TYPE_H__
