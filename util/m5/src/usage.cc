@@ -38,9 +38,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cinttypes>
-#include <cstdio>
 #include <cstdlib>
+#include <iostream>
 
 #include "call_type.hh"
 #include "commands.hh"
@@ -51,16 +50,16 @@ std::string progname;
 void
 usage()
 {
-    fprintf(stderr, "Usage: %s [call type] <command> [arguments]\n",
-            progname.c_str());
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Call types:\n");
-    fprintf(stderr, CallType::usageSummary().c_str());
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Commands:\n");
-    fprintf(stderr, Command::usageSummary().c_str());
-    fprintf(stderr, "\n");
-    fprintf(stderr, "All times in nanoseconds!\n");
+    std::cerr << "Usage: " << progname <<
+        "[call type] <command> [arguments]" << std::endl <<
+        std::endl <<
+        "Call types:" << std::endl <<
+        CallType::usageSummary() <<
+        std::endl <<
+        "Commands:" << std::endl <<
+        Command::usageSummary() <<
+        std::endl <<
+        "All times in nanoseconds!" << std::endl;
 
     exit(1);
 }
