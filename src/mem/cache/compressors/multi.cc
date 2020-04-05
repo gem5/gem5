@@ -103,7 +103,7 @@ MultiCompressor::compress(const uint64_t* cache_line, Cycles& comp_lat,
             if (lhs_cf == rhs_cf) {
                 // When they have similar compressed sizes, give the one
                 // with fastest decompression privilege
-                return lhs->decompLat < rhs->decompLat;
+                return lhs->decompLat > rhs->decompLat;
             }
             return lhs_cf < rhs_cf;
         }
