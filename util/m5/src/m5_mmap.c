@@ -38,9 +38,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -54,21 +56,23 @@ void *m5_mem = NULL;
 #endif
 uint64_t m5op_addr = M5OP_ADDR;
 
+const char *m5_mmap_dev = "/dev/mem";
+
 void
 map_m5_mem()
 {
     int fd;
 
-    fd = open("/dev/mem", O_RDWR | O_SYNC);
+    fd = open(m5_mmap_dev, O_RDWR | O_SYNC);
     if (fd == -1) {
-        perror("Can't open /dev/mem");
+        fprintf(stderr, "Can't open %s: %s\n", m5_mmap_dev, strerror(errno));
         exit(1);
     }
 
     m5_mem = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
                   m5op_addr);
     if (!m5_mem) {
-        perror("Can't mmap /dev/mem");
+        fprintf(stderr, "Can't map %s: %s\n", m5_mmap_dev, strerror(errno));
         exit(1);
     }
 }
