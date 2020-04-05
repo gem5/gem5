@@ -117,6 +117,19 @@ do_exit(const DispatchTable &dt, Args &args)
     (*dt.m5_exit)(ns_delay);
 }
 
+// For testing purposes.
+static void
+do_sum(const DispatchTable &dt, Args &args)
+{
+    uint64_t a, b, c, d, e, f;
+    if (!args.pop(a) || !args.pop(b) || !args.pop(c, 0) ||
+            !args.pop(d, 0) || !args.pop(e, 0) || !args.pop(f, 0))
+        usage();
+
+    unsigned sum = (*dt.m5_sum)(a, b, c, d, e, f);
+    std::cout << "Sum is " << sum << "." << std::endl;
+}
+
 static void
 do_fail(const DispatchTable &dt, Args &args)
 {
@@ -230,6 +243,8 @@ std::map<std::string, Command> Command::map = {
         "        Exit after delay, or immediately" }},
     { "fail", { 1, 2, do_fail, "<code> [delay]\n"
         "        Exit with failure code code after delay, or immediately" }},
+    { "sum", { 2, 6, do_sum, "<a> <b> [c [d [e [f]]]]\n"
+        "        Sum a-f (defaults are 0), for testing purposes" }},
     { "initparam", { 1, 1, do_initparam, "[key]\n"
         "        optional key may be at most 16 characters long" }},
     { "loadsymbol", { 0, 0, do_loadsymbol, "\n"
