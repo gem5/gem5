@@ -279,6 +279,28 @@ let {{
     PseudoInst::loadsymbol(xc->tcBase());
     '''
 
+    m5sum_code = '''
+        R0 = PseudoInst::m5sum(xc->tcBase(), R0, R1, R2, R3, R4, R5);
+    '''
+    m5sumIop = InstObjParams("m5sum", "M5sum", "PredOp",
+                                 { "code": m5sum_code,
+                                   "predicate_test": predicateTest },
+                                   ["No_OpClass", "IsNonSpeculative"])
+    header_output += BasicDeclare.subst(m5sumIop)
+    decoder_output += BasicConstructor.subst(m5sumIop)
+    exec_output += PredOpExecute.subst(m5sumIop)
+
+    m5sum_code64 = '''
+        X0 = PseudoInst::m5sum(xc->tcBase(), X0, X1, X2, X3, X4, X5);
+    '''
+    m5sumIop = InstObjParams("m5sum", "M5sum64", "PredOp",
+                                 { "code": m5sum_code64,
+                                   "predicate_test": predicateTest },
+                                   ["No_OpClass", "IsNonSpeculative"])
+    header_output += BasicDeclare.subst(m5sumIop)
+    decoder_output += BasicConstructor.subst(m5sumIop)
+    exec_output += PredOpExecute.subst(m5sumIop)
+
     loadsymbolIop = InstObjParams("loadsymbol", "Loadsymbol", "PredOp",
                            { "code": loadsymbolCode,
                              "predicate_test": predicateTest },

@@ -233,10 +233,14 @@ def operands {{
     'R1': intRegNPC('1'),
     'R2': intRegNPC('2'),
     'R3': intRegNPC('3'),
+    'R4': intRegNPC('4'),
+    'R5': intRegNPC('5'),
     'X0': intRegX64('0'),
     'X1': intRegX64('1'),
     'X2': intRegX64('2'),
     'X3': intRegX64('3'),
+    'X4': intRegX64('4'),
+    'X5': intRegX64('5'),
 
     # Condition code registers
     'CondCodesNZ': ccReg('CCREG_NZ'),

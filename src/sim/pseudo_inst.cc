@@ -189,6 +189,16 @@ m5exit(ThreadContext *tc, Tick delay)
     }
 }
 
+// m5sum is for sanity checking the gem5 op interface.
+uint64_t
+m5sum(ThreadContext *tc, uint64_t a, uint64_t b, uint64_t c,
+                         uint64_t d, uint64_t e, uint64_t f)
+{
+    DPRINTF(PseudoInst, "PseudoInst::m5sum(%#x, %#x, %#x, %#x, %#x, %#x)\n",
+            a, b, c, d, e, f);
+    return a + b + c + d + e + f;
+}
+
 void
 m5fail(ThreadContext *tc, Tick delay, uint64_t code)
 {

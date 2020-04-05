@@ -170,6 +170,10 @@
                     0x22: m5fail({{
                         PseudoInst::m5fail(xc->tcBase(), Rdi, Rsi);
                     }}, IsNonSpeculative);
+                    0x23: m5sum({{
+                        Rax = PseudoInst::m5sum(xc->tcBase(),
+                                Rdi, Rsi, Rdx, Rcx, R8, R9);
+                    }}, IsNonSpeculative);
                     0x30: m5initparam({{
                         Rax = PseudoInst::initParam(xc->tcBase(), Rdi, Rsi);
                     }}, IsNonSpeculative);

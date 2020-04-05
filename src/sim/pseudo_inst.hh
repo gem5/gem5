@@ -100,6 +100,8 @@ uint64_t rpns(ThreadContext *tc);
 void wakeCPU(ThreadContext *tc, uint64_t cpuid);
 void m5exit(ThreadContext *tc, Tick delay);
 void m5fail(ThreadContext *tc, Tick delay, uint64_t code);
+uint64_t m5sum(ThreadContext *tc, uint64_t a, uint64_t b, uint64_t c,
+                                  uint64_t d, uint64_t e, uint64_t f);
 void resetstats(ThreadContext *tc, Tick delay, Tick period);
 void dumpstats(ThreadContext *tc, Tick delay, Tick period);
 void dumpresetstats(ThreadContext *tc, Tick delay, Tick period);
@@ -167,6 +169,11 @@ pseudoInstWork(ThreadContext *tc, uint8_t func, uint64_t &result)
 
       case M5OP_FAIL:
         invokeSimcall<ABI>(tc, m5fail);
+        return true;
+
+      // M5OP_SUM is for sanity checking the gem5 op interface.
+      case M5OP_SUM:
+        result = invokeSimcall<ABI, store_ret>(tc, m5sum);
         return true;
 
       case M5OP_INIT_PARAM:

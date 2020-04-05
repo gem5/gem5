@@ -976,6 +976,10 @@ decode OP default Unknown::unknown()
                     0x21: m5exit({{
                         PseudoInst::m5exit(xc->tcBase(), O0);
                     }}, No_OpClass, IsNonSpeculative);
+                    0x23: m5sum({{
+                        O0 = PseudoInst::m5sum(xc->tcBase(),
+                                O0, O1, O2, O3, O4, O5);
+                    }}, IsNonSpeculative);
                     0x50: m5readfile({{
                         O0 = PseudoInst::readfile(xc->tcBase(), O0, O1, O2);
                     }}, IsNonSpeculative);

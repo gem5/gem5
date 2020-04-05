@@ -53,6 +53,7 @@
 #define M5OP_DEPRECATED3        0x20 // deprecated exit function
 #define M5OP_EXIT               0x21
 #define M5OP_FAIL               0x22
+#define M5OP_SUM                0x23 // For testing
 #define M5OP_INIT_PARAM         0x30
 #define M5OP_LOAD_SYMBOL        0x31
 #define M5OP_RESET_STATS        0x40
@@ -90,6 +91,7 @@
     M5OP(m5_wake_cpu, M5OP_WAKE_CPU)                            \
     M5OP(m5_exit, M5OP_EXIT)                                    \
     M5OP(m5_fail, M5OP_FAIL)                                    \
+    M5OP(m5_sum, M5OP_SUM)                                      \
     M5OP(m5_init_param, M5OP_INIT_PARAM)                        \
     M5OP(m5_load_symbol, M5OP_LOAD_SYMBOL)                      \
     M5OP(m5_reset_stats, M5OP_RESET_STATS)                      \
