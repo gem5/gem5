@@ -97,8 +97,7 @@ class AddrCallType : public CallType
             if (arg[0] != '=')
                 usage();
             // Attempt to extract an address after the '='.
-            Args temp_args({ arg.substr(1) });
-            if (!parse_int_args(temp_args, &addr_override, 1))
+            if (!args.stoi(arg.substr(1), addr_override))
                 usage();
             // If we found an address, use it to override m5op_addr.
             m5op_addr = addr_override;
@@ -106,7 +105,7 @@ class AddrCallType : public CallType
         }
         // If an address override wasn't part of the first argument, check if
         // it's the second argument. If not, then there's no override.
-        if (args.size() && parse_int_args(args, &addr_override, 1)) {
+        if (args.pop(addr_override)) {
             m5op_addr = addr_override;
             return true;
         }

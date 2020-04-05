@@ -38,39 +38,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cinttypes>
-#include <cstdlib>
 #include <cstring>
 
 #include "args.hh"
 
 bool
-parse_int_args(Args &args, uint64_t ints[], int len)
-{
-// On 32 bit platforms we need to use strtoull to do the conversion
-#ifdef __LP64__
-#define strto64 strtoul
-#else
-#define strto64 strtoull
-#endif
-    for (int i = 0; i < len; ++i)
-        ints[i] = strto64(args.pop("0").c_str(), NULL, 0);
-
-#undef strto64
-    return true;
-}
-
-bool
-pack_arg_into_regs(Args &args, uint64_t regs[], int num_regs)
+Args::pack(const std::string &str, uint64_t regs[], int num_regs)
 {
     const size_t RegSize = sizeof(regs[0]);
     const size_t MaxLen = num_regs * RegSize;
-    const std::string &sarg = args.pop();
-    const char *arg = sarg.c_str();
+    const char *arg = str.c_str();
 
     memset(regs, 0, MaxLen);
 
-    size_t len = sarg.size();
+    size_t len = str.size();
 
     if (len > MaxLen)
         return false;

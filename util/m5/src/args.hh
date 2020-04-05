@@ -41,9 +41,9 @@
 #ifndef __ARGS_HH__
 #define __ARGS_HH__
 
-#include <cstddef>
 #include <cstdint>
 #include <initializer_list>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -61,19 +61,115 @@ class Args
     }
     Args(std::initializer_list<std::string> strings) : args(strings) {}
 
+    /*
+     * Attempt to convert str into an integer.
+     *
+     * Return whether that succeeded.
+     */
+    static bool
+    stoi(const std::string &str, uint64_t &val)
+    {
+        try {
+            val = std::stoi(str, nullptr, 0);
+            return true;
+        } catch (const std::invalid_argument &e) {
+            return false;
+        } catch (const std::out_of_range &e) {
+            return false;
+        }
+    }
+
+    /*
+     * Attempt to convert str into an integer.
+     *
+     * Return whether that suceeded. If not, val will be set to def.
+     */
+    static bool
+    stoi(const std::string &str, uint64_t &val, uint64_t def)
+    {
+        val = def;
+        return stoi(str, val);
+    }
+
+    /*
+     * Attempt to pack str as a sequence of bytes in to regs in little endian
+     * byte order.
+     *
+     * Return whether that succeeded.
+     */
+    static bool pack(const std::string &str, uint64_t regs[], int num_regs);
+
+    /*
+     * If there are any arguments in the list, remove and return the first
+     * one. If not, return def instead.
+     */
     const std::string &
-    pop(const std::string &def = "") {
+    pop(const std::string &def = "")
+    {
         if (!size())
             return def;
         return args[offset++];
+    }
+
+    /*
+     * If there are any arguments in the list, attempt to convert the first
+     * one to an integer. If successful, remove it and store its value in val.
+     *
+     * Return whether that succeeded.
+     */
+    bool
+    pop(uint64_t &val)
+    {
+        if (!size() || !stoi(args[offset], val)) {
+            return false;
+        } else {
+            offset++;
+            return true;
+        }
+    }
+
+    /*
+     * If there are any arguments in the list, attempt to convert the first
+     * one to an integer. If successful, remove it and store its value in val.
+     * If there are no arguments or the conversion failed, set val to def.
+     *
+     * Return true if there were no arguments, or there were and the conversion
+     * succeeded.
+     */
+    bool
+    pop(uint64_t &val, uint64_t def)
+    {
+        val = def;
+        if (!size())
+            return true;
+        if (stoi(args[offset], val)) {
+            offset++;
+            return true;
+        }
+        return false;
+    }
+
+    /*
+     * If there are any arguments in the list, attempt to pack the first one
+     * as a sequence of bytes into the integers in regs in little endian byte
+     * order.
+     *
+     * Return whether that succeeded.
+     */
+    bool
+    pop(uint64_t regs[], int num_regs)
+    {
+        if (!size() || !pack(args[offset], regs, num_regs)) {
+            return false;
+        } else {
+            offset++;
+            return true;
+        }
     }
 
     size_t size() { return args.size() - offset; }
 
     const std::string &operator [] (size_t idx) { return args[offset + idx]; }
 };
-
-bool parse_int_args(Args &args, uint64_t ints[], int len);
-bool pack_arg_into_regs(Args &args, uint64_t regs[], int num_regs);
 
 #endif // __ARGS_HH__
