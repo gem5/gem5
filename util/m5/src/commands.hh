@@ -29,24 +29,46 @@
 #ifndef __COMMANDS_HH__
 #define __COMMANDS_HH__
 
+#include <map>
+#include <string>
+
 #include "args.hh"
 #include "dispatch_table.hh"
 
-struct CommandInfo
+class Command
 {
-    // The name of the command.
-    const char *name;
+  private:
+    // The minimum number of arguments the command expects.
+    const int minArgs;
+    // The maximum number of arguments the command can handle.
+    const int maxArgs;
+
+    using FuncType = void (*)(const DispatchTable &dt, Args &args);
     // A function which processes command line arguments and passes them to
     // the underlying function through the dispatch table.
-    void (*func)(const DispatchTable &dt, Args &args);
+    FuncType func;
+
     // Help text for this command.
-    const char *usage;
+    const std::string usageStr;
+
+  public:
+
+    static std::map<std::string, Command> map;
+
+    Command(int _min, int _max, FuncType _func, const std::string &_usage) :
+        minArgs(_min), maxArgs(_max), func(_func), usageStr(_usage)
+    {}
+
+    void run(const DispatchTable &dt, Args &args);
+
+    static std::string
+    usageSummary()
+    {
+        std::string summary;
+        for (auto &p: Command::map)
+            summary += "    " + p.first + " " + p.second.usageStr + "\n";
+        return summary;
+    }
 };
-
-// The commands themselves.
-extern CommandInfo command_table[];
-
-// The number of commands.
-extern int num_commands;
 
 #endif // __COMMANDS_HH__

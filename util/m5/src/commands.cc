@@ -26,88 +26,90 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <err.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-#include <cinttypes>
-#include <cstdio>
-#include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 
 #include "args.hh"
 #include "commands.hh"
 #include "usage.hh"
 
-static int
-read_file(const DispatchTable &dt, int dest_fid)
+void
+Command::run(const DispatchTable &dt, Args &args)
 {
-    uint8_t buf[256*1024];
-    int offset = 0;
-    int len, ret;
+    const int num_args = args.size();
+    if (num_args < minArgs || num_args > maxArgs)
+        usage();
+
+    func(dt, args);
+}
+
+
+static int
+read_file(const DispatchTable &dt, std::ostream &os)
+{
+    char buf[256 * 1024];
 
     // Touch all buffer pages to ensure they are mapped in the
     // page table. This is required in the case of X86_FS, where
     // Linux does demand paging.
     memset(buf, 0, sizeof(buf));
 
+    int len;
+    int offset = 0;
     while ((len = (*dt.m5_read_file)(buf, sizeof(buf), offset)) > 0) {
-        uint8_t *base = buf;
+        os.write(buf, len);
+        os.flush();
+        if (!os) {
+            std::cerr << "Failed to write file" << std::endl;
+            exit(2);
+        }
         offset += len;
-        do {
-            ret = write(dest_fid, base, len);
-            if (ret < 0) {
-                perror("Failed to write file");
-                exit(2);
-            } else if (ret == 0) {
-                fprintf(stderr, "Failed to write file: "
-                        "Unhandled short write\n");
-                exit(2);
-            }
-
-            base += ret;
-            len -= ret;
-        } while (len);
     }
 
     return offset;
 }
 
 static void
-write_file(const DispatchTable &dt, const char *filename,
-           const char *host_filename)
+write_file(const DispatchTable &dt, const std::string &filename,
+           const std::string &host_filename)
 {
-    fprintf(stderr, "opening %s\n", filename);
-    int src_fid = open(filename, O_RDONLY);
+    std::cerr << "opening " << filename << std::endl;
+    std::ifstream src(filename, std::ios_base::in | std::ios_base::binary);
 
-    if (src_fid < 0) {
-        fprintf(stderr, "error opening %s\n", filename);
+    if (!src) {
+        std::cerr << "error opening " << filename << std::endl;
         return;
     }
 
-    char buf[256*1024];
+    char buf[256 * 1024];
     int offset = 0;
-    int len;
-    int bytes = 0;
 
     memset(buf, 0, sizeof(buf));
 
-    while ((len = read(src_fid, buf, sizeof(buf))) > 0) {
-        bytes += (*dt.m5_write_file)(buf, len, offset, host_filename);
-        offset += len;
+    while (true) {
+        src.seekg(offset);
+        src.read(buf, sizeof(buf));
+        int len = src.gcount();
+        if (!src && !src.eof())
+            break;
+        char *wbuf = buf;
+        while (len) {
+            int bytes = (*dt.m5_write_file)(
+                    wbuf, len, offset, host_filename.c_str());
+            len -= bytes;
+            offset += bytes;
+            wbuf += bytes;
+        }
+        if (src.eof())
+            break;
     }
-    fprintf(stderr, "written %d bytes\n", bytes);
-
-    close(src_fid);
+    std::cerr << "Wrote " << offset << " bytes." << std::endl;
 }
 
 static void
 do_exit(const DispatchTable &dt, Args &args)
 {
-    if (args.size() > 1)
-        usage();
-
     uint64_t ns_delay;
     if (!args.pop(ns_delay, 0))
         usage();
@@ -118,9 +120,6 @@ do_exit(const DispatchTable &dt, Args &args)
 static void
 do_fail(const DispatchTable &dt, Args &args)
 {
-    if (args.size() > 2)
-        usage();
-
     uint64_t ns_delay, code;
     if (!args.pop(code) || !args.pop(ns_delay, 0))
         usage();
@@ -131,9 +130,6 @@ do_fail(const DispatchTable &dt, Args &args)
 static void
 do_reset_stats(const DispatchTable &dt, Args &args)
 {
-    if (args.size() > 2)
-        usage();
-
     uint64_t ns_delay, ns_period;
     if (!args.pop(ns_delay, 0) || !args.pop(ns_period, 0))
         usage();
@@ -144,9 +140,6 @@ do_reset_stats(const DispatchTable &dt, Args &args)
 static void
 do_dump_stats(const DispatchTable &dt, Args &args)
 {
-    if (args.size() > 2)
-        usage();
-
     uint64_t ns_delay, ns_period;
     if (!args.pop(ns_delay, 0) || !args.pop(ns_period, 0))
         usage();
@@ -157,9 +150,6 @@ do_dump_stats(const DispatchTable &dt, Args &args)
 static void
 do_dump_reset_stats(const DispatchTable &dt, Args &args)
 {
-    if (args.size() > 2)
-        usage();
-
     uint64_t ns_delay, ns_period;
     if (!args.pop(ns_delay, 0) || !args.pop(ns_period, 0))
         usage();
@@ -173,27 +163,21 @@ do_read_file(const DispatchTable &dt, Args &args)
     if (args.size() > 0)
         usage();
 
-    read_file(dt, STDOUT_FILENO);
+    read_file(dt, std::cout);
 }
 
 static void
 do_write_file(const DispatchTable &dt, Args &args)
 {
-    if (args.size() < 1 || args.size() > 2)
-        usage();
-
     const std::string &filename = args.pop();
     const std::string &host_filename = args.pop(filename);
 
-    write_file(dt, filename.c_str(), host_filename.c_str());
+    write_file(dt, filename, host_filename);
 }
 
 static void
 do_checkpoint(const DispatchTable &dt, Args &args)
 {
-    if (args.size() > 2)
-        usage();
-
     uint64_t ns_delay, ns_period;
     if (!args.pop(ns_delay, 0) || !args.pop(ns_period, 0))
         usage();
@@ -204,9 +188,6 @@ do_checkpoint(const DispatchTable &dt, Args &args)
 static void
 do_addsymbol(const DispatchTable &dt, Args &args)
 {
-    if (args.size() != 2)
-        usage();
-
     uint64_t addr;
     if (!args.pop(addr))
         usage();
@@ -219,18 +200,12 @@ do_addsymbol(const DispatchTable &dt, Args &args)
 static void
 do_loadsymbol(const DispatchTable &dt, Args &args)
 {
-    if (args.size() > 0)
-        usage();
-
     (*dt.m5_load_symbol)();
 }
 
 static void
 do_initparam(const DispatchTable &dt, Args &args)
 {
-    if (args.size() != 1)
-        usage();
-
     uint64_t key_str[2];
     if (!args.pop(key_str, 2))
         usage();
@@ -238,42 +213,34 @@ do_initparam(const DispatchTable &dt, Args &args)
     std::cout << val;
 }
 
-CommandInfo command_table[] = {
-    { "addsymbol",      do_addsymbol,        "<address> <symbol> // Adds a "
-                                             "symbol with address \"address\" "
-                                             "to gem5's symbol table" },
-    { "checkpoint",     do_checkpoint,       "[delay [period]] // After "
-                                             "delay (default 0) take a "
-                                             "checkpoint, and then optionally "
-                                             "every period after" },
-    { "dumpresetstats", do_dump_reset_stats, "[delay [period]] // After "
-                                             "delay (default 0) dump and "
-                                             "reset the stats, and then "
-                                             "optionally every period after" },
-    { "dumpstats",      do_dump_stats,       "[delay [period]] // After "
-                                             "delay (default 0) dump the "
-                                             "stats, and then optionally "
-                                             "every period after" },
-    { "exit",           do_exit,             "[delay] // Exit after delay, "
-                                             "or immediately" },
-    { "fail",           do_fail,             "<code> [delay] // Exit with "
-                                             "failure code code after delay, "
-                                             "or immediately" },
-    { "initparam",      do_initparam,        "[key] // optional key may be at "
-                                             "most 16 characters long" },
-    { "loadsymbol",     do_loadsymbol,       "load a preselected symbol file "
-                                             "into gem5's symbol table" },
-    { "readfile",       do_read_file,        "read a preselected file from "
-                                             "the host and write it to "
-                                             "stdout" },
-    { "resetstats",     do_reset_stats,      "[delay [period]] // After "
-                                             "delay (default 0) reset the "
-                                             "stats, and then optionally "
-                                             "every period after" },
-    { "writefile",      do_write_file,       "<filename> [host filename] // "
-                                             "Write a file to the host, "
-                                             "optionally with a different "
-                                             "name" },
+std::map<std::string, Command> Command::map = {
+    { "addsymbol", { 2, 2, do_addsymbol, "<address> <symbol>\n"
+        "        Adds a symbol with address \"address\" to gem5's "
+            "symbol table" }},
+    { "checkpoint", { 0, 2, do_checkpoint, "[delay [period]]\n"
+        "        After delay (default 0) take a checkpoint, and then "
+            "optionally every period after" }},
+    { "dumpresetstats", { 0, 2, do_dump_reset_stats, "[delay [period]]\n"
+        "        After delay (default 0) dump and reset the stats, and then "
+            "optionally every period after" }},
+    { "dumpstats", { 0, 2, do_dump_stats, "[delay [period]]\n"
+        "        After delay (default 0) dump the stats, and then optionally "
+            "every period after" }},
+    { "exit", { 0, 1, do_exit, "[delay]\n"
+        "        Exit after delay, or immediately" }},
+    { "fail", { 1, 2, do_fail, "<code> [delay]\n"
+        "        Exit with failure code code after delay, or immediately" }},
+    { "initparam", { 1, 1, do_initparam, "[key]\n"
+        "        optional key may be at most 16 characters long" }},
+    { "loadsymbol", { 0, 0, do_loadsymbol, "\n"
+        "        load a preselected symbol file into gem5's symbol table" }},
+    { "readfile", { 0, 0, do_read_file, "\n"
+        "        read a preselected file from the host and write it to "
+            "stdout" }},
+    { "resetstats", { 0, 2, do_reset_stats, "[delay [period]]\n"
+        "        After delay (default 0) reset the stats, and then "
+            "optionally every period after" }},
+    { "writefile", { 1, 2, do_write_file, "<filename> [host filename]\n"
+        "        Write a file to the host, optionally with a different "
+            "name" }},
 };
-
-int num_commands = sizeof(command_table) / sizeof(CommandInfo);

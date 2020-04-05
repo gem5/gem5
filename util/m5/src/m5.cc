@@ -38,9 +38,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cstdlib>
-#include <cstring>
-
 #include "args.hh"
 #include "call_type.hh"
 #include "commands.hh"
@@ -51,25 +48,20 @@ main(int argc, const char *argv[])
 {
     Args args(argc, argv);
 
+    progname = args.pop("{progname}");
+
     if (!args.size())
         usage();
-
-    progname = args.pop("{progname}");
 
     const DispatchTable &dt = CallType::detect(args).getDispatch();
 
     if (!args.size())
         usage();
 
-    const std::string &command = args.pop();
+    auto cmd = Command::map.find(args.pop());
+    if (cmd == Command::map.end())
+        usage();
 
-    for (int i = 0; i < num_commands; ++i) {
-        if (command != command_table[i].name)
-            continue;
-
-        command_table[i].func(dt, args);
-        exit(0);
-    }
-
-    usage();
+    cmd->second.run(dt, args);
+    exit(0);
 }

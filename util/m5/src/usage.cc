@@ -58,10 +58,7 @@ usage()
     fprintf(stderr, CallType::usageSummary().c_str());
     fprintf(stderr, "\n");
     fprintf(stderr, "Commands:\n");
-    for (int i = 0; i < num_commands; ++i) {
-        fprintf(stderr, "    %s %s\n",
-                command_table[i].name, command_table[i].usage);
-    }
+    fprintf(stderr, Command::usageSummary().c_str());
     fprintf(stderr, "\n");
     fprintf(stderr, "All times in nanoseconds!\n");
 
