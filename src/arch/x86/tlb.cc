@@ -397,13 +397,6 @@ TLB::translate(const RequestPtr &req,
                     Process *p = tc->getProcessPtr();
                     const EmulationPageTable::Entry *pte =
                         p->pTable->lookup(vaddr);
-                    if (!pte && mode != Execute) {
-                        // Check if we just need to grow the stack.
-                        if (p->fixupFault(vaddr)) {
-                            // If we did, lookup the entry for the new page.
-                            pte = p->pTable->lookup(vaddr);
-                        }
-                    }
                     if (!pte) {
                         return std::make_shared<PageFault>(vaddr, true, mode,
                                                            true, false);
