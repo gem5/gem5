@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2019 ARM Limited
+# Copyright (c) 2013-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -110,6 +110,8 @@ def addNoISAOptions(parser):
                       help="Specify the physical memory size (single memory)")
     parser.add_option("--enable-dram-powerdown", action="store_true",
                        help="Enable low-power states in DRAMCtrl")
+    parser.add_option("--mem-channels-intlv", type="int",
+                      help="Memory channels interleave")
 
 
     parser.add_option("--memchecker", action="store_true")
