@@ -230,7 +230,11 @@ MemCmd::commandInfo[] =
       InvalidateResp, "InvalidateReq" },
     /* Invalidation Response */
     { SET2(IsInvalidate, IsResponse),
-      InvalidCmd, "InvalidateResp" }
+      InvalidCmd, "InvalidateResp" },
+      // hardware transactional memory
+    { SET3(IsRead, IsRequest, NeedsResponse), HTMReqResp, "HTMReq" },
+    { SET2(IsRead, IsResponse), InvalidCmd, "HTMReqResp" },
+    { SET2(IsRead, IsRequest), InvalidCmd, "HTMAbort" },
 };
 
 AddrRange
@@ -488,4 +492,63 @@ Packet::PrintReqState::printObj(Printable *obj)
 {
     printLabels();
     obj->print(os, verbosity, curPrefix());
+}
+
+void
+Packet::makeHtmTransactionalReqResponse(
+    const HtmCacheFailure htm_return_code)
+{
+    assert(needsResponse());
+    assert(isRequest());
+
+    cmd = cmd.responseCommand();
+
+    setHtmTransactionFailedInCache(htm_return_code);
+
+    // responses are never express, even if the snoop that
+    // triggered them was
+    flags.clear(EXPRESS_SNOOP);
+}
+
+void
+Packet::setHtmTransactionFailedInCache(
+    const HtmCacheFailure htm_return_code)
+{
+    if (htm_return_code != HtmCacheFailure::NO_FAIL)
+        flags.set(FAILS_TRANSACTION);
+
+    htmReturnReason = htm_return_code;
+}
+
+bool
+Packet::htmTransactionFailedInCache() const
+{
+    return flags.isSet(FAILS_TRANSACTION);
+}
+
+HtmCacheFailure
+Packet::getHtmTransactionFailedInCacheRC() const
+{
+    assert(htmTransactionFailedInCache());
+    return htmReturnReason;
+}
+
+void
+Packet::setHtmTransactional(uint64_t htm_uid)
+{
+    flags.set(FROM_TRANSACTION);
+    htmTransactionUid = htm_uid;
+}
+
+bool
+Packet::isHtmTransactional() const
+{
+    return flags.isSet(FROM_TRANSACTION);
+}
+
+uint64_t
+Packet::getHtmTransactionUid() const
+{
+    assert(flags.isSet(FROM_TRANSACTION));
+    return htmTransactionUid;
 }
