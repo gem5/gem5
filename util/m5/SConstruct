@@ -28,8 +28,13 @@ import os
 
 main = Environment()
 
+gem5_root = Dir('..').Dir('..')
+
 # Includes which are shared with gem5 itself.
-common_include = Dir('..').Dir('..').Dir('include')
+common_include = gem5_root.Dir('include')
+
+ext_dir = gem5_root.Dir('ext')
+googletest_dir = ext_dir.Dir('googletest')
 
 src_dir = Dir('src')
 build_dir = Dir('build')
@@ -45,12 +50,6 @@ main.Append(CPPPATH=[ common_include ])
 # Propogate the environment's PATH setting.
 main['ENV']['PATH'] = os.environ['PATH']
 
-main['CC'] = '${CROSS_COMPILE}gcc'
-main['CXX'] = '${CROSS_COMPILE}g++'
-main['AS'] = '${CROSS_COMPILE}as'
-main['LD'] = '${CROSS_COMPILE}ld'
-main['AR'] = '${CROSS_COMPILE}ar'
-
 # Detect some dependencies of some forms of the m5 utility/library.
 main['HAVE_JAVA'] = all(key in main for key in ('JAVAC', 'JAR'))
 main['HAVE_PKG_CONFIG'] = main.Detect('pkg-config') is not None
@@ -61,6 +60,35 @@ main['HAVE_LUA51'] = (main['HAVE_PKG_CONFIG'] and
 main.SConsignFile(os.path.join(abspath(build_dir), 'sconsign'))
 # Use soft links instead of hard links when setting up a build directory.
 main.SetOption('duplicate', 'soft-copy')
+
+def GTest(env, name, *srcs, **kwargs):
+    if 'GTEST_ENV' not in env:
+        gtest_env = env.Clone(OBJSUFFIX='.to')
+        gtest_env.Append(CPPFLAGS=[ '${GTEST_CPPFLAGS}' ])
+        gtest_env.Append(LIBS=[ '${GTEST_LIBS}' ])
+        env['GTEST_ENV'] = gtest_env
+
+    if not srcs:
+        srcs = [ name + '.cc', name + '.test.cc' ]
+    env['GTEST_ENV'].Program('test/%s' % name, srcs, **kwargs)
+
+main.AddMethod(GTest)
+
+native = main.Clone()
+native_dir = build_dir.Dir('native')
+
+# Bring in the googletest sources.
+native.SConscript(googletest_dir.File('SConscript'),
+        variant_dir=native_dir.Dir('googletest'), exports={ 'main': native })
+
+native.SConscript(src_dir.File('SConscript.native'),
+        variant_dir=native_dir, exports={ 'env': native })
+
+main['CC'] = '${CROSS_COMPILE}gcc'
+main['CXX'] = '${CROSS_COMPILE}g++'
+main['AS'] = '${CROSS_COMPILE}as'
+main['LD'] = '${CROSS_COMPILE}ld'
+main['AR'] = '${CROSS_COMPILE}ar'
 
 class CallType(object):
     def __init__(self, name):
@@ -110,5 +138,9 @@ for root, dirs, files in os.walk(abspath(src_dir)):
         # Once all the options have been configured, set up build targets for
         # this abi.
         abi_dir = build_dir.Dir(env.subst('${ABI}'))
+        # Bring in the googletest sources.
+        env.SConscript(googletest_dir.File('SConscript'),
+                variant_dir=abi_dir.Dir('googletest'),
+                exports={ 'main': env })
         env.SConscript(src_dir.File('SConscript'),
                        variant_dir=abi_dir, exports='env')
