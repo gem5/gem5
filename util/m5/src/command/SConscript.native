@@ -25,14 +25,8 @@
 
 Import('*')
 
-env.Append(CPPPATH=Dir('.'))
+command_tests = (
+    'sum',
+)
 
-env.GTest('args')
-env.GTest('call_type')
-env.GTest('command', 'command.test.cc', 'command.cc', 'args.cc')
-
-command_tests = env.SConscript('command/SConscript.native', exports='env')
-
-for test in command_tests:
-    env.GTest('commands/%s' % test, 'command/%s.test.cc' % test,
-              'command/%s.cc' % test, 'args.cc', 'command.cc')
+Return('command_tests')
