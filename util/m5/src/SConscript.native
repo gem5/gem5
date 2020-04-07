@@ -27,3 +27,4 @@ Import('*')
 
 env.GTest('args')
 env.GTest('call_type')
+env.GTest('command', 'command.test.cc', 'command.cc', 'args.cc')
