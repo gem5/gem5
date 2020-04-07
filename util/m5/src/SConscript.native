@@ -26,3 +26,4 @@
 Import('*')
 
 env.GTest('args')
+env.GTest('call_type')

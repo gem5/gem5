@@ -32,8 +32,8 @@
 #include <string>
 #include <vector>
 
-#include "args.hh"
-#include "dispatch_table.hh"
+class Args;
+class DispatchTable;
 
 class CallType
 {

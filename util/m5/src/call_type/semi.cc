@@ -27,7 +27,9 @@
 
 #include <cstring>
 
+#include "args.hh"
 #include "call_type.hh"
+#include "dispatch_table.hh"
 
 extern "C"
 {
