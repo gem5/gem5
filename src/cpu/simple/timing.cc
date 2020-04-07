@@ -805,6 +805,8 @@ TimingSimpleCPU::advanceInst(const Fault &fault)
     if (tryCompleteDrain())
         return;
 
+    serviceInstCountEvents();
+
     if (_status == BaseSimpleCPU::Running) {
         // kick off fetch of next instruction... callback from icache
         // response will cause that instruction to be executed,
