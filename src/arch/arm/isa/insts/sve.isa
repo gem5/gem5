@@ -3558,7 +3558,7 @@ let {{
     sveCmpInst('fcmuo', 'Fcmuo', 'SimdFloatCmpOp', fpTypes, fcmuoCode)
     # FCMLA (indexed)
     sveComplexMulAddInst('fcmla', 'Fcmlai', 'SimdFloatMultAccOp',
-            fpTypes[1:], predType = PredType.NONE)
+            fpTypes[:2], predType = PredType.NONE)
     # FCMLA (vectors)
     sveComplexMulAddInst('fcmla', 'Fcmlav', 'SimdFloatMultAccOp',
             fpTypes, predType = PredType.MERGE)

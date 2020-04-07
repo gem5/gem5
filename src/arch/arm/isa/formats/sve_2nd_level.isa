@@ -2799,12 +2799,12 @@ namespace Aarch64
             case 2:
                 zm = (IntRegIndex) (uint8_t) bits(machInst, 18, 16);
                 imm = bits(machInst, 20, 19);
-                return new SveFcmlai<uint32_t>(machInst,
+                return new SveFcmlai<uint16_t>(machInst,
                         zda, zn, zm, rot, imm);
             case 3:
                 zm = (IntRegIndex) (uint8_t) bits(machInst, 19, 16);
                 imm = bits(machInst, 20);
-                return new SveFcmlai<uint64_t>(machInst,
+                return new SveFcmlai<uint32_t>(machInst,
                         zda, zn, zm, rot, imm);
         }
         return new Unknown64(machInst);
