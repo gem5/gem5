@@ -1,4 +1,4 @@
-# Copyright (c) 2017 ARM Limited
+# Copyright (c) 2017, 2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -49,42 +49,52 @@ import fs_bigLITTLE as bL
 
 
 class CpuPowerOn(MathExprPowerModel):
-    # 2A per IPC, 3pA per cache miss
-    # and then convert to Watt
-    dyn = "voltage * (2 * ipc + " \
-            "3 * 0.000000001 * dcache.overall_misses / sim_seconds)"
-    st = "4 * temp"
+    def __init__(self, cpu_path, **kwargs):
+        super(CpuPowerOn, self).__init__(**kwargs)
+        # 2A per IPC, 3pA per cache miss
+        # and then convert to Watt
+        self.dyn =  "voltage * (2 * {}.ipc + 3 * 0.000000001 * " \
+                    "{}.dcache.overall_misses / sim_seconds)".format(cpu_path,
+                                                                     cpu_path)
+        self.st = "4 * temp"
 
 class CpuPowerOff(MathExprPowerModel):
     dyn = "0"
     st = "0"
 
 class CpuPowerModel(PowerModel):
-    pm = [
-        CpuPowerOn(), # ON
-        CpuPowerOff(), # CLK_GATED
-        CpuPowerOff(), # SRAM_RETENTION
-        CpuPowerOff(), # OFF
-    ]
+    def __init__(self, cpu_path, **kwargs):
+        super(CpuPowerModel, self).__init__(**kwargs)
+        self.pm = [
+            CpuPowerOn(cpu_path), # ON
+            CpuPowerOff(), # CLK_GATED
+            CpuPowerOff(), # SRAM_RETENTION
+            CpuPowerOff(), # OFF
+        ]
 
 class L2PowerOn(MathExprPowerModel):
-    # Example to report l2 Cache overall_accesses
-    # The estimated power is converted to Watt and will vary based on the size of the cache
-    dyn = "overall_accesses*0.000018000"
-    st = "(voltage * 3)/10"
+    def __init__(self, l2_path, **kwargs):
+        super(L2PowerOn, self).__init__(**kwargs)
+        # Example to report l2 Cache overall_accesses
+        # The estimated power is converted to Watt and will vary based
+        # on the size of the cache
+        self.dyn = "{}.overall_accesses * 0.000018000".format(l2_path)
+        self.st = "(voltage * 3)/10"
 
 class L2PowerOff(MathExprPowerModel):
     dyn = "0"
     st = "0"
 
 class L2PowerModel(PowerModel):
-    # Choose a power model for every power state
-    pm = [
-        L2PowerOn(), # ON
-        L2PowerOff(), # CLK_GATED
-        L2PowerOff(), # SRAM_RETENTION
-        L2PowerOff(), # OFF
-    ]
+    def __init__(self, l2_path, **kwargs):
+        super(L2PowerModel, self).__init__(**kwargs)
+        # Choose a power model for every power state
+        self.pm = [
+            L2PowerOn(l2_path), # ON
+            L2PowerOff(), # CLK_GATED
+            L2PowerOff(), # SRAM_RETENTION
+            L2PowerOff(), # OFF
+        ]
 
 
 def main():
@@ -105,7 +115,7 @@ def main():
             continue
 
         cpu.default_p_state = "ON"
-        cpu.power_model = CpuPowerModel()
+        cpu.power_model = CpuPowerModel(cpu.path())
 
     # Example power model for the L2 Cache of the bigCluster
     for l2 in root.system.bigCluster.l2.descendants():
@@ -113,7 +123,7 @@ def main():
             continue
 
         l2.default_p_state = "ON"
-        l2.power_model = L2PowerModel()
+        l2.power_model = L2PowerModel(l2.path())
 
     bL.instantiate(options)
 
