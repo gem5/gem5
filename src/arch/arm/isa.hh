@@ -743,6 +743,9 @@ namespace ArmISA
 
         void startup(ThreadContext *tc);
 
+        void takeOverFrom(ThreadContext *new_tc,
+                          ThreadContext *old_tc) override;
+
         Enums::DecoderFlavor decoderFlavor() const { return _decoderFlavor; }
 
         /** Returns true if the ISA has a GICv3 cpu interface */

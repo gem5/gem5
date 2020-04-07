@@ -437,6 +437,16 @@ ISA::startup(ThreadContext *tc)
     afterStartup = true;
 }
 
+void
+ISA::takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc)
+{
+    pmu->setThreadContext(new_tc);
+
+    if (system && gicv3CpuInterface) {
+        gicv3CpuInterface->setISA(this);
+        gicv3CpuInterface->setThreadContext(new_tc);
+    }
+}
 
 RegVal
 ISA::readMiscRegNoEffect(int misc_reg) const
