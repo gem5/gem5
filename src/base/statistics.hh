@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Arm Limited
+ * Copyright (c) 2019-2020 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -3349,6 +3349,7 @@ void dump();
 void reset();
 void enable();
 bool enabled();
+const Info* resolve(const std::string &name);
 
 /**
  * Register reset and dump handlers.  These are the functions which
