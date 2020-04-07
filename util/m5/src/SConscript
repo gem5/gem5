@@ -33,7 +33,6 @@ env.Append(CPPPATH=Dir('.'))
 args = 'args.cc'
 call_type = 'call_type.cc'
 command = 'command.cc'
-commands = 'commands.cc'
 m5 = 'm5.cc'
 m5_mmap = 'm5_mmap.c'
 usage = 'usage.cc'
@@ -59,6 +58,7 @@ static_env.Append(LINKFLAGS=[ '-no-pie', '-static' ])
 #
 libm5 = static_env.StaticLibrary('out/m5', [ m5_mmap ] + m5ops)
 
+commands = env.SConscript('command/SConscript', exports={ "env": static_env })
 
 #
 # The m5 stand alone command line utility.
