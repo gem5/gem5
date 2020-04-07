@@ -1,16 +1,4 @@
 /*
- * Copyright (c) 2011, 2017 ARM Limited
- * All rights reserved
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
- *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -38,28 +26,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cstdlib>
-#include <iostream>
-
-#include "call_type.hh"
+#include "args.hh"
 #include "command.hh"
-#include "usage.hh"
 
-std::string progname;
-
-void
-usage()
+std::map<std::string, Command &> &
+Command::map()
 {
-    std::cerr << "Usage: " << progname <<
-        "[call type] <command> [arguments]" << std::endl <<
-        std::endl <<
-        "Call types:" << std::endl <<
-        CallType::usageSummary() <<
-        std::endl <<
-        "Commands:" << std::endl <<
-        Command::usageSummary() <<
-        std::endl <<
-        "All times in nanoseconds!" << std::endl;
+    static std::map<std::string, Command &> the_map;
+    return the_map;
+}
 
-    exit(1);
+bool
+Command::run(const DispatchTable &dt, Args &args)
+{
+    if (!args.size())
+        return false;
+
+    auto cmd_it = map().find(args.pop());
+    if (cmd_it == map().end())
+        return false;
+
+    auto &cmd = cmd_it->second;
+
+    const int num_args = args.size();
+    if (num_args < cmd.minArgs || num_args > cmd.maxArgs)
+        return false;
+
+    cmd.func(dt, args);
+    return true;
 }

@@ -32,6 +32,7 @@ env.Append(CPPPATH=Dir('.'))
 # Raw source files.
 args = 'args.cc'
 call_type = 'call_type.cc'
+command = 'command.cc'
 commands = 'commands.cc'
 m5 = 'm5.cc'
 m5_mmap = 'm5_mmap.c'
@@ -68,8 +69,8 @@ for ct in call_types:
     is_default = 'true' if ct.default else 'false'
     ct_env.Append(CXXFLAGS=[ '-DCALL_TYPE_IS_DEFAULT=%s' % is_default ])
     ct_support.extend(ct_env.StaticObject('call_type/%s.cc' % ct.name))
-m5_bin = static_env.Program('out/m5',
-        ct_support + [ args, call_type, commands, m5, m5_mmap, libm5, usage ])
+m5_bin = static_env.Program('out/m5', ct_support +
+        [ args, call_type, command, commands, m5, m5_mmap, libm5, usage ])
 
 
 # The shared version of the m5 op call sights, used by mutliple targets below.

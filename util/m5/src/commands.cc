@@ -31,21 +31,14 @@
 #include <iostream>
 
 #include "args.hh"
-#include "commands.hh"
+#include "command.hh"
+#include "dispatch_table.hh"
 #include "usage.hh"
 
-void
-Command::run(const DispatchTable &dt, Args &args)
+namespace
 {
-    const int num_args = args.size();
-    if (num_args < minArgs || num_args > maxArgs)
-        usage();
 
-    func(dt, args);
-}
-
-
-static int
+int
 read_file(const DispatchTable &dt, std::ostream &os)
 {
     char buf[256 * 1024];
@@ -70,7 +63,7 @@ read_file(const DispatchTable &dt, std::ostream &os)
     return offset;
 }
 
-static void
+void
 write_file(const DispatchTable &dt, const std::string &filename,
            const std::string &host_filename)
 {
@@ -107,7 +100,72 @@ write_file(const DispatchTable &dt, const std::string &filename,
     std::cerr << "Wrote " << offset << " bytes." << std::endl;
 }
 
-static void
+void
+do_add_symbol(const DispatchTable &dt, Args &args)
+{
+    uint64_t addr;
+    if (!args.pop(addr))
+        usage();
+    const std::string &symbol = args.pop();
+
+    (*dt.m5_add_symbol)(addr, symbol.c_str());
+}
+
+Command add_symbol = {
+    "addsymbol", 2, 2, do_add_symbol, "<address> <symbol>\n"
+        "        Adds a symbol with address \"address\" to gem5's "
+        "symbol table" };
+
+
+void
+do_checkpoint(const DispatchTable &dt, Args &args)
+{
+    uint64_t ns_delay, ns_period;
+    if (!args.pop(ns_delay, 0) || !args.pop(ns_period, 0))
+        usage();
+
+    (*dt.m5_checkpoint)(ns_delay, ns_period);
+}
+
+Command checkpoint = {
+    "checkpoint", 0, 2, do_checkpoint, "[delay [period]]\n"
+        "        After delay (default 0) take a checkpoint, and then "
+            "optionally every period after" };
+
+
+void
+do_dump_reset_stats(const DispatchTable &dt, Args &args)
+{
+    uint64_t ns_delay, ns_period;
+    if (!args.pop(ns_delay, 0) || !args.pop(ns_period, 0))
+        usage();
+
+    (*dt.m5_dump_reset_stats)(ns_delay, ns_period);
+}
+
+Command dump_reset_stats = {
+    "dumpresetstats", 0, 2, do_dump_reset_stats, "[delay [period]]\n"
+        "        After delay (default 0) dump and reset the stats, and then "
+            "optionally every period after" };
+
+
+void
+do_dump_stats(const DispatchTable &dt, Args &args)
+{
+    uint64_t ns_delay, ns_period;
+    if (!args.pop(ns_delay, 0) || !args.pop(ns_period, 0))
+        usage();
+
+    (*dt.m5_dump_stats)(ns_delay, ns_period);
+}
+
+Command dump_stats = {
+    "dumpstats", 0, 2, do_dump_stats, "[delay [period]]\n"
+        "        After delay (default 0) dump the stats, and then optionally "
+            "every period after" };
+
+
+void
 do_exit(const DispatchTable &dt, Args &args)
 {
     uint64_t ns_delay;
@@ -117,8 +175,28 @@ do_exit(const DispatchTable &dt, Args &args)
     (*dt.m5_exit)(ns_delay);
 }
 
+Command exit_cmd = {
+    "exit", 0, 1, do_exit, "[delay]\n"
+        "        Exit after delay, or immediately" };
+
+
+void
+do_fail(const DispatchTable &dt, Args &args)
+{
+    uint64_t ns_delay, code;
+    if (!args.pop(code) || !args.pop(ns_delay, 0))
+        usage();
+
+    (*dt.m5_fail)(ns_delay, code);
+}
+
+Command fail_cmd = {
+    "fail", 1, 2, do_fail, "<code> [delay]\n"
+        "        Exit with failure code code after delay, or immediately" };
+
+
 // For testing purposes.
-static void
+void
 do_sum(const DispatchTable &dt, Args &args)
 {
     uint64_t a, b, c, d, e, f;
@@ -130,93 +208,12 @@ do_sum(const DispatchTable &dt, Args &args)
     std::cout << "Sum is " << sum << "." << std::endl;
 }
 
-static void
-do_fail(const DispatchTable &dt, Args &args)
-{
-    uint64_t ns_delay, code;
-    if (!args.pop(code) || !args.pop(ns_delay, 0))
-        usage();
-
-    (*dt.m5_fail)(ns_delay, code);
-}
-
-static void
-do_reset_stats(const DispatchTable &dt, Args &args)
-{
-    uint64_t ns_delay, ns_period;
-    if (!args.pop(ns_delay, 0) || !args.pop(ns_period, 0))
-        usage();
-
-    (*dt.m5_reset_stats)(ns_delay, ns_period);
-}
-
-static void
-do_dump_stats(const DispatchTable &dt, Args &args)
-{
-    uint64_t ns_delay, ns_period;
-    if (!args.pop(ns_delay, 0) || !args.pop(ns_period, 0))
-        usage();
-
-    (*dt.m5_dump_stats)(ns_delay, ns_period);
-}
-
-static void
-do_dump_reset_stats(const DispatchTable &dt, Args &args)
-{
-    uint64_t ns_delay, ns_period;
-    if (!args.pop(ns_delay, 0) || !args.pop(ns_period, 0))
-        usage();
-
-    (*dt.m5_dump_reset_stats)(ns_delay, ns_period);
-}
-
-static void
-do_read_file(const DispatchTable &dt, Args &args)
-{
-    if (args.size() > 0)
-        usage();
-
-    read_file(dt, std::cout);
-}
-
-static void
-do_write_file(const DispatchTable &dt, Args &args)
-{
-    const std::string &filename = args.pop();
-    const std::string &host_filename = args.pop(filename);
-
-    write_file(dt, filename, host_filename);
-}
-
-static void
-do_checkpoint(const DispatchTable &dt, Args &args)
-{
-    uint64_t ns_delay, ns_period;
-    if (!args.pop(ns_delay, 0) || !args.pop(ns_period, 0))
-        usage();
-
-    (*dt.m5_checkpoint)(ns_delay, ns_period);
-}
-
-static void
-do_addsymbol(const DispatchTable &dt, Args &args)
-{
-    uint64_t addr;
-    if (!args.pop(addr))
-        usage();
-    const std::string &symbol = args.pop();
-
-    (*dt.m5_add_symbol)(addr, symbol.c_str());
-}
+Command sum = {
+    "sum", 2, 6, do_sum, "<a> <b> [c [d [e [f]]]]\n"
+        "        Sum a-f (defaults are 0), for testing purposes" };
 
 
-static void
-do_loadsymbol(const DispatchTable &dt, Args &args)
-{
-    (*dt.m5_load_symbol)();
-}
-
-static void
+void
 do_initparam(const DispatchTable &dt, Args &args)
 {
     uint64_t key_str[2];
@@ -226,36 +223,65 @@ do_initparam(const DispatchTable &dt, Args &args)
     std::cout << val;
 }
 
-std::map<std::string, Command> Command::map = {
-    { "addsymbol", { 2, 2, do_addsymbol, "<address> <symbol>\n"
-        "        Adds a symbol with address \"address\" to gem5's "
-            "symbol table" }},
-    { "checkpoint", { 0, 2, do_checkpoint, "[delay [period]]\n"
-        "        After delay (default 0) take a checkpoint, and then "
-            "optionally every period after" }},
-    { "dumpresetstats", { 0, 2, do_dump_reset_stats, "[delay [period]]\n"
-        "        After delay (default 0) dump and reset the stats, and then "
-            "optionally every period after" }},
-    { "dumpstats", { 0, 2, do_dump_stats, "[delay [period]]\n"
-        "        After delay (default 0) dump the stats, and then optionally "
-            "every period after" }},
-    { "exit", { 0, 1, do_exit, "[delay]\n"
-        "        Exit after delay, or immediately" }},
-    { "fail", { 1, 2, do_fail, "<code> [delay]\n"
-        "        Exit with failure code code after delay, or immediately" }},
-    { "sum", { 2, 6, do_sum, "<a> <b> [c [d [e [f]]]]\n"
-        "        Sum a-f (defaults are 0), for testing purposes" }},
-    { "initparam", { 1, 1, do_initparam, "[key]\n"
-        "        optional key may be at most 16 characters long" }},
-    { "loadsymbol", { 0, 0, do_loadsymbol, "\n"
-        "        load a preselected symbol file into gem5's symbol table" }},
-    { "readfile", { 0, 0, do_read_file, "\n"
+Command init_param = {
+    "initparam", 1, 1, do_initparam, "[key]\n"
+        "        optional key may be at most 16 characters long" };
+
+
+void
+do_loadsymbol(const DispatchTable &dt, Args &args)
+{
+    (*dt.m5_load_symbol)();
+}
+
+Command load_symbol = {
+    "loadsymbol", 0, 0, do_loadsymbol, "\n"
+        "        load a preselected symbol file into gem5's symbol table" };
+
+
+void
+do_read_file(const DispatchTable &dt, Args &args)
+{
+    if (args.size() > 0)
+        usage();
+
+    read_file(dt, std::cout);
+}
+
+Command read_file_cmd = {
+    "readfile", 0, 0, do_read_file, "\n"
         "        read a preselected file from the host and write it to "
-            "stdout" }},
-    { "resetstats", { 0, 2, do_reset_stats, "[delay [period]]\n"
+            "stdout" };
+
+
+void
+do_reset_stats(const DispatchTable &dt, Args &args)
+{
+    uint64_t ns_delay, ns_period;
+    if (!args.pop(ns_delay, 0) || !args.pop(ns_period, 0))
+        usage();
+
+    (*dt.m5_reset_stats)(ns_delay, ns_period);
+}
+
+Command reset_stats = {
+    "resetstats", 0, 2, do_reset_stats, "[delay [period]]\n"
         "        After delay (default 0) reset the stats, and then "
-            "optionally every period after" }},
-    { "writefile", { 1, 2, do_write_file, "<filename> [host filename]\n"
+            "optionally every period after" };
+
+
+void
+do_write_file(const DispatchTable &dt, Args &args)
+{
+    const std::string &filename = args.pop();
+    const std::string &host_filename = args.pop(filename);
+
+    write_file(dt, filename, host_filename);
+}
+
+Command write_file_cmd = {
+    "writefile", 1, 2, do_write_file, "<filename> [host filename]\n"
         "        Write a file to the host, optionally with a different "
-            "name" }},
-};
+            "name" };
+
+} // anonymous namespace

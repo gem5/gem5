@@ -40,7 +40,7 @@
 
 #include "args.hh"
 #include "call_type.hh"
-#include "commands.hh"
+#include "command.hh"
 #include "usage.hh"
 
 int
@@ -55,13 +55,8 @@ main(int argc, const char *argv[])
 
     const DispatchTable &dt = CallType::detect(args).getDispatch();
 
-    if (!args.size())
+    if (!Command::run(dt, args))
         usage();
 
-    auto cmd = Command::map.find(args.pop());
-    if (cmd == Command::map.end())
-        usage();
-
-    cmd->second.run(dt, args);
     exit(0);
 }

@@ -26,18 +26,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __COMMANDS_HH__
-#define __COMMANDS_HH__
+#ifndef __COMMAND_HH__
+#define __COMMAND_HH__
 
 #include <map>
 #include <string>
+#include <utility>
 
-#include "args.hh"
-#include "dispatch_table.hh"
+class Args;
+class DispatchTable;
 
 class Command
 {
   private:
+    const std::string name;
+
     // The minimum number of arguments the command expects.
     const int minArgs;
     // The maximum number of arguments the command can handle.
@@ -51,24 +54,32 @@ class Command
     // Help text for this command.
     const std::string usageStr;
 
+    static std::map<std::string, Command &> &map();
+
   public:
 
-    static std::map<std::string, Command> map;
+    Command(const std::string &_name, int _min, int _max, FuncType _func,
+            const std::string &_usage) :
+        name(_name), minArgs(_min), maxArgs(_max), func(_func),
+        usageStr(_usage)
+    {
+        map().emplace(std::piecewise_construct,
+                    std::forward_as_tuple(std::string(_name)),
+                    std::forward_as_tuple(*this));
+    }
 
-    Command(int _min, int _max, FuncType _func, const std::string &_usage) :
-        minArgs(_min), maxArgs(_max), func(_func), usageStr(_usage)
-    {}
+    ~Command() { map().erase(name); }
 
-    void run(const DispatchTable &dt, Args &args);
+    static bool run(const DispatchTable &dt, Args &args);
 
     static std::string
     usageSummary()
     {
         std::string summary;
-        for (auto &p: Command::map)
+        for (auto &p: Command::map())
             summary += "    " + p.first + " " + p.second.usageStr + "\n";
         return summary;
     }
 };
 
-#endif // __COMMANDS_HH__
+#endif // __COMMAND_HH__
