@@ -29,15 +29,15 @@
 #include "args.hh"
 #include "command.hh"
 #include "dispatch_table.hh"
-#include "usage.hh"
 
 namespace
 {
 
-void
+bool
 do_loadsymbol(const DispatchTable &dt, Args &args)
 {
     (*dt.m5_load_symbol)();
+    return true;
 }
 
 Command load_symbol = {

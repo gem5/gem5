@@ -29,19 +29,20 @@
 #include "args.hh"
 #include "command.hh"
 #include "dispatch_table.hh"
-#include "usage.hh"
 
 namespace
 {
 
-void
+bool
 do_exit(const DispatchTable &dt, Args &args)
 {
     uint64_t ns_delay;
     if (!args.pop(ns_delay, 0))
-        usage();
+        return false;
 
     (*dt.m5_exit)(ns_delay);
+
+    return true;
 }
 
 Command exit_cmd = {

@@ -31,19 +31,21 @@
 #include "args.hh"
 #include "command.hh"
 #include "dispatch_table.hh"
-#include "usage.hh"
 
 namespace
 {
 
-void
+bool
 do_initparam(const DispatchTable &dt, Args &args)
 {
     uint64_t key_str[2];
     if (!args.pop(key_str, 2))
-        usage();
+        return false;
+
     uint64_t val = (*dt.m5_init_param)(key_str[0], key_str[1]);
     std::cout << val;
+
+    return true;
 }
 
 Command init_param = {

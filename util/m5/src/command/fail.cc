@@ -29,19 +29,20 @@
 #include "args.hh"
 #include "command.hh"
 #include "dispatch_table.hh"
-#include "usage.hh"
 
 namespace
 {
 
-void
+bool
 do_fail(const DispatchTable &dt, Args &args)
 {
     uint64_t ns_delay, code;
     if (!args.pop(code) || !args.pop(ns_delay, 0))
-        usage();
+        return false;
 
     (*dt.m5_fail)(ns_delay, code);
+
+    return true;
 }
 
 Command fail_cmd = {

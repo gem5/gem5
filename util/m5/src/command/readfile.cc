@@ -32,7 +32,6 @@
 #include "args.hh"
 #include "command.hh"
 #include "dispatch_table.hh"
-#include "usage.hh"
 
 namespace
 {
@@ -62,13 +61,15 @@ read_file(const DispatchTable &dt, std::ostream &os)
     return offset;
 }
 
-void
+bool
 do_read_file(const DispatchTable &dt, Args &args)
 {
     if (args.size() > 0)
-        usage();
+        return false;
 
     read_file(dt, std::cout);
+
+    return true;
 }
 
 Command read_file_cmd = {

@@ -40,18 +40,20 @@ class DispatchTable {};
 
 DispatchTable dt;
 
-void
+bool
 do_test1(const DispatchTable &dt, Args &args)
 {
     ran_test1 = true;
+    return true;
 }
 
 bool ran_test2 = false;
 
-void
+bool
 do_test2(const DispatchTable &dt, Args &args)
 {
     ran_test2 = true;
+    return true;
 }
 
 TEST(CommandTest, OneCommandNoArgs)

@@ -33,7 +33,6 @@
 #include "args.hh"
 #include "command.hh"
 #include "dispatch_table.hh"
-#include "usage.hh"
 
 namespace
 {
@@ -75,13 +74,15 @@ write_file(const DispatchTable &dt, const std::string &filename,
     std::cerr << "Wrote " << offset << " bytes." << std::endl;
 }
 
-void
+bool
 do_write_file(const DispatchTable &dt, Args &args)
 {
     const std::string &filename = args.pop();
     const std::string &host_filename = args.pop(filename);
 
     write_file(dt, filename, host_filename);
+
+    return true;
 }
 
 Command write_file_cmd = {

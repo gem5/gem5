@@ -29,19 +29,20 @@
 #include "args.hh"
 #include "command.hh"
 #include "dispatch_table.hh"
-#include "usage.hh"
 
 namespace
 {
 
-void
+bool
 do_dump_reset_stats(const DispatchTable &dt, Args &args)
 {
     uint64_t ns_delay, ns_period;
     if (!args.pop(ns_delay, 0) || !args.pop(ns_period, 0))
-        usage();
+        return false;
 
     (*dt.m5_dump_reset_stats)(ns_delay, ns_period);
+
+    return true;
 }
 
 Command dump_reset_stats = {

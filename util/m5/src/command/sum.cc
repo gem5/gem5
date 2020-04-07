@@ -31,22 +31,23 @@
 #include "args.hh"
 #include "command.hh"
 #include "dispatch_table.hh"
-#include "usage.hh"
 
 namespace
 {
 
 // For testing purposes.
-void
+bool
 do_sum(const DispatchTable &dt, Args &args)
 {
     uint64_t a, b, c, d, e, f;
     if (!args.pop(a) || !args.pop(b) || !args.pop(c, 0) ||
             !args.pop(d, 0) || !args.pop(e, 0) || !args.pop(f, 0))
-        usage();
+        return false;
 
     unsigned sum = (*dt.m5_sum)(a, b, c, d, e, f);
     std::cout << "Sum is " << sum << "." << std::endl;
+
+    return true;
 }
 
 Command sum = {

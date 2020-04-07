@@ -52,6 +52,5 @@ Command::run(const DispatchTable &dt, Args &args)
     if (num_args < cmd.minArgs || num_args > cmd.maxArgs)
         return false;
 
-    cmd.func(dt, args);
-    return true;
+    return cmd.func(dt, args);
 }

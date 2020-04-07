@@ -29,20 +29,21 @@
 #include "args.hh"
 #include "command.hh"
 #include "dispatch_table.hh"
-#include "usage.hh"
 
 namespace
 {
 
-void
+bool
 do_add_symbol(const DispatchTable &dt, Args &args)
 {
     uint64_t addr;
     if (!args.pop(addr))
-        usage();
+        return false;
     const std::string &symbol = args.pop();
 
     (*dt.m5_add_symbol)(addr, symbol.c_str());
+
+    return true;
 }
 
 Command add_symbol = {

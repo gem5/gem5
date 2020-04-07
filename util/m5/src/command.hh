@@ -46,7 +46,7 @@ class Command
     // The maximum number of arguments the command can handle.
     const int maxArgs;
 
-    using FuncType = void (*)(const DispatchTable &dt, Args &args);
+    using FuncType = bool (*)(const DispatchTable &dt, Args &args);
     // A function which processes command line arguments and passes them to
     // the underlying function through the dispatch table.
     FuncType func;
