@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
+
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -41,12 +43,13 @@ void
 write_file(const DispatchTable &dt, const std::string &filename,
            const std::string &host_filename)
 {
-    std::cerr << "opening " << filename << std::endl;
+    std::cout << "Opening \"" << filename << "\"." << std::endl;
     std::ifstream src(filename, std::ios_base::in | std::ios_base::binary);
 
     if (!src) {
-        std::cerr << "error opening " << filename << std::endl;
-        return;
+        std::cerr << "Error opening \"" << filename << "\": " <<
+            strerror(errno) << std::endl;
+        exit(2);
     }
 
     char buf[256 * 1024];
@@ -58,8 +61,11 @@ write_file(const DispatchTable &dt, const std::string &filename,
         src.seekg(offset);
         src.read(buf, sizeof(buf));
         int len = src.gcount();
-        if (!src && !src.eof())
-            break;
+        if (!src && !src.eof()) {
+            std::cerr << "Error reading \"" << filename << "\": " <<
+                strerror(errno) << std::endl;
+            exit(2);
+        }
         char *wbuf = buf;
         while (len) {
             int bytes = (*dt.m5_write_file)(
@@ -71,7 +77,7 @@ write_file(const DispatchTable &dt, const std::string &filename,
         if (src.eof())
             break;
     }
-    std::cerr << "Wrote " << offset << " bytes." << std::endl;
+    std::cout << "Wrote " << offset << " bytes." << std::endl;
 }
 
 bool
