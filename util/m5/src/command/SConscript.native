@@ -37,6 +37,7 @@ command_tests = (
     'readfile',
     'resetstats',
     'sum',
+    'writefile',
 )
 
 Return('command_tests')
