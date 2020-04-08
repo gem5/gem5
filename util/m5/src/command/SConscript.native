@@ -34,6 +34,7 @@ command_tests = (
     'fail',
     'initparam',
     'loadsymbol',
+    'readfile',
     'resetstats',
     'sum',
 )
