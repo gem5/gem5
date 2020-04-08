@@ -91,7 +91,6 @@ namespace ArmISA
         bool haveVirtualization;
         bool haveCrypto;
         bool haveLargeAsid64;
-        bool haveGICv3CPUInterface;
         uint8_t physAddrRange;
         bool haveSVE;
         bool haveLSE;
@@ -746,14 +745,14 @@ namespace ArmISA
 
         Enums::DecoderFlavor decoderFlavor() const { return _decoderFlavor; }
 
-        /** Getter for haveGICv3CPUInterface */
+        /** Returns true if the ISA has a GICv3 cpu interface */
         bool haveGICv3CpuIfc() const
         {
-            // haveGICv3CPUInterface is initialized at startup time, hence
+            // gicv3CpuInterface is initialized at startup time, hence
             // trying to read its value before the startup stage will lead
             // to an error
             assert(afterStartup);
-            return haveGICv3CPUInterface;
+            return gicv3CpuInterface != nullptr;
         }
 
         Enums::VecRegRenameMode

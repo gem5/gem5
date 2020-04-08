@@ -60,7 +60,7 @@ namespace ArmISA
 
 ISA::ISA(Params *p) : BaseISA(p), system(NULL),
     _decoderFlavor(p->decoderFlavor), _vecRegRenameMode(Enums::Full),
-    pmu(p->pmu), haveGICv3CPUInterface(false), impdefAsNop(p->impdef_nop),
+    pmu(p->pmu), impdefAsNop(p->impdef_nop),
     afterStartup(false)
 {
     miscRegs[MISCREG_SCTLR_RST] = 0;
@@ -428,7 +428,6 @@ ISA::startup(ThreadContext *tc)
     if (system) {
         Gicv3 *gicv3 = dynamic_cast<Gicv3 *>(system->getGIC());
         if (gicv3) {
-            haveGICv3CPUInterface = true;
             gicv3CpuInterface.reset(gicv3->getCPUInterface(tc->contextId()));
             gicv3CpuInterface->setISA(this);
             gicv3CpuInterface->setThreadContext(tc);
@@ -744,7 +743,7 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
                (haveVirtualization    ? 0x0000000000000200 : 0) | // EL2
                (haveSecurity          ? 0x0000000000002000 : 0) | // EL3
                (haveSVE               ? 0x0000000100000000 : 0) | // SVE
-               (haveGICv3CPUInterface ? 0x0000000001000000 : 0);
+               (gicv3CpuInterface     ? 0x0000000001000000 : 0);
       case MISCREG_ID_AA64PFR1_EL1:
         return 0; // bits [63:0] RES0 (reserved for future use)
 
