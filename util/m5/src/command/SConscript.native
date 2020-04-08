@@ -26,6 +26,15 @@
 Import('*')
 
 command_tests = (
+    'addsymbol',
+    'checkpoint',
+    'dumpresetstats',
+    'dumpstats',
+    'exit',
+    'fail',
+    'initparam',
+    'loadsymbol',
+    'resetstats',
     'sum',
 )
 
