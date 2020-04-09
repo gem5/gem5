@@ -30,18 +30,17 @@
 // For EXPECT_THAT and HasSubstr
 #include <gmock/gmock.h>
 
+#include "args.hh"
 #include "call_type.hh"
 
 // Simple substitute definitions for Args and DispatchTable, with an int so
 // we can tell instances apart.
-class Args { public: int i; };
 class DispatchTable { public: int i; };
 
 class TestCallType : public CallType
 {
   protected:
     bool isDefault() const override { return testIsDefault; }
-    bool checkArgs(Args &args) override { return args.i == testAcceptArgs; }
     void
     init() override
     {
@@ -52,7 +51,9 @@ class TestCallType : public CallType
     void printBrief(std::ostream &os) const override { os << testBrief; }
     void printDesc(std::ostream &os) const override { os << testDesc; }
   public:
-    static std::vector<CallType *> &testGetAllTypes() { return allTypes(); }
+    TestCallType(const std::string &_name) : CallType(_name) {}
+
+    static std::map<std::string, CallType &> &testGetMap() { return map(); }
 
     // Usage strings to return.
     std::string testBrief;
@@ -61,9 +62,6 @@ class TestCallType : public CallType
     // Return this dispatch table when requested.
     DispatchTable testDt = { 0 };
     const DispatchTable &getDispatch() const override { return testDt; }
-
-    // If an Args has this value, accept it.
-    int testAcceptArgs = 0;
 
     // Whether this call type should be considered default.
     bool testIsDefault = false;
@@ -74,124 +72,112 @@ class TestCallType : public CallType
 
 TEST(CallTypeTest, Constructor)
 {
-    auto &all_types = TestCallType::testGetAllTypes();
+    auto &map = TestCallType::testGetMap();
 
     // There should be no call types yet.
-    EXPECT_EQ(all_types.size(), 0);
+    EXPECT_EQ(map.size(), 0);
 
     // Create one.
-    TestCallType test_ct;
+    TestCallType test_ct("test_ct");
 
     // Set the dispatch table to something we'll recognize.
     test_ct.testDt.i = 0xaa55;
 
     // Verify that the list of all call types has one in it now.
-    EXPECT_EQ(all_types.size(), 1);
+    EXPECT_EQ(map.size(), 1);
 
     // Verify that that was our call type by verifying that the dispatch table
     // has our signature.
-    EXPECT_EQ(all_types[0]->getDispatch().i, 0xaa55);
-
-    // Clear all_types, since call types don't clean up after themselves as
-    // they go away.
-    all_types.clear();
+    EXPECT_EQ(map.begin()->second.getDispatch().i, 0xaa55);
 }
 
 TEST(CallTypeTest, DetectOne)
 {
-    auto &all_types = TestCallType::testGetAllTypes();
+    auto &map = TestCallType::testGetMap();
 
     // One option selected.
-    TestCallType option1;
-    option1.testAcceptArgs = 1;
+    TestCallType option1("option1");
     option1.testIsDefault = true;
     option1.testDt.i = 1;
 
-    EXPECT_EQ(all_types.size(), 1);
+    EXPECT_EQ(map.size(), 1);
 
-    Args args;
-    args.i = 1;
+    Args args1({"--option1"});
 
     EXPECT_FALSE(option1.testInitHappened);
 
-    auto &ct = CallType::detect(args);
+    auto *ct = CallType::detect(args1);
 
     // Verify that we selected the only option.
     EXPECT_TRUE(option1.testInitHappened);
-    EXPECT_EQ(ct.getDispatch().i, 1);
+    EXPECT_EQ(ct, &option1);
 
     // One option, selecting the default.
     option1.testInitHappened = false;
 
     // Args will not match.
-    args.i = 2;
+    Args args2({"--option2"});
 
-    auto &def_ct = CallType::detect(args);
+    auto *def_ct = CallType::detect(args2);
 
     // Verify that the one option was defaulted to.
     EXPECT_TRUE(option1.testInitHappened);
-    EXPECT_EQ(def_ct.getDispatch().i, 1);
-
-    // Reset all_types.
-    all_types.clear();
+    EXPECT_EQ(def_ct, &option1);
 }
 
 TEST(CallTypeTest, DetectTwo)
 {
-    auto &all_types = TestCallType::testGetAllTypes();
+    auto &map = TestCallType::testGetMap();
 
     // One of two options selected.
-    TestCallType option1;
-    option1.testAcceptArgs = 1;
+    TestCallType option1("option1");
     option1.testIsDefault = true;
     option1.testDt.i = 1;
 
-    TestCallType option2;
-    option2.testAcceptArgs = 2;
+    TestCallType option2("option2");
     option2.testIsDefault = false;
     option2.testDt.i = 2;
 
-    EXPECT_EQ(all_types.size(), 2);
+    EXPECT_EQ(map.size(), 2);
 
     // Select the first option.
-    Args args;
-    args.i = 1;
+    Args args1({"--option1"});
 
     EXPECT_FALSE(option1.testInitHappened);
     EXPECT_FALSE(option2.testInitHappened);
 
-    auto &ct1 = CallType::detect(args);
+    auto *ct1 = CallType::detect(args1);
 
     // Verify that we selected the first option.
     EXPECT_TRUE(option1.testInitHappened);
     EXPECT_FALSE(option2.testInitHappened);
-    EXPECT_EQ(ct1.getDispatch().i, 1);
+    EXPECT_EQ(ct1, &option1);
 
     option1.testInitHappened = false;
     option2.testInitHappened = false;
 
     // Select the second option.
-    args.i = 2;
+    Args args2({"--option2"});
 
-    auto &ct2 = CallType::detect(args);
+    auto *ct2 = CallType::detect(args2);
 
     // Verify that we selected the second option.
     EXPECT_FALSE(option1.testInitHappened);
     EXPECT_TRUE(option2.testInitHappened);
-    EXPECT_EQ(ct2.getDispatch().i, 2);
+    EXPECT_EQ(ct2, &option2);
 
     option1.testInitHappened = false;
     option2.testInitHappened = false;
 
     // Default to the first option.
-    args.i = 3;
+    Args args3({"--option3"});
 
-    auto &def_ct1 = CallType::detect(args);
+    auto *def_ct1 = CallType::detect(args3);
 
     // Verify that we selected the first option.
     EXPECT_TRUE(option1.testInitHappened);
     EXPECT_FALSE(option2.testInitHappened);
-    EXPECT_EQ(ct1.getDispatch().i, 1);
+    EXPECT_EQ(def_ct1, &option1);
 
     option1.testInitHappened = false;
     option2.testInitHappened = false;
@@ -200,34 +186,31 @@ TEST(CallTypeTest, DetectTwo)
     option1.testIsDefault = false;
     option2.testIsDefault = true;
 
-    auto &def_ct2 = CallType::detect(args);
+    auto *def_ct2 = CallType::detect(args3);
 
     // Verify that we selected the second option.
     EXPECT_FALSE(option1.testInitHappened);
     EXPECT_TRUE(option2.testInitHappened);
-    EXPECT_EQ(ct2.getDispatch().i, 2);
+    EXPECT_EQ(def_ct2, &option2);
 
     option1.testInitHappened = false;
     option2.testInitHappened = false;
-
-    // Reset all_types.
-    all_types.clear();
 }
 
 TEST(CallTypeTest, Usage)
 {
-    auto &all_types = TestCallType::testGetAllTypes();
+    auto &map = TestCallType::testGetMap();
 
-    TestCallType ct1;
+    TestCallType ct1("ct1");
     ct1.testBrief = "brief 1";
     ct1.testDesc = "A longer description of call type 1, which is long.";
 
-    TestCallType ct2;
+    TestCallType ct2("ct2");
     ct2.testBrief = "short 2";
     ct2.testDesc = "Very verbose text saying what call type 2 is, "
         "and is different from 1.";
 
-    EXPECT_EQ(all_types.size(), 2);
+    EXPECT_EQ(map.size(), 2);
 
     auto summary = CallType::usageSummary();
 
@@ -241,7 +224,4 @@ TEST(CallTypeTest, Usage)
     EXPECT_THAT(summary, testing::HasSubstr(ct2.testBrief));
     EXPECT_THAT(summary, testing::HasSubstr(ct2.testDesc));
     EXPECT_THAT(summary, testing::HasSubstr(ct2.testDesc));
-
-    // Reset all_types.
-    all_types.clear();
 }

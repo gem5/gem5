@@ -43,20 +43,11 @@ M5OP_FOREACH
 class InstCallType : public CallType
 {
   public:
+    InstCallType() : CallType("inst") {}
+
     bool isDefault() const override { return CALL_TYPE_IS_DEFAULT; }
     const DispatchTable &getDispatch() const override { return inst_dispatch; }
 
-    bool
-    checkArgs(Args &args) override
-    {
-        if (args.size() && args[0] == "--inst") {
-            args.pop();
-            return true;
-        }
-        return false;
-    }
-
-    void printBrief(std::ostream &os) const override { os << "--inst"; }
     void
     printDesc(std::ostream &os) const override
     {

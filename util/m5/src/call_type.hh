@@ -29,29 +29,49 @@
 #define __CALL_TYPE_HH__
 
 #include <iostream>
+#include <map>
 #include <string>
-#include <vector>
+#include <utility>
 
 class Args;
 class DispatchTable;
 
 class CallType
 {
+  public:
+    enum class CheckArgsResult {
+        Match,
+        NoMatch,
+        Usage
+    };
+
   protected:
+    const std::string name;
+
     virtual bool isDefault() const = 0;
-    virtual bool checkArgs(Args &args) = 0;
+    virtual CheckArgsResult checkArgs(Args &args);
     virtual void init() {}
 
-    static std::vector<CallType *> &allTypes();
+    static std::map<std::string, CallType &> &map();
 
-    virtual void printBrief(std::ostream &os) const = 0;
+    virtual void printBrief(std::ostream &os) const { os << "--" << name; }
     virtual void printDesc(std::ostream &os) const = 0;
     std::string formattedUsage() const;
 
   public:
-    CallType() { allTypes().push_back(this); }
+    CallType(const std::string &_name) : name(_name)
+    {
+        map().emplace(std::piecewise_construct,
+            std::forward_as_tuple(std::string(_name)),
+            std::forward_as_tuple(*this));
+    }
 
-    static CallType &detect(Args &args);
+    ~CallType()
+    {
+        map().erase(name);
+    }
+
+    static CallType *detect(Args &args);
     static std::string usageSummary();
 
     virtual const DispatchTable &getDispatch() const = 0;

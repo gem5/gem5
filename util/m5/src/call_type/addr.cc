@@ -59,16 +59,17 @@ constexpr uint64_t DefaultAddress = 0;
 
 class AddrCallType : public CallType
 {
-  private:
   public:
+    AddrCallType() : CallType("addr") {}
+
     bool isDefault() const override { return CALL_TYPE_IS_DEFAULT; }
     const DispatchTable &getDispatch() const override { return addr_dispatch; }
 
     void
     printBrief(std::ostream &os) const override
     {
-        os << "--addr " << (DefaultAddrDefined ? "[address override]" :
-                                                 "<address override>");
+        os << "--" << name << (DefaultAddrDefined ? " [address override]" :
+                                                    " <address override>");
     }
 
     void
@@ -81,15 +82,15 @@ class AddrCallType : public CallType
         }
     }
 
-    bool
+    CheckArgsResult
     checkArgs(Args &args) override
     {
-        static const std::string prefix = "--addr";
+        const std::string prefix = "--" + name;
         uint64_t addr_override;
 
         // If the first argument doesn't start with --addr...
         if (!args.size() || args[0].substr(0, prefix.size()) != prefix)
-            return false;
+            return CheckArgsResult::NoMatch;
 
         const std::string &arg = args.pop().substr(prefix.size());
 
@@ -97,25 +98,25 @@ class AddrCallType : public CallType
         if (arg.size()) {
             // If it doesn't start with '=', it's malformed.
             if (arg[0] != '=')
-                usage();
+                return CheckArgsResult::Usage;
             // Attempt to extract an address after the '='.
             if (!args.stoi(arg.substr(1), addr_override))
-                usage();
+                return CheckArgsResult::Usage;
             // If we found an address, use it to override m5op_addr.
             m5op_addr = addr_override;
-            return true;
+            return CheckArgsResult::Match;
         }
         // If an address override wasn't part of the first argument, check if
         // it's the second argument. If not, then there's no override.
         if (args.pop(addr_override)) {
             m5op_addr = addr_override;
-            return true;
+            return CheckArgsResult::Match;
         }
         // If the default address was not defined, an override is required.
         if (!DefaultAddrDefined)
-            usage();
+            return CheckArgsResult::Usage;
 
-        return true;
+        return CheckArgsResult::Match;
     }
 
     void init() override { map_m5_mem(); }

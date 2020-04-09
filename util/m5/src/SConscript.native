@@ -28,7 +28,7 @@ Import('*')
 env.Append(CPPPATH=Dir('.'))
 
 env.GTest('args')
-env.GTest('call_type')
+env.GTest('call_type', 'call_type.test.cc', 'call_type.cc', 'args.cc')
 env.GTest('command', 'command.test.cc', 'command.cc', 'args.cc')
 
 command_tests = env.SConscript('command/SConscript.native', exports='env')

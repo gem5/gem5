@@ -50,20 +50,11 @@ M5OP_FOREACH
 class SemiCallType : public CallType
 {
   public:
+    SemiCallType() : CallType("semi") {}
+
     bool isDefault() const override { return CALL_TYPE_IS_DEFAULT; }
     const DispatchTable &getDispatch() const override { return semi_dispatch; }
 
-    bool
-    checkArgs(Args &args) override
-    {
-        if (args.size() && args[0] == "--semi") {
-            args.pop();
-            return true;
-        }
-        return false;
-    }
-
-    void printBrief(std::ostream &os) const override { os << "--semi"; }
     void
     printDesc(std::ostream &os) const override
     {

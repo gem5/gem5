@@ -53,9 +53,11 @@ main(int argc, const char *argv[])
     if (!args.size())
         usage();
 
-    const DispatchTable &dt = CallType::detect(args).getDispatch();
+    CallType *ct = CallType::detect(args);
+    if (!ct)
+        usage();
 
-    if (!Command::run(dt, args))
+    if (!Command::run(ct->getDispatch(), args))
         usage();
 
     exit(0);

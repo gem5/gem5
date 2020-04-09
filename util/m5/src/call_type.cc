@@ -28,40 +28,60 @@
 #include <cassert>
 #include <sstream>
 
+#include "args.hh"
 #include "call_type.hh"
 
-std::vector<CallType *> &
-CallType::allTypes()
+std::map<std::string, CallType &> &
+CallType::map()
 {
-    static std::vector<CallType *> all;
+    static std::map<std::string, CallType &> all;
     return all;
 }
 
-CallType &
+CallType::CheckArgsResult
+CallType::checkArgs(Args &args)
+{
+    if (args.size() && args[0] == "--" + name) {
+        args.pop();
+        return CheckArgsResult::Match;
+    }
+    return CheckArgsResult::NoMatch;
+}
+
+CallType *
 CallType::detect(Args &args)
 {
     CallType *def = nullptr;
 
-    for (auto *ct: allTypes()) {
-        if (ct->checkArgs(args)) {
-            ct->init();
-            return *ct;
+    for (auto p: map()) {
+        auto &ct = p.second;
+        if (ct.isDefault())
+            def = &ct;
+        auto result = ct.checkArgs(args);
+        switch (result) {
+          case CheckArgsResult::Match:
+            ct.init();
+            return &ct;
+          case CheckArgsResult::NoMatch:
+            continue;
+          case CheckArgsResult::Usage:
+            return nullptr;
+          default:
+            assert(!"Bad checkArgs result");
         }
-        if (ct->isDefault())
-            def = ct;
     }
 
     assert(def);
     def->init();
-    return *def;
+    return def;
 }
 
 std::string
 CallType::usageSummary()
 {
     std::string summary = "";
-    for (auto *ct: allTypes())
-        summary += ct->formattedUsage();
+    for (auto p: map())
+        summary += p.second.formattedUsage();
     return summary;
 }
 
