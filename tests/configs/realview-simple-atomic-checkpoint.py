@@ -33,6 +33,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import functools
+
 from m5.objects import *
 from arm_generic import *
 import checkpoint
@@ -42,4 +44,4 @@ root = LinuxArmFSSystemUniprocessor(aarch64_kernel=False,
                                     mem_class=SimpleMemory,
                                     cpu_class=AtomicSimpleCPU).create_root()
 
-run_test = checkpoint.run_test
+run_test = functools.partial(checkpoint.run_test, interval=0.2)
