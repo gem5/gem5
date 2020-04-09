@@ -63,7 +63,7 @@ main.SetOption('duplicate', 'soft-copy')
 
 def GTest(env, name, *srcs, **kwargs):
     if 'GTEST_ENV' not in env:
-        gtest_env = env.Clone(OBJSUFFIX='.to')
+        gtest_env = env.Clone(OBJSUFFIX='.to', SHOBJSUFFIX='.sto')
         gtest_env.Append(CPPFLAGS=[ '${GTEST_CPPFLAGS}' ])
         gtest_env.Append(LIBS=[ '${GTEST_LIBS}' ])
         env['GTEST_ENV'] = gtest_env

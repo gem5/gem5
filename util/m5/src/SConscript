@@ -42,7 +42,9 @@ lua = 'lua_gem5Op.cc'
 
 all_call_types = list(env['CALL_TYPE'].values())
 call_types = list([ ct for ct in all_call_types if ct.enabled ])
-m5ops = list([ 'abi/${ABI}/%s' % ct.impl_file for ct in call_types ])
+m5ops = { ct.name: 'abi/${ABI}/%s' % ct.impl_file
+          for ct in call_types }
+all_m5ops = list(m5ops.values())
 
 default_call_type = list([ ct for ct in call_types if ct.default ])
 assert len(default_call_type) == 1, \
@@ -56,7 +58,7 @@ static_env.Append(LINKFLAGS=[ '-no-pie', '-static' ])
 #
 # The m5 library for use in other C/C++ programs.
 #
-libm5 = static_env.StaticLibrary('out/m5', [ m5_mmap ] + m5ops)
+libm5 = static_env.StaticLibrary('out/m5', [ m5_mmap ] + all_m5ops)
 
 commands = env.SConscript('command/SConscript', exports={ "env": static_env })
 
@@ -76,7 +78,20 @@ m5_bin = static_env.Program('out/m5', ct_support +
 # The shared version of the m5 op call sights, used by mutliple targets below.
 shared_env = env.Clone()
 shared_env.Append(ASFLAGS='-DM5OP_PIC')
-m5op_shared = shared_env.SharedObject(m5ops)
+m5op_shared = shared_env.SharedObject(all_m5ops)
+
+#
+# Unit tests for enabled call types.
+#
+call_type_shared = shared_env.SharedObject(call_type)
+args_shared = shared_env.SharedObject(args)
+m5_mmap_shared = shared_env.SharedObject(m5_mmap)
+for ct in call_types:
+    ct_env = shared_env.Clone()
+    ct_env.Append(CXXFLAGS=[ '-DCALL_TYPE_IS_DEFAULT=false' ])
+    ct_env.GTest('call_type/%s' % ct.name, 'call_type/%s.test.cc' % ct.name,
+                 'call_type/%s.cc' % ct.name, call_type_shared, args_shared,
+                 m5_mmap_shared, m5ops[ct.name])
 
 if env['HAVE_JAVA']:
     #
@@ -106,4 +121,4 @@ if env['HAVE_LUA51']:
     # Extract the include paths needed for lua51 using pkg-config.
     lua_env.ParseConfig('pkg-config --cflags lua51')
     lib = lua_env.SharedLibrary('out/gem5OpLua',
-                                [ lua, m5_mmap ] + m5op_shared)
+                                [ lua, m5_mmap_shared ] + m5op_shared)
