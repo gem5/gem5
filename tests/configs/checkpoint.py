@@ -1,4 +1,4 @@
-# Copyright (c) 2015 ARM Limited
+# Copyright (c) 2015, 2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -92,6 +92,7 @@ def run_test(root, interval=0.5, max_checkpoints=5):
 
     cpt_name = os.path.join(m5.options.outdir, "test.cpt")
     restore = None
+    checkpointed = False
 
     for cpt_no in range(max_checkpoints):
         # Create a checkpoint from a separate child process. This enables
@@ -112,10 +113,15 @@ def run_test(root, interval=0.5, max_checkpoints=5):
         restore = cpt_name
 
         if p.exitcode == _exitcode_done:
-            print("Test done.", file=sys.stderr)
-            sys.exit(0)
+            if checkpointed:
+                print("Test done.", file=sys.stderr)
+                sys.exit(0)
+            else:
+                print("Test done, but no checkpoint was created.",
+                    file=sys.stderr)
+                sys.exit(1)
         elif p.exitcode == _exitcode_checkpoint:
-            pass
+            checkpointed = True
         else:
             print("Test failed.", file=sys.stderr)
             sys.exit(1)
