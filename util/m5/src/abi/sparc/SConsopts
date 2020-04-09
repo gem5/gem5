@@ -29,4 +29,4 @@ env['ABI'] = 'sparc'
 get_abi_opt('CROSS_COMPILE', 'sparc64-linux-gnu-')
 env.Append(CXXFLAGS='-m64')
 
-env['CALL_TYPE']['inst'].impl('m5op.S', default=True)
+env['CALL_TYPE']['inst'].impl('m5op.S', 'verify_inst.cc', default=True)

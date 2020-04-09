@@ -67,9 +67,7 @@ commands = env.SConscript('command/SConscript', exports={ "env": static_env })
 #
 ct_support = []
 for ct in call_types:
-    ct_env = static_env.Clone()
-    is_default = 'true' if ct.default else 'false'
-    ct_env.Append(CXXFLAGS=[ '-DCALL_TYPE_IS_DEFAULT=%s' % is_default ])
+    ct_env = ct.setup_env(static_env)
     ct_support.extend(ct_env.StaticObject('call_type/%s.cc' % ct.name))
 m5_bin = static_env.Program('out/m5', ct_support +
         [ args, call_type, command, commands, m5, m5_mmap, libm5, usage ])
@@ -87,11 +85,12 @@ call_type_shared = shared_env.SharedObject(call_type)
 args_shared = shared_env.SharedObject(args)
 m5_mmap_shared = shared_env.SharedObject(m5_mmap)
 for ct in call_types:
-    ct_env = shared_env.Clone()
-    ct_env.Append(CXXFLAGS=[ '-DCALL_TYPE_IS_DEFAULT=false' ])
-    ct_env.GTest('call_type/%s' % ct.name, 'call_type/%s.test.cc' % ct.name,
-                 'call_type/%s.cc' % ct.name, call_type_shared, args_shared,
-                 m5_mmap_shared, m5ops[ct.name])
+    ct_env = ct.setup_env(shared_env, allow_default=False)
+    srcs = [ 'call_type/%s.test.cc' % ct.name, 'call_type/%s.cc' % ct.name,
+             call_type_shared, args_shared, m5_mmap_shared, m5ops[ct.name] ]
+    if ct.verifier:
+        srcs.append('abi/${ABI}/%s' % ct.verifier)
+    ct_env.GTest('call_type/%s' % ct.name, *srcs)
 
 if env['HAVE_JAVA']:
     #

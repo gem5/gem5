@@ -95,12 +95,23 @@ class CallType(object):
         self.name = name
         self.impl_file = None
         self.enabled = False
+        self.verifier = None
         self.default = False
 
-    def impl(self, impl, default=False):
+    def impl(self, impl, verifier=None, default=False):
         self.impl_file = impl
         self.enabled = True
+        self.verifier = verifier
         self.default = default
+
+    # Being the default can be disabled for testing purposes, so we can tell if
+    # a call type was selected because it was chosen, or because nobody else
+    # was.
+    def setup_env(self, env, allow_default=True):
+        env = env.Clone()
+        is_default = 'true' if self.default and allow_default else 'false'
+        env.Append(CXXFLAGS=[ '-DCALL_TYPE_IS_DEFAULT=%s' % is_default ])
+        return env
 
 call_types = {
     # Magic instruction.
