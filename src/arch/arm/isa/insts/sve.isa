@@ -2432,7 +2432,16 @@ let {{
             elif destType == DstRegType.SimdFpScalar:
                 code += ''' else {
             AA64FpDest_x[0] = AA64FpDestMerge_x[0];
-        }'''
+        }
+        '''
+        if destType == DstRegType.SimdFpScalar:
+            # This section will extend zeros to the simdFP scalar
+            # intructions for lasta/b and Clasta/b
+            code += '''
+                for (int i = 1; i < eCount; ++i) {
+                    AA64FpDest_x[i] = (Element)0x0;
+                }
+                '''
         iop = InstObjParams(name, 'Sve' + Name, 'SveSelectOp',
                             {'code': code, 'op_class': opClass,
                              'isCond': 'true' if isCond else 'false',
