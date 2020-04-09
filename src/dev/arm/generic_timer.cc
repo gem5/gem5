@@ -728,57 +728,65 @@ GenericTimer::CoreTimers::notify()
 void
 GenericTimer::CoreTimers::serialize(CheckpointOut &cp) const
 {
-    physS.serializeSection(cp, "phys_s_timer");
-    physNS.serializeSection(cp, "phys_ns_timer");
-    virt.serializeSection(cp, "virt_timer");
-    hyp.serializeSection(cp, "hyp_timer");
-
     SERIALIZE_SCALAR(cntfrq);
     SERIALIZE_SCALAR(cntkctl);
     SERIALIZE_SCALAR(cnthctl);
 
-    bool ev_scheduled = physEvStream.event.scheduled();
-    SERIALIZE_SCALAR(ev_scheduled);
-    if (ev_scheduled)
-        SERIALIZE_SCALAR(physEvStream.event.when());
+    const bool phys_ev_scheduled = physEvStream.event.scheduled();
+    SERIALIZE_SCALAR(phys_ev_scheduled);
+    if (phys_ev_scheduled) {
+        const Tick phys_ev_when = physEvStream.event.when();
+        SERIALIZE_SCALAR(phys_ev_when);
+    }
     SERIALIZE_SCALAR(physEvStream.transitionTo);
     SERIALIZE_SCALAR(physEvStream.transitionBit);
-    ev_scheduled = virtEvStream.event.scheduled();
-    SERIALIZE_SCALAR(ev_scheduled);
-    if (ev_scheduled)
-        SERIALIZE_SCALAR(virtEvStream.event.when());
+
+    const bool virt_ev_scheduled = virtEvStream.event.scheduled();
+    SERIALIZE_SCALAR(virt_ev_scheduled);
+    if (virt_ev_scheduled) {
+        const Tick virt_ev_when = virtEvStream.event.when();
+        SERIALIZE_SCALAR(virt_ev_when);
+    }
     SERIALIZE_SCALAR(virtEvStream.transitionTo);
     SERIALIZE_SCALAR(virtEvStream.transitionBit);
+
+    physS.serializeSection(cp, "phys_s_timer");
+    physNS.serializeSection(cp, "phys_ns_timer");
+    virt.serializeSection(cp, "virt_timer");
+    hyp.serializeSection(cp, "hyp_timer");
 }
 
 void
 GenericTimer::CoreTimers::unserialize(CheckpointIn &cp)
 {
-    physS.unserializeSection(cp, "phys_s_timer");
-    physNS.unserializeSection(cp, "phys_ns_timer");
-    virt.unserializeSection(cp, "virt_timer");
-    hyp.unserializeSection(cp, "hyp_timer");
-
     UNSERIALIZE_SCALAR(cntfrq);
     UNSERIALIZE_SCALAR(cntkctl);
     UNSERIALIZE_SCALAR(cnthctl);
 
-    bool ev_scheduled;
-    Tick when;
-    UNSERIALIZE_SCALAR(ev_scheduled);
-    if (ev_scheduled) {
-        UNSERIALIZE_SCALAR(when);
-        parent.reschedule(physEvStream.event, when, true);
+    bool phys_ev_scheduled;
+    UNSERIALIZE_SCALAR(phys_ev_scheduled);
+    if (phys_ev_scheduled) {
+        Tick phys_ev_when;
+        UNSERIALIZE_SCALAR(phys_ev_when);
+        parent.reschedule(physEvStream.event, phys_ev_when, true);
     }
     UNSERIALIZE_SCALAR(physEvStream.transitionTo);
     UNSERIALIZE_SCALAR(physEvStream.transitionBit);
-    UNSERIALIZE_SCALAR(ev_scheduled);
-    if (ev_scheduled) {
-        UNSERIALIZE_SCALAR(when);
-        parent.reschedule(virtEvStream.event, when, true);
+
+    bool virt_ev_scheduled;
+    UNSERIALIZE_SCALAR(virt_ev_scheduled);
+    if (virt_ev_scheduled) {
+        Tick virt_ev_when;
+        UNSERIALIZE_SCALAR(virt_ev_when);
+        parent.reschedule(virtEvStream.event, virt_ev_when, true);
     }
     UNSERIALIZE_SCALAR(virtEvStream.transitionTo);
     UNSERIALIZE_SCALAR(virtEvStream.transitionBit);
+
+    physS.unserializeSection(cp, "phys_s_timer");
+    physNS.unserializeSection(cp, "phys_ns_timer");
+    virt.unserializeSection(cp, "virt_timer");
+    hyp.unserializeSection(cp, "hyp_timer");
 }
 
 void
@@ -823,23 +831,25 @@ GenericTimerFrame::GenericTimerFrame(GenericTimerFrameParams *const p)
 void
 GenericTimerFrame::serialize(CheckpointOut &cp) const
 {
-    physTimer.serializeSection(cp, "phys_timer");
-    virtTimer.serializeSection(cp, "virt_timer");
     SERIALIZE_SCALAR(accessBits);
     if (hasEl0View())
         SERIALIZE_SCALAR(accessBitsEl0);
     SERIALIZE_SCALAR(nonSecureAccess);
+
+    physTimer.serializeSection(cp, "phys_timer");
+    virtTimer.serializeSection(cp, "virt_timer");
 }
 
 void
 GenericTimerFrame::unserialize(CheckpointIn &cp)
 {
-    physTimer.unserializeSection(cp, "phys_timer");
-    virtTimer.unserializeSection(cp, "virt_timer");
     UNSERIALIZE_SCALAR(accessBits);
     if (hasEl0View())
         UNSERIALIZE_SCALAR(accessBitsEl0);
     UNSERIALIZE_SCALAR(nonSecureAccess);
+
+    physTimer.unserializeSection(cp, "phys_timer");
+    virtTimer.unserializeSection(cp, "virt_timer");
 }
 
 uint64_t
