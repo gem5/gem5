@@ -47,10 +47,11 @@
 .macro m5op_func name, func
         .align 2
         .globl \name
+        .thumb_func
 \name:
         .short 0xEE00 | \func
         .short 0x0110
-        mov pc,lr
+        bx lr
 .endm
 
 .text
