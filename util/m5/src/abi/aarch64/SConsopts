@@ -30,4 +30,4 @@ get_abi_opt('CROSS_COMPILE', 'aarch64-linux-gnu-')
 
 env['CALL_TYPE']['inst'].impl('m5op.S', 'verify_inst.cc', default=True)
 env['CALL_TYPE']['addr'].impl('m5op_addr.S')
-env['CALL_TYPE']['semi'].impl('m5op_semi.S')
+env['CALL_TYPE']['semi'].impl('m5op_semi.S', 'verify_semi.cc')
