@@ -79,6 +79,7 @@ PybindSimObjectResolver::resolveSimObject(const std::string &name)
 }
 
 extern const char *compileDate;
+extern const char *gem5Version;
 
 #ifdef DEBUG
 const bool flag_DEBUG = true;
@@ -260,6 +261,7 @@ pybind_init_core(py::module &m_native)
 
     /* TODO: These should be read-only */
     m_core.attr("compileDate") = py::cast(compileDate);
+    m_core.attr("gem5Version") = py::cast(gem5Version);
 
     m_core.attr("flag_DEBUG") = py::cast(flag_DEBUG);
     m_core.attr("flag_DEBUG") = py::cast(flag_DEBUG);

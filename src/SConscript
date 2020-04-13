@@ -830,6 +830,7 @@ import m5.util
 buildEnv = m5.util.SmartDict($build_env)
 
 compileDate = _m5.core.compileDate
+gem5Version = _m5.core.gem5Version
 _globals = globals()
 for key,val in _m5.core.__dict__.items():
     if key.startswith('flag_'):

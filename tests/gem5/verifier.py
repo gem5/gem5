@@ -127,6 +127,7 @@ class MatchStdout(DerivedGoldStandard):
     _file = constants.gem5_simulation_stdout
     _default_ignore_regex = [
             re.compile('^Redirecting (stdout|stderr) to'),
+            re.compile('^gem5 version '),
             re.compile('^gem5 compiled '),
             re.compile('^gem5 started '),
             re.compile('^gem5 executing on '),

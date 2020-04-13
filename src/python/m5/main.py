@@ -273,6 +273,7 @@ def main(*args):
         done = True
         print('Build information:')
         print()
+        print('gem5 version %s' % defines.gem5Version)
         print('compiled %s' % defines.compileDate)
         print('build options:')
         keys = list(defines.buildEnv.keys())
@@ -336,6 +337,7 @@ def main(*args):
         print(brief_copyright)
         print()
 
+        print("gem5 version %s" % defines.gem5Version)
         print("gem5 compiled %s" % defines.compileDate)
 
         print("gem5 started %s" %
