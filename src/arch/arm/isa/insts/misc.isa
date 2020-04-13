@@ -721,18 +721,19 @@ let {{
 
     // WFE Sleeps if SevMailbox==0 and no unmasked interrupts are pending,
     ThreadContext *tc = xc->tcBase();
+    Tick next_cycle = tc->getCpuPtr()->nextCycle();
     if (SevMailbox == 1) {
         SevMailbox = 0;
-        PseudoInst::quiesceSkip(tc);
+        tc->quiesceTick(next_cycle + 1);
     } else if (tc->getCpuPtr()->getInterruptController(
                 tc->threadId())->checkInterrupts()) {
-        PseudoInst::quiesceSkip(tc);
+        tc->quiesceTick(next_cycle + 1);
     } else {
         fault = trapWFx(tc, cpsr, scr, true);
         if (fault == NoFault) {
-            PseudoInst::quiesce(tc);
+            tc->quiesce();
         } else {
-            PseudoInst::quiesceSkip(tc);
+            tc->quiesceTick(next_cycle + 1);
         }
     }
     '''
@@ -760,15 +761,16 @@ let {{
     ThreadContext *tc = xc->tcBase();
     auto *ic = dynamic_cast<ArmISA::Interrupts *>(
             tc->getCpuPtr()->getInterruptController(tc->threadId()));
+    Tick next_cycle = tc->getCpuPtr()->nextCycle();
     if (ic->checkWfiWake(hcr, cpsr, scr)) {
-        PseudoInst::quiesceSkip(tc);
+        tc->quiesceTick(next_cycle + 1);
     } else {
         fault = trapWFx(tc, cpsr, scr, false);
         if (fault == NoFault) {
-            PseudoInst::quiesce(tc);
+            tc->quiesce();
             ArmSystem::callSetStandByWfi(tc);
         } else {
-            PseudoInst::quiesceSkip(tc);
+            tc->quiesceTick(next_cycle + 1);
         }
     }
     tc->getCpuPtr()->clearInterrupt(tc->threadId(), INT_ABT, 0);
