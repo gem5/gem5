@@ -110,6 +110,7 @@ def create(args):
             stdin=args.semi_stdin,
             stdout=args.semi_stdout,
             stderr=args.semi_stderr,
+            files_root_dir=args.semi_path,
             cmd_line = " ".join([ args.kernel ] + args.args)
         )
 
@@ -223,6 +224,10 @@ def main():
     parser.add_argument("--semi-stderr", type=str, default="stderr",
                         help="Standard error for semihosting " \
                         "(default: gem5's stderr)")
+    parser.add_argument('--semi-path', type=str,
+                        default="",
+                        help=('Search path for files to be loaded through '
+                              'Arm Semihosting'))
     parser.add_argument("args", default=[], nargs="*",
                         help="Semihosting arguments to pass to benchmark")
     parser.add_argument("-P", "--param", action="append", default=[],
