@@ -473,7 +473,7 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
         Fault fault = walker->startFunctional(tc, addr, logBytes, mode);
         if (fault != NoFault)
             return fault;
-        paddr = insertBits(addr, logBytes, 0, vaddr);
+        paddr = insertBits(addr, logBytes - 1, 0, vaddr);
     } else {
         Process *process = tc->getProcessPtr();
         const auto *pte = process->pTable->lookup(vaddr);
