@@ -66,14 +66,13 @@ machine(MachineType:L2Cache, "Token protocol")
   state_declaration(State, desc="L2 Cache states", default="L2Cache_State_I") {
 
     // Stable states
-    NP, AccessPermission:Invalid, desc="Not Present";
     I, AccessPermission:Invalid, desc="Invalid";
-    ILS, AccessPermission:Invalid, desc="Idle/NP, but local sharers exist";
-    ILX, AccessPermission:Invalid, desc="Idle/NP, but local exclusive exists";
-    ILO, AccessPermission:Invalid, desc="Idle/NP, but local owner exists";
-    ILOX, AccessPermission:Invalid, desc="Idle/NP, but local owner exists and chip is exclusive";
-    ILOS, AccessPermission:Invalid, desc="Idle/NP, but local owner exists and local sharers as well";
-    ILOSX, AccessPermission:Invalid, desc="Idle/NP, but local owner exists, local sharers exist, chip is exclusive ";
+    ILS, AccessPermission:Invalid, desc="Not present, but local sharers exist";
+    ILX, AccessPermission:Invalid, desc="Not present, but local exclusive exists";
+    ILO, AccessPermission:Invalid, desc="Not present, but local owner exists";
+    ILOX, AccessPermission:Invalid, desc="Not present, but local owner exists and chip is exclusive";
+    ILOS, AccessPermission:Invalid, desc="Not present, but local owner exists and local sharers as well";
+    ILOSX, AccessPermission:Invalid, desc="Not present, but local owner exists, local sharers exist, chip is exclusive ";
     S, AccessPermission:Read_Only, desc="Shared, no local sharers";
     O, AccessPermission:Read_Only, desc="Owned, no local sharers";
     OLS, AccessPermission:Read_Only, desc="Owned with local sharers";
@@ -324,11 +323,22 @@ machine(MachineType:L2Cache, "Token protocol")
   void copyDirToCache(Entry cache_entry, Addr addr) {
     assert(is_valid(cache_entry));
     DirEntry dir_entry := getDirEntry(addr);
+    assert(is_valid(dir_entry));
     cache_entry.Sharers := dir_entry.Sharers;
     cache_entry.Owner := dir_entry.Owner;
     cache_entry.OwnerValid := dir_entry.OwnerValid;
   }
 
+  bool isDirEntryClean(DirEntry dir_entry) {
+    assert(is_valid(dir_entry));
+    return (dir_entry.Sharers.count() == 0) &&
+           (dir_entry.OwnerValid == false);
+  }
+
+  bool isCacheEntryClean(Entry cache_entry) {
+    return (cache_entry.Sharers.count() == 0) &&
+           (cache_entry.OwnerValid == false);
+  }
 
   void recordLocalSharerInDir(Entry cache_entry, Addr addr, MachineID shar_id) {
     if (is_valid(cache_entry)) {
@@ -478,7 +488,6 @@ machine(MachineType:L2Cache, "Token protocol")
   }
 
   State getState(TBE tbe, Entry cache_entry, Addr addr) {
-
     if (is_valid(tbe)) {
       return tbe.TBEState;
     } else if (is_valid(cache_entry)) {
@@ -487,7 +496,7 @@ machine(MachineType:L2Cache, "Token protocol")
       DirEntry dir_entry := getDirEntry(addr);
       return dir_entry.DirState;
     } else {
-      return State:NP;
+      return State:I;
     }
   }
 
@@ -496,45 +505,46 @@ machine(MachineType:L2Cache, "Token protocol")
   }
 
   void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
+    // Consistency checks
+
+    // Either on the the cache, directory, or invalid
     assert((localDirectory.isTagPresent(addr) && L2cache.isTagPresent(addr)) == false);
 
+    if (state == State:I) {
+      assert(L2cache.isTagPresent(addr) == false);
+      assert(is_valid(cache_entry) == false);
+      assert(localDirectory.isTagPresent(addr) == false);
+    } else if ( (state == State:M) ||
+                (state == State:O) ||
+                (state == State:S) ||
+                (state == State:OLS) ||
+                (state == State:OLSX) ||
+                (state == State:SLS)) {
+       assert(is_valid(cache_entry));
+       assert(L2cache.isTagPresent(addr));
+
+       if ( ((cache_entry.CacheState != State:M) && (state == State:M)) ||
+           ((cache_entry.CacheState != State:S) && (state == State:S)) ||
+           ((cache_entry.CacheState != State:O) && (state == State:O)) ) {
+        // disable Coherence Checker for now
+        // sequencer.checkCoherence(addr);
+      }
+    } else if ( (state == State:ILS) ||
+                (state == State:ILX) ||
+                (state == State:ILO) ||
+                (state == State:ILOX) ||
+                (state == State:ILOS) ||
+                (state == State:ILOSX)) {
+       assert(localDirectory.isTagPresent(addr));
+    }
+
+    // Update state
     if (is_valid(tbe)) {
       tbe.TBEState := state;
     }
 
-    if (
-         (state == State:M) ||
-         (state == State:O) ||
-         (state == State:S) ||
-         (state == State:OLS) ||
-         (state == State:SLS) ||
-         (state == State:OLSX) ||
-         (state == State:SLS)
-       ) {
-       assert(is_valid(cache_entry));
-    }
-    else if (
-         (state == State:ILS) ||
-         (state == State:ILX) ||
-         (state == State:ILO) ||
-         (state == State:ILOX) ||
-         (state == State:ILOS) ||
-         (state == State:ILOSX)
-       ) {
-       // assert(isCacheTagPresent(addr) == false);
-    }
-
     if (is_valid(cache_entry)) {
-      if ( ((cache_entry.CacheState != State:M) && (state == State:M)) ||
-           ((cache_entry.CacheState != State:S) && (state == State:S)) ||
-           ((cache_entry.CacheState != State:O) && (state == State:O)) ) {
-        cache_entry.CacheState := state;
-        // disable Coherence Checker for now
-        // sequencer.checkCoherence(addr);
-      }
-      else {
-        cache_entry.CacheState := state;
-      }
+      cache_entry.CacheState := state;
     }
     else if (localDirectory.isTagPresent(addr)) {
       DirEntry dir_entry := getDirEntry(addr);
@@ -1560,6 +1570,16 @@ machine(MachineType:L2Cache, "Token protocol")
     localDirectory.deallocate(address);
   }
 
+  action(checkCacheNoSharersNoOwner, "/ckcache", desc="Remove dir state") {
+    assert(is_valid(cache_entry));
+    assert(isCacheEntryClean(cache_entry));
+  }
+
+  action(removeFromDir, "/rmdir", desc="Remove dir state") {
+    assert(isDirEntryClean(getDirEntry(address)));
+    localDirectory.deallocate(address);
+  }
+
   action(zz_recycleGlobalRequestQueue, "\zglb", desc="Send the head of the mandatory queue to the back of the queue.") {
     peek(requestNetwork_in, RequestMsg) {
       APPEND_TRANSITION_COMMENT(in_msg.Requestor);
@@ -1628,7 +1648,7 @@ machine(MachineType:L2Cache, "Token protocol")
   }
 
   // must happened because we forwarded GETX to local exclusive trying to do wb
-  transition({I, M, O, ILS, ILOX, OLS, OLSX, SLS, S}, L1_PUTX) {
+  transition({M, O, ILS, ILOX, OLS, OLSX, SLS, S}, L1_PUTX) {
     ll_writebackNack;
     o_popL1RequestQueue;
   }
@@ -1661,16 +1681,6 @@ machine(MachineType:L2Cache, "Token protocol")
     o_popL1RequestQueue;
   }
 
-  // must happened because we got Inv when L1 attempted PUTS
-  transition(I, L1_PUTS) {
-    ll_writebackNack;
-    o_popL1RequestQueue;
-  }
-
-  transition(I, L1_PUTO) {
-    ll_writebackNack;
-    o_popL1RequestQueue;
-  }
 
   // FORWARDED REQUESTS
 
@@ -1784,6 +1794,7 @@ machine(MachineType:L2Cache, "Token protocol")
     i_copyDataToTBE;
     c_sendExclusiveDataFromTBEToFwdGETS;
     gg_clearLocalSharers;
+    removeFromDir;
     s_deallocateTBE;
     n_popResponseQueue;
     wa_wakeUpDependents;
@@ -1801,6 +1812,7 @@ machine(MachineType:L2Cache, "Token protocol")
     i_copyDataToTBE;
     c_sendDataFromTBEToFwdGETX;
     gg_clearLocalSharers;
+    removeFromDir;
     s_deallocateTBE;
     n_popResponseQueue;
     wa_wakeUpDependents;
@@ -1832,16 +1844,15 @@ machine(MachineType:L2Cache, "Token protocol")
   transition(IFGXX, All_Acks, I) {
     c_sendDataFromTBEToFwdGETX;
     gg_clearLocalSharers;
+    removeFromDir;
     s_deallocateTBE;
     n_popTriggerQueue;
     wa_wakeUpDependents;
   }
 
-
-  // transition({O, OX}, Fwd_GETX, I) {
   transition(O, Fwd_GETX, I) {
     dd_sendDataToFwdGETX;
-    y_copyCacheStateToDir;
+    checkCacheNoSharersNoOwner;
     rr_deallocateL2CacheBlock;
     m_popRequestQueue;
   }
@@ -1871,19 +1882,14 @@ machine(MachineType:L2Cache, "Token protocol")
 
   transition(M, Fwd_GETX, I) {
     dd_sendDataToFwdGETX;
+    checkCacheNoSharersNoOwner;
     rr_deallocateL2CacheBlock;
     m_popRequestQueue;
   }
 
-  // MAKE THIS THE SAME POLICY FOR NOW
-
-  // transition(M, Fwd_GETS, O) {
-  //   dd_sendDataToFwdGETS;
-  //   m_popRequestQueue;
-  // }
-
   transition(M, Fwd_GETS, I) {
      dd_sendExclusiveDataToFwdGETS;
+     checkCacheNoSharersNoOwner;
      rr_deallocateL2CacheBlock;
      m_popRequestQueue;
   }
@@ -1911,6 +1917,7 @@ machine(MachineType:L2Cache, "Token protocol")
     c_sendDataFromTBEToFwdGETX;
     gg_clearLocalSharers;
     s_deallocateTBE;
+    checkCacheNoSharersNoOwner;
     rr_deallocateL2CacheBlock;
     n_popTriggerQueue;
     wa_wakeUpDependents;
@@ -1926,7 +1933,7 @@ machine(MachineType:L2Cache, "Token protocol")
     m_popRequestQueue;
   }
 
-  transition({I,NP}, Inv) {
+  transition(I, Inv) {
     i_allocateTBE;
     t_recordFwdXID;
     e_sendAck;
@@ -1941,6 +1948,7 @@ machine(MachineType:L2Cache, "Token protocol")
     t_recordFwdXID;
     ee_sendLocalInv;
     gg_clearLocalSharers;
+    removeFromDir;
     m_popRequestQueue;
   }
 
@@ -1970,6 +1978,7 @@ machine(MachineType:L2Cache, "Token protocol")
     t_recordFwdXID;
     e_sendAck;
     s_deallocateTBE;
+    checkCacheNoSharersNoOwner;
     rr_deallocateL2CacheBlock;
     m_popRequestQueue;
   }
@@ -2115,12 +2124,12 @@ machine(MachineType:L2Cache, "Token protocol")
 
   // LOCAL REQUESTS THAT MUST ISSUE
 
-  transition(NP, {L1_PUTS, L1_PUTX, L1_PUTO}) {
+  transition(I, {L1_PUTS, L1_PUTX, L1_PUTO}) {
     ll_writebackNack;
     o_popL1RequestQueue;
   }
 
-  transition({NP, I}, L1_GETS, IGS) {
+  transition(I, L1_GETS, IGS) {
     i_allocateTBE;
     s_recordGetSL1ID;
     a_issueGETS;
@@ -2128,7 +2137,7 @@ machine(MachineType:L2Cache, "Token protocol")
     o_popL1RequestQueue;
   }
 
-  transition({NP, I}, L1_GETX, IGM) {
+  transition(I, L1_GETX, IGM) {
     i_allocateTBE;
     s_recordGetXL1ID;
     a_issueGETX;
@@ -2791,7 +2800,8 @@ machine(MachineType:L2Cache, "Token protocol")
 
 
   // L2 WRITEBACKS
-  transition({I, S}, L2_Replacement, I) {
+  transition(S, L2_Replacement, I) {
+    checkCacheNoSharersNoOwner;
     rr_deallocateL2CacheBlock;
   }
 
@@ -2885,12 +2895,14 @@ machine(MachineType:L2Cache, "Token protocol")
 
   transition({MI, OI}, Writeback_Ack, I) {
     qq_sendDataFromTBEToMemory;
+    removeFromDir;
     s_deallocateTBE;
     n_popResponseQueue;
     wa_wakeUpDependents;
   }
 
   transition(MII, Writeback_Nack, I) {
+    removeFromDir;
     s_deallocateTBE;
     n_popResponseQueue;
     wa_wakeUpDependents;
@@ -2910,6 +2922,7 @@ machine(MachineType:L2Cache, "Token protocol")
 
   transition(MII, Writeback_Ack, I) {
     f_sendUnblock;
+    removeFromDir;
     s_deallocateTBE;
     n_popResponseQueue;
     wa_wakeUpDependents;
