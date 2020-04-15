@@ -57,6 +57,7 @@ from common import ObjectList
 from common.cores.arm import HPI
 
 import devices
+import workloads
 
 # Pre-defined CPU configurations. Each tuple must be ordered as : (cpu_class,
 # l1_icache_class, l1_dcache_class, walk_cache_class, l2_Cache_class). Any of
@@ -100,9 +101,6 @@ def create(args):
                                   args.mem_size,
                                   platform=platform(),
                                   mem_mode=mem_mode,
-                                  workload=ArmFsWorkload(
-                                      atags_addr=0,
-                                      object_file=args.kernel),
                                   readfile=args.readfile)
 
     MemConfig.config_mem(args, system)
@@ -162,6 +160,10 @@ def create(args):
     system.have_virtualization = True
     system.have_security = True
 
+    workload_class = workloads.workload_list.get(args.workload)
+    system.workload = workload_class(
+        args.kernel, system)
+
     return system
 
 def run(args):
@@ -190,6 +192,10 @@ def main():
     parser.add_argument("--kernel", type=str,
                         default=None,
                         help="Binary to run")
+    parser.add_argument("--workload", type=str,
+                        default="ArmBaremetal",
+                        choices=workloads.workload_list.get_names(),
+                        help="Workload type")
     parser.add_argument("--disk-image", type=str,
                         default=None,
                         help="Disk to instantiate")
