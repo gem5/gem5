@@ -138,70 +138,97 @@ machine(MachineType:Directory, "Directory protocol")
 
   Entry getDirectoryEntry(Addr addr), return_by_pointer="yes" {
     Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
+    assert(is_valid(dir_entry));
+    return dir_entry;
+  }
 
-    if (is_valid(dir_entry)) {
-      return dir_entry;
-    }
-
-    dir_entry :=  static_cast(Entry, "pointer",
+  Entry allocateDirectoryEntry(Addr addr), return_by_pointer="yes" {
+    Entry dir_entry := static_cast(Entry, "pointer",
                               directory.allocate(addr, new Entry));
     return dir_entry;
   }
 
+  void deallocateDirectoryEntry(Addr addr) {
+    // Always going to transition from a valid state to I when deallocating
+    // Owners and shares must be clear
+    assert(getDirectoryEntry(addr).DirectoryState != State:I);
+    assert(getDirectoryEntry(addr).Owner.count() == 0);
+    assert(getDirectoryEntry(addr).Sharers.count() == 0);
+
+    directory.deallocate(addr);
+
+    // disable coherence checker
+    // sequencer.checkCoherence(addr);
+  }
+
   State getState(TBE tbe, Addr addr) {
-    return getDirectoryEntry(addr).DirectoryState;
+    Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
+    if (is_valid(dir_entry)) {
+      return dir_entry.DirectoryState;
+    }
+    else {
+      return State:I;
+    }
   }
 
   void setState(TBE tbe, Addr addr, State state) {
     if (directory.isPresent(addr)) {
 
-      if (state == State:I) {
-        assert(getDirectoryEntry(addr).Owner.count() == 0);
-        assert(getDirectoryEntry(addr).Sharers.count() == 0);
-      }
+      Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
 
-      if (state == State:S) {
-        assert(getDirectoryEntry(addr).Owner.count() == 0);
-      }
+      if (is_valid(dir_entry)) {
 
-      if (state == State:O) {
-        assert(getDirectoryEntry(addr).Owner.count() == 1);
-        assert(getDirectoryEntry(addr).Sharers.isSuperset(getDirectoryEntry(addr).Owner) == false);
-      }
+        assert(state != State:I);
 
-      if (state == State:M) {
-        assert(getDirectoryEntry(addr).Owner.count() == 1);
-        assert(getDirectoryEntry(addr).Sharers.count() == 0);
-      }
+        if (state == State:S) {
+          assert(dir_entry.Owner.count() == 0);
+        }
 
-      if ((state != State:SS) && (state != State:OO)) {
-        assert(getDirectoryEntry(addr).WaitingUnblocks == 0);
-      }
+        if (state == State:O) {
+          assert(dir_entry.Owner.count() == 1);
+          assert(dir_entry.Sharers.isSuperset(dir_entry.Owner) == false);
+        }
 
-      if ( (getDirectoryEntry(addr).DirectoryState != State:I) && (state == State:I) ) {
-        getDirectoryEntry(addr).DirectoryState := state;
-         // disable coherence checker
-        // sequencer.checkCoherence(addr);
-      }
-      else {
-        getDirectoryEntry(addr).DirectoryState := state;
+        if (state == State:M) {
+          assert(dir_entry.Owner.count() == 1);
+          assert(dir_entry.Sharers.count() == 0);
+        }
+
+        if ((state != State:SS) && (state != State:OO)) {
+          assert(dir_entry.WaitingUnblocks == 0);
+        }
+
+        dir_entry.DirectoryState := state;
+
+      } else {
+        assert(state == State:I);
       }
     }
   }
 
   AccessPermission getAccessPermission(Addr addr) {
     if (directory.isPresent(addr)) {
-      DPRINTF(RubySlicc, "%s\n", Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState));
-      return Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState);
+      Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
+      if (is_valid(dir_entry)) {
+        DPRINTF(RubySlicc, "%s\n", Directory_State_to_permission(dir_entry.DirectoryState));
+        return Directory_State_to_permission(dir_entry.DirectoryState);
+      } else {
+        DPRINTF(RubySlicc, "%s\n", Directory_State_to_permission(State:I));
+        return Directory_State_to_permission(State:I);
+      }
     }
-
     DPRINTF(RubySlicc, "AccessPermission_NotPresent\n");
     return AccessPermission:NotPresent;
   }
 
   void setAccessPermission(Addr addr, State state) {
     if (directory.isPresent(addr)) {
-      getDirectoryEntry(addr).changePermission(Directory_State_to_permission(state));
+      Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
+      if (is_valid(dir_entry)) {
+        dir_entry.changePermission(Directory_State_to_permission(state));
+      } else {
+        assert(state == State:I);
+      }
     }
   }
 
@@ -318,6 +345,14 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   // Actions
+
+  action(allocDirEntry, "alloc", desc="Allocate directory entry") {
+    allocateDirectoryEntry(address);
+  }
+
+  action(deallocDirEntry, "dealloc", desc="Deallocate directory entry") {
+    deallocateDirectoryEntry(address);
+  }
 
   action(a_sendWriteBackAck, "a", desc="Send writeback ack to requestor") {
     peek(requestQueue_in, RequestMsg) {
@@ -600,16 +635,19 @@ machine(MachineType:Directory, "Directory protocol")
 
   // TRANSITIONS
   transition(I, GETX, MM) {
+    allocDirEntry;
     qf_queueMemoryFetchRequest;
     i_popIncomingRequestQueue;
   }
 
   transition(I, DMA_READ, XI_M) {
+    allocDirEntry;
     qf_queueMemoryFetchRequest;
     i_popIncomingRequestQueue;
   }
 
   transition(I, DMA_WRITE, XI_U) {
+    allocDirEntry;
     qw_queueMemoryWBFromDMARequest;
     a_sendDMAAck;  // ack count may be zero
     i_popIncomingRequestQueue;
@@ -617,12 +655,14 @@ machine(MachineType:Directory, "Directory protocol")
 
   transition(XI_M, Memory_Data, I) {
     d_sendDataMsg;  // ack count may be zero
+    deallocDirEntry;
     q_popMemQueue;
   }
 
   transition(XI_U, Exclusive_Unblock, I) {
     cc_clearSharers;
     c_clearOwner;
+    deallocDirEntry;
     j_popIncomingUnblockQueue;
   }
 
@@ -647,6 +687,7 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   transition(I, GETS, IS) {
+    allocDirEntry;
     qf_queueMemoryFetchRequest;
     i_popIncomingRequestQueue;
   }
@@ -812,6 +853,7 @@ machine(MachineType:Directory, "Directory protocol")
     c_clearOwner;
     cc_clearSharers;
     qw_queueMemoryWBFromCacheRequest;
+    deallocDirEntry;
     i_popIncomingRequestQueue;
   }
 
@@ -846,6 +888,7 @@ machine(MachineType:Directory, "Directory protocol")
   transition(MI, Clean_Writeback, I) {
     c_clearOwner;
     cc_clearSharers;
+    deallocDirEntry;
     i_popIncomingRequestQueue;
   }
 
