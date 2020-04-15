@@ -905,7 +905,7 @@ machine(MachineType:Directory, "Directory protocol")
     j_popIncomingUnblockQueue;
   }
 
-  transition({I, S, O, M, IS, SS, OO, MO, MM, MI, MIS, OS, OSS}, Memory_Data) {
+  transition({S, O, M, IS, SS, OO, MO, MM, MI, MIS, OS, OSS}, Memory_Data) {
     d_sendDataMsg;
     q_popMemQueue;
   }
