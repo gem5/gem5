@@ -93,10 +93,12 @@ def create(args):
     # Only simulate caches when using a timing CPU (e.g., the HPI model)
     want_caches = True if mem_mode == "timing" else False
 
+    platform = ObjectList.platform_list.get(args.machine_type)
+
     system = devices.simpleSystem(ArmSystem,
                                   want_caches,
                                   args.mem_size,
-                                  platform=VExpress_GEM5_V2(),
+                                  platform=platform(),
                                   mem_mode=mem_mode,
                                   workload=ArmFsWorkload(
                                       atags_addr=0,
@@ -199,6 +201,10 @@ def main():
     parser.add_argument("--cpu-freq", type=str, default="4GHz")
     parser.add_argument("--num-cores", type=int, default=1,
                         help="Number of CPU cores")
+    parser.add_argument("--machine-type", type=str,
+                        choices=ObjectList.platform_list.get_names(),
+                        default="VExpress_GEM5_V2",
+                        help="Hardware platform class")
     parser.add_argument("--mem-type", default="DDR3_1600_8x8",
                         choices=ObjectList.mem_list.get_names(),
                         help = "type of memory to use")
