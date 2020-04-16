@@ -41,12 +41,13 @@ import copy
 import subprocess
 import sys
 
-from testlib.test import TestFunction
+from testlib.test_util import TestFunction
 from testlib.suite import TestSuite
 from testlib.helper import log_call
-from testlib.config import constants, config
-from fixture import TempdirFixture, Gem5Fixture, VariableFixture
-import verifier
+from testlib.configuration import constants, config
+from .fixture import TempdirFixture, Gem5Fixture, VariableFixture
+
+from . import verifier
 
 def gem5_verify_config(name,
                        config,
@@ -190,6 +191,7 @@ def _create_test_run_gem5(config, config_args, gem5_args):
         command.append(config)
         # Config_args should set up the program args.
         command.extend(config_args)
-        returncode.value = log_call(params.log, command, stderr=sys.stderr)
+        returncode.value = log_call(params.log, command, stdout=sys.stdout,
+                                                         stderr=sys.stderr)
 
     return test_run_gem5

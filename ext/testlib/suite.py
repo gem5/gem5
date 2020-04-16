@@ -27,8 +27,8 @@
 # Authors: Sean Wilson
 
 
-import helper
-import runner as runner_mod
+import testlib.helper as helper
+import testlib.runner as runner_mod
 
 class TestSuite(object):
     '''
@@ -52,7 +52,7 @@ class TestSuite(object):
     tags = set()
 
     def __new__(klass, *args, **kwargs):
-        obj = super(TestSuite, klass).__new__(klass, *args, **kwargs)
+        obj = super(TestSuite, klass).__new__(klass)
         TestSuite.collector.collect(obj)
         return obj
 

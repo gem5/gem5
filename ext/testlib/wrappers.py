@@ -44,9 +44,8 @@ loaded by the testlib :class:`testlib.loader.Loader`.
 '''
 import itertools
 
-import log
-import uid
-from state import Status, Result
+import testlib.uid as uid
+from testlib.state import Status, Result
 
 class TestCaseMetadata():
     def __init__(self, name, uid, path, result, status, suite_uid):
@@ -127,9 +126,11 @@ class LoadedTestable(object):
 
     # TODO Change log to provide status_update, result_update for all types.
     def log_status(self, status):
+        import testlib.log as log
         log.test_log.status_update(self, status)
 
     def log_result(self, result):
+        import testlib.log as log
         log.test_log.result_update(self, result)
 
     def __iter__(self):

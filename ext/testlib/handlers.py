@@ -35,20 +35,20 @@ from __future__ import print_function
 
 import multiprocessing
 import os
-import Queue
 import sys
 import threading
 import time
 import traceback
 
-import helper
-import log
-import result
-import state
-import test
-import terminal
+import testlib.helper as helper
+import testlib.log as log
+import testlib.result as result
+import testlib.state as state
+import testlib.test_util as test
+import testlib.terminal as terminal
 
-from config import config, constants
+from six.moves import queue as Queue
+from testlib.configuration import config, constants
 
 
 class _TestStreamManager(object):

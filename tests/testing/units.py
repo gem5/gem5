@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 #
 # Copyright (c) 2016 ARM Limited
 # All rights reserved
@@ -41,15 +41,18 @@ import difflib
 import functools
 import os
 import re
+from six import add_metaclass
 import subprocess
 import sys
 import traceback
 
-from .results import UnitResult
-from .helpers import *
+sys.path.append(os.path.dirname(__file__))
+from results import UnitResult
+from helpers import *
 
 _test_base = os.path.join(os.path.dirname(__file__), "..")
 
+@add_metaclass(ABCMeta)
 class TestUnit(object):
     """Base class for all test units.
 
@@ -63,8 +66,6 @@ class TestUnit(object):
     exceptions.
 
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, name, ref_dir, test_dir, skip=False):
         self.name = name

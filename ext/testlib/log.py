@@ -30,8 +30,9 @@
 This module supplies the global `test_log` object which all testing
 results and messages are reported through.
 '''
-import wrappers
+import testlib.wrappers as wrappers
 
+from six import add_metaclass
 
 class LogLevel():
     Fatal = 0
@@ -55,6 +56,7 @@ class RecordTypeCounterMetaclass(type):
         RecordTypeCounterMetaclass.counter += 1
 
 
+@add_metaclass(RecordTypeCounterMetaclass)
 class Record(object):
     '''
     A generic object that is passed to the :class:`Log` and its handlers.
@@ -62,7 +64,6 @@ class Record(object):
     ..note: Although not statically enforced, all items in the record should be
         be pickleable. This enables logging accross multiple processes.
     '''
-    __metaclass__ = RecordTypeCounterMetaclass
 
     def __init__(self, **data):
         self.data = data

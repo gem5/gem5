@@ -29,8 +29,8 @@
 import copy
 import traceback
 
-import helper
-import log
+import testlib.helper as helper
+import testlib.log as log
 
 class SkipException(Exception):
     def __init__(self, fixture, testitem):
@@ -61,7 +61,7 @@ class Fixture(object):
     collector = helper.InstanceCollector()
 
     def __new__(klass, *args, **kwargs):
-        obj = super(Fixture, klass).__new__(klass, *args, **kwargs)
+        obj = super(Fixture, klass).__new__(klass)
         Fixture.collector.collect(obj)
         return obj
 

@@ -29,12 +29,12 @@
 
 from .state import *
 from .runner import *
-from .test import *
+from .test_util import *
 from .suite import *
 from .loader import *
 from .fixture import *
-from .config import *
-from main import main
+from .configuration import *
+from .main import main
 
 #TODO Remove this awkward bootstrap
 #FIXME

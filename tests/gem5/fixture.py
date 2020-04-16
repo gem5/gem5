@@ -42,11 +42,11 @@ import shutil
 import sys
 import socket
 import threading
-import urllib
-import urllib2
+
+from six.moves import urllib
 
 from testlib.fixture import Fixture
-from testlib.config import config, constants
+from testlib.configuration import config, constants
 from testlib.helper import log_call, cacheresult, joinpath, absdirpath
 import testlib.log as log
 from testlib.state import Result
@@ -271,15 +271,16 @@ class DownloadedProgram(UniqueFixture):
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
-        urllib.urlretrieve(self.url, self.filename)
+        urllib.request.urlretrieve(self.url, self.filename)
 
     def _getremotetime(self):
         import datetime, time
         import _strptime # Needed for python threading bug
 
-        u = urllib2.urlopen(self.url, timeout=10)
+        u = urllib.request.urlopen(self.url, timeout=10)
+
         return time.mktime(datetime.datetime.strptime( \
-                    u.info().getheaders("Last-Modified")[0],
+                    u.info()["Last-Modified"],
                     "%a, %d %b %Y %X GMT").timetuple())
 
     def _setup(self, testitem):
@@ -289,7 +290,7 @@ class DownloadedProgram(UniqueFixture):
         else:
             try:
                 t = self._getremotetime()
-            except (urllib2.URLError, socket.timeout):
+            except (urllib.error.URLError, socket.timeout):
                 # Problem checking the server, use the old files.
                 log.test_log.debug("Could not contact server. Binaries may be old.")
                 return
@@ -315,7 +316,7 @@ class DownloadedArchive(DownloadedProgram):
         else:
             try:
                 t = self._getremotetime()
-            except (urllib2.URLError, socket.timeout):
+            except (urllib.error.URLError, socket.timeout):
                 # Problem checking the server, use the old files.
                 log.test_log.debug("Could not contact server. "
                                    "Binaries may be old.")

@@ -34,7 +34,6 @@ from collections import MutableSet, OrderedDict
 import difflib
 import errno
 import os
-import Queue
 import re
 import shutil
 import stat
@@ -43,6 +42,8 @@ import tempfile
 import threading
 import time
 import traceback
+
+from six.moves import queue as Queue
 
 #TODO Tear out duplicate logic from the sandbox IOManager
 def log_call(logger, command, *popenargs, **kwargs):
@@ -80,7 +81,8 @@ def log_call(logger, command, *popenargs, **kwargs):
 
     def log_output(log_callback, pipe, redirects=tuple()):
         # Read iteractively, don't allow input to fill the pipe.
-        for line in iter(pipe.readline, ''):
+        for line in iter(pipe.readline, b''):
+            line = line.decode("utf-8")
             for r in redirects:
                 r.write(line)
             log_callback(line.rstrip())

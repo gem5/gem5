@@ -33,7 +33,7 @@ import sys
 import threading
 import traceback
 
-import log
+import testlib.log as log
 
 pdb._Pdb = pdb.Pdb
 class ForkedPdb(pdb._Pdb):
@@ -81,18 +81,18 @@ class IoManager(object):
         self.old_stdout = os.dup(sys.stdout.fileno())
 
         os.dup2(self.stderr_wp, sys.stderr.fileno())
-        sys.stderr = os.fdopen(self.stderr_wp, 'w', 0)
+        sys.stderr = os.fdopen(self.stderr_wp, 'w')
         os.dup2(self.stdout_wp, sys.stdout.fileno())
-        sys.stdout = os.fdopen(self.stdout_wp, 'w', 0)
+        sys.stdout = os.fdopen(self.stdout_wp, 'w')
 
     def restore_pipes(self):
         self.stderr_wp = os.dup(sys.stderr.fileno())
         self.stdout_wp = os.dup(sys.stdout.fileno())
 
         os.dup2(self.old_stderr, sys.stderr.fileno())
-        sys.stderr = os.fdopen(self.old_stderr, 'w', 0)
+        sys.stderr = open(self.old_stderr, 'w')
         os.dup2(self.old_stdout, sys.stdout.fileno())
-        sys.stdout = os.fdopen(self.old_stdout, 'w', 0)
+        sys.stdout = open(self.old_stdout, 'w')
 
     def start_loggers(self):
         self.log_ouput()

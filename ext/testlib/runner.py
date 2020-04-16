@@ -30,13 +30,13 @@ import multiprocessing.dummy
 import threading
 import traceback
 
-import helper
-import state
-import log
-import sandbox
+import testlib.helper as helper
+import testlib.state as state
+import testlib.log as log
+import testlib.sandbox as sandbox
 
-from state import Status, Result
-from fixture import SkipException
+from testlib.state import Status, Result
+from testlib.fixture import SkipException
 
 def compute_aggregate_result(iterable):
     '''
