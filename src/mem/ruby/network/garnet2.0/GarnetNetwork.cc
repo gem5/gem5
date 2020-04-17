@@ -146,10 +146,11 @@ GarnetNetwork::init()
 */
 
 void
-GarnetNetwork::makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
+GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
                             const NetDest& routing_table_entry)
 {
-    assert(src < m_nodes);
+    NodeID local_src = getLocalNodeID(global_src);
+    assert(local_src < m_nodes);
 
     GarnetExtLink* garnet_link = safe_cast<GarnetExtLink*>(link);
 
@@ -163,7 +164,7 @@ GarnetNetwork::makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
 
     PortDirection dst_inport_dirn = "Local";
     m_routers[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
-    m_nis[src]->addOutPort(net_link, credit_link, dest);
+    m_nis[local_src]->addOutPort(net_link, credit_link, dest);
 }
 
 /*
@@ -173,10 +174,12 @@ GarnetNetwork::makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
 */
 
 void
-GarnetNetwork::makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                             const NetDest& routing_table_entry)
+GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
+                              BasicLink* link,
+                              const NetDest& routing_table_entry)
 {
-    assert(dest < m_nodes);
+    NodeID local_dest = getLocalNodeID(global_dest);
+    assert(local_dest < m_nodes);
     assert(src < m_routers.size());
     assert(m_routers[src] != NULL);
 
@@ -194,7 +197,7 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
     m_routers[src]->addOutPort(src_outport_dirn, net_link,
                                routing_table_entry,
                                link->m_weight, credit_link);
-    m_nis[dest]->addInPort(net_link, credit_link);
+    m_nis[local_dest]->addInPort(net_link, credit_link);
 }
 
 /*
@@ -233,9 +236,11 @@ GarnetNetwork::getNumRouters()
 
 // Get ID of router connected to a NI.
 int
-GarnetNetwork::get_router_id(int ni)
+GarnetNetwork::get_router_id(int global_ni)
 {
-    return m_nis[ni]->get_router_id();
+    NodeID local_ni = getLocalNodeID(global_ni);
+
+    return m_nis[local_ni]->get_router_id();
 }
 
 void

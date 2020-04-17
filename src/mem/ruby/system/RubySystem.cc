@@ -94,7 +94,7 @@ RubySystem::RubySystem(const Params *p)
 void
 RubySystem::registerNetwork(Network* network_ptr)
 {
-    m_network = network_ptr;
+    m_networks.emplace_back(network_ptr);
 }
 
 void
@@ -108,7 +108,6 @@ RubySystem::registerAbstractController(AbstractController* cntrl)
 
 RubySystem::~RubySystem()
 {
-    delete m_network;
     delete m_profiler;
 }
 
@@ -407,7 +406,9 @@ void
 RubySystem::resetStats()
 {
     m_start_cycle = curCycle();
-    m_network->resetStats();
+    for (auto& network : m_networks) {
+        network->resetStats();
+    }
 }
 
 bool
@@ -512,8 +513,10 @@ RubySystem::functionalRead(PacketPtr pkt)
         DPRINTF(RubySystem, "Network functionalRead lookup "
                             "(num_maybe_stale=%d, num_busy = %d)\n",
                 num_maybe_stale, num_busy);
-        if (m_network->functionalRead(pkt))
-            return true;
+        for (auto& network : m_networks) {
+            if (network->functionalRead(pkt))
+                return true;
+        }
     }
 
     return false;
@@ -558,7 +561,9 @@ RubySystem::functionalWrite(PacketPtr pkt)
         }
     }
 
-    num_functional_writes += m_network->functionalWrite(pkt);
+    for (auto& network : m_networks) {
+        num_functional_writes += network->functionalWrite(pkt);
+    }
     DPRINTF(RubySystem, "Messages written = %u\n", num_functional_writes);
 
     return true;
