@@ -1835,26 +1835,25 @@ let {{
                 xc->tcBase());
 
         // Number of elements in a 128 bit segment
-        constexpr unsigned ePerSegment = 128 / sizeof(Element);
+        constexpr unsigned ePerSegment = 16 / sizeof(Element);
 
-        '''
-
-        code += '''
+        ArmISA::VecRegContainer tmpC;
+        auto auxDest = tmpC.as<TPElem>();
         for (unsigned i = 0; i < eCount; i++) {
-                const auto segmentBase = i - i % ePerSegment;
-                const auto segmentIdx = segmentBase + index;
+            const auto segmentBase = i - i %% ePerSegment;
+            const auto segmentIdx = segmentBase + index;
 
-                const Element& srcElem1 = AA64FpOp1_x[i];
-                const Element& srcElem2 = AA64FpOp2_x[segmentIdx];
-                Element destElem = 0;
+            const Element& srcElem1 = AA64FpOp1_x[i];
+            const Element& srcElem2 = AA64FpOp2_x[segmentIdx];
+            Element destElem = 0;
 
-        '''
-
-        code += '''
-        %(op)s
-        AA64FpDest_x[i] = destElem;
+            %(op)s
+            auxDest[i] = destElem;
         }
-        ''' % {'op': op}
+
+        for (unsigned i = 0; i < eCount; i++) {
+            AA64FpDest_x[i] = auxDest[i];
+        }''' % {'op':op}
 
         baseClass = 'SveBinIdxUnpredOp'
 
@@ -2067,8 +2066,10 @@ let {{
                 xc->tcBase());
 
         // Number of elements in a 128 bit segment
-        constexpr unsigned ePerSegment = 128 / sizeof(Element);
+        constexpr unsigned ePerSegment = 16 / sizeof(Element);
 
+        ArmISA::VecRegContainer tmpC;
+        auto auxDest = tmpC.as<TPElem>();
         for (unsigned i = 0; i < eCount; i++) {
             const auto segmentBase = i - i % ePerSegment;
             const auto segmentIdx = segmentBase + index;
@@ -2077,10 +2078,13 @@ let {{
             const Element& srcElem2 = AA64FpOp2_x[segmentIdx];
             Element destElem = AA64FpDestMerge_x[i];
         '''
-
         code += '''
             %(op)s
-            AA64FpDest_x[i] = destElem;
+            auxDest[i] = destElem;
+        }
+
+        for (unsigned i = 0; i < eCount; i++) {
+            AA64FpDest_x[i] = auxDest[i];
         }''' % {'op': op}
 
         iop = InstObjParams(name, 'Sve' + Name, 'SveBinIdxUnpredOp',
@@ -3024,6 +3028,9 @@ let {{
             code += '''
         uint32_t eltspersegment = 16 / (2 * sizeof(Element));'''
         code += '''
+        ArmISA::VecRegContainer tmpC;
+        auto auxDest = tmpC.as<TPElem>();
+
         for (int i = 0; i < eCount / 2; ++i) {'''
         if predType == PredType.NONE:
             code += '''
@@ -3067,9 +3074,14 @@ let {{
             code += '''
             }'''
         code += '''
-            AA64FpDest_x[2 * i] = addend_r;
-            AA64FpDest_x[2 * i + 1] = addend_i;
-        }'''
+            auxDest[2 * i] = addend_r;
+            auxDest[2 * i + 1] = addend_i;
+        }
+
+        for (unsigned i = 0; i < eCount; i++) {
+            AA64FpDest_x[i] = auxDest[i];
+        }
+        '''
         iop = InstObjParams(name, 'Sve' + Name,
                 'SveComplexIdxOp' if predType == PredType.NONE
                                   else 'SveComplexOp',
