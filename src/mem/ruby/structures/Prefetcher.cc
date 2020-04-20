@@ -45,13 +45,13 @@
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
-Prefetcher*
+RubyPrefetcher*
 PrefetcherParams::create()
 {
-    return new Prefetcher(this);
+    return new RubyPrefetcher(this);
 }
 
-Prefetcher::Prefetcher(const Params *p)
+RubyPrefetcher::RubyPrefetcher(const Params *p)
     : SimObject(p), m_num_streams(p->num_streams),
     m_array(p->num_streams), m_train_misses(p->train_misses),
     m_num_startup_pfs(p->num_startup_pfs), m_num_unit_filters(p->unit_filter),
@@ -89,7 +89,7 @@ Prefetcher::Prefetcher(const Params *p)
     }
 }
 
-Prefetcher::~Prefetcher()
+RubyPrefetcher::~RubyPrefetcher()
 {
     delete m_unit_filter_hit;
     delete m_negative_filter_hit;
@@ -98,7 +98,7 @@ Prefetcher::~Prefetcher()
 }
 
 void
-Prefetcher::regStats()
+RubyPrefetcher::regStats()
 {
     SimObject::regStats();
 
@@ -139,7 +139,7 @@ Prefetcher::regStats()
 }
 
 void
-Prefetcher::observeMiss(Addr address, const RubyRequestType& type)
+RubyPrefetcher::observeMiss(Addr address, const RubyRequestType& type)
 {
     DPRINTF(RubyPrefetcher, "Observed miss for %#x\n", address);
     Addr line_addr = makeLineAddress(address);
@@ -207,7 +207,7 @@ Prefetcher::observeMiss(Addr address, const RubyRequestType& type)
 }
 
 void
-Prefetcher::observePfMiss(Addr address)
+RubyPrefetcher::observePfMiss(Addr address)
 {
     numPartialHits++;
     DPRINTF(RubyPrefetcher, "Observed partial hit for %#x\n", address);
@@ -215,7 +215,7 @@ Prefetcher::observePfMiss(Addr address)
 }
 
 void
-Prefetcher::observePfHit(Addr address)
+RubyPrefetcher::observePfHit(Addr address)
 {
     numHits++;
     DPRINTF(RubyPrefetcher, "Observed hit for %#x\n", address);
@@ -223,7 +223,7 @@ Prefetcher::observePfHit(Addr address)
 }
 
 void
-Prefetcher::issueNextPrefetch(Addr address, PrefetchEntry *stream)
+RubyPrefetcher::issueNextPrefetch(Addr address, PrefetchEntry *stream)
 {
     // get our corresponding stream fetcher
     if (stream == NULL) {
@@ -262,7 +262,7 @@ Prefetcher::issueNextPrefetch(Addr address, PrefetchEntry *stream)
 }
 
 uint32_t
-Prefetcher::getLRUindex(void)
+RubyPrefetcher::getLRUindex(void)
 {
     uint32_t lru_index = 0;
     Cycles lru_access = m_array[lru_index].m_use_time;
@@ -281,7 +281,7 @@ Prefetcher::getLRUindex(void)
 }
 
 void
-Prefetcher::clearNonunitEntry(uint32_t index)
+RubyPrefetcher::clearNonunitEntry(uint32_t index)
 {
     m_nonunit_filter[index] = 0;
     m_nonunit_stride[index] = 0;
@@ -289,7 +289,7 @@ Prefetcher::clearNonunitEntry(uint32_t index)
 }
 
 void
-Prefetcher::initializeStream(Addr address, int stride,
+RubyPrefetcher::initializeStream(Addr address, int stride,
      uint32_t index, const RubyRequestType& type)
 {
     numAllocatedStreams++;
@@ -330,7 +330,7 @@ Prefetcher::initializeStream(Addr address, int stride,
 }
 
 PrefetchEntry *
-Prefetcher::getPrefetchEntry(Addr address, uint32_t &index)
+RubyPrefetcher::getPrefetchEntry(Addr address, uint32_t &index)
 {
     // search all streams for a match
     for (int i = 0; i < m_num_streams; i++) {
@@ -348,7 +348,7 @@ Prefetcher::getPrefetchEntry(Addr address, uint32_t &index)
 }
 
 bool
-Prefetcher::accessUnitFilter(std::vector<Addr>& filter_table,
+RubyPrefetcher::accessUnitFilter(std::vector<Addr>& filter_table,
     uint32_t *filter_hit, uint32_t &index, Addr address,
     int stride, bool &alloc)
 {
@@ -381,7 +381,7 @@ Prefetcher::accessUnitFilter(std::vector<Addr>& filter_table,
 }
 
 bool
-Prefetcher::accessNonunitFilter(Addr address, int *stride,
+RubyPrefetcher::accessNonunitFilter(Addr address, int *stride,
     bool &alloc)
 {
     //reset the alloc flag
@@ -444,7 +444,7 @@ Prefetcher::accessNonunitFilter(Addr address, int *stride,
 }
 
 void
-Prefetcher::print(std::ostream& out) const
+RubyPrefetcher::print(std::ostream& out) const
 {
     out << name() << " Prefetcher State\n";
     // print out unit filter
@@ -477,7 +477,7 @@ Prefetcher::print(std::ostream& out) const
 }
 
 Addr
-Prefetcher::pageAddress(Addr addr) const
+RubyPrefetcher::pageAddress(Addr addr) const
 {
     return mbits<Addr>(addr, 63, m_page_shift);
 }

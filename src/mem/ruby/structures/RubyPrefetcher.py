@@ -44,7 +44,7 @@ from m5.objects.System import System
 
 class Prefetcher(SimObject):
     type = 'Prefetcher'
-    cxx_class = 'Prefetcher'
+    cxx_class = 'RubyPrefetcher'
     cxx_header = "mem/ruby/structures/Prefetcher.hh"
 
     num_streams = Param.UInt32(4,

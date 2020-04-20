@@ -90,12 +90,12 @@ class PrefetchEntry
         std::bitset<MAX_PF_INFLIGHT> requestCompleted;
 };
 
-class Prefetcher : public SimObject
+class RubyPrefetcher : public SimObject
 {
     public:
         typedef PrefetcherParams Params;
-        Prefetcher(const Params *p);
-        ~Prefetcher();
+        RubyPrefetcher(const Params *p);
+        ~RubyPrefetcher();
 
         void issueNextPrefetch(Addr address, PrefetchEntry *stream);
         /**
