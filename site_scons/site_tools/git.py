@@ -44,6 +44,7 @@ import sys
 
 import gem5_scons.util
 from m5.util import readCommand
+from six.moves import input
 
 git_style_message = """
 You're missing the gem5 style or commit message hook. These hooks help
@@ -102,7 +103,7 @@ def install_style_hooks(env):
 
     print(git_style_message, end=' ')
     try:
-        raw_input()
+        input()
     except:
         print("Input exception, exiting scons.\n")
         sys.exit(1)
