@@ -331,7 +331,7 @@ RubySystem::unserialize(CheckpointIn &cp)
 
     UNSERIALIZE_SCALAR(cache_trace_file);
     UNSERIALIZE_SCALAR(cache_trace_size);
-    cache_trace_file = cp.cptDir + "/" + cache_trace_file;
+    cache_trace_file = cp.getCptDir() + "/" + cache_trace_file;
 
     readCompressedTrace(cache_trace_file, uncompressed_trace,
                         cache_trace_size);
