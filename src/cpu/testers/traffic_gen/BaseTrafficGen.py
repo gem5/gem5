@@ -42,7 +42,7 @@ from m5.objects.ClockedObject import ClockedObject
 # and are meant to initialize the stream and substream IDs for
 # every memory request, regardless of how the packet has been
 # generated (Random, Linear, Trace etc)
-class StreamGenType(Enum): vals = [ 'none', 'fixed', 'random' ]
+class StreamGenType(ScopedEnum): vals = [ 'none', 'fixed', 'random' ]
 
 # The traffic generator is a master module that generates stimuli for
 # the memory system, based on a collection of simple behaviours that

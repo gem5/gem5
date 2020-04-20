@@ -43,11 +43,11 @@ StreamGen*
 StreamGen::create(const BaseTrafficGenParams *p)
 {
     switch (p->stream_gen) {
-      case Enums::fixed:
+      case StreamGenType::fixed:
         return new FixedStreamGen(p);
-      case Enums::random:
+      case StreamGenType::random:
         return new RandomStreamGen(p);
-      case Enums::none:
+      case StreamGenType::none:
       default:
         return nullptr;
     }

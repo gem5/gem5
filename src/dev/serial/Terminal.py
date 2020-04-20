@@ -42,7 +42,8 @@ from m5.proxy import *
 
 from m5.objects.Serial import SerialDevice
 
-class TerminalDump(Enum): vals = ["none", "stdoutput", "stderror", "file"]
+class TerminalDump(ScopedEnum): vals = [
+        "none", "stdoutput", "stderror", "file"]
 
 class Terminal(SerialDevice):
     type = 'Terminal'
