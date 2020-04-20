@@ -40,6 +40,7 @@
 
 from __future__ import print_function
 import os
+import sys
 
 import gem5_scons.util
 from m5.util import readCommand
