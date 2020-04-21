@@ -140,6 +140,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     PF_Load,         desc="Load request from prefetcher";
     PF_Ifetch,       desc="Instruction fetch request from prefetcher";
     PF_Store,        desc="Exclusive load request from prefetcher";
+    PF_Bad_Addr,     desc="Throw away prefetch request due to bad address generation";
   }
 
   // TYPES
@@ -323,7 +324,16 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
   in_port(optionalQueue_in, RubyRequest, prefetchQueue, desc="...", rank = 2) {
     if (optionalQueue_in.isReady(clockEdge())) {
       peek(optionalQueue_in, RubyRequest) {
-        if (in_msg.Type == RubyRequestType:IFETCH) {
+        // first check for valid address
+        MachineID mid := mapAddressToMachine(in_msg.LineAddress, MachineType:Directory);
+        NodeID nid := machineIDToNodeID(mid);
+        int nidint := IDToInt(nid);
+        int numDirs := machineCount(MachineType:Directory);
+        if (nidint >= numDirs) {
+          Entry cache_entry := static_cast(Entry, "pointer", Dcache.getNullEntry());
+          TBE tbe := TBEs.getNullEntry();
+          trigger(Event:PF_Bad_Addr, in_msg.LineAddress, cache_entry, tbe);
+        } else if (in_msg.Type == RubyRequestType:IFETCH) {
           // Instruction Prefetch
           Entry icache_entry := getICacheEntry(in_msg.LineAddress);
           if (is_valid(icache_entry)) {
@@ -1163,5 +1173,9 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     mp_markPrefetched;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
+  }
+
+  transition(I, PF_Bad_Addr) {
+    pq_popPrefetchQueue;
   }
 }

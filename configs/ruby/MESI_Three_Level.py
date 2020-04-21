@@ -127,7 +127,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
                 nonunit_filter = 256,
                 train_misses = 5,
                 num_startup_pfs = 4,
-                cross_page = False
+                cross_page = True
             )
 
             l0_cntrl = L0Cache_Controller(
