@@ -37,10 +37,12 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
+import inspect
 import m5
 from m5.objects import *
 from m5.options import *
 
+from common.ObjectList import ObjectList
 from common.SysPaths import binary, disk
 
 class ArmBaremetal(ArmFsWorkload):
@@ -83,3 +85,12 @@ class ArmTrustedFirmware(ArmFsWorkload):
 
         # Arm Trusted Firmware will provide a PSCI implementation
         system._have_psci = True
+
+class _WorkloadList(ObjectList):
+    def _add_objects(self):
+        """Add all sub-classes of the base class in the object hierarchy."""
+        modname = sys.modules[__name__]
+        for name, cls in inspect.getmembers(modname, self._is_obj_class):
+            self._sub_classes[name] = cls
+
+workload_list = _WorkloadList(getattr(m5.objects, 'ArmFsWorkload', None))
