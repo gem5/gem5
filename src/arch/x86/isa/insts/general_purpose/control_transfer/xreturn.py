@@ -39,6 +39,7 @@ def macroop RET_NEAR
     # Make the default data size of rets 64 bits in 64 bit mode
     .adjust_env oszIn64Override
     .function_return
+    .control_indirect
 
     ld t1, ss, [1, t0, rsp]
     # Check address of return
@@ -51,6 +52,7 @@ def macroop RET_NEAR_I
     # Make the default data size of rets 64 bits in 64 bit mode
     .adjust_env oszIn64Override
     .function_return
+    .control_indirect
 
     limm t2, imm
     ld t1, ss, [1, t0, rsp]
@@ -63,6 +65,7 @@ def macroop RET_NEAR_I
 def macroop RET_FAR {
     .adjust_env oszIn64Override
     .function_return
+    .control_indirect
 
     # Get the return RIP
     ld t1, ss, [1, t0, rsp]

@@ -62,6 +62,12 @@ def template SeqOpDeclare {{
                 uint64_t setFlags, uint16_t _target, uint8_t _cc);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const;
+
+        X86ISA::PCState branchTarget(const X86ISA::PCState &branchPC) const
+        override;
+
+        /// Explicitly import the otherwise hidden branchTarget
+        using StaticInst::branchTarget;
     };
 }};
 
@@ -100,6 +106,17 @@ def template SeqOpConstructor {{
     {
         %(constructor)s;
         %(cond_control_flag_init)s;
+    }
+
+    X86ISA::PCState
+    %(class_name)s::branchTarget(const X86ISA::PCState &branchPC) const
+    {
+        X86ISA::PCState pcs = branchPC;
+        DPRINTF(X86, "Br branchTarget PC info: %s, Target: %d\n",
+                pcs, (int16_t)target);
+        pcs.nupc(target);
+        pcs.uAdvance();
+        return pcs;
     }
 }};
 
@@ -173,7 +190,8 @@ let {{
              "else_code": "nuIP = nuIP;",
              "cond_test": "checkCondition(ccFlagBits | cfofBits | dfBit | \
                                           ecfBit | ezfBit, cc)",
-             "cond_control_flag_init": "flags[IsCondControl] = true"})
+             "cond_control_flag_init": "flags[IsCondControl] = true; \
+             flags[IsDirectControl] = true;"})
     exec_output += SeqOpExecute.subst(iop)
     header_output += SeqOpDeclare.subst(iop)
     decoder_output += SeqOpConstructor.subst(iop)
@@ -191,7 +209,8 @@ let {{
             {"code": "", "else_code": "",
              "cond_test": "checkCondition(ccFlagBits | cfofBits | dfBit | \
                                           ecfBit | ezfBit, cc)",
-             "cond_control_flag_init": ""})
+             "cond_control_flag_init": "flags[IsUncondControl] = true;\
+             flags[IsDirectControl] = true;"})
     exec_output += SeqOpExecute.subst(iop)
     header_output += SeqOpDeclare.subst(iop)
     decoder_output += SeqOpConstructor.subst(iop)

@@ -35,6 +35,8 @@
 
 microcode = '''
 def macroop LOOP_I {
+    .control_direct
+
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
     rdip t1
@@ -43,6 +45,8 @@ def macroop LOOP_I {
 };
 
 def macroop LOOPNE_I {
+    .control_direct
+
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
     rdip t1
@@ -51,6 +55,8 @@ def macroop LOOPNE_I {
 };
 
 def macroop LOOPE_I {
+    .control_direct
+
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
     rdip t1

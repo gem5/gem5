@@ -150,6 +150,10 @@ let {{
             self.function_call = True
         def function_return(self):
             self.function_return = True
+        def control_direct(self):
+            self.control_direct = True
+        def control_indirect(self):
+            self.control_indirect = True
 
         def __init__(self, name):
             super(X86Macroop, self).__init__(name)
@@ -160,7 +164,9 @@ let {{
                 "serialize_before" : self.serializeBefore,
                 "serialize_after" : self.serializeAfter,
                 "function_call" : self.function_call,
-                "function_return" : self.function_return
+                "function_return" : self.function_return,
+                "control_direct" : self.control_direct,
+                "control_indirect" : self.control_indirect
             }
             self.declared = False
             self.adjust_env = ""
@@ -179,6 +185,8 @@ let {{
             self.serialize_after = False
             self.function_call = False
             self.function_return = False
+            self.control_direct = False
+            self.control_indirect = False
 
         def getAllocator(self, env):
             return "new X86Macroop::%s(machInst, %s)" % \
@@ -227,6 +235,10 @@ let {{
                     if self.function_return:
                         flags.append("IsReturn")
                         flags.append("IsUncondControl")
+                    if self.control_direct:
+                        flags.append("IsDirectControl")
+                    if self.control_indirect:
+                        flags.append("IsIndirectControl")
                 else:
                     flags.append("IsDelayedCommit")
 

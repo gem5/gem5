@@ -110,6 +110,12 @@ def template MicroRegOpDeclare {{
                 uint8_t _dataSize, uint16_t _ext);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const;
+
+        X86ISA::PCState branchTarget(const X86ISA::PCState &branchPC) const
+        override;
+
+        /// Explicitly import the otherwise hidden branchTarget
+        using StaticInst::branchTarget;
     };
 }};
 
@@ -124,6 +130,12 @@ def template MicroRegOpImmDeclare {{
                 uint8_t _dataSize, uint16_t _ext);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const;
+
+        X86ISA::PCState branchTarget(const X86ISA::PCState &branchPC) const
+        override;
+
+        /// Explicitly import the otherwise hidden branchTarget
+        using StaticInst::branchTarget;
     };
 }};
 
@@ -139,6 +151,17 @@ def template MicroRegOpConstructor {{
         %(constructor)s;
         %(cond_control_flag_init)s;
     }
+
+    X86ISA::PCState
+    %(class_name)s::branchTarget(const X86ISA::PCState &branchPC) const
+    {
+        X86ISA::PCState pcs = branchPC;
+        DPRINTF(X86, "branchTarget PC info: %s, Immediate: %lx\n",
+                pcs, (int64_t) this->machInst.immediate);
+        pcs.npc(pcs.npc() + (int64_t) this->machInst.immediate);
+        pcs.uEnd();
+        return pcs;
+    }
 }};
 
 def template MicroRegOpImmConstructor {{
@@ -152,6 +175,17 @@ def template MicroRegOpImmConstructor {{
     {
         %(constructor)s;
         %(cond_control_flag_init)s;
+    }
+
+    X86ISA::PCState
+    %(class_name)s::branchTarget(const X86ISA::PCState &branchPC) const
+    {
+        X86ISA::PCState pcs = branchPC;
+        DPRINTF(X86, "branchTarget PC info: %s, Immediate (imm8): %lx\n",
+                pcs, (int8_t)imm8);
+        pcs.npc(pcs.npc() + (int8_t)imm8);
+        pcs.uEnd();
+        return pcs;
     }
 }};
 
@@ -273,7 +307,8 @@ let {{
             # a version without it and fix up this version to use it.
             if flag_code != "" or cond_check != "true":
                 self.buildCppClasses(name, Name, suffix,
-                        code, big_code, "", "true", else_code, "", op_class)
+                        code, big_code, "", "true", else_code,
+                        "flags[IsUncondControl] = flags[IsControl];", op_class)
                 suffix = "Flags" + suffix
 
             # If psrc1 or psrc2 is used, we need to actually insert code to

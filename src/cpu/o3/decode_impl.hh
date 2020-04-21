@@ -747,8 +747,9 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
 
                 DPRINTF(Decode,
                         "[tid:%i] [sn:%llu] "
-                        "Updating predictions: PredPC: %s\n",
-                        tid, inst->seqNum, target);
+                        "Updating predictions: Wrong predicted target: %s \
+                        PredPC: %s\n",
+                        tid, inst->seqNum, inst->readPredTarg(), target);
                 //The micro pc after an instruction level branch should be 0
                 inst->setPredTarg(target);
                 break;
