@@ -51,7 +51,7 @@ if config.bin_path:
 else:
     base_path = joinpath(absdirpath(__file__), '..', 'test-progs')
 
-urlbase = 'http://dist.gem5.org/dist/current/test-progs/insttest/bin/'
+urlbase = config.resource_url + '/test-progs/insttest/bin/'
 for isa in test_progs:
     for binary in test_progs[isa]:
         for  operating_s in supported_os[isa]:

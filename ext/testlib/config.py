@@ -220,6 +220,7 @@ def define_defaults(defaults):
                                                       os.pardir))
     defaults.result_path = os.path.join(os.getcwd(), '.testing-results')
     defaults.list_only_failed = False
+    defaults.resource_url = 'http://dist.gem5.org/dist/develop'
 
 def define_constants(constants):
     '''
@@ -578,6 +579,12 @@ def define_common_args(config):
             action='store',
             default=None,
             help='Path where binaries are stored (downloaded if not present)'
+        ),
+        Argument(
+            '--resource-url',
+            action='store',
+            default=config._defaults.resource_url,
+            help='The URL where the resources reside.'
         ),
 
     ]

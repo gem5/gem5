@@ -81,7 +81,7 @@ else:
     base_path = joinpath(absdirpath(__file__), '..', 'test-progs', 'hello',
         'bin')
 
-urlbase = 'http://dist.gem5.org/dist/current/test-progs/hello/bin/'
+urlbase = config.resource_url + '/test-progs/hello/bin/'
 
 ref_path = joinpath(getcwd(), 'ref')
 verifiers = (

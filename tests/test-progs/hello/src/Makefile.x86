@@ -1,14 +1,4 @@
-SERVER_USER=
-SERVER_PATH=/z/www/htdocs/dist/current/test-progs/hello/bin/x86/linux
-FETCH_PATH=http://dist.gem5.org/dist/current/test-progs/hello/bin/x86/linux
-
-UPLOAD_LOCATION=$(SERVER_USER)daystrom.gem5.org:$(SERVER_PATH)
-
 all: hello64-static hello64-dynamic hello32-static
-
-
-upload: hello64-static hello64-dynamic hello32-static
-	scp hello64-static hello64-dynamic hello32-static $(UPLOAD_LOCATION)
 
 hello64-static: hello.c dockcross-x64
 	./dockcross-x64 bash -c '$$CC hello.c -o hello64-static -static'

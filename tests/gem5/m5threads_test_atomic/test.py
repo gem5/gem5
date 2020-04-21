@@ -38,7 +38,7 @@ else:
                          'test_atomic', 'bin')
 
 binary = 'test_atomic'
-url = 'http://dist.gem5.org/dist/current/test-progs/pthread/bin/' + binary
+url = config.resource_url + '/current/test-progs/pthread/bin/' + binary
 DownloadedProgram(url, base_path, binary)
 
 verifiers = (

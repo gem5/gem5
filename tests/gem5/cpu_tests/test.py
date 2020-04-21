@@ -56,7 +56,7 @@ if config.bin_path:
 else:
     base_path = joinpath(absdirpath(__file__), 'benchmarks', 'bin')
 
-base_url = 'http://dist.gem5.org/dist/current/gem5/cpu_tests/benchmarks/bin/'
+base_url = config.resource_url + '/gem5/cpu_tests/benchmarks/bin/'
 for isa in valid_isas:
     path = joinpath(base_path, isa)
     for workload in workloads:
