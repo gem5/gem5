@@ -279,7 +279,8 @@ class VecRegContainer
     static constexpr inline size_t size() { return SIZE; };
     using Container = std::array<uint8_t, SIZE>;
   private:
-    Container container;
+    // 16-byte aligned to support 128bit element view
+    alignas(16) Container container;
     using MyClass = VecRegContainer<SIZE>;
 
   public:
