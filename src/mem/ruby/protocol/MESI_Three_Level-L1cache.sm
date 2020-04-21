@@ -262,7 +262,8 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   bool inL0Cache(State state) {
-    if (state == State:S || state == State:E || state == State:M ||
+    if (state == State:S || state == State:E ||
+        state == State:M || state == State:SM ||
         state == State:S_IL0 || state == State:E_IL0 ||
         state == State:M_IL0 || state == State:SM_IL0) {
         return true;
@@ -996,7 +997,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   // Transitions from IM
-  transition({IM,SM}, Inv, IM) {
+  transition(IM, Inv, IM) {
     fi_sendInvAck;
     l_popL2RequestQueue;
   }
