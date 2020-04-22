@@ -294,6 +294,7 @@ KvmVM::KvmVM(KvmVMParams *params)
       kvm(new Kvm()), system(nullptr),
       vmFD(kvm->createVM()),
       started(false),
+      _hasKernelIRQChip(false),
       nextVCPUID(0)
 {
     maxMemorySlot = kvm->capNumMemSlots();
