@@ -2949,7 +2949,7 @@ let {{
                 if (sub_i) {
                     elt2_i = fplibNeg<Element>(elt2_i);
                 }
-                fpscr =  (FPSCR) FpscrExc;
+                fpscr = FpscrExc & ~FpscrAhpMask;
                 acc_r = fplibAdd<Element>(acc_r, elt2_i, fpscr);
                 FpscrExc = fpscr;
             }
@@ -2957,7 +2957,7 @@ let {{
                 if (sub_r) {
                     elt2_r = fplibNeg<Element>(elt2_r);
                 }
-                fpscr =  (FPSCR) FpscrExc;
+                fpscr = FpscrExc & ~FpscrAhpMask;
                 acc_i = fplibAdd<Element>(acc_i, elt2_r, fpscr);
                 FpscrExc = fpscr;
             }
@@ -3015,7 +3015,7 @@ let {{
             if (neg_r) {
                 elt2_a = fplibNeg<Element>(elt2_a);
             }
-            fpscr =  (FPSCR) FpscrExc;
+            fpscr = FpscrExc & ~FpscrAhpMask;
             addend_r = fplibMulAdd<Element>(addend_r, elt1_a, elt2_a, fpscr);
             FpscrExc = fpscr;'''
         if predType != PredType.NONE:
@@ -3028,7 +3028,7 @@ let {{
             if (neg_i) {
                 elt2_b = fplibNeg<Element>(elt2_b);
             }
-            fpscr =  (FPSCR) FpscrExc;
+            fpscr = FpscrExc & ~FpscrAhpMask;
             addend_i = fplibMulAdd<Element>(addend_i, elt1_a, elt2_b, fpscr);
             FpscrExc = fpscr;'''
         if predType != PredType.NONE:
@@ -3466,7 +3466,7 @@ let {{
     sveExtInst('ext', 'Ext', 'SimdAluOp')
     # FABD
     fpOp = '''
-            FPSCR fpscr = (FPSCR) FpscrExc;
+            FPSCR fpscr = FpscrExc & ~FpscrAhpMask;
             destElem = %s;
             FpscrExc = fpscr;
     '''
@@ -3497,7 +3497,7 @@ let {{
     sveBinInst('fadd', 'FaddUnpred', 'SimdFloatAddOp', floatTypes, faddCode)
     # FADDA
     fpAddaOp = '''
-            FPSCR fpscr = (FPSCR) FpscrExc;
+            FPSCR fpscr = FpscrExc & ~FpscrAhpMask;
             destElem = fplibAdd<Element>(destElem, srcElem1, fpscr);
             FpscrExc = FpscrExc | fpscr;
     '''
@@ -3505,7 +3505,7 @@ let {{
             fpAddaOp)
     # FADDV
     fpReduceOp = '''
-            FPSCR fpscr = (FPSCR) FpscrExc;
+            FPSCR fpscr = FpscrExc & ~FpscrAhpMask;
             destElem = fplib%s<Element>(srcElem1, srcElem2, fpscr);
             FpscrExc = FpscrExc | fpscr;
     '''

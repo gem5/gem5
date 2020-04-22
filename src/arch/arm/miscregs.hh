@@ -1936,10 +1936,12 @@ namespace ArmISA
     // This mask selects bits of the FPSCR that actually go in the FpCondCodes
     // integer register to allow renaming.
     static const uint32_t FpCondCodesMask = 0xF0000000;
-    // This mask selects the cumulative FP exception flags of the FPSCR.
-    static const uint32_t FpscrExcMask = 0x0000009F;
     // This mask selects the cumulative saturation flag of the FPSCR.
     static const uint32_t FpscrQcMask = 0x08000000;
+    // This mask selects the AHP bit of the FPSCR.
+    static const uint32_t FpscrAhpMask = 0x04000000;
+    // This mask selects the cumulative FP exception flags of the FPSCR.
+    static const uint32_t FpscrExcMask = 0x0000009F;
 
     /**
      * Check for permission to read coprocessor registers.
