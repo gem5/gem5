@@ -1633,3 +1633,26 @@ setsockoptFunc(SyscallDesc *desc, ThreadContext *tc,
     return (status == -1) ? -errno : status;
 }
 
+SyscallReturn
+getcpuFunc(SyscallDesc *desc, ThreadContext *tc,
+           Addr cpu_ptr, Addr node_ptr, Addr tcache_ptr)
+{
+    bool error = false;
+
+    // unsigned is the same size (4) on all Linux supported ISAs.
+    if (cpu_ptr != 0) {
+        TypedBufferArg<uint32_t> result(cpu_ptr);
+        *result = htog(tc->contextId(),
+            tc->getSystemPtr()->getGuestByteOrder());
+        error |= !result.copyOut(tc->getVirtProxy());
+    }
+
+    // Set a fixed NUMA node 0.
+    if (node_ptr != 0) {
+        TypedBufferArg<uint32_t> result(node_ptr);
+        *result = 0;
+        error |= !result.copyOut(tc->getVirtProxy());
+    }
+
+    return error ? -EFAULT : 0;
+}

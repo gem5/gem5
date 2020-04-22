@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015, 2019 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2019-2020 ARM Limited
  * Copyright (c) 2015 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -353,6 +353,9 @@ SyscallReturn getsockoptFunc(SyscallDesc *desc, ThreadContext *tc,
 SyscallReturn setsockoptFunc(SyscallDesc *desc, ThreadContext *tc,
                              int tgt_fd, int level, int optname,
                              Addr valPtr, socklen_t len);
+
+SyscallReturn getcpuFunc(SyscallDesc *desc, ThreadContext *tc,
+                         Addr cpu_ptr, Addr node_ptr, Addr tcache_ptr);
 
 // Target getsockname() handler.
 SyscallReturn getsocknameFunc(SyscallDesc *desc, ThreadContext *tc,

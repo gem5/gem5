@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015 ARM Limited
+ * Copyright (c) 2010-2013, 2015, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -476,7 +476,7 @@ class SyscallTable32 :
         { base + 342, "tee" },
         { base + 343, "vmsplice" },
         { base + 344, "move_pages" },
-        { base + 345, "getcpu" },
+        { base + 345, "getcpu", getcpuFunc },
         { base + 346, "epoll_pwait" },
         { base + 347, "sys_kexec_load" },
         { base + 348, "sys_utimensat" },
@@ -681,7 +681,7 @@ class SyscallTable64 :
         {  base + 165, "getrusage", getrusageFunc<ArmLinux64> },
         {  base + 166, "umask" },
         {  base + 167, "prctl" },
-        {  base + 168, "getcpu" },
+        {  base + 168, "getcpu", getcpuFunc },
         {  base + 169, "gettimeofday", gettimeofdayFunc<ArmLinux64> },
         {  base + 170, "settimeofday" },
         {  base + 171, "adjtimex" },
