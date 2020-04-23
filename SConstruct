@@ -359,7 +359,10 @@ if main['GCC'] or main['CLANG']:
         main.Append(CCFLAGS=['-I/usr/local/include'])
         main.Append(CXXFLAGS=['-I/usr/local/include'])
 
-    main.Append(LINKFLAGS='-Wl,--as-needed')
+    # On Mac OS X/Darwin the default linker doesn't support the
+    # option --as-needed
+    if sys.platform != "darwin":
+        main.Append(LINKFLAGS='-Wl,--as-needed')
     main['FILTER_PSHLINKFLAGS'] = lambda x: str(x).replace(' -shared', '')
     main['PSHLINKFLAGS'] = main.subst('${FILTER_PSHLINKFLAGS(SHLINKFLAGS)}')
     if GetOption('gold_linker'):
