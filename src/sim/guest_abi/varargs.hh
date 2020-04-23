@@ -26,7 +26,7 @@
  */
 
 #ifndef __SIM_GUEST_ABI_VARARGS_HH__
-#define __SIM_GUEST_ABI_VARRAGS_HH__
+#define __SIM_GUEST_ABI_VARARGS_HH__
 
 #include <memory>
 #include <sstream>
