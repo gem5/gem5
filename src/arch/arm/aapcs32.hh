@@ -489,12 +489,12 @@ struct Argument<Aapcs32Vfp, Float, typename std::enable_if<
         if (state.variadic)
             return getArgument<Aapcs32, Float>(tc, state);
 
-        int index = state.allocate(Float{}, 1);
+        const int index = state.allocate(Float{}, 1);
 
         if (index >= 0) {
             constexpr int lane_per_reg = 16 / sizeof(Float);
-            constexpr int reg = index / lane_per_reg;
-            constexpr int lane = index % lane_per_reg;
+            const int reg = index / lane_per_reg;
+            const int lane = index % lane_per_reg;
 
             RegId id(VecRegClass, reg);
             auto val = tc->readVecReg(id);
@@ -558,14 +558,14 @@ struct Argument<Aapcs32Vfp, HA, typename std::enable_if<
         if (useBaseABI(state))
             return getArgument<Aapcs32, HA>(tc, state);
 
-        int base = state.allocate(Elem{}, Count);
+        const int base = state.allocate(Elem{}, Count);
         if (base >= 0) {
             constexpr int lane_per_reg = 16 / sizeof(Elem);
             HA ha;
             for (int i = 0; i < Count; i++) {
-                constexpr int index = base + i;
-                constexpr int reg = index / lane_per_reg;
-                constexpr int lane = index % lane_per_reg;
+                const int index = base + i;
+                const int reg = index / lane_per_reg;
+                const int lane = index % lane_per_reg;
 
                 RegId id(VecRegClass, reg);
                 auto val = tc->readVecReg(id);
