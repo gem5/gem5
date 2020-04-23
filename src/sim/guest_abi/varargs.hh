@@ -70,6 +70,8 @@ template <typename First, typename ...Types>
 class VarArgsBase<First, Types...> : public VarArgsBase<Types...>
 {
   public:
+    virtual ~VarArgsBase() = default;
+
     // The virtual function takes a reference parameter so that the different
     // _getImpl methods can co-exist through overloading.
     virtual void _getImpl(First &) = 0;
@@ -126,6 +128,8 @@ class VarArgsImpl<ABI, Base> : public Base
     // Declare state to pass to the Argument<>::get methods.
     ThreadContext *tc;
     typename ABI::State state;
+    // Make sure base class _getImpl-es don't get hidden by ours.
+    using Base::_getImpl;
 
     // Give the "using" statement in our subclass something to refer to.
     void _getImpl();
