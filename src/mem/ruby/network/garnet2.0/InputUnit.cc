@@ -52,7 +52,7 @@ InputUnit::InputUnit(int id, PortDirection direction, Router *router)
     // Instantiating the virtual channels
     virtualChannels.reserve(m_num_vcs);
     for (int i=0; i < m_num_vcs; i++) {
-        virtualChannels.emplace_back(i);
+        virtualChannels.emplace_back();
     }
 }
 

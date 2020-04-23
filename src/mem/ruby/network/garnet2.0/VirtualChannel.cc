@@ -31,8 +31,8 @@
 
 #include "mem/ruby/network/garnet2.0/VirtualChannel.hh"
 
-VirtualChannel::VirtualChannel(int id)
-  : m_id(id), inputBuffer(), m_vc_state(IDLE_, Cycles(0)), m_output_port(-1),
+VirtualChannel::VirtualChannel()
+  : inputBuffer(), m_vc_state(IDLE_, Cycles(0)), m_output_port(-1),
     m_enqueue_time(INFINITE_), m_output_vc(-1)
 {
 }

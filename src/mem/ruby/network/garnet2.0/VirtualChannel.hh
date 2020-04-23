@@ -40,7 +40,7 @@
 class VirtualChannel
 {
   public:
-    VirtualChannel(int id);
+    VirtualChannel();
     ~VirtualChannel() = default;
 
     bool need_stage(flit_stage stage, Cycles time);
@@ -89,7 +89,6 @@ class VirtualChannel
     uint32_t functionalWrite(Packet *pkt);
 
   private:
-    int m_id;
     flitBuffer inputBuffer;
     std::pair<VC_state_type, Cycles> m_vc_state;
     int m_output_port;
