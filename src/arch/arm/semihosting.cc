@@ -305,7 +305,7 @@ ArmSemihosting::callOpen(ThreadContext *tc, const Addr name_base,
 }
 
 ArmSemihosting::RetErrno
-ArmSemihosting::callClose(ThreadContext *tc, uint64_t handle)
+ArmSemihosting::callClose(ThreadContext *tc, Handle handle)
 {
     if (handle > files.size()) {
         DPRINTF(Semihosting, "Semihosting SYS_CLOSE(%i): Illegal file\n");
@@ -350,7 +350,7 @@ ArmSemihosting::callWrite0(ThreadContext *tc, InPlaceArg arg)
 }
 
 ArmSemihosting::RetErrno
-ArmSemihosting::callWrite(ThreadContext *tc, uint64_t handle, Addr addr,
+ArmSemihosting::callWrite(ThreadContext *tc, Handle handle, Addr addr,
                           size_t size)
 {
     if (handle > files.size() || !files[handle])
@@ -371,7 +371,7 @@ ArmSemihosting::callWrite(ThreadContext *tc, uint64_t handle, Addr addr,
 }
 
 ArmSemihosting::RetErrno
-ArmSemihosting::callRead(ThreadContext *tc, uint64_t handle, Addr addr,
+ArmSemihosting::callRead(ThreadContext *tc, Handle handle, Addr addr,
                          size_t size)
 {
     if (handle > files.size() || !files[handle])
@@ -404,7 +404,7 @@ ArmSemihosting::callIsError(ThreadContext *tc, int64_t status)
 }
 
 ArmSemihosting::RetErrno
-ArmSemihosting::callIsTTY(ThreadContext *tc, uint64_t handle)
+ArmSemihosting::callIsTTY(ThreadContext *tc, Handle handle)
 {
     if (handle > files.size() || !files[handle])
         return retError(EBADF);
@@ -418,7 +418,7 @@ ArmSemihosting::callIsTTY(ThreadContext *tc, uint64_t handle)
 }
 
 ArmSemihosting::RetErrno
-ArmSemihosting::callSeek(ThreadContext *tc, uint64_t handle, uint64_t pos)
+ArmSemihosting::callSeek(ThreadContext *tc, Handle handle, uint64_t pos)
 {
     if (handle > files.size() || !files[handle])
         return retError(EBADF);
@@ -432,7 +432,7 @@ ArmSemihosting::callSeek(ThreadContext *tc, uint64_t handle, uint64_t pos)
 }
 
 ArmSemihosting::RetErrno
-ArmSemihosting::callFLen(ThreadContext *tc, uint64_t handle)
+ArmSemihosting::callFLen(ThreadContext *tc, Handle handle)
 {
     if (handle > files.size() || !files[handle])
         return retError(EBADF);
