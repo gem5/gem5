@@ -102,9 +102,9 @@ class GPUCoalescer : public RubyPort
     void wakeup(); // Used only for deadlock detection
 
     void printProgress(std::ostream& out) const;
-    void resetStats();
+    void resetStats() override;
     void collateStats();
-    void regStats();
+    void regStats() override;
 
     void writeCallback(Addr address, DataBlock& data);
 
@@ -157,18 +157,18 @@ class GPUCoalescer : public RubyPort
     void recordCPWriteCallBack(MachineID myMachID, MachineID senderMachID);
 
     // Alternate implementations in VIPER Coalescer
-    virtual RequestStatus makeRequest(PacketPtr pkt);
+    virtual RequestStatus makeRequest(PacketPtr pkt) override;
 
-    int outstandingCount() const { return m_outstanding_count; }
+    int outstandingCount() const override { return m_outstanding_count; }
 
     bool
-    isDeadlockEventScheduled() const
+    isDeadlockEventScheduled() const override
     {
         return deadlockCheckEvent.scheduled();
     }
 
     void
-    descheduleDeadlockEvent()
+    descheduleDeadlockEvent() override
     {
         deschedule(deadlockCheckEvent);
     }

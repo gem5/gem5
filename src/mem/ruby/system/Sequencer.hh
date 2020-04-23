@@ -86,9 +86,9 @@ class Sequencer : public RubyPort
 
     // Public Methods
     void wakeup(); // Used only for deadlock detection
-    void resetStats();
+    void resetStats() override;
     void collateStats();
-    void regStats();
+    void regStats() override;
 
     void writeCallback(Addr address,
                        DataBlock& data,
@@ -106,14 +106,14 @@ class Sequencer : public RubyPort
                       const Cycles forwardRequestTime = Cycles(0),
                       const Cycles firstResponseTime = Cycles(0));
 
-    RequestStatus makeRequest(PacketPtr pkt);
+    RequestStatus makeRequest(PacketPtr pkt) override;
     bool empty() const;
-    int outstandingCount() const { return m_outstanding_count; }
+    int outstandingCount() const override { return m_outstanding_count; }
 
-    bool isDeadlockEventScheduled() const
+    bool isDeadlockEventScheduled() const override
     { return deadlockCheckEvent.scheduled(); }
 
-    void descheduleDeadlockEvent()
+    void descheduleDeadlockEvent() override
     { deschedule(deadlockCheckEvent); }
 
     void print(std::ostream& out) const;

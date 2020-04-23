@@ -726,14 +726,14 @@ namespace ArmISA
                                            unsigned eCount);
 
         void
-        serialize(CheckpointOut &cp) const
+        serialize(CheckpointOut &cp) const override
         {
             DPRINTF(Checkpoint, "Serializing Arm Misc Registers\n");
             SERIALIZE_ARRAY(miscRegs, NUM_PHYS_MISCREGS);
         }
 
         void
-        unserialize(CheckpointIn &cp)
+        unserialize(CheckpointIn &cp) override
         {
             DPRINTF(Checkpoint, "Unserializing Arm Misc Registers\n");
             UNSERIALIZE_ARRAY(miscRegs, NUM_PHYS_MISCREGS);
