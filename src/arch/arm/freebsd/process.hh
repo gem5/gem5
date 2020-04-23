@@ -39,7 +39,7 @@
 
 class ArmFreebsdProcessBits
 {
-  protected:
+  public:
     struct SyscallABI {};
 };
 
