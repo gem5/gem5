@@ -118,7 +118,7 @@ sysctlFunc(SyscallDesc *desc, ThreadContext *tc, Addr namep, size_t nameLen,
     void *holdp = (void *)buf2.bufferPtr();
     size_t *holdlenp = (size_t *)buf3.bufferPtr();
 
-    ret = sysctl((int *)hnamep, namelen, holdp, holdlenp, hnewp, newlen);
+    ret = sysctl((int *)hnamep, nameLen, holdp, holdlenp, hnewp, newlen);
 
     buf.copyOut(tc->getVirtProxy());
     buf2.copyOut(tc->getVirtProxy());
