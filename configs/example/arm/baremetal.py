@@ -89,6 +89,8 @@ def create(args):
         print("Error: Bootscript %s does not exist" % args.readfile)
         sys.exit(1)
 
+    object_file = args.kernel if args.kernel else ""
+
     cpu_class = cpu_types[args.cpu][0]
     mem_mode = cpu_class.memory_mode()
     # Only simulate caches when using a timing CPU (e.g., the HPI model)
@@ -111,7 +113,7 @@ def create(args):
             stdout=args.semi_stdout,
             stderr=args.semi_stderr,
             files_root_dir=args.semi_path,
-            cmd_line = " ".join([ args.kernel ] + args.args)
+            cmd_line = " ".join([ object_file ] + args.args)
         )
 
     # Add the PCI devices we need for this system. The base system
@@ -162,7 +164,7 @@ def create(args):
 
     workload_class = workloads.workload_list.get(args.workload)
     system.workload = workload_class(
-        args.kernel, system)
+        object_file, system)
 
     return system
 
