@@ -229,6 +229,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         dir_cntrl.responseToDir.slave = ruby_system.network.master
         dir_cntrl.responseFromDir = MessageBuffer()
         dir_cntrl.responseFromDir.master = ruby_system.network.slave
+        dir_cntrl.requestToMemory = MessageBuffer()
         dir_cntrl.responseFromMemory = MessageBuffer()
 
     for i, dma_port in enumerate(dma_ports):

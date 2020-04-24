@@ -277,6 +277,8 @@ def create_system(options, full_system, system, dma_devices, bootmem,
 
         dir_cntrl.triggerQueue = MessageBuffer(ordered = True)
         dir_cntrl.L3triggerQueue = MessageBuffer(ordered = True)
+
+        dir_cntrl.requestToMemory = MessageBuffer()
         dir_cntrl.responseFromMemory = MessageBuffer()
 
         exec("system.dir_cntrl%d = dir_cntrl" % i)
