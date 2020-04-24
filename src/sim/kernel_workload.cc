@@ -38,39 +38,44 @@ KernelWorkload::KernelWorkload(const Params &p) : Workload(&p), _params(p),
     if (!Loader::debugSymbolTable)
         Loader::debugSymbolTable = new Loader::SymbolTable;
 
-    kernelObj = Loader::createObjectFile(params().object_file);
-    inform("kernel located at: %s", params().object_file);
+    if (params().object_file == "") {
+        inform("No kernel set for full system simulation. "
+               "Assuming you know what you're doing.");
+    } else {
+        kernelObj = Loader::createObjectFile(params().object_file);
+        inform("kernel located at: %s", params().object_file);
 
-    fatal_if(!kernelObj,
-            "Could not load kernel file %s", params().object_file);
+        fatal_if(!kernelObj,
+                "Could not load kernel file %s", params().object_file);
 
-    image = kernelObj->buildImage();
+        image = kernelObj->buildImage();
 
-    _start = image.minAddr();
-    _end = image.maxAddr();
+        _start = image.minAddr();
+        _end = image.maxAddr();
 
-    // If load_addr_mask is set to 0x0, then calculate the smallest mask to
-    // cover all kernel addresses so gem5 can relocate the kernel to a new
-    // offset.
-    if (_loadAddrMask == 0)
-        _loadAddrMask = mask(findMsbSet(_end - _start) + 1);
+        // If load_addr_mask is set to 0x0, then calculate the smallest mask to
+        // cover all kernel addresses so gem5 can relocate the kernel to a new
+        // offset.
+        if (_loadAddrMask == 0)
+            _loadAddrMask = mask(findMsbSet(_end - _start) + 1);
 
-    image.move([this](Addr a) {
-        return (a & _loadAddrMask) + _loadAddrOffset;
-    });
+        image.move([this](Addr a) {
+            return (a & _loadAddrMask) + _loadAddrOffset;
+        });
 
-    // load symbols
-    fatal_if(!kernelObj->loadGlobalSymbols(kernelSymtab),
-            "Could not load kernel symbols.");
+        // load symbols
+        fatal_if(!kernelObj->loadGlobalSymbols(kernelSymtab),
+                "Could not load kernel symbols.");
 
-    fatal_if(!kernelObj->loadLocalSymbols(kernelSymtab),
-            "Could not load kernel local symbols.");
+        fatal_if(!kernelObj->loadLocalSymbols(kernelSymtab),
+                "Could not load kernel local symbols.");
 
-    fatal_if(!kernelObj->loadGlobalSymbols(Loader::debugSymbolTable),
-            "Could not load kernel symbols.");
+        fatal_if(!kernelObj->loadGlobalSymbols(Loader::debugSymbolTable),
+                "Could not load kernel symbols.");
 
-    fatal_if(!kernelObj->loadLocalSymbols(Loader::debugSymbolTable),
-            "Could not load kernel local symbols.");
+        fatal_if(!kernelObj->loadLocalSymbols(Loader::debugSymbolTable),
+                "Could not load kernel local symbols.");
+    }
 
     // Loading only needs to happen once and after memory system is
     // connected so it will happen in initState()

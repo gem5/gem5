@@ -69,9 +69,13 @@ SkipFunc::returnFromFuncIn(ThreadContext *tc)
     }
 }
 
-FsWorkload::FsWorkload(Params *p) : KernelWorkload(*p),
-    kernelEntry((kernelObj->entryPoint() & loadAddrMask()) + loadAddrOffset())
+FsWorkload::FsWorkload(Params *p) : KernelWorkload(*p)
 {
+    if (kernelObj) {
+        kernelEntry = (kernelObj->entryPoint() & loadAddrMask()) +
+            loadAddrOffset();
+    }
+
     bootLoaders.reserve(p->boot_loader.size());
     for (const auto &bl : p->boot_loader) {
         std::unique_ptr<Loader::ObjectFile> bl_obj;
