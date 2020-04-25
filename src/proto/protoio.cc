@@ -87,7 +87,7 @@ ProtoOutputStream::write(const Message& msg)
     io::CodedOutputStream codedStream(zeroCopyStream);
 
     // Write the size of the message to the stream
-    codedStream.WriteVarint32(msg.ByteSize());
+    codedStream.WriteVarint32(msg.ByteSizeLong());
 
     // Write the message itself to the stream
     msg.SerializeWithCachedSizes(&codedStream);
