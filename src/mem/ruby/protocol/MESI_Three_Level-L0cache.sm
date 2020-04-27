@@ -121,6 +121,8 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     Ack,        desc="Ack for processor";
 
     WB_Ack,        desc="Ack for replacement";
+
+    Failed_SC,        desc="Store conditional request that will fail";
   }
 
   // TYPES
@@ -257,7 +259,8 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
       return Event:Load;
     } else if (type == RubyRequestType:IFETCH) {
       return Event:Ifetch;
-    } else if ((type == RubyRequestType:ST) || (type == RubyRequestType:ATOMIC)) {
+    } else if ((type == RubyRequestType:ST) || (type == RubyRequestType:ATOMIC)
+               || (type == RubyRequestType:Store_Conditional)) {
       return Event:Store;
     } else {
       error("Invalid RubyRequestType");
@@ -349,36 +352,51 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
             }
           }
         } else {
-
           // *** DATA ACCESS ***
           Entry Dcache_entry := getDCacheEntry(in_msg.LineAddress);
+
+          // early out for failed store conditionals
+
+          if (in_msg.Type == RubyRequestType:Store_Conditional) {
+              if (!sequencer.llscCheckMonitor(in_msg.LineAddress)) {
+                trigger(Event:Failed_SC, in_msg.LineAddress,
+                        Dcache_entry, TBEs[in_msg.LineAddress]);
+            }
+          }
+
           if (is_valid(Dcache_entry)) {
             // The tag matches for the L0, so the L0 ask the L1 for it
             trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
                     Dcache_entry, TBEs[in_msg.LineAddress]);
           } else {
-
-            // Check to see if it is in the OTHER L0
-            Entry Icache_entry := getICacheEntry(in_msg.LineAddress);
-            if (is_valid(Icache_entry)) {
-              // The block is in the wrong L0, put the request on the queue to the private L1
-              trigger(Event:L0_Replacement, in_msg.LineAddress,
-                      Icache_entry, TBEs[in_msg.LineAddress]);
-            }
-
-            if (Dcache.cacheAvail(in_msg.LineAddress)) {
-              // L1 does't have the line, but we have space for it
-              // in the L0 let's see if the L1 has it
-              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
-                      Dcache_entry, TBEs[in_msg.LineAddress]);
+            // if the request is not valid, the store conditional will fail
+            if (in_msg.Type == RubyRequestType:Store_Conditional) {
+                // if the line is not valid, it can't be locked
+                trigger(Event:Failed_SC, in_msg.LineAddress,
+                        Dcache_entry, TBEs[in_msg.LineAddress]);
             } else {
-              // No room in the L1, so we need to make room in the L0
-              // Check if the line we want to evict is not locked
-              Addr addr := Dcache.cacheProbe(in_msg.LineAddress);
-              check_on_cache_probe(mandatoryQueue_in, addr);
-              trigger(Event:L0_Replacement, addr,
-                      getDCacheEntry(addr),
-                      TBEs[addr]);
+              // Check to see if it is in the OTHER L0
+              Entry Icache_entry := getICacheEntry(in_msg.LineAddress);
+              if (is_valid(Icache_entry)) {
+                // The block is in the wrong L0, put the request on the queue to the private L1
+                trigger(Event:L0_Replacement, in_msg.LineAddress,
+                        Icache_entry, TBEs[in_msg.LineAddress]);
+              }
+
+              if (Dcache.cacheAvail(in_msg.LineAddress)) {
+                // L1 does't have the line, but we have space for it
+                // in the L0 let's see if the L1 has it
+                trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
+                        Dcache_entry, TBEs[in_msg.LineAddress]);
+              } else {
+                // No room in the L1, so we need to make room in the L0
+                // Check if the line we want to evict is not locked
+                Addr addr := Dcache.cacheProbe(in_msg.LineAddress);
+                check_on_cache_probe(mandatoryQueue_in, addr);
+                trigger(Event:L0_Replacement, addr,
+                        getDCacheEntry(addr),
+                        TBEs[addr]);
+              }
             }
           }
         }
@@ -629,6 +647,13 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
         ++Dcache.demand_hits;
   }
 
+  // store conditionals
+
+  action(hhc_storec_fail, "\hc",
+         desc="Notify sequencer that store conditional failed") {
+    sequencer.writeCallbackScFail(address, cache_entry.DataBlk);
+  }
+
   //*****************************************************
   // TRANSITIONS
   //*****************************************************
@@ -664,11 +689,13 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
   }
 
   transition({I, IS, IM, Inst_IS}, {InvOwn, InvElse}) {
+    forward_eviction_to_cpu;
     fi_sendInvAck;
     l_popRequestQueue;
   }
 
   transition(SM, {InvOwn, InvElse}, IM) {
+    forward_eviction_to_cpu;
     fi_sendInvAck;
     l_popRequestQueue;
   }
@@ -768,6 +795,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
 
   transition(IS, Data_Stale, I) {
     u_writeDataToCache;
+    forward_eviction_to_cpu;
     hx_load_hit;
     s_deallocateTBE;
     ff_deallocateCacheBlock;
@@ -806,5 +834,13 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     s_deallocateTBE;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
+  }
+
+  // store conditionals
+
+  transition({I,S,E,M}, Failed_SC) {
+    // IS,IM,SM don't handle store conditionals
+    hhc_storec_fail;
+    k_popMandatoryQueue;
   }
 }

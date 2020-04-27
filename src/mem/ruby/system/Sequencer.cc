@@ -590,7 +590,11 @@ Sequencer::makeRequest(PacketPtr pkt)
         if (pkt->isWrite()) {
             DPRINTF(RubySequencer, "Issuing SC\n");
             primary_type = RubyRequestType_Store_Conditional;
+#ifdef PROTOCOL_MESI_Three_Level
+            secondary_type = RubyRequestType_Store_Conditional;
+#else
             secondary_type = RubyRequestType_ST;
+#endif
         } else {
             DPRINTF(RubySequencer, "Issuing LL\n");
             assert(pkt->isRead());
