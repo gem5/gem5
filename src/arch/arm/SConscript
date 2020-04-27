@@ -44,6 +44,8 @@ if env['TARGET_ISA'] == 'arm':
 # Workaround for bug in SCons version > 0.97d20071212
 # Scons bug id: 2006 M5 Bug id: 308
     Dir('isa/formats')
+
+    GTest('aapcs64.test', 'aapcs64.test.cc')
     Source('decoder.cc')
     Source('faults.cc')
     Source('insts/branch.cc')
