@@ -135,11 +135,17 @@ def findPartOffset(devFile, fileName, partition):
         exit(returncode)
     lines = out.splitlines()
     # Make sure the first few lines of the output look like what we expect.
-    assert(lines[0][0] == '#')
-    assert(lines[1] == 'unit: sectors')
-    assert(lines[2] == '')
-    # This line has information about the first partition.
-    chunks = lines[3].split()
+    assert(lines[0][0] == '#' or lines[0].startswith('label:'))
+    assert(lines[1] == 'unit: sectors' or lines[1].startswith('label-id:'))
+    assert(lines[2] == '' or lines[2].startswith('device:'))
+    if lines[0][0] == '#' :
+        # Parsing an 'old style' dump oputput
+        # Line 4 has information about the first partition.
+        chunks = lines[3].split()
+    else :
+        # Parsing a 'new style' dump oputput
+        # Line 6 has information about the first partition.
+        chunks = lines[5].split()
     # The fourth chunk is the offset of the partition in sectors followed by
     # a comma. We drop the comma and convert that to an integer.
     sectors = string.atoi(chunks[3][:-1])
@@ -282,12 +288,11 @@ partitionCom = Command('partition', 'Partition part of "init".',
                        [('file', 'Name of the image file.')])
 
 def partition(dev, cylinders, heads, sectors):
-    # Use fdisk to partition the device
-    comStr = '0,\n;\n;\n;\n'
-    return runPriv([findProg('sfdisk'), '--no-reread', '-D', \
-                   '-C', "%d" % cylinders, \
-                   '-H', "%d" % heads, \
-                   '-S', "%d" % sectors, \
+    # Use sfdisk to partition the device
+    # The specified options are intended to work with both new and old
+    # versions of sfdisk (see https://askubuntu.com/a/819614)
+    comStr = ';'
+    return runPriv([findProg('sfdisk'), '--no-reread', '-u', 'S', '-L', \
                    str(dev)], inputVal=comStr)
 
 def partitionComFunc(options, args):
