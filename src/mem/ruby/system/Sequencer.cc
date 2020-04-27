@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2019-2020 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@
 #include "base/logging.hh"
 #include "base/str.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
+#include "debug/LLSC.hh"
 #include "debug/MemoryAccess.hh"
 #include "debug/ProtocolTrace.hh"
 #include "debug/RubySequencer.hh"
@@ -87,6 +88,64 @@ Sequencer::Sequencer(const Params *p)
 
 Sequencer::~Sequencer()
 {
+}
+
+void
+Sequencer::llscLoadLinked(const Addr claddr)
+{
+    AbstractCacheEntry *line = m_dataCache_ptr->lookup(claddr);
+    if (line) {
+        line->setLocked(m_version);
+        DPRINTF(LLSC, "LLSC Monitor - inserting load linked - "
+                      "addr=0x%lx - cpu=%u\n", claddr, m_version);
+    }
+}
+
+void
+Sequencer::llscClearMonitor(const Addr claddr)
+{
+    AbstractCacheEntry *line = m_dataCache_ptr->lookup(claddr);
+    if (line && line->isLocked(m_version)) {
+        line->clearLocked();
+        DPRINTF(LLSC, "LLSC Monitor - clearing due to store - "
+                      "addr=0x%lx - cpu=%u\n", claddr, m_version);
+    }
+}
+
+bool
+Sequencer::llscStoreConditional(const Addr claddr)
+{
+    AbstractCacheEntry *line = m_dataCache_ptr->lookup(claddr);
+    if (!line)
+        return false;
+
+    DPRINTF(LLSC, "LLSC Monitor - clearing due to "
+                  "store conditional - "
+                  "addr=0x%lx - cpu=%u\n",
+                  claddr, m_version);
+
+    if (line->isLocked(m_version)) {
+        line->clearLocked();
+        return true;
+    } else {
+        line->clearLocked();
+        return false;
+    }
+}
+
+bool
+Sequencer::llscCheckMonitor(const Addr address)
+{
+    const Addr claddr = makeLineAddress(address);
+    AbstractCacheEntry *line = m_dataCache_ptr->lookup(claddr);
+    if (!line)
+        return false;
+
+    if (line->isLocked(m_version)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 void
@@ -203,62 +262,6 @@ Sequencer::markRemoved()
 }
 
 void
-Sequencer::invalidateSC(Addr address)
-{
-    AbstractCacheEntry *e = m_dataCache_ptr->lookup(address);
-    // The controller has lost the coherence permissions, hence the lock
-    // on the cache line maintained by the cache should be cleared.
-    if (e && e->isLocked(m_version)) {
-        e->clearLocked();
-    }
-}
-
-bool
-Sequencer::handleLlsc(Addr address, SequencerRequest* request)
-{
-    AbstractCacheEntry *e = m_dataCache_ptr->lookup(address);
-    if (!e)
-        return true;
-
-    // The success flag indicates whether the LLSC operation was successful.
-    // LL ops will always succeed, but SC may fail if the cache line is no
-    // longer locked.
-    bool success = true;
-    if (request->m_type == RubyRequestType_Store_Conditional) {
-        if (!e->isLocked(m_version)) {
-            //
-            // For failed SC requests, indicate the failure to the cpu by
-            // setting the extra data to zero.
-            //
-            request->pkt->req->setExtraData(0);
-            success = false;
-        } else {
-            //
-            // For successful SC requests, indicate the success to the cpu by
-            // setting the extra data to one.
-            //
-            request->pkt->req->setExtraData(1);
-        }
-        //
-        // Independent of success, all SC operations must clear the lock
-        //
-        e->clearLocked();
-    } else if (request->m_type == RubyRequestType_Load_Linked) {
-        //
-        // Note: To fully follow Alpha LLSC semantics, should the LL clear any
-        // previously locked cache lines?
-        //
-        e->setLocked(m_version);
-    } else if (e->isLocked(m_version)) {
-        //
-        // Normal writes should clear the locked address
-        //
-        e->clearLocked();
-    }
-    return success;
-}
-
-void
 Sequencer::recordMissLatency(SequencerRequest* srequest, bool llscSuccess,
                              const MachineType respondingMach,
                              bool isExternalHit, Cycles initialRequestTime,
@@ -325,6 +328,13 @@ Sequencer::recordMissLatency(SequencerRequest* srequest, bool llscSuccess,
 }
 
 void
+Sequencer::writeCallbackScFail(Addr address, DataBlock& data)
+{
+    llscClearMonitor(address);
+    writeCallback(address, data);
+}
+
+void
 Sequencer::writeCallback(Addr address, DataBlock& data,
                          const bool externalHit, const MachineType mach,
                          const Cycles initialRequestTime,
@@ -349,21 +359,27 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
         SequencerRequest &seq_req = seq_req_list.front();
         if (ruby_request) {
             assert(seq_req.m_type != RubyRequestType_LD);
+            assert(seq_req.m_type != RubyRequestType_Load_Linked);
             assert(seq_req.m_type != RubyRequestType_IFETCH);
         }
 
         // handle write request
         if ((seq_req.m_type != RubyRequestType_LD) &&
+            (seq_req.m_type != RubyRequestType_Load_Linked) &&
             (seq_req.m_type != RubyRequestType_IFETCH)) {
-            //
-            // For Alpha, properly handle LL, SC, and write requests with
-            // respect to locked cache blocks.
-            //
-            // Not valid for Garnet_standalone protocl
-            //
-            bool success = true;
-            if (!m_runningGarnetStandalone)
-                success = handleLlsc(address, &seq_req);
+            // LL/SC support (tested with ARMv8)
+            bool success = false;
+
+            if (seq_req.m_type != RubyRequestType_Store_Conditional) {
+                // Regular stores to addresses being monitored
+                // will fail (remove) the monitor entry.
+                llscClearMonitor(address);
+            } else {
+                // Store conditionals must first check the monitor
+                // if they will succeed or not
+                success = llscStoreConditional(address);
+                seq_req.pkt->req->setExtraData(success ? 1 : 0);
+            }
 
             // Handle SLICC block_on behavior for Locked_RMW accesses. NOTE: the
             // address variable here is assumed to be a line address, so when
@@ -435,11 +451,13 @@ Sequencer::readCallback(Addr address, DataBlock& data,
         SequencerRequest &seq_req = seq_req_list.front();
         if (ruby_request) {
             assert((seq_req.m_type == RubyRequestType_LD) ||
+                   (seq_req.m_type == RubyRequestType_Load_Linked) ||
                    (seq_req.m_type == RubyRequestType_IFETCH));
         } else {
             aliased_loads++;
         }
         if ((seq_req.m_type != RubyRequestType_LD) &&
+            (seq_req.m_type != RubyRequestType_Load_Linked) &&
             (seq_req.m_type != RubyRequestType_IFETCH)) {
             // Write request: reissue request to the cache hierarchy
             issueRequest(seq_req.pkt, seq_req.m_second_type);
@@ -479,6 +497,12 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
     PacketPtr pkt = srequest->pkt;
     Addr request_address(pkt->getAddr());
     RubyRequestType type = srequest->m_type;
+
+    // Load-linked handling
+    if (type == RubyRequestType_Load_Linked) {
+        Addr line_addr = makeLineAddress(request_address);
+        llscLoadLinked(line_addr);
+    }
 
     // update the data unless it is a non-data-carrying flush
     if (RubySystem::getWarmupEnabled()) {
@@ -553,23 +577,26 @@ Sequencer::makeRequest(PacketPtr pkt)
     RubyRequestType secondary_type = RubyRequestType_NULL;
 
     if (pkt->isLLSC()) {
-        //
-        // Alpha LL/SC instructions need to be handled carefully by the cache
+        // LL/SC instructions need to be handled carefully by the cache
         // coherence protocol to ensure they follow the proper semantics. In
         // particular, by identifying the operations as atomic, the protocol
         // should understand that migratory sharing optimizations should not
         // be performed (i.e. a load between the LL and SC should not steal
         // away exclusive permission).
         //
+        // The following logic works correctly with the semantics
+        // of armV8 LDEX/STEX instructions.
+
         if (pkt->isWrite()) {
             DPRINTF(RubySequencer, "Issuing SC\n");
             primary_type = RubyRequestType_Store_Conditional;
+            secondary_type = RubyRequestType_ST;
         } else {
             DPRINTF(RubySequencer, "Issuing LL\n");
             assert(pkt->isRead());
             primary_type = RubyRequestType_Load_Linked;
+            secondary_type = RubyRequestType_LD;
         }
-        secondary_type = RubyRequestType_ATOMIC;
     } else if (pkt->req->isLockedRMW()) {
         //
         // x86 locked instructions are translated to store cache coherence
@@ -724,6 +751,7 @@ Sequencer::recordRequestType(SequencerRequestType requestType) {
 void
 Sequencer::evictionCallback(Addr address)
 {
+    llscClearMonitor(address);
     ruby_eviction_callback(address);
 }
 

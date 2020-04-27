@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2019 ARM Limited
- * All rights reserved.
+ * Copyright (c) 2019-2020 ARM Limited
+ * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -84,6 +84,13 @@ class Sequencer : public RubyPort
     Sequencer(const Params *);
     ~Sequencer();
 
+    /**
+     * Proxy function to writeCallback that first
+     * invalidates the line address in the local monitor.
+     */
+    void writeCallbackScFail(Addr address,
+                        DataBlock& data);
+
     // Public Methods
     void wakeup(); // Used only for deadlock detection
     void resetStats() override;
@@ -121,7 +128,6 @@ class Sequencer : public RubyPort
 
     void markRemoved();
     void evictionCallback(Addr address);
-    void invalidateSC(Addr address);
     int coreId() const { return m_coreId; }
 
     virtual int functionalWrite(Packet *func_pkt) override;
@@ -191,7 +197,6 @@ class Sequencer : public RubyPort
 
     RequestStatus insertRequest(PacketPtr pkt, RubyRequestType primary_type,
                                 RubyRequestType secondary_type);
-    bool handleLlsc(Addr address, SequencerRequest* request);
 
     // Private copy constructor and assignment operator
     Sequencer(const Sequencer& obj);
@@ -257,6 +262,39 @@ class Sequencer : public RubyPort
     std::vector<Stats::Counter> m_IncompleteTimes;
 
     EventFunctionWrapper deadlockCheckEvent;
+
+    // support for LL/SC
+
+    /**
+     * Places the cache line address into the global monitor
+     * tagged with this Sequencer object's version id.
+     */
+    void llscLoadLinked(const Addr);
+
+    /**
+     * Removes the cache line address from the global monitor.
+     * This is independent of this Sequencer object's version id.
+     */
+    void llscClearMonitor(const Addr);
+
+    /**
+     * Searches for cache line address in the global monitor
+     * tagged with this Sequencer object's version id.
+     * If a match is found, the entry is is erased from
+     * the global monitor.
+     *
+     * @return a boolean indicating if the line address was found.
+     */
+    bool llscStoreConditional(const Addr);
+
+  public:
+    /**
+     * Searches for cache line address in the global monitor
+     * tagged with this Sequencer object's version id.
+     *
+     * @return a boolean indicating if the line address was found.
+     */
+    bool llscCheckMonitor(const Addr);
 };
 
 inline std::ostream&
