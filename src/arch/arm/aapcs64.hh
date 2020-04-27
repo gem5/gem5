@@ -70,24 +70,17 @@ namespace GuestABI
 
 // A short vector is a machine type that is composed of repeated instances of
 // one fundamental integral or floating- point type. It may be 8 or 16 bytes
-// in total size. We represent it here as an opaque blob of data with an
-// appropriate alignment requirement.
+// in total size.
 
-template <typename T, std::size_t count, typename Enabled=void>
-using Aapcs64ShortVectorCandidate =
-    alignas(sizeof(T) * count) uint8_t [sizeof(T) * count];
-
-template <typename T, std::size_t count>
-using Aapcs64ShortVector = Aapcs64ShortVectorCandidate<T, count,
-    typename std::enable_if<
-        (std::is_integral<T>::value || std::is_floating_point<T>::value) &&
-        (sizeof(T) * count == 8 || sizeof(T) * count == 16)>::type>;
-
-template <typename T>
+template <typename T, typename Enabled=void>
 struct IsAapcs64ShortVector : public std::false_type {};
 
 template <typename E, size_t N>
-struct IsAapcs64ShortVector<Aapcs64ShortVector<E, N>> : public std::true_type
+struct IsAapcs64ShortVector<E[N],
+    typename std::enable_if<
+        (std::is_integral<E>::value || std::is_floating_point<E>::value) &&
+        (sizeof(E) * N == 8 || sizeof(E) * N == 16)>::type> :
+        public std::true_type
 {};
 
 /*
@@ -114,38 +107,31 @@ struct IsAapcs64Composite<T, typename std::enable_if<
 // we can't actually detect that or manipulate that with templates. Instead,
 // we approximate that by detecting only arrays with that property.
 
-template <typename T, std::size_t count, typename Enabled=void>
-using Aapcs64HomogeneousAggregate = T[count];
-
 // An Homogeneous Floating-Point Aggregate (HFA) is an Homogeneous Aggregate
 // with a Fundemental Data Type that is a Floating-Point type and at most four
 // uniquely addressable members.
-
-template <typename T, std::size_t count>
-using Aapcs64Hfa = Aapcs64HomogeneousAggregate<T, count,
-      typename std::enable_if<std::is_floating_point<T>::value &&
-                              count <= 4>::type>;
 
 template <typename T, typename Enabled=void>
 struct IsAapcs64Hfa : public std::false_type {};
 
 template <typename E, size_t N>
-struct IsAapcs64Hfa<E[N], Aapcs64Hfa<E, N>> : public std::true_type {};
+struct IsAapcs64Hfa<E[N],
+    typename std::enable_if<std::is_floating_point<E>::value &&
+    N <= 4>::type> : public std::true_type
+{};
 
 // An Homogeneous Short-Vector Aggregate (HVA) is an Homogeneous Aggregate with
 // a Fundamental Data Type that is a Short-Vector type and at most four
 // uniquely addressable members.
 
-template <typename T, std::size_t count>
-using Aapcs64Hva = Aapcs64HomogeneousAggregate<T, count,
-      typename std::enable_if<IsAapcs64ShortVector<T>::value &&
-                              count <= 4>::type>;
-
 template <typename T, typename Enabled=void>
 struct IsAapcs64Hva : public std::false_type {};
 
 template <typename E, size_t N>
-struct IsAapcs64Hva<E[N], Aapcs64Hva<E, N>> : public std::true_type {};
+struct IsAapcs64Hva<E[N],
+    typename std::enable_if<IsAapcs64ShortVector<E>::value &&
+    N <= 4>::type> : public std::true_type
+{};
 
 // A shorthand to test if a type is an HVA or an HFA.
 template <typename T, typename Enabled=void>
@@ -153,7 +139,7 @@ struct IsAapcs64Hxa : public std::false_type {};
 
 template <typename T>
 struct IsAapcs64Hxa<T, typename std::enable_if<
-    IsAapcs64Hfa<T>::value && IsAapcs64Hva<T>::value>::type> :
+    IsAapcs64Hfa<T>::value || IsAapcs64Hva<T>::value>::type> :
     public std::true_type
 {};
 
