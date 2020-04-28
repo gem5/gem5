@@ -163,6 +163,8 @@ Topology::createLinks(Network *net)
             } else {
                 for (int v = 0; v < link->mVnets.size(); v++) {
                     int vnet = link->mVnets[v];
+                    fatal_if(vnet >= m_vnets, "Not enough virtual networks "
+                             "(setting latency and weight for vnet %d)", vnet);
                     // Two links connecting same src and destination
                     // cannot carry same vnets.
                     fatal_if(vnet_done[vnet], "Two links connecting same src"
