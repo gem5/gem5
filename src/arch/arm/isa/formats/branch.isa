@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010,2012-2013,2017-2018 ARM Limited
+// Copyright (c) 2010,2012-2013,2017-2018, 2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -187,8 +187,7 @@ def format Thumb32BranchesAndMiscCtrl() {{
                                   case 0x4:
                                     return new SevInst(machInst);
                                   case 0x5:
-                                    return new WarnUnimplemented(
-                                            "sevl", machInst);
+                                    return new SevlInst(machInst);
                                 }
                                 break;
                               case 0x1:
