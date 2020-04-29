@@ -87,7 +87,12 @@ ProtoOutputStream::write(const Message& msg)
     io::CodedOutputStream codedStream(zeroCopyStream);
 
     // Write the size of the message to the stream
-    codedStream.WriteVarint32(msg.ByteSizeLong());
+#   if GOOGLE_PROTOBUF_VERSION < 3001000
+        auto msg_size = msg.ByteSize();
+#   else
+        auto msg_size = msg.ByteSizeLong();
+#   endif
+    codedStream.WriteVarint32(msg_size);
 
     // Write the message itself to the stream
     msg.SerializeWithCachedSizes(&codedStream);
