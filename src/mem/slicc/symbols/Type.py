@@ -1,3 +1,15 @@
+# Copyright (c) 2020 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
 # Copyright (c) 2009 The Hewlett-Packard Development Company
 # All rights reserved.
@@ -37,6 +49,9 @@ class DataMember(Var):
         super(DataMember, self).__init__(symtab, ident, location, type,
                                          code, pairs, machine)
         self.init_code = init_code
+        self.real_c_type = self.type.c_ident
+        if "template" in pairs:
+            self.real_c_type += pairs["template"]
 
 class Enumeration(PairContainer):
     def __init__(self, ident, pairs):
@@ -235,8 +250,9 @@ $klass ${{self.c_ident}}$parent
                     code('m_$ident = ${{dm["default"]}}; // default for this field')
                 elif "default" in dm.type:
                     # Look for the type default
-                    tid = dm.type.c_ident
-                    code('m_$ident = ${{dm.type["default"]}}; // default value of $tid')
+                    tid = dm.real_c_type
+                    code('m_$ident = ${{dm.type["default"]}};')
+                    code(' // default value of $tid')
                 else:
                     code('// m_$ident has no default')
             code.dedent()
@@ -268,7 +284,7 @@ $klass ${{self.c_ident}}$parent
 
         # ******** Full init constructor ********
         if not self.isGlobal:
-            params = [ 'const %s& local_%s' % (dm.type.c_ident, dm.ident) \
+            params = [ 'const %s& local_%s' % (dm.real_c_type, dm.ident) \
                        for dm in self.data_members.values() ]
             params = ', '.join(params)
 
@@ -318,7 +334,7 @@ clone() const
 /** \\brief Const accessor method for ${{dm.ident}} field.
  *  \\return ${{dm.ident}} field
  */
-const ${{dm.type.c_ident}}&
+const ${{dm.real_c_type}}&
 get${{dm.ident}}() const
 {
     return m_${{dm.ident}};
@@ -332,7 +348,7 @@ get${{dm.ident}}() const
 /** \\brief Non-const accessor method for ${{dm.ident}} field.
  *  \\return ${{dm.ident}} field
  */
-${{dm.type.c_ident}}&
+${{dm.real_c_type}}&
 get${{dm.ident}}()
 {
     return m_${{dm.ident}};
@@ -345,7 +361,7 @@ get${{dm.ident}}()
                 code('''
 /** \\brief Mutator method for ${{dm.ident}} field */
 void
-set${{dm.ident}}(const ${{dm.type.c_ident}}& local_${{dm.ident}})
+set${{dm.ident}}(const ${{dm.real_c_type}}& local_${{dm.ident}})
 {
     m_${{dm.ident}} = local_${{dm.ident}};
 }
@@ -375,7 +391,7 @@ set${{dm.ident}}(const ${{dm.type.c_ident}}& local_${{dm.ident}})
                 if "desc" in dm:
                     code('/** ${{dm["desc"]}} */')
 
-                code('$const${{dm.type.c_ident}} m_${{dm.ident}}$init;')
+                code('$const${{dm.real_c_type}} m_${{dm.ident}}$init;')
 
         # Prototypes for methods defined for the Type
         for item in self.methods:
