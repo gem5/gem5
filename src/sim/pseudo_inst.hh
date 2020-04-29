@@ -59,16 +59,6 @@ struct PseudoInstABI
 namespace GuestABI
 {
 
-template <typename T>
-struct Result<PseudoInstABI, T>
-{
-    static void
-    store(ThreadContext *tc, const T &ret)
-    {
-        // Don't do anything with the pseudo inst results by default.
-    }
-};
-
 template <>
 struct Argument<PseudoInstABI, uint64_t>
 {
@@ -134,9 +124,9 @@ void togglesync(ThreadContext *tc);
  * @return Whether the pseudo instruction was recognized/handled.
  */
 
-template <typename ABI>
+template <typename ABI, bool store_ret>
 bool
-pseudoInst(ThreadContext *tc, uint8_t func, uint64_t &result)
+pseudoInstWork(ThreadContext *tc, uint8_t func, uint64_t &result)
 {
     DPRINTF(PseudoInst, "PseudoInst::pseudoInst(%i)\n", func);
 
@@ -160,11 +150,11 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint64_t &result)
         return true;
 
       case M5OP_QUIESCE_TIME:
-        result = invokeSimcall<ABI>(tc, quiesceTime);
+        result = invokeSimcall<ABI, store_ret>(tc, quiesceTime);
         return true;
 
       case M5OP_RPNS:
-        result = invokeSimcall<ABI>(tc, rpns);
+        result = invokeSimcall<ABI, store_ret>(tc, rpns);
         return true;
 
       case M5OP_WAKE_CPU:
@@ -180,7 +170,7 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint64_t &result)
         return true;
 
       case M5OP_INIT_PARAM:
-        result = invokeSimcall<ABI>(tc, initParam);
+        result = invokeSimcall<ABI, store_ret>(tc, initParam);
         return true;
 
       case M5OP_LOAD_SYMBOL:
@@ -204,11 +194,11 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint64_t &result)
         return true;
 
       case M5OP_WRITE_FILE:
-        result = invokeSimcall<ABI>(tc, writefile);
+        result = invokeSimcall<ABI, store_ret>(tc, writefile);
         return true;
 
       case M5OP_READ_FILE:
-        result = invokeSimcall<ABI>(tc, readfile);
+        result = invokeSimcall<ABI, store_ret>(tc, readfile);
         return true;
 
       case M5OP_DEBUG_BREAK:
@@ -260,6 +250,21 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint64_t &result)
         warn("Unhandled m5 op: %#x\n", func);
         return false;
     }
+}
+
+template <typename ABI, bool store_ret=false>
+bool
+pseudoInst(ThreadContext *tc, uint8_t func, uint64_t &result)
+{
+    return pseudoInstWork<ABI, store_ret>(tc, func, result);
+}
+
+template <typename ABI, bool store_ret=true>
+bool
+pseudoInst(ThreadContext *tc, uint8_t func)
+{
+    uint64_t result;
+    return pseudoInstWork<ABI, store_ret>(tc, func, result);
 }
 
 } // namespace PseudoInst
