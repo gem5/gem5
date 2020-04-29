@@ -345,6 +345,15 @@ TEST(GuestABI, ABI_returns)
         EXPECT_EQ(tc.intResult, tc.DefaultIntResult);
         EXPECT_EQ(tc.floatResult, DoubleRetValue + 1.0);
     }
+    {
+        // Disable storing the return value in the ThreadContext.
+        ThreadContext tc;
+        int ret = invokeSimcall<TestABI_1D, false>(&tc, testIntRet);
+        EXPECT_EQ(ret, IntRetValue);
+        EXPECT_EQ(tc.intResult, tc.DefaultIntResult);
+        EXPECT_EQ(tc.floatResult, tc.DefaultFloatResult);
+    }
+
 
     // 2D returns.
     {

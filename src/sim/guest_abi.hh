@@ -42,7 +42,7 @@ class ThreadContext;
 // and write a result (if any) back to. For convenience, the wrapper also
 // returns the result of the wrapped function.
 
-template <typename ABI, typename Ret, typename ...Args>
+template <typename ABI, bool store_ret, typename Ret, typename ...Args>
 Ret
 invokeSimcall(ThreadContext *tc,
               std::function<Ret(ThreadContext *, Args...)> target)
@@ -51,15 +51,30 @@ invokeSimcall(ThreadContext *tc,
     // types will be zero initialized.
     auto state = GuestABI::initializeState<ABI>(tc);
     GuestABI::prepareForFunction<ABI, Ret, Args...>(tc, state);
-    return GuestABI::callFrom<ABI, Ret, Args...>(tc, state, target);
+    return GuestABI::callFrom<ABI, store_ret, Ret, Args...>(tc, state, target);
+}
+
+template <typename ABI, typename Ret, typename ...Args>
+Ret
+invokeSimcall(ThreadContext *tc,
+              std::function<Ret(ThreadContext *, Args...)> target)
+{
+    return invokeSimcall<ABI, true>(tc, target);
+}
+
+template <typename ABI, bool store_ret, typename Ret, typename ...Args>
+Ret
+invokeSimcall(ThreadContext *tc, Ret (*target)(ThreadContext *, Args...))
+{
+    return invokeSimcall<ABI, store_ret>(
+            tc, std::function<Ret(ThreadContext *, Args...)>(target));
 }
 
 template <typename ABI, typename Ret, typename ...Args>
 Ret
 invokeSimcall(ThreadContext *tc, Ret (*target)(ThreadContext *, Args...))
 {
-    return invokeSimcall<ABI>(
-            tc, std::function<Ret(ThreadContext *, Args...)>(target));
+    return invokeSimcall<ABI, true>(tc, target);
 }
 
 template <typename ABI, typename ...Args>

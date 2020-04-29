@@ -52,14 +52,24 @@ namespace GuestABI
 
 // With no arguments to gather, call the target function and store the
 // result.
-template <typename ABI, typename Ret>
-static typename std::enable_if<!std::is_void<Ret>::value, Ret>::type
+template <typename ABI, bool store_ret, typename Ret>
+static typename std::enable_if<!std::is_void<Ret>::value && store_ret,
+                Ret>::type
 callFrom(ThreadContext *tc, typename ABI::State &state,
         std::function<Ret(ThreadContext *)> target)
 {
     Ret ret = target(tc);
     storeResult<ABI, Ret>(tc, ret, state);
     return ret;
+}
+
+template <typename ABI, bool store_ret, typename Ret>
+static typename std::enable_if<!std::is_void<Ret>::value && !store_ret,
+                Ret>::type
+callFrom(ThreadContext *tc, typename ABI::State &state,
+        std::function<Ret(ThreadContext *)> target)
+{
+    return target(tc);
 }
 
 // With no arguments to gather and nothing to return, call the target function.
@@ -73,7 +83,8 @@ callFrom(ThreadContext *tc, typename ABI::State &state,
 
 // Recursively gather arguments for target from tc until we get to the base
 // case above.
-template <typename ABI, typename Ret, typename NextArg, typename ...Args>
+template <typename ABI, bool store_ret, typename Ret,
+          typename NextArg, typename ...Args>
 static typename std::enable_if<!std::is_void<Ret>::value, Ret>::type
 callFrom(ThreadContext *tc, typename ABI::State &state,
         std::function<Ret(ThreadContext *, NextArg, Args...)> target)
@@ -88,7 +99,7 @@ callFrom(ThreadContext *tc, typename ABI::State &state,
         };
 
     // Recursively handle any remaining arguments.
-    return callFrom<ABI, Ret, Args...>(tc, state, partial);
+    return callFrom<ABI, store_ret, Ret, Args...>(tc, state, partial);
 }
 
 // Recursively gather arguments for target from tc until we get to the base
