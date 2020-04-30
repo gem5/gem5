@@ -605,8 +605,6 @@ MultiperspectivePerceptronTAGE::update(ThreadID tid, Addr instPC, bool taken,
     assert(bp_history);
     MPPTAGEBranchInfo *bi = static_cast<MPPTAGEBranchInfo*>(bp_history);
 
-    assert(corrTarget != MaxAddr);
-
     if (squashed) {
         if (tage->isSpeculativeUpdateEnabled()) {
             // This restores the global history, then update it

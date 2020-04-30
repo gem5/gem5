@@ -58,8 +58,6 @@ TAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
     TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
     TAGEBase::BranchInfo *tage_bi = bi->tageBranchInfo;
 
-    assert(corrTarget != MaxAddr);
-
     if (squashed) {
         // This restores the global history, then update it
         // and recomputes the folded histories.

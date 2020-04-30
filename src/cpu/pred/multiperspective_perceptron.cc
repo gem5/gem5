@@ -613,7 +613,6 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr instPC, bool taken,
 {
     assert(bp_history);
     MPPBranchInfo *bi = static_cast<MPPBranchInfo*>(bp_history);
-    assert(corrTarget != MaxAddr);
     if (squashed) {
         //delete bi;
         return;

@@ -95,8 +95,6 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
 
     LTageBranchInfo* bi = static_cast<LTageBranchInfo*>(bp_history);
 
-    assert(corrTarget != MaxAddr);
-
     if (squashed) {
         if (tage->isSpeculativeUpdateEnabled()) {
             // This restores the global history, then update it
