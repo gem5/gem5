@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2018 ARM Limited
+# Copyright (c) 2018, 2020 ARM Limited
 #
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
@@ -1140,7 +1140,7 @@ env.AlwaysBuild(tags)
 # Build a small helper that marshals the Python code using the same
 # version of Python as gem5. This is in an unorthodox location to
 # avoid building it for every variant.
-py_marshal = env.Program('marshal', 'python/marshal.cc')[0]
+py_marshal = base_py_env.Program('marshal', 'python/marshal.cc')[0]
 
 # Embed python files.  All .py files that have been indicated by a
 # PySource() call in a SConscript need to be embedded into the M5
@@ -1196,8 +1196,8 @@ EmbeddedPython embedded_${sym}(
     code.write(str(target[0]))
 
 for source in PySource.all:
-    env.Command(source.cpp, [ py_marshal, source.tnode ],
-                MakeAction(embedPyFile, Transform("EMBED PY")))
+    base_py_env.Command(source.cpp, [ py_marshal, source.tnode ],
+                        MakeAction(embedPyFile, Transform("EMBED PY")))
     Source(source.cpp, tags=source.tags, add_tags='python')
 
 ########################################################################

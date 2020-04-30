@@ -709,6 +709,10 @@ if main['USE_PYTHON']:
         if not conf.CheckLib(lib):
             error("Can't find library %s required by python." % lib)
 
+main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
+# Bare minimum environment that only includes python
+base_py_env = main.Clone()
+
 # On Solaris you need to use libsocket for socket ops
 if not conf.CheckLibWithHeader(None, 'sys/socket.h', 'C++', 'accept(0,0,0);'):
    if not conf.CheckLibWithHeader('socket', 'sys/socket.h',
@@ -1100,8 +1104,6 @@ for root, dirs, files in os.walk(ext_dir):
 gdb_xml_dir = joinpath(ext_dir, 'gdb-xml')
 Export('gdb_xml_dir')
 
-main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
-
 ###################################################
 #
 # This builder and wrapper method are used to set up a directory with
@@ -1259,7 +1261,8 @@ for variant_path in variant_paths:
     # The src/SConscript file sets up the build rules in 'env' according
     # to the configured variables.  It returns a list of environments,
     # one for each variant build (debug, opt, etc.)
-    SConscript('src/SConscript', variant_dir = variant_path, exports = 'env')
+    SConscript('src/SConscript', variant_dir=variant_path,
+               exports=['env', 'base_py_env'])
 
 # base help text
 Help('''
