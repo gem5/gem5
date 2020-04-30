@@ -15,3 +15,9 @@
  *
  * These methods relate to the event queue interface.
  */
+
+/**
+ * @defgroup api_stats The Stats API.
+ *
+ * These methods relate to the statistics I/O interface.
+ */
