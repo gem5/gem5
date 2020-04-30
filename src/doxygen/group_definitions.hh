@@ -21,3 +21,9 @@
  *
  * These methods relate to the statistics I/O interface.
  */
+
+/**
+ * @defgroup api_simobject The SimObject API.
+ *
+ * These methods relate to the SimObject interface.
+ */
