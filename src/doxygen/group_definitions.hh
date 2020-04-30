@@ -9,3 +9,9 @@
  *
  * These methods related to the "Serialize" interface.
  */
+
+/**
+ * @defgroup api_eventq The Event Queue API.
+ *
+ * These methods relate to the event queue interface.
+ */
