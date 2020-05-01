@@ -51,7 +51,7 @@ system = MySystem(args.kernel, args.disk, args.cpu_type, args.num_cpus)
 
 if args.boot_type == "init":
     # Simply run "exit.sh"
-    system.boot_osflags += ' init=/root/exit.sh'
+    system.workload.command_line += ' init=/root/exit.sh'
 else:
     if args.boot_type != "systemd":
         m5.fatal("Bad option for boot_type. init or systemd.")
