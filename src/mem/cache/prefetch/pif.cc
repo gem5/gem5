@@ -75,12 +75,12 @@ PIF::CompactorEntry::inSameSpatialRegion(Addr pc,
     Addr blk_distance = distanceFromTrigger(pc, log_blk_size);
 
     bool hit = (pc > trigger) ?
-        (succ.size() >= blk_distance) : (prec.size() >= blk_distance);
+        (succ.size() > blk_distance) : (prec.size() > blk_distance);
     if (hit && update) {
         if (pc > trigger) {
-            succ[blk_distance - 1] = true;
+            succ[blk_distance] = true;
         } else if (pc < trigger) {
-            prec[blk_distance - 1] = true;
+            prec[blk_distance] = true;
         }
     }
     return hit;
@@ -93,9 +93,9 @@ PIF::CompactorEntry::hasAddress(Addr target,
     Addr blk_distance = distanceFromTrigger(target, log_blk_size);
     bool hit = false;
     if (target > trigger) {
-        hit = blk_distance <= succ.size() && succ[blk_distance - 1];
+        hit = blk_distance < succ.size() && succ[blk_distance];
     } else if (target < trigger) {
-        hit = blk_distance <= prec.size() && succ[blk_distance - 1];
+        hit = blk_distance < prec.size() && prec[blk_distance];
     } else {
         hit = true;
     }
@@ -134,6 +134,7 @@ PIF::notifyRetiredInst(const Addr pc)
     // First access to the prefetcher
     if (temporalCompactor.size() == 0) {
         spatialCompactor = CompactorEntry(pc, precSize, succSize);
+        temporalCompactor.push_back(spatialCompactor);
     } else {
         // If the PC of the instruction retired is in the same spatial region
         // than the last trigger address, update the bit vectors based on the
@@ -195,12 +196,16 @@ void
 PIF::calculatePrefetch(const PrefetchInfo &pfi,
     std::vector<AddrPriority> &addresses)
 {
-    const Addr addr = pfi.getAddr();
+    if (!pfi.hasPC()) {
+        return;
+    }
+
+    const Addr pc = pfi.getPC();
 
     // First check if the access has been prefetched, this is done by
     // comparing the access against the active Stream Address Buffers
     for (auto &sabEntry : streamAddressBuffer) {
-        if (sabEntry->hasAddress(addr, lBlkSize)) {
+        if (sabEntry->hasAddress(pc, lBlkSize)) {
             sabEntry++;
             sabEntry->getPredictedAddresses(lBlkSize, addresses);
             // We are done
@@ -210,7 +215,7 @@ PIF::calculatePrefetch(const PrefetchInfo &pfi,
 
     // Check if a valid entry in the 'index' table is found and allocate a new
     // active prediction stream
-    IndexEntry *idx_entry = index.findEntry(addr, /* unused */ false);
+    IndexEntry *idx_entry = index.findEntry(pc, /* unused */ false);
 
     if (idx_entry != nullptr) {
         index.accessEntry(idx_entry);
