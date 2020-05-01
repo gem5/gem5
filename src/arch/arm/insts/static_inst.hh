@@ -476,11 +476,6 @@ class ArmStaticInst : public StaticInst
     Fault sveAccessTrap(ExceptionLevel el) const;
 
     /**
-     * Check an SVE access against CPTR_EL2 and CPTR_EL3.
-     */
-    Fault checkSveTrap(ThreadContext *tc, CPSR cpsr) const;
-
-    /**
      * Check an SVE access against CPACR_EL1, CPTR_EL2, and CPTR_EL3.
      */
     Fault checkSveEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const;

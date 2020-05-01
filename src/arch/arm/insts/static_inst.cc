@@ -984,26 +984,6 @@ ArmStaticInst::sveAccessTrap(ExceptionLevel el) const
 }
 
 Fault
-ArmStaticInst::checkSveTrap(ThreadContext *tc, CPSR cpsr) const
-{
-    const ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
-
-    if (ArmSystem::haveVirtualization(tc) && el <= EL2) {
-        CPTR cptrEnCheck = tc->readMiscReg(MISCREG_CPTR_EL2);
-        if (cptrEnCheck.tz)
-            return sveAccessTrap(EL2);
-    }
-
-    if (ArmSystem::haveSecurity(tc)) {
-        CPTR cptrEnCheck = tc->readMiscReg(MISCREG_CPTR_EL3);
-        if (!cptrEnCheck.ez)
-            return sveAccessTrap(EL3);
-    }
-
-    return NoFault;
-}
-
-Fault
 ArmStaticInst::checkSveEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
 {
     const ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
@@ -1011,9 +991,20 @@ ArmStaticInst::checkSveEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
         (el == EL1 && !(cpacr.zen & 0x1)))
         return sveAccessTrap(EL1);
 
-    return checkSveTrap(tc, cpsr);
-}
+    if (ArmSystem::haveVirtualization(tc) && el <= EL2) {
+        CPTR cptr_en_check = tc->readMiscReg(MISCREG_CPTR_EL2);
+        if (cptr_en_check.tz)
+            return sveAccessTrap(EL2);
+    }
 
+    if (ArmSystem::haveSecurity(tc)) {
+        CPTR cptr_en_check = tc->readMiscReg(MISCREG_CPTR_EL3);
+        if (!cptr_en_check.ez)
+            return sveAccessTrap(EL3);
+    }
+
+    return NoFault;
+}
 
 static uint8_t
 getRestoredITBits(ThreadContext *tc, CPSR spsr)
