@@ -1,8 +1,0 @@
-insmod /modules/devtime.ko dataAddr=0x9000008 count=100
-rmmod devtime
-insmod /modules/devtime.ko dataAddr=0x1a0000300 count=100
-rmmod devtime
-insmod /modules/devtime.ko memTest=1 count=100
-rmmod devtime
-m5 exit
-

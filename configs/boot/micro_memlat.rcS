@@ -1,4 +1,0 @@
-m5 checkpoint 1 999999999
-/benchmarks/micros/lmbench/bin/alphaev6-linux-gnu/lat_mem_rd 64
-m5 exit
-
