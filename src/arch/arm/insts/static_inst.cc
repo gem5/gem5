@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014, 2016-2019 ARM Limited
+ * Copyright (c) 2010-2014, 2016-2020 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -987,20 +987,33 @@ Fault
 ArmStaticInst::checkSveEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
 {
     const ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
-    if ((el == EL0 && cpacr.zen != 0x3) ||
-        (el == EL1 && !(cpacr.zen & 0x1)))
-        return sveAccessTrap(EL1);
+    // Check if access disabled in CPACR_EL1
+    if (el <= EL1 && !ELIsInHost(tc, el)) {
+        if ((el == EL0 && cpacr.zen == 0x1) ||
+            (!(cpacr.zen & 0x1)))
+            return sveAccessTrap(EL1);
 
+        if ((el == EL0 && cpacr.fpen == 0x1) ||
+            (!(cpacr.fpen & 0x1)))
+            return advSIMDFPAccessTrap64(EL1);
+    }
+
+    // Check if access disabled in CPTR_EL2
     if (ArmSystem::haveVirtualization(tc) && el <= EL2) {
         CPTR cptr_en_check = tc->readMiscReg(MISCREG_CPTR_EL2);
         if (cptr_en_check.tz)
             return sveAccessTrap(EL2);
+        if (cptr_en_check.tfp)
+            return advSIMDFPAccessTrap64(EL2);
     }
 
+    // Check if access disabled in CPTR_EL3
     if (ArmSystem::haveSecurity(tc)) {
         CPTR cptr_en_check = tc->readMiscReg(MISCREG_CPTR_EL3);
         if (!cptr_en_check.ez)
             return sveAccessTrap(EL3);
+        if (cptr_en_check.tfp)
+            return advSIMDFPAccessTrap64(EL3);
     }
 
     return NoFault;
