@@ -787,12 +787,12 @@ ISA::setMiscRegNoEffect(int misc_reg, RegVal val)
     if (upper > 0) {
         miscRegs[lower] = bits(v, 31, 0);
         miscRegs[upper] = bits(v, 63, 32);
-        DPRINTF(MiscRegs, "Writing to misc reg %d (%d:%d) : %#x\n",
-                misc_reg, lower, upper, v);
+        DPRINTF(MiscRegs, "Writing MiscReg %s (%d %d:%d) : %#x\n",
+                miscRegName[misc_reg], misc_reg, lower, upper, v);
     } else {
         miscRegs[lower] = v;
-        DPRINTF(MiscRegs, "Writing to misc reg %d (%d) : %#x\n",
-                misc_reg, lower, v);
+        DPRINTF(MiscRegs, "Writing MiscReg %s (%d %d) : %#x\n",
+                miscRegName[misc_reg], misc_reg, lower, v);
     }
 }
 
