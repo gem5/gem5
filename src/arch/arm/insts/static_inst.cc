@@ -999,7 +999,7 @@ ArmStaticInst::checkSveEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
     }
 
     // Check if access disabled in CPTR_EL2
-    if (ArmSystem::haveVirtualization(tc) && el <= EL2) {
+    if (el <= EL2 && EL2Enabled(tc)) {
         CPTR cptr_en_check = tc->readMiscReg(MISCREG_CPTR_EL2);
         if (cptr_en_check.tz)
             return sveAccessTrap(EL2);
