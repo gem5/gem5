@@ -8,3 +8,4 @@
 * The m5 utility has been revamped with a new build system based on scons, tests, and updated and more consistent feature support.
 * Robust support for marshalling data from a function call inside the simulation to a function within gem5 using a predefined set of rules.
 * Workload configuration pulled out into its own object, simplifying the System object and making workload configuration more modular and flexible.
+* Sv39 paging has been added to the RISC-V ISA, bringing gem5 close to running Linux on RISC-V.
