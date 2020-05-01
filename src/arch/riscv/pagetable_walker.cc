@@ -184,6 +184,11 @@ Walker::WalkerState::initState(ThreadContext * _tc,
     tc = _tc;
     mode = _mode;
     timing = _isTiming;
+    // fetch these now in case they change during the walk
+    status = tc->readMiscReg(MISCREG_STATUS);
+    pmode = walker->tlb->getMemPriv(tc, mode);
+    satp = tc->readMiscReg(MISCREG_SATP);
+    assert(satp.mode == AddrXlateMode::SV39);
 }
 
 void
@@ -303,7 +308,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         if (pte.r || pte.x) {
             // step 5: leaf PTE
             doEndWalk = true;
-            fault = walker->tlb->checkPermissions(tc, entry.vaddr, mode, pte);
+            fault = walker->tlb->checkPermissions(status, pmode,
+                                                  entry.vaddr, mode, pte);
 
             // step 6
             if (fault == NoFault) {
@@ -413,10 +419,7 @@ Walker::WalkerState::endWalk()
 void
 Walker::WalkerState::setupWalk(Addr vaddr)
 {
-    vaddr &= ((static_cast<Addr>(1) << VADDR_BITS) - 1);
-
-    SATP satp = tc->readMiscReg(MISCREG_SATP);
-    assert(satp.mode == AddrXlateMode::SV39);
+    vaddr &= (static_cast<Addr>(1) << VADDR_BITS) - 1;
 
     Addr shift = PageShift + LEVEL_BITS * 2;
     Addr idx = (vaddr >> shift) & LEVEL_MASK;
@@ -483,12 +486,12 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
              * permissions violations, so we'll need the return value as
              * well.
              */
-            bool delayedResponse;
-            Fault fault = walker->tlb->doTranslate(req, tc, NULL, mode,
-                                                   delayedResponse);
-            assert(!delayedResponse);
+            Addr vaddr = req->getVaddr();
+            vaddr &= (static_cast<Addr>(1) << VADDR_BITS) - 1;
+            Addr paddr = walker->tlb->translateWithTLB(vaddr, satp.asid, mode);
+            req->setPaddr(paddr);
             // Let the CPU continue.
-            translation->finish(fault, req, tc, mode);
+            translation->finish(NoFault, req, tc, mode);
         } else {
             // There was a fault during the walk. Let the CPU know.
             translation->finish(timingFault, req, tc, mode);

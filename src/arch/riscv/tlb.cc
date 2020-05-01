@@ -213,7 +213,8 @@ TLB::remove(size_t idx)
 }
 
 Fault
-TLB::checkPermissions(ThreadContext *tc, Addr vaddr, Mode mode, PTESv39 pte)
+TLB::checkPermissions(STATUS status, PrivilegeMode pmode, Addr vaddr,
+                      Mode mode, PTESv39 pte)
 {
     Fault fault = NoFault;
 
@@ -232,8 +233,6 @@ TLB::checkPermissions(ThreadContext *tc, Addr vaddr, Mode mode, PTESv39 pte)
 
     if (fault == NoFault) {
         // check pte.u
-        STATUS status = tc->readMiscReg(MISCREG_STATUS);
-        PrivilegeMode pmode = getMemPriv(tc, mode);
         if (pmode == PrivilegeMode::PRV_U && !pte.u) {
             DPRINTF(TLB, "PTE is not user accessible, raising PF\n");
             fault = createPagefault(vaddr, mode);
@@ -260,6 +259,14 @@ TLB::createPagefault(Addr vaddr, Mode mode)
     return std::make_shared<AddressFault>(vaddr, code);
 }
 
+Addr
+TLB::translateWithTLB(Addr vaddr, uint16_t asid, Mode mode)
+{
+    TlbEntry *e = lookup(vaddr, asid, mode, false);
+    assert(e != nullptr);
+    return e->paddr << PageShift | (vaddr & mask(e->logBytes));
+}
+
 Fault
 TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
                  Translation *translation, Mode mode, bool &delayed)
@@ -281,7 +288,9 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
         assert(e != nullptr);
     }
 
-    Fault fault = checkPermissions(tc, vaddr, mode, e->pte);
+    STATUS status = tc->readMiscReg(MISCREG_STATUS);
+    PrivilegeMode pmode = getMemPriv(tc, mode);
+    Fault fault = checkPermissions(status, pmode, vaddr, mode, e->pte);
     if (fault != NoFault) {
         // if we want to write and it isn't writable, do a page table walk
         // again to update the dirty flag.

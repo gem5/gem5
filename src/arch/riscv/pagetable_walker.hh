@@ -100,6 +100,9 @@ namespace RiscvISA
             Fault timingFault;
             TLB::Translation * translation;
             BaseTLB::Mode mode;
+            SATP satp;
+            STATUS status;
+            PrivilegeMode pmode;
             bool functional;
             bool timing;
             bool retrying;

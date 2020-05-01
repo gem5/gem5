@@ -88,7 +88,7 @@ class TLB : public BaseTLB
     void flushAll() override;
     void demapPage(Addr vaddr, uint64_t asn) override;
 
-    Fault checkPermissions(ThreadContext *tc, Addr vaddr,
+    Fault checkPermissions(STATUS status, PrivilegeMode pmode, Addr vaddr,
                            Mode mode, PTESv39 pte);
     Fault createPagefault(Addr vaddr, Mode mode);
 
@@ -100,8 +100,7 @@ class TLB : public BaseTLB
 
     void regStats() override;
 
-    Fault doTranslate(const RequestPtr &req, ThreadContext *tc,
-                      Translation *translation, Mode mode, bool &delayed);
+    Addr translateWithTLB(Addr vaddr, uint16_t asid, Mode mode);
 
     Fault translateAtomic(const RequestPtr &req,
                           ThreadContext *tc, Mode mode) override;
@@ -122,6 +121,8 @@ class TLB : public BaseTLB
 
     Fault translate(const RequestPtr &req, ThreadContext *tc,
                     Translation *translation, Mode mode, bool &delayed);
+    Fault doTranslate(const RequestPtr &req, ThreadContext *tc,
+                      Translation *translation, Mode mode, bool &delayed);
 };
 
 }
