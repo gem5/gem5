@@ -1,0 +1,11 @@
+all: hello
+
+hello: hello.c dockcross-mips
+	./dockcross-mips bash -c '$$CC hello.c -o hello -static'
+
+dockcross-mips:
+	docker run --rm dockcross/linux-mips > ./dockcross-mips
+	chmod +x ./dockcross-mips
+
+clean:
+	rm -f dockcross* hello
