@@ -3,10 +3,10 @@ def upgrader(cpt):
     if cpt.get('root','isa') != 'arm':
         return
     import re
-    print "Warning: The size of the FP register file has changed. "\
-          "To get similar results you need to adjust the number of "\
-          "physical registers in the CPU you're restoring into by "\
-          "NNNN."
+    print("Warning: The size of the FP register file has changed. "
+          "To get similar results you need to adjust the number of "
+          "physical registers in the CPU you're restoring into by "
+          "NNNN.")
     # Find the CPU context's and upgrade their registers
     for sec in cpt.sections():
         re_xc_match = re.match('^.*?sys.*?\.cpu(\d+)*\.xc\.*', sec)

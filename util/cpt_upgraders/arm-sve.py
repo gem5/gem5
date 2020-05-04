@@ -23,7 +23,8 @@ def upgrader(cpt):
                 # Updating SVE misc registers (dummy values)
                 mr = cpt.get(sec, 'miscRegs').split()
                 if len(mr) == 820:
-                    print "MISCREG_SVE registers already seems to be inserted."
+                    print("MISCREG_SVE registers already seems "
+                          "to be inserted.")
                 else:
                     # Replace MISCREG_FREESLOT_1 with MISCREG_ID_AA64ZFR0_EL1
                     mr[-1] = 0;

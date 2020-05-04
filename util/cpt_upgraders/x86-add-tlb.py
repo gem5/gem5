@@ -12,6 +12,6 @@ def upgrader(cpt):
                 cpt.set(sec, '_size', '0')
                 cpt.set(sec, 'lruSeq', '0')
     else:
-        print "ISA is not x86"
+        print("ISA is not x86")
 
 legacy_version = 6
