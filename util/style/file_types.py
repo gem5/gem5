@@ -77,7 +77,7 @@ hash_bang = (
     )
 
 # the list of all languages that we detect
-all_languages = frozenset(lang_types.itervalues())
+all_languages = frozenset(lang_types.values())
 all_languages |= frozenset(lang for start,lang in lang_prefixes)
 all_languages |= frozenset(lang for start,lang in hash_bang)
 

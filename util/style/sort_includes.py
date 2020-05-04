@@ -42,7 +42,7 @@ import os
 import re
 import sys
 
-from file_types import *
+from .file_types import *
 
 cpp_c_headers = {
     'assert.h' : 'cassert',
@@ -314,6 +314,6 @@ if __name__ == '__main__':
         for filename,language in find_files(base, languages=opts.languages,
                 file_ignore=opts.file_ignore, dir_ignore=opts.dir_ignore):
             if opts.dry_run:
-                print "%s: %s" % (filename, language)
+                print("{}: {}".format(filename, language))
             else:
                 update_file(filename, filename, language, SortIncludes())

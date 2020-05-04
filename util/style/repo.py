@@ -39,8 +39,8 @@ from abc import *
 import os
 import subprocess
 
-from region import *
-from style import modified_regions
+from .region import *
+from .style import modified_regions
 
 class AbstractRepo(object):
     __metaclass__ = ABCMeta
@@ -118,7 +118,8 @@ class GitRepo(AbstractRepo):
     def repo_base(self):
         if self._repo_base is None:
             self._repo_base = subprocess.check_output(
-                [ self.git, "rev-parse", "--show-toplevel" ]).rstrip("\n")
+                [ self.git, "rev-parse", "--show-toplevel" ]) \
+                .decode().rstrip("\n")
 
         return self._repo_base
 
@@ -159,7 +160,7 @@ class GitRepo(AbstractRepo):
         try:
             self._head_revision = subprocess.check_output(
                 [ self.git, "rev-parse", "--verify", "HEAD" ],
-                stderr=subprocess.PIPE).rstrip("\n")
+                stderr=subprocess.PIPE).decode().rstrip("\n")
         except subprocess.CalledProcessError:
             # Assume that the repo is empty and use the semi-magic
             # empty tree revision if git rev-parse returned an error.
@@ -185,7 +186,7 @@ class GitRepo(AbstractRepo):
         if filter:
             cmd += [ "--diff-filter=%s" % filter ]
         cmd += [ self.head_revision(), "--" ] + files
-        status = subprocess.check_output(cmd).rstrip("\n")
+        status = subprocess.check_output(cmd).decode().rstrip("\n")
 
         if status:
             return [ f.split("\t") for f in status.split("\n") ]
@@ -194,11 +195,12 @@ class GitRepo(AbstractRepo):
 
     def file_from_index(self, name):
         return subprocess.check_output(
-            [ self.git, "show", ":%s" % (name, ) ])
+            [ self.git, "show", ":%s" % (name, ) ]).decode()
 
     def file_from_head(self, name):
         return subprocess.check_output(
-            [ self.git, "show", "%s:%s" % (self.head_revision(), name) ])
+            [ self.git, "show", "%s:%s" % (self.head_revision(), name) ]) \
+            .decode()
 
 class MercurialRepo(AbstractRepo):
     def __init__(self):
@@ -208,7 +210,7 @@ class MercurialRepo(AbstractRepo):
     def repo_base(self):
         if self._repo_base is None:
             self._repo_base = subprocess.check_output(
-                [ self.hg, "root" ]).rstrip("\n")
+                [ self.hg, "root" ]).decode().rstrip("\n")
 
         return self._repo_base
 
@@ -233,14 +235,16 @@ class MercurialRepo(AbstractRepo):
         return modified_regions(old, new, context=context)
 
     def status(self, filter=None):
-        files = subprocess.check_output([ self.hg, "status" ]).rstrip("\n")
+        files = subprocess.check_output([ self.hg, "status" ]) \
+            .decode().rstrip("\n")
         if files:
             return [ f.split(" ") for f in files.split("\n") ]
         else:
             return []
 
     def file_from_tip(self, name):
-        return subprocess.check_output([ self.hg, "cat", name ])
+        return subprocess.check_output([ self.hg, "cat", name ]) \
+            .decode()
 
 def detect_repo(path="."):
     """Auto-detect the revision control system used for a source code
