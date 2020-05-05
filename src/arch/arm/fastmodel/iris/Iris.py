@@ -27,12 +27,18 @@ from m5.params import *
 from m5.proxy import *
 
 from m5.objects.BaseCPU import BaseCPU
+from m5.objects.BaseInterrupts import BaseInterrupts
 from m5.objects.BaseTLB import BaseTLB
 
 class IrisTLB(BaseTLB):
     type = 'IrisTLB'
     cxx_class = 'Iris::TLB'
     cxx_header = 'arch/arm/fastmodel/iris/tlb.hh'
+
+class IrisInterrupts(BaseInterrupts):
+    type = 'IrisInterrupts'
+    cxx_class = 'Iris::Interrupts'
+    cxx_header = 'arch/arm/fastmodel/iris/interrupts.hh'
 
 class IrisBaseCPU(BaseCPU):
     type = 'IrisBaseCPU'
@@ -60,3 +66,6 @@ class IrisBaseCPU(BaseCPU):
 
     dtb = IrisTLB()
     itb = IrisTLB()
+
+    def createInterruptController(self):
+        self.interrupts = [ IrisInterrupts() for i in range(self.numThreads) ]

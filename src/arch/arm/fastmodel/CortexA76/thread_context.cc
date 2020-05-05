@@ -231,7 +231,7 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
         // ArmISA::MISCREG_NMRR_MAIR1_S?
         // ArmISA::MISCREG_PMXEVTYPER_PMCCFILTR?
         // ArmISA::MISCREG_SCTLR_RST?
-        // ArmISA::MISCREG_SEV_MAILBOX?
+        { ArmISA::MISCREG_SEV_MAILBOX, "SEV_STATE" },
 
         // AArch32 CP14 registers (debug/trace/ThumbEE/Jazelle control)
         // ArmISA::MISCREG_DBGDIDR?
