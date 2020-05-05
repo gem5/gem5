@@ -38,7 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/structures/Prefetcher.hh"
+#include "mem/ruby/structures/RubyPrefetcher.hh"
 
 #include "base/bitfield.hh"
 #include "debug/RubyPrefetcher.hh"
@@ -46,7 +46,7 @@
 #include "mem/ruby/system/RubySystem.hh"
 
 RubyPrefetcher*
-PrefetcherParams::create()
+RubyPrefetcherParams::create()
 {
     return new RubyPrefetcher(this);
 }

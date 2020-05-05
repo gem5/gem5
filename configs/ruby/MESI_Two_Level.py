@@ -78,7 +78,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
                             start_index_bit = block_size_bits,
                             is_icache = False)
 
-        prefetcher = RubyPrefetcher.Prefetcher()
+        prefetcher = RubyPrefetcher()
 
         # the ruby random tester reuses num_cpus to specify the
         # number of cpu ports connected to the tester object, which

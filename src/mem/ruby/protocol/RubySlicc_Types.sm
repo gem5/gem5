@@ -246,7 +246,7 @@ structure (TimerTable, inport="yes", external = "yes") {
   bool isSet(Addr);
 }
 
-structure (Prefetcher, external = "yes") {
+structure (RubyPrefetcher, external = "yes") {
     void observeMiss(Addr, RubyRequestType);
     void observePfHit(Addr);
     void observePfMiss(Addr);

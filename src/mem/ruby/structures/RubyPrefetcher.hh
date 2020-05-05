@@ -51,7 +51,7 @@
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/slicc_interface/RubyRequest.hh"
 #include "mem/ruby/system/RubySystem.hh"
-#include "params/Prefetcher.hh"
+#include "params/RubyPrefetcher.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
@@ -93,7 +93,7 @@ class PrefetchEntry
 class RubyPrefetcher : public SimObject
 {
     public:
-        typedef PrefetcherParams Params;
+        typedef RubyPrefetcherParams Params;
         RubyPrefetcher(const Params *p);
         ~RubyPrefetcher();
 

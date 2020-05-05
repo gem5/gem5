@@ -61,7 +61,7 @@ python_class_map = {
                     "MemoryControl": "MemoryControl",
                     "MessageBuffer": "MessageBuffer",
                     "DMASequencer": "DMASequencer",
-                    "Prefetcher":"Prefetcher",
+                    "RubyPrefetcher":"RubyPrefetcher",
                     "Cycles":"Cycles",
                    }
 

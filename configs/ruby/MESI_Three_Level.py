@@ -121,7 +121,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
                 clk_domain = system.cpu[i].clk_domain
 
             # Ruby prefetcher
-            prefetcher = RubyPrefetcher.Prefetcher(
+            prefetcher = RubyPrefetcher(
                 num_streams=16,
                 unit_filter = 256,
                 nonunit_filter = 256,
