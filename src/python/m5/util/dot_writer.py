@@ -267,7 +267,7 @@ def dot_gen_colour(simNode, isPort = False):
     return dot_rgb_to_html(r, g, b)
 
 def dot_rgb_to_html(r, g, b):
-    return "#%.2x%.2x%.2x" % (r, g, b)
+    return "#%.2x%.2x%.2x" % (int(r), int(g), int(b))
 
 # We need to create all of the clock domains. We abuse the alpha channel to get
 # the correct domain colouring.
