@@ -220,7 +220,7 @@ def define_defaults(defaults):
                                                       os.pardir))
     defaults.result_path = os.path.join(os.getcwd(), '.testing-results')
     defaults.list_only_failed = False
-    defaults.resource_url = 'http://dist.gem5.org/dist/develop'
+    defaults.resource_url = 'http://dist.gem5.org/dist/v20'
 
 def define_constants(constants):
     '''
