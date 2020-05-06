@@ -277,7 +277,7 @@ global_vars.AddVariables(
     ('CCFLAGS_EXTRA', 'Extra C and C++ compiler flags', ''),
     ('LDFLAGS_EXTRA', 'Extra linker flags', ''),
     ('PYTHON_CONFIG', 'Python config binary to use',
-     [ 'python2.7-config', 'python-config' ]),
+     [ 'python2.7-config', 'python-config', 'python3-config' ]),
     ('PROTOC', 'protoc tool', environ.get('PROTOC', 'protoc')),
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
