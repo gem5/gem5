@@ -26,4 +26,4 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-const char *gem5Version = "[develop]";
+const char *gem5Version = "20.0.0.0";
