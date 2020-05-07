@@ -77,10 +77,9 @@ MipsLinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, ThreadContext *tc, Addr utsname)
+unameFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name)
 {
     auto process = tc->getProcessPtr();
-    TypedBufferArg<Linux::utsname> name(utsname);
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename,"sim.gem5.org");
@@ -88,7 +87,6 @@ unameFunc(SyscallDesc *desc, ThreadContext *tc, Addr utsname)
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "mips");
 
-    name.copyOut(tc->getVirtProxy());
     return 0;
 }
 
@@ -103,10 +101,9 @@ sys_getsysinfoFunc(SyscallDesc *desc, ThreadContext *tc, unsigned op,
       case 45:
         {
             // GSI_IEEE_FP_CONTROL
-            TypedBufferArg<uint64_t> fpcr(bufPtr);
+            VPtr<uint64_t> fpcr(bufPtr, tc);
             // I don't think this exactly matches the HW FPCR
             *fpcr = 0;
-            fpcr.copyOut(tc->getVirtProxy());
             return 0;
         }
       default:
@@ -128,11 +125,11 @@ sys_setsysinfoFunc(SyscallDesc *desc, ThreadContext *tc, unsigned op,
       case 14:
         {
             // SSI_IEEE_FP_CONTROL
-            TypedBufferArg<uint64_t> fpcr(bufPtr);
+            ConstVPtr<uint64_t> fpcr(bufPtr, tc);
             // I don't think this exactly matches the HW FPCR
             fpcr.copyIn(tc->getVirtProxy());
             DPRINTFR(SyscallVerbose, "sys_setsysinfo(SSI_IEEE_FP_CONTROL): "
-                   " setting FPCR to 0x%x\n", letoh(*(uint64_t*)fpcr));
+                   " setting FPCR to 0x%x\n", letoh(*fpcr));
             return 0;
         }
       default:

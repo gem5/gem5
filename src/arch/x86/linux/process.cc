@@ -89,18 +89,15 @@ X86LinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, ThreadContext *tc, Addr utsname)
+unameFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name)
 {
     auto process = tc->getProcessPtr();
-    TypedBufferArg<Linux::utsname> name(utsname);
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "sim.gem5.org");
     strcpy(name->release, process->release.c_str());
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "x86_64");
-
-    name.copyOut(tc->getVirtProxy());
 
     return 0;
 }
@@ -167,7 +164,8 @@ struct UserDesc64 {
 };
 
 static SyscallReturn
-setThreadArea32Func(SyscallDesc *desc, ThreadContext *tc, Addr userDescPtr)
+setThreadArea32Func(SyscallDesc *desc, ThreadContext *tc,
+                    VPtr<UserDesc32> userDesc)
 {
     const int minTLSEntry = 6;
     const int numTLSEntries = 3;
@@ -180,13 +178,9 @@ setThreadArea32Func(SyscallDesc *desc, ThreadContext *tc, Addr userDescPtr)
 
     assert((maxTLSEntry + 1) * sizeof(uint64_t) <= x86p->gdtSize());
 
-    TypedBufferArg<UserDesc32> userDesc(userDescPtr);
     TypedBufferArg<uint64_t>
         gdt(x86p->gdtStart() + minTLSEntry * sizeof(uint64_t),
             numTLSEntries * sizeof(uint64_t));
-
-    if (!userDesc.copyIn(tc->getVirtProxy()))
-        return -EFAULT;
 
     if (!gdt.copyIn(tc->getVirtProxy()))
         panic("Failed to copy in GDT for %s.\n", desc->name());
@@ -240,8 +234,6 @@ setThreadArea32Func(SyscallDesc *desc, ThreadContext *tc, Addr userDescPtr)
 
     gdt[index] = (uint64_t)segDesc;
 
-    if (!userDesc.copyOut(tc->getVirtProxy()))
-        return -EFAULT;
     if (!gdt.copyOut(tc->getVirtProxy()))
         panic("Failed to copy out GDT for %s.\n", desc->name());
 

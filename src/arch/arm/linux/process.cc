@@ -100,10 +100,9 @@ ArmLinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc32(SyscallDesc *desc, ThreadContext *tc, Addr utsname)
+unameFunc32(SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name)
 {
     auto process = tc->getProcessPtr();
-    TypedBufferArg<Linux::utsname> name(utsname);
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -111,16 +110,14 @@ unameFunc32(SyscallDesc *desc, ThreadContext *tc, Addr utsname)
     strcpy(name->version, "#1 SMP Sat Dec  1 00:00:00 GMT 2012");
     strcpy(name->machine, "armv7l");
 
-    name.copyOut(tc->getVirtProxy());
     return 0;
 }
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc64(SyscallDesc *desc, ThreadContext *tc, Addr utsname)
+unameFunc64(SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name)
 {
     auto process = tc->getProcessPtr();
-    TypedBufferArg<Linux::utsname> name(utsname);
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "gem5");
@@ -128,7 +125,6 @@ unameFunc64(SyscallDesc *desc, ThreadContext *tc, Addr utsname)
     strcpy(name->version, "#1 SMP Sat Dec  1 00:00:00 GMT 2012");
     strcpy(name->machine, "armv8l");
 
-    name.copyOut(tc->getVirtProxy());
     return 0;
 }
 
