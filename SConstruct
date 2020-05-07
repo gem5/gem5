@@ -97,7 +97,7 @@ import SCons
 import SCons.Node
 import SCons.Node.FS
 
-from m5.util import compareVersions, readCommand
+from m5.util import compareVersions, readCommand, readCommandWithReturn
 
 help_texts = {
     "options" : "",
@@ -683,8 +683,21 @@ if main['USE_PYTHON']:
 
     # Read the linker flags and split them into libraries and other link
     # flags. The libraries are added later through the call the CheckLib.
-    py_ld_flags = readCommand([python_config, '--ldflags'],
-        exception='').split()
+    # Note: starting in Python 3.8 the --embed flag is required to get the
+    # -lpython3.8 linker flag
+    retcode, cmd_stdout = readCommandWithReturn(
+        [python_config, '--ldflags', '--embed'], exception='')
+    if retcode != 0:
+        # If --embed isn't detected then we're running python <3.8
+        retcode, cmd_stdout = readCommandWithReturn(
+            [python_config, '--ldflags'], exception='')
+
+    # Checking retcode again
+    if retcode != 0:
+        error("Failing on python-config --ldflags command")
+
+    py_ld_flags = cmd_stdout.split()
+
     py_libs = []
     for lib in py_ld_flags:
          if not lib.startswith('-l'):
