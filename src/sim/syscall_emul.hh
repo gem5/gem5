@@ -554,11 +554,12 @@ getElapsedTimeNano(T1 &sec, T2 &nsec)
 //// buffer.  Also copies the target buffer out to the simulated
 //// memory space.  Used by stat(), fstat(), and lstat().
 
-template <typename target_stat, typename host_stat>
+template <typename OS, typename TgtStatPtr, typename HostStatPtr>
 void
-convertStatBuf(target_stat &tgt, host_stat *host,
-               ByteOrder bo, bool fakeTTY=false)
+copyOutStatBuf(TgtStatPtr tgt, HostStatPtr host, bool fakeTTY=false)
 {
+    constexpr ByteOrder bo = OS::byteOrder;
+
     if (fakeTTY)
         tgt->st_dev = 0xA;
     else
@@ -602,13 +603,15 @@ convertStatBuf(target_stat &tgt, host_stat *host,
 
 // Same for stat64
 
-template <typename target_stat, typename host_stat64>
+template <typename OS, typename TgtStatPtr, typename HostStatPtr>
 void
-convertStat64Buf(target_stat &tgt, host_stat64 *host,
-                 ByteOrder bo, bool fakeTTY=false)
+copyOutStat64Buf(TgtStatPtr tgt, HostStatPtr host,
+                 bool fakeTTY=false)
 {
-    convertStatBuf<target_stat, host_stat64>(tgt, host, bo, fakeTTY);
+    copyOutStatBuf<OS>(tgt, host, fakeTTY);
 #if defined(STAT_HAVE_NSEC)
+    constexpr ByteOrder bo = OS::byteOrder;
+
     tgt->st_atime_nsec = host->st_atime_nsec;
     tgt->st_atime_nsec = htog(tgt->st_atime_nsec, bo);
     tgt->st_mtime_nsec = host->st_mtime_nsec;
@@ -622,38 +625,11 @@ convertStat64Buf(target_stat &tgt, host_stat64 *host,
 #endif
 }
 
-// Here are a couple of convenience functions
-template<class OS>
+template <class OS, typename TgtStatPtr, typename HostStatPtr>
 void
-copyOutStatBuf(PortProxy &mem, Addr addr,
-               hst_stat *host, bool fakeTTY = false)
+copyOutStatfsBuf(TgtStatPtr tgt, HostStatPtr host)
 {
-    typedef TypedBufferArg<typename OS::tgt_stat> tgt_stat_buf;
-    tgt_stat_buf tgt(addr);
-    convertStatBuf<tgt_stat_buf, hst_stat>(tgt, host, OS::byteOrder, fakeTTY);
-    tgt.copyOut(mem);
-}
-
-template<class OS>
-void
-copyOutStat64Buf(PortProxy &mem, Addr addr,
-                 hst_stat64 *host, bool fakeTTY = false)
-{
-    typedef TypedBufferArg<typename OS::tgt_stat64> tgt_stat_buf;
-    tgt_stat_buf tgt(addr);
-    convertStat64Buf<tgt_stat_buf, hst_stat64>(
-            tgt, host, OS::byteOrder, fakeTTY);
-    tgt.copyOut(mem);
-}
-
-template <class OS>
-void
-copyOutStatfsBuf(PortProxy &mem, Addr addr,
-                 hst_statfs *host)
-{
-    TypedBufferArg<typename OS::tgt_statfs> tgt(addr);
-
-    const ByteOrder bo = OS::byteOrder;
+    constexpr ByteOrder bo = OS::byteOrder;
 
     tgt->f_type = htog(host->f_type, bo);
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
@@ -687,8 +663,6 @@ copyOutStatfsBuf(PortProxy &mem, Addr addr,
      */
     memset(&tgt->f_spare, 0, sizeof(tgt->f_spare));
 #endif
-
-    tgt.copyOut(mem);
 }
 
 /// Target ioctl() handler.  For the most part, programs call ioctl()
@@ -979,17 +953,14 @@ renameatFunc(SyscallDesc *desc, ThreadContext *tc,
 /// Target sysinfo() handler.
 template <class OS>
 SyscallReturn
-sysinfoFunc(SyscallDesc *desc, ThreadContext *tc, Addr info)
+sysinfoFunc(SyscallDesc *desc, ThreadContext *tc,
+            VPtr<typename OS::tgt_sysinfo> sysinfo)
 {
     auto process = tc->getProcessPtr();
-
-    TypedBufferArg<typename OS::tgt_sysinfo> sysinfo(info);
 
     sysinfo->uptime = seconds_since_epoch;
     sysinfo->totalram = process->system->memSize();
     sysinfo->mem_unit = 1;
-
-    sysinfo.copyOut(tc->getVirtProxy());
 
     return 0;
 }
@@ -1199,7 +1170,8 @@ mremapFunc(SyscallDesc *desc, ThreadContext *tc,
 /// Target stat() handler.
 template <class OS>
 SyscallReturn
-statFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
+statFunc(SyscallDesc *desc, ThreadContext *tc,
+         Addr pathname, VPtr<typename OS::tgt_stat> tgt_stat)
 {
     std::string path;
     auto process = tc->getProcessPtr();
@@ -1216,7 +1188,7 @@ statFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
+    copyOutStatBuf<OS>(tgt_stat, &hostBuf);
 
     return 0;
 }
@@ -1225,7 +1197,8 @@ statFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
 /// Target stat64() handler.
 template <class OS>
 SyscallReturn
-stat64Func(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
+stat64Func(SyscallDesc *desc, ThreadContext *tc,
+           Addr pathname, VPtr<typename OS::tgt_stat64> tgt_stat)
 {
     std::string path;
     auto process = tc->getProcessPtr();
@@ -1247,7 +1220,7 @@ stat64Func(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
+    copyOutStat64Buf<OS>(tgt_stat, &hostBuf);
 
     return 0;
 }
@@ -1257,7 +1230,7 @@ stat64Func(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
 template <class OS>
 SyscallReturn
 fstatat64Func(SyscallDesc *desc, ThreadContext *tc,
-              int dirfd, Addr pathname, Addr bufPtr)
+              int dirfd, Addr pathname, VPtr<typename OS::tgt_stat64> tgt_stat)
 {
     auto process = tc->getProcessPtr();
     if (dirfd != OS::TGT_AT_FDCWD)
@@ -1281,7 +1254,7 @@ fstatat64Func(SyscallDesc *desc, ThreadContext *tc,
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
+    copyOutStat64Buf<OS>(tgt_stat, &hostBuf);
 
     return 0;
 }
@@ -1290,7 +1263,8 @@ fstatat64Func(SyscallDesc *desc, ThreadContext *tc,
 /// Target fstat64() handler.
 template <class OS>
 SyscallReturn
-fstat64Func(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, Addr bufPtr)
+fstat64Func(SyscallDesc *desc, ThreadContext *tc,
+            int tgt_fd, VPtr<typename OS::tgt_stat64> tgt_stat)
 {
     auto p = tc->getProcessPtr();
 
@@ -1310,7 +1284,7 @@ fstat64Func(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, Addr bufPtr)
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf, (sim_fd == 1));
+    copyOutStat64Buf<OS>(tgt_stat, &hostBuf, (sim_fd == 1));
 
     return 0;
 }
@@ -1319,7 +1293,8 @@ fstat64Func(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, Addr bufPtr)
 /// Target lstat() handler.
 template <class OS>
 SyscallReturn
-lstatFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
+lstatFunc(SyscallDesc *desc, ThreadContext *tc,
+          Addr pathname, VPtr<typename OS::tgt_stat> tgt_stat)
 {
     std::string path;
     auto process = tc->getProcessPtr();
@@ -1336,7 +1311,7 @@ lstatFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
+    copyOutStatBuf<OS>(tgt_stat, &hostBuf);
 
     return 0;
 }
@@ -1344,7 +1319,8 @@ lstatFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
 /// Target lstat64() handler.
 template <class OS>
 SyscallReturn
-lstat64Func(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
+lstat64Func(SyscallDesc *desc, ThreadContext *tc,
+            Addr pathname, VPtr<typename OS::tgt_stat64> tgt_stat)
 {
     std::string path;
     auto process = tc->getProcessPtr();
@@ -1366,7 +1342,7 @@ lstat64Func(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
+    copyOutStat64Buf<OS>(tgt_stat, &hostBuf);
 
     return 0;
 }
@@ -1374,7 +1350,8 @@ lstat64Func(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
 /// Target fstat() handler.
 template <class OS>
 SyscallReturn
-fstatFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, Addr bufPtr)
+fstatFunc(SyscallDesc *desc, ThreadContext *tc,
+          int tgt_fd, VPtr<typename OS::tgt_stat> tgt_stat)
 {
     auto p = tc->getProcessPtr();
 
@@ -1391,7 +1368,7 @@ fstatFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, Addr bufPtr)
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf, (sim_fd == 1));
+    copyOutStatBuf<OS>(tgt_stat, &hostBuf, (sim_fd == 1));
 
     return 0;
 }
@@ -1399,7 +1376,8 @@ fstatFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, Addr bufPtr)
 /// Target statfs() handler.
 template <class OS>
 SyscallReturn
-statfsFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
+statfsFunc(SyscallDesc *desc, ThreadContext *tc,
+           Addr pathname, VPtr<typename OS::tgt_statfs> tgt_stat)
 {
 #if defined(__linux__)
     std::string path;
@@ -1417,7 +1395,7 @@ statfsFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr bufPtr)
     if (result < 0)
         return -errno;
 
-    copyOutStatfsBuf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
+    copyOutStatfsBuf<OS>(tgt_stat, &hostBuf);
     return 0;
 #else
     warnUnsupportedOS("statfs");
@@ -1551,7 +1529,8 @@ cloneBackwardsFunc(SyscallDesc *desc, ThreadContext *tc, RegVal flags,
 /// Target fstatfs() handler.
 template <class OS>
 SyscallReturn
-fstatfsFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, Addr bufPtr)
+fstatfsFunc(SyscallDesc *desc, ThreadContext *tc,
+            int tgt_fd, VPtr<typename OS::tgt_statfs> tgt_stat)
 {
     auto p = tc->getProcessPtr();
 
@@ -1566,7 +1545,7 @@ fstatfsFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, Addr bufPtr)
     if (result < 0)
         return -errno;
 
-    copyOutStatfsBuf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
+    copyOutStatfsBuf<OS>(tgt_stat, &hostBuf);
 
     return 0;
 }
@@ -1841,10 +1820,8 @@ mmap2Func(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 getrlimitFunc(SyscallDesc *desc, ThreadContext *tc,
-              unsigned resource, Addr rlim)
+              unsigned resource, VPtr<typename OS::rlimit> rlp)
 {
-    TypedBufferArg<typename OS::rlimit> rlp(rlim);
-
     const ByteOrder bo = OS::byteOrder;
     switch (resource) {
       case OS::TGT_RLIMIT_STACK:
@@ -1873,24 +1850,22 @@ getrlimitFunc(SyscallDesc *desc, ThreadContext *tc,
         break;
     }
 
-    rlp.copyOut(tc->getVirtProxy());
     return 0;
 }
 
 template <class OS>
 SyscallReturn
 prlimitFunc(SyscallDesc *desc, ThreadContext *tc,
-            int pid, int resource, Addr n, Addr o)
+            int pid, int resource, Addr n, VPtr<typename OS::rlimit> rlp)
 {
     if (pid != 0) {
         warn("prlimit: ignoring rlimits for nonzero pid");
         return -EPERM;
     }
-    if (n != 0)
+    if (n)
         warn("prlimit: ignoring new rlimit");
-    if (o != 0) {
+    if (rlp) {
         const ByteOrder bo = OS::byteOrder;
-        TypedBufferArg<typename OS::rlimit> rlp(o);
         switch (resource) {
           case OS::TGT_RLIMIT_STACK:
             // max stack size in bytes: make up a number (8MB for now)
@@ -1909,7 +1884,6 @@ prlimitFunc(SyscallDesc *desc, ThreadContext *tc,
             return -EINVAL;
             break;
         }
-        rlp.copyOut(tc->getVirtProxy());
     }
     return 0;
 }
@@ -1918,16 +1892,12 @@ prlimitFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 clock_gettimeFunc(SyscallDesc *desc, ThreadContext *tc,
-                  int clk_id, Addr tp_ptr)
+                  int clk_id, VPtr<typename OS::timespec> tp)
 {
-    TypedBufferArg<typename OS::timespec> tp(tp_ptr);
-
     getElapsedTimeNano(tp->tv_sec, tp->tv_nsec);
     tp->tv_sec += seconds_since_epoch;
     tp->tv_sec = htog(tp->tv_sec, OS::byteOrder);
     tp->tv_nsec = htog(tp->tv_nsec, OS::byteOrder);
-
-    tp.copyOut(tc->getVirtProxy());
 
     return 0;
 }
@@ -1935,15 +1905,12 @@ clock_gettimeFunc(SyscallDesc *desc, ThreadContext *tc,
 /// Target clock_getres() function.
 template <class OS>
 SyscallReturn
-clock_getresFunc(SyscallDesc *desc, ThreadContext *tc, int clk_id, Addr tp_ptr)
+clock_getresFunc(SyscallDesc *desc, ThreadContext *tc, int clk_id,
+                 VPtr<typename OS::timespec> tp)
 {
-    TypedBufferArg<typename OS::timespec> tp(tp_ptr);
-
     // Set resolution at ns, which is what clock_gettime() returns
     tp->tv_sec = 0;
     tp->tv_nsec = 1;
-
-    tp.copyOut(tc->getVirtProxy());
 
     return 0;
 }
@@ -1952,16 +1919,12 @@ clock_getresFunc(SyscallDesc *desc, ThreadContext *tc, int clk_id, Addr tp_ptr)
 template <class OS>
 SyscallReturn
 gettimeofdayFunc(SyscallDesc *desc, ThreadContext *tc,
-                 Addr tv_ptr, Addr tz_ptr)
+                 VPtr<typename OS::timeval> tp, Addr tz_ptr)
 {
-    TypedBufferArg<typename OS::timeval> tp(tv_ptr);
-
     getElapsedTimeMicro(tp->tv_sec, tp->tv_usec);
     tp->tv_sec += seconds_since_epoch;
     tp->tv_sec = htog(tp->tv_sec, OS::byteOrder);
     tp->tv_usec = htog(tp->tv_usec, OS::byteOrder);
-
-    tp.copyOut(tc->getVirtProxy());
 
     return 0;
 }
@@ -2090,10 +2053,9 @@ execveFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 getrusageFunc(SyscallDesc *desc, ThreadContext *tc,
-              int who /* THREAD, SELF, or CHILDREN */, Addr usage)
+              int who /* THREAD, SELF, or CHILDREN */,
+              VPtr<typename OS::rusage> rup)
 {
-    TypedBufferArg<typename OS::rusage> rup(usage);
-
     rup->ru_utime.tv_sec = 0;
     rup->ru_utime.tv_usec = 0;
     rup->ru_stime.tv_sec = 0;
@@ -2131,18 +2093,14 @@ getrusageFunc(SyscallDesc *desc, ThreadContext *tc,
              who);
     }
 
-    rup.copyOut(tc->getVirtProxy());
-
     return 0;
 }
 
 /// Target times() function.
 template <class OS>
 SyscallReturn
-timesFunc(SyscallDesc *desc, ThreadContext *tc, Addr bufPtr)
+timesFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<typename OS::tms> bufp)
 {
-    TypedBufferArg<typename OS::tms> bufp(bufPtr);
-
     // Fill in the time structure (in clocks)
     int64_t clocks = curTick() * OS::M5_SC_CLK_TCK / SimClock::Int::s;
     bufp->tms_utime = clocks;
@@ -2152,9 +2110,6 @@ timesFunc(SyscallDesc *desc, ThreadContext *tc, Addr bufPtr)
 
     // Convert to host endianness
     bufp->tms_utime = htog(bufp->tms_utime, OS::byteOrder);
-
-    // Write back
-    bufp.copyOut(tc->getVirtProxy());
 
     // Return clock ticks since system boot
     return clocks;
@@ -2264,40 +2219,27 @@ socketpairFunc(SyscallDesc *desc, ThreadContext *tc,
 
 template <class OS>
 SyscallReturn
-selectFunc(SyscallDesc *desc, ThreadContext *tc,
-           int nfds_t, Addr fds_read_ptr, Addr fds_writ_ptr,
-           Addr fds_excp_ptr, Addr time_val_ptr)
+selectFunc(SyscallDesc *desc, ThreadContext *tc, int nfds,
+           VPtr<typename OS::fd_set> readfds,
+           VPtr<typename OS::fd_set> writefds,
+           VPtr<typename OS::fd_set> errorfds,
+           VPtr<typename OS::timeval> timeout)
 {
     int retval;
 
     auto p = tc->getProcessPtr();
-
-    TypedBufferArg<typename OS::fd_set> rd_t(fds_read_ptr);
-    TypedBufferArg<typename OS::fd_set> wr_t(fds_writ_ptr);
-    TypedBufferArg<typename OS::fd_set> ex_t(fds_excp_ptr);
-    TypedBufferArg<typename OS::timeval> tp(time_val_ptr);
 
     /**
      * Host fields. Notice that these use the definitions from the system
      * headers instead of the gem5 headers and libraries. If the host and
      * target have different header file definitions, this will not work.
      */
-    fd_set rd_h;
-    FD_ZERO(&rd_h);
-    fd_set wr_h;
-    FD_ZERO(&wr_h);
-    fd_set ex_h;
-    FD_ZERO(&ex_h);
-
-    /**
-     * Copy in the fd_set from the target.
-     */
-    if (fds_read_ptr)
-        rd_t.copyIn(tc->getVirtProxy());
-    if (fds_writ_ptr)
-        wr_t.copyIn(tc->getVirtProxy());
-    if (fds_excp_ptr)
-        ex_t.copyIn(tc->getVirtProxy());
+    fd_set readfds_h;
+    FD_ZERO(&readfds_h);
+    fd_set writefds_h;
+    FD_ZERO(&writefds_h);
+    fd_set errorfds_h;
+    FD_ZERO(&errorfds_h);
 
     /**
      * We need to translate the target file descriptor set into a host file
@@ -2310,7 +2252,7 @@ selectFunc(SyscallDesc *desc, ThreadContext *tc,
      */
     int nfds_h = 0;
     std::map<int, int> trans_map;
-    auto try_add_host_set = [&](fd_set *tgt_set_entry,
+    auto try_add_host_set = [&](typename OS::fd_set *tgt_set_entry,
                                 fd_set *hst_set_entry,
                                 int iter) -> bool
     {
@@ -2319,7 +2261,7 @@ selectFunc(SyscallDesc *desc, ThreadContext *tc,
          * descriptor set on the target. We need to check if the target file
          * descriptor value passed in as iter is part of the set.
          */
-        if (FD_ISSET(iter, tgt_set_entry)) {
+        if (FD_ISSET(iter, (fd_set *)tgt_set_entry)) {
             /**
              * We know that the target file descriptor belongs to the set,
              * but we do not yet know if the file descriptor is valid or
@@ -2353,22 +2295,25 @@ selectFunc(SyscallDesc *desc, ThreadContext *tc,
         return false;
     };
 
-    for (int i = 0; i < nfds_t; i++) {
-        if (fds_read_ptr) {
-            bool ebadf = try_add_host_set((fd_set*)&*rd_t, &rd_h, i);
-            if (ebadf) return -EBADF;
+    for (int i = 0; i < nfds; i++) {
+        if (readfds) {
+            bool ebadf = try_add_host_set(readfds, &readfds_h, i);
+            if (ebadf)
+                return -EBADF;
         }
-        if (fds_writ_ptr) {
-            bool ebadf = try_add_host_set((fd_set*)&*wr_t, &wr_h, i);
-            if (ebadf) return -EBADF;
+        if (writefds) {
+            bool ebadf = try_add_host_set(writefds, &writefds_h, i);
+            if (ebadf)
+                return -EBADF;
         }
-        if (fds_excp_ptr) {
-            bool ebadf = try_add_host_set((fd_set*)&*ex_t, &ex_h, i);
-            if (ebadf) return -EBADF;
+        if (errorfds) {
+            bool ebadf = try_add_host_set(errorfds, &errorfds_h, i);
+            if (ebadf)
+                return -EBADF;
         }
     }
 
-    if (time_val_ptr) {
+    if (timeout) {
         /**
          * It might be possible to decrement the timeval based on some
          * derivation of wall clock determined from elapsed simulator ticks
@@ -2376,14 +2321,14 @@ selectFunc(SyscallDesc *desc, ThreadContext *tc,
          * zero timeout. (There is no reason to block during the simulation
          * as it only decreases simulator performance.)
          */
-        tp->tv_sec = 0;
-        tp->tv_usec = 0;
+        timeout->tv_sec = 0;
+        timeout->tv_usec = 0;
 
         retval = select(nfds_h,
-                        fds_read_ptr ? &rd_h : nullptr,
-                        fds_writ_ptr ? &wr_h : nullptr,
-                        fds_excp_ptr ? &ex_h : nullptr,
-                        (timeval*)&*tp);
+                        readfds ? &readfds_h : nullptr,
+                        writefds ? &writefds_h : nullptr,
+                        errorfds ? &errorfds_h : nullptr,
+                        (timeval *)(typename OS::timeval *)timeout);
     } else {
         /**
          * If the timeval pointer is null, setup a new timeval structure to
@@ -2395,9 +2340,9 @@ selectFunc(SyscallDesc *desc, ThreadContext *tc,
         struct timeval tv = { 0, 0 };
 
         retval = select(nfds_h,
-                        fds_read_ptr ? &rd_h : nullptr,
-                        fds_writ_ptr ? &wr_h : nullptr,
-                        fds_excp_ptr ? &ex_h : nullptr,
+                        readfds ? &readfds_h : nullptr,
+                        readfds ? &writefds_h : nullptr,
+                        readfds ? &errorfds_h : nullptr,
                         &tv);
 
         if (retval == 0) {
@@ -2416,9 +2361,9 @@ selectFunc(SyscallDesc *desc, ThreadContext *tc,
     if (retval == -1)
         return -errno;
 
-    FD_ZERO((fd_set*)&*rd_t);
-    FD_ZERO((fd_set*)&*wr_t);
-    FD_ZERO((fd_set*)&*ex_t);
+    FD_ZERO(readfds);
+    FD_ZERO(writefds);
+    FD_ZERO(errorfds);
 
     /**
      * We need to translate the host file descriptor set into a target file
@@ -2426,30 +2371,15 @@ selectFunc(SyscallDesc *desc, ThreadContext *tc,
      * and the fd_set defined in header files.
      */
     for (int i = 0; i < nfds_h; i++) {
-        if (fds_read_ptr) {
-            if (FD_ISSET(i, &rd_h))
-                FD_SET(trans_map[i], (fd_set*)&*rd_t);
-        }
+        if (readfds && FD_ISSET(i, &readfds_h))
+            FD_SET(trans_map[i], readfds);
 
-        if (fds_writ_ptr) {
-            if (FD_ISSET(i, &wr_h))
-                FD_SET(trans_map[i], (fd_set*)&*wr_t);
-        }
+        if (writefds && FD_ISSET(i, &writefds_h))
+            FD_SET(trans_map[i], writefds);
 
-        if (fds_excp_ptr) {
-            if (FD_ISSET(i, &ex_h))
-                FD_SET(trans_map[i], (fd_set*)&*ex_t);
-        }
+        if (errorfds && FD_ISSET(i, &errorfds_h))
+            FD_SET(trans_map[i], errorfds);
     }
-
-    if (fds_read_ptr)
-        rd_t.copyOut(tc->getVirtProxy());
-    if (fds_writ_ptr)
-        wr_t.copyOut(tc->getVirtProxy());
-    if (fds_excp_ptr)
-        ex_t.copyOut(tc->getVirtProxy());
-    if (time_val_ptr)
-        tp.copyOut(tc->getVirtProxy());
 
     return retval;
 }
