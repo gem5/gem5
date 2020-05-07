@@ -132,7 +132,6 @@ structure (Sequencer, external = "yes") {
   void evictionCallback(Addr);
   void recordRequestType(SequencerRequestType);
   bool checkResourceAvailable(CacheResourceType, Addr);
-  void invalidateSC(Addr);
 }
 
 structure (GPUCoalescer, external = "yes") {
