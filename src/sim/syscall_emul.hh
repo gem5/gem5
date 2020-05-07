@@ -101,6 +101,7 @@
 #include "sim/futex_map.hh"
 #include "sim/guest_abi.hh"
 #include "sim/process.hh"
+#include "sim/proxy_ptr.hh"
 #include "sim/syscall_debug_macros.hh"
 #include "sim/syscall_desc.hh"
 #include "sim/syscall_emul_buf.hh"

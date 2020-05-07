@@ -69,7 +69,6 @@
 #include "sim/stat_control.hh"
 #include "sim/stats.hh"
 #include "sim/system.hh"
-#include "sim/vptr.hh"
 
 using namespace std;
 using namespace Stats;
