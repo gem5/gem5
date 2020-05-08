@@ -121,6 +121,8 @@ class GlobalMemPipeline
         loadVrfBankConflictCycles += num_cycles;
     }
 
+    bool coalescerReady(GPUDynInstPtr mp) const;
+
   private:
     ComputeUnit *computeUnit;
     std::string _name;

@@ -48,6 +48,7 @@
 #include "mem/ruby/protocol/RubyRequestType.hh"
 #include "mem/ruby/protocol/SequencerRequestType.hh"
 #include "mem/ruby/system/Sequencer.hh"
+#include "mem/token_port.hh"
 
 class DataBlock;
 class CacheMsg;
@@ -59,47 +60,99 @@ class RubyGPUCoalescerParams;
 HSAScope reqScopeToHSAScope(const RequestPtr &req);
 HSASegment reqSegmentToHSASegment(const RequestPtr &req);
 
-struct GPUCoalescerRequest
-{
-    PacketPtr pkt;
-    RubyRequestType m_type;
-    Cycles issue_time;
+// List of packets that belongs to a specific instruction.
+typedef std::list<PacketPtr> PerInstPackets;
 
-    GPUCoalescerRequest(PacketPtr _pkt, RubyRequestType _m_type,
-                        Cycles _issue_time)
-        : pkt(_pkt), m_type(_m_type), issue_time(_issue_time)
-    {}
-};
-
-class RequestDesc
+class UncoalescedTable
 {
   public:
-    RequestDesc(PacketPtr pkt, RubyRequestType p_type, RubyRequestType s_type)
-        : pkt(pkt), primaryType(p_type), secondaryType(s_type)
-    {
-    }
+    UncoalescedTable(GPUCoalescer *gc);
+    ~UncoalescedTable() {}
 
-    RequestDesc() : pkt(nullptr), primaryType(RubyRequestType_NULL),
-        secondaryType(RubyRequestType_NULL)
-    {
-    }
+    void insertPacket(PacketPtr pkt);
+    bool packetAvailable();
+    void printRequestTable(std::stringstream& ss);
 
-    PacketPtr pkt;
-    RubyRequestType primaryType;
-    RubyRequestType secondaryType;
+    // Returns a pointer to the list of packets corresponding to an
+    // instruction in the instruction map or nullptr if there are no
+    // instructions at the offset.
+    PerInstPackets* getInstPackets(int offset);
+    void updateResources();
+
+    // Check if a packet hasn't been removed from instMap in too long.
+    // Panics if a deadlock is detected and returns nothing otherwise.
+    void checkDeadlock(Tick threshold);
+
+  private:
+    GPUCoalescer *coalescer;
+
+    // Maps an instructions unique sequence number to a queue of packets
+    // which need responses. This data structure assumes the sequence number
+    // is monotonically increasing (which is true for CU class) in order to
+    // issue packets in age order.
+    std::map<uint64_t, PerInstPackets> instMap;
 };
 
-std::ostream& operator<<(std::ostream& out, const GPUCoalescerRequest& obj);
+class CoalescedRequest
+{
+  public:
+    CoalescedRequest(uint64_t _seqNum)
+        : seqNum(_seqNum), issueTime(Cycles(0)),
+          rubyType(RubyRequestType_NULL)
+    {}
+    ~CoalescedRequest() {}
+
+    void insertPacket(PacketPtr pkt) { pkts.push_back(pkt); }
+    void setSeqNum(uint64_t _seqNum) { seqNum = _seqNum; }
+    void setIssueTime(Cycles _issueTime) { issueTime = _issueTime; }
+    void setRubyType(RubyRequestType type) { rubyType = type; }
+
+    uint64_t getSeqNum() const { return seqNum; }
+    PacketPtr getFirstPkt() const { return pkts[0]; }
+    Cycles getIssueTime() const { return issueTime; }
+    RubyRequestType getRubyType() const { return rubyType; }
+    std::vector<PacketPtr>& getPackets() { return pkts; }
+
+  private:
+    uint64_t seqNum;
+    Cycles issueTime;
+    RubyRequestType rubyType;
+    std::vector<PacketPtr> pkts;
+};
 
 class GPUCoalescer : public RubyPort
 {
   public:
+    class GMTokenPort : public TokenSlavePort
+    {
+      public:
+        GMTokenPort(const std::string& name, ClockedObject *owner,
+                    PortID id = InvalidPortID)
+            : TokenSlavePort(name, owner, id)
+        { }
+        ~GMTokenPort() { }
+
+      protected:
+        Tick recvAtomic(PacketPtr) { return Tick(0); }
+        void recvFunctional(PacketPtr) { }
+        bool recvTimingReq(PacketPtr) { return false; }
+        AddrRangeList getAddrRanges() const
+        {
+            AddrRangeList ranges;
+            return ranges;
+        }
+    };
+
     typedef RubyGPUCoalescerParams Params;
     GPUCoalescer(const Params *);
     ~GPUCoalescer();
 
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
+
     // Public Methods
     void wakeup(); // Used only for deadlock detection
+    void printRequestTable(std::stringstream& ss);
 
     void printProgress(std::ostream& out) const;
     void resetStats() override;
@@ -177,12 +230,12 @@ class GPUCoalescer : public RubyPort
 
     void print(std::ostream& out) const;
 
-    void markRemoved();
-    void removeRequest(GPUCoalescerRequest* request);
     void evictionCallback(Addr address);
     void completeIssue();
 
     void insertKernel(int wavefront_id, PacketPtr pkt);
+
+    GMTokenPort& getGMTokenPort() { return gmTokenPort; }
 
     void recordRequestType(SequencerRequestType requestType);
     Stats::Histogram& getOutstandReqHist() { return m_outstandReqHist; }
@@ -224,11 +277,11 @@ class GPUCoalescer : public RubyPort
                         Addr pc, RubyAccessMode access_mode,
                         int size, DataBlock*& data_ptr);
     // Alternate implementations in VIPER Coalescer
-    virtual void issueRequest(PacketPtr pkt, RubyRequestType type);
+    virtual void issueRequest(CoalescedRequest* crequest);
 
     void kernelCallback(int wavfront_id);
 
-    void hitCallback(GPUCoalescerRequest* request,
+    void hitCallback(CoalescedRequest* crequest,
                      MachineType mach,
                      DataBlock& data,
                      bool success,
@@ -236,21 +289,23 @@ class GPUCoalescer : public RubyPort
                      Cycles forwardRequestTime,
                      Cycles firstResponseTime,
                      bool isRegion);
-    void recordMissLatency(GPUCoalescerRequest* request,
+    void recordMissLatency(CoalescedRequest* crequest,
                            MachineType mach,
                            Cycles initialRequestTime,
                            Cycles forwardRequestTime,
                            Cycles firstResponseTime,
                            bool success, bool isRegion);
-    void completeHitCallback(std::vector<PacketPtr> & mylist, int len);
-    PacketPtr mapAddrToPkt(Addr address);
+    void completeHitCallback(std::vector<PacketPtr> & mylist);
 
 
-    RequestStatus getRequestStatus(PacketPtr pkt,
-                                   RubyRequestType request_type);
-    bool insertRequest(PacketPtr pkt, RubyRequestType request_type);
+    virtual RubyRequestType getRequestType(PacketPtr pkt);
 
-    bool handleLlsc(Addr address, GPUCoalescerRequest* request);
+    // Attempt to remove a packet from the uncoalescedTable and coalesce
+    // with a previous request from the same instruction. If there is no
+    // previous instruction and the max number of outstanding requests has
+    // not be reached, a new coalesced request is created and added to the
+    // "target" list of the coalescedTable.
+    bool coalescePacket(PacketPtr pkt);
 
     EventFunctionWrapper issueEvent;
 
@@ -258,22 +313,27 @@ class GPUCoalescer : public RubyPort
   // Changed to protected to enable inheritance by VIPER Coalescer
   protected:
     int m_max_outstanding_requests;
-    int m_deadlock_threshold;
+    Cycles m_deadlock_threshold;
 
     CacheMemory* m_dataCache_ptr;
     CacheMemory* m_instCache_ptr;
 
-    // We need to track both the primary and secondary request types.
-    // The secondary request type comprises a subset of RubyRequestTypes that
-    // are understood by the L1 Controller. A primary request type can be any
-    // RubyRequestType.
-    typedef std::unordered_map<Addr, std::vector<RequestDesc>> CoalescingTable;
-    CoalescingTable reqCoalescer;
-    std::vector<Addr> newRequests;
+    // coalescingWindow is the maximum number of instructions that are
+    // allowed to be coalesced in a single cycle.
+    int coalescingWindow;
 
-    typedef std::unordered_map<Addr, GPUCoalescerRequest*> RequestTable;
-    RequestTable m_writeRequestTable;
-    RequestTable m_readRequestTable;
+    // The uncoalescedTable contains several "columns" which hold memory
+    // request packets for an instruction. The maximum size is the number of
+    // columns * the wavefront size.
+    UncoalescedTable uncoalescedTable;
+
+    // An MSHR-like struct for holding coalesced requests. The requests in
+    // this table may or may not be outstanding in the memory hierarchy. The
+    // maximum size is equal to the maximum outstanding requests for a CU
+    // (typically the number of blocks in TCP). If there are duplicates of
+    // an address, the are serviced in age order.
+    std::map<Addr, std::deque<CoalescedRequest*>> coalescedTable;
+
     // Global outstanding request count, across all request tables
     int m_outstanding_count;
     bool m_deadlock_check_scheduled;
@@ -334,7 +394,12 @@ class GPUCoalescer : public RubyPort
     std::vector<Stats::Histogram *> m_ForwardToFirstResponseDelayHist;
     std::vector<Stats::Histogram *> m_FirstResponseToCompletionDelayHist;
 
-private:
+  private:
+    // Token port is used to send/receive tokens to/from GPU's global memory
+    // pipeline across the port boundary. There is one per <wave size> data
+    // ports in the CU.
+    GMTokenPort gmTokenPort;
+
     // Private copy constructor and assignment operator
     GPUCoalescer(const GPUCoalescer& obj);
     GPUCoalescer& operator=(const GPUCoalescer& obj);

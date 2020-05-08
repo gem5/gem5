@@ -74,9 +74,9 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p), fetchStage(p),
     req_tick_latency(p->mem_req_latency * p->clk_domain->clockPeriod()),
     resp_tick_latency(p->mem_resp_latency * p->clk_domain->clockPeriod()),
     _masterId(p->system->getMasterId(this, "ComputeUnit")),
-    lds(*p->localDataStore), _cacheLineSize(p->system->cacheLineSize()),
-    globalSeqNum(0), wavefrontSize(p->wfSize),
-    kernelLaunchInst(new KernelLaunchStaticInst())
+    lds(*p->localDataStore), gmTokenPort(name() + ".gmTokenPort", this),
+    _cacheLineSize(p->system->cacheLineSize()), globalSeqNum(0),
+    wavefrontSize(p->wfSize), kernelLaunchInst(new KernelLaunchStaticInst())
 {
     /**
      * This check is necessary because std::bitset only provides conversion
@@ -138,6 +138,10 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p), fetchStage(p),
     }
 
     memPort.resize(wfSize());
+
+    // Setup tokens for slave ports. The number of tokens in memSlaveTokens
+    // is the total token count for the entire vector port (i.e., this CU).
+    memPortTokens = new TokenManager(p->max_cu_tokens);
 
     // resize the tlbPort vectorArray
     int tlbPort_width = perLaneTLB ? wfSize() : 1;
@@ -612,6 +616,8 @@ ComputeUnit::init()
     vectorAluInstAvail.resize(numSIMDs, false);
     shrMemInstAvail = 0;
     glbMemInstAvail = 0;
+
+    gmTokenPort.setTokenManager(memPortTokens);
 }
 
 bool

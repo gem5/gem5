@@ -434,6 +434,11 @@ Wavefront::ready(itype_e type)
             return 0;
         }
 
+        // Does the coalescer have space for our instruction?
+        if (!computeUnit->globalMemoryPipe.coalescerReady(ii)) {
+            return 0;
+        }
+
         if (!computeUnit->globalMemoryPipe.
             isGMReqFIFOWrRdy(rdGmReqsInPipe + wrGmReqsInPipe)) {
             // Can we insert a new request to the Global Mem Request FIFO?
@@ -504,6 +509,12 @@ Wavefront::ready(itype_e type)
         if (!locMemIssueRdy) {
             return 0;
         }
+
+        // Does the coalescer have space for our instruction?
+        if (!computeUnit->globalMemoryPipe.coalescerReady(ii)) {
+            return 0;
+        }
+
         if (!computeUnit->globalMemoryPipe.
             isGMReqFIFOWrRdy(rdGmReqsInPipe + wrGmReqsInPipe)) {
             // Can we insert a new request to the Global Mem Request FIFO?

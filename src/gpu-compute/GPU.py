@@ -129,6 +129,8 @@ class ComputeUnit(ClockedObject):
                                       "memory pipeline's queues")
     local_mem_queue_size = Param.Int(256, "Number of entries in the local "
                                       "memory pipeline's queues")
+    max_cu_tokens = Param.Int(4, "Maximum number of tokens, i.e., the number"\
+                            " of instructions that can be sent to coalescer")
     ldsBus = Bridge() # the bridge between the CU and its LDS
     ldsPort = MasterPort("The port that goes to the LDS")
     localDataStore = Param.LdsState("the LDS for this CU")

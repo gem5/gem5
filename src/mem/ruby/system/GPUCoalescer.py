@@ -42,6 +42,8 @@ class RubyGPUCoalescer(RubyPort):
    # max_outstanding_requests = (wave front slots) x (wave front size)
    max_outstanding_requests = Param.Int(40*64,
                                 "max requests (incl. prefetches) outstanding")
+   max_coalesces_per_cycle = Param.Int(1, "max instructions that can be " \
+                                "coalesced in a single cycle")
    assume_rfo = Param.Bool(True, "assume protocol implementes Read for "
                            "Ownership coherence");
 

@@ -33,6 +33,7 @@
 
 #include "gpu-compute/global_memory_pipeline.hh"
 
+#include "debug/GPUCoalescer.hh"
 #include "debug/GPUMem.hh"
 #include "debug/GPUReg.hh"
 #include "gpu-compute/compute_unit.hh"
@@ -54,6 +55,25 @@ GlobalMemPipeline::init(ComputeUnit *cu)
     computeUnit = cu;
     globalMemSize = computeUnit->shader->globalMemSize;
     _name = computeUnit->name() + ".GlobalMemPipeline";
+}
+
+bool
+GlobalMemPipeline::coalescerReady(GPUDynInstPtr mp) const
+{
+    // We require one token from the coalescer's uncoalesced table to
+    // proceed
+    int token_count = 1;
+
+    // Make sure the vector port has tokens. There is a single pool
+    // of tokens so only one port in the vector port needs to be checked.
+    // Lane 0 is chosen arbirarily.
+    DPRINTF(GPUCoalescer, "Checking for %d tokens\n", token_count);
+    if (!mp->computeUnit()->getTokenManager()->haveTokens(token_count)) {
+        DPRINTF(GPUCoalescer, "Stalling inst because coalsr is busy!\n");
+        return false;
+    }
+
+    return true;
 }
 
 void
@@ -124,6 +144,14 @@ GlobalMemPipeline::exec()
             }
         }
 
+        DPRINTF(GPUCoalescer, "initiateAcc for %s seqNum %d\n",
+                mp->disassemble(), mp->seqNum());
+        // Memfences will not return tokens and must be issued so we should
+        // not request one as this will deplete the token count until deadlock
+        if (!mp->isMemFence()) {
+            assert(mp->computeUnit()->getTokenManager()->haveTokens(1));
+            mp->computeUnit()->getTokenManager()->acquireTokens(1);
+        }
         mp->initiateAcc(mp);
 
         if (!outOfOrderDataDelivery && !mp->isMemFence()) {

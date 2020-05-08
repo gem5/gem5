@@ -51,6 +51,7 @@
 #include "gpu-compute/schedule_stage.hh"
 #include "gpu-compute/scoreboard_check_stage.hh"
 #include "mem/port.hh"
+#include "mem/token_port.hh"
 #include "sim/clocked_object.hh"
 
 static const int MAX_REGS_FOR_NON_VEC_MEM_INST = 1;
@@ -415,6 +416,26 @@ class ComputeUnit : public ClockedObject
 
     CUExitCallback *cuExitCallback;
 
+    class GMTokenPort : public TokenMasterPort
+    {
+      public:
+        GMTokenPort(const std::string& name, SimObject *owner,
+                    PortID id = InvalidPortID)
+            : TokenMasterPort(name, owner, id)
+        { }
+        ~GMTokenPort() { }
+
+      protected:
+        bool recvTimingResp(PacketPtr) { return false; }
+        void recvReqRetry() { }
+    };
+
+    // Manager for the number of tokens available to this compute unit to
+    // send global memory request packets to the coalescer this is only used
+    // between global memory pipe and TCP coalescer.
+    TokenManager *memPortTokens;
+    GMTokenPort gmTokenPort;
+
     /** Data access Port **/
     class DataPort : public MasterPort
     {
@@ -677,6 +698,12 @@ class ComputeUnit : public ClockedObject
         return ldsPort;
     }
 
+    TokenManager *
+    getTokenManager()
+    {
+        return memPortTokens;
+    }
+
     /** The memory port for SIMD data accesses.
      *  Can be connected to PhysMem for Ruby for timing simulations
      */
@@ -712,6 +739,8 @@ class ComputeUnit : public ClockedObject
             }
             ldsPort = new LDSPort(csprintf("%s-port", name()), this, idx);
             return *ldsPort;
+        } else if (if_name == "gmTokenPort") {
+            return gmTokenPort;
         } else {
             panic("incorrect port name");
         }

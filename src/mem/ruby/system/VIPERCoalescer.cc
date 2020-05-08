@@ -76,15 +76,8 @@ VIPERCoalescer::~VIPERCoalescer()
 {
 }
 
-// Analyzes the packet to see if this request can be coalesced.
-// If request can be coalesced, this request is added to the reqCoalescer table
-// and makeRequest returns RequestStatus_Issued;
-// If this is the first request to a cacheline, request is added to both
-// newRequests queue and to the reqCoalescer table; makeRequest
-// returns RequestStatus_Issued.
-// If there is a pending request to this cacheline and this request
-// can't be coalesced, RequestStatus_Aliased is returned and
-// the packet needs to be reissued.
+// Places an uncoalesced packet in uncoalescedTable. If the packet is a
+// special type (MemFence, scoping, etc), it is issued immediately.
 RequestStatus
 VIPERCoalescer::makeRequest(PacketPtr pkt)
 {
@@ -109,7 +102,6 @@ VIPERCoalescer::makeRequest(PacketPtr pkt)
 
             return RequestStatus_Issued;
         }
-//        return RequestStatus_Aliased;
     } else if (pkt->req->isKernel() && pkt->req->isRelease()) {
         // Flush Dirty Data on Kernel End
         // isKernel + isRelease
@@ -123,13 +115,10 @@ VIPERCoalescer::makeRequest(PacketPtr pkt)
         }
         return RequestStatus_Issued;
     }
-    RequestStatus requestStatus = GPUCoalescer::makeRequest(pkt);
-    if (requestStatus!=RequestStatus_Issued) {
-        // Request not isssued
-        // enqueue Retry
-        DPRINTF(GPUCoalescer, "Request not issued by GPUCoaleser\n");
-        return requestStatus;
-    } else if (pkt->req->isKernel() && pkt->req->isAcquire()) {
+
+    GPUCoalescer::makeRequest(pkt);
+
+    if (pkt->req->isKernel() && pkt->req->isAcquire()) {
         // Invalidate clean Data on Kernel Begin
         // isKernel + isAcquire
         invL1();
