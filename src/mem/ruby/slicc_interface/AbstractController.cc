@@ -56,7 +56,7 @@ AbstractController::AbstractController(const Params *p)
       m_transitions_per_cycle(p->transitions_per_cycle),
       m_buffer_size(p->buffer_size), m_recycle_latency(p->recycle_latency),
       m_mandatory_queue_latency(p->mandatory_queue_latency),
-      memoryPort(csprintf("%s.memory", name()), this, ""),
+      memoryPort(csprintf("%s.memory", name()), this),
       addrRanges(p->addr_ranges.begin(), p->addr_ranges.end())
 {
     if (m_version == 0) {
@@ -250,12 +250,15 @@ AbstractController::serviceMemoryQueue()
         // to make more progress. Make sure it wakes up
         scheduleEvent(Cycles(1));
         recvTimingResp(pkt);
-    } else {
+    } else if (memoryPort.sendTimingReq(pkt)) {
         mem_queue->dequeue(clockEdge());
-        memoryPort.schedTimingReq(pkt, clockEdge());
         // Since the queue was popped the controller may be able
         // to make more progress. Make sure it wakes up
         scheduleEvent(Cycles(1));
+    } else {
+        scheduleEvent(Cycles(1));
+        delete pkt;
+        delete s;
     }
 
     return true;
@@ -305,11 +308,6 @@ int
 AbstractController::functionalMemoryWrite(PacketPtr pkt)
 {
     int num_functional_writes = 0;
-
-    // Check the buffer from the controller to the memory.
-    if (memoryPort.trySatisfyFunctional(pkt)) {
-        num_functional_writes++;
-    }
 
     // Update memory itself.
     memoryPort.sendFunctional(pkt);
@@ -369,12 +367,15 @@ AbstractController::MemoryPort::recvTimingResp(PacketPtr pkt)
     return true;
 }
 
+void
+AbstractController::MemoryPort::recvReqRetry()
+{
+    controller->serviceMemoryQueue();
+}
+
 AbstractController::MemoryPort::MemoryPort(const std::string &_name,
                                            AbstractController *_controller,
-                                           const std::string &_label)
-    : QueuedMasterPort(_name, _controller, reqQueue, snoopRespQueue),
-      reqQueue(*_controller, *this, _label),
-      snoopRespQueue(*_controller, *this, false, _label),
-      controller(_controller)
+                                           PortID id)
+    : MasterPort(_name, _controller, id), controller(_controller)
 {
 }

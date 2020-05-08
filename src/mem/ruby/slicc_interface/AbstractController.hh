@@ -228,26 +228,25 @@ class AbstractController : public ClockedObject, public Consumer
 
     /**
      * Port that forwards requests and receives responses from the
-     * memory controller.  It has a queue of packets not yet sent.
+     * memory controller.
      */
-    class MemoryPort : public QueuedMasterPort
+    class MemoryPort : public MasterPort
     {
       private:
-        // Packet queues used to store outgoing requests and snoop responses.
-        ReqPacketQueue reqQueue;
-        SnoopRespPacketQueue snoopRespQueue;
-
         // Controller that operates this port.
         AbstractController *controller;
 
       public:
         MemoryPort(const std::string &_name, AbstractController *_controller,
-                   const std::string &_label);
+                   PortID id = InvalidPortID);
 
+      protected:
         // Function for receiving a timing response from the peer port.
         // Currently the pkt is handed to the coherence controller
         // associated with this port.
         bool recvTimingResp(PacketPtr pkt);
+
+        void recvReqRetry();
     };
 
     /* Master port to the memory controller. */
