@@ -60,7 +60,7 @@ class SETranslatingPortProxy : public TranslatingPortProxy
     bool fixupAddr(Addr addr, BaseTLB::Mode mode) const override;
 
   public:
-    SETranslatingPortProxy(ThreadContext *tc, AllocType alloc,
+    SETranslatingPortProxy(ThreadContext *tc, AllocType alloc=NextPage,
                            Request::Flags _flags=0);
 };
 
