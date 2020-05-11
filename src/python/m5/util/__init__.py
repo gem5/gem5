@@ -1,4 +1,4 @@
-# Copyright (c) 2016 ARM Limited
+# Copyright (c) 2016, 2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -177,9 +177,16 @@ def printList(items, indent=4):
             line += item
             print(line)
 
-def readCommand(cmd, **kwargs):
-    """run the command cmd, read the results and return them
-    this is sorta like `cmd` in shell"""
+def readCommandWithReturn(cmd, **kwargs):
+    """
+    run the command cmd, read the results and return them
+    this is sorta like `cmd` in shell
+
+    :param cmd: command to run with Popen
+    :type cmd: string, list
+    :returns: pair consisting on Popen retcode and the command stdout
+    :rtype: (int, string)
+    """
     from subprocess import Popen, PIPE, STDOUT
 
     if isinstance(cmd, str):
@@ -196,10 +203,23 @@ def readCommand(cmd, **kwargs):
         subp = Popen(cmd, **kwargs)
     except Exception as e:
         if no_exception:
-            return exception
+            return -1, exception
         raise
 
-    return subp.communicate()[0].decode('utf-8')
+    output = subp.communicate()[0].decode('utf-8')
+    return subp.returncode, output
+
+def readCommand(cmd, **kwargs):
+    """
+    run the command cmd, read the results and return them
+    this is sorta like `cmd` in shell
+
+    :param cmd: command to run with Popen
+    :type cmd: string, list
+    :returns: command stdout
+    :rtype: string
+    """
+    return readCommandWithReturn(cmd, **kwargs)[1]
 
 def makeDir(path):
     """Make a directory if it doesn't exist.  If the path does exist,
