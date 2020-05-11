@@ -20,12 +20,7 @@ test-insttest-rv64i-linux-TimingSimpleCPU-RISCV-x86_64-debug
 test-insttest-rv64i-linux-DerivO3CPU-RISCV-x86_64-debug
 test-insttest-linux-AtomicSimpleCPU-SPARC-x86_64-debug
 test-insttest-linux-TimingSimpleCPU-SPARC-x86_64-debug
-test-insttest-rv64a-linux-MinorCPU-RISCV-x86_64-fast
-test-insttest-rv64c-linux-MinorCPU-RISCV-x86_64-fast
-test-insttest-rv64d-linux-MinorCPU-RISCV-x86_64-fast
-test-insttest-rv64f-linux-MinorCPU-RISCV-x86_64-fast
 test-insttest-rv64i-linux-MinorCPU-RISCV-x86_64-fast
-test-insttest-rv64m-linux-MinorCPU-RISCV-x86_64-fast
 test-insttest-rv64i-linux-AtomicSimpleCPU-RISCV-x86_64-fast
 test-insttest-rv64i-linux-TimingSimpleCPU-RISCV-x86_64-fast
 test-insttest-rv64i-linux-DerivO3CPU-RISCV-x86_64-fast

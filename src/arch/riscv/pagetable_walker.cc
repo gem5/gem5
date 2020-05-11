@@ -386,10 +386,9 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             if (!functional)
                 walker->tlb->insert(entry.vaddr, entry);
             else {
-                Addr offset = entry.vaddr & mask(entry.logBytes);
-                Addr paddr = entry.paddr << PageShift | offset;
                 DPRINTF(PageTableWalker, "Translated %#x -> %#x\n",
-                        entry.vaddr, paddr);
+                        entry.vaddr, entry.paddr << PageShift |
+                        (entry.vaddr & mask(entry.logBytes)));
             }
         }
         endWalk();
