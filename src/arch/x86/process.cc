@@ -67,32 +67,6 @@
 using namespace std;
 using namespace X86ISA;
 
-static const int ArgumentReg[] = {
-    INTREG_RDI,
-    INTREG_RSI,
-    INTREG_RDX,
-    // This argument register is r10 for syscalls and rcx for C.
-    INTREG_R10W,
-    // INTREG_RCX,
-    INTREG_R8W,
-    INTREG_R9W
-};
-
-static const int NumArgumentRegs M5_VAR_USED =
-    sizeof(ArgumentReg) / sizeof(const int);
-
-static const int ArgumentReg32[] = {
-    INTREG_EBX,
-    INTREG_ECX,
-    INTREG_EDX,
-    INTREG_ESI,
-    INTREG_EDI,
-    INTREG_EBP
-};
-
-static const int NumArgumentRegs32 M5_VAR_USED =
-    sizeof(ArgumentReg) / sizeof(const int);
-
 template class MultiLevelPageTable<LongModePTE<47, 39>,
                                    LongModePTE<38, 30>,
                                    LongModePTE<29, 21>,

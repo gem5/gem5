@@ -64,14 +64,14 @@ class MathExprPowerModel : public PowerModelState
      *
      * @return Power (Watts) consumed by this object (dynamic component)
      */
-    double getDynamicPower() const { return eval(dyn_expr); }
+    double getDynamicPower() const override { return eval(dyn_expr); }
 
     /**
      * Get the static power consumption.
      *
      * @return Power (Watts) consumed by this object (static component)
      */
-    double getStaticPower() const { return eval(st_expr); }
+    double getStaticPower() const override { return eval(st_expr); }
 
     /**
      * Get the value for a variable (maps to a stat)
