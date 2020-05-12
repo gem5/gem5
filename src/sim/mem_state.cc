@@ -369,6 +369,7 @@ MemState::remapRegion(Addr start_addr, Addr new_start_addr, Addr length)
                                          new_start_addr);
 
         start_addr += _pageBytes;
+        new_start_addr += _pageBytes;
 
         /**
          * The regions need to always be page-aligned otherwise the while
