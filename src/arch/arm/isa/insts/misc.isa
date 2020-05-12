@@ -721,7 +721,7 @@ let {{
         SevMailbox = 0;
         PseudoInst::quiesceSkip(tc);
     } else if (tc->getCpuPtr()->getInterruptController(
-                tc->threadId())->checkInterrupts(tc)) {
+                tc->threadId())->checkInterrupts()) {
         PseudoInst::quiesceSkip(tc);
     } else {
         fault = trapWFx(tc, cpsr, scr, true);

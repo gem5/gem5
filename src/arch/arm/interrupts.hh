@@ -57,18 +57,10 @@ namespace ArmISA
 class Interrupts : public BaseInterrupts
 {
   private:
-    BaseCPU * cpu;
-
     bool interrupts[NumInterruptTypes];
     uint64_t intStatus;
 
   public:
-
-    void
-    setCPU(BaseCPU * _cpu)
-    {
-        cpu = _cpu;
-    }
 
     typedef ArmInterruptsParams Params;
 
@@ -78,7 +70,7 @@ class Interrupts : public BaseInterrupts
         return dynamic_cast<const Params *>(_params);
     }
 
-    Interrupts(Params * p) : BaseInterrupts(p), cpu(NULL)
+    Interrupts(Params * p) : BaseInterrupts(p)
     {
         clearAll();
     }
@@ -128,10 +120,10 @@ class Interrupts : public BaseInterrupts
         INT_MASK_P  // pending
     };
 
-    bool takeInt(ThreadContext *tc, InterruptTypes int_type) const;
+    bool takeInt(InterruptTypes int_type) const;
 
     bool
-    checkInterrupts(ThreadContext *tc) const
+    checkInterrupts() const
     {
         HCR  hcr  = tc->readMiscReg(MISCREG_HCR);
 
@@ -150,9 +142,9 @@ class Interrupts : public BaseInterrupts
                (hcr.va && allowVAbort)) )
             return false;
 
-        bool take_irq = takeInt(tc, INT_IRQ);
-        bool take_fiq = takeInt(tc, INT_FIQ);
-        bool take_ea =  takeInt(tc, INT_ABT);
+        bool take_irq = takeInt(INT_IRQ);
+        bool take_fiq = takeInt(INT_FIQ);
+        bool take_ea =  takeInt(INT_ABT);
 
         return ((interrupts[INT_IRQ] && take_irq)                   ||
                 (interrupts[INT_FIQ] && take_fiq)                   ||
@@ -220,9 +212,9 @@ class Interrupts : public BaseInterrupts
     }
 
     Fault
-    getInterrupt(ThreadContext *tc)
+    getInterrupt() override
     {
-        assert(checkInterrupts(tc));
+        assert(checkInterrupts());
 
         HCR  hcr  = tc->readMiscReg(MISCREG_HCR);
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
@@ -236,9 +228,9 @@ class Interrupts : public BaseInterrupts
         bool allowVFiq   = !cpsr.f && hcr.fmo && !isSecure && !isHypMode;
         bool allowVAbort = !cpsr.a && hcr.amo && !isSecure && !isHypMode;
 
-        bool take_irq = takeInt(tc, INT_IRQ);
-        bool take_fiq = takeInt(tc, INT_FIQ);
-        bool take_ea =  takeInt(tc, INT_ABT);
+        bool take_irq = takeInt(INT_IRQ);
+        bool take_fiq = takeInt(INT_FIQ);
+        bool take_ea =  takeInt(INT_ABT);
 
         if (interrupts[INT_IRQ] && take_irq)
             return std::make_shared<Interrupt>();
@@ -262,21 +254,17 @@ class Interrupts : public BaseInterrupts
         panic("intStatus and interrupts not in sync\n");
     }
 
-    void
-    updateIntrInfo(ThreadContext *tc)
-    {
-        ; // nothing to do
-    }
+    void updateIntrInfo() override {} // nothing to do
 
     void
-    serialize(CheckpointOut &cp) const
+    serialize(CheckpointOut &cp) const override
     {
         SERIALIZE_ARRAY(interrupts, NumInterruptTypes);
         SERIALIZE_SCALAR(intStatus);
     }
 
     void
-    unserialize(CheckpointIn &cp)
+    unserialize(CheckpointIn &cp) override
     {
         UNSERIALIZE_ARRAY(interrupts, NumInterruptTypes);
         UNSERIALIZE_SCALAR(intStatus);

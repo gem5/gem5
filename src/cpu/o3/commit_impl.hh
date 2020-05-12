@@ -733,7 +733,7 @@ void
 DefaultCommit<Impl>::handleInterrupt()
 {
     // Verify that we still have an interrupt to handle
-    if (!cpu->checkInterrupts(cpu->tcBase(0))) {
+    if (!cpu->checkInterrupts(0)) {
         DPRINTF(Commit, "Pending interrupt is cleared by master before "
                 "it got handled. Restart fetching from the orig path.\n");
         toIEW->commitInfo[0].clearInterrupt = true;
@@ -813,7 +813,7 @@ DefaultCommit<Impl>::commit()
 {
     if (FullSystem) {
         // Check if we have a interrupt and get read to handle it
-        if (cpu->checkInterrupts(cpu->tcBase(0)))
+        if (cpu->checkInterrupts(0))
             propagateInterrupt();
     }
 
@@ -1125,7 +1125,7 @@ DefaultCommit<Impl>::commitInsts()
                 //
                 // If we don't do this, we might end up in a live lock situation
                 if (!interrupt && avoidQuiesceLiveLock &&
-                    onInstBoundary && cpu->checkInterrupts(cpu->tcBase(0)))
+                    onInstBoundary && cpu->checkInterrupts(0))
                     squashAfter(tid, head_inst);
             } else {
                 DPRINTF(Commit, "Unable to commit head instruction PC:%s "

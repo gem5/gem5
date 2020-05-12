@@ -66,7 +66,8 @@ class BaseCPU;
 
 int divideFromConf(uint32_t conf);
 
-namespace X86ISA {
+namespace X86ISA
+{
 
 ApicRegIndex decodeAddr(Addr paddr);
 
@@ -170,8 +171,6 @@ class Interrupts : public BaseInterrupts
 
     void requestInterrupt(uint8_t vector, uint8_t deliveryMode, bool level);
 
-    BaseCPU *cpu;
-
     int initialApicId;
 
     // Ports for interrupts.
@@ -193,7 +192,7 @@ class Interrupts : public BaseInterrupts
      */
     typedef X86LocalApicParams Params;
 
-    void setCPU(BaseCPU * newCPU) override;
+    void setThreadContext(ThreadContext *_tc) override;
 
     const Params *
     params() const
@@ -261,7 +260,7 @@ class Interrupts : public BaseInterrupts
      * Functions for retrieving interrupts for the CPU to handle.
      */
 
-    bool checkInterrupts(ThreadContext *tc) const override;
+    bool checkInterrupts() const override;
     /**
      * Check if there are pending interrupts without ignoring the
      * interrupts disabled flag.
@@ -275,8 +274,8 @@ class Interrupts : public BaseInterrupts
      * @return true there are unmaskable interrupts pending.
      */
     bool hasPendingUnmaskable() const { return pendingUnmaskableInt; }
-    Fault getInterrupt(ThreadContext *tc) override;
-    void updateIntrInfo(ThreadContext *tc) override;
+    Fault getInterrupt() override;
+    void updateIntrInfo() override;
 
     /*
      * Serialization.

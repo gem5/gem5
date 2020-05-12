@@ -37,14 +37,14 @@ class BaseCPU;
 class BaseInterrupts : public SimObject
 {
   protected:
-    BaseCPU *cpu;
+    ThreadContext *tc = nullptr;
 
   public:
     typedef BaseInterruptsParams Params;
 
     BaseInterrupts(Params *p) : SimObject(p) {}
 
-    virtual void setCPU(BaseCPU * newCPU) = 0;
+    virtual void setThreadContext(ThreadContext *_tc) { tc = _tc; }
 
     const Params *
     params() const
@@ -59,16 +59,16 @@ class BaseInterrupts : public SimObject
     /*
      * Return whether there are any interrupts waiting to be recognized.
      */
-    virtual bool checkInterrupts(ThreadContext *tc) const = 0;
+    virtual bool checkInterrupts() const = 0;
     /*
      * Return an interrupt to process. This should return an interrupt exactly
      * when checkInterrupts returns true.
      */
-    virtual Fault getInterrupt(ThreadContext *tc) = 0;
+    virtual Fault getInterrupt() = 0;
     /*
      * Update interrupt related state after an interrupt has been processed.
      */
-    virtual void updateIntrInfo(ThreadContext *tc) = 0;
+    virtual void updateIntrInfo() = 0;
 
     /*
      * Old functions needed for compatability but which will be phased out

@@ -1141,8 +1141,8 @@ X86KvmCPU::deliverInterrupts()
         // they are getInterrupt() and updateIntrInfo() are called
         // atomically.
         EventQueue::ScopedMigration migrate(interrupts[0]->eventQueue());
-        fault = interrupts[0]->getInterrupt(tc);
-        interrupts[0]->updateIntrInfo(tc);
+        fault = interrupts[0]->getInterrupt();
+        interrupts[0]->updateIntrInfo();
     }
 
     X86Interrupt *x86int(dynamic_cast<X86Interrupt *>(fault.get()));
@@ -1200,7 +1200,7 @@ X86KvmCPU::kvmRun(Tick ticks)
             // the thread context and check if there are /really/
             // interrupts that should be delivered now.
             syncThreadContext();
-            if (lapic->checkInterrupts(tc)) {
+            if (lapic->checkInterrupts()) {
                 DPRINTF(KvmInt,
                         "M5 has pending interrupts, delivering interrupt.\n");
 

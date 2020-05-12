@@ -55,11 +55,7 @@ class Interrupts : public BaseInterrupts
         return dynamic_cast<const Params *>(_params);
     }
 
-    Interrupts(Params * p) : BaseInterrupts(p)
-    {
-    }
-
-    void setCPU(BaseCPU *_cpu) override {}
+    Interrupts(Params * p) : BaseInterrupts(p) {}
 
     //  post(int int_num, int index) is responsible
     //  for posting an interrupt. It sets a bit
@@ -67,7 +63,7 @@ class Interrupts : public BaseInterrupts
     //  MIPS register Cause is updated by updateIntrInfo
     //  which is called by checkInterrupts
     //
-    void post(int int_num, ThreadContext *tc);
+    void post(int int_num);
     void post(int int_num, int index) override;
 
     // clear(int int_num, int index) is responsible
@@ -76,7 +72,7 @@ class Interrupts : public BaseInterrupts
     //  MIPS register Cause is updated by updateIntrInfo
     //  which is called by checkInterrupts
     //
-    void clear(int int_num, ThreadContext* tc);
+    void clear(int int_num);
     void clear(int int_num, int index) override;
 
     //  clearAll() is responsible
@@ -85,25 +81,24 @@ class Interrupts : public BaseInterrupts
     //  MIPS register Cause is updated by updateIntrInfo
     //  which is called by checkInterrupts
     //
-    void clearAll(ThreadContext *tc);
     void clearAll() override;
 
-    // getInterrupt(ThreadContext * tc) checks if an interrupt
+    // getInterrupt() checks if an interrupt
     //  should be returned. It ands the interrupt mask and
     //  and interrupt pending bits to see if one exists. It
     //  also makes sure interrupts are enabled (IE) and
     //  that ERL and ERX are not set
     //
-    Fault getInterrupt(ThreadContext *tc) override;
+    Fault getInterrupt() override;
 
-    // updateIntrInfo(ThreadContext *tc) const syncs the
+    // updateIntrInfo() const syncs the
     //  MIPS cause register with the instatus variable. instatus
     //  is essentially a copy of the MIPS cause[IP7:IP0]
     //
-    void updateIntrInfo(ThreadContext *tc) override;
-    bool interruptsPending(ThreadContext *tc) const;
-    bool onCpuTimerInterrupt(ThreadContext *tc) const;
-    bool checkInterrupts(ThreadContext *tc) const override;
+    void updateIntrInfo() override;
+    bool interruptsPending() const;
+    bool onCpuTimerInterrupt() const;
+    bool checkInterrupts() const override;
 
     void
     serialize(CheckpointOut &cp) const override

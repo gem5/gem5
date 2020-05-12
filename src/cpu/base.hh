@@ -252,9 +252,9 @@ class BaseCPU : public ClockedObject
     }
 
     bool
-    checkInterrupts(ThreadContext *tc) const
+    checkInterrupts(ThreadID tid) const
     {
-        return FullSystem && interrupts[tc->threadId()]->checkInterrupts(tc);
+        return FullSystem && interrupts[tid]->checkInterrupts();
     }
 
     void processProfileEvent();

@@ -72,7 +72,7 @@ IntrControl::havePosted(int cpu_id) const
 {
     DPRINTF(IntrControl, "Check pending interrupts for CPU %d\n", cpu_id);
     auto *tc = sys->threads[cpu_id];
-    return tc->getCpuPtr()->checkInterrupts(tc);
+    return tc->getCpuPtr()->checkInterrupts(tc->threadId());
 }
 
 IntrControl *

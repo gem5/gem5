@@ -46,7 +46,7 @@ ArmInterruptsParams::create()
 }
 
 bool
-ArmISA::Interrupts::takeInt(ThreadContext *tc, InterruptTypes int_type) const
+ArmISA::Interrupts::takeInt(InterruptTypes int_type) const
 {
     // Table G1-17~19 of ARM V8 ARM
     InterruptMask mask;

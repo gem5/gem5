@@ -439,12 +439,12 @@ BaseSimpleCPU::checkForInterrupts()
     SimpleThread* thread = t_info.thread;
     ThreadContext* tc = thread->getTC();
 
-    if (checkInterrupts(tc)) {
-        Fault interrupt = interrupts[curThread]->getInterrupt(tc);
+    if (checkInterrupts(curThread)) {
+        Fault interrupt = interrupts[curThread]->getInterrupt();
 
         if (interrupt != NoFault) {
             t_info.fetchOffset = 0;
-            interrupts[curThread]->updateIntrInfo(tc);
+            interrupts[curThread]->updateIntrInfo();
             interrupt->invoke(tc);
             thread->decoder.reset();
         }

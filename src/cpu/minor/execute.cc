@@ -409,7 +409,7 @@ Execute::handleMemResponse(MinorDynInstPtr inst,
 bool
 Execute::isInterrupted(ThreadID thread_id) const
 {
-    return cpu.checkInterrupts(cpu.getContext(thread_id));
+    return cpu.checkInterrupts(thread_id);
 }
 
 bool
@@ -418,13 +418,11 @@ Execute::takeInterrupt(ThreadID thread_id, BranchData &branch)
     DPRINTF(MinorInterrupt, "Considering interrupt status from PC: %s\n",
         cpu.getContext(thread_id)->pcState());
 
-    Fault interrupt = cpu.getInterruptController(thread_id)->getInterrupt
-        (cpu.getContext(thread_id));
+    Fault interrupt = cpu.getInterruptController(thread_id)->getInterrupt();
 
     if (interrupt != NoFault) {
         /* The interrupt *must* set pcState */
-        cpu.getInterruptController(thread_id)->updateIntrInfo
-            (cpu.getContext(thread_id));
+        cpu.getInterruptController(thread_id)->updateIntrInfo();
         interrupt->invoke(cpu.getContext(thread_id));
 
         assert(!lsq.accessesInFlight());

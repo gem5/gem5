@@ -170,17 +170,6 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
         }
     }
 
-    // The interrupts should always be present unless this CPU is
-    // switched in later or in case it is a checker CPU
-    if (!params()->switched_out && !is_checker) {
-        fatal_if(interrupts.size() != numThreads,
-                 "CPU %s has %i interrupt controllers, but is expecting one "
-                 "per thread (%i)\n",
-                 name(), interrupts.size(), numThreads);
-        for (ThreadID tid = 0; tid < numThreads; tid++)
-            interrupts[tid]->setCPU(this);
-    }
-
     if (FullSystem) {
         if (params()->profile)
             profileEvent = new EventFunctionWrapper(
@@ -432,6 +421,11 @@ BaseCPU::registerThreadContexts()
 {
     assert(system->multiThread || numThreads == 1);
 
+    fatal_if(interrupts.size() != numThreads,
+             "CPU %s has %i interrupt controllers, but is expecting one "
+             "per thread (%i)\n",
+             name(), interrupts.size(), numThreads);
+
     ThreadID size = threadContexts.size();
     for (ThreadID tid = 0; tid < size; ++tid) {
         ThreadContext *tc = threadContexts[tid];
@@ -444,6 +438,8 @@ BaseCPU::registerThreadContexts()
 
         if (!FullSystem)
             tc->getProcessPtr()->assignThreadContext(tc->contextId());
+
+        interrupts[tid]->setThreadContext(tc);
     }
 }
 
@@ -628,7 +624,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 
     interrupts = oldCPU->interrupts;
     for (ThreadID tid = 0; tid < numThreads; tid++) {
-        interrupts[tid]->setCPU(this);
+        interrupts[tid]->setThreadContext(threadContexts[tid]);
     }
     oldCPU->interrupts.clear();
 

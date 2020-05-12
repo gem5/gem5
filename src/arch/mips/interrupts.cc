@@ -39,20 +39,22 @@ namespace MipsISA
 {
 
 static inline uint8_t
-getCauseIP(ThreadContext *tc) {
+getCauseIP(ThreadContext *tc)
+{
     CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
     return cause.ip;
 }
 
 static inline void
-setCauseIP(ThreadContext *tc, uint8_t val) {
+setCauseIP(ThreadContext *tc, uint8_t val)
+{
     CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
     cause.ip = val;
     tc->setMiscRegNoEffect(MISCREG_CAUSE, cause);
 }
 
 void
-Interrupts::post(int int_num, ThreadContext* tc)
+Interrupts::post(int int_num)
 {
     DPRINTF(Interrupt, "Interrupt %d posted\n", int_num);
     if (int_num < 0 || int_num >= NumInterruptLevels)
@@ -70,7 +72,7 @@ Interrupts::post(int int_num, int index)
 }
 
 void
-Interrupts::clear(int int_num, ThreadContext* tc)
+Interrupts::clear(int int_num)
 {
     DPRINTF(Interrupt, "Interrupt %d cleared\n", int_num);
     if (int_num < 0 || int_num >= NumInterruptLevels)
@@ -88,24 +90,18 @@ Interrupts::clear(int int_num, int index)
 }
 
 void
-Interrupts::clearAll(ThreadContext *tc)
+Interrupts::clearAll()
 {
     DPRINTF(Interrupt, "Interrupts all cleared\n");
     uint8_t intstatus = 0;
     setCauseIP(tc, intstatus);
 }
 
-void
-Interrupts::clearAll()
-{
-    fatal("Must use Thread Context when clearing MIPS Interrupts in M5");
-}
-
 
 bool
-Interrupts::checkInterrupts(ThreadContext *tc) const
+Interrupts::checkInterrupts() const
 {
-    if (!interruptsPending(tc))
+    if (!interruptsPending())
         return false;
 
     //Check if there are any outstanding interrupts
@@ -126,9 +122,9 @@ Interrupts::checkInterrupts(ThreadContext *tc) const
 }
 
 Fault
-Interrupts::getInterrupt(ThreadContext * tc)
+Interrupts::getInterrupt()
 {
-    assert(checkInterrupts(tc));
+    assert(checkInterrupts());
 
     StatusReg M5_VAR_USED status = tc->readMiscRegNoEffect(MISCREG_STATUS);
     CauseReg M5_VAR_USED cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
@@ -139,7 +135,7 @@ Interrupts::getInterrupt(ThreadContext * tc)
 }
 
 bool
-Interrupts::onCpuTimerInterrupt(ThreadContext * tc) const
+Interrupts::onCpuTimerInterrupt() const
 {
     RegVal compare = tc->readMiscRegNoEffect(MISCREG_COMPARE);
     RegVal count = tc->readMiscRegNoEffect(MISCREG_COUNT);
@@ -148,19 +144,15 @@ Interrupts::onCpuTimerInterrupt(ThreadContext * tc) const
     return false;
 }
 
-void
-Interrupts::updateIntrInfo(ThreadContext *tc)
-{
-    //Nothing needs to be done.
-}
+void Interrupts::updateIntrInfo() {} // Nothing needs to be done.
 
 bool
-Interrupts::interruptsPending(ThreadContext *tc) const
+Interrupts::interruptsPending() const
 {
     //if there is a on cpu timer interrupt (i.e. Compare == Count)
     //update CauseIP before proceeding to interrupt
-    if (onCpuTimerInterrupt(tc)) {
-        DPRINTF(Interrupt, "Interrupts OnCpuTimerINterrupt(tc) == true\n");
+    if (onCpuTimerInterrupt()) {
+        DPRINTF(Interrupt, "Interrupts OnCpuTimerInterrupt() == true\n");
         //determine timer interrupt IP #
         IntCtlReg intCtl = tc->readMiscRegNoEffect(MISCREG_INTCTL);
         uint8_t intStatus = getCauseIP(tc);

@@ -891,7 +891,7 @@ Fault
 FullO3CPU<Impl>::getInterrupts()
 {
     // Check if there are any outstanding interrupts
-    return this->interrupts[0]->getInterrupt(this->threadContexts[0]);
+    return this->interrupts[0]->getInterrupt();
 }
 
 template <class Impl>
@@ -905,7 +905,7 @@ FullO3CPU<Impl>::processInterrupts(const Fault &interrupt)
     // @todo: Allow other threads to handle interrupts.
 
     assert(interrupt != NoFault);
-    this->interrupts[0]->updateIntrInfo(this->threadContexts[0]);
+    this->interrupts[0]->updateIntrInfo();
 
     DPRINTF(O3CPU, "Interrupt %s being handled\n", interrupt->name());
     this->trap(interrupt, 0, nullptr);
