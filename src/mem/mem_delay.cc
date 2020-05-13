@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 ARM Limited
+ * Copyright (c) 2018, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -87,7 +87,12 @@ MemDelay::MasterPort::MasterPort(const std::string &_name, MemDelay &_parent)
 bool
 MemDelay::MasterPort::recvTimingResp(PacketPtr pkt)
 {
-    const Tick when = curTick() + parent.delayResp(pkt);
+    // technically the packet only reaches us after the header delay,
+    // and typically we also need to deserialise any payload
+    const Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
+    pkt->headerDelay = pkt->payloadDelay = 0;
+
+    const Tick when = curTick() + parent.delayResp(pkt) + receive_delay;
 
     parent.slavePort.schedTimingResp(pkt, when);
 
@@ -136,7 +141,13 @@ MemDelay::SlavePort::recvAtomic(PacketPtr pkt)
 bool
 MemDelay::SlavePort::recvTimingReq(PacketPtr pkt)
 {
-    const Tick when = curTick() + parent.delayReq(pkt);
+    // technically the packet only reaches us after the header
+    // delay, and typically we also need to deserialise any
+    // payload
+    Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
+    pkt->headerDelay = pkt->payloadDelay = 0;
+
+    const Tick when = curTick() + parent.delayReq(pkt) + receive_delay;
 
     parent.masterPort.schedTimingReq(pkt, when);
 
