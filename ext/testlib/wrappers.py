@@ -1,4 +1,4 @@
-# Copyright (c) 2019 ARM Limited
+# Copyright (c) 2019-2020 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -123,6 +123,14 @@ class LoadedTestable(object):
     @property
     def runner(self):
         return self.obj.runner
+
+    @property
+    def time(self):
+        return self.metadata.time
+
+    @time.setter
+    def time(self, value):
+        self.metadata.time = value
 
     # TODO Change log to provide status_update, result_update for all types.
     def log_status(self, status):

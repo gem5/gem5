@@ -170,7 +170,7 @@ class SConsFixture(UniqueFixture):
         command.extend(self.targets)
         if self.options:
             command.extend(self.options)
-        log_call(log.test_log, command, stderr=sys.stderr)
+        log_call(log.test_log, command, time=None, stderr=sys.stderr)
 
 class Gem5Fixture(SConsFixture):
     def __new__(cls, isa, variant, protocol=None):
@@ -208,7 +208,7 @@ class MakeFixture(Fixture):
         targets = set(self.required_by)
         command = ['make', '-C', self.directory]
         command.extend([target.target for target in targets])
-        log_call(log.test_log, command, stderr=sys.stderr)
+        log_call(log.test_log, command, time=None, stderr=sys.stderr)
 
 
 class MakeTarget(Fixture):

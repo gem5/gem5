@@ -132,7 +132,7 @@ class TimedWaitPID(object):
 TimedWaitPID.install()
 
 #TODO Tear out duplicate logic from the sandbox IOManager
-def log_call(logger, command, *popenargs, **kwargs):
+def log_call(logger, command, time, *popenargs, **kwargs):
     '''
     Calls the given process and automatically logs the command and output.
 
@@ -186,6 +186,12 @@ def log_call(logger, command, *popenargs, **kwargs):
     retval = p.wait()
     stdout_thread.join()
     stderr_thread.join()
+
+    if time is not None and TimedWaitPID.has_time_for_pid(p.pid):
+        resource_usage = TimedWaitPID.get_time_for_pid(p.pid)
+        time['user_time'] = resource_usage.user_time
+        time['system_time'] = resource_usage.system_time
+
     # Return the return exit code of the process.
     if retval != 0:
         raise subprocess.CalledProcessError(retval, cmdstr)
@@ -482,7 +488,8 @@ def diff_out_file(ref_file, out_file, logger, ignore_regexes=tuple()):
     (_, tfname) = tempfile.mkstemp(dir=os.path.dirname(out_file), text=True)
     with open(tfname, 'r+') as tempfile_:
         try:
-            log_call(logger, ['diff', out_file, ref_file], stdout=tempfile_)
+            log_call(logger, ['diff', out_file, ref_file],
+                time=None, stdout=tempfile_)
         except OSError:
             # Likely signals that diff does not exist on this system. fallback
             # to difflib

@@ -176,6 +176,7 @@ def _create_test_run_gem5(config, config_args, gem5_args):
         command.append(config)
         # Config_args should set up the program args.
         command.extend(config_args)
-        log_call(params.log, command, stdout=sys.stdout, stderr=sys.stderr)
+        log_call(params.log, command, time=params.time,
+            stdout=sys.stdout, stderr=sys.stderr)
 
     return test_run_gem5

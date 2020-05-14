@@ -79,6 +79,8 @@ class TestParameters(object):
         self.suite = suite
         self.log = log.test_log
         self.log.test = test
+        self.time = {
+            "user_time" : 0, "system_time" : 0}
 
     @helper.cacheresult
     def _fixtures(self):
@@ -151,6 +153,8 @@ class TestRunner(RunnerPattern):
                     traceback.format_exc())
         else:
             self.testable.result = Result(Result.Passed)
+
+        self.testable.time = test_params.time
 
 
 class SuiteRunner(RunnerPattern):
