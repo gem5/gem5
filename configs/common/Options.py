@@ -110,7 +110,7 @@ def addNoISAOptions(parser):
                       help="Specify the physical memory size (single memory)")
     parser.add_option("--enable-dram-powerdown", action="store_true",
                        help="Enable low-power states in DRAMCtrl")
-    parser.add_option("--mem-channels-intlv", type="int",
+    parser.add_option("--mem-channels-intlv", type="int", default=0,
                       help="Memory channels interleave")
 
 

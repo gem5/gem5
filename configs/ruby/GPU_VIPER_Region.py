@@ -29,16 +29,20 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import six
 import math
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
-from Ruby import send_evicts
+from .Ruby import send_evicts
 
 addToPath('../')
 
 from topologies.Cluster import Cluster
+
+if six.PY3:
+    long = int
 
 class CntrlBase:
     _seqs = 0

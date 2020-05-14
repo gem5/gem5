@@ -40,6 +40,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
+import six
 import sys
 from os import getcwd
 from os.path import join as joinpath
@@ -51,6 +52,9 @@ import m5
 from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import *
+
+if six.PY3:
+    long = int
 
 addToPath('../common')
 

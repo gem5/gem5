@@ -49,7 +49,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import argparse
-import ConfigParser
+from six.moves import configparser
 import inspect
 import json
 import re
@@ -63,7 +63,7 @@ if six.PY3:
     long = int
 
 sim_object_classes_by_name = {
-    cls.__name__: cls for cls in m5.objects.__dict__.values()
+    cls.__name__: cls for cls in list(m5.objects.__dict__.values())
     if inspect.isclass(cls) and issubclass(cls, m5.objects.SimObject) }
 
 # Add some parsing functions to Param classes to handle reading in .ini
@@ -129,7 +129,7 @@ param_parsers = {
     'EthernetAddr': simple_parser()
     }
 
-for name, parser in param_parsers.items():
+for name, parser in list(param_parsers.items()):
     setattr(m5.params.__dict__[name], 'parse_ini', classmethod(parser))
 
 class PortConnection(object):
@@ -193,7 +193,7 @@ class ConfigManager(object):
 
         parsed_params = {}
 
-        for param_name, param in object_class._params.items():
+        for param_name, param in list(object_class._params.items()):
             if issubclass(param.ptype, m5.params.ParamValue):
                 if isinstance(param, m5.params.VectorParamDesc):
                     param_values = self.config.get_param_vector(object_name,
@@ -221,7 +221,7 @@ class ConfigManager(object):
         if object_name == 'Null':
             return NULL
 
-        for param_name, param in obj.__class__._params.items():
+        for param_name, param in list(obj.__class__._params.items()):
             if issubclass(param.ptype, m5.objects.SimObject):
                 if isinstance(param, m5.params.VectorParamDesc):
                     param_values = self.config.get_param_vector(object_name,
@@ -286,11 +286,11 @@ class ConfigManager(object):
             return NULL
 
         parsed_ports = []
-        for port_name, port in obj.__class__._ports.items():
+        for port_name, port in list(obj.__class__._ports.items()):
             # Assume that unnamed ports are unconnected
             peers = self.config.get_port_peers(object_name, port_name)
 
-            for index, peer in zip(range(0, len(peers)), peers):
+            for index, peer in zip(list(range(0, len(peers))), peers):
                 parsed_ports.append((
                     PortConnection(object_name, port.name, index),
                     PortConnection.from_string(peer)))
@@ -368,12 +368,12 @@ class ConfigManager(object):
         # Now fill in SimObject-valued parameters in the knowledge that
         #   this won't be interpreted as becoming the parent of objects
         #   which are already in the root hierarchy
-        for name, obj in self.objects_by_name.items():
+        for name, obj in list(self.objects_by_name.items()):
             self.fill_in_simobj_parameters(name, obj)
 
         # Gather a list of all port-to-port connections
         connections = []
-        for name, obj in self.objects_by_name.items():
+        for name, obj in list(self.objects_by_name.items()):
             connections += self.gather_port_connections(name, obj)
 
         # Find an acceptable order to bind those port connections and
@@ -415,7 +415,7 @@ class ConfigFile(object):
 
 class ConfigIniFile(ConfigFile):
     def __init__(self):
-        self.parser = ConfigParser.ConfigParser()
+        self.parser = configparser.ConfigParser()
 
     def load(self, config_file):
         self.parser.read(config_file)
@@ -466,7 +466,7 @@ class ConfigJsonFile(ConfigFile):
             for elem in node:
                 self.find_all_objects(elem)
         elif isinstance(node, dict):
-            for elem in node.values():
+            for elem in list(node.values()):
                 self.find_all_objects(elem)
 
     def load(self, config_file):
@@ -505,7 +505,7 @@ class ConfigJsonFile(ConfigFile):
         obj = self.object_dicts[object_name]
 
         children = []
-        for name, node in obj.items():
+        for name, node in list(obj.items()):
             if self.is_sim_object(node):
                 children.append((name, node['path']))
             elif isinstance(node, list) and node != [] and all([

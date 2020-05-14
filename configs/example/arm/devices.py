@@ -38,11 +38,16 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
+import six
+
 import m5
 from m5.objects import *
 m5.util.addToPath('../../')
 from common.Caches import *
 from common import ObjectList
+
+if six.PY3:
+    long = int
 
 have_kvm = "ArmV8KvmCPU" in ObjectList.cpu_list.get_names()
 have_fastmodel = "FastModelCortexA76" in ObjectList.cpu_list.get_names()

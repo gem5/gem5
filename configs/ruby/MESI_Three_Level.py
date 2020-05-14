@@ -31,8 +31,8 @@ import math
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
-from Ruby import create_topology, create_directories
-from Ruby import send_evicts
+from .Ruby import create_topology, create_directories
+from .Ruby import send_evicts
 from common import FileSystemConfig
 
 #
@@ -294,10 +294,10 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         all_cntrls = all_cntrls + [io_controller]
     # Register configuration with filesystem
     else:
-        for i in xrange(options.num_clusters):
-            for j in xrange(num_cpus_per_cluster):
+        for i in range(options.num_clusters):
+            for j in range(num_cpus_per_cluster):
                 FileSystemConfig.register_cpu(physical_package_id = 0,
-                                              core_siblings = xrange(options.num_cpus),
+                                              core_siblings = range(options.num_cpus),
                                               core_id = i*num_cpus_per_cluster+j,
                                               thread_siblings = [])
 
@@ -329,7 +329,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
                                                    num_l2caches_per_cluster)+'B',
                                             line_size = options.cacheline_size,
                                             assoc = options.l2_assoc,
-                                            cpus = [n for n in xrange(i*num_cpus_per_cluster, \
+                                            cpus = [n for n in range(i*num_cpus_per_cluster, \
                                                                      (i+1)*num_cpus_per_cluster)])
 
     ruby_system.network.number_of_virtual_networks = 3

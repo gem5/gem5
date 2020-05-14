@@ -37,6 +37,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import gzip
+import six
 import optparse
 import os
 
@@ -51,6 +52,9 @@ from common import MemConfig
 
 addToPath('../../util')
 import protolib
+
+if six.PY3:
+    long = int
 
 # this script is helpful to observe the memory latency for various
 # levels in a cache hierarchy, and various cache and memory

@@ -55,10 +55,10 @@ class PathSearchFunc(object):
                     paths = [ '/dist/m5/system', '/n/poolfs/z/dist/m5/system' ]
 
                 # expand '~' and '~user' in paths
-                paths = map(os.path.expanduser, paths)
+                paths = list(map(os.path.expanduser, paths))
 
                 # filter out non-existent directories
-                paths = filter(os.path.isdir, paths)
+                paths = list(filter(os.path.isdir, paths))
 
                 if not paths:
                     raise IOError(

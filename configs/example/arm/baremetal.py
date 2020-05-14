@@ -203,7 +203,7 @@ def main():
                         help="Disk to instantiate")
     parser.add_argument("--readfile", type=str, default="",
                         help = "File to return with the m5 readfile command")
-    parser.add_argument("--cpu", type=str, choices=cpu_types.keys(),
+    parser.add_argument("--cpu", type=str, choices=list(cpu_types.keys()),
                         default="atomic",
                         help="CPU model to use")
     parser.add_argument("--cpu-freq", type=str, default="4GHz")
