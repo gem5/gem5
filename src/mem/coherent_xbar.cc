@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2019 ARM Limited
+ * Copyright (c) 2011-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -180,7 +180,7 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     calcPacketTiming(pkt, xbar_delay);
 
     // determine how long to be crossbar layer is busy
-    Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
+    Tick packetFinishTime = clockEdge(headerLatency) + pkt->payloadDelay;
 
     // is this the destination point for this packet? (e.g. true if
     // this xbar is the PoC for a cache maintenance operation to the
@@ -471,7 +471,7 @@ CoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     calcPacketTiming(pkt, xbar_delay);
 
     // determine how long to be crossbar layer is busy
-    Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
+    Tick packetFinishTime = clockEdge(headerLatency) + pkt->payloadDelay;
 
     if (snoopFilter && !system->bypassCaches()) {
         // let the snoop filter inspect the response and update its state
@@ -619,7 +619,7 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     calcPacketTiming(pkt, xbar_delay);
 
     // determine how long to be crossbar layer is busy
-    Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
+    Tick packetFinishTime = clockEdge(headerLatency) + pkt->payloadDelay;
 
     // forward it either as a snoop response or a normal response
     if (forwardAsSnoop) {

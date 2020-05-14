@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015, 2018-2019 ARM Limited
+ * Copyright (c) 2011-2015, 2018-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -56,6 +56,7 @@ BaseXBar::BaseXBar(const BaseXBarParams *p)
       frontendLatency(p->frontend_latency),
       forwardLatency(p->forward_latency),
       responseLatency(p->response_latency),
+      headerLatency(p->header_latency),
       width(p->width),
       gotAddrRanges(p->port_default_connection_count +
                           p->port_master_connection_count, false),

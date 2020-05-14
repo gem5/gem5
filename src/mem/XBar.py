@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2015, 2017, 2019 ARM Limited
+# Copyright (c) 2012, 2015, 2017, 2019-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -67,6 +67,11 @@ class BaseXBar(ClockedObject):
     frontend_latency = Param.Cycles("Frontend latency")
     forward_latency = Param.Cycles("Forward latency")
     response_latency = Param.Cycles("Response latency")
+
+    # The XBar uses one Layer per master. Each Layer forwards a packet
+    # to its destination and is occupied for header_latency + size /
+    # width cycles
+    header_latency = Param.Cycles(1, "Header latency")
 
     # Width governing the throughput of the crossbar
     width = Param.Unsigned("Datapath width per port (bytes)")

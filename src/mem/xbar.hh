@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015, 2018-2019 ARM Limited
+ * Copyright (c) 2011-2015, 2018-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -307,6 +307,8 @@ class BaseXBar : public ClockedObject
     const Cycles frontendLatency;
     const Cycles forwardLatency;
     const Cycles responseLatency;
+    /** Cycles the layer is occupied processing the packet header */
+    const Cycles headerLatency;
     /** the width of the xbar in bytes */
     const uint32_t width;
 
