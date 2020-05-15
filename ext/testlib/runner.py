@@ -1,3 +1,15 @@
+# Copyright (c) 2020 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2017 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
@@ -33,7 +45,6 @@ import traceback
 import testlib.helper as helper
 import testlib.state as state
 import testlib.log as log
-import testlib.sandbox as sandbox
 
 from testlib.state import Status, Result
 from testlib.fixture import SkipException
@@ -128,14 +139,14 @@ class RunnerPattern:
 
 class TestRunner(RunnerPattern):
     def test(self):
-        self.sandbox_test()
+        test_params = TestParameters(
+            self.testable,
+            self.testable.parent_suite)
 
-    def sandbox_test(self):
         try:
-            sandbox.Sandbox(TestParameters(
-                    self.testable,
-                    self.testable.parent_suite))
-        except sandbox.SubprocessException:
+            # Running the test
+            test_params.test.test(test_params)
+        except Exception:
             self.testable.result = Result(Result.Failed,
                     traceback.format_exc())
         else:
