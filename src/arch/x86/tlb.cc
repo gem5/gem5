@@ -264,7 +264,6 @@ TLB::finalizePhysical(const RequestPtr &req,
         req->setFlags(Request::STRICT_ORDER);
         uint8_t func;
         PseudoInst::decodeAddrOffset(paddr - m5opRange.start(), func);
-        req->setPaddr(req->getVaddr());
         req->setLocalAccessor(
             [func, mode](ThreadContext *tc, PacketPtr pkt) -> Cycles
             {
