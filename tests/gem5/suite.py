@@ -178,7 +178,6 @@ def _create_test_run_gem5(config, config_args, gem5_args):
         # I.E. Only the returncode verifier will use the gem5_returncode
         # fixture, but we always require it even if that verifier isn't being
         # ran.
-        returncode = fixtures[constants.gem5_returncode_fixture_name]
         tempdir = fixtures[constants.tempdir_fixture_name].path
         gem5 = fixtures[constants.gem5_binary_fixture_name].path
         command = [
@@ -191,7 +190,6 @@ def _create_test_run_gem5(config, config_args, gem5_args):
         command.append(config)
         # Config_args should set up the program args.
         command.extend(config_args)
-        returncode.value = log_call(params.log, command, stdout=sys.stdout,
-                                                         stderr=sys.stderr)
+        log_call(params.log, command, stdout=sys.stdout, stderr=sys.stderr)
 
     return test_run_gem5
