@@ -74,7 +74,7 @@ HSADriver::mmap(ThreadContext *tc, Addr start, uint64_t length, int prot,
             "offset: 0x%x)\n", start, length, offset);
 
     auto process = tc->getProcessPtr();
-    auto mem_state = process->getMemState();
+    auto mem_state = process->memState;
 
     // Extend global mmap region if necessary.
     if (start == 0) {
@@ -87,32 +87,8 @@ HSADriver::mmap(ThreadContext *tc, Addr start, uint64_t length, int prot,
      * Now map this virtual address to our PIO doorbell interface
      * in the page tables (non-cacheable).
      */
-    mem_state->map(start, device->hsaPacketProc().pioAddr, length, false);
+    process->pTable->map(start, device->hsaPacketProc().pioAddr,
+                         length, false);
     DPRINTF(HSADriver, "amdkfd doorbell mapped to %xp\n", start);
     return start;
-}
-
-/**
- * Forward relevant parameters to packet processor; queueID
- * is used to link doorbell. The queueIDs are not re-used
- * in current implementation, and we allocate only one page
- * (4096 bytes) for doorbells, so check if this queue ID can
- * be mapped into that page.
- */
-void
-HSADriver::allocateQueue(const SETranslatingPortProxy &mem_proxy, Addr ioc_buf)
-{
-    TypedBufferArg<kfd_ioctl_create_queue_args> args(ioc_buf);
-    args.copyIn(mem_proxy);
-
-    if (VOID_PTR_ADD32(0, queueId) >= (void*)0x1000) {
-        fatal("%s: Exceeded maximum number of HSA queues allowed\n", name());
-    }
-
-    args->queue_id = queueId++;
-    auto &hsa_pp = device->hsaPacketProc();
-    hsa_pp.setDeviceQueueDesc(args->read_pointer_address,
-                              args->ring_base_address, args->queue_id,
-                              args->ring_size);
-    args.copyOut(mem_proxy);
 }

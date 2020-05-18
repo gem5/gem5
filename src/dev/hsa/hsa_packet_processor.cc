@@ -127,7 +127,7 @@ HSAPacketProcessor::write(Packet *pkt)
           "%s: write of size %d to reg-offset %d (0x%x)\n",
           __FUNCTION__, pkt->getSize(), daddr, daddr);
 
-    uint32_t doorbell_reg = pkt->get<uint32_t>();
+    uint32_t doorbell_reg = pkt->getLE<uint32_t>();
 
     DPRINTF(HSAPacketProcessor,
             "%s: write data 0x%x to offset %d (0x%x)\n",
@@ -152,9 +152,8 @@ HSAPacketProcessor::translateOrDie(Addr vaddr, Addr &paddr)
     // new extensions, it will likely be wrong to just arbitrarily grab context
     // zero.
     auto process = sys->getThreadContext(0)->getProcessPtr();
-    auto mem_state = process->getMemState();
 
-    if (!mem_state->translate(vaddr, paddr))
+    if (!process->pTable->translate(vaddr, paddr))
         fatal("failed translation: vaddr 0x%x\n", vaddr);
 }
 
@@ -395,9 +394,7 @@ HSAPacketProcessor::processPkt(void* pkt, uint32_t rl_idx, Addr host_pkt_addr)
                  * not support atomic operations.
                  */
                 auto tc = sys->getThreadContext(0);
-                auto process = tc->getProcessPtr();
-                auto mem_state = process->getMemState();
-                auto &virt_proxy = mem_state->getVirtProxy();
+                auto &virt_proxy = tc->getVirtProxy();
                 TypedBufferArg<uint64_t> prev_signal(signal_addr);
                 prev_signal.copyIn(virt_proxy);
 
