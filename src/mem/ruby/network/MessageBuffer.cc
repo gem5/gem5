@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019,2020 ARM Limited
+ * Copyright (c) 2019-2021 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -486,7 +486,7 @@ MessageBuffer::isReady(Tick current_time) const
 }
 
 uint32_t
-MessageBuffer::functionalAccess(Packet *pkt, bool is_read)
+MessageBuffer::functionalAccess(Packet *pkt, bool is_read, WriteMask *mask)
 {
     DPRINTF(RubyQueue, "functional %s for %#x\n",
             is_read ? "read" : "write", pkt->getAddr());
@@ -497,8 +497,10 @@ MessageBuffer::functionalAccess(Packet *pkt, bool is_read)
     // correspond to the address in the packet.
     for (unsigned int i = 0; i < m_prio_heap.size(); ++i) {
         Message *msg = m_prio_heap[i].get();
-        if (is_read && msg->functionalRead(pkt))
+        if (is_read && !mask && msg->functionalRead(pkt))
             return 1;
+        else if (is_read && mask && msg->functionalRead(pkt, *mask))
+            num_functional_accesses++;
         else if (!is_read && msg->functionalWrite(pkt))
             num_functional_accesses++;
     }
@@ -513,8 +515,10 @@ MessageBuffer::functionalAccess(Packet *pkt, bool is_read)
             it != (map_iter->second).end(); ++it) {
 
             Message *msg = (*it).get();
-            if (is_read && msg->functionalRead(pkt))
+            if (is_read && !mask && msg->functionalRead(pkt))
                 return 1;
+            else if (is_read && mask && msg->functionalRead(pkt, *mask))
+                num_functional_accesses++;
             else if (!is_read && msg->functionalWrite(pkt))
                 num_functional_accesses++;
         }

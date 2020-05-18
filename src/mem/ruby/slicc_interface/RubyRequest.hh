@@ -157,6 +157,7 @@ class RubyRequest : public Message
 
     void print(std::ostream& out) const;
     bool functionalRead(Packet *pkt);
+    bool functionalRead(Packet *pkt, WriteMask &mask);
     bool functionalWrite(Packet *pkt);
 };
 

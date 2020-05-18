@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020 Advanced Micro Devices, Inc.
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2019,2021 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -201,6 +201,21 @@ SimpleNetwork::functionalRead(Packet *pkt)
     }
 
     return false;
+}
+
+bool
+SimpleNetwork::functionalRead(Packet *pkt, WriteMask &mask)
+{
+    bool read = false;
+    for (unsigned int i = 0; i < m_switches.size(); i++) {
+        if (m_switches[i]->functionalRead(pkt, mask))
+            read = true;
+    }
+    for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
+        if (m_int_link_buffers[i]->functionalRead(pkt, mask))
+            read = true;
+    }
+    return read;
 }
 
 uint32_t

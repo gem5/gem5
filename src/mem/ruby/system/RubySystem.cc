@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2019,2021 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -472,6 +472,7 @@ RubySystem::resetStats()
     }
 }
 
+#ifndef PARTIAL_FUNC_READS
 bool
 RubySystem::functionalRead(PacketPtr pkt)
 {
@@ -587,6 +588,95 @@ RubySystem::functionalRead(PacketPtr pkt)
 
     return false;
 }
+#else
+bool
+RubySystem::functionalRead(PacketPtr pkt)
+{
+    Addr address(pkt->getAddr());
+    Addr line_address = makeLineAddress(address);
+
+    DPRINTF(RubySystem, "Functional Read request for %#x\n", address);
+
+    std::vector<AbstractController*> ctrl_ro;
+    std::vector<AbstractController*> ctrl_busy;
+    std::vector<AbstractController*> ctrl_others;
+    AbstractController *ctrl_rw = nullptr;
+    AbstractController *ctrl_bs = nullptr;
+
+    // Build lists of controllers that have line
+    for (auto ctrl : m_abs_cntrl_vec) {
+        switch(ctrl->getAccessPermission(line_address)) {
+            case AccessPermission_Read_Only:
+                ctrl_ro.push_back(ctrl);
+                break;
+            case AccessPermission_Busy:
+                ctrl_busy.push_back(ctrl);
+                break;
+            case AccessPermission_Read_Write:
+                assert(ctrl_rw == nullptr);
+                ctrl_rw = ctrl;
+                break;
+            case AccessPermission_Backing_Store:
+                assert(ctrl_bs == nullptr);
+                ctrl_bs = ctrl;
+                break;
+            case AccessPermission_Backing_Store_Busy:
+                assert(ctrl_bs == nullptr);
+                ctrl_bs = ctrl;
+                ctrl_busy.push_back(ctrl);
+                break;
+            default:
+                ctrl_others.push_back(ctrl);
+                break;
+        }
+    }
+
+    DPRINTF(RubySystem, "num_ro=%d, num_busy=%d , has_rw=%d, "
+                        "backing_store=%d\n",
+                ctrl_ro.size(), ctrl_busy.size(),
+                ctrl_rw != nullptr, ctrl_bs != nullptr);
+
+    // Issue functional reads to all controllers found in a stable state
+    // until we get a full copy of the line
+    WriteMask bytes;
+    if (ctrl_rw != nullptr) {
+        ctrl_rw->functionalRead(line_address, pkt, bytes);
+        // if a RW controllter has the full line that's all uptodate
+        if (bytes.isFull())
+            return true;
+    }
+
+    // Get data from RO and BS
+    for (auto ctrl : ctrl_ro)
+        ctrl->functionalRead(line_address, pkt, bytes);
+
+    ctrl_bs->functionalRead(line_address, pkt, bytes);
+
+    // if there is any busy controller or bytes still not set, then a partial
+    // and/or dirty copy of the line might be in a message buffer or the
+    // network
+    if (!ctrl_busy.empty() || !bytes.isFull()) {
+        DPRINTF(RubySystem, "Reading from busy controllers and network\n");
+        for (auto ctrl : ctrl_busy) {
+            ctrl->functionalRead(line_address, pkt, bytes);
+            ctrl->functionalReadBuffers(pkt, bytes);
+        }
+        for (auto& network : m_networks) {
+            network->functionalRead(pkt, bytes);
+        }
+        for (auto ctrl : ctrl_others) {
+            ctrl->functionalRead(line_address, pkt, bytes);
+            ctrl->functionalReadBuffers(pkt, bytes);
+        }
+    }
+    // we either got the full line or couldn't find anything at this point
+    panic_if(!(bytes.isFull() || bytes.isEmpty()),
+            "Inconsistent state on functional read for %#x %s\n",
+            address, bytes);
+
+    return bytes.isFull();
+}
+#endif
 
 // The function searches through all the buffers that exist in different
 // cache, directory and memory controllers, and in the network components

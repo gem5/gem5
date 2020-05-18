@@ -70,6 +70,12 @@ RubyRequest::functionalRead(Packet *pkt)
 }
 
 bool
+RubyRequest::functionalRead(Packet *pkt, WriteMask &mask)
+{
+    return false;
+}
+
+bool
 RubyRequest::functionalWrite(Packet *pkt)
 {
     // This needs a little explanation. I am not sure if this message

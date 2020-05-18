@@ -328,6 +328,7 @@ class $c_ident : public AbstractController
     GPUCoalescer* getGPUCoalescer() const;
 
     bool functionalReadBuffers(PacketPtr&);
+    bool functionalReadBuffers(PacketPtr&, WriteMask&);
     int functionalWriteBuffers(PacketPtr&);
 
     void countTransition(${ident}_State state, ${ident}_Event event);
@@ -1181,6 +1182,27 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt)
 
         code('''
     return false;
+}
+
+bool
+$c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
+{
+    bool read = false;
+''')
+        for var in self.objects:
+            vtype = var.type
+            if vtype.isBuffer:
+                vid = "m_%s_ptr" % var.ident
+                code('if ($vid->functionalRead(pkt, mask)) read = true;')
+
+        for var in self.config_parameters:
+            vtype = var.type_ast.type
+            if vtype.isBuffer:
+                vid = "m_%s_ptr" % var.ident
+                code('if ($vid->functionalRead(pkt, mask)) read = true;')
+
+        code('''
+    return read;
 }
 ''')
 

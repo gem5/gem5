@@ -117,7 +117,16 @@ class AbstractController : public ClockedObject, public Consumer
     //! These functions are used by ruby system to read/write the data blocks
     //! that exist with in the controller.
     virtual bool functionalReadBuffers(PacketPtr&) = 0;
-    virtual void functionalRead(const Addr &addr, PacketPtr) = 0;
+    virtual void functionalRead(const Addr &addr, PacketPtr)
+    { panic("functionalRead(Addr,PacketPtr) not implemented"); }
+
+    //! Functional read that reads only blocks not present in the mask.
+    //! Return number of bytes read.
+    virtual bool functionalReadBuffers(PacketPtr&, WriteMask &mask) = 0;
+    virtual void functionalRead(const Addr &addr, PacketPtr pkt,
+                               WriteMask &mask)
+    { panic("functionalRead(Addr,PacketPtr,WriteMask) not implemented"); }
+
     void functionalMemoryRead(PacketPtr);
     //! The return value indicates the number of messages written with the
     //! data from the packet.

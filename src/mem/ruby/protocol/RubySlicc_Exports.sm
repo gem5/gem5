@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2020-2021 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -107,6 +107,7 @@ enumeration(AccessPermission, desc="...", default="AccessPermission_NotPresent")
   // This is not supposed to be used in directory or token protocols where
   // memory/NB has an idea of what is going on in the whole system.
   Backing_Store, desc="for memory in Broadcast/Snoop protocols";
+  Backing_Store_Busy, desc="Backing_Store + cntrl is busy waiting for data";
 
   // Invalid data
   Invalid,    desc="block is in an Invalid base state";

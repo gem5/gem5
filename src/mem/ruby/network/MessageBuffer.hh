@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019,2020 ARM Limited
+ * Copyright (c) 2019-2021 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -160,7 +160,7 @@ class MessageBuffer : public SimObject
     // Return value indicates the number of messages that were updated.
     uint32_t functionalWrite(Packet *pkt)
     {
-        return functionalAccess(pkt, false);
+        return functionalAccess(pkt, false, nullptr);
     }
 
     // Function for figuring if message in the buffer has valid data for
@@ -169,13 +169,19 @@ class MessageBuffer : public SimObject
     // read was performed.
     bool functionalRead(Packet *pkt)
     {
-        return functionalAccess(pkt, true) == 1;
+        return functionalAccess(pkt, true, nullptr) == 1;
+    }
+
+    // Functional read with mask
+    bool functionalRead(Packet *pkt, WriteMask &mask)
+    {
+        return functionalAccess(pkt, true, &mask) == 1;
     }
 
   private:
     void reanalyzeList(std::list<MsgPtr> &, Tick);
 
-    uint32_t functionalAccess(Packet *pkt, bool is_read);
+    uint32_t functionalAccess(Packet *pkt, bool is_read, WriteMask *mask);
 
   private:
     // Data Members (m_ prefix)
