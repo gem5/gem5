@@ -285,7 +285,7 @@ initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
     char key[len];
     memset(key, '\0', len);
 
-    std::array<uint64_t, 2> key_regs = { key_str1, key_str2 };
+    std::array<uint64_t, 2> key_regs = {{ key_str1, key_str2 }};
     key_regs = letoh(key_regs);
     memcpy(key, key_regs.data(), sizeof(key_regs));
 
