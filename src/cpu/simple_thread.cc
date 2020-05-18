@@ -157,12 +157,6 @@ SimpleThread::unserialize(CheckpointIn &cp)
 }
 
 void
-SimpleThread::startup()
-{
-    isa->startup(this);
-}
-
-void
 SimpleThread::dumpFuncProfile()
 {
     OutputStream *os(simout.create(csprintf("profile.%s.dat", baseCpu->name())));

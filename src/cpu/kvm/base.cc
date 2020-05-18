@@ -155,8 +155,6 @@ BaseKvmCPU::startup()
         inform("KVM: Coalesced not supported by host OS\n");
     }
 
-    thread->startup();
-
     Event *startupEvent(
         new EventFunctionWrapper([this]{ startupThread(); }, name(), true));
     schedule(startupEvent, curTick());

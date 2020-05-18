@@ -200,7 +200,7 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::clearArchRegs()
 {
-    cpu->isa[thread->threadId()]->clear(this);
+    cpu->isa[thread->threadId()]->clear();
 }
 
 template <class Impl>

@@ -89,7 +89,6 @@ SimObject('TimingExpr.py')
 
 Source('activity.cc')
 Source('base.cc')
-Source('cpuevent.cc')
 Source('exetrace.cc')
 Source('exec_context.cc')
 Source('func_unit.cc')

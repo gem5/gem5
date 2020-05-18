@@ -54,7 +54,6 @@
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "cpu/checker/cpu.hh"
-#include "cpu/cpuevent.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Mwait.hh"
@@ -440,6 +439,7 @@ BaseCPU::registerThreadContexts()
             tc->getProcessPtr()->assignThreadContext(tc->contextId());
 
         interrupts[tid]->setThreadContext(tc);
+        tc->getIsaPtr()->setThreadContext(tc);
     }
 }
 
@@ -569,9 +569,9 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         ThreadContext *newTC = threadContexts[i];
         ThreadContext *oldTC = oldCPU->threadContexts[i];
 
-        newTC->takeOverFrom(oldTC);
+        newTC->getIsaPtr()->setThreadContext(newTC);
 
-        CpuEvent::replaceThreadContext(oldTC, newTC);
+        newTC->takeOverFrom(oldTC);
 
         assert(newTC->contextId() == oldTC->contextId());
         assert(newTC->threadId() == oldTC->threadId());

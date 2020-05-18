@@ -243,7 +243,7 @@ ISA::readMiscRegNoEffect(int misc_reg) const
 }
 
 RegVal
-ISA::readMiscReg(int misc_reg, ThreadContext *tc)
+ISA::readMiscReg(int misc_reg)
 {
     switch (misc_reg) {
       case MISCREG_HARTID:
@@ -330,7 +330,7 @@ ISA::setMiscRegNoEffect(int misc_reg, RegVal val)
 }
 
 void
-ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
+ISA::setMiscReg(int misc_reg, RegVal val)
 {
     if (misc_reg >= MISCREG_CYCLE && misc_reg <= MISCREG_HPMCOUNTER31) {
         // Ignore writes to HPM counters for now

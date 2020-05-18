@@ -52,23 +52,21 @@ namespace X86ISA
       protected:
         RegVal regVal[NUM_MISCREGS];
         void updateHandyM5Reg(Efer efer, CR0 cr0,
-                SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags,
-                ThreadContext *tc);
-        void clear();
+                SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags);
 
       public:
-        typedef X86ISAParams Params;
+        void clear();
 
-        void clear(ThreadContext *tc) { clear(); }
+        typedef X86ISAParams Params;
 
         ISA(Params *p);
         const Params *params() const;
 
         RegVal readMiscRegNoEffect(int miscReg) const;
-        RegVal readMiscReg(int miscReg, ThreadContext *tc);
+        RegVal readMiscReg(int miscReg);
 
         void setMiscRegNoEffect(int miscReg, RegVal val);
-        void setMiscReg(int miscReg, RegVal val, ThreadContext *tc);
+        void setMiscReg(int miscReg, RegVal val);
 
         RegId
         flattenRegId(const RegId& regId) const
@@ -88,11 +86,7 @@ namespace X86ISA
             return regId;
         }
 
-        int
-        flattenIntIndex(int reg) const
-        {
-            return reg & ~IntFoldBit;
-        }
+        int flattenIntIndex(int reg) const { return reg & ~IntFoldBit; }
 
         int
         flattenFloatIndex(int reg) const
@@ -104,44 +98,16 @@ namespace X86ISA
             return reg;
         }
 
-        int
-        flattenVecIndex(int reg) const
-        {
-            return reg;
-        }
-
-        int
-        flattenVecElemIndex(int reg) const
-        {
-            return reg;
-        }
-
-        int
-        flattenVecPredIndex(int reg) const
-        {
-            return reg;
-        }
-
-        int
-        flattenCCIndex(int reg) const
-        {
-            return reg;
-        }
-
-        int
-        flattenMiscIndex(int reg) const
-        {
-            return reg;
-        }
+        int flattenVecIndex(int reg) const { return reg; }
+        int flattenVecElemIndex(int reg) const { return reg; }
+        int flattenVecPredIndex(int reg) const { return reg; }
+        int flattenCCIndex(int reg) const { return reg; }
+        int flattenMiscIndex(int reg) const { return reg; }
 
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
 
-        void startup(ThreadContext *tc);
-
-        /// Explicitly import the otherwise hidden startup
-        using BaseISA::startup;
-
+        void setThreadContext(ThreadContext *_tc) override;
     };
 }
 

@@ -120,18 +120,15 @@ ISA::params() const
 }
 
 void
-ISA::clear(ThreadContext *tc)
-{
-    clear();
-    // Invalidate cached copies of miscregs in the TLBs
-    getITBPtr(tc)->invalidateMiscReg();
-    getDTBPtr(tc)->invalidateMiscReg();
-}
-
-void
 ISA::clear()
 {
     const Params *p(params());
+
+    // Invalidate cached copies of miscregs in the TLBs
+    if (tc) {
+        getITBPtr(tc)->invalidateMiscReg();
+        getDTBPtr(tc)->invalidateMiscReg();
+    }
 
     SCTLR sctlr_rst = miscRegs[MISCREG_SCTLR_RST];
     memset(miscRegs, 0, sizeof(miscRegs));
@@ -421,31 +418,40 @@ ISA::initID64(const ArmISAParams *p)
 }
 
 void
-ISA::startup(ThreadContext *tc)
+ISA::startup()
 {
-    pmu->setThreadContext(tc);
+    BaseISA::startup();
 
-    if (system) {
-        Gicv3 *gicv3 = dynamic_cast<Gicv3 *>(system->getGIC());
-        if (gicv3) {
-            gicv3CpuInterface.reset(gicv3->getCPUInterface(tc->contextId()));
-            gicv3CpuInterface->setISA(this);
-            gicv3CpuInterface->setThreadContext(tc);
-        }
-    }
+    if (tc)
+        setupThreadContext();
 
     afterStartup = true;
 }
 
 void
+ISA::setupThreadContext()
+{
+    pmu->setThreadContext(tc);
+
+    if (!system)
+        return;
+
+    Gicv3 *gicv3 = dynamic_cast<Gicv3 *>(system->getGIC());
+    if (!gicv3)
+        return;
+
+    if (!gicv3CpuInterface)
+        gicv3CpuInterface.reset(gicv3->getCPUInterface(tc->contextId()));
+
+    gicv3CpuInterface->setISA(this);
+    gicv3CpuInterface->setThreadContext(tc);
+}
+
+void
 ISA::takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc)
 {
-    pmu->setThreadContext(new_tc);
-
-    if (system && gicv3CpuInterface) {
-        gicv3CpuInterface->setISA(this);
-        gicv3CpuInterface->setThreadContext(new_tc);
-    }
+    tc = new_tc;
+    setupThreadContext();
 }
 
 RegVal
@@ -473,7 +479,7 @@ ISA::readMiscRegNoEffect(int misc_reg) const
 
 
 RegVal
-ISA::readMiscReg(int misc_reg, ThreadContext *tc)
+ISA::readMiscReg(int misc_reg)
 {
     CPSR cpsr = 0;
     PCState pc = 0;
@@ -760,12 +766,12 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
       // Generic Timer registers
       case MISCREG_CNTFRQ ... MISCREG_CNTVOFF:
       case MISCREG_CNTFRQ_EL0 ... MISCREG_CNTVOFF_EL2:
-        return getGenericTimer(tc).readMiscReg(misc_reg);
+        return getGenericTimer().readMiscReg(misc_reg);
 
       case MISCREG_ICC_AP0R0 ... MISCREG_ICH_LRC15:
       case MISCREG_ICC_PMR_EL1 ... MISCREG_ICC_IGRPEN1_EL3:
       case MISCREG_ICH_AP0R0_EL2 ... MISCREG_ICH_LR15_EL2:
-        return getGICv3CPUInterface(tc).readMiscReg(misc_reg);
+        return getGICv3CPUInterface().readMiscReg(misc_reg);
 
       default:
         break;
@@ -797,7 +803,7 @@ ISA::setMiscRegNoEffect(int misc_reg, RegVal val)
 }
 
 void
-ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
+ISA::setMiscReg(int misc_reg, RegVal val)
 {
 
     RegVal newVal = val;
@@ -827,7 +833,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
         pc.nextJazelle(cpsr.j);
         pc.illegalExec(cpsr.il == 1);
 
-        tc->getDecoderPtr()->setSveLen((getCurSveVecLenInBits(tc) >> 7) - 1);
+        tc->getDecoderPtr()->setSveLen((getCurSveVecLenInBits() >> 7) - 1);
 
         // Follow slightly different semantics if a CheckerCPU object
         // is connected
@@ -1132,8 +1138,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // TLB Invalidate All
           case MISCREG_TLBIALL: // TLBI all entries, EL0&1,
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIALL tlbiOp(EL1, haveSecurity && !scr.ns);
                 tlbiOp(tc);
@@ -1142,8 +1148,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // TLB Invalidate All, Inner Shareable
           case MISCREG_TLBIALLIS:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIALL tlbiOp(EL1, haveSecurity && !scr.ns);
                 tlbiOp.broadcast(tc);
@@ -1152,8 +1158,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // Instruction TLB Invalidate All
           case MISCREG_ITLBIALL:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 ITLBIALL tlbiOp(EL1, haveSecurity && !scr.ns);
                 tlbiOp(tc);
@@ -1162,8 +1168,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // Data TLB Invalidate All
           case MISCREG_DTLBIALL:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 DTLBIALL tlbiOp(EL1, haveSecurity && !scr.ns);
                 tlbiOp(tc);
@@ -1176,8 +1182,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBIMVA:
           case MISCREG_TLBIMVAL:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIMVA tlbiOp(EL1,
                                haveSecurity && !scr.ns,
@@ -1191,8 +1197,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBIMVAIS:
           case MISCREG_TLBIMVALIS:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIMVA tlbiOp(EL1,
                                haveSecurity && !scr.ns,
@@ -1205,8 +1211,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // TLB Invalidate by ASID match
           case MISCREG_TLBIASID:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIASID tlbiOp(EL1,
                                 haveSecurity && !scr.ns,
@@ -1218,8 +1224,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // TLB Invalidate by ASID match, Inner Shareable
           case MISCREG_TLBIASIDIS:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIASID tlbiOp(EL1,
                                 haveSecurity && !scr.ns,
@@ -1235,8 +1241,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBIMVAA:
           case MISCREG_TLBIMVAAL:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIMVAA tlbiOp(EL1, haveSecurity && !scr.ns,
                                 mbits(newVal, 31,12));
@@ -1248,8 +1254,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBIMVAAIS:
           case MISCREG_TLBIMVAALIS:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIMVAA tlbiOp(EL1, haveSecurity && !scr.ns,
                                 mbits(newVal, 31,12));
@@ -1264,8 +1270,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBIMVAH:
           case MISCREG_TLBIMVALH:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIMVAA tlbiOp(EL2, haveSecurity && !scr.ns,
                                 mbits(newVal, 31,12));
@@ -1277,8 +1283,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBIMVAHIS:
           case MISCREG_TLBIMVALHIS:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIMVAA tlbiOp(EL2, haveSecurity && !scr.ns,
                                 mbits(newVal, 31,12));
@@ -1293,8 +1299,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBIIPAS2:
           case MISCREG_TLBIIPAS2L:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIIPA tlbiOp(EL1,
                                haveSecurity && !scr.ns,
@@ -1308,8 +1314,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBIIPAS2IS:
           case MISCREG_TLBIIPAS2LIS:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIIPA tlbiOp(EL1,
                                haveSecurity && !scr.ns,
@@ -1321,8 +1327,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // Instruction TLB Invalidate by VA
           case MISCREG_ITLBIMVA:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 ITLBIMVA tlbiOp(EL1,
                                 haveSecurity && !scr.ns,
@@ -1335,8 +1341,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // Data TLB Invalidate by VA
           case MISCREG_DTLBIMVA:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 DTLBIMVA tlbiOp(EL1,
                                 haveSecurity && !scr.ns,
@@ -1349,8 +1355,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // Instruction TLB Invalidate by ASID match
           case MISCREG_ITLBIASID:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 ITLBIASID tlbiOp(EL1,
                                  haveSecurity && !scr.ns,
@@ -1362,8 +1368,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // Data TLB Invalidate by ASID match
           case MISCREG_DTLBIASID:
             {
-                assert32(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert32();
+                scr = readMiscReg(MISCREG_SCR);
 
                 DTLBIASID tlbiOp(EL1,
                                  haveSecurity && !scr.ns,
@@ -1375,7 +1381,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // TLB Invalidate All, Non-Secure Non-Hyp
           case MISCREG_TLBIALLNSNH:
             {
-                assert32(tc);
+                assert32();
 
                 TLBIALLN tlbiOp(EL1);
                 tlbiOp(tc);
@@ -1384,7 +1390,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // TLB Invalidate All, Non-Secure Non-Hyp, Inner Shareable
           case MISCREG_TLBIALLNSNHIS:
             {
-                assert32(tc);
+                assert32();
 
                 TLBIALLN tlbiOp(EL1);
                 tlbiOp.broadcast(tc);
@@ -1393,7 +1399,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // TLB Invalidate All, Hyp mode
           case MISCREG_TLBIALLH:
             {
-                assert32(tc);
+                assert32();
 
                 TLBIALLN tlbiOp(EL2);
                 tlbiOp(tc);
@@ -1402,7 +1408,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // TLB Invalidate All, Hyp mode, Inner Shareable
           case MISCREG_TLBIALLHIS:
             {
-                assert32(tc);
+                assert32();
 
                 TLBIALLN tlbiOp(EL2);
                 tlbiOp.broadcast(tc);
@@ -1411,7 +1417,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // AArch64 TLB Invalidate All, EL3
           case MISCREG_TLBI_ALLE3:
             {
-                assert64(tc);
+                assert64();
 
                 TLBIALL tlbiOp(EL3, true);
                 tlbiOp(tc);
@@ -1420,7 +1426,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // AArch64 TLB Invalidate All, EL3, Inner Shareable
           case MISCREG_TLBI_ALLE3IS:
             {
-                assert64(tc);
+                assert64();
 
                 TLBIALL tlbiOp(EL3, true);
                 tlbiOp.broadcast(tc);
@@ -1430,8 +1436,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBI_ALLE2:
           case MISCREG_TLBI_ALLE2IS:
             {
-                assert64(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIALL tlbiOp(EL2, haveSecurity && !scr.ns);
                 tlbiOp(tc);
@@ -1443,8 +1449,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBI_VMALLS12E1:
             // @todo: handle VMID and stage 2 to enable Virtualization
             {
-                assert64(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIALL tlbiOp(EL1, haveSecurity && !scr.ns);
                 tlbiOp(tc);
@@ -1456,8 +1462,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBI_VMALLS12E1IS:
             // @todo: handle VMID and stage 2 to enable Virtualization
             {
-                assert64(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIALL tlbiOp(EL1, haveSecurity && !scr.ns);
                 tlbiOp.broadcast(tc);
@@ -1471,7 +1477,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBI_VAE3_Xt:
           case MISCREG_TLBI_VALE3_Xt:
             {
-                assert64(tc);
+                assert64();
 
                 TLBIMVA tlbiOp(EL3, true,
                                static_cast<Addr>(bits(newVal, 43, 0)) << 12,
@@ -1483,7 +1489,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBI_VAE3IS_Xt:
           case MISCREG_TLBI_VALE3IS_Xt:
             {
-                assert64(tc);
+                assert64();
 
                 TLBIMVA tlbiOp(EL3, true,
                                static_cast<Addr>(bits(newVal, 43, 0)) << 12,
@@ -1496,8 +1502,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBI_VAE2_Xt:
           case MISCREG_TLBI_VALE2_Xt:
             {
-                assert64(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIMVA tlbiOp(EL2, haveSecurity && !scr.ns,
                                static_cast<Addr>(bits(newVal, 43, 0)) << 12,
@@ -1509,8 +1515,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBI_VAE2IS_Xt:
           case MISCREG_TLBI_VALE2IS_Xt:
             {
-                assert64(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIMVA tlbiOp(EL2, haveSecurity && !scr.ns,
                                static_cast<Addr>(bits(newVal, 43, 0)) << 12,
@@ -1523,8 +1529,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBI_VAE1_Xt:
           case MISCREG_TLBI_VALE1_Xt:
             {
-                assert64(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
                 auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
                                               bits(newVal, 55, 48);
 
@@ -1539,8 +1545,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBI_VAE1IS_Xt:
           case MISCREG_TLBI_VALE1IS_Xt:
             {
-                assert64(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
                 auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
                                               bits(newVal, 55, 48);
 
@@ -1555,8 +1561,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // @todo: handle VMID to enable Virtualization
           case MISCREG_TLBI_ASIDE1_Xt:
             {
-                assert64(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
                 auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
                                               bits(newVal, 55, 48);
 
@@ -1567,8 +1573,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // AArch64 TLB Invalidate by ASID, EL1, Inner Shareable
           case MISCREG_TLBI_ASIDE1IS_Xt:
             {
-                assert64(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
                 auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
                                               bits(newVal, 55, 48);
 
@@ -1582,8 +1588,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBI_VAAE1_Xt:
           case MISCREG_TLBI_VAALE1_Xt:
             {
-                assert64(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIMVAA tlbiOp(EL1, haveSecurity && !scr.ns,
                     static_cast<Addr>(bits(newVal, 43, 0)) << 12);
@@ -1595,8 +1601,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBI_VAAE1IS_Xt:
           case MISCREG_TLBI_VAALE1IS_Xt:
             {
-                assert64(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIMVAA tlbiOp(EL1, haveSecurity && !scr.ns,
                     static_cast<Addr>(bits(newVal, 43, 0)) << 12);
@@ -1609,8 +1615,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBI_IPAS2E1_Xt:
           case MISCREG_TLBI_IPAS2LE1_Xt:
             {
-                assert64(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIIPA tlbiOp(EL1, haveSecurity && !scr.ns,
                                static_cast<Addr>(bits(newVal, 35, 0)) << 12);
@@ -1623,8 +1629,8 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           case MISCREG_TLBI_IPAS2E1IS_Xt:
           case MISCREG_TLBI_IPAS2LE1IS_Xt:
             {
-                assert64(tc);
-                scr = readMiscReg(MISCREG_SCR, tc);
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
 
                 TLBIIPA tlbiOp(EL1, haveSecurity && !scr.ns,
                                static_cast<Addr>(bits(newVal, 35, 0)) << 12);
@@ -2077,18 +2083,17 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
           // Generic Timer registers
           case MISCREG_CNTFRQ ... MISCREG_CNTVOFF:
           case MISCREG_CNTFRQ_EL0 ... MISCREG_CNTVOFF_EL2:
-            getGenericTimer(tc).setMiscReg(misc_reg, newVal);
+            getGenericTimer().setMiscReg(misc_reg, newVal);
             break;
           case MISCREG_ICC_AP0R0 ... MISCREG_ICH_LRC15:
           case MISCREG_ICC_PMR_EL1 ... MISCREG_ICC_IGRPEN1_EL3:
           case MISCREG_ICH_AP0R0_EL2 ... MISCREG_ICH_LR15_EL2:
-            getGICv3CPUInterface(tc).setMiscReg(misc_reg, newVal);
+            getGICv3CPUInterface().setMiscReg(misc_reg, newVal);
             return;
           case MISCREG_ZCR_EL3:
           case MISCREG_ZCR_EL2:
           case MISCREG_ZCR_EL1:
-            tc->getDecoderPtr()->setSveLen(
-                (getCurSveVecLenInBits(tc) >> 7) - 1);
+            tc->getDecoderPtr()->setSveLen((getCurSveVecLenInBits() >> 7) - 1);
             break;
         }
     }
@@ -2096,7 +2101,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
 }
 
 BaseISADevice &
-ISA::getGenericTimer(ThreadContext *tc)
+ISA::getGenericTimer()
 {
     // We only need to create an ISA interface the first time we try
     // to access the timer.
@@ -2117,14 +2122,14 @@ ISA::getGenericTimer(ThreadContext *tc)
 }
 
 BaseISADevice &
-ISA::getGICv3CPUInterface(ThreadContext *tc)
+ISA::getGICv3CPUInterface()
 {
     panic_if(!gicv3CpuInterface, "GICV3 cpu interface is not registered!");
     return *gicv3CpuInterface.get();
 }
 
 unsigned
-ISA::getCurSveVecLenInBits(ThreadContext *tc) const
+ISA::getCurSveVecLenInBits() const
 {
     if (!FullSystem) {
         return sveVL * 128;

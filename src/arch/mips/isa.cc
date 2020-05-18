@@ -430,7 +430,7 @@ ISA::readMiscRegNoEffect(int misc_reg, ThreadID tid) const
 //       Status to TCStatus depending on current thread
 //template <class TC>
 RegVal
-ISA::readMiscReg(int misc_reg, ThreadContext *tc,  ThreadID tid)
+ISA::readMiscReg(int misc_reg, ThreadID tid)
 {
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
@@ -471,7 +471,7 @@ ISA::setRegMask(int misc_reg, RegVal val, ThreadID tid)
 // be overwritten. Make sure to handle those particular registers
 // with care!
 void
-ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc, ThreadID tid)
+ISA::setMiscReg(int misc_reg, RegVal val, ThreadID tid)
 {
     int reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);

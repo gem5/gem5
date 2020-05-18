@@ -599,8 +599,6 @@ void
 FullO3CPU<Impl>::startup()
 {
     BaseCPU::startup();
-    for (int tid = 0; tid < numThreads; ++tid)
-        isa[tid]->startup(threadContexts[tid]);
 
     fetch.startupStage();
     decode.startupStage();
@@ -1180,7 +1178,7 @@ RegVal
 FullO3CPU<Impl>::readMiscReg(int misc_reg, ThreadID tid)
 {
     miscRegfileReads++;
-    return this->isa[tid]->readMiscReg(misc_reg, tcBase(tid));
+    return this->isa[tid]->readMiscReg(misc_reg);
 }
 
 template <class Impl>
@@ -1195,7 +1193,7 @@ void
 FullO3CPU<Impl>::setMiscReg(int misc_reg, RegVal val, ThreadID tid)
 {
     miscRegfileWrites++;
-    this->isa[tid]->setMiscReg(misc_reg, val, tcBase(tid));
+    this->isa[tid]->setMiscReg(misc_reg, val);
 }
 
 template <class Impl>

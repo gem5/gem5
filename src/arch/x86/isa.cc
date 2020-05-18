@@ -40,8 +40,7 @@ namespace X86ISA
 
 void
 ISA::updateHandyM5Reg(Efer efer, CR0 cr0,
-                      SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags,
-                      ThreadContext *tc)
+                      SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags)
 {
     HandyM5Reg m5reg = 0;
     if (efer.lma) {
@@ -154,7 +153,7 @@ ISA::readMiscRegNoEffect(int miscReg) const
 }
 
 RegVal
-ISA::readMiscReg(int miscReg, ThreadContext * tc)
+ISA::readMiscReg(int miscReg)
 {
     if (miscReg == MISCREG_TSC) {
         return regVal[MISCREG_TSC] + tc->getCpuPtr()->curCycle();
@@ -218,7 +217,7 @@ ISA::setMiscRegNoEffect(int miscReg, RegVal val)
 }
 
 void
-ISA::setMiscReg(int miscReg, RegVal val, ThreadContext * tc)
+ISA::setMiscReg(int miscReg, RegVal val)
 {
     RegVal newVal = val;
     switch(miscReg)
@@ -250,8 +249,7 @@ ISA::setMiscReg(int miscReg, RegVal val, ThreadContext * tc)
                              newCR0,
                              regVal[MISCREG_CS_ATTR],
                              regVal[MISCREG_SS_ATTR],
-                             regVal[MISCREG_RFLAGS],
-                             tc);
+                             regVal[MISCREG_RFLAGS]);
         }
         break;
       case MISCREG_CR2:
@@ -292,8 +290,7 @@ ISA::setMiscReg(int miscReg, RegVal val, ThreadContext * tc)
                              regVal[MISCREG_CR0],
                              newCSAttr,
                              regVal[MISCREG_SS_ATTR],
-                             regVal[MISCREG_RFLAGS],
-                             tc);
+                             regVal[MISCREG_RFLAGS]);
         }
         break;
       case MISCREG_SS_ATTR:
@@ -301,8 +298,7 @@ ISA::setMiscReg(int miscReg, RegVal val, ThreadContext * tc)
                          regVal[MISCREG_CR0],
                          regVal[MISCREG_CS_ATTR],
                          val,
-                         regVal[MISCREG_RFLAGS],
-                         tc);
+                         regVal[MISCREG_RFLAGS]);
         break;
       // These segments always actually use their bases, or in other words
       // their effective bases must stay equal to their actual bases.
@@ -409,8 +405,7 @@ ISA::setMiscReg(int miscReg, RegVal val, ThreadContext * tc)
                          regVal[MISCREG_CR0],
                          regVal[MISCREG_CS_ATTR],
                          regVal[MISCREG_SS_ATTR],
-                         regVal[MISCREG_RFLAGS],
-                         tc);
+                         regVal[MISCREG_RFLAGS]);
         return;
       default:
         break;
@@ -432,13 +427,13 @@ ISA::unserialize(CheckpointIn &cp)
                      regVal[MISCREG_CR0],
                      regVal[MISCREG_CS_ATTR],
                      regVal[MISCREG_SS_ATTR],
-                     regVal[MISCREG_RFLAGS],
-                     NULL);
+                     regVal[MISCREG_RFLAGS]);
 }
 
 void
-ISA::startup(ThreadContext *tc)
+ISA::setThreadContext(ThreadContext *_tc)
 {
+    BaseISA::setThreadContext(_tc);
     tc->getDecoderPtr()->setM5Reg(regVal[MISCREG_M5_REG]);
 }
 

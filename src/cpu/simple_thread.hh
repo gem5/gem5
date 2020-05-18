@@ -158,7 +158,6 @@ class SimpleThread : public ThreadState, public ThreadContext
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
-    void startup();
 
     /***************************************************************
      *  SimpleThread functions to provide CPU with access to various
@@ -296,7 +295,7 @@ class SimpleThread : public ThreadState, public ThreadContext
         for (auto &pred_reg: vecPredRegs)
             pred_reg.reset();
         ccRegs.fill(0);
-        isa->clear(this);
+        isa->clear();
     }
 
     //
@@ -558,7 +557,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     RegVal
     readMiscReg(RegIndex misc_reg) override
     {
-        return isa->readMiscReg(misc_reg, this);
+        return isa->readMiscReg(misc_reg);
     }
 
     void
@@ -570,7 +569,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     void
     setMiscReg(RegIndex misc_reg, RegVal val) override
     {
-        return isa->setMiscReg(misc_reg, val, this);
+        return isa->setMiscReg(misc_reg, val);
     }
 
     RegId

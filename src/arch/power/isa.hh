@@ -54,17 +54,7 @@ class ISA : public BaseISA
   public:
     typedef PowerISAParams Params;
 
-    void
-    clear(ThreadContext *tc)
-    {
-        clear();
-    }
-
-  protected:
-    void
-    clear()
-    {
-    }
+    void clear() {}
 
   public:
     RegVal
@@ -75,7 +65,7 @@ class ISA : public BaseISA
     }
 
     RegVal
-    readMiscReg(int misc_reg, ThreadContext *tc)
+    readMiscReg(int misc_reg)
     {
         fatal("Power does not currently have any misc regs defined\n");
         return dummy;
@@ -88,7 +78,7 @@ class ISA : public BaseISA
     }
 
     void
-    setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
+    setMiscReg(int misc_reg, RegVal val)
     {
         fatal("Power does not currently have any misc regs defined\n");
     }
@@ -137,11 +127,6 @@ class ISA : public BaseISA
     {
         return reg;
     }
-
-    void startup(ThreadContext *tc) {}
-
-    /// Explicitly import the otherwise hidden startup
-    using BaseISA::startup;
 
     const Params *params() const;
 

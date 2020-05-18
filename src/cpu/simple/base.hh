@@ -133,8 +133,6 @@ class BaseSimpleCPU : public BaseCPU
     void regStats() override;
     void resetStats() override;
 
-    void startup() override;
-
     virtual Fault readMem(Addr addr, uint8_t* data, unsigned size,
                           Request::Flags flags,
                           const std::vector<bool>& byte_enable =

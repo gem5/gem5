@@ -56,7 +56,6 @@
 
 struct ArmISAParams;
 struct DummyArmISADeviceParams;
-class ThreadContext;
 class Checkpoint;
 class EventManager;
 
@@ -446,26 +445,17 @@ namespace ArmISA
             }
         }
 
-        BaseISADevice &getGenericTimer(ThreadContext *tc);
-        BaseISADevice &getGICv3CPUInterface(ThreadContext *tc);
-
+        BaseISADevice &getGenericTimer();
+        BaseISADevice &getGICv3CPUInterface();
 
       private:
-        inline void assert32(ThreadContext *tc) {
-            CPSR cpsr M5_VAR_USED = readMiscReg(MISCREG_CPSR, tc);
-            assert(cpsr.width);
-        }
-
-        inline void assert64(ThreadContext *tc) {
-            CPSR cpsr M5_VAR_USED = readMiscReg(MISCREG_CPSR, tc);
-            assert(!cpsr.width);
-        }
+        void assert32() { assert(((CPSR)readMiscReg(MISCREG_CPSR)).width); }
+        void assert64() { assert(!((CPSR)readMiscReg(MISCREG_CPSR)).width); }
 
       public:
-        void clear(ThreadContext *tc);
+        void clear();
 
       protected:
-        void clear();
         void clear32(const ArmISAParams *p, const SCTLR &sctlr_rst);
         void clear64(const ArmISAParams *p);
         void initID32(const ArmISAParams *p);
@@ -473,9 +463,9 @@ namespace ArmISA
 
       public:
         RegVal readMiscRegNoEffect(int misc_reg) const;
-        RegVal readMiscReg(int misc_reg, ThreadContext *tc);
+        RegVal readMiscReg(int misc_reg);
         void setMiscRegNoEffect(int misc_reg, RegVal val);
-        void setMiscReg(int misc_reg, RegVal val, ThreadContext *tc);
+        void setMiscReg(int misc_reg, RegVal val);
 
         RegId
         flattenRegId(const RegId& regId) const
@@ -718,7 +708,7 @@ namespace ArmISA
             return std::make_pair(lower, upper);
         }
 
-        unsigned getCurSveVecLenInBits(ThreadContext *tc) const;
+        unsigned getCurSveVecLenInBits() const;
 
         unsigned getCurSveVecLenInBitsAtReset() const { return sveVL * 128; }
 
@@ -741,7 +731,9 @@ namespace ArmISA
             updateRegMap(tmp_cpsr);
         }
 
-        void startup(ThreadContext *tc);
+        void startup() override;
+
+        void setupThreadContext();
 
         void takeOverFrom(ThreadContext *new_tc,
                           ThreadContext *old_tc) override;
@@ -763,9 +755,6 @@ namespace ArmISA
         {
             return _vecRegRenameMode;
         }
-
-        /// Explicitly import the otherwise hidden startup
-        using BaseISA::startup;
 
         typedef ArmISAParams Params;
 

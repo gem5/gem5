@@ -685,11 +685,3 @@ BaseSimpleCPU::advancePC(const Fault &fault)
         }
     }
 }
-
-void
-BaseSimpleCPU::startup()
-{
-    BaseCPU::startup();
-    for (auto& t_info : threadInfo)
-        t_info->thread->startup();
-}

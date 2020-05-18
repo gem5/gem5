@@ -1171,7 +1171,7 @@ unsigned
 ArmStaticInst::getCurSveVecLenInBits(ThreadContext *tc)
 {
     auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-    return isa->getCurSveVecLenInBits(tc);
+    return isa->getCurSveVecLenInBits();
 }
 
 }
