@@ -59,6 +59,7 @@ class ThreadContext : public ::ThreadContext
     System *_system;
     ::BaseTLB *_dtb;
     ::BaseTLB *_itb;
+    ::BaseISA *_isa;
 
     std::string _irisPath;
     iris::InstanceId _instId = iris::IRIS_UINT64_MAX;
@@ -167,7 +168,7 @@ class ThreadContext : public ::ThreadContext
 
   public:
     ThreadContext(::BaseCPU *cpu, int id, System *system,
-                  ::BaseTLB *dtb, ::BaseTLB *itb,
+                  ::BaseTLB *dtb, ::BaseTLB *itb, ::BaseISA *isa,
                   iris::IrisConnectionInterface *iris_if,
                   const std::string &iris_path);
     virtual ~ThreadContext();
@@ -213,7 +214,7 @@ class ThreadContext : public ::ThreadContext
     BaseISA *
     getIsaPtr() override
     {
-        panic("%s not implemented.", __FUNCTION__);
+        return _isa;
     }
 
     PortProxy &getPhysProxy() override { return *physProxy; }

@@ -42,9 +42,6 @@ class FastModelCortexA76(IrisBaseCPU):
 
     cntfrq = Param.UInt64(0x1800000, "Value for the CNTFRQ timer register")
 
-    # We shouldn't need these, but gem5 gets mad without them.
-    isa = [ ArmISA() ]
-
     evs = Parent.evs
 
     redistributor = Gicv3CommsTargetSocket('GIC communication target')

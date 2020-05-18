@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Google, Inc.
+ * Copyright 2019 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,46 +25,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_ARM_FASTMODEL_CORTEXA76_THREAD_CONTEXT_HH__
-#define __ARCH_ARM_FASTMODEL_CORTEXA76_THREAD_CONTEXT_HH__
+#ifndef __ARCH_ARM_FASTMODEL_IRIS_ISA_HH__
+#define __ARCH_ARM_FASTMODEL_IRIS_ISA_HH__
 
-#include "arch/arm/fastmodel/iris/thread_context.hh"
+#include "arch/generic/isa.hh"
 
-namespace FastModel
+namespace Iris
 {
 
-// This ThreadContext class translates accesses to state using gem5's native
-// to the Iris API. This includes extracting and translating register indices.
-class CortexA76TC : public Iris::ThreadContext
+class ISA : public BaseISA
 {
-  protected:
-    static IdxNameMap miscRegIdxNameMap;
-    static IdxNameMap intReg32IdxNameMap;
-    static IdxNameMap intReg64IdxNameMap;
-    static IdxNameMap flattenedIntIdxNameMap;
-    static IdxNameMap ccRegIdxNameMap;
-    static IdxNameMap vecRegIdxNameMap;
-    static std::vector<iris::MemorySpaceId> bpSpaceIds;
-
   public:
-    CortexA76TC(::BaseCPU *cpu, int id, System *system,
-                ::BaseTLB *dtb, ::BaseTLB *itb, ::BaseISA *isa,
-                iris::IrisConnectionInterface *iris_if,
-                const std::string &iris_path);
+    ISA(const Params *p) : BaseISA(p) {}
 
-    bool translateAddress(Addr &paddr, Addr vaddr) override;
-
-    void initFromIrisInstance(const ResourceMap &resources) override;
-
-    RegVal readIntRegFlat(RegIndex idx) const override;
-    void setIntRegFlat(RegIndex idx, RegVal val) override;
-
-    RegVal readCCRegFlat(RegIndex idx) const override;
-    void setCCRegFlat(RegIndex idx, RegVal val) override;
-
-    const std::vector<iris::MemorySpaceId> &getBpSpaceIds() const override;
+    void serialize(CheckpointOut &cp) const;
 };
 
-} // namespace FastModel
+} // namespace Iris
 
-#endif // __ARCH_ARM_FASTMODEL_CORTEXA76_THREAD_CONTEXT_HH__
+#endif // __ARCH_ARM_FASTMODEL_IRIS_ISA_HH__
