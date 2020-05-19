@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2017 ARM Limited
+ * Copyright (c) 2014, 2017, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -143,6 +143,12 @@ class InstRecord
      */
     bool predicate;
 
+    /**
+     * Did the execution of this instruction fault? (requires ExecFaulting
+     * to be enabled)
+     */
+    bool faulting;
+
   public:
     InstRecord(Tick _when, ThreadContext *_thread,
                const StaticInstPtr _staticInst,
@@ -151,7 +157,8 @@ class InstRecord
         : when(_when), thread(_thread), staticInst(_staticInst), pc(_pc),
         macroStaticInst(_macroStaticInst), addr(0), size(0), flags(0),
         fetch_seq(0), cp_seq(0), data_status(DataInvalid), mem_valid(false),
-        fetch_seq_valid(false), cp_seq_valid(false), predicate(true)
+        fetch_seq_valid(false), cp_seq_valid(false), predicate(true),
+        faulting(false)
     { }
 
     virtual ~InstRecord()
@@ -218,6 +225,8 @@ class InstRecord
 
     void setPredicate(bool val) { predicate = val; }
 
+    void setFaulting(bool val) { faulting = val; }
+
     virtual void dump() = 0;
 
   public:
@@ -241,6 +250,8 @@ class InstRecord
 
     InstSeqNum getCpSeq() const { return cp_seq; }
     bool getCpSeqValid() const { return cp_seq_valid; }
+
+    bool getFaulting() const { return faulting; }
 };
 
 class InstTracer : public SimObject
