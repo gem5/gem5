@@ -215,10 +215,8 @@ Router::collateStats()
 void
 Router::resetStats()
 {
-    for (int j = 0; j < m_virtual_networks; j++) {
-        for (int i = 0; i < m_input_unit.size(); i++) {
+    for (int i = 0; i < m_input_unit.size(); i++) {
             m_input_unit[i]->resetStats();
-        }
     }
 
     crossbarSwitch.resetStats();
