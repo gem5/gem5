@@ -1215,7 +1215,7 @@ gem5_binary = Gem5('gem5')
 # environment 'env' with modified object suffix and optional stripped
 # binary.  Additional keyword arguments are appended to corresponding
 # build environment vars.
-def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
+def makeEnv(env, label, objsfx, strip=False, **kwargs):
     # SCons doesn't know to append a library suffix when there is a '.' in the
     # name.  Use '_' instead.
     libname = 'gem5_' + label
@@ -1246,6 +1246,19 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
 
         group_static = [ s.static(new_env) for s in srcs ]
         group_shared = [ s.shared(new_env) for s in srcs ]
+
+        # Disable partial linking if mixing it with LTO is broken and LTO
+        # is enabled.
+        #
+        # Also, up until Apple LLVM version 10.0.0 (clang-1000.11.45.5),
+        # partial linked objects do not expose symbols that are marked with
+        # the hidden visibility and consequently building gem5 on Mac OS
+        # fails. As a workaround, we disable partial linking, however, we
+        # may want to revisit in the future.
+        broken_inc_lto = env.get('BROKEN_INCREMENTAL_LTO', False)
+        forced_lto = GetOption('force_lto')
+        darwin = (env['PLATFORM'] == 'darwin')
+        disable_partial = (broken_inc_lto and forced_lto) or darwin
 
         # If partial linking is disabled, add these sources to the build
         # directly, and short circuit this loop.
@@ -1370,54 +1383,37 @@ needed_envs = [identifyTarget(target) for target in BUILD_TARGETS]
 if 'all' in needed_envs:
     needed_envs += target_types
 
-disable_partial = False
-if env['PLATFORM'] == 'darwin':
-    # Up until Apple LLVM version 10.0.0 (clang-1000.11.45.5), partial
-    # linked objects do not expose symbols that are marked with the
-    # hidden visibility and consequently building gem5 on Mac OS
-    # fails. As a workaround, we disable partial linking, however, we
-    # may want to revisit in the future.
-    disable_partial = True
-
 # Debug binary
 if 'debug' in needed_envs:
     makeEnv(env, 'debug', '.do',
             CCFLAGS = Split(ccflags['debug']),
             CPPDEFINES = ['DEBUG', 'TRACING_ON=1'],
-            LINKFLAGS = Split(ldflags['debug']),
-            disable_partial=disable_partial)
+            LINKFLAGS = Split(ldflags['debug']))
 
 # Optimized binary
 if 'opt' in needed_envs:
     makeEnv(env, 'opt', '.o',
             CCFLAGS = Split(ccflags['opt']),
             CPPDEFINES = ['TRACING_ON=1'],
-            LINKFLAGS = Split(ldflags['opt']),
-            disable_partial=disable_partial)
+            LINKFLAGS = Split(ldflags['opt']))
 
 # "Fast" binary
 if 'fast' in needed_envs:
-    disable_partial = disable_partial or \
-            (env.get('BROKEN_INCREMENTAL_LTO', False) and \
-            GetOption('force_lto'))
     makeEnv(env, 'fast', '.fo', strip = True,
             CCFLAGS = Split(ccflags['fast']),
             CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-            LINKFLAGS = Split(ldflags['fast']),
-            disable_partial=disable_partial)
+            LINKFLAGS = Split(ldflags['fast']))
 
 # Profiled binary using gprof
 if 'prof' in needed_envs:
     makeEnv(env, 'prof', '.po',
             CCFLAGS = Split(ccflags['prof']),
             CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-            LINKFLAGS = Split(ldflags['prof']),
-            disable_partial=disable_partial)
+            LINKFLAGS = Split(ldflags['prof']))
 
 # Profiled binary using google-pprof
 if 'perf' in needed_envs:
     makeEnv(env, 'perf', '.gpo',
             CCFLAGS = Split(ccflags['perf']),
             CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-            LINKFLAGS = Split(ldflags['perf']),
-            disable_partial=disable_partial)
+            LINKFLAGS = Split(ldflags['perf']))
