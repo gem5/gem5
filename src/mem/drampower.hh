@@ -74,11 +74,6 @@ class DRAMPower
     static Data::MemPowerSpec getPowerParams(const DRAMCtrlParams* p);
 
     /**
-     * Determine data rate, either one or two.
-     */
-    static uint8_t getDataRate(const DRAMCtrlParams* p);
-
-    /**
      * Determine if DRAM has two voltage domains (or one)
      */
     static bool hasTwoVDD(const DRAMCtrlParams* p);

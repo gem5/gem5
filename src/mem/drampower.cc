@@ -53,7 +53,7 @@ DRAMPower::getArchParams(const DRAMCtrlParams* p)
     archSpec.nbrOfBanks = p->banks_per_rank;
     // One DRAMPower instance per rank, hence set this to 1
     archSpec.nbrOfRanks = 1;
-    archSpec.dataRate = getDataRate(p);
+    archSpec.dataRate = p->beats_per_clock;
     // For now we can ignore the number of columns and rows as they
     // are not used in the power calculation.
     archSpec.nbrOfColumns = 0;
@@ -145,15 +145,4 @@ bool
 DRAMPower::hasTwoVDD(const DRAMCtrlParams* p)
 {
     return p->VDD2 == 0 ? false : true;
-}
-
-uint8_t
-DRAMPower::getDataRate(const DRAMCtrlParams* p)
-{
-    uint32_t burst_cycles = divCeil(p->tBURST_MAX, p->tCK);
-    uint8_t data_rate = p->burst_length / burst_cycles;
-    // 4 for GDDR5
-    if (data_rate != 1 && data_rate != 2 && data_rate != 4 && data_rate != 8)
-        fatal("Got unexpected data rate %d, should be 1 or 2 or 4 or 8\n");
-    return data_rate;
 }
