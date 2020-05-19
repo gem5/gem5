@@ -407,6 +407,7 @@ void
 RubySystem::resetStats()
 {
     m_start_cycle = curCycle();
+    m_network->resetStats();
 }
 
 bool

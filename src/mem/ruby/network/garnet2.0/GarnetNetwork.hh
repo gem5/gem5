@@ -101,6 +101,7 @@ class GarnetNetwork : public Network
     // Stats
     void collateStats();
     void regStats();
+    void resetStats();
     void print(std::ostream& out) const;
 
     // increment counters
