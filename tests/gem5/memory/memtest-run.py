@@ -32,7 +32,7 @@ from common.Caches import *
 #MAX CORES IS 8 with the fals sharing method
 nb_cores = 8
 cpus = [MemTest(max_loads = 1e5, progress_interval = 1e4)
-        for i in xrange(nb_cores) ]
+        for i in range(nb_cores) ]
 
 # system simulated
 system = System(cpu = cpus,
