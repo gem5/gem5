@@ -480,13 +480,6 @@ Scheduler::scheduleStop(bool finish_delta)
 }
 
 void
-Scheduler::scheduleTimeAdvancesEvent()
-{
-    if (!traceFiles.empty() && !timeAdvancesEvent.scheduled())
-        schedule(&timeAdvancesEvent);
-}
-
-void
 Scheduler::trace(bool delta)
 {
     for (auto tf: traceFiles)
