@@ -459,12 +459,7 @@ class Scheduler
 
     void timeAdvances() { trace(false); }
     EventWrapper<Scheduler, &Scheduler::timeAdvances> timeAdvancesEvent;
-    void
-    scheduleTimeAdvancesEvent()
-    {
-        if (!traceFiles.empty() && !timeAdvancesEvent.scheduled())
-            schedule(&timeAdvancesEvent);
-    }
+    void scheduleTimeAdvancesEvent();
 
     uint64_t _numCycles;
     uint64_t _changeStamp;
