@@ -122,10 +122,19 @@ PosixKvmTimer::disarm()
     struct itimerspec ts;
     memset(&ts, 0, sizeof(ts));
 
-    DPRINTF(KvmTimer, "Disarming POSIX timer\n");
-
-    if (timer_settime(timer, 0, &ts, NULL) == -1)
+    if (timer_settime(timer, 0, &ts, &prevTimerSpec) == -1)
         panic("PosixKvmTimer: Failed to disarm timer\n");
+
+    DPRINTF(KvmTimer, "Disarmed POSIX timer: %is%ins left\n",
+            prevTimerSpec.it_value.tv_sec,
+            prevTimerSpec.it_value.tv_nsec);
+}
+
+bool
+PosixKvmTimer::expired()
+{
+    return (prevTimerSpec.it_value.tv_nsec == 0 &&
+            prevTimerSpec.it_value.tv_sec == 0);
 }
 
 Tick

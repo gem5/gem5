@@ -93,6 +93,9 @@ class BaseKvmTimer
      * signals upon timeout.
      */
     virtual void disarm() = 0;
+    virtual bool expired() {
+        return true;
+    }
 
     /**
      * Determine the resolution of the timer in ticks. This method is
@@ -193,6 +196,7 @@ class PosixKvmTimer : public BaseKvmTimer
 
     void arm(Tick ticks);
     void disarm();
+    bool expired() override;
 
   protected:
     Tick calcResolution();
@@ -200,6 +204,7 @@ class PosixKvmTimer : public BaseKvmTimer
   private:
     clockid_t clockID;
     timer_t timer;
+    struct itimerspec prevTimerSpec;
 };
 
 /**

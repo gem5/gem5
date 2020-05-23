@@ -691,8 +691,13 @@ BaseKvmCPU::tick()
     }
 
     // Schedule a new tick if we are still running
-    if (_status != Idle && _status != RunningMMIOPending)
-        schedule(tickEvent, clockEdge(ticksToCycles(delay)));
+    if (_status != Idle && _status != RunningMMIOPending) {
+        if (_kvmRun->exit_reason == KVM_EXIT_INTR && runTimer->expired())
+            schedule(tickEvent, clockEdge(ticksToCycles(
+                     curEventQueue()->nextTick() - curTick() + 1)));
+        else
+            schedule(tickEvent, clockEdge(ticksToCycles(delay)));
+    }
 }
 
 Tick
