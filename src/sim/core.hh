@@ -43,8 +43,6 @@
 /// The universal simulation clock.
 inline Tick curTick() { return _curEventQueue->getCurTick(); }
 
-const Tick retryTime = 1000;
-
 /// These are variables that are set based on the simulator frequency
 ///@{
 namespace SimClock {

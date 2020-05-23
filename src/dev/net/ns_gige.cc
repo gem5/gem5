@@ -1395,7 +1395,7 @@ NSGigE::transmit()
 
    if (!txFifo.empty() && !txEvent.scheduled()) {
        DPRINTF(Ethernet, "reschedule transmit\n");
-       schedule(txEvent, curTick() + retryTime);
+       schedule(txEvent, curTick() + SimClock::Int::ns);
    }
 }
 

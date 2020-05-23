@@ -196,7 +196,7 @@ EtherTapBase::sendSimulated(void *data, size_t len)
         DPRINTF(Ethernet, "bus busy...buffer for retransmission\n");
         packetBuffer.push(packet);
         if (!txEvent.scheduled())
-            schedule(txEvent, curTick() + retryTime);
+            schedule(txEvent, curTick() + SimClock::Int::ns);
     } else if (dump) {
         dump->dump(packet);
     }
@@ -218,7 +218,7 @@ EtherTapBase::retransmit()
     }
 
     if (!packetBuffer.empty() && !txEvent.scheduled())
-        schedule(txEvent, curTick() + retryTime);
+        schedule(txEvent, curTick() + SimClock::Int::ns);
 }
 
 
