@@ -25,13 +25,22 @@
 
 Import('*')
 
+from m5.util import compareVersions
+
 if env['USE_SYSTEMC']:
+    if main['GCC'] and compareVersions(main['GCC_VERSION'], '10.1') >= 0:
+        disable_false_positives = {
+            "CCFLAGS": [ "-Wno-array-bounds",
+                         "-Wno-stringop-overflow" ]
+        }
+    else:
+        disable_false_positives = {}
     Source('messages.cc')
     Source('sc_int_base.cc')
     Source('sc_int_mask.cc')
     Source('sc_length_param.cc')
     Source('sc_nbexterns.cc')
     Source('sc_nbutils.cc')
-    Source('sc_signed.cc')
+    Source('sc_signed.cc', append=disable_false_positives)
     Source('sc_uint_base.cc')
-    Source('sc_unsigned.cc')
+    Source('sc_unsigned.cc', append=disable_false_positives)
