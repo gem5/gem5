@@ -38,6 +38,7 @@
 #ifndef __DEV_ARM_SMMU_V3_TRANSL_HH__
 #define __DEV_ARM_SMMU_V3_TRANSL_HH__
 
+#include "base/compiler.hh"
 #include "dev/arm/smmu_v3_proc.hh"
 #include "dev/arm/smmu_v3_ptops.hh"
 #include "dev/arm/smmu_v3_slaveifc.hh"
@@ -96,7 +97,7 @@ class SMMUTranslationProcess : public SMMUProcess
     TranslContext context;
 
     Tick recvTick;
-    Tick faultTick;
+    Tick M5_CLASS_VAR_USED faultTick;
 
     virtual void main(Yield &yield);
 
