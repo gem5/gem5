@@ -223,7 +223,7 @@ BaseKvmCPU::KVMCpuPort::recvReqRetry()
 void
 BaseKvmCPU::finishMMIOPending()
 {
-    assert(_status = RunningMMIOPending);
+    assert(_status == RunningMMIOPending);
     assert(!tickEvent.scheduled());
 
     _status = RunningServiceCompletion;
