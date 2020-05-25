@@ -677,7 +677,8 @@ copyOutStatfsBuf(PortProxy &mem, Addr addr,
     tgt->f_frsize = htog(host->f_frsize, bo);
 #endif
 #if defined(__linux__)
-    memcpy(&tgt->f_spare, &host->f_spare, sizeof(host->f_spare));
+    memcpy(&tgt->f_spare, &host->f_spare,
+            std::min(sizeof(host->f_spare), sizeof(tgt->f_spare)));
 #else
     /*
      * The fields are different sizes per OS. Don't bother with
