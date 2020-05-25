@@ -28,6 +28,7 @@
 
 #include "learning_gem5/part2/simple_memobj.hh"
 
+#include "base/trace.hh"
 #include "debug/SimpleMemobj.hh"
 
 SimpleMemobj::SimpleMemobj(SimpleMemobjParams *params) :

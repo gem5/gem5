@@ -37,6 +37,7 @@
 #include <queue>
 
 #include "base/bitfield.hh"
+#include "base/trace.hh"
 #include "debug/CacheComp.hh"
 #include "params/MultiCompressor.hh"
 

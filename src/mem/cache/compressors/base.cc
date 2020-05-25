@@ -37,6 +37,7 @@
 #include <cstdint>
 #include <string>
 
+#include "base/trace.hh"
 #include "debug/CacheComp.hh"
 #include "mem/cache/tags/super_blk.hh"
 #include "params/BaseCacheCompressor.hh"

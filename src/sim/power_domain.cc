@@ -39,6 +39,7 @@
 
 #include <unordered_map>
 
+#include "base/trace.hh"
 #include "debug/PowerDomain.hh"
 
 PowerDomain::PowerDomain(const PowerDomainParams* p) :

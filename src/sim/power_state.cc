@@ -38,6 +38,7 @@
 #include "sim/power_state.hh"
 
 #include "base/logging.hh"
+#include "base/trace.hh"
 #include "debug/PowerDomain.hh"
 #include "sim/power_domain.hh"
 

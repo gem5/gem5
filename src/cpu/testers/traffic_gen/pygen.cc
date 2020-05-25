@@ -36,6 +36,7 @@
  */
 #include "cpu/testers/traffic_gen/pygen.hh"
 
+#include "base/trace.hh"
 #include "config/have_protobuf.hh"
 #include "debug/TrafficGen.hh"
 #include "params/PyTrafficGen.hh"

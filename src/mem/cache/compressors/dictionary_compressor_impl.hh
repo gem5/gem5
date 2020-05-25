@@ -35,6 +35,7 @@
 
 #include <algorithm>
 
+#include "base/trace.hh"
 #include "debug/CacheComp.hh"
 #include "mem/cache/compressors/dictionary_compressor.hh"
 #include "params/BaseDictionaryCompressor.hh"

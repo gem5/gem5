@@ -52,9 +52,11 @@
 #include <cstring>
 #include <vector>
 
+#include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/DistEthernet.hh"
 #include "debug/DistEthernetCmd.hh"
+#include "sim/core.hh"
 #include "sim/sim_exit.hh"
 
 #if defined(__FreeBSD__)

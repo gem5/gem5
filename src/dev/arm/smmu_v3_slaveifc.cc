@@ -37,6 +37,7 @@
 
 #include "dev/arm/smmu_v3_slaveifc.hh"
 
+#include "base/trace.hh"
 #include "debug/SMMUv3.hh"
 #include "dev/arm/smmu_v3.hh"
 #include "dev/arm/smmu_v3_transl.hh"

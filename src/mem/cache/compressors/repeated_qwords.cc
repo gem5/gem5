@@ -33,6 +33,7 @@
 
 #include "mem/cache/compressors/repeated_qwords.hh"
 
+#include "base/trace.hh"
 #include "debug/CacheComp.hh"
 #include "mem/cache/compressors/dictionary_compressor_impl.hh"
 #include "params/RepeatedQwordsCompressor.hh"

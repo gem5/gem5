@@ -1,6 +1,7 @@
 #include "mem/hmc_controller.hh"
 
 #include "base/random.hh"
+#include "base/trace.hh"
 #include "debug/HMCController.hh"
 
 HMCController::HMCController(const HMCControllerParams* p) :

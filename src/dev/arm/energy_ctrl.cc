@@ -37,6 +37,7 @@
 
 #include "dev/arm/energy_ctrl.hh"
 
+#include "base/trace.hh"
 #include "debug/EnergyCtrl.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"

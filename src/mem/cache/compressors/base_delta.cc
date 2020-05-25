@@ -30,6 +30,7 @@
  * Implementation of the specialized sub-compressors used by BDI. @see BDI
  */
 
+#include "base/trace.hh"
 #include "mem/cache/compressors/base_delta_impl.hh"
 #include "params/Base16Delta8.hh"
 #include "params/Base32Delta16.hh"

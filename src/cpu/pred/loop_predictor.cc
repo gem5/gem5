@@ -34,6 +34,7 @@
 #include "cpu/pred/loop_predictor.hh"
 
 #include "base/random.hh"
+#include "base/trace.hh"
 #include "debug/LTage.hh"
 #include "params/LoopPredictor.hh"
 
