@@ -46,7 +46,7 @@
 
 #include "base/callback.hh"
 #include "base/hostinfo.hh"
-#include "sim/eventq_impl.hh"
+#include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
 #include "sim/stats.hh"
 

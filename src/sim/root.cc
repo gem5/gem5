@@ -31,7 +31,7 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "debug/TimeSync.hh"
-#include "sim/eventq_impl.hh"
+#include "sim/eventq.hh"
 #include "sim/full_system.hh"
 #include "sim/root.hh"
 

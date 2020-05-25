@@ -34,7 +34,7 @@
 #include <vector>
 
 #include "base/barrier.hh"
-#include "sim/eventq_impl.hh"
+#include "sim/eventq.hh"
 
 /**
  * @file sim/global_event.hh

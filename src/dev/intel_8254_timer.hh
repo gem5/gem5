@@ -36,7 +36,7 @@
 #include "base/types.hh"
 #include "base/trace.hh"
 #include "debug/Intel8254Timer.hh"
-#include "sim/eventq_impl.hh"
+#include "sim/eventq.hh"
 #include "sim/serialize.hh"
 
 /** Programmable Interval Timer (Intel 8254) */

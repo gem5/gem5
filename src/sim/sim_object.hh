@@ -53,7 +53,6 @@
 #include "params/SimObject.hh"
 #include "sim/drain.hh"
 #include "sim/eventq.hh"
-#include "sim/eventq_impl.hh"
 #include "sim/port.hh"
 #include "sim/serialize.hh"
 

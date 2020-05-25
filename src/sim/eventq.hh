@@ -44,6 +44,7 @@
 #include <mutex>
 #include <string>
 
+#include "base/debug.hh"
 #include "base/flags.hh"
 #include "base/types.hh"
 #include "debug/Event.hh"
@@ -750,14 +751,56 @@ class EventQueue
      *
      * @ingroup api_eventq
      */
-    void schedule(Event *event, Tick when, bool global = false);
+    void
+    schedule(Event *event, Tick when, bool global=false)
+    {
+        assert(when >= getCurTick());
+        assert(!event->scheduled());
+        assert(event->initialized());
+
+        event->setWhen(when, this);
+
+        // The check below is to make sure of two things
+        // a. A thread schedules local events on other queues through the
+        //    asyncq.
+        // b. A thread schedules global events on the asyncq, whether or not
+        //    this event belongs to this eventq. This is required to maintain
+        //    a total order amongst the global events. See global_event.{cc,hh}
+        //    for more explanation.
+        if (inParallelMode && (this != curEventQueue() || global)) {
+            asyncInsert(event);
+        } else {
+            insert(event);
+        }
+        event->flags.set(Event::Scheduled);
+        event->acquire();
+
+        if (DTRACE(Event))
+            event->trace("scheduled");
+    }
 
     /**
      * Deschedule the specified event. Should be called only from the owning
      * thread.
      * @ingroup api_eventq
      */
-    void deschedule(Event *event);
+    void
+    deschedule(Event *event)
+    {
+        assert(event->scheduled());
+        assert(event->initialized());
+        assert(!inParallelMode || this == curEventQueue());
+
+        remove(event);
+
+        event->flags.clear(Event::Squashed);
+        event->flags.clear(Event::Scheduled);
+
+        if (DTRACE(Event))
+            event->trace("descheduled");
+
+        event->release();
+    }
 
     /**
      * Reschedule the specified event. Should be called only from the owning
@@ -765,7 +808,28 @@ class EventQueue
      *
      * @ingroup api_eventq
      */
-    void reschedule(Event *event, Tick when, bool always = false);
+    void
+    reschedule(Event *event, Tick when, bool always=false)
+    {
+        assert(when >= getCurTick());
+        assert(always || event->scheduled());
+        assert(event->initialized());
+        assert(!inParallelMode || this == curEventQueue());
+
+        if (event->scheduled()) {
+            remove(event);
+        } else {
+            event->acquire();
+        }
+
+        event->setWhen(when, this);
+        insert(event);
+        event->flags.clear(Event::Squashed);
+        event->flags.set(Event::Scheduled);
+
+        if (DTRACE(Event))
+            event->trace("rescheduled");
+    }
 
     Tick nextTick() const { return head->when(); }
     void setCurTick(Tick newVal) { _curTick = newVal; }
