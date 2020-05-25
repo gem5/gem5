@@ -137,4 +137,10 @@ void clearDebugFlag(const char *string);
 
 void dumpDebugFlags();
 
+#if TRACING_ON
+#   define DTRACE(x) (Debug::x)
+#else // !TRACING_ON
+#   define DTRACE(x) (false)
+#endif  // TRACING_ON
+
 #endif // __BASE_DEBUG_HH__

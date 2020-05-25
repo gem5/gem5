@@ -168,8 +168,6 @@ class Named
 
 #if TRACING_ON
 
-#define DTRACE(x) (Debug::x)
-
 #define DDUMP(x, data, count) do {               \
     using namespace Debug;                       \
     if (DTRACE(x))                               \
@@ -220,7 +218,6 @@ class Named
 
 #else // !TRACING_ON
 
-#define DTRACE(x) (false)
 #define DDUMP(x, data, count) do {} while (0)
 #define DPRINTF(x, ...) do {} while (0)
 #define DPRINTFS(x, ...) do {} while (0)

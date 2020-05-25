@@ -31,7 +31,7 @@
 #ifndef __SIM_EVENTQ_IMPL_HH__
 #define __SIM_EVENTQ_IMPL_HH__
 
-#include "base/trace.hh"
+#include "base/debug.hh"
 #include "sim/eventq.hh"
 
 inline void
