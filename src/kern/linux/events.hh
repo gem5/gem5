@@ -48,6 +48,7 @@
 #include "debug/DebugPrintf.hh"
 #include "kern/linux/printk.hh"
 #include "kern/system_events.hh"
+#include "mem/se_translating_port_proxy.hh"
 #include "sim/guest_abi.hh"
 
 class ThreadContext;

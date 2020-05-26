@@ -47,7 +47,7 @@
 #include "mem/packet_access.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"
-#include "sim/syscall_emul_buf.hh"
+#include "sim/proxy_ptr.hh"
 #include "sim/system.hh"
 
 #define HSAPP_EVENT_DESCRIPTION_GENERATOR(XEVENT) \
@@ -414,13 +414,10 @@ HSAPacketProcessor::processPkt(void* pkt, uint32_t rl_idx, Addr host_pkt_addr)
                  * The reason for this is that the DMASequencer does
                  * not support atomic operations.
                  */
-                auto tc = sys->threads[0];
-                auto &virt_proxy = tc->getVirtProxy();
-                TypedBufferArg<uint64_t> prev_signal(signal_addr);
-                prev_signal.copyIn(virt_proxy);
+                VPtr<uint64_t> prev_signal(signal_addr, sys->threads[0]);
 
                 hsa_signal_value_t *new_signal = new hsa_signal_value_t;
-                *new_signal = (hsa_signal_value_t) *prev_signal - 1;
+                *new_signal = (hsa_signal_value_t)*prev_signal - 1;
 
                 dmaWriteVirt(signal_addr,
                              sizeof(hsa_signal_value_t), NULL, new_signal, 0);

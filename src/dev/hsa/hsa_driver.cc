@@ -42,7 +42,7 @@
 #include "dev/hsa/kfd_ioctl.h"
 #include "params/HSADriver.hh"
 #include "sim/process.hh"
-#include "sim/syscall_emul_buf.hh"
+#include "sim/proxy_ptr.hh"
 
 HSADriver::HSADriver(HSADriverParams *p)
     : EmulatedDriver(p), device(p->device), queueId(0)

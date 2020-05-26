@@ -356,7 +356,8 @@ SyscallReturn setsockoptFunc(SyscallDesc *desc, ThreadContext *tc,
                              Addr valPtr, socklen_t len);
 
 SyscallReturn getcpuFunc(SyscallDesc *desc, ThreadContext *tc,
-                         Addr cpu_ptr, Addr node_ptr, Addr tcache_ptr);
+                         VPtr<uint32_t> cpu, VPtr<uint32_t> node,
+                         VPtr<uint32_t> tcache);
 
 // Target getsockname() handler.
 SyscallReturn getsocknameFunc(SyscallDesc *desc, ThreadContext *tc,
@@ -1933,16 +1934,14 @@ gettimeofdayFunc(SyscallDesc *desc, ThreadContext *tc,
 /// Target utimes() handler.
 template <class OS>
 SyscallReturn
-utimesFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, Addr times)
+utimesFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname,
+           VPtr<typename OS::timeval [2]> tp)
 {
     std::string path;
     auto process = tc->getProcessPtr();
 
     if (!tc->getVirtProxy().tryReadString(path, pathname))
         return -EFAULT;
-
-    TypedBufferArg<typename OS::timeval [2]> tp(times);
-    tp.copyIn(tc->getVirtProxy());
 
     struct timeval hostTimeval[2];
     for (int i = 0; i < 2; ++i) {

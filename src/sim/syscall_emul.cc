@@ -47,6 +47,7 @@
 #include "mem/page_table.hh"
 #include "sim/byteswap.hh"
 #include "sim/process.hh"
+#include "sim/proxy_ptr.hh"
 #include "sim/sim_exit.hh"
 #include "sim/syscall_debug_macros.hh"
 #include "sim/syscall_desc.hh"
@@ -1636,24 +1637,15 @@ setsockoptFunc(SyscallDesc *desc, ThreadContext *tc,
 
 SyscallReturn
 getcpuFunc(SyscallDesc *desc, ThreadContext *tc,
-           Addr cpu_ptr, Addr node_ptr, Addr tcache_ptr)
+           VPtr<uint32_t> cpu, VPtr<uint32_t> node, VPtr<uint32_t> tcache)
 {
-    bool error = false;
-
     // unsigned is the same size (4) on all Linux supported ISAs.
-    if (cpu_ptr != 0) {
-        TypedBufferArg<uint32_t> result(cpu_ptr);
-        *result = htog(tc->contextId(),
-            tc->getSystemPtr()->getGuestByteOrder());
-        error |= !result.copyOut(tc->getVirtProxy());
-    }
+    if (cpu)
+        *cpu = htog(tc->contextId(), tc->getSystemPtr()->getGuestByteOrder());
 
     // Set a fixed NUMA node 0.
-    if (node_ptr != 0) {
-        TypedBufferArg<uint32_t> result(node_ptr);
-        *result = 0;
-        error |= !result.copyOut(tc->getVirtProxy());
-    }
+    if (node)
+        *node = 0;
 
-    return error ? -EFAULT : 0;
+    return 0;
 }

@@ -37,8 +37,9 @@
 #include "arch/arm/utility.hh"
 #include "base/intmath.hh"
 #include "cpu/thread_context.hh"
+#include "mem/port_proxy.hh"
 #include "sim/guest_abi.hh"
-#include "sim/syscall_emul_buf.hh"
+#include "sim/proxy_ptr.hh"
 
 class ThreadContext;
 
@@ -113,8 +114,7 @@ struct Aapcs32ArgumentBase
         state.nsaa = roundUp(state.nsaa, align);
 
         // Extract the value from it.
-        TypedBufferArg<T> val(state.nsaa);
-        val.copyIn(tc->getVirtProxy());
+        ConstVPtr<T> val(state.nsaa, tc);
 
         // Move the nsaa past this argument.
         state.nsaa += size;
@@ -284,9 +284,8 @@ struct Result<Aapcs32, Composite, typename std::enable_if<
             val = gtoh(val, ArmISA::byteOrder(tc));
             tc->setIntReg(ArmISA::INTREG_R0, val);
         } else {
-            TypedBufferArg<Composite> cp(state.retAddr);
-            cp = htog(composite, ArmISA::byteOrder(tc));
-            cp.copyOut(tc->getVirtProxy());
+            VPtr<Composite> cp(state.retAddr, tc);
+            *cp = htog(composite, ArmISA::byteOrder(tc));
         }
     }
 
