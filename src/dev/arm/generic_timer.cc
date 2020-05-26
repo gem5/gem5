@@ -689,6 +689,42 @@ GenericTimer::readMiscReg(int reg, unsigned cpu)
     }
 }
 
+GenericTimer::CoreTimers::CoreTimers(GenericTimer &_parent,
+    ArmSystem &system, unsigned cpu,
+    ArmInterruptPin *_irqPhysS, ArmInterruptPin *_irqPhysNS,
+    ArmInterruptPin *_irqVirt, ArmInterruptPin *_irqHyp)
+      : parent(_parent),
+        cntfrq(parent.params()->cntfrq),
+        threadContext(system.getThreadContext(cpu)),
+        irqPhysS(_irqPhysS),
+        irqPhysNS(_irqPhysNS),
+        irqVirt(_irqVirt),
+        irqHyp(_irqHyp),
+        physS(csprintf("%s.phys_s_timer%d", parent.name(), cpu),
+              system, parent, parent.systemCounter,
+              _irqPhysS),
+        // This should really be phys_timerN, but we are stuck with
+        // arch_timer for backwards compatibility.
+        physNS(csprintf("%s.arch_timer%d", parent.name(), cpu),
+             system, parent, parent.systemCounter,
+             _irqPhysNS),
+        virt(csprintf("%s.virt_timer%d", parent.name(), cpu),
+           system, parent, parent.systemCounter,
+           _irqVirt),
+        hyp(csprintf("%s.hyp_timer%d", parent.name(), cpu),
+           system, parent, parent.systemCounter,
+           _irqHyp),
+        physEvStream{
+           EventFunctionWrapper([this]{ physEventStreamCallback(); },
+           csprintf("%s.phys_event_gen%d", parent.name(), cpu)), 0, 0
+        },
+        virtEvStream{
+           EventFunctionWrapper([this]{ virtEventStreamCallback(); },
+           csprintf("%s.virt_event_gen%d", parent.name(), cpu)), 0, 0
+        }
+{
+}
+
 void
 GenericTimer::CoreTimers::physEventStreamCallback()
 {

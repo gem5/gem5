@@ -293,38 +293,10 @@ class GenericTimer : public SimObject
       public:
         CoreTimers(GenericTimer &_parent, ArmSystem &system, unsigned cpu,
                    ArmInterruptPin *_irqPhysS, ArmInterruptPin *_irqPhysNS,
-                   ArmInterruptPin *_irqVirt, ArmInterruptPin *_irqHyp)
-            : parent(_parent),
-              threadContext(system.getThreadContext(cpu)),
-              irqPhysS(_irqPhysS),
-              irqPhysNS(_irqPhysNS),
-              irqVirt(_irqVirt),
-              irqHyp(_irqHyp),
-              physS(csprintf("%s.phys_s_timer%d", parent.name(), cpu),
-                     system, parent, parent.systemCounter,
-                     _irqPhysS),
-              // This should really be phys_timerN, but we are stuck with
-              // arch_timer for backwards compatibility.
-              physNS(csprintf("%s.arch_timer%d", parent.name(), cpu),
-                     system, parent, parent.systemCounter,
-                     _irqPhysNS),
-              virt(csprintf("%s.virt_timer%d", parent.name(), cpu),
-                   system, parent, parent.systemCounter,
-                   _irqVirt),
-              hyp(csprintf("%s.hyp_timer%d", parent.name(), cpu),
-                   system, parent, parent.systemCounter,
-                   _irqHyp),
-              physEvStream{
-                   EventFunctionWrapper([this]{ physEventStreamCallback(); },
-                   csprintf("%s.phys_event_gen%d", parent.name(), cpu)), 0, 0
-              },
-              virtEvStream{
-                   EventFunctionWrapper([this]{ virtEventStreamCallback(); },
-                   csprintf("%s.virt_event_gen%d", parent.name(), cpu)), 0, 0
-              }
-        {
-            cntfrq = 0x01800000;
-        }
+                   ArmInterruptPin *_irqVirt, ArmInterruptPin *_irqHyp);
+
+        /// Generic Timer parent reference
+        GenericTimer &parent;
 
         /// System counter frequency as visible from this core
         uint32_t cntfrq;
@@ -334,9 +306,6 @@ class GenericTimer : public SimObject
 
         /// Hypervisor control register
         CNTHCTL cnthctl;
-
-        /// Generic Timer parent reference
-        GenericTimer &parent;
 
         /// Thread (HW) context associated to this PE implementation
         ThreadContext *threadContext;
