@@ -36,6 +36,7 @@ from os import mkdir, makedirs, getpid, listdir, fsync
 from os.path import join as joinpath
 from os.path import isdir
 from shutil import rmtree, copyfile
+from m5.util.convert import toFrequency
 
 def file_append(path, contents):
     with open(joinpath(*path), 'a') as f:
@@ -76,30 +77,32 @@ def createHsaTopology(options):
 
     # populate global node properties
     # NOTE: SIMD count triggers a valid GPU agent creation
-    # TODO: Really need to parse these from options
-    node_prop = 'cpu_cores_count %s\n' % options.num_cpus   + \
-                'simd_count 32\n'                           + \
-                'mem_banks_count 0\n'                       + \
-                'caches_count 0\n'                          + \
-                'io_links_count 0\n'                        + \
-                'cpu_core_id_base 16\n'                     + \
-                'simd_id_base 2147483648\n'                 + \
-                'max_waves_per_simd 40\n'                   + \
-                'lds_size_in_kb 64\n'                       + \
-                'gds_size_in_kb 0\n'                        + \
-                'wave_front_size 64\n'                      + \
-                'array_count 1\n'                           + \
-                'simd_arrays_per_engine 1\n'                + \
-                'cu_per_simd_array 10\n'                    + \
-                'simd_per_cu 4\n'                           + \
-                'max_slots_scratch_cu 32\n'                 + \
-                'vendor_id 4098\n'                          + \
-                'device_id 39028\n'                         + \
-                'location_id 8\n'                           + \
-                'max_engine_clk_fcompute 800\n'             + \
-                'local_mem_size 0\n'                        + \
-                'fw_version 699\n'                          + \
-                'capability 4738\n'                         + \
-                'max_engine_clk_ccompute 2100\n'
+    node_prop = 'cpu_cores_count %s\n' % options.num_cpus                   + \
+                'simd_count %s\n'                                             \
+                    % (options.num_compute_units * options.simds_per_cu)    + \
+                'mem_banks_count 0\n'                                       + \
+                'caches_count 0\n'                                          + \
+                'io_links_count 0\n'                                        + \
+                'cpu_core_id_base 16\n'                                     + \
+                'simd_id_base 2147483648\n'                                 + \
+                'max_waves_per_simd %s\n' % options.wfs_per_simd            + \
+                'lds_size_in_kb %s\n' % int(options.lds_size / 1024)        + \
+                'gds_size_in_kb 0\n'                                        + \
+                'wave_front_size %s\n' % options.wf_size                    + \
+                'array_count 1\n'                                           + \
+                'simd_arrays_per_engine %s\n' % options.sa_per_complex      + \
+                'cu_per_simd_array %s\n' % options.cu_per_sa                + \
+                'simd_per_cu %s\n' % options.simds_per_cu                   + \
+                'max_slots_scratch_cu 32\n'                                 + \
+                'vendor_id 4098\n'                                          + \
+                'device_id 39028\n'                                         + \
+                'location_id 8\n'                                           + \
+                'max_engine_clk_fcompute %s\n'                                \
+                    % int(toFrequency(options.gpu_clock) / 1e6)             + \
+                'local_mem_size 0\n'                                        + \
+                'fw_version 699\n'                                          + \
+                'capability 4738\n'                                         + \
+                'max_engine_clk_ccompute %s\n'                                \
+                    % int(toFrequency(options.CPUClock) / 1e6)
 
     file_append((node_dir, 'properties'), node_prop)
