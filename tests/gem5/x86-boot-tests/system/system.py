@@ -118,7 +118,8 @@ class MySystem(System):
         else:
             m5.fatal("No CPU type {}".format(cpu_type))
 
-        map(lambda c: c.createThreads(), self.cpu)
+        for c in self.cpu:
+            c.createThreads()
 
     def setDiskImages(self, img_path_1, img_path_2):
         disk0 = CowDisk(img_path_1)
