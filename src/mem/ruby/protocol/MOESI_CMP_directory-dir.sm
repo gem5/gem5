@@ -469,7 +469,11 @@ machine(MachineType:Directory, "Directory protocol")
         out_msg.Destination.add(in_msg.OriginalRequestorMachId);
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Dirty := false; // By definition, the block is now clean
-        out_msg.Acks := in_msg.Acks;
+        if (getDirectoryEntry(in_msg.addr).Sharers.isElement(in_msg.OriginalRequestorMachId) == true) {
+         out_msg.Acks := (getDirectoryEntry(in_msg.addr).Sharers.count()) - 1;
+        } else {
+         out_msg.Acks := getDirectoryEntry(in_msg.addr).Sharers.count();
+        }
         if (in_msg.ReadX) {
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
         } else {
