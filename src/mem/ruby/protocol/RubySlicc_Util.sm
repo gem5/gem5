@@ -32,6 +32,7 @@
 void error(std::string msg);
 void assert(bool condition);
 Cycles zero_time();
+Cycles intToCycles(int c);
 NodeID intToID(int nodenum);
 int IDToInt(NodeID id);
 int addressToInt(Addr addr);

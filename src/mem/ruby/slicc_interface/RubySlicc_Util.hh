@@ -59,6 +59,8 @@
 
 inline Cycles zero_time() { return Cycles(0); }
 
+inline Cycles intToCycles(int c) { return Cycles(c); }
+
 inline NodeID
 intToID(int nodenum)
 {
