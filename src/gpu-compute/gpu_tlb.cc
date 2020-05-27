@@ -314,7 +314,7 @@ namespace X86ISA
                 return std::make_shared<GeneralProtection>(0);
 
             req->setLocalAccessor(
-                [read,regNum,vaddr](ThreadContext *tc, PacketPtr pkt)
+                [read,regNum](ThreadContext *tc, PacketPtr pkt)
                 {
                     return localMiscRegAccess(read, regNum, tc, pkt);
                 }
