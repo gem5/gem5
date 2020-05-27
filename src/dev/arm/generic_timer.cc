@@ -281,7 +281,11 @@ ArchTimer::updateCounter()
     if (value() >= _counterLimit) {
         counterLimitReached();
     } else {
-        _control.istatus = 0;
+        if (_control.istatus) {
+            DPRINTF(Timer, "Clearing interrupt\n");
+            _interrupt->clear();
+            _control.istatus = 0;
+        }
         if (scheduleEvents()) {
             _parent.schedule(_counterLimitReachedEvent,
                              whenValue(_counterLimit));
@@ -313,8 +317,13 @@ ArchTimer::setControl(uint32_t val)
     if (!old_ctl.enable && new_ctl.enable)
         updateCounter();
     // Timer disabled
-    else if (old_ctl.enable && !new_ctl.enable)
-        _control.istatus = 0;
+    else if (old_ctl.enable && !new_ctl.enable) {
+        if (_control.istatus) {
+            DPRINTF(Timer, "Clearing interrupt\n");
+            _interrupt->clear();
+            _control.istatus = 0;
+        }
+    }
 }
 
 void
