@@ -68,7 +68,6 @@ AbstractController::AbstractController(const Params *p)
 void
 AbstractController::init()
 {
-    params()->ruby_system->registerAbstractController(this);
     m_delayHistogram.init(10);
     uint32_t size = Network::getNumberOfVirtualNetworks();
     for (uint32_t i = 0; i < size; i++) {

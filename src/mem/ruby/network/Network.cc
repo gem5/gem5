@@ -55,6 +55,8 @@ Network::Network(const Params *p)
     m_virtual_networks = p->number_of_virtual_networks;
     m_control_msg_size = p->control_msg_size;
 
+    params()->ruby_system->registerNetwork(this);
+
     // Populate localNodeVersions with the version of each MachineType in
     // this network. This will be used to compute a global to local ID.
     // Do this by looking at the ext_node for each ext_link. There is one
@@ -64,6 +66,7 @@ Network::Network(const Params *p)
     for (auto &it : params()->ext_links) {
         AbstractController *cntrl = it->params()->ext_node;
         localNodeVersions[cntrl->getType()].push_back(cntrl->getVersion());
+        params()->ruby_system->registerMachineID(cntrl->getMachineID(), this);
     }
 
     // Compute a local ID for each MachineType using the same order as SLICC
@@ -103,8 +106,6 @@ Network::Network(const Params *p)
     for (int i = 0; i < m_virtual_networks; i++) {
         m_ordered[i] = false;
     }
-
-    params()->ruby_system->registerNetwork(this);
 
     // Initialize the controller's network pointers
     for (std::vector<BasicExtLink*>::const_iterator i = p->ext_links.begin();

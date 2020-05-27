@@ -98,6 +98,9 @@ class System : public SimObject, public PCEventScope
     std::list<PCEvent *> liveEvents;
     SystemPort _systemPort;
 
+    // Map of memory address ranges for devices with their own backing stores
+    std::unordered_map<MasterID, AbstractMemory *> deviceMemMap;
+
   public:
 
     class Threads
@@ -352,6 +355,25 @@ class System : public SimObject, public PCEventScope
      * @return Whether the address corresponds to a memory
      */
     bool isMemAddr(Addr addr) const;
+
+    /**
+     * Add a physical memory range for a device. The ranges added here will
+     * be considered a non-PIO memory address if the masterId of the packet
+     * and range match something in the device memory map.
+     */
+    void addDeviceMemory(MasterID masterID, AbstractMemory *deviceMemory);
+
+    /**
+     * Similar to isMemAddr but for devices. Checks if a physical address
+     * of the packet match an address range of a device corresponding to the
+     * MasterId of the request.
+     */
+    bool isDeviceMemAddr(PacketPtr pkt) const;
+
+    /**
+     * Return a pointer to the device memory.
+     */
+    AbstractMemory *getDeviceMemory(MasterID masterID) const;
 
     /**
      * Get the architecture.

@@ -418,6 +418,31 @@ System::isMemAddr(Addr addr) const
 }
 
 void
+System::addDeviceMemory(MasterID masterId, AbstractMemory *deviceMemory)
+{
+    if (!deviceMemMap.count(masterId)) {
+        deviceMemMap.insert(std::make_pair(masterId, deviceMemory));
+    }
+}
+
+bool
+System::isDeviceMemAddr(PacketPtr pkt) const
+{
+    const MasterID& mid = pkt->masterId();
+
+    return (deviceMemMap.count(mid) &&
+            deviceMemMap.at(mid)->getAddrRange().contains(pkt->getAddr()));
+}
+
+AbstractMemory *
+System::getDeviceMemory(MasterID mid) const
+{
+    panic_if(!deviceMemMap.count(mid),
+             "No device memory found for MasterID %d\n", mid);
+    return deviceMemMap.at(mid);
+}
+
+void
 System::drainResume()
 {
     totalNumInsts = 0;

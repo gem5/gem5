@@ -252,7 +252,7 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     if (pkt->cmd != MemCmd::MemFenceReq) {
-        if (!isPhysMemAddress(pkt->getAddr())) {
+        if (!isPhysMemAddress(pkt)) {
             assert(ruby_port->memMasterPort.isConnected());
             DPRINTF(RubyPort, "Request address %#x assumed to be a "
                     "pio address\n", pkt->getAddr());
@@ -313,7 +313,7 @@ RubyPort::MemSlavePort::recvAtomic(PacketPtr pkt)
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     if (pkt->cmd != MemCmd::MemFenceReq) {
-        if (!isPhysMemAddress(pkt->getAddr())) {
+        if (!isPhysMemAddress(pkt)) {
             assert(ruby_port->memMasterPort.isConnected());
             DPRINTF(RubyPort, "Request address %#x assumed to be a "
                     "pio address\n", pkt->getAddr());
@@ -371,7 +371,7 @@ RubyPort::MemSlavePort::recvFunctional(PacketPtr pkt)
 
     // Check for pio requests and directly send them to the dedicated
     // pio port.
-    if (!isPhysMemAddress(pkt->getAddr())) {
+    if (!isPhysMemAddress(pkt)) {
         DPRINTF(RubyPort, "Pio Request for address: 0x%#x\n", pkt->getAddr());
         assert(rp->pioMasterPort.isConnected());
         rp->pioMasterPort.sendFunctional(pkt);
@@ -431,7 +431,7 @@ RubyPort::ruby_hit_callback(PacketPtr pkt)
 
     // The packet was destined for memory and has not yet been turned
     // into a response
-    assert(system->isMemAddr(pkt->getAddr()));
+    assert(system->isMemAddr(pkt->getAddr()) || system->isDeviceMemAddr(pkt));
     assert(pkt->isRequest());
 
     // First we must retrieve the request port from the sender State
@@ -553,7 +553,16 @@ RubyPort::MemSlavePort::hitCallback(PacketPtr pkt)
     RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
     RubySystem *rs = ruby_port->m_ruby_system;
     if (accessPhysMem) {
-        rs->getPhysMem()->access(pkt);
+        // We must check device memory first in case it overlaps with the
+        // system memory range.
+        if (ruby_port->system->isDeviceMemAddr(pkt)) {
+            auto dmem = ruby_port->system->getDeviceMemory(pkt->masterId());
+            dmem->access(pkt);
+        } else if (ruby_port->system->isMemAddr(pkt->getAddr())) {
+            rs->getPhysMem()->access(pkt);
+        } else {
+            panic("Packet is in neither device nor system memory!");
+        }
     } else if (needsResponse) {
         pkt->makeResponse();
     }
@@ -589,10 +598,11 @@ RubyPort::PioSlavePort::getAddrRanges() const
 }
 
 bool
-RubyPort::MemSlavePort::isPhysMemAddress(Addr addr) const
+RubyPort::MemSlavePort::isPhysMemAddress(PacketPtr pkt) const
 {
     RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
-    return ruby_port->system->isMemAddr(addr);
+    return ruby_port->system->isMemAddr(pkt->getAddr())
+        || ruby_port->system->isDeviceMemAddr(pkt);
 }
 
 void

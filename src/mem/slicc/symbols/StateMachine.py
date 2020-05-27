@@ -558,6 +558,7 @@ $c_ident::$c_ident(const Params *p)
     m_machineID.type = MachineType_${ident};
     m_machineID.num = m_version;
     m_num_controllers++;
+    p->ruby_system->registerAbstractController(this);
 
     m_in_ports = $num_in_ports;
 ''')

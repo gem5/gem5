@@ -99,7 +99,7 @@ class RubyPort : public ClockedObject
         void addToRetryList();
 
       private:
-        bool isPhysMemAddress(Addr addr) const;
+        bool isPhysMemAddress(PacketPtr pkt) const;
     };
 
     class PioMasterPort : public QueuedMasterPort

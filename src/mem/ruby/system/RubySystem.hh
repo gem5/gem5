@@ -35,6 +35,8 @@
 #ifndef __MEM_RUBY_SYSTEM_RUBYSYSTEM_HH__
 #define __MEM_RUBY_SYSTEM_RUBYSYSTEM_HH__
 
+#include <unordered_map>
+
 #include "base/callback.hh"
 #include "base/output.hh"
 #include "mem/packet.hh"
@@ -53,6 +55,7 @@ class RubySystem : public ClockedObject
     typedef RubySystemParams Params;
     RubySystem(const Params *p);
     ~RubySystem();
+    const Params *params() const { return (const Params *)_params; }
 
     // config accessors
     static int getRandomization() { return m_randomization; }
@@ -86,12 +89,15 @@ class RubySystem : public ClockedObject
     void unserialize(CheckpointIn &cp) override;
     void drainResume() override;
     void process();
+    void init() override;
     void startup() override;
     bool functionalRead(Packet *ptr);
     bool functionalWrite(Packet *ptr);
 
     void registerNetwork(Network*);
     void registerAbstractController(AbstractController*);
+    void registerMachineID(const MachineID& mach_id, Network* network);
+    void registerMasterIDs();
 
     bool eventQueueEmpty() { return eventq->empty(); }
     void enqueueRubyEvent(Tick tick)
@@ -134,6 +140,10 @@ class RubySystem : public ClockedObject
     std::vector<std::unique_ptr<Network>> m_networks;
     std::vector<AbstractController *> m_abs_cntrl_vec;
     Cycles m_start_cycle;
+
+    std::unordered_map<MachineID, unsigned> machineToNetwork;
+    std::unordered_map<MasterID, unsigned> masterToNetwork;
+    std::unordered_map<unsigned, std::vector<AbstractController*>> netCntrls;
 
   public:
     Profiler* m_profiler;

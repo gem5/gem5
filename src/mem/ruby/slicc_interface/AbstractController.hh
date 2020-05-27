@@ -147,6 +147,7 @@ class AbstractController : public ClockedObject, public Consumer
 
   public:
     MachineID getMachineID() const { return m_machineID; }
+    MasterID getMasterId() const { return m_masterId; }
 
     Stats::Histogram& getDelayHist() { return m_delayHistogram; }
     Stats::Histogram& getDelayVCHist(uint32_t index)
