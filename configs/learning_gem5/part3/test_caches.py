@@ -76,7 +76,6 @@ class TestCacheSystem(RubySystem):
 
         self.sequencers = [RubySequencer(version = i,
                               # I/D cache is combined and grab from ctrl
-                              icache = self.controllers[i].cacheMemory,
                               dcache = self.controllers[i].cacheMemory,
                               clk_domain = self.clk_domain,
                               ) for i in range(num_testers)]

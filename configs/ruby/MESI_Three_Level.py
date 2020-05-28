@@ -141,7 +141,6 @@ def create_system(options, full_system, system, dma_ports, bootmem,
                    ruby_system = ruby_system)
 
             cpu_seq = RubySequencer(version = i * num_cpus_per_cluster + j,
-                                    icache = l0i_cache,
                                     clk_domain = clk_domain,
                                     dcache = l0d_cache,
                                     ruby_system = ruby_system)

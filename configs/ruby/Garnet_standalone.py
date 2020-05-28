@@ -79,8 +79,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
                                       cacheMemory = cache,
                                       ruby_system = ruby_system)
 
-        cpu_seq = RubySequencer(icache = cache,
-                                dcache = cache,
+        cpu_seq = RubySequencer(dcache = cache,
                                 garnet_standalone = True,
                                 ruby_system = ruby_system)
 

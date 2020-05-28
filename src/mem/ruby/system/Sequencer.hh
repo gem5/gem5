@@ -212,7 +212,6 @@ class Sequencer : public RubyPort
     int m_max_outstanding_requests;
 
     CacheMemory* m_dataCache_ptr;
-    CacheMemory* m_instCache_ptr;
 
     // The cache access latency for top-level caches (L0/L1). These are
     // currently assessed at the beginning of each memory access through the

@@ -73,7 +73,6 @@ Sequencer::Sequencer(const Params *p)
 {
     m_outstanding_count = 0;
 
-    m_instCache_ptr = p->icache;
     m_dataCache_ptr = p->dcache;
     m_max_outstanding_requests = p->max_outstanding_requests;
     m_deadlock_threshold = p->deadlock_threshold;
@@ -81,8 +80,6 @@ Sequencer::Sequencer(const Params *p)
     m_coreId = p->coreid; // for tracking the two CorePair sequencers
     assert(m_max_outstanding_requests > 0);
     assert(m_deadlock_threshold > 0);
-    assert(m_instCache_ptr != NULL);
-    assert(m_dataCache_ptr != NULL);
 
     m_runningGarnetStandalone = p->garnet_standalone;
 }
@@ -94,6 +91,8 @@ Sequencer::~Sequencer()
 void
 Sequencer::llscLoadLinked(const Addr claddr)
 {
+    fatal_if(m_dataCache_ptr == NULL,
+        "%s must have a dcache object to support LLSC requests.", name());
     AbstractCacheEntry *line = m_dataCache_ptr->lookup(claddr);
     if (line) {
         line->setLocked(m_version);
@@ -105,6 +104,9 @@ Sequencer::llscLoadLinked(const Addr claddr)
 void
 Sequencer::llscClearMonitor(const Addr claddr)
 {
+    // clear monitor is called for all stores and evictions
+    if (m_dataCache_ptr == NULL)
+        return;
     AbstractCacheEntry *line = m_dataCache_ptr->lookup(claddr);
     if (line && line->isLocked(m_version)) {
         line->clearLocked();
@@ -116,6 +118,8 @@ Sequencer::llscClearMonitor(const Addr claddr)
 bool
 Sequencer::llscStoreConditional(const Addr claddr)
 {
+    fatal_if(m_dataCache_ptr == NULL,
+        "%s must have a dcache object to support LLSC requests.", name());
     AbstractCacheEntry *line = m_dataCache_ptr->lookup(claddr);
     if (!line)
         return false;
@@ -137,6 +141,7 @@ Sequencer::llscStoreConditional(const Addr claddr)
 bool
 Sequencer::llscCheckMonitor(const Addr address)
 {
+    assert(m_dataCache_ptr != NULL);
     const Addr claddr = makeLineAddress(address);
     AbstractCacheEntry *line = m_dataCache_ptr->lookup(claddr);
     if (!line)

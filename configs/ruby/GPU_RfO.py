@@ -118,7 +118,6 @@ class CPCntrl(CorePair_Controller, CntrlBase):
 
         self.sequencer = RubySequencer()
         self.sequencer.version = self.seqCount()
-        self.sequencer.icache = self.L1Icache
         self.sequencer.dcache = self.L1D0cache
         self.sequencer.ruby_system = ruby_system
         self.sequencer.coreid = 0
@@ -126,7 +125,6 @@ class CPCntrl(CorePair_Controller, CntrlBase):
 
         self.sequencer1 = RubySequencer()
         self.sequencer1.version = self.seqCount()
-        self.sequencer1.icache = self.L1Icache
         self.sequencer1.dcache = self.L1D1cache
         self.sequencer1.ruby_system = ruby_system
         self.sequencer1.coreid = 1
@@ -180,7 +178,6 @@ class TCPCntrl(TCP_Controller, CntrlBase):
 
         self.sequencer = RubySequencer()
         self.sequencer.version = self.seqCount()
-        self.sequencer.icache = self.L1cache
         self.sequencer.dcache = self.L1cache
         self.sequencer.ruby_system = ruby_system
         self.sequencer.is_cpu_sequencer = True
@@ -209,7 +206,6 @@ class TCPCntrl(TCP_Controller, CntrlBase):
 
         self.sequencer = RubySequencer()
         self.sequencer.version = self.seqCount()
-        self.sequencer.icache = self.L1cache
         self.sequencer.dcache = self.L1cache
         self.sequencer.ruby_system = ruby_system
         self.sequencer.is_cpu_sequencer = True
@@ -243,7 +239,6 @@ class SQCCntrl(SQC_Controller, CntrlBase):
         self.sequencer = RubySequencer()
 
         self.sequencer.version = self.seqCount()
-        self.sequencer.icache = self.L1cache
         self.sequencer.dcache = self.L1cache
         self.sequencer.ruby_system = ruby_system
         self.sequencer.support_data_reqs = False
@@ -268,7 +263,6 @@ class SQCCntrl(SQC_Controller, CntrlBase):
         self.sequencer = RubySequencer()
 
         self.sequencer.version = self.seqCount()
-        self.sequencer.icache = self.L1cache
         self.sequencer.dcache = self.L1cache
         self.sequencer.ruby_system = ruby_system
         self.sequencer.support_data_reqs = False

@@ -78,7 +78,6 @@ class CPCntrl(AMD_Base_Controller, CntrlBase):
 
         self.sequencer = RubySequencer()
         self.sequencer.version = self.seqCount()
-        self.sequencer.icache = self.L1Icache
         self.sequencer.dcache = self.L1D0cache
         self.sequencer.ruby_system = ruby_system
         self.sequencer.coreid = 0
@@ -86,7 +85,6 @@ class CPCntrl(AMD_Base_Controller, CntrlBase):
 
         self.sequencer1 = RubySequencer()
         self.sequencer1.version = self.seqCount()
-        self.sequencer1.icache = self.L1Icache
         self.sequencer1.dcache = self.L1D1cache
         self.sequencer1.ruby_system = ruby_system
         self.sequencer1.coreid = 1

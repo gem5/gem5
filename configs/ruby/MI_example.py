@@ -92,7 +92,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
                                       clk_domain=clk_domain,
                                       ruby_system=ruby_system)
 
-        cpu_seq = RubySequencer(version=i, icache=cache, dcache=cache,
+        cpu_seq = RubySequencer(version=i, dcache=cache,
                                 clk_domain=clk_domain, ruby_system=ruby_system)
 
         l1_cntrl.sequencer = cpu_seq
