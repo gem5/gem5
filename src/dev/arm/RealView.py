@@ -53,6 +53,7 @@ from m5.objects.Uart import Uart
 from m5.objects.SimpleMemory import SimpleMemory
 from m5.objects.GenericTimer import *
 from m5.objects.Gic import *
+from m5.objects.MHU import MHU, Scp2ApDoorbell, Ap2ScpDoorbell
 from m5.objects.EnergyCtrl import EnergyCtrl
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.SubSystem import SubSystem
@@ -61,6 +62,7 @@ from m5.objects.ClockedObject import ClockedObject
 from m5.objects.PS2 import *
 from m5.objects.VirtIOMMIO import MmioVirtIO
 from m5.objects.Display import Display, Display1080p
+from m5.objects.Scmi import *
 from m5.objects.SMMUv3 import SMMUv3
 from m5.objects.PciDevice import PciLegacyIoBar, PciIoBar
 
@@ -607,6 +609,23 @@ Reference:
     type = 'FVPBasePwrCtrl'
     cxx_header = 'dev/arm/fvp_base_pwr_ctrl.hh'
 
+class GenericMHU(MHU):
+    lowp_scp2ap = Scp2ApDoorbell(
+        set_address=0x10020008, clear_address=0x10020010,
+        interrupt=ArmSPI(num=68))
+    highp_scp2ap = Scp2ApDoorbell(
+        set_address=0x10020028, clear_address=0x10020030,
+        interrupt=ArmSPI(num=67))
+    sec_scp2ap = Scp2ApDoorbell(
+        set_address=0x10020208, clear_address=0x10020210,
+        interrupt=ArmSPI(num=69))
+    lowp_ap2scp = Ap2ScpDoorbell(
+        set_address=0x10020108, clear_address=0x10020110)
+    highp_ap2scp = Ap2ScpDoorbell(
+        set_address=0x10020128, clear_address=0x10020130)
+    sec_ap2scp = Ap2ScpDoorbell(
+        set_address=0x10020308, clear_address=0x10020310)
+
 class RealView(Platform):
     type = 'RealView'
     cxx_header = "dev/arm/realview.hh"
@@ -912,6 +931,7 @@ Memory map:
    0x10000000-0x13ffffff: gem5-specific peripherals (Off-chip, CS5)
        0x10000000-0x1000ffff: gem5 energy controller
        0x10010000-0x1001ffff: gem5 pseudo-ops
+       0x10020000-0x1002ffff: gem5 MHU
 
    0x14000000-0x17ffffff: Reserved (Off-chip, PSRAM, CS1)
    0x18000000-0x1bffffff: Reserved (Off-chip, Peripherals, CS2)
@@ -1187,6 +1207,25 @@ Interrupts:
         #  loader, but this is the only place we can configure the
         #  system.
         cur_sys.m5ops_base = 0x10010000
+
+    def attachScmi(self, bus):
+        # Generate and attach the mailbox
+        self.mailbox = GenericMHU(pio_addr=0x10020000)
+        self._attach_device(self.mailbox, bus)
+
+        # Generate and attach the SCMI platform
+        _scmi_comm = ScmiCommunication(
+            agent_channel = ScmiAgentChannel(
+                shmem=self.non_trusted_sram,
+                shmem_range=AddrRange(0x2e000000, size=0x200),
+                doorbell=self.mailbox.highp_ap2scp),
+            platform_channel = ScmiPlatformChannel(
+                shmem=self.non_trusted_sram,
+                shmem_range=AddrRange(0x2e000000, size=0x200),
+                doorbell=self.mailbox.highp_scp2ap))
+
+        self.scmi = ScmiPlatform(comms=[ _scmi_comm ])
+        self._attach_device(self.scmi, bus)
 
     def generateDeviceTree(self, state):
         # Generate using standard RealView function
