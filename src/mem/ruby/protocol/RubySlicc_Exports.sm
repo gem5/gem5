@@ -58,7 +58,16 @@ structure(WriteMask, external="yes", desc="...") {
   bool isFull();
   bool isOverlap(WriteMask);
   void orMask(WriteMask);
+  void setInvertedMask(WriteMask);
   void fillMask();
+  void setMask(int,int);
+  bool getMask(int,int);
+  void setMask(int,int,bool);
+  int firstBitSet(bool);
+  int firstBitSet(bool,int);
+  int count();
+  int count(int);
+  bool test(int);
 }
 
 structure(DataBlock, external = "yes", desc="..."){

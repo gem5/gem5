@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2012-15 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -69,18 +81,18 @@ class WriteMask
     }
 
     bool
-    test(int offset)
+    test(int offset) const
     {
         assert(offset < mSize);
         return mMask[offset];
     }
 
     void
-    setMask(int offset, int len)
+    setMask(int offset, int len, bool val = true)
     {
         assert(mSize >= (offset + len));
         for (int i = 0; i < len; i++) {
-            mMask[offset + i] = true;
+            mMask[offset + i] = val;
         }
     }
     void
@@ -161,6 +173,33 @@ class WriteMask
             mAtomic = true;
             mAtomicOp = writeMask.mAtomicOp;
         }
+    }
+
+    void
+    setInvertedMask(const WriteMask & writeMask)
+    {
+        assert(mSize == writeMask.mSize);
+        for (int i = 0; i < mSize; i++) {
+            mMask[i] = !writeMask.mMask.at(i);
+        }
+    }
+
+    int
+    firstBitSet(bool val, int offset = 0) const
+    {
+        for (int i = offset; i < mSize; ++i)
+            if (mMask[i] == val)
+                return i;
+        return mSize;
+    }
+
+    int
+    count(int offset = 0) const
+    {
+        int count = 0;
+        for (int i = offset; i < mSize; ++i)
+            count += mMask[i];
+        return count;
     }
 
     void print(std::ostream& out) const;
