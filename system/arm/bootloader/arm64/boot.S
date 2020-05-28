@@ -40,8 +40,6 @@
 
         .globl	_start
 _start:
-        ldr	x0, =CNTFRQ
-        msr	cntfrq_el0, x0
         /*
          * EL3 initialisation
          */

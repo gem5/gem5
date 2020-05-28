@@ -89,6 +89,15 @@ Reference:
     int_virt = Param.ArmPPI("Virtual timer interrupt")
     int_hyp = Param.ArmPPI("Hypervisor timer interrupt")
 
+    # This value should be in theory initialized by the highest
+    # priviledged software. We do this in gem5 to avoid KVM
+    # complications (the gem5 firmware won't run at highest EL)
+    #
+    # PLEASE note: change this parameter only if using the gem5 bootloader
+    # Another real world bootloader might be changing the CNTFRQ register
+    # value, so this initial value will be discarded
+    cntfrq = Param.UInt64(0x1800000, "Value for the CNTFRQ timer register")
+
     def generateDeviceTree(self, state):
         node = FdtNode("timer")
 
