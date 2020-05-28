@@ -83,9 +83,14 @@ class Info;
 class Group
 {
   public:
+    /**
+     * @ingroup api_stats
+     * @{
+     */
     Group() = delete;
     Group(const Group &) = delete;
     Group &operator=(const Group &) = delete;
+    /** @}*/ //end of api_stats
 
     /**
      * Construct a new statistics group.
@@ -104,6 +109,8 @@ class Group
      * @param parent Parent group to associate this object to.
      * @param name Name of this group, can be NULL to merge this group
      * with the parent group.
+     *
+     * @ingroup api_stats
      */
     Group(Group *parent, const char *name = nullptr);
 
@@ -117,11 +124,15 @@ class Group
      * description. Stat names and descriptions should typically be
      * set from the constructor usingo from the constructor using the
      * ADD_STAT macro.
+     *
+     * @ingroup api_stats
      */
     virtual void regStats();
 
     /**
      * Callback to reset stats.
+     *
+     * @ingroup api_stats
      */
     virtual void resetStats();
 
@@ -129,22 +140,30 @@ class Group
      * Callback before stats are dumped. This can be overridden by
      * objects that need to perform calculations in addition to the
      * capabiltiies implemented in the stat framework.
+     *
+     * @ingroup api_stats
      */
     virtual void preDumpStats();
 
     /**
      * Register a stat with this group. This method is normally called
      * automatically when a stat is instantiated.
+     *
+     * @ingroup api_stats
      */
     void addStat(Stats::Info *info);
 
     /**
      * Get all child groups associated with this object.
+     *
+     * @ingroup api_stats
      */
     const std::map<std::string, Group *> &getStatGroups() const;
 
     /**
      * Get all stats associated with this object.
+     *
+     * @ingroup api_stats
      */
     const std::vector<Info *> &getStats() const;
 
@@ -154,6 +173,8 @@ class Group
      * This method may only be called from a Group constructor or from
      * regStats. It's typically only called explicitly from Python
      * when setting up the SimObject hierarchy.
+     *
+     * @ingroup api_stats
      */
     void addStatGroup(const char *name, Group *block);
 

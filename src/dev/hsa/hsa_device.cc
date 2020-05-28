@@ -102,9 +102,8 @@ HSADevice::translateOrDie(Addr vaddr, Addr &paddr)
      * grab context zero.
      */
     auto process = sys->getThreadContext(0)->getProcessPtr();
-    auto mem_state = process->getMemState();
 
-    if (!mem_state->translate(vaddr, paddr)) {
+    if (!process->pTable->translate(vaddr, paddr)) {
         fatal("failed translation: vaddr 0x%x\n", vaddr);
     }
 }

@@ -38,6 +38,7 @@
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/registers.hh"
 #include "base/bitfield.hh"
+#include "base/compiler.hh"
 #include "cpu/base.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/RiscvMisc.hh"
@@ -48,7 +49,7 @@
 namespace RiscvISA
 {
 
-const std::array<const char *, NumMiscRegs> MiscRegNames = {{
+const std::array<const char *, NumMiscRegs> M5_VAR_USED MiscRegNames = {{
     [MISCREG_PRV]           = "PRV",
     [MISCREG_ISA]           = "ISA",
     [MISCREG_VENDORID]      = "VENDORID",

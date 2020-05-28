@@ -52,11 +52,6 @@
 // HSA runtime supports only 5 signals per barrier packet
 #define NumSignalsPerBarrier 5
 
-// This define is copied from hsa runtime (libhsakmt/src/libhsakmt.h)
-// This is the mapping function used by runtime for mapping
-// queueID to dooorbell address
-#define VOID_PTR_ADD32(ptr,n) (void*)((uint32_t*)(ptr) + n)/*ptr + offset*/
-
 class HSADevice;
 class HWScheduler;
 

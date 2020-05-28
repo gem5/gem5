@@ -1,6 +1,0 @@
-#!/bin/sh
-
-cd /benchmarks/spec/bzip200/
-/sbin/m5 resetstats 
-/benchmarks/spec/bzip200/bzip2 lgred.graphic 1
-/sbin/m5 exit

@@ -111,6 +111,9 @@ class EventBase
     static const FlagsType InitMask      = 0xffc0; // mask for init bits
 
   public:
+    /**
+     * @ingroup api_eventq
+     */
     typedef int8_t Priority;
 
     /// Event priorities, to provide tie-breakers for events scheduled
@@ -118,61 +121,117 @@ class EventBase
     /// priority; these values are used to control events that need to
     /// be ordered within a cycle.
 
-    /// Minimum priority
+    /**
+     * Minimum priority
+     *
+     * @ingroup api_eventq
+     */
     static const Priority Minimum_Pri =          SCHAR_MIN;
 
-    /// If we enable tracing on a particular cycle, do that as the
-    /// very first thing so we don't miss any of the events on
-    /// that cycle (even if we enter the debugger).
+    /**
+     * If we enable tracing on a particular cycle, do that as the
+     * very first thing so we don't miss any of the events on
+     * that cycle (even if we enter the debugger).
+     *
+     * @ingroup api_eventq
+     */
     static const Priority Debug_Enable_Pri =          -101;
 
-    /// Breakpoints should happen before anything else (except
-    /// enabling trace output), so we don't miss any action when
-    /// debugging.
+    /**
+     * Breakpoints should happen before anything else (except
+     * enabling trace output), so we don't miss any action when
+     * debugging.
+     *
+     * @ingroup api_eventq
+     */
     static const Priority Debug_Break_Pri =           -100;
 
-    /// CPU switches schedule the new CPU's tick event for the
-    /// same cycle (after unscheduling the old CPU's tick event).
-    /// The switch needs to come before any tick events to make
-    /// sure we don't tick both CPUs in the same cycle.
+    /**
+     * CPU switches schedule the new CPU's tick event for the
+     * same cycle (after unscheduling the old CPU's tick event).
+     * The switch needs to come before any tick events to make
+     * sure we don't tick both CPUs in the same cycle.
+     *
+     * @ingroup api_eventq
+     */
     static const Priority CPU_Switch_Pri =             -31;
 
-    /// For some reason "delayed" inter-cluster writebacks are
-    /// scheduled before regular writebacks (which have default
-    /// priority).  Steve?
+    /**
+     * For some reason "delayed" inter-cluster writebacks are
+     * scheduled before regular writebacks (which have default
+     * priority).  Steve?
+     *
+     * @ingroup api_eventq
+     */
     static const Priority Delayed_Writeback_Pri =       -1;
 
-    /// Default is zero for historical reasons.
+    /**
+     * Default is zero for historical reasons.
+     *
+     * @ingroup api_eventq
+     */
     static const Priority Default_Pri =                  0;
 
-    /// DVFS update event leads to stats dump therefore given a lower priority
-    /// to ensure all relevant states have been updated
+    /**
+     * DVFS update event leads to stats dump therefore given a lower priority
+     * to ensure all relevant states have been updated
+     *
+     * @ingroup api_eventq
+     */
     static const Priority DVFS_Update_Pri =             31;
 
-    /// Serailization needs to occur before tick events also, so
-    /// that a serialize/unserialize is identical to an on-line
-    /// CPU switch.
+    /**
+     * Serailization needs to occur before tick events also, so
+     * that a serialize/unserialize is identical to an on-line
+     * CPU switch.
+     *
+     * @ingroup api_eventq
+     */
     static const Priority Serialize_Pri =               32;
 
-    /// CPU ticks must come after other associated CPU events
-    /// (such as writebacks).
+    /**
+     * CPU ticks must come after other associated CPU events
+     * (such as writebacks).
+     *
+     * @ingroup api_eventq
+     */
     static const Priority CPU_Tick_Pri =                50;
 
-    /// If we want to exit a thread in a CPU, it comes after CPU_Tick_Pri
+    /**
+     * If we want to exit a thread in a CPU, it comes after CPU_Tick_Pri
+     *
+     * @ingroup api_eventq
+     */
     static const Priority CPU_Exit_Pri =                64;
 
-    /// Statistics events (dump, reset, etc.) come after
-    /// everything else, but before exit.
+    /**
+     * Statistics events (dump, reset, etc.) come after
+     * everything else, but before exit.
+     *
+     * @ingroup api_eventq
+     */
     static const Priority Stat_Event_Pri =              90;
 
-    /// Progress events come at the end.
+    /**
+     * Progress events come at the end.
+     *
+     * @ingroup api_eventq
+     */
     static const Priority Progress_Event_Pri =          95;
 
-    /// If we want to exit on this cycle, it's the very last thing
-    /// we do.
+    /**
+     * If we want to exit on this cycle, it's the very last thing
+     * we do.
+     *
+     * @ingroup api_eventq
+     */
     static const Priority Sim_Exit_Pri =               100;
 
-    /// Maximum priority
+    /**
+     * Maximum priority
+     *
+     * @ingroup api_eventq
+     */
     static const Priority Maximum_Pri =          SCHAR_MAX;
 };
 
@@ -246,7 +305,6 @@ class Event : public EventBase, public Serializable
     }
 
   protected:
-    /// Accessor for flags.
     Flags
     getFlags() const
     {
@@ -260,7 +318,6 @@ class Event : public EventBase, public Serializable
         return flags.isSet(_flags);
     }
 
-    /// Accessor for flags.
     void
     setFlags(Flags _flags)
     {
@@ -281,7 +338,11 @@ class Event : public EventBase, public Serializable
         flags.clear(PublicWrite);
     }
 
-    // This function isn't really useful if TRACING_ON is not defined
+    /**
+     * This function isn't really useful if TRACING_ON is not defined
+     *
+     * @ingroup api_eventq
+     */
     virtual void trace(const char *action);     //!< trace event activity
 
     /// Return the instance number as a string.
@@ -341,6 +402,8 @@ class Event : public EventBase, public Serializable
     /*
      * Event constructor
      * @param queue that the event gets scheduled on
+     *
+     * @ingroup api_eventq
      */
     Event(Priority p = Default_Pri, Flags f = 0)
         : nextBin(nullptr), nextInBin(nullptr), _when(0), _priority(p),
@@ -357,6 +420,10 @@ class Event : public EventBase, public Serializable
 #endif
     }
 
+    /**
+     * @ingroup api_eventq
+     * @{
+     */
     virtual ~Event();
     virtual const std::string name() const;
 
@@ -367,6 +434,7 @@ class Event : public EventBase, public Serializable
 
     /// Dump the current event data
     void dump() const;
+    /** @}*/ //end of api group
 
   public:
     /*
@@ -378,29 +446,63 @@ class Event : public EventBase, public Serializable
      *
      * If the AutoDestroy flag is set, the object is deleted once it
      * is processed.
+     *
+     * @ingroup api_eventq
      */
     virtual void process() = 0;
 
-    /// Determine if the current event is scheduled
+    /**
+     * Determine if the current event is scheduled
+     *
+     * @ingroup api_eventq
+     */
     bool scheduled() const { return flags.isSet(Scheduled); }
 
-    /// Squash the current event
+    /**
+     * Squash the current event
+     *
+     * @ingroup api_eventq
+     */
     void squash() { flags.set(Squashed); }
 
-    /// Check whether the event is squashed
+    /**
+     * Check whether the event is squashed
+     *
+     * @ingroup api_eventq
+     */
     bool squashed() const { return flags.isSet(Squashed); }
 
-    /// See if this is a SimExitEvent (without resorting to RTTI)
+    /**
+     * See if this is a SimExitEvent (without resorting to RTTI)
+     *
+     * @ingroup api_eventq
+     */
     bool isExitEvent() const { return flags.isSet(IsExitEvent); }
 
-    /// Check whether this event will auto-delete
+    /**
+     * Check whether this event will auto-delete
+     *
+     * @ingroup api_eventq
+     */
     bool isManaged() const { return flags.isSet(Managed); }
+
+    /**
+     * @ingroup api_eventq
+     */
     bool isAutoDelete() const { return isManaged(); }
 
-    /// Get the time that the event is scheduled
+    /**
+     * Get the time that the event is scheduled
+     *
+     * @ingroup api_eventq
+     */
     Tick when() const { return _when; }
 
-    /// Get the event priority
+    /**
+     * Get the event priority
+     *
+     * @ingroup api_eventq
+     */
     Priority priority() const { return _priority; }
 
     //! If this is part of a GlobalEvent, return the pointer to the
@@ -412,6 +514,9 @@ class Event : public EventBase, public Serializable
     void unserialize(CheckpointIn &cp) override;
 };
 
+/**
+ * @ingroup api_eventq
+ */
 inline bool
 operator<(const Event &l, const Event &r)
 {
@@ -419,6 +524,9 @@ operator<(const Event &l, const Event &r)
         (l.when() == r.when() && l.priority() < r.priority());
 }
 
+/**
+ * @ingroup api_eventq
+ */
 inline bool
 operator>(const Event &l, const Event &r)
 {
@@ -426,12 +534,19 @@ operator>(const Event &l, const Event &r)
         (l.when() == r.when() && l.priority() > r.priority());
 }
 
+/**
+ * @ingroup api_eventq
+ */
 inline bool
 operator<=(const Event &l, const Event &r)
 {
     return l.when() < r.when() ||
         (l.when() == r.when() && l.priority() <= r.priority());
 }
+
+/**
+ * @ingroup api_eventq
+ */
 inline bool
 operator>=(const Event &l, const Event &r)
 {
@@ -439,12 +554,18 @@ operator>=(const Event &l, const Event &r)
         (l.when() == r.when() && l.priority() >= r.priority());
 }
 
+/**
+ * @ingroup api_eventq
+ */
 inline bool
 operator==(const Event &l, const Event &r)
 {
     return l.when() == r.when() && l.priority() == r.priority();
 }
 
+/**
+ * @ingroup api_eventq
+ */
 inline bool
 operator!=(const Event &l, const Event &r)
 {
@@ -552,6 +673,9 @@ class EventQueue
     class ScopedMigration
     {
       public:
+        /**
+         * @ingroup api_eventq
+         */
         ScopedMigration(EventQueue *_new_eq, bool _doMigrate = true)
             :new_eq(*_new_eq), old_eq(*curEventQueue()),
              doMigrate((&new_eq != &old_eq)&&_doMigrate)
@@ -590,6 +714,9 @@ class EventQueue
     class ScopedRelease
     {
       public:
+        /**
+         * @group api_eventq
+         */
         ScopedRelease(EventQueue *_eq)
             :  eq(*_eq)
         {
@@ -605,33 +732,71 @@ class EventQueue
         EventQueue &eq;
     };
 
+    /**
+     * @ingroup api_eventq
+     */
     EventQueue(const std::string &n);
 
+    /**
+     * @ingroup api_eventq
+     * @{
+     */
     virtual const std::string name() const { return objName; }
     void name(const std::string &st) { objName = st; }
+    /** @}*/ //end of api_eventq group
 
-    //! Schedule the given event on this queue. Safe to call from any
-    //! thread.
+    /**
+     * Schedule the given event on this queue. Safe to call from any thread.
+     *
+     * @ingroup api_eventq
+     */
     void schedule(Event *event, Tick when, bool global = false);
 
-    //! Deschedule the specified event. Should be called only from the
-    //! owning thread.
+    /**
+     * Deschedule the specified event. Should be called only from the owning
+     * thread.
+     * @ingroup api_eventq
+     */
     void deschedule(Event *event);
 
-    //! Reschedule the specified event. Should be called only from
-    //! the owning thread.
+    /**
+     * Reschedule the specified event. Should be called only from the owning
+     * thread.
+     *
+     * @ingroup api_eventq
+     */
     void reschedule(Event *event, Tick when, bool always = false);
 
     Tick nextTick() const { return head->when(); }
     void setCurTick(Tick newVal) { _curTick = newVal; }
+
+    /**
+     * While curTick() is useful for any object assigned to this event queue,
+     * if an object that is assigned to another event queue (or a non-event
+     * object) need to access the current tick of this event queue, this
+     * function is used.
+     *
+     * @return Tick The current tick of this event queue.
+     * @ingroup api_eventq
+     */
     Tick getCurTick() const { return _curTick; }
     Event *getHead() const { return head; }
 
     Event *serviceOne();
 
-    // process all events up to the given timestamp.  we inline a
-    // quick test to see if there are any events to process; if so,
-    // call the internal out-of-line version to process them all.
+    /**
+     * process all events up to the given timestamp.  we inline a quick test
+     * to see if there are any events to process; if so, call the internal
+     * out-of-line version to process them all.
+     *
+     * Notes:
+     *  - This is only used for "instruction" event queues. Instead of counting
+     *    ticks, this is actually counting instructions.
+     *  - This updates the current tick value to the value of the entry at the
+     *    head of the queue.
+     *
+     * @ingroup api_eventq
+     */
     void
     serviceEvents(Tick when)
     {
@@ -650,14 +815,26 @@ class EventQueue
         setCurTick(when);
     }
 
-    // return true if no events are queued
+    /**
+     * Returns true if no events are queued
+     *
+     * @ingroup api_eventq
+     */
     bool empty() const { return head == NULL; }
 
+    /**
+     * This is a debugging function which will print everything on the event
+     * queue.
+     *
+     * @ingroup api_eventq
+     */
     void dump() const;
 
     bool debugVerify() const;
 
-    //! Function for moving events from the async_queue to the main queue.
+    /**
+     * Function for moving events from the async_queue to the main queue.
+     */
     void handleAsyncInsertions();
 
     /**
@@ -672,6 +849,8 @@ class EventQueue
      *  can be used by an implementation to schedule a wakeup in the
      *  future if it is sure it will remain active until then.
      *  Or it can be ignored and the event queue can be woken up now.
+     *
+     *  @ingroup api_eventq
      */
     virtual void wakeup(Tick when = (Tick)-1) { }
 
@@ -730,52 +909,81 @@ class EventManager
     EventQueue *eventq;
 
   public:
+    /**
+     * @ingroup api_eventq
+     * @{
+     */
     EventManager(EventManager &em) : eventq(em.eventq) {}
     EventManager(EventManager *em) : eventq(em->eventq) {}
     EventManager(EventQueue *eq) : eventq(eq) {}
+    /** @}*/ //end of api_eventq group
 
+    /**
+     * @ingroup api_eventq
+     */
     EventQueue *
     eventQueue() const
     {
         return eventq;
     }
 
+    /**
+     * @ingroup api_eventq
+     */
     void
     schedule(Event &event, Tick when)
     {
         eventq->schedule(&event, when);
     }
 
+    /**
+     * @ingroup api_eventq
+     */
     void
     deschedule(Event &event)
     {
         eventq->deschedule(&event);
     }
 
+    /**
+     * @ingroup api_eventq
+     */
     void
     reschedule(Event &event, Tick when, bool always = false)
     {
         eventq->reschedule(&event, when, always);
     }
 
+    /**
+     * @ingroup api_eventq
+     */
     void
     schedule(Event *event, Tick when)
     {
         eventq->schedule(event, when);
     }
 
+    /**
+     * @ingroup api_eventq
+     */
     void
     deschedule(Event *event)
     {
         eventq->deschedule(event);
     }
 
+    /**
+     * @ingroup api_eventq
+     */
     void
     reschedule(Event *event, Tick when, bool always = false)
     {
         eventq->reschedule(event, when, always);
     }
 
+    /**
+     * @ingroup api_eventq
+     */
     void wakeupEventQueue(Tick when = (Tick)-1)
     {
         eventq->wakeup(when);
@@ -823,6 +1031,9 @@ class EventFunctionWrapper : public Event
       std::string _name;
 
   public:
+    /**
+     * @ingroup api_eventq
+     */
     EventFunctionWrapper(const std::function<void(void)> &callback,
                          const std::string &name,
                          bool del = false,
@@ -833,14 +1044,23 @@ class EventFunctionWrapper : public Event
             setFlags(AutoDelete);
     }
 
+   /**
+    * @ingroup api_eventq
+    */
     void process() { callback(); }
 
+    /**
+     * @ingroup api_eventq
+     */
     const std::string
     name() const
     {
         return _name + ".wrapped_function_event";
     }
 
+    /**
+     * @ingroup api_eventq
+     */
     const char *description() const { return "EventFunctionWrapped"; }
 };
 

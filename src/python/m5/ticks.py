@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import print_function
+from math import ceil
 import six
 if six.PY3:
     long = int
@@ -73,7 +74,7 @@ def fromSeconds(value):
     # convert the value from time to ticks
     value *= _m5.core.getClockFrequency()
 
-    int_value = int(round(value))
+    int_value = int(ceil(value))
     err = (value - int_value) / value
     if err > frequency_tolerance:
         warn("rounding error > tolerance\n    %f rounded to %d", value,

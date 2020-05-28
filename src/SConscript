@@ -624,7 +624,7 @@ def makeTheISA(source, target, env):
     isas = [ src.get_contents().decode('utf-8') for src in source ]
     target_isa = env['TARGET_ISA']
     def define(isa):
-        return isa.upper() + '_ISA'
+        return str(isa.upper()) + '_ISA'
 
     def namespace(isa):
         return isa[0].upper() + isa[1:].lower() + 'ISA'
@@ -666,10 +666,10 @@ env.Command('config/the_isa.hh', list(map(Value, all_isa_list)),
             MakeAction(makeTheISA, Transform("CFG ISA", 0)))
 
 def makeTheGPUISA(source, target, env):
-    isas = [ src.get_contents() for src in source ]
+    isas = [ src.get_contents().decode('utf-8') for src in source ]
     target_gpu_isa = env['TARGET_GPU_ISA']
     def define(isa):
-        return isa.upper() + '_ISA'
+        return str(isa.upper()) + '_ISA'
 
     def namespace(isa):
         return isa[0].upper() + isa[1:].lower() + 'ISA'

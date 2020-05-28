@@ -94,8 +94,8 @@ def upgrader(cpt):
             cpt.set(sec_dma, "buffer", "")
 
 
-    print "Warning: Assuming that the HDLCD pixel clock and global frequency " \
-        "are still using their default values."
+    print("Warning: Assuming that the HDLCD pixel clock and global frequency "
+        "are still using their default values.")
     sec_osc = "system.realview.realview_io.osc_pxl"
     global_tick = 1E12
     pxl_freq = 137E6

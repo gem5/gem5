@@ -41,11 +41,16 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
+import six
+
 import m5
 from m5.objects import *
 from m5.util import *
 from common.Benchmarks import *
 from common import ObjectList
+
+if six.PY3:
+    long = int
 
 # Populate to reflect supported os types per target ISA
 os_types = { 'mips'  : [ 'linux' ],
@@ -574,7 +579,7 @@ def makeLinuxX86System(mem_mode, numCPUs=1, mdesc=None, Ruby=False,
 
     # We assume below that there's at least 1MB of memory. We'll require 2
     # just to avoid corner cases.
-    phys_mem_size = sum(map(lambda r: r.size(), self.mem_ranges))
+    phys_mem_size = sum([r.size() for r in self.mem_ranges])
     assert(phys_mem_size >= 0x200000)
     assert(len(self.mem_ranges) <= 2)
 

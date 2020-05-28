@@ -42,10 +42,10 @@ from m5.proxy import *
 
 from m5.objects.System import System
 
-class Prefetcher(SimObject):
-    type = 'Prefetcher'
+class RubyPrefetcher(SimObject):
+    type = 'RubyPrefetcher'
     cxx_class = 'RubyPrefetcher'
-    cxx_header = "mem/ruby/structures/Prefetcher.hh"
+    cxx_header = "mem/ruby/structures/RubyPrefetcher.hh"
 
     num_streams = Param.UInt32(4,
         "Number of prefetch streams to be allocated")
@@ -58,3 +58,7 @@ class Prefetcher(SimObject):
     cross_page = Param.Bool(False, """True if prefetched address can be on a
             page different from the observed address""")
     sys = Param.System(Parent.any, "System this prefetcher belongs to")
+
+class Prefetcher(RubyPrefetcher):
+    """DEPRECATED"""
+    pass

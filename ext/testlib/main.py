@@ -29,16 +29,16 @@
 import os
 import itertools
 
-import config
-import fixture as fixture_mod
-import handlers
-import loader as loader_mod
-import log
-import query
-import result
-import runner
-import terminal
-import uid
+import testlib.configuration as configuration
+import testlib.fixture as fixture_mod
+import testlib.handlers as handlers
+import testlib.loader as loader_mod
+import testlib.log as log
+import testlib.query as query
+import testlib.result as result
+import testlib.runner as runner
+import testlib.terminal as terminal
+import testlib.uid as uid
 
 def entry_message():
     log.test_log.message("Running the new gem5 testing script.")
@@ -50,7 +50,7 @@ def entry_message():
 class RunLogHandler():
     def __init__(self):
         term_handler = handlers.TerminalHandler(
-            verbosity=config.config.verbose+log.LogLevel.Info
+            verbosity=configuration.config.verbose+log.LogLevel.Info
         )
         summary_handler = handlers.SummaryHandler()
         self.mp_handler = handlers.MultiprocessingHandlerWrapper(
@@ -62,7 +62,7 @@ class RunLogHandler():
     def schedule_finalized(self, test_schedule):
         # Create the result handler object.
         self.result_handler = handlers.ResultHandler(
-                test_schedule, config.config.result_path)
+                test_schedule, configuration.config.result_path)
         self.mp_handler.add_handler(self.result_handler)
 
     def finish_testing(self):
@@ -87,27 +87,27 @@ class RunLogHandler():
         return self.result_handler.unsuccessful()
 
 def get_config_tags():
-    return getattr(config.config,
-            config.StorePositionalTagsAction.position_kword)
+    return getattr(configuration.config,
+            configuration.StorePositionalTagsAction.position_kword)
 
 def filter_with_config_tags(loaded_library):
     tags = get_config_tags()
     final_tags = []
     regex_fmt = '^%s$'
-    cfg = config.config
+    cfg = configuration.config
 
     def _append_inc_tag_filter(name):
         if hasattr(cfg, name):
             tag_opts = getattr(cfg, name)
             for tag in tag_opts:
-                final_tags.append(config.TagRegex(True, regex_fmt % tag))
+                final_tags.append(configuration.TagRegex(True, regex_fmt % tag))
 
     def _append_rem_tag_filter(name):
         if hasattr(cfg, name):
             tag_opts = getattr(cfg, name)
             for tag in cfg.constants.supported_tags[name]:
                 if tag not in tag_opts:
-                    final_tags.append(config.TagRegex(False, regex_fmt % tag))
+                    final_tags.append(configuration.TagRegex(False, regex_fmt % tag))
 
     # Append additional tags for the isa, length, and variant options.
     # They apply last (they take priority)
@@ -206,13 +206,13 @@ def load_tests():
     testloader = loader_mod.Loader()
     log.test_log.message(terminal.separator())
     log.test_log.message('Loading Tests', bold=True)
-    testloader.load_root(config.config.directory)
+    testloader.load_root(configuration.config.directory)
     return testloader
 
 def do_list():
     term_handler = handlers.TerminalHandler(
-        verbosity=config.config.verbose+log.LogLevel.Info,
-        machine_only=config.config.quiet
+        verbosity=configuration.config.verbose+log.LogLevel.Info,
+        machine_only=configuration.config.quiet
     )
     log.test_log.log_obj.add_handler(term_handler)
 
@@ -223,11 +223,11 @@ def do_list():
 
     qrunner = query.QueryRunner(test_schedule)
 
-    if config.config.suites:
+    if configuration.config.suites:
         qrunner.list_suites()
-    elif config.config.tests:
+    elif configuration.config.tests:
         qrunner.list_tests()
-    elif config.config.all_tags:
+    elif configuration.config.all_tags:
         qrunner.list_tags()
     else:
         qrunner.list_suites()
@@ -259,13 +259,13 @@ def run_schedule(test_schedule, log_handler):
     log.test_log.message('Running Tests from {} suites'
             .format(len(test_schedule.suites)), bold=True)
     log.test_log.message("Results will be stored in {}".format(
-                config.config.result_path))
+                configuration.config.result_path))
     log.test_log.message(terminal.separator())
 
     # Build global fixtures and exectute scheduled test suites.
-    if config.config.test_threads > 1:
+    if configuration.config.test_threads > 1:
         library_runner = runner.LibraryParallelRunner(test_schedule)
-        library_runner.set_threads(config.config.test_threads)
+        library_runner.set_threads(configuration.config.test_threads)
     else:
         library_runner = runner.LibraryRunner(test_schedule)
     library_runner.run()
@@ -279,8 +279,8 @@ def run_schedule(test_schedule, log_handler):
 def do_run():
     # Initialize early parts of the log.
     with RunLogHandler() as log_handler:
-        if config.config.uid:
-            uid_ = uid.UID.from_uid(config.config.uid)
+        if configuration.config.uid:
+            uid_ = uid.UID.from_uid(configuration.config.uid)
             if isinstance(uid_, uid.TestUID):
                 log.test_log.error('Unable to run a standalone test.\n'
                         'Gem5 expects test suites to be the smallest unit '
@@ -305,8 +305,8 @@ def do_rerun():
     with RunLogHandler() as log_handler:
         # Load previous results
         results = result.InternalSavedResults.load(
-                os.path.join(config.config.result_path,
-                config.constants.pickle_filename))
+                os.path.join(configuration.config.result_path,
+                configuration.constants.pickle_filename))
 
         rerun_suites = (suite.uid for suite in results if suite.unsuccessful)
 
@@ -323,10 +323,10 @@ def main():
     Returns 0 on success and 1 otherwise so it can be used as a return code
     for scripts.
     '''
-    config.initialize_config()
+    configuration.initialize_config()
 
     # 'do' the given command.
-    result = globals()['do_'+config.config.command]()
+    result = globals()['do_'+configuration.config.command]()
     log.test_log.close()
 
     return result

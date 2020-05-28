@@ -1,7 +1,0 @@
-#!/bin/sh
-
-#/benchmarks/spec/art00/art -scanfile c756hel.in -trainfile1 a10.img -stride 2 -startx 134 -starty 220 -endx 184 -endy 240 -objects 3
-cd /benchmarks/spec/art00/
-/sbin/m5 resetstats 
-/benchmarks/spec/art00/art -scanfile c756hel.in -trainfile1 a10.img -stride 5 -startx 134 -starty 220 -endx 184 -endy 240 -objects 1
-/sbin/m5 exit

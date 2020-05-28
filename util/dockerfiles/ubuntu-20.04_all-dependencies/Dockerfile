@@ -24,14 +24,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update
 RUN apt -y upgrade
 RUN apt -y install build-essential git m4 scons zlib1g zlib1g-dev \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
-    python-dev python python3-dev python3.6 python-six python3-venv
-
-ENV VIRTUAL_ENV "/venv"
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH "$VIRTUAL_ENV/bin:$PATH"
+    python3-dev python3-six python-is-python3 doxygen libboost-all-dev \
+    libhdf5-serial-dev python3-pydot libpng-dev

@@ -70,11 +70,11 @@ for isa in valid_isas:
         binary = joinpath(workload_binary.path, workload)
 
         for cpu in valid_isas[isa]:
-           gem5_verify_config(
+            gem5_verify_config(
                   name='cpu_test_{}_{}'.format(cpu,workload),
                   verifiers=verifiers,
                   config=joinpath(getcwd(), 'run.py'),
                   config_args=['--cpu={}'.format(cpu), binary],
                   valid_isas=(isa.upper(),),
                   fixtures=[workload_binary]
-           )
+            )

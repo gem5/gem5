@@ -46,7 +46,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
    Cycles response_latency := 2;
    bool send_evictions;
 
-   Prefetcher * prefetcher;
+   RubyPrefetcher * prefetcher;
    bool enable_prefetch := "False";
 
    // From this node's L0 cache to the network

@@ -47,10 +47,12 @@ import os
 import re
 import sys
 
-import style
-import sort_includes
-from region import *
-from file_types import lang_type
+from six import add_metaclass
+
+from . import style
+from . import sort_includes
+from .region import *
+from .file_types import lang_type
 
 
 def safefix(fix_func):
@@ -100,6 +102,7 @@ def _modified_regions(old, new):
     return regions
 
 
+@add_metaclass(ABCMeta)
 class Verifier(object):
     """Base class for style verifiers
 
@@ -117,7 +120,6 @@ class Verifier(object):
 
     """
 
-    __metaclass__ = ABCMeta
 
     def __init__(self, ui, opts, base=None):
         self.ui = ui
@@ -144,9 +146,9 @@ class Verifier(object):
 
     def open(self, filename, mode):
         try:
-            f = file(filename, mode)
-        except OSError, msg:
-            print 'could not open file %s: %s' % (filename, msg)
+            f = open(filename, mode)
+        except OSError as msg:
+            print('could not open file {}: {}'.format(filename, msg))
             return None
 
         return f
@@ -222,11 +224,12 @@ class Verifier(object):
         """
         pass
 
+@add_metaclass(ABCMeta)
 class LineVerifier(Verifier):
     def check(self, filename, regions=all_regions, fobj=None, silent=False):
         close = False
         if fobj is None:
-            fobj = self.open(filename, 'r')
+            fobj = self.open(filename, 'rb')
             close = True
 
         lang = lang_type(filename)
@@ -236,13 +239,13 @@ class LineVerifier(Verifier):
         for num,line in enumerate(fobj):
             if num not in regions:
                 continue
-            line = line.rstrip('\n')
-            if not self.check_line(line, language=lang):
+            s_line = line.decode().rstrip('\n')
+            if not self.check_line(s_line, language=lang):
                 if not silent:
                     self.ui.write("invalid %s in %s:%d\n" % \
                                   (self.test_name, filename, num + 1))
                     if self.ui.verbose:
-                        self.ui.write(">>%s<<\n" % line[:-1])
+                        self.ui.write(">>%s<<\n" % s_line[:-1])
                 errors += 1
         if close:
             fobj.close()
@@ -348,7 +351,7 @@ class SortedIncludes(Verifier):
             close = True
         norm_fname = self.normalize_filename(filename)
 
-        old = [ l.rstrip('\n') for l in fobj.xreadlines() ]
+        old = [ l.decode().rstrip('\n') for l in fobj ]
         if close:
             fobj.close()
 
@@ -428,14 +431,14 @@ class ControlCharacters(LineVerifier):
     test_name = 'control character'
     opt_name = 'ascii'
 
-    valid = ('\n', '\t')
-    invalid = "".join([chr(i) for i in range(0, 0x20) if chr(i) not in valid])
+    invalid = "".join([chr(i) for i in range(0, 0x20) \
+        if chr(i) not in ('\n', '\t')])
 
     def check_line(self, line, **kwargs):
         return self.fix_line(line) == line
 
     def fix_line(self, line, **kwargs):
-        return line.translate(None, ControlCharacters.invalid)
+        return ''.join(c for c in line if c not in ControlCharacters.invalid)
 
 class BoolCompare(LineVerifier):
     languages = set(('C', 'C++', 'python'))

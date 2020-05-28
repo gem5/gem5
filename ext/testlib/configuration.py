@@ -83,10 +83,11 @@ import copy
 import os
 import re
 
-from ConfigParser import ConfigParser
+from six import add_metaclass
+from six.moves import configparser as ConfigParser
 from pickle import HIGHEST_PROTOCOL as highest_pickle_protocol
 
-from helper import absdirpath, AttrDict, FrozenAttrDict
+from testlib.helper import absdirpath, AttrDict, FrozenAttrDict
 
 class UninitialzedAttributeException(Exception):
     '''
@@ -220,7 +221,7 @@ def define_defaults(defaults):
                                                       os.pardir))
     defaults.result_path = os.path.join(os.getcwd(), '.testing-results')
     defaults.list_only_failed = False
-    defaults.resource_url = 'http://dist.gem5.org/dist/develop'
+    defaults.resource_url = 'http://dist.gem5.org/dist/v20'
 
 def define_constants(constants):
     '''
@@ -598,9 +599,8 @@ def define_common_args(config):
     # one in the list will be saved.
     common_args = AttrDict({arg.name:arg for arg in common_args})
 
-
+@add_metaclass(abc.ABCMeta)
 class ArgParser(object):
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self, parser):
         # Copy public methods of the parser.

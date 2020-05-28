@@ -61,7 +61,7 @@ python_class_map = {
                     "MemoryControl": "MemoryControl",
                     "MessageBuffer": "MessageBuffer",
                     "DMASequencer": "DMASequencer",
-                    "Prefetcher":"Prefetcher",
+                    "RubyPrefetcher":"RubyPrefetcher",
                     "Cycles":"Cycles",
                    }
 
@@ -458,6 +458,31 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
         ident = self.ident
         c_ident = "%s_Controller" % self.ident
 
+        # Unfortunately, clang compilers will throw a "call to function ...
+        # that is neither visible in the template definition nor found by
+        # argument-dependent lookup" error if "mem/ruby/common/BoolVec.hh" is
+        # included after "base/cprintf.hh". This is because "base/cprintf.hh"
+        # utilizes a "<<" operator in "base/cprintf_formats.hh" that is
+        # defined in "mem/ruby/common/BoolVec.hh". While GCC compilers permit
+        # the operator definition after usage in this case, clang compilers do
+        # not.
+        #
+        # The reason for this verbose solution below is due to the gem5
+        # style-checker, which will complain if "mem/ruby/common/BoolVec.hh"
+        # is included above "base/cprintf.hh" in this file, despite it being
+        # necessary in this case. This is therefore a bit of a hack to keep
+        # both clang and our style-checker happy.
+        base_include = '''
+#include "base/compiler.hh"
+#include "base/cprintf.hh"
+
+'''
+
+        boolvec_include = '''
+#include "mem/ruby/common/BoolVec.hh"
+
+'''
+
         code('''
 /** \\file $c_ident.cc
  *
@@ -473,11 +498,11 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 #include <string>
 #include <typeinfo>
 
-#include "base/compiler.hh"
-#include "base/cprintf.hh"
-#include "mem/ruby/common/BoolVec.hh"
-
 ''')
+
+        code(boolvec_include)
+        code(base_include)
+
         for f in self.debug_flags:
             code('#include "debug/${{f}}.hh"')
         code('''

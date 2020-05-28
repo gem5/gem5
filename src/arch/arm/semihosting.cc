@@ -581,10 +581,10 @@ ArmSemihosting::callHeapInfo32(ThreadContext *tc, Addr block_addr)
     uint64_t heap_base, heap_limit, stack_base, stack_limit;
     gatherHeapInfo(tc, false, heap_base, heap_limit, stack_base, stack_limit);
 
-    std::array<uint32_t, 4> block = {
+    std::array<uint32_t, 4> block = {{
         (uint32_t)heap_base, (uint32_t)heap_limit,
         (uint32_t)stack_base, (uint32_t)stack_limit
-    };
+    }};
     portProxy(tc).write(block_addr, block, ArmISA::byteOrder(tc));
 
     return retOK(0);
@@ -596,9 +596,9 @@ ArmSemihosting::callHeapInfo64(ThreadContext *tc, Addr block_addr)
     uint64_t heap_base, heap_limit, stack_base, stack_limit;
     gatherHeapInfo(tc, true, heap_base, heap_limit, stack_base, stack_limit);
 
-    std::array<uint64_t, 4> block = {
+    std::array<uint64_t, 4> block = {{
         heap_base, heap_limit, stack_base, stack_limit
-    };
+    }};
     portProxy(tc).write(block_addr, block, ArmISA::byteOrder(tc));
 
     return retOK(0);

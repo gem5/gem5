@@ -35,7 +35,7 @@
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
-from Process import EmulatedDriver
+from m5.objects.Process import EmulatedDriver
 
 class HSADriver(EmulatedDriver):
     type = 'HSADriver'

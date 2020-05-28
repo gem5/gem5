@@ -716,7 +716,7 @@ DRAMCtrl::processRespondEvent()
         accessAndRespond(dram_pkt->pkt, frontendLatency + backendLatency);
     }
 
-    delete respQueue.front();
+    assert(respQueue.front() == dram_pkt);
     respQueue.pop_front();
 
     if (!respQueue.empty()) {
@@ -737,6 +737,8 @@ DRAMCtrl::processRespondEvent()
             schedule(dram_pkt->rankRef.refreshEvent, curTick());
         }
     }
+
+    delete dram_pkt;
 
     // We have made a location in the queue available at this point,
     // so if there is a read that was forced to wait, retry now

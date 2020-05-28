@@ -97,7 +97,7 @@ import SCons
 import SCons.Node
 import SCons.Node.FS
 
-from m5.util import compareVersions, readCommand
+from m5.util import compareVersions, readCommand, readCommandWithReturn
 
 help_texts = {
     "options" : "",
@@ -277,7 +277,7 @@ global_vars.AddVariables(
     ('CCFLAGS_EXTRA', 'Extra C and C++ compiler flags', ''),
     ('LDFLAGS_EXTRA', 'Extra linker flags', ''),
     ('PYTHON_CONFIG', 'Python config binary to use',
-     [ 'python2.7-config', 'python-config' ]),
+     [ 'python2.7-config', 'python-config', 'python3-config' ]),
     ('PROTOC', 'protoc tool', environ.get('PROTOC', 'protoc')),
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
@@ -404,22 +404,27 @@ if main['GCC']:
 
     main['GCC_VERSION'] = gcc_version
 
-    if compareVersions(gcc_version, '4.9') >= 0 and \
-       compareVersions(gcc_version, '8.1') < 0:
+    if compareVersions(gcc_version, '4.9') >= 0:
         # Incremental linking with LTO is currently broken in gcc versions
-        # 4.9 to 8.1.
+        # 4.9 and above. A version where everything works completely hasn't
+        # yet been identified.
         #
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67548
-        #
+        main['BROKEN_INCREMENTAL_LTO'] = True
+    if compareVersions(gcc_version, '6.0') >= 0:
         # gcc versions 6.0 and greater accept an -flinker-output flag which
         # selects what type of output the linker should generate. This is
         # necessary for incremental lto to work, but is also broken in
-        # versions of gcc up to 8.1.
+        # current versions of gcc. It may not be necessary in future
+        # versions. We add it here since it might be, and as a reminder that
+        # it exists. It's excluded if lto is being forced.
         #
         # https://gcc.gnu.org/gcc-6/changes.html
         # https://gcc.gnu.org/ml/gcc-patches/2015-11/msg03161.html
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69866
-        main['BROKEN_INCREMENTAL_LTO'] = True
+        if not GetOption('force_lto'):
+            main.Append(PSHLINKFLAGS='-flinker-output=rel')
+            main.Append(PLINKFLAGS='-flinker-output=rel')
 
     disable_lto = GetOption('no_lto')
     if not disable_lto and main.get('BROKEN_INCREMENTAL_LTO', False) and \
@@ -471,6 +476,11 @@ elif main['CLANG']:
                          # interchangeably.
                          '-Wno-mismatched-tags',
                          ])
+    if compareVersions(clang_version, "10.0") >= 0:
+        main.Append(CCFLAGS=['-Wno-c99-designator'])
+
+    if compareVersions(clang_version, "8.0") >= 0:
+        main.Append(CCFLAGS=['-Wno-defaulted-function-deleted'])
 
     main.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
@@ -683,8 +693,21 @@ if main['USE_PYTHON']:
 
     # Read the linker flags and split them into libraries and other link
     # flags. The libraries are added later through the call the CheckLib.
-    py_ld_flags = readCommand([python_config, '--ldflags'],
-        exception='').split()
+    # Note: starting in Python 3.8 the --embed flag is required to get the
+    # -lpython3.8 linker flag
+    retcode, cmd_stdout = readCommandWithReturn(
+        [python_config, '--ldflags', '--embed'], exception='')
+    if retcode != 0:
+        # If --embed isn't detected then we're running python <3.8
+        retcode, cmd_stdout = readCommandWithReturn(
+            [python_config, '--ldflags'], exception='')
+
+    # Checking retcode again
+    if retcode != 0:
+        error("Failing on python-config --ldflags command")
+
+    py_ld_flags = cmd_stdout.split()
+
     py_libs = []
     for lib in py_ld_flags:
          if not lib.startswith('-l'):

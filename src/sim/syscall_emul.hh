@@ -1181,7 +1181,6 @@ mremapFunc(SyscallDesc *desc, ThreadContext *tc,
 
                 warn("returning %08p as start\n", new_start);
                 p->memState->remapRegion(start, new_start, old_length);
-                p->memState->mapRegion(new_start, new_length, "remapped");
                 return new_start;
             }
         }

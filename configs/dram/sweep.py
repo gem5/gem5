@@ -73,7 +73,7 @@ parser.add_option("--rd_perc", type="int", default=100,
                   help = "Percentage of read commands")
 
 parser.add_option("--mode", type="choice", default="DRAM",
-                  choices=dram_generators.keys(),
+                  choices=list(dram_generators.keys()),
                   help = "DRAM: Random traffic; \
                           DRAM_ROTATE: Traffic rotating across banks and ranks")
 

@@ -29,8 +29,8 @@ Built in test cases that verify particular details about a gem5 run.
 '''
 import re
 
-from testlib import test
-from testlib.config import constants
+from testlib import test_util as test
+from testlib.configuration import constants
 from testlib.helper import joinpath, diff_out_file
 
 class Verifier(object):

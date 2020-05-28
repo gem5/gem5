@@ -206,6 +206,7 @@ TLB::translateInt(bool read, RequestPtr req, ThreadContext *tc)
         if (!msrAddrToIndex(regNum, vaddr))
             return std::make_shared<GeneralProtection>(0);
 
+        req->setPaddr(req->getVaddr());
         req->setLocalAccessor(
             [read,regNum](ThreadContext *tc, PacketPtr pkt)
             {
@@ -223,6 +224,7 @@ TLB::translateInt(bool read, RequestPtr req, ThreadContext *tc)
         // space.
         assert(!(IOPort & ~0xFFFF));
         if (IOPort == 0xCF8 && req->getSize() == 4) {
+            req->setPaddr(req->getVaddr());
             req->setLocalAccessor(
                 [read](ThreadContext *tc, PacketPtr pkt)
                 {

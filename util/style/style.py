@@ -44,7 +44,7 @@ import difflib
 import re
 import sys
 
-from region import *
+from .region import *
 
 tabsize = 8
 lead = re.compile(r'^([ \t]+)')

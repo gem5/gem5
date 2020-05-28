@@ -35,7 +35,7 @@
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
-from Device import DmaDevice
+from m5.objects.Device import DmaDevice
 
 class HSADevice(DmaDevice):
     type = 'HSADevice'

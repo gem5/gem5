@@ -444,7 +444,7 @@ CowDiskImage::unserialize(CheckpointIn &cp)
 {
     string cowFilename;
     UNSERIALIZE_SCALAR(cowFilename);
-    cowFilename = cp.cptDir + "/" + cowFilename;
+    cowFilename = cp.getCptDir() + "/" + cowFilename;
     open(cowFilename);
 }
 

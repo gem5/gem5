@@ -29,7 +29,7 @@
 import os
 import itertools
 
-import config
+import testlib.configuration as configuration
 
 class UID(object):
     sep = ':'
@@ -42,12 +42,12 @@ class UID(object):
     @staticmethod
     def _shorten_path(path):
         return os.path.relpath(path,
-                os.path.commonprefix((config.constants.testing_base,
+                os.path.commonprefix((configuration.constants.testing_base,
                                       path)))
 
     @staticmethod
     def _full_path(short_path):
-        return os.path.join(config.constants.testing_base, short_path)
+        return os.path.join(configuration.constants.testing_base, short_path)
 
     @classmethod
     def uid_to_path(cls, uid):

@@ -1,6 +1,0 @@
-#!/bin/sh
-
-cd /benchmarks
-/sbin/m5 resetstats 
-./pthread_mutex_test 4 10000
-/sbin/m5 exit

@@ -28,8 +28,8 @@
 
 import functools
 
-import helper
-import runner as runner_mod
+import testlib.helper as helper
+import testlib.runner as runner_mod
 
 class TestingException(Exception):
     '''Common ancestor for manual Testing Exceptions.'''
@@ -62,7 +62,7 @@ class TestCase(object):
     collector = helper.InstanceCollector()
 
     def __new__(cls, *args, **kwargs):
-        obj = super(TestCase, cls).__new__(cls, *args, **kwargs)
+        obj = super(TestCase, cls).__new__(cls)
         TestCase.collector.collect(obj)
         return obj
 
