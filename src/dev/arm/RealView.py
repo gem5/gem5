@@ -543,7 +543,40 @@ class HDLcd(AmbaDmaDevice):
 
         yield node
 
-class MmioSRAM(SimpleMemory):
+class ParentMem(SimpleMemory):
+    """
+    This is a base abstract class for child node generation
+    A memory willing to autogenerate child nodes can do that
+    directly in the generateDeviceTree method.
+    However sometimes portions of memory (child nodes) are tagged
+    for specific applications. Hardcoding the child node in the
+    parent memory class is not flexible, so we delegate this
+    to the application model, which is registering the generator
+    helper via the ParentMem interface.
+    """
+    def __init__(self, *args, **kwargs):
+        super(ParentMem, self).__init__(*args, **kwargs)
+        self._generators = []
+
+    def addSubnodeGenerator(self, gen):
+        """
+        This is the method a client application would use to
+        register a child generator in the memory object.
+        """
+        self._generators.append(gen)
+
+    def generateSubnodes(self, node, state):
+        """
+        This is the method the memory would use to instantiate
+        the child nodes via the previously registered generators.
+        """
+        for subnode_gen in self._generators:
+            node.append(subnode_gen(state))
+
+class MmioSRAM(ParentMem):
+    def __init__(self, *args, **kwargs):
+        super(MmioSRAM, self).__init__(**kwargs)
+
     def generateDeviceTree(self, state):
         node = FdtNode("sram@%x" % long(self.range.start))
         node.appendCompatible(["mmio-sram"])
@@ -558,6 +591,8 @@ class MmioSRAM(SimpleMemory):
             local_state.addrCells(0) +
             state.addrCells(self.range.start) +
             state.sizeCells(self.range.size()) ))
+
+        self.generateSubnodes(node, state)
 
         yield node
 
