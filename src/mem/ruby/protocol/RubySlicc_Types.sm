@@ -48,7 +48,15 @@
 // undefined declaration error.
 //
 
-external_type(MessageBuffer, buffer="yes", inport="yes", outport="yes");
+structure(MessageBuffer, buffer="yes", inport="yes", outport="yes",
+                         external = "yes", primitive="yes") {
+  // NOTE: it's recommended to use SLICC's built in resource stall management.
+  // These functions are mostly for including resource utilization info
+  // in debug traces dumped by the protocol.
+  bool areNSlotsAvailable(int n, Tick curTime);
+  int getSize(Tick curTime);
+}
+
 external_type(Scalar, primitive="yes");
 
 structure(OutPort, external = "yes", primitive="yes") {
