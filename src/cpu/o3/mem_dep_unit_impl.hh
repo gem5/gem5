@@ -435,7 +435,7 @@ MemDepUnit<MemDepPred, Impl>::completed(const DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::completeBarrier(const DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::completeInst(const DynInstPtr &inst)
 {
     wakeDependents(inst);
     completed(inst);

@@ -139,14 +139,8 @@ class MemDepUnit
      */
     void replay();
 
-    /** Completes a memory instruction. */
-    void completed(const DynInstPtr &inst);
-
-    /** Completes a barrier instruction. */
-    void completeBarrier(const DynInstPtr &inst);
-
-    /** Wakes any dependents of a memory instruction. */
-    void wakeDependents(const DynInstPtr &inst);
+    /** Notifies completion of an instruction. */
+    void completeInst(const DynInstPtr &inst);
 
     /** Squashes all instructions up until a given sequence number for a
      *  specific thread.
@@ -164,6 +158,13 @@ class MemDepUnit
     void dumpLists();
 
   private:
+
+    /** Completes a memory instruction. */
+    void completed(const DynInstPtr &inst);
+
+    /** Wakes any dependents of a memory instruction. */
+    void wakeDependents(const DynInstPtr &inst);
+
     typedef typename std::list<DynInstPtr>::iterator ListIt;
 
     class MemDepEntry;
