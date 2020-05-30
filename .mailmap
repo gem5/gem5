@@ -1,0 +1,334 @@
+ARM gem5 Developers <none@none>
+Abdul Mutaal Ahmad <abdul.mutaal@gmail.com>
+Adrian Herrera <adrian.herrera@arm.com>
+Adrien Pesle <adrien.pesle@arm.com>
+Adrià Armejach <adria.armejach@bsc.es> Adrià Armejach <adria.armejach@gmail.com>
+Akash Bagdia <akash.bagdia@ARM.com> Akash Bagdia <akash.bagdia@arm.com>
+Alec Roelke <alec.roelke@gmail.com> Alec Roelke <ar4jc@virginia.edu>
+Alexandru Dutu <alexandru.dutu@amd.com> Alexandru <alexandru.dutu@amd.com>
+Ali Jafri <ali.jafri@arm.com>
+Ali Saidi <Ali.Saidi@arm.com> Ali Saidi <Ali.Saidi@ARM.com>
+Ali Saidi <Ali.Saidi@arm.com> Ali Saidi <ali.saidi@arm.com>
+Ali Saidi <Ali.Saidi@arm.com> Ali Saidi <saidi@eecs.umich.edu>
+Amin Farmahini <aminfar@gmail.com>
+Anders Handler <s052838@student.dtu.dk>
+Andrea Mondelli <andrea.mondelli@ucf.edu> Andrea Mondelli <Andrea.Mondelli@ucf.edu>
+Andrea Pellegrini <andrea.pellegrini@gmail.com>
+Andreas Hansson <andreas.hanson@arm.com> Andreas Hansson <Andreas.Hansson@ARM.com>
+Andreas Hansson <andreas.hanson@arm.com> Andreas Hansson <andreas.hansson>
+Andreas Hansson <andreas.hanson@arm.com> Andreas Hansson <andreas.hansson@arm.com>
+Andreas Hansson <andreas.hanson@arm.com> Andreas Hansson <andreas.hansson@armm.com>
+Andreas Sandberg <Andreas.Sandberg@arm.com> Andreas Sandberg <Andreas.Sandberg@ARM.com>
+Andreas Sandberg <Andreas.Sandberg@arm.com> Andreas Sandberg <andreas.sandberg@arm.com>
+Andreas Sandberg <Andreas.Sandberg@arm.com> Andreas Sandberg <andreas@sandberg.pp.se>
+Andrew Bardsley <Andrew.Bardsley@arm.com> Andrew Bardsley <Andreas.Bardsley@arm.com>
+Andrew Lukefahr <lukefahr@umich.edu>
+Andrew Schultz <alschult@umich.edu>
+Andriani Mappoura <andriani.mappoura@arm.com>
+Ani Udipi <ani.udipi@arm.com>
+Anis Peysieux <anis.peysieux@inria.fr>
+Anouk Van Laer <anouk.vanlaer@arm.com>
+Arthur Perais <arthur.perais@inria.fr>
+Ashkan Tousi <ashkan.tousimojarad@arm.com>
+Austin Harris <austinharris@utexas.edu>
+Richard D. Strong <r.d.strong@gmail.com>
+Avishai Tvila <avishai.tvila@gmail.com>
+Ayaz Akram <yazakram@ucdavis.edu>
+Bagus Hanindhito <hanindhito@bagus.my.id>
+Benjamin Nash <benash@umich.edu>
+Bertrand Marquis <bertrand.marquis@arm.com>
+Binh Pham <binhpham@cs.rutgers.edu>
+Bjoern A. Zeeb <baz21@cam.ac.uk>
+Blake Hechtman <bah13@duke.edu> Blake Hechtman <blake.hechtman@amd.com>
+Blake Hechtman <bah13@duke.edu> Blake Hechtman ext:(%2C%20Nilay%20Vaish%20%3Cnilay%40cs.wisc.edu%3E) <bah13@duke.edu>
+Bobby R. Bruce <bbruce@ucdavis.edu>
+Boris Shingarov <shingarov@gmail.com> Boris Shingarov <shingarov@labware.com>
+Brad Beckmann <brad.beckmann@amd.com> Brad Beckmann <Brad.Beckmann@amd.com>
+Brad Beckmann <brad.beckmann@amd.com> Brad Beckmann ext:(%2C%20Nilay%20Vaish%20%3Cnilay%40cs.wisc.edu%3E) <Brad.Beckmann@amd.com>
+Brad Danofsky <bradley.danofsky@amd.com>
+Bradley Wang <radwang@ucdavis.edu> Bradley <animalvgamer@gmail.com>
+Brandon Potter <brandon.potter@amd.com> bpotter <brandon.potter@amd.com>
+Brandon Potter <brandon.potter@amd.com> Brandon Potter <Brandon.Potter@amd.com>
+Brandon Potter <brandon.potter@amd.com> BKP <brandon.potter@amd.com>
+Brian Grayson <b.grayson@samsung.com>
+Cagdas Dirik <cdirik@micron.com> cdirik <cdirik@micron.com>
+Chander Sudanthi <chander.sudanthi@arm.com> Chander Sudanthi <Chander.Sudanthi@arm.com>
+Chander Sudanthi <chander.sudanthi@arm.com> Chander Sudanthi <Chander.Sudanthi@ARM.com>
+Chen Zou <chenzou@uchicago.edu>
+Chris Adeniyi-Jones <Chris.Adeniyi-Jones@arm.com>
+Chris Emmons <chris.emmons@arm.com> Chris Emmons <Chris.Emmons@ARM.com>
+Chris Emmons <chris.emmons@arm.com> Chris Emmons <Chris.Emmons@arm.com>
+Christian Menard <christian.menard@tu-dresden.de> Christian Menard <Christian.Menard@tu-dresden.de>
+Christoph Pfister <pfistchr@student.ethz.ch>
+Christopher Torng <clt67@cornell.edu>
+Chuan Zhu <chuan.zhu@arm.com>
+Chun-Chen Hsu <chunchenhsu@google.com> Chun-Chen TK Hsu <chunchenhsu@google.com>
+Ciro Santilli <ciro.santilli@arm.com>
+Clint Smullen <cws3k@cs.virginia.edu>
+Curtis Dunham <Curtis.Dunham@arm.com>
+Dam Sunwoo <dam.sunwoo@arm.com>
+Dan Gibson <gibson@cs.wisc.edu>
+Daniel Carvalho <odanrc@yahoo.com.br> Daniel <odanrc@yahoo.com.br>
+Daniel Carvalho <odanrc@yahoo.com.br> Daniel R. Carvalho <odanrc@yahoo.com.br>
+Daniel Johnson <daniel.johnson@arm.com>
+Daniel Sanchez <sanchezd@stanford.edu>
+David Guillen-Fandos <david.guillen@arm.com> David Guillen <david.guillen@arm.com>
+David Guillen-Fandos <david.guillen@arm.com> David Guillen Fandos <david.guillen@arm.com>
+David Hashe <david.hashe@amd.com> David Hashe <david.j.hashe@gmail.com>
+David Oehmke <doehmke@umich.edu>
+Derek Hower <drh5@cs.wisc.edu>
+Deyaun Guo <guodeyuan@tsinghua.org.cn> Deyuan Guo <guodeyuan@tsinghua.org.cn>
+Deyaun Guo <guodeyuan@tsinghua.org.cn> Deyuan Guo ext:(%2C%20Nilay%20Vaish%20%3Cnilay%40cs.wisc.edu%3E) <guodeyuan@tsinghua.org.cn>
+Dibakar Gope <gope@wisc.edu> Dibakar Gope ext:(%2C%20Nilay%20Vaish%20%3Cnilay%40cs.wisc.edu%3E) <gope@wisc.edu>
+Djordje Kovacevic <djordje.kovacevic@arm.com> Djordje Kovacevic <Djordje.Kovacevic@arm.com>
+Dongxue Zhang <elta.era@gmail.com>
+Doğukan Korkmaztürk <d.korkmazturk@gmail.com>
+Dylan Johnson <Dylan.Johnson@ARM.com>
+Earl Ou <shunhsingou@google.com>
+Edmund Grimley Evans <Edmund.Grimley-Evans@arm.com>
+Emilio Castillo <castilloe@unican.es> Emilio Castillo <ecastill@bsc.es>
+Emilio Castillo <castilloe@unican.es> Emilio Castillo ext:(%2C%20Nilay%20Vaish%20%3Cnilay%40cs.wisc.edu%3E) <castilloe@unican.es>
+Erfan Azarkhish <erfan.azarkhish@unibo.it>
+Eric Van Hensbergen <eric.vanhensbergen@arm.com> Eric Van Hensbergen <Eric.VanHensbergen@ARM.com>
+Erik Hallnor <ehallnor@umich.edu>
+Erik Tomusk <E.Tomusk@sms.ed.ac.uk>
+Faissal Sleiman <Faissal.Sleiman@arm.com> Faissal Sleiman <sleimanf@umich.edu>
+Fernando Endo <fernando.endo2@gmail.com>
+Gabe Black <gabeblack@google.com> Gabe Black <gabe.black@gmail.com>
+Gabe Black <gabeblack@google.com> Gabe Black <gblack@eecs.umich.edu>
+Gabor Dozsa <gabor.dozsa@arm.com>
+Gedare Bloom <gedare@rtems.org> Gedare Bloom <gedare@gwmail.gwu.edu>
+Gene Wu <gene.wu@arm.com> Gene WU <gene.wu@arm.com>
+Gene WU <gene.wu@arm.com> Gene Wu <Gene.Wu@arm.com>
+Geoffrey Blake <geoffrey.blake@arm.com> Geoffrey Blake <Geoffrey.Blake@arm.com>
+Geoffrey Blake <geoffrey.blake@arm.com> Geoffrey Blake <blakeg@umich.edu>
+Georg Kotheimer <georg.kotheimer@mailbox.tu-dresden.de>
+Giacomo Gabrielli <giacomo.gabrielli@arm.com> Giacomo Gabrielli <Giacomo.Gabrielli@arm.com>
+Giacomo Travaglini <giacomo.travaglini@arm.com>
+Glenn Bergmans <glenn.bergmans@arm.com>
+Hamid Reza Khaleghzadeh <khaleghzadeh@gmail.com> Hamid Reza Khaleghzadeh ext:(%2C%20Lluc%20Alvarez%20%3Clluc.alvarez%40bsc.es%3E%2C%20Nilay%20Vaish%20%3Cnilay%40cs.wisc.edu%3E) <khaleghzadeh@gmail.com>
+Hanhwi Jang <jang.hanhwi@gmail.com>
+Hoa Nguyen <hoanguyen@ucdavis.edu>
+Hongil Yoon <ongal@cs.wisc.edu>
+Hsuan Hsu <hsuan.hsu@mediatek.com>
+Hussein Elnawawy <hussein.elnawawy@gmail.com>
+Ian Jiang <ianjiang.ict@gmail.com>
+IanJiangICT <ianjiang.ict@gmail.com>
+Ilias Vougioukas <Ilias.Vougioukas@ARM.com>
+Isaac Richter <isaac.richter@rochester.edu>
+Isaac Sánchez Barrera <isaac.sanchez@bsc.es>
+Ivan Pizarro <ivan.pizarro@metempsy.com>
+Jack Whitham <jack-m5ml2@cs.york.ac.uk> Jack Whitman <jack-m5ml2@cs.york.ac.uk>
+Jairo Balart <jairo.balart@metempsy.com>
+Jakub Jermar <jakub@jermar.eu>
+James Clarkson <james.clarkson@arm.com>
+Jan-Peter Larsson <jan-peter.larsson@arm.com>
+Jason Lowe-Power <jason@lowepower.com> Jason Lowe-Power <power.jg@gmail.com>
+Jason Lowe-Power <jason@lowepower.com> Jason Lowe-Power <powerjg@cs.wisc.edu>
+Jason Lowe-Power <jason@lowepower.com> Jason Power <power.jg@gmail.com>
+Jason Lowe-Power <jason@lowepower.com> Jason Power <powerjg@cs.wisc.edu>
+Jason Lowe-Power <jason@lowepower.com> Jason Power ext:(%2C%20Joel%20Hestness%20%3Chestness%40cs.wisc.edu%3E) <power.jg@gmail.com>
+Javier Bueno Hedo <javier.bueno@metempsy.com> Javier Bueno <javier.bueno@metempsy.com>
+Javier Cano-Cano <javier.cano555@gmail.com>
+Javier Setoain <javier.setoain@arm.com>
+Jayneel Gandhi <jayneel@cs.wisc.edu>
+Jennifer Treichler <jtreichl@umich.edu>
+Jieming Yin <jieming.yin@amd.com>
+Jing Qu <jqu32@wisc.edu> JingQuJQ <jqu32@wisc.edu>
+Jiuyue Ma <majiuyue@ncic.ac.cn>
+Joe Gross <joe.gross@amd.com> Joe Gross <joseph.gross@amd.com>
+Joel Hestness <jthestness@gmail.com> Joel Hestness <hestness@cs.utexas.edu>
+Joel Hestness <jthestness@gmail.com> Joel Hestness <hestness@cs.wisc.edu>
+Joel Hestness <jthestness@gmail.com> Joel Hestness ext:(%2C%20Nilay%20Vaish%20%3Cnilay%40cs.wisc.edu%3E) <jthestness@gmail.com>
+John Alsop <johnathan.alsop@amd.com>
+John Kalamatianos <john.kalamatianos@amd.com> jkalamat <john.kalamatianos@amd.com>
+Jordi Vaquero <jordi.vaquero@metempsy.com>
+Jose Marinho <jose.marinho@arm.com>
+Jui-min Lee <fcrh@google.com>
+Kanishk Sugand <kanishk.sugand@arm.com>
+Karthik Sangaiah <karthik.sangaiah@arm.com>
+Ke Meng <mengke97@hotmail.com>
+Kevin Brodsky <kevin.brodsky@arm.com>
+Kevin Lim <ktlim@umich.edu>
+Khalique <khalique913@gmail.com>
+Koan-Sin Tan <koansin.tan@gmail.com>
+Korey Sewell <ksewell@umich.edu>
+Krishnendra Nathella <Krishnendra.Nathella@arm.com> Krishnendra Nathella <krinat01@arm.com>
+Lena Olson <leolson@google.com> Lena Olson <lena@cs.wisc,edu>
+Lena Olson <leolson@google.com> Lena Olson <lena@cs.wisc.edu>
+Lisa Hsu <Lisa.Hsu@amd.com> Lisa Hsu <hsul@eecs.umich.edu>
+Lluc Alvarez <lluc.alvarez@bsc.es>
+Lluís Vilanova <vilanova@ac.upc.edu> Lluis Vilanova <vilanova@ac.upc.edu>
+Mahyar Samani <msamani@ucdavis.edu>
+Malek Musleh <malek.musleh@gmail.com> Nilay Vaish ext:(%2C%20Malek%20Musleh%20%3Cmalek.musleh%40gmail.com%3E) <nilay@cs.wisc.edu>
+Marc Mari Barcelo <marc.maribarcelo@arm.com>
+Marc Orr <marc.orr@gmail.com> Marc Orr <morr@cs.wisc.edu>
+Marco Balboni <Marco.Balboni@ARM.com>
+Marco Elver <Marco.Elver@ARM.com> Marco Elver <marco.elver@ed.ac.uk>
+Matt DeVuyst <mdevuyst@gmail.com>
+Matt Evans <matt.evans@arm.com> Matt Evans <Matt.Evans@arm.com>
+Matt Horsnell <matt.horsnell@arm.com>Matt Horsnell <Matt.Horsnell@ARM.com>
+Matt Horsnell <matt.horsnell@arm.com> Matt Horsnell <Matt.Horsnell@arm.com>
+Matt Horsnell <matt.horsnell@arm.com> Matt Horsnell <matt.horsnell@ARM.com>
+Matt Poremba <matthew.poremba@amd.com> Matt Poremba <Matthew.Poremba@amd.com>
+Matteo Andreozzi <matteo.andreozzi@arm.com> Matteo Andreozzi <Matteo.Andreozzi@arm.com>
+Matteo M. Fusi <matteo.fusi@bsc.es>
+Matthew Poremba <matthew.poremba@amd.com> Matthew Poremba <Matthew.Poremba@amd.com>
+Matt Sinclair <mattdsinclair@gmail.com> Matthew Sinclair <matthew.sinclair@amd.com>
+Matthias Hille <matthiashille8@gmail.com>
+Matthias Jung <jungma@eit.uni-kl.de>
+Maurice Becker <madnaurice@googlemail.com>
+Maxime Martinasso <maxime.cscs@gmail.com>
+Maximilian Stein <maximilian.stein@tu-dresden.de>
+Maximilien Breughe <maximilien.breughe@elis.ugent.be> Maximilien Breughe <Maximilien.Breughe@elis.ugent.be>
+Michael Adler <Michael.Adler@intel.com>
+Michael LeBeane <michael.lebeane@amd.com> Michael LeBeane <Michael.Lebeane@amd.com>
+Michael LeBeane <michael.lebeane@amd.com> mlebeane <michael.lebeane@amd.com>
+Michael Levenhagen <mjleven@sandia.gov>
+Michiel Van Tol <michiel.vantol@arm.com> Michiel W. van Tol <Michiel.VanTol@arm.com>
+Michiel Van Tol <michiel.vantol@arm.com> Michiel van Tol <Michiel.VanTol@arm.com>
+Miguel Serrano <mserrano@umich.edu>
+Miles Kaufmann <milesck@eecs.umich.edu>
+Min Kyu Jeong <minkyu.jeong@arm.com> Min Kyu Jeong <MinKyu.Jeong@arm.com>
+Mingyuan <xiang_my@outlook.com>
+Mitch Hayenga <mitch.hayenga@arm.com> Mitch Hayenga <Mitch.Hayenga@ARM.com>
+Mitch Hayenga <mitch.hayenga@arm.com> Mitch Hayenga <Mitch.Hayenga@arm.com>
+Mitch Hayenga <mitch.hayenga@arm.com> Mitch Hayenga <mitch.hayenga+gem5@gmail.com>
+Mitch Hayenga <mitch.hayenga@arm.com> Mitch Hayenga ext:(%2C%20Amin%20Farmahini%20%3Caminfar%40gmail.com%3E) <mitch.hayenga+gem5@gmail.com>
+Mitch Hayenga <mitch.hayenga@arm.com> Mitchell Hayenga <Mitchell.Hayenga@ARM.com>
+Mohammad Alian <m.alian1369@gmail.com>
+Monir Mozumder <monir.mozumder@amd.com>
+Moyang Wang <mw828@cornell.edu>
+Mrinmoy Ghosh <mrinmoy.ghosh@arm.com> Mrinmoy Ghosh <Mrinmoy.Ghosh@arm.com>
+Nathan Binkert <nate@binkert.org> Nathan Binkert <binkertn@umich.edu>
+Nathanael Premillieu <nathanael.premillieu@arm.com> Nathanael Premillieu <Nathanael.Premillieu@arm.com>
+Nathanael Premillieu <nathanael.premillieu@arm.com> Nathanael Premillieu <nathanael.premillieu@irisa.fr>
+Nathanael Premillieu <nathanael.premillieu@arm.com> Nathanael Premillieu <nathananel.premillieu@arm.com>
+Nathanael Premillieu <nathanael.premillieu@arm.com> Nathanael Premillieu <npremill@irisa.fr>
+Nayan Deshmukh <nayan26deshmukh@gmail.com>
+Neha Agarwal <neha.agarwal@arm.com>
+Nicholas Lindsay <nicholas.lindsay@arm.com>
+Nicolas Derumigny <nderumigny@gmail.com>
+Nicolas Zea <nicolas.zea@gmail.com>
+Nikos Nikoleris <nikos.nikoleris@arm.com> Nikos Nikoleris <nikos.nikoleris@gmail.com>
+Nils Asmussen <nils.asmussen@barkhauseninstitut.org> Nils Asmussen <nilsasmussen7@gmail.com>
+Nuwan Jayasena <Nuwan.Jayasena@amd.com>
+Ola Jeppsson <ola.jeppsson@gmail.com>
+Omar Naji <Omar.Naji@arm.com>
+Pablo Prieto <pablo.prieto@unican.es>
+Palle Lyckegaard <palle@lyckegaard.dk>
+Pau Cabre <pau.cabre@metempsy.com>
+Paul Rosenfeld <prosenfeld@micron.com> Paul Rosenfeld <dramninjas@gmail.com>
+Paul Rosenfeld <prosenfeld@micron.com> Paul Rosenfeld <prosenfeld@micon.com>
+Peter Enns <Peter.Enns@arm.com> Pierre-Yves Péneau <pierre-yves.peneau@lirmm.fr>
+Pin-Yen Lin <treapking@google.com>
+Po-Hao Su <supohaosu@gmail.com>
+Polina Dudnik <pdudnik@cs.wisc.edu> Polina Dudnik <pdudnik@gmail.com>
+Polydoros Petrakis <ppetrak@ics.forth.gr>
+Pouya Fotouhi <pfotouhi@ucdavis.edu> Pouya Fotouhi <Pouya.Fotouhi@amd.com>
+Prakash Ramrakhyani <prakash.ramrakhyani@arm.com> Prakash Ramrakhani <Prakash.Ramrakhani@arm.com>
+Prakash Ramrakhyani <prakash.ramrakhyani@arm.com> Prakash Ramrakhyani <Prakash.Ramrakhyani@arm.com>
+Pritha Ghoshal <pritha9987@tamu.edu>
+Radhika Jagtap <radhika.jagtap@arm.com> Radhika Jagtap <radhika.jagtap@ARM.com>
+Rahul Thakur <rjthakur@google.com>
+Reiley Jeapaul <Reiley.Jeyapaul@arm.com>
+Rekai Gonzalez-Alberquilla <rekai.gonzalezalberquilla@arm.com> Rekai <Rekai.GonzalezAlberquilla@arm.com>
+Rekai Gonzalez-Alberquilla <rekai.gonzalezalberquilla@arm.com> Rekai Gonzalez Alberquilla <Rekai.GonzalezAlberquilla@arm.com>
+Rekai Gonzalez-Alberquilla <rekai.gonzalezalberquilla@arm.com> Rekai Gonzalez Alberquilla <rekai.gonzalezalberquilla@arm.com>
+Rekai Gonzalez-Alberquilla <rekai.gonzalezalberquilla@arm.com> Rekai Gonzalez-Alberquilla <Rekai.GonzalezAlberquilla@arm.com>
+Rene de Jong <rene.dejong@arm.com>
+Ricardo Alves <ricardo.alves@arm.com>
+Richard Strong <rstrong@hp.com> Richard Strong <r.d.strong@gmail.com>
+Richard Strong <rstrong@hp.com> Richard Strong <rstrong@cs.ucsd.edu>
+Richard Strong <rstrong@hp.com> Rick Strong <rstrong@cs.ucsd.edu>
+Rico Amslinger <rico.amslinger@informatik.uni-augsburg.de>
+Riken Gohil <Riken.Gohil@arm.com>
+Rizwana Begum <rb639@drexel.edu>
+Robert Scheffel <robert.scheffel1@tu-dresden.de> Robert <robert.scheffel1@tu-dresden.de>
+Robert Kovacsics <rmk35@cl.cam.ac.uk>
+Rohit Kurup <rohit.kurup@arm.com>
+Ron Dreslinski <rdreslin@umich.edu> Ronald Dreslinski <rdreslin@umich.edu>
+Ruben Ayrapetyan <ruben.ayrapetyan@arm.com>
+Rune Holm <rune.holm@arm.com>
+Ruslan Bukin <br@bsdpad.com> Ruslan Bukin ext:(%2C%20Zhang%20Guoye) <br@bsdpad.com>
+Rutuja Oza <roza@ucdavis.edu>
+Ryan Gambord <gambordr@oregonstate.edu>
+Samuel Grayson <sam@samgrayson.me>
+Sandipan Das <sandipan@linux.ibm.com>
+Santi Galan <santi.galan@metempsy.com>
+Sascha Bischoff <sascha.bischoff@arm.com> Sascha Bischoff <Sascha.Bischoff@ARM.com>
+Sascha Bischoff <sascha.bischoff@arm.com> Sascha Bischoff <sascha.bischoff@ARM.com>
+Sean McGoogan <Sean.McGoogan@arm.com>
+Sean Wilson <spwilson2@wisc.edu>
+Sergei Trofimov <sergei.trofimov@arm.com>
+Severin Wischmann <wiseveri@student.ethz.ch> Severin Wischmann ext:(%2C%20Ioannis%20Ilkos%20%3Cioannis.ilkos09%40imperial.ac.uk%3E) <wiseveri@student.ethz.ch>
+Shawn Rosti <shawn.rosti@gmail.com>
+Sherif Elhabbal <elhabbalsherif@gmail.com>
+Siddhesh Poyarekar <siddhesh.poyarekar@gmail.com>
+Somayeh Sardashti <somayeh@cs.wisc.edu>
+Sooraj Puthoor <puthoorsooraj@gmail.com>
+Sophiane Senni <sophiane.senni@gmail.com>
+Soumyaroop Roy <sroy@cse.usf.edu>
+Srikant Bharadwaj <srikant.bharadwaj@amd.com>
+Stan Czerniawski <stan.czerniawski@arm.com>
+Stanislaw Czerniawski <stacze01@arm.com>
+Stephan Diestelhorst <stephan.diestelhorst@arm.com> Stephan Diestelhorst <stephan.diestelhorst@ARM.com>
+Stephen Hines <hines@cs.fsu.edu>
+Steve Raasch <sraasch@umich.edu>
+Steve Reinhardt <stever@gmail.com> Steve Reinhardt <Steve.Reinhardt@amd.com>
+Steve Reinhardt <stever@gmail.com> Steve Reinhardt <steve.reinhardt@amd.com>
+Steve Reinhardt <stever@gmail.com> Steve Reinhardt <stever@eecs.umich.edu>
+Steve Reinhardt <stever@gmail.com> Steve Reinhardt ext:(%2C%20Nilay%20Vaish%20%3Cnilay%40cs.wisc.edu%3E%2C%20Ali%20Saidi%20%3CAli.Saidi%40ARM.com%3E) <stever@gmail.com>
+Stian Hvatum <stian@dream-web.no>
+Sudhanshu Jha <sudhanshu.jha@arm.com>
+Sujay Phadke <electronicsguy123@gmail.com>
+Swapnil Haria <swapnilster@gmail.com> Swapnil Haria <swapnilh@cs.wisc.edu>
+Taeho Kgil <tkgil@umich.edu>
+Tao Zhang <tao.zhang.0924@gmail.com>
+Thomas Grass <Thomas.Grass@ARM.com>
+Tiago Mück <tiago.muck@arm.com> Tiago Muck <tiago.muck@arm.com>
+Tim Harris <tharris@microsoft.com>
+Timothy Hayes <timothy.hayes@arm.com>
+Timothy M. Jones <timothy.jones@arm.com> Timothy Jones <timothy.jones@cl.cam.ac.uk>
+Timothy M. Jones <timothy.jones@arm.com> Nilay Vaish ext:(%2C%20Timothy%20Jones%20%3Ctimothy.jones%40cl.cam.ac.uk%3E) <nilay@cs.wisc.edu>
+Timothy M. Jones <timothy.jones@arm.com> Timothy M. Jones <timothy.jones@cl.cam.ac.uk>
+Timothy M. Jones <timothy.jones@arm.com> Timothy M. Jones <tjones1@inf.ed.ac.uk>
+Tom Jablin <tjablin@gmail.com>
+Tommaso Marinelli <tommarin@ucm.es>
+Tony Gutierrez <anthony.gutierrez@amd.com> Anthony Gutierrez <atgutier@umich.edu>
+Tuan Ta <qtt2@cornell.edu> Tuan Ta <taquangtuan1992@gmail.com>
+Tushar Krishna <tushar@ece.gatech.edu> Tushar Krishna <Tushar.Krishna@amd.com>
+Tushar Krishna <tushar@ece.gatech.edu> Tushar Krishna <tushar@csail.mit.edu>
+Umesh Bhaskar <umesh.b2006@gmail.com>
+Uri Wiener <uri.wiener@arm.com>
+Victor Garcia <victor.garcia@arm.com>
+Vilas Sridharan <vilas.sridharan@gmail.com>
+Vince Weaver <vince@csl.cornell.edu>
+Vincentius Robby <acolyte@umich.edu>
+Wade Walker <wade.walker@arm.com>
+Weiping Liao <weipingliao@google.com>
+Wendy Elsasser <wendy.elsasser@arm.com>
+William Wang <william.wang@arm.com> William Wang <William.Wang@ARM.com>
+William Wang <william.wang@arm.com> William Wang <William.Wang@arm.com>
+Willy Wolff <willy.mh.wolff.ml@gmail.com>
+Xiangyu Dong <rioshering@gmail.com>
+Xianwei Zhang <xianwei.zhang@amd.com>
+Xiaoyu Ma <xiaoyuma@google.com>
+Xin Ouyang <xin.ouyang@streamcomputing.com>
+Yasuko Eckert <yasuko.eckert@amd.com>
+Yi Xiang <yix@colostate.edu>
+Yifei Liu <liu.ad2039@gmail.com>
+Yu-hsin Wang <yuhsingw@google.com>
+Yuan Yao <yuanyao@seas.harvard.edu>
+Yuetsu Kodama <yuetsu.kodama@riken.jp> yuetsu.kodama <yuetsu.kodama@riken.jp>
+Zhang Zheng <perise@gmail.com>
+Zicong Wang <wangzicong@nudt.edu.cn>
+Éder F. Zulian <zulian@eit.uni-kl.de>
+Gabe Loh <gabriel.loh@amd.com> gloh <none@none>
+jiegec <noc@jiegec.ac.cn>
+m5test <m5test@zizzer>
+Marjan Fariborz <mfariborz@ucdavis.edu> marjanfariborz <mfariborz@ucdavis.edu>
+Mike Upton <michaelupton@gmail.com>
+seanzw <seanyukigeek@gmail.com>
+Trivikram Reddy <tvreddy@ucdavis.edu> tv-reddy <tvreddy@ucdavis.edu>
+
