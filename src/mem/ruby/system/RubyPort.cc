@@ -86,6 +86,8 @@ RubyPort::init()
 {
     assert(m_controller != NULL);
     m_mandatory_q_ptr = m_controller->getMandatoryQueue();
+    for (const auto &response_port : response_ports)
+        response_port->sendRangeChange();
 }
 
 Port &
