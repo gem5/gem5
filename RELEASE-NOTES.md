@@ -1,3 +1,7 @@
+# Version 20.0.0.1
+
+**[HOTFIX]** A fix was applied to stop incorrect clock frequences being reported due to rounding errors.
+
 # Version 20.0.0.0
 
 Welcome to our first "official" gem5 release!
