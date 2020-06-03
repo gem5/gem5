@@ -1,0 +1,172 @@
+{
+    "2": [
+        {
+            "parent_name": "sys", 
+            "name": "cpu", 
+            "parameters": {
+                "do_statistics_insts": {}, 
+                "numThreads": {}, 
+                "syscallRetryLatency": {}, 
+                "pwr_gating_latency": {}, 
+                "function_trace": {}, 
+                "do_checkpoint_insts": {}, 
+                "system": {}, 
+                "function_trace_start": {}, 
+                "cpu_id": {
+                    "Value": "None"
+                }, 
+                "checker": {}, 
+                "eventq_index": {}, 
+                "default_p_state": {}, 
+                "p_state_clk_gate_max": {}, 
+                "do_quiesce": {}, 
+                "profile": {}, 
+                "p_state_clk_gate_min": {}, 
+                "itb": {}, 
+                "interrupts": {}, 
+                "socket_id": {}, 
+                "power_model": {}, 
+                "max_insts_all_threads": {}, 
+                "clk_domain": {}, 
+                "power_gating_on_idle": {}, 
+                "switched_out": {}, 
+                "workload": {}, 
+                "wait_for_remote_gdb": {}, 
+                "p_state_clk_gate_bins": {}, 
+                "simpoint_start_insts": {}, 
+                "max_insts_any_thread": {}, 
+                "dtb": {}, 
+                "progress_interval": {}, 
+                "branchPred": {}, 
+                "isa": {}, 
+                "tracer": {}
+            }, 
+            "height": 237.0, 
+            "connections": [
+                {
+                    "child_port_num": 2, 
+                    "parent_port_num": 1, 
+                    "key": [
+                        "parent", 
+                        "membus", 
+                        "icache_port", 
+                        "slave"
+                    ], 
+                    "parent_endpoint_x": 844.375, 
+                    "parent_endpoint_y": 658.75, 
+                    "child_endpoint_y": 454.5, 
+                    "child_endpoint_x": 946.125
+                }, 
+                {
+                    "child_port_num": 2, 
+                    "parent_port_num": 0, 
+                    "key": [
+                        "parent", 
+                        "membus", 
+                        "dcache_port", 
+                        "slave"
+                    ], 
+                    "parent_endpoint_x": 844.375, 
+                    "parent_endpoint_y": 558.25, 
+                    "child_endpoint_y": 454.5, 
+                    "child_endpoint_x": 946.125
+                }
+            ], 
+            "width": 312.0, 
+            "connected_objects": [
+                "interrupts"
+            ], 
+            "y": 489.0, 
+            "x": 587.0, 
+            "z": 2, 
+            "ports": {
+                "icache_port": {
+                    "Value": "membus.slave"
+                }, 
+                "dcache_port": {
+                    "Value": "membus.slave"
+                }
+            }, 
+            "component_name": "TimingSimpleCPU"
+        }
+    ], 
+    "3": [
+        {
+            "parent_name": "cpu", 
+            "name": "interrupts", 
+            "parameters": {
+                "eventq_index": {}, 
+                "int_latency": {}, 
+                "pio_latency": {}, 
+                "system": {}, 
+                "clk_domain": {}
+            }, 
+            "height": 87.0, 
+            "connections": [
+                {
+                    "child_port_num": 2, 
+                    "parent_port_num": 1, 
+                    "key": [
+                        "child", 
+                        "membus", 
+                        "pio", 
+                        "master"
+                    ], 
+                    "parent_endpoint_x": 946.125, 
+                    "parent_endpoint_y": 437.5, 
+                    "child_endpoint_y": 661.5, 
+                    "child_endpoint_x": 733.125
+                }, 
+                {
+                    "child_port_num": 1, 
+                    "parent_port_num": 1, 
+                    "key": [
+                        "child", 
+                        "membus", 
+                        "int_slave", 
+                        "master"
+                    ], 
+                    "parent_endpoint_x": 946.125, 
+                    "parent_endpoint_y": 437.5, 
+                    "child_endpoint_y": 644.5, 
+                    "child_endpoint_x": 733.125
+                }, 
+                {
+                    "child_port_num": 2, 
+                    "parent_port_num": 0, 
+                    "key": [
+                        "parent", 
+                        "membus", 
+                        "int_master", 
+                        "slave"
+                    ], 
+                    "parent_endpoint_x": 733.125, 
+                    "parent_endpoint_y": 627.5, 
+                    "child_endpoint_y": 454.5, 
+                    "child_endpoint_x": 946.125
+                }
+            ], 
+            "width": 162.0, 
+            "connected_objects": [], 
+            "y": 600.0, 
+            "x": 607.0, 
+            "z": 3, 
+            "ports": {
+                "int_slave": {
+                    "Value": null
+                }, 
+                "int_master": {
+                    "Value": "membus.slave"
+                }, 
+                "pio": {
+                    "Value": null
+                }
+            }, 
+            "component_name": "X86LocalApic"
+        }
+    ], 
+    "parent": "cpu", 
+    "parent_pos_x": 587.0, 
+    "parent_pos_y": 489.0, 
+    "object_name": "cpusub"
+}

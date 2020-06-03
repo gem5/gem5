@@ -1,0 +1,79 @@
+{
+    "0": [
+        {
+            "parent_name": null, 
+            "name": "root", 
+            "parameters": {
+                "time_sync_period": {}, 
+                "eventq_index": {}, 
+                "time_sync_spin_threshold": {}, 
+                "time_sync_enable": {}, 
+                "sim_quantum": {}, 
+                "full_system": {
+                    "Value": "False"
+                }
+            }, 
+            "height": 225.0, 
+            "connections": [], 
+            "width": 450.0, 
+            "connected_objects": [
+                "hello"
+            ], 
+            "y": 477.0, 
+            "x": 617.0, 
+            "z": 0, 
+            "ports": {}, 
+            "component_name": "Root"
+        }
+    ], 
+    "1": [
+        {
+            "parent_name": "root", 
+            "name": "hello", 
+            "parameters": {
+                "eventq_index": {}, 
+                "goodbye_object": {
+                    "Value": "bye"
+                }, 
+                "number_of_fires": {}, 
+                "time_to_wait": {
+                    "Value": "1ns"
+                }
+            }, 
+            "height": 150.0, 
+            "connections": [], 
+            "width": 300.0, 
+            "connected_objects": [
+                "bye"
+            ], 
+            "y": 552.0, 
+            "x": 617.0, 
+            "z": 1, 
+            "ports": {}, 
+            "component_name": "HelloObject"
+        }
+    ], 
+    "2": [
+        {
+            "parent_name": "hello", 
+            "name": "bye", 
+            "parameters": {
+                "buffer_size": {}, 
+                "write_bandwidth": {}, 
+                "eventq_index": {}
+            }, 
+            "height": 75.0, 
+            "connections": [], 
+            "width": 150.0, 
+            "connected_objects": [], 
+            "y": 627.0, 
+            "x": 617.0, 
+            "z": 2, 
+            "ports": {}, 
+            "component_name": "GoodbyeObject"
+        }
+    ], 
+    "code": {
+        "headers": "import m5, sys, os\nfrom m5.objects import *\nfrom common import SimpleOpts"
+    }
+}

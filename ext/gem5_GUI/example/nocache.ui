@@ -1,0 +1,621 @@
+{
+    "3": [
+        {
+            "parent_name": "cpu", 
+            "name": "workload", 
+            "parameters": {
+                "uid": {}, 
+                "pid": {}, 
+                "kvmInSE": {}, 
+                "executable": {}, 
+                "drivers": {}, 
+                "system": {}, 
+                "gid": {}, 
+                "eventq_index": {}, 
+                "env": {}, 
+                "maxStackSize": {}, 
+                "ppid": {}, 
+                "cwd": {}, 
+                "pgid": {}, 
+                "simpoint": {}, 
+                "euid": {}, 
+                "input": {}, 
+                "cmd": {
+                    "Value": "/home/parallels/gem5/tests/test-progs/hello/bin/x86/linux/hello"
+                }, 
+                "errout": {}, 
+                "useArchPT": {}, 
+                "egid": {}, 
+                "release": {}, 
+                "output": {}
+            }, 
+            "height": 75.0, 
+            "connections": [], 
+            "width": 150.0, 
+            "connected_objects": [], 
+            "y": 714.0, 
+            "x": 1125.0, 
+            "z": 3, 
+            "ports": {}, 
+            "component_name": "Process"
+        }, 
+        {
+            "parent_name": "cpu", 
+            "name": "interrupts", 
+            "parameters": {
+                "eventq_index": {}, 
+                "int_latency": {}, 
+                "pio_latency": {}, 
+                "system": {}, 
+                "clk_domain": {}
+            }, 
+            "height": 75.0, 
+            "connections": [
+                {
+                    "child_port_num": 2, 
+                    "parent_port_num": 0, 
+                    "key": [
+                        "parent", 
+                        "membus", 
+                        "int_master", 
+                        "slave"
+                    ], 
+                    "parent_endpoint_x": 1064.125, 
+                    "parent_endpoint_y": 795.5, 
+                    "child_endpoint_y": 505.5, 
+                    "child_endpoint_x": 1074.125
+                }, 
+                {
+                    "child_port_num": 1, 
+                    "parent_port_num": 2, 
+                    "key": [
+                        "parent", 
+                        "membus", 
+                        "pio", 
+                        "master"
+                    ], 
+                    "parent_endpoint_x": 1064.125, 
+                    "parent_endpoint_y": 829.5, 
+                    "child_endpoint_y": 488.5, 
+                    "child_endpoint_x": 1074.125
+                }, 
+                {
+                    "child_port_num": 1, 
+                    "parent_port_num": 1, 
+                    "key": [
+                        "parent", 
+                        "membus", 
+                        "int_slave", 
+                        "master"
+                    ], 
+                    "parent_endpoint_x": 1064.125, 
+                    "parent_endpoint_y": 812.5, 
+                    "child_endpoint_y": 488.5, 
+                    "child_endpoint_x": 1074.125
+                }
+            ], 
+            "width": 150.0, 
+            "connected_objects": [], 
+            "y": 768.0, 
+            "x": 938.0, 
+            "z": 3, 
+            "ports": {
+                "int_slave": {
+                    "Value": "membus.master"
+                }, 
+                "int_master": {
+                    "Value": "membus.slave"
+                }, 
+                "pio": {
+                    "Value": "membus.master"
+                }
+            }, 
+            "component_name": "X86LocalApic"
+        }, 
+        {
+            "parent_name": "clk_domain", 
+            "name": "volts", 
+            "parameters": {
+                "eventq_index": {}, 
+                "voltage": {}
+            }, 
+            "height": 75.0, 
+            "connections": [], 
+            "width": 150.0, 
+            "connected_objects": [], 
+            "y": 634.0, 
+            "x": 621.0, 
+            "z": 3, 
+            "ports": {}, 
+            "component_name": "VoltageDomain"
+        }, 
+        {
+            "parent_name": "cpu", 
+            "name": "isa", 
+            "parameters": {
+                "eventq_index": {}
+            }, 
+            "height": 75.0, 
+            "connections": [], 
+            "width": 150.0, 
+            "connected_objects": [], 
+            "y": 676.5, 
+            "x": 950.5, 
+            "z": 3, 
+            "ports": {}, 
+            "component_name": "X86ISA"
+        }
+    ], 
+    "1": [
+        {
+            "parent_name": "root", 
+            "name": "sys", 
+            "parameters": {
+                "mmap_using_noreserve": {}, 
+                "redirect_paths": {}, 
+                "symbolfile": {}, 
+                "cache_line_size": {}, 
+                "thermal_components": {}, 
+                "thermal_model": {}, 
+                "work_end_ckpt_count": {}, 
+                "memories": {}, 
+                "work_begin_ckpt_count": {}, 
+                "mem_ranges": {}, 
+                "eventq_index": {}, 
+                "m5ops_base": {}, 
+                "work_end_exit_count": {}, 
+                "kvm_vm": {}, 
+                "readfile": {}, 
+                "work_cpus_ckpt_count": {}, 
+                "work_begin_exit_count": {}, 
+                "num_work_ids": {}, 
+                "mem_mode": {
+                    "Value": "timing"
+                }, 
+                "init_param": {}, 
+                "multi_thread": {}, 
+                "work_begin_cpu_id_exit": {}, 
+                "work_item_id": {}, 
+                "exit_on_work_items": {}
+            }, 
+            "height": 410.5, 
+            "connections": [
+                {
+                    "child_port_num": 2, 
+                    "parent_port_num": 0, 
+                    "key": [
+                        "parent", 
+                        "membus", 
+                        "system_port", 
+                        "slave"
+                    ], 
+                    "parent_endpoint_x": 1321.5625, 
+                    "parent_endpoint_y": 677.25, 
+                    "child_endpoint_y": 505.5, 
+                    "child_endpoint_x": 1074.125
+                }
+            ], 
+            "width": 822.5, 
+            "connected_objects": [
+                "clk_domain", 
+                "mem_ctrl", 
+                "membus", 
+                "cpu"
+            ], 
+            "y": 465.0, 
+            "x": 607.0, 
+            "z": 1, 
+            "ports": {
+                "system_port": {
+                    "Value": "membus.slave"
+                }
+            }, 
+            "component_name": "System"
+        }
+    ], 
+    "2": [
+        {
+            "parent_name": "sys", 
+            "name": "membus", 
+            "parameters": {
+                "point_of_coherency": {}, 
+                "snoop_filter": {}, 
+                "max_routing_table_size": {}, 
+                "forward_latency": {}, 
+                "system": {}, 
+                "max_outstanding_snoops": {}, 
+                "clk_domain": {}, 
+                "point_of_unification": {}, 
+                "width": {}, 
+                "use_default_range": {}, 
+                "power_model": {}, 
+                "response_latency": {}, 
+                "eventq_index": {}, 
+                "snoop_response_latency": {}, 
+                "frontend_latency": {}
+            }, 
+            "height": 75.0, 
+            "connections": [
+                {
+                    "child_port_num": 2, 
+                    "parent_port_num": 1, 
+                    "key": [
+                        "child", 
+                        "cpu", 
+                        "slave", 
+                        "icache_port"
+                    ], 
+                    "parent_endpoint_x": 1296.625, 
+                    "parent_endpoint_y": 810.0, 
+                    "child_endpoint_y": 505.5, 
+                    "child_endpoint_x": 1074.125
+                }, 
+                {
+                    "child_port_num": 1, 
+                    "parent_port_num": 0, 
+                    "key": [
+                        "child", 
+                        "mem_ctrl", 
+                        "master", 
+                        "port"
+                    ], 
+                    "parent_endpoint_x": 814.125, 
+                    "parent_endpoint_y": 504.5, 
+                    "child_endpoint_y": 488.5, 
+                    "child_endpoint_x": 1074.125
+                }, 
+                {
+                    "child_port_num": 2, 
+                    "parent_port_num": 0, 
+                    "key": [
+                        "child", 
+                        "sys", 
+                        "slave", 
+                        "system_port"
+                    ], 
+                    "parent_endpoint_x": 1321.5625, 
+                    "parent_endpoint_y": 677.25, 
+                    "child_endpoint_y": 505.5, 
+                    "child_endpoint_x": 1074.125
+                }, 
+                {
+                    "child_port_num": 1, 
+                    "parent_port_num": 1, 
+                    "key": [
+                        "child", 
+                        "interrupts", 
+                        "master", 
+                        "int_slave"
+                    ], 
+                    "parent_endpoint_x": 1064.125, 
+                    "parent_endpoint_y": 812.5, 
+                    "child_endpoint_y": 488.5, 
+                    "child_endpoint_x": 1074.125
+                }, 
+                {
+                    "child_port_num": 2, 
+                    "parent_port_num": 0, 
+                    "key": [
+                        "child", 
+                        "cpu", 
+                        "slave", 
+                        "dcache_port"
+                    ], 
+                    "parent_endpoint_x": 1296.625, 
+                    "parent_endpoint_y": 718.0, 
+                    "child_endpoint_y": 505.5, 
+                    "child_endpoint_x": 1074.125
+                }, 
+                {
+                    "child_port_num": 1, 
+                    "parent_port_num": 2, 
+                    "key": [
+                        "child", 
+                        "interrupts", 
+                        "master", 
+                        "pio"
+                    ], 
+                    "parent_endpoint_x": 1064.125, 
+                    "parent_endpoint_y": 829.5, 
+                    "child_endpoint_y": 488.5, 
+                    "child_endpoint_x": 1074.125
+                }, 
+                {
+                    "child_port_num": 2, 
+                    "parent_port_num": 0, 
+                    "key": [
+                        "child", 
+                        "interrupts", 
+                        "slave", 
+                        "int_master"
+                    ], 
+                    "parent_endpoint_x": 1064.125, 
+                    "parent_endpoint_y": 795.5, 
+                    "child_endpoint_y": 505.5, 
+                    "child_endpoint_x": 1074.125
+                }
+            ], 
+            "width": 150.0, 
+            "connected_objects": [], 
+            "y": 444.0, 
+            "x": 948.0, 
+            "z": 2, 
+            "ports": {
+                "default": {
+                    "Value": null
+                }, 
+                "master": {
+                    "Value": null
+                }, 
+                "slave": {
+                    "Value": null
+                }
+            }, 
+            "component_name": "SystemXBar"
+        }, 
+        {
+            "parent_name": "sys", 
+            "name": "mem_ctrl", 
+            "parameters": {
+                "tRFC": {}, 
+                "activation_limit": {}, 
+                "IDD3N2": {}, 
+                "qos_priorities": {}, 
+                "tWTR": {}, 
+                "enable_dram_powerdown": {}, 
+                "IDD52": {}, 
+                "write_low_thresh_perc": {}, 
+                "write_buffer_size": {}, 
+                "qos_syncro_scheduler": {}, 
+                "VDD": {}, 
+                "write_high_thresh_perc": {}, 
+                "static_frontend_latency": {}, 
+                "IDD3P12": {}, 
+                "bank_groups_per_rank": {}, 
+                "IDD2N2": {}, 
+                "IDD2N": {}, 
+                "tRRD_L": {}, 
+                "qos_turnaround_policy": {}, 
+                "in_addr_map": {}, 
+                "tRRD": {}, 
+                "tRTW": {}, 
+                "max_accesses_per_row": {}, 
+                "burst_length": {}, 
+                "tRTP": {}, 
+                "dll": {}, 
+                "tWR": {}, 
+                "mem_sched_policy": {}, 
+                "tRP": {}, 
+                "eventq_index": {}, 
+                "devices_per_rank": {}, 
+                "IDD2P02": {}, 
+                "IDD4R2": {}, 
+                "banks_per_rank": {}, 
+                "IDD5": {}, 
+                "tXP": {}, 
+                "qos_masters": {}, 
+                "IDD3P02": {}, 
+                "IDD0": {}, 
+                "IDD62": {}, 
+                "device_rowbuffer_size": {}, 
+                "min_writes_per_switch": {}, 
+                "tCCD_L": {}, 
+                "IDD2P1": {}, 
+                "IDD2P0": {}, 
+                "ranks_per_channel": {}, 
+                "page_policy": {}, 
+                "IDD4W2": {}, 
+                "null": {}, 
+                "tCS": {}, 
+                "power_model": {}, 
+                "qos_priority_escalation": {}, 
+                "tCL": {}, 
+                "read_buffer_size": {}, 
+                "conf_table_reported": {}, 
+                "tCK": {}, 
+                "tRAS": {}, 
+                "IDD6": {}, 
+                "tBURST": {}, 
+                "clk_domain": {}, 
+                "qos_q_policy": {}, 
+                "tXS": {}, 
+                "addr_mapping": {}, 
+                "IDD3P0": {}, 
+                "IDD3P1": {}, 
+                "tRCD": {}, 
+                "IDD3N": {}, 
+                "tCCD_L_WR": {}, 
+                "tXSDLL": {}, 
+                "IDD02": {}, 
+                "device_size": {}, 
+                "kvm_map": {}, 
+                "tREFI": {}, 
+                "range": {}, 
+                "tXAW": {}, 
+                "IDD2P12": {}, 
+                "VDD2": {}, 
+                "device_bus_width": {}, 
+                "qos_policy": {}, 
+                "static_backend_latency": {}, 
+                "IDD4W": {}, 
+                "IDD4R": {}, 
+                "tXPDLL": {}
+            }, 
+            "height": 75.0, 
+            "connections": [
+                {
+                    "child_port_num": 1, 
+                    "parent_port_num": 0, 
+                    "key": [
+                        "parent", 
+                        "membus", 
+                        "port", 
+                        "master"
+                    ], 
+                    "parent_endpoint_x": 814.125, 
+                    "parent_endpoint_y": 504.5, 
+                    "child_endpoint_y": 488.5, 
+                    "child_endpoint_x": 1074.125
+                }
+            ], 
+            "width": 150.0, 
+            "connected_objects": [], 
+            "y": 460.0, 
+            "x": 688.0, 
+            "z": 2, 
+            "ports": {
+                "port": {
+                    "Value": "membus.master"
+                }
+            }, 
+            "component_name": "DDR3_1600_8x8"
+        }, 
+        {
+            "parent_name": "sys", 
+            "name": "clk_domain", 
+            "parameters": {
+                "init_perf_level": {}, 
+                "voltage_domain": {
+                    "Value": "volts"
+                }, 
+                "eventq_index": {}, 
+                "domain_id": {}, 
+                "clock": {
+                    "Value": "1GHz"
+                }
+            }, 
+            "height": 150.0, 
+            "connections": [], 
+            "width": 300.0, 
+            "connected_objects": [
+                "volts"
+            ], 
+            "y": 559.0, 
+            "x": 621.0, 
+            "z": 2, 
+            "ports": {}, 
+            "component_name": "SrcClockDomain"
+        }, 
+        {
+            "parent_name": "sys", 
+            "name": "cpu", 
+            "parameters": {
+                "do_statistics_insts": {}, 
+                "numThreads": {}, 
+                "syscallRetryLatency": {}, 
+                "pwr_gating_latency": {}, 
+                "function_trace": {}, 
+                "do_checkpoint_insts": {}, 
+                "system": {}, 
+                "function_trace_start": {}, 
+                "cpu_id": {}, 
+                "checker": {}, 
+                "eventq_index": {}, 
+                "do_quiesce": {}, 
+                "profile": {}, 
+                "itb": {}, 
+                "interrupts": {
+                    "Value": "interrupts"
+                }, 
+                "socket_id": {}, 
+                "power_model": {}, 
+                "max_insts_all_threads": {}, 
+                "clk_domain": {}, 
+                "power_gating_on_idle": {}, 
+                "switched_out": {}, 
+                "workload": {
+                    "Value": "workload"
+                }, 
+                "wait_for_remote_gdb": {}, 
+                "dtb": {}, 
+                "simpoint_start_insts": {}, 
+                "max_insts_any_thread": {}, 
+                "progress_interval": {}, 
+                "branchPred": {}, 
+                "isa": {
+                    "Value": "isa"
+                }, 
+                "tracer": {}
+            }, 
+            "height": 208.0, 
+            "connections": [
+                {
+                    "child_port_num": 2, 
+                    "parent_port_num": 1, 
+                    "key": [
+                        "parent", 
+                        "membus", 
+                        "icache_port", 
+                        "slave"
+                    ], 
+                    "parent_endpoint_x": 1296.625, 
+                    "parent_endpoint_y": 810.0, 
+                    "child_endpoint_y": 505.5, 
+                    "child_endpoint_x": 1074.125
+                }, 
+                {
+                    "child_port_num": 2, 
+                    "parent_port_num": 0, 
+                    "key": [
+                        "parent", 
+                        "membus", 
+                        "dcache_port", 
+                        "slave"
+                    ], 
+                    "parent_endpoint_x": 1296.625, 
+                    "parent_endpoint_y": 718.0, 
+                    "child_endpoint_y": 505.5, 
+                    "child_endpoint_x": 1074.125
+                }
+            ], 
+            "width": 426.0, 
+            "connected_objects": [
+                "interrupts", 
+                "isa", 
+                "workload"
+            ], 
+            "y": 653.0, 
+            "x": 929.0, 
+            "z": 2, 
+            "ports": {
+                "icache_port": {
+                    "Value": "membus.slave"
+                }, 
+                "dcache_port": {
+                    "Value": "membus.slave"
+                }
+            }, 
+            "component_name": "TimingSimpleCPU"
+        }
+    ], 
+    "code": {
+        "headers": "import m5, sys, os\nfrom m5.objects import *\nfrom common import SimpleOpts"
+    }, 
+    "0": [
+        {
+            "parent_name": null, 
+            "name": "root", 
+            "parameters": {
+                "time_sync_period": {}, 
+                "eventq_index": {}, 
+                "time_sync_spin_threshold": {}, 
+                "time_sync_enable": {}, 
+                "sim_quantum": {}, 
+                "full_system": {
+                    "Value": "False"
+                }
+            }, 
+            "height": 450.0, 
+            "connections": [], 
+            "width": 900.0, 
+            "connected_objects": [
+                "sys"
+            ], 
+            "y": 435.0, 
+            "x": 594.0, 
+            "z": 0, 
+            "ports": {}, 
+            "component_name": "Root"
+        }
+    ]
+}

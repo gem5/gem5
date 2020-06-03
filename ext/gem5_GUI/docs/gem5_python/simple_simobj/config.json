@@ -1,0 +1,19 @@
+{
+    "name": null, 
+    "sim_quantum": 0, 
+    "time_sync_period": 100000000000, 
+    "eventq_index": 0, 
+    "time_sync_spin_threshold": 100000000, 
+    "cxx_class": "Root", 
+    "path": "root", 
+    "time_sync_enable": false, 
+    "type": "Root", 
+    "hello": {
+        "eventq_index": 0, 
+        "path": "hello", 
+        "type": "SimpleObject", 
+        "name": "hello", 
+        "cxx_class": "SimpleObject"
+    }, 
+    "full_system": false
+}

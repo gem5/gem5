@@ -1,0 +1,30 @@
+{
+    "name": null, 
+    "sim_quantum": 0, 
+    "time_sync_period": 100000000000, 
+    "eventq_index": 0, 
+    "time_sync_spin_threshold": 100000000, 
+    "cxx_class": "Root", 
+    "path": "root", 
+    "time_sync_enable": false, 
+    "type": "Root", 
+    "hello": {
+        "name": "hello", 
+        "number_of_fires": 5, 
+        "goodbye_object": {
+            "name": "goodbye_object", 
+            "cxx_class": "GoodbyeObject", 
+            "eventq_index": 0, 
+            "write_bandwidth": "9537.000000", 
+            "buffer_size": 100, 
+            "path": "hello.goodbye_object", 
+            "type": "GoodbyeObject"
+        }, 
+        "eventq_index": 0, 
+        "cxx_class": "HelloObject", 
+        "path": "hello", 
+        "type": "HelloObject", 
+        "time_to_wait": 2000000
+    }, 
+    "full_system": false
+}
