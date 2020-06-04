@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014 ARM Limited
+ * Copyright (c) 2010-2014, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1196,6 +1196,7 @@ VldMultOp64::VldMultOp64(const char *mnem, ExtMachInst machInst,
     for (int i = 0; i < numMicroops - 1; ++i) {
         microOps[i]->setDelayedCommit();
     }
+    microOps[0]->setFirstMicroop();
     microOps[numMicroops - 1]->setLastMicroop();
 }
 
@@ -1280,6 +1281,7 @@ VstMultOp64::VstMultOp64(const char *mnem, ExtMachInst machInst,
     for (int i = 0; i < numMicroops - 1; i++) {
         microOps[i]->setDelayedCommit();
     }
+    microOps[0]->setFirstMicroop();
     microOps[numMicroops - 1]->setLastMicroop();
 }
 
@@ -1353,6 +1355,7 @@ VldSingleOp64::VldSingleOp64(const char *mnem, ExtMachInst machInst,
     for (int i = 0; i < numMicroops - 1; i++) {
         microOps[i]->setDelayedCommit();
     }
+    microOps[0]->setFirstMicroop();
     microOps[numMicroops - 1]->setLastMicroop();
 }
 
@@ -1425,6 +1428,7 @@ VstSingleOp64::VstSingleOp64(const char *mnem, ExtMachInst machInst,
     for (int i = 0; i < numMicroops - 1; i++) {
         microOps[i]->setDelayedCommit();
     }
+    microOps[0]->setFirstMicroop();
     microOps[numMicroops - 1]->setLastMicroop();
 }
 
@@ -1495,6 +1499,7 @@ MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
     }
 
     assert(numMicroops == i);
+    microOps[0]->setFirstMicroop();
     microOps[numMicroops - 1]->setLastMicroop();
 
     for (StaticInstPtr *curUop = microOps;
