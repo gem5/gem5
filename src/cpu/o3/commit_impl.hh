@@ -1259,7 +1259,11 @@ DefaultCommit<Impl>::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
             "[tid:%i] [sn:%llu] Committing instruction with fault\n",
             tid, head_inst->seqNum);
         if (head_inst->traceData) {
-            if (DTRACE(ExecFaulting)) {
+            // We ignore ReExecution "faults" here as they are not real
+            // (architectural) faults but signal flush/replays.
+            if (DTRACE(ExecFaulting)
+                && dynamic_cast<ReExec*>(inst_fault.get()) == nullptr) {
+
                 head_inst->traceData->setFaulting(true);
                 head_inst->traceData->setFetchSeq(head_inst->seqNum);
                 head_inst->traceData->setCPSeq(thread[tid]->numOp);
