@@ -102,7 +102,6 @@ sim-power: Power modeling
 stats: Updates to statistics for regressions
 
 system: System boot code and related components
-system-alpha:
 system-arm:
   Andreas Sandberg <andreas.sandberg@arm.com>
   Giacomo Travaglini <giacomo.travaglini@arm.com>

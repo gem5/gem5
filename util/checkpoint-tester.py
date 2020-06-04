@@ -55,11 +55,11 @@
 #
 # Examples:
 #
-# util/checkpoint-tester.py -i 400000 -- build/ALPHA_SE/m5.opt \
-#      configs/example/se.py -c tests/test-progs/hello/bin/alpha/tru64/hello \
+# util/checkpoint-tester.py -i 400000 -- build/<ISA>/m5.opt \
+#      configs/example/se.py -c tests/test-progs/hello/bin/<isa>/tru64/hello \
 #      --output=progout --errout=progerr
 #
-# util/checkpoint-tester.py -i 200000000000 -- build/ALPHA_FS/m5.opt \
+# util/checkpoint-tester.py -i 200000000000 -- build/<ISA>/m5.opt \
 #      configs/example/fs.py --script tests/halt.sh
 #
 

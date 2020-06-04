@@ -81,17 +81,6 @@ ClassicConfig = namedtuple("ClassicConfig", (
 # original name. See get_tests() for details.
 #
 arch_configs = {
-    ("alpha", None) : (
-        'tsunami-simple-atomic',
-        'tsunami-simple-timing',
-        'tsunami-simple-atomic-dual',
-        'tsunami-simple-timing-dual',
-        'twosys-tsunami-simple-atomic',
-        'tsunami-o3', 'tsunami-o3-dual',
-        'tsunami-minor', 'tsunami-minor-dual',
-        'tsunami-switcheroo-full',
-    ),
-
     ("arm", None) : (
         'simple-atomic-dummychecker',
         'o3-timing-checker',

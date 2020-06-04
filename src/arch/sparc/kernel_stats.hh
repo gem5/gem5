@@ -46,7 +46,7 @@ class Statistics : public ::Kernel::Statistics
     {}
 };
 
-} // namespace AlphaISA::Kernel
-} // namespace AlphaISA
+} // namespace SparcISA::Kernel
+} // namespace SparcISA
 
 #endif // __ARCH_SPARC_KERNEL_STATS_HH__

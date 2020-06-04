@@ -47,7 +47,6 @@ from testlib import *
 static_progs = {
     'x86': ('hello64-static', 'hello32-static'),
     'arm': ('hello64-static', 'hello32-static'),
-    'alpha': ('hello',),
     'mips': ('hello',),
     'riscv': ('hello',),
     'sparc': ('hello',)
@@ -60,7 +59,6 @@ dynamic_progs = {
 cpu_types = {
     'x86': ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU'),
     'arm' :  ('TimingSimpleCPU', 'AtomicSimpleCPU','DerivO3CPU'),
-    'alpha': ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU', 'MinorCPU'),
     'mips' : ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU'),
     'riscv' : ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU', 'MinorCPU'),
     'sparc' : ('TimingSimpleCPU', 'AtomicSimpleCPU')
@@ -69,7 +67,6 @@ cpu_types = {
 supported_os = {
     'x86': ('linux',),
     'arm' : ('linux',),
-    'alpha' : ('linux',),
     'mips' : ('linux',),
     'riscv' : ('linux',),
     'sparc' : ('linux',)

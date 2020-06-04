@@ -155,7 +155,6 @@ add_option('-a', "--all-bin", default=False, action='store_true',
            help="compile debug, opt, and fast binaries")
 
 set_group("ISA options")
-bool_option("alpha", default=False, help="compile Alpha")
 bool_option("mips", default=False, help="compile MIPS")
 bool_option("sparc", default=False, help="compile SPARC")
 add_option('-i', "--all-isa", default=False, action='store_true',
@@ -198,20 +197,14 @@ if not binaries:
     binaries.append('m5.debug')
 
 if options.all_isa:
-    options.alpha = True
     options.mips = True
     options.sparc = True
 
 isas = []
-if options.alpha:
-    isas.append('alpha')
 if options.mips:
     isas.append('mips')
 if options.sparc:
     isas.append('sparc')
-
-if not isas:
-    isas.append('alpha')
 
 modes = []
 if options.syscall:
@@ -227,10 +220,9 @@ if not modes:
 #
 
 # valid combinations of ISA and emulation mode
-valid = { ('alpha', 'syscall') : 'ALPHA_SE',
-          ('alpha', 'fullsys') : 'ALPHA_FS',
-          ('mips',  'syscall') : 'MIPS_SE',
-          ('sparc', 'syscall') : 'SPARC_SE' }
+valid = {
+    ('mips',  'syscall') : 'MIPS_SE',
+    ('sparc', 'syscall') : 'SPARC_SE' }
 
 # experimental combinations of ISA and emulation mode
 experiment = { ('mips', 'fullsys') : 'MIPS_FS',

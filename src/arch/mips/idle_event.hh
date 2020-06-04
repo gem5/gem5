@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __KERN_MIPS_IDLE_EVENT_HH__
-#define __KERN_MIPS_IDLE_EVENT_HH__
+#ifndef __ARCH_MIPS_IDLE_EVENT_HH__
+#define __ARCH_MIPS_IDLE_EVENT_HH__
 
 #include "cpu/pc_event.hh"
 
@@ -40,4 +40,4 @@ class IdleStartEvent : public PCEvent
     virtual void process(ThreadContext *tc);
 };
 
-#endif // __KERN_ALPHA_IDLE_EVENT_HH__
+#endif // __ARCH_MIPS_IDLE_EVENT_HH__

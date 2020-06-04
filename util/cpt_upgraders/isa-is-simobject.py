@@ -3,7 +3,6 @@
 def upgrader(cpt):
     isa = cpt.get('root','isa')
     isa_fields = {
-        "alpha" : ( "fpcr", "uniq", "lock_flag", "lock_addr", "ipr" ),
         "arm" : ( "miscRegs" ),
         "sparc" : ( "asi", "tick", "fprs", "gsr", "softint", "tick_cmpr",
                     "stick", "stick_cmpr", "tpc", "tnpc", "tstate", "tt",
