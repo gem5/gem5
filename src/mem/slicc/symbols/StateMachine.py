@@ -87,7 +87,7 @@ class StateMachine(Symbol):
 
             self.symtab.registerSym(param.ident, var)
 
-            if str(param.type_ast.type) == "Prefetcher":
+            if str(param.type_ast.type) == "RubyPrefetcher":
                 self.prefetchers.append(var)
 
         self.states = OrderedDict()
