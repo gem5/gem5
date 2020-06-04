@@ -844,11 +844,11 @@ BaseCache::updateCompressionData(CacheBlk *blk, const uint64_t* data,
 
     // The compressor is called to compress the updated data, so that its
     // metadata can be updated.
-    std::size_t compression_size = 0;
     Cycles compression_lat = Cycles(0);
     Cycles decompression_lat = Cycles(0);
-    compressor->compress(data, compression_lat, decompression_lat,
-                         compression_size);
+    const auto comp_data =
+        compressor->compress(data, compression_lat, decompression_lat);
+    std::size_t compression_size = comp_data->getSizeBits();
 
     // If block's compression factor increased, it may not be co-allocatable
     // anymore. If so, some blocks might need to be evicted to make room for
@@ -1421,8 +1421,9 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     // calculate the amount of extra cycles needed to read or write compressed
     // blocks.
     if (compressor && pkt->hasData()) {
-        compressor->compress(pkt->getConstPtr<uint64_t>(), compression_lat,
-                             decompression_lat, blk_size_bits);
+        const auto comp_data = compressor->compress(
+            pkt->getConstPtr<uint64_t>(), compression_lat, decompression_lat);
+        blk_size_bits = comp_data->getSizeBits();
     }
 
     // Find replacement victim

@@ -232,10 +232,11 @@ class DictionaryCompressor : public BaseDictionaryCompressor
     /**
      * Apply compression.
      *
-     * @param data The cache line to be compressed.
+     * @param chunks The cache line to be compressed.
      * @return Cache line after compression.
      */
-    std::unique_ptr<Base::CompressionData> compress(const uint64_t* data);
+    std::unique_ptr<Base::CompressionData> compress(
+        const std::vector<Chunk>& chunks);
 
     using BaseDictionaryCompressor::compress;
 

@@ -50,10 +50,11 @@ CPack::addToDictionary(DictionaryEntry data)
 }
 
 std::unique_ptr<Base::CompressionData>
-CPack::compress(const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat)
+CPack::compress(const std::vector<Chunk>& chunks,
+    Cycles& comp_lat, Cycles& decomp_lat)
 {
     std::unique_ptr<Base::CompressionData> comp_data =
-        DictionaryCompressor<uint32_t>::compress(data);
+        DictionaryCompressor<uint32_t>::compress(chunks);
 
     // Set compression latency (Accounts for pattern matching, length
     // generation, packaging and shifting)

@@ -72,7 +72,7 @@ Multi::~Multi()
 }
 
 std::unique_ptr<Base::CompressionData>
-Multi::compress(const uint64_t* cache_line, Cycles& comp_lat,
+Multi::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
     Cycles& decomp_lat)
 {
     struct Results
@@ -114,6 +114,12 @@ Multi::compress(const uint64_t* cache_line, Cycles& comp_lat,
         }
     };
 
+    // Each sub-compressor can have its own chunk size; therefore, revert
+    // the chunks to raw data, so that they handle the conversion internally
+    uint64_t data[blkSize / sizeof(uint64_t)];
+    std::memset(data, 0, blkSize);
+    fromChunks(chunks, data);
+
     // Find the ranking of the compressor outputs
     std::priority_queue<std::shared_ptr<Results>,
         std::vector<std::shared_ptr<Results>>, ResultsComparator> results;
@@ -121,7 +127,7 @@ Multi::compress(const uint64_t* cache_line, Cycles& comp_lat,
     for (unsigned i = 0; i < compressors.size(); i++) {
         Cycles temp_decomp_lat;
         auto temp_comp_data =
-            compressors[i]->compress(cache_line, comp_lat, temp_decomp_lat);
+            compressors[i]->compress(data, comp_lat, temp_decomp_lat);
         results.push(std::make_shared<Results>(i, std::move(temp_comp_data),
             temp_decomp_lat, blkSize));
         max_comp_lat = std::max(max_comp_lat, comp_lat);

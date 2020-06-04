@@ -98,16 +98,9 @@ class CPack : public DictionaryCompressor<uint32_t>
 
     void addToDictionary(DictionaryEntry data) override;
 
-    /**
-     * Apply compression.
-     *
-     * @param data The cache line to be compressed.
-     * @param comp_lat Compression latency in number of cycles.
-     * @param decomp_lat Decompression latency in number of cycles.
-     * @return Cache line after compression.
-     */
     std::unique_ptr<Base::CompressionData> compress(
-        const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat) override;
+        const std::vector<Base::Chunk>& chunks,
+        Cycles& comp_lat, Cycles& decomp_lat) override;
 
   public:
     /** Convenience typedef. */

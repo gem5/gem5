@@ -53,11 +53,11 @@ RepeatedQwords::addToDictionary(DictionaryEntry data)
 }
 
 std::unique_ptr<Base::CompressionData>
-RepeatedQwords::compress(const uint64_t* data, Cycles& comp_lat,
-    Cycles& decomp_lat)
+RepeatedQwords::compress(const std::vector<Chunk>& chunks,
+    Cycles& comp_lat, Cycles& decomp_lat)
 {
     std::unique_ptr<Base::CompressionData> comp_data =
-        DictionaryCompressor::compress(data);
+        DictionaryCompressor::compress(chunks);
 
     // Since there is a single value repeated over and over, there should be
     // a single dictionary entry. If there are more, the compressor failed

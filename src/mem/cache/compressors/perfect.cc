@@ -40,27 +40,19 @@
 
 namespace Compressor {
 
-Perfect::CompData::CompData(const uint64_t* data,
-    std::size_t num_entries)
-    : CompressionData(), entries(data, data + num_entries)
-{
-}
-
 Perfect::Perfect(const Params *p)
-    : Base(p),
-      compressedSize(8 * blkSize / p->max_compression_ratio),
-      compressionLatency(p->compression_latency),
-      decompressionLatency(p->decompression_latency)
+  : Base(p), compressedSize(8 * blkSize / p->max_compression_ratio),
+    compressionLatency(p->compression_latency),
+    decompressionLatency(p->decompression_latency)
 {
 }
 
 std::unique_ptr<Base::CompressionData>
-Perfect::compress(const uint64_t* cache_line, Cycles& comp_lat,
-    Cycles& decomp_lat)
+Perfect::compress(const std::vector<Chunk>& chunks,
+    Cycles& comp_lat, Cycles& decomp_lat)
 {
     // Compress every word sequentially
-    std::unique_ptr<Base::CompressionData> comp_data(
-        new CompData(cache_line, blkSize/8));
+    std::unique_ptr<Base::CompressionData> comp_data(new CompData(chunks));
 
     // Set relevant metadata
     comp_data->setSizeBits(compressedSize);
@@ -75,10 +67,7 @@ Perfect::decompress(const CompressionData* comp_data,
     uint64_t* data)
 {
     // Decompress every entry sequentially
-    const std::vector<uint64_t>& entries =
-        static_cast<const CompData*>(comp_data)->entries;
-    assert(entries.size() == (blkSize/8));
-    std::copy(entries.begin(), entries.end(), data);
+    fromChunks(static_cast<const CompData*>(comp_data)->chunks, data);
 }
 
 } // namespace Compressor

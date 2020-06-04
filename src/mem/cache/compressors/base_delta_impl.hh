@@ -67,11 +67,12 @@ BaseDelta<BaseType, DeltaSizeBits>::addToDictionary(DictionaryEntry data)
 
 template <class BaseType, std::size_t DeltaSizeBits>
 std::unique_ptr<Base::CompressionData>
-BaseDelta<BaseType, DeltaSizeBits>::compress(const uint64_t* data,
-    Cycles& comp_lat, Cycles& decomp_lat)
+BaseDelta<BaseType, DeltaSizeBits>::compress(
+    const std::vector<Base::Chunk>& chunks, Cycles& comp_lat,
+    Cycles& decomp_lat)
 {
     std::unique_ptr<Base::CompressionData> comp_data =
-        DictionaryCompressor<BaseType>::compress(data);
+        DictionaryCompressor<BaseType>::compress(chunks);
 
     // If there are more bases than the maximum, the compressor failed.
     // Otherwise, we have to take into account all bases that have not

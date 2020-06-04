@@ -78,7 +78,8 @@ class Multi : public Base
     ~Multi();
 
     std::unique_ptr<Base::CompressionData> compress(
-        const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat) override;
+        const std::vector<Base::Chunk>& chunks,
+        Cycles& comp_lat, Cycles& decomp_lat) override;
 
     void decompress(const CompressionData* comp_data, uint64_t* data) override;
 };

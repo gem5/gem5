@@ -53,11 +53,11 @@ Zero::addToDictionary(DictionaryEntry data)
 }
 
 std::unique_ptr<Base::CompressionData>
-Zero::compress(const uint64_t* data, Cycles& comp_lat,
+Zero::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
     Cycles& decomp_lat)
 {
     std::unique_ptr<Base::CompressionData> comp_data =
-        DictionaryCompressor::compress(data);
+        DictionaryCompressor::compress(chunks);
 
     // If there is any non-zero entry, the compressor failed
     if (numEntries > 0) {

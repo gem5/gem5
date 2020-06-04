@@ -50,10 +50,31 @@ namespace Compressor {
 /**
  * Base cache compressor interface. Every cache compressor must implement a
  * compression and a decompression method.
+ *
+ * Compressors usually cannot parse all data input at once. Therefore, they
+ * typically divide the input into multiple *chunks*, and parse them one at
+ * a cycle.
  */
 class Base : public SimObject
 {
+  public:
+    /**
+     * Forward declaration of compression data. Every new compressor must
+     * create a new compression data based on it.
+     */
+    class CompressionData;
+
   protected:
+    /**
+     * A chunk is a basic lexical unit. The data being compressed is received
+     * by the compressor as a raw pointer. In order to parse this data, the
+     * compressor must divide it into smaller units. Typically, state-of-the-
+     * art compressors interpret cache lines as sequential 32-bit chunks
+     * (chunks), but any size is valid.
+     * @sa chunkSizeBits
+     */
+    typedef uint64_t Chunk;
+
     /**
      * This compressor must be able to access the protected functions of
      * its sub-compressors.
@@ -61,15 +82,12 @@ class Base : public SimObject
     friend class Multi;
 
     /**
-     * Forward declaration of compression data. Every new compressor must
-     * create a new compression data based on it.
-     */
-    class CompressionData;
-
-    /**
      * Uncompressed cache line size (in bytes).
      */
     const std::size_t blkSize;
+
+    /** Chunk size, in number of bits. */
+    const unsigned chunkSizeBits;
 
     /**
      * Size in bytes at which a compression is classified as bad and therefore
@@ -102,19 +120,37 @@ class Base : public SimObject
     } stats;
 
     /**
+     * This function splits the raw data into chunks, so that it can be
+     * parsed by the compressor.
+     *
+     * @param data The raw pointer to the data being compressed.
+     * @return The raw data divided into a vector of sequential chunks.
+     */
+    std::vector<Chunk> toChunks(const uint64_t* data) const;
+
+    /**
+     * This function re-joins the chunks to recreate the original data.
+     *
+     * @param chunks The raw data divided into a vector of sequential chunks.
+     * @param data The raw pointer to the data.
+     */
+    void fromChunks(const std::vector<Chunk>& chunks, uint64_t* data) const;
+
+    /**
      * Apply the compression process to the cache line.
      * Returns the number of cycles used by the compressor, however it is
      * usually covered by a good pipelined execution, and is currently ignored.
      * The decompression latency is also returned, in order to avoid
      * increasing simulation time and memory consumption.
      *
-     * @param cache_line The cache line to be compressed.
+     * @param chunks The cache line to be compressed, divided into chunks.
      * @param comp_lat Compression latency in number of cycles.
      * @param decomp_lat Decompression latency in number of cycles.
      * @return Cache line after compression.
      */
     virtual std::unique_ptr<CompressionData> compress(
-        const uint64_t* cache_line, Cycles& comp_lat, Cycles& decomp_lat) = 0;
+        const std::vector<Chunk>& chunks, Cycles& comp_lat,
+        Cycles& decomp_lat) = 0;
 
     /**
      * Apply the decompression process to the compressed data.
@@ -137,10 +173,10 @@ class Base : public SimObject
      * @param data The cache line to be compressed.
      * @param comp_lat Compression latency in number of cycles.
      * @param decomp_lat Decompression latency in number of cycles.
-     * @param comp_size_bits Compressed data size (in bits).
+     * @return Cache line after compression.
      */
-    void compress(const uint64_t* data, Cycles& comp_lat,
-                  Cycles& decomp_lat, std::size_t& comp_size_bits);
+    std::unique_ptr<CompressionData>
+    compress(const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat);
 
     /**
      * Get the decompression latency if the block is compressed. Latency is 0

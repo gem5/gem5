@@ -115,9 +115,9 @@ class BaseDelta : public DictionaryCompressor<BaseType>
 
     void addToDictionary(DictionaryEntry data) override;
 
-    std::unique_ptr<Base::CompressionData>
-    compress(const uint64_t* data, Cycles& comp_lat,
-        Cycles& decomp_lat) override;
+    std::unique_ptr<Base::CompressionData> compress(
+        const std::vector<Base::Chunk>& chunks,
+        Cycles& comp_lat, Cycles& decomp_lat) override;
 
   public:
     typedef BaseDictionaryCompressorParams Params;

@@ -33,6 +33,7 @@
 #include "mem/cache/compressors/base.hh"
 
 #include <algorithm>
+#include <climits>
 #include <cmath>
 #include <cstdint>
 #include <string>
@@ -75,19 +76,58 @@ Base::CompressionData::getSize() const
 }
 
 Base::Base(const Params *p)
-  : SimObject(p), blkSize(p->block_size), sizeThreshold(p->size_threshold),
+  : SimObject(p), blkSize(p->block_size), chunkSizeBits(p->chunk_size_bits),
+    sizeThreshold(p->size_threshold),
     stats(*this)
 {
+    fatal_if(64 % chunkSizeBits,
+        "64 must be a multiple of the chunk granularity.");
+
     fatal_if(blkSize < sizeThreshold, "Compressed data must fit in a block");
 }
 
+std::vector<Base::Chunk>
+Base::toChunks(const uint64_t* data) const
+{
+    // Number of chunks in a 64-bit value
+    const unsigned num_chunks_per_64 =
+        (sizeof(uint64_t) * CHAR_BIT) / chunkSizeBits;
+
+    // Turn a 64-bit array into a chunkSizeBits-array
+    std::vector<Chunk> chunks((blkSize * CHAR_BIT) / chunkSizeBits, 0);
+    for (int i = 0; i < chunks.size(); i++) {
+        const int index_64 = std::floor(i / (double)num_chunks_per_64);
+        const unsigned start = i % num_chunks_per_64;
+        chunks[i] = bits(data[index_64],
+            (start + 1) * chunkSizeBits - 1, start * chunkSizeBits);
+    }
+
+    return chunks;
+}
+
 void
-Base::compress(const uint64_t* data, Cycles& comp_lat,
-                              Cycles& decomp_lat, std::size_t& comp_size_bits)
+Base::fromChunks(const std::vector<Chunk>& chunks, uint64_t* data) const
+{
+    // Number of chunks in a 64-bit value
+    const unsigned num_chunks_per_64 =
+        (sizeof(uint64_t) * CHAR_BIT) / chunkSizeBits;
+
+    // Turn a chunkSizeBits-array into a 64-bit array
+    std::memset(data, 0, blkSize);
+    for (int i = 0; i < chunks.size(); i++) {
+        const int index_64 = std::floor(i / (double)num_chunks_per_64);
+        const unsigned start = i % num_chunks_per_64;
+        replaceBits(data[index_64], (start + 1) * chunkSizeBits - 1,
+            start * chunkSizeBits, chunks[i]);
+    }
+}
+
+std::unique_ptr<Base::CompressionData>
+Base::compress(const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat)
 {
     // Apply compression
     std::unique_ptr<CompressionData> comp_data =
-        compress(data, comp_lat, decomp_lat);
+        compress(toChunks(data), comp_lat, decomp_lat);
 
     // If we are in debug mode apply decompression just after the compression.
     // If the results do not match, we've got an error
@@ -104,9 +144,10 @@ Base::compress(const uint64_t* data, Cycles& comp_lat,
 
     // Get compression size. If compressed size is greater than the size
     // threshold, the compression is seen as unsuccessful
-    comp_size_bits = comp_data->getSizeBits();
-    if (comp_size_bits >= sizeThreshold * 8) {
-        comp_size_bits = blkSize * 8;
+    std::size_t comp_size_bits = comp_data->getSizeBits();
+    if (comp_size_bits > sizeThreshold * CHAR_BIT) {
+        comp_size_bits = blkSize * CHAR_BIT;
+        comp_data->setSizeBits(comp_size_bits);
     }
 
     // Update stats
@@ -118,6 +159,8 @@ Base::compress(const uint64_t* data, Cycles& comp_lat,
     DPRINTF(CacheComp, "Compressed cache line from %d to %d bits. " \
             "Compression latency: %llu, decompression latency: %llu\n",
             blkSize*8, comp_size_bits, comp_lat, decomp_lat);
+
+    return std::move(comp_data);
 }
 
 Cycles
