@@ -276,6 +276,8 @@ global_vars.AddVariables(
     ('CXX', 'C++ compiler', environ.get('CXX', main['CXX'])),
     ('CCFLAGS_EXTRA', 'Extra C and C++ compiler flags', ''),
     ('LDFLAGS_EXTRA', 'Extra linker flags', ''),
+    ('MARSHAL_CCFLAGS_EXTRA', 'Extra C and C++ marshal compiler flags', ''),
+    ('MARSHAL_LDFLAGS_EXTRA', 'Extra marshal linker flags', ''),
     ('PYTHON_CONFIG', 'Python config binary to use',
      [ 'python2.7-config', 'python-config', 'python3-config' ]),
     ('PROTOC', 'protoc tool', environ.get('PROTOC', 'protoc')),
@@ -734,7 +736,9 @@ if main['USE_PYTHON']:
 
 main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
 # Bare minimum environment that only includes python
-base_py_env = main.Clone()
+marshal_env = main.Clone()
+marshal_env.Append(CCFLAGS='$MARSHAL_CCFLAGS_EXTRA')
+marshal_env.Append(LINKFLAGS='$MARSHAL_LDFLAGS_EXTRA')
 
 # On Solaris you need to use libsocket for socket ops
 if not conf.CheckLibWithHeader(None, 'sys/socket.h', 'C++', 'accept(0,0,0);'):
@@ -1285,7 +1289,7 @@ for variant_path in variant_paths:
     # to the configured variables.  It returns a list of environments,
     # one for each variant build (debug, opt, etc.)
     SConscript('src/SConscript', variant_dir=variant_path,
-               exports=['env', 'base_py_env'])
+               exports=['env', 'marshal_env'])
 
 # base help text
 Help('''

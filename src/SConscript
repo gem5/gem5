@@ -1140,7 +1140,7 @@ env.AlwaysBuild(tags)
 # Build a small helper that marshals the Python code using the same
 # version of Python as gem5. This is in an unorthodox location to
 # avoid building it for every variant.
-py_marshal = base_py_env.Program('marshal', 'python/marshal.cc')[0]
+py_marshal = marshal_env.Program('marshal', 'python/marshal.cc')[0]
 
 # Embed python files.  All .py files that have been indicated by a
 # PySource() call in a SConscript need to be embedded into the M5
@@ -1196,7 +1196,7 @@ EmbeddedPython embedded_${sym}(
     code.write(str(target[0]))
 
 for source in PySource.all:
-    base_py_env.Command(source.cpp, [ py_marshal, source.tnode ],
+    marshal_env.Command(source.cpp, [ py_marshal, source.tnode ],
                         MakeAction(embedPyFile, Transform("EMBED PY")))
     Source(source.cpp, tags=source.tags, add_tags='python')
 
