@@ -394,8 +394,9 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                   case 5:
                     return MISCREG_ID_ISAR5;
                   case 6:
-                  case 7:
                     return MISCREG_RAZ; // read as zero
+                  case 7:
+                    return MISCREG_ID_ISAR6;
                 }
                 break;
               default:
@@ -2059,6 +2060,8 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_ID_ISAR4_EL1;
                       case 5:
                         return MISCREG_ID_ISAR5_EL1;
+                      case 7:
+                        return MISCREG_ID_ISAR6_EL1;
                     }
                     break;
                   case 3:
@@ -3779,6 +3782,8 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_ISAR5)
       .allPrivileges().exceptUserMode().writes(0);
+    InitReg(MISCREG_ID_ISAR6)
+      .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_CCSIDR)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_CLIDR)
@@ -4708,6 +4713,9 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_ISAR5_EL1)
       .allPrivileges().exceptUserMode().writes(0)
       .mapsTo(MISCREG_ID_ISAR5);
+    InitReg(MISCREG_ID_ISAR6_EL1)
+      .allPrivileges().exceptUserMode().writes(0)
+      .mapsTo(MISCREG_ID_ISAR6);
     InitReg(MISCREG_MVFR0_EL1)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_MVFR1_EL1)

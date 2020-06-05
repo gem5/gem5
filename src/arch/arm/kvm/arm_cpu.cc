@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -157,6 +157,7 @@ static uint64_t invariant_reg_vector[] = {
     REG_CP32(15, 0, 0, 2, 3), // ID_ISAR3
     REG_CP32(15, 0, 0, 2, 4), // ID_ISAR4
     REG_CP32(15, 0, 0, 2, 5), // ID_ISAR5
+    REG_CP32(15, 0, 0, 2, 7), // ID_ISAR6
 
     REG_CP32(15, 0, 1, 0, 0), // CSSIDR
     REG_CP32(15, 0, 1, 0, 1), // CLIDR

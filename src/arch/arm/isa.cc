@@ -344,6 +344,7 @@ ISA::initID32(const ArmISAParams &p)
     miscRegs[MISCREG_ID_ISAR3] = p.id_isar3;
     miscRegs[MISCREG_ID_ISAR4] = p.id_isar4;
     miscRegs[MISCREG_ID_ISAR5] = p.id_isar5;
+    miscRegs[MISCREG_ID_ISAR6] = p.id_isar6;
 
     miscRegs[MISCREG_ID_MMFR0] = p.id_mmfr0;
     miscRegs[MISCREG_ID_MMFR1] = p.id_mmfr1;
