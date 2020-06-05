@@ -169,6 +169,16 @@ htmCmdToRubyRequestType(const Packet *pkt)
     }
 }
 
+inline int
+addressOffset(Addr addr, Addr base)
+{
+    assert(addr >= base);
+    Addr offset = addr - base;
+    // sanity checks if fits in an int
+    assert(offset < INT_MAX);
+    return offset;
+}
+
 /**
  * This function accepts an address, a data block and a packet. If the address
  * range for the data block contains the address which the packet needs to
