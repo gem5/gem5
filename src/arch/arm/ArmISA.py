@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015-2019 ARM Limited
+# Copyright (c) 2012-2013, 2015-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -101,8 +101,8 @@ class ArmISA(BaseISA):
     id_aa64isar0_el1 = Param.UInt64(0x0000000000000000,
         "AArch64 Instruction Set Attribute Register 0")
 
-    # GPI = 0x0 | GPA = 0x1| API=0x0 | APA=0x1 | FCMA
-    id_aa64isar1_el1 = Param.UInt64(0x0000000001010010,
+    # GPI = 0x0 | GPA = 0x1 | API=0x0 | FCMA | JSCVT | APA=0x1
+    id_aa64isar1_el1 = Param.UInt64(0x0000000001011010,
         "AArch64 Instruction Set Attribute Register 1")
 
     # 4K | 64K | !16K | !BigEndEL0 | !SNSMem | !BigEnd | 8b ASID | 40b PA
