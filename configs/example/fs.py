@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013, 2016, 2019 ARM Limited
+# Copyright (c) 2010-2013, 2016, 2019-2020 ARM Limited
 # Copyright (c) 2020 Barkhausen Institut
 # All rights reserved.
 #
@@ -366,8 +366,11 @@ if options.frame_capture:
 
 if buildEnv['TARGET_ISA'] == "arm" and not options.bare_metal \
         and not options.dtb_filename:
-    if options.machine_type not in ["VExpress_GEM5", "VExpress_GEM5_V1"]:
-        warn("Can only correctly generate a dtb for VExpress_GEM5_V1 " \
+    if options.machine_type not in ["VExpress_GEM5",
+                                    "VExpress_GEM5_V1",
+                                    "VExpress_GEM5_V2",
+                                    "VExpress_GEM5_Foundation"]:
+        warn("Can only correctly generate a dtb for VExpress_GEM5_* " \
              "platforms, unless custom hardware models have been equipped "\
              "with generation functionality.")
 
