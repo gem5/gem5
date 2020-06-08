@@ -1,3 +1,7 @@
+# Version 20.0.0.2
+
+**[HOTFIX]** A patch was applied to fix the RubyPrefetcher with MESI_Three_Level. Prior to this fix a segfault occurred.
+
 # Version 20.0.0.1
 
 **[HOTFIX]** A fix was applied to stop incorrect clock frequences being reported due to rounding errors.
