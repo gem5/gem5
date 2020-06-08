@@ -48,6 +48,7 @@
 #include <exception>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "arch/types.hh"
 #include "base/pollevent.hh"
@@ -297,6 +298,32 @@ class BaseRemoteGDB
     bool cmdAsyncStep(GdbCommand::Context &ctx);
     bool cmdClrHwBkpt(GdbCommand::Context &ctx);
     bool cmdSetHwBkpt(GdbCommand::Context &ctx);
+
+    struct QuerySetCommand
+    {
+        struct Context
+        {
+            const std::string &name;
+            std::vector<std::string> args;
+
+            Context(const std::string &_name) : name(_name) {}
+        };
+
+        using Func = void (BaseRemoteGDB::*)(Context &ctx);
+
+        const char * const argSep;
+        const Func func;
+
+        QuerySetCommand(Func _func, const char *_argSep=nullptr) :
+            argSep(_argSep), func(_func)
+        {}
+    };
+
+    static std::map<std::string, QuerySetCommand> queryMap;
+
+    void queryC(QuerySetCommand::Context &ctx);
+    void querySupported(QuerySetCommand::Context &ctx);
+    void queryXfer(QuerySetCommand::Context &ctx);
 
   protected:
     ThreadContext *context() { return tc; }

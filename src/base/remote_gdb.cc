@@ -137,6 +137,7 @@
 #include <cstdio>
 #include <sstream>
 #include <string>
+#include <utility>
 
 #include "base/intmath.hh"
 #include "base/socket.hh"
@@ -916,48 +917,120 @@ BaseRemoteGDB::cmdMemW(GdbCommand::Context &ctx)
     return true;
 }
 
+namespace {
+
+std::pair<std::string, std::string>
+splitAt(std::string str, const char * const delim)
+{
+    size_t pos = str.find_first_of(delim);
+    if (pos == std::string::npos)
+        return std::pair<std::string, std::string>(str, "");
+    else
+        return std::pair<std::string, std::string>(
+                str.substr(0, pos), str.substr(pos + 1));
+}
+
+} // anonymous namespace
+
+std::map<std::string, BaseRemoteGDB::QuerySetCommand>
+        BaseRemoteGDB::queryMap = {
+    { "C", { &BaseRemoteGDB::queryC } },
+    { "Supported", { &BaseRemoteGDB::querySupported, ";" } },
+    { "Xfer", { &BaseRemoteGDB::queryXfer } },
+};
+
+void
+BaseRemoteGDB::queryC(QuerySetCommand::Context &ctx)
+{
+    send("QC0");
+}
+
+void
+BaseRemoteGDB::querySupported(QuerySetCommand::Context &ctx)
+{
+    std::ostringstream oss;
+    // This reply field mandatory. We can receive arbitrarily
+    // long packets, so we could choose it to be arbitrarily large.
+    // This is just an arbitrary filler value that seems to work.
+    oss << "PacketSize=1024";
+    for (const auto& feature : availableFeatures())
+        oss << ';' << feature;
+    send(oss.str().c_str());
+}
+
+void
+BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
+{
+    auto split = splitAt(ctx.args.at(0), ":");
+    auto object = split.first;
+
+    split = splitAt(split.second, ":");
+    auto operation = split.first;
+
+    // Only the "features" object and "read"ing are supported currently.
+    if (object != "features" || operation != "read")
+        throw Unsupported();
+
+    // Extract the annex name.
+    split = splitAt(split.second, ":");
+    auto annex = split.first;
+
+    // Read the contents of the annex.
+    std::string content;
+    if (!getXferFeaturesRead(annex, content))
+        throw CmdError("E00");
+
+    // Extract the offset and length.
+    split = splitAt(split.second, ",");
+    auto offset_str = split.first;
+    auto length_str = split.second;
+
+    const char *offset_ptr = offset_str.c_str();
+    const char *length_ptr = length_str.c_str();
+    auto offset = hex2i(&offset_ptr);
+    auto length = hex2i(&length_ptr);
+    if (offset_ptr != offset_str.c_str() + offset_str.length() ||
+            length_ptr != length_str.c_str() + length_str.length()) {
+        throw CmdError("E00");
+    }
+
+    std::string encoded;
+    encodeXferResponse(content, encoded, offset, length);
+    send(encoded.c_str());
+}
+
 bool
 BaseRemoteGDB::cmdQueryVar(GdbCommand::Context &ctx)
 {
+    // The query command goes until the first ':', or the end of the string.
     std::string s(ctx.data, ctx.len);
-    std::string xfer_read_prefix = "Xfer:features:read:";
-    if (s.rfind("Supported:", 0) == 0) {
-        std::ostringstream oss;
-        // This reply field mandatory. We can receive arbitrarily
-        // long packets, so we could choose it to be arbitrarily large.
-        // This is just an arbitrary filler value that seems to work.
-        oss << "PacketSize=1024";
-        for (const auto& feature : availableFeatures())
-            oss << ';' << feature;
-        send(oss.str().c_str());
-    } else if (s.rfind(xfer_read_prefix, 0) == 0) {
-        size_t offset, length;
-        auto value_string = s.substr(xfer_read_prefix.length());
-        auto colon_pos = value_string.find(':');
-        auto comma_pos = value_string.find(',');
-        if (colon_pos == std::string::npos || comma_pos == std::string::npos)
-            throw CmdError("E00");
-        std::string annex;
-        if (!getXferFeaturesRead(value_string.substr(0, colon_pos), annex))
-            throw CmdError("E00");
-        try {
-            offset = std::stoull(
-                value_string.substr(colon_pos + 1, comma_pos), NULL, 16);
-            length = std::stoull(
-                value_string.substr(comma_pos + 1), NULL, 16);
-        } catch (std::invalid_argument& e) {
-            throw CmdError("E00");
-        } catch (std::out_of_range& e) {
-            throw CmdError("E00");
-        }
-        std::string encoded;
-        encodeXferResponse(annex, encoded, offset, length);
-        send(encoded.c_str());
-    } else if (s == "C") {
-        send("QC0");
-    } else {
+    auto query_split = splitAt({ ctx.data, (size_t)ctx.len }, ":");
+    const auto &query_str = query_split.first;
+
+    // Look up the query command, and report if it isn't found.
+    auto query_it = queryMap.find(query_str);
+    if (query_it == queryMap.end()) {
+        DPRINTF(GDBMisc, "Unknown query %s\n", s);
         throw Unsupported();
     }
+
+    // If it was found, construct a context.
+    QuerySetCommand::Context qctx(query_str);
+
+    const auto &query = query_it->second;
+    auto remaining = std::move(query_split.second);
+    if (!query.argSep) {
+        qctx.args.emplace_back(std::move(remaining));
+    } else {
+        while (remaining != "") {
+            auto arg_split = splitAt(remaining, query.argSep);
+            qctx.args.emplace_back(std::move(arg_split.first));
+            remaining = std::move(arg_split.second);
+        }
+    }
+
+    (this->*(query.func))(qctx);
+
     return true;
 }
 
