@@ -922,7 +922,7 @@ BaseRemoteGDB::cmd_mem_w(GdbCommand::Context &ctx)
 bool
 BaseRemoteGDB::cmd_query_var(GdbCommand::Context &ctx)
 {
-    std::string s(ctx.data, ctx.len - 1);
+    std::string s(ctx.data, ctx.len);
     std::string xfer_read_prefix = "Xfer:features:read:";
     if (s.rfind("Supported:", 0) == 0) {
         std::ostringstream oss;
