@@ -157,7 +157,6 @@ class BaseRemoteGDB
     void replaceThreadContext(ThreadContext *_tc) { tc = _tc; }
 
     bool trap(int type);
-    bool breakpoint() { return trap(SIGTRAP); }
 
     /** @} */ // end of api_remote_gdb
 

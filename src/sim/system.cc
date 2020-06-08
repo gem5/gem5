@@ -300,16 +300,6 @@ System::setMemoryMode(Enums::MemoryMode mode)
     memoryMode = mode;
 }
 
-bool System::breakpoint()
-{
-    if (!threads.size())
-        return false;
-    auto *gdb = threads.thread(0).gdb;
-    if (!gdb)
-        return false;
-    return gdb->breakpoint();
-}
-
 ContextID
 System::registerThreadContext(ThreadContext *tc, ContextID assigned)
 {
