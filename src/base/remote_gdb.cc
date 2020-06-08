@@ -155,8 +155,6 @@ static const char GDBEnd = '#';
 static const char GDBGoodP = '+';
 static const char GDBBadP = '-';
 
-std::vector<BaseRemoteGDB *> debuggers;
-
 class HardBreakpoint : public PCEvent
 {
   private:
@@ -316,7 +314,6 @@ BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c, int _port) :
         active(false), attached(false), sys(_system), tc(c),
         trapEvent(this), singleStepEvent(*this)
 {
-    debuggers.push_back(this);
 }
 
 BaseRemoteGDB::~BaseRemoteGDB()
