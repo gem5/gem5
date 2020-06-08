@@ -139,6 +139,7 @@
 #include <string>
 #include <utility>
 
+#include "base/cprintf.hh"
 #include "base/intmath.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
@@ -863,7 +864,7 @@ bool
 BaseRemoteGDB::cmdSetThread(GdbCommand::Context &ctx)
 {
     const char *p = ctx.data + 1; // Ignore the subcommand byte.
-    if (hex2i(&p) != 0)
+    if (hex2i(&p) != tc->contextId())
         throw CmdError("E01");
     send("OK");
     return true;
@@ -937,12 +938,14 @@ std::map<std::string, BaseRemoteGDB::QuerySetCommand>
     { "C", { &BaseRemoteGDB::queryC } },
     { "Supported", { &BaseRemoteGDB::querySupported, ";" } },
     { "Xfer", { &BaseRemoteGDB::queryXfer } },
+    { "fThreadInfo", { &BaseRemoteGDB::queryFThreadInfo } },
+    { "sThreadInfo", { &BaseRemoteGDB::querySThreadInfo } },
 };
 
 void
 BaseRemoteGDB::queryC(QuerySetCommand::Context &ctx)
 {
-    send("QC0");
+    send(csprintf("QC%x", tc->contextId()).c_str());
 }
 
 void
@@ -997,6 +1000,18 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
     std::string encoded;
     encodeXferResponse(content, encoded, offset, length);
     send(encoded.c_str());
+}
+
+void
+BaseRemoteGDB::queryFThreadInfo(QuerySetCommand::Context &ctx)
+{
+    send(csprintf("m%x", tc->contextId()).c_str());
+}
+
+void
+BaseRemoteGDB::querySThreadInfo(QuerySetCommand::Context &ctx)
+{
+    send("l");
 }
 
 bool

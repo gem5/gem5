@@ -324,6 +324,8 @@ class BaseRemoteGDB
     void queryC(QuerySetCommand::Context &ctx);
     void querySupported(QuerySetCommand::Context &ctx);
     void queryXfer(QuerySetCommand::Context &ctx);
+    void queryFThreadInfo(QuerySetCommand::Context &ctx);
+    void querySThreadInfo(QuerySetCommand::Context &ctx);
 
   protected:
     ThreadContext *context() { return tc; }
