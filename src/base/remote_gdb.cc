@@ -216,14 +216,14 @@ digit2i(char c)
     else if (c >= 'A' && c <= 'F')
         return (c - 'A' + 10);
     else
-        return (-1);
+        return -1;
 }
 
 // Convert the low 4 bits of an integer into an hex digit.
 char
 i2digit(int n)
 {
-    return ("0123456789abcdef"[n & 0x0f]);
+    return "0123456789abcdef"[n & 0x0f];
 }
 
 // Convert a byte array into an hex string.
@@ -245,12 +245,12 @@ mem2hex(char *vdst, const char *vsrc, int len)
 // hex digit. If the string ends in the middle of a byte, NULL is
 // returned.
 const char *
-hex2mem(char *vdst, const char *src, int maxlen)
+hex2mem(char *vdst, const char *src, int max_len)
 {
     char *dst = vdst;
     int msb, lsb;
 
-    while (*src && maxlen--) {
+    while (*src && max_len--) {
         msb = digit2i(*src++);
         if (msb < 0)
             return (src - 1);
@@ -292,7 +292,7 @@ enum GdbBreakpointType
 
 #ifndef NDEBUG
 const char *
-break_type(char c)
+breakType(char c)
 {
     switch(c) {
       case GdbSoftBp: return "software breakpoint";
@@ -434,8 +434,8 @@ BaseRemoteGDB::trap(int type)
     regCachePtr = gdbRegs();
     regCachePtr->getRegs(tc);
 
-    GdbCommand::Context cmdCtx;
-    cmdCtx.type = type;
+    GdbCommand::Context cmd_ctx;
+    cmd_ctx.type = type;
     std::vector<char> data;
 
     for (;;) {
@@ -443,20 +443,20 @@ BaseRemoteGDB::trap(int type)
             recv(data);
             if (data.size() == 1)
                 throw BadClient();
-            cmdCtx.cmd_byte = data[0];
-            cmdCtx.data = data.data() + 1;
-            // One for sentinel, one for cmd_byte.
-            cmdCtx.len = data.size() - 2;
+            cmd_ctx.cmdByte = data[0];
+            cmd_ctx.data = data.data() + 1;
+            // One for sentinel, one for cmdByte.
+            cmd_ctx.len = data.size() - 2;
 
-            auto cmdIt = command_map.find(cmdCtx.cmd_byte);
-            if (cmdIt == command_map.end()) {
+            auto cmd_it = commandMap.find(cmd_ctx.cmdByte);
+            if (cmd_it == commandMap.end()) {
                 DPRINTF(GDBMisc, "Unknown command: %c(%#x)\n",
-                        cmdCtx.cmd_byte, cmdCtx.cmd_byte);
+                        cmd_ctx.cmdByte, cmd_ctx.cmdByte);
                 throw Unsupported();
             }
-            cmdCtx.cmd = &(cmdIt->second);
+            cmd_ctx.cmd = &(cmd_it->second);
 
-            if (!(this->*(cmdCtx.cmd->func))(cmdCtx))
+            if (!(this->*(cmd_ctx.cmd->func))(cmd_ctx))
                 break;
 
         } catch (BadClient &e) {
@@ -723,61 +723,61 @@ BaseRemoteGDB::descheduleInstCommitEvent(Event *ev)
         tc->descheduleInstCountEvent(ev);
 }
 
-std::map<char, BaseRemoteGDB::GdbCommand> BaseRemoteGDB::command_map = {
+std::map<char, BaseRemoteGDB::GdbCommand> BaseRemoteGDB::commandMap = {
     // last signal
-    { '?', { "KGDB_SIGNAL", &BaseRemoteGDB::cmd_signal } },
+    { '?', { "KGDB_SIGNAL", &BaseRemoteGDB::cmdSignal } },
     // set baud (deprecated)
-    { 'b', { "KGDB_SET_BAUD", &BaseRemoteGDB::cmd_unsupported } },
+    { 'b', { "KGDB_SET_BAUD", &BaseRemoteGDB::cmdUnsupported } },
     // set breakpoint (deprecated)
-    { 'B', { "KGDB_SET_BREAK", &BaseRemoteGDB::cmd_unsupported } },
+    { 'B', { "KGDB_SET_BREAK", &BaseRemoteGDB::cmdUnsupported } },
     // resume
-    { 'c', { "KGDB_CONT", &BaseRemoteGDB::cmd_cont } },
+    { 'c', { "KGDB_CONT", &BaseRemoteGDB::cmdCont } },
     // continue with signal
-    { 'C', { "KGDB_ASYNC_CONT", &BaseRemoteGDB::cmd_async_cont } },
+    { 'C', { "KGDB_ASYNC_CONT", &BaseRemoteGDB::cmdAsyncCont } },
     // toggle debug flags (deprecated)
-    { 'd', { "KGDB_DEBUG", &BaseRemoteGDB::cmd_unsupported } },
+    { 'd', { "KGDB_DEBUG", &BaseRemoteGDB::cmdUnsupported } },
     // detach remote gdb
-    { 'D', { "KGDB_DETACH", &BaseRemoteGDB::cmd_detach } },
+    { 'D', { "KGDB_DETACH", &BaseRemoteGDB::cmdDetach } },
     // read general registers
-    { 'g', { "KGDB_REG_R", &BaseRemoteGDB::cmd_reg_r } },
+    { 'g', { "KGDB_REG_R", &BaseRemoteGDB::cmdRegR } },
     // write general registers
-    { 'G', { "KGDB_REG_W", &BaseRemoteGDB::cmd_reg_w } },
+    { 'G', { "KGDB_REG_W", &BaseRemoteGDB::cmdRegW } },
     // set thread
-    { 'H', { "KGDB_SET_THREAD", &BaseRemoteGDB::cmd_set_thread } },
+    { 'H', { "KGDB_SET_THREAD", &BaseRemoteGDB::cmdSetThread } },
     // step a single cycle
-    { 'i', { "KGDB_CYCLE_STEP", &BaseRemoteGDB::cmd_unsupported } },
+    { 'i', { "KGDB_CYCLE_STEP", &BaseRemoteGDB::cmdUnsupported } },
     // signal then cycle step
-    { 'I', { "KGDB_SIG_CYCLE_STEP", &BaseRemoteGDB::cmd_unsupported } },
+    { 'I', { "KGDB_SIG_CYCLE_STEP", &BaseRemoteGDB::cmdUnsupported } },
     // kill program
-    { 'k', { "KGDB_KILL", &BaseRemoteGDB::cmd_detach } },
+    { 'k', { "KGDB_KILL", &BaseRemoteGDB::cmdDetach } },
     // read memory
-    { 'm', { "KGDB_MEM_R", &BaseRemoteGDB::cmd_mem_r } },
+    { 'm', { "KGDB_MEM_R", &BaseRemoteGDB::cmdMemR } },
     // write memory
-    { 'M', { "KGDB_MEM_W", &BaseRemoteGDB::cmd_mem_w } },
+    { 'M', { "KGDB_MEM_W", &BaseRemoteGDB::cmdMemW } },
     // read register
-    { 'p', { "KGDB_READ_REG", &BaseRemoteGDB::cmd_unsupported } },
+    { 'p', { "KGDB_READ_REG", &BaseRemoteGDB::cmdUnsupported } },
     // write register
-    { 'P', { "KGDB_SET_REG", &BaseRemoteGDB::cmd_unsupported } },
+    { 'P', { "KGDB_SET_REG", &BaseRemoteGDB::cmdUnsupported } },
     // query variable
-    { 'q', { "KGDB_QUERY_VAR", &BaseRemoteGDB::cmd_query_var } },
+    { 'q', { "KGDB_QUERY_VAR", &BaseRemoteGDB::cmdQueryVar } },
     // set variable
-    { 'Q', { "KGDB_SET_VAR", &BaseRemoteGDB::cmd_unsupported } },
+    { 'Q', { "KGDB_SET_VAR", &BaseRemoteGDB::cmdUnsupported } },
     // reset system (deprecated)
-    { 'r', { "KGDB_RESET", &BaseRemoteGDB::cmd_unsupported } },
+    { 'r', { "KGDB_RESET", &BaseRemoteGDB::cmdUnsupported } },
     // step
-    { 's', { "KGDB_STEP", &BaseRemoteGDB::cmd_step } },
+    { 's', { "KGDB_STEP", &BaseRemoteGDB::cmdStep } },
     // signal and step
-    { 'S', { "KGDB_ASYNC_STEP", &BaseRemoteGDB::cmd_async_step } },
+    { 'S', { "KGDB_ASYNC_STEP", &BaseRemoteGDB::cmdAsyncStep } },
     // find out if the thread is alive
-    { 'T', { "KGDB_THREAD_ALIVE", &BaseRemoteGDB::cmd_unsupported } },
+    { 'T', { "KGDB_THREAD_ALIVE", &BaseRemoteGDB::cmdUnsupported } },
     // target exited
-    { 'W', { "KGDB_TARGET_EXIT", &BaseRemoteGDB::cmd_unsupported } },
+    { 'W', { "KGDB_TARGET_EXIT", &BaseRemoteGDB::cmdUnsupported } },
     // write memory
-    { 'X', { "KGDB_BINARY_DLOAD", &BaseRemoteGDB::cmd_unsupported } },
+    { 'X', { "KGDB_BINARY_DLOAD", &BaseRemoteGDB::cmdUnsupported } },
     // remove breakpoint or watchpoint
-    { 'z', { "KGDB_CLR_HW_BKPT", &BaseRemoteGDB::cmd_clr_hw_bkpt } },
+    { 'z', { "KGDB_CLR_HW_BKPT", &BaseRemoteGDB::cmdClrHwBkpt } },
     // insert breakpoint or watchpoint
-    { 'Z', { "KGDB_SET_HW_BKPT", &BaseRemoteGDB::cmd_set_hw_bkpt } },
+    { 'Z', { "KGDB_SET_HW_BKPT", &BaseRemoteGDB::cmdSetHwBkpt } },
 };
 
 bool
@@ -787,7 +787,7 @@ BaseRemoteGDB::checkBpLen(size_t len)
 }
 
 bool
-BaseRemoteGDB::cmd_unsupported(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdUnsupported(GdbCommand::Context &ctx)
 {
     DPRINTF(GDBMisc, "Unsupported command: %s\n", ctx.cmd->name);
     DDUMP(GDBMisc, ctx.data, ctx.len);
@@ -796,46 +796,46 @@ BaseRemoteGDB::cmd_unsupported(GdbCommand::Context &ctx)
 
 
 bool
-BaseRemoteGDB::cmd_signal(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdSignal(GdbCommand::Context &ctx)
 {
     send(csprintf("S%02x", ctx.type).c_str());
     return true;
 }
 
 bool
-BaseRemoteGDB::cmd_cont(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdCont(GdbCommand::Context &ctx)
 {
     const char *p = ctx.data;
     if (ctx.len) {
-        Addr newPc = hex2i(&p);
-        tc->pcState(newPc);
+        Addr new_pc = hex2i(&p);
+        tc->pcState(new_pc);
     }
     clearSingleStep();
     return false;
 }
 
 bool
-BaseRemoteGDB::cmd_async_cont(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdAsyncCont(GdbCommand::Context &ctx)
 {
     const char *p = ctx.data;
     hex2i(&p);
     if (*p++ == ';') {
-        Addr newPc = hex2i(&p);
-        tc->pcState(newPc);
+        Addr new_pc = hex2i(&p);
+        tc->pcState(new_pc);
     }
     clearSingleStep();
     return false;
 }
 
 bool
-BaseRemoteGDB::cmd_detach(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdDetach(GdbCommand::Context &ctx)
 {
     detach();
     return false;
 }
 
 bool
-BaseRemoteGDB::cmd_reg_r(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdRegR(GdbCommand::Context &ctx)
 {
     char buf[2 * regCachePtr->size() + 1];
     buf[2 * regCachePtr->size()] = '\0';
@@ -845,7 +845,7 @@ BaseRemoteGDB::cmd_reg_r(GdbCommand::Context &ctx)
 }
 
 bool
-BaseRemoteGDB::cmd_reg_w(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdRegW(GdbCommand::Context &ctx)
 {
     const char *p = ctx.data;
     p = hex2mem(regCachePtr->data(), p, regCachePtr->size());
@@ -859,7 +859,7 @@ BaseRemoteGDB::cmd_reg_w(GdbCommand::Context &ctx)
 }
 
 bool
-BaseRemoteGDB::cmd_set_thread(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdSetThread(GdbCommand::Context &ctx)
 {
     const char *p = ctx.data + 1; // Ignore the subcommand byte.
     if (hex2i(&p) != 0)
@@ -869,7 +869,7 @@ BaseRemoteGDB::cmd_set_thread(GdbCommand::Context &ctx)
 }
 
 bool
-BaseRemoteGDB::cmd_mem_r(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdMemR(GdbCommand::Context &ctx)
 {
     const char *p = ctx.data;
     Addr addr = hex2i(&p);
@@ -893,7 +893,7 @@ BaseRemoteGDB::cmd_mem_r(GdbCommand::Context &ctx)
 }
 
 bool
-BaseRemoteGDB::cmd_mem_w(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdMemW(GdbCommand::Context &ctx)
 {
     const char *p = ctx.data;
     Addr addr = hex2i(&p);
@@ -917,7 +917,7 @@ BaseRemoteGDB::cmd_mem_w(GdbCommand::Context &ctx)
 }
 
 bool
-BaseRemoteGDB::cmd_query_var(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdQueryVar(GdbCommand::Context &ctx)
 {
     std::string s(ctx.data, ctx.len);
     std::string xfer_read_prefix = "Xfer:features:read:";
@@ -1000,35 +1000,35 @@ BaseRemoteGDB::encodeXferResponse(const std::string &unencoded,
 }
 
 bool
-BaseRemoteGDB::cmd_async_step(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdAsyncStep(GdbCommand::Context &ctx)
 {
     const char *p = ctx.data;
     hex2i(&p); // Ignore the subcommand byte.
     if (*p++ == ';') {
-        Addr newPc = hex2i(&p);
-        tc->pcState(newPc);
+        Addr new_pc = hex2i(&p);
+        tc->pcState(new_pc);
     }
     setSingleStep();
     return false;
 }
 
 bool
-BaseRemoteGDB::cmd_step(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdStep(GdbCommand::Context &ctx)
 {
     if (ctx.len) {
         const char *p = ctx.data;
-        Addr newPc = hex2i(&p);
-        tc->pcState(newPc);
+        Addr new_pc = hex2i(&p);
+        tc->pcState(new_pc);
     }
     setSingleStep();
     return false;
 }
 
 bool
-BaseRemoteGDB::cmd_clr_hw_bkpt(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdClrHwBkpt(GdbCommand::Context &ctx)
 {
     const char *p = ctx.data;
-    char subcmd = *p++;
+    char sub_cmd = *p++;
     if (*p++ != ',')
         throw CmdError("E0D");
     Addr addr = hex2i(&p);
@@ -1037,9 +1037,9 @@ BaseRemoteGDB::cmd_clr_hw_bkpt(GdbCommand::Context &ctx)
     size_t len = hex2i(&p);
 
     DPRINTF(GDBMisc, "clear %s, addr=%#x, len=%d\n",
-            break_type(subcmd), addr, len);
+            breakType(sub_cmd), addr, len);
 
-    switch (subcmd) {
+    switch (sub_cmd) {
       case GdbSoftBp:
         removeSoftBreak(addr, len);
         break;
@@ -1058,10 +1058,10 @@ BaseRemoteGDB::cmd_clr_hw_bkpt(GdbCommand::Context &ctx)
 }
 
 bool
-BaseRemoteGDB::cmd_set_hw_bkpt(GdbCommand::Context &ctx)
+BaseRemoteGDB::cmdSetHwBkpt(GdbCommand::Context &ctx)
 {
     const char *p = ctx.data;
-    char subcmd = *p++;
+    char sub_cmd = *p++;
     if (*p++ != ',')
         throw CmdError("E0D");
     Addr addr = hex2i(&p);
@@ -1070,9 +1070,9 @@ BaseRemoteGDB::cmd_set_hw_bkpt(GdbCommand::Context &ctx)
     size_t len = hex2i(&p);
 
     DPRINTF(GDBMisc, "set %s, addr=%#x, len=%d\n",
-            break_type(subcmd), addr, len);
+            breakType(sub_cmd), addr, len);
 
-    switch (subcmd) {
+    switch (sub_cmd) {
       case GdbSoftBp:
         insertSoftBreak(addr, len);
         break;
