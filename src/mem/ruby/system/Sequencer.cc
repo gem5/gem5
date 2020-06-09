@@ -352,7 +352,8 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
                          const bool externalHit, const MachineType mach,
                          const Cycles initialRequestTime,
                          const Cycles forwardRequestTime,
-                         const Cycles firstResponseTime)
+                         const Cycles firstResponseTime,
+                         const bool noCoales)
 {
     //
     // Free the whole list as we assume we have had the exclusive access
@@ -370,6 +371,15 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
     int aliased_loads = 0;
     while (!seq_req_list.empty()) {
         SequencerRequest &seq_req = seq_req_list.front();
+
+        if (noCoales && !ruby_request) {
+            // Do not process follow-up requests
+            // (e.g. if full line no present)
+            // Reissue to the cache hierarchy
+            issueRequest(seq_req.pkt, seq_req.m_second_type);
+            break;
+        }
+
         if (ruby_request) {
             assert(seq_req.m_type != RubyRequestType_LD);
             assert(seq_req.m_type != RubyRequestType_Load_Linked);

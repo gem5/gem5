@@ -129,6 +129,7 @@ structure (Sequencer, external = "yes") {
   void writeCallback(Addr, DataBlock, bool, MachineType);
   void writeCallback(Addr, DataBlock, bool, MachineType,
                      Cycles, Cycles, Cycles);
+  void writeUniqueCallback(Addr, DataBlock);
 
   // ll/sc support
   void writeCallbackScFail(Addr, DataBlock);

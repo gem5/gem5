@@ -103,7 +103,15 @@ class Sequencer : public RubyPort
                        const MachineType mach = MachineType_NUM,
                        const Cycles initialRequestTime = Cycles(0),
                        const Cycles forwardRequestTime = Cycles(0),
-                       const Cycles firstResponseTime = Cycles(0));
+                       const Cycles firstResponseTime = Cycles(0),
+                       const bool noCoales = false);
+
+    // Write callback that prevents coalescing
+    void writeUniqueCallback(Addr address, DataBlock& data)
+    {
+        writeCallback(address, data, true, MachineType_NUM, Cycles(0),
+                      Cycles(0), Cycles(0), true);
+    }
 
     void readCallback(Addr address,
                       DataBlock& data,
