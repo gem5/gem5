@@ -313,11 +313,13 @@ ArchTimer::setControl(uint32_t val)
     _control.enable = new_ctl.enable;
     _control.imask = new_ctl.imask;
     _control.istatus = old_ctl.istatus;
-    // Timer enabled
-    if (!old_ctl.enable && new_ctl.enable)
+    // Timer unmasked or enabled
+    if ((old_ctl.imask && !new_ctl.imask) ||
+        (!old_ctl.enable && new_ctl.enable))
         updateCounter();
-    // Timer disabled
-    else if (old_ctl.enable && !new_ctl.enable) {
+    // Timer masked or disabled
+    else if ((!old_ctl.imask && new_ctl.imask) ||
+             (old_ctl.enable && !new_ctl.enable)) {
         if (_control.istatus) {
             DPRINTF(Timer, "Clearing interrupt\n");
             _interrupt->clear();
