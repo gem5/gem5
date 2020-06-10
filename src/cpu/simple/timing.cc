@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2010-2013,2015,2017-2018 ARM Limited
+ * Copyright (c) 2010-2013,2015,2017-2018, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -363,10 +363,8 @@ TimingSimpleCPU::translationFault(const Fault &fault)
     updateCycleCounts();
     updateCycleCounters(BaseCPU::CPU_STATE_ON);
 
-    if (traceData) {
-        // Since there was a fault, we shouldn't trace this instruction.
-        delete traceData;
-        traceData = NULL;
+    if ((fault != NoFault) && traceData) {
+        traceFault();
     }
 
     postExecute();
@@ -794,9 +792,7 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
         // ifetch
         if (_status == BaseSimpleCPU::Running) {
             if (fault != NoFault && traceData) {
-                // If there was a fault, we shouldn't trace this instruction.
-                delete traceData;
-                traceData = NULL;
+                traceFault();
             }
 
             postExecute();
@@ -813,9 +809,8 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
         // keep an instruction count
         if (fault == NoFault)
             countInst();
-        else if (traceData && !DTRACE(ExecFaulting)) {
-            delete traceData;
-            traceData = NULL;
+        else if (traceData) {
+            traceFault();
         }
 
         postExecute();
@@ -913,9 +908,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     if (fault == NoFault)
         countInst();
     else if (traceData) {
-        // If there was a fault, we shouldn't trace this instruction.
-        delete traceData;
-        traceData = NULL;
+        traceFault();
     }
 
     delete pkt;

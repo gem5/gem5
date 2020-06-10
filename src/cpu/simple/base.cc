@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2015, 2017, 2018 ARM Limited
+ * Copyright (c) 2010-2012, 2015, 2017, 2018, 2020 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -64,6 +64,7 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Decode.hh"
+#include "debug/ExecFaulting.hh"
 #include "debug/Fetch.hh"
 #include "debug/Quiesce.hh"
 #include "mem/packet.hh"
@@ -429,6 +430,17 @@ BaseSimpleCPU::wakeup(ThreadID tid)
     if (threadInfo[tid]->thread->status() == ThreadContext::Suspended) {
         DPRINTF(Quiesce,"[tid:%d] Suspended Processor awoke\n", tid);
         threadInfo[tid]->thread->activate();
+    }
+}
+
+void
+BaseSimpleCPU::traceFault()
+{
+    if (DTRACE(ExecFaulting)) {
+        traceData->setFaulting(true);
+    } else {
+        delete traceData;
+        traceData = NULL;
     }
 }
 

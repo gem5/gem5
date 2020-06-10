@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012,2015,2018 ARM Limited
+ * Copyright (c) 2011-2012,2015,2018,2020 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -119,6 +119,14 @@ class BaseSimpleCPU : public BaseCPU
     };
 
     Status _status;
+
+    /**
+     * Handler used when encountering a fault; its purpose is to
+     * tear down the InstRecord. If a fault is meant to be traced,
+     * the handler won't delete the record and it will annotate
+     * the record as coming from a faulting instruction.
+     */
+    void traceFault();
 
   public:
     void checkForInterrupts();

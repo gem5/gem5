@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2012-2013,2015,2017-2019 ARM Limited
+ * Copyright (c) 2012-2013,2015,2017-2020 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -713,10 +713,8 @@ AtomicSimpleCPU::tick()
                 if (fault == NoFault) {
                     countInst();
                     ppCommit->notify(std::make_pair(thread, curStaticInst));
-                }
-                else if (traceData && !DTRACE(ExecFaulting)) {
-                    delete traceData;
-                    traceData = NULL;
+                } else if (traceData) {
+                    traceFault();
                 }
 
                 if (fault != NoFault &&

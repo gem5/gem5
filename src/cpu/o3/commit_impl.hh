@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2010-2014, 2017 ARM Limited
+ * Copyright (c) 2010-2014, 2017, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1260,6 +1260,7 @@ DefaultCommit<Impl>::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
             tid, head_inst->seqNum);
         if (head_inst->traceData) {
             if (DTRACE(ExecFaulting)) {
+                head_inst->traceData->setFaulting(true);
                 head_inst->traceData->setFetchSeq(head_inst->seqNum);
                 head_inst->traceData->setCPSeq(thread[tid]->numOp);
                 head_inst->traceData->dump();
