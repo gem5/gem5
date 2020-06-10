@@ -87,7 +87,7 @@ class _TestStreams(object):
         self.stdout.close()
         self.stderr.close()
 
-class ResultHandler(log.Handler):
+class ResultHandler(object):
     '''
     Log handler which listens for test results and output saving data as
     it is reported.
@@ -181,7 +181,7 @@ class ResultHandler(log.Handler):
 
 #TODO Change from a handler to an internal post processor so it can be used
 # to reprint results
-class SummaryHandler(log.Handler):
+class SummaryHandler(object):
     '''
     A log handler which listens to the log for test results
     and reports the aggregate results when closed.
@@ -250,7 +250,7 @@ class SummaryHandler(log.Handler):
                 string,
                 color=self.colormap[most_severe_outcome] + self.color.Bold)
 
-class TerminalHandler(log.Handler):
+class TerminalHandler(object):
     color = terminal.get_termcap()
     verbosity_mapping = {
         log.LogLevel.Warn: color.Yellow,
@@ -330,22 +330,13 @@ class TerminalHandler(log.Handler):
             return
         self.mapping.get(record.type_id, lambda _:None)(record)
 
-    def set_verbosity(self, verbosity):
-        self.verbosity = verbosity
-
-
-class PrintHandler(log.Handler):
-    def __init__(self):
-        pass
-
-    def handle(self, record):
-        print(str(record).rstrip())
-
     def close(self):
         pass
 
+    def set_verbosity(self, verbosity):
+        self.verbosity = verbosity
 
-class MultiprocessingHandlerWrapper(log.Handler):
+class MultiprocessingHandlerWrapper(object):
     '''
     A handler class which forwards log records to subhandlers, enabling
     logging across multiprocessing python processes.

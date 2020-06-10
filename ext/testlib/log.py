@@ -130,10 +130,8 @@ class Log(object):
             raise Exception('The log has been closed'
                 ' and is no longer available.')
 
-        map(lambda handler:handler.prehandle(), self.handlers)
         for handler in self.handlers:
             handler.handle(record)
-            handler.posthandle()
 
     def add_handler(self, handler):
         if self._opened:
@@ -143,28 +141,6 @@ class Log(object):
     def close_handler(self, handler):
         handler.close()
         self.handlers.remove(handler)
-
-
-class Handler(object):
-    '''
-    Empty implementation of the interface available to handlers which
-    is expected by the :class:`Log`.
-    '''
-    def __init__(self):
-        pass
-
-    def handle(self, record):
-        pass
-
-    def close(self):
-        pass
-
-    def prehandle(self):
-        pass
-
-    def posthandle(self):
-        pass
-
 
 class LogWrapper(object):
     _result_typemap = {
