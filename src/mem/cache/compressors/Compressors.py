@@ -113,6 +113,9 @@ class MultiCompressor(BaseCacheCompressor):
     # since these compressors have many overlapping patterns
     compressors = VectorParam.BaseCacheCompressor([CPack(), FPCD()],
         "Array of compressors")
+    encoding_in_tags = Param.Bool(False, "If set the bits to inform which "
+        "sub-compressor compressed some data are added to its corresponding "
+        "tag entry.")
 
 class PerfectCompressor(BaseCacheCompressor):
     type = 'PerfectCompressor'

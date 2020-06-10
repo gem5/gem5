@@ -58,6 +58,23 @@ class Multi : public Base
     /** List of sub-compressors. */
     std::vector<Base*> compressors;
 
+    /**
+     * An encoding is associated to each sub-compressor to inform which
+     * sub-compressor to use when decompressing data. This information can
+     * be added either to the tag entry, in which case no extra bits are
+     * added to the compressed data (numEncodingBits = 0), or to the
+     * compressed data itself.
+     *
+     * There is no encoding reserved for the uncompressed case; it is assumed
+     * that an "is compressed" bit is stored in the tags. Therefore, even if
+     * storing the encoding within the compressed data, these extra bits are
+     * not added when the data is uncompressible.
+     *
+     * These extra bits are taken into account when thresholding the
+     * compressed data's size.
+     */
+    const std::size_t numEncodingBits;
+
     struct MultiStats : public Stats::Group
     {
         const Multi& compressor;

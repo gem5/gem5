@@ -59,6 +59,8 @@ Multi::MultiCompData::getIndex() const
 
 Multi::Multi(const Params *p)
   : Base(p), compressors(p->compressors),
+    numEncodingBits(p->encoding_in_tags ? 0 :
+        std::log2(alignToPowerOfTwo(compressors.size()))),
     multiStats(stats, *this)
 {
     fatal_if(compressors.size() == 0, "There must be at least one compressor");
@@ -128,6 +130,8 @@ Multi::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
         Cycles temp_decomp_lat;
         auto temp_comp_data =
             compressors[i]->compress(data, comp_lat, temp_decomp_lat);
+        temp_comp_data->setSizeBits(temp_comp_data->getSizeBits() +
+            numEncodingBits);
         results.push(std::make_shared<Results>(i, std::move(temp_comp_data),
             temp_decomp_lat, blkSize));
         max_comp_lat = std::max(max_comp_lat, comp_lat);
