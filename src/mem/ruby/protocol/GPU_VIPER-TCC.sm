@@ -438,6 +438,14 @@ machine(MachineType:TCC, "TCC Cache")
     }
   }
 
+  action(p_profileMiss, "pm", desc="Profile cache miss") {
+      ++L2cache.demand_misses;
+  }
+
+  action(p_profileHit, "ph", desc="Profile cache hit") {
+      ++L2cache.demand_hits;
+  }
+
   action(t_allocateTBE, "t", desc="allocate TBE Entry") {
     if (is_invalid(tbe)) {
       check_allocate(TBEs);
@@ -596,28 +604,42 @@ machine(MachineType:TCC, "TCC Cache")
       z_stall;
   }
   transition({M, V}, RdBlk) {TagArrayRead, DataArrayRead} {
+    p_profileHit;
     sd_sendData;
     ut_updateTag;
     p_popRequestQueue;
   }
   transition(W, RdBlk, WI) {TagArrayRead, DataArrayRead} {
+    p_profileHit;
     t_allocateTBE;
     wb_writeBack;
   }
 
   transition(I, RdBlk, IV) {TagArrayRead} {
+    p_profileMiss;
     t_allocateTBE;
     rd_requestData;
     p_popRequestQueue;
   }
 
   transition(IV, RdBlk) {
+    p_profileMiss;
     t_allocateTBE;
     rd_requestData;
     p_popRequestQueue;
   }
 
-  transition({V, I},Atomic, A) {TagArrayRead} {
+  transition(V, Atomic, A) {TagArrayRead} {
+    p_profileHit;
+    i_invL2;
+    t_allocateTBE;
+    at_atomicThrough;
+    ina_incrementNumAtomics;
+    p_popRequestQueue;
+  }
+
+transition(I, Atomic, A) {TagArrayRead} {
+    p_profileMiss;
     i_invL2;
     t_allocateTBE;
     at_atomicThrough;
@@ -626,22 +648,26 @@ machine(MachineType:TCC, "TCC Cache")
   }
 
   transition(A, Atomic) {
+    p_profileMiss;
     at_atomicThrough;
     ina_incrementNumAtomics;
     p_popRequestQueue;
   }
 
   transition({M, W}, Atomic, WI) {TagArrayRead} {
+    p_profileHit;
     t_allocateTBE;
     wb_writeBack;
   }
 
   transition(I, WrVicBlk) {TagArrayRead} {
+    p_profileMiss;
     wt_writeThrough;
     p_popRequestQueue;
   }
 
   transition(V, WrVicBlk) {TagArrayRead, DataArrayWrite} {
+    p_profileHit;
     ut_updateTag;
     wdb_writeDirtyBytes;
     wt_writeThrough;
@@ -649,6 +675,7 @@ machine(MachineType:TCC, "TCC Cache")
   }
 
   transition({V, M}, WrVicBlkBack, M) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+    p_profileHit;
     ut_updateTag;
     swb_sendWBAck;
     wdb_writeDirtyBytes;
@@ -656,6 +683,7 @@ machine(MachineType:TCC, "TCC Cache")
   }
 
   transition(W, WrVicBlkBack) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+    p_profileHit;
     ut_updateTag;
     swb_sendWBAck;
     wdb_writeDirtyBytes;
@@ -663,6 +691,7 @@ machine(MachineType:TCC, "TCC Cache")
   }
 
   transition(I, WrVicBlkBack, W) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+    p_profileMiss;
     a_allocateBlock;
     ut_updateTag;
     swb_sendWBAck;

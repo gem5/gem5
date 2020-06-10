@@ -527,6 +527,16 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
       // built-int action
   }
 
+  // added for profiling
+  action(uu_profileDataMiss, "\udm", desc="Profile the demand miss"){
+      ++L1cache.demand_misses;
+  }
+
+  action(uu_profileDataHit, "\udh", desc="Profile the demand hit"){
+      ++L1cache.demand_hits;
+  }
+
+
   // Transitions
   // ArrayRead/Write assumptions:
   // All requests read Tag Array
@@ -544,12 +554,14 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
 
   transition(I, Load) {TagArrayRead} {
     n_issueRdBlk;
+    uu_profileDataMiss;
     p_popMandatoryQueue;
   }
 
   transition(V, Load) {TagArrayRead, DataArrayRead} {
     l_loadDone;
     mru_updateMRU;
+    uu_profileDataHit;
     p_popMandatoryQueue;
   }
 
@@ -564,6 +576,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     a_allocate;
     dw_dirtyWrite;
     s_storeDone;
+    uu_profileDataMiss;
     wt_writeThrough;
     ic_invCache;
     p_popMandatoryQueue;
@@ -572,6 +585,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   transition(V, StoreThrough, I) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
     dw_dirtyWrite;
     s_storeDone;
+    uu_profileDataHit;
     wt_writeThrough;
     ic_invCache;
     p_popMandatoryQueue;
