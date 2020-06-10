@@ -75,6 +75,13 @@ class Multi : public Base
      */
     const std::size_t numEncodingBits;
 
+    /**
+     * Extra decompression latency to be added to the sub-compressor's
+     * decompression latency. This can different from zero due to decoding,
+     * shifting, or packaging, for example.
+     */
+    const Cycles extraDecompressionLatency;
+
     struct MultiStats : public Stats::Group
     {
         const Multi& compressor;

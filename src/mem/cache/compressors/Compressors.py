@@ -116,6 +116,8 @@ class MultiCompressor(BaseCacheCompressor):
     encoding_in_tags = Param.Bool(False, "If set the bits to inform which "
         "sub-compressor compressed some data are added to its corresponding "
         "tag entry.")
+    extra_decomp_lat = Param.Unsigned(0, "Extra latency to be added to the "
+        "sub-compressor's decompression latency")
 
 class PerfectCompressor(BaseCacheCompressor):
     type = 'PerfectCompressor'
