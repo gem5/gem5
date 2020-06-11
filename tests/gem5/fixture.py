@@ -191,7 +191,7 @@ class MakeFixture(Fixture):
         targets = set(self.required_by)
         command = ['make', '-C', self.directory]
         command.extend([target.target for target in targets])
-        log_call(command)
+        log_call(log.test_log, command, stderr=sys.stderr)
 
 
 class MakeTarget(Fixture):
