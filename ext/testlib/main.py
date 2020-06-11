@@ -30,7 +30,6 @@ import os
 import itertools
 
 import testlib.configuration as configuration
-import testlib.fixture as fixture_mod
 import testlib.handlers as handlers
 import testlib.loader as loader_mod
 import testlib.log as log
