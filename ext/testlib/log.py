@@ -110,7 +110,19 @@ class LibraryMessage(Record):
 
 
 class Log(object):
-    def __init__(self):
+    _result_typemap = {
+        wrappers.LoadedLibrary.__name__: LibraryResult,
+        wrappers.LoadedSuite.__name__: SuiteResult,
+        wrappers.LoadedTest.__name__: TestResult,
+    }
+    _status_typemap = {
+        wrappers.LoadedLibrary.__name__: LibraryStatus,
+        wrappers.LoadedSuite.__name__: SuiteStatus,
+        wrappers.LoadedTest.__name__: TestStatus,
+    }
+
+    def __init__(self, test=None):
+        self.test = test
         self.handlers = []
         self._opened = False # TODO Guards to methods
         self._closed = False # TODO Guards to methods
@@ -133,39 +145,15 @@ class Log(object):
         for handler in self.handlers:
             handler.handle(record)
 
-    def add_handler(self, handler):
-        if self._opened:
-            raise Exception('Unable to add a handler once the log is open.')
-        self.handlers.append(handler)
-
-    def close_handler(self, handler):
-        handler.close()
-        self.handlers.remove(handler)
-
-class LogWrapper(object):
-    _result_typemap = {
-        wrappers.LoadedLibrary.__name__: LibraryResult,
-        wrappers.LoadedSuite.__name__: SuiteResult,
-        wrappers.LoadedTest.__name__: TestResult,
-    }
-    _status_typemap = {
-        wrappers.LoadedLibrary.__name__: LibraryStatus,
-        wrappers.LoadedSuite.__name__: SuiteStatus,
-        wrappers.LoadedTest.__name__: TestStatus,
-    }
-    def __init__(self, log):
-        self.log_obj = log
-
-    def log(self, *args, **kwargs):
-        self.log_obj.log(*args, **kwargs)
-
-    # Library Logging Methods
-    # TODO Replace these methods in a test/create a wrapper?
-    # That way they still can log like this it's just hidden that they
-    # capture the current test.
     def message(self, message, level=LogLevel.Info, bold=False, **metadata):
-        self.log_obj.log(LibraryMessage(message=message, level=level,
-                bold=bold, **metadata))
+        if self.test:
+            record = TestMessage(message=message, level=level,
+                test_uid=self.test.uid, suite_uid=self.test.parent_suite.uid)
+        else:
+            record = LibraryMessage(message=message, level=level,
+                bold=bold, **metadata)
+
+        self.log(record)
 
     def error(self, message):
         self.message(message, LogLevel.Error)
@@ -182,52 +170,21 @@ class LogWrapper(object):
     def trace(self, message):
         self.message(message, LogLevel.Trace)
 
-    # Ongoing Test Logging Methods
     def status_update(self, obj, status):
-        self.log_obj.log(
-                self._status_typemap[obj.__class__.__name__](obj, status))
+        self.log(
+            self._status_typemap[obj.__class__.__name__](obj, status))
 
     def result_update(self, obj, result):
-        self.log_obj.log(
-                self._result_typemap[obj.__class__.__name__](obj, result))
+        self.log(
+            self._result_typemap[obj.__class__.__name__](obj, result))
 
-    def test_message(self, test, message, level):
-        self.log_obj.log(TestMessage(message=message, level=level,
-                test_uid=test.uid, suite_uid=test.parent_suite.uid))
+    def add_handler(self, handler):
+        if self._opened:
+            raise Exception('Unable to add a handler once the log is open.')
+        self.handlers.append(handler)
 
-    # NOTE If performance starts to drag on logging stdout/err
-    # replace metadata with just test and suite uid tags.
-    def test_stdout(self, test, suite, buf):
-        self.log_obj.log(TestStdout(buffer=buf, metadata=test.metadata))
+    def close_handler(self, handler):
+        handler.close()
+        self.handlers.remove(handler)
 
-    def test_stderr(self, test, suite, buf):
-        self.log_obj.log(TestStderr(buffer=buf, metadata=test.metadata))
-
-    def close(self):
-        self.log_obj.close()
-
-class TestLogWrapper(object):
-    def __init__(self, log, test, suite):
-        self.log_obj = log
-        self.test = test
-
-    def test_message(self, message, level):
-        self.log_obj.test_message(test=self.test,
-                message=message, level=level)
-
-    def error(self, message):
-        self.test_message(message, LogLevel.Error)
-
-    def warn(self, message):
-        self.test_message(message, LogLevel.Warn)
-
-    def info(self, message):
-        self.test_message(message, LogLevel.Info)
-
-    def debug(self, message):
-        self.test_message(message, LogLevel.Debug)
-
-    def trace(self, message):
-        self.test_message(message, LogLevel.Trace)
-
-test_log = LogWrapper(Log())
+test_log = Log()
