@@ -39,11 +39,9 @@
 # Authors: Sean Wilson
 
 import multiprocessing.dummy
-import threading
 import traceback
 
 import testlib.helper as helper
-import testlib.state as state
 import testlib.log as log
 
 from testlib.state import Status, Result
@@ -169,9 +167,6 @@ class LibraryParallelRunner(RunnerPattern):
     def set_threads(self, threads):
         self.threads = threads
 
-    def _entrypoint(self, suite):
-        suite.runner(suite).run()
-
     def test(self):
         pool = multiprocessing.dummy.Pool(self.threads)
         pool.map(lambda suite : suite.runner(suite).run(), self.testable)
@@ -181,8 +176,6 @@ class LibraryParallelRunner(RunnerPattern):
 
 class BrokenFixtureException(Exception):
     def __init__(self, fixture, testitem, trace):
-        self.fixture = fixture
-        self.testitem = testitem
         self.trace = trace
 
         self.msg = ('%s\n'
