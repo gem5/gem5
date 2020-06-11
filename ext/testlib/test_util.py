@@ -26,25 +26,8 @@
 #
 # Authors: Sean Wilson
 
-import functools
-
 import testlib.helper as helper
 import testlib.runner as runner_mod
-
-class TestingException(Exception):
-    '''Common ancestor for manual Testing Exceptions.'''
-class TestFailException(TestingException):
-    '''Signals that a test has failed.'''
-class TestSkipException(TestingException):
-    '''Signals that a test has been skipped.'''
-
-def fail(message):
-    '''Cause the current test to fail with the given message.'''
-    raise TestFailException(message)
-
-def skip(message):
-    '''Cause the current test to skip with the given message.'''
-    raise TestSkipException(message)
 
 class TestCase(object):
     '''
@@ -84,23 +67,3 @@ class TestFunction(TestCase):
 
     def test(self, *args, **kwargs):
         self.test_function(*args, **kwargs)
-
-# TODO Change the decorator to make this easier to create copy tests.
-# Good way to do so might be return by reference.
-def testfunction(function=None, name=None, fixtures=tuple()):
-    '''
-    A decorator used to wrap a function as a TestFunction.
-    '''
-    def testfunctiondecorator(function):
-        '''Decorator used to mark a function as a test case.'''
-        kwargs = {}
-        if name is not None:
-            kwargs['name'] = name
-        if fixtures is not None:
-            kwargs['fixtures'] = fixtures
-        TestFunction(function, **kwargs)
-        return function
-    if function is not None:
-        return testfunctiondecorator(function)
-    else:
-        return testfunctiondecorator
