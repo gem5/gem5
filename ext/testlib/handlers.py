@@ -44,11 +44,10 @@ import testlib.helper as helper
 import testlib.log as log
 import testlib.result as result
 import testlib.state as state
-import testlib.test_util as test
 import testlib.terminal as terminal
 
 from six.moves import queue as Queue
-from testlib.configuration import config, constants
+from testlib.configuration import constants
 
 
 class _TestStreamManager(object):
@@ -194,8 +193,6 @@ class SummaryHandler(object):
             state.Result.Passed: color.Green,
             state.Result.Skipped: color.Cyan,
     }
-    sep_fmtkey = 'separator'
-    sep_fmtstr = '{%s}' % sep_fmtkey
 
     def __init__(self):
         self.mapping = {
@@ -332,9 +329,6 @@ class TerminalHandler(object):
 
     def close(self):
         pass
-
-    def set_verbosity(self, verbosity):
-        self.verbosity = verbosity
 
 class MultiprocessingHandlerWrapper(object):
     '''
