@@ -71,7 +71,6 @@ import six
 import sys
 import traceback
 
-import testlib.configuration as configuration
 import testlib.log as log
 import testlib.suite as suite_mod
 import testlib.test_util as test_mod
@@ -183,22 +182,12 @@ class Loader(object):
         Load files from the given root directory which match
         `self.filepath_filter`.
         '''
-        if __debug__:
-            self._loaded_a_file = True
-
         for directory in self._discover_files(root):
             directory = list(directory)
             if directory:
                 _assert_files_in_same_dir(directory)
                 for f in directory:
                     self.load_file(f)
-
-    def load_dir(self, directory):
-        for dir_ in self._discover_files(directory):
-            directory = list(directory)
-            _assert_files_in_same_dir(dir_)
-            for f in dir_:
-                self.load_file(f)
 
     def load_file(self, path):
         path = os.path.abspath(path)
@@ -224,7 +213,6 @@ class Loader(object):
         sys.path.insert(0, os.path.dirname(path))
         cwd = os.getcwd()
         os.chdir(os.path.dirname(path))
-        configuration.config.file_under_load = path
 
         new_tests = test_mod.TestCase.collector.create()
         new_suites = suite_mod.TestSuite.collector.create()
@@ -239,7 +227,6 @@ class Loader(object):
                               'Ignoring all tests in this file.'
                                % (path))
             # Clean up
-            configuration.config.file_under_load = None
             sys.path[:] = old_path
             os.chdir(cwd)
             test_mod.TestCase.collector.remove(new_tests)
@@ -283,7 +270,6 @@ class Loader(object):
             self.suite_uids.update({suite.uid: suite
                     for suite in loaded_suites})
         # Clean up
-        configuration.config.file_under_load = None
         sys.path[:] = old_path
         os.chdir(cwd)
         test_mod.TestCase.collector.remove(new_tests)
