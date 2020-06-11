@@ -84,7 +84,6 @@ import os
 import re
 
 from six import add_metaclass
-from six.moves import configparser as ConfigParser
 from pickle import HIGHEST_PROTOCOL as highest_pickle_protocol
 
 from testlib.helper import absdirpath, AttrDict, FrozenAttrDict
@@ -130,11 +129,6 @@ class _Config(object):
     def _init(self, parser):
         self._parse_commandline_args(parser)
         self._run_post_processors()
-        self._initialized = True
-
-    def _init_with_dicts(self, config, defaults):
-        self._config = config
-        self._defaults = defaults
         self._initialized = True
 
     def _add_post_processor(self, attr, post_processor):
@@ -220,7 +214,6 @@ def define_defaults(defaults):
                                                       os.pardir,
                                                       os.pardir))
     defaults.result_path = os.path.join(os.getcwd(), '.testing-results')
-    defaults.list_only_failed = False
     defaults.resource_url = 'http://dist.gem5.org/dist/develop'
 
 def define_constants(constants):
