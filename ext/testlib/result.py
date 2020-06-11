@@ -33,7 +33,6 @@ import xml.sax.saxutils
 from testlib.configuration import config
 import testlib.helper as helper
 import testlib.state as state
-import testlib.log as log
 
 def _create_uid_index(iterable):
     index = {}
