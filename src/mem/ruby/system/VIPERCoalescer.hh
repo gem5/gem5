@@ -62,7 +62,7 @@ class VIPERCoalescer : public GPUCoalescer
     void issueRequest(CoalescedRequest* crequest) override;
     void wbCallback(Addr address);
     void invCallback(Addr address);
-    RequestStatus makeRequest(PacketPtr pkt);
+    RequestStatus makeRequest(PacketPtr pkt) override;
   private:
     void invL1();
     void wbL1();
