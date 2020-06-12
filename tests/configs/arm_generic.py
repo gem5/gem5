@@ -100,7 +100,7 @@ class LinuxArmSystemBuilder(object):
         sc = SysConfig(None, self.mem_size, [disk_image], "/dev/sda")
         system = FSConfig.makeArmSystem(self.mem_mode,
                                         self.machine_type, self.num_cpus,
-                                        sc, False, ruby=self.use_ruby)
+                                        sc, ruby=self.use_ruby)
 
         # We typically want the simulator to panic if the kernel
         # panics or oopses. This prevents the simulator from running
