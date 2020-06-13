@@ -77,7 +77,7 @@ class Interrupts : public BaseInterrupts
 
 
     void
-    post(int int_num, int index)
+    post(int int_num, int index) override
     {
         DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
 
@@ -92,7 +92,7 @@ class Interrupts : public BaseInterrupts
     }
 
     void
-    clear(int int_num, int index)
+    clear(int int_num, int index) override
     {
         DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
 
@@ -107,7 +107,7 @@ class Interrupts : public BaseInterrupts
     }
 
     void
-    clearAll()
+    clearAll() override
     {
         DPRINTF(Interrupt, "Interrupts all cleared\n");
         intStatus = 0;
@@ -123,7 +123,7 @@ class Interrupts : public BaseInterrupts
     bool takeInt(InterruptTypes int_type) const;
 
     bool
-    checkInterrupts() const
+    checkInterrupts() const override
     {
         HCR  hcr  = tc->readMiscReg(MISCREG_HCR);
 
