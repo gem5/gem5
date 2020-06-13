@@ -47,11 +47,72 @@
 #include "base/trace.hh"
 #include "sim/sim_object.hh"
 
+namespace
+{
+
+class DefaultMasterPort : public MasterPort
+{
+  protected:
+    [[noreturn]] void
+    blowUp() const
+    {
+        throw UnboundPortException();
+    }
+
+  public:
+    DefaultMasterPort() : MasterPort("default_master_port", nullptr) {}
+
+    // Atomic protocol.
+    Tick recvAtomicSnoop(PacketPtr) override { blowUp(); }
+
+    // Timing protocol.
+    bool recvTimingResp(PacketPtr) override { blowUp(); }
+    void recvTimingSnoopReq(PacketPtr) override { blowUp(); }
+    void recvReqRetry() override { blowUp(); }
+    void recvRetrySnoopResp() override { blowUp(); }
+
+    // Functional protocol.
+    void recvFunctionalSnoop(PacketPtr) override { blowUp(); }
+};
+
+class DefaultSlavePort : public SlavePort
+{
+  protected:
+    [[noreturn]] void
+    blowUp() const
+    {
+        throw UnboundPortException();
+    }
+
+  public:
+    DefaultSlavePort() : SlavePort("default_slave_port", nullptr) {}
+
+    // Atomic protocol.
+    Tick recvAtomic(PacketPtr) override { blowUp(); }
+
+    // Timing protocol.
+    bool recvTimingReq(PacketPtr) override { blowUp(); }
+    bool tryTiming(PacketPtr) override { blowUp(); }
+    bool recvTimingSnoopResp(PacketPtr) override { blowUp(); }
+    void recvRespRetry() override { blowUp(); }
+
+    // Functional protocol.
+    void recvFunctional(PacketPtr) override { blowUp(); }
+
+    // General.
+    AddrRangeList getAddrRanges() const override { return AddrRangeList(); }
+};
+
+DefaultMasterPort defaultMasterPort;
+DefaultSlavePort defaultSlavePort;
+
+} // anonymous namespace
+
 /**
  * Master port
  */
 MasterPort::MasterPort(const std::string& name, SimObject* _owner, PortID _id)
-    : Port(name, _id), _slavePort(NULL), owner(*_owner)
+    : Port(name, _id), _slavePort(&defaultSlavePort), owner(*_owner)
 {
 }
 
@@ -63,10 +124,8 @@ void
 MasterPort::bind(Port &peer)
 {
     auto *slave_port = dynamic_cast<SlavePort *>(&peer);
-    if (!slave_port) {
-        fatal("Attempt to bind port %s to non-slave port %s.",
-                name(), peer.name());
-    }
+    fatal_if(!slave_port, "Can't bind port %s to non-slave port %s.",
+             name(), peer.name());
     // master port keeps track of the slave port
     _slavePort = slave_port;
     Port::bind(peer);
@@ -77,11 +136,10 @@ MasterPort::bind(Port &peer)
 void
 MasterPort::unbind()
 {
-    if (_slavePort == NULL)
-        panic("Attempting to unbind master port %s that is not connected\n",
-              name());
+    panic_if(!isConnected(), "Can't unbind master port %s which is not bound.",
+             name());
     _slavePort->slaveUnbind();
-    _slavePort = nullptr;
+    _slavePort = &defaultSlavePort;
     Port::unbind();
 }
 
@@ -108,8 +166,8 @@ MasterPort::printAddr(Addr a)
  * Slave port
  */
 SlavePort::SlavePort(const std::string& name, SimObject* _owner, PortID id)
-    : Port(name, id), _masterPort(NULL), defaultBackdoorWarned(false),
-    owner(*_owner)
+    : Port(name, id), _masterPort(&defaultMasterPort),
+    defaultBackdoorWarned(false), owner(*_owner)
 {
 }
 
@@ -120,7 +178,7 @@ SlavePort::~SlavePort()
 void
 SlavePort::slaveUnbind()
 {
-    _masterPort = NULL;
+    _masterPort = &defaultMasterPort;
     Port::unbind();
 }
 

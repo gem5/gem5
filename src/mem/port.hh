@@ -258,6 +258,7 @@ class SlavePort : public Port, public AtomicResponseProtocol,
 
   private:
     MasterPort* _masterPort;
+
     bool defaultBackdoorWarned;
 
   protected:
@@ -278,13 +279,7 @@ class SlavePort : public Port, public AtomicResponseProtocol,
     /**
      * Called by the owner to send a range change
      */
-    void
-    sendRangeChange() const
-    {
-        fatal_if(!_masterPort,
-                "%s cannot sendRangeChange() without master port.", name());
-        _masterPort->recvRangeChange();
-    }
+    void sendRangeChange() const { _masterPort->recvRangeChange(); }
 
     /**
      * Get a list of the non-overlapping address ranges the owner is
@@ -316,7 +311,11 @@ class SlavePort : public Port, public AtomicResponseProtocol,
     Tick
     sendAtomicSnoop(PacketPtr pkt)
     {
-        return AtomicResponseProtocol::sendSnoop(_masterPort, pkt);
+        try {
+            return AtomicResponseProtocol::sendSnoop(_masterPort, pkt);
+        } catch (UnboundPortException) {
+            reportUnbound();
+        }
     }
 
   public:
@@ -332,7 +331,11 @@ class SlavePort : public Port, public AtomicResponseProtocol,
     void
     sendFunctionalSnoop(PacketPtr pkt) const
     {
-        FunctionalResponseProtocol::sendSnoop(_masterPort, pkt);
+        try {
+            FunctionalResponseProtocol::sendSnoop(_masterPort, pkt);
+        } catch (UnboundPortException) {
+            reportUnbound();
+        }
     }
 
   public:
@@ -352,7 +355,11 @@ class SlavePort : public Port, public AtomicResponseProtocol,
     bool
     sendTimingResp(PacketPtr pkt)
     {
-        return TimingResponseProtocol::sendResp(_masterPort, pkt);
+        try {
+            return TimingResponseProtocol::sendResp(_masterPort, pkt);
+        } catch (UnboundPortException) {
+            reportUnbound();
+        }
     }
 
     /**
@@ -365,7 +372,11 @@ class SlavePort : public Port, public AtomicResponseProtocol,
     void
     sendTimingSnoopReq(PacketPtr pkt)
     {
-        TimingResponseProtocol::sendSnoopReq(_masterPort, pkt);
+        try {
+            TimingResponseProtocol::sendSnoopReq(_masterPort, pkt);
+        } catch (UnboundPortException) {
+            reportUnbound();
+        }
     }
 
     /**
@@ -375,7 +386,11 @@ class SlavePort : public Port, public AtomicResponseProtocol,
     void
     sendRetryReq()
     {
-        TimingResponseProtocol::sendRetryReq(_masterPort);
+        try {
+            TimingResponseProtocol::sendRetryReq(_masterPort);
+        } catch (UnboundPortException) {
+            reportUnbound();
+        }
     }
 
     /**
@@ -385,7 +400,11 @@ class SlavePort : public Port, public AtomicResponseProtocol,
     void
     sendRetrySnoopResp()
     {
-        TimingResponseProtocol::sendRetrySnoopResp(_masterPort);
+        try {
+            TimingResponseProtocol::sendRetrySnoopResp(_masterPort);
+        } catch (UnboundPortException) {
+            reportUnbound();
+        }
     }
 
   protected:
@@ -422,43 +441,71 @@ class SlavePort : public Port, public AtomicResponseProtocol,
 inline Tick
 MasterPort::sendAtomic(PacketPtr pkt)
 {
-    return AtomicRequestProtocol::send(_slavePort, pkt);
+    try {
+        return AtomicRequestProtocol::send(_slavePort, pkt);
+    } catch (UnboundPortException) {
+        reportUnbound();
+    }
 }
 
 inline Tick
 MasterPort::sendAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
 {
-    return AtomicRequestProtocol::sendBackdoor(_slavePort, pkt, backdoor);
+    try {
+        return AtomicRequestProtocol::sendBackdoor(_slavePort, pkt, backdoor);
+    } catch (UnboundPortException) {
+        reportUnbound();
+    }
 }
 
 inline void
 MasterPort::sendFunctional(PacketPtr pkt) const
 {
-    return FunctionalRequestProtocol::send(_slavePort, pkt);
+    try {
+        return FunctionalRequestProtocol::send(_slavePort, pkt);
+    } catch (UnboundPortException) {
+        reportUnbound();
+    }
 }
 
 inline bool
 MasterPort::sendTimingReq(PacketPtr pkt)
 {
-    return TimingRequestProtocol::sendReq(_slavePort, pkt);
+    try {
+        return TimingRequestProtocol::sendReq(_slavePort, pkt);
+    } catch (UnboundPortException) {
+        reportUnbound();
+    }
 }
 
 inline bool
 MasterPort::tryTiming(PacketPtr pkt) const
 {
-    return TimingRequestProtocol::trySend(_slavePort, pkt);
+    try {
+        return TimingRequestProtocol::trySend(_slavePort, pkt);
+    } catch (UnboundPortException) {
+        reportUnbound();
+    }
 }
 
 inline bool
 MasterPort::sendTimingSnoopResp(PacketPtr pkt)
 {
-    return TimingRequestProtocol::sendSnoopResp(_slavePort, pkt);
+    try {
+        return TimingRequestProtocol::sendSnoopResp(_slavePort, pkt);
+    } catch (UnboundPortException) {
+        reportUnbound();
+    }
 }
 
 inline void
 MasterPort::sendRetryResp()
 {
-    TimingRequestProtocol::sendRetryResp(_slavePort);
+    try {
+        TimingRequestProtocol::sendRetryResp(_slavePort);
+    } catch (UnboundPortException) {
+        reportUnbound();
+    }
 }
 
 #endif //__MEM_PORT_HH__
