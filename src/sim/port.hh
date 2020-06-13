@@ -63,6 +63,10 @@ class Port
 
   protected:
 
+    class UnboundPortException {};
+
+    [[noreturn]] void reportUnbound() const;
+
     /**
      * A numeric identifier to distinguish ports in a vector, and set
      * to InvalidPortID in case this port is not part of a vector.
