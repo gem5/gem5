@@ -153,7 +153,11 @@ Base::compress(const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat)
     // Update stats
     stats.compressions++;
     stats.compressionSizeBits += comp_size_bits;
-    stats.compressionSize[std::ceil(std::log2(comp_size_bits))]++;
+    if (comp_size_bits != 0) {
+        stats.compressionSize[1 + std::ceil(std::log2(comp_size_bits))]++;
+    } else {
+        stats.compressionSize[0]++;
+    }
 
     // Print debug information
     DPRINTF(CacheComp, "Compressed cache line from %d to %d bits. " \
@@ -221,11 +225,15 @@ Base::BaseStats::regStats()
 {
     Stats::Group::regStats();
 
-    compressionSize.init(std::log2(compressor.blkSize*8) + 1);
+    // Values comprised are {0, 1, 2, 4, ..., blkSize}
+    compressionSize.init(std::log2(compressor.blkSize*8) + 2);
+    compressionSize.subname(0, "0");
+    compressionSize.subdesc(0,
+        "Number of blocks that compressed to fit in 0 bits");
     for (unsigned i = 0; i <= std::log2(compressor.blkSize*8); ++i) {
         std::string str_i = std::to_string(1 << i);
-        compressionSize.subname(i, str_i);
-        compressionSize.subdesc(i,
+        compressionSize.subname(1+i, str_i);
+        compressionSize.subdesc(1+i,
             "Number of blocks that compressed to fit in " + str_i + " bits");
     }
 

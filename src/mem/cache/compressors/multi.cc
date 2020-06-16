@@ -94,9 +94,16 @@ Multi::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
             const std::size_t size = compData->getSize();
             // If the compressed size is worse than the uncompressed size,
             // we assume the size is the uncompressed size, and thus the
-            // compression factor is 1
+            // compression factor is 1.
+            //
+            // Some compressors (notably the zero compressor) may rely on
+            // extra information being stored in the tags, or added in
+            // another compression layer. Their size can be 0, so it is
+            // assigned the highest possible compression factor (the original
+            // block's size).
             compressionFactor = (size > blk_size) ? 1 :
-                alignToPowerOfTwo(std::floor(blk_size / (double) size));
+                ((size == 0) ? blk_size :
+                alignToPowerOfTwo(std::floor(blk_size / (double) size)));
         }
     };
     struct ResultsComparator

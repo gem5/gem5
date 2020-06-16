@@ -106,7 +106,7 @@ class Zero::PatternX
 {
   public:
     PatternX(const DictionaryEntry bytes, const int match_location)
-        : DictionaryCompressor::UncompressedPattern(X, 0, 1, match_location,
+        : DictionaryCompressor::UncompressedPattern(X, 0, 0, match_location,
           bytes)
     {
     }
@@ -118,7 +118,7 @@ class Zero::PatternZ
   public:
     PatternZ(const DictionaryEntry bytes, const int match_location)
         : DictionaryCompressor::MaskedValuePattern<0, 0xFFFFFFFFFFFFFFFF>(
-          Z, 1, 1, match_location, bytes)
+          Z, 1, 0, match_location, bytes)
     {
     }
 };
