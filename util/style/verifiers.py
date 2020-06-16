@@ -347,7 +347,7 @@ class SortedIncludes(Verifier):
     def check(self, filename, regions=all_regions, fobj=None, silent=False):
         close = False
         if fobj is None:
-            fobj = self.open(filename, 'r')
+            fobj = self.open(filename, 'rb')
             close = True
         norm_fname = self.normalize_filename(filename)
 
