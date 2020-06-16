@@ -563,9 +563,10 @@ class DictionaryCompressor<T>::LocatedMaskedPattern
         const uint64_t code,
         const uint64_t metadata_length,
         const int match_location,
-        const DictionaryEntry bytes)
+        const DictionaryEntry bytes,
+        const bool allocate = true)
       : MaskedPattern<mask>(number, code, metadata_length, match_location,
-            bytes)
+            bytes, allocate)
     {
     }
 

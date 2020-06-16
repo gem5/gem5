@@ -116,7 +116,7 @@ class RepeatedQwords::PatternM
   public:
     PatternM(const DictionaryEntry bytes, const int match_location)
         : LocatedMaskedPattern<0xFFFFFFFFFFFFFFFF, 0>(M, 1, 0, match_location,
-          bytes)
+          bytes, false)
     {
     }
 };
