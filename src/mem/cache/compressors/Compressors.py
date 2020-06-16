@@ -145,6 +145,7 @@ class ZeroCompressor(BaseDictionaryCompressor):
     chunk_size_bits = 64
 
 class BDI(MultiCompressor):
+    encoding_in_tags=True
     compressors = [ZeroCompressor(), RepeatedQwordsCompressor(),
         Base64Delta8(), Base64Delta16(), Base64Delta32(), Base32Delta8(),
         Base32Delta16(), Base16Delta8()]
