@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright 2019 Google, Inc.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,8 +97,6 @@ arm_fast_model_pybind(pybind11::module &m_internal)
              pybind11::arg("debug") = false)
         .def("scx_enable_cadi_log", &scx::scx_enable_cadi_log,
              pybind11::arg("log") = true)
-        .def("scx_prefix_appli_output", &scx::scx_prefix_appli_output,
-             pybind11::arg("prefix") = true)
         .def("scx_print_port_number", &scx::scx_print_port_number,
              pybind11::arg("print") = true)
 
