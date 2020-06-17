@@ -32,6 +32,11 @@
 
 #include "mem/ruby/system/RubySystem.hh"
 
+WriteMask::WriteMask()
+    : mSize(RubySystem::getBlockSizeBytes()), mMask(mSize, false),
+      mAtomic(false)
+{}
+
 void
 WriteMask::print(std::ostream& out) const
 {

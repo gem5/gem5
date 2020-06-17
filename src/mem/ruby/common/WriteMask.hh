@@ -46,18 +46,16 @@
 #include <iostream>
 #include <vector>
 
+#include "base/amo.hh"
+#include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/TypeDefines.hh"
-#include "mem/ruby/system/RubySystem.hh"
 
 class WriteMask
 {
   public:
     typedef std::vector<std::pair<int, AtomicOpFunctor* >> AtomicOpVector;
 
-    WriteMask()
-      : mSize(RubySystem::getBlockSizeBytes()), mMask(mSize, false),
-        mAtomic(false)
-    {}
+    WriteMask();
 
     WriteMask(int size)
       : mSize(size), mMask(size, false), mAtomic(false)

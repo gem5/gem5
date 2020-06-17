@@ -55,6 +55,7 @@
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/common/WriteMask.hh"
+#include "mem/ruby/protocol/RubyRequestType.hh"
 
 inline Cycles zero_time() { return Cycles(0); }
 
