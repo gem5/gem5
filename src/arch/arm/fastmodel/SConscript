@@ -1,3 +1,15 @@
+# Copyright (c) 2020 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright 2019 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -114,6 +126,7 @@ libs = (
     'armctmodel',
     'fmruntime',
     'IrisSupport',
+    'atomic',
     'dl',
     'rt',
 )
@@ -374,10 +387,8 @@ for header in gicv3_comms_headers:
     Command(gic_protocol_dest.File(header), gic_protocol_src.File(header),
             Copy('${TARGET}', '${SOURCE}'))
 
-lisa_protocol_types_header_path = 'include/lisa_protocol_types.h'
-lisa_protocol_types_header_target = \
-    gic_protocol_dest.File(lisa_protocol_types_header_path)
-lisa_protocol_types_header_src = \
-    examples_common_dir.File(lisa_protocol_types_header_path)
-Command(lisa_protocol_types_header_target, lisa_protocol_types_header_src,
-        Copy('${TARGET}', '${SOURCE}'))
+common_headers = ('lisa_protocol_types.h', 'tlm_has_get_protocol_types.h')
+for header in common_headers:
+    header_target = gic_protocol_dest.Dir('include').File(header)
+    header_src = examples_common_dir.Dir('include').File(header)
+    Command(header_target, header_src, Copy('${TARGET}', '${SOURCE}'))
