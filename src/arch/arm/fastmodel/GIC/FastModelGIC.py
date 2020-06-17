@@ -1,3 +1,15 @@
+# Copyright (c) 2020 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright 2019 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,6 +36,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.params import *
+from m5.util.fdthelper import *
 from m5.SimObject import SimObject
 
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
@@ -463,6 +476,9 @@ class FastModelGIC(BaseGic):
     redistributor = VectorGicv3CommsInitiatorSocket(
             'GIC communication initiator')
 
+    # Used for DTB autogeneration
+    _state = FdtState(addr_cells=2, size_cells=2, interrupt_cells=3)
+
     def get_redist_bases(self):
         """
         The format of reg_base_per_redistributor is
@@ -497,3 +513,62 @@ class FastModelGIC(BaseGic):
         ]
 
         return ranges
+
+    def interruptCells(self, int_type, int_num, int_flag):
+        """
+        Interupt cells generation helper:
+        Following specifications described in
+
+        Documentation/devicetree/bindings/interrupt-controller/arm,gic-v3.txt
+        """
+        prop = self._state.interruptCells(0)
+        assert len(prop) >= 3
+        prop[0] = int_type
+        prop[1] = int_num
+        prop[2] = int_flag
+        return prop
+
+    def generateDeviceTree(self, state):
+        sc_gic = self.sc_gic
+
+        node = FdtNode("interrupt-controller")
+        node.appendCompatible(["arm,gic-v3"])
+        node.append(self._state.interruptCellsProperty())
+        node.append(self._state.addrCellsProperty())
+        node.append(self._state.sizeCellsProperty())
+        node.append(FdtProperty("ranges"))
+        node.append(FdtProperty("interrupt-controller"))
+
+        redist_stride = 0x40000 if sc_gic.has_gicv4_1 else 0x20000
+        node.append(FdtPropertyWords("redistributor-stride",
+            state.sizeCells(redist_stride)))
+
+        regs = (
+            state.addrCells(sc_gic.reg_base) +
+            state.sizeCells(0x10000) +
+            state.addrCells(self.get_redist_bases()[0]) +
+            state.sizeCells(0x2000000) )
+
+        node.append(FdtPropertyWords("reg", regs))
+        # Maintenance interrupt (PPI 25).
+        node.append(FdtPropertyWords("interrupts",
+            self.interruptCells(1, 9, 0xf04)))
+
+        node.appendPhandle(self)
+
+        # Generate the ITS device tree
+        its_frame_size = 0x10000
+        its_bases = [
+            sc_gic.its0_base, sc_gic.its1_base, sc_gic.its2_base,
+            sc_gic.its3_base
+        ]
+        for its_base in its_bases:
+            its_node = self.generateBasicPioDeviceNode(state, "gic-its",
+                                                       its_base,
+                                                       2 * its_frame_size)
+            its_node.appendCompatible(["arm,gic-v3-its"])
+            its_node.append(FdtProperty("msi-controller"))
+            its_node.append(FdtPropertyWords("#msi-cells", [1]))
+            node.append(its_node)
+
+        yield node
