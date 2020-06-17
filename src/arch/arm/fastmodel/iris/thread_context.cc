@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright 2019 Google, Inc.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -204,9 +216,22 @@ ThreadContext::phaseInitLeave(
     std::vector<iris::ResourceInfo> resources;
     call().resource_getList(_instId, resources);
 
+    std::map<iris::ResourceId, const iris::ResourceInfo *>
+        idToResource;
+    for (const auto &resource: resources) {
+        idToResource[resource.rscId] = &resource;
+    }
     ResourceMap resourceMap;
-    for (auto &resource: resources)
-        resourceMap[resource.name] = resource;
+    for (const auto &resource: resources) {
+        std::string name = resource.name;
+        iris::ResourceId parentId = resource.parentRscId;
+        while (parentId != iris::IRIS_UINT64_MAX) {
+            const auto *parent = idToResource[parentId];
+            name = parent->name + "." + name;
+            parentId = parent->parentRscId;
+        }
+        resourceMap[name] = resource;
+    }
 
     initFromIrisInstance(resourceMap);
 
