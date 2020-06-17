@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, 2019 ARM Limited
+# Copyright (c) 2016-2017, 2019-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -219,7 +219,8 @@ def build(options):
     m5.ticks.fixGlobalFrequency()
 
     kernel_cmd = [
-        "earlyprintk=pl011,0x1c090000",
+        "earlyprintk",
+        "earlycon=pl011,0x1c090000",
         "console=ttyAMA0",
         "lpj=19988480",
         "norandmaps",
