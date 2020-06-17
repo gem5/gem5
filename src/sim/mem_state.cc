@@ -43,7 +43,8 @@ MemState::MemState(Process *owner, Addr brk_point, Addr stack_base,
                    Addr mmap_end)
     : _ownerProcess(owner),
       _pageBytes(owner->system->getPageBytes()), _brkPoint(brk_point),
-      _stackBase(stack_base), _maxStackSize(max_stack_size),
+      _stackBase(stack_base), _stackSize(max_stack_size),
+      _maxStackSize(max_stack_size), _stackMin(stack_base - max_stack_size),
       _nextThreadStackBase(next_thread_stack_base),
       _mmapEnd(mmap_end), _endBrkPoint(brk_point)
 {
