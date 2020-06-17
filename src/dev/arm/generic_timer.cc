@@ -415,6 +415,13 @@ GenericTimer::unserialize(CheckpointIn &cp)
         cpu_count = OLD_CPU_MAX;
     }
 
+    if (cpu_count != system.threads.size()) {
+        fatal("The simulated system has been initialized with %d CPUs, "
+              "but the Generic Timer checkpoint expects %d CPUs. Consider "
+              "restoring the checkpoint specifying %d CPUs.",
+              system.threads.size(), cpu_count, cpu_count);
+    }
+
     for (int i = 0; i < cpu_count; ++i) {
         CoreTimers &core(getTimers(i));
         core.unserializeSection(cp, csprintf("pe_implementation%d", i));
