@@ -66,7 +66,7 @@ class LTAGE : public TAGE
     void squash(ThreadID tid, void *bp_history) override;
     void update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
                 bool squashed, const StaticInstPtr & inst,
-                Addr corrTarget = MaxAddr) override;
+                Addr corrTarget) override;
 
     void init() override;
     virtual void regStats() override;

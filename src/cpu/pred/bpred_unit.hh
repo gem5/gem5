@@ -177,8 +177,7 @@ class BPredUnit : public SimObject
      */
     virtual void update(ThreadID tid, Addr instPC, bool taken,
                    void *bp_history, bool squashed,
-                   const StaticInstPtr & inst = StaticInst::nullStaticInstPtr,
-                   Addr corrTarget = MaxAddr) = 0;
+                   const StaticInstPtr &inst, Addr corrTarget) = 0;
     /**
      * Updates the BTB with the target of a branch.
      * @param inst_PC The branch's PC that will be updated.

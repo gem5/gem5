@@ -158,7 +158,7 @@ class TAGE_SC_L: public LTAGE
 
     void update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
                 bool squashed, const StaticInstPtr & inst,
-                Addr corrTarget = MaxAddr) override;
+                Addr corrTarget) override;
 
   protected:
 

@@ -228,7 +228,7 @@ class MultiperspectivePerceptronTAGE : public MultiperspectivePerceptron
     void update(ThreadID tid, Addr instPC, bool taken,
             void *bp_history, bool squashed,
             const StaticInstPtr & inst,
-            Addr corrTarget = MaxAddr) override;
+            Addr corrTarget) override;
     void uncondBranch(ThreadID tid, Addr pc, void * &bp_history) override;
     void squash(ThreadID tid, void *bp_history) override;
 
