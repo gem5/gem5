@@ -62,6 +62,5 @@ SETranslatingPortProxy::fixupAddr(Addr addr, BaseTLB::Mode mode) const
             return true;
         }
     }
-    panic("Page table fault when accessing virtual address %#x "
-          "during functional write.", addr);
+    return false;
 }
