@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017 ARM Limited
+# Copyright (c) 2016-2017, 2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -58,9 +58,9 @@ from common.cores.arm import HPI
 import devices
 
 
-default_dist_version = '20170616'
-default_kernel = 'vmlinux.vexpress_gem5_v1_64.' + default_dist_version
+default_kernel = 'vmlinux.arm64'
 default_disk = 'linaro-minimal-aarch64.img'
+default_root_device = '/dev/vda1'
 
 
 # Pre-defined CPU configurations. Each tuple must be ordered as : (cpu_class,
@@ -112,7 +112,7 @@ def create(args):
 
     # Add the PCI devices we need for this system. The base system
     # doesn't have any PCI devices by default since they are assumed
-    # to be added by the configurastion scripts needin them.
+    # to be added by the configuration scripts needing them.
     system.pci_devices = [
         # Create a VirtIO block device for the system's boot
         # disk. Attach the disk image using gem5's Copy-on-Write
@@ -165,7 +165,7 @@ def create(args):
         # memory layout.
         "norandmaps",
         # Tell Linux where to find the root disk image.
-        "root=/dev/vda",
+        "root=%s" % args.root_device,
         # Mount the root disk read-write by default.
         "rw",
         # Tell Linux about the amount of physical memory present.
@@ -206,6 +206,10 @@ def main():
     parser.add_argument("--disk-image", type=str,
                         default=default_disk,
                         help="Disk to instantiate")
+    parser.add_argument("--root-device", type=str,
+                        default=default_root_device,
+                        help="OS device name for root partition (default: {})"
+                             .format(default_root_device))
     parser.add_argument("--script", type=str, default="",
                         help = "Linux bootscript")
     parser.add_argument("--cpu", type=str, choices=list(cpu_types.keys()),
