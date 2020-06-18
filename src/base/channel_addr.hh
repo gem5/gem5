@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2019, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -91,6 +91,14 @@ class ChannelAddr
 
     constexpr ChannelAddr operator<<(const int b) const {
         return ChannelAddr(a << b);
+    }
+
+    constexpr ChannelAddr operator^(const int b) const {
+        return ChannelAddr(a ^ b);
+    }
+
+    constexpr ChannelAddr operator%(const int b) const {
+        return ChannelAddr(a % b);
     }
 
     constexpr ChannelAddr operator*(const Type &b) const {
