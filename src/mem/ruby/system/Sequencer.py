@@ -99,6 +99,32 @@ class RubySequencer(RubyPort):
    # 99 is the dummy default value
    coreid = Param.Int(99, "CorePair core id")
 
+   def connectCpuPorts(self, cpu):
+      """
+      Helper for connecting all cpu memory request output ports to this
+      object's in_ports.
+      This assumes the provided cpu object is an instance of BaseCPU. Non-cpu
+      objects should use connectInstPort and connectDataPort.
+      """
+      import m5.objects
+      assert(isinstance(cpu, m5.objects.BaseCPU))
+      # this connects all cpu mem-side ports to self.in_ports
+      cpu.connectAllPorts(self)
+
+   def connectIOPorts(self, piobus):
+      """
+      Helper for connecting this object's IO request and response ports to the
+      provided bus object. Usually a iobus object is used to wireup IO
+      components in a full system simulation. Incoming/Outgoing IO requests do
+      not go though the SLICC protocol so the iobus must be connected to the
+      sequencer directly.
+      """
+      import m5.defines
+      self.pio_request_port = piobus.cpu_side_ports
+      self.mem_request_port = piobus.cpu_side_ports
+      if m5.defines.buildEnv['TARGET_ISA'] == "x86":
+         self.pio_response_port = piobus.mem_side_ports
+
 class RubyHTMSequencer(RubySequencer):
    type = 'RubyHTMSequencer'
    cxx_class = 'HTMSequencer'
