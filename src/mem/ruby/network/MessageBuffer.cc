@@ -176,9 +176,11 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
     assert((delta > 0) || m_allow_zero_latency);
     Tick arrival_time = 0;
 
-    // random delays are inserted if either RubySystem level randomization flag
-    // is turned on, or the buffer level randomization is set
-    if (!RubySystem::getRandomization() && !m_randomization) {
+    // random delays are inserted if the RubySystem level randomization flag
+    // is turned on and this buffer allows it
+    if ((m_randomization == MessageRandomization::disabled) ||
+        ((m_randomization == MessageRandomization::ruby_system) &&
+          !RubySystem::getRandomization())) {
         // No randomization
         arrival_time = current_time + delta;
     } else {

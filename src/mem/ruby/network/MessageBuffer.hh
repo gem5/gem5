@@ -248,7 +248,7 @@ class MessageBuffer : public SimObject
     uint64_t m_msg_counter;
     int m_priority_rank;
     const bool m_strict_fifo;
-    const bool m_randomization;
+    const MessageRandomization m_randomization;
     const bool m_allow_zero_latency;
 
     int m_input_link_id;

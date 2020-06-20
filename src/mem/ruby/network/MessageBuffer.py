@@ -40,6 +40,13 @@ from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
+# A MessageBuffer inserts random delays to enqueued messages when the
+# randomization param is set to 'enabled' or when globally enabled for the
+# RubySystem and the param is set to 'ruby_system' (default). 'disabled'
+# completely prevents randomization.
+class MessageRandomization(ScopedEnum):
+    vals = ['disabled', 'enabled', 'ruby_system']
+
 class MessageBuffer(SimObject):
     type = 'MessageBuffer'
     cxx_class = 'MessageBuffer'
@@ -47,10 +54,8 @@ class MessageBuffer(SimObject):
     ordered = Param.Bool(False, "Whether the buffer is ordered")
     buffer_size = Param.Unsigned(0, "Maximum number of entries to buffer \
                                      (0 allows infinite entries)")
-    randomization = Param.Bool(False, "Insert random delays on message \
-                                       enqueue times (enforced to have \
-                                       random delays if RubySystem \
-                                       randomization flag is True)")
+    randomization = Param.MessageRandomization('ruby_system',
+                                       "Randomization parameter")
     allow_zero_latency = Param.Bool(False, "Allows messages to be enqueued \
                                             with zero latency. This is useful \
                                             for internall trigger queues and \
