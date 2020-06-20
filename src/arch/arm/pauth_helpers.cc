@@ -706,7 +706,7 @@ ArmISA::addPACGA(ThreadContext * tc, uint64_t X, uint64_t Y, uint64_t* out)
     {
         case EL0:
             trapEL2 = (EL2Enabled(tc) && hcr.api == 0 &&
-                      (hcr.tge == '0' || hcr.e2h == 0));
+                      (hcr.tge == 0 || hcr.e2h == 0));
             trapEL3 = have_el3 && sc3.api == 0;
             break;
         case EL1:
