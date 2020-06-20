@@ -172,17 +172,7 @@ def build_test_system(np):
             cpu.createThreads()
             cpu.createInterruptController()
 
-            cpu.icache_port = test_sys.ruby._cpu_ports[i].slave
-            cpu.dcache_port = test_sys.ruby._cpu_ports[i].slave
-
-            cpu.mmu.connectWalkerPorts(
-                test_sys.ruby._cpu_ports[i].slave,
-                test_sys.ruby._cpu_ports[i].slave)
-
-            if buildEnv['TARGET_ISA'] in "x86":
-                cpu.interrupts[0].pio = test_sys.ruby._cpu_ports[i].master
-                cpu.interrupts[0].int_master = test_sys.ruby._cpu_ports[i].slave
-                cpu.interrupts[0].int_slave = test_sys.ruby._cpu_ports[i].master
+            test_sys.ruby._cpu_ports[i].connectCpuPorts(cpu)
 
     else:
         if options.caches or options.l2cache:

@@ -226,11 +226,7 @@ def create_system(options, full_system, system, piobus = None, dma_ports = [],
     # Connect the cpu sequencers and the piobus
     if piobus != None:
         for cpu_seq in cpu_sequencers:
-            cpu_seq.pio_master_port = piobus.slave
-            cpu_seq.mem_master_port = piobus.slave
-
-            if buildEnv['TARGET_ISA'] == "x86":
-                cpu_seq.pio_slave_port = piobus.master
+            cpu_seq.connectIOPorts(piobus)
 
     ruby.number_of_virtual_networks = ruby.network.number_of_virtual_networks
     ruby._cpu_ports = cpu_sequencers

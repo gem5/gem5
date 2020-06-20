@@ -78,14 +78,7 @@ for (i, cpu) in enumerate(system.cpu):
     # create the interrupt controller
     cpu.createInterruptController()
     # Tie the cpu ports to the correct ruby system ports
-    cpu.icache_port = system.ruby._cpu_ports[i].slave
-    cpu.dcache_port = system.ruby._cpu_ports[i].slave
-    cpu.mmu.connectWalkerPorts(
-        system.ruby._cpu_ports[i].slave, system.ruby._cpu_ports[i].slave)
-
-    cpu.interrupts[0].pio = system.ruby._cpu_ports[i].master
-    cpu.interrupts[0].int_master = system.ruby._cpu_ports[i].slave
-    cpu.interrupts[0].int_slave = system.ruby._cpu_ports[i].master
+    system.ruby._cpu_ports[i].connectCpuPorts(cpu)
 
 root = Root(full_system = True, system = system)
 m5.ticks.setGlobalFrequency('1THz')
