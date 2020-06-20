@@ -108,6 +108,7 @@ class BrkPoint
   public:
     bool testAddrMatch(ThreadContext *tc, Addr pc, uint8_t bas);
     bool testAddrMissMatch(ThreadContext *tc, Addr pc, uint8_t bas);
+    bool testContextMatch(ThreadContext *tc, bool ctx1, bool low_ctx);
     bool testContextMatch(ThreadContext *tc, bool ctx1);
     bool testVMIDMatch(ThreadContext *tc);
 

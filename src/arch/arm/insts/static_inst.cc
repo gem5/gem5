@@ -672,16 +672,37 @@ ArmStaticInst::advSIMDFPAccessTrap64(ExceptionLevel el) const
 Fault
 ArmStaticInst::checkFPAdvSIMDTrap64(ThreadContext *tc, CPSR cpsr) const
 {
-    if (ArmSystem::haveVirtualization(tc) && !inSecureState(tc)) {
-        HCPTR cptrEnCheck = tc->readMiscReg(MISCREG_CPTR_EL2);
-        if (cptrEnCheck.tfp)
+    if (currEL(tc) <= EL2 && EL2Enabled(tc)) {
+        bool trap_el2 = false;
+        CPTR cptr_en_check = tc->readMiscReg(MISCREG_CPTR_EL2);
+        HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+        if (HaveVirtHostExt(tc) && hcr.e2h == 0x1) {
+            switch (cptr_en_check.fpen) {
+              case 0:
+              case 2:
+                trap_el2 = !(currEL(tc) == EL1 && hcr.tge == 1);
+                break;
+              case 1:
+                trap_el2 = (currEL(tc) == EL0 && hcr.tge == 1);
+                break;
+              default:
+                trap_el2 = false;
+                break;
+            }
+        } else if (cptr_en_check.tfp) {
+            trap_el2 = true;
+        }
+
+        if (trap_el2) {
             return advSIMDFPAccessTrap64(EL2);
+        }
     }
 
     if (ArmSystem::haveSecurity(tc)) {
-        HCPTR cptrEnCheck = tc->readMiscReg(MISCREG_CPTR_EL3);
-        if (cptrEnCheck.tfp)
+        CPTR cptr_en_check = tc->readMiscReg(MISCREG_CPTR_EL3);
+        if (cptr_en_check.tfp) {
             return advSIMDFPAccessTrap64(EL3);
+        }
     }
 
     return NoFault;
@@ -768,8 +789,8 @@ ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc,
     }
 
     if (have_security && ELIs64(tc, EL3)) {
-        HCPTR cptrEnCheck = tc->readMiscReg(MISCREG_CPTR_EL3);
-        if (cptrEnCheck.tfp)
+        HCPTR cptr_en_check = tc->readMiscReg(MISCREG_CPTR_EL3);
+        if (cptr_en_check.tfp)
             return advSIMDFPAccessTrap64(EL3);
     }
 
@@ -1008,10 +1029,24 @@ ArmStaticInst::checkSveEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
     // Check if access disabled in CPTR_EL2
     if (el <= EL2 && EL2Enabled(tc)) {
         CPTR cptr_en_check = tc->readMiscReg(MISCREG_CPTR_EL2);
-        if (cptr_en_check.tz)
-            return sveAccessTrap(EL2);
-        if (cptr_en_check.tfp)
-            return advSIMDFPAccessTrap64(EL2);
+        HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+        if (HaveVirtHostExt(tc) && hcr.e2h) {
+            if (((cptr_en_check.zen & 0x1) == 0x0) ||
+                (cptr_en_check.zen == 0x1 && el == EL0 &&
+                 hcr.tge == 0x1)) {
+                return sveAccessTrap(EL2);
+            }
+            if (((cptr_en_check.fpen & 0x1) == 0x0) ||
+                (cptr_en_check.fpen == 0x1 && el == EL0 &&
+                 hcr.tge == 0x1)) {
+                return advSIMDFPAccessTrap64(EL2);
+            }
+        } else {
+            if (cptr_en_check.tz == 1)
+                return sveAccessTrap(EL2);
+            if (cptr_en_check.tfp == 1)
+                return advSIMDFPAccessTrap64(EL2);
+        }
     }
 
     // Check if access disabled in CPTR_EL3

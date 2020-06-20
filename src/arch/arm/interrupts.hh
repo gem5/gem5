@@ -132,11 +132,23 @@ class Interrupts : public BaseInterrupts
 
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
 
+        bool no_vhe = !HaveVirtHostExt(tc);
+        bool amo, fmo, imo;
+        if (hcr.tge == 1){
+            amo =  (no_vhe || hcr.e2h == 0);
+            fmo =  (no_vhe || hcr.e2h == 0);
+            imo =  (no_vhe || hcr.e2h == 0);
+        } else {
+            amo = hcr.amo;
+            fmo = hcr.fmo;
+            imo = hcr.imo;
+        }
+
         bool isHypMode   = currEL(tc) == EL2;
         bool isSecure    = inSecureState(tc);
-        bool allowVIrq   = !cpsr.i && hcr.imo && !isSecure && !isHypMode;
-        bool allowVFiq   = !cpsr.f && hcr.fmo && !isSecure && !isHypMode;
-        bool allowVAbort = !cpsr.a && hcr.amo && !isSecure && !isHypMode;
+        bool allowVIrq   = !cpsr.i && imo && !isSecure && !isHypMode;
+        bool allowVFiq   = !cpsr.f && fmo && !isSecure && !isHypMode;
+        bool allowVAbort = !cpsr.a && amo && !isSecure && !isHypMode;
 
         if ( !(intStatus || (hcr.vi && allowVIrq) || (hcr.vf && allowVFiq) ||
                (hcr.va && allowVAbort)) )
@@ -219,14 +231,26 @@ class Interrupts : public BaseInterrupts
         HCR  hcr  = tc->readMiscReg(MISCREG_HCR);
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
 
+        bool no_vhe = !HaveVirtHostExt(tc);
+        bool amo, fmo, imo;
+        if (hcr.tge == 1){
+            amo =  (no_vhe || hcr.e2h == 0);
+            fmo =  (no_vhe || hcr.e2h == 0);
+            imo =  (no_vhe || hcr.e2h == 0);
+        } else {
+            amo = hcr.amo;
+            fmo = hcr.fmo;
+            imo = hcr.imo;
+        }
+
         // Calculate a few temp vars so we can work out if there's a pending
         // virtual interrupt, and if its allowed to happen
         // ARM ARM Issue C section B1.9.9, B1.9.11, and B1.9.13
         bool isHypMode   = currEL(tc) == EL2;
         bool isSecure    = inSecureState(tc);
-        bool allowVIrq   = !cpsr.i && hcr.imo && !isSecure && !isHypMode;
-        bool allowVFiq   = !cpsr.f && hcr.fmo && !isSecure && !isHypMode;
-        bool allowVAbort = !cpsr.a && hcr.amo && !isSecure && !isHypMode;
+        bool allowVIrq   = !cpsr.i && imo && !isSecure && !isHypMode;
+        bool allowVFiq   = !cpsr.f && fmo && !isSecure && !isHypMode;
+        bool allowVAbort = !cpsr.a && amo && !isSecure && !isHypMode;
 
         bool take_irq = takeInt(INT_IRQ);
         bool take_fiq = takeInt(INT_FIQ);

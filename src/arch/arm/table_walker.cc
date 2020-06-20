@@ -264,11 +264,21 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
         currState->vaddr = currState->vaddr_tainted;
 
     if (currState->aarch64) {
+        currState->hcr = currState->tc->readMiscReg(MISCREG_HCR_EL2);
         if (isStage2) {
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL1);
             currState->vtcr = currState->tc->readMiscReg(MISCREG_VTCR_EL2);
         } else switch (currState->el) {
           case EL0:
+            if (HaveVirtHostExt(currState->tc) &&
+                  currState->hcr.tge == 1 && currState->hcr.e2h ==1) {
+              currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL2);
+              currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL2);
+            } else {
+              currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL1);
+              currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL1);
+            }
+            break;
           case EL1:
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL1);
             currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL1);
@@ -287,7 +297,6 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
             panic("Invalid exception level");
             break;
         }
-        currState->hcr = currState->tc->readMiscReg(MISCREG_HCR_EL2);
     } else {
         currState->sctlr = currState->tc->readMiscReg(snsBankedIndex(
             MISCREG_SCTLR, currState->tc, !currState->isSecure));
@@ -370,7 +379,7 @@ TableWalker::processWalkWrapper()
     // @TODO Should this always be the TLB or should we look in the stage2 TLB?
     TlbEntry* te = tlb->lookup(currState->vaddr, currState->asid,
             currState->vmid, currState->isHyp, currState->isSecure, true, false,
-            currState->el);
+            currState->el, false);
 
     // Check if we still need to have a walk for this request. If the requesting
     // instruction has been squashed, or a previous walk has filled the TLB with
@@ -436,7 +445,7 @@ TableWalker::processWalkWrapper()
             currState = pendingQueue.front();
             te = tlb->lookup(currState->vaddr, currState->asid,
                 currState->vmid, currState->isHyp, currState->isSecure, true,
-                false, currState->el);
+                false, currState->el, false);
         } else {
             // Terminate the loop, nothing more to do
             currState = NULL;
@@ -772,6 +781,48 @@ TableWalker::processWalkAArch64()
 
     switch (currState->el) {
       case EL0:
+        {
+            Addr ttbr0;
+            Addr ttbr1;
+            if (HaveVirtHostExt(currState->tc) &&
+                    currState->hcr.tge==1 && currState->hcr.e2h == 1) {
+                // VHE code for EL2&0 regime
+                ttbr0 = currState->tc->readMiscReg(MISCREG_TTBR0_EL2);
+                ttbr1 = currState->tc->readMiscReg(MISCREG_TTBR1_EL2);
+            } else {
+                ttbr0 = currState->tc->readMiscReg(MISCREG_TTBR0_EL1);
+                ttbr1 = currState->tc->readMiscReg(MISCREG_TTBR1_EL1);
+            }
+            switch (bits(currState->vaddr, 63,48)) {
+              case 0:
+                DPRINTF(TLB, " - Selecting TTBR0 (AArch64)\n");
+                ttbr = ttbr0;
+                tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
+                tg = GrainMap_tg0[currState->tcr.tg0];
+                currState->hpd = currState->tcr.hpd0;
+                currState->isUncacheable = currState->tcr.irgn0 == 0;
+                if (bits(currState->vaddr, 63, tsz) != 0x0 ||
+                    currState->tcr.epd0)
+                  fault = true;
+                break;
+              case 0xffff:
+                DPRINTF(TLB, " - Selecting TTBR1 (AArch64)\n");
+                ttbr = ttbr1;
+                tsz = adjustTableSizeAArch64(64 - currState->tcr.t1sz);
+                tg = GrainMap_tg1[currState->tcr.tg1];
+                currState->hpd = currState->tcr.hpd1;
+                currState->isUncacheable = currState->tcr.irgn1 == 0;
+                if (bits(currState->vaddr, 63, tsz) != mask(64-tsz) ||
+                    currState->tcr.epd1)
+                  fault = true;
+                break;
+              default:
+                // top two bytes must be all 0s or all 1s, else invalid addr
+                fault = true;
+            }
+            ps = currState->tcr.ips;
+        }
+        break;
       case EL1:
         if (isStage2) {
             DPRINTF(TLB, " - Selecting VTTBR0 (AArch64 stage 2)\n");
@@ -828,7 +879,7 @@ TableWalker::processWalkAArch64()
       case EL2:
         switch(bits(currState->vaddr, 63,48)) {
           case 0:
-            DPRINTF(TLB, " - Selecting TTBR0 (AArch64)\n");
+            DPRINTF(TLB, " - Selecting TTBR0_EL2 (AArch64)\n");
             ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL2);
             tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
             tg = GrainMap_tg0[currState->tcr.tg0];
@@ -838,7 +889,7 @@ TableWalker::processWalkAArch64()
             break;
 
           case 0xffff:
-            DPRINTF(TLB, " - Selecting TTBR1 (AArch64)\n");
+            DPRINTF(TLB, " - Selecting TTBR1_EL2 (AArch64)\n");
             ttbr = currState->tc->readMiscReg(MISCREG_TTBR1_EL2);
             tsz = adjustTableSizeAArch64(64 - currState->tcr.t1sz);
             tg = GrainMap_tg1[currState->tcr.tg1];
@@ -853,12 +904,12 @@ TableWalker::processWalkAArch64()
               // invalid addr if top two bytes are not all 0s
               fault = true;
         }
-        ps = currState->tcr.ps;
+        ps = currState->hcr.e2h ? currState->tcr.ips: currState->tcr.ps;
         break;
       case EL3:
         switch(bits(currState->vaddr, 63,48)) {
             case 0:
-                DPRINTF(TLB, " - Selecting TTBR0 (AArch64)\n");
+                DPRINTF(TLB, " - Selecting TTBR0_EL3 (AArch64)\n");
                 ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL3);
                 tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
                 tg = GrainMap_tg0[currState->tcr.tg0];
@@ -1408,10 +1459,11 @@ TableWalker::memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
         uint8_t attrIndx = lDescriptor.attrIndx();
 
         DPRINTF(TLBVerbose, "memAttrsAArch64 AttrIndx:%#x sh:%#x\n", attrIndx, sh);
+        ExceptionLevel regime =  s1TranslationRegime(tc, currState->el);
 
         // Select MAIR
         uint64_t mair;
-        switch (currState->el) {
+        switch (regime) {
           case EL0:
           case EL1:
             mair = tc->readMiscReg(MISCREG_MAIR_EL1);

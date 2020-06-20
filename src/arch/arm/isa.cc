@@ -507,6 +507,7 @@ ISA::readMiscReg(int misc_reg)
                   miscRegName[misc_reg]);
     }
 #endif
+    misc_reg = redirectRegVHE(tc, misc_reg);
 
     switch (unflattenMiscReg(misc_reg)) {
       case MISCREG_HCR:
@@ -859,6 +860,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                     miscRegName[misc_reg], val);
         }
 #endif
+        misc_reg = redirectRegVHE(tc, misc_reg);
+
         switch (unflattenMiscReg(misc_reg)) {
           case MISCREG_CPACR:
             {
@@ -1707,7 +1710,6 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             }
           // AArch64 TLB Invalidate All, EL1
           case MISCREG_TLBI_ALLE1:
-          case MISCREG_TLBI_VMALLE1:
           case MISCREG_TLBI_VMALLS12E1:
             // @todo: handle VMID and stage 2 to enable Virtualization
             {
@@ -1718,9 +1720,21 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 tlbiOp(tc);
                 return;
             }
+          case MISCREG_TLBI_VMALLE1:
+            // @todo: handle VMID and stage 2 to enable Virtualization
+            {
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
+
+                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = is_host ?  EL2 : EL1;
+                TLBIALL tlbiOp(target_el, haveSecurity && !scr.ns);
+                tlbiOp(tc);
+                return;
+            }
           // AArch64 TLB Invalidate All, EL1, Inner Shareable
           case MISCREG_TLBI_ALLE1IS:
-          case MISCREG_TLBI_VMALLE1IS:
           case MISCREG_TLBI_VMALLS12E1IS:
             // @todo: handle VMID and stage 2 to enable Virtualization
             {
@@ -1728,6 +1742,19 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 scr = readMiscReg(MISCREG_SCR);
 
                 TLBIALL tlbiOp(EL1, haveSecurity && !scr.ns);
+                tlbiOp.broadcast(tc);
+                return;
+            }
+          case MISCREG_TLBI_VMALLE1IS:
+            // @todo: handle VMID and stage 2 to enable Virtualization
+            {
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
+
+                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = is_host ?  EL2 : EL1;
+                TLBIALL tlbiOp(target_el, haveSecurity && !scr.ns);
                 tlbiOp.broadcast(tc);
                 return;
             }
@@ -1796,7 +1823,10 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
                                               bits(newVal, 55, 48);
 
-                TLBIMVA tlbiOp(EL1, haveSecurity && !scr.ns,
+                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = is_host ?  EL2 : EL1;
+                TLBIMVA tlbiOp(target_el, haveSecurity && !scr.ns,
                                static_cast<Addr>(bits(newVal, 43, 0)) << 12,
                                asid);
 
@@ -1812,9 +1842,12 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
                                               bits(newVal, 55, 48);
 
-                TLBIMVA tlbiOp(EL1, haveSecurity && !scr.ns,
-                               static_cast<Addr>(bits(newVal, 43, 0)) << 12,
-                               asid);
+                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = is_host ?  EL2 : EL1;
+                TLBIMVA tlbiOp(target_el, haveSecurity && !scr.ns,
+                                static_cast<Addr>(bits(newVal, 43, 0)) << 12,
+                                asid);
 
                 tlbiOp.broadcast(tc);
                 return;
@@ -1828,7 +1861,10 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
                                               bits(newVal, 55, 48);
 
-                TLBIASID tlbiOp(EL1, haveSecurity && !scr.ns, asid);
+                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = is_host ?  EL2 : EL1;
+                TLBIASID tlbiOp(target_el, haveSecurity && !scr.ns, asid);
                 tlbiOp(tc);
                 return;
             }
@@ -1840,7 +1876,10 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
                                               bits(newVal, 55, 48);
 
-                TLBIASID tlbiOp(EL1, haveSecurity && !scr.ns, asid);
+                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = is_host ?  EL2 : EL1;
+                TLBIASID tlbiOp(target_el, haveSecurity && !scr.ns, asid);
                 tlbiOp.broadcast(tc);
                 return;
             }
@@ -1853,7 +1892,10 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIMVAA tlbiOp(EL1, haveSecurity && !scr.ns,
+                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = is_host ?  EL2 : EL1;
+                TLBIMVAA tlbiOp(target_el, haveSecurity && !scr.ns,
                     static_cast<Addr>(bits(newVal, 43, 0)) << 12);
 
                 tlbiOp(tc);
@@ -1866,7 +1908,10 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIMVAA tlbiOp(EL1, haveSecurity && !scr.ns,
+                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = is_host ?  EL2 : EL1;
+                TLBIMVAA tlbiOp(target_el, haveSecurity && !scr.ns,
                     static_cast<Addr>(bits(newVal, 43, 0)) << 12);
 
                 tlbiOp.broadcast(tc);

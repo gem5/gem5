@@ -64,7 +64,7 @@ let {{
 
             # Add memory request flags where necessary
             if self.user:
-                self.memFlags.append("ArmISA::TLB::UserMode")
+                self.memFlags.append("userFlag")
 
             if self.flavor == "dprefetch":
                 self.memFlags.append("Request::PREFETCH")
@@ -134,6 +134,11 @@ let {{
             if not self.post:
                 eaCode += self.offset
             eaCode += ";"
+
+            if self.user:
+                eaCode += " uint8_t userFlag = 0;\n"\
+                          "  if(isUnpriviledgeAccess(xc->tcBase()))\n"\
+                          "     userFlag = ArmISA::TLB::UserMode;"
 
             self.codeBlobs["ea_code"] = eaCode
 

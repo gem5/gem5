@@ -188,22 +188,23 @@ struct TlbEntry : public Serializable
 
     bool
     match(Addr va, uint8_t _vmid, bool hypLookUp, bool secure_lookup,
-          ExceptionLevel target_el) const
+          ExceptionLevel target_el, bool in_host) const
     {
-        return match(va, 0, _vmid, hypLookUp, secure_lookup, true, target_el);
+        return match(va, 0, _vmid, hypLookUp, secure_lookup, true,
+                     target_el, in_host);
     }
 
     bool
     match(Addr va, uint16_t asn, uint8_t _vmid, bool hypLookUp,
-          bool secure_lookup, bool ignore_asn, ExceptionLevel target_el) const
+          bool secure_lookup, bool ignore_asn, ExceptionLevel target_el,
+          bool in_host) const
     {
         bool match = false;
         Addr v = vpn << N;
-
         if (valid && va >= v && va <= v + size && (secure_lookup == !nstid) &&
             (hypLookUp == isHyp))
         {
-            match = checkELMatch(target_el);
+            match = checkELMatch(target_el, in_host);
 
             if (match && !ignore_asn) {
                 match = global || (asn == asid);
@@ -216,12 +217,20 @@ struct TlbEntry : public Serializable
     }
 
     bool
-    checkELMatch(ExceptionLevel target_el) const
+    checkELMatch(ExceptionLevel target_el, bool in_host) const
     {
-        if (target_el == EL2 || target_el == EL3) {
-            return (el  == target_el);
-        } else {
-            return (el == EL0) || (el == EL1);
+        switch (target_el) {
+            case EL3:
+                return el == EL3;
+            case EL2:
+              {
+                return el == EL2 || (el == EL0 && in_host);
+              }
+            case EL1:
+            case EL0:
+                return (el == EL0) || (el == EL1);
+            default:
+                return false;
         }
     }
 

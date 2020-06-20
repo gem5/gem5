@@ -327,7 +327,7 @@ s1TranslationRegime(ThreadContext* tc, ExceptionLevel el)
         return el;
     else if (ArmSystem::haveEL(tc, EL3) && ELIs32(tc, EL3) && scr.ns == 0)
         return EL3;
-    else if (ArmSystem::haveVirtualization(tc) && ELIsInHost(tc, el))
+    else if (HaveVirtHostExt(tc) && ELIsInHost(tc, el))
         return EL2;
     else
         return EL1;
@@ -380,7 +380,8 @@ bool
 ELIsInHost(ThreadContext *tc, ExceptionLevel el)
 {
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-    return ((IsSecureEL2Enabled(tc) || !isSecureBelowEL3(tc)) &&
+    return (ArmSystem::haveEL(tc, EL2) &&
+            (IsSecureEL2Enabled(tc) || !isSecureBelowEL3(tc)) &&
             HaveVirtHostExt(tc) && !ELIs32(tc, EL2) && hcr.e2h == 1 &&
             (el == EL2 || (el == EL0 && hcr.tge == 1)));
 }
@@ -416,9 +417,12 @@ ELStateUsingAArch32K(ThreadContext *tc, ExceptionLevel el, bool secure)
         bool aarch32_below_el3 = (have_el3 && scr.rw == 0);
 
         HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+        bool secEL2 = false;
         bool aarch32_at_el1 = (aarch32_below_el3
-                               || (have_el2
-                               && !secure && hcr.rw == 0));
+                         || (have_el2
+                             && (secEL2 || !isSecureBelowEL3(tc))
+                             && hcr.rw == 0 && !(hcr.e2h && hcr.tge
+                                                && HaveVirtHostExt(tc))));
 
         // Only know if EL0 using AArch32 from PSTATE
         if (el == EL0 && !aarch32_at_el1) {
@@ -497,7 +501,7 @@ computeAddrTop(ThreadContext *tc, bool selbit, bool isInstr,
           case EL2:
           {
             TCR tcr = tc->readMiscReg(MISCREG_TCR_EL2);
-            if (ArmSystem::haveVirtualization(tc) && ELIsInHost(tc, el)) {
+            if (HaveVirtHostExt(tc) && ELIsInHost(tc, el)) {
                 tbi = selbit? tcr.tbi1 : tcr.tbi0;
                 tbid = selbit? tcr.tbid1 : tcr.tbid0;
             } else {
@@ -526,7 +530,6 @@ purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
                  TCR tcr, bool isInstr)
 {
     bool selbit = bits(addr, 55);
-//    TCR tcr = tc->readMiscReg(MISCREG_TCR_EL1);
     int topbit = computeAddrTop(tc, selbit, isInstr, tcr, el);
 
     if (topbit == 63) {
@@ -1305,8 +1308,27 @@ decodeMrsMsrBankedReg(uint8_t sysM, bool r, bool &isIntReg, int &regIdx,
 }
 
 bool
+isUnpriviledgeAccess(ThreadContext * tc)
+{
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    // NV Extension not implemented yet
+    bool have_nv_ext = false;
+    bool unpriv_el1 = currEL(tc) == EL1 &&
+                               !(ArmSystem::haveVirtualization(tc) &&
+                                 have_nv_ext && hcr.nv == 1 && hcr.nv1 == 1);
+    bool unpriv_el2 = ArmSystem::haveEL(tc, EL2) && HaveVirtHostExt(tc) &&
+                      currEL(tc) == EL2 && hcr.e2h == 1 && hcr.tge == 1;
+
+    // User Access override, or UAO not implemented yet.
+    bool user_access_override = false;
+    return (unpriv_el1 || unpriv_el2) && !user_access_override;
+}
+
+bool
 SPAlignmentCheckEnabled(ThreadContext* tc)
 {
+    ExceptionLevel regime = s1TranslationRegime(tc, currEL(tc));
+
     switch (currEL(tc)) {
       case EL3:
         return ((SCTLR) tc->readMiscReg(MISCREG_SCTLR_EL3)).sa;
@@ -1315,7 +1337,11 @@ SPAlignmentCheckEnabled(ThreadContext* tc)
       case EL1:
         return ((SCTLR) tc->readMiscReg(MISCREG_SCTLR_EL1)).sa;
       case EL0:
-        return ((SCTLR) tc->readMiscReg(MISCREG_SCTLR_EL1)).sa0;
+        {
+          SCTLR sc = (regime == EL2) ? tc->readMiscReg(MISCREG_SCTLR_EL2):
+                                       tc->readMiscReg(MISCREG_SCTLR_EL1);
+          return sc.sa0;
+        }
       default:
         panic("Invalid exception level");
         break;

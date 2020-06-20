@@ -450,6 +450,7 @@ inline ByteOrder byteOrder(const ThreadContext *tc)
     return isBigEndian64(tc) ? BigEndianByteOrder : LittleEndianByteOrder;
 };
 
-}
+bool isUnpriviledgeAccess(ThreadContext * tc);
 
+}
 #endif

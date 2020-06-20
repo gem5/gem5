@@ -62,7 +62,7 @@ let {{
 
             # Add memory request flags where necessary
             if self.user:
-                self.memFlags.append("ArmISA::TLB::UserMode")
+                self.memFlags.append("userFlag")
 
             if self.flavor in ("relexp", "exp"):
                 # For exclusive pair ops alignment check is based on total size
@@ -135,6 +135,10 @@ let {{
                 eaCode += self.offset
             eaCode += ";"
 
+            if self.user:
+                eaCode += " uint8_t userFlag = 0;\n"\
+                          "  if(isUnpriviledgeAccess(xc->tcBase()))\n"\
+                          "     userFlag = ArmISA::TLB::UserMode;"
             self.codeBlobs["ea_code"] = eaCode
 
 

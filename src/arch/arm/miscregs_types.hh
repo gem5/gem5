@@ -662,7 +662,11 @@ namespace ArmISA
 
    BitUnion32(CPTR)
         Bitfield<31> tcpac;
+        Bitfield<30> tam;
+        Bitfield<28> tta_e2h;
+        Bitfield<21, 20> fpen;
         Bitfield<20> tta;
+        Bitfield<17, 16> zen;
         Bitfield<13, 12> res1_13_12_el2;
         Bitfield<10> tfp;
         Bitfield<9> res1_9_el2;

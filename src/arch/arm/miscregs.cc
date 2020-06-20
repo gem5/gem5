@@ -2233,7 +2233,16 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                 }
                 break;
               case 5:
+                /* op0: 3 Crn:1 op1:5 */
                 switch (crm) {
+                  case 0:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_SCTLR_EL12;
+                      case 2:
+                        return MISCREG_CPACR_EL12;
+                    }
+                    break;
                   case 2:
                     switch (op2) {
                       case 0:
@@ -2345,6 +2354,21 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_VTTBR_EL2;
                       case 2:
                         return MISCREG_VTCR_EL2;
+                    }
+                    break;
+                }
+                break;
+              case 5:
+                /* op0: 3 Crn:2 op1:5 */
+                switch (crm) {
+                  case 0:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_TTBR0_EL12;
+                      case 1:
+                        return MISCREG_TTBR1_EL12;
+                      case 2:
+                        return MISCREG_TCR_EL12;
                     }
                     break;
                 }
@@ -2471,6 +2495,18 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                     break;
                 }
                 break;
+              case 5:
+                switch (crm) {
+                  case 0:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_SPSR_EL12;
+                      case 1:
+                        return MISCREG_ELR_EL12;
+                    }
+                    break;
+                }
+                break;
               case 6:
                 switch (crm) {
                   case 0:
@@ -2571,6 +2607,24 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                     break;
                 }
                 break;
+              case 5:
+                switch (crm) {
+                  case 1:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_AFSR0_EL12;
+                      case 1:
+                        return MISCREG_AFSR1_EL12;
+                    }
+                    break;
+                  case 2:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_ESR_EL12;
+                    }
+                    break;
+                }
+                break;
               case 6:
                 switch (crm) {
                   case 1:
@@ -2611,6 +2665,16 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_FAR_EL2;
                       case 4:
                         return MISCREG_HPFAR_EL2;
+                    }
+                    break;
+                }
+                break;
+              case 5:
+                switch (crm) {
+                  case 0:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_FAR_EL12;
                     }
                     break;
                 }
@@ -2729,6 +2793,22 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                     switch (op2) {
                       case 0:
                         return MISCREG_AMAIR_EL2;
+                    }
+                    break;
+                }
+                break;
+              case 5:
+                switch (crm) {
+                  case 2:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_MAIR_EL12;
+                    }
+                    break;
+                  case 3:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_AMAIR_EL12;
                     }
                     break;
                 }
@@ -2958,6 +3038,16 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                     break;
                 }
                 break;
+              case 5:
+                switch (crm) {
+                  case 0:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_VBAR_EL12;
+                    }
+                    break;
+                }
+                break;
               case 6:
                 switch (crm) {
                   case 0:
@@ -3018,6 +3108,16 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_CONTEXTIDR_EL2;
                       case 2:
                         return MISCREG_TPIDR_EL2;
+                    }
+                    break;
+                }
+                break;
+              case 5:
+                switch (crm) {
+                  case 0:
+                    switch (op2) {
+                      case 1:
+                        return MISCREG_CONTEXTIDR_EL12;
                     }
                     break;
                 }
@@ -4512,7 +4612,8 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGWCR15);
     InitReg(MISCREG_MDCCSR_EL0)
-      .allPrivileges().monSecureWrite(0).monNonSecureWrite(0)
+      .allPrivileges().writes(0)
+      //monSecureWrite(0).monNonSecureWrite(0)
       .mapsTo(MISCREG_DBGDSCRint);
     InitReg(MISCREG_MDDTR_EL0)
       .allPrivileges();
@@ -4679,12 +4780,26 @@ ISA::initializeMiscRegMetadata()
                      | (nTLSMD ? 0 :  0x8000000)
                      | (LSMAOE ? 0 : 0x10000000))
       .mapsTo(MISCREG_SCTLR_NS);
+    InitReg(MISCREG_SCTLR_EL12)
+      .allPrivileges().exceptUserMode()
+      .res0( 0x20440 | (EnDB   ? 0 :     0x2000)
+                     | (IESB   ? 0 :   0x200000)
+                     | (EnDA   ? 0 :  0x8000000)
+                     | (EnIB   ? 0 : 0x40000000)
+                     | (EnIA   ? 0 : 0x80000000))
+      .res1(0x500800 | (SPAN   ? 0 :   0x800000)
+                     | (nTLSMD ? 0 :  0x8000000)
+                     | (LSMAOE ? 0 : 0x10000000))
+      .mapsTo(MISCREG_SCTLR_EL1);
     InitReg(MISCREG_ACTLR_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_ACTLR_NS);
     InitReg(MISCREG_CPACR_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_CPACR);
+    InitReg(MISCREG_CPACR_EL12)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_CPACR_EL1);
     InitReg(MISCREG_SCTLR_EL2)
       .hyp().mon()
       .res0(0x0512c7c0 | (EnDB   ? 0 :     0x2000)
@@ -4736,10 +4851,19 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TTBR0_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_TTBR0_NS);
+    InitReg(MISCREG_TTBR0_EL12)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_TTBR0_EL1);
     InitReg(MISCREG_TTBR1_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_TTBR1_NS);
+    InitReg(MISCREG_TTBR1_EL12)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_TTBR1_EL1);
     InitReg(MISCREG_TCR_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_TTBCR_NS);
+    InitReg(MISCREG_TCR_EL12)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_TTBCR_NS);
     InitReg(MISCREG_TTBR0_EL2)
@@ -4766,8 +4890,14 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_SPSR_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_SPSR_SVC); // NAM C5.2.17 SPSR_EL1
+    InitReg(MISCREG_SPSR_EL12)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_SPSR_SVC);
     InitReg(MISCREG_ELR_EL1)
       .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_ELR_EL12)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_ELR_EL1);
     InitReg(MISCREG_SP_EL0)
       .allPrivileges().exceptUserMode();
     InitReg(MISCREG_SPSEL)
@@ -4814,11 +4944,20 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_AFSR0_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_ADFSR_NS);
+    InitReg(MISCREG_AFSR0_EL12)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_ADFSR_NS);
     InitReg(MISCREG_AFSR1_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_AIFSR_NS);
+    InitReg(MISCREG_AFSR1_EL12)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_AIFSR_NS);
     InitReg(MISCREG_ESR_EL1)
       .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_ESR_EL12)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_ESR_EL1);
     InitReg(MISCREG_IFSR32_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_IFSR_NS);
@@ -4840,6 +4979,9 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ESR_EL3)
       .mon();
     InitReg(MISCREG_FAR_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_DFAR_NS, MISCREG_IFAR_NS);
+    InitReg(MISCREG_FAR_EL12)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DFAR_NS, MISCREG_IFAR_NS);
     InitReg(MISCREG_FAR_EL2)
@@ -5023,7 +5165,13 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_MAIR_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_PRRR_NS, MISCREG_NMRR_NS);
+    InitReg(MISCREG_MAIR_EL12)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_PRRR_NS, MISCREG_NMRR_NS);
     InitReg(MISCREG_AMAIR_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_AMAIR0_NS, MISCREG_AMAIR1_NS);
+    InitReg(MISCREG_AMAIR_EL12)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_AMAIR0_NS, MISCREG_AMAIR1_NS);
     InitReg(MISCREG_MAIR_EL2)
@@ -5043,6 +5191,9 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_VBAR_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_VBAR_NS);
+    InitReg(MISCREG_VBAR_EL12)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_VBAR_NS);
     InitReg(MISCREG_RVBAR_EL1)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ISR_EL1)
@@ -5060,6 +5211,9 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_RMR_EL3)
       .mon();
     InitReg(MISCREG_CONTEXTIDR_EL1)
+      .allPrivileges().exceptUserMode()
+      .mapsTo(MISCREG_CONTEXTIDR_NS);
+    InitReg(MISCREG_CONTEXTIDR_EL12)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_CONTEXTIDR_NS);
     InitReg(MISCREG_TPIDR_EL1)
@@ -5180,7 +5334,21 @@ ISA::initializeMiscRegMetadata()
       .hyp()
       .res0(0xffffffff00000000)
       .mapsTo(MISCREG_CNTHP_TVAL);
-    // IF Armv8.1-VHE
+    InitReg(MISCREG_CNTHPS_CTL_EL2)
+      .mon()
+      .hyp()
+      .res0(0xfffffffffffffff8)
+      .unimplemented();
+    InitReg(MISCREG_CNTHPS_CVAL_EL2)
+      .mon()
+      .hyp()
+      .res0(0xfffffffffffffff8)
+      .unimplemented();
+    InitReg(MISCREG_CNTHPS_TVAL_EL2)
+      .mon()
+      .hyp()
+      .res0(0xfffffffffffffff8)
+      .unimplemented();
     InitReg(MISCREG_CNTHV_CTL_EL2)
       .mon()
       .hyp()
@@ -5192,6 +5360,21 @@ ISA::initializeMiscRegMetadata()
       .mon()
       .hyp()
       .res0(0xffffffff00000000);
+    InitReg(MISCREG_CNTHVS_CTL_EL2)
+      .mon()
+      .hyp()
+      .res0(0xfffffffffffffff8)
+      .unimplemented();
+    InitReg(MISCREG_CNTHVS_CVAL_EL2)
+      .mon()
+      .hyp()
+      .res0(0xfffffffffffffff8)
+      .unimplemented();
+    InitReg(MISCREG_CNTHVS_TVAL_EL2)
+      .mon()
+      .hyp()
+      .res0(0xfffffffffffffff8)
+      .unimplemented();
     // ENDIF Armv8.1-VHE
     InitReg(MISCREG_CNTVOFF_EL2)
       .mon()
@@ -5746,7 +5929,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ZCR_EL2)
         .hyp().mon();
     InitReg(MISCREG_ZCR_EL12)
-        .unimplemented().warnNotFail();
+        .allPrivileges().exceptUserMode()
+        .mapsTo(MISCREG_ZCR_EL1);
     InitReg(MISCREG_ZCR_EL1)
         .allPrivileges().exceptUserMode();
 

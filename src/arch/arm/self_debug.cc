@@ -222,87 +222,106 @@ BrkPoint::test(ThreadContext *tc, Addr pc, ExceptionLevel el, DBGBCR ctr,
                bool from_link)
 {
     bool v = false;
-    switch (ctr.bt)
-    {
-        case 0x0:
-            v = testAddrMatch(tc, pc, ctr.bas);
-            break;
-        case 0x1:
-            v = testAddrMatch(tc, pc, ctr.bas); // linked
-            if (v){
-                v = (conf->getBrkPoint(ctr.lbn))->testLinkedBk(tc, pc, el);
-            }
-            break;
-        case 0x2:
-            v = testContextMatch(tc, true);
-            break;
-        case 0x3:
-            if (from_link){
-                v = testContextMatch(tc, true); //linked
-            }
-            break;
-        case 0x4:
-            v = testAddrMissMatch(tc, pc, ctr.bas);
-            break;
-        case 0x5:
-            v = testAddrMissMatch(tc, pc, ctr.bas); // linked
-            if (v && !from_link)
-                v = v && (conf->getBrkPoint(ctr.lbn))->testLinkedBk(tc,
-                                                                 pc, el);
-            break;
-        case 0x6:
-            // VHE not implemented
-            // v = testContextMatch(tc, true);
-            break;
-        case 0x7:
-            // VHE not implemented
-            // if (from_link)
-            //     v = testContextMatch(tc, true);
-            break;
-        case 0x8:
-            v = testVMIDMatch(tc);
-            break;
-        case 0x9:
-            if (from_link && ArmSystem::haveEL(tc, EL2)){
-                v = testVMIDMatch(tc); // linked
-            }
-            break;
-        case 0xa:
-            if (ArmSystem::haveEL(tc, EL2)){
-                v = testContextMatch(tc, true);
-                if (v && !from_link)
-                v = v && testVMIDMatch(tc);
-            }
-            break;
-        case 0xb:
-            if (from_link && ArmSystem::haveEL(tc, EL2)){
-                v = testContextMatch(tc, true);
-                v = v && testVMIDMatch(tc);
-            }
-            break;
-        case 0xc:
-            // VHE not implemented
-            // v = testContextMatch(tc, false); // CONTEXTIDR_EL2
-            break;
-        case 0xd:
-            // VHE not implemented
-            // if (from_link)
-            //     v = testContextMatch(tc, false);
-            // CONTEXTIDR_EL2 AND LINKED
+    switch (ctr.bt) {
+      case 0x0:
+        v = testAddrMatch(tc, pc, ctr.bas);
+        break;
 
-            break;
-       case 0xe:
-            // VHE not implemented
-            // v = testContextMatch(tc, true); // CONTEXTIDR_EL1
-            // v = v && testContextMatch(tc, false); // CONTEXTIDR_EL2
-            break;
-        case 0xf:
-            // VHE not implemented
-            // if (from_link){
-            //     v = testContextMatch(tc, true); // CONTEXTIDR_EL1
-            //     v = v && testContextMatch(tc, false); // CONTEXTIDR_EL2
-            // }
-            break;
+      case 0x1:
+        v = testAddrMatch(tc, pc, ctr.bas); // linked
+        if (v) {
+            v = (conf->getBrkPoint(ctr.lbn))->testLinkedBk(tc, pc, el);
+        }
+        break;
+
+      case 0x2:
+        {
+            bool host = ELIsInHost(tc, el);
+            v = testContextMatch(tc, !host, true);
+        }
+        break;
+
+      case 0x3:
+        if (from_link){
+            bool host = ELIsInHost(tc, el);
+            v = testContextMatch(tc, !host, true);
+        }
+        break;
+
+      case 0x4:
+        v = testAddrMissMatch(tc, pc, ctr.bas);
+        break;
+
+      case 0x5:
+        v = testAddrMissMatch(tc, pc, ctr.bas); // linked
+        if (v && !from_link)
+            v = v && (conf->getBrkPoint(ctr.lbn))->testLinkedBk(tc, pc, el);
+        break;
+
+      case 0x6:
+        if (HaveVirtHostExt(tc) && !ELIsInHost(tc, el))
+             v = testContextMatch(tc, true);
+        break;
+
+      case 0x7:
+        if (HaveVirtHostExt(tc) && !ELIsInHost(tc, el) && from_link)
+            v = testContextMatch(tc, true);
+        break;
+
+      case 0x8:
+        if (ArmSystem::haveEL(tc, EL2) && !ELIsInHost(tc, el)) {
+            v = testVMIDMatch(tc);
+        }
+        break;
+
+      case 0x9:
+        if (from_link && ArmSystem::haveEL(tc, EL2) &&
+            !ELIsInHost(tc, el)) {
+            v = testVMIDMatch(tc);
+        }
+        break;
+
+      case 0xa:
+        if (ArmSystem::haveEL(tc, EL2) && !ELIsInHost(tc, el)) {
+            v = testContextMatch(tc, true);
+            if (v && !from_link)
+                 v = v && testVMIDMatch(tc);
+        }
+        break;
+      case 0xb:
+        if (from_link && ArmSystem::haveEL(tc, EL2) &&
+            !ELIsInHost(tc, el)) {
+            v = testContextMatch(tc, true);
+            v = v && testVMIDMatch(tc);
+        }
+        break;
+
+      case 0xc:
+        if (HaveVirtHostExt(tc) && !inSecureState(tc))
+            v = testContextMatch(tc, false);
+        break;
+
+      case 0xd:
+        if (HaveVirtHostExt(tc) && from_link && !inSecureState(tc))
+            v = testContextMatch(tc, false);
+        break;
+
+      case 0xe:
+        if (HaveVirtHostExt(tc) && !ELIsInHost(tc, el)
+                && !inSecureState(tc) ) {
+            v = testContextMatch(tc, true); // CONTEXTIDR_EL1
+            v = v && testContextMatch(tc, false); // CONTEXTIDR_EL2
+        }
+        break;
+      case 0xf:
+        if (HaveVirtHostExt(tc) && !ELIsInHost(tc, el) && from_link
+                && !inSecureState(tc) ) {
+            v = testContextMatch(tc, true); // CONTEXTIDR_EL1
+            v = v && testContextMatch(tc, false); // CONTEXTIDR_EL2
+        }
+        break;
+      default:
+        break;
     }
     return v;
 }
@@ -404,6 +423,12 @@ BrkPoint::testAddrMissMatch(ThreadContext *tc, Addr in_pc, uint8_t bas)
 bool
 BrkPoint::testContextMatch(ThreadContext *tc, bool ctx1)
 {
+    return testContextMatch(tc, ctx1, ctx1);
+}
+
+bool
+BrkPoint::testContextMatch(ThreadContext *tc, bool ctx1, bool low_ctx)
+{
     if (!isCntxtAware)
         return false;
     MiscRegIndex miscridx;
@@ -420,8 +445,8 @@ BrkPoint::testContextMatch(ThreadContext *tc, bool ctx1)
             return false;
     }
 
-    RegVal ctxid = tc->readMiscReg(miscridx);
-    RegVal v = getContextfromReg(tc, ctx1);
+    RegVal ctxid = bits(tc->readMiscReg(miscridx), 31, 0);
+    RegVal v = getContextfromReg(tc, low_ctx);
     return (v == ctxid);
 }
 

@@ -45,16 +45,18 @@ namespace ArmISA {
 void
 TLBIALL::operator()(ThreadContext* tc)
 {
-    getITBPtr(tc)->flushAllSecurity(secureLookup, targetEL);
-    getDTBPtr(tc)->flushAllSecurity(secureLookup, targetEL);
+    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    bool in_host = (hcr.tge == 1 && hcr.e2h == 1);
+    getITBPtr(tc)->flushAllSecurity(secureLookup, targetEL, in_host);
+    getDTBPtr(tc)->flushAllSecurity(secureLookup, targetEL, in_host);
 
     // If CheckerCPU is connected, need to notify it of a flush
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
         getITBPtr(checker)->flushAllSecurity(secureLookup,
-                                               targetEL);
+                                               targetEL, in_host);
         getDTBPtr(checker)->flushAllSecurity(secureLookup,
-                                               targetEL);
+                                               targetEL, in_host);
     }
 }
 
@@ -73,12 +75,14 @@ DTLBIALL::operator()(ThreadContext* tc)
 void
 TLBIASID::operator()(ThreadContext* tc)
 {
-    getITBPtr(tc)->flushAsid(asid, secureLookup, targetEL);
-    getDTBPtr(tc)->flushAsid(asid, secureLookup, targetEL);
+    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    bool in_host = (hcr.tge == 1 && hcr.e2h == 1);
+    getITBPtr(tc)->flushAsid(asid, secureLookup, targetEL, in_host);
+    getDTBPtr(tc)->flushAsid(asid, secureLookup, targetEL, in_host);
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getITBPtr(checker)->flushAsid(asid, secureLookup, targetEL);
-        getDTBPtr(checker)->flushAsid(asid, secureLookup, targetEL);
+        getITBPtr(checker)->flushAsid(asid, secureLookup, targetEL, in_host);
+        getDTBPtr(checker)->flushAsid(asid, secureLookup, targetEL, in_host);
     }
 }
 
@@ -110,30 +114,34 @@ TLBIALLN::operator()(ThreadContext* tc)
 void
 TLBIMVAA::operator()(ThreadContext* tc)
 {
-    getITBPtr(tc)->flushMva(addr, secureLookup, targetEL);
-    getDTBPtr(tc)->flushMva(addr, secureLookup, targetEL);
+    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    bool in_host = (hcr.tge == 1 && hcr.e2h == 1);
+    getITBPtr(tc)->flushMva(addr, secureLookup, targetEL, in_host);
+    getDTBPtr(tc)->flushMva(addr, secureLookup, targetEL, in_host);
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getITBPtr(checker)->flushMva(addr, secureLookup, targetEL);
-        getDTBPtr(checker)->flushMva(addr, secureLookup, targetEL);
+        getITBPtr(checker)->flushMva(addr, secureLookup, targetEL, in_host);
+        getDTBPtr(checker)->flushMva(addr, secureLookup, targetEL, in_host);
     }
 }
 
 void
 TLBIMVA::operator()(ThreadContext* tc)
 {
+    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    bool in_host = (hcr.tge == 1 && hcr.e2h == 1);
     getITBPtr(tc)->flushMvaAsid(addr, asid,
-                                  secureLookup, targetEL);
+                                  secureLookup, targetEL, in_host);
     getDTBPtr(tc)->flushMvaAsid(addr, asid,
-                                  secureLookup, targetEL);
+                                  secureLookup, targetEL, in_host);
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
         getITBPtr(checker)->flushMvaAsid(
-            addr, asid, secureLookup, targetEL);
+            addr, asid, secureLookup, targetEL, in_host);
         getDTBPtr(checker)->flushMvaAsid(
-            addr, asid, secureLookup, targetEL);
+            addr, asid, secureLookup, targetEL, in_host);
     }
 }
 
