@@ -121,7 +121,8 @@ class SimpleRenameMap
      * @param arch_reg The architectural register to look up.
      * @return The physical register it is currently mapped to.
      */
-    PhysRegIdPtr lookup(const RegId& arch_reg) const
+    PhysRegIdPtr
+    lookup(const RegId& arch_reg) const
     {
         assert(arch_reg.flatIndex() <= map.size());
         return map[arch_reg.flatIndex()];
@@ -133,7 +134,8 @@ class SimpleRenameMap
      * @param arch_reg The architectural register to remap.
      * @param phys_reg The physical register to remap it to.
      */
-    void setEntry(const RegId& arch_reg, PhysRegIdPtr phys_reg)
+    void
+    setEntry(const RegId& arch_reg, PhysRegIdPtr phys_reg)
     {
         assert(arch_reg.flatIndex() <= map.size());
         map[arch_reg.flatIndex()] = phys_reg;
@@ -262,7 +264,8 @@ class UnifiedRenameMap
      * @param arch_reg The architectural register to look up.
      * @return The physical register it is currently mapped to.
      */
-    PhysRegIdPtr lookup(const RegId& arch_reg) const
+    PhysRegIdPtr
+    lookup(const RegId& arch_reg) const
     {
         switch (arch_reg.classValue()) {
           case IntRegClass:
@@ -304,7 +307,8 @@ class UnifiedRenameMap
      * @param arch_reg The architectural register to remap.
      * @param phys_reg The physical register to remap it to.
      */
-    void setEntry(const RegId& arch_reg, PhysRegIdPtr phys_reg)
+    void
+    setEntry(const RegId& arch_reg, PhysRegIdPtr phys_reg)
     {
         switch (arch_reg.classValue()) {
           case IntRegClass:
@@ -353,18 +357,20 @@ class UnifiedRenameMap
      * this number of entries is available regardless of which class
      * of registers is requested.
      */
-    unsigned numFreeEntries() const
+    unsigned
+    numFreeEntries() const
     {
-        return std::min(std::min(
-                std::min(intMap.numFreeEntries(), floatMap.numFreeEntries()),
-                vecMode == Enums::Full ? vecMap.numFreeEntries()
-                                    : vecElemMap.numFreeEntries()),
-                predMap.numFreeEntries());
+        return std::min({intMap.numFreeEntries(),
+                         floatMap.numFreeEntries(),
+                         vecMode == Enums::Full ? vecMap.numFreeEntries() :
+                                                  vecElemMap.numFreeEntries(),
+                         predMap.numFreeEntries()});
     }
 
     unsigned numFreeIntEntries() const { return intMap.numFreeEntries(); }
     unsigned numFreeFloatEntries() const { return floatMap.numFreeEntries(); }
-    unsigned numFreeVecEntries() const
+    unsigned
+    numFreeVecEntries() const
     {
         return vecMode == Enums::Full
                 ? vecMap.numFreeEntries()
@@ -376,9 +382,10 @@ class UnifiedRenameMap
     /**
      * Return whether there are enough registers to serve the request.
      */
-    bool canRename(uint32_t intRegs, uint32_t floatRegs, uint32_t vectorRegs,
-                   uint32_t vecElemRegs, uint32_t vecPredRegs,
-                   uint32_t ccRegs) const
+    bool
+    canRename(uint32_t intRegs, uint32_t floatRegs, uint32_t vectorRegs,
+              uint32_t vecElemRegs, uint32_t vecPredRegs,
+              uint32_t ccRegs) const
     {
         return intRegs <= intMap.numFreeEntries() &&
             floatRegs <= floatMap.numFreeEntries() &&
