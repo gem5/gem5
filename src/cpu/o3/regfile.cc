@@ -180,8 +180,8 @@ PhysRegFile::initFreeList(UnifiedFreeList *freeList)
     freeList->addRegs(ccRegIds.begin(), ccRegIds.end());
 }
 
-auto
-PhysRegFile::getRegElemIds(PhysRegIdPtr reg) -> IdRange
+PhysRegFile::IdRange
+PhysRegFile::getRegElemIds(PhysRegIdPtr reg)
 {
     panic_if(!reg->isVectorPhysReg(),
             "Trying to get elems of a %s register", reg->className());
@@ -191,8 +191,8 @@ PhysRegFile::getRegElemIds(PhysRegIdPtr reg) -> IdRange
                 vecElemIds.begin() + (idx+1) * NumVecElemPerVecReg);
 }
 
-auto
-PhysRegFile::getRegIds(RegClass cls) -> IdRange
+PhysRegFile::IdRange
+PhysRegFile::getRegIds(RegClass cls)
 {
     switch (cls)
     {
