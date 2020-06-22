@@ -34,7 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libboost-system-dev \
     libboost-dev
 
-ARG gem5_dist=http://dist.gem5.org/dist/current
+ARG gem5_dist=http://dist.gem5.org/dist/develop
 
 # Install ROCm 1.6 binaries
 RUN wget -qO- ${gem5_dist}/apt_1.6.2.tar.bz2 \
@@ -61,14 +61,14 @@ RUN git clone --single-branch https://github.com/ROCm-Developer-Tools/HIP/ && \
 RUN mkdir -p /patch && cd /patch && \
     wget ${gem5_dist}/rocm_patches/hipBLAS.patch && \
     wget ${gem5_dist}/rocm_patches/hip.patch && \
-    wget ${gem5_dist}/rocm_patches/miopen.patch && \
+    wget ${gem5_dist}/rocm_patches/miopen-conv.patch && \
     wget ${gem5_dist}/rocm_patches/rocBLAS.patch
 
 RUN git -C /HIP/ checkout 0e3d824e && git -C /HIP/ apply /patch/hip.patch && \
     git -C /hipBLAS/ checkout ee57787e && git -C /hipBLAS/ apply /patch/hipBLAS.patch && \
     git -C /rocBLAS/ checkout cbff4b4e && git -C /rocBLAS/ apply /patch/rocBLAS.patch && \
     git -C /MIOpenGEMM/ checkout 9547fb9e && \
-    git -C /MIOpen/ checkout a9949e30 && git -C /MIOpen/ apply /patch/miopen.patch
+    git -C /MIOpen/ checkout 01d6ca55c && git -C /MIOpen/ apply /patch/miopen-conv.patch
 
 ENV ROCM_PATH /opt/rocm
 ENV HCC_HOME ${ROCM_PATH}/hcc
@@ -107,6 +107,16 @@ RUN cmake .. && make miopengemm && make install && rm -rf *
 # Should link this in as a volume if at all possible
 RUN mkdir -p /.cache/miopen && chmod 777 /.cache/miopen
 
+# Un-set default c++ version for MIOpen compilation
+# As MIOpen 1.7 requires c++14 or higher
+RUN sed -i 's/INTERFACE_COMPILE_OPTIONS "-std=c++amp;-fPIC;-gline-tables-only"/#&/' /opt/rocm/hcc-1.0/lib/cmake/hcc/hcc-targets.cmake && \
+    sed -i 's/INTERFACE_COMPILE_OPTIONS "-hc"/#&/' /opt/rocm/hcc-1.0/lib/cmake/hcc/hcc-targets.cmake
+
+WORKDIR /MIOpen
+# Half is required; This is the version that MIOpen would download
+RUN wget https://github.com/pfultz2/half/archive/1.12.0.tar.gz && \
+    tar -xzf 1.12.0.tar.gz
+
 WORKDIR /MIOpen/build
 RUN CXX=/opt/rocm/hcc/bin/hcc cmake \
     -DCMAKE_BUILD_TYPE=Debug \
@@ -115,15 +125,21 @@ RUN CXX=/opt/rocm/hcc/bin/hcc cmake \
     -DCMAKE_PREFIX_PATH="/opt/rocm/hip;/opt/rocm/hcc;/opt/rocm/rocdl;/opt/rocm/miopengemm;/opt/rocm/hsa" \
     -DMIOPEN_CACHE_DIR=/.cache/miopen \
     -DMIOPEN_AMDGCN_ASSEMBLER_PATH=/opt/rocm/opencl/bin \
+    -DHALF_INCLUDE_DIR=/MIOpen/half-1.12.0/include \
     -DCMAKE_CXX_FLAGS="-isystem /usr/include/x86_64-linux-gnu" .. && \
     make -j$(nproc) && make install && rm -rf *
 
-# Create performance DB for gfx801. May need personal dbs still
+# Re-set defaults
+RUN sed -i 's/#\(INTERFACE_COMPILE_OPTIONS "-std=c++amp;-fPIC;-gline-tables-only"\)/\1/' /opt/rocm/hcc-1.0/lib/cmake/hcc/hcc-targets.cmake && \
+    sed -i 's/#\(INTERFACE_COMPILE_OPTIONS "-hc"\)/\1/' /opt/rocm/hcc-1.0/lib/cmake/hcc/hcc-targets.cmake
+
+# Create performance DB for gfx801.
 WORKDIR /opt/rocm/miopen/share/miopen/db
-RUN ln -s gfx803_64.cd.pdb.txt gfx801_8.cd.pdb.txt && \
-    ln -s gfx803_64.cd.pdb.txt gfx801_16.cd.pdb.txt && \
-    ln -s gfx803_64.cd.pdb.txt gfx801_32.cd.pdb.txt && \
-    ln -s gfx803_64.cd.pdb.txt gfx801_64.cd.pdb.txt
+RUN cp gfx803_64.cd.pdb.txt gfx801_4.cd.pdb.txt && \
+    cp gfx803_64.cd.pdb.txt gfx801_8.cd.pdb.txt && \
+    cp gfx803_64.cd.pdb.txt gfx801_16.cd.pdb.txt && \
+    cp gfx803_64.cd.pdb.txt gfx801_32.cd.pdb.txt && \
+    cp gfx803_64.cd.pdb.txt gfx801_64.cd.pdb.txt
 
 # Install profiler from .deb file, works for 1.6.2
 WORKDIR /ROCm-Profiler
