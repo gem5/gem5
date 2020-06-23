@@ -11,13 +11,14 @@ build_dir="${gem5_root}/build"
 num_cores=`nproc`
 
 # All Docker images in the gem5 testing GCR which we want to compile with.
-images=("ubuntu-20.04_all-dependencies" # Uses GCC-9
-        "clang-version-9"
+images=("gcc-version-10"
+        "gcc-version-9"
         "gcc-version-8"
         "gcc-version-7"
         "gcc-version-6"
         "gcc-version-5"
         "gcc-version-4.8"
+        "clang-version-9"
         "clang-version-8"
         "clang-version-7"
         "clang-version-6.0"
@@ -27,7 +28,7 @@ images=("ubuntu-20.04_all-dependencies" # Uses GCC-9
 
 # A subset of the above list: these images will build against every target,
 # ignoring builds_per_compiler.
-comprehensive=("ubuntu-20.04_all-dependencies"
+comprehensive=("gcc-version-10"
                "clang-version-9")
 
 # All build targets in build_opt/ which we want to build using each image.
