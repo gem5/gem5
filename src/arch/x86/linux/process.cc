@@ -347,7 +347,7 @@ static SyscallDescTable<X86_64LinuxProcess::SyscallABI> syscallDescs64 = {
     {  87, "unlink", unlinkFunc },
     {  88, "symlink", symlinkFunc },
     {  89, "readlink", readlinkFunc },
-    {  90, "chmod" },
+    {  90, "chmod", ignoreFunc },
     {  91, "fchmod" },
     {  92, "chown" },
     {  93, "fchown" },
