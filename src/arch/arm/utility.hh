@@ -237,7 +237,7 @@ Addr purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
 Addr purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
                       bool isInstr);
 int computeAddrTop(ThreadContext *tc, bool selbit, bool isInstr,
-               TTBCR tcr, ExceptionLevel el);
+               TCR tcr, ExceptionLevel el);
 
 static inline bool
 inSecureState(SCR scr, CPSR cpsr)

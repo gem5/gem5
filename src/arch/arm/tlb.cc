@@ -1011,11 +1011,29 @@ TLB::translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
         TLB::ArmTranslationType tranType, Addr vaddr, bool long_desc_format)
 {
     bool is_fetch  = (mode == Execute);
+    bool is_atomic = req->isAtomic();
     req->setPaddr(vaddr);
     // When the MMU is off the security attribute corresponds to the
     // security state of the processor
     if (isSecure)
         req->setFlags(Request::SECURE);
+
+    bool selbit = bits(vaddr, 55);
+    TCR tcr1 = tc->readMiscReg(MISCREG_TCR_EL1);
+    int topbit = computeAddrTop(tc, selbit, is_fetch, tcr1, currEL(tc));
+    int addr_sz = bits(vaddr, topbit, MaxPhysAddrRange);
+    if (addr_sz != 0){
+        Fault f;
+        if (is_fetch)
+            f = std::make_shared<PrefetchAbort>(vaddr,
+                ArmFault::AddressSizeLL, isStage2, ArmFault::LpaeTran);
+        else
+            f = std::make_shared<DataAbort>( vaddr,
+                TlbEntry::DomainType::NoAccess,
+                is_atomic ? false : mode==Write,
+                ArmFault::AddressSizeLL, isStage2, ArmFault::LpaeTran);
+        return f;
+    }
 
     // @todo: double check this (ARM ARM issue C B3.2.1)
     if (long_desc_format || sctlr.tre == 0 || nmrr.ir0 == 0 ||
