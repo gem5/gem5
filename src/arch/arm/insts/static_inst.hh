@@ -257,7 +257,7 @@ class ArmStaticInst : public StaticInst
                         validModeChange = false;
                     // There is no Hyp mode ('11010') in Secure state, so that
                     // is UNPREDICTABLE
-                    if (scr.ns == '0' && newMode == MODE_HYP)
+                    if (scr.ns == 0 && newMode == MODE_HYP)
                         validModeChange = false;
                     // Cannot move into Hyp mode directly from a Non-secure
                     // PL1 mode
