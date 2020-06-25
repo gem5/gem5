@@ -201,8 +201,6 @@ decodeCP14Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                       return MISCREG_DBGBXVR15;
                 }
                 break;
-            }
-            switch (opc2) {
               case 4:
                 switch (crm) {
                   case 0:
@@ -216,6 +214,7 @@ decodeCP14Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                 }
                 break;
             }
+            break;
           case 6:
             switch (crm) {
               case 0:
