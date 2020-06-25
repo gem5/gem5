@@ -428,7 +428,6 @@ ISA::startup()
         setupThreadContext();
 
     afterStartup = true;
-    selfDebug->init(tc);
 }
 
 void
@@ -438,6 +437,8 @@ ISA::setupThreadContext()
 
     if (!system)
         return;
+
+    selfDebug->init(tc);
 
     Gicv3 *gicv3 = dynamic_cast<Gicv3 *>(system->getGIC());
     if (!gicv3)
