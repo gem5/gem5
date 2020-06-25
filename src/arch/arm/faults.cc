@@ -884,17 +884,8 @@ SupervisorCall::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 bool
 SupervisorCall::routeToHyp(ThreadContext *tc) const
 {
-    bool toHyp;
-
-    SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR);
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
-    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
-
-    // if in Hyp mode then stay in Hyp mode
-    toHyp  = scr.ns && (cpsr.mode == MODE_HYP);
-    // if HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector
-    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (currEL(tc) == EL0);
-    return toHyp;
+    return EL2Enabled(tc) && currEL(tc) == EL0 && hcr.tge == 1;
 }
 
 ExceptionClass
@@ -1028,15 +1019,8 @@ SecureMonitorCall::ec(ThreadContext *tc) const
 bool
 SupervisorTrap::routeToHyp(ThreadContext *tc) const
 {
-    bool toHyp = false;
-
-    SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
-    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
-
-    // if HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector
-    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (currEL(tc) == EL0);
-    return toHyp;
+    return EL2Enabled(tc) && currEL(tc) <= EL1 && hcr.tge;
 }
 
 uint32_t
@@ -1323,6 +1307,7 @@ PrefetchAbort::routeToHyp(ThreadContext *tc) const
 
     // if in Hyp mode then stay in Hyp mode
     toHyp = scr.ns && (currEL(tc) == EL2);
+    toHyp |= (currEL(tc) <= EL1) && hcr.tge;
     // otherwise, check whether to take to Hyp mode through Hyp Trap vector
     toHyp |= (stage2 ||
               ((source == DebugEvent) && (hdcr.tde || hcr.tge) &&
@@ -1384,6 +1369,7 @@ DataAbort::routeToHyp(ThreadContext *tc) const
 
     // if in Hyp mode then stay in Hyp mode
     toHyp = scr.ns && (currEL(tc) == EL2);
+    toHyp |= (currEL(tc) <= EL1 && hcr.tge==1);
     // otherwise, check whether to take to Hyp mode through Hyp Trap vector
     toHyp |= (stage2 ||
               ((currEL(tc) != EL2) &&
@@ -1484,15 +1470,9 @@ Interrupt::routeToMonitor(ThreadContext *tc) const
 bool
 Interrupt::routeToHyp(ThreadContext *tc) const
 {
-    bool toHyp;
-
-    SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR);
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
-    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
-    // Determine whether IRQs are routed to Hyp mode.
-    toHyp = (!scr.irq && hcr.imo && !inSecureState(tc)) ||
-            (cpsr.mode == MODE_HYP);
-    return toHyp;
+    return fromEL == EL2 ||
+           (EL2Enabled(tc) && fromEL <= EL1 && (hcr.tge == 1 || hcr.imo));
 }
 
 bool
@@ -1523,15 +1503,9 @@ FastInterrupt::routeToMonitor(ThreadContext *tc) const
 bool
 FastInterrupt::routeToHyp(ThreadContext *tc) const
 {
-    bool toHyp;
-
-    SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR);
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
-    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
-    // Determine whether IRQs are routed to Hyp mode.
-    toHyp = (!scr.fiq && hcr.fmo && !inSecureState(tc)) ||
-            (cpsr.mode == MODE_HYP);
-    return toHyp;
+    return fromEL == EL2 ||
+           (EL2Enabled(tc) && fromEL <= EL1 && (hcr.tge == 1 || hcr.fmo));
 }
 
 bool
@@ -1571,15 +1545,8 @@ PCAlignmentFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 bool
 PCAlignmentFault::routeToHyp(ThreadContext *tc) const
 {
-    bool toHyp = false;
-
-    SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
-    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
-
-    // if HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector
-    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (currEL(tc) == EL0);
-    return toHyp;
+    return EL2Enabled(tc) && currEL(tc) <= EL1 && hcr.tge == 1;
 }
 
 SPAlignmentFault::SPAlignmentFault()
@@ -1590,7 +1557,7 @@ SPAlignmentFault::routeToHyp(ThreadContext *tc) const
 {
     assert(from64);
     HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
-    return EL2Enabled(tc) && hcr.tge==1;
+    return EL2Enabled(tc) && currEL(tc) <= EL1 && hcr.tge == 1;
 }
 
 SystemError::SystemError()
