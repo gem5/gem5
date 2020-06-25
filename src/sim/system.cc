@@ -447,7 +447,7 @@ System::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(pagePtr);
 
     for (auto &t: threads.threads) {
-        Tick when;
+        Tick when = 0;
         ContextID id = t.context->contextId();
         if (!optParamIn(cp, csprintf("quiesceEndTick_%d", id), when) ||
                 !when || !t.resumeEvent) {
