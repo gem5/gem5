@@ -956,7 +956,10 @@ class TableWalker : public ClockedObject
 
     Fault processWalk();
     Fault processWalkLPAE();
-    static unsigned adjustTableSizeAArch64(unsigned tsz);
+
+    bool checkVAddrSizeFaultAArch64(Addr addr, int top_bit,
+        GrainSize granule, int tsz, bool low_range);
+
     /// Returns true if the address exceeds the range permitted by the
     /// system-wide setting or by the TCR_ELx IPS/PS setting
     static bool checkAddrSizeFaultAArch64(Addr addr, int currPhysAddrRange);

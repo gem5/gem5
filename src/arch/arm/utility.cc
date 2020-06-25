@@ -326,6 +326,13 @@ HaveVirtHostExt(ThreadContext *tc)
     return id_aa64mmfr1.vh;
 }
 
+bool
+HaveLVA(ThreadContext *tc)
+{
+    const AA64MMFR2 mm_fr2 = tc->readMiscReg(MISCREG_ID_AA64MMFR2_EL1);
+    return (bool)mm_fr2.varange;
+}
+
 ExceptionLevel
 s1TranslationRegime(ThreadContext* tc, ExceptionLevel el)
 {

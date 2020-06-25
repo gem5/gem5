@@ -746,14 +746,21 @@ TableWalker::processWalkLPAE()
     return f;
 }
 
-unsigned
-TableWalker::adjustTableSizeAArch64(unsigned tsz)
+bool
+TableWalker::checkVAddrSizeFaultAArch64(Addr addr, int top_bit,
+    GrainSize tg, int tsz, bool low_range)
 {
-    if (tsz < 25)
-        return 25;
-    if (tsz > 48)
-        return 48;
-    return tsz;
+    // The effective maximum input size is 48 if ARMv8.2-LVA is not
+    // supported or if the translation granule that is in use is 4KB or
+    // 16KB in size. When ARMv8.2-LVA is supported, for the 64KB
+    // translation granule size only, the effective minimum value of
+    // 52.
+    int in_max = (HaveLVA(currState->tc) && tg == Grain64KB) ? 52 : 48;
+    int in_min = 64 - (tg == Grain64KB ? 47 : 48);
+
+    return tsz > in_max || tsz < in_min || (low_range ?
+        bits(currState->vaddr, top_bit, tsz) != 0x0 :
+        bits(currState->vaddr, top_bit, tsz) != mask(top_bit - tsz + 1));
 }
 
 bool
@@ -784,8 +791,14 @@ TableWalker::processWalkAArch64()
     GrainSize tg = Grain4KB; // grain size computed from tg* field
     bool fault = false;
 
-    LookupLevel start_lookup_level = MAX_LOOKUP_LEVELS;
+    int top_bit = computeAddrTop(currState->tc,
+        bits(currState->vaddr, 55),
+        currState->mode==TLB::Execute,
+        currState->tcr,
+        currState->el);
 
+    LookupLevel start_lookup_level = MAX_LOOKUP_LEVELS;
+    bool vaddr_fault = false;
     switch (currState->el) {
       case EL0:
         {
@@ -804,24 +817,28 @@ TableWalker::processWalkAArch64()
               case 0:
                 DPRINTF(TLB, " - Selecting TTBR0 (AArch64)\n");
                 ttbr = ttbr0;
-                tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
+                tsz = 64 - currState->tcr.t0sz;
                 tg = GrainMap_tg0[currState->tcr.tg0];
                 currState->hpd = currState->tcr.hpd0;
                 currState->isUncacheable = currState->tcr.irgn0 == 0;
-                if (bits(currState->vaddr, 63, tsz) != 0x0 ||
-                    currState->tcr.epd0)
-                  fault = true;
+                vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
+                    top_bit, tg, tsz, true);
+
+                if (vaddr_fault || currState->tcr.epd0)
+                    fault = true;
                 break;
               case 0xffff:
                 DPRINTF(TLB, " - Selecting TTBR1 (AArch64)\n");
                 ttbr = ttbr1;
-                tsz = adjustTableSizeAArch64(64 - currState->tcr.t1sz);
+                tsz = 64 - currState->tcr.t1sz;
                 tg = GrainMap_tg1[currState->tcr.tg1];
                 currState->hpd = currState->tcr.hpd1;
                 currState->isUncacheable = currState->tcr.irgn1 == 0;
-                if (bits(currState->vaddr, 63, tsz) != mask(64-tsz) ||
-                    currState->tcr.epd1)
-                  fault = true;
+                vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
+                    top_bit, tg, tsz, false);
+
+                if (vaddr_fault || currState->tcr.epd1)
+                    fault = true;
                 break;
               default:
                 // top two bytes must be all 0s or all 1s, else invalid addr
@@ -858,28 +875,32 @@ TableWalker::processWalkAArch64()
             ps = currState->vtcr.ps;
             currState->isUncacheable = currState->vtcr.irgn0 == 0;
         } else {
-            switch (bits(currState->vaddr, 63,48)) {
+            switch (bits(currState->vaddr, top_bit)) {
               case 0:
-                DPRINTF(TLB, " - Selecting TTBR0 (AArch64)\n");
+                DPRINTF(TLB, " - Selecting TTBR0_EL1 (AArch64)\n");
                 ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL1);
-                tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
+                tsz = 64 - currState->tcr.t0sz;
                 tg = GrainMap_tg0[currState->tcr.tg0];
                 currState->hpd = currState->tcr.hpd0;
                 currState->isUncacheable = currState->tcr.irgn0 == 0;
-                if (bits(currState->vaddr, 63, tsz) != 0x0 ||
-                    currState->tcr.epd0)
-                  fault = true;
+                vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
+                    top_bit, tg, tsz, true);
+
+                if (vaddr_fault || currState->tcr.epd0)
+                    fault = true;
                 break;
-              case 0xffff:
-                DPRINTF(TLB, " - Selecting TTBR1 (AArch64)\n");
+              case 0x1:
+                DPRINTF(TLB, " - Selecting TTBR1_EL1 (AArch64)\n");
                 ttbr = currState->tc->readMiscReg(MISCREG_TTBR1_EL1);
-                tsz = adjustTableSizeAArch64(64 - currState->tcr.t1sz);
+                tsz = 64 - currState->tcr.t1sz;
                 tg = GrainMap_tg1[currState->tcr.tg1];
                 currState->hpd = currState->tcr.hpd1;
                 currState->isUncacheable = currState->tcr.irgn1 == 0;
-                if (bits(currState->vaddr, 63, tsz) != mask(64-tsz) ||
-                    currState->tcr.epd1)
-                  fault = true;
+                vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
+                    top_bit, tg, tsz, false);
+
+                if (vaddr_fault || currState->tcr.epd1)
+                    fault = true;
                 break;
               default:
                 // top two bytes must be all 0s or all 1s, else invalid addr
@@ -889,27 +910,34 @@ TableWalker::processWalkAArch64()
         }
         break;
       case EL2:
-        switch(bits(currState->vaddr, 63,48)) {
+        switch(bits(currState->vaddr, top_bit)) {
           case 0:
             DPRINTF(TLB, " - Selecting TTBR0_EL2 (AArch64)\n");
             ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL2);
-            tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
+            tsz = 64 - currState->tcr.t0sz;
             tg = GrainMap_tg0[currState->tcr.tg0];
             currState->hpd = currState->hcr.e2h ?
                 currState->tcr.hpd0 : currState->tcr.hpd;
             currState->isUncacheable = currState->tcr.irgn0 == 0;
+            vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
+                top_bit, tg, tsz, true);
+
+            if (vaddr_fault || (currState->hcr.e2h && currState->tcr.epd0))
+                fault = true;
             break;
 
-          case 0xffff:
+          case 0x1:
             DPRINTF(TLB, " - Selecting TTBR1_EL2 (AArch64)\n");
             ttbr = currState->tc->readMiscReg(MISCREG_TTBR1_EL2);
-            tsz = adjustTableSizeAArch64(64 - currState->tcr.t1sz);
+            tsz = 64 - currState->tcr.t1sz;
             tg = GrainMap_tg1[currState->tcr.tg1];
             currState->hpd = currState->tcr.hpd1;
             currState->isUncacheable = currState->tcr.irgn1 == 0;
-            if (bits(currState->vaddr, 63, tsz) != mask(64-tsz) ||
-                currState->tcr.epd1 || !currState->hcr.e2h)
-              fault = true;
+            vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
+                top_bit, tg, tsz, false);
+
+            if (vaddr_fault || !currState->hcr.e2h || currState->tcr.epd1)
+                fault = true;
             break;
 
            default:
@@ -919,18 +947,23 @@ TableWalker::processWalkAArch64()
         ps = currState->hcr.e2h ? currState->tcr.ips: currState->tcr.ps;
         break;
       case EL3:
-        switch(bits(currState->vaddr, 63,48)) {
-            case 0:
-                DPRINTF(TLB, " - Selecting TTBR0_EL3 (AArch64)\n");
-                ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL3);
-                tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
-                tg = GrainMap_tg0[currState->tcr.tg0];
-                currState->hpd = currState->tcr.hpd;
-                currState->isUncacheable = currState->tcr.irgn0 == 0;
-                break;
-            default:
-                // invalid addr if top two bytes are not all 0s
+        switch(bits(currState->vaddr, top_bit)) {
+          case 0:
+            DPRINTF(TLB, " - Selecting TTBR0_EL3 (AArch64)\n");
+            ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL3);
+            tsz = 64 - currState->tcr.t0sz;
+            tg = GrainMap_tg0[currState->tcr.tg0];
+            currState->hpd = currState->tcr.hpd;
+            currState->isUncacheable = currState->tcr.irgn0 == 0;
+            vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
+                top_bit, tg, tsz, true);
+
+            if (vaddr_fault)
                 fault = true;
+            break;
+          default:
+            // invalid addr if top two bytes are not all 0s
+            fault = true;
         }
         ps = currState->tcr.ps;
         break;

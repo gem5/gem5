@@ -153,6 +153,7 @@ currEL(CPSR cpsr)
 
 bool HavePACExt(ThreadContext *tc);
 bool HaveVirtHostExt(ThreadContext *tc);
+bool HaveLVA(ThreadContext *tc);
 bool HaveSecureEL2Ext(ThreadContext *tc);
 bool IsSecureEL2Enabled(ThreadContext *tc);
 bool EL2Enabled(ThreadContext *tc);
