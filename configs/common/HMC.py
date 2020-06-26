@@ -127,6 +127,10 @@ import argparse
 import m5
 from m5.objects import *
 from m5.util import *
+from m5.defines import buildEnv
+
+from common.Benchmarks import *
+from common import ObjectList
 
 
 def add_options(parser):
@@ -274,7 +278,7 @@ def add_options(parser):
     parser.add_argument("--hmc-dev-vault-size", default='256MB', type=str,
                         help="vault storage capacity in bytes. Default:\
                         256MB")
-    parser.add_argument("--mem-type", type=str, choices=["HMC_2500_1x32"],
+    parser.add_argument("--mem-type", type=str, choices=["HMC_2500_1x32","DDR3_1600_8x8"],
                         default="HMC_2500_1x32", help="type of HMC memory to\
                         use. Default: HMC_2500_1x32")
     parser.add_argument("--mem-channels", default=1, action="store", type=int,
@@ -285,6 +289,13 @@ def add_options(parser):
                         type=int, help="burst length in bytes. Note: the\
                         cache line size will be set to this value.\nDefault:\
                         256")
+    parser.add_argument("--mem-size", action="store", type=str,
+                      default="2048MB",
+                      help="Specify the physical memory size (single memory)")
+    parser.add_argument("-c", "--cmd", default="",
+                      help="The binary to run in syscall emulation mode.")
+
+    
 
 
 # configure HMC host controller
