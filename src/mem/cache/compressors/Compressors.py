@@ -148,6 +148,13 @@ class ZeroCompressor(BaseDictionaryCompressor):
 
 class BDI(MultiCompressor):
     encoding_in_tags=True
-    compressors = [ZeroCompressor(), RepeatedQwordsCompressor(),
-        Base64Delta8(), Base64Delta16(), Base64Delta32(), Base32Delta8(),
-        Base32Delta16(), Base16Delta8()]
+    compressors = [
+        ZeroCompressor(size_threshold_percentage=99),
+        RepeatedQwordsCompressor(size_threshold_percentage=99),
+        Base64Delta8(size_threshold_percentage=99),
+        Base64Delta16(size_threshold_percentage=99),
+        Base64Delta32(size_threshold_percentage=99),
+        Base32Delta8(size_threshold_percentage=99),
+        Base32Delta16(size_threshold_percentage=99),
+        Base16Delta8(size_threshold_percentage=99),
+    ]
