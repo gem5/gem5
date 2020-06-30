@@ -84,9 +84,11 @@ OutputFile<StreamType>::OutputFile(const OutputDirectory &dir,
     _mode(mode), _recreateable(recreateable),
     _fstream(static_cast<stream_type_t *>(_stream))
 {
-    _fstream->open(dir.resolve(_name).c_str(), _mode);
+    std::string resolved_path = dir.resolve(_name);
 
-    assert(_fstream->is_open());
+    _fstream->open(resolved_path.c_str(), _mode);
+
+    panic_if(!_fstream->is_open(), "Failed to open \"%s\"\n", resolved_path);
 }
 
 template<class StreamType>
