@@ -58,7 +58,6 @@ class BrkPoint
   private:
     MiscRegIndex ctrlRegIndex;
     MiscRegIndex valRegIndex;
-    MiscRegIndex xRegIndex;
     SelfDebug * conf;
     bool isCntxtAware;
     bool VMID16enabled;
@@ -72,7 +71,7 @@ class BrkPoint
              MiscRegIndex _xIndex, SelfDebug* _conf, bool _ctxAw, bool lva,
              bool vmid16, bool aarch32):
                 ctrlRegIndex(_ctrlIndex), valRegIndex(_valIndex),
-                xRegIndex(_xIndex), conf(_conf), isCntxtAware(_ctxAw),
+                conf(_conf), isCntxtAware(_ctxAw),
                 VMID16enabled(vmid16), active_pc(0x0), enable(false)
     {
         maxAddrSize = lva ? 52: 48 ;
@@ -214,10 +213,6 @@ class SoftwareStep
     bool steppedLdx;
     bool prevSteppedLdx;
     bool cpsrD;
-
-    bool ctrStepped;
-    bool ctrActivate;
-
 
   public:
     SoftwareStep(SelfDebug* s): bSS(false), stateSS(INACTIVE_STATE),
