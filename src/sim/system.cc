@@ -179,7 +179,7 @@ System::Threads::quiesce(ContextID id)
 {
     auto &t = thread(id);
 #   if THE_ISA != NULL_ISA
-    BaseCPU *cpu = t.context->getCpuPtr();
+    BaseCPU M5_VAR_USED *cpu = t.context->getCpuPtr();
     DPRINTFS(Quiesce, cpu, "quiesce()\n");
 #   endif
     t.quiesce();
