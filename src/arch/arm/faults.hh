@@ -647,7 +647,7 @@ class Watchpoint : public ArmFaultVals<Watchpoint>
     bool routeToHyp(ThreadContext *tc) const override;
     uint32_t iss() const override;
     ExceptionClass ec(ThreadContext *tc) const override;
-    void annotate(AnnotationIDs id, uint64_t val);
+    void annotate(AnnotationIDs id, uint64_t val) override;
 };
 
 class SoftwareStepFault : public ArmFaultVals<SoftwareStepFault>
