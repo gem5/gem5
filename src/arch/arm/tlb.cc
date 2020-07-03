@@ -89,6 +89,7 @@ TLB::TLB(const ArmTLBParams *p)
     haveLPAE = tableWalker->haveLPAE();
     haveVirtualization = tableWalker->haveVirtualization();
     haveLargeAsid64 = tableWalker->haveLargeAsid64();
+    physAddrRange = tableWalker->physAddrRange();
 
     if (sys)
         m5opRange = sys->m5opRange();
@@ -949,7 +950,7 @@ TLB::translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
         bool selbit = bits(vaddr, 55);
         TCR tcr1 = tc->readMiscReg(MISCREG_TCR_EL1);
         int topbit = computeAddrTop(tc, selbit, is_fetch, tcr1, currEL(tc));
-        int addr_sz = bits(vaddr, topbit, MaxPhysAddrRange);
+        int addr_sz = bits(vaddr, topbit, physAddrRange);
         if (addr_sz != 0){
             Fault f;
             if (is_fetch)

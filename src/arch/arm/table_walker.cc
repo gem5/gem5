@@ -81,12 +81,12 @@ TableWalker::TableWalker(const Params *p)
         haveSecurity = armSys->haveSecurity();
         _haveLPAE = armSys->haveLPAE();
         _haveVirtualization = armSys->haveVirtualization();
-        physAddrRange = armSys->physAddrRange();
+        _physAddrRange = armSys->physAddrRange();
         _haveLargeAsid64 = armSys->haveLargeAsid64();
     } else {
         haveSecurity = _haveLPAE = _haveVirtualization = false;
         _haveLargeAsid64 = false;
-        physAddrRange = 32;
+        _physAddrRange = 48;
     }
 
 }
@@ -252,7 +252,7 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
     currState->mode = _mode;
     currState->tranType = tranType;
     currState->isSecure = secure;
-    currState->physAddrRange = physAddrRange;
+    currState->physAddrRange = _physAddrRange;
 
     /** @todo These should be cached or grabbed from cached copies in
      the TLB, all these miscreg reads are expensive */
@@ -764,10 +764,10 @@ TableWalker::checkVAddrSizeFaultAArch64(Addr addr, int top_bit,
 }
 
 bool
-TableWalker::checkAddrSizeFaultAArch64(Addr addr, int currPhysAddrRange)
+TableWalker::checkAddrSizeFaultAArch64(Addr addr, int pa_range)
 {
-    return (currPhysAddrRange != MaxPhysAddrRange &&
-            bits(addr, MaxPhysAddrRange - 1, currPhysAddrRange));
+    return (pa_range != _physAddrRange &&
+            bits(addr, _physAddrRange - 1, pa_range));
 }
 
 Fault
@@ -1041,20 +1041,29 @@ TableWalker::processWalkAArch64()
                  "Table walker couldn't find lookup level\n");
     }
 
-    int stride = tg - 3;
+    // Clamp to lower limit
+    int pa_range = decodePhysAddrRange64(ps);
+    if (pa_range > _physAddrRange) {
+        currState->physAddrRange = _physAddrRange;
+    } else {
+        currState->physAddrRange = pa_range;
+    }
 
     // Determine table base address
+    int stride = tg - 3;
     int base_addr_lo = 3 + tsz - stride * (3 - start_lookup_level) - tg;
-    Addr base_addr = mbits(ttbr, 47, base_addr_lo);
+    Addr base_addr = 0;
+
+    if (pa_range == 52) {
+        int z = (base_addr_lo < 6) ? 6 : base_addr_lo;
+        base_addr = mbits(ttbr, 47, z);
+        base_addr |= (bits(ttbr, 5, 2) << 48);
+    } else {
+        base_addr = mbits(ttbr, 47, base_addr_lo);
+    }
 
     // Determine physical address size and raise an Address Size Fault if
     // necessary
-    int pa_range = decodePhysAddrRange64(ps);
-    // Clamp to lower limit
-    if (pa_range > physAddrRange)
-        currState->physAddrRange = physAddrRange;
-    else
-        currState->physAddrRange = pa_range;
     if (checkAddrSizeFaultAArch64(base_addr, currState->physAddrRange)) {
         DPRINTF(TLB, "Address size fault before any lookup\n");
         Fault f;
@@ -1084,7 +1093,7 @@ TableWalker::processWalkAArch64()
         }
         return f;
 
-   }
+    }
 
     // Determine descriptor address
     Addr desc_addr = base_addr |
@@ -1119,6 +1128,7 @@ TableWalker::processWalkAArch64()
     currState->longDesc.lookupLevel = start_lookup_level;
     currState->longDesc.aarch64 = true;
     currState->longDesc.grainSize = tg;
+    currState->longDesc.physAddrRange = _physAddrRange;
 
     if (currState->timing) {
         fetchDescriptor(desc_addr, (uint8_t*) &currState->longDesc.data,
@@ -1745,10 +1755,8 @@ TableWalker::doLongDescriptor()
         {
             auto fault_source = ArmFault::FaultSourceInvalid;
             // Check for address size fault
-            if (checkAddrSizeFaultAArch64(
-                    mbits(currState->longDesc.data, MaxPhysAddrRange - 1,
-                          currState->longDesc.offsetBits()),
-                    currState->physAddrRange)) {
+            if (checkAddrSizeFaultAArch64(currState->longDesc.paddr(),
+                currState->physAddrRange)) {
 
                 DPRINTF(TLB, "L%d descriptor causing Address Size Fault\n",
                         currState->longDesc.lookupLevel);
@@ -2305,6 +2313,7 @@ TableWalker::pageSizeNtoStatBin(uint8_t N)
         case 25: return 6; // 32M (using 16K granule in v8-64)
         case 29: return 7; // 512M (using 64K granule in v8-64)
         case 30: return 8; // 1G-LPAE
+        case 42: return 9; // 1G-LPAE
         default:
             panic("unknown page size");
             return 255;
@@ -2374,7 +2383,7 @@ TableWalker::TableWalkerStats::TableWalkerStats(Stats::Group *parent)
         .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan);
 
     pageSizes // see DDI 0487A D4-1661
-        .init(9)
+        .init(10)
         .flags(Stats::total | Stats::pdf | Stats::dist | Stats::nozero);
     pageSizes.subname(0, "4K");
     pageSizes.subname(1, "16K");
@@ -2385,6 +2394,7 @@ TableWalker::TableWalkerStats::TableWalkerStats(Stats::Group *parent)
     pageSizes.subname(6, "32M");
     pageSizes.subname(7, "512M");
     pageSizes.subname(8, "1G");
+    pageSizes.subname(9, "4TB");
 
     requestOrigin
         .init(2,2) // Instruction/Data, requests/completed

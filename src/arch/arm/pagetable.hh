@@ -51,7 +51,7 @@ namespace ArmISA
 {
 
 // Max. physical address range in bits supported by the architecture
-const unsigned MaxPhysAddrRange = 48;
+const unsigned MaxPhysAddrRange = 52;
 
 // ITB/DTB page table entry
 struct PTE

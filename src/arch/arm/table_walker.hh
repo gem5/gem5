@@ -382,7 +382,10 @@ class TableWalker : public ClockedObject
             Page
         };
 
-        LongDescriptor() : data(0), _dirty(false) {}
+        LongDescriptor()
+          : data(0), _dirty(false), aarch64(false), grainSize(Grain4KB),
+            physAddrRange(0)
+        {}
 
         /** The raw bits of the entry */
         uint64_t data;
@@ -390,6 +393,15 @@ class TableWalker : public ClockedObject
         /** This entry has been modified (access flag set) and needs to be
          * written back to memory */
         bool _dirty;
+
+        /** True if the current lookup is performed in AArch64 state */
+        bool aarch64;
+
+        /** Width of the granule size in bits */
+        GrainSize grainSize;
+
+        uint8_t physAddrRange;
+
 
         virtual uint64_t getRawData() const
         {
@@ -417,12 +429,6 @@ class TableWalker : public ClockedObject
             return have_security && (currState->secureLookup && !bits(data, 5));
         }
 
-        /** True if the current lookup is performed in AArch64 state */
-        bool aarch64;
-
-        /** Width of the granule size in bits */
-        GrainSize grainSize;
-
         /** Return the descriptor type */
         EntryType type() const
         {
@@ -430,9 +436,31 @@ class TableWalker : public ClockedObject
               case 0x1:
                 // In AArch64 blocks are not allowed at L0 for the 4 KB granule
                 // and at L1 for 16/64 KB granules
-                if (grainSize > Grain4KB)
-                    return lookupLevel == L2 ? Block : Invalid;
-                return lookupLevel == L0 || lookupLevel == L3 ? Invalid : Block;
+                switch (grainSize) {
+                  case Grain4KB:
+                    if (lookupLevel == L0 || lookupLevel == L3)
+                        return Invalid;
+                    else
+                        return Block;
+
+                  case Grain16KB:
+                    if (lookupLevel == L2)
+                        return Block;
+                    else
+                        return Invalid;
+
+                  case Grain64KB:
+                    // With Armv8.2-LPA (52bit PA) L1 Block descriptors
+                    // are allowed for 64KB granule
+                    if ((lookupLevel == L1 && physAddrRange == 52) ||
+                        lookupLevel == L2)
+                        return Block;
+                    else
+                        return Invalid;
+
+                  default:
+                    return Invalid;
+                }
               case 0x3:
                 return lookupLevel == L3 ? Page : Table;
               default:
@@ -451,7 +479,8 @@ class TableWalker : public ClockedObject
                     case Grain16KB:
                         return 25  /* 32 MB */;
                     case Grain64KB:
-                        return 29 /* 512 MB */;
+                        return lookupLevel == L1 ? 42 /* 4TB MB */
+                                                 : 29 /* 512 MB */;
                     default:
                         panic("Invalid AArch64 VM granule size\n");
                 }
@@ -472,36 +501,39 @@ class TableWalker : public ClockedObject
         /** Return the physical frame, bits shifted right */
         Addr pfn() const
         {
-            if (aarch64)
-                return bits(data, 47, offsetBits());
-            return bits(data, 39, offsetBits());
-        }
-
-        /** Return the complete physical address given a VA */
-        Addr paddr(Addr va) const
-        {
-            int n = offsetBits();
-            if (aarch64)
-                return mbits(data, 47, n) | mbits(va, n - 1, 0);
-            return mbits(data, 39, n) | mbits(va, n - 1, 0);
+            return paddr() >> offsetBits();
         }
 
         /** Return the physical address of the entry */
         Addr paddr() const
         {
-            if (aarch64)
-                return mbits(data, 47, offsetBits());
-            return mbits(data, 39, offsetBits());
+            Addr addr = 0;
+            if (aarch64) {
+                addr = mbits(data, 47, offsetBits());
+                if (physAddrRange == 52 && grainSize == Grain64KB) {
+                    addr |= bits(data, 15, 12) << 48;
+                }
+            } else {
+                addr = mbits(data, 39, offsetBits());
+            }
+            return addr;
         }
 
         /** Return the address of the next page table */
         Addr nextTableAddr() const
         {
             assert(type() == Table);
-            if (aarch64)
-                return mbits(data, 47, grainSize);
-            else
-                return mbits(data, 39, 12);
+            Addr table_address = 0;
+            if (aarch64) {
+                table_address = mbits(data, 47, grainSize);
+                // Using 52bit if Armv8.2-LPA is implemented
+                if (physAddrRange == 52 && grainSize == Grain64KB)
+                    table_address |= bits(data, 15, 12) << 48;
+            } else {
+                table_address = mbits(data, 39, 12);
+            }
+
+            return table_address;
         }
 
         /** Return the address of the next descriptor */
@@ -854,7 +886,7 @@ class TableWalker : public ClockedObject
     bool haveSecurity;
     bool _haveLPAE;
     bool _haveVirtualization;
-    uint8_t physAddrRange;
+    uint8_t _physAddrRange;
     bool _haveLargeAsid64;
 
     /** Statistics */
@@ -896,6 +928,7 @@ class TableWalker : public ClockedObject
     bool haveLPAE() const { return _haveLPAE; }
     bool haveVirtualization() const { return _haveVirtualization; }
     bool haveLargeAsid64() const { return _haveLargeAsid64; }
+    uint8_t physAddrRange() const { return _physAddrRange; }
     /** Checks if all state is cleared and if so, completes drain */
     void completeDrain();
     DrainState drain() override;
@@ -962,7 +995,8 @@ class TableWalker : public ClockedObject
 
     /// Returns true if the address exceeds the range permitted by the
     /// system-wide setting or by the TCR_ELx IPS/PS setting
-    static bool checkAddrSizeFaultAArch64(Addr addr, int currPhysAddrRange);
+    bool checkAddrSizeFaultAArch64(Addr addr, int pa_range);
+
     Fault processWalkAArch64();
     void processWalkWrapper();
     EventFunctionWrapper doProcessEvent;

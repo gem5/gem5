@@ -95,7 +95,7 @@ ArmSystem::ArmSystem(Params *p)
 
     if (_highestELIs64 && (
             _physAddrRange64 < 32 ||
-            _physAddrRange64 > 48 ||
+            _physAddrRange64 > MaxPhysAddrRange ||
             (_physAddrRange64 % 4 != 0 && _physAddrRange64 != 42))) {
         fatal("Invalid physical address range (%d)\n", _physAddrRange64);
     }

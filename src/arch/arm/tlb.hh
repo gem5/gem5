@@ -431,6 +431,7 @@ protected:
     bool haveLPAE;
     bool haveVirtualization;
     bool haveLargeAsid64;
+    uint8_t physAddrRange;
 
     AddrRange m5opRange;
 

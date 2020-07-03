@@ -1396,9 +1396,9 @@ decodePhysAddrRange64(uint8_t pa_enc)
       case 0x4:
         return 44;
       case 0x5:
-      case 0x6:
-      case 0x7:
         return 48;
+      case 0x6:
+        return 52;
       default:
         panic("Invalid phys. address range encoding");
     }
@@ -1420,6 +1420,8 @@ encodePhysAddrRange64(int pa_size)
         return 0x4;
       case 48:
         return 0x5;
+      case 52:
+        return 0x6;
       default:
         panic("Invalid phys. address range");
     }
