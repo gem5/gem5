@@ -79,10 +79,6 @@ class ArmSystem(System):
     semihosting = Param.ArmSemihosting(NULL,
         "Enable support for the Arm semihosting by settings this parameter")
 
-    m5ops_base = Param.Addr(0,
-        "Base of the 64KiB PA range used for memory-mapped m5ops. Set to 0 "
-        "to disable.")
-
     # Set to true if simulation provides a PSCI implementation
     # This flag will be checked when auto-generating
     # a PSCI node. A client (e.g Linux) would then be able to
