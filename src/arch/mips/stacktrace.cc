@@ -40,54 +40,6 @@
 
 using namespace MipsISA;
 
-ProcessInfo::ProcessInfo(ThreadContext *_tc) : tc(_tc)
-{}
-
-Addr
-ProcessInfo::task(Addr ksp) const
-{
-    Addr base = ksp & ~0x3fff;
-    if (base == ULL(0xfffffc0000000000))
-        return 0;
-
-    Addr tsk;
-
-    PortProxy &vp = tc->getVirtProxy();
-    tsk = vp.read<Addr>(base + task_off, GuestByteOrder);
-
-    return tsk;
-}
-
-int
-ProcessInfo::pid(Addr ksp) const
-{
-    Addr task = this->task(ksp);
-    if (!task)
-        return -1;
-
-    uint16_t pd;
-
-    PortProxy &vp = tc->getVirtProxy();
-    pd = vp.read<uint16_t>(task + pid_off, GuestByteOrder);
-
-    return pd;
-}
-
-std::string
-ProcessInfo::name(Addr ksp) const
-{
-    Addr task = this->task(ksp);
-    if (!task)
-        return "console";
-
-    char comm[256];
-    tc->getVirtProxy().readString(comm, task + name_off, sizeof(comm));
-    if (!comm[0])
-        return "startup";
-
-    return comm;
-}
-
 StackTrace::StackTrace()
     : tc(0), stack(64)
 {

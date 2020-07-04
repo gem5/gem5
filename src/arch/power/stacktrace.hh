@@ -41,16 +41,6 @@ class StackTrace;
 namespace PowerISA
 {
 
-class ProcessInfo
-{
-  public:
-    ProcessInfo(ThreadContext *_tc);
-
-    Addr task(Addr ksp) const;
-    int pid(Addr ksp) const;
-    std::string name(Addr ksp) const;
-};
-
 class StackTrace
 {
   private:

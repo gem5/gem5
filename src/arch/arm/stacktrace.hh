@@ -37,27 +37,6 @@ class ThreadContext;
 namespace ArmISA
 {
 
-class StackTrace;
-
-class ProcessInfo
-{
-  private:
-    ThreadContext *tc;
-
-    int thread_info_size;
-    int task_struct_size;
-    int task_off;
-    int pid_off;
-    int name_off;
-
-  public:
-    ProcessInfo(ThreadContext *_tc);
-
-    Addr task(Addr ksp) const;
-    int pid(Addr ksp) const;
-    std::string name(Addr ksp) const;
-};
-
 class StackTrace
 {
   protected:

@@ -36,32 +36,6 @@ using namespace std;
 
 namespace PowerISA {
 
-ProcessInfo::ProcessInfo(ThreadContext *_tc)
-{
-    panic("ProcessInfo constructor not implemented.\n");
-}
-
-Addr
-ProcessInfo::task(Addr ksp) const
-{
-    panic("ProcessInfo::task not implemented.\n");
-    return 0;
-}
-
-int
-ProcessInfo::pid(Addr ksp) const
-{
-    panic("ProcessInfo::pid not implemented.\n");
-    return 0;
-}
-
-string
-ProcessInfo::name(Addr ksp) const
-{
-    panic("ProcessInfo::name not implemented.\n");
-    return "";
-}
-
 StackTrace::StackTrace()
     : tc(0), stack(64)
 {
