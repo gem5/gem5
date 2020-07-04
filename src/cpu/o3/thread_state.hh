@@ -154,7 +154,7 @@ struct O3ThreadState : public ThreadState {
     {
         OutputStream *os(
             simout.create(csprintf("profile.%s.dat", cpu->name())));
-        profile->dump(tc, *os->stream());
+        profile->dump(*os->stream());
         simout.close(os);
     }
 };

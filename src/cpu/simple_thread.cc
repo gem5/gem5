@@ -150,7 +150,7 @@ void
 SimpleThread::dumpFuncProfile()
 {
     OutputStream *os(simout.create(csprintf("profile.%s.dat", baseCpu->name())));
-    profile->dump(this, *os->stream());
+    profile->dump(*os->stream());
     simout.close(os);
 }
 

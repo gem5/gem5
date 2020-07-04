@@ -30,49 +30,39 @@
 
 #include <string>
 
-#include "base/bitfield.hh"
 #include "base/callback.hh"
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "base/trace.hh"
-#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 
-using namespace std;
-
-ProfileNode::ProfileNode()
-    : count(0)
-{ }
-
 void
-ProfileNode::dump(const string &symbol, uint64_t id,
-                  const Loader::SymbolTable &symtab, ostream &os) const
+ProfileNode::dump(const std::string &symbol, uint64_t id,
+                  const Loader::SymbolTable &symtab, std::ostream &os) const
 {
     ccprintf(os, "%#x %s %d ", id, symbol, count);
-    ChildList::const_iterator i, end = children.end();
-    for (i = children.begin(); i != end; ++i) {
-        const ProfileNode *node = i->second;
-        ccprintf(os, "%#x ", (intptr_t)node);
-    }
+    for (const auto &p: children)
+        ccprintf(os, "%#x ", (intptr_t)(p.second));
 
     ccprintf(os, "\n");
 
-    Loader::SymbolTable::const_iterator it;
-    for (i = children.begin(); i != end; ++i) {
-        Addr addr = i->first;
-        string symbol;
-        if (addr == 1)
+    for (const auto &p: children) {
+        Addr addr = p.first;
+        std::string symbol;
+        if (addr == 1) {
             symbol = "user";
-        else if (addr == 2)
+        } else if (addr == 2) {
             symbol = "console";
-        else if (addr == 3)
+        } else if (addr == 3) {
             symbol = "unknown";
-        else if ((it = symtab.find(addr)) != symtab.end())
+        } else {
+            const auto it = symtab.find(addr);
+            panic_if(it == symtab.end(),
+                     "Could not find symbol for address %#x\n", addr);
             symbol = it->name;
-        else
-            panic("could not find symbol for address %#x\n", addr);
+        }
 
-        const ProfileNode *node = i->second;
+        const auto *node = p.second;
         node->dump(symbol, (intptr_t)node, symtab, os);
     }
 }
@@ -81,13 +71,12 @@ void
 ProfileNode::clear()
 {
     count = 0;
-    ChildList::iterator i, end = children.end();
-    for (i = children.begin(); i != end; ++i)
-        i->second->clear();
+    for (const auto &p: children)
+        p.second->clear();
 }
 
-FunctionProfile::FunctionProfile(const Loader::SymbolTable &_symtab)
-    : reset(0), symtab(_symtab)
+FunctionProfile::FunctionProfile(const Loader::SymbolTable &_symtab) :
+    symtab(_symtab)
 {
     reset = new MakeCallback<FunctionProfile, &FunctionProfile::clear>(this);
     Stats::registerResetCallback(reset);
@@ -95,17 +84,16 @@ FunctionProfile::FunctionProfile(const Loader::SymbolTable &_symtab)
 
 FunctionProfile::~FunctionProfile()
 {
-    if (reset)
-        delete reset;
+    delete reset;
 }
 
 ProfileNode *
-FunctionProfile::consume(const vector<Addr> &stack)
+FunctionProfile::consume(const std::vector<Addr> &stack)
 {
     ProfileNode *current = &top;
     for (int i = 0, size = stack.size(); i < size; ++i) {
         ProfileNode *&ptr = current->children[stack[size - i - 1]];
-        if (ptr == NULL)
+        if (!ptr)
             ptr = new ProfileNode;
 
         current = ptr;
@@ -122,23 +110,25 @@ FunctionProfile::clear()
 }
 
 void
-FunctionProfile::dump(ThreadContext *tc, ostream &os) const
+FunctionProfile::dump(std::ostream &os) const
 {
     ccprintf(os, ">>>PC data\n");
-    map<Addr, Counter>::const_iterator i, end = pc_count.end();
-    for (i = pc_count.begin(); i != end; ++i) {
-        Addr pc = i->first;
-        Counter count = i->second;
+    for (const auto &p: pc_count) {
+        Addr pc = p.first;
+        Counter count = p.second;
 
-        Loader::SymbolTable::const_iterator it;
         if (pc == 1) {
             ccprintf(os, "user %d\n", count);
-        } else if ((it = symtab.find(pc)) != symtab.end() &&
-                !it->name.empty()) {
-            ccprintf(os, "%s %d\n", it->name, count);
-        } else {
-            ccprintf(os, "%#x %d\n", pc, count);
+            continue;
         }
+
+        const auto it = symtab.find(pc);
+        if (it != symtab.end() && !it->name.empty()) {
+            ccprintf(os, "%s %d\n", it->name, count);
+            continue;
+        }
+
+        ccprintf(os, "%#x %d\n", pc, count);
     }
 
     ccprintf(os, ">>>function data\n");

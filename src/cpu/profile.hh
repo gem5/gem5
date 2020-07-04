@@ -47,11 +47,9 @@ class ProfileNode
     ChildList children;
 
   public:
-    Counter count;
+    Counter count = 0;
 
   public:
-    ProfileNode();
-
     void dump(const std::string &symbol, uint64_t id,
               const Loader::SymbolTable &symtab, std::ostream &os) const;
     void clear();
@@ -61,7 +59,7 @@ class Callback;
 class FunctionProfile
 {
   private:
-    Callback *reset;
+    Callback *reset = nullptr;
     const Loader::SymbolTable &symtab;
     ProfileNode top;
     std::map<Addr, Counter> pc_count;
@@ -74,7 +72,7 @@ class FunctionProfile
     ProfileNode *consume(ThreadContext *tc, const StaticInstPtr &inst);
     ProfileNode *consume(const std::vector<Addr> &stack);
     void clear();
-    void dump(ThreadContext *tc, std::ostream &out) const;
+    void dump(std::ostream &out) const;
     void sample(ProfileNode *node, Addr pc);
 };
 
@@ -82,7 +80,7 @@ inline ProfileNode *
 FunctionProfile::consume(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (!trace.trace(tc, inst))
-        return NULL;
+        return nullptr;
     trace.dprintf();
     return consume(trace.getstack());
 }
