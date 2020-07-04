@@ -2,6 +2,10 @@
 
 * m5.stats.dump() root argument renamed to roots to reflect the fact that it now takes a list of SimObjects
 
+# Version 20.0.0.3
+
+**[HOTFIX]** When using the ARM ISA, gem5 could crash when a guest tried to call m5ops. This was due to `m5ops_base` being incorrectly declared in `src/arch/arm/ArmSystem.py`. A fix was applied to remove this declaration.
+
 # Version 20.0.0.2
 
 **[HOTFIX]** A patch was applied to fix the RubyPrefetcher with MESI_Three_Level. Prior to this fix a segfault occurred.
