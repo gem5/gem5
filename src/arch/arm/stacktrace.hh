@@ -29,71 +29,16 @@
 #ifndef __ARCH_ARM_STACKTRACE_HH__
 #define __ARCH_ARM_STACKTRACE_HH__
 
-#include "base/trace.hh"
-#include "cpu/static_inst.hh"
-#include "debug/Stack.hh"
+#include "cpu/profile.hh"
 
-class ThreadContext;
 namespace ArmISA
 {
 
-class StackTrace
+class StackTrace : public BaseStackTrace
 {
   protected:
-    typedef ArmISA::MachInst MachInst;
-  private:
-    ThreadContext *tc;
-    std::vector<Addr> stack;
-
-  private:
-    bool isEntry(Addr addr);
-    bool decodePrologue(Addr sp, Addr callpc, Addr func, int &size, Addr &ra);
-    bool decodeSave(MachInst inst, int &reg, int &disp);
-    bool decodeStack(MachInst inst, int &disp);
-
-    void trace(ThreadContext *tc, bool is_call);
-
-  public:
-    StackTrace();
-    StackTrace(ThreadContext *tc, const StaticInstPtr &inst);
-    ~StackTrace();
-
-    void clear()
-    {
-        tc = 0;
-        stack.clear();
-    }
-
-    bool valid() const { return tc != NULL; }
-    bool trace(ThreadContext *tc, const StaticInstPtr &inst);
-
-  public:
-    const std::vector<Addr> &getstack() const { return stack; }
-
-#if TRACING_ON
-  private:
-    void dump();
-
-  public:
-    void dprintf() { if (DTRACE(Stack)) dump(); }
-#else
-  public:
-    void dprintf() {}
-#endif
+    void trace(ThreadContext *tc, bool is_call) override {};
 };
-
-inline bool
-StackTrace::trace(ThreadContext *tc, const StaticInstPtr &inst)
-{
-    if (!inst->isCall() && !inst->isReturn())
-        return false;
-
-    if (valid())
-        clear();
-
-    trace(tc, !inst->isReturn());
-    return true;
-}
 
 } // Namespace ArmISA
 

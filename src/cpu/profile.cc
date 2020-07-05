@@ -34,11 +34,39 @@
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "base/trace.hh"
+#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 
 void
+BaseStackTrace::dump()
+{
+    StringWrap name(tc->getCpuPtr()->name());
+    auto *symtab = &tc->getSystemPtr()->workload->symtab(tc);
+
+    DPRINTFN("------ Stack ------\n");
+
+    std::string symbol;
+    for (int i = 0, size = stack.size(); i < size; ++i) {
+        Addr addr = stack[size - i - 1];
+        getSymbol(symbol, addr, symtab);
+        DPRINTFN("%#x: %s\n", addr, symbol);
+    }
+}
+
+bool
+BaseStackTrace::tryGetSymbol(std::string &symbol, Addr addr,
+                             const Loader::SymbolTable *symtab)
+{
+    const auto it = symtab->find(addr);
+    if (it == symtab->end())
+        return false;
+    symbol = it->name;
+    return true;
+}
+
+void
 ProfileNode::dump(const std::string &symbol, uint64_t id,
-                  const Loader::SymbolTable &symtab, std::ostream &os) const
+                  const FunctionProfile &prof, std::ostream &os) const
 {
     ccprintf(os, "%#x %s %d ", id, symbol, count);
     for (const auto &p: children)
@@ -49,21 +77,11 @@ ProfileNode::dump(const std::string &symbol, uint64_t id,
     for (const auto &p: children) {
         Addr addr = p.first;
         std::string symbol;
-        if (addr == 1) {
-            symbol = "user";
-        } else if (addr == 2) {
-            symbol = "console";
-        } else if (addr == 3) {
-            symbol = "unknown";
-        } else {
-            const auto it = symtab.find(addr);
-            panic_if(it == symtab.end(),
-                     "Could not find symbol for address %#x\n", addr);
-            symbol = it->name;
-        }
+
+        prof.trace->getSymbol(symbol, addr, &prof.symtab);
 
         const auto *node = p.second;
-        node->dump(symbol, (intptr_t)node, symtab, os);
+        node->dump(symbol, (intptr_t)node, prof, os);
     }
 }
 
@@ -75,8 +93,9 @@ ProfileNode::clear()
         p.second->clear();
 }
 
-FunctionProfile::FunctionProfile(const Loader::SymbolTable &_symtab) :
-    symtab(_symtab)
+FunctionProfile::FunctionProfile(std::unique_ptr<BaseStackTrace> _trace,
+                                 const Loader::SymbolTable &_symtab) :
+    symtab(_symtab), trace(std::move(_trace))
 {
     reset = new MakeCallback<FunctionProfile, &FunctionProfile::clear>(this);
     Stats::registerResetCallback(reset);
@@ -117,22 +136,15 @@ FunctionProfile::dump(std::ostream &os) const
         Addr pc = p.first;
         Counter count = p.second;
 
-        if (pc == 1) {
-            ccprintf(os, "user %d\n", count);
-            continue;
-        }
-
-        const auto it = symtab.find(pc);
-        if (it != symtab.end() && !it->name.empty()) {
-            ccprintf(os, "%s %d\n", it->name, count);
-            continue;
-        }
-
-        ccprintf(os, "%#x %d\n", pc, count);
+        std::string symbol;
+        if (trace->tryGetSymbol(symbol, pc, &symtab))
+            ccprintf(os, "%s %d\n", symbol, count);
+        else
+            ccprintf(os, "%#x %d\n", pc, count);
     }
 
     ccprintf(os, ">>>function data\n");
-    top.dump("top", 0, symtab, os);
+    top.dump("top", 0, *this, os);
 }
 
 void

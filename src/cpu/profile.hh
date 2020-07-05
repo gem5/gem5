@@ -30,13 +30,82 @@
 #define __CPU_PROFILE_HH__
 
 #include <map>
+#include <string>
 
-#include "arch/stacktrace.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
-#include "config/the_isa.hh"
 #include "cpu/static_inst.hh"
+#include "debug/Stack.hh"
 
 class ThreadContext;
+class FunctionProfile;
+
+namespace Loader
+{
+    class SymbolTable;
+} // Loader
+
+class BaseStackTrace
+{
+  private:
+    void dump();
+
+  protected:
+    ThreadContext *tc = nullptr;
+    std::vector<Addr> stack;
+
+    // Subclasses should implement this function so that it collects the
+    // the current and return addresses on the stack in the "stack" vector.
+    virtual void trace(ThreadContext *tc, bool is_call) = 0;
+
+  public:
+    BaseStackTrace() : stack(64) {}
+    virtual ~BaseStackTrace() {}
+
+    void
+    clear()
+    {
+        tc = nullptr;
+        stack.clear();
+    }
+
+    bool valid() const { return tc; }
+
+    bool
+    trace(ThreadContext *tc, const StaticInstPtr &inst)
+    {
+        if (!inst->isCall() && !inst->isReturn())
+            return false;
+
+        if (valid())
+            clear();
+
+        trace(tc, !inst->isReturn());
+        return true;
+    }
+
+    const std::vector<Addr> &getstack() const { return stack; }
+
+    void dprintf() { if (DTRACE(Stack)) dump(); }
+
+    // This function can be overridden so that special addresses which don't
+    // actually refer to PCs can be translated into special names. For
+    // instance, the address 1 could translate into "user" for user level
+    // code when the symbol table only has kernel symbols.
+    //
+    // It should return whether addr was recognized and symbol has been set to
+    // something.
+    virtual bool tryGetSymbol(std::string &symbol, Addr addr,
+                              const Loader::SymbolTable *symtab);
+
+    void
+    getSymbol(std::string &symbol, Addr addr,
+              const Loader::SymbolTable *symtab)
+    {
+        panic_if(!tryGetSymbol(symbol, addr, symtab),
+                 "Could not find symbol for address %#x\n", addr);
+    }
+};
 
 class ProfileNode
 {
@@ -51,7 +120,7 @@ class ProfileNode
 
   public:
     void dump(const std::string &symbol, uint64_t id,
-              const Loader::SymbolTable &symtab, std::ostream &os) const;
+              const FunctionProfile &prof, std::ostream &os) const;
     void clear();
 };
 
@@ -59,14 +128,17 @@ class Callback;
 class FunctionProfile
 {
   private:
+    friend class ProfileNode;
+
     Callback *reset = nullptr;
     const Loader::SymbolTable &symtab;
     ProfileNode top;
     std::map<Addr, Counter> pc_count;
-    TheISA::StackTrace trace;
+    std::unique_ptr<BaseStackTrace> trace;
 
   public:
-    FunctionProfile(const Loader::SymbolTable &symtab);
+    FunctionProfile(std::unique_ptr<BaseStackTrace> _trace,
+                    const Loader::SymbolTable &symtab);
     ~FunctionProfile();
 
     ProfileNode *consume(ThreadContext *tc, const StaticInstPtr &inst);
@@ -79,10 +151,10 @@ class FunctionProfile
 inline ProfileNode *
 FunctionProfile::consume(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    if (!trace.trace(tc, inst))
+    if (!trace->trace(tc, inst))
         return nullptr;
-    trace.dprintf();
-    return consume(trace.getstack());
+    trace->dprintf();
+    return consume(trace->getstack());
 }
 
 #endif // __CPU_PROFILE_HH__

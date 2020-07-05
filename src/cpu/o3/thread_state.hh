@@ -41,7 +41,9 @@
 #ifndef __CPU_O3_THREAD_STATE_HH__
 #define __CPU_O3_THREAD_STATE_HH__
 
+#include "arch/stacktrace.hh"
 #include "base/callback.hh"
+#include "base/compiler.hh"
 #include "base/output.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
@@ -103,6 +105,7 @@ struct O3ThreadState : public ThreadState {
 
         if (cpu->params()->profile) {
             profile = new FunctionProfile(
+                    m5::make_unique<TheISA::StackTrace>(),
                     cpu->params()->system->workload->symtab(tc));
             Callback *cb =
                 new MakeCallback<O3ThreadState,

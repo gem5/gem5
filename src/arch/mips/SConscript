@@ -40,7 +40,6 @@ if env['TARGET_ISA'] == 'mips':
     Source('pagetable.cc')
     Source('process.cc')
     Source('remote_gdb.cc')
-    Source('stacktrace.cc')
     Source('tlb.cc')
     Source('utility.cc')
 

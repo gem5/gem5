@@ -46,6 +46,7 @@
 #include "arch/stacktrace.hh"
 #include "arch/utility.hh"
 #include "base/callback.hh"
+#include "base/compiler.hh"
 #include "base/cprintf.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
@@ -92,7 +93,8 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
     clearArchRegs();
 
     if (baseCpu->params()->profile) {
-        profile = new FunctionProfile(system->workload->symtab(this));
+        profile = new FunctionProfile(m5::make_unique<TheISA::StackTrace>(),
+                                      system->workload->symtab(this));
         Callback *cb =
             new MakeCallback<SimpleThread,
             &SimpleThread::dumpFuncProfile>(this);

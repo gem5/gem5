@@ -82,7 +82,6 @@ if env['TARGET_ISA'] == 'arm':
     Source('qarma.cc')
     Source('remote_gdb.cc')
     Source('semihosting.cc')
-    Source('stacktrace.cc')
     Source('system.cc')
     Source('table_walker.cc')
     Source('self_debug.cc')

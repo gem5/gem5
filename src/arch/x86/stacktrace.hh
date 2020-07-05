@@ -29,73 +29,16 @@
 #ifndef __ARCH_X86_STACKTRACE_HH__
 #define __ARCH_X86_STACKTRACE_HH__
 
-#include "base/trace.hh"
-#include "cpu/static_inst.hh"
-#include "debug/Stack.hh"
+#include "cpu/profile.hh"
 
-class ThreadContext;
 namespace X86ISA
 {
 
-class StackTrace
+class StackTrace : public BaseStackTrace
 {
-  private:
-    ThreadContext *tc;
-    std::vector<Addr> stack;
-
-  private:
-    bool isEntry(Addr addr);
-    bool decodePrologue(Addr sp, Addr callpc, Addr func, int &size, Addr &ra);
-    bool decodeSave(MachInst inst, int &reg, int &disp);
-    bool decodeStack(MachInst inst, int &disp);
-
-    void trace(ThreadContext *tc, bool is_call);
-
-  public:
-    StackTrace();
-    StackTrace(ThreadContext *tc, const StaticInstPtr &inst);
-    ~StackTrace();
-
-    void clear()
-    {
-        tc = 0;
-        stack.clear();
-    }
-
-    bool valid() const { return tc != NULL; }
-    bool trace(ThreadContext *tc, const StaticInstPtr &inst);
-
-  public:
-    const std::vector<Addr> &getstack() const { return stack; }
-
-    static const int user = 1;
-    static const int console = 2;
-    static const int unknown = 3;
-
-#if TRACING_ON
-  private:
-    void dump();
-
-  public:
-    void dprintf() { if (DTRACE(Stack)) dump(); }
-#else
-  public:
-    void dprintf() {}
-#endif
+  protected:
+    void trace(ThreadContext *tc, bool is_call) override {};
 };
-
-inline bool
-StackTrace::trace(ThreadContext *tc, const StaticInstPtr &inst)
-{
-    if (!inst->isCall() && !inst->isReturn())
-        return false;
-
-    if (valid())
-        clear();
-
-    trace(tc, !inst->isReturn());
-    return true;
-}
 
 } // namespace X86ISA
 
