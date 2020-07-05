@@ -41,7 +41,9 @@
 
 #include "arch/arm/interrupts.hh"
 #include "debug/KvmInt.hh"
+#include "dev/arm/generic_timer.hh"
 #include "params/BaseArmKvmCPU.hh"
+#include "params/GenericTimer.hh"
 
 #define INTERRUPT_ID(type, vcpu, irq) (                    \
         ((type) << KVM_ARM_IRQ_TYPE_SHIFT) |               \
@@ -57,7 +59,8 @@
 
 BaseArmKvmCPU::BaseArmKvmCPU(BaseArmKvmCPUParams *params)
     : BaseKvmCPU(params),
-      irqAsserted(false), fiqAsserted(false)
+      irqAsserted(false), fiqAsserted(false),
+      virtTimerPin(nullptr), prevDeviceIRQLevel(0)
 {
 }
 
@@ -82,6 +85,10 @@ BaseArmKvmCPU::startup()
         target_config.features[0] |= (1 << KVM_ARM_VCPU_EL1_32BIT);
     }
     kvmArmVCpuInit(target_config);
+
+    if (!vm.hasKernelIRQChip())
+        virtTimerPin = static_cast<ArmSystem *>(system)\
+            ->getGenericTimer()->params()->int_virt->get(tc);
 }
 
 Tick
@@ -113,7 +120,29 @@ BaseArmKvmCPU::kvmRun(Tick ticks)
     irqAsserted = simIRQ;
     fiqAsserted = simFIQ;
 
-    return BaseKvmCPU::kvmRun(ticks);
+    Tick kvmRunTicks = BaseKvmCPU::kvmRun(ticks);
+
+    if (!vm.hasKernelIRQChip()) {
+        uint64_t device_irq_level =
+            getKvmRunState()->s.regs.device_irq_level;
+
+        if (!(prevDeviceIRQLevel & KVM_ARM_DEV_EL1_VTIMER) &&
+            (device_irq_level & KVM_ARM_DEV_EL1_VTIMER)) {
+
+            DPRINTF(KvmInt, "In-kernel vtimer IRQ asserted\n");
+            prevDeviceIRQLevel |= KVM_ARM_DEV_EL1_VTIMER;
+            virtTimerPin->raise();
+
+        } else if ((prevDeviceIRQLevel & KVM_ARM_DEV_EL1_VTIMER) &&
+                   !(device_irq_level & KVM_ARM_DEV_EL1_VTIMER)) {
+
+            DPRINTF(KvmInt, "In-kernel vtimer IRQ disasserted\n");
+            prevDeviceIRQLevel &= ~KVM_ARM_DEV_EL1_VTIMER;
+            virtTimerPin->clear();
+        }
+    }
+
+    return kvmRunTicks;
 }
 
 const BaseArmKvmCPU::RegIndexVector &

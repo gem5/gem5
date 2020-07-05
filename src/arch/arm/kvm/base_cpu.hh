@@ -41,6 +41,7 @@
 #include <vector>
 
 #include "cpu/kvm/base.hh"
+#include "dev/arm/base_gic.hh"
 
 struct BaseArmKvmCPUParams;
 
@@ -60,6 +61,23 @@ class BaseArmKvmCPU : public BaseKvmCPU
     bool irqAsserted;
     /** Cached state of the FIQ line */
     bool fiqAsserted;
+
+    /**
+     * If the user-space GIC and the kernel-space timer are used
+     * simultaneously, set up this interrupt pin to forward interrupt from
+     * the timer to the GIC when timer IRQ level change is intercepted.
+     */
+    ArmInterruptPin *virtTimerPin;
+
+    /**
+     * KVM records whether each in-kernel device IRQ is asserted or
+     * disasserted in the kvmRunState->s.regs.device_irq_level bit map,
+     * and guarantees at least one KVM exit when the level changes. We
+     * use only the KVM_ARM_DEV_EL1_VTIMER bit field currently to track
+     * the level of the in-kernel timer, and preserve the last level in
+     * this class member.
+     */
+    uint64_t prevDeviceIRQLevel;
 
   protected:
     typedef std::vector<uint64_t> RegIndexVector;
