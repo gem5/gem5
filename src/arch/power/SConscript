@@ -1,6 +1,7 @@
 # -*- mode:python -*-
 
 # Copyright (c) 2009 The University of Edinburgh
+# Copyright (c) 2020 LabWare
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -56,3 +57,5 @@ if env['TARGET_ISA'] == 'power':
     DebugFlag('Power')
 
     ISADesc('isa/main.isa')
+
+    GdbXml('power.xml', 'gdb_xml_power')
