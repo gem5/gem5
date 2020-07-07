@@ -45,6 +45,31 @@ using namespace ArmISA;
 using namespace std;
 
 Fault
+SelfDebug::testDebug(ThreadContext *tc, const RequestPtr &req,
+                     BaseTLB::Mode mode)
+{
+    Fault fault = NoFault;
+
+    if (mode == BaseTLB::Execute) {
+        const bool d_step = softStep->advanceSS(tc);
+        if (!d_step) {
+            fault = testVectorCatch(tc, req->getVaddr(), nullptr);
+            if (fault == NoFault)
+                fault = testBreakPoints(tc, req->getVaddr());
+        }
+    } else if (!req->isCacheMaintenance() ||
+             (req->isCacheInvalidate() && !req->isCacheClean())) {
+        bool md = mode == BaseTLB::Write ? true: false;
+        fault = testWatchPoints(tc, req->getVaddr(), md,
+                                req->isAtomic(),
+                                req->getSize(),
+                                req->isCacheMaintenance());
+    }
+
+    return fault;
+}
+
+Fault
 SelfDebug::testBreakPoints(ThreadContext *tc, Addr vaddr)
 {
     if (!enableFlag)

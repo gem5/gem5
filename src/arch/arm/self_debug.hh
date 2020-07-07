@@ -44,6 +44,7 @@
 #include "arch/arm/system.hh"
 #include "arch/arm/types.hh"
 #include "arch/arm/utility.hh"
+#include "arch/generic/tlb.hh"
 #include "cpu/thread_context.hh"
 
 class ThreadContext;
@@ -322,14 +323,19 @@ class SelfDebug
         delete vcExcpt;
     }
 
+    Fault testDebug(ThreadContext *tc, const RequestPtr &req,
+                    BaseTLB::Mode mode);
+
+  protected:
     Fault testBreakPoints(ThreadContext *tc, Addr vaddr);
     Fault testWatchPoints(ThreadContext *tc, Addr vaddr, bool write,
                           bool atomic, unsigned size, bool cm);
-    Fault testVectorCatch(ThreadContext *tc, Addr addr, ArmFault* flt);
 
     Fault triggerException(ThreadContext * tc, Addr vaddr);
     Fault triggerWatchpointException(ThreadContext *tc, Addr vaddr,
                                      bool write, bool cm);
+  public:
+    Fault testVectorCatch(ThreadContext *tc, Addr addr, ArmFault* flt);
 
     inline BrkPoint* getBrkPoint(uint8_t index)
     {
