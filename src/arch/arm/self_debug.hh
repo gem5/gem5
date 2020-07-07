@@ -68,6 +68,8 @@ class BrkPoint
     bool onUse;
 
   public:
+    friend class SelfDebug;
+
     BrkPoint(MiscRegIndex _ctrlIndex, MiscRegIndex _valIndex,
              MiscRegIndex _xIndex, SelfDebug* _conf, bool _ctxAw, bool lva,
              bool vmid16, bool aarch32):
@@ -77,20 +79,9 @@ class BrkPoint
     {
         maxAddrSize = lva ? 52: 48 ;
         maxAddrSize = aarch32 ? 31 : maxAddrSize;
-        onUse=false;
-    }
-    void setOnUse()
-    {
-        onUse = true;
-    }
-    void unsetOnUse()
-    {
         onUse = false;
     }
-    bool isSet()
-    {
-        return onUse;
-    }
+
     bool testLinkedBk(ThreadContext *tc, Addr vaddr, ExceptionLevel el);
     bool test(ThreadContext *tc, Addr pc, ExceptionLevel el, DBGBCR ctr,
               bool from_link);
@@ -138,11 +129,6 @@ class BrkPoint
     {
         enable = val.e == 0x1;
     }
-    bool getEnable()
-    {
-        return enable;
-    }
-
 };
 
 class WatchPoint
@@ -154,13 +140,9 @@ class WatchPoint
     bool enable;
     int maxAddrSize;
 
-    inline int getMaxAddrSize()
-    {
-        return maxAddrSize;
-    }
-
-
   public:
+    friend class SelfDebug;
+
     WatchPoint(MiscRegIndex _ctrlIndex, MiscRegIndex _valIndex,
                SelfDebug* _conf, bool lva, bool aarch32):
                 ctrlRegIndex(_ctrlIndex),
@@ -187,10 +169,6 @@ class WatchPoint
     inline void updateControl(DBGWCR val)
     {
         enable = val.e == 0x1;
-    }
-    bool getEnable()
-    {
-        return enable;
     }
 
     bool isEnabled(ThreadContext* tc, ExceptionLevel el, bool hmc,
@@ -368,7 +346,7 @@ class SelfDebug
     void activateDebug()
     {
         for (auto &p: arBrkPoints){
-            p.unsetOnUse();
+            p.onUse = false;
         }
     }
 
@@ -432,10 +410,6 @@ class SelfDebug
         return aarch32;
     }
 
-    inline bool isTo32()
-    {
-        return to32;
-    }
     inline void setAArch32(ThreadContext * tc)
     {
         ExceptionLevel fromEL = (ExceptionLevel) currEL(tc);
@@ -445,6 +419,7 @@ class SelfDebug
             aarch32 = ELIs32(tc, fromEL);
         return;
     }
+
     SoftwareStep * getSstep()
     {
         return softStep;

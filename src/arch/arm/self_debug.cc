@@ -90,13 +90,13 @@ SelfDebug::testBreakPoints(ThreadContext *tc, Addr vaddr)
         Addr pc = vaddr;
         if (pcst.itstate() != 0x0)
             pc = pcst.pc();
-        if (p.getEnable() && p.isActive(pc) &&(!to32 || !p.isSet())){
+        if (p.enable && p.isActive(pc) &&(!to32 || !p.onUse)) {
             const DBGBCR ctr = p.getControlReg(tc);
             if (p.isEnabled(tc, el, ctr.hmc, ctr.ssc, ctr.pmc)) {
                 bool debug = p.test(tc, pc, el, ctr, false);
                 if (debug){
                     if (to32)
-                        p.setOnUse();
+                        p.onUse = true;
                     return triggerException(tc, pc);
                 }
             }
@@ -109,7 +109,7 @@ SelfDebug::testBreakPoints(ThreadContext *tc, Addr vaddr)
 Fault
 SelfDebug::triggerException(ThreadContext * tc, Addr vaddr)
 {
-    if (isTo32()) {
+    if (to32) {
         return std::make_shared<PrefetchAbort>(vaddr,
                                    ArmFault::DebugEvent, false,
                                    ArmFault::UnknownTran,
@@ -134,8 +134,7 @@ SelfDebug::testWatchPoints(ThreadContext *tc, Addr vaddr, bool write,
     int idxtmp = -1;
     for (auto &p: arWatchPoints){
         idxtmp ++;
-        if (p.getEnable())
-        {
+        if (p.enable) {
             bool debug = p.test(tc, vaddr, el, write, atomic, size);
             if (debug){
                 return triggerWatchpointException(tc, vaddr, write, cm);
@@ -149,7 +148,7 @@ Fault
 SelfDebug::triggerWatchpointException(ThreadContext *tc, Addr vaddr,
                                       bool write, bool cm)
 {
-    if (isTo32()) {
+    if (to32) {
         ArmFault::DebugType d = cm? ArmFault::WPOINT_CM:
                                     ArmFault::WPOINT_NOCM;
         return std::make_shared<DataAbort>(vaddr,
@@ -211,7 +210,7 @@ BrkPoint::testLinkedBk(ThreadContext *tc, Addr vaddr, ExceptionLevel el)
 {
     bool debug = false;
     const DBGBCR ctr = getControlReg(tc);
-    if ((ctr.bt & 0x1) && getEnable()){
+    if ((ctr.bt & 0x1) && enable) {
         debug = test(tc, vaddr, el, ctr, true);
     }
     return debug;
@@ -527,7 +526,6 @@ WatchPoint::compareAddress(ThreadContext *tc, Addr in_addr, uint8_t bas,
         uint8_t mask, unsigned size)
 {
     Addr addr_tocmp = getAddrfromReg(tc);
-    int maxAddrSize = getMaxAddrSize();
     int maxbits = isDoubleAligned(addr_tocmp) ? 4: 8;
     int bottom = isDoubleAligned(addr_tocmp) ? 2: 3;
     Addr addr = bits(in_addr, maxAddrSize, 0);
