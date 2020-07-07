@@ -281,6 +281,10 @@ class GicV2 : public BaseGic, public BaseGicRegisters
         }
     }
 
+    /** 2 bit per interrupt signaling if it's level or edge sensitive
+     * and if it is 1:N or N:N */
+    uint32_t intConfig[INT_BITS_MAX*2];
+
     /** GICD_ICFGRn
      * get 2 bit config associated to an interrupt.
      */
@@ -318,10 +322,6 @@ class GicV2 : public BaseGic, public BaseGicRegisters
             return cpuTarget[ix - 32];
         }
     }
-
-    /** 2 bit per interrupt signaling if it's level or edge sensitive
-     * and if it is 1:N or N:N */
-    uint32_t intConfig[INT_BITS_MAX*2];
 
     bool isLevelSensitive(ContextID ctx, uint32_t ix) {
         if (ix == SPURIOUS_INT) {

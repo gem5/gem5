@@ -72,7 +72,7 @@ GicV2::GicV2(const Params *p)
       enabled(false), haveGem5Extensions(p->gem5_extensions),
       itLines(p->it_lines),
       intEnabled {}, pendingInt {}, activeInt {},
-      intPriority {}, cpuTarget {}, intConfig {},
+      intPriority {}, intConfig {}, cpuTarget {},
       cpuSgiPending {}, cpuSgiActive {},
       cpuSgiPendingExt {}, cpuSgiActiveExt {},
       cpuPpiPending {}, cpuPpiActive {},
