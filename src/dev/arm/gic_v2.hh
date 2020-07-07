@@ -192,6 +192,10 @@ class GicV2 : public BaseGic, public BaseGicRegisters
          * interrupt group bits for first 32 interrupts, 1b per interrupt */
         uint32_t intGroup;
 
+        /** GICD_ICFGR0, GICD_ICFGR1
+         * interrupt config bits for first 32 interrupts, 2b per interrupt */
+        uint32_t intConfig[2];
+
         /** GICD_IPRIORITYR{0..7}
          * interrupt priority for SGIs and PPIs */
         uint8_t intPriority[SGI_MAX + PPI_MAX];
@@ -201,7 +205,7 @@ class GicV2 : public BaseGic, public BaseGicRegisters
 
         BankedRegs() :
             intEnabled(0), pendingInt(0), activeInt(0),
-            intGroup(0), intPriority {0}
+            intGroup(0), intConfig {0}, intPriority {0}
           {}
     };
     std::vector<BankedRegs*> bankedRegs;
@@ -281,18 +285,26 @@ class GicV2 : public BaseGic, public BaseGicRegisters
         }
     }
 
-    /** 2 bit per interrupt signaling if it's level or edge sensitive
+    /**
+     * GICD_ICFGR{2...63}
+     * 2 bit per interrupt signaling if it's level or edge sensitive
      * and if it is 1:N or N:N */
-    uint32_t intConfig[INT_BITS_MAX*2];
+    uint32_t intConfig[INT_BITS_MAX*2 - 2];
 
-    /** GICD_ICFGRn
+    /**
+     * Reads the GICD_ICFGRn register.
      * @param ctx context id (PE specific)
      * @param ix interrupt word index
      * @returns the interrupt config word
      */
     uint32_t& getIntConfig(ContextID ctx, uint32_t ix) {
         assert(ix < INT_BITS_MAX*2);
-        return intConfig[ix];
+        if (ix < 2) {
+            /** SGIs and PPIs **/
+            return getBankedRegs(ctx).intConfig[ix];
+        } else {
+            return intConfig[ix - 2];
+        }
     }
 
     /** GICD_ITARGETSR{8..255}
