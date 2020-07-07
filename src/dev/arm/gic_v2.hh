@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013, 2015-2019 ARM Limited
+ * Copyright (c) 2010, 2013, 2015-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -286,13 +286,13 @@ class GicV2 : public BaseGic, public BaseGicRegisters
     uint32_t intConfig[INT_BITS_MAX*2];
 
     /** GICD_ICFGRn
-     * get 2 bit config associated to an interrupt.
+     * @param ctx context id (PE specific)
+     * @param ix interrupt word index
+     * @returns the interrupt config word
      */
-    uint8_t getIntConfig(ContextID ctx, uint32_t ix) {
-        assert(ix < INT_LINES_MAX);
-        const uint8_t cfg_low = intNumToBit(ix * 2);
-        const uint8_t cfg_hi = cfg_low + 1;
-        return bits(intConfig[intNumToWord(ix * 2)], cfg_hi, cfg_low);
+    uint32_t& getIntConfig(ContextID ctx, uint32_t ix) {
+        assert(ix < INT_BITS_MAX*2);
+        return intConfig[ix];
     }
 
     /** GICD_ITARGETSR{8..255}
@@ -323,11 +323,13 @@ class GicV2 : public BaseGic, public BaseGicRegisters
         }
     }
 
-    bool isLevelSensitive(ContextID ctx, uint32_t ix) {
-        if (ix == SPURIOUS_INT) {
+    bool isLevelSensitive(ContextID ctx, uint32_t int_num) {
+        if (int_num == SPURIOUS_INT) {
             return false;
         } else {
-            return bits(getIntConfig(ctx, ix), 1) == 0;
+            const auto ix = intNumToWord(int_num * 2);
+            const uint8_t cfg_hi = intNumToBit(int_num * 2) + 1;
+            return bits(getIntConfig(ctx, ix), cfg_hi) == 0;
         }
     }
 

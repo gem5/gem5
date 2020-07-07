@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013, 2015-2018 ARM Limited
+ * Copyright (c) 2010, 2013, 2015-2018, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -250,10 +250,7 @@ GicV2::readDistributor(ContextID ctx, Addr daddr, size_t resp_sz)
 
     if (GICD_ICFGR.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ICFGR.start()) >> 2;
-        assert(ix < 64);
-        /** @todo software generated interrupts and PPIs
-         * can't be configured in some ways */
-        return intConfig[ix];
+        return getIntConfig(ctx, ix);
     }
 
     switch(daddr) {
@@ -521,8 +518,7 @@ GicV2::writeDistributor(ContextID ctx, Addr daddr, uint32_t data,
 
     if (GICD_ICFGR.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ICFGR.start()) >> 2;
-        assert(ix < INT_BITS_MAX*2);
-        intConfig[ix] = data;
+        getIntConfig(ctx, ix) = data;
         if (data & NN_CONFIG_MASK)
             warn("GIC N:N mode selected and not supported at this time\n");
         return;
