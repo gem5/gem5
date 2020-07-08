@@ -107,7 +107,7 @@ SelfDebug::testBreakPoints(ThreadContext *tc, Addr vaddr)
 
 
 Fault
-SelfDebug::triggerException(ThreadContext * tc, Addr vaddr)
+SelfDebug::triggerException(ThreadContext *tc, Addr vaddr)
 {
     if (to32) {
         return std::make_shared<PrefetchAbort>(vaddr,
@@ -164,15 +164,17 @@ bool
 SelfDebug::isDebugEnabledForEL64(ThreadContext *tc, ExceptionLevel el,
                          bool secure, bool mask)
 {
-    bool route_to_el2 =  ArmSystem::haveEL(tc, EL2)
-                         && !secure && enableTdeTge;
-    ExceptionLevel target_el = route_to_el2? EL2 : EL1;
-    if (oslk || (bSDD && secure && ArmSystem::haveEL(tc, EL3))){
+    bool route_to_el2 =  ArmSystem::haveEL(tc, EL2) &&
+        !secure && enableTdeTge;
+
+    ExceptionLevel target_el = route_to_el2 ? EL2 : EL1;
+    if (oslk || (bSDD && secure && ArmSystem::haveEL(tc, EL3))) {
         return false;
     }
-    if (el == target_el){
+
+    if (el == target_el) {
         return bKDE  && !mask;
-    }else{
+    } else {
         return target_el > el;
     }
 }
@@ -181,15 +183,16 @@ bool
 SelfDebug::isDebugEnabledForEL32(ThreadContext *tc, ExceptionLevel el,
                          bool secure, bool mask)
 {
-    if (el==EL0 && !ELStateUsingAArch32(tc, EL1, secure)){
+    if (el == EL0 && !ELStateUsingAArch32(tc, EL1, secure)) {
         return isDebugEnabledForEL64(tc, el, secure, mask);
     }
-    if (oslk){
+
+    if (oslk) {
         return false;
     }
 
     bool enabled;
-    if (secure && ArmSystem::haveEL(tc, EL3)){
+    if (secure && ArmSystem::haveEL(tc, EL3)) {
         // We ignore the check for invasive External debug checking SPIDEN
         // and DBGEN signals. They are not implemented
         bool spd32 = bits(tc->readMiscReg(MISCREG_MDCR_EL3), 14);
@@ -197,9 +200,7 @@ SelfDebug::isDebugEnabledForEL32(ThreadContext *tc, ExceptionLevel el,
 
         bool suiden = bits(tc->readMiscReg(MISCREG_SDER), 0);
         enabled  = el == EL0 ? (enabled || suiden) : enabled;
-    }
-    else
-    {
+    } else {
         enabled = el != EL2;
     }
     return enabled;
@@ -306,6 +307,61 @@ BrkPoint::test(ThreadContext *tc, Addr pc, ExceptionLevel el, DBGBCR ctr,
     return v;
 }
 
+void
+SelfDebug::init(ThreadContext *tc)
+{
+    if (initialized)
+        return;
+    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    aarch32 = cpsr.width == 1;
+
+    const AA64DFR0 dfr = tc->readMiscReg(MISCREG_ID_AA64DFR0_EL1);
+    const AA64MMFR2 mm_fr2 = tc->readMiscReg(MISCREG_ID_AA64MMFR2_EL1);
+    const AA64MMFR1 mm_fr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
+
+    for (int i = 0; i <= dfr.brps; i++) {
+        const bool isctxaw = i >= (dfr.brps - dfr.ctx_cmps);
+
+        BrkPoint bkp = BrkPoint((MiscRegIndex)(MISCREG_DBGBCR0_EL1 + i),
+                                (MiscRegIndex)(MISCREG_DBGBVR0_EL1 + i),
+                                this, isctxaw, (bool)mm_fr2.varange,
+                                mm_fr1.vmidbits, aarch32);
+        const DBGBCR ctr = tc->readMiscReg(MISCREG_DBGBCR0_EL1 + i);
+
+        bkp.updateControl(ctr);
+        arBrkPoints.push_back(bkp);
+    }
+
+    for (int i = 0; i <= dfr.wrps; i++) {
+        WatchPoint wtp = WatchPoint((MiscRegIndex)(MISCREG_DBGWCR0 + i),
+                                    (MiscRegIndex)(MISCREG_DBGWVR0 + i),
+                                    this, (bool)mm_fr2.varange, aarch32);
+        const DBGWCR ctr = tc->readMiscReg(MISCREG_DBGWCR0 + i);
+
+        wtp.updateControl(ctr);
+        arWatchPoints.push_back(wtp);
+    }
+
+    initialized = true;
+
+    RegVal oslar_el1 = tc->readMiscReg(MISCREG_OSLAR_EL1);
+    updateOSLock(oslar_el1);
+    // Initialize preloaded control booleans
+    uint64_t mdscr_el1 = tc->readMiscReg(MISCREG_MDSCR_EL1);
+    setMDSCRvals(mdscr_el1);
+
+    const uint64_t mdcr_el3 = tc->readMiscReg(MISCREG_MDCR_EL3);
+    setbSDD(mdcr_el3);
+
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
+    setenableTDETGE(hcr, mdcr);
+
+    // Enable Vector Catch Exceptions
+    const DEVID dvid = tc->readMiscReg(MISCREG_DBGDEVID0);
+    vcExcpt = new VectorCatch(dvid.vectorcatch==0x0, this);
+}
+
 bool
 BrkPoint::testAddrMatch(ThreadContext *tc, Addr in_pc, uint8_t bas)
 {
@@ -316,7 +372,7 @@ BrkPoint::testAddrMatch(ThreadContext *tc, Addr in_pc, uint8_t bas)
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     bool thumb = cpsr.t;
 
-    if (thumb){
+    if (thumb) {
         if (bas == 0xc)
             prs = bits(in_pc, 1, 0) == 0x2;
         else if (bas == 0x3)
@@ -336,7 +392,7 @@ BrkPoint::testAddrMissMatch(ThreadContext *tc, Addr in_pc, uint8_t bas)
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     bool thumb = cpsr.t;
 
-    if (thumb){
+    if (thumb) {
         if (bas == 0xc)
             prs = bits(in_pc, 1, 0) == 0x2;
         else if (bas == 0x3)
@@ -354,11 +410,11 @@ BrkPoint::testContextMatch(ThreadContext *tc, bool ctx1)
     ExceptionLevel el = currEL(tc);
     bool a32 = conf->isAArch32();
 
-    if (ctx1){
-        miscridx = a32? MISCREG_CONTEXTIDR: MISCREG_CONTEXTIDR_EL1;
-        if ((el == EL3 && !a32) || el ==EL2)
+    if (ctx1) {
+        miscridx = a32? MISCREG_CONTEXTIDR : MISCREG_CONTEXTIDR_EL1;
+        if ((el == EL3 && !a32) || el == EL2)
             return false;
-    }else{
+    } else {
         miscridx = MISCREG_CONTEXTIDR_EL2;
         if (el == EL2 && a32)
             return false;
@@ -366,7 +422,7 @@ BrkPoint::testContextMatch(ThreadContext *tc, bool ctx1)
 
     RegVal ctxid = tc->readMiscReg(miscridx);
     RegVal v = getContextfromReg(tc, ctx1);
-    return (v== ctxid);
+    return (v == ctxid);
 }
 
 bool
@@ -386,36 +442,33 @@ BrkPoint::testVMIDMatch(ThreadContext *tc)
 
 
 bool
-BrkPoint::isEnabled(ThreadContext* tc, ExceptionLevel el,
-                    uint8_t hmc, uint8_t ssc, uint8_t pmc){
+BrkPoint::isEnabled(ThreadContext *tc, ExceptionLevel el,
+                    uint8_t hmc, uint8_t ssc, uint8_t pmc)
+{
     bool v;
     bool aarch32 = conf->isAArch32();
-    bool noEL2 = !ArmSystem::haveEL(tc, EL2);
-    bool noEL3 = !ArmSystem::haveEL(tc, EL3);
+    bool no_el2 = !ArmSystem::haveEL(tc, EL2);
+    bool no_el3 = !ArmSystem::haveEL(tc, EL3);
 
-    if (noEL3 && !noEL2 && (ssc==0x1 || ssc==0x2)
-            && !(hmc && ssc == 0x1 && pmc==0x0)){
+    if (no_el3 && !no_el2 && (ssc == 0x1 || ssc == 0x2) &&
+        !(hmc && ssc == 0x1 && pmc == 0x0)) {
         return false;
-    }
-    else if (noEL3 && noEL2 &&( hmc != 0x0 || ssc !=0x0)
-            && !(!aarch32 && ((hmc && ssc == 0x1  && pmc == 0x0)
-                    || ssc == 0x3))){
+    } else if (no_el3 && no_el2 && (hmc != 0x0 || ssc != 0x0) &&
+        !(!aarch32 && ((hmc && ssc == 0x1  && pmc == 0x0) || ssc == 0x3))) {
         return false;
-    }
-    else if (noEL2 && hmc && ssc == 0x3 && pmc == 0x0){
+    } else if (no_el2 && hmc && ssc == 0x3 && pmc == 0x0) {
         return false;
-    }
-    else if (ssc == 0x11 && pmc==0x1 &&
-        !(!aarch32 && hmc && ssc == 0x3 &&pmc == 0x0)){
+    } else if (ssc == 0x11 && pmc == 0x1 &&
+        !(!aarch32 && hmc && ssc == 0x3 && pmc == 0x0)) {
         // AND secureEL2 not implemented
         return false;
-    }
-    else if (hmc && ssc == 0x1 && pmc == 0x0){//AND secureEL2 not implemented
+    } else if (hmc && ssc == 0x1 && pmc == 0x0) {
+        //AND secureEL2 not implemented
         return false;
     }
     switch (el) {
         case EL0:
-            v = (pmc == 0x3) || (pmc == 0x2 && hmc == 0x0) ;
+            v = (pmc == 0x3) || (pmc == 0x2 && hmc == 0x0);
             if (aarch32)
                 v = v || (pmc == 0x0 && ssc != 0x3 && hmc == 0x0);
             if (v && ssc == 0x3)
@@ -428,7 +481,7 @@ BrkPoint::isEnabled(ThreadContext* tc, ExceptionLevel el,
             break;
         case EL2:
             v = (ssc == 0x3) ||
-                ((hmc == 0x1) && !((ssc==0x2) && (pmc == 0x0)));
+                ((hmc == 0x1) && !((ssc == 0x2) && (pmc == 0x0)));
             if (v && pmc == 0x2)
                 panic("Unexpected EL in SelfDebug::isDebugEnabled.\n");
             break;
@@ -460,42 +513,41 @@ WatchPoint::isEnabled(ThreadContext* tc, ExceptionLevel el,
 
     bool v;
     bool aarch32 = conf->isAArch32();
-    bool noEL2 = !ArmSystem::haveEL(tc, EL2);
-    bool noEL3 = !ArmSystem::haveEL(tc, EL3);
+    bool no_el2 = !ArmSystem::haveEL(tc, EL2);
+    bool no_el3 = !ArmSystem::haveEL(tc, EL3);
 
-    if (aarch32){
+    if (aarch32) {
         // WatchPoint PL2 using aarch32 is disabled except for
         // debug state. Check G2-5395 table G2-15.
-        if (el==EL2)
+        if (el == EL2)
             return false;
-        if (noEL3){
-            if (ssc == 0x01 || ssc == 0x02){
+        if (no_el3) {
+            if (ssc == 0x01 || ssc == 0x02 ){
                 return false;
-            }
-            else if (noEL2 && ((!hmc && ssc==0x3) || (hmc && ssc==0x0)))
-            {
+            } else if (no_el2 &&
+                      ((!hmc && ssc == 0x3) || (hmc && ssc == 0x0))) {
                 return false;
             }
         }
-        if (noEL2 && hmc && ssc == 0x03 && pac == 0)
+        if (no_el2 && hmc && ssc == 0x03 && pac == 0)
             return false;
     }
     switch (el) {
-        case EL0:
-            v = (pac == 0x3 || (pac == 0x2 && !hmc && ssc != 0x3));
-            break;
-        case EL1:
-            v = (pac == 0x1 || pac == 0x3);
-            break;
-        case EL2:
-            v = (hmc && (ssc != 0x2 || pac != 0x0));
-            break;
-        case EL3:
-            v = (hmc && (ssc == 0x2 ||
-                        (ssc == 0x1 && (pac == 0x1 || pac == 0x3))));
-            break;
-        default:
-            panic("Unexpected EL in WatchPoint::isEnabled.\n");
+      case EL0:
+        v = (pac == 0x3 || (pac == 0x2 && !hmc && ssc != 0x3));
+        break;
+      case EL1:
+        v = (pac == 0x1 || pac == 0x3);
+        break;
+      case EL2:
+        v = (hmc && (ssc != 0x2 || pac != 0x0));
+        break;
+      case EL3:
+        v = (hmc && (ssc == 0x2 ||
+            (ssc == 0x1 && (pac == 0x1 || pac == 0x3))));
+        break;
+      default:
+        panic("Unexpected EL in WatchPoint::isEnabled.\n");
     }
     return v && SelfDebug::securityStateMatch(tc, ssc, hmc);
 }
@@ -508,14 +560,13 @@ WatchPoint::test(ThreadContext *tc, Addr addr, ExceptionLevel el, bool& wrt,
     bool v = false;
     const DBGWCR ctr = tc->readMiscReg(ctrlRegIndex);
     if (isEnabled(tc, el, ctr.hmc, ctr.ssc, ctr.pac) &&
-            ((wrt && (ctr.lsv & 0x2)) || (!wrt && (ctr.lsv & 0x1)) || atomic))
-    {
+        ((wrt && (ctr.lsv & 0x2)) || (!wrt && (ctr.lsv & 0x1)) || atomic)) {
         v = compareAddress(tc, addr, ctr.bas, ctr.mask, size);
-        if (ctr.wt){
+        if (ctr.wt) {
             v = v && (conf->getBrkPoint(ctr.lbn))->testLinkedBk(tc, addr, el);
         }
     }
-    if (atomic && (ctr.lsv & 0x1)){
+    if (atomic && (ctr.lsv & 0x1)) {
         wrt = false;
     }
     return v;
@@ -533,38 +584,33 @@ WatchPoint::compareAddress(ThreadContext *tc, Addr in_addr, uint8_t bas,
     if (bas == 0x0)
         return false;
 
-    if (mask == 0x0){
-
-        for (int i=0; i < maxbits; i++){
+    if (mask == 0x0) {
+        for (int i = 0; i < maxbits; i++) {
             uint8_t bas_m = 0x1 << i;
             uint8_t masked_bas = bas & bas_m;
-            if (masked_bas == bas_m){
+            if (masked_bas == bas_m) {
                 uint8_t off = log2(masked_bas);
                 Addr cmpaddr = addr_tocmp | off;
-                for (int j=0; j<size; j++){
-                    if ((addr+j) == cmpaddr) {
+                for (int j = 0; j < size; j++) {
+                    if ((addr + j) == cmpaddr) {
                         return true;
                     }
                 }
             }
         }
         return false;
-    }
-    else
-    {
+    } else {
         bool v = false;
-        for (int j=0; j<size; j++)
-        {
+        for (int j = 0; j < size; j++) {
             Addr compaddr;
-            if (mask > bottom){
+            if (mask > bottom) {
                 addr = bits((in_addr+j), maxAddrSize, mask);
                 compaddr = bits(addr_tocmp, maxAddrSize, mask);
-            }
-            else{
+            } else {
                 addr = bits((in_addr+j), maxAddrSize, bottom);
                 compaddr = bits(addr_tocmp, maxAddrSize, bottom);
             }
-            v = v || (addr==compaddr) ;
+            v = v || (addr == compaddr);
         }
         return v;
     }
@@ -609,7 +655,7 @@ SoftwareStep::advanceSS(ThreadContext * tc)
 
     PCState pc = tc->pcState();
     bool res = false;
-    switch (stateSS){
+    switch (stateSS) {
       case INACTIVE_STATE:
         pc.debugStep(false);
         break;
@@ -636,14 +682,14 @@ SoftwareStep::advanceSS(ThreadContext * tc)
         break;
 
       default:
-            break;
+        break;
     }
     return res;
 }
 
 Fault
 SelfDebug::testVectorCatch(ThreadContext *tc, Addr addr,
-                           ArmFault* fault)
+                           ArmFault *fault)
 {
 
     setAArch32(tc);
