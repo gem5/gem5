@@ -286,9 +286,9 @@ ArmISA::authDA(ThreadContext * tc, uint64_t X, uint64_t Y, uint64_t* out)
   using the same algorithm and key as AddPACDA().
 */
 
-    bool trapEL2;
-    bool trapEL3;
-    bool enable;
+    bool trapEL2 = false;
+    bool trapEL3 = false;
+    bool enable = false;
 
     uint64_t hi_key= tc->readMiscReg(MISCREG_APDAKeyHi_EL1);
     uint64_t lo_key= tc->readMiscReg(MISCREG_APDAKeyLo_EL1);
@@ -354,9 +354,9 @@ ArmISA::authDB(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out)
   using the same algorithm and key as AddPACDA().
 */
 
-    bool trapEL2;
-    bool trapEL3;
-    bool enable;
+    bool trapEL2 = false;
+    bool trapEL3 = false;
+    bool enable = false;
 
     uint64_t hi_key= tc->readMiscReg(MISCREG_APDBKeyHi_EL1);
     uint64_t lo_key= tc->readMiscReg(MISCREG_APDBKeyLo_EL1);
@@ -424,9 +424,9 @@ ArmISA::authIA(ThreadContext * tc, uint64_t X, uint64_t Y, uint64_t* out)
   using the same algorithm and key as AddPACDA().
 */
 
-    bool trapEL2;
-    bool trapEL3;
-    bool enable;
+    bool trapEL2 = false;
+    bool trapEL3 = false;
+    bool enable = false;
 
     uint64_t hi_key= tc->readMiscReg(MISCREG_APIAKeyHi_EL1);
     uint64_t lo_key= tc->readMiscReg(MISCREG_APIAKeyLo_EL1);
@@ -498,9 +498,9 @@ ArmISA::authIB(ThreadContext *tc, uint64_t X, uint64_t Y, uint64_t* out)
   using the same algorithm and key as AddPACDA().
 */
 
-    bool trapEL2;
-    bool trapEL3;
-    bool enable;
+    bool trapEL2 = false;
+    bool trapEL3 = false;
+    bool enable = false;
 
     uint64_t hi_key= tc->readMiscReg(MISCREG_APIBKeyHi_EL1);
     uint64_t lo_key= tc->readMiscReg(MISCREG_APIBKeyLo_EL1);
@@ -566,9 +566,9 @@ ArmISA::authIB(ThreadContext *tc, uint64_t X, uint64_t Y, uint64_t* out)
 Fault
 ArmISA::addPACDA(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out)
 {
-    bool trapEL2;
-    bool trapEL3;
-    bool enable;
+    bool trapEL2 = false;
+    bool trapEL3 = false;
+    bool enable = false;
 
     uint64_t hi_key= tc->readMiscReg(MISCREG_APDAKeyHi_EL1);
     uint64_t lo_key= tc->readMiscReg(MISCREG_APDAKeyLo_EL1);
@@ -630,9 +630,9 @@ ArmISA::addPACDA(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out)
 Fault
 ArmISA::addPACDB(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out)
 {
-    bool trapEL2;
-    bool trapEL3;
-    bool enable;
+    bool trapEL2 = false;
+    bool trapEL3 = false;
+    bool enable = false;
 
     uint64_t hi_key= tc->readMiscReg(MISCREG_APDBKeyHi_EL1);
     uint64_t lo_key= tc->readMiscReg(MISCREG_APDBKeyLo_EL1);
@@ -691,8 +691,8 @@ ArmISA::addPACDB(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out)
 Fault
 ArmISA::addPACGA(ThreadContext * tc, uint64_t X, uint64_t Y, uint64_t* out)
 {
-    bool trapEL2;
-    bool trapEL3;
+    bool trapEL2 = false;
+    bool trapEL3 = false;
 
     uint64_t hi_key= tc->readMiscReg(MISCREG_APGAKeyHi_EL1);
     uint64_t lo_key= tc->readMiscReg(MISCREG_APGAKeyLo_EL1);
@@ -738,9 +738,9 @@ ArmISA::addPACGA(ThreadContext * tc, uint64_t X, uint64_t Y, uint64_t* out)
 
 Fault
 ArmISA::addPACIA(ThreadContext * tc, uint64_t X, uint64_t Y, uint64_t* out){
-    bool trapEL2;
-    bool trapEL3;
-    bool enable;
+    bool trapEL2 = false;
+    bool trapEL3 = false;
+    bool enable = false;
 
     uint64_t hi_key= tc->readMiscReg(MISCREG_APIAKeyHi_EL1);
     uint64_t lo_key= tc->readMiscReg(MISCREG_APIAKeyLo_EL1);
@@ -797,9 +797,9 @@ ArmISA::addPACIA(ThreadContext * tc, uint64_t X, uint64_t Y, uint64_t* out){
 
 Fault
 ArmISA::addPACIB(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out){
-    bool trapEL2;
-    bool trapEL3;
-    bool enable;
+    bool trapEL2 = false;
+    bool trapEL3 = false;
+    bool enable = false;
 
     uint64_t hi_key= tc->readMiscReg(MISCREG_APIBKeyHi_EL1);
     uint64_t lo_key= tc->readMiscReg(MISCREG_APIBKeyLo_EL1);
@@ -859,8 +859,8 @@ ArmISA::addPACIB(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out){
 
 Fault
 ArmISA::stripPAC(ThreadContext* tc, uint64_t A, bool data, uint64_t* out){
-    bool trapEL2;
-    bool trapEL3;
+    bool trapEL2 = false;
+    bool trapEL3 = false;
 
     uint64_t ptr;
 
