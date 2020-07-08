@@ -429,7 +429,7 @@ BrkPoint::isEnabled(ThreadContext* tc, ExceptionLevel el,
             break;
         case EL2:
             v = (ssc == 0x3) ||
-                ((hmc == 0x1) && !((ssc==0x2) && (pmc = 0x0)));
+                ((hmc == 0x1) && !((ssc==0x2) && (pmc == 0x0)));
             if (v && pmc == 0x2)
                 panic("Unexpected EL in SelfDebug::isDebugEnabled.\n");
             break;
