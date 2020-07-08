@@ -58,13 +58,13 @@ FVPBasePwrCtrl::FVPBasePwrCtrl(FVPBasePwrCtrlParams *const params)
 }
 
 void
-FVPBasePwrCtrl::init()
+FVPBasePwrCtrl::startup()
 {
     // All cores are ON by default (PwrStatus.{l0,l1} = 0b1)
     corePwrStatus.resize(sys->threads.size(), 0x60000000);
     for (const auto &tc : sys->threads)
         poweredCoresPerCluster[tc->socketId()] += 1;
-    BasicPioDevice::init();
+    BasicPioDevice::startup();
 }
 
 void

@@ -88,7 +88,7 @@ class FVPBasePwrCtrl : public BasicPioDevice
      */
     void clearWakeRequest(ThreadContext *const tc);
 
-    void init() override;
+    void startup() override;
 
   protected:
     Tick read(PacketPtr pkt) override;
