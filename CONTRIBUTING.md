@@ -136,7 +136,7 @@ A canonical commit message consists of three parts:
    causes line-wrapping for longer lines.
  * (Optional, but highly recommended) A detailed description. This describes
    what you have done and why. If the change isn't obvious, you might want to
-   motivate why it is needed. Lines need to be wrapped to 75 characters or
+   motivate why it is needed. Lines need to be wrapped to 72 characters or
    less.
  * Tags describing patch metadata. You are highly recommended to use
    tags to acknowledge reviewers for their work. Gerrit will automatically add
