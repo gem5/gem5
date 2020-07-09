@@ -5183,7 +5183,7 @@ namespace Gcn3ISA
     void
     Inst_SMEM__S_STORE_DWORDX4::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstScalarOperandU64 sdata(gpuDynInst, instData.SDATA);
+        ConstScalarOperandU128 sdata(gpuDynInst, instData.SDATA);
         sdata.read();
         std::memcpy((void*)gpuDynInst->scalar_data, sdata.rawDataPtr(),
             4 * sizeof(ScalarRegU32));

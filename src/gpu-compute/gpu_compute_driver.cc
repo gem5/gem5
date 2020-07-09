@@ -267,6 +267,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
           {
             warn("unimplemented ioctl: AMDKFD_IOC_UNMAP_MEMORY_FROM_GPU\n");
           }
+          break;
         case AMDKFD_IOC_ALLOC_MEMORY_OF_SCRATCH:
           {
             warn("unimplemented ioctl: AMDKFD_IOC_ALLOC_MEMORY_OF_SCRATCH\n");

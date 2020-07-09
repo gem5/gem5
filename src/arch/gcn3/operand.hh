@@ -521,12 +521,22 @@ namespace Gcn3ISA
             switch(_opIdx) {
               case REG_EXEC_LO:
                 {
-                    ScalarRegU64 exec_mask = _gpuDynInst->wavefront()->
-                        execMask().to_ullong();
-                    std::memcpy((void*)srfData.data(), (void*)&exec_mask,
-                        sizeof(srfData));
-                    DPRINTF(GPUSRF, "Read EXEC\n");
-                    DPRINTF(GPUSRF, "EXEC = %#x\n", exec_mask);
+                    if (NumDwords == 1) {
+                        ScalarRegU32 exec_mask = _gpuDynInst->wavefront()->
+                            execMask().to_ulong();
+                        std::memcpy((void*)srfData.data(), (void*)&exec_mask,
+                            sizeof(exec_mask));
+                        DPRINTF(GPUSRF, "Read EXEC\n");
+                        DPRINTF(GPUSRF, "EXEC = %#x\n", exec_mask);
+                    } else {
+                        assert(NumDwords == 2);
+                        ScalarRegU64 exec_mask = _gpuDynInst->wavefront()->
+                            execMask().to_ullong();
+                        std::memcpy((void*)srfData.data(), (void*)&exec_mask,
+                            sizeof(exec_mask));
+                        DPRINTF(GPUSRF, "Read EXEC\n");
+                        DPRINTF(GPUSRF, "EXEC = %#x\n", exec_mask);
+                    }
                 }
                 break;
               case REG_EXEC_HI:
@@ -541,7 +551,7 @@ namespace Gcn3ISA
 
                     ScalarRegU32 exec_mask_hi = bits(exec_mask, 63, 32);
                     std::memcpy((void*)srfData.data(), (void*)&exec_mask_hi,
-                                sizeof(srfData));
+                                sizeof(exec_mask_hi));
                     DPRINTF(GPUSRF, "Read EXEC_HI\n");
                     DPRINTF(GPUSRF, "EXEC_HI = %#x\n", exec_mask_hi);
                 }
@@ -556,7 +566,7 @@ namespace Gcn3ISA
                 {
                     typename OpTraits<DataType>::FloatT pos_half = 0.5;
                     std::memcpy((void*)srfData.data(), (void*)&pos_half,
-                        sizeof(srfData));
+                        sizeof(pos_half));
 
                 }
                 break;
@@ -564,44 +574,44 @@ namespace Gcn3ISA
                 {
                     typename OpTraits<DataType>::FloatT neg_half = -0.5;
                     std::memcpy((void*)srfData.data(), (void*)&neg_half,
-                        sizeof(srfData));
+                        sizeof(neg_half));
                 }
                 break;
               case REG_POS_ONE:
                 {
                     typename OpTraits<DataType>::FloatT pos_one = 1.0;
-                    std::memcpy(srfData.data(), &pos_one, sizeof(srfData));
+                    std::memcpy(srfData.data(), &pos_one, sizeof(pos_one));
                 }
                 break;
               case REG_NEG_ONE:
                 {
                     typename OpTraits<DataType>::FloatT neg_one = -1.0;
-                    std::memcpy(srfData.data(), &neg_one, sizeof(srfData));
+                    std::memcpy(srfData.data(), &neg_one, sizeof(neg_one));
                 }
                 break;
               case REG_POS_TWO:
                 {
                     typename OpTraits<DataType>::FloatT pos_two = 2.0;
-                    std::memcpy(srfData.data(), &pos_two, sizeof(srfData));
+                    std::memcpy(srfData.data(), &pos_two, sizeof(pos_two));
                 }
                 break;
               case REG_NEG_TWO:
                 {
                     typename OpTraits<DataType>::FloatT neg_two = -2.0;
-                    std::memcpy(srfData.data(), &neg_two, sizeof(srfData));
+                    std::memcpy(srfData.data(), &neg_two, sizeof(neg_two));
                 }
                 break;
               case REG_POS_FOUR:
                 {
                     typename OpTraits<DataType>::FloatT pos_four = 4.0;
-                    std::memcpy(srfData.data(), &pos_four, sizeof(srfData));
+                    std::memcpy(srfData.data(), &pos_four, sizeof(pos_four));
                 }
                 break;
               case REG_NEG_FOUR:
                 {
                     typename OpTraits<DataType>::FloatT neg_four = -4.0;
                     std::memcpy((void*)srfData.data(), (void*)&neg_four ,
-                        sizeof(srfData));
+                        sizeof(neg_four));
                 }
                 break;
                 case REG_PI:
@@ -614,10 +624,10 @@ namespace Gcn3ISA
 
                     if (sizeof(DataType) == sizeof(ScalarRegF64)) {
                         std::memcpy((void*)srfData.data(),
-                            (void*)&pi_u64, sizeof(srfData));
+                            (void*)&pi_u64, sizeof(pi_u64));
                     } else {
                         std::memcpy((void*)srfData.data(),
-                            (void*)&pi_u32, sizeof(srfData));
+                            (void*)&pi_u32, sizeof(pi_u32));
                     }
                 }
                 break;

@@ -1887,12 +1887,14 @@ namespace Gcn3ISA
             } else if (numDstRegOperands()) {
                 return extData.VDST;
             }
+            break;
           case 2:
             if (numSrcRegOperands() > 2) {
                 return extData.DATA1;
             } else if (numDstRegOperands()) {
                 return extData.VDST;
             }
+            break;
           case 3:
             assert(numDstRegOperands());
             return extData.VDST;
@@ -1900,6 +1902,8 @@ namespace Gcn3ISA
             fatal("Operand at idx %i does not exist\n", opIdx);
             return -1;
         }
+        fatal("Operand at idx %i does not exist\n", opIdx);
+        return -1;
     }
 
     // --- Inst_MUBUF base class methods ---
