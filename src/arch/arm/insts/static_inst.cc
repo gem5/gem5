@@ -1192,8 +1192,8 @@ ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
         new_cpsr.daif = spsr.daif;
     }
 
-    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-    SoftwareStep * ss = (isa->getSelfDebug())->getSstep();
+    SelfDebug *sd = ArmISA::ISA::getSelfDebug(tc);
+    SoftwareStep *ss = sd->getSstep();
     new_cpsr.ss = ss->debugExceptionReturnSS(tc, spsr, dest, new_cpsr.width);
 
     return new_cpsr;

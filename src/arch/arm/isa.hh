@@ -466,10 +466,19 @@ namespace ArmISA
         void initID64(const ArmISAParams *p);
 
       public:
-        SelfDebug * getSelfDebug()
+        SelfDebug*
+        getSelfDebug() const
         {
             return selfDebug;
         }
+
+        static SelfDebug*
+        getSelfDebug(ThreadContext *tc)
+        {
+            auto *arm_isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+            return arm_isa->getSelfDebug();
+        }
+
         RegVal readMiscRegNoEffect(int misc_reg) const;
         RegVal readMiscReg(int misc_reg);
         void setMiscRegNoEffect(int misc_reg, RegVal val);

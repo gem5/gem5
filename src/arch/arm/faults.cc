@@ -723,8 +723,7 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
 bool
 ArmFault::vectorCatch(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-    SelfDebug * sd = isa->getSelfDebug();
+    SelfDebug *sd = ArmISA::ISA::getSelfDebug(tc);
     VectorCatch* vc = sd->getVectorCatch(tc);
     if (!vc->isVCMatch()) {
         Fault fault = sd->testVectorCatch(tc, 0x0, this);

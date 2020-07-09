@@ -203,8 +203,7 @@ class ArmStaticInst : public StaticInst
     static void
     activateBreakpoint(ThreadContext *tc)
     {
-        auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-        SelfDebug * sd = isa->getSelfDebug();
+        SelfDebug *sd = ArmISA::ISA::getSelfDebug(tc);
         sd->activateDebug();
     }
 

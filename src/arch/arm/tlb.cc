@@ -1234,8 +1234,7 @@ TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
 
     //Check for Debug Exceptions
     if (fault == NoFault) {
-        auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-        SelfDebug *sd = isa->getSelfDebug();
+        SelfDebug *sd = ArmISA::ISA::getSelfDebug(tc);
 
         fault = sd->testDebug(tc, req, mode);
     }

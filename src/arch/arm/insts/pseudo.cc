@@ -201,8 +201,11 @@ DebugStep::execute(ExecContext *xc, Trace::InstRecord *traceData) const
     PCState pc_state(xc->pcState());
     pc_state.debugStep(false);
     xc->pcState(pc_state);
-    auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
-    bool ldx = isa->getSelfDebug()->getSstep()->getLdx();
+
+    SelfDebug *sd = ArmISA::ISA::getSelfDebug(xc->tcBase());
+
+    bool ldx = sd->getSstep()->getLdx();
+
     return std::make_shared<SoftwareStepFault>(machInst, ldx,
                                                pc_state.stepped());
 

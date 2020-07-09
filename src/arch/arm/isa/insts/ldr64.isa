@@ -243,9 +243,8 @@ let {{
             accCode = accCode % buildMemSuffix(self.sign, self.size)
             if self.flavor in ('exclusive', 'acex'):
                 accCode += '''
-             auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
-             SelfDebug * sd = isa->getSelfDebug();
-             sd->getSstep()->setLdx();
+                SelfDebug *sd = ArmISA::ISA::getSelfDebug(xc->tcBase());
+                sd->getSstep()->setLdx();
              '''
             self.codeBlobs["memacc_code"] = accCode
             if accEpilogCode:
@@ -344,9 +343,8 @@ let {{
                         '''
             if self.flavor in ('exp', 'acexp'):
                 accCode += '''
-             auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
-             SelfDebug * sd = isa->getSelfDebug();
-             sd->getSstep()->setLdx();
+                SelfDebug *sd = ArmISA::ISA::getSelfDebug(xc->tcBase());
+                sd->getSstep()->setLdx();
              '''
             self.codeBlobs["memacc_code"] = accCode
             if accEpilogCode:
