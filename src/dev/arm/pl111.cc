@@ -203,21 +203,7 @@ Pl111::read(PacketPtr pkt)
         }
     }
 
-    switch(pkt->getSize()) {
-      case 1:
-        pkt->setLE<uint8_t>(data);
-        break;
-      case 2:
-        pkt->setLE<uint16_t>(data);
-        break;
-      case 4:
-        pkt->setLE<uint32_t>(data);
-        break;
-      default:
-        panic("CLCD controller read size too big?\n");
-        break;
-    }
-
+    pkt->setUintX(data, LittleEndianByteOrder);
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -229,22 +215,7 @@ Pl111::write(PacketPtr pkt)
     // use a temporary data since the LCD registers are read/written with
     // different size operations
     //
-    uint32_t data = 0;
-
-    switch(pkt->getSize()) {
-      case 1:
-        data = pkt->getLE<uint8_t>();
-        break;
-      case 2:
-        data = pkt->getLE<uint16_t>();
-        break;
-      case 4:
-        data = pkt->getLE<uint32_t>();
-        break;
-      default:
-        panic("PL111 CLCD controller write size too big?\n");
-        break;
-    }
+    const uint32_t data = pkt->getUintX(LittleEndianByteOrder);
 
     assert(pkt->getAddr() >= pioAddr &&
            pkt->getAddr() < pioAddr + pioSize);
