@@ -80,7 +80,7 @@ AmbaDevice::readId(PacketPtr pkt, uint64_t amba_id, Addr pio_addr)
     DPRINTF(AMBA, "Returning %#x for offset %#x(%d)\n",
             (amba_id >> byte) & 0xFF,
             pkt->getAddr() - pio_addr, byte);
-    assert(pkt->getSize() == 4);
-    pkt->setLE<uint32_t>((amba_id >> byte) & 0xFF);
+
+    pkt->setUintX((amba_id >> byte) & 0xFF, LittleEndianByteOrder);
     return true;
 }
