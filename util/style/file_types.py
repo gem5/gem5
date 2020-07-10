@@ -118,7 +118,7 @@ def lang_type(filename, firstline=None, openok=True):
     return None
 
 # directories and files to ignore by default
-default_dir_ignore = frozenset(('.hg', '.svn', 'build', 'ext'))
+default_dir_ignore = frozenset(('build', 'ext'))
 default_file_ignore = frozenset(('parsetab.py', ))
 
 def find_files(base, languages=all_languages,

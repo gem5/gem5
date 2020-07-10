@@ -80,7 +80,6 @@ def common_config(env):
 
 gem5_tool_list = [
     'git',
-    'mercurial',
 ]
 
 def generate(env):

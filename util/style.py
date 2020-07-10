@@ -84,7 +84,6 @@ repo_types = {
     "auto" : detect_repo,
     "none" : lambda : None,
     "git" : repo.GitRepo,
-    "hg" : repo.MercurialRepo,
 }
 
 if __name__ == '__main__':

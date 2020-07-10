@@ -202,50 +202,6 @@ class GitRepo(AbstractRepo):
             [ self.git, "show", "%s:%s" % (self.head_revision(), name) ]) \
             .decode()
 
-class MercurialRepo(AbstractRepo):
-    def __init__(self):
-        self.hg = "hg"
-        self._repo_base = None
-
-    def repo_base(self):
-        if self._repo_base is None:
-            self._repo_base = subprocess.check_output(
-                [ self.hg, "root" ]).decode().rstrip("\n")
-
-        return self._repo_base
-
-    def staged_files(self):
-        added = []
-        modified = []
-        for action, fname in self.status():
-            if action == "M":
-                modified.append(fname)
-            elif action == "A":
-                added.append(fname)
-
-        return added, modified
-
-    def staged_regions(self, fname, context=0):
-        return self.modified_regions(fname, context=context)
-
-    def modified_regions(self, fname, context=0):
-        old = self.file_from_tip(fname).split("\n")
-        new = self.get_file(fname).split("\n")
-
-        return modified_regions(old, new, context=context)
-
-    def status(self, filter=None):
-        files = subprocess.check_output([ self.hg, "status" ]) \
-            .decode().rstrip("\n")
-        if files:
-            return [ f.split(" ") for f in files.split("\n") ]
-        else:
-            return []
-
-    def file_from_tip(self, name):
-        return subprocess.check_output([ self.hg, "cat", name ]) \
-            .decode()
-
 def detect_repo(path="."):
     """Auto-detect the revision control system used for a source code
     directory. The code starts searching for repository meta data
@@ -259,7 +215,6 @@ def detect_repo(path="."):
 
     _repo_types = (
         (".git", GitRepo),
-        (".hg", MercurialRepo),
     )
 
     repo_types = []

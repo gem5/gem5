@@ -79,18 +79,6 @@ class StdioUI(UserInterface):
     def write(self, string):
         sys.stdout.write(string)
 
-class MercurialUI(UserInterface):
-    def __init__(self, ui, *args, **kwargs):
-        super(MercurialUI, self).__init__(*args, **kwargs)
-        self.hg_ui = ui
-
-    def _prompt(self, prompt, results, default):
-        return self.hg_ui.prompt(prompt, default=default)
-
-    def write(self, string):
-        self.hg_ui.write(string)
-
-
 def _re_ignore(expr):
     """Helper function to create regular expression ignore file
     matcher functions"""
