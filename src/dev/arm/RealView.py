@@ -1363,6 +1363,8 @@ class VExpress_GEM5_Foundation(VExpress_GEM5_Base):
         AddrRange(0x40000000, 0x80000000),
     ]
 
+    sp810_fake = AmbaFake(pio_addr=0x1C020000, ignore_access=True)
+
     gic = Gicv3(dist_addr=0x2f000000, redist_addr=0x2f100000,
                 maint_int=ArmPPI(num=25), gicv4=False,
                 its=NULL)
@@ -1377,6 +1379,11 @@ class VExpress_GEM5_Foundation(VExpress_GEM5_Base):
         return super(VExpress_GEM5_Foundation, self)._on_chip_devices() + [
                 self.gic
             ]
+
+    def _off_chip_devices(self):
+        return super(VExpress_GEM5_Foundation, self)._off_chip_devices() + [
+                self.sp810_fake,
+        ]
 
     def setupBootLoader(self, cur_sys, loc, boot_loader=None):
         if boot_loader is None:
