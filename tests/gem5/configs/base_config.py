@@ -133,7 +133,7 @@ class BaseSystem(object):
         Arguments:
           system -- System to work on.
         """
-        system.vm = KvmVM()
+        system.kvm_vm = KvmVM()
 
     def init_system(self, system):
         """Initialize a system.
