@@ -81,6 +81,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('smmu_v3_deviceifc.cc');
     Source('smmu_v3_transl.cc');
     Source('timer_sp804.cc')
+    Source('watchdog_generic.cc')
     Source('watchdog_sp805.cc')
     Source('gpu_nomali.cc')
     Source('pci_host.cc')

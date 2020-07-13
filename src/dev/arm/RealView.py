@@ -441,6 +441,21 @@ Reference:
 
         yield node
 
+class GenericWatchdog(PioDevice):
+    type = 'GenericWatchdog'
+    cxx_header = 'dev/arm/watchdog_generic.hh'
+
+    refresh_start = Param.Addr("Start address for the refresh frame")
+    control_start = Param.Addr("Start address for the control frame")
+    pio_latency = Param.Latency('10ns', "Delay for PIO r/w")
+
+    ws0 = Param.ArmInterruptPin("WS0 Signal")
+    ws1 = Param.ArmInterruptPin("WS1 Signal")
+
+    system_counter = Param.SystemCounter(Parent.any,
+        "The Watchdog uses the Generic Timer system counter as the timebase "
+        "against which the decision to trigger an interrupt is made.")
+
 class A9GlobalTimer(BasicPioDevice):
     type = 'A9GlobalTimer'
     cxx_header = "dev/arm/timer_a9global.hh"
