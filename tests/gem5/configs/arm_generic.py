@@ -84,10 +84,31 @@ class LinuxArmSystemBuilder(object):
         self.use_ruby = kwargs.get('use_ruby', False)
         self.aarch64_kernel = aarch64_kernel
 
+    def init_kvm(self, system):
+        """Do KVM-specific system initialization.
+
+        Arguments:
+          system -- System to work on.
+        """
+        system.kvm_vm = KvmVM()
+
+        # Arm KVM regressions will use a simulated GIC. This means that in
+        # order to work we need to remove the system interface of the
+        # generic timer from the DTB and we need to inform the MuxingKvmGic
+        # class to use the gem5 GIC instead of relying on the host one
+        GenericTimer.generateDeviceTree = SimObject.generateDeviceTree
+        system.realview.gic.simulate_gic = True
+
     def create_system(self):
         if self.aarch64_kernel:
             gem5_kernel = "vmlinux.arm64"
-            disk_image = "m5_exit.squashfs.arm64"
+            try:
+                if issubclass(self.cpu_class, ArmV8KvmCPU):
+                    disk_image = "m5_exit_addr.squashfs.arm64"
+                else:
+                    disk_image = "m5_exit.squashfs.arm64"
+            except:
+                disk_image = "m5_exit.squashfs.arm64"
         else:
             gem5_kernel = "vmlinux.arm"
             disk_image = "m5_exit.squashfs.arm"
