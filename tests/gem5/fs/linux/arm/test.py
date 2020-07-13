@@ -41,6 +41,10 @@ from os.path import join as joinpath
 
 from testlib import *
 
+arm_fs_kvm_tests = [
+    'realview64-kvm',
+]
+
 arm_fs_quick_tests = [
     'realview64-simple-atomic',
     'realview64-simple-atomic-dual',
@@ -49,7 +53,7 @@ arm_fs_quick_tests = [
     'realview64-simple-timing-dual',
     'realview64-switcheroo-atomic',
     'realview64-switcheroo-timing',
-]
+] + arm_fs_kvm_tests
 
 arm_fs_long_tests = [
     'realview-simple-atomic',
@@ -94,7 +98,21 @@ filepath = os.path.dirname(os.path.abspath(__file__))
 path = joinpath(config.bin_path, 'arm')
 arm_fs_binaries = DownloadedArchive(url, path, tarball)
 
+def support_kvm():
+    return os.access("/dev/kvm", os.R_OK | os.W_OK)
+
 for name in arm_fs_quick_tests:
+    if name in arm_fs_kvm_tests:
+        # The current host might not be supporting KVM
+        # Skip the test if that's the case
+        if not support_kvm():
+            continue
+
+        # Run KVM test if we are on an arm host only
+        valid_hosts = (constants.host_arm_tag,)
+    else:
+        valid_hosts = constants.supported_hosts
+
     args = [
         joinpath(config.base_dir, 'tests', 'gem5', 'configs', name + '.py'),
         path,
@@ -107,6 +125,7 @@ for name in arm_fs_quick_tests:
         config_args=args,
         valid_isas=(constants.arm_tag,),
         length=constants.quick_tag,
+        valid_hosts=valid_hosts,
         fixtures=(arm_fs_binaries,)
     )
 
