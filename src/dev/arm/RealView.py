@@ -1085,6 +1085,11 @@ Interrupts:
 
     ### On-chip devices ###
 
+    el2_watchdog = GenericWatchdog(
+        control_start=0x2a440000,
+        refresh_start=0x2a450000,
+        ws0=ArmSPI(num=59), ws1=ArmSPI(num=60))
+
     # Trusted Watchdog, SP805
     trusted_watchdog = Sp805(pio_addr=0x2a490000, interrupt=ArmSPI(num=56))
 
@@ -1109,6 +1114,7 @@ Interrupts:
     def _on_chip_devices(self):
         return [
             self.generic_timer_mem,
+            self.el2_watchdog,
             self.trusted_watchdog,
             self.system_watchdog
         ] + self.generic_timer_mem.frames
