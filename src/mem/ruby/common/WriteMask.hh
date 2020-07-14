@@ -40,6 +40,8 @@
 class WriteMask
 {
   public:
+    typedef std::vector<std::pair<int, AtomicOpFunctor* >> AtomicOpVector;
+
     WriteMask()
       : mSize(RubySystem::getBlockSizeBytes()), mMask(mSize, false),
         mAtomic(false)
@@ -53,8 +55,7 @@ class WriteMask
       : mSize(size), mMask(mask), mAtomic(false)
     {}
 
-    WriteMask(int size, std::vector<bool> &mask,
-              std::vector<std::pair<int, AtomicOpFunctor*> > atomicOp)
+    WriteMask(int size, std::vector<bool> &mask, AtomicOpVector atomicOp)
       : mSize(size), mMask(mask), mAtomic(true), mAtomicOp(atomicOp)
     {}
 
@@ -184,11 +185,25 @@ class WriteMask
             (*fnctr)(p);
         }
     }
+
+    const AtomicOpVector&
+    getAtomicOps() const
+    {
+        return mAtomicOp;
+    }
+
+    void
+    setAtomicOps(const AtomicOpVector& atomicOps)
+    {
+        mAtomic = true;
+        mAtomicOp = std::move(atomicOps);
+    }
+
   private:
     int mSize;
     std::vector<bool> mMask;
     bool mAtomic;
-    std::vector<std::pair<int, AtomicOpFunctor*> > mAtomicOp;
+    AtomicOpVector mAtomicOp;
 };
 
 inline std::ostream&
