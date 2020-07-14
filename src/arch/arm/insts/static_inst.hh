@@ -214,8 +214,7 @@ class ArmStaticInst : public StaticInst
     {
         bool privileged   = (cpsr.mode != MODE_USER);
         bool haveVirt     = ArmSystem::haveVirtualization(tc);
-        bool haveSecurity = ArmSystem::haveSecurity(tc);
-        bool isSecure     = inSecureState(scr, cpsr) || !haveSecurity;
+        bool isSecure     = ArmISA::isSecure(tc);
 
         uint32_t bitMask = 0;
 

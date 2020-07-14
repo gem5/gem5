@@ -88,6 +88,7 @@ ISA::ISA(Params *p) : BaseISA(p), system(NULL),
         physAddrRange = system->physAddrRange();
         haveSVE = system->haveSVE();
         havePAN = system->havePAN();
+        haveSecEL2 = system->haveSecEL2();
         sveVL = system->sveVL();
         haveLSE = system->haveLSE();
     } else {
@@ -98,6 +99,7 @@ ISA::ISA(Params *p) : BaseISA(p), system(NULL),
         physAddrRange = 32;  // dummy value
         haveSVE = true;
         havePAN = false;
+        haveSecEL2 = true;
         sveVL = p->sve_vl_se;
         haveLSE = true;
     }
@@ -397,6 +399,13 @@ ISA::initID64(const ArmISAParams *p)
     miscRegs[MISCREG_ID_AA64PFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64PFR0_EL1], 35, 32,
         haveSVE ? 0x1 : 0x0);
+    // SecEL2
+    miscRegs[MISCREG_ID_AA64PFR0_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64PFR0_EL1], 39, 36,
+        haveSecEL2 ? 0x1 : 0x0);
+    miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64ISAR0_EL1], 39, 36,
+        haveSecEL2 ? 0x1 : 0x0);
     // Large ASID support
     miscRegs[MISCREG_ID_AA64MMFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64MMFR0_EL1], 7, 4,
@@ -554,7 +563,7 @@ ISA::readMiscReg(int misc_reg)
       case MISCREG_MIDR:
         cpsr = readMiscRegNoEffect(MISCREG_CPSR);
         scr  = readMiscRegNoEffect(MISCREG_SCR);
-        if ((cpsr.mode == MODE_HYP) || inSecureState(scr, cpsr)) {
+        if ((cpsr.mode == MODE_HYP) || isSecure(tc)) {
             return readMiscRegNoEffect(misc_reg);
         } else {
             return readMiscRegNoEffect(MISCREG_VPIDR);
@@ -731,9 +740,7 @@ ISA::readMiscReg(int misc_reg)
             val &= ~(1 << 14);
             // If a CP bit in NSACR is 0 then the corresponding bit in
             // HCPTR is RAO/WI
-            bool secure_lookup = haveSecurity &&
-                inSecureState(readMiscRegNoEffect(MISCREG_SCR),
-                              readMiscRegNoEffect(MISCREG_CPSR));
+            bool secure_lookup = haveSecurity && isSecure(tc);
             if (!secure_lookup) {
                 RegVal mask = readMiscRegNoEffect(MISCREG_NSACR);
                 val |= (mask ^ 0x7FFF) & 0xBFFF;
@@ -764,6 +771,7 @@ ISA::readMiscReg(int misc_reg)
                (haveVirtualization    ? 0x0000000000000200 : 0) | // EL2
                (haveSecurity          ? 0x0000000000002000 : 0) | // EL3
                (haveSVE               ? 0x0000000100000000 : 0) | // SVE
+               (haveSecEL2            ? 0x0000001000000000 : 0) | // SecEL2
                (gicv3CpuInterface     ? 0x0000000001000000 : 0);
       case MISCREG_ID_AA64PFR1_EL1:
         return 0; // bits [63:0] RES0 (reserved for future use)
@@ -1968,9 +1976,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             {
                 // If a CP bit in NSACR is 0 then the corresponding bit in
                 // HCPTR is RAO/WI. Same applies to NSASEDIS
-                secure_lookup = haveSecurity &&
-                    inSecureState(readMiscRegNoEffect(MISCREG_SCR),
-                                  readMiscRegNoEffect(MISCREG_CPSR));
+                secure_lookup = haveSecurity && isSecure(tc);
                 if (!secure_lookup) {
                     RegVal oldValue = readMiscRegNoEffect(MISCREG_HCPTR);
                     RegVal mask =
@@ -2464,7 +2470,7 @@ ISA::getCurSveVecLenInBits() const
 
     if (el == EL2 || (el == EL0 && ELIsInHost(tc, el))) {
         len = static_cast<ZCR>(miscRegs[MISCREG_ZCR_EL2]).len;
-    } else if (haveVirtualization && !inSecureState(tc) &&
+    } else if (haveVirtualization && !isSecure(tc) &&
                (el == EL0 || el == EL1)) {
         len = std::min(
             len,

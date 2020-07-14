@@ -171,12 +171,15 @@ sendEvent(ThreadContext *tc)
 }
 
 bool
-inSecureState(ThreadContext *tc)
+isSecure(ThreadContext *tc)
 {
-    SCR scr = inAArch64(tc) ? tc->readMiscReg(MISCREG_SCR_EL3) :
-        tc->readMiscReg(MISCREG_SCR);
-    return ArmSystem::haveSecurity(tc) && inSecureState(
-        scr, tc->readMiscReg(MISCREG_CPSR));
+    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    if (ArmSystem::haveEL(tc, EL3) && !cpsr.width && currEL(tc) == EL3)
+        return true;
+    if (ArmSystem::haveEL(tc, EL3) && cpsr.width  && cpsr.mode == MODE_MON)
+        return true;
+    else
+        return isSecureBelowEL3(tc);
 }
 
 bool
@@ -190,14 +193,14 @@ ExceptionLevel
 debugTargetFrom(ThreadContext *tc, bool secure)
 {
     bool route_to_el2;
-    if (ArmSystem::haveEL(tc, EL2) && !secure){
-        if (ELIs32(tc, EL2)){
+    if (ArmSystem::haveEL(tc, EL2) && (!secure || HaveSecureEL2Ext(tc))) {
+        if (ELIs32(tc, EL2)) {
             const HCR hcr = tc->readMiscReg(MISCREG_HCR);
-            const HDCR hdcr  = tc->readMiscRegNoEffect(MISCREG_HDCR);
+            const HDCR hdcr = tc->readMiscRegNoEffect(MISCREG_HDCR);
             route_to_el2 = (hdcr.tde == 1 || hcr.tge == 1);
-        }else{
+        } else {
             const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
+            const HDCR mdcr = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
             route_to_el2 = (mdcr.tde == 1 || hcr.tge == 1);
         }
     }else{
@@ -206,10 +209,10 @@ debugTargetFrom(ThreadContext *tc, bool secure)
     ExceptionLevel target;
     if (route_to_el2) {
         target = EL2;
-    }else if (ArmSystem::haveEL(tc, EL3) && !ArmSystem::highestELIs64(tc)
-              && secure){
+    } else if (ArmSystem::haveEL(tc, EL3) && !ArmSystem::highestELIs64(tc)
+              && secure) {
         target = EL3;
-    }else{
+    } else {
         target = EL1;
     }
     return target;
@@ -344,11 +347,12 @@ bool
 IsSecureEL2Enabled(ThreadContext *tc)
 {
     SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-    if (ArmSystem::haveEL(tc, EL2) && HaveSecureEL2Ext(tc)) {
+    if (ArmSystem::haveEL(tc, EL2) && HaveSecureEL2Ext(tc) &&
+        !ELIs32(tc, EL2)) {
         if (ArmSystem::haveEL(tc, EL3))
             return !ELIs32(tc, EL3) && scr.eel2;
         else
-            return inSecureState(tc);
+            return isSecure(tc);
     }
     return false;
 }
@@ -393,6 +397,20 @@ ELUsingAArch32K(ThreadContext *tc, ExceptionLevel el)
     return ELStateUsingAArch32K(tc, el, secure);
 }
 
+bool
+haveAArch32EL(ThreadContext *tc, ExceptionLevel el)
+{
+    if (!ArmSystem::haveEL(tc, el))
+        return false;
+    else if (!ArmSystem::highestELIs64(tc))
+        return true;
+    else if (ArmSystem::highestEL(tc) == el)
+        return false;
+    else if (el == EL0)
+        return true;
+    return true;
+}
+
 std::pair<bool, bool>
 ELStateUsingAArch32K(ThreadContext *tc, ExceptionLevel el, bool secure)
 {
@@ -405,30 +423,33 @@ ELStateUsingAArch32K(ThreadContext *tc, ExceptionLevel el, bool secure)
 
     bool known, aarch32;
     known = aarch32 = false;
-    if (ArmSystem::highestELIs64(tc) && ArmSystem::highestEL(tc) == el) {
+    if (!haveAArch32EL(tc, el)) {
         // Target EL is the highest one in a system where
         // the highest is using AArch64.
+        known = true; aarch32 = false;
+    } else if (secure && el == EL2) {
         known = true; aarch32 = false;
     } else if (!ArmSystem::highestELIs64(tc)) {
         // All ELs are using AArch32:
         known = true; aarch32 = true;
+    } else if (ArmSystem::highestEL(tc) == el) {
+        known = true; aarch32 = false;
     } else {
         SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-        bool aarch32_below_el3 = (have_el3 && scr.rw == 0);
+        bool aarch32_below_el3 = have_el3 && scr.rw == 0 &&
+                            (!secure || !HaveSecureEL2Ext(tc) || !scr.eel2);
 
         HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-        bool secEL2 = false;
-        bool aarch32_at_el1 = (aarch32_below_el3
-                         || (have_el2
-                             && (secEL2 || !isSecureBelowEL3(tc))
-                             && hcr.rw == 0 && !(hcr.e2h && hcr.tge
-                                                && HaveVirtHostExt(tc))));
+        bool sec_el2 = HaveSecureEL2Ext(tc) && scr.eel2;
+        bool aarch32_at_el1 = (aarch32_below_el3 ||
+                               (have_el2 && (sec_el2 || !secure) &&
+                                hcr.rw == 0 && !(hcr.e2h && hcr.tge &&
+                                                 HaveVirtHostExt(tc))));
 
         // Only know if EL0 using AArch32 from PSTATE
         if (el == EL0 && !aarch32_at_el1) {
             // EL0 controlled by PSTATE
             CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-
             known = (currEL(tc) == EL0);
             aarch32 = (cpsr.width == 1);
         } else {

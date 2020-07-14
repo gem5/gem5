@@ -210,8 +210,7 @@ let {{
 
     vmrsCode = vmrsEnabledCheckCode + '''
     CPSR cpsr = Cpsr;
-    SCR  scr  = Scr;
-    if (!inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP)) {
+    if (!isSecure(xc->tcBase()) && (cpsr.mode != MODE_HYP)) {
         HCR hcr = Hcr;
         bool hypTrap = false;
         switch(xc->tcBase()->flattenRegId(RegId(MiscRegClass, op1)).index()) {

@@ -165,7 +165,7 @@ SelfDebug::isDebugEnabledForEL64(ThreadContext *tc, ExceptionLevel el,
                          bool secure, bool mask)
 {
     bool route_to_el2 =  ArmSystem::haveEL(tc, EL2) &&
-        !secure && enableTdeTge;
+                         (!secure || HaveSecureEL2Ext(tc)) && enableTdeTge;
 
     ExceptionLevel target_el = route_to_el2 ? EL2 : EL1;
     if (oslk || (bSDD && secure && ArmSystem::haveEL(tc, EL3))) {
@@ -269,53 +269,53 @@ BrkPoint::test(ThreadContext *tc, Addr pc, ExceptionLevel el, DBGBCR ctr,
         break;
 
       case 0x8:
-        if (ArmSystem::haveEL(tc, EL2) && !ELIsInHost(tc, el)) {
+        if (EL2Enabled(tc) && !ELIsInHost(tc, el)) {
             v = testVMIDMatch(tc);
         }
         break;
 
       case 0x9:
-        if (from_link && ArmSystem::haveEL(tc, EL2) &&
-            !ELIsInHost(tc, el)) {
+        if (from_link && EL2Enabled(tc) && !ELIsInHost(tc, el)) {
             v = testVMIDMatch(tc);
         }
         break;
 
       case 0xa:
-        if (ArmSystem::haveEL(tc, EL2) && !ELIsInHost(tc, el)) {
+        if (EL2Enabled(tc) && !ELIsInHost(tc, el)) {
             v = testContextMatch(tc, true);
             if (v && !from_link)
                  v = v && testVMIDMatch(tc);
         }
         break;
       case 0xb:
-        if (from_link && ArmSystem::haveEL(tc, EL2) &&
-            !ELIsInHost(tc, el)) {
+        if (from_link && EL2Enabled(tc) && !ELIsInHost(tc, el)) {
             v = testContextMatch(tc, true);
             v = v && testVMIDMatch(tc);
         }
         break;
 
       case 0xc:
-        if (HaveVirtHostExt(tc) && !inSecureState(tc))
+        if (HaveVirtHostExt(tc) && (!isSecure(tc)|| HaveSecureEL2Ext(tc)))
             v = testContextMatch(tc, false);
         break;
 
       case 0xd:
-        if (HaveVirtHostExt(tc) && from_link && !inSecureState(tc))
-            v = testContextMatch(tc, false);
+        if (HaveVirtHostExt(tc) && from_link &&
+            (!isSecure(tc)|| HaveSecureEL2Ext(tc))) {
+             v = testContextMatch(tc, false);
+        }
         break;
 
       case 0xe:
-        if (HaveVirtHostExt(tc) && !ELIsInHost(tc, el)
-                && !inSecureState(tc) ) {
+        if (HaveVirtHostExt(tc) && !ELIsInHost(tc, el) &&
+            (!isSecure(tc)|| HaveSecureEL2Ext(tc))) {
             v = testContextMatch(tc, true); // CONTEXTIDR_EL1
             v = v && testContextMatch(tc, false); // CONTEXTIDR_EL2
         }
         break;
       case 0xf:
-        if (HaveVirtHostExt(tc) && !ELIsInHost(tc, el) && from_link
-                && !inSecureState(tc) ) {
+        if (HaveVirtHostExt(tc) && !ELIsInHost(tc, el) && from_link &&
+            (!isSecure(tc)|| HaveSecureEL2Ext(tc))) {
             v = testContextMatch(tc, true); // CONTEXTIDR_EL1
             v = v && testContextMatch(tc, false); // CONTEXTIDR_EL2
         }
@@ -652,8 +652,9 @@ SoftwareStep::debugExceptionReturnSS(ThreadContext *tc, CPSR spsr,
 
         bool enabled_dst = false;
         bool secure = isSecureBelowEL3(tc) || dest == EL3;
-        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-        if (cpsr.width) {
+//        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+//        if (cpsr.width) {
+        if (ELIs32(tc, dest)) {
             enabled_dst = conf->isDebugEnabledForEL32(tc, dest, secure,
                                                       spsr.d == 1);
         } else {
@@ -760,7 +761,7 @@ VectorCatch::addressMatching(ThreadContext *tc, Addr addr, ExceptionLevel el)
         Addr vaddress = addr & ~ 0x1f;
         Addr low_addr = bits(addr, 5, 2);
         if (vaddress == vbase) {
-            if (ArmSystem::haveEL(tc, EL3) && !inSecureState(tc)) {
+            if (ArmSystem::haveEL(tc, EL3) && !isSecure(tc)) {
                 uint32_t bmask = 1UL << (low_addr + 24);
                 match_word = match_word | (DBGVCR) bmask;
                 // Non-secure vectors
@@ -772,7 +773,7 @@ VectorCatch::addressMatching(ThreadContext *tc, Addr addr, ExceptionLevel el)
         }
         uint32_t mvbase = getVectorBase(tc, true);
         if (ArmSystem::haveEL(tc, EL3) && ELIs32(tc, EL3) &&
-            inSecureState(tc) && (vaddress == mvbase)) {
+            isSecure(tc) && (vaddress == mvbase)) {
             uint32_t bmask = 1UL << (low_addr + 8);
             match_word = match_word | (DBGVCR) bmask;
             // Monitor vectors
@@ -793,7 +794,7 @@ VectorCatch::addressMatching(ThreadContext *tc, Addr addr, ExceptionLevel el)
         enabled = match_word != 0x0;
         // Check for UNPREDICTABLE case - match on Prefetch Abort and
         // Data Abort vectors
-        ExceptionLevel ELd = debugTargetFrom(tc, inSecureState(tc));
+        ExceptionLevel ELd = debugTargetFrom(tc, isSecure(tc));
         if (((match_word & 0x18001818) != 0x0) && ELd == el) {
             enabled = false;
         }
@@ -818,7 +819,7 @@ VectorCatch::exceptionTrapping(ThreadContext *tc, ExceptionLevel el,
         } else if (ELIs32(tc, EL3) && fault->getToMode() == MODE_MON) {
             mask = (DBGVCR) 0x0000DE00;
         } else {
-            if (inSecureState(tc))
+            if (isSecure(tc))
                 mask = (DBGVCR) 0x000000DE;
             else
                 mask = (DBGVCR) 0xDE000000;

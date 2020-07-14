@@ -75,6 +75,8 @@ class ArmSystem(System):
         "True if LSE is implemented (ARMv8.1)")
     have_pan = Param.Bool(True,
         "True if Priviledge Access Never is implemented (ARMv8.1)")
+    have_secel2 = Param.Bool(True,
+        "True if Secure EL2 is implemented (ARMv8)")
 
     semihosting = Param.ArmSemihosting(NULL,
         "Enable support for the Arm semihosting by settings this parameter")

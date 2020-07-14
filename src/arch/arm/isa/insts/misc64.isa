@@ -56,7 +56,8 @@ let {{
     ExceptionLevel pstate_EL = (ExceptionLevel)(uint8_t)(cpsr.el);
 
     bool unalloc_encod = !ArmSystem::haveEL(tc, EL2) || pstate_EL == EL0 ||
-                         (pstate_EL == EL1 && inSecureState(tc));
+                         (pstate_EL == EL1 && (!IsSecureEL2Enabled(tc) &&
+                         isSecure(tc)));
 
     bool hvc_enable = ArmSystem::haveEL(tc, EL3) ?
         scr.hce : !hcr.hcd;

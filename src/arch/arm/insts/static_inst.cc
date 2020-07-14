@@ -634,9 +634,8 @@ ArmStaticInst::softwareBreakpoint32(ExecContext *xc, uint16_t imm) const
     const auto tc = xc->tcBase();
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const HDCR mdcr = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
-    if ((ArmSystem::haveEL(tc, EL2) && !inSecureState(tc) &&
-         !ELIs32(tc, EL2) && (hcr.tge == 1 || mdcr.tde == 1)) ||
-         !ELIs32(tc, EL1)) {
+    if ((EL2Enabled(tc) && !ELIs32(tc, EL2) &&
+         (hcr.tge || mdcr.tde)) || !ELIs32(tc, EL1)) {
         // Route to AArch64 Software Breakpoint
         return std::make_shared<SoftwareBreakpoint>(machInst, imm);
     } else {
@@ -728,7 +727,7 @@ ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc,
 {
     const bool have_virtualization = ArmSystem::haveVirtualization(tc);
     const bool have_security = ArmSystem::haveSecurity(tc);
-    const bool is_secure = inSecureState(tc);
+    const bool is_secure = isSecure(tc);
     const ExceptionLevel cur_el = currEL(tc);
 
     if (cur_el == EL0 && ELIs64(tc, EL1))
@@ -908,8 +907,7 @@ ArmStaticInst::trapWFx(ThreadContext *tc,
         fault = checkForWFxTrap32(tc, EL1, isWfe);
     }
 
-    if ((fault == NoFault) &&
-        ArmSystem::haveEL(tc, EL2) && !inSecureState(scr, cpsr) &&
+    if ((fault == NoFault) && EL2Enabled(tc) &&
         ((curr_el == EL0) || (curr_el == EL1))) {
 
         fault = checkForWFxTrap32(tc, EL2, isWfe);
@@ -945,7 +943,7 @@ ArmStaticInst::checkSETENDEnabled(ThreadContext *tc, CPSR cpsr) const
         // Get the index of the banked version of SCTLR:
         // SCTLR_s or SCTLR_ns.
         auto banked_sctlr = snsBankedIndex(
-            MISCREG_SCTLR, tc, !inSecureState(tc));
+            MISCREG_SCTLR, tc, !isSecure(tc));
 
         // SCTLR.SED bit is enabling/disabling the ue of SETEND instruction.
         setend_disabled = ((SCTLR)tc->readMiscRegNoEffect(banked_sctlr)).sed;
@@ -1097,22 +1095,34 @@ illegalExceptionReturn(ThreadContext *tc, CPSR cpsr, CPSR spsr)
     if (unknownMode(mode))
         return true;
 
-    const OperatingMode cur_mode = (OperatingMode) (uint8_t)cpsr.mode;
-    const ExceptionLevel target_el = opModeToEL(mode);
+    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
-    HCR hcr = ((HCR)tc->readMiscReg(MISCREG_HCR_EL2));
-    SCR scr = ((SCR)tc->readMiscReg(MISCREG_SCR_EL3));
-
-    if (target_el > opModeToEL(cur_mode))
+    //ELFromSPSR
+    bool valid;
+    ExceptionLevel target_el = opModeToEL(mode);
+    if (!spsr.width) {
+        if (!ArmSystem::highestELIs64(tc)) {
+            valid = false;
+        } else if (!ArmSystem::haveEL(tc, target_el)) {
+            valid = false;
+        } else if (spsr & 0x2) {
+            valid = false;
+        } else if (target_el == EL0 && spsr.sp) {
+            valid = false;
+        } else if (target_el == EL2 && ArmSystem::haveEL(tc, EL3) &&
+                   !scr.ns && !IsSecureEL2Enabled(tc)) {
+            valid = false;
+        } else {
+            valid = true;
+        }
+    } else {
+        valid = !unknownMode32(mode);
+    }
+    if (!valid)
         return true;
 
-    if (!ArmSystem::haveEL(tc, target_el))
-        return true;
-
-    if (target_el == EL1 && ArmSystem::haveEL(tc, EL2) && scr.ns && hcr.tge)
-        return true;
-
-    if (target_el == EL2 && ArmSystem::haveEL(tc, EL3) && !scr.ns)
+    if (target_el > currEL(tc))
         return true;
 
     bool spsr_mode_is_aarch32 = (spsr.width == 1);
@@ -1123,17 +1133,9 @@ illegalExceptionReturn(ThreadContext *tc, CPSR cpsr, CPSR spsr)
     if (known && (spsr_mode_is_aarch32 != target_el_is_aarch32))
         return true;
 
-    if (!spsr.width) {
-        // aarch64
-        if (!ArmSystem::highestELIs64(tc))
-            return true;
-        if (spsr & 0x2)
-            return true;
-        if (target_el == EL0 && spsr.sp)
-            return true;
-    } else {
-        // aarch32
-        return unknownMode32(mode);
+    if (target_el == EL1 && ArmSystem::haveEL(tc, EL2) && hcr.tge &&
+            (IsSecureEL2Enabled(tc) || !isSecureBelowEL3(tc))) {
+        return true;
     }
 
     return false;
@@ -1206,7 +1208,7 @@ ArmStaticInst::generalExceptionsToAArch64(ThreadContext *tc,
     // AArch64 or TGE is in force and EL2 is using AArch64.
     HCR hcr = ((HCR)tc->readMiscReg(MISCREG_HCR_EL2));
     return (pstateEL == EL0 && !ELIs32(tc, EL1)) ||
-           (ArmSystem::haveEL(tc, EL2) && !inSecureState(tc) &&
+           (ArmSystem::haveEL(tc, EL2) && !isSecure(tc) &&
                !ELIs32(tc, EL2) && hcr.tge);
 }
 

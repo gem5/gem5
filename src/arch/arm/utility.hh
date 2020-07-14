@@ -128,6 +128,8 @@ inPrivilegedMode(ThreadContext *tc)
     return !inUserMode(tc);
 }
 
+bool isSecure(ThreadContext *tc);
+
 bool inAArch64(ThreadContext *tc);
 
 static inline OperatingMode
@@ -255,8 +257,6 @@ inSecureState(SCR scr, CPSR cpsr)
         return !scr.ns;
     }
 }
-
-bool inSecureState(ThreadContext *tc);
 
 bool isSecureBelowEL3(ThreadContext *tc);
 

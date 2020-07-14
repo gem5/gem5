@@ -55,7 +55,7 @@ Stage2LookUp::getTe(ThreadContext *tc, TlbEntry *destTe)
 
 {
     fault = stage2Tlb->getTE(&stage2Te, req, tc, mode, this, timing,
-                                   functional, false, tranType);
+                                   functional, secure, tranType);
     // Call finish if we're done already
     if ((fault != NoFault) || (stage2Te != NULL)) {
         // Since we directly requested the table entry (which we need later on
@@ -180,7 +180,7 @@ Stage2LookUp::finish(const Fault &_fault, const RequestPtr &req,
     // if we haven't got the table entry get it now
     if ((fault == NoFault) && (stage2Te == NULL)) {
         fault = stage2Tlb->getTE(&stage2Te, req, tc, mode, this,
-            timing, functional, false, tranType);
+            timing, functional, secure, tranType);
     }
 
     // Now we have the stage 2 table entry we need to merge it with the stage

@@ -118,7 +118,7 @@ TarmacTracerRecord::TraceInstEntry::TraceInstEntry(
     bool predicate)
       : InstEntry(tarmCtx.thread, tarmCtx.pc, tarmCtx.staticInst, predicate)
 {
-    secureMode = inSecureState(tarmCtx.thread);
+    secureMode = isSecure(tarmCtx.thread);
 
     auto arm_inst = static_cast<const ArmStaticInst*>(
         tarmCtx.staticInst.get()

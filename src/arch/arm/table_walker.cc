@@ -267,7 +267,13 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
         currState->hcr = currState->tc->readMiscReg(MISCREG_HCR_EL2);
         if (isStage2) {
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL1);
-            currState->vtcr = currState->tc->readMiscReg(MISCREG_VTCR_EL2);
+            if (currState->secureLookup) {
+                currState->vtcr =
+                    currState->tc->readMiscReg(MISCREG_VSTCR_EL2);
+            } else {
+                currState->vtcr =
+                    currState->tc->readMiscReg(MISCREG_VTCR_EL2);
+            }
         } else switch (currState->el) {
           case EL0:
             if (HaveVirtHostExt(currState->tc) &&
@@ -825,8 +831,13 @@ TableWalker::processWalkAArch64()
         break;
       case EL1:
         if (isStage2) {
-            DPRINTF(TLB, " - Selecting VTTBR0 (AArch64 stage 2)\n");
-            ttbr = currState->tc->readMiscReg(MISCREG_VTTBR_EL2);
+            if (currState->secureLookup) {
+                DPRINTF(TLB, " - Selecting VSTTBR_EL2 (AArch64 stage 2)\n");
+                ttbr = currState->tc->readMiscReg(MISCREG_VSTTBR_EL2);
+            } else {
+                DPRINTF(TLB, " - Selecting VTTBR_EL2 (AArch64 stage 2)\n");
+                ttbr = currState->tc->readMiscReg(MISCREG_VTTBR_EL2);
+            }
             tsz = 64 - currState->vtcr.t0sz64;
             tg = GrainMap_tg0[currState->vtcr.tg0];
             // ARM DDI 0487A.f D7-2148

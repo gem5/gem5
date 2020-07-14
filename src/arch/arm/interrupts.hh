@@ -145,7 +145,7 @@ class Interrupts : public BaseInterrupts
         }
 
         bool isHypMode   = currEL(tc) == EL2;
-        bool isSecure    = inSecureState(tc);
+        bool isSecure    = ArmISA::isSecure(tc);
         bool allowVIrq   = !cpsr.i && imo && !isSecure && !isHypMode;
         bool allowVFiq   = !cpsr.f && fmo && !isSecure && !isHypMode;
         bool allowVAbort = !cpsr.a && amo && !isSecure && !isHypMode;
@@ -185,7 +185,7 @@ class Interrupts : public BaseInterrupts
         virtWake  = (hcr.vi || interrupts[INT_VIRT_IRQ]) && hcr.imo;
         virtWake |= (hcr.vf || interrupts[INT_VIRT_FIQ]) && hcr.fmo;
         virtWake |=  hcr.va                              && hcr.amo;
-        virtWake &= (cpsr.mode != MODE_HYP) && !inSecureState(scr, cpsr);
+        virtWake &= (cpsr.mode != MODE_HYP) && !isSecure(tc);
         return maskedIntStatus || virtWake;
     }
 
@@ -195,7 +195,7 @@ class Interrupts : public BaseInterrupts
         bool useHcrMux;
         CPSR isr = 0; // ARM ARM states ISR reg uses same bit possitions as CPSR
 
-        useHcrMux = (cpsr.mode != MODE_HYP) && !inSecureState(scr, cpsr);
+        useHcrMux = (cpsr.mode != MODE_HYP) && !isSecure(tc);
         isr.i = (useHcrMux & hcr.imo) ? (interrupts[INT_VIRT_IRQ] || hcr.vi)
                                       :  interrupts[INT_IRQ];
         isr.f = (useHcrMux & hcr.fmo) ? (interrupts[INT_VIRT_FIQ] || hcr.vf)
@@ -247,7 +247,7 @@ class Interrupts : public BaseInterrupts
         // virtual interrupt, and if its allowed to happen
         // ARM ARM Issue C section B1.9.9, B1.9.11, and B1.9.13
         bool isHypMode   = currEL(tc) == EL2;
-        bool isSecure    = inSecureState(tc);
+        bool isSecure    = ArmISA::isSecure(tc);
         bool allowVIrq   = !cpsr.i && imo && !isSecure && !isHypMode;
         bool allowVFiq   = !cpsr.f && fmo && !isSecure && !isHypMode;
         bool allowVAbort = !cpsr.a && amo && !isSecure && !isHypMode;

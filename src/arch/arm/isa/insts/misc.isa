@@ -95,8 +95,7 @@ let {{
     SCR  scr  = Scr;
 
     if ((cpsr.mode != MODE_USER) && FullSystem) {
-        if (ArmSystem::haveVirtualization(xc->tcBase()) &&
-            !inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP) && hcr.tsc) {
+        if (EL2Enabled(xc->tcBase()) && (cpsr.mode != MODE_HYP) && hcr.tsc) {
             fault = std::make_shared<HypervisorTrap>(machInst, 0,
                                                      EC_SMC_TO_HYP);
         } else {
@@ -121,12 +120,11 @@ let {{
 
     hvcCode = '''
     CPSR cpsr = Cpsr;
-    SCR  scr  = Scr;
 
     // Filter out the various cases where this instruction isn't defined
     if (!FullSystem || !ArmSystem::haveVirtualization(xc->tcBase()) ||
         (cpsr.mode == MODE_USER) ||
-        (ArmSystem::haveSecurity(xc->tcBase()) && (!scr.ns || !scr.hce))) {
+        (isSecure(xc->tcBase()) && !IsSecureEL2Enabled(xc->tcBase()))) {
         fault = disabledFault();
     } else {
         fault = std::make_shared<HypervisorCall>(machInst, imm);
@@ -936,7 +934,7 @@ let {{
     // the register is accessable, in other modes we trap if only if the register
     // IS accessable.
     if (undefined || (!can_read && !(fault != NoFault && !inUserMode(Cpsr) &&
-                                    !inSecureState(Scr, Cpsr)))) {
+                                    !isSecure(xc->tcBase())))) {
         return std::make_shared<UndefinedInstruction>(machInst, false,
                                                       mnemonic);
     }
@@ -970,7 +968,7 @@ let {{
     // the register is accessable, in other modes we trap if only if the register
     // IS accessable.
     if (undefined || (!can_write && !(fault != NoFault && !inUserMode(Cpsr) &&
-                                      !inSecureState(Scr, Cpsr)))) {
+                                      !isSecure(xc->tcBase())))) {
         return std::make_shared<UndefinedInstruction>(machInst, false,
                                                       mnemonic);
     }
@@ -1003,7 +1001,7 @@ let {{
     // the register is accessable, in other modes we trap if only if the register
     // IS accessable.
     if (undefined || (!can_read && !(fault != NoFault && !inUserMode(Cpsr) &&
-                                     !inSecureState(Scr, Cpsr)))) {
+                                     !isSecure(xc->tcBase())))) {
         return std::make_shared<UndefinedInstruction>(machInst, false,
                                                       mnemonic);
     }
@@ -1037,7 +1035,7 @@ let {{
     // the register is accessable, in other modes we trap if only if the register
     // IS accessable.
     if (undefined || (!can_write && !(fault != NoFault && !inUserMode(Cpsr) &&
-                                     !inSecureState(Scr, Cpsr)))) {
+                                     !isSecure(xc->tcBase())))) {
         return std::make_shared<UndefinedInstruction>(machInst, false,
                                                       mnemonic);
     }
@@ -1115,7 +1113,7 @@ let {{
         // of whether the register is accessible, in other modes we
         // trap if only if the register IS accessible.
         if (undefined || (!can_write & !(hypTrap & !inUserMode(Cpsr) &
-                                         !inSecureState(Scr, Cpsr)))) {
+                                         !isSecure(xc->tcBase())))) {
             return std::make_shared<UndefinedInstruction>(machInst, false,
                                                           mnemonic);
         }

@@ -151,11 +151,10 @@ let {{
     bxjcode = '''
     HSTR hstr = Hstr;
     CPSR cpsr = Cpsr;
-    SCR  scr  = Scr;
 
     if (ArmSystem::haveVirtualization(xc->tcBase()) && hstr.tjdbx &&
-        !inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP)) {
-        fault = std::make_shared<HypervisorTrap>(machInst, op1, EC_TRAPPED_BXJ);
+        !isSecure(xc->tcBase()) && (cpsr.mode != MODE_HYP)) {
+       fault = std::make_shared<HypervisorTrap>(machInst, op1, EC_TRAPPED_BXJ);
     }
     IWNPC = Op1;
     '''

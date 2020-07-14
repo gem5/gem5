@@ -69,15 +69,16 @@ class Stage2LookUp : public BaseTLB::Translation
     Fault                   fault;
     bool                    complete;
     bool                    selfDelete;
+    bool                    secure;
 
   public:
     Stage2LookUp(TLB *s1Tlb, TLB *s2Tlb, TlbEntry s1Te, const RequestPtr &_req,
         TLB::Translation *_transState, BaseTLB::Mode _mode, bool _timing,
-        bool _functional, TLB::ArmTranslationType _tranType) :
+        bool _functional, bool _secure, TLB::ArmTranslationType _tranType) :
         stage1Tlb(s1Tlb), stage2Tlb(s2Tlb), stage1Te(s1Te), s1Req(_req),
         transState(_transState), mode(_mode), timing(_timing),
         functional(_functional), tranType(_tranType), stage2Te(nullptr),
-        fault(NoFault), complete(false), selfDelete(false)
+        fault(NoFault), complete(false), selfDelete(false), secure(_secure)
     {
         req = std::make_shared<Request>();
         req->setVirt(s1Te.pAddr(s1Req->getVaddr()), s1Req->getSize(),

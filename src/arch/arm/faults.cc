@@ -977,10 +977,12 @@ ArmFaultVals<T>::offset64(ThreadContext *tc)
     } else {
         bool lower_32 = false;
         if (toEL == EL3) {
-            if (!inSecureState(tc) && ArmSystem::haveEL(tc, EL2))
+            if (EL2Enabled(tc))
                 lower_32 = ELIs32(tc, EL2);
             else
                 lower_32 = ELIs32(tc, EL1);
+        } else if (ELIsInHost(tc, fromEL) && fromEL == EL0 && toEL == EL2) {
+            lower_32 = ELIs32(tc, EL0);
         } else {
             lower_32 = ELIs32(tc, static_cast<ExceptionLevel>(toEL - 1));
         }
@@ -1310,7 +1312,7 @@ PrefetchAbort::routeToHyp(ThreadContext *tc) const
     HDCR hdcr = tc->readMiscRegNoEffect(MISCREG_HDCR);
 
     toHyp = fromEL == EL2;
-    toHyp |=  ArmSystem::haveEL(tc, EL2) && !inSecureState(tc) &&
+    toHyp |=  ArmSystem::haveEL(tc, EL2) && !isSecure(tc) &&
         currEL(tc) <= EL1 && (hcr.tge || stage2 ||
                               (source == DebugEvent && hdcr.tde));
      return toHyp;

@@ -244,7 +244,7 @@ ArmSemihosting::portProxy(ThreadContext *tc)
     static std::unique_ptr<PortProxy> port_proxy_s;
     static System *secure_sys = nullptr;
 
-    if (ArmISA::inSecureState(tc)) {
+    if (ArmISA::isSecure(tc)) {
         System *sys = tc->getSystemPtr();
         if (sys != secure_sys) {
             if (FullSystem) {

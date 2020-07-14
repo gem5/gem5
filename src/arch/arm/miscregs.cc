@@ -2356,6 +2356,14 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_VTCR_EL2;
                     }
                     break;
+                  case 6:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_VSTTBR_EL2;
+                      case 2:
+                        return MISCREG_VSTCR_EL2;
+                    }
+                    break;
                 }
                 break;
               case 5:
@@ -4880,6 +4888,10 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_VTCR_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_VTCR);
+    InitReg(MISCREG_VSTTBR_EL2)
+      .hyp().mon();
+    InitReg(MISCREG_VSTCR_EL2)
+      .hyp().mon();
     InitReg(MISCREG_TTBR0_EL3)
       .mon();
     InitReg(MISCREG_TCR_EL3)

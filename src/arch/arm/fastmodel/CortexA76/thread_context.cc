@@ -59,7 +59,7 @@ CortexA76TC::translateAddress(Addr &paddr, Addr vaddr)
         break;
     }
 
-    Iris::CanonicalMsn out_msn = inSecureState(this) ?
+    Iris::CanonicalMsn out_msn = isSecure(this) ?
         Iris::PhysicalMemorySecureMsn : Iris::PhysicalMemoryNonSecureMsn;
 
     // Figure out what memory spaces match the canonical numbers we need.

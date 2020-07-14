@@ -95,6 +95,7 @@ namespace ArmISA
         bool haveSVE;
         bool haveLSE;
         bool havePAN;
+        bool haveSecEL2;
 
         /** SVE vector length in quadwords */
         unsigned sveVL;
@@ -695,7 +696,7 @@ namespace ArmISA
             if (hcr.e2h == 0x0 || currEL(tc) != EL2)
                 return misc_reg;
             SCR scr = readMiscRegNoEffect(MISCREG_SCR_EL3);
-            bool sec_el2 = scr.eel2 && false;
+            bool sec_el2 = scr.eel2 && haveSecEL2;
             switch(misc_reg) {
               case MISCREG_SPSR_EL1:
                   return MISCREG_SPSR_EL2;

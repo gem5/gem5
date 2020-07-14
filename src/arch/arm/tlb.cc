@@ -833,6 +833,8 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
     bool w = is_write;
     bool x = is_fetch;
 
+    xn = ArmSystem::haveEL(tc, EL3) && isSecure && te->ns && scr.sif;
+
     // grant_read is used for faults from an atomic instruction that
     // both reads and writes from a memory location. From a ISS point
     // of view they count as read if a read to that address would have
@@ -1351,7 +1353,7 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
     cpsr = tc->readMiscReg(MISCREG_CPSR);
 
     // Dependencies: SCR/SCR_EL3, CPSR
-    isSecure = inSecureState(tc) &&
+    isSecure = ArmISA::isSecure(tc) &&
         !(tranType & HypMode) && !(tranType & S1S2NsTran);
 
     aarch64EL = tranTypeEL(cpsr, tranType);
@@ -1420,11 +1422,17 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
         scr = tc->readMiscReg(MISCREG_SCR_EL3);
         isPriv = aarch64EL != EL0;
         if (haveVirtualization) {
-            vmid  = bits(tc->readMiscReg(MISCREG_VTTBR_EL2), 55, 48);
+            uint64_t vttbr = isSecure? tc->readMiscReg(MISCREG_VSTTBR_EL2):
+                                       tc->readMiscReg(MISCREG_VTTBR_EL2);
+            vmid           = bits(vttbr, 55, 48);
             isHyp = aarch64EL == EL2;
             isHyp |= tranType & HypMode;
             isHyp &= (tranType & S1S2NsTran) == 0;
             isHyp &= (tranType & S1CTran)    == 0;
+            bool vm = hcr.vm;
+            if (HaveVirtHostExt(tc) && hcr.e2h == 1 && hcr.tge ==1) {
+                vm = 0;
+            }
 
             if (hcr.e2h == 1 && (aarch64EL == EL2
                                   || (hcr.tge ==1 && aarch64EL == EL0))) {
@@ -1436,16 +1444,12 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
             // Work out if we should skip the first stage of translation and go
             // directly to stage 2. This value is cached so we don't have to
             // compute it for every translation.
-                bool vm = hcr.vm;
-                if (HaveVirtHostExt(tc) && hcr.e2h == 1 && hcr.tge == 1) {
-                    vm = 0;
-                }
-
+                bool sec = !isSecure || (isSecure && IsSecureEL2Enabled(tc));
                 stage2Req = isStage2 ||
-                            (vm && !isHyp && !isSecure &&
+                            (vm && !isHyp && sec &&
                              !(tranType & S1CTran) && (aarch64EL < EL2) &&
                              !(tranType & S1E1Tran)); // <--- FIX THIS HACK
-                stage2DescReq = isStage2 ||  (vm && !isHyp && !isSecure &&
+                stage2DescReq = isStage2 ||  (vm && !isHyp && sec &&
                                 (aarch64EL < EL2));
                 directToStage2 = !isStage2 && stage2Req && !sctlr.m;
             }
@@ -1494,9 +1498,10 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
             // Work out if we should skip the first stage of translation and go
             // directly to stage 2. This value is cached so we don't have to
             // compute it for every translation.
-            stage2Req      = hcr.vm && !isStage2 && !isHyp && !isSecure &&
+            bool sec = !isSecure || (isSecure && IsSecureEL2Enabled(tc));
+            stage2Req      = hcr.vm && !isStage2 && !isHyp && sec &&
                              !(tranType & S1CTran);
-            stage2DescReq  = hcr.vm && !isStage2 && !isHyp && !isSecure;
+            stage2DescReq  = hcr.vm && !isStage2 && !isHyp && sec;
             directToStage2 = stage2Req && !sctlr.m;
         } else {
             vmid           = 0;
@@ -1652,7 +1657,8 @@ TLB::getResultTe(TlbEntry **te, const RequestPtr &req,
             fault = checkPermissions(s1Te, req, mode);
         if (stage2Req & (fault == NoFault)) {
             Stage2LookUp *s2Lookup = new Stage2LookUp(this, stage2Tlb, *s1Te,
-                req, translation, mode, timing, functional, curTranType);
+                req, translation, mode, timing, functional, !(s1Te->ns),
+                curTranType);
             fault = s2Lookup->getTe(tc, mergeTe);
             if (s2Lookup->isComplete()) {
                 *te = mergeTe;

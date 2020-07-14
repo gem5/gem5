@@ -70,6 +70,7 @@ ArmSystem::ArmSystem(Params *p)
       _sveVL(p->sve_vl),
       _haveLSE(p->have_lse),
       _havePAN(p->have_pan),
+      _haveSecEL2(p->have_secel2),
       semihosting(p->semihosting),
       multiProc(p->multi_proc)
 {

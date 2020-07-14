@@ -341,11 +341,11 @@ class SelfDebug
     {
         switch (ssc) {
             case 0x0: return true;
-            case 0x1: return !inSecureState(tc);
-            case 0x2: return inSecureState(tc);
+            case 0x1: return !isSecure(tc);
+            case 0x2: return isSecure(tc);
             case 0x3:
                 {
-                    bool b = hmc? true: inSecureState(tc);
+                    bool b = hmc? true: isSecure(tc);
                     return b;
                 }
             default: panic("Unreachable value");
@@ -372,10 +372,10 @@ class SelfDebug
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
         ExceptionLevel el = (ExceptionLevel) currEL(tc);
         if (aarch32) {
-            return isDebugEnabledForEL32(tc, el, inSecureState(tc),
+            return isDebugEnabledForEL32(tc, el, isSecure(tc),
                                          (bool)cpsr.d == 1);
         } else {
-            return isDebugEnabledForEL64(tc, el, inSecureState(tc),
+            return isDebugEnabledForEL64(tc, el, isSecure(tc),
                                          (bool)cpsr.d == 1 );
         }
     }
@@ -464,7 +464,7 @@ class SelfDebug
     bool
     targetAArch32(ThreadContext *tc)
     {
-        ExceptionLevel ELd = debugTargetFrom(tc, inSecureState(tc));
+        ExceptionLevel ELd = debugTargetFrom(tc, isSecure(tc));
         return ELIs32(tc, ELd) && aarch32;
     }
 

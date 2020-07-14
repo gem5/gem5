@@ -128,6 +128,9 @@ class ArmSystem : public System
     /** True if Priviledge Access Never is implemented */
     const unsigned _havePAN;
 
+    /** True if Secure EL2 is implemented */
+    const unsigned _haveSecEL2;
+
     /**
      * True if the Semihosting interface is enabled.
      */
@@ -222,6 +225,9 @@ class ArmSystem : public System
 
     /** Returns true if Priviledge Access Never is implemented */
     bool havePAN() const { return _havePAN; }
+
+    /** Returns true if Priviledge Access Never is implemented */
+    bool haveSecEL2() const { return _haveSecEL2; }
 
     /** Returns the supported physical address range in bits if the highest
      * implemented exception level is 64 bits (ARMv8) */
