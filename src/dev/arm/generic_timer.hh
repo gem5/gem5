@@ -71,7 +71,7 @@ class GenericTimerMemParams;
 
 /// Abstract class for elements whose events depend on the counting speed
 /// of the System Counter
-class SystemCounterListener : public Serializable
+class SystemCounterListener
 {
   public:
     /// Called from the SystemCounter when a change in counting speed occurred
@@ -174,7 +174,8 @@ class SystemCounter : public SimObject
 };
 
 /// Per-CPU architected timer.
-class ArchTimer : public SystemCounterListener, public Drainable
+class ArchTimer : public SystemCounterListener, public Drainable,
+                  public Serializable
 {
   protected:
     /// Control register.
@@ -297,7 +298,7 @@ class GenericTimer : public SimObject
     RegVal readMiscReg(int misc_reg, unsigned cpu);
 
   protected:
-    class CoreTimers : public SystemCounterListener
+    class CoreTimers : public SystemCounterListener, public Serializable
     {
       public:
         CoreTimers(GenericTimer &_parent, ArmSystem &system, unsigned cpu,
