@@ -73,7 +73,7 @@ DRAMFile('Transaction.cpp')
 # DRAMSim2 violates some of the warning flags used by gem5, so
 # we explicitly disable them here
 dramenv = main.Clone()
-dramenv.Append(CCFLAGS=['-Wno-unused-value'])
+dramenv.Append(CCFLAGS=['-Wno-unused-value', '-Wno-error=nonnull-compare'])
 
 # If we are using clang, there are more flags to disable
 if main['CLANG']:
