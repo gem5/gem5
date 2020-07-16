@@ -406,6 +406,8 @@ class HypervisorCall : public ArmFaultVals<HypervisorCall>
   public:
     HypervisorCall(ExtMachInst _machInst, uint32_t _imm);
 
+    bool routeToHyp(ThreadContext *tc) const override;
+    bool routeToMonitor(ThreadContext *tc) const override;
     ExceptionClass ec(ThreadContext *tc) const override;
     uint32_t vectorCatchFlag() const override { return 0xFFFFFFFF; }
 };
@@ -677,6 +679,8 @@ class IllegalInstSetStateFault : public ArmFaultVals<IllegalInstSetStateFault>
 {
   public:
     IllegalInstSetStateFault();
+
+    bool routeToHyp(ThreadContext *tc) const override;
 };
 
 /*

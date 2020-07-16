@@ -819,17 +819,9 @@ UndefinedInstruction::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 bool
 UndefinedInstruction::routeToHyp(ThreadContext *tc) const
 {
-    bool toHyp;
-
-    SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR);
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
-    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
-
-    // if in Hyp mode then stay in Hyp mode
-    toHyp  = scr.ns && (currEL(tc) == EL2);
-    // if HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector
-    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (currEL(tc) == EL0);
-    return toHyp;
+    return fromEL == EL2 ||
+           (EL2Enabled(tc) && (fromEL == EL0) && hcr.tge);
 }
 
 uint32_t
@@ -885,7 +877,8 @@ bool
 SupervisorCall::routeToHyp(ThreadContext *tc) const
 {
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
-    return EL2Enabled(tc) && currEL(tc) == EL0 && hcr.tge == 1;
+    return fromEL == EL2 ||
+           (EL2Enabled(tc) && fromEL == EL0 && hcr.tge);
 }
 
 ExceptionClass
@@ -927,6 +920,18 @@ HypervisorCall::HypervisorCall(ExtMachInst _machInst, uint32_t _imm) :
         ArmFaultVals<HypervisorCall>(_machInst, _imm)
 {
     bStep = true;
+}
+
+bool
+HypervisorCall::routeToMonitor(ThreadContext *tc) const
+{
+    return from64 && fromEL == EL3;
+}
+
+bool
+HypervisorCall::routeToHyp(ThreadContext *tc) const
+{
+    return !from64 || fromEL != EL3;
 }
 
 ExceptionClass
@@ -1301,20 +1306,14 @@ PrefetchAbort::routeToHyp(ThreadContext *tc) const
 {
     bool toHyp;
 
-    SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR);
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
     HDCR hdcr = tc->readMiscRegNoEffect(MISCREG_HDCR);
 
-    // if in Hyp mode then stay in Hyp mode
-    toHyp = scr.ns && (currEL(tc) == EL2);
-    toHyp |= (currEL(tc) <= EL1) && hcr.tge;
-    // otherwise, check whether to take to Hyp mode through Hyp Trap vector
-    toHyp |= (stage2 ||
-              ((source == DebugEvent) && (hdcr.tde || hcr.tge) &&
-               (currEL(tc) != EL2)) ||
-              ((source == SynchronousExternalAbort) && hcr.tge  &&
-               (currEL(tc) == EL0))) && !inSecureState(tc);
-    return toHyp;
+    toHyp = fromEL == EL2;
+    toHyp |=  ArmSystem::haveEL(tc, EL2) && !inSecureState(tc) &&
+        currEL(tc) <= EL1 && (hcr.tge || stage2 ||
+                              (source == DebugEvent && hdcr.tde));
+     return toHyp;
 }
 
 ExceptionClass
@@ -1363,21 +1362,22 @@ DataAbort::routeToHyp(ThreadContext *tc) const
 {
     bool toHyp;
 
-    SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR);
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
     HDCR hdcr = tc->readMiscRegNoEffect(MISCREG_HDCR);
 
+    bool amo = hcr.amo;
+    if (hcr.tge == 1)
+        amo =  (!HaveVirtHostExt(tc) || hcr.e2h == 0);
+
     // if in Hyp mode then stay in Hyp mode
-    toHyp = scr.ns && (currEL(tc) == EL2);
-    toHyp |= (currEL(tc) <= EL1 && hcr.tge==1);
-    // otherwise, check whether to take to Hyp mode through Hyp Trap vector
-    toHyp |= (stage2 ||
-              ((currEL(tc) != EL2) &&
-               (((source == AsynchronousExternalAbort) && hcr.amo) ||
-                ((source == DebugEvent) && (hdcr.tde || hcr.tge)))) ||
-              ((currEL(tc) == EL0) && hcr.tge &&
-               ((source == AlignmentFault) ||
-                (source == SynchronousExternalAbort)))) && !inSecureState(tc);
+    toHyp = fromEL == EL2 ||
+            (EL2Enabled(tc) && fromEL <= EL1
+                && (hcr.tge || stage2 ||
+                    ((source == AsynchronousExternalAbort) && amo) ||
+                    ((fromEL == EL0) && hcr.tge &&
+                     ((source == AlignmentFault) ||
+                      (source == SynchronousExternalAbort))) ||
+                    ((source == DebugEvent) && (hdcr.tde || hcr.tge))));
     return toHyp;
 }
 
@@ -1472,7 +1472,7 @@ Interrupt::routeToHyp(ThreadContext *tc) const
 {
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
     return fromEL == EL2 ||
-           (EL2Enabled(tc) && fromEL <= EL1 && (hcr.tge == 1 || hcr.imo));
+           (EL2Enabled(tc) && fromEL <= EL1 && (hcr.tge || hcr.imo));
 }
 
 bool
@@ -1505,7 +1505,7 @@ FastInterrupt::routeToHyp(ThreadContext *tc) const
 {
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
     return fromEL == EL2 ||
-           (EL2Enabled(tc) && fromEL <= EL1 && (hcr.tge == 1 || hcr.fmo));
+           (EL2Enabled(tc) && fromEL <= EL1 && (hcr.tge || hcr.fmo));
 }
 
 bool
@@ -1546,7 +1546,7 @@ bool
 PCAlignmentFault::routeToHyp(ThreadContext *tc) const
 {
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
-    return EL2Enabled(tc) && currEL(tc) <= EL1 && hcr.tge == 1;
+    return fromEL == EL2 || (EL2Enabled(tc) && fromEL <= EL1 && hcr.tge);
 }
 
 SPAlignmentFault::SPAlignmentFault()
@@ -1576,21 +1576,18 @@ SystemError::routeToMonitor(ThreadContext *tc) const
     assert(ArmSystem::haveSecurity(tc));
     assert(from64);
     SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
-    return scr.ea;
+    return scr.ea || fromEL == EL3;
 }
 
 bool
 SystemError::routeToHyp(ThreadContext *tc) const
 {
-    bool toHyp;
     assert(from64);
 
-    SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
-    HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
+    HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
 
-    toHyp = (!scr.ea && hcr.amo && !inSecureState(tc)) ||
-            (!scr.ea && !scr.rw && !hcr.amo && !inSecureState(tc));
-    return toHyp;
+    return fromEL == EL2 ||
+           (EL2Enabled(tc) && fromEL <= EL1 && (hcr.tge || hcr.amo));
 }
 
 
@@ -1601,13 +1598,11 @@ SoftwareBreakpoint::SoftwareBreakpoint(ExtMachInst _mach_inst, uint32_t _iss)
 bool
 SoftwareBreakpoint::routeToHyp(ThreadContext *tc) const
 {
-    const bool have_el2 = ArmSystem::haveVirtualization(tc);
-
     const HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
 
-    return have_el2 && !inSecureState(tc) && fromEL <= EL1 &&
-        (hcr.tge || mdcr.tde);
+    return fromEL == EL2 ||
+           (EL2Enabled(tc) && fromEL <= EL1 && (hcr.tge || mdcr.tde));
 }
 
 ExceptionClass
@@ -1623,13 +1618,10 @@ HardwareBreakpoint::HardwareBreakpoint(Addr _vaddr,  uint32_t _iss)
 bool
 HardwareBreakpoint::routeToHyp(ThreadContext *tc) const
 {
-    const bool have_el2 = ArmSystem::haveVirtualization(tc);
-
     const HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
 
-    return have_el2 && !inSecureState(tc) && fromEL <= EL1 &&
-        (hcr.tge || mdcr.tde);
+    return EL2Enabled(tc) && fromEL <= EL1 && (hcr.tge || mdcr.tde);
 }
 
 ExceptionClass
@@ -1704,8 +1696,8 @@ Watchpoint::routeToHyp(ThreadContext *tc) const
     const HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
 
-    return fromEL == EL2 || (EL2Enabled(tc) && fromEL <= EL1 &&
-                             (hcr.tge || mdcr.tde));
+    return fromEL == EL2 ||
+           (EL2Enabled(tc) && fromEL <= EL1 && (hcr.tge || mdcr.tde));
 }
 
 void
@@ -1744,13 +1736,11 @@ SoftwareStepFault::SoftwareStepFault(ExtMachInst _mach_inst, bool is_ldx,
 bool
 SoftwareStepFault::routeToHyp(ThreadContext *tc) const
 {
-    const bool have_el2 = ArmSystem::haveVirtualization(tc);
-
     const HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
 
-    return have_el2 && !inSecureState(tc) && fromEL <= EL1 &&
-        (hcr.tge || mdcr.tde);
+    return fromEL == EL2 ||
+           (EL2Enabled(tc) && fromEL <= EL1 && (hcr.tge || mdcr.tde));
 }
 
 ExceptionClass
@@ -1823,6 +1813,13 @@ template class AbortFault<VirtualDataAbort>;
 
 IllegalInstSetStateFault::IllegalInstSetStateFault()
 {}
+
+bool
+IllegalInstSetStateFault::routeToHyp(ThreadContext *tc) const
+{
+    const HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    return EL2Enabled(tc) && fromEL == EL0 && hcr.tge;
+}
 
 bool
 getFaultVAddr(Fault fault, Addr &va)
