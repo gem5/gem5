@@ -380,6 +380,12 @@ TransitionResult doTransitionWorker(${ident}_Event event,
         code('''
                                     Addr addr);
 
+${ident}_Event m_curTransitionEvent;
+${ident}_State m_curTransitionNextState;
+
+${ident}_Event curTransitionEvent() { return m_curTransitionEvent; }
+${ident}_State curTransitionNextState() { return m_curTransitionNextState; }
+
 int m_counters[${ident}_State_NUM][${ident}_Event_NUM];
 int m_event_counters[${ident}_Event_NUM];
 bool m_possible[${ident}_State_NUM][${ident}_Event_NUM];
@@ -1407,6 +1413,8 @@ ${ident}_Controller::doTransitionWorker(${ident}_Event event,
         code('''
                                         Addr addr)
 {
+    m_curTransitionEvent = event;
+    m_curTransitionNextState = next_state;
     switch(HASH_FUN(state, event)) {
 ''')
 
@@ -1427,10 +1435,12 @@ ${ident}_Controller::doTransitionWorker(${ident}_Event event,
                     # is determined before any actions of the transition
                     # execute, and therefore the next state calculation cannot
                     # depend on any of the transitionactions.
-                    case('next_state = getNextState(addr);')
+                    case('next_state = getNextState(addr); '
+                         'm_curTransitionNextState = next_state;')
                 else:
                     ns_ident = trans.nextState.ident
-                    case('next_state = ${ident}_State_${ns_ident};')
+                    case('next_state = ${ident}_State_${ns_ident}; '
+                         'm_curTransitionNextState = next_state;')
 
             actions = trans.actions
             request_types = trans.request_types
