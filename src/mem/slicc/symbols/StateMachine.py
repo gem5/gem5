@@ -854,6 +854,36 @@ $c_ident::regStats()
             }
         }
     }
+    for (${ident}_Event event = ${ident}_Event_FIRST;
+                 event < ${ident}_Event_NUM; ++event) {
+        Stats::Histogram* t = new Stats::Histogram;
+        m_outTransLatHist.push_back(t);
+        t->init(5);
+        t->name(name() + ".outTransLatHist." +
+                    ${ident}_Event_to_string(event));
+        t->flags(Stats::pdf | Stats::total |
+                 Stats::oneline | Stats::nozero);
+    }
+    for (${ident}_Event event = ${ident}_Event_FIRST;
+                 event < ${ident}_Event_NUM; ++event) {
+        m_inTransLatHist.emplace_back();
+        for (${ident}_State initial_state = ${ident}_State_FIRST;
+             initial_state < ${ident}_State_NUM; ++initial_state) {
+            m_inTransLatHist.back().emplace_back();
+            for (${ident}_State final_state = ${ident}_State_FIRST;
+                 final_state < ${ident}_State_NUM; ++final_state) {
+                Stats::Histogram* t = new Stats::Histogram;
+                m_inTransLatHist.back().back().push_back(t);
+                t->init(5);
+                t->name(name() + ".inTransLatHist." +
+                            ${ident}_Event_to_string(event) + "." +
+                            ${ident}_State_to_string(initial_state) + "." +
+                            ${ident}_State_to_string(final_state));
+                t->flags(Stats::pdf | Stats::total |
+                         Stats::oneline | Stats::nozero);
+            }
+        }
+    }
 }
 
 void

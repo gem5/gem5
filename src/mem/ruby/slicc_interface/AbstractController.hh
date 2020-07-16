@@ -181,6 +181,84 @@ class AbstractController : public ClockedObject, public Consumer
     //! Profiles the delay associated with messages.
     void profileMsgDelay(uint32_t virtualNetwork, Cycles delay);
 
+    // Tracks outstanding transactions for latency profiling
+    struct TransMapPair { unsigned transaction; unsigned state; Tick time; };
+    std::unordered_map<Addr, TransMapPair> m_inTrans;
+    std::unordered_map<Addr, TransMapPair> m_outTrans;
+
+    // Initialized by the SLICC compiler for all combinations of event and
+    // states. Only histograms with samples will appear in the stats
+    std::vector<std::vector<std::vector<Stats::Histogram*>>> m_inTransLatHist;
+
+    // Initialized by the SLICC compiler for all events.
+    // Only histograms with samples will appear in the stats.
+    std::vector<Stats::Histogram*> m_outTransLatHist;
+
+    /**
+     * Profiles an event that initiates a protocol transactions for a specific
+     * line (e.g. events triggered by incoming request messages).
+     * A histogram with the latency of the transactions is generated for
+     * all combinations of trigger event, initial state, and final state.
+     *
+     * @param addr address of the line
+     * @param type event that started the transaction
+     * @param initialState state of the line before the transaction
+     */
+    template<typename EventType, typename StateType>
+    void incomingTransactionStart(Addr addr,
+        EventType type, StateType initialState)
+    {
+        assert(m_inTrans.find(addr) == m_inTrans.end());
+        m_inTrans[addr] = {type, initialState, curTick()};
+    }
+
+    /**
+     * Profiles an event that ends a transaction.
+     *
+     * @param addr address of the line with a outstanding transaction
+     * @param finalState state of the line after the transaction
+     */
+    template<typename StateType>
+    void incomingTransactionEnd(Addr addr, StateType finalState)
+    {
+        auto iter = m_inTrans.find(addr);
+        assert(iter != m_inTrans.end());
+        m_inTransLatHist[iter->second.transaction]
+                        [iter->second.state]
+                        [(unsigned)finalState]->sample(
+                          ticksToCycles(curTick() - iter->second.time));
+       m_inTrans.erase(iter);
+    }
+
+    /**
+     * Profiles an event that initiates a transaction in a peer controller
+     * (e.g. an event that sends a request message)
+     *
+     * @param addr address of the line
+     * @param type event that started the transaction
+     */
+    template<typename EventType>
+    void outgoingTransactionStart(Addr addr, EventType type)
+    {
+        assert(m_outTrans.find(addr) == m_outTrans.end());
+        m_outTrans[addr] = {type, 0, curTick()};
+    }
+
+    /**
+     * Profiles the end of an outgoing transaction.
+     * (e.g. receiving the response for a requests)
+     *
+     * @param addr address of the line with an outstanding transaction
+     */
+    void outgoingTransactionEnd(Addr addr)
+    {
+        auto iter = m_outTrans.find(addr);
+        assert(iter != m_outTrans.end());
+        m_outTransLatHist[iter->second.transaction]->sample(
+            ticksToCycles(curTick() - iter->second.time));
+        m_outTrans.erase(iter);
+    }
+
     void stallBuffer(MessageBuffer* buf, Addr addr);
     void wakeUpBuffers(Addr addr);
     void wakeUpAllBuffers(Addr addr);
