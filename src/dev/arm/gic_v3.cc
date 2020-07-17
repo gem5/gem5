@@ -193,8 +193,12 @@ Gicv3::sendPPInt(uint32_t int_id, uint32_t cpu)
 }
 
 void
-Gicv3::clearPPInt(uint32_t num, uint32_t cpu)
+Gicv3::clearPPInt(uint32_t int_id, uint32_t cpu)
 {
+    panic_if(cpu >= redistributors.size(), "Invalid cpuID clearing PPI!");
+    DPRINTF(Interrupt, "Gicv3::clearPPInt(): received PPI %d cpuTarget %#x\n",
+            int_id, cpu);
+    redistributors[cpu]->clearPPInt(int_id);
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2019-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -153,6 +153,7 @@ class Gicv3Redistributor : public Serializable
     std::vector <uint8_t> irqGroup;
     std::vector <bool> irqEnabled;
     std::vector <bool> irqPending;
+    std::vector <bool> irqPendingIspendr;
     std::vector <bool> irqActive;
     std::vector <uint8_t> irqPriority;
     std::vector <Gicv3::IntTriggerType> irqConfig;
@@ -221,6 +222,29 @@ class Gicv3Redistributor : public Serializable
     void update();
     void updateDistributor();
 
+  protected:
+
+    bool isLevelSensitive(uint32_t int_id) const
+    {
+        return irqConfig[int_id] == Gicv3::INT_LEVEL_SENSITIVE;
+    }
+
+    /**
+     * This helper is used to check if an interrupt should be treated as
+     * edge triggered in the following scenarios:
+     *
+     * a) While activating the interrupt
+     * b) While clearing an interrupt via ICPENDR
+     *
+     * In fact, in these two situations, a level sensitive interrupt
+     * which had been made pending via a write to ISPENDR, will be
+     * treated as it if was edge triggered.
+     */
+    bool treatAsEdgeTriggered(uint32_t int_id) const
+    {
+        return !isLevelSensitive(int_id) || irqPendingIspendr[int_id];
+    }
+
   public:
 
     Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id);
@@ -228,6 +252,7 @@ class Gicv3Redistributor : public Serializable
     void init();
     uint64_t read(Addr addr, size_t size, bool is_secure_access);
     void sendPPInt(uint32_t int_id);
+    void clearPPInt(uint32_t int_id);
     void write(Addr addr, uint64_t data, size_t size, bool is_secure_access);
 };
 
