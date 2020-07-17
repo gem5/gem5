@@ -150,7 +150,6 @@ VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
     std::shared_ptr<RubyRequest> msg;
     if (pkt->isAtomicOp()) {
         msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                              pkt->getPtr<uint8_t>(),
                               pkt->getSize(), pc, crequest->getRubyType(),
                               RubyAccessMode_Supervisor, pkt,
                               PrefetchBit_No, proc_id, 100,
@@ -158,7 +157,6 @@ VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
                               dataBlock, atomicOps, crequest->getSeqNum());
     } else {
         msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                              pkt->getPtr<uint8_t>(),
                               pkt->getSize(), pc, crequest->getRubyType(),
                               RubyAccessMode_Supervisor, pkt,
                               PrefetchBit_No, proc_id, 100,
@@ -288,7 +286,7 @@ VIPERCoalescer::invTCP()
         // Evict Read-only data
         RubyRequestType request_type = RubyRequestType_REPLACEMENT;
         std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
-            clockEdge(), addr, (uint8_t*) 0, 0, 0,
+            clockEdge(), addr, 0, 0,
             request_type, RubyAccessMode_Supervisor,
             nullptr);
         DPRINTF(GPUCoalescer, "Evicting addr 0x%x\n", addr);

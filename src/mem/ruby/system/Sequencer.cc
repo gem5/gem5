@@ -769,8 +769,6 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
     // requests do not
     std::shared_ptr<RubyRequest> msg =
         std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                                      pkt->isFlush() ?
-                                      nullptr : pkt->getPtr<uint8_t>(),
                                       pkt->getSize(), pc, secondary_type,
                                       RubyAccessMode_Supervisor, pkt,
                                       PrefetchBit_No, proc_id, core_id);

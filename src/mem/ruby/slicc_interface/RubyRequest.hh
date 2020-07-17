@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -62,7 +62,6 @@ class RubyRequest : public Message
     RubyAccessMode m_AccessMode;
     int m_Size;
     PrefetchBit m_Prefetch;
-    uint8_t* data;
     PacketPtr m_pkt;
     ContextID m_contextId;
     WriteMask m_writeMask;
@@ -72,7 +71,7 @@ class RubyRequest : public Message
     bool m_htmFromTransaction;
     uint64_t m_htmTransactionUid;
 
-    RubyRequest(Tick curTime, uint64_t _paddr, uint8_t* _data, int _len,
+    RubyRequest(Tick curTime, uint64_t _paddr, int _len,
         uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode,
         PacketPtr _pkt, PrefetchBit _pb = PrefetchBit_No,
         ContextID _proc_id = 100, ContextID _core_id = 99)
@@ -83,7 +82,6 @@ class RubyRequest : public Message
           m_AccessMode(_access_mode),
           m_Size(_len),
           m_Prefetch(_pb),
-          data(_data),
           m_pkt(_pkt),
           m_contextId(_core_id),
           m_htmFromTransaction(false),
@@ -92,7 +90,7 @@ class RubyRequest : public Message
         m_LineAddress = makeLineAddress(m_PhysicalAddress);
     }
 
-    RubyRequest(Tick curTime, uint64_t _paddr, uint8_t* _data, int _len,
+    RubyRequest(Tick curTime, uint64_t _paddr, int _len,
         uint64_t _pc, RubyRequestType _type,
         RubyAccessMode _access_mode, PacketPtr _pkt, PrefetchBit _pb,
         unsigned _proc_id, unsigned _core_id,
@@ -106,7 +104,6 @@ class RubyRequest : public Message
           m_AccessMode(_access_mode),
           m_Size(_len),
           m_Prefetch(_pb),
-          data(_data),
           m_pkt(_pkt),
           m_contextId(_core_id),
           m_writeMask(_wm_size,_wm_mask),
@@ -119,7 +116,7 @@ class RubyRequest : public Message
         m_LineAddress = makeLineAddress(m_PhysicalAddress);
     }
 
-    RubyRequest(Tick curTime, uint64_t _paddr, uint8_t* _data, int _len,
+    RubyRequest(Tick curTime, uint64_t _paddr, int _len,
         uint64_t _pc, RubyRequestType _type,
         RubyAccessMode _access_mode, PacketPtr _pkt, PrefetchBit _pb,
         unsigned _proc_id, unsigned _core_id,
@@ -134,7 +131,6 @@ class RubyRequest : public Message
           m_AccessMode(_access_mode),
           m_Size(_len),
           m_Prefetch(_pb),
-          data(_data),
           m_pkt(_pkt),
           m_contextId(_core_id),
           m_writeMask(_wm_size,_wm_mask,_atomicOps),
