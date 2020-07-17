@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2019,2021 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -81,6 +81,13 @@ RubyRequest::functionalWrite(Packet *pkt)
 
     if (!data)
       return false;
+
+    if (pkt->isMaskedWrite() || m_pkt->isMaskedWrite()) {
+        warn("Skiping functional write to/from a masked write packet"
+            " (addr: %#x, other addr: %#x).\n", m_PhysicalAddress,
+              pkt->getAddr());
+        return false;
+    }
 
     Addr wBase = pkt->getAddr();
     Addr wTail = wBase + pkt->getSize();
