@@ -172,8 +172,6 @@ Gicv3::write(PacketPtr pkt)
 void
 Gicv3::sendInt(uint32_t int_id)
 {
-    panic_if(int_id < Gicv3::SGI_MAX + Gicv3::PPI_MAX, "Invalid SPI!");
-    panic_if(int_id >= Gicv3::INTID_SECURE, "Invalid SPI!");
     DPRINTF(Interrupt, "Gicv3::sendInt(): received SPI %d\n", int_id);
     distributor->sendInt(int_id);
 }
@@ -188,8 +186,6 @@ void
 Gicv3::sendPPInt(uint32_t int_id, uint32_t cpu)
 {
     panic_if(cpu >= redistributors.size(), "Invalid cpuID sending PPI!");
-    panic_if(int_id < Gicv3::SGI_MAX, "Invalid PPI!");
-    panic_if(int_id >= Gicv3::SGI_MAX + Gicv3::PPI_MAX, "Invalid PPI!");
     DPRINTF(Interrupt, "Gicv3::sendPPInt(): received PPI %d cpuTarget %#x\n",
             int_id, cpu);
     redistributors[cpu]->sendPPInt(int_id);
