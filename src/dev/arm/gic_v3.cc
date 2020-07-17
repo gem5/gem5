@@ -177,9 +177,10 @@ Gicv3::sendInt(uint32_t int_id)
 }
 
 void
-Gicv3::clearInt(uint32_t number)
+Gicv3::clearInt(uint32_t int_id)
 {
-    distributor->deassertSPI(number);
+    DPRINTF(Interrupt, "Gicv3::clearInt(): received SPI %d\n", int_id);
+    distributor->clearInt(int_id);
 }
 
 void
