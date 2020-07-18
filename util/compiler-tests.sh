@@ -70,14 +70,14 @@ test_dir="${gem5_root}/.compile-test-out"
 exits="${test_dir}/exit-codes.csv"
 
 # Create the testing output directory and files
-rm -rf $test_dir_final
-rm -rf $test_dir
-mkdir $test_dir
-touch $exits
-echo "compiler,build_target,exit_code" >> $exits
+rm -rf "${test_dir_final}"
+rm -rf "${test_dir}"
+mkdir "${test_dir}"
+touch "${exits}"
+echo "compiler,build_target,exit_code" >> "${exits}"
 
 for compiler in ${images[@]}; do
-    echo "Starting build tests with '$compiler'..."
+    echo "Starting build tests with '${compiler}'..."
     # Generate a randomized list of build targets
     build_permutation=($(shuf -i 0-$((${#builds[@]} - 1)) ))
 
@@ -96,33 +96,34 @@ for compiler in ${images[@]}; do
     # Grab compiler image
     docker pull $repo_name >/dev/null
 
-    mkdir "$test_dir/$compiler"
+    mkdir "${test_dir}/${compiler}"
 
     for build_index in ${build_indices[@]}; do
         for build_opt in ${opts[@]}; do
             build="${builds[$build_index]}"
             build_out="build/$build/gem5$build_opt"
-            build_stdout="$test_dir/$compiler/$build$build_opt.stdout"
-            build_stderr="$test_dir/$compiler/$build$build_opt.stderr"
+            build_stdout="${test_dir}/${compiler}/${build}${build_opt}.stdout"
+            build_stderr="${test_dir}/${compiler}/${build}${build_opt}.stderr"
 
             # Clean the build
             rm -rf "${build_dir}"
 
-            touch $build_stdout
-            touch $build_stderr
+            touch "${build_stdout}"
+            touch "${build_stderr}"
 
-            echo "  * Building target '$build$build_opt' with '$compiler'..."
+            echo "  * Building target '${build}${build_opt}' with '${compiler}'..."
 
             # Build with container
             {
-                docker run --rm -v ${gem5_root}:/gem5 -u $UID:$GID -w /gem5 \
-                    $repo_name scons $build_out $build_args
-            }>$build_stdout 2>$build_stderr
+                docker run --rm -v "${gem5_root}":"/gem5" -u $UID:$GID \
+                    -w /gem5 $repo_name scons "${build_out}" "${build_args}"
+            }>"${build_stdout}" 2>"${build_stderr}"
             result=$?
 
-            echo "$compiler,$build/gem5$build_opt,$result" >> $exits
-            if [ $result -ne 0 ]; then
-                echo "  ! Failed with exit code $result."
+            echo "${compiler},${build}/gem5${build_opt},${result}" >>"${exits}"
+
+            if [ ${result} -ne 0 ]; then
+                echo "  ! Failed with exit code ${result}."
             else
                 echo "    Done."
             fi
