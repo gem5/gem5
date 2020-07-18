@@ -743,6 +743,11 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i = i + 2, int_id++) {
+
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
+                continue;
+            }
+
             irqConfig[int_id] = data & (0x2 << i) ?
                                 Gicv3::INT_EDGE_TRIGGERED :
                                 Gicv3::INT_LEVEL_SENSITIVE;
