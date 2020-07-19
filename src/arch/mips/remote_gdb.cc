@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 LabWare
+ * Copyright 2015-2020 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2010 ARM Limited
  * All rights reserved
@@ -136,6 +136,7 @@
 #include <string>
 
 #include "arch/mips/decoder.hh"
+#include "blobs/gdb_xml_mips.hh"
 #include "cpu/thread_state.hh"
 #include "debug/GDBAcc.hh"
 #include "debug/GDBMisc.hh"
@@ -200,4 +201,21 @@ BaseGdbRegCache*
 RemoteGDB::gdbRegs()
 {
     return &regCache;
+}
+
+bool
+RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
+{
+#define GDB_XML(x, s) \
+        { x, std::string(reinterpret_cast<const char *>(Blobs::s), \
+        Blobs::s ## _len) }
+    static const std::map<std::string, std::string> annexMap {
+        GDB_XML("target.xml", gdb_xml_mips),
+    };
+#undef GDB_XML
+    auto it = annexMap.find(annex);
+    if (it == annexMap.end())
+        return false;
+    output = it->second;
+    return true;
 }

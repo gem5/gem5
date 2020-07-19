@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 LabWare
+ * Copyright 2015-2020 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2007 The Regents of The University of Michigan
  * All rights reserved.
@@ -79,6 +79,12 @@ class RemoteGDB : public BaseRemoteGDB
   public:
     RemoteGDB(System *_system, ThreadContext *tc, int _port);
     BaseGdbRegCache *gdbRegs();
+    std::vector<std::string>
+    availableFeatures() const
+    {
+        return {"qXfer:features:read+"};
+    };
+    bool getXferFeaturesRead(const std::string &annex, std::string &output);
 };
 
 } // namespace MipsISA
