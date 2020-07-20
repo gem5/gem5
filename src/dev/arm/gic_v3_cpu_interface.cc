@@ -79,6 +79,8 @@ void
 Gicv3CPUInterface::setThreadContext(ThreadContext *tc)
 {
     maintenanceInterrupt = gic->params()->maint_int->get(tc);
+    fatal_if(maintenanceInterrupt->num() >= redistributor->irqPending.size(),
+        "Invalid maintenance interrupt number\n");
 }
 
 bool
@@ -2078,10 +2080,13 @@ Gicv3CPUInterface::virtualUpdate()
 
     ICH_HCR_EL2 ich_hcr_el2 = isa->readMiscRegNoEffect(MISCREG_ICH_HCR_EL2);
 
-    if (ich_hcr_el2.En) {
-        if (maintenanceInterruptStatus()) {
-            maintenanceInterrupt->raise();
-        }
+    const bool maint_pending = redistributor->irqPending[
+        maintenanceInterrupt->num()];
+
+    if (ich_hcr_el2.En && !maint_pending && maintenanceInterruptStatus()) {
+        maintenanceInterrupt->raise();
+    } else if (maint_pending) {
+        maintenanceInterrupt->clear();
     }
 
     if (signal_IRQ) {
