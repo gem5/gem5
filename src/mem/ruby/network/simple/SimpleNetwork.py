@@ -39,6 +39,7 @@
 from m5.params import *
 from m5.proxy import *
 
+from m5.util import fatal
 from m5.SimObject import SimObject
 from m5.objects.Network import RubyNetwork
 from m5.objects.BasicRouter import BasicRouter
@@ -49,10 +50,9 @@ class SimpleNetwork(RubyNetwork):
     cxx_header = "mem/ruby/network/simple/SimpleNetwork.hh"
     cxx_class = 'gem5::ruby::SimpleNetwork'
 
-    buffer_size = Param.Int(0,
-        "default buffer size; 0 indicates infinite buffering")
+    buffer_size = Param.Int(0, "default internal buffer size for links and\
+                                routers; 0 indicates infinite buffering")
     endpoint_bandwidth = Param.Int(1000, "bandwidth adjustment factor")
-    int_link_buffers = VectorParam.MessageBuffer("Buffers for int_links")
 
     physical_vnets_channels = VectorParam.Int([],
         "Set to emulate multiple channels for each vnet."
@@ -76,39 +76,11 @@ class SimpleNetwork(RubyNetwork):
             return self.buffer_size * self.physical_vnets_channels[vnet]
 
     def setup_buffers(self):
-        # Note that all SimpleNetwork MessageBuffers are currently ordered
-        network_buffers = []
+        # Setup internal buffers for links and routers
         for link in self.int_links:
-            # The network needs number_of_virtual_networks buffers per
-            # int_link port
-            for i in range(int(self.number_of_virtual_networks)):
-                network_buffers.append(MessageBuffer(ordered = True,
-                                     buffer_size = self.vnet_buffer_size(i)))
-                network_buffers.append(MessageBuffer(ordered = True,
-                                     buffer_size = self.vnet_buffer_size(i)))
-        self.int_link_buffers = network_buffers
-
-        # Also add buffers for all router-link connections
+            link.setup_buffers(self)
         for router in self.routers:
-            router_buffers = []
-            # Add message buffers to routers at the end of each
-            # unidirectional internal link
-            for link in self.int_links:
-                if link.dst_node == router:
-                    for i in range(int(self.number_of_virtual_networks)):
-                        router_buffers.append(MessageBuffer(ordered = True,
-                                     allow_zero_latency = True,
-                                     buffer_size = self.vnet_buffer_size(i)))
-
-            # Add message buffers to routers for each external link connection
-            for link in self.ext_links:
-                # Routers can only be int_nodes on ext_links
-                if link.int_node in self.routers:
-                    for i in range(int(self.number_of_virtual_networks)):
-                        router_buffers.append(MessageBuffer(ordered = True,
-                                     allow_zero_latency = True,
-                                     buffer_size = self.vnet_buffer_size(i)))
-            router.port_buffers = router_buffers
+            router.setup_buffers(self)
 
 
 class BaseRoutingUnit(SimObject):
@@ -126,6 +98,11 @@ class WeightBased(BaseRoutingUnit):
     adaptive_routing = Param.Bool(False, "enable adaptive routing")
 
 
+class SwitchPortBuffer(MessageBuffer):
+    """MessageBuffer type used internally by the Switch port buffers"""
+    ordered = True
+    allow_zero_latency = True
+
 class Switch(BasicRouter):
     type = 'Switch'
     cxx_header = 'mem/ruby/network/simple/Switch.hh'
@@ -133,8 +110,36 @@ class Switch(BasicRouter):
 
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
-    port_buffers = VectorParam.MessageBuffer("Port buffers")
+
+    # Internal port buffers used between the PerfectSwitch and
+    # Throttle objects. There is one buffer per virtual network
+    # and per output port.
+    # These are created by setup_buffers and the user should not
+    # set these manually.
+    port_buffers = VectorParam.MessageBuffer([], "Port buffers")
 
     routing_unit = Param.BaseRoutingUnit(
                         WeightBased(adaptive_routing = False),
                         "Routing strategy to be used")
+
+    def setup_buffers(self, network):
+        if len(self.port_buffers) > 0:
+            fatal("User should not manually set routers' port_buffers")
+        router_buffers = []
+        # Add message buffers to routers at the end of each
+        # unidirectional internal link
+        for link in network.int_links:
+            if link.dst_node == self:
+                for i in range(int(network.number_of_virtual_networks)):
+                    router_buffers.append(SwitchPortBuffer(
+                                    buffer_size = network.vnet_buffer_size(i)))
+
+        # Add message buffers to routers for each external link connection
+        for link in network.ext_links:
+            # Routers can only be int_nodes on ext_links
+            if link.int_node == self:
+                for i in range(int(network.number_of_virtual_networks)):
+                    router_buffers.append(SwitchPortBuffer(
+                                    buffer_size = network.vnet_buffer_size(i)))
+
+        self.port_buffers = router_buffers

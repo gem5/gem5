@@ -71,9 +71,6 @@ SimpleNetwork::SimpleNetwork(const Params &p)
         s->init_net_ptr(this);
     }
 
-    m_int_link_buffers = p.int_link_buffers;
-    m_num_connected_buffers = 0;
-
     const std::vector<int> &physical_vnets_channels =
         p.physical_vnets_channels;
     const std::vector<int> &physical_vnets_bandwidth =
@@ -144,25 +141,17 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                 PortDirection src_outport,
                                 PortDirection dst_inport)
 {
-    // Create a set of new MessageBuffers
-    std::vector<MessageBuffer*> queues(m_virtual_networks);
-
-    for (int i = 0; i < m_virtual_networks; i++) {
-        // allocate a buffer
-        assert(m_num_connected_buffers < m_int_link_buffers.size());
-        MessageBuffer* buffer_ptr = m_int_link_buffers[m_num_connected_buffers];
-        m_num_connected_buffers++;
-        queues[i] = buffer_ptr;
-    }
-
     // Connect it to the two switches
     SimpleIntLink *simple_link = safe_cast<SimpleIntLink*>(link);
 
-    m_switches[dest]->addInPort(queues);
-    m_switches[src]->addOutPort(queues, routing_table_entry[0],
+    m_switches[dest]->addInPort(simple_link->m_buffers);
+    m_switches[src]->addOutPort(simple_link->m_buffers, routing_table_entry[0],
                                 simple_link->m_latency,
                                 simple_link->m_bw_multiplier,
                                 dst_inport);
+    // Maitain a global list of buffers (used for functional accesses only)
+    m_int_link_buffers.insert(m_int_link_buffers.end(),
+            simple_link->m_buffers.begin(), simple_link->m_buffers.end());
 }
 
 void

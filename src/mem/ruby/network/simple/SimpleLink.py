@@ -1,3 +1,15 @@
+# Copyright (c) 2021 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2011 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
@@ -26,8 +38,10 @@
 
 from m5.params import *
 from m5.proxy import *
+from m5.util import fatal
 from m5.SimObject import SimObject
 from m5.objects.BasicLink import BasicIntLink, BasicExtLink
+from m5.objects.MessageBuffer import MessageBuffer
 
 class SimpleExtLink(BasicExtLink):
     type = 'SimpleExtLink'
@@ -38,3 +52,23 @@ class SimpleIntLink(BasicIntLink):
     type = 'SimpleIntLink'
     cxx_header = "mem/ruby/network/simple/SimpleLink.hh"
     cxx_class = 'gem5::ruby::SimpleIntLink'
+
+    # Buffers for this internal link.
+    # One buffer is allocated per vnet when setup_buffers is called.
+    # These are created by setup_buffers and the user should not
+    # set these manually.
+    buffers = VectorParam.MessageBuffer([], "Buffers for int_links")
+
+    def setup_buffers(self, network):
+        if len(self.buffers) > 0:
+            fatal("User should not manually set links' \
+                   in_buffers or out_buffers")
+        # Note that all SimpleNetwork MessageBuffers are currently ordered
+
+        # The network needs number_of_virtual_networks buffers per
+        # in and out port
+        buffers = []
+        for i in range(int(network.number_of_virtual_networks)):
+            buffers.append(MessageBuffer(ordered = True,
+                                    buffer_size = network.vnet_buffer_size(i)))
+        self.buffers = buffers

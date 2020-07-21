@@ -104,7 +104,6 @@ class SimpleNetwork : public Network
 
     std::vector<Switch*> m_switches;
     std::vector<MessageBuffer*> m_int_link_buffers;
-    int m_num_connected_buffers;
     const int m_buffer_size;
     const int m_endpoint_bandwidth;
 
