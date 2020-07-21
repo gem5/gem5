@@ -54,7 +54,7 @@ class AddrMap(Enum): vals = ['RoRaBaChCo', 'RoRaBaCoCh', 'RoCoRaBaCh']
 class MemInterface(AbstractMemory):
     type = 'MemInterface'
     abstract = True
-    cxx_header = "mem/dram_ctrl.hh"
+    cxx_header = "mem/mem_interface.hh"
 
     # Allow the interface to set required controller buffer sizes
     # each entry corresponds to a burst for the specific memory channel

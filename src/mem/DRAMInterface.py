@@ -47,7 +47,7 @@ class PageManage(Enum): vals = ['open', 'open_adaptive', 'close',
 
 class DRAMInterface(MemInterface):
     type = 'DRAMInterface'
-    cxx_header = "mem/dram_ctrl.hh"
+    cxx_header = "mem/mem_interface.hh"
 
     # scheduler page policy
     page_policy = Param.PageManage('open_adaptive', "Page management policy")

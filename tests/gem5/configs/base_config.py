@@ -221,7 +221,7 @@ class BaseSESystem(BaseSystem):
 
     def create_system(self):
         if issubclass(self.mem_class, m5.objects.DRAMInterface):
-            mem_ctrl = DRAMCtrl()
+            mem_ctrl = MemCtrl()
             mem_ctrl.dram = self.mem_class()
         else:
             mem_ctrl = self.mem_class()
@@ -280,7 +280,7 @@ class BaseFSSystem(BaseSystem):
             if issubclass(self.mem_class, m5.objects.DRAMInterface):
                 mem_ctrls = []
                 for r in system.mem_ranges:
-                    mem_ctrl = DRAMCtrl()
+                    mem_ctrl = MemCtrl()
                     mem_ctrl.dram = self.mem_class(range = r)
                     mem_ctrls.append(mem_ctrl)
                 system.physmem = mem_ctrls

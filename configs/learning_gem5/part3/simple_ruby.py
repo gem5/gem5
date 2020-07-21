@@ -68,7 +68,7 @@ system.mem_ranges = [AddrRange('512MB')] # Create an address range
 system.cpu = [TimingSimpleCPU() for i in range(2)]
 
 # Create a DDR3 memory controller and connect it to the membus
-system.mem_ctrl = DRAMCtrl()
+system.mem_ctrl = MemCtrl()
 system.mem_ctrl.dram = DDR3_1600_8x8()
 system.mem_ctrl.dram.range = system.mem_ranges[0]
 

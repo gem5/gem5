@@ -133,7 +133,7 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
             dram_intf = MemConfig.create_mem_intf(mem_type, r, index,
                 options.num_dirs, int(math.log(options.num_dirs, 2)),
                 intlv_size, options.xor_low_bit)
-            mem_ctrl = m5.objects.DRAMCtrl(dram = dram_intf)
+            mem_ctrl = m5.objects.MemCtrl(dram = dram_intf)
 
             if options.access_backing_store:
                 mem_ctrl.kvm_map=False

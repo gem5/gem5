@@ -115,8 +115,8 @@ MemConfig.config_mem(options, system)
 
 # the following assumes that we are using the native DRAM
 # controller, check to be sure
-if not isinstance(system.mem_ctrls[0], m5.objects.DRAMCtrl):
-    fatal("This script assumes the controller is a DRAMCtrl subclass")
+if not isinstance(system.mem_ctrls[0], m5.objects.MemCtrl):
+    fatal("This script assumes the controller is a MemCtrl subclass")
 if not isinstance(system.mem_ctrls[0].dram, m5.objects.DRAMInterface):
     fatal("This script assumes the memory is a DRAMInterface subclass")
 

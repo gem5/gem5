@@ -224,11 +224,11 @@ def config_mem(options, system):
                 if opt_mem_type == "HMC_2500_1x32":
                     # The static latency of the vault controllers is estimated
                     # to be smaller than a full DRAM channel controller
-                    mem_ctrl = m5.objects.DRAMCtrl(min_writes_per_switch = 8,
+                    mem_ctrl = m5.objects.MemCtrl(min_writes_per_switch = 8,
                                              static_backend_latency = '4ns',
                                              static_frontend_latency = '4ns')
                 else:
-                    mem_ctrl = m5.objects.DRAMCtrl()
+                    mem_ctrl = m5.objects.MemCtrl()
 
                 # Hookup the controller to the interface and add to the list
                 mem_ctrl.dram = dram_intf
@@ -246,7 +246,7 @@ def config_mem(options, system):
                 # Create a controller if not sharing a channel with DRAM
                 # in which case the controller has already been created
                 if not opt_hybrid_channel:
-                    mem_ctrl = m5.objects.DRAMCtrl()
+                    mem_ctrl = m5.objects.MemCtrl()
                     mem_ctrl.nvm = nvm_intf
 
                     mem_ctrls.append(mem_ctrl)

@@ -46,13 +46,13 @@ from m5.objects.QoSMemCtrl import *
 # First-Served and a First-Row Hit then First-Come First-Served
 class MemSched(Enum): vals = ['fcfs', 'frfcfs']
 
-# DRAMCtrl is a single-channel single-ported DRAM controller model
+# MemCtrl is a single-channel single-ported Memory controller model
 # that aims to model the most important system-level performance
-# effects of a DRAM without getting into too much detail of the DRAM
-# itself.
-class DRAMCtrl(QoSMemCtrl):
-    type = 'DRAMCtrl'
-    cxx_header = "mem/dram_ctrl.hh"
+# effects of a memory controller, interfacing with media specific
+# interfaces
+class MemCtrl(QoSMemCtrl):
+    type = 'MemCtrl'
+    cxx_header = "mem/mem_ctrl.hh"
 
     # single-ported on the system interface side, instantiate with a
     # bus in front of the controller for multiple ports

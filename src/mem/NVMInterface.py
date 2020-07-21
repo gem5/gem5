@@ -43,7 +43,7 @@ from m5.objects.DRAMInterface import AddrMap
 # are modeled without getting into too much detail of the media itself.
 class NVMInterface(MemInterface):
     type = 'NVMInterface'
-    cxx_header = "mem/dram_ctrl.hh"
+    cxx_header = "mem/mem_interface.hh"
 
     # NVM DIMM could have write buffer to offload writes
     # define buffer depth, which will limit the number of pending writes
