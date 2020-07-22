@@ -239,8 +239,8 @@ class IntAssignment : public BaseConfigEntry
         sourceBusID(_sourceBusID), sourceBusIRQ(_sourceBusIRQ),
         destApicID(_destApicID), destApicIntIn(_destApicIntIn)
     {
-        replaceBits(flags, 0, 1, polarity);
-        replaceBits(flags, 2, 3, trigger);
+        replaceBits(flags, 1, 0, polarity);
+        replaceBits(flags, 3, 2, trigger);
     }
 };
 

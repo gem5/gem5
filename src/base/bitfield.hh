@@ -150,7 +150,9 @@ insertBits(T val, int bit, B bit_val)
 
 /**
  * A convenience function to replace bits first to last of val with bit_val
- * in place.
+ * in place. It is functionally equivalent to insertBits.
+ *
+ * \note "first" is the MSB and "last" is the LSB. "first" >= "last"
  */
 template <class T, class B>
 inline

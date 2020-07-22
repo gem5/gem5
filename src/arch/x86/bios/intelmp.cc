@@ -284,9 +284,9 @@ X86ISA::IntelMP::Processor::Processor(Params * p) : BaseConfigEntry(p, 0),
     if (p->bootstrap)
         cpuFlags |= (1 << 1);
 
-    replaceBits(cpuSignature, 0, 3, p->stepping);
-    replaceBits(cpuSignature, 4, 7, p->model);
-    replaceBits(cpuSignature, 8, 11, p->family);
+    replaceBits(cpuSignature, 3, 0, p->stepping);
+    replaceBits(cpuSignature, 7, 4, p->model);
+    replaceBits(cpuSignature, 11, 8, p->family);
 }
 
 X86ISA::IntelMP::Processor *
