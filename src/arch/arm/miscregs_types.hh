@@ -730,6 +730,7 @@ namespace ArmISA
         Bitfield<14> hde;
         Bitfield<13> res0_;
         Bitfield<12> udccdis;
+        Bitfield<12> tdcc;
         Bitfield<11, 7> res0_2;
         Bitfield<6> err;
         Bitfield<5, 2> moe;

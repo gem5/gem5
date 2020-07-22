@@ -114,9 +114,26 @@ MiscRegOp64::checkEL1Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
                           uint32_t &immediate) const
 {
     const CPACR cpacr = tc->readMiscReg(MISCREG_CPACR_EL1);
+    const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+    const SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
     bool trap_to_sup = false;
     switch (misc_reg) {
+      case MISCREG_DAIF:
+        trap_to_sup = !scr.ns && !scr.eel2 && !sctlr.uma && el == EL0;
+        trap_to_sup = trap_to_sup ||
+            (el == EL0 && (scr.ns || scr.eel2) && !hcr.tge && !sctlr.uma);
+        break;
+      case MISCREG_DC_ZVA_Xt:
+        // In syscall-emulation mode, this test is skipped and DCZVA is always
+        // allowed at EL0
+        trap_to_sup =  el == EL0 && !sctlr.dze && FullSystem;
+        break;
+      case MISCREG_DC_CIVAC_Xt:
+      case MISCREG_DC_CVAC_Xt:
+        trap_to_sup = el == EL0 && !sctlr.uci;
+        break;
       case MISCREG_FPCR:
       case MISCREG_FPSR:
       case MISCREG_FPEXC32_EL2:
@@ -126,6 +143,24 @@ MiscRegOp64::checkEL1Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
             ec = EC_TRAPPED_SIMD_FP;
             immediate = 0x1E00000;
         }
+        break;
+      case MISCREG_DC_CVAU_Xt:
+        trap_to_sup = !sctlr.uci && (!hcr.tge || (!scr.ns && !scr.eel2)) &&
+            el == EL1;
+        break;
+      case MISCREG_CTR_EL0:
+        trap_to_sup = el == EL0 && !sctlr.uct &&
+            (!hcr.tge || (!scr.ns && !scr.eel2));
+        break;
+       case MISCREG_MDCCSR_EL0:
+         {
+             DBGDS32 mdscr = tc->readMiscReg(MISCREG_MDSCR_EL1);
+             trap_to_sup = el == EL0 && mdscr.tdcc &&
+                     (hcr.tge == 0x0 || ( scr.ns == 0x0));
+         }
+         break;
+     case MISCREG_ZCR_EL1:
+        trap_to_sup = el == EL1 && ((cpacr.zen & 0x1) == 0x0);
         break;
       // Generic Timer
       case MISCREG_CNTFRQ_EL0 ... MISCREG_CNTVOFF_EL2:

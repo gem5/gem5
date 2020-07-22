@@ -312,14 +312,6 @@ let {{
     msrMrs64EnabledCheckCode = '''
         // Check for read/write access right
         if (!can%sAArch64SysReg(flat_idx, Hcr64, Scr64, cpsr, xc->tcBase())) {
-            if (flat_idx == MISCREG_DAIF ||
-                flat_idx == MISCREG_DC_ZVA_Xt ||
-                flat_idx == MISCREG_DC_CVAC_Xt ||
-                flat_idx == MISCREG_DC_CIVAC_Xt
-                )
-                return std::make_shared<UndefinedInstruction>(
-                                    machInst, 0, EC_TRAPPED_MSR_MRS_64,
-                                    mnemonic);
             return std::make_shared<UndefinedInstruction>(machInst, false,
                                                           mnemonic);
         }

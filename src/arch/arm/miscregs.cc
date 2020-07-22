@@ -1415,23 +1415,6 @@ canWriteAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
     if ((reg == MISCREG_SP_EL0) && (tc->readMiscReg(MISCREG_SPSEL) == 0))
         return false;
     ExceptionLevel el = currEL(cpsr);
-    if (reg == MISCREG_DAIF) {
-        SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
-        if (el == EL0 && !sctlr.uma)
-            return false;
-    }
-    if (FullSystem && reg == MISCREG_DC_ZVA_Xt) {
-        // In syscall-emulation mode, this test is skipped and DCZVA is always
-        // allowed at EL0
-        SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
-        if (el == EL0 && !sctlr.dze)
-            return false;
-    }
-    if (reg == MISCREG_DC_CVAC_Xt || reg == MISCREG_DC_CIVAC_Xt) {
-        SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
-        if (el == EL0 && !sctlr.uci)
-            return false;
-    }
 
     bool secure = ArmSystem::haveSecurity(tc) && !scr.ns;
     bool el2_host = EL2Enabled(tc) && hcr.e2h;
