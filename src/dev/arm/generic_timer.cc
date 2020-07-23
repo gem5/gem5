@@ -281,11 +281,14 @@ ArchTimer::updateCounter()
     if (value() >= _counterLimit) {
         counterLimitReached();
     } else {
-        if (_control.istatus) {
+        // Clear the interurpt when timers conditions are not met
+        if (_interrupt->active()) {
             DPRINTF(Timer, "Clearing interrupt\n");
             _interrupt->clear();
-            _control.istatus = 0;
         }
+
+        _control.istatus = 0;
+
         if (scheduleEvents()) {
             _parent.schedule(_counterLimitReachedEvent,
                              whenValue(_counterLimit));
@@ -320,10 +323,16 @@ ArchTimer::setControl(uint32_t val)
     // Timer masked or disabled
     else if ((!old_ctl.imask && new_ctl.imask) ||
              (old_ctl.enable && !new_ctl.enable)) {
-        if (_control.istatus) {
+
+        if (_interrupt->active()) {
             DPRINTF(Timer, "Clearing interrupt\n");
+            // We are clearing the interrupt but we are not
+            // setting istatus to 0 as we are doing
+            // in the updateCounter.
+            // istatus signals that Timer conditions are met.
+            // It shouldn't depend on masking.
+            // if enable is zero. istatus is unknown.
             _interrupt->clear();
-            _control.istatus = 0;
         }
     }
 }
