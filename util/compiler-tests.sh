@@ -8,7 +8,6 @@
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 gem5_root="${dir}/.."
 build_dir="${gem5_root}/build"
-num_cores=`nproc`
 
 # All Docker images in the gem5 testing GCR which we want to compile with.
 images=("gcc-version-10"
@@ -61,7 +60,7 @@ builds_per_compiler=1
 base_url="gcr.io/gem5-test"
 
 # Arguments passed into scons on every build target test.
-build_args="-j ${num_cores}"
+build_args="$@"
 
 # Testing directory variables
 mkdir -p "${build_dir}" # Create the build directory if it doesn't exist.
