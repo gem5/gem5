@@ -58,8 +58,9 @@ namespace ruby
 using stl_helpers::operator<<;
 
 MessageBuffer::MessageBuffer(const Params &p)
-    : SimObject(p), m_stall_map_size(0),
-    m_max_size(p.buffer_size), m_time_last_time_size_checked(0),
+    : SimObject(p), m_stall_map_size(0), m_max_size(p.buffer_size),
+    m_max_dequeue_rate(p.max_dequeue_rate), m_dequeues_this_cy(0),
+    m_time_last_time_size_checked(0),
     m_time_last_time_enqueue(0), m_time_last_time_pop(0),
     m_last_arrival_time(0), m_strict_fifo(p.ordered),
     m_randomization(p.randomization),
@@ -312,7 +313,9 @@ MessageBuffer::dequeue(Tick current_time, bool decrement_messages)
         m_size_at_cycle_start = m_prio_heap.size();
         m_stalled_at_cycle_start = m_stall_map_size;
         m_time_last_time_pop = current_time;
+        m_dequeues_this_cy = 0;
     }
+    ++m_dequeues_this_cy;
 
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(), std::greater<MsgPtr>());
     m_prio_heap.pop_back();
@@ -507,8 +510,17 @@ MessageBuffer::print(std::ostream& out) const
 bool
 MessageBuffer::isReady(Tick current_time) const
 {
-    return ((m_prio_heap.size() > 0) &&
-        (m_prio_heap.front()->getLastEnqueueTime() <= current_time));
+    assert(m_time_last_time_pop <= current_time);
+    bool can_dequeue = (m_max_dequeue_rate == 0) ||
+                       (m_time_last_time_pop < current_time) ||
+                       (m_dequeues_this_cy < m_max_dequeue_rate);
+    bool is_ready = (m_prio_heap.size() > 0) &&
+                   (m_prio_heap.front()->getLastEnqueueTime() <= current_time);
+    if (!can_dequeue && is_ready) {
+        // Make sure the Consumer executes next cycle to dequeue the ready msg
+        m_consumer->scheduleEvent(Cycles(1));
+    }
+    return can_dequeue && is_ready;
 }
 
 uint32_t

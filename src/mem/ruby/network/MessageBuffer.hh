@@ -240,6 +240,14 @@ class MessageBuffer : public SimObject
      */
     const unsigned int m_max_size;
 
+    /**
+     * When != 0, isReady returns false once m_max_dequeue_rate
+     * messages have been dequeued in the same cycle.
+     */
+    const unsigned int m_max_dequeue_rate;
+
+    unsigned int m_dequeues_this_cy;
+
     Tick m_time_last_time_size_checked;
     unsigned int m_size_last_time_size_checked;
 
