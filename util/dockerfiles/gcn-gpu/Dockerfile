@@ -60,11 +60,11 @@ RUN git clone --single-branch https://github.com/ROCm-Developer-Tools/HIP/ && \
 # Apply patches to various repos
 RUN mkdir -p /patch && cd /patch && \
     wget ${gem5_dist}/rocm_patches/hipBLAS.patch && \
-    wget ${gem5_dist}/rocm_patches/hip.patch && \
+    wget ${gem5_dist}/rocm_patches/hip.patch_v2 && \
     wget ${gem5_dist}/rocm_patches/miopen-conv.patch && \
     wget ${gem5_dist}/rocm_patches/rocBLAS.patch
 
-RUN git -C /HIP/ checkout 0e3d824e && git -C /HIP/ apply /patch/hip.patch && \
+RUN git -C /HIP/ checkout 0e3d824e && git -C /HIP/ apply /patch/hip.patch_v2 && \
     git -C /hipBLAS/ checkout ee57787e && git -C /hipBLAS/ apply /patch/hipBLAS.patch && \
     git -C /rocBLAS/ checkout cbff4b4e && git -C /rocBLAS/ apply /patch/rocBLAS.patch && \
     git -C /MIOpenGEMM/ checkout 9547fb9e && \
