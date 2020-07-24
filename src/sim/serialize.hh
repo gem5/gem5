@@ -79,6 +79,8 @@ class CheckpointIn
     ~CheckpointIn();
 
     /**
+     * @return Returns the current directory being used for creating
+     * checkpoints or restoring checkpoints.
      * @ingroup api_serialize
      * @{
      */
@@ -136,6 +138,10 @@ class CheckpointIn
 /**
  * Basic support for object serialization.
  *
+ * The Serailizable interface is used to create checkpoints. Any
+ * object that implements this interface can be included in
+ * gem5's checkpointing system.
+ *
  * Objects that support serialization should derive from this
  * class. Such objects can largely be divided into two categories: 1)
  * True SimObjects (deriving from SimObject), and 2) child objects
@@ -166,26 +172,27 @@ class CheckpointIn
 class Serializable
 {
   protected:
-    /**
-     * Scoped checkpoint section helper class
-     *
-     * This helper class creates a section within a checkpoint without
-     * the need for a separate serializeable object. It is mainly used
-     * within the Serializable class when serializing or unserializing
-     * section (see serializeSection() and unserializeSection()). It
-     * can also be used to maintain backwards compatibility in
-     * existing code that serializes structs that are not inheriting
-     * from Serializable into subsections.
-     *
-     * When the class is instantiated, it appends a name to the active
-     * path in a checkpoint. The old path is later restored when the
-     * instance is destroyed. For example, serializeSection() could be
-     * implemented by instantiating a ScopedCheckpointSection and then
-     * calling serialize() on an object.
-     */
     class ScopedCheckpointSection {
       public:
         /**
+         * This is the constructor for Scoped checkpoint section helper
+         * class.
+         *
+         * Scoped checkpoint helper class creates a section within a
+         * checkpoint without the need for a separate serializeable
+         * object. It is mainly used within the Serializable class
+         * when serializing or unserializing section (see
+         * serializeSection() and unserializeSection()). It
+         * can also be used to maintain backwards compatibility in
+         * existing code that serializes structs that are not inheriting
+         * from Serializable into subsections.
+         *
+         * When the class is instantiated, it appends a name to the active
+         * path in a checkpoint. The old path is later restored when the
+         * instance is destroyed. For example, serializeSection() could be
+         * implemented by instantiating a ScopedCheckpointSection and then
+         * calling serialize() on an object.
+         *
          * @ingroup api_serialize
          * @{
          */
@@ -297,6 +304,8 @@ class Serializable
     static const std::string &currentSection();
 
     /**
+     * Serializes all the SimObjects.
+     *
      * @ingroup api_serialize
      */
     static void serializeAll(const std::string &cpt_dir);
@@ -447,6 +456,10 @@ parseParam(const std::string &s, std::string &value)
 }
 
 /**
+ * This function is used for writing parameters to a checkpoint.
+ * @param os The checkpoint to be written to.
+ * @param name Name of the parameter to be set.
+ * @param param Value of the parameter to be written.
  * @ingroup api_serialize
  */
 template <class T>
@@ -459,6 +472,10 @@ paramOut(CheckpointOut &os, const std::string &name, const T &param)
 }
 
 /**
+ * This function is used for restoring parameters from a checkpoint.
+ * @param os The checkpoint to be restored from.
+ * @param name Name of the parameter to be set.
+ * @param param Value of the parameter to be restored.
  * @ingroup api_serialize
  */
 template <class T>
@@ -473,6 +490,16 @@ paramIn(CheckpointIn &cp, const std::string &name, T &param)
 }
 
 /**
+ * This function is used for restoring optional parameters from the
+ * checkpoint.
+ * @param cp The checkpoint to be written to.
+ * @param name Name of the parameter to be written.
+ * @param param Value of the parameter to be written.
+ * @param warn If the warn is set to true then the function prints the warning
+ * message.
+ * @return If the parameter we are searching for does not exist
+ * the function returns false else it returns true.
+ *
  * @ingroup api_serialize
  */
 template <class T>

@@ -112,12 +112,17 @@ class SimObject : public EventManager, public Serializable, public Drainable,
   public:
     typedef SimObjectParams Params;
     /**
+     * @return This function returns the cached copy of the object parameters.
+     *
      * @ingroup api_simobject
-     * @{
      */
     const Params *params() const { return _params; }
+
+    /**
+     * @ingroup api_simobject
+     */
     SimObject(const Params *_params);
-    /** @}*/ //end of the api_simobject group
+
     virtual ~SimObject();
 
   public:
@@ -178,6 +183,11 @@ class SimObject : public EventManager, public Serializable, public Drainable,
     /**
      * Get the probe manager for this object.
      *
+     * Probes generate traces. A trace is a file that
+     * keeps a log of events. For example, we can have a probe
+     * listener for an address and the trace will be a file that
+     * has time stamps for all the reads and writes to that address.
+     *
      * @ingroup api_simobject
      */
     ProbeManager *getProbeManager();
@@ -185,6 +195,18 @@ class SimObject : public EventManager, public Serializable, public Drainable,
     /**
      * Get a port with a given name and index. This is used at binding time
      * and returns a reference to a protocol-agnostic port.
+     *
+     * gem5 has a request and response port interface. All memory objects
+     * are connected together via ports. These ports provide a rigid
+     * interface between these memory objects. These ports implement
+     * three different memory system modes: timing, atomic, and
+     * functional. The most important mode is the timing mode and here
+     * timing mode is used for conducting cycle-level timing
+     * experiments. The other modes are only used in special
+     * circumstances and should *not* be used to conduct cycle-level
+     * timing experiments. The other modes are only used in special
+     * circumstances. These ports allow SimObjects to communicate with
+     * each other.
      *
      * @param if_name Port name
      * @param idx Index in the case of a VectorPort

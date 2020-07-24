@@ -488,6 +488,9 @@ class Event : public EventBase, public Serializable
     bool isManaged() const { return flags.isSet(Managed); }
 
     /**
+     * The function returns true if the object is automatically
+     * deleted after the event is processed.
+     *
      * @ingroup api_eventq
      */
     bool isAutoDelete() const { return isManaged(); }
@@ -659,22 +662,21 @@ class EventQueue
     EventQueue(const EventQueue &);
 
   public:
-    /**
-     * Temporarily migrate execution to a different event queue.
-     *
-     * An instance of this class temporarily migrates execution to a
-     * different event queue by releasing the current queue, locking
-     * the new queue, and updating curEventQueue(). This can, for
-     * example, be useful when performing IO across thread event
-     * queues when timing is not crucial (e.g., during fast
-     * forwarding).
-     *
-     * ScopedMigration does nothing if both eqs are the same
-     */
     class ScopedMigration
     {
       public:
-        /**
+         /**
+         * Temporarily migrate execution to a different event queue.
+         *
+         * An instance of this class temporarily migrates execution to
+         * different event queue by releasing the current queue, locking
+         * the new queue, and updating curEventQueue(). This can, for
+         * example, be useful when performing IO across thread event
+         * queues when timing is not crucial (e.g., during fast
+         * forwarding).
+         *
+         * ScopedMigration does nothing if both eqs are the same
+         *
          * @ingroup api_eventq
          */
         ScopedMigration(EventQueue *_new_eq, bool _doMigrate = true)
@@ -703,19 +705,19 @@ class EventQueue
         bool doMigrate;
     };
 
-    /**
-     * Temporarily release the event queue service lock.
-     *
-     * There are cases where it is desirable to temporarily release
-     * the event queue lock to prevent deadlocks. For example, when
-     * waiting on the global barrier, we need to release the lock to
-     * prevent deadlocks from happening when another thread tries to
-     * temporarily take over the event queue waiting on the barrier.
-     */
+
     class ScopedRelease
     {
       public:
         /**
+         * Temporarily release the event queue service lock.
+         *
+         * There are cases where it is desirable to temporarily release
+         * the event queue lock to prevent deadlocks. For example, when
+         * waiting on the global barrier, we need to release the lock to
+         * prevent deadlocks from happening when another thread tries to
+         * temporarily take over the event queue waiting on the barrier.
+         *
          * @group api_eventq
          */
         ScopedRelease(EventQueue *_eq)
@@ -839,6 +841,8 @@ class EventQueue
      * if an object that is assigned to another event queue (or a non-event
      * object) need to access the current tick of this event queue, this
      * function is used.
+     *
+     * Tick is the unit of time used in gem5.
      *
      * @return Tick The current tick of this event queue.
      * @ingroup api_eventq
@@ -974,6 +978,9 @@ class EventManager
 
   public:
     /**
+     * Event manger manages events in the event queue. Where
+     * you can schedule and deschedule different events.
+     *
      * @ingroup api_eventq
      * @{
      */
@@ -1046,6 +1053,9 @@ class EventManager
     }
 
     /**
+     * This function is not needed by the usual gem5 event loop
+     * but may be necessary in derived EventQueues which host gem5
+     * on other schedulers.
      * @ingroup api_eventq
      */
     void wakeupEventQueue(Tick when = (Tick)-1)
@@ -1096,6 +1106,9 @@ class EventFunctionWrapper : public Event
 
   public:
     /**
+     * This function wraps a function into an event, to be
+     * executed later.
+     *
      * @ingroup api_eventq
      */
     EventFunctionWrapper(const std::function<void(void)> &callback,

@@ -278,19 +278,45 @@ CheckpointIn::~CheckpointIn()
 {
     delete db;
 }
-
+/**
+ * @param section Here we mention the section we are looking for
+ * (example: currentsection).
+ * @param entry Mention the entry we are looking for (example: interrupt
+ * time) in the section.
+ *
+ * @return Returns true if the entry exists in the named section
+ * we are looking in.
+ */
 bool
 CheckpointIn::entryExists(const string &section, const string &entry)
 {
     return db->entryExists(section, entry);
 }
-
+/**
+ * @param section Here we mention the section we are looking for
+ * (example: currentsection).
+ * @param entry Mention the entry we are looking for (example: Cache
+ * line size etc) in the section.
+ * @param value Give the value at the said entry.
+ *
+ * @return Returns true if the searched parameter exists with
+ * the value, given the section .
+ */
 bool
 CheckpointIn::find(const string &section, const string &entry, string &value)
 {
     return db->find(section, entry, value);
 }
-
+/**
+ * @param section Here we mention the section we are looking for
+ * (example: currentsection).
+ * @param entry Mention the SimObject we are looking for (example:
+ * interruput time) in the section.
+ * @param value Give the value at the said entry.
+ *
+ * @return Returns true if a SimObject exists in the section.
+ *
+ */
 bool
 CheckpointIn::findObj(const string &section, const string &entry,
                     SimObject *&value)
