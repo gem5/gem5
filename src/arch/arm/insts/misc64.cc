@@ -146,7 +146,7 @@ MiscRegOp64::checkEL1Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
         break;
       case MISCREG_DC_CVAU_Xt:
         trap_to_sup = !sctlr.uci && (!hcr.tge || (!scr.ns && !scr.eel2)) &&
-            el == EL1;
+            el == EL0;
         break;
       case MISCREG_CTR_EL0:
         trap_to_sup = el == EL0 && !sctlr.uct &&
