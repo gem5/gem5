@@ -216,10 +216,12 @@ class AbstractController : public ClockedObject, public Consumer
      */
     template<typename EventType, typename StateType>
     void incomingTransactionStart(Addr addr,
-        EventType type, StateType initialState)
+        EventType type, StateType initialState, bool retried)
     {
         assert(m_inTrans.find(addr) == m_inTrans.end());
         m_inTrans[addr] = {type, initialState, curTick()};
+        if (retried)
+          ++(*stats.inTransLatRetries[type]);
     }
 
     /**
@@ -237,6 +239,7 @@ class AbstractController : public ClockedObject, public Consumer
                               [iter->second.state]
                               [(unsigned)finalState]->sample(
                                 ticksToCycles(curTick() - iter->second.time));
+        ++(*stats.inTransLatTotal[iter->second.transaction]);
        m_inTrans.erase(iter);
     }
 
@@ -260,12 +263,14 @@ class AbstractController : public ClockedObject, public Consumer
      *
      * @param addr address of the line with an outstanding transaction
      */
-    void outgoingTransactionEnd(Addr addr)
+    void outgoingTransactionEnd(Addr addr, bool retried)
     {
         auto iter = m_outTrans.find(addr);
         assert(iter != m_outTrans.end());
         stats.outTransLatHist[iter->second.transaction]->sample(
             ticksToCycles(curTick() - iter->second.time));
+        if (retried)
+          ++(*stats.outTransLatHistRetries[iter->second.transaction]);
         m_outTrans.erase(iter);
     }
 
@@ -356,10 +361,13 @@ class AbstractController : public ClockedObject, public Consumer
         // states. Only histograms with samples will appear in the stats
         std::vector<std::vector<std::vector<Stats::Histogram*>>>
           inTransLatHist;
+        std::vector<Stats::Scalar*> inTransLatRetries;
+        std::vector<Stats::Scalar*> inTransLatTotal;
 
         // Initialized by the SLICC compiler for all events.
         // Only histograms with samples will appear in the stats.
         std::vector<Stats::Histogram*> outTransLatHist;
+        std::vector<Stats::Scalar*> outTransLatHistRetries;
 
         //! Counter for the number of cycles when the transitions carried out
         //! were equal to the maximum allowed

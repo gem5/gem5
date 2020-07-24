@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2020 ARM Limited
+# Copyright (c) 2019-2021 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -849,6 +849,7 @@ $c_ident::regStats()
             }
         }
     }
+
     for (${ident}_Event event = ${ident}_Event_FIRST;
                  event < ${ident}_Event_NUM; ++event) {
         std::string stat_name =
@@ -858,9 +859,27 @@ $c_ident::regStats()
         t->init(5);
         t->flags(Stats::pdf | Stats::total |
                  Stats::oneline | Stats::nozero);
+
+        Stats::Scalar* r = new Stats::Scalar(&stats,
+                                             (stat_name + ".retries").c_str());
+        stats.outTransLatHistRetries.push_back(r);
+        r->flags(Stats::nozero);
     }
+
     for (${ident}_Event event = ${ident}_Event_FIRST;
                  event < ${ident}_Event_NUM; ++event) {
+        std::string stat_name = ".inTransLatHist." +
+                                ${ident}_Event_to_string(event);
+        Stats::Scalar* r = new Stats::Scalar(&stats,
+                                             (stat_name + ".total").c_str());
+        stats.inTransLatTotal.push_back(r);
+        r->flags(Stats::nozero);
+
+        r = new Stats::Scalar(&stats,
+                              (stat_name + ".retries").c_str());
+        stats.inTransLatRetries.push_back(r);
+        r->flags(Stats::nozero);
+
         stats.inTransLatHist.emplace_back();
         for (${ident}_State initial_state = ${ident}_State_FIRST;
              initial_state < ${ident}_State_NUM; ++initial_state) {
