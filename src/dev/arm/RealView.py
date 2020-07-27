@@ -456,12 +456,6 @@ class GenericWatchdog(PioDevice):
         "The Watchdog uses the Generic Timer system counter as the timebase "
         "against which the decision to trigger an interrupt is made.")
 
-class A9GlobalTimer(BasicPioDevice):
-    type = 'A9GlobalTimer'
-    cxx_header = "dev/arm/timer_a9global.hh"
-    gic = Param.BaseGic(Parent.any, "Gic to use for interrupting")
-    int_num = Param.UInt32("Interrrupt number that connects to GIC")
-
 class CpuLocalTimer(BasicPioDevice):
     type = 'CpuLocalTimer'
     cxx_header = "dev/arm/timer_cpulocal.hh"
