@@ -388,10 +388,9 @@ class Pl011(Uart):
 class Sp804(AmbaPioDevice):
     type = 'Sp804'
     cxx_header = "dev/arm/timer_sp804.hh"
-    gic = Param.BaseGic(Parent.any, "Gic to use for interrupting")
-    int_num0 = Param.UInt32("Interrupt number that connects to GIC")
+    int0 = Param.ArmSPI("Interrupt that connects to GIC")
     clock0 = Param.Clock('1MHz', "Clock speed of the input")
-    int_num1 = Param.UInt32("Interrupt number that connects to GIC")
+    int1 = Param.ArmSPI("Interrupt that connects to GIC")
     clock1 = Param.Clock('1MHz', "Clock speed of the input")
     amba_id = 0x00141804
 
@@ -708,8 +707,10 @@ class VExpress_EMM(RealView):
                                  int_virt=ArmPPI(num=27),
                                  int_hyp=ArmPPI(num=26))
 
-    timer0 = Sp804(int_num0=34, int_num1=34, pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
-    timer1 = Sp804(int_num0=35, int_num1=35, pio_addr=0x1C120000, clock0='1MHz', clock1='1MHz')
+    timer0 = Sp804(int0=ArmSPI(num=34), int1=ArmSPI(num=34),
+                   pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
+    timer1 = Sp804(int0=ArmSPI(num=35), int1=ArmSPI(num=35),
+                   pio_addr=0x1C120000, clock0='1MHz', clock1='1MHz')
     clcd   = Pl111(pio_addr=0x1c1f0000, interrupt=ArmSPI(num=46))
     kmi0   = Pl050(pio_addr=0x1c060000, interrupt=ArmSPI(num=44),
                    ps2=PS2Keyboard())

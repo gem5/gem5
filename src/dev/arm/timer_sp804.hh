@@ -80,8 +80,8 @@ class Sp804 : public AmbaPioDevice
         /** Pointer to parent class */
         Sp804 *parent;
 
-        /** Number of interrupt to cause/clear */
-        const uint32_t intNum;
+        /** Pointer to the interrupt pin */
+        ArmInterruptPin * const interrupt;
 
         /** Number of ticks in a clock input */
         const Tick clock;
@@ -109,7 +109,8 @@ class Sp804 : public AmbaPioDevice
          * @param val the value to start at (pre-16 bit masking if en) */
         void restartCounter(uint32_t val);
 
-        Timer(std::string __name, Sp804 *parent, int int_num, Tick clock);
+        Timer(std::string __name, Sp804 *parent, ArmInterruptPin *_interrupt,
+              Tick clock);
 
         std::string name() const { return _name; }
 
@@ -122,9 +123,6 @@ class Sp804 : public AmbaPioDevice
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
     };
-
-    /** Pointer to the GIC for causing an interrupt */
-    BaseGic *gic;
 
     /** Timers that do the actual work */
     Timer timer0;
