@@ -65,6 +65,7 @@ MessageBuffer::MessageBuffer(const Params &p)
     m_last_arrival_time(0), m_strict_fifo(p.ordered),
     m_randomization(p.randomization),
     m_allow_zero_latency(p.allow_zero_latency),
+    m_routing_priority(p.routing_priority),
     ADD_STAT(m_not_avail_count, statistics::units::Count::get(),
              "Number of times this buffer did not have N slots available"),
     ADD_STAT(m_msg_count, statistics::units::Count::get(),

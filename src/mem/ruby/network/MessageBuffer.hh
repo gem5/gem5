@@ -158,6 +158,9 @@ class MessageBuffer : public SimObject
     void setIncomingLink(int link_id) { m_input_link_id = link_id; }
     void setVnet(int net) { m_vnet_id = net; }
 
+    int getIncomingLink() const { return m_input_link_id; }
+    int getVnet() const { return m_vnet_id; }
+
     Port &
     getPort(const std::string &, PortID idx=InvalidPortID) override
     {
@@ -186,6 +189,8 @@ class MessageBuffer : public SimObject
     {
         return functionalAccess(pkt, true, &mask) == 1;
     }
+
+    int routingPriority() const { return m_routing_priority; }
 
   private:
     void reanalyzeList(std::list<MsgPtr> &, Tick);
@@ -269,6 +274,8 @@ class MessageBuffer : public SimObject
     const bool m_strict_fifo;
     const MessageRandomization m_randomization;
     const bool m_allow_zero_latency;
+
+    const int m_routing_priority;
 
     int m_input_link_id;
     int m_vnet_id;

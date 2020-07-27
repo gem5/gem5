@@ -70,3 +70,6 @@ class MessageBuffer(SimObject):
     max_dequeue_rate = Param.Unsigned(0, "Maximum number of messages that can \
                                           be dequeued per cycle \
                                     (0 allows dequeueing all ready messages)")
+    routing_priority = Param.Int(0, "Buffer priority when messages are \
+                                     consumed by the network. Smaller value \
+                                     means higher priority")

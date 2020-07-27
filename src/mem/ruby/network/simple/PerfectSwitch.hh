@@ -99,7 +99,7 @@ class PerfectSwitch : public Consumer
     PerfectSwitch& operator=(const PerfectSwitch& obj);
 
     void operateVnet(int vnet);
-    void operateMessageBuffer(MessageBuffer *b, int incoming, int vnet);
+    void operateMessageBuffer(MessageBuffer *b, int vnet);
 
     const SwitchID m_switch_id;
     Switch * const m_switch;
@@ -114,6 +114,13 @@ class PerfectSwitch : public Consumer
         std::vector<MessageBuffer*> buffers;
     };
     std::vector<OutputPort> m_out;
+
+    // input ports ordered by priority; indexed by vnet first
+    std::vector<std::vector<MessageBuffer*> > m_in_prio;
+    // input ports grouped by priority; indexed by vnet,prio_lv
+    std::vector<std::vector<std::vector<MessageBuffer*>>> m_in_prio_groups;
+
+    void updatePriorityGroups(int vnet, MessageBuffer* buf);
 
     uint32_t m_virtual_networks;
     int m_wakeups_wo_switch;

@@ -88,7 +88,33 @@ PerfectSwitch::addInPort(const std::vector<MessageBuffer*>& in)
             in[i]->setConsumer(this);
             in[i]->setIncomingLink(port);
             in[i]->setVnet(i);
+            updatePriorityGroups(i, in[i]);
         }
+    }
+}
+
+void
+PerfectSwitch::updatePriorityGroups(int vnet, MessageBuffer* in_buf)
+{
+    while (m_in_prio.size() <= vnet) {
+        m_in_prio.emplace_back();
+        m_in_prio_groups.emplace_back();
+    }
+
+    m_in_prio[vnet].push_back(in_buf);
+
+    std::sort(m_in_prio[vnet].begin(), m_in_prio[vnet].end(),
+        [](const MessageBuffer* i, const MessageBuffer* j)
+        { return i->routingPriority() < j->routingPriority(); });
+
+    // reset groups
+    m_in_prio_groups[vnet].clear();
+    int cur_prio = m_in_prio[vnet].front()->routingPriority();
+    m_in_prio_groups[vnet].emplace_back();
+    for (auto buf : m_in_prio[vnet]) {
+        if (buf->routingPriority() != cur_prio)
+            m_in_prio_groups[vnet].emplace_back();
+        m_in_prio_groups[vnet].back().push_back(buf);
     }
 }
 
@@ -126,12 +152,15 @@ PerfectSwitch::inBuffer(int in_port, int vnet) const
 void
 PerfectSwitch::operateVnet(int vnet)
 {
-    if (m_pending_message_count[vnet] > 0) {
+    if (m_pending_message_count[vnet] == 0)
+        return;
+
+    for (auto &in : m_in_prio_groups[vnet]) {
         // first check the port with the oldest message
         unsigned start_in_port = 0;
         Tick lowest_tick = MaxTick;
-        for (int i = 0; i < m_in.size(); ++i) {
-            MessageBuffer *buffer = inBuffer(i, vnet);
+        for (int i = 0; i < in.size(); ++i) {
+            MessageBuffer *buffer = in[i];
             if (buffer) {
                 Tick ready_time = buffer->readyTime();
                 if (ready_time < lowest_tick){
@@ -141,21 +170,20 @@ PerfectSwitch::operateVnet(int vnet)
             }
         }
         DPRINTF(RubyNetwork, "vnet %d: %d pending msgs. "
-                             "Checking port %d first\n",
+                            "Checking port %d first\n",
                 vnet, m_pending_message_count[vnet], start_in_port);
         // check all ports starting with the one with the oldest message
-        for (int i = 0; i < m_in.size(); ++i) {
-            int in_port = (i + start_in_port) % m_in.size();
-            MessageBuffer *buffer = inBuffer(in_port, vnet);
+        for (int i = 0; i < in.size(); ++i) {
+            int in_port = (i + start_in_port) % in.size();
+            MessageBuffer *buffer = in[in_port];
             if (buffer)
-                operateMessageBuffer(buffer, in_port, vnet);
+                operateMessageBuffer(buffer, vnet);
         }
     }
 }
 
 void
-PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
-                                    int vnet)
+PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int vnet)
 {
     MsgPtr msg_ptr;
     Message *net_msg_ptr = NULL;
@@ -166,7 +194,7 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
     Tick current_time = m_switch->clockEdge();
 
     while (buffer->isReady(current_time)) {
-        DPRINTF(RubyNetwork, "incoming: %d\n", incoming);
+        DPRINTF(RubyNetwork, "incoming: %d\n", buffer->getIncomingLink());
 
         // Peek at message
         msg_ptr = buffer->peekMsgPtr();
@@ -237,7 +265,7 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
             // Enqeue msg
             DPRINTF(RubyNetwork, "Enqueuing net msg from "
                     "inport[%d][%d] to outport [%d][%d].\n",
-                    incoming, vnet, outgoing, vnet);
+                    buffer->getIncomingLink(), vnet, outgoing, vnet);
 
             out_port.buffers[vnet]->enqueue(msg_ptr, current_time,
                                            out_port.latency);
