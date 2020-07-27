@@ -369,14 +369,13 @@ class FixedClock(SrcClockDomain):
 class Pl011(Uart):
     type = 'Pl011'
     cxx_header = "dev/arm/pl011.hh"
-    gic = Param.BaseGic(Parent.any, "Gic to use for interrupting")
-    int_num = Param.UInt32("Interrupt number that connects to GIC")
+    interrupt = Param.ArmInterruptPin("Interrupt that connects to GIC")
     end_on_eot = Param.Bool(False, "End the simulation when a EOT is received on the UART")
     int_delay = Param.Latency("100ns", "Time between action and interrupt generation by UART")
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(state, 'uart', self.pio_addr,
-                                               0x1000, [int(self.int_num)])
+            0x1000, [int(self.interrupt.num)])
         node.appendCompatible(["arm,pl011", "arm,primecell"])
 
         # Hardcoded reference to the realview platform clocks, because the
@@ -700,7 +699,7 @@ class VExpress_EMM(RealView):
         return memories
 
     ### Off-chip devices ###
-    uart = Pl011(pio_addr=0x1c090000, int_num=37)
+    uart = Pl011(pio_addr=0x1c090000, interrupt=ArmSPI(num=37))
     pci_host = GenericPciHost(
         conf_base=0x30000000, conf_size='256MB', conf_device_bits=16,
         pci_pio_base=0)
@@ -1012,10 +1011,14 @@ Interrupts:
     clock24MHz = SrcClockDomain(clock="24MHz")
 
     uart = [
-        Pl011(pio_addr=0x1c090000, int_num=37),
-        Pl011(pio_addr=0x1c0a0000, int_num=38, device=Terminal()),
-        Pl011(pio_addr=0x1c0b0000, int_num=39, device=Terminal()),
-        Pl011(pio_addr=0x1c0c0000, int_num=40, device=Terminal())
+        Pl011(pio_addr=0x1c090000,
+            interrupt=ArmSPI(num=37)),
+        Pl011(pio_addr=0x1c0a0000,
+            interrupt=ArmSPI(num=38), device=Terminal()),
+        Pl011(pio_addr=0x1c0b0000,
+            interrupt=ArmSPI(num=39), device=Terminal()),
+        Pl011(pio_addr=0x1c0c0000,
+            interrupt=ArmSPI(num=40), device=Terminal())
     ]
 
     kmi0 = Pl050(pio_addr=0x1c060000, int_num=44, ps2=PS2Keyboard())

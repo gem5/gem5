@@ -171,14 +171,10 @@ class Pl011 : public Uart, public AmbaDevice
     uint16_t rawInt;
 
   protected: // Configuration
-    /** Gic to use for interrupting */
-    BaseGic * const gic;
-
     /** Should the simulation end on an EOT */
     const bool endOnEOT;
 
-    /** Interrupt number to generate */
-    const int intNum;
+    ArmInterruptPin* const interrupt;
 
     /** Delay before interrupting */
     const Tick intDelay;
