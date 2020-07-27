@@ -592,9 +592,9 @@ HDLcd::setInterrupts(uint32_t ints, uint32_t mask)
     int_rawstat = ints;
 
     if (!old_ints && intStatus()) {
-        gic->sendInt(intNum);
+        interrupt->raise();
     } else if (old_ints && !intStatus()) {
-        gic->clearInt(intNum);
+        interrupt->clear();
     }
 }
 

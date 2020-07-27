@@ -303,7 +303,7 @@ Pl111::write(PacketPtr pkt)
         lcdMis = lcdImsc & lcdRis;
 
         if (!lcdMis)
-            gic->clearInt(intNum);
+            interrupt->clear();
 
          break;
       case LcdRis:
@@ -317,7 +317,7 @@ Pl111::write(PacketPtr pkt)
         lcdMis = lcdImsc & lcdRis;
 
         if (!lcdMis)
-            gic->clearInt(intNum);
+            interrupt->clear();
 
         break;
       case LcdUpCurr:
@@ -759,7 +759,7 @@ Pl111::generateInterrupt()
     lcdMis = lcdImsc & lcdRis;
 
     if (lcdMis.underflow || lcdMis.baseaddr || lcdMis.vcomp || lcdMis.ahbmaster) {
-        gic->sendInt(intNum);
+        interrupt->raise();
         DPRINTF(PL111, " -- Generated\n");
     }
 }

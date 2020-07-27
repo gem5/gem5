@@ -86,8 +86,7 @@ class AmbaPioDevice : public BasicPioDevice, public AmbaDevice
 class AmbaIntDevice : public AmbaPioDevice
 {
   protected:
-    int intNum;
-    BaseGic *gic;
+    ArmInterruptPin* const interrupt;
     Tick intDelay;
 
   public:
@@ -102,8 +101,7 @@ class AmbaDmaDevice : public DmaDevice, public AmbaDevice
     Addr     pioAddr;
     Addr     pioSize;
     Tick     pioDelay;
-    int      intNum;
-    BaseGic  *gic;
+    ArmInterruptPin* const interrupt;
 
   public:
     typedef AmbaDmaDeviceParams Params;

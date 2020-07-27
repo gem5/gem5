@@ -215,7 +215,7 @@ Sp805::sendInt()
             warn("Watchdog timed out, system reset asserted\n");
     } else {
         intRaised = true;
-        gic->sendInt(intNum);
+        interrupt->raise();
     }
 }
 
@@ -223,7 +223,7 @@ void
 Sp805::clearInt()
 {
     intRaised = false;
-    gic->clearInt(intNum);
+    interrupt->clear();
 }
 
 void

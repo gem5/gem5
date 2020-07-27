@@ -183,11 +183,11 @@ Pl050::updateIntCtrl(InterruptReg ints, ControlReg ctrl)
     if (!old_pending && new_pending) {
         DPRINTF(Pl050, "Generate interrupt: rawInt=%#x ctrl=%#x int=%#x\n",
                 rawInterrupts, control, getInterrupt());
-        gic->sendInt(intNum);
+        interrupt->raise();
     } else if (old_pending && !new_pending) {
         DPRINTF(Pl050, "Clear interrupt: rawInt=%#x ctrl=%#x int=%#x\n",
                 rawInterrupts, control, getInterrupt());
-        gic->clearInt(intNum);
+        interrupt->clear();
     }
 }
 

@@ -85,8 +85,7 @@ class AmbaIntDevice(AmbaPioDevice):
     type = 'AmbaIntDevice'
     abstract = True
     cxx_header = "dev/arm/amba_device.hh"
-    gic = Param.BaseGic(Parent.any, "Gic to use for interrupting")
-    int_num = Param.UInt32("Interrupt number that connects to GIC")
+    interrupt = Param.ArmInterruptPin("Interrupt that connects to GIC")
     int_delay = Param.Latency("100ns",
             "Time between action and interrupt generation by device")
 
@@ -96,8 +95,7 @@ class AmbaDmaDevice(DmaDevice):
     cxx_header = "dev/arm/amba_device.hh"
     pio_addr = Param.Addr("Address for AMBA slave interface")
     pio_latency = Param.Latency("10ns", "Time between action and write/read result by AMBA DMA Device")
-    gic = Param.BaseGic(Parent.any, "Gic to use for interrupting")
-    int_num = Param.UInt32("Interrupt number that connects to GIC")
+    interrupt = Param.ArmInterruptPin("Interrupt that connects to GIC")
     amba_id = Param.UInt32("ID of AMBA device for kernel detection")
 
 class A9SCU(BasicPioDevice):
@@ -412,7 +410,7 @@ Reference:
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(state, 'watchdog',
-            self.pio_addr, 0x1000, [int(self.int_num)])
+            self.pio_addr, 0x1000, [int(self.interrupt.num)])
         node.appendCompatible(['arm,sp805', 'arm,primecell'])
         clocks = [state.phandle(self.clk_domain.unproxy(self))]
         clock_names = ['wdogclk']
@@ -445,7 +443,7 @@ class PL031(AmbaIntDevice):
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(state, 'rtc', self.pio_addr,
-                                               0x1000, [int(self.int_num)])
+            0x1000, [int(self.interrupt.num)])
 
         node.appendCompatible(["arm,pl031", "arm,primecell"])
         clock = state.phandle(self.clk_domain.unproxy(self))
@@ -463,7 +461,7 @@ class Pl050(AmbaIntDevice):
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(state, 'kmi', self.pio_addr,
-                                               0x1000, [int(self.int_num)])
+            0x1000, [int(self.interrupt.num)])
 
         node.appendCompatible(["arm,pl050", "arm,primecell"])
         clock = state.phandle(self.clk_domain.unproxy(self))
@@ -679,7 +677,7 @@ class VExpress_EMM(RealView):
                                     pio_addr=0x2C080000)
 
     hdlcd  = HDLcd(pxl_clk=dcc.osc_pxl,
-                   pio_addr=0x2b000000, int_num=117,
+                   pio_addr=0x2b000000, interrupt=ArmSPI(num=117),
                    workaround_swap_rb=True)
 
     def _on_chip_devices(self):
@@ -712,9 +710,11 @@ class VExpress_EMM(RealView):
 
     timer0 = Sp804(int_num0=34, int_num1=34, pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
     timer1 = Sp804(int_num0=35, int_num1=35, pio_addr=0x1C120000, clock0='1MHz', clock1='1MHz')
-    clcd   = Pl111(pio_addr=0x1c1f0000, int_num=46)
-    kmi0   = Pl050(pio_addr=0x1c060000, int_num=44, ps2=PS2Keyboard())
-    kmi1   = Pl050(pio_addr=0x1c070000, int_num=45, ps2=PS2TouchKit())
+    clcd   = Pl111(pio_addr=0x1c1f0000, interrupt=ArmSPI(num=46))
+    kmi0   = Pl050(pio_addr=0x1c060000, interrupt=ArmSPI(num=44),
+                   ps2=PS2Keyboard())
+    kmi1   = Pl050(pio_addr=0x1c070000, interrupt=ArmSPI(num=45),
+                   ps2=PS2TouchKit())
     cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=2,
                             io_shift = 2, ctrl_offset = 2, Command = 0x1,
                             BAR0 = 0x1C1A0000, BAR0Size = '256B',
@@ -725,7 +725,7 @@ class VExpress_EMM(RealView):
                                   conf_table_reported = False)
     vram           = SimpleMemory(range = AddrRange(0x18000000, size='32MB'),
                                   conf_table_reported = False)
-    rtc            = PL031(pio_addr=0x1C170000, int_num=36)
+    rtc            = PL031(pio_addr=0x1C170000, interrupt=ArmSPI(num=36))
 
     l2x0_fake      = IsaFake(pio_addr=0x2C100000, pio_size=0xfff)
     uart1_fake     = AmbaFake(pio_addr=0x1C0A0000)
@@ -971,7 +971,7 @@ Interrupts:
     ### On-chip devices ###
 
     # Trusted Watchdog, SP805
-    trusted_watchdog = Sp805(pio_addr=0x2a490000, int_num=56)
+    trusted_watchdog = Sp805(pio_addr=0x2a490000, interrupt=ArmSPI(num=56))
 
     sys_counter = SystemCounter()
     generic_timer = GenericTimer(int_phys_s=ArmPPI(num=29),
@@ -988,7 +988,7 @@ Interrupts:
                 int_phys=ArmSPI(num=58), int_virt=ArmSPI(num=134))
     ])
 
-    system_watchdog = Sp805(pio_addr=0x2b060000, int_num=130)
+    system_watchdog = Sp805(pio_addr=0x2b060000, interrupt=ArmSPI(num=130))
 
     def _on_chip_devices(self):
         return [
@@ -1021,12 +1021,14 @@ Interrupts:
             interrupt=ArmSPI(num=40), device=Terminal())
     ]
 
-    kmi0 = Pl050(pio_addr=0x1c060000, int_num=44, ps2=PS2Keyboard())
-    kmi1 = Pl050(pio_addr=0x1c070000, int_num=45, ps2=PS2TouchKit())
+    kmi0 = Pl050(pio_addr=0x1c060000, interrupt=ArmSPI(num=44),
+                 ps2=PS2Keyboard())
+    kmi1 = Pl050(pio_addr=0x1c070000, interrupt=ArmSPI(num=45),
+                 ps2=PS2TouchKit())
 
-    watchdog = Sp805(pio_addr=0x1c0f0000, int_num=32)
+    watchdog = Sp805(pio_addr=0x1c0f0000, interrupt=ArmSPI(num=32))
 
-    rtc = PL031(pio_addr=0x1c170000, int_num=36)
+    rtc = PL031(pio_addr=0x1C170000, interrupt=ArmSPI(num=36))
 
     ### gem5-specific off-chip devices ###
     pci_host = GenericArmPciHost(
@@ -1177,7 +1179,7 @@ class VExpress_GEM5_V1_Base(VExpress_GEM5_Base):
 
 class VExpress_GEM5_V1(VExpress_GEM5_V1_Base):
     hdlcd  = HDLcd(pxl_clk=VExpress_GEM5_V1_Base.dcc.osc_pxl,
-                   pio_addr=0x2b000000, int_num=95)
+                   pio_addr=0x2b000000, interrupt=ArmSPI(num=95))
 
     def _on_chip_devices(self):
         return super(VExpress_GEM5_V1,self)._on_chip_devices() + [
@@ -1205,7 +1207,7 @@ class VExpress_GEM5_V2_Base(VExpress_GEM5_Base):
 
 class VExpress_GEM5_V2(VExpress_GEM5_V2_Base):
     hdlcd  = HDLcd(pxl_clk=VExpress_GEM5_V2_Base.dcc.osc_pxl,
-                   pio_addr=0x2b000000, int_num=95)
+                   pio_addr=0x2b000000, interrupt=ArmSPI(num=95))
 
     def _on_chip_devices(self):
         return super(VExpress_GEM5_V2,self)._on_chip_devices() + [
