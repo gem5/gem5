@@ -426,7 +426,11 @@ GenericTimer::unserialize(CheckpointIn &cp)
         cpu_count = OLD_CPU_MAX;
     }
 
-    if (cpu_count != system.threads.size()) {
+    // We cannot assert for equality here because CPU timers are dynamically
+    // created on the first miscreg access. Therefore, if we take the checkpoint
+    // before any timer registers have been accessed, the number of counters
+    // is actually smaller than the total number of CPUs.
+    if (cpu_count > system.threads.size()) {
         fatal("The simulated system has been initialized with %d CPUs, "
               "but the Generic Timer checkpoint expects %d CPUs. Consider "
               "restoring the checkpoint specifying %d CPUs.",
