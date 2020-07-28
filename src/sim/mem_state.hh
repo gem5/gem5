@@ -190,7 +190,18 @@ class MemState : public Serializable
         paramOut(cp, "stackMin", _stackMin);
         paramOut(cp, "nextThreadStackBase", _nextThreadStackBase);
         paramOut(cp, "mmapEnd", _mmapEnd);
+
+        ScopedCheckpointSection sec(cp, "vmalist");
+        paramOut(cp, "size", _vmaList.size());
+        int count = 0;
+        for (auto vma : _vmaList) {
+            ScopedCheckpointSection sec(cp, csprintf("Vma%d", count++));
+            paramOut(cp, "name", vma.getName());
+            paramOut(cp, "addrRangeStart", vma.start());
+            paramOut(cp, "addrRangeEnd", vma.end());
+        }
     }
+
     void
     unserialize(CheckpointIn &cp) override
     {
@@ -201,6 +212,20 @@ class MemState : public Serializable
         paramIn(cp, "stackMin", _stackMin);
         paramIn(cp, "nextThreadStackBase", _nextThreadStackBase);
         paramIn(cp, "mmapEnd", _mmapEnd);
+
+        int count;
+        ScopedCheckpointSection sec(cp, "vmalist");
+        paramIn(cp, "size", count);
+        for (int i = 0; i < count; ++i) {
+            ScopedCheckpointSection sec(cp, csprintf("Vma%d", i));
+            std::string name;
+            Addr start;
+            Addr end;
+            paramIn(cp, "name", name);
+            paramIn(cp, "addrRangeStart", start);
+            paramIn(cp, "addrRangeEnd", end);
+            _vmaList.emplace_back(AddrRange(start, end), _pageBytes, name);
+        }
     }
 
     /**
