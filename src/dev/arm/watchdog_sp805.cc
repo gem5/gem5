@@ -49,7 +49,6 @@ Sp805::Sp805(Sp805Params const* params)
       persistedValue(timeoutInterval),
       enabled(false),
       resetEnabled(false),
-      intRaised(false),
       writeAccessEnabled(true),
       integrationTestEnabled(false),
       timeoutEvent([this] { timeoutExpired(); }, name())
@@ -78,10 +77,10 @@ Sp805::read(PacketPtr pkt)
         warn("Sp805::read: WO reg (0x%x) [WDOGINTCLR]\n", addr);
         break;
       case WDOGRIS:
-        resp = intRaised;
+        resp = interrupt->active();
         break;
       case WDOGMIS:
-        resp = intRaised & enabled;
+        resp = interrupt->active() && enabled;
         break;
       case WDOGLOCK:
         resp = writeAccessEnabled;
@@ -210,11 +209,10 @@ Sp805::sendInt()
 {
     // If the previously sent interrupt has not been served,
     // assert system reset if enabled
-    if (intRaised & enabled) {
+    if (interrupt->active() && enabled) {
         if (resetEnabled)
             warn("Watchdog timed out, system reset asserted\n");
     } else {
-        intRaised = true;
         interrupt->raise();
     }
 }
@@ -222,7 +220,6 @@ Sp805::sendInt()
 void
 Sp805::clearInt()
 {
-    intRaised = false;
     interrupt->clear();
 }
 
@@ -234,7 +231,6 @@ Sp805::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(persistedValue);
     SERIALIZE_SCALAR(enabled);
     SERIALIZE_SCALAR(resetEnabled);
-    SERIALIZE_SCALAR(intRaised);
     SERIALIZE_SCALAR(writeAccessEnabled);
     SERIALIZE_SCALAR(integrationTestEnabled);
 
@@ -252,7 +248,6 @@ Sp805::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(persistedValue);
     UNSERIALIZE_SCALAR(enabled);
     UNSERIALIZE_SCALAR(resetEnabled);
-    UNSERIALIZE_SCALAR(intRaised);
     UNSERIALIZE_SCALAR(writeAccessEnabled);
     UNSERIALIZE_SCALAR(integrationTestEnabled);
 

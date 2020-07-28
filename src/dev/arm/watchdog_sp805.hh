@@ -93,9 +93,6 @@ class Sp805 : public AmbaIntDevice
     /** Indicates if reset behaviour is enabled when counter reaches 0 */
     bool resetEnabled;
 
-    /** Indicates if an interrupt has been raised by the counter reaching 0 */
-    bool intRaised;
-
     /** Indicates if write access to registers is enabled */
     bool writeAccessEnabled;
 
