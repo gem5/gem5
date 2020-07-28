@@ -168,7 +168,8 @@ EmulationPageTable::translate(const RequestPtr &req)
 void
 EmulationPageTable::serialize(CheckpointOut &cp) const
 {
-    paramOut(cp, "ptable.size", pTable.size());
+    ScopedCheckpointSection sec(cp, "ptable");
+    paramOut(cp, "size", pTable.size());
 
     PTable::size_type count = 0;
     for (auto &pte : pTable) {
@@ -185,7 +186,8 @@ void
 EmulationPageTable::unserialize(CheckpointIn &cp)
 {
     int count;
-    paramIn(cp, "ptable.size", count);
+    ScopedCheckpointSection sec(cp, "ptable");
+    paramIn(cp, "size", count);
 
     for (int i = 0; i < count; ++i) {
         ScopedCheckpointSection sec(cp, csprintf("Entry%d", i));
