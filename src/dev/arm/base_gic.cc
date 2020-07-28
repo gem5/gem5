@@ -121,7 +121,7 @@ ArmPPIGen::get(ThreadContext* tc)
 ArmInterruptPin::ArmInterruptPin(
     Platform  *_platform, ThreadContext *tc, uint32_t int_num)
       : threadContext(tc), platform(dynamic_cast<RealView*>(_platform)),
-        intNum(int_num)
+        intNum(int_num), _active(false)
 {
     fatal_if(!platform, "Interrupt not connected to a RealView platform");
 }
@@ -143,6 +143,18 @@ ArmInterruptPin::targetContext() const
     return threadContext->contextId();
 }
 
+void
+ArmInterruptPin::serialize(CheckpointOut &cp) const
+{
+    SERIALIZE_SCALAR(_active);
+}
+
+void
+ArmInterruptPin::unserialize(CheckpointIn &cp)
+{
+    UNSERIALIZE_SCALAR(_active);
+}
+
 ArmSPI::ArmSPI(
     Platform  *_platform, uint32_t int_num)
       : ArmInterruptPin(_platform, nullptr, int_num)
@@ -152,12 +164,14 @@ ArmSPI::ArmSPI(
 void
 ArmSPI::raise()
 {
+    _active = true;
     platform->gic->sendInt(intNum);
 }
 
 void
 ArmSPI::clear()
 {
+    _active = false;
     platform->gic->clearInt(intNum);
 }
 
@@ -170,12 +184,14 @@ ArmPPI::ArmPPI(
 void
 ArmPPI::raise()
 {
+    _active = true;
     platform->gic->sendPPInt(intNum, targetContext());
 }
 
 void
 ArmPPI::clear()
 {
+    _active = false;
     platform->gic->clearPPInt(intNum, targetContext());
 }
 
