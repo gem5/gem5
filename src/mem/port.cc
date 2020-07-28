@@ -131,7 +131,7 @@ RequestPort::bind(Port &peer)
     _responsePort = response_port;
     Port::bind(peer);
     // response port also keeps track of request port
-    _responsePort->slaveBind(*this);
+    _responsePort->responderBind(*this);
 }
 
 void
@@ -139,7 +139,7 @@ RequestPort::unbind()
 {
     panic_if(!isConnected(), "Can't unbind request port %s which is "
     "not bound.", name());
-    _responsePort->slaveUnbind();
+    _responsePort->responderUnbind();
     _responsePort = &defaultResponsePort;
     Port::unbind();
 }
@@ -164,7 +164,7 @@ RequestPort::printAddr(Addr a)
 }
 
 /**
- * Slave port
+ * Response port
  */
 ResponsePort::ResponsePort(const std::string& name, SimObject* _owner,
     PortID id) : Port(name, id), _requestPort(&defaultRequestPort),
@@ -177,14 +177,14 @@ ResponsePort::~ResponsePort()
 }
 
 void
-ResponsePort::slaveUnbind()
+ResponsePort::responderUnbind()
 {
     _requestPort = &defaultRequestPort;
     Port::unbind();
 }
 
 void
-ResponsePort::slaveBind(RequestPort& request_port)
+ResponsePort::responderBind(RequestPort& request_port)
 {
     _requestPort = &request_port;
     Port::bind(request_port);

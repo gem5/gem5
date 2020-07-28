@@ -423,13 +423,13 @@ class ResponsePort : public Port, public AtomicResponseProtocol,
      * Called by the request port to unbind. Should never be called
      * directly.
      */
-    void slaveUnbind();
+    void responderUnbind();
 
     /**
      * Called by the request port to bind. Should never be called
      * directly.
      */
-    void slaveBind(RequestPort& request_port);
+    void responderBind(RequestPort& request_port);
 
     /**
      * Default implementations.

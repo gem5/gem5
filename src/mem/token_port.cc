@@ -109,7 +109,7 @@ TokenSlavePort::bind(Port& peer)
 void
 TokenSlavePort::unbind()
 {
-    SlavePort::slaveUnbind();
+    SlavePort::responderUnbind();
     tokenMasterPort = nullptr;
 }
 
