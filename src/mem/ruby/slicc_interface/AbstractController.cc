@@ -149,8 +149,7 @@ AbstractController::wakeUpAllBuffers(Addr addr)
 {
     if (m_waiting_buffers.count(addr) > 0) {
         //
-        // Wake up all possible lower rank (i.e. lower priority) buffers that could
-        // be waiting on this message.
+        // Wake up all possible buffers that could be waiting on this message.
         //
         for (int in_port_rank = m_in_ports - 1;
              in_port_rank >= 0;

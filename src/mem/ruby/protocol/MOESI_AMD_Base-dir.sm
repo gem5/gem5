@@ -180,6 +180,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   void set_tbe(TBE a);
   void unset_tbe();
   void wakeUpAllBuffers();
+  void wakeUpAllBuffers(Addr a);
   void wakeUpBuffers(Addr a);
   Cycles curCycle();
 
@@ -1069,12 +1070,20 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     stall_and_wait(requestNetwork_in, address);
   }
 
+  action(sd_stallAndWaitRequest, "sd", desc="Stall and wait on the address") {
+    stall_and_wait(dmaRequestQueue_in, address);
+  }
+
   action(wa_wakeUpDependents, "wa", desc="Wake up any requests waiting for this address") {
     wakeUpBuffers(address);
   }
 
   action(wa_wakeUpAllDependents, "waa", desc="Wake up any requests waiting for this region") {
     wakeUpAllBuffers();
+  }
+
+  action(wa_wakeUpAllDependentsAddr, "waaa", desc="Wake up any requests waiting for this address") {
+    wakeUpAllBuffers(address);
   }
 
   action(z_stall, "z", desc="...") {
@@ -1090,6 +1099,11 @@ machine(MachineType:Directory, "AMD Baseline protocol")
       st_stallAndWaitRequest;
   }
 
+  // The exit state is always going to be U, so wakeUpDependents logic should be covered in all the
+  // transitions which are flowing into U.
+  transition({BL, BS_M, BM_M, B_M, BP, BDW_P, BS_PM, BM_PM, B_PM, BS_Pm, BM_Pm, B_Pm, B}, {DmaRead,DmaWrite}){
+    sd_stallAndWaitRequest;
+  }
 
   // transitions from U
   transition(U, DmaRead, BDR_PM) {L3TagArrayRead} {
@@ -1193,7 +1207,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   transition({B}, CoreUnblock, U) {
-    wa_wakeUpDependents;
+    wa_wakeUpAllDependentsAddr;
     pu_popUnblockQueue;
   }
 
@@ -1323,12 +1337,18 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   transition(BDW_P, ProbeAcksComplete, U) {
+    // Check for pending requests from the core we put to sleep while waiting
+    // for a response
+    wa_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
     pt_popTriggerQueue;
   }
 
   transition(BDR_Pm, ProbeAcksComplete, U) {
     dd_sendResponseDmaData;
+    // Check for pending requests from the core we put to sleep while waiting
+    // for a response
+    wa_wakeUpDependents;
     dt_deallocateTBE;
     pt_popTriggerQueue;
   }
