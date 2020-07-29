@@ -522,9 +522,8 @@ class HDLcd(AmbaDmaDevice):
         port_node = FdtNode("port")
         port_node.append(endpoint_node)
 
-        # Interrupt number is hardcoded; it is not a property of this class
         node = self.generateBasicPioDeviceNode(state, 'hdlcd',
-                                               self.pio_addr, 0x1000, [63])
+            self.pio_addr, 0x1000, [ self.interrupt.num ])
 
         node.appendCompatible(["arm,hdlcd"])
         node.append(FdtPropertyWords("clocks", state.phandle(self.pxl_clk)))
