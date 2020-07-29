@@ -57,14 +57,14 @@ class PioDevice(ClockedObject):
             state.sizeCells(size) ))
 
         if interrupts:
-            if any([i < 32 for i in interrupts]):
+            if any([i.num < 32 for i in interrupts]):
                 raise(("Interrupt number smaller than 32 "+
                        " in PioDevice %s") % name)
 
             # subtracting 32 because Linux assumes that SPIs start at 0, while
             # gem5 uses the internal GIC numbering (SPIs start at 32)
             node.append(FdtPropertyWords("interrupts", sum(
-                [[0, i  - 32, 4] for i in interrupts], []) ))
+                [[0, i.num  - 32, 4] for i in interrupts], []) ))
 
         return node
 

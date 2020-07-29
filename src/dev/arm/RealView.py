@@ -373,7 +373,7 @@ class Pl011(Uart):
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(state, 'uart', self.pio_addr,
-            0x1000, [int(self.interrupt.num)])
+            0x1000, [ self.interrupt ])
         node.appendCompatible(["arm,pl011", "arm,primecell"])
 
         # Hardcoded reference to the realview platform clocks, because the
@@ -409,7 +409,7 @@ Reference:
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(state, 'watchdog',
-            self.pio_addr, 0x1000, [int(self.interrupt.num)])
+            self.pio_addr, 0x1000, [ self.interrupt ])
         node.appendCompatible(['arm,sp805', 'arm,primecell'])
         clocks = [state.phandle(self.clk_domain.unproxy(self))]
         clock_names = ['wdogclk']
@@ -442,7 +442,7 @@ class PL031(AmbaIntDevice):
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(state, 'rtc', self.pio_addr,
-            0x1000, [int(self.interrupt.num)])
+            0x1000, [ self.interrupt ])
 
         node.appendCompatible(["arm,pl031", "arm,primecell"])
         clock = state.phandle(self.clk_domain.unproxy(self))
@@ -460,7 +460,7 @@ class Pl050(AmbaIntDevice):
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(state, 'kmi', self.pio_addr,
-            0x1000, [int(self.interrupt.num)])
+            0x1000, [ self.interrupt ])
 
         node.appendCompatible(["arm,pl050", "arm,primecell"])
         clock = state.phandle(self.clk_domain.unproxy(self))
@@ -523,7 +523,7 @@ class HDLcd(AmbaDmaDevice):
         port_node.append(endpoint_node)
 
         node = self.generateBasicPioDeviceNode(state, 'hdlcd',
-            self.pio_addr, 0x1000, [ self.interrupt.num ])
+            self.pio_addr, 0x1000, [ self.interrupt ])
 
         node.appendCompatible(["arm,hdlcd"])
         node.append(FdtPropertyWords("clocks", state.phandle(self.pxl_clk)))
