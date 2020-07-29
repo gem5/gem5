@@ -2155,6 +2155,70 @@ class PortParamDesc(with_metaclass(Singleton, object)):
     ptype_str = 'Port'
     ptype = Port
 
+class DeprecatedParam(object):
+    """A special type for deprecated parameter variable names.
+
+    There are times when we need to change the name of parameter, but this
+    breaks the external-facing python API used in configuration files. Using
+    this "type" for a parameter will warn users that they are using the old
+    name, but allow for backwards compatibility.
+
+    Usage example:
+    In the following example, the `time` parameter is changed to `delay`.
+
+    ```
+    class SomeDevice(SimObject):
+        delay = Param.Latency('1ns', 'The time to wait before something')
+        time = DeprecatedParam(delay, '`time` is now called `delay`')
+    ```
+    """
+
+    def __init__(self, new_param, message=''):
+        """new_param: the new parameter variable that users should be using
+        instead of this parameter variable.
+        message: an optional message to print when warning the user
+        """
+        self.message = message
+        self.newParam = new_param
+        # Note: We won't know the string variable names until later in the
+        # SimObject initialization process. Note: we expect that the setters
+        # will be called when the SimObject type (class) is initialized so
+        # these variables should be filled in before the instance of the
+        # SimObject with this parameter is constructed
+        self._oldName = ''
+        self._newName = ''
+
+    @property
+    def oldName(self):
+        assert(self._oldName != '') # should already be set
+        return self._oldName
+
+    @oldName.setter
+    def oldName(self, name):
+        assert(self._oldName == '') # Cannot "re-set" this value
+        self._oldName = name
+
+    @property
+    def newName(self):
+        assert(self._newName != '') # should already be set
+        return self._newName
+
+    @newName.setter
+    def newName(self, name):
+        assert(self._newName == '') # Cannot "re-set" this value
+        self._newName = name
+
+    def printWarning(self, instance_name, simobj_name):
+        """Issue a warning that this variable name should not be used.
+
+        instance_name: str, the name of the instance used in python
+        simobj_name: str, the name of the SimObject type
+        """
+        if not self.message:
+            self.message = "See {} for more information".format(simobj_name)
+        warn('{}.{} is deprecated. {}'.format(
+            instance_name, self._oldName, self.message))
+
 baseEnums = allEnums.copy()
 baseParams = allParams.copy()
 
@@ -2180,4 +2244,6 @@ __all__ = ['Param', 'VectorParam',
            'NextEthernetAddr', 'NULL',
            'Port', 'RequestPort', 'ResponsePort', 'MasterPort', 'SlavePort',
            'VectorPort', 'VectorRequestPort', 'VectorResponsePort',
-           'VectorMasterPort', 'VectorSlavePort']
+           'VectorMasterPort', 'VectorSlavePort',
+           'DeprecatedParam',
+           ]

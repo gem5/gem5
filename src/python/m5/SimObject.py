@@ -467,6 +467,12 @@ class MetaSimObject(type):
         cls._params = multidict() # param descriptions
         cls._ports = multidict()  # port descriptions
 
+        # Parameter names that are deprecated. Dict[str, DeprecatedParam]
+        # The key is the "old_name" so that when the old_name is used in
+        # python config files, we will use the DeprecatedParam object to
+        # translate to the new type.
+        cls._deprecated_params = multidict()
+
         # class or instance attributes
         cls._values = multidict()   # param values
         cls._hr_values = multidict() # human readable param values
@@ -495,6 +501,7 @@ class MetaSimObject(type):
             cls._base = base
             cls._params.parent = base._params
             cls._ports.parent = base._ports
+            cls._deprecated_params.parent = base._deprecated_params
             cls._values.parent = base._values
             cls._hr_values.parent = base._hr_values
             cls._children.parent = base._children
@@ -531,6 +538,15 @@ class MetaSimObject(type):
             # port objects
             elif isinstance(val, Port):
                 cls._new_port(key, val)
+
+            # Deprecated variable names
+            elif isinstance(val, DeprecatedParam):
+                new_name, new_val = cls._get_param_by_value(val.newParam)
+                # Note: We don't know the (string) name of this variable until
+                # here, so now we can finish setting up the dep_param.
+                val.oldName = key
+                val.newName = new_name
+                cls._deprecated_params[key] = val
 
             # init-time-only keywords
             elif key in cls.init_keywords:
@@ -603,6 +619,18 @@ class MetaSimObject(type):
             ref = cls._ports[attr].makeRef(cls)
             cls._port_refs[attr] = ref
         return ref
+
+    def _get_param_by_value(cls, value):
+        """Given an object, value, return the name and the value from the
+        internal list of parameter values. If this value can't be found, raise
+        a runtime error. This will search both the current object and its
+        parents.
+        """
+        for k,v in cls._value_dict.items():
+            if v == value:
+                return k,v
+        raise RuntimeError("Cannot find parameter {} in parameter list"
+                           .format(value))
 
     # Set attribute (called on foo.attr = value when foo is an
     # instance of class cls).
@@ -1255,6 +1283,11 @@ class SimObject(object):
         return ref
 
     def __getattr__(self, attr):
+        if attr in self._deprecated_params:
+            dep_param = self._deprecated_params[attr]
+            dep_param.printWarning(self._name, self.__class__.__name__)
+            return getattr(self, self._deprecated_params[attr].newName)
+
         if attr in self._ports:
             return self._get_port_ref(attr)
 
@@ -1286,6 +1319,11 @@ class SimObject(object):
         if attr.startswith('_'):
             object.__setattr__(self, attr, value)
             return
+
+        if attr in self._deprecated_params:
+            dep_param = self._deprecated_params[attr]
+            dep_param.printWarning(self._name, self.__class__.__name__)
+            return setattr(self, self._deprecated_params[attr].newName, value)
 
         if attr in self._ports:
             # set up port connection
