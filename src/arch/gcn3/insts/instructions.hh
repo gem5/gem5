@@ -80189,6 +80189,8 @@ namespace Gcn3ISA
         } // isDstOperand
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_FLAT__FLAT_ATOMIC_SUB
 
     class Inst_FLAT__FLAT_ATOMIC_SMIN : public Inst_FLAT
@@ -80717,6 +80719,8 @@ namespace Gcn3ISA
         } // isDstOperand
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_FLAT__FLAT_ATOMIC_INC
 
     class Inst_FLAT__FLAT_ATOMIC_DEC : public Inst_FLAT
@@ -80783,6 +80787,8 @@ namespace Gcn3ISA
         } // isDstOperand
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_FLAT__FLAT_ATOMIC_DEC
 
     class Inst_FLAT__FLAT_ATOMIC_SWAP_X2 : public Inst_FLAT
@@ -81051,6 +81057,8 @@ namespace Gcn3ISA
         } // isDstOperand
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_FLAT__FLAT_ATOMIC_SUB_X2
 
     class Inst_FLAT__FLAT_ATOMIC_SMIN_X2 : public Inst_FLAT
@@ -81579,6 +81587,8 @@ namespace Gcn3ISA
         } // isDstOperand
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_FLAT__FLAT_ATOMIC_INC_X2
 
     class Inst_FLAT__FLAT_ATOMIC_DEC_X2 : public Inst_FLAT
@@ -81645,6 +81655,8 @@ namespace Gcn3ISA
         } // isDstOperand
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_FLAT__FLAT_ATOMIC_DEC_X2
 } // namespace Gcn3ISA
 

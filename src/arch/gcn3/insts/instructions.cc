@@ -40643,8 +40643,72 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_ATOMIC_SUB::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
+            wf->wrGmReqsInPipe--;
+            wf->rdGmReqsInPipe--;
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
+
+        addr.read();
+        data.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
+                    = data[lane];
+            }
+        }
+
+        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+            gpuDynInst->computeUnit()->globalMemoryPipe.
+                issueRequest(gpuDynInst);
+            wf->wrGmReqsInPipe--;
+            wf->outstandingReqsWrGm++;
+            wf->rdGmReqsInPipe--;
+            wf->outstandingReqsRdGm++;
+        } else {
+            fatal("Non global flat instructions not implemented yet.\n");
+        }
+
+        gpuDynInst->wavefront()->outstandingReqs++;
+        gpuDynInst->wavefront()->validateRequestCounters();
     }
+    void
+    Inst_FLAT__FLAT_ATOMIC_SUB::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SUB::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        if (isAtomicRet()) {
+            VecOperandU32 vdst(gpuDynInst, extData.VDST);
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane];
+                }
+            }
+
+            vdst.write();
+        }
+    } // completeAcc
 
     Inst_FLAT__FLAT_ATOMIC_SMIN::Inst_FLAT__FLAT_ATOMIC_SMIN(InFmt_FLAT *iFmt)
         : Inst_FLAT(iFmt, "flat_atomic_smin")
@@ -40843,8 +40907,73 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_ATOMIC_INC::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
+            wf->wrGmReqsInPipe--;
+            wf->rdGmReqsInPipe--;
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
+
+        addr.read();
+        data.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
+                    = data[lane];
+            }
+        }
+
+        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+            gpuDynInst->computeUnit()->globalMemoryPipe.
+                issueRequest(gpuDynInst);
+            wf->wrGmReqsInPipe--;
+            wf->outstandingReqsWrGm++;
+            wf->rdGmReqsInPipe--;
+            wf->outstandingReqsRdGm++;
+        } else {
+            fatal("Non global flat instructions not implemented yet.\n");
+        }
+
+        gpuDynInst->wavefront()->outstandingReqs++;
+        gpuDynInst->wavefront()->validateRequestCounters();
     }
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_INC::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_INC::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        if (isAtomicRet()) {
+            VecOperandU32 vdst(gpuDynInst, extData.VDST);
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane];
+                }
+            }
+
+            vdst.write();
+        }
+    } // completeAcc
 
     Inst_FLAT__FLAT_ATOMIC_DEC::Inst_FLAT__FLAT_ATOMIC_DEC(InFmt_FLAT *iFmt)
         : Inst_FLAT(iFmt, "flat_atomic_dec")
@@ -40868,8 +40997,73 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_ATOMIC_DEC::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
+            wf->wrGmReqsInPipe--;
+            wf->rdGmReqsInPipe--;
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
+
+        addr.read();
+        data.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
+                    = data[lane];
+            }
+        }
+
+        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+            gpuDynInst->computeUnit()->globalMemoryPipe.
+                issueRequest(gpuDynInst);
+            wf->wrGmReqsInPipe--;
+            wf->outstandingReqsWrGm++;
+            wf->rdGmReqsInPipe--;
+            wf->outstandingReqsRdGm++;
+        } else {
+            fatal("Non global flat instructions not implemented yet.\n");
+        }
+
+        gpuDynInst->wavefront()->outstandingReqs++;
+        gpuDynInst->wavefront()->validateRequestCounters();
     }
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_DEC::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_DEC::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        if (isAtomicRet()) {
+            VecOperandU32 vdst(gpuDynInst, extData.VDST);
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane];
+                }
+            }
+
+            vdst.write();
+        }
+    } // completeAcc
 
     Inst_FLAT__FLAT_ATOMIC_SWAP_X2::Inst_FLAT__FLAT_ATOMIC_SWAP_X2(
           InFmt_FLAT *iFmt)
@@ -41118,8 +41312,74 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_ATOMIC_SUB_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
+            wf->wrGmReqsInPipe--;
+            wf->rdGmReqsInPipe--;
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU64 data(gpuDynInst, extData.DATA);
+
+        addr.read();
+        data.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU64*>(gpuDynInst->a_data))[lane]
+                    = data[lane];
+            }
+        }
+
+        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+            gpuDynInst->computeUnit()->globalMemoryPipe.
+                issueRequest(gpuDynInst);
+            wf->wrGmReqsInPipe--;
+            wf->outstandingReqsWrGm++;
+            wf->rdGmReqsInPipe--;
+            wf->outstandingReqsRdGm++;
+        } else {
+            fatal("Non global flat instructions not implemented yet.\n");
+        }
+
+        gpuDynInst->wavefront()->outstandingReqs++;
+        gpuDynInst->wavefront()->validateRequestCounters();
     }
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SUB_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SUB_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        if (isAtomicRet()) {
+            VecOperandU64 vdst(gpuDynInst, extData.VDST);
+
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    vdst[lane] = (reinterpret_cast<VecElemU64*>(
+                        gpuDynInst->d_data))[lane];
+                }
+            }
+
+            vdst.write();
+        }
+    } // completeAcc
 
     Inst_FLAT__FLAT_ATOMIC_SMIN_X2::Inst_FLAT__FLAT_ATOMIC_SMIN_X2(
           InFmt_FLAT *iFmt)
@@ -41326,8 +41586,74 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_ATOMIC_INC_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
+            wf->wrGmReqsInPipe--;
+            wf->rdGmReqsInPipe--;
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU64 data(gpuDynInst, extData.DATA);
+
+        addr.read();
+        data.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU64*>(gpuDynInst->a_data))[lane]
+                    = data[lane];
+            }
+        }
+
+        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+            gpuDynInst->computeUnit()->globalMemoryPipe.
+                issueRequest(gpuDynInst);
+            wf->wrGmReqsInPipe--;
+            wf->outstandingReqsWrGm++;
+            wf->rdGmReqsInPipe--;
+            wf->outstandingReqsRdGm++;
+        } else {
+            fatal("Non global flat instructions not implemented yet.\n");
+        }
+
+        gpuDynInst->wavefront()->outstandingReqs++;
+        gpuDynInst->wavefront()->validateRequestCounters();
     }
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_INC_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_INC_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        if (isAtomicRet()) {
+            VecOperandU64 vdst(gpuDynInst, extData.VDST);
+
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    vdst[lane] = (reinterpret_cast<VecElemU64*>(
+                        gpuDynInst->d_data))[lane];
+                }
+            }
+
+            vdst.write();
+        }
+    } // completeAcc
 
     Inst_FLAT__FLAT_ATOMIC_DEC_X2::Inst_FLAT__FLAT_ATOMIC_DEC_X2(
         InFmt_FLAT *iFmt)
@@ -41353,6 +41679,72 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_ATOMIC_DEC_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
+            wf->wrGmReqsInPipe--;
+            wf->rdGmReqsInPipe--;
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU64 data(gpuDynInst, extData.DATA);
+
+        addr.read();
+        data.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU64*>(gpuDynInst->a_data))[lane]
+                    = data[lane];
+            }
+        }
+
+        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+            gpuDynInst->computeUnit()->globalMemoryPipe.
+                issueRequest(gpuDynInst);
+            wf->wrGmReqsInPipe--;
+            wf->outstandingReqsWrGm++;
+            wf->rdGmReqsInPipe--;
+            wf->outstandingReqsRdGm++;
+        } else {
+            fatal("Non global flat instructions not implemented yet.\n");
+        }
+
+        gpuDynInst->wavefront()->outstandingReqs++;
+        gpuDynInst->wavefront()->validateRequestCounters();
     }
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_DEC_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_DEC_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        if (isAtomicRet()) {
+            VecOperandU64 vdst(gpuDynInst, extData.VDST);
+
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    vdst[lane] = (reinterpret_cast<VecElemU64*>(
+                        gpuDynInst->d_data))[lane];
+                }
+            }
+
+            vdst.write();
+        }
+    } // completeAcc
 } // namespace Gcn3ISA
