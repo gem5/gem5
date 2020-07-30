@@ -1398,7 +1398,7 @@ SMMUTranslationProcess::doReadCD(Yield &yield,
                                  const StreamTableEntry &ste,
                                  uint32_t sid, uint32_t ssid)
 {
-    Addr cd_addr;
+    Addr cd_addr = 0;
 
     if (ste.dw0.s1cdmax == 0) {
         cd_addr = ste.dw0.s1ctxptr << ST_CD_ADDR_SHIFT;
