@@ -44,6 +44,7 @@ import re
 import sys
 
 from six import string_types
+from six.moves import zip_longest
 
 from . import convert
 from . import jobfile
@@ -132,13 +133,13 @@ def compareVersions(v1, v2):
 
     v1 = make_version_list(v1)
     v2 = make_version_list(v2)
+
     # Compare corresponding elements of lists
-    for n1,n2 in zip(v1, v2):
+    # The shorter list is filled with 0 till the lists have the same length
+    for n1,n2 in zip_longest(v1, v2, fillvalue=0):
         if n1 < n2: return -1
         if n1 > n2: return  1
-    # all corresponding values are equal... see if one has extra values
-    if len(v1) < len(v2): return -1
-    if len(v1) > len(v2): return  1
+
     return 0
 
 def crossproduct(items):
