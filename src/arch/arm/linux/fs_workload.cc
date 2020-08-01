@@ -175,7 +175,6 @@ FsLinux::~FsLinux()
     delete kernelPanic;
 
     delete dumpStats;
-    delete debugPrintk;
 }
 
 void
