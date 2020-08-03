@@ -194,12 +194,12 @@ class PosixKvmTimer : public BaseKvmTimer
                   float hostFactor, Tick hostFreq);
     ~PosixKvmTimer();
 
-    void arm(Tick ticks);
-    void disarm();
+    void arm(Tick ticks) override;
+    void disarm() override;
     bool expired() override;
 
   protected:
-    Tick calcResolution();
+    Tick calcResolution() override;
 
   private:
     clockid_t clockID;
