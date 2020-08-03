@@ -74,6 +74,8 @@ mkdir "${test_dir}"
 touch "${exits}"
 echo "compiler,build_target,exit_code" >> "${exits}"
 
+exit_code=0 # We return a non-zero exit code if any of the compilations fail.
+
 for compiler in ${images[@]}; do
     echo "Starting build tests with '${compiler}'..."
     # Generate a randomized list of build targets
@@ -121,6 +123,7 @@ for compiler in ${images[@]}; do
             echo "${compiler},${build}/gem5${build_opt},${result}" >>"${exits}"
 
             if [ ${result} -ne 0 ]; then
+                exit_code=1
                 echo "  ! Failed with exit code ${result}."
             else
                 echo "    Done."
@@ -130,3 +133,5 @@ for compiler in ${images[@]}; do
 done
 
 mv "${test_dir}" "${test_dir_final}"
+
+exit ${exit_code}
