@@ -1315,11 +1315,6 @@ def makeEnv(env, label, objsfx, strip=False, **kwargs):
     new_env.Command(secondary_exename, new_env.M5Binary,
             MakeAction('ln $SOURCE $TARGET', Transform("HARDLINK")))
 
-    # Set up regression tests.
-    SConscript(os.path.join(env.root.abspath, 'tests', 'SConscript'),
-               variant_dir=Dir('tests').Dir(new_env.Label),
-               exports={ 'env' : new_env }, duplicate=False)
-
 # Start out with the compiler flags common to all compilers,
 # i.e. they all use -g for opt and -g -pg for prof
 ccflags = {'debug' : [], 'opt' : ['-g'], 'fast' : [], 'prof' : ['-g', '-pg'],
@@ -1374,9 +1369,6 @@ def identifyTarget(t):
         return ext
     if ext in obj2target:
         return obj2target[ext]
-    match = re.search(r'/tests/([^/]+)/', t)
-    if match and match.group(1) in target_types:
-        return match.group(1)
     return 'all'
 
 needed_envs = [identifyTarget(target) for target in BUILD_TARGETS]
