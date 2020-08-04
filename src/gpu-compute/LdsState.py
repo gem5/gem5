@@ -44,4 +44,4 @@ class LdsState(ClockedObject):
     bankConflictPenalty = Param.Int(1, 'penalty per LDS bank conflict when '\
                                     'accessing data')
     banks = Param.Int(32, 'Number of LDS banks')
-    cuPort = SlavePort("port that goes to the compute unit")
+    cuPort = ResponsePort("port that goes to the compute unit")

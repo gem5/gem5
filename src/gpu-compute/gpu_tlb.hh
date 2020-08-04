@@ -236,12 +236,12 @@ namespace X86ISA
         void issueTLBLookup(PacketPtr pkt);
 
         // CpuSidePort is the TLB Port closer to the CPU/CU side
-        class CpuSidePort : public SlavePort
+        class CpuSidePort : public ResponsePort
         {
           public:
             CpuSidePort(const std::string &_name, GpuTLB * gpu_TLB,
                         PortID _index)
-                : SlavePort(_name, gpu_TLB), tlb(gpu_TLB), index(_index) { }
+                : ResponsePort(_name, gpu_TLB), tlb(gpu_TLB), index(_index) { }
 
           protected:
             GpuTLB *tlb;
@@ -263,12 +263,12 @@ namespace X86ISA
          * Future action item: if we ever do real page walks, then this port
          * should be connected to a RubyPort.
          */
-        class MemSidePort : public MasterPort
+        class MemSidePort : public RequestPort
         {
           public:
             MemSidePort(const std::string &_name, GpuTLB * gpu_TLB,
                         PortID _index)
-                : MasterPort(_name, gpu_TLB), tlb(gpu_TLB), index(_index) { }
+                : RequestPort(_name, gpu_TLB), tlb(gpu_TLB), index(_index) { }
 
             std::deque<PacketPtr> retries;
 
@@ -325,7 +325,7 @@ namespace X86ISA
             // When was the req for this translation issued
             uint64_t issueTime;
             // Remember where this came from
-            std::vector<SlavePort*>ports;
+            std::vector<ResponsePort*>ports;
 
             // keep track of #uncoalesced reqs per packet per TLB level;
             // reqCnt per level >= reqCnt higher level

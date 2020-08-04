@@ -161,11 +161,12 @@ class ComputeUnit(ClockedObject):
 
     memory_port = VectorMasterPort("Port to the memory system")
     translation_port = VectorMasterPort('Port to the TLB hierarchy')
-    sqc_port = MasterPort("Port to the SQC (I-cache")
-    sqc_tlb_port = MasterPort("Port to the TLB for the SQC (I-cache)")
-    scalar_port = MasterPort("Port to the scalar data cache")
-    scalar_tlb_port = MasterPort("Port to the TLB for the scalar data cache")
-    gmTokenPort = MasterPort("Port to the GPU coalesecer for sharing tokens")
+    sqc_port = RequestPort("Port to the SQC (I-cache")
+    sqc_tlb_port = RequestPort("Port to the TLB for the SQC (I-cache)")
+    scalar_port = RequestPort("Port to the scalar data cache")
+    scalar_tlb_port = RequestPort("Port to the TLB for the scalar data cache")
+    gmTokenPort = RequestPort("Port to the GPU coalesecer for sharing tokens")
+
     perLaneTLB = Param.Bool(False, "enable per-lane TLB")
     prefetch_depth = Param.Int(0, "Number of prefetches triggered at a time"\
                                "(0 turns off prefetching)")
@@ -193,7 +194,7 @@ class ComputeUnit(ClockedObject):
     max_cu_tokens = Param.Int(4, "Maximum number of tokens, i.e., the number"\
                             " of instructions that can be sent to coalescer")
     ldsBus = Bridge() # the bridge between the CU and its LDS
-    ldsPort = MasterPort("The port that goes to the LDS")
+    ldsPort = RequestPort("The port that goes to the LDS")
     localDataStore = Param.LdsState("the LDS for this CU")
 
     vector_register_file = VectorParam.VectorRegisterFile("Vector register "\

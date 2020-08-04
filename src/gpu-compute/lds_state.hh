@@ -157,11 +157,11 @@ class LdsState: public ClockedObject
     /**
      * CuSidePort is the LDS Port closer to the CU side
      */
-    class CuSidePort: public SlavePort
+    class CuSidePort: public ResponsePort
     {
       public:
         CuSidePort(const std::string &_name, LdsState *_ownerLds) :
-                SlavePort(_name, _ownerLds), ownerLds(_ownerLds)
+                ResponsePort(_name, _ownerLds), ownerLds(_ownerLds)
         {
         }
 

@@ -137,12 +137,12 @@ class TLBCoalescer : public ClockedObject
     void updatePhysAddresses(PacketPtr pkt);
     void regStats() override;
 
-    class CpuSidePort : public SlavePort
+    class CpuSidePort : public ResponsePort
     {
       public:
         CpuSidePort(const std::string &_name, TLBCoalescer *tlb_coalescer,
                     PortID _index)
-            : SlavePort(_name, tlb_coalescer), coalescer(tlb_coalescer),
+            : ResponsePort(_name, tlb_coalescer), coalescer(tlb_coalescer),
               index(_index) { }
 
       protected:
@@ -165,12 +165,12 @@ class TLBCoalescer : public ClockedObject
         virtual AddrRangeList getAddrRanges() const;
     };
 
-    class MemSidePort : public MasterPort
+    class MemSidePort : public RequestPort
     {
       public:
         MemSidePort(const std::string &_name, TLBCoalescer *tlb_coalescer,
                     PortID _index)
-            : MasterPort(_name, tlb_coalescer), coalescer(tlb_coalescer),
+            : RequestPort(_name, tlb_coalescer), coalescer(tlb_coalescer),
               index(_index) { }
 
         std::deque<PacketPtr> retries;

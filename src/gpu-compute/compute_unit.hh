@@ -649,11 +649,11 @@ class ComputeUnit : public ClockedObject
     GMTokenPort gmTokenPort;
 
     /** Data access Port **/
-    class DataPort : public MasterPort
+    class DataPort : public RequestPort
     {
       public:
         DataPort(const std::string &_name, ComputeUnit *_cu, PortID _index)
-            : MasterPort(_name, _cu), computeUnit(_cu),
+            : RequestPort(_name, _cu), computeUnit(_cu),
               index(_index) { }
 
         bool snoopRangeSent;
@@ -699,12 +699,12 @@ class ComputeUnit : public ClockedObject
     };
 
     // Scalar data cache access port
-    class ScalarDataPort : public MasterPort
+    class ScalarDataPort : public RequestPort
     {
       public:
         ScalarDataPort(const std::string &_name, ComputeUnit *_cu,
                        PortID _index)
-            : MasterPort(_name, _cu, _index), computeUnit(_cu), index(_index)
+            : RequestPort(_name, _cu, _index), computeUnit(_cu), index(_index)
         {
             (void)index;
         }
@@ -749,11 +749,11 @@ class ComputeUnit : public ClockedObject
     };
 
     // Instruction cache access port
-    class SQCPort : public MasterPort
+    class SQCPort : public RequestPort
     {
       public:
         SQCPort(const std::string &_name, ComputeUnit *_cu, PortID _index)
-            : MasterPort(_name, _cu), computeUnit(_cu),
+            : RequestPort(_name, _cu), computeUnit(_cu),
               index(_index) { }
 
         bool snoopRangeSent;
@@ -792,11 +792,11 @@ class ComputeUnit : public ClockedObject
      };
 
     /** Data TLB port **/
-    class DTLBPort : public MasterPort
+    class DTLBPort : public RequestPort
     {
       public:
         DTLBPort(const std::string &_name, ComputeUnit *_cu, PortID _index)
-            : MasterPort(_name, _cu), computeUnit(_cu),
+            : RequestPort(_name, _cu), computeUnit(_cu),
               index(_index), stalled(false)
         { }
 
@@ -840,11 +840,11 @@ class ComputeUnit : public ClockedObject
         virtual void recvReqRetry();
     };
 
-    class ScalarDTLBPort : public MasterPort
+    class ScalarDTLBPort : public RequestPort
     {
       public:
         ScalarDTLBPort(const std::string &_name, ComputeUnit *_cu)
-            : MasterPort(_name, _cu), computeUnit(_cu), stalled(false)
+            : RequestPort(_name, _cu), computeUnit(_cu), stalled(false)
         {
         }
 
@@ -868,11 +868,11 @@ class ComputeUnit : public ClockedObject
         bool stalled;
     };
 
-    class ITLBPort : public MasterPort
+    class ITLBPort : public RequestPort
     {
       public:
         ITLBPort(const std::string &_name, ComputeUnit *_cu)
-            : MasterPort(_name, _cu), computeUnit(_cu), stalled(false) { }
+            : RequestPort(_name, _cu), computeUnit(_cu), stalled(false) { }
 
 
         bool isStalled() { return stalled; }
@@ -910,11 +910,11 @@ class ComputeUnit : public ClockedObject
     /**
      * the port intended to communicate between the CU and its LDS
      */
-    class LDSPort : public MasterPort
+    class LDSPort : public RequestPort
     {
       public:
         LDSPort(const std::string &_name, ComputeUnit *_cu, PortID _id)
-        : MasterPort(_name, _cu, _id), computeUnit(_cu)
+        : RequestPort(_name, _cu, _id), computeUnit(_cu)
         {
         }
 

@@ -2590,7 +2590,7 @@ ComputeUnit::LDSPort::sendTimingReq(PacketPtr pkt)
                         computeUnit->cu_id, gpuDynInst->simdId,
                         gpuDynInst->wfSlotId);
         return false;
-    } else if (!MasterPort::sendTimingReq(pkt)) {
+    } else if (!RequestPort::sendTimingReq(pkt)) {
         // need to stall the LDS port until a recvReqRetry() is received
         // this indicates that there is more space
         stallPort();
@@ -2634,7 +2634,7 @@ ComputeUnit::LDSPort::recvReqRetry()
 
         DPRINTF(GPUPort, "CU%d: retrying LDS send\n", computeUnit->cu_id);
 
-        if (!MasterPort::sendTimingReq(packet)) {
+        if (!RequestPort::sendTimingReq(packet)) {
             // Stall port
             stallPort();
             DPRINTF(GPUPort, ": LDS send failed again\n");

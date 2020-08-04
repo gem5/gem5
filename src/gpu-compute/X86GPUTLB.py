@@ -40,7 +40,7 @@ if buildEnv['FULL_SYSTEM']:
     class X86PagetableWalker(SimObject):
         type = 'X86PagetableWalker'
         cxx_class = 'X86ISA::Walker'
-        port = SlavePort("Port for the hardware table walker")
+        port = ResponsePort("Port for the hardware table walker")
         system = Param.System(Parent.any, "system object")
 
 class X86GPUTLB(ClockedObject):

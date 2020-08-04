@@ -198,7 +198,7 @@ TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
             sender_state->hitLevel = first_hit_level;
         }
 
-        SlavePort *return_port = sender_state->ports.back();
+        ResponsePort *return_port = sender_state->ports.back();
         sender_state->ports.pop_back();
 
         // Translation is done - Convert to a response pkt if necessary and
