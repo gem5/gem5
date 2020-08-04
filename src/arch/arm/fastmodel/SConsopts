@@ -41,6 +41,8 @@ sticky_vars.AddVariables(
      os.environ.get('MAXCORE_HOME', '')),
     ('ARMLMD_LICENSE_FILE', 'ARM license file location',
      os.environ.get('ARMLMD_LICENSE_FILE', '')),
+    ('ARMLMD_LICENSE_COUNT',
+     'The maximum number of ARM licenses to use concurrently', 1),
     ('SIMGEN', 'simgen executable', os.environ.get('SIMGEN', default_simgen)),
 )
 

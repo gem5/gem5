@@ -36,6 +36,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import print_function
+from itertools import cycle
 
 Import('*')
 
@@ -242,6 +243,10 @@ class ProjectFileParser(Grammar):
         t[0] = t[1]
 
 
+license_count = int(env['ARMLMD_LICENSE_COUNT'])
+arm_licenses = list((Value(i) for i in range(license_count)))
+license_cycle = cycle(arm_licenses)
+
 class ArmFastModelComponent(object):
     def __init__(self, project_file, *extra_deps):
         project_file = File(project_file)
@@ -312,6 +317,14 @@ class ArmFastModelComponent(object):
         sources = [project_file]
         sources.extend(extra_deps)
         env.Command(lib_nodes + self.headers, sources, simgen_action)
+        # Distribute simgen actions among ARM license slots. All actions which
+        # have a given license as a "side effect" will be serialized relative
+        # to each other, meaning the number of licenses being used concurrently
+        # will never be larger than the number of license nodes.
+        #
+        # This allocation is fixed and may not be as optimal as a dynamic one,
+        # but the difference is probably not significant.
+        env.SideEffect(next(license_cycle), lib_nodes[0])
 
     def prepare_env(self, env):
         env.Append(LIBPATH=self.libpaths)
