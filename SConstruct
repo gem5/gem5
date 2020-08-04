@@ -151,8 +151,6 @@ AddLocalOption('--no-lto', action='store_true',
 AddLocalOption('--force-lto', action='store_true',
                help='Use Link-Time Optimization instead of partial linking' +
                     ' when the compiler doesn\'t support using them together.')
-AddLocalOption('--update-ref', action='store_true',
-               help='Update test reference outputs')
 AddLocalOption('--verbose', action='store_true',
                help='Print full tool command lines')
 AddLocalOption('--without-python', action='store_true',
