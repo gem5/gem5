@@ -99,70 +99,34 @@ import SCons.Node.FS
 
 from m5.util import compareVersions, readCommand, readCommandWithReturn
 
-help_texts = {
-    "options" : "",
-    "global_vars" : "",
-    "local_vars" : ""
-}
-
-Export("help_texts")
-
-
-# There's a bug in scons in that (1) by default, the help texts from
-# AddOption() are supposed to be displayed when you type 'scons -h'
-# and (2) you can override the help displayed by 'scons -h' using the
-# Help() function, but these two features are incompatible: once
-# you've overridden the help text using Help(), there's no way to get
-# at the help texts from AddOptions.  See:
-#     https://github.com/SCons/scons/issues/2356
-#     https://github.com/SCons/scons/issues/2611
-# This hack lets us extract the help text from AddOptions and
-# re-inject it via Help().  Ideally someday this bug will be fixed and
-# we can just use AddOption directly.
-def AddLocalOption(*args, **kwargs):
-    col_width = 30
-
-    help = "  " + ", ".join(args)
-    if "help" in kwargs:
-        length = len(help)
-        if length >= col_width:
-            help += "\n" + " " * col_width
-        else:
-            help += " " * (col_width - length)
-        help += kwargs["help"]
-    help_texts["options"] += help + "\n"
-
-    AddOption(*args, **kwargs)
-
-AddLocalOption('--colors', dest='use_colors', action='store_true',
-               help="Add color to abbreviated scons output")
-AddLocalOption('--no-colors', dest='use_colors', action='store_false',
-               help="Don't add color to abbreviated scons output")
-AddLocalOption('--with-cxx-config', action='store_true',
-               help="Build with support for C++-based configuration")
-AddLocalOption('--default',
-               help='Override which build_opts file to use for defaults')
-AddLocalOption('--ignore-style', action='store_true',
-               help='Disable style checking hooks')
-AddLocalOption('--gold-linker', action='store_true',
-               help='Use the gold linker')
-AddLocalOption('--no-lto', action='store_true',
-               help='Disable Link-Time Optimization for fast')
-AddLocalOption('--force-lto', action='store_true',
-               help='Use Link-Time Optimization instead of partial linking' +
-                    ' when the compiler doesn\'t support using them together.')
-AddLocalOption('--verbose', action='store_true',
-               help='Print full tool command lines')
-AddLocalOption('--without-python', action='store_true',
-               help='Build without Python configuration support')
-AddLocalOption('--without-tcmalloc', action='store_true',
-               help='Disable linking against tcmalloc')
-AddLocalOption('--with-ubsan', action='store_true',
-               help='Build with Undefined Behavior Sanitizer if available')
-AddLocalOption('--with-asan', action='store_true',
-               help='Build with Address Sanitizer if available')
-AddLocalOption('--with-systemc-tests', action='store_true',
-               help='Build systemc tests')
+AddOption('--colors', dest='use_colors', action='store_true',
+          help="Add color to abbreviated scons output")
+AddOption('--no-colors', dest='use_colors', action='store_false',
+          help="Don't add color to abbreviated scons output")
+AddOption('--with-cxx-config', action='store_true',
+          help="Build with support for C++-based configuration")
+AddOption('--default',
+          help='Override which build_opts file to use for defaults')
+AddOption('--ignore-style', action='store_true',
+          help='Disable style checking hooks')
+AddOption('--gold-linker', action='store_true', help='Use the gold linker')
+AddOption('--no-lto', action='store_true',
+          help='Disable Link-Time Optimization for fast')
+AddOption('--force-lto', action='store_true',
+          help='Use Link-Time Optimization instead of partial linking' +
+               ' when the compiler doesn\'t support using them together.')
+AddOption('--verbose', action='store_true',
+          help='Print full tool command lines')
+AddOption('--without-python', action='store_true',
+          help='Build without Python configuration support')
+AddOption('--without-tcmalloc', action='store_true',
+          help='Disable linking against tcmalloc')
+AddOption('--with-ubsan', action='store_true',
+          help='Build with Undefined Behavior Sanitizer if available')
+AddOption('--with-asan', action='store_true',
+          help='Build with Address Sanitizer if available')
+AddOption('--with-systemc-tests', action='store_true',
+          help='Build systemc tests')
 
 from gem5_scons import Transform, error, warning, summarize_warnings
 
@@ -284,7 +248,10 @@ global_vars.AddVariables(
 
 # Update main environment with values from ARGUMENTS & global_vars_file
 global_vars.Update(main)
-help_texts["global_vars"] += global_vars.GenerateHelpText(main)
+Help('''
+Global build variables:
+{help}
+'''.format(help=global_vars.GenerateHelpText(main)), append=True)
 
 # Save sticky variable settings back to current variables file
 global_vars.Save(global_vars_file, main)
@@ -1224,9 +1191,11 @@ for variant_path in variant_paths:
     # Apply current variable settings to env
     sticky_vars.Update(env)
 
-    help_texts["local_vars"] += \
-        "Build variables for %s:\n" % variant_dir \
-                 + sticky_vars.GenerateHelpText(env)
+    Help('''
+Build variables for {dir}:
+{help}
+'''.format(dir=variant_dir, help=sticky_vars.GenerateHelpText(env)),
+         append=True)
 
     # Process variable settings.
 
@@ -1287,18 +1256,5 @@ for variant_path in variant_paths:
     # one for each variant build (debug, opt, etc.)
     SConscript('src/SConscript', variant_dir=variant_path,
                exports=['env', 'marshal_env'])
-
-# base help text
-Help('''
-Usage: scons [scons options] [build variables] [target(s)]
-
-Extra scons options:
-%(options)s
-
-Global build variables:
-%(global_vars)s
-
-%(local_vars)s
-''' % help_texts)
 
 atexit.register(summarize_warnings)
