@@ -102,8 +102,8 @@ for compiler in ${images[@]}; do
         for build_opt in ${opts[@]}; do
             build="${builds[$build_index]}"
             build_out="build/$build/gem5$build_opt"
-            build_stdout="${test_dir}/${compiler}/${build}${build_opt}.stdout"
-            build_stderr="${test_dir}/${compiler}/${build}${build_opt}.stderr"
+            build_stdout="${test_dir}/${compiler}/${build}${build_opt}.stdout.txt"
+            build_stderr="${test_dir}/${compiler}/${build}${build_opt}.stderr.txt"
 
             # Clean the build
             rm -rf "${build_dir}"
