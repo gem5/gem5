@@ -51,7 +51,7 @@ class SimpleCache : public ClockedObject
      * Port on the CPU-side that receives requests.
      * Mostly just forwards requests to the cache (owner)
      */
-    class CPUSidePort : public SlavePort
+    class CPUSidePort : public ResponsePort
     {
       private:
         /// Since this is a vector port, need to know what number this one is
@@ -71,7 +71,7 @@ class SimpleCache : public ClockedObject
          * Constructor. Just calls the superclass constructor.
          */
         CPUSidePort(const std::string& name, int id, SimpleCache *owner) :
-            SlavePort(name, owner), id(id), owner(owner), needRetry(false),
+            ResponsePort(name, owner), id(id), owner(owner), needRetry(false),
             blockedPacket(nullptr)
         { }
 
@@ -137,7 +137,7 @@ class SimpleCache : public ClockedObject
      * Port on the memory-side that receives responses.
      * Mostly just forwards requests to the cache (owner)
      */
-    class MemSidePort : public MasterPort
+    class MemSidePort : public RequestPort
     {
       private:
         /// The object that owns this object (SimpleCache)
@@ -151,7 +151,7 @@ class SimpleCache : public ClockedObject
          * Constructor. Just calls the superclass constructor.
          */
         MemSidePort(const std::string& name, SimpleCache *owner) :
-            MasterPort(name, owner), owner(owner), blockedPacket(nullptr)
+            RequestPort(name, owner), owner(owner), blockedPacket(nullptr)
         { }
 
         /**
