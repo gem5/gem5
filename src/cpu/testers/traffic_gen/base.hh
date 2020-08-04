@@ -124,12 +124,12 @@ class BaseTrafficGen : public ClockedObject
 
 
     /** Master port specialisation for the traffic generator */
-    class TrafficGenPort : public MasterPort
+    class TrafficGenPort : public RequestPort
     {
       public:
 
         TrafficGenPort(const std::string& name, BaseTrafficGen& traffic_gen)
-            : MasterPort(name, &traffic_gen), trafficGen(traffic_gen)
+            : RequestPort(name, &traffic_gen), trafficGen(traffic_gen)
         { }
 
       protected:

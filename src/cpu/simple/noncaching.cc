@@ -52,7 +52,7 @@ NonCachingSimpleCPU::verifyMemoryMode() const
 }
 
 Tick
-NonCachingSimpleCPU::sendPacket(MasterPort &port, const PacketPtr &pkt)
+NonCachingSimpleCPU::sendPacket(RequestPort &port, const PacketPtr &pkt)
 {
     if (system->isMemAddr(pkt->getAddr())) {
         system->getPhysMem().access(pkt);

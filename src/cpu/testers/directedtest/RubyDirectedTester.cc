@@ -105,7 +105,7 @@ RubyDirectedTester::CpuPort::recvTimingResp(PacketPtr pkt)
     return true;
 }
 
-MasterPort*
+RequestPort*
 RubyDirectedTester::getCpuPort(int idx)
 {
     assert(idx >= 0 && idx < ports.size());

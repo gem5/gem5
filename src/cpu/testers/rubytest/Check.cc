@@ -84,7 +84,7 @@ Check::initiatePrefetch()
     DPRINTF(RubyTest, "initiating prefetch\n");
 
     int index = random_mt.random(0, m_num_readers - 1);
-    MasterPort* port = m_tester_ptr->getReadableCpuPort(index);
+    RequestPort* port = m_tester_ptr->getReadableCpuPort(index);
 
     Request::Flags flags;
     flags.set(Request::PREFETCH);
@@ -142,7 +142,7 @@ Check::initiateFlush()
     DPRINTF(RubyTest, "initiating Flush\n");
 
     int index = random_mt.random(0, m_num_writers - 1);
-    MasterPort* port = m_tester_ptr->getWritableCpuPort(index);
+    RequestPort* port = m_tester_ptr->getWritableCpuPort(index);
 
     Request::Flags flags;
 
@@ -172,7 +172,7 @@ Check::initiateAction()
     assert(m_status == TesterStatus_Idle);
 
     int index = random_mt.random(0, m_num_writers - 1);
-    MasterPort* port = m_tester_ptr->getWritableCpuPort(index);
+    RequestPort* port = m_tester_ptr->getWritableCpuPort(index);
 
     Request::Flags flags;
 
@@ -233,7 +233,7 @@ Check::initiateCheck()
     assert(m_status == TesterStatus_Ready);
 
     int index = random_mt.random(0, m_num_readers - 1);
-    MasterPort* port = m_tester_ptr->getReadableCpuPort(index);
+    RequestPort* port = m_tester_ptr->getReadableCpuPort(index);
 
     Request::Flags flags;
 

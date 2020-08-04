@@ -54,7 +54,7 @@ InvalidateGenerator::~InvalidateGenerator()
 bool
 InvalidateGenerator::initiate()
 {
-    MasterPort* port;
+    RequestPort* port;
     Request::Flags flags;
     PacketPtr pkt;
     Packet::Command cmd;

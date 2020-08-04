@@ -221,12 +221,12 @@ class TraceCPU : public BaseCPU
     /**
      * IcachePort class that interfaces with L1 Instruction Cache.
      */
-    class IcachePort : public MasterPort
+    class IcachePort : public RequestPort
     {
       public:
         /** Default constructor. */
         IcachePort(TraceCPU* _cpu)
-            : MasterPort(_cpu->name() + ".icache_port", _cpu),
+            : RequestPort(_cpu->name() + ".icache_port", _cpu),
                          owner(_cpu)
         { }
 
@@ -261,13 +261,13 @@ class TraceCPU : public BaseCPU
     /**
      * DcachePort class that interfaces with L1 Data Cache.
      */
-    class DcachePort : public MasterPort
+    class DcachePort : public RequestPort
     {
 
       public:
         /** Default constructor. */
         DcachePort(TraceCPU* _cpu)
-            : MasterPort(_cpu->name() + ".dcache_port", _cpu),
+            : RequestPort(_cpu->name() + ".dcache_port", _cpu),
                          owner(_cpu)
         { }
 
@@ -423,7 +423,7 @@ class TraceCPU : public BaseCPU
         public:
         /* Constructor */
         FixedRetryGen(TraceCPU& _owner, const std::string& _name,
-                   MasterPort& _port, MasterID master_id,
+                   RequestPort& _port, MasterID master_id,
                    const std::string& trace_file)
             : owner(_owner),
               port(_port),
@@ -501,7 +501,7 @@ class TraceCPU : public BaseCPU
         TraceCPU& owner;
 
         /** Reference of the port to be used to issue memory requests. */
-        MasterPort& port;
+        RequestPort& port;
 
         /** MasterID used for the requests being sent. */
         const MasterID masterID;
@@ -847,7 +847,7 @@ class TraceCPU : public BaseCPU
         public:
         /* Constructor */
         ElasticDataGen(TraceCPU& _owner, const std::string& _name,
-                   MasterPort& _port, MasterID master_id,
+                   RequestPort& _port, MasterID master_id,
                    const std::string& trace_file, TraceCPUParams *params)
             : owner(_owner),
               port(_port),
@@ -984,7 +984,7 @@ class TraceCPU : public BaseCPU
         TraceCPU& owner;
 
         /** Reference of the port to be used to issue memory requests. */
-        MasterPort& port;
+        RequestPort& port;
 
         /** MasterID used for the requests being sent. */
         const MasterID masterID;

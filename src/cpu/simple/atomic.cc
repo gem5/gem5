@@ -272,7 +272,7 @@ AtomicSimpleCPU::suspendContext(ThreadID thread_num)
 }
 
 Tick
-AtomicSimpleCPU::sendPacket(MasterPort &port, const PacketPtr &pkt)
+AtomicSimpleCPU::sendPacket(RequestPort &port, const PacketPtr &pkt)
 {
     return port.sendAtomic(pkt);
 }

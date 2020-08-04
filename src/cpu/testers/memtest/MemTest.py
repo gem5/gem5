@@ -64,7 +64,7 @@ class MemTest(ClockedObject):
     progress_check = Param.Cycles(5000000, "Cycles before exiting " \
                                       "due to lack of progress")
 
-    port = MasterPort("Port to the memory system")
+    port = RequestPort("Port to the memory system")
     system = Param.System(Parent.any, "System this tester is part of")
 
     # Add the ability to supress error responses on functional

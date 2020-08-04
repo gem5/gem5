@@ -238,7 +238,7 @@ class LSQUnit
     void regStats();
 
     /** Sets the pointer to the dcache port. */
-    void setDcachePort(MasterPort *dcache_port);
+    void setDcachePort(RequestPort *dcache_port);
 
     /** Perform sanity checks after a drain. */
     void drainSanityCheck() const;
@@ -398,7 +398,7 @@ class LSQUnit
     LSQ *lsq;
 
     /** Pointer to the dcache port.  Used only for sending. */
-    MasterPort *dcachePort;
+    RequestPort *dcachePort;
 
     /** Particularisation of the LSQSenderState to the LQ. */
     class LQSenderState : public LSQSenderState

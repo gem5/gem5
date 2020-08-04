@@ -572,15 +572,15 @@ class BaseKvmCPU : public BaseCPU
 
 
     /**
-     * KVM memory port.  Uses default MasterPort behavior and provides an
+     * KVM memory port.  Uses default RequestPort behavior and provides an
      * interface for KVM to transparently submit atomic or timing requests.
      */
-    class KVMCpuPort : public MasterPort
+    class KVMCpuPort : public RequestPort
     {
 
       public:
         KVMCpuPort(const std::string &_name, BaseKvmCPU *_cpu)
-            : MasterPort(_name, _cpu), cpu(_cpu), activeMMIOReqs(0)
+            : RequestPort(_name, _cpu), cpu(_cpu), activeMMIOReqs(0)
         { }
         /**
          * Interface to send Atomic or Timing IO request.  Assumes that the pkt

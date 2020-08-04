@@ -175,8 +175,8 @@ class BaseCPU(ClockedObject):
 
     tracer = Param.InstTracer(default_tracer, "Instruction tracer")
 
-    icache_port = MasterPort("Instruction Port")
-    dcache_port = MasterPort("Data Port")
+    icache_port = RequestPort("Instruction Port")
+    dcache_port = RequestPort("Data Port")
     _cached_ports = ['icache_port', 'dcache_port']
 
     if buildEnv['TARGET_ISA'] in ['x86', 'arm', 'riscv']:

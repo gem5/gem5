@@ -91,14 +91,14 @@ class MemTest : public ClockedObject
 
     EventFunctionWrapper noResponseEvent;
 
-    class CpuPort : public MasterPort
+    class CpuPort : public RequestPort
     {
         MemTest &memtest;
 
       public:
 
         CpuPort(const std::string &_name, MemTest &_memtest)
-            : MasterPort(_name, &_memtest), memtest(_memtest)
+            : RequestPort(_name, &_memtest), memtest(_memtest)
         { }
 
       protected:

@@ -99,9 +99,9 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     void setSystem(System *system);
 
-    void setIcachePort(MasterPort *icache_port);
+    void setIcachePort(RequestPort *icache_port);
 
-    void setDcachePort(MasterPort *dcache_port);
+    void setDcachePort(RequestPort *dcache_port);
 
     Port &
     getDataPort() override
@@ -127,8 +127,8 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     System *systemPtr;
 
-    MasterPort *icachePort;
-    MasterPort *dcachePort;
+    RequestPort *icachePort;
+    RequestPort *dcachePort;
 
     ThreadContext *tc;
 

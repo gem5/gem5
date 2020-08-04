@@ -155,12 +155,12 @@ class TimingSimpleCPU : public BaseSimpleCPU
      * scheduling of handling of incoming packets in the following
      * cycle.
      */
-    class TimingCPUPort : public MasterPort
+    class TimingCPUPort : public RequestPort
     {
       public:
 
         TimingCPUPort(const std::string& _name, TimingSimpleCPU* _cpu)
-            : MasterPort(_name, _cpu), cpu(_cpu),
+            : RequestPort(_name, _cpu), cpu(_cpu),
               retryRespEvent([this]{ sendRetryResp(); }, name())
         { }
 

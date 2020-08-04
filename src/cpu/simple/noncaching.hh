@@ -53,7 +53,7 @@ class NonCachingSimpleCPU : public AtomicSimpleCPU
     void verifyMemoryMode() const override;
 
   protected:
-    Tick sendPacket(MasterPort &port, const PacketPtr &pkt) override;
+    Tick sendPacket(RequestPort &port, const PacketPtr &pkt) override;
 };
 
 #endif // __CPU_SIMPLE_NONCACHING_HH__

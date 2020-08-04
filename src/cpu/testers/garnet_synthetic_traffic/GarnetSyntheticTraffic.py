@@ -51,5 +51,5 @@ class GarnetSyntheticTraffic(ClockedObject):
                               after decimal point")
     response_limit = Param.Cycles(5000000, "Cycles before exiting \
                                             due to lack of progress")
-    test = MasterPort("Port to the memory system to test")
+    test = RequestPort("Port to the memory system to test")
     system = Param.System(Parent.any, "System we belong to")

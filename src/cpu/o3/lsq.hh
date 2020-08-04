@@ -119,7 +119,7 @@ class LSQ
     /**
      * DcachePort class for the load/store queue.
      */
-    class DcachePort : public MasterPort
+    class DcachePort : public RequestPort
     {
       protected:
 
@@ -130,7 +130,7 @@ class LSQ
       public:
         /** Default constructor. */
         DcachePort(LSQ<Impl> *_lsq, FullO3CPU<Impl>* _cpu)
-            : MasterPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq),
+            : RequestPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq),
               cpu(_cpu)
         { }
 
@@ -1053,7 +1053,7 @@ class LSQ
     /** Another store port is in use */
     void cachePortBusy(bool is_load);
 
-    MasterPort &getDataPort() { return dcachePort; }
+    RequestPort &getDataPort() { return dcachePort; }
 
   protected:
     /** D-cache is blocked */

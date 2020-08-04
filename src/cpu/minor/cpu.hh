@@ -95,7 +95,7 @@ class MinorCPU : public BaseCPU
   public:
     /** Provide a non-protected base class for Minor's Ports as derived
      *  classes are created by Fetch1 and Execute */
-    class MinorCPUPort : public MasterPort
+    class MinorCPUPort : public RequestPort
     {
       public:
         /** The enclosing cpu */
@@ -103,7 +103,7 @@ class MinorCPU : public BaseCPU
 
       public:
         MinorCPUPort(const std::string& name_, MinorCPU &cpu_)
-            : MasterPort(name_, &cpu_), cpu(cpu_)
+            : RequestPort(name_, &cpu_), cpu(cpu_)
         { }
 
     };

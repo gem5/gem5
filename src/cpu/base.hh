@@ -162,7 +162,7 @@ class BaseCPU : public ClockedObject
     virtual PortProxy::SendFunctionalFunc
     getSendFunctional()
     {
-        auto port = dynamic_cast<MasterPort *>(&getDataPort());
+        auto port = dynamic_cast<RequestPort *>(&getDataPort());
         assert(port);
         return [port](PacketPtr pkt)->void { port->sendFunctional(pkt); };
     }

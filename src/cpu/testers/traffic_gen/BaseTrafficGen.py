@@ -57,7 +57,7 @@ class BaseTrafficGen(ClockedObject):
     cxx_header = "cpu/testers/traffic_gen/traffic_gen.hh"
 
     # Port used for sending requests and receiving responses
-    port = MasterPort("Master port")
+    port = RequestPort("Master port")
 
     # System used to determine the mode of the memory system
     system = Param.System(Parent.any, "System this generator is part of")

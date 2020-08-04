@@ -87,7 +87,7 @@ class DefaultFetch
     /**
      * IcachePort class for instruction fetch.
      */
-    class IcachePort : public MasterPort
+    class IcachePort : public RequestPort
     {
       protected:
         /** Pointer to fetch. */
@@ -96,7 +96,7 @@ class DefaultFetch
       public:
         /** Default constructor. */
         IcachePort(DefaultFetch<Impl> *_fetch, FullO3CPU<Impl>* _cpu)
-            : MasterPort(_cpu->name() + ".icache_port", _cpu), fetch(_fetch)
+            : RequestPort(_cpu->name() + ".icache_port", _cpu), fetch(_fetch)
         { }
 
       protected:
@@ -377,7 +377,7 @@ class DefaultFetch
     /** The decoder. */
     TheISA::Decoder *decoder[Impl::MaxThreads];
 
-    MasterPort &getInstPort() { return icachePort; }
+    RequestPort &getInstPort() { return icachePort; }
 
   private:
     DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,

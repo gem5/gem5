@@ -101,7 +101,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
      */
     bool tryCompleteDrain();
 
-    virtual Tick sendPacket(MasterPort &port, const PacketPtr &pkt);
+    virtual Tick sendPacket(RequestPort &port, const PacketPtr &pkt);
 
     /**
      * An AtomicCPUPort overrides the default behaviour of the
@@ -109,13 +109,13 @@ class AtomicSimpleCPU : public BaseSimpleCPU
      * also provides an implementation for the purely virtual timing
      * functions and panics on either of these.
      */
-    class AtomicCPUPort : public MasterPort
+    class AtomicCPUPort : public RequestPort
     {
 
       public:
 
         AtomicCPUPort(const std::string &_name, BaseSimpleCPU* _cpu)
-            : MasterPort(_name, _cpu)
+            : RequestPort(_name, _cpu)
         { }
 
       protected:

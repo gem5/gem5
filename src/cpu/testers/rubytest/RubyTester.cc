@@ -203,7 +203,7 @@ RubyTester::isInstDataCpuPort(int idx)
             (idx < (m_num_inst_only_ports + m_num_inst_data_ports)));
 }
 
-MasterPort*
+RequestPort*
 RubyTester::getReadableCpuPort(int idx)
 {
     assert(idx >= 0 && idx < readPorts.size());
@@ -211,7 +211,7 @@ RubyTester::getReadableCpuPort(int idx)
     return readPorts[idx];
 }
 
-MasterPort*
+RequestPort*
 RubyTester::getWritableCpuPort(int idx)
 {
     assert(idx >= 0 && idx < writePorts.size());

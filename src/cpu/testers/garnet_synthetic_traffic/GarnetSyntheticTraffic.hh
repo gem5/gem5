@@ -74,14 +74,14 @@ class GarnetSyntheticTraffic : public ClockedObject
   protected:
     EventFunctionWrapper tickEvent;
 
-    class CpuPort : public MasterPort
+    class CpuPort : public RequestPort
     {
         GarnetSyntheticTraffic *tester;
 
       public:
 
         CpuPort(const std::string &_name, GarnetSyntheticTraffic *_tester)
-            : MasterPort(_name, _tester), tester(_tester)
+            : RequestPort(_name, _tester), tester(_tester)
         { }
 
       protected:
