@@ -37,7 +37,7 @@ class RiscvPagetableWalker(ClockedObject):
     type = 'RiscvPagetableWalker'
     cxx_class = 'RiscvISA::Walker'
     cxx_header = 'arch/riscv/pagetable_walker.hh'
-    port = MasterPort("Port for the hardware table walker")
+    port = RequestPort("Port for the hardware table walker")
     system = Param.System(Parent.any, "system object")
     num_squash_per_cycle = Param.Unsigned(4,
             "Number of outstanding walks that can be squashed per cycle")

@@ -54,7 +54,7 @@ class ArmTableWalker(ClockedObject):
     # to the Stage2MMU, and shared by the two table walkers, but we
     # access it through the ITB and DTB walked objects in the CPU for
     # symmetry with the other ISAs.
-    port = MasterPort("Port used by the two table walkers")
+    port = RequestPort("Port used by the two table walkers")
 
     sys = Param.System(Parent.any, "system object parameter")
 

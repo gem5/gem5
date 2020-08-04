@@ -58,11 +58,11 @@ namespace RiscvISA
     {
       protected:
         // Port for accessing memory
-        class WalkerPort : public MasterPort
+        class WalkerPort : public RequestPort
         {
           public:
             WalkerPort(const std::string &_name, Walker * _walker) :
-                  MasterPort(_name, _walker), walker(_walker)
+                  RequestPort(_name, _walker), walker(_walker)
             {}
 
           protected:
