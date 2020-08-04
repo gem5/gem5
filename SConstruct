@@ -138,36 +138,33 @@ AddLocalOption('--colors', dest='use_colors', action='store_true',
                help="Add color to abbreviated scons output")
 AddLocalOption('--no-colors', dest='use_colors', action='store_false',
                help="Don't add color to abbreviated scons output")
-AddLocalOption('--with-cxx-config', dest='with_cxx_config',
-               action='store_true',
+AddLocalOption('--with-cxx-config', action='store_true',
                help="Build with support for C++-based configuration")
-AddLocalOption('--default', dest='default', type='string', action='store',
+AddLocalOption('--default',
                help='Override which build_opts file to use for defaults')
-AddLocalOption('--ignore-style', dest='ignore_style', action='store_true',
+AddLocalOption('--ignore-style', action='store_true',
                help='Disable style checking hooks')
-AddLocalOption('--gold-linker', dest='gold_linker', action='store_true',
+AddLocalOption('--gold-linker', action='store_true',
                help='Use the gold linker')
-AddLocalOption('--no-lto', dest='no_lto', action='store_true',
+AddLocalOption('--no-lto', action='store_true',
                help='Disable Link-Time Optimization for fast')
-AddLocalOption('--force-lto', dest='force_lto', action='store_true',
+AddLocalOption('--force-lto', action='store_true',
                help='Use Link-Time Optimization instead of partial linking' +
                     ' when the compiler doesn\'t support using them together.')
-AddLocalOption('--update-ref', dest='update_ref', action='store_true',
+AddLocalOption('--update-ref', action='store_true',
                help='Update test reference outputs')
-AddLocalOption('--verbose', dest='verbose', action='store_true',
+AddLocalOption('--verbose', action='store_true',
                help='Print full tool command lines')
-AddLocalOption('--without-python', dest='without_python',
-               action='store_true',
+AddLocalOption('--without-python', action='store_true',
                help='Build without Python configuration support')
-AddLocalOption('--without-tcmalloc', dest='without_tcmalloc',
-               action='store_true',
+AddLocalOption('--without-tcmalloc', action='store_true',
                help='Disable linking against tcmalloc')
-AddLocalOption('--with-ubsan', dest='with_ubsan', action='store_true',
+AddLocalOption('--with-ubsan', action='store_true',
                help='Build with Undefined Behavior Sanitizer if available')
-AddLocalOption('--with-asan', dest='with_asan', action='store_true',
+AddLocalOption('--with-asan', action='store_true',
                help='Build with Address Sanitizer if available')
-AddLocalOption('--with-systemc-tests', dest='with_systemc_tests',
-               action='store_true', help='Build systemc tests')
+AddLocalOption('--with-systemc-tests', action='store_true',
+               help='Build systemc tests')
 
 from gem5_scons import Transform, error, warning, summarize_warnings
 
