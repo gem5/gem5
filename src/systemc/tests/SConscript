@@ -31,6 +31,7 @@ if env['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
 
     from gem5_scons import Transform
 
+    import os
     import os.path
     import json
 
@@ -75,7 +76,7 @@ if env['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
             # Turn off extra warnings and Werror for the tests.
             to_remove = ['-Wall', '-Wundef', '-Wextra', '-Werror']
             env['CCFLAGS'] = \
-                filter(lambda f: f not in to_remove, env['CCFLAGS'])
+                list(filter(lambda f: f not in to_remove, env['CCFLAGS']))
 
             env.Append(CPPPATH=test_dir.Dir('include'))
 
@@ -112,26 +113,28 @@ if env['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
 
 
     def scan_dir_for_tests(subdir):
-        def visitor(arg, dirname, names):
+        subdir_src = Dir('.').srcdir.Dir(subdir)
+        for root, dirs, files in os.walk(str(subdir_src)):
             # If there's a 'DONTRUN' file in this directory, skip it and any
             # child directories.
-            if 'DONTRUN' in names:
-                del names[:]
+            if 'DONTRUN' in files:
+                del dirs[:]
                 return
 
-            endswith = lambda sfx: filter(lambda n: n.endswith(sfx), names)
+            endswith = lambda sfx: list(filter(
+                        lambda n: n.endswith(sfx), files))
 
             cpps = endswith('.cpp')
             if not cpps:
-                return
+                continue
 
             def get_entries(fname):
-                with open(os.path.join(dirname, fname)) as content:
+                with open(os.path.join(root, fname)) as content:
                     lines = content.readlines
                     # Get rid of leading and trailing whitespace.
                     lines = map(lambda x: x.strip(), content.readlines())
                     # Get rid of blank lines.
-                    lines = filter(lambda x: x, lines)
+                    lines = list(filter(lambda x: x, lines))
                     return lines
 
             # If there's only one source file, then that files name is the test
@@ -139,7 +142,7 @@ if env['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
             if len(cpps) == 1:
                 cpp = cpps[0]
 
-                test = new_test(dirname, os.path.splitext(cpp)[0])
+                test = new_test(root, os.path.splitext(cpp)[0])
                 test.add_source(cpp)
 
             # Otherwise, expect there to be a file that ends in .f. That files
@@ -149,24 +152,21 @@ if env['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
                 fs = endswith('.f')
                 if len(fs) != 1:
                     print("In %s, expected 1 *.f file, but found %d.",
-                          dirname, len(fs))
+                          root, len(fs))
                     for f in fs:
-                        print(os.path.join(dirname, f))
+                        print(os.path.join(root, f))
                     return
                 f = fs[0]
 
-                test = new_test(dirname, os.path.splitext(f)[0])
+                test = new_test(root, os.path.splitext(f)[0])
                 # Add all the sources to this test.
                 test.add_sources(get_entries(f))
 
-            if 'COMPILE' in names:
+            if 'COMPILE' in files:
                 test.compile_only = True
 
-            if 'DEPS' in names:
+            if 'DEPS' in files:
                 test.deps = get_entries('DEPS')
-
-        subdir_src = Dir('.').srcdir.Dir(subdir)
-        os.path.walk(str(subdir_src), visitor, None)
 
     scan_dir_for_tests('systemc')
     scan_dir_for_tests('tlm')
