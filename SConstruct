@@ -114,8 +114,8 @@ Export("help_texts")
 # Help() function, but these two features are incompatible: once
 # you've overridden the help text using Help(), there's no way to get
 # at the help texts from AddOptions.  See:
-#     http://scons.tigris.org/issues/show_bug.cgi?id=2356
-#     http://scons.tigris.org/issues/show_bug.cgi?id=2611
+#     https://github.com/SCons/scons/issues/2356
+#     https://github.com/SCons/scons/issues/2611
 # This hack lets us extract the help text from AddOptions and
 # re-inject it via Help().  Ideally someday this bug will be fixed and
 # we can just use AddOption directly.

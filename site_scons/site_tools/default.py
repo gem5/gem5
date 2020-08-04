@@ -68,7 +68,7 @@ def common_config(env):
 
     # Tell scons to avoid implicit command dependencies to avoid issues
     # with the param wrappes being compiled twice (see
-    # http://scons.tigris.org/issues/show_bug.cgi?id=2811)
+    # https://github.com/SCons/scons/issues/2811
     env['IMPLICIT_COMMAND_DEPENDENCIES'] = 0
     env.Decider('MD5-timestamp')
     env.root = env.Dir('#')
