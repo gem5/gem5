@@ -1,0 +1,109 @@
+/*
+ * Copyright 2020 Google Inc.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+component CortexR52x2
+{
+
+    composition
+    {
+        core : ARMCortexR52x2CT();
+
+        // Clocks.
+        clock1Hz : MasterClock();
+        clockDiv : ClockDivider();
+        clockDivPeriph : ClockDivider(mul=0x01800000);
+    }
+
+    connection
+    {
+        // Memory interfaces.
+        core.llpp_m => self.llpp;
+        core.flash_m => self.flash;
+        core.pvbus_core_m => self.amba;
+
+        // Clocks.
+        clock1Hz.clk_out => clockDiv.clk_in;
+        clock1Hz.clk_out => clockDivPeriph.clk_in;
+        clockDiv.clk_out => core.clk_in;
+
+        // Internal ports for PPI and SPI programmatic access.
+        self.ppi_0 => core.extppi_in_0;
+        self.ppi_1 => core.extppi_in_1;
+
+        self.spi => core.spi_in;
+    }
+
+    properties
+    {
+        component_type = "System";
+    }
+
+    master port<PVBus> llpp[2];
+    master port<PVBus> flash[2];
+    master port<PVBus> amba[2];
+
+    slave port<ExportedClockRateControl> clock_rate_s
+    {
+        behavior set_mul_div(uint64_t mul, uint64_t div)
+        {
+            clockDiv.rate.set64(mul, div);
+        }
+    }
+
+    slave port<SignalInterrupt> signal_interrupt
+    {
+        behavior ppi(uint8_t cpu, uint32_t num, bool state_val)
+        {
+            sg::Signal::State state =
+                state_val ? sg::Signal::Set : sg::Signal::Clear;
+
+            sc_assert(cpu < 2);
+            switch (cpu) {
+              case 0:
+                ppi_0[num].setValue(state);
+                break;
+              case 1:
+                ppi_1[num].setValue(state);
+                break;
+              default:
+                sc_assert(false);
+            }
+        }
+
+        behavior spi(uint32_t num, bool state_val)
+        {
+            sg::Signal::State state =
+                state_val ? sg::Signal::Set : sg::Signal::Clear;
+            spi[num].setValue(state);
+        }
+    }
+
+    internal slave port<Signal> spi[960];
+
+    internal slave port<Signal> ppi_0[9];
+    internal slave port<Signal> ppi_1[9];
+}

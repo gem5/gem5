@@ -1,0 +1,155 @@
+/*
+ * Copyright 2020 Google, Inc.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "arch/arm/fastmodel/CortexR52/evs.hh"
+
+#include "arch/arm/fastmodel/iris/cpu.hh"
+#include "base/logging.hh"
+#include "sim/core.hh"
+#include "systemc/tlm_bridge/gem5_to_tlm.hh"
+
+namespace FastModel
+{
+
+template <class Types>
+void
+ScxEvsCortexR52<Types>::clockChangeHandler()
+{
+    clockRateControl->set_mul_div(SimClock::Int::s, clockPeriod.value);
+}
+
+template <class Types>
+ScxEvsCortexR52<Types>::CorePins::CorePins(Evs *_evs, int _cpu) :
+        name(csprintf("%s.cpu%s", _evs->name(), _cpu)),
+    evs(_evs), cpu(_cpu),
+    llpp(evs->llpp[cpu], name + ".llpp", -1),
+    flash(evs->flash[cpu], name + ".flash", -1),
+    amba(evs->amba[cpu], name + ".amba", -1)
+{
+    for (int i = 0; i < Evs::PpiCount; i++) {
+        ppis.emplace_back(
+                new CoreInt(csprintf("%s.ppi[%d]", name, i), i, this));
+    }
+}
+
+
+template <class Types>
+ScxEvsCortexR52<Types>::ScxEvsCortexR52(
+        const sc_core::sc_module_name &mod_name, const Params &p) :
+    Base(mod_name),
+    clockChanged(Iris::ClockEventName.c_str()),
+    clockPeriod(Iris::PeriodAttributeName.c_str()),
+    gem5CpuCluster(Iris::Gem5CpuClusterAttributeName.c_str()),
+    sendFunctional(Iris::SendFunctionalAttributeName.c_str()),
+    params(p)
+{
+    for (int i = 0; i < CoreCount; i++)
+        corePins.emplace_back(new CorePins(this, i));
+
+    for (int i = 0; i < SpiCount; i++) {
+        spis.emplace_back(
+                new ClstrInt(csprintf("%s.spi[%d]", name(), i), i, this));
+    }
+
+    clockRateControl.bind(this->clock_rate_s);
+    signalInterrupt.bind(this->signal_interrupt);
+
+    this->add_attribute(gem5CpuCluster);
+    this->add_attribute(clockPeriod);
+    SC_METHOD(clockChangeHandler);
+    this->dont_initialize();
+    this->sensitive << clockChanged;
+
+    sendFunctional.value = [this](PacketPtr pkt) { sendFunc(pkt); };
+    this->add_attribute(sendFunctional);
+}
+
+template <class Types>
+void
+ScxEvsCortexR52<Types>::sendFunc(PacketPtr pkt)
+{
+    auto *trans = sc_gem5::packet2payload(pkt);
+    panic_if(Base::amba[0]->transport_dbg(*trans) != trans->get_data_length(),
+            "Didn't send entire functional packet!");
+    trans->release();
+}
+
+template <class Types>
+Port &
+ScxEvsCortexR52<Types>::gem5_getPort(const std::string &if_name, int idx)
+{
+    if (if_name == "llpp") {
+        return this->corePins.at(idx)->llpp;
+    } else if (if_name == "flash") {
+        return this->corePins.at(idx)->flash;
+    } else if (if_name == "amba") {
+        return this->corePins.at(idx)->amba;
+    } else if (if_name == "spi") {
+        return *this->spis.at(idx);
+    } else if (if_name.substr(0, 3) == "ppi") {
+        int cpu;
+        try {
+            cpu = std::stoi(if_name.substr(4));
+        } catch (const std::invalid_argument &a) {
+            panic("Couldn't find CPU number in %s.", if_name);
+        }
+        return *this->corePins.at(cpu)->ppis.at(idx);
+    } else {
+        return Base::gem5_getPort(if_name, idx);
+    }
+}
+
+template class ScxEvsCortexR52<ScxEvsCortexR52x1Types>;
+template class ScxEvsCortexR52<ScxEvsCortexR52x2Types>;
+template class ScxEvsCortexR52<ScxEvsCortexR52x3Types>;
+template class ScxEvsCortexR52<ScxEvsCortexR52x4Types>;
+
+} // namespace FastModel
+
+FastModel::ScxEvsCortexR52x1 *
+FastModelScxEvsCortexR52x1Params::create()
+{
+    return new FastModel::ScxEvsCortexR52x1(name.c_str(), *this);
+}
+
+FastModel::ScxEvsCortexR52x2 *
+FastModelScxEvsCortexR52x2Params::create()
+{
+    return new FastModel::ScxEvsCortexR52x2(name.c_str(), *this);
+}
+
+FastModel::ScxEvsCortexR52x3 *
+FastModelScxEvsCortexR52x3Params::create()
+{
+    return new FastModel::ScxEvsCortexR52x3(name.c_str(), *this);
+}
+
+FastModel::ScxEvsCortexR52x4 *
+FastModelScxEvsCortexR52x4Params::create()
+{
+    return new FastModel::ScxEvsCortexR52x4(name.c_str(), *this);
+}
