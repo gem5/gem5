@@ -65,7 +65,6 @@ env.SwitchingHeaders(
         pseudo_inst.hh
         registers.hh
         remote_gdb.hh
-        stacktrace.hh
         types.hh
         utility.hh
         '''),
