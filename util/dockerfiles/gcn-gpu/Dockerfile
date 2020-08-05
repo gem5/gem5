@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python-dev \
     python \
     python-yaml \
+    python-six \
     wget \
     libpci3 \
     libelf1 \
