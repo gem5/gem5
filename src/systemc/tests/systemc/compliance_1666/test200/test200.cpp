@@ -10,7 +10,7 @@ struct Chan: i_f, sc_object
 {
 };
 
-struct Port: sc_port<i_f>
+struct SCPort: sc_port<i_f>
 {
   Chan chan;
 };
@@ -33,7 +33,7 @@ void check_form_of_suffix(std::string s)
 
 SC_MODULE(M)
 {
-  Port port;
+  SCPort port;
 
   SC_CTOR(M)
   {
