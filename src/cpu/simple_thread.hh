@@ -71,9 +71,6 @@
 class BaseCPU;
 class CheckerCPU;
 
-class FunctionProfile;
-class ProfileNode;
-
 /**
  * The SimpleThread object provides a combination of the ThreadState
  * object and the ThreadContext interface. It implements the
@@ -179,8 +176,6 @@ class SimpleThread : public ThreadState, public ThreadContext
         dtb->demapPage(vaddr, asn);
     }
 
-    void dumpFuncProfile() override;
-
     /*******************************************
      * ThreadContext interface functions.
      ******************************************/
@@ -259,9 +254,6 @@ class SimpleThread : public ThreadState, public ThreadContext
     {
         return ThreadState::readLastSuspend();
     }
-
-    void profileClear() override { ThreadState::profileClear(); }
-    void profileSample() override { ThreadState::profileSample(); }
 
     void copyArchRegs(ThreadContext *tc) override;
 

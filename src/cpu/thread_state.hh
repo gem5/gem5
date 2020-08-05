@@ -32,12 +32,8 @@
 #include "arch/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
-#include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
 #include "sim/process.hh"
-
-class FunctionProfile;
-class ProfileNode;
 
 class Checkpoint;
 
@@ -81,12 +77,6 @@ struct ThreadState : public Serializable {
      * @param tc ThreadContext for the virtual-to-physical translation
      */
     void initMemProxies(ThreadContext *tc);
-
-    void dumpFuncProfile();
-
-    void profileClear();
-
-    void profileSample();
 
     PortProxy &getPhysProxy();
 
@@ -151,11 +141,6 @@ struct ThreadState : public Serializable {
 
     /** Last time suspend was called on this thread. */
     Tick lastSuspend;
-
-  public:
-    FunctionProfile *profile;
-    ProfileNode *profileNode;
-    Addr profilePC;
 
   protected:
     Process *process;

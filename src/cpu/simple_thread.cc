@@ -43,7 +43,6 @@
 #include <string>
 
 #include "arch/isa_traits.hh"
-#include "arch/stacktrace.hh"
 #include "arch/utility.hh"
 #include "base/callback.hh"
 #include "base/compiler.hh"
@@ -52,7 +51,6 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
-#include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "mem/translating_port_proxy.hh"
@@ -91,21 +89,6 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
     assert(isa);
 
     clearArchRegs();
-
-    if (baseCpu->params()->profile) {
-        profile = new FunctionProfile(m5::make_unique<TheISA::StackTrace>(),
-                                      system->workload->symtab(this));
-        Callback *cb =
-            new MakeCallback<SimpleThread,
-            &SimpleThread::dumpFuncProfile>(this);
-        registerExitCallback(cb);
-    }
-
-    // let's fill with a dummy node for now so we don't get a segfault
-    // on the first cycle when there's no node available.
-    static ProfileNode dummyNode;
-    profileNode = &dummyNode;
-    profilePC = 3;
 }
 
 void
@@ -146,14 +129,6 @@ SimpleThread::unserialize(CheckpointIn &cp)
 {
     ThreadState::unserialize(cp);
     ::unserialize(*this, cp);
-}
-
-void
-SimpleThread::dumpFuncProfile()
-{
-    OutputStream *os(simout.create(csprintf("profile.%s.dat", baseCpu->name())));
-    profile->dump(*os->stream());
-    simout.close(os);
 }
 
 void

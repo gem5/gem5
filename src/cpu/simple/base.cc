@@ -41,7 +41,6 @@
 
 #include "cpu/simple/base.hh"
 
-#include "arch/stacktrace.hh"
 #include "arch/utility.hh"
 #include "base/cp_annotate.hh"
 #include "base/cprintf.hh"
@@ -57,7 +56,6 @@
 #include "cpu/checker/thread_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/pred/bpred_unit.hh"
-#include "cpu/profile.hh"
 #include "cpu/simple/exec_context.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/smt.hh"
@@ -573,20 +571,11 @@ void
 BaseSimpleCPU::postExecute()
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
-    SimpleThread* thread = t_info.thread;
 
     assert(curStaticInst);
 
     TheISA::PCState pc = threadContexts[curThread]->pcState();
     Addr instAddr = pc.instAddr();
-    if (FullSystem && thread->profile) {
-        bool usermode = TheISA::inUserMode(threadContexts[curThread]);
-        thread->profilePC = usermode ? 1 : instAddr;
-        ProfileNode *node = thread->profile->consume(threadContexts[curThread],
-                                                     curStaticInst);
-        if (node)
-            thread->profileNode = node;
-    }
 
     if (curStaticInst->isMemRef()) {
         t_info.numMemRefs++;

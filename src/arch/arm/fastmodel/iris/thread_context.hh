@@ -238,12 +238,6 @@ class ThreadContext : public ::ThreadContext
     void halt() override { setStatus(Halted); }
 
     void
-    dumpFuncProfile() override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-
-    void
     takeOverFrom(::ThreadContext *old_context) override
     {
         panic("%s not implemented.", __FUNCTION__);
@@ -259,17 +253,6 @@ class ThreadContext : public ::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
     Tick readLastSuspend() override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-
-    void
-    profileClear() override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-    void
-    profileSample() override
     {
         panic("%s not implemented.", __FUNCTION__);
     }

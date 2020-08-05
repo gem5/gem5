@@ -196,8 +196,6 @@ class CheckerThreadContext : public ThreadContext
     /// Set the status to Halted.
     void halt() override { actualTC->halt(); }
 
-    void dumpFuncProfile() override { actualTC->dumpFuncProfile(); }
-
     void
     takeOverFrom(ThreadContext *oldContext) override
     {
@@ -214,9 +212,6 @@ class CheckerThreadContext : public ThreadContext
 
     Tick readLastActivate() override { return actualTC->readLastActivate(); }
     Tick readLastSuspend() override { return actualTC->readLastSuspend(); }
-
-    void profileClear() override { return actualTC->profileClear(); }
-    void profileSample() override { return actualTC->profileSample(); }
 
     // @todo: Do I need this?
     void

@@ -172,11 +172,6 @@ class O3ThreadContext : public ThreadContext
     /** Set the status to Halted. */
     void halt() override;
 
-    /** Dumps the function profiling information.
-     * @todo: Implement.
-     */
-    void dumpFuncProfile() override;
-
     /** Takes over execution of a thread from another CPU. */
     void takeOverFrom(ThreadContext *old_context) override;
 
@@ -184,11 +179,6 @@ class O3ThreadContext : public ThreadContext
     Tick readLastActivate() override;
     /** Reads the last tick that this thread was suspended on. */
     Tick readLastSuspend() override;
-
-    /** Clears the function profiling information. */
-    void profileClear() override;
-    /** Samples the function profiling information. */
-    void profileSample() override;
 
     /** Copies the architectural registers from another TC into this TC. */
     void copyArchRegs(ThreadContext *tc) override;

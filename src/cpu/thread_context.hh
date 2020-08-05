@@ -177,8 +177,6 @@ class ThreadContext : public PCEventScope
     /// Quiesce, suspend, and schedule activate at resume
     void quiesceTick(Tick resume);
 
-    virtual void dumpFuncProfile() = 0;
-
     virtual void takeOverFrom(ThreadContext *old_context) = 0;
 
     virtual void regStats(const std::string &name) {};
@@ -191,9 +189,6 @@ class ThreadContext : public PCEventScope
     // Having an extra function just to read these is obnoxious
     virtual Tick readLastActivate() = 0;
     virtual Tick readLastSuspend() = 0;
-
-    virtual void profileClear() = 0;
-    virtual void profileSample() = 0;
 
     virtual void copyArchRegs(ThreadContext *tc) = 0;
 

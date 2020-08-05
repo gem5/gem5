@@ -257,9 +257,6 @@ class BaseCPU : public ClockedObject
         return FullSystem && interrupts[tid]->checkInterrupts();
     }
 
-    void processProfileEvent();
-    EventFunctionWrapper * profileEvent;
-
   protected:
     std::vector<ThreadContext *> threadContexts;
 

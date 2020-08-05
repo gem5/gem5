@@ -54,7 +54,6 @@
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "cpu/checker/cpu.hh"
-#include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Mwait.hh"
 #include "debug/SyscallVerbose.hh"
@@ -127,8 +126,7 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
       _dataMasterId(p->system->getMasterId(this, "data")),
       _taskId(ContextSwitchTaskId::Unknown), _pid(invldPid),
       _switchedOut(p->switched_out), _cacheLineSize(p->system->cacheLineSize()),
-      interrupts(p->interrupts), profileEvent(NULL),
-      numThreads(p->numThreads), system(p->system),
+      interrupts(p->interrupts), numThreads(p->numThreads), system(p->system),
       previousCycle(0), previousState(CPU_STATE_SLEEP),
       functionTraceStream(nullptr), currentFunctionStart(0),
       currentFunctionEnd(0), functionEntryTick(0),
@@ -169,12 +167,6 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
         }
     }
 
-    if (FullSystem) {
-        if (params()->profile)
-            profileEvent = new EventFunctionWrapper(
-                [this]{ processProfileEvent(); },
-                name());
-    }
     tracer = params()->tracer;
 
     if (params()->isa.size() != numThreads) {
@@ -191,7 +183,6 @@ BaseCPU::enableFunctionTrace()
 
 BaseCPU::~BaseCPU()
 {
-    delete profileEvent;
 }
 
 void
@@ -307,11 +298,6 @@ BaseCPU::init()
 void
 BaseCPU::startup()
 {
-    if (FullSystem) {
-        if (!params()->switched_out && profileEvent)
-            schedule(profileEvent, curTick());
-    }
-
     if (params()->progress_interval) {
         new CPUProgressEvent(this, params()->progress_interval);
     }
@@ -536,8 +522,6 @@ BaseCPU::switchOut()
 {
     assert(!_switchedOut);
     _switchedOut = true;
-    if (profileEvent && profileEvent->scheduled())
-        deschedule(profileEvent);
 
     // Flush all TLBs in the CPU to avoid having stale translations if
     // it gets switched in later.
@@ -628,14 +612,6 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     }
     oldCPU->interrupts.clear();
 
-    if (FullSystem) {
-        for (ThreadID i = 0; i < size; ++i)
-            threadContexts[i]->profileClear();
-
-        if (profileEvent)
-            schedule(profileEvent, curTick());
-    }
-
     // All CPUs have an instruction and a data port, and the new CPU's
     // ports are dangling while the old CPU has its ports connected
     // already. Unbind the old CPU and then bind the ports of the one
@@ -658,17 +634,6 @@ BaseCPU::flushTLBs()
             checker->getDTBPtr()->flushAll();
         }
     }
-}
-
-void
-BaseCPU::processProfileEvent()
-{
-    ThreadID size = threadContexts.size();
-
-    for (ThreadID i = 0; i < size; ++i)
-        threadContexts[i]->profileSample();
-
-    schedule(profileEvent, curTick() + params()->profile);
 }
 
 void

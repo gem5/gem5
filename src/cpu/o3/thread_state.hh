@@ -41,7 +41,6 @@
 #ifndef __CPU_O3_THREAD_STATE_HH__
 #define __CPU_O3_THREAD_STATE_HH__
 
-#include "arch/stacktrace.hh"
 #include "base/callback.hh"
 #include "base/compiler.hh"
 #include "base/output.hh"
@@ -52,9 +51,7 @@
 
 class Event;
 class FunctionalMemory;
-class FunctionProfile;
 class Process;
-class ProfileNode;
 
 /**
  * Class that has various thread state, such as the status, the
@@ -100,24 +97,6 @@ struct O3ThreadState : public ThreadState {
           comInstEventQueue("instruction-based event queue"),
           noSquashFromTC(false), trapPending(false), tc(nullptr)
     {
-        if (!FullSystem)
-            return;
-
-        if (cpu->params()->profile) {
-            profile = new FunctionProfile(
-                    m5::make_unique<TheISA::StackTrace>(),
-                    cpu->params()->system->workload->symtab(tc));
-            Callback *cb =
-                new MakeCallback<O3ThreadState,
-                &O3ThreadState::dumpFuncProfile>(this);
-            registerExitCallback(cb);
-        }
-
-        // let's fill with a dummy node for now so we don't get a segfault
-        // on the first cycle when there's no node available.
-        static ProfileNode dummyNode;
-        profileNode = &dummyNode;
-        profilePC = 3;
     }
 
     void serialize(CheckpointOut &cp) const override
@@ -151,14 +130,6 @@ struct O3ThreadState : public ThreadState {
     void syscall(Fault *fault)
     {
         process->syscall(tc, fault);
-    }
-
-    void dumpFuncProfile()
-    {
-        OutputStream *os(
-            simout.create(csprintf("profile.%s.dat", cpu->name())));
-        profile->dump(*os->stream());
-        simout.close(os);
     }
 };
 

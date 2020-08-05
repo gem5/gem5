@@ -57,13 +57,6 @@ O3ThreadContext<Impl>::getVirtProxy()
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::dumpFuncProfile()
-{
-    thread->dumpFuncProfile();
-}
-
-template <class Impl>
-void
 O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
 {
     ::takeOverFrom(*this, *old_context);
@@ -151,20 +144,6 @@ Tick
 O3ThreadContext<Impl>::readLastSuspend()
 {
     return thread->lastSuspend;
-}
-
-template <class Impl>
-void
-O3ThreadContext<Impl>::profileClear()
-{
-    thread->profileClear();
-}
-
-template <class Impl>
-void
-O3ThreadContext<Impl>::profileSample()
-{
-    thread->profileSample();
 }
 
 template <class Impl>

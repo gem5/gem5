@@ -1281,14 +1281,6 @@ DefaultCommit<Impl>::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
     updateComInstStats(head_inst);
 
     if (FullSystem) {
-        if (thread[tid]->profile) {
-            thread[tid]->profilePC = head_inst->instAddr();
-            ProfileNode *node = thread[tid]->profile->consume(
-                    thread[tid]->getTC(), head_inst->staticInst);
-
-            if (node)
-                thread[tid]->profileNode = node;
-        }
         if (CPA::available()) {
             if (head_inst->isControl()) {
                 ThreadContext *tc = thread[tid]->getTC();
