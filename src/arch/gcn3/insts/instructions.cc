@@ -39406,6 +39406,9 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
+            gpuDynInst->exec_mask = wf->execMask();
+            wf->computeUnit->vrf[wf->simdId]->
+                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
             return;
         }
 
@@ -39504,6 +39507,9 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
+            gpuDynInst->exec_mask = wf->execMask();
+            wf->computeUnit->vrf[wf->simdId]->
+                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
             return;
         }
 
@@ -39602,6 +39608,9 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
+            gpuDynInst->exec_mask = wf->execMask();
+            wf->computeUnit->vrf[wf->simdId]->
+                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
             return;
         }
 
@@ -39672,6 +39681,9 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
+            gpuDynInst->exec_mask = wf->execMask();
+            wf->computeUnit->vrf[wf->simdId]->
+                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
             return;
         }
 
@@ -39742,6 +39754,9 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
+            gpuDynInst->exec_mask = wf->execMask();
+            wf->computeUnit->vrf[wf->simdId]->
+                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
             return;
         }
 
@@ -39821,6 +39836,10 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
+            gpuDynInst->exec_mask = wf->execMask();
+            wf->computeUnit->vrf[wf->simdId]->
+                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
+            return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
@@ -40355,6 +40374,11 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
+            if (instData.GLC) {
+                gpuDynInst->exec_mask = wf->execMask();
+                wf->computeUnit->vrf[wf->simdId]->
+                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
+            }
             return;
         }
 
@@ -40457,6 +40481,11 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
+            if (instData.GLC) {
+                gpuDynInst->exec_mask = wf->execMask();
+                wf->computeUnit->vrf[wf->simdId]->
+                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
+            }
             return;
         }
 
@@ -40560,6 +40589,11 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
+            if (instData.GLC) {
+                gpuDynInst->exec_mask = wf->execMask();
+                wf->computeUnit->vrf[wf->simdId]->
+                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
+            }
             return;
         }
 
@@ -40650,6 +40684,11 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
+            if (instData.GLC) {
+                gpuDynInst->exec_mask = wf->execMask();
+                wf->computeUnit->vrf[wf->simdId]->
+                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
+            }
             return;
         }
 
@@ -40914,6 +40953,11 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
+            if (instData.GLC) {
+                gpuDynInst->exec_mask = wf->execMask();
+                wf->computeUnit->vrf[wf->simdId]->
+                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
+            }
             return;
         }
 
@@ -41004,6 +41048,11 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
+            if (instData.GLC) {
+                gpuDynInst->exec_mask = wf->execMask();
+                wf->computeUnit->vrf[wf->simdId]->
+                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
+            }
             return;
         }
 
@@ -41123,6 +41172,11 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
+            if (instData.GLC) {
+                gpuDynInst->exec_mask = wf->execMask();
+                wf->computeUnit->vrf[wf->simdId]->
+                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
+            }
             return;
         }
 
@@ -41227,6 +41281,11 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
+            if (instData.GLC) {
+                gpuDynInst->exec_mask = wf->execMask();
+                wf->computeUnit->vrf[wf->simdId]->
+                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
+            }
             return;
         }
 
@@ -41319,6 +41378,11 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
+            if (instData.GLC) {
+                gpuDynInst->exec_mask = wf->execMask();
+                wf->computeUnit->vrf[wf->simdId]->
+                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
+            }
             return;
         }
 
@@ -41593,6 +41657,11 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
+            if (instData.GLC) {
+                gpuDynInst->exec_mask = wf->execMask();
+                wf->computeUnit->vrf[wf->simdId]->
+                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
+            }
             return;
         }
 
@@ -41686,6 +41755,11 @@ namespace Gcn3ISA
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
+            if (instData.GLC) {
+                gpuDynInst->exec_mask = wf->execMask();
+                wf->computeUnit->vrf[wf->simdId]->
+                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
+            }
             return;
         }
 
