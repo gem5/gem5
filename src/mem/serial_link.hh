@@ -91,7 +91,7 @@ class SerialLink : public ClockedObject
      * is responsible for. The slave port also has a buffer for the
      * responses not yet sent.
      */
-    class SerialLinkSlavePort : public SlavePort
+    class SerialLinkSlavePort : public ResponsePort
     {
 
       private:
@@ -207,7 +207,7 @@ class SerialLink : public ClockedObject
      * responses. The master port has a buffer for the requests not
      * yet sent.
      */
-    class SerialLinkMasterPort : public MasterPort
+    class SerialLinkMasterPort : public RequestPort
     {
 
       private:

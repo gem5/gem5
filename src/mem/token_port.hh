@@ -40,7 +40,7 @@
 class TokenManager;
 class TokenSlavePort;
 
-class TokenMasterPort : public MasterPort
+class TokenMasterPort : public RequestPort
 {
   private:
     /* Manager to track tokens between this token port pair. */
@@ -49,7 +49,7 @@ class TokenMasterPort : public MasterPort
   public:
     TokenMasterPort(const std::string& name, SimObject* owner,
                     PortID id = InvalidPortID) :
-        MasterPort(name, owner, id), tokenManager(nullptr)
+        RequestPort(name, owner, id), tokenManager(nullptr)
     { }
 
     /**
@@ -87,7 +87,7 @@ class TokenMasterPort : public MasterPort
     void setTokenManager(TokenManager *_tokenManager);
 };
 
-class TokenSlavePort : public SlavePort
+class TokenSlavePort : public ResponsePort
 {
   private:
     TokenMasterPort *tokenMasterPort;
@@ -99,7 +99,7 @@ class TokenSlavePort : public SlavePort
   public:
     TokenSlavePort(const std::string& name, ClockedObject *owner,
                    PortID id = InvalidPortID) :
-        SlavePort(name, owner, id), tokenMasterPort(nullptr)
+        ResponsePort(name, owner, id), tokenMasterPort(nullptr)
     { }
     ~TokenSlavePort() { }
 

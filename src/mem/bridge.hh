@@ -96,7 +96,7 @@ class Bridge : public ClockedObject
      * is responsible for. The slave port also has a buffer for the
      * responses not yet sent.
      */
-    class BridgeSlavePort : public SlavePort
+    class BridgeSlavePort : public ResponsePort
     {
 
       private:
@@ -216,7 +216,7 @@ class Bridge : public ClockedObject
      * responses. The master port has a buffer for the requests not
      * yet sent.
      */
-    class BridgeMasterPort : public MasterPort
+    class BridgeMasterPort : public RequestPort
     {
 
       private:

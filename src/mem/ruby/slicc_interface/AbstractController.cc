@@ -373,6 +373,6 @@ AbstractController::MemoryPort::recvReqRetry()
 AbstractController::MemoryPort::MemoryPort(const std::string &_name,
                                            AbstractController *_controller,
                                            PortID id)
-    : MasterPort(_name, _controller, id), controller(_controller)
+    : RequestPort(_name, _controller, id), controller(_controller)
 {
 }

@@ -88,13 +88,13 @@ class MemCheckerMonitor : public SimObject
      * send function of the slave port is called. Besides this, these
      * functions can also perform actions for capturing statistics.
      */
-    class MonitorMasterPort : public MasterPort
+    class MonitorMasterPort : public RequestPort
     {
 
       public:
 
         MonitorMasterPort(const std::string& _name, MemCheckerMonitor& _mon)
-            : MasterPort(_name, &_mon), mon(_mon)
+            : RequestPort(_name, &_mon), mon(_mon)
         { }
 
       protected:
@@ -149,13 +149,13 @@ class MemCheckerMonitor : public SimObject
      * send function of the master port is called. Besides this, these
      * functions can also perform actions for capturing statistics.
      */
-    class MonitorSlavePort : public SlavePort
+    class MonitorSlavePort : public ResponsePort
     {
 
       public:
 
         MonitorSlavePort(const std::string& _name, MemCheckerMonitor& _mon)
-            : SlavePort(_name, &_mon), mon(_mon)
+            : ResponsePort(_name, &_mon), mon(_mon)
         { }
 
       protected:

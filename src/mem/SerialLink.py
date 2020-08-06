@@ -46,8 +46,8 @@ from m5.objects.ClockedObject import ClockedObject
 class SerialLink(ClockedObject):
     type = 'SerialLink'
     cxx_header = "mem/serial_link.hh"
-    slave = SlavePort('Slave port')
-    master = MasterPort('Master port')
+    slave = ResponsePort('Slave port')
+    master = RequestPort('Master port')
     req_size = Param.Unsigned(16, "The number of requests to buffer")
     resp_size = Param.Unsigned(16, "The number of responses to buffer")
     delay = Param.Latency('0ns', "The latency of this serial_link")

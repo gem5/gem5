@@ -135,7 +135,7 @@ class NoncoherentXBar : public BaseXBar
      * instantiated for each of the slave ports connecting to the
      * crossbar.
      */
-    class NoncoherentXBarMasterPort : public MasterPort
+    class NoncoherentXBarMasterPort : public RequestPort
     {
       private:
 
@@ -146,7 +146,7 @@ class NoncoherentXBar : public BaseXBar
 
         NoncoherentXBarMasterPort(const std::string &_name,
                                  NoncoherentXBar &_xbar, PortID _id)
-            : MasterPort(_name, &_xbar, _id), xbar(_xbar)
+            : RequestPort(_name, &_xbar, _id), xbar(_xbar)
         { }
 
       protected:

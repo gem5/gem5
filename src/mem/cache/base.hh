@@ -79,7 +79,7 @@ namespace Prefetcher {
     class Base;
 }
 class MSHR;
-class MasterPort;
+class RequestPort;
 class QueueEntry;
 struct BaseCacheParams;
 
@@ -166,7 +166,7 @@ class BaseCache : public ClockedObject
 
       public:
 
-        CacheReqPacketQueue(BaseCache &cache, MasterPort &port,
+        CacheReqPacketQueue(BaseCache &cache, RequestPort &port,
                             SnoopRespPacketQueue &snoop_resp_queue,
                             const std::string &label) :
             ReqPacketQueue(cache, port, label), cache(cache),

@@ -40,5 +40,5 @@ class MessageBuffer(SimObject):
                                        random delays if RubySystem \
                                        randomization flag is True)")
 
-    master = MasterPort("Master port to MessageBuffer receiver")
-    slave = SlavePort("Slave port from MessageBuffer sender")
+    master = RequestPort("Master port to MessageBuffer receiver")
+    slave = ResponsePort("Slave port from MessageBuffer sender")

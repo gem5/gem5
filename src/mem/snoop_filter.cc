@@ -61,7 +61,7 @@ SnoopFilter::eraseIfNullEntry(SnoopFilterCache::iterator& sf_it)
 }
 
 std::pair<SnoopFilter::SnoopList, Cycles>
-SnoopFilter::lookupRequest(const Packet* cpkt, const SlavePort& slave_port)
+SnoopFilter::lookupRequest(const Packet* cpkt, const ResponsePort& slave_port)
 {
     DPRINTF(SnoopFilter, "%s: src %s packet %s\n", __func__,
             slave_port.name(), cpkt->print());
@@ -240,8 +240,8 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
 
 void
 SnoopFilter::updateSnoopResponse(const Packet* cpkt,
-                                 const SlavePort& rsp_port,
-                                 const SlavePort& req_port)
+                                 const ResponsePort& rsp_port,
+                                 const ResponsePort& req_port)
 {
     DPRINTF(SnoopFilter, "%s: rsp %s req %s packet %s\n",
             __func__, rsp_port.name(), req_port.name(), cpkt->print());
@@ -297,7 +297,7 @@ SnoopFilter::updateSnoopResponse(const Packet* cpkt,
 
 void
 SnoopFilter::updateSnoopForward(const Packet* cpkt,
-        const SlavePort& rsp_port, const MasterPort& req_port)
+        const ResponsePort& rsp_port, const RequestPort& req_port)
 {
     DPRINTF(SnoopFilter, "%s: rsp %s req %s packet %s\n",
             __func__, rsp_port.name(), req_port.name(), cpkt->print());
@@ -333,7 +333,7 @@ SnoopFilter::updateSnoopForward(const Packet* cpkt,
 }
 
 void
-SnoopFilter::updateResponse(const Packet* cpkt, const SlavePort& slave_port)
+SnoopFilter::updateResponse(const Packet* cpkt, const ResponsePort& slave_port)
 {
     DPRINTF(SnoopFilter, "%s: src %s packet %s\n",
             __func__, slave_port.name(), cpkt->print());

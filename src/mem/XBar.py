@@ -78,7 +78,7 @@ class BaseXBar(ClockedObject):
 
     # The default port can be left unconnected, or be used to connect
     # a default slave port
-    default = MasterPort("Port for connecting an optional default slave")
+    default = RequestPort("Port for connecting an optional default slave")
 
     # The default port can be used unconditionally, or based on
     # address range, in which case it may overlap with other

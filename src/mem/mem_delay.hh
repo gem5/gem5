@@ -71,10 +71,10 @@ class MemDelay : public ClockedObject
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;
 
-    class MasterPort : public QueuedMasterPort
+    class RequestPort : public QueuedMasterPort
     {
       public:
-        MasterPort(const std::string &_name, MemDelay &_parent);
+        RequestPort(const std::string &_name, MemDelay &_parent);
 
       protected:
         bool recvTimingResp(PacketPtr pkt) override;
@@ -97,10 +97,10 @@ class MemDelay : public ClockedObject
         MemDelay& parent;
     };
 
-    class SlavePort : public QueuedSlavePort
+    class ResponsePort : public QueuedSlavePort
     {
       public:
-        SlavePort(const std::string &_name, MemDelay &_parent);
+        ResponsePort(const std::string &_name, MemDelay &_parent);
 
       protected:
         Tick recvAtomic(PacketPtr pkt) override;
@@ -122,8 +122,8 @@ class MemDelay : public ClockedObject
 
     bool trySatisfyFunctional(PacketPtr pkt);
 
-    MasterPort masterPort;
-    SlavePort slavePort;
+    RequestPort masterPort;
+    ResponsePort slavePort;
 
     ReqPacketQueue reqQueue;
     RespPacketQueue respQueue;

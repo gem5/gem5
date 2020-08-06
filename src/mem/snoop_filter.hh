@@ -135,7 +135,7 @@ class SnoopFilter : public SimObject {
      * @return Pair of a vector of snoop target ports and lookup latency.
      */
     std::pair<SnoopList, Cycles> lookupRequest(const Packet* cpkt,
-                                               const SlavePort& slave_port);
+                                               const ResponsePort& slave_port);
 
     /**
      * For an un-successful request, revert the change to the snoop
@@ -154,8 +154,8 @@ class SnoopFilter : public SimObject {
      * additional steering thanks to the snoop filter.
      *
      * @param cpkt Pointer to const Packet containing the snoop.
-     * @return Pair with a vector of SlavePorts that need snooping and a lookup
-     *         latency.
+     * @return Pair with a vector of ResponsePorts that need snooping and a
+     * lookup latency.
      */
     std::pair<SnoopList, Cycles> lookupSnoop(const Packet* cpkt);
 
@@ -165,12 +165,12 @@ class SnoopFilter : public SimObject {
      * will update the corresponding state in the filter.
      *
      * @param cpkt     Pointer to const Packet holding the snoop response.
-     * @param rsp_port SlavePort that sends the response.
-     * @param req_port SlavePort that made the original request and is the
+     * @param rsp_port ResponsePort that sends the response.
+     * @param req_port ResponsePort that made the original request and is the
      *                 destination of the snoop response.
      */
-    void updateSnoopResponse(const Packet *cpkt, const SlavePort& rsp_port,
-                             const SlavePort& req_port);
+    void updateSnoopResponse(const Packet *cpkt, const ResponsePort& rsp_port,
+                             const ResponsePort& req_port);
 
     /**
      * Pass snoop responses that travel downward through the snoop
@@ -178,11 +178,11 @@ class SnoopFilter : public SimObject {
      * additional routing happens.
      *
      * @param cpkt     Pointer to const Packet holding the snoop response.
-     * @param rsp_port SlavePort that sends the response.
-     * @param req_port MasterPort through which the response is forwarded.
+     * @param rsp_port ResponsePort that sends the response.
+     * @param req_port RequestPort through which the response is forwarded.
      */
-    void updateSnoopForward(const Packet *cpkt, const SlavePort& rsp_port,
-                            const MasterPort& req_port);
+    void updateSnoopForward(const Packet *cpkt, const ResponsePort& rsp_port,
+                            const RequestPort& req_port);
 
     /**
      * Update the snoop filter with a response from below (outer /
@@ -190,10 +190,10 @@ class SnoopFilter : public SimObject {
      * the snoop filter.
      *
      * @param cpkt       Pointer to const Packet holding the snoop response.
-     * @param slave_port SlavePort that made the original request and
+     * @param slave_port ResponsePort that made the original request and
      *                   is the target of this response.
      */
-    void updateResponse(const Packet *cpkt, const SlavePort& slave_port);
+    void updateResponse(const Packet *cpkt, const ResponsePort& slave_port);
 
     virtual void regStats();
 
@@ -206,7 +206,7 @@ class SnoopFilter : public SimObject {
     typedef std::bitset<SNOOP_MASK_SIZE> SnoopMask;
 
     /**
-    * Per cache line item tracking a bitmask of SlavePorts who have an
+    * Per cache line item tracking a bitmask of ResponsePorts who have an
     * outstanding request to this line (requested) or already share a
     * cache line with this address (holder).
     */
@@ -239,14 +239,14 @@ class SnoopFilter : public SimObject {
 
     /**
      * Convert a single port to a corresponding, one-hot bitmask
-     * @param port SlavePort that should be converted.
+     * @param port ResponsePort that should be converted.
      * @return One-hot bitmask corresponding to the port.
      */
-    SnoopMask portToMask(const SlavePort& port) const;
+    SnoopMask portToMask(const ResponsePort& port) const;
     /**
      * Converts a bitmask of ports into the corresponing list of ports
      * @param ports SnoopMask of the requested ports
-     * @return SnoopList containing all the requested SlavePorts
+     * @return SnoopList containing all the requested ResponsePorts
      */
     SnoopList maskToPortList(SnoopMask ports) const;
 
@@ -320,7 +320,7 @@ class SnoopFilter : public SimObject {
 };
 
 inline SnoopFilter::SnoopMask
-SnoopFilter::portToMask(const SlavePort& port) const
+SnoopFilter::portToMask(const ResponsePort& port) const
 {
     assert(port.getId() != InvalidPortID);
     // if this is not a snooping port, return a zero mask

@@ -592,8 +592,8 @@ BaseXBar::Layer<SrcType, DstType>::drain()
 
 /**
  * Crossbar layer template instantiations. Could be removed with _impl.hh
- * file, but since there are only two given options (MasterPort and
- * SlavePort) it seems a bit excessive at this point.
+ * file, but since there are only two given options (RequestPort and
+ * ResponsePort) it seems a bit excessive at this point.
  */
-template class BaseXBar::Layer<SlavePort, MasterPort>;
-template class BaseXBar::Layer<MasterPort, SlavePort>;
+template class BaseXBar::Layer<ResponsePort, RequestPort>;
+template class BaseXBar::Layer<RequestPort, ResponsePort>;

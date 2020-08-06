@@ -36,10 +36,10 @@ class RubyPort(ClockedObject):
 
    slave = VectorSlavePort("CPU slave port")
    master = VectorMasterPort("CPU master port")
-   pio_master_port = MasterPort("Ruby mem master port")
-   mem_master_port = MasterPort("Ruby mem master port")
-   pio_slave_port = SlavePort("Ruby pio slave port")
-   mem_slave_port = SlavePort("Ruby memory port")
+   pio_master_port = RequestPort("Ruby mem master port")
+   mem_master_port = RequestPort("Ruby mem master port")
+   pio_slave_port = ResponsePort("Ruby pio slave port")
+   mem_slave_port = ResponsePort("Ruby memory port")
 
    using_ruby_tester = Param.Bool(False, "")
    no_retry_on_stall = Param.Bool(False, "")

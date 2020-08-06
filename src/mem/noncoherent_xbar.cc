@@ -58,7 +58,7 @@ NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams *p)
     // are enumerated starting from zero
     for (int i = 0; i < p->port_master_connection_count; ++i) {
         std::string portName = csprintf("%s.master[%d]", name(), i);
-        MasterPort* bp = new NoncoherentXBarMasterPort(portName, *this, i);
+        RequestPort* bp = new NoncoherentXBarMasterPort(portName, *this, i);
         masterPorts.push_back(bp);
         reqLayers.push_back(new ReqLayer(*bp, *this,
                                          csprintf("reqLayer%d", i)));
@@ -69,7 +69,7 @@ NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams *p)
     if (p->port_default_connection_count) {
         defaultPortID = masterPorts.size();
         std::string portName = name() + ".default";
-        MasterPort* bp = new NoncoherentXBarMasterPort(portName, *this,
+        RequestPort* bp = new NoncoherentXBarMasterPort(portName, *this,
                                                       defaultPortID);
         masterPorts.push_back(bp);
         reqLayers.push_back(new ReqLayer(*bp, *this, csprintf("reqLayer%d",
@@ -98,7 +98,7 @@ bool
 NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 {
     // determine the source port based on the id
-    SlavePort *src_port = slavePorts[slave_port_id];
+    ResponsePort *src_port = slavePorts[slave_port_id];
 
     // we should never see express snoops on a non-coherent crossbar
     assert(!pkt->isExpressSnoop());
@@ -176,7 +176,7 @@ bool
 NoncoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 {
     // determine the source port based on the id
-    MasterPort *src_port = masterPorts[master_port_id];
+    RequestPort *src_port = masterPorts[master_port_id];
 
     // determine the destination
     const auto route_lookup = routeTo.find(pkt->req);

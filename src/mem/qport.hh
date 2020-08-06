@@ -55,7 +55,7 @@
  * queue is a parameter to allow tailoring of the queue implementation
  * (used in the cache).
  */
-class QueuedSlavePort : public SlavePort
+class QueuedSlavePort : public ResponsePort
 {
 
   protected:
@@ -76,7 +76,7 @@ class QueuedSlavePort : public SlavePort
      */
     QueuedSlavePort(const std::string& name, SimObject* owner,
                     RespPacketQueue &resp_queue, PortID id = InvalidPortID) :
-        SlavePort(name, owner, id), respQueue(resp_queue)
+        ResponsePort(name, owner, id), respQueue(resp_queue)
     { }
 
     virtual ~QueuedSlavePort() { }
@@ -103,7 +103,7 @@ class QueuedSlavePort : public SlavePort
  * independent, and so each queue manages its own flow control
  * (retries).
  */
-class QueuedMasterPort : public MasterPort
+class QueuedMasterPort : public RequestPort
 {
 
   protected:
@@ -131,7 +131,7 @@ class QueuedMasterPort : public MasterPort
                      ReqPacketQueue &req_queue,
                      SnoopRespPacketQueue &snoop_resp_queue,
                      PortID id = InvalidPortID) :
-        MasterPort(name, owner, id), reqQueue(req_queue),
+        RequestPort(name, owner, id), reqQueue(req_queue),
         snoopRespQueue(snoop_resp_queue)
     { }
 

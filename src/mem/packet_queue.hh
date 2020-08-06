@@ -224,11 +224,11 @@ class ReqPacketQueue : public PacketQueue
 
   protected:
 
-    MasterPort& masterPort;
+    RequestPort& masterPort;
 
     // Static definition so it can be called when constructing the parent
     // without us being completely initialized.
-    static const std::string name(const MasterPort& masterPort,
+    static const std::string name(const RequestPort& masterPort,
                                   const std::string& label)
     { return masterPort.name() + "-" + label; }
 
@@ -243,7 +243,7 @@ class ReqPacketQueue : public PacketQueue
      * @param _masterPort Master port used to send the packets
      * @param _label Label to push on the label stack for print request packets
      */
-    ReqPacketQueue(EventManager& _em, MasterPort& _masterPort,
+    ReqPacketQueue(EventManager& _em, RequestPort& _masterPort,
                    const std::string _label = "ReqPacketQueue");
 
     virtual ~ReqPacketQueue() { }
@@ -260,11 +260,11 @@ class SnoopRespPacketQueue : public PacketQueue
 
   protected:
 
-    MasterPort& masterPort;
+    RequestPort& masterPort;
 
     // Static definition so it can be called when constructing the parent
     // without us being completely initialized.
-    static const std::string name(const MasterPort& masterPort,
+    static const std::string name(const RequestPort& masterPort,
                                   const std::string& label)
     { return masterPort.name() + "-" + label; }
 
@@ -280,7 +280,7 @@ class SnoopRespPacketQueue : public PacketQueue
      * @param force_order Force insertion order for packets with same address
      * @param _label Label to push on the label stack for print request packets
      */
-    SnoopRespPacketQueue(EventManager& _em, MasterPort& _masterPort,
+    SnoopRespPacketQueue(EventManager& _em, RequestPort& _masterPort,
                          bool force_order = false,
                          const std::string _label = "SnoopRespPacketQueue");
 
@@ -298,11 +298,11 @@ class RespPacketQueue : public PacketQueue
 
   protected:
 
-    SlavePort& slavePort;
+    ResponsePort& slavePort;
 
     // Static definition so it can be called when constructing the parent
     // without us being completely initialized.
-    static const std::string name(const SlavePort& slavePort,
+    static const std::string name(const ResponsePort& slavePort,
                                   const std::string& label)
     { return slavePort.name() + "-" + label; }
 
@@ -318,7 +318,7 @@ class RespPacketQueue : public PacketQueue
      * @param force_order Force insertion order for packets with same address
      * @param _label Label to push on the label stack for print request packets
      */
-    RespPacketQueue(EventManager& _em, SlavePort& _slavePort,
+    RespPacketQueue(EventManager& _em, ResponsePort& _slavePort,
                     bool force_order = false,
                     const std::string _label = "RespPacketQueue");
 

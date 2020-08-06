@@ -42,7 +42,7 @@
 void
 TokenMasterPort::bind(Port &peer)
 {
-    MasterPort::bind(peer);
+    RequestPort::bind(peer);
 }
 
 void
@@ -88,10 +88,10 @@ void
 TokenSlavePort::bind(Port& peer)
 {
     // TokenSlavePort is allowed to bind to either TokenMasterPort or a
-    // MasterPort as fallback. If the type is a MasterPort, tokenMasterPort
+    // RequestPort as fallback. If the type is a RequestPort, tokenMasterPort
     // is set to nullptr to indicate tokens should not be exchanged.
     auto *token_master_port = dynamic_cast<TokenMasterPort*>(&peer);
-    auto *master_port = dynamic_cast<MasterPort*>(&peer);
+    auto *master_port = dynamic_cast<RequestPort*>(&peer);
     if (!token_master_port && !master_port) {
         fatal("Attempt to bind port %s to unsupported slave port %s.",
               name(), peer.name());
@@ -109,7 +109,7 @@ TokenSlavePort::bind(Port& peer)
 void
 TokenSlavePort::unbind()
 {
-    SlavePort::responderUnbind();
+    ResponsePort::responderUnbind();
     tokenMasterPort = nullptr;
 }
 
@@ -121,7 +121,7 @@ TokenSlavePort::recvRespRetry()
              "Attempted to retry a response when no retry was queued!\n");
 
     PacketPtr pkt = respQueue.front();
-    bool success = SlavePort::sendTimingResp(pkt);
+    bool success = ResponsePort::sendTimingResp(pkt);
 
     if (success) {
         respQueue.pop_front();
@@ -131,7 +131,7 @@ TokenSlavePort::recvRespRetry()
 bool
 TokenSlavePort::sendTimingResp(PacketPtr pkt)
 {
-    bool success = SlavePort::sendTimingResp(pkt);
+    bool success = ResponsePort::sendTimingResp(pkt);
 
     if (!success) {
         respQueue.push_back(pkt);

@@ -48,8 +48,8 @@ class AddrMapper(SimObject):
     abstract = True
 
     # one port in each direction
-    master = MasterPort("Master port")
-    slave = SlavePort("Slave port")
+    master = RequestPort("Master port")
+    slave = ResponsePort("Slave port")
 
 
 # Range address mapper that maps a set of original ranges to a set of

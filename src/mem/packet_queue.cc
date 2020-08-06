@@ -232,7 +232,7 @@ PacketQueue::drain()
     }
 }
 
-ReqPacketQueue::ReqPacketQueue(EventManager& _em, MasterPort& _masterPort,
+ReqPacketQueue::ReqPacketQueue(EventManager& _em, RequestPort& _masterPort,
                                const std::string _label)
     : PacketQueue(_em, _label, name(_masterPort, _label)),
       masterPort(_masterPort)
@@ -246,7 +246,7 @@ ReqPacketQueue::sendTiming(PacketPtr pkt)
 }
 
 SnoopRespPacketQueue::SnoopRespPacketQueue(EventManager& _em,
-                                           MasterPort& _masterPort,
+                                           RequestPort& _masterPort,
                                            bool force_order,
                                            const std::string _label)
     : PacketQueue(_em, _label, name(_masterPort, _label), force_order),
@@ -260,7 +260,7 @@ SnoopRespPacketQueue::sendTiming(PacketPtr pkt)
     return masterPort.sendTimingSnoopResp(pkt);
 }
 
-RespPacketQueue::RespPacketQueue(EventManager& _em, SlavePort& _slavePort,
+RespPacketQueue::RespPacketQueue(EventManager& _em, ResponsePort& _slavePort,
                                  bool force_order,
                                  const std::string _label)
     : PacketQueue(_em, _label, name(_slavePort, _label), force_order),

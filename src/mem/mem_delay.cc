@@ -77,7 +77,7 @@ MemDelay::trySatisfyFunctional(PacketPtr pkt)
         masterPort.trySatisfyFunctional(pkt);
 }
 
-MemDelay::MasterPort::MasterPort(const std::string &_name, MemDelay &_parent)
+MemDelay::RequestPort::RequestPort(const std::string &_name, MemDelay &_parent)
     : QueuedMasterPort(_name, &_parent,
                        _parent.reqQueue, _parent.snoopRespQueue),
       parent(_parent)
@@ -85,7 +85,7 @@ MemDelay::MasterPort::MasterPort(const std::string &_name, MemDelay &_parent)
 }
 
 bool
-MemDelay::MasterPort::recvTimingResp(PacketPtr pkt)
+MemDelay::RequestPort::recvTimingResp(PacketPtr pkt)
 {
     // technically the packet only reaches us after the header delay,
     // and typically we also need to deserialise any payload
@@ -100,7 +100,7 @@ MemDelay::MasterPort::recvTimingResp(PacketPtr pkt)
 }
 
 void
-MemDelay::MasterPort::recvFunctionalSnoop(PacketPtr pkt)
+MemDelay::RequestPort::recvFunctionalSnoop(PacketPtr pkt)
 {
     if (parent.trySatisfyFunctional(pkt)) {
         pkt->makeResponse();
@@ -110,7 +110,7 @@ MemDelay::MasterPort::recvFunctionalSnoop(PacketPtr pkt)
 }
 
 Tick
-MemDelay::MasterPort::recvAtomicSnoop(PacketPtr pkt)
+MemDelay::RequestPort::recvAtomicSnoop(PacketPtr pkt)
 {
     const Tick delay = parent.delaySnoopResp(pkt);
 
@@ -118,20 +118,21 @@ MemDelay::MasterPort::recvAtomicSnoop(PacketPtr pkt)
 }
 
 void
-MemDelay::MasterPort::recvTimingSnoopReq(PacketPtr pkt)
+MemDelay::RequestPort::recvTimingSnoopReq(PacketPtr pkt)
 {
     parent.slavePort.sendTimingSnoopReq(pkt);
 }
 
 
-MemDelay::SlavePort::SlavePort(const std::string &_name, MemDelay &_parent)
+MemDelay::ResponsePort::
+ResponsePort(const std::string &_name, MemDelay &_parent)
     : QueuedSlavePort(_name, &_parent, _parent.respQueue),
       parent(_parent)
 {
 }
 
 Tick
-MemDelay::SlavePort::recvAtomic(PacketPtr pkt)
+MemDelay::ResponsePort::recvAtomic(PacketPtr pkt)
 {
     const Tick delay = parent.delayReq(pkt) + parent.delayResp(pkt);
 
@@ -139,7 +140,7 @@ MemDelay::SlavePort::recvAtomic(PacketPtr pkt)
 }
 
 bool
-MemDelay::SlavePort::recvTimingReq(PacketPtr pkt)
+MemDelay::ResponsePort::recvTimingReq(PacketPtr pkt)
 {
     // technically the packet only reaches us after the header
     // delay, and typically we also need to deserialise any
@@ -155,7 +156,7 @@ MemDelay::SlavePort::recvTimingReq(PacketPtr pkt)
 }
 
 void
-MemDelay::SlavePort::recvFunctional(PacketPtr pkt)
+MemDelay::ResponsePort::recvFunctional(PacketPtr pkt)
 {
     if (parent.trySatisfyFunctional(pkt)) {
         pkt->makeResponse();
@@ -165,7 +166,7 @@ MemDelay::SlavePort::recvFunctional(PacketPtr pkt)
 }
 
 bool
-MemDelay::SlavePort::recvTimingSnoopResp(PacketPtr pkt)
+MemDelay::ResponsePort::recvTimingSnoopResp(PacketPtr pkt)
 {
     const Tick when = curTick() + parent.delaySnoopResp(pkt);
 

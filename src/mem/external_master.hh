@@ -48,9 +48,9 @@
  * port which is to be bound to.  A port handler will usually construct a
  * bridge object in the external system to accomodate the port-to-port
  * mapping but this bridge is not exposed to gem5 other than be the
- * presentation of the MasterPort which can be bound.
+ * presentation of the RequestPort which can be bound.
  *
- * The external port must provide a gem5 MasterPort interface.
+ * The external port must provide a gem5 RequestPort interface.
  */
 
 #ifndef __MEM_EXTERNAL_MASTER_HH__
@@ -64,7 +64,7 @@ class ExternalMaster : public SimObject
 {
   public:
     /** Derive from this class to create an external port interface */
-    class ExternalPort : public MasterPort
+    class ExternalPort : public RequestPort
     {
       protected:
         ExternalMaster &owner;
@@ -72,7 +72,7 @@ class ExternalMaster : public SimObject
       public:
         ExternalPort(const std::string &name_,
             ExternalMaster &owner_) :
-            MasterPort(name_, &owner_), owner(owner_)
+            RequestPort(name_, &owner_), owner(owner_)
         { }
 
         ~ExternalPort() { }
@@ -83,7 +83,7 @@ class ExternalMaster : public SimObject
 
     /* Handlers are specific to *types* of port not specific port
      * instantiations.  A handler will typically build a bridge to the
-     * external port from gem5 and provide gem5 with a MasterPort that can be
+     * external port from gem5 and provide gem5 with a RequestPort that can be
      * bound to for each call to Handler::getExternalPort.*/
     class Handler
     {

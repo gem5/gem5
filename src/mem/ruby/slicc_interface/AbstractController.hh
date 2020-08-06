@@ -218,7 +218,7 @@ class AbstractController : public ClockedObject, public Consumer
      * Port that forwards requests and receives responses from the
      * memory controller.
      */
-    class MemoryPort : public MasterPort
+    class MemoryPort : public RequestPort
     {
       private:
         // Controller that operates this port.

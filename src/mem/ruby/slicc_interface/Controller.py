@@ -66,5 +66,5 @@ class RubyController(ClockedObject):
         Param.Cycles(1, "Default latency for requests added to the " \
                         "mandatory queue on top-level controllers")
 
-    memory = MasterPort("Port for attaching a memory controller")
+    memory = RequestPort("Port for attaching a memory controller")
     system = Param.System(Parent.any, "system object parameter")

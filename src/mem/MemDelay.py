@@ -41,8 +41,8 @@ class MemDelay(ClockedObject):
     cxx_header = 'mem/mem_delay.hh'
     abstract = True
 
-    master = MasterPort("Master port")
-    slave = SlavePort("Slave port")
+    master = RequestPort("Master port")
+    slave = ResponsePort("Slave port")
 
 class SimpleMemDelay(MemDelay):
     type = 'SimpleMemDelay'

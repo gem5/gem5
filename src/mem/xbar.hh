@@ -165,7 +165,7 @@ class BaseXBar : public ClockedObject
 
         /**
          * Sending the actual retry, in a manner specific to the
-         * individual layers. Note that for a MasterPort, there is
+         * individual layers. Note that for a RequestPort, there is
          * both a RequestLayer and a SnoopResponseLayer using the same
          * port, but using different functions for the flow control.
          */
@@ -231,7 +231,7 @@ class BaseXBar : public ClockedObject
 
     };
 
-    class ReqLayer : public Layer<SlavePort, MasterPort>
+    class ReqLayer : public Layer<ResponsePort, RequestPort>
     {
       public:
         /**
@@ -241,19 +241,20 @@ class BaseXBar : public ClockedObject
          * @param _xbar the crossbar this layer belongs to
          * @param _name the layer's name
          */
-        ReqLayer(MasterPort& _port, BaseXBar& _xbar, const std::string& _name) :
+        ReqLayer(RequestPort& _port, BaseXBar& _xbar,
+        const std::string& _name) :
             Layer(_port, _xbar, _name)
         {}
 
       protected:
         void
-        sendRetry(SlavePort* retry_port) override
+        sendRetry(ResponsePort* retry_port) override
         {
             retry_port->sendRetryReq();
         }
     };
 
-    class RespLayer : public Layer<MasterPort, SlavePort>
+    class RespLayer : public Layer<RequestPort, ResponsePort>
     {
       public:
         /**
@@ -263,20 +264,20 @@ class BaseXBar : public ClockedObject
          * @param _xbar the crossbar this layer belongs to
          * @param _name the layer's name
          */
-        RespLayer(SlavePort& _port, BaseXBar& _xbar,
+        RespLayer(ResponsePort& _port, BaseXBar& _xbar,
                   const std::string& _name) :
             Layer(_port, _xbar, _name)
         {}
 
       protected:
         void
-        sendRetry(MasterPort* retry_port) override
+        sendRetry(RequestPort* retry_port) override
         {
             retry_port->sendRetryResp();
         }
     };
 
-    class SnoopRespLayer : public Layer<SlavePort, MasterPort>
+    class SnoopRespLayer : public Layer<ResponsePort, RequestPort>
     {
       public:
         /**
@@ -286,7 +287,7 @@ class BaseXBar : public ClockedObject
          * @param _xbar the crossbar this layer belongs to
          * @param _name the layer's name
          */
-        SnoopRespLayer(MasterPort& _port, BaseXBar& _xbar,
+        SnoopRespLayer(RequestPort& _port, BaseXBar& _xbar,
                        const std::string& _name) :
             Layer(_port, _xbar, _name)
         {}
@@ -294,7 +295,7 @@ class BaseXBar : public ClockedObject
       protected:
 
         void
-        sendRetry(SlavePort* retry_port) override
+        sendRetry(ResponsePort* retry_port) override
         {
             retry_port->sendRetrySnoopResp();
         }
@@ -373,7 +374,7 @@ class BaseXBar : public ClockedObject
 
     /** The master and slave ports of the crossbar */
     std::vector<QueuedSlavePort*> slavePorts;
-    std::vector<MasterPort*> masterPorts;
+    std::vector<RequestPort*> masterPorts;
 
     /** Port that handles requests that don't match any of the interfaces.*/
     PortID defaultPortID;

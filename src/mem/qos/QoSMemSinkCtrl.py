@@ -42,7 +42,7 @@ class QoSMemSinkCtrl(QoSMemCtrl):
     type = 'QoSMemSinkCtrl'
     cxx_header = "mem/qos/mem_sink.hh"
     cxx_class = "QoS::MemSinkCtrl"
-    port = SlavePort("Slave ports")
+    port = ResponsePort("Response ports")
 
     # the basic configuration of the controller architecture, note
     # that each entry corresponds to a burst for the specific DRAM

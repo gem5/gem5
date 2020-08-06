@@ -98,13 +98,13 @@ class AddrMapper : public SimObject
 
     };
 
-    class MapperMasterPort : public MasterPort
+    class MapperMasterPort : public RequestPort
     {
 
       public:
 
         MapperMasterPort(const std::string& _name, AddrMapper& _mapper)
-            : MasterPort(_name, &_mapper), mapper(_mapper)
+            : RequestPort(_name, &_mapper), mapper(_mapper)
         { }
 
       protected:
@@ -153,13 +153,13 @@ class AddrMapper : public SimObject
     /** Instance of master port, facing the memory side */
     MapperMasterPort masterPort;
 
-    class MapperSlavePort : public SlavePort
+    class MapperSlavePort : public ResponsePort
     {
 
       public:
 
         MapperSlavePort(const std::string& _name, AddrMapper& _mapper)
-            : SlavePort(_name, &_mapper), mapper(_mapper)
+            : ResponsePort(_name, &_mapper), mapper(_mapper)
         { }
 
       protected:

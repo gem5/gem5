@@ -68,7 +68,7 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
     // are enumerated starting from zero
     for (int i = 0; i < p->port_master_connection_count; ++i) {
         std::string portName = csprintf("%s.master[%d]", name(), i);
-        MasterPort* bp = new CoherentXBarMasterPort(portName, *this, i);
+        RequestPort* bp = new CoherentXBarMasterPort(portName, *this, i);
         masterPorts.push_back(bp);
         reqLayers.push_back(new ReqLayer(*bp, *this,
                                          csprintf("reqLayer%d", i)));
@@ -81,7 +81,7 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
     if (p->port_default_connection_count) {
         defaultPortID = masterPorts.size();
         std::string portName = name() + ".default";
-        MasterPort* bp = new CoherentXBarMasterPort(portName, *this,
+        RequestPort* bp = new CoherentXBarMasterPort(portName, *this,
                                                     defaultPortID);
         masterPorts.push_back(bp);
         reqLayers.push_back(new ReqLayer(*bp, *this, csprintf("reqLayer%d",
@@ -142,7 +142,7 @@ bool
 CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 {
     // determine the source port based on the id
-    SlavePort *src_port = slavePorts[slave_port_id];
+    ResponsePort *src_port = slavePorts[slave_port_id];
 
     // remember if the packet is an express snoop
     bool is_express_snoop = pkt->isExpressSnoop();
@@ -439,7 +439,7 @@ bool
 CoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 {
     // determine the source port based on the id
-    MasterPort *src_port = masterPorts[master_port_id];
+    RequestPort *src_port = masterPorts[master_port_id];
 
     // determine the destination
     const auto route_lookup = routeTo.find(pkt->req);
@@ -561,7 +561,7 @@ bool
 CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
 {
     // determine the source port based on the id
-    SlavePort* src_port = slavePorts[slave_port_id];
+    ResponsePort* src_port = slavePorts[slave_port_id];
 
     // get the destination
     const auto route_lookup = routeTo.find(pkt->req);
@@ -589,7 +589,7 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
         }
     } else {
         // get the master port that mirrors this slave port internally
-        MasterPort* snoop_port = snoopRespPorts[slave_port_id];
+        RequestPort* snoop_port = snoopRespPorts[slave_port_id];
         assert(dest_port_id < respLayers.size());
         if (!respLayers[dest_port_id]->tryTiming(snoop_port)) {
             DPRINTF(CoherentXBar, "%s: src %s packet %s BUSY\n", __func__,

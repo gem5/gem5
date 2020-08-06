@@ -100,7 +100,7 @@ class PortProxy : FunctionalRequestProtocol
     PortProxy(SendFunctionalFunc func, unsigned int cacheLineSize) :
         sendFunctional(func), _cacheLineSize(cacheLineSize)
     {}
-    PortProxy(const MasterPort &port, unsigned int cacheLineSize) :
+    PortProxy(const RequestPort &port, unsigned int cacheLineSize) :
         sendFunctional([&port](PacketPtr pkt)->void {
                 port.sendFunctional(pkt);
             }), _cacheLineSize(cacheLineSize)

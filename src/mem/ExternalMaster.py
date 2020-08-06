@@ -41,7 +41,7 @@ class ExternalMaster(SimObject):
     type = 'ExternalMaster'
     cxx_header = "mem/external_master.hh"
 
-    port = MasterPort("Master port")
+    port = RequestPort("Master port")
 
     port_type = Param.String('stub', 'Registered external port handler'
         ' to pass this port to in instantiation')
