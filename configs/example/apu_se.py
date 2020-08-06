@@ -622,10 +622,7 @@ redirect_paths = [RedirectPath(src = "/proc",
                   RedirectPath(src = "/sys",
                                dests = ["%s/fs/sys"  % m5.options.outdir]),
                   RedirectPath(src = "/tmp",
-                               dests = ["%s/fs/tmp"  % m5.options.outdir]),
-                  RedirectPath(src = "/dev/shm",
-                               dests = ["/dev/shm/%s/gem5_%s"  %
-                                   (getpass.getuser(), os.getpid())])]
+                               dests = ["%s/fs/tmp"  % m5.options.outdir])]
 
 system.redirect_paths = redirect_paths
 
@@ -680,7 +677,5 @@ elif options.fast_forward_pseudo_op:
 
 print("Ticks:", m5.curTick())
 print('Exiting because ', exit_event.getCause())
-
-FileSystemConfig.cleanup_filesystem(options)
 
 sys.exit(exit_event.getCode())
