@@ -42,6 +42,7 @@ import m5
 from m5.objects import *
 from m5.util.convert import *
 
+from functools import reduce
 import operator, os, platform, getpass
 from os import mkdir, makedirs, getpid, listdir, stat, access
 from pwd import getpwuid
