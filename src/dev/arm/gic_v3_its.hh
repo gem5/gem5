@@ -77,14 +77,14 @@ class Gicv3Its : public BasicPioDevice
     friend class ::ItsTranslation;
     friend class ::ItsCommand;
   public:
-    class DataPort : public MasterPort
+    class DataPort : public RequestPort
     {
       protected:
         Gicv3Its &its;
 
       public:
         DataPort(const std::string &_name, Gicv3Its &_its) :
-            MasterPort(_name, &_its),
+            RequestPort(_name, &_its),
             its(_its)
         {}
 

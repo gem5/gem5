@@ -177,7 +177,7 @@ class Gicv3Its(BasicPioDevice):
     type = 'Gicv3Its'
     cxx_header = "dev/arm/gic_v3_its.hh"
 
-    dma = MasterPort("DMA port")
+    dma = RequestPort("DMA port")
     pio_size = Param.Unsigned(0x20000, "Gicv3Its pio size")
 
     # CIL [36] = 0: ITS supports 16-bit CollectionID

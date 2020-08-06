@@ -43,9 +43,9 @@ class SMMUv3SlaveInterface(ClockedObject):
     type = 'SMMUv3SlaveInterface'
     cxx_header = 'dev/arm/smmu_v3_slaveifc.hh'
 
-    slave = SlavePort('Device port')
-    ats_master = MasterPort('ATS master port')
-    ats_slave  = SlavePort('ATS slave port')
+    slave = ResponsePort('Device port')
+    ats_master = RequestPort('ATS master port')
+    ats_slave  = ResponsePort('ATS slave port')
 
     port_width = Param.Unsigned(16, 'Port width in bytes (= 1 beat)')
     wrbuf_slots = Param.Unsigned(16, 'Write buffer size (in beats)')
@@ -74,10 +74,11 @@ class SMMUv3(ClockedObject):
     type = 'SMMUv3'
     cxx_header = 'dev/arm/smmu_v3.hh'
 
-    master = MasterPort('Master port')
-    master_walker = MasterPort(
+    master = RequestPort('Master port')
+    master_walker = RequestPort(
         'Master port for SMMU initiated HWTW requests (optional)')
-    control = SlavePort('Control port for accessing memory-mapped registers')
+    control = ResponsePort(
+        'Control port for accessing memory-mapped registers')
     sample_period = Param.Clock('10us', 'Stats sample period')
     reg_map = Param.AddrRange('Address range for control registers')
     system = Param.System(Parent.any, "System this device is part of")

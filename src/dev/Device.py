@@ -46,7 +46,7 @@ class PioDevice(ClockedObject):
     type = 'PioDevice'
     cxx_header = "dev/io_device.hh"
     abstract = True
-    pio = SlavePort("Programmed I/O port")
+    pio = ResponsePort("Programmed I/O port")
     system = Param.System(Parent.any, "System this device is part of")
 
     def generateBasicPioDeviceNode(self, state, name, pio_addr,
@@ -79,7 +79,7 @@ class DmaDevice(PioDevice):
     type = 'DmaDevice'
     cxx_header = "dev/dma_device.hh"
     abstract = True
-    dma = MasterPort("DMA port")
+    dma = RequestPort("DMA port")
 
     _iommu = None
 

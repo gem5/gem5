@@ -52,7 +52,7 @@
 
 class ClockedObject;
 
-class DmaPort : public MasterPort, public Drainable
+class DmaPort : public RequestPort, public Drainable
 {
   private:
 

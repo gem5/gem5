@@ -42,7 +42,7 @@
 #include "dev/arm/smmu_v3_slaveifc.hh"
 
 SMMUMasterPort::SMMUMasterPort(const std::string &_name, SMMUv3 &_smmu) :
-    MasterPort(_name, &_smmu),
+    RequestPort(_name, &_smmu),
     smmu(_smmu)
 {}
 
@@ -60,7 +60,7 @@ SMMUMasterPort::recvReqRetry()
 
 SMMUMasterTableWalkPort::SMMUMasterTableWalkPort(const std::string &_name,
                                                  SMMUv3 &_smmu) :
-    MasterPort(_name, &_smmu),
+    RequestPort(_name, &_smmu),
     smmu(_smmu)
 {}
 

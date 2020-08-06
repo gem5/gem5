@@ -44,7 +44,7 @@
 class SMMUv3;
 class SMMUv3SlaveInterface;
 
-class SMMUMasterPort : public MasterPort
+class SMMUMasterPort : public RequestPort
 {
   protected:
     SMMUv3 &smmu;
@@ -58,7 +58,7 @@ class SMMUMasterPort : public MasterPort
 };
 
 // Separate master port to send MMU initiated requests on
-class SMMUMasterTableWalkPort : public MasterPort
+class SMMUMasterTableWalkPort : public RequestPort
 {
   protected:
     SMMUv3 &smmu;
