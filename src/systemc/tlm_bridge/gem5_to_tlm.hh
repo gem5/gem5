@@ -85,7 +85,7 @@ template <unsigned int BITWIDTH>
 class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
 {
   private:
-    class BridgeSlavePort : public SlavePort
+    class BridgeSlavePort : public ResponsePort
     {
       protected:
         Gem5ToTlmBridge<BITWIDTH> &bridge;
@@ -130,7 +130,7 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
       public:
         BridgeSlavePort(const std::string &name_,
                         Gem5ToTlmBridge<BITWIDTH> &bridge_) :
-            SlavePort(name_, nullptr), bridge(bridge_)
+            ResponsePort(name_, nullptr), bridge(bridge_)
         {}
     };
 

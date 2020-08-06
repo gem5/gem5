@@ -89,7 +89,7 @@ class TlmToGem5Bridge : public TlmToGem5BridgeBase
         TlmSenderState(tlm::tlm_generic_payload &trans) : trans(trans) {}
     };
 
-    class BridgeMasterPort : public MasterPort
+    class BridgeMasterPort : public RequestPort
     {
       protected:
         TlmToGem5Bridge<BITWIDTH> &bridge;
@@ -105,7 +105,7 @@ class TlmToGem5Bridge : public TlmToGem5BridgeBase
       public:
         BridgeMasterPort(const std::string &name_,
                          TlmToGem5Bridge<BITWIDTH> &bridge_) :
-            MasterPort(name_, nullptr), bridge(bridge_)
+            RequestPort(name_, nullptr), bridge(bridge_)
         {}
     };
 

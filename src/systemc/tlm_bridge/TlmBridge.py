@@ -37,7 +37,7 @@ class Gem5ToTlmBridgeBase(SystemC_ScModule):
 
     system = Param.System(Parent.any, "system")
 
-    gem5 = SlavePort('gem5 slave port')
+    gem5 = ResponsePort('gem5 slave port')
     addr_ranges = VectorParam.AddrRange([],
             'Addresses served by this port\'s TLM side')
 
@@ -49,7 +49,7 @@ class TlmToGem5BridgeBase(SystemC_ScModule):
 
     system = Param.System(Parent.any, "system")
 
-    gem5 = MasterPort('gem5 master port')
+    gem5 = RequestPort('gem5 master port')
 
 
 class Gem5ToTlmBridge32(Gem5ToTlmBridgeBase):

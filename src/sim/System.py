@@ -51,7 +51,7 @@ class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing',
 class System(SimObject):
     type = 'System'
     cxx_header = "sim/system.hh"
-    system_port = MasterPort("System port")
+    system_port = RequestPort("System port")
 
     cxx_exports = [
         PyBindMethod("getMemoryMode"),

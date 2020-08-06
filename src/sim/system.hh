@@ -79,7 +79,7 @@ class System : public SimObject, public PCEventScope
      * master for debug access and for non-structural entities that do
      * not have a port of their own.
      */
-    class SystemPort : public MasterPort
+    class SystemPort : public RequestPort
     {
       public:
 
@@ -87,7 +87,7 @@ class System : public SimObject, public PCEventScope
          * Create a system port with a name and an owner.
          */
         SystemPort(const std::string &_name, SimObject *_owner)
-            : MasterPort(_name, _owner)
+            : RequestPort(_name, _owner)
         { }
         bool recvTimingResp(PacketPtr pkt) override
         { panic("SystemPort does not receive timing!\n"); return false; }
@@ -237,7 +237,7 @@ class System : public SimObject, public PCEventScope
      *
      * @return a reference to the system port we own
      */
-    MasterPort& getSystemPort() { return _systemPort; }
+    RequestPort& getSystemPort() { return _systemPort; }
 
     /**
      * Additional function to return the Port of a memory object.
