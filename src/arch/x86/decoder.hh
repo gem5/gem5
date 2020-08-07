@@ -83,24 +83,24 @@ class Decoder : public InstDecoder
 
     // The bytes to be predecoded.
     MachInst fetchChunk;
-    InstBytes *instBytes;
+    InstBytes *instBytes = &dummy;
     int chunkIdx;
     // The pc of the start of fetchChunk.
-    Addr basePC;
+    Addr basePC = 0;
     // The pc the current instruction started at.
-    Addr origPC;
+    Addr origPC = 0;
     // The offset into fetchChunk of current processing.
-    int offset;
+    int offset = 0;
     // The extended machine instruction being generated.
     ExtMachInst emi;
     // Predecoding state.
-    X86Mode mode;
-    X86SubMode submode;
-    uint8_t altOp;
-    uint8_t defOp;
-    uint8_t altAddr;
-    uint8_t defAddr;
-    uint8_t stack;
+    X86Mode mode = LongMode;
+    X86SubMode submode = SixtyFourBitMode;
+    uint8_t altOp = 0;
+    uint8_t defOp = 0;
+    uint8_t altAddr = 0;
+    uint8_t defAddr = 0;
+    uint8_t stack = 0;
 
     uint8_t
     getNextByte()
@@ -167,9 +167,9 @@ class Decoder : public InstDecoder
     // State machine state.
   protected:
     // Whether or not we're out of bytes.
-    bool outOfBytes;
+    bool outOfBytes = true;
     // Whether we've completed generating an ExtMachInst.
-    bool instDone;
+    bool instDone = false;
     // The size of the displacement value.
     int displacementSize;
     // The size of the immediate value.
@@ -198,7 +198,7 @@ class Decoder : public InstDecoder
         ErrorState
     };
 
-    State state;
+    State state = ResetState;
 
     // Functions to handle each of the states
     State doResetState();
@@ -229,32 +229,21 @@ class Decoder : public InstDecoder
     typedef RegVal CacheKey;
 
     typedef DecodeCache::AddrMap<Decoder::InstBytes> DecodePages;
-    DecodePages *decodePages;
+    DecodePages *decodePages = nullptr;
     typedef std::unordered_map<CacheKey, DecodePages *> AddrCacheMap;
     AddrCacheMap addrCacheMap;
 
-    DecodeCache::InstMap<ExtMachInst> *instMap;
+    DecodeCache::InstMap<ExtMachInst> *instMap = nullptr;
     typedef std::unordered_map<
             CacheKey, DecodeCache::InstMap<ExtMachInst> *> InstCacheMap;
     static InstCacheMap instCacheMap;
 
   public:
-    Decoder(ISA* isa = nullptr) : basePC(0), origPC(0), offset(0),
-        outOfBytes(true), instDone(false), state(ResetState)
+    Decoder(ISA *isa=nullptr)
     {
         emi.reset();
-        mode = LongMode;
-        submode = SixtyFourBitMode;
         emi.mode.mode = mode;
         emi.mode.submode = submode;
-        altOp = 0;
-        defOp = 0;
-        altAddr = 0;
-        defAddr = 0;
-        stack = 0;
-        instBytes = &dummy;
-        decodePages = NULL;
-        instMap = NULL;
     }
 
     void
