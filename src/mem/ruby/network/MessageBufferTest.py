@@ -1,5 +1,3 @@
-# -*- mode:python -*-
-
 # Copyright (c) 2026 Arm Limited
 # All rights reserved.
 #
@@ -11,9 +9,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2009 The Hewlett-Packard Development Company
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -38,25 +33,41 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.ClockedObject import ClockedObject
+from m5.params import *
+from m5.proxy import *
 
-if not env['CONF']['RUBY']:
-    Return()
 
-DebugFlag('TraceRoutesDebug')
+class MessageBufferProducerTest(ClockedObject):
+    type = "MessageBufferProducerTest"
+    cxx_class = "gem5::ruby::MessageBufferProducerTest"
+    cxx_header = "mem/ruby/network/MessageBufferTest.hh"
 
-SimObject('BasicLink.py', sim_objects=[
-    'BasicLink', 'BasicExtLink', 'BasicIntLink'])
-SimObject('BasicRouter.py', sim_objects=['BasicRouter'])
-SimObject('MessageBuffer.py', sim_objects=['MessageBuffer'],
-        enums=['MessageRandomization'])
-SimObject('MessageBufferTest.py', sim_objects=['MessageBufferProducerTest',
-    'MessageBufferConsumerTest'])
-SimObject('Network.py', sim_objects=['RubyNetwork'])
+    rate = Param.Int(
+        1,
+        "Number of messages to produce per cycle,"
+        "note negative values are taken as fractional e.g. -5"
+        "is 5 cycles per message",
+    )
 
-Source('BasicLink.cc')
-Source('BasicRouter.cc')
-Source('MessageBuffer.cc')
-Source('Network.cc')
-Source('RouteProfiler.cc')
-Source('Topology.cc')
+    num_msgs = Param.Int(1, "Total number of messages to produce")
+
+    latency = Param.Cycles(1, "Cycles until message is ready after production")
+
+    buffer = Param.MessageBuffer("")
+
+
+class MessageBufferConsumerTest(ClockedObject):
+    type = "MessageBufferConsumerTest"
+    cxx_class = "gem5::ruby::MessageBufferConsumerTest"
+    cxx_header = "mem/ruby/network/MessageBufferTest.hh"
+
+    rate = Param.Int(1, "Maximum number of messages consumable within a cycle")
+
+    num_msgs = Param.Int(1, "Total number of messages to consume")
+
+    stall_prob = Param.Float(
+        0, "Probability consumer cannot consume messages in a cycle"
+    )
+
+    buffer = Param.MessageBuffer("")
