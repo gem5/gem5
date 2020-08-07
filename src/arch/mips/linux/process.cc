@@ -127,7 +127,6 @@ sys_setsysinfoFunc(SyscallDesc *desc, ThreadContext *tc, unsigned op,
             // SSI_IEEE_FP_CONTROL
             ConstVPtr<uint64_t> fpcr(bufPtr, tc);
             // I don't think this exactly matches the HW FPCR
-            fpcr.copyIn(tc->getVirtProxy());
             DPRINTFR(SyscallVerbose, "sys_setsysinfo(SSI_IEEE_FP_CONTROL): "
                    " setting FPCR to 0x%x\n", letoh(*fpcr));
             return 0;
