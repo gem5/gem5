@@ -80,7 +80,11 @@ class BasePrefetcher(ClockedObject):
     use_virtual_addresses = Param.Bool(False,
         "Use virtual addresses for prefetching")
 
-    _events = []
+    def __init__(self, **kwargs):
+        super(BasePrefetcher, self).__init__(**kwargs)
+        self._events = []
+        self._tlbs = []
+
     def addEvent(self, newObject):
         self._events.append(newObject)
 
@@ -90,7 +94,7 @@ class BasePrefetcher(ClockedObject):
         for tlb in self._tlbs:
             self.getCCObject().addTLB(tlb.getCCObject())
         for event in self._events:
-           event.register()
+            event.register()
         self.getCCObject().regProbeListeners()
 
     def listenFromProbe(self, simObj, *probeNames):
@@ -99,7 +103,7 @@ class BasePrefetcher(ClockedObject):
         if len(probeNames) <= 0:
             raise TypeError("probeNames must have at least one element")
         self.addEvent(HWPProbeEvent(self, simObj, *probeNames))
-    _tlbs = []
+
     def registerTLB(self, simObj):
         if not isinstance(simObj, SimObject):
             raise TypeError("argument must be a SimObject type")
