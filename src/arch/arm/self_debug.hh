@@ -210,7 +210,7 @@ class SoftwareStep
     {}
 
     bool debugExceptionReturnSS(ThreadContext *tc, CPSR spsr,
-                                ExceptionLevel dest, bool aarch32);
+                                ExceptionLevel dest);
     bool advanceSS(ThreadContext *tc);
 
     inline void

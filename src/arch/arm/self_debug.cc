@@ -643,7 +643,7 @@ WatchPoint::compareAddress(ThreadContext *tc, Addr in_addr, uint8_t bas,
 
 bool
 SoftwareStep::debugExceptionReturnSS(ThreadContext *tc, CPSR spsr,
-                                     ExceptionLevel dest, bool aarch32)
+                                     ExceptionLevel dest)
 {
     bool SS_bit = false;
     bool enabled_src = false;
@@ -652,9 +652,7 @@ SoftwareStep::debugExceptionReturnSS(ThreadContext *tc, CPSR spsr,
 
         bool enabled_dst = false;
         bool secure = isSecureBelowEL3(tc) || dest == EL3;
-//        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-//        if (cpsr.width) {
-        if (ELIs32(tc, dest)) {
+        if (spsr.width) {
             enabled_dst = conf->isDebugEnabledForEL32(tc, dest, secure,
                                                       spsr.d == 1);
         } else {

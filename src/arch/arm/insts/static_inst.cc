@@ -1194,7 +1194,7 @@ ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
 
     SelfDebug *sd = ArmISA::ISA::getSelfDebug(tc);
     SoftwareStep *ss = sd->getSstep();
-    new_cpsr.ss = ss->debugExceptionReturnSS(tc, spsr, dest, new_cpsr.width);
+    new_cpsr.ss = ss->debugExceptionReturnSS(tc, spsr, dest);
 
     return new_cpsr;
 }
