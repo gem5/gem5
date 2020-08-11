@@ -833,7 +833,8 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
     bool w = is_write;
     bool x = is_fetch;
 
-    xn = ArmSystem::haveEL(tc, EL3) && isSecure && te->ns && scr.sif;
+    if (ArmSystem::haveEL(tc, EL3) && isSecure && te->ns && scr.sif)
+        xn = true;
 
     // grant_read is used for faults from an atomic instruction that
     // both reads and writes from a memory location. From a ISS point
