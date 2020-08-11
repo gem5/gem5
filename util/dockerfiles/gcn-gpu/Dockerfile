@@ -33,7 +33,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl-dev \
     libboost-filesystem-dev \
     libboost-system-dev \
-    libboost-dev
+    libboost-dev \
+    libpng12-dev
 
 ARG gem5_dist=http://dist.gem5.org/dist/develop
 
