@@ -119,12 +119,15 @@ let {{
     exec_output += PredOpExecute.subst(smcIop)
 
     hvcCode = '''
+    HCR  hcr  = Hcr;
     CPSR cpsr = Cpsr;
+    SCR  scr  = Scr;
 
     // Filter out the various cases where this instruction isn't defined
     if (!FullSystem || !ArmSystem::haveVirtualization(xc->tcBase()) ||
         (cpsr.mode == MODE_USER) ||
-        (isSecure(xc->tcBase()) && !IsSecureEL2Enabled(xc->tcBase()))) {
+        (isSecure(xc->tcBase()) && !IsSecureEL2Enabled(xc->tcBase())) ||
+        (ArmSystem::haveSecurity(xc->tcBase()) ? !scr.hce : hcr.hcd)) {
         fault = disabledFault();
     } else {
         fault = std::make_shared<HypervisorCall>(machInst, imm);
