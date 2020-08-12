@@ -204,6 +204,8 @@ class SoftwareStep
     bool cpsrD;
 
   public:
+    friend class SelfDebug;
+
     SoftwareStep(SelfDebug *s)
       : bSS(false), stateSS(INACTIVE_STATE),
         conf(s), steppedLdx(false)
@@ -212,18 +214,6 @@ class SoftwareStep
     bool debugExceptionReturnSS(ThreadContext *tc, CPSR spsr,
                                 ExceptionLevel dest);
     bool advanceSS(ThreadContext *tc);
-
-    inline void
-    setCPSRD(bool val)
-    {
-        cpsrD = val;
-    }
-
-    inline void
-    setEnableSS(bool val)
-    {
-        bSS = val;
-    }
 
     void
     setLdx()
@@ -391,7 +381,7 @@ class SelfDebug
     {
         enableFlag = bits(val, 15);
         bKDE = bits(val, 13);
-        softStep->setEnableSS((bool)bits(val, 0));
+        softStep->bSS = bits(val, 0);
     }
 
     inline void
@@ -427,7 +417,7 @@ class SelfDebug
     inline void
     setDebugMask(bool mask)
     {
-        softStep->setCPSRD(mask);
+        softStep->cpsrD = mask;
     }
 
     inline bool
