@@ -160,30 +160,34 @@ class TLB : public BaseTLB
 
     TlbTestInterface *test;
 
-    // Access Stats
-    mutable Stats::Scalar instHits;
-    mutable Stats::Scalar instMisses;
-    mutable Stats::Scalar readHits;
-    mutable Stats::Scalar readMisses;
-    mutable Stats::Scalar writeHits;
-    mutable Stats::Scalar writeMisses;
-    mutable Stats::Scalar inserts;
-    mutable Stats::Scalar flushTlb;
-    mutable Stats::Scalar flushTlbMva;
-    mutable Stats::Scalar flushTlbMvaAsid;
-    mutable Stats::Scalar flushTlbAsid;
-    mutable Stats::Scalar flushedEntries;
-    mutable Stats::Scalar alignFaults;
-    mutable Stats::Scalar prefetchFaults;
-    mutable Stats::Scalar domainFaults;
-    mutable Stats::Scalar permsFaults;
+    struct TlbStats : public Stats::Group
+    {
+        TlbStats(Stats::Group *parent);
+        // Access Stats
+        mutable Stats::Scalar instHits;
+        mutable Stats::Scalar instMisses;
+        mutable Stats::Scalar readHits;
+        mutable Stats::Scalar readMisses;
+        mutable Stats::Scalar writeHits;
+        mutable Stats::Scalar writeMisses;
+        mutable Stats::Scalar inserts;
+        mutable Stats::Scalar flushTlb;
+        mutable Stats::Scalar flushTlbMva;
+        mutable Stats::Scalar flushTlbMvaAsid;
+        mutable Stats::Scalar flushTlbAsid;
+        mutable Stats::Scalar flushedEntries;
+        mutable Stats::Scalar alignFaults;
+        mutable Stats::Scalar prefetchFaults;
+        mutable Stats::Scalar domainFaults;
+        mutable Stats::Scalar permsFaults;
 
-    Stats::Formula readAccesses;
-    Stats::Formula writeAccesses;
-    Stats::Formula instAccesses;
-    Stats::Formula hits;
-    Stats::Formula misses;
-    Stats::Formula accesses;
+        Stats::Formula readAccesses;
+        Stats::Formula writeAccesses;
+        Stats::Formula instAccesses;
+        Stats::Formula hits;
+        Stats::Formula misses;
+        Stats::Formula accesses;
+    } stats;
 
     /** PMU probe for TLB refills */
     ProbePoints::PMUUPtr ppRefills;
@@ -384,8 +388,6 @@ class TLB : public BaseTLB
             ThreadContext *tc, Mode mode) const override;
 
     void drainResume() override;
-
-    void regStats() override;
 
     void regProbePoints() override;
 
