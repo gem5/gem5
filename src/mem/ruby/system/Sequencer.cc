@@ -368,7 +368,7 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
             (seq_req.m_type != RubyRequestType_Load_Linked) &&
             (seq_req.m_type != RubyRequestType_IFETCH)) {
             // LL/SC support (tested with ARMv8)
-            bool success = false;
+            bool success = true;
 
             if (seq_req.m_type != RubyRequestType_Store_Conditional) {
                 // Regular stores to addresses being monitored
