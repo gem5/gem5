@@ -1655,7 +1655,7 @@ TLB::getResultTe(TlbEntry **te, const RequestPtr &req,
             fault = checkPermissions(s1Te, req, mode);
         if (stage2Req & (fault == NoFault)) {
             Stage2LookUp *s2Lookup = new Stage2LookUp(this, stage2Tlb, *s1Te,
-                req, translation, mode, timing, functional, !(s1Te->ns),
+                req, translation, mode, timing, functional, isSecure,
                 curTranType);
             fault = s2Lookup->getTe(tc, mergeTe);
             if (s2Lookup->isComplete()) {
