@@ -1233,10 +1233,10 @@ TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
                                functional, vaddr, tranMethod);
     }
 
-    //Check for Debug Exceptions
-    if (fault == NoFault) {
-        SelfDebug *sd = ArmISA::ISA::getSelfDebug(tc);
+    // Check for Debug Exceptions
+    SelfDebug *sd = ArmISA::ISA::getSelfDebug(tc);
 
+    if (sd->enabled() && fault == NoFault) {
         fault = sd->testDebug(tc, req, mode);
     }
 
