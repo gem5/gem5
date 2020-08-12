@@ -167,8 +167,7 @@ class WatchPoint
     inline Addr
     getAddrfromReg(ThreadContext *tc)
     {
-       return bits(tc->readMiscReg(valRegIndex), maxAddrSize, 0);
-
+        return bits(tc->readMiscReg(valRegIndex), maxAddrSize, 0);
     }
 
     inline bool
@@ -282,11 +281,9 @@ class SelfDebug
     bool initialized;
     bool enableTdeTge; // MDCR_EL2.TDE || HCR_EL2.TGE
 
-    // THIS is MDSCR_EL1.MDE in aarch64 and DBGDSCRext.MDBGen in aarch32
-    bool enableFlag;
-
-    bool bSDD; // MDCR_EL3.SDD
-    bool bKDE; // MDSCR_EL1.KDE
+    bool mde; // MDSCR_EL1.MDE, DBGDSCRext.MDBGen
+    bool sdd; // MDCR_EL3.SDD
+    bool kde; // MDSCR_EL1.KDE
     bool oslk; // OS lock flag
 
     bool aarch32; // updates with stage1 aarch64/32
@@ -295,7 +292,7 @@ class SelfDebug
   public:
     SelfDebug()
       : initialized(false), enableTdeTge(false),
-        enableFlag(false), bSDD(false), bKDE(false), oslk(false)
+        mde(false), sdd(false), kde(false), oslk(false)
     {
         softStep = new SoftwareStep(this);
     }
@@ -319,6 +316,8 @@ class SelfDebug
                                      bool write, bool cm);
   public:
     Fault testVectorCatch(ThreadContext *tc, Addr addr, ArmFault* flt);
+
+    bool enabled() const { return mde || softStep->bSS; };
 
     inline BrkPoint*
     getBrkPoint(uint8_t index)
@@ -373,21 +372,21 @@ class SelfDebug
     inline void
     setbSDD(RegVal val)
     {
-        bSDD = bits(val, 16);
+        sdd = bits(val, 16);
     }
 
     inline void
     setMDSCRvals(RegVal val)
     {
-        enableFlag = bits(val, 15);
-        bKDE = bits(val, 13);
+        mde = bits(val, 15);
+        kde = bits(val, 13);
         softStep->bSS = bits(val, 0);
     }
 
     inline void
     setMDBGen(RegVal val)
     {
-        enableFlag = bits(val, 15);
+        mde = bits(val, 15);
     }
 
     inline void

@@ -72,7 +72,7 @@ SelfDebug::testDebug(ThreadContext *tc, const RequestPtr &req,
 Fault
 SelfDebug::testBreakPoints(ThreadContext *tc, Addr vaddr)
 {
-    if (!enableFlag)
+    if (!mde)
         return NoFault;
 
     setAArch32(tc);
@@ -127,7 +127,7 @@ SelfDebug::testWatchPoints(ThreadContext *tc, Addr vaddr, bool write,
     to32 = targetAArch32(tc);
     if (!initialized)
         init(tc);
-    if (!isDebugEnabled(tc) || !enableFlag)
+    if (!isDebugEnabled(tc) || !mde)
         return NoFault;
 
     ExceptionLevel el = (ExceptionLevel) currEL(tc);
@@ -168,12 +168,12 @@ SelfDebug::isDebugEnabledForEL64(ThreadContext *tc, ExceptionLevel el,
                          (!secure || HaveSecureEL2Ext(tc)) && enableTdeTge;
 
     ExceptionLevel target_el = route_to_el2 ? EL2 : EL1;
-    if (oslk || (bSDD && secure && ArmSystem::haveEL(tc, EL3))) {
+    if (oslk || (sdd && secure && ArmSystem::haveEL(tc, EL3))) {
         return false;
     }
 
     if (el == target_el) {
-        return bKDE  && !mask;
+        return kde  && !mask;
     } else {
         return target_el > el;
     }
@@ -720,7 +720,7 @@ SelfDebug::testVectorCatch(ThreadContext *tc, Addr addr,
     to32 = targetAArch32(tc);
     if (!initialized)
         init(tc);
-    if (!isDebugEnabled(tc) || !enableFlag || !aarch32)
+    if (!isDebugEnabled(tc) || !mde || !aarch32)
         return NoFault;
 
     ExceptionLevel el = (ExceptionLevel) currEL(tc);
