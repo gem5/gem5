@@ -229,7 +229,7 @@ class TableWalker : public ClockedObject
          */
         bool secure(bool have_security, WalkerState *currState) const
         {
-            if (have_security) {
+            if (have_security && currState->secureLookup) {
                 if (type() == PageTable)
                     return !bits(data, 3);
                 else
