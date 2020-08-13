@@ -101,9 +101,12 @@ ListenSocket::listen(int port, bool reuse)
     if (listening)
         panic("Socket already listening!");
 
-    fd = ::socket(PF_INET, SOCK_STREAM, 0);
-    if (fd < 0)
-        panic("Can't create socket:%s !", strerror(errno));
+    // only create socket if not already created by a previous call
+    if (fd == -1) {
+        fd = ::socket(PF_INET, SOCK_STREAM, 0);
+        if (fd < 0)
+            panic("Can't create socket:%s !", strerror(errno));
+    }
 
     if (reuse) {
         int i = 1;
