@@ -614,12 +614,15 @@ else:
 
 ########################## Start simulation ########################
 
-redirect_paths = [RedirectPath(src = "/proc",
-                               dests = ["%s/fs/proc" % m5.options.outdir]),
-                  RedirectPath(src = "/sys",
-                               dests = ["%s/fs/sys"  % m5.options.outdir]),
-                  RedirectPath(src = "/tmp",
-                               dests = ["%s/fs/tmp"  % m5.options.outdir])]
+redirect_paths = [RedirectPath(app_path = "/proc",
+                               host_paths =
+                                ["%s/fs/proc" % m5.options.outdir]),
+                  RedirectPath(app_path = "/sys",
+                               host_paths =
+                                ["%s/fs/sys"  % m5.options.outdir]),
+                  RedirectPath(app_path = "/tmp",
+                               host_paths =
+                                ["%s/fs/tmp"  % m5.options.outdir])]
 
 system.redirect_paths = redirect_paths
 
