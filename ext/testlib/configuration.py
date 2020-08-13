@@ -247,7 +247,6 @@ def define_constants(constants):
 
     constants.host_isa_tag_type = 'host'
     constants.host_x86_64_tag = 'x86_64'
-    constants.host_i386_tag = 'i386'
     constants.host_arm_tag = 'aarch64'
 
     constants.supported_tags = {
@@ -271,7 +270,6 @@ def define_constants(constants):
         ),
         constants.host_isa_tag_type: (
             constants.host_x86_64_tag,
-            constants.host_i386_tag,
             constants.host_arm_tag,
         ),
     }
@@ -280,11 +278,11 @@ def define_constants(constants):
     # case where host ISA and target ISA need to coincide
     constants.target_host = {
         constants.arm_tag   : (constants.host_arm_tag,),
-        constants.x86_tag   : (constants.host_x86_64_tag, constants.host_i386_tag),
-        constants.sparc_tag : (constants.host_x86_64_tag, constants.host_i386_tag),
-        constants.riscv_tag : (constants.host_x86_64_tag, constants.host_i386_tag),
-        constants.mips_tag  : (constants.host_x86_64_tag, constants.host_i386_tag),
-        constants.power_tag : (constants.host_x86_64_tag, constants.host_i386_tag),
+        constants.x86_tag   : (constants.host_x86_64_tag,),
+        constants.sparc_tag : (constants.host_x86_64_tag,),
+        constants.riscv_tag : (constants.host_x86_64_tag,),
+        constants.mips_tag  : (constants.host_x86_64_tag,),
+        constants.power_tag : (constants.host_x86_64_tag,),
         constants.null_tag  : (None,)
     }
 
