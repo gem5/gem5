@@ -282,31 +282,19 @@ class L3Cntrl(L3Cache_Controller, CntrlBase):
         self.probeToL3 = probe_to_l3
         self.respToL3 = resp_to_l3
 
-# Directory memory: Directory memory of infinite size which is
-# used by directory controller to store the "states" of the
-# state machine. The state machine is implemented per cache block
-class DirMem(RubyDirectoryMemory, CntrlBase):
-    def create(self, options, ruby_system, system):
-        self.version = self.versionCount()
-        phys_mem_size = AddrRange(options.mem_size).size()
-        mem_module_size = phys_mem_size / options.num_dirs
-        dir_size = MemorySize('0B')
-        dir_size.value = mem_module_size
-        self.size = dir_size
-
-# Directory controller: Contains directory memory, L3 cache and associated state
-# machine which is used to accurately redirect a data request to L3 cache or to
-# memory. The permissions requests do not come to this directory for region
+# Directory controller: Contains directory memory, L3 cache and associated
+# state machine which is used to accurately redirect a data request to L3 cache
+# or memory. The permissions requests do not come to this directory for region
 # based protocols as they are handled exclusively by the region directory.
 # However, region directory controller uses this directory controller for
 # sending probe requests and receiving probe responses.
 class DirCntrl(Directory_Controller, CntrlBase):
-    def create(self, options, ruby_system, system):
+    def create(self, options, dir_ranges, ruby_system, system):
         self.version = self.versionCount()
         self.response_latency = 25
         self.response_latency_regionDir = 1
-        self.directory = DirMem()
-        self.directory.create(options, ruby_system, system)
+        self.addr_ranges = dir_ranges
+        self.directory = RubyDirectoryMemory()
         self.L3CacheMemory = L3Cache()
         self.L3CacheMemory.create(options, ruby_system, system)
         self.l3_hit_latency = \
@@ -695,8 +683,26 @@ def create_system(options, full_system, system, dma_devices, bootmem,
     # Clusters
     mainCluster = Cluster(intBW = crossbar_bw)
 
+    if options.numa_high_bit:
+        numa_bit = options.numa_high_bit
+    else:
+        # if the numa_bit is not specified, set the directory bits as the
+        # lowest bits above the block offset bits, and the numa_bit as the
+        # highest of those directory bits
+        dir_bits = int(math.log(options.num_dirs, 2))
+        block_size_bits = int(math.log(options.cacheline_size, 2))
+        numa_bit = block_size_bits + dir_bits - 1
+
+    dir_ranges = []
+    for r in system.mem_ranges:
+        addr_range = m5.objects.AddrRange(r.start, size = r.size(),
+                                          intlvHighBit = numa_bit,
+                                          intlvBits = dir_bits,
+                                          intlvMatch = i)
+        dir_ranges.append(addr_range)
+
     dir_cntrl = DirCntrl()
-    dir_cntrl.create(options, ruby_system, system)
+    dir_cntrl.create(options, dir_ranges, ruby_system, system)
     dir_cntrl.number_of_TBEs = 2560 * options.num_compute_units
     dir_cntrl.useL3OnWT = options.use_L3_on_WT
 
