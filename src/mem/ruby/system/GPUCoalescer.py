@@ -52,3 +52,5 @@ class RubyGPUCoalescer(RubyPort):
        "max outstanding cycles for a request before " \
        "deadlock/livelock declared")
    garnet_standalone = Param.Bool(False, "")
+
+   gmTokenPort = SlavePort("Port to the CU for sharing tokens")

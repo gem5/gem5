@@ -569,6 +569,8 @@ for i in range(n_cu):
     for j in range(wavefront_size):
         system.cpu[shader_idx].CUs[i].memory_port[j] = \
                   system.ruby._cpu_ports[gpu_port_idx].slave[j]
+    system.cpu[shader_idx].CUs[i].gmTokenPort = \
+            system.ruby._cpu_ports[gpu_port_idx].gmTokenPort
     gpu_port_idx += 1
 
 for i in range(n_cu):

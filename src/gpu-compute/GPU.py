@@ -165,6 +165,7 @@ class ComputeUnit(ClockedObject):
     sqc_tlb_port = MasterPort("Port to the TLB for the SQC (I-cache)")
     scalar_port = MasterPort("Port to the scalar data cache")
     scalar_tlb_port = MasterPort("Port to the TLB for the scalar data cache")
+    gmTokenPort = MasterPort("Port to the GPU coalesecer for sharing tokens")
     perLaneTLB = Param.Bool(False, "enable per-lane TLB")
     prefetch_depth = Param.Int(0, "Number of prefetches triggered at a time"\
                                "(0 turns off prefetching)")
