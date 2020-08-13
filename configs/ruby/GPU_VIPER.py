@@ -399,6 +399,9 @@ def define_options(parser):
 
     parser.add_option("--noL1", action = "store_true", default = False,
                       help = "bypassL1")
+    parser.add_option("--scalar-buffer-size", type = 'int', default = 128,
+                      help="Size of the mandatory queue in the GPU scalar "
+                      "cache controller")
 
 def create_system(options, full_system, system, dma_devices, bootmem,
                   ruby_system):
@@ -676,7 +679,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
         scalar_cntrl.responseToSQC.slave = ruby_system.network.master
 
         scalar_cntrl.mandatoryQueue = \
-            MessageBuffer(buffer_size=options.buffers_size)
+            MessageBuffer(buffer_size=options.scalar_buffer_size)
 
         gpuCluster.add(scalar_cntrl)
 
