@@ -334,8 +334,6 @@ for i in range(n_cu):
 shader.CUs = compute_units
 
 ########################## Creating the CPU system ########################
-options.num_cpus = options.num_cpus
-
 # The shader core will be whatever is after the CPU cores are accounted for
 shader_idx = options.num_cpus
 
@@ -616,7 +614,6 @@ else:
 
 ########################## Start simulation ########################
 
-chroot = os.path.expanduser(options.chroot)
 redirect_paths = [RedirectPath(src = "/proc",
                                dests = ["%s/fs/proc" % m5.options.outdir]),
                   RedirectPath(src = "/sys",
