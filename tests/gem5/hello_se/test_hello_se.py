@@ -72,6 +72,16 @@ supported_os = {
     'sparc' : ('linux',)
 }
 
+# We only want to test x86, arm, and riscv on quick. Mips and sparc will be
+# left for long.
+os_length = {
+    'x86': constants.quick_tag,
+    'arm' : constants.quick_tag,
+    'mips' : constants.long_tag,
+    'riscv' : constants.quick_tag,
+    'sparc' : constants.long_tag,
+}
+
 if config.bin_path:
     base_path = config.bin_path
 else:
@@ -99,6 +109,7 @@ def verify_config(isa, binary, operating_s, cpu, hosts):
             '--caches'],
         valid_isas=(isa.upper(),),
         valid_hosts=hosts,
+        length = os_length[isa],
     )
 
 # Run statically linked hello worlds
