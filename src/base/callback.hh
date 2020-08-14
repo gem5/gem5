@@ -29,6 +29,7 @@
 #ifndef __BASE_CALLBACK_HH__
 #define __BASE_CALLBACK_HH__
 
+#include <functional>
 #include <list>
 #include <string>
 
@@ -77,6 +78,21 @@ class MakeCallback : public Callback
     { }
 
     void process() { (object->*F)(); }
+};
+
+class CallbackQueue2 : public std::list<std::function<void()>>
+{
+  public:
+    using Base = std::list<std::function<void()>>;
+
+    using Base::Base;
+
+    void
+    process()
+    {
+        for (auto &f: *this)
+            f();
+    }
 };
 
 class CallbackQueue
