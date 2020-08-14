@@ -70,9 +70,6 @@ class Uart : public BasicPioDevice
      * @return interrupt status
      */
     bool intStatus() { return status ? true : false; }
-
-  protected:
-    MakeCallback<Uart, &Uart::dataAvailable> callbackDataAvail;
 };
 
 #endif // __UART_HH__

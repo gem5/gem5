@@ -45,7 +45,7 @@ VirtIOConsole::VirtIOConsole(Params *params)
     : VirtIODeviceBase(params, ID_CONSOLE, sizeof(Config), F_SIZE),
       qRecv(params->system->physProxy, byteOrder, params->qRecvSize, *this),
       qTrans(params->system->physProxy, byteOrder, params->qTransSize, *this),
-      device(*params->device), callbackDataAvail(qRecv)
+      device(*params->device)
 {
     registerQueue(qRecv);
     registerQueue(qTrans);
@@ -53,7 +53,7 @@ VirtIOConsole::VirtIOConsole(Params *params)
     config.cols = 80;
     config.rows = 24;
 
-    device.regInterfaceCallback(&callbackDataAvail);
+    device.regInterfaceCallback([this]() { qRecv.trySend(); });
 }
 
 

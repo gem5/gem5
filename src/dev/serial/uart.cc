@@ -32,13 +32,11 @@
 
 #include "dev/serial/uart.hh"
 
-Uart::Uart(const Params *p, Addr pio_size)
-    : BasicPioDevice(p, pio_size),
-      platform(p->platform), device(p->device),
-      callbackDataAvail(this)
+Uart::Uart(const Params *p, Addr pio_size) :
+    BasicPioDevice(p, pio_size), platform(p->platform), device(p->device)
 {
     status = 0;
 
     // setup serial device callbacks
-    device->regInterfaceCallback(&callbackDataAvail);
+    device->regInterfaceCallback([this]() { dataAvailable(); });
 }

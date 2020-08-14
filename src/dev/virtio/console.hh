@@ -148,8 +148,6 @@ class VirtIOConsole : public VirtIODeviceBase
 
   protected:
     SerialDevice &device;
-    MakeCallback<VirtIOConsole::TermRecvQueue,
-                 &VirtIOConsole::TermRecvQueue::trySend> callbackDataAvail;
 };
 
 #endif // __DEV_VIRTIO_CONSOLE_HH__
