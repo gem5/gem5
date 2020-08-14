@@ -45,13 +45,12 @@
 MmioVirtIO::MmioVirtIO(const MmioVirtIOParams *params)
     : BasicPioDevice(params, params->pio_size),
       hostFeaturesSelect(0), guestFeaturesSelect(0), pageSize(0),
-      interruptStatus(0),
-      callbackKick(this), vio(*params->vio),
+      interruptStatus(0), vio(*params->vio),
       interrupt(params->interrupt->get())
 {
     fatal_if(!interrupt, "No MMIO VirtIO interrupt specified\n");
 
-    vio.registerKickCallback(&callbackKick);
+    vio.registerKickCallback([this]() { kick(); });
 }
 
 MmioVirtIO::~MmioVirtIO()

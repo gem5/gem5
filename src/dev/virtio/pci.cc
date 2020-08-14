@@ -44,7 +44,7 @@
 
 PciVirtIO::PciVirtIO(const Params *params)
     : PciDevice(params), queueNotify(0), interruptDeliveryPending(false),
-      vio(*params->vio), callbackKick(this)
+      vio(*params->vio)
 {
     // Override the subsystem ID with the device ID from VirtIO
     config.subsystemID = htole(vio.deviceId);
@@ -55,7 +55,7 @@ PciVirtIO::PciVirtIO(const Params *params)
     // used to check accesses later on.
     BARSize[0] = alignToPowerOfTwo(BAR0_SIZE_BASE + vio.configSize);
 
-    vio.registerKickCallback(&callbackKick);
+    vio.registerKickCallback([this]() { kick(); });
 }
 
 PciVirtIO::~PciVirtIO()

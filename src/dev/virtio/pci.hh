@@ -80,8 +80,6 @@ class PciVirtIO : public PciDevice
     bool interruptDeliveryPending;
 
     VirtIODeviceBase &vio;
-
-    MakeCallback<PciVirtIO, &PciVirtIO::kick> callbackKick;
 };
 
 #endif // __DEV_VIRTIO_PCI_HH__

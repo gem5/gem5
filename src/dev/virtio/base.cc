@@ -328,8 +328,7 @@ VirtIODeviceBase::VirtIODeviceBase(Params *params, DeviceId id,
       guestFeatures(0),
       byteOrder(params->system->getGuestByteOrder()),
       deviceId(id), configSize(config_size), deviceFeatures(features),
-      _deviceStatus(0), _queueSelect(0),
-      transKick(NULL)
+      _deviceStatus(0), _queueSelect(0)
 {
 }
 

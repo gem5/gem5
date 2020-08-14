@@ -38,9 +38,10 @@
 #ifndef __DEV_VIRTIO_BASE_HH__
 #define __DEV_VIRTIO_BASE_HH__
 
+#include <functional>
+
 #include "arch/isa_traits.hh"
 #include "base/bitunion.hh"
-#include "base/callback.hh"
 #include "dev/virtio/virtio_ring.h"
 #include "mem/port_proxy.hh"
 #include "sim/sim_object.hh"
@@ -605,9 +606,11 @@ class VirtIODeviceBase : public SimObject
      * typically through an interrupt. Device models call this method
      * to tell the transport interface to notify the guest.
      */
-    void kick() {
+    void
+    kick()
+    {
         assert(transKick);
-        transKick->process();
+        transKick();
     };
 
     /**
@@ -725,11 +728,13 @@ class VirtIODeviceBase : public SimObject
       * Register a callback to kick the guest through the transport
       * interface.
       *
-      * @param c Callback into transport interface.
+      * @param callback Callback into transport interface.
       */
-    void registerKickCallback(Callback *c) {
+    void
+    registerKickCallback(const std::function<void()> &callback)
+    {
         assert(!transKick);
-        transKick = c;
+        transKick = callback;
     }
 
 
@@ -867,7 +872,7 @@ class VirtIODeviceBase : public SimObject
     std::vector<VirtQueue *> _queues;
 
     /** Callbacks to kick the guest through the transport layer  */
-    Callback *transKick;
+    std::function<void()> transKick;
 };
 
 class VirtIODummyDevice : public VirtIODeviceBase

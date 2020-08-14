@@ -103,8 +103,6 @@ class MmioVirtIO : public BasicPioDevice
     uint32_t pageSize;
     uint32_t interruptStatus;
 
-    MakeCallback<MmioVirtIO, &MmioVirtIO::kick> callbackKick;
-
   protected: // Params
     VirtIODeviceBase &vio;
     ArmInterruptPin *const interrupt;
