@@ -48,9 +48,9 @@ RegOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     stringstream ss;
     ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", " <<
         registerName(_srcRegIdx[0]);
-    if (_srcRegIdx[1].index() != 0)
+    if (_numSrcRegs >= 2)
         ss << ", " << registerName(_srcRegIdx[1]);
-    if (_srcRegIdx[2].index() != 0)
+    if (_numSrcRegs >= 3)
         ss << ", " << registerName(_srcRegIdx[2]);
     return ss.str();
 }
