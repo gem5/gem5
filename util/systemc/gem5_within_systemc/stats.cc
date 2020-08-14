@@ -72,7 +72,7 @@ void statsPrepare()
 void statsDump()
 {
     bool desc = true;
-    Stats::Output *output = Stats::initText(filename, desc);
+    Stats::Output *output = Stats::initText(filename, desc, true);
 
     Stats::processDumpQueue();
 
