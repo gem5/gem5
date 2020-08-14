@@ -151,12 +151,4 @@ class PowerState : public SimObject
     } stats;
 };
 
-class PowerStateDumpCallback : public Callback
-{
-    PowerState *co;
-  public:
-    PowerStateDumpCallback(PowerState *co_t) : co(co_t) {}
-    virtual void process() { co->computeStats(); };
-};
-
 #endif //__SIM_POWER_STATE_HH__
