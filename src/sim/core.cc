@@ -126,10 +126,10 @@ setOutputDir(const string &dir)
 /**
  * Queue of C++ callbacks to invoke on simulator exit.
  */
-inline CallbackQueue2 &
+inline CallbackQueue &
 exitCallbacks()
 {
-    static CallbackQueue2 theQueue;
+    static CallbackQueue theQueue;
     return theQueue;
 }
 

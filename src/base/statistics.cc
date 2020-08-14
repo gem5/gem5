@@ -518,8 +518,8 @@ registerHandlers(Handler reset_handler, Handler dump_handler)
     dumpHandler = dump_handler;
 }
 
-CallbackQueue2 dumpQueue;
-CallbackQueue2 resetQueue;
+CallbackQueue dumpQueue;
+CallbackQueue resetQueue;
 
 void
 processResetQueue()

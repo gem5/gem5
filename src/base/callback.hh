@@ -32,7 +32,7 @@
 #include <functional>
 #include <list>
 
-class CallbackQueue2 : public std::list<std::function<void()>>
+class CallbackQueue : public std::list<std::function<void()>>
 {
   public:
     using Base = std::list<std::function<void()>>;

@@ -113,7 +113,7 @@ class MemBackdoor
     }
 
   private:
-    CallbackQueue2 invalidationCallbacks;
+    CallbackQueue invalidationCallbacks;
 
     AddrRange _range;
     uint8_t *_ptr;
