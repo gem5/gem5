@@ -160,24 +160,6 @@ class Network : public ClockedObject
     std::vector<bool> m_ordered;
 
   private:
-    //! Callback class used for collating statistics from all the
-    //! controller of this type.
-    class StatsCallback : public Callback
-    {
-      private:
-        Network *ctr;
-
-      public:
-        virtual ~StatsCallback() {}
-
-        StatsCallback(Network *_ctr)
-            : ctr(_ctr)
-        {
-        }
-
-        void process() {ctr->collateStats();}
-    };
-
     // Global address map
     struct AddrMapNode {
         NodeID id;

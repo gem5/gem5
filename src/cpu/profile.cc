@@ -97,13 +97,7 @@ FunctionProfile::FunctionProfile(std::unique_ptr<BaseStackTrace> _trace,
                                  const Loader::SymbolTable &_symtab) :
     symtab(_symtab), trace(std::move(_trace))
 {
-    reset = new MakeCallback<FunctionProfile, &FunctionProfile::clear>(this);
-    Stats::registerResetCallback(reset);
-}
-
-FunctionProfile::~FunctionProfile()
-{
-    delete reset;
+    Stats::registerResetCallback([this]() { clear(); });
 }
 
 ProfileNode *

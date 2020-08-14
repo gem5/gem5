@@ -518,8 +518,8 @@ registerHandlers(Handler reset_handler, Handler dump_handler)
     dumpHandler = dump_handler;
 }
 
-CallbackQueue dumpQueue;
-CallbackQueue resetQueue;
+CallbackQueue2 dumpQueue;
+CallbackQueue2 resetQueue;
 
 void
 processResetQueue()
@@ -534,9 +534,9 @@ processDumpQueue()
 }
 
 void
-registerResetCallback(Callback *cb)
+registerResetCallback(const std::function<void()> &callback)
 {
-    resetQueue.add(cb);
+    resetQueue.push_back(callback);
 }
 
 bool _enabled = false;
@@ -586,9 +586,9 @@ resolve(const std::string &name)
 }
 
 void
-registerDumpCallback(Callback *cb)
+registerDumpCallback(const std::function<void()> &callback)
 {
-    dumpQueue.add(cb);
+    dumpQueue.push_back(callback);
 }
 
 } // namespace Stats

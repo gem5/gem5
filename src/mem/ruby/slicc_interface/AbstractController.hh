@@ -214,19 +214,6 @@ class AbstractController : public ClockedObject, public Consumer
     Stats::Histogram m_delayHistogram;
     std::vector<Stats::Histogram *> m_delayVCHistogram;
 
-    //! Callback class used for collating statistics from all the
-    //! controller of this type.
-    class StatsCallback : public Callback
-    {
-      private:
-        AbstractController *ctr;
-
-      public:
-        virtual ~StatsCallback() {}
-        StatsCallback(AbstractController *_ctr) : ctr(_ctr) {}
-        void process() {ctr->collateStats();}
-    };
-
     /**
      * Port that forwards requests and receives responses from the
      * memory controller.

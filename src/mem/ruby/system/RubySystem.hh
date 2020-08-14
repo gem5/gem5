@@ -151,15 +151,4 @@ class RubySystem : public ClockedObject
     std::vector<std::map<uint32_t, AbstractController *> > m_abstract_controls;
 };
 
-class RubyStatsCallback : public Callback
-{
-  private:
-    RubySystem *m_ruby_system;
-
-  public:
-    virtual ~RubyStatsCallback() {}
-    RubyStatsCallback(RubySystem *system) : m_ruby_system(system) {}
-    void process() { m_ruby_system->collateStats(); }
-};
-
 #endif //__MEM_RUBY_SYSTEM_RUBYSYSTEM_HH__

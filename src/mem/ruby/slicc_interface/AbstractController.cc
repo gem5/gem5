@@ -61,7 +61,7 @@ AbstractController::AbstractController(const Params *p)
     if (m_version == 0) {
         // Combine the statistics from all controllers
         // of this particular type.
-        Stats::registerDumpCallback(new StatsCallback(this));
+        Stats::registerDumpCallback([this]() { collateStats(); });
     }
 }
 

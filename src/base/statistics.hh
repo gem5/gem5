@@ -82,8 +82,6 @@
 #include "base/str.hh"
 #include "base/types.hh"
 
-class Callback;
-
 /** The current simulated tick. */
 extern Tick curTick();
 
@@ -3364,13 +3362,13 @@ void registerHandlers(Handler reset_handler, Handler dump_handler);
  * Register a callback that should be called whenever statistics are
  * reset
  */
-void registerResetCallback(Callback *cb);
+void registerResetCallback(const std::function<void()> &callback);
 
 /**
  * Register a callback that should be called whenever statistics are
  * about to be dumped
  */
-void registerDumpCallback(Callback *cb);
+void registerDumpCallback(const std::function<void()> &callback);
 
 /**
  * Process all the callbacks in the reset callbacks queue

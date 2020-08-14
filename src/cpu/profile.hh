@@ -124,13 +124,11 @@ class ProfileNode
     void clear();
 };
 
-class Callback;
 class FunctionProfile
 {
   private:
     friend class ProfileNode;
 
-    Callback *reset = nullptr;
     const Loader::SymbolTable &symtab;
     ProfileNode top;
     std::map<Addr, Counter> pc_count;
@@ -139,7 +137,6 @@ class FunctionProfile
   public:
     FunctionProfile(std::unique_ptr<BaseStackTrace> _trace,
                     const Loader::SymbolTable &symtab);
-    ~FunctionProfile();
 
     ProfileNode *consume(ThreadContext *tc, const StaticInstPtr &inst);
     ProfileNode *consume(const std::vector<Addr> &stack);

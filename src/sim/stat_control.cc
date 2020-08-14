@@ -70,15 +70,6 @@ Tick startTick;
 
 GlobalEvent *dumpEvent;
 
-struct SimTicksReset : public Callback
-{
-    void process()
-    {
-        statTime.setTimer();
-        startTick = curTick();
-    }
-};
-
 double
 statElapsedTime()
 {
@@ -100,8 +91,6 @@ statFinalTick()
 {
     return curTick();
 }
-
-SimTicksReset simTicksReset;
 
 struct Global
 {
@@ -198,7 +187,10 @@ Global::Global()
     hostOpRate = simOps / hostSeconds;
     hostTickRate = simTicks / hostSeconds;
 
-    registerResetCallback(&simTicksReset);
+    registerResetCallback([]() {
+        statTime.setTimer();
+        startTick = curTick();
+    });
 }
 
 void
