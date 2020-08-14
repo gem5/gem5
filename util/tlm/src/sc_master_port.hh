@@ -71,7 +71,7 @@ class Gem5MasterTransactor;
  * It is assumed that the mode (atomic/timing) does not change during
  * execution.
  */
-class SCMasterPort : public ExternalMaster::Port
+class SCMasterPort : public ExternalMaster::ExternalPort
 {
   private:
     struct TlmSenderState : public Packet::SenderState
@@ -149,9 +149,9 @@ class SCMasterPortHandler : public ExternalMaster::Handler
   public:
     SCMasterPortHandler(Gem5SimControl& control) : control(control) {}
 
-    ExternalMaster::Port *getExternalPort(const std::string &name,
-                                          ExternalMaster &owner,
-                                          const std::string &port_data);
+    ExternalMaster::ExternalPort *
+        getExternalPort(const std::string &name, ExternalMaster &owner,
+                        const std::string &port_data);
 };
 
 }

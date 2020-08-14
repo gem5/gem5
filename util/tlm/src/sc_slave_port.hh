@@ -65,7 +65,7 @@ class Gem5SlaveTransactor;
  * original packet as a payload extension, the packet can be restored and send
  * back to the gem5 world upon receiving a response from the SystemC world.
  */
-class SCSlavePort : public ExternalSlave::Port
+class SCSlavePort : public ExternalSlave::ExternalPort
 {
   public:
     /** One instance of pe and the related callback needed */
@@ -125,9 +125,9 @@ class SCSlavePortHandler : public ExternalSlave::Handler
   public:
     SCSlavePortHandler(Gem5SimControl& control) : control(control) {}
 
-    ExternalSlave::Port *getExternalPort(const std::string &name,
-                                         ExternalSlave &owner,
-                                         const std::string &port_data);
+    ExternalSlave::ExternalPort *
+        getExternalPort(const std::string &name, ExternalSlave &owner,
+                        const std::string &port_data);
 };
 
 }
