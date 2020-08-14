@@ -99,9 +99,9 @@ class AbstractNVM : public SimObject
      * data transfer between the disk and the disk controller.
      */
     virtual void readMemory(uint64_t address, uint32_t amount,
-                            Callback *event) = 0;
+                            const std::function<void()> &event) = 0;
     virtual void writeMemory(uint64_t address, uint32_t amount,
-                             Callback *event) = 0;
+                             const std::function<void()> &event) = 0;
 };
 
 #endif //__DEV_ARM_ABSTRACT_NVM_HH__

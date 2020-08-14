@@ -73,8 +73,8 @@
  * Constructor and destructor functions of UFSHCM device
  */
 UFSHostDevice::UFSSCSIDevice::UFSSCSIDevice(const UFSHostDeviceParams* p,
-                             uint32_t lun_id, Callback *transfer_cb,
-                             Callback *read_cb):
+                             uint32_t lun_id, const Callback &transfer_cb,
+                             const Callback &read_cb):
     SimObject(p),
     flashDisk(p->image[lun_id]),
     flashDevice(p->internalflash[lun_id]),
@@ -97,11 +97,9 @@ UFSHostDevice::UFSSCSIDevice::UFSSCSIDevice(const UFSHostDeviceParams* p,
      * or from the UFS SCSI device to the UFS host.
      */
     signalDone = transfer_cb;
-    memReadCallback = new MakeCallback<UFSSCSIDevice,
-        &UFSHostDevice::UFSSCSIDevice::readCallback>(this);
+    memReadCallback = [this]() { readCallback(); };
     deviceReadCallback = read_cb;
-    memWriteCallback = new MakeCallback<UFSSCSIDevice,
-        &UFSHostDevice::UFSSCSIDevice::SSDWriteDone>(this);
+    memWriteCallback = [this]() { SSDWriteDone(); };
 
     /**
      * make ascii out of lun_id (and add more characters)
@@ -738,14 +736,10 @@ UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams* p) :
             lunAvail);
     UFSDevice.resize(lunAvail);
 
-    transferDoneCallback = new MakeCallback<UFSHostDevice,
-        &UFSHostDevice::LUNSignal>(this);
-    memReadCallback = new MakeCallback<UFSHostDevice,
-        &UFSHostDevice::readCallback>(this);
-
     for (int count = 0; count < lunAvail; count++) {
-        UFSDevice[count] = new UFSSCSIDevice(p, count, transferDoneCallback,
-                                             memReadCallback);
+        UFSDevice[count] = new UFSSCSIDevice(p, count,
+                [this]() { LUNSignal(); },
+                [this]() { readCallback(); });
     }
 
     if (UFSSlots > 31)
@@ -2070,7 +2064,7 @@ UFSHostDevice::UFSSCSIDevice::SSDWriteDone()
 
         //Callback UFS Host
         setSignal();
-        signalDone->process();
+        signalDone();
     }
 
 }
@@ -2213,7 +2207,7 @@ UFSHostDevice::UFSSCSIDevice::SSDReadDone()
 
         /**Callback: transferdone*/
         setSignal();
-        signalDone->process();
+        signalDone();
     }
 
 }
@@ -2231,7 +2225,7 @@ UFSHostDevice::UFSSCSIDevice::readCallback()
      * UFSHostDevice::readCallback
      */
     setReadSignal();
-    deviceReadCallback->process();
+    deviceReadCallback();
 
     //Are we done yet?
     SSDReadDone();
