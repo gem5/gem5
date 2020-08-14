@@ -64,7 +64,7 @@ BaseTags::BaseTags(const Params *p)
       dataBlks(new uint8_t[p->size]), // Allocate data storage in one big chunk
       stats(*this)
 {
-    registerExitCallback(new BaseTagsCallback(this));
+    registerExitCallback([this]() { cleanupRefs(); });
 }
 
 ReplaceableEntry*

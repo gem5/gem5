@@ -168,16 +168,6 @@ RawDiskImageParams::create()
 const uint32_t CowDiskImage::VersionMajor = 1;
 const uint32_t CowDiskImage::VersionMinor = 0;
 
-class CowDiskCallback : public Callback
-{
-  private:
-    CowDiskImage *image;
-
-  public:
-    CowDiskCallback(CowDiskImage *i) : image(i) {}
-    void process() { image->save(); delete this; }
-};
-
 CowDiskImage::CowDiskImage(const Params *p)
     : DiskImage(p), filename(p->image_file), child(p->child), table(NULL)
 {
@@ -191,7 +181,7 @@ CowDiskImage::CowDiskImage(const Params *p)
         }
 
         if (!p->read_only)
-            registerExitCallback(new CowDiskCallback(this));
+            registerExitCallback([this]() { save(); });
     }
 }
 

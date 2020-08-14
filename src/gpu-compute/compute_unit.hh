@@ -350,11 +350,6 @@ class ComputeUnit : public ClockedObject
 
     /*
      * for Counting page accesses
-     *
-     * cuExitCallback inherits from Callback. When you register a callback
-     * function as an exit callback, it will get added to an exit callback
-     * queue, such that on simulation exit, all callbacks in the callback
-     * queue will have their process() function called.
      */
     bool countPages;
 
@@ -631,24 +626,7 @@ class ComputeUnit : public ClockedObject
     typedef std::unordered_map<Addr, std::pair<int, int>> pageDataStruct;
     pageDataStruct pageAccesses;
 
-    class CUExitCallback : public Callback
-    {
-      private:
-        ComputeUnit *computeUnit;
-
-      public:
-        virtual ~CUExitCallback() { }
-
-        CUExitCallback(ComputeUnit *_cu)
-        {
-            computeUnit = _cu;
-        }
-
-        virtual void
-        process();
-    };
-
-    CUExitCallback *cuExitCallback;
+    void exitCallback();
 
     class GMTokenPort : public TokenMasterPort
     {

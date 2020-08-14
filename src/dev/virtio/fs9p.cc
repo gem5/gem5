@@ -315,9 +315,7 @@ VirtIO9PDiod::VirtIO9PDiod(Params *params)
       fd_to_diod(-1), fd_from_diod(-1), diod_pid(-1)
 {
     // Register an exit callback so we can kill the diod process
-    Callback* cb = new MakeCallback<VirtIO9PDiod,
-                                    &VirtIO9PDiod::terminateDiod>(this);
-    registerExitCallback(cb);
+    registerExitCallback([this]() { terminateDiod(); });
 }
 
 VirtIO9PDiod::~VirtIO9PDiod()

@@ -79,26 +79,6 @@ using namespace TheISA;
 bool CPA::exists;
 CPA *CPA::_cpa;
 
-class AnnotateDumpCallback : public Callback
-{
-
-  private:
-    CPA *cpa;
-  public:
-    virtual void process();
-    AnnotateDumpCallback(CPA *_cpa)
-        : cpa(_cpa)
-    {}
-};
-
-void
-AnnotateDumpCallback::process()
-{
-    cpa->dump(true);
-    cpa->dumpKey();
-}
-
-
 CPA::CPA(Params *p)
     : SimObject(p), numSm(0), numSmt(0), numSys(0), numQs(0), conId(0)
 {
@@ -140,7 +120,7 @@ CPA::startup()
     ah.key_off = 0;
     osbin->write((char*)&ah, sizeof(AnnotateHeader));
 
-    registerExitCallback(new AnnotateDumpCallback(this));
+    registerExitCallback([this]() { dump(true); dumpKey(); });
 }
 
 uint64_t

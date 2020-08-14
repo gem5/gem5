@@ -35,6 +35,7 @@
  * information, output directory and exit events
  */
 
+#include <functional>
 #include <string>
 
 #include "base/types.hh"
@@ -95,8 +96,7 @@ Tick getClockFrequency(); // Ticks per second.
 
 void setOutputDir(const std::string &dir);
 
-class Callback;
-void registerExitCallback(Callback *callback);
+void registerExitCallback(const std::function<void()> &callback);
 void doExitCleanup();
 
 #endif /* __SIM_CORE_HH__ */

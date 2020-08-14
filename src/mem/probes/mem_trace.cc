@@ -74,8 +74,7 @@ MemTraceProbe::MemTraceProbe(MemTraceProbeParams *p)
     // Register a callback to compensate for the destructor not
     // being called. The callback forces the stream to flush and
     // closes the output file.
-    registerExitCallback(
-        new MakeCallback<MemTraceProbe, &MemTraceProbe::closeStreams>(this));
+    registerExitCallback([this]() { closeStreams(); });
 }
 
 void

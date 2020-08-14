@@ -68,9 +68,7 @@ DRAMSim2::DRAMSim2(const Params* p) :
 
     // Register a callback to compensate for the destructor not
     // being called. The callback prints the DRAMSim2 stats.
-    Callback* cb = new MakeCallback<DRAMSim2Wrapper,
-        &DRAMSim2Wrapper::printStats>(wrapper);
-    registerExitCallback(cb);
+    registerExitCallback([&wrapper]() { wrapper->printStats(); });
 }
 
 void

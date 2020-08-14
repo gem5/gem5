@@ -353,12 +353,4 @@ class BaseTags : public ClockedObject
     void computeStatsVisitor(CacheBlk &blk);
 };
 
-class BaseTagsCallback : public Callback
-{
-    BaseTags *tags;
-  public:
-    BaseTagsCallback(BaseTags *t) : tags(t) {}
-    virtual void process() { tags->cleanupRefs(); };
-};
-
 #endif //__MEM_CACHE_TAGS_BASE_HH__

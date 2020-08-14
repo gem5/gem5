@@ -88,9 +88,7 @@ ElasticTrace::ElasticTrace(const ElasticTraceParams* params)
     data_rec_header.set_window_size(depWindowSize);
     dataTraceStream->write(data_rec_header);
     // Register a callback to flush trace records and close the output streams.
-    Callback* cb = new MakeCallback<ElasticTrace,
-        &ElasticTrace::flushTraces>(this);
-    registerExitCallback(cb);
+    registerExitCallback([this]() {  flushTraces(); });
 }
 
 void

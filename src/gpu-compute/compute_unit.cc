@@ -179,8 +179,7 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p),
     int tlbPort_width = perLaneTLB ? wfSize() : 1;
     tlbPort.resize(tlbPort_width);
 
-    cuExitCallback = new CUExitCallback(this);
-    registerExitCallback(cuExitCallback);
+    registerExitCallback([this]() { exitCallback(); });
 
     lastExecCycle.resize(numVectorALUs, 0);
 
@@ -215,7 +214,6 @@ ComputeUnit::~ComputeUnit()
         lastVaddrSimd[j].clear();
     }
     lastVaddrCU.clear();
-    delete cuExitCallback;
     delete ldsPort;
 }
 
@@ -2460,16 +2458,15 @@ ComputeUnit::updatePageDivergenceDist(Addr addr)
 }
 
 void
-ComputeUnit::CUExitCallback::process()
+ComputeUnit::exitCallback()
 {
-    if (computeUnit->countPages) {
-        std::ostream *page_stat_file =
-            simout.create(computeUnit->name().c_str())->stream();
+    if (countPages) {
+        std::ostream *page_stat_file = simout.create(name().c_str())->stream();
 
         *page_stat_file << "page, wavefront accesses, workitem accesses" <<
             std::endl;
 
-        for (auto iter : computeUnit->pageAccesses) {
+        for (auto iter : pageAccesses) {
             *page_stat_file << std::hex << iter.first << ",";
             *page_stat_file << std::dec << iter.second.first << ",";
             *page_stat_file << std::dec << iter.second.second << std::endl;
