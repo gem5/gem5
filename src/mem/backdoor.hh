@@ -42,28 +42,6 @@ class MemBackdoor
     // a const reference to this back door as their only parameter.
     typedef std::function<void(const MemBackdoor &backdoor)> CbFunction;
 
-  private:
-    // This wrapper class holds the callables described above so that they
-    // can be stored in a generic CallbackQueue.
-    class Callback : public ::Callback
-    {
-      public:
-        Callback(MemBackdoor &bd, CbFunction cb) :
-            _backdoor(bd), cbFunction(cb)
-        {}
-
-        void process() override { cbFunction(_backdoor); }
-        // It looks like this is only called when the CallbackQueue is
-        // destroyed and this Callback is currently in the queue.
-        void autoDestruct() override { delete this; }
-
-        MemBackdoor &backdoor() { return _backdoor; }
-
-      private:
-        MemBackdoor &_backdoor;
-        CbFunction cbFunction;
-    };
-
   public:
     enum Flags{
         // How data is allowed to be accessed through this backdoor.
@@ -108,7 +86,6 @@ class MemBackdoor
     void flags(Flags f) { _flags = f; }
 
     MemBackdoor(AddrRange r, uint8_t *p, Flags flags) :
-        invalidationCallbacks(new CallbackQueue),
         _range(r), _ptr(p), _flags(flags)
     {}
 
@@ -121,9 +98,7 @@ class MemBackdoor
     void
     addInvalidationCallback(CbFunction func)
     {
-        auto *cb = new MemBackdoor::Callback(*this, func);
-        assert(cb);
-        invalidationCallbacks->add(cb);
+        invalidationCallbacks.push_back([this,func](){ func(*this); });
     }
 
     // Notify and clear invalidation callbacks when the data in the backdoor
@@ -133,14 +108,12 @@ class MemBackdoor
     void
     invalidate()
     {
-        invalidationCallbacks->process();
-        // Delete and recreate the callback queue to ensure the callback
-        // objects are deleted.
-        invalidationCallbacks.reset(new CallbackQueue());
+        invalidationCallbacks.process();
+        invalidationCallbacks.clear();
     }
 
   private:
-    std::unique_ptr<CallbackQueue> invalidationCallbacks;
+    CallbackQueue2 invalidationCallbacks;
 
     AddrRange _range;
     uint8_t *_ptr;
