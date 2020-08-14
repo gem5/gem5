@@ -120,7 +120,8 @@ SimpleNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     m_fromNetQueues[local_dest].resize(num_vnets, nullptr);
 
     m_switches[src]->addOutPort(m_fromNetQueues[local_dest],
-                                routing_table_entry[0], simple_link->m_latency,
+                                routing_table_entry[0],
+                                simple_link->m_latency, 0,
                                 simple_link->m_bw_multiplier);
 }
 
@@ -147,6 +148,7 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
     m_switches[dest]->addInPort(simple_link->m_buffers);
     m_switches[src]->addOutPort(simple_link->m_buffers, routing_table_entry[0],
                                 simple_link->m_latency,
+                                simple_link->m_weight,
                                 simple_link->m_bw_multiplier,
                                 dst_inport);
     // Maitain a global list of buffers (used for functional accesses only)

@@ -79,7 +79,8 @@ class PerfectSwitch : public Consumer
     void addInPort(const std::vector<MessageBuffer*>& in);
     void addOutPort(const std::vector<MessageBuffer*>& out,
                     const NetDest& routing_table_entry,
-                    const PortDirection &dst_inport);
+                    const PortDirection &dst_inport,
+                    int link_weight);
 
     int getInLinks() const { return m_in.size(); }
     int getOutLinks() const { return m_out.size(); }

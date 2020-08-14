@@ -95,13 +95,15 @@ PerfectSwitch::addInPort(const std::vector<MessageBuffer*>& in)
 void
 PerfectSwitch::addOutPort(const std::vector<MessageBuffer*>& out,
                           const NetDest& routing_table_entry,
-                          const PortDirection &dst_inport)
+                          const PortDirection &dst_inport,
+                          int link_weight)
 {
     // Add to routing unit
     m_switch->getRoutingUnit().addOutPort(m_out.size(),
                                           out,
                                           routing_table_entry,
-                                          dst_inport);
+                                          dst_inport,
+                                          link_weight);
     m_out.push_back(out);
 }
 

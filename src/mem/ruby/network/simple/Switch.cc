@@ -85,7 +85,8 @@ Switch::addInPort(const std::vector<MessageBuffer*>& in)
 void
 Switch::addOutPort(const std::vector<MessageBuffer*>& out,
                    const NetDest& routing_table_entry,
-                   Cycles link_latency, int bw_multiplier,
+                   Cycles link_latency, int link_weight,
+                   int bw_multiplier,
                    PortDirection dst_inport)
 {
     const std::vector<int> &physical_vnets_channels =
@@ -122,7 +123,7 @@ Switch::addOutPort(const std::vector<MessageBuffer*>& out,
 
     // Hook the queues to the PerfectSwitch
     perfectSwitch.addOutPort(intermediateBuffers, routing_table_entry,
-        dst_inport);
+                             dst_inport, link_weight);
 
     // Hook the queues to the Throttle
     throttles.back().addLinks(intermediateBuffers, out);

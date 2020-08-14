@@ -69,7 +69,8 @@ class BaseRoutingUnit : public SimObject
     virtual void addOutPort(LinkID link_id,
                            const std::vector<MessageBuffer*>& m_out_buffer,
                            const NetDest& routing_table_entry,
-                           const PortDirection &direction) = 0;
+                           const PortDirection &direction,
+                           int link_weight) = 0;
 
     struct RouteInfo
     {

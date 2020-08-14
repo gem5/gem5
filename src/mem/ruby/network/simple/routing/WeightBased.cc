@@ -60,13 +60,15 @@ void
 WeightBased::addOutPort(LinkID link_id,
                     const std::vector<MessageBuffer*>& m_out_buffer,
                     const NetDest& routing_table_entry,
-                    const PortDirection &direction)
+                    const PortDirection &direction,
+                    int link_weight)
 {
     gem5_assert(link_id == m_links.size());
     m_links.emplace_back(new LinkInfo{link_id,
                         routing_table_entry,
                         m_out_buffer,
-                        static_cast<int>(link_id)});
+                        0, link_weight});
+    sortLinks();
 }
 
 void
@@ -81,7 +83,7 @@ WeightBased::route(const Message &msg,
             // Don't adaptively route
             // Makes sure ordering is reset
             for (auto &link : m_links)
-                link->m_order = static_cast<int>(link->m_link_id);
+                link->m_order = 0;
         } else {
             // Find how clogged each link is
             for (auto &link : m_links) {
@@ -96,12 +98,7 @@ WeightBased::route(const Message &msg,
                     (out_queue_length << 8) | random_mt.random(0, 0xff);
             }
         }
-
-        std::sort(m_links.begin(), m_links.end(),
-            [](const std::unique_ptr<LinkInfo> &a,
-               const std::unique_ptr<LinkInfo> &b) {
-                return a->m_order < b->m_order;
-            });
+        sortLinks();
     }
 
     findRoute(msg, out_links);
