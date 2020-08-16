@@ -1992,133 +1992,47 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             misc_reg = MISCREG_IFAR_S;
             break;
           case MISCREG_ATS1CPR:
+            addressTranslation(TLB::S1CTran, BaseTLB::Read, 0, val);
+            return;
           case MISCREG_ATS1CPW:
+            addressTranslation(TLB::S1CTran, BaseTLB::Write, 0, val);
+            return;
           case MISCREG_ATS1CUR:
+            addressTranslation(TLB::S1CTran, BaseTLB::Read,
+                TLB::UserMode, val);
+            return;
           case MISCREG_ATS1CUW:
+            addressTranslation(TLB::S1CTran, BaseTLB::Write,
+                TLB::UserMode, val);
+            return;
           case MISCREG_ATS12NSOPR:
+            if (!haveSecurity)
+                panic("Security Extensions required for ATS12NSOPR");
+            addressTranslation(TLB::S1S2NsTran, BaseTLB::Read, 0, val);
+            return;
           case MISCREG_ATS12NSOPW:
+            if (!haveSecurity)
+                panic("Security Extensions required for ATS12NSOPW");
+            addressTranslation(TLB::S1S2NsTran, BaseTLB::Write, 0, val);
+            return;
           case MISCREG_ATS12NSOUR:
+            if (!haveSecurity)
+                panic("Security Extensions required for ATS12NSOUR");
+            addressTranslation(TLB::S1S2NsTran, BaseTLB::Read,
+                TLB::UserMode, val);
+            return;
           case MISCREG_ATS12NSOUW:
+            if (!haveSecurity)
+                panic("Security Extensions required for ATS12NSOUW");
+            addressTranslation(TLB::S1S2NsTran, BaseTLB::Write,
+                TLB::UserMode, val);
+            return;
           case MISCREG_ATS1HR:
+            addressTranslation(TLB::HypMode, BaseTLB::Read, 0, val);
+            return;
           case MISCREG_ATS1HW:
-            {
-              Request::Flags flags = 0;
-              BaseTLB::Mode mode = BaseTLB::Read;
-              TLB::ArmTranslationType tranType = TLB::NormalTran;
-              Fault fault;
-              switch(misc_reg) {
-                case MISCREG_ATS1CPR:
-                  tranType = TLB::S1CTran;
-                  mode     = BaseTLB::Read;
-                  break;
-                case MISCREG_ATS1CPW:
-                  tranType = TLB::S1CTran;
-                  mode     = BaseTLB::Write;
-                  break;
-                case MISCREG_ATS1CUR:
-                  flags    = TLB::UserMode;
-                  tranType = TLB::S1CTran;
-                  mode     = BaseTLB::Read;
-                  break;
-                case MISCREG_ATS1CUW:
-                  flags    = TLB::UserMode;
-                  tranType = TLB::S1CTran;
-                  mode     = BaseTLB::Write;
-                  break;
-                case MISCREG_ATS12NSOPR:
-                  if (!haveSecurity)
-                      panic("Security Extensions required for ATS12NSOPR");
-                  tranType = TLB::S1S2NsTran;
-                  mode     = BaseTLB::Read;
-                  break;
-                case MISCREG_ATS12NSOPW:
-                  if (!haveSecurity)
-                      panic("Security Extensions required for ATS12NSOPW");
-                  tranType = TLB::S1S2NsTran;
-                  mode     = BaseTLB::Write;
-                  break;
-                case MISCREG_ATS12NSOUR:
-                  if (!haveSecurity)
-                      panic("Security Extensions required for ATS12NSOUR");
-                  flags    = TLB::UserMode;
-                  tranType = TLB::S1S2NsTran;
-                  mode     = BaseTLB::Read;
-                  break;
-                case MISCREG_ATS12NSOUW:
-                  if (!haveSecurity)
-                      panic("Security Extensions required for ATS12NSOUW");
-                  flags    = TLB::UserMode;
-                  tranType = TLB::S1S2NsTran;
-                  mode     = BaseTLB::Write;
-                  break;
-                case MISCREG_ATS1HR: // only really useful from secure mode.
-                  tranType = TLB::HypMode;
-                  mode     = BaseTLB::Read;
-                  break;
-                case MISCREG_ATS1HW:
-                  tranType = TLB::HypMode;
-                  mode     = BaseTLB::Write;
-                  break;
-              }
-              // If we're in timing mode then doing the translation in
-              // functional mode then we're slightly distorting performance
-              // results obtained from simulations. The translation should be
-              // done in the same mode the core is running in. NOTE: This
-              // can't be an atomic translation because that causes problems
-              // with unexpected atomic snoop requests.
-              warn("Translating via %s in functional mode! Fix Me!\n",
-                   miscRegName[misc_reg]);
-
-              auto req = std::make_shared<Request>(
-                  val, 0, flags,  Request::funcMasterId,
-                  tc->pcState().pc(), tc->contextId());
-
-              fault = getDTBPtr(tc)->translateFunctional(
-                      req, tc, mode, tranType);
-
-              TTBCR ttbcr = readMiscRegNoEffect(MISCREG_TTBCR);
-              HCR   hcr   = readMiscRegNoEffect(MISCREG_HCR);
-
-              RegVal newVal;
-              if (fault == NoFault) {
-                  Addr paddr = req->getPaddr();
-                  if (haveLPAE && (ttbcr.eae || tranType & TLB::HypMode ||
-                     ((tranType & TLB::S1S2NsTran) && hcr.vm) )) {
-                      newVal = (paddr & mask(39, 12)) |
-                               (getDTBPtr(tc)->getAttr());
-                  } else {
-                      newVal = (paddr & 0xfffff000) |
-                               (getDTBPtr(tc)->getAttr());
-                  }
-                  DPRINTF(MiscRegs,
-                          "MISCREG: Translated addr 0x%08x: PAR: 0x%08x\n",
-                          val, newVal);
-              } else {
-                  ArmFault *armFault = static_cast<ArmFault *>(fault.get());
-                  armFault->update(tc);
-                  // Set fault bit and FSR
-                  FSR fsr = armFault->getFsr(tc);
-
-                  newVal = ((fsr >> 9) & 1) << 11;
-                  if (newVal) {
-                    // LPAE - rearange fault status
-                    newVal |= ((fsr >>  0) & 0x3f) << 1;
-                  } else {
-                    // VMSA - rearange fault status
-                    newVal |= ((fsr >>  0) & 0xf) << 1;
-                    newVal |= ((fsr >> 10) & 0x1) << 5;
-                    newVal |= ((fsr >> 12) & 0x1) << 6;
-                  }
-                  newVal |= 0x1; // F bit
-                  newVal |= ((armFault->iss() >> 7) & 0x1) << 8;
-                  newVal |= armFault->isStage2() ? 0x200 : 0;
-                  DPRINTF(MiscRegs,
-                          "MISCREG: Translated addr 0x%08x fault fsr %#x: PAR: 0x%08x\n",
-                          val, fsr, newVal);
-              }
-              setMiscRegNoEffect(MISCREG_PAR, newVal);
-              return;
-            }
+            addressTranslation(TLB::HypMode, BaseTLB::Write, 0, val);
+            return;
           case MISCREG_TTBCR:
             {
                 TTBCR ttbcr = readMiscRegNoEffect(MISCREG_TTBCR);
@@ -2257,134 +2171,45 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             }
             break;
           case MISCREG_AT_S1E1R_Xt:
+            addressTranslation64(TLB::S1E1Tran, BaseTLB::Read, 0, val);
+            return;
           case MISCREG_AT_S1E1W_Xt:
+            addressTranslation64(TLB::S1E1Tran, BaseTLB::Write, 0, val);
+            return;
           case MISCREG_AT_S1E0R_Xt:
+            addressTranslation64(TLB::S1E0Tran, BaseTLB::Read,
+                TLB::UserMode, val);
+            return;
           case MISCREG_AT_S1E0W_Xt:
+            addressTranslation64(TLB::S1E0Tran, BaseTLB::Write,
+                TLB::UserMode, val);
+            return;
           case MISCREG_AT_S1E2R_Xt:
+            addressTranslation64(TLB::S1E2Tran, BaseTLB::Read, 0, val);
+            return;
           case MISCREG_AT_S1E2W_Xt:
+            addressTranslation64(TLB::S1E2Tran, BaseTLB::Write, 0, val);
+            return;
           case MISCREG_AT_S12E1R_Xt:
+            addressTranslation64(TLB::S12E1Tran, BaseTLB::Read, 0, val);
+            return;
           case MISCREG_AT_S12E1W_Xt:
+            addressTranslation64(TLB::S12E1Tran, BaseTLB::Write, 0, val);
+            return;
           case MISCREG_AT_S12E0R_Xt:
+            addressTranslation64(TLB::S12E0Tran, BaseTLB::Read,
+                TLB::UserMode, val);
+            return;
           case MISCREG_AT_S12E0W_Xt:
+            addressTranslation64(TLB::S12E0Tran, BaseTLB::Write,
+                TLB::UserMode, val);
+            return;
           case MISCREG_AT_S1E3R_Xt:
+            addressTranslation64(TLB::S1E3Tran, BaseTLB::Read, 0, val);
+            return;
           case MISCREG_AT_S1E3W_Xt:
-            {
-                RequestPtr req = std::make_shared<Request>();
-                Request::Flags flags = 0;
-                BaseTLB::Mode mode = BaseTLB::Read;
-                TLB::ArmTranslationType tranType = TLB::NormalTran;
-                Fault fault;
-                switch(misc_reg) {
-                  case MISCREG_AT_S1E1R_Xt:
-                    tranType = TLB::S1E1Tran;
-                    mode     = BaseTLB::Read;
-                    break;
-                  case MISCREG_AT_S1E1W_Xt:
-                    tranType = TLB::S1E1Tran;
-                    mode     = BaseTLB::Write;
-                    break;
-                  case MISCREG_AT_S1E0R_Xt:
-                    flags    = TLB::UserMode;
-                    tranType = TLB::S1E0Tran;
-                    mode     = BaseTLB::Read;
-                    break;
-                  case MISCREG_AT_S1E0W_Xt:
-                    flags    = TLB::UserMode;
-                    tranType = TLB::S1E0Tran;
-                    mode     = BaseTLB::Write;
-                    break;
-                  case MISCREG_AT_S1E2R_Xt:
-                    tranType = TLB::S1E2Tran;
-                    mode     = BaseTLB::Read;
-                    break;
-                  case MISCREG_AT_S1E2W_Xt:
-                    tranType = TLB::S1E2Tran;
-                    mode     = BaseTLB::Write;
-                    break;
-                  case MISCREG_AT_S12E0R_Xt:
-                    flags    = TLB::UserMode;
-                    tranType = TLB::S12E0Tran;
-                    mode     = BaseTLB::Read;
-                    break;
-                  case MISCREG_AT_S12E0W_Xt:
-                    flags    = TLB::UserMode;
-                    tranType = TLB::S12E0Tran;
-                    mode     = BaseTLB::Write;
-                    break;
-                  case MISCREG_AT_S12E1R_Xt:
-                    tranType = TLB::S12E1Tran;
-                    mode     = BaseTLB::Read;
-                    break;
-                  case MISCREG_AT_S12E1W_Xt:
-                    tranType = TLB::S12E1Tran;
-                    mode     = BaseTLB::Write;
-                    break;
-                  case MISCREG_AT_S1E3R_Xt:
-                    tranType = TLB::S1E3Tran;
-                    mode     = BaseTLB::Read;
-                    break;
-                  case MISCREG_AT_S1E3W_Xt:
-                    tranType = TLB::S1E3Tran;
-                    mode     = BaseTLB::Write;
-                    break;
-                }
-                // If we're in timing mode then doing the translation in
-                // functional mode then we're slightly distorting performance
-                // results obtained from simulations. The translation should be
-                // done in the same mode the core is running in. NOTE: This
-                // can't be an atomic translation because that causes problems
-                // with unexpected atomic snoop requests.
-                warn("Translating via %s in functional mode! Fix Me!\n",
-                     miscRegName[misc_reg]);
-
-                req->setVirt(val, 0, flags,  Request::funcMasterId,
-                             tc->pcState().pc());
-                req->setContext(tc->contextId());
-                fault = getDTBPtr(tc)->translateFunctional(req, tc, mode,
-                                                           tranType);
-
-                RegVal newVal;
-                if (fault == NoFault) {
-                    Addr paddr = req->getPaddr();
-                    uint64_t attr = getDTBPtr(tc)->getAttr();
-                    uint64_t attr1 = attr >> 56;
-                    if (!attr1 || attr1 ==0x44) {
-                        attr |= 0x100;
-                        attr &= ~ uint64_t(0x80);
-                    }
-                    newVal = (paddr & mask(47, 12)) | attr;
-                    DPRINTF(MiscRegs,
-                          "MISCREG: Translated addr %#x: PAR_EL1: %#xx\n",
-                          val, newVal);
-                } else {
-                    ArmFault *armFault = static_cast<ArmFault *>(fault.get());
-                    armFault->update(tc);
-                    // Set fault bit and FSR
-                    FSR fsr = armFault->getFsr(tc);
-
-                    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-                    if (cpsr.width) { // AArch32
-                        newVal = ((fsr >> 9) & 1) << 11;
-                        // rearrange fault status
-                        newVal |= ((fsr >>  0) & 0x3f) << 1;
-                        newVal |= 0x1; // F bit
-                        newVal |= ((armFault->iss() >> 7) & 0x1) << 8;
-                        newVal |= armFault->isStage2() ? 0x200 : 0;
-                    } else { // AArch64
-                        newVal = 1; // F bit
-                        newVal |= fsr << 1; // FST
-                        // TODO: DDI 0487A.f D7-2083, AbortFault's s1ptw bit.
-                        newVal |= armFault->isStage2() ? 1 << 8 : 0; // PTW
-                        newVal |= armFault->isStage2() ? 1 << 9 : 0; // S
-                        newVal |= 1 << 11; // RES1
-                    }
-                    DPRINTF(MiscRegs,
-                            "MISCREG: Translated addr %#x fault fsr %#x: PAR: %#x\n",
-                            val, fsr, newVal);
-                }
-                setMiscRegNoEffect(MISCREG_PAR_EL1, newVal);
-                return;
-            }
+            addressTranslation64(TLB::S1E3Tran, BaseTLB::Write, 0, val);
+            return;
           case MISCREG_SPSR_EL3:
           case MISCREG_SPSR_EL2:
           case MISCREG_SPSR_EL1:
@@ -2499,6 +2324,135 @@ ISA::zeroSveVecRegUpperPart(VecRegContainer &vc, unsigned eCount)
     for (int i = 2; i < eCount; ++i) {
         vv[i] = 0;
     }
+}
+
+void
+ISA::addressTranslation64(TLB::ArmTranslationType tran_type,
+    BaseTLB::Mode mode, Request::Flags flags, RegVal val)
+{
+    // If we're in timing mode then doing the translation in
+    // functional mode then we're slightly distorting performance
+    // results obtained from simulations. The translation should be
+    // done in the same mode the core is running in. NOTE: This
+    // can't be an atomic translation because that causes problems
+    // with unexpected atomic snoop requests.
+    warn_once("Doing AT (address translation) in functional mode! Fix Me!\n");
+
+    auto req = std::make_shared<Request>(
+        val, 0, flags,  Request::funcMasterId,
+        tc->pcState().pc(), tc->contextId());
+
+    Fault fault = getDTBPtr(tc)->translateFunctional(
+        req, tc, mode, tran_type);
+
+    RegVal newVal;
+    if (fault == NoFault) {
+        Addr paddr = req->getPaddr();
+        uint64_t attr = getDTBPtr(tc)->getAttr();
+        uint64_t attr1 = attr >> 56;
+        if (!attr1 || attr1 ==0x44) {
+            attr |= 0x100;
+            attr &= ~ uint64_t(0x80);
+        }
+        newVal = (paddr & mask(47, 12)) | attr;
+        DPRINTF(MiscRegs,
+              "MISCREG: Translated addr %#x: PAR_EL1: %#xx\n",
+              val, newVal);
+    } else {
+        ArmFault *armFault = static_cast<ArmFault *>(fault.get());
+        armFault->update(tc);
+        // Set fault bit and FSR
+        FSR fsr = armFault->getFsr(tc);
+
+        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+        if (cpsr.width) { // AArch32
+            newVal = ((fsr >> 9) & 1) << 11;
+            // rearrange fault status
+            newVal |= ((fsr >>  0) & 0x3f) << 1;
+            newVal |= 0x1; // F bit
+            newVal |= ((armFault->iss() >> 7) & 0x1) << 8;
+            newVal |= armFault->isStage2() ? 0x200 : 0;
+        } else { // AArch64
+            newVal = 1; // F bit
+            newVal |= fsr << 1; // FST
+            // TODO: DDI 0487A.f D7-2083, AbortFault's s1ptw bit.
+            newVal |= armFault->isStage2() ? 1 << 8 : 0; // PTW
+            newVal |= armFault->isStage2() ? 1 << 9 : 0; // S
+            newVal |= 1 << 11; // RES1
+        }
+        DPRINTF(MiscRegs,
+                "MISCREG: Translated addr %#x fault fsr %#x: PAR: %#x\n",
+                val, fsr, newVal);
+    }
+    setMiscRegNoEffect(MISCREG_PAR_EL1, newVal);
+    return;
+}
+
+void
+ISA::addressTranslation(TLB::ArmTranslationType tran_type,
+    BaseTLB::Mode mode, Request::Flags flags, RegVal val)
+{
+    // If we're in timing mode then doing the translation in
+    // functional mode then we're slightly distorting performance
+    // results obtained from simulations. The translation should be
+    // done in the same mode the core is running in. NOTE: This
+    // can't be an atomic translation because that causes problems
+    // with unexpected atomic snoop requests.
+    warn_once("Doing AT (address translation) in functional mode! Fix Me!\n");
+
+    auto req = std::make_shared<Request>(
+        val, 0, flags,  Request::funcMasterId,
+        tc->pcState().pc(), tc->contextId());
+
+    Fault fault = getDTBPtr(tc)->translateFunctional(
+        req, tc, mode, tran_type);
+
+    RegVal newVal;
+    if (fault == NoFault) {
+        Addr paddr = req->getPaddr();
+        TTBCR ttbcr = readMiscRegNoEffect(MISCREG_TTBCR);
+        HCR hcr = readMiscRegNoEffect(MISCREG_HCR);
+
+        uint8_t max_paddr_bit = 0;
+        if (haveLPAE && (ttbcr.eae || tran_type & TLB::HypMode ||
+            ((tran_type & TLB::S1S2NsTran) && hcr.vm) )) {
+
+            max_paddr_bit = 39;
+        } else {
+            max_paddr_bit = 31;
+        }
+
+        newVal = (paddr & mask(max_paddr_bit, 12)) |
+            (getDTBPtr(tc)->getAttr());
+
+        DPRINTF(MiscRegs,
+               "MISCREG: Translated addr 0x%08x: PAR: 0x%08x\n",
+               val, newVal);
+    } else {
+        ArmFault *armFault = static_cast<ArmFault *>(fault.get());
+        armFault->update(tc);
+        // Set fault bit and FSR
+        FSR fsr = armFault->getFsr(tc);
+
+        newVal = ((fsr >> 9) & 1) << 11;
+        if (newVal) {
+            // LPAE - rearange fault status
+            newVal |= ((fsr >>  0) & 0x3f) << 1;
+        } else {
+            // VMSA - rearange fault status
+            newVal |= ((fsr >>  0) & 0xf) << 1;
+            newVal |= ((fsr >> 10) & 0x1) << 5;
+            newVal |= ((fsr >> 12) & 0x1) << 6;
+        }
+        newVal |= 0x1; // F bit
+        newVal |= ((armFault->iss() >> 7) & 0x1) << 8;
+        newVal |= armFault->isStage2() ? 0x200 : 0;
+        DPRINTF(MiscRegs,
+               "MISCREG: Translated addr 0x%08x fault fsr %#x: PAR: 0x%08x\n",
+               val, fsr, newVal);
+    }
+    setMiscRegNoEffect(MISCREG_PAR, newVal);
+    return;
 }
 
 ISA::MiscRegLUTEntryInitializer::chain
