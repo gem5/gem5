@@ -2364,22 +2364,13 @@ ISA::addressTranslation64(TLB::ArmTranslationType tran_type,
         // Set fault bit and FSR
         FSR fsr = armFault->getFsr(tc);
 
-        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-        if (cpsr.width) { // AArch32
-            newVal = ((fsr >> 9) & 1) << 11;
-            // rearrange fault status
-            newVal |= ((fsr >>  0) & 0x3f) << 1;
-            newVal |= 0x1; // F bit
-            newVal |= ((armFault->iss() >> 7) & 0x1) << 8;
-            newVal |= armFault->isStage2() ? 0x200 : 0;
-        } else { // AArch64
-            newVal = 1; // F bit
-            newVal |= fsr << 1; // FST
-            // TODO: DDI 0487A.f D7-2083, AbortFault's s1ptw bit.
-            newVal |= armFault->isStage2() ? 1 << 8 : 0; // PTW
-            newVal |= armFault->isStage2() ? 1 << 9 : 0; // S
-            newVal |= 1 << 11; // RES1
-        }
+        newVal = 1; // F bit
+        newVal |= fsr << 1; // FST
+        // TODO: DDI 0487A.f D7-2083, AbortFault's s1ptw bit.
+        newVal |= armFault->isStage2() ? 1 << 8 : 0; // PTW
+        newVal |= armFault->isStage2() ? 1 << 9 : 0; // S
+        newVal |= 1 << 11; // RES1
+
         DPRINTF(MiscRegs,
                 "MISCREG: Translated addr %#x fault fsr %#x: PAR: %#x\n",
                 val, fsr, newVal);
