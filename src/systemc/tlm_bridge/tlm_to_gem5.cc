@@ -162,8 +162,15 @@ TlmToGem5Bridge<BITWIDTH>::handleBeginReq(tlm::tlm_generic_payload &trans)
     auto tlmSenderState = new TlmSenderState(trans);
     pkt->pushSenderState(tlmSenderState);
 
+    // If the packet doesn't need a response, we should send BEGIN_RESP by
+    // ourselves.
+    bool needsResponse = pkt->needsResponse();
     if (bmp.sendTimingReq(pkt)) { // port is free -> send END_REQ immediately
         sendEndReq(trans);
+        if (!needsResponse) {
+            auto delay = sc_core::SC_ZERO_TIME;
+            sendBeginResp(trans, delay);
+        }
         trans.release();
     } else { // port is blocked -> wait for retry before sending END_REQ
         waitForRetry = true;
@@ -429,12 +436,19 @@ TlmToGem5Bridge<BITWIDTH>::recvReqRetry()
     sc_assert(pendingRequest != nullptr);
     sc_assert(pendingPacket != nullptr);
 
+    // If the packet doesn't need a response, we should send BEGIN_RESP by
+    // ourselves.
+    bool needsResponse = pendingPacket->needsResponse();
     if (bmp.sendTimingReq(pendingPacket)) {
         waitForRetry = false;
         pendingPacket = nullptr;
 
         auto &trans = *pendingRequest;
         sendEndReq(trans);
+        if (!needsResponse) {
+            auto delay = sc_core::SC_ZERO_TIME;
+            sendBeginResp(trans, delay);
+        }
         trans.release();
 
         pendingRequest = nullptr;
