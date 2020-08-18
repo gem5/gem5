@@ -60,13 +60,15 @@ CSROp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
     ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", ";
-    if (_numSrcRegs > 0)
-        ss << registerName(_srcRegIdx[0]) << ", ";
     auto data = CSRData.find(csr);
     if (data != CSRData.end())
         ss << data->second.name;
     else
-        ss << "?? (" << hex << "0x" << csr << ")";
+        ss << "?? (" << hex << "0x" << csr << dec << ")";
+    if (_numSrcRegs > 0)
+        ss << ", " << registerName(_srcRegIdx[0]);
+    else
+        ss << uimm;
     return ss.str();
 }
 
