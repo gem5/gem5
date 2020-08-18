@@ -217,63 +217,6 @@ TLB::unserialize(CheckpointIn &cp)
     }
 }
 
-void
-TLB::regStats()
-{
-    BaseTLB::regStats();
-
-    read_hits
-        .name(name() + ".read_hits")
-        .desc("DTB read hits")
-        ;
-
-    read_misses
-        .name(name() + ".read_misses")
-        .desc("DTB read misses")
-        ;
-
-
-    read_accesses
-        .name(name() + ".read_accesses")
-        .desc("DTB read accesses")
-        ;
-
-    write_hits
-        .name(name() + ".write_hits")
-        .desc("DTB write hits")
-        ;
-
-    write_misses
-        .name(name() + ".write_misses")
-        .desc("DTB write misses")
-        ;
-
-
-    write_accesses
-        .name(name() + ".write_accesses")
-        .desc("DTB write accesses")
-        ;
-
-    hits
-        .name(name() + ".hits")
-        .desc("DTB hits")
-        ;
-
-    misses
-        .name(name() + ".misses")
-        .desc("DTB misses")
-        ;
-
-    accesses
-        .name(name() + ".accesses")
-        .desc("DTB accesses")
-        ;
-
-    hits = read_hits + write_hits;
-    misses = read_misses + write_misses;
-    accesses = read_accesses + write_accesses;
-}
-
 Fault
 TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode)
 {

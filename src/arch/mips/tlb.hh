@@ -61,18 +61,6 @@ class TLB : public BaseTLB
     void nextnlu() { if (++nlu >= size) nlu = 0; }
     MipsISA::PTE *lookup(Addr vpn, uint8_t asn) const;
 
-    mutable Stats::Scalar read_hits;
-    mutable Stats::Scalar read_misses;
-    mutable Stats::Scalar read_acv;
-    mutable Stats::Scalar read_accesses;
-    mutable Stats::Scalar write_hits;
-    mutable Stats::Scalar write_misses;
-    mutable Stats::Scalar write_acv;
-    mutable Stats::Scalar write_accesses;
-    Stats::Formula hits;
-    Stats::Formula misses;
-    Stats::Formula accesses;
-
   public:
     typedef MipsTLBParams Params;
     TLB(const Params *p);
@@ -103,8 +91,6 @@ class TLB : public BaseTLB
     // Checkpointing
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
-
-    void regStats() override;
 
     Fault translateAtomic(
             const RequestPtr &req, ThreadContext *tc, Mode mode) override;
