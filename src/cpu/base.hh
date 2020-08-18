@@ -52,7 +52,6 @@
 #else
 #include "arch/generic/interrupts.hh"
 #include "arch/isa_traits.hh"
-#include "arch/microcode_rom.hh"
 #include "base/statistics.hh"
 #include "mem/port_proxy.hh"
 #include "sim/clocked_object.hh"
@@ -212,8 +211,6 @@ class BaseCPU : public ClockedObject
     inline void workItemEnd() { numWorkItemsCompleted++; }
     // @todo remove me after debugging with legion done
     Tick instCount() { return instCnt; }
-
-    TheISA::MicrocodeRom microcodeRom;
 
   protected:
     std::vector<BaseInterrupts*> interrupts;
