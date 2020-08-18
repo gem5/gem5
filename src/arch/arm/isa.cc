@@ -2345,7 +2345,7 @@ ISA::addressTranslation64(TLB::ArmTranslationType tran_type,
     Fault fault = getDTBPtr(tc)->translateFunctional(
         req, tc, mode, tran_type);
 
-    RegVal newVal;
+    PAR par = 0;
     if (fault == NoFault) {
         Addr paddr = req->getPaddr();
         uint64_t attr = getDTBPtr(tc)->getAttr();
@@ -2354,28 +2354,26 @@ ISA::addressTranslation64(TLB::ArmTranslationType tran_type,
             attr |= 0x100;
             attr &= ~ uint64_t(0x80);
         }
-        newVal = (paddr & mask(47, 12)) | attr;
+        par = (paddr & mask(47, 12)) | attr;
         DPRINTF(MiscRegs,
               "MISCREG: Translated addr %#x: PAR_EL1: %#xx\n",
-              val, newVal);
+              val, par);
     } else {
         ArmFault *armFault = static_cast<ArmFault *>(fault.get());
         armFault->update(tc);
         // Set fault bit and FSR
         FSR fsr = armFault->getFsr(tc);
 
-        newVal = 1; // F bit
-        newVal |= fsr << 1; // FST
-        // TODO: DDI 0487A.f D7-2083, AbortFault's s1ptw bit.
-        newVal |= armFault->isStage2() ? 1 << 8 : 0; // PTW
-        newVal |= armFault->isStage2() ? 1 << 9 : 0; // S
-        newVal |= 1 << 11; // RES1
+        par.f = 1; // F bit
+        par.fst = fsr.status; // FST
+        par.ptw = (armFault->iss() >> 7) & 0x1; // S1PTW
+        par.s = armFault->isStage2() ? 1 : 0; // S
 
         DPRINTF(MiscRegs,
                 "MISCREG: Translated addr %#x fault fsr %#x: PAR: %#x\n",
-                val, fsr, newVal);
+                val, fsr, par);
     }
-    setMiscRegNoEffect(MISCREG_PAR_EL1, newVal);
+    setMiscRegNoEffect(MISCREG_PAR_EL1, par);
     return;
 }
 
@@ -2398,7 +2396,7 @@ ISA::addressTranslation(TLB::ArmTranslationType tran_type,
     Fault fault = getDTBPtr(tc)->translateFunctional(
         req, tc, mode, tran_type);
 
-    RegVal newVal;
+    PAR par = 0;
     if (fault == NoFault) {
         Addr paddr = req->getPaddr();
         TTBCR ttbcr = readMiscRegNoEffect(MISCREG_TTBCR);
@@ -2413,36 +2411,36 @@ ISA::addressTranslation(TLB::ArmTranslationType tran_type,
             max_paddr_bit = 31;
         }
 
-        newVal = (paddr & mask(max_paddr_bit, 12)) |
+        par = (paddr & mask(max_paddr_bit, 12)) |
             (getDTBPtr(tc)->getAttr());
 
         DPRINTF(MiscRegs,
                "MISCREG: Translated addr 0x%08x: PAR: 0x%08x\n",
-               val, newVal);
+               val, par);
     } else {
         ArmFault *armFault = static_cast<ArmFault *>(fault.get());
         armFault->update(tc);
         // Set fault bit and FSR
         FSR fsr = armFault->getFsr(tc);
 
-        newVal = ((fsr >> 9) & 1) << 11;
-        if (newVal) {
+        par.f = 0x1; // F bit
+        par.lpae = fsr.lpae;
+        par.ptw = (armFault->iss() >> 7) & 0x1;
+        par.s = armFault->isStage2() ? 1 : 0;
+
+        if (par.lpae) {
             // LPAE - rearange fault status
-            newVal |= ((fsr >>  0) & 0x3f) << 1;
+            par.fst = fsr.status;
         } else {
             // VMSA - rearange fault status
-            newVal |= ((fsr >>  0) & 0xf) << 1;
-            newVal |= ((fsr >> 10) & 0x1) << 5;
-            newVal |= ((fsr >> 12) & 0x1) << 6;
+            par.fs4_0 = fsr.fsLow | (fsr.fsHigh << 5);
+            par.fs5 = fsr.ext;
         }
-        newVal |= 0x1; // F bit
-        newVal |= ((armFault->iss() >> 7) & 0x1) << 8;
-        newVal |= armFault->isStage2() ? 0x200 : 0;
         DPRINTF(MiscRegs,
                "MISCREG: Translated addr 0x%08x fault fsr %#x: PAR: 0x%08x\n",
-               val, fsr, newVal);
+               val, fsr, par);
     }
-    setMiscRegNoEffect(MISCREG_PAR, newVal);
+    setMiscRegNoEffect(MISCREG_PAR, par);
     return;
 }
 

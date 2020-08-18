@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 ARM Limited
+ * Copyright (c) 2010-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -650,7 +650,12 @@ namespace ArmISA
         Bitfield<39, 12> pa;
         Bitfield<11>     lpae;
         Bitfield<9>      ns;
+        Bitfield<9>      s;
         Bitfield<8, 7>   sh;
+        Bitfield<8>      ptw;
+        Bitfield<6, 1>   fst;
+        Bitfield<6>      fs5;
+        Bitfield<5, 1>   fs4_0;
         Bitfield<0>      f;
    EndBitUnion(PAR)
 
