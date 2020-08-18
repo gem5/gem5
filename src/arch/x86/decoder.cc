@@ -37,6 +37,8 @@
 namespace X86ISA
 {
 
+X86ISAInst::MicrocodeRom Decoder::microcodeRom;
+
 Decoder::State
 Decoder::doResetState()
 {
@@ -723,6 +725,12 @@ Decoder::decode(PCState &nextPC)
 
     si = decode(emi, origPC);
     return si;
+}
+
+StaticInstPtr
+Decoder::fetchRomMicroop(MicroPC micropc, StaticInstPtr curMacroop)
+{
+    return microcodeRom.fetchMicroop(micropc, curMacroop);
 }
 
 }

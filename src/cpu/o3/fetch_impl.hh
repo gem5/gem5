@@ -1316,7 +1316,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             bool newMacro = false;
             if (curMacroop || inRom) {
                 if (inRom) {
-                    staticInst = cpu->microcodeRom.fetchMicroop(
+                    staticInst = decoder[tid]->fetchRomMicroop(
                             thisPC.microPC(), curMacroop);
                 } else {
                     staticInst = curMacroop->fetchMicroop(thisPC.microPC());

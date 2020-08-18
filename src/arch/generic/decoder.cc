@@ -25,17 +25,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_GENERIC_DECODER_HH__
-#define __ARCH_GENERIC_DECODER_HH__
+#include "arch/generic/decoder.hh"
 
-#include "base/types.hh"
-#include "cpu/static_inst_fwd.hh"
+#include "base/logging.hh"
 
-class InstDecoder
+StaticInstPtr
+InstDecoder::fetchRomMicroop(MicroPC micropc, StaticInstPtr curMacroop)
 {
-  public:
-    virtual StaticInstPtr fetchRomMicroop(
-            MicroPC micropc, StaticInstPtr curMacroop);
-};
-
-#endif // __ARCH_DECODER_GENERIC_HH__
+    panic("ROM based microcode isn't implemented.");
+}

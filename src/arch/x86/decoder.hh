@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "arch/generic/decoder.hh"
+#include "arch/x86/microcode_rom.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/types.hh"
 #include "base/bitfield.hh"
@@ -66,6 +67,8 @@ class Decoder : public InstDecoder
     static ByteTable ImmediateTypeThreeByte0F38;
     static ByteTable ImmediateTypeThreeByte0F3A;
     static ByteTable ImmediateTypeVex[10];
+
+    static X86ISAInst::MicrocodeRom microcodeRom;
 
   protected:
     struct InstBytes
@@ -332,6 +335,9 @@ class Decoder : public InstDecoder
     /// @retval A pointer to the corresponding StaticInst object.
     StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
     StaticInstPtr decode(X86ISA::PCState &nextPC);
+
+    StaticInstPtr fetchRomMicroop(
+            MicroPC micropc, StaticInstPtr curMacroop) override;
 };
 
 } // namespace X86ISA

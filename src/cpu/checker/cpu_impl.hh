@@ -287,8 +287,8 @@ Checker<Impl>::verify(const DynInstPtr &completed_inst)
 
                 if (isRomMicroPC(pcState.microPC())) {
                     fetchDone = true;
-                    curStaticInst =
-                        microcodeRom.fetchMicroop(pcState.microPC(), NULL);
+                    curStaticInst = thread->decoder.fetchRomMicroop(
+                            pcState.microPC(), nullptr);
                 } else if (!curMacroStaticInst) {
                     //We're not in the middle of a macro instruction
                     StaticInstPtr instPtr = nullptr;
