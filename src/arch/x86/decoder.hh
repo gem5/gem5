@@ -33,6 +33,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "arch/generic/decoder.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/types.hh"
 #include "base/bitfield.hh"
@@ -47,7 +48,7 @@ namespace X86ISA
 {
 
 class ISA;
-class Decoder
+class Decoder : public InstDecoder
 {
   private:
     //These are defined and documented in decoder_tables.cc

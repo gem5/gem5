@@ -31,6 +31,7 @@
 #define __ARCH_RISCV_DECODER_HH__
 
 #include "arch/generic/decode_cache.hh"
+#include "arch/generic/decoder.hh"
 #include "arch/riscv/isa_traits.hh"
 #include "arch/riscv/types.hh"
 #include "base/logging.hh"
@@ -42,7 +43,7 @@ namespace RiscvISA
 {
 
 class ISA;
-class Decoder
+class Decoder : public InstDecoder
 {
   private:
     DecodeCache::InstMap<ExtMachInst> instMap;
