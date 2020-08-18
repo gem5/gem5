@@ -101,11 +101,14 @@ namespace X86ISA
 
         AddrRange m5opRange;
 
-        // Statistics
-        Stats::Scalar rdAccesses;
-        Stats::Scalar wrAccesses;
-        Stats::Scalar rdMisses;
-        Stats::Scalar wrMisses;
+        struct TlbStats : public Stats::Group {
+            TlbStats(Stats::Group *parent);
+
+            Stats::Scalar rdAccesses;
+            Stats::Scalar wrAccesses;
+            Stats::Scalar rdMisses;
+            Stats::Scalar wrMisses;
+        } stats;
 
         Fault translateInt(bool read, RequestPtr req, ThreadContext *tc);
 
@@ -148,11 +151,6 @@ namespace X86ISA
                                Mode mode) const override;
 
         TlbEntry *insert(Addr vpn, const TlbEntry &entry);
-
-        /*
-         * Function to register Stats
-         */
-        void regStats() override;
 
         // Checkpointing
         void serialize(CheckpointOut &cp) const override;

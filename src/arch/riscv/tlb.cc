@@ -66,7 +66,7 @@ buildKey(Addr vpn, uint16_t asid)
 }
 
 TLB::TLB(const Params *p)
-    : BaseTLB(p), size(p->size), tlb(size), lruSeq(0)
+    : BaseTLB(p), size(p->size), tlb(size), lruSeq(0), stats(this)
 {
     for (size_t x = 0; x < size; x++) {
         tlb[x].trieHandle = NULL;
@@ -108,21 +108,21 @@ TLB::lookup(Addr vpn, uint16_t asid, Mode mode, bool hidden)
             entry->lruSeq = nextSeq();
 
         if (mode == Write)
-            write_accesses++;
+            stats.write_accesses++;
         else
-            read_accesses++;
+            stats.read_accesses++;
 
         if (!entry) {
             if (mode == Write)
-                write_misses++;
+                stats.write_misses++;
             else
-                read_misses++;
+                stats.read_misses++;
         }
         else {
             if (mode == Write)
-                write_hits++;
+                stats.write_hits++;
             else
-                read_hits++;
+                stats.read_hits++;
         }
 
         DPRINTF(TLBVerbose, "lookup(vpn=%#x, asid=%#x): %s ppn %#x\n",
@@ -496,61 +496,20 @@ TLB::unserialize(CheckpointIn &cp)
     }
 }
 
-void
-TLB::regStats()
+TLB::TlbStats::TlbStats(Stats::Group *parent)
+  : Stats::Group(parent),
+    ADD_STAT(read_hits, "read hits"),
+    ADD_STAT(read_misses, "read misses"),
+    ADD_STAT(read_accesses, "read accesses"),
+    ADD_STAT(write_hits, "write hits"),
+    ADD_STAT(write_misses, "write misses"),
+    ADD_STAT(write_accesses, "write accesses"),
+    ADD_STAT(hits, "Total TLB (read and write) hits", read_hits + write_hits),
+    ADD_STAT(misses, "Total TLB (read and write) misses",
+        read_misses + write_misses),
+    ADD_STAT(accesses, "Total TLB (read and write) accesses",
+        read_accesses + write_accesses)
 {
-    BaseTLB::regStats();
-
-    read_hits
-        .name(name() + ".read_hits")
-        .desc("DTB read hits")
-        ;
-
-    read_misses
-        .name(name() + ".read_misses")
-        .desc("DTB read misses")
-        ;
-
-
-    read_accesses
-        .name(name() + ".read_accesses")
-        .desc("DTB read accesses")
-        ;
-
-    write_hits
-        .name(name() + ".write_hits")
-        .desc("DTB write hits")
-        ;
-
-    write_misses
-        .name(name() + ".write_misses")
-        .desc("DTB write misses")
-        ;
-
-
-    write_accesses
-        .name(name() + ".write_accesses")
-        .desc("DTB write accesses")
-        ;
-
-    hits
-        .name(name() + ".hits")
-        .desc("DTB hits")
-        ;
-
-    misses
-        .name(name() + ".misses")
-        .desc("DTB misses")
-        ;
-
-    accesses
-        .name(name() + ".accesses")
-        .desc("DTB accesses")
-        ;
-
-    hits = read_hits + write_hits;
-    misses = read_misses + write_misses;
-    accesses = read_accesses + write_accesses;
 }
 
 RiscvISA::TLB *
