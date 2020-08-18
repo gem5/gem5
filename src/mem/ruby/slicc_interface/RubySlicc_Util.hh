@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -61,6 +61,8 @@
 inline Cycles zero_time() { return Cycles(0); }
 
 inline Cycles intToCycles(int c) { return Cycles(c); }
+
+inline Tick intToTick(int c) { return c; }
 
 inline NodeID
 intToID(int nodenum)
