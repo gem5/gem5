@@ -26,6 +26,7 @@
 
 import m5
 from m5.objects import *
+from caches import *
 import sys
 import argparse
 
@@ -43,6 +44,7 @@ root.system.clk_domain = SrcClockDomain()
 root.system.clk_domain.clock = '3GHz'
 root.system.clk_domain.voltage_domain = VoltageDomain()
 root.system.mem_mode = 'timing'
+root.system.mem_ranges = [AddrRange('512MB')]
 
 if args.cpu_type == 'DerivO3CPU':
     root.system.cpu = [DerivO3CPU(cpu_id = i)
@@ -54,11 +56,45 @@ else:
     print("ERROR: CPU Type '" + args.cpu_type + "' not supported")
     sys.exit(1)
 
+root.system.membus = SystemXBar()
+root.system.membus.badaddr_responder = BadAddr()
+root.system.membus.default = root.system.membus.badaddr_responder.pio
+
+root.system.system_port = root.system.membus.slave
+
 process = Process(executable = args.cmd,
                   cmd = [args.cmd, str(args.num_cores)])
 
-for i in range(int(args.num_cores)):
-    root.system.cpu[i].workload = process
+for cpu in root.system.cpu:
+    cpu.workload = process
+    cpu.createThreads()
+    cpu.createInterruptController()
+
+    # Create a memory bus, a coherent crossbar, in this case
+    cpu.l2bus = L2XBar()
+
+    # Create an L1 instruction and data cache
+    cpu.icache = L1ICache()
+    cpu.dcache = L1DCache()
+
+    # Connect the instruction and data caches to the CPU
+    cpu.icache.connectCPU(cpu)
+    cpu.dcache.connectCPU(cpu)
+
+    # Hook the CPU ports up to the l2bus
+    cpu.icache.connectBus(cpu.l2bus)
+    cpu.dcache.connectBus(cpu.l2bus)
+
+    # Create an L2 cache and connect it to the l2bus
+    cpu.l2cache = L2Cache()
+    cpu.l2cache.connectCPUSideBus(cpu.l2bus)
+
+    # Connect the L2 cache to the L3 bus
+    cpu.l2cache.connectMemSideBus(root.system.membus)
+
+root.system.mem_ctrl = DDR3_1600_8x8()
+root.system.mem_ctrl.range = root.system.mem_ranges[0]
+root.system.mem_ctrl.port = root.system.membus.master
 
 m5.instantiate()
 exit_event = m5.simulate()

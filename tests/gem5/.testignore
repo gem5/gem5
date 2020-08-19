@@ -59,17 +59,5 @@ test-insttest-rv64i-linux-TimingSimpleCPU-RISCV-aarch64-fast
 test-insttest-rv64i-linux-DerivO3CPU-RISCV-aarch64-fast
 test-insttest-linux-AtomicSimpleCPU-SPARC-aarch64-fast
 test-insttest-linux-TimingSimpleCPU-SPARC-aarch64-fast
-test-atomic-DerivO3CPU-SPARC-x86_64-opt
-test-atomic-TimingSimpleCPU-SPARC-x86_64-opt
-test-atomic-DerivO3CPU-SPARC-x86_64-debug
-test-atomic-TimingSimpleCPU-SPARC-x86_64-debug
-test-atomic-DerivO3CPU-SPARC-x86_64-fast
-test-atomic-TimingSimpleCPU-SPARC-x86_64-fast
-test-atomic-DerivO3CPU-SPARC-aarch64-opt
-test-atomic-TimingSimpleCPU-SPARC-aarch64-opt
-test-atomic-DerivO3CPU-SPARC-aarch64-debug
-test-atomic-TimingSimpleCPU-SPARC-aarch64-debug
-test-atomic-DerivO3CPU-SPARC-aarch64-fast
-test-atomic-TimingSimpleCPU-SPARC-aarch64-fast
 realview-o3-checker-ARM-x86_64-opt
 realview64-o3-checker-ARM-x86_64-opt
