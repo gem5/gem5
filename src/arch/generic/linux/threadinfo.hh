@@ -41,6 +41,8 @@ class ThreadInfo
     System *sys;
     Addr pcbb;
 
+    ByteOrder byteOrder;
+
     template <typename T>
     bool
     get_data(const char *symbol, T &data)
@@ -54,14 +56,15 @@ class ThreadInfo
             return false;
         }
 
-        data = tc->getVirtProxy().read<T>(it->address, TheISA::GuestByteOrder);
+        data = tc->getVirtProxy().read<T>(it->address, byteOrder);
 
         return true;
     }
 
   public:
     ThreadInfo(ThreadContext *_tc, Addr _pcbb = 0)
-        : tc(_tc), sys(tc->getSystemPtr()), pcbb(_pcbb)
+        : tc(_tc), sys(tc->getSystemPtr()), pcbb(_pcbb),
+        byteOrder(tc->getSystemPtr()->getGuestByteOrder())
     {
 
     }
