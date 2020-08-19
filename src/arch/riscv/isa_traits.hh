@@ -57,9 +57,6 @@ const Addr PageBytes = ULL(1) << PageShift;
 // Memory accesses can be unaligned (at least for double-word memory accesses)
 const bool HasUnalignedMemAcc = true;
 
-const bool CurThreadInfoImplemented = false;
-const int CurThreadInfoReg = -1;
-
 }
 
 #endif //__ARCH_RISCV_ISA_TRAITS_HH__

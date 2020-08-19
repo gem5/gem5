@@ -138,9 +138,6 @@ const uint32_t ITOUCH_ANNOTE = 0xffffffff;
 
 const bool HasUnalignedMemAcc = true;
 
-const bool CurThreadInfoImplemented = false;
-const int CurThreadInfoReg = -1;
-
 } // namespace MipsISA
 
 #endif // __ARCH_MIPS_ISA_TRAITS_HH__

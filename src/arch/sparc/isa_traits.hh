@@ -47,9 +47,6 @@ StaticInstPtr decodeInst(ExtMachInst);
 // Memory accesses cannot be unaligned
 const bool HasUnalignedMemAcc = false;
 
-const bool CurThreadInfoImplemented = false;
-const int CurThreadInfoReg = -1;
-
 }
 
 #endif // __ARCH_SPARC_ISA_TRAITS_HH__

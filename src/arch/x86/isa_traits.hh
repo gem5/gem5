@@ -52,9 +52,6 @@ namespace X86ISA
 
     // Memory accesses can be unaligned
     const bool HasUnalignedMemAcc = true;
-
-    const bool CurThreadInfoImplemented = false;
-    const int CurThreadInfoReg = -1;
 }
 
 #endif // __ARCH_X86_ISATRAITS_HH__
