@@ -46,15 +46,8 @@ IndirectMemory::IndirectMemory(const IndirectMemoryPrefetcherParams *p)
     ipd(p->ipd_table_assoc, p->ipd_table_entries, p->ipd_table_indexing_policy,
         p->ipd_table_replacement_policy,
         IndirectPatternDetectorEntry(p->addr_array_len, shiftValues.size())),
-    ipdEntryTrackingMisses(nullptr),
-#if THE_ISA != NULL_ISA
-    byteOrder(TheISA::GuestByteOrder)
-#else
-    byteOrder((ByteOrder) -1)
-#endif
+    ipdEntryTrackingMisses(nullptr), byteOrder(p->sys->getGuestByteOrder())
 {
-    fatal_if(byteOrder == static_cast<ByteOrder>(-1),
-            "This prefetcher requires a defined ISA\n");
 }
 
 void
