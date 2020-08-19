@@ -71,7 +71,7 @@ class ThreadInfo
     ~ThreadInfo()
     {}
 
-    inline Addr
+    Addr
     curThreadInfo()
     {
         if (!TheISA::CurThreadInfoImplemented)
@@ -89,7 +89,7 @@ class ThreadInfo
         return sp & ~ULL(0x3fff);
     }
 
-    inline Addr
+    Addr
     curTaskInfo(Addr thread_info = 0)
     {
         // Note that in Linux 4.10 the thread_info struct will no longer have a
