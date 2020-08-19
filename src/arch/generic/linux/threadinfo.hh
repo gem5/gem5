@@ -103,7 +103,8 @@ class ThreadInfo
     }
 
     int32_t
-    curTaskPIDFromTaskStruct(Addr task_struct) {
+    curTaskPIDFromTaskStruct(Addr task_struct)
+    {
         int32_t offset = 0;
         if (!get_data("task_struct_pid", offset))
             return -1;
