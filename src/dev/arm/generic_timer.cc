@@ -1273,7 +1273,7 @@ GenericTimerMem::GenericTimerMem(GenericTimerMemParams *const p)
 void
 GenericTimerMem::validateFrameRange(const AddrRange &range)
 {
-    fatal_if(range.start() % TheISA::PageBytes,
+    fatal_if(range.start() % ArmISA::PageBytes,
              "GenericTimerMem::validateFrameRange: Architecture states each "
              "register frame should be in a separate memory page, specified "
              "range base address [0x%x] is not compliant\n");

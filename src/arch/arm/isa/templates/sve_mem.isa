@@ -146,7 +146,7 @@ def template SveContigLoadExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        TheISA::VecRegContainer memData;
+        ArmISA::VecRegContainer memData;
         auto memDataView = memData.as<MemElemType>();
 
         %(rden_code)s;
@@ -203,7 +203,7 @@ def template SveContigLoadCompleteAcc {{
         %(op_decl)s;
         %(op_rd)s;
 
-        TheISA::VecRegContainer memData;
+        ArmISA::VecRegContainer memData;
         auto memDataView = memData.as<MemElemType>();
 
         if (xc->readMemAccPredicate()) {
@@ -233,7 +233,7 @@ def template SveContigStoreExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        TheISA::VecRegContainer memData;
+        ArmISA::VecRegContainer memData;
         auto memDataView = memData.as<MemElemType>();
 
         %(wren_code)s;
@@ -270,7 +270,7 @@ def template SveContigStoreInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        TheISA::VecRegContainer memData;
+        ArmISA::VecRegContainer memData;
         auto memDataView = memData.as<MemElemType>();
 
         %(wren_code)s;
@@ -929,7 +929,7 @@ def template SveStructLoadExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        TheISA::VecRegContainer memData;
+        ArmISA::VecRegContainer memData;
         auto memDataView = memData.as<Element>();
 
         if (fault == NoFault) {
@@ -984,7 +984,7 @@ def template SveStructLoadCompleteAcc {{
         %(op_decl)s;
         %(op_rd)s;
 
-        TheISA::VecRegContainer memData;
+        ArmISA::VecRegContainer memData;
         auto memDataView = memData.as<Element>();
 
         memcpy(memData.raw_ptr<uint8_t>(), pkt->getPtr<uint8_t>(),
@@ -1017,7 +1017,7 @@ def template SveStructStoreExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        TheISA::VecRegContainer memData;
+        ArmISA::VecRegContainer memData;
         auto memDataView = memData.as<Element>();
 
         %(wren_code)s;
@@ -1054,7 +1054,7 @@ def template SveStructStoreInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        TheISA::VecRegContainer memData;
+        ArmISA::VecRegContainer memData;
         auto memDataView = memData.as<Element>();
 
         %(wren_code)s;

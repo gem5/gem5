@@ -46,7 +46,7 @@ let {{
     smallFloatTypes = ("uint32_t",)
 
     zeroSveVecRegUpperPartCode = '''
-        TheISA::ISA::zeroSveVecRegUpperPart(%s,
+        ArmISA::ISA::zeroSveVecRegUpperPart(%s,
             ArmStaticInst::getCurSveVecLen<uint64_t>(xc->tcBase()));
     '''
 
