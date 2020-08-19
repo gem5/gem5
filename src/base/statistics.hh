@@ -791,7 +791,7 @@ class ValueProxy : public ProxyInfo
     Result total() const { return *scalar; }
 };
 
-template <class T>
+template <class T, class Enabled=void>
 class FunctorProxy : public ProxyInfo
 {
   private:
@@ -802,6 +802,27 @@ class FunctorProxy : public ProxyInfo
     Counter value() const { return (*functor)(); }
     Result result() const { return (*functor)(); }
     Result total() const { return (*functor)(); }
+};
+
+/**
+ * Template specialization for type std::function<Result()> which holds a copy
+ * of its target instead of a pointer to it. This makes it possible to use a
+ * lambda or other type inline without having to keep track of an instance
+ * somewhere else.
+ */
+template <class T>
+class FunctorProxy<T,
+    typename std::enable_if<std::is_constructible<std::function<Result()>,
+        const T &>::value>::type> : public ProxyInfo
+{
+  private:
+    std::function<Result()> functor;
+
+  public:
+    FunctorProxy(const T &func) : functor(func) {}
+    Counter value() const { return functor(); }
+    Result result() const { return functor(); }
+    Result total() const { return functor(); }
 };
 
 /**
@@ -843,6 +864,15 @@ class ValueBase : public DataWrap<Derived, ScalarInfoProxy>
     scalar(T &value)
     {
         proxy = new ValueProxy<T>(value);
+        this->setInit();
+        return this->self();
+    }
+
+    template <class T>
+    Derived &
+    functor(const T &func)
+    {
+        proxy = new FunctorProxy<T>(func);
         this->setInit();
         return this->self();
     }
