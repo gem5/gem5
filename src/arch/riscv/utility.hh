@@ -127,6 +127,10 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     for (int i = 0; i < NumIntRegs; ++i)
         dest->setIntReg(i, src->readIntReg(i));
 
+    // Second loop through the float registers.
+    for (int i = 0; i < NumFloatRegs; ++i)
+        dest->setFloatReg(i, src->readFloatReg(i));
+
     // Lastly copy PC/NPC
     dest->pcState(src->pcState());
 }
