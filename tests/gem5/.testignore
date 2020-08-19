@@ -10,5 +10,3 @@ test-insttest-linux-AtomicSimpleCPU-SPARC-aarch64-debug
 test-insttest-linux-TimingSimpleCPU-SPARC-aarch64-debug
 test-insttest-linux-AtomicSimpleCPU-SPARC-aarch64-fast
 test-insttest-linux-TimingSimpleCPU-SPARC-aarch64-fast
-realview-o3-checker-ARM-x86_64-opt
-realview64-o3-checker-ARM-x86_64-opt
