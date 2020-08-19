@@ -71,22 +71,10 @@ class ThreadInfo
     ~ThreadInfo()
     {}
 
-    Addr
+    virtual Addr
     curThreadInfo()
     {
-        if (!TheISA::CurThreadInfoImplemented)
-            panic("curThreadInfo() not implemented for this ISA");
-
-        Addr addr = pcbb;
-        Addr sp;
-
-        if (!addr)
-            addr = tc->readMiscRegNoEffect(TheISA::CurThreadInfoReg);
-
-        PortProxy &p = tc->getPhysProxy();
-        p.readBlob(addr, &sp, sizeof(Addr));
-
-        return sp & ~ULL(0x3fff);
+        panic("curThreadInfo() not implemented.");
     }
 
     Addr
