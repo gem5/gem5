@@ -39,4 +39,11 @@
 
 #include "arch/generic/locked_mem.hh"
 
+namespace PowerISA
+{
+
+using namespace GenericISA::LockedMem;
+
+} // namespace PowerISA
+
 #endif // __ARCH_POWER_LOCKED_MEM_HH__

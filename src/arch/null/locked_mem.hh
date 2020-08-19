@@ -49,4 +49,11 @@
 
 #include "arch/generic/locked_mem.hh"
 
+namespace NullISA
+{
+
+using namespace GenericISA::LockedMem;
+
+} // namespace NullISA
+
 #endif

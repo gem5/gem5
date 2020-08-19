@@ -37,4 +37,11 @@
 
 #include "arch/generic/locked_mem.hh"
 
+namespace X86ISA
+{
+
+using namespace GenericISA::LockedMem;
+
+} // namespace X86ISA
+
 #endif // __ARCH_X86_LOCKEDMEM_HH__

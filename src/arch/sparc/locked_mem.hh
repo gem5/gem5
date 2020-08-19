@@ -37,4 +37,11 @@
 
 #include "arch/generic/locked_mem.hh"
 
+namespace SparcISA
+{
+
+using namespace GenericISA::LockedMem;
+
+} // namespace SparcISA
+
 #endif
