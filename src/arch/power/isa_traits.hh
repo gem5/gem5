@@ -54,9 +54,6 @@ const Addr PteMask = NPtePage - 1;
 
 const int MachineBytes = 4;
 
-// Memory accesses can be unaligned
-const bool HasUnalignedMemAcc = true;
-
 } // namespace PowerISA
 
 #endif // __ARCH_POWER_ISA_TRAITS_HH__

@@ -136,8 +136,6 @@ enum mode_type
 const int ANNOTE_NONE = 0;
 const uint32_t ITOUCH_ANNOTE = 0xffffffff;
 
-const bool HasUnalignedMemAcc = true;
-
 } // namespace MipsISA
 
 #endif // __ARCH_MIPS_ISA_TRAITS_HH__

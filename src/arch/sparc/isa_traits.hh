@@ -44,9 +44,6 @@ const Addr PageBytes = ULL(1) << PageShift;
 
 StaticInstPtr decodeInst(ExtMachInst);
 
-// Memory accesses cannot be unaligned
-const bool HasUnalignedMemAcc = false;
-
 }
 
 #endif // __ARCH_SPARC_ISA_TRAITS_HH__

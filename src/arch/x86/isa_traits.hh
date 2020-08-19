@@ -49,9 +49,6 @@ namespace X86ISA
 
     const Addr PageShift = 12;
     const Addr PageBytes = ULL(1) << PageShift;
-
-    // Memory accesses can be unaligned
-    const bool HasUnalignedMemAcc = true;
 }
 
 #endif // __ARCH_X86_ISATRAITS_HH__
