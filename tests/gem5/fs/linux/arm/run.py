@@ -67,7 +67,7 @@ sys.path.append(joinpath(tests_root, 'configs'))
 exec(compile(open(config).read(), config, 'exec'))
 
 system = root.system
-system.readfile = os.path.join(tests_root, 'halt.sh')
+system.readfile = os.path.join(gem5_root, 'configs', 'boot', 'halt.sh')
 
 # The CPU can either be a list of CPUs or a single object.
 if isinstance(system.cpu, list):
