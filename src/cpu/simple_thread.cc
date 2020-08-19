@@ -72,7 +72,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
       isa(dynamic_cast<TheISA::ISA *>(_isa)),
       predicate(true), memAccPredicate(true),
       comInstEventQueue("instruction-based event queue"),
-      system(_sys), itb(_itb), dtb(_dtb), decoder(TheISA::Decoder(isa))
+      system(_sys), itb(_itb), dtb(_dtb), decoder(isa)
 {
     assert(isa);
     clearArchRegs();
@@ -84,7 +84,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
       isa(dynamic_cast<TheISA::ISA *>(_isa)),
       predicate(true), memAccPredicate(true),
       comInstEventQueue("instruction-based event queue"),
-      system(_sys), itb(_itb), dtb(_dtb), decoder(TheISA::Decoder(isa))
+      system(_sys), itb(_itb), dtb(_dtb), decoder(isa)
 {
     assert(isa);
 
