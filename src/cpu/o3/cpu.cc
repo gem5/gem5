@@ -444,7 +444,6 @@ FullO3CPU<Impl>::regStats()
     this->decode.regStats();
     this->rename.regStats();
     this->iew.regStats();
-    this->commit.regStats();
     this->rob.regStats();
 
     intRegfileReads

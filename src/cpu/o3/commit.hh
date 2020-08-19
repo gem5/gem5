@@ -143,9 +143,6 @@ class DefaultCommit
     /** Returns the name of the DefaultCommit. */
     std::string name() const;
 
-    /** Registers statistics. */
-    void regStats();
-
     /** Registers probes. */
     void regProbePoints();
 
@@ -479,52 +476,55 @@ class DefaultCommit
     /** Updates commit stats based on this instruction. */
     void updateComInstStats(const DynInstPtr &inst);
 
-
     // HTM
     int htmStarts[Impl::MaxThreads];
     int htmStops[Impl::MaxThreads];
 
-    /** Stat for the total number of squashed instructions discarded by commit.
-     */
-    Stats::Scalar commitSquashedInsts;
-    /** Stat for the total number of times commit has had to stall due to a non-
-     * speculative instruction reaching the head of the ROB.
-     */
-    Stats::Scalar commitNonSpecStalls;
-    /** Stat for the total number of branch mispredicts that caused a squash. */
-    Stats::Scalar branchMispredicts;
-    /** Distribution of the number of committed instructions each cycle. */
-    Stats::Distribution numCommittedDist;
+    struct CommitStats : public Stats::Group {
+        CommitStats(O3CPU *cpu, DefaultCommit *commit);
+        /** Stat for the total number of squashed instructions discarded by
+         * commit.
+         */
+        Stats::Scalar commitSquashedInsts;
+        /** Stat for the total number of times commit has had to stall due
+         * to a non-speculative instruction reaching the head of the ROB.
+         */
+        Stats::Scalar commitNonSpecStalls;
+        /** Stat for the total number of branch mispredicts that caused a
+         * squash.
+         */
+        Stats::Scalar branchMispredicts;
+        /** Distribution of the number of committed instructions each cycle. */
+        Stats::Distribution numCommittedDist;
 
-    /** Total number of instructions committed. */
-    Stats::Vector instsCommitted;
-    /** Total number of ops (including micro ops) committed. */
-    Stats::Vector opsCommitted;
-    /** Total number of software prefetches committed. */
-    Stats::Vector statComSwp;
-    /** Stat for the total number of committed memory references. */
-    Stats::Vector statComRefs;
-    /** Stat for the total number of committed loads. */
-    Stats::Vector statComLoads;
-    /** Stat for the total number of committed atomics. */
-    Stats::Vector statComAmos;
-    /** Total number of committed memory barriers. */
-    Stats::Vector statComMembars;
-    /** Total number of committed branches. */
-    Stats::Vector statComBranches;
-    /** Total number of vector instructions */
-    Stats::Vector statComVector;
-    /** Total number of floating point instructions */
-    Stats::Vector statComFloating;
-    /** Total number of integer instructions */
-    Stats::Vector statComInteger;
-    /** Total number of function calls */
-    Stats::Vector statComFunctionCalls;
-    /** Committed instructions by instruction type (OpClass) */
-    Stats::Vector2d statCommittedInstType;
+        /** Total number of instructions committed. */
+        Stats::Vector instsCommitted;
+        /** Total number of ops (including micro ops) committed. */
+        Stats::Vector opsCommitted;
+        /** Stat for the total number of committed memory references. */
+        Stats::Vector memRefs;
+        /** Stat for the total number of committed loads. */
+        Stats::Vector loads;
+        /** Stat for the total number of committed atomics. */
+        Stats::Vector amos;
+        /** Total number of committed memory barriers. */
+        Stats::Vector membars;
+        /** Total number of committed branches. */
+        Stats::Vector branches;
+        /** Total number of vector instructions */
+        Stats::Vector vector;
+        /** Total number of floating point instructions */
+        Stats::Vector floating;
+        /** Total number of integer instructions */
+        Stats::Vector integer;
+        /** Total number of function calls */
+        Stats::Vector functionCalls;
+        /** Committed instructions by instruction type (OpClass) */
+        Stats::Vector2d committedInstType;
 
-    /** Number of cycles where the commit bandwidth limit is reached. */
-    Stats::Scalar commitEligibleSamples;
+        /** Number of cycles where the commit bandwidth limit is reached. */
+        Stats::Scalar commitEligibleSamples;
+    } stats;
 };
 
 #endif // __CPU_O3_COMMIT_HH__

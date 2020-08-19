@@ -92,7 +92,8 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
       drainImminent(false),
       trapLatency(params->trapLatency),
       canHandleInterrupts(true),
-      avoidQuiesceLiveLock(false)
+      avoidQuiesceLiveLock(false),
+      stats(_cpu, this)
 {
     if (commitWidth > Impl::MaxWidth)
         fatal("commitWidth (%d) is larger than compiled limit (%d),\n"
@@ -145,129 +146,91 @@ DefaultCommit<Impl>::regProbePoints()
 }
 
 template <class Impl>
-void
-DefaultCommit<Impl>::regStats()
+DefaultCommit<Impl>::CommitStats::CommitStats(O3CPU *cpu,
+                                              DefaultCommit *commit)
+    : Stats::Group(cpu, "commit"),
+      ADD_STAT(commitSquashedInsts, "The number of squashed insts skipped by"
+          " commit"),
+      ADD_STAT(commitNonSpecStalls, "The number of times commit has been"
+          " forced to stall to communicate backwards"),
+      ADD_STAT(branchMispredicts, "The number of times a branch was"
+          " mispredicted"),
+      ADD_STAT(numCommittedDist, "Number of insts commited each cycle"),
+      ADD_STAT(instsCommitted, "Number of instructions committed"),
+      ADD_STAT(opsCommitted, "Number of ops (including micro ops) committed"),
+      ADD_STAT(memRefs, "Number of memory references committed"),
+      ADD_STAT(loads, "Number of loads committed"),
+      ADD_STAT(amos, "Number of atomic instructions committed"),
+      ADD_STAT(membars, "Number of memory barriers committed"),
+      ADD_STAT(branches, "Number of branches committed"),
+      ADD_STAT(vector, "Number of committed Vector instructions."),
+      ADD_STAT(floating, "Number of committed floating point"
+          " instructions."),
+      ADD_STAT(integer, "Number of committed integer instructions."),
+      ADD_STAT(functionCalls, "Number of function calls committed."),
+      ADD_STAT(committedInstType, "Class of committed instruction"),
+      ADD_STAT(commitEligibleSamples, "number cycles where commit BW limit"
+          " reached")
 {
     using namespace Stats;
-    commitSquashedInsts
-        .name(name() + ".commitSquashedInsts")
-        .desc("The number of squashed insts skipped by commit")
-        .prereq(commitSquashedInsts);
 
-    commitNonSpecStalls
-        .name(name() + ".commitNonSpecStalls")
-        .desc("The number of times commit has been forced to stall to "
-              "communicate backwards")
-        .prereq(commitNonSpecStalls);
-
-    branchMispredicts
-        .name(name() + ".branchMispredicts")
-        .desc("The number of times a branch was mispredicted")
-        .prereq(branchMispredicts);
+    commitSquashedInsts.prereq(commitSquashedInsts);
+    commitNonSpecStalls.prereq(commitNonSpecStalls);
+    branchMispredicts.prereq(branchMispredicts);
 
     numCommittedDist
-        .init(0,commitWidth,1)
-        .name(name() + ".committed_per_cycle")
-        .desc("Number of insts commited each cycle")
-        .flags(Stats::pdf)
-        ;
+        .init(0,commit->commitWidth,1)
+        .flags(Stats::pdf);
 
     instsCommitted
         .init(cpu->numThreads)
-        .name(name() + ".committedInsts")
-        .desc("Number of instructions committed")
-        .flags(total)
-        ;
+        .flags(total);
 
     opsCommitted
         .init(cpu->numThreads)
-        .name(name() + ".committedOps")
-        .desc("Number of ops (including micro ops) committed")
-        .flags(total)
-        ;
+        .flags(total);
 
-    statComSwp
+    memRefs
         .init(cpu->numThreads)
-        .name(name() + ".swp_count")
-        .desc("Number of s/w prefetches committed")
-        .flags(total)
-        ;
+        .flags(total);
 
-    statComRefs
+    loads
         .init(cpu->numThreads)
-        .name(name() +  ".refs")
-        .desc("Number of memory references committed")
-        .flags(total)
-        ;
+        .flags(total);
 
-    statComLoads
+    amos
         .init(cpu->numThreads)
-        .name(name() +  ".loads")
-        .desc("Number of loads committed")
-        .flags(total)
-        ;
+        .flags(total);
 
-    statComAmos
+    membars
         .init(cpu->numThreads)
-        .name(name() +  ".amos")
-        .desc("Number of atomic instructions committed")
-        .flags(total)
-        ;
+        .flags(total);
 
-    statComMembars
+    branches
         .init(cpu->numThreads)
-        .name(name() +  ".membars")
-        .desc("Number of memory barriers committed")
-        .flags(total)
-        ;
+        .flags(total);
 
-    statComBranches
+    vector
         .init(cpu->numThreads)
-        .name(name() + ".branches")
-        .desc("Number of branches committed")
-        .flags(total)
-        ;
+        .flags(total);
 
-    statComFloating
+    floating
         .init(cpu->numThreads)
-        .name(name() + ".fp_insts")
-        .desc("Number of committed floating point instructions.")
-        .flags(total)
-        ;
+        .flags(total);
 
-    statComVector
+    integer
         .init(cpu->numThreads)
-        .name(name() + ".vec_insts")
-        .desc("Number of committed Vector instructions.")
-        .flags(total)
-        ;
+        .flags(total);
 
-    statComInteger
-        .init(cpu->numThreads)
-        .name(name()+".int_insts")
-        .desc("Number of committed integer instructions.")
-        .flags(total)
-        ;
+    functionCalls
+        .init(commit->numThreads)
+        .flags(total);
 
-    statComFunctionCalls
-        .init(cpu->numThreads)
-        .name(name()+".function_calls")
-        .desc("Number of function calls committed.")
-        .flags(total)
-        ;
+    committedInstType
+        .init(commit->numThreads,Enums::Num_OpClass)
+        .flags(total | pdf | dist);
 
-    statCommittedInstType
-        .init(numThreads,Enums::Num_OpClass)
-        .name(name() + ".op_class")
-        .desc("Class of committed instruction")
-        .flags(total | pdf | dist)
-        ;
-    statCommittedInstType.ysubnames(Enums::OpClassStrings);
-
-    commitEligibleSamples
-        .name(name() + ".bw_lim_events")
-        .desc("number cycles where commit BW limit reached")
-        ;
+    committedInstType.ysubnames(Enums::OpClassStrings);
 }
 
 template <class Impl>
@@ -948,7 +911,7 @@ DefaultCommit<Impl>::commit()
                 if (toIEW->commitInfo[tid].mispredictInst->isUncondCtrl()) {
                      toIEW->commitInfo[tid].branchTaken = true;
                 }
-                ++branchMispredicts;
+                ++stats.branchMispredicts;
             }
 
             toIEW->commitInfo[tid].pc = fromIEW->pc[tid];
@@ -1075,7 +1038,7 @@ DefaultCommit<Impl>::commitInsts()
 
             rob->retireHead(commit_thread);
 
-            ++commitSquashedInsts;
+            ++stats.commitSquashedInsts;
             // Notify potential listeners that this instruction is squashed
             ppSquash->notify(head_inst);
 
@@ -1096,7 +1059,7 @@ DefaultCommit<Impl>::commitInsts()
 
             if (commit_success) {
                 ++num_committed;
-                statCommittedInstType[tid][head_inst->opClass()]++;
+                stats.committedInstType[tid][head_inst->opClass()]++;
                 ppCommit->notify(head_inst);
 
                 // hardware transactional memory
@@ -1208,10 +1171,10 @@ DefaultCommit<Impl>::commitInsts()
     }
 
     DPRINTF(CommitRate, "%i\n", num_committed);
-    numCommittedDist.sample(num_committed);
+    stats.numCommittedDist.sample(num_committed);
 
     if (num_committed == commitWidth) {
-        commitEligibleSamples++;
+        stats.commitEligibleSamples++;
     }
 }
 
@@ -1264,7 +1227,7 @@ DefaultCommit<Impl>::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
             toIEW->commitInfo[tid].strictlyOrdered = true;
             toIEW->commitInfo[tid].strictlyOrderedLoad = head_inst;
         } else {
-            ++commitNonSpecStalls;
+            ++stats.commitNonSpecStalls;
         }
 
         return false;
@@ -1474,8 +1437,8 @@ DefaultCommit<Impl>::updateComInstStats(const DynInstPtr &inst)
     ThreadID tid = inst->threadNumber;
 
     if (!inst->isMicroop() || inst->isLastMicroop())
-        instsCommitted[tid]++;
-    opsCommitted[tid]++;
+        stats.instsCommitted[tid]++;
+    stats.opsCommitted[tid]++;
 
     // To match the old model, don't count nops and instruction
     // prefetches towards the total commit count.
@@ -1487,41 +1450,41 @@ DefaultCommit<Impl>::updateComInstStats(const DynInstPtr &inst)
     //  Control Instructions
     //
     if (inst->isControl())
-        statComBranches[tid]++;
+        stats.branches[tid]++;
 
     //
     //  Memory references
     //
     if (inst->isMemRef()) {
-        statComRefs[tid]++;
+        stats.memRefs[tid]++;
 
         if (inst->isLoad()) {
-            statComLoads[tid]++;
+            stats.loads[tid]++;
         }
 
         if (inst->isAtomic()) {
-            statComAmos[tid]++;
+            stats.amos[tid]++;
         }
     }
 
     if (inst->isMemBarrier()) {
-        statComMembars[tid]++;
+        stats.membars[tid]++;
     }
 
     // Integer Instruction
     if (inst->isInteger())
-        statComInteger[tid]++;
+        stats.integer[tid]++;
 
     // Floating Point Instruction
     if (inst->isFloating())
-        statComFloating[tid]++;
+        stats.floating[tid]++;
     // Vector Instruction
     if (inst->isVector())
-        statComVector[tid]++;
+        stats.vector[tid]++;
 
     // Function Calls
     if (inst->isCall())
-        statComFunctionCalls[tid]++;
+        stats.functionCalls[tid]++;
 
 }
 
