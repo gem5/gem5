@@ -114,13 +114,6 @@ namespace X86ISA
     void setRFlags(ThreadContext *tc, uint64_t val);
 
     /**
-     * Extract the bit string representing a double value.
-     */
-    inline uint64_t getDoubleBits(double val) {
-        return *(uint64_t *)(&val);
-    }
-
-    /**
      * Convert an x87 tag word to abridged tag format.
      *
      * Convert from the x87 tag representation to the tag abridged

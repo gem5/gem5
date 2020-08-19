@@ -144,7 +144,7 @@ let {{
             if isinstance(imm, (int, long)):
                 imm = "ULL(%d)" % imm
             elif isinstance(imm, float):
-                imm = "getDoubleBits(%.16f)" % imm
+                imm = "floatToBits64(%.16f)" % imm
             self.imm = imm
             self.dataSize = dataSize
 
