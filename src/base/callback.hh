@@ -39,6 +39,9 @@ class CallbackQueue : public std::list<std::function<void()>>
 
     using Base::Base;
 
+    /**
+     * @ingroup api_callback
+     */
     void
     process()
     {
