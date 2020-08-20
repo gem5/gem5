@@ -64,8 +64,13 @@ class Random : public Serializable
 
   public:
 
+    /**
+     * @ingroup api_base_utils
+     * @{
+     */
     Random();
     Random(uint32_t s);
+    /** @} */ // end of api_base_utils
     ~Random();
 
     void init(uint32_t s);
@@ -73,6 +78,8 @@ class Random : public Serializable
     /**
      * Use the SFINAE idiom to choose an implementation based on
      * whether the type is integral or floating point.
+     *
+     * @ingroup api_base_utils
      */
     template <typename T>
     typename std::enable_if<std::is_integral<T>::value, T>::type
@@ -83,6 +90,9 @@ class Random : public Serializable
         return dist(gen);
     }
 
+    /**
+     * @ingroup api_base_utils
+     */
     template <typename T>
     typename std::enable_if<std::is_floating_point<T>::value, T>::type
     random()
@@ -91,7 +101,9 @@ class Random : public Serializable
         std::uniform_real_distribution<T> dist;
         return dist(gen);
     }
-
+    /**
+     * @ingroup api_base_utils
+     */
     template <typename T>
     typename std::enable_if<std::is_integral<T>::value, T>::type
     random(T min, T max)
@@ -104,6 +116,9 @@ class Random : public Serializable
     void unserialize(CheckpointIn &cp) override;
 };
 
+/**
+ * @ingroup api_base_utils
+ */
 extern Random random_mt;
 
 #endif // __BASE_RANDOM_HH__
