@@ -38,7 +38,6 @@ import optparse
 import m5
 from m5.objects import *
 from m5.proxy import *
-m5.util.addToPath('../configs/')
 from common import FSConfig
 from common import Options
 from common.Caches import *

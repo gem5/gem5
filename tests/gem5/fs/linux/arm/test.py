@@ -96,7 +96,7 @@ arm_fs_binaries = DownloadedArchive(url, path, tarball)
 
 for name in arm_fs_quick_tests:
     args = [
-        joinpath(config.base_dir, 'tests', 'configs', name + '.py'),
+        joinpath(config.base_dir, 'tests', 'gem5', 'configs', name + '.py'),
         path
     ]
     gem5_verify_config(
@@ -111,7 +111,7 @@ for name in arm_fs_quick_tests:
 
 for name in arm_fs_long_tests:
     args = [
-        joinpath(config.base_dir, 'tests', 'configs', name + '.py'),
+        joinpath(config.base_dir, 'tests', 'gem5', 'configs', name + '.py'),
         path
     ]
     gem5_verify_config(
