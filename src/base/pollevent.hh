@@ -49,13 +49,24 @@ class PollEvent : public Serializable
     bool enabled;
 
   public:
+    /**
+     * @ingroup api_poll_event
+     */
     PollEvent(int fd, int event);
     virtual ~PollEvent();
 
+    /**
+     * @ingroup api_poll_event
+     * @{
+     */
     void disable();
     void enable();
     virtual void process(int revent) = 0;
+    /** @} */ // end of api_poll_event
 
+    /**
+     * @ingroup api_poll_event
+     */
     bool queued() { return queue != 0; }
 
     void serialize(CheckpointOut &cp) const override;
@@ -73,18 +84,30 @@ class PollQueue
     int num_fds;
 
   public:
+    /**
+     * @ingroup api_poll_queue
+     */
     PollQueue();
     ~PollQueue();
 
+    /**
+     * @ingroup api_poll_queue
+     * @{
+     */
     void copy();
     void remove(PollEvent *event);
     void schedule(PollEvent *event);
     void service();
+    /** @} */ // end of api_poll_queue
+
 
   public:
     static void setupAsyncIO(int fd, bool set);
 };
 
+/**
+ * @ingroup api_poll_queue
+ */
 extern PollQueue pollQueue;
 
 #endif // __POLLEVENT_H__
