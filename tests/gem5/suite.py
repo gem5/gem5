@@ -88,15 +88,6 @@ def gem5_verify_config(name,
     fixtures = list(fixtures)
     testsuites = []
 
-    # Obtain the set of tests to ignore. This is found in the
-    # ".testignore" file.
-    __location__ = os.path.realpath(
-        os.path.join(os.getcwd(), os.path.dirname(__file__)))
-    _test_ignore_file_loc = os.path.join(__location__,".testignore")
-    ignore = set()
-    if os.path.exists(_test_ignore_file_loc):
-        ignore.update(open(_test_ignore_file_loc).read().splitlines())
-
     for host in valid_hosts:
         for opt in valid_variants:
             for isa in valid_isas:
@@ -114,11 +105,6 @@ def gem5_verify_config(name,
                         opt=opt)
                 if protocol:
                     _name += '-'+protocol
-
-                # We check to see if this test suite is to be ignored. If so,
-                # we skip it.
-                if _name in ignore:
-                    continue
 
                 # Create the running of gem5 subtest.  NOTE: We specifically
                 # create this test before our verifiers so this is listed
