@@ -62,40 +62,72 @@
 class Fiber
 {
   public:
+    /**
+     * @ingroup api_fiber
+     */
     const static size_t DefaultStackSize = 0x50000;
 
-    /// stack_size is the size of the stack available to this fiber.
-    /// link points to another fiber which will start executing when this
-    /// fiber's main function returns.
+    /**
+     * @param Link points to another fiber which will start executing when this
+     *     fiber's main function returns.
+     * @param stack_size is the size of the stack available to this fiber.
+     *
+     * @ingroup api_fiber
+     * @{
+     */
     Fiber(size_t stack_size=DefaultStackSize);
     Fiber(Fiber *link, size_t stack_size=DefaultStackSize);
+    /** @} */ // end of api_fiber
 
+    /**
+     * @ingroup api_fiber
+     */
     virtual ~Fiber();
 
-    /// Start executing the fiber represented by this object. This function
-    /// will "return" when the current fiber is switched back to later on.
+    /**
+     * Start executing the fiber represented by this object. This function
+     * will "return" when the current fiber is switched back to later on.
+     *
+     * @ingroup api_fiber
+     */
     void run();
 
-    /// Returns whether the "main" function of this fiber has finished.
-    ///
+    /**
+     * Returns whether the "main" function of this fiber has finished.
+     *
+     * @ingroup api_fiber
+     */
     bool finished() const { return _finished; };
 
-    /// Returns whether the "main" function of this fiber has started.
-    ///
+    /**
+     * Returns whether the "main" function of this fiber has started.
+     *
+     * @ingroup api_fiber
+     */
     bool started() const { return _started; };
 
-    /// Get a pointer to the current running Fiber.
-    ///
+    /**
+     * Get a pointer to the current running Fiber.
+     *
+     * @ingroup api_fiber
+     */
     static Fiber *currentFiber();
-    /// Get a pointer to the primary Fiber.
-    /// This Fiber represents the thread of execution started by the OS, and
-    /// which has a Fiber attached to it after the fact.
+
+    /**
+     * Get a pointer to the primary Fiber.
+     * This Fiber represents the thread of execution started by the OS, and
+     * which has a Fiber attached to it after the fact.
+     *
+     * @ingroup api_fiber
+     */
     static Fiber *primaryFiber();
 
   protected:
-    /// This method is called when this fiber is first run. Override it to
-    /// give your fiber something to do. When main returns, the fiber will
-    /// mark itself as finished and switch to its link fiber.
+    /**
+     * This method is called when this fiber is first run. Override it to
+     * give your fiber something to do. When main returns, the fiber will
+     * mark itself as finished and switch to its link fiber.
+     */
     virtual void main() = 0;
 
     void setStarted() { _started = true; }
