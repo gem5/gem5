@@ -52,7 +52,9 @@ class Logger
 {
   public:
 
-    // Get a Logger for the specified type of message.
+    /**
+     * Get a Logger for the specified type of message.
+     */
     static Logger &getPanic();
     static Logger &getFatal();
     static Logger &getWarn();
@@ -114,9 +116,11 @@ class Logger
         print(loc, format.c_str(), args...);
     }
 
-    // This helper is necessary since noreturn isn't inherited by virtual
-    // functions, and gcc will get mad if a function calls panic and then
-    // doesn't return.
+    /**
+     * This helper is necessary since noreturn isn't inherited by virtual
+     * functions, and gcc will get mad if a function calls panic and then
+     * doesn't return.
+     */
     void exit_helper() M5_ATTR_NORETURN { exit(); ::abort(); }
 
   protected:
@@ -159,6 +163,10 @@ class Logger
  * be called when something happens that should never ever happen
  * regardless of what the user does (i.e., an acutal m5 bug).  panic()
  * might call abort which can dump core or enter the debugger.
+ *
+ * \def panic(...)
+ *
+ * @ingroup api_logger
  */
 #define panic(...) exit_message(::Logger::getPanic(), __VA_ARGS__)
 
@@ -167,6 +175,10 @@ class Logger
  * be called when the simulation cannot continue due to some condition
  * that is the user's fault (bad configuration, invalid arguments,
  * etc.) and not a simulator bug.  fatal() might call exit, unlike panic().
+ *
+ * \def fatal(...)
+ *
+ * @ingroup api_logger
  */
 #define fatal(...) exit_message(::Logger::getFatal(), __VA_ARGS__)
 
@@ -177,6 +189,10 @@ class Logger
  *
  * @param cond Condition that is checked; if true -> panic
  * @param ...  Printf-based format string with arguments, extends printout.
+ *
+ * \def panic_if(...)
+ *
+ * @ingroup api_logger
  */
 #define panic_if(cond, ...)                                  \
     do {                                                     \
@@ -195,6 +211,10 @@ class Logger
  *
  * @param cond Condition that is checked; if true -> fatal
  * @param ...  Printf-based format string with arguments, extends printout.
+ *
+ * \def fatal_if(...)
+ *
+ * @ingroup api_logger
  */
 #define fatal_if(cond, ...)                                     \
     do {                                                        \
@@ -205,6 +225,17 @@ class Logger
     } while (0)
 
 
+/**
+ * \def warn(...)
+ * \def inform(...)
+ * \def hack(...)
+ * \def warn_once(...)
+ * \def inform_once(...)
+ * \def hack_once(...)
+ *
+ * @ingroup api_logger
+ * @{
+ */
 #define warn(...) base_message(::Logger::getWarn(), __VA_ARGS__)
 #define inform(...) base_message(::Logger::getInfo(), __VA_ARGS__)
 #define hack(...) base_message(::Logger::getHack(), __VA_ARGS__)
@@ -212,14 +243,22 @@ class Logger
 #define warn_once(...) base_message_once(::Logger::getWarn(), __VA_ARGS__)
 #define inform_once(...) base_message_once(::Logger::getInfo(), __VA_ARGS__)
 #define hack_once(...) base_message_once(::Logger::getHack(), __VA_ARGS__)
+/** @} */ // end of api_logger
 
 /**
+ *
  * Conditional warning macro that checks the supplied condition and
  * only prints a warning if the condition is true. Useful to replace
  * if + warn.
  *
  * @param cond Condition that is checked; if true -> warn
  * @param ...  Printf-based format string with arguments, extends printout.
+ *
+ * \def warn_if(cond, ...)
+ * \def warn_if_once(cond, ...)
+ *
+ * @ingroup api_logger
+ * @{
  */
 #define warn_if(cond, ...) \
     do { \
@@ -232,6 +271,7 @@ class Logger
         if ((cond)) \
             warn_once(__VA_ARGS__); \
     } while (0)
+/** @} */ // end of api_logger
 
 /**
  * The chatty assert macro will function like a normal assert, but will allow
@@ -241,6 +281,10 @@ class Logger
  *
  * @param cond Condition that is checked; if false -> assert
  * @param ...  Printf-based format string with arguments, extends printout.
+ *
+ * \def chatty_assert(cond, ...)
+ *
+ * @ingroup api_logger
  */
 #ifdef NDEBUG
 #define chatty_assert(cond, ...)
@@ -251,4 +295,5 @@ class Logger
             panic("assert(" # cond ") failed: %s", csprintf(__VA_ARGS__)); \
     } while (0)
 #endif // NDEBUG
+/** @} */ // end of api_logger
 #endif // __BASE_LOGGING_HH__
