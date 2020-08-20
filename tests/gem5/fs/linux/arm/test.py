@@ -53,17 +53,13 @@ arm_fs_quick_tests = [
 
 arm_fs_long_tests = [
     'realview-simple-atomic',
-    'realview-simple-atomic-dual',
     'realview-simple-atomic-checkpoint',
     'realview-simple-timing',
-    'realview-simple-timing-dual',
     'realview-switcheroo-atomic',
     'realview-switcheroo-timing',
     'realview-o3',
     'realview-o3-checker',
-    'realview-o3-dual',
     'realview-minor',
-    'realview-minor-dual',
     'realview-switcheroo-noncaching-timing',
     'realview-switcheroo-o3',
     'realview-switcheroo-full',
@@ -75,9 +71,15 @@ arm_fs_long_tests = [
     'realview64-switcheroo-o3',
     'realview64-switcheroo-full',
     'realview-simple-timing-ruby',
-    'realview-simple-timing-dual-ruby',
     'realview64-simple-timing-ruby',
     'realview64-simple-timing-dual-ruby',
+
+    # https://gem5.atlassian.net/browse/GEM5-640
+    #'realview-simple-atomic-dual',
+    #'realview-simple-timing-dual',
+    #'realview-o3-dual',
+    #'realview-minor-dual',
+    #'realview-simple-timing-dual-ruby',
 ]
 
 tarball = 'aarch-system-201901106.tar.bz2'
