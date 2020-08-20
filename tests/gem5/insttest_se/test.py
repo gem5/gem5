@@ -34,10 +34,11 @@ from testlib import *
 test_progs = {
     'sparc': ('insttest',)
 }
-#o3-timing  simple-atomic  simple-timing
+
 cpu_types = {
     'sparc' : ('AtomicSimpleCPU', 'TimingSimpleCPU')
 }
+
 supported_os = {
     'sparc' : ('linux',)
 }
