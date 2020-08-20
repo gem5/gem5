@@ -41,7 +41,6 @@
 #ifndef __CPU_O3_DYN_INST_IMPL_HH__
 #define __CPU_O3_DYN_INST_IMPL_HH__
 
-#include "base/cp_annotate.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "debug/O3PipeView.hh"
 

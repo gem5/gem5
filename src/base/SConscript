@@ -28,9 +28,6 @@
 
 Import('*')
 
-if env['CP_ANNOTATE']:
-    SimObject('CPA.py')
-    Source('cp_annotate.cc')
 SimObject('Graphics.py')
 Source('atomicio.cc')
 GTest('atomicio.test', 'atomicio.test.cc', 'atomicio.cc')

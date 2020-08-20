@@ -111,7 +111,6 @@ output exec {{
 
 #endif
 
-#include "base/cp_annotate.hh"
 #include "debug/Arm.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"

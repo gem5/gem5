@@ -42,7 +42,6 @@
 #include "cpu/simple/base.hh"
 
 #include "arch/utility.hh"
-#include "base/cp_annotate.hh"
 #include "base/cprintf.hh"
 #include "base/inifile.hh"
 #include "base/loader/symtab.hh"
@@ -584,10 +583,6 @@ BaseSimpleCPU::postExecute()
 
     if (curStaticInst->isLoad()) {
         ++t_info.numLoad;
-    }
-
-    if (CPA::available()) {
-        CPA::cpa()->swAutoBegin(threadContexts[curThread], pc.nextInstAddr());
     }
 
     if (curStaticInst->isControl()) {

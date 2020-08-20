@@ -46,7 +46,6 @@
 
 #include <algorithm>
 
-#include "base/cp_annotate.hh"
 #include "base/trace.hh"
 #include "debug/DMACopyEngine.hh"
 #include "debug/Drain.hh"
@@ -449,8 +448,6 @@ CopyEngine::regStats()
 void
 CopyEngine::CopyEngineChannel::fetchDescriptor(Addr address)
 {
-    anDq();
-    anBegin("FetchDescriptor");
     DPRINTF(DMACopyEngine, "Reading descriptor from at memory location %#x(%#x)\n",
            address, ce->pciToDma(address));
     assert(address);
@@ -479,8 +476,6 @@ CopyEngine::CopyEngineChannel::fetchDescComplete()
             if (inDrain()) return;
             writeCompletionStatus();
         } else {
-            anBegin("Idle");
-            anWait();
             busy = false;
             nextState = Idle;
             inDrain();
@@ -499,7 +494,6 @@ CopyEngine::CopyEngineChannel::fetchDescComplete()
 void
 CopyEngine::CopyEngineChannel::readCopyBytes()
 {
-    anBegin("ReadCopyBytes");
     DPRINTF(DMACopyEngine, "Reading %d bytes from buffer to memory location %#x(%#x)\n",
            curDmaDesc->len, curDmaDesc->dest,
            ce->pciToDma(curDmaDesc->src));
@@ -520,7 +514,6 @@ CopyEngine::CopyEngineChannel::readCopyBytesComplete()
 void
 CopyEngine::CopyEngineChannel::writeCopyBytes()
 {
-    anBegin("WriteCopyBytes");
     DPRINTF(DMACopyEngine, "Writing %d bytes from buffer to memory location %#x(%#x)\n",
            curDmaDesc->len, curDmaDesc->dest,
            ce->pciToDma(curDmaDesc->dest));
@@ -541,8 +534,6 @@ CopyEngine::CopyEngineChannel::writeCopyBytesComplete()
     cr.status.compl_desc_addr(lastDescriptorAddr >> 6);
     completionDataReg = cr.status() | 1;
 
-    anQ("DMAUsedDescQ", channelId, 1);
-    anQ("AppRecvQ", curDmaDesc->user1, curDmaDesc->len);
     if (curDmaDesc->command & DESC_CTRL_CP_STS) {
         nextState = CompletionWrite;
         if (inDrain()) return;
@@ -559,8 +550,6 @@ CopyEngine::CopyEngineChannel::continueProcessing()
     busy = false;
 
     if (underReset) {
-        anBegin("Reset");
-        anWait();
         underReset = false;
         refreshNext = false;
         busy = false;
@@ -581,15 +570,12 @@ CopyEngine::CopyEngineChannel::continueProcessing()
     } else {
         inDrain();
         nextState = Idle;
-        anWait();
-        anBegin("Idle");
     }
 }
 
 void
 CopyEngine::CopyEngineChannel::writeCompletionStatus()
 {
-    anBegin("WriteCompletionStatus");
     DPRINTF(DMACopyEngine, "Writing completion status %#x to address %#x(%#x)\n",
             completionDataReg, cr.completionAddr,
             ce->pciToDma(cr.completionAddr));
@@ -610,7 +596,6 @@ CopyEngine::CopyEngineChannel::writeStatusComplete()
 void
 CopyEngine::CopyEngineChannel::fetchNextAddr(Addr address)
 {
-    anBegin("FetchNextAddr");
     DPRINTF(DMACopyEngine, "Fetching next address...\n");
     busy = true;
     cePort.dmaAction(MemCmd::ReadReq,
@@ -628,8 +613,6 @@ CopyEngine::CopyEngineChannel::fetchAddrComplete()
         DPRINTF(DMACopyEngine, "Got NULL descriptor, nothing more to do\n");
         busy = false;
         nextState = Idle;
-        anWait();
-        anBegin("Idle");
         inDrain();
         return;
     }

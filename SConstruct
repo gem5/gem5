@@ -1000,8 +1000,6 @@ sticky_vars.AddVariables(
     BoolVariable('USE_POSIX_CLOCK', 'Use POSIX Clocks', have_posix_clock),
     BoolVariable('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
     BoolVariable('USE_PNG',  'Enable support for PNG images', have_png),
-    BoolVariable('CP_ANNOTATE', 'Enable critical path annotation capability',
-                 False),
     BoolVariable('USE_KVM', 'Enable hardware virtualized (KVM) CPU models',
                  have_kvm),
     BoolVariable('USE_TUNTAP',
@@ -1018,7 +1016,7 @@ sticky_vars.AddVariables(
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
-export_vars += ['USE_FENV', 'TARGET_ISA', 'TARGET_GPU_ISA', 'CP_ANNOTATE',
+export_vars += ['USE_FENV', 'TARGET_ISA', 'TARGET_GPU_ISA',
                 'USE_POSIX_CLOCK', 'USE_KVM', 'USE_TUNTAP', 'PROTOCOL',
                 'HAVE_PROTOBUF', 'HAVE_VALGRIND',
                 'HAVE_PERF_ATTR_EXCLUDE_HOST', 'USE_PNG',

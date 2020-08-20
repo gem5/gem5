@@ -46,7 +46,6 @@
 #include <string>
 
 #include "arch/utility.hh"
-#include "base/cp_annotate.hh"
 #include "base/loader/symtab.hh"
 #include "base/logging.hh"
 #include "config/the_isa.hh"
@@ -1280,14 +1279,6 @@ DefaultCommit<Impl>::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
 
     updateComInstStats(head_inst);
 
-    if (FullSystem) {
-        if (CPA::available()) {
-            if (head_inst->isControl()) {
-                ThreadContext *tc = thread[tid]->getTC();
-                CPA::cpa()->swAutoBegin(tc, head_inst->nextInstAddr());
-            }
-        }
-    }
     DPRINTF(Commit,
             "[tid:%i] [sn:%llu] Committing instruction with PC %s\n",
             tid, head_inst->seqNum, head_inst->pcState());

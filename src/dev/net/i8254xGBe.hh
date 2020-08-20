@@ -36,7 +36,6 @@
 #include <deque>
 #include <string>
 
-#include "base/cp_annotate.hh"
 #include "base/inet.hh"
 #include "debug/EthernetDesc.hh"
 #include "debug/EthernetIntr.hh"
@@ -55,7 +54,6 @@ class IGbE : public EtherDevice
 {
   private:
     IGbEInt *etherInt;
-    CPA *cpa;
 
     // device registers
     iGbReg::Regs regs;
@@ -171,42 +169,6 @@ class IGbE : public EtherDevice
      * handle the drain event if so.
      */
     void checkDrain();
-
-    void anBegin(std::string sm, std::string st, int flags = CPA::FL_NONE) {
-        if (cpa)
-            cpa->hwBegin((CPA::flags)flags, sys, macAddr, sm, st);
-    }
-
-    void anQ(std::string sm, std::string q) {
-        if (cpa)
-            cpa->hwQ(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
-    }
-
-    void anDq(std::string sm, std::string q) {
-        if (cpa)
-            cpa->hwDq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
-    }
-
-    void anPq(std::string sm, std::string q, int num = 1) {
-        if (cpa)
-            cpa->hwPq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr, NULL, num);
-    }
-
-    void anRq(std::string sm, std::string q, int num = 1) {
-        if (cpa)
-            cpa->hwRq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr, NULL, num);
-    }
-
-    void anWe(std::string sm, std::string q) {
-        if (cpa)
-            cpa->hwWe(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
-    }
-
-    void anWf(std::string sm, std::string q) {
-        if (cpa)
-            cpa->hwWf(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
-    }
-
 
     template<class T>
     class DescCache : public Serializable
