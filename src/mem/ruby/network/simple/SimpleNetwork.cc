@@ -122,7 +122,7 @@ SimpleNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     m_switches[src]->addOutPort(m_fromNetQueues[local_dest],
                                 routing_table_entry[0],
                                 simple_link->m_latency, 0,
-                                simple_link->m_bw_multiplier);
+                                simple_link->m_bw_multiplier, true);
 }
 
 // From an endpoint node to a switch
@@ -150,6 +150,7 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                 simple_link->m_latency,
                                 simple_link->m_weight,
                                 simple_link->m_bw_multiplier,
+                                false,
                                 dst_inport);
     // Maitain a global list of buffers (used for functional accesses only)
     m_int_link_buffers.insert(m_int_link_buffers.end(),

@@ -96,6 +96,7 @@ void
 PerfectSwitch::addOutPort(const std::vector<MessageBuffer*>& out,
                           const NetDest& routing_table_entry,
                           const PortDirection &dst_inport,
+                          Tick routing_latency,
                           int link_weight)
 {
     // Add to routing unit
@@ -104,7 +105,7 @@ PerfectSwitch::addOutPort(const std::vector<MessageBuffer*>& out,
                                           routing_table_entry,
                                           dst_inport,
                                           link_weight);
-    m_out.push_back(out);
+    m_out.push_back({routing_latency, out});
 }
 
 PerfectSwitch::~PerfectSwitch()
@@ -182,8 +183,9 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
         bool enough = true;
         for (int i = 0; i < output_links.size(); i++) {
             int outgoing = output_links[i].m_link_id;
+            OutputPort &out_port = m_out[outgoing];
 
-            if (!m_out[outgoing][vnet]->areNSlotsAvailable(1, current_time))
+            if (!out_port.buffers[vnet]->areNSlotsAvailable(1, current_time))
                 enough = false;
 
             DPRINTF(RubyNetwork, "Checking if node is blocked ..."
@@ -220,6 +222,7 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
         // Enqueue it - for all outgoing queues
         for (int i=0; i<output_links.size(); i++) {
             int outgoing = output_links[i].m_link_id;
+            OutputPort &out_port = m_out[outgoing];
 
             if (i > 0) {
                 // create a private copy of the unmodified message
@@ -236,8 +239,8 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
                     "inport[%d][%d] to outport [%d][%d].\n",
                     incoming, vnet, outgoing, vnet);
 
-            m_out[outgoing][vnet]->enqueue(msg_ptr, current_time,
-                                           m_switch->latencyTicks());
+            out_port.buffers[vnet]->enqueue(msg_ptr, current_time,
+                                           out_port.latency);
         }
     }
 }

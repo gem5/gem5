@@ -93,6 +93,7 @@ class Switch : public BasicRouter
     void addOutPort(const std::vector<MessageBuffer*>& out,
                     const NetDest& routing_table_entry,
                     Cycles link_latency, int link_weight, int bw_multiplier,
+                    bool is_external,
                     PortDirection dst_inport = "");
 
     void resetStats();
@@ -108,10 +109,6 @@ class Switch : public BasicRouter
     bool functionalRead(Packet *, WriteMask&);
     uint32_t functionalWrite(Packet *);
 
-    Cycles latencyCycles() const { return m_latency; }
-
-    Tick latencyTicks() const { return cyclesToTicks(m_latency); }
-
     BaseRoutingUnit& getRoutingUnit() { return m_routing_unit; }
 
   private:
@@ -123,7 +120,8 @@ class Switch : public BasicRouter
     SimpleNetwork* m_network_ptr;
     std::list<Throttle> throttles;
 
-    const Cycles m_latency;
+    const Cycles m_int_routing_latency;
+    const Cycles m_ext_routing_latency;
 
     BaseRoutingUnit &m_routing_unit;
 

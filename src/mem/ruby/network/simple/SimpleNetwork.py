@@ -111,6 +111,11 @@ class Switch(BasicRouter):
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
 
+    int_routing_latency = Param.Cycles(BasicRouter.latency,
+                                    "Routing latency to internal links")
+    ext_routing_latency = Param.Cycles(BasicRouter.latency,
+                                    "Routing latency to external links")
+
     # Internal port buffers used between the PerfectSwitch and
     # Throttle objects. There is one buffer per virtual network
     # and per output port.

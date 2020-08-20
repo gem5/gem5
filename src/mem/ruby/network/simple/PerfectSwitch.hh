@@ -80,6 +80,7 @@ class PerfectSwitch : public Consumer
     void addOutPort(const std::vector<MessageBuffer*>& out,
                     const NetDest& routing_table_entry,
                     const PortDirection &dst_inport,
+                    Tick routing_latency,
                     int link_weight);
 
     int getInLinks() const { return m_in.size(); }
@@ -103,9 +104,16 @@ class PerfectSwitch : public Consumer
     const SwitchID m_switch_id;
     Switch * const m_switch;
 
-    // vector of queues from the components
+    // Vector of queues associated to each port.
     std::vector<std::vector<MessageBuffer*> > m_in;
-    std::vector<std::vector<MessageBuffer*> > m_out;
+
+    // Each output port also has a latency for routing to that port
+    struct OutputPort
+    {
+        Tick latency;
+        std::vector<MessageBuffer*> buffers;
+    };
+    std::vector<OutputPort> m_out;
 
     uint32_t m_virtual_networks;
     int m_wakeups_wo_switch;
