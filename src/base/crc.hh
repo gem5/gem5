@@ -51,6 +51,8 @@
  * @param size: Number of bytes
  *
  * @return 32-bit remainder of the checksum
+ *
+ * @ingroup api_base_utils
  */
 template <uint32_t Poly>
 uint32_t
