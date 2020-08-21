@@ -86,7 +86,7 @@ def needSudo():
 def runCommand(command, inputVal=''):
     print("%>", ' '.join(command))
     proc = Popen(command, stdin=PIPE)
-    proc.communicate(inputVal)
+    proc.communicate(inputVal.encode())
     return proc.returncode
 
 # Run an external command and capture its output. This is intended to be
@@ -98,7 +98,7 @@ def getOutput(command, inputVal=''):
     proc = Popen(command, stderr=STDOUT,
                  stdin=PIPE, stdout=PIPE)
     (out, err) = proc.communicate(inputVal)
-    return (out, proc.returncode)
+    return (out.decode(), proc.returncode)
 
 # Run a command as root, using sudo if necessary.
 def runPriv(command, inputVal=''):
@@ -120,7 +120,7 @@ def findProg(program, cleanupDev=None):
         if cleanupDev:
             cleanupDev.destroy()
         exit("Unable to find program %s, check your PATH variable." % program)
-    return string.strip(out)
+    return out.strip()
 
 class LoopbackDevice(object):
     def __init__(self, devFile=None):
@@ -134,7 +134,7 @@ class LoopbackDevice(object):
         if returncode != 0:
             print(out)
             return returncode
-        self.devFile = string.strip(out)
+        self.devFile = out.strip()
         command = [findProg('losetup'), self.devFile, fileName]
         if offset:
             off = findPartOffset(self.devFile, fileName, 0)
@@ -174,7 +174,7 @@ def findPartOffset(devFile, fileName, partition):
         chunks = lines[5].split()
     # The fourth chunk is the offset of the partition in sectors followed by
     # a comma. We drop the comma and convert that to an integer.
-    sectors = string.atoi(chunks[3][:-1])
+    sectors = int(chunks[3][:-1])
     # Free the loopback device and return an answer.
     dev.destroy()
     return sectors * BlockSize
@@ -299,11 +299,11 @@ def newImage(file, mb):
     # store to disk and which is defined to read as zero.
     fd = os.open(file, os.O_WRONLY | os.O_CREAT)
     os.lseek(fd, size - 1, os.SEEK_SET)
-    os.write(fd, '\0')
+    os.write(fd, b'\0')
 
 def newComFunc(options, args):
     (file, mb) = args
-    mb = string.atoi(mb)
+    mb = int(mb)
     newImage(file, mb)
 
 
@@ -366,7 +366,7 @@ formatCom.func = formatComFunc
 
 def initComFunc(options, args):
     (path, mb) = args
-    mb = string.atoi(mb)
+    mb = int(mb)
     newImage(path, mb)
     dev = LoopbackDevice()
     if dev.setup(path) != 0:
