@@ -27,22 +27,18 @@
 # Authors: Bobby R. Bruce
 
 '''
-Test file for the insttest binary running on the RISCV and SPARC
+Test file for the insttest binary running on the SPARC ISA
 '''
 from testlib import *
 
 test_progs = {
-    'riscv': ('insttest-rv64a', 'insttest-rv64c', 'insttest-rv64d',
-        'insttest-rv64f', 'insttest-rv64i', 'insttest-rv64m'),
     'sparc': ('insttest',)
 }
 #o3-timing  simple-atomic  simple-timing
 cpu_types = {
-    'riscv' : ('AtomicSimpleCPU', 'TimingSimpleCPU', 'DerivO3CPU', 'MinorCPU'),
     'sparc' : ('AtomicSimpleCPU', 'TimingSimpleCPU')
 }
 supported_os = {
-    'riscv' : ('linux',),
     'sparc' : ('linux',)
 }
 
