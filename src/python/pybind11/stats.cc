@@ -54,6 +54,25 @@
 
 namespace py = pybind11;
 
+static const py::object
+cast_stat_info(const Stats::Info *info)
+{
+    /* PyBind11 gets confused by the InfoProxy magic, so we need to
+     * explicitly cast to the right wrapper type. */
+
+#define TRY_CAST(T) do {                                \
+        auto _stat = dynamic_cast<const T *>(info);     \
+        if (_stat)                                      \
+            return py::cast(_stat);                     \
+    } while (0)
+
+    TRY_CAST(Stats::ScalarInfo);
+
+    return py::cast(info);
+
+#undef TRY_CAST
+}
+
 namespace Stats {
 
 void
@@ -120,14 +139,39 @@ pybind_init_stats(py::module &m_native)
         .def("visit", &Stats::Info::visit)
         ;
 
+    py::class_<Stats::ScalarInfo, Stats::Info,
+               std::unique_ptr<Stats::ScalarInfo, py::nodelete>>(
+                   m, "ScalarInfo")
+        .def("value", &Stats::ScalarInfo::value)
+        .def("result", &Stats::ScalarInfo::result)
+        .def("total", &Stats::ScalarInfo::total)
+        ;
+
     py::class_<Stats::Group, std::unique_ptr<Stats::Group, py::nodelete>>(
         m, "Group")
         .def("regStats", &Stats::Group::regStats)
         .def("resetStats", &Stats::Group::resetStats)
         .def("preDumpStats", &Stats::Group::preDumpStats)
-        .def("getStats", &Stats::Group::getStats)
+        .def("getStats", [](const Stats::Group &self)
+             -> std::vector<py::object> {
+
+                 auto stats = self.getStats();
+                std::vector<py::object> py_stats;
+                py_stats.reserve(stats.size());
+                std::transform(stats.begin(), stats.end(),
+                               std::back_inserter(py_stats),
+                               cast_stat_info);
+                return py_stats;
+            })
         .def("getStatGroups", &Stats::Group::getStatGroups)
         .def("addStatGroup", &Stats::Group::addStatGroup)
-        .def("resolveStat", &Stats::Group::resolveStat)
+        .def("resolveStat", [](const Stats::Group &self,
+                               const std::string &name) -> py::object {
+                 const Stats::Info *stat = self.resolveStat(name);
+                 if (!stat)
+                     throw pybind11::key_error("Unknown stat name");
+
+                 return cast_stat_info(stat);
+             })
         ;
 }
