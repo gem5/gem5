@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 ARM Limited
+// Copyright (c) 2017-2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -2881,6 +2881,29 @@ namespace Aarch64
         }
         return new Unknown64(machInst);
     }  // decodeSveFpFusedMulAdd
+
+    StaticInstPtr
+    decodeSveFpFusedMatMulAdd(ExtMachInst machInst)
+    {
+        RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        uint8_t size = bits(machInst, 23, 22);
+        switch (size) {
+          case 0x1:
+            // BFMMLA goes here when implemented.
+            return new Unknown64(machInst);
+          case 0x2:
+            return new SveFmmla<uint32_t,uint32_t,uint32_t>(
+                machInst, zda, zn, zm);
+          case 0x3:
+            return new SveFmmla<uint64_t,uint64_t,uint64_t>(
+                machInst, zda, zn, zm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }  // decodeSveFpFusedMatMulAdd
 
     StaticInstPtr
     decodeSveFpCplxAdd(ExtMachInst machInst)

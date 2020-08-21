@@ -320,6 +320,9 @@ ArmProcess64::armHwcapImpl2() const
     hwcap |= (isa_r0.ts >= 2) ? Arm_Flagm2 : Arm_None;
     hwcap |= (isa_r0.rndr >= 1) ? Arm_Rng : Arm_None;
 
+    const AA64ZFR0 zf_r0 = tc->readMiscReg(MISCREG_ID_AA64ZFR0_EL1);
+    hwcap |= (zf_r0.f32mm >= 1) ? Arm_Svef32mm : Arm_None;
+
     return hwcap;
 }
 

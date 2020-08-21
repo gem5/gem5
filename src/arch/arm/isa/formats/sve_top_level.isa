@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 ARM Limited
+// Copyright (c) 2017-2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -83,6 +83,7 @@ namespace Aarch64
     StaticInstPtr decodeSveFpUnaryPred(ExtMachInst machInst);
     StaticInstPtr decodeSveFpCmpVec(ExtMachInst machInst);
     StaticInstPtr decodeSveFpFusedMulAdd(ExtMachInst machInst);
+    StaticInstPtr decodeSveFpFusedMatMulAdd(ExtMachInst machInst);
     StaticInstPtr decodeSveFpCplxAdd(ExtMachInst machInst);
     StaticInstPtr decodeSveFpCplxMulAddVec(ExtMachInst machInst);
     StaticInstPtr decodeSveFpMulAddIndexed(ExtMachInst machInst);
@@ -269,9 +270,10 @@ namespace Aarch64
               case 0:
                 return decodeSveFpMulAddIndexed(machInst);
               case 4:
-                if (!bits(machInst, 10))
+                if (bits(machInst, 10))
+                   return decodeSveFpFusedMatMulAdd(machInst);
+                else
                     return decodeSveFpMulIndexed(machInst);
-                [[fallthrough]];
               default:
                 return new Unknown64(machInst);
             }

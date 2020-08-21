@@ -498,7 +498,7 @@ class SveTerPredOp : public ArmStaticInst
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
-///SVE2 Accumulate instructions
+/// Ternary, destructive, unpredicated SVE instruction.
 class SveTerUnpredOp : public ArmStaticInst
 {
   protected:

@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 ARM Limited
+// Copyright (c) 2017-2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -2188,6 +2188,111 @@ let {{
                          'class_name' : 'Sve' + Name}
             exec_output += SveOpExecDeclare.subst(substDict)
 
+    # Generates definitions for ternary destructive SVE Matrix
+    # Multiplication instructions (not predicated)
+    #
+    # `type_specs` can either be a sequence of types for cases where
+    # the dest and source matrices have the same element types, or a
+    # sequence of 3-tuples for case where the dest and source matrices
+    # have differnet element types.
+    #
+    # The calculation Z = Z + A x B is performed for full matrices
+    # Z (numDestRows x numDestCols), A (numDestRows x K), and
+    # B(K x numDestCols), and remaining elemnts of Z are set to zero.
+    # The vector length must be large enough for one full matrix or
+    # an UndefinedInstruction Fault is generated.
+    #
+    def sveMatMulInst(name, Name, opClass, type_specs,
+                      numDestRows, numDestCols, K,
+                      elt_mul_op):
+        global header_output, exec_output
+        code = sveEnabledCheckCode + '''
+        // Types of the extended versions of the source elements.
+        // Required to make sure the itermediate calculations don't overflow.
+        using ExtendedElementA = typename vector_element_traits::
+                                   extend_element<DestElement,
+                                                  SrcElementA>::type;
+        using ExtendedElementB = typename vector_element_traits::
+                                   extend_element<DestElement,
+                                                  SrcElementB>::type;
+
+        // Element count of destination vector
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<DestElement>(
+                xc->tcBase());
+
+        // SVE Matrix operations require that there are at least 4
+        // elements (one full matrix). Further matrices may be partial,
+        // in which case the trailing dest elements are filled with zeros.
+        if (eCount < 4) {
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          "%(mnemonic)s");
+        }
+
+        // Some properties of the source and dest matrix dimensions
+        //   ( numDestRows x numDestCols ) <- (numDestRows x K) .
+        //                                        (K x numDestCols)
+        constexpr unsigned numDestRows = %(numDestRows)d;
+        constexpr unsigned numDestCols = %(numDestCols)d;
+        constexpr unsigned K = %(K)d;
+
+        constexpr unsigned eltsPerDestMatrix = numDestRows * numDestCols;
+        constexpr unsigned eltsPerSrcAMatrix = numDestRows * K;
+        constexpr unsigned eltsPerSrcBMatrix = K * numDestCols;
+
+        // Number of full matrices - there may be some elements left over
+        const unsigned mCount = eCount / eltsPerDestMatrix;
+
+        // Calculate z_ij = Sum[k=1..K](a_ik * b_kj)
+
+        unsigned zEltIdx = 0; // Index of the result element being produced
+        unsigned aMatIdx = 0; // Index of the first element of the A matrix
+        unsigned bMatIdx = 0; // Index of the first element of the B matrix
+        for (unsigned matIdx = 0; matIdx < mCount; ++matIdx) {
+            for (unsigned rowIdx = 0; rowIdx < numDestRows; ++rowIdx) {
+                for (unsigned colIdx = 0; colIdx < numDestCols; ++colIdx) {
+                    DestElement destElem =
+                        static_cast<DestElement>(AA64FpDestMerge_x[zEltIdx]);
+                    for (unsigned k = 0; k < K; ++k) {
+                        const ExtendedElementA srcElemA =
+                            static_cast<ExtendedElementA>
+                                                (AA64FpOp1_srcA[aMatIdx + K * rowIdx + k]);
+                        const ExtendedElementB srcElemB =
+                            static_cast<ExtendedElementB>
+                                                (AA64FpOp2_srcB[bMatIdx + K * colIdx + k]);
+
+                        // Do the math operation. Should be of form:
+                        //   destElem += f(destElem, srcElemA, srcElemB);
+                        %(elt_mul_op)s;
+                    }
+                    AA64FpDest_x[zEltIdx++] = destElem;
+                }
+            }
+            aMatIdx += eltsPerSrcAMatrix;
+            bMatIdx += eltsPerSrcBMatrix;
+        }
+
+        // Zero-fill any trailing elements
+        for (unsigned i = mCount * eltsPerDestMatrix; i < eCount; ++i) {
+            AA64FpDest_x[i] = static_cast<DestElement>(0);
+        }
+        ''' % {'elt_mul_op': elt_mul_op, 'mnemonic': name,
+               'numDestRows': numDestRows, 'numDestCols': numDestCols,
+               'K': K}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveTerUnpredOp',
+                            {'code': code, 'op_class': opClass}, [])
+        header_output += SveMatMulOpDeclare.subst(iop)
+        exec_output += SveMatMulOpExecute.subst(iop)
+        for type_spec in type_specs:
+            try:
+                destEltType, srcEltAType, srcEltBType = type_spec
+            except ValueError:
+                destEltType, srcEltAType, srcEltBType = (type_spec,) * 3
+            substDict = {'destEltType': destEltType,
+                         'srcEltAType': srcEltAType,
+                         'srcEltBType': srcEltBType,
+                         'class_name': 'Sve' + Name}
+            exec_output += SveMatMulOpExecDeclare.subst(substDict)
+
     # Generates definitions for PTRUE and PTRUES instructions.
     def svePtrueInst(name, Name, opClass, types, isFlagSetting=False,
                      decoder='Generic'):
@@ -3822,6 +3927,16 @@ let {{
     # FMLS (indexed)
     sveTerIdxInst('fmls', 'FmlsIdx', 'SimdFloatMultAccOp', floatTypes,
                   fmlsCode, PredType.MERGE)
+
+    fmmlaCode = fpOp % '''
+        fplibAdd<DestElement>(destElem,
+            fplibMul<DestElement>(srcElemA, srcElemB, fpscr), fpscr);
+    '''
+    # FMMLA (vectors)
+    sveMatMulInst('fmmla', 'Fmmla', 'SimdFloatMultAccOp', floatTypes,
+                  numDestRows=2, numDestCols=2, K=2,
+                  elt_mul_op=fmmlaCode)
+
     # FMLS (vectors)
     sveTerInst('fmls', 'Fmls', 'SimdFloatMultAccOp', floatTypes, fmlsCode,
                PredType.MERGE)

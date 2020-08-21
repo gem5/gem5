@@ -5403,6 +5403,11 @@ ISA::initializeMiscRegMetadata()
 
     // SVE
     InitReg(MISCREG_ID_AA64ZFR0_EL1)
+        .reset([this](){
+            AA64ZFR0 zfr0_el1 = 0;
+            zfr0_el1.f32mm = release->has(ArmExtension::FEAT_F32MM) ? 1 : 0;
+            return zfr0_el1;
+        }())
         .faultRead(EL0, faultIdst)
         .faultRead(EL1, HCR_TRAP(tid3))
         .allPrivileges().exceptUserMode().writes(0);

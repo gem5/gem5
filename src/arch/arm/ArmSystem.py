@@ -78,6 +78,7 @@ class ArmExtension(ScopedEnum):
         "FEAT_UAO",
         "FEAT_LVA",  # Optional in Armv8.2
         "FEAT_LPA",  # Optional in Armv8.2
+        "FEAT_F32MM",  # Optional in Armv8.2
         # Armv8.3
         "FEAT_FCMA",
         "FEAT_JSCVT",
@@ -163,6 +164,7 @@ class ArmDefaultRelease(Armv8):
         "FEAT_LVA",
         "FEAT_LPA",
         "FEAT_SVE",
+        "FEAT_F32MM",
         # Armv8.3
         "FEAT_FCMA",
         "FEAT_JSCVT",
@@ -196,6 +198,7 @@ class Armv82(Armv81):
         "FEAT_LVA",
         "FEAT_LPA",
         "FEAT_SVE",
+        "FEAT_F32MM",
     ]
 
 

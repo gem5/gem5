@@ -66,6 +66,7 @@ output header {{
 #include "arch/arm/insts/sve.hh"
 #include "arch/arm/insts/sve_mem.hh"
 #include "arch/arm/insts/tme64.hh"
+#include "arch/arm/insts/vector_element_traits.hh"
 #include "arch/arm/insts/vfp.hh"
 #include "enums/DecoderFlavor.hh"
 #include "mem/packet.hh"

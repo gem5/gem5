@@ -53,6 +53,7 @@ class ArmDefaultSERelease(ArmRelease):
         "FEAT_LSE",
         "FEAT_RDM",
         # Armv8.2
+        "FEAT_F32MM",
         "FEAT_SVE",
         # Armv8.3
         "FEAT_FCMA",

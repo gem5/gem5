@@ -60,6 +60,8 @@ def operand_types {{
     'xs1' : 'TPS1Elem',
     'xs2' : 'TPS2Elem',
     'xd' : 'TPDElem',
+    'srcA' : 'TPSrcAElem',
+    'srcB' : 'TPSrcBElem',
     'pc' : 'ArmISA::VecPredRegContainer',
     'pb' : 'uint8_t'
 }};
