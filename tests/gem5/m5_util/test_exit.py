@@ -47,11 +47,7 @@ m5_exit_regex = re.compile(
 r'Exiting @ tick \d* because m5_exit instruction encountered'
 )
 
-if config.bin_path:
-    path = config.bin_path
-else:
-    path = joinpath(absdirpath(__file__), '..',
-                    'test-progs', 'hello', 'bin', 'x86', 'linux')
+path = joinpath(config.bin_path, 'test-progs', 'hello', 'bin', 'x86', 'linux')
 filename = 'm5_exit'
 url = (config.resource_url + '/test-progs/m5-exit/bin/x86/linux/m5_exit')
 test_program = DownloadedProgram(url, path, filename)

@@ -43,10 +43,7 @@ supported_os = {
     'sparc' : ('linux',)
 }
 
-if config.bin_path:
-    base_path = config.bin_path
-else:
-    base_path = joinpath(absdirpath(__file__), '..', 'test-progs')
+base_path = joinpath(config.bin_path, 'insttest')
 
 urlbase = config.resource_url + '/test-progs/insttest/bin/'
 for isa in test_progs:

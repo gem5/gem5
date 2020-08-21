@@ -38,11 +38,7 @@ cpu_types = (
     # 'TimingSimpleCPU',
 )
 
-if config.bin_path:
-    base_path = config.bin_path
-else:
-    base_path = joinpath(absdirpath(__file__), '..', 'test-progs',
-                         'test_atomic', 'bin')
+base_path = joinpath(config.bin_path, 'pthreads', 'sparc64')
 
 binary = 'test_atomic'
 url = config.resource_url + '/test-progs/pthreads/sparc64/' + binary

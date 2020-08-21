@@ -223,7 +223,7 @@ class MakeTarget(Fixture):
 
 class TestProgram(MakeTarget):
     def __init__(self, program, isa, os, recompile=False):
-        make_dir = joinpath('test-progs', program)
+        make_dir = joinpath(config.bin_dir, program)
         make_fixture = MakeFixture(make_dir)
         target = joinpath('bin', isa, os, program)
         super(TestProgram, self).__init__(target, make_fixture)

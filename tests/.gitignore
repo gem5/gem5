@@ -1,7 +1,2 @@
 .testing-results
-gem5/cpu_tests/benchmarks
-gem5/fs/linux/arm/*.tar.bz2
-gem5/fs/linux/arm/binaries
-gem5/fs/linux/arm/disks
-gem5/test-progs
 gem5/resources

@@ -82,11 +82,7 @@ os_length = {
     'sparc' : constants.long_tag,
 }
 
-if config.bin_path:
-    base_path = config.bin_path
-else:
-    base_path = joinpath(absdirpath(__file__), '..', 'test-progs', 'hello',
-        'bin')
+base_path = joinpath(config.bin_path, 'hello')
 
 urlbase = config.resource_url + '/test-progs/hello/bin/'
 

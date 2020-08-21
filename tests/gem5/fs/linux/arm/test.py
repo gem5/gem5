@@ -91,7 +91,7 @@ arm_fs_long_tests = [
 tarball = 'aarch-system-201901106.tar.bz2'
 url = config.resource_url + "/arm/" + tarball
 filepath = os.path.dirname(os.path.abspath(__file__))
-path = config.bin_path if config.bin_path else filepath
+path = joinpath(config.bin_path, 'arm')
 arm_fs_binaries = DownloadedArchive(url, path, tarball)
 
 for name in arm_fs_quick_tests:
