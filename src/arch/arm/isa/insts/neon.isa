@@ -1416,7 +1416,7 @@ let {{
         if readDest:
             readDestCode = 'destElem = letoh(destReg.elements[i]);'
         eWalkCode += '''
-        if (imm < 0 && imm >= eCount) {
+        if (imm >= eCount) {
             fault = std::make_shared<UndefinedInstruction>(machInst, false,
                                                            mnemonic);
         } else {
@@ -1468,7 +1468,7 @@ let {{
         if readDest:
             readDestCode = 'destElem = letoh(destReg.elements[i]);'
         eWalkCode += '''
-        if (imm < 0 && imm >= eCount) {
+        if (imm >= eCount) {
             fault = std::make_shared<UndefinedInstruction>(machInst, false,
                                                           mnemonic);
         } else {
@@ -1518,7 +1518,7 @@ let {{
         if readDest:
             readDestCode = 'destReg = destRegs[i];'
         eWalkCode += '''
-        if (imm < 0 && imm >= eCount) {
+        if (imm >= eCount) {
             fault = std::make_shared<UndefinedInstruction>(machInst, false,
                                                            mnemonic);
         } else {

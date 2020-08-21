@@ -4335,13 +4335,10 @@ let {{
         destElem = srcElem1 - (count * imm);
         bool negDest = (destElem < 0);
         bool negSrc = (srcElem1 < 0);
-        bool posCount = ((count * imm) >= 0);
-        if ((negDest != negSrc) && (negSrc == posCount)) {
+        if (!negDest && negSrc) {
             destElem = static_cast<%(dstType)s>(
                 (%(dstType)s)1 << (sizeof(%(dstType)s) * 8 - 1)
                 );
-            if (negDest)
-                destElem -= 1;
         }
     '''
     sveElemCountInst('sqdec', 'Sqdec32', 'SimdAluOp', signedTypes,
@@ -4394,13 +4391,11 @@ let {{
         destElem = srcElem1 + (count * imm);
         bool negDest = (destElem < 0);
         bool negSrc = (srcElem1 < 0);
-        bool negCount = ((count * imm) < 0);
-        if ((negDest != negSrc) && (negSrc == negCount)) {
+        if (negDest && !negSrc) {
             destElem = static_cast<%(dstType)s>(
                 (%(dstType)s)1 << (sizeof(%(dstType)s) * 8 - 1)
                 );
-            if (negDest)
-                destElem -= 1;
+            destElem -= 1;
         }
     '''
     sveElemCountInst('sqinc', 'Sqinc32', 'SimdAluOp', signedTypes,
