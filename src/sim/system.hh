@@ -386,11 +386,7 @@ class System : public SimObject, public PCEventScope
     ByteOrder
     getGuestByteOrder() const
     {
-#if THE_ISA != NULL_ISA
-        return TheISA::GuestByteOrder;
-#else
-        panic("The NULL ISA has no endianness.");
-#endif
+        return _params->byte_order;
     }
 
      /**
