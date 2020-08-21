@@ -43,10 +43,16 @@ class ContainerPrint
     bool first;
 
   public:
+    /**
+     * @ingroup api_base_utils
+     */
     ContainerPrint(std::ostream &out)
         : out(out), first(true)
     {}
 
+    /**
+     * @ingroup api_base_utils
+     */
     void
     operator()(const T &elem)
     {
@@ -60,8 +66,12 @@ class ContainerPrint
     }
 };
 
-// Write out all elements in an stl container as a space separated
-// list enclosed in square brackets
+/**
+ * Write out all elements in an stl container as a space separated
+ * list enclosed in square brackets
+ *
+ * @ingroup api_base_utils
+ */
 template <template <typename T, typename A> class C, typename T, typename A>
 std::ostream &
 operator<<(std::ostream& out, const C<T,A> &vec)
