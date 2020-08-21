@@ -72,14 +72,14 @@ template <class MemT>
 void
 getMemLE(PacketPtr pkt, MemT &mem, Trace::InstRecord *traceData)
 {
-    getMem<LittleEndianByteOrder>(pkt, mem, traceData);
+    getMem<ByteOrder::little>(pkt, mem, traceData);
 }
 
 template <class MemT>
 void
 getMemBE(PacketPtr pkt, MemT &mem, Trace::InstRecord *traceData)
 {
-    getMem<BigEndianByteOrder>(pkt, mem, traceData);
+    getMem<ByteOrder::big>(pkt, mem, traceData);
 }
 
 /// Read from memory in atomic mode.
@@ -103,7 +103,7 @@ Fault
 readMemAtomicLE(XC *xc, Trace::InstRecord *traceData, Addr addr, MemT &mem,
                 Request::Flags flags)
 {
-    return readMemAtomic<LittleEndianByteOrder>(
+    return readMemAtomic<ByteOrder::little>(
             xc, traceData, addr, mem, flags);
 }
 
@@ -112,7 +112,7 @@ Fault
 readMemAtomicBE(XC *xc, Trace::InstRecord *traceData, Addr addr, MemT &mem,
                 Request::Flags flags)
 {
-    return readMemAtomic<BigEndianByteOrder>(xc, traceData, addr, mem, flags);
+    return readMemAtomic<ByteOrder::big>(xc, traceData, addr, mem, flags);
 }
 
 /// Write to memory in timing mode.
@@ -133,7 +133,7 @@ Fault
 writeMemTimingLE(XC *xc, Trace::InstRecord *traceData, MemT mem, Addr addr,
                Request::Flags flags, uint64_t *res)
 {
-    return writeMemTiming<LittleEndianByteOrder>(
+    return writeMemTiming<ByteOrder::little>(
             xc, traceData, mem, addr, flags, res);
 }
 
@@ -142,7 +142,7 @@ Fault
 writeMemTimingBE(XC *xc, Trace::InstRecord *traceData, MemT mem, Addr addr,
                Request::Flags flags, uint64_t *res)
 {
-    return writeMemTiming<BigEndianByteOrder>(
+    return writeMemTiming<ByteOrder::big>(
             xc, traceData, mem, addr, flags, res);
 }
 
@@ -172,7 +172,7 @@ Fault
 writeMemAtomicLE(XC *xc, Trace::InstRecord *traceData, const MemT &mem,
                  Addr addr, Request::Flags flags, uint64_t *res)
 {
-    return writeMemAtomic<LittleEndianByteOrder>(
+    return writeMemAtomic<ByteOrder::little>(
             xc, traceData, mem, addr, flags, res);
 }
 
@@ -181,7 +181,7 @@ Fault
 writeMemAtomicBE(XC *xc, Trace::InstRecord *traceData, const MemT &mem,
                  Addr addr, Request::Flags flags, uint64_t *res)
 {
-    return writeMemAtomic<BigEndianByteOrder>(
+    return writeMemAtomic<ByteOrder::big>(
             xc, traceData, mem, addr, flags, res);
 }
 
@@ -213,7 +213,7 @@ Fault
 amoMemAtomicLE(XC *xc, Trace::InstRecord *traceData, MemT &mem, Addr addr,
                Request::Flags flags, AtomicOpFunctor *_amo_op)
 {
-    return amoMemAtomic<LittleEndianByteOrder>(
+    return amoMemAtomic<ByteOrder::little>(
             xc, traceData, mem, addr, flags, _amo_op);
 }
 
@@ -222,7 +222,7 @@ Fault
 amoMemAtomicBE(XC *xc, Trace::InstRecord *traceData, MemT &mem, Addr addr,
                Request::Flags flags, AtomicOpFunctor *_amo_op)
 {
-    return amoMemAtomic<BigEndianByteOrder>(
+    return amoMemAtomic<ByteOrder::big>(
             xc, traceData, mem, addr, flags, _amo_op);
 }
 

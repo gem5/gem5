@@ -999,7 +999,7 @@ GenericTimerFrame::read(PacketPtr pkt)
     DPRINTF(Timer, "GenericTimerFrame::read: 0x%x<-0x%x(%i) [S = %u]\n", resp,
             addr, size, is_sec);
 
-    pkt->setUintX(resp, LittleEndianByteOrder);
+    pkt->setUintX(resp, ByteOrder::little);
     pkt->makeResponse();
     return 0;
 }
@@ -1014,7 +1014,7 @@ GenericTimerFrame::write(PacketPtr pkt)
              "GenericTimerFrame::write: Invalid size %i\n", size);
 
     bool to_el0 = false;
-    const uint64_t data = pkt->getUintX(LittleEndianByteOrder);
+    const uint64_t data = pkt->getUintX(ByteOrder::little);
     Addr offset = 0;
     if (timerRange.contains(addr)) {
         offset = addr - timerRange.start();
@@ -1313,7 +1313,7 @@ GenericTimerMem::read(PacketPtr pkt)
     DPRINTF(Timer, "GenericTimerMem::read: 0x%x<-0x%x(%i) [S = %u]\n", resp,
             addr, size, is_sec);
 
-    pkt->setUintX(resp, LittleEndianByteOrder);
+    pkt->setUintX(resp, ByteOrder::little);
     pkt->makeResponse();
     return 0;
 }
@@ -1327,7 +1327,7 @@ GenericTimerMem::write(PacketPtr pkt)
     panic_if(size != 4 && size != 8,
              "GenericTimerMem::write: Invalid size %i\n", size);
 
-    const uint64_t data = pkt->getUintX(LittleEndianByteOrder);
+    const uint64_t data = pkt->getUintX(ByteOrder::little);
     if (counterCtrlRange.contains(addr))
         counterCtrlWrite(addr - counterCtrlRange.start(), size, data, is_sec);
     else if (counterStatusRange.contains(addr))

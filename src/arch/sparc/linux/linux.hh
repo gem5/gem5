@@ -36,7 +36,7 @@ class SparcLinux : public Linux
 {
   public:
 
-    static const ByteOrder byteOrder = BigEndianByteOrder;
+    static const ByteOrder byteOrder = ByteOrder::big;
 
     struct tgt_stat
     {

@@ -44,7 +44,7 @@
 
 SimpleUart::SimpleUart(const SimpleUartParams *p)
     : Uart(p, p->pio_size),
-      byteOrder(p->big_endian ? BigEndianByteOrder : LittleEndianByteOrder),
+      byteOrder(p->big_endian ? ByteOrder::big : ByteOrder::little),
       endOnEOT(p->end_on_eot)
 {
 }

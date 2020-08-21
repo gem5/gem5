@@ -93,7 +93,7 @@ Sp805::read(PacketPtr pkt)
         break;
       default:
         if (readId(pkt, ambaId, pioAddr))
-            resp = pkt->getUintX(LittleEndianByteOrder);
+            resp = pkt->getUintX(ByteOrder::little);
         else
             warn("Sp805::read: Unexpected address (0x%x:%i), assuming RAZ\n",
                  addr, size);
@@ -101,7 +101,7 @@ Sp805::read(PacketPtr pkt)
 
     DPRINTF(Sp805, "Sp805::read: 0x%x<-0x%x(%i)\n", resp, addr, size);
 
-    pkt->setUintX(resp, LittleEndianByteOrder);
+    pkt->setUintX(resp, ByteOrder::little);
     pkt->makeResponse();
     return pioDelay;
 }
@@ -113,7 +113,7 @@ Sp805::write(PacketPtr pkt)
     const size_t size = pkt->getSize();
     panic_if(size != 4, "Sp805::write: Invalid size %i\n", size);
 
-    uint64_t data = pkt->getUintX(LittleEndianByteOrder);
+    uint64_t data = pkt->getUintX(ByteOrder::little);
     switch (addr) {
       case WDOGLOAD:
         if (writeAccessEnabled) {

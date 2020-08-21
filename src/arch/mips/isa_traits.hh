@@ -35,7 +35,7 @@
 namespace MipsISA
 {
 
-const ByteOrder GuestByteOrder = LittleEndianByteOrder;
+const ByteOrder GuestByteOrder = ByteOrder::little;
 
 const Addr PageShift = 13;
 const Addr PageBytes = ULL(1) << PageShift;

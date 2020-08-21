@@ -182,7 +182,7 @@ Pl111::read(PacketPtr pkt)
       default:
         if (readId(pkt, AMBA_ID, pioAddr)) {
             // Hack for variable size accesses
-            data = pkt->getUintX(LittleEndianByteOrder);
+            data = pkt->getUintX(ByteOrder::little);
             break;
         } else if (daddr >= CrsrImage && daddr <= 0xBFC) {
             // CURSOR IMAGE
@@ -203,7 +203,7 @@ Pl111::read(PacketPtr pkt)
         }
     }
 
-    pkt->setUintX(data, LittleEndianByteOrder);
+    pkt->setUintX(data, ByteOrder::little);
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -215,7 +215,7 @@ Pl111::write(PacketPtr pkt)
     // use a temporary data since the LCD registers are read/written with
     // different size operations
     //
-    const uint32_t data = pkt->getUintX(LittleEndianByteOrder);
+    const uint32_t data = pkt->getUintX(ByteOrder::little);
 
     assert(pkt->getAddr() >= pioAddr &&
            pkt->getAddr() < pioAddr + pioSize);
@@ -383,13 +383,13 @@ Pl111::pixelConverter() const
             bytesPerPixel,
             offsets[2], offsets[1], offsets[0],
             rw, gw, bw,
-            LittleEndianByteOrder);
+            ByteOrder::little);
     } else {
         return PixelConverter(
             bytesPerPixel,
             offsets[0], offsets[1], offsets[2],
             rw, gw, bw,
-            LittleEndianByteOrder);
+            ByteOrder::little);
     }
 }
 

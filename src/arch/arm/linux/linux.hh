@@ -48,7 +48,7 @@
 class ArmLinux : public Linux
 {
   public:
-    static const ByteOrder byteOrder = LittleEndianByteOrder;
+    static const ByteOrder byteOrder = ByteOrder::little;
 
     static void
     archClone(uint64_t flags,

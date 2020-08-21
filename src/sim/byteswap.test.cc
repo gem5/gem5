@@ -86,102 +86,102 @@ TEST(ByteswapTest, htog)
 {
 #if (defined(_BIG_ENDIAN)||!defined(_LITTLE_ENDIAN)) && BYTE_ORDER==BIG_ENDIAN
     EXPECT_EQ(0xefcdab8967452301, htog((uint64_t)0xefcdab8967452301,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0x1032547698badcfe, htog((uint64_t)0x1032547698badcfe,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0xb14171b771b01c0b, htog((uint64_t)0xb14171b771b01c0b,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0xffffffff00000000, htog((uint64_t)0xffffffff00000000,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0x5555555555555555, htog((uint64_t)0x5555555555555555,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0, htog((uint64_t)0xa0a0a0a0a0a0a0a0,
-                                BigEndianByteOrder));
-    EXPECT_EQ(0xefcd2301, htog((uint32_t)0xefcd2301, BigEndianByteOrder));
-    EXPECT_EQ(0x1032dcfe, htog((uint32_t)0x1032dcfe, BigEndianByteOrder));
-    EXPECT_EQ(0xb1411c0b, htog((uint32_t)0xb1411c0b, BigEndianByteOrder));
-    EXPECT_EQ(0xffff0000, htog((uint32_t)0xffff0000, BigEndianByteOrder));
-    EXPECT_EQ(0x55555555, htog((uint32_t)0x55555555, BigEndianByteOrder));
-    EXPECT_EQ(0xa0a0a0a0, htog((uint32_t)0xa0a0a0a0, BigEndianByteOrder));
-    EXPECT_EQ(0xef01, htog((uint16_t)0xef01, BigEndianByteOrder));
-    EXPECT_EQ(0x10fe, htog((uint16_t)0x10fe, BigEndianByteOrder));
-    EXPECT_EQ(0xb10b, htog((uint16_t)0xb10b, BigEndianByteOrder));
-    EXPECT_EQ(0xff00, htog((uint16_t)0xff00, BigEndianByteOrder));
-    EXPECT_EQ(0x5555, htog((uint16_t)0x5555, BigEndianByteOrder));
-    EXPECT_EQ(0xa0a0, htog((uint16_t)0xa0a0, BigEndianByteOrder));
+                                ByteOrder::big));
+    EXPECT_EQ(0xefcd2301, htog((uint32_t)0xefcd2301, ByteOrder::big));
+    EXPECT_EQ(0x1032dcfe, htog((uint32_t)0x1032dcfe, ByteOrder::big));
+    EXPECT_EQ(0xb1411c0b, htog((uint32_t)0xb1411c0b, ByteOrder::big));
+    EXPECT_EQ(0xffff0000, htog((uint32_t)0xffff0000, ByteOrder::big));
+    EXPECT_EQ(0x55555555, htog((uint32_t)0x55555555, ByteOrder::big));
+    EXPECT_EQ(0xa0a0a0a0, htog((uint32_t)0xa0a0a0a0, ByteOrder::big));
+    EXPECT_EQ(0xef01, htog((uint16_t)0xef01, ByteOrder::big));
+    EXPECT_EQ(0x10fe, htog((uint16_t)0x10fe, ByteOrder::big));
+    EXPECT_EQ(0xb10b, htog((uint16_t)0xb10b, ByteOrder::big));
+    EXPECT_EQ(0xff00, htog((uint16_t)0xff00, ByteOrder::big));
+    EXPECT_EQ(0x5555, htog((uint16_t)0x5555, ByteOrder::big));
+    EXPECT_EQ(0xa0a0, htog((uint16_t)0xa0a0, ByteOrder::big));
     EXPECT_EQ(0x0123456789abcdef, htog((uint64_t)0xefcdab8967452301,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0xfedcba9876543210, htog((uint64_t)0x1032547698badcfe,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0x0b1cb071b77141b1, htog((uint64_t)0xb14171b771b01c0b,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0x00000000ffffffff, htog((uint64_t)0xffffffff00000000,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0x5555555555555555, htog((uint64_t)0x5555555555555555,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0, htog((uint64_t)0xa0a0a0a0a0a0a0a0,
-                                LittleEndianByteOrder));
-    EXPECT_EQ(0x0123cdef, htog((uint32_t)0xefcd2301, LittleEndianByteOrder));
-    EXPECT_EQ(0xfedc3210, htog((uint32_t)0x1032dcfe, LittleEndianByteOrder));
-    EXPECT_EQ(0x0b1c41b1, htog((uint32_t)0xb1411c0b, LittleEndianByteOrder));
-    EXPECT_EQ(0x0000ffff, htog((uint32_t)0xffff0000, LittleEndianByteOrder));
-    EXPECT_EQ(0x55555555, htog((uint32_t)0x55555555, LittleEndianByteOrder));
-    EXPECT_EQ(0xa0a0a0a0, htog((uint32_t)0xa0a0a0a0, LittleEndianByteOrder));
-    EXPECT_EQ(0x01ef, htog((uint16_t)0xef01, LittleEndianByteOrder));
-    EXPECT_EQ(0xfe10, htog((uint16_t)0x10fe, LittleEndianByteOrder));
-    EXPECT_EQ(0x0bb1, htog((uint16_t)0xb10b, LittleEndianByteOrder));
-    EXPECT_EQ(0x00ff, htog((uint16_t)0xff00, LittleEndianByteOrder));
-    EXPECT_EQ(0x5555, htog((uint16_t)0x5555, LittleEndianByteOrder));
-    EXPECT_EQ(0xa0a0, htog((uint16_t)0xa0a0, LittleEndianByteOrder));
+                                ByteOrder::little));
+    EXPECT_EQ(0x0123cdef, htog((uint32_t)0xefcd2301, ByteOrder::little));
+    EXPECT_EQ(0xfedc3210, htog((uint32_t)0x1032dcfe, ByteOrder::little));
+    EXPECT_EQ(0x0b1c41b1, htog((uint32_t)0xb1411c0b, ByteOrder::little));
+    EXPECT_EQ(0x0000ffff, htog((uint32_t)0xffff0000, ByteOrder::little));
+    EXPECT_EQ(0x55555555, htog((uint32_t)0x55555555, ByteOrder::little));
+    EXPECT_EQ(0xa0a0a0a0, htog((uint32_t)0xa0a0a0a0, ByteOrder::little));
+    EXPECT_EQ(0x01ef, htog((uint16_t)0xef01, ByteOrder::little));
+    EXPECT_EQ(0xfe10, htog((uint16_t)0x10fe, ByteOrder::little));
+    EXPECT_EQ(0x0bb1, htog((uint16_t)0xb10b, ByteOrder::little));
+    EXPECT_EQ(0x00ff, htog((uint16_t)0xff00, ByteOrder::little));
+    EXPECT_EQ(0x5555, htog((uint16_t)0x5555, ByteOrder::little));
+    EXPECT_EQ(0xa0a0, htog((uint16_t)0xa0a0, ByteOrder::little));
 #elif defined(_LITTLE_ENDIAN) || BYTE_ORDER==LITTLE_ENDIAN
     EXPECT_EQ(0x0123456789abcdef, htog((uint64_t)0xefcdab8967452301,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0xfedcba9876543210, htog((uint64_t)0x1032547698badcfe,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0x0b1cb071b77141b1, htog((uint64_t)0xb14171b771b01c0b,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0x00000000ffffffff, htog((uint64_t)0xffffffff00000000,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0x5555555555555555, htog((uint64_t)0x5555555555555555,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0, htog((uint64_t)0xa0a0a0a0a0a0a0a0,
-                                BigEndianByteOrder));
-    EXPECT_EQ(0x0123cdef, htog((uint32_t)0xefcd2301, BigEndianByteOrder));
-    EXPECT_EQ(0xfedc3210, htog((uint32_t)0x1032dcfe, BigEndianByteOrder));
-    EXPECT_EQ(0x0b1c41b1, htog((uint32_t)0xb1411c0b, BigEndianByteOrder));
-    EXPECT_EQ(0x0000ffff, htog((uint32_t)0xffff0000, BigEndianByteOrder));
-    EXPECT_EQ(0x55555555, htog((uint32_t)0x55555555, BigEndianByteOrder));
-    EXPECT_EQ(0xa0a0a0a0, htog((uint32_t)0xa0a0a0a0, BigEndianByteOrder));
-    EXPECT_EQ(0x01ef, htog((uint16_t)0xef01, BigEndianByteOrder));
-    EXPECT_EQ(0xfe10, htog((uint16_t)0x10fe, BigEndianByteOrder));
-    EXPECT_EQ(0x0bb1, htog((uint16_t)0xb10b, BigEndianByteOrder));
-    EXPECT_EQ(0x00ff, htog((uint16_t)0xff00, BigEndianByteOrder));
-    EXPECT_EQ(0x5555, htog((uint16_t)0x5555, BigEndianByteOrder));
-    EXPECT_EQ(0xa0a0, htog((uint16_t)0xa0a0, BigEndianByteOrder));
+                                ByteOrder::big));
+    EXPECT_EQ(0x0123cdef, htog((uint32_t)0xefcd2301, ByteOrder::big));
+    EXPECT_EQ(0xfedc3210, htog((uint32_t)0x1032dcfe, ByteOrder::big));
+    EXPECT_EQ(0x0b1c41b1, htog((uint32_t)0xb1411c0b, ByteOrder::big));
+    EXPECT_EQ(0x0000ffff, htog((uint32_t)0xffff0000, ByteOrder::big));
+    EXPECT_EQ(0x55555555, htog((uint32_t)0x55555555, ByteOrder::big));
+    EXPECT_EQ(0xa0a0a0a0, htog((uint32_t)0xa0a0a0a0, ByteOrder::big));
+    EXPECT_EQ(0x01ef, htog((uint16_t)0xef01, ByteOrder::big));
+    EXPECT_EQ(0xfe10, htog((uint16_t)0x10fe, ByteOrder::big));
+    EXPECT_EQ(0x0bb1, htog((uint16_t)0xb10b, ByteOrder::big));
+    EXPECT_EQ(0x00ff, htog((uint16_t)0xff00, ByteOrder::big));
+    EXPECT_EQ(0x5555, htog((uint16_t)0x5555, ByteOrder::big));
+    EXPECT_EQ(0xa0a0, htog((uint16_t)0xa0a0, ByteOrder::big));
     EXPECT_EQ(0xefcdab8967452301, htog((uint64_t)0xefcdab8967452301,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0x1032547698badcfe, htog((uint64_t)0x1032547698badcfe,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0xb14171b771b01c0b, htog((uint64_t)0xb14171b771b01c0b,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0xffffffff00000000, htog((uint64_t)0xffffffff00000000,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0x5555555555555555, htog((uint64_t)0x5555555555555555,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0, htog((uint64_t)0xa0a0a0a0a0a0a0a0,
-                                LittleEndianByteOrder));
-    EXPECT_EQ(0xefcd2301, htog((uint32_t)0xefcd2301, LittleEndianByteOrder));
-    EXPECT_EQ(0x1032dcfe, htog((uint32_t)0x1032dcfe, LittleEndianByteOrder));
-    EXPECT_EQ(0xb1411c0b, htog((uint32_t)0xb1411c0b, LittleEndianByteOrder));
-    EXPECT_EQ(0xffff0000, htog((uint32_t)0xffff0000, LittleEndianByteOrder));
-    EXPECT_EQ(0x55555555, htog((uint32_t)0x55555555, LittleEndianByteOrder));
-    EXPECT_EQ(0xa0a0a0a0, htog((uint32_t)0xa0a0a0a0, LittleEndianByteOrder));
-    EXPECT_EQ(0xef01, htog((uint16_t)0xef01, LittleEndianByteOrder));
-    EXPECT_EQ(0x10fe, htog((uint16_t)0x10fe, LittleEndianByteOrder));
-    EXPECT_EQ(0xb10b, htog((uint16_t)0xb10b, LittleEndianByteOrder));
-    EXPECT_EQ(0xff00, htog((uint16_t)0xff00, LittleEndianByteOrder));
-    EXPECT_EQ(0x5555, htog((uint16_t)0x5555, LittleEndianByteOrder));
-    EXPECT_EQ(0xa0a0, htog((uint16_t)0xa0a0, LittleEndianByteOrder));
+                                ByteOrder::little));
+    EXPECT_EQ(0xefcd2301, htog((uint32_t)0xefcd2301, ByteOrder::little));
+    EXPECT_EQ(0x1032dcfe, htog((uint32_t)0x1032dcfe, ByteOrder::little));
+    EXPECT_EQ(0xb1411c0b, htog((uint32_t)0xb1411c0b, ByteOrder::little));
+    EXPECT_EQ(0xffff0000, htog((uint32_t)0xffff0000, ByteOrder::little));
+    EXPECT_EQ(0x55555555, htog((uint32_t)0x55555555, ByteOrder::little));
+    EXPECT_EQ(0xa0a0a0a0, htog((uint32_t)0xa0a0a0a0, ByteOrder::little));
+    EXPECT_EQ(0xef01, htog((uint16_t)0xef01, ByteOrder::little));
+    EXPECT_EQ(0x10fe, htog((uint16_t)0x10fe, ByteOrder::little));
+    EXPECT_EQ(0xb10b, htog((uint16_t)0xb10b, ByteOrder::little));
+    EXPECT_EQ(0xff00, htog((uint16_t)0xff00, ByteOrder::little));
+    EXPECT_EQ(0x5555, htog((uint16_t)0x5555, ByteOrder::little));
+    EXPECT_EQ(0xa0a0, htog((uint16_t)0xa0a0, ByteOrder::little));
 #else
     #error Invalid Endianess
 #endif
@@ -191,102 +191,102 @@ TEST(ByteswapTest, gtoh)
 {
 #if (defined(_BIG_ENDIAN)||!defined(_LITTLE_ENDIAN)) && BYTE_ORDER==BIG_ENDIAN
     EXPECT_EQ(0xefcdab8967452301, gtoh((uint64_t)0xefcdab8967452301,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0x1032547698badcfe, gtoh((uint64_t)0x1032547698badcfe,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0xb14171b771b01c0b, gtoh((uint64_t)0xb14171b771b01c0b,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0xffffffff00000000, gtoh((uint64_t)0xffffffff00000000,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0x5555555555555555, gtoh((uint64_t)0x5555555555555555,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0, gtoh((uint64_t)0xa0a0a0a0a0a0a0a0,
-                                BigEndianByteOrder));
-    EXPECT_EQ(0xefcd2301, gtoh((uint32_t)0xefcd2301, BigEndianByteOrder));
-    EXPECT_EQ(0x1032dcfe, gtoh((uint32_t)0x1032dcfe, BigEndianByteOrder));
-    EXPECT_EQ(0xb1411c0b, gtoh((uint32_t)0xb1411c0b, BigEndianByteOrder));
-    EXPECT_EQ(0xffff0000, gtoh((uint32_t)0xffff0000, BigEndianByteOrder));
-    EXPECT_EQ(0x55555555, gtoh((uint32_t)0x55555555, BigEndianByteOrder));
-    EXPECT_EQ(0xa0a0a0a0, gtoh((uint32_t)0xa0a0a0a0, BigEndianByteOrder));
-    EXPECT_EQ(0xef01, gtoh((uint16_t)0xef01, BigEndianByteOrder));
-    EXPECT_EQ(0x10fe, gtoh((uint16_t)0x10fe, BigEndianByteOrder));
-    EXPECT_EQ(0xb10b, gtoh((uint16_t)0xb10b, BigEndianByteOrder));
-    EXPECT_EQ(0xff00, gtoh((uint16_t)0xff00, BigEndianByteOrder));
-    EXPECT_EQ(0x5555, gtoh((uint16_t)0x5555, BigEndianByteOrder));
-    EXPECT_EQ(0xa0a0, gtoh((uint16_t)0xa0a0, BigEndianByteOrder));
+                                ByteOrder::big));
+    EXPECT_EQ(0xefcd2301, gtoh((uint32_t)0xefcd2301, ByteOrder::big));
+    EXPECT_EQ(0x1032dcfe, gtoh((uint32_t)0x1032dcfe, ByteOrder::big));
+    EXPECT_EQ(0xb1411c0b, gtoh((uint32_t)0xb1411c0b, ByteOrder::big));
+    EXPECT_EQ(0xffff0000, gtoh((uint32_t)0xffff0000, ByteOrder::big));
+    EXPECT_EQ(0x55555555, gtoh((uint32_t)0x55555555, ByteOrder::big));
+    EXPECT_EQ(0xa0a0a0a0, gtoh((uint32_t)0xa0a0a0a0, ByteOrder::big));
+    EXPECT_EQ(0xef01, gtoh((uint16_t)0xef01, ByteOrder::big));
+    EXPECT_EQ(0x10fe, gtoh((uint16_t)0x10fe, ByteOrder::big));
+    EXPECT_EQ(0xb10b, gtoh((uint16_t)0xb10b, ByteOrder::big));
+    EXPECT_EQ(0xff00, gtoh((uint16_t)0xff00, ByteOrder::big));
+    EXPECT_EQ(0x5555, gtoh((uint16_t)0x5555, ByteOrder::big));
+    EXPECT_EQ(0xa0a0, gtoh((uint16_t)0xa0a0, ByteOrder::big));
     EXPECT_EQ(0x0123456789abcdef, gtoh((uint64_t)0xefcdab8967452301,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0xfedcba9876543210, gtoh((uint64_t)0x1032547698badcfe,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0x0b1cb071b77141b1, gtoh((uint64_t)0xb14171b771b01c0b,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0x00000000ffffffff, gtoh((uint64_t)0xffffffff00000000,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0x5555555555555555, gtoh((uint64_t)0x5555555555555555,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0, gtoh((uint64_t)0xa0a0a0a0a0a0a0a0,
-                                LittleEndianByteOrder));
-    EXPECT_EQ(0x0123cdef, gtoh((uint32_t)0xefcd2301, LittleEndianByteOrder));
-    EXPECT_EQ(0xfedc3210, gtoh((uint32_t)0x1032dcfe, LittleEndianByteOrder));
-    EXPECT_EQ(0x0b1c41b1, gtoh((uint32_t)0xb1411c0b, LittleEndianByteOrder));
-    EXPECT_EQ(0x0000ffff, gtoh((uint32_t)0xffff0000, LittleEndianByteOrder));
-    EXPECT_EQ(0x55555555, gtoh((uint32_t)0x55555555, LittleEndianByteOrder));
-    EXPECT_EQ(0xa0a0a0a0, gtoh((uint32_t)0xa0a0a0a0, LittleEndianByteOrder));
-    EXPECT_EQ(0x01ef, gtoh((uint16_t)0xef01, LittleEndianByteOrder));
-    EXPECT_EQ(0xfe10, gtoh((uint16_t)0x10fe, LittleEndianByteOrder));
-    EXPECT_EQ(0x0bb1, gtoh((uint16_t)0xb10b, LittleEndianByteOrder));
-    EXPECT_EQ(0x00ff, gtoh((uint16_t)0xff00, LittleEndianByteOrder));
-    EXPECT_EQ(0x5555, gtoh((uint16_t)0x5555, LittleEndianByteOrder));
-    EXPECT_EQ(0xa0a0, gtoh((uint16_t)0xa0a0, LittleEndianByteOrder));
+                                ByteOrder::little));
+    EXPECT_EQ(0x0123cdef, gtoh((uint32_t)0xefcd2301, ByteOrder::little));
+    EXPECT_EQ(0xfedc3210, gtoh((uint32_t)0x1032dcfe, ByteOrder::little));
+    EXPECT_EQ(0x0b1c41b1, gtoh((uint32_t)0xb1411c0b, ByteOrder::little));
+    EXPECT_EQ(0x0000ffff, gtoh((uint32_t)0xffff0000, ByteOrder::little));
+    EXPECT_EQ(0x55555555, gtoh((uint32_t)0x55555555, ByteOrder::little));
+    EXPECT_EQ(0xa0a0a0a0, gtoh((uint32_t)0xa0a0a0a0, ByteOrder::little));
+    EXPECT_EQ(0x01ef, gtoh((uint16_t)0xef01, ByteOrder::little));
+    EXPECT_EQ(0xfe10, gtoh((uint16_t)0x10fe, ByteOrder::little));
+    EXPECT_EQ(0x0bb1, gtoh((uint16_t)0xb10b, ByteOrder::little));
+    EXPECT_EQ(0x00ff, gtoh((uint16_t)0xff00, ByteOrder::little));
+    EXPECT_EQ(0x5555, gtoh((uint16_t)0x5555, ByteOrder::little));
+    EXPECT_EQ(0xa0a0, gtoh((uint16_t)0xa0a0, ByteOrder::little));
 #elif defined(_LITTLE_ENDIAN) || BYTE_ORDER==LITTLE_ENDIAN
     EXPECT_EQ(0x0123456789abcdef, gtoh((uint64_t)0xefcdab8967452301,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0xfedcba9876543210, gtoh((uint64_t)0x1032547698badcfe,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0x0b1cb071b77141b1, gtoh((uint64_t)0xb14171b771b01c0b,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0x00000000ffffffff, gtoh((uint64_t)0xffffffff00000000,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0x5555555555555555, gtoh((uint64_t)0x5555555555555555,
-                                BigEndianByteOrder));
+                                ByteOrder::big));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0, gtoh((uint64_t)0xa0a0a0a0a0a0a0a0,
-                                BigEndianByteOrder));
-    EXPECT_EQ(0x0123cdef, gtoh((uint32_t)0xefcd2301, BigEndianByteOrder));
-    EXPECT_EQ(0xfedc3210, gtoh((uint32_t)0x1032dcfe, BigEndianByteOrder));
-    EXPECT_EQ(0x0b1c41b1, gtoh((uint32_t)0xb1411c0b, BigEndianByteOrder));
-    EXPECT_EQ(0x0000ffff, gtoh((uint32_t)0xffff0000, BigEndianByteOrder));
-    EXPECT_EQ(0x55555555, gtoh((uint32_t)0x55555555, BigEndianByteOrder));
-    EXPECT_EQ(0xa0a0a0a0, gtoh((uint32_t)0xa0a0a0a0, BigEndianByteOrder));
-    EXPECT_EQ(0x01ef, gtoh((uint16_t)0xef01, BigEndianByteOrder));
-    EXPECT_EQ(0xfe10, gtoh((uint16_t)0x10fe, BigEndianByteOrder));
-    EXPECT_EQ(0x0bb1, gtoh((uint16_t)0xb10b, BigEndianByteOrder));
-    EXPECT_EQ(0x00ff, gtoh((uint16_t)0xff00, BigEndianByteOrder));
-    EXPECT_EQ(0x5555, gtoh((uint16_t)0x5555, BigEndianByteOrder));
-    EXPECT_EQ(0xa0a0, gtoh((uint16_t)0xa0a0, BigEndianByteOrder));
+                                ByteOrder::big));
+    EXPECT_EQ(0x0123cdef, gtoh((uint32_t)0xefcd2301, ByteOrder::big));
+    EXPECT_EQ(0xfedc3210, gtoh((uint32_t)0x1032dcfe, ByteOrder::big));
+    EXPECT_EQ(0x0b1c41b1, gtoh((uint32_t)0xb1411c0b, ByteOrder::big));
+    EXPECT_EQ(0x0000ffff, gtoh((uint32_t)0xffff0000, ByteOrder::big));
+    EXPECT_EQ(0x55555555, gtoh((uint32_t)0x55555555, ByteOrder::big));
+    EXPECT_EQ(0xa0a0a0a0, gtoh((uint32_t)0xa0a0a0a0, ByteOrder::big));
+    EXPECT_EQ(0x01ef, gtoh((uint16_t)0xef01, ByteOrder::big));
+    EXPECT_EQ(0xfe10, gtoh((uint16_t)0x10fe, ByteOrder::big));
+    EXPECT_EQ(0x0bb1, gtoh((uint16_t)0xb10b, ByteOrder::big));
+    EXPECT_EQ(0x00ff, gtoh((uint16_t)0xff00, ByteOrder::big));
+    EXPECT_EQ(0x5555, gtoh((uint16_t)0x5555, ByteOrder::big));
+    EXPECT_EQ(0xa0a0, gtoh((uint16_t)0xa0a0, ByteOrder::big));
     EXPECT_EQ(0xefcdab8967452301, gtoh((uint64_t)0xefcdab8967452301,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0x1032547698badcfe, gtoh((uint64_t)0x1032547698badcfe,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0xb14171b771b01c0b, gtoh((uint64_t)0xb14171b771b01c0b,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0xffffffff00000000, gtoh((uint64_t)0xffffffff00000000,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0x5555555555555555, gtoh((uint64_t)0x5555555555555555,
-                                LittleEndianByteOrder));
+                                ByteOrder::little));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0, gtoh((uint64_t)0xa0a0a0a0a0a0a0a0,
-                                LittleEndianByteOrder));
-    EXPECT_EQ(0xefcd2301, gtoh((uint32_t)0xefcd2301, LittleEndianByteOrder));
-    EXPECT_EQ(0x1032dcfe, gtoh((uint32_t)0x1032dcfe, LittleEndianByteOrder));
-    EXPECT_EQ(0xb1411c0b, gtoh((uint32_t)0xb1411c0b, LittleEndianByteOrder));
-    EXPECT_EQ(0xffff0000, gtoh((uint32_t)0xffff0000, LittleEndianByteOrder));
-    EXPECT_EQ(0x55555555, gtoh((uint32_t)0x55555555, LittleEndianByteOrder));
-    EXPECT_EQ(0xa0a0a0a0, gtoh((uint32_t)0xa0a0a0a0, LittleEndianByteOrder));
-    EXPECT_EQ(0xef01, gtoh((uint16_t)0xef01, LittleEndianByteOrder));
-    EXPECT_EQ(0x10fe, gtoh((uint16_t)0x10fe, LittleEndianByteOrder));
-    EXPECT_EQ(0xb10b, gtoh((uint16_t)0xb10b, LittleEndianByteOrder));
-    EXPECT_EQ(0xff00, gtoh((uint16_t)0xff00, LittleEndianByteOrder));
-    EXPECT_EQ(0x5555, gtoh((uint16_t)0x5555, LittleEndianByteOrder));
-    EXPECT_EQ(0xa0a0, gtoh((uint16_t)0xa0a0, LittleEndianByteOrder));
+                                ByteOrder::little));
+    EXPECT_EQ(0xefcd2301, gtoh((uint32_t)0xefcd2301, ByteOrder::little));
+    EXPECT_EQ(0x1032dcfe, gtoh((uint32_t)0x1032dcfe, ByteOrder::little));
+    EXPECT_EQ(0xb1411c0b, gtoh((uint32_t)0xb1411c0b, ByteOrder::little));
+    EXPECT_EQ(0xffff0000, gtoh((uint32_t)0xffff0000, ByteOrder::little));
+    EXPECT_EQ(0x55555555, gtoh((uint32_t)0x55555555, ByteOrder::little));
+    EXPECT_EQ(0xa0a0a0a0, gtoh((uint32_t)0xa0a0a0a0, ByteOrder::little));
+    EXPECT_EQ(0xef01, gtoh((uint16_t)0xef01, ByteOrder::little));
+    EXPECT_EQ(0x10fe, gtoh((uint16_t)0x10fe, ByteOrder::little));
+    EXPECT_EQ(0xb10b, gtoh((uint16_t)0xb10b, ByteOrder::little));
+    EXPECT_EQ(0xff00, gtoh((uint16_t)0xff00, ByteOrder::little));
+    EXPECT_EQ(0x5555, gtoh((uint16_t)0x5555, ByteOrder::little));
+    EXPECT_EQ(0xa0a0, gtoh((uint16_t)0xa0a0, ByteOrder::little));
 #else
     #error Invalid Endianess
 #endif

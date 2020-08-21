@@ -136,13 +136,13 @@ template <typename T> inline T letobe(T value) {return swap_byte(value);}
 //For conversions not involving the guest system, we can define the functions
 //conditionally based on the BYTE_ORDER macro and outside of the namespaces
 #if (defined(_BIG_ENDIAN) || !defined(_LITTLE_ENDIAN)) && BYTE_ORDER == BIG_ENDIAN
-const ByteOrder HostByteOrder = BigEndianByteOrder;
+const ByteOrder HostByteOrder = ByteOrder::big;
 template <typename T> inline T htole(T value) {return swap_byte(value);}
 template <typename T> inline T letoh(T value) {return swap_byte(value);}
 template <typename T> inline T htobe(T value) {return value;}
 template <typename T> inline T betoh(T value) {return value;}
 #elif defined(_LITTLE_ENDIAN) || BYTE_ORDER == LITTLE_ENDIAN
-const ByteOrder HostByteOrder = LittleEndianByteOrder;
+const ByteOrder HostByteOrder = ByteOrder::little;
 template <typename T> inline T htole(T value) {return value;}
 template <typename T> inline T letoh(T value) {return value;}
 template <typename T> inline T htobe(T value) {return swap_byte(value);}
@@ -154,14 +154,14 @@ template <typename T> inline T betoh(T value) {return swap_byte(value);}
 template <typename T>
 inline T htog(T value, ByteOrder guest_byte_order)
 {
-    return guest_byte_order == BigEndianByteOrder ?
+    return guest_byte_order == ByteOrder::big ?
         htobe(value) : htole(value);
 }
 
 template <typename T>
 inline T gtoh(T value, ByteOrder guest_byte_order)
 {
-    return guest_byte_order == BigEndianByteOrder ?
+    return guest_byte_order == ByteOrder::big ?
         betoh(value) : letoh(value);
 }
 

@@ -1513,6 +1513,14 @@ class ScopedEnum(Enum):
     # If not None, use this as the enum name rather than this class name
     enum_name = None
 
+class ByteOrder(ScopedEnum):
+    """Enum representing component's byte order (endianness)"""
+
+    vals = [
+        'big',
+        'little',
+    ]
+
 # how big does a rounding error need to be before we warn about it?
 frequency_tolerance = 0.001  # 0.1%
 

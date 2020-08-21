@@ -81,6 +81,6 @@ AmbaDevice::readId(PacketPtr pkt, uint64_t amba_id, Addr pio_addr)
             (amba_id >> byte) & 0xFF,
             pkt->getAddr() - pio_addr, byte);
 
-    pkt->setUintX((amba_id >> byte) & 0xFF, LittleEndianByteOrder);
+    pkt->setUintX((amba_id >> byte) & 0xFF, ByteOrder::little);
     return true;
 }

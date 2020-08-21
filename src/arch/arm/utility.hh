@@ -448,7 +448,7 @@ uint8_t encodePhysAddrRange64(int pa_size);
 
 inline ByteOrder byteOrder(const ThreadContext *tc)
 {
-    return isBigEndian64(tc) ? BigEndianByteOrder : LittleEndianByteOrder;
+    return isBigEndian64(tc) ? ByteOrder::big : ByteOrder::little;
 };
 
 bool isUnpriviledgeAccess(ThreadContext * tc);

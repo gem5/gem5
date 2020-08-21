@@ -127,7 +127,7 @@ Gicv3::read(PacketPtr pkt)
         panic("Gicv3::read(): unknown address %#x\n", addr);
     }
 
-    pkt->setUintX(resp, LittleEndianByteOrder);
+    pkt->setUintX(resp, ByteOrder::little);
     pkt->makeAtomicResponse();
     return delay;
 }
@@ -136,7 +136,7 @@ Tick
 Gicv3::write(PacketPtr pkt)
 {
     const size_t size = pkt->getSize();
-    uint64_t data = pkt->getUintX(LittleEndianByteOrder);
+    uint64_t data = pkt->getUintX(ByteOrder::little);
     const Addr addr = pkt->getAddr();
     bool is_secure_access = pkt->isSecure();
     Tick delay = 0;

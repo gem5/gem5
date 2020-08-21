@@ -151,7 +151,7 @@ FVPBasePwrCtrl::read(PacketPtr pkt)
     DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::read: 0x%x<-0x%x(%i)\n", resp,
             addr, size);
 
-    pkt->setUintX(resp, LittleEndianByteOrder);
+    pkt->setUintX(resp, ByteOrder::little);
     pkt->makeResponse();
     return pioDelay;
 }
@@ -163,7 +163,7 @@ FVPBasePwrCtrl::write(PacketPtr pkt)
     const size_t size = pkt->getSize();
     panic_if(size != 4, "FVPBasePwrCtrl::write: Invalid size %i\n", size);
 
-    uint64_t data = pkt->getUintX(LittleEndianByteOrder);
+    uint64_t data = pkt->getUintX(ByteOrder::little);
 
     // Software may use the power controller to check for core presence
     // If core is not present, return an invalid MPID as notification

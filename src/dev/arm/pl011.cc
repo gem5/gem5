@@ -137,7 +137,7 @@ Pl011::read(PacketPtr pkt)
       default:
         if (readId(pkt, AMBA_ID, pioAddr)) {
             // Hack for variable size accesses
-            data = pkt->getUintX(LittleEndianByteOrder);
+            data = pkt->getUintX(ByteOrder::little);
             break;
         }
 

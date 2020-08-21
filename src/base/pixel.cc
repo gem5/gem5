@@ -43,10 +43,10 @@
 
 const PixelConverter PixelConverter::rgba8888_le(4, 0, 8, 16, 8, 8, 8);
 const PixelConverter PixelConverter::rgba8888_be(4, 0, 8, 16, 8, 8, 8,
-                                                 BigEndianByteOrder);
+                                                 ByteOrder::big);
 const PixelConverter PixelConverter::rgb565_le(2,  0, 5, 11, 5, 6, 5);
 const PixelConverter PixelConverter::rgb565_be(2,  0, 5, 11, 5, 6, 5,
-                                               BigEndianByteOrder);
+                                               ByteOrder::big);
 
 PixelConverter::PixelConverter(unsigned _length,
                                unsigned ro, unsigned go, unsigned bo,
@@ -74,7 +74,7 @@ PixelConverter::readWord(const uint8_t *p) const
 {
     uint32_t word(0);
 
-    if (byte_order == LittleEndianByteOrder) {
+    if (byte_order == ByteOrder::little) {
         for (int i = 0; i < length; ++i)
             word |= p[i] << (8 * i);
     } else {
@@ -88,7 +88,7 @@ PixelConverter::readWord(const uint8_t *p) const
 void
 PixelConverter::writeWord(uint8_t *p, uint32_t word) const
 {
-    if (byte_order == LittleEndianByteOrder) {
+    if (byte_order == ByteOrder::little) {
         for (int i = 0; i < length; ++i)
             p[i] = (word >> (8 * i)) & 0xFF;
     } else {

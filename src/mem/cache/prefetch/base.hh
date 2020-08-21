@@ -206,10 +206,10 @@ class Base : public ClockedObject
                 panic("PrefetchInfo::get called with a request with no data.");
             }
             switch (endian) {
-                case BigEndianByteOrder:
+                case ByteOrder::big:
                     return betoh(*(T*)data);
 
-                case LittleEndianByteOrder:
+                case ByteOrder::little:
                     return letoh(*(T*)data);
 
                 default:

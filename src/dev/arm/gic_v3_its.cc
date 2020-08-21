@@ -882,7 +882,7 @@ Gicv3Its::read(PacketPtr pkt)
         }
     }
 
-    pkt->setUintX(value, LittleEndianByteOrder);
+    pkt->setUintX(value, ByteOrder::little);
     pkt->makeAtomicResponse();
     return pioDelay;
 }

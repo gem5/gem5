@@ -90,7 +90,7 @@ PL031::read(PacketPtr pkt)
       default:
         if (readId(pkt, ambaId, pioAddr)) {
             // Hack for variable sized access
-            data = pkt->getUintX(LittleEndianByteOrder);
+            data = pkt->getUintX(ByteOrder::little);
             break;
         }
         panic("Tried to read PL031 at offset %#x that doesn't exist\n", daddr);

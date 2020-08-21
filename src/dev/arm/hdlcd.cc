@@ -434,7 +434,7 @@ PixelConverter
 HDLcd::pixelConverter() const
 {
     ByteOrder byte_order(
-        pixel_format.big_endian ? BigEndianByteOrder : LittleEndianByteOrder);
+        pixel_format.big_endian ? ByteOrder::big : ByteOrder::little);
 
     /* Some Linux kernels have a broken driver that swaps the red and
      * blue color select registers. */

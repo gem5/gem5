@@ -95,7 +95,7 @@ Pl050::read(PacketPtr pkt)
       default:
         if (readId(pkt, ambaId, pioAddr)) {
             // Hack for variable size accesses
-            data = pkt->getUintX(LittleEndianByteOrder);
+            data = pkt->getUintX(ByteOrder::little);
             break;
         }
 
@@ -103,7 +103,7 @@ Pl050::read(PacketPtr pkt)
         break;
     }
 
-    pkt->setUintX(data, LittleEndianByteOrder);
+    pkt->setUintX(data, ByteOrder::little);
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -115,7 +115,7 @@ Pl050::write(PacketPtr pkt)
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     Addr daddr = pkt->getAddr() - pioAddr;
-    const uint32_t data = pkt->getUintX(LittleEndianByteOrder);
+    const uint32_t data = pkt->getUintX(ByteOrder::little);
 
     panic_if(pkt->getSize() != 1,
              "PL050: Unexpected write size "

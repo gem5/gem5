@@ -34,7 +34,7 @@
 namespace SparcISA
 {
 
-const ByteOrder GuestByteOrder = BigEndianByteOrder;
+const ByteOrder GuestByteOrder = ByteOrder::big;
 
 const Addr PageShift = 13;
 const Addr PageBytes = ULL(1) << PageShift;

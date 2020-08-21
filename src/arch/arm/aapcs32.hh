@@ -165,7 +165,7 @@ struct Result<Aapcs32, Integer, typename std::enable_if<
     {
         if (std::is_same<Integer, Addr>::value) {
             tc->setIntReg(ArmISA::INTREG_R0, (uint32_t)i);
-        } else if (ArmISA::byteOrder(tc) == LittleEndianByteOrder) {
+        } else if (ArmISA::byteOrder(tc) == ByteOrder::little) {
             tc->setIntReg(ArmISA::INTREG_R0, (uint32_t)(i >> 0));
             tc->setIntReg(ArmISA::INTREG_R1, (uint32_t)(i >> 32));
         } else {
@@ -213,7 +213,7 @@ struct Argument<Aapcs32, Integer, typename std::enable_if<
         if (sizeof(Integer) == sizeof(uint64_t) &&
                 state.ncrn + 1 <= state.MAX_CRN) {
             Integer low, high;
-            if (ArmISA::byteOrder(tc) == LittleEndianByteOrder) {
+            if (ArmISA::byteOrder(tc) == ByteOrder::little) {
                 low = tc->readIntReg(state.ncrn++) & mask(32);
                 high = tc->readIntReg(state.ncrn++) & mask(32);
             } else {

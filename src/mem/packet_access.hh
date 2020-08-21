@@ -82,10 +82,10 @@ inline T
 Packet::get(ByteOrder endian) const
 {
     switch (endian) {
-      case BigEndianByteOrder:
+      case ByteOrder::big:
         return getBE<T>();
 
-      case LittleEndianByteOrder:
+      case ByteOrder::little:
         return getLE<T>();
 
       default:
@@ -112,10 +112,10 @@ inline void
 Packet::set(T v, ByteOrder endian)
 {
     switch (endian) {
-      case BigEndianByteOrder:
+      case ByteOrder::big:
         return setBE<T>(v);
 
-      case LittleEndianByteOrder:
+      case ByteOrder::little:
         return setLE<T>(v);
 
       default:
