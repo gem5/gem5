@@ -283,10 +283,13 @@ def template JumpExecute {{
     %(class_name)s::generateDisassembly(
             Addr pc, const Loader::SymbolTable *symtab) const
     {
-        std::vector<RegId> indices = {%(regs)s};
         std::stringstream ss;
         ss << mnemonic << ' ';
-        ss << registerName(indices[0]);
+        if (QUADRANT == 0x3)
+            ss << registerName(_destRegIdx[0]) << ", "
+               << imm << "(" << registerName(_srcRegIdx[0]) << ")";
+        else
+            ss << registerName(_srcRegIdx[0]);
         return ss.str();
     }
 }};
