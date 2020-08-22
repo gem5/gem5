@@ -31,8 +31,8 @@
 
 #include <string>
 
-#include "arch/isa_traits.hh"
 #include "base/addr_range.hh"
+#include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/Vma.hh"
 #include "mem/se_translating_port_proxy.hh"
