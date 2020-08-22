@@ -36,10 +36,6 @@
 
 namespace MipsISA {
 
-struct VAddr
-{
-};
-
 // ITB/DTB page table entry
 struct PTE
 {

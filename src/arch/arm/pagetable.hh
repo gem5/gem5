@@ -49,12 +49,6 @@
 
 namespace ArmISA {
 
-struct VAddr
-{
-    VAddr(Addr a) { panic("not implemented yet."); }
-};
-
-
 // ITB/DTB page table entry
 struct PTE
 {

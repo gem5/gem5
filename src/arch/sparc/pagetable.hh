@@ -37,12 +37,8 @@
 
 class Checkpoint;
 
-namespace SparcISA {
-
-struct VAddr
+namespace SparcISA
 {
-    VAddr(Addr a) { panic("not implemented yet."); }
-};
 
 class TteTag
 {
