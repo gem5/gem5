@@ -37,6 +37,7 @@
 
 #include "dev/arm/vgic.hh"
 
+#include "arch/arm/interrupts.hh"
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/VGIC.hh"

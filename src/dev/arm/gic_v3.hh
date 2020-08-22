@@ -41,6 +41,7 @@
 #ifndef __DEV_ARM_GICV3_H__
 #define __DEV_ARM_GICV3_H__
 
+#include "arch/arm/interrupts.hh"
 #include "dev/arm/base_gic.hh"
 #include "params/Gicv3.hh"
 

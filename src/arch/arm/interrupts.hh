@@ -54,6 +54,18 @@
 namespace ArmISA
 {
 
+enum InterruptTypes
+{
+    INT_RST,
+    INT_ABT,
+    INT_IRQ,
+    INT_FIQ,
+    INT_SEV, // Special interrupt for recieving SEV's
+    INT_VIRT_IRQ,
+    INT_VIRT_FIQ,
+    NumInterruptTypes
+};
+
 class Interrupts : public BaseInterrupts
 {
   private:

@@ -42,67 +42,14 @@
 #ifndef __ARCH_ARM_ISA_TRAITS_HH__
 #define __ARCH_ARM_ISA_TRAITS_HH__
 
-#include "arch/arm/types.hh"
 #include "base/types.hh"
-#include "cpu/static_inst_fwd.hh"
 
 namespace ArmISA
 {
     const ByteOrder GuestByteOrder = LittleEndianByteOrder;
 
-    StaticInstPtr decodeInst(ExtMachInst);
-
     const Addr PageShift = 12;
     const Addr PageBytes = ULL(1) << PageShift;
-    const Addr Page_Mask = ~(PageBytes - 1);
-    const Addr PageOffset = PageBytes - 1;
-
-
-    ////////////////////////////////////////////////////////////////////////
-    //
-    //  Translation stuff
-    //
-
-    const Addr PteShift = 3;
-    const Addr NPtePageShift = PageShift - PteShift;
-    const Addr NPtePage = ULL(1) << NPtePageShift;
-    const Addr PteMask = NPtePage - 1;
-
-    //// All 'Mapped' segments go through the TLB
-    //// All other segments are translated by dropping the MSB, to give
-    //// the corresponding physical address
-    // User Segment - Mapped
-    const Addr USegBase = ULL(0x0);
-    const Addr USegEnd = ULL(0x7FFFFFFF);
-
-    const unsigned VABits = 32;
-    const unsigned PABits = 32; // Is this correct?
-    const Addr VAddrImplMask = (ULL(1) << VABits) - 1;
-    const Addr VAddrUnImplMask = ~VAddrImplMask;
-    inline Addr VAddrImpl(Addr a) { return a & VAddrImplMask; }
-    inline Addr VAddrVPN(Addr a) { return a >> ArmISA::PageShift; }
-    inline Addr VAddrOffset(Addr a) { return a & ArmISA::PageOffset; }
-
-    const Addr PAddrImplMask = (ULL(1) << PABits) - 1;
-
-    // Max. physical address range in bits supported by the architecture
-    const unsigned MaxPhysAddrRange = 48;
-
-    const int MachineBytes = 4;
-
-    const uint32_t HighVecs = 0xFFFF0000;
-
-    enum InterruptTypes
-    {
-        INT_RST,
-        INT_ABT,
-        INT_IRQ,
-        INT_FIQ,
-        INT_SEV, // Special interrupt for recieving SEV's
-        INT_VIRT_IRQ,
-        INT_VIRT_FIQ,
-        NumInterruptTypes
-    };
 } // namespace ArmISA
 
 using namespace ArmISA;

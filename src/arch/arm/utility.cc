@@ -40,6 +40,7 @@
 #include <memory>
 
 #include "arch/arm/faults.hh"
+#include "arch/arm/interrupts.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
@@ -74,8 +75,7 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
         }
     } else {
         if (size == (uint16_t)(-1))
-            // todo: should this not be sizeof(uint32_t) rather?
-            size = ArmISA::MachineBytes;
+            size = sizeof(uint32_t);
 
         if (number < NumArgumentRegs) {
             // If the argument is 64 bits, it must be in an even regiser

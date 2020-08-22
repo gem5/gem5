@@ -47,7 +47,11 @@
 #include "arch/arm/utility.hh"
 #include "sim/serialize.hh"
 
-namespace ArmISA {
+namespace ArmISA
+{
+
+// Max. physical address range in bits supported by the architecture
+const unsigned MaxPhysAddrRange = 48;
 
 // ITB/DTB page table entry
 struct PTE

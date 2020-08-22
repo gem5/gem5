@@ -42,6 +42,7 @@
 #include "arch/arm/faults.hh"
 
 #include "arch/arm/insts/static_inst.hh"
+#include "arch/arm/interrupts.hh"
 #include "arch/arm/isa.hh"
 #include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
@@ -55,6 +56,8 @@
 
 namespace ArmISA
 {
+
+const uint32_t HighVecs = 0xFFFF0000;
 
 uint8_t ArmFault::shortDescFaultSources[] = {
     0x01,  // AlignmentFault

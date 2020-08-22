@@ -48,6 +48,7 @@
 
 #include <vector>
 
+#include "arch/arm/interrupts.hh"
 #include "base/addr_range.hh"
 #include "base/bitunion.hh"
 #include "cpu/intr_control.hh"
