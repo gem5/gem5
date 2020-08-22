@@ -38,9 +38,6 @@
 #ifndef __ARCH_X86_ISATRAITS_HH__
 #define __ARCH_X86_ISATRAITS_HH__
 
-#include "arch/x86/types.hh"
-#include "arch/x86/x86_traits.hh"
-#include "base/compiler.hh"
 #include "base/types.hh"
 
 namespace X86ISA
