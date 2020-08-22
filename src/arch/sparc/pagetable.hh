@@ -34,8 +34,7 @@
 #include "arch/sparc/isa_traits.hh"
 #include "base/bitfield.hh"
 #include "base/logging.hh"
-
-class Checkpoint;
+#include "sim/serialize.hh"
 
 namespace SparcISA
 {
