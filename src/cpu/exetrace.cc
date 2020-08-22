@@ -43,7 +43,6 @@
 #include <iomanip>
 #include <sstream>
 
-#include "arch/isa_traits.hh"
 #include "arch/utility.hh"
 #include "base/loader/symtab.hh"
 #include "config/the_isa.hh"

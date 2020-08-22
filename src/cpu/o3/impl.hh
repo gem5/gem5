@@ -29,7 +29,6 @@
 #ifndef __CPU_O3_IMPL_HH__
 #define __CPU_O3_IMPL_HH__
 
-#include "arch/isa_traits.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/cpu_policy.hh"
 

@@ -45,7 +45,6 @@
 #include <list>
 #include <string>
 
-#include "arch/isa_traits.hh"
 #include "base/refcnt.hh"
 #include "config/the_isa.hh"
 #include "cpu/base_dyn_inst.hh"

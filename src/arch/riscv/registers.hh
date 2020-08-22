@@ -52,7 +52,6 @@
 #include "arch/generic/types.hh"
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
-#include "arch/isa_traits.hh"
 #include "arch/riscv/generated/max_inst_regs.hh"
 #include "base/types.hh"
 

@@ -41,7 +41,6 @@
 
 #include "arch/generic/tlb.hh"
 #include "arch/isa.hh"
-#include "arch/isa_traits.hh"
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/regs/segment.hh"
 #include "base/logging.hh"

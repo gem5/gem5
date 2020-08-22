@@ -49,7 +49,6 @@
 #include <queue>
 
 #include "arch/generic/tlb.hh"
-#include "arch/isa_traits.hh"
 #include "arch/utility.hh"
 #include "base/random.hh"
 #include "base/types.hh"

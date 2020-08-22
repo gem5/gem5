@@ -44,7 +44,6 @@
 
 #include <algorithm>
 
-#include "arch/isa_traits.hh"
 #include "arch/types.hh"
 #include "arch/utility.hh"
 #include "base/trace.hh"

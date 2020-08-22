@@ -35,6 +35,7 @@
 
 #include <cstring>
 
+#include "arch/x86/isa_traits.hh"
 #include "base/logging.hh"
 #include "debug/GPUTLB.hh"
 #include "sim/process.hh"

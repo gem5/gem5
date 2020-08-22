@@ -40,7 +40,6 @@
 
 #include <functional>
 
-#include "arch/isa_traits.hh"
 #include "base/bitunion.hh"
 #include "dev/virtio/virtio_ring.h"
 #include "mem/port_proxy.hh"

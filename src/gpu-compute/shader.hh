@@ -40,7 +40,6 @@
 #include <string>
 
 #include "arch/isa.hh"
-#include "arch/isa_traits.hh"
 #include "base/types.hh"
 #include "cpu/simple/atomic.hh"
 #include "cpu/simple/timing.hh"

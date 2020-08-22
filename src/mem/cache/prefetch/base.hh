@@ -48,7 +48,6 @@
 
 #include <cstdint>
 
-#include "arch/isa_traits.hh"
 #include "arch/generic/tlb.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"

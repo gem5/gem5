@@ -318,7 +318,7 @@ Process::drain()
 void
 Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
 {
-    int npages = divCeil(size, (int64_t)PageBytes);
+    int npages = divCeil(size, (int64_t)system->getPageBytes());
     Addr paddr = system->allocPhysPages(npages);
     pTable->map(vaddr, paddr, size,
                 clobber ? EmulationPageTable::Clobber :
@@ -333,14 +333,14 @@ Process::replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
         new_paddr = system->allocPhysPages(1);
 
     // Read from old physical page.
-    uint8_t *buf_p = new uint8_t[PageBytes];
-    old_tc->getVirtProxy().readBlob(vaddr, buf_p, PageBytes);
+    uint8_t *buf_p = new uint8_t[system->getPageBytes()];
+    old_tc->getVirtProxy().readBlob(vaddr, buf_p, system->getPageBytes());
 
     // Create new mapping in process address space by clobbering existing
     // mapping (if any existed) and then write to the new physical page.
     bool clobber = true;
-    pTable->map(vaddr, new_paddr, PageBytes, clobber);
-    new_tc->getVirtProxy().writeBlob(vaddr, buf_p, PageBytes);
+    pTable->map(vaddr, new_paddr, system->getPageBytes(), clobber);
+    new_tc->getVirtProxy().writeBlob(vaddr, buf_p, system->getPageBytes());
     delete[] buf_p;
 }
 
@@ -442,7 +442,7 @@ Process::updateBias()
 
     // Determine how large the interpreters footprint will be in the process
     // address space.
-    Addr interp_mapsize = roundUp(interp->mapSize(), TheISA::PageBytes);
+    Addr interp_mapsize = roundUp(interp->mapSize(), system->getPageBytes());
 
     // We are allocating the memory area; set the bias to the lowest address
     // in the allocated memory region.

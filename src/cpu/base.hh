@@ -51,7 +51,6 @@
 #include "arch/null/cpu_dummy.hh"
 #else
 #include "arch/generic/interrupts.hh"
-#include "arch/isa_traits.hh"
 #include "base/statistics.hh"
 #include "mem/port_proxy.hh"
 #include "sim/clocked_object.hh"

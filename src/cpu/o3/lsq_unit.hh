@@ -49,7 +49,6 @@
 
 #include "arch/generic/debugfaults.hh"
 #include "arch/generic/vec_reg.hh"
-#include "arch/isa_traits.hh"
 #include "arch/locked_mem.hh"
 #include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"

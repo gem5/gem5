@@ -47,7 +47,6 @@
 #include "arch/decoder.hh"
 #include "arch/generic/tlb.hh"
 #include "arch/isa.hh"
-#include "arch/isa_traits.hh"
 #include "arch/registers.hh"
 #include "arch/types.hh"
 #include "base/types.hh"

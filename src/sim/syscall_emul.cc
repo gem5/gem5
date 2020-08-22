@@ -241,7 +241,7 @@ exitGroupFunc(SyscallDesc *desc, ThreadContext *tc, int status)
 SyscallReturn
 getpagesizeFunc(SyscallDesc *desc, ThreadContext *tc)
 {
-    return (int)PageBytes;
+    return (int)tc->getSystemPtr()->getPageBytes();
 }
 
 
