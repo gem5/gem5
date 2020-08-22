@@ -74,4 +74,8 @@ ReturnAddrStack::restore(unsigned top_entry_idx,
     tos = top_entry_idx;
 
     addrStack[tos] = restored;
+
+    if (usedEntries != numEntries) {
+        ++usedEntries;
+    }
 }
