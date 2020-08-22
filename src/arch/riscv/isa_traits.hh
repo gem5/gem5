@@ -42,9 +42,7 @@
 #ifndef __ARCH_RISCV_ISA_TRAITS_HH__
 #define __ARCH_RISCV_ISA_TRAITS_HH__
 
-#include "arch/riscv/types.hh"
 #include "base/types.hh"
-#include "cpu/static_inst_fwd.hh"
 
 namespace RiscvISA
 {
