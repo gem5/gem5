@@ -77,7 +77,7 @@ PowerProcess::initState()
 {
     Process::initState();
 
-    argsInit(MachineBytes, PageBytes);
+    argsInit(sizeof(uint32_t), PageBytes);
 }
 
 void
