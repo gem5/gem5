@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Inria
+ * Copyright (c) 2019-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,8 @@ struct Base64Delta32Params;
 struct Base32Delta8Params;
 struct Base32Delta16Params;
 struct Base16Delta8Params;
+
+namespace Compressor {
 
 /**
  * Base class for all base-delta-immediate compressors. Although not proposed
@@ -113,7 +115,7 @@ class BaseDelta : public DictionaryCompressor<BaseType>
 
     void addToDictionary(DictionaryEntry data) override;
 
-    std::unique_ptr<BaseCacheCompressor::CompressionData>
+    std::unique_ptr<Base::CompressionData>
     compress(const uint64_t* data, Cycles& comp_lat,
         Cycles& decomp_lat) override;
 
@@ -200,5 +202,7 @@ class Base16Delta8 : public BaseDelta<uint16_t, 8>
     Base16Delta8(const Params *p);
     ~Base16Delta8() = default;
 };
+
+} // namespace Compressor
 
 #endif //__MEM_CACHE_COMPRESSORS_BASE_DELTA_HH__

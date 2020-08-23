@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Inria
+ * Copyright (c) 2019-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,23 +38,25 @@
 #include "mem/cache/compressors/dictionary_compressor_impl.hh"
 #include "params/RepeatedQwordsCompressor.hh"
 
-RepeatedQwordsCompressor::RepeatedQwordsCompressor(const Params *p)
+namespace Compressor {
+
+RepeatedQwords::RepeatedQwords(const Params *p)
     : DictionaryCompressor<uint64_t>(p)
 {
 }
 
 void
-RepeatedQwordsCompressor::addToDictionary(DictionaryEntry data)
+RepeatedQwords::addToDictionary(DictionaryEntry data)
 {
     assert(numEntries < dictionarySize);
     dictionary[numEntries++] = data;
 }
 
-std::unique_ptr<BaseCacheCompressor::CompressionData>
-RepeatedQwordsCompressor::compress(const uint64_t* data, Cycles& comp_lat,
+std::unique_ptr<Base::CompressionData>
+RepeatedQwords::compress(const uint64_t* data, Cycles& comp_lat,
     Cycles& decomp_lat)
 {
-    std::unique_ptr<BaseCacheCompressor::CompressionData> comp_data =
+    std::unique_ptr<Base::CompressionData> comp_data =
         DictionaryCompressor::compress(data);
 
     // Since there is a single value repeated over and over, there should be
@@ -75,8 +77,10 @@ RepeatedQwordsCompressor::compress(const uint64_t* data, Cycles& comp_lat,
     return comp_data;
 }
 
-RepeatedQwordsCompressor*
+} // namespace Compressor
+
+Compressor::RepeatedQwords*
 RepeatedQwordsCompressorParams::create()
 {
-    return new RepeatedQwordsCompressor(this);
+    return new Compressor::RepeatedQwords(this);
 }

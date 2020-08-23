@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Inria
+ * Copyright (c) 2019-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,8 @@
 #include "mem/cache/compressors/dictionary_compressor.hh"
 
 struct FPCDParams;
+
+namespace Compressor {
 
 class FPCD : public DictionaryCompressor<uint32_t>
 {
@@ -137,7 +139,7 @@ class FPCD : public DictionaryCompressor<uint32_t>
 
     void addToDictionary(DictionaryEntry data) override;
 
-    std::unique_ptr<BaseCacheCompressor::CompressionData> compress(
+    std::unique_ptr<Base::CompressionData> compress(
         const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat) override;
 
   public:
@@ -317,5 +319,7 @@ class FPCD::PatternXXXX : public UncompressedPattern
     {
     }
 };
+
+} // namespace Compressor
 
 #endif //__MEM_CACHE_COMPRESSORS_FPCD_HH__

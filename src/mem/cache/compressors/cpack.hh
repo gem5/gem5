@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Inria
+ * Copyright (c) 2018-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,8 @@
 #include "mem/cache/compressors/dictionary_compressor.hh"
 
 struct CPackParams;
+
+namespace Compressor {
 
 class CPack : public DictionaryCompressor<uint32_t>
 {
@@ -104,7 +106,7 @@ class CPack : public DictionaryCompressor<uint32_t>
      * @param decomp_lat Decompression latency in number of cycles.
      * @return Cache line after compression.
      */
-    std::unique_ptr<BaseCacheCompressor::CompressionData> compress(
+    std::unique_ptr<Base::CompressionData> compress(
         const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat) override;
 
   public:
@@ -177,5 +179,7 @@ class CPack::PatternMMMX : public MaskedPattern<0xFFFFFF00>
     {
     }
 };
+
+} // namespace Compressor
 
 #endif //__MEM_CACHE_COMPRESSORS_CPACK_HH__

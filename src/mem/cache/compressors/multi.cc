@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Inria
+ * Copyright (c) 2019-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,45 +41,47 @@
 #include "debug/CacheComp.hh"
 #include "params/MultiCompressor.hh"
 
-MultiCompressor::MultiCompData::MultiCompData(unsigned index,
-    std::unique_ptr<BaseCacheCompressor::CompressionData> comp_data)
+namespace Compressor {
+
+Multi::MultiCompData::MultiCompData(unsigned index,
+    std::unique_ptr<Base::CompressionData> comp_data)
     : CompressionData(), index(index), compData(std::move(comp_data))
 {
     setSizeBits(compData->getSizeBits());
 }
 
 uint8_t
-MultiCompressor::MultiCompData::getIndex() const
+Multi::MultiCompData::getIndex() const
 {
     return index;
 }
 
-MultiCompressor::MultiCompressor(const Params *p)
-    : BaseCacheCompressor(p), compressors(p->compressors)
+Multi::Multi(const Params *p)
+    : Base(p), compressors(p->compressors)
 {
     fatal_if(compressors.size() == 0, "There must be at least one compressor");
 }
 
-MultiCompressor::~MultiCompressor()
+Multi::~Multi()
 {
     for (auto& compressor : compressors) {
         delete compressor;
     }
 }
 
-std::unique_ptr<BaseCacheCompressor::CompressionData>
-MultiCompressor::compress(const uint64_t* cache_line, Cycles& comp_lat,
+std::unique_ptr<Base::CompressionData>
+Multi::compress(const uint64_t* cache_line, Cycles& comp_lat,
     Cycles& decomp_lat)
 {
     struct Results
     {
         unsigned index;
-        std::unique_ptr<BaseCacheCompressor::CompressionData> compData;
+        std::unique_ptr<Base::CompressionData> compData;
         Cycles decompLat;
         uint8_t compressionFactor;
 
         Results(unsigned index,
-            std::unique_ptr<BaseCacheCompressor::CompressionData> comp_data,
+            std::unique_ptr<Base::CompressionData> comp_data,
             Cycles decomp_lat, std::size_t blk_size)
             : index(index), compData(std::move(comp_data)),
               decompLat(decomp_lat)
@@ -147,7 +149,7 @@ MultiCompressor::compress(const uint64_t* cache_line, Cycles& comp_lat,
 }
 
 void
-MultiCompressor::decompress(const CompressionData* comp_data,
+Multi::decompress(const CompressionData* comp_data,
     uint64_t* cache_line)
 {
     const MultiCompData* casted_comp_data =
@@ -157,9 +159,9 @@ MultiCompressor::decompress(const CompressionData* comp_data,
 }
 
 void
-MultiCompressor::regStats()
+Multi::regStats()
 {
-    BaseCacheCompressor::regStats();
+    Base::regStats();
 
     rankStats
         .init(compressors.size(), compressors.size())
@@ -177,8 +179,10 @@ MultiCompressor::regStats()
     }
 }
 
-MultiCompressor*
+} // namespace Compressor
+
+Compressor::Multi*
 MultiCompressorParams::create()
 {
-    return new MultiCompressor(this);
+    return new Compressor::Multi(this);
 }

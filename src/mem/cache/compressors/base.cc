@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Inria
+ * Copyright (c) 2018-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,37 +42,39 @@
 #include "mem/cache/tags/super_blk.hh"
 #include "params/BaseCacheCompressor.hh"
 
+namespace Compressor {
+
 // Uncomment this line if debugging compression
 //#define DEBUG_COMPRESSION
 
-BaseCacheCompressor::CompressionData::CompressionData()
+Base::CompressionData::CompressionData()
     : _size(0)
 {
 }
 
-BaseCacheCompressor::CompressionData::~CompressionData()
+Base::CompressionData::~CompressionData()
 {
 }
 
 void
-BaseCacheCompressor::CompressionData::setSizeBits(std::size_t size)
+Base::CompressionData::setSizeBits(std::size_t size)
 {
     _size = size;
 }
 
 std::size_t
-BaseCacheCompressor::CompressionData::getSizeBits() const
+Base::CompressionData::getSizeBits() const
 {
     return _size;
 }
 
 std::size_t
-BaseCacheCompressor::CompressionData::getSize() const
+Base::CompressionData::getSize() const
 {
     return std::ceil(_size/8);
 }
 
-BaseCacheCompressor::BaseCacheCompressor(const Params *p)
+Base::Base(const Params *p)
   : SimObject(p), blkSize(p->block_size), sizeThreshold(p->size_threshold),
     stats(*this)
 {
@@ -80,7 +82,7 @@ BaseCacheCompressor::BaseCacheCompressor(const Params *p)
 }
 
 void
-BaseCacheCompressor::compress(const uint64_t* data, Cycles& comp_lat,
+Base::compress(const uint64_t* data, Cycles& comp_lat,
                               Cycles& decomp_lat, std::size_t& comp_size_bits)
 {
     // Apply compression
@@ -119,7 +121,7 @@ BaseCacheCompressor::compress(const uint64_t* data, Cycles& comp_lat,
 }
 
 Cycles
-BaseCacheCompressor::getDecompressionLatency(const CacheBlk* blk)
+Base::getDecompressionLatency(const CacheBlk* blk)
 {
     const CompressionBlk* comp_blk = static_cast<const CompressionBlk*>(blk);
 
@@ -137,7 +139,7 @@ BaseCacheCompressor::getDecompressionLatency(const CacheBlk* blk)
 }
 
 void
-BaseCacheCompressor::setDecompressionLatency(CacheBlk* blk, const Cycles lat)
+Base::setDecompressionLatency(CacheBlk* blk, const Cycles lat)
 {
     // Sanity check
     assert(blk != nullptr);
@@ -147,7 +149,7 @@ BaseCacheCompressor::setDecompressionLatency(CacheBlk* blk, const Cycles lat)
 }
 
 void
-BaseCacheCompressor::setSizeBits(CacheBlk* blk, const std::size_t size_bits)
+Base::setSizeBits(CacheBlk* blk, const std::size_t size_bits)
 {
     // Sanity check
     assert(blk != nullptr);
@@ -156,8 +158,7 @@ BaseCacheCompressor::setSizeBits(CacheBlk* blk, const std::size_t size_bits)
     static_cast<CompressionBlk*>(blk)->setSizeBits(size_bits);
 }
 
-BaseCacheCompressor::BaseCacheCompressorStats::BaseCacheCompressorStats(
-    BaseCacheCompressor& _compressor)
+Base::BaseStats::BaseStats(Base& _compressor)
   : Stats::Group(&_compressor), compressor(_compressor),
     compressions(this, "compressions",
         "Total number of compressions"),
@@ -173,7 +174,7 @@ BaseCacheCompressor::BaseCacheCompressorStats::BaseCacheCompressorStats(
 }
 
 void
-BaseCacheCompressor::BaseCacheCompressorStats::regStats()
+Base::BaseStats::regStats()
 {
     Stats::Group::regStats();
 
@@ -189,3 +190,4 @@ BaseCacheCompressor::BaseCacheCompressorStats::regStats()
     avgCompressionSizeBits = compressionSizeBits / compressions;
 }
 
+} // namespace Compressor

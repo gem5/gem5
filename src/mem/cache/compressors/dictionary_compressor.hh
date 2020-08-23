@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Inria
+ * Copyright (c) 2018-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,9 @@
 
 struct BaseDictionaryCompressorParams;
 
-class BaseDictionaryCompressor : public BaseCacheCompressor
+namespace Compressor {
+
+class BaseDictionaryCompressor : public Base
 {
   protected:
     /** Dictionary size. */
@@ -225,8 +227,7 @@ class DictionaryCompressor : public BaseDictionaryCompressor
      * @param data The cache line to be compressed.
      * @return Cache line after compression.
      */
-    std::unique_ptr<BaseCacheCompressor::CompressionData> compress(
-        const uint64_t* data);
+    std::unique_ptr<Base::CompressionData> compress(const uint64_t* data);
 
     using BaseDictionaryCompressor::compress;
 
@@ -724,5 +725,7 @@ class DictionaryCompressor<T>::DeltaPattern
         return bytes;
     }
 };
+
+} // namespace Compressor
 
 #endif //__MEM_CACHE_COMPRESSORS_DICTIONARY_COMPRESSOR_HH__

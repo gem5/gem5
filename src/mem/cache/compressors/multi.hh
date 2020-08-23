@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Inria
+ * Copyright (c) 2019-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,9 @@
 
 struct MultiCompressorParams;
 
-class MultiCompressor : public BaseCacheCompressor
+namespace Compressor {
+
+class Multi : public Base
 {
   protected:
     /**
@@ -53,7 +55,7 @@ class MultiCompressor : public BaseCacheCompressor
     class MultiCompData;
 
     /** List of sub-compressors. */
-    std::vector<BaseCacheCompressor*> compressors;
+    std::vector<Base*> compressors;
 
     /**
      * @defgroup CompressionStats Compression specific statistics.
@@ -68,24 +70,19 @@ class MultiCompressor : public BaseCacheCompressor
      */
 
   public:
-    /** Convenience typedef. */
-     typedef MultiCompressorParams Params;
-
-    /** Default constructor. */
-    MultiCompressor(const Params *p);
-
-    /** Default destructor. */
-    ~MultiCompressor();
+    typedef MultiCompressorParams Params;
+    Multi(const Params *p);
+    ~Multi();
 
     void regStats() override;
 
-    std::unique_ptr<BaseCacheCompressor::CompressionData> compress(
+    std::unique_ptr<Base::CompressionData> compress(
         const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat) override;
 
     void decompress(const CompressionData* comp_data, uint64_t* data) override;
 };
 
-class MultiCompressor::MultiCompData : public CompressionData
+class Multi::MultiCompData : public CompressionData
 {
   private:
     /** Index of the compressor that provided these compression results. */
@@ -93,7 +90,7 @@ class MultiCompressor::MultiCompData : public CompressionData
 
   public:
     /** Compression data of the best compressor. */
-    std::unique_ptr<BaseCacheCompressor::CompressionData> compData;
+    std::unique_ptr<Base::CompressionData> compData;
 
     /**
      * Default constructor.
@@ -102,7 +99,7 @@ class MultiCompressor::MultiCompData : public CompressionData
      * @param comp_data Compression data of the best compressor.
      */
     MultiCompData(unsigned index,
-        std::unique_ptr<BaseCacheCompressor::CompressionData> comp_data);
+        std::unique_ptr<Base::CompressionData> comp_data);
 
     /** Default destructor. */
     ~MultiCompData() = default;
@@ -110,5 +107,7 @@ class MultiCompressor::MultiCompData : public CompressionData
     /** Get the index of the best compressor. */
     uint8_t getIndex() const;
 };
+
+} // namespace Compressor
 
 #endif //__MEM_CACHE_COMPRESSORS_MULTI_HH__

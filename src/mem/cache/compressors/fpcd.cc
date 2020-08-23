@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Inria
+ * Copyright (c) 2019-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,8 @@
 #include "mem/cache/compressors/dictionary_compressor_impl.hh"
 #include "params/FPCD.hh"
 
+namespace Compressor {
+
 FPCD::FPCD(const Params *p)
     : DictionaryCompressor<uint32_t>(p)
 {
@@ -52,10 +54,10 @@ FPCD::addToDictionary(DictionaryEntry data)
     }
 }
 
-std::unique_ptr<BaseCacheCompressor::CompressionData>
+std::unique_ptr<Base::CompressionData>
 FPCD::compress(const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat)
 {
-    std::unique_ptr<BaseCacheCompressor::CompressionData> comp_data =
+    std::unique_ptr<Base::CompressionData> comp_data =
         DictionaryCompressor<uint32_t>::compress(data);
 
     // Set compression latency (Accounts for zero checks, ones check, match
@@ -71,8 +73,10 @@ FPCD::compress(const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat)
     return comp_data;
 }
 
-FPCD*
+} // namespace Compressor
+
+Compressor::FPCD*
 FPCDParams::create()
 {
-    return new FPCD(this);
+    return new Compressor::FPCD(this);
 }

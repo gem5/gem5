@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Inria
+ * Copyright (c) 2018-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,8 @@
 #include "debug/CacheComp.hh"
 #include "mem/cache/compressors/dictionary_compressor.hh"
 #include "params/BaseDictionaryCompressor.hh"
+
+namespace Compressor {
 
 template <class T>
 DictionaryCompressor<T>::CompData::CompData()
@@ -113,10 +115,10 @@ DictionaryCompressor<T>::compressValue(const T data)
 }
 
 template <class T>
-std::unique_ptr<BaseCacheCompressor::CompressionData>
+std::unique_ptr<Base::CompressionData>
 DictionaryCompressor<T>::compress(const uint64_t* data)
 {
-    std::unique_ptr<BaseCacheCompressor::CompressionData> comp_data =
+    std::unique_ptr<Base::CompressionData> comp_data =
         std::unique_ptr<CompData>(new CompData());
 
     // Reset dictionary
@@ -208,5 +210,7 @@ DictionaryCompressor<T>::fromDictionaryEntry(const DictionaryEntry& entry)
     }
     return value;
 }
+
+} // namespace Compressor
 
 #endif //__MEM_CACHE_COMPRESSORS_DICTIONARY_COMPRESSOR_IMPL_HH__

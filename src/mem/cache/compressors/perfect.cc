@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Inria
+ * Copyright (c) 2019-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,26 +38,28 @@
 #include "debug/CacheComp.hh"
 #include "params/PerfectCompressor.hh"
 
-PerfectCompressor::CompData::CompData(const uint64_t* data,
+namespace Compressor {
+
+Perfect::CompData::CompData(const uint64_t* data,
     std::size_t num_entries)
     : CompressionData(), entries(data, data + num_entries)
 {
 }
 
-PerfectCompressor::PerfectCompressor(const Params *p)
-    : BaseCacheCompressor(p),
+Perfect::Perfect(const Params *p)
+    : Base(p),
       compressedSize(8 * blkSize / p->max_compression_ratio),
       compressionLatency(p->compression_latency),
       decompressionLatency(p->decompression_latency)
 {
 }
 
-std::unique_ptr<BaseCacheCompressor::CompressionData>
-PerfectCompressor::compress(const uint64_t* cache_line, Cycles& comp_lat,
+std::unique_ptr<Base::CompressionData>
+Perfect::compress(const uint64_t* cache_line, Cycles& comp_lat,
     Cycles& decomp_lat)
 {
     // Compress every word sequentially
-    std::unique_ptr<BaseCacheCompressor::CompressionData> comp_data(
+    std::unique_ptr<Base::CompressionData> comp_data(
         new CompData(cache_line, blkSize/8));
 
     // Set relevant metadata
@@ -69,7 +71,7 @@ PerfectCompressor::compress(const uint64_t* cache_line, Cycles& comp_lat,
 }
 
 void
-PerfectCompressor::decompress(const CompressionData* comp_data,
+Perfect::decompress(const CompressionData* comp_data,
     uint64_t* data)
 {
     // Decompress every entry sequentially
@@ -79,8 +81,10 @@ PerfectCompressor::decompress(const CompressionData* comp_data,
     std::copy(entries.begin(), entries.end(), data);
 }
 
-PerfectCompressor*
+} // namespace Compressor
+
+Compressor::Perfect*
 PerfectCompressorParams::create()
 {
-    return new PerfectCompressor(this);
+    return new Compressor::Perfect(this);
 }

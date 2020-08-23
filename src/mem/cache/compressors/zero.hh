@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Inria
+ * Copyright (c) 2019-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,9 @@
 
 struct ZeroCompressorParams;
 
-class ZeroCompressor : public DictionaryCompressor<uint64_t>
+namespace Compressor {
+
+class Zero : public DictionaryCompressor<uint64_t>
 {
   protected:
     using DictionaryEntry = DictionaryCompressor<uint64_t>::DictionaryEntry;
@@ -89,16 +91,16 @@ class ZeroCompressor : public DictionaryCompressor<uint64_t>
 
     void addToDictionary(DictionaryEntry data) override;
 
-    std::unique_ptr<BaseCacheCompressor::CompressionData> compress(
+    std::unique_ptr<Base::CompressionData> compress(
         const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat) override;
 
   public:
     typedef ZeroCompressorParams Params;
-    ZeroCompressor(const Params *p);
-    ~ZeroCompressor() = default;
+    Zero(const Params *p);
+    ~Zero() = default;
 };
 
-class ZeroCompressor::PatternX
+class Zero::PatternX
     : public DictionaryCompressor::UncompressedPattern
 {
   public:
@@ -109,7 +111,7 @@ class ZeroCompressor::PatternX
     }
 };
 
-class ZeroCompressor::PatternZ
+class Zero::PatternZ
     : public DictionaryCompressor::MaskedValuePattern<0, 0xFFFFFFFFFFFFFFFF>
 {
   public:
@@ -119,5 +121,7 @@ class ZeroCompressor::PatternZ
     {
     }
 };
+
+} // namespace Compressor
 
 #endif //__MEM_CACHE_COMPRESSORS_ZERO_HH__

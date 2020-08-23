@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Inria
+ * Copyright (c) 2019-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,9 @@
 
 struct PerfectCompressorParams;
 
-class PerfectCompressor : public BaseCacheCompressor
+namespace Compressor {
+
+class Perfect : public Base
 {
   protected:
     class CompData;
@@ -64,11 +66,11 @@ class PerfectCompressor : public BaseCacheCompressor
 
   public:
     typedef PerfectCompressorParams Params;
-    PerfectCompressor(const Params *p);
-    ~PerfectCompressor() {};
+    Perfect(const Params *p);
+    ~Perfect() = default;
 };
 
-class PerfectCompressor::CompData : public CompressionData
+class Perfect::CompData : public CompressionData
 {
   public:
     /** The original data is simply copied over to this vector. */
@@ -83,5 +85,7 @@ class PerfectCompressor::CompData : public CompressionData
     CompData(const uint64_t* data, std::size_t num_entries);
     ~CompData() = default;
 };
+
+} // namespace Compressor
 
 #endif //__MEM_CACHE_COMPRESSORS_PERFECT_COMPRESSOR_HH__

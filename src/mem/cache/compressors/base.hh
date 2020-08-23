@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Inria
+ * Copyright (c) 2018-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,18 +45,20 @@
 class CacheBlk;
 struct BaseCacheCompressorParams;
 
+namespace Compressor {
+
 /**
  * Base cache compressor interface. Every cache compressor must implement a
  * compression and a decompression method.
  */
-class BaseCacheCompressor : public SimObject
+class Base : public SimObject
 {
   protected:
     /**
      * This compressor must be able to access the protected functions of
      * its sub-compressors.
      */
-    friend class MultiCompressor;
+    friend class Multi;
 
     /**
      * Forward declaration of compression data. Every new compressor must
@@ -75,11 +77,11 @@ class BaseCacheCompressor : public SimObject
      */
     const std::size_t sizeThreshold;
 
-    struct BaseCacheCompressorStats : public Stats::Group
+    struct BaseStats : public Stats::Group
     {
-        const BaseCacheCompressor& compressor;
+        const Base& compressor;
 
-        BaseCacheCompressorStats(BaseCacheCompressor& compressor);
+        BaseStats(Base& compressor);
 
         void regStats() override;
 
@@ -124,18 +126,9 @@ class BaseCacheCompressor : public SimObject
                               uint64_t* cache_line) = 0;
 
   public:
-    /** Convenience typedef. */
-     typedef BaseCacheCompressorParams Params;
-
-    /**
-     * Default constructor.
-     */
-    BaseCacheCompressor(const Params *p);
-
-    /**
-     * Default destructor.
-     */
-    virtual ~BaseCacheCompressor() {};
+    typedef BaseCacheCompressorParams Params;
+    Base(const Params *p);
+    virtual ~Base() = default;
 
     /**
      * Apply the compression process to the cache line. Ignores compression
@@ -174,7 +167,8 @@ class BaseCacheCompressor : public SimObject
     static void setSizeBits(CacheBlk* blk, const std::size_t size_bits);
 };
 
-class BaseCacheCompressor::CompressionData {
+class Base::CompressionData
+{
   private:
     /**
      * Compressed cache line size (in bits).
@@ -213,5 +207,7 @@ class BaseCacheCompressor::CompressionData {
      */
     std::size_t getSize() const;
 };
+
+} // namespace Compressor
 
 #endif //__MEM_CACHE_COMPRESSORS_BASE_HH__

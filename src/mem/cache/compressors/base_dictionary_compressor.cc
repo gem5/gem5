@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Inria
+ * Copyright (c) 2018-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,15 +34,17 @@
 #include "mem/cache/compressors/dictionary_compressor.hh"
 #include "params/BaseDictionaryCompressor.hh"
 
+namespace Compressor {
+
 BaseDictionaryCompressor::BaseDictionaryCompressor(const Params *p)
-    : BaseCacheCompressor(p), dictionarySize(p->dictionary_size), numEntries(0)
+    : Base(p), dictionarySize(p->dictionary_size), numEntries(0)
 {
 }
 
 void
 BaseDictionaryCompressor::regStats()
 {
-    BaseCacheCompressor::regStats();
+    Base::regStats();
 
     // We store the frequency of each pattern
     patternStats
@@ -57,3 +59,5 @@ BaseDictionaryCompressor::regStats()
                                 getName(i));
     }
 }
+
+} // namespace Compressor

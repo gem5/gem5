@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Inria
+# Copyright (c) 2018-2020 Inria
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@ from m5.SimObject import SimObject
 class BaseCacheCompressor(SimObject):
     type = 'BaseCacheCompressor'
     abstract = True
+    cxx_class = 'Compressor::Base'
     cxx_header = "mem/cache/compressors/base.hh"
 
     block_size = Param.Int(Parent.cache_line_size, "Block size in bytes")
@@ -41,6 +42,7 @@ class BaseCacheCompressor(SimObject):
 class BaseDictionaryCompressor(BaseCacheCompressor):
     type = 'BaseDictionaryCompressor'
     abstract = True
+    cxx_class = 'Compressor::BaseDictionaryCompressor'
     cxx_header = "mem/cache/compressors/dictionary_compressor.hh"
 
     dictionary_size = Param.Int(Parent.cache_line_size,
@@ -48,49 +50,49 @@ class BaseDictionaryCompressor(BaseCacheCompressor):
 
 class Base64Delta8(BaseDictionaryCompressor):
     type = 'Base64Delta8'
-    cxx_class = 'Base64Delta8'
+    cxx_class = 'Compressor::Base64Delta8'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
 class Base64Delta16(BaseDictionaryCompressor):
     type = 'Base64Delta16'
-    cxx_class = 'Base64Delta16'
+    cxx_class = 'Compressor::Base64Delta16'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
 class Base64Delta32(BaseDictionaryCompressor):
     type = 'Base64Delta32'
-    cxx_class = 'Base64Delta32'
+    cxx_class = 'Compressor::Base64Delta32'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
 class Base32Delta8(BaseDictionaryCompressor):
     type = 'Base32Delta8'
-    cxx_class = 'Base32Delta8'
+    cxx_class = 'Compressor::Base32Delta8'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
 class Base32Delta16(BaseDictionaryCompressor):
     type = 'Base32Delta16'
-    cxx_class = 'Base32Delta16'
+    cxx_class = 'Compressor::Base32Delta16'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
 class Base16Delta8(BaseDictionaryCompressor):
     type = 'Base16Delta8'
-    cxx_class = 'Base16Delta8'
+    cxx_class = 'Compressor::Base16Delta8'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
 class CPack(BaseDictionaryCompressor):
     type = 'CPack'
-    cxx_class = 'CPack'
+    cxx_class = 'Compressor::CPack'
     cxx_header = "mem/cache/compressors/cpack.hh"
 
 class FPCD(BaseDictionaryCompressor):
     type = 'FPCD'
-    cxx_class = 'FPCD'
+    cxx_class = 'Compressor::FPCD'
     cxx_header = "mem/cache/compressors/fpcd.hh"
 
     dictionary_size = 2
 
 class MultiCompressor(BaseCacheCompressor):
     type = 'MultiCompressor'
-    cxx_class = 'MultiCompressor'
+    cxx_class = 'Compressor::Multi'
     cxx_header = "mem/cache/compressors/multi.hh"
 
     # Dummy default compressor list. This might not be an optimal choice,
@@ -100,7 +102,7 @@ class MultiCompressor(BaseCacheCompressor):
 
 class PerfectCompressor(BaseCacheCompressor):
     type = 'PerfectCompressor'
-    cxx_class = 'PerfectCompressor'
+    cxx_class = 'Compressor::Perfect'
     cxx_header = "mem/cache/compressors/perfect.hh"
 
     max_compression_ratio = Param.Int(2,
@@ -112,12 +114,12 @@ class PerfectCompressor(BaseCacheCompressor):
 
 class RepeatedQwordsCompressor(BaseDictionaryCompressor):
     type = 'RepeatedQwordsCompressor'
-    cxx_class = 'RepeatedQwordsCompressor'
+    cxx_class = 'Compressor::RepeatedQwords'
     cxx_header = "mem/cache/compressors/repeated_qwords.hh"
 
 class ZeroCompressor(BaseDictionaryCompressor):
     type = 'ZeroCompressor'
-    cxx_class = 'ZeroCompressor'
+    cxx_class = 'Compressor::Zero'
     cxx_header = "mem/cache/compressors/zero.hh"
 
 class BDI(MultiCompressor):

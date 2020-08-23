@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Inria
+ * Copyright (c) 2019-2020 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,8 @@
 #include "params/Base64Delta32.hh"
 #include "params/Base64Delta8.hh"
 
+namespace Compressor {
+
 Base64Delta8::Base64Delta8(const Params *p)
     : BaseDelta<uint64_t, 8>(p)
 {
@@ -69,38 +71,40 @@ Base16Delta8::Base16Delta8(const Params *p)
 {
 }
 
-Base64Delta8*
+} // namespace Compressor
+
+Compressor::Base64Delta8*
 Base64Delta8Params::create()
 {
-    return new Base64Delta8(this);
+    return new Compressor::Base64Delta8(this);
 }
 
-Base64Delta16*
+Compressor::Base64Delta16*
 Base64Delta16Params::create()
 {
-    return new Base64Delta16(this);
+    return new Compressor::Base64Delta16(this);
 }
 
-Base64Delta32*
+Compressor::Base64Delta32*
 Base64Delta32Params::create()
 {
-    return new Base64Delta32(this);
+    return new Compressor::Base64Delta32(this);
 }
 
-Base32Delta8*
+Compressor::Base32Delta8*
 Base32Delta8Params::create()
 {
-    return new Base32Delta8(this);
+    return new Compressor::Base32Delta8(this);
 }
 
-Base32Delta16*
+Compressor::Base32Delta16*
 Base32Delta16Params::create()
 {
-    return new Base32Delta16(this);
+    return new Compressor::Base32Delta16(this);
 }
 
-Base16Delta8*
+Compressor::Base16Delta8*
 Base16Delta8Params::create()
 {
-    return new Base16Delta8(this);
+    return new Compressor::Base16Delta8(this);
 }
