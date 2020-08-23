@@ -912,9 +912,9 @@ ArmLinuxProcess64::initState()
 }
 
 void
-ArmLinuxProcess32::syscall(ThreadContext *tc, Fault *fault)
+ArmLinuxProcess32::syscall(ThreadContext *tc)
 {
-    ArmProcess32::syscall(tc, fault);
+    ArmProcess32::syscall(tc);
 
     int num = tc->readIntReg(INTREG_R7);
     SyscallDesc *desc = syscallDescs32Low.get(num, false);
@@ -922,13 +922,13 @@ ArmLinuxProcess32::syscall(ThreadContext *tc, Fault *fault)
         desc = syscallDescs32Low.get(num, false);
     if (!desc)
         desc = privSyscallDescs32.get(num);
-    desc->doSyscall(tc, fault);
+    desc->doSyscall(tc);
 }
 
 void
-ArmLinuxProcess64::syscall(ThreadContext *tc, Fault *fault)
+ArmLinuxProcess64::syscall(ThreadContext *tc)
 {
-    ArmProcess64::syscall(tc, fault);
+    ArmProcess64::syscall(tc);
 
     int num = tc->readIntReg(INTREG_X8);
     SyscallDesc *desc = syscallDescs64Low.get(num, false);
@@ -936,5 +936,5 @@ ArmLinuxProcess64::syscall(ThreadContext *tc, Fault *fault)
         desc = syscallDescs64Low.get(num, false);
     if (!desc)
         desc = privSyscallDescs64.get(num);
-    desc->doSyscall(tc, fault);
+    desc->doSyscall(tc);
 }

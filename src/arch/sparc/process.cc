@@ -66,7 +66,7 @@ SparcProcess::SparcProcess(ProcessParams *params,
 }
 
 void
-SparcProcess::handleTrap(int trapNum, ThreadContext *tc, Fault *fault)
+SparcProcess::handleTrap(int trapNum, ThreadContext *tc)
 {
     PCState pc = tc->pcState();
     switch (trapNum) {

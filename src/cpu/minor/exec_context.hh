@@ -379,11 +379,7 @@ class ExecContext : public ::ExecContext
         return thread.setMiscReg(reg.index(), val);
     }
 
-    void
-    syscall(Fault *fault) override
-    {
-        thread.syscall(fault);
-    }
+    void syscall() override { thread.syscall(); }
 
     ThreadContext *tcBase() const override { return thread.getTC(); }
 

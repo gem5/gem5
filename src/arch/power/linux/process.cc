@@ -451,8 +451,8 @@ PowerLinuxProcess::initState()
 }
 
 void
-PowerLinuxProcess::syscall(ThreadContext *tc, Fault *fault)
+PowerLinuxProcess::syscall(ThreadContext *tc)
 {
-    PowerProcess::syscall(tc, fault);
-    syscallDescs.get(tc->readIntReg(0))->doSyscall(tc, fault);
+    PowerProcess::syscall(tc);
+    syscallDescs.get(tc->readIntReg(0))->doSyscall(tc);
 }

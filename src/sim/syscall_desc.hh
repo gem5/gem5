@@ -71,7 +71,7 @@ class SyscallDesc {
      * to add filters for behaviors or apply checks for all system calls.
      * @param tc Handle for owning ThreadContext to pass information
      */
-    void doSyscall(ThreadContext *tc, Fault *fault);
+    void doSyscall(ThreadContext *tc);
 
     std::string name() const { return _name; }
     int num() const { return _num; }

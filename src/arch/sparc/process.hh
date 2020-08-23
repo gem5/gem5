@@ -61,7 +61,7 @@ class SparcProcess : public Process
   public:
 
     // Handles traps which request services from the operating system
-    virtual void handleTrap(int trapNum, ThreadContext *tc, Fault *fault);
+    virtual void handleTrap(int trapNum, ThreadContext *tc);
 
     Addr readFillStart() { return fillStart; }
     Addr readSpillStart() { return spillStart; }

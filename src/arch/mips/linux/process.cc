@@ -476,8 +476,8 @@ MipsLinuxProcess::MipsLinuxProcess(ProcessParams * params,
 {}
 
 void
-MipsLinuxProcess::syscall(ThreadContext *tc, Fault *fault)
+MipsLinuxProcess::syscall(ThreadContext *tc)
 {
-    MipsProcess::syscall(tc, fault);
-    syscallDescs.get(tc->readIntReg(2))->doSyscall(tc, fault);
+    MipsProcess::syscall(tc);
+    syscallDescs.get(tc->readIntReg(2))->doSyscall(tc);
 }

@@ -915,7 +915,7 @@ FullO3CPU<Impl>::trap(const Fault &fault, ThreadID tid,
 
 template <class Impl>
 void
-FullO3CPU<Impl>::syscall(ThreadID tid, Fault *fault)
+FullO3CPU<Impl>::syscall(ThreadID tid)
 {
     DPRINTF(O3CPU, "[tid:%i] Executing syscall().\n\n", tid);
 
@@ -926,7 +926,7 @@ FullO3CPU<Impl>::syscall(ThreadID tid, Fault *fault)
     ++(this->thread[tid]->funcExeInst);
 
     // Execute the actual syscall.
-    this->thread[tid]->syscall(fault);
+    this->thread[tid]->syscall();
 
     // Decrease funcExeInst by one as the normal commit will handle
     // incrementing it.

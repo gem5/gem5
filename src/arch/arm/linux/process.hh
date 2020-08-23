@@ -82,7 +82,7 @@ class ArmLinuxProcess32 : public ArmProcess32, public ArmLinuxProcessBits
 
     void initState() override;
 
-    void syscall(ThreadContext *tc, Fault *fault) override;
+    void syscall(ThreadContext *tc) override;
 
     /// A page to hold "kernel" provided functions. The name might be wrong.
     static const Addr commPage;
@@ -100,7 +100,7 @@ class ArmLinuxProcess64 : public ArmProcess64, public ArmLinuxProcessBits
                       ::Loader::Arch _arch);
 
     void initState() override;
-    void syscall(ThreadContext *tc, Fault *fault) override;
+    void syscall(ThreadContext *tc) override;
 
     struct SyscallABI : public ArmProcess64::SyscallABI,
                         public ArmLinuxProcessBits::SyscallABI

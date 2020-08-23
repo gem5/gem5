@@ -566,10 +566,10 @@ static SyscallDescTable<X86_64LinuxProcess::SyscallABI> syscallDescs64 = {
 };
 
 void
-X86_64LinuxProcess::syscall(ThreadContext *tc, Fault *fault)
+X86_64LinuxProcess::syscall(ThreadContext *tc)
 {
-    X86_64Process::syscall(tc, fault);
-    syscallDescs64.get(tc->readIntReg(INTREG_RAX))->doSyscall(tc, fault);
+    X86_64Process::syscall(tc);
+    syscallDescs64.get(tc->readIntReg(INTREG_RAX))->doSyscall(tc);
 }
 
 void
@@ -915,9 +915,9 @@ static SyscallDescTable<I386LinuxProcess::SyscallABI> syscallDescs32 = {
 };
 
 void
-I386LinuxProcess::syscall(ThreadContext *tc, Fault *fault)
+I386LinuxProcess::syscall(ThreadContext *tc)
 {
-    I386Process::syscall(tc, fault);
+    I386Process::syscall(tc);
     PCState pc = tc->pcState();
     Addr eip = pc.pc();
     if (eip >= vsyscallPage.base &&
@@ -925,7 +925,7 @@ I386LinuxProcess::syscall(ThreadContext *tc, Fault *fault)
         pc.npc(vsyscallPage.base + vsyscallPage.vsysexitOffset);
         tc->pcState(pc);
     }
-    syscallDescs32.get(tc->readIntReg(INTREG_RAX))->doSyscall(tc, fault);
+    syscallDescs32.get(tc->readIntReg(INTREG_RAX))->doSyscall(tc);
 }
 
 void

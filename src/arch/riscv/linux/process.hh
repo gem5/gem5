@@ -50,7 +50,7 @@ class RiscvLinuxProcess64 : public RiscvProcess64
     /// ID of the thread group leader for the process
     uint64_t __tgid;
 
-    void syscall(ThreadContext *tc, Fault *fault) override;
+    void syscall(ThreadContext *tc) override;
 
     /// Syscall descriptors, indexed by call number.
     static SyscallDescTable<SyscallABI> syscallDescs;
@@ -68,7 +68,7 @@ class RiscvLinuxProcess32 : public RiscvProcess32
     /// ID of the thread group leader for the process
     uint64_t __tgid;
 
-    void syscall(ThreadContext *tc, Fault *fault) override;
+    void syscall(ThreadContext *tc) override;
 
     /// Array of syscall descriptors, indexed by call number.
     static SyscallDescTable<SyscallABI> syscallDescs;

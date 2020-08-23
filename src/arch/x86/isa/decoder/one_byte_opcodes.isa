@@ -398,7 +398,7 @@
                         // will sign extend it, and there's no easy way to
                         // specify only checking the first byte.
                         0xffffffffffffff80:
-                            SyscallInst::int80('xc->syscall(&fault)',
+                            SyscallInst::int80('xc->syscall()',
                                                IsSyscall, IsNonSpeculative,
                                                IsSerializeAfter);
                     }

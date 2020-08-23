@@ -576,11 +576,7 @@ class SimpleThread : public ThreadState, public ThreadContext
         return ThreadState::readFuncExeInst();
     }
 
-    void
-    syscall(Fault *fault) override
-    {
-        process->syscall(this, fault);
-    }
+    void syscall() override { process->syscall(this); }
 
     RegVal readIntRegFlat(RegIndex idx) const override { return intRegs[idx]; }
     void

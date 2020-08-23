@@ -75,7 +75,7 @@ class Process : public SimObject
     void initState() override;
     DrainState drain() override;
 
-    virtual void syscall(ThreadContext *tc, Fault *fault) { numSyscalls++; }
+    virtual void syscall(ThreadContext *tc) { numSyscalls++; }
 
     inline uint64_t uid() { return _uid; }
     inline uint64_t euid() { return _euid; }

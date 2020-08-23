@@ -53,7 +53,7 @@ class X86_64LinuxProcess : public X86_64Process
 {
   public:
     using X86_64Process::X86_64Process;
-    void syscall(ThreadContext *tc, Fault *fault) override;
+    void syscall(ThreadContext *tc) override;
     void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *process,
                RegVal flags) override;
 
@@ -67,7 +67,7 @@ class I386LinuxProcess : public I386Process
 {
   public:
     using I386Process::I386Process;
-    void syscall(ThreadContext *tc, Fault *fault) override;
+    void syscall(ThreadContext *tc) override;
     void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *process,
                RegVal flags) override;
 

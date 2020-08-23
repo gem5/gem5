@@ -479,8 +479,7 @@ void
 m5Syscall(ThreadContext *tc)
 {
     DPRINTF(PseudoInst, "PseudoInst::m5Syscall()\n");
-    Fault fault;
-    tc->syscall(&fault);
+    tc->syscall();
 }
 
 void

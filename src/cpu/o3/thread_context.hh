@@ -421,9 +421,9 @@ class O3ThreadContext : public ThreadContext
 
     /** Executes a syscall in SE mode. */
     void
-    syscall(Fault *fault) override
+    syscall() override
     {
-        return cpu->syscall(thread->threadId(), fault);
+        return cpu->syscall(thread->threadId());
     }
 
     /** Reads the funcExeInst counter. */

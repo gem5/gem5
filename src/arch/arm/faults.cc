@@ -865,8 +865,7 @@ SupervisorCall::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     // As of now, there isn't a 32 bit thumb version of this instruction.
     assert(!machInst.bigThumb);
-    Fault fault;
-    tc->syscall(&fault);
+    tc->syscall();
 
     // Advance the PC since that won't happen automatically.
     PCState pc = tc->pcState();

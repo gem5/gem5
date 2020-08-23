@@ -494,11 +494,7 @@ class SimpleExecContext : public ExecContext {
     /**
      * Executes a syscall specified by the callnum.
      */
-    void
-    syscall(Fault *fault) override
-    {
-        thread->syscall(fault);
-    }
+    void syscall() override { thread->syscall(); }
 
     /** Returns a pointer to the ThreadContext. */
     ThreadContext *tcBase() const override { return thread->getTC(); }

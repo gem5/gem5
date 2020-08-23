@@ -56,9 +56,9 @@ class Sparc32LinuxProcess : public SparcLinuxProcess, public Sparc32Process
     /// Constructor.
     Sparc32LinuxProcess(ProcessParams * params, ::Loader::ObjectFile *objFile);
 
-    void syscall(ThreadContext *tc, Fault *fault) override;
+    void syscall(ThreadContext *tc) override;
 
-    void handleTrap(int trapNum, ThreadContext *tc, Fault *fault) override;
+    void handleTrap(int trapNum, ThreadContext *tc) override;
 };
 
 /// A process with emulated 32 bit SPARC/Linux syscalls.
@@ -68,12 +68,12 @@ class Sparc64LinuxProcess : public SparcLinuxProcess, public Sparc64Process
     /// Constructor.
     Sparc64LinuxProcess(ProcessParams * params, ::Loader::ObjectFile *objFile);
 
-    void syscall(ThreadContext *tc, Fault *fault) override;
+    void syscall(ThreadContext *tc) override;
 
     void getContext(ThreadContext *tc);
     void setContext(ThreadContext *tc);
 
-    void handleTrap(int trapNum, ThreadContext *tc, Fault *fault) override;
+    void handleTrap(int trapNum, ThreadContext *tc) override;
 };
 
 SyscallReturn getresuidFunc(SyscallDesc *desc, ThreadContext *tc,

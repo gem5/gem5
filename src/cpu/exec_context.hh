@@ -303,7 +303,7 @@ class ExecContext {
     /**
      * Executes a syscall.
      */
-    virtual void syscall(Fault *fault) = 0;
+    virtual void syscall() = 0;
 
     /** @} */
 

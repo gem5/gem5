@@ -280,7 +280,7 @@ class FullO3CPU : public BaseO3CPU
     /** Executes a syscall.
      * @todo: Determine if this needs to be virtual.
      */
-    void syscall(ThreadID tid, Fault *fault);
+    void syscall(ThreadID tid);
 
     /** Starts draining the CPU's pipeline of all instructions in
      * order to stop all memory accesses. */

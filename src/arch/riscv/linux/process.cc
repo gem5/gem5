@@ -781,10 +781,10 @@ RiscvLinuxProcess64::RiscvLinuxProcess64(ProcessParams * params,
 {}
 
 void
-RiscvLinuxProcess64::syscall(ThreadContext *tc, Fault *fault)
+RiscvLinuxProcess64::syscall(ThreadContext *tc)
 {
-    RiscvProcess64::syscall(tc, fault);
-    syscallDescs.get(tc->readIntReg(SyscallNumReg))->doSyscall(tc, fault);
+    RiscvProcess64::syscall(tc);
+    syscallDescs.get(tc->readIntReg(SyscallNumReg))->doSyscall(tc);
 }
 
 RiscvLinuxProcess32::RiscvLinuxProcess32(ProcessParams * params,
@@ -792,8 +792,8 @@ RiscvLinuxProcess32::RiscvLinuxProcess32(ProcessParams * params,
 {}
 
 void
-RiscvLinuxProcess32::syscall(ThreadContext *tc, Fault *fault)
+RiscvLinuxProcess32::syscall(ThreadContext *tc)
 {
-    RiscvProcess32::syscall(tc, fault);
-    syscallDescs.get(tc->readIntReg(SyscallNumReg))->doSyscall(tc, fault);
+    RiscvProcess32::syscall(tc);
+    syscallDescs.get(tc->readIntReg(SyscallNumReg))->doSyscall(tc);
 }

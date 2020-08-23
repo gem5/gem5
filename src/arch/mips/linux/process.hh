@@ -47,7 +47,7 @@ class MipsLinuxProcess : public MipsProcess
     /// ID of the thread group leader for the process
     uint64_t __tgid;
 
-    void syscall(ThreadContext *tc, Fault *fault) override;
+    void syscall(ThreadContext *tc) override;
 
     /// Syscall descriptors, indexed by call number.
     static SyscallDescTable<SyscallABI> syscallDescs;

@@ -515,7 +515,7 @@ decode OPCODE default Unknown::unknown() {
         55: stfdu({{ Mem_df = Fs; }});
     }
 
-    17: IntOp::sc({{ xc->syscall(&fault); }},
+    17: IntOp::sc({{ xc->syscall(); }},
                   [ IsSyscall, IsNonSpeculative, IsSerializeAfter ]);
 
     format FloatArithOp {
