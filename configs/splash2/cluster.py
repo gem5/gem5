@@ -216,6 +216,8 @@ system.clock = '1GHz'
 system.toL2bus = L2XBar(clock = busFrequency)
 system.l2 = L2(size = options.l2size, assoc = 8)
 
+system.workload = SEWorkload()
+
 # ----------------------
 # Connect the L2 cache and memory together
 # ----------------------

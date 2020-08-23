@@ -137,6 +137,8 @@ system.mem_ctrl.dram = DDR3_1600_8x8()
 system.mem_ctrl.dram.range = system.mem_ranges[0]
 system.mem_ctrl.port = system.membus.master
 
+system.workload = SEWorkload()
+
 # Create a process for a simple "Hello World" application
 process = Process()
 # Set the command

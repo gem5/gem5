@@ -500,7 +500,8 @@ cpu_list = cpu_list + [shader] + cp_list
 system = System(cpu = cpu_list,
                 mem_ranges = [AddrRange(options.mem_size)],
                 cache_line_size = options.cacheline_size,
-                mem_mode = mem_mode)
+                mem_mode = mem_mode,
+                workload = SEWorkload())
 if fast_forward:
     system.future_cpu = future_cpu_list
 system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)

@@ -94,6 +94,8 @@ thispath = os.path.dirname(os.path.realpath(__file__))
 binary = os.path.join(thispath, '../../../',
                       'tests/test-progs/hello/bin/', isa, 'linux/hello')
 
+system.workload = SEWorkload()
+
 # Create a process for a simple "Hello World" application
 process = Process()
 # Set the command

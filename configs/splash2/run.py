@@ -195,7 +195,8 @@ else:
 # Create a system, and add system wide objects
 # ----------------------
 system = System(cpu = cpus, physmem = SimpleMemory(),
-                membus = SystemXBar(clock = busFrequency))
+                membus = SystemXBar(clock = busFrequency),
+                workload = SEWorkload())
 system.clock = '1GHz'
 
 system.toL2bus = L2XBar(clock = busFrequency)

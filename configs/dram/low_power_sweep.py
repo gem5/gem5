@@ -93,6 +93,8 @@ system.clk_domain = SrcClockDomain(clock = '2.0GHz',
                                    voltage_domain =
                                    VoltageDomain(voltage = '1V'))
 
+system.workload = SEWorkload()
+
 # We are fine with 256 MB memory for now.
 mem_range = AddrRange('256MB')
 # Start address is 0

@@ -111,7 +111,7 @@ class System(SimObject):
     work_cpus_ckpt_count = Param.Counter(0,
         "create checkpoint when active cpu count value is reached")
 
-    workload = Param.Workload(NULL, "Operating system kernel")
+    workload = Param.Workload(NULL, "Workload to run on this system")
     init_param = Param.UInt64(0, "numerical value to pass into simulator")
     readfile = Param.String("", "file to read startup script from")
     symbolfile = Param.String("", "file to get the symbols from")
