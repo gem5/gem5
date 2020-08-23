@@ -128,9 +128,6 @@ struct O3ThreadState : public ThreadState {
 
     /** Returns a pointer to the TC of this thread. */
     ThreadContext *getTC() { return tc; }
-
-    /** Handles the syscall. */
-    void syscall() { process->syscall(tc); }
 };
 
 #endif // __CPU_O3_THREAD_STATE_HH__

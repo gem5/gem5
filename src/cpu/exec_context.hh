@@ -300,18 +300,6 @@ class ExecContext {
 
     /** @} */
 
-    /**
-     * @{
-     * @name SysCall Emulation Interfaces
-     */
-
-    /**
-     * Executes a syscall.
-     */
-    virtual void syscall() = 0;
-
-    /** @} */
-
     /** Returns a pointer to the ThreadContext. */
     virtual ThreadContext *tcBase() const = 0;
 

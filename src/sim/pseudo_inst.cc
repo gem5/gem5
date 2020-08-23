@@ -479,7 +479,7 @@ void
 m5Syscall(ThreadContext *tc)
 {
     DPRINTF(PseudoInst, "PseudoInst::m5Syscall()\n");
-    tc->syscall();
+    tc->getSystemPtr()->workload->syscall(tc);
 }
 
 void

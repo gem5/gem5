@@ -27,10 +27,17 @@
 
 #include "sim/se_workload.hh"
 
+#include "cpu/thread_context.hh"
 #include "params/SEWorkload.hh"
+#include "sim/process.hh"
 
 SEWorkload::SEWorkload(const Params &p) : Workload(&p), _params(p)
+{}
+
+void
+SEWorkload::syscall(ThreadContext *tc)
 {
+    tc->getProcessPtr()->syscall(tc);
 }
 
 SEWorkload *

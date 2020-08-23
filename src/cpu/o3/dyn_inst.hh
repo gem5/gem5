@@ -248,9 +248,6 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Traps to handle specified fault. */
     void trap(const Fault &fault);
 
-    /** Emulates a syscall. */
-    void syscall() override;
-
   public:
 
     // The register accessor methods provide the index of the

@@ -419,8 +419,6 @@ class ExecContext : public ::ExecContext
         return thread.setMiscReg(reg.index(), val);
     }
 
-    void syscall() override { thread.syscall(); }
-
     ThreadContext *tcBase() const override { return thread.getTC(); }
 
     /* @todo, should make stCondFailures persistent somewhere */

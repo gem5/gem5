@@ -496,11 +496,6 @@ class SimpleExecContext : public ExecContext {
         return thread->readStCondFailures();
     }
 
-    /**
-     * Executes a syscall specified by the callnum.
-     */
-    void syscall() override { thread->syscall(); }
-
     /** Returns a pointer to the ThreadContext. */
     ThreadContext *tcBase() const override { return thread->getTC(); }
 

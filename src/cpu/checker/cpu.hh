@@ -610,9 +610,6 @@ class CheckerCPU : public BaseCPU, public ExecContext
     /////////////////////////////////////////////////////
 
     void wakeup(ThreadID tid) override { }
-    // Assume that the normal CPU's call to syscall was successful.
-    // The checker's state would have already been updated by the syscall.
-    void syscall() override { }
 
     void
     handleError()

@@ -171,9 +171,6 @@ class CheckerThreadContext : public ThreadContext
         actualTC->connectMemPorts(tc);
     }
 
-    /** Executes a syscall in SE mode. */
-    void syscall() override { return actualTC->syscall(); }
-
     Status status() const override { return actualTC->status(); }
 
     void

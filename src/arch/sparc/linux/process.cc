@@ -92,7 +92,7 @@ Sparc32LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
 {
     switch (trapNum) {
       case 0x10: //Linux 32 bit syscall trap
-        tc->syscall();
+        tc->getSystemPtr()->workload->syscall(tc);
         break;
       default:
         SparcProcess::handleTrap(trapNum, tc);
@@ -129,7 +129,7 @@ Sparc64LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
     switch (trapNum) {
       // case 0x10: // Linux 32 bit syscall trap
       case 0x6d: // Linux 64 bit syscall trap
-        tc->syscall();
+        tc->getSystemPtr()->workload->syscall(tc);
         break;
       case 0x6e: // Linux 64 bit getcontext trap
         getContext(tc);

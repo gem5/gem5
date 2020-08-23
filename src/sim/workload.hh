@@ -69,6 +69,12 @@ class Workload : public SimObject
     virtual const Loader::SymbolTable &symtab(ThreadContext *tc) = 0;
     virtual bool insertSymbol(const Loader::Symbol &symbol) = 0;
 
+    virtual void
+    syscall(ThreadContext *tc)
+    {
+        panic("syscall() not implemented.");
+    }
+
     /** @{ */
     /**
      * Add a function-based event to the given function, to be looked

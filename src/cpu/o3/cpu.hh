@@ -276,11 +276,6 @@ class FullO3CPU : public BaseO3CPU
     void exitThreads();
 
   public:
-    /** Executes a syscall.
-     * @todo: Determine if this needs to be virtual.
-     */
-    void syscall(ThreadID tid);
-
     /** Starts draining the CPU's pipeline of all instructions in
      * order to stop all memory accesses. */
     DrainState drain() override;

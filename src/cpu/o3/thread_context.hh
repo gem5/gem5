@@ -419,13 +419,6 @@ class O3ThreadContext : public ThreadContext
         thread->storeCondFailures = sc_failures;
     }
 
-    /** Executes a syscall in SE mode. */
-    void
-    syscall() override
-    {
-        return cpu->syscall(thread->threadId());
-    }
-
     /** Reads the funcExeInst counter. */
     Counter readFuncExeInst() const override { return thread->funcExeInst; }
 

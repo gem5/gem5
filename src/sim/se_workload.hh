@@ -76,6 +76,8 @@ class SEWorkload : public Workload
         // within it.
         panic("No workload symbol table for syscall emulation mode.");
     }
+
+    void syscall(ThreadContext *tc) override;
 };
 
 #endif // __SIM_SE_WORKLOAD_HH__
