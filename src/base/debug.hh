@@ -134,10 +134,17 @@ void clearDebugFlag(const char *string);
 
 void dumpDebugFlags();
 
+/**
+ * \def DTRACE(x)
+ *
+ * @ingroup api_trace
+ * @{
+ */
 #if TRACING_ON
 #   define DTRACE(x) (Debug::x)
 #else // !TRACING_ON
 #   define DTRACE(x) (false)
 #endif  // TRACING_ON
+/** @} */ // end of api_trace
 
 #endif // __BASE_DEBUG_HH__
