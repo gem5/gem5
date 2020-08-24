@@ -123,7 +123,7 @@ let {{
 
             # If there's something optional to do with flags, generate
             # a version without it and fix up this version to use it.
-            if flag_code is not "" or cond_check is not "true":
+            if flag_code != "" or cond_check != "true":
                 self.buildCppClasses(name, Name, suffix,
                         code, "", "true", else_code, op_class)
                 suffix = "Flags" + suffix
