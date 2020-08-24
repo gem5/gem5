@@ -515,8 +515,7 @@ decode OPCODE default Unknown::unknown() {
         55: stfdu({{ Mem_df = Fs; }});
     }
 
-    17: IntOp::sc({{ xc->syscall(); }},
-                  [ IsSyscall, IsNonSpeculative, IsSerializeAfter ]);
+    17: IntOp::sc({{ return std::make_shared<SESyscallFault>(); }});
 
     format FloatArithOp {
         59: decode A_XO {

@@ -159,9 +159,12 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x2: movz({{ Rd = (Rt == 0) ? Rs : Rd; }});
                     0x3: movn({{ Rd = (Rt != 0) ? Rs : Rd; }});
                     0x4: decode FullSystemInt {
-                        0: syscall_se({{ xc->syscall(); }},
-                                IsSerializeAfter, IsNonSpeculative);
-                      default: syscall({{ fault = std::make_shared<SystemCallFault>(); }});
+                        0: syscall_se({{
+                            fault = std::make_shared<SESyscallFault>();
+                        }});
+                      default: syscall({{
+                            fault = std::make_shared<SystemCallFault>();
+                        }});
                     }
                     0x7: sync({{ ; }}, IsMemBarrier);
                   0x5: break({{fault = std::make_shared<BreakpointFault>();}});

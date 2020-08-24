@@ -64,6 +64,15 @@ class UnimpFault : public FaultBase
                 StaticInst::nullStaticInstPtr) override;
 };
 
+// A fault to trigger a system call in SE mode.
+class SESyscallFault : public FaultBase
+{
+    const char *name() const override { return "syscall_fault"; }
+
+    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
+            StaticInst::nullStaticInstPtr) override;
+};
+
 class ReExec : public FaultBase
 {
   public:

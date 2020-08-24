@@ -51,6 +51,16 @@ UnimpFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 }
 
 void
+SESyscallFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+{
+    tc->syscall();
+    // Move the PC forward since that doesn't happen automatically.
+    TheISA::PCState pc = tc->pcState();
+    inst->advancePC(pc);
+    tc->pcState(pc);
+}
+
+void
 ReExec::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     tc->pcState(tc->pcState());
