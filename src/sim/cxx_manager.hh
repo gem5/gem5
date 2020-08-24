@@ -126,14 +126,14 @@ class CxxConfigManager
     std::list<Renaming> renamings;
 
     /** Bind a single connection between two objects' ports */
-    void bindPort(SimObject *masterObject, const std::string &masterPort,
-        PortID masterPortIndex, SimObject *slaveObject,
-        const std::string &slavePort, PortID slavePortIndex);
+    void bindPort(SimObject *requestorObject, const std::string &requestPort,
+        PortID requestPortIndex, SimObject *responderObject,
+        const std::string &responsePort, PortID responsePortIndex);
 
-    /** Bind a single (possibly vectored) master port to peers from the
+    /** Bind a single (possibly vectored) request port to peers from the
      *  unparsed list peers with elements in the .ini connection format:
      *  path(.path)*.port[index] */
-    void bindMasterPort(SimObject *object,
+    void bindRequestPort(SimObject *object,
         const CxxConfigDirectoryEntry::PortDesc &port,
         const std::vector<std::string> &peers);
 

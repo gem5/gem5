@@ -191,7 +191,8 @@ X86ISA::I8259::write(PacketPtr pkt)
           case 0x2:
             DPRINTF(I8259, "Received initialization command word 3.\n");
             if (mode == Enums::I8259Master) {
-                DPRINTF(I8259, "Slaves attached to IRQs:%s%s%s%s%s%s%s%s\n",
+                DPRINTF(I8259, "Responders attached to "
+                        "IRQs:%s%s%s%s%s%s%s%s\n",
                         bits(val, 0) ? " 0" : "",
                         bits(val, 1) ? " 1" : "",
                         bits(val, 2) ? " 2" : "",
@@ -202,7 +203,7 @@ X86ISA::I8259::write(PacketPtr pkt)
                         bits(val, 7) ? " 7" : "");
                 cascadeBits = val;
             } else {
-                DPRINTF(I8259, "Slave ID is %d.\n", val & mask(3));
+                DPRINTF(I8259, "Responder ID is %d.\n", val & mask(3));
                 cascadeBits = val & mask(3);
             }
             if (expectICW4)
@@ -307,10 +308,10 @@ int
 X86ISA::I8259::getVector()
 {
     /*
-     * This code only handles one slave. Since that's how the PC platform
+     * This code only handles one responder. Since that's how the PC platform
      * always uses the 8259 PIC, there shouldn't be any need for more. If
-     * there -is- a need for more for some reason, "slave" can become a
-     * vector of slaves.
+     * there -is- a need for more for some reason, "responder" can become a
+     * vector of responders.
      */
     int line = findMsbSet(IRR);
     IRR &= ~(1 << line);
@@ -321,7 +322,7 @@ X86ISA::I8259::getVector()
         ISR |= 1 << line;
     }
     if (slave && bits(cascadeBits, line)) {
-        DPRINTF(I8259, "Interrupt was from slave who will "
+        DPRINTF(I8259, "Interrupt was from responder who will "
                 "provide the vector.\n");
         return slave->getVector();
     }

@@ -86,10 +86,10 @@ MemTraceProbe::startup()
     header_msg.set_obj_id(name());
     header_msg.set_tick_freq(SimClock::Frequency);
 
-    for (int i = 0; i < system->maxMasters(); i++) {
+    for (int i = 0; i < system->maxRequestors(); i++) {
         auto id_string = header_msg.add_id_strings();
         id_string->set_key(i);
-        id_string->set_value(system->getMasterName(i));
+        id_string->set_value(system->getRequestorName(i));
     }
 
     traceStream->write(header_msg);
@@ -114,7 +114,7 @@ MemTraceProbe::handleRequest(const ProbePoints::PacketInfo &pkt_info)
     pkt_msg.set_size(pkt_info.size);
     if (withPC && pkt_info.pc != 0)
         pkt_msg.set_pc(pkt_info.pc);
-    pkt_msg.set_pkt_id(pkt_info.master);
+    pkt_msg.set_pkt_id(pkt_info.id);
 
     traceStream->write(pkt_msg);
 }

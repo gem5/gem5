@@ -444,72 +444,74 @@ CxxConfigManager::bindAllPorts()
 
 void
 CxxConfigManager::bindPort(
-    SimObject *master_object, const std::string &master_port_name,
-    PortID master_port_index,
-    SimObject *slave_object, const std::string &slave_port_name,
-    PortID slave_port_index)
+    SimObject *requestor_object, const std::string &request_port_name,
+    PortID request_port_index,
+    SimObject *responder_object, const std::string &response_port_name,
+    PortID response_port_index)
 {
-    /* FIXME, check slave_port_index against connection_count
+    /* FIXME, check response_port_index against connection_count
      *  defined for port, need getPortConnectionCount and a
      *  getCxxConfigDirectoryEntry for each object. */
 
     /* It would be nice to be able to catch the errors from these calls. */
-    Port &master_port = master_object->getPort(
-        master_port_name, master_port_index);
-    Port &slave_port = slave_object->getPort(
-        slave_port_name, slave_port_index);
+    Port &request_port = requestor_object->getPort(
+        request_port_name, request_port_index);
+    Port &response_port = responder_object->getPort(
+        response_port_name, response_port_index);
 
-    if (master_port.isConnected()) {
-        throw Exception(master_object->name(), csprintf(
-            "Master port: %s[%d] is already connected\n", master_port_name,
-            master_port_index));
+    if (request_port.isConnected()) {
+        throw Exception(requestor_object->name(), csprintf(
+            "Request port: %s[%d] is already connected\n", request_port_name,
+            request_port_index));
     }
 
-    if (slave_port.isConnected()) {
-        throw Exception(slave_object->name(), csprintf(
-            "Slave port: %s[%d] is already connected\n", slave_port_name,
-            slave_port_index));
+    if (response_port.isConnected()) {
+        throw Exception(responder_object->name(), csprintf(
+            "Response port: %s[%d] is already connected\n", response_port_name,
+            response_port_index));
     }
 
     DPRINTF(CxxConfig, "Binding port %s.%s[%d]"
         " to %s:%s[%d]\n",
-        master_object->name(), master_port_name, master_port_index,
-        slave_object->name(), slave_port_name, slave_port_index);
+        requestor_object->name(), request_port_name, request_port_index,
+        responder_object->name(), response_port_name, response_port_index);
 
-    master_port.bind(slave_port);
+    request_port.bind(response_port);
 }
 
 void
-CxxConfigManager::bindMasterPort(SimObject *object,
+CxxConfigManager::bindRequestPort(SimObject *object,
     const CxxConfigDirectoryEntry::PortDesc &port,
     const std::vector<std::string> &peers)
 {
-    unsigned int master_port_index = 0;
+    unsigned int request_port_index = 0;
 
     for (auto peer_i = peers.begin(); peer_i != peers.end();
         ++peer_i)
     {
         const std::string &peer = *peer_i;
-        std::string slave_object_name;
-        std::string slave_port_name;
-        unsigned int slave_port_index;
+        std::string response_object_name;
+        std::string response_port_name;
+        unsigned int response_port_index;
 
-        parsePort(peer, slave_object_name, slave_port_name,
-            slave_port_index);
+        parsePort(peer, response_object_name, response_port_name,
+            response_port_index);
 
-        std::string slave_instance_name = rename(slave_object_name);
+        std::string response_instance_name = rename(response_object_name);
 
-        if (objectsByName.find(slave_instance_name) == objectsByName.end()) {
+        if (objectsByName.find(response_instance_name)
+            == objectsByName.end()) {
             throw Exception(object->name(), csprintf(
-                "Can't find slave port object: %s", slave_instance_name));
+                "Can't find response port object: %s",
+                response_instance_name));
         }
 
-        SimObject *slave_object = objectsByName[slave_instance_name];
+        SimObject *responder_object = objectsByName[response_instance_name];
 
-        bindPort(object, port.name, master_port_index,
-            slave_object, slave_port_name, slave_port_index);
+        bindPort(object, port.name, request_port_index,
+            responder_object, response_port_name, response_port_index);
 
-        master_port_index++;
+        request_port_index++;
     }
 }
 
@@ -540,14 +542,14 @@ CxxConfigManager::bindObjectPorts(SimObject *object)
 
         /* Only handle master ports as binding only needs to happen once
          *  for each observed pair of ports */
-        if (port->isMaster) {
+        if (port->isRequestor) {
             if (!port->isVector && peers.size() > 1) {
                 throw Exception(instance_name, csprintf(
                     "Too many connections to non-vector port %s (%d)\n",
                     port->name, peers.size()));
             }
 
-            bindMasterPort(object, *port, peers);
+            bindRequestPort(object, *port, peers);
         }
     }
 }

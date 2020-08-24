@@ -58,7 +58,7 @@ using namespace TheISA;
 void
 CheckerCPU::init()
 {
-    masterId = systemPtr->getMasterId(this);
+    requestorId = systemPtr->getRequestorId(this);
 }
 
 CheckerCPU::CheckerCPU(Params *p)
@@ -154,13 +154,13 @@ CheckerCPU::genMemFragmentRequest(Addr frag_addr, int size,
         auto it_end = byte_enable.cbegin() + (size - size_left);
         if (isAnyActiveElement(it_start, it_end)) {
             mem_req = std::make_shared<Request>(frag_addr, frag_size,
-                    flags, masterId, thread->pcState().instAddr(),
+                    flags, requestorId, thread->pcState().instAddr(),
                     tc->contextId());
             mem_req->setByteEnable(std::vector<bool>(it_start, it_end));
         }
     } else {
         mem_req = std::make_shared<Request>(frag_addr, frag_size,
-                    flags, masterId, thread->pcState().instAddr(),
+                    flags, requestorId, thread->pcState().instAddr(),
                     tc->contextId());
     }
 

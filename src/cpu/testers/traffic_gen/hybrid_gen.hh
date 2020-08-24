@@ -66,7 +66,7 @@ class HybridGen : public BaseGen
      * Create a hybrid DRAM + NVM address sequence generator.
      *
      * @param obj SimObject owning this sequence generator
-     * @param master_id MasterID related to the memory requests
+     * @param requestor_id RequestorID related to the memory requests
      * @param _duration duration of this state before transitioning
      * @param start_addr_dram Start address for DRAM range
      * @param end_addr_dram End address for DRAM range
@@ -96,7 +96,7 @@ class HybridGen : public BaseGen
      * @param nvm_percent Percentage of traffic going to NVM
      */
     HybridGen(SimObject &obj,
-           MasterID master_id, Tick _duration,
+           RequestorID requestor_id, Tick _duration,
            Addr start_addr_dram, Addr end_addr_dram,
            Addr blocksize_dram,
            Addr start_addr_nvm, Addr end_addr_nvm,

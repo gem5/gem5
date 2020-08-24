@@ -443,7 +443,7 @@ class SCFastModelGIC(SystemC_ScModule):
     output_attributes = Param.String("ExtendedID[62:55]=MPAM_PMG, "
             "ExtendedID[54:39]=MPAM_PARTID, ExtendedID[38]=MPAM_NS",
             "User-defined transform to be applied to bus attributes like "
-            "MasterID, ExtendedID or UserFlags. Currently, only works for "
+            "RequestorID, ExtendedID or UserFlags. Currently, only works for "
             "MPAM Attributes encoding into bus attributes.")
     has_DirtyVLPIOnLoad = Param.Bool(False, "GICR_VPENDBASER.Dirty reflects "
             "transient loading state when valid=1")

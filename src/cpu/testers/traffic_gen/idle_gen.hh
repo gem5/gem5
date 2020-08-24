@@ -56,8 +56,8 @@ class IdleGen : public BaseGen
 
   public:
 
-    IdleGen(SimObject &obj, MasterID master_id, Tick _duration)
-        : BaseGen(obj, master_id, _duration)
+    IdleGen(SimObject &obj, RequestorID requestor_id, Tick _duration)
+        : BaseGen(obj, requestor_id, _duration)
     { }
 
     void enter();

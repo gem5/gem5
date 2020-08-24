@@ -250,7 +250,7 @@ class MemCmd
 /**
  * A Packet is used to encapsulate a transfer between two objects in
  * the memory system (e.g., the L1 and L2 cache).  (In contrast, a
- * single Request travels all the way from the requester to the
+ * single Request travels all the way from the requestor to the
  * ultimate destination and back, possibly being conveyed by several
  * different Packets along the way.)
  */
@@ -737,7 +737,7 @@ class Packet : public Printable
     inline void qosValue(const uint8_t qos_value)
     { _qosValue = qos_value; }
 
-    inline MasterID masterId() const { return req->masterId(); }
+    inline RequestorID requestorId() const { return req->requestorId(); }
 
     // Network error conditions... encapsulate them as methods since
     // their encoding keeps changing (from result field to command

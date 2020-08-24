@@ -48,8 +48,8 @@ namespace QoS {
 /**
  * Fixed Priority QoS Policy
  *
- * Fixed Priority Policy: based on a configured MasterID to priority map,
- * it returns a fixed QoS priority value: every master has a fixed priority.
+ * Fixed Priority Policy: based on a configured RequestorID to priority map,
+ * it returns a fixed QoS priority value: every requestor has a fixed priority.
  */
 class FixedPriorityPolicy : public Policy
 {
@@ -62,42 +62,42 @@ class FixedPriorityPolicy : public Policy
     void init() override;
 
     /**
-     * Initialize the fixed master's priority by providing
-     * the master's name and priority value.
-     * The master's name has to match a name in the system.
+     * Initialize the fixed requestor's priority by providing
+     * the requestor's name and priority value.
+     * The requestor's name has to match a name in the system.
      *
-     * @param master master's name to lookup.
-     * @param priority priority value for the master
+     * @param requestor requestor's name to lookup.
+     * @param priority priority value for the requestor
      */
-    void initMasterName(std::string master, uint8_t priority);
+    void initRequestorName(std::string requestor, uint8_t priority);
 
     /**
-     * Initialize the fixed master's priority by providing
-     * the master's SimObject pointer and priority value.
+     * Initialize the fixed requestor's priority by providing
+     * the requestor's SimObject pointer and priority value.
      *
-     * @param master master's SimObject pointer to lookup.
-     * @param priority priority value for the master
+     * @param requestor requestor's SimObject pointer to lookup.
+     * @param priority priority value for the requestor
      */
-    void initMasterObj(const SimObject* master, uint8_t priority);
+    void initRequestorObj(const SimObject* requestor, uint8_t priority);
 
     /**
      * Schedules a packet based on fixed priority configuration
      *
-     * @param mId master id to schedule
+     * @param id requestor id to schedule
      * @param data data to schedule
      * @return QoS priority value
      */
-    virtual uint8_t schedule(const MasterID, const uint64_t) override;
+    virtual uint8_t schedule(const RequestorID, const uint64_t) override;
 
   protected:
-    /** Default fixed priority value for non-listed masters */
+    /** Default fixed priority value for non-listed requestors */
     const uint8_t defaultPriority;
 
     /**
-     * Priority map, associates configured masters with
+     * Priority map, associates configured requestors with
      * a fixed QoS priority value
      */
-    std::map<MasterID, uint8_t> priorityMap;
+    std::map<RequestorID, uint8_t> priorityMap;
 };
 
 } // namespace QoS

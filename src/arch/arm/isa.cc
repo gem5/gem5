@@ -2345,7 +2345,7 @@ ISA::addressTranslation64(TLB::ArmTranslationType tran_type,
     warn_once("Doing AT (address translation) in functional mode! Fix Me!\n");
 
     auto req = std::make_shared<Request>(
-        val, 0, flags,  Request::funcMasterId,
+        val, 0, flags,  Request::funcRequestorId,
         tc->pcState().pc(), tc->contextId());
 
     Fault fault = getDTBPtr(tc)->translateFunctional(
@@ -2396,7 +2396,7 @@ ISA::addressTranslation(TLB::ArmTranslationType tran_type,
     warn_once("Doing AT (address translation) in functional mode! Fix Me!\n");
 
     auto req = std::make_shared<Request>(
-        val, 0, flags,  Request::funcMasterId,
+        val, 0, flags,  Request::funcRequestorId,
         tc->pcState().pc(), tc->contextId());
 
     Fault fault = getDTBPtr(tc)->translateFunctional(

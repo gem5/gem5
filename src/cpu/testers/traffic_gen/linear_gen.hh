@@ -67,7 +67,7 @@ class LinearGen : public StochasticGen
      * time.
      *
      * @param obj SimObject owning this sequence generator
-     * @param master_id MasterID related to the memory requests
+     * @param requestor_id RequestorID related to the memory requests
      * @param _duration duration of this state before transitioning
      * @param start_addr Start address
      * @param end_addr End address
@@ -79,12 +79,12 @@ class LinearGen : public StochasticGen
      * @param data_limit Upper limit on how much data to read/write
      */
     LinearGen(SimObject &obj,
-              MasterID master_id, Tick _duration,
+              RequestorID requestor_id, Tick _duration,
               Addr start_addr, Addr end_addr,
               Addr _blocksize, Addr cacheline_size,
               Tick min_period, Tick max_period,
               uint8_t read_percent, Addr data_limit)
-        : StochasticGen(obj, master_id, _duration, start_addr, end_addr,
+        : StochasticGen(obj, requestor_id, _duration, start_addr, end_addr,
                         _blocksize, cacheline_size, min_period, max_period,
                         read_percent, data_limit),
           nextAddr(0),

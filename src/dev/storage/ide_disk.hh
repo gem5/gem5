@@ -245,7 +245,7 @@ class IdeDisk : public SimObject
     uint32_t curPrdAddr;
     /** PRD entry */
     PrdTableEntry curPrd;
-    /** Device ID (master=0/slave=1) */
+    /** Device ID (device0=0/device1=1) */
     int devID;
     /** Interrupt pending */
     bool intrPending;

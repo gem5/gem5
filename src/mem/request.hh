@@ -82,7 +82,7 @@ class Request;
 class ThreadContext;
 
 typedef std::shared_ptr<Request> RequestPtr;
-typedef uint16_t MasterID;
+typedef uint16_t RequestorID;
 
 class Request
 {
@@ -236,23 +236,23 @@ class Request
     static const FlagsType HTM_CMD = HTM_START | HTM_COMMIT |
         HTM_CANCEL | HTM_ABORT;
 
-    /** Master Ids that are statically allocated
+    /** Requestor Ids that are statically allocated
      * @{*/
-    enum : MasterID {
-        /** This master id is used for writeback requests by the caches */
-        wbMasterId = 0,
+    enum : RequestorID {
+        /** This requestor id is used for writeback requests by the caches */
+        wbRequestorId = 0,
         /**
-         * This master id is used for functional requests that
+         * This requestor id is used for functional requests that
          * don't come from a particular device
          */
-        funcMasterId = 1,
-        /** This master id is used for message signaled interrupts */
-        intMasterId = 2,
+        funcRequestorId = 1,
+        /** This requestor id is used for message signaled interrupts */
+        intRequestorId = 2,
         /**
-         * Invalid master id for assertion checking only. It is
+         * Invalid requestor id for assertion checking only. It is
          * invalid behavior to ever send this id as part of a request.
          */
-        invldMasterId = std::numeric_limits<MasterID>::max()
+        invldRequestorId = std::numeric_limits<RequestorID>::max()
     };
     /** @} */
 
@@ -347,7 +347,7 @@ class Request
     /** The requestor ID which is unique in the system for all ports
      * that are capable of issuing a transaction
      */
-    MasterID _masterId = invldMasterId;
+    RequestorID _requestorId = invldRequestorId;
 
     /** Flag structure for the request. */
     Flags _flags;
@@ -427,25 +427,25 @@ class Request
      * just physical address, size, flags, and timestamp (to curTick()).
      * These fields are adequate to perform a request.
      */
-    Request(Addr paddr, unsigned size, Flags flags, MasterID mid) :
-        _paddr(paddr), _size(size), _masterId(mid), _time(curTick())
+    Request(Addr paddr, unsigned size, Flags flags, RequestorID id) :
+        _paddr(paddr), _size(size), _requestorId(id), _time(curTick())
     {
         _flags.set(flags);
         privateFlags.set(VALID_PADDR|VALID_SIZE);
     }
 
     Request(Addr vaddr, unsigned size, Flags flags,
-            MasterID mid, Addr pc, ContextID cid,
+            RequestorID id, Addr pc, ContextID cid,
             AtomicOpFunctorPtr atomic_op=nullptr)
     {
-        setVirt(vaddr, size, flags, mid, pc, std::move(atomic_op));
+        setVirt(vaddr, size, flags, id, pc, std::move(atomic_op));
         setContext(cid);
     }
 
     Request(const Request& other)
         : _paddr(other._paddr), _size(other._size),
           _byteEnable(other._byteEnable),
-          _masterId(other._masterId),
+          _requestorId(other._requestorId),
           _flags(other._flags),
           _cacheCoherenceFlags(other._cacheCoherenceFlags),
           privateFlags(other.privateFlags),
@@ -493,12 +493,12 @@ class Request
      * allocated Request object.
      */
     void
-    setVirt(Addr vaddr, unsigned size, Flags flags, MasterID mid, Addr pc,
+    setVirt(Addr vaddr, unsigned size, Flags flags, RequestorID id, Addr pc,
             AtomicOpFunctorPtr amo_op=nullptr)
     {
         _vaddr = vaddr;
         _size = size;
-        _masterId = mid;
+        _requestorId = id;
         _pc = pc;
         _time = curTick();
 
@@ -737,10 +737,10 @@ class Request
     }
 
     /** Accesssor for the requestor id. */
-    MasterID
-    masterId() const
+    RequestorID
+    requestorId() const
     {
-        return _masterId;
+        return _requestorId;
     }
 
     uint32_t

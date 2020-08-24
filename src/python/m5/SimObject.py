@@ -186,11 +186,11 @@ def createCxxConfigDirectoryEntryFile(code, name, simobj, is_header):
 
         for port in simobj._ports.values():
             is_vector = isinstance(port, m5.params.VectorPort)
-            is_master = port.role == 'MASTER'
+            is_requestor = port.role == 'GEM5 REQUESTOR'
 
             code('ports["%s"] = new PortDesc("%s", %s, %s);' %
                 (port.name, port.name, cxx_bool(is_vector),
-                cxx_bool(is_master)))
+                cxx_bool(is_requestor)))
 
         code.dedent()
         code('}')

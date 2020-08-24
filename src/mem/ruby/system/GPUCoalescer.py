@@ -53,4 +53,4 @@ class RubyGPUCoalescer(RubyPort):
        "deadlock/livelock declared")
    garnet_standalone = Param.Bool(False, "")
 
-   gmTokenPort = SlavePort("Port to the CU for sharing tokens")
+   gmTokenPort = ResponsePort("Port to the CU for sharing tokens")

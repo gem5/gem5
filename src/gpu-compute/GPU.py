@@ -159,8 +159,8 @@ class ComputeUnit(ClockedObject):
     coalescer_to_vrf_bus_width = Param.Int(64, "Coalescer->VRF data bus "\
                                            "width  in bytes")
 
-    memory_port = VectorMasterPort("Port to the memory system")
-    translation_port = VectorMasterPort('Port to the TLB hierarchy')
+    memory_port = VectorRequestPort("Port to the memory system")
+    translation_port = VectorRequestPort('Port to the TLB hierarchy')
     sqc_port = RequestPort("Port to the SQC (I-cache")
     sqc_tlb_port = RequestPort("Port to the TLB for the SQC (I-cache)")
     scalar_port = RequestPort("Port to the scalar data cache")

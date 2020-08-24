@@ -83,7 +83,7 @@ TranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
          gen.next())
     {
         auto req = std::make_shared<Request>(
-                gen.addr(), gen.size(), flags, Request::funcMasterId, 0,
+                gen.addr(), gen.size(), flags, Request::funcRequestorId, 0,
                 _tc->contextId());
 
         if (!tryTLBs(req, BaseTLB::Read))
@@ -105,7 +105,7 @@ TranslatingPortProxy::tryWriteBlob(
          gen.next())
     {
         auto req = std::make_shared<Request>(
-                gen.addr(), gen.size(), flags, Request::funcMasterId, 0,
+                gen.addr(), gen.size(), flags, Request::funcRequestorId, 0,
                 _tc->contextId());
 
         if (!tryTLBs(req, BaseTLB::Write))
@@ -125,7 +125,7 @@ TranslatingPortProxy::tryMemsetBlob(Addr address, uint8_t v, int size) const
          gen.next())
     {
         auto req = std::make_shared<Request>(
-                gen.addr(), gen.size(), flags, Request::funcMasterId, 0,
+                gen.addr(), gen.size(), flags, Request::funcRequestorId, 0,
                 _tc->contextId());
 
         if (!tryTLBs(req, BaseTLB::Write))

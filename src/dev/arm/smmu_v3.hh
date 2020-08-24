@@ -48,11 +48,11 @@
 #include "dev/arm/smmu_v3_caches.hh"
 #include "dev/arm/smmu_v3_cmdexec.hh"
 #include "dev/arm/smmu_v3_defs.hh"
+#include "dev/arm/smmu_v3_deviceifc.hh"
 #include "dev/arm/smmu_v3_events.hh"
 #include "dev/arm/smmu_v3_ports.hh"
 #include "dev/arm/smmu_v3_proc.hh"
 #include "dev/arm/smmu_v3_ptops.hh"
-#include "dev/arm/smmu_v3_slaveifc.hh"
 #include "mem/packet.hh"
 #include "params/SMMUv3.hh"
 #include "sim/clocked_object.hh"
@@ -85,13 +85,13 @@ class SMMUv3 : public ClockedObject
     friend class SMMUProcess;
     friend class SMMUTranslationProcess;
     friend class SMMUCommandExecProcess;
-    friend class SMMUv3SlaveInterface;
+    friend class SMMUv3DeviceInterface;
 
     const System &system;
-    const MasterID masterId;
+    const RequestorID requestorId;
 
-    SMMUMasterPort    masterPort;
-    SMMUMasterTableWalkPort masterTableWalkPort;
+    SMMURequestPort    requestPort;
+    SMMUTableWalkPort tableWalkPort;
     SMMUControlPort   controlPort;
 
     ARMArchTLB  tlb;
@@ -108,7 +108,7 @@ class SMMUv3 : public ClockedObject
     const bool walkCacheNonfinalEnable;
     const unsigned walkCacheS1Levels;
     const unsigned walkCacheS2Levels;
-    const unsigned masterPortWidth; // in bytes
+    const unsigned requestPortWidth; // in bytes
 
     SMMUSemaphore tlbSem;
     SMMUSemaphore ifcSmmuSem;
@@ -116,7 +116,7 @@ class SMMUv3 : public ClockedObject
     SMMUSemaphore configSem;
     SMMUSemaphore ipaSem;
     SMMUSemaphore walkSem;
-    SMMUSemaphore masterPortSem;
+    SMMUSemaphore requestPortSem;
 
     SMMUSemaphore transSem; // max N transactions in SMMU
     SMMUSemaphore ptwSem; // max N concurrent PTWs
@@ -138,7 +138,7 @@ class SMMUv3 : public ClockedObject
     Stats::Distribution translationTimeDist;
     Stats::Distribution ptwTimeDist;
 
-    std::vector<SMMUv3SlaveInterface *> slaveInterfaces;
+    std::vector<SMMUv3DeviceInterface *> deviceInterfaces;
 
     SMMUCommandExecProcess commandExecutor;
 
@@ -151,7 +151,7 @@ class SMMUv3 : public ClockedObject
     std::queue<SMMUAction> packetsTableWalkToRetry;
 
 
-    void scheduleSlaveRetries();
+    void scheduleDeviceRetries();
 
     SMMUAction runProcess(SMMUProcess *proc, PacketPtr pkt);
     SMMUAction runProcessAtomic(SMMUProcess *proc, PacketPtr pkt);
@@ -171,13 +171,13 @@ class SMMUv3 : public ClockedObject
     virtual void init() override;
     virtual void regStats() override;
 
-    Tick slaveRecvAtomic(PacketPtr pkt, PortID id);
-    bool slaveRecvTimingReq(PacketPtr pkt, PortID id);
-    bool masterRecvTimingResp(PacketPtr pkt);
-    void masterRecvReqRetry();
+    Tick recvAtomic(PacketPtr pkt, PortID id);
+    bool recvTimingReq(PacketPtr pkt, PortID id);
+    bool recvTimingResp(PacketPtr pkt);
+    void recvReqRetry();
 
-    bool masterTableWalkRecvTimingResp(PacketPtr pkt);
-    void masterTableWalkRecvReqRetry();
+    bool tableWalkRecvTimingResp(PacketPtr pkt);
+    void tableWalkRecvReqRetry();
 
     Tick readControl(PacketPtr pkt);
     Tick writeControl(PacketPtr pkt);

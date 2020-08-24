@@ -87,14 +87,14 @@ initMemReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type,
                 assert(!misaligned_acc);
 
                 req = std::make_shared<Request>(vaddr, sizeof(T), 0,
-                    gpuDynInst->computeUnit()->masterId(), 0,
+                    gpuDynInst->computeUnit()->requestorId(), 0,
                     gpuDynInst->wfDynId,
                     gpuDynInst->makeAtomicOpFunctor<T>(
                         &(reinterpret_cast<T*>(gpuDynInst->a_data))[lane],
                         &(reinterpret_cast<T*>(gpuDynInst->x_data))[lane]));
             } else {
                 req = std::make_shared<Request>(vaddr, req_size, 0,
-                                  gpuDynInst->computeUnit()->masterId(), 0,
+                                  gpuDynInst->computeUnit()->requestorId(), 0,
                                   gpuDynInst->wfDynId);
             }
 
@@ -158,7 +158,7 @@ initMemReqScalarHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
     bool misaligned_acc = split_addr > vaddr;
 
     RequestPtr req = std::make_shared<Request>(vaddr, req_size, 0,
-                                 gpuDynInst->computeUnit()->masterId(), 0,
+                                 gpuDynInst->computeUnit()->requestorId(), 0,
                                  gpuDynInst->wfDynId);
 
     if (misaligned_acc) {

@@ -491,7 +491,7 @@ class DistIface : public Drainable, public Serializable
      */
     unsigned distIfaceId;
 
-    bool isMaster;
+    bool isPrimary;
 
   private:
     /**
@@ -507,10 +507,10 @@ class DistIface : public Drainable, public Serializable
      */
     static SyncEvent *syncEvent;
     /**
-     * The very first DistIface object created becomes the master. We need
-     * a master to co-ordinate the global synchronisation.
+     * The very first DistIface object created becomes the primary interface.
+     * We need a primary interface to co-ordinate the global synchronisation.
      */
-    static DistIface *master;
+    static DistIface *primary;
     /**
      * System pointer used to wakeup sleeping threads when stopping sync.
      */
@@ -635,7 +635,7 @@ class DistIface : public Drainable, public Serializable
      */
     static uint64_t sizeParam();
     /**
-     * Trigger the master to start/stop synchronization.
+     * Trigger the primary to start/stop synchronization.
      */
     static void toggleSync(ThreadContext *tc);
  };

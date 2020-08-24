@@ -258,7 +258,7 @@ DRAMsim3::accessAndRespond(PacketPtr pkt)
     // response
     access(pkt);
 
-    // turn packet around to go back to requester if response expected
+    // turn packet around to go back to requestor if response expected
     if (needsResponse) {
         // access already turned the packet into a response
         assert(pkt->isResponse());
@@ -352,7 +352,7 @@ DRAMsim3::drain()
 
 DRAMsim3::MemoryPort::MemoryPort(const std::string& _name,
                                  DRAMsim3& _memory)
-    : SlavePort(_name, &_memory), memory(_memory)
+    : ResponsePort(_name, &_memory), memory(_memory)
 { }
 
 AddrRangeList

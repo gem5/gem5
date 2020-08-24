@@ -47,7 +47,7 @@
 #include "enums/AddrMap.hh"
 
 NvmGen::NvmGen(SimObject &obj,
-               MasterID master_id, Tick _duration,
+               RequestorID requestor_id, Tick _duration,
                Addr start_addr, Addr end_addr,
                Addr _blocksize, Addr cacheline_size,
                Tick min_period, Tick max_period,
@@ -57,7 +57,7 @@ NvmGen::NvmGen(SimObject &obj,
                unsigned int nbr_of_banks_util,
                Enums::AddrMap addr_mapping,
                unsigned int nbr_of_ranks)
-       : RandomGen(obj, master_id, _duration, start_addr, end_addr,
+       : RandomGen(obj, requestor_id, _duration, start_addr, end_addr,
          _blocksize, cacheline_size, min_period, max_period,
          read_percent, data_limit),
          numSeqPkts(num_seq_pkts), countNumSeqPkts(0), addr(0),

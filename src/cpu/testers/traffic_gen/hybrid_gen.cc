@@ -49,7 +49,7 @@
 using namespace std;
 
 HybridGen::HybridGen(SimObject &obj,
-               MasterID master_id, Tick _duration,
+               RequestorID requestor_id, Tick _duration,
                Addr start_addr_dram, Addr end_addr_dram,
                Addr blocksize_dram,
                Addr start_addr_nvm, Addr end_addr_nvm,
@@ -67,7 +67,7 @@ HybridGen::HybridGen(SimObject &obj,
                unsigned int nbr_of_ranks_dram,
                unsigned int nbr_of_ranks_nvm,
                uint8_t nvm_percent)
-       : BaseGen(obj, master_id, _duration),
+       : BaseGen(obj, requestor_id, _duration),
          startAddrDram(start_addr_dram),
          endAddrDram(end_addr_dram),
          blocksizeDram(blocksize_dram),

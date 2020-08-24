@@ -74,31 +74,32 @@ class Policy : public SimObject
     void setMemCtrl(MemCtrl* mem) { memCtrl = mem; };
 
     /**
-     * Builds a MasterID/value pair given a master input.
-     * This will be lookuped in the system list of masters in order
-     * to retrieve the associated MasterID.
-     * In case the master name/object cannot be resolved, the pairing
+     * Builds a RequestorID/value pair given a requestor input.
+     * This will be looked up in the system list of requestors in order
+     * to retrieve the associated RequestorID.
+     * In case the requestor name/object cannot be resolved, the pairing
      * method will panic.
      *
-     * @param master Master to lookup in the system
-     * @param value Value to be associated with the MasterID
-     * @return A MasterID/Value pair.
+     * @param requestor Requestor to lookup in the system
+     * @param value Value to be associated with the RequestorID
+     * @return A RequestorID/Value pair.
      */
-    template <typename M, typename T>
-    std::pair<MasterID, T> pair(M master, T value);
+    template <typename Requestor, typename T>
+    std::pair<RequestorID, T> pair(Requestor requestor, T value);
 
     /**
      * Schedules data - must be defined by derived class
      *
-     * @param mId master id to schedule
+     * @param requestor_id requestor id to schedule
      * @param data data to schedule
      * @return QoS priority value
      */
-    virtual uint8_t schedule(const MasterID mId, const uint64_t data) = 0;
+    virtual uint8_t schedule(const RequestorID requestor_id,
+                              const uint64_t data) = 0;
 
     /**
      * Schedules a packet. Non virtual interface for the scheduling
-     * method requiring a master ID.
+     * method requiring a requestor id.
      *
      * @param pkt pointer to packet to schedule
      * @return QoS priority value
@@ -110,20 +111,20 @@ class Policy : public SimObject
     MemCtrl* memCtrl;
 };
 
-template <typename M, typename T>
-std::pair<MasterID, T>
-Policy::pair(M master, T value)
+template <typename Requestor, typename T>
+std::pair<RequestorID, T>
+Policy::pair(Requestor requestor, T value)
 {
-    auto id = memCtrl->system()->lookupMasterId(master);
+    auto id = memCtrl->system()->lookupRequestorId(requestor);
 
-    panic_if(id == Request::invldMasterId,
-             "Unable to find master %s\n", master);
+    panic_if(id == Request::invldRequestorId,
+             "Unable to find requestor %s\n", requestor);
 
     DPRINTF(QOS,
-            "Master %s [id %d] associated with QoS data %d\n",
-            master, id, value);
+            "Requestor %s [id %d] associated with QoS data %d\n",
+            requestor, id, value);
 
-    return std::pair<MasterID, T>(id, value);
+    return std::pair<RequestorID, T>(id, value);
 }
 
 } // namespace QoS

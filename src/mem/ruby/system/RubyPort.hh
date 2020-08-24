@@ -58,21 +58,21 @@ class AbstractController;
 class RubyPort : public ClockedObject
 {
   public:
-    class MemMasterPort : public QueuedMasterPort
+    class MemRequestPort : public QueuedRequestPort
     {
       private:
         ReqPacketQueue reqQueue;
         SnoopRespPacketQueue snoopRespQueue;
 
       public:
-        MemMasterPort(const std::string &_name, RubyPort *_port);
+        MemRequestPort(const std::string &_name, RubyPort *_port);
 
       protected:
         bool recvTimingResp(PacketPtr pkt);
         void recvRangeChange() {}
     };
 
-    class MemSlavePort : public QueuedSlavePort
+    class MemResponsePort : public QueuedResponsePort
     {
       private:
         RespPacketQueue queue;
@@ -80,7 +80,7 @@ class RubyPort : public ClockedObject
         bool no_retry_on_stall;
 
       public:
-        MemSlavePort(const std::string &_name, RubyPort *_port,
+        MemResponsePort(const std::string &_name, RubyPort *_port,
                      bool _access_backing_store,
                      PortID id, bool _no_retry_on_stall);
         void hitCallback(PacketPtr pkt);
@@ -102,27 +102,27 @@ class RubyPort : public ClockedObject
         bool isPhysMemAddress(PacketPtr pkt) const;
     };
 
-    class PioMasterPort : public QueuedMasterPort
+    class PioRequestPort : public QueuedRequestPort
     {
       private:
         ReqPacketQueue reqQueue;
         SnoopRespPacketQueue snoopRespQueue;
 
       public:
-        PioMasterPort(const std::string &_name, RubyPort *_port);
+        PioRequestPort(const std::string &_name, RubyPort *_port);
 
       protected:
         bool recvTimingResp(PacketPtr pkt);
         void recvRangeChange();
     };
 
-    class PioSlavePort : public QueuedSlavePort
+    class PioResponsePort : public QueuedResponsePort
     {
       private:
         RespPacketQueue queue;
 
       public:
-        PioSlavePort(const std::string &_name, RubyPort *_port);
+        PioResponsePort(const std::string &_name, RubyPort *_port);
 
       protected:
         bool recvTimingReq(PacketPtr pkt);
@@ -130,15 +130,16 @@ class RubyPort : public ClockedObject
         Tick recvAtomic(PacketPtr pkt);
 
         void recvFunctional(PacketPtr pkt)
-        { panic("recvFunctional should never be called on pio slave port!"); }
+        { panic("recvFunctional should never be called on pio response "
+                "port!"); }
 
         AddrRangeList getAddrRanges() const;
     };
 
     struct SenderState : public Packet::SenderState
     {
-        MemSlavePort *port;
-        SenderState(MemSlavePort * _port) : port(_port)
+        MemResponsePort *port;
+        SenderState(MemResponsePort * _port) : port(_port)
         {}
      };
 
@@ -178,11 +179,11 @@ class RubyPort : public ClockedObject
      * Called by the PIO port when receiving a timing response.
      *
      * @param pkt Response packet
-     * @param master_port_id Port id of the PIO port
+     * @param request_port_id Port id of the PIO port
      *
      * @return Whether successfully sent
      */
-    bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
+    bool recvTimingResp(PacketPtr pkt, PortID request_port_id);
 
     RubySystem *m_ruby_system;
     uint32_t m_version;
@@ -191,35 +192,35 @@ class RubyPort : public ClockedObject
     bool m_usingRubyTester;
     System* system;
 
-    std::vector<MemSlavePort *> slave_ports;
+    std::vector<MemResponsePort *> response_ports;
 
   private:
-    bool onRetryList(MemSlavePort * port)
+    bool onRetryList(MemResponsePort * port)
     {
         return (std::find(retryList.begin(), retryList.end(), port) !=
                 retryList.end());
     }
-    void addToRetryList(MemSlavePort * port)
+    void addToRetryList(MemResponsePort * port)
     {
         if (onRetryList(port)) return;
         retryList.push_back(port);
     }
 
-    PioMasterPort pioMasterPort;
-    PioSlavePort pioSlavePort;
-    MemMasterPort memMasterPort;
-    MemSlavePort memSlavePort;
+    PioRequestPort pioRequestPort;
+    PioResponsePort pioResponsePort;
+    MemRequestPort memRequestPort;
+    MemResponsePort memResponsePort;
     unsigned int gotAddrRanges;
 
     /** Vector of M5 Ports attached to this Ruby port. */
-    typedef std::vector<MemSlavePort *>::iterator CpuPortIter;
-    std::vector<PioMasterPort *> master_ports;
+    typedef std::vector<MemResponsePort *>::iterator CpuPortIter;
+    std::vector<PioRequestPort *> request_ports;
 
     //
     // Based on similar code in the M5 bus.  Stores pointers to those ports
     // that should be called when the Sequencer becomes available after a stall.
     //
-    std::vector<MemSlavePort *> retryList;
+    std::vector<MemResponsePort *> retryList;
 
     bool m_isCPUSequencer;
 };

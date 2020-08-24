@@ -409,7 +409,7 @@ class LSQ
             if (byte_enable.empty() ||
                 isAnyActiveElement(byte_enable.begin(), byte_enable.end())) {
                 auto request = std::make_shared<Request>(
-                        addr, size, _flags, _inst->masterId(),
+                        addr, size, _flags, _inst->requestorId(),
                         _inst->instAddr(), _inst->contextId(),
                         std::move(_amo_op));
                 if (!byte_enable.empty()) {
@@ -456,9 +456,9 @@ class LSQ
          */
         void
         setVirt(Addr vaddr, unsigned size, Request::Flags flags_,
-                MasterID mid, Addr pc)
+                RequestorID requestor_id, Addr pc)
         {
-            request()->setVirt(vaddr, size, flags_, mid, pc);
+            request()->setVirt(vaddr, size, flags_, requestor_id, pc);
         }
 
         void

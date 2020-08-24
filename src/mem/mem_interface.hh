@@ -83,7 +83,6 @@ class MemInterface : public AbstractMemory
     {
 
       public:
-
         static const uint32_t NO_ROW = -1;
 
         uint32_t openRow;
@@ -751,6 +750,7 @@ class DRAMInterface : public MemInterface
     const Tick wrToRdDlySameBG;
     const Tick rdToWrDlySameBG;
 
+
     Enums::PageManage pageMgmt;
     /**
      * Max column accesses (read and write) per row, before forefully
@@ -1098,7 +1098,6 @@ class NVMInterface : public MemInterface
         Stats::Histogram pendingWrites;
         Stats::Histogram bytesPerBank;
     };
-
     NVMStats stats;
 
     void processWriteRespondEvent();

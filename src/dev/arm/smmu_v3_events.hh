@@ -41,15 +41,15 @@
 #include <base/types.hh>
 #include <sim/eventq.hh>
 
-class SMMUv3SlaveInterface;
+class SMMUv3DeviceInterface;
 
 class SMMUDeviceRetryEvent : public Event
 {
   private:
-    SMMUv3SlaveInterface &smmuIfc;
+    SMMUv3DeviceInterface &smmuIfc;
 
   public:
-    SMMUDeviceRetryEvent(SMMUv3SlaveInterface &ifc)
+    SMMUDeviceRetryEvent(SMMUv3DeviceInterface &ifc)
         : smmuIfc(ifc)
     {}
 
@@ -58,7 +58,7 @@ class SMMUDeviceRetryEvent : public Event
     const std::string name() const;
 
     const char *description() const
-    { return "SlaveRetryEvent"; }
+    { return "DeviceRetryEvent"; }
 };
 
 #endif /* __DEV_ARM_SMMU_V3_EVENTS_HH__ */

@@ -39,67 +39,67 @@
 
 #include "base/logging.hh"
 #include "dev/arm/smmu_v3.hh"
-#include "dev/arm/smmu_v3_slaveifc.hh"
+#include "dev/arm/smmu_v3_deviceifc.hh"
 
-SMMUMasterPort::SMMUMasterPort(const std::string &_name, SMMUv3 &_smmu) :
+SMMURequestPort::SMMURequestPort(const std::string &_name, SMMUv3 &_smmu) :
     RequestPort(_name, &_smmu),
     smmu(_smmu)
 {}
 
 bool
-SMMUMasterPort::recvTimingResp(PacketPtr pkt)
+SMMURequestPort::recvTimingResp(PacketPtr pkt)
 {
-    return smmu.masterRecvTimingResp(pkt);
+    return smmu.recvTimingResp(pkt);
 }
 
 void
-SMMUMasterPort::recvReqRetry()
+SMMURequestPort::recvReqRetry()
 {
-    return smmu.masterRecvReqRetry();
+    return smmu.recvReqRetry();
 }
 
-SMMUMasterTableWalkPort::SMMUMasterTableWalkPort(const std::string &_name,
+SMMUTableWalkPort::SMMUTableWalkPort(const std::string &_name,
                                                  SMMUv3 &_smmu) :
     RequestPort(_name, &_smmu),
     smmu(_smmu)
 {}
 
 bool
-SMMUMasterTableWalkPort::recvTimingResp(PacketPtr pkt)
+SMMUTableWalkPort::recvTimingResp(PacketPtr pkt)
 {
-    return smmu.masterTableWalkRecvTimingResp(pkt);
+    return smmu.tableWalkRecvTimingResp(pkt);
 }
 
 void
-SMMUMasterTableWalkPort::recvReqRetry()
+SMMUTableWalkPort::recvReqRetry()
 {
-    return smmu.masterTableWalkRecvReqRetry();
+    return smmu.tableWalkRecvReqRetry();
 }
 
-SMMUSlavePort::SMMUSlavePort(const std::string &_name,
-                             SMMUv3SlaveInterface &_ifc,
+SMMUDevicePort::SMMUDevicePort(const std::string &_name,
+                             SMMUv3DeviceInterface &_ifc,
                              PortID _id)
 :
-    QueuedSlavePort(_name, &_ifc, respQueue, _id),
+    QueuedResponsePort(_name, &_ifc, respQueue, _id),
     ifc(_ifc),
     respQueue(_ifc, *this)
 {}
 
 void
-SMMUSlavePort::recvFunctional(PacketPtr pkt)
+SMMUDevicePort::recvFunctional(PacketPtr pkt)
 {
     if (!respQueue.trySatisfyFunctional(pkt))
         recvAtomic(pkt);
 }
 
 Tick
-SMMUSlavePort::recvAtomic(PacketPtr pkt)
+SMMUDevicePort::recvAtomic(PacketPtr pkt)
 {
     return ifc.recvAtomic(pkt);
 }
 
 bool
-SMMUSlavePort::recvTimingReq(PacketPtr pkt)
+SMMUDevicePort::recvTimingReq(PacketPtr pkt)
 {
     return ifc.recvTimingReq(pkt);
 }
@@ -136,41 +136,41 @@ SMMUControlPort::getAddrRanges() const
     return list;
 }
 
-SMMUATSMasterPort::SMMUATSMasterPort(const std::string &_name,
-                                     SMMUv3SlaveInterface &_ifc) :
-    QueuedMasterPort(_name, &_ifc, reqQueue, snoopRespQueue),
+SMMUATSMemoryPort::SMMUATSMemoryPort(const std::string &_name,
+                                     SMMUv3DeviceInterface &_ifc) :
+    QueuedRequestPort(_name, &_ifc, reqQueue, snoopRespQueue),
     ifc(_ifc),
     reqQueue(_ifc, *this),
     snoopRespQueue(_ifc, *this)
 {}
 
 bool
-SMMUATSMasterPort::recvTimingResp(PacketPtr pkt)
+SMMUATSMemoryPort::recvTimingResp(PacketPtr pkt)
 {
-    return ifc.atsMasterRecvTimingResp(pkt);
+    return ifc.atsRecvTimingResp(pkt);
 }
 
-SMMUATSSlavePort::SMMUATSSlavePort(const std::string &_name,
-                                   SMMUv3SlaveInterface &_ifc) :
-    QueuedSlavePort(_name, &_ifc, respQueue),
+SMMUATSDevicePort::SMMUATSDevicePort(const std::string &_name,
+                                   SMMUv3DeviceInterface &_ifc) :
+    QueuedResponsePort(_name, &_ifc, respQueue),
     ifc(_ifc),
     respQueue(_ifc, *this)
 {}
 
 void
-SMMUATSSlavePort::recvFunctional(PacketPtr pkt)
+SMMUATSDevicePort::recvFunctional(PacketPtr pkt)
 {
     panic("Functional access on ATS port!");
 }
 
 Tick
-SMMUATSSlavePort::recvAtomic(PacketPtr pkt)
+SMMUATSDevicePort::recvAtomic(PacketPtr pkt)
 {
-    return ifc.atsSlaveRecvAtomic(pkt);
+    return ifc.atsRecvAtomic(pkt);
 }
 
 bool
-SMMUATSSlavePort::recvTimingReq(PacketPtr pkt)
+SMMUATSDevicePort::recvTimingReq(PacketPtr pkt)
 {
-    return ifc.atsSlaveRecvTimingReq(pkt);
+    return ifc.atsRecvTimingReq(pkt);
 }

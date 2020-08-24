@@ -599,7 +599,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     // Build request here.
     RequestPtr mem_req = std::make_shared<Request>(
         fetchBufferBlockPC, fetchBufferSize,
-        Request::INST_FETCH, cpu->instMasterId(), pc,
+        Request::INST_FETCH, cpu->instRequestorId(), pc,
         cpu->thread[tid]->contextId());
 
     mem_req->taskId(cpu->taskId());

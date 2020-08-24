@@ -155,7 +155,7 @@ class FifoQueuePolicy : public QueuePolicy
 /**
  * Least Recently Granted Queue Policy
  * It selects packets from the queue with a round
- * robin-like policy: using the master id as a switching
+ * robin-like policy: using the requestor id as a switching
  * parameter rather than switching over a time quantum.
  */
 class LrgQueuePolicy : public QueuePolicy
@@ -179,10 +179,10 @@ class LrgQueuePolicy : public QueuePolicy
   protected:
     /**
      * Support structure for lrg algorithms:
-     * keeps track of serviced masters,
+     * keeps track of serviced requestors,
      * always serve the front element.
      */
-    std::list<MasterID> toServe;
+    std::list<RequestorID> toServe;
 };
 
 } // namespace QoS

@@ -166,7 +166,7 @@ namespace RiscvISA
         // The TLB we're supposed to load.
         TLB * tlb;
         System * sys;
-        MasterID masterId;
+        RequestorID requestorId;
 
         // The number of outstanding walks that can be squashed per cycle.
         unsigned numSquashable;
@@ -202,7 +202,7 @@ namespace RiscvISA
         Walker(const Params *params) :
             ClockedObject(params), port(name() + ".port", this),
             funcState(this, NULL, NULL, true), tlb(NULL), sys(params->system),
-            masterId(sys->getMasterId(this)),
+            requestorId(sys->getRequestorId(this)),
             numSquashable(params->num_squash_per_cycle),
             startWalkWrapperEvent([this]{ startWalkWrapper(); }, name())
         {

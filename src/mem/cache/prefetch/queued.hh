@@ -101,12 +101,13 @@ class Queued : public Base
          * Create the associated memory packet
          * @param paddr physical address of this packet
          * @param blk_size block size used by the prefetcher
-         * @param mid Requester ID of the access that generated this prefetch
+         * @param requestor_id Requestor ID of the access that generated
+         * this prefetch
          * @param tag_prefetch flag to indicate if the packet needs to be
          *        tagged
          * @param t time when the prefetch becomes ready
          */
-        void createPkt(Addr paddr, unsigned blk_size, MasterID mid,
+        void createPkt(Addr paddr, unsigned blk_size, RequestorID requestor_id,
                        bool tag_prefetch, Tick t);
 
         /**

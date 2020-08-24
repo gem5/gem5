@@ -55,7 +55,7 @@ using namespace ArmISA;
 
 TableWalker::TableWalker(const Params *p)
     : ClockedObject(p),
-      stage2Mmu(NULL), port(NULL), masterId(Request::invldMasterId),
+      stage2Mmu(NULL), port(NULL), requestorId(Request::invldRequestorId),
       isStage2(p->is_stage2), tlb(NULL),
       currState(NULL), pending(false),
       numSquashable(p->num_squash_per_cycle),
@@ -97,11 +97,11 @@ TableWalker::~TableWalker()
 }
 
 void
-TableWalker::setMMU(Stage2MMU *m, MasterID master_id)
+TableWalker::setMMU(Stage2MMU *m, RequestorID requestor_id)
 {
     stage2Mmu = m;
     port = &m->getDMAPort();
-    masterId = master_id;
+    requestorId = requestor_id;
 }
 
 void
@@ -2122,7 +2122,7 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
             (this->*doDescriptor)();
         } else {
             RequestPtr req = std::make_shared<Request>(
-                descAddr, numBytes, flags, masterId);
+                descAddr, numBytes, flags, requestorId);
 
             req->taskId(ContextSwitchTaskId::DMA);
             PacketPtr  pkt = new Packet(req, MemCmd::ReadReq);

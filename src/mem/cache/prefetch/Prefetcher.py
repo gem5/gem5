@@ -163,7 +163,7 @@ class StridePrefetcher(QueuedPrefetcher):
     confidence_threshold = Param.Percent(50,
         "Prefetch generation confidence threshold")
 
-    use_master_id = Param.Bool(True, "Use master id based history")
+    use_requestor_id = Param.Bool(True, "Use requestor id based history")
 
     degree = Param.Int(4, "Number of prefetches to generate")
 

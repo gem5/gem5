@@ -52,14 +52,14 @@ TLBCoalescer::TLBCoalescer(const Params *p)
                    "Cleanup issuedTranslationsTable hashmap",
                    false, Event::Maximum_Pri)
 {
-    // create the slave ports based on the number of connected ports
-    for (size_t i = 0; i < p->port_slave_connection_count; ++i) {
+    // create the response ports based on the number of connected ports
+    for (size_t i = 0; i < p->port_cpu_side_ports_connection_count; ++i) {
         cpuSidePort.push_back(new CpuSidePort(csprintf("%s-port%d", name(), i),
                                               this, i));
     }
 
-    // create the master ports based on the number of connected ports
-    for (size_t i = 0; i < p->port_master_connection_count; ++i) {
+    // create the request ports based on the number of connected ports
+    for (size_t i = 0; i < p->port_mem_side_ports_connection_count; ++i) {
         memSidePort.push_back(new MemSidePort(csprintf("%s-port%d", name(), i),
                                               this, i));
     }
@@ -68,13 +68,13 @@ TLBCoalescer::TLBCoalescer(const Params *p)
 Port &
 TLBCoalescer::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name == "slave") {
+    if (if_name == "cpu_side_ports") {
         if (idx >= static_cast<PortID>(cpuSidePort.size())) {
             panic("TLBCoalescer::getPort: unknown index %d\n", idx);
         }
 
         return *cpuSidePort[idx];
-    } else  if (if_name == "master") {
+    } else  if (if_name == "mem_side_ports") {
         if (idx >= static_cast<PortID>(memSidePort.size())) {
             panic("TLBCoalescer::getPort: unknown index %d\n", idx);
         }
@@ -359,7 +359,7 @@ TLBCoalescer::CpuSidePort::recvFunctional(PacketPtr pkt)
 AddrRangeList
 TLBCoalescer::CpuSidePort::getAddrRanges() const
 {
-    // currently not checked by the master
+    // currently not checked by the requestor
     AddrRangeList ranges;
 
     return ranges;

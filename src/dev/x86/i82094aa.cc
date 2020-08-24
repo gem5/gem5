@@ -42,7 +42,7 @@
 X86ISA::I82094AA::I82094AA(Params *p)
     : BasicPioDevice(p, 20), extIntPic(p->external_int_pic),
       lowestPriorityOffset(0),
-      intMasterPort(name() + ".int_master", this, this, p->int_latency)
+      intRequestPort(name() + ".int_request", this, this, p->int_latency)
 {
     // This assumes there's only one I/O APIC in the system and since the apic
     // id is stored in a 8-bit field with 0xff meaning broadcast, the id must
@@ -71,16 +71,16 @@ X86ISA::I82094AA::init()
     // the piodevice init() function.
     BasicPioDevice::init();
 
-    // If the master port isn't connected, we can't send interrupts anywhere.
-    panic_if(!intMasterPort.isConnected(),
+    // If the request port isn't connected, we can't send interrupts anywhere.
+    panic_if(!intRequestPort.isConnected(),
             "Int port not connected to anything!");
 }
 
 Port &
 X86ISA::I82094AA::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name == "int_master")
-        return intMasterPort;
+    if (if_name == "int_request")
+        return intRequestPort;
     if (if_name == "inputs")
         return *inputs.at(idx);
     else
@@ -242,7 +242,7 @@ X86ISA::I82094AA::signalInterrupt(int line)
         }
         for (auto id: apics) {
             PacketPtr pkt = buildIntTriggerPacket(id, message);
-            intMasterPort.sendMessage(pkt, sys->isTimingMode());
+            intRequestPort.sendMessage(pkt, sys->isTimingMode());
         }
     }
 }

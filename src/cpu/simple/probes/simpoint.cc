@@ -93,7 +93,8 @@ SimPoint::profile(const std::pair<SimpleThread*, StaticInstPtr>& p)
         auto map_itr = bbMap.find(currentBBV);
         if (map_itr == bbMap.end()){
             // If a new (previously unseen) basic block is found,
-            // add a new unique id, record num of insts and insert into bbMap.
+            // add a new unique id, record num of insts and insert
+            // into bbMap.
             BBInfo info;
             info.id = bbMap.size() + 1;
             info.insts = currentBBVInstCount;

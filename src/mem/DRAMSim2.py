@@ -42,7 +42,7 @@ class DRAMSim2(AbstractMemory):
     cxx_header = "mem/dramsim2.hh"
 
     # A single port for now
-    port = SlavePort("Slave port")
+    port = ResponsePort("This port sends responses and receives requests")
 
     deviceConfigFile = Param.String("ini/DDR3_micron_32M_8B_x8_sg15.ini",
                                     "Device configuration file")

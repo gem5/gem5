@@ -123,23 +123,23 @@ RubySystem::registerMachineID(const MachineID& mach_id, Network* network)
     machineToNetwork.insert(std::make_pair(mach_id, network_id));
 }
 
-// This registers all master IDs in the system for functional reads. This
-// should be called in init() since master IDs are obtained in a SimObject's
+// This registers all requestor IDs in the system for functional reads. This
+// should be called in init() since requestor IDs are obtained in a SimObject's
 // constructor and there are functional reads/writes between init() and
 // startup().
 void
-RubySystem::registerMasterIDs()
+RubySystem::registerRequestorIDs()
 {
-    // Create the map for MasterID to network node. This is done in init()
-    // because all MasterIDs must be obtained in the constructor and
+    // Create the map for RequestorID to network node. This is done in init()
+    // because all RequestorIDs must be obtained in the constructor and
     // AbstractControllers are registered in their constructor. This is done
     // in two steps: (1) Add all of the AbstractControllers. Since we don't
-    // have a mapping of MasterID to MachineID this is the easiest way to
-    // filter out AbstractControllers from non-Ruby masters. (2) Go through
-    // the system's list of MasterIDs and add missing MasterIDs to network 0
-    // (the default).
+    // have a mapping of RequestorID to MachineID this is the easiest way to
+    // filter out AbstractControllers from non-Ruby requestors. (2) Go through
+    // the system's list of RequestorIDs and add missing RequestorIDs to
+    // network 0 (the default).
     for (auto& cntrl : m_abs_cntrl_vec) {
-        MasterID mid = cntrl->getMasterId();
+        RequestorID id = cntrl->getRequestorId();
         MachineID mach_id = cntrl->getMachineID();
 
         // These are setup in Network constructor and should exist
@@ -148,16 +148,16 @@ RubySystem::registerMasterIDs()
                  MachineIDToString(mach_id).c_str());
 
         auto network_id = machineToNetwork[mach_id];
-        masterToNetwork.insert(std::make_pair(mid, network_id));
+        requestorToNetwork.insert(std::make_pair(id, network_id));
 
         // Create helper vectors for each network to iterate over.
         netCntrls[network_id].push_back(cntrl);
     }
 
-    // Default all other master IDs to network 0
-    for (auto mid = 0; mid < params()->system->maxMasters(); ++mid) {
-        if (!masterToNetwork.count(mid)) {
-            masterToNetwork.insert(std::make_pair(mid, 0));
+    // Default all other requestor IDs to network 0
+    for (auto id = 0; id < params()->system->maxRequestors(); ++id) {
+        if (!requestorToNetwork.count(id)) {
+            requestorToNetwork.insert(std::make_pair(id, 0));
         }
     }
 }
@@ -400,7 +400,7 @@ RubySystem::unserialize(CheckpointIn &cp)
 void
 RubySystem::init()
 {
-    registerMasterIDs();
+    registerRequestorIDs();
 }
 
 void
@@ -491,9 +491,9 @@ RubySystem::functionalRead(PacketPtr pkt)
     unsigned int num_invalid = 0;
 
     // Only send functional requests within the same network.
-    assert(masterToNetwork.count(pkt->masterId()));
-    int master_net_id = masterToNetwork[pkt->masterId()];
-    assert(netCntrls.count(master_net_id));
+    assert(requestorToNetwork.count(pkt->requestorId()));
+    int request_net_id = requestorToNetwork[pkt->requestorId()];
+    assert(netCntrls.count(request_net_id));
 
     AbstractController *ctrl_ro = nullptr;
     AbstractController *ctrl_rw = nullptr;
@@ -501,7 +501,7 @@ RubySystem::functionalRead(PacketPtr pkt)
 
     // In this loop we count the number of controllers that have the given
     // address in read only, read write and busy states.
-    for (auto& cntrl : netCntrls[master_net_id]) {
+    for (auto& cntrl : netCntrls[request_net_id]) {
         access_perm = cntrl-> getAccessPermission(line_address);
         if (access_perm == AccessPermission_Read_Only){
             num_ro++;
@@ -537,7 +537,7 @@ RubySystem::functionalRead(PacketPtr pkt)
     // The reason is because the Backing_Store memory could easily be stale, if
     // there are copies floating around the cache hierarchy, so you want to read
     // it only if it's not in the cache hierarchy at all.
-    int num_controllers = netCntrls[master_net_id].size();
+    int num_controllers = netCntrls[request_net_id].size();
     if (num_invalid == (num_controllers - 1) && num_backing_store == 1) {
         DPRINTF(RubySystem, "only copy in Backing_Store memory, read from it\n");
         ctrl_backing_store->functionalRead(line_address, pkt);
@@ -573,7 +573,7 @@ RubySystem::functionalRead(PacketPtr pkt)
         DPRINTF(RubySystem, "Controllers functionalRead lookup "
                             "(num_maybe_stale=%d, num_busy = %d)\n",
                 num_maybe_stale, num_busy);
-        for (auto& cntrl : netCntrls[master_net_id]) {
+        for (auto& cntrl : netCntrls[request_net_id]) {
             if (cntrl->functionalReadBuffers(pkt))
                 return true;
         }
@@ -605,11 +605,11 @@ RubySystem::functionalWrite(PacketPtr pkt)
     uint32_t M5_VAR_USED num_functional_writes = 0;
 
     // Only send functional requests within the same network.
-    assert(masterToNetwork.count(pkt->masterId()));
-    int master_net_id = masterToNetwork[pkt->masterId()];
-    assert(netCntrls.count(master_net_id));
+    assert(requestorToNetwork.count(pkt->requestorId()));
+    int request_net_id = requestorToNetwork[pkt->requestorId()];
+    assert(netCntrls.count(request_net_id));
 
-    for (auto& cntrl : netCntrls[master_net_id]) {
+    for (auto& cntrl : netCntrls[request_net_id]) {
         num_functional_writes += cntrl->functionalWriteBuffers(pkt);
 
         access_perm = cntrl->getAccessPermission(line_addr);

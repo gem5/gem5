@@ -35,11 +35,11 @@ def AMBA_TARGET_ROLE(width):
 def AMBA_INITIATOR_ROLE(width):
     return 'AMBA INITIATOR %d' % width
 
-def SC_MASTER_PORT_ROLE(port_type):
-    return 'SC MASTER PORT for %s' % port_type
+def SC_REQUEST_PORT_ROLE(port_type):
+    return 'SC REQUEST PORT for %s' % port_type
 
-def SC_SLAVE_PORT_ROLE(port_type):
-    return 'SC SLAVE PORT for %s' % port_type
+def SC_RESPONSE_PORT_ROLE(port_type):
+    return 'SC RESPONSE PORT for %s' % port_type
 
 class AmbaTargetSocket(Port):
     def __init__(self, width, desc):
@@ -75,21 +75,21 @@ class VectorAmbaInitiatorSocket(VectorPort):
         super(VectorAmbaInitiatorSocket, self).__init__(
                 my_role, desc, is_source=True)
 
-class ScMasterPort(Port):
+class ScRequestPort(Port):
     def __init__(self, desc, port_type):
-        my_role = SC_MASTER_PORT_ROLE(port_type)
-        peer_role = SC_SLAVE_PORT_ROLE(port_type)
+        my_role = SC_REQUEST_PORT_ROLE(port_type)
+        peer_role = SC_RESPONSE_PORT_ROLE(port_type)
         Port.compat(my_role, peer_role)
 
-        super(ScMasterPort, self).__init__(my_role, desc)
+        super(ScRequestPort, self).__init__(my_role, desc)
 
-class ScSlavePort(Port):
+class ScResponsePort(Port):
     def __init__(self, desc, port_type):
-        my_role = SC_SLAVE_PORT_ROLE(port_type)
-        peer_role = SC_MASTER_PORT_ROLE(port_type)
+        my_role = SC_RESPONSE_PORT_ROLE(port_type)
+        peer_role = SC_REQUEST_PORT_ROLE(port_type)
         Port.compat(my_role, peer_role)
 
-        super(ScSlavePort, self).__init__(my_role, desc)
+        super(ScResponsePort, self).__init__(my_role, desc)
 
 class AmbaToTlmBridge64(SystemC_ScModule):
     type = 'AmbaToTlmBridge64'

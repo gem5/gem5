@@ -204,7 +204,7 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
                         base_addr + pkt->getSize()) - addr;
         stats.readPktSize[ceilLog2(size)]++;
         stats.readBursts++;
-        stats.masterReadAccesses[pkt->masterId()]++;
+        stats.requestorReadAccesses[pkt->requestorId()]++;
 
         // First check write buffer to see if the data is already at
         // the controller
@@ -267,7 +267,7 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             readQueue[mem_pkt->qosValue()].push_back(mem_pkt);
 
             // log packet
-            logRequest(MemCtrl::READ, pkt->masterId(), pkt->qosValue(),
+            logRequest(MemCtrl::READ, pkt->requestorId(), pkt->qosValue(),
                        mem_pkt->addr, 1);
 
             // Update stats
@@ -314,7 +314,7 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
                         base_addr + pkt->getSize()) - addr;
         stats.writePktSize[ceilLog2(size)]++;
         stats.writeBursts++;
-        stats.masterWriteAccesses[pkt->masterId()]++;
+        stats.requestorWriteAccesses[pkt->requestorId()]++;
 
         // see if we can merge with an existing item in the write
         // queue and keep track of whether we have merged or not
@@ -341,7 +341,7 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
             isInWriteQueue.insert(burstAlign(addr, is_dram));
 
             // log packet
-            logRequest(MemCtrl::WRITE, pkt->masterId(), pkt->qosValue(),
+            logRequest(MemCtrl::WRITE, pkt->requestorId(), pkt->qosValue(),
                        mem_pkt->addr, 1);
 
             assert(totalWriteQueueSize == isInWriteQueue.size());
@@ -498,7 +498,7 @@ MemCtrl::processRespondEvent()
         if (mem_pkt->burstHelper->burstsServiced ==
             mem_pkt->burstHelper->burstCount) {
             // we have now serviced all children packets of a system packet
-            // so we can now respond to the requester
+            // so we can now respond to the requestor
             // @todo we probably want to have a different front end and back
             // end latency for split packets
             accessAndRespond(mem_pkt->pkt, frontendLatency + backendLatency);
@@ -635,7 +635,7 @@ MemCtrl::accessAndRespond(PacketPtr pkt, Tick static_latency)
               pkt->print());
     }
 
-    // turn packet around to go back to requester if response expected
+    // turn packet around to go back to requestor if response expected
     if (needsResponse) {
         // access already turned the packet into a response
         assert(pkt->isResponse());
@@ -842,13 +842,13 @@ MemCtrl::doBurstAccess(MemPacket* mem_pkt)
     if (mem_pkt->isRead()) {
         ++readsThisTime;
         // Update latency stats
-        stats.masterReadTotalLat[mem_pkt->masterId()] +=
+        stats.requestorReadTotalLat[mem_pkt->requestorId()] +=
             mem_pkt->readyTime - mem_pkt->entryTime;
-        stats.masterReadBytes[mem_pkt->masterId()] += mem_pkt->size;
+        stats.requestorReadBytes[mem_pkt->requestorId()] += mem_pkt->size;
     } else {
         ++writesThisTime;
-        stats.masterWriteBytes[mem_pkt->masterId()] += mem_pkt->size;
-        stats.masterWriteTotalLat[mem_pkt->masterId()] +=
+        stats.requestorWriteBytes[mem_pkt->requestorId()] += mem_pkt->size;
+        stats.requestorWriteTotalLat[mem_pkt->requestorId()] +=
             mem_pkt->readyTime - mem_pkt->entryTime;
     }
 }
@@ -1005,13 +1005,13 @@ MemCtrl::processNextReqEvent()
             assert(mem_pkt->readyTime >= curTick());
 
             // log the response
-            logResponse(MemCtrl::READ, (*to_read)->masterId(),
+            logResponse(MemCtrl::READ, (*to_read)->requestorId(),
                         mem_pkt->qosValue(), mem_pkt->getAddr(), 1,
                         mem_pkt->readyTime - mem_pkt->entryTime);
 
 
             // Insert into response queue. It will be sent back to the
-            // requester at its readyTime
+            // requestor at its readyTime
             if (respQueue.empty()) {
                 assert(!respondEvent.scheduled());
                 schedule(respondEvent, mem_pkt->readyTime);
@@ -1090,7 +1090,7 @@ MemCtrl::processNextReqEvent()
         isInWriteQueue.erase(burstAlign(mem_pkt->addr, mem_pkt->isDram()));
 
         // log the response
-        logResponse(MemCtrl::WRITE, mem_pkt->masterId(),
+        logResponse(MemCtrl::WRITE, mem_pkt->requestorId(),
                     mem_pkt->qosValue(), mem_pkt->getAddr(), 1,
                     mem_pkt->readyTime - mem_pkt->entryTime);
 
@@ -1220,24 +1220,24 @@ MemCtrl::CtrlStats::CtrlStats(MemCtrl &_ctrl)
     ADD_STAT(totGap, "Total gap between requests"),
     ADD_STAT(avgGap, "Average gap between requests"),
 
-    ADD_STAT(masterReadBytes, "Per-master bytes read from memory"),
-    ADD_STAT(masterWriteBytes, "Per-master bytes write to memory"),
-    ADD_STAT(masterReadRate,
-             "Per-master bytes read from memory rate (Bytes/sec)"),
-    ADD_STAT(masterWriteRate,
-             "Per-master bytes write to memory rate (Bytes/sec)"),
-    ADD_STAT(masterReadAccesses,
-             "Per-master read serviced memory accesses"),
-    ADD_STAT(masterWriteAccesses,
-             "Per-master write serviced memory accesses"),
-    ADD_STAT(masterReadTotalLat,
-             "Per-master read total memory access latency"),
-    ADD_STAT(masterWriteTotalLat,
-             "Per-master write total memory access latency"),
-    ADD_STAT(masterReadAvgLat,
-             "Per-master read average memory access latency"),
-    ADD_STAT(masterWriteAvgLat,
-             "Per-master write average memory access latency")
+    ADD_STAT(requestorReadBytes, "Per-requestor bytes read from memory"),
+    ADD_STAT(requestorWriteBytes, "Per-requestor bytes write to memory"),
+    ADD_STAT(requestorReadRate,
+             "Per-requestor bytes read from memory rate (Bytes/sec)"),
+    ADD_STAT(requestorWriteRate,
+             "Per-requestor bytes write to memory rate (Bytes/sec)"),
+    ADD_STAT(requestorReadAccesses,
+             "Per-requestor read serviced memory accesses"),
+    ADD_STAT(requestorWriteAccesses,
+             "Per-requestor write serviced memory accesses"),
+    ADD_STAT(requestorReadTotalLat,
+             "Per-requestor read total memory access latency"),
+    ADD_STAT(requestorWriteTotalLat,
+             "Per-requestor write total memory access latency"),
+    ADD_STAT(requestorReadAvgLat,
+             "Per-requestor read average memory access latency"),
+    ADD_STAT(requestorWriteAvgLat,
+             "Per-requestor write average memory access latency")
 
 {
 }
@@ -1248,7 +1248,7 @@ MemCtrl::CtrlStats::regStats()
     using namespace Stats;
 
     assert(ctrl.system());
-    const auto max_masters = ctrl.system()->maxMasters();
+    const auto max_requestors = ctrl.system()->maxRequestors();
 
     avgRdQLen.precision(2);
     avgWrQLen.precision(2);
@@ -1270,60 +1270,60 @@ MemCtrl::CtrlStats::regStats()
     avgWrBWSys.precision(2);
     avgGap.precision(2);
 
-    // per-master bytes read and written to memory
-    masterReadBytes
-        .init(max_masters)
+    // per-requestor bytes read and written to memory
+    requestorReadBytes
+        .init(max_requestors)
         .flags(nozero | nonan);
 
-    masterWriteBytes
-        .init(max_masters)
+    requestorWriteBytes
+        .init(max_requestors)
         .flags(nozero | nonan);
 
-    // per-master bytes read and written to memory rate
-    masterReadRate
+    // per-requestor bytes read and written to memory rate
+    requestorReadRate
         .flags(nozero | nonan)
         .precision(12);
 
-    masterReadAccesses
-        .init(max_masters)
+    requestorReadAccesses
+        .init(max_requestors)
         .flags(nozero);
 
-    masterWriteAccesses
-        .init(max_masters)
+    requestorWriteAccesses
+        .init(max_requestors)
         .flags(nozero);
 
-    masterReadTotalLat
-        .init(max_masters)
+    requestorReadTotalLat
+        .init(max_requestors)
         .flags(nozero | nonan);
 
-    masterReadAvgLat
+    requestorReadAvgLat
         .flags(nonan)
         .precision(2);
 
-    masterWriteRate
+    requestorWriteRate
         .flags(nozero | nonan)
         .precision(12);
 
-    masterWriteTotalLat
-        .init(max_masters)
+    requestorWriteTotalLat
+        .init(max_requestors)
         .flags(nozero | nonan);
 
-    masterWriteAvgLat
+    requestorWriteAvgLat
         .flags(nonan)
         .precision(2);
 
-    for (int i = 0; i < max_masters; i++) {
-        const std::string master = ctrl.system()->getMasterName(i);
-        masterReadBytes.subname(i, master);
-        masterReadRate.subname(i, master);
-        masterWriteBytes.subname(i, master);
-        masterWriteRate.subname(i, master);
-        masterReadAccesses.subname(i, master);
-        masterWriteAccesses.subname(i, master);
-        masterReadTotalLat.subname(i, master);
-        masterReadAvgLat.subname(i, master);
-        masterWriteTotalLat.subname(i, master);
-        masterWriteAvgLat.subname(i, master);
+    for (int i = 0; i < max_requestors; i++) {
+        const std::string requestor = ctrl.system()->getRequestorName(i);
+        requestorReadBytes.subname(i, requestor);
+        requestorReadRate.subname(i, requestor);
+        requestorWriteBytes.subname(i, requestor);
+        requestorWriteRate.subname(i, requestor);
+        requestorReadAccesses.subname(i, requestor);
+        requestorWriteAccesses.subname(i, requestor);
+        requestorReadTotalLat.subname(i, requestor);
+        requestorReadAvgLat.subname(i, requestor);
+        requestorWriteTotalLat.subname(i, requestor);
+        requestorWriteAvgLat.subname(i, requestor);
     }
 
     // Formula stats
@@ -1332,10 +1332,10 @@ MemCtrl::CtrlStats::regStats()
 
     avgGap = totGap / (readReqs + writeReqs);
 
-    masterReadRate = masterReadBytes / simSeconds;
-    masterWriteRate = masterWriteBytes / simSeconds;
-    masterReadAvgLat = masterReadTotalLat / masterReadAccesses;
-    masterWriteAvgLat = masterWriteTotalLat / masterWriteAccesses;
+    requestorReadRate = requestorReadBytes / simSeconds;
+    requestorWriteRate = requestorWriteBytes / simSeconds;
+    requestorReadAvgLat = requestorReadTotalLat / requestorReadAccesses;
+    requestorWriteAvgLat = requestorWriteTotalLat / requestorWriteAccesses;
 }
 
 void
@@ -1421,7 +1421,7 @@ MemCtrl::drainResume()
 }
 
 MemCtrl::MemoryPort::MemoryPort(const std::string& name, MemCtrl& _ctrl)
-    : QueuedSlavePort(name, &_ctrl, queue), queue(_ctrl, *this, true),
+    : QueuedResponsePort(name, &_ctrl, queue), queue(_ctrl, *this, true),
       ctrl(_ctrl)
 { }
 

@@ -148,14 +148,14 @@ class TraceGen : public BaseGen
      * Create a trace generator.
      *
      * @param obj SimObject owning this sequence generator
-     * @param master_id MasterID related to the memory requests
+     * @param requestor_id RequestorID related to the memory requests
      * @param _duration duration of this state before transitioning
      * @param trace_file File to read the transactions from
      * @param addr_offset Positive offset to add to trace address
      */
-    TraceGen(SimObject &obj, MasterID master_id, Tick _duration,
+    TraceGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
              const std::string& trace_file, Addr addr_offset)
-        : BaseGen(obj, master_id, _duration),
+        : BaseGen(obj, requestor_id, _duration),
           trace(trace_file),
           tickOffset(0),
           addrOffset(addr_offset),

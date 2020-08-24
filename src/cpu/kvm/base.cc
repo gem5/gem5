@@ -1073,7 +1073,7 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
     syncThreadContext();
 
     RequestPtr mmio_req = std::make_shared<Request>(
-        paddr, size, Request::UNCACHEABLE, dataMasterId());
+        paddr, size, Request::UNCACHEABLE, dataRequestorId());
 
     mmio_req->setContext(tc->contextId());
     // Some architectures do need to massage physical addresses a bit

@@ -204,7 +204,7 @@ Terminal::accept()
     pollQueue.schedule(dataEvent);
 
     stringstream stream;
-    ccprintf(stream, "==== m5 slave terminal: Terminal %d ====", number);
+    ccprintf(stream, "==== m5 terminal: Terminal %d ====", number);
 
     // we need an actual carriage return followed by a newline for the
     // terminal

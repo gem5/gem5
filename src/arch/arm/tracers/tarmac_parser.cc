@@ -1287,7 +1287,7 @@ TarmacParserRecord::readMemNoEffect(Addr addr, uint8_t *data, unsigned size,
     ArmISA::TLB* dtb = static_cast<TLB*>(thread->getDTBPtr());
 
     req->setVirt(addr, size, flags, thread->pcState().instAddr(),
-                 Request::funcMasterId);
+                 Request::funcRequestorId);
 
     // Translate to physical address
     Fault fault = dtb->translateAtomic(req, thread, BaseTLB::Read);

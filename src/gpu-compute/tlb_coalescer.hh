@@ -191,9 +191,9 @@ class TLBCoalescer : public ClockedObject
         }
     };
 
-    // Coalescer slave ports on the cpu Side
+    // Coalescer response ports on the cpu Side
     std::vector<CpuSidePort*> cpuSidePort;
-    // Coalescer master ports on the memory side
+    // Coalescer request ports on the memory side
     std::vector<MemSidePort*> memSidePort;
 
     Port &getPort(const std::string &if_name,

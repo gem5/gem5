@@ -53,7 +53,7 @@ ExternalMaster::ExternalMaster(ExternalMasterParams *params) :
     portName(params->name + ".port"),
     portType(params->port_type),
     portData(params->port_data),
-    masterId(params->system->getMasterId(this))
+    id(params->system->getRequestorId(this))
 {}
 
 Port &

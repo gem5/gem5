@@ -206,7 +206,7 @@ Shader::prepareInvalidate(HSAQueueEntry *task) {
         // create a request to hold INV info; the request's fields will
         // be updated in cu before use
         auto req = std::make_shared<Request>(0, 0, 0,
-                                             cuList[i_cu]->masterId(),
+                                             cuList[i_cu]->requestorId(),
                                              0, -1);
 
         _dispatcher.updateInvCounter(kernId, +1);
@@ -457,7 +457,7 @@ Shader::AccessMem(uint64_t address, void *ptr, uint32_t size, int cu_id,
 
         RequestPtr req = std::make_shared<Request>(
             gen.addr(), gen.size(), 0,
-            cuList[0]->masterId(), 0, 0, nullptr);
+            cuList[0]->requestorId(), 0, 0, nullptr);
 
         doFunctionalAccess(req, cmd, data_buf, suppress_func_errors, cu_id);
         data_buf += gen.size();

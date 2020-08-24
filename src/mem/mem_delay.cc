@@ -42,18 +42,18 @@
 
 MemDelay::MemDelay(const MemDelayParams *p)
     : ClockedObject(p),
-      masterPort(name() + "-master", *this),
-      slavePort(name() + "-slave", *this),
-      reqQueue(*this, masterPort),
-      respQueue(*this, slavePort),
-      snoopRespQueue(*this, masterPort)
+      requestPort(name() + "-mem_side_port", *this),
+      responsePort(name() + "-cpu_side_port", *this),
+      reqQueue(*this, requestPort),
+      respQueue(*this, responsePort),
+      snoopRespQueue(*this, requestPort)
 {
 }
 
 void
 MemDelay::init()
 {
-    if (!slavePort.isConnected() || !masterPort.isConnected())
+    if (!responsePort.isConnected() || !requestPort.isConnected())
         fatal("Memory delay is not connected on both sides.\n");
 }
 
@@ -61,10 +61,10 @@ MemDelay::init()
 Port &
 MemDelay::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name == "master") {
-        return masterPort;
-    } else if (if_name == "slave") {
-        return slavePort;
+    if (if_name == "mem_side_port") {
+        return requestPort;
+    } else if (if_name == "cpu_side_port") {
+        return responsePort;
     } else {
         return ClockedObject::getPort(if_name, idx);
     }
@@ -73,12 +73,12 @@ MemDelay::getPort(const std::string &if_name, PortID idx)
 bool
 MemDelay::trySatisfyFunctional(PacketPtr pkt)
 {
-    return slavePort.trySatisfyFunctional(pkt) ||
-        masterPort.trySatisfyFunctional(pkt);
+    return responsePort.trySatisfyFunctional(pkt) ||
+        requestPort.trySatisfyFunctional(pkt);
 }
 
 MemDelay::RequestPort::RequestPort(const std::string &_name, MemDelay &_parent)
-    : QueuedMasterPort(_name, &_parent,
+    : QueuedRequestPort(_name, &_parent,
                        _parent.reqQueue, _parent.snoopRespQueue),
       parent(_parent)
 {
@@ -94,7 +94,7 @@ MemDelay::RequestPort::recvTimingResp(PacketPtr pkt)
 
     const Tick when = curTick() + parent.delayResp(pkt) + receive_delay;
 
-    parent.slavePort.schedTimingResp(pkt, when);
+    parent.responsePort.schedTimingResp(pkt, when);
 
     return true;
 }
@@ -105,7 +105,7 @@ MemDelay::RequestPort::recvFunctionalSnoop(PacketPtr pkt)
     if (parent.trySatisfyFunctional(pkt)) {
         pkt->makeResponse();
     } else {
-        parent.slavePort.sendFunctionalSnoop(pkt);
+        parent.responsePort.sendFunctionalSnoop(pkt);
     }
 }
 
@@ -114,19 +114,19 @@ MemDelay::RequestPort::recvAtomicSnoop(PacketPtr pkt)
 {
     const Tick delay = parent.delaySnoopResp(pkt);
 
-    return delay + parent.slavePort.sendAtomicSnoop(pkt);
+    return delay + parent.responsePort.sendAtomicSnoop(pkt);
 }
 
 void
 MemDelay::RequestPort::recvTimingSnoopReq(PacketPtr pkt)
 {
-    parent.slavePort.sendTimingSnoopReq(pkt);
+    parent.responsePort.sendTimingSnoopReq(pkt);
 }
 
 
 MemDelay::ResponsePort::
 ResponsePort(const std::string &_name, MemDelay &_parent)
-    : QueuedSlavePort(_name, &_parent, _parent.respQueue),
+    : QueuedResponsePort(_name, &_parent, _parent.respQueue),
       parent(_parent)
 {
 }
@@ -136,7 +136,7 @@ MemDelay::ResponsePort::recvAtomic(PacketPtr pkt)
 {
     const Tick delay = parent.delayReq(pkt) + parent.delayResp(pkt);
 
-    return delay + parent.masterPort.sendAtomic(pkt);
+    return delay + parent.requestPort.sendAtomic(pkt);
 }
 
 bool
@@ -150,7 +150,7 @@ MemDelay::ResponsePort::recvTimingReq(PacketPtr pkt)
 
     const Tick when = curTick() + parent.delayReq(pkt) + receive_delay;
 
-    parent.masterPort.schedTimingReq(pkt, when);
+    parent.requestPort.schedTimingReq(pkt, when);
 
     return true;
 }
@@ -161,7 +161,7 @@ MemDelay::ResponsePort::recvFunctional(PacketPtr pkt)
     if (parent.trySatisfyFunctional(pkt)) {
         pkt->makeResponse();
     } else {
-        parent.masterPort.sendFunctional(pkt);
+        parent.requestPort.sendFunctional(pkt);
     }
 }
 
@@ -170,7 +170,7 @@ MemDelay::ResponsePort::recvTimingSnoopResp(PacketPtr pkt)
 {
     const Tick when = curTick() + parent.delaySnoopResp(pkt);
 
-    parent.masterPort.schedTimingSnoopResp(pkt, when);
+    parent.requestPort.schedTimingSnoopResp(pkt, when);
 
     return true;
 }

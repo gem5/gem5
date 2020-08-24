@@ -224,7 +224,7 @@ class TLB : public BaseTLB
 
     TableWalker *getTableWalker() { return tableWalker; }
 
-    void setMMU(Stage2MMU *m, MasterID master_id);
+    void setMMU(Stage2MMU *m, RequestorID requestor_id);
 
     int getsize() const { return size; }
 
@@ -399,7 +399,7 @@ class TLB : public BaseTLB
      * reference. For ARM this method will always return a valid port
      * pointer.
      *
-     * @return A pointer to the walker master port
+     * @return A pointer to the walker request port
      */
     Port *getTableWalkerPort() override;
 

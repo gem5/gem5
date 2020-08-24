@@ -68,15 +68,15 @@ SMMUProcess::reinit()
 void
 SMMUProcess::doRead(Yield &yield, Addr addr, void *ptr, size_t size)
 {
-    doSemaphoreDown(yield, smmu.masterPortSem);
+    doSemaphoreDown(yield, smmu.requestPortSem);
     doDelay(yield, Cycles(1)); // request - assume 1 cycle
-    doSemaphoreUp(smmu.masterPortSem);
+    doSemaphoreUp(smmu.requestPortSem);
 
     SMMUAction a;
     a.type = ACTION_SEND_REQ;
 
     RequestPtr req = std::make_shared<Request>(
-        addr, size, 0, smmu.masterId);
+        addr, size, 0, smmu.requestorId);
 
     req->taskId(ContextSwitchTaskId::DMA);
 
@@ -97,18 +97,19 @@ SMMUProcess::doRead(Yield &yield, Addr addr, void *ptr, size_t size)
 void
 SMMUProcess::doWrite(Yield &yield, Addr addr, const void *ptr, size_t size)
 {
-    unsigned nbeats = (size + (smmu.masterPortWidth-1)) / smmu.masterPortWidth;
+    unsigned nbeats = (size + (smmu.requestPortWidth-1))
+                            / smmu.requestPortWidth;
 
-    doSemaphoreDown(yield, smmu.masterPortSem);
+    doSemaphoreDown(yield, smmu.requestPortSem);
     doDelay(yield, Cycles(nbeats));
-    doSemaphoreUp(smmu.masterPortSem);
+    doSemaphoreUp(smmu.requestPortSem);
 
 
     SMMUAction a;
     a.type = ACTION_SEND_REQ;
 
     RequestPtr req = std::make_shared<Request>(
-        addr, size, 0, smmu.masterId);
+        addr, size, 0, smmu.requestorId);
 
     req->taskId(ContextSwitchTaskId::DMA);
 

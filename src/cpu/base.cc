@@ -122,8 +122,8 @@ CPUProgressEvent::description() const
 
 BaseCPU::BaseCPU(Params *p, bool is_checker)
     : ClockedObject(p), instCnt(0), _cpuId(p->cpu_id), _socketId(p->socket_id),
-      _instMasterId(p->system->getMasterId(this, "inst")),
-      _dataMasterId(p->system->getMasterId(this, "data")),
+      _instRequestorId(p->system->getRequestorId(this, "inst")),
+      _dataRequestorId(p->system->getRequestorId(this, "data")),
       _taskId(ContextSwitchTaskId::Unknown), _pid(invldPid),
       _switchedOut(p->switched_out), _cacheLineSize(p->system->cacheLineSize()),
       interrupts(p->interrupts), numThreads(p->numThreads), system(p->system),
@@ -250,7 +250,7 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseTLB *dtb)
     if (secondAddr > addr)
         size = secondAddr - addr;
 
-    req->setVirt(addr, size, 0x0, dataMasterId(), tc->instAddr());
+    req->setVirt(addr, size, 0x0, dataRequestorId(), tc->instAddr());
 
     // translate to physical address
     Fault fault = dtb->translateAtomic(req, tc, BaseTLB::Read);

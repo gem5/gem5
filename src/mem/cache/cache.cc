@@ -96,7 +96,7 @@ Cache::satisfyRequest(PacketPtr pkt, CacheBlk *blk,
             } else if (blk->isWritable() && !pending_downgrade &&
                        !pkt->hasSharers() &&
                        pkt->cmd != MemCmd::ReadCleanReq) {
-                // we can give the requester a writable copy on a read
+                // we can give the requestor a writable copy on a read
                 // request if:
                 // - we have a writable copy at this level (& below)
                 // - we don't have a pending snoop from below
@@ -326,7 +326,7 @@ Cache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
         // should have flushed and have no valid block
         assert(!blk || !blk->isValid());
 
-        stats.cmdStats(pkt).mshr_uncacheable[pkt->req->masterId()]++;
+        stats.cmdStats(pkt).mshr_uncacheable[pkt->req->requestorId()]++;
 
         if (pkt->isWrite()) {
             allocateWriteBuffer(pkt, forward_time);
@@ -371,9 +371,9 @@ Cache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
         if (!mshr) {
             // copy the request and create a new SoftPFReq packet
             RequestPtr req = std::make_shared<Request>(pkt->req->getPaddr(),
-                                                       pkt->req->getSize(),
-                                                       pkt->req->getFlags(),
-                                                       pkt->req->masterId());
+                                                    pkt->req->getSize(),
+                                                    pkt->req->getFlags(),
+                                                    pkt->req->requestorId());
             pf = new Packet(req, pkt->cmd);
             pf->allocate();
             assert(pf->matchAddr(pkt));
@@ -774,9 +774,9 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
 
                 assert(!tgt_pkt->req->isUncacheable());
 
-                assert(tgt_pkt->req->masterId() < system->maxMasters());
+                assert(tgt_pkt->req->requestorId() < system->maxRequestors());
                 stats.cmdStats(tgt_pkt)
-                    .missLatency[tgt_pkt->req->masterId()] +=
+                    .missLatency[tgt_pkt->req->requestorId()] +=
                     completion_time - target.recvTime;
             } else if (pkt->cmd == MemCmd::UpgradeFailResp) {
                 // failed StoreCond upgrade
@@ -912,7 +912,7 @@ Cache::cleanEvictBlk(CacheBlk *blk)
 
     // Creating a zero sized write, a message to the snoop filter
     RequestPtr req = std::make_shared<Request>(
-        regenerateBlkAddr(blk), blkSize, 0, Request::wbMasterId);
+        regenerateBlkAddr(blk), blkSize, 0, Request::wbRequestorId);
 
     if (blk->isSecure())
         req->setFlags(Request::SECURE);
@@ -1006,7 +1006,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     if (forwardSnoops) {
         // first propagate snoop upward to see if anyone above us wants to
         // handle it.  save & restore packet src since it will get
-        // rewritten to be relative to cpu-side bus (if any)
+        // rewritten to be relative to CPU-side bus (if any)
         if (is_timing) {
             // copy the packet so that we can clear any flags before
             // forwarding it upwards, we also allocate data (passing
@@ -1026,7 +1026,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
 
             // If this request is a prefetch or clean evict and an upper level
             // signals block present, make sure to propagate the block
-            // presence to the requester.
+            // presence to the requestor.
             if (snoopPkt.isBlockCached()) {
                 pkt->setBlockCached();
             }
@@ -1044,7 +1044,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
             cpuSidePort.sendAtomicSnoop(pkt);
             if (!already_responded && pkt->cacheResponding()) {
                 // cache-to-cache response from some upper cache:
-                // forward response to original requester
+                // forward response to original requestor
                 assert(pkt->isResponse());
             }
         }

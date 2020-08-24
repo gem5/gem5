@@ -248,7 +248,7 @@ VIPERCoalescer::writeCompleteCallback(Addr addr, uint64_t instSeqNum)
             RubyPort::SenderState *ss =
                 safe_cast<RubyPort::SenderState *>
                     (writeCompletePkt->senderState);
-            MemSlavePort *port = ss->port;
+            MemResponsePort *port = ss->port;
             assert(port != NULL);
 
             writeCompletePkt->senderState = ss->predecessor;

@@ -92,7 +92,7 @@ SectorSubBlk::invalidate()
 
 void
 SectorSubBlk::insert(const Addr tag, const bool is_secure,
-                     const int src_master_ID, const uint32_t task_ID)
+                     const int src_requestor_ID, const uint32_t task_ID)
 {
     // Make sure it is not overwriting another sector
     panic_if((_sectorBlk && _sectorBlk->isValid()) &&
@@ -100,7 +100,7 @@ SectorSubBlk::insert(const Addr tag, const bool is_secure,
               (_sectorBlk->isSecure() != is_secure)),
               "Overwriting valid sector!");
 
-    CacheBlk::insert(tag, is_secure, src_master_ID, task_ID);
+    CacheBlk::insert(tag, is_secure, src_requestor_ID, task_ID);
 
     // Set sector tag
     _sectorBlk->setTag(tag);

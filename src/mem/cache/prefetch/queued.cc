@@ -51,10 +51,12 @@ namespace Prefetcher {
 
 void
 Queued::DeferredPacket::createPkt(Addr paddr, unsigned blk_size,
-                                            MasterID mid, bool tag_prefetch,
+                                            RequestorID requestor_id,
+                                            bool tag_prefetch,
                                             Tick t) {
     /* Create a prefetch memory request */
-    RequestPtr req = std::make_shared<Request>(paddr, blk_size, 0, mid);
+    RequestPtr req = std::make_shared<Request>(paddr, blk_size,
+                                                0, requestor_id);
 
     if (pfInfo.isSecure()) {
         req->setFlags(Request::SECURE);
@@ -277,7 +279,7 @@ Queued::translationComplete(DeferredPacket *dp, bool failed)
         } else {
             Tick pf_time = curTick() + clockPeriod() * latency;
             it->createPkt(it->translationRequest->getPaddr(), blkSize,
-                    masterId, tagPrefetch, pf_time);
+                    requestorId, tagPrefetch, pf_time);
             addToQueue(pfq, *it);
         }
     } else {
@@ -328,7 +330,7 @@ Queued::createPrefetchRequest(Addr addr, PrefetchInfo const &pfi,
                                         PacketPtr pkt)
 {
     RequestPtr translation_req = std::make_shared<Request>(
-            addr, blkSize, pkt->req->getFlags(), masterId, pfi.getPC(),
+            addr, blkSize, pkt->req->getFlags(), requestorId, pfi.getPC(),
             pkt->req->contextId());
     translation_req->setFlags(Request::PREFETCH);
     return translation_req;
@@ -417,7 +419,8 @@ Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi,
     DeferredPacket dpp(this, new_pfi, 0, priority);
     if (has_target_pa) {
         Tick pf_time = curTick() + clockPeriod() * latency;
-        dpp.createPkt(target_paddr, blkSize, masterId, tagPrefetch, pf_time);
+        dpp.createPkt(target_paddr, blkSize, requestorId, tagPrefetch,
+                      pf_time);
         DPRINTF(HWPrefetch, "Prefetch queued. "
                 "addr:%#x priority: %3d tick:%lld.\n",
                 new_pfi.getAddr(), priority, pf_time);

@@ -107,10 +107,10 @@ TLB::init()
 }
 
 void
-TLB::setMMU(Stage2MMU *m, MasterID master_id)
+TLB::setMMU(Stage2MMU *m, RequestorID requestor_id)
 {
     stage2Mmu = m;
-    tableWalker->setMMU(m, master_id);
+    tableWalker->setMMU(m, requestor_id);
 }
 
 bool

@@ -82,7 +82,7 @@ class Stage2LookUp : public BaseTLB::Translation
     {
         req = std::make_shared<Request>();
         req->setVirt(s1Te.pAddr(s1Req->getVaddr()), s1Req->getSize(),
-                     s1Req->getFlags(), s1Req->masterId(), 0);
+                     s1Req->getFlags(), s1Req->requestorId(), 0);
     }
 
     Fault getTe(ThreadContext *tc, TlbEntry *destTe);

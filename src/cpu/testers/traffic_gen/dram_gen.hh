@@ -64,7 +64,7 @@ class DramGen : public RandomGen
      * Create a DRAM address sequence generator.
      *
      * @param obj SimObject owning this sequence generator
-     * @param master_id MasterID related to the memory requests
+     * @param requestor_id RequestorID related to the memory requests
      * @param _duration duration of this state before transitioning
      * @param start_addr Start address
      * @param end_addr End address
@@ -83,7 +83,7 @@ class DramGen : public RandomGen
      *                     assumes single channel system
      */
     DramGen(SimObject &obj,
-            MasterID master_id, Tick _duration,
+            RequestorID requestor_id, Tick _duration,
             Addr start_addr, Addr end_addr,
             Addr _blocksize, Addr cacheline_size,
             Tick min_period, Tick max_period,

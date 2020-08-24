@@ -56,7 +56,7 @@ struct PacketInfo {
     uint32_t size;
     Request::FlagsType flags;
     Addr pc;
-    MasterID master;
+    RequestorID id;
 
     explicit PacketInfo(const PacketPtr& pkt) :
         cmd(pkt->cmd),
@@ -64,7 +64,7 @@ struct PacketInfo {
         size(pkt->getSize()),
         flags(pkt->req->getFlags()),
         pc(pkt->req->hasPC() ? pkt->req->getPC() : 0),
-        master(pkt->req->masterId())  { }
+        id(pkt->req->requestorId())  { }
 };
 
 /**

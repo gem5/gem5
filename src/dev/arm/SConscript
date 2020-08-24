@@ -77,7 +77,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('smmu_v3_ports.cc');
     Source('smmu_v3_proc.cc');
     Source('smmu_v3_ptops.cc');
-    Source('smmu_v3_slaveifc.cc');
+    Source('smmu_v3_deviceifc.cc');
     Source('smmu_v3_transl.cc');
     Source('timer_sp804.cc')
     Source('watchdog_sp805.cc')

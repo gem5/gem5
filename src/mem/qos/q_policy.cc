@@ -67,8 +67,8 @@ LrgQueuePolicy::selectPacket(PacketQueue* q)
 {
     QueuePolicy::PacketQueue::iterator ret = q->end();
 
-    // Tracks one packet per master in the queue
-    std::unordered_map<MasterID, QueuePolicy::PacketQueue::iterator> track;
+    // Tracks one packet per requestor in the queue
+    std::unordered_map<RequestorID, QueuePolicy::PacketQueue::iterator> track;
 
     // Cycle queue only once
     for (auto pkt_it = q->begin(); pkt_it != q->end(); ++pkt_it) {
@@ -78,51 +78,51 @@ LrgQueuePolicy::selectPacket(PacketQueue* q)
         panic_if(!pkt->req,
                  "QoSQPolicy::lrg detected packet without request");
 
-        // Get Request MasterID
-        MasterID m_id = pkt->req->masterId();
+        // Get Request RequestorID
+        RequestorID requestor_id = pkt->req->requestorId();
         DPRINTF(QOS, "QoSQPolicy::lrg checking packet "
-                     "from queue with id %d\n", m_id);
+                     "from queue with id %d\n", requestor_id);
 
-        // Check if this is a known master.
-        panic_if(memCtrl->hasMaster(m_id),
-                 "%s: Unrecognized Master\n", __func__);
+        // Check if this is a known requestor.
+        panic_if(memCtrl->hasRequestor(requestor_id),
+                 "%s: Unrecognized Requestor\n", __func__);
 
         panic_if(toServe.size() > 0,
                  "%s: toServe list is empty\n", __func__);
 
-        if (toServe.front() == m_id) {
+        if (toServe.front() == requestor_id) {
             DPRINTF(QOS, "QoSQPolicy::lrg matched to served "
-                         "master id %d\n", m_id);
-            // This packet matches the MasterID to be served next
+                         "requestor id %d\n", requestor_id);
+            // This packet matches the RequestorID to be served next
             // move toServe front to back
-            toServe.push_back(m_id);
+            toServe.push_back(requestor_id);
             toServe.pop_front();
 
             return pkt_it;
         }
 
-        // The master generating the packet is not first in the toServe list
-        // (Doesn't have the highest priority among masters)
-        // Check if this is the first packet seen with its master ID
+        // The requestor generating the packet is not first in the toServe list
+        // (Doesn't have the highest priority among requestors)
+        // Check if this is the first packet seen with its requestor id
         // and remember it. Then keep looping over the remaining packets
         // in the queue.
-        if (track.find(m_id) == track.end()) {
-            track[m_id] = pkt_it;
+        if (track.find(requestor_id) == track.end()) {
+            track[requestor_id] = pkt_it;
             DPRINTF(QOS, "QoSQPolicy::lrg tracking a packet for "
-                         "master id %d\n", m_id);
+                         "requestor id %d\n", requestor_id);
         }
     }
 
-    // If here, the current master to be serviced doesn't have a pending
-    // packet in the queue: look for the next master in the list.
-    for (const auto& masterId : toServe) {
+    // If here, the current requestor to be serviced doesn't have a pending
+    // packet in the queue: look for the next requestor in the list.
+    for (const auto& requestorId : toServe) {
         DPRINTF(QOS, "QoSQPolicy::lrg evaluating alternative "
-                     "master id %d\n", masterId);
+                     "requestor id %d\n", requestorId);
 
-        if (track.find(masterId) != track.end()) {
-            ret = track[masterId];
-            DPRINTF(QOS, "QoSQPolicy::lrg master id "
-                         "%d selected for service\n", masterId);
+        if (track.find(requestorId) != track.end()) {
+            ret = track[requestorId];
+            DPRINTF(QOS, "QoSQPolicy::lrg requestor id "
+                         "%d selected for service\n", requestorId);
 
             return ret;
         }
@@ -138,9 +138,9 @@ LrgQueuePolicy::selectPacket(PacketQueue* q)
 void
 LrgQueuePolicy::enqueuePacket(PacketPtr pkt)
 {
-    MasterID m_id = pkt->masterId();
-    if (!memCtrl->hasMaster(m_id)) {
-        toServe.push_back(m_id);
+    RequestorID requestor_id = pkt->requestorId();
+    if (!memCtrl->hasRequestor(requestor_id)) {
+        toServe.push_back(requestor_id);
     }
 };
 

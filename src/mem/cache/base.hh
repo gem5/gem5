@@ -111,7 +111,7 @@ class BaseCache : public ClockedObject
   protected:
 
     /**
-     * A cache master port is used for the memory-side port of the
+     * A cache request port is used for the memory-side port of the
      * cache, and in addition to the basic timing port that only sends
      * response packets through a transmit list, it also offers the
      * ability to schedule and send request packets (requests &
@@ -119,7 +119,7 @@ class BaseCache : public ClockedObject
      * and the sendDeferredPacket of the timing port is modified to
      * consider both the transmit list and the requests from the MSHR.
      */
-    class CacheMasterPort : public QueuedMasterPort
+    class CacheRequestPort : public QueuedRequestPort
     {
 
       public:
@@ -136,10 +136,10 @@ class BaseCache : public ClockedObject
 
       protected:
 
-        CacheMasterPort(const std::string &_name, BaseCache *_cache,
+        CacheRequestPort(const std::string &_name, BaseCache *_cache,
                         ReqPacketQueue &_reqQueue,
                         SnoopRespPacketQueue &_snoopRespQueue) :
-            QueuedMasterPort(_name, _cache, _reqQueue, _snoopRespQueue)
+            QueuedRequestPort(_name, _cache, _reqQueue, _snoopRespQueue)
         { }
 
         /**
@@ -202,10 +202,10 @@ class BaseCache : public ClockedObject
 
 
     /**
-     * The memory-side port extends the base cache master port with
+     * The memory-side port extends the base cache request port with
      * access functions for functional, atomic and timing snoops.
      */
-    class MemSidePort : public CacheMasterPort
+    class MemSidePort : public CacheRequestPort
     {
       private:
 
@@ -234,14 +234,14 @@ class BaseCache : public ClockedObject
     };
 
     /**
-     * A cache slave port is used for the CPU-side port of the cache,
+     * A cache response port is used for the CPU-side port of the cache,
      * and it is basically a simple timing port that uses a transmit
-     * list for responses to the CPU (or connected master). In
+     * list for responses to the CPU (or connected requestor). In
      * addition, it has the functionality to block the port for
      * incoming requests. If blocked, the port will issue a retry once
      * unblocked.
      */
-    class CacheSlavePort : public QueuedSlavePort
+    class CacheResponsePort : public QueuedResponsePort
     {
 
       public:
@@ -256,7 +256,7 @@ class BaseCache : public ClockedObject
 
       protected:
 
-        CacheSlavePort(const std::string &_name, BaseCache *_cache,
+        CacheResponsePort(const std::string &_name, BaseCache *_cache,
                        const std::string &_label);
 
         /** A normal packet queue used to store responses. */
@@ -275,10 +275,10 @@ class BaseCache : public ClockedObject
     };
 
     /**
-     * The CPU-side port extends the base cache slave port with access
+     * The CPU-side port extends the base cache response port with access
      * functions for functional, atomic and timing requests.
      */
-    class CpuSidePort : public CacheSlavePort
+    class CpuSidePort : public CacheResponsePort
     {
       private:
 
@@ -1154,7 +1154,7 @@ class BaseCache : public ClockedObject
 
     /**
      * Marks the access path of the cache as blocked for the given cause. This
-     * also sets the blocked flag in the slave interface.
+     * also sets the blocked flag in the response interface.
      * @param cause The reason for the cache blocking.
      */
     void setBlocked(BlockedCause cause)
@@ -1219,8 +1219,8 @@ class BaseCache : public ClockedObject
 
     void incMissCount(PacketPtr pkt)
     {
-        assert(pkt->req->masterId() < system->maxMasters());
-        stats.cmdStats(pkt).misses[pkt->req->masterId()]++;
+        assert(pkt->req->requestorId() < system->maxRequestors());
+        stats.cmdStats(pkt).misses[pkt->req->requestorId()]++;
         pkt->req->incAccessDepth();
         if (missCount) {
             --missCount;
@@ -1230,8 +1230,8 @@ class BaseCache : public ClockedObject
     }
     void incHitCount(PacketPtr pkt)
     {
-        assert(pkt->req->masterId() < system->maxMasters());
-        stats.cmdStats(pkt).hits[pkt->req->masterId()]++;
+        assert(pkt->req->requestorId() < system->maxRequestors());
+        stats.cmdStats(pkt).hits[pkt->req->requestorId()]++;
     }
 
     /**

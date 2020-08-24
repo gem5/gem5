@@ -2265,7 +2265,6 @@ NVMInterface::processReadReadyEvent()
     }
 }
 
-
 bool
 NVMInterface::burstReady(MemPacket* pkt) const {
     bool read_rdy =  pkt->isRead() && (ctrl->inReadBusState(true)) &&

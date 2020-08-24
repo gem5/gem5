@@ -51,11 +51,11 @@
  * A queued port is a port that has an infinite queue for outgoing
  * packets and thus decouples the module that wants to send
  * request/responses from the flow control (retry mechanism) of the
- * port. A queued port can be used by both a master and a slave. The
+ * port. A queued port can be used by both a requestor and a responder. The
  * queue is a parameter to allow tailoring of the queue implementation
  * (used in the cache).
  */
-class QueuedSlavePort : public ResponsePort
+class QueuedResponsePort : public ResponsePort
 {
 
   protected:
@@ -74,12 +74,12 @@ class QueuedSlavePort : public ResponsePort
      * behaviuor in a subclass, and provide the latter to the
      * QueuePort constructor.
      */
-    QueuedSlavePort(const std::string& name, SimObject* owner,
+    QueuedResponsePort(const std::string& name, SimObject* owner,
                     RespPacketQueue &resp_queue, PortID id = InvalidPortID) :
         ResponsePort(name, owner, id), respQueue(resp_queue)
     { }
 
-    virtual ~QueuedSlavePort() { }
+    virtual ~QueuedResponsePort() { }
 
     /**
      * Schedule the sending of a timing response.
@@ -97,13 +97,13 @@ class QueuedSlavePort : public ResponsePort
 };
 
 /**
- * The QueuedMasterPort combines two queues, a request queue and a
+ * The QueuedRequestPort combines two queues, a request queue and a
  * snoop response queue, that both share the same port. The flow
  * control for requests and snoop responses are completely
  * independent, and so each queue manages its own flow control
  * (retries).
  */
-class QueuedMasterPort : public RequestPort
+class QueuedRequestPort : public RequestPort
 {
 
   protected:
@@ -127,7 +127,7 @@ class QueuedMasterPort : public RequestPort
      * behaviuor in a subclass, and provide the latter to the
      * QueuePort constructor.
      */
-    QueuedMasterPort(const std::string& name, SimObject* owner,
+    QueuedRequestPort(const std::string& name, SimObject* owner,
                      ReqPacketQueue &req_queue,
                      SnoopRespPacketQueue &snoop_resp_queue,
                      PortID id = InvalidPortID) :
@@ -135,7 +135,7 @@ class QueuedMasterPort : public RequestPort
         snoopRespQueue(snoop_resp_queue)
     { }
 
-    virtual ~QueuedMasterPort() { }
+    virtual ~QueuedRequestPort() { }
 
     /**
      * Schedule the sending of a timing request.

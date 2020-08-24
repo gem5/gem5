@@ -44,7 +44,7 @@
 
 void
 CacheBlk::insert(const Addr tag, const bool is_secure,
-                 const int src_master_ID, const uint32_t task_ID)
+                 const int src_requestor_ID, const uint32_t task_ID)
 {
     // Make sure that the block has been properly invalidated
     assert(status == 0);
@@ -53,7 +53,7 @@ CacheBlk::insert(const Addr tag, const bool is_secure,
     this->tag = tag;
 
     // Set source requestor ID
-    srcMasterId = src_master_ID;
+    srcRequestorId = src_requestor_ID;
 
     // Set task ID
     task_id = task_ID;

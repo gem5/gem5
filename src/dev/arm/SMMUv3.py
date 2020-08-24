@@ -39,13 +39,21 @@ from m5.util.fdthelper import *
 from m5.SimObject import *
 from m5.objects.ClockedObject import ClockedObject
 
-class SMMUv3SlaveInterface(ClockedObject):
-    type = 'SMMUv3SlaveInterface'
-    cxx_header = 'dev/arm/smmu_v3_slaveifc.hh'
+class SMMUv3DeviceInterface(ClockedObject):
+    type = 'SMMUv3DeviceInterface'
+    cxx_header = 'dev/arm/smmu_v3_deviceifc.hh'
 
-    slave = ResponsePort('Device port')
-    ats_master = RequestPort('ATS master port')
-    ats_slave  = ResponsePort('ATS slave port')
+    device_port = ResponsePort('Device port')
+    slave     = DeprecatedParam(device_port,
+                                '`slave` is now called `device_port`')
+    ats_mem_side_port = RequestPort('ATS mem side port,'
+                                'sends requests and receives responses')
+    ats_master   = DeprecatedParam(ats_mem_side_port,
+                        '`ats_master` is now called `ats_mem_side_port`')
+    ats_dev_side_port  = ResponsePort('ATS dev_side_port,'
+                                'sends responses and receives requests')
+    ats_slave     = DeprecatedParam(ats_dev_side_port,
+                        '`ats_slave` is now called `ats_dev_side_port`')
 
     port_width = Param.Unsigned(16, 'Port width in bytes (= 1 beat)')
     wrbuf_slots = Param.Unsigned(16, 'Write buffer size (in beats)')
@@ -74,18 +82,19 @@ class SMMUv3(ClockedObject):
     type = 'SMMUv3'
     cxx_header = 'dev/arm/smmu_v3.hh'
 
-    master = RequestPort('Master port')
-    master_walker = RequestPort(
-        'Master port for SMMU initiated HWTW requests (optional)')
+    request = RequestPort('Request port')
+    walker = RequestPort(
+        'Request port for SMMU initiated HWTW requests (optional)')
     control = ResponsePort(
         'Control port for accessing memory-mapped registers')
     sample_period = Param.Clock('10us', 'Stats sample period')
     reg_map = Param.AddrRange('Address range for control registers')
     system = Param.System(Parent.any, "System this device is part of")
 
-    slave_interfaces = VectorParam.SMMUv3SlaveInterface([], "Slave interfaces")
+    device_interfaces = VectorParam.SMMUv3DeviceInterface([],
+                                        "Responder interfaces")
 
-    # SLAVE INTERFACE<->SMMU link parameters
+    # RESPONDER INTERFACE<->SMMU link parameters
     ifc_smmu_lat = Param.Cycles(8, 'IFC to SMMU communication latency')
     smmu_ifc_lat = Param.Cycles(8, 'SMMU to IFC communication latency')
 
@@ -93,8 +102,8 @@ class SMMUv3(ClockedObject):
     xlate_slots = Param.Unsigned(64, 'SMMU translation slots')
     ptw_slots = Param.Unsigned(16, 'SMMU page table walk slots')
 
-    master_port_width = Param.Unsigned(16,
-        'Master port width in bytes (= 1 beat)')
+    request_port_width = Param.Unsigned(16,
+        'Request port width in bytes (= 1 beat)')
 
     tlb_entries = Param.Unsigned(2048, 'TLB size (entries)')
     tlb_assoc = Param.Unsigned(4, 'TLB associativity (0=full)')
@@ -185,23 +194,23 @@ class SMMUv3(ClockedObject):
 
     def connect(self, device):
         """
-        Helper method used to connect the SMMU. The master could
+        Helper method used to connect the SMMU. The requestor could
         be either a dma port (if the SMMU is attached directly to a
-        dma device), or to a master port (this is the case where the SMMU
+        dma device), or to a request port (this is the case where the SMMU
         is attached to a bridge).
         """
 
-        slave_interface = SMMUv3SlaveInterface()
+        device_interface = SMMUv3DeviceInterface()
 
-        if hasattr(device, "master"):
-            slave_interface.slave = device.master
+        if hasattr(device, "request_port"):
+            device_interface.device_port = device.request_port
         elif hasattr(device, "dma"):
-            slave_interface.slave = device.dma
+            device_interface.device_port = device.dma
         else:
             print("Unable to attach SMMUv3\n")
             sys.exit(1)
 
-        self.slave_interfaces.append(slave_interface)
+        self.device_interfaces.append(device_interface)
 
         # Storing a reference to the smmu to be used when generating
         # the binding in the device DTB.

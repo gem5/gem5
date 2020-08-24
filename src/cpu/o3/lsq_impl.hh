@@ -892,7 +892,7 @@ LSQ<Impl>::SplitDataRequest::initiateTranslation()
     uint32_t size_so_far = 0;
 
     mainReq = std::make_shared<Request>(base_addr,
-                _size, _flags, _inst->masterId(),
+                _size, _flags, _inst->requestorId(),
                 _inst->instAddr(), _inst->contextId());
     if (!_byteEnable.empty()) {
         mainReq->setByteEnable(_byteEnable);

@@ -45,7 +45,8 @@ SimpleCache::SimpleCache(SimpleCacheParams *params) :
     // automatically created depending on the name of the vector port and
     // holds the number of connections to this port name
     for (int i = 0; i < params->port_cpu_side_connection_count; ++i) {
-        cpuPorts.emplace_back(name() + csprintf(".cpu_side[%d]", i), i, this);
+        cpuPorts.emplace_back(name() + csprintf(".cpu_side[%d]", i),
+                                                             i, this);
     }
 }
 

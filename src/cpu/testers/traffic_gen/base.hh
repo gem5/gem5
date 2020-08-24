@@ -53,7 +53,7 @@ class System;
 struct BaseTrafficGenParams;
 
 /**
- * The traffic generator is a master module that generates stimuli for
+ * The traffic generator is a module that generates stimuli for
  * the memory system, based on a collection of simple generator
  * behaviours that are either probabilistic or based on traces. It can
  * be used stand alone for creating test cases for interconnect and
@@ -123,7 +123,7 @@ class BaseTrafficGen : public ClockedObject
     const int maxOutstandingReqs;
 
 
-    /** Master port specialisation for the traffic generator */
+    /** Request port specialisation for the traffic generator */
     class TrafficGenPort : public RequestPort
     {
       public:
@@ -157,7 +157,7 @@ class BaseTrafficGen : public ClockedObject
      */
     void update();
 
-    /** The instance of master port used by the traffic generator. */
+    /** The instance of request port used by the traffic generator. */
     TrafficGenPort port;
 
     /** Packet waiting to be sent. */
@@ -324,9 +324,9 @@ class BaseTrafficGen : public ClockedObject
     virtual std::shared_ptr<BaseGen> nextGenerator() = 0;
 
     /**
-     * MasterID used in generated requests.
+     * RequestorID used in generated requests.
      */
-    const MasterID masterID;
+    const RequestorID requestorId;
 
     /** Currently active generator */
     std::shared_ptr<BaseGen> activeGenerator;

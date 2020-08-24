@@ -159,7 +159,7 @@ class AbstractMemory : public ClockedObject
     }
 
     /** Pointer to the System object.
-     * This is used for getting the number of masters in the system which is
+     * This is used for getting the number of requestors in the system which is
      * needed when registering stats
      */
     System *_system;

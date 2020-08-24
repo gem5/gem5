@@ -182,25 +182,25 @@ class BaseCPU(ClockedObject):
     if buildEnv['TARGET_ISA'] in ['x86', 'arm', 'riscv']:
         _cached_ports += ["itb.walker.port", "dtb.walker.port"]
 
-    _uncached_slave_ports = []
-    _uncached_master_ports = []
+    _uncached_interrupt_response_ports = []
+    _uncached_interrupt_request_ports = []
     if buildEnv['TARGET_ISA'] == 'x86':
-        _uncached_slave_ports += ["interrupts[0].pio",
-                                  "interrupts[0].int_slave"]
-        _uncached_master_ports += ["interrupts[0].int_master"]
+        _uncached_interrupt_response_ports += ["interrupts[0].pio",
+                                  "interrupts[0].int_responder"]
+        _uncached_interrupt_request_ports += ["interrupts[0].int_requestor"]
 
     def createInterruptController(self):
         self.interrupts = [ArchInterrupts() for i in range(self.numThreads)]
 
     def connectCachedPorts(self, bus):
         for p in self._cached_ports:
-            exec('self.%s = bus.slave' % p)
+            exec('self.%s = bus.cpu_side_ports' % p)
 
     def connectUncachedPorts(self, bus):
-        for p in self._uncached_slave_ports:
-            exec('self.%s = bus.master' % p)
-        for p in self._uncached_master_ports:
-            exec('self.%s = bus.slave' % p)
+        for p in self._uncached_interrupt_response_ports:
+            exec('self.%s = bus.mem_side_ports' % p)
+        for p in self._uncached_interrupt_request_ports:
+            exec('self.%s = bus.cpu_side_ports' % p)
 
     def connectAllPorts(self, cached_bus, uncached_bus = None):
         self.connectCachedPorts(cached_bus)
@@ -237,7 +237,7 @@ class BaseCPU(ClockedObject):
         self.toL2Bus = xbar if xbar else L2XBar()
         self.connectCachedPorts(self.toL2Bus)
         self.l2cache = l2c
-        self.toL2Bus.master = self.l2cache.cpu_side
+        self.toL2Bus.mem_side_ports = self.l2cache.cpu_side
         self._cached_ports = ['l2cache.mem_side']
 
     def createThreads(self):

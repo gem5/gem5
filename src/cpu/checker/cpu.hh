@@ -89,7 +89,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     using VecRegContainer = TheISA::VecRegContainer;
 
     /** id attached to all issued requests */
-    MasterID masterId;
+    RequestorID requestorId;
   public:
     void init() override;
 

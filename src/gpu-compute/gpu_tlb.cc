@@ -113,14 +113,14 @@ namespace X86ISA
         missLatency1 = p->missLatency1;
         missLatency2 = p->missLatency2;
 
-        // create the slave ports based on the number of connected ports
-        for (size_t i = 0; i < p->port_slave_connection_count; ++i) {
+        // create the response ports based on the number of connected ports
+        for (size_t i = 0; i < p->port_cpu_side_ports_connection_count; ++i) {
             cpuSidePort.push_back(new CpuSidePort(csprintf("%s-port%d",
                                   name(), i), this, i));
         }
 
-        // create the master ports based on the number of connected ports
-        for (size_t i = 0; i < p->port_master_connection_count; ++i) {
+        // create the request ports based on the number of connected ports
+        for (size_t i = 0; i < p->port_mem_side_ports_connection_count; ++i) {
             memSidePort.push_back(new MemSidePort(csprintf("%s-port%d",
                                   name(), i), this, i));
         }
@@ -136,13 +136,13 @@ namespace X86ISA
     Port &
     GpuTLB::getPort(const std::string &if_name, PortID idx)
     {
-        if (if_name == "slave") {
+        if (if_name == "cpu_side_ports") {
             if (idx >= static_cast<PortID>(cpuSidePort.size())) {
                 panic("TLBCoalescer::getPort: unknown index %d\n", idx);
             }
 
             return *cpuSidePort[idx];
-        } else if (if_name == "master") {
+        } else if (if_name == "mem_side_ports") {
             if (idx >= static_cast<PortID>(memSidePort.size())) {
                 panic("TLBCoalescer::getPort: unknown index %d\n", idx);
             }
@@ -930,7 +930,7 @@ namespace X86ISA
         Addr paddr = local_entry->paddr | (vaddr & (page_size - 1));
         DPRINTF(GPUTLB, "Translated %#x -> %#x.\n", vaddr, paddr);
 
-        // Since this packet will be sent through the cpu side slave port,
+        // Since this packet will be sent through the cpu side port,
         // it must be converted to a response pkt if it is not one already
         if (pkt->isRequest()) {
             pkt->makeTimingResponse();
@@ -1324,7 +1324,7 @@ namespace X86ISA
     AddrRangeList
     GpuTLB::CpuSidePort::getAddrRanges() const
     {
-        // currently not checked by the master
+        // currently not checked by the requestor
         AddrRangeList ranges;
 
         return ranges;

@@ -35,15 +35,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "dev/arm/smmu_v3_slaveifc.hh"
+#include "dev/arm/smmu_v3_deviceifc.hh"
 
 #include "base/trace.hh"
 #include "debug/SMMUv3.hh"
 #include "dev/arm/smmu_v3.hh"
 #include "dev/arm/smmu_v3_transl.hh"
 
-SMMUv3SlaveInterface::SMMUv3SlaveInterface(
-    const SMMUv3SlaveInterfaceParams *p) :
+SMMUv3DeviceInterface::SMMUv3DeviceInterface(
+    const SMMUv3DeviceInterfaceParams *p) :
     ClockedObject(p),
     smmu(nullptr),
     microTLB(new SMMUTLB(p->utlb_entries,
@@ -54,14 +54,15 @@ SMMUv3SlaveInterface::SMMUv3SlaveInterface(
                         p->tlb_policy)),
     microTLBEnable(p->utlb_enable),
     mainTLBEnable(p->tlb_enable),
-    slavePortSem(1),
+    devicePortSem(1),
     microTLBSem(p->utlb_slots),
     mainTLBSem(p->tlb_slots),
     microTLBLat(p->utlb_lat),
     mainTLBLat(p->tlb_lat),
-    slavePort(new SMMUSlavePort(csprintf("%s.slave", name()), *this)),
-    atsSlavePort(name() + ".atsSlave", *this),
-    atsMasterPort(name() + ".atsMaster", *this),
+    devicePort(new SMMUDevicePort(csprintf("%s.device_port",
+                                            name()), *this)),
+    atsDevicePort(name() + ".atsDevicePort", *this),
+    atsMemPort(name() + ".atsMemPort", *this),
     portWidth(p->port_width),
     wrBufSlotsRemaining(p->wrbuf_slots),
     xlateSlotsRemaining(p->xlate_slots),
@@ -76,41 +77,41 @@ SMMUv3SlaveInterface::SMMUv3SlaveInterface(
 {}
 
 void
-SMMUv3SlaveInterface::sendRange()
+SMMUv3DeviceInterface::sendRange()
 {
-    if (slavePort->isConnected()) {
-        inform("Slave port is connected to %s\n", slavePort->getPeer());
+    if (devicePort->isConnected()) {
+        inform("Device port is connected to %s\n", devicePort->getPeer());
 
-        slavePort->sendRangeChange();
+        devicePort->sendRangeChange();
     } else {
-        fatal("Slave port is not connected.\n");
+        fatal("Device port is not connected.\n");
     }
 }
 
 Port&
-SMMUv3SlaveInterface::getPort(const std::string &name, PortID id)
+SMMUv3DeviceInterface::getPort(const std::string &name, PortID id)
 {
-    if (name == "ats_master") {
-        return atsMasterPort;
-    } else if (name == "slave") {
-        return *slavePort;
-    } else if (name == "ats_slave") {
-        return atsSlavePort;
+    if (name == "ats_mem_side_port") {
+        return atsMemPort;
+    } else if (name == "device_port") {
+        return *devicePort;
+    } else if (name == "ats_dev_side_port") {
+        return atsDevicePort;
     } else {
         return ClockedObject::getPort(name, id);
     }
 }
 
 void
-SMMUv3SlaveInterface::schedTimingResp(PacketPtr pkt)
+SMMUv3DeviceInterface::schedTimingResp(PacketPtr pkt)
 {
-    slavePort->schedTimingResp(pkt, nextCycle());
+    devicePort->schedTimingResp(pkt, nextCycle());
 }
 
 void
-SMMUv3SlaveInterface::schedAtsTimingResp(PacketPtr pkt)
+SMMUv3DeviceInterface::schedAtsTimingResp(PacketPtr pkt)
 {
-    atsSlavePort.schedTimingResp(pkt, nextCycle());
+    atsDevicePort.schedTimingResp(pkt, nextCycle());
 
     if (atsDeviceNeedsRetry) {
         atsDeviceNeedsRetry = false;
@@ -119,10 +120,10 @@ SMMUv3SlaveInterface::schedAtsTimingResp(PacketPtr pkt)
 }
 
 Tick
-SMMUv3SlaveInterface::recvAtomic(PacketPtr pkt)
+SMMUv3DeviceInterface::recvAtomic(PacketPtr pkt)
 {
     DPRINTF(SMMUv3, "[a] req from %s addr=%#x size=%#x\n",
-            slavePort->getPeer(), pkt->getAddr(), pkt->getSize());
+            devicePort->getPeer(), pkt->getAddr(), pkt->getSize());
 
     std::string proc_name = csprintf("%s.port", name());
     SMMUTranslationProcess proc(proc_name, *smmu, *this);
@@ -135,10 +136,10 @@ SMMUv3SlaveInterface::recvAtomic(PacketPtr pkt)
 }
 
 bool
-SMMUv3SlaveInterface::recvTimingReq(PacketPtr pkt)
+SMMUv3DeviceInterface::recvTimingReq(PacketPtr pkt)
 {
     DPRINTF(SMMUv3, "[t] req from %s addr=%#x size=%#x\n",
-            slavePort->getPeer(), pkt->getAddr(), pkt->getSize());
+            devicePort->getPeer(), pkt->getAddr(), pkt->getSize());
 
     // @todo: We need to pay for this and not just zero it out
     pkt->headerDelay = pkt->payloadDelay = 0;
@@ -167,9 +168,9 @@ SMMUv3SlaveInterface::recvTimingReq(PacketPtr pkt)
 }
 
 Tick
-SMMUv3SlaveInterface::atsSlaveRecvAtomic(PacketPtr pkt)
+SMMUv3DeviceInterface::atsRecvAtomic(PacketPtr pkt)
 {
-    DPRINTF(SMMUv3, "[a] ATS slave  req  addr=%#x size=%#x\n",
+    DPRINTF(SMMUv3, "[a] ATS responder req  addr=%#x size=%#x\n",
             pkt->getAddr(), pkt->getSize());
 
     std::string proc_name = csprintf("%s.atsport", name());
@@ -185,9 +186,9 @@ SMMUv3SlaveInterface::atsSlaveRecvAtomic(PacketPtr pkt)
 }
 
 bool
-SMMUv3SlaveInterface::atsSlaveRecvTimingReq(PacketPtr pkt)
+SMMUv3DeviceInterface::atsRecvTimingReq(PacketPtr pkt)
 {
-    DPRINTF(SMMUv3, "[t] ATS slave  req  addr=%#x size=%#x\n",
+    DPRINTF(SMMUv3, "[t] ATS responder  req  addr=%#x size=%#x\n",
             pkt->getAddr(), pkt->getSize());
 
     // @todo: We need to pay for this and not just zero it out
@@ -210,9 +211,9 @@ SMMUv3SlaveInterface::atsSlaveRecvTimingReq(PacketPtr pkt)
 }
 
 bool
-SMMUv3SlaveInterface::atsMasterRecvTimingResp(PacketPtr pkt)
+SMMUv3DeviceInterface::atsRecvTimingResp(PacketPtr pkt)
 {
-    DPRINTF(SMMUv3, "[t] ATS master resp addr=%#x size=%#x\n",
+    DPRINTF(SMMUv3, "[t] ATS requestor resp addr=%#x size=%#x\n",
             pkt->getAddr(), pkt->getSize());
 
     // @todo: We need to pay for this and not just zero it out
@@ -227,30 +228,30 @@ SMMUv3SlaveInterface::atsMasterRecvTimingResp(PacketPtr pkt)
 }
 
 void
-SMMUv3SlaveInterface::sendDeviceRetry()
+SMMUv3DeviceInterface::sendDeviceRetry()
 {
-    slavePort->sendRetryReq();
+    devicePort->sendRetryReq();
 }
 
 void
-SMMUv3SlaveInterface::atsSendDeviceRetry()
+SMMUv3DeviceInterface::atsSendDeviceRetry()
 {
     DPRINTF(SMMUv3, "ATS retry\n");
-    atsSlavePort.sendRetryReq();
+    atsDevicePort.sendRetryReq();
 }
 
 void
-SMMUv3SlaveInterface::scheduleDeviceRetry()
+SMMUv3DeviceInterface::scheduleDeviceRetry()
 {
     if (deviceNeedsRetry && !sendDeviceRetryEvent.scheduled()) {
-        DPRINTF(SMMUv3, "sched slave retry\n");
+        DPRINTF(SMMUv3, "sched responder retry\n");
         deviceNeedsRetry = false;
         schedule(sendDeviceRetryEvent, nextCycle());
     }
 }
 
 DrainState
-SMMUv3SlaveInterface::drain()
+SMMUv3DeviceInterface::drain()
 {
     // Wait until all SMMU translations are completed
     if (xlateSlotsRemaining < params()->xlate_slots) {
@@ -259,8 +260,8 @@ SMMUv3SlaveInterface::drain()
     return DrainState::Drained;
 }
 
-SMMUv3SlaveInterface*
-SMMUv3SlaveInterfaceParams::create()
+SMMUv3DeviceInterface*
+SMMUv3DeviceInterfaceParams::create()
 {
-    return new SMMUv3SlaveInterface(this);
+    return new SMMUv3DeviceInterface(this);
 }

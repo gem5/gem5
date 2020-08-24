@@ -108,7 +108,7 @@ Check::initiatePrefetch()
 
     // Prefetches are assumed to be 0 sized
     RequestPtr req = std::make_shared<Request>(
-            m_address, 0, flags, m_tester_ptr->masterId());
+            m_address, 0, flags, m_tester_ptr->requestorId());
     req->setPC(m_pc);
     req->setContext(index);
 
@@ -147,7 +147,7 @@ Check::initiateFlush()
     Request::Flags flags;
 
     RequestPtr req = std::make_shared<Request>(
-            m_address, CHECK_SIZE, flags, m_tester_ptr->masterId());
+            m_address, CHECK_SIZE, flags, m_tester_ptr->requestorId());
     req->setPC(m_pc);
 
     Packet::Command cmd;
@@ -181,7 +181,7 @@ Check::initiateAction()
 
     // Stores are assumed to be 1 byte-sized
     RequestPtr req = std::make_shared<Request>(
-        writeAddr, 1, flags, m_tester_ptr->masterId());
+        writeAddr, 1, flags, m_tester_ptr->requestorId());
     req->setPC(m_pc);
 
     req->setContext(index);
@@ -246,7 +246,7 @@ Check::initiateCheck()
 
     // Checks are sized depending on the number of bytes written
     RequestPtr req = std::make_shared<Request>(
-            m_address, CHECK_SIZE, flags, m_tester_ptr->masterId());
+            m_address, CHECK_SIZE, flags, m_tester_ptr->requestorId());
     req->setPC(m_pc);
 
     req->setContext(index);

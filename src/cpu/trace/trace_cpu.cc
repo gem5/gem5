@@ -46,12 +46,12 @@ TraceCPU::TraceCPU(TraceCPUParams *params)
     :   BaseCPU(params),
         icachePort(this),
         dcachePort(this),
-        instMasterID(params->system->getMasterId(this, "inst")),
-        dataMasterID(params->system->getMasterId(this, "data")),
+        instRequestorID(params->system->getRequestorId(this, "inst")),
+        dataRequestorID(params->system->getRequestorId(this, "data")),
         instTraceFile(params->instTraceFile),
         dataTraceFile(params->dataTraceFile),
-        icacheGen(*this, "iside", icachePort, instMasterID, instTraceFile),
-        dcacheGen(*this, "dside", dcachePort, dataMasterID, dataTraceFile,
+        icacheGen(*this, ".iside", icachePort, instRequestorID, instTraceFile),
+        dcacheGen(*this, ".dside", dcachePort, dataRequestorID, dataTraceFile,
                   params),
         icacheNextEvent([this]{ schedIcacheNext(); }, name()),
         dcacheNextEvent([this]{ schedDcacheNext(); }, name()),
@@ -593,7 +593,7 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
 
     // Create a request and the packet containing request
     auto req = std::make_shared<Request>(
-        node_ptr->physAddr, node_ptr->size, node_ptr->flags, masterID);
+        node_ptr->physAddr, node_ptr->size, node_ptr->flags, requestorId);
     req->setReqInstSeqNum(node_ptr->seqNum);
 
     // If this is not done it triggers assert in L1 cache for invalid contextId
@@ -604,7 +604,7 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
     // of the request.
     if (node_ptr->virtAddr != 0) {
         req->setVirt(node_ptr->virtAddr, node_ptr->size,
-                     node_ptr->flags, masterID, node_ptr->pc);
+                     node_ptr->flags, requestorId, node_ptr->pc);
         req->setPaddr(node_ptr->physAddr);
         req->setReqInstSeqNum(node_ptr->seqNum);
     }
@@ -619,7 +619,7 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
     }
     pkt->dataDynamic(pkt_data);
 
-    // Call MasterPort method to send a timing request for this packet
+    // Call RequestPort method to send a timing request for this packet
     bool success = port.sendTimingReq(pkt);
     ++elasticStats.numSendAttempted;
 
@@ -1073,7 +1073,7 @@ TraceCPU::FixedRetryGen::send(Addr addr, unsigned size, const MemCmd& cmd,
 {
 
     // Create new request
-    auto req = std::make_shared<Request>(addr, size, flags, masterID);
+    auto req = std::make_shared<Request>(addr, size, flags, requestorId);
     req->setPC(pc);
 
     // If this is not done it triggers assert in L1 cache for invalid contextId
@@ -1089,7 +1089,7 @@ TraceCPU::FixedRetryGen::send(Addr addr, unsigned size, const MemCmd& cmd,
         memset(pkt_data, 0xA, req->getSize());
     }
 
-    // Call MasterPort method to send a timing request for this packet
+    // Call RequestPort method to send a timing request for this packet
     bool success = port.sendTimingReq(pkt);
     if (!success) {
         // If it fails, save the packet to retry when a retry is signalled by

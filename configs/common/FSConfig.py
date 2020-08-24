@@ -98,7 +98,7 @@ def fillInCmdline(mdesc, template, **kwargs):
 def makeCowDisks(disk_paths):
     disks = []
     for disk_path in disk_paths:
-        disk = CowIdeDisk(driveID='master')
+        disk = CowIdeDisk(driveID='device0')
         disk.childImage(disk_path);
         disks.append(disk)
     return disks

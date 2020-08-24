@@ -48,8 +48,15 @@ class X86LocalApic(BaseInterrupts):
     type = 'X86LocalApic'
     cxx_class = 'X86ISA::Interrupts'
     cxx_header = 'arch/x86/interrupts.hh'
-    int_master = RequestPort("Port for sending interrupt messages")
-    int_slave = ResponsePort("Port for receiving interrupt messages")
+
+    int_requestor = RequestPort("Port for sending interrupt messages")
+    int_master    = DeprecatedParam(int_requestor,
+                        '`int_master` is now called `int_requestor`')
+
+    int_responder = ResponsePort("Port for receiving interrupt messages")
+    int_slave     = DeprecatedParam(int_responder,
+                        '`int_slave` is now called `int_responder`')
+
     int_latency = Param.Latency('1ns', \
             "Latency for an interrupt to propagate through this device.")
     pio = ResponsePort("Programmed I/O port")

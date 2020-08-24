@@ -466,7 +466,7 @@ TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size,
         traceData->setMem(addr, size, flags);
 
     RequestPtr req = std::make_shared<Request>(
-        addr, size, flags, dataMasterId(), pc, thread->contextId());
+        addr, size, flags, dataRequestorId(), pc, thread->contextId());
     if (!byte_enable.empty()) {
         req->setByteEnable(byte_enable);
     }
@@ -550,7 +550,7 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
         traceData->setMem(addr, size, flags);
 
     RequestPtr req = std::make_shared<Request>(
-        addr, size, flags, dataMasterId(), pc, thread->contextId());
+        addr, size, flags, dataRequestorId(), pc, thread->contextId());
     if (!byte_enable.empty()) {
         req->setByteEnable(byte_enable);
     }
@@ -608,7 +608,7 @@ TimingSimpleCPU::initiateMemAMO(Addr addr, unsigned size,
         traceData->setMem(addr, size, flags);
 
     RequestPtr req = make_shared<Request>(addr, size, flags,
-                            dataMasterId(), pc, thread->contextId(),
+                            dataRequestorId(), pc, thread->contextId(),
                             std::move(amo_op));
 
     assert(req->hasAtomicOpFunctor());
@@ -1228,7 +1228,7 @@ TimingSimpleCPU::initiateHtmCmd(Request::Flags flags)
         traceData->setMem(addr, size, flags);
 
     RequestPtr req = std::make_shared<Request>(
-        addr, size, flags, dataMasterId());
+        addr, size, flags, dataRequestorId());
 
     req->setPC(pc);
     req->setContext(thread->contextId());
@@ -1277,7 +1277,7 @@ TimingSimpleCPU::htmSendAbortSignal(HtmFailureFaultCause cause)
     // notify l1 d-cache (ruby) that core has aborted transaction
 
     RequestPtr req = std::make_shared<Request>(
-        addr, size, flags, dataMasterId());
+        addr, size, flags, dataRequestorId());
 
     req->setPC(pc);
     req->setContext(thread->contextId());

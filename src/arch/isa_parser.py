@@ -1294,7 +1294,7 @@ class OperandList(object):
 class SubOperandList(OperandList):
     '''Find all the operands in the given code block.  Returns an operand
     descriptor list (instance of class OperandList).'''
-    def __init__(self, parser, code, master_list):
+    def __init__(self, parser, code, requestor_list):
         self.items = []
         self.bases = {}
         # delete strings and comments so we don't match on operands inside
@@ -1315,17 +1315,17 @@ class SubOperandList(OperandList):
             if op_base in parser.elemToVector:
                 elem_op = op_base
                 op_base = parser.elemToVector[elem_op]
-            # find this op in the master list
-            op_desc = master_list.find_base(op_base)
+            # find this op in the requestor list
+            op_desc = requestor_list.find_base(op_base)
             if not op_desc:
-                error('Found operand %s which is not in the master list!'
+                error('Found operand %s which is not in the requestor list!'
                       % op_base)
             else:
                 # See if we've already found this operand
                 op_desc = self.find_base(op_base)
                 if not op_desc:
                     # if not, add a reference to it to this sub list
-                    self.append(master_list.bases[op_base])
+                    self.append(requestor_list.bases[op_base])
 
             # start next search after end of current match
             next_pos = match.end()

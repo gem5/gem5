@@ -75,12 +75,12 @@ class Pc(Platform):
 
     def attachIO(self, bus, dma_ports = []):
         self.south_bridge.attachIO(bus, dma_ports)
-        self.i_dont_exist1.pio = bus.master
-        self.i_dont_exist2.pio = bus.master
-        self.behind_pci.pio = bus.master
-        self.com_1.pio = bus.master
-        self.fake_com_2.pio = bus.master
-        self.fake_com_3.pio = bus.master
-        self.fake_com_4.pio = bus.master
-        self.fake_floppy.pio = bus.master
+        self.i_dont_exist1.pio = bus.mem_side_ports
+        self.i_dont_exist2.pio = bus.mem_side_ports
+        self.behind_pci.pio = bus.mem_side_ports
+        self.com_1.pio = bus.mem_side_ports
+        self.fake_com_2.pio = bus.mem_side_ports
+        self.fake_com_3.pio = bus.mem_side_ports
+        self.fake_com_4.pio = bus.mem_side_ports
+        self.fake_floppy.pio = bus.mem_side_ports
         self.pci_host.pio = bus.default

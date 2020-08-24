@@ -122,11 +122,11 @@ class SectorSubBlk : public CacheBlk
      *
      * @param tag Block address tag.
      * @param is_secure Whether the block is in secure space or not.
-     * @param src_master_ID The source requestor ID.
+     * @param src_requestor_ID The source requestor ID.
      * @param task_ID The new task ID.
      */
-    void insert(const Addr tag, const bool is_secure, const int src_master_ID,
-                const uint32_t task_ID) override;
+    void insert(const Addr tag, const bool is_secure, const int
+                src_requestor_ID, const uint32_t task_ID) override;
 
     /**
      * Pretty-print sector offset and other CacheBlk information.

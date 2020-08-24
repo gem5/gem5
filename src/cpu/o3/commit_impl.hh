@@ -736,7 +736,7 @@ DefaultCommit<Impl>::handleInterrupt()
 {
     // Verify that we still have an interrupt to handle
     if (!cpu->checkInterrupts(0)) {
-        DPRINTF(Commit, "Pending interrupt is cleared by master before "
+        DPRINTF(Commit, "Pending interrupt is cleared by requestor before "
                 "it got handled. Restart fetching from the orig path.\n");
         toIEW->commitInfo[0].clearInterrupt = true;
         interrupt = NoFault;

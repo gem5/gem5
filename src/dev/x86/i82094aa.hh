@@ -82,7 +82,7 @@ class I82094AA : public BasicPioDevice
 
     std::vector<IntSinkPin<I82094AA> *> inputs;
 
-    IntMasterPort<I82094AA> intMasterPort;
+    IntRequestPort<I82094AA> intRequestPort;
 
   public:
     typedef I82094AAParams Params;

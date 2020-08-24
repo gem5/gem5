@@ -147,7 +147,7 @@ class AbstractController : public ClockedObject, public Consumer
 
   public:
     MachineID getMachineID() const { return m_machineID; }
-    MasterID getMasterId() const { return m_masterId; }
+    RequestorID getRequestorId() const { return m_id; }
 
     Stats::Histogram& getDelayHist() { return m_delayHistogram; }
     Stats::Histogram& getDelayVCHist(uint32_t index)
@@ -185,8 +185,8 @@ class AbstractController : public ClockedObject, public Consumer
     MachineID m_machineID;
     const NodeID m_clusterID;
 
-    // MasterID used by some components of gem5.
-    const MasterID m_masterId;
+    // RequestorID used by some components of gem5.
+    const RequestorID m_id;
 
     Network *m_net_ptr;
     bool m_is_blocking;
@@ -237,7 +237,7 @@ class AbstractController : public ClockedObject, public Consumer
         void recvReqRetry();
     };
 
-    /* Master port to the memory controller. */
+    /* Request port to the memory controller. */
     MemoryPort memoryPort;
 
     // State that is stored in packets sent to the memory controller.

@@ -1351,7 +1351,7 @@ X86KvmCPU::handleKvmExitIO()
     for (int i = 0; i < count; ++i) {
         RequestPtr io_req = std::make_shared<Request>(
             pAddr, kvm_run.io.size,
-            Request::UNCACHEABLE, dataMasterId());
+            Request::UNCACHEABLE, dataRequestorId());
 
         io_req->setContext(tc->contextId());
 

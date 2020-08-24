@@ -34,7 +34,7 @@
 This class is a simple crossbar switch through which an arbitrary number of initiators
 may communicate in parallel as long as they do not talk to the same target.
 
-If two masters address the same target at the same point of time,
+If two requestors address the same target at the same point of time,
 the choice who will be allowed to communicate
 is done non-deterministically (based on the SystemC process exectution order).
 

@@ -97,7 +97,7 @@ class RubySystem : public ClockedObject
     void registerNetwork(Network*);
     void registerAbstractController(AbstractController*);
     void registerMachineID(const MachineID& mach_id, Network* network);
-    void registerMasterIDs();
+    void registerRequestorIDs();
 
     bool eventQueueEmpty() { return eventq->empty(); }
     void enqueueRubyEvent(Tick tick)
@@ -142,7 +142,7 @@ class RubySystem : public ClockedObject
     Cycles m_start_cycle;
 
     std::unordered_map<MachineID, unsigned> machineToNetwork;
-    std::unordered_map<MasterID, unsigned> masterToNetwork;
+    std::unordered_map<RequestorID, unsigned> requestorToNetwork;
     std::unordered_map<unsigned, std::vector<AbstractController*>> netCntrls;
 
   public:

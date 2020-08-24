@@ -50,7 +50,7 @@
 AbstractController::AbstractController(const Params *p)
     : ClockedObject(p), Consumer(this), m_version(p->version),
       m_clusterID(p->cluster_id),
-      m_masterId(p->system->getMasterId(this)), m_is_blocking(false),
+      m_id(p->system->getRequestorId(this)), m_is_blocking(false),
       m_number_of_TBEs(p->number_of_TBEs),
       m_transitions_per_cycle(p->transitions_per_cycle),
       m_buffer_size(p->buffer_size), m_recycle_latency(p->recycle_latency),
@@ -219,7 +219,7 @@ AbstractController::serviceMemoryQueue()
     }
 
     RequestPtr req
-        = std::make_shared<Request>(mem_msg->m_addr, req_size, 0, m_masterId);
+        = std::make_shared<Request>(mem_msg->m_addr, req_size, 0, m_id);
     PacketPtr pkt;
     if (mem_msg->getType() == MemoryRequestType_MEMORY_WB) {
         pkt = Packet::createWrite(req);

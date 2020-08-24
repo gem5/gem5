@@ -2120,13 +2120,13 @@ class Port(object):
     def cxx_decl(self, code):
         code('unsigned int port_${{self.name}}_connection_count;')
 
-Port.compat('GEM5 REQUESTER', 'GEM5 RESPONDER')
+Port.compat('GEM5 REQUESTOR', 'GEM5 RESPONDER')
 
 class RequestPort(Port):
     # RequestPort("description")
     def __init__(self, desc):
         super(RequestPort, self).__init__(
-                'GEM5 REQUESTER', desc, is_source=True)
+                'GEM5 REQUESTOR', desc, is_source=True)
 
 class ResponsePort(Port):
     # ResponsePort("description")
@@ -2143,7 +2143,7 @@ class VectorRequestPort(VectorPort):
     # VectorRequestPort("description")
     def __init__(self, desc):
         super(VectorRequestPort, self).__init__(
-                'GEM5 REQUESTER', desc, is_source=True)
+                'GEM5 REQUESTOR', desc, is_source=True)
 
 class VectorResponsePort(VectorPort):
     # VectorResponsePort("description")

@@ -57,7 +57,7 @@ namespace Prefetcher {
 
 Base::PrefetchInfo::PrefetchInfo(PacketPtr pkt, Addr addr, bool miss)
   : address(addr), pc(pkt->req->hasPC() ? pkt->req->getPC() : 0),
-    masterId(pkt->req->masterId()), validPC(pkt->req->hasPC()),
+    requestorId(pkt->req->requestorId()), validPC(pkt->req->hasPC()),
     secure(pkt->isSecure()), size(pkt->req->getSize()), write(pkt->isWrite()),
     paddress(pkt->req->getPaddr()), cacheMiss(miss)
 {
@@ -72,9 +72,10 @@ Base::PrefetchInfo::PrefetchInfo(PacketPtr pkt, Addr addr, bool miss)
 }
 
 Base::PrefetchInfo::PrefetchInfo(PrefetchInfo const &pfi, Addr addr)
-  : address(addr), pc(pfi.pc), masterId(pfi.masterId), validPC(pfi.validPC),
-    secure(pfi.secure), size(pfi.size), write(pfi.write),
-    paddress(pfi.paddress), cacheMiss(pfi.cacheMiss), data(nullptr)
+  : address(addr), pc(pfi.pc), requestorId(pfi.requestorId),
+    validPC(pfi.validPC), secure(pfi.secure), size(pfi.size),
+    write(pfi.write), paddress(pfi.paddress), cacheMiss(pfi.cacheMiss),
+    data(nullptr)
 {
 }
 
@@ -92,7 +93,8 @@ Base::Base(const BasePrefetcherParams *p)
     : ClockedObject(p), listeners(), cache(nullptr), blkSize(p->block_size),
       lBlkSize(floorLog2(blkSize)), onMiss(p->on_miss), onRead(p->on_read),
       onWrite(p->on_write), onData(p->on_data), onInst(p->on_inst),
-      masterId(p->sys->getMasterId(this)), pageBytes(p->sys->getPageBytes()),
+      requestorId(p->sys->getRequestorId(this)),
+      pageBytes(p->sys->getPageBytes()),
       prefetchOnAccess(p->prefetch_on_access),
       useVirtualAddresses(p->use_virtual_addresses),
       prefetchStats(this), issuedPrefetches(0),

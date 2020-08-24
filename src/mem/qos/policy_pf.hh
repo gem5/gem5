@@ -67,38 +67,38 @@ class PropFairPolicy : public Policy
     virtual ~PropFairPolicy();
 
     /**
-     * Initialize the master's score by providing
-     * the master's name and initial score value.
-     * The master's name has to match a name in the system.
+     * Initialize the requestor's score by providing
+     * the requestor's name and initial score value.
+     * The requestor's name has to match a name in the system.
      *
-     * @param master master's name to lookup.
-     * @param score initial score value for the master
+     * @param requestor requestor's name to lookup.
+     * @param score initial score value for the requestor
      */
-    void initMasterName(const std::string master, const double score);
+    void initRequestorName(const std::string requestor, const double score);
 
     /**
-     * Initialize the master's score by providing
-     * the master's SimObject pointer and initial score value.
-     * The master's pointer has to match a master in the system.
+     * Initialize the requestor's score by providing
+     * the requestor's SimObject pointer and initial score value.
+     * The requestor's pointer has to match a requestor in the system.
      *
-     * @param master master's SimObject pointer to lookup.
-     * @param score initial score value for the master
+     * @param requestor requestor's SimObject pointer to lookup.
+     * @param score initial score value for the requestor
      */
-    void initMasterObj(const SimObject* master, const double score);
+    void initRequestorObj(const SimObject* requestor, const double score);
 
     /**
      * Schedules a packet based on proportional fair configuration
      *
-     * @param m_id master id to schedule
+     * @param id requestor id to schedule
      * @param pkt_size size of the packet
      * @return QoS priority value
      */
     virtual uint8_t
-    schedule(const MasterID m_id, const uint64_t pkt_size) override;
+    schedule(const RequestorID id, const uint64_t pkt_size) override;
 
   protected:
-    template <typename Master>
-    void initMaster(const Master master, const double score);
+    template <typename Requestor>
+    void initRequestor(const Requestor requestor, const double score);
 
     inline double
     updateScore(const double old_score, const uint64_t served_bytes) const;
@@ -107,9 +107,9 @@ class PropFairPolicy : public Policy
     /** PF Policy weight */
     const double weight;
 
-    /** history is keeping track of every master's score */
-    using MasterHistory = std::pair<MasterID, double>;
-    std::vector<MasterHistory> history;
+    /** history is keeping track of every requestor's score */
+    using RequestorHistory = std::pair<RequestorID, double>;
+    std::vector<RequestorHistory> history;
 };
 
 } // namespace QoS

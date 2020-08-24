@@ -1843,7 +1843,7 @@ FullO3CPU<Impl>::htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
 
     // notify l1 d-cache (ruby) that core has aborted transaction
     RequestPtr req =
-        std::make_shared<Request>(addr, size, flags, _dataMasterId);
+        std::make_shared<Request>(addr, size, flags, _dataRequestorId);
 
     req->taskId(taskId());
     req->setContext(this->thread[tid]->contextId());

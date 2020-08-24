@@ -584,7 +584,7 @@ namespace Gcn3ISA
             gpuDynInst->setStatusVector(0, 1);
             RequestPtr req = std::make_shared<Request>(0, 0, 0,
                                        gpuDynInst->computeUnit()->
-                                       masterId(), 0,
+                                       requestorId(), 0,
                                        gpuDynInst->wfDynId);
             gpuDynInst->setRequestFlags(req);
             gpuDynInst->computeUnit()->

@@ -227,7 +227,7 @@ HTMSequencer::rubyHtmCallback(PacketPtr pkt,
     RubyPort::SenderState *senderState =
         safe_cast<RubyPort::SenderState *>(pkt->popSenderState());
 
-    MemSlavePort *port = safe_cast<MemSlavePort*>(senderState->port);
+    MemResponsePort *port = safe_cast<MemResponsePort*>(senderState->port);
     assert(port != nullptr);
     delete senderState;
 
@@ -237,7 +237,7 @@ HTMSequencer::rubyHtmCallback(PacketPtr pkt,
             pkt->req->isHTMStart(), pkt->req->isHTMCommit(),
             pkt->req->isHTMCancel(), htm_return_code);
 
-    // turn packet around to go back to requester if response expected
+    // turn packet around to go back to requestor if response expected
     if (pkt->needsResponse()) {
         DPRINTF(RubyPort, "Sending packet back over port\n");
         pkt->makeHtmTransactionalReqResponse(

@@ -78,18 +78,18 @@ MemCtrl::~MemCtrl()
 {}
 
 void
-MemCtrl::logRequest(BusState dir, MasterID m_id, uint8_t qos,
+MemCtrl::logRequest(BusState dir, RequestorID id, uint8_t qos,
                     Addr addr, uint64_t entries)
 {
     // If needed, initialize all counters and statistics
-    // for this master
-    addMaster(m_id);
+    // for this requestor
+    addRequestor(id);
 
     DPRINTF(QOS,
-            "QoSMemCtrl::logRequest MASTER %s [id %d] address %d"
-            " prio %d this master q packets %d"
+            "QoSMemCtrl::logRequest REQUESTOR %s [id %d] address %d"
+            " prio %d this requestor q packets %d"
             " - queue size %d - requested entries %d\n",
-            masters[m_id], m_id, addr, qos, packetPriorities[m_id][qos],
+            requestors[id], id, addr, qos, packetPriorities[id][qos],
             (dir == READ) ? readQueueSizes[qos]: writeQueueSizes[qos],
             entries);
 
@@ -101,51 +101,51 @@ MemCtrl::logRequest(BusState dir, MasterID m_id, uint8_t qos,
         totalWriteQueueSize += entries;
     }
 
-    packetPriorities[m_id][qos] += entries;
+    packetPriorities[id][qos] += entries;
     for (auto j = 0; j < entries; ++j) {
-        requestTimes[m_id][addr].push_back(curTick());
+        requestTimes[id][addr].push_back(curTick());
     }
 
     // Record statistics
-    stats.avgPriority[m_id].sample(qos);
+    stats.avgPriority[id].sample(qos);
 
     // Compute avg priority distance
 
-    for (uint8_t i = 0; i < packetPriorities[m_id].size(); ++i) {
+    for (uint8_t i = 0; i < packetPriorities[id].size(); ++i) {
         uint8_t distance =
-            (abs(int(qos) - int(i))) * packetPriorities[m_id][i];
+            (abs(int(qos) - int(i))) * packetPriorities[id][i];
 
         if (distance > 0) {
-            stats.avgPriorityDistance[m_id].sample(distance);
+            stats.avgPriorityDistance[id].sample(distance);
             DPRINTF(QOS,
-                    "QoSMemCtrl::logRequest MASTER %s [id %d]"
+                    "QoSMemCtrl::logRequest REQUESTOR %s [id %d]"
                     " registering priority distance %d for priority %d"
                     " (packets %d)\n",
-                    masters[m_id], m_id, distance, i,
-                    packetPriorities[m_id][i]);
+                    requestors[id], id, distance, i,
+                    packetPriorities[id][i]);
         }
     }
 
     DPRINTF(QOS,
-            "QoSMemCtrl::logRequest MASTER %s [id %d] prio %d "
-            "this master q packets %d - new queue size %d\n",
-            masters[m_id], m_id, qos, packetPriorities[m_id][qos],
+            "QoSMemCtrl::logRequest REQUESTOR %s [id %d] prio %d "
+            "this requestor q packets %d - new queue size %d\n",
+            requestors[id], id, qos, packetPriorities[id][qos],
             (dir == READ) ? readQueueSizes[qos]: writeQueueSizes[qos]);
 
 }
 
 void
-MemCtrl::logResponse(BusState dir, MasterID m_id, uint8_t qos,
+MemCtrl::logResponse(BusState dir, RequestorID id, uint8_t qos,
                      Addr addr, uint64_t entries, double delay)
 {
-    panic_if(!hasMaster(m_id),
-        "Logging response with invalid master\n");
+    panic_if(!hasRequestor(id),
+        "Logging response with invalid requestor\n");
 
     DPRINTF(QOS,
-            "QoSMemCtrl::logResponse MASTER %s [id %d] address %d prio"
-            " %d this master q packets %d"
+            "QoSMemCtrl::logResponse REQUESTOR %s [id %d] address %d prio"
+            " %d this requestor q packets %d"
             " - queue size %d - requested entries %d\n",
-            masters[m_id], m_id, addr, qos, packetPriorities[m_id][qos],
+            requestors[id], id, addr, qos, packetPriorities[id][qos],
             (dir == READ) ? readQueueSizes[qos]: writeQueueSizes[qos],
             entries);
 
@@ -157,17 +157,17 @@ MemCtrl::logResponse(BusState dir, MasterID m_id, uint8_t qos,
         totalWriteQueueSize -= entries;
     }
 
-    panic_if(packetPriorities[m_id][qos] == 0,
-             "QoSMemCtrl::logResponse master %s negative packets for priority"
-             " %d", masters[m_id], qos);
+    panic_if(packetPriorities[id][qos] == 0,
+             "QoSMemCtrl::logResponse requestor %s negative packets "
+             "for priority %d", requestors[id], qos);
 
-    packetPriorities[m_id][qos] -= entries;
+    packetPriorities[id][qos] -= entries;
 
     for (auto j = 0; j < entries; ++j) {
-        auto it = requestTimes[m_id].find(addr);
-        panic_if(it == requestTimes[m_id].end(),
-                 "QoSMemCtrl::logResponse master %s unmatched response for"
-                 " address %d received", masters[m_id], addr);
+        auto it = requestTimes[id].find(addr);
+        panic_if(it == requestTimes[id].end(),
+                 "QoSMemCtrl::logResponse requestor %s unmatched response for"
+                 " address %d received", requestors[id], addr);
 
         // Load request time
         uint64_t requestTime = it->second.front();
@@ -177,7 +177,7 @@ MemCtrl::logResponse(BusState dir, MasterID m_id, uint8_t qos,
 
         // Remove whole address entry if last one
         if (it->second.empty()) {
-            requestTimes[m_id].erase(it);
+            requestTimes[id].erase(it);
         }
         // Compute latency
         double latency = (double) (curTick() + delay - requestTime)
@@ -197,22 +197,22 @@ MemCtrl::logResponse(BusState dir, MasterID m_id, uint8_t qos,
     }
 
     DPRINTF(QOS,
-            "QoSMemCtrl::logResponse MASTER %s [id %d] prio %d "
-            "this master q packets %d - new queue size %d\n",
-            masters[m_id], m_id, qos, packetPriorities[m_id][qos],
+            "QoSMemCtrl::logResponse REQUESTOR %s [id %d] prio %d "
+            "this requestor q packets %d - new queue size %d\n",
+            requestors[id], id, qos, packetPriorities[id][qos],
             (dir == READ) ? readQueueSizes[qos]: writeQueueSizes[qos]);
 }
 
 uint8_t
-MemCtrl::schedule(MasterID m_id, uint64_t data)
+MemCtrl::schedule(RequestorID id, uint64_t data)
 {
     if (policy) {
-        return policy->schedule(m_id, data);
+        return policy->schedule(id, data);
     } else {
         DPRINTF(QOS,
-                "QoSScheduler::schedule master ID [%d] "
+                "QoSScheduler::schedule requestor id [%d] "
                 "data received [%d], but QoS scheduler not initialized\n",
-                m_id,data);
+                id,data);
         return 0;
     }
 }
@@ -223,7 +223,7 @@ MemCtrl::schedule(const PacketPtr pkt)
     assert(pkt->req);
 
     if (policy) {
-        return schedule(pkt->req->masterId(), pkt->getSize());
+        return schedule(pkt->req->requestorId(), pkt->getSize());
     } else {
         DPRINTF(QOS, "QoSScheduler::schedule Packet received [Qv %d], "
                 "but QoS scheduler not initialized\n",
@@ -261,16 +261,16 @@ MemCtrl::selectNextBusState()
 }
 
 void
-MemCtrl::addMaster(MasterID m_id)
+MemCtrl::addRequestor(RequestorID id)
 {
-    if (!hasMaster(m_id)) {
-        masters.emplace(m_id, _system->getMasterName(m_id));
-        packetPriorities[m_id].resize(numPriorities(), 0);
+    if (!hasRequestor(id)) {
+        requestors.emplace(id, _system->getRequestorName(id));
+        packetPriorities[id].resize(numPriorities(), 0);
 
         DPRINTF(QOS,
-                "QoSMemCtrl::addMaster registering"
-                " Master %s [id %d]\n",
-                masters[m_id], m_id);
+                "QoSMemCtrl::addRequestor registering"
+                " Requestor %s [id %d]\n",
+                requestors[id], id);
     }
 }
 
@@ -307,18 +307,18 @@ MemCtrl::MemCtrlStats::regStats()
     using namespace Stats;
 
     System *system = memCtrl._system;
-    const auto max_masters = system->maxMasters();
+    const auto max_requestors = system->maxRequestors();
     const auto num_priorities = memCtrl.numPriorities();
 
-    // Initializes per master statistics
+    // Initializes per requestor statistics
     avgPriority
-        .init(max_masters)
+        .init(max_requestors)
         .flags(nozero | nonan)
         .precision(2)
         ;
 
     avgPriorityDistance
-        .init(max_masters)
+        .init(max_requestors)
         .flags(nozero | nonan)
         ;
 
@@ -332,10 +332,10 @@ MemCtrl::MemCtrlStats::regStats()
         .precision(12)
         ;
 
-    for (int i = 0; i < max_masters; i++) {
-        const std::string master = system->getMasterName(i);
-        avgPriority.subname(i, master);
-        avgPriorityDistance.subname(i, master);
+    for (int i = 0; i < max_requestors; i++) {
+        const std::string name = system->getRequestorName(i);
+        avgPriority.subname(i, name);
+        avgPriorityDistance.subname(i, name);
     }
 
     for (int j = 0; j < num_priorities; ++j) {

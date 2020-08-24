@@ -61,7 +61,7 @@ class DRAMsim3 : public AbstractMemory
      * having unbounded storage that is implicitly created in the port
      * itself.
      */
-    class MemoryPort : public SlavePort
+    class MemoryPort : public ResponsePort
     {
 
       private:

@@ -95,12 +95,12 @@ class CxxConfigDirectoryEntry
         /* Is this a vector or singleton parameters/SimObject */
         const bool isVector;
 
-        /** Is this a master or slave port */
-        const bool isMaster;
+        /** Is this a request or response port */
+        const bool isRequestor;
 
         PortDesc(const std::string &name_,
-            bool isVector_, bool isMaster_) :
-            name(name_), isVector(isVector_), isMaster(isMaster_)
+            bool isVector_, bool isRequestor_) :
+            name(name_), isVector(isVector_), isRequestor(isRequestor_)
         { }
     };
 

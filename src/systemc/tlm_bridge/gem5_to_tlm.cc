@@ -128,7 +128,7 @@ Gem5ToTlmBridge<BITWIDTH>::pec(
         // Did another request arrive while blocked, schedule a retry.
         if (needToSendRequestRetry) {
             needToSendRequestRetry = false;
-            bsp.sendRetryReq();
+            bridgeResponsePort.sendRetryReq();
         }
     }
     if (phase == tlm::BEGIN_RESP) {
@@ -147,11 +147,11 @@ Gem5ToTlmBridge<BITWIDTH>::pec(
          */
         if (extension.isPipeThrough()) {
             if (packet->isResponse()) {
-                need_retry = !bsp.sendTimingResp(packet);
+                need_retry = !bridgeResponsePort.sendTimingResp(packet);
             }
         } else if (packet->needsResponse()) {
             packet->makeResponse();
-            need_retry = !bsp.sendTimingResp(packet);
+            need_retry = !bridgeResponsePort.sendTimingResp(packet);
         }
 
         if (need_retry) {
@@ -381,7 +381,7 @@ Gem5ToTlmBridge<BITWIDTH>::recvRespRetry()
     PacketPtr packet =
         Gem5SystemC::Gem5Extension::getExtension(trans).getPacket();
 
-    bool need_retry = !bsp.sendTimingResp(packet);
+    bool need_retry = !bridgeResponsePort.sendTimingResp(packet);
 
     sc_assert(!need_retry);
 
@@ -442,7 +442,8 @@ Gem5ToTlmBridge<BITWIDTH>::invalidate_direct_mem_ptr(
 template <unsigned int BITWIDTH>
 Gem5ToTlmBridge<BITWIDTH>::Gem5ToTlmBridge(
         Params *params, const sc_core::sc_module_name &mn) :
-    Gem5ToTlmBridgeBase(mn), bsp(std::string(name()) + ".gem5", *this),
+    Gem5ToTlmBridgeBase(mn),
+    bridgeResponsePort(std::string(name()) + ".gem5", *this),
     socket("tlm_socket"),
     wrapper(socket, std::string(name()) + ".tlm", InvalidPortID),
     system(params->system), blockingRequest(nullptr),
@@ -456,7 +457,7 @@ template <unsigned int BITWIDTH>
 Gem5ToTlmBridge<BITWIDTH>::gem5_getPort(const std::string &if_name, int idx)
 {
     if (if_name == "gem5")
-        return bsp;
+        return bridgeResponsePort;
     else if (if_name == "tlm")
         return wrapper;
 
@@ -467,7 +468,7 @@ template <unsigned int BITWIDTH>
 void
 Gem5ToTlmBridge<BITWIDTH>::before_end_of_elaboration()
 {
-    bsp.sendRangeChange();
+    bridgeResponsePort.sendRangeChange();
 
     socket.register_nb_transport_bw(this, &Gem5ToTlmBridge::nb_transport_bw);
     socket.register_invalidate_direct_mem_ptr(

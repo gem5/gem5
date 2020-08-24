@@ -120,7 +120,7 @@ class CoalescedRequest
 
 // PendingWriteInst tracks the number of outstanding Ruby requests
 // per write instruction. Once all requests associated with one instruction
-// are completely done in Ruby, we call back the requester to mark
+// are completely done in Ruby, we call back the requestor to mark
 // that this instruction is complete.
 class PendingWriteInst
 {
@@ -135,7 +135,7 @@ class PendingWriteInst
     {}
 
     void
-    addPendingReq(RubyPort::MemSlavePort* port, GPUDynInstPtr inst,
+    addPendingReq(RubyPort::MemResponsePort* port, GPUDynInstPtr inst,
                   bool usingRubyTester)
     {
         assert(port);
@@ -157,7 +157,7 @@ class PendingWriteInst
         return (numPendingStores == 0) ? true : false;
     }
 
-    // ack the original requester that this write instruction is complete
+    // ack the original requestor that this write instruction is complete
     void
     ackWriteCompletion(bool usingRubyTester)
     {
@@ -175,7 +175,7 @@ class PendingWriteInst
             pkt->senderState = ss;
         }
 
-        // send the ack response to the requester
+        // send the ack response to the requestor
         originalPort->sendTimingResp(pkt);
     }
 
@@ -192,7 +192,7 @@ class PendingWriteInst
     // which implies multiple ports per instruction. However, we need
     // only 1 of the ports to call back the CU. Therefore, here we keep
     // track the port that sent the first packet of this instruction.
-    RubyPort::MemSlavePort* originalPort;
+    RubyPort::MemResponsePort* originalPort;
     // similar to the originalPort, this gpuDynInstPtr is set only for
     // the first packet of this instruction.
     GPUDynInstPtr gpuDynInstPtr;
@@ -201,12 +201,12 @@ class PendingWriteInst
 class GPUCoalescer : public RubyPort
 {
   public:
-    class GMTokenPort : public TokenSlavePort
+    class GMTokenPort : public TokenResponsePort
     {
       public:
         GMTokenPort(const std::string& name, ClockedObject *owner,
                     PortID id = InvalidPortID)
-            : TokenSlavePort(name, owner, id)
+            : TokenResponsePort(name, owner, id)
         { }
         ~GMTokenPort() { }
 

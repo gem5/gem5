@@ -458,13 +458,13 @@ class ComputeUnit : public ClockedObject
     void processFetchReturn(PacketPtr pkt);
     void updatePageDivergenceDist(Addr addr);
 
-    MasterID masterId() { return _masterId; }
+    RequestorID requestorId() { return _requestorId; }
 
     bool isDone() const;
     bool isVectorAluIdle(uint32_t simdId) const;
 
   protected:
-    MasterID _masterId;
+    RequestorID _requestorId;
 
     LdsState &lds;
 
@@ -628,12 +628,12 @@ class ComputeUnit : public ClockedObject
 
     void exitCallback();
 
-    class GMTokenPort : public TokenMasterPort
+    class GMTokenPort : public TokenRequestPort
     {
       public:
         GMTokenPort(const std::string& name, SimObject *owner,
                     PortID id = InvalidPortID)
-            : TokenMasterPort(name, owner, id)
+            : TokenRequestPort(name, owner, id)
         { }
         ~GMTokenPort() { }
 
