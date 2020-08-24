@@ -748,6 +748,10 @@ if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
           'and/or zlib.h header file.\n'
           'Please install zlib and try again.')
 
+if not conf.CheckLibWithHeader('elf', 'gelf.h', 'C++',
+                               'elf_version(EV_CURRENT);'):
+    error('Did not find ELF access library libelf')
+
 # If we have the protobuf compiler, also make sure we have the
 # development libraries. If the check passes, libprotobuf will be
 # automatically added to the LIBS environment variable. After

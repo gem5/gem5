@@ -41,6 +41,7 @@
 #include "base/loader/elf_object.hh"
 
 #include <fcntl.h>
+#include <gelf.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -54,7 +55,6 @@
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/Loader.hh"
-#include "gelf.h"
 #include "sim/byteswap.hh"
 
 namespace Loader
@@ -221,8 +221,7 @@ ElfObject::determineArch()
     auto &edata = ehdr.e_ident[EI_DATA];
 
     // Detect the architecture
-    if (emach == EM_SPARC64 || (emach == EM_SPARC && eclass == ELFCLASS64) ||
-        emach == EM_SPARCV9) {
+    if ((emach == EM_SPARC && eclass == ELFCLASS64) || emach == EM_SPARCV9) {
         arch = SPARC64;
     } else if (emach == EM_SPARC32PLUS ||
                (emach == EM_SPARC && eclass == ELFCLASS32)) {

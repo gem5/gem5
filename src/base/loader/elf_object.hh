@@ -41,11 +41,12 @@
 #ifndef __BASE_LOADER_ELF_OBJECT_HH__
 #define __BASE_LOADER_ELF_OBJECT_HH__
 
+#include <gelf.h>
+
 #include <set>
 #include <vector>
 
 #include "base/loader/object_file.hh"
-#include "gelf.h"
 
 namespace Loader
 {
