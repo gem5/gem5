@@ -50,6 +50,7 @@ class VirtIODeviceBase(SimObject):
     subsystem = Param.UInt8(0x00, "VirtIO subsystem ID")
 
     system = Param.System(Parent.any, "system object")
+    byte_order = Param.ByteOrder(Parent.byte_order, "Device byte order")
 
 class VirtIODummyDevice(VirtIODeviceBase):
     type = 'VirtIODummyDevice'

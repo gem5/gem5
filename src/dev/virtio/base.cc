@@ -37,10 +37,10 @@
 
 #include "dev/virtio/base.hh"
 
+#include "base/trace.hh"
 #include "debug/VIO.hh"
 #include "params/VirtIODeviceBase.hh"
 #include "params/VirtIODummyDevice.hh"
-#include "sim/system.hh"
 
 VirtDescriptor::VirtDescriptor(PortProxy &_memProxy, ByteOrder bo,
                                VirtQueue &_queue, Index descIndex)
@@ -326,7 +326,7 @@ VirtIODeviceBase::VirtIODeviceBase(Params *params, DeviceId id,
                                    size_t config_size, FeatureBits features)
     : SimObject(params),
       guestFeatures(0),
-      byteOrder(params->system->getGuestByteOrder()),
+      byteOrder(params->byte_order),
       deviceId(id), configSize(config_size), deviceFeatures(features),
       _deviceStatus(0), _queueSelect(0)
 {
