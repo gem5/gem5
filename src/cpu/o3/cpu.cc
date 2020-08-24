@@ -441,7 +441,6 @@ FullO3CPU<Impl>::regStats()
         .precision(6);
     totalIpc =  sum(committedInsts) / numCycles;
 
-    this->decode.regStats();
     this->rename.regStats();
     this->iew.regStats();
     this->rob.regStats();
