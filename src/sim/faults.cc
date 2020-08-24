@@ -37,43 +37,47 @@
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 
-void FaultBase::invoke(ThreadContext * tc, const StaticInstPtr &inst)
+void
+FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    if (FullSystem) {
-        DPRINTF(Fault, "Fault %s at PC: %s\n", name(), tc->pcState());
-    } else {
-        panic("fault (%s) detected @ PC %s", name(), tc->pcState());
-    }
+    panic_if(!FullSystem, "fault (%s) detected @ PC %s",
+             name(), tc->pcState());
+    DPRINTF(Fault, "Fault %s at PC: %s\n", name(), tc->pcState());
 }
 
-void UnimpFault::invoke(ThreadContext * tc, const StaticInstPtr &inst)
+void
+UnimpFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    panic("Unimpfault: %s\n", panicStr.c_str());
+    panic("Unimpfault: %s", panicStr.c_str());
 }
 
-void ReExec::invoke(ThreadContext *tc, const StaticInstPtr &inst)
-{
-    tc->pcState(tc->pcState());
-}
-
-void SyscallRetryFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+void
+ReExec::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     tc->pcState(tc->pcState());
 }
 
-void GenericPageTableFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+void
+SyscallRetryFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+{
+    tc->pcState(tc->pcState());
+}
+
+void
+GenericPageTableFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     bool handled = false;
     if (!FullSystem) {
         Process *p = tc->getProcessPtr();
         handled = p->fixupFault(vaddr);
     }
-    if (!handled)
-        panic("Page table fault when accessing virtual address %#x\n", vaddr);
+    panic_if(!handled, "Page table fault when accessing virtual address %#x",
+             vaddr);
 
 }
 
-void GenericAlignmentFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+void
+GenericAlignmentFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     panic("Alignment fault when accessing virtual address %#x\n", vaddr);
 }

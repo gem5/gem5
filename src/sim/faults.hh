@@ -35,14 +35,14 @@
 
 class ThreadContext;
 
-typedef const char * FaultName;
+typedef const char *FaultName;
 typedef Stats::Scalar FaultStat;
 
 class FaultBase
 {
   public:
     virtual FaultName name() const = 0;
-    virtual void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+    virtual void invoke(ThreadContext * tc, const StaticInstPtr &inst=
                         StaticInst::nullStaticInstPtr);
 
     virtual ~FaultBase() {};
@@ -53,22 +53,19 @@ class UnimpFault : public FaultBase
   private:
     std::string panicStr;
   public:
-    UnimpFault(std::string _str)
-        : panicStr(_str)
-    { }
+    UnimpFault(std::string _str) : panicStr(_str) {}
 
     FaultName name() const { return "Unimplemented simulator feature"; }
-    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
-                StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr) override;
 };
 
 class ReExec : public FaultBase
 {
   public:
     virtual FaultName name() const { return "Re-execution fault"; }
-    ReExec() {}
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
+                StaticInst::nullStaticInstPtr) override;
 };
 
 /*
@@ -83,8 +80,8 @@ class SyscallRetryFault : public FaultBase
   public:
     virtual FaultName name() const { return "System call retry fault"; }
     SyscallRetryFault() {}
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
+                StaticInst::nullStaticInstPtr) override;
 };
 
 class GenericPageTableFault : public FaultBase
@@ -94,8 +91,8 @@ class GenericPageTableFault : public FaultBase
   public:
     FaultName name() const { return "Generic page table fault"; }
     GenericPageTableFault(Addr va) : vaddr(va) {}
-    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
-                StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
+                StaticInst::nullStaticInstPtr) override;
     Addr getFaultVAddr() const { return vaddr; }
 };
 
@@ -106,8 +103,8 @@ class GenericAlignmentFault : public FaultBase
   public:
     FaultName name() const { return "Generic alignment fault"; }
     GenericAlignmentFault(Addr va) : vaddr(va) {}
-    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
-                StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
+                StaticInst::nullStaticInstPtr) override;
     Addr getFaultVAddr() const { return vaddr; }
 };
 
