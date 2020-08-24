@@ -43,9 +43,7 @@
 #include "sim/sim_exit.hh"
 
 SimpleUart::SimpleUart(const SimpleUartParams *p)
-    : Uart(p, p->pio_size),
-      byteOrder(p->big_endian ? ByteOrder::big : ByteOrder::little),
-      endOnEOT(p->end_on_eot)
+    : Uart(p, p->pio_size), byteOrder(p->byte_order), endOnEOT(p->end_on_eot)
 {
 }
 
