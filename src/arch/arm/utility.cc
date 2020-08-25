@@ -315,6 +315,14 @@ getAffinity(ArmSystem *arm_sys, ThreadContext *tc)
 }
 
 bool
+HavePACExt(ThreadContext *tc)
+{
+    AA64ISAR1 id_aa64isar1 = tc->readMiscReg(MISCREG_ID_AA64ISAR1_EL1);
+    return id_aa64isar1.api | id_aa64isar1.apa |
+        id_aa64isar1.gpi | id_aa64isar1.gpa;
+}
+
+bool
 HaveVirtHostExt(ThreadContext *tc)
 {
     AA64MMFR1 id_aa64mmfr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
