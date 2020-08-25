@@ -45,6 +45,7 @@
 #include <algorithm>
 #include <cstring>
 #include <map>
+#include <memory>
 #include <queue>
 
 #include "arch/generic/debugfaults.hh"
@@ -225,7 +226,10 @@ class LSQUnit
      * contructor is deleted explicitly. However, STL vector requires
      * a valid copy constructor for the base type at compile time.
      */
-    LSQUnit(const LSQUnit &l) { panic("LSQUnit is not copy-able"); }
+    LSQUnit(const LSQUnit &l): stats(nullptr)
+    {
+        panic("LSQUnit is not copy-able");
+    }
 
     /** Initializes the LSQ unit with the specified number of entries. */
     void init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
@@ -233,9 +237,6 @@ class LSQUnit
 
     /** Returns the name of the LSQ unit. */
     std::string name() const;
-
-    /** Registers statistics. */
-    void regStats();
 
     /** Sets the pointer to the dcache port. */
     void setDcachePort(RequestPort *dcache_port);
@@ -561,39 +562,35 @@ class LSQUnit
     /** Flag for memory model. */
     bool needsTSO;
 
+  protected:
     // Will also need how many read/write ports the Dcache has.  Or keep track
     // of that in stage that is one level up, and only call executeLoad/Store
     // the appropriate number of times.
-    /** Total number of loads forwaded from LSQ stores. */
-    Stats::Scalar lsqForwLoads;
+    struct LSQUnitStats : public Stats::Group{
+        LSQUnitStats(Stats::Group *parent);
 
-    /** Total number of loads ignored due to invalid addresses. */
-    Stats::Scalar invAddrLoads;
+        /** Total number of loads forwaded from LSQ stores. */
+        Stats::Scalar forwLoads;
 
-    /** Total number of squashed loads. */
-    Stats::Scalar lsqSquashedLoads;
+        /** Total number of squashed loads. */
+        Stats::Scalar squashedLoads;
 
-    /** Total number of responses from the memory system that are
-     * ignored due to the instruction already being squashed. */
-    Stats::Scalar lsqIgnoredResponses;
+        /** Total number of responses from the memory system that are
+         * ignored due to the instruction already being squashed. */
+        Stats::Scalar ignoredResponses;
 
-    /** Tota number of memory ordering violations. */
-    Stats::Scalar lsqMemOrderViolation;
+        /** Tota number of memory ordering violations. */
+        Stats::Scalar memOrderViolation;
 
-    /** Total number of squashed stores. */
-    Stats::Scalar lsqSquashedStores;
+        /** Total number of squashed stores. */
+        Stats::Scalar squashedStores;
 
-    /** Total number of software prefetches ignored due to invalid addresses. */
-    Stats::Scalar invAddrSwpfs;
+        /** Number of loads that were rescheduled. */
+        Stats::Scalar rescheduledLoads;
 
-    /** Ready loads blocked due to partial store-forwarding. */
-    Stats::Scalar lsqBlockedLoads;
-
-    /** Number of loads that were rescheduled. */
-    Stats::Scalar lsqRescheduledLoads;
-
-    /** Number of times the LSQ is blocked due to the cache. */
-    Stats::Scalar lsqCacheBlocked;
+        /** Number of times the LSQ is blocked due to the cache. */
+        Stats::Scalar blockedByCache;
+    } stats;
 
   public:
     /** Executes the load at the given index. */
@@ -658,7 +655,7 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
         iewStage->rescheduleMemInst(load_inst);
         load_inst->clearIssued();
         load_inst->effAddrValid(false);
-        ++lsqRescheduledLoads;
+        ++stats.rescheduledLoads;
         DPRINTF(LSQUnit, "Strictly ordered load [sn:%lli] PC %s\n",
                 load_inst->seqNum, load_inst->pcState());
 
@@ -873,7 +870,7 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
                 cpu->schedule(wb, curTick());
 
                 // Don't need to do anything special for split loads.
-                ++lsqForwLoads;
+                ++stats.forwLoads;
 
                 return NoFault;
             } else if (coverage == AddrRangeCoverage::PartialAddrRangeCoverage) {
@@ -900,7 +897,7 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
                 iewStage->rescheduleMemInst(load_inst);
                 load_inst->clearIssued();
                 load_inst->effAddrValid(false);
-                ++lsqRescheduledLoads;
+                ++stats.rescheduledLoads;
 
                 // Do not generate a writeback event as this instruction is not
                 // complete.

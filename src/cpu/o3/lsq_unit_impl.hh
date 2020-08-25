@@ -208,7 +208,7 @@ LSQUnit<Impl>::LSQUnit(uint32_t lqEntries, uint32_t sqEntries)
       lastRetiredHtmUid(0),
       cacheBlockMask(0), stalled(false),
       isStoreBlocked(false), storeInFlight(false), hasPendingRequest(false),
-      pendingRequest(nullptr)
+      pendingRequest(nullptr), stats(nullptr)
 {
 }
 
@@ -223,6 +223,8 @@ LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
     iewStage = iew_ptr;
 
     lsq = lsq_ptr;
+
+    cpu->addStatGroup(csprintf("lsq%i", lsqID).c_str(), &stats);
 
     DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",lsqID);
 
@@ -265,49 +267,20 @@ LSQUnit<Impl>::name() const
     }
 }
 
-template<class Impl>
-void
-LSQUnit<Impl>::regStats()
+template <class Impl>
+LSQUnit<Impl>::LSQUnitStats::LSQUnitStats(Stats::Group *parent)
+    : Stats::Group(parent),
+      ADD_STAT(forwLoads, "Number of loads that had data forwarded from"
+          " stores"),
+      ADD_STAT(squashedLoads, "Number of loads squashed"),
+      ADD_STAT(ignoredResponses, "Number of memory responses ignored"
+          " because the instruction is squashed"),
+      ADD_STAT(memOrderViolation, "Number of memory ordering violations"),
+      ADD_STAT(squashedStores, "Number of stores squashed"),
+      ADD_STAT(rescheduledLoads, "Number of loads that were rescheduled"),
+      ADD_STAT(blockedByCache, "Number of times an access to memory failed"
+          " due to the cache being blocked")
 {
-    lsqForwLoads
-        .name(name() + ".forwLoads")
-        .desc("Number of loads that had data forwarded from stores");
-
-    invAddrLoads
-        .name(name() + ".invAddrLoads")
-        .desc("Number of loads ignored due to an invalid address");
-
-    lsqSquashedLoads
-        .name(name() + ".squashedLoads")
-        .desc("Number of loads squashed");
-
-    lsqIgnoredResponses
-        .name(name() + ".ignoredResponses")
-        .desc("Number of memory responses ignored because the instruction is squashed");
-
-    lsqMemOrderViolation
-        .name(name() + ".memOrderViolation")
-        .desc("Number of memory ordering violations");
-
-    lsqSquashedStores
-        .name(name() + ".squashedStores")
-        .desc("Number of stores squashed");
-
-    invAddrSwpfs
-        .name(name() + ".invAddrSwpfs")
-        .desc("Number of software prefetches ignored due to an invalid address");
-
-    lsqBlockedLoads
-        .name(name() + ".blockedLoads")
-        .desc("Number of blocked loads due to partial load-store forwarding");
-
-    lsqRescheduledLoads
-        .name(name() + ".rescheduledLoads")
-        .desc("Number of loads that were rescheduled");
-
-    lsqCacheBlocked
-        .name(name() + ".cacheBlocked")
-        .desc("Number of times an access to memory failed due to the cache being blocked");
 }
 
 template<class Impl>
@@ -587,7 +560,7 @@ LSQUnit<Impl>::checkViolations(typename LoadQueue::iterator& loadIt,
                                 inst->seqNum, ld_inst->seqNum, ld_eff_addr1);
                         memDepViolator = ld_inst;
 
-                        ++lsqMemOrderViolation;
+                        ++stats.memOrderViolation;
 
                         return std::make_shared<GenericISA::M5PanicFault>(
                             "Detected fault with inst [sn:%lli] and "
@@ -614,7 +587,7 @@ LSQUnit<Impl>::checkViolations(typename LoadQueue::iterator& loadIt,
                         inst->seqNum, ld_inst->seqNum, ld_eff_addr1);
                 memDepViolator = ld_inst;
 
-                ++lsqMemOrderViolation;
+                ++stats.memOrderViolation;
 
                 return std::make_shared<GenericISA::M5PanicFault>(
                     "Detected fault with "
@@ -1005,7 +978,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         --loads;
 
         loadQueue.pop_back();
-        ++lsqSquashedLoads;
+        ++stats.squashedLoads;
     }
 
     // hardware transactional memory
@@ -1077,7 +1050,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         --stores;
 
         storeQueue.pop_back();
-        ++lsqSquashedStores;
+        ++stats.squashedStores;
     }
 }
 
@@ -1122,7 +1095,7 @@ LSQUnit<Impl>::writeback(const DynInstPtr &inst, PacketPtr pkt)
     // Squashed instructions do not need to complete their access.
     if (inst->isSquashed()) {
         assert (!inst->isStore() || inst->isStoreConditional());
-        ++lsqIgnoredResponses;
+        ++stats.ignoredResponses;
         return;
     }
 
@@ -1269,7 +1242,7 @@ LSQUnit<Impl>::trySendPacket(bool isLoad, PacketPtr data_pkt)
     } else {
         if (cache_got_blocked) {
             lsq->cacheBlocked(true);
-            ++lsqCacheBlocked;
+            ++stats.blockedByCache;
         }
         if (!isLoad) {
             assert(state->request() == storeWBIt->request());

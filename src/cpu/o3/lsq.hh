@@ -856,9 +856,6 @@ class LSQ
     /** Returns the name of the LSQ. */
     std::string name() const;
 
-    /** Registers statistics of each LSQ unit. */
-    void regStats();
-
     /** Sets the pointer to the list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);
 

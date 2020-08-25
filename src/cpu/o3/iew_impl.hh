@@ -146,7 +146,6 @@ DefaultIEW<Impl>::regStats()
     using namespace Stats;
 
     instQueue.regStats();
-    ldstQueue.regStats();
 
     iewIdleCycles
         .name(name() + ".iewIdleCycles")
