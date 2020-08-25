@@ -1,5 +1,6 @@
 // -*- mode:c++ -*-
 
+// Copyright (c) 2020 ARM Limited
 // Copyright (c) 2020 Metempsy Technology Consulting
 // All rights reserved
 //
@@ -859,13 +860,9 @@ ArmISA::addPACIB(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out){
 
 
 
-Fault
-ArmISA::stripPAC(ThreadContext* tc, uint64_t A, bool data, uint64_t* out){
-    bool trapEL2 = false;
-    bool trapEL3 = false;
-
-    uint64_t ptr;
-
+void
+ArmISA::stripPAC(ThreadContext* tc, uint64_t A, bool data, uint64_t* out)
+{
     ExceptionLevel el = currEL(tc);
 
     bool tbi = calculateTBI(tc, el, A, data);
@@ -873,52 +870,15 @@ ArmISA::stripPAC(ThreadContext* tc, uint64_t A, bool data, uint64_t* out){
     int bottom_PAC_bit = calculateBottomPACBit(tc, el, selbit);
 
     int top_bit = tbi ? 55 : 63;
-    uint32_t nbits = (top_bit+1) - bottom_PAC_bit;
+    uint32_t nbits = (top_bit + 1) - bottom_PAC_bit;
     uint64_t pacbits = ((uint64_t)0x1 << nbits) -1; // 2^n -1;
     uint64_t mask = pacbits << bottom_PAC_bit; // creates mask
 
-
     if (selbit) {
-        ptr = A | mask;
+        *out = A | mask;
     } else {
-        ptr = A & ~mask;
+        *out = A & ~mask;
     }
-
-    SCR scr3 = tc->readMiscReg(MISCREG_SCR_EL3);
-    HCR   hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-    bool have_el3 = ArmSystem::haveEL(tc, EL3);
-
-    switch (el)
-    {
-        case EL0:
-            trapEL2 = (EL2Enabled(tc) && hcr.api == 0 &&
-                       (hcr.tge == 0 || hcr.e2h == 0));
-            trapEL3 = have_el3 && scr3.api == 0;
-            break;
-        case EL1:
-            trapEL2 = EL2Enabled(tc) && hcr.api == 0;
-            trapEL3 = have_el3 && scr3.api == 0;
-            break;
-        case EL2:
-            trapEL2 = false;
-            trapEL3 = have_el3 && scr3.api == 0;
-            break;
-        case EL3:
-            trapEL2 = false;
-            trapEL3 = false;
-            break;
-        default:
-            // Unnaccessible
-            break;
-    }
-    if (trapEL2)
-        return trapPACUse(tc, EL2);
-    else if (trapEL3)
-        return trapPACUse(tc, EL3);
-    else
-        *out = ptr;
-
-    return NoFault;
 }
 
 } // namespace gem5
