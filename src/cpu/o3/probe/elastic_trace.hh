@@ -175,9 +175,6 @@ class ElasticTrace : public ProbeListenerObject
      */
     void addCommittedInst(const DynInstConstPtr& head_inst);
 
-    /** Register statistics for the elastic trace. */
-    void regStats();
-
     /** Event to trigger registering this listener for all probe points. */
     EventFunctionWrapper regEtraceListenersEvent;
 
@@ -507,50 +504,54 @@ class ElasticTrace : public ProbeListenerObject
      */
     bool hasCompCompleted(TraceInfo* past_record, Tick execute_tick) const;
 
-    /** Number of register dependencies recorded during tracing */
-    Stats::Scalar numRegDep;
+    struct ElasticTraceStats : public Stats::Group {
+        ElasticTraceStats(Stats::Group *parent);
 
-    /**
-     * Number of stores that got assigned a commit order dependency
-     * on a past load/store.
-     */
-    Stats::Scalar numOrderDepStores;
+        /** Number of register dependencies recorded during tracing */
+        Stats::Scalar numRegDep;
 
-    /**
-     * Number of load insts that got assigned an issue order dependency
-     * because they were dependency-free.
-     */
-    Stats::Scalar numIssueOrderDepLoads;
+        /**
+         * Number of stores that got assigned a commit order dependency
+         * on a past load/store.
+         */
+        Stats::Scalar numOrderDepStores;
 
-    /**
-     * Number of store insts that got assigned an issue order dependency
-     * because they were dependency-free.
-     */
-    Stats::Scalar numIssueOrderDepStores;
+        /**
+         * Number of load insts that got assigned an issue order dependency
+         * because they were dependency-free.
+         */
+        Stats::Scalar numIssueOrderDepLoads;
 
-    /**
-     * Number of non load/store insts that got assigned an issue order
-     * dependency because they were dependency-free.
-     */
-    Stats::Scalar numIssueOrderDepOther;
+        /**
+         * Number of store insts that got assigned an issue order dependency
+         * because they were dependency-free.
+         */
+        Stats::Scalar numIssueOrderDepStores;
 
-    /** Number of filtered nodes */
-    Stats::Scalar numFilteredNodes;
+        /**
+         * Number of non load/store insts that got assigned an issue order
+         * dependency because they were dependency-free.
+         */
+        Stats::Scalar numIssueOrderDepOther;
 
-    /** Maximum number of dependents on any instruction */
-    Stats::Scalar maxNumDependents;
+        /** Number of filtered nodes */
+        Stats::Scalar numFilteredNodes;
 
-    /**
-     * Maximum size of the temporary store mostly useful as a check that it is
-     * not growing
-     */
-    Stats::Scalar maxTempStoreSize;
+        /** Maximum number of dependents on any instruction */
+        Stats::Scalar maxNumDependents;
 
-    /**
-     * Maximum size of the map that holds the last writer to a physical
-     * register.
-     * */
-    Stats::Scalar maxPhysRegDepMapSize;
+        /**
+         * Maximum size of the temporary store mostly useful as a check that
+         * it is not growing
+         */
+        Stats::Scalar maxTempStoreSize;
+
+        /**
+         * Maximum size of the map that holds the last writer to a physical
+         * register.
+         */
+        Stats::Scalar maxPhysRegDepMapSize;
+    } stats;
 
 };
 #endif//__CPU_O3_PROBE_ELASTIC_TRACE_HH__
