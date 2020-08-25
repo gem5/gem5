@@ -257,9 +257,6 @@ class ROB
      */
     size_t countInsts(ThreadID tid);
 
-    /** Registers statistics. */
-    void regStats();
-
   private:
     /** Reset the ROB state */
     void resetState();
@@ -323,10 +320,15 @@ class ROB
     /** Number of active threads. */
     ThreadID numThreads;
 
-    // The number of rob_reads
-    Stats::Scalar robReads;
-    // The number of rob_writes
-    Stats::Scalar robWrites;
+
+    struct ROBStats : public Stats::Group {
+        ROBStats(Stats::Group *parent);
+
+        // The number of rob_reads
+        Stats::Scalar reads;
+        // The number of rob_writes
+        Stats::Scalar writes;
+    } stats;
 };
 
 #endif //__CPU_O3_ROB_HH__

@@ -58,7 +58,8 @@ ROB<Impl>::ROB(O3CPU *_cpu, DerivO3CPUParams *params)
       numEntries(params->numROBEntries),
       squashWidth(params->squashWidth),
       numInstsInROB(0),
-      numThreads(params->numThreads)
+      numThreads(params->numThreads),
+      stats(_cpu)
 {
     //Figure out rob policy
     if (robPolicy == SMTQueuePolicy::Dynamic) {
@@ -204,7 +205,7 @@ ROB<Impl>::insertInst(const DynInstPtr &inst)
 {
     assert(inst);
 
-    robWrites++;
+    stats.writes++;
 
     DPRINTF(ROB, "Adding inst PC %s to the ROB.\n", inst->pcState());
 
@@ -239,7 +240,7 @@ template <class Impl>
 void
 ROB<Impl>::retireHead(ThreadID tid)
 {
-    robWrites++;
+    stats.writes++;
 
     assert(numInstsInROB > 0);
 
@@ -274,7 +275,7 @@ template <class Impl>
 bool
 ROB<Impl>::isHeadReady(ThreadID tid)
 {
-    robReads++;
+    stats.reads++;
     if (threadEntries[tid] != 0) {
         return instList[tid].front()->readyToCommit();
     }
@@ -319,7 +320,7 @@ template <class Impl>
 void
 ROB<Impl>::doSquash(ThreadID tid)
 {
-    robWrites++;
+    stats.writes++;
     DPRINTF(ROB, "[tid:%i] Squashing instructions until [sn:%llu].\n",
             tid, squashedSeqNum[tid]);
 
@@ -528,17 +529,11 @@ ROB<Impl>::readTailInst(ThreadID tid)
 }
 
 template <class Impl>
-void
-ROB<Impl>::regStats()
+ROB<Impl>::ROBStats::ROBStats(Stats::Group *parent)
+    : Stats::Group(parent, "rob"),
+      ADD_STAT(reads, "The number of ROB reads"),
+      ADD_STAT(writes, "The number of ROB writes")
 {
-    using namespace Stats;
-    robReads
-        .name(name() + ".rob_reads")
-        .desc("The number of ROB reads");
-
-    robWrites
-        .name(name() + ".rob_writes")
-        .desc("The number of ROB writes");
 }
 
 template <class Impl>

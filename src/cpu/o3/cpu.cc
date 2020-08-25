@@ -443,7 +443,6 @@ FullO3CPU<Impl>::regStats()
 
     this->rename.regStats();
     this->iew.regStats();
-    this->rob.regStats();
 
     intRegfileReads
         .name(name() + ".int_regfile_reads")
