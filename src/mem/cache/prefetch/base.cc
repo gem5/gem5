@@ -94,7 +94,8 @@ Base::Base(const BasePrefetcherParams *p)
       onWrite(p->on_write), onData(p->on_data), onInst(p->on_inst),
       masterId(p->sys->getMasterId(this)), pageBytes(p->sys->getPageBytes()),
       prefetchOnAccess(p->prefetch_on_access),
-      useVirtualAddresses(p->use_virtual_addresses), issuedPrefetches(0),
+      useVirtualAddresses(p->use_virtual_addresses),
+      prefetchStats(this), issuedPrefetches(0),
       usefulPrefetches(0), tlb(nullptr)
 {
 }
@@ -109,18 +110,12 @@ Base::setCache(BaseCache *_cache)
     blkSize = cache->getBlockSize();
     lBlkSize = floorLog2(blkSize);
 }
-
-void
-Base::regStats()
+Base::StatGroup::StatGroup(Stats::Group *parent)
+    : Stats::Group(parent),
+    ADD_STAT(pfIssued, "number of hwpf issued")
 {
-    ClockedObject::regStats();
-
-    pfIssued
-        .name(name() + ".num_hwpf_issued")
-        .desc("number of hwpf issued")
-        ;
-
 }
+
 
 bool
 Base::observeAccess(const PacketPtr &pkt, bool miss) const
