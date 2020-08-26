@@ -95,6 +95,7 @@
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "kern/linux/linux.hh"
 #include "mem/page_table.hh"
 #include "params/Process.hh"
 #include "sim/emul_driver.hh"
@@ -2360,9 +2361,9 @@ selectFunc(SyscallDesc *desc, ThreadContext *tc, int nfds,
     if (retval == -1)
         return -errno;
 
-    FD_ZERO(readfds);
-    FD_ZERO(writefds);
-    FD_ZERO(errorfds);
+    FD_ZERO(reinterpret_cast<fd_set *>((typename OS::fd_set *)readfds));
+    FD_ZERO(reinterpret_cast<fd_set *>((typename OS::fd_set *)writefds));
+    FD_ZERO(reinterpret_cast<fd_set *>((typename OS::fd_set *)errorfds));
 
     /**
      * We need to translate the host file descriptor set into a target file
