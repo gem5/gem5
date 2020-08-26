@@ -865,7 +865,7 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
     if (!inst->staticInst->isMicroop() || inst->staticInst->isLastMicroop())
     {
         thread->numInst++;
-        thread->numInsts++;
+        thread->threadStats.numInsts++;
         cpu.stats.numInsts++;
         cpu.system->totalNumInsts++;
 
@@ -873,7 +873,7 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
         thread->comInstEventQueue.serviceEvents(thread->numInst);
     }
     thread->numOp++;
-    thread->numOps++;
+    thread->threadStats.numOps++;
     cpu.stats.numOps++;
     cpu.stats.committedInstType[inst->id.threadId]
                                [inst->staticInst->opClass()]++;

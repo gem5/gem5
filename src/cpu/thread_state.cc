@@ -39,7 +39,8 @@
 #include "sim/system.hh"
 
 ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
-    : numInst(0), numOp(0), numLoad(0), startNumLoad(0),
+    : numInst(0), numOp(0), threadStats(cpu, this),
+      numLoad(0), startNumLoad(0),
       _status(ThreadContext::Halted), baseCpu(cpu),
       _contextId(0), _threadId(_tid), lastActivate(0), lastSuspend(0),
       process(_process), physProxy(NULL), virtProxy(NULL),
@@ -115,4 +116,14 @@ ThreadState::getVirtProxy()
 {
     assert(virtProxy != NULL);
     return *virtProxy;
+}
+
+ThreadState::ThreadStateStats::ThreadStateStats(BaseCPU *cpu,
+                                                ThreadState *thread)
+      : Stats::Group(cpu, csprintf("thread%i", thread->threadId()).c_str()),
+      ADD_STAT(numInsts, "Number of Instructions committed"),
+      ADD_STAT(numOps, "Number of Ops committed"),
+      ADD_STAT(numMemRefs, "Number of Memory References")
+{
+
 }

@@ -1512,7 +1512,7 @@ FullO3CPU<Impl>::instDone(ThreadID tid, const DynInstPtr &inst)
     // Keep an instruction count.
     if (!inst->isMicroop() || inst->isLastMicroop()) {
         thread[tid]->numInst++;
-        thread[tid]->numInsts++;
+        thread[tid]->threadStats.numInsts++;
         committedInsts[tid]++;
         system->totalNumInsts++;
 
@@ -1520,7 +1520,7 @@ FullO3CPU<Impl>::instDone(ThreadID tid, const DynInstPtr &inst)
         thread[tid]->comInstEventQueue.serviceEvents(thread[tid]->numInst);
     }
     thread[tid]->numOp++;
-    thread[tid]->numOps++;
+    thread[tid]->threadStats.numOps++;
     committedOps[tid]++;
 
     probeInstCommit(inst->staticInst, inst->instAddr());
