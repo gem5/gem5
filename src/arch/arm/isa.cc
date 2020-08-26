@@ -2359,15 +2359,15 @@ ISA::addressTranslation64(TLB::ArmTranslationType tran_type,
               "MISCREG: Translated addr %#x: PAR_EL1: %#xx\n",
               val, par);
     } else {
-        ArmFault *armFault = static_cast<ArmFault *>(fault.get());
-        armFault->update(tc);
+        ArmFault *arm_fault = static_cast<ArmFault *>(fault.get());
+        arm_fault->update(tc);
         // Set fault bit and FSR
-        FSR fsr = armFault->getFsr(tc);
+        FSR fsr = arm_fault->getFsr(tc);
 
         par.f = 1; // F bit
         par.fst = fsr.status; // FST
-        par.ptw = (armFault->iss() >> 7) & 0x1; // S1PTW
-        par.s = armFault->isStage2() ? 1 : 0; // S
+        par.ptw = (arm_fault->iss() >> 7) & 0x1; // S1PTW
+        par.s = arm_fault->isStage2() ? 1 : 0; // S
 
         DPRINTF(MiscRegs,
                 "MISCREG: Translated addr %#x fault fsr %#x: PAR: %#x\n",
@@ -2418,15 +2418,15 @@ ISA::addressTranslation(TLB::ArmTranslationType tran_type,
                "MISCREG: Translated addr 0x%08x: PAR: 0x%08x\n",
                val, par);
     } else {
-        ArmFault *armFault = static_cast<ArmFault *>(fault.get());
-        armFault->update(tc);
+        ArmFault *arm_fault = static_cast<ArmFault *>(fault.get());
+        arm_fault->update(tc);
         // Set fault bit and FSR
-        FSR fsr = armFault->getFsr(tc);
+        FSR fsr = arm_fault->getFsr(tc);
 
         par.f = 0x1; // F bit
         par.lpae = fsr.lpae;
-        par.ptw = (armFault->iss() >> 7) & 0x1;
-        par.s = armFault->isStage2() ? 1 : 0;
+        par.ptw = (arm_fault->iss() >> 7) & 0x1;
+        par.s = arm_fault->isStage2() ? 1 : 0;
 
         if (par.lpae) {
             // LPAE - rearange fault status
