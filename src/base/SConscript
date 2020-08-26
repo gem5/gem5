@@ -74,15 +74,6 @@ GTest('trie.test', 'trie.test.cc')
 Source('types.cc')
 GTest('types.test', 'types.test.cc', 'types.cc')
 
-Source('loader/dtb_file.cc')
-Source('loader/elf_object.cc')
-Source('loader/image_file_data.cc')
-GTest('loader/image_file_data.test', 'loader/image_file_data.test.cc',
-'loader/image_file_data.cc')
-Source('loader/memory_image.cc')
-Source('loader/object_file.cc')
-Source('loader/symtab.cc')
-
 Source('stats/group.cc')
 Source('stats/text.cc')
 if env['USE_HDF5']:
