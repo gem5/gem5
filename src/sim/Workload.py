@@ -51,6 +51,46 @@ class KernelWorkload(Workload):
 
     command_line = Param.String("a", "boot flags to pass to the kernel")
 
-class SEWorkload(Workload):
+class SEWorkloadMeta(type(Workload)):
+    all_se_workload_classes = []
+    def __new__(mcls, name, bases, dct):
+        cls = super(SEWorkloadMeta, mcls).__new__(mcls, name, bases, dct)
+        SEWorkloadMeta.all_se_workload_classes.append(cls)
+        return cls
+
+class SEWorkload(Workload, metaclass=SEWorkloadMeta):
     type = 'SEWorkload'
     cxx_header = "sim/se_workload.hh"
+    cxx_class = 'SEWorkload'
+
+    @classmethod
+    def _is_compatible_with(cls, obj):
+        return False
+
+    @classmethod
+    def find_compatible(cls, path):
+        '''List the SE workloads compatible with the binary at path'''
+
+        from _m5 import object_file
+        obj = object_file.create(path)
+        options = list(filter(lambda wld: wld._is_compatible_with(obj),
+                              SEWorkloadMeta.all_se_workload_classes))
+
+        return options
+
+    @classmethod
+    def init_compatible(cls, path, *args, **kwargs):
+        '''Construct the only SE workload compatible with the binary at path'''
+
+        options = SEWorkload.find_compatible(path)
+
+        if len(options) > 1:
+            raise ValueError("More than one SE workload is compatible with %s")
+        elif len(options) < 1:
+            # For now, fall back to the base class if there are no matches.
+            # After we've had a chance to implement everything, this default
+            # can be removed since this should always find exactly one match.
+            return SEWorkload(*args, **kwargs)
+            raise ValueError("No SE workload is compatible with %s", path)
+
+        return options[0](*args, **kwargs)
