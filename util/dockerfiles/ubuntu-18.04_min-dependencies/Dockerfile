@@ -29,4 +29,4 @@ FROM ubuntu:18.04
 RUN apt -y update
 RUN apt -y upgrade
 RUN apt -y install build-essential scons zlib1g-dev m4 python-dev python \
-    python-six
+    python-six libelf-dev

@@ -40,7 +40,7 @@ RUN apt -y update
 RUN apt -y upgrade
 RUN apt -y install git m4 scons zlib1g zlib1g-dev clang-${version} \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
-    python-dev python python-six doxygen
+    python-dev python python-six doxygen libelf-dev
 
 RUN apt-get --purge -y remove gcc
 

@@ -37,7 +37,8 @@ RUN apt -y update
 RUN apt -y upgrade
 RUN apt -y install git m4 scons zlib1g zlib1g-dev gcc-multilib \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
-    python-dev python python-six doxygen wget zip gcc-${version} g++-${version}
+    python-dev python python-six doxygen wget zip gcc-${version} \
+    g++-${version} libelf-dev
 
 RUN update-alternatives --install \
     /usr/bin/g++ g++ /usr/bin/g++-${version} 100

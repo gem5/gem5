@@ -34,7 +34,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libboost-filesystem-dev \
     libboost-system-dev \
     libboost-dev \
-    libpng12-dev
+    libpng12-dev \
+    libelf-dev
 
 ARG gem5_dist=http://dist.gem5.org/dist/develop
 
