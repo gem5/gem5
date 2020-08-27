@@ -115,6 +115,11 @@ steps:
             '--build-arg', 'version=9',
             'util/dockerfiles/ubuntu-18.04_clang-version']
 
+    - name: 'gcr.io/cloud-builders/docker'
+      args: ['build',
+            '-t',
+            'gcr.io/$PROJECT_ID/gcn-gpu:latest',
+            'util/dockerfiles/gcn-gpu']
 
 images: ['gcr.io/$PROJECT_ID/ubuntu-20.04_all-dependencies:latest',
          'gcr.io/$PROJECT_ID/ubuntu-18.04_all-dependencies:latest',
@@ -132,5 +137,6 @@ images: ['gcr.io/$PROJECT_ID/ubuntu-20.04_all-dependencies:latest',
          'gcr.io/$PROJECT_ID/clang-version-6.0:latest',
          'gcr.io/$PROJECT_ID/clang-version-7:latest',
          'gcr.io/$PROJECT_ID/clang-version-8:latest',
-         'gcr.io/$PROJECT_ID/clang-version-9:latest']
+         'gcr.io/$PROJECT_ID/clang-version-9:latest',
+         'gcr.io/$PROJECT_ID/gcn-gpu:latest']
 timeout: 18000s # 5 Hours
