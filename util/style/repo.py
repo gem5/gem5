@@ -186,7 +186,7 @@ class GitRepo(AbstractRepo):
         if filter:
             cmd += [ "--diff-filter=%s" % filter ]
         cmd += [ self.head_revision(), "--" ] + files
-        status = subprocess.check_output(cmd).decode().rstrip("\n")
+        status = subprocess.check_output(cmd).decode('utf-8').rstrip("\n")
 
         if status:
             return [ f.split("\t") for f in status.split("\n") ]
@@ -195,12 +195,12 @@ class GitRepo(AbstractRepo):
 
     def file_from_index(self, name):
         return subprocess.check_output(
-            [ self.git, "show", ":%s" % (name, ) ]).decode()
+            [ self.git, "show", ":%s" % (name, ) ]).decode('utf-8')
 
     def file_from_head(self, name):
         return subprocess.check_output(
             [ self.git, "show", "%s:%s" % (self.head_revision(), name) ]) \
-            .decode()
+            .decode('utf-8')
 
 def detect_repo(path="."):
     """Auto-detect the revision control system used for a source code

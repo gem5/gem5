@@ -79,7 +79,7 @@ for status, fname in git.status(filter="MA", cached=True):
     # Show they appropriate object and dump it to a file
     status = git.file_from_index(fname)
     f = TemporaryFile()
-    f.write(status.encode())
+    f.write(status.encode('utf-8'))
 
     verifiers = [ v(ui, opts, base=repo_base) for v in all_verifiers ]
     for v in verifiers:
