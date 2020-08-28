@@ -71,7 +71,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
           {
             DPRINTF(GPUDriver, "ioctl: AMDKFD_IOC_CREATE_QUEUE\n");
 
-            allocateQueue(virt_proxy, ioc_buf);
+            allocateQueue(tc, ioc_buf);
 
             DPRINTF(GPUDriver, "Creating queue %d\n", queueId);
           }

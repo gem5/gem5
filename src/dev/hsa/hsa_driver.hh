@@ -74,7 +74,7 @@ class HSADriver : public EmulatedDriver
     HSADevice *device;
     uint32_t queueId;
 
-    void allocateQueue(PortProxy &mem_proxy, Addr ioc_buf);
+    void allocateQueue(ThreadContext *tc, Addr ioc_buf);
 };
 
 #endif // __DEV_HSA_HSA_DRIVER_HH__

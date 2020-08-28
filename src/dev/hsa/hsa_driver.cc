@@ -101,10 +101,9 @@ HSADriver::mmap(ThreadContext *tc, Addr start, uint64_t length, int prot,
  * be mapped into that page.
  */
 void
-HSADriver::allocateQueue(PortProxy &mem_proxy, Addr ioc_buf)
+HSADriver::allocateQueue(ThreadContext *tc, Addr ioc_buf)
 {
-    TypedBufferArg<kfd_ioctl_create_queue_args> args(ioc_buf);
-    args.copyIn(mem_proxy);
+    VPtr<kfd_ioctl_create_queue_args> args(ioc_buf, tc);
 
     if (queueId >= 0x1000) {
         fatal("%s: Exceeded maximum number of HSA queues allowed\n", name());
@@ -115,5 +114,4 @@ HSADriver::allocateQueue(PortProxy &mem_proxy, Addr ioc_buf)
     hsa_pp.setDeviceQueueDesc(args->read_pointer_address,
                               args->ring_base_address, args->queue_id,
                               args->ring_size);
-    args.copyOut(mem_proxy);
 }
