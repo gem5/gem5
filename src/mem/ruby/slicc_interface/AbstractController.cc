@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017,2019,2020 ARM Limited
+ * Copyright (c) 2017,2019-2021 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -140,6 +140,28 @@ AbstractController::stallBuffer(MessageBuffer* buf, Addr addr)
             addr);
     assert(m_in_ports > m_cur_in_port);
     (*(m_waiting_buffers[addr]))[m_cur_in_port] = buf;
+}
+
+void
+AbstractController::wakeUpBuffer(MessageBuffer* buf, Addr addr)
+{
+    auto iter = m_waiting_buffers.find(addr);
+    if (iter != m_waiting_buffers.end()) {
+        bool has_other_msgs = false;
+        MsgVecType* msgVec = iter->second;
+        for (unsigned int port = 0; port < msgVec->size(); ++port) {
+            if ((*msgVec)[port] == buf) {
+                buf->reanalyzeMessages(addr, clockEdge());
+                (*msgVec)[port] = NULL;
+            } else if ((*msgVec)[port] != NULL) {
+                has_other_msgs = true;
+            }
+        }
+        if (!has_other_msgs) {
+            delete msgVec;
+            m_waiting_buffers.erase(iter);
+        }
+    }
 }
 
 void

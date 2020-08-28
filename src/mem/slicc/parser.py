@@ -1,4 +1,4 @@
-# Copyright (c) 2020 ARM Limited
+# Copyright (c) 2020,2021 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -118,6 +118,7 @@ class SLICC(Grammar):
         'state_declaration' : 'STATE_DECL',
         'peek' : 'PEEK',
         'stall_and_wait' : 'STALL_AND_WAIT',
+        'wakeup_port' : 'WAKEUP_PORT',
         'enqueue' : 'ENQUEUE',
         'check_allocate' : 'CHECK_ALLOCATE',
         'check_next_cycle' : 'CHECK_NEXT_CYCLE',
@@ -615,6 +616,10 @@ class SLICC(Grammar):
     def p_statement__stall_and_wait(self, p):
         "statement : STALL_AND_WAIT '(' var ',' var ')' SEMI"
         p[0] = ast.StallAndWaitStatementAST(self, p[3], p[5])
+
+    def p_statement__wakeup_port(self, p):
+        "statement : WAKEUP_PORT '(' var ',' var ')' SEMI"
+        p[0] = ast.WakeupPortStatementAST(self, p[3], p[5])
 
     def p_statement__peek(self, p):
         "statement : PEEK '(' var ',' type pairs ')' statements"

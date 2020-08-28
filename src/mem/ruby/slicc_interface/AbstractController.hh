@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017,2019,2020 ARM Limited
+ * Copyright (c) 2017,2019-2021 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -270,6 +270,7 @@ class AbstractController : public ClockedObject, public Consumer
     }
 
     void stallBuffer(MessageBuffer* buf, Addr addr);
+    void wakeUpBuffer(MessageBuffer* buf, Addr addr);
     void wakeUpBuffers(Addr addr);
     void wakeUpAllBuffers(Addr addr);
     void wakeUpAllBuffers();
