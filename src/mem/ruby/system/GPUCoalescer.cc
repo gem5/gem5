@@ -682,10 +682,11 @@ GPUCoalescer::coalescePacket(PacketPtr pkt)
             // create a new coalecsed request and issue it immediately.
             auto reqList = std::deque<CoalescedRequest*> { creq };
             coalescedTable.insert(std::make_pair(line_addr, reqList));
-
-            DPRINTF(GPUCoalescer, "Issued req type %s seqNum %d\n",
-                    RubyRequestType_to_string(creq->getRubyType()), seqNum);
-            issueRequest(creq);
+            if (!coalescedReqs.count(seqNum)) {
+                coalescedReqs.insert(std::make_pair(seqNum, reqList));
+            } else {
+                coalescedReqs.at(seqNum).push_back(creq);
+            }
         } else {
             // The request is for a line address that is already outstanding
             // but for a different instruction. Add it as a new request to be
@@ -772,6 +773,17 @@ GPUCoalescer::completeIssue()
             pkt_list->remove_if(
                 [&](PacketPtr pkt) { return coalescePacket(pkt); }
             );
+
+            if (coalescedReqs.count(seq_num)) {
+                auto& creqs = coalescedReqs.at(seq_num);
+                for (auto creq : creqs) {
+                    DPRINTF(GPUCoalescer, "Issued req type %s seqNum %d\n",
+                            RubyRequestType_to_string(creq->getRubyType()),
+                                                      seq_num);
+                    issueRequest(creq);
+                }
+                coalescedReqs.erase(seq_num);
+            }
 
             assert(pkt_list_size >= pkt_list->size());
             size_t pkt_list_diff = pkt_list_size - pkt_list->size();

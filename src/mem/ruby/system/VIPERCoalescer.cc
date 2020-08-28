@@ -238,19 +238,28 @@ VIPERCoalescer::writeCompleteCallback(Addr addr, uint64_t instSeqNum)
     assert(m_writeCompletePktMap.count(key) == 1 &&
            !m_writeCompletePktMap[key].empty());
 
-    for (auto writeCompletePkt : m_writeCompletePktMap[key]) {
-        if (makeLineAddress(writeCompletePkt->getAddr()) == addr) {
-            RubyPort::SenderState *ss =
-                safe_cast<RubyPort::SenderState *>
-                    (writeCompletePkt->senderState);
-            MemResponsePort *port = ss->port;
-            assert(port != NULL);
+    m_writeCompletePktMap[key].erase(
+        std::remove_if(
+            m_writeCompletePktMap[key].begin(),
+            m_writeCompletePktMap[key].end(),
+            [addr](PacketPtr writeCompletePkt) -> bool {
+                if (makeLineAddress(writeCompletePkt->getAddr()) == addr) {
+                    RubyPort::SenderState *ss =
+                        safe_cast<RubyPort::SenderState *>
+                            (writeCompletePkt->senderState);
+                    MemResponsePort *port = ss->port;
+                    assert(port != NULL);
 
-            writeCompletePkt->senderState = ss->predecessor;
-            delete ss;
-            port->hitCallback(writeCompletePkt);
-        }
-    }
+                    writeCompletePkt->senderState = ss->predecessor;
+                    delete ss;
+                    port->hitCallback(writeCompletePkt);
+                    return true;
+                }
+                return false;
+            }
+        ),
+        m_writeCompletePktMap[key].end()
+    );
 
     trySendRetries();
 

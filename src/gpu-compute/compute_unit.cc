@@ -863,33 +863,6 @@ ComputeUnit::DataPort::recvTimingResp(PacketPtr pkt)
         delete pkt->senderState;
         delete pkt;
         return true;
-    } else if (pkt->cmd == MemCmd::WriteCompleteResp) {
-        // this is for writeComplete callback
-        // we simply get decrement write-related wait counters
-        assert(gpuDynInst);
-        M5_VAR_USED Wavefront *w =
-            computeUnit->wfList[gpuDynInst->simdId][gpuDynInst->wfSlotId];
-        assert(w);
-        DPRINTF(GPUExec, "WriteCompleteResp: WF[%d][%d] WV%d %s decrementing "
-                        "outstanding reqs %d => %d\n", gpuDynInst->simdId,
-                        gpuDynInst->wfSlotId, gpuDynInst->wfDynId,
-                        gpuDynInst->disassemble(), w->outstandingReqs,
-                        w->outstandingReqs - 1);
-        if (gpuDynInst->allLanesZero()) {
-            // ask gm pipe to decrement request counters, instead of directly
-            // performing here, to avoid asynchronous counter update and
-            // instruction retirement (which may hurt waincnt effects)
-            computeUnit->globalMemoryPipe.handleResponse(gpuDynInst);
-
-            DPRINTF(GPUMem, "CU%d: WF[%d][%d]: write totally complete\n",
-                            computeUnit->cu_id, gpuDynInst->simdId,
-                            gpuDynInst->wfSlotId);
-        }
-
-        delete pkt->senderState;
-        delete pkt;
-
-        return true;
     }
 
     EventFunctionWrapper *mem_resp_event =
@@ -1319,10 +1292,16 @@ ComputeUnit::DataPort::processMemRespEvent(PacketPtr pkt)
 
     Addr paddr = pkt->req->getPaddr();
 
-    // mem sync resp and write-complete callback must be handled already in
+    // mem sync resp callback must be handled already in
     // DataPort::recvTimingResp
     assert(pkt->cmd != MemCmd::MemSyncResp);
-    assert(pkt->cmd != MemCmd::WriteCompleteResp);
+
+    // The status vector and global memory response for WriteResp packets get
+    // handled by the WriteCompleteResp packets.
+    if (pkt->cmd == MemCmd::WriteResp) {
+        delete pkt;
+        return;
+    }
 
     // this is for read, write and atomic
     int index = gpuDynInst->memStatusVector[paddr].back();
@@ -1356,17 +1335,13 @@ ComputeUnit::DataPort::processMemRespEvent(PacketPtr pkt)
 
         gpuDynInst->memStatusVector.clear();
 
-        // note: only handle read response here; for write, the response
-        // is separately handled when writeComplete callback is received
-        if (pkt->isRead()) {
-            gpuDynInst->
-                profileRoundTripTime(curTick(), InstMemoryHop::GMEnqueue);
-            compute_unit->globalMemoryPipe.handleResponse(gpuDynInst);
+        gpuDynInst->
+            profileRoundTripTime(curTick(), InstMemoryHop::GMEnqueue);
+        compute_unit->globalMemoryPipe.handleResponse(gpuDynInst);
 
-            DPRINTF(GPUMem, "CU%d: WF[%d][%d]: packet totally complete\n",
-                    compute_unit->cu_id, gpuDynInst->simdId,
-                    gpuDynInst->wfSlotId);
-        }
+        DPRINTF(GPUMem, "CU%d: WF[%d][%d]: packet totally complete\n",
+                compute_unit->cu_id, gpuDynInst->simdId,
+                gpuDynInst->wfSlotId);
     } else {
         if (pkt->isRead()) {
             if (!compute_unit->headTailMap.count(gpuDynInst)) {

@@ -430,6 +430,10 @@ class GPUCoalescer : public RubyPort
     // (typically the number of blocks in TCP). If there are duplicates of
     // an address, the are serviced in age order.
     std::map<Addr, std::deque<CoalescedRequest*>> coalescedTable;
+    // Map of instruction sequence number to coalesced requests that get
+    // created in coalescePacket, used in completeIssue to send the fully
+    // coalesced request
+    std::unordered_map<uint64_t, std::deque<CoalescedRequest*>> coalescedReqs;
 
     // a map btw an instruction sequence number and PendingWriteInst
     // this is used to do a final call back for each write when it is

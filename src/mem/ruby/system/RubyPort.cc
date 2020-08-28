@@ -546,7 +546,8 @@ RubyPort::MemResponsePort::hitCallback(PacketPtr pkt)
     }
 
     // Flush, acquire, release requests don't access physical memory
-    if (pkt->isFlush() || pkt->cmd == MemCmd::MemSyncReq) {
+    if (pkt->isFlush() || pkt->cmd == MemCmd::MemSyncReq
+        || pkt->cmd == MemCmd::WriteCompleteResp) {
         accessPhysMem = false;
     }
 
