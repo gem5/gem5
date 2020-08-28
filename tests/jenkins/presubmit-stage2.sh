@@ -37,19 +37,13 @@
 
 set -e
 
-DOCKER_IMAGE=gcr.io/gem5-test/ubuntu-20.04_all-dependencies
-PRESUBMIT_STAGE2=tests/jenkins/presubmit-stage2.sh
+# Use ccache with the default directory for caching
+#XXX Not available in docker image.
+#export PATH="/usr/lib/ccache:$PATH"
 
-# Move the docker base directory to tempfs.
-sudo /etc/init.d/docker stop
-sudo mv /var/lib/docker /tmpfs/
-sudo ln -s /tmpfs/docker /var/lib/docker
-sudo /etc/init.d/docker start
-
-# Move the CWD to the gem5 checkout.
-cd git/jenkins-gem5-prod/
-
-# Enter a docker image which has all the tools we need, and run the actual
-# presubmit tests.
-docker run -u $UID:$GID --volume $(pwd):$(pwd) -w $(pwd) --rm \
-    "${DOCKER_IMAGE}" "${PRESUBMIT_STAGE2}"
+# Build with 4 threads (i.e., pass -j4 to scons)
+# Run 4 tests in parallel
+# Look for tests in the gem5 subdirectory
+# Once complete, run the Google Tests
+cd tests
+./main.py run -j4 -t4 gem5 && scons -C .. build/NULL/unittests.opt
