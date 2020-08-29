@@ -70,6 +70,7 @@ class DMASequencer : public RubyPort
     /* SLICC callback */
     void dataCallback(const DataBlock &dblk, const Addr &addr);
     void ackCallback(const Addr &addr);
+    void atomicCallback(const DataBlock &dblk, const Addr &addr);
 
     void recordRequestType(DMASequencerRequestType requestType);
 

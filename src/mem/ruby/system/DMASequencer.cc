@@ -108,7 +108,35 @@ DMASequencer::makeRequest(PacketPtr pkt)
         std::make_shared<SequencerMsg>(clockEdge());
     msg->getPhysicalAddress() = paddr;
     msg->getLineAddress() = line_addr;
-    msg->getType() = write ? SequencerRequestType_ST : SequencerRequestType_LD;
+
+    if (pkt->req->isAtomic()) {
+        msg->setType(SequencerRequestType_ATOMIC);
+
+        // While regular LD/ST can support DMAs spanning multiple cache lines,
+        // atomic requests are only supported within a single cache line. The
+        // atomic request will end upon atomicCallback and not call issueNext.
+        int block_size = m_ruby_system->getBlockSizeBytes();
+        int atomic_offset = pkt->getAddr() - line_addr;
+        std::vector<bool> access_mask(block_size, false);
+        assert(atomic_offset + pkt->getSize() <= block_size);
+
+        for (int idx = 0; idx < pkt->getSize(); ++idx) {
+            access_mask[atomic_offset + idx] = true;
+        }
+
+        std::vector<std::pair<int, AtomicOpFunctor*>> atomic_ops;
+        std::pair<int, AtomicOpFunctor*>
+            atomic_op(atomic_offset, pkt->getAtomicOp());
+
+        atomic_ops.emplace_back(atomic_op);
+        msg->getwriteMask().setAtomicOps(atomic_ops);
+    } else if (write) {
+        msg->setType(SequencerRequestType_ST);
+    } else {
+        assert(pkt->isRead());
+        msg->setType(SequencerRequestType_LD);
+    }
+
     int offset = paddr & m_data_block_mask;
 
     msg->getLen() = (offset + len) <= RubySystem::getBlockSizeBytes() ?
@@ -206,6 +234,25 @@ DMASequencer::ackCallback(const Addr& address)
 {
     assert(m_RequestTable.find(address) != m_RequestTable.end());
     issueNext(address);
+}
+
+void
+DMASequencer::atomicCallback(const DataBlock& dblk, const Addr& address)
+{
+    RequestTable::iterator i = m_RequestTable.find(address);
+    assert(i != m_RequestTable.end());
+
+    DMARequest &active_request = i->second;
+    PacketPtr pkt = active_request.pkt;
+
+    int offset = active_request.start_paddr & m_data_block_mask;
+    memcpy(pkt->getPtr<uint8_t>(), dblk.getData(offset, pkt->getSize()),
+           pkt->getSize());
+
+    ruby_hit_callback(pkt);
+
+    m_outstanding_count--;
+    m_RequestTable.erase(i);
 }
 
 void

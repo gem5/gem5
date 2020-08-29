@@ -312,6 +312,7 @@ structure(SequencerMsg, desc="...", interface="Message") {
   SequencerRequestType Type,     desc="Type of request (LD, ST, etc)";
   Addr ProgramCounter,    desc="Program counter of the instruction that caused the miss";
   RubyAccessMode AccessMode, desc="user/supervisor access type";
+  WriteMask writeMask,       desc="WriteMask for atomics";
   DataBlock DataBlk,         desc="Data";
   int Len,                   desc="size in bytes of access";
   PrefetchBit Prefetch,      desc="Is this a prefetch request";
