@@ -357,24 +357,21 @@ else:
           "src/SConscript to support that compiler.")))
 
 if main['GCC']:
-    # Check for a supported version of gcc. >= 4.8 is chosen for its
-    # level of c++11 support. See
-    # http://gcc.gnu.org/projects/cxx0x.html for details.
     gcc_version = readCommand([main['CXX'], '-dumpversion'], exception=False)
-    if compareVersions(gcc_version, "4.8") < 0:
-        error('gcc version 4.8 or newer required.\n'
+    if compareVersions(gcc_version, "5") < 0:
+        error('gcc version 5 or newer required.\n'
               'Installed version:', gcc_version)
         Exit(1)
 
     main['GCC_VERSION'] = gcc_version
 
-    if compareVersions(gcc_version, '4.9') >= 0:
-        # Incremental linking with LTO is currently broken in gcc versions
-        # 4.9 and above. A version where everything works completely hasn't
-        # yet been identified.
-        #
-        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67548
-        main['BROKEN_INCREMENTAL_LTO'] = True
+    # Incremental linking with LTO is currently broken in gcc versions
+    # 4.9 and above. A version where everything works completely hasn't
+    # yet been identified.
+    #
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67548
+    main['BROKEN_INCREMENTAL_LTO'] = True
+
     if compareVersions(gcc_version, '6.0') >= 0:
         # gcc versions 6.0 and greater accept an -flinker-output flag which
         # selects what type of output the linker should generate. This is
@@ -416,9 +413,6 @@ if main['GCC']:
                                   '-fno-builtin-realloc', '-fno-builtin-free'])
 
 elif main['CLANG']:
-    # Check for a supported version of clang, >= 3.1 is needed to
-    # support similar features as gcc 4.8. See
-    # http://clang.llvm.org/cxx_status.html for details
     clang_version_re = re.compile(".* version (\d+\.\d+)")
     clang_version_match = clang_version_re.search(CXX_version)
     if (clang_version_match):
@@ -462,13 +456,9 @@ elif main['CLANG']:
 # Add sanitizers flags
 sanitizers=[]
 if GetOption('with_ubsan'):
-    # Only gcc >= 4.9 supports UBSan, so check both the version
-    # and the command-line option before adding the compiler and
-    # linker flags.
-    if not main['GCC'] or compareVersions(main['GCC_VERSION'], '4.9') >= 0:
-        sanitizers.append('undefined')
+    sanitizers.append('undefined')
 if GetOption('with_asan'):
-    # Available for gcc >= 4.8 or llvm >= 3.1 both a requirement
+    # Available for gcc >= 5 or llvm >= 3.1 both a requirement
     # by the build system
     sanitizers.append('address')
     suppressions_file = Dir('util').File('lsan-suppressions').get_abspath()
