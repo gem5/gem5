@@ -77,7 +77,8 @@ class TestParameters(object):
     def __init__(self, test, suite):
         self.test = test
         self.suite = suite
-        self.log = log.Log(test)
+        self.log = log.test_log
+        self.log.test = test
 
     @helper.cacheresult
     def _fixtures(self):
