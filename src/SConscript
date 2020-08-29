@@ -922,8 +922,16 @@ def createSimObjectPyBindWrapper(target, source, env):
 # Generate all of the SimObject param C++ struct header files
 params_hh_files = []
 for name,simobj in sorted(sim_objects.items()):
+    # If this simobject's source changes, we need to regenerate the header.
     py_source = PySource.modules[simobj.__module__]
     extra_deps = [ py_source.tnode ]
+
+    # Get the params for just this SimObject, excluding base classes.
+    params = simobj._params.local.values()
+    # Extract the parameters' c++ types.
+    types = sorted(map(lambda p: p.ptype.cxx_type, params))
+    # If any of these types have changed, we need to regenerate the header.
+    extra_deps.append(Value(types))
 
     hh_file = File('params/%s.hh' % name)
     params_hh_files.append(hh_file)
