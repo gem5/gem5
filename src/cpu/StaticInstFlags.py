@@ -78,8 +78,6 @@ class StaticInstFlags(Enum):
         'IsCall',           # Subroutine call.
         'IsReturn',         # Subroutine return.
 
-        'IsThreadSync',     # Thread synchronization operation.
-
         'IsSerializing',    # Serializes pipeline: won't execute until all
                             # older instructions have committed.
         'IsSerializeBefore',

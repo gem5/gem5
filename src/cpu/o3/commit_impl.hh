@@ -1233,11 +1233,6 @@ DefaultCommit<Impl>::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
         return false;
     }
 
-    if (head_inst->isThreadSync()) {
-        // Not handled for now.
-        panic("Thread sync instructions are not handled yet.\n");
-    }
-
     // Check if the instruction caused a fault.  If so, trap.
     Fault inst_fault = head_inst->getFault();
 
