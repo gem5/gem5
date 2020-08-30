@@ -174,10 +174,10 @@ decode OPCODE_HI default Unknown::unknown() {
 
             0x2: decode FUNCTION_LO {
                 0x0: HiLoRsSelOp::mfhi({{ Rd = HI_RS_SEL; }},
-                             IntMultOp, IsIprAccess);
+                             IntMultOp, IsSerializeBefore);
                 0x1: HiLoRdSelOp::mthi({{ HI_RD_SEL = Rs; }});
                 0x2: HiLoRsSelOp::mflo({{ Rd = LO_RS_SEL; }},
-                             IntMultOp, IsIprAccess);
+                             IntMultOp, IsSerializeBefore);
                 0x3: HiLoRdSelOp::mtlo({{ LO_RD_SEL = Rs; }});
             }
 

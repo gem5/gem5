@@ -684,8 +684,7 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
         // instructions.  This is mainly due to lack of support for
         // out-of-order operations of either of those classes of
         // instructions.
-        if ((inst->isIprAccess() || inst->isSerializeBefore()) &&
-            !inst->isSerializeHandled()) {
+        if (inst->isSerializeBefore() && !inst->isSerializeHandled()) {
             DPRINTF(Rename, "Serialize before instruction encountered.\n");
 
             if (!inst->isTempSerializeBefore()) {

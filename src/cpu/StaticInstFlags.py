@@ -89,7 +89,6 @@ class StaticInstFlags(Enum):
         'IsNonSpeculative', # Should not be executed speculatively
         'IsQuiesce',        # Is a quiesce instruction
 
-        'IsIprAccess',      # Accesses IPRs
         'IsUnverifiable',   # Can't be verified by a checker
 
         'IsSyscall',        # Causes a system call to be emulated in syscall

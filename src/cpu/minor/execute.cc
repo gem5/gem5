@@ -224,8 +224,7 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
         !inst->isFault() &&
         inst->isLastOpInInst() &&
         (inst->staticInst->isSerializeAfter() ||
-         inst->staticInst->isSquashAfter() ||
-         inst->staticInst->isIprAccess());
+         inst->staticInst->isSquashAfter());
 
     DPRINTF(Branch, "tryToBranch before: %s after: %s%s\n",
         pc_before, target, (force_branch ? " (forcing)" : ""));
