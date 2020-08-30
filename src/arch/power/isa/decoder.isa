@@ -343,8 +343,8 @@ decode OPCODE default Unknown::unknown() {
         format MiscOp {
             278: dcbt({{ }});
             246: dcbtst({{ }});
-            598: sync({{ }}, [ IsMemBarrier ]);
-            854: eieio({{ }}, [ IsMemBarrier ]);
+            598: sync({{ }}, [ IsReadBarrier, IsWriteBarrier ]);
+            854: eieio({{ }}, [ IsReadBarrier, IsWriteBarrier ]);
         }
     }
 

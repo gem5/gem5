@@ -154,7 +154,7 @@ LSQ::LSQRequest::containsAddrRangeOf(LSQRequestPtr other_request)
 bool
 LSQ::LSQRequest::isBarrier()
 {
-    return inst->isInst() && inst->staticInst->isMemBarrier();
+    return inst->isInst() && inst->staticInst->isFullMemBarrier();
 }
 
 bool
@@ -1711,7 +1711,7 @@ makePacketForRequest(const RequestPtr &request, bool isLoad,
 void
 LSQ::issuedMemBarrierInst(MinorDynInstPtr inst)
 {
-    assert(inst->isInst() && inst->staticInst->isMemBarrier());
+    assert(inst->isInst() && inst->staticInst->isFullMemBarrier());
     assert(inst->id.execSeqNum > lastMemBarrier[inst->id.threadId]);
 
     /* Remember the barrier.  We only have a notion of one

@@ -79,8 +79,7 @@ let {{
                 self.instFlags.append("IsMicroop")
 
             if self.flavor in ("release", "relex", "relexp"):
-                self.instFlags.extend(["IsMemBarrier",
-                                       "IsWriteBarrier",
+                self.instFlags.extend(["IsWriteBarrier",
                                        "IsReadBarrier"])
                 self.memFlags.append("Request::RELEASE")
 

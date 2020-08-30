@@ -335,7 +335,8 @@ decode OP default Unknown::unknown()
                 // 7-14 should cause an illegal instruction exception
                 0x0F: decode I {
                     0x0: Nop::stbar(IsWriteBarrier, MemWriteOp);
-                    0x1: Nop::membar(IsMemBarrier, MemReadOp);
+                    0x1: Nop::membar(IsReadBarrier, IsWriteBarrier,
+                                     MemReadOp);
                 }
                 0x10: Priv::rdpcr({{Rd = Pcr;}});
                 0x11: Priv::rdpic({{Rd = Pic;}}, {{Pcr<0:>}});

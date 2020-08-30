@@ -91,7 +91,7 @@ let {{
                 self.instFlags.append("IsMicroop")
 
             if self.flavor in ("release", "acquire_release", "acquire"):
-                self.instFlags.append("IsMemBarrier")
+                self.instFlags.extend(["IsReadBarrier", "IsWriteBarrier"])
             if self.flavor in ("release", "acquire_release"):
                 self.instFlags.append("IsWriteBarrier")
             if self.flavor in ("acquire_release", "acquire"):

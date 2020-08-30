@@ -91,9 +91,7 @@ let {{
                 self.memFlags.append("ArmISA::TLB::AllowUnaligned")
 
             if self.flavor in ("acquire", "acex", "acexp"):
-                self.instFlags.extend(["IsMemBarrier",
-                                       "IsWriteBarrier",
-                                       "IsReadBarrier"])
+                self.instFlags.extend(["IsWriteBarrier", "IsReadBarrier"])
                 self.memFlags.append("Request::ACQUIRE")
 
             if self.flavor in ("acex", "exclusive", "exp", "acexp"):

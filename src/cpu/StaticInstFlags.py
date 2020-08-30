@@ -40,11 +40,6 @@ from m5.params import *
 # - If IsControl is set, then exactly one of IsDirectControl or IsIndirect
 # Control will be set, and exactly one of IsCondControl or IsUncondControl
 # will be set.
-# - IsSerializing, IsMemBarrier, and IsWriteBarrier are implemented as flags
-# since in the current model there's no other way for instructions to inject
-# behavior into the pipeline outside of fetch.  Once we go to an exec-in-exec
-# CPU model we should be able to get rid of these flags and implement this
-# behavior via the execute() methods.
 
 class StaticInstFlags(Enum):
     wrapper_name = 'StaticInstFlags'
@@ -79,7 +74,6 @@ class StaticInstFlags(Enum):
                             # older instructions have committed.
         'IsSerializeBefore',
         'IsSerializeAfter',
-        'IsMemBarrier',     # Is a memory barrier
         'IsWriteBarrier',   # Is a write barrier
         'IsReadBarrier',    # Is a read barrier
 

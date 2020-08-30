@@ -1238,7 +1238,8 @@ let {{
     dsbIop = InstObjParams("dsb", "Dsb", "ImmOp",
                              {"code": dsbCode,
                                "predicate_test": predicateTest},
-                              ['IsMemBarrier', 'IsSerializeAfter'])
+                              ['IsReadBarrier', 'IsWriteBarrier',
+                               'IsSerializeAfter'])
     header_output += ImmOpDeclare.subst(dsbIop)
     decoder_output += ImmOpConstructor.subst(dsbIop)
     exec_output += PredOpExecute.subst(dsbIop)
@@ -1254,7 +1255,7 @@ let {{
     dmbIop = InstObjParams("dmb", "Dmb", "ImmOp",
                              {"code": dmbCode,
                                "predicate_test": predicateTest},
-                               ['IsMemBarrier'])
+                               ['IsReadBarrier', 'IsWriteBarrier'])
     header_output += ImmOpDeclare.subst(dmbIop)
     decoder_output += ImmOpConstructor.subst(dmbIop)
     exec_output += PredOpExecute.subst(dmbIop)

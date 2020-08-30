@@ -233,7 +233,8 @@ let {{
         def __init__(self):
             self.className = "Mfence"
             self.mnemonic = "mfence"
-            self.instFlags = "| (1ULL << StaticInst::IsMemBarrier)"
+            self.instFlags = "| (1ULL << StaticInst::IsReadBarrier)" + \
+                             "| (1ULL << StaticInst::IsWriteBarrier)"
 
         def getAllocator(self, microFlags):
             allocString = '''

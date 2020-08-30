@@ -179,9 +179,7 @@ let {{
                 self.memFlags.append("Request::LLSC")
 
             if self.flavor in ("acquire", "acex"):
-                self.instFlags.extend(["IsMemBarrier",
-                                       "IsWriteBarrier",
-                                       "IsReadBarrier"])
+                self.instFlags.extend(["IsWriteBarrier", "IsReadBarrier"])
                 self.memFlags.append("Request::ACQUIRE")
 
             # Disambiguate the class name for different flavors of loads
@@ -260,9 +258,7 @@ let {{
                 self.Name = "%s_%s" % (self.name.upper(), self.Name)
 
             if self.flavor in ("acquire", "acex"):
-                self.instFlags.extend(["IsMemBarrier",
-                                       "IsWriteBarrier",
-                                       "IsReadBarrier"])
+                self.instFlags.extend(["IsWriteBarrier", "IsReadBarrier"])
                 self.memFlags.append("Request::ACQUIRE")
 
         def emit(self):

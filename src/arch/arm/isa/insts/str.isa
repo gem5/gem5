@@ -187,8 +187,7 @@ let {{
                 self.memFlags.append("ArmISA::TLB::AllowUnaligned")
 
             if self.flavor in ("release", "relex"):
-                self.instFlags.extend(["IsMemBarrier",
-                                       "IsWriteBarrier",
+                self.instFlags.extend(["IsWriteBarrier",
                                        "IsReadBarrier"])
                 self.memFlags.append("Request::RELEASE")
 
@@ -269,8 +268,7 @@ let {{
                 self.memFlags.append("ArmISA::TLB::AlignWord")
 
             if self.flavor in ("release", "relex"):
-                self.instFlags.extend(["IsMemBarrier",
-                                       "IsWriteBarrier",
+                self.instFlags.extend(["IsWriteBarrier",
                                        "IsReadBarrier"])
                 self.memFlags.append("Request::RELEASE")
 

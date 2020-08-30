@@ -1196,7 +1196,7 @@ DefaultCommit<Impl>::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
         // Make sure we are only trying to commit un-executed instructions we
         // think are possible.
         assert(head_inst->isNonSpeculative() || head_inst->isStoreConditional()
-               || head_inst->isMemBarrier() || head_inst->isWriteBarrier()
+               || head_inst->isReadBarrier() || head_inst->isWriteBarrier()
                || head_inst->isAtomic()
                || (head_inst->isLoad() && head_inst->strictlyOrdered()));
 
@@ -1462,7 +1462,7 @@ DefaultCommit<Impl>::updateComInstStats(const DynInstPtr &inst)
         }
     }
 
-    if (inst->isMemBarrier()) {
+    if (inst->isFullMemBarrier()) {
         stats.membars[tid]++;
     }
 

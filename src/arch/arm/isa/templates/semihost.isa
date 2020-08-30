@@ -38,8 +38,8 @@
 // A new class of Semihosting constructor templates has been added.
 // Their main purpose is to check if the Exception Generation
 // Instructions (HLT, SVC) are actually a semihosting command.
-// If that is the case, the IsMemBarrier flag is raised, so that
-// in the O3 model we perform a coherent memory access during
+// If that is the case, the IsReadBarrier and IsWriteBarrier flags are raised,
+// so that in the O3 model we perform a coherent memory access during
 // the semihosting operation.
 // Please note: since we don't have a thread context pointer in the
 // constructor we cannot check if semihosting is enabled in the
@@ -64,7 +64,8 @@ def template SemihostConstructor {{
         auto semihost_imm = machInst.thumb? %(thumb_semihost)s :
                                             %(arm_semihost)s;
         if (_imm == semihost_imm) {
-            flags[IsMemBarrier] = true;
+            flags[IsReadBarrier] = true;
+            flags[IsWriteBarrier] = true;
         }
     }
 }};
@@ -78,7 +79,8 @@ def template SemihostConstructor64 {{
         // In AArch64 there is only one instruction for issuing
         // semhosting commands: HLT #0xF000
         if (_imm == 0xF000) {
-            flags[IsMemBarrier] = true;
+            flags[IsReadBarrier] = true;
+            flags[IsWriteBarrier] = true;
         }
     }
 }};

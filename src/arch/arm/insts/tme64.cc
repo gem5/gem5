@@ -83,7 +83,6 @@ MicroTfence64::MicroTfence64(ExtMachInst machInst)
     _numVecElemDestRegs = 0;
     _numIntDestRegs = 0;
     _numCCDestRegs = 0;
-    flags[IsMemBarrier] = true;
     flags[IsMicroop] = true;
     flags[IsReadBarrier] = true;
     flags[IsWriteBarrier] = true;

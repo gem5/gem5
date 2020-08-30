@@ -421,7 +421,7 @@ decode QUADRANT default Unknown::unknown() {
         0x03: decode FUNCT3 {
             format FenceOp {
                 0x0: fence({{
-                }}, uint64_t, IsMemBarrier, No_OpClass);
+                }}, uint64_t, IsReadBarrier, IsWriteBarrier, No_OpClass);
                 0x1: fence_i({{
                 }}, uint64_t, IsNonSpeculative, IsSerializeAfter, No_OpClass);
             }

@@ -553,7 +553,8 @@ class BaseDynInst : public ExecContext, public RefCounted
         return staticInst->isSerializeAfter() || status[SerializeAfter];
     }
     bool isSquashAfter() const { return staticInst->isSquashAfter(); }
-    bool isMemBarrier()   const { return staticInst->isMemBarrier(); }
+    bool isFullMemBarrier()   const { return staticInst->isFullMemBarrier(); }
+    bool isReadBarrier() const { return staticInst->isReadBarrier(); }
     bool isWriteBarrier() const { return staticInst->isWriteBarrier(); }
     bool isNonSpeculative() const { return staticInst->isNonSpeculative(); }
     bool isQuiesce() const { return staticInst->isQuiesce(); }

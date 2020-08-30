@@ -166,7 +166,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             fault = std::make_shared<SystemCallFault>();
                         }});
                     }
-                    0x7: sync({{ ; }}, IsMemBarrier);
+                    0x7: sync({{ ; }}, IsReadBarrier, IsWriteBarrier);
                   0x5: break({{fault = std::make_shared<BreakpointFault>();}});
                 }
 

@@ -173,13 +173,14 @@ let {{
     exec_output += BasicExecute.subst(isbIop)
 
     dsbIop = InstObjParams("dsb", "Dsb64", "ArmStaticInst", "",
-                           ['IsMemBarrier', 'IsSerializeAfter'])
+                           ['IsReadBarrier', 'IsWriteBarrier',
+                            'IsSerializeAfter'])
     header_output += BasicDeclare.subst(dsbIop)
     decoder_output += BasicConstructor64.subst(dsbIop)
     exec_output += BasicExecute.subst(dsbIop)
 
     dmbIop = InstObjParams("dmb", "Dmb64", "ArmStaticInst", "",
-                           ['IsMemBarrier'])
+                           ['IsReadBarrier', 'IsWriteBarrier'])
     header_output += BasicDeclare.subst(dmbIop)
     decoder_output += BasicConstructor64.subst(dmbIop)
     exec_output += BasicExecute.subst(dmbIop)

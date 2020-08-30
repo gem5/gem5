@@ -1119,7 +1119,7 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
             }
 
             toRename->iewInfo[tid].dispatchedToSQ++;
-        } else if (inst->isMemBarrier() || inst->isWriteBarrier()) {
+        } else if (inst->isReadBarrier() || inst->isWriteBarrier()) {
             // Same as non-speculative stores.
             inst->setCanCommit();
             instQueue.insertBarrier(inst);

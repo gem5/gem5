@@ -44,6 +44,7 @@
 #include <map>
 #include <vector>
 
+#include "base/debug.hh"
 #include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/mem_dep_unit.hh"
 #include "debug/MemDepUnit.hh"
@@ -171,24 +172,31 @@ void
 MemDepUnit<MemDepPred, Impl>::insertBarrierSN(const DynInstPtr &barr_inst)
 {
     InstSeqNum barr_sn = barr_inst->seqNum;
-    // Memory barriers block loads and stores, write barriers only stores.
-    // Required also for hardware transactional memory commands which
-    // can have strict ordering semantics
-    if (barr_inst->isMemBarrier() || barr_inst->isHtmCmd()) {
-        loadBarrierSNs.insert(barr_sn);
-        storeBarrierSNs.insert(barr_sn);
-        DPRINTF(MemDepUnit, "Inserted a memory barrier %s SN:%lli\n",
-                barr_inst->pcState(), barr_sn);
-    } else if (barr_inst->isWriteBarrier()) {
-        storeBarrierSNs.insert(barr_sn);
-        DPRINTF(MemDepUnit, "Inserted a write barrier %s SN:%lli\n",
-                barr_inst->pcState(), barr_sn);
-    }
 
-    if (loadBarrierSNs.size() || storeBarrierSNs.size()) {
-        DPRINTF(MemDepUnit, "Outstanding load barriers = %d; "
-                            "store barriers = %d\n",
-                loadBarrierSNs.size(), storeBarrierSNs.size());
+    if (barr_inst->isReadBarrier() || barr_inst->isHtmCmd())
+        loadBarrierSNs.insert(barr_sn);
+    if (barr_inst->isWriteBarrier() || barr_inst->isHtmCmd())
+        storeBarrierSNs.insert(barr_sn);
+
+    if (DTRACE(MemDepUnit)) {
+        const char *barrier_type = nullptr;
+        if (barr_inst->isReadBarrier() && barr_inst->isWriteBarrier())
+            barrier_type = "memory";
+        else if (barr_inst->isReadBarrier())
+            barrier_type = "read";
+        else if (barr_inst->isWriteBarrier())
+            barrier_type = "write";
+
+        if (barrier_type) {
+            DPRINTF(MemDepUnit, "Inserted a %s barrier %s SN:%lli\n",
+                    barrier_type, barr_inst->pcState(), barr_sn);
+        }
+
+        if (loadBarrierSNs.size() || storeBarrierSNs.size()) {
+            DPRINTF(MemDepUnit, "Outstanding load barriers = %d; "
+                                "store barriers = %d\n",
+                    loadBarrierSNs.size(), storeBarrierSNs.size());
+        }
     }
 }
 
@@ -444,18 +452,27 @@ MemDepUnit<MemDepPred, Impl>::completeInst(const DynInstPtr &inst)
     completed(inst);
     InstSeqNum barr_sn = inst->seqNum;
 
-    if (inst->isMemBarrier() || inst->isHtmCmd()) {
+    if (inst->isWriteBarrier() || inst->isHtmCmd()) {
+        assert(hasStoreBarrier());
+        storeBarrierSNs.erase(barr_sn);
+    }
+    if (inst->isReadBarrier() || inst->isHtmCmd()) {
         assert(hasLoadBarrier());
-        assert(hasStoreBarrier());
         loadBarrierSNs.erase(barr_sn);
-        storeBarrierSNs.erase(barr_sn);
-        DPRINTF(MemDepUnit, "Memory barrier completed: %s SN:%lli\n",
-                            inst->pcState(), inst->seqNum);
-    } else if (inst->isWriteBarrier()) {
-        assert(hasStoreBarrier());
-        storeBarrierSNs.erase(barr_sn);
-        DPRINTF(MemDepUnit, "Write barrier completed: %s SN:%lli\n",
-                            inst->pcState(), inst->seqNum);
+    }
+    if (DTRACE(MemDepUnit)) {
+        const char *barrier_type = nullptr;
+        if (inst->isWriteBarrier() && inst->isReadBarrier())
+            barrier_type = "Memory";
+        else if (inst->isWriteBarrier())
+            barrier_type = "Write";
+        else if (inst->isReadBarrier())
+            barrier_type = "Read";
+
+        if (barrier_type) {
+            DPRINTF(MemDepUnit, "%s barrier completed: %s SN:%lli\n",
+                                barrier_type, inst->pcState(), inst->seqNum);
+        }
     }
 }
 
@@ -463,9 +480,8 @@ template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::wakeDependents(const DynInstPtr &inst)
 {
-    // Only stores, atomics, barriers and
-    // hardware transactional memory commands have dependents.
-    if (!inst->isStore() && !inst->isAtomic() && !inst->isMemBarrier() &&
+    // Only stores, atomics and barriers have dependents.
+    if (!inst->isStore() && !inst->isAtomic() && !inst->isReadBarrier() &&
         !inst->isWriteBarrier() && !inst->isHtmCmd()) {
         return;
     }

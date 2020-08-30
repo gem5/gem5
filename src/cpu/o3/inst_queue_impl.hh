@@ -1014,7 +1014,7 @@ InstructionQueue<Impl>::wakeDependents(const DynInstPtr &completed_inst)
         ++freeEntries;
         completed_inst->memOpDone(true);
         count[tid]--;
-    } else if (completed_inst->isMemBarrier() ||
+    } else if (completed_inst->isReadBarrier() ||
                completed_inst->isWriteBarrier()) {
         // Completes a non mem ref barrier
         memDepUnit[tid].completeInst(completed_inst);
@@ -1245,7 +1245,7 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
             DPRINTF(IQ, "[tid:%i] Instruction [sn:%llu] PC %s squashed.\n",
                     tid, squashed_inst->seqNum, squashed_inst->pcState());
 
-            bool is_acq_rel = squashed_inst->isMemBarrier() &&
+            bool is_acq_rel = squashed_inst->isFullMemBarrier() &&
                          (squashed_inst->isLoad() ||
                           (squashed_inst->isStore() &&
                              !squashed_inst->isStoreConditional()));
@@ -1255,7 +1255,7 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
                 (!squashed_inst->isNonSpeculative() &&
                  !squashed_inst->isStoreConditional() &&
                  !squashed_inst->isAtomic() &&
-                 !squashed_inst->isMemBarrier() &&
+                 !squashed_inst->isReadBarrier() &&
                  !squashed_inst->isWriteBarrier())) {
 
                 for (int src_reg_idx = 0;

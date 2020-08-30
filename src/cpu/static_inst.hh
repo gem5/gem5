@@ -185,7 +185,12 @@ class StaticInst : public RefCounted, public StaticInstFlags
     bool isSerializeBefore() const { return flags[IsSerializeBefore]; }
     bool isSerializeAfter() const { return flags[IsSerializeAfter]; }
     bool isSquashAfter() const { return flags[IsSquashAfter]; }
-    bool isMemBarrier()   const { return flags[IsMemBarrier]; }
+    bool
+    isFullMemBarrier() const
+    {
+        return flags[IsReadBarrier] && flags[IsWriteBarrier];
+    }
+    bool isReadBarrier() const { return flags[IsReadBarrier]; }
     bool isWriteBarrier() const { return flags[IsWriteBarrier]; }
     bool isNonSpeculative() const { return flags[IsNonSpeculative]; }
     bool isQuiesce() const { return flags[IsQuiesce]; }
