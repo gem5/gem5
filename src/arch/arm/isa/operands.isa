@@ -681,7 +681,7 @@ def operands {{
     'XURc' : intRegX64('urc'),
 
     #Memory Operand
-    'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), srtNormal),
+    'Mem': ('Mem', 'uw', None, (None, 'IsLoad', 'IsStore'), srtNormal),
 
     #PCState fields
     'RawPC': pcStateReg('pc', srtPC),

@@ -392,7 +392,7 @@ let {{
                                   "use_uops" : 0,
                                   "op_wb" : ";",
                                   "fa_code" : ";"},
-                                ['IsStore', 'IsMemRef']);
+                                ['IsStore']);
     header_output += DCStore64Declare.subst(msrDCZVAIop);
     decoder_output += DCStore64Constructor.subst(msrDCZVAIop);
     exec_output += DCStore64Execute.subst(msrDCZVAIop);
@@ -423,7 +423,7 @@ let {{
                                    "use_uops" : 0,
                                    "op_wb" : ";",
                                    "fa_code" : cachem_fa},
-                                 ['IsStore', 'IsMemRef']);
+                                 ['IsStore']);
     header_output += DCStore64Declare.subst(msrDCCVAUIop);
     decoder_output += DCStore64Constructor.subst(msrDCCVAUIop);
     exec_output += DCStore64Execute.subst(msrDCCVAUIop);
@@ -447,7 +447,7 @@ let {{
                                    "use_uops" : 0,
                                    "op_wb" : ";",
                                    "fa_code" : cachem_fa},
-                                 ['IsStore', 'IsMemRef']);
+                                 ['IsStore']);
     header_output += DCStore64Declare.subst(msrDCCVACIop);
     decoder_output += DCStore64Constructor.subst(msrDCCVACIop);
     exec_output += DCStore64Execute.subst(msrDCCVACIop);
@@ -472,7 +472,7 @@ let {{
                                     "use_uops" : 0,
                                     "op_wb" : ";",
                                     "fa_code" : cachem_fa},
-                                  ['IsStore', 'IsMemRef']);
+                                  ['IsStore']);
     header_output += DCStore64Declare.subst(msrDCCIVACIop);
     decoder_output += DCStore64Constructor.subst(msrDCCIVACIop);
     exec_output += DCStore64Execute.subst(msrDCCIVACIop);
@@ -503,7 +503,7 @@ let {{
                                    "use_uops" : 0,
                                    "op_wb" : ";",
                                    "fa_code" : cachem_fa},
-                                 ['IsStore', 'IsMemRef']);
+                                 ['IsStore']);
     header_output += DCStore64Declare.subst(msrDCIVACIop);
     decoder_output += DCStore64Constructor.subst(msrDCIVACIop);
     exec_output += DCStore64Execute.subst(msrDCIVACIop);

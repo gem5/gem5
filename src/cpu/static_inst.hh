@@ -157,7 +157,11 @@ class StaticInst : public RefCounted, public StaticInstFlags
 
     bool isNop()          const { return flags[IsNop]; }
 
-    bool isMemRef()       const { return flags[IsMemRef]; }
+    bool
+    isMemRef() const
+    {
+        return flags[IsLoad] || flags[IsStore] || flags[IsAtomic];
+    }
     bool isLoad()         const { return flags[IsLoad]; }
     bool isStore()        const { return flags[IsStore]; }
     bool isAtomic()       const { return flags[IsAtomic]; }

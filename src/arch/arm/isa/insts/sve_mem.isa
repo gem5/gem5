@@ -823,7 +823,7 @@ let {{
              'rden_code' : loadRdEnableCode,
              'fault_code' : '',
              'fa_code' : ''},
-            ['IsMemRef', 'IsLoad'])
+            ['IsLoad'])
         storeIop = InstObjParams('str',
             'SveStrPred' if isPred else 'SveStrVec',
             'SveMemPredFillSpill' if isPred else 'SveMemVecFillSpill',
@@ -833,7 +833,7 @@ let {{
              'memacc_code': storeMemAccCode,
              'ea_code' : sveEnabledCheckCode + eaCode,
              'fa_code' : ''},
-            ['IsMemRef', 'IsStore'])
+            ['IsStore'])
         header_output += SveMemFillSpillOpDeclare.subst(loadIop)
         header_output += SveMemFillSpillOpDeclare.subst(storeIop)
         exec_output += (
@@ -1007,7 +1007,7 @@ let {{
              'ea_code' : sveEnabledCheckCode + eaCode,
              'fault_code' : '',
              'fa_code' : ''},
-            ['IsMemRef', 'IsLoad'])
+            ['IsLoad'])
         storeIop = InstObjParams('st1',
             'SveContigStoreSI' if offsetIsImm else 'SveContigStoreSS',
             'SveContigMemSI' if offsetIsImm else 'SveContigMemSS',
@@ -1017,7 +1017,7 @@ let {{
              'memacc_code': storeMemAccCode,
              'ea_code' : sveEnabledCheckCode + eaCode,
              'fa_code' : ''},
-            ['IsMemRef', 'IsStore'])
+            ['IsStore'])
         faultIop = InstObjParams('ldff1' if firstFaulting else 'ldnf1',
             'SveContigFFLoadSS' if firstFaulting else 'SveContigNFLoadSI',
             'SveContigMemSS' if firstFaulting else 'SveContigMemSI',
@@ -1028,7 +1028,7 @@ let {{
              'ea_code' : sveEnabledCheckCode + eaCode,
              'fault_code' : faultCode,
              'fa_code' : ''},
-            ['IsMemRef', 'IsLoad'])
+            ['IsLoad'])
         faultIop.snippets['memacc_code'] = (ffrReadBackCode +
                                            faultIop.snippets['memacc_code'])
         if offsetIsImm:
@@ -1091,7 +1091,7 @@ let {{
              'memacc_code': memAccCode,
              'ea_code' : sveEnabledCheckCode + eaCode,
              'fa_code' : ''},
-            ['IsMemRef', 'IsLoad'])
+            ['IsLoad'])
         header_output += SveContigMemSIOpDeclare.subst(iop)
         exec_output += (
             SveLoadAndReplExecute.subst(iop) +
@@ -1158,7 +1158,7 @@ let {{
              'fault_status_reset_code' : faultStatusResetCode,
              'pred_check_code' : predCheckCode,
              'fa_code' : ''},
-            ['IsMicroop', 'IsMemRef', 'IsLoad'])
+            ['IsMicroop', 'IsLoad'])
         storeIop = InstObjParams('st1',
             ('SveScatterStoreVIMicroop'
              if indexed_addr_form == IndexedAddrForm.VEC_PLUS_IMM
@@ -1170,7 +1170,7 @@ let {{
              'ea_code' : sveEnabledCheckCode + eaCode_store,
              'pred_check_code' : predCheckCode,
              'fa_code' : ''},
-            ['IsMicroop', 'IsMemRef', 'IsStore'])
+            ['IsMicroop', 'IsStore'])
         if indexed_addr_form == IndexedAddrForm.VEC_PLUS_IMM:
             header_output += SveIndexedMemVIMicroopDeclare.subst(loadIop)
             header_output += SveIndexedMemVIMicroopDeclare.subst(storeIop)
@@ -1445,7 +1445,7 @@ let {{
              'memacc_code': loadMemAccCode,
              'ea_code' : sveEnabledCheckCode + eaCode,
              'fa_code' : ''},
-            ['IsMemRef', 'IsLoad', 'IsMicroop'])
+            ['IsLoad', 'IsMicroop'])
         storeIop = InstObjParams('stxx',
             'SveStoreRegImmMicroop' if offsetIsImm
                                     else 'SveStoreRegRegMicroop',
@@ -1455,7 +1455,7 @@ let {{
              'memacc_code': storeMemAccCode,
              'ea_code' : sveEnabledCheckCode + eaCode,
              'fa_code' : ''},
-            ['IsMemRef', 'IsStore', 'IsMicroop'])
+            ['IsStore', 'IsMicroop'])
         if offsetIsImm:
             header_output += SveStructMemSIMicroopDeclare.subst(loadIop)
             header_output += SveStructMemSIMicroopDeclare.subst(storeIop)
@@ -1528,7 +1528,7 @@ let {{
                  'ea_code': sveEnabledCheckCode + eaCode,
                  'fault_code': '',
                  'fa_code': ''},
-                ['IsMemRef', 'IsLoad'])
+                ['IsLoad'])
         if offsetIsImm:
             header_output += SveContigMemSIOpDeclare.subst(iop)
         else:

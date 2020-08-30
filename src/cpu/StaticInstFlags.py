@@ -36,7 +36,6 @@ from m5.params import *
 # one of these two flags set, it is possible for an instruction to have
 # neither (e.g., direct unconditional branches, memory barriers) or both
 # (e.g., an FP/int conversion).
-# - If IsMemRef is set, then exactly one of IsLoad or IsStore will be set.
 # - If IsControl is set, then exactly one of IsDirectControl or IsIndirect
 # Control will be set, and exactly one of IsCondControl or IsUncondControl
 # will be set.
@@ -54,7 +53,6 @@ class StaticInstFlags(Enum):
         'IsVector',         # References Vector regs.
         'IsVectorElem',     # References Vector reg elems.
 
-        'IsMemRef',         # References memory (load, store, or prefetch)
         'IsLoad',           # Reads from memory (load or prefetch).
         'IsStore',          # Writes to memory.
         'IsAtomic',         # Does atomic RMW to memory.

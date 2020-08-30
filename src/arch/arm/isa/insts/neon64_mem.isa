@@ -146,7 +146,7 @@ let {{
                 'memacc_code' : loadMemAccCode,
                 'ea_code' : simd64EnabledCheckCode + eaCode,
             },
-            [ 'IsMicroop', 'IsMemRef', 'IsLoad' ])
+            [ 'IsMicroop', 'IsLoad' ])
         loadIop.snippets["memacc_code"] += zeroSveVecRegUpperPartCode % \
             "AA64FpDest"
         storeIop = InstObjParams(name + 'st',
@@ -156,7 +156,7 @@ let {{
                 'memacc_code' : storeMemAccCode,
                 'ea_code' : simd64EnabledCheckCode + eaCode,
             },
-            [ 'IsMicroop', 'IsMemRef', 'IsStore' ])
+            [ 'IsMicroop', 'IsStore' ])
 
         exec_output += NeonLoadExecute64.subst(loadIop) + \
             NeonLoadInitiateAcc64.subst(loadIop) + \

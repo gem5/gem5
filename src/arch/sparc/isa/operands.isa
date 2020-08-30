@@ -187,6 +187,6 @@ def operands {{
 
     'Fsr':              ('ControlReg', 'udw', 'MISCREG_FSR', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 80),
     # Mem gets a large number so it's always last
-    'Mem':              ('Mem', 'udw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 100)
+    'Mem':              ('Mem', 'udw', None, (None, 'IsLoad', 'IsStore'), 100)
 
 }};

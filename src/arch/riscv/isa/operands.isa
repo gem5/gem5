@@ -72,7 +72,7 @@ def operands {{
     'Fp2_bits': ('FloatReg', 'ud', 'FP2 + 8', 'IsFloating', 2),
 
 #Memory Operand
-    'Mem': ('Mem', 'ud', None, ('IsMemRef', 'IsLoad', 'IsStore'), 5),
+    'Mem': ('Mem', 'ud', None, (None, 'IsLoad', 'IsStore'), 5),
 
 #Program Counter Operands
     'PC': ('PCState', 'ud', 'pc', (None, None, 'IsControl'), 7),

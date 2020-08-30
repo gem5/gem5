@@ -252,7 +252,7 @@ let {{
                                   'memacc_code' : loadMemAccCode,
                                   'ea_code' : simdEnabledCheckCode + eaCode,
                                   'predicate_test' : predicateTest },
-                                [ 'IsMicroop', 'IsMemRef', 'IsLoad' ])
+                                [ 'IsMicroop', 'IsLoad' ])
         storeIop = InstObjParams('strneon%(size)d_uop' % subst,
                                  'MicroStrNeon%(size)dUop' % subst,
                                  'MicroNeonMemOp',
@@ -261,7 +261,7 @@ let {{
                                    'memacc_code' : storeMemAccCode,
                                    'ea_code' : simdEnabledCheckCode + eaCode,
                                    'predicate_test' : predicateTest },
-                                 [ 'IsMicroop', 'IsMemRef', 'IsStore' ])
+                                 [ 'IsMicroop', 'IsStore' ])
 
         exec_output += NeonLoadExecute.subst(loadIop) + \
                        NeonLoadInitiateAcc.subst(loadIop) + \

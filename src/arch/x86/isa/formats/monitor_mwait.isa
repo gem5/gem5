@@ -90,7 +90,6 @@ output header {{
                 OpClass __opClass) :
             X86ISA::X86StaticInst(_mnemonic, _machInst, __opClass)
         {
-            flags[IsMemRef] = 1;
             flags[IsLoad] = 1;
         }
 

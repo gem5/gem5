@@ -207,7 +207,6 @@ def template AtomicMemOpRMWConstructor {{
         %(constructor)s;
 
         // overwrite default flags
-        flags[IsMemRef] = true;
         flags[IsLoad] = false;
         flags[IsStore] = false;
         flags[IsAtomic] = true;

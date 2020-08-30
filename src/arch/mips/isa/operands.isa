@@ -144,7 +144,7 @@ def operands {{
     'Cause': ('ControlReg','uw', 'MISCREG_CAUSE',None,1),
 
     #Memory Operand
-    'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4),
+    'Mem': ('Mem', 'uw', None, (None, 'IsLoad', 'IsStore'), 4),
 
     #Program Counter Operands
     'PC': ('PCState', 'uw', 'pc', (None, None, 'IsControl'), 4),

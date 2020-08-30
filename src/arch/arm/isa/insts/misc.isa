@@ -1149,7 +1149,7 @@ let {{
                                    "postacc_code": "",
                                    "ea_code": McrDcimvacCode,
                                    "predicate_test": predicateTest},
-                                ['IsMemRef', 'IsStore'])
+                                ['IsStore'])
     header_output += MiscRegRegImmMemOpDeclare.subst(McrDcimvacIop)
     decoder_output += MiscRegRegImmOpConstructor.subst(McrDcimvacIop)
     exec_output += Mcr15Execute.subst(McrDcimvacIop) + \
@@ -1167,7 +1167,7 @@ let {{
                                    "postacc_code": "",
                                    "ea_code": McrDccmvacCode,
                                    "predicate_test": predicateTest},
-                                ['IsMemRef', 'IsStore'])
+                                ['IsStore'])
     header_output += MiscRegRegImmMemOpDeclare.subst(McrDccmvacIop)
     decoder_output += MiscRegRegImmOpConstructor.subst(McrDccmvacIop)
     exec_output += Mcr15Execute.subst(McrDccmvacIop) + \
@@ -1185,7 +1185,7 @@ let {{
                                    "postacc_code": "",
                                    "ea_code": McrDccmvauCode,
                                    "predicate_test": predicateTest},
-                                ['IsMemRef', 'IsStore'])
+                                ['IsStore'])
     header_output += MiscRegRegImmMemOpDeclare.subst(McrDccmvauIop)
     decoder_output += MiscRegRegImmOpConstructor.subst(McrDccmvauIop)
     exec_output += Mcr15Execute.subst(McrDccmvauIop) + \
@@ -1204,7 +1204,7 @@ let {{
                                    "postacc_code": "",
                                    "ea_code": McrDccimvacCode,
                                    "predicate_test": predicateTest},
-                                ['IsMemRef', 'IsStore'])
+                                ['IsStore'])
     header_output += MiscRegRegImmMemOpDeclare.subst(McrDccimvacIop)
     decoder_output += MiscRegRegImmOpConstructor.subst(McrDccimvacIop)
     exec_output += Mcr15Execute.subst(McrDccimvacIop) + \

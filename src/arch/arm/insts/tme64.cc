@@ -128,7 +128,6 @@ Tstart64::Tstart64(ExtMachInst machInst, IntRegIndex _dest)
     flags[IsHtmStart] = true;
     flags[IsInteger] = true;
     flags[IsLoad] = true;
-    flags[IsMemRef] = true;
     flags[IsMicroop] = true;
     flags[IsNonSpeculative] = true;
 }
@@ -169,7 +168,6 @@ Tcancel64::Tcancel64(ExtMachInst machInst, uint64_t _imm)
     _numIntDestRegs = 0;
     _numCCDestRegs = 0;
     flags[IsLoad] = true;
-    flags[IsMemRef] = true;
     flags[IsMicroop] = true;
     flags[IsNonSpeculative] = true;
     flags[IsHtmCancel] = true;
@@ -212,7 +210,6 @@ MicroTcommit64::MicroTcommit64(ExtMachInst machInst)
     _numCCDestRegs = 0;
     flags[IsHtmStop] = true;
     flags[IsLoad] = true;
-    flags[IsMemRef] = true;
     flags[IsMicroop] = true;
     flags[IsNonSpeculative] = true;
 }
