@@ -196,8 +196,6 @@ class StaticInst : public RefCounted, public StaticInstFlags
     bool isDelayedCommit() const { return flags[IsDelayedCommit]; }
     bool isLastMicroop() const { return flags[IsLastMicroop]; }
     bool isFirstMicroop() const { return flags[IsFirstMicroop]; }
-    //This flag doesn't do anything yet
-    bool isMicroBranch() const { return flags[IsMicroBranch]; }
     // hardware transactional memory
     // HtmCmds must be identified as such in order
     // to provide them with necessary memory ordering semantics.

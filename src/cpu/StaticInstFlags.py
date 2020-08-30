@@ -99,9 +99,6 @@ class StaticInstFlags(Enum):
         'IsDelayedCommit',  # This microop doesn't commit right away
         'IsLastMicroop',    # This microop ends a microop sequence
         'IsFirstMicroop',   # This microop begins a microop sequence
-        # This flag doesn't do anything yet
-        'IsMicroBranch',    # This microop branches within the microcode for
-                            # a macroop
 
         'IsSquashAfter',     # Squash all uncommitted state after executed
 

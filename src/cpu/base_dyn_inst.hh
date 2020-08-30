@@ -564,7 +564,6 @@ class BaseDynInst : public ExecContext, public RefCounted
     bool isDelayedCommit() const { return staticInst->isDelayedCommit(); }
     bool isLastMicroop() const { return staticInst->isLastMicroop(); }
     bool isFirstMicroop() const { return staticInst->isFirstMicroop(); }
-    bool isMicroBranch() const { return staticInst->isMicroBranch(); }
     // hardware transactional memory
     bool isHtmStart() const { return staticInst->isHtmStart(); }
     bool isHtmStop() const { return staticInst->isHtmStop(); }
