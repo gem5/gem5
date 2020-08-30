@@ -719,7 +719,7 @@ decode OPCODE_HI default Unknown::unknown() {
                         LLFlag = 0;
                         Status = status;
                         SRSCtl = srsCtl;
-                    }}, IsReturn, IsSerializing, IsERET);
+                    }}, IsReturn, IsSerializing);
 
                     0x1F: deret({{
                         DebugReg debug = Debug;
@@ -732,7 +732,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             // Undefined;
                         }
                         Debug = debug;
-                    }}, IsReturn, IsSerializing, IsERET);
+                    }}, IsReturn, IsSerializing);
                 }
                 format CP0TLB {
                     0x01: tlbr({{
