@@ -241,7 +241,6 @@ def format Branch(code, *opt_flags) {{
             code += 'R31 = NNPC;\n'
         elif x == 'Likely':
             not_taken_code = 'NNPC = NPC; NPC = PC;'
-            inst_flags += ('IsCondDelaySlot', )
         else:
             inst_flags += (x, )
 
@@ -280,7 +279,6 @@ def format DspBranch(code, *opt_flags) {{
             code += 'R32 = NNPC;'
         elif x == 'Likely':
             not_taken_code = 'NNPC = NPC, NPC = PC;'
-            inst_flags += ('IsCondDelaySlot', )
         else:
             inst_flags += (x, )
 

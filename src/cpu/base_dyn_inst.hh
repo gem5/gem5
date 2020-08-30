@@ -541,7 +541,6 @@ class BaseDynInst : public ExecContext, public RefCounted
     bool isIndirectCtrl() const { return staticInst->isIndirectCtrl(); }
     bool isCondCtrl()     const { return staticInst->isCondCtrl(); }
     bool isUncondCtrl()   const { return staticInst->isUncondCtrl(); }
-    bool isCondDelaySlot() const { return staticInst->isCondDelaySlot(); }
     bool isThreadSync()   const { return staticInst->isThreadSync(); }
     bool isSerializing()  const { return staticInst->isSerializing(); }
     bool
