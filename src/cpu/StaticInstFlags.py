@@ -103,8 +103,9 @@ class StaticInstFlags(Enum):
         # This flag doesn't do anything yet
         'IsMicroBranch',    # This microop branches within the microcode for
                             # a macroop
-        'IsDspOp',
+
         'IsSquashAfter',     # Squash all uncommitted state after executed
+
         # hardware transactional memory
         'IsHtmStart',       # Starts a HTM transaction
         'IsHtmStop',        # Stops (commits) a HTM transaction

@@ -173,8 +173,6 @@ def format DspIntOp(code, *opt_flags) {{
 
     code = decl_code + code + write_code
 
-    opt_flags += ('IsDspOp',)
-
     iop = InstObjParams(name, Name, 'DspIntOp', code, opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
@@ -203,8 +201,6 @@ def format DspHiLoOp(code, *opt_flags) {{
     write_code += 'LO_RD_SEL = dspac<31:0>;\n'
 
     code = decl_code + fetch_code + code + write_code
-
-    opt_flags += ('IsDspOp',)
 
     iop = InstObjParams(name, Name, 'DspHiLoOp', code, opt_flags)
     header_output = BasicDeclare.subst(iop)
