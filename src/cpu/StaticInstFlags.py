@@ -56,7 +56,6 @@ class StaticInstFlags(Enum):
 
         'IsInteger',        # References integer regs.
         'IsFloating',       # References FP regs.
-        'IsCC',             # References CC regs.
         'IsVector',         # References Vector regs.
         'IsVectorElem',     # References Vector reg elems.
 
