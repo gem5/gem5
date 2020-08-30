@@ -458,7 +458,6 @@ def format StoreMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
 
 def format LoadIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
                      mem_flags = [], inst_flags = []) {{
-    inst_flags += ['IsIndexed']
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                       decode_template = ImmNopCheckDecode,
@@ -467,7 +466,6 @@ def format LoadIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
 
 def format StoreIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
                      mem_flags = [], inst_flags = []) {{
-    inst_flags += ['IsIndexed']
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                       exec_template_base = 'Store')
@@ -475,7 +473,7 @@ def format StoreIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
 
 def format LoadFPIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
                      mem_flags = [], inst_flags = []) {{
-    inst_flags += ['IsIndexed', 'IsFloating']
+    inst_flags += ['IsFloating']
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                       decode_template = ImmNopCheckDecode,
@@ -484,7 +482,7 @@ def format LoadFPIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
 
 def format StoreFPIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
                      mem_flags = [], inst_flags = []) {{
-    inst_flags += ['IsIndexed', 'IsFloating']
+    inst_flags += ['IsFloating']
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                       exec_template_base = 'Store')
