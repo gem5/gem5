@@ -44,7 +44,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   // DMA
   MessageBuffer * requestFromDMA, network="From", virtual_network="1", vnet_type="request";
-  MessageBuffer * responseToDMA, network="To", virtual_network="3", vnet_type="request";
+  MessageBuffer * responseToDMA, network="To", virtual_network="3", vnet_type="response";
 
   // From the Cores
   MessageBuffer * requestFromCores, network="From", virtual_network="0", vnet_type="request";
