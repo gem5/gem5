@@ -440,7 +440,8 @@ elif main['CLANG']:
                          # interchangeably.
                          '-Wno-mismatched-tags',
                          ])
-    if compareVersions(clang_version, "10.0") >= 0:
+    if sys.platform != "darwin" and \
+       compareVersions(clang_version, "10.0") >= 0:
         main.Append(CCFLAGS=['-Wno-c99-designator'])
 
     if compareVersions(clang_version, "8.0") >= 0:
