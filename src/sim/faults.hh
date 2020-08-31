@@ -55,7 +55,11 @@ class UnimpFault : public FaultBase
   public:
     UnimpFault(std::string _str) : panicStr(_str) {}
 
-    FaultName name() const { return "Unimplemented simulator feature"; }
+    FaultName
+    name() const override
+    {
+        return "Unimplemented simulator feature";
+    }
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr) override;
 };
@@ -63,7 +67,7 @@ class UnimpFault : public FaultBase
 class ReExec : public FaultBase
 {
   public:
-    virtual FaultName name() const { return "Re-execution fault"; }
+    virtual FaultName name() const override { return "Re-execution fault"; }
     void invoke(ThreadContext *tc, const StaticInstPtr &inst=
                 StaticInst::nullStaticInstPtr) override;
 };
@@ -78,7 +82,7 @@ class ReExec : public FaultBase
 class SyscallRetryFault : public FaultBase
 {
   public:
-    virtual FaultName name() const { return "System call retry fault"; }
+    FaultName name() const override { return "System call retry fault"; }
     SyscallRetryFault() {}
     void invoke(ThreadContext *tc, const StaticInstPtr &inst=
                 StaticInst::nullStaticInstPtr) override;
@@ -89,7 +93,7 @@ class GenericPageTableFault : public FaultBase
   private:
     Addr vaddr;
   public:
-    FaultName name() const { return "Generic page table fault"; }
+    FaultName name() const override { return "Generic page table fault"; }
     GenericPageTableFault(Addr va) : vaddr(va) {}
     void invoke(ThreadContext *tc, const StaticInstPtr &inst=
                 StaticInst::nullStaticInstPtr) override;
@@ -101,7 +105,7 @@ class GenericAlignmentFault : public FaultBase
   private:
     Addr vaddr;
   public:
-    FaultName name() const { return "Generic alignment fault"; }
+    FaultName name() const override { return "Generic alignment fault"; }
     GenericAlignmentFault(Addr va) : vaddr(va) {}
     void invoke(ThreadContext *tc, const StaticInstPtr &inst=
                 StaticInst::nullStaticInstPtr) override;
