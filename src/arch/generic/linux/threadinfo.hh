@@ -39,7 +39,6 @@ class ThreadInfo
   private:
     ThreadContext *tc;
     System *sys;
-    Addr pcbb;
 
     ByteOrder byteOrder;
 
@@ -62,8 +61,8 @@ class ThreadInfo
     }
 
   public:
-    ThreadInfo(ThreadContext *_tc, Addr _pcbb = 0)
-        : tc(_tc), sys(tc->getSystemPtr()), pcbb(_pcbb),
+    ThreadInfo(ThreadContext *_tc)
+        : tc(_tc), sys(tc->getSystemPtr()),
         byteOrder(tc->getSystemPtr()->getGuestByteOrder())
     {
 
