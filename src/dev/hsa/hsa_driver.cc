@@ -43,6 +43,7 @@
 #include "params/HSADriver.hh"
 #include "sim/process.hh"
 #include "sim/proxy_ptr.hh"
+#include "sim/syscall_emul_buf.hh"
 
 HSADriver::HSADriver(HSADriverParams *p)
     : EmulatedDriver(p), device(p->device), queueId(0)
