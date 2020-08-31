@@ -60,84 +60,31 @@ BPredUnit::BPredUnit(const Params *params)
           params->numThreads),
       RAS(numThreads),
       iPred(params->indirectBranchPred),
+      stats(this),
       instShiftAmt(params->instShiftAmt)
 {
     for (auto& r : RAS)
         r.init(params->RASSize);
 }
 
-void
-BPredUnit::regStats()
+BPredUnit::BPredUnitStats::BPredUnitStats(Stats::Group *parent)
+    : Stats::Group(parent),
+      ADD_STAT(lookups, "Number of BP lookups"),
+      ADD_STAT(condPredicted, "Number of conditional branches predicted"),
+      ADD_STAT(condIncorrect, "Number of conditional branches incorrect"),
+      ADD_STAT(BTBLookups, "Number of BTB lookups"),
+      ADD_STAT(BTBHits, "Number of BTB hits"),
+      ADD_STAT(BTBHitPct, "BTB Hit Percentage",
+           (BTBHits / BTBLookups) * 100),
+      ADD_STAT(RASUsed, "Number of times the RAS was used to get a target."),
+      ADD_STAT(RASIncorrect, "Number of incorrect RAS predictions."),
+      ADD_STAT(indirectLookups, "Number of indirect predictor lookups."),
+      ADD_STAT(indirectHits, "Number of indirect target hits."),
+      ADD_STAT(indirectMisses, "Number of indirect misses."),
+      ADD_STAT(indirectMispredicted, "Number of mispredicted indirect"
+          " branches.")
 {
-    SimObject::regStats();
-
-    lookups
-        .name(name() + ".lookups")
-        .desc("Number of BP lookups")
-        ;
-
-    condPredicted
-        .name(name() + ".condPredicted")
-        .desc("Number of conditional branches predicted")
-        ;
-
-    condIncorrect
-        .name(name() + ".condIncorrect")
-        .desc("Number of conditional branches incorrect")
-        ;
-
-    BTBLookups
-        .name(name() + ".BTBLookups")
-        .desc("Number of BTB lookups")
-        ;
-
-    BTBHits
-        .name(name() + ".BTBHits")
-        .desc("Number of BTB hits")
-        ;
-
-    BTBCorrect
-        .name(name() + ".BTBCorrect")
-        .desc("Number of correct BTB predictions (this stat may not "
-              "work properly.")
-        ;
-
-    BTBHitPct
-        .name(name() + ".BTBHitPct")
-        .desc("BTB Hit Percentage")
-        .precision(6);
-    BTBHitPct = (BTBHits / BTBLookups) * 100;
-
-    usedRAS
-        .name(name() + ".usedRAS")
-        .desc("Number of times the RAS was used to get a target.")
-        ;
-
-    RASIncorrect
-        .name(name() + ".RASInCorrect")
-        .desc("Number of incorrect RAS predictions.")
-        ;
-
-    indirectLookups
-        .name(name() + ".indirectLookups")
-        .desc("Number of indirect predictor lookups.")
-        ;
-
-    indirectHits
-        .name(name() + ".indirectHits")
-        .desc("Number of indirect target hits.")
-        ;
-
-    indirectMisses
-        .name(name() + ".indirectMisses")
-        .desc("Number of indirect misses.")
-        ;
-
-    indirectMispredicted
-        .name(name() + "indirectMispredicted")
-        .desc("Number of mispredicted indirect branches.")
-        ;
-
+    BTBHitPct.precision(6);
 }
 
 ProbePoints::PMUUPtr
@@ -177,7 +124,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     bool pred_taken = false;
     TheISA::PCState target = pc;
 
-    ++lookups;
+    ++stats.lookups;
     ppBranches->notify(1);
 
     void *bp_history = NULL;
@@ -191,7 +138,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         // Tell the BP there was an unconditional branch.
         uncondBranch(tid, pc.instAddr(), bp_history);
     } else {
-        ++condPredicted;
+        ++stats.condPredicted;
         pred_taken = lookup(tid, pc.instAddr(), bp_history);
 
         DPRINTF(Branch, "[tid:%i] [sn:%llu] "
@@ -214,7 +161,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     // Now lookup in the BTB or RAS.
     if (pred_taken) {
         if (inst->isReturn()) {
-            ++usedRAS;
+            ++stats.RASUsed;
             predict_record.wasReturn = true;
             // If it's a function return call, then look up the address
             // in the RAS.
@@ -248,10 +195,10 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             }
 
             if (inst->isDirectCtrl() || !iPred) {
-                ++BTBLookups;
+                ++stats.BTBLookups;
                 // Check BTB on direct branches
                 if (BTB.valid(pc.instAddr(), tid)) {
-                    ++BTBHits;
+                    ++stats.BTBHits;
                     // If it's not a return, use the BTB to get target addr.
                     target = BTB.lookup(pc.instAddr(), tid);
                     DPRINTF(Branch,
@@ -280,18 +227,18 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                 }
             } else {
                 predict_record.wasIndirect = true;
-                ++indirectLookups;
+                ++stats.indirectLookups;
                 //Consult indirect predictor on indirect control
                 if (iPred->lookup(pc.instAddr(), target, tid)) {
                     // Indirect predictor hit
-                    ++indirectHits;
+                    ++stats.indirectHits;
                     DPRINTF(Branch,
                             "[tid:%i] [sn:%llu] "
                             "Instruction %s predicted "
                             "indirect target is %s\n",
                             tid, seqNum, pc, target);
                 } else {
-                    ++indirectMisses;
+                    ++stats.indirectMisses;
                     pred_taken = false;
                     predict_record.predTaken = pred_taken;
                     DPRINTF(Branch,
@@ -426,7 +373,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
 
     History &pred_hist = predHist[tid];
 
-    ++condIncorrect;
+    ++stats.condIncorrect;
     ppMisses->notify(1);
 
     DPRINTF(Branch, "[tid:%i] Squashing from sequence number %i, "
@@ -454,7 +401,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
 
 
         if ((*hist_it).usedRAS) {
-            ++RASIncorrect;
+            ++stats.RASIncorrect;
             DPRINTF(Branch,
                     "[tid:%i] [squash sn:%llu] Incorrect RAS [sn:%llu]\n",
                     tid, squashed_sn, hist_it->seqNum);
@@ -493,7 +440,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                  hist_it->usedRAS = true;
             }
             if (hist_it->wasIndirect) {
-                ++indirectMispredicted;
+                ++stats.indirectMispredicted;
                 if (iPred) {
                     iPred->recordTarget(
                         hist_it->seqNum, pred_hist.front().indirectHistory,
