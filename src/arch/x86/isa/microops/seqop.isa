@@ -50,7 +50,7 @@ output header {{
                 uint16_t _target, uint8_t _cc);
 
         std::string generateDisassembly(Addr pc,
-                const Loader::SymbolTable *symtab) const;
+                const Loader::SymbolTable *symtab) const override;
     };
 }};
 
@@ -61,7 +61,7 @@ def template SeqOpDeclare {{
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
                 uint64_t setFlags, uint16_t _target, uint8_t _cc);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
         X86ISA::PCState branchTarget(const X86ISA::PCState &branchPC) const
         override;

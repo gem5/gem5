@@ -46,7 +46,7 @@ def template BasicDeclare {{
           public:
             // Constructor.
             %(class_name)s(ExtMachInst machInst);
-            Fault execute(ExecContext *, Trace::InstRecord *) const;
+            Fault execute(ExecContext *, Trace::InstRecord *) const override;
         };
 }};
 

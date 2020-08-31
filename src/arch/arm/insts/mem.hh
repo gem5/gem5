@@ -54,7 +54,7 @@ class MightBeMicro : public PredOp
     {}
 
     void
-    advancePC(PCState &pcState) const
+    advancePC(PCState &pcState) const override
     {
         if (flags[IsLastMicroop]) {
             pcState.uEnd();
@@ -372,7 +372,8 @@ class MemoryOffset : public Base
     {}
 
     std::string
-    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+    generateDisassembly(Addr pc,
+                        const Loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         this->printInst(ss, Memory::AddrMd_Offset);
@@ -422,7 +423,8 @@ class MemoryPreIndex : public Base
     {}
 
     std::string
-    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+    generateDisassembly(Addr pc,
+                        const Loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         this->printInst(ss, Memory::AddrMd_PreIndex);
@@ -472,7 +474,8 @@ class MemoryPostIndex : public Base
     {}
 
     std::string
-    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+    generateDisassembly(Addr pc,
+                        const Loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         this->printInst(ss, Memory::AddrMd_PostIndex);

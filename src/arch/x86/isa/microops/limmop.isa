@@ -61,7 +61,7 @@ def template MicroLimmOpDeclare {{
         RegIndex foldOBit;
 
         std::string generateDisassembly(Addr pc,
-            const Loader::SymbolTable *symtab) const;
+            const Loader::SymbolTable *symtab) const override;
 
       public:
         %(class_name)s(ExtMachInst _machInst,
@@ -69,7 +69,7 @@ def template MicroLimmOpDeclare {{
                 uint64_t setFlags, InstRegIndex _dest,
                 uint64_t _imm, uint8_t _dataSize);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 

@@ -110,7 +110,8 @@ namespace X86ISA
         }
 
         std::string
-        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+        generateDisassembly(Addr pc,
+                           const Loader::SymbolTable *symtab) const override
         {
             std::stringstream ss;
 
@@ -122,7 +123,7 @@ namespace X86ISA
         bool checkCondition(uint64_t flags, int condition) const;
 
         void
-        advancePC(PCState &pcState) const
+        advancePC(PCState &pcState) const override
         {
             if (flags[IsLastMicroop])
                 pcState.uEnd();

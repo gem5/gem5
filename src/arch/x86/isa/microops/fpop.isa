@@ -82,7 +82,7 @@ def template MicroFpOpDeclare {{
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, int8_t _spm);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 

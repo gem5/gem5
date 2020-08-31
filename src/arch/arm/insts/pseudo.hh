@@ -128,7 +128,8 @@ class IllegalExecInst : public ArmStaticInst
   public:
     IllegalExecInst(ExtMachInst _machInst);
 
-    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+    Fault execute(ExecContext *xc,
+                  Trace::InstRecord *traceData) const override;
 };
 
 class DebugStep : public ArmStaticInst
@@ -136,7 +137,8 @@ class DebugStep : public ArmStaticInst
   public:
     DebugStep(ExtMachInst _machInst);
 
-    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+    Fault execute(ExecContext *xc,
+                  Trace::InstRecord *traceData) const override;
 };
 
 #endif

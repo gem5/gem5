@@ -52,7 +52,7 @@ output header {{
                 uint64_t setFlags, Fault _fault, uint8_t _cc);
 
         std::string generateDisassembly(Addr pc,
-                const Loader::SymbolTable *symtab) const;
+                const Loader::SymbolTable *symtab) const override;
     };
 
     class MicroHalt : public X86ISA::X86MicroopBase
@@ -67,10 +67,10 @@ output header {{
         {
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
         std::string generateDisassembly(Addr pc,
-                const Loader::SymbolTable *symtab) const;
+                const Loader::SymbolTable *symtab) const override;
     };
 }};
 
@@ -81,7 +81,7 @@ def template MicroFaultDeclare {{
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
                 uint64_t setFlags, Fault _fault, uint8_t _cc);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
@@ -214,7 +214,7 @@ def template MicroFenceOpDeclare {{
                 const char * instMnem,
                 uint64_t setFlags);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 

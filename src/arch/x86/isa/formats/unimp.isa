@@ -60,10 +60,11 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
         std::string
-        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const;
+        generateDisassembly(Addr pc,
+                            const Loader::SymbolTable *symtab) const override;
     };
 
     /**
@@ -91,10 +92,11 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
         std::string
-        generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const;
+        generateDisassembly(Addr pc,
+                            const Loader::SymbolTable *symtab) const override;
     };
 }};
 

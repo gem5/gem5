@@ -15,7 +15,7 @@ output header {{
         { }
 
         std::string generateDisassembly(Addr pc,
-                const Loader::SymbolTable *symtab) const;
+                const Loader::SymbolTable *symtab) const override;
     };
 }};
 
@@ -50,9 +50,10 @@ def template MwaitDeclare {{
         public:
         // Constructor.
         %(class_name)s(ExtMachInst machInst);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
     };
 }};
 
@@ -94,7 +95,7 @@ output header {{
         }
 
         std::string generateDisassembly(Addr pc,
-                const Loader::SymbolTable *symtab) const;
+                const Loader::SymbolTable *symtab) const override;
     };
 }};
 

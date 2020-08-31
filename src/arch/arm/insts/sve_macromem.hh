@@ -86,14 +86,15 @@ class SveLdStructSS : public PredMacroOp
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const
+    execute(ExecContext *, Trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
         return NoFault;
     }
 
     std::string
-    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+    generateDisassembly(Addr pc,
+                        const Loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -158,14 +159,15 @@ class SveStStructSS : public PredMacroOp
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const
+    execute(ExecContext *, Trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
         return NoFault;
     }
 
     std::string
-    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+    generateDisassembly(Addr pc,
+                        const Loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -230,14 +232,15 @@ class SveLdStructSI : public PredMacroOp
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const
+    execute(ExecContext *, Trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
         return NoFault;
     }
 
     std::string
-    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+    generateDisassembly(Addr pc,
+                        const Loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -303,14 +306,15 @@ class SveStStructSI : public PredMacroOp
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const
+    execute(ExecContext *, Trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
         return NoFault;
     }
 
     std::string
-    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+    generateDisassembly(Addr pc,
+                        const Loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -402,14 +406,15 @@ class SveIndexedMemVI : public PredMacroOp
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const
+    execute(ExecContext *, Trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
         return NoFault;
     }
 
     std::string
-    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+    generateDisassembly(Addr pc,
+                        const Loader::SymbolTable *symtab) const override
     {
         // TODO: add suffix to transfer and base registers
         std::stringstream ss;
@@ -506,14 +511,15 @@ class SveIndexedMemSV : public PredMacroOp
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const
+    execute(ExecContext *, Trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
         return NoFault;
     }
 
     std::string
-    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+    generateDisassembly(Addr pc,
+                        const Loader::SymbolTable *symtab) const override
     {
         // TODO: add suffix to transfer and base registers
         std::stringstream ss;

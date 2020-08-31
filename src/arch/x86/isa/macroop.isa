@@ -42,7 +42,8 @@
 
 // Execute method for macroops.
 def template MacroExecPanic {{
-    Fault execute(ExecContext *, Trace::InstRecord *) const
+    Fault
+    execute(ExecContext *, Trace::InstRecord *) const override
     {
         panic("Tried to execute macroop directly!");
         return NoFault;
@@ -60,7 +61,7 @@ output header {{
         {}
 
         Fault
-        execute(ExecContext *, Trace::InstRecord *) const
+        execute(ExecContext *, Trace::InstRecord *) const override
         {
             panic("Tried to execute macroop directly!");
         }
@@ -89,7 +90,7 @@ def template MacroDeclare {{
             %(class_name)s(ExtMachInst machInst, X86ISA::EmulEnv _env);
 
             std::string generateDisassembly(
-                    Addr pc, const Loader::SymbolTable *symtab) const;
+                    Addr pc, const Loader::SymbolTable *symtab) const override;
         };
     }
 }};

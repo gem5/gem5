@@ -67,7 +67,7 @@ class SveMemVecFillSpill : public ArmStaticInst
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 class SveMemPredFillSpill : public ArmStaticInst
@@ -93,7 +93,7 @@ class SveMemPredFillSpill : public ArmStaticInst
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 class SveContigMemSS : public ArmStaticInst
@@ -120,7 +120,7 @@ class SveContigMemSS : public ArmStaticInst
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 class SveContigMemSI : public ArmStaticInst
@@ -147,7 +147,7 @@ class SveContigMemSI : public ArmStaticInst
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const;
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 }  // namespace ArmISA

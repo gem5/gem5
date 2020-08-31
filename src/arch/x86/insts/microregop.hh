@@ -93,7 +93,7 @@ namespace X86ISA
         }
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const;
+                Addr pc, const Loader::SymbolTable *symtab) const override;
     };
 
     class RegOpImm : public RegOpBase
@@ -115,7 +115,7 @@ namespace X86ISA
         }
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const;
+                Addr pc, const Loader::SymbolTable *symtab) const override;
     };
 }
 

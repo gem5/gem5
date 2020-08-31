@@ -55,7 +55,7 @@ def template MediaOpRegDeclare {{
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _srcSize, uint8_t _destSize, uint16_t _ext);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
@@ -69,7 +69,7 @@ def template MediaOpImmDeclare {{
                 InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
                 uint8_t _srcSize, uint8_t _destSize, uint16_t _ext);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 

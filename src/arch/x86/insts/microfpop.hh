@@ -75,7 +75,7 @@ namespace X86ISA
         bool checkCondition(uint64_t flags) const;*/
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const;
+                Addr pc, const Loader::SymbolTable *symtab) const override;
     };
 }
 
