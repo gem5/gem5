@@ -165,7 +165,7 @@ Base::compress(const uint64_t* data, Cycles& comp_lat, Cycles& decomp_lat)
             "Compression latency: %llu, decompression latency: %llu\n",
             blkSize*8, comp_size_bits, comp_lat, decomp_lat);
 
-    return std::move(comp_data);
+    return comp_data;
 }
 
 Cycles
