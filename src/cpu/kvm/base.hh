@@ -82,7 +82,6 @@ class BaseKvmCPU : public BaseCPU
 
     void init() override;
     void startup() override;
-    void regStats() override;
 
     void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
     void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
@@ -782,16 +781,19 @@ class BaseKvmCPU : public BaseCPU
 
   public:
     /* @{ */
-    Stats::Scalar numInsts;
-    Stats::Scalar numVMExits;
-    Stats::Scalar numVMHalfEntries;
-    Stats::Scalar numExitSignal;
-    Stats::Scalar numMMIO;
-    Stats::Scalar numCoalescedMMIO;
-    Stats::Scalar numIO;
-    Stats::Scalar numHalt;
-    Stats::Scalar numInterrupts;
-    Stats::Scalar numHypercalls;
+    struct StatGroup : public Stats::Group {
+        StatGroup(Stats::Group *parent);
+        Stats::Scalar committedInsts;
+        Stats::Scalar numVMExits;
+        Stats::Scalar numVMHalfEntries;
+        Stats::Scalar numExitSignal;
+        Stats::Scalar numMMIO;
+        Stats::Scalar numCoalescedMMIO;
+        Stats::Scalar numIO;
+        Stats::Scalar numHalt;
+        Stats::Scalar numInterrupts;
+        Stats::Scalar numHypercalls;
+    } stats;
     /* @} */
 
     /** Number of instructions executed by the CPU */
