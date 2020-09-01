@@ -32,7 +32,6 @@ Source('unittest.cc')
 
 UnitTest('cprintftime', 'cprintftime.cc')
 UnitTest('nmtest', 'nmtest.cc')
-UnitTest('refcnttest', 'refcnttest.cc')
 
 stattest_py = PySource('m5', 'stattestmain.py', tags='stattest')
 UnitTest('stattest', 'stattest.cc', with_tag('stattest'), main=True)
