@@ -50,8 +50,8 @@ TraceCPU::TraceCPU(TraceCPUParams *params)
         dataMasterID(params->system->getMasterId(this, "data")),
         instTraceFile(params->instTraceFile),
         dataTraceFile(params->dataTraceFile),
-        icacheGen(*this, ".iside", icachePort, instMasterID, instTraceFile),
-        dcacheGen(*this, ".dside", dcachePort, dataMasterID, dataTraceFile,
+        icacheGen(*this, "iside", icachePort, instMasterID, instTraceFile),
+        dcacheGen(*this, "dside", dcachePort, dataMasterID, dataTraceFile,
                   params),
         icacheNextEvent([this]{ schedIcacheNext(); }, name()),
         dcacheNextEvent([this]{ schedDcacheNext(); }, name()),
@@ -60,7 +60,7 @@ TraceCPU::TraceCPU(TraceCPUParams *params)
         execCompleteEvent(nullptr),
         enableEarlyExit(params->enableEarlyExit),
         progressMsgInterval(params->progressMsgInterval),
-        progressMsgThreshold(params->progressMsgInterval)
+        progressMsgThreshold(params->progressMsgInterval), traceStats(this)
 {
     // Increment static counter for number of Trace CPUs.
     ++TraceCPU::numTraceCPUs;
@@ -91,8 +91,9 @@ TraceCPUParams::create()
 void
 TraceCPU::updateNumOps(uint64_t rob_num)
 {
-    numOps = rob_num;
-    if (progressMsgInterval != 0 && numOps.value() >= progressMsgThreshold) {
+    traceStats.numOps = rob_num;
+    if (progressMsgInterval != 0 &&
+         traceStats.numOps.value() >= progressMsgThreshold) {
         inform("%s: %i insts committed\n", name(), progressMsgThreshold);
         progressMsgThreshold += progressMsgInterval;
     }
@@ -161,7 +162,7 @@ TraceCPU::schedIcacheNext()
         DPRINTF(TraceCPUInst, "Scheduling next icacheGen event "
                 "at %d.\n", curTick() + icacheGen.tickDelta());
         schedule(icacheNextEvent, curTick() + icacheGen.tickDelta());
-        ++numSchedIcacheEvent;
+        ++traceStats.numSchedIcacheEvent;
     } else {
         // check if traceComplete. If not, do nothing because sending failed
         // and next event will be scheduled via RecvRetry()
@@ -208,93 +209,33 @@ TraceCPU::checkAndSchedExitEvent()
         }
     }
 }
-
-void
-TraceCPU::regStats()
+ TraceCPU::TraceStats::TraceStats(TraceCPU *trace)
+    : Stats::Group(trace),
+    ADD_STAT(numSchedDcacheEvent,
+     "Number of events scheduled to trigger data request generator"),
+    ADD_STAT(numSchedIcacheEvent,
+     "Number of events scheduled to trigger instruction request generator"),
+    ADD_STAT(numOps, "Number of micro-ops simulated by the Trace CPU"),
+    ADD_STAT(cpi, "Cycles per micro-op used as a proxy for CPI",
+     trace->numCycles / numOps)
 {
-
-    BaseCPU::regStats();
-
-    numSchedDcacheEvent
-    .name(name() + ".numSchedDcacheEvent")
-    .desc("Number of events scheduled to trigger data request generator")
-    ;
-
-    numSchedIcacheEvent
-    .name(name() + ".numSchedIcacheEvent")
-    .desc("Number of events scheduled to trigger instruction request generator")
-    ;
-
-    numOps
-    .name(name() + ".numOps")
-    .desc("Number of micro-ops simulated by the Trace CPU")
-    ;
-
-    cpi
-    .name(name() + ".cpi")
-    .desc("Cycles per micro-op used as a proxy for CPI")
-    .precision(6)
-    ;
-    cpi = numCycles/numOps;
-
-    icacheGen.regStats();
-    dcacheGen.regStats();
+        cpi.precision(6);
 }
-
-void
-TraceCPU::ElasticDataGen::regStats()
+TraceCPU::ElasticDataGen::
+ElasticDataGenStatGroup::ElasticDataGenStatGroup(Stats::Group *parent,
+                                                 const std::string& _name)
+    : Stats::Group(parent, _name.c_str()),
+    ADD_STAT(maxDependents, "Max number of dependents observed on a node"),
+    ADD_STAT(maxReadyListSize, "Max size of the ready list observed"),
+    ADD_STAT(numSendAttempted, "Number of first attempts to send a request"),
+    ADD_STAT(numSendSucceeded, "Number of successful first attempts"),
+    ADD_STAT(numSendFailed, "Number of failed first attempts"),
+    ADD_STAT(numRetrySucceeded, "Number of successful retries"),
+    ADD_STAT(numSplitReqs, "Number of split requests"),
+    ADD_STAT(numSOLoads, "Number of strictly ordered loads"),
+    ADD_STAT(numSOStores, "Number of strictly ordered stores"),
+    ADD_STAT(dataLastTick, "Last tick simulated from the elastic data trace")
 {
-    using namespace Stats;
-
-    maxDependents
-    .name(name() + ".maxDependents")
-    .desc("Max number of dependents observed on a node")
-    ;
-
-    maxReadyListSize
-    .name(name() + ".maxReadyListSize")
-    .desc("Max size of the ready list observed")
-    ;
-
-    numSendAttempted
-    .name(name() + ".numSendAttempted")
-    .desc("Number of first attempts to send a request")
-    ;
-
-    numSendSucceeded
-    .name(name() + ".numSendSucceeded")
-    .desc("Number of successful first attempts")
-    ;
-
-    numSendFailed
-    .name(name() + ".numSendFailed")
-    .desc("Number of failed first attempts")
-    ;
-
-    numRetrySucceeded
-    .name(name() + ".numRetrySucceeded")
-    .desc("Number of successful retries")
-    ;
-
-    numSplitReqs
-    .name(name() + ".numSplitReqs")
-    .desc("Number of split requests")
-    ;
-
-    numSOLoads
-    .name(name() + ".numSOLoads")
-    .desc("Number of strictly ordered loads")
-    ;
-
-    numSOStores
-    .name(name() + ".numSOStores")
-    .desc("Number of strictly ordered stores")
-    ;
-
-    dataLastTick
-    .name(name() + ".dataLastTick")
-    .desc("Last tick simulated from the elastic data trace")
-    ;
 }
 
 Tick
@@ -412,7 +353,8 @@ TraceCPU::ElasticDataGen::addDepsOnParent(GraphNode *new_node,
             // node.
             parent_itr->second->dependents.push_back(new_node);
             auto num_depts = parent_itr->second->dependents.size();
-            maxDependents = std::max<double>(num_depts, maxDependents.value());
+            elasticStats.maxDependents = std::max<double>(num_depts,
+                                        elasticStats.maxDependents.value());
         } else {
             // The dependency is not found in the graph. So consider
             // the execution of the parent is complete, i.e. remove this
@@ -472,7 +414,7 @@ TraceCPU::ElasticDataGen::execute()
                       "the first node in the readyList.\n");
             }
             if (port.sendTimingReq(retryPkt)) {
-                ++numRetrySucceeded;
+                ++elasticStats.numRetrySucceeded;
                 retryPkt = nullptr;
             }
         } else if (node_ptr->isLoad() || node_ptr->isStore()) {
@@ -613,7 +555,7 @@ TraceCPU::ElasticDataGen::execute()
         !hwResource.awaitingResponse()) {
         DPRINTF(TraceCPUData, "\tExecution Complete!\n");
         execComplete = true;
-        dataLastTick = curTick();
+        elasticStats.dataLastTick = curTick();
     }
 }
 
@@ -629,7 +571,8 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
     // If the request is strictly ordered, do not send it. Just return nullptr
     // as if it was succesfully sent.
     if (node_ptr->isStrictlyOrdered()) {
-        node_ptr->isLoad() ? ++numSOLoads : ++numSOStores;
+        node_ptr->isLoad() ? ++elasticStats.numSOLoads :
+             ++elasticStats.numSOStores;
         DPRINTF(TraceCPUData, "Skipping strictly ordered request %lli.\n",
                 node_ptr->seqNum);
         return nullptr;
@@ -645,7 +588,7 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
     Addr blk_offset = (node_ptr->physAddr & (Addr)(blk_size - 1));
     if (!(blk_offset + node_ptr->size <= blk_size)) {
         node_ptr->size = blk_size - blk_offset;
-        ++numSplitReqs;
+        ++elasticStats.numSplitReqs;
     }
 
     // Create a request and the packet containing request
@@ -678,17 +621,17 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
 
     // Call MasterPort method to send a timing request for this packet
     bool success = port.sendTimingReq(pkt);
-    ++numSendAttempted;
+    ++elasticStats.numSendAttempted;
 
     if (!success) {
         // If it fails, return the packet to retry when a retry is signalled by
         // the cache
-        ++numSendFailed;
+        ++elasticStats.numSendFailed;
         DPRINTF(TraceCPUData, "Send failed. Saving packet for retry.\n");
         return pkt;
     } else {
         // It is succeeds, return nullptr
-        ++numSendSucceeded;
+        ++elasticStats.numSendSucceeded;
         return nullptr;
     }
 }
@@ -815,8 +758,8 @@ TraceCPU::ElasticDataGen::addToSortedReadyList(NodeSeqNum seq_num,
     // and return
     if (itr == readyList.end()) {
         readyList.insert(itr, ready_node);
-        maxReadyListSize = std::max<double>(readyList.size(),
-                                              maxReadyListSize.value());
+        elasticStats.maxReadyListSize = std::max<double>(readyList.size(),
+                                        elasticStats.maxReadyListSize.value());
         return;
     }
 
@@ -853,8 +796,8 @@ TraceCPU::ElasticDataGen::addToSortedReadyList(NodeSeqNum seq_num,
     }
     readyList.insert(itr, ready_node);
     // Update the stat for max size reached of the readyList
-    maxReadyListSize = std::max<double>(readyList.size(),
-                                          maxReadyListSize.value());
+    elasticStats.maxReadyListSize = std::max<double>(readyList.size(),
+                                        elasticStats.maxReadyListSize.value());
 }
 
 void
@@ -1010,36 +953,17 @@ TraceCPU::ElasticDataGen::HardwareResource::printOccupancy() {
             numInFlightLoads, sizeLoadBuffer,
             numInFlightStores, sizeStoreBuffer);
 }
-
-void
-TraceCPU::FixedRetryGen::regStats()
+TraceCPU::FixedRetryGen::
+FixedRetryGenStatGroup::FixedRetryGenStatGroup(Stats::Group *parent,
+                                               const std::string& _name)
+    : Stats::Group(parent, _name.c_str()),
+    ADD_STAT(numSendAttempted, "Number of first attempts to send a request"),
+    ADD_STAT(numSendSucceeded, "Number of successful first attempts"),
+    ADD_STAT(numSendFailed, "Number of failed first attempts"),
+    ADD_STAT(numRetrySucceeded, "Number of successful retries"),
+    ADD_STAT(instLastTick, "Last tick simulated from the fixed inst trace")
 {
-    using namespace Stats;
 
-    numSendAttempted
-    .name(name() + ".numSendAttempted")
-    .desc("Number of first attempts to send a request")
-    ;
-
-    numSendSucceeded
-    .name(name() + ".numSendSucceeded")
-    .desc("Number of successful first attempts")
-    ;
-
-    numSendFailed
-    .name(name() + ".numSendFailed")
-    .desc("Number of failed first attempts")
-    ;
-
-    numRetrySucceeded
-    .name(name() + ".numRetrySucceeded")
-    .desc("Number of successful retries")
-    ;
-
-    instLastTick
-    .name(name() + ".instLastTick")
-    .desc("Last tick simulated from the fixed inst trace")
-    ;
 }
 
 Tick
@@ -1070,7 +994,7 @@ TraceCPU::FixedRetryGen::tryNext()
             DPRINTF(TraceCPUInst, "Retry packet sending failed.\n");
             return false;
         }
-        ++numRetrySucceeded;
+        ++fixedStats.numRetrySucceeded;
     } else {
 
         DPRINTF(TraceCPUInst, "Trying to send packet for currElement.\n");
@@ -1078,16 +1002,16 @@ TraceCPU::FixedRetryGen::tryNext()
         // try sending current element
         assert(currElement.isValid());
 
-        ++numSendAttempted;
+        ++fixedStats.numSendAttempted;
 
         if (!send(currElement.addr, currElement.blocksize,
                     currElement.cmd, currElement.flags, currElement.pc)) {
             DPRINTF(TraceCPUInst, "currElement sending failed.\n");
-            ++numSendFailed;
+            ++fixedStats.numSendFailed;
             // return false to indicate not to schedule next event
             return false;
         } else {
-            ++numSendSucceeded;
+            ++fixedStats.numSendSucceeded;
         }
     }
     // If packet was sent successfully, either retryPkt or currElement, return
@@ -1129,7 +1053,7 @@ TraceCPU::FixedRetryGen::nextExecute()
     // to returning false. If successful then next message is in currElement.
     if (!trace.read(&currElement)) {
         traceComplete = true;
-        instLastTick = curTick();
+        fixedStats.instLastTick = curTick();
         return false;
     }
 
@@ -1202,7 +1126,7 @@ TraceCPU::schedDcacheNextEvent(Tick when)
         DPRINTF(TraceCPUData, "Scheduling next DcacheGen event at %lli.\n",
                 when);
         schedule(dcacheNextEvent, when);
-        ++numSchedDcacheEvent;
+        ++traceStats.numSchedDcacheEvent;
     } else if (when < dcacheNextEvent.when()) {
         DPRINTF(TraceCPUData, "Re-scheduling next dcache event from %lli"
                 " to %lli.\n", dcacheNextEvent.when(), when);
