@@ -26,6 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <unistd.h>
+
+#include <csignal>
 #include <iostream>
 #include <list>
 #include <sstream>
@@ -62,7 +65,7 @@ main()
     while (!stop) {
         stringstream result;
         ccprintf(result,
-                 "this is a %s of %d iterations %3.2f %#x\n",
+                 "this is a %s of %d iterations %3.2f %p\n",
                  "test", iterations, 51.934, &result);
 
         iterations += 1;
@@ -75,7 +78,7 @@ main()
     while (!stop) {
         char result[1024];
         sprintf(result,
-                 "this is a %s of %d iterations %3.2f %#x\n",
+                 "this is a %s of %d iterations %3.2f %p\n",
                  "test", iterations, 51.934, &result);
 
         iterations += 1;
