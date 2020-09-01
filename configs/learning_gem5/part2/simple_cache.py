@@ -84,8 +84,6 @@ system.mem_ctrl.port = system.membus.master
 # Connect the system up to the membus
 system.system_port = system.membus.slave
 
-system.workload = SEWorkload()
-
 # Create a process for a simple "Hello World" application
 process = Process()
 # Set the command
@@ -98,6 +96,8 @@ process.cmd = [binpath]
 # Set the cpu to use the process as its workload and create thread contexts
 system.cpu.workload = process
 system.cpu.createThreads()
+
+system.workload = SEWorkload.init_compatible(binpath)
 
 # set up the root SimObject and start the simulation
 root = Root(full_system = False, system = system)

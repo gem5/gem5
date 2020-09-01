@@ -195,8 +195,7 @@ else:
 # Create a system, and add system wide objects
 # ----------------------
 system = System(cpu = cpus, physmem = SimpleMemory(),
-                membus = SystemXBar(clock = busFrequency),
-                workload = SEWorkload())
+                membus = SystemXBar(clock = busFrequency))
 system.clock = '1GHz'
 
 system.toL2bus = L2XBar(clock = busFrequency)
@@ -267,6 +266,8 @@ else:
 
 for cpu in cpus:
     cpu.workload = root.workload
+
+system.workload = SEWorkload.init_compatible(root.workload.executable)
 
 # ----------------------
 # Run the simulation

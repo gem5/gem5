@@ -40,7 +40,7 @@ args = parser.parse_args()
 root = Root(full_system = False)
 root.system = System()
 
-root.system.workload = SEWorkload()
+root.system.workload = SEWorkload.init_compatible(args.cmd)
 
 root.system.clk_domain = SrcClockDomain()
 root.system.clk_domain.clock = '3GHz'

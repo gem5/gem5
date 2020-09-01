@@ -169,11 +169,12 @@ if options.smt and options.num_cpus > 1:
     fatal("You cannot use SMT with multiple CPUs!")
 
 np = options.num_cpus
+mp0_path = multiprocesses[0].executable
 system = System(cpu = [CPUClass(cpu_id=i) for i in range(np)],
                 mem_mode = test_mem_mode,
                 mem_ranges = [AddrRange(options.mem_size)],
                 cache_line_size = options.cacheline_size,
-                workload = SEWorkload())
+                workload = SEWorkload.init_compatible(mp0_path))
 
 if numThreads > 1:
     system.multi_thread = True

@@ -89,8 +89,6 @@ thispath = os.path.dirname(os.path.realpath(__file__))
 binary = os.path.join(thispath, '../../../', 'tests/test-progs/threads/bin/',
                       isa, 'linux/threads')
 
-system.workload = SEWorkload()
-
 # Create a process for a simple "multi-threaded" application
 process = Process()
 # Set the command
@@ -100,6 +98,8 @@ process.cmd = [binary]
 for cpu in system.cpu:
     cpu.workload = process
     cpu.createThreads()
+
+system.workload = SEWorkload.init_compatible(binary)
 
 # Set up the pseudo file system for the threads function above
 config_filesystem(system)
