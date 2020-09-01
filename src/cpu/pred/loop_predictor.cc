@@ -57,7 +57,8 @@ LoopPredictor::LoopPredictor(LoopPredictorParams *p)
     restrictAllocation(p->restrictAllocation),
     initialLoopIter(p->initialLoopIter),
     initialLoopAge(p->initialLoopAge),
-    optionalAgeReset(p->optionalAgeReset)
+    optionalAgeReset(p->optionalAgeReset),
+    stats(this)
 {
     assert(initialLoopAge <= ((1 << loopTableAgeBits) - 1));
 }
@@ -314,9 +315,9 @@ void
 LoopPredictor::updateStats(bool taken, BranchInfo* bi)
 {
     if (taken == bi->loopPred) {
-        loopPredictorCorrect++;
+        stats.correct++;
     } else {
-        loopPredictorWrong++;
+        stats.wrong++;
     }
 }
 
@@ -344,18 +345,13 @@ LoopPredictor::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
     loopUpdate(branch_pc, taken, bi, tage_pred);
 }
 
-void
-LoopPredictor::regStats()
+LoopPredictor::LoopPredictorStats::LoopPredictorStats(Stats::Group *parent)
+    : Stats::Group(parent),
+      ADD_STAT(correct, "Number of times the loop predictor is"
+          " the provider and the prediction is correct"),
+      ADD_STAT(wrong, "Number of times the loop predictor is the"
+          " provider and the prediction is wrong")
 {
-    loopPredictorCorrect
-        .name(name() + ".loopPredictorCorrect")
-        .desc("Number of times the loop predictor is the provider and "
-              "the prediction is correct");
-
-    loopPredictorWrong
-        .name(name() + ".loopPredictorWrong")
-        .desc("Number of times the loop predictor is the provider and "
-              "the prediction is wrong");
 }
 
 size_t

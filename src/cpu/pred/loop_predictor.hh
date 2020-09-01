@@ -83,9 +83,11 @@ class LoopPredictor : public SimObject
     const unsigned initialLoopAge;
     const bool optionalAgeReset;
 
-    // stats
-    Stats::Scalar loopPredictorCorrect;
-    Stats::Scalar loopPredictorWrong;
+    struct LoopPredictorStats : public Stats::Group {
+        LoopPredictorStats(Stats::Group *parent);
+        Stats::Scalar correct;
+        Stats::Scalar wrong;
+    } stats;
 
     /**
      * Updates an unsigned counter based on up/down parameter
@@ -249,11 +251,6 @@ class LoopPredictor : public SimObject
      * Initialize the loop predictor
      */
     void init() override;
-
-    /**
-     * Register stats for this object
-     */
-    void regStats() override;
 
     LoopPredictor(LoopPredictorParams *p);
 
