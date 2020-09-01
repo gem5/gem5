@@ -57,9 +57,9 @@ def run_test(root):
 
 config = sys.argv[1]
 os.environ['M5_PATH'] = sys.argv[2]
+gem5_root = sys.argv[3]
 
 # path setup
-gem5_root = joinpath(os.path.dirname(__file__), '..', '..', '..', '..', '..')
 sys.path.append(joinpath(gem5_root, 'configs'))
 tests_root = joinpath(gem5_root, 'tests')
 sys.path.append(joinpath(tests_root, 'gem5', 'configs'))
