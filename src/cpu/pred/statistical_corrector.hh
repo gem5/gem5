@@ -182,9 +182,12 @@ class StatisticalCorrector : public SimObject
     int8_t firstH;
     int8_t secondH;
 
-    // stats
-    Stats::Scalar scPredictorCorrect;
-    Stats::Scalar scPredictorWrong;
+    struct StatisticalCorrectorStats : public Stats::Group {
+        StatisticalCorrectorStats(Stats::Group *parent);
+        Stats::Scalar correct;
+        Stats::Scalar wrong;
+    } stats;
+
   public:
     struct BranchInfo
     {
@@ -260,7 +263,6 @@ class StatisticalCorrector : public SimObject
         int64_t phist) = 0;
 
     void init() override;
-    void regStats() override;
     void updateStats(bool taken, BranchInfo *bi);
 
     virtual void condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
