@@ -38,6 +38,60 @@ namespace Loader
 
 ObjectFile::ObjectFile(ImageFileDataPtr ifd) : ImageFile(ifd) {}
 
+const char *
+archToString(Arch arch)
+{
+    switch (arch) {
+      case UnknownArch:
+        return "unknown";
+      case SPARC64:
+        return "sparc64";
+      case SPARC32:
+        return "sparc32";
+      case Mips:
+        return "mips";
+      case X86_64:
+        return "x86_64";
+      case I386:
+        return "i386";
+      case Arm64:
+        return "arm64";
+      case Arm:
+        return "arm";
+      case Thumb:
+        return "thumb";
+      case Power:
+        return "power";
+      case Riscv64:
+        return "riscv64";
+      case Riscv32:
+        return "riscv32";
+      default:
+        panic("Unrecognized arch %d.", arch);
+    }
+}
+
+const char *
+opSysToString(OpSys op_sys)
+{
+    switch (op_sys) {
+      case UnknownOpSys:
+        return "unknown";
+      case Tru64:
+        return "tru64";
+      case Linux:
+        return "linux";
+      case Solaris:
+        return "solaris";
+      case LinuxArmOABI:
+        return "linux_arm_OABI";
+      case FreeBSD:
+        return "freebsd";
+      default:
+        panic("Unrecognized operating system %d.", op_sys);
+    }
+}
+
 namespace
 {
 

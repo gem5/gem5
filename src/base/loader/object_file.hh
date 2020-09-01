@@ -56,6 +56,8 @@ enum Arch {
     Riscv32
 };
 
+const char *archToString(Arch arch);
+
 enum OpSys {
     UnknownOpSys,
     Tru64,
@@ -64,6 +66,8 @@ enum OpSys {
     LinuxArmOABI,
     FreeBSD
 };
+
+const char *opSysToString(OpSys op_sys);
 
 class SymbolTable;
 
