@@ -59,7 +59,6 @@ class TAGEBase : public SimObject
 {
   public:
     TAGEBase(const TAGEBaseParams *p);
-    void regStats() override;
     void init() override;
 
   protected:
@@ -483,20 +482,23 @@ class TAGEBase : public SimObject
 
     bool initialized;
 
-    // stats
-    Stats::Scalar tageLongestMatchProviderCorrect;
-    Stats::Scalar tageAltMatchProviderCorrect;
-    Stats::Scalar bimodalAltMatchProviderCorrect;
-    Stats::Scalar tageBimodalProviderCorrect;
-    Stats::Scalar tageLongestMatchProviderWrong;
-    Stats::Scalar tageAltMatchProviderWrong;
-    Stats::Scalar bimodalAltMatchProviderWrong;
-    Stats::Scalar tageBimodalProviderWrong;
-    Stats::Scalar tageAltMatchProviderWouldHaveHit;
-    Stats::Scalar tageLongestMatchProviderWouldHaveHit;
+    struct TAGEBaseStats : public Stats::Group {
+        TAGEBaseStats(Stats::Group *parent, unsigned nHistoryTables);
+        // stats
+        Stats::Scalar longestMatchProviderCorrect;
+        Stats::Scalar altMatchProviderCorrect;
+        Stats::Scalar bimodalAltMatchProviderCorrect;
+        Stats::Scalar bimodalProviderCorrect;
+        Stats::Scalar longestMatchProviderWrong;
+        Stats::Scalar altMatchProviderWrong;
+        Stats::Scalar bimodalAltMatchProviderWrong;
+        Stats::Scalar bimodalProviderWrong;
+        Stats::Scalar altMatchProviderWouldHaveHit;
+        Stats::Scalar longestMatchProviderWouldHaveHit;
 
-    Stats::Vector tageLongestMatchProvider;
-    Stats::Vector tageAltMatchProvider;
+        Stats::Vector longestMatchProvider;
+        Stats::Vector altMatchProvider;
+    } stats;
 };
 
 #endif // __CPU_PRED_TAGE_BASE
