@@ -1,0 +1,139 @@
+# -*- mode:python -*-
+
+# Copyright (c) 2004-2005 The Regents of The University of Michigan
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Nathan Binkert
+
+from __future__ import print_function
+
+import os, subprocess
+
+Import('main')
+
+from m5.util import compareVersions
+
+elf_files = []
+def ElfFile(filename):
+    elf_files.append(File(filename))
+
+ElfFile('elf_begin.c')
+ElfFile('elf_cntl.c')
+ElfFile('elf_data.c')
+ElfFile('elf_end.c')
+ElfFile('elf_errmsg.c')
+ElfFile('elf_errno.c')
+ElfFile('elf_fill.c')
+ElfFile('elf_flag.c')
+ElfFile('elf_getarhdr.c')
+ElfFile('elf_getarsym.c')
+ElfFile('elf_getbase.c')
+ElfFile('elf_getident.c')
+ElfFile('elf_hash.c')
+ElfFile('elf_kind.c')
+ElfFile('elf_memory.c')
+ElfFile('elf_next.c')
+ElfFile('elf_phnum.c')
+ElfFile('elf_rand.c')
+ElfFile('elf_rawfile.c')
+ElfFile('elf_scn.c')
+ElfFile('elf_shnum.c')
+ElfFile('elf_shstrndx.c')
+ElfFile('elf_strptr.c')
+ElfFile('elf_update.c')
+ElfFile('elf_version.c')
+ElfFile('gelf_checksum.c')
+ElfFile('gelf_dyn.c')
+ElfFile('gelf_ehdr.c')
+ElfFile('gelf_fsize.c')
+ElfFile('gelf_getclass.c')
+ElfFile('gelf_phdr.c')
+ElfFile('gelf_rel.c')
+ElfFile('gelf_rela.c')
+ElfFile('gelf_shdr.c')
+ElfFile('gelf_sym.c')
+ElfFile('gelf_symshndx.c')
+ElfFile('gelf_xlate.c')
+ElfFile('libelf.c')
+ElfFile('libelf_align.c')
+ElfFile('libelf_allocate.c')
+ElfFile('libelf_ar.c')
+ElfFile('libelf_checksum.c')
+ElfFile('libelf_data.c')
+ElfFile('libelf_ehdr.c')
+ElfFile('libelf_extended.c')
+ElfFile('libelf_phdr.c')
+ElfFile('libelf_shdr.c')
+ElfFile('libelf_xlate.c')
+
+ElfFile('libelf_convert.c')
+ElfFile('libelf_fsize.c')
+ElfFile('libelf_msize.c')
+
+m4env = main.Clone()
+if m4env['GCC']:
+    m4env.Append(CCFLAGS=['-Wno-pointer-sign',
+                          '-Wno-unused-but-set-variable',
+                          '-Wno-implicit-function-declaration',
+                          '-Wno-override-init'])
+if m4env['CLANG']:
+    m4env.Append(CCFLAGS=['-Wno-initializer-overrides', '-Wno-pointer-sign'])
+    # clang defaults to c99 (while gcc defaults to gnu89) and there is a
+    # difference in the handling of inlining functions which causes
+    # linking problems with multiple definitions of the symbols in
+    # sysmacros.h for older versions of glibc
+    m4env.Append(CCFLAGS=['-std=gnu89'])
+m4env.Append(CCFLAGS=['-Wno-implicit'])
+del m4env['CPPPATH']
+
+# If we have gm4 use it
+if m4env.Detect('gm4'):
+    m4env['M4'] = 'gm4'
+
+# Check that m4 is available
+import SCons.Tool.m4
+if not SCons.Tool.m4.exists(m4env):
+   print("Error: Can't find version of M4 macro processor.  " +
+         "Please install M4 and try again.")
+   Exit(1)
+
+m4env.Append(M4FLAGS=['-DSRCDIR=%s' % Dir('.').path])
+m4env['M4COM'] = '$M4 $M4FLAGS $SOURCES > $TARGET'
+m4env.M4(target=File('libelf_convert.c'),
+         source=[File('elf_types.m4'), File('libelf_convert.m4')])
+m4env.M4(target=File('libelf_fsize.c'),
+         source=[File('elf_types.m4'), File('libelf_fsize.m4')])
+m4env.M4(target=File('libelf_msize.c'),
+         source=[File('elf_types.m4'), File('libelf_msize.m4')])
+
+# Build libelf as a static library with PIC code so it can be linked
+# into either m5 or the library
+m4env.Library('elf', [m4env.SharedObject(f) for f in elf_files])
+
+main.Prepend(CPPPATH=Dir('.'))
+main.Append(LIBS=['elf'])
+main.Prepend(LIBPATH=[Dir('.')])
+
