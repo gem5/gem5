@@ -106,6 +106,9 @@ class SimpleThread : public ThreadState, public ThreadContext
 
     TheISA::PCState _pcState;
 
+    // hardware transactional memory
+    std::unique_ptr<BaseHTMCheckpoint> _htmCheckpoint;
+
     /** Did this instruction execute or is it predicated false */
     bool predicate;
 
@@ -131,6 +134,10 @@ class SimpleThread : public ThreadState, public ThreadContext
     BaseTLB *dtb;
 
     TheISA::Decoder decoder;
+
+    // hardware transactional memory
+    int64_t htmTransactionStarts;
+    int64_t htmTransactionStops;
 
     // constructor: initialize SimpleThread from given process structure
     // FS

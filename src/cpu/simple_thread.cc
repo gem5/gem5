@@ -72,7 +72,8 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
       isa(dynamic_cast<TheISA::ISA *>(_isa)),
       predicate(true), memAccPredicate(true),
       comInstEventQueue("instruction-based event queue"),
-      system(_sys), itb(_itb), dtb(_dtb), decoder(isa)
+      system(_sys), itb(_itb), dtb(_dtb), decoder(isa),
+      htmTransactionStarts(0), htmTransactionStops(0)
 {
     assert(isa);
     clearArchRegs();
@@ -84,7 +85,8 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
       isa(dynamic_cast<TheISA::ISA *>(_isa)),
       predicate(true), memAccPredicate(true),
       comInstEventQueue("instruction-based event queue"),
-      system(_sys), itb(_itb), dtb(_dtb), decoder(isa)
+      system(_sys), itb(_itb), dtb(_dtb), decoder(isa),
+      htmTransactionStarts(0), htmTransactionStops(0)
 {
     assert(isa);
 
@@ -175,17 +177,25 @@ SimpleThread::copyArchRegs(ThreadContext *src_tc)
 void
 SimpleThread::htmAbortTransaction(uint64_t htm_uid, HtmFailureFaultCause cause)
 {
-    panic("function not implemented\n");
+    BaseSimpleCPU *baseSimpleCpu = dynamic_cast<BaseSimpleCPU*>(baseCpu);
+    assert(baseSimpleCpu);
+
+    baseSimpleCpu->htmSendAbortSignal(cause);
+
+    // these must be reset after the abort signal has been sent
+    htmTransactionStarts = 0;
+    htmTransactionStops = 0;
 }
 
 BaseHTMCheckpointPtr&
 SimpleThread::getHtmCheckpointPtr()
 {
-    panic("function not implemented\n");
+    return _htmCheckpoint;
 }
 
 void
 SimpleThread::setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt)
 {
-    panic("function not implemented\n");
+    assert(!_htmCheckpoint->valid());
+    _htmCheckpoint = std::move(new_cpt);
 }

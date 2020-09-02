@@ -63,6 +63,7 @@
 #include "debug/Decode.hh"
 #include "debug/ExecFaulting.hh"
 #include "debug/Fetch.hh"
+#include "debug/HtmCpu.hh"
 #include "debug/Quiesce.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
@@ -453,6 +454,17 @@ BaseSimpleCPU::checkForInterrupts()
         Fault interrupt = interrupts[curThread]->getInterrupt();
 
         if (interrupt != NoFault) {
+            // hardware transactional memory
+            // Postpone taking interrupts while executing transactions.
+            assert(!std::dynamic_pointer_cast<GenericHtmFailureFault>(
+                interrupt));
+            if (t_info.inHtmTransactionalState()) {
+                DPRINTF(HtmCpu, "Deferring pending interrupt - %s -"
+                    "due to transactional state\n",
+                    interrupt->name());
+                return;
+            }
+
             t_info.fetchOffset = 0;
             interrupts[curThread]->updateIntrInfo();
             interrupt->invoke(tc);

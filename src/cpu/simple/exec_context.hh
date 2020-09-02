@@ -475,8 +475,7 @@ class SimpleExecContext : public ExecContext {
 
     Fault initiateHtmCmd(Request::Flags flags) override
     {
-        panic("Not yet supported\n");
-        return NoFault;
+        return cpu->initiateHtmCmd(flags);
     }
 
     /**
@@ -536,29 +535,26 @@ class SimpleExecContext : public ExecContext {
     uint64_t
     getHtmTransactionUid() const override
     {
-        panic("Not yet supported\n");
-        return 0;
+        return tcBase()->getHtmCheckpointPtr()->getHtmUid();
     }
 
     uint64_t
     newHtmTransactionUid() const override
     {
-        panic("Not yet supported\n");
-        return 0;
+        return tcBase()->getHtmCheckpointPtr()->newHtmUid();
     }
 
     bool
     inHtmTransactionalState() const override
     {
-        panic("Not yet supported\n");
-        return false;
+        return (getHtmTransactionalDepth() > 0);
     }
 
     uint64_t
     getHtmTransactionalDepth() const override
     {
-        panic("Not yet supported\n");
-        return 0;
+        assert(thread->htmTransactionStarts >= thread->htmTransactionStops);
+        return (thread->htmTransactionStarts - thread->htmTransactionStops);
     }
 
     /**
