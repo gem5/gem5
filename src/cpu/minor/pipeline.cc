@@ -104,14 +104,6 @@ Pipeline::Pipeline(MinorCPU &cpu_, MinorCPUParams &params) :
 }
 
 void
-Pipeline::regStats()
-{
-    Ticked::regStats();
-
-    fetch2.regStats();
-}
-
-void
 Pipeline::minorTrace() const
 {
     fetch1.minorTrace();
