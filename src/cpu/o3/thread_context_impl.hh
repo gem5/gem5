@@ -331,21 +331,24 @@ void
 O3ThreadContext<Impl>::htmAbortTransaction(uint64_t htmUid,
                                            HtmFailureFaultCause cause)
 {
-    panic("function not implemented\n");
+    cpu->htmSendAbortSignal(thread->threadId(), htmUid, cause);
+
+    conditionalSquash();
 }
 
 template <class Impl>
 BaseHTMCheckpointPtr&
 O3ThreadContext<Impl>::getHtmCheckpointPtr()
 {
-    panic("function not implemented\n");
+    return thread->htmCheckpoint;
 }
 
 template <class Impl>
 void
 O3ThreadContext<Impl>::setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt)
 {
-    panic("function not implemented\n");
+    assert(!thread->htmCheckpoint->valid());
+    thread->htmCheckpoint = std::move(new_cpt);
 }
 
 #endif //__CPU_O3_THREAD_CONTEXT_IMPL_HH__

@@ -61,6 +61,7 @@
 #include "cpu/op_class.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/translation.hh"
+#include "debug/HtmCpu.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
@@ -140,6 +141,7 @@ class BaseDynInst : public ExecContext, public RefCounted
         IsStrictlyOrdered,
         ReqMade,
         MemOpDone,
+        HtmFromTransaction,
         MaxFlags
     };
 
@@ -239,6 +241,11 @@ class BaseDynInst : public ExecContext, public RefCounted
     /////////////////////// Checker //////////////////////
     // Need a copy of main request pointer to verify on writes.
     RequestPtr reqToVerify;
+
+  private:
+    // hardware transactional memory
+    uint64_t htmUid;
+    uint64_t htmDepth;
 
   protected:
     /** Flattened register index of the destination registers of this
@@ -548,8 +555,8 @@ class BaseDynInst : public ExecContext, public RefCounted
 
     uint64_t getHtmTransactionUid() const override
     {
-        panic("Not yet implemented\n");
-        return 0;
+        assert(instFlags[HtmFromTransaction]);
+        return this->htmUid;
     }
 
     uint64_t newHtmTransactionUid() const override
@@ -560,14 +567,35 @@ class BaseDynInst : public ExecContext, public RefCounted
 
     bool inHtmTransactionalState() const override
     {
-        panic("Not yet implemented\n");
-        return false;
+        return instFlags[HtmFromTransaction];
     }
 
     uint64_t getHtmTransactionalDepth() const override
     {
-        panic("Not yet implemented\n");
-        return 0;
+        if (inHtmTransactionalState())
+            return this->htmDepth;
+        else
+            return 0;
+    }
+
+    void setHtmTransactionalState(uint64_t htm_uid, uint64_t htm_depth)
+    {
+        instFlags.set(HtmFromTransaction);
+        htmUid = htm_uid;
+        htmDepth = htm_depth;
+    }
+
+    void clearHtmTransactionalState()
+    {
+        if (inHtmTransactionalState()) {
+            DPRINTF(HtmCpu,
+                "clearing instuction's transactional state htmUid=%u\n",
+                getHtmTransactionUid());
+
+            instFlags.reset(HtmFromTransaction);
+            htmUid = -1;
+            htmDepth = 0;
+        }
     }
 
     /** Temporarily sets this instruction as a serialize before instruction. */
@@ -997,8 +1025,9 @@ template<class Impl>
 Fault
 BaseDynInst<Impl>::initiateHtmCmd(Request::Flags flags)
 {
-    panic("Not yet implemented\n");
-    return NoFault;
+    return cpu->pushRequest(
+            dynamic_cast<typename DynInstPtr::PtrType>(this),
+            /* ld */ true, nullptr, 8, 0x0ul, flags, nullptr, nullptr);
 }
 
 template<class Impl>

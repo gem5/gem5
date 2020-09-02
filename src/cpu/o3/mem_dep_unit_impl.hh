@@ -172,7 +172,9 @@ MemDepUnit<MemDepPred, Impl>::insertBarrierSN(const DynInstPtr &barr_inst)
 {
     InstSeqNum barr_sn = barr_inst->seqNum;
     // Memory barriers block loads and stores, write barriers only stores.
-    if (barr_inst->isMemBarrier()) {
+    // Required also for hardware transactional memory commands which
+    // can have strict ordering semantics
+    if (barr_inst->isMemBarrier() || barr_inst->isHtmCmd()) {
         loadBarrierSNs.insert(barr_sn);
         storeBarrierSNs.insert(barr_sn);
         DPRINTF(MemDepUnit, "Inserted a memory barrier %s SN:%lli\n",
@@ -182,6 +184,7 @@ MemDepUnit<MemDepPred, Impl>::insertBarrierSN(const DynInstPtr &barr_inst)
         DPRINTF(MemDepUnit, "Inserted a write barrier %s SN:%lli\n",
                 barr_inst->pcState(), barr_sn);
     }
+
     if (loadBarrierSNs.size() || storeBarrierSNs.size()) {
         DPRINTF(MemDepUnit, "Outstanding load barriers = %d; "
                             "store barriers = %d\n",
@@ -440,7 +443,8 @@ MemDepUnit<MemDepPred, Impl>::completeInst(const DynInstPtr &inst)
     wakeDependents(inst);
     completed(inst);
     InstSeqNum barr_sn = inst->seqNum;
-    if (inst->isMemBarrier()) {
+
+    if (inst->isMemBarrier() || inst->isHtmCmd()) {
         assert(hasLoadBarrier());
         assert(hasStoreBarrier());
         loadBarrierSNs.erase(barr_sn);
@@ -459,9 +463,10 @@ template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::wakeDependents(const DynInstPtr &inst)
 {
-    // Only stores, atomics and barriers have dependents.
+    // Only stores, atomics, barriers and
+    // hardware transactional memory commands have dependents.
     if (!inst->isStore() && !inst->isAtomic() && !inst->isMemBarrier() &&
-        !inst->isWriteBarrier()) {
+        !inst->isWriteBarrier() && !inst->isHtmCmd()) {
         return;
     }
 

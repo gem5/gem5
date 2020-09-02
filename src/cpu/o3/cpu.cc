@@ -623,6 +623,10 @@ template <class Impl>
 void
 FullO3CPU<Impl>::deactivateThread(ThreadID tid)
 {
+    // hardware transactional memory
+    // shouldn't deactivate thread in the middle of a transaction
+    assert(!commit.executingHtmTransaction(tid));
+
     //Remove From Active List, if Active
     list<ThreadID>::iterator thread_it =
         std::find(activeThreads.begin(), activeThreads.end(), tid);
@@ -1829,10 +1833,38 @@ FullO3CPU<Impl>::exitThreads()
 
 template <class Impl>
 void
-FullO3CPU<Impl>::htmSendAbortSignal(ThreadID tid, uint64_t htmUid,
+FullO3CPU<Impl>::htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
      HtmFailureFaultCause cause)
 {
-    panic("not yet supported!");
+    const Addr addr = 0x0ul;
+    const int size = 8;
+    const Request::Flags flags =
+      Request::PHYSICAL|Request::STRICT_ORDER|Request::HTM_ABORT;
+
+    // O3-specific actions
+    this->iew.ldstQueue.resetHtmStartsStops(tid);
+    this->commit.resetHtmStartsStops(tid);
+
+    // notify l1 d-cache (ruby) that core has aborted transaction
+    RequestPtr req =
+        std::make_shared<Request>(addr, size, flags, _dataMasterId);
+
+    req->taskId(taskId());
+    req->setContext(this->thread[tid]->contextId());
+    req->setHtmAbortCause(cause);
+
+    assert(req->isHTMAbort());
+
+    PacketPtr abort_pkt = Packet::createRead(req);
+    uint8_t *memData = new uint8_t[8];
+    assert(memData);
+    abort_pkt->dataStatic(memData);
+    abort_pkt->setHtmTransactional(htm_uid);
+
+    // TODO include correct error handling here
+    if (!this->iew.ldstQueue.getDataPort().sendTimingReq(abort_pkt)) {
+        panic("HTM abort signal was not sent to the memory subsystem.");
+    }
 }
 
 // Forward declaration of FullO3CPU.

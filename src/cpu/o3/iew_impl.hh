@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2018 ARM Limited
+ * Copyright (c) 2010-2013, 2018-2019 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -1050,6 +1050,20 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
             ++iewLSQFullEvents;
             break;
         }
+
+        // hardware transactional memory
+        // CPU needs to track transactional state in program order.
+        const int numHtmStarts = ldstQueue.numHtmStarts(tid);
+        const int numHtmStops = ldstQueue.numHtmStops(tid);
+        const int htmDepth = numHtmStarts - numHtmStops;
+
+        if (htmDepth > 0) {
+            inst->setHtmTransactionalState(ldstQueue.getLatestHtmUid(tid),
+                                            htmDepth);
+        } else {
+            inst->clearHtmTransactionalState();
+        }
+
 
         // Otherwise issue the instruction just fine.
         if (inst->isAtomic()) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2014 ARM Limited
+ * Copyright (c) 2010-2012, 2014, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -232,6 +232,16 @@ class DefaultIEW
 
     /** Check misprediction  */
     void checkMisprediction(const DynInstPtr &inst);
+
+    // hardware transactional memory
+    // For debugging purposes, it is useful to keep track of the most recent
+    // htmUid that has been committed (architecturally, not transactionally)
+    // to ensure that the core and the memory subsystem are observing
+    // correct ordering constraints.
+    void setLastRetiredHtmUid(ThreadID tid, uint64_t htmUid)
+    {
+        ldstQueue.setLastRetiredHtmUid(tid, htmUid);
+    }
 
   private:
     /** Sends commit proper information for a squash due to a branch

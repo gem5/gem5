@@ -53,6 +53,7 @@
 #include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/timebuf.hh"
+#include "debug/HtmCpu.hh"
 #include "debug/LSQUnit.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
@@ -312,6 +313,21 @@ class LSQUnit
     /** Returns the number of stores in the SQ. */
     int numStores() { return stores; }
 
+    // hardware transactional memory
+    int numHtmStarts() const { return htmStarts; }
+    int numHtmStops() const { return htmStops; }
+    void resetHtmStartsStops() { htmStarts = htmStops = 0; }
+    uint64_t getLatestHtmUid() const
+    {
+        const auto& htm_cpt = cpu->tcBase(lsqID)->getHtmCheckpointPtr();
+        return htm_cpt->getHtmUid();
+    }
+    void setLastRetiredHtmUid(uint64_t htm_uid)
+    {
+        assert(htm_uid >= lastRetiredHtmUid);
+        lastRetiredHtmUid = htm_uid;
+    }
+
     /** Returns if either the LQ or SQ is full. */
     bool isFull() { return lqFull() || sqFull(); }
 
@@ -496,6 +512,13 @@ class LSQUnit
     /** The number of store instructions in the SQ waiting to writeback. */
     int storesToWB;
 
+    // hardware transactional memory
+    // nesting depth
+    int htmStarts;
+    int htmStops;
+    // sanity checks and debugging
+    uint64_t lastRetiredHtmUid;
+
     /** The index of the first instruction that may be ready to be
      * written back, and has not yet been written back.
      */
@@ -665,6 +688,7 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
 
     if (req->mainRequest()->isLocalAccess()) {
         assert(!load_inst->memData);
+        assert(!load_inst->inHtmTransactionalState());
         load_inst->memData = new uint8_t[MaxDataBytes];
 
         ThreadContext *thread = cpu->tcBase(lsqID);
@@ -677,6 +701,37 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
         WritebackEvent *wb = new WritebackEvent(load_inst, main_pkt, this);
         cpu->schedule(wb, cpu->clockEdge(delay));
         return NoFault;
+    }
+
+    // hardware transactional memory
+    if (req->mainRequest()->isHTMStart() || req->mainRequest()->isHTMCommit())
+    {
+        // don't want to send nested transactionStarts and
+        // transactionStops outside of core, e.g. to Ruby
+        if (req->mainRequest()->getFlags().isSet(Request::NO_ACCESS)) {
+            Cycles delay(0);
+            PacketPtr data_pkt =
+                new Packet(req->mainRequest(), MemCmd::ReadReq);
+
+            // Allocate memory if this is the first time a load is issued.
+            if (!load_inst->memData) {
+                load_inst->memData =
+                    new uint8_t[req->mainRequest()->getSize()];
+                // sanity checks espect zero in request's data
+                memset(load_inst->memData, 0, req->mainRequest()->getSize());
+            }
+
+            data_pkt->dataStatic(load_inst->memData);
+            if (load_inst->inHtmTransactionalState()) {
+                data_pkt->setHtmTransactional(
+                    load_inst->getHtmTransactionUid());
+            }
+            data_pkt->makeResponse();
+
+            WritebackEvent *wb = new WritebackEvent(load_inst, data_pkt, this);
+            cpu->schedule(wb, cpu->clockEdge(delay));
+            return NoFault;
+        }
     }
 
     // Check the SQ for any previous stores that might lead to forwarding
@@ -771,6 +826,35 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
                         MemCmd::ReadReq);
                 data_pkt->dataStatic(load_inst->memData);
 
+                // hardware transactional memory
+                // Store to load forwarding within a transaction
+                // This should be okay because the store will be sent to
+                // the memory subsystem and subsequently get added to the
+                // write set of the transaction. The write set has a stronger
+                // property than the read set, so the load doesn't necessarily
+                // have to be there.
+                assert(!req->mainRequest()->isHTMCmd());
+                if (load_inst->inHtmTransactionalState()) {
+                    assert (!storeQueue[store_it._idx].completed());
+                    assert (
+                        storeQueue[store_it._idx].instruction()->
+                          inHtmTransactionalState());
+                    assert (
+                        load_inst->getHtmTransactionUid() ==
+                        storeQueue[store_it._idx].instruction()->
+                          getHtmTransactionUid());
+                    data_pkt->setHtmTransactional(
+                        load_inst->getHtmTransactionUid());
+                    DPRINTF(HtmCpu, "HTM LD (ST2LDF) "
+                      "pc=0x%lx - vaddr=0x%lx - "
+                      "paddr=0x%lx - htmUid=%u\n",
+                      load_inst->instAddr(),
+                      data_pkt->req->hasVaddr() ?
+                        data_pkt->req->getVaddr() : 0lu,
+                      data_pkt->getAddr(),
+                      load_inst->getHtmTransactionUid());
+                }
+
                 if (req->isAnyOutstandingRequest()) {
                     assert(req->_numOutstandingPackets > 0);
                     // There are memory requests packets in flight already.
@@ -839,6 +923,15 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
     // Allocate memory if this is the first time a load is issued.
     if (!load_inst->memData) {
         load_inst->memData = new uint8_t[req->mainRequest()->getSize()];
+    }
+
+
+    // hardware transactional memory
+    if (req->mainRequest()->isHTMCmd()) {
+        // this is a simple sanity check
+        // the Ruby cache controller will set
+        // memData to 0x0ul if successful.
+        *load_inst->memData = (uint64_t) 0x1ull;
     }
 
     // For now, load throughput is constrained by the number of

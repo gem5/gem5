@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -91,6 +91,9 @@ struct O3ThreadState : public ThreadState {
      * thus able to be externally updated without squashing.
      */
     bool trapPending;
+
+    /** Pointer to the hardware transactional memory checkpoint. */
+    std::unique_ptr<BaseHTMCheckpoint> htmCheckpoint;
 
     O3ThreadState(O3CPU *_cpu, int _thread_num, Process *_process)
         : ThreadState(_cpu, _thread_num, _process), cpu(_cpu),

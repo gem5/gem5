@@ -60,6 +60,7 @@
 #include "debug/CommitRate.hh"
 #include "debug/Drain.hh"
 #include "debug/ExecFaulting.hh"
+#include "debug/HtmCpu.hh"
 #include "debug/O3PipeView.hh"
 #include "params/DerivO3CPU.hh"
 #include "sim/faults.hh"
@@ -121,6 +122,8 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
         committedStores[tid] = false;
         checkEmptyROB[tid] = false;
         renameMap[tid] = nullptr;
+        htmStarts[tid] = 0;
+        htmStops[tid] = 0;
     }
     interrupt = NoFault;
 }
@@ -404,6 +407,14 @@ DefaultCommit<Impl>::drainSanityCheck() const
 {
     assert(isDrained());
     rob->drainSanityCheck();
+
+    // hardware transactional memory
+    // cannot drain partially through a transaction
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        if (executingHtmTransaction(tid)) {
+            panic("cannot drain partially through a HTM transaction");
+        }
+    }
 }
 
 template <class Impl>
@@ -459,6 +470,27 @@ DefaultCommit<Impl>::deactivateThread(ThreadID tid)
 
     if (thread_it != priority_list.end()) {
         priority_list.erase(thread_it);
+    }
+}
+
+template <class Impl>
+bool
+DefaultCommit<Impl>::executingHtmTransaction(ThreadID tid) const
+{
+    if (tid == InvalidThreadID)
+        return false;
+    else
+        return (htmStarts[tid] > htmStops[tid]);
+}
+
+template <class Impl>
+void
+DefaultCommit<Impl>::resetHtmStartsStops(ThreadID tid)
+{
+    if (tid != InvalidThreadID)
+    {
+        htmStarts[tid] = 0;
+        htmStops[tid] = 0;
     }
 }
 
@@ -531,6 +563,14 @@ DefaultCommit<Impl>::generateTrapEvent(ThreadID tid, Fault inst_fault)
 
     Cycles latency = dynamic_pointer_cast<SyscallRetryFault>(inst_fault) ?
                      cpu->syscallRetryLatency : trapLatency;
+
+    // hardware transactional memory
+    if (inst_fault != nullptr &&
+        std::dynamic_pointer_cast<GenericHtmFailureFault>(inst_fault)) {
+        // TODO
+        // latency = default abort/restore latency
+        // could also do some kind of exponential back off if desired
+    }
 
     cpu->schedule(trap, cpu->clockEdge(latency));
     trapInFlight[tid] = true;
@@ -991,12 +1031,27 @@ DefaultCommit<Impl>::commitInsts()
     // Commit as many instructions as possible until the commit bandwidth
     // limit is reached, or it becomes impossible to commit any more.
     while (num_committed < commitWidth) {
-        // Check for any interrupt that we've already squashed for
-        // and start processing it.
-        if (interrupt != NoFault)
-            handleInterrupt();
+        // hardware transactionally memory
+        // If executing within a transaction,
+        // need to handle interrupts specially
 
         ThreadID commit_thread = getCommittingThread();
+
+        // Check for any interrupt that we've already squashed for
+        // and start processing it.
+        if (interrupt != NoFault) {
+            // If inside a transaction, postpone interrupts
+            if (executingHtmTransaction(commit_thread)) {
+                cpu->clearInterrupts(0);
+                toIEW->commitInfo[0].clearInterrupt = true;
+                interrupt = NoFault;
+                avoidQuiesceLiveLock = true;
+            } else {
+                handleInterrupt();
+            }
+        }
+
+        // ThreadID commit_thread = getCommittingThread();
 
         if (commit_thread == -1 || !rob->isHeadReady(commit_thread))
             break;
@@ -1043,6 +1098,23 @@ DefaultCommit<Impl>::commitInsts()
                 ++num_committed;
                 statCommittedInstType[tid][head_inst->opClass()]++;
                 ppCommit->notify(head_inst);
+
+                // hardware transactional memory
+
+                // update nesting depth
+                if (head_inst->isHtmStart())
+                    htmStarts[tid]++;
+
+                // sanity check
+                if (head_inst->inHtmTransactionalState()) {
+                    assert(executingHtmTransaction(tid));
+                } else {
+                    assert(!executingHtmTransaction(tid));
+                }
+
+                // update nesting depth
+                if (head_inst->isHtmStop())
+                    htmStops[tid]++;
 
                 changedROBNumEntries[tid] = true;
 
@@ -1206,6 +1278,23 @@ DefaultCommit<Impl>::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
     // Check if the instruction caused a fault.  If so, trap.
     Fault inst_fault = head_inst->getFault();
 
+    // hardware transactional memory
+    // if a fault occurred within a HTM transaction
+    // ensure that the transaction aborts
+    if (inst_fault != NoFault && head_inst->inHtmTransactionalState()) {
+        // There exists a generic HTM fault common to all ISAs
+        if (!std::dynamic_pointer_cast<GenericHtmFailureFault>(inst_fault)) {
+            DPRINTF(HtmCpu, "%s - fault (%s) encountered within transaction"
+                            " - converting to GenericHtmFailureFault\n",
+            head_inst->staticInst->getName(), inst_fault->name());
+            inst_fault = std::make_shared<GenericHtmFailureFault>(
+                head_inst->getHtmTransactionUid(),
+                HtmFailureFaultCause::EXCEPTION);
+        }
+        // If this point is reached and the fault inherits from the HTM fault,
+        // then there is no need to raise a new fault
+    }
+
     // Stores mark themselves as completed.
     if (!head_inst->isStore() && inst_fault == NoFault) {
         head_inst->setCompleted();
@@ -1300,6 +1389,11 @@ DefaultCommit<Impl>::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
         renameMap[tid]->setEntry(head_inst->flattenedDestRegIdx(i),
                                  head_inst->renamedDestRegIdx(i));
     }
+
+    // hardware transactional memory
+    // the HTM UID is purely for correctness and debugging purposes
+    if (head_inst->isHtmStart())
+        iewStage->setLastRetiredHtmUid(tid, head_inst->getHtmTransactionUid());
 
     // Finally clear the head ROB entry.
     rob->retireHead(tid);

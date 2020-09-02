@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2014 ARM Limited
+ * Copyright (c) 2010-2012, 2014, 2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -204,6 +204,12 @@ class DefaultCommit
 
     /** Deschedules a thread from scheduling */
     void deactivateThread(ThreadID tid);
+
+    /** Is the CPU currently processing a HTM transaction? */
+    bool executingHtmTransaction(ThreadID) const;
+
+    /* Reset HTM tracking, e.g. after an abort */
+    void resetHtmStartsStops(ThreadID);
 
     /** Ticks the commit stage, which tries to commit instructions. */
     void tick();
@@ -472,6 +478,11 @@ class DefaultCommit
 
     /** Updates commit stats based on this instruction. */
     void updateComInstStats(const DynInstPtr &inst);
+
+
+    // HTM
+    int htmStarts[Impl::MaxThreads];
+    int htmStops[Impl::MaxThreads];
 
     /** Stat for the total number of squashed instructions discarded by commit.
      */

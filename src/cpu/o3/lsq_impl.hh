@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, 2014, 2017-2018 ARM Limited
+ * Copyright (c) 2011-2012, 2014, 2017-2019 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -51,6 +51,7 @@
 #include "cpu/o3/lsq.hh"
 #include "debug/Drain.hh"
 #include "debug/Fetch.hh"
+#include "debug/HtmCpu.hh"
 #include "debug/LSQ.hh"
 #include "debug/Writeback.hh"
 #include "params/DerivO3CPU.hh"
@@ -706,11 +707,17 @@ LSQ<Impl>::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
     // lines. For now, such cross-line update is not supported.
     assert(!isAtomic || (isAtomic && !needs_burst));
 
+    const bool htm_cmd = isLoad && (flags & Request::HTM_CMD);
+
     if (inst->translationStarted()) {
         req = inst->savedReq;
         assert(req);
     } else {
-        if (needs_burst) {
+        if (htm_cmd) {
+            assert(addr == 0x0lu);
+            assert(size == 8);
+            req = new HtmCmdRequest(&thread[tid], inst, flags);
+        } else if (needs_burst) {
             req = new SplitDataRequest(&thread[tid], inst, isLoad, addr,
                     size, flags, data, res);
         } else {
@@ -1033,6 +1040,23 @@ LSQ<Impl>::SingleDataRequest::buildPackets()
                     :  Packet::createWrite(request()));
         _packets.back()->dataStatic(_inst->memData);
         _packets.back()->senderState = _senderState;
+
+        // hardware transactional memory
+        // If request originates in a transaction (not necessarily a HtmCmd),
+        // then the packet should be marked as such.
+        if (_inst->inHtmTransactionalState()) {
+            _packets.back()->setHtmTransactional(
+                _inst->getHtmTransactionUid());
+
+            DPRINTF(HtmCpu,
+              "HTM %s pc=0x%lx - vaddr=0x%lx - paddr=0x%lx - htmUid=%u\n",
+              isLoad() ? "LD" : "ST",
+              _inst->instAddr(),
+              _packets.back()->req->hasVaddr() ?
+                  _packets.back()->req->getVaddr() : 0lu,
+              _packets.back()->getAddr(),
+              _inst->getHtmTransactionUid());
+        }
     }
     assert(_packets.size() == 1);
 }
@@ -1049,6 +1073,21 @@ LSQ<Impl>::SplitDataRequest::buildPackets()
         if (isLoad()) {
             _mainPacket = Packet::createRead(mainReq);
             _mainPacket->dataStatic(_inst->memData);
+
+            // hardware transactional memory
+            // If request originates in a transaction,
+            // packet should be marked as such
+            if (_inst->inHtmTransactionalState()) {
+                _mainPacket->setHtmTransactional(
+                    _inst->getHtmTransactionUid());
+                DPRINTF(HtmCpu,
+                  "HTM LD.0 pc=0x%lx-vaddr=0x%lx-paddr=0x%lx-htmUid=%u\n",
+                  _inst->instAddr(),
+                  _mainPacket->req->hasVaddr() ?
+                      _mainPacket->req->getVaddr() : 0lu,
+                  _mainPacket->getAddr(),
+                  _inst->getHtmTransactionUid());
+            }
         }
         for (int i = 0; i < _requests.size() && _fault[i] == NoFault; i++) {
             RequestPtr r = _requests[i];
@@ -1066,6 +1105,23 @@ LSQ<Impl>::SplitDataRequest::buildPackets()
             }
             pkt->senderState = _senderState;
             _packets.push_back(pkt);
+
+            // hardware transactional memory
+            // If request originates in a transaction,
+            // packet should be marked as such
+            if (_inst->inHtmTransactionalState()) {
+                _packets.back()->setHtmTransactional(
+                    _inst->getHtmTransactionUid());
+                DPRINTF(HtmCpu,
+                  "HTM %s.%d pc=0x%lx-vaddr=0x%lx-paddr=0x%lx-htmUid=%u\n",
+                  isLoad() ? "LD" : "ST",
+                  i+1,
+                  _inst->instAddr(),
+                  _packets.back()->req->hasVaddr() ?
+                      _packets.back()->req->getVaddr() : 0lu,
+                  _packets.back()->getAddr(),
+                  _inst->getHtmTransactionUid());
+            }
         }
     }
     assert(_packets.size() > 0);
@@ -1190,6 +1246,61 @@ void
 LSQ<Impl>::DcachePort::recvReqRetry()
 {
     lsq->recvReqRetry();
+}
+
+template<class Impl>
+LSQ<Impl>::HtmCmdRequest::HtmCmdRequest(LSQUnit* port,
+                  const DynInstPtr& inst,
+                  const Request::Flags& flags_) :
+    SingleDataRequest(port, inst, true, 0x0lu, 8, flags_,
+        nullptr, nullptr, nullptr)
+{
+    assert(_requests.size() == 0);
+
+    this->addRequest(_addr, _size, _byteEnable);
+
+    if (_requests.size() > 0) {
+        _requests.back()->setReqInstSeqNum(_inst->seqNum);
+        _requests.back()->taskId(_taskId);
+        _requests.back()->setPaddr(_addr);
+        _requests.back()->setInstCount(_inst->getCpuPtr()->totalInsts());
+
+        _inst->strictlyOrdered(_requests.back()->isStrictlyOrdered());
+        _inst->fault = NoFault;
+        _inst->physEffAddr = _requests.back()->getPaddr();
+        _inst->memReqFlags = _requests.back()->getFlags();
+        _inst->savedReq = this;
+
+        setState(State::Translation);
+    } else {
+        panic("unexpected behaviour");
+    }
+}
+
+template<class Impl>
+void
+LSQ<Impl>::HtmCmdRequest::initiateTranslation()
+{
+    // Transaction commands are implemented as loads to avoid significant
+    // changes to the cpu and memory interfaces
+    // The virtual and physical address uses a dummy value of 0x00
+    // Address translation does not really occur thus the code below
+
+    flags.set(Flag::TranslationStarted);
+    flags.set(Flag::TranslationFinished);
+
+    _inst->translationStarted(true);
+    _inst->translationCompleted(true);
+
+    setState(State::Request);
+}
+
+template<class Impl>
+void
+LSQ<Impl>::HtmCmdRequest::finish(const Fault &fault, const RequestPtr &req,
+        ThreadContext* tc, BaseTLB::Mode mode)
+{
+    panic("unexpected behaviour");
 }
 
 #endif//__CPU_O3_LSQ_IMPL_HH__

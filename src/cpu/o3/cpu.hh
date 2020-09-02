@@ -61,7 +61,6 @@
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/timebuf.hh"
-//#include "cpu/o3/thread_context.hh"
 #include "params/DerivO3CPU.hh"
 #include "sim/process.hh"
 
