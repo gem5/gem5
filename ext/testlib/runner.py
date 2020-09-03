@@ -128,6 +128,7 @@ class RunnerPattern:
             self.testable.status = Status.Running
             self.test()
         finally:
+            self.builder.post_test_procedure(self.testable)
             self.testable.status = Status.TearingDown
             self.builder.teardown(self.testable)
 
@@ -208,6 +209,10 @@ class FixtureBuilder(object):
 
                 raise BrokenFixtureException(fixture, testitem,
                         traceback.format_exc())
+
+    def post_test_procedure(self, testitem):
+        for fixture in self.built_fixtures:
+            fixture.post_test_procedure(testitem)
 
     def teardown(self, testitem):
         for fixture in self.built_fixtures:

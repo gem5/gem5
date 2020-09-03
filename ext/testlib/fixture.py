@@ -70,6 +70,9 @@ class Fixture(object):
     def setup(self, testitem):
         pass
 
+    def post_test_procedure(self, testitem):
+        pass
+
     def teardown(self, testitem):
         pass
 
