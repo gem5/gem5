@@ -13,7 +13,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     ca-certificates \
     m4 \
-    scons \
     zlib1g \
     zlib1g-dev \
     libprotobuf-dev \
@@ -24,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python \
     python-yaml \
     python-six \
+    python-pip \
     wget \
     libpci3 \
     libelf1 \
@@ -36,6 +36,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libboost-dev \
     libpng12-dev \
     libelf-dev
+
+RUN python -m pip install -U pip && \
+    python -m pip install -U setuptools scons
 
 ARG gem5_dist=http://dist.gem5.org/dist/develop
 
