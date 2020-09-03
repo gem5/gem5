@@ -653,6 +653,9 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
         node_ptr->physAddr, node_ptr->size, node_ptr->flags, masterID);
     req->setReqInstSeqNum(node_ptr->seqNum);
 
+    // If this is not done it triggers assert in L1 cache for invalid contextId
+    req->setContext(ContextID(0));
+
     req->setPC(node_ptr->pc);
     // If virtual address is valid, set the virtual address field
     // of the request.
