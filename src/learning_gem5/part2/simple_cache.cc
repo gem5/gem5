@@ -38,7 +38,7 @@ SimpleCache::SimpleCache(SimpleCacheParams *params) :
     blockSize(params->system->cacheLineSize()),
     capacity(params->size / blockSize),
     memPort(params->name + ".mem_side", this),
-    blocked(false), originalPacket(nullptr), waitingPortId(-1)
+    blocked(false), originalPacket(nullptr), waitingPortId(-1), stats(this)
 {
     // Since the CPU side ports are a vector of ports, create an instance of
     // the CPUSidePort for each connection. This member of params is
@@ -221,7 +221,7 @@ SimpleCache::handleResponse(PacketPtr pkt)
     // for any added latency.
     insert(pkt);
 
-    missLatency.sample(curTick() - missTime);
+    stats.missLatency.sample(curTick() - missTime);
 
     // If we had to upgrade the request packet to a full cache line, now we
     // can use that packet to construct the response.
@@ -286,12 +286,12 @@ SimpleCache::accessTiming(PacketPtr pkt)
 
     if (hit) {
         // Respond to the CPU side
-        hits++; // update stats
+        stats.hits++; // update stats
         DDUMP(SimpleCache, pkt->getConstPtr<uint8_t>(), pkt->getSize());
         pkt->makeResponse();
         sendResponse(pkt);
     } else {
-        misses++; // update stats
+        stats.misses++; // update stats
         missTime = curTick();
         // Forward to the memory side.
         // We can't directly forward the packet unless it is exactly the size
@@ -421,31 +421,15 @@ SimpleCache::sendRangeChange() const
     }
 }
 
-void
-SimpleCache::regStats()
+SimpleCache::SimpleCacheStats::SimpleCacheStats(Stats::Group *parent)
+      : Stats::Group(parent),
+      ADD_STAT(hits, "Number of hits"),
+      ADD_STAT(misses, "Number of misses"),
+      ADD_STAT(missLatency, "Ticks for misses to the cache"),
+      ADD_STAT(hitRatio, "The ratio of hits to the total"
+                 "accesses to the cache", hits / (hits + misses))
 {
-    // If you don't do this you get errors about uninitialized stats.
-    ClockedObject::regStats();
-
-    hits.name(name() + ".hits")
-        .desc("Number of hits")
-        ;
-
-    misses.name(name() + ".misses")
-        .desc("Number of misses")
-        ;
-
-    missLatency.name(name() + ".missLatency")
-        .desc("Ticks for misses to the cache")
-        .init(16) // number of buckets
-        ;
-
-    hitRatio.name(name() + ".hitRatio")
-        .desc("The ratio of hits to the total accesses to the cache")
-        ;
-
-    hitRatio = hits / (hits + misses);
-
+    missLatency.init(16); // number of buckets
 }
 
 

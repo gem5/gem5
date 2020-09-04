@@ -292,10 +292,15 @@ class SimpleCache : public ClockedObject
     std::unordered_map<Addr, uint8_t*> cacheStore;
 
     /// Cache statistics
-    Stats::Scalar hits;
-    Stats::Scalar misses;
-    Stats::Histogram missLatency;
-    Stats::Formula hitRatio;
+  protected:
+    struct SimpleCacheStats : public Stats::Group
+    {
+        SimpleCacheStats(Stats::Group *parent);
+        Stats::Scalar hits;
+        Stats::Scalar misses;
+        Stats::Histogram missLatency;
+        Stats::Formula hitRatio;
+    } stats;
 
   public:
 
@@ -316,10 +321,6 @@ class SimpleCache : public ClockedObject
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;
 
-    /**
-     * Register the stats
-     */
-    void regStats() override;
 };
 
 
