@@ -83,10 +83,6 @@ pybind_init_debug(py::module &m_native)
     m_debug
         .def("getAllFlagsVersion", []() { return Debug::allFlagsVersion; })
         .def("allFlags", &Debug::allFlags, py::return_value_policy::reference)
-        .def("findFlag", &Debug::findFlag)
-        .def("setDebugFlag", &setDebugFlag)
-        .def("clearDebugFlag", &clearDebugFlag)
-        .def("dumpDebugFlags", &dumpDebugFlags)
 
         .def("schedBreak", &schedBreak)
         .def("setRemoteGDBPort", &setRemoteGDBPort)
