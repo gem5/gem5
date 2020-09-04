@@ -72,4 +72,5 @@ for isa in test_progs:
                     config_args=['--cmd', joinpath(path, binary),
                         '--cpu-type', cpu, '--caches'],
                     valid_isas=(isa.upper(),),
+                    length = constants.long_tag,
                 )
