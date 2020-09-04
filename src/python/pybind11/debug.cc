@@ -98,6 +98,20 @@ pybind_init_debug(py::module &m_native)
         .def_property_readonly("desc", &Debug::Flag::desc)
         .def("enable", &Debug::Flag::enable)
         .def("disable", &Debug::Flag::disable)
+        .def_property("status",
+                      [](const Debug::Flag *flag) {
+                          return flag->status();
+                      },
+                      [](Debug::Flag *flag, bool state) {
+                          if (state) {
+                              flag->enable();
+                          } else {
+                              flag->disable();
+                          }
+                      })
+        .def("__bool__", [](const Debug::Flag *flag) {
+                return flag->status();
+            })
         ;
 
     py::class_<Debug::SimpleFlag>(m_debug, "SimpleFlag", c_flag);
