@@ -91,10 +91,10 @@ def _validateTags(commit_header):
     valid_tags = ["arch", "arch-arm", "arch-gcn3",
         "arch-mips", "arch-power", "arch-riscv", "arch-sparc", "arch-x86",
         "base", "configs", "cpu", "cpu-kvm", "cpu-minor", "cpu-o3",
-        "cpu-simple", "dev", "dev-arm", "dev-virtio", "ext", "fastmodel",
-        "gpu-compute", "learning-gem5", "mem", "mem-cache", "mem-garnet",
-        "mem-ruby", "misc", "python", "scons", "sim", "sim-se", "sim-power",
-        "stats", "system", "system-arm", "systemc", "tests",
+        "cpu-simple", "dev", "dev-arm", "dev-hsa", "dev-virtio", "ext",
+        "fastmodel", "gpu-compute", "learning-gem5", "mem", "mem-cache",
+        "mem-garnet", "mem-ruby", "misc", "python", "scons", "sim", "sim-se",
+        "sim-power", "stats", "system", "system-arm", "systemc", "tests",
         "util", "RFC", "WIP"]
 
     tags = ''.join(commit_header.split(':')[0].split()).split(',')
