@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 ARM Limited
+ * Copyright (c) 2017, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -94,16 +94,16 @@ pybind_init_debug(py::module &m_native)
 
     py::class_<Debug::Flag> c_flag(m_debug, "Flag");
     c_flag
-        .def("name", &Debug::Flag::name)
-        .def("desc", &Debug::Flag::desc)
-        .def("kids", &Debug::Flag::kids)
+        .def_property_readonly("name", &Debug::Flag::name)
+        .def_property_readonly("desc", &Debug::Flag::desc)
         .def("enable", &Debug::Flag::enable)
         .def("disable", &Debug::Flag::disable)
-        .def("sync", &Debug::Flag::sync)
         ;
 
     py::class_<Debug::SimpleFlag>(m_debug, "SimpleFlag", c_flag);
-    py::class_<Debug::CompoundFlag>(m_debug, "CompoundFlag", c_flag);
+    py::class_<Debug::CompoundFlag>(m_debug, "CompoundFlag", c_flag)
+        .def("kids", &Debug::CompoundFlag::kids)
+        ;
 
 
     py::module m_trace = m_native.def_submodule("trace");

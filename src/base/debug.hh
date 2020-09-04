@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * Copyright (c) 2010 The Hewlett-Packard Development Company
  * All rights reserved.
@@ -42,8 +54,12 @@ void breakpoint();
 class Flag
 {
   protected:
+    static bool _globalEnable; // whether debug tracings are enabled
+
     const char *_name;
     const char *_desc;
+
+    virtual void sync() { }
 
   public:
     Flag(const char *name, const char *desc);
@@ -51,36 +67,35 @@ class Flag
 
     std::string name() const { return _name; }
     std::string desc() const { return _desc; }
-    virtual std::vector<Flag *> kids() { return std::vector<Flag*>(); }
 
     virtual void enable() = 0;
     virtual void disable() = 0;
-    virtual void sync() {}
+    virtual bool status() const = 0;
+
+    operator bool() const { return status(); }
+    bool operator!() const { return !status(); }
+
+    static void globalEnable();
+    static void globalDisable();
 };
 
 class SimpleFlag : public Flag
 {
-    static bool _active; // whether debug tracings are enabled
   protected:
     bool _tracing; // tracing is enabled and flag is on
     bool _status;  // flag status
+
+    void sync() override { _tracing = _globalEnable && _status; }
 
   public:
     SimpleFlag(const char *name, const char *desc)
         : Flag(name, desc), _status(false)
     { }
 
-    bool status() const { return _tracing; }
-    operator bool() const { return _tracing; }
-    bool operator!() const { return !_tracing; }
+    bool status() const override { return _tracing; }
 
-    void enable()  { _status = true;  sync(); }
-    void disable() { _status = false; sync(); }
-
-    void sync() { _tracing = _active && _status; }
-
-    static void enableAll();
-    static void disableAll();
+    void enable() override  { _status = true;  sync(); }
+    void disable() override { _status = false; sync(); }
 };
 
 class CompoundFlag : public Flag
@@ -97,10 +112,11 @@ class CompoundFlag : public Flag
     {
     }
 
-    std::vector<Flag *> kids() { return _kids; }
+    const std::vector<Flag *> &kids() const { return _kids; }
 
-    void enable();
-    void disable();
+    void enable() override;
+    void disable() override;
+    bool status() const override;
 };
 
 typedef std::map<std::string, Flag *> FlagsMap;
