@@ -99,7 +99,7 @@ MemTest::MemTest(const Params *p)
       nextProgressMessage(p->progress_interval),
       maxLoads(p->max_loads),
       atomic(p->system->isAtomicMode()),
-      suppressFuncErrors(p->suppress_func_errors)
+      suppressFuncErrors(p->suppress_func_errors), stats(this)
 {
     id = TESTER_ALLOCATOR++;
     fatal_if(id >= blockSize, "Too many testers, only %d allowed\n",
@@ -160,7 +160,7 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
             }
 
             numReads++;
-            numReadsStat++;
+            stats.numReads++;
 
             if (numReads == (uint64_t)nextProgressMessage) {
                 ccprintf(cerr, "%s: completed %d read, %d write accesses @%d\n",
@@ -176,7 +176,7 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
             // update the reference data
             referenceData[req->getPaddr()] = pkt_data[0];
             numWrites++;
-            numWritesStat++;
+            stats.numWrites++;
         }
     }
 
@@ -190,23 +190,12 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
     else if (noResponseEvent.scheduled())
         deschedule(noResponseEvent);
 }
-
-void
-MemTest::regStats()
+MemTest::MemTestStats::MemTestStats(Stats::Group *parent)
+      : Stats::Group(parent),
+      ADD_STAT(numReads, "number of read accesses completed"),
+      ADD_STAT(numWrites, "number of write accesses completed")
 {
-    ClockedObject::regStats();
 
-    using namespace Stats;
-
-    numReadsStat
-        .name(name() + ".num_reads")
-        .desc("number of read accesses completed")
-        ;
-
-    numWritesStat
-        .name(name() + ".num_writes")
-        .desc("number of write accesses completed")
-        ;
 }
 
 void

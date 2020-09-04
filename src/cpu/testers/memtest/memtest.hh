@@ -72,7 +72,6 @@ class MemTest : public ClockedObject
     typedef MemTestParams Params;
     MemTest(const Params *p);
 
-    void regStats() override;
 
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;
@@ -166,9 +165,13 @@ class MemTest : public ClockedObject
     const bool atomic;
 
     const bool suppressFuncErrors;
-
-    Stats::Scalar numReadsStat;
-    Stats::Scalar numWritesStat;
+  protected:
+    struct MemTestStats : public Stats::Group
+    {
+        MemTestStats(Stats::Group *parent);
+        Stats::Scalar numReads;
+        Stats::Scalar numWrites;
+    } stats;
 
     /**
      * Complete a request by checking the response.
