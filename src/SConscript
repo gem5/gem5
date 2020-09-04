@@ -1071,15 +1071,12 @@ namespace Debug {
         if not compound:
             code('SimpleFlag $name("$name", "$desc");')
         else:
-            comp_code('CompoundFlag $name("$name", "$desc",')
+            comp_code('CompoundFlag $name("$name", "$desc", {')
             comp_code.indent()
-            last = len(compound) - 1
-            for i,flag in enumerate(compound):
-                if i != last:
-                    comp_code('&$flag,')
-                else:
-                    comp_code('&$flag);')
+            for flag in compound:
+                comp_code('&$flag,')
             comp_code.dedent()
+            comp_code('});')
 
     code.append(comp_code)
     code()

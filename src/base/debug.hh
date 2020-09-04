@@ -30,6 +30,7 @@
 #ifndef __BASE_DEBUG_HH__
 #define __BASE_DEBUG_HH__
 
+#include <initializer_list>
 #include <map>
 #include <string>
 #include <vector>
@@ -87,31 +88,13 @@ class CompoundFlag : public Flag
   protected:
     std::vector<Flag *> _kids;
 
-    void
-    addFlag(Flag *f)
-    {
-        if (f != nullptr)
-            _kids.push_back(f);
-    }
-
   public:
+    template<typename... Args>
     CompoundFlag(const char *name, const char *desc,
-        Flag *f00 = nullptr, Flag *f01 = nullptr,
-        Flag *f02 = nullptr, Flag *f03 = nullptr,
-        Flag *f04 = nullptr, Flag *f05 = nullptr,
-        Flag *f06 = nullptr, Flag *f07 = nullptr,
-        Flag *f08 = nullptr, Flag *f09 = nullptr,
-        Flag *f10 = nullptr, Flag *f11 = nullptr,
-        Flag *f12 = nullptr, Flag *f13 = nullptr,
-        Flag *f14 = nullptr, Flag *f15 = nullptr,
-        Flag *f16 = nullptr, Flag *f17 = nullptr,
-        Flag *f18 = nullptr, Flag *f19 = nullptr)
-        : Flag(name, desc)
+                 std::initializer_list<Flag *> flags)
+        : Flag(name, desc),
+          _kids(flags)
     {
-        addFlag(f00); addFlag(f01); addFlag(f02); addFlag(f03); addFlag(f04);
-        addFlag(f05); addFlag(f06); addFlag(f07); addFlag(f08); addFlag(f09);
-        addFlag(f10); addFlag(f11); addFlag(f12); addFlag(f13); addFlag(f14);
-        addFlag(f15); addFlag(f16); addFlag(f17); addFlag(f18); addFlag(f19);
     }
 
     std::vector<Flag *> kids() { return _kids; }
