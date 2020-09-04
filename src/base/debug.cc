@@ -125,35 +125,6 @@ CompoundFlag::disable()
         k->disable();
 }
 
-struct AllFlags : public Flag
-{
-    AllFlags()
-        : Flag("All", "All Flags")
-    {}
-
-    void
-    enable()
-    {
-        FlagsMap::iterator i = allFlags().begin();
-        FlagsMap::iterator end = allFlags().end();
-        for (; i != end; ++i)
-            if (i->second != this)
-                i->second->enable();
-    }
-
-    void
-    disable()
-    {
-        FlagsMap::iterator i = allFlags().begin();
-        FlagsMap::iterator end = allFlags().end();
-        for (; i != end; ++i)
-            if (i->second != this)
-                i->second->disable();
-    }
-};
-
-AllFlags theAllFlags;
-Flag *const All = &theAllFlags;
 
 bool
 changeFlag(const char *s, bool value)
