@@ -287,7 +287,7 @@ def template DCStore64Declare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -372,7 +372,7 @@ def template LoadStoreImm64Declare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -396,7 +396,7 @@ def template LoadStoreImmU64Declare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -420,7 +420,7 @@ def template LoadStoreImmDU64Declare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -464,7 +464,7 @@ def template LoadStoreReg64Declare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -489,7 +489,7 @@ def template LoadStoreRegU64Declare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -511,7 +511,7 @@ def template LoadStoreRaw64Declare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -533,7 +533,7 @@ def template LoadStoreEx64Declare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -554,7 +554,7 @@ def template LoadStoreLit64Declare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -577,7 +577,7 @@ def template LoadStoreLitU64Declare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -814,7 +814,7 @@ def template AmoOpDeclare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -851,7 +851,7 @@ def template AmoPairOpDeclare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -896,7 +896,7 @@ def template AmoArithmeticOpDeclare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }

@@ -40,6 +40,8 @@
 #include "arch/arm/insts/static_inst.hh"
 #include "tarmac_tracer.hh"
 
+using namespace ArmISA;
+
 namespace Trace {
 
 // TARMAC Instruction Record static variables

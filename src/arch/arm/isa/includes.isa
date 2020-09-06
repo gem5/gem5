@@ -71,6 +71,11 @@ output header {{
 #include "mem/packet.hh"
 #include "sim/faults.hh"
 
+namespace ArmISAInst
+{
+using namespace ArmISA;
+}
+
 }};
 
 output decoder {{

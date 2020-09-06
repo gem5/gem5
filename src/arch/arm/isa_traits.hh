@@ -52,6 +52,4 @@ namespace ArmISA
     const Addr PageBytes = ULL(1) << PageShift;
 } // namespace ArmISA
 
-using namespace ArmISA;
-
 #endif // __ARCH_ARM_ISA_TRAITS_HH__

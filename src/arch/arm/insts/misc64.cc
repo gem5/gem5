@@ -38,6 +38,8 @@
 #include "arch/arm/insts/misc64.hh"
 #include "arch/arm/isa.hh"
 
+using namespace ArmISA;
+
 std::string
 ImmOp64::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {

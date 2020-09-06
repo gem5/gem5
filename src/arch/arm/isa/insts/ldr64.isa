@@ -153,11 +153,11 @@ let {{
             fa_code = None
             if not self.micro and self.flavor in ("normal", "widen", "acquire"):
                 fa_code = '''
-                    fault->annotate(ArmFault::SAS, %s);
-                    fault->annotate(ArmFault::SSE, %s);
-                    fault->annotate(ArmFault::SRT, dest);
-                    fault->annotate(ArmFault::SF, %s);
-                    fault->annotate(ArmFault::AR, %s);
+                    fault->annotate(ArmISA::ArmFault::SAS, %s);
+                    fault->annotate(ArmISA::ArmFault::SSE, %s);
+                    fault->annotate(ArmISA::ArmFault::SRT, dest);
+                    fault->annotate(ArmISA::ArmFault::SF, %s);
+                    fault->annotate(ArmISA::ArmFault::AR, %s);
                 ''' % ("0" if self.size == 1 else
                        "1" if self.size == 2 else
                        "2" if self.size == 4 else "3",

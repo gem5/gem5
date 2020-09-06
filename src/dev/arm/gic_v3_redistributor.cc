@@ -45,6 +45,8 @@
 #include "dev/arm/gic_v3_cpu_interface.hh"
 #include "dev/arm/gic_v3_distributor.hh"
 
+using namespace ArmISA;
+
 const AddrRange Gicv3Redistributor::GICR_IPRIORITYR(SGI_base + 0x0400,
                                                     SGI_base + 0x0420);
 

@@ -403,8 +403,8 @@ let {{
     # The DC ZVA instruction is not classified as a cache maintenance
     # instruction, and therefore we shouldn't annotate it.
     cachem_fa = '''
-        fault->annotate(ArmFault::CM, 1);
-        fault->annotate(ArmFault::OFA, faultAddr);
+        fault->annotate(ArmISA::ArmFault::CM, 1);
+        fault->annotate(ArmISA::ArmFault::OFA, faultAddr);
     '''
 
     msrdccvau_ea_code = msr_check_code

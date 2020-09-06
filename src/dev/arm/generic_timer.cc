@@ -50,6 +50,8 @@
 #include "params/GenericTimerMem.hh"
 #include "params/SystemCounter.hh"
 
+using namespace ArmISA;
+
 SystemCounter::SystemCounter(SystemCounterParams *const p)
     : SimObject(p),
       _enabled(true),

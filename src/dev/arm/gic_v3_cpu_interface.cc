@@ -47,6 +47,8 @@
 #include "dev/arm/gic_v3_distributor.hh"
 #include "dev/arm/gic_v3_redistributor.hh"
 
+using namespace ArmISA;
+
 const uint8_t Gicv3CPUInterface::GIC_MIN_BPR;
 const uint8_t Gicv3CPUInterface::GIC_MIN_BPR_NS;
 
@@ -2039,22 +2041,22 @@ Gicv3CPUInterface::update()
     }
 
     if (hppiCanPreempt()) {
-        ArmISA::InterruptTypes int_type = intSignalType(hppi.group);
+        InterruptTypes int_type = intSignalType(hppi.group);
         DPRINTF(GIC, "Gicv3CPUInterface::update(): "
                 "posting int as %d!\n", int_type);
-        int_type == ArmISA::INT_IRQ ? signal_IRQ = true : signal_FIQ = true;
+        int_type == INT_IRQ ? signal_IRQ = true : signal_FIQ = true;
     }
 
     if (signal_IRQ) {
-        gic->postInt(cpuId, ArmISA::INT_IRQ);
+        gic->postInt(cpuId, INT_IRQ);
     } else {
-        gic->deassertInt(cpuId, ArmISA::INT_IRQ);
+        gic->deassertInt(cpuId, INT_IRQ);
     }
 
     if (signal_FIQ) {
-        gic->postInt(cpuId, ArmISA::INT_FIQ);
+        gic->postInt(cpuId, INT_FIQ);
     } else {
-        gic->deassertInt(cpuId, ArmISA::INT_FIQ);
+        gic->deassertInt(cpuId, INT_FIQ);
     }
 }
 
@@ -2091,18 +2093,18 @@ Gicv3CPUInterface::virtualUpdate()
 
     if (signal_IRQ) {
         DPRINTF(GIC, "Gicv3CPUInterface::virtualUpdate(): "
-                "posting int as %d!\n", ArmISA::INT_VIRT_IRQ);
-        gic->postInt(cpuId, ArmISA::INT_VIRT_IRQ);
+                "posting int as %d!\n", INT_VIRT_IRQ);
+        gic->postInt(cpuId, INT_VIRT_IRQ);
     } else {
-        gic->deassertInt(cpuId, ArmISA::INT_VIRT_IRQ);
+        gic->deassertInt(cpuId, INT_VIRT_IRQ);
     }
 
     if (signal_FIQ) {
         DPRINTF(GIC, "Gicv3CPUInterface::virtualUpdate(): "
-                "posting int as %d!\n", ArmISA::INT_VIRT_FIQ);
-        gic->postInt(cpuId, ArmISA::INT_VIRT_FIQ);
+                "posting int as %d!\n", INT_VIRT_FIQ);
+        gic->postInt(cpuId, INT_VIRT_FIQ);
     } else {
-        gic->deassertInt(cpuId, ArmISA::INT_VIRT_FIQ);
+        gic->deassertInt(cpuId, INT_VIRT_FIQ);
     }
 }
 
@@ -2220,7 +2222,7 @@ Gicv3CPUInterface::virtualIncrementEOICount()
 }
 
 // spec section 4.6.2
-ArmISA::InterruptTypes
+InterruptTypes
 Gicv3CPUInterface::intSignalType(Gicv3::GroupId group) const
 {
     bool is_fiq = false;
@@ -2244,9 +2246,9 @@ Gicv3CPUInterface::intSignalType(Gicv3::GroupId group) const
     }
 
     if (is_fiq) {
-        return ArmISA::INT_FIQ;
+        return INT_FIQ;
     } else {
-        return ArmISA::INT_IRQ;
+        return INT_IRQ;
     }
 }
 
@@ -2334,7 +2336,7 @@ Gicv3CPUInterface::inSecureState() const
 
     CPSR cpsr = isa->readMiscRegNoEffect(MISCREG_CPSR);
     SCR scr = isa->readMiscRegNoEffect(MISCREG_SCR);
-    return ArmISA::inSecureState(scr, cpsr);
+    return ::inSecureState(scr, cpsr);
 }
 
 int

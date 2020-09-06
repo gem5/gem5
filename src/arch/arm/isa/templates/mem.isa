@@ -684,7 +684,7 @@ def template LoadStoreImmDeclare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -753,7 +753,7 @@ def template StoreRegDeclare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -802,7 +802,7 @@ def template LoadRegDeclare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -827,7 +827,7 @@ def template LoadImmDeclare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }

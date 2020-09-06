@@ -67,9 +67,9 @@ let {{
             elif wbDecl == None:
                 codeBlobs["fa_code"] = '''
                     if (dest != INTREG_PC) {
-                        fault->annotate(ArmFault::SAS, %s);
-                        fault->annotate(ArmFault::SSE, %s);
-                        fault->annotate(ArmFault::SRT, dest);
+                        fault->annotate(ArmISA::ArmFault::SAS, %s);
+                        fault->annotate(ArmISA::ArmFault::SSE, %s);
+                        fault->annotate(ArmISA::ArmFault::SRT, dest);
                     }
                 ''' %("0"    if size == 1 else
                       "1"    if size == 2 else "2",

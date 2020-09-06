@@ -124,11 +124,11 @@ let {{
 
 
             fa_code = '''
-               fault->annotate(ArmFault::SAS, %s);
-               fault->annotate(ArmFault::SSE, %s);
-               fault->annotate(ArmFault::SRT, dest);
-               fault->annotate(ArmFault::SF, %s);
-               fault->annotate(ArmFault::AR, %s);
+               fault->annotate(ArmISA::ArmFault::SAS, %s);
+               fault->annotate(ArmISA::ArmFault::SSE, %s);
+               fault->annotate(ArmISA::ArmFault::SRT, dest);
+               fault->annotate(ArmISA::ArmFault::SF, %s);
+               fault->annotate(ArmISA::ArmFault::AR, %s);
                ''' % (sas_code,
                      "true" if not self.unsign else "false",
                      "true" if self.size == 8 else "false",

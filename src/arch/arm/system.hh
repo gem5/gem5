@@ -204,14 +204,14 @@ class ArmSystem : public System
     bool highestELIs64() const { return _highestELIs64; }
 
     /** Returns the highest implemented exception level */
-    ExceptionLevel
+    ArmISA::ExceptionLevel
     highestEL() const
     {
         if (_haveSecurity)
-            return EL3;
+            return ArmISA::EL3;
         if (_haveVirtualization)
-            return EL2;
-        return EL1;
+            return ArmISA::EL2;
+        return ArmISA::EL1;
     }
 
     /** Returns the reset address if the highest implemented exception level is
@@ -297,10 +297,10 @@ class ArmSystem : public System
     /** Returns the highest implemented exception level for the system of a
      * specific thread context
      */
-    static ExceptionLevel highestEL(ThreadContext *tc);
+    static ArmISA::ExceptionLevel highestEL(ThreadContext *tc);
 
     /** Return true if the system implements a specific exception level */
-    static bool haveEL(ThreadContext *tc, ExceptionLevel el);
+    static bool haveEL(ThreadContext *tc, ArmISA::ExceptionLevel el);
 
     /** Returns true if the system of a specific thread context implements the
      * transactional memory extension (TME)

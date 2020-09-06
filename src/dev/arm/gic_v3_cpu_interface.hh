@@ -340,8 +340,8 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     void assertWakeRequest(void);
     void deassertWakeRequest(void);
 
-    RegVal readBankedMiscReg(MiscRegIndex misc_reg) const;
-    void setBankedMiscReg(MiscRegIndex misc_reg, RegVal val) const;
+    RegVal readBankedMiscReg(ArmISA::MiscRegIndex misc_reg) const;
+    void setBankedMiscReg(ArmISA::MiscRegIndex misc_reg, RegVal val) const;
   public:
 
     Gicv3CPUInterface(Gicv3 * gic, uint32_t cpu_id);

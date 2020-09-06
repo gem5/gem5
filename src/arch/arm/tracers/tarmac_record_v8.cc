@@ -41,6 +41,8 @@
 #include "arch/arm/tlb.hh"
 #include "arch/arm/tracers/tarmac_tracer.hh"
 
+using namespace ArmISA;
+
 namespace Trace {
 
 TarmacTracerRecordV8::TraceInstEntryV8::TraceInstEntryV8(

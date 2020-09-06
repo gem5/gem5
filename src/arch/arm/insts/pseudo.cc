@@ -42,6 +42,8 @@
 
 #include "cpu/exec_context.hh"
 
+using namespace ArmISA;
+
 DecoderFaultInst::DecoderFaultInst(ExtMachInst _machInst)
     : ArmStaticInst("gem5decoderFault", _machInst, No_OpClass),
       faultId(static_cast<DecoderFault>(

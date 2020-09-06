@@ -43,15 +43,15 @@
 
 #include "arch/arm/insts/static_inst.hh"
 
-class DecoderFaultInst : public ArmStaticInst
+class DecoderFaultInst : public ArmISA::ArmStaticInst
 {
   protected:
-    DecoderFault faultId;
+    ArmISA::DecoderFault faultId;
 
     const char *faultName() const;
 
   public:
-    DecoderFaultInst(ExtMachInst _machInst);
+    DecoderFaultInst(ArmISA::ExtMachInst _machInst);
 
     Fault execute(ExecContext *xc,
                   Trace::InstRecord *traceData) const override;
@@ -67,7 +67,7 @@ class DecoderFaultInst : public ArmStaticInst
  * 'Unknown' class is used for unrecognized/illegal instructions.
  * This is a leaf class.
  */
-class FailUnimplemented : public ArmStaticInst
+class FailUnimplemented : public ArmISA::ArmStaticInst
 {
   private:
     /// Full mnemonic for MRC and MCR instructions including the
@@ -75,8 +75,8 @@ class FailUnimplemented : public ArmStaticInst
     std::string fullMnemonic;
 
   public:
-    FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst);
-    FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst,
+    FailUnimplemented(const char *_mnemonic, ArmISA::ExtMachInst _machInst);
+    FailUnimplemented(const char *_mnemonic, ArmISA::ExtMachInst _machInst,
                       const std::string& _fullMnemonic);
 
     Fault execute(ExecContext *xc,
@@ -95,7 +95,7 @@ class FailUnimplemented : public ArmStaticInst
  * probably make the 'warned' flag a static member of the derived
  * class.
  */
-class WarnUnimplemented : public ArmStaticInst
+class WarnUnimplemented : public ArmISA::ArmStaticInst
 {
   private:
     /// Have we warned on this instruction yet?
@@ -105,8 +105,8 @@ class WarnUnimplemented : public ArmStaticInst
     std::string fullMnemonic;
 
   public:
-    WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst);
-    WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst,
+    WarnUnimplemented(const char *_mnemonic, ArmISA::ExtMachInst _machInst);
+    WarnUnimplemented(const char *_mnemonic, ArmISA::ExtMachInst _machInst,
                       const std::string& _fullMnemonic);
 
     Fault execute(ExecContext *xc,
@@ -123,19 +123,19 @@ class WarnUnimplemented : public ArmStaticInst
  * The sole purpose of this instruction is to generate an appropriate
  * fault when executed.
  */
-class IllegalExecInst : public ArmStaticInst
+class IllegalExecInst : public ArmISA::ArmStaticInst
 {
   public:
-    IllegalExecInst(ExtMachInst _machInst);
+    IllegalExecInst(ArmISA::ExtMachInst _machInst);
 
     Fault execute(ExecContext *xc,
                   Trace::InstRecord *traceData) const override;
 };
 
-class DebugStep : public ArmStaticInst
+class DebugStep : public ArmISA::ArmStaticInst
 {
   public:
-    DebugStep(ExtMachInst _machInst);
+    DebugStep(ArmISA::ExtMachInst _machInst);
 
     Fault execute(ExecContext *xc,
                   Trace::InstRecord *traceData) const override;

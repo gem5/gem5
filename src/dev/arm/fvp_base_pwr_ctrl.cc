@@ -307,7 +307,7 @@ FVPBasePwrCtrl::startCoreUp(ThreadContext *const tc)
     clearWakeRequest(tc);
 
     // InitCPU
-    Reset().invoke(tc);
+    ArmISA::Reset().invoke(tc);
     tc->activate();
 }
 

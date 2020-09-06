@@ -37,6 +37,8 @@
 
 #include "arch/arm/insts/vfp.hh"
 
+using namespace ArmISA;
+
 /*
  * The asm statements below are to keep gcc from reordering code. Otherwise
  * the rounding mode might be set after the operation it was intended for, the

@@ -302,10 +302,10 @@ class GenericTimer : public SimObject
         uint32_t cntfrq;
 
         /// Kernel control register
-        CNTKCTL cntkctl;
+        ArmISA::CNTKCTL cntkctl;
 
         /// Hypervisor control register
-        CNTHCTL cnthctl;
+        ArmISA::CNTHCTL cnthctl;
 
         /// Thread (HW) context associated to this PE implementation
         ThreadContext *threadContext;

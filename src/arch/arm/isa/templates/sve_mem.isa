@@ -56,7 +56,7 @@ def template SveMemFillSpillOpDeclare {{
                           Trace::InstRecord *) const override;
 
         void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -86,7 +86,7 @@ def template SveContigMemSSOpDeclare {{
                           Trace::InstRecord *) const override;
 
         virtual void
-        annotateFault(ArmFault *fault) override {
+        annotateFault(ArmISA::ArmFault *fault) override {
             %(fa_code)s
         }
     };
@@ -115,7 +115,7 @@ def template SveContigMemSIOpDeclare {{
                           Trace::InstRecord *) const override;
 
         virtual void
-        annotateFault(ArmFault *fault) override {
+        annotateFault(ArmISA::ArmFault *fault) override {
             %(fa_code)s
         }
     };
@@ -430,7 +430,7 @@ def template SveIndexedMemVIMicroopDeclare {{
                           Trace::InstRecord *) const override;
 
         virtual void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -511,7 +511,7 @@ def template SveIndexedMemSVMicroopDeclare {{
                           Trace::InstRecord *) const override;
 
         virtual void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -867,7 +867,7 @@ def template SveStructMemSIMicroopDeclare {{
                           Trace::InstRecord *) const override;
 
         virtual void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }
@@ -1132,7 +1132,7 @@ def template SveStructMemSSMicroopDeclare {{
                           Trace::InstRecord *) const override;
 
         virtual void
-        annotateFault(ArmFault *fault) override
+        annotateFault(ArmISA::ArmFault *fault) override
         {
             %(fa_code)s
         }

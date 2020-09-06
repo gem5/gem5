@@ -53,6 +53,7 @@
 
 using namespace std;
 using namespace Linux;
+using namespace ArmISA;
 
 ArmSystem::ArmSystem(Params *p)
     : System(p),
