@@ -53,7 +53,10 @@
 #include "base/hostinfo.hh"
 #include "base/statistics.hh"
 #include "base/time.hh"
+#include "config/the_isa.hh"
+#if THE_ISA != NULL_ISA
 #include "cpu/base.hh"
+#endif
 #include "sim/global_event.hh"
 
 using namespace std;
@@ -109,7 +112,6 @@ struct Global
 Global::Global()
 {
     simInsts
-        .functor(BaseCPU::numSimulatedInsts)
         .name("sim_insts")
         .desc("Number of instructions simulated")
         .precision(0)
@@ -117,12 +119,19 @@ Global::Global()
         ;
 
     simOps
-        .functor(BaseCPU::numSimulatedOps)
         .name("sim_ops")
         .desc("Number of ops (including micro ops) simulated")
         .precision(0)
         .prereq(simOps)
         ;
+
+#if THE_ISA != NULL_ISA
+    simInsts.functor(BaseCPU::numSimulatedInsts);
+    simOps.functor(BaseCPU::numSimulatedOps);
+#else
+    simInsts.functor([] { return 0; });
+    simOps.functor([] { return 0; });
+#endif
 
     simSeconds
         .name("sim_seconds")

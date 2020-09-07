@@ -50,12 +50,15 @@
 #include "base/loader/symtab.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
+#include "config/the_isa.hh"
 #include "config/use_kvm.hh"
 #if USE_KVM
 #include "cpu/kvm/base.hh"
 #include "cpu/kvm/vm.hh"
 #endif
+#if THE_ISA != NULL_ISA
 #include "cpu/base.hh"
+#endif
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "debug/Quiesce.hh"

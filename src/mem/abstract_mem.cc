@@ -45,7 +45,6 @@
 #include "arch/locked_mem.hh"
 #include "base/loader/memory_image.hh"
 #include "base/loader/object_file.hh"
-#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/LLSC.hh"
 #include "debug/MemoryAccess.hh"

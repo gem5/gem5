@@ -48,7 +48,6 @@
 #include <cassert>
 
 #include "base/intmath.hh"
-#include "cpu/base.hh"
 #include "mem/cache/base.hh"
 #include "params/BasePrefetcher.hh"
 #include "sim/system.hh"

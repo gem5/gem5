@@ -48,7 +48,7 @@
 // and if so stop here
 #include "config/the_isa.hh"
 #if THE_ISA == NULL_ISA
-#include "arch/null/cpu_dummy.hh"
+#error Including BaseCPU in a system without CPU support
 #else
 #include "arch/generic/interrupts.hh"
 #include "base/statistics.hh"
