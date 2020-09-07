@@ -1506,11 +1506,6 @@ cloneFunc(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
 
     desc->returnInto(ctc, 0);
 
-#if THE_ISA == SPARC_ISA
-    tc->setIntReg(TheISA::SyscallPseudoReturnReg, 0);
-    ctc->setIntReg(TheISA::SyscallPseudoReturnReg, 1);
-#endif
-
     TheISA::PCState cpc = tc->pcState();
     if (!p->kvmInSE)
         cpc.advance();
