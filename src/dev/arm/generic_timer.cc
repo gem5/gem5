@@ -873,7 +873,7 @@ GenericTimerISA::readMiscReg(int reg)
 
 GenericTimerFrame::GenericTimerFrame(GenericTimerFrameParams *const p)
     : PioDevice(p),
-      timerRange(RangeSize(p->cnt_base, sys->getPageBytes())),
+      timerRange(RangeSize(p->cnt_base, ArmSystem::PageBytes)),
       addrRanges({timerRange}),
       systemCounter(*p->counter),
       physTimer(csprintf("%s.phys_timer", name()),
@@ -887,7 +887,7 @@ GenericTimerFrame::GenericTimerFrame(GenericTimerFrameParams *const p)
     SystemCounter::validateCounterRef(p->counter);
     // Expose optional CNTEL0Base register frame
     if (p->cnt_el0_base != MaxAddr) {
-        timerEl0Range = RangeSize(p->cnt_el0_base, sys->getPageBytes());
+        timerEl0Range = RangeSize(p->cnt_el0_base, ArmSystem::PageBytes);
         accessBitsEl0 = 0x303;
         addrRanges.push_back(timerEl0Range);
     }
@@ -1244,9 +1244,9 @@ GenericTimerFrame::timerWrite(Addr addr, size_t size, uint64_t data,
 
 GenericTimerMem::GenericTimerMem(GenericTimerMemParams *const p)
     : PioDevice(p),
-      counterCtrlRange(RangeSize(p->cnt_control_base, sys->getPageBytes())),
-      counterStatusRange(RangeSize(p->cnt_read_base, sys->getPageBytes())),
-      timerCtrlRange(RangeSize(p->cnt_ctl_base, sys->getPageBytes())),
+      counterCtrlRange(RangeSize(p->cnt_control_base, ArmSystem::PageBytes)),
+      counterStatusRange(RangeSize(p->cnt_read_base, ArmSystem::PageBytes)),
+      timerCtrlRange(RangeSize(p->cnt_ctl_base, ArmSystem::PageBytes)),
       cnttidr(0x0),
       addrRanges{counterCtrlRange, counterStatusRange, timerCtrlRange},
       systemCounter(*p->counter),
@@ -1273,7 +1273,7 @@ GenericTimerMem::GenericTimerMem(GenericTimerMemParams *const p)
 void
 GenericTimerMem::validateFrameRange(const AddrRange &range)
 {
-    fatal_if(range.start() % ArmISA::PageBytes,
+    fatal_if(range.start() % ArmSystem::PageBytes,
              "GenericTimerMem::validateFrameRange: Architecture states each "
              "register frame should be in a separate memory page, specified "
              "range base address [0x%x] is not compliant\n");
