@@ -435,7 +435,7 @@ IdeDisk::doDmaRead()
         // clear out the data buffer
         memset(dataBuffer, 0, MAX_DMA_SIZE);
         dmaReadCG = new ChunkGenerator(curPrd.getBaseAddr(),
-                curPrd.getByteCount(), pageBytes);
+                curPrd.getByteCount(), chunkBytes);
 
     }
     if (ctrl->dmaPending() || ctrl->drainState() != DrainState::Running) {
@@ -447,7 +447,7 @@ IdeDisk::doDmaRead()
                 &dmaReadWaitEvent, dataBuffer + dmaReadCG->complete());
         dmaReadBytes += dmaReadCG->size();
         dmaReadTxs++;
-        if (dmaReadCG->size() == pageBytes)
+        if (dmaReadCG->size() == chunkBytes)
             dmaReadFullPages++;
         dmaReadCG->next();
     } else {
@@ -518,7 +518,7 @@ IdeDisk::doDmaWrite()
     if (!dmaWriteCG) {
         // clear out the data buffer
         dmaWriteCG = new ChunkGenerator(curPrd.getBaseAddr(),
-                curPrd.getByteCount(), pageBytes);
+                curPrd.getByteCount(), chunkBytes);
     }
     if (ctrl->dmaPending() || ctrl->drainState() != DrainState::Running) {
         schedule(dmaWriteWaitEvent, curTick() + DMA_BACKOFF_PERIOD);
@@ -532,7 +532,7 @@ IdeDisk::doDmaWrite()
                 curPrd.getByteCount(), curPrd.getEOT());
         dmaWriteBytes += dmaWriteCG->size();
         dmaWriteTxs++;
-        if (dmaWriteCG->size() == pageBytes)
+        if (dmaWriteCG->size() == chunkBytes)
             dmaWriteFullPages++;
         dmaWriteCG->next();
     } else {

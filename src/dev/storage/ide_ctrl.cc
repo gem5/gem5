@@ -120,7 +120,8 @@ IdeController::IdeController(Params *p)
             panic("IDE controllers support a maximum "
                   "of 4 devices attached!\n");
         }
-        params()->disks[i]->setController(this, sys->getPageBytes());
+        // Arbitrarily set the chunk size to 4K.
+        params()->disks[i]->setController(this, 4 * 1024);
     }
 
     primary.select(false);
