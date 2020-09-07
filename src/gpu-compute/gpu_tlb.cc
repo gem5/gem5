@@ -164,7 +164,7 @@ namespace X86ISA
          * vpn holds the virtual page address
          * The least significant bits are simply masked
          */
-        int set = (vpn >> TheISA::PageShift) & setMask;
+        int set = (vpn >> PageShift) & setMask;
 
         if (!freeList[set].empty()) {
             newEntry = freeList[set].front();
@@ -184,7 +184,7 @@ namespace X86ISA
     GpuTLB::EntryList::iterator
     GpuTLB::lookupIt(Addr va, bool update_lru)
     {
-        int set = (va >> TheISA::PageShift) & setMask;
+        int set = (va >> PageShift) & setMask;
 
         if (FA) {
             assert(!set);
@@ -214,7 +214,7 @@ namespace X86ISA
     TlbEntry*
     GpuTLB::lookup(Addr va, bool update_lru)
     {
-        int set = (va >> TheISA::PageShift) & setMask;
+        int set = (va >> PageShift) & setMask;
 
         auto entry = lookupIt(va, update_lru);
 
@@ -266,7 +266,7 @@ namespace X86ISA
     GpuTLB::demapPage(Addr va, uint64_t asn)
     {
 
-        int set = (va >> TheISA::PageShift) & setMask;
+        int set = (va >> PageShift) & setMask;
         auto entry = lookupIt(va, false);
 
         if (entry != entryList[set].end()) {
