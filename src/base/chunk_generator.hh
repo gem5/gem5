@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BASE__CHUNK_GENERATOR_HH__
-#define __BASE__CHUNK_GENERATOR_HH__
+#ifndef __BASE_CHUNK_GENERATOR_HH__
+#define __BASE_CHUNK_GENERATOR_HH__
 
 /**
  * @file
@@ -60,13 +60,13 @@ class ChunkGenerator
     /** The starting address of the next chunk (after the current one). */
     Addr nextAddr;
     /** The size of the current chunk (in bytes). */
-    unsigned  curSize;
+    Addr curSize;
     /** The number of bytes remaining in the region after the current chunk. */
-    unsigned  sizeLeft;
+    Addr sizeLeft;
     /** The start address so we can calculate offset in writing block. */
     const Addr startAddr;
     /** The maximum chunk size, e.g., the cache block size or page size. */
-    const unsigned chunkSize;
+    const Addr chunkSize;
 
   public:
     /**
@@ -78,8 +78,8 @@ class ChunkGenerator
      *
      * @ingroup api_chunk_generator
      */
-    ChunkGenerator(Addr _startAddr, unsigned totalSize, unsigned _chunkSize)
-        : startAddr(_startAddr), chunkSize(_chunkSize)
+    ChunkGenerator(Addr _startAddr, Addr totalSize, Addr _chunkSize) :
+        startAddr(_startAddr), chunkSize(_chunkSize)
     {
         // chunkSize must be a power of two
         assert(chunkSize == 0 || isPowerOf2(chunkSize));
@@ -87,13 +87,10 @@ class ChunkGenerator
         // set up initial chunk.
         curAddr = startAddr;
 
-        if (chunkSize == 0) //Special Case, if we see 0, assume no chuncking
-        {
+        if (chunkSize == 0) { // Special Case, if we see 0, assume no chunking.
             nextAddr = startAddr + totalSize;
-        }
-        else
-        {
-            // nextAddr should be *next* chunk start
+        } else {
+            // nextAddr should be *next* chunk start.
             nextAddr = roundUp(startAddr, chunkSize);
             if (curAddr == nextAddr) {
                 // ... even if startAddr is already chunk-aligned
@@ -101,8 +98,8 @@ class ChunkGenerator
             }
         }
 
-        // how many bytes are left between curAddr and the end of this chunk?
-        unsigned left_in_chunk = nextAddr - curAddr;
+        // How many bytes are left between curAddr and the end of this chunk?
+        Addr left_in_chunk = nextAddr - curAddr;
         curSize = std::min(totalSize, left_in_chunk);
         sizeLeft = totalSize - curSize;
     }
@@ -118,14 +115,14 @@ class ChunkGenerator
      *
      * @ingroup api_chunk_generator
      */
-    unsigned size() const { return curSize; }
+    Addr size() const { return curSize; }
 
     /**
      * Number of bytes we have already chunked up.
      *
      * @ingroup api_chunk_generator
      */
-    unsigned complete() const { return curAddr - startAddr; }
+    Addr complete() const { return curAddr - startAddr; }
 
     /**
      * Are we done?  That is, did the last call to next() advance
@@ -134,7 +131,7 @@ class ChunkGenerator
      *
      * @ingroup api_chunk_generator
      */
-    bool done() const { return (curSize == 0); }
+    bool done() const { return curSize == 0; }
 
     /**
      * Is this the last chunk?
@@ -142,7 +139,7 @@ class ChunkGenerator
      *
      * @ingroup api_chunk_generator
      */
-    bool last() const { return (sizeLeft == 0); }
+    bool last() const { return sizeLeft == 0; }
 
     /**
      * Advance generator to next chunk.
@@ -154,7 +151,7 @@ class ChunkGenerator
     bool
     next()
     {
-        if (sizeLeft == 0) {
+        if (last()) {
             curSize = 0;
             return false;
         }
@@ -167,4 +164,4 @@ class ChunkGenerator
     }
 };
 
-#endif // __BASE__CHUNK_GENERATOR_HH__
+#endif // __BASE_CHUNK_GENERATOR_HH__
