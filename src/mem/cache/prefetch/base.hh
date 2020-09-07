@@ -49,7 +49,6 @@
 #include <cstdint>
 
 #include "arch/generic/tlb.hh"
-#include "arch/isa_traits.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "mem/packet.hh"
