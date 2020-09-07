@@ -137,6 +137,9 @@ class ArmSystem : public System
     ArmSemihosting *const semihosting;
 
   public:
+    static constexpr Addr PageBytes = ArmISA::PageBytes;
+    static constexpr Addr PageShift = ArmISA::PageShift;
+
     typedef ArmSystemParams Params;
     const Params *
     params() const
