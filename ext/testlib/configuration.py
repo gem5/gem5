@@ -486,6 +486,8 @@ def define_common_args(config):
     '''
     global common_args
 
+    parse_comma_separated_string = lambda st: st.split(',')
+
     # A list of common arguments/flags used across cli parsers.
     common_args = [
         Argument(
@@ -503,20 +505,23 @@ def define_common_args(config):
             help='A tag comparison used to select tests.'),
         Argument(
             '--isa',
-            action='append',
+            action='extend',
             default=[],
+            type=parse_comma_separated_string,
             help="Only tests that are valid with one of these ISAs. "
                  "Comma separated."),
         Argument(
             '--variant',
-            action='append',
+            action='extend',
             default=[],
+            type=parse_comma_separated_string,
             help="Only tests that are valid with one of these binary variants"
                  "(e.g., opt, debug). Comma separated."),
         Argument(
             '--length',
-            action='append',
+            action='extend',
             default=[],
+            type=parse_comma_separated_string,
             help="Only tests that are one of these lengths. Comma separated."),
         Argument(
             '--host',
@@ -596,6 +601,11 @@ def define_common_args(config):
 
 @add_metaclass(abc.ABCMeta)
 class ArgParser(object):
+    class ExtendAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            items = getattr(namespace, self.dest, [])
+            items.extend(values)
+            setattr(namespace, self.dest, items)
 
     def __init__(self, parser):
         # Copy public methods of the parser.
@@ -603,6 +613,7 @@ class ArgParser(object):
             if not attr.startswith('_'):
                 setattr(self, attr, getattr(parser, attr))
         self.parser = parser
+        self.parser.register('action', 'extend', ArgParser.ExtendAction)
         self.add_argument = self.parser.add_argument
 
         # Argument will be added to all parsers and subparsers.
