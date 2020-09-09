@@ -2043,8 +2043,7 @@ NVMInterfaceParams::create()
 
 NVMInterface::Rank::Rank(const NVMInterfaceParams* _p,
                          int _rank, NVMInterface& _nvm)
-    : EventManager(&_nvm), nvm(_nvm), rank(_rank),
-      banks(_p->banks_per_rank)
+    : EventManager(&_nvm), rank(_rank), banks(_p->banks_per_rank)
 {
     for (int b = 0; b < _p->banks_per_rank; b++) {
         banks[b].bank = b;

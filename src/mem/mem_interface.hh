@@ -1026,13 +1026,6 @@ class NVMInterface : public MemInterface
      */
     class Rank : public EventManager
     {
-      private:
-
-        /**
-         * A reference to the parent NVMInterface instance
-         */
-        NVMInterface& nvm;
-
       public:
 
         /**
