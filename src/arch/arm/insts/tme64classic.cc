@@ -38,6 +38,8 @@
 #include "arch/arm/faults.hh"
 #include "arch/arm/insts/tme64.hh"
 
+using namespace ArmISA;
+
 namespace ArmISAInst {
 
 Fault

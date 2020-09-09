@@ -40,6 +40,8 @@
 
  #include <sstream>
 
+using namespace ArmISA;
+
 namespace ArmISAInst {
 
 std::string

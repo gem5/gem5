@@ -45,8 +45,9 @@
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
 
-namespace ArmISAInst {
+using namespace ArmISA;
 
+namespace ArmISAInst {
 
 Fault
 Tstart64::initiateAcc(ExecContext *xc,

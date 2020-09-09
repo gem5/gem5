@@ -234,14 +234,14 @@ class MiscRegImplDefined64 : public MiscRegOp64
             Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
-class RegNone : public ArmStaticInst
+class RegNone : public ArmISA::ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
+    ArmISA::IntRegIndex dest;
 
-    RegNone(const char *mnem, ExtMachInst _machInst,
-                     OpClass __opClass, IntRegIndex _dest) :
-        ArmStaticInst(mnem, _machInst, __opClass),
+    RegNone(const char *mnem, ArmISA::ExtMachInst _machInst,
+            OpClass __opClass, ArmISA::IntRegIndex _dest) :
+        ArmISA::ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest)
     {}
 

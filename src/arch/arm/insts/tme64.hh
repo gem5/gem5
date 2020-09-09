@@ -44,18 +44,19 @@
 
 namespace ArmISAInst {
 
-class MicroTmeOp : public MicroOp
+class MicroTmeOp : public ArmISA::MicroOp
 {
   protected:
-    MicroTmeOp(const char *mnem, ExtMachInst machInst, OpClass __opClass) :
-               MicroOp(mnem, machInst, __opClass)
+    MicroTmeOp(const char *mnem, ArmISA::ExtMachInst machInst,
+               OpClass __opClass)
+      : ArmISA::MicroOp(mnem, machInst, __opClass)
     {}
 };
 
 class MicroTmeBasic64 : public MicroTmeOp
 {
   protected:
-    MicroTmeBasic64(const char *mnem, ExtMachInst machInst,
+    MicroTmeBasic64(const char *mnem, ArmISA::ExtMachInst machInst,
                     OpClass __opClass) :
                     MicroTmeOp(mnem, machInst, __opClass)
     {}
@@ -64,30 +65,30 @@ class MicroTmeBasic64 : public MicroTmeOp
                                     const Loader::SymbolTable *symtab) const;
 };
 
-class TmeImmOp64 : public ArmStaticInst
+class TmeImmOp64 : public ArmISA::ArmStaticInst
 {
   protected:
     uint64_t imm;
 
-    TmeImmOp64(const char *mnem, ExtMachInst machInst,
-               OpClass __opClass, uint64_t _imm) :
-                 ArmStaticInst(mnem, machInst, __opClass),
-                 imm(_imm)
+    TmeImmOp64(const char *mnem, ArmISA::ExtMachInst machInst,
+               OpClass __opClass, uint64_t _imm)
+      : ArmISA::ArmStaticInst(mnem, machInst, __opClass),
+        imm(_imm)
     {}
 
     std::string generateDisassembly(Addr pc,
                                     const Loader::SymbolTable *symtab) const;
 };
 
-class TmeRegNone64 : public ArmStaticInst
+class TmeRegNone64 : public ArmISA::ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
+    ArmISA::IntRegIndex dest;
 
-    TmeRegNone64(const char *mnem, ExtMachInst machInst,
-                 OpClass __opClass, IntRegIndex _dest) :
-                   ArmStaticInst(mnem, machInst, __opClass),
-                   dest(_dest)
+    TmeRegNone64(const char *mnem, ArmISA::ExtMachInst machInst,
+                 OpClass __opClass, ArmISA::IntRegIndex _dest)
+      : ArmISA::ArmStaticInst(mnem, machInst, __opClass),
+        dest(_dest)
     {}
 
     std::string generateDisassembly(Addr pc,
@@ -97,7 +98,7 @@ class TmeRegNone64 : public ArmStaticInst
 class Tstart64 : public TmeRegNone64
 {
   public:
-    Tstart64(ExtMachInst, IntRegIndex);
+    Tstart64(ArmISA::ExtMachInst, ArmISA::IntRegIndex);
 
     Fault execute(ExecContext *, Trace::InstRecord *) const;
     Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
@@ -107,7 +108,7 @@ class Tstart64 : public TmeRegNone64
 class Ttest64 : public TmeRegNone64
 {
   public:
-    Ttest64(ExtMachInst, IntRegIndex);
+    Ttest64(ArmISA::ExtMachInst, ArmISA::IntRegIndex);
 
     Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
@@ -115,7 +116,7 @@ class Ttest64 : public TmeRegNone64
 class Tcancel64 : public TmeImmOp64
 {
   public:
-    Tcancel64(ExtMachInst, uint64_t);
+    Tcancel64(ArmISA::ExtMachInst, uint64_t);
 
     Fault execute(ExecContext *, Trace::InstRecord *) const;
     Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
@@ -125,7 +126,7 @@ class Tcancel64 : public TmeImmOp64
 class MicroTfence64 : public MicroTmeBasic64
 {
   public:
-    MicroTfence64(ExtMachInst);
+    MicroTfence64(ArmISA::ExtMachInst);
 
     Fault execute(ExecContext *, Trace::InstRecord *) const;
     Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
@@ -135,7 +136,7 @@ class MicroTfence64 : public MicroTmeBasic64
 class MicroTcommit64 : public MicroTmeBasic64
 {
   public:
-    MicroTcommit64(ExtMachInst);
+    MicroTcommit64(ArmISA::ExtMachInst);
 
     Fault execute(ExecContext *, Trace::InstRecord *) const;
     Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
@@ -143,16 +144,17 @@ class MicroTcommit64 : public MicroTmeBasic64
 };
 
 
-class MacroTmeOp : public PredMacroOp
+class MacroTmeOp : public ArmISA::PredMacroOp
 {
   protected:
-    MacroTmeOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass);
+    MacroTmeOp(const char *mnem, ArmISA::ExtMachInst _machInst,
+               OpClass __opClass);
 };
 
 class Tcommit64 : public MacroTmeOp
 {
   public:
-    Tcommit64(ExtMachInst _machInst);
+    Tcommit64(ArmISA::ExtMachInst _machInst);
 };
 
 } // namespace
