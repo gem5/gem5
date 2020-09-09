@@ -137,6 +137,7 @@ class BaseHTMCheckpoint
     {
         reset();
     }
+    virtual ~BaseHTMCheckpoint() {}
 
     /**
      * Every ISA implementing HTM support should override the
