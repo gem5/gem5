@@ -31,7 +31,7 @@ import math
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
-from m5.util import addToPath, fatal
+from m5.util import addToPath, fatal, warn
 
 def define_options(parser):
     # By default, ruby uses the simple timing cpu
@@ -42,8 +42,9 @@ def define_options(parser):
     parser.add_option("--mesh-rows", type="int", default=0,
                       help="the number of rows in the mesh topology")
     parser.add_option("--network", type="choice", default="simple",
-                      choices=['simple', 'garnet2.0'],
-                      help="'simple'|'garnet2.0'")
+                      choices=['simple', 'garnet'],
+                      help="""'simple'|'garnet' (garnet2.0 will be
+                      deprecated.)""")
     parser.add_option("--router-latency", action="store", type="int",
                       default=1,
                       help="""number of pipeline stages in the garnet router.
@@ -65,8 +66,8 @@ def define_options(parser):
                       default=0,
                       help="""routing algorithm in network.
                             0: weight-based table
-                            1: XY (for Mesh. see garnet2.0/RoutingUnit.cc)
-                            2: Custom (see garnet2.0/RoutingUnit.cc""")
+                            1: XY (for Mesh. see garnet/RoutingUnit.cc)
+                            2: Custom (see garnet/RoutingUnit.cc""")
     parser.add_option("--network-fault-model", action="store_true",
                       default=False,
                       help="""enable network fault model:
@@ -77,8 +78,16 @@ def define_options(parser):
 
 def create_network(options, ruby):
 
-    # Set the network classes based on the command line options
+    # Allow legacy users to use garnet through garnet2.0 option
+    # until next gem5 release.
     if options.network == "garnet2.0":
+        warn("Usage of option 'garnet2.0' will be depracated. " \
+            "Please use 'garnet' for using the latest garnet " \
+            "version. Current version: 3.0")
+        options.network = "garnet"
+
+    # Set the network classes based on the command line options
+    if options.network == "garnet":
         NetworkClass = GarnetNetwork
         IntLinkClass = GarnetIntLink
         ExtLinkClass = GarnetExtLink
@@ -101,7 +110,7 @@ def create_network(options, ruby):
 
 def init_network(options, network, InterfaceClass):
 
-    if options.network == "garnet2.0":
+    if options.network == "garnet":
         network.num_rows = options.mesh_rows
         network.vcs_per_vnet = options.vcs_per_vnet
         network.ni_flit_size = options.link_width_bits / 8
@@ -181,6 +190,6 @@ def init_network(options, network, InterfaceClass):
         network.netifs = netifs
 
     if options.network_fault_model:
-        assert(options.network == "garnet2.0")
+        assert(options.network == "garnet")
         network.enable_fault_model = True
         network.fault_model = FaultModel()
