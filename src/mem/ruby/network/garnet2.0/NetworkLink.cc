@@ -44,7 +44,6 @@ NetworkLink::NetworkLink(const Params *p)
       link_consumer(nullptr), link_srcQueue(nullptr)
 {
     int num_vnets = (p->supported_vnets).size();
-    assert(num_vnets > 0);
     mVnets.resize(num_vnets);
     bitWidth = p->width;
     for (int i = 0; i < num_vnets; i++) {
