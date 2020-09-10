@@ -497,7 +497,7 @@ def format LoadUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3; 
         uint32_t mem_word = Mem_uw;
         uint32_t unalign_addr = Rs + disp;
         uint32_t byte_offset = unalign_addr & 3;
-        if (GuestByteOrder == BigEndianByteOrder)
+        if (GuestByteOrder == ByteOrder::big)
             byte_offset ^= 3;
     '''
 
@@ -515,7 +515,7 @@ def format StoreUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3;
         uint32_t mem_word = 0;
         uint32_t unaligned_addr = Rs + disp;
         uint32_t byte_offset = unaligned_addr & 3;
-        if (GuestByteOrder == BigEndianByteOrder)
+        if (GuestByteOrder == ByteOrder::big)
             byte_offset ^= 3;
         fault = readMemAtomicLE(xc, traceData, EA, mem_word, memAccessFlags);
     '''

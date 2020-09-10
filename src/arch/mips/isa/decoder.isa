@@ -1532,7 +1532,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     if (Rs<2:0> == 0) {
                         Fd_ud = Fs_ud;
                     } else if (Rs<2:0> == 4) {
-                        if (GuestByteOrder == BigEndianByteOrder)
+                        if (GuestByteOrder == ByteOrder::big)
                             Fd_ud = Fs_ud<31:0> << 32 | Ft_ud<63:32>;
                         else
                             Fd_ud = Ft_ud<31:0> << 32 | Fs_ud<63:32>;
