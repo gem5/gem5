@@ -1417,8 +1417,8 @@ let {{
             readDestCode = 'destElem = letoh(destReg.elements[i]);'
         eWalkCode += '''
         if (imm >= eCount) {
-            fault = std::make_shared<UndefinedInstruction>(machInst, false,
-                                                           mnemonic);
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          mnemonic);
         } else {
             for (unsigned i = 0; i < eCount; i++) {
                 Element srcElem1 = letoh(srcReg1.elements[i]);
@@ -1519,8 +1519,8 @@ let {{
             readDestCode = 'destReg = destRegs[i];'
         eWalkCode += '''
         if (imm >= eCount) {
-            fault = std::make_shared<UndefinedInstruction>(machInst, false,
-                                                           mnemonic);
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          mnemonic);
         } else {
             for (unsigned i = 0; i < rCount; i++) {
                 float srcReg1 = srcRegs1[i];
