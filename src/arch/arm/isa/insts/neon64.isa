@@ -351,7 +351,7 @@ let {{
         global header_output, exec_output
         eWalkCode = simd64EnabledCheckCode + '''
         RegVect srcReg1;
-        BigRegVect destReg;
+        BigRegVect destReg = {0};
         '''
         destReg = 0 if not hi else 2
         for reg in range(2):
@@ -632,7 +632,7 @@ let {{
         global header_output, exec_output
         eWalkCode = simd64EnabledCheckCode + '''
         RegVect srcRegs;
-        BigRegVect destReg;
+        BigRegVect destReg = {0};
         '''
         for reg in range(rCount):
             eWalkCode += '''

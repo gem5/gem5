@@ -1452,7 +1452,7 @@ let {{
         rCount = 2
         eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1, srcReg2;
-        BigRegVect destReg;
+        BigRegVect destReg = {0};
         '''
         for reg in range(rCount):
             eWalkCode += '''
@@ -1654,7 +1654,7 @@ let {{
         global header_output, exec_output
         eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1;
-        BigRegVect destReg;
+        BigRegVect destReg = {0};
         '''
         for reg in range(2):
             eWalkCode += '''
@@ -1884,7 +1884,7 @@ let {{
         global header_output, exec_output
         eWalkCode = simdEnabledCheckCode + '''
         RegVect srcRegs;
-        BigRegVect destReg;
+        BigRegVect destReg = {0};
         '''
         for reg in range(rCount):
             eWalkCode += '''
@@ -2010,7 +2010,7 @@ let {{
         global header_output, exec_output
         eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1;
-        BigRegVect destReg;
+        BigRegVect destReg = {0};
         '''
         for reg in range(2):
             eWalkCode += '''
