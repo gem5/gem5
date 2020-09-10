@@ -140,14 +140,14 @@ class GarnetExtLink(BasicExtLink):
     # The network bridge encapsulates both the CDC and Ser-Des
     # units in HeteroGarnet. This is automatically enabled when
     # either CDC or Ser-Des is enabled.
-    ext_net_bridge = VectorParam.NetworkBridge(NULL,
+    ext_net_bridge = VectorParam.NetworkBridge([],
         "Network Bridge at external end")
-    ext_cred_bridge = VectorParam.NetworkBridge(NULL,
+    ext_cred_bridge = VectorParam.NetworkBridge([],
         "Credit Bridge at external end")
-    int_net_bridge = VectorParam.NetworkBridge(NULL,
+    int_net_bridge = VectorParam.NetworkBridge([],
         "Network Bridge at internal end")
-    int_cred_bridge = VectorParam.NetworkBridge(NULL,
-        "Credit Bridge at intternal end")
+    int_cred_bridge = VectorParam.NetworkBridge([],
+        "Credit Bridge at internal end")
 
 
     width = Param.UInt32(Parent.ni_flit_size,
