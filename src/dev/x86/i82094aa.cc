@@ -79,7 +79,7 @@ X86ISA::I82094AA::init()
 Port &
 X86ISA::I82094AA::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name == "int_request")
+    if (if_name == "int_requestor")
         return intRequestPort;
     if (if_name == "inputs")
         return *inputs.at(idx);
