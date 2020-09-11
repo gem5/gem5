@@ -197,16 +197,6 @@ class FullO3CPU : public BaseO3CPU
         mmu->demapPage(vaddr, asn);
     }
 
-    void demapInstPage(Addr vaddr, uint64_t asn)
-    {
-        mmu->itb->demapPage(vaddr, asn);
-    }
-
-    void demapDataPage(Addr vaddr, uint64_t asn)
-    {
-        mmu->dtb->demapPage(vaddr, asn);
-    }
-
     /** Ticks CPU, calling tick() on each stage, and checking the overall
      *  activity to see if the CPU should deschedule itself.
      */

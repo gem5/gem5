@@ -296,16 +296,6 @@ class BaseDynInst : public ExecContext, public RefCounted
     {
         cpu->demapPage(vaddr, asn);
     }
-    void
-    demapInstPage(Addr vaddr, uint64_t asn)
-    {
-        cpu->demapPage(vaddr, asn);
-    }
-    void
-    demapDataPage(Addr vaddr, uint64_t asn)
-    {
-        cpu->demapPage(vaddr, asn);
-    }
 
     Fault initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
             const std::vector<bool> &byte_enable) override;

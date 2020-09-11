@@ -174,16 +174,6 @@ class SimpleThread : public ThreadState, public ThreadContext
         mmu->demapPage(vaddr, asn);
     }
 
-    void demapInstPage(Addr vaddr, uint64_t asn)
-    {
-        mmu->itb->demapPage(vaddr, asn);
-    }
-
-    void demapDataPage(Addr vaddr, uint64_t asn)
-    {
-        mmu->dtb->demapPage(vaddr, asn);
-    }
-
     /*******************************************
      * ThreadContext interface functions.
      ******************************************/

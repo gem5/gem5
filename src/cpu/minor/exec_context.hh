@@ -451,18 +451,6 @@ class ExecContext : public ::ExecContext
         thread.setCCReg(reg.index(), val);
     }
 
-    void
-    demapInstPage(Addr vaddr, uint64_t asn)
-    {
-        thread.getITBPtr()->demapPage(vaddr, asn);
-    }
-
-    void
-    demapDataPage(Addr vaddr, uint64_t asn)
-    {
-        thread.getDTBPtr()->demapPage(vaddr, asn);
-    }
-
     BaseCPU *getCpuPtr() { return &cpu; }
 
   public:

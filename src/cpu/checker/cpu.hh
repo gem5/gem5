@@ -557,18 +557,6 @@ class CheckerCPU : public BaseCPU, public ExecContext
     AddressMonitor *getAddrMonitor() override
     { return BaseCPU::getCpuAddrMonitor(0); }
 
-    void
-    demapInstPage(Addr vaddr, uint64_t asn)
-    {
-        mmu->itb->demapPage(vaddr, asn);
-    }
-
-    void
-    demapDataPage(Addr vaddr, uint64_t asn)
-    {
-        mmu->dtb->demapPage(vaddr, asn);
-    }
-
     /**
      * Helper function used to generate the request for a single fragment of a
      * memory access.
