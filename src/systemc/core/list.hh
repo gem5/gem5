@@ -102,8 +102,13 @@ struct NodeList : public ListNode
         prevListNode = t;
     }
 
-    T *getNext() { return dynamic_cast<T *>(nextListNode); }
-    bool empty() { return getNext() == nullptr; }
+    T *
+    getNext()
+    {
+        return empty() ? nullptr : static_cast<T *>(nextListNode);
+    }
+
+    bool empty() { return nextListNode == this; }
 };
 
 } // namespace sc_gem5
