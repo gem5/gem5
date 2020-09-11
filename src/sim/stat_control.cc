@@ -53,10 +53,6 @@
 #include "base/hostinfo.hh"
 #include "base/statistics.hh"
 #include "base/time.hh"
-#include "config/the_isa.hh"
-#if THE_ISA != NULL_ISA
-#include "cpu/base.hh"
-#endif
 #include "sim/global_event.hh"
 
 using namespace std;
@@ -65,6 +61,7 @@ Stats::Formula simSeconds;
 Stats::Value simTicks;
 Stats::Value finalTick;
 Stats::Value simFreq;
+Stats::Value hostSeconds;
 
 namespace Stats {
 
@@ -97,42 +94,14 @@ statFinalTick()
 
 struct Global
 {
-    Stats::Formula hostInstRate;
-    Stats::Formula hostOpRate;
     Stats::Formula hostTickRate;
     Stats::Value hostMemory;
-    Stats::Value hostSeconds;
-
-    Stats::Value simInsts;
-    Stats::Value simOps;
 
     Global();
 };
 
 Global::Global()
 {
-    simInsts
-        .name("sim_insts")
-        .desc("Number of instructions simulated")
-        .precision(0)
-        .prereq(simInsts)
-        ;
-
-    simOps
-        .name("sim_ops")
-        .desc("Number of ops (including micro ops) simulated")
-        .precision(0)
-        .prereq(simOps)
-        ;
-
-#if THE_ISA != NULL_ISA
-    simInsts.functor(BaseCPU::numSimulatedInsts);
-    simOps.functor(BaseCPU::numSimulatedOps);
-#else
-    simInsts.functor([] { return 0; });
-    simOps.functor([] { return 0; });
-#endif
-
     simSeconds
         .name("sim_seconds")
         .desc("Number of seconds simulated")
@@ -157,20 +126,6 @@ Global::Global()
               "(restored from checkpoints and never reset)")
         ;
 
-    hostInstRate
-        .name("host_inst_rate")
-        .desc("Simulator instruction rate (inst/s)")
-        .precision(0)
-        .prereq(simInsts)
-        ;
-
-    hostOpRate
-        .name("host_op_rate")
-        .desc("Simulator op (including micro ops) rate (op/s)")
-        .precision(0)
-        .prereq(simOps)
-        ;
-
     hostMemory
         .functor(memUsage)
         .name("host_mem_usage")
@@ -192,8 +147,6 @@ Global::Global()
         ;
 
     simSeconds = simTicks / simFreq;
-    hostInstRate = simInsts / hostSeconds;
-    hostOpRate = simOps / hostSeconds;
     hostTickRate = simTicks / hostSeconds;
 
     registerResetCallback([]() {

@@ -145,6 +145,23 @@ class BaseCPU : public ClockedObject
     /** Cache the cache line size that we get from the system */
     const unsigned int _cacheLineSize;
 
+    /** Global CPU statistics that are merged into the Root object. */
+    struct GlobalStats : public Stats::Group {
+        GlobalStats(::Stats::Group *parent);
+
+        ::Stats::Value simInsts;
+        ::Stats::Value simOps;
+
+        ::Stats::Formula hostInstRate;
+        ::Stats::Formula hostOpRate;
+    };
+
+    /**
+     * Pointer to the global stat structure. This needs to be
+     * constructed from regStats since we merge it into the root
+     * group. */
+    static std::unique_ptr<GlobalStats> globalStats;
+
   public:
 
     /**

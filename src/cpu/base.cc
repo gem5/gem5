@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012,2016-2017, 2019 ARM Limited
+ * Copyright (c) 2011-2012,2016-2017, 2019-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -63,6 +63,7 @@
 #include "sim/clocked_object.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
+#include "sim/root.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
@@ -71,6 +72,8 @@
 #include "sim/stat_control.hh"
 
 using namespace std;
+
+std::unique_ptr<BaseCPU::GlobalStats> BaseCPU::globalStats;
 
 vector<BaseCPU *> BaseCPU::cpuList;
 
@@ -369,6 +372,12 @@ void
 BaseCPU::regStats()
 {
     ClockedObject::regStats();
+
+    if (!globalStats) {
+        /* We need to construct the global CPU stat structure here
+         * since it needs a pointer to the Root object. */
+        globalStats.reset(new GlobalStats(Root::root()));
+    }
 
     using namespace Stats;
 
@@ -753,4 +762,40 @@ bool
 BaseCPU::waitForRemoteGDB() const
 {
     return params()->wait_for_remote_gdb;
+}
+
+
+BaseCPU::GlobalStats::GlobalStats(::Stats::Group *parent)
+    : ::Stats::Group(parent),
+    simInsts(this, "sim_insts", "Number of instructions simulated"),
+    simOps(this, "sim_ops", "Number of ops (including micro ops) simulated"),
+    hostInstRate(this, "host_inst_rate",
+                 "Simulator instruction rate (inst/s)"),
+    hostOpRate(this, "host_op_rate",
+               "Simulator op (including micro ops) rate (op/s)")
+{
+    simInsts
+        .functor(BaseCPU::numSimulatedInsts)
+        .precision(0)
+        .prereq(simInsts)
+        ;
+
+    simOps
+        .functor(BaseCPU::numSimulatedOps)
+        .precision(0)
+        .prereq(simOps)
+        ;
+
+    hostInstRate
+        .precision(0)
+        .prereq(simInsts)
+        ;
+
+    hostOpRate
+        .precision(0)
+        .prereq(simOps)
+        ;
+
+    hostInstRate = simInsts / hostSeconds;
+    hostOpRate = simOps / hostSeconds;
 }
