@@ -38,16 +38,6 @@ gem5_verify_config(
     valid_isas=('X86', 'RISCV', 'ARM'),
 )
 
-# The "long" simple tests.
-gem5_verify_config(
-    name='simple_test',
-    verifiers = (),
-    config=joinpath(config_path, 'simple.py'),
-    config_args = [],
-    length = constants.long_tag,
-    valid_isas=('MIPS',),
-)
-
 # The "quick" two level tests.
 gem5_verify_config(
     name='two_level_test',
@@ -57,14 +47,3 @@ gem5_verify_config(
     length = constants.quick_tag,
     valid_isas=('X86', 'RISCV', 'ARM'),
 )
-
-# The "long" two level tests.
-gem5_verify_config(
-    name='two_level_test',
-    verifiers = (),
-    config=joinpath(config_path, 'two_level.py'),
-    config_args = [],
-    length = constants.long_tag,
-    valid_isas=('MIPS',),
-)
-
