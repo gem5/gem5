@@ -61,13 +61,13 @@ RubyPort::RubyPort(const Params *p)
       memResponsePort(csprintf("%s-mem-response-port", name()), this,
                    p->ruby_system->getAccessBackingStore(), -1,
                    p->no_retry_on_stall),
-      gotAddrRanges(p->port_request_ports_connection_count),
+      gotAddrRanges(p->port_interrupt_out_port_connection_count),
       m_isCPUSequencer(p->is_cpu_sequencer)
 {
     assert(m_version != -1);
 
     // create the response ports based on the number of connected ports
-    for (size_t i = 0; i < p->port_response_ports_connection_count; ++i) {
+    for (size_t i = 0; i < p->port_in_ports_connection_count; ++i) {
         response_ports.push_back(new MemResponsePort(csprintf
             ("%s.response_ports%d", name(), i), this,
             p->ruby_system->getAccessBackingStore(),
@@ -75,7 +75,7 @@ RubyPort::RubyPort(const Params *p)
     }
 
     // create the request ports based on the number of connected ports
-    for (size_t i = 0; i < p->port_request_ports_connection_count; ++i) {
+    for (size_t i = 0; i < p->port_interrupt_out_port_connection_count; ++i) {
         request_ports.push_back(new PioRequestPort(csprintf(
                     "%s.request_ports%d", name(), i), this));
     }
@@ -99,7 +99,7 @@ RubyPort::getPort(const std::string &if_name, PortID idx)
         return memResponsePort;
     } else if (if_name == "pio_response_port") {
         return pioResponsePort;
-    } else if (if_name == "request_ports") {
+    } else if (if_name == "interrupt_out_port") {
         // used by the x86 CPUs to connect the interrupt PIO and interrupt
         // response port
         if (idx >= static_cast<PortID>(request_ports.size())) {
@@ -107,7 +107,7 @@ RubyPort::getPort(const std::string &if_name, PortID idx)
         }
 
         return *request_ports[idx];
-    } else if (if_name == "response_ports") {
+    } else if (if_name == "in_ports") {
         // used by the CPUs to connect the caches to the interconnect, and
         // for the x86 case also the interrupt request port
         if (idx >= static_cast<PortID>(response_ports.size())) {
