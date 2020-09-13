@@ -61,7 +61,7 @@ output decoder {{
 
 #include "arch/riscv/decoder.hh"
 #include "arch/riscv/faults.hh"
-#include "arch/riscv/tlb.hh"
+#include "arch/riscv/mmu.hh"
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
@@ -81,6 +81,7 @@ output exec {{
 
 #include "arch/generic/memhelpers.hh"
 #include "arch/riscv/faults.hh"
+#include "arch/riscv/mmu.hh"
 #include "arch/riscv/registers.hh"
 #include "arch/riscv/utility.hh"
 #include "base/condcodes.hh"

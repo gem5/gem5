@@ -1848,8 +1848,7 @@ decode QUADRANT default Unknown::unknown() {
                                         "sfence in user mode or TVM enabled",
                                         machInst);
                         }
-                        xc->tcBase()->getITBPtr()->demapPage(Rs1, Rs2);
-                        xc->tcBase()->getDTBPtr()->demapPage(Rs1, Rs2);
+                        xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
                     }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
                     0x18: mret({{
                         if (xc->readMiscReg(MISCREG_PRV) != PRV_M) {

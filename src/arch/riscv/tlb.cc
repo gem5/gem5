@@ -35,6 +35,7 @@
 
 #include "arch/riscv/faults.hh"
 #include "arch/riscv/fs_workload.hh"
+#include "arch/riscv/mmu.hh"
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/pagetable_walker.hh"
 #include "arch/riscv/pra_constants.hh"
@@ -411,13 +412,13 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
     Addr paddr = vaddr;
 
     if (FullSystem) {
-        TLB *tlb = dynamic_cast<TLB *>(tc->getDTBPtr());
+        MMU *mmu = static_cast<MMU *>(tc->getMMUPtr());
 
-        PrivilegeMode pmode = tlb->getMemPriv(tc, mode);
+        PrivilegeMode pmode = mmu->getMemPriv(tc, mode);
         SATP satp = tc->readMiscReg(MISCREG_SATP);
         if (pmode != PrivilegeMode::PRV_M &&
             satp.mode != AddrXlateMode::BARE) {
-            Walker *walker = tlb->getWalker();
+            Walker *walker = mmu->getDataWalker();
             unsigned logBytes;
             Fault fault = walker->startFunctional(
                     tc, paddr, logBytes, mode);

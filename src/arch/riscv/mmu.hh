@@ -39,6 +39,8 @@
 #define __ARCH_RISCV_MMU_HH__
 
 #include "arch/generic/mmu.hh"
+#include "arch/riscv/isa.hh"
+#include "arch/riscv/tlb.hh"
 
 #include "params/RiscvMMU.hh"
 
@@ -50,6 +52,18 @@ class MMU : public BaseMMU
     MMU(const RiscvMMUParams &p)
       : BaseMMU(p)
     {}
+
+    PrivilegeMode
+    getMemPriv(ThreadContext *tc, BaseTLB::Mode mode)
+    {
+        return static_cast<TLB*>(dtb)->getMemPriv(tc, mode);
+    }
+
+    Walker *
+    getDataWalker()
+    {
+        return static_cast<TLB*>(dtb)->getWalker();
+    }
 };
 
 } // namespace RiscvISA

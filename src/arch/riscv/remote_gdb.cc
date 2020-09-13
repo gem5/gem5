@@ -134,9 +134,9 @@
 
 #include <string>
 
+#include "arch/riscv/mmu.hh"
 #include "arch/riscv/pagetable_walker.hh"
 #include "arch/riscv/registers.hh"
-#include "arch/riscv/tlb.hh"
 #include "cpu/thread_state.hh"
 #include "debug/GDBAcc.hh"
 #include "mem/page_table.hh"
@@ -155,15 +155,15 @@ RemoteGDB::acc(Addr va, size_t len)
 {
     if (FullSystem)
     {
-        TLB *tlb = dynamic_cast<TLB *>(context()->getDTBPtr());
+        MMU *mmu = static_cast<MMU *>(context()->getMMUPtr());
         unsigned logBytes;
         Addr paddr = va;
 
-        PrivilegeMode pmode = tlb->getMemPriv(context(), BaseTLB::Read);
+        PrivilegeMode pmode = mmu->getMemPriv(context(), BaseTLB::Read);
         SATP satp = context()->readMiscReg(MISCREG_SATP);
         if (pmode != PrivilegeMode::PRV_M &&
             satp.mode != AddrXlateMode::BARE) {
-            Walker *walker = tlb->getWalker();
+            Walker *walker = mmu->getDataWalker();
             Fault fault = walker->startFunctional(
                     context(), paddr, logBytes, BaseTLB::Read);
             if (fault != NoFault)
