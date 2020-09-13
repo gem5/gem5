@@ -444,7 +444,7 @@ public:
     {
         return dynamic_cast<const Params &>(_params);
     }
-    inline void invalidateMiscReg() { miscRegValid = false; }
+    void invalidateMiscReg() { miscRegValid = false; }
 
 private:
     /** Remove any entries that match both a va and asn
@@ -465,24 +465,6 @@ private:
                    TlbEntry::DomainType domain,
                    LookupLevel lookup_level);
 };
-
-template<typename T>
-TLB *
-getITBPtr(T *tc)
-{
-    auto tlb = static_cast<TLB *>(tc->getITBPtr());
-    assert(tlb);
-    return tlb;
-}
-
-template<typename T>
-TLB *
-getDTBPtr(T *tc)
-{
-    auto tlb = static_cast<TLB *>(tc->getDTBPtr());
-    assert(tlb);
-    return tlb;
-}
 
 } // namespace ArmISA
 

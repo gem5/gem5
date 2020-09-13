@@ -40,10 +40,10 @@
 #include "arch/arm/faults.hh"
 #include "arch/arm/htm.hh"
 #include "arch/arm/interrupts.hh"
+#include "arch/arm/mmu.hh"
 #include "arch/arm/pmu.hh"
 #include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
-#include "arch/arm/tlb.hh"
 #include "arch/arm/tlbi_op.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
@@ -133,8 +133,7 @@ ISA::clear()
 
     // Invalidate cached copies of miscregs in the TLBs
     if (tc) {
-        getITBPtr(tc)->invalidateMiscReg();
-        getDTBPtr(tc)->invalidateMiscReg();
+        getMMUPtr(tc)->invalidateMiscReg();
     }
 
     SCTLR sctlr_rst = miscRegs[MISCREG_SCTLR_RST];
@@ -844,12 +843,11 @@ ISA::setMiscReg(int misc_reg, RegVal val)
         int old_mode = old_cpsr.mode;
         CPSR cpsr = val;
         if (old_mode != cpsr.mode || cpsr.il != old_cpsr.il) {
-            getITBPtr(tc)->invalidateMiscReg();
-            getDTBPtr(tc)->invalidateMiscReg();
+            getMMUPtr(tc)->invalidateMiscReg();
         }
 
         if (cpsr.pan != old_cpsr.pan) {
-            getDTBPtr(tc)->invalidateMiscReg();
+            getMMUPtr(tc)->invalidateMiscReg(MMU::D_TLBS);
         }
 
         DPRINTF(Arm, "Updating CPSR from %#x to %#x f:%d i:%d a:%d mode:%#x\n",
@@ -1364,8 +1362,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             }
             break;
           case MISCREG_SCR:
-            getITBPtr(tc)->invalidateMiscReg();
-            getDTBPtr(tc)->invalidateMiscReg();
+            getMMUPtr(tc)->invalidateMiscReg();
             break;
           case MISCREG_SCTLR:
             {
@@ -1383,8 +1380,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 SCTLR new_sctlr = newVal;
                 new_sctlr.nmfi =  ((bool)sctlr.nmfi) && !haveVirtualization;
                 miscRegs[sctlr_idx] = (RegVal)new_sctlr;
-                getITBPtr(tc)->invalidateMiscReg();
-                getDTBPtr(tc)->invalidateMiscReg();
+                getMMUPtr(tc)->invalidateMiscReg();
             }
           case MISCREG_MIDR:
           case MISCREG_ID_PFR0:
@@ -2087,8 +2083,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                     newVal = (newVal & ttbcrMask) | (ttbcr & (~ttbcrMask));
                 }
                 // Invalidate TLB MiscReg
-                getITBPtr(tc)->invalidateMiscReg();
-                getDTBPtr(tc)->invalidateMiscReg();
+                getMMUPtr(tc)->invalidateMiscReg();
                 break;
             }
           case MISCREG_TTBR0:
@@ -2104,8 +2099,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                     }
                 }
                 // Invalidate TLB MiscReg
-                getITBPtr(tc)->invalidateMiscReg();
-                getDTBPtr(tc)->invalidateMiscReg();
+                getMMUPtr(tc)->invalidateMiscReg();
                 break;
             }
           case MISCREG_SCTLR_EL1:
@@ -2128,15 +2122,13 @@ ISA::setMiscReg(int misc_reg, RegVal val)
           case MISCREG_TTBR0_EL2:
           case MISCREG_TTBR1_EL2:
           case MISCREG_TTBR0_EL3:
-            getITBPtr(tc)->invalidateMiscReg();
-            getDTBPtr(tc)->invalidateMiscReg();
+            getMMUPtr(tc)->invalidateMiscReg();
             break;
           case MISCREG_HCR_EL2:
             {
                 const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
                 selfDebug->setenableTDETGE((HCR)val, mdcr);
-                getITBPtr(tc)->invalidateMiscReg();
-                getDTBPtr(tc)->invalidateMiscReg();
+                getMMUPtr(tc)->invalidateMiscReg();
             }
             break;
           case MISCREG_NZCV:
@@ -2184,7 +2176,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
           case MISCREG_PAN:
             {
                 // PAN is affecting data accesses
-                getDTBPtr(tc)->invalidateMiscReg();
+                getMMUPtr(tc)->invalidateMiscReg(MMU::D_TLBS);
 
                 CPSR cpsr = miscRegs[MISCREG_CPSR];
                 cpsr.pan = (uint8_t) ((CPSR) newVal).pan;
@@ -2364,13 +2356,13 @@ ISA::addressTranslation64(TLB::ArmTranslationType tran_type,
         val, 0, flags,  Request::funcRequestorId,
         tc->pcState().pc(), tc->contextId());
 
-    Fault fault = getDTBPtr(tc)->translateFunctional(
+    Fault fault = getMMUPtr(tc)->translateFunctional(
         req, tc, mode, tran_type);
 
     PAR par = 0;
     if (fault == NoFault) {
         Addr paddr = req->getPaddr();
-        uint64_t attr = getDTBPtr(tc)->getAttr();
+        uint64_t attr = getMMUPtr(tc)->getAttr();
         uint64_t attr1 = attr >> 56;
         if (!attr1 || attr1 ==0x44) {
             attr |= 0x100;
@@ -2415,7 +2407,7 @@ ISA::addressTranslation(TLB::ArmTranslationType tran_type,
         val, 0, flags,  Request::funcRequestorId,
         tc->pcState().pc(), tc->contextId());
 
-    Fault fault = getDTBPtr(tc)->translateFunctional(
+    Fault fault = getMMUPtr(tc)->translateFunctional(
         req, tc, mode, tran_type);
 
     PAR par = 0;
@@ -2434,7 +2426,7 @@ ISA::addressTranslation(TLB::ArmTranslationType tran_type,
         }
 
         par = (paddr & mask(max_paddr_bit, 12)) |
-            (getDTBPtr(tc)->getAttr());
+            (getMMUPtr(tc)->getAttr());
 
         DPRINTF(MiscRegs,
                "MISCREG: Translated addr 0x%08x: PAR: 0x%08x\n",

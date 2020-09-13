@@ -37,6 +37,113 @@
 
 #include "arch/arm/mmu.hh"
 
+using namespace ArmISA;
+
+bool
+MMU::translateFunctional(ThreadContext *tc, Addr vaddr, Addr &paddr)
+{
+    return getDTBPtr()->translateFunctional(tc, vaddr, paddr);
+}
+
+Fault
+MMU::translateFunctional(const RequestPtr &req, ThreadContext *tc,
+    BaseTLB::Mode mode, TLB::ArmTranslationType tran_type)
+{
+    if (mode == BaseTLB::Execute)
+        return getITBPtr()->translateFunctional(req, tc, mode, tran_type);
+    else
+        return getDTBPtr()->translateFunctional(req, tc, mode, tran_type);
+}
+
+void
+MMU::invalidateMiscReg(TLBType type)
+{
+    if (type & TLBType::I_TLBS) {
+        getITBPtr()->invalidateMiscReg();
+    }
+    if (type & TLBType::D_TLBS) {
+        getDTBPtr()->invalidateMiscReg();
+    }
+}
+
+void
+MMU::flushAllSecurity(bool secure_lookup, ExceptionLevel target_el,
+    TLBType type, bool ignore_el, bool in_host)
+{
+    if (type & TLBType::I_TLBS) {
+        getITBPtr()->flushAllSecurity(
+            secure_lookup, target_el, ignore_el, in_host);
+    }
+    if (type & TLBType::D_TLBS) {
+        getDTBPtr()->flushAllSecurity(
+            secure_lookup, target_el, ignore_el, in_host);
+    }
+}
+
+void
+MMU::flushAllNs(ExceptionLevel target_el, bool ignore_el,
+    TLBType type)
+{
+    if (type & TLBType::I_TLBS) {
+        getITBPtr()->flushAllNs(target_el, ignore_el);
+    }
+    if (type & TLBType::D_TLBS) {
+        getDTBPtr()->flushAllNs(target_el, ignore_el);
+    }
+}
+
+void
+MMU::flushMvaAsid(Addr mva, uint64_t asn, bool secure_lookup,
+    ExceptionLevel target_el, TLBType type,
+    bool in_host)
+{
+    if (type & TLBType::I_TLBS) {
+        getITBPtr()->flushMvaAsid(
+            mva, asn, secure_lookup, target_el, in_host);
+    }
+    if (type & TLBType::D_TLBS) {
+        getDTBPtr()->flushMvaAsid(
+            mva, asn, secure_lookup, target_el, in_host);
+    }
+}
+
+void
+MMU::flushAsid(uint64_t asn, bool secure_lookup,
+    ExceptionLevel target_el, TLBType type,
+    bool in_host)
+{
+    if (type & TLBType::I_TLBS) {
+        getITBPtr()->flushAsid(asn, secure_lookup, target_el, in_host);
+    }
+    if (type & TLBType::D_TLBS) {
+        getDTBPtr()->flushAsid(asn, secure_lookup, target_el, in_host);
+    }
+}
+
+void
+MMU::flushMva(Addr mva, bool secure_lookup, ExceptionLevel target_el,
+    TLBType type, bool in_host)
+{
+    if (type & TLBType::I_TLBS) {
+        getITBPtr()->flushMva(mva, secure_lookup, target_el, in_host);
+    }
+    if (type & TLBType::D_TLBS) {
+        getDTBPtr()->flushMva(mva, secure_lookup, target_el, in_host);
+    }
+}
+
+void
+MMU::flushIpaVmid(Addr ipa, bool secure_lookup, ExceptionLevel target_el,
+    TLBType type)
+{
+    if (type & TLBType::I_TLBS) {
+        getITBPtr()->flushIpaVmid(ipa, secure_lookup, target_el);
+    }
+    if (type & TLBType::D_TLBS) {
+        getDTBPtr()->flushIpaVmid(ipa, secure_lookup, target_el);
+    }
+}
+
 ArmISA::MMU *
 ArmMMUParams::create() const
 {

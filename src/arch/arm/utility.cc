@@ -42,8 +42,8 @@
 #include "arch/arm/faults.hh"
 #include "arch/arm/interrupts.hh"
 #include "arch/arm/isa_traits.hh"
+#include "arch/arm/mmu.hh"
 #include "arch/arm/system.hh"
-#include "arch/arm/tlb.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/thread_context.hh"
@@ -154,8 +154,7 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     dest->pcState(src->pcState());
 
     // Invalidate the tlb misc register cache
-    dynamic_cast<TLB *>(dest->getITBPtr())->invalidateMiscReg();
-    dynamic_cast<TLB *>(dest->getDTBPtr())->invalidateMiscReg();
+    static_cast<MMU *>(dest->getMMUPtr())->invalidateMiscReg();
 }
 
 void

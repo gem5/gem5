@@ -40,7 +40,7 @@
 #include <memory>
 
 #include "arch/arm/insts/static_inst.hh"
-#include "arch/arm/tlb.hh"
+#include "arch/arm/mmu.hh"
 #include "arch/arm/tracers/tarmac_tracer.hh"
 
 using namespace ArmISA;
@@ -58,8 +58,9 @@ TarmacTracerRecordV8::TraceInstEntryV8::TraceInstEntryV8(
     const auto thread = tarmCtx.thread;
 
     // Evaluate physical address
-    ArmISA::TLB* dtb = static_cast<TLB*>(thread->getDTBPtr());
-    paddrValid = dtb->translateFunctional(thread, addr, paddr);
+    auto mmu = static_cast<ArmISA::MMU*>(thread->getMMUPtr());
+    paddrValid = mmu->translateFunctional(
+        thread, addr, paddr);
 }
 
 TarmacTracerRecordV8::TraceMemEntryV8::TraceMemEntryV8(
@@ -72,8 +73,8 @@ TarmacTracerRecordV8::TraceMemEntryV8::TraceMemEntryV8(
     const auto thread = tarmCtx.thread;
 
     // Evaluate physical address
-    ArmISA::TLB* dtb = static_cast<TLB*>(thread->getDTBPtr());
-    dtb->translateFunctional(thread, addr, paddr);
+    auto mmu = static_cast<ArmISA::MMU*>(thread->getMMUPtr());
+    mmu->translateFunctional(thread, addr, paddr);
 }
 
 TarmacTracerRecordV8::TraceRegEntryV8::TraceRegEntryV8(

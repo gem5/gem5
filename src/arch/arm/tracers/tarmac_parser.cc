@@ -43,8 +43,8 @@
 
 #include "arch/arm/tracers/tarmac_parser.hh"
 
-#include "arch/arm/tlb.hh"
 #include "arch/arm/insts/static_inst.hh"
+#include "arch/arm/mmu.hh"
 #include "config/the_isa.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
@@ -1284,13 +1284,13 @@ TarmacParserRecord::readMemNoEffect(Addr addr, uint8_t *data, unsigned size,
                                     unsigned flags)
 {
     const RequestPtr &req = memReq;
-    ArmISA::TLB* dtb = static_cast<TLB*>(thread->getDTBPtr());
+    auto mmu = static_cast<MMU*>(thread->getMMUPtr());
 
     req->setVirt(addr, size, flags, thread->pcState().instAddr(),
                  Request::funcRequestorId);
 
     // Translate to physical address
-    Fault fault = dtb->translateAtomic(req, thread, BaseTLB::Read);
+    Fault fault = mmu->translateAtomic(req, thread, BaseTLB::Read);
 
     // Ignore read if the address falls into the ignored range
     if (parent.ignoredAddrRange.contains(addr))

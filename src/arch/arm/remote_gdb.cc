@@ -140,7 +140,7 @@
 #include "arch/arm/registers.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
-#include "arch/generic/tlb.hh"
+#include "arch/generic/mmu.hh"
 #include "base/chunk_generator.hh"
 #include "base/intmath.hh"
 #include "base/remote_gdb.hh"
@@ -180,10 +180,9 @@ tryTranslate(ThreadContext *tc, Addr addr)
     //
     // Calling translateFunctional invokes a table-walk if required
     // so we should always succeed
-    auto *dtb = tc->getDTBPtr();
-    auto *itb = tc->getITBPtr();
-    return dtb->translateFunctional(req, tc, BaseTLB::Read) == NoFault ||
-           itb->translateFunctional(req, tc, BaseTLB::Read) == NoFault;
+    auto *mmu = tc->getMMUPtr();
+    return mmu->translateFunctional(req, tc, BaseTLB::Read) == NoFault ||
+           mmu->translateFunctional(req, tc, BaseTLB::Execute) == NoFault;
 }
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc, int _port)

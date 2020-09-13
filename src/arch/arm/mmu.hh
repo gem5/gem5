@@ -38,6 +38,7 @@
 #ifndef __ARCH_ARM_MMU_HH__
 #define __ARCH_ARM_MMU_HH__
 
+#include "arch/arm/tlb.hh"
 #include "arch/generic/mmu.hh"
 
 #include "params/ArmMMU.hh"
@@ -46,11 +47,101 @@ namespace ArmISA {
 
 class MMU : public BaseMMU
 {
+  protected:
+    ArmISA::TLB *
+    getDTBPtr() const
+    {
+        return static_cast<ArmISA::TLB *>(dtb);
+    }
+
+    ArmISA::TLB *
+    getITBPtr() const
+    {
+        return static_cast<ArmISA::TLB *>(itb);
+    }
+
   public:
+    enum TLBType
+    {
+        I_TLBS = 0x01,
+        D_TLBS = 0x10,
+        ALL_TLBS = 0x11
+    };
+
     MMU(const ArmMMUParams &p)
       : BaseMMU(p)
     {}
+
+    bool translateFunctional(ThreadContext *tc, Addr vaddr, Addr &paddr);
+
+    Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
+        BaseTLB::Mode mode, TLB::ArmTranslationType tran_type);
+
+    void invalidateMiscReg(TLBType type = ALL_TLBS);
+
+    /** Reset the entire TLB
+     * @param secure_lookup if the operation affects the secure world
+     */
+    void flushAllSecurity(bool secure_lookup, ExceptionLevel target_el,
+         TLBType type = ALL_TLBS,
+         bool ignore_el = false, bool in_host = false);
+
+    /** Remove all entries in the non secure world, depending on whether they
+     *  were allocated in hyp mode or not
+     */
+    void flushAllNs(ExceptionLevel target_el, bool ignore_el = false,
+        TLBType type = ALL_TLBS);
+
+    /** Remove any entries that match both a va and asn
+     * @param mva virtual address to flush
+     * @param asn contextid/asn to flush on match
+     * @param secure_lookup if the operation affects the secure world
+     */
+    void flushMvaAsid(Addr mva, uint64_t asn, bool secure_lookup,
+        ExceptionLevel target_el, TLBType type = ALL_TLBS,
+        bool in_host = false);
+
+    /** Remove any entries that match the asn
+     * @param asn contextid/asn to flush on match
+     * @param secure_lookup if the operation affects the secure world
+     */
+    void flushAsid(uint64_t asn, bool secure_lookup,
+        ExceptionLevel target_el, TLBType type = ALL_TLBS,
+        bool in_host = false);
+
+    /** Remove all entries that match the va regardless of asn
+     * @param mva address to flush from cache
+     * @param secure_lookup if the operation affects the secure world
+     */
+    void flushMva(Addr mva, bool secure_lookup, ExceptionLevel target_el,
+        TLBType type = ALL_TLBS, bool in_host = false);
+
+    /**
+     * Invalidate all entries in the stage 2 TLB that match the given ipa
+     * and the current VMID
+     * @param ipa the address to invalidate
+     * @param secure_lookup if the operation affects the secure world
+     */
+    void flushIpaVmid(Addr ipa, bool secure_lookup, ExceptionLevel target_el,
+        TLBType type = ALL_TLBS);
+
+    uint64_t
+    getAttr() const
+    {
+        return getDTBPtr()->getAttr();
+    }
+
 };
+
+template<typename T>
+MMU *
+getMMUPtr(T *tc)
+{
+    auto mmu = static_cast<MMU *>(tc->getMMUPtr());
+    assert(mmu);
+    return mmu;
+}
+
 
 } // namespace ArmISA
 
