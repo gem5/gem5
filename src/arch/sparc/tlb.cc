@@ -33,6 +33,7 @@
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/interrupts.hh"
+#include "arch/sparc/mmu.hh"
 #include "arch/sparc/registers.hh"
 #include "base/bitfield.hh"
 #include "base/compiler.hh"
@@ -955,7 +956,7 @@ TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
     DPRINTF(IPR, "Memory Mapped IPR Read: asi=%#X a=%#x\n",
          (uint32_t)pkt->req->getArchFlags(), pkt->getAddr());
 
-    TLB *itb = dynamic_cast<TLB *>(tc->getITBPtr());
+    TLB *itb = static_cast<TLB *>(tc->getMMUPtr()->itb);
 
     switch (asi) {
       case ASI_LSU_CONTROL_REG:
@@ -1151,7 +1152,7 @@ TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
     DPRINTF(IPR, "Memory Mapped IPR Write: asi=%#X a=%#x d=%#X\n",
          (uint32_t)asi, va, data);
 
-    TLB *itb = dynamic_cast<TLB *>(tc->getITBPtr());
+    TLB *itb = static_cast<TLB *>(tc->getMMUPtr()->itb);
 
     switch (asi) {
       case ASI_LSU_CONTROL_REG:
@@ -1388,7 +1389,7 @@ void
 TLB::GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs)
 {
     uint64_t tag_access = mbits(addr,63,13) | mbits(ctx,12,0);
-    TLB *itb = dynamic_cast<TLB *>(tc->getITBPtr());
+    TLB *itb = static_cast<TLB *>(tc->getMMUPtr()->itb);
     ptrs[0] = MakeTsbPtr(Ps0, tag_access,
                 c0_tsb_ps0,
                 c0_config,

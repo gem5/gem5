@@ -39,6 +39,7 @@
 #define __ARCH_SPARC_MMU_HH__
 
 #include "arch/generic/mmu.hh"
+#include "arch/sparc/tlb.hh"
 
 #include "params/SparcMMU.hh"
 
@@ -50,6 +51,22 @@ class MMU : public BaseMMU
     MMU(const SparcMMUParams &p)
       : BaseMMU(p)
     {}
+
+    void
+    insertItlbEntry(Addr vpn, int partition_id, int context_id, bool real,
+        const PageTableEntry& PTE, int entry=-1)
+    {
+        static_cast<TLB*>(itb)->insert(vpn, partition_id,
+            context_id, real, PTE, entry);
+    }
+
+    void
+    insertDtlbEntry(Addr vpn, int partition_id, int context_id, bool real,
+        const PageTableEntry& PTE, int entry=-1)
+    {
+        static_cast<TLB*>(dtb)->insert(vpn, partition_id,
+            context_id, real, PTE, entry);
+    }
 };
 
 } // namespace SparcISA
