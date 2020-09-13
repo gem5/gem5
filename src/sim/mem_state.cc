@@ -30,7 +30,7 @@
 
 #include <cassert>
 
-#include "arch/generic/tlb.hh"
+#include "arch/generic/mmu.hh"
 #include "debug/Vma.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "sim/process.hh"
@@ -258,8 +258,7 @@ MemState::unmapRegion(Addr start_addr, Addr length)
      * that can flush just part of the address space.
      */
     for (auto *tc: _ownerProcess->system->threads) {
-        tc->getDTBPtr()->flushAll();
-        tc->getITBPtr()->flushAll();
+        tc->getMMUPtr()->flushAll();
     }
 
     do {
@@ -360,8 +359,7 @@ MemState::remapRegion(Addr start_addr, Addr new_start_addr, Addr length)
      * that can flush just part of the address space.
      */
     for (auto *tc: _ownerProcess->system->threads) {
-        tc->getDTBPtr()->flushAll();
-        tc->getITBPtr()->flushAll();
+        tc->getMMUPtr()->flushAll();
     }
 
     do {
