@@ -39,6 +39,7 @@
 #define __ARCH_X86_MMU_HH__
 
 #include "arch/generic/mmu.hh"
+#include "arch/x86/tlb.hh"
 
 #include "params/X86MMU.hh"
 
@@ -50,6 +51,19 @@ class MMU : public BaseMMU
     MMU(const X86MMUParams &p)
       : BaseMMU(p)
     {}
+
+    void
+    flushNonGlobal()
+    {
+        static_cast<TLB*>(itb)->flushNonGlobal();
+        static_cast<TLB*>(dtb)->flushNonGlobal();
+    }
+
+    Walker*
+    getDataWalker()
+    {
+        return static_cast<TLB*>(dtb)->getWalker();
+    }
 };
 
 } // namespace X86ISA

@@ -42,6 +42,7 @@
 
 #include "arch/x86/generated/decoder.hh"
 #include "arch/x86/isa_traits.hh"
+#include "arch/x86/mmu.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
@@ -137,8 +138,7 @@ PageFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         // Invalidate any matching TLB entries before handling the page fault.
-        tc->getITBPtr()->demapPage(addr, 0);
-        tc->getDTBPtr()->demapPage(addr, 0);
+        tc->getMMUPtr()->demapPage(addr, 0);
         HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
         X86FaultBase::invoke(tc);
         // If something bad happens while trying to enter the page fault

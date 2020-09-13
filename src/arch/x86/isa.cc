@@ -29,7 +29,7 @@
 #include "arch/x86/isa.hh"
 
 #include "arch/x86/decoder.hh"
-#include "arch/x86/tlb.hh"
+#include "arch/x86/mmu.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "params/X86ISA.hh"
@@ -239,8 +239,7 @@ ISA::setMiscReg(int miscReg, RegVal val)
                 }
             }
             if (toggled.pg) {
-                dynamic_cast<TLB *>(tc->getITBPtr())->flushAll();
-                dynamic_cast<TLB *>(tc->getDTBPtr())->flushAll();
+                tc->getMMUPtr()->flushAll();
             }
             //This must always be 1.
             newCR0.et = 1;
@@ -255,15 +254,13 @@ ISA::setMiscReg(int miscReg, RegVal val)
       case MISCREG_CR2:
         break;
       case MISCREG_CR3:
-        dynamic_cast<TLB *>(tc->getITBPtr())->flushNonGlobal();
-        dynamic_cast<TLB *>(tc->getDTBPtr())->flushNonGlobal();
+        static_cast<MMU *>(tc->getMMUPtr())->flushNonGlobal();
         break;
       case MISCREG_CR4:
         {
             CR4 toggled = regVal[miscReg] ^ val;
             if (toggled.pae || toggled.pse || toggled.pge) {
-                dynamic_cast<TLB *>(tc->getITBPtr())->flushAll();
-                dynamic_cast<TLB *>(tc->getDTBPtr())->flushAll();
+                tc->getMMUPtr()->flushAll();
             }
         }
         break;

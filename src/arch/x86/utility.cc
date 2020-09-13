@@ -39,6 +39,7 @@
 #include "arch/x86/utility.hh"
 
 #include "arch/x86/interrupts.hh"
+#include "arch/x86/mmu.hh"
 #include "arch/x86/registers.hh"
 #include "arch/x86/x86_traits.hh"
 #include "cpu/base.hh"
@@ -86,8 +87,7 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
     // CPU switch have different frequencies.
     dest->setMiscReg(MISCREG_TSC, src->readMiscReg(MISCREG_TSC));
 
-    dest->getITBPtr()->flushAll();
-    dest->getDTBPtr()->flushAll();
+    dest->getMMUPtr()->flushAll();
 }
 
 void
