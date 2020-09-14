@@ -52,7 +52,8 @@ let {{
 
     def threeEqualRegInstX(name, Name, opClass, types, rCount, op,
                            readDest=False, pairwise=False, scalar=False,
-                           byElem=False, decoder='Generic', complex=False):
+                           byElem=False, decoder='Generic', complex=False,
+                           extra=''):
         assert (not pairwise) or ((not byElem) and (not scalar))
         global header_output, exec_output, decoders
         eWalkCode = simd64EnabledCheckCode + '''
@@ -110,6 +111,7 @@ let {{
                 continue;
             }
             '''
+            eWalkCode += extra
             eWalkCode += '''
         for (unsigned i = 0; i < eCount; i++) {
             %(scalarCheck)s
@@ -2336,7 +2338,81 @@ let {{
                      sqnegCode)
     twoEqualRegInstX("sqneg", "SqnegScX", "SimdAluOp", signedTypes, 4,
                      sqnegCode, scalar=True)
-    # SQRDMULH (by element)
+    sqrdmCode = '''
+
+          FPSCR fpscr = (FPSCR) FpscrQc;
+          int nbits = sizeof(Element)*8;
+
+          auto val_max = std::numeric_limits<Element>::max();
+          auto val_min = std::numeric_limits<Element>::min();
+          BigElement unsat_value = ((BigElement)destElem << nbits) %(code)s
+                ((BigElement)srcElem1 * (BigElement)srcElem2 * 2) +
+                ((BigElement)1 << (nbits - 1));
+          unsat_value >>= nbits;
+
+          if (unsat_value > val_max) {
+              fpscr.qc = 1;
+              destElem = val_max;
+          } else if (unsat_value < val_min) {
+              fpscr.qc = 1;
+              destElem = val_min;
+          } else {
+              destElem = unsat_value;
+          }
+          FpscrQc = fpscr;
+    '''
+    code_add = "+"
+    sqrdmlahCode = sqrdmCode % {'code': code_add}
+    rdm_check = '''
+      int sz = bits(machInst, 23, 22);
+      AA64ISAR0 isar0 = xc->tcBase()->readMiscReg( MISCREG_ID_AA64ISAR0_EL1);
+      if (!isar0.rdm || sz == 3 || sz == 0)
+          return std::make_shared<UndefinedInstruction>(machInst, true);
+      typedef __int128_t BigElement;
+    '''
+    threeEqualRegInstX("sqrdmlah", "SqrdmlahElemDX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 2, sqrdmlahCode, byElem=True,
+                       readDest=True, extra=rdm_check)
+    threeEqualRegInstX("sqrdmlah", "SqrdmlahElemQX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqrdmlahCode, byElem=True,
+                       readDest=True, extra=rdm_check)
+    threeEqualRegInstX("sqrdmlah", "SqrdmlahElemScX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqrdmlahCode, byElem=True,
+                       readDest=True, scalar=True, extra=rdm_check)
+    # SQRDMLAH (vector)
+    threeEqualRegInstX("sqrdmlah", "SqrdmlahDX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 2, sqrdmlahCode,
+                       readDest=True, extra=rdm_check)
+    threeEqualRegInstX("sqrdmlah", "SqrdmlahQX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqrdmlahCode,
+                       readDest=True, extra=rdm_check)
+    threeEqualRegInstX("sqrdmlah", "SqrdmlahScX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqrdmlahCode, scalar=True,
+                       readDest=True, extra=rdm_check)
+    # SQRDMLSH (by element)
+    code_sub = "-"
+    sqrdmlshCode = sqrdmCode % {'code': code_sub}
+
+    threeEqualRegInstX("sqrdmlsh", "SqrdmlshElemDX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 2, sqrdmlshCode, byElem=True,
+                       readDest=True, extra=rdm_check)
+    threeEqualRegInstX("sqrdmlsh", "SqrdmlshElemQX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqrdmlshCode, byElem=True,
+                       readDest=True, extra=rdm_check)
+    threeEqualRegInstX("sqrdmlsh", "SqrdmlshElemScX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqrdmlshCode, byElem=True,
+                       readDest=True, scalar=True, extra=rdm_check)
+    # SQRDMLSH (vector)
+    threeEqualRegInstX("sqrdmlsh", "SqrdmlshDX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 2, sqrdmlshCode,
+                       readDest=True, extra=rdm_check)
+    threeEqualRegInstX("sqrdmlsh", "SqrdmlshQX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqrdmlshCode,
+                       readDest=True, extra=rdm_check)
+    threeEqualRegInstX("sqrdmlsh", "SqrdmlshScX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqrdmlshCode, scalar=True,
+                       readDest=True, extra=rdm_check)
+    # SQRDMULby element)
     sqrdmulhCode = '''
             FPSCR fpscr = (FPSCR) FpscrQc;
             destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2 +

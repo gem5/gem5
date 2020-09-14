@@ -1147,7 +1147,7 @@ let {{
 
     def threeEqualRegInst(name, Name, opClass, types, rCount, op,
                           readDest=False, pairwise=False, byElem=False,
-                          standardFpcsr=False, complex=False):
+                          standardFpcsr=False, complex=False, extra=''):
         global header_output, exec_output
         eWalkCode = simdEnabledCheckCode + '''
                     RegVect srcReg1, destReg;
@@ -1203,6 +1203,7 @@ let {{
             }
             ''' % { "op" : op, "readDest" : readDestCode }
         else:
+            eWalkCode += extra
             eWalkCode += '''
             for (unsigned i = 0; i < eCount; i++) {
                 Element srcElem1 = letoh(srcReg1.elements[i]);
@@ -1398,7 +1399,8 @@ let {{
         threeUnequalRegInst(name, Name, opClass, types, op,
                             True, False, True, readDest)
 
-    def twoEqualRegInst(name, Name, opClass, types, rCount, op, readDest=False):
+    def twoEqualRegInst(name, Name, opClass, types, rCount, op,
+                        readDest=False, extra=''):
         global header_output, exec_output
         eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1, srcReg2, destReg;
@@ -1415,6 +1417,7 @@ let {{
         readDestCode = ''
         if readDest:
             readDestCode = 'destElem = letoh(destReg.elements[i]);'
+        eWalkCode += extra
         eWalkCode += '''
         if (imm >= eCount) {
             return std::make_shared<UndefinedInstruction>(machInst, false,
@@ -2783,6 +2786,55 @@ let {{
     threeEqualRegInst("vqdmulh", "VqdmulhD", "SimdMultOp", smallSignedTypes, 2, vqdmulhCode)
     threeEqualRegInst("vqdmulh", "VqdmulhQ", "SimdMultOp", smallSignedTypes, 4, vqdmulhCode)
 
+
+    vqrdmCode = '''
+          FPSCR fpscr = (FPSCR) FpscrQc;
+          int nbits = sizeof(Element)*8;
+
+          auto val_max = std::numeric_limits<Element>::max();
+          auto val_min = std::numeric_limits<Element>::min();
+          BigElement unsat_value = ((BigElement)destElem << nbits) %(code)s
+                ((BigElement)srcElem1 * (BigElement)srcElem2 * 2) +
+                ((BigElement)1 << (nbits - 1));
+          unsat_value >>= nbits;
+
+          if (unsat_value > val_max) {
+              fpscr.qc = 1;
+              destElem = val_max;
+          } else if (unsat_value < val_min) {
+              fpscr.qc = 1;
+              destElem = val_min;
+          } else {
+              destElem = unsat_value;
+          }
+          FpscrQc = fpscr;
+    '''
+    code_add = "+"
+    vqrdmlahCode = vqrdmCode % {'code': code_add}
+    rdm_check = '''
+      int sz = bits(machInst, 21, 20);
+      RegVal isar5 = xc->tcBase()->readMiscReg(MISCREG_ID_ISAR5);
+      if (!(bits(isar5, 27, 24) == 0x1) || sz == 3 || sz == 0)
+          return std::make_shared<UndefinedInstruction>(machInst, true);
+      typedef __int128_t BigElement;
+    '''
+    threeEqualRegInst("vqrdmlah", "VqrdmlahD",
+            "SimdMultOp", smallSignedTypes, 2, vqrdmlahCode, readDest=True,
+            extra=rdm_check)
+    threeEqualRegInst("vqrdmlah", "VqrdmlahQ",
+            "SimdMultOp", smallSignedTypes, 4, vqrdmlahCode, readDest=True,
+            extra=rdm_check)
+
+    code_sub = "-"
+    vqrdmlshCode = vqrdmCode % {'code': code_sub}
+    threeEqualRegInst("vqrdmlsh", "VqrdmlshD",
+            "SimdMultOp", smallSignedTypes, 2, vqrdmlshCode, readDest=True,
+            extra=rdm_check)
+    threeEqualRegInst("vqrdmlsh", "VqrdmlshQ",
+            "SimdMultOp", smallSignedTypes, 4, vqrdmlshCode, readDest=True,
+            extra=rdm_check)
+
+
     vqrdmulhCode = '''
         FPSCR fpscr = (FPSCR) FpscrQc;
         destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2 +
@@ -3033,6 +3085,18 @@ let {{
             "SimdMultOp", smallSignedTypes, 2, vqrdmulhCode)
     twoEqualRegInst("vqrdmulh", "VqrdmulhsQ",
             "SimdMultOp", smallSignedTypes, 4, vqrdmulhCode)
+    twoEqualRegInst("vqrdmlah", "VqrdmlahsD",
+            "SimdMultOp", smallSignedTypes, 2, vqrdmlahCode, readDest=True,
+            extra=rdm_check)
+    twoEqualRegInst("vqrdmlah", "VqrdmlahsQ",
+            "SimdMultOp", smallSignedTypes, 4, vqrdmlahCode, readDest=True,
+            extra=rdm_check)
+    twoEqualRegInst("vqrdmlsh", "VqrdmlshsD",
+            "SimdMultOp", smallSignedTypes, 2, vqrdmlshCode, readDest=True,
+            extra=rdm_check)
+    twoEqualRegInst("vqrdmlsh", "VqrdmlshsQ",
+            "SimdMultOp", smallSignedTypes, 4, vqrdmlshCode, readDest=True,
+            extra=rdm_check)
 
     vshrCode = '''
         if (imm >= sizeof(srcElem1) * 8) {

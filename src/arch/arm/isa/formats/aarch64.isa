@@ -2975,6 +2975,8 @@ namespace Aarch64
             } else {
                 return new Unknown64(machInst);
             }
+        } else if (bits(machInst, 15) && bits(machInst, 10) == 1) {
+            return decodeNeonSc3SameExtra(machInst);
         } else if (bits(machInst, 23, 22) == 0 &&
                    bits(machInst, 15) == 0) {
             if (bits(machInst, 10) == 1) {

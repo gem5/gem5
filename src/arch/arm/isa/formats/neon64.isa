@@ -66,6 +66,8 @@ namespace Aarch64
 
     // AdvSIMD scalar three same
     inline StaticInstPtr decodeNeonSc3Same(ExtMachInst machInst);
+    // AdvSIMD scalar three same extra
+    inline StaticInstPtr decodeNeonSc3SameExtra(ExtMachInst machInst);
     // AdvSIMD scalar three different
     inline StaticInstPtr decodeNeonSc3Diff(ExtMachInst machInst);
     // AdvSIMD scalar two-reg misc
@@ -516,6 +518,20 @@ namespace Aarch64
         IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
 
         switch (opcode) {
+          case 0x10:
+            if (q)
+                return decodeNeonSThreeHAndWReg<SqrdmlahQX>(
+                    size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeHAndWReg<SqrdmlahDX>(
+                    size, machInst, vd, vn, vm);
+          case 0x11:
+            if (q)
+                return decodeNeonSThreeHAndWReg<SqrdmlshQX>(
+                    size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeHAndWReg<SqrdmlshDX>(
+                    size, machInst, vd, vn, vm);
           case 0x18:
           case 0x19:
           case 0x1a:
@@ -1531,10 +1547,16 @@ namespace Aarch64
                 return decodeNeonSThreeImmHAndWReg<SqdmulhElemDX, SqdmulhElemQX>(
                     q, size, machInst, vd, vn, vm, index);
           case 0xd:
-            if (u || (size == 0x0 || size == 0x3))
-                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonSThreeImmHAndWReg<SqrdmlahElemDX,
+                                                   SqrdmlahElemQX>(
+                    q, size, machInst, vd, vn, vm, index);
             else
-                return decodeNeonSThreeImmHAndWReg<SqrdmulhElemDX, SqrdmulhElemQX>(
+                return decodeNeonSThreeImmHAndWReg<SqrdmulhElemDX,
+                                                   SqrdmulhElemQX>(
+                    q, size, machInst, vd, vn, vm, index);
+          case 0xf:
+            return decodeNeonSThreeImmHAndWReg<SqrdmlshElemDX, SqrdmlshElemQX>(
                     q, size, machInst, vd, vn, vm, index);
           default:
             return new Unknown64(machInst);
@@ -2106,6 +2128,28 @@ namespace Aarch64
     }
 
     StaticInstPtr
+    decodeNeonSc3SameExtra(ExtMachInst machInst)
+    {
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opcode = bits(machInst, 15, 11);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        switch (opcode) {
+          case 0x10:
+            return decodeNeonSThreeHAndWReg<SqrdmlahScX>(
+                size, machInst, vd, vn, vm);
+          case 0x11:
+            return decodeNeonSThreeHAndWReg<SqrdmlshScX>(
+                size, machInst, vd, vn, vm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
     decodeNeonSc3Diff(ExtMachInst machInst)
     {
         if (bits(machInst, 29))
@@ -2434,10 +2478,9 @@ namespace Aarch64
         }
         IntRegIndex vm_fp = (IntRegIndex) (uint8_t) (vmh << 4 | vm_bf);
 
-        if (u && opcode != 9)
-            return new Unknown64(machInst);
+        uint8_t u_opcode = opcode | u << 4;
 
-        switch (opcode) {
+        switch (u_opcode) {
           case 0x1:
             if (size < 2 || sz_L == 0x3)
                 return new Unknown64(machInst);
@@ -2465,11 +2508,7 @@ namespace Aarch64
           case 0x9:
             if (size < 2 || sz_L == 0x3)
                 return new Unknown64(machInst);
-            if (u)
-                return decodeNeonUThreeImmScFpReg<FmulxElemScX>(
-                    size & 0x1, machInst, vd, vn, vm_fp, index_fp);
-            else
-                return decodeNeonUThreeImmScFpReg<FmulElemScX>(
+            return decodeNeonUThreeImmScFpReg<FmulElemScX>(
                     size & 0x1, machInst, vd, vn, vm_fp, index_fp);
           case 0xb:
             if (size == 0x0 || size == 0x3)
@@ -2484,10 +2523,20 @@ namespace Aarch64
                 return decodeNeonSThreeImmHAndWReg<SqdmulhElemScX>(
                     size, machInst, vd, vn, vm, index);
           case 0xd:
-            if (size == 0x0 || size == 0x3)
+            return decodeNeonSThreeImmHAndWReg<SqrdmulhElemScX>(
+                    size, machInst, vd, vn, vm, index);
+          case 0x19:
+            if (size < 2 || sz_L == 0x3)
                 return new Unknown64(machInst);
-            else
-                return decodeNeonSThreeImmHAndWReg<SqrdmulhElemScX>(
+            return decodeNeonUThreeImmScFpReg<FmulxElemScX>(
+                    size & 0x1, machInst, vd, vn, vm_fp, index_fp);
+
+          case 0x1d:
+            return decodeNeonSThreeImmHAndWReg<SqrdmlahElemScX>(
+                    size, machInst, vd, vn, vm, index);
+
+          case 0x1f:
+            return decodeNeonSThreeImmHAndWReg<SqrdmlshElemScX>(
                     size, machInst, vd, vn, vm, index);
           default:
             return new Unknown64(machInst);

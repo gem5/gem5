@@ -652,7 +652,10 @@ let {{
             }
           case 0xb:
             if (o1) {
-                if (u || q) {
+                if (u) {
+                    return decodeNeonSThreeSReg<VqrdmlahD, VqrdmlahQ>(
+                            q, size, machInst, vd, vn, vm);
+                } else if (q) {
                     return new Unknown(machInst);
                 } else {
                     return decodeNeonUThreeUSReg<NVpaddD>(
@@ -669,7 +672,10 @@ let {{
             }
           case 0xc:
             if (o1) {
-                if (!u) {
+                if (u) {
+                    return decodeNeonSThreeSReg<VqrdmlshD, VqrdmlshQ>(
+                            q, size, machInst, vd, vn, vm);
+                } else {
                     if (bits(size, 1) == 0) {
                         if (q) {
                             return new NVfmaQFp<float>(machInst, vd, vn, vm);
@@ -1499,6 +1505,54 @@ let {{
                             machInst, vd, vn, vm, index);
                   case 2:
                     return new VqrdmulhsD<int32_t>(
+                            machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            }
+          case 0xe:
+            if (u) {
+                switch (size) {
+                  case 1:
+                    return new VqrdmlahsQ<int16_t>(
+                            machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VqrdmlahsQ<int32_t>(
+                            machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            } else {
+                switch (size) {
+                  case 1:
+                    return new VqrdmlahsD<int16_t>(
+                            machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VqrdmlahsD<int32_t>(
+                            machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            }
+          case 0xf:
+            if (u) {
+                switch (size) {
+                  case 1:
+                    return new VqrdmlshsQ<int16_t>(
+                            machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VqrdmlshsQ<int32_t>(
+                            machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            } else {
+                switch (size) {
+                  case 1:
+                    return new VqrdmlshsD<int16_t>(
+                            machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VqrdmlshsD<int32_t>(
                             machInst, vd, vn, vm, index);
                   default:
                     return new Unknown(machInst);
