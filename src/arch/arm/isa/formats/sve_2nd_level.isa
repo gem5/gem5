@@ -3219,66 +3219,96 @@ namespace Aarch64
     }  // decodeSveMemGather32
 
     StaticInstPtr
-    decodeSveLoadBcastQuadSS(ExtMachInst machInst)
+    decodeSveLoadBcastMultiSS(ExtMachInst machInst)
     {
-        uint8_t num = bits(machInst, 22, 21);
-        if (num != 0x00) {
-            return new Unknown64(machInst);
-        }
-
         RegIndex zt = (RegIndex)(uint8_t) bits(machInst, 4, 0);
         RegIndex rn = makeSP((RegIndex)(uint8_t) bits(machInst, 9, 5));
         RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
         RegIndex rm = (RegIndex)(uint8_t) bits(machInst, 20, 16);
-        uint8_t msz = bits(machInst, 24, 23);
-        switch (msz) {
-            case 0:
+
+        uint8_t msz_esz = bits(machInst, 24, 21);
+
+        switch (msz_esz) {
+            // Load-Broadcast Quad-word Variants
+            case 0b0000: // 0x0:
                 return new SveLd1RqSS<uint8_t, uint8_t>("ld1rqb",
                         machInst, zt, pg, rn, rm);
-            case 1:
-                return new SveLd1RqSS<uint16_t, uint16_t>("ld1rqh",
+            case 0b0100: // 0x4:
+                 return new SveLd1RqSS<uint16_t, uint16_t>("ld1rqh",
                         machInst, zt, pg, rn, rm);
-            case 2:
+            case 0b1000: // 0x8:
                 return new SveLd1RqSS<uint32_t, uint32_t>("ld1rqw",
                         machInst, zt, pg, rn, rm);
-            case 3:
+            case 0b1100: // 0xc:
                 return new SveLd1RqSS<uint64_t, uint64_t>("ld1rqd",
                         machInst, zt, pg, rn, rm);
+
+            // Load-Broadcast Octa-word Variants
+            case 0b0001: // 0x1:
+                return new SveLd1RoSS<uint8_t, uint8_t>("ld1rob",
+                        machInst, zt, pg, rn, rm);
+            case 0b0101: // 0x5:
+                return new SveLd1RoSS<uint16_t, uint16_t>("ld1roh",
+                        machInst, zt, pg, rn, rm);
+            case 0b1001: // 0x9:
+                return new SveLd1RoSS<uint32_t, uint32_t>("ld1row",
+                        machInst, zt, pg, rn, rm);
+            case 0b1101: // 0xd:
+                return new SveLd1RoSS<uint64_t, uint64_t>("ld1rod",
+                        machInst, zt, pg, rn, rm);
+
+            default:
+              return new Unknown64(machInst);
         }
 
         return new Unknown64(machInst);
-    }  // decodeSveLoadBcastQuadSS
+    }  // decodeSveLoadBcastMultiSS
 
     StaticInstPtr
-    decodeSveLoadBcastQuadSI(ExtMachInst machInst)
+    decodeSveLoadBcastMultiSI(ExtMachInst machInst)
     {
-        uint8_t num = bits(machInst, 22, 21);
-        if (num != 0x00) {
-            return new Unknown64(machInst);
-        }
-
         RegIndex zt = (RegIndex)(uint8_t) bits(machInst, 4, 0);
         RegIndex rn = makeSP((RegIndex)(uint8_t) bits(machInst, 9, 5));
         RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
         uint64_t imm = sext<4>(bits(machInst, 19, 16));
-        uint8_t msz = bits(machInst, 24, 23);
-        switch (msz) {
-            case 0:
+
+        uint8_t msz_esz = bits(machInst, 24, 21);
+
+        switch (msz_esz) {
+            // Load-Broadcast Quad-word Variants
+            case 0b0000: // 0x0:
                 return new SveLd1RqSI<uint8_t, uint8_t>("ld1rqb",
                         machInst, zt, pg, rn, imm);
-            case 1:
+            case 0b0100: // 0x4:
                 return new SveLd1RqSI<uint16_t, uint16_t>("ld1rqh",
                         machInst, zt, pg, rn, imm);
-            case 2:
+            case 0b1000: // 0x8:
                 return new SveLd1RqSI<uint32_t, uint32_t>("ld1rqw",
                         machInst, zt, pg, rn, imm);
-            case 3:
+            case 0b1100: // 0xc:
                 return new SveLd1RqSI<uint64_t, uint64_t>("ld1rqd",
                         machInst, zt, pg, rn, imm);
+
+            // Load-Broadcast Octa-word Variants
+            case 0b0001: // 0x1:
+                return new SveLd1RoSI<uint8_t, uint8_t>("ld1rob",
+                        machInst, zt, pg, rn, imm);
+            case 0b0101: // 0x5:
+                return new SveLd1RoSI<uint16_t, uint16_t>("ld1roh",
+                        machInst, zt, pg, rn, imm);
+            case 0b1001: // 0x9:
+                return new SveLd1RoSI<uint32_t, uint32_t>("ld1row",
+                        machInst, zt, pg, rn, imm);
+            case 0b1101: // 0xd:
+                return new SveLd1RoSI<uint64_t, uint64_t>("ld1rod",
+                        machInst, zt, pg, rn, imm);
+
+            default:
+              return new Unknown64(machInst);
         }
 
         return new Unknown64(machInst);
-    }  // decodeSveLoadBcastQuadSI
+    }  // decodeSveLoadBcastMultiSI
 
     StaticInstPtr
     decodeSveContigLoadSS(ExtMachInst machInst)
@@ -3388,10 +3418,10 @@ namespace Aarch64
     {
         switch (bits(machInst, 15, 13)) {
           case 0x0:
-            return decodeSveLoadBcastQuadSS(machInst);
+            return decodeSveLoadBcastMultiSS(machInst);
           case 0x1:
             if (bits(machInst, 20) == 0x0) {
-                return decodeSveLoadBcastQuadSI(machInst);
+                return decodeSveLoadBcastMultiSI(machInst);
             }
             break;
           case 0x2:
