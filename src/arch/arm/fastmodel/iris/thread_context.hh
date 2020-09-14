@@ -191,16 +191,6 @@ class ThreadContext : public ::ThreadContext
     int contextId() const override { return _contextId; }
     void setContextId(int id) override { _contextId = id; }
 
-    BaseTLB *
-    getITBPtr() override
-    {
-        return _itb;
-    }
-    BaseTLB *
-    getDTBPtr() override
-    {
-        return _dtb;
-    }
     BaseMMU *
     getMMUPtr() override
     {

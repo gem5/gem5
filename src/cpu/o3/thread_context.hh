@@ -98,12 +98,6 @@ class O3ThreadContext : public ThreadContext
     /** Pointer to the thread state that this TC corrseponds to. */
     O3ThreadState<Impl> *thread;
 
-    /** Returns a pointer to the ITB. */
-    BaseTLB *getITBPtr() override { return cpu->mmu->itb; }
-
-    /** Returns a pointer to the DTB. */
-    BaseTLB *getDTBPtr() override { return cpu->mmu->dtb; }
-
     /** Returns a pointer to the MMU. */
     BaseMMU *getMMUPtr() override { return cpu->mmu; }
 

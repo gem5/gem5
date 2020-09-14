@@ -130,10 +130,6 @@ class ThreadContext : public PCEventScope
 
     virtual void setContextId(ContextID id) = 0;
 
-    virtual BaseTLB *getITBPtr() = 0;
-
-    virtual BaseTLB *getDTBPtr() = 0;
-
     virtual BaseMMU *getMMUPtr() = 0;
 
     virtual CheckerCPU *getCheckerCpuPtr() = 0;

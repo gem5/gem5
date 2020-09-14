@@ -127,10 +127,6 @@ class CheckerThreadContext : public ThreadContext
         actualTC->setThreadId(id);
     }
 
-    BaseTLB *getITBPtr() override { return actualTC->getITBPtr(); }
-
-    BaseTLB *getDTBPtr() override { return actualTC->getDTBPtr(); }
-
     BaseMMU *getMMUPtr() override { return actualTC->getMMUPtr(); }
 
     CheckerCPU *

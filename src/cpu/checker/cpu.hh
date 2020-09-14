@@ -152,9 +152,6 @@ class CheckerCPU : public BaseCPU, public ExecContext
     // Primary thread being run.
     SimpleThread *thread;
 
-    BaseTLB* getITBPtr() { return mmu->itb; }
-    BaseTLB* getDTBPtr() { return mmu->dtb; }
-
     BaseMMU* getMMUPtr() { return mmu; }
 
     virtual Counter totalInsts() const override
