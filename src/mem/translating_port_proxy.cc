@@ -45,6 +45,7 @@
 
 #include "mem/translating_port_proxy.hh"
 
+#include "arch/generic/mmu.hh"
 #include "base/chunk_generator.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
@@ -61,10 +62,9 @@ TranslatingPortProxy::TranslatingPortProxy(
 bool
 TranslatingPortProxy::tryTLBsOnce(RequestPtr req, BaseTLB::Mode mode) const
 {
-    BaseTLB *dtb = _tc->getDTBPtr();
-    BaseTLB *itb = _tc->getDTBPtr();
-    return dtb->translateFunctional(req, _tc, mode) == NoFault ||
-           itb->translateFunctional(req, _tc, BaseTLB::Read) == NoFault;
+    BaseMMU *mmu = _tc->getMMUPtr();
+    return mmu->translateFunctional(req, _tc, mode) == NoFault ||
+           mmu->translateFunctional(req, _tc, BaseTLB::Execute) == NoFault;
 }
 
 bool
