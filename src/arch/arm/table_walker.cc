@@ -386,7 +386,7 @@ TableWalker::processWalkWrapper()
     // @TODO Should this always be the TLB or should we look in the stage2 TLB?
     TlbEntry* te = tlb->lookup(currState->vaddr, currState->asid,
             currState->vmid, currState->isHyp, currState->isSecure, true, false,
-            currState->el, false);
+            currState->el, false, BaseTLB::Read);
 
     // Check if we still need to have a walk for this request. If the requesting
     // instruction has been squashed, or a previous walk has filled the TLB with
@@ -452,7 +452,7 @@ TableWalker::processWalkWrapper()
             currState = pendingQueue.front();
             te = tlb->lookup(currState->vaddr, currState->asid,
                 currState->vmid, currState->isHyp, currState->isSecure, true,
-                false, currState->el, false);
+                false, currState->el, false, BaseTLB::Read);
         } else {
             // Terminate the loop, nothing more to do
             currState = NULL;

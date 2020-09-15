@@ -217,12 +217,15 @@ class TLB : public BaseTLB
      * @param hyp if the lookup is done from hyp mode
      * @param functional if the lookup should modify state
      * @param ignore_asn if on lookup asn should be ignored
+     * @param target_el selecting the translation regime
+     * @param in_host if we are in host (EL2&0 regime)
+     * @param mode to differentiate between read/writes/fetches.
      * @return pointer to TLB entry if it exists
      */
     TlbEntry *lookup(Addr vpn, uint16_t asn, uint8_t vmid, bool hyp,
                      bool secure, bool functional,
                      bool ignore_asn, ExceptionLevel target_el,
-                     bool in_host);
+                     bool in_host, BaseTLB::Mode mode);
 
     virtual ~TLB();
 

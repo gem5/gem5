@@ -126,7 +126,7 @@ TLB::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
     }
 
     TlbEntry *e = lookup(va, asid, vmid, isHyp, isSecure, true, false,
-                         aarch64 ? aarch64EL : EL1, false);
+                         aarch64 ? aarch64EL : EL1, false, BaseTLB::Read);
     if (!e)
         return false;
     pa = e->pAddr(va);
@@ -165,7 +165,7 @@ TLB::finalizePhysical(const RequestPtr &req,
 TlbEntry*
 TLB::lookup(Addr va, uint16_t asn, uint8_t vmid, bool hyp, bool secure,
             bool functional, bool ignore_asn, ExceptionLevel target_el,
-            bool in_host)
+            bool in_host, BaseTLB::Mode mode)
 {
 
     TlbEntry *retval = NULL;
@@ -202,6 +202,25 @@ TLB::lookup(Addr va, uint16_t asn, uint8_t vmid, bool hyp, bool secure,
             retval ? retval->ns        : 0, retval ? retval->nstid : 0,
             retval ? retval->global    : 0, retval ? retval->asid  : 0,
             retval ? retval->el        : 0);
+
+    // Updating stats if this was not a functional lookup
+    if (!functional) {
+        if (!retval) {
+            if (mode == BaseTLB::Execute)
+                stats.instMisses++;
+            else if (mode == BaseTLB::Write)
+                stats.writeMisses++;
+            else
+                stats.readMisses++;
+        } else {
+            if (mode == BaseTLB::Execute)
+                stats.instHits++;
+            else if (mode == BaseTLB::Write)
+               stats.writeHits++;
+            else
+                stats.readHits++;
+        }
+    }
 
     return retval;
 }
@@ -452,7 +471,7 @@ TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup,
     bool hyp = target_el == EL2;
 
     te = lookup(mva, asn, vmid, hyp, secure_lookup, true, ignore_asn,
-                target_el, in_host);
+                target_el, in_host, BaseTLB::Read);
     while (te != NULL) {
         if (secure_lookup == !te->nstid) {
             DPRINTF(TLB, " -  %s\n", te->print());
@@ -460,7 +479,7 @@ TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup,
             stats.flushedEntries++;
         }
         te = lookup(mva, asn, vmid, hyp, secure_lookup, true, ignore_asn,
-                    target_el, in_host);
+                    target_el, in_host, BaseTLB::Read);
     }
 }
 
@@ -1568,8 +1587,6 @@ TLB::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
     if (isStage2) {
         updateMiscReg(tc, tranType);
     }
-    bool is_fetch = (mode == Execute);
-    bool is_write = (mode == Write);
 
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = 0;
@@ -1581,16 +1598,8 @@ TLB::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         vaddr = vaddr_tainted;
     }
     *te = lookup(vaddr, asid, vmid, isHyp, is_secure, false, false, target_el,
-                 false);
+                 false, mode);
     if (*te == NULL) {
-        // Note, we are updating the stats for sw prefetching misses as well
-        if (is_fetch)
-            stats.instMisses++;
-        else if (is_write)
-            stats.writeMisses++;
-        else
-            stats.readMisses++;
-
         if (req->isPrefetch()) {
             // if the request is a prefetch don't attempt to fill the TLB or go
             // any further with the memory access (here we can safely use the
@@ -1613,18 +1622,11 @@ TLB::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
             return fault;
         }
 
-        *te = lookup(vaddr, asid, vmid, isHyp, is_secure, false, false,
-                     target_el, false);
+        *te = lookup(vaddr, asid, vmid, isHyp, is_secure, true, false,
+                     target_el, false, mode);
         if (!*te)
             printTlb();
         assert(*te);
-    } else {
-        if (is_fetch)
-            stats.instHits++;
-        else if (is_write)
-           stats.writeHits++;
-        else
-            stats.readHits++;
     }
     return NoFault;
 }
