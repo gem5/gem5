@@ -29,6 +29,7 @@
 #define __SYSTEMC_CORE_SCHEDULER_HH__
 
 #include <functional>
+#include <list>
 #include <map>
 #include <mutex>
 #include <set>
@@ -151,13 +152,17 @@ class Scheduler
     class TimeSlot : public ::Event
     {
       public:
-        TimeSlot() : ::Event(Default_Pri, AutoDelete) {}
-
+        TimeSlot(const Tick& targeted_when) : ::Event(Default_Pri, AutoDelete),
+                                              targeted_when(targeted_when) {}
+        // Event::when() is only set after it's scheduled to an event queue.
+        // However, TimeSlot won't be scheduled before init is done. We need
+        // to keep the real 'targeted_when' information before scheduled.
+        Tick targeted_when;
         ScEvents events;
         void process();
     };
 
-    typedef std::map<Tick, TimeSlot *> TimeSlots;
+    typedef std::list<TimeSlot *> TimeSlots;
 
     Scheduler();
     ~Scheduler();
@@ -250,12 +255,14 @@ class Scheduler
         }
 
         // Timed notification/timeout.
-        TimeSlot *&ts = timeSlots[tick];
-        if (!ts) {
-            ts = new TimeSlot;
-            schedule(ts, tick);
+        auto it = timeSlots.begin();
+        while (it != timeSlots.end() && (*it)->targeted_when < tick)
+            it++;
+        if (it == timeSlots.end() || (*it)->targeted_when != tick) {
+            it = timeSlots.emplace(it, new TimeSlot(tick));
+            schedule(*it, tick);
         }
-        event->schedule(ts->events, tick);
+        event->schedule((*it)->events, tick);
     }
 
     // For descheduling delayed/timed notifications/timeouts.
@@ -270,10 +277,15 @@ class Scheduler
         }
 
         // Timed notification/timeout.
-        auto tsit = timeSlots.find(event->when());
-        panic_if(tsit == timeSlots.end(),
+        auto tsit = timeSlots.begin();
+        while (tsit != timeSlots.end() &&
+               (*tsit)->targeted_when < event->when())
+            tsit++;
+
+        panic_if(tsit == timeSlots.end() ||
+                 (*tsit)->targeted_when != event->when(),
                 "Descheduling event at time with no events.");
-        TimeSlot *ts = tsit->second;
+        TimeSlot *ts = *tsit;
         ScEvents &events = ts->events;
         assert(on == &events);
         event->deschedule();
@@ -288,7 +300,7 @@ class Scheduler
     void
     completeTimeSlot(TimeSlot *ts)
     {
-        assert(ts == timeSlots.begin()->second);
+        assert(ts == timeSlots.front());
         timeSlots.erase(timeSlots.begin());
         if (!runToTime && starved())
             scheduleStarvationEvent();
@@ -324,7 +336,7 @@ class Scheduler
         if (pendingCurr())
             return 0;
         if (pendingFuture())
-            return timeSlots.begin()->first - getCurTick();
+            return timeSlots.front()->targeted_when - getCurTick();
         return MaxTick - getCurTick();
     }
 
@@ -434,7 +446,8 @@ class Scheduler
     {
         return (readyListMethods.empty() && readyListThreads.empty() &&
                 updateList.empty() && deltas.empty() &&
-                (timeSlots.empty() || timeSlots.begin()->first > maxTick) &&
+                (timeSlots.empty() ||
+                 timeSlots.front()->targeted_when > maxTick) &&
                 initList.empty());
     }
     EventWrapper<Scheduler, &Scheduler::pause> starvationEvent;

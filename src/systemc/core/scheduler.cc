@@ -71,8 +71,7 @@ Scheduler::clear()
         deltas.front()->deschedule();
 
     // Timed notifications.
-    for (auto &tsp: timeSlots) {
-        TimeSlot *&ts = tsp.second;
+    for (auto &ts: timeSlots) {
         while (!ts->events.empty())
             ts->events.front()->deschedule();
         deschedule(ts);
