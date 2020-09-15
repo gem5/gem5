@@ -240,6 +240,8 @@ FetchUnit::fetch(PacketPtr pkt, Wavefront *wavefront)
      * pending, in the same cycle another instruction is trying to fetch.
      */
     if (!fetchBuf.at(wavefront->wfSlotId).isReserved(pkt->req->getVaddr())) {
+        wavefront->dropFetch = false;
+        wavefront->pendingFetch = false;
         return;
     }
 
