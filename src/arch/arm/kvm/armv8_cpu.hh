@@ -93,27 +93,27 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
   protected:
     /** Mapping between integer registers in gem5 and KVM */
     struct IntRegInfo {
-        IntRegInfo(uint64_t _kvm, IntRegIndex _idx, const char *_name)
+        IntRegInfo(uint64_t _kvm, ArmISA::IntRegIndex _idx, const char *_name)
             : kvm(_kvm), idx(_idx), name(_name) {}
 
         /** Register index in KVM */
         uint64_t kvm;
         /** Register index in gem5 */
-        IntRegIndex idx;
+        ArmISA::IntRegIndex idx;
         /** Name to use in debug dumps */
         const char *name;
     };
 
     /** Mapping between misc registers in gem5 and registers in KVM */
     struct MiscRegInfo {
-        MiscRegInfo(uint64_t _kvm, MiscRegIndex _idx, const char *_name,
-                    bool _is_device = false)
+        MiscRegInfo(uint64_t _kvm, ArmISA::MiscRegIndex _idx,
+                    const char *_name, bool _is_device = false)
             : kvm(_kvm), idx(_idx), name(_name), is_device(_is_device) {}
 
         /** Register index in KVM */
         uint64_t kvm;
         /** Register index in gem5 */
-        MiscRegIndex idx;
+        ArmISA::MiscRegIndex idx;
         /** Name to use in debug dumps */
         const char *name;
         /** is device register? (needs 'effectful' state update) */
@@ -137,7 +137,7 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
     /** Mapping between gem5 misc registers and registers in kvm */
     static const std::vector<ArmV8KvmCPU::MiscRegInfo> miscRegMap;
     /** Device registers (needing "effectful" MiscReg writes) */
-    static const std::set<MiscRegIndex> deviceRegSet;
+    static const std::set<ArmISA::MiscRegIndex> deviceRegSet;
     /** Mapping between gem5 ID misc registers and registers in kvm */
     static const std::vector<ArmV8KvmCPU::MiscRegInfo> miscRegIdMap;
 

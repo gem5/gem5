@@ -42,6 +42,8 @@
 #include "debug/KvmContext.hh"
 #include "params/ArmV8KvmCPU.hh"
 
+using namespace ArmISA;
+
 // Unlike gem5, kvm doesn't count the SP as a normal integer register,
 // which means we only have 31 normal integer registers.
 constexpr static unsigned NUM_XREGS = NUM_ARCH_INTREGS - 1;
