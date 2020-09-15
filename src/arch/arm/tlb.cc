@@ -446,7 +446,7 @@ TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup,
 
     bool hyp = target_el == EL2;
 
-    te = lookup(mva, asn, vmid, hyp, secure_lookup, false, ignore_asn,
+    te = lookup(mva, asn, vmid, hyp, secure_lookup, true, ignore_asn,
                 target_el, in_host);
     while (te != NULL) {
         if (secure_lookup == !te->nstid) {
@@ -454,7 +454,7 @@ TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup,
             te->valid = false;
             stats.flushedEntries++;
         }
-        te = lookup(mva, asn, vmid, hyp, secure_lookup, false, ignore_asn,
+        te = lookup(mva, asn, vmid, hyp, secure_lookup, true, ignore_asn,
                     target_el, in_host);
     }
 }
