@@ -31,16 +31,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/system/GPUCoalescer.hh"
+
 #include "base/logging.hh"
 #include "base/str.hh"
 #include "config/the_isa.hh"
-
-#if THE_ISA == X86_ISA
-#include "arch/x86/insts/microldstop.hh"
-
-#endif // X86_ISA
-#include "mem/ruby/system/GPUCoalescer.hh"
-
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/GPUCoalescer.hh"
 #include "debug/MemoryAccess.hh"
