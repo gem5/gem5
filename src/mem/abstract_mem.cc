@@ -345,17 +345,15 @@ static inline void
 tracePacket(System *sys, const char *label, PacketPtr pkt)
 {
     int size = pkt->getSize();
-#if THE_ISA != NULL_ISA
     if (size == 1 || size == 2 || size == 4 || size == 8) {
         ByteOrder byte_order = sys->getGuestByteOrder();
-        DPRINTF(MemoryAccess,"%s from %s of size %i on address %#x data "
+        DPRINTF(MemoryAccess, "%s from %s of size %i on address %#x data "
                 "%#x %c\n", label, sys->getRequestorName(pkt->req->
                 requestorId()), size, pkt->getAddr(),
                 size, pkt->getAddr(), pkt->getUintX(byte_order),
                 pkt->req->isUncacheable() ? 'U' : 'C');
         return;
     }
-#endif
     DPRINTF(MemoryAccess, "%s from %s of size %i on address %#x %c\n",
             label, sys->getRequestorName(pkt->req->requestorId()),
             size, pkt->getAddr(), pkt->req->isUncacheable() ? 'U' : 'C');
