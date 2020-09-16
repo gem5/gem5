@@ -34,8 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libboost-filesystem-dev \
     libboost-system-dev \
     libboost-dev \
-    libpng12-dev \
-    libelf-dev
+    libpng12-dev
 
 RUN python -m pip install -U pip && \
     python -m pip install -U setuptools scons
