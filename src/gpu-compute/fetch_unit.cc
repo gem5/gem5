@@ -33,6 +33,7 @@
 
 #include "gpu-compute/fetch_unit.hh"
 
+#include "base/bitfield.hh"
 #include "debug/GPUFetch.hh"
 #include "debug/GPUPort.hh"
 #include "debug/GPUTLB.hh"
@@ -576,7 +577,8 @@ FetchUnit::FetchBufDesc::decodeSplitInst()
     int num_dwords = sizeof(TheGpuISA::RawMachInst) / dword_size;
 
     for (int i = 0; i < num_dwords; ++i) {
-        ((uint32_t*)(&split_inst))[i] = *reinterpret_cast<uint32_t*>(readPtr);
+        replaceBits(split_inst, 32*(i+1)-1, 32*i,
+            *reinterpret_cast<uint32_t*>(readPtr));
         if (readPtr + dword_size >= bufEnd) {
             readPtr = bufStart;
         }
