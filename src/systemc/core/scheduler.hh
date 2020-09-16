@@ -152,14 +152,24 @@ class Scheduler
     class TimeSlot : public ::Event
     {
       public:
-        TimeSlot(const Tick& targeted_when) : ::Event(Default_Pri, AutoDelete),
-                                              targeted_when(targeted_when) {}
+        TimeSlot(Scheduler* scheduler) : ::Event(Default_Pri, AutoDelete),
+                                         parent_scheduler(scheduler) {}
         // Event::when() is only set after it's scheduled to an event queue.
         // However, TimeSlot won't be scheduled before init is done. We need
         // to keep the real 'targeted_when' information before scheduled.
         Tick targeted_when;
+        Scheduler* parent_scheduler;
         ScEvents events;
         void process();
+
+      protected:
+        void
+        releaseImpl() override
+        {
+            if (!scheduled())
+                parent_scheduler->releaseTimeSlot(this);
+        }
+
     };
 
     typedef std::list<TimeSlot *> TimeSlots;
@@ -259,7 +269,7 @@ class Scheduler
         while (it != timeSlots.end() && (*it)->targeted_when < tick)
             it++;
         if (it == timeSlots.end() || (*it)->targeted_when != tick) {
-            it = timeSlots.emplace(it, new TimeSlot(tick));
+            it = timeSlots.emplace(it, acquireTimeSlot(tick));
             schedule(*it, tick);
         }
         event->schedule((*it)->events, tick);
@@ -386,6 +396,27 @@ class Scheduler
     void registerTraceFile(TraceFile *tf) { traceFiles.insert(tf); }
     void unregisterTraceFile(TraceFile *tf) { traceFiles.erase(tf); }
 
+    TimeSlot*
+    acquireTimeSlot(Tick tick)
+    {
+        TimeSlot *ts = nullptr;
+        if (!freeTimeSlots.empty()) {
+            ts = freeTimeSlots.top();
+            freeTimeSlots.pop();
+        } else {
+            ts = new TimeSlot(this);
+        }
+        ts->targeted_when = tick;
+        ts->events.clear();
+        return ts;
+    }
+
+    void
+    releaseTimeSlot(TimeSlot *ts)
+    {
+        freeTimeSlots.push(ts);
+    }
+
   private:
     typedef const EventBase::Priority Priority;
     static Priority DefaultPriority = EventBase::Default_Pri;
@@ -422,6 +453,7 @@ class Scheduler
 
     ScEvents deltas;
     TimeSlots timeSlots;
+    std::stack<TimeSlot*> freeTimeSlots;
 
     Process *
     getNextReady()
