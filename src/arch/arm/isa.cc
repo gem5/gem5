@@ -1711,15 +1711,24 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 tlbiOp.broadcast(tc);
                 return;
             }
-          // AArch64 TLB Invalidate All, EL2, Inner Shareable
+          // AArch64 TLB Invalidate All, EL2
           case MISCREG_TLBI_ALLE2:
-          case MISCREG_TLBI_ALLE2IS:
             {
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
                 TLBIALL tlbiOp(EL2, haveSecurity && !scr.ns);
                 tlbiOp(tc);
+                return;
+            }
+          // AArch64 TLB Invalidate All, EL2, Inner Shareable
+          case MISCREG_TLBI_ALLE2IS:
+            {
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
+
+                TLBIALL tlbiOp(EL2, haveSecurity && !scr.ns);
+                tlbiOp.broadcast(tc);
                 return;
             }
           // AArch64 TLB Invalidate All, EL1
