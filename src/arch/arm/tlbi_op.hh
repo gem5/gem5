@@ -121,6 +121,25 @@ class DTLBIALL : public TLBIALL
     void operator()(ThreadContext* tc) override;
 };
 
+/** Implementaton of AArch64 TLBI ALLE(1,2,3)(IS) instructions */
+class TLBIALLEL : public TLBIOp
+{
+  public:
+    TLBIALLEL(ExceptionLevel _targetEL, bool _secure)
+      : TLBIOp(_targetEL, _secure), inHost(false)
+    {}
+
+    void operator()(ThreadContext* tc) override;
+
+    TLBIALLEL
+    makeStage2() const
+    {
+        return TLBIALLEL(EL1, secureLookup);
+    }
+
+    bool inHost;
+};
+
 /** TLB Invalidate by ASID match */
 class TLBIASID : public TLBIOp
 {

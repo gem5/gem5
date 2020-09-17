@@ -1701,7 +1701,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             {
                 assert64();
 
-                TLBIALL tlbiOp(EL3, true);
+                TLBIALLEL tlbiOp(EL3, true);
                 tlbiOp(tc);
                 return;
             }
@@ -1710,7 +1710,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             {
                 assert64();
 
-                TLBIALL tlbiOp(EL3, true);
+                TLBIALLEL tlbiOp(EL3, true);
                 tlbiOp.broadcast(tc);
                 return;
             }
@@ -1720,7 +1720,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIALL tlbiOp(EL2, haveSecurity && !scr.ns);
+                TLBIALLEL tlbiOp(EL2, haveSecurity && !scr.ns);
                 tlbiOp(tc);
                 return;
             }
@@ -1730,12 +1730,30 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIALL tlbiOp(EL2, haveSecurity && !scr.ns);
+                TLBIALLEL tlbiOp(EL2, haveSecurity && !scr.ns);
                 tlbiOp.broadcast(tc);
                 return;
             }
           // AArch64 TLB Invalidate All, EL1
           case MISCREG_TLBI_ALLE1:
+            {
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
+
+                TLBIALLEL tlbiOp(EL1, haveSecurity && !scr.ns);
+                tlbiOp(tc);
+                return;
+            }
+          // AArch64 TLB Invalidate All, EL1, Inner Shareable
+          case MISCREG_TLBI_ALLE1IS:
+            {
+                assert64();
+                scr = readMiscReg(MISCREG_SCR);
+
+                TLBIALLEL tlbiOp(EL1, haveSecurity && !scr.ns);
+                tlbiOp.broadcast(tc);
+                return;
+            }
           case MISCREG_TLBI_VMALLS12E1:
             // @todo: handle VMID and stage 2 to enable Virtualization
             {
@@ -1759,8 +1777,6 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 tlbiOp(tc);
                 return;
             }
-          // AArch64 TLB Invalidate All, EL1, Inner Shareable
-          case MISCREG_TLBI_ALLE1IS:
           case MISCREG_TLBI_VMALLS12E1IS:
             // @todo: handle VMID and stage 2 to enable Virtualization
             {

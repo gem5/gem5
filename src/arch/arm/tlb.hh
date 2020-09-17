@@ -62,6 +62,7 @@ class Stage2MMU;
 class TLB;
 
 class TLBIALL;
+class TLBIALLEL;
 class TLBIALLN;
 class TLBIMVA;
 class TLBIASID;
@@ -261,7 +262,12 @@ class TLB : public BaseTLB
 
     /** Reset the entire TLB
      */
-    void flush(const TLBIALL& tlbi_op);
+    void flush(const TLBIALL &tlbi_op);
+
+    /** Implementaton of AArch64 TLBI ALLE1(IS), ALLE2(IS), ALLE3(IS)
+     * instructions
+     */
+    void flush(const TLBIALLEL &tlbi_op);
 
     /** Remove all entries in the non secure world, depending on whether they
      *  were allocated in hyp mode or not

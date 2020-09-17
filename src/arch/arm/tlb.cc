@@ -300,6 +300,36 @@ TLB::flush(const TLBIALL& tlbi_op)
 }
 
 void
+TLB::flush(const TLBIALLEL &tlbi_op)
+{
+    DPRINTF(TLB, "Flushing all TLB entries (%s lookup)\n",
+            (tlbi_op.secureLookup ? "secure" : "non-secure"));
+    int x = 0;
+    TlbEntry *te;
+    while (x < size) {
+        te = &table[x];
+        const bool el_match = te->checkELMatch(
+            tlbi_op.targetEL, tlbi_op.inHost);
+        if (te->valid && tlbi_op.secureLookup == !te->nstid && el_match) {
+
+            DPRINTF(TLB, " -  %s\n", te->print());
+            te->valid = false;
+            stats.flushedEntries++;
+        }
+        ++x;
+    }
+
+    stats.flushTlb++;
+
+    // If there's a second stage TLB (and we're not it)
+    // and if we're targeting EL1
+    // then flush it as well
+    if (!isStage2 && tlbi_op.targetEL == EL1) {
+        stage2Tlb->flush(tlbi_op.makeStage2());
+    }
+}
+
+void
 TLB::flush(const TLBIALLN &tlbi_op)
 {
     bool hyp = tlbi_op.targetEL == EL2;
