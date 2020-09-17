@@ -167,7 +167,7 @@ Sequencer::wakeup()
     int total_outstanding = 0;
 
     for (const auto &table_entry : m_RequestTable) {
-        for (const auto seq_req : table_entry.second) {
+        for (const auto &seq_req : table_entry.second) {
             if (current_time - seq_req.issue_time < m_deadlock_threshold)
                 continue;
 
