@@ -227,11 +227,15 @@ def config_mem(options, system):
                     mem_ctrl = m5.objects.MemCtrl(min_writes_per_switch = 8,
                                              static_backend_latency = '4ns',
                                              static_frontend_latency = '4ns')
+                elif opt_mem_type == "SimpleMemory":
+                    mem_ctrl = m5.objects.SimpleMemory()
                 else:
                     mem_ctrl = m5.objects.MemCtrl()
 
                 # Hookup the controller to the interface and add to the list
-                mem_ctrl.dram = dram_intf
+                if opt_mem_type != "SimpleMemory":
+                    mem_ctrl.dram = dram_intf
+
                 mem_ctrls.append(mem_ctrl)
 
             elif opt_nvm_type and (not opt_mem_type or range_iter % 2 == 0):

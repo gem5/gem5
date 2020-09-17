@@ -77,6 +77,6 @@ class TLBCoalescer(ClockedObject):
     slave    = DeprecatedParam(cpu_side_ports,
                         '`slave` is now called `cpu_side_ports`')
     mem_side_ports = VectorRequestPort("Port on side closer to memory")
-    master   DeprecatedParam(mem_side_ports,
+    master   = DeprecatedParam(mem_side_ports,
                         '`master` is now called `mem_side_ports`')
     disableCoalescing = Param.Bool(False,"Dispable Coalescing")
