@@ -28,6 +28,7 @@
 #ifndef __SYSTEMC_CORE_SCHEDULER_HH__
 #define __SYSTEMC_CORE_SCHEDULER_HH__
 
+#include <atomic>
 #include <functional>
 #include <list>
 #include <map>
@@ -529,6 +530,7 @@ class Scheduler
 
     ChannelList asyncUpdateList;
     std::mutex asyncListMutex;
+    std::atomic<bool> hasAsyncUpdate;
 
     std::map<::Event *, Tick> eventsToSchedule;
 

@@ -259,6 +259,7 @@ Scheduler::asyncRequestUpdate(Channel *c)
 {
     std::lock_guard<std::mutex> lock(asyncListMutex);
     asyncUpdateList.pushLast(c);
+    hasAsyncUpdate = true;
 }
 
 void
@@ -325,11 +326,12 @@ void
 Scheduler::runUpdate()
 {
     status(StatusUpdate);
-    {
+    if (hasAsyncUpdate) {
         std::lock_guard<std::mutex> lock(asyncListMutex);
         Channel *channel;
         while ((channel = asyncUpdateList.getNext()) != nullptr)
             updateList.pushLast(channel);
+        hasAsyncUpdate = false;
     }
 
     try {
