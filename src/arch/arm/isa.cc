@@ -1755,17 +1755,15 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 return;
             }
           case MISCREG_TLBI_VMALLS12E1:
-            // @todo: handle VMID and stage 2 to enable Virtualization
             {
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIALL tlbiOp(EL1, haveSecurity && !scr.ns);
+                TLBIVMALL tlbiOp(EL1, haveSecurity && !scr.ns, true);
                 tlbiOp(tc);
                 return;
             }
           case MISCREG_TLBI_VMALLE1:
-            // @todo: handle VMID and stage 2 to enable Virtualization
             {
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
@@ -1773,22 +1771,20 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 HCR hcr = readMiscReg(MISCREG_HCR_EL2);
                 bool is_host = (hcr.tge && hcr.e2h);
                 ExceptionLevel target_el = is_host ?  EL2 : EL1;
-                TLBIALL tlbiOp(target_el, haveSecurity && !scr.ns);
+                TLBIVMALL tlbiOp(target_el, haveSecurity && !scr.ns, false);
                 tlbiOp(tc);
                 return;
             }
           case MISCREG_TLBI_VMALLS12E1IS:
-            // @todo: handle VMID and stage 2 to enable Virtualization
             {
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIALL tlbiOp(EL1, haveSecurity && !scr.ns);
+                TLBIVMALL tlbiOp(EL1, haveSecurity && !scr.ns, true);
                 tlbiOp.broadcast(tc);
                 return;
             }
           case MISCREG_TLBI_VMALLE1IS:
-            // @todo: handle VMID and stage 2 to enable Virtualization
             {
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
@@ -1796,7 +1792,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 HCR hcr = readMiscReg(MISCREG_HCR_EL2);
                 bool is_host = (hcr.tge && hcr.e2h);
                 ExceptionLevel target_el = is_host ?  EL2 : EL1;
-                TLBIALL tlbiOp(target_el, haveSecurity && !scr.ns);
+                TLBIVMALL tlbiOp(target_el, haveSecurity && !scr.ns, false);
                 tlbiOp.broadcast(tc);
                 return;
             }

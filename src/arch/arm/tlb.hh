@@ -63,6 +63,7 @@ class TLB;
 
 class TLBIALL;
 class TLBIALLEL;
+class TLBIVMALL;
 class TLBIALLN;
 class TLBIMVA;
 class TLBIASID;
@@ -268,6 +269,11 @@ class TLB : public BaseTLB
      * instructions
      */
     void flush(const TLBIALLEL &tlbi_op);
+
+    /** Implementaton of AArch64 TLBI VMALLE1(IS)/VMALLS112E1(IS)
+     * instructions
+     */
+    void flush(const TLBIVMALL &tlbi_op);
 
     /** Remove all entries in the non secure world, depending on whether they
      *  were allocated in hyp mode or not

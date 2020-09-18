@@ -141,6 +141,28 @@ class TLBIALLEL : public TLBIOp
     bool inHost;
 };
 
+/** Implementaton of AArch64 TLBI VMALLE1(IS)/VMALLS112E1(IS) instructions */
+class TLBIVMALL : public TLBIOp
+{
+  public:
+    TLBIVMALL(ExceptionLevel _targetEL, bool _secure, bool _stage2)
+      : TLBIOp(_targetEL, _secure), inHost(false), el2Enabled(false),
+        stage2(_stage2)
+    {}
+
+    void operator()(ThreadContext* tc) override;
+
+    TLBIVMALL
+    makeStage2() const
+    {
+        return TLBIVMALL(EL1, secureLookup, false);
+    }
+
+    bool inHost;
+    bool el2Enabled;
+    bool stage2;
+};
+
 /** TLB Invalidate by ASID match */
 class TLBIASID : public TLBIOp
 {

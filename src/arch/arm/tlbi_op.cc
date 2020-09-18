@@ -87,6 +87,21 @@ TLBIALLEL::operator()(ThreadContext* tc)
 }
 
 void
+TLBIVMALL::operator()(ThreadContext* tc)
+{
+    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    inHost = (hcr.tge == 1 && hcr.e2h == 1);
+
+    getMMUPtr(tc)->flush(*this);
+
+    // If CheckerCPU is connected, need to notify it of a flush
+    CheckerCPU *checker = tc->getCheckerCpuPtr();
+    if (checker) {
+        getMMUPtr(checker)->flush(*this);
+    }
+}
+
+void
 TLBIASID::operator()(ThreadContext* tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
