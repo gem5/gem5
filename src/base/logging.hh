@@ -196,7 +196,7 @@ class Logger
  */
 #define panic_if(cond, ...)                                  \
     do {                                                     \
-        if ((cond)) {                                        \
+        if (M5_UNLIKELY(cond)) {                             \
             panic("panic condition " # cond " occurred: %s", \
                   csprintf(__VA_ARGS__));                    \
         }                                                    \
@@ -218,7 +218,7 @@ class Logger
  */
 #define fatal_if(cond, ...)                                     \
     do {                                                        \
-        if ((cond)) {                                           \
+        if (M5_UNLIKELY(cond)) {                                \
             fatal("fatal condition " # cond " occurred: %s",    \
                   csprintf(__VA_ARGS__));                       \
         }                                                       \
@@ -262,13 +262,13 @@ class Logger
  */
 #define warn_if(cond, ...) \
     do { \
-        if ((cond)) \
+        if (M5_UNLIKELY(cond)) \
             warn(__VA_ARGS__); \
     } while (0)
 
 #define warn_if_once(cond, ...) \
     do { \
-        if ((cond)) \
+        if (M5_UNLIKELY(cond)) \
             warn_once(__VA_ARGS__); \
     } while (0)
 /** @} */ // end of api_logger
@@ -291,7 +291,7 @@ class Logger
 #else //!NDEBUG
 #define chatty_assert(cond, ...)                                        \
     do {                                                                \
-        if (!(cond))                                                    \
+        if (M5_UNLIKELY(!(cond)))                                       \
             panic("assert(" # cond ") failed: %s", csprintf(__VA_ARGS__)); \
     } while (0)
 #endif // NDEBUG
