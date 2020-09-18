@@ -417,8 +417,8 @@ elif main['CLANG']:
     clang_version_match = clang_version_re.search(CXX_version)
     if (clang_version_match):
         clang_version = clang_version_match.groups()[0]
-        if compareVersions(clang_version, "3.1") < 0:
-            error('clang version 3.1 or newer required.\n'
+        if compareVersions(clang_version, "3.9") < 0:
+            error('clang version 3.9 or newer required.\n'
                   'Installed version:', clang_version)
     else:
         error('Unable to determine clang version.')
