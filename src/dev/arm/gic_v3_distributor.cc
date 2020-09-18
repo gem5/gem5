@@ -472,6 +472,9 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
         //return 0x43b; // ARM JEP106 code (r0p0 GIC-500)
         return 0;
 
+      case GICD_TYPER2: // Interrupt Controller Type Register 2
+        return 0; // RES0
+
       case GICD_STATUSR: // Error Reporting Status Register
         // Optional register, RAZ/WI
         return 0x0;

@@ -65,6 +65,8 @@ class Gicv3Distributor : public Serializable
         GICD_TYPER = 0x0004,
         // Implementer Identification Register
         GICD_IIDR = 0x0008,
+        // Interrupt Controller Type Register 2
+        GICD_TYPER2 = 0x000C,
         // Error Reporting Status Register
         GICD_STATUSR = 0x0010,
         // Set Non-secure SPI Pending Register
