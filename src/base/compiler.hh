@@ -56,6 +56,8 @@
 #  define M5_UNREACHABLE __builtin_unreachable()
 #  define M5_PUBLIC __attribute__ ((visibility ("default")))
 #  define M5_LOCAL __attribute__ ((visibility ("hidden")))
+#  define M5_LIKELY(cond) __builtin_expect(!!(cond), 1)
+#  define M5_UNLIKELY(cond) __builtin_expect(!!(cond), 0)
 #endif
 
 #if defined(__clang__)
