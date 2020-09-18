@@ -160,7 +160,7 @@ class Scheduler
         Tick targeted_when;
         Scheduler* parent_scheduler;
         ScEvents events;
-        void process();
+        void process() override;
 
       protected:
         void
