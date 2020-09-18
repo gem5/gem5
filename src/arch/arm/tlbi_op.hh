@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 ARM Limited
+ * Copyright (c) 2018-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -89,11 +89,11 @@ class TLBIALL : public TLBIOp
 };
 
 /** Instruction TLB Invalidate All */
-class ITLBIALL : public TLBIOp
+class ITLBIALL : public TLBIALL
 {
   public:
     ITLBIALL(ExceptionLevel _targetEL, bool _secure)
-      : TLBIOp(_targetEL, _secure)
+      : TLBIALL(_targetEL, _secure)
     {}
 
     void broadcast(ThreadContext *tc) = delete;
@@ -102,11 +102,11 @@ class ITLBIALL : public TLBIOp
 };
 
 /** Data TLB Invalidate All */
-class DTLBIALL : public TLBIOp
+class DTLBIALL : public TLBIALL
 {
   public:
     DTLBIALL(ExceptionLevel _targetEL, bool _secure)
-      : TLBIOp(_targetEL, _secure)
+      : TLBIALL(_targetEL, _secure)
     {}
 
     void broadcast(ThreadContext *tc) = delete;
@@ -129,35 +129,29 @@ class TLBIASID : public TLBIOp
 };
 
 /** Instruction TLB Invalidate by ASID match */
-class ITLBIASID : public TLBIOp
+class ITLBIASID : public TLBIASID
 {
   public:
     ITLBIASID(ExceptionLevel _targetEL, bool _secure, uint16_t _asid)
-      : TLBIOp(_targetEL, _secure), asid(_asid)
+      : TLBIASID(_targetEL, _secure, _asid)
     {}
 
     void broadcast(ThreadContext *tc) = delete;
 
     void operator()(ThreadContext* tc) override;
-
-  protected:
-    uint16_t asid;
 };
 
 /** Data TLB Invalidate by ASID match */
-class DTLBIASID : public TLBIOp
+class DTLBIASID : public TLBIASID
 {
   public:
     DTLBIASID(ExceptionLevel _targetEL, bool _secure, uint16_t _asid)
-      : TLBIOp(_targetEL, _secure), asid(_asid)
+      : TLBIASID(_targetEL, _secure, _asid)
     {}
 
     void broadcast(ThreadContext *tc) = delete;
 
     void operator()(ThreadContext* tc) override;
-
-  protected:
-    uint16_t asid;
 };
 
 /** TLB Invalidate All, Non-Secure */
@@ -203,39 +197,31 @@ class TLBIMVA : public TLBIOp
 };
 
 /** Instruction TLB Invalidate by VA */
-class ITLBIMVA : public TLBIOp
+class ITLBIMVA : public TLBIMVA
 {
   public:
     ITLBIMVA(ExceptionLevel _targetEL, bool _secure,
              Addr _addr, uint16_t _asid)
-      : TLBIOp(_targetEL, _secure), addr(_addr), asid(_asid)
+      : TLBIMVA(_targetEL, _secure, _addr, _asid)
     {}
 
     void broadcast(ThreadContext *tc) = delete;
 
     void operator()(ThreadContext* tc) override;
-
-  protected:
-    Addr addr;
-    uint16_t asid;
 };
 
 /** Data TLB Invalidate by VA */
-class DTLBIMVA : public TLBIOp
+class DTLBIMVA : public TLBIMVA
 {
   public:
     DTLBIMVA(ExceptionLevel _targetEL, bool _secure,
              Addr _addr, uint16_t _asid)
-      : TLBIOp(_targetEL, _secure), addr(_addr), asid(_asid)
+      : TLBIMVA(_targetEL, _secure, _addr, _asid)
     {}
 
     void broadcast(ThreadContext *tc) = delete;
 
     void operator()(ThreadContext* tc) override;
-
-  protected:
-    Addr addr;
-    uint16_t asid;
 };
 
 /** TLB Invalidate by Intermediate Physical Address */
