@@ -1803,7 +1803,6 @@ ISA::setMiscReg(int misc_reg, RegVal val)
           // VAEx(IS) and VALEx(IS) are the same because TLBs
           // only store entries
           // from the last level of translation table walks
-          // @todo: handle VMID to enable Virtualization
           // AArch64 TLB Invalidate by VA, EL3
           case MISCREG_TLBI_VAE3_Xt:
           case MISCREG_TLBI_VALE3_Xt:
@@ -1895,7 +1894,6 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 return;
             }
           // AArch64 TLB Invalidate by ASID, EL1
-          // @todo: handle VMID to enable Virtualization
           case MISCREG_TLBI_ASIDE1_Xt:
             {
                 assert64();

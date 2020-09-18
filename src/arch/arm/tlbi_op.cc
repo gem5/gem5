@@ -47,6 +47,8 @@ TLBIALL::operator()(ThreadContext* tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     inHost = (hcr.tge == 1 && hcr.e2h == 1);
+    el2Enabled = EL2Enabled(tc);
+
     getMMUPtr(tc)->flush(*this);
 
     // If CheckerCPU is connected, need to notify it of a flush
@@ -59,12 +61,14 @@ TLBIALL::operator()(ThreadContext* tc)
 void
 ITLBIALL::operator()(ThreadContext* tc)
 {
+    el2Enabled = EL2Enabled(tc);
     getMMUPtr(tc)->iflush(*this);
 }
 
 void
 DTLBIALL::operator()(ThreadContext* tc)
 {
+    el2Enabled = EL2Enabled(tc);
     getMMUPtr(tc)->dflush(*this);
 }
 
@@ -87,6 +91,8 @@ TLBIASID::operator()(ThreadContext* tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     inHost = (hcr.tge == 1 && hcr.e2h == 1);
+    el2Enabled = EL2Enabled(tc);
+
     getMMUPtr(tc)->flush(*this);
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
@@ -97,12 +103,14 @@ TLBIASID::operator()(ThreadContext* tc)
 void
 ITLBIASID::operator()(ThreadContext* tc)
 {
+    el2Enabled = EL2Enabled(tc);
     getMMUPtr(tc)->iflush(*this);
 }
 
 void
 DTLBIASID::operator()(ThreadContext* tc)
 {
+    el2Enabled = EL2Enabled(tc);
     getMMUPtr(tc)->dflush(*this);
 }
 

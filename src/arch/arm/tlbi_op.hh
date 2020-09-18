@@ -81,7 +81,7 @@ class TLBIALL : public TLBIOp
 {
   public:
     TLBIALL(ExceptionLevel _targetEL, bool _secure)
-      : TLBIOp(_targetEL, _secure), inHost(false)
+      : TLBIOp(_targetEL, _secure), inHost(false), el2Enabled(false)
     {}
 
     void operator()(ThreadContext* tc) override;
@@ -93,6 +93,7 @@ class TLBIALL : public TLBIOp
     }
 
     bool inHost;
+    bool el2Enabled;
 };
 
 /** Instruction TLB Invalidate All */
@@ -145,13 +146,15 @@ class TLBIASID : public TLBIOp
 {
   public:
     TLBIASID(ExceptionLevel _targetEL, bool _secure, uint16_t _asid)
-      : TLBIOp(_targetEL, _secure), asid(_asid), inHost(false)
+      : TLBIOp(_targetEL, _secure), asid(_asid), inHost(false),
+        el2Enabled(false)
     {}
 
     void operator()(ThreadContext* tc) override;
 
     uint16_t asid;
     bool inHost;
+    bool el2Enabled;
 };
 
 /** Instruction TLB Invalidate by ASID match */

@@ -281,7 +281,7 @@ TLB::flush(const TLBIALL& tlbi_op)
         const bool el_match = te->checkELMatch(
             tlbi_op.targetEL, tlbi_op.inHost);
         if (te->valid && tlbi_op.secureLookup == !te->nstid &&
-            (te->vmid == vmid || tlbi_op.secureLookup) && el_match) {
+            (te->vmid == vmid || tlbi_op.el2Enabled) && el_match) {
 
             DPRINTF(TLB, " -  %s\n", te->print());
             te->valid = false;
@@ -383,7 +383,7 @@ TLB::flush(const TLBIASID &tlbi_op)
         te = &table[x];
         if (te->valid && te->asid == tlbi_op.asid &&
             tlbi_op.secureLookup == !te->nstid &&
-            (te->vmid == vmid || tlbi_op.secureLookup) &&
+            (te->vmid == vmid || tlbi_op.el2Enabled) &&
             te->checkELMatch(tlbi_op.targetEL, tlbi_op.inHost)) {
 
             te->valid = false;
