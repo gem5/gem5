@@ -1145,29 +1145,31 @@ namespace Aarch64
     }  // decodeSvePermPredicates
 
     StaticInstPtr
-    decodeSvePermIntlv(ExtMachInst machInst)
+    decodeSvePermIntlv(ExtMachInst machInst, bool f64mm)
     {
         RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
         RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
         RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
-        uint8_t size = bits(machInst, 23, 22);
+        uint8_t size = f64mm ? 4 : (uint8_t)bits(machInst, 23, 22);
 
         uint8_t opc = bits(machInst, 12, 10);
 
         switch (opc) {
           case 0x0:
-            return decodeSveBinUnpredU<SveZip1>(size, machInst, zd, zn, zm);
+            return decodeSveBinUnpredUQ<SveZip1>(size, machInst, zd, zn, zm);
           case 0x1:
-            return decodeSveBinUnpredU<SveZip2>(size, machInst, zd, zn, zm);
+            return decodeSveBinUnpredUQ<SveZip2>(size, machInst, zd, zn, zm);
           case 0x2:
-            return decodeSveBinUnpredU<SveUzp1>(size, machInst, zd, zn, zm);
+            return decodeSveBinUnpredUQ<SveUzp1>(size, machInst, zd, zn, zm);
           case 0x3:
-            return decodeSveBinUnpredU<SveUzp2>(size, machInst, zd, zn, zm);
+            return decodeSveBinUnpredUQ<SveUzp2>(size, machInst, zd, zn, zm);
           case 0x4:
-            return decodeSveBinUnpredU<SveTrn1>(size, machInst, zd, zn, zm);
+          case 0x6:
+            return decodeSveBinUnpredUQ<SveTrn1>(size, machInst, zd, zn, zm);
           case 0x5:
-            return decodeSveBinUnpredU<SveTrn2>(size, machInst, zd, zn, zm);
+          case 0x7:
+            return decodeSveBinUnpredUQ<SveTrn2>(size, machInst, zd, zn, zm);
         }
         return new Unknown64(machInst);
     }  // decodeSvePermIntlv

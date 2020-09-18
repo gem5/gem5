@@ -57,7 +57,7 @@ namespace Aarch64
     StaticInstPtr decodeSvePermExtract(ExtMachInst machInst);
     StaticInstPtr decodeSvePermUnpred(ExtMachInst machInst);
     StaticInstPtr decodeSvePermPredicates(ExtMachInst machInst);
-    StaticInstPtr decodeSvePermIntlv(ExtMachInst machInst);
+    StaticInstPtr decodeSvePermIntlv(ExtMachInst machInst, bool f64mm);
     StaticInstPtr decodeSvePermPred(ExtMachInst machInst);
     StaticInstPtr decodeSveSelVec(ExtMachInst machInst);
     StaticInstPtr decodeSveIntCmpVec(ExtMachInst machInst);
@@ -202,11 +202,18 @@ namespace Aarch64
                     if (b_13) {
                         return decodeSvePermUnpred(machInst);
                     } else {
-                        return decodeSvePermExtract(machInst);
+                        uint8_t b_23 = bits(machInst, 23);
+                        if (b_23) {
+                            // 128-bit element encodings for Armv8.6 F64MM
+                            return decodeSvePermIntlv(machInst, true);
+                        } else {
+                            return decodeSvePermExtract(machInst);
+                        }
                     }
                   case 0x1:
                     if (b_13) {
-                        return decodeSvePermIntlv(machInst);
+                        // 8,16,32,64-bit element encodings
+                        return decodeSvePermIntlv(machInst, false);
                     } else {
                         return decodeSvePermPredicates(machInst);
                     }

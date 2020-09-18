@@ -633,6 +633,29 @@ output header {{
     }
 
     // Decodes binary, constructive, unpredicated SVE instructions.
+    // Unsigned instructions only, including Quadword variants.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinUnpredUQ(unsigned size, ExtMachInst machInst, RegIndex dest,
+            RegIndex op1, RegIndex op2)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, op2);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, op2);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, op2);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, op2);
+          case 4:
+            return new Base<__uint128_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, constructive, unpredicated SVE instructions.
     // Signed instructions only.
     template <template <typename T> class Base>
     StaticInstPtr
@@ -3299,6 +3322,8 @@ let {{
     fpTypes = ('uint16_t', 'uint32_t', 'uint64_t')
     signedTypes = ('int8_t', 'int16_t', 'int32_t', 'int64_t')
     unsignedTypes = ('uint8_t', 'uint16_t', 'uint32_t', 'uint64_t')
+    extendedUnsignedTypes = ('uint8_t', 'uint16_t', 'uint32_t', 'uint64_t',
+                             '__uint128_t')
 
     smallSignedTypes = ('int8_t', 'int16_t', 'int32_t')
     bigSignedTypes = ('int16_t', 'int32_t', 'int64_t')
@@ -4754,23 +4779,36 @@ let {{
                        trnPredIterCode % 1)
     # TRN1, TRN2 (vectors)
     trnIterCode = '''
+        // SVE F64MM support requires that there are at least two elements
+        // in the vector.
+        if (eCount < 2) {
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          "%(mnemonic)s");
+        }
         int s;
-        int part = %d;
+        int part = %(part)d;
         ArmISA::VecRegContainer tmpVecC;
         auto auxDest = tmpVecC.as<Element>();
-        for (unsigned i = 0; i < eCount / 2; i++) {
+        const unsigned eltPairsCount = eCount / 2;
+        const unsigned eltsInPairsCount = eltPairsCount * 2;
+        for (unsigned i = 0; i < eltPairsCount; i++) {
             s = 2 * i + part;
             auxDest[2 * i] = AA64FpOp1_x[s];
             auxDest[2 * i + 1] = AA64FpOp2_x[s];
         }
-        for (unsigned i = 0; i < eCount; i++) {
+        // Fill output vector with pairs of elements
+        for (unsigned i = 0; i < eltsInPairsCount; i++) {
             AA64FpDest_x[i] = auxDest[i];
         }
+        // Fill any trailing non-full pairs with zeros
+        for (unsigned i = eltsInPairsCount; i < eCount; i++) {
+            AA64FpDest_x[i] = 0;
+        }
     '''
-    sveBinInst('trn1', 'Trn1', 'SimdAluOp', unsignedTypes, '',
-               customIterCode=trnIterCode % 0)
-    sveBinInst('trn2', 'Trn2', 'SimdAluOp', unsignedTypes, '',
-               customIterCode=trnIterCode % 1)
+    sveBinInst('trn1', 'Trn1', 'SimdAluOp', extendedUnsignedTypes, '',
+               customIterCode=trnIterCode % dict(mnemonic='trn1', part=0))
+    sveBinInst('trn2', 'Trn2', 'SimdAluOp', extendedUnsignedTypes, '',
+               customIterCode=trnIterCode % dict(mnemonic='trn2', part=1))
     # UABD
     sveBinInst('uabd', 'Uabd', 'SimdAddOp', unsignedTypes, abdCode,
                PredType.MERGE, True)
@@ -4976,26 +5014,39 @@ let {{
                        uzpPredIterCode % 1)
     # UZP1, UZP2 (vectors)
     uzpIterCode = '''
+        // SVE F64MM support requires that there are at least two elements
+        // in the vector.
+        if (eCount < 2) {
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          "%(mnemonic)s");
+        }
         int s;
-        int part = %d;
+        int part = %(part)d;
         ArmISA::VecRegContainer tmpVecC;
         auto auxDest = tmpVecC.as<Element>();
-        for (unsigned i = 0; i < eCount; i++) {
+        const unsigned eltPairsCount = eCount / 2;
+        const unsigned eltsInPairsCount = eltPairsCount * 2;
+        for (unsigned i = 0; i < eltsInPairsCount; i++) {
             s = 2 * i + part;
-            if (s < eCount) {
+            if (s < eltsInPairsCount) {
                 auxDest[i] = AA64FpOp1_x[s];
             } else {
-                auxDest[i] = AA64FpOp2_x[s - eCount];
+                auxDest[i] = AA64FpOp2_x[s - eltsInPairsCount];
             }
         }
-        for (unsigned i = 0; i < eCount; i++) {
+        // Fill output vector with pairs of elements
+        for (unsigned i = 0; i < eltsInPairsCount; i++) {
             AA64FpDest_x[i] = auxDest[i];
         }
+        // Fill any trailing non-full pairs with zeros
+        for (unsigned i = eltsInPairsCount; i < eCount; i++) {
+            AA64FpDest_x[i] = 0;
+        }
     '''
-    sveBinInst('uzp1', 'Uzp1', 'SimdAluOp', unsignedTypes, '',
-               customIterCode=uzpIterCode % 0)
-    sveBinInst('uzp2', 'Uzp2', 'SimdAluOp', unsignedTypes, '',
-               customIterCode=uzpIterCode % 1)
+    sveBinInst('uzp1', 'Uzp1', 'SimdAluOp', extendedUnsignedTypes, '',
+               customIterCode=uzpIterCode % dict(mnemonic='uzp1', part=0))
+    sveBinInst('uzp2', 'Uzp2', 'SimdAluOp', extendedUnsignedTypes, '',
+               customIterCode=uzpIterCode % dict(mnemonic='uzp2', part=1))
     # WHILELE (32-bit)
     whileLECode = '''
             cond = srcElem1 <= srcElem2;
@@ -5058,22 +5109,35 @@ let {{
                        zipPredIterCode % 1)
     # ZIP1, ZIP2 (vectors)
     zipIterCode = '''
+        // SVE F64MM support requires that there are at least two elements
+        // in the vector.
+        if (eCount < 2) {
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          "%(mnemonic)s");
+        }
         int s;
-        int part = %d;
+        int part = %(part)d;
         ArmISA::VecRegContainer tmpVecC;
         auto auxDest = tmpVecC.as<Element>();
-        for (unsigned i = 0; i < eCount / 2; i++) {
-            s = i + (part * (eCount / 2));
+        const unsigned eltPairsCount = eCount / 2;
+        const unsigned eltsInPairsCount = eltPairsCount * 2;
+        for (unsigned i = 0; i < eltPairsCount; i++) {
+            s = i + (part * (eltsInPairsCount / 2));
             auxDest[2 * i] = AA64FpOp1_x[s];
             auxDest[2 * i + 1] = AA64FpOp2_x[s];
         }
-        for (unsigned i = 0; i < eCount; i++) {
+        // Fill output vector with pairs of elements
+        for (unsigned i = 0; i < eltsInPairsCount; i++) {
             AA64FpDest_x[i] = auxDest[i];
         }
+        // Fill any trailing non-full pairs with zeros
+        for (unsigned i = eltsInPairsCount; i < eCount; i++) {
+            AA64FpDest_x[i] = 0;
+        }
     '''
-    sveBinInst('zip1', 'Zip1', 'SimdAluOp', unsignedTypes, '',
-               customIterCode=zipIterCode % 0)
-    sveBinInst('zip2', 'Zip2', 'SimdAluOp', unsignedTypes, '',
-               customIterCode=zipIterCode % 1)
+    sveBinInst('zip1', 'Zip1', 'SimdAluOp', extendedUnsignedTypes, '',
+               customIterCode=zipIterCode % dict(mnemonic='zip1', part=0))
+    sveBinInst('zip2', 'Zip2', 'SimdAluOp', extendedUnsignedTypes, '',
+               customIterCode=zipIterCode % dict(mnemonic='zip2', part=1))
 
 }};
