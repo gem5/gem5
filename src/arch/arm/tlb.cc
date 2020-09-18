@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016-2019 ARM Limited
+ * Copyright (c) 2010-2013, 2016-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -242,6 +242,29 @@ TLB::printTlb() const
         if (te->valid)
             DPRINTF(TLB, " *  %s\n", te->print());
         ++x;
+    }
+}
+
+void
+TLB::flushAll()
+{
+    DPRINTF(TLB, "Flushing all TLB entries\n");
+    int x = 0;
+    TlbEntry *te;
+    while (x < size) {
+        te = &table[x];
+
+        DPRINTF(TLB, " -  %s\n", te->print());
+        te->valid = false;
+        stats.flushedEntries++;
+        ++x;
+    }
+
+    stats.flushTlb++;
+
+    // If there's a second stage TLB (and we're not it) then flush it as well
+    if (!isStage2) {
+        stage2Tlb->flushAll();
     }
 }
 

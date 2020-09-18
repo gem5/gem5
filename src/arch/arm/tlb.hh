@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016, 2019 ARM Limited
+ * Copyright (c) 2010-2013, 2016, 2019-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -246,6 +246,11 @@ class TLB : public BaseTLB
     bool checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
                   Mode mode);
 
+    /** Reset the entire TLB. Used for CPU switching to prevent stale
+     * translations after multiple switches
+     */
+    void flushAll() override;
+
 
     /** Reset the entire TLB
      * @param secure_lookup if the operation affects the secure world
@@ -258,15 +263,6 @@ class TLB : public BaseTLB
      */
     void flushAllNs(ExceptionLevel target_el, bool ignore_el = false);
 
-
-    /** Reset the entire TLB. Used for CPU switching to prevent stale
-     * translations after multiple switches
-     */
-    void flushAll() override
-    {
-        flushAllSecurity(false, EL0, true, false);
-        flushAllSecurity(true, EL0, true, false);
-    }
 
     /** Remove any entries that match both a va and asn
      * @param mva virtual address to flush
