@@ -72,7 +72,6 @@ class TLBIOp
             (*this)(oc);
     }
 
-  protected:
     bool secureLookup;
     ExceptionLevel targetEL;
 };
@@ -82,10 +81,18 @@ class TLBIALL : public TLBIOp
 {
   public:
     TLBIALL(ExceptionLevel _targetEL, bool _secure)
-      : TLBIOp(_targetEL, _secure)
+      : TLBIOp(_targetEL, _secure), inHost(false)
     {}
 
     void operator()(ThreadContext* tc) override;
+
+    TLBIALL
+    makeStage2() const
+    {
+        return TLBIALL(EL1, secureLookup);
+    }
+
+    bool inHost;
 };
 
 /** Instruction TLB Invalidate All */
@@ -119,13 +126,13 @@ class TLBIASID : public TLBIOp
 {
   public:
     TLBIASID(ExceptionLevel _targetEL, bool _secure, uint16_t _asid)
-      : TLBIOp(_targetEL, _secure), asid(_asid)
+      : TLBIOp(_targetEL, _secure), asid(_asid), inHost(false)
     {}
 
     void operator()(ThreadContext* tc) override;
 
-  protected:
     uint16_t asid;
+    bool inHost;
 };
 
 /** Instruction TLB Invalidate by ASID match */
@@ -163,6 +170,12 @@ class TLBIALLN : public TLBIOp
     {}
 
     void operator()(ThreadContext* tc) override;
+
+    TLBIALLN
+    makeStage2() const
+    {
+        return TLBIALLN(EL1);
+    }
 };
 
 /** TLB Invalidate by VA, All ASID */
@@ -171,13 +184,13 @@ class TLBIMVAA : public TLBIOp
   public:
     TLBIMVAA(ExceptionLevel _targetEL, bool _secure,
              Addr _addr)
-      : TLBIOp(_targetEL, _secure), addr(_addr)
+      : TLBIOp(_targetEL, _secure), addr(_addr), inHost(false)
     {}
 
     void operator()(ThreadContext* tc) override;
 
-  protected:
     Addr addr;
+    bool inHost;
 };
 
 /** TLB Invalidate by VA */
@@ -186,14 +199,15 @@ class TLBIMVA : public TLBIOp
   public:
     TLBIMVA(ExceptionLevel _targetEL, bool _secure,
             Addr _addr, uint16_t _asid)
-      : TLBIOp(_targetEL, _secure), addr(_addr), asid(_asid)
+      : TLBIOp(_targetEL, _secure), addr(_addr), asid(_asid),
+        inHost(false)
     {}
 
     void operator()(ThreadContext* tc) override;
 
-  protected:
     Addr addr;
     uint16_t asid;
+    bool inHost;
 };
 
 /** Instruction TLB Invalidate by VA */
@@ -234,7 +248,6 @@ class TLBIIPA : public TLBIOp
 
     void operator()(ThreadContext* tc) override;
 
-  protected:
     Addr addr;
 };
 

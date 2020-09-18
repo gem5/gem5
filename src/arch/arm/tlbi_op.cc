@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 ARM Limited
+ * Copyright (c) 2018-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -46,64 +46,60 @@ void
 TLBIALL::operator()(ThreadContext* tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-    bool in_host = (hcr.tge == 1 && hcr.e2h == 1);
-    getMMUPtr(tc)->flushAllSecurity(secureLookup, targetEL,
-        MMU::ALL_TLBS, in_host);
+    inHost = (hcr.tge == 1 && hcr.e2h == 1);
+    getMMUPtr(tc)->flush(*this);
 
     // If CheckerCPU is connected, need to notify it of a flush
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getMMUPtr(checker)->flushAllSecurity(
-            secureLookup, targetEL, MMU::ALL_TLBS, in_host);
+        getMMUPtr(checker)->flush(*this);
     }
 }
 
 void
 ITLBIALL::operator()(ThreadContext* tc)
 {
-    getMMUPtr(tc)->flushAllSecurity(secureLookup, targetEL, MMU::I_TLBS);
+    getMMUPtr(tc)->iflush(*this);
 }
 
 void
 DTLBIALL::operator()(ThreadContext* tc)
 {
-    getMMUPtr(tc)->flushAllSecurity(secureLookup, targetEL, MMU::D_TLBS);
+    getMMUPtr(tc)->dflush(*this);
 }
 
 void
 TLBIASID::operator()(ThreadContext* tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-    bool in_host = (hcr.tge == 1 && hcr.e2h == 1);
-    getMMUPtr(tc)->flushAsid(asid, secureLookup, targetEL,
-        MMU::ALL_TLBS, in_host);
+    inHost = (hcr.tge == 1 && hcr.e2h == 1);
+    getMMUPtr(tc)->flush(*this);
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getMMUPtr(checker)->flushAsid(asid, secureLookup, targetEL,
-            MMU::ALL_TLBS, in_host);
+        getMMUPtr(checker)->flush(*this);
     }
 }
 
 void
 ITLBIASID::operator()(ThreadContext* tc)
 {
-    getMMUPtr(tc)->flushAsid(asid, secureLookup, targetEL, MMU::I_TLBS);
+    getMMUPtr(tc)->iflush(*this);
 }
 
 void
 DTLBIASID::operator()(ThreadContext* tc)
 {
-    getMMUPtr(tc)->flushAsid(asid, secureLookup, targetEL, MMU::D_TLBS);
+    getMMUPtr(tc)->dflush(*this);
 }
 
 void
 TLBIALLN::operator()(ThreadContext* tc)
 {
-    getMMUPtr(tc)->flushAllNs(targetEL);
+    getMMUPtr(tc)->flush(*this);
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getMMUPtr(checker)->flushAllNs(targetEL);
+        getMMUPtr(checker)->flush(*this);
     }
 }
 
@@ -111,14 +107,12 @@ void
 TLBIMVAA::operator()(ThreadContext* tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-    bool in_host = (hcr.tge == 1 && hcr.e2h == 1);
-    getMMUPtr(tc)->flushMva(addr, secureLookup, targetEL,
-        MMU::ALL_TLBS, in_host);
+    inHost = (hcr.tge == 1 && hcr.e2h == 1);
+    getMMUPtr(tc)->flush(*this);
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getMMUPtr(checker)->flushMva(addr, secureLookup, targetEL,
-            MMU::ALL_TLBS, in_host);
+        getMMUPtr(checker)->flush(*this);
     }
 }
 
@@ -126,41 +120,35 @@ void
 TLBIMVA::operator()(ThreadContext* tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-    bool in_host = (hcr.tge == 1 && hcr.e2h == 1);
-    getMMUPtr(tc)->flushMvaAsid(addr, asid,
-        secureLookup, targetEL, MMU::ALL_TLBS, in_host);
+    inHost = (hcr.tge == 1 && hcr.e2h == 1);
+    getMMUPtr(tc)->flush(*this);
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getMMUPtr(checker)->flushMvaAsid(
-            addr, asid, secureLookup, targetEL, MMU::ALL_TLBS, in_host);
+        getMMUPtr(checker)->flush(*this);
     }
 }
 
 void
 ITLBIMVA::operator()(ThreadContext* tc)
 {
-    getMMUPtr(tc)->flushMvaAsid(
-        addr, asid, secureLookup, targetEL, MMU::I_TLBS);
+    getMMUPtr(tc)->iflush(*this);
 }
 
 void
 DTLBIMVA::operator()(ThreadContext* tc)
 {
-    getMMUPtr(tc)->flushMvaAsid(
-        addr, asid, secureLookup, targetEL, MMU::D_TLBS);
+    getMMUPtr(tc)->dflush(*this);
 }
 
 void
 TLBIIPA::operator()(ThreadContext* tc)
 {
-    getMMUPtr(tc)->flushIpaVmid(addr,
-        secureLookup, targetEL);
+    getMMUPtr(tc)->flush(*this);
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getMMUPtr(checker)->flushIpaVmid(addr,
-            secureLookup, targetEL);
+        getMMUPtr(checker)->flush(*this);
     }
 }
 

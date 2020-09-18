@@ -79,58 +79,33 @@ class MMU : public BaseMMU
 
     void invalidateMiscReg(TLBType type = ALL_TLBS);
 
-    /** Reset the entire TLB
-     * @param secure_lookup if the operation affects the secure world
-     */
-    void flushAllSecurity(bool secure_lookup, ExceptionLevel target_el,
-         TLBType type = ALL_TLBS,
-         bool ignore_el = false, bool in_host = false);
+    template <typename OP>
+    void
+    flush(const OP &tlbi_op)
+    {
+        getITBPtr()->flush(tlbi_op);
+        getDTBPtr()->flush(tlbi_op);
+    }
 
-    /** Remove all entries in the non secure world, depending on whether they
-     *  were allocated in hyp mode or not
-     */
-    void flushAllNs(ExceptionLevel target_el, bool ignore_el = false,
-        TLBType type = ALL_TLBS);
+    template <typename OP>
+    void
+    iflush(const OP &tlbi_op)
+    {
+        getITBPtr()->flush(tlbi_op);
+    }
 
-    /** Remove any entries that match both a va and asn
-     * @param mva virtual address to flush
-     * @param asn contextid/asn to flush on match
-     * @param secure_lookup if the operation affects the secure world
-     */
-    void flushMvaAsid(Addr mva, uint64_t asn, bool secure_lookup,
-        ExceptionLevel target_el, TLBType type = ALL_TLBS,
-        bool in_host = false);
-
-    /** Remove any entries that match the asn
-     * @param asn contextid/asn to flush on match
-     * @param secure_lookup if the operation affects the secure world
-     */
-    void flushAsid(uint64_t asn, bool secure_lookup,
-        ExceptionLevel target_el, TLBType type = ALL_TLBS,
-        bool in_host = false);
-
-    /** Remove all entries that match the va regardless of asn
-     * @param mva address to flush from cache
-     * @param secure_lookup if the operation affects the secure world
-     */
-    void flushMva(Addr mva, bool secure_lookup, ExceptionLevel target_el,
-        TLBType type = ALL_TLBS, bool in_host = false);
-
-    /**
-     * Invalidate all entries in the stage 2 TLB that match the given ipa
-     * and the current VMID
-     * @param ipa the address to invalidate
-     * @param secure_lookup if the operation affects the secure world
-     */
-    void flushIpaVmid(Addr ipa, bool secure_lookup, ExceptionLevel target_el,
-        TLBType type = ALL_TLBS);
+    template <typename OP>
+    void
+    dflush(const OP &tlbi_op)
+    {
+        getDTBPtr()->flush(tlbi_op);
+    }
 
     uint64_t
     getAttr() const
     {
         return getDTBPtr()->getAttr();
     }
-
 };
 
 template<typename T>

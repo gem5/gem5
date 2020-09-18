@@ -61,6 +61,13 @@ class Stage2LookUp;
 class Stage2MMU;
 class TLB;
 
+class TLBIALL;
+class TLBIALLN;
+class TLBIMVA;
+class TLBIASID;
+class TLBIMVAA;
+class TLBIIPA;
+
 class TlbTestInterface
 {
   public:
@@ -253,46 +260,31 @@ class TLB : public BaseTLB
 
 
     /** Reset the entire TLB
-     * @param secure_lookup if the operation affects the secure world
      */
-    void flushAllSecurity(bool secure_lookup, ExceptionLevel target_el,
-                          bool ignore_el = false, bool in_host = false);
+    void flush(const TLBIALL& tlbi_op);
 
     /** Remove all entries in the non secure world, depending on whether they
      *  were allocated in hyp mode or not
      */
-    void flushAllNs(ExceptionLevel target_el, bool ignore_el = false);
-
+    void flush(const TLBIALLN &tlbi_op);
 
     /** Remove any entries that match both a va and asn
-     * @param mva virtual address to flush
-     * @param asn contextid/asn to flush on match
-     * @param secure_lookup if the operation affects the secure world
      */
-    void flushMvaAsid(Addr mva, uint64_t asn, bool secure_lookup,
-                      ExceptionLevel target_el, bool in_host = false);
+    void flush(const TLBIMVA &tlbi_op);
 
     /** Remove any entries that match the asn
-     * @param asn contextid/asn to flush on match
-     * @param secure_lookup if the operation affects the secure world
      */
-    void flushAsid(uint64_t asn, bool secure_lookup,
-                   ExceptionLevel target_el, bool in_host = false);
+    void flush(const TLBIASID &tlbi_op);
 
     /** Remove all entries that match the va regardless of asn
-     * @param mva address to flush from cache
-     * @param secure_lookup if the operation affects the secure world
      */
-    void flushMva(Addr mva, bool secure_lookup, ExceptionLevel target_el,
-                  bool in_host = false);
+    void flush(const TLBIMVAA &tlbi_op);
 
     /**
      * Invalidate all entries in the stage 2 TLB that match the given ipa
      * and the current VMID
-     * @param ipa the address to invalidate
-     * @param secure_lookup if the operation affects the secure world
      */
-    void flushIpaVmid(Addr ipa, bool secure_lookup, ExceptionLevel target_el);
+    void flush(const TLBIIPA &tlbi_op);
 
     Fault trickBoxCheck(const RequestPtr &req, Mode mode,
                         TlbEntry::DomainType domain);
