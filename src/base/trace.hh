@@ -182,14 +182,14 @@ class Named
 
 #define DDUMP(x, data, count) do {               \
     using namespace Debug;                       \
-    if (DTRACE(x))                               \
+    if (M5_UNLIKELY(DTRACE(x)))                  \
         Trace::getDebugLogger()->dump(           \
             curTick(), name(), data, count, #x); \
 } while (0)
 
 #define DPRINTF(x, ...) do {                     \
     using namespace Debug;                       \
-    if (DTRACE(x)) {                             \
+    if (M5_UNLIKELY(DTRACE(x))) {                \
         Trace::getDebugLogger()->dprintf_flag(   \
             curTick(), name(), #x, __VA_ARGS__); \
     }                                            \
@@ -197,7 +197,7 @@ class Named
 
 #define DPRINTFS(x, s, ...) do {                        \
     using namespace Debug;                              \
-    if (DTRACE(x)) {                                    \
+    if (M5_UNLIKELY(DTRACE(x))) {                       \
         Trace::getDebugLogger()->dprintf_flag(          \
                 curTick(), s->name(), #x, __VA_ARGS__); \
     }                                                   \
@@ -205,7 +205,7 @@ class Named
 
 #define DPRINTFR(x, ...) do {                          \
     using namespace Debug;                             \
-    if (DTRACE(x)) {                                   \
+    if (M5_UNLIKELY(DTRACE(x))) {                      \
         Trace::getDebugLogger()->dprintf_flag(         \
             (Tick)-1, std::string(), #x, __VA_ARGS__); \
     }                                                  \
