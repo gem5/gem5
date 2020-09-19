@@ -214,10 +214,7 @@ MinorDynInst::minorTraceInst(const Named &named_object) const
                     regs_str << ',';
             }
 
-#if THE_ISA == ARM_ISA
-            regs_str << " extMachInst=" << std::hex << std::setw(16)
-                << std::setfill('0') << staticInst->machInst << std::dec;
-#endif
+            ccprintf(regs_str, " extMachInst=%160x", staticInst->machInst);
         }
 
         std::ostringstream flags;
