@@ -58,7 +58,6 @@
 // DTB pointers.
 namespace TheISA
 {
-    class ISA;
     class Decoder;
 }
 class BaseCPU;
@@ -88,7 +87,6 @@ class System;
 class ThreadContext : public PCEventScope
 {
   protected:
-    typedef TheISA::MachInst MachInst;
     using VecRegContainer = TheISA::VecRegContainer;
     using VecElem = TheISA::VecElem;
     using VecPredRegContainer = TheISA::VecPredRegContainer;
