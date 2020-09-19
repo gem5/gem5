@@ -273,14 +273,6 @@ System::~System()
 }
 
 void
-System::init()
-{
-    // check that the system port is connected
-    if (!_systemPort.isConnected())
-        panic("System port on %s is not connected.\n", name());
-}
-
-void
 System::startup()
 {
     SimObject::startup();

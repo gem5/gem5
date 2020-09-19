@@ -221,11 +221,6 @@ class System : public SimObject, public PCEventScope
         const_iterator end() const { return const_iterator(*this, size()); }
     };
 
-    /**
-     * After all objects have been created and all ports are
-     * connected, check that the system port is connected.
-     */
-    void init() override;
     void startup() override;
 
     /**
