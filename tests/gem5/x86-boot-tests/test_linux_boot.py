@@ -25,7 +25,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import subprocess
 from testlib import *
+import platform
 
 
 if config.bin_path:
@@ -43,8 +45,10 @@ kernel_name = 'vmlinux-4.19.83' # 4.19 is LTS (Projected EOL: Dec, 2020)
 image = DownloadedProgram(image_url, base_path, image_name, True)
 kernel = DownloadedProgram(kernel_url, base_path, kernel_name)
 
+def support_kvm():
+    return os.access("/dev/kvm", os.R_OK | os.W_OK)
 
-def test_boot(cpu_type, num_cpus, boot_type):
+def test_boot(cpu_type, num_cpus, boot_type, host):
     gem5_verify_config(
         name = 'test-ubuntu_boot-' + cpu_type + '_cpu-' + num_cpus + '_cpus-'
                + boot_type + '_boot',
@@ -59,14 +63,19 @@ def test_boot(cpu_type, num_cpus, boot_type):
             '--boot-type', boot_type,
         ],
         valid_isas = ('X86',),
-        valid_hosts = constants.supported_hosts,
+        valid_hosts = host,
         length = constants.long_tag,
     )
 
 # Test every CPU type
 cpu_types = ('atomic', 'simple',)
 for cpu_type in cpu_types:
-    test_boot(cpu_type, '1', 'init')
+    test_boot(cpu_type, '1', 'init', constants.supported_hosts)
 
 # Test a multicore system
-test_boot('atomic', '4', 'systemd')
+test_boot('atomic', '4', 'systemd', constants.supported_hosts)
+
+#KVM
+if(support_kvm() and (platform.machine() == constants.host_x86_64_tag)):
+    test_boot('kvm', '1', 'init', (constants.host_x86_64_tag,))
+    test_boot('kvm', '4', 'systemd', (constants.host_x86_64_tag,))
