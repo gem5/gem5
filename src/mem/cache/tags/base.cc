@@ -133,7 +133,7 @@ void
 BaseTags::cleanupRefsVisitor(CacheBlk &blk)
 {
     if (blk.isValid()) {
-        stats.totalRefs += blk.refCount;
+        stats.totalRefs += blk.getRefCount();
         ++stats.sampledRefs;
     }
 }

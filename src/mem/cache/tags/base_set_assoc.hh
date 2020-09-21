@@ -141,7 +141,7 @@ class BaseSetAssoc : public BaseTags
         // If a cache hit
         if (blk != nullptr) {
             // Update number of references to accessed block
-            blk->refCount++;
+            blk->increaseRefCount();
 
             // Update replacement data of accessed block
             replacementPolicy->touch(blk->replacementData);

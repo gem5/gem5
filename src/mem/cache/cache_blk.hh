@@ -106,9 +106,6 @@ class CacheBlk : public ReplaceableEntry
      */
     Tick whenReady;
 
-    /** Number of references to this block since it was brought in. */
-    unsigned refCount;
-
     /** holds the source requestor ID for this block. */
     int srcRequestorId;
 
@@ -210,7 +207,7 @@ class CacheBlk : public ReplaceableEntry
         setTaskId(ContextSwitchTaskId::Unknown);
         status = 0;
         whenReady = MaxTick;
-        refCount = 0;
+        setRefCount(0);
         srcRequestorId = Request::invldRequestorId;
         lockList.clear();
     }
@@ -300,6 +297,12 @@ class CacheBlk : public ReplaceableEntry
 
     /** Get the task id associated to this block. */
     uint32_t getTaskId() const { return _taskId; }
+
+    /** Get the number of references to this block since insertion. */
+    unsigned getRefCount() const { return _refCount; }
+
+    /** Get the number of references to this block since insertion. */
+    void increaseRefCount() { _refCount++; }
 
     /**
      * Checks if the given information corresponds to this block's.
@@ -456,12 +459,18 @@ class CacheBlk : public ReplaceableEntry
     /** Set the task id value. */
     void setTaskId(const uint32_t task_id) { _taskId = task_id; }
 
+    /** Set the number of references to this block since insertion. */
+    void setRefCount(const unsigned count) { _refCount = count; }
+
   private:
     /** Data block tag value. */
     Addr _tag;
 
     /** Task Id associated with this block */
     uint32_t _taskId;
+
+    /** Number of references to this block since it was brought in. */
+    unsigned _refCount;
 };
 
 /**

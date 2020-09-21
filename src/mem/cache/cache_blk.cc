@@ -69,7 +69,7 @@ CacheBlk::insert(const Addr tag, const bool is_secure,
     tickInserted = curTick();
 
     // Insertion counts as a reference to the block
-    refCount = 1;
+    increaseRefCount();
 
     // Set secure state
     if (is_secure) {

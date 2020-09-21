@@ -151,7 +151,7 @@ SectorTags::accessBlock(Addr addr, bool is_secure, Cycles &lat)
     // If a cache hit
     if (blk != nullptr) {
         // Update number of references to accessed block
-        blk->refCount++;
+        blk->increaseRefCount();
 
         // Get block's sector
         SectorSubBlk* sub_blk = static_cast<SectorSubBlk*>(blk);
