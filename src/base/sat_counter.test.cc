@@ -185,9 +185,13 @@ TEST(SatCounterTest, Shift)
     ASSERT_EQ(counter, 0);
 
     // Make sure the counters cannot be shifted by negative numbers, since
-    // that is undefined behaviour
+    // that is undefined behaviour. As these tests depend on asserts failing,
+    // these tests are only functional if `TRACING_ON == 1`, when gem5 is
+    // compiled as `debug` or `opt`.
+    #if TRACING_ON
     ASSERT_DEATH(counter >>= -1, "");
     ASSERT_DEATH(counter <<= -1, "");
+    #endif
 }
 
 /**
