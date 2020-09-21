@@ -57,6 +57,7 @@
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
+#include "sim/core.hh"
 
 /**
  * Cache block status bit assignments
@@ -109,12 +110,6 @@ class CacheBlk : public ReplaceableEntry
     /** holds the source requestor ID for this block. */
     int srcRequestorId;
 
-    /**
-     * Tick on which the block was inserted in the cache. Its value is only
-     * meaningful if the block is valid.
-     */
-    Tick tickInserted;
-
   protected:
     /**
      * Represents that the indicated thread context has a "lock" on
@@ -158,7 +153,7 @@ class CacheBlk : public ReplaceableEntry
     std::list<Lock> lockList;
 
   public:
-    CacheBlk() : data(nullptr), tickInserted(0)
+    CacheBlk() : data(nullptr), _tickInserted(0)
     {
         invalidate();
     }
@@ -291,7 +286,7 @@ class CacheBlk : public ReplaceableEntry
      */
     void setWhenReady(const Tick tick)
     {
-        assert(tick >= tickInserted);
+        assert(tick >= _tickInserted);
         whenReady = tick;
     }
 
@@ -303,6 +298,18 @@ class CacheBlk : public ReplaceableEntry
 
     /** Get the number of references to this block since insertion. */
     void increaseRefCount() { _refCount++; }
+
+    /**
+     * Get the block's age, that is, the number of ticks since its insertion.
+     *
+     * @return The block's age.
+     */
+    Tick
+    getAge() const
+    {
+        assert(_tickInserted <= curTick());
+        return curTick() - _tickInserted;
+    }
 
     /**
      * Checks if the given information corresponds to this block's.
@@ -462,6 +469,9 @@ class CacheBlk : public ReplaceableEntry
     /** Set the number of references to this block since insertion. */
     void setRefCount(const unsigned count) { _refCount = count; }
 
+    /** Set the current tick as this block's insertion tick. */
+    void setTickInserted() { _tickInserted = curTick(); }
+
   private:
     /** Data block tag value. */
     Addr _tag;
@@ -471,6 +481,12 @@ class CacheBlk : public ReplaceableEntry
 
     /** Number of references to this block since it was brought in. */
     unsigned _refCount;
+
+    /**
+     * Tick on which the block was inserted in the cache. Its value is only
+     * meaningful if the block is valid.
+     */
+    Tick _tickInserted;
 };
 
 /**

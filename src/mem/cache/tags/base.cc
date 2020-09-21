@@ -151,8 +151,7 @@ BaseTags::computeStatsVisitor(CacheBlk &blk)
         const uint32_t task_id = blk.getTaskId();
         assert(task_id < ContextSwitchTaskId::NumTaskId);
         stats.occupanciesTaskId[task_id]++;
-        assert(blk.tickInserted <= curTick());
-        Tick age = curTick() - blk.tickInserted;
+        Tick age = blk.getAge();
 
         int age_index;
         if (age / SimClock::Int::us < 10) { // <10us
