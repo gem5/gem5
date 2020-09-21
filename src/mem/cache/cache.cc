@@ -89,13 +89,13 @@ Cache::satisfyRequest(PacketPtr pkt, CacheBlk *blk,
 
                 // if we have a dirty copy, make sure the recipient
                 // keeps it marked dirty (in the modified state)
-                if (blk->isDirty()) {
+                if (blk->isSet(CacheBlk::DirtyBit)) {
                     pkt->setCacheResponding();
-                    blk->status &= ~BlkDirty;
+                    blk->clearCoherenceBits(CacheBlk::DirtyBit);
                 }
-            } else if (blk->isWritable() && !pending_downgrade &&
-                       !pkt->hasSharers() &&
-                       pkt->cmd != MemCmd::ReadCleanReq) {
+            } else if (blk->isSet(CacheBlk::WritableBit) &&
+                !pending_downgrade && !pkt->hasSharers() &&
+                pkt->cmd != MemCmd::ReadCleanReq) {
                 // we can give the requestor a writable copy on a read
                 // request if:
                 // - we have a writable copy at this level (& below)
@@ -106,7 +106,7 @@ Cache::satisfyRequest(PacketPtr pkt, CacheBlk *blk,
                 //   snooping the packet)
                 // - the read has explicitly asked for a clean
                 //   copy of the line
-                if (blk->isDirty()) {
+                if (blk->isSet(CacheBlk::DirtyBit)) {
                     // special considerations if we're owner:
                     if (!deferred_response) {
                         // respond with the line in Modified state
@@ -128,7 +128,7 @@ Cache::satisfyRequest(PacketPtr pkt, CacheBlk *blk,
                         // the cache hierarchy through a cache,
                         // and first snoop upwards in all other
                         // branches
-                        blk->status &= ~BlkDirty;
+                        blk->clearCoherenceBits(CacheBlk::DirtyBit);
                     } else {
                         // if we're responding after our own miss,
                         // there's a window where the recipient didn't
@@ -496,7 +496,7 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
     const bool useUpgrades = true;
     assert(cpu_pkt->cmd != MemCmd::WriteLineReq || is_whole_line_write);
     if (is_whole_line_write) {
-        assert(!blkValid || !blk->isWritable());
+        assert(!blkValid || !blk->isSet(CacheBlk::WritableBit));
         // forward as invalidate to all other caches, this gives us
         // the line in Exclusive state, and invalidates all other
         // copies
@@ -505,7 +505,7 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
         // only reason to be here is that blk is read only and we need
         // it to be writable
         assert(needsWritable);
-        assert(!blk->isWritable());
+        assert(!blk->isSet(CacheBlk::WritableBit));
         cmd = cpu_pkt->isLLSC() ? MemCmd::SCUpgradeReq : MemCmd::UpgradeReq;
     } else if (cpu_pkt->cmd == MemCmd::SCUpgradeFailReq ||
                cpu_pkt->cmd == MemCmd::StoreCondFailReq) {
@@ -722,7 +722,7 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
                     // between the PrefetchExReq and the expected WriteReq, we
                     // proactively mark the block as Dirty.
                     assert(blk);
-                    blk->status |= BlkDirty;
+                    blk->setCoherenceBits(CacheBlk::DirtyBit);
 
                     panic_if(isReadOnly, "Prefetch exclusive requests from "
                             "read-only cache %s\n", name());
@@ -745,7 +745,7 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
             if (tgt_pkt->cmd == MemCmd::WriteLineReq) {
                 assert(!is_error);
                 assert(blk);
-                assert(blk->isWritable());
+                assert(blk->isSet(CacheBlk::WritableBit));
             }
 
             // Here we decide whether we will satisfy the target using
@@ -888,7 +888,7 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
         if (is_invalidate || mshr->hasPostInvalidate()) {
             invalidateBlock(blk);
         } else if (mshr->hasPostDowngrade()) {
-            blk->status &= ~BlkWritable;
+            blk->clearCoherenceBits(CacheBlk::WritableBit);
         }
     }
 }
@@ -896,7 +896,7 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
 PacketPtr
 Cache::evictBlock(CacheBlk *blk)
 {
-    PacketPtr pkt = (blk->isDirty() || writebackClean) ?
+    PacketPtr pkt = (blk->isSet(CacheBlk::DirtyBit) || writebackClean) ?
         writebackBlk(blk) : cleanEvictBlk(blk);
 
     invalidateBlock(blk);
@@ -908,7 +908,7 @@ PacketPtr
 Cache::cleanEvictBlk(CacheBlk *blk)
 {
     assert(!writebackClean);
-    assert(blk && blk->isValid() && !blk->isDirty());
+    assert(blk && blk->isValid() && !blk->isSet(CacheBlk::DirtyBit));
 
     // Creating a zero sized write, a message to the snoop filter
     RequestPtr req = std::make_shared<Request>(
@@ -1053,10 +1053,11 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     bool respond = false;
     bool blk_valid = blk && blk->isValid();
     if (pkt->isClean()) {
-        if (blk_valid && blk->isDirty()) {
+        if (blk_valid && blk->isSet(CacheBlk::DirtyBit)) {
             DPRINTF(CacheVerbose, "%s: packet (snoop) %s found block: %s\n",
                     __func__, pkt->print(), blk->print());
-            PacketPtr wb_pkt = writecleanBlk(blk, pkt->req->getDest(), pkt->id);
+            PacketPtr wb_pkt =
+                writecleanBlk(blk, pkt->req->getDest(), pkt->id);
             PacketList writebacks;
             writebacks.push_back(wb_pkt);
 
@@ -1098,10 +1099,11 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         // invalidation itself is taken care of below. We don't respond to
         // cache maintenance operations as this is done by the destination
         // xbar.
-        respond = blk->isDirty() && pkt->needsResponse();
+        respond = blk->isSet(CacheBlk::DirtyBit) && pkt->needsResponse();
 
-        chatty_assert(!(isReadOnly && blk->isDirty()), "Should never have "
-                      "a dirty block in a read-only cache %s\n", name());
+        chatty_assert(!(isReadOnly && blk->isSet(CacheBlk::DirtyBit)),
+            "Should never have a dirty block in a read-only cache %s\n",
+            name());
     }
 
     // Invalidate any prefetch's from below that would strip write permissions
@@ -1125,8 +1127,9 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         // which means we go from Modified to Owned (and will respond
         // below), remain in Owned (and will respond below), from
         // Exclusive to Shared, or remain in Shared
-        if (!pkt->req->isUncacheable())
-            blk->status &= ~BlkWritable;
+        if (!pkt->req->isUncacheable()) {
+            blk->clearCoherenceBits(CacheBlk::WritableBit);
+        }
         DPRINTF(Cache, "new state is %s\n", blk->print());
     }
 
@@ -1135,7 +1138,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         // memory, and also prevent any memory from even seeing the
         // request
         pkt->setCacheResponding();
-        if (!pkt->isClean() && blk->isWritable()) {
+        if (!pkt->isClean() && blk->isSet(CacheBlk::WritableBit)) {
             // inform the cache hierarchy that this cache had the line
             // in the Modified state so that we avoid unnecessary
             // invalidations (see Packet::setResponderHadWritable)

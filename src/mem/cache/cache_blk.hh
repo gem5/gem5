@@ -60,18 +60,6 @@
 #include "sim/core.hh"
 
 /**
- * Cache block status bit assignments
- */
-enum CacheBlkStatusBits : unsigned {
-    /** write permission */
-    BlkWritable =       0x02,
-    /** read permission (yes, block can be valid but not readable) */
-    BlkReadable =       0x04,
-    /** dirty (modified) */
-    BlkDirty =          0x08,
-};
-
-/**
  * A Basic Cache block.
  * Contains information regarding its coherence, prefetching status, as
  * well as a pointer to its data.
@@ -80,6 +68,29 @@ class CacheBlk : public TaggedEntry
 {
   public:
     /**
+     * Cache block's enum listing the supported coherence bits. The valid
+     * bit is not defined here because it is part of a TaggedEntry.
+     */
+    enum CoherenceBits : unsigned
+    {
+        /** write permission */
+        WritableBit =       0x02,
+        /**
+         * Read permission. Note that a block can be valid but not readable
+         * if there is an outstanding write upgrade miss.
+         */
+        ReadableBit =       0x04,
+        /** dirty (modified) */
+        DirtyBit =          0x08,
+
+        /**
+         * Helper enum value that includes all other bits. Whenever a new
+         * bits is added, this should be updated.
+         */
+        AllBits  =          0x0E,
+    };
+
+    /**
      * Contains a copy of the data in this block for easy access. This is used
      * for efficient execution when the data could be actually stored in
      * another format (COW, compressed, sub-blocked, etc). In all cases the
@@ -87,12 +98,6 @@ class CacheBlk : public TaggedEntry
      * referenced by this block.
      */
     uint8_t *data;
-
-    /** block state: OR of CacheBlkStatusBit */
-    typedef unsigned State;
-
-    /** The current status of this block. @sa CacheBlockStatusBits */
-    State status;
 
     /**
      * Which curTick() will this block be accessible. Its value is only
@@ -153,28 +158,16 @@ class CacheBlk : public TaggedEntry
     virtual ~CacheBlk() {};
 
     /**
-     * Checks the write permissions of this block.
-     * @return True if the block is writable.
-     */
-    bool isWritable() const { return isValid() && (status & BlkWritable); }
-
-    /**
-     * Checks the read permissions of this block.  Note that a block
-     * can be valid but not readable if there is an outstanding write
-     * upgrade miss.
-     * @return True if the block is readable.
-     */
-    bool isReadable() const { return isValid() && (status & BlkReadable); }
-
-    /**
      * Invalidate the block and clear all state.
      */
     virtual void invalidate()
     {
         TaggedEntry::invalidate();
+
         clearPrefetched();
+        clearCoherenceBits(AllBits);
+
         setTaskId(ContextSwitchTaskId::Unknown);
-        status = 0;
         whenReady = MaxTick;
         setRefCount(0);
         setSrcRequestorId(Request::invldRequestorId);
@@ -182,12 +175,33 @@ class CacheBlk : public TaggedEntry
     }
 
     /**
-     * Check to see if a block has been written.
-     * @return True if the block is dirty.
+     * Sets the corresponding coherence bits.
+     *
+     * @param bits The coherence bits to be set.
      */
-    bool isDirty() const
+    void
+    setCoherenceBits(unsigned bits)
     {
-        return (status & BlkDirty) != 0;
+        assert(isValid());
+        coherence |= bits;
+    }
+
+    /**
+     * Clear the corresponding coherence bits.
+     *
+     * @param bits The coherence bits to be cleared.
+     */
+    void clearCoherenceBits(unsigned bits) { coherence &= ~bits; }
+
+    /**
+     * Checks the given coherence bits are set.
+     *
+     * @return True if the block is readable.
+     */
+    bool
+    isSet(unsigned bits) const
+    {
+        return isValid() && (coherence & bits);
     }
 
     /**
@@ -327,7 +341,7 @@ class CacheBlk : public TaggedEntry
          *
          * Note that only one cache ever has a block in Modified or
          * Owned state, i.e., only one cache owns the block, or
-         * equivalently has the BlkDirty bit set. However, multiple
+         * equivalently has the DirtyBit bit set. However, multiple
          * caches on the same path to memory can have a block in the
          * Exclusive state (despite the name). Exclusive means this
          * cache has the only copy at this level of the hierarchy,
@@ -336,7 +350,8 @@ class CacheBlk : public TaggedEntry
          * this branch of the hierarchy, and no caches at or above
          * this level on any other branch have copies either.
          **/
-        unsigned state = isWritable() << 2 | isDirty() << 1 | isValid();
+        unsigned state =
+            isSet(WritableBit) << 2 | isSet(DirtyBit) << 1 | isValid();
         char s = '?';
         switch (state) {
           case 0b111: s = 'M'; break;
@@ -347,8 +362,8 @@ class CacheBlk : public TaggedEntry
           default:    s = 'T'; break; // @TODO add other types
         }
         return csprintf("state: %x (%c) writable: %d readable: %d "
-            "dirty: %d | %s", status, s, isWritable(), isReadable(),
-            isDirty(), TaggedEntry::print());
+            "dirty: %d | %s", coherence, s, isSet(WritableBit),
+            isSet(ReadableBit), isSet(DirtyBit), TaggedEntry::print());
     }
 
     /**
@@ -399,6 +414,14 @@ class CacheBlk : public TaggedEntry
     }
 
   protected:
+    /** The current coherence status of this block. @sa CoherenceBits */
+    unsigned coherence;
+
+    // The following setters have been marked as protected because their
+    // respective variables should only be modified at 2 moments:
+    // invalidation and insertion. Because of that, they shall only be
+    // called by the functions that perform those actions.
+
     /** Set the task id value. */
     void setTaskId(const uint32_t task_id) { _taskId = task_id; }
 

@@ -318,9 +318,10 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                 // internally, and have a sufficiently weak memory
                 // model, this is probably unnecessary, but at some
                 // point it must have seemed like we needed it...
-                assert((pkt->needsWritable() && !blk->isWritable()) ||
-                       pkt->req->isCacheMaintenance());
-                blk->status &= ~BlkReadable;
+                assert((pkt->needsWritable() &&
+                    !blk->isSet(CacheBlk::WritableBit)) ||
+                    pkt->req->isCacheMaintenance());
+                blk->clearCoherenceBits(CacheBlk::ReadableBit);
             }
             // Here we are using forward_time, modelling the latency of
             // a miss (outbound) just as forwardLatency, neglecting the
@@ -476,7 +477,7 @@ BaseCache::recvTimingResp(PacketPtr pkt)
     if (blk && blk->isValid() && pkt->isClean() && !pkt->isInvalidate()) {
         // The block was marked not readable while there was a pending
         // cache maintenance operation, restore its flag.
-        blk->status |= BlkReadable;
+        blk->setCoherenceBits(CacheBlk::ReadableBit);
 
         // This was a cache clean operation (without invalidate)
         // and we have a copy of the block already. Since there
@@ -485,7 +486,8 @@ BaseCache::recvTimingResp(PacketPtr pkt)
         mshr->promoteReadable();
     }
 
-    if (blk && blk->isWritable() && !pkt->req->isCacheInvalidate()) {
+    if (blk && blk->isSet(CacheBlk::WritableBit) &&
+        !pkt->req->isCacheInvalidate()) {
         // If at this point the referenced block is writable and the
         // response is not a cache invalidate, we promote targets that
         // were deferred as we couldn't guarrantee a writable copy
@@ -498,7 +500,7 @@ BaseCache::recvTimingResp(PacketPtr pkt)
         // avoid later read getting stale data while write miss is
         // outstanding.. see comment in timingAccess()
         if (blk) {
-            blk->status &= ~BlkReadable;
+            blk->clearCoherenceBits(CacheBlk::ReadableBit);
         }
         mshrQueue.markPending(mshr);
         schedMemSideSendEvent(clockEdge() + pkt->payloadDelay);
@@ -551,7 +553,7 @@ BaseCache::recvAtomic(PacketPtr pkt)
     PacketList writebacks;
     bool satisfied = access(pkt, blk, lat, writebacks);
 
-    if (pkt->isClean() && blk && blk->isDirty()) {
+    if (pkt->isClean() && blk && blk->isSet(CacheBlk::DirtyBit)) {
         // A cache clean opearation is looking for a dirty
         // block. If a dirty block is encountered a WriteClean
         // will update any copies to the path to the memory
@@ -641,7 +643,7 @@ BaseCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
     // data we have is dirty if marked as such or if we have an
     // in-service MSHR that is pending a modified line
     bool have_dirty =
-        have_data && (blk->isDirty() ||
+        have_data && (blk->isSet(CacheBlk::DirtyBit) ||
                       (mshr && mshr->inService && mshr->isPendingModified()));
 
     bool done = have_dirty ||
@@ -709,7 +711,7 @@ BaseCache::cmpAndSwap(CacheBlk *blk, PacketPtr pkt)
 
     if (overwrite_mem) {
         std::memcpy(blk_data, &overwrite_val, pkt->getSize());
-        blk->status |= BlkDirty;
+        blk->setCoherenceBits(CacheBlk::DirtyBit);
     }
 }
 
@@ -805,8 +807,8 @@ BaseCache::handleEvictions(std::vector<CacheBlk*> &evict_blks,
             if (mshr) {
                 // Must be an outstanding upgrade or clean request on a block
                 // we're about to replace
-                assert((!blk->isWritable() && mshr->needsWritable()) ||
-                       mshr->isCleaning());
+                assert((!blk->isSet(CacheBlk::WritableBit) &&
+                    mshr->needsWritable()) || mshr->isCleaning());
                 return false;
             }
         }
@@ -912,7 +914,7 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
     // can satisfy a following ReadEx anyway since we can rely on the
     // Read requestor(s) to have buffered the ReadEx snoop and to
     // invalidate their blocks after receiving them.
-    // assert(!pkt->needsWritable() || blk->isWritable());
+    // assert(!pkt->needsWritable() || blk->isSet(CacheBlk::WritableBit));
     assert(pkt->getOffset(blkSize) + pkt->getSize() <= blkSize);
 
     // Check RMW operations first since both isRead() and
@@ -929,7 +931,7 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
             (*(pkt->getAtomicOp()))(blk_data);
 
             // set block status to dirty
-            blk->status |= BlkDirty;
+            blk->setCoherenceBits(CacheBlk::DirtyBit);
         } else {
             cmpAndSwap(blk, pkt);
         }
@@ -938,7 +940,7 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
         // note that the line may be also be considered writable in
         // downstream caches along the path to memory, but always
         // Exclusive, and never Modified
-        assert(blk->isWritable());
+        assert(blk->isSet(CacheBlk::WritableBit));
         // Write or WriteLine at the first cache with block in writable state
         if (blk->checkWrite(pkt)) {
             pkt->writeDataToBlock(blk->data, blkSize);
@@ -947,7 +949,7 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
         // Modified state) even if we are a failed StoreCond so we
         // supply data to any snoops that have appended themselves to
         // this cache before knowing the store will fail.
-        blk->status |= BlkDirty;
+        blk->setCoherenceBits(CacheBlk::DirtyBit);
         DPRINTF(CacheVerbose, "%s for %s (write)\n", __func__, pkt->print());
     } else if (pkt->isRead()) {
         if (pkt->isLLSC()) {
@@ -961,15 +963,15 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
         // sanity check
         assert(!pkt->hasSharers());
 
-        if (blk->isDirty()) {
+        if (blk->isSet(CacheBlk::DirtyBit)) {
             // we were in the Owned state, and a cache above us that
             // has the line in Shared state needs to be made aware
             // that the data it already has is in fact dirty
             pkt->setCacheResponding();
-            blk->status &= ~BlkDirty;
+            blk->clearCoherenceBits(CacheBlk::DirtyBit);
         }
     } else if (pkt->isClean()) {
-        blk->status &= ~BlkDirty;
+        blk->clearCoherenceBits(CacheBlk::DirtyBit);
     } else {
         assert(pkt->isInvalidate());
         invalidateBlock(blk);
@@ -1137,7 +1139,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                 return false;
             }
 
-            blk->status |= BlkReadable;
+            blk->setCoherenceBits(CacheBlk::ReadableBit);
         } else if (compressor) {
             // This is an overwrite to an existing block, therefore we need
             // to check for data expansion (i.e., block was compressed with
@@ -1153,14 +1155,14 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // only mark the block dirty if we got a writeback command,
         // and leave it as is for a clean writeback
         if (pkt->cmd == MemCmd::WritebackDirty) {
-            // TODO: the coherent cache can assert(!blk->isDirty());
-            blk->status |= BlkDirty;
+            // TODO: the coherent cache can assert that the dirty bit is set
+            blk->setCoherenceBits(CacheBlk::DirtyBit);
         }
         // if the packet does not have sharers, it is passing
         // writable, and we got the writeback in Modified or Exclusive
         // state, if not we are in the Owned or Shared state
         if (!pkt->hasSharers()) {
-            blk->status |= BlkWritable;
+            blk->setCoherenceBits(CacheBlk::WritableBit);
         }
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
@@ -1213,7 +1215,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                     return false;
                 }
 
-                blk->status |= BlkReadable;
+                blk->setCoherenceBits(CacheBlk::ReadableBit);
             }
         } else if (compressor) {
             // This is an overwrite to an existing block, therefore we need
@@ -1231,9 +1233,9 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // write clean operation and the block is already in this
         // cache, we need to update the data and the block flags
         assert(blk);
-        // TODO: the coherent cache can assert(!blk->isDirty());
+        // TODO: the coherent cache can assert that the dirty bit is set
         if (!pkt->writeThrough()) {
-            blk->status |= BlkDirty;
+            blk->setCoherenceBits(CacheBlk::DirtyBit);
         }
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
@@ -1250,8 +1252,9 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         // If this a write-through packet it will be sent to cache below
         return !pkt->writeThrough();
-    } else if (blk && (pkt->needsWritable() ? blk->isWritable() :
-                       blk->isReadable())) {
+    } else if (blk && (pkt->needsWritable() ?
+            blk->isSet(CacheBlk::WritableBit) :
+            blk->isSet(CacheBlk::ReadableBit))) {
         // OK to satisfy access
         incHitCount(pkt);
 
@@ -1293,8 +1296,8 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 void
 BaseCache::maintainClusivity(bool from_cache, CacheBlk *blk)
 {
-    if (from_cache && blk && blk->isValid() && !blk->isDirty() &&
-        clusivity == Enums::mostly_excl) {
+    if (from_cache && blk && blk->isValid() &&
+        !blk->isSet(CacheBlk::DirtyBit) && clusivity == Enums::mostly_excl) {
         // if we have responded to a cache, and our block is still
         // valid, but not dirty, and this cache is mostly exclusive
         // with respect to the cache above, drop the block
@@ -1345,7 +1348,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
     assert(blk->isSecure() == is_secure);
     assert(regenerateBlkAddr(blk) == addr);
 
-    blk->status |= BlkReadable;
+    blk->setCoherenceBits(CacheBlk::ReadableBit);
 
     // sanity check for whole-line writes, which should always be
     // marked as writable as part of the fill, and then later marked
@@ -1365,14 +1368,14 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
         // we could get a writable line from memory (rather than a
         // cache) even in a read-only cache, note that we set this bit
         // even for a read-only cache, possibly revisit this decision
-        blk->status |= BlkWritable;
+        blk->setCoherenceBits(CacheBlk::WritableBit);
 
         // check if we got this via cache-to-cache transfer (i.e., from a
         // cache that had the block in Modified or Owned state)
         if (pkt->cacheResponding()) {
             // we got the block in Modified state, and invalidated the
             // owners copy
-            blk->status |= BlkDirty;
+            blk->setCoherenceBits(CacheBlk::DirtyBit);
 
             chatty_assert(!isReadOnly, "Should never see dirty snoop response "
                           "in read-only cache %s\n", name());
@@ -1487,7 +1490,8 @@ BaseCache::writebackBlk(CacheBlk *blk)
 {
     chatty_assert(!isReadOnly || writebackClean,
                   "Writeback from read-only cache");
-    assert(blk && blk->isValid() && (blk->isDirty() || writebackClean));
+    assert(blk && blk->isValid() &&
+        (blk->isSet(CacheBlk::DirtyBit) || writebackClean));
 
     stats.writebacks[Request::wbRequestorId]++;
 
@@ -1500,23 +1504,24 @@ BaseCache::writebackBlk(CacheBlk *blk)
     req->taskId(blk->getTaskId());
 
     PacketPtr pkt =
-        new Packet(req, blk->isDirty() ?
+        new Packet(req, blk->isSet(CacheBlk::DirtyBit) ?
                    MemCmd::WritebackDirty : MemCmd::WritebackClean);
 
     DPRINTF(Cache, "Create Writeback %s writable: %d, dirty: %d\n",
-            pkt->print(), blk->isWritable(), blk->isDirty());
+        pkt->print(), blk->isSet(CacheBlk::WritableBit),
+        blk->isSet(CacheBlk::DirtyBit));
 
-    if (blk->isWritable()) {
+    if (blk->isSet(CacheBlk::WritableBit)) {
         // not asserting shared means we pass the block in modified
         // state, mark our own block non-writeable
-        blk->status &= ~BlkWritable;
+        blk->clearCoherenceBits(CacheBlk::WritableBit);
     } else {
         // we are in the Owned state, tell the receiver
         pkt->setHasSharers();
     }
 
     // make sure the block is not marked dirty
-    blk->status &= ~BlkDirty;
+    blk->clearCoherenceBits(CacheBlk::DirtyBit);
 
     pkt->allocate();
     pkt->setDataFromBlock(blk->data, blkSize);
@@ -1549,19 +1554,19 @@ BaseCache::writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id)
     }
 
     DPRINTF(Cache, "Create %s writable: %d, dirty: %d\n", pkt->print(),
-            blk->isWritable(), blk->isDirty());
+            blk->isSet(CacheBlk::WritableBit), blk->isSet(CacheBlk::DirtyBit));
 
-    if (blk->isWritable()) {
+    if (blk->isSet(CacheBlk::WritableBit)) {
         // not asserting shared means we pass the block in modified
         // state, mark our own block non-writeable
-        blk->status &= ~BlkWritable;
+        blk->clearCoherenceBits(CacheBlk::WritableBit);
     } else {
         // we are in the Owned state, tell the receiver
         pkt->setHasSharers();
     }
 
     // make sure the block is not marked dirty
-    blk->status &= ~BlkDirty;
+    blk->clearCoherenceBits(CacheBlk::DirtyBit);
 
     pkt->allocate();
     pkt->setDataFromBlock(blk->data, blkSize);
@@ -1591,7 +1596,8 @@ BaseCache::memInvalidate()
 bool
 BaseCache::isDirty() const
 {
-    return tags->anyBlk([](CacheBlk &blk) { return blk.isDirty(); });
+    return tags->anyBlk([](CacheBlk &blk) {
+        return blk.isSet(CacheBlk::DirtyBit); });
 }
 
 bool
@@ -1603,7 +1609,7 @@ BaseCache::coalesce() const
 void
 BaseCache::writebackVisitor(CacheBlk &blk)
 {
-    if (blk.isDirty()) {
+    if (blk.isSet(CacheBlk::DirtyBit)) {
         assert(blk.isValid());
 
         RequestPtr request = std::make_shared<Request>(
@@ -1619,19 +1625,19 @@ BaseCache::writebackVisitor(CacheBlk &blk)
 
         memSidePort.sendFunctional(&packet);
 
-        blk.status &= ~BlkDirty;
+        blk.clearCoherenceBits(CacheBlk::DirtyBit);
     }
 }
 
 void
 BaseCache::invalidateVisitor(CacheBlk &blk)
 {
-    if (blk.isDirty())
+    if (blk.isSet(CacheBlk::DirtyBit))
         warn_once("Invalidating dirty cache lines. " \
                   "Expect things to break.\n");
 
     if (blk.isValid()) {
-        assert(!blk.isDirty());
+        assert(!blk.isSet(CacheBlk::DirtyBit));
         invalidateBlock(&blk);
     }
 }
@@ -1707,7 +1713,7 @@ BaseCache::sendMSHRQueuePacket(MSHR* mshr)
     // as forwarded packets may already have existing state
     pkt->pushSenderState(mshr);
 
-    if (pkt->isClean() && blk && blk->isDirty()) {
+    if (pkt->isClean() && blk && blk->isSet(CacheBlk::DirtyBit)) {
         // A cache clean opearation is looking for a dirty block. Mark
         // the packet so that the destination xbar can determine that
         // there will be a follow-up write packet as well.
@@ -1738,7 +1744,7 @@ BaseCache::sendMSHRQueuePacket(MSHR* mshr)
             pkt->cacheResponding();
         markInService(mshr, pending_modified_resp);
 
-        if (pkt->isClean() && blk && blk->isDirty()) {
+        if (pkt->isClean() && blk && blk->isSet(CacheBlk::DirtyBit)) {
             // A cache clean opearation is looking for a dirty
             // block. If a dirty block is encountered a WriteClean
             // will update any copies to the path to the memory
@@ -2264,7 +2270,8 @@ BaseCache::CacheStats::regStats()
     overallAvgMshrUncacheableLatency =
         overallMshrUncacheableLatency / overallMshrUncacheable;
     for (int i = 0; i < max_requestors; i++) {
-        overallAvgMshrUncacheableLatency.subname(i, system->getRequestorName(i));
+        overallAvgMshrUncacheableLatency.subname(i,
+            system->getRequestorName(i));
     }
 
     dataExpansions.flags(nozero | nonan);

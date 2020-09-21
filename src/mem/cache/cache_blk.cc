@@ -48,7 +48,7 @@ CacheBlk::insert(const Addr tag, const bool is_secure,
                  const int src_requestor_ID, const uint32_t task_ID)
 {
     // Make sure that the block has been properly invalidated
-    assert(status == 0);
+    assert(!isValid());
 
     insert(tag, is_secure);
 
@@ -71,8 +71,8 @@ CacheBlkPrintWrapper::print(std::ostream &os, int verbosity,
 {
     ccprintf(os, "%sblk %c%c%c%c\n", prefix,
              blk->isValid()    ? 'V' : '-',
-             blk->isWritable() ? 'E' : '-',
-             blk->isDirty()    ? 'M' : '-',
+             blk->isSet(CacheBlk::WritableBit) ? 'E' : '-',
+             blk->isSet(CacheBlk::DirtyBit)    ? 'M' : '-',
              blk->isSecure()   ? 'S' : '-');
 }
 
