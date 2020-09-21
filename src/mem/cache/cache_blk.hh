@@ -107,9 +107,6 @@ class CacheBlk : public ReplaceableEntry
      */
     Tick whenReady;
 
-    /** holds the source requestor ID for this block. */
-    int srcRequestorId;
-
   protected:
     /**
      * Represents that the indicated thread context has a "lock" on
@@ -203,7 +200,7 @@ class CacheBlk : public ReplaceableEntry
         status = 0;
         whenReady = MaxTick;
         setRefCount(0);
-        srcRequestorId = Request::invldRequestorId;
+        setSrcRequestorId(Request::invldRequestorId);
         lockList.clear();
     }
 
@@ -292,6 +289,9 @@ class CacheBlk : public ReplaceableEntry
 
     /** Get the task id associated to this block. */
     uint32_t getTaskId() const { return _taskId; }
+
+    /** Get the requestor id associated to this block. */
+    uint32_t getSrcRequestorId() const { return _srcRequestorId; }
 
     /** Get the number of references to this block since insertion. */
     unsigned getRefCount() const { return _refCount; }
@@ -466,6 +466,9 @@ class CacheBlk : public ReplaceableEntry
     /** Set the task id value. */
     void setTaskId(const uint32_t task_id) { _taskId = task_id; }
 
+    /** Set the source requestor id. */
+    void setSrcRequestorId(const uint32_t id) { _srcRequestorId = id; }
+
     /** Set the number of references to this block since insertion. */
     void setRefCount(const unsigned count) { _refCount = count; }
 
@@ -478,6 +481,9 @@ class CacheBlk : public ReplaceableEntry
 
     /** Task Id associated with this block */
     uint32_t _taskId;
+
+    /** holds the source requestor ID for this block. */
+    int _srcRequestorId;
 
     /** Number of references to this block since it was brought in. */
     unsigned _refCount;

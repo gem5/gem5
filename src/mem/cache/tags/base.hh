@@ -253,7 +253,7 @@ class BaseTags : public ClockedObject
         assert(blk);
         assert(blk->isValid());
 
-        stats.occupancies[blk->srcRequestorId]--;
+        stats.occupancies[blk->getSrcRequestorId()]--;
         stats.totalRefs += blk->getRefCount();
         stats.sampledRefs++;
 
