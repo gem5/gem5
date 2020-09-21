@@ -63,7 +63,7 @@ CacheBlk::insert(const Addr tag, const bool is_secure,
     srcRequestorId = src_requestor_ID;
 
     // Set task ID
-    task_id = task_ID;
+    setTaskId(task_ID);
 
     // Set insertion tick as current tick
     tickInserted = curTick();

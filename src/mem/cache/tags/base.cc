@@ -148,8 +148,9 @@ void
 BaseTags::computeStatsVisitor(CacheBlk &blk)
 {
     if (blk.isValid()) {
-        assert(blk.task_id < ContextSwitchTaskId::NumTaskId);
-        stats.occupanciesTaskId[blk.task_id]++;
+        const uint32_t task_id = blk.getTaskId();
+        assert(task_id < ContextSwitchTaskId::NumTaskId);
+        stats.occupanciesTaskId[task_id]++;
         assert(blk.tickInserted <= curTick());
         Tick age = curTick() - blk.tickInserted;
 
@@ -165,7 +166,7 @@ BaseTags::computeStatsVisitor(CacheBlk &blk)
         } else
             age_index = 4; // >10ms
 
-        stats.ageTaskId[blk.task_id][age_index]++;
+        stats.ageTaskId[task_id][age_index]++;
     }
 }
 

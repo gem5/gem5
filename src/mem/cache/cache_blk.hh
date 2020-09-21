@@ -85,9 +85,6 @@ enum CacheBlkStatusBits : unsigned {
 class CacheBlk : public ReplaceableEntry
 {
   public:
-    /** Task Id associated with this block */
-    uint32_t task_id;
-
     /**
      * Contains a copy of the data in this block for easy access. This is used
      * for efficient execution when the data could be actually stored in
@@ -210,7 +207,7 @@ class CacheBlk : public ReplaceableEntry
     virtual void invalidate()
     {
         setTag(MaxAddr);
-        task_id = ContextSwitchTaskId::Unknown;
+        setTaskId(ContextSwitchTaskId::Unknown);
         status = 0;
         whenReady = MaxTick;
         refCount = 0;
@@ -300,6 +297,9 @@ class CacheBlk : public ReplaceableEntry
         assert(tick >= tickInserted);
         whenReady = tick;
     }
+
+    /** Get the task id associated to this block. */
+    uint32_t getTaskId() const { return _taskId; }
 
     /**
      * Checks if the given information corresponds to this block's.
@@ -452,9 +452,16 @@ class CacheBlk : public ReplaceableEntry
         }
     }
 
+  protected:
+    /** Set the task id value. */
+    void setTaskId(const uint32_t task_id) { _taskId = task_id; }
+
   private:
     /** Data block tag value. */
     Addr _tag;
+
+    /** Task Id associated with this block */
+    uint32_t _taskId;
 };
 
 /**

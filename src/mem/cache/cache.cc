@@ -917,7 +917,7 @@ Cache::cleanEvictBlk(CacheBlk *blk)
     if (blk->isSecure())
         req->setFlags(Request::SECURE);
 
-    req->taskId(blk->task_id);
+    req->taskId(blk->getTaskId());
 
     PacketPtr pkt = new Packet(req, MemCmd::CleanEvict);
     pkt->allocate();
