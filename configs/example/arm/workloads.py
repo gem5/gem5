@@ -47,7 +47,7 @@ from common.SysPaths import binary, disk
 
 class ArmBaremetal(ArmFsWorkload):
     """ Baremetal workload """
-    atags_addr = 0
+    dtb_addr = 0
 
     def __init__(self, obj, system, **kwargs):
         super(ArmBaremetal, self).__init__(**kwargs)
@@ -72,7 +72,7 @@ class ArmTrustedFirmware(ArmFsWorkload):
     https://github.com/ARM-software/arm-trusted-firmware
 
     """
-    atags_addr = 0
+    dtb_addr = 0
 
     def __init__(self, obj, system, **kwargs):
         super(ArmTrustedFirmware, self).__init__(**kwargs)

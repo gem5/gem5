@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016 ARM Limited
+ * Copyright (c) 2010-2013, 2016, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -92,7 +92,7 @@ FsLinux::initState()
         // Kernel supports flattened device tree and dtb file specified.
         // Using Device Tree Blob to describe system configuration.
         inform("Loading DTB file: %s at address %#x\n", params().dtb_filename,
-                params().atags_addr + _loadAddrOffset);
+                params().dtb_addr);
 
         auto *dtb_file = new ::Loader::DtbFile(params().dtb_filename);
 
@@ -102,9 +102,8 @@ FsLinux::initState()
                  params().dtb_filename);
         }
 
-        dtb_file->buildImage().
-            offset(params().atags_addr + _loadAddrOffset).
-            write(system->physProxy);
+        dtb_file->buildImage().offset(params().dtb_addr)
+            .write(system->physProxy);
         delete dtb_file;
     } else {
         // Using ATAGS
@@ -152,17 +151,27 @@ FsLinux::initState()
         DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
         DDUMP(Loader, boot_data, size << 2);
 
-        system->physProxy.writeBlob(params().atags_addr + _loadAddrOffset,
+        system->physProxy.writeBlob(params().dtb_addr + _loadAddrOffset,
                                     boot_data, size << 2);
 
         delete[] boot_data;
     }
 
-    // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
-    for (auto *tc: system->threads) {
-        tc->setIntReg(0, 0);
-        tc->setIntReg(1, params().machine_type);
-        tc->setIntReg(2, params().atags_addr + _loadAddrOffset);
+    if (getArch() == Loader::Arm64) {
+        // We inform the bootloader of the kernel entry point. This was added
+        // originally done because the entry offset changed in kernel v5.8.
+        // Previously the bootloader just used a hardcoded address.
+        for (auto *tc: system->threads) {
+            tc->setIntReg(0, params().dtb_addr);
+            tc->setIntReg(5, params().cpu_release_addr);
+        }
+    } else {
+        // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
+        for (auto *tc: system->threads) {
+            tc->setIntReg(0, 0);
+            tc->setIntReg(1, params().machine_type);
+            tc->setIntReg(2, params().dtb_addr + _loadAddrOffset);
+        }
     }
 }
 

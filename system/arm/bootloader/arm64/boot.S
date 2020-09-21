@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -40,6 +40,14 @@
 
         .globl	_start
 _start:
+        /* Save some values initialized by gem5. */
+        /* DTB address. */
+        mov x21, x0
+        /* Kernel entry point. */
+        mov x20, x3
+        /* cpu-release-addr. */
+        mov x22, x5
+
         /*
          * EL3 initialisation
          */
@@ -153,8 +161,19 @@ start_ns:
          * Secondary CPUs
          */
 1:	wfe
-        ldr	x4, =PHYS_OFFSET + 0xfff8
-        ldr     x4, [x4]
+        /* The Linux kernel v5.8 and older writes the entry point address
+         * of the secondary CPUs to this address, and does a SEV, waking up
+         * the secondary CPUs.
+         *
+         * gem5 informs the kernel the desired address via cpu-release-addr
+         * of the DTB.
+         *
+         * When this is first reached immediately after the bootloader starts,
+         * the value at that address must be 0, which is the default memory
+         * value set by gem5 for otherwise uninitialized memory, leading to
+         * WFE.
+         */
+        ldr x4, [x22]
         cbz	x4, 1b
         br	x4				// branch to the given address
 
@@ -180,9 +199,13 @@ start_ns:
         /*
          * Primary CPU
          */
-        ldr	x0, =PHYS_OFFSET + 0x8000000	 // device tree blob
-        ldr     x6, =PHYS_OFFSET + 0x80000       // kernel start address
-        br	x6
+        // The kernel boot protocol specifies that the DTB address is placed
+        // in x0.
+        // https://github.com/torvalds/linux/blob/v5.7/Documentation/arm64/
+        // booting.rst#4-call-the-kernel-image
+        mov x0, x21
+        // Jump into the kernel entry point.
+        br x20
 
         .ltorg
 

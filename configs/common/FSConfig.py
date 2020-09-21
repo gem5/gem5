@@ -250,7 +250,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
     if bare_metal:
         # EOT character on UART will end the simulation
         self.realview.uart[0].end_on_eot = True
-        self.workload = ArmFsWorkload(atags_addr=0)
+        self.workload = ArmFsWorkload(dtb_addr=0)
     else:
         workload = ArmFsLinux()
 
@@ -268,8 +268,6 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
 
         if hasattr(self.realview.gic, 'cpu_addr'):
             self.gic_cpu_addr = self.realview.gic.cpu_addr
-
-        self.flags_addr = self.realview.realview_io.pio_addr + 0x30
 
         # This check is for users who have previously put 'android' in
         # the disk image filename to tell the config scripts to

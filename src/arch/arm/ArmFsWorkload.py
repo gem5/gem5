@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2012-2013, 2015-2019 ARM Limited
+# Copyright (c) 2009, 2012-2013, 2015-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -57,11 +57,11 @@ class ArmFsWorkload(KernelWorkload):
 
     dtb_filename = Param.String("",
         "File that contains the Device Tree Blob. Don't use DTB if empty.")
+    dtb_addr = Param.Addr(0, "DTB or ATAGS address")
+    cpu_release_addr = Param.Addr(0, "cpu-release-addr property")
 
     machine_type = Param.ArmMachineType('DTOnly',
         "Machine id from http://www.arm.linux.org.uk/developer/machines/")
-    atags_addr = Param.Addr("Address where default atags structure should " \
-                                "be written")
     early_kernel_symbols = Param.Bool(False,
         "enable early kernel symbol tables before MMU")
     enable_context_switch_stats_dump = Param.Bool(False,

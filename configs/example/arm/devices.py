@@ -308,7 +308,6 @@ def simpleSystem(BaseSystem, caches, mem_size, platform=None, **kwargs):
 
             if hasattr(self.realview.gic, 'cpu_addr'):
                 self.gic_cpu_addr = self.realview.gic.cpu_addr
-            self.flags_addr = self.realview.realview_io.pio_addr + 0x30
 
             self.membus = MemBus()
 

@@ -34,11 +34,7 @@ BUILDDIR = .
 DESTDIR = $(error Please set DESTDIR to wanted installation directory)
 
 CFLAGS = -march=armv8-a
-CPPFLAGS = -DPHYS_OFFSET=0x80000000 \
-		   -DUART_BASE=0x1c090000 -DSYSREGS_BASE=0x1c010000 \
-		   -Dkernel=0x80080000 \
-		   -Dmbox=0x8000fff8 -Ddtb=0x80000100
-
+CPPFLAGS = -DUART_BASE=0x1c090000 -DSYSREGS_BASE=0x1c010000
 LDFLAGS = -N -Ttext 0x00000010 -static
 
 .PHONY: all clean install mkdir

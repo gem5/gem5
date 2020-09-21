@@ -48,7 +48,6 @@ class ArmSystem(System):
     cxx_header = "arch/arm/system.hh"
     multi_proc = Param.Bool(True, "Multiprocessor system?")
     gic_cpu_addr = Param.Addr(0, "Addres of the GIC CPU interface")
-    flags_addr = Param.Addr(0, "Address of the flags register for MP booting")
     have_security = Param.Bool(False,
         "True if Security Extensions are implemented")
     have_virtualization = Param.Bool(False,
