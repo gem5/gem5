@@ -659,6 +659,7 @@ mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc, uint32_t iss,
               case MISCREG_ID_MMFR1:
               case MISCREG_ID_MMFR2:
               case MISCREG_ID_MMFR3:
+              case MISCREG_ID_MMFR4:
               case MISCREG_ID_ISAR0:
               case MISCREG_ID_ISAR1:
               case MISCREG_ID_ISAR2:

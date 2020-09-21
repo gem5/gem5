@@ -72,6 +72,7 @@ class ArmISA(BaseISA):
     # SuperSec | Coherent TLB | Bcast Maint |
     # BP Maint | Cache Maint Set/way | Cache Maint MVA
     id_mmfr3 = Param.UInt32(0x02102211, "Memory Model Feature Register 3")
+    id_mmfr4 = Param.UInt32(0x00000000, "Memory Model Feature Register 4")
 
     # See section B4.1.84 of ARM ARM
     # All values are latest for ARMv7-A profile

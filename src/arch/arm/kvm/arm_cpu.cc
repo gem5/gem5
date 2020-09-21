@@ -157,6 +157,7 @@ static uint64_t invariant_reg_vector[] = {
     REG_CP32(15, 0, 0, 2, 3), // ID_ISAR3
     REG_CP32(15, 0, 0, 2, 4), // ID_ISAR4
     REG_CP32(15, 0, 0, 2, 5), // ID_ISAR5
+    REG_CP32(15, 0, 0, 2, 6), // ID_MMFR4
     REG_CP32(15, 0, 0, 2, 7), // ID_ISAR6
 
     REG_CP32(15, 0, 1, 0, 0), // CSSIDR

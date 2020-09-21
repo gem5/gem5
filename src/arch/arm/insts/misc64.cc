@@ -365,7 +365,7 @@ MiscRegOp64::checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
       case MISCREG_ID_MMFR1_EL1:
       case MISCREG_ID_MMFR2_EL1:
       case MISCREG_ID_MMFR3_EL1:
-      //case MISCREG_ID_MMFR4_EL1:
+      case MISCREG_ID_MMFR4_EL1:
       case MISCREG_ID_ISAR0_EL1:
       case MISCREG_ID_ISAR1_EL1:
       case MISCREG_ID_ISAR2_EL1:

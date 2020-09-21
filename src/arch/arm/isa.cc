@@ -350,6 +350,7 @@ ISA::initID32(const ArmISAParams &p)
     miscRegs[MISCREG_ID_MMFR1] = p.id_mmfr1;
     miscRegs[MISCREG_ID_MMFR2] = p.id_mmfr2;
     miscRegs[MISCREG_ID_MMFR3] = p.id_mmfr3;
+    miscRegs[MISCREG_ID_MMFR4] = p.id_mmfr4;
 
     miscRegs[MISCREG_ID_ISAR5] = insertBits(
         miscRegs[MISCREG_ID_ISAR5], 19, 4,
@@ -1391,6 +1392,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
           case MISCREG_ID_MMFR1:
           case MISCREG_ID_MMFR2:
           case MISCREG_ID_MMFR3:
+          case MISCREG_ID_MMFR4:
           case MISCREG_ID_ISAR0:
           case MISCREG_ID_ISAR1:
           case MISCREG_ID_ISAR2:

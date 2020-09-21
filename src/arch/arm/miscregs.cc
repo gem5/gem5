@@ -394,7 +394,7 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                   case 5:
                     return MISCREG_ID_ISAR5;
                   case 6:
-                    return MISCREG_RAZ; // read as zero
+                    return MISCREG_ID_MMFR4;
                   case 7:
                     return MISCREG_ID_ISAR6;
                 }
@@ -2070,6 +2070,8 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_ID_ISAR4_EL1;
                       case 5:
                         return MISCREG_ID_ISAR5_EL1;
+                      case 6:
+                        return MISCREG_ID_MMFR4_EL1;
                       case 7:
                         return MISCREG_ID_ISAR6_EL1;
                     }
@@ -3780,6 +3782,8 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_MMFR3)
       .allPrivileges().exceptUserMode().writes(0);
+    InitReg(MISCREG_ID_MMFR4)
+      .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_ISAR0)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_ISAR1)
@@ -4705,6 +4709,9 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_MMFR3_EL1)
       .allPrivileges().exceptUserMode().writes(0)
       .mapsTo(MISCREG_ID_MMFR3);
+    InitReg(MISCREG_ID_MMFR4_EL1)
+      .allPrivileges().exceptUserMode().writes(0)
+      .mapsTo(MISCREG_ID_MMFR4);
     InitReg(MISCREG_ID_ISAR0_EL1)
       .allPrivileges().exceptUserMode().writes(0)
       .mapsTo(MISCREG_ID_ISAR0);
