@@ -73,6 +73,7 @@ Source('trace.cc')
 GTest('trie.test', 'trie.test.cc')
 Source('types.cc')
 GTest('types.test', 'types.test.cc', 'types.cc')
+GTest('uncontended_mutex.test', 'uncontended_mutex.test.cc')
 
 Source('stats/group.cc')
 Source('stats/text.cc')

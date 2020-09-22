@@ -41,12 +41,12 @@
 #include <functional>
 #include <iosfwd>
 #include <memory>
-#include <mutex>
 #include <string>
 
 #include "base/debug.hh"
 #include "base/flags.hh"
 #include "base/types.hh"
+#include "base/uncontended_mutex.hh"
 #include "debug/Event.hh"
 #include "sim/serialize.hh"
 
@@ -622,7 +622,7 @@ class EventQueue
     Tick _curTick;
 
     //! Mutex to protect async queue.
-    std::mutex async_queue_mutex;
+    UncontendedMutex async_queue_mutex;
 
     //! List of events added by other threads to this event queue.
     std::list<Event*> async_queue;
@@ -647,7 +647,7 @@ class EventQueue
      * @see EventQueue::lock()
      * @see EventQueue::unlock()
      */
-    std::mutex service_mutex;
+    UncontendedMutex service_mutex;
 
     //! Insert / remove event from the queue. Should only be called
     //! by thread operating this queue.
