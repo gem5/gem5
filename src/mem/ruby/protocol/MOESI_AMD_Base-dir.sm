@@ -633,6 +633,18 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     }
   }
 
+  //This action profiles a hit or miss for a given request or write back.
+  //It should be called after l_queueMemRdReq, qdr_queueDmaRdReq, and al_allocateL3Block
+  //actions (where the tag has been checked and the L3Hit Flag is set) and before the TBE is
+  //deallocated in dt_deallocateTBE (only for WB) as it checks the L3Hit flag of the TBE entry.
+  action(pr_profileL3HitMiss, "pr_l3hm", desc="L3 Hit or Miss Profile") {
+    if (tbe.L3Hit) {
+      ++L3CacheMemory.demand_hits;
+    } else {
+      ++L3CacheMemory.demand_misses;
+    }
+  }
+
   action(icd_probeInvCoreDataForDMA, "icd", desc="Probe inv cores, return data for DMA") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
       enqueue(probeNetwork_out, NBProbeRequestMsg, response_latency) {
@@ -968,6 +980,11 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         APPEND_TRANSITION_COMMENT(" al wrote data to L3 (hit) ");
         entry.DataBlk := in_msg.DataBlk;
         entry.LastSender := in_msg.Sender;
+        assert(is_valid(tbe));
+        //The controller always allocates a TBE entry upon receipt of a request from L2 caches.
+        //L3Hit flag is used by the hit profiling action pr_profileL3HitMiss to determine hit or miss.
+        //A TBE entry is not deallocated until a request is fully serviced and profiled.
+        tbe.L3Hit := true;
       } else {
         if (L3CacheMemory.cacheAvail(address) == false) {
           Addr victim := L3CacheMemory.cacheProbe(address);
@@ -994,6 +1011,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   action(alwt_allocateL3BlockOnWT, "alwt", desc="allocate the L3 block on WT") {
     if ((tbe.wtData || tbe.atomicData) && useL3OnWT) {
+      //This tag check does not need to be counted as a hit or Miss, it has already been recorded.
       if (L3CacheMemory.isTagPresent(address)) {
         CacheEntry entry := static_cast(CacheEntry, "pointer", L3CacheMemory.lookup(address));
         APPEND_TRANSITION_COMMENT(" al wrote data to L3 (hit) ");
@@ -1109,6 +1127,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   transition(U, DmaRead, BDR_PM) {L3TagArrayRead} {
     atd_allocateTBEforDMA;
     qdr_queueDmaRdReq;
+    pr_profileL3HitMiss; //Must come after qdr_queueDmaRdReq
     scd_probeShrCoreDataForDma;
     pd_popDmaRequestQueue;
   }
@@ -1116,6 +1135,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   transition(U, {RdBlkS}, BS_PM) {L3TagArrayRead} {
     t_allocateTBE;
     l_queueMemRdReq;
+    pr_profileL3HitMiss; //Must come after l_queueMemRdReq
     sc_probeShrCoreData;
     p_popRequestQueue;
   }
@@ -1131,6 +1151,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     t_allocateTBE;
     w_sendResponseWBAck;
     l_queueMemRdReq;
+    pr_profileL3HitMiss; //Must come after l_queueMemRdReq
     dc_probeInvCoreData;
     p_popRequestQueue;
   }
@@ -1138,6 +1159,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   transition(U, Atomic, BM_PM) {L3TagArrayRead, L3TagArrayWrite} {
     t_allocateTBE;
     l_queueMemRdReq;
+    pr_profileL3HitMiss; //Must come after l_queueMemRdReq
     dc_probeInvCoreData;
     p_popRequestQueue;
   }
@@ -1145,6 +1167,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   transition(U, {RdBlkM}, BM_PM) {L3TagArrayRead} {
     t_allocateTBE;
     l_queueMemRdReq;
+    pr_profileL3HitMiss; //Must come after l_queueMemRdReq
     dc_probeInvCoreData;
     p_popRequestQueue;
   }
@@ -1152,6 +1175,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   transition(U, RdBlk, B_PM) {L3TagArrayRead}{
     t_allocateTBE;
     l_queueMemRdReq;
+    pr_profileL3HitMiss; //Must come after l_queueMemRdReq
     sc_probeShrCoreData;
     p_popRequestQueue;
   }
@@ -1181,6 +1205,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   transition(BL, CPUData, U) {L3TagArrayWrite, L3DataArrayWrite} {
     d_writeDataToMemory;
     al_allocateL3Block;
+    pr_profileL3HitMiss; //Must come after al_allocateL3Block and before dt_deallocateTBE
     wa_wakeUpDependents;
     dt_deallocateTBE;
     pr_popResponseQueue;
