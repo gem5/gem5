@@ -347,7 +347,6 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt)
 {
-    assert(!thread->htmCheckpoint->valid());
     thread->htmCheckpoint = std::move(new_cpt);
 }
 

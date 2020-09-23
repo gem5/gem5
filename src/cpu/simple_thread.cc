@@ -196,6 +196,5 @@ SimpleThread::getHtmCheckpointPtr()
 void
 SimpleThread::setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt)
 {
-    assert(!_htmCheckpoint->valid());
     _htmCheckpoint = std::move(new_cpt);
 }
