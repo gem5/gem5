@@ -1282,6 +1282,22 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
     ++L1Icache.demand_misses;
   }
 
+  action(l10h_profileHit, "l10h", desc="l10h hit profile") {
+    ++L1D0cache.demand_misses;
+  }
+
+  action(l11h_profileHit, "l11h", desc="l11h hit profile") {
+    ++L1D1cache.demand_misses;
+  }
+
+  action(l1ih_profileHit, "l1lh", desc="l1ih hit profile") {
+    ++L1Icache.demand_misses;
+  }
+
+  action(l2h_profileHit, "l2h", desc="l2h hit profile") {
+    ++L2cache.demand_misses;
+  }
+
   action(yy_recycleProbeQueue, "yy", desc="recycle probe queue") {
     probeNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
   }
@@ -1373,6 +1389,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(S, C0_Load_L1miss, S_F0) {L1D0TagArrayRead, L2TagArrayRead, L2DataArrayRead} {
     l10m_profileMiss;
+    l2h_profileHit;
     a0_allocateL1D;
     f0_L2ToL1;
     mru_setMRU;
@@ -1381,6 +1398,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(S, C1_Load_L1miss, S_F1) {L1D1TagArrayRead,L2TagArrayRead, L2DataArrayRead} {
     l11m_profileMiss;
+    l2h_profileHit;
     a1_allocateL1D;
     f1_L2ToL1;
     mru_setMRU;
@@ -1389,6 +1407,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(S, Ifetch0_L1miss, Si_F0) {L1ITagArrayRead, L2TagArrayRead, L2DataArrayRead} {
     l1im_profileMiss;
+    l2h_profileHit;
     ai_allocateL1I;
     fi_L2ToL1;
     mru_setMRU;
@@ -1397,6 +1416,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(S, Ifetch1_L1miss, Si_F1) {L1ITagArrayRead,L2TagArrayRead, L2DataArrayRead} {
     l1im_profileMiss;
+    l2h_profileHit;
     ai_allocateL1I;
     fi_L2ToL1;
     mru_setMRU;
@@ -1427,6 +1447,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(Es, C0_Load_L1miss, Es_F0) {L1D0TagArrayRead, L2TagArrayRead, L2DataArrayRead} {  // can this be folded with S_F?
     a0_allocateL1D;
+    l2h_profileHit;
     l10m_profileMiss;
     f0_L2ToL1;
     mru_setMRU;
@@ -1435,6 +1456,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(Es, C1_Load_L1miss, Es_F1) {L1D1TagArrayRead, L2TagArrayRead, L2DataArrayRead} {  // can this be folded with S_F?
     l11m_profileMiss;
+    l2h_profileHit;
     a1_allocateL1D;
     f1_L2ToL1;
     mru_setMRU;
@@ -1463,6 +1485,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   // THES SHOULD NOT BE INSTANTANEOUS BUT OH WELL FOR NOW
   transition(Es, {C0_Store_L1hit, C0_Store_L1miss}, M0) {L1D0TagArrayRead, L1D0TagArrayWrite, L1D0DataArrayWrite, L2TagArrayRead, L2TagArrayWrite, L2DataArrayWrite} {
+    l2h_profileHit;
+    l10h_profileHit; //Probably shouldnt be considered a hit, but its instantaneous so...
     a0_allocateL1D;
     i1_invCluster;
     s0_storeDone;   // instantaneous L1/L2 dirty - no writethrough delay
@@ -1472,6 +1496,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(Es, {C1_Store_L1hit, C1_Store_L1miss}, M1) {L1D1TagArrayRead, L1D1TagArrayWrite, L1D1DataArrayWrite, L2TagArrayRead, L2TagArrayWrite, L2DataArrayWrite} {
+    l2h_profileHit;
+    l11h_profileHit; //Probably shouldnt be considered a hit, but its instantaneous so...
     a1_allocateL1D;
     i0_invCluster;
     s1_storeDone;
@@ -1482,6 +1508,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(E0, C0_Load_L1miss, E0_F) {L1D0TagArrayRead,L2TagArrayRead, L2DataArrayRead} {
     l10m_profileMiss;
+    l2h_profileHit;
     a0_allocateL1D;
     f0_L2ToL1;
     mru_setMRU;
@@ -1490,6 +1517,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(E0, C1_Load_L1miss, E0_Es) {L1D1TagArrayRead,  L2TagArrayRead, L2DataArrayRead} {
     l11m_profileMiss;
+    l2h_profileHit;
     a1_allocateL1D;
     f1_L2ToL1;
     mru_setMRU;
@@ -1519,6 +1547,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(E0, {C0_Store_L1hit, C0_Store_L1miss}, M0) {L1D0TagArrayRead, L1D0DataArrayWrite, L1D0TagArrayWrite, L2TagArrayRead, L2DataArrayWrite, L2TagArrayWrite} {
+    l2h_profileHit;
+    l10h_profileHit; //Probably shouldnt be considered a hit, but its instantaneous so...maybe its ok bc its the same controller?
     a0_allocateL1D;
     s0_storeDone;
     mruD0_setD0cacheMRU;
@@ -1527,6 +1557,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(E0, C1_Store_L1miss, M1) {L1D1TagArrayRead, L1D1TagArrayWrite, L1D1TagArrayWrite, L2TagArrayRead, L2TagArrayWrite, L2DataArrayWrite} {
+    l2h_profileHit;
     l11m_profileMiss;
     a1_allocateL1D;
     i0_invCluster;
@@ -1536,7 +1567,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(E1, C1_Load_L1miss, E1_F) {L1D1TagArrayRead, L2TagArrayRead, L2DataArrayRead} {
-     l11m_profileMiss;
+    l2h_profileHit;
+    l11m_profileMiss;
     a1_allocateL1D;
     f1_L2ToL1;
     mru_setMRU;
@@ -1544,7 +1576,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(E1, C0_Load_L1miss, E1_Es) {L1D0TagArrayRead,  L2TagArrayRead, L2DataArrayRead} {
-    l11m_profileMiss;
+    l10m_profileMiss;
+    l2h_profileHit;
     a0_allocateL1D;
     f0_L2ToL1;
     mru_setMRU;
@@ -1574,6 +1607,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(E1, {C1_Store_L1hit, C1_Store_L1miss}, M1) {L1D1TagArrayRead, L2TagArrayRead, L2DataArrayWrite, L1D1TagArrayWrite, L2TagArrayWrite} {
+    l2h_profileHit;
+    l11h_profileHit; //Probably shouldnt be considered a hit, but its instantaneous so...maybe its ok bc its the same controller?
     a1_allocateL1D;
     s1_storeDone;
     mruD1_setD1cacheMRU;
@@ -1582,7 +1617,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(E1, C0_Store_L1miss, M0) {L1D0TagArrayRead, L2TagArrayRead, L2TagArrayWrite, L1D0TagArrayWrite, L1D0DataArrayWrite, L2DataArrayWrite} {
-     l10m_profileMiss;
+    l2h_profileHit;
+    l10m_profileMiss;
     a0_allocateL1D;
     i1_invCluster;
     s0_storeDone;
@@ -1614,6 +1650,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(O, C0_Load_L1miss, O_F0) {L2TagArrayRead, L2DataArrayRead, L1D0TagArrayRead} {
     l10m_profileMiss;
+    l2h_profileHit;
     a0_allocateL1D;
     f0_L2ToL1;
     mru_setMRU;
@@ -1622,6 +1659,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(O, C1_Load_L1miss, O_F1) {L2TagArrayRead, L2DataArrayRead, L1D1TagArrayRead} {
      l11m_profileMiss;
+    l2h_profileHit;
     a1_allocateL1D;
     f1_L2ToL1;
     mru_setMRU;
@@ -1630,6 +1668,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(Ms, C0_Load_L1miss, Ms_F0) {L2TagArrayRead, L2DataArrayRead, L1D0TagArrayRead} {
     l10m_profileMiss;
+    l2h_profileHit;
     a0_allocateL1D;
     f0_L2ToL1;
     mru_setMRU;
@@ -1638,6 +1677,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(Ms, C1_Load_L1miss, Ms_F1) {L2TagArrayRead, L2DataArrayRead, L1D1TagArrayRead} {
     l11m_profileMiss;
+    l2h_profileHit;
     a1_allocateL1D;
     f1_L2ToL1;
     mru_setMRU;
@@ -1667,6 +1707,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(Ms, {C0_Store_L1hit, C0_Store_L1miss}, M0) {L1D0TagArrayRead, L1D0TagArrayWrite, L1D0DataArrayWrite, L2TagArrayRead, L2DataArrayWrite, L2TagArrayWrite} {
+    l2h_profileHit;
+    l10h_profileHit; //Probably shouldnt be considered a hit, but its instantaneous so...maybe its ok bc its the same controller?
     a0_allocateL1D;
     i1_invCluster;
     s0_storeDone;
@@ -1676,6 +1718,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(Ms, {C1_Store_L1hit, C1_Store_L1miss}, M1) {L1D1TagArrayRead, L1D1TagArrayWrite, L1D1DataArrayWrite, L2TagArrayRead, L2DataArrayWrite, L2TagArrayWrite} {
+    l2h_profileHit;
+    l11h_profileHit; //Probably shouldnt be considered a hit, but its instantaneous so...maybe its ok bc its the same controller?
     a1_allocateL1D;
     i0_invCluster;
     s1_storeDone;
@@ -1685,15 +1729,17 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(M0, C0_Load_L1miss, M0_F) {L1D0TagArrayRead, L2TagArrayRead, L2DataArrayRead} {
-     l10m_profileMiss;
+    l10m_profileMiss;
+    l2h_profileHit;
     a0_allocateL1D;
     f0_L2ToL1;
     mru_setMRU;
     p_popMandatoryQueue;
   }
 
-  transition(M0, C1_Load_L1miss, M0_Ms) {L2TagArrayRead, L2DataArrayRead,L1D0TagArrayRead} {
+  transition(M0, C1_Load_L1miss, M0_Ms) {L2TagArrayRead, L2DataArrayRead,L1D1TagArrayRead} {
     l11m_profileMiss;
+    l2h_profileHit;
     a1_allocateL1D;
     f1_L2ToL1;
     mru_setMRU;
@@ -1701,6 +1747,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(M0, {C0_Store_L1hit, C0_Store_L1miss}) {L1D0TagArrayRead,L1D0DataArrayWrite, L2DataArrayWrite, L2TagArrayRead} {
+    l2h_profileHit;
+    l10h_profileHit; //Probably shouldnt be considered a hit, but its instantaneous so...maybe its ok bc its the same controller?
     a0_allocateL1D;
     s0_storeDone;
     mruD0_setD0cacheMRU;
@@ -1709,6 +1757,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(M0, {C1_Store_L1hit, C1_Store_L1miss}, M1) {L1D1TagArrayRead, L1D1TagArrayWrite, L1D0DataArrayWrite, L2DataArrayWrite, L2TagArrayRead, L2TagArrayWrite} {
+    l2h_profileHit;
+    l11h_profileHit; //Probably shouldnt be considered a hit, but its instantaneous so...maybe its ok bc its the same controller?
     a1_allocateL1D;
     i0_invCluster;
     s1_storeDone;
@@ -1719,13 +1769,16 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(M1, C0_Load_L1miss, M1_Ms) {L2TagArrayRead, L2DataArrayRead, L1D0TagArrayRead} {
     l10m_profileMiss;
+    l2h_profileHit;
     a0_allocateL1D;
     f0_L2ToL1;
     mru_setMRU;
     p_popMandatoryQueue;
   }
 
-  transition(M1, C1_Load_L1miss, M1_F) {L1D1TagArrayRead,L2TagArrayRead, L2DataArrayRead} {
+  transition(M1, C1_Load_L1miss, M1_F) {L1D1TagArrayRead, L2TagArrayRead, L2DataArrayRead} {
+    l11m_profileMiss;
+    l2h_profileHit;
     a1_allocateL1D;
     f1_L2ToL1;
     mru_setMRU;
@@ -1733,6 +1786,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(M1, {C0_Store_L1hit, C0_Store_L1miss}, M0) {L1D0TagArrayRead, L1D0TagArrayWrite, L1D0DataArrayWrite, L2TagArrayRead, L2DataArrayWrite, L2TagArrayWrite} {
+    l2h_profileHit;
+    l10h_profileHit; //Probably shouldnt be considered a hit, but its instantaneous so...maybe its ok bc its the same controller?
     a0_allocateL1D;
     i1_invCluster;
     s0_storeDone;
@@ -1742,6 +1797,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(M1, {C1_Store_L1hit, C1_Store_L1miss}) {L1D1TagArrayRead, L2TagArrayRead, L2DataArrayWrite} {
+    l2h_profileHit;
+    l11h_profileHit; //Probably shouldnt be considered a hit, but its instantaneous so...maybe its ok bc its the same controller?
     a1_allocateL1D;
     s1_storeDone;
     mruD1_setD1cacheMRU;
@@ -1755,6 +1812,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   transition({S, Es, E0, O, Ms, M0, O_F1, S_F1, Si_F0, Si_F1, Es_F1, E0_Es,
           Ms_F1, M0_Ms}, C0_Load_L1hit) {L1D0TagArrayRead, L1D0DataArrayRead} {
     // track hits, if implemented
+    l10h_profileHit;
     l0_loadDone;
     mruD0_setD0cacheMRU;
     p_popMandatoryQueue;
@@ -1763,6 +1821,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   transition({S, Es, E1, O, Ms, M1, O_F0, S_F0, Si_F0, Si_F1, Es_F0, E1_Es,
           Ms_F0, M1_Ms}, C1_Load_L1hit) {L1D1TagArrayRead, L1D1DataArrayRead} {
     // track hits, if implemented
+    l11h_profileHit;
     l1_loadDone;
     mruD1_setD1cacheMRU;
     p_popMandatoryQueue;
@@ -1770,6 +1829,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition({S, S_C, S_F0, S_F1, S_F}, Ifetch0_L1hit) {L1ITagArrayRead, L1IDataArrayRead} {
     // track hits, if implemented
+    l1ih_profileHit;
     il0_loadDone;
     mruI_setIcacheMRU;
     p_popMandatoryQueue;
@@ -1777,6 +1837,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition({S, S_C, S_F0, S_F1, S_F}, Ifetch1_L1hit) {L1ITagArrayRead, L1IDataArrayWrite} {
     // track hits, if implemented
+    l1ih_profileHit;
     il1_loadDone;
     mruI_setIcacheMRU;
     p_popMandatoryQueue;
@@ -1876,6 +1937,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition({E0_Es, E1_F, Es_F1}, C0_Load_L1miss, Es_F) {L2DataArrayRead} {
     l10m_profileMiss;
+    l2h_profileHit;
     a0_allocateL1D;
     f0_L2ToL1;
     p_popMandatoryQueue;
@@ -1883,6 +1945,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(S_F1, C0_Load_L1miss, S_F) {L2DataArrayRead} {
     l10m_profileMiss;
+    l2h_profileHit;
     a0_allocateL1D;
     f0_L2ToL1;
     p_popMandatoryQueue;
@@ -1890,6 +1953,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(O_F1, C0_Load_L1miss, O_F) {L2DataArrayRead} {
     l10m_profileMiss;
+    l2h_profileHit;
     a0_allocateL1D;
     f0_L2ToL1;
     p_popMandatoryQueue;
@@ -1897,6 +1961,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition({Ms_F1, M0_Ms, M1_F}, C0_Load_L1miss, Ms_F) {L2DataArrayRead} {
     l10m_profileMiss;
+    l2h_profileHit;
     a0_allocateL1D;
     f0_L2ToL1;
     p_popMandatoryQueue;
@@ -1950,6 +2015,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition({E1_Es, E0_F, Es_F0}, C1_Load_L1miss, Es_F) {L2DataArrayRead} {
     l11m_profileMiss;
+    l2h_profileHit;
     a1_allocateL1D;
     f1_L2ToL1;
     p_popMandatoryQueue;
@@ -1957,6 +2023,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(S_F0, C1_Load_L1miss, S_F) {L2DataArrayRead} {
     l11m_profileMiss;
+    l2h_profileHit;
     a1_allocateL1D;
     f1_L2ToL1;
     p_popMandatoryQueue;
@@ -1964,6 +2031,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition(O_F0, C1_Load_L1miss, O_F) {L2DataArrayRead} {
     l11m_profileMiss;
+    l2h_profileHit;
     a1_allocateL1D;
     f1_L2ToL1;
     p_popMandatoryQueue;
@@ -1971,6 +2039,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   transition({Ms_F0, M1_Ms, M0_F}, C1_Load_L1miss, Ms_F) { L2DataArrayRead} {
     l11m_profileMiss;
+    l2h_profileHit;
     a1_allocateL1D;
     f1_L2ToL1;
     p_popMandatoryQueue;
