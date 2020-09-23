@@ -463,8 +463,9 @@ void
 TLB::flush(const TLBIIPA &tlbi_op)
 {
     assert(!isStage2);
-    stage2Tlb->_flushMva(tlbi_op.addr, 0xbeef, tlbi_op.secureLookup,
-        true, tlbi_op.targetEL, false);
+
+    // Note, TLBIIPA::makeStage2 will generare a TLBIMVAA
+    stage2Tlb->flush(tlbi_op.makeStage2());
 }
 
 void

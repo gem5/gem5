@@ -292,6 +292,13 @@ class TLBIIPA : public TLBIOp
 
     void operator()(ThreadContext* tc) override;
 
+    /** TLBIIPA is basically a TLBIMVAA for stage2 TLBs */
+    TLBIMVAA
+    makeStage2() const
+    {
+        return TLBIMVAA(EL1, secureLookup, addr);
+    }
+
     Addr addr;
 };
 
