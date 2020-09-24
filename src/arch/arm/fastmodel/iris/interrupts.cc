@@ -28,7 +28,7 @@
 #include "arch/arm/fastmodel/iris/interrupts.hh"
 
 #include "arch/arm/fastmodel/iris/thread_context.hh"
-#include "arch/arm/isa_traits.hh"
+#include "arch/arm/interrupts.hh"
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/miscregs_types.hh"
 #include "arch/arm/types.hh"
@@ -86,12 +86,12 @@ Iris::Interrupts::serialize(CheckpointOut &cp) const
     for (bool &i: interrupts)
         i = false;
 
-    interrupts[INT_ABT] = phys_abort;
-    interrupts[INT_IRQ] = phys_irq;
-    interrupts[INT_FIQ] = phys_fiq;
-    interrupts[INT_SEV] = tc->readMiscReg(MISCREG_SEV_MAILBOX);
-    interrupts[INT_VIRT_IRQ] = virt_irq;
-    interrupts[INT_VIRT_FIQ] = virt_fiq;
+    interrupts[ArmISA::INT_ABT] = phys_abort;
+    interrupts[ArmISA::INT_IRQ] = phys_irq;
+    interrupts[ArmISA::INT_FIQ] = phys_fiq;
+    interrupts[ArmISA::INT_SEV] = tc->readMiscReg(MISCREG_SEV_MAILBOX);
+    interrupts[ArmISA::INT_VIRT_IRQ] = virt_irq;
+    interrupts[ArmISA::INT_VIRT_FIQ] = virt_fiq;
 
     for (int i = 0; i < NumInterruptTypes; i++) {
         if (interrupts[i])
