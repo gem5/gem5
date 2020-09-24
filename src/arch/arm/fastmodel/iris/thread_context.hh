@@ -445,12 +445,6 @@ class ThreadContext : public ::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    void
-    syscall() override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-
     /** @{ */
     /**
      * Flat register interfaces
@@ -517,6 +511,24 @@ class ThreadContext : public ::ThreadContext
     void setCCRegFlat(RegIndex idx, RegVal val) override;
     /** @} */
 
+    // hardware transactional memory
+    void
+    htmAbortTransaction(uint64_t htm_uid, HtmFailureFaultCause cause) override
+    {
+        panic("%s not implemented.", __FUNCTION__);
+    }
+
+    BaseHTMCheckpointPtr &
+    getHtmCheckpointPtr() override
+    {
+        panic("%s not implemented.", __FUNCTION__);
+    }
+
+    void
+    setHtmCheckpointPtr(BaseHTMCheckpointPtr cpt) override
+    {
+        panic("%s not implemented.", __FUNCTION__);
+    }
 };
 
 } // namespace Iris
