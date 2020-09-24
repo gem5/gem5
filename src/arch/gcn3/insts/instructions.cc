@@ -32522,6 +32522,7 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()
                                 ->cyclesToTicks(Cycles(24)));
@@ -32593,6 +32594,7 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()
                                 ->cyclesToTicks(Cycles(24)));
