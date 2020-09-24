@@ -39,7 +39,8 @@ from m5.SimObject import *
 from m5.params import *
 from m5.params import isNullPointer
 from m5.proxy import *
-from m5.objects.Gic import ArmInterruptPin
+from m5.objects.Gic import ArmInterruptPin, ArmPPI
+from m5.util.fdthelper import *
 
 class ProbeEvent(object):
     def __init__(self, pmu, _eventId, obj, *listOfNames):
@@ -167,6 +168,21 @@ class ArmPMU(SimObject):
         # 0x2E: L2I_TLB_REFILL
         # 0x2F: L2D_TLB
         # 0x30: L2I_TLB
+
+    def generateDeviceTree(self, state):
+        # For simplicity we just support PPIs for DTB autogen otherwise
+        # it would be difficult to construct a ordered list of SPIs
+        assert isinstance(self.interrupt, ArmPPI)
+
+        node = FdtNode("pmu")
+        node.appendCompatible("arm,armv8-pmuv3")
+
+        gic = self.platform.unproxy(self).gic
+        node.append(
+            FdtPropertyWords("interrupts",
+                self.interrupt.generateFdtProperty(gic)))
+
+        yield node
 
     cycleEventId = Param.Int(ARCH_EVENT_CORE_CYCLES, "Cycle event id")
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
