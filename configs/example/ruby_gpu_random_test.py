@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2015 Advanced Micro Devices, Inc.
+# Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # For use for simulation and test purposes only
@@ -43,103 +43,199 @@ addToPath('../')
 from common import Options
 from ruby import Ruby
 
-# Get paths we might need.
-config_path = os.path.dirname(os.path.abspath(__file__))
-config_root = os.path.dirname(config_path)
-m5_root = os.path.dirname(config_root)
-
-parser = optparse.OptionParser()
-Options.addNoISAOptions(parser)
-
-parser.add_option("--maxloads", metavar="N", default=100,
-                  help="Stop after N loads")
-parser.add_option("-f", "--wakeup_freq", metavar="N", default=10,
-                  help="Wakeup every N cycles")
-parser.add_option("-u", "--num-compute-units", type="int", default=1,
-                  help="number of compute units in the GPU")
-parser.add_option("--num-cp", type="int", default=0,
-                  help="Number of GPU Command Processors (CP)")
-# not super important now, but to avoid putting the number 4 everywhere, make
-# it an option/knob
-parser.add_option("--cu-per-sqc", type="int", default=4, help="number of CUs \
-                  sharing an SQC (icache, and thus icache TLB)")
-parser.add_option("--simds-per-cu", type="int", default=4, help="SIMD units" \
-                  "per CU")
-parser.add_option("--wf-size", type="int", default=64,
-                  help="Wavefront size(in workitems)")
-parser.add_option("--wfs-per-simd", type="int", default=10, help="Number of " \
-                  "WF slots per SIMD")
-
 #
 # Add the ruby specific and protocol specific options
 #
+parser = optparse.OptionParser()
+Options.addNoISAOptions(parser)
 Ruby.define_options(parser)
 
-exec(compile( \
-    open(os.path.join(config_root, "common", "Options.py")).read(), \
-    os.path.join(config_root, "common", "Options.py"), 'exec'))
+# GPU Ruby tester options
+parser.add_option("--cache-size", type="choice", default="small",
+                  choices=["small", "large"],
+                  help="Cache sizes to use. Small encourages races between \
+                        requests and writebacks. Large stresses write-through \
+                        and/or write-back GPU caches.")
+parser.add_option("--system-size", type="choice", default="small",
+                  choices=["small", "medium", "large"],
+                  help="This option defines how many CUs, CPUs and cache \
+                        components in the test system.")
+parser.add_option("--address-range", type="choice", default="small",
+                  choices=["small", "large"],
+                  help="This option defines the number of atomic \
+                        locations that affects the working set's size. \
+                        A small number of atomic locations encourage more \
+                        races among threads. The large option stresses cache \
+                        resources.")
+parser.add_option("--episode-length", type="choice", default="short",
+                  choices=["short", "medium", "long"],
+                  help="This option defines the number of LDs and \
+                        STs in an episode. The small option encourages races \
+                        between the start and end of an episode. The long \
+                        option encourages races between LDs and STs in the \
+                        same episode.")
+parser.add_option("--test-length", type="int", default=1,
+                  help="The number of episodes to be executed by each \
+                        wavefront. This determines the maximum number, i.e., \
+                        val X #WFs, of episodes to be executed in the test.")
+parser.add_option("--debug-tester", action='store_true',
+                  help="This option will turn on DRF checker")
+parser.add_option("--random-seed", type="int", default=0,
+                  help="Random seed number. Default value (i.e., 0) means \
+                        using runtime-specific value")
+parser.add_option("--log-file", type="string", default="gpu-ruby-test.log")
 
 (options, args) = parser.parse_args()
-
-#
-# Set the default cache size and associativity to be very small to encourage
-# races between requests and writebacks.
-#
-options.l1d_size="256B"
-options.l1i_size="256B"
-options.l2_size="512B"
-options.l3_size="1kB"
-options.l1d_assoc=2
-options.l1i_assoc=2
-options.l2_assoc=2
-options.l3_assoc=2
-
-# This file can support multiple compute units
-assert(options.num_compute_units >= 1)
-n_cu = options.num_compute_units
-
-options.num_sqc = int((n_cu + options.cu_per_sqc - 1) // options.cu_per_sqc)
 
 if args:
      print("Error: script doesn't take any positional arguments")
      sys.exit(1)
 
 #
-# Create the ruby random tester
+# Set up cache size - 2 options
+#   0: small cache
+#   1: large cache
 #
-
-# Check to for the GPU_RfO protocol.  Other GPU protocols are non-SC and will
-# not work with the Ruby random tester.
-assert(buildEnv['PROTOCOL'] == 'GPU_RfO')
-
-# The GPU_RfO protocol does not support cache flushes
-check_flush = False
-
-tester = RubyTester(check_flush=check_flush,
-                    checks_to_complete=options.maxloads,
-                    wakeup_frequency=options.wakeup_freq,
-                    deadlock_threshold=1000000)
+if (options.cache_size == "small"):
+    options.tcp_size="256B"
+    options.tcp_assoc=2
+    options.tcc_size="1kB"
+    options.tcc_assoc=2
+elif (options.cache_size == "large"):
+    options.tcp_size="256kB"
+    options.tcp_assoc=16
+    options.tcc_size="1024kB"
+    options.tcc_assoc=16
 
 #
-# Create the M5 system.  Note that the Memory Object isn't
-# actually used by the rubytester, but is included to support the
-# M5 memory size == Ruby memory size checks
+# Set up system size - 3 options
 #
-system = System(cpu=tester, mem_ranges=[AddrRange(options.mem_size)])
+if (options.system_size == "small"):
+    # 1 CU, 1 CPU, 1 SQC, 1 Scalar
+    options.wf_size = 1
+    options.wavefronts_per_cu = 1
+    options.num_cpus = 1
+    options.cu_per_sqc = 1
+    options.cu_per_scalar_cache = 1
+    options.num_compute_units = 1
+elif (options.system_size == "medium"):
+    # 4 CUs, 4 CPUs, 1 SQCs, 1 Scalars
+    options.wf_size = 16
+    options.wavefronts_per_cu = 4
+    options.num_cpus = 4
+    options.cu_per_sqc = 4
+    options.cu_per_scalar_cache = 4
+    options.num_compute_units = 4
+elif (options.system_size == "large"):
+    # 8 CUs, 4 CPUs, 1 SQCs, 1 Scalars
+    options.wf_size = 32
+    options.wavefronts_per_cu = 4
+    options.num_cpus = 4
+    options.cu_per_sqc = 4
+    options.cu_per_scalar_cache = 4
+    options.num_compute_units = 8
 
-# Create a top-level voltage domain and clock domain
-system.voltage_domain = VoltageDomain(voltage=options.sys_voltage)
+#
+# Set address range - 2 options
+#   level 0: small
+#   level 1: large
+# Each location corresponds to a 4-byte piece of data
+#
+options.mem_size = '1024MB'
+if (options.address_range == "small"):
+    num_atomic_locs = 10
+    num_regular_locs_per_atomic_loc = 10000
+elif (options.address_range == "large"):
+    num_atomic_locs = 100
+    num_regular_locs_per_atomic_loc = 100000
 
-system.clk_domain = SrcClockDomain(clock=options.sys_clock,
-                                   voltage_domain=system.voltage_domain)
+#
+# Set episode length (# of actions per episode) - 3 options
+#   0: 10 actions
+#   1: 100 actions
+#   2: 500 actions
+#
+if (options.episode_length == "short"):
+    eps_length = 10
+elif (options.episode_length == "medium"):
+    eps_length = 100
+elif (options.episode_length == "long"):
+    eps_length = 500
 
+#
+# Set Ruby and tester deadlock thresholds. Ruby's deadlock detection is the
+# primary check for deadlocks. The tester's deadlock threshold detection is
+# a secondary check for deadlock. If there is a bug in RubyPort that causes
+# a packet not to return to the tester properly, the tester will issue a
+# deadlock panic. We set cache_deadlock_threshold < tester_deadlock_threshold
+# to detect deadlock caused by Ruby protocol first before one caused by the
+# coalescer. Both units are in Ticks
+#
+options.cache_deadlock_threshold = 1e8
+tester_deadlock_threshold = 1e9
+
+# For now we're testing only GPU protocol, so we force num_cpus to be 0
+options.num_cpus = 0
+
+# Number of CUs
+n_CUs = options.num_compute_units
+
+# Set test length, i.e., number of episodes per wavefront * #WFs.
+# Test length can be 1x#WFs, 10x#WFs, 100x#WFs, ...
+n_WFs = n_CUs * options.wavefronts_per_cu
+max_episodes = options.test_length * n_WFs
+
+# Number of SQC and Scalar caches
+assert(n_CUs % options.cu_per_sqc == 0)
+n_SQCs = n_CUs // options.cu_per_sqc
+options.num_sqc = n_SQCs
+
+assert(options.cu_per_scalar_cache != 0)
+n_Scalars = n_CUs // options.cu_per_scalar_cache
+options.num_scalar_cache = n_Scalars
+
+#
+# Create GPU Ruby random tester
+#
+tester = ProtocolTester(cus_per_sqc = options.cu_per_sqc,
+                        cus_per_scalar = options.cu_per_scalar_cache,
+                        wavefronts_per_cu = options.wavefronts_per_cu,
+                        workitems_per_wavefront = options.wf_size,
+                        num_atomic_locations = num_atomic_locs,
+                        num_normal_locs_per_atomic = \
+                                          num_regular_locs_per_atomic_loc,
+                        max_num_episodes = max_episodes,
+                        episode_length = eps_length,
+                        debug_tester = options.debug_tester,
+                        random_seed = options.random_seed,
+                        log_file = options.log_file)
+
+#
+# Create a gem5 system. Note that the memory object isn't actually used by the
+# tester, but is included to ensure the gem5 memory size == Ruby memory size
+# checks. The system doesn't have real CPUs or CUs. It just has a tester that
+# has physical ports to be connected to Ruby
+#
+system = System(cpu = tester,
+                mem_ranges = [AddrRange(options.mem_size)],
+                cache_line_size = options.cacheline_size,
+                mem_mode = 'timing')
+
+system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
+system.clk_domain = SrcClockDomain(clock = options.sys_clock,
+                                   voltage_domain = system.voltage_domain)
+
+#
+# Command processor is not needed for the tester since we don't run real
+# kernels. Setting it to zero disables the VIPER protocol from creating
+# a command processor and its caches.
+#
+options.num_cp = 0
+
+#
+# Create the Ruby system
+#
 Ruby.create_system(options, False, system)
-
-# Create a seperate clock domain for Ruby
-system.ruby.clk_domain = SrcClockDomain(clock=options.ruby_clock,
-                                       voltage_domain=system.voltage_domain)
-
-tester.num_cpus = len(system.ruby._cpu_ports)
 
 #
 # The tester is most effective when randomization is turned on and
@@ -147,41 +243,72 @@ tester.num_cpus = len(system.ruby._cpu_ports)
 #
 system.ruby.randomization = True
 
-for ruby_port in system.ruby._cpu_ports:
+# Assert that we got the right number of Ruby ports
+assert(len(system.ruby._cpu_ports) == n_CUs + n_SQCs + n_Scalars)
 
-    #
-    # Tie the ruby tester ports to the ruby cpu read and write ports
-    #
-    if ruby_port.support_data_reqs and ruby_port.support_inst_reqs:
-        tester.cpuInstDataPort = ruby_port.slave
-    elif ruby_port.support_data_reqs:
-        tester.cpuDataPort = ruby_port.slave
-    elif ruby_port.support_inst_reqs:
-        tester.cpuInstPort = ruby_port.slave
-
-    # Do not automatically retry stalled Ruby requests
+#
+# Attach Ruby ports to the tester in the order:
+#               cpu_sequencers,
+#               vector_coalescers,
+#               sqc_sequencers,
+#               scalar_sequencers
+#
+# Note that this requires the protocol to create sequencers in this order
+#
+print("Attaching ruby ports to the tester")
+for i, ruby_port in enumerate(system.ruby._cpu_ports):
     ruby_port.no_retry_on_stall = True
-
-    #
-    # Tell each sequencer this is the ruby tester so that it
-    # copies the subblock back to the checker
-    #
     ruby_port.using_ruby_tester = True
 
-# -----------------------
-# run simulation
-# -----------------------
+    if i < n_CUs:
+        tester.cu_vector_ports = ruby_port.in_ports
+        tester.cu_token_ports = ruby_port.gmTokenPort
+        tester.max_cu_tokens = 4*n_WFs
+    elif i < (n_CUs + n_SQCs):
+        tester.cu_sqc_ports = ruby_port.in_ports
+    else:
+        tester.cu_scalar_ports = ruby_port.in_ports
 
-root = Root( full_system = False, system = system )
-root.system.mem_mode = 'timing'
+    i += 1
+
+#
+# No CPU threads are needed for GPU tester
+#
+tester.cpu_threads = []
+
+#
+# Create GPU wavefronts
+#
+thread_clock = SrcClockDomain(clock = '1GHz',
+                              voltage_domain = system.voltage_domain)
+wavefronts = []
+g_thread_idx = 0
+print("Creating %i WFs attached to %i CUs" % \
+                (n_CUs * tester.wavefronts_per_cu, n_CUs))
+for cu_idx in range(n_CUs):
+    for wf_idx in range(tester.wavefronts_per_cu):
+        wavefronts.append(GpuWavefront(thread_id = g_thread_idx,
+                                         cu_id = cu_idx,
+                                         num_lanes = options.wf_size,
+                                         clk_domain = thread_clock,
+                                         deadlock_threshold = \
+                                                tester_deadlock_threshold))
+        g_thread_idx += 1
+tester.wavefronts = wavefronts
+
+#
+# Run simulation
+#
+root = Root(full_system = False, system = system)
 
 # Not much point in this being higher than the L1 latency
 m5.ticks.setGlobalFrequency('1ns')
 
-# instantiate configuration
+# Instantiate configuration
 m5.instantiate()
 
-# simulate until program terminates
-exit_event = m5.simulate(options.abs_max_tick)
+# Simulate until tester completes
+exit_event = m5.simulate()
 
-print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())
+print('Exiting tick: ', m5.curTick())
+print('Exiting because ', exit_event.getCause())
