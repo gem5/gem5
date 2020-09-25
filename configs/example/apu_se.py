@@ -174,7 +174,7 @@ parser.add_option("--numLdsBanks", type="int", default=32,
                   help="number of physical banks per LDS module")
 parser.add_option("--ldsBankConflictPenalty", type="int", default=1,
                   help="number of cycles per LDS bank conflict")
-parser.add_options("--lds-size", type="int", default=65536,
+parser.add_option("--lds-size", type="int", default=65536,
                    help="Size of the LDS in bytes")
 parser.add_option('--fast-forward-pseudo-op', action='store_true',
                   help = 'fast forward using kvm until the m5_switchcpu'
