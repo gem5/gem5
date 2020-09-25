@@ -581,6 +581,10 @@ class ArmSemihosting : public SimObject
     static const std::map<uint64_t, const char *> exitCodes;
     static const std::vector<uint8_t> features;
     static const std::map<const std::string, FILE *> stdioMap;
+
+    // used in callTmpNam() to deterministically generate a temp filename
+    uint16_t tmpNameIndex = 0;
+
 };
 
 std::ostream &operator << (

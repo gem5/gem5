@@ -37,10 +37,14 @@
 
 #include "arch/arm/semihosting.hh"
 
+#include <unistd.h>
+
+#include <cerrno>
 #include <cstdio>
 
 #include "arch/arm/utility.hh"
 #include "base/logging.hh"
+#include "base/output.hh"
 #include "base/time.hh"
 #include "debug/Semihosting.hh"
 #include "dev/serial/serial.hh"
@@ -449,16 +453,21 @@ ArmSemihosting::RetErrno
 ArmSemihosting::callTmpNam(ThreadContext *tc, Addr addr, uint64_t id,
                            size_t size)
 {
-    std::vector<char> buf(L_tmpnam);
-    char *path = tmpnam(buf.data());
-    if (!path)
-        return retError(EINVAL);
+    std::string path = "";
+    int64_t unlink_call_ret = 0;
 
-    const size_t path_len = strlen(path);
+    do {
+        path = simout.resolve(csprintf("%s.tmp%05i", name(), tmpNameIndex++));
+        // remove the (potentially existing) file of the given path
+        unlink_call_ret = unlink(path.c_str());
+    // if the file is busy, find another name
+    } while ((unlink_call_ret < 0) && (errno == EBUSY));
+
+    const size_t path_len = path.length();
     if (path_len >= size)
         return retError(ENOSPC);
 
-    portProxy(tc).writeBlob(addr, path, path_len + 1);
+    portProxy(tc).writeBlob(addr, path.c_str(), path_len + 1);
     return retOK(0);
 }
 
