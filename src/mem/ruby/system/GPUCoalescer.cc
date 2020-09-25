@@ -77,6 +77,26 @@ UncoalescedTable::packetAvailable()
     return !instMap.empty();
 }
 
+void
+UncoalescedTable::initPacketsRemaining(InstSeqNum seqNum, int count)
+{
+    if (!instPktsRemaining.count(seqNum)) {
+        instPktsRemaining[seqNum] = count;
+    }
+}
+
+int
+UncoalescedTable::getPacketsRemaining(InstSeqNum seqNum)
+{
+    return instPktsRemaining[seqNum];
+}
+
+void
+UncoalescedTable::setPacketsRemaining(InstSeqNum seqNum, int count)
+{
+    instPktsRemaining[seqNum] = count;
+}
+
 PerInstPackets*
 UncoalescedTable::getInstPackets(int offset)
 {
@@ -94,9 +114,20 @@ void
 UncoalescedTable::updateResources()
 {
     for (auto iter = instMap.begin(); iter != instMap.end(); ) {
-        if (iter->second.empty()) {
-            DPRINTF(GPUCoalescer, "Returning token seqNum %d\n", iter->first);
+        InstSeqNum seq_num = iter->first;
+        DPRINTF(GPUCoalescer, "%s checking remaining pkts for %d\n",
+                coalescer->name().c_str(), seq_num);
+        assert(instPktsRemaining.count(seq_num));
+
+        if (instPktsRemaining[seq_num] == 0) {
+            assert(iter->second.empty());
+
+            // Remove from both maps
             instMap.erase(iter++);
+            instPktsRemaining.erase(seq_num);
+
+            // Release the token
+            DPRINTF(GPUCoalescer, "Returning token seqNum %d\n", seq_num);
             coalescer->getGMTokenPort().sendTokens(1);
         } else {
             ++iter;
@@ -555,16 +586,23 @@ GPUCoalescer::makeRequest(PacketPtr pkt)
         // otherwise, this must be either read or write command
         assert(pkt->isRead() || pkt->isWrite());
 
+        InstSeqNum seq_num = pkt->req->getReqInstSeqNum();
+        int num_packets = getDynInst(pkt)->exec_mask.count();
+
         // the pkt is temporarily stored in the uncoalesced table until
         // it's picked for coalescing process later in this cycle or in a
-        // future cycle
+        // future cycle. Packets remaining is set to the number of excepted
+        // requests from the instruction based on its exec_mask.
         uncoalescedTable.insertPacket(pkt);
+        uncoalescedTable.initPacketsRemaining(seq_num, num_packets);
         DPRINTF(GPUCoalescer, "Put pkt with addr 0x%X to uncoalescedTable\n",
                 pkt->getAddr());
 
         // we schedule an issue event here to process the uncoalesced table
         // and try to issue Ruby request to cache system
         if (!issueEvent.scheduled()) {
+            DPRINTF(GPUCoalescer, "Scheduled issueEvent for seqNum %d\n",
+                    seq_num);
             schedule(issueEvent, curTick());
         }
     }
@@ -595,6 +633,18 @@ GPUCoalescer::print(ostream& out) const
         << "]";
 }
 
+GPUDynInstPtr
+GPUCoalescer::getDynInst(PacketPtr pkt) const
+{
+    RubyPort::SenderState* ss =
+            safe_cast<RubyPort::SenderState*>(pkt->senderState);
+
+    ComputeUnit::DataPort::SenderState* cu_state =
+        safe_cast<ComputeUnit::DataPort::SenderState*>
+            (ss->predecessor);
+
+    return cu_state->_gpuDynInst;
+}
 
 bool
 GPUCoalescer::coalescePacket(PacketPtr pkt)
@@ -674,10 +724,7 @@ GPUCoalescer::coalescePacket(PacketPtr pkt)
                 // CU will use that instruction to decrement wait counters
                 // in the issuing wavefront.
                 // For Ruby tester, gpuDynInst == nullptr
-                ComputeUnit::DataPort::SenderState* cu_state =
-                    safe_cast<ComputeUnit::DataPort::SenderState*>
-                        (ss->predecessor);
-                gpuDynInst = cu_state->_gpuDynInst;
+                gpuDynInst = getDynInst(pkt);
             }
 
             PendingWriteInst& inst = pendingWriteInsts[seqNum];
@@ -698,21 +745,45 @@ GPUCoalescer::completeIssue()
     // Iterate over the maximum number of instructions we can coalesce
     // per cycle (coalescingWindow).
     for (int instIdx = 0; instIdx < coalescingWindow; ++instIdx) {
-        PerInstPackets *pktList =
+        PerInstPackets *pkt_list =
             uncoalescedTable.getInstPackets(instIdx);
 
         // getInstPackets will return nullptr if no instruction
         // exists at the current offset.
-        if (!pktList) {
+        if (!pkt_list) {
             break;
+        } else if (pkt_list->empty()) {
+            // Found something, but it has not been cleaned up by update
+            // resources yet. See if there is anything else to coalesce.
+            // Assume we can't check anymore if the coalescing window is 1.
+            continue;
         } else {
+            // All packets in the list have the same seqNum, use first.
+            InstSeqNum seq_num = pkt_list->front()->req->getReqInstSeqNum();
+
+            // The difference in list size before and after tells us the
+            // number of packets which were coalesced.
+            size_t pkt_list_size = pkt_list->size();
+
             // Since we have a pointer to the list of packets in the inst,
             // erase them from the list if coalescing is successful and
             // leave them in the list otherwise. This aggressively attempts
             // to coalesce as many packets as possible from the current inst.
-            pktList->remove_if(
+            pkt_list->remove_if(
                 [&](PacketPtr pkt) { return coalescePacket(pkt); }
             );
+
+            assert(pkt_list_size >= pkt_list->size());
+            size_t pkt_list_diff = pkt_list_size - pkt_list->size();
+
+            int num_remaining = uncoalescedTable.getPacketsRemaining(seq_num);
+            num_remaining -= pkt_list_diff;
+            assert(num_remaining >= 0);
+
+            uncoalescedTable.setPacketsRemaining(seq_num, num_remaining);
+            DPRINTF(GPUCoalescer,
+                    "Coalesced %d pkts for seqNum %d, %d remaining\n",
+                    pkt_list_diff, seq_num, num_remaining);
         }
     }
 

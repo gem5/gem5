@@ -70,12 +70,18 @@ class UncoalescedTable
     bool packetAvailable();
     void printRequestTable(std::stringstream& ss);
 
+    // Modify packets remaining map. Init sets value iff the seqNum has not
+    // yet been seen before. get/set act as a regular getter/setter.
+    void initPacketsRemaining(InstSeqNum seqNum, int count);
+    int getPacketsRemaining(InstSeqNum seqNum);
+    void setPacketsRemaining(InstSeqNum seqNum, int count);
+
     // Returns a pointer to the list of packets corresponding to an
     // instruction in the instruction map or nullptr if there are no
     // instructions at the offset.
     PerInstPackets* getInstPackets(int offset);
     void updateResources();
-    bool areRequestsDone(const uint64_t instSeqNum);
+    bool areRequestsDone(const InstSeqNum instSeqNum);
 
     // Check if a packet hasn't been removed from instMap in too long.
     // Panics if a deadlock is detected and returns nothing otherwise.
@@ -88,7 +94,9 @@ class UncoalescedTable
     // which need responses. This data structure assumes the sequence number
     // is monotonically increasing (which is true for CU class) in order to
     // issue packets in age order.
-    std::map<uint64_t, PerInstPackets> instMap;
+    std::map<InstSeqNum, PerInstPackets> instMap;
+
+    std::map<InstSeqNum, int> instPktsRemaining;
 };
 
 class CoalescedRequest
@@ -388,6 +396,8 @@ class GPUCoalescer : public RubyPort
     void completeHitCallback(std::vector<PacketPtr> & mylist);
 
     virtual RubyRequestType getRequestType(PacketPtr pkt);
+
+    GPUDynInstPtr getDynInst(PacketPtr pkt) const;
 
     // Attempt to remove a packet from the uncoalescedTable and coalesce
     // with a previous request from the same instruction. If there is no
