@@ -34,13 +34,13 @@ else:
     base_path = joinpath(absdirpath(__file__), '..', 'resources',
             'ubuntu-boot')
 
-image_url = config.resource_url + '/images/x86/ubuntu-18-04/base.img'
+image_url = config.resource_url + '/images/x86/ubuntu-18-04/base.img.gz'
 kernel_url = config.resource_url + '/kernels/x86/static/vmlinux-4.19.83'
 
 image_name = 'ubuntu-18-04-base.img'
 kernel_name = 'vmlinux-4.19.83' # 4.19 is LTS (Projected EOL: Dec, 2020)
 
-image = DownloadedProgram(image_url, base_path, image_name)
+image = DownloadedProgram(image_url, base_path, image_name, True)
 kernel = DownloadedProgram(kernel_url, base_path, kernel_name)
 
 
