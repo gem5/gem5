@@ -566,6 +566,16 @@ gpu_port_idx = len(system.ruby._cpu_ports) \
                - options.num_scalar_cache
 gpu_port_idx = gpu_port_idx - options.num_cp * 2
 
+# Connect token ports. For this we need to search through the list of all
+# sequencers, since the TCP coalescers will not necessarily be first. Only
+# TCP coalescers use a token port for back pressure.
+token_port_idx = 0
+for i in range(len(system.ruby._cpu_ports)):
+    if isinstance(system.ruby._cpu_ports[i], VIPERCoalescer):
+        system.cpu[shader_idx].CUs[token_port_idx].gmTokenPort = \
+            system.ruby._cpu_ports[i].gmTokenPort
+        token_port_idx += 1
+
 wavefront_size = options.wf_size
 for i in range(n_cu):
     # The pipeline issues wavefront_size number of uncoalesced requests
@@ -573,8 +583,6 @@ for i in range(n_cu):
     for j in range(wavefront_size):
         system.cpu[shader_idx].CUs[i].memory_port[j] = \
                   system.ruby._cpu_ports[gpu_port_idx].slave[j]
-    system.cpu[shader_idx].CUs[i].gmTokenPort = \
-            system.ruby._cpu_ports[gpu_port_idx].gmTokenPort
     gpu_port_idx += 1
 
 for i in range(n_cu):

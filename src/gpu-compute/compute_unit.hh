@@ -1015,6 +1015,8 @@ class ComputeUnit : public ClockedObject
             return sqcTLBPort;
         } else if (if_name == "ldsPort") {
             return ldsPort;
+        } else if (if_name == "gmTokenPort") {
+            return gmTokenPort;
         } else {
             return ClockedObject::getPort(if_name, idx);
         }
