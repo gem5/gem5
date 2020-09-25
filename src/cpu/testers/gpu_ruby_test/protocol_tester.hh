@@ -58,6 +58,7 @@
 #include "cpu/testers/gpu_ruby_test/address_manager.hh"
 #include "mem/packet.hh"
 #include "mem/ruby/system/RubyPort.hh"
+#include "mem/token_port.hh"
 #include "params/ProtocolTester.hh"
 
 class GpuThread;
@@ -79,6 +80,20 @@ class ProtocolTester : public ClockedObject
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual void recvReqRetry()
             { panic("%s does not expect a retry\n", name()); }
+    };
+
+    class GMTokenPort : public TokenRequestPort
+    {
+        public:
+            GMTokenPort(const std::string& name, ProtocolTester *_tester,
+                        PortID id = InvalidPortID)
+                : TokenRequestPort(name, _tester, id)
+            {}
+            ~GMTokenPort() {}
+
+        protected:
+            bool recvTimingResp(PacketPtr) { return false; }
+            void recvReqRetry() {}
     };
 
     struct SenderState : public Packet::SenderState
@@ -131,10 +146,12 @@ class ProtocolTester : public ClockedObject
     int numVectorPorts;
     int numSqcPorts;
     int numScalarPorts;
+    int numTokenPorts;
     int numCusPerSqc;
     int numCusPerScalar;
     int numWfsPerCu;
     int numWisPerWf;
+    int numCuTokens;
     // parameters controlling the address range that the tester can access
     int numAtomicLocs;
     int numNormalLocsPerAtomic;
@@ -150,6 +167,8 @@ class ProtocolTester : public ClockedObject
     std::vector<RequestPort*> cuVectorPorts; // ports to GPU vector cache
     std::vector<RequestPort*> cuSqcPorts;    // ports to GPU inst cache
     std::vector<RequestPort*> cuScalarPorts; // ports to GPU scalar cache
+    std::vector<TokenManager*> cuTokenManagers;
+    std::vector<GMTokenPort*> cuTokenPorts;
     // all CPU and GPU threads
     std::vector<CpuThread*> cpuThreads;
     std::vector<GpuWavefront*> wfs;

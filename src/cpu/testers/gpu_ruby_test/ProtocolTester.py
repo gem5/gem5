@@ -41,12 +41,18 @@ class ProtocolTester(ClockedObject):
     cu_vector_ports = VectorRequestPort("Vector ports for GPUs")
     cu_sqc_ports = VectorRequestPort("SQC ports for GPUs")
     cu_scalar_ports = VectorRequestPort("Scalar ports for GPUs")
+    cu_token_ports = VectorRequestPort("Token ports for GPU")
 
     cus_per_sqc = Param.Int(4, "Number of CUs per SQC")
     cus_per_scalar = Param.Int(4, "Number of CUs per scalar cache")
 
     wavefronts_per_cu = Param.Int(1, "Number of wavefronts per CU")
     workitems_per_wavefront = Param.Int(64, "Number of workitems per wf")
+
+    max_cu_tokens = Param.Int(4, "Maximum number of tokens, i.e., the number"
+                                 " of instructions that can be uncoalesced"
+                                 " before back-pressure occurs from the"
+                                 " coalescer.")
 
     cpu_threads = VectorParam.CpuThread("All cpus")
     wavefronts = VectorParam.GpuWavefront("All wavefronts")

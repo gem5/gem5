@@ -42,6 +42,7 @@
 #include "cpu/testers/gpu_ruby_test/episode.hh"
 #include "cpu/testers/gpu_ruby_test/protocol_tester.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
+#include "mem/token_port.hh"
 #include "sim/clocked_object.hh"
 
 class GpuThread : public ClockedObject
@@ -61,6 +62,7 @@ class GpuThread : public ClockedObject
 
     void attachGpuThreadToPorts(ProtocolTester *_tester,
                              ProtocolTester::SeqPort *_port,
+                             ProtocolTester::GMTokenPort *_tokenPort = nullptr,
                              ProtocolTester::SeqPort *_sqcPort = nullptr,
                              ProtocolTester::SeqPort *_scalarPort = nullptr);
 
@@ -136,6 +138,7 @@ class GpuThread : public ClockedObject
     AddressManager *addrManager;
 
     ProtocolTester::SeqPort *port;       // main data port (GPU-vector data)
+    ProtocolTester::GMTokenPort *tokenPort;
     ProtocolTester::SeqPort *scalarPort; // nullptr for CPU
     ProtocolTester::SeqPort *sqcPort;   // nullptr for CPU
 

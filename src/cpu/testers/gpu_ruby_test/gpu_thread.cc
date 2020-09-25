@@ -125,11 +125,13 @@ GpuThread::scheduleDeadlockCheckEvent()
 void
 GpuThread::attachGpuThreadToPorts(ProtocolTester *_tester,
                             ProtocolTester::SeqPort *_port,
+                            ProtocolTester::GMTokenPort *_tokenPort,
                             ProtocolTester::SeqPort *_scalarPort,
                             ProtocolTester::SeqPort *_sqcPort)
 {
     tester = _tester;
     port = _port;
+    tokenPort = _tokenPort;
     scalarPort = _scalarPort;
     sqcPort = _sqcPort;
 
@@ -163,7 +165,8 @@ GpuThread::isNextActionReady()
                 // to complete
                 if (pendingLdStCount == 0 &&
                     pendingFenceCount == 0 &&
-                    pendingAtomicCount == 0) {
+                    pendingAtomicCount == 0 &&
+                    tokenPort->haveTokens(numLanes)) {
                     return true;
                 }
 
@@ -198,7 +201,8 @@ GpuThread::isNextActionReady()
                 assert(pendingAtomicCount == 0);
 
                 // can't issue if there is a pending fence
-                if (pendingFenceCount > 0) {
+                if (pendingFenceCount > 0 ||
+                    !tokenPort->haveTokens(numLanes)) {
                     return false;
                 }
 
@@ -241,6 +245,7 @@ GpuThread::issueNextAction()
 {
     switch(curAction->getType()) {
         case Episode::Action::Type::ATOMIC:
+            tokenPort->acquireTokens(numLanes);
             issueAtomicOps();
             break;
         case Episode::Action::Type::ACQUIRE:
@@ -250,9 +255,11 @@ GpuThread::issueNextAction()
             issueReleaseOp();
             break;
         case Episode::Action::Type::LOAD:
+            tokenPort->acquireTokens(numLanes);
             issueLoadOps();
             break;
         case Episode::Action::Type::STORE:
+            tokenPort->acquireTokens(numLanes);
             issueStoreOps();
             break;
         default:

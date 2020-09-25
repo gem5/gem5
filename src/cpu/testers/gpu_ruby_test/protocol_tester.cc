@@ -53,10 +53,12 @@ ProtocolTester::ProtocolTester(const Params &p)
         numVectorPorts(p.port_cu_vector_ports_connection_count),
         numSqcPorts(p.port_cu_sqc_ports_connection_count),
         numScalarPorts(p.port_cu_scalar_ports_connection_count),
+        numTokenPorts(p.port_cu_token_ports_connection_count),
         numCusPerSqc(p.cus_per_sqc),
         numCusPerScalar(p.cus_per_scalar),
         numWfsPerCu(p.wavefronts_per_cu),
         numWisPerWf(p.workitems_per_wavefront),
+        numCuTokens(p.max_cu_tokens),
         numAtomicLocs(p.num_atomic_locations),
         numNormalLocsPerAtomic(p.num_normal_locs_per_atomic),
         episodeLength(p.episode_length),
@@ -105,6 +107,14 @@ ProtocolTester::ProtocolTester(const Params &p)
                                                   name(), i),
                                          this, i, idx));
         idx++;
+    }
+
+    for (int i = 0; i < numTokenPorts; ++i) {
+        cuTokenPorts.push_back(new GMTokenPort(csprintf("%s-cuTokenPort%d",
+                                                        name(), i),
+                                               this, i));
+        cuTokenManagers.push_back(new TokenManager(numCuTokens));
+        cuTokenPorts[i]->setTokenManager(cuTokenManagers[i]);
     }
 
     // create an address manager
@@ -194,6 +204,7 @@ ProtocolTester::init()
             wfId = cu_id * numWfsPerCu + i;
             wfs[wfId]->attachGpuThreadToPorts(this,
                            static_cast<SeqPort*>(cuVectorPorts[vectorPortId]),
+                           cuTokenPorts[vectorPortId],
                            static_cast<SeqPort*>(cuSqcPorts[sqcPortId]),
                            static_cast<SeqPort*>(cuScalarPorts[scalarPortId]));
             wfs[wfId]->scheduleWakeup();
@@ -206,7 +217,8 @@ Port&
 ProtocolTester::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "cpu_ports" && if_name != "cu_vector_ports" &&
-        if_name != "cu_sqc_ports" && if_name != "cu_scalar_ports") {
+        if_name != "cu_sqc_ports" && if_name != "cu_scalar_ports" &&
+        if_name != "cu_token_ports") {
         // pass along to super class
         return ClockedObject::getPort(if_name, idx);
     } else {
@@ -222,6 +234,10 @@ ProtocolTester::getPort(const std::string &if_name, PortID idx)
             if (idx > numSqcPorts)
                 panic("ProtocolTester: unknown cu sqc port %d\n", idx);
             return *cuSqcPorts[idx];
+        } else if (if_name == "cu_token_ports") {
+            if (idx > numTokenPorts)
+                panic("ProtocolTester: unknown cu token port %d\n", idx);
+            return *cuTokenPorts[idx];
         } else {
             assert(if_name == "cu_scalar_ports");
             if (idx > numScalarPorts)
