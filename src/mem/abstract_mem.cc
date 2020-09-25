@@ -93,7 +93,8 @@ AbstractMemory::initState()
     panic_if(!image_range.isSubset(range), "%s: memory image %s doesn't fit.",
              name(), file);
 
-    PortProxy proxy([this](PacketPtr pkt) { functionalAccess(pkt); }, size());
+    PortProxy proxy([this](PacketPtr pkt) { functionalAccess(pkt); },
+                    system()->cacheLineSize());
 
     panic_if(!image.write(proxy), "%s: Unable to write image.");
 }
