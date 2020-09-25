@@ -328,6 +328,11 @@ ElfObject::handleLoadableSegment(GElf_Phdr phdr, int seg_num)
 {
     auto name = std::to_string(seg_num);
 
+    if (phdr.p_memsz == 0) {
+        warn("Ignoring empty loadable segment %s", name);
+        return;
+    }
+
     image.addSegment({ name, phdr.p_paddr, imageData,
                        phdr.p_offset, phdr.p_filesz });
     Addr uninitialized = phdr.p_memsz - phdr.p_filesz;
