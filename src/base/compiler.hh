@@ -88,28 +88,4 @@
     #define M5_NODISCARD
 #endif
 
-// std::make_unique redefined for C++11 compilers
-namespace m5
-{
-
-#if __cplusplus >= 201402L // C++14
-
-using std::make_unique;
-
-#else // C++11
-
-/** Defining custom version of make_unique: m5::make_unique<>() */
-template<typename T, typename... Args>
-std::unique_ptr<T>
-make_unique( Args&&... constructor_args )
-{
-    return std::unique_ptr<T>(
-               new T( std::forward<Args>(constructor_args)... )
-           );
-}
-
-#endif // __cplusplus >= 201402L
-
-} //namespace m5
-
 #endif // __BASE_COMPILER_HH__
