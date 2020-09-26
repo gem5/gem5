@@ -46,7 +46,6 @@
 // http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
 
 #if defined(__GNUC__) // clang or gcc
-#  define M5_ATTR_NORETURN  __attribute__((noreturn))
 #  define M5_VAR_USED __attribute__((unused))
 #  define M5_ATTR_PACKED __attribute__ ((__packed__))
 #  define M5_NO_INLINE __attribute__ ((__noinline__))

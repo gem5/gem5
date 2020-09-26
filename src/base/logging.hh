@@ -121,7 +121,7 @@ class Logger
      * functions, and gcc will get mad if a function calls panic and then
      * doesn't return.
      */
-    void exit_helper() M5_ATTR_NORETURN { exit(); ::abort(); }
+    [[noreturn]] void exit_helper() { exit(); ::abort(); }
 
   protected:
     bool enabled;

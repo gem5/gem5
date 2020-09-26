@@ -99,7 +99,7 @@ class NoMaliGpu : public PioDevice
      * @param err Error code from the NoMali library.
      * @param msg Message to print.
      */
-    static void gpuPanic(nomali_error_t err, const char *msg) M5_ATTR_NORETURN;
+    [[noreturn]] static void gpuPanic(nomali_error_t err, const char *msg);
     /**
      * Panic if the NoMali returned an error, do nothing otherwise.
      *
