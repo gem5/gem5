@@ -55,8 +55,8 @@
 class MemObject : public ClockedObject
 {
   public:
-    M5_DEPRECATED_MSG(
-            "MemObject is deprecated. Use ClockedObject or SimObject instead")
+    [[deprecated(
+        "MemObject is deprecated. Use ClockedObject or SimObject instead")]]
         MemObject(const MemObjectParams *params) : ClockedObject(params)
     {}
 };

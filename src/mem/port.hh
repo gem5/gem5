@@ -245,7 +245,7 @@ class RequestPort: public Port, public AtomicRequestProtocol,
     }
 };
 
-class M5_DEPRECATED MasterPort : public RequestPort
+class [[deprecated]] MasterPort : public RequestPort
 {
   public:
     MasterPort(const std::string& name, SimObject* _owner,
@@ -449,7 +449,7 @@ class ResponsePort : public Port, public AtomicResponseProtocol,
     }
 };
 
-class M5_DEPRECATED SlavePort : public ResponsePort
+class [[deprecated]] SlavePort : public ResponsePort
 {
   public:
     SlavePort(const std::string& name, SimObject* _owner,
