@@ -56,13 +56,10 @@ namespace ArmISA
 uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {
-    if (!FullSystem) {
-        panic("getArgument() only implemented for full system mode.\n");
-        M5_DUMMY_RETURN
-    }
+    panic_if(!FullSystem,
+            "getArgument() only implemented for full system mode.");
 
-    if (fp)
-        panic("getArgument(): Floating point arguments not implemented\n");
+    panic_if(fp, "getArgument(): Floating point arguments not implemented");
 
     if (inAArch64(tc)) {
         if (size == (uint16_t)(-1))

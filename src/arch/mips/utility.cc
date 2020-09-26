@@ -47,7 +47,6 @@ uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {
     panic("getArgument() not implemented\n");
-    M5_DUMMY_RETURN
 }
 
 uint64_t

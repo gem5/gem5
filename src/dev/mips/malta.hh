@@ -108,21 +108,18 @@ class Malta : public Platform
     calcPciConfigAddr(int bus, int dev, int func)
     {
         panic("Need implementation\n");
-        M5_DUMMY_RETURN
     }
 
     Addr
     calcPciIOAddr(Addr addr)
     {
         panic("Need implementation\n");
-        M5_DUMMY_RETURN
     }
 
     Addr
     calcPciMemAddr(Addr addr)
     {
         panic("Need implementation\n");
-        M5_DUMMY_RETURN
     }
 
     void serialize(CheckpointOut &cp) const override;

@@ -49,14 +49,12 @@ Tick
 BadDevice::read(PacketPtr pkt)
 {
     panic("Device %s not imlpmented\n", devname);
-    M5_DUMMY_RETURN
 }
 
 Tick
 BadDevice::write(PacketPtr pkt)
 {
     panic("Device %s not imlpmented\n", devname);
-    M5_DUMMY_RETURN
 }
 
 BadDevice *
