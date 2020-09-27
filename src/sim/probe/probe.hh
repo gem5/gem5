@@ -151,7 +151,7 @@ class ProbeManager
 {
   private:
     /** Required for sensible debug messages.*/
-    const M5_CLASS_VAR_USED SimObject *object;
+    M5_CLASS_VAR_USED const SimObject *object;
     /** Vector for name look-up. */
     std::vector<ProbePoint *> points;
 

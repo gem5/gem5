@@ -43,14 +43,14 @@
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
 
-struct DmesgEntry {
+struct M5_ATTR_PACKED DmesgEntry {
     uint64_t ts_nsec;
     uint16_t len;
     uint16_t text_len;
     uint16_t dict_len;
     uint8_t facility;
     uint8_t flags;
-} M5_ATTR_PACKED;
+};
 
 static int
 dumpDmesgEntry(const uint8_t *base, const uint8_t *end, const ByteOrder bo,

@@ -76,7 +76,7 @@ class PngWriter : public ImgWriter
     void write(std::ostream &png) const override;
   private:
     /** Png Pixel type: not containing padding */
-    struct PngPixel24 {
+    struct M5_ATTR_PACKED PngPixel24 {
         PngPixel24 &operator=(const Pixel &rhs) {
             red = rhs.red;
             green = rhs.green;
@@ -87,7 +87,7 @@ class PngWriter : public ImgWriter
         uint8_t red;
         uint8_t green;
         uint8_t blue;
-    } M5_ATTR_PACKED;
+    };
 
     /**
      * Handle to resources used by libpng:

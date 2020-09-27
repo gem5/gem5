@@ -66,12 +66,12 @@ class RemoteGDB : public BaseRemoteGDB
     {
       using BaseGdbRegCache::BaseGdbRegCache;
       private:
-        struct {
+        struct M5_ATTR_PACKED {
           uint32_t gpr[16];
           uint32_t cpsr;
           uint64_t fpr[32];
           uint32_t fpscr;
-        } M5_ATTR_PACKED r;
+        } r;
       public:
         char *data() const { return (char *)&r; }
         size_t size() const { return sizeof(r); }
@@ -88,7 +88,7 @@ class RemoteGDB : public BaseRemoteGDB
     {
       using BaseGdbRegCache::BaseGdbRegCache;
       private:
-        struct {
+        struct M5_ATTR_PACKED {
           uint64_t x[31];
           uint64_t spx;
           uint64_t pc;
@@ -96,7 +96,7 @@ class RemoteGDB : public BaseRemoteGDB
           VecElem v[NumVecV8ArchRegs * NumVecElemPerNeonVecReg];
           uint32_t fpsr;
           uint32_t fpcr;
-        } M5_ATTR_PACKED r;
+        } r;
       public:
         char *data() const { return (char *)&r; }
         size_t size() const { return sizeof(r); }

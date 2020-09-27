@@ -855,7 +855,7 @@ BaseCache::updateCompressionData(CacheBlk *blk, const uint64_t* data,
     // the bigger block
 
     // Get previous compressed size
-    const std::size_t M5_VAR_USED prev_size = compression_blk->getSizeBits();
+    M5_VAR_USED const std::size_t prev_size = compression_blk->getSizeBits();
 
     // Check if new data is co-allocatable
     const bool is_co_allocatable = superblock->isCompressed(compression_blk) &&
@@ -2320,7 +2320,7 @@ BaseCache::CpuSidePort::recvTimingReq(PacketPtr pkt)
     if (cache->system->bypassCaches()) {
         // Just forward the packet if caches are disabled.
         // @todo This should really enqueue the packet rather
-        bool M5_VAR_USED success = cache->memSidePort.sendTimingReq(pkt);
+        M5_VAR_USED bool success = cache->memSidePort.sendTimingReq(pkt);
         assert(success);
         return true;
     } else if (tryTiming(pkt)) {

@@ -388,7 +388,7 @@ void
 Fetch1::minorTraceResponseLine(const std::string &name,
     Fetch1::FetchRequestPtr response) const
 {
-    const RequestPtr &request M5_VAR_USED = response->request;
+    M5_VAR_USED const RequestPtr &request = response->request;
 
     if (response->packet && response->packet->isError()) {
         MINORLINE(this, "id=F;%s vaddr=0x%x fault=\"error packet\"\n",

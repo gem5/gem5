@@ -49,7 +49,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor.
     %(class_name)s(ExtMachInst machInst);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
-    Fault doFpOp(ExecContext *, Trace::InstRecord *) const M5_NO_INLINE;
+    M5_NO_INLINE Fault doFpOp(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 

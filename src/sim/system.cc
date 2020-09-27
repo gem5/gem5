@@ -183,7 +183,7 @@ System::Threads::quiesce(ContextID id)
 {
     auto &t = thread(id);
 #   if THE_ISA != NULL_ISA
-    BaseCPU M5_VAR_USED *cpu = t.context->getCpuPtr();
+    M5_VAR_USED BaseCPU *cpu = t.context->getCpuPtr();
     DPRINTFS(Quiesce, cpu, "quiesce()\n");
 #   endif
     t.quiesce();
@@ -250,7 +250,7 @@ System::System(Params *p)
         warn_once("Cache line size is neither 16, 32, 64 nor 128 bytes.\n");
 
     // Get the generic system requestor IDs
-    RequestorID tmp_id M5_VAR_USED;
+    M5_VAR_USED RequestorID tmp_id;
     tmp_id = getRequestorId(this, "writebacks");
     assert(tmp_id == Request::wbRequestorId);
     tmp_id = getRequestorId(this, "functional");

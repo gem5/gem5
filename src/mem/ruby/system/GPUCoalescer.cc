@@ -460,7 +460,7 @@ GPUCoalescer::hitCallback(CoalescedRequest* crequest,
 {
     PacketPtr pkt = crequest->getFirstPkt();
     Addr request_address = pkt->getAddr();
-    Addr request_line_address M5_VAR_USED = makeLineAddress(request_address);
+    M5_VAR_USED Addr request_line_address = makeLineAddress(request_address);
 
     RubyRequestType type = crequest->getRubyType();
 

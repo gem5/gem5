@@ -451,10 +451,10 @@ public:
         typedef uint16_t Flags;
         typedef uint16_t Index;
 
-        struct Header {
+        struct M5_ATTR_PACKED Header {
             Flags flags;
             Index index;
-        } M5_ATTR_PACKED;
+        };
 
         VirtRing<T>(PortProxy &proxy, ByteOrder bo, uint16_t size) :
             header{0, 0}, ring(size), _proxy(proxy), _base(0), byteOrder(bo)

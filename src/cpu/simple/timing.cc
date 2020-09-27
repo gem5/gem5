@@ -947,7 +947,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     // hardware transactional memory
 
     SimpleExecContext *t_info = threadInfo[curThread];
-    const bool is_htm_speculative M5_VAR_USED =
+    M5_VAR_USED const bool is_htm_speculative =
         t_info->inHtmTransactionalState();
 
     // received a response from the dcache: complete the load or store

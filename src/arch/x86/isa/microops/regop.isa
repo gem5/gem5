@@ -49,7 +49,7 @@ def template MicroRegOpExecute {{
             %(op_decl)s;
             %(op_rd)s;
 
-            RegVal result M5_VAR_USED;
+            M5_VAR_USED RegVal result;
 
             if(%(cond_check)s)
             {
@@ -79,7 +79,7 @@ def template MicroRegOpImmExecute {{
             %(op_decl)s;
             %(op_rd)s;
 
-            RegVal result M5_VAR_USED;
+            M5_VAR_USED RegVal result;
 
             if(%(cond_check)s)
             {

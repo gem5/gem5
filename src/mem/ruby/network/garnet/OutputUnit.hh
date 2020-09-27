@@ -99,7 +99,7 @@ class OutputUnit : public Consumer
 
   private:
     Router *m_router;
-    int M5_CLASS_VAR_USED m_id;
+    M5_CLASS_VAR_USED int m_id;
     PortDirection m_direction;
     int m_vc_per_vnet;
     NetworkLink *m_out_link;

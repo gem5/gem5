@@ -695,7 +695,7 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
     // Cache clean operations require read permissions to the specified VA
     bool is_write = !req->isCacheClean() && mode == Write;
     bool is_atomic = req->isAtomic();
-    bool is_priv M5_VAR_USED  = isPriv && !(flags & UserMode);
+    M5_VAR_USED bool is_priv = isPriv && !(flags & UserMode);
 
     updateMiscReg(tc, curTranType);
 

@@ -49,7 +49,7 @@
 namespace RiscvISA
 {
 
-const std::array<const char *, NumMiscRegs> M5_VAR_USED MiscRegNames = {{
+M5_VAR_USED const std::array<const char *, NumMiscRegs> MiscRegNames = {{
     [MISCREG_PRV]           = "PRV",
     [MISCREG_ISA]           = "ISA",
     [MISCREG_VENDORID]      = "VENDORID",

@@ -605,7 +605,7 @@ void
 $c_ident::initNetQueues()
 {
     MachineType machine_type = string_to_MachineType("${{self.ident}}");
-    int base M5_VAR_USED = MachineType_base_number(machine_type);
+    M5_VAR_USED int base = MachineType_base_number(machine_type);
 
 ''')
         code.indent()

@@ -77,7 +77,7 @@ LSQ::LSQRequest::tryToSuppressFault()
     SimpleThread &thread = *port.cpu.threads[inst->id.threadId];
     TheISA::PCState old_pc = thread.pcState();
     ExecContext context(port.cpu, thread, port.execute, inst);
-    Fault M5_VAR_USED fault = inst->translationFault;
+    M5_VAR_USED Fault fault = inst->translationFault;
 
     // Give the instruction a chance to suppress a translation fault
     inst->translationFault = inst->staticInst->initiateAcc(&context, nullptr);
@@ -334,7 +334,7 @@ LSQ::SplitDataRequest::finish(const Fault &fault_, const RequestPtr &request_,
 {
     port.numAccessesInDTLB--;
 
-    unsigned int M5_VAR_USED expected_fragment_index =
+    M5_VAR_USED unsigned int expected_fragment_index =
         numTranslatedFragments;
 
     numInTranslationFragments--;
@@ -475,7 +475,7 @@ LSQ::SplitDataRequest::makeFragmentRequests()
     for (unsigned int fragment_index = 0; fragment_index < numFragments;
          fragment_index++)
     {
-        bool M5_VAR_USED is_last_fragment = false;
+        M5_VAR_USED bool is_last_fragment = false;
 
         if (fragment_addr == base_addr) {
             /* First fragment */

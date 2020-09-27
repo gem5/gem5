@@ -50,14 +50,14 @@ struct VirtIO9PBaseParams;
 typedef uint8_t P9MsgType;
 typedef uint16_t P9Tag;
 
-struct P9MsgHeader {
+struct M5_ATTR_PACKED P9MsgHeader {
     /** Length including header */
     uint32_t len;
     /** Message type */
     P9MsgType type;
     /** Message tag */
     P9Tag tag;
-} M5_ATTR_PACKED;
+};
 
 /** Convert p9 byte order (LE) to host byte order */
 template <typename T> inline T
@@ -120,10 +120,10 @@ class VirtIO9PBase : public VirtIODeviceBase
      * @note The fields in this structure depend on the features
      * exposed to the guest.
      */
-    struct Config {
+    struct M5_ATTR_PACKED Config {
         uint16_t len;
         char tag[];
-    } M5_ATTR_PACKED;
+    };
 
     /** Currently active configuration (host byte order) */
     std::unique_ptr<Config> config;

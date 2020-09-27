@@ -108,7 +108,7 @@ BPredUnit::drainSanityCheck() const
 {
     // We shouldn't have any outstanding requests when we resume from
     // a drained system.
-    for (const auto& ph M5_VAR_USED : predHist)
+    for (M5_VAR_USED const auto& ph : predHist)
         assert(ph.empty());
 }
 

@@ -166,7 +166,7 @@ class Template(object):
             if operands.predRead:
                 myDict['op_decl'] += 'uint8_t _sourceIndex = 0;\n'
             if operands.predWrite:
-                myDict['op_decl'] += 'uint8_t M5_VAR_USED _destIndex = 0;\n'
+                myDict['op_decl'] += 'M5_VAR_USED uint8_t _destIndex = 0;\n'
 
             is_src = lambda op: op.is_src
             is_dest = lambda op: op.is_dest

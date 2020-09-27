@@ -233,7 +233,7 @@ Device::read(PacketPtr pkt)
 
     prepareRead(cpu, index);
 
-    uint64_t value M5_VAR_USED = 0;
+    M5_VAR_USED uint64_t value = 0;
     if (pkt->getSize() == 4) {
         uint32_t reg = regData32(raddr);
         pkt->setLE(reg);

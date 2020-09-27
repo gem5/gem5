@@ -305,19 +305,19 @@ CopyEngine::write(PacketPtr pkt)
     ///
 
     if (size == sizeof(uint64_t)) {
-        uint64_t val M5_VAR_USED = pkt->getLE<uint64_t>();
+        M5_VAR_USED uint64_t val = pkt->getLE<uint64_t>();
         DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n",
                 daddr, val);
     } else if (size == sizeof(uint32_t)) {
-        uint32_t val M5_VAR_USED = pkt->getLE<uint32_t>();
+        M5_VAR_USED uint32_t val = pkt->getLE<uint32_t>();
         DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n",
                 daddr, val);
     } else if (size == sizeof(uint16_t)) {
-        uint16_t val M5_VAR_USED = pkt->getLE<uint16_t>();
+        M5_VAR_USED uint16_t val = pkt->getLE<uint16_t>();
         DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n",
                 daddr, val);
     } else if (size == sizeof(uint8_t)) {
-        uint8_t val M5_VAR_USED = pkt->getLE<uint8_t>();
+        M5_VAR_USED uint8_t val = pkt->getLE<uint8_t>();
         DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n",
                 daddr, val);
     } else {

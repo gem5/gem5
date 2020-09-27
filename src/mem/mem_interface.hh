@@ -140,7 +140,7 @@ class MemInterface : public AbstractMemory
     /**
      * General timing requirements
      */
-    const Tick M5_CLASS_VAR_USED tCK;
+    M5_CLASS_VAR_USED const Tick tCK;
     const Tick tCS;
     const Tick tBURST;
     const Tick tRTW;

@@ -2703,7 +2703,7 @@ let {{
         CondCodesC = !destPred.lastActive(GpOp, eCount);
         CondCodesV = 0;'''
         extraPrologCode = '''
-        auto& destPred M5_VAR_USED = PDest;'''
+        M5_VAR_USED auto& destPred = PDest;'''
         baseClass = ('SvePredUnaryWImplicitSrcOp' if predType == PredType.NONE
                      else 'SvePredUnaryWImplicitSrcPredOp')
         iop = InstObjParams(name, 'Sve' + Name, baseClass,
@@ -2722,7 +2722,7 @@ let {{
         global header_output, exec_output, decoders
         code = sveEnabledCheckCode + op
         extraPrologCode = '''
-        auto& destPred M5_VAR_USED = Ffr;'''
+        M5_VAR_USED auto& destPred = Ffr;'''
         baseClass = ('SveWImplicitSrcDstOp' if isSetFfr
                      else 'SvePredUnaryWImplicitDstOp')
         iop = InstObjParams(name, 'Sve' + Name, baseClass,

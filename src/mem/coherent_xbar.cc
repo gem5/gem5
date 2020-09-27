@@ -638,7 +638,7 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID cpu_side_port_id)
                             *memSidePorts[dest_port_id]);
         }
 
-        bool success M5_VAR_USED =
+        M5_VAR_USED bool success =
             memSidePorts[dest_port_id]->sendTimingSnoopResp(pkt);
         pktCount[cpu_side_port_id][dest_port_id]++;
         pktSize[cpu_side_port_id][dest_port_id] += pkt_size;
@@ -858,7 +858,7 @@ CoherentXBar::recvAtomicBackdoor(PacketPtr pkt, PortID cpu_side_port_id,
         // if this is the destination of the operation, the xbar
         // sends the responce to the cache clean operation only
         // after having encountered the cache clean request
-        auto M5_VAR_USED ret = outstandingCMO.emplace(pkt->id, nullptr);
+        M5_VAR_USED auto ret = outstandingCMO.emplace(pkt->id, nullptr);
         // in atomic mode we know that the WriteClean packet should
         // precede the clean request
         assert(ret.second);

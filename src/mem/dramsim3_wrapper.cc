@@ -123,7 +123,7 @@ DRAMsim3Wrapper::canAccept(uint64_t addr, bool is_write) const
 void
 DRAMsim3Wrapper::enqueue(uint64_t addr, bool is_write)
 {
-    bool success M5_VAR_USED = dramsim->AddTransaction(addr, is_write);
+    M5_VAR_USED bool success = dramsim->AddTransaction(addr, is_write);
     assert(success);
 }
 

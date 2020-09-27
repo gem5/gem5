@@ -97,7 +97,7 @@ class SMMUTranslationProcess : public SMMUProcess
     TranslContext context;
 
     Tick recvTick;
-    Tick M5_CLASS_VAR_USED faultTick;
+    M5_CLASS_VAR_USED Tick faultTick;
 
     virtual void main(Yield &yield);
 

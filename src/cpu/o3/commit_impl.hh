@@ -701,7 +701,7 @@ DefaultCommit<Impl>::tick()
             // will be active.
             _nextStatus = Active;
 
-            const DynInstPtr &inst M5_VAR_USED = rob->readHeadInst(tid);
+            M5_VAR_USED const DynInstPtr &inst = rob->readHeadInst(tid);
 
             DPRINTF(Commit,"[tid:%i] Instruction [sn:%llu] PC %s is head of"
                     " ROB and ready to commit\n",

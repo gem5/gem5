@@ -118,7 +118,7 @@ HWScheduler::registerNewQueue(uint64_t hostReadIndexPointer,
 
     // Check if this newly created queue can be directly mapped
     // to registered queue list
-    bool M5_VAR_USED register_q = mapQIfSlotAvlbl(queue_id, aql_buf, q_desc);
+    M5_VAR_USED bool register_q = mapQIfSlotAvlbl(queue_id, aql_buf, q_desc);
     schedWakeup();
     DPRINTF(HSAPacketProcessor,
              "%s: offset = %p, qID = %d, is_regd = %s, AL size %d\n",

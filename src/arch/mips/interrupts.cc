@@ -145,8 +145,8 @@ Interrupts::getInterrupt()
 {
     assert(checkInterrupts());
 
-    StatusReg M5_VAR_USED status = tc->readMiscRegNoEffect(MISCREG_STATUS);
-    CauseReg M5_VAR_USED cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
+    M5_VAR_USED StatusReg status = tc->readMiscRegNoEffect(MISCREG_STATUS);
+    M5_VAR_USED CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
     DPRINTF(Interrupt, "Interrupt! IM[7:0]=%d IP[7:0]=%d \n",
             (unsigned)status.im, (unsigned)cause.ip);
 

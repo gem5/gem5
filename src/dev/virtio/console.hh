@@ -77,10 +77,10 @@ class VirtIOConsole : public VirtIODeviceBase
      * @note This needs to be changed if the multiport feature is
      * announced!
      */
-    struct Config {
+    struct M5_ATTR_PACKED Config {
         uint16_t cols;
         uint16_t rows;
-    } M5_ATTR_PACKED;
+    };
 
     /** Currently active configuration (host byte order) */
     Config config;

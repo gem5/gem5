@@ -378,7 +378,7 @@ VncServer::checkProtocolVersion()
 {
     assert(curState == WaitForProtocolVersion);
 
-    size_t len M5_VAR_USED;
+    M5_VAR_USED size_t len;
     char version_string[13];
 
     // Null terminate the message so it's easier to work with

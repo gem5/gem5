@@ -150,7 +150,7 @@ template<class ENTRY>
 inline void
 PerfectCacheMemory<ENTRY>::deallocate(Addr address)
 {
-    auto num_erased M5_VAR_USED = m_map.erase(makeLineAddress(address));
+    M5_VAR_USED auto num_erased = m_map.erase(makeLineAddress(address));
     assert(num_erased == 1);
 }
 

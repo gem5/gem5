@@ -57,7 +57,7 @@ class Scoreboard
     std::vector<bool> regScoreBoard;
 
     /** The number of actual physical registers */
-    unsigned M5_CLASS_VAR_USED numPhysRegs;
+    M5_CLASS_VAR_USED unsigned numPhysRegs;
 
   public:
     /** Constructs a scoreboard.
