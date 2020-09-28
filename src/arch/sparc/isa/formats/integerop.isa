@@ -128,26 +128,20 @@ def format IntOpCc(code, ic=default_ic, iv=default_iv,
                          xc=default_xc, xv=default_xv,
                          sub=False, *opt_flags) {{
 
-    if sub == "False":
-        (def_ic, def_iv, def_xc, def_xv) = \
-            (default_ic, default_iv, default_xc, default_xv)
-    else:
-        (def_ic, def_iv, def_xc, def_xv) = \
-            (default_sub_ic, default_sub_iv, default_sub_xc, default_sub_xv)
+    sub = sub != 'False'
     if ic == "default_ic":
-        ic = def_ic
+        ic = default_sub_ic if sub else default_ic
     if iv == "default_iv":
-        iv = def_iv
+        iv = default_sub_iv if sub else default_iv
     if xc == "default_xc":
-        xc = def_xc
+        xc = default_sub_xc if sub else default_xc
     if xv == "default_xv":
-        xv = def_xv
+        xv = default_sub_xv if sub else default_xv
     ccCode = calcCcCode % vars()
     (header_output,
      decoder_output,
      exec_output,
-     decode_block) = doIntFormat(code, ccCode,
-                                 name, Name, opt_flags)
+     decode_block) = doIntFormat(code, ccCode, name, Name, opt_flags)
 }};
 
 // Primary format for integer operate instructions:
