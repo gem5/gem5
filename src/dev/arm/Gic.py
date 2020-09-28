@@ -110,12 +110,32 @@ class ArmSPI(ArmInterruptPin):
 
     _LINUX_ID = 0
 
+    def generateFdtProperty(self, gic):
+        """
+        Return a list used as an entry for an interrupt FdtProperty
+
+        Subtracting 32 because Linux assumes that SPIs start at 0, while
+        gem5 uses the internal GIC numbering (SPIs start at 32)
+        """
+        return gic.interruptCells(
+            self._LINUX_ID, self.num - 32, int(self.int_type.getValue()))
+
 class ArmPPI(ArmInterruptPin):
     type = 'ArmPPI'
     cxx_header = "dev/arm/base_gic.hh"
     cxx_class = "ArmPPIGen"
 
     _LINUX_ID = 1
+
+    def generateFdtProperty(self, gic):
+        """
+        Return a list used as an entry for an interrupt FdtProperty
+
+        Subtracting 16 because Linux assumes that PPIs start at 0, while
+        gem5 uses the internal GIC numbering (PPIs start at 16)
+        """
+        return gic.interruptCells(
+            self._LINUX_ID, self.num - 16, int(self.int_type.getValue()))
 
 class GicV2(BaseGic):
     type = 'GicV2'
