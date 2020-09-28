@@ -104,12 +104,13 @@ Reference:
         node.appendCompatible(["arm,cortex-a15-timer",
                                "arm,armv7-timer",
                                "arm,armv8-timer"])
-        node.append(FdtPropertyWords("interrupts", [
-            1, int(self.int_phys_s.num) - 16, 0xf08,
-            1, int(self.int_phys_ns.num) - 16, 0xf08,
-            1, int(self.int_virt.num) - 16, 0xf08,
-            1, int(self.int_hyp.num) - 16, 0xf08,
-        ]))
+
+        gic = self._parent.unproxy(self).gic
+        node.append(FdtPropertyWords("interrupts",
+            self.int_phys_s.generateFdtProperty(gic) +
+            self.int_phys_ns.generateFdtProperty(gic) +
+            self.int_virt.generateFdtProperty(gic) +
+            self.int_hyp.generateFdtProperty(gic)))
 
         if self._freq_in_dtb:
             node.append(self.counter.unproxy(self).generateDtb())
@@ -139,13 +140,15 @@ Reference:
     int_phys = Param.ArmSPI("Physical Interrupt")
     int_virt = Param.ArmSPI("Virtual Interrupt")
 
-    def generateDeviceTree(self, state):
+    def generateDeviceTree(self, state, gic):
         node = FdtNode("frame@{:08x}".format(self.cnt_base.value))
         node.append(FdtPropertyWords("frame-number", self._frame_num))
-        ints = [0, int(self.int_phys.num) - 32, 4]
+
+        ints = self.int_phys.generateFdtProperty(gic)
         if self.int_virt != NULL:
-            ints.extend([0, int(self.int_virt.num) - 32, 4])
+            ints.extend(self.int_virt.generateFdtProperty(gic))
         node.append(FdtPropertyWords("interrupts", ints))
+
         reg = state.addrCells(self.cnt_base) + state.sizeCells(0x1000)
         if self.cnt_el0_base.value != MaxAddr:
             reg.extend(state.addrCells(self.cnt_el0_base)
@@ -193,8 +196,10 @@ Reference:
         if self._freq_in_dtb:
             node.append(self.counter.unproxy(self).generateDtb())
 
+        gic = self._parent.unproxy(self).gic
+
         for i, frame in enumerate(self.frames):
             frame._frame_num = i
-            node.append(frame.generateDeviceTree(state))
+            node.append(frame.generateDeviceTree(state, gic))
 
         yield node

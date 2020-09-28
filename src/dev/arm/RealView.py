@@ -703,10 +703,11 @@ class VExpress_EMM(RealView):
         pci_pio_base=0)
 
     sys_counter = SystemCounter()
-    generic_timer = GenericTimer(int_phys_s=ArmPPI(num=29),
-                                 int_phys_ns=ArmPPI(num=30),
-                                 int_virt=ArmPPI(num=27),
-                                 int_hyp=ArmPPI(num=26))
+    generic_timer = GenericTimer(
+        int_phys_s=ArmPPI(num=29, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_phys_ns=ArmPPI(num=30, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_virt=ArmPPI(num=27, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_hyp=ArmPPI(num=26, int_type='IRQ_TYPE_LEVEL_LOW'))
 
     timer0 = Sp804(int0=ArmSPI(num=34), int1=ArmSPI(num=34),
                    pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
@@ -975,10 +976,11 @@ Interrupts:
     trusted_watchdog = Sp805(pio_addr=0x2a490000, interrupt=ArmSPI(num=56))
 
     sys_counter = SystemCounter()
-    generic_timer = GenericTimer(int_phys_s=ArmPPI(num=29),
-                                 int_phys_ns=ArmPPI(num=30),
-                                 int_virt=ArmPPI(num=27),
-                                 int_hyp=ArmPPI(num=26))
+    generic_timer = GenericTimer(
+        int_phys_s=ArmPPI(num=29, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_phys_ns=ArmPPI(num=30, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_virt=ArmPPI(num=27, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_hyp=ArmPPI(num=26, int_type='IRQ_TYPE_LEVEL_LOW'))
     generic_timer_mem = GenericTimerMem(cnt_control_base=0x2a430000,
                                         cnt_read_base=0x2a800000,
                                         cnt_ctl_base=0x2a810000,
