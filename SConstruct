@@ -637,6 +637,10 @@ if main['USE_PYTHON']:
               main['PYTHON_CONFIG'])
 
     print("Info: Using Python config: %s" % (python_config, ))
+    if python_config != 'python3-config':
+        warning('python3-config could not be found.\n'
+                'Future releases of gem5 will drop support for python2.')
+
     py_includes = readCommand([python_config, '--includes'],
                               exception='').split()
     py_includes = list(filter(
