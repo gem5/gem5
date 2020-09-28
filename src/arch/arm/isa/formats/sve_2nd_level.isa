@@ -246,6 +246,33 @@ namespace Aarch64
     }  // decodeSveIntMulAdd
 
     StaticInstPtr
+    decodeSveIntMatMulAdd(ExtMachInst machInst)
+    {
+        RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        uint8_t uns = bits(machInst, 23, 22);
+
+        switch (uns) {
+          case 0x0:
+            return new SveSmmla<int32_t, int8_t, int8_t>(
+                         machInst, zda, zn, zm);
+          case 0x2:
+            return new SveUsmmla<int32_t, uint8_t, int8_t>(
+                         machInst, zda, zn, zm);
+          case 0x3:
+            return new SveUmmla<uint32_t, uint8_t, uint8_t>(
+                         machInst, zda, zn, zm);
+          case 0x1:
+          default:
+            return new Unknown64(machInst);
+        }
+
+        return new Unknown64(machInst);
+    }  // decodeSveIntMatMulAdd
+
+    StaticInstPtr
     decodeSveShiftByImmPred0(ExtMachInst machInst)
     {
         RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
@@ -3808,6 +3835,22 @@ namespace Aarch64
         }
         return new Unknown64(machInst);
     }  // decodeSveMemStore
+
+    StaticInstPtr
+    decodeSveMisc(ExtMachInst machInst) {
+        switch(bits(machInst, 13, 10)) {
+          case 0b0110: {
+              return decodeSveIntMatMulAdd(machInst);
+              break;
+          }
+          default: {
+              return new Unknown64(machInst);
+              break;
+          }
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveMisc
+
 
 }  // namespace Aarch64
 }};

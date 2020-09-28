@@ -4250,6 +4250,22 @@ let {{
     sbclbCode = 'res = srcElem1 + ~(srcElem2) + carryIn;'
     sveTerInstUnpred('sbclb', 'Sbclb', 'VectorIntegerArithOp', unsignedTypes,
                       sbclbCode, isTop=False, isAdd=False)
+    mmlaCode = ('destElem += srcElemA * srcElemB')
+    # SMMLA (vectors)
+    sveMatMulInst('smmla', 'Smmla', 'SimdMultAccOp',
+                  (('int32_t', 'int8_t', 'int8_t'),),
+                  numDestRows=2, numDestCols=2, K=8,
+                  elt_mul_op=mmlaCode)
+    # USMMLA (vectors)
+    sveMatMulInst('usmmla', 'Usmmla', 'SimdMultAccOp',
+                  (('int32_t', 'uint8_t', 'int8_t'),),
+                  numDestRows=2, numDestCols=2, K=8,
+                  elt_mul_op=mmlaCode)
+    # UMMLA (vectors)
+    sveMatMulInst('ummla', 'Ummla', 'SimdMultAccOp',
+                  (('uint32_t', 'uint8_t', 'uint8_t'),),
+                  numDestRows=2, numDestCols=2, K=8,
+                  elt_mul_op=mmlaCode)
     # MOVPRFX (predicated)
     movCode = 'destElem = srcElem1;'
     sveUnaryInst('movprfx', 'MovprfxPredM', 'SimdMiscOp', unsignedTypes,

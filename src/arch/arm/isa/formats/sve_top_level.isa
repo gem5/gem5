@@ -44,6 +44,7 @@ namespace Aarch64
     StaticInstPtr decodeSveShiftByImmPred(ExtMachInst machInst);
     StaticInstPtr decodeSveIntArithUnaryPred(ExtMachInst machInst);
     StaticInstPtr decodeSveIntMulAdd(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntMatMulAdd(ExtMachInst machInst);
     StaticInstPtr decodeSveIntArithUnpred(ExtMachInst machInst);
     StaticInstPtr decodeSveIntLogUnpred(ExtMachInst machInst);
     StaticInstPtr decodeSveIndexGen(ExtMachInst machInst);
@@ -94,6 +95,8 @@ namespace Aarch64
     StaticInstPtr decodeSveMemContigLoad(ExtMachInst machInst);
     StaticInstPtr decodeSveMemGather64(ExtMachInst machInst);
     StaticInstPtr decodeSveMemStore(ExtMachInst machInst);
+
+    StaticInstPtr decodeSveMisc(ExtMachInst machInst);
 }
 }};
 
@@ -104,6 +107,14 @@ namespace Aarch64
     StaticInstPtr
     decodeSveInt(ExtMachInst machInst)
     {
+        if (bits(machInst, 31, 29) == 0b010) {
+            if (bits(machInst, 24) == 0b1 &&
+                bits(machInst, 21) == 0b0 &&
+                bits(machInst, 15, 14)==0b10) {
+                return decodeSveMisc(machInst);
+            }
+        }
+
         uint8_t b_29_24_21 = (bits(machInst, 29) << 2) |
                              (bits(machInst, 24) << 1) |
                              bits(machInst, 21);
