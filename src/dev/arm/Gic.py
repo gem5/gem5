@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2017-2019 ARM Limited
+# Copyright (c) 2012-2013, 2017-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -70,6 +70,19 @@ class BaseGic(PioDevice):
         assert self._state.interrupt_cells == 3
         return [ int_type, int_num, int_flag ]
 
+class ArmInterruptType(ScopedEnum):
+    """
+    The values of the scoped enum are matching Linux macroes
+    defined in include/linux/irq.h. They are mainly meant
+    to be used for DTB autogen
+    """
+    map = {
+        'IRQ_TYPE_EDGE_RISING' : 0x1,
+        'IRQ_TYPE_EDGE_FALLING' : 0x2,
+        'IRQ_TYPE_LEVEL_HIGH' : 0x4,
+        'IRQ_TYPE_LEVEL_LOW' : 0x8
+    }
+
 class ArmInterruptPin(SimObject):
     type = 'ArmInterruptPin'
     cxx_header = "dev/arm/base_gic.hh"
@@ -78,6 +91,8 @@ class ArmInterruptPin(SimObject):
 
     platform = Param.Platform(Parent.any, "Platform with interrupt controller")
     num = Param.UInt32("Interrupt number in GIC")
+    int_type = Param.ArmInterruptType('IRQ_TYPE_LEVEL_HIGH',
+        "Interrupt type (level/edge triggered)")
 
 class ArmSPI(ArmInterruptPin):
     type = 'ArmSPI'

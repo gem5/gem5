@@ -47,6 +47,8 @@
 #include "arch/arm/system.hh"
 #include "dev/io_device.hh"
 
+#include "enums/ArmInterruptType.hh"
+
 class Platform;
 class RealView;
 class ThreadContext;
@@ -177,8 +179,7 @@ class ArmInterruptPin : public Serializable
 {
     friend class ArmInterruptPinGen;
   protected:
-    ArmInterruptPin(Platform *platform, ThreadContext *tc,
-                    uint32_t int_num);
+    ArmInterruptPin(const ArmInterruptPinParams &p, ThreadContext *tc);
 
   public: /* Public interface */
     /**
@@ -226,6 +227,9 @@ class ArmInterruptPin : public Serializable
     /** Interrupt number to generate */
     const uint32_t intNum;
 
+    /** Interrupt triggering type */
+    const ArmInterruptType triggerType;
+
     /** True if interrupt pin is active, false otherwise */
     bool _active;
 };
@@ -234,7 +238,7 @@ class ArmSPI : public ArmInterruptPin
 {
     friend class ArmSPIGen;
   private:
-    ArmSPI(Platform *platform, uint32_t int_num);
+    ArmSPI(const ArmSPIParams &p);
 
   public:
     void raise() override;
@@ -245,7 +249,7 @@ class ArmPPI : public ArmInterruptPin
 {
     friend class ArmPPIGen;
   private:
-    ArmPPI(Platform *platform, ThreadContext *tc, uint32_t int_num);
+    ArmPPI(const ArmPPIParams &p, ThreadContext *tc);
 
   public:
     void raise() override;

@@ -81,7 +81,7 @@ ArmInterruptPinGen::ArmInterruptPinGen(const ArmInterruptPinParams &p)
 }
 
 ArmSPIGen::ArmSPIGen(const ArmSPIParams &p)
-    : ArmInterruptPinGen(p), pin(new ArmSPI(p.platform, p.num))
+    : ArmInterruptPinGen(p), pin(new ArmSPI(p))
 {
 }
 
@@ -110,7 +110,7 @@ ArmPPIGen::get(ThreadContext* tc)
     } else {
         // Generate PPI Pin
         auto &p = static_cast<const ArmPPIParams &>(_params);
-        ArmPPI *pin = new ArmPPI(p.platform, tc, p.num);
+        ArmPPI *pin = new ArmPPI(p, tc);
 
         pins.insert({cid, pin});
 
@@ -119,9 +119,9 @@ ArmPPIGen::get(ThreadContext* tc)
 }
 
 ArmInterruptPin::ArmInterruptPin(
-    Platform  *_platform, ThreadContext *tc, uint32_t int_num)
-      : threadContext(tc), platform(dynamic_cast<RealView*>(_platform)),
-        intNum(int_num), _active(false)
+    const ArmInterruptPinParams &p, ThreadContext *tc)
+      : threadContext(tc), platform(dynamic_cast<RealView*>(p.platform)),
+        intNum(p.num), triggerType(p.int_type), _active(false)
 {
     fatal_if(!platform, "Interrupt not connected to a RealView platform");
 }
@@ -156,8 +156,8 @@ ArmInterruptPin::unserialize(CheckpointIn &cp)
 }
 
 ArmSPI::ArmSPI(
-    Platform  *_platform, uint32_t int_num)
-      : ArmInterruptPin(_platform, nullptr, int_num)
+    const ArmSPIParams &p)
+      : ArmInterruptPin(p, nullptr)
 {
 }
 
@@ -176,8 +176,8 @@ ArmSPI::clear()
 }
 
 ArmPPI::ArmPPI(
-    Platform  *_platform, ThreadContext *tc, uint32_t int_num)
-      : ArmInterruptPin(_platform, tc, int_num)
+    const ArmPPIParams &p, ThreadContext *tc)
+      : ArmInterruptPin(p, tc)
 {
 }
 
