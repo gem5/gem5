@@ -1133,7 +1133,7 @@ class OperandList(object):
         # search for operands
         next_pos = 0
         while 1:
-            match = parser.operandsRE.search(code, next_pos)
+            match = parser.operandsRE().search(code, next_pos)
             if not match:
                 # no more matches: we're done
                 break
@@ -1303,7 +1303,7 @@ class SubOperandList(OperandList):
         # search for operands
         next_pos = 0
         while 1:
-            match = parser.operandsRE.search(code, next_pos)
+            match = parser.operandsRE().search(code, next_pos)
             if not match:
                 # no more matches: we're done
                 break
@@ -1558,6 +1558,13 @@ class ISAParser(Grammar):
         # variable to hold templates
         self.templateMap = {}
 
+        # variable to hold operands
+        self.operandNameMap = {}
+
+        # Regular expressions for working with operands
+        self._operandsRE = None
+        self._operandsWithExtRE = None
+
         # This dictionary maps format name strings to Format objects.
         self.formatMap = {}
 
@@ -1589,6 +1596,16 @@ class ISAParser(Grammar):
         self.maxInstSrcRegs = 0
         self.maxInstDestRegs = 0
         self.maxMiscDestRegs = 0
+
+    def operandsRE(self):
+        if not self._operandsRE:
+            self.buildOperandREs()
+        return self._operandsRE
+
+    def operandsWithExtRE(self):
+        if not self._operandsWithExtRE:
+            self.buildOperandREs()
+        return self._operandsWithExtRE
 
     def __getitem__(self, i):    # Allow object (self) to be
         return getattr(self, i)  # passed to %-substitutions
@@ -2581,18 +2598,19 @@ StaticInstPtr
             # in tmp_dict, just as if we evaluated a class declaration.
             operand_name[op_name] = type(cls_name, (base_cls,), tmp_dict)
 
-        self.operandNameMap = operand_name
+        self.operandNameMap.update(operand_name)
 
+    def buildOperandREs(self):
         # Define operand variables.
-        operands = list(user_dict.keys())
+        operands = list(self.operandNameMap.keys())
         # Add the elems defined in the vector operands and
         # build a map elem -> vector (used in OperandList)
         elem_to_vec = {}
-        for op in user_dict.keys():
-            if hasattr(self.operandNameMap[op], 'elems'):
-                for elem in self.operandNameMap[op].elems.keys():
+        for op_name, op in self.operandNameMap.items():
+            if hasattr(op, 'elems'):
+                for elem in op.elems.keys():
                     operands.append(elem)
-                    elem_to_vec[elem] = op
+                    elem_to_vec[elem] = op_name
         self.elemToVector = elem_to_vec
         extensions = self.operandTypeMap.keys()
 
@@ -2602,7 +2620,8 @@ StaticInstPtr
         (?!\w)       # neg. lookahead assertion: prevent partial matches
         ''' % ('|'.join(operands), '|'.join(extensions))
 
-        self.operandsRE = re.compile(operandsREString, re.MULTILINE|re.VERBOSE)
+        self._operandsRE = re.compile(operandsREString,
+                                      re.MULTILINE | re.VERBOSE)
 
         # Same as operandsREString, but extension is mandatory, and only two
         # groups are returned (base and ext, not full name as above).
@@ -2610,14 +2629,14 @@ StaticInstPtr
         operandsWithExtREString = r'(?<!\w)(%s)_(%s)(?!\w)' \
             % ('|'.join(operands), '|'.join(extensions))
 
-        self.operandsWithExtRE = \
+        self._operandsWithExtRE = \
             re.compile(operandsWithExtREString, re.MULTILINE)
 
     def substMungedOpNames(self, code):
         '''Munge operand names in code string to make legal C++
         variable names.  This means getting rid of the type extension
         if any.  Will match base_name attribute of Operand object.)'''
-        return self.operandsWithExtRE.sub(r'\1', code)
+        return self.operandsWithExtRE().sub(r'\1', code)
 
     def mungeSnippet(self, s):
         '''Fix up code snippets for final substitution in templates.'''
