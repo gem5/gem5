@@ -64,7 +64,7 @@ let {{
 '''
 
     def doPrivFormat(code, check_code, name, Name, opt_flags, check_tl=False):
-        (uses_imm, code, imm_code, r_string, i_string) = splitOutImm(code)
+        code, imm_code, _ = splitOutImm(code)
         tl_check = tl_check_code if check_tl else ''
         # If these are rd, rdpr, rdhpr, wr, wrpr, or wrhpr instructions,
         # cut any other info out of the mnemonic. Also pick a different
@@ -93,7 +93,7 @@ let {{
         else:
             decoder_output = ControlRegConstructor.subst(iop)
         exec_output = PrivExecute.subst(iop)
-        if uses_imm:
+        if imm_code is not None:
             imm_iop = InstObjParams(name, Name + 'Imm', reg_base + 'Imm',
                     {"code": imm_code, "check": check_code,
                      "tl_check": tl_check, "reg_name": reg_name},

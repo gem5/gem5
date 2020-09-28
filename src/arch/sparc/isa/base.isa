@@ -52,69 +52,69 @@ output header {{
 let {{
     def filterDoubles(code):
         assignRE = re.compile(r'\s*=(?!=)', re.MULTILINE)
-        for opName in ("Frd", "Frs1", "Frs2", "Frd_N"):
-            next_pos = 0
-            operandsREString = (r'''
-            (?<!\w)             # neg. lookbehind assertion: prevent partial matches
-            ((%s)(?:_([^\W_]+))?)   # match: operand with optional '.' then suffix
-            (?!\w)             # neg. lookahead assertion: prevent partial matches
-            ''' % opName)
-            operandsRE = re.compile(operandsREString, re.MULTILINE|re.VERBOSE)
-            is_src = False
-            is_dest = False
-            extension = None
-            foundOne = False
-            while 1:
-                match = operandsRE.search(code, next_pos)
-                if not match:
-                    break
-                foundOne = True
-                op = match.groups()
-                (op_full, op_base, op_ext) = op
-                is_dest_local = (assignRE.match(code, match.end()) != None)
-                is_dest = is_dest or is_dest_local
-                is_src = is_src or not is_dest_local
-                if extension and extension != op_ext:
-                    raise Exception("Inconsistent extensions in double filter")
-                extension = op_ext
-                next_pos = match.end()
-            if foundOne:
-                # Get rid of any unwanted extension
-                code = operandsRE.sub(op_base, code)
-                is_int = False
-                member = "d"
-                if extension in ("sb", "ub", "shw", "uhw", "sw", "uw", "sdw", "udw"):
-                    is_int = True
-                    member = "ui"
-                if is_src:
-                    code = ("%s = DoubleSingle(%s_high, %s_low).%s;" % \
-                        (opName, opName, opName, member)) + code
-                if is_dest:
-                    code += '''
-                        %s_low = DoubleSingle(%s).s[1];
-                        %s_high = DoubleSingle(%s).s[0];''' % \
-                             (opName, opName, opName, opName)
-                if is_int:
-                    code = ("uint64_t %s;" % opName) + code
-                else:
-                    code = ("double %s;" % opName) + code
+
+        int_extensions = ("sb", "ub", "shw", "uhw", "sw", "uw", "sdw", "udw")
+        operand_names = ("Frd", "Frs1", "Frs2", "Frd_N")
+
+        class Operand(object):
+            def __init__(self, name, ext):
+                self.name = name
+                self.ext = ext
+                self.src = False
+                self.dest = False
+
+        operands = {}
+
+        operandsREString = (r'''
+        # neg. lookbehind assertion: prevent partial matches
+        (?<!\w)
+        # match: operand with optional '.' then suffix
+        ((?P<name>%s)(_(?P<ext>[^\W_]+))?)
+        # neg. lookahead assertion: prevent partial matches
+        (?!\w)
+        ''' % '|'.join(operand_names))
+        operandsRE = re.compile(operandsREString, re.MULTILINE | re.VERBOSE)
+
+        for match in operandsRE.finditer(code):
+            name = match.group('name')
+            ext = match.group('ext')
+            operand = operands.setdefault(name, Operand(name, ext))
+            if assignRE.match(code, match.end()):
+                operand.dest = True
+            else:
+                operand.src = True
+            if operand.ext != ext:
+                raise Exception("Inconsistent extensions in double filter")
+
+        # Get rid of any unwanted extension
+        code = operandsRE.sub('\g<name>', code)
+
+        for op in operands.values():
+            is_int = op.ext in int_extensions
+            member, type = ('ui', 'uint64_t') if is_int else ('d', 'double')
+            if op.src:
+                code = ("%s = DoubleSingle(%s_high, %s_low).%s;" % \
+                    (op.name, op.name, op.name, member)) + code
+            if op.dest:
+                code += '''
+                    %s_low = DoubleSingle(%s).s[1];
+                    %s_high = DoubleSingle(%s).s[0];''' % \
+                         (op.name, op.name, op.name, op.name)
+            code = ("%s %s;" % (type, op.name)) + code
         return code
 }};
 
 let {{
     def splitOutImm(code):
-        matcher = re.compile(r'Rs(?P<rNum>\d)_or_imm(?P<iNum>\d+)(?P<typeQual>_[^\W_]+)?')
+        matcher = re.compile(
+                r'Rs(?P<rNum>\d)_or_imm(?P<iNum>\d+)(?P<typeQual>_[^\W_]+)?')
         rOrImmMatch = matcher.search(code)
-        if (rOrImmMatch == None):
-            return (False, code, '', '', '')
-        rString = rOrImmMatch.group("rNum")
-        if (rOrImmMatch.group("typeQual") != None):
-            rString += rOrImmMatch.group("typeQual")
-        iString = rOrImmMatch.group("iNum")
+        if rOrImmMatch == None:
+            return code, None, None
         orig_code = code
-        code = matcher.sub('Rs' + rString, orig_code)
-        imm_code = matcher.sub('imm', orig_code)
-        return (True, code, imm_code, rString, iString)
+        reg_code = matcher.sub('Rs\g<rNum>\g<typeQual>', code)
+        imm_code = matcher.sub('imm', code)
+        return reg_code, imm_code, rOrImmMatch.group('iNum')
 }};
 
 output exec {{

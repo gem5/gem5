@@ -59,15 +59,14 @@ def template IntOpExecute {{
 
 let {{
     def doIntFormat(code, ccCode, name, Name, opt_flags):
-        (usesImm, code, immCode,
-         rString, iString) = splitOutImm(code)
+        code, immCode, iString = splitOutImm(code)
         iop = InstObjParams(name, Name, 'IntOp',
                 {"code": code, "cc_code": ccCode},
                 opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         exec_output = IntOpExecute.subst(iop)
-        if usesImm:
+        if immCode is not None:
             imm_iop = InstObjParams(name, Name + 'Imm', 'IntOpImm' + iString,
                     {"code": immCode, "cc_code": ccCode}, opt_flags)
             header_output += BasicDeclare.subst(imm_iop)
