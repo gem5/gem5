@@ -47,59 +47,9 @@ from types import *
 
 from m5.util.grammar import Grammar
 from .operand_types import *
+from .util import *
 
 debug=False
-
-###################
-# Utility functions
-
-#
-# Indent every line in string 's' by two spaces
-# (except preprocessor directives).
-# Used to make nested code blocks look pretty.
-#
-def indent(s):
-    return re.sub(r'(?m)^(?!#)', '  ', s)
-
-#
-# Munge a somewhat arbitrarily formatted piece of Python code
-# (e.g. from a format 'let' block) into something whose indentation
-# will get by the Python parser.
-#
-# The two keys here are that Python will give a syntax error if
-# there's any whitespace at the beginning of the first line, and that
-# all lines at the same lexical nesting level must have identical
-# indentation.  Unfortunately the way code literals work, an entire
-# let block tends to have some initial indentation.  Rather than
-# trying to figure out what that is and strip it off, we prepend 'if
-# 1:' to make the let code the nested block inside the if (and have
-# the parser automatically deal with the indentation for us).
-#
-# We don't want to do this if (1) the code block is empty or (2) the
-# first line of the block doesn't have any whitespace at the front.
-
-def fixPythonIndentation(s):
-    # get rid of blank lines first
-    s = re.sub(r'(?m)^\s*\n', '', s);
-    if (s != '' and re.match(r'[ \t]', s[0])):
-        s = 'if 1:\n' + s
-    return s
-
-class ISAParserError(Exception):
-    """Exception class for parser errors"""
-    def __init__(self, first, second=None):
-        if second is None:
-            self.lineno = 0
-            self.string = first
-        else:
-            self.lineno = first
-            self.string = second
-
-    def __str__(self):
-        return self.string
-
-def error(*args):
-    raise ISAParserError(*args)
 
 ####################
 # Template objects.
@@ -119,7 +69,7 @@ class Template(object):
 
         # Protect non-Python-dict substitutions (e.g. if there's a printf
         # in the templated C++ code)
-        template = self.parser.protectNonSubstPercents(self.template)
+        template = protectNonSubstPercents(self.template)
 
         # Build a dict ('myDict') to use for the template substitution.
         # Start with the template namespace.  Make a copy since we're
@@ -763,54 +713,6 @@ class InstObjParams(object):
         else:
             self.fp_enable_check = ''
 
-##############
-# Stack: a simple stack object.  Used for both formats (formatStack)
-# and default cases (defaultStack).  Simply wraps a list to give more
-# stack-like syntax and enable initialization with an argument list
-# (as opposed to an argument that's a list).
-
-class Stack(list):
-    def __init__(self, *items):
-        list.__init__(self, items)
-
-    def push(self, item):
-        self.append(item);
-
-    def top(self):
-        return self[-1]
-
-# Format a file include stack backtrace as a string
-def backtrace(filename_stack):
-    fmt = "In file included from %s:"
-    return "\n".join([fmt % f for f in filename_stack])
-
-
-#######################
-#
-# LineTracker: track filenames along with line numbers in PLY lineno fields
-#     PLY explicitly doesn't do anything with 'lineno' except propagate
-#     it.  This class lets us tie filenames with the line numbers with a
-#     minimum of disruption to existing increment code.
-#
-
-class LineTracker(object):
-    def __init__(self, filename, lineno=1):
-        self.filename = filename
-        self.lineno = lineno
-
-    # Overload '+=' for increments.  We need to create a new object on
-    # each update else every token ends up referencing the same
-    # constantly incrementing instance.
-    def __iadd__(self, incr):
-        return LineTracker(self.filename, self.lineno + incr)
-
-    def __str__(self):
-        return "%s:%d" % (self.filename, self.lineno)
-
-    # In case there are places where someone really expects a number
-    def __int__(self):
-        return self.lineno
-
 
 #######################
 #
@@ -1285,7 +1187,7 @@ class ISAParser(Grammar):
     # indicate template substitutions by doubling them first so that the
     # format operation will reduce them back to single '%'s.
     def process_output(self, s):
-        s = self.protectNonSubstPercents(s)
+        s = protectNonSubstPercents(s)
         return substBitOps(s % self.templateMap)
 
     def p_output(self, t):
@@ -1789,12 +1691,6 @@ StaticInstPtr
 
         # create new object and store in global map
         self.formatMap[id] = Format(id, params, code)
-
-    def protectNonSubstPercents(self, s):
-        '''Protect any non-dict-substitution '%'s in a format string
-        (i.e. those not followed by '(')'''
-
-        return re.sub(r'%(?!\()', '%%', s)
 
     def buildOperandNameMap(self, user_dict, lineno):
         operand_name = {}
