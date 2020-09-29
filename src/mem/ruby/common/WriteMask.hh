@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2020,2021 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -157,6 +157,20 @@ class WriteMask
             }
         }
         return true;
+    }
+
+    void
+    andMask(const WriteMask & writeMask)
+    {
+        assert(mSize == writeMask.mSize);
+        for (int i = 0; i < mSize; i++) {
+            mMask[i] = (mMask.at(i)) & (writeMask.mMask.at(i));
+        }
+
+        if (writeMask.mAtomic) {
+            mAtomic = true;
+            mAtomicOp = writeMask.mAtomicOp;
+        }
     }
 
     void

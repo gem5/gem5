@@ -57,6 +57,7 @@ structure(WriteMask, external="yes", desc="...") {
   bool isEmpty();
   bool isFull();
   bool isOverlap(WriteMask);
+  void andMask(WriteMask);
   void orMask(WriteMask);
   void setInvertedMask(WriteMask);
   void fillMask();
