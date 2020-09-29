@@ -37,11 +37,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import with_statement, print_function
 import os
-import sys
 import re
-import inspect, traceback
+import sys
+import traceback
 # get type names
 from types import *
 
