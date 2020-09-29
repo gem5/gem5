@@ -72,8 +72,10 @@ namespace Aarch64
     StaticInstPtr decodeSveClamp(ExtMachInst machInst);
     StaticInstPtr decodeSve2Accum(ExtMachInst machInst);
 
-    StaticInstPtr decodeSveMultiplyAddUnpred(ExtMachInst machInst);
-    StaticInstPtr decodeSveMultiplyIndexed(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntegerDotProductUnpred(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntegerDotProductIndexed(ExtMachInst machInst);
+    StaticInstPtr decodeSveMixedSignDotProduct(ExtMachInst machInst);
+    StaticInstPtr decodeSveMixedSignDotProductIndexed(ExtMachInst machInst);
 
     StaticInstPtr decodeSveFpFastReduc(ExtMachInst machInst);
     StaticInstPtr decodeSveFpUnaryUnpred(ExtMachInst machInst);
@@ -97,6 +99,8 @@ namespace Aarch64
     StaticInstPtr decodeSveMemStore(ExtMachInst machInst);
 
     StaticInstPtr decodeSveMisc(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntegerMulAddUnpred(ExtMachInst machInst);
+    StaticInstPtr decodeSveMultiplyIndexed(ExtMachInst machInst);
 }
 }};
 
@@ -108,10 +112,33 @@ namespace Aarch64
     decodeSveInt(ExtMachInst machInst)
     {
         if (bits(machInst, 31, 29) == 0b010) {
-            if (bits(machInst, 24) == 0b1 &&
-                bits(machInst, 21) == 0b0 &&
-                bits(machInst, 15, 14)==0b10) {
-                return decodeSveMisc(machInst);
+            uint8_t op1 = bits(machInst, 24, 23);
+            uint8_t op2 = bits(machInst, 15, 14);
+            switch (op1) {
+              case 0b00:
+              case 0b01:
+                  if (bits(machInst, 21) == 0b0) {
+                      if (bits(machInst, 15) == 0b0) {
+                          return decodeSveIntegerMulAddUnpred(machInst);
+                      } else {
+                          return new Unknown64(machInst);
+                      }
+                  } else {
+                      return decodeSveMultiplyIndexed(machInst);
+                  }
+                  break;
+              case 0b10:
+              case 0b11:
+                  if (bits(machInst, 21) == 0b0 && op2 == 0b10) {
+                      return decodeSveMisc(machInst);
+                  } else if (bits(machInst, 21) == 0b0 && op2 == 0b11) {
+                      return decodeSve2Accum(machInst);
+                  } else {
+                      return new Unknown64(machInst);
+                  }
+                  break;
+              default:
+                  return new Unknown64(machInst);
             }
         }
 
@@ -131,11 +158,10 @@ namespace Aarch64
                                       bits(machInst, 13);
                     switch (b_15_13) {
                       case 0x0:
-                        if (bits(machInst, 30)) {
-                            return decodeSveMultiplyAddUnpred(machInst);
-                        } else {
+                        if (!bits(machInst, 30)) {
                             return decodeSveIntArithBinPred(machInst);
                         }
+                        break;
                       case 0x1:
                         return decodeSveIntReduc(machInst);
                       case 0x2:
@@ -156,12 +182,11 @@ namespace Aarch64
                     if (b_13) {
                         return decodeSveIntLogUnpred(machInst);
                     } else {
-                        if (bits(machInst, 30)) {
-                            return decodeSveMultiplyIndexed(machInst);
-                        } else {
+                        if (!bits(machInst, 30)) {
                             return decodeSveIntArithUnpred(machInst);
                         }
                     }
+                    break;
                   case 0x1:
                     if (b_13) {
                         return new Unknown64(machInst);
@@ -187,22 +212,12 @@ namespace Aarch64
             }
           case 0x2:
             {
-              if (bits(machInst, 30) == 0) {
-                  if (bits(machInst, 20)) {
-                      return decodeSveIntWideImmPred(machInst);
+                if (bits(machInst, 20)) {
+                    return decodeSveIntWideImmPred(machInst);
                 } else {
                     return decodeSveLogMaskImm(machInst);
                 }
-              } else {
-                uint8_t b_15_14 = bits(machInst, 15, 14);
-                switch (b_15_14) {
-                  case 3:
-                    return decodeSve2Accum(machInst);
-                  default :
-                    break;
-                }
-              }
-              break;
+                break;
             }
           case 0x3:
             {

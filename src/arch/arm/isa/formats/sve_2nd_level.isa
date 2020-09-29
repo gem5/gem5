@@ -2241,7 +2241,7 @@ namespace Aarch64
     }
 
     StaticInstPtr
-    decodeSveMultiplyAddUnpred(ExtMachInst machInst)
+    decodeSveIntegerDotProductUnpred(ExtMachInst machInst)
     {
         RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
         RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
@@ -2273,10 +2273,10 @@ namespace Aarch64
         }
 
         return new Unknown64(machInst);
-    } // decodeSveMultiplyAddUnpred
+    } // decodeSveIntegerDotProductUnpred
 
     StaticInstPtr
-    decodeSveMultiplyIndexed(ExtMachInst machInst)
+    decodeSveIntegerDotProductIndexed(ExtMachInst machInst)
     {
         RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
         RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
@@ -2310,7 +2310,59 @@ namespace Aarch64
             }
         }
         return new Unknown64(machInst);
-    } // decodeSveMultiplyIndexed
+    } // decodeSveIntegerDotProductIndexed
+
+    StaticInstPtr
+    decodeSveMixedSignDotProduct(ExtMachInst machInst)
+    {
+        uint8_t size = (uint8_t) bits(machInst, 23, 22);
+        if (size != 0b10) {
+            return new Unknown64(machInst);
+        }
+
+        RegIndex zda M5_VAR_USED = (RegIndex)
+                                          (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn M5_VAR_USED = (RegIndex)
+                                          (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm M5_VAR_USED = (RegIndex)
+                                          (uint8_t) bits(machInst, 20, 16);
+
+        // Placeholder for SveUsdotv
+        //return SveUsdotv<int32_t, uint8_t, int8_t>(machInst, zda, zn, zm);
+        return new Unknown64(machInst);
+    } // decodeSveMixedSignDotProduct
+
+    StaticInstPtr
+    decodeSveMixedSignDotProductIndexed(ExtMachInst machInst)
+    {
+        uint8_t size = (uint8_t) bits(machInst, 23, 22);
+        if (size != 0b10) {
+            return new Unknown64(machInst);
+        }
+
+        RegIndex zda M5_VAR_USED = (RegIndex)
+                                          (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn M5_VAR_USED = (RegIndex)
+                                          (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm M5_VAR_USED = (RegIndex)
+                                          (uint8_t) bits(machInst, 18, 16);
+        uint8_t i2 M5_VAR_USED = (uint8_t) bits(machInst, 20, 19);
+
+        uint8_t usig = (uint8_t) bits(machInst, 10);
+
+        if (usig) {
+            // Placeholder for SveSudoti
+            //return SveSudoti<int32_t, int8_t, uint8_t>
+            //                         (machInst, zda, zn, zm, i2);
+            return new Unknown64(machInst);
+        } else {
+            // Placeholder for SveUsdoti
+            //return SveUsdoti<int32_t, uint8_t, int8_t>
+            //                         (machInst, zda, zn, zm, i2);
+            return new Unknown64(machInst);
+        }
+
+    } // decodeSveMixedSignDotProductIndexed
 
     StaticInstPtr
     decodeSve2ArithCarry(ExtMachInst machInst)
@@ -3851,6 +3903,43 @@ namespace Aarch64
         return new Unknown64(machInst);
     }  // decodeSveMisc
 
+    StaticInstPtr
+    decodeSveIntegerMulAddUnpred(ExtMachInst machInst)
+    {
+        uint8_t op1 = (uint8_t) bits(machInst, 13, 11);
+        if (bits(machInst, 14) == 0b0) {
+            if (op1 == 0b000) {
+                return decodeSveIntegerDotProductUnpred(machInst);
+            } else {
+                return new Unknown64(machInst);
+            }
+        } else {
+            if (op1 == 0b111 &&
+                bits(machInst, 10) == 0b0) {
+                return decodeSveMixedSignDotProduct(machInst);
+            } else {
+                return new Unknown64(machInst);
+            }
+        }
+    }
+
+    StaticInstPtr
+    decodeSveMultiplyIndexed(ExtMachInst machInst)
+    {
+        if (bits(machInst, 15, 13) == 0b000) {
+            switch (bits(machInst, 12, 11)) {
+              case 0b00:
+                return decodeSveIntegerDotProductIndexed(machInst);
+              case 0b11:
+                return decodeSveMixedSignDotProductIndexed(machInst);
+              default:
+                return new Unknown64(machInst);
+            }
+        } else {
+            return new Unknown64(machInst);
+        }
+        return new Unknown64(machInst);
+    }
 
 }  // namespace Aarch64
 }};
