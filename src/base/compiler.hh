@@ -76,6 +76,8 @@
 // gcc and clang support a custom attribute which is essentially the same
 // thing.
 #  define M5_VAR_USED [[gnu::unused]]
+#else
+#  error "Don't know what to do for your compiler."
 #endif
 
 
@@ -106,6 +108,8 @@
 // we can't do that with direct substitution.
 #  define M5_LIKELY(cond) __builtin_expect(!!(cond), 1)
 #  define M5_UNLIKELY(cond) __builtin_expect(!!(cond), 0)
+#else
+#  error "Don't know what to do for your compiler."
 #endif
 
 // When a member variable may be unused, mark it with M5_CLASS_VAR_USED. This
