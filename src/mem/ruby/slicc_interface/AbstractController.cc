@@ -317,7 +317,10 @@ AbstractController::getPort(const std::string &if_name, PortID idx)
 void
 AbstractController::functionalMemoryRead(PacketPtr pkt)
 {
-    memoryPort.sendFunctional(pkt);
+    // read from mem. req. queue if write data is pending there
+    MessageBuffer *req_queue = getMemReqQueue();
+    if (!req_queue || !req_queue->functionalRead(pkt))
+        memoryPort.sendFunctional(pkt);
 }
 
 int
