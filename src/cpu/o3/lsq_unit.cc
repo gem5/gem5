@@ -700,6 +700,17 @@ LSQUnit::executeStore(const DynInstPtr &store_inst)
         DPRINTF(LSQUnit,"Fault on Store PC %s, [sn:%lli], Size = 0\n",
                 store_inst->pcState(), store_inst->seqNum);
 
+        if (store_inst->isAtomic()) {
+            // If the instruction faulted, then we need to send it along
+            // to commit without the instruction completing.
+            if (!(store_inst->hasRequest() && store_inst->strictlyOrdered()) ||
+                store_inst->isAtCommit()) {
+                store_inst->setExecuted();
+            }
+            iewStage->instToCommit(store_inst);
+            iewStage->activityThisCycle();
+        }
+
         return store_fault;
     }
 
