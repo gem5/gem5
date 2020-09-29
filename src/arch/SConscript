@@ -105,15 +105,17 @@ SCons.Tool.SourceFileScanner.add_scanner('.cc.inc', SCons.Tool.CScanner)
 # output from the ISA description (*.isa) files.
 #
 
-parser_py = File('isa_parser.py')
+parser_files = Glob('isa_parser/*.py')
 micro_asm_py = File('micro_asm.py')
 
 # import ply here because SCons screws with sys.path when performing actions.
 import ply
 
+arch_dir = Dir('.')
+
 def run_parser(target, source, env):
     # Add the current directory to the system path so we can import files.
-    sys.path[0:0] = [ parser_py.dir.abspath ]
+    sys.path[0:0] = [ arch_dir.abspath ]
     import isa_parser
 
     parser = isa_parser.ISAParser(target[0].dir.abspath)
@@ -207,7 +209,7 @@ def ISADesc(desc, decoder_splits=1, exec_splits=1):
             source_gen('generic_cpu_exec_%d.cc' % i)
 
     # Actually create the builder.
-    sources = [desc, parser_py, micro_asm_py]
+    sources = [desc, micro_asm_py] + parser_files
     IsaDescBuilder(target=gen, source=sources, env=env)
     return gen
 
