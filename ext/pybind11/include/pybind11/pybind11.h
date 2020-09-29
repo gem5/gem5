@@ -12,6 +12,7 @@
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-value"
+#pragma clang diagnostic warning "-Wrange-loop-analysis"
 #endif
 
 #if defined(__INTEL_COMPILER)
