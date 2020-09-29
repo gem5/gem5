@@ -162,9 +162,9 @@ class SMMUv3(ClockedObject):
     # [0] S2P = 0b1, Stage 2 translation supported.
     smmu_idr0 = Param.UInt32(0x094C100F, "SMMU_IDR0 register");
 
-    # [25:21] CMDQS = 0b00101, Maximum number of Command queue entries
-    # as log 2 (entries) (0b00101 = 32 entries).
-    smmu_idr1 = Param.UInt32(0x00A00000, "SMMU_IDR1 register");
+    # [25:21] CMDQS = 0b00111, Maximum number of Command queue entries
+    # as log 2 (entries) (0b00111 = 128 entries).
+    smmu_idr1 = Param.UInt32(0x00E00000, "SMMU_IDR1 register");
 
     smmu_idr2 = Param.UInt32(0, "SMMU_IDR2 register");
     smmu_idr3 = Param.UInt32(0, "SMMU_IDR3 register");
