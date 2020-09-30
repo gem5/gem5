@@ -63,18 +63,6 @@ class SimpleNetwork(RubyNetwork):
         "Only valid when physical_vnets_channels is set. This overrides the"
         "bandwidth_factor parameter set for the  individual links.")
 
-    def vnet_buffer_size(self, vnet):
-        """
-        Gets the size of the message buffers associated to a vnet
-        If physical_vnets_channels is set we just multiply the size of the
-        buffers as SimpleNetwork does not actually creates multiple physical
-        channels per vnet.
-        """
-        if len(self.physical_vnets_channels) == 0:
-            return self.buffer_size
-        else:
-            return self.buffer_size * self.physical_vnets_channels[vnet]
-
     def setup_buffers(self):
         # Setup internal buffers for links and routers
         for link in self.int_links:
@@ -128,8 +116,22 @@ class Switch(BasicRouter):
                         "Routing strategy to be used")
 
     def setup_buffers(self, network):
+        def vnet_buffer_size(vnet):
+            """
+            Gets the size of the message buffers associated to a vnet
+            If physical_vnets_channels is set we just multiply the size of the
+            buffers as SimpleNetwork does not actually creates multiple phy
+            channels per vnet.
+            """
+            if len(network.physical_vnets_channels) == 0:
+                return network.buffer_size
+            else:
+                return network.buffer_size * \
+                       network.physical_vnets_channels[vnet]
+
         if len(self.port_buffers) > 0:
             fatal("User should not manually set routers' port_buffers")
+
         router_buffers = []
         # Add message buffers to routers at the end of each
         # unidirectional internal link
@@ -137,7 +139,7 @@ class Switch(BasicRouter):
             if link.dst_node == self:
                 for i in range(int(network.number_of_virtual_networks)):
                     router_buffers.append(SwitchPortBuffer(
-                                    buffer_size = network.vnet_buffer_size(i)))
+                                    buffer_size = vnet_buffer_size(i)))
 
         # Add message buffers to routers for each external link connection
         for link in network.ext_links:
@@ -145,6 +147,6 @@ class Switch(BasicRouter):
             if link.int_node == self:
                 for i in range(int(network.number_of_virtual_networks)):
                     router_buffers.append(SwitchPortBuffer(
-                                    buffer_size = network.vnet_buffer_size(i)))
+                                    buffer_size = vnet_buffer_size(i)))
 
         self.port_buffers = router_buffers

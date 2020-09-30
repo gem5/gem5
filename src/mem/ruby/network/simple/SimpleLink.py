@@ -63,12 +63,29 @@ class SimpleIntLink(BasicIntLink):
         if len(self.buffers) > 0:
             fatal("User should not manually set links' \
                    in_buffers or out_buffers")
-        # Note that all SimpleNetwork MessageBuffers are currently ordered
 
         # The network needs number_of_virtual_networks buffers per
         # in and out port
         buffers = []
         for i in range(int(network.number_of_virtual_networks)):
-            buffers.append(MessageBuffer(ordered = True,
-                                    buffer_size = network.vnet_buffer_size(i)))
+            buffers.append(MessageBuffer(ordered = True))
+
+        # If physical_vnets_channels is set we adjust the buffer sizes and
+        # the max_dequeue_rate in order to achieve the expected thoughput
+        # assuming a fully pipelined link, i.e., throughput of 1 msg per cycle
+        # per channel (assuming the channels width matches the protocol
+        # logical message size, otherwise maximum thoughput may be smaller).
+        # In MessageBuffer, an entry occupied by a dequeued message at cycle
+        # X will available for enqueuing another message at cycle X+1. So
+        # for a 1 cy enqueue latency, 2 entries are needed. For any latency,
+        # the size should be at least latency+1.
+        if len(network.physical_vnets_channels) != 0:
+            assert(len(network.physical_vnets_channels) == \
+                   int(network.number_of_virtual_networks))
+            for i in range(int(network.number_of_virtual_networks)):
+                buffers[i].buffer_size = \
+                    network.physical_vnets_channels[i] * (self.latency + 1)
+                buffers[i].max_dequeue_rate = \
+                    network.physical_vnets_channels[i]
+
         self.buffers = buffers
