@@ -49,13 +49,9 @@ class OperandList(object):
         # delete strings and comments so we don't match on operands inside
         for regEx in (stringRE, commentRE):
             code = regEx.sub('', code)
+
         # search for operands
-        next_pos = 0
-        while 1:
-            match = parser.operandsRE().search(code, next_pos)
-            if not match:
-                # no more matches: we're done
-                break
+        for match in parser.operandsRE().finditer(code):
             op = match.groups()
             # regexp groups are operand full name, base, and extension
             (op_full, op_base, op_ext) = op
@@ -103,8 +99,7 @@ class OperandList(object):
                     op_desc.elemExt = elem_op[1]
                     op_desc.active_elems = [elem_op]
                 self.append(op_desc)
-            # start next search after end of current match
-            next_pos = match.end()
+
         self.sort()
         # enumerate source & dest register operands... used in building
         # constructor later
@@ -219,13 +214,9 @@ class SubOperandList(OperandList):
         # delete strings and comments so we don't match on operands inside
         for regEx in (stringRE, commentRE):
             code = regEx.sub('', code)
+
         # search for operands
-        next_pos = 0
-        while 1:
-            match = parser.operandsRE().search(code, next_pos)
-            if not match:
-                # no more matches: we're done
-                break
+        for match in parser.operandsRE().finditer(code):
             op = match.groups()
             # regexp groups are operand full name, base, and extension
             (op_full, op_base, op_ext) = op
@@ -246,8 +237,6 @@ class SubOperandList(OperandList):
                     # if not, add a reference to it to this sub list
                     self.append(requestor_list.bases[op_base])
 
-            # start next search after end of current match
-            next_pos = match.end()
         self.sort()
         self.memOperand = None
         # Whether the whole PC needs to be read so parts of it can be accessed
