@@ -3098,6 +3098,15 @@ let {{
     def sveDotInst(name, Name, opClass, types, isIndexed = True):
         global header_output, exec_output, decoders
         code = sveEnabledCheckCode + '''
+        // Types of the extended versions of the source elements.
+        // Required to make sure the intermediate calculations don't overflow.
+        using ExtendedElementA = typename vector_element_traits::
+                                   extend_element<DElement,
+                                                  SElementA>::type;
+        using ExtendedElementB = typename vector_element_traits::
+                                   extend_element<DElement,
+                                                  SElementB>::type;
+
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
         for (int i = 0; i < eCount; ++i) {'''
@@ -3107,17 +3116,21 @@ let {{
             int s = segbase + imm;'''
         code += '''
             DElement res = AA64FpDest_xd[i];
-            DElement srcElem1, srcElem2;
+            ExtendedElementA srcElemA;
+            ExtendedElementB srcElemB;
             for (int j = 0; j <= 3; ++j) {
-                srcElem1 = static_cast<DElement>(AA64FpOp1_xs[4 * i + j]);'''
+                srcElemA = static_cast<ExtendedElementA>
+                                          (AA64FpOp1_srcA[4 * i + j]);'''
         if isIndexed:
             code += '''
-                srcElem2 = static_cast<DElement>(AA64FpOp2_xs[4 * s + j]);'''
+                srcElemB = static_cast<ExtendedElementB>
+                                          (AA64FpOp2_srcB[4 * s + j]);'''
         else:
             code += '''
-                srcElem2 = static_cast<DElement>(AA64FpOp2_xs[4 * i + j]);'''
+                srcElemB = static_cast<ExtendedElementB>
+                                          (AA64FpOp2_srcB[4 * i + j]);'''
         code += '''
-                res += srcElem1 * srcElem2;
+                res += srcElemA * srcElemB;
             }
             AA64FpDestMerge_xd[i] = res;
         }'''
@@ -3129,7 +3142,7 @@ let {{
             header_output += SveWideningTerImmOpDeclare.subst(iop)
         else:
             header_output += SveWideningTerOpDeclare.subst(iop)
-        exec_output += SveWideningOpExecute.subst(iop)
+        exec_output += SveWideningTerOpExecute.subst(iop)
         for type in types:
             substDict = {'targs': type, 'class_name': 'Sve' + Name}
             exec_output += SveOpExecDeclare.subst(substDict)
@@ -4468,11 +4481,14 @@ let {{
     sveBinInst('sdivr', 'Sdivr', 'SimdDivOp', signedTypes, sdivrCode,
                PredType.MERGE, True)
     # SDOT (indexed)
-    sveDotInst('sdot', 'Sdoti', 'SimdAluOp', ['int8_t, int32_t',
-        'int16_t, int64_t'], isIndexed = True)
+    sveDotInst('sdot', 'Sdoti', 'SimdAluOp', ['int8_t, int8_t, int32_t',
+        'int16_t, int16_t, int64_t'], isIndexed = True)
     # SDOT (vectors)
-    sveDotInst('sdot', 'Sdotv', 'SimdAluOp', ['int8_t, int32_t',
-        'int16_t, int64_t'], isIndexed = False)
+    sveDotInst('sdot', 'Sdotv', 'SimdAluOp', ['int8_t, int8_t, int32_t',
+        'int16_t, int16_t, int64_t'], isIndexed = False)
+    # SUDOT (indexed)
+    sveDotInst('sudot', 'Sudoti', 'SimdAluOp', ['int8_t, uint8_t, int32_t'],
+               isIndexed = True)
     # SEL (predicates)
     selCode = 'destElem = srcElem1;'
     svePredLogicalInst('sel', 'PredSel', 'SimdPredAluOp', ('uint8_t',),
@@ -4857,11 +4873,17 @@ let {{
     sveBinInst('udivr', 'Udivr', 'SimdDivOp', unsignedTypes, udivrCode,
                PredType.MERGE, True)
     # UDOT (indexed)
-    sveDotInst('udot', 'Udoti', 'SimdAluOp', ['uint8_t, uint32_t',
-        'uint16_t, uint64_t'], isIndexed = True)
+    sveDotInst('udot', 'Udoti', 'SimdAluOp', ['uint8_t, uint8_t, uint32_t',
+        'uint16_t, uint16_t, uint64_t'], isIndexed = True)
     # UDOT (vectors)
-    sveDotInst('udot', 'Udotv', 'SimdAluOp', ['uint8_t, uint32_t',
-        'uint16_t, uint64_t'], isIndexed = False)
+    sveDotInst('udot', 'Udotv', 'SimdAluOp', ['uint8_t, uint8_t, uint32_t',
+        'uint16_t, uint16_t, uint64_t'], isIndexed = False)
+    # USDOT (indexed)
+    sveDotInst('usdot', 'Usdoti', 'SimdAluOp', ['uint8_t, int8_t, int32_t'],
+               isIndexed = True)
+    # USDOT (vectors)
+    sveDotInst('usdot', 'Usdotv', 'SimdAluOp', ['uint8_t, int8_t, int32_t'],
+               isIndexed = False)
     # UMAX (immediate)
     sveWideImmInst('umax', 'UmaxImm', 'SimdCmpOp', unsignedTypes, maxCode)
     # UMAX (vectors)

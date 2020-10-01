@@ -2256,19 +2256,19 @@ namespace Aarch64
         uint8_t usig = (uint8_t) bits(machInst, 10);
         if (size & 0x1) {
             if (usig) {
-                return new SveUdotv<uint16_t, uint64_t>(machInst,
-                                                        zda, zn, zm);
+                return new SveUdotv<uint16_t, uint16_t, uint64_t>
+                                        (machInst, zda, zn, zm);
             } else {
-                return new SveSdotv<int16_t, int64_t>(machInst,
-                                                        zda, zn, zm);
+                return new SveSdotv<int16_t, int16_t, int64_t>
+                                        (machInst, zda, zn, zm);
             }
         } else {
             if (usig) {
-                return new SveUdotv<uint8_t, uint32_t>(machInst,
-                                                        zda, zn, zm);
+                return new SveUdotv<uint8_t, uint8_t, uint32_t>
+                                        (machInst, zda, zn, zm);
             } else {
-                return new SveSdotv<int8_t, int32_t>(machInst,
-                                                        zda, zn, zm);
+                return new SveSdotv<int8_t, int8_t, int32_t>
+                                        (machInst, zda, zn, zm);
             }
         }
 
@@ -2292,21 +2292,21 @@ namespace Aarch64
             RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 19, 16);
             uint8_t i1 = (uint8_t) bits(machInst, 20);
             if (usig) {
-                return new SveUdoti<uint16_t, uint64_t>(machInst,
-                                                        zda, zn, zm, i1);
+                return new SveUdoti<uint16_t, uint16_t, uint64_t>
+                                       (machInst, zda, zn, zm, i1);
             } else {
-                return new SveSdoti<int16_t, int64_t>(machInst,
-                                                        zda, zn, zm, i1);
+                return new SveSdoti<int16_t, int16_t, int64_t>
+                                       (machInst, zda, zn, zm, i1);
             }
         } else {
             RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 18, 16);
             uint8_t i2 = (uint8_t) bits(machInst, 20, 19);
             if (usig) {
-                return new SveUdoti<uint8_t, uint32_t>(machInst,
-                                                        zda, zn, zm, i2);
+                return new SveUdoti<uint8_t, uint8_t, uint32_t>
+                                        (machInst, zda, zn, zm, i2);
             } else {
-                return new SveSdoti<int8_t, int32_t>(machInst,
-                                                        zda, zn, zm, i2);
+                return new SveSdoti<int8_t, int8_t, int32_t>
+                                        (machInst, zda, zn, zm, i2);
             }
         }
         return new Unknown64(machInst);
@@ -2320,16 +2320,12 @@ namespace Aarch64
             return new Unknown64(machInst);
         }
 
-        RegIndex zda M5_VAR_USED = (RegIndex)
-                                          (uint8_t) bits(machInst, 4, 0);
-        RegIndex zn M5_VAR_USED = (RegIndex)
-                                          (uint8_t) bits(machInst, 9, 5);
-        RegIndex zm M5_VAR_USED = (RegIndex)
-                                          (uint8_t) bits(machInst, 20, 16);
+        RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
-        // Placeholder for SveUsdotv
-        //return SveUsdotv<int32_t, uint8_t, int8_t>(machInst, zda, zn, zm);
-        return new Unknown64(machInst);
+        return new SveUsdotv<uint8_t, int8_t, int32_t>
+                                 (machInst, zda, zn, zm);
     } // decodeSveMixedSignDotProduct
 
     StaticInstPtr
@@ -2340,26 +2336,18 @@ namespace Aarch64
             return new Unknown64(machInst);
         }
 
-        RegIndex zda M5_VAR_USED = (RegIndex)
-                                          (uint8_t) bits(machInst, 4, 0);
-        RegIndex zn M5_VAR_USED = (RegIndex)
-                                          (uint8_t) bits(machInst, 9, 5);
-        RegIndex zm M5_VAR_USED = (RegIndex)
-                                          (uint8_t) bits(machInst, 18, 16);
-        uint8_t i2 M5_VAR_USED = (uint8_t) bits(machInst, 20, 19);
-
+        RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 18, 16);
+        uint8_t i2 = (uint8_t) bits(machInst, 20, 19);
         uint8_t usig = (uint8_t) bits(machInst, 10);
 
         if (usig) {
-            // Placeholder for SveSudoti
-            //return SveSudoti<int32_t, int8_t, uint8_t>
-            //                         (machInst, zda, zn, zm, i2);
-            return new Unknown64(machInst);
+            return new SveSudoti<int8_t, uint8_t, int32_t>
+                                     (machInst, zda, zn, zm, i2);
         } else {
-            // Placeholder for SveUsdoti
-            //return SveUsdoti<int32_t, uint8_t, int8_t>
-            //                         (machInst, zda, zn, zm, i2);
-            return new Unknown64(machInst);
+            return new SveUsdoti<uint8_t, int8_t, int32_t>
+                                     (machInst, zda, zn, zm, i2);
         }
 
     } // decodeSveMixedSignDotProductIndexed

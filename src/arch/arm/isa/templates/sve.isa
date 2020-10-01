@@ -1139,17 +1139,22 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template SveWideningTerImmOpDeclare {{
-template <class _SElement, class _DElement>
+template <class _SElementA, class _SElementB, class _DElement>
 class %(class_name)s : public %(base_class)s
 {
+  static_assert(sizeof(_SElementA) == sizeof(_SElementB),
+                "Source elements must have the same size.");
+
   private:
     %(reg_idx_arr_decl)s;
 
   protected:
     typedef _DElement Element;
-    typedef _SElement SElement;
+    typedef _SElementA SElementA;
+    typedef _SElementB SElementB;
     typedef _DElement DElement;
-    typedef _SElement TPSElem;
+    typedef _SElementA TPSrcAElem;
+    typedef _SElementB TPSrcBElem;
     typedef _DElement TPDElem;
 
   public:
@@ -1168,7 +1173,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template SveWideningTerOpDeclare {{
-template <class _SElement, class _DElement>
+template <class _SElementA, class _SElementB, class _DElement>
 class %(class_name)s : public %(base_class)s
 {
   private:
@@ -1176,9 +1181,11 @@ class %(class_name)s : public %(base_class)s
 
   protected:
     typedef _DElement Element;
-    typedef _SElement SElement;
+    typedef _SElementA SElementA;
+    typedef _SElementB SElementB;
     typedef _DElement DElement;
-    typedef _SElement TPSElem;
+    typedef _SElementA TPSrcAElem;
+    typedef _SElementB TPSrcBElem;
     typedef _DElement TPDElem;
 
   public:
@@ -1288,6 +1295,26 @@ def template SveWideningOpExecute {{
 
         %(code)s;
         if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SveWideningTerOpExecute {{
+    template <class SElementA, class SElementB, class DElement>
+    Fault %(class_name)s<SElementA, SElementB, DElement>::execute
+           (ExecContext *xc,
+            trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        %(op_decl)s;
+        %(op_rd)s;
+
+        %(code)s;
+        if (fault == NoFault)
+        {
             %(op_wb)s;
         }
 
