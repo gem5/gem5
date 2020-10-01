@@ -115,6 +115,9 @@ class DerivedGoldStandard(MatchGoldStandard):
 class MatchStdout(DerivedGoldStandard):
     _file = constants.gem5_simulation_stdout
     _default_ignore_regex = [
+            re.compile('^\s+$'), # Remove blank lines.
+            re.compile('^gem5 Simulator System'),
+            re.compile('^gem5 is copyrighted software'),
             re.compile('^Redirecting (stdout|stderr) to'),
             re.compile('^gem5 version '),
             re.compile('^gem5 compiled '),

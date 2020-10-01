@@ -103,7 +103,7 @@ const std::string DIST_SIZE = "dist-size";
 static inline void
 panicFsOnlyPseudoInst(const char *name)
 {
-    panic("Pseudo inst \"%s\" is only available in Full System mode.");
+    panic("Pseudo inst \"%s\" is only available in Full System mode.", name);
 }
 
 void

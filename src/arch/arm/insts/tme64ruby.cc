@@ -109,15 +109,16 @@ Tstart64::completeAcc(PacketPtr pkt, ExecContext *xc,
 
         // checkpointing occurs in the outer transaction only
         if (htm_depth == 1) {
-            auto new_cpt = new HTMCheckpoint();
+            BaseHTMCheckpointPtr& cpt = xc->tcBase()->getHtmCheckpointPtr();
 
-            new_cpt->save(tc);
-            new_cpt->destinationRegister(dest);
+            HTMCheckpoint *armcpt =
+                dynamic_cast<HTMCheckpoint*>(cpt.get());
+            assert(armcpt != nullptr);
+
+            armcpt->save(tc);
+            armcpt->destinationRegister(dest);
 
             ArmISA::globalClearExclusive(tc);
-
-            xc->tcBase()->setHtmCheckpointPtr(
-                std::unique_ptr<BaseHTMCheckpoint>(new_cpt));
         }
 
         xc->setIntRegOperand(this, 0, (Dest64) & mask(intWidth));

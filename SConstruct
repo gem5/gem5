@@ -238,7 +238,8 @@ global_vars.AddVariables(
     ('MARSHAL_CCFLAGS_EXTRA', 'Extra C and C++ marshal compiler flags', ''),
     ('MARSHAL_LDFLAGS_EXTRA', 'Extra marshal linker flags', ''),
     ('PYTHON_CONFIG', 'Python config binary to use',
-     [ 'python2.7-config', 'python-config', 'python3-config' ]),
+     [ 'python3-config', 'python-config', 'python2.7-config', 'python2-config']
+    ),
     ('PROTOC', 'protoc tool', environ.get('PROTOC', 'protoc')),
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
@@ -336,12 +337,6 @@ if main['GCC'] or main['CLANG']:
     main.Append(PSHLINKFLAGS=shared_partial_flags)
     main.Append(PLINKFLAGS=shared_partial_flags)
 
-    # Treat warnings as errors but white list some warnings that we
-    # want to allow (e.g., deprecation warnings).
-    main.Append(CCFLAGS=['-Werror',
-                         '-Wno-error=deprecated-declarations',
-                         '-Wno-error=deprecated',
-                        ])
 else:
     error('\n'.join((
           "Don't know what compiler options to use for your compiler.",
@@ -636,6 +631,10 @@ if main['USE_PYTHON']:
               main['PYTHON_CONFIG'])
 
     print("Info: Using Python config: %s" % (python_config, ))
+    if python_config != 'python3-config':
+        warning('python3-config could not be found.\n'
+                'Future releases of gem5 will drop support for python2.')
+
     py_includes = readCommand([python_config, '--includes'],
                               exception='').split()
     py_includes = list(filter(

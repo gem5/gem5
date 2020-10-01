@@ -38,6 +38,7 @@
 #include "arch/arm/isa.hh"
 
 #include "arch/arm/faults.hh"
+#include "arch/arm/htm.hh"
 #include "arch/arm/interrupts.hh"
 #include "arch/arm/pmu.hh"
 #include "arch/arm/self_debug.hh"
@@ -439,8 +440,14 @@ ISA::startup()
 {
     BaseISA::startup();
 
-    if (tc)
+    if (tc) {
         setupThreadContext();
+
+        if (haveTME) {
+            std::unique_ptr<BaseHTMCheckpoint> cpt(new HTMCheckpoint());
+            tc->setHtmCheckpointPtr(std::move(cpt));
+        }
+    }
 
     afterStartup = true;
 }

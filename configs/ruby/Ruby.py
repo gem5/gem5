@@ -136,7 +136,7 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
             mem_ctrl = m5.objects.MemCtrl(dram = dram_intf)
 
             if options.access_backing_store:
-                mem_ctrl.kvm_map=False
+                dram_intf.kvm_map=False
 
             mem_ctrls.append(mem_ctrl)
             dir_ranges.append(mem_ctrl.dram.range)

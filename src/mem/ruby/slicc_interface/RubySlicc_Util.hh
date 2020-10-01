@@ -256,8 +256,8 @@ inline int
 countBoolVec(BoolVec bVec)
 {
     int count = 0;
-    for (const auto &it: bVec) {
-        if (it) {
+    for (const bool e: bVec) {
+        if (e) {
             count++;
         }
     }

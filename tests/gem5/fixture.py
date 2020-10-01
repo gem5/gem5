@@ -42,6 +42,7 @@ import shutil
 import sys
 import socket
 import threading
+import gzip
 
 from six.moves import urllib
 
@@ -260,11 +261,11 @@ class DownloadedProgram(UniqueFixture):
         and downloads an updated version if it is needed.
     """
 
-    def __new__(cls, url, path, filename):
+    def __new__(cls, url, path, filename, gzip_decompress=False):
         target = joinpath(path, filename)
         return super(DownloadedProgram, cls).__new__(cls, target)
 
-    def _init(self, url, path, filename, **kwargs):
+    def _init(self, url, path, filename, gzip_decompress=False, **kwargs):
         """
         url: string
             The url of the archive
@@ -272,12 +273,16 @@ class DownloadedProgram(UniqueFixture):
             The absolute path of the directory containing the archive
         filename: string
             The name of the archive
+        gzip_decompress: boolean
+            True if this target resource have been compressed using gzip and
+            is to be decompressed prior to usage.
         """
 
         self.url = url
         self.path = path
         self.filename = joinpath(path, filename)
         self.name = "Downloaded:" + self.filename
+        self.gzip_decompress = gzip_decompress
 
     def _download(self):
         import errno
@@ -288,7 +293,17 @@ class DownloadedProgram(UniqueFixture):
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
-        urllib.request.urlretrieve(self.url, self.filename)
+        if self.gzip_decompress:
+            gzipped_filename = self.filename + ".gz"
+            urllib.request.urlretrieve(self.url, gzipped_filename)
+
+            with open(self.filename, 'w') as outfile:
+                with gzip.open(gzipped_filename, 'r') as infile:
+                    shutil.copyfileobj(infile, outfile)
+
+            os.remove(gzipped_filename)
+        else:
+            urllib.request.urlretrieve(self.url, self.filename)
 
     def _getremotetime(self):
         import datetime, time
