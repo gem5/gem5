@@ -334,7 +334,7 @@ Sequencer::recordMissLatency(SequencerRequest* srequest, bool llscSuccess,
     assert(curCycle() >= issued_time);
     Cycles total_lat = completion_time - issued_time;
 
-    if (initialRequestTime < issued_time) {
+    if ((initialRequestTime != 0) && (initialRequestTime < issued_time)) {
         // if the request was combined in the protocol with an earlier request
         // for the same address, it is possible that it will return an
         // initialRequestTime corresponding the earlier request.  Since Cycles
