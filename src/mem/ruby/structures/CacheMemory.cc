@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -533,10 +533,10 @@ CacheMemoryStats::CacheMemoryStats(Stats::Group *parent)
       ADD_STAT(m_demand_misses, "Number of cache demand misses"),
       ADD_STAT(m_demand_accesses, "Number of cache demand accesses",
                m_demand_hits + m_demand_misses),
-      ADD_STAT(m_sw_prefetches, "Number of software prefetches"),
-      ADD_STAT(m_hw_prefetches, "Number of hardware prefetches"),
-      ADD_STAT(m_prefetches, "Number of prefetches",
-               m_sw_prefetches + m_hw_prefetches),
+      ADD_STAT(m_prefetch_hits, "Number of cache prefetch hits"),
+      ADD_STAT(m_prefetch_misses, "Number of cache prefetch misses"),
+      ADD_STAT(m_prefetch_accesses, "Number of cache prefetch accesses",
+               m_prefetch_hits + m_prefetch_misses),
       ADD_STAT(m_accessModeType, "")
 {
     numDataArrayReads
@@ -573,13 +573,13 @@ CacheMemoryStats::CacheMemoryStats(Stats::Group *parent)
         .init(8)
         .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan);
 
-    m_sw_prefetches
+    m_prefetch_hits
         .flags(Stats::nozero);
 
-    m_hw_prefetches
+    m_prefetch_misses
         .flags(Stats::nozero);
 
-    m_prefetches
+    m_prefetch_accesses
         .flags(Stats::nozero);
 
     m_accessModeType
@@ -747,3 +747,16 @@ CacheMemory::profileDemandMiss()
 {
     cacheMemoryStats.m_demand_misses++;
 }
+
+void
+CacheMemory::profilePrefetchHit()
+{
+    cacheMemoryStats.m_prefetch_hits++;
+}
+
+void
+CacheMemory::profilePrefetchMiss()
+{
+    cacheMemoryStats.m_prefetch_misses++;
+}
+

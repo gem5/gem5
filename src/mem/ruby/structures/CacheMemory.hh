@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -228,9 +228,9 @@ class CacheMemory : public SimObject
           Stats::Scalar m_demand_misses;
           Stats::Formula m_demand_accesses;
 
-          Stats::Scalar m_sw_prefetches;
-          Stats::Scalar m_hw_prefetches;
-          Stats::Formula m_prefetches;
+          Stats::Scalar m_prefetch_hits;
+          Stats::Scalar m_prefetch_misses;
+          Stats::Formula m_prefetch_accesses;
 
           Stats::Vector m_accessModeType;
       } cacheMemoryStats;
@@ -240,6 +240,8 @@ class CacheMemory : public SimObject
       // each time they are called
       void profileDemandHit();
       void profileDemandMiss();
+      void profilePrefetchHit();
+      void profilePrefetchMiss();
 };
 
 std::ostream& operator<<(std::ostream& out, const CacheMemory& obj);
