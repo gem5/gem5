@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 ARM Limited
+ * Copyright (c) 2019-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -193,7 +193,8 @@ class Sequencer : public RubyPort
                      const MachineType mach, const bool externalHit,
                      const Cycles initialRequestTime,
                      const Cycles forwardRequestTime,
-                     const Cycles firstResponseTime);
+                     const Cycles firstResponseTime,
+                     const bool was_coalesced);
 
     void recordMissLatency(SequencerRequest* srequest, bool llscSuccess,
                            const MachineType respondingMach,

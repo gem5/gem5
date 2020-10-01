@@ -473,19 +473,18 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
                 aliased_stores++;
             }
             markRemoved();
-            ruby_request = false;
             hitCallback(&seq_req, data, success, mach, externalHit,
                         initialRequestTime, forwardRequestTime,
-                        firstResponseTime);
+                        firstResponseTime, !ruby_request);
+            ruby_request = false;
         } else {
             // handle read request
             assert(!ruby_request);
             markRemoved();
-            ruby_request = false;
             aliased_loads++;
             hitCallback(&seq_req, data, true, mach, externalHit,
                         initialRequestTime, forwardRequestTime,
-                        firstResponseTime);
+                        firstResponseTime, !ruby_request);
         }
         seq_req_list.pop_front();
     }
@@ -538,10 +537,10 @@ Sequencer::readCallback(Addr address, DataBlock& data,
                               firstResponseTime);
         }
         markRemoved();
-        ruby_request = false;
         hitCallback(&seq_req, data, true, mach, externalHit,
                     initialRequestTime, forwardRequestTime,
-                    firstResponseTime);
+                    firstResponseTime, !ruby_request);
+        ruby_request = false;
         seq_req_list.pop_front();
     }
 
@@ -557,7 +556,8 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
                        const MachineType mach, const bool externalHit,
                        const Cycles initialRequestTime,
                        const Cycles forwardRequestTime,
-                       const Cycles firstResponseTime)
+                       const Cycles firstResponseTime,
+                       const bool was_coalesced)
 {
     warn_once("Replacement policy updates recently became the responsibility "
               "of SLICC state machines. Make sure to setMRU() near callbacks "
@@ -566,6 +566,14 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
     PacketPtr pkt = srequest->pkt;
     Addr request_address(pkt->getAddr());
     RubyRequestType type = srequest->m_type;
+
+    if (was_coalesced) {
+        // Notify the controller about a coalesced request so it can properly
+        // account for it in its hit/miss stats and/or train prefetchers
+        // (this is protocol-dependent)
+        m_controller->notifyCoalesced(request_address, type, pkt->req,
+                                      data, externalHit);
+    }
 
     // Load-linked handling
     if (type == RubyRequestType_Load_Linked) {
