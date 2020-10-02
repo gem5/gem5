@@ -229,11 +229,15 @@ def config_mem(options, system):
                                              static_frontend_latency = '4ns')
                 elif opt_mem_type == "SimpleMemory":
                     mem_ctrl = m5.objects.SimpleMemory()
+                elif opt_mem_type == "QoSMemSinkInterface":
+                    mem_ctrl = m5.objects.QoSMemSinkCtrl()
                 else:
                     mem_ctrl = m5.objects.MemCtrl()
 
                 # Hookup the controller to the interface and add to the list
-                if opt_mem_type != "SimpleMemory":
+                if opt_mem_type == "QoSMemSinkInterface":
+                    mem_ctrl.interface = dram_intf
+                elif opt_mem_type != "SimpleMemory":
                     mem_ctrl.dram = dram_intf
 
                 mem_ctrls.append(mem_ctrl)
