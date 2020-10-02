@@ -203,7 +203,10 @@ both tags and in the author field of the changeset.
 For significant changes, authors are encouraged to add copyright information
 and their names at the beginning of the file. The main purpose of the author
 names on the file is to track who is most knowledgeable about the file (e.g.,
-who has contributed a significant amount of code to the file).
+who has contributed a significant amount of code to the file). The
+`util/update-copyright.py` helper script can help to keep your copyright dates
+up-to-date when you make further changes to files which already have your
+copyright but with older dates.
 
 Note: If you do not follow these guidelines, the gerrit review site will
 automatically reject your patch.
