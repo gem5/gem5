@@ -82,6 +82,29 @@ PciDevice::PciDevice(const PciDeviceParams &p)
     fatal_if(p.InterruptPin >= 5,
              "Invalid PCI interrupt '%i' specified.", p.InterruptPin);
 
+    BARs[0] = p.BAR0;
+    BARs[1] = p.BAR1;
+    BARs[2] = p.BAR2;
+    BARs[3] = p.BAR3;
+    BARs[4] = p.BAR4;
+    BARs[5] = p.BAR5;
+
+    int idx = 0;
+    for (auto *bar: BARs) {
+        auto *mu = dynamic_cast<PciMemUpperBar *>(bar);
+        // If this is the upper 32 bits of a memory BAR, try to connect it to
+        // the lower 32 bits.
+        if (mu) {
+            fatal_if(idx == 0,
+                    "First BAR in %s is upper 32 bits of a memory BAR.", idx);
+            auto *ml = dynamic_cast<PciMemBar *>(BARs[idx - 1]);
+            fatal_if(!ml, "Upper 32 bits of memory BAR in %s doesn't come "
+                    "after the lower 32.");
+            mu->lower(ml);
+        }
+        idx++;
+    }
+
     config.vendor = htole(p.VendorID);
     config.device = htole(p.DeviceID);
     config.command = htole(p.Command);
@@ -95,12 +118,10 @@ PciDevice::PciDevice(const PciDeviceParams &p)
     config.headerType = htole(p.HeaderType);
     config.bist = htole(p.BIST);
 
-    config.baseAddr[0] = htole(p.BAR0);
-    config.baseAddr[1] = htole(p.BAR1);
-    config.baseAddr[2] = htole(p.BAR2);
-    config.baseAddr[3] = htole(p.BAR3);
-    config.baseAddr[4] = htole(p.BAR4);
-    config.baseAddr[5] = htole(p.BAR5);
+    idx = 0;
+    for (auto *bar: BARs)
+        config.baseAddr[idx++] = bar->write(hostInterface, 0);
+
     config.cardbusCIS = htole(p.CardbusCIS);
     config.subsystemVendorID = htole(p.SubsystemVendorID);
     config.subsystemID = htole(p.SubsystemID);
@@ -183,33 +204,6 @@ PciDevice::PciDevice(const PciDeviceParams &p)
     pxcap.pxls = p.PXCAPLinkStatus;
     pxcap.pxdcap2 = p.PXCAPDevCap2;
     pxcap.pxdc2 = p.PXCAPDevCtrl2;
-
-    BARSize[0] = p.BAR0Size;
-    BARSize[1] = p.BAR1Size;
-    BARSize[2] = p.BAR2Size;
-    BARSize[3] = p.BAR3Size;
-    BARSize[4] = p.BAR4Size;
-    BARSize[5] = p.BAR5Size;
-
-    legacyIO[0] = p.BAR0LegacyIO;
-    legacyIO[1] = p.BAR1LegacyIO;
-    legacyIO[2] = p.BAR2LegacyIO;
-    legacyIO[3] = p.BAR3LegacyIO;
-    legacyIO[4] = p.BAR4LegacyIO;
-    legacyIO[5] = p.BAR5LegacyIO;
-
-    for (int i = 0; i < 6; ++i) {
-        if (legacyIO[i]) {
-            BARAddrs[i] = p.LegacyIOBase + letoh(config.baseAddr[i]);
-            config.baseAddr[i] = 0;
-        } else {
-            BARAddrs[i] = 0;
-            uint32_t barsize = BARSize[i];
-            if (barsize != 0 && !isPowerOf2(barsize)) {
-                fatal("BAR %d size %d is not a power of 2\n", i, BARSize[i]);
-            }
-        }
-    }
 }
 
 Tick
@@ -273,10 +267,13 @@ AddrRangeList
 PciDevice::getAddrRanges() const
 {
     AddrRangeList ranges;
-    int x = 0;
-    for (x = 0; x < 6; x++)
-        if (BARAddrs[x] != 0)
-            ranges.push_back(RangeSize(BARAddrs[x],BARSize[x]));
+    PciCommandRegister command = letoh(config.command);
+    for (auto *bar: BARs) {
+        if (command.ioSpace && bar->isIo())
+            ranges.push_back(bar->range());
+        if (command.memorySpace && bar->isMem())
+            ranges.push_back(bar->range());
+    }
     return ranges;
 }
 
@@ -333,6 +330,8 @@ PciDevice::writeConfig(PacketPtr pkt)
         switch (offset) {
           case PCI_COMMAND:
             config.command = pkt->getLE<uint8_t>();
+            // IO or memory space may have been enabled/disabled.
+            pioPort.sendRangeChange();
             break;
           case PCI_STATUS:
             config.status = pkt->getLE<uint8_t>();
@@ -357,55 +356,11 @@ PciDevice::writeConfig(PacketPtr pkt)
           case PCI0_BASE_ADDR4:
           case PCI0_BASE_ADDR5:
             {
-                int barnum = BAR_NUMBER(offset);
-
-                if (!legacyIO[barnum]) {
-                    // convert BAR values to host endianness
-                    uint32_t he_old_bar = letoh(config.baseAddr[barnum]);
-                    uint32_t he_new_bar = letoh(pkt->getLE<uint32_t>());
-
-                    uint32_t bar_mask =
-                        BAR_IO_SPACE(he_old_bar) ? BAR_IO_MASK : BAR_MEM_MASK;
-
-                    // Writing 0xffffffff to a BAR tells the card to set the
-                    // value of the bar to a bitmask indicating the size of
-                    // memory it needs
-                    if (he_new_bar == 0xffffffff) {
-                        he_new_bar = ~(BARSize[barnum] - 1);
-                    } else {
-                        // does it mean something special to write 0 to a BAR?
-                        he_new_bar &= ~bar_mask;
-                        if (he_new_bar) {
-                            if (isLargeBAR(barnum)) {
-                                if (BAR_IO_SPACE(he_old_bar))
-                                    warn("IO BARs can't be set as large BAR");
-                                uint64_t he_large_bar =
-                                         letoh(config.baseAddr[barnum + 1]);
-                                he_large_bar = he_large_bar << 32;
-                                he_large_bar += he_new_bar;
-                                BARAddrs[barnum] =
-                                        hostInterface.memAddr(he_large_bar);
-                            } else if (isLargeBAR(barnum - 1)) {
-                                BARAddrs[barnum] = 0;
-                                uint64_t he_large_bar = he_new_bar;
-                                he_large_bar = he_large_bar << 32;
-                                // We need to apply mask to lower bits
-                                he_large_bar +=
-                                         letoh(config.baseAddr[barnum - 1]
-                                         & ~bar_mask);
-                                BARAddrs[barnum - 1] =
-                                        hostInterface.memAddr(he_large_bar);
-                           } else {
-                                BARAddrs[barnum] = BAR_IO_SPACE(he_old_bar) ?
-                                    hostInterface.pioAddr(he_new_bar) :
-                                    hostInterface.memAddr(he_new_bar);
-                            }
-                            pioPort.sendRangeChange();
-                        }
-                    }
-                    config.baseAddr[barnum] = htole((he_new_bar & ~bar_mask) |
-                                                    (he_old_bar & bar_mask));
-                }
+                int num = BAR_NUMBER(offset);
+                auto *bar = BARs[num];
+                config.baseAddr[num] =
+                    htole(bar->write(hostInterface, pkt->getLE<uint32_t>()));
+                pioPort.sendRangeChange();
             }
             break;
 
@@ -421,6 +376,8 @@ PciDevice::writeConfig(PacketPtr pkt)
             // register. However they should never get set, so lets ignore
             // it for now
             config.command = pkt->getLE<uint32_t>();
+            // IO or memory space may have been enabled/disabled.
+            pioPort.sendRangeChange();
             break;
 
           default:
@@ -441,8 +398,6 @@ PciDevice::writeConfig(PacketPtr pkt)
 void
 PciDevice::serialize(CheckpointOut &cp) const
 {
-    SERIALIZE_ARRAY(BARSize, sizeof(BARSize) / sizeof(BARSize[0]));
-    SERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs) / sizeof(BARAddrs[0]));
     SERIALIZE_ARRAY(config.data, sizeof(config.data) / sizeof(config.data[0]));
 
     // serialize the capability list registers
@@ -506,10 +461,11 @@ PciDevice::serialize(CheckpointOut &cp) const
 void
 PciDevice::unserialize(CheckpointIn &cp)
 {
-    UNSERIALIZE_ARRAY(BARSize, sizeof(BARSize) / sizeof(BARSize[0]));
-    UNSERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs) / sizeof(BARAddrs[0]));
     UNSERIALIZE_ARRAY(config.data,
                       sizeof(config.data) / sizeof(config.data[0]));
+
+    for (int idx = 0; idx < BARs.size(); idx++)
+        BARs[idx]->write(hostInterface, config.baseAddr[idx]);
 
     // unserialize the capability list registers
     uint16_t tmp16;
@@ -595,3 +551,32 @@ PciDevice::unserialize(CheckpointIn &cp)
     pioPort.sendRangeChange();
 }
 
+PciBarNone *
+PciBarNoneParams::create() const
+{
+    return new PciBarNone(*this);
+}
+
+PciIoBar *
+PciIoBarParams::create() const
+{
+    return new PciIoBar(*this);
+}
+
+PciLegacyIoBar *
+PciLegacyIoBarParams::create() const
+{
+    return new PciLegacyIoBar(*this);
+}
+
+PciMemBar *
+PciMemBarParams::create() const
+{
+    return new PciMemBar(*this);
+}
+
+PciMemUpperBar *
+PciMemUpperBarParams::create() const
+{
+    return new PciMemUpperBar(*this);
+}

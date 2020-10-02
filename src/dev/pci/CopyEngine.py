@@ -28,7 +28,7 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 
-from m5.objects.PciDevice import PciDevice
+from m5.objects.PciDevice import PciDevice, PciMemBar
 
 class CopyEngine(PciDevice):
     type = 'CopyEngine'
@@ -47,12 +47,17 @@ class CopyEngine(PciDevice):
     MinimumGrant = 0xff
     InterruptLine = 0x20
     InterruptPin = 0x01
-    BAR0Size = '1kB'
+
+    BAR0 = PciMemBar(size='1kB')
 
     ChanCnt = Param.UInt8(4, "Number of DMA channels that exist on device")
-    XferCap = Param.MemorySize('4kB', "Number of bits of transfer size that are supported")
+    XferCap = Param.MemorySize('4kB',
+            "Number of bits of transfer size that are supported")
 
-    latBeforeBegin = Param.Latency('20ns', "Latency after a DMA command is seen before it's proccessed")
-    latAfterCompletion = Param.Latency('20ns', "Latency after a DMA command is complete before it's reported as such")
+    latBeforeBegin = Param.Latency('20ns',
+            "Latency after a DMA command is seen before it's proccessed")
+    latAfterCompletion = Param.Latency('20ns',
+            "Latency after a DMA command is complete before "
+            "it's reported as such")
 
 

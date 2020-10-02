@@ -73,29 +73,18 @@ enum ConfRegOffset {
 
 static const uint16_t timeRegWithDecodeEn = 0x8000;
 
-IdeController::Channel::Channel(
-        string newName, Addr _cmdSize, Addr _ctrlSize) :
-    _name(newName),
-    cmdAddr(0), cmdSize(_cmdSize), ctrlAddr(0), ctrlSize(_ctrlSize),
-    device0(NULL), device1(NULL), selected(NULL)
+IdeController::Channel::Channel(string newName) : _name(newName)
 {
     bmiRegs.reset();
     bmiRegs.status.dmaCap0 = 1;
     bmiRegs.status.dmaCap1 = 1;
 }
 
-IdeController::Channel::~Channel()
-{
-}
-
 IdeController::IdeController(const Params &p)
-    : PciDevice(p), primary(name() + ".primary", BARSize[0], BARSize[1]),
-    secondary(name() + ".secondary", BARSize[2], BARSize[3]),
-    bmiAddr(0), bmiSize(BARSize[4]),
+    : PciDevice(p), primary(name() + ".primary"),
+    secondary(name() + ".secondary"),
     primaryTiming(htole(timeRegWithDecodeEn)),
     secondaryTiming(htole(timeRegWithDecodeEn)),
-    deviceTiming(0), udmaControl(0), udmaTiming(0), ideConfig(0),
-    ioEnabled(false), bmEnabled(false),
     ioShift(p.io_shift), ctrlOffset(p.ctrl_offset)
 {
 
@@ -126,18 +115,6 @@ IdeController::IdeController(const Params &p)
 
     primary.select(false);
     secondary.select(false);
-
-    if ((BARAddrs[0] & ~BAR_IO_MASK) && (!legacyIO[0] || ioShift)) {
-        primary.cmdAddr = BARAddrs[0];  primary.cmdSize = BARSize[0];
-        primary.ctrlAddr = BARAddrs[1]; primary.ctrlSize = BARSize[1];
-    }
-    if ((BARAddrs[2] & ~BAR_IO_MASK) && (!legacyIO[2] || ioShift)) {
-        secondary.cmdAddr = BARAddrs[2];  secondary.cmdSize = BARSize[2];
-        secondary.ctrlAddr = BARAddrs[3]; secondary.ctrlSize = BARSize[3];
-    }
-
-    ioEnabled = (config.command & htole(PCI_CMD_IOSE));
-    bmEnabled = (config.command & htole(PCI_CMD_BME));
 }
 
 bool
@@ -323,41 +300,6 @@ IdeController::writeConfig(PacketPtr pkt)
         }
         pkt->makeAtomicResponse();
     }
-
-    /* Trap command register writes and enable IO/BM as appropriate as well as
-     * BARs. */
-    switch(offset) {
-      case PCI0_BASE_ADDR0:
-        if (BARAddrs[0] != 0)
-            primary.cmdAddr = BARAddrs[0];
-        break;
-
-      case PCI0_BASE_ADDR1:
-        if (BARAddrs[1] != 0)
-            primary.ctrlAddr = BARAddrs[1];
-        break;
-
-      case PCI0_BASE_ADDR2:
-        if (BARAddrs[2] != 0)
-            secondary.cmdAddr = BARAddrs[2];
-        break;
-
-      case PCI0_BASE_ADDR3:
-        if (BARAddrs[3] != 0)
-            secondary.ctrlAddr = BARAddrs[3];
-        break;
-
-      case PCI0_BASE_ADDR4:
-        if (BARAddrs[4] != 0)
-            bmiAddr = BARAddrs[4];
-        break;
-
-      case PCI_COMMAND:
-        DPRINTF(IdeCtrl, "Writing to PCI Command val: %#x\n", config.command);
-        ioEnabled = (config.command & htole(PCI_CMD_IOSE));
-        bmEnabled = (config.command & htole(PCI_CMD_BME));
-        break;
-    }
     return configDelay;
 }
 
@@ -487,48 +429,45 @@ IdeController::dispatchAccess(PacketPtr pkt, bool read)
     if (pkt->getSize() != 1 && pkt->getSize() != 2 && pkt->getSize() !=4)
          panic("Bad IDE read size: %d\n", pkt->getSize());
 
-    if (!ioEnabled) {
-        pkt->makeAtomicResponse();
-        DPRINTF(IdeCtrl, "io not enabled\n");
-        return;
-    }
-
     Addr addr = pkt->getAddr();
     int size = pkt->getSize();
     uint8_t *dataPtr = pkt->getPtr<uint8_t>();
 
-    if (addr >= primary.cmdAddr &&
-            addr < (primary.cmdAddr + primary.cmdSize)) {
-        addr -= primary.cmdAddr;
+    int bar_num;
+    Addr offset;
+    panic_if(!getBAR(addr, bar_num, offset),
+        "IDE controller access to invalid address: %#x.", addr);
+
+    switch (bar_num) {
+      case 0:
         // linux may have shifted the address by ioShift,
         // here we shift it back, similarly for ctrlOffset.
-        addr >>= ioShift;
-        primary.accessCommand(addr, size, dataPtr, read);
-    } else if (addr >= primary.ctrlAddr &&
-               addr < (primary.ctrlAddr + primary.ctrlSize)) {
-        addr -= primary.ctrlAddr;
-        addr += ctrlOffset;
-        primary.accessControl(addr, size, dataPtr, read);
-    } else if (addr >= secondary.cmdAddr &&
-               addr < (secondary.cmdAddr + secondary.cmdSize)) {
-        addr -= secondary.cmdAddr;
-        secondary.accessCommand(addr, size, dataPtr, read);
-    } else if (addr >= secondary.ctrlAddr &&
-               addr < (secondary.ctrlAddr + secondary.ctrlSize)) {
-        addr -= secondary.ctrlAddr;
-        secondary.accessControl(addr, size, dataPtr, read);
-    } else if (addr >= bmiAddr && addr < (bmiAddr + bmiSize)) {
-        if (!read && !bmEnabled)
-            return;
-        addr -= bmiAddr;
-        if (addr < sizeof(Channel::BMIRegs)) {
-            primary.accessBMI(addr, size, dataPtr, read);
-        } else {
-            addr -= sizeof(Channel::BMIRegs);
-            secondary.accessBMI(addr, size, dataPtr, read);
+        offset >>= ioShift;
+        primary.accessCommand(offset, size, dataPtr, read);
+        break;
+      case 1:
+        offset += ctrlOffset;
+        primary.accessControl(offset, size, dataPtr, read);
+        break;
+      case 2:
+        secondary.accessCommand(offset, size, dataPtr, read);
+        break;
+      case 3:
+        secondary.accessControl(offset, size, dataPtr, read);
+        break;
+      case 4:
+        {
+            PciCommandRegister command = letoh(config.command);
+            if (!read && !command.busMaster)
+                return;
+
+            if (offset < sizeof(Channel::BMIRegs)) {
+                primary.accessBMI(offset, size, dataPtr, read);
+            } else {
+                offset -= sizeof(Channel::BMIRegs);
+                secondary.accessBMI(offset, size, dataPtr, read);
+            }
         }
-    } else {
-        panic("IDE controller access to invalid address: %#x\n", addr);
     }
 
 #ifndef NDEBUG
@@ -577,22 +516,12 @@ IdeController::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(udmaControl);
     SERIALIZE_SCALAR(udmaTiming);
     SERIALIZE_SCALAR(ideConfig);
-
-    // Serialize internal state
-    SERIALIZE_SCALAR(ioEnabled);
-    SERIALIZE_SCALAR(bmEnabled);
-    SERIALIZE_SCALAR(bmiAddr);
-    SERIALIZE_SCALAR(bmiSize);
 }
 
 void
 IdeController::Channel::serialize(const std::string &base,
                                   CheckpointOut &cp) const
 {
-    paramOut(cp, base + ".cmdAddr", cmdAddr);
-    paramOut(cp, base + ".cmdSize", cmdSize);
-    paramOut(cp, base + ".ctrlAddr", ctrlAddr);
-    paramOut(cp, base + ".ctrlSize", ctrlSize);
     uint8_t command = bmiRegs.command;
     paramOut(cp, base + ".bmiRegs.command", command);
     paramOut(cp, base + ".bmiRegs.reserved0", bmiRegs.reserved0);
@@ -620,21 +549,11 @@ IdeController::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(udmaControl);
     UNSERIALIZE_SCALAR(udmaTiming);
     UNSERIALIZE_SCALAR(ideConfig);
-
-    // Unserialize internal state
-    UNSERIALIZE_SCALAR(ioEnabled);
-    UNSERIALIZE_SCALAR(bmEnabled);
-    UNSERIALIZE_SCALAR(bmiAddr);
-    UNSERIALIZE_SCALAR(bmiSize);
 }
 
 void
 IdeController::Channel::unserialize(const std::string &base, CheckpointIn &cp)
 {
-    paramIn(cp, base + ".cmdAddr", cmdAddr);
-    paramIn(cp, base + ".cmdSize", cmdSize);
-    paramIn(cp, base + ".ctrlAddr", ctrlAddr);
-    paramIn(cp, base + ".ctrlSize", ctrlSize);
     uint8_t command;
     paramIn(cp, base +".bmiRegs.command", command);
     bmiRegs.command = command;

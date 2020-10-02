@@ -40,7 +40,7 @@ from m5.defines import buildEnv
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
-from m5.objects.PciDevice import PciDevice
+from m5.objects.PciDevice import PciDevice, PciIoBar, PciMemBar
 
 ETHERNET_ROLE = 'ETHERNET'
 Port.compat(ETHERNET_ROLE, ETHERNET_ROLE)
@@ -152,17 +152,11 @@ class IGbE(EtherDevice):
     SubClassCode = 0x00
     ClassCode = 0x02
     ProgIF = 0x00
-    BAR0 = 0x00000000
-    BAR1 = 0x00000000
-    BAR2 = 0x00000000
-    BAR3 = 0x00000000
-    BAR4 = 0x00000000
-    BAR5 = 0x00000000
+    BAR0 = PciMemBar(size='128kB')
     MaximumLatency = 0x00
     MinimumGrant = 0xff
     InterruptLine = 0x1e
     InterruptPin = 0x01
-    BAR0Size = '128kB'
     wb_delay = Param.Latency('10ns', "delay before desc writeback occurs")
     fetch_delay = Param.Latency('10ns', "delay before desc fetch occurs")
     fetch_comp_delay = Param.Latency('10ns', "delay after desc fetch occurs")
@@ -224,18 +218,11 @@ class NSGigE(EtherDevBase):
     SubClassCode = 0x00
     ClassCode = 0x02
     ProgIF = 0x00
-    BAR0 = 0x00000001
-    BAR1 = 0x00000000
-    BAR2 = 0x00000000
-    BAR3 = 0x00000000
-    BAR4 = 0x00000000
-    BAR5 = 0x00000000
+    BARs = (PciIoBar(size='256B'), PciMemBar(size='4kB'))
     MaximumLatency = 0x34
     MinimumGrant = 0xb0
     InterruptLine = 0x1e
     InterruptPin = 0x01
-    BAR0Size = '256B'
-    BAR1Size = '4kB'
 
 
 
@@ -265,16 +252,8 @@ class Sinic(EtherDevBase):
     SubClassCode = 0x00
     ClassCode = 0x02
     ProgIF = 0x00
-    BAR0 = 0x00000000
-    BAR1 = 0x00000000
-    BAR2 = 0x00000000
-    BAR3 = 0x00000000
-    BAR4 = 0x00000000
-    BAR5 = 0x00000000
+    BARs = PciMemBar(size='64kB')
     MaximumLatency = 0x34
     MinimumGrant = 0xb0
     InterruptLine = 0x1e
     InterruptPin = 0x01
-    BAR0Size = '64kB'
-
-

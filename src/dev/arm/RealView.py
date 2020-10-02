@@ -62,6 +62,7 @@ from m5.objects.PS2 import *
 from m5.objects.VirtIOMMIO import MmioVirtIO
 from m5.objects.Display import Display, Display1080p
 from m5.objects.SMMUv3 import SMMUv3
+from m5.objects.PciDevice import PciLegacyIoBar, PciIoBar
 
 # Platforms with KVM support should generally use in-kernel GIC
 # emulation. Use a GIC model that automatically switches between
@@ -717,10 +718,9 @@ class VExpress_EMM(RealView):
     kmi1   = Pl050(pio_addr=0x1c070000, interrupt=ArmSPI(num=45),
                    ps2=PS2TouchKit())
     cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=2,
-                            io_shift = 2, ctrl_offset = 2, Command = 0x1,
-                            BAR0 = 0x1C1A0000, BAR0Size = '256B',
-                            BAR1 = 0x1C1A0100, BAR1Size = '4096B',
-                            BAR0LegacyIO = True, BAR1LegacyIO = True)
+                            io_shift = 2, ctrl_offset = 2, Command = 0x1)
+    cf_ctrl.BAR0 = PciLegacyIoBar(addr='0x1C1A0000', size='256B')
+    cf_ctrl.BAR1 = PciLegacyIoBar(addr='0x1C1A0100', size='4096B')
 
     bootmem        = SimpleMemory(range = AddrRange('64MB'),
                                   conf_table_reported = False)

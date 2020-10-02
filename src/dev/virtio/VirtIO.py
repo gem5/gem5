@@ -39,7 +39,7 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 from m5.objects.Device import PioDevice
-from m5.objects.PciDevice import PciDevice
+from m5.objects.PciDevice import PciDevice, PciIoBar
 
 
 class VirtIODeviceBase(SimObject):
@@ -68,7 +68,7 @@ class PciVirtIO(PciDevice):
 
     ClassCode = 0xff # Misc device
 
-    BAR0 = 0x00000001 # Anywhere in 32-bit space; IOREG
-    BAR0Size = '0B' # Overridden by the device model
+    # The size is overridden by the device model.
+    BAR0 = PciIoBar(size='4B')
 
     InterruptPin = 0x01 # Use #INTA

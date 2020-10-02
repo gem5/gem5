@@ -42,6 +42,47 @@ from m5.proxy import *
 from m5.objects.Device import DmaDevice
 from m5.objects.PciHost import PciHost
 
+class PciBar(SimObject):
+    type = 'PciBar'
+    cxx_class = 'PciBar'
+    cxx_header = "dev/pci/device.hh"
+    abstract = True
+
+class PciBarNone(PciBar):
+    type = 'PciBarNone'
+    cxx_class = 'PciBarNone'
+    cxx_header = "dev/pci/device.hh"
+
+class PciIoBar(PciBar):
+    type = 'PciIoBar'
+    cxx_class = 'PciIoBar'
+    cxx_header = "dev/pci/device.hh"
+
+    size = Param.MemorySize32("IO region size")
+
+class PciLegacyIoBar(PciIoBar):
+    type = 'PciLegacyIoBar'
+    cxx_class = 'PciLegacyIoBar'
+    cxx_header = "dev/pci/device.hh"
+
+    addr = Param.UInt32("Legacy IO address")
+
+# To set up a 64 bit memory BAR, put a PciMemUpperBar immediately after
+# a PciMemBar. The pair will take up the right number of BARs, and will be
+# recognized by the device and turned into a 64 bit BAR when the config is
+# consumed.
+class PciMemBar(PciBar):
+    type = 'PciMemBar'
+    cxx_class = 'PciMemBar'
+    cxx_header = "dev/pci/device.hh"
+
+    size = Param.MemorySize("Memory region size")
+
+class PciMemUpperBar(PciBar):
+    type = 'PciMemUpperBar'
+    cxx_class = 'PciMemUpperBar'
+    cxx_header = "dev/pci/device.hh"
+
 class PciDevice(DmaDevice):
     type = 'PciDevice'
     cxx_class = 'PciDevice'
@@ -69,25 +110,12 @@ class PciDevice(DmaDevice):
     HeaderType = Param.UInt8(0, "PCI Header Type")
     BIST = Param.UInt8(0, "Built In Self Test")
 
-    BAR0 = Param.UInt32(0x00, "Base Address Register 0")
-    BAR1 = Param.UInt32(0x00, "Base Address Register 1")
-    BAR2 = Param.UInt32(0x00, "Base Address Register 2")
-    BAR3 = Param.UInt32(0x00, "Base Address Register 3")
-    BAR4 = Param.UInt32(0x00, "Base Address Register 4")
-    BAR5 = Param.UInt32(0x00, "Base Address Register 5")
-    BAR0Size = Param.MemorySize32('0B', "Base Address Register 0 Size")
-    BAR1Size = Param.MemorySize32('0B', "Base Address Register 1 Size")
-    BAR2Size = Param.MemorySize32('0B', "Base Address Register 2 Size")
-    BAR3Size = Param.MemorySize32('0B', "Base Address Register 3 Size")
-    BAR4Size = Param.MemorySize32('0B', "Base Address Register 4 Size")
-    BAR5Size = Param.MemorySize32('0B', "Base Address Register 5 Size")
-    BAR0LegacyIO = Param.Bool(False, "Whether BAR0 is hardwired legacy IO")
-    BAR1LegacyIO = Param.Bool(False, "Whether BAR1 is hardwired legacy IO")
-    BAR2LegacyIO = Param.Bool(False, "Whether BAR2 is hardwired legacy IO")
-    BAR3LegacyIO = Param.Bool(False, "Whether BAR3 is hardwired legacy IO")
-    BAR4LegacyIO = Param.Bool(False, "Whether BAR4 is hardwired legacy IO")
-    BAR5LegacyIO = Param.Bool(False, "Whether BAR5 is hardwired legacy IO")
-    LegacyIOBase = Param.Addr(0x0, "Base Address for Legacy IO")
+    BAR0 = Param.PciBar(PciBarNone(), "Base address register 0");
+    BAR1 = Param.PciBar(PciBarNone(), "Base address register 1");
+    BAR2 = Param.PciBar(PciBarNone(), "Base address register 2");
+    BAR3 = Param.PciBar(PciBarNone(), "Base address register 3");
+    BAR4 = Param.PciBar(PciBarNone(), "Base address register 4");
+    BAR5 = Param.PciBar(PciBarNone(), "Base address register 5");
 
     CardbusCIS = Param.UInt32(0x00, "Cardbus Card Information Structure")
     SubsystemID = Param.UInt16(0x00, "Subsystem ID")

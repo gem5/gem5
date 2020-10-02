@@ -26,7 +26,7 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-from m5.objects.PciDevice import PciDevice
+from m5.objects.PciDevice import PciDevice, PciIoBar
 
 class IdeID(Enum): vals = ['device0', 'device1']
 
@@ -50,19 +50,17 @@ class IdeController(PciDevice):
     ClassCode = 0x01
     SubClassCode = 0x01
     ProgIF = 0x85
-    BAR0 = 0x00000001
-    BAR1 = 0x00000001
-    BAR2 = 0x00000001
-    BAR3 = 0x00000001
-    BAR4 = 0x00000001
-    BAR5 = 0x00000001
     InterruptLine = 0x1f
     InterruptPin = 0x01
-    BAR0Size = '8B'
-    BAR1Size = '4B'
-    BAR2Size = '8B'
-    BAR3Size = '4B'
-    BAR4Size = '16B'
+
+    # Primary
+    BAR0 = PciIoBar(size='8B')
+    BAR1 = PciIoBar(size='4B')
+    # Secondary
+    BAR2 = PciIoBar(size='8B')
+    BAR3 = PciIoBar(size='4B')
+    # DMA
+    BAR4 = PciIoBar(size='16B')
 
     io_shift = Param.UInt32(0x0, "IO port shift");
     ctrl_offset = Param.UInt32(0x0, "IDE disk control offset")

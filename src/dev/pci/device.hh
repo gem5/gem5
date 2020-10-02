@@ -45,20 +45,220 @@
 #ifndef __DEV_PCI_DEVICE_HH__
 #define __DEV_PCI_DEVICE_HH__
 
+#include <array>
 #include <cstring>
 #include <vector>
 
 #include "dev/dma_device.hh"
 #include "dev/pci/host.hh"
 #include "dev/pci/pcireg.h"
+#include "params/PciBar.hh"
+#include "params/PciBarNone.hh"
 #include "params/PciDevice.hh"
+#include "params/PciIoBar.hh"
+#include "params/PciLegacyIoBar.hh"
+#include "params/PciMemBar.hh"
+#include "params/PciMemUpperBar.hh"
 #include "sim/byteswap.hh"
 
-#define BAR_IO_MASK 0x3
-#define BAR_MEM_MASK 0xF
-#define BAR_IO_SPACE_BIT 0x1
-#define BAR_IO_SPACE(x) ((x) & BAR_IO_SPACE_BIT)
 #define BAR_NUMBER(x) (((x) - PCI0_BASE_ADDR0) >> 0x2);
+
+class PciBar : public SimObject
+{
+  protected:
+    // The address and size of the region this decoder recognizes.
+    Addr _addr = 0;
+    Addr _size = 0;
+
+  public:
+    PciBar(const PciBarParams &p) : SimObject(p) {}
+
+    virtual bool isMem() const { return false; }
+    virtual bool isIo() const { return false; }
+
+    // Accepts a value written to config space, consumes it, and returns what
+    // value config space should actually be set to. Both should be in host
+    // endian format.
+    virtual uint32_t write(const PciHost::DeviceInterface &host,
+                           uint32_t val) = 0;
+
+    AddrRange range() const { return AddrRange(_addr, _addr + _size); }
+    Addr addr() const { return _addr; }
+    Addr size() const { return _size; }
+
+    // Hack for devices that don't know their BAR sizes ahead of time :-o.
+    // Don't use unless you have to, since this may not propogate properly
+    // outside of a small window.
+    void size(Addr value) { _size = value; }
+};
+
+class PciBarNone : public PciBar
+{
+  public:
+    PciBarNone(const PciBarNoneParams &p) : PciBar(p) {}
+
+    uint32_t
+    write(const PciHost::DeviceInterface &host, uint32_t val) override
+    {
+        return 0;
+    }
+};
+
+class PciIoBar : public PciBar
+{
+  protected:
+    BitUnion32(Bar)
+        Bitfield<31, 2> addr;
+        Bitfield<1> reserved;
+        Bitfield<0> io;
+    EndBitUnion(Bar)
+
+  public:
+    PciIoBar(const PciIoBarParams &p, bool legacy=false) : PciBar(p)
+    {
+        _size = p.size;
+        if (!legacy) {
+            Bar bar = _size;
+            fatal_if(!_size || !isPowerOf2(_size) || bar.io || bar.reserved,
+                    "Illegal size %d for bar %s.", _size, name());
+        }
+    }
+
+    bool isIo() const override { return true; }
+
+    uint32_t
+    write(const PciHost::DeviceInterface &host, uint32_t val) override
+    {
+        // Mask away the bits fixed by hardware.
+        Bar bar = val & ~(_size - 1);
+        // Set the fixed bits to their correct values.
+        bar.reserved = 0;
+        bar.io = 1;
+
+        // Update our address.
+        _addr = host.pioAddr(bar.addr << 2);
+
+        // Return what should go into config space.
+        return bar;
+    }
+};
+
+class PciLegacyIoBar : public PciIoBar
+{
+  protected:
+    Addr fixedAddr;
+
+  public:
+    PciLegacyIoBar(const PciLegacyIoBarParams &p) : PciIoBar(p, true)
+    {
+        // Save the address until we get a host to translate it.
+        fixedAddr = p.addr;
+    }
+
+    uint32_t
+    write(const PciHost::DeviceInterface &host, uint32_t val) override
+    {
+        // Update the address now that we have a host to translate it.
+        _addr = host.pioAddr(fixedAddr);
+        // Ignore writes.
+        return 0;
+    }
+};
+
+class PciMemBar : public PciBar
+{
+  private:
+    BitUnion32(Bar)
+        Bitfield<31, 3> addr;
+        SubBitUnion(type, 2, 1)
+            Bitfield<2> wide;
+            Bitfield<1> reserved;
+        EndSubBitUnion(type)
+        Bitfield<0> io;
+    EndBitUnion(Bar)
+
+    bool _wide = false;
+    uint64_t _lower = 0;
+    uint64_t _upper = 0;
+
+  public:
+    PciMemBar(const PciMemBarParams &p) : PciBar(p)
+    {
+        _size = p.size;
+        Bar bar = _size;
+        fatal_if(!_size || !isPowerOf2(_size) || bar.io || bar.type,
+                "Illegal size %d for bar %s.", _size, name());
+    }
+
+    bool isMem() const override { return true; }
+
+    uint32_t
+    write(const PciHost::DeviceInterface &host, uint32_t val) override
+    {
+        // Mask away the bits fixed by hardware.
+        Bar bar = val & ~(_size - 1);
+        // Set the fixed bits to their correct values.
+        bar.type.wide = wide() ? 1 : 0;
+        bar.type.reserved = 0;
+        bar.io = 0;
+
+        // Keep track of our lower 32 bits.
+        _lower = bar.addr << 3;
+
+        // Update our address.
+        _addr = host.memAddr(upper() + lower());
+
+        // Return what should go into config space.
+        return bar;
+    }
+
+    bool wide() const { return _wide; }
+    void wide(bool val) { _wide = val; }
+
+    uint64_t upper() const { return _upper; }
+    void
+    upper(const PciHost::DeviceInterface &host, uint32_t val)
+    {
+        _upper = (uint64_t)val << 32;
+
+        // Update our address.
+        _addr = host.memAddr(upper() + lower());
+    }
+
+    uint64_t lower() const { return _lower; }
+};
+
+class PciMemUpperBar : public PciBar
+{
+  private:
+    PciMemBar *_lower = nullptr;
+
+  public:
+    PciMemUpperBar(const PciMemUpperBarParams &p) : PciBar(p)
+    {}
+
+    void
+    lower(PciMemBar *val)
+    {
+        _lower = val;
+        // Let our lower half know we're up here.
+        _lower->wide(true);
+    }
+
+    uint32_t
+    write(const PciHost::DeviceInterface &host, uint32_t val) override
+    {
+        assert(_lower);
+
+        // Mask away bits fixed by hardware, if any.
+        Addr upper = val & ~((_lower->size() - 1) >> 32);
+
+        // Let our lower half know about the update.
+        _lower->upper(host, upper);
+
+        return upper;
+    }
+};
 
 /**
  * PCI device, base implementation is only config space.
@@ -102,68 +302,29 @@ class PciDevice : public DmaDevice
     std::vector<MSIXTable> msix_table;
     std::vector<MSIXPbaEntry> msix_pba;
 
-    /** The size of the BARs */
-    uint32_t BARSize[6];
-
-    /** The current address mapping of the BARs */
-    Addr BARAddrs[6];
-
-    /** Whether the BARs are really hardwired legacy IO locations. */
-    bool legacyIO[6];
-
-    /**
-     * Does the given BAR represent 32 lower bits of a 64-bit address?
-     */
-    bool
-    isLargeBAR(int bar) const
-    {
-        return bits(config.baseAddr[bar], 2, 1) == 0x2;
-    }
-
-    /**
-     * Does the given address lie within the space mapped by the given
-     * base address register?
-     */
-    bool
-    isBAR(Addr addr, int bar) const
-    {
-        assert(bar >= 0 && bar < 6);
-        return BARAddrs[bar] <= addr && addr < BARAddrs[bar] + BARSize[bar];
-    }
-
-    /**
-     * Which base address register (if any) maps the given address?
-     * @return The BAR number (0-5 inclusive), or -1 if none.
-     */
-    int
-    getBAR(Addr addr)
-    {
-        for (int i = 0; i <= 5; ++i)
-            if (isBAR(addr, i))
-                return i;
-
-        return -1;
-    }
+    std::array<PciBar *, 6> BARs{};
 
     /**
      * Which base address register (if any) maps the given address?
      * @param addr The address to check.
-     * @retval bar The BAR number (0-5 inclusive),
+     * @retval num The BAR number (0-5 inclusive),
      *             only valid if return value is true.
      * @retval offs The offset from the base address,
      *              only valid if return value is true.
      * @return True iff address maps to a base address register's region.
      */
     bool
-    getBAR(Addr addr, int &bar, Addr &offs)
+    getBAR(Addr addr, int &num, Addr &offs)
     {
-        int b = getBAR(addr);
-        if (b < 0)
-            return false;
-
-        offs = addr - BARAddrs[b];
-        bar = b;
-        return true;
+        for (int i = 0; i < BARs.size(); i++) {
+            auto *bar = BARs[i];
+            if (!bar || !bar->range().contains(addr))
+                continue;
+            num = i;
+            offs = addr - bar->addr();
+            return true;
+        }
+        return false;
     }
 
   public: // Host configuration interface
@@ -191,7 +352,9 @@ class PciDevice : public DmaDevice
     Tick configDelay;
 
   public:
-    Addr pciToDma(Addr pci_addr) const {
+    Addr
+    pciToDma(Addr pci_addr) const
+    {
         return hostInterface.dmaAddr(pci_addr);
     }
 

@@ -53,7 +53,7 @@ PciVirtIO::PciVirtIO(const Params &params)
     // two. Nothing else is supported. Therefore, we need to force
     // that alignment here. We do not touch vio.configSize as this is
     // used to check accesses later on.
-    BARSize[0] = alignToPowerOfTwo(BAR0_SIZE_BASE + vio.configSize);
+    BARs[0]->size(alignToPowerOfTwo(BAR0_SIZE_BASE + vio.configSize));
 
     vio.registerKickCallback([this]() { kick(); });
 }

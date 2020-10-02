@@ -50,6 +50,20 @@
 #include "base/bitfield.hh"
 #include "base/bitunion.hh"
 
+BitUnion16(PciCommandRegister)
+    Bitfield<15, 10> reserved;
+    Bitfield<9> fastBackToBackEn;
+    Bitfield<8> serrEn;
+    Bitfield<7> steppingControl;
+    Bitfield<6> parityErrResp;
+    Bitfield<5> vgaPaletteSnoopEn;
+    Bitfield<4> memWriteInvEn;
+    Bitfield<3> specialCycles;
+    Bitfield<2> busMaster;
+    Bitfield<1> memorySpace;
+    Bitfield<0> ioSpace;
+EndBitUnion(PciCommandRegister)
+
 union PCIConfig {
     uint8_t data[64];
 

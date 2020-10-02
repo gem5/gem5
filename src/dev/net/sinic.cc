@@ -209,10 +209,12 @@ Tick
 Device::read(PacketPtr pkt)
 {
     assert(config.command & PCI_CMD_MSE);
-    assert(pkt->getAddr() >= BARAddrs[0] && pkt->getSize() < BARSize[0]);
+
+    Addr daddr = pkt->getAddr();
+    assert(BARs[0]->range().contains(daddr));
+    daddr -= BARs[0]->addr();
 
     ContextID cpu = pkt->req->contextId();
-    Addr daddr = pkt->getAddr() - BARAddrs[0];
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 
@@ -294,10 +296,12 @@ Tick
 Device::write(PacketPtr pkt)
 {
     assert(config.command & PCI_CMD_MSE);
-    assert(pkt->getAddr() >= BARAddrs[0] && pkt->getSize() < BARSize[0]);
+
+    Addr daddr = pkt->getAddr();
+    assert(BARs[0]->range().contains(daddr));
+    daddr -= BARs[0]->addr();
 
     ContextID cpu = pkt->req->contextId();
-    Addr daddr = pkt->getAddr() - BARAddrs[0];
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 

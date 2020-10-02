@@ -72,13 +72,12 @@ class IdeController : public PciDevice
             return _name;
         }
 
-        /** Command and control block registers */
-        Addr cmdAddr, cmdSize, ctrlAddr, ctrlSize;
-
         /** Registers used for bus master interface */
         struct BMIRegs
         {
-            void reset() {
+            void
+            reset()
+            {
                 memset(static_cast<void *>(this), 0, sizeof(*this));
             }
 
@@ -95,12 +94,12 @@ class IdeController : public PciDevice
          * #Multiple_devices_on_a_cable
          *
         */
-        IdeDisk *device0, *device1;
+        IdeDisk *device0 = nullptr, *device1 = nullptr;
 
         /** Currently selected disk */
-        IdeDisk *selected;
+        IdeDisk *selected = nullptr;
 
-        bool selectBit;
+        bool selectBit = false;
 
         void
         select(bool select_device_1)
@@ -113,8 +112,7 @@ class IdeController : public PciDevice
         void accessControl(Addr offset, int size, uint8_t *data, bool read);
         void accessBMI(Addr offset, int size, uint8_t *data, bool read);
 
-        Channel(std::string newName, Addr _cmdSize, Addr _ctrlSize);
-        ~Channel();
+        Channel(std::string newName);
 
         void serialize(const std::string &base, std::ostream &os) const;
         void unserialize(const std::string &base, CheckpointIn &cp);
@@ -123,19 +121,12 @@ class IdeController : public PciDevice
     Channel primary;
     Channel secondary;
 
-    /** Bus master interface (BMI) registers */
-    Addr bmiAddr, bmiSize;
-
     /** Registers used in device specific PCI configuration */
     uint16_t primaryTiming, secondaryTiming;
-    uint8_t deviceTiming;
-    uint8_t udmaControl;
-    uint16_t udmaTiming;
-    uint16_t ideConfig;
-
-    // Internal management variables
-    bool ioEnabled;
-    bool bmEnabled;
+    uint8_t deviceTiming = 0;
+    uint8_t udmaControl = 0;
+    uint16_t udmaTiming = 0;
+    uint16_t ideConfig = 0;
 
     uint32_t ioShift, ctrlOffset;
 
