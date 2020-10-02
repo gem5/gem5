@@ -208,8 +208,11 @@ def mountPointToDev(mountPoint):
     mountTable = mountTable.splitlines()
     for line in mountTable:
         chunks = line.split()
-        if os.path.samefile(chunks[2], mountPoint):
-            return LoopbackDevice(chunks[0])
+        try:
+            if os.path.samefile(chunks[2], mountPoint):
+                return LoopbackDevice(chunks[0])
+        except OSError:
+            continue
     return None
 
 
@@ -283,8 +286,8 @@ def mountComFunc(options, args):
 mountCom.func = mountComFunc
 
 # A command to unmount the first partition in the image.
-umountCom = Command('umount', 'Unmount the first partition in the disk image.',
-                    [('mount point', 'What mount point to unmount.')])
+umountCom = Command('umount', 'Unmount the disk image mounted at mount_point.',
+                    [('mount_point', 'What mount point to unmount.')])
 
 def umountComFunc(options, args):
     (mountPoint,) = args
