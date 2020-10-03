@@ -36,6 +36,7 @@
 from m5.params import *
 from m5.proxy import *
 
+from m5.SimObject import SimObject
 from m5.objects.ArmPMU import ArmPMU
 from m5.objects.ArmSystem import SveVectorLength
 from m5.objects.BaseISA import BaseISA
@@ -124,3 +125,7 @@ class ArmISA(BaseISA):
     # allocated, instead of an ArmSystem
     sve_vl_se = Param.SveVectorLength(1,
         "SVE vector length in quadwords (128-bit), SE-mode only")
+
+    # Recurse into subnodes to generate DTB entries. This is mainly needed to
+    # generate the PMU entry.
+    generateDeviceTree = SimObject.recurseDeviceTree
