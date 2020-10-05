@@ -160,20 +160,23 @@ if text_width is None:
     text_width = 80
 
 def print_message(prefix, color, message, **kwargs):
-    # Precompute some useful values.
     prefix_len = len(prefix)
-    wrap_width = text_width - prefix_len
-    padding = ' ' * prefix_len
+    if text_width > prefix_len:
+        wrap_width = text_width - prefix_len
+        padding = ' ' * prefix_len
 
-    # First split on newlines.
-    lines = message.split('\n')
-    # Then wrap each line to the required width.
-    wrapped_lines = []
-    for line in lines:
-        wrapped_lines.extend(textwrap.wrap(line, wrap_width))
-    # Finally add the prefix and padding on extra lines, and glue it all back
-    # together.
-    message = prefix + ('\n' + padding).join(wrapped_lines)
+        # First split on newlines.
+        lines = message.split('\n')
+        # Then wrap each line to the required width.
+        wrapped_lines = []
+        for line in lines:
+            wrapped_lines.extend(textwrap.wrap(line, wrap_width))
+        # Finally add the prefix and padding on extra lines, and glue it all
+        # back together.
+        message = prefix + ('\n' + padding).join(wrapped_lines)
+    else:
+        # We have very small terminal, indent formatting doesn't help.
+        message = prefix + message
     # Add in terminal escape sequences.
     message = color + termcap.Bold + message + termcap.Normal
     # Actually print the message.
