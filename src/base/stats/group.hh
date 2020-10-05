@@ -194,7 +194,6 @@ class Group
      */
     const Info * resolveStat(std::string name) const;
 
-  private:
     /**
      * Merge the contents (stats & children) of a block to this block.
      *
@@ -205,7 +204,7 @@ class Group
 
   private:
     /** Parent pointer if merged into parent */
-    Group *const mergedParent;
+    Group *mergedParent;
 
     std::map<std::string, Group *> statGroups;
     std::vector<Group *> mergedStatGroups;

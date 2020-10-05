@@ -47,7 +47,7 @@
 namespace Stats {
 
 Group::Group(Group *parent, const char *name)
-    : mergedParent(name ? nullptr : parent)
+    : mergedParent(nullptr)
 {
     if (parent && name) {
         parent->addStatGroup(name, this);
@@ -152,7 +152,22 @@ Group::resolveStat(std::string name) const
 void
 Group::mergeStatGroup(Group *block)
 {
+    panic_if(!block, "No stat block provided");
+    panic_if(block->mergedParent,
+             "Stat group already merged into another group");
+    panic_if(block == this, "Stat group can't merge with itself");
+
+    // Track the new stat group
     mergedStatGroups.push_back(block);
+
+    // We might not have seen stats that were associated with the
+    // child group before it was merged, so add them here.
+    for (auto &s : block->stats)
+        addStat(s);
+
+    // Setup the parent pointer so the child know that it needs to
+    // register new stats with the parent.
+    block->mergedParent = this;
 }
 
 const std::map<std::string, Group *> &
