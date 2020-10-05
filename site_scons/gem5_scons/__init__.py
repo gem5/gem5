@@ -41,6 +41,7 @@
 from __future__ import print_function
 
 import os
+import sys
 import textwrap
 
 from gem5_scons.util import get_termcap
@@ -130,6 +131,10 @@ class Transform(object):
 
 # The width warning and error messages should be wrapped at.
 text_width = None
+
+# If stdout is not attached to a terminal, default to 80 columns.
+if not sys.stdout.isatty():
+    text_width = 80
 
 # This should work in python 3.3 and above.
 if text_width is None:
