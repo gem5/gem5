@@ -345,12 +345,12 @@ def _dump_to_visitor(visitor, roots=None):
             for p in reversed(root.path_list()):
                 visitor.endGroup()
     else:
+        # New stats starting from root.
+        dump_group(Root.getInstance())
+
         # Legacy stats
         for stat in stats_list:
             stat.visit(visitor)
-
-        # New stats starting from root.
-        dump_group(Root.getInstance())
 
 lastDump = 0
 # List[SimObject].
