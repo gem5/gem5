@@ -81,6 +81,7 @@ Source('clocked_object.cc')
 Source('mathexpr.cc')
 Source('power_state.cc')
 Source('power_domain.cc')
+Source('stats.cc')
 
 GTest('byteswap.test', 'byteswap.test.cc', '../base/types.cc')
 GTest('guest_abi.test', 'guest_abi.test.cc')

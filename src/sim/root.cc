@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2011 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -27,6 +39,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/hostinfo.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
@@ -36,6 +49,56 @@
 #include "sim/root.hh"
 
 Root *Root::_root = NULL;
+Root::Stats Root::Stats::instance;
+Root::Stats &rootStats = Root::Stats::instance;
+
+Root::Stats::Stats()
+    : Stats::Group(nullptr),
+    simSeconds(this, "sim_seconds", "Number of seconds simulated"),
+    simTicks(this, "sim_ticks", "Number of ticks simulated"),
+    finalTick(this, "final_tick",
+              "Number of ticks from beginning of simulation "
+              "(restored from checkpoints and never reset)"),
+    simFreq(this, "sim_freq", "Frequency of simulated ticks"),
+    hostSeconds(this, "host_seconds", "Real time elapsed on the host"),
+    hostTickRate(this, "host_tick_rate", "Simulator tick rate (ticks/s)"),
+    hostMemory(this, "host_mem_usage", "Number of bytes of host memory used"),
+
+    statTime(true),
+    startTick(0)
+{
+    simFreq.scalar(SimClock::Frequency);
+    simTicks.functor([this]() { return curTick() - startTick; });
+    finalTick.functor(curTick);
+
+    hostMemory
+        .functor(memUsage)
+        .prereq(hostMemory)
+        ;
+
+    hostSeconds
+        .functor([this]() {
+                Time now;
+                now.setTimer();
+                return now - statTime;
+            })
+        .precision(2)
+        ;
+
+    hostTickRate.precision(0);
+
+    simSeconds = simTicks / simFreq;
+    hostTickRate = simTicks / hostSeconds;
+}
+
+void
+Root::Stats::resetStats()
+{
+    statTime.setTimer();
+    startTick = curTick();
+
+    Stats::Group::resetStats();
+}
 
 /*
  * This function is called periodically by an event in M5 and ensures that
@@ -112,6 +175,12 @@ Root::Root(RootParams *p)
     lastTime.setTimer();
 
     simQuantum = p->sim_quantum;
+
+    // Some of the statistics are global and need to be accessed by
+    // stat formulas. The most convenient way to implement that is by
+    // having a single global stat group for global stats. Merge that
+    // group into the root object here.
+    mergeStatGroup(&Root::Stats::instance);
 }
 
 void

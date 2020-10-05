@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2011 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -39,6 +51,7 @@
 #ifndef __SIM_ROOT_HH__
 #define __SIM_ROOT_HH__
 
+#include "base/statistics.hh"
 #include "base/time.hh"
 #include "params/Root.hh"
 #include "sim/eventq.hh"
@@ -76,6 +89,32 @@ class Root : public SimObject
         return _root;
     }
 
+  public: // Global statistics
+    struct Stats : public ::Stats::Group
+    {
+        void resetStats() override;
+
+        ::Stats::Formula simSeconds;
+        ::Stats::Value simTicks;
+        ::Stats::Value finalTick;
+        ::Stats::Value simFreq;
+        ::Stats::Value hostSeconds;
+
+        ::Stats::Formula hostTickRate;
+        ::Stats::Value hostMemory;
+
+        static Stats instance;
+
+      private:
+        Stats();
+
+        Stats(const Stats &) = delete;
+        Stats &operator=(const Stats &) = delete;
+
+        Time statTime;
+        Tick startTick;
+    };
+
   public:
 
     /// Check whether time syncing is enabled.
@@ -107,5 +146,11 @@ class Root : public SimObject
 
     void serialize(CheckpointOut &cp) const override;
 };
+
+/**
+ * Global simulator statistics that are not associated with a
+ * specific SimObject.
+ */
+extern Root::Stats &rootStats;
 
 #endif // __SIM_ROOT_HH__

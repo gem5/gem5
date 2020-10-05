@@ -50,115 +50,19 @@
 #include <list>
 
 #include "base/callback.hh"
-#include "base/hostinfo.hh"
 #include "base/statistics.hh"
 #include "base/time.hh"
 #include "sim/global_event.hh"
 
 using namespace std;
 
-Stats::Formula simSeconds;
-Stats::Value simTicks;
-Stats::Value finalTick;
-Stats::Value simFreq;
-Stats::Value hostSeconds;
-
 namespace Stats {
 
-Time statTime(true);
-Tick startTick;
-
 GlobalEvent *dumpEvent;
-
-double
-statElapsedTime()
-{
-    Time now;
-    now.setTimer();
-
-    Time elapsed = now - statTime;
-    return elapsed;
-}
-
-Tick
-statElapsedTicks()
-{
-    return curTick() - startTick;
-}
-
-Tick
-statFinalTick()
-{
-    return curTick();
-}
-
-struct Global
-{
-    Stats::Formula hostTickRate;
-    Stats::Value hostMemory;
-
-    Global();
-};
-
-Global::Global()
-{
-    simSeconds
-        .name("sim_seconds")
-        .desc("Number of seconds simulated")
-        ;
-
-    simFreq
-        .scalar(SimClock::Frequency)
-        .name("sim_freq")
-        .desc("Frequency of simulated ticks")
-        ;
-
-    simTicks
-        .functor(statElapsedTicks)
-        .name("sim_ticks")
-        .desc("Number of ticks simulated")
-        ;
-
-    finalTick
-        .functor(statFinalTick)
-        .name("final_tick")
-        .desc("Number of ticks from beginning of simulation "
-              "(restored from checkpoints and never reset)")
-        ;
-
-    hostMemory
-        .functor(memUsage)
-        .name("host_mem_usage")
-        .desc("Number of bytes of host memory used")
-        .prereq(hostMemory)
-        ;
-
-    hostSeconds
-        .functor(statElapsedTime)
-        .name("host_seconds")
-        .desc("Real time elapsed on the host")
-        .precision(2)
-        ;
-
-    hostTickRate
-        .name("host_tick_rate")
-        .desc("Simulator tick rate (ticks/s)")
-        .precision(0)
-        ;
-
-    simSeconds = simTicks / simFreq;
-    hostTickRate = simTicks / hostSeconds;
-
-    registerResetCallback([]() {
-        statTime.setTimer();
-        startTick = curTick();
-    });
-}
 
 void
 initSimStats()
 {
-    static Global global;
 }
 
 /**
