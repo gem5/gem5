@@ -68,6 +68,7 @@ Stride::StrideEntry::StrideEntry(const SatCounter& init_confidence)
 void
 Stride::StrideEntry::invalidate()
 {
+    TaggedEntry::invalidate();
     lastAddr = 0;
     stride = 0;
     confidence.reset();
