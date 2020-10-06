@@ -73,17 +73,6 @@ SectorSubBlk::getTag() const
 }
 
 void
-SectorSubBlk::setTag(Addr tag)
-{
-    CacheBlk::setTag(tag);
-
-    // The sector block handles its own tag's invalidation
-    if (tag != MaxAddr) {
-        _sectorBlk->setTag(tag);
-    }
-}
-
-void
 SectorSubBlk::setValid()
 {
     CacheBlk::setValid();
@@ -91,10 +80,18 @@ SectorSubBlk::setValid()
 }
 
 void
-SectorSubBlk::setSecure()
+SectorSubBlk::insert(const Addr tag, const bool is_secure)
 {
-    CacheBlk::setSecure();
-    _sectorBlk->setSecure();
+    // Make sure it is not overwriting another sector
+    panic_if(_sectorBlk && _sectorBlk->isValid() &&
+        !_sectorBlk->matchTag(tag, is_secure), "Overwriting valid sector!");
+
+    // If the sector is not valid, insert the new tag. The sector block
+    // handles its own tag's invalidation, so do not attempt to insert MaxAddr.
+    if ((_sectorBlk && !_sectorBlk->isValid()) && (tag != MaxAddr)) {
+        _sectorBlk->insert(tag, is_secure);
+    }
+    CacheBlk::insert(tag, is_secure);
 }
 
 void
@@ -102,17 +99,6 @@ SectorSubBlk::invalidate()
 {
     CacheBlk::invalidate();
     _sectorBlk->invalidateSubBlk();
-}
-
-void
-SectorSubBlk::insert(const Addr tag, const bool is_secure,
-                     const int src_requestor_ID, const uint32_t task_ID)
-{
-    // Make sure it is not overwriting another sector
-    panic_if(_sectorBlk && _sectorBlk->isValid() &&
-        !_sectorBlk->matchTag(tag, is_secure), "Overwriting valid sector!");
-
-    CacheBlk::insert(tag, is_secure, src_requestor_ID, task_ID);
 }
 
 std::string
@@ -123,7 +109,7 @@ SectorSubBlk::print() const
 }
 
 SectorBlk::SectorBlk()
-    : ReplaceableEntry(), _validCounter(0), _tag(MaxAddr), _secureBit(false)
+    : TaggedEntry(), _validCounter(0)
 {
 }
 
@@ -140,25 +126,6 @@ SectorBlk::getNumValid() const
     return _validCounter;
 }
 
-bool
-SectorBlk::isSecure() const
-{
-    // If any of the valid blocks in the sector is secure, so is the sector
-    return _secureBit;
-}
-
-void
-SectorBlk::setTag(const Addr tag)
-{
-    _tag = tag;
-}
-
-Addr
-SectorBlk::getTag() const
-{
-    return _tag;
-}
-
 void
 SectorBlk::validateSubBlk()
 {
@@ -171,15 +138,8 @@ SectorBlk::invalidateSubBlk()
     // If all sub-blocks have been invalidated, the sector becomes invalid,
     // so clear secure bit
     if (--_validCounter == 0) {
-        _secureBit = false;
-        setTag(MaxAddr);
+        invalidate();
     }
-}
-
-void
-SectorBlk::setSecure()
-{
-    _secureBit = true;
 }
 
 void
@@ -189,10 +149,4 @@ SectorBlk::setPosition(const uint32_t set, const uint32_t way)
     for (auto& blk : blks) {
         blk->setPosition(set, way);
     }
-}
-
-bool
-SectorBlk::matchTag(Addr tag, bool is_secure) const
-{
-    return isValid() && (getTag() == tag) && (isSecure() == is_secure);
 }

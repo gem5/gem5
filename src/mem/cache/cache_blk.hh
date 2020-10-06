@@ -54,7 +54,7 @@
 
 #include "base/printable.hh"
 #include "base/types.hh"
-#include "mem/cache/replacement_policies/base.hh"
+#include "mem/cache/tags/tagged_entry.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "sim/core.hh"
@@ -63,8 +63,6 @@
  * Cache block status bit assignments
  */
 enum CacheBlkStatusBits : unsigned {
-    /** valid, readable */
-    BlkValid =          0x01,
     /** write permission */
     BlkWritable =       0x02,
     /** read permission (yes, block can be valid but not readable) */
@@ -73,17 +71,16 @@ enum CacheBlkStatusBits : unsigned {
     BlkDirty =          0x08,
     /** block was a hardware prefetch yet unaccessed*/
     BlkHWPrefetched =   0x20,
-    /** block holds data from the secure memory space */
-    BlkSecure =         0x40,
     /** block holds compressed data */
     BlkCompressed =     0x80
 };
 
 /**
  * A Basic Cache block.
- * Contains the tag, status, and a pointer to data.
+ * Contains information regarding its coherence, prefetching and compression
+ * status, as well as a pointer to its data.
  */
-class CacheBlk : public ReplaceableEntry
+class CacheBlk : public TaggedEntry
 {
   public:
     /**
@@ -150,7 +147,7 @@ class CacheBlk : public ReplaceableEntry
     std::list<Lock> lockList;
 
   public:
-    CacheBlk() : data(nullptr), _tickInserted(0)
+    CacheBlk() : TaggedEntry(), data(nullptr), _tickInserted(0)
     {
         invalidate();
     }
@@ -163,11 +160,7 @@ class CacheBlk : public ReplaceableEntry
      * Checks the write permissions of this block.
      * @return True if the block is writable.
      */
-    bool isWritable() const
-    {
-        const State needed_bits = BlkWritable | BlkValid;
-        return (status & needed_bits) == needed_bits;
-    }
+    bool isWritable() const { return isValid() && (status & BlkWritable); }
 
     /**
      * Checks the read permissions of this block.  Note that a block
@@ -175,27 +168,14 @@ class CacheBlk : public ReplaceableEntry
      * upgrade miss.
      * @return True if the block is readable.
      */
-    bool isReadable() const
-    {
-        const State needed_bits = BlkReadable | BlkValid;
-        return (status & needed_bits) == needed_bits;
-    }
-
-    /**
-     * Checks that a block is valid.
-     * @return True if the block is valid.
-     */
-    bool isValid() const
-    {
-        return (status & BlkValid) != 0;
-    }
+    bool isReadable() const { return isValid() && (status & BlkReadable); }
 
     /**
      * Invalidate the block and clear all state.
      */
     virtual void invalidate()
     {
-        setTag(MaxAddr);
+        TaggedEntry::invalidate();
         setTaskId(ContextSwitchTaskId::Unknown);
         status = 0;
         whenReady = MaxTick;
@@ -221,46 +201,6 @@ class CacheBlk : public ReplaceableEntry
     bool wasPrefetched() const
     {
         return (status & BlkHWPrefetched) != 0;
-    }
-
-    /**
-     * Get tag associated to this block.
-     *
-     * @return The tag value.
-     */
-    virtual Addr getTag() const { return _tag; }
-
-    /**
-     * Set tag associated to this block.
-     *
-     * @param The tag value.
-     */
-    virtual void setTag(Addr tag) { _tag = tag; }
-
-    /**
-     * Check if this block holds data from the secure memory space.
-     * @return True if the block holds data from the secure memory space.
-     */
-    bool isSecure() const
-    {
-        return (status & BlkSecure) != 0;
-    }
-
-    /**
-     * Set valid bit.
-     */
-    virtual void setValid()
-    {
-        assert(!isValid());
-        status |= BlkValid;
-    }
-
-    /**
-     * Set secure bit.
-     */
-    virtual void setSecure()
-    {
-        status |= BlkSecure;
     }
 
     /**
@@ -312,14 +252,6 @@ class CacheBlk : public ReplaceableEntry
     }
 
     /**
-     * Checks if the given information corresponds to this block's.
-     *
-     * @param tag The tag value to compare to.
-     * @param is_secure Whether secure bit is set.
-     */
-    virtual bool matchTag(Addr tag, bool is_secure) const;
-
-    /**
      * Set member variables when a block insertion occurs. Resets reference
      * count to 1 (the insertion counts as a reference), and touch block if
      * it hadn't been touched previously. Sets the insertion tick to the
@@ -330,8 +262,9 @@ class CacheBlk : public ReplaceableEntry
      * @param src_requestor_ID The source requestor ID.
      * @param task_ID The new task ID.
      */
-    virtual void insert(const Addr tag, const bool is_secure,
-                        const int src_requestor_ID, const uint32_t task_ID);
+    void insert(const Addr tag, const bool is_secure,
+        const int src_requestor_ID, const uint32_t task_ID);
+    using TaggedEntry::insert;
 
     /**
      * Track the fact that a local locked was issued to the
@@ -410,9 +343,9 @@ class CacheBlk : public ReplaceableEntry
           case 0b000: s = 'I'; break;
           default:    s = 'T'; break; // @TODO add other types
         }
-        return csprintf("state: %x (%c) valid: %d writable: %d readable: %d "
-            "dirty: %d | tag: %#x %s", status, s, isValid(), isWritable(),
-            isReadable(), isDirty(), getTag(), ReplaceableEntry::print());
+        return csprintf("state: %x (%c) writable: %d readable: %d "
+            "dirty: %d | %s", status, s, isWritable(), isReadable(),
+            isDirty(), TaggedEntry::print());
     }
 
     /**
@@ -476,9 +409,6 @@ class CacheBlk : public ReplaceableEntry
     void setTickInserted() { _tickInserted = curTick(); }
 
   private:
-    /** Data block tag value. */
-    Addr _tag;
-
     /** Task Id associated with this block */
     uint32_t _taskId;
 
@@ -530,23 +460,11 @@ class TempCacheBlk final : public CacheBlk
         _addr = MaxAddr;
     }
 
-    void insert(const Addr addr, const bool is_secure,
-                const int src_requestor_ID=0, const uint32_t task_ID=0)
-                override
+    void
+    insert(const Addr addr, const bool is_secure) override
     {
-        // Make sure that the block has been properly invalidated
-        assert(status == 0);
-
-        // Set block address
+        CacheBlk::insert(addr, is_secure);
         _addr = addr;
-
-        // Set secure state
-        if (is_secure) {
-            setSecure();
-        }
-
-        // Validate block
-        setValid();
     }
 
     /**

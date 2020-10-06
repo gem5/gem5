@@ -30,83 +30,8 @@
 #define __CACHE_PREFETCH_ASSOCIATIVE_SET_HH__
 
 #include "mem/cache/replacement_policies/base.hh"
-#include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
-
-/**
- * Entry used for set-associative tables, usable with replacement policies
- */
-class TaggedEntry : public ReplaceableEntry {
-    /** Tag for the entry */
-    Addr tag;
-    /** Valid bit */
-    bool valid;
-    /** Whether this entry refers to a memory area in the secure space */
-    bool secure;
-  public:
-    TaggedEntry() : tag(0), valid(false), secure(false) {}
-    virtual ~TaggedEntry() {}
-
-    /**
-     * Consult the valid bit
-     * @return True if the entry is valid
-     */
-    bool isValid() const
-    {
-        return valid;
-    }
-
-    /**
-     * Sets the entry to valid
-     */
-    void setValid()
-    {
-        valid = true;
-    }
-
-    /** Invalidates the entry. */
-    virtual void
-    invalidate()
-    {
-        valid = false;
-    }
-
-    /**
-     * Obtain the entry tag
-     * @return the tag value
-     */
-    Addr getTag() const
-    {
-        return tag;
-    }
-
-    /**
-     * Sets the tag of the entry
-     * @param t the tag value
-     */
-    void setTag(Addr t)
-    {
-        tag = t;
-    }
-
-    /**
-     * Consult if this entry refers to a memory in the secure area
-     * @return True if this entry refers to secure memory area
-     */
-    bool isSecure() const
-    {
-        return secure;
-    }
-
-    /**
-     * Sets the secure value bit
-     * @param s secure bit value
-     */
-    void setSecure(bool s)
-    {
-        secure = s;
-    }
-};
+#include "mem/cache/tags/tagged_entry.hh"
 
 /**
  * Associative container based on the previosuly defined Entry type

@@ -109,9 +109,7 @@ template<class Entry>
 void
 AssociativeSet<Entry>::insertEntry(Addr addr, bool is_secure, Entry* entry)
 {
-   entry->setValid();
-   entry->setTag(indexingPolicy->extractTag(addr));
-   entry->setSecure(is_secure);
+   entry->insert(indexingPolicy->extractTag(addr), is_secure);
    replacementPolicy->reset(entry->replacementData);
 }
 

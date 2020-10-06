@@ -93,36 +93,18 @@ class SectorSubBlk : public CacheBlk
     int getSectorOffset() const;
 
     Addr getTag() const override;
-    void setTag(Addr tag) override;
 
     /**
      * Set valid bit and inform sector block.
      */
     void setValid() override;
 
-    /**
-     * Set secure bit and inform sector block.
-     */
-    void setSecure() override;
+    void insert(const Addr tag, const bool is_secure) override;
 
     /**
      * Invalidate the block and inform sector block.
      */
     void invalidate() override;
-
-    /**
-     * Set member variables when a block insertion occurs. Resets reference
-     * count to 1 (the insertion counts as a reference), and touch block if
-     * it hadn't been touched previously. Sets the insertion tick to the
-     * current tick. Marks the block valid.
-     *
-     * @param tag Block address tag.
-     * @param is_secure Whether the block is in secure space or not.
-     * @param src_requestor_ID The source requestor ID.
-     * @param task_ID The new task ID.
-     */
-    void insert(const Addr tag, const bool is_secure, const int
-                src_requestor_ID, const uint32_t task_ID) override;
 
     /**
      * Pretty-print sector offset and other CacheBlk information.
@@ -136,7 +118,7 @@ class SectorSubBlk : public CacheBlk
  * A Basic Sector block.
  * Contains the tag and a list of blocks associated to this sector.
  */
-class SectorBlk : public ReplaceableEntry
+class SectorBlk : public TaggedEntry
 {
   private:
     /**
@@ -144,17 +126,6 @@ class SectorBlk : public ReplaceableEntry
      * of its sub-blocks is valid.
      */
     uint8_t _validCounter;
-
-  protected:
-    /**
-     * Sector tag value. A sector's tag is the tag of all its sub-blocks.
-     */
-    Addr _tag;
-
-    /**
-     * Whether sector blk is in secure-space or not.
-     */
-    bool _secureBit;
 
   public:
     SectorBlk();
@@ -170,7 +141,7 @@ class SectorBlk : public ReplaceableEntry
      *
      * @return True if any of the blocks in the sector is valid.
      */
-    bool isValid() const;
+    bool isValid() const override;
 
     /**
      * Get the number of sub-blocks that have been validated.
@@ -178,29 +149,6 @@ class SectorBlk : public ReplaceableEntry
      * @return The number of valid sub-blocks.
      */
     uint8_t getNumValid() const;
-
-    /**
-     * Checks that a sector block is secure. A single secure block suffices
-     * to imply that the whole sector is secure, as the insertion proccess
-     * asserts that different secure spaces can't coexist in the same sector.
-     *
-     * @return True if any of the blocks in the sector is secure.
-     */
-    bool isSecure() const;
-
-    /**
-     * Set tag associated to this block.
-     *
-     * @param The tag value.
-     */
-    void setTag(const Addr tag);
-
-    /**
-     * Get tag associated to this block.
-     *
-     * @return The tag value.
-     */
-    Addr getTag() const;
 
     /**
      * Increase the number of valid sub-blocks.
@@ -213,25 +161,12 @@ class SectorBlk : public ReplaceableEntry
     void invalidateSubBlk();
 
     /**
-     * Set secure bit.
-     */
-    void setSecure();
-
-    /**
      * Sets the position of the sub-entries, besides its own.
      *
      * @param set The set of this entry and sub-entries.
      * @param way The way of this entry and sub-entries.
      */
     void setPosition(const uint32_t set, const uint32_t way) override;
-
-    /**
-     * Checks if the given information corresponds to this block's.
-     *
-     * @param tag The tag value to compare to.
-     * @param is_secure Whether secure bit is set.
-     */
-    virtual bool matchTag(Addr tag, bool is_secure) const;
 };
 
 #endif //__MEM_CACHE_TAGS_SECTOR_BLK_HH__

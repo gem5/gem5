@@ -43,12 +43,6 @@
 
 #include "base/cprintf.hh"
 
-bool
-CacheBlk::matchTag(Addr tag, bool is_secure) const
-{
-    return isValid() && (getTag() == tag) && (isSecure() == is_secure);
-}
-
 void
 CacheBlk::insert(const Addr tag, const bool is_secure,
                  const int src_requestor_ID, const uint32_t task_ID)
@@ -56,8 +50,7 @@ CacheBlk::insert(const Addr tag, const bool is_secure,
     // Make sure that the block has been properly invalidated
     assert(status == 0);
 
-    // Set block tag
-    setTag(tag);
+    insert(tag, is_secure);
 
     // Set source requestor ID
     setSrcRequestorId(src_requestor_ID);
@@ -70,14 +63,6 @@ CacheBlk::insert(const Addr tag, const bool is_secure,
 
     // Insertion counts as a reference to the block
     increaseRefCount();
-
-    // Set secure state
-    if (is_secure) {
-        setSecure();
-    }
-
-    // Validate block
-    setValid();
 }
 
 void
