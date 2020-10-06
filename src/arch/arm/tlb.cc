@@ -452,15 +452,6 @@ TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup,
 }
 
 void
-TLB::flush(const TLBIIPA &tlbi_op)
-{
-    assert(!isStage2);
-
-    // Note, TLBIIPA::makeStage2 will generare a TLBIMVAA
-    stage2Tlb->flush(tlbi_op.makeStage2());
-}
-
-void
 TLB::drainResume()
 {
     // We might have unserialized something or switched CPUs, so make

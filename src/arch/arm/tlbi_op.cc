@@ -182,11 +182,11 @@ DTLBIMVA::operator()(ThreadContext* tc)
 void
 TLBIIPA::operator()(ThreadContext* tc)
 {
-    getMMUPtr(tc)->flush(*this);
+    getMMUPtr(tc)->flushStage2(makeStage2());
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getMMUPtr(checker)->flush(*this);
+        getMMUPtr(checker)->flushStage2(makeStage2());
     }
 }
 

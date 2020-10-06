@@ -66,7 +66,6 @@ class TLBIALLN;
 class TLBIMVA;
 class TLBIASID;
 class TLBIMVAA;
-class TLBIIPA;
 
 class TlbTestInterface
 {
@@ -293,12 +292,6 @@ class TLB : public BaseTLB
     /** Remove all entries that match the va regardless of asn
      */
     void flush(const TLBIMVAA &tlbi_op);
-
-    /**
-     * Invalidate all entries in the stage 2 TLB that match the given ipa
-     * and the current VMID
-     */
-    void flush(const TLBIIPA &tlbi_op);
 
     Fault trickBoxCheck(const RequestPtr &req, Mode mode,
                         TlbEntry::DomainType domain);

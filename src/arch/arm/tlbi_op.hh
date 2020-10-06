@@ -343,6 +343,12 @@ class TLBIIPA : public TLBIOp
 
     void operator()(ThreadContext* tc) override;
 
+    bool
+    stage1Flush() const override
+    {
+        return false;
+    }
+
     /** TLBIIPA is basically a TLBIMVAA for stage2 TLBs */
     TLBIMVAA
     makeStage2() const
