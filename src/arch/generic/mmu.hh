@@ -51,6 +51,15 @@ class BaseMMU : public SimObject
       : SimObject(p), dtb(p.dtb), itb(p.itb)
     {}
 
+    BaseTLB*
+    getTlb(BaseTLB::Mode mode) const
+    {
+        if (mode == BaseTLB::Execute)
+            return itb;
+        else
+            return dtb;
+    }
+
   public:
     void
     flushAll()
@@ -70,40 +79,28 @@ class BaseMMU : public SimObject
     translateAtomic(const RequestPtr &req, ThreadContext *tc,
                     BaseTLB::Mode mode)
     {
-        if (mode == BaseTLB::Execute)
-            return itb->translateAtomic(req, tc, mode);
-        else
-            return dtb->translateAtomic(req, tc, mode);
+        return getTlb(mode)->translateAtomic(req, tc, mode);
     }
 
     void
     translateTiming(const RequestPtr &req, ThreadContext *tc,
                     BaseTLB::Translation *translation, BaseTLB::Mode mode)
     {
-        if (mode == BaseTLB::Execute)
-            return itb->translateTiming(req, tc, translation, mode);
-        else
-            return dtb->translateTiming(req, tc, translation, mode);
+        return getTlb(mode)->translateTiming(req, tc, translation, mode);
     }
 
     Fault
     translateFunctional(const RequestPtr &req, ThreadContext *tc,
                         BaseTLB::Mode mode)
     {
-        if (mode == BaseTLB::Execute)
-            return itb->translateFunctional(req, tc, mode);
-        else
-            return dtb->translateFunctional(req, tc, mode);
+        return getTlb(mode)->translateFunctional(req, tc, mode);
     }
 
     Fault
     finalizePhysical(const RequestPtr &req, ThreadContext *tc,
                      BaseTLB::Mode mode) const
     {
-        if (mode == BaseTLB::Execute)
-            return itb->finalizePhysical(req, tc, mode);
-        else
-            return dtb->finalizePhysical(req, tc, mode);
+        return getTlb(mode)->finalizePhysical(req, tc, mode);
     }
 
     void takeOverFrom(BaseMMU *old_mmu);
