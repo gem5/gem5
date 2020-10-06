@@ -36,9 +36,51 @@
  */
 
 #include "arch/arm/mmu.hh"
+#include "arch/arm/table_walker.hh"
 #include "arch/arm/tlbi_op.hh"
 
 using namespace ArmISA;
+
+MMU::MMU(const ArmMMUParams &p)
+  : BaseMMU(p),
+    itbStage2(p.stage2_itb), dtbStage2(p.stage2_dtb),
+    itbWalker(p.itb_walker), dtbWalker(p.dtb_walker),
+    itbStage2Walker(p.stage2_itb_walker),
+    dtbStage2Walker(p.stage2_dtb_walker)
+{}
+
+void
+MMU::init()
+{
+    itbWalker->setMmu(this);
+    dtbWalker->setMmu(this);
+    itbStage2Walker->setMmu(this);
+    dtbStage2Walker->setMmu(this);
+
+    itbStage2->setTableWalker(itbStage2Walker);
+    dtbStage2->setTableWalker(dtbStage2Walker);
+
+    getITBPtr()->setStage2Tlb(itbStage2);
+    getITBPtr()->setTableWalker(itbWalker);
+    getDTBPtr()->setStage2Tlb(dtbStage2);
+    getDTBPtr()->setTableWalker(dtbWalker);
+}
+
+TLB *
+MMU::getTlb(BaseTLB::Mode mode, bool stage2) const
+{
+    if (mode == BaseTLB::Execute) {
+        if (stage2)
+            return itbStage2;
+        else
+            return getITBPtr();
+    } else {
+        if (stage2)
+            return dtbStage2;
+        else
+            return getDTBPtr();
+    }
+}
 
 bool
 MMU::translateFunctional(ThreadContext *tc, Addr vaddr, Addr &paddr)
@@ -50,10 +92,30 @@ Fault
 MMU::translateFunctional(const RequestPtr &req, ThreadContext *tc,
     BaseTLB::Mode mode, TLB::ArmTranslationType tran_type)
 {
-    if (mode == BaseTLB::Execute)
-        return getITBPtr()->translateFunctional(req, tc, mode, tran_type);
-    else
-        return getDTBPtr()->translateFunctional(req, tc, mode, tran_type);
+    return translateFunctional(req, tc, mode, tran_type, false);
+}
+
+Fault
+MMU::translateFunctional(const RequestPtr &req, ThreadContext *tc,
+    BaseTLB::Mode mode, TLB::ArmTranslationType tran_type,
+    bool stage2)
+{
+    return getTlb(mode, stage2)->translateFunctional(
+        req, tc, mode, tran_type);
+}
+
+Fault
+MMU::translateAtomic(const RequestPtr &req, ThreadContext *tc,
+    BaseTLB::Mode mode, bool stage2)
+{
+    return getTlb(mode, stage2)->translateAtomic(req, tc, mode);
+}
+
+void
+MMU::translateTiming(const RequestPtr &req, ThreadContext *tc,
+    BaseTLB::Translation *translation, BaseTLB::Mode mode, bool stage2)
+{
+    return getTlb(mode, stage2)->translateTiming(req, tc, translation, mode);
 }
 
 void

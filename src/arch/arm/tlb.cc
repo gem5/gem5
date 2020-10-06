@@ -50,7 +50,6 @@
 #include "arch/arm/reg_abi.hh"
 #include "arch/arm/self_debug.hh"
 #include "arch/arm/stage2_lookup.hh"
-#include "arch/arm/stage2_mmu.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/tlbi_op.hh"
@@ -77,24 +76,28 @@ using namespace ArmISA;
 TLB::TLB(const ArmTLBParams &p)
     : BaseTLB(p), table(new TlbEntry[p.size]), size(p.size),
       isStage2(p.is_stage2), stage2Req(false), stage2DescReq(false), _attr(0),
-      directToStage2(false), tableWalker(p.walker), stage2Tlb(NULL),
-      stage2Mmu(NULL), test(nullptr), stats(this),  rangeMRU(1),
+      directToStage2(false), tableWalker(nullptr), stage2Tlb(nullptr),
+      test(nullptr), stats(this),  rangeMRU(1),
       aarch64(false), aarch64EL(EL0), isPriv(false), isSecure(false),
       isHyp(false), asid(0), vmid(0), hcr(0), dacr(0),
       miscRegValid(false), miscRegContext(0), curTranType(NormalTran)
 {
-    const ArmSystem *sys = dynamic_cast<const ArmSystem *>(p.sys);
-
-    tableWalker->setTlb(this);
-
     // Cache system-level properties
-    haveLPAE = tableWalker->haveLPAE();
-    haveVirtualization = tableWalker->haveVirtualization();
-    haveLargeAsid64 = tableWalker->haveLargeAsid64();
-    physAddrRange = tableWalker->physAddrRange();
+    if (FullSystem) {
+        ArmSystem *arm_sys = dynamic_cast<ArmSystem *>(p.sys);
+        assert(arm_sys);
+        haveLPAE = arm_sys->haveLPAE();
+        haveVirtualization = arm_sys->haveVirtualization();
+        haveLargeAsid64 = arm_sys->haveLargeAsid64();
+        physAddrRange = arm_sys->physAddrRange();
+    } else {
+        haveLPAE = false;
+        haveVirtualization = false;
+        haveLargeAsid64 = false;
+        physAddrRange = 48;
+    }
 
-    if (sys)
-        m5opRange = sys->m5opRange();
+    m5opRange = p.sys->m5opRange();
 }
 
 TLB::~TLB()
@@ -103,17 +106,10 @@ TLB::~TLB()
 }
 
 void
-TLB::init()
+TLB::setTableWalker(TableWalker *table_walker)
 {
-    if (stage2Mmu && !isStage2)
-        stage2Tlb = stage2Mmu->stage2Tlb();
-}
-
-void
-TLB::setMMU(Stage2MMU *m, RequestorID requestor_id)
-{
-    stage2Mmu = m;
-    tableWalker->setMMU(m, requestor_id);
+    tableWalker = table_walker;
+    tableWalker->setTlb(this);
 }
 
 bool
@@ -1374,7 +1370,7 @@ TLB::translateComplete(const RequestPtr &req, ThreadContext *tc,
 Port *
 TLB::getTableWalkerPort()
 {
-    return &stage2Mmu->getTableWalkerPort();
+    return &tableWalker->getTableWalkerPort();
 }
 
 vmid_t

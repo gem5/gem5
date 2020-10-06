@@ -94,7 +94,6 @@ if env['TARGET_ISA'] == 'arm':
     Source('system.cc')
     Source('table_walker.cc')
     Source('self_debug.cc')
-    Source('stage2_mmu.cc')
     Source('stage2_lookup.cc')
     Source('tlb.cc')
     Source('tlbi_op.cc')

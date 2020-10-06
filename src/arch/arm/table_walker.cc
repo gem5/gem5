@@ -40,7 +40,7 @@
 #include <memory>
 
 #include "arch/arm/faults.hh"
-#include "arch/arm/stage2_mmu.hh"
+#include "arch/arm/mmu.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
 #include "base/compiler.hh"
@@ -57,7 +57,8 @@ using namespace ArmISA;
 
 TableWalker::TableWalker(const Params &p)
     : ClockedObject(p),
-      stage2Mmu(NULL), port(NULL), requestorId(Request::invldRequestorId),
+      requestorId(p.sys->getRequestorId(this)),
+      port(new Port(this, requestorId)),
       isStage2(p.is_stage2), tlb(NULL),
       currState(NULL), pending(false),
       numSquashable(p.num_squash_per_cycle),
@@ -98,31 +99,17 @@ TableWalker::~TableWalker()
     ;
 }
 
-void
-TableWalker::setMMU(Stage2MMU *m, RequestorID requestor_id)
+TableWalker::Port &
+TableWalker::getTableWalkerPort()
 {
-    stage2Mmu = m;
-    port = &m->getTableWalkerPort();
-    requestorId = requestor_id;
-}
-
-void
-TableWalker::init()
-{
-    fatal_if(!stage2Mmu, "Table walker must have a valid stage-2 MMU\n");
-    fatal_if(!port, "Table walker must have a valid port\n");
-    fatal_if(!tlb, "Table walker must have a valid TLB\n");
+    return static_cast<Port&>(getPort("port"));
 }
 
 Port &
 TableWalker::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "port") {
-        if (!isStage2) {
-            return *port;
-        } else {
-            fatal("Cannot access table walker port through stage-two walker\n");
-        }
+        return *port;
     }
     return ClockedObject::getPort(if_name, idx);
 }
@@ -2230,15 +2217,13 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
         Fault fault;
 
         if (isTiming) {
-            Stage2MMU::Stage2Translation *tran = new
-                Stage2MMU::Stage2Translation(*stage2Mmu, data, event,
-                                             currState->vaddr);
+            auto *tran = new
+                Stage2Walk(*this, data, event, currState->vaddr);
             currState->stage2Tran = tran;
-            stage2Mmu->readDataTimed(currState->tc, descAddr, tran, numBytes,
-                                     flags);
+            readDataTimed(currState->tc, descAddr, tran, numBytes, flags);
             fault = tran->fault;
         } else {
-            fault = stage2Mmu->readDataUntimed(currState->tc,
+            fault = readDataUntimed(currState->tc,
                 currState->vaddr, descAddr, data, numBytes, flags,
                 currState->functional);
         }
@@ -2420,8 +2405,98 @@ TableWalker::pageSizeNtoStatBin(uint8_t N)
     }
 }
 
-TableWalker::TableWalkerStats::TableWalkerStats(statistics::Group *parent)
-    : statistics::Group(parent),
+Fault
+TableWalker::readDataUntimed(ThreadContext *tc, Addr vaddr, Addr desc_addr,
+    uint8_t *data, int num_bytes, Request::Flags flags, bool functional)
+{
+    Fault fault;
+
+    // translate to physical address using the second stage MMU
+    auto req = std::make_shared<Request>();
+    req->setVirt(desc_addr, num_bytes, flags | Request::PT_WALK,
+                requestorId, 0);
+    if (functional) {
+        fault = mmu->translateFunctional(req, tc, BaseTLB::Read,
+            TLB::NormalTran, true);
+    } else {
+        fault = mmu->translateAtomic(req, tc, BaseTLB::Read, true);
+    }
+
+    // Now do the access.
+    if (fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
+        Packet pkt = Packet(req, MemCmd::ReadReq);
+        pkt.dataStatic(data);
+        if (functional) {
+            port->sendFunctional(&pkt);
+        } else {
+            port->sendAtomic(&pkt);
+        }
+        assert(!pkt.isError());
+    }
+
+    // If there was a fault annotate it with the flag saying the foult occured
+    // while doing a translation for a stage 1 page table walk.
+    if (fault != NoFault) {
+        ArmFault *arm_fault = reinterpret_cast<ArmFault *>(fault.get());
+        arm_fault->annotate(ArmFault::S1PTW, true);
+        arm_fault->annotate(ArmFault::OVA, vaddr);
+    }
+    return fault;
+}
+
+void
+TableWalker::readDataTimed(ThreadContext *tc, Addr desc_addr,
+                           Stage2Walk *translation, int num_bytes,
+                           Request::Flags flags)
+{
+    // translate to physical address using the second stage MMU
+    translation->setVirt(
+            desc_addr, num_bytes, flags | Request::PT_WALK, requestorId);
+    translation->translateTiming(tc);
+}
+
+TableWalker::Stage2Walk::Stage2Walk(TableWalker &_parent,
+        uint8_t *_data, Event *_event, Addr vaddr)
+    : data(_data), numBytes(0), event(_event), parent(_parent),
+      oVAddr(vaddr), fault(NoFault)
+{
+    req = std::make_shared<Request>();
+}
+
+void
+TableWalker::Stage2Walk::finish(const Fault &_fault,
+                                const RequestPtr &req,
+                                ThreadContext *tc, BaseTLB::Mode mode)
+{
+    fault = _fault;
+
+    // If there was a fault annotate it with the flag saying the foult occured
+    // while doing a translation for a stage 1 page table walk.
+    if (fault != NoFault) {
+        ArmFault *arm_fault = reinterpret_cast<ArmFault *>(fault.get());
+        arm_fault->annotate(ArmFault::S1PTW, true);
+        arm_fault->annotate(ArmFault::OVA, oVAddr);
+    }
+
+    if (_fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
+        parent.getTableWalkerPort().sendTimingReq(
+            req->getPaddr(), numBytes, data, req->getFlags(),
+            tc->getCpuPtr()->clockPeriod(), event);
+    } else {
+        // We can't do the DMA access as there's been a problem, so tell the
+        // event we're done
+        event->process();
+    }
+}
+
+void
+TableWalker::Stage2Walk::translateTiming(ThreadContext *tc)
+{
+    parent.mmu->translateTiming(req, tc, this, BaseTLB::Read, true);
+}
+
+TableWalker::TableWalkerStats::TableWalkerStats(Stats::Group *parent)
+    : Stats::Group(parent),
     ADD_STAT(walks, statistics::units::Count::get(),
              "Table walker walks requested"),
     ADD_STAT(walksShortDescriptor, statistics::units::Count::get(),

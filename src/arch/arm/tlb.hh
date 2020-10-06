@@ -57,7 +57,6 @@ namespace ArmISA {
 
 class TableWalker;
 class Stage2LookUp;
-class Stage2MMU;
 class TLB;
 
 class TLBIALL;
@@ -166,7 +165,6 @@ class TLB : public BaseTLB
 
     TableWalker *tableWalker;
     TLB *stage2Tlb;
-    Stage2MMU *stage2Mmu;
 
     TlbTestInterface *test;
 
@@ -231,14 +229,13 @@ class TLB : public BaseTLB
 
     void takeOverFrom(BaseTLB *otlb) override;
 
-    /// setup all the back pointers
-    void init() override;
-
     void setTestInterface(SimObject *ti);
 
-    TableWalker *getTableWalker() { return tableWalker; }
+    void setStage2Tlb(TLB *stage2_tlb) { stage2Tlb = stage2_tlb; }
 
-    void setMMU(Stage2MMU *m, RequestorID requestor_id);
+    void setTableWalker(TableWalker *table_walker);
+
+    TableWalker *getTableWalker() { return tableWalker; }
 
     int getsize() const { return size; }
 

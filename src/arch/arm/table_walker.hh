@@ -57,7 +57,7 @@ class ThreadContext;
 namespace ArmISA {
 class Translation;
 class TLB;
-class Stage2MMU;
+class MMU;
 
 class TableWalker : public ClockedObject
 {
@@ -897,6 +897,47 @@ class TableWalker : public ClockedObject
         RequestorID requestorId;
     };
 
+    /** This translation class is used to trigger the data fetch once a timing
+        translation returns the translated physical address */
+    class Stage2Walk : public BaseTLB::Translation
+    {
+      private:
+        uint8_t      *data;
+        int          numBytes;
+        RequestPtr   req;
+        Event        *event;
+        TableWalker  &parent;
+        Addr         oVAddr;
+
+      public:
+        Fault fault;
+
+        Stage2Walk(TableWalker &_parent, uint8_t *_data, Event *_event,
+                   Addr vaddr);
+
+        void markDelayed() {}
+
+        void finish(const Fault &fault, const RequestPtr &req,
+            ThreadContext *tc, BaseTLB::Mode mode);
+
+        void
+        setVirt(Addr vaddr, int size, Request::Flags flags,
+                int requestorId)
+        {
+            numBytes = size;
+            req->setVirt(vaddr, size, flags, requestorId, 0);
+        }
+
+        void translateTiming(ThreadContext *tc);
+    };
+
+    Fault readDataUntimed(ThreadContext *tc, Addr vaddr, Addr desc_addr,
+                          uint8_t *data, int num_bytes, Request::Flags flags,
+                          bool functional);
+    void readDataTimed(ThreadContext *tc, Addr desc_addr,
+                       Stage2Walk *translation, int num_bytes,
+                       Request::Flags flags);
+
   protected:
 
     /** Queues of requests for all the different lookup levels */
@@ -907,13 +948,13 @@ class TableWalker : public ClockedObject
     std::list<WalkerState *> pendingQueue;
 
     /** The MMU to forward second stage look upts to */
-    Stage2MMU *stage2Mmu;
-
-    /** Port shared by the two table walkers. */
-    Port* port;
+    MMU *mmu;
 
     /** Requestor id assigned by the MMU. */
     RequestorID requestorId;
+
+    /** Port shared by the two table walkers. */
+    Port* port;
 
     /** Indicates whether this table walker is part of the stage 2 mmu */
     const bool isStage2;
@@ -970,8 +1011,6 @@ class TableWalker : public ClockedObject
     TableWalker(const Params &p);
     virtual ~TableWalker();
 
-    void init() override;
-
     bool haveLPAE() const { return _haveLPAE; }
     bool haveVirtualization() const { return _haveVirtualization; }
     bool haveLargeAsid64() const { return _haveLargeAsid64; }
@@ -984,15 +1023,17 @@ class TableWalker : public ClockedObject
     ::Port &getPort(const std::string &if_name,
                     PortID idx=InvalidPortID) override;
 
+    Port &getTableWalkerPort();
+
     Fault walk(const RequestPtr &req, ThreadContext *tc,
                uint16_t asid, vmid_t _vmid,
                bool _isHyp, TLB::Mode mode, TLB::Translation *_trans,
                bool timing, bool functional, bool secure,
                TLB::ArmTranslationType tranType, bool _stage2Req);
 
+    void setMmu(MMU *_mmu) { mmu = _mmu; }
     void setTlb(TLB *_tlb) { tlb = _tlb; }
     TLB* getTlb() { return tlb; }
-    void setMMU(Stage2MMU *m, RequestorID requestor_id);
     void memAttrs(ThreadContext *tc, TlbEntry &te, SCTLR sctlr,
                   uint8_t texcb, bool s);
     void memAttrsLPAE(ThreadContext *tc, TlbEntry &te,

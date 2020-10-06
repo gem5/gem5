@@ -60,6 +60,17 @@ class MMU : public BaseMMU
         return static_cast<ArmISA::TLB *>(itb);
     }
 
+    TLB * getTlb(BaseTLB::Mode mode, bool stage2) const;
+
+  protected:
+    TLB *itbStage2;
+    TLB *dtbStage2;
+
+    TableWalker *itbWalker;
+    TableWalker *dtbWalker;
+    TableWalker *itbStage2Walker;
+    TableWalker *dtbStage2Walker;
+
   public:
     enum TLBType
     {
@@ -68,14 +79,25 @@ class MMU : public BaseMMU
         ALL_TLBS = 0x11
     };
 
-    MMU(const ArmMMUParams &p)
-      : BaseMMU(p)
-    {}
+    MMU(const ArmMMUParams &p);
+
+    void init() override;
 
     bool translateFunctional(ThreadContext *tc, Addr vaddr, Addr &paddr);
 
     Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
         BaseTLB::Mode mode, TLB::ArmTranslationType tran_type);
+
+    Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
+        BaseTLB::Mode mode, TLB::ArmTranslationType tran_type,
+        bool stage2);
+
+    using BaseMMU::translateAtomic;
+    Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+        BaseTLB::Mode mode, bool stage2);
+
+    void translateTiming(const RequestPtr &req, ThreadContext *tc,
+        BaseTLB::Translation *translation, BaseTLB::Mode mode, bool stage2);
 
     void invalidateMiscReg(TLBType type = ALL_TLBS);
 
@@ -99,6 +121,14 @@ class MMU : public BaseMMU
     dflush(const OP &tlbi_op)
     {
         getDTBPtr()->flush(tlbi_op);
+    }
+
+    void
+    flushAll() override
+    {
+        BaseMMU::flushAll();
+        itbStage2->flushAll();
+        dtbStage2->flushAll();
     }
 
     uint64_t
