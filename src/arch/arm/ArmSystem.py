@@ -60,7 +60,7 @@ class ArmSystem(System):
         "Reset address (ARMv8)")
     auto_reset_addr = Param.Bool(True,
         "Determine reset address from kernel entry point if no boot loader")
-    highest_el_is_64 = Param.Bool(False,
+    highest_el_is_64 = Param.Bool(True,
         "True if the register width of the highest implemented exception level "
         "is 64 bits (ARMv8)")
     phys_addr_range_64 = Param.UInt8(40,
