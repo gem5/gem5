@@ -1310,7 +1310,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
     Addr addr = pkt->getAddr();
     bool is_secure = pkt->isSecure();
 #if TRACING_ON
-    CacheBlk::State old_state = blk ? blk->status : 0;
+    const std::string old_state = blk ? blk->print() : "";
 #endif
 
     // When handling a fill, we should have no writes to this line.
@@ -1380,7 +1380,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
         }
     }
 
-    DPRINTF(Cache, "Block addr %#llx (%s) moving from state %x to %s\n",
+    DPRINTF(Cache, "Block addr %#llx (%s) moving from %s to %s\n",
             addr, is_secure ? "s" : "ns", old_state, blk->print());
 
     // if we got new data, copy it in (checking for a read response

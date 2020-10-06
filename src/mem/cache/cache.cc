@@ -590,7 +590,7 @@ Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
             bus_pkt->print());
 
 #if TRACING_ON
-    CacheBlk::State old_state = blk ? blk->status : 0;
+    const std::string old_state = blk ? blk->print() : "";
 #endif
 
     Cycles latency = ticksToCycles(memSidePort.sendAtomic(bus_pkt));
@@ -598,7 +598,7 @@ Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
     bool is_invalidate = bus_pkt->isInvalidate();
 
     // We are now dealing with the response handling
-    DPRINTF(Cache, "%s: Receive response: %s in state %i\n", __func__,
+    DPRINTF(Cache, "%s: Receive response: %s for %s\n", __func__,
             bus_pkt->print(), old_state);
 
     // If packet was a forward, the response (if any) is already
