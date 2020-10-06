@@ -37,26 +37,26 @@
 #include "base/logging.hh"
 
 CompressionBlk::CompressionBlk()
-    : SectorSubBlk(), _size(0), _decompressionLatency(0)
+    : SectorSubBlk(), _size(0), _decompressionLatency(0), _compressed(false)
 {
 }
 
 bool
 CompressionBlk::isCompressed() const
 {
-    return (status & BlkCompressed) != 0;
+    return _compressed;
 }
 
 void
 CompressionBlk::setCompressed()
 {
-    status |= BlkCompressed;
+    _compressed = true;
 }
 
 void
 CompressionBlk::setUncompressed()
 {
-    status &= ~BlkCompressed;
+    _compressed = false;
 }
 
 std::size_t
@@ -81,6 +81,13 @@ void
 CompressionBlk::setDecompressionLatency(const Cycles lat)
 {
     _decompressionLatency = lat;
+}
+
+void
+CompressionBlk::invalidate()
+{
+    SectorSubBlk::invalidate();
+    setUncompressed();
 }
 
 std::string

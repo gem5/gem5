@@ -59,6 +59,9 @@ class CompressionBlk : public SectorSubBlk
      */
     Cycles _decompressionLatency;
 
+    /** Compression bit. */
+    bool _compressed;
+
   public:
     CompressionBlk();
     CompressionBlk(const CompressionBlk&) = delete;
@@ -109,6 +112,8 @@ class CompressionBlk : public SectorSubBlk
      * @param Decompression latency.
      */
     void setDecompressionLatency(const Cycles lat);
+
+    void invalidate() override;
 
     /**
      * Pretty-print sector offset and other CacheBlk information.

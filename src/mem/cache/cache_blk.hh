@@ -69,14 +69,12 @@ enum CacheBlkStatusBits : unsigned {
     BlkReadable =       0x04,
     /** dirty (modified) */
     BlkDirty =          0x08,
-    /** block holds compressed data */
-    BlkCompressed =     0x80
 };
 
 /**
  * A Basic Cache block.
- * Contains information regarding its coherence, prefetching and compression
- * status, as well as a pointer to its data.
+ * Contains information regarding its coherence, prefetching status, as
+ * well as a pointer to its data.
  */
 class CacheBlk : public TaggedEntry
 {
