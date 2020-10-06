@@ -69,8 +69,6 @@ enum CacheBlkStatusBits : unsigned {
     BlkReadable =       0x04,
     /** dirty (modified) */
     BlkDirty =          0x08,
-    /** block was a hardware prefetch yet unaccessed*/
-    BlkHWPrefetched =   0x20,
     /** block holds compressed data */
     BlkCompressed =     0x80
 };
@@ -176,6 +174,7 @@ class CacheBlk : public TaggedEntry
     virtual void invalidate()
     {
         TaggedEntry::invalidate();
+        clearPrefetched();
         setTaskId(ContextSwitchTaskId::Unknown);
         status = 0;
         whenReady = MaxTick;
@@ -198,10 +197,16 @@ class CacheBlk : public TaggedEntry
      * be touched.
      * @return True if the block was a hardware prefetch, unaccesed.
      */
-    bool wasPrefetched() const
-    {
-        return (status & BlkHWPrefetched) != 0;
-    }
+    bool wasPrefetched() const { return _prefetched; }
+
+    /**
+     * Clear the prefetching bit. Either because it was recently used, or due
+     * to the block being invalidated.
+     */
+    void clearPrefetched() { _prefetched = false; }
+
+    /** Marks this blocks as a recently prefetched block. */
+    void setPrefetched() { _prefetched = false; }
 
     /**
      * Get tick at which block's data will be available for access.
@@ -423,6 +428,9 @@ class CacheBlk : public TaggedEntry
      * meaningful if the block is valid.
      */
     Tick _tickInserted;
+
+    /** Whether this block is an unaccessed hardware prefetch. */
+    bool _prefetched;
 };
 
 /**

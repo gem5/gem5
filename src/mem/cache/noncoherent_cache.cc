@@ -288,7 +288,7 @@ NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
             assert(tgt_pkt->cmd == MemCmd::HardPFReq);
 
             if (blk)
-                blk->status |= BlkHWPrefetched;
+                blk->setPrefetched();
 
             // We have filled the block and the prefetcher does not
             // require responses.

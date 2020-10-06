@@ -367,7 +367,7 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         ppHit->notify(pkt);
 
         if (prefetcher && blk && blk->wasPrefetched()) {
-            blk->status &= ~BlkHWPrefetched;
+            blk->clearPrefetched();
         }
 
         handleTimingReqHit(pkt, blk, request_time);
