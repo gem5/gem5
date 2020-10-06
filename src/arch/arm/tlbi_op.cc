@@ -48,6 +48,7 @@ TLBIALL::operator()(ThreadContext* tc)
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     inHost = (hcr.tge == 1 && hcr.e2h == 1);
     el2Enabled = EL2Enabled(tc);
+    currentEL = currEL(tc);
 
     getMMUPtr(tc)->flush(*this);
 
@@ -108,10 +109,10 @@ TLBIASID::operator()(ThreadContext* tc)
     inHost = (hcr.tge == 1 && hcr.e2h == 1);
     el2Enabled = EL2Enabled(tc);
 
-    getMMUPtr(tc)->flush(*this);
+    getMMUPtr(tc)->flushStage1(*this);
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getMMUPtr(checker)->flush(*this);
+        getMMUPtr(checker)->flushStage1(*this);
     }
 }
 
@@ -145,11 +146,11 @@ TLBIMVAA::operator()(ThreadContext* tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     inHost = (hcr.tge == 1 && hcr.e2h == 1);
-    getMMUPtr(tc)->flush(*this);
+    getMMUPtr(tc)->flushStage1(*this);
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getMMUPtr(checker)->flush(*this);
+        getMMUPtr(checker)->flushStage1(*this);
     }
 }
 
@@ -158,11 +159,11 @@ TLBIMVA::operator()(ThreadContext* tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     inHost = (hcr.tge == 1 && hcr.e2h == 1);
-    getMMUPtr(tc)->flush(*this);
+    getMMUPtr(tc)->flushStage1(*this);
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getMMUPtr(checker)->flush(*this);
+        getMMUPtr(checker)->flushStage1(*this);
     }
 }
 

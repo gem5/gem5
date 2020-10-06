@@ -283,11 +283,6 @@ TLB::flushAll()
     }
 
     stats.flushTlb++;
-
-    // If there's a second stage TLB (and we're not it) then flush it as well
-    if (!isStage2) {
-        stage2Tlb->flushAll();
-    }
 }
 
 void
@@ -312,12 +307,6 @@ TLB::flush(const TLBIALL& tlbi_op)
     }
 
     stats.flushTlb++;
-
-    // If there's a second stage TLB (and we're not it) then flush it as well
-    // if we're currently in hyp mode
-    if (!isStage2 && isHyp) {
-        stage2Tlb->flush(tlbi_op.makeStage2());
-    }
 }
 
 void
@@ -341,13 +330,6 @@ TLB::flush(const TLBIALLEL &tlbi_op)
     }
 
     stats.flushTlb++;
-
-    // If there's a second stage TLB (and we're not it)
-    // and if we're targeting EL1
-    // then flush it as well
-    if (!isStage2 && tlbi_op.targetEL == EL1) {
-        stage2Tlb->flush(tlbi_op.makeStage2());
-    }
 }
 
 void
@@ -372,12 +354,6 @@ TLB::flush(const TLBIVMALL &tlbi_op)
     }
 
     stats.flushTlb++;
-
-    // If there's a second stage TLB (and we're not it) then flush it as well
-    // if we're currently in hyp mode
-    if (!isStage2 && tlbi_op.stage2) {
-        stage2Tlb->flush(tlbi_op.makeStage2());
-    }
 }
 
 void
@@ -403,11 +379,6 @@ TLB::flush(const TLBIALLN &tlbi_op)
     }
 
     stats.flushTlb++;
-
-    // If there's a second stage TLB (and we're not it) then flush it as well
-    if (!isStage2 && !hyp) {
-        stage2Tlb->flush(tlbi_op.makeStage2());
-    }
 }
 
 void

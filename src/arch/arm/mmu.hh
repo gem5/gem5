@@ -105,8 +105,29 @@ class MMU : public BaseMMU
     void
     flush(const OP &tlbi_op)
     {
-        getITBPtr()->flush(tlbi_op);
-        getDTBPtr()->flush(tlbi_op);
+        if (tlbi_op.stage1Flush()) {
+            flushStage1(tlbi_op);
+        }
+
+        if (tlbi_op.stage2Flush()) {
+            flushStage2(tlbi_op.makeStage2());
+        }
+    }
+
+    template <typename OP>
+    void
+    flushStage1(const OP &tlbi_op)
+    {
+        iflush(tlbi_op);
+        dflush(tlbi_op);
+    }
+
+    template <typename OP>
+    void
+    flushStage2(const OP &tlbi_op)
+    {
+        itbStage2->flush(tlbi_op);
+        dtbStage2->flush(tlbi_op);
     }
 
     template <typename OP>

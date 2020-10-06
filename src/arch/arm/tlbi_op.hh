@@ -72,6 +72,28 @@ class TLBIOp
             (*this)(oc);
     }
 
+    /**
+     * Return true if the TLBI op needs to flush stage1
+     * entries, Defaulting to true in the TLBIOp abstract
+     * class
+     */
+    virtual bool
+    stage1Flush() const
+    {
+        return true;
+    }
+
+    /**
+     * Return true if the TLBI op needs to flush stage2
+     * entries, Defaulting to false in the TLBIOp abstract
+     * class
+     */
+    virtual bool
+    stage2Flush() const
+    {
+        return false;
+    }
+
     bool secureLookup;
     ExceptionLevel targetEL;
 };
@@ -81,10 +103,19 @@ class TLBIALL : public TLBIOp
 {
   public:
     TLBIALL(ExceptionLevel _targetEL, bool _secure)
-      : TLBIOp(_targetEL, _secure), inHost(false), el2Enabled(false)
+      : TLBIOp(_targetEL, _secure), inHost(false), el2Enabled(false),
+        currentEL(EL0)
     {}
 
     void operator()(ThreadContext* tc) override;
+
+    bool
+    stage2Flush() const override
+    {
+        // TLBIALL (AArch32) flushing stage2 entries if we're currently
+        // in hyp mode
+        return currentEL == EL2;
+    }
 
     TLBIALL
     makeStage2() const
@@ -94,6 +125,7 @@ class TLBIALL : public TLBIOp
 
     bool inHost;
     bool el2Enabled;
+    ExceptionLevel currentEL;
 };
 
 /** Instruction TLB Invalidate All */
@@ -132,6 +164,13 @@ class TLBIALLEL : public TLBIOp
 
     void operator()(ThreadContext* tc) override;
 
+    bool
+    stage2Flush() const override
+    {
+        // If we're targeting EL1 then flush stage2 as well
+        return targetEL == EL1;
+    }
+
     TLBIALLEL
     makeStage2() const
     {
@@ -151,6 +190,12 @@ class TLBIVMALL : public TLBIOp
     {}
 
     void operator()(ThreadContext* tc) override;
+
+    bool
+    stage2Flush() const override
+    {
+        return stage2;
+    }
 
     TLBIVMALL
     makeStage2() const
@@ -214,6 +259,12 @@ class TLBIALLN : public TLBIOp
     {}
 
     void operator()(ThreadContext* tc) override;
+
+    bool
+    stage2Flush() const override
+    {
+        return targetEL != EL2;
+    }
 
     TLBIALLN
     makeStage2() const
