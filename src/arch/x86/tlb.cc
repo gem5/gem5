@@ -59,9 +59,9 @@
 
 namespace X86ISA {
 
-TLB::TLB(const Params *p)
-    : BaseTLB(p), configAddress(0), size(p->size),
-      tlb(size), lruSeq(0), m5opRange(p->system->m5opRange()), stats(this)
+TLB::TLB(const Params &p)
+    : BaseTLB(p), configAddress(0), size(p.size),
+      tlb(size), lruSeq(0), m5opRange(p.system->m5opRange()), stats(this)
 {
     if (!size)
         fatal("TLBs must have a non-zero size.\n");
@@ -71,7 +71,7 @@ TLB::TLB(const Params *p)
         freeList.push_back(&tlb[x]);
     }
 
-    walker = p->walker;
+    walker = p.walker;
     walker->setTLB(this);
 }
 
@@ -573,7 +573,7 @@ TLB::getTableWalkerPort()
 } // namespace X86ISA
 
 X86ISA::TLB *
-X86TLBParams::create()
+X86TLBParams::create() const
 {
-    return new X86ISA::TLB(this);
+    return new X86ISA::TLB(*this);
 }

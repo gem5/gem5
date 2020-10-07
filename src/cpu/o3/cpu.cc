@@ -67,7 +67,7 @@ struct BaseCPUParams;
 using namespace TheISA;
 using namespace std;
 
-BaseO3CPU::BaseO3CPU(BaseCPUParams *params)
+BaseO3CPU::BaseO3CPU(const BaseCPUParams &params)
     : BaseCPU(params)
 {
 }
@@ -79,10 +79,10 @@ BaseO3CPU::regStats()
 }
 
 template <class Impl>
-FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
+FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
     : BaseO3CPU(params),
-      itb(params->itb),
-      dtb(params->dtb),
+      itb(params.itb),
+      dtb(params.dtb),
       tickEvent([this]{ tick(); }, "FullO3CPU tick",
                 false, Event::CPU_Tick_Pri),
       threadExitEvent([this]{ exitThreads(); }, "FullO3CPU exit threads",
@@ -99,12 +99,12 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
       /* It is mandatory that all SMT threads use the same renaming mode as
        * they are sharing registers and rename */
-      vecMode(RenameMode<TheISA::ISA>::init(params->isa[0])),
-      regFile(params->numPhysIntRegs,
-              params->numPhysFloatRegs,
-              params->numPhysVecRegs,
-              params->numPhysVecPredRegs,
-              params->numPhysCCRegs,
+      vecMode(RenameMode<TheISA::ISA>::init(params.isa[0])),
+      regFile(params.numPhysIntRegs,
+              params.numPhysFloatRegs,
+              params.numPhysVecRegs,
+              params.numPhysVecPredRegs,
+              params.numPhysCCRegs,
               vecMode),
 
       freeList(name() + ".freelist", &regFile),
@@ -116,37 +116,37 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
       isa(numThreads, NULL),
 
-      timeBuffer(params->backComSize, params->forwardComSize),
-      fetchQueue(params->backComSize, params->forwardComSize),
-      decodeQueue(params->backComSize, params->forwardComSize),
-      renameQueue(params->backComSize, params->forwardComSize),
-      iewQueue(params->backComSize, params->forwardComSize),
+      timeBuffer(params.backComSize, params.forwardComSize),
+      fetchQueue(params.backComSize, params.forwardComSize),
+      decodeQueue(params.backComSize, params.forwardComSize),
+      renameQueue(params.backComSize, params.forwardComSize),
+      iewQueue(params.backComSize, params.forwardComSize),
       activityRec(name(), NumStages,
-                  params->backComSize + params->forwardComSize,
-                  params->activity),
+                  params.backComSize + params.forwardComSize,
+                  params.activity),
 
       globalSeqNum(1),
-      system(params->system),
+      system(params.system),
       lastRunningCycle(curCycle())
 {
-    fatal_if(FullSystem && params->numThreads > 1,
+    fatal_if(FullSystem && params.numThreads > 1,
             "SMT is not supported in O3 in full system mode currently.");
 
-    fatal_if(!FullSystem && params->numThreads < params->workload.size(),
+    fatal_if(!FullSystem && params.numThreads < params.workload.size(),
             "More workload items (%d) than threads (%d) on CPU %s.",
-            params->workload.size(), params->numThreads, name());
+            params.workload.size(), params.numThreads, name());
 
-    if (!params->switched_out) {
+    if (!params.switched_out) {
         _status = Running;
     } else {
         _status = SwitchedOut;
     }
 
-    if (params->checker) {
-        BaseCPU *temp_checker = params->checker;
+    if (params.checker) {
+        BaseCPU *temp_checker = params.checker;
         checker = dynamic_cast<Checker<Impl> *>(temp_checker);
         checker->setIcachePort(&this->fetch.getInstPort());
-        checker->setSystem(params->system);
+        checker->setSystem(params.system);
     } else {
         checker = NULL;
     }
@@ -194,7 +194,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     if (FullSystem) {
         active_threads = 1;
     } else {
-        active_threads = params->workload.size();
+        active_threads = params.workload.size();
 
         if (active_threads > Impl::MaxThreads) {
             panic("Workload Size too large. Increase the 'MaxThreads' "
@@ -204,18 +204,18 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     }
 
     //Make Sure That this a Valid Architeture
-    assert(params->numPhysIntRegs   >= numThreads * TheISA::NumIntRegs);
-    assert(params->numPhysFloatRegs >= numThreads * TheISA::NumFloatRegs);
-    assert(params->numPhysVecRegs >= numThreads * TheISA::NumVecRegs);
-    assert(params->numPhysVecPredRegs >= numThreads * TheISA::NumVecPredRegs);
-    assert(params->numPhysCCRegs >= numThreads * TheISA::NumCCRegs);
+    assert(params.numPhysIntRegs   >= numThreads * TheISA::NumIntRegs);
+    assert(params.numPhysFloatRegs >= numThreads * TheISA::NumFloatRegs);
+    assert(params.numPhysVecRegs >= numThreads * TheISA::NumVecRegs);
+    assert(params.numPhysVecPredRegs >= numThreads * TheISA::NumVecPredRegs);
+    assert(params.numPhysCCRegs >= numThreads * TheISA::NumCCRegs);
 
     rename.setScoreboard(&scoreboard);
     iew.setScoreboard(&scoreboard);
 
     // Setup the rename map for whichever stages need it.
     for (ThreadID tid = 0; tid < numThreads; tid++) {
-        isa[tid] = dynamic_cast<TheISA::ISA *>(params->isa[tid]);
+        isa[tid] = dynamic_cast<TheISA::ISA *>(params.isa[tid]);
         assert(isa[tid]);
         assert(RenameMode<TheISA::ISA>::equalsInit(isa[tid], isa[0]));
 
@@ -307,12 +307,12 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
             assert(this->numThreads == 1);
             this->thread[tid] = new Thread(this, 0, NULL);
         } else {
-            if (tid < params->workload.size()) {
+            if (tid < params.workload.size()) {
                 DPRINTF(O3CPU, "Workload[%i] process is %#x",
                         tid, this->thread[tid]);
                 this->thread[tid] = new typename FullO3CPU<Impl>::Thread(
                         (typename Impl::O3CPU *)(this),
-                        tid, params->workload[tid]);
+                        tid, params.workload[tid]);
 
                 //usedTids[tid] = true;
                 //threadMap[tid] = tid;
@@ -337,7 +337,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
         // If we're using a checker, then the TC should be the
         // CheckerThreadContext.
-        if (params->checker) {
+        if (params.checker) {
             tc = new CheckerThreadContext<O3ThreadContext<Impl> >(
                 o3_tc, this->checker);
         }
@@ -354,7 +354,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     }
 
     // FullO3CPU always requires an interrupt controller.
-    if (!params->switched_out && interrupts.empty()) {
+    if (!params.switched_out && interrupts.empty()) {
         fatal("FullO3CPU %s has no interrupt controller.\n"
               "Ensure createInterruptController() is called.\n", name());
     }

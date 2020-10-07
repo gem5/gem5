@@ -71,13 +71,13 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
     for (vector<BasicExtLink*>::const_iterator i = ext_links.begin();
          i != ext_links.end(); ++i) {
         BasicExtLink *ext_link = (*i);
-        AbstractController *abs_cntrl = ext_link->params()->ext_node;
-        BasicRouter *router = ext_link->params()->int_node;
+        AbstractController *abs_cntrl = ext_link->params().ext_node;
+        BasicRouter *router = ext_link->params().int_node;
 
         int machine_base_idx = MachineType_base_number(abs_cntrl->getType());
         int ext_idx1 = machine_base_idx + abs_cntrl->getVersion();
         int ext_idx2 = ext_idx1 + m_nodes;
-        int int_idx = router->params()->router_id + 2*m_nodes;
+        int int_idx = router->params().router_id + 2*m_nodes;
 
         // create the internal uni-directional links in both directions
         // ext to int
@@ -90,17 +90,17 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
     for (vector<BasicIntLink*>::const_iterator i = int_links.begin();
          i != int_links.end(); ++i) {
         BasicIntLink *int_link = (*i);
-        BasicRouter *router_src = int_link->params()->src_node;
-        BasicRouter *router_dst = int_link->params()->dst_node;
+        BasicRouter *router_src = int_link->params().src_node;
+        BasicRouter *router_dst = int_link->params().dst_node;
 
-        PortDirection src_outport = int_link->params()->src_outport;
-        PortDirection dst_inport = int_link->params()->dst_inport;
+        PortDirection src_outport = int_link->params().src_outport;
+        PortDirection dst_inport = int_link->params().dst_inport;
 
         // Store the IntLink pointers for later
         m_int_link_vector.push_back(int_link);
 
-        int src = router_src->params()->router_id + 2*m_nodes;
-        int dst = router_dst->params()->router_id + 2*m_nodes;
+        int src = router_src->params().router_id + 2*m_nodes;
+        int dst = router_dst->params().router_id + 2*m_nodes;
 
         // create the internal uni-directional link from src to dst
         addLink(src, dst, int_link, src_outport, dst_inport);

@@ -121,7 +121,8 @@ class InstructionQueue
     };
 
     /** Constructs an IQ. */
-    InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params);
+    InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
+                     const DerivO3CPUParams &params);
 
     /** Destructs the IQ. */
     ~InstructionQueue();

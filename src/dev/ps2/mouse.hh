@@ -61,7 +61,7 @@ class PS2Mouse : public PS2Device
     uint8_t sampleRate;
 
   public:
-    PS2Mouse(const PS2MouseParams *p);
+    PS2Mouse(const PS2MouseParams &p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

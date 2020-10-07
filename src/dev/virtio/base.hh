@@ -577,7 +577,7 @@ class VirtIODeviceBase : public SimObject
     EndBitUnion(DeviceStatus)
 
     typedef VirtIODeviceBaseParams Params;
-    VirtIODeviceBase(Params *params, DeviceId id, size_t config_size,
+    VirtIODeviceBase(const Params &params, DeviceId id, size_t config_size,
                      FeatureBits features);
     virtual ~VirtIODeviceBase();
 
@@ -877,7 +877,7 @@ class VirtIODeviceBase : public SimObject
 class VirtIODummyDevice : public VirtIODeviceBase
 {
   public:
-    VirtIODummyDevice(VirtIODummyDeviceParams *params);
+    VirtIODummyDevice(const VirtIODummyDeviceParams &params);
 
   protected:
     /** VirtIO device ID */

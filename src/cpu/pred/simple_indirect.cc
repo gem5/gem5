@@ -32,23 +32,23 @@
 #include "debug/Indirect.hh"
 
 SimpleIndirectPredictor::SimpleIndirectPredictor(
-        const SimpleIndirectPredictorParams * params)
+        const SimpleIndirectPredictorParams &params)
     : IndirectPredictor(params),
-      hashGHR(params->indirectHashGHR),
-      hashTargets(params->indirectHashTargets),
-      numSets(params->indirectSets),
-      numWays(params->indirectWays),
-      tagBits(params->indirectTagSize),
-      pathLength(params->indirectPathLength),
-      instShift(params->instShiftAmt),
-      ghrNumBits(params->indirectGHRBits),
-      ghrMask((1 << params->indirectGHRBits)-1)
+      hashGHR(params.indirectHashGHR),
+      hashTargets(params.indirectHashTargets),
+      numSets(params.indirectSets),
+      numWays(params.indirectWays),
+      tagBits(params.indirectTagSize),
+      pathLength(params.indirectPathLength),
+      instShift(params.instShiftAmt),
+      ghrNumBits(params.indirectGHRBits),
+      ghrMask((1 << params.indirectGHRBits)-1)
 {
     if (!isPowerOf2(numSets)) {
-      panic("Indirect predictor requires power of 2 number of sets");
+        panic("Indirect predictor requires power of 2 number of sets");
     }
 
-    threadInfo.resize(params->numThreads);
+    threadInfo.resize(params.numThreads);
 
     targetCache.resize(numSets);
     for (unsigned i = 0; i < numSets; i++) {
@@ -235,7 +235,7 @@ SimpleIndirectPredictor::getTag(Addr br_addr)
 }
 
 SimpleIndirectPredictor *
-SimpleIndirectPredictorParams::create()
+SimpleIndirectPredictorParams::create() const
 {
-    return new SimpleIndirectPredictor(this);
+    return new SimpleIndirectPredictor(*this);
 }

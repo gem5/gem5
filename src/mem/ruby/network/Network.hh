@@ -77,9 +77,12 @@ class Network : public ClockedObject
 {
   public:
     typedef RubyNetworkParams Params;
-    Network(const Params *p);
-    const Params * params() const
-    { return dynamic_cast<const Params *>(_params); }
+    Network(const Params &p);
+    const Params &
+    params() const
+    {
+        return dynamic_cast<const Params &>(_params);
+    }
 
     virtual ~Network();
 

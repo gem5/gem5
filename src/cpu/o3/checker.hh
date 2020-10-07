@@ -51,9 +51,7 @@
 class O3Checker : public Checker<O3CPUImpl>
 {
   public:
-    O3Checker(Params *p)
-          : Checker<O3CPUImpl>(p)
-    { }
+    O3Checker(const Params &p) : Checker<O3CPUImpl>(p) {}
 };
 
 #endif // __CPU_O3_CHECKER_HH__

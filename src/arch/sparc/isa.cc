@@ -59,15 +59,15 @@ buildPstateMask()
 
 static const PSTATE PstateMask = buildPstateMask();
 
-ISA::ISA(Params *p) : BaseISA(p)
+ISA::ISA(const Params &p) : BaseISA(p)
 {
     clear();
 }
 
-const SparcISAParams *
+const SparcISAParams &
 ISA::params() const
 {
-    return dynamic_cast<const Params *>(_params);
+    return dynamic_cast<const Params &>(_params);
 }
 
 void
@@ -761,7 +761,7 @@ ISA::unserialize(CheckpointIn &cp)
 }
 
 SparcISA::ISA *
-SparcISAParams::create()
+SparcISAParams::create() const
 {
-    return new SparcISA::ISA(this);
+    return new SparcISA::ISA(*this);
 }

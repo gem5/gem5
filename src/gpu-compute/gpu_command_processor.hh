@@ -60,7 +60,7 @@ class GPUCommandProcessor : public HSADevice
     typedef GPUCommandProcessorParams Params;
 
     GPUCommandProcessor() = delete;
-    GPUCommandProcessor(const Params *p);
+    GPUCommandProcessor(const Params &p);
 
     void setShader(Shader *shader);
     Shader* shader();

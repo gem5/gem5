@@ -57,7 +57,7 @@ class WireBuffer : public SimObject
 {
   public:
     typedef RubyWireBufferParams Params;
-    WireBuffer(const Params *p);
+    WireBuffer(const Params &p);
     void init();
 
     ~WireBuffer();

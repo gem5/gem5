@@ -36,7 +36,7 @@
 
 namespace ReplacementPolicy {
 
-Random::Random(const Params *p)
+Random::Random(const Params &p)
   : Base(p)
 {
 }
@@ -95,7 +95,7 @@ Random::instantiateEntry()
 } // namespace ReplacementPolicy
 
 ReplacementPolicy::Random*
-RandomRPParams::create()
+RandomRPParams::create() const
 {
-    return new ReplacementPolicy::Random(this);
+    return new ReplacementPolicy::Random(*this);
 }

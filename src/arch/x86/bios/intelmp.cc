@@ -145,15 +145,15 @@ X86ISA::IntelMP::FloatingPointer::writeOut(PortProxy& proxy, Addr addr)
     return 16;
 }
 
-X86ISA::IntelMP::FloatingPointer::FloatingPointer(Params * p) :
-    SimObject(p), tableAddr(0), specRev(p->spec_rev),
-    defaultConfig(p->default_config), imcrPresent(p->imcr_present)
+X86ISA::IntelMP::FloatingPointer::FloatingPointer(const Params &p) :
+    SimObject(p), tableAddr(0), specRev(p.spec_rev),
+    defaultConfig(p.default_config), imcrPresent(p.imcr_present)
 {}
 
 X86ISA::IntelMP::FloatingPointer *
-X86IntelMPFloatingPointerParams::create()
+X86IntelMPFloatingPointerParams::create() const
 {
-    return new X86ISA::IntelMP::FloatingPointer(this);
+    return new X86ISA::IntelMP::FloatingPointer(*this);
 }
 
 Addr
@@ -165,7 +165,8 @@ X86ISA::IntelMP::BaseConfigEntry::writeOut(PortProxy& proxy,
     return 1;
 }
 
-X86ISA::IntelMP::BaseConfigEntry::BaseConfigEntry(Params * p, uint8_t _type) :
+X86ISA::IntelMP::BaseConfigEntry::BaseConfigEntry(
+        const Params &p, uint8_t _type) :
     SimObject(p), type(_type)
 {}
 
@@ -180,7 +181,7 @@ X86ISA::IntelMP::ExtConfigEntry::writeOut(PortProxy& proxy,
     return 1;
 }
 
-X86ISA::IntelMP::ExtConfigEntry::ExtConfigEntry(Params * p,
+X86ISA::IntelMP::ExtConfigEntry::ExtConfigEntry(const Params &p,
         uint8_t _type, uint8_t _length) :
     SimObject(p), type(_type), length(_length)
 {}
@@ -245,17 +246,17 @@ X86ISA::IntelMP::ConfigTable::writeOut(PortProxy& proxy, Addr addr)
     return offset + extOffset;
 };
 
-X86ISA::IntelMP::ConfigTable::ConfigTable(Params * p) : SimObject(p),
-    specRev(p->spec_rev), oemID(p->oem_id), productID(p->product_id),
-    oemTableAddr(p->oem_table_addr), oemTableSize(p->oem_table_size),
-    localApic(p->local_apic),
-    baseEntries(p->base_entries), extEntries(p->ext_entries)
+X86ISA::IntelMP::ConfigTable::ConfigTable(const Params &p) : SimObject(p),
+    specRev(p.spec_rev), oemID(p.oem_id), productID(p.product_id),
+    oemTableAddr(p.oem_table_addr), oemTableSize(p.oem_table_size),
+    localApic(p.local_apic),
+    baseEntries(p.base_entries), extEntries(p.ext_entries)
 {}
 
 X86ISA::IntelMP::ConfigTable *
-X86IntelMPConfigTableParams::create()
+X86IntelMPConfigTableParams::create() const
 {
-    return new X86ISA::IntelMP::ConfigTable(this);
+    return new X86ISA::IntelMP::ConfigTable(*this);
 }
 
 Addr
@@ -275,24 +276,24 @@ X86ISA::IntelMP::Processor::writeOut(
     return 20;
 }
 
-X86ISA::IntelMP::Processor::Processor(Params * p) : BaseConfigEntry(p, 0),
-    localApicID(p->local_apic_id), localApicVersion(p->local_apic_version),
-    cpuFlags(0), cpuSignature(0), featureFlags(p->feature_flags)
+X86ISA::IntelMP::Processor::Processor(const Params &p) : BaseConfigEntry(p, 0),
+    localApicID(p.local_apic_id), localApicVersion(p.local_apic_version),
+    cpuFlags(0), cpuSignature(0), featureFlags(p.feature_flags)
 {
-    if (p->enable)
+    if (p.enable)
         cpuFlags |= (1 << 0);
-    if (p->bootstrap)
+    if (p.bootstrap)
         cpuFlags |= (1 << 1);
 
-    replaceBits(cpuSignature, 3, 0, p->stepping);
-    replaceBits(cpuSignature, 7, 4, p->model);
-    replaceBits(cpuSignature, 11, 8, p->family);
+    replaceBits(cpuSignature, 3, 0, p.stepping);
+    replaceBits(cpuSignature, 7, 4, p.model);
+    replaceBits(cpuSignature, 11, 8, p.family);
 }
 
 X86ISA::IntelMP::Processor *
-X86IntelMPProcessorParams::create()
+X86IntelMPProcessorParams::create() const
 {
-    return new X86ISA::IntelMP::Processor(this);
+    return new X86ISA::IntelMP::Processor(*this);
 }
 
 Addr
@@ -305,14 +306,14 @@ X86ISA::IntelMP::Bus::writeOut(
     return 8;
 }
 
-X86ISA::IntelMP::Bus::Bus(Params * p) : BaseConfigEntry(p, 1),
-    busID(p->bus_id), busType(p->bus_type)
+X86ISA::IntelMP::Bus::Bus(const Params &p) : BaseConfigEntry(p, 1),
+    busID(p.bus_id), busType(p.bus_type)
 {}
 
 X86ISA::IntelMP::Bus *
-X86IntelMPBusParams::create()
+X86IntelMPBusParams::create() const
 {
-    return new X86ISA::IntelMP::Bus(this);
+    return new X86ISA::IntelMP::Bus(*this);
 }
 
 Addr
@@ -327,17 +328,17 @@ X86ISA::IntelMP::IOAPIC::writeOut(
     return 8;
 }
 
-X86ISA::IntelMP::IOAPIC::IOAPIC(Params * p) : BaseConfigEntry(p, 2),
-    id(p->id), version(p->version), flags(0), address(p->address)
+X86ISA::IntelMP::IOAPIC::IOAPIC(const Params &p) : BaseConfigEntry(p, 2),
+    id(p.id), version(p.version), flags(0), address(p.address)
 {
-    if (p->enable)
+    if (p.enable)
         flags |= 1;
 }
 
 X86ISA::IntelMP::IOAPIC *
-X86IntelMPIOAPICParams::create()
+X86IntelMPIOAPICParams::create() const
 {
-    return new X86ISA::IntelMP::IOAPIC(this);
+    return new X86ISA::IntelMP::IOAPIC(*this);
 }
 
 Addr
@@ -354,28 +355,28 @@ X86ISA::IntelMP::IntAssignment::writeOut(
     return 8;
 }
 
-X86ISA::IntelMP::IOIntAssignment::IOIntAssignment(Params * p) :
-    IntAssignment(p, p->interrupt_type, p->polarity, p->trigger, 3,
-            p->source_bus_id, p->source_bus_irq,
-            p->dest_io_apic_id, p->dest_io_apic_intin)
+X86ISA::IntelMP::IOIntAssignment::IOIntAssignment(const Params &p) :
+    IntAssignment(p, p.interrupt_type, p.polarity, p.trigger, 3,
+            p.source_bus_id, p.source_bus_irq,
+            p.dest_io_apic_id, p.dest_io_apic_intin)
 {}
 
 X86ISA::IntelMP::IOIntAssignment *
-X86IntelMPIOIntAssignmentParams::create()
+X86IntelMPIOIntAssignmentParams::create() const
 {
-    return new X86ISA::IntelMP::IOIntAssignment(this);
+    return new X86ISA::IntelMP::IOIntAssignment(*this);
 }
 
-X86ISA::IntelMP::LocalIntAssignment::LocalIntAssignment(Params * p) :
-    IntAssignment(p, p->interrupt_type, p->polarity, p->trigger, 4,
-            p->source_bus_id, p->source_bus_irq,
-            p->dest_local_apic_id, p->dest_local_apic_intin)
+X86ISA::IntelMP::LocalIntAssignment::LocalIntAssignment(const Params &p) :
+    IntAssignment(p, p.interrupt_type, p.polarity, p.trigger, 4,
+            p.source_bus_id, p.source_bus_irq,
+            p.dest_local_apic_id, p.dest_local_apic_intin)
 {}
 
 X86ISA::IntelMP::LocalIntAssignment *
-X86IntelMPLocalIntAssignmentParams::create()
+X86IntelMPLocalIntAssignmentParams::create() const
 {
-    return new X86ISA::IntelMP::LocalIntAssignment(this);
+    return new X86ISA::IntelMP::LocalIntAssignment(*this);
 }
 
 Addr
@@ -390,16 +391,16 @@ X86ISA::IntelMP::AddrSpaceMapping::writeOut(
     return length;
 }
 
-X86ISA::IntelMP::AddrSpaceMapping::AddrSpaceMapping(Params * p) :
+X86ISA::IntelMP::AddrSpaceMapping::AddrSpaceMapping(const Params &p) :
     ExtConfigEntry(p, 128, 20),
-    busID(p->bus_id), addrType(p->address_type),
-    addr(p->address), addrLength(p->length)
+    busID(p.bus_id), addrType(p.address_type),
+    addr(p.address), addrLength(p.length)
 {}
 
 X86ISA::IntelMP::AddrSpaceMapping *
-X86IntelMPAddrSpaceMappingParams::create()
+X86IntelMPAddrSpaceMappingParams::create() const
 {
-    return new X86ISA::IntelMP::AddrSpaceMapping(this);
+    return new X86ISA::IntelMP::AddrSpaceMapping(*this);
 }
 
 Addr
@@ -417,18 +418,18 @@ X86ISA::IntelMP::BusHierarchy::writeOut(
     return length;
 }
 
-X86ISA::IntelMP::BusHierarchy::BusHierarchy(Params * p) :
+X86ISA::IntelMP::BusHierarchy::BusHierarchy(const Params &p) :
     ExtConfigEntry(p, 129, 8),
-    busID(p->bus_id), info(0), parentBus(p->parent_bus)
+    busID(p.bus_id), info(0), parentBus(p.parent_bus)
 {
-    if (p->subtractive_decode)
+    if (p.subtractive_decode)
         info |= 1;
 }
 
 X86ISA::IntelMP::BusHierarchy *
-X86IntelMPBusHierarchyParams::create()
+X86IntelMPBusHierarchyParams::create() const
 {
-    return new X86ISA::IntelMP::BusHierarchy(this);
+    return new X86ISA::IntelMP::BusHierarchy(*this);
 }
 
 Addr
@@ -442,16 +443,16 @@ X86ISA::IntelMP::CompatAddrSpaceMod::writeOut(
     return length;
 }
 
-X86ISA::IntelMP::CompatAddrSpaceMod::CompatAddrSpaceMod(Params * p) :
+X86ISA::IntelMP::CompatAddrSpaceMod::CompatAddrSpaceMod(const Params &p) :
     ExtConfigEntry(p, 130, 8),
-    busID(p->bus_id), mod(0), rangeList(p->range_list)
+    busID(p.bus_id), mod(0), rangeList(p.range_list)
 {
-    if (p->add)
+    if (p.add)
         mod |= 1;
 }
 
 X86ISA::IntelMP::CompatAddrSpaceMod *
-X86IntelMPCompatAddrSpaceModParams::create()
+X86IntelMPCompatAddrSpaceModParams::create() const
 {
-    return new X86ISA::IntelMP::CompatAddrSpaceMod(this);
+    return new X86ISA::IntelMP::CompatAddrSpaceMod(*this);
 }

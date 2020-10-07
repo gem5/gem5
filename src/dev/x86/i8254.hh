@@ -77,22 +77,22 @@ class I8254 : public BasicPioDevice
             return BasicPioDevice::getPort(if_name, idx);
     }
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
-    I8254(Params *p) : BasicPioDevice(p, 4), latency(p->pio_latency),
-            pit(p->name, this)
+    I8254(const Params &p) : BasicPioDevice(p, 4), latency(p.pio_latency),
+            pit(p.name, this)
     {
-        for (int i = 0; i < p->port_int_pin_connection_count; i++) {
+        for (int i = 0; i < p.port_int_pin_connection_count; i++) {
             intPin.push_back(new IntSourcePin<I8254>(csprintf(
                             "%s.int_pin[%d]", name(), i), i, this));
         }
     }
-    Tick read(PacketPtr pkt) override;
 
+    Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
 
     bool

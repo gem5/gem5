@@ -38,7 +38,7 @@ class DirectedGenerator : public SimObject
 {
   public:
     typedef DirectedGeneratorParams Params;
-    DirectedGenerator(const Params *p);
+    DirectedGenerator(const Params &p);
 
     virtual ~DirectedGenerator() {}
 

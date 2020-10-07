@@ -44,7 +44,7 @@
 #include "gpu-compute/wavefront.hh"
 #include "params/VectorRegisterFile.hh"
 
-VectorRegisterFile::VectorRegisterFile(const VectorRegisterFileParams *p)
+VectorRegisterFile::VectorRegisterFile(const VectorRegisterFileParams &p)
     : RegisterFile(p)
 {
     regFile.resize(numRegs(), VecRegContainer());
@@ -209,7 +209,7 @@ VectorRegisterFile::scheduleWriteOperandsFromLoad(
 }
 
 VectorRegisterFile*
-VectorRegisterFileParams::create()
+VectorRegisterFileParams::create() const
 {
-    return new VectorRegisterFile(this);
+    return new VectorRegisterFile(*this);
 }

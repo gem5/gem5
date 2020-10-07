@@ -58,8 +58,8 @@ class EmulatedDriver : public SimObject
     const std::string &filename;
 
   public:
-    EmulatedDriver(EmulatedDriverParams *p)
-        : SimObject(p), filename(p->filename)
+    EmulatedDriver(const EmulatedDriverParams &p)
+        : SimObject(p), filename(p.filename)
     {
     }
 

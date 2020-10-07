@@ -29,7 +29,7 @@
 #include "arch/power/interrupts.hh"
 
 PowerISA::Interrupts *
-PowerInterruptsParams::create()
+PowerInterruptsParams::create() const
 {
-    return new PowerISA::Interrupts(this);
+    return new PowerISA::Interrupts(*this);
 }

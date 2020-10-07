@@ -51,13 +51,13 @@
 
 using namespace std;
 
-VncInput::VncInput(const Params *p)
+VncInput::VncInput(const Params &p)
     : SimObject(p), keyboard(NULL), mouse(NULL),
       fb(&FrameBuffer::dummy),
       _videoWidth(fb->width()), _videoHeight(fb->height()),
-      captureEnabled(p->frame_capture),
+      captureEnabled(p.frame_capture),
       captureCurrentFrame(0), captureLastHash(0),
-      imgFormat(p->img_format)
+      imgFormat(p.img_format)
 {
     if (captureEnabled) {
         // remove existing frame output directory if it exists, then create a
@@ -136,7 +136,7 @@ VncInput::captureFrameBuffer()
 
 // create the VNC Replayer object
 VncInput *
-VncInputParams::create()
+VncInputParams::create() const
 {
-    return new VncInput(this);
+    return new VncInput(*this);
 }

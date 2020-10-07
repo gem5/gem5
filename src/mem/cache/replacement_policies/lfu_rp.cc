@@ -35,7 +35,7 @@
 
 namespace ReplacementPolicy {
 
-LFU::LFU(const Params *p)
+LFU::LFU(const Params &p)
   : Base(p)
 {
 }
@@ -92,7 +92,7 @@ LFU::instantiateEntry()
 } // namespace ReplacementPolicy
 
 ReplacementPolicy::LFU*
-LFURPParams::create()
+LFURPParams::create() const
 {
-    return new ReplacementPolicy::LFU(this);
+    return new ReplacementPolicy::LFU(*this);
 }

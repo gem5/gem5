@@ -52,8 +52,8 @@ SimObject::SimObjectList SimObject::simObjectList;
 //
 // SimObject constructor: used to maintain static simObjectList
 //
-SimObject::SimObject(const Params *p)
-    : EventManager(getEventQueue(p->eventq_index)),
+SimObject::SimObject(const Params &p)
+    : EventManager(getEventQueue(p.eventq_index)),
       Stats::Group(nullptr),
       _params(p)
 {

@@ -41,7 +41,7 @@
 
 namespace QoS {
 
-Policy::Policy(const Params* p)
+Policy::Policy(const Params &p)
   : SimObject(p)
 {}
 

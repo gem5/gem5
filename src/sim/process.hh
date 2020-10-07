@@ -65,7 +65,7 @@ class ThreadContext;
 class Process : public SimObject
 {
   public:
-    Process(ProcessParams *params, EmulationPageTable *pTable,
+    Process(const ProcessParams &params, EmulationPageTable *pTable,
             ::Loader::ObjectFile *obj_file);
 
     void serialize(CheckpointOut &cp) const override;
@@ -201,13 +201,13 @@ class Process : public SimObject
          * error like file IO errors, etc., those should fail non-silently
          * with a panic or fail as normal.
          */
-        virtual Process *load(ProcessParams *params,
+        virtual Process *load(const ProcessParams &params,
                               ::Loader::ObjectFile *obj_file) = 0;
     };
 
     // Try all the Loader instance's "load" methods one by one until one is
     // successful. If none are, complain and fail.
-    static Process *tryLoaders(ProcessParams *params,
+    static Process *tryLoaders(const ProcessParams &params,
                                ::Loader::ObjectFile *obj_file);
 
     ::Loader::ObjectFile *objFile;

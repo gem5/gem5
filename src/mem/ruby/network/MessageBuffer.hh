@@ -69,7 +69,7 @@ class MessageBuffer : public SimObject
 {
   public:
     typedef MessageBufferParams Params;
-    MessageBuffer(const Params *p);
+    MessageBuffer(const Params &p);
 
     void reanalyzeMessages(Addr addr, Tick current_time);
     void reanalyzeAllMessages(Tick current_time);

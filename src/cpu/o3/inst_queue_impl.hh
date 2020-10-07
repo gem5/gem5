@@ -83,26 +83,26 @@ InstructionQueue<Impl>::FUCompletion::description() const
 
 template <class Impl>
 InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
-                                         DerivO3CPUParams *params)
+                                         const DerivO3CPUParams &params)
     : cpu(cpu_ptr),
       iewStage(iew_ptr),
-      fuPool(params->fuPool),
-      iqPolicy(params->smtIQPolicy),
-      numEntries(params->numIQEntries),
-      totalWidth(params->issueWidth),
-      commitToIEWDelay(params->commitToIEWDelay)
+      fuPool(params.fuPool),
+      iqPolicy(params.smtIQPolicy),
+      numEntries(params.numIQEntries),
+      totalWidth(params.issueWidth),
+      commitToIEWDelay(params.commitToIEWDelay)
 {
     assert(fuPool);
 
-    numThreads = params->numThreads;
+    numThreads = params.numThreads;
 
     // Set the number of total physical registers
     // As the vector registers have two addressing modes, they are added twice
-    numPhysRegs = params->numPhysIntRegs + params->numPhysFloatRegs +
-                    params->numPhysVecRegs +
-                    params->numPhysVecRegs * TheISA::NumVecElemPerVecReg +
-                    params->numPhysVecPredRegs +
-                    params->numPhysCCRegs;
+    numPhysRegs = params.numPhysIntRegs + params.numPhysFloatRegs +
+                    params.numPhysVecRegs +
+                    params.numPhysVecRegs * TheISA::NumVecElemPerVecReg +
+                    params.numPhysVecPredRegs +
+                    params.numPhysCCRegs;
 
     //Create an entry for each physical register within the
     //dependency graph.
@@ -138,7 +138,7 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
         DPRINTF(IQ, "IQ sharing policy set to Partitioned:"
                 "%i entries per thread.\n",part_amt);
     } else if (iqPolicy == SMTQueuePolicy::Threshold) {
-        double threshold =  (double)params->smtIQThreshold / 100;
+        double threshold =  (double)params.smtIQThreshold / 100;
 
         int thresholdIQ = (int)((double)threshold * numEntries);
 

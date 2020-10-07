@@ -53,7 +53,7 @@ class MaltaIO : public BasicPioDevice
     {
       public:
         Malta *malta;
-        RTC(const std::string &name, const MaltaIOParams *p);
+        RTC(const std::string &name, const MaltaIOParams &p);
 
       protected:
         void handleEvent()
@@ -104,17 +104,17 @@ class MaltaIO : public BasicPioDevice
 
     typedef MaltaIOParams Params;
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     /**
      * Initialize all the data for devices supported by Malta I/O.
      * @param p pointer to Params struct
      */
-    MaltaIO(const Params *p);
+    MaltaIO(const Params &p);
 
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;

@@ -61,7 +61,7 @@ struct BaseMemProbeParams;
 class BaseMemProbe : public SimObject
 {
   public:
-    BaseMemProbe(BaseMemProbeParams *params);
+    BaseMemProbe(const BaseMemProbeParams &params);
 
     void regProbeListeners() override;
 

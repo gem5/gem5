@@ -57,7 +57,7 @@ class Pc : public Platform
      */
     void init() override;
 
-    Pc(const Params *p);
+    Pc(const Params &p);
 
   public:
     void postConsoleInt() override;

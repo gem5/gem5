@@ -57,10 +57,10 @@ MemDepUnit<MemDepPred, Impl>::MemDepUnit()
 }
 
 template <class MemDepPred, class Impl>
-MemDepUnit<MemDepPred, Impl>::MemDepUnit(DerivO3CPUParams *params)
-    : _name(params->name + ".memdepunit"),
-      depPred(params->store_set_clear_period, params->SSITSize,
-              params->LFSTSize),
+MemDepUnit<MemDepPred, Impl>::MemDepUnit(const DerivO3CPUParams &params)
+    : _name(params.name + ".memdepunit"),
+      depPred(params.store_set_clear_period, params.SSITSize,
+              params.LFSTSize),
       iqPtr(NULL)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit object.\n");
@@ -93,15 +93,16 @@ MemDepUnit<MemDepPred, Impl>::~MemDepUnit()
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::init(DerivO3CPUParams *params, ThreadID tid)
+MemDepUnit<MemDepPred, Impl>::init(
+        const DerivO3CPUParams &params, ThreadID tid)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit %i object.\n",tid);
 
-    _name = csprintf("%s.memDep%d", params->name, tid);
+    _name = csprintf("%s.memDep%d", params.name, tid);
     id = tid;
 
-    depPred.init(params->store_set_clear_period, params->SSITSize,
-            params->LFSTSize);
+    depPred.init(params.store_set_clear_period, params.SSITSize,
+            params.LFSTSize);
 }
 
 template <class MemDepPred, class Impl>

@@ -40,11 +40,11 @@
 #include "debug/GPUTLB.hh"
 #include "sim/process.hh"
 
-TLBCoalescer::TLBCoalescer(const Params *p)
+TLBCoalescer::TLBCoalescer(const Params &p)
     : ClockedObject(p),
-      TLBProbesPerCycle(p->probesPerCycle),
-      coalescingWindow(p->coalescingWindow),
-      disableCoalescing(p->disableCoalescing),
+      TLBProbesPerCycle(p.probesPerCycle),
+      coalescingWindow(p.coalescingWindow),
+      disableCoalescing(p.disableCoalescing),
       probeTLBEvent([this]{ processProbeTLBEvent(); },
                     "Probe the TLB below",
                     false, Event::CPU_Tick_Pri),
@@ -53,13 +53,13 @@ TLBCoalescer::TLBCoalescer(const Params *p)
                    false, Event::Maximum_Pri)
 {
     // create the response ports based on the number of connected ports
-    for (size_t i = 0; i < p->port_cpu_side_ports_connection_count; ++i) {
+    for (size_t i = 0; i < p.port_cpu_side_ports_connection_count; ++i) {
         cpuSidePort.push_back(new CpuSidePort(csprintf("%s-port%d", name(), i),
                                               this, i));
     }
 
     // create the request ports based on the number of connected ports
-    for (size_t i = 0; i < p->port_mem_side_ports_connection_count; ++i) {
+    for (size_t i = 0; i < p.port_mem_side_ports_connection_count; ++i) {
         memSidePort.push_back(new MemSidePort(csprintf("%s-port%d", name(), i),
                                               this, i));
     }
@@ -555,8 +555,8 @@ TLBCoalescer::regStats()
 
 
 TLBCoalescer*
-TLBCoalescerParams::create()
+TLBCoalescerParams::create() const
 {
-    return new TLBCoalescer(this);
+    return new TLBCoalescer(*this);
 }
 

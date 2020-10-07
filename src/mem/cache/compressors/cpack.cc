@@ -37,7 +37,7 @@
 
 namespace Compressor {
 
-CPack::CPack(const Params *p)
+CPack::CPack(const Params &p)
     : DictionaryCompressor<uint32_t>(p)
 {
 }
@@ -70,7 +70,7 @@ CPack::compress(const std::vector<Chunk>& chunks,
 } // namespace Compressor
 
 Compressor::CPack*
-CPackParams::create()
+CPackParams::create() const
 {
-    return new Compressor::CPack(this);
+    return new Compressor::CPack(*this);
 }

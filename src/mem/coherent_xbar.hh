@@ -423,7 +423,7 @@ class CoherentXBar : public BaseXBar
 
     virtual void init();
 
-    CoherentXBar(const CoherentXBarParams *p);
+    CoherentXBar(const CoherentXBarParams &p);
 
     virtual ~CoherentXBar();
 

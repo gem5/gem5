@@ -52,10 +52,10 @@ class BadDevice : public BasicPioDevice
     typedef BadDeviceParams Params;
 
   protected:
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
   public:
@@ -64,7 +64,7 @@ class BadDevice : public BasicPioDevice
       * @param p object parameters
       * @param a base address of the write
       */
-    BadDevice(Params *p);
+    BadDevice(const Params &p);
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);

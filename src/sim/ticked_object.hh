@@ -163,7 +163,7 @@ class Ticked : public Serializable
 class TickedObject : public ClockedObject, public Ticked
 {
   public:
-    TickedObject(const TickedObjectParams *params,
+    TickedObject(const TickedObjectParams &params,
         Event::Priority priority = Event::CPU_Tick_Pri);
 
     /** Disambiguate to make these functions overload correctly */

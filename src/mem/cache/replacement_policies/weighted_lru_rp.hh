@@ -63,7 +63,7 @@ class WeightedLRU : public Base
     };
   public:
     typedef WeightedLRURPParams Params;
-    WeightedLRU(const Params* p);
+    WeightedLRU(const Params &p);
     ~WeightedLRU() = default;
 
     /**

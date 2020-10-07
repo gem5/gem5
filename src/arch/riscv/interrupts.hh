@@ -59,13 +59,13 @@ class Interrupts : public BaseInterrupts
   public:
     typedef RiscvInterruptsParams Params;
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
-    Interrupts(Params * p) : BaseInterrupts(p), ip(0), ie(0) {}
+    Interrupts(const Params &p) : BaseInterrupts(p), ip(0), ie(0) {}
 
     std::bitset<NumInterruptTypes>
     globalMask() const

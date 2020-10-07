@@ -79,7 +79,7 @@ struct ArmV8KvmCPUParams;
 class ArmV8KvmCPU : public BaseArmKvmCPU
 {
   public:
-    ArmV8KvmCPU(ArmV8KvmCPUParams *params);
+    ArmV8KvmCPU(const ArmV8KvmCPUParams &params);
     virtual ~ArmV8KvmCPU();
 
     void startup() override;

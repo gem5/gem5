@@ -56,7 +56,7 @@ class MemFootprintProbe : public BaseMemProbe
   public:
     typedef std::unordered_set<Addr> AddrSet;
 
-    MemFootprintProbe(MemFootprintProbeParams *p);
+    MemFootprintProbe(const MemFootprintProbeParams &p);
     void regStats() override;
     // Fix footprint tracking state on stat reset
     void statReset();

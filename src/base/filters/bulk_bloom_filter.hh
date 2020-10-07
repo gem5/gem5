@@ -44,7 +44,7 @@ namespace BloomFilter {
 class Bulk : public MultiBitSel
 {
   public:
-    Bulk(const BloomFilterBulkParams* p);
+    Bulk(const BloomFilterBulkParams &p);
     ~Bulk();
 
   protected:

@@ -55,21 +55,21 @@
 using namespace iGbReg;
 using namespace Net;
 
-IGbE::IGbE(const Params *p)
+IGbE::IGbE(const Params &p)
     : EtherDevice(p), etherInt(NULL),
-      rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size), inTick(false),
+      rxFifo(p.rx_fifo_size), txFifo(p.tx_fifo_size), inTick(false),
       rxTick(false), txTick(false), txFifoTick(false), rxDmaPacket(false),
-      pktOffset(0), fetchDelay(p->fetch_delay), wbDelay(p->wb_delay),
-      fetchCompDelay(p->fetch_comp_delay), wbCompDelay(p->wb_comp_delay),
-      rxWriteDelay(p->rx_write_delay), txReadDelay(p->tx_read_delay),
+      pktOffset(0), fetchDelay(p.fetch_delay), wbDelay(p.wb_delay),
+      fetchCompDelay(p.fetch_comp_delay), wbCompDelay(p.wb_comp_delay),
+      rxWriteDelay(p.rx_write_delay), txReadDelay(p.tx_read_delay),
       rdtrEvent([this]{ rdtrProcess(); }, name()),
       radvEvent([this]{ radvProcess(); }, name()),
       tadvEvent([this]{ tadvProcess(); }, name()),
       tidvEvent([this]{ tidvProcess(); }, name()),
       tickEvent([this]{ tick(); }, name()),
       interEvent([this]{ delayIntEvent(); }, name()),
-      rxDescCache(this, name()+".RxDesc", p->rx_desc_cache_size),
-      txDescCache(this, name()+".TxDesc", p->tx_desc_cache_size),
+      rxDescCache(this, name()+".RxDesc", p.rx_desc_cache_size),
+      txDescCache(this, name()+".TxDesc", p.tx_desc_cache_size),
       lastInterrupt(0)
 {
     etherInt = new IGbEInt(name() + ".int", this);
@@ -106,7 +106,7 @@ IGbE::IGbE(const Params *p)
     memset(&flash, 0, EEPROM_SIZE*2);
 
     // Set the MAC address
-    memcpy(flash, p->hardware_address.bytes(), ETH_ADDR_LEN);
+    memcpy(flash, p.hardware_address.bytes(), ETH_ADDR_LEN);
     for (int x = 0; x < ETH_ADDR_LEN/2; x++)
         flash[x] = htobe(flash[x]);
 
@@ -119,7 +119,7 @@ IGbE::IGbE(const Params *p)
     flash[EEPROM_SIZE-1] = htobe((uint16_t)(EEPROM_CSUM - csum));
 
     // Store the MAC address as queue ID
-    macAddr = p->hardware_address;
+    macAddr = p.hardware_address;
 
     rxFifo.clear();
     txFifo.clear();
@@ -468,10 +468,10 @@ IGbE::write(PacketPtr pkt)
             regs.mdic.data(0x796D); // link up
             break;
           case PHY_PID:
-            regs.mdic.data(params()->phy_pid);
+            regs.mdic.data(params().phy_pid);
             break;
           case PHY_EPID:
-            regs.mdic.data(params()->phy_epid);
+            regs.mdic.data(params().phy_epid);
             break;
           case PHY_GSTATUS:
             regs.mdic.data(0x7C00);
@@ -2465,7 +2465,7 @@ IGbE::unserialize(CheckpointIn &cp)
 }
 
 IGbE *
-IGbEParams::create()
+IGbEParams::create() const
 {
-    return new IGbE(this);
+    return new IGbE(*this);
 }

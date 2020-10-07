@@ -47,7 +47,7 @@ namespace RiscvISA {
 class MMU : public BaseMMU
 {
   public:
-    MMU(const RiscvMMUParams *p)
+    MMU(const RiscvMMUParams &p)
       : BaseMMU(p)
     {}
 };

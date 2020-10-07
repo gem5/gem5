@@ -98,9 +98,9 @@ class ISA : public BaseISA
     void serialize(CheckpointOut &cp) const;
     void unserialize(CheckpointIn &cp);
 
-    const Params *params() const;
+    const Params &params() const;
 
-    ISA(Params *p);
+    ISA(const Params &p);
 };
 
 } // namespace RiscvISA

@@ -38,7 +38,7 @@
 #include "arch/mips/mmu.hh"
 
 MipsISA::MMU *
-MipsMMUParams::create()
+MipsMMUParams::create() const
 {
-    return new MipsISA::MMU(this);
+    return new MipsISA::MMU(*this);
 }

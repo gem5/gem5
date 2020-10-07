@@ -59,8 +59,8 @@ namespace X86ISA
 
         typedef X86ISAParams Params;
 
-        ISA(Params *p);
-        const Params *params() const;
+        ISA(const Params &p);
+        const Params &params() const;
 
         RegVal readMiscRegNoEffect(int miscReg) const;
         RegVal readMiscReg(int miscReg);

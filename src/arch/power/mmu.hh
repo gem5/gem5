@@ -47,7 +47,7 @@ namespace PowerISA {
 class MMU : public BaseMMU
 {
   public:
-    MMU(const PowerMMUParams *p)
+    MMU(const PowerMMUParams &p)
       : BaseMMU(p)
     {}
 };

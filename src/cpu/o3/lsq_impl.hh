@@ -59,26 +59,26 @@
 using namespace std;
 
 template <class Impl>
-LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
+LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, const DerivO3CPUParams &params)
     : cpu(cpu_ptr), iewStage(iew_ptr),
       _cacheBlocked(false),
-      cacheStorePorts(params->cacheStorePorts), usedStorePorts(0),
-      cacheLoadPorts(params->cacheLoadPorts), usedLoadPorts(0),
-      lsqPolicy(params->smtLSQPolicy),
-      LQEntries(params->LQEntries),
-      SQEntries(params->SQEntries),
-      maxLQEntries(maxLSQAllocation(lsqPolicy, LQEntries, params->numThreads,
-                  params->smtLSQThreshold)),
-      maxSQEntries(maxLSQAllocation(lsqPolicy, SQEntries, params->numThreads,
-                  params->smtLSQThreshold)),
+      cacheStorePorts(params.cacheStorePorts), usedStorePorts(0),
+      cacheLoadPorts(params.cacheLoadPorts), usedLoadPorts(0),
+      lsqPolicy(params.smtLSQPolicy),
+      LQEntries(params.LQEntries),
+      SQEntries(params.SQEntries),
+      maxLQEntries(maxLSQAllocation(lsqPolicy, LQEntries, params.numThreads,
+                  params.smtLSQThreshold)),
+      maxSQEntries(maxLSQAllocation(lsqPolicy, SQEntries, params.numThreads,
+                  params.smtLSQThreshold)),
       dcachePort(this, cpu_ptr),
-      numThreads(params->numThreads)
+      numThreads(params.numThreads)
 {
     assert(numThreads > 0 && numThreads <= Impl::MaxThreads);
 
-    //**********************************************/
-    //************ Handle SMT Parameters ***********/
-    //**********************************************/
+    //**********************************************
+    //************ Handle SMT Parameters ***********
+    //**********************************************
 
     /* Run SMT olicy checks. */
         if (lsqPolicy == SMTQueuePolicy::Dynamic) {
@@ -89,8 +89,8 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
                 maxLQEntries,maxSQEntries);
     } else if (lsqPolicy == SMTQueuePolicy::Threshold) {
 
-        assert(params->smtLSQThreshold > params->LQEntries);
-        assert(params->smtLSQThreshold > params->SQEntries);
+        assert(params.smtLSQThreshold > params.LQEntries);
+        assert(params.smtLSQThreshold > params.SQEntries);
 
         DPRINTF(LSQ, "LSQ sharing policy set to Threshold: "
                 "%i entries per LQ | %i entries per SQ\n",

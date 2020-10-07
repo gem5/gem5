@@ -46,7 +46,7 @@ namespace BloomFilter {
 class Multi : public Base
 {
   public:
-    Multi(const BloomFilterMultiParams* p);
+    Multi(const BloomFilterMultiParams &p);
     ~Multi();
 
     void clear() override;

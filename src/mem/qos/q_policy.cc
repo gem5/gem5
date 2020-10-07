@@ -49,9 +49,9 @@
 namespace QoS {
 
 QueuePolicy*
-QueuePolicy::create(const QoSMemCtrlParams* p)
+QueuePolicy::create(const QoSMemCtrlParams &p)
 {
-    switch (p->qos_q_policy) {
+    switch (p.qos_q_policy) {
       case Enums::QoSQPolicy::fifo:
         return new FifoQueuePolicy(p);
       case Enums::QoSQPolicy::lrg:

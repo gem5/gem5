@@ -241,7 +241,7 @@ ArmKvmCPU::KvmCoreMiscRegInfo ArmKvmCPU::kvmCoreMiscRegs[] = {
     { 0, NUM_MISCREGS }
 };
 
-ArmKvmCPU::ArmKvmCPU(ArmKvmCPUParams *params)
+ArmKvmCPU::ArmKvmCPU(const ArmKvmCPUParams &params)
     : BaseKvmCPU(params),
       irqAsserted(false), fiqAsserted(false)
 {
@@ -843,7 +843,7 @@ ArmKvmCPU::updateTCStateVFP(uint64_t id, bool show_warnings)
 }
 
 ArmKvmCPU *
-ArmKvmCPUParams::create()
+ArmKvmCPUParams::create() const
 {
-    return new ArmKvmCPU(this);
+    return new ArmKvmCPU(*this);
 }

@@ -115,9 +115,9 @@ Terminal::DataEvent::process(int revent)
 /*
  * Terminal code
  */
-Terminal::Terminal(const Params *p)
+Terminal::Terminal(const Params &p)
     : SerialDevice(p), listenEvent(NULL), dataEvent(NULL),
-      number(p->number), data_fd(-1), txbuf(16384), rxbuf(16384),
+      number(p.number), data_fd(-1), txbuf(16384), rxbuf(16384),
       outfile(terminalDump(p))
 #if TRACING_ON == 1
       , linebuf(16384)
@@ -126,8 +126,8 @@ Terminal::Terminal(const Params *p)
     if (outfile)
         outfile->stream()->setf(ios::unitbuf);
 
-    if (p->port)
-        listen(p->port);
+    if (p.port)
+        listen(p.port);
 }
 
 Terminal::~Terminal()
@@ -143,9 +143,9 @@ Terminal::~Terminal()
 }
 
 OutputStream *
-Terminal::terminalDump(const TerminalParams* p)
+Terminal::terminalDump(const TerminalParams &p)
 {
-    switch (p->outfile) {
+    switch (p.outfile) {
       case TerminalDump::none:
         return nullptr;
       case TerminalDump::stdoutput:
@@ -153,7 +153,7 @@ Terminal::terminalDump(const TerminalParams* p)
       case TerminalDump::stderror:
         return simout.findOrCreate("stderr");
       case TerminalDump::file:
-        return simout.findOrCreate(p->name);
+        return simout.findOrCreate(p.name);
       default:
         panic("Invalid option\n");
     }
@@ -361,7 +361,7 @@ Terminal::writeData(uint8_t c)
 }
 
 Terminal *
-TerminalParams::create()
+TerminalParams::create() const
 {
-    return new Terminal(this);
+    return new Terminal(*this);
 }

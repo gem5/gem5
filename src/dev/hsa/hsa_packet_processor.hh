@@ -309,7 +309,7 @@ class HSAPacketProcessor: public DmaDevice
     const Tick pktProcessDelay;
 
     typedef HSAPacketProcessorParams Params;
-    HSAPacketProcessor(const Params *p);
+    HSAPacketProcessor(const Params &p);
     ~HSAPacketProcessor();
     void setDeviceQueueDesc(uint64_t hostReadIndexPointer,
                             uint64_t basePointer,

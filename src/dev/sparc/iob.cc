@@ -51,16 +51,16 @@
 #include "sim/faults.hh"
 #include "sim/system.hh"
 
-Iob::Iob(const Params *p)
-    : PioDevice(p), ic(p->platform->intrctrl)
+Iob::Iob(const Params &p)
+    : PioDevice(p), ic(p.platform->intrctrl)
 {
     iobManAddr = ULL(0x9800000000);
     iobManSize = ULL(0x0100000000);
     iobJBusAddr = ULL(0x9F00000000);
     iobJBusSize = ULL(0x0100000000);
-    assert(params()->system->threads.size() <= MaxNiagaraProcs);
+    assert(params().system->threads.size() <= MaxNiagaraProcs);
 
-    pioDelay = p->pio_latency;
+    pioDelay = p.pio_latency;
 
     for (int x = 0; x < NumDeviceIds; ++x) {
         intMan[x].cpu = 0;
@@ -377,7 +377,7 @@ Iob::unserialize(CheckpointIn &cp)
 }
 
 Iob *
-IobParams::create()
+IobParams::create() const
 {
-    return new Iob(this);
+    return new Iob(*this);
 }

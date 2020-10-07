@@ -52,7 +52,7 @@ class EtherDump : public SimObject
 
   public:
     typedef EtherDumpParams Params;
-    EtherDump(const Params *p);
+    EtherDump(const Params &p);
 
     inline void dump(EthPacketPtr &pkt) { dumpPacket(pkt); }
 };

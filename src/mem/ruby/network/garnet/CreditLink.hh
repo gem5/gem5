@@ -38,7 +38,7 @@ class CreditLink : public NetworkLink
 {
   public:
     typedef CreditLinkParams Params;
-    CreditLink(const Params *p) : NetworkLink(p) {}
+    CreditLink(const Params &p) : NetworkLink(p) {}
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_CREDITLINK_HH__

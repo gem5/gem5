@@ -102,7 +102,7 @@ class BaseIndexingPolicy : public SimObject
     /**
      * Construct and initialize this policy.
      */
-    BaseIndexingPolicy(const Params *p);
+    BaseIndexingPolicy(const Params &p);
 
     /**
      * Destructor.

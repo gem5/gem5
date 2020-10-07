@@ -56,7 +56,7 @@ class FixedPriorityPolicy : public Policy
     using Params = QoSFixedPriorityPolicyParams;
 
   public:
-    FixedPriorityPolicy(const Params*);
+    FixedPriorityPolicy(const Params &);
     virtual ~FixedPriorityPolicy();
 
     void init() override;

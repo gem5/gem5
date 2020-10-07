@@ -43,24 +43,24 @@
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 
-TournamentBP::TournamentBP(const TournamentBPParams *params)
+TournamentBP::TournamentBP(const TournamentBPParams &params)
     : BPredUnit(params),
-      localPredictorSize(params->localPredictorSize),
-      localCtrBits(params->localCtrBits),
+      localPredictorSize(params.localPredictorSize),
+      localCtrBits(params.localCtrBits),
       localCtrs(localPredictorSize, SatCounter(localCtrBits)),
-      localHistoryTableSize(params->localHistoryTableSize),
-      localHistoryBits(ceilLog2(params->localPredictorSize)),
-      globalPredictorSize(params->globalPredictorSize),
-      globalCtrBits(params->globalCtrBits),
+      localHistoryTableSize(params.localHistoryTableSize),
+      localHistoryBits(ceilLog2(params.localPredictorSize)),
+      globalPredictorSize(params.globalPredictorSize),
+      globalCtrBits(params.globalCtrBits),
       globalCtrs(globalPredictorSize, SatCounter(globalCtrBits)),
-      globalHistory(params->numThreads, 0),
+      globalHistory(params.numThreads, 0),
       globalHistoryBits(
-          ceilLog2(params->globalPredictorSize) >
-          ceilLog2(params->choicePredictorSize) ?
-          ceilLog2(params->globalPredictorSize) :
-          ceilLog2(params->choicePredictorSize)),
-      choicePredictorSize(params->choicePredictorSize),
-      choiceCtrBits(params->choiceCtrBits),
+          ceilLog2(params.globalPredictorSize) >
+          ceilLog2(params.choicePredictorSize) ?
+          ceilLog2(params.globalPredictorSize) :
+          ceilLog2(params.choicePredictorSize)),
+      choicePredictorSize(params.choicePredictorSize),
+      choiceCtrBits(params.choiceCtrBits),
       choiceCtrs(choicePredictorSize, SatCounter(choiceCtrBits))
 {
     if (!isPowerOf2(localPredictorSize)) {
@@ -344,9 +344,9 @@ TournamentBP::squash(ThreadID tid, void *bp_history)
 }
 
 TournamentBP*
-TournamentBPParams::create()
+TournamentBPParams::create() const
 {
-    return new TournamentBP(this);
+    return new TournamentBP(*this);
 }
 
 #ifdef DEBUG

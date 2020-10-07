@@ -48,10 +48,10 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-Pl050::Pl050(const Pl050Params *p)
+Pl050::Pl050(const Pl050Params &p)
     : AmbaIntDevice(p, 0x1000), control(0), status(0x43), clkdiv(0),
       rawInterrupts(0),
-      ps2(p->ps2)
+      ps2(p.ps2)
 {
     ps2->hostRegDataAvailable([this]() { this->updateRxInt(); });
 }
@@ -221,7 +221,7 @@ Pl050::unserialize(CheckpointIn &cp)
 }
 
 Pl050 *
-Pl050Params::create()
+Pl050Params::create() const
 {
-    return new Pl050(this);
+    return new Pl050(*this);
 }

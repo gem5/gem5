@@ -57,7 +57,7 @@ class IntelTrace : public InstTracer
 {
   public:
 
-    IntelTrace(const IntelTraceParams *p) : InstTracer(p)
+    IntelTrace(const IntelTraceParams &p) : InstTracer(p)
     {}
 
     IntelTraceRecord *

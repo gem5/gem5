@@ -50,11 +50,11 @@
 namespace X86ISA
 {
 
-FsWorkload::FsWorkload(Params *p) : KernelWorkload(*p),
-    smbiosTable(p->smbios_table),
-    mpFloatingPointer(p->intel_mp_pointer),
-    mpConfigTable(p->intel_mp_table),
-    rsdp(p->acpi_description_table_pointer)
+FsWorkload::FsWorkload(const Params &p) : KernelWorkload(p),
+    smbiosTable(p.smbios_table),
+    mpFloatingPointer(p.intel_mp_pointer),
+    mpConfigTable(p.intel_mp_table),
+    rsdp(p.acpi_description_table_pointer)
 {}
 
 void
@@ -367,7 +367,7 @@ FsWorkload::writeOutMPTable(Addr fp, Addr &fpSize, Addr &tableSize, Addr table)
 } // namespace X86ISA
 
 X86ISA::FsWorkload *
-X86FsWorkloadParams::create()
+X86FsWorkloadParams::create() const
 {
-    return new X86ISA::FsWorkload(this);
+    return new X86ISA::FsWorkload(*this);
 }

@@ -914,13 +914,13 @@ class TableWalker : public ClockedObject
 
   public:
    typedef ArmTableWalkerParams Params;
-    TableWalker(const Params *p);
+    TableWalker(const Params &p);
     virtual ~TableWalker();
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     void init() override;

@@ -48,7 +48,7 @@ class VectorRegisterFile : public RegisterFile
   public:
     using VecRegContainer = TheGpuISA::VecRegContainerU32;
 
-    VectorRegisterFile(const VectorRegisterFileParams *p);
+    VectorRegisterFile(const VectorRegisterFileParams &p);
     ~VectorRegisterFile() { }
 
     virtual bool operandsReady(Wavefront *w, GPUDynInstPtr ii) const override;

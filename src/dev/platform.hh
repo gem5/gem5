@@ -54,7 +54,7 @@ class Platform : public SimObject
 
   public:
     typedef PlatformParams Params;
-    Platform(const Params *p);
+    Platform(const Params &p);
     virtual ~Platform();
 
     /**

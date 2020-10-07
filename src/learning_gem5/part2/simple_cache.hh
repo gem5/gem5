@@ -306,7 +306,7 @@ class SimpleCache : public ClockedObject
 
     /** constructor
      */
-    SimpleCache(SimpleCacheParams *params);
+    SimpleCache(const SimpleCacheParams &params);
 
     /**
      * Get a port with a given name and index. This is used at

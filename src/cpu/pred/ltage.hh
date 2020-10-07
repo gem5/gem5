@@ -60,7 +60,7 @@
 class LTAGE : public TAGE
 {
   public:
-    LTAGE(const LTAGEParams *params);
+    LTAGE(const LTAGEParams &params);
 
     // Base class methods.
     void squash(ThreadID tid, void *bp_history) override;

@@ -97,7 +97,7 @@ class RepeatedQwords : public DictionaryCompressor<uint64_t>
 
   public:
     typedef RepeatedQwordsCompressorParams Params;
-    RepeatedQwords(const Params *p);
+    RepeatedQwords(const Params &p);
     ~RepeatedQwords() = default;
 };
 

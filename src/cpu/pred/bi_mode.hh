@@ -54,7 +54,7 @@
 class BiModeBP : public BPredUnit
 {
   public:
-    BiModeBP(const BiModeBPParams *params);
+    BiModeBP(const BiModeBPParams &params);
     void uncondBranch(ThreadID tid, Addr pc, void * &bp_history);
     void squash(ThreadID tid, void *bp_history);
     bool lookup(ThreadID tid, Addr branch_addr, void * &bp_history);

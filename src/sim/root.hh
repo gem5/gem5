@@ -132,13 +132,13 @@ class Root : public SimObject
     void timeSyncSpinThreshold(Time newThreshold);
 
     typedef RootParams Params;
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
-    Root(Params *p);
+    Root(const Params &p);
 
     /** Schedule the timesync event at startup().
      */

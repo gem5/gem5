@@ -31,7 +31,7 @@
 #include "params/KernelWorkload.hh"
 #include "sim/system.hh"
 
-KernelWorkload::KernelWorkload(const Params &p) : Workload(&p), _params(p),
+KernelWorkload::KernelWorkload(const Params &p) : Workload(p), _params(p),
     _loadAddrMask(p.load_addr_mask), _loadAddrOffset(p.load_addr_offset),
     commandLine(p.command_line)
 {
@@ -137,7 +137,7 @@ KernelWorkload::unserialize(CheckpointIn &cp)
 }
 
 KernelWorkload *
-KernelWorkloadParams::create()
+KernelWorkloadParams::create() const
 {
     return new KernelWorkload(*this);
 }

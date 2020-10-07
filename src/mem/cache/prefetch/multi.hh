@@ -47,7 +47,7 @@ namespace Prefetcher {
 class Multi : public Base
 {
   public: // SimObject
-    Multi(const MultiPrefetcherParams *p);
+    Multi(const MultiPrefetcherParams &p);
 
   public:
     void setCache(BaseCache *_cache) override;

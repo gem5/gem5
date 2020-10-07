@@ -163,18 +163,18 @@ Root::timeSyncSpinThreshold(Time newThreshold)
     timeSyncEnable(en);
 }
 
-Root::Root(RootParams *p)
-    : SimObject(p), _enabled(false), _periodTick(p->time_sync_period),
+Root::Root(const RootParams &p)
+    : SimObject(p), _enabled(false), _periodTick(p.time_sync_period),
       syncEvent([this]{ timeSync(); }, name())
 {
-    _period.setTick(p->time_sync_period);
-    _spinThreshold.setTick(p->time_sync_spin_threshold);
+    _period.setTick(p.time_sync_period);
+    _spinThreshold.setTick(p.time_sync_spin_threshold);
 
     assert(_root == NULL);
     _root = this;
     lastTime.setTimer();
 
-    simQuantum = p->sim_quantum;
+    simQuantum = p.sim_quantum;
 
     // Some of the statistics are global and need to be accessed by
     // stat formulas. The most convenient way to implement that is by
@@ -186,7 +186,7 @@ Root::Root(RootParams *p)
 void
 Root::startup()
 {
-    timeSyncEnable(params()->time_sync_enable);
+    timeSyncEnable(params().time_sync_enable);
 }
 
 void
@@ -202,7 +202,7 @@ bool FullSystem;
 unsigned int FullSystemInt;
 
 Root *
-RootParams::create()
+RootParams::create() const
 {
     static bool created = false;
     if (created)
@@ -213,5 +213,5 @@ RootParams::create()
     FullSystem = full_system;
     FullSystemInt = full_system ? 1 : 0;
 
-    return new Root(this);
+    return new Root(*this);
 }

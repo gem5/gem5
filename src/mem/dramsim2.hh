@@ -167,7 +167,7 @@ class DRAMSim2 : public AbstractMemory
   public:
 
     typedef DRAMSim2Params Params;
-    DRAMSim2(const Params *p);
+    DRAMSim2(const Params &p);
 
     /**
      * Read completion callback.

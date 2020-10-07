@@ -102,7 +102,7 @@ class Stage2MMU : public SimObject
     };
 
     typedef ArmStage2MMUParams Params;
-    Stage2MMU(const Params *p);
+    Stage2MMU(const Params &p);
 
     /**
      * Get the port that ultimately belongs to the stage-two MMU, but

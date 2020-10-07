@@ -67,7 +67,7 @@ Iris::TLB::translateTiming(const RequestPtr &req, ::ThreadContext *tc,
 }
 
 Iris::TLB *
-IrisTLBParams::create()
+IrisTLBParams::create() const
 {
-    return new Iris::TLB(this);
+    return new Iris::TLB(*this);
 }

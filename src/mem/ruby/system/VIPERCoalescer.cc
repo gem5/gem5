@@ -54,12 +54,12 @@
 using namespace std;
 
 VIPERCoalescer *
-VIPERCoalescerParams::create()
+VIPERCoalescerParams::create() const
 {
-    return new VIPERCoalescer(this);
+    return new VIPERCoalescer(*this);
 }
 
-VIPERCoalescer::VIPERCoalescer(const Params *p)
+VIPERCoalescer::VIPERCoalescer(const Params &p)
     : GPUCoalescer(p),
       m_cache_inv_pkt(nullptr),
       m_num_pending_invs(0)

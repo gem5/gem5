@@ -83,7 +83,7 @@ Uart8250::scheduleIntr(Event *event)
 }
 
 
-Uart8250::Uart8250(const Params *p)
+Uart8250::Uart8250(const Params &p)
     : Uart(p, 8), IER(0), DLAB(0), LCR(0), MCR(0), lastTxInt(0),
       txIntrEvent([this]{ processIntrEvent(TX_INT); }, "TX"),
       rxIntrEvent([this]{ processIntrEvent(RX_INT); }, "RX")
@@ -321,7 +321,7 @@ Uart8250::unserialize(CheckpointIn &cp)
 }
 
 Uart8250 *
-Uart8250Params::create()
+Uart8250Params::create() const
 {
-    return new Uart8250(this);
+    return new Uart8250(*this);
 }

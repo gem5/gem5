@@ -58,8 +58,8 @@ class MPP_TAGE : public TAGEBase {
         {}
     };
 
-    MPP_TAGE(const MPP_TAGEParams *p) : TAGEBase(p),
-        tunedHistoryLengths(p->tunedHistoryLengths)
+    MPP_TAGE(const MPP_TAGEParams &p) : TAGEBase(p),
+        tunedHistoryLengths(p.tunedHistoryLengths)
     {}
 
     void calculateParameters() override;
@@ -84,7 +84,7 @@ class MPP_TAGE : public TAGEBase {
 
 class MPP_LoopPredictor : public LoopPredictor {
   public:
-    MPP_LoopPredictor(MPP_LoopPredictorParams *p) : LoopPredictor(p)
+    MPP_LoopPredictor(const MPP_LoopPredictorParams &p) : LoopPredictor(p)
     {}
 
     bool calcConf(int index) const override;
@@ -146,7 +146,7 @@ class MPP_StatisticalCorrector : public StatisticalCorrector {
         virtual ~BranchInfo()
         {}
     };
-    MPP_StatisticalCorrector(const MPP_StatisticalCorrectorParams *p);
+    MPP_StatisticalCorrector(const MPP_StatisticalCorrectorParams &p);
 
     void initBias() override;
     unsigned getIndBias(Addr branch_pc, StatisticalCorrector::BranchInfo* bi,
@@ -219,7 +219,7 @@ class MultiperspectivePerceptronTAGE : public MultiperspectivePerceptron
 
   public:
     MultiperspectivePerceptronTAGE(
-        const MultiperspectivePerceptronTAGEParams *p);
+        const MultiperspectivePerceptronTAGEParams &p);
 
     void init() override;
 

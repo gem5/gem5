@@ -51,25 +51,25 @@
 using namespace std;
 using namespace Data;
 
-MemInterface::MemInterface(const MemInterfaceParams* _p)
+MemInterface::MemInterface(const MemInterfaceParams &_p)
     : AbstractMemory(_p),
-      addrMapping(_p->addr_mapping),
-      burstSize((_p->devices_per_rank * _p->burst_length *
-                 _p->device_bus_width) / 8),
-      deviceSize(_p->device_size),
-      deviceRowBufferSize(_p->device_rowbuffer_size),
-      devicesPerRank(_p->devices_per_rank),
+      addrMapping(_p.addr_mapping),
+      burstSize((_p.devices_per_rank * _p.burst_length *
+                 _p.device_bus_width) / 8),
+      deviceSize(_p.device_size),
+      deviceRowBufferSize(_p.device_rowbuffer_size),
+      devicesPerRank(_p.devices_per_rank),
       rowBufferSize(devicesPerRank * deviceRowBufferSize),
       burstsPerRowBuffer(rowBufferSize / burstSize),
       burstsPerStripe(range.interleaved() ?
                       range.granularity() / burstSize : 1),
-      ranksPerChannel(_p->ranks_per_channel),
-      banksPerRank(_p->banks_per_rank), rowsPerBank(0),
-      tCK(_p->tCK), tCS(_p->tCS), tBURST(_p->tBURST),
-      tRTW(_p->tRTW),
-      tWTR(_p->tWTR),
-      readBufferSize(_p->read_buffer_size),
-      writeBufferSize(_p->write_buffer_size)
+      ranksPerChannel(_p.ranks_per_channel),
+      banksPerRank(_p.banks_per_rank), rowsPerBank(0),
+      tCK(_p.tCK), tCS(_p.tCS), tBURST(_p.tBURST),
+      tRTW(_p.tRTW),
+      tWTR(_p.tWTR),
+      readBufferSize(_p.read_buffer_size),
+      writeBufferSize(_p.write_buffer_size)
 {}
 
 void
@@ -730,28 +730,28 @@ DRAMInterface::addRankToRankDelay(Tick cmd_at)
     }
 }
 
-DRAMInterface::DRAMInterface(const DRAMInterfaceParams* _p)
+DRAMInterface::DRAMInterface(const DRAMInterfaceParams &_p)
     : MemInterface(_p),
-      bankGroupsPerRank(_p->bank_groups_per_rank),
-      bankGroupArch(_p->bank_groups_per_rank > 0),
-      tCL(_p->tCL),
-      tBURST_MIN(_p->tBURST_MIN), tBURST_MAX(_p->tBURST_MAX),
-      tCCD_L_WR(_p->tCCD_L_WR), tCCD_L(_p->tCCD_L), tRCD(_p->tRCD),
-      tRP(_p->tRP), tRAS(_p->tRAS), tWR(_p->tWR), tRTP(_p->tRTP),
-      tRFC(_p->tRFC), tREFI(_p->tREFI), tRRD(_p->tRRD), tRRD_L(_p->tRRD_L),
-      tPPD(_p->tPPD), tAAD(_p->tAAD),
-      tXAW(_p->tXAW), tXP(_p->tXP), tXS(_p->tXS),
-      clkResyncDelay(tCL + _p->tBURST_MAX),
-      dataClockSync(_p->data_clock_sync),
+      bankGroupsPerRank(_p.bank_groups_per_rank),
+      bankGroupArch(_p.bank_groups_per_rank > 0),
+      tCL(_p.tCL),
+      tBURST_MIN(_p.tBURST_MIN), tBURST_MAX(_p.tBURST_MAX),
+      tCCD_L_WR(_p.tCCD_L_WR), tCCD_L(_p.tCCD_L), tRCD(_p.tRCD),
+      tRP(_p.tRP), tRAS(_p.tRAS), tWR(_p.tWR), tRTP(_p.tRTP),
+      tRFC(_p.tRFC), tREFI(_p.tREFI), tRRD(_p.tRRD), tRRD_L(_p.tRRD_L),
+      tPPD(_p.tPPD), tAAD(_p.tAAD),
+      tXAW(_p.tXAW), tXP(_p.tXP), tXS(_p.tXS),
+      clkResyncDelay(tCL + _p.tBURST_MAX),
+      dataClockSync(_p.data_clock_sync),
       burstInterleave(tBURST != tBURST_MIN),
-      twoCycleActivate(_p->two_cycle_activate),
-      activationLimit(_p->activation_limit),
-      wrToRdDlySameBG(tCL + _p->tBURST_MAX + _p->tWTR_L),
-      rdToWrDlySameBG(_p->tRTW + _p->tBURST_MAX),
-      pageMgmt(_p->page_policy),
-      maxAccessesPerRow(_p->max_accesses_per_row),
+      twoCycleActivate(_p.two_cycle_activate),
+      activationLimit(_p.activation_limit),
+      wrToRdDlySameBG(tCL + _p.tBURST_MAX + _p.tWTR_L),
+      rdToWrDlySameBG(_p.tRTW + _p.tBURST_MAX),
+      pageMgmt(_p.page_policy),
+      maxAccessesPerRow(_p.max_accesses_per_row),
       timeStampOffset(0), activeRank(0),
-      enableDRAMPowerdown(_p->enable_dram_powerdown),
+      enableDRAMPowerdown(_p.enable_dram_powerdown),
       lastStatsResetTick(0),
       stats(*this)
 {
@@ -1119,20 +1119,20 @@ DRAMInterface::minBankPrep(const MemPacketQueue& queue,
 }
 
 DRAMInterface*
-DRAMInterfaceParams::create()
+DRAMInterfaceParams::create() const
 {
-    return new DRAMInterface(this);
+    return new DRAMInterface(*this);
 }
 
-DRAMInterface::Rank::Rank(const DRAMInterfaceParams* _p,
+DRAMInterface::Rank::Rank(const DRAMInterfaceParams &_p,
                          int _rank, DRAMInterface& _dram)
     : EventManager(&_dram), dram(_dram),
       pwrStateTrans(PWR_IDLE), pwrStatePostRefresh(PWR_IDLE),
       pwrStateTick(0), refreshDueAt(0), pwrState(PWR_IDLE),
       refreshState(REF_IDLE), inLowPowerState(false), rank(_rank),
       readEntries(0), writeEntries(0), outstandingEvents(0),
-      wakeUpAllowedAt(0), power(_p, false), banks(_p->banks_per_rank),
-      numBanksActive(0), actTicks(_p->activation_limit, 0), lastBurstTick(0),
+      wakeUpAllowedAt(0), power(_p, false), banks(_p.banks_per_rank),
+      numBanksActive(0), actTicks(_p.activation_limit, 0), lastBurstTick(0),
       writeDoneEvent([this]{ processWriteDoneEvent(); }, name()),
       activateEvent([this]{ processActivateEvent(); }, name()),
       prechargeEvent([this]{ processPrechargeEvent(); }, name()),
@@ -1141,12 +1141,12 @@ DRAMInterface::Rank::Rank(const DRAMInterfaceParams* _p,
       wakeUpEvent([this]{ processWakeUpEvent(); }, name()),
       stats(_dram, *this)
 {
-    for (int b = 0; b < _p->banks_per_rank; b++) {
+    for (int b = 0; b < _p.banks_per_rank; b++) {
         banks[b].bank = b;
         // GDDR addressing of banks to BG is linear.
         // Here we assume that all DRAM generations address bank groups as
         // follows:
-        if (_p->bank_groups_per_rank > 0) {
+        if (_p.bank_groups_per_rank > 0) {
             // Simply assign lower bits to bank group in order to
             // rotate across bank groups as banks are incremented
             // e.g. with 4 banks per bank group and 16 banks total:
@@ -1154,7 +1154,7 @@ DRAMInterface::Rank::Rank(const DRAMInterfaceParams* _p,
             //    banks 1,5,9,13  are in bank group 1
             //    banks 2,6,10,14 are in bank group 2
             //    banks 3,7,11,15 are in bank group 3
-            banks[b].bankgr = b % _p->bank_groups_per_rank;
+            banks[b].bankgr = b % _p.bank_groups_per_rank;
         } else {
             // No bank groups; simply assign to bank number
             banks[b].bankgr = b;
@@ -1996,12 +1996,12 @@ DRAMInterface::RankStats::preDumpStats()
     rank.computeStats();
 }
 
-NVMInterface::NVMInterface(const NVMInterfaceParams* _p)
+NVMInterface::NVMInterface(const NVMInterfaceParams &_p)
     : MemInterface(_p),
-      maxPendingWrites(_p->max_pending_writes),
-      maxPendingReads(_p->max_pending_reads),
-      twoCycleRdWr(_p->two_cycle_rdwr),
-      tREAD(_p->tREAD), tWRITE(_p->tWRITE), tSEND(_p->tSEND),
+      maxPendingWrites(_p.max_pending_writes),
+      maxPendingReads(_p.max_pending_reads),
+      twoCycleRdWr(_p.two_cycle_rdwr),
+      tREAD(_p.tREAD), tWRITE(_p.tWRITE), tSEND(_p.tSEND),
       stats(*this),
       writeRespondEvent([this]{ processWriteRespondEvent(); }, name()),
       readReadyEvent([this]{ processReadReadyEvent(); }, name()),
@@ -2036,16 +2036,16 @@ NVMInterface::NVMInterface(const NVMInterfaceParams* _p)
 }
 
 NVMInterface*
-NVMInterfaceParams::create()
+NVMInterfaceParams::create() const
 {
-    return new NVMInterface(this);
+    return new NVMInterface(*this);
 }
 
-NVMInterface::Rank::Rank(const NVMInterfaceParams* _p,
+NVMInterface::Rank::Rank(const NVMInterfaceParams &_p,
                          int _rank, NVMInterface& _nvm)
-    : EventManager(&_nvm), rank(_rank), banks(_p->banks_per_rank)
+    : EventManager(&_nvm), rank(_rank), banks(_p.banks_per_rank)
 {
-    for (int b = 0; b < _p->banks_per_rank; b++) {
+    for (int b = 0; b < _p.banks_per_rank; b++) {
         banks[b].bank = b;
         // No bank groups; simply assign to bank number
         banks[b].bankgr = b;

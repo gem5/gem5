@@ -204,13 +204,13 @@ CortexA76Cluster::getPort(const std::string &if_name, PortID idx)
 } // namespace FastModel
 
 FastModel::CortexA76 *
-FastModelCortexA76Params::create()
+FastModelCortexA76Params::create() const
 {
     return new FastModel::CortexA76(*this);
 }
 
 FastModel::CortexA76Cluster *
-FastModelCortexA76ClusterParams::create()
+FastModelCortexA76ClusterParams::create() const
 {
     return new FastModel::CortexA76Cluster(*this);
 }

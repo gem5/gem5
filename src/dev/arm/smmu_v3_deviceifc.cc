@@ -43,33 +43,33 @@
 #include "dev/arm/smmu_v3_transl.hh"
 
 SMMUv3DeviceInterface::SMMUv3DeviceInterface(
-    const SMMUv3DeviceInterfaceParams *p) :
+    const SMMUv3DeviceInterfaceParams &p) :
     ClockedObject(p),
     smmu(nullptr),
-    microTLB(new SMMUTLB(p->utlb_entries,
-                         p->utlb_assoc,
-                         p->utlb_policy)),
-    mainTLB(new SMMUTLB(p->tlb_entries,
-                        p->tlb_assoc,
-                        p->tlb_policy)),
-    microTLBEnable(p->utlb_enable),
-    mainTLBEnable(p->tlb_enable),
+    microTLB(new SMMUTLB(p.utlb_entries,
+                         p.utlb_assoc,
+                         p.utlb_policy)),
+    mainTLB(new SMMUTLB(p.tlb_entries,
+                        p.tlb_assoc,
+                        p.tlb_policy)),
+    microTLBEnable(p.utlb_enable),
+    mainTLBEnable(p.tlb_enable),
     devicePortSem(1),
-    microTLBSem(p->utlb_slots),
-    mainTLBSem(p->tlb_slots),
-    microTLBLat(p->utlb_lat),
-    mainTLBLat(p->tlb_lat),
+    microTLBSem(p.utlb_slots),
+    mainTLBSem(p.tlb_slots),
+    microTLBLat(p.utlb_lat),
+    mainTLBLat(p.tlb_lat),
     devicePort(new SMMUDevicePort(csprintf("%s.device_port",
                                             name()), *this)),
     atsDevicePort(name() + ".atsDevicePort", *this),
     atsMemPort(name() + ".atsMemPort", *this),
-    portWidth(p->port_width),
-    wrBufSlotsRemaining(p->wrbuf_slots),
-    xlateSlotsRemaining(p->xlate_slots),
+    portWidth(p.port_width),
+    wrBufSlotsRemaining(p.wrbuf_slots),
+    xlateSlotsRemaining(p.xlate_slots),
     pendingMemAccesses(0),
-    prefetchEnable(p->prefetch_enable),
+    prefetchEnable(p.prefetch_enable),
     prefetchReserveLastWay(
-        p->prefetch_reserve_last_way),
+        p.prefetch_reserve_last_way),
     deviceNeedsRetry(false),
     atsDeviceNeedsRetry(false),
     sendDeviceRetryEvent(*this),
@@ -254,14 +254,14 @@ DrainState
 SMMUv3DeviceInterface::drain()
 {
     // Wait until all SMMU translations are completed
-    if (xlateSlotsRemaining < params()->xlate_slots) {
+    if (xlateSlotsRemaining < params().xlate_slots) {
         return DrainState::Draining;
     }
     return DrainState::Drained;
 }
 
 SMMUv3DeviceInterface*
-SMMUv3DeviceInterfaceParams::create()
+SMMUv3DeviceInterfaceParams::create() const
 {
-    return new SMMUv3DeviceInterface(this);
+    return new SMMUv3DeviceInterface(*this);
 }

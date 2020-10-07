@@ -385,7 +385,7 @@ class BaseXBar : public ClockedObject
        addresses not handled by another port to default device. */
     const bool useDefaultRange;
 
-    BaseXBar(const BaseXBarParams *p);
+    BaseXBar(const BaseXBarParams &p);
 
     /**
      * Stats for transaction distribution and data passing through the

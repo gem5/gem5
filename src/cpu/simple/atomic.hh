@@ -51,7 +51,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 {
   public:
 
-    AtomicSimpleCPU(AtomicSimpleCPUParams *params);
+    AtomicSimpleCPU(const AtomicSimpleCPUParams &params);
     virtual ~AtomicSimpleCPU();
 
     void init() override;

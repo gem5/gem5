@@ -56,7 +56,7 @@ class PowerModelState : public SimObject
   public:
 
     typedef PowerModelStateParams Params;
-    PowerModelState(const Params *p);
+    PowerModelState(const Params &p);
 
     /**
      * Get the dynamic power consumption.
@@ -88,13 +88,13 @@ class PowerModelState : public SimObject
 
         dynamicPower
           .method(this, &PowerModelState::getDynamicPower)
-          .name(params()->name + ".dynamic_power")
+          .name(params().name + ".dynamic_power")
           .desc("Dynamic power for this object (Watts)")
         ;
 
         staticPower
           .method(this, &PowerModelState::getStaticPower)
-          .name(params()->name + ".static_power")
+          .name(params().name + ".static_power")
           .desc("Static power for this object (Watts)")
         ;
     }
@@ -120,7 +120,7 @@ class PowerModel : public SimObject
   public:
 
     typedef PowerModelParams Params;
-    PowerModel(const Params *p);
+    PowerModel(const Params &p);
 
     /**
      * Get the dynamic power consumption.
@@ -141,13 +141,13 @@ class PowerModel : public SimObject
 
         dynamicPower
           .method(this, &PowerModel::getDynamicPower)
-          .name(params()->name + ".dynamic_power")
+          .name(params().name + ".dynamic_power")
           .desc("Dynamic power for this power state")
         ;
 
         staticPower
           .method(this, &PowerModel::getStaticPower)
-          .name(params()->name + ".static_power")
+          .name(params().name + ".static_power")
           .desc("Static power for this power state")
         ;
     }

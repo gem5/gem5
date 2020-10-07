@@ -98,16 +98,16 @@ class PL031 : public AmbaIntDevice
 
   public:
     typedef PL031Params Params;
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
     /**
       * The constructor for RealView just registers itself with the MMU.
       * @param p params structure
       */
-    PL031(Params *p);
+    PL031(const Params &p);
 
     /**
      * Handle a read to the device

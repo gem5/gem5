@@ -48,8 +48,8 @@
 #include "gpu-compute/wavefront.hh"
 #include "params/RegisterFile.hh"
 
-RegisterFile::RegisterFile(const RegisterFileParams *p)
-    : SimObject(p), simdId(p->simd_id), _numRegs(p->num_regs)
+RegisterFile::RegisterFile(const RegisterFileParams &p)
+    : SimObject(p), simdId(p.simd_id), _numRegs(p.num_regs)
 {
     fatal_if((_numRegs % 2) != 0, "VRF size is illegal\n");
     fatal_if(simdId < 0, "Illegal SIMD id for VRF");
@@ -172,9 +172,9 @@ RegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
 }
 
 RegisterFile*
-RegisterFileParams::create()
+RegisterFileParams::create() const
 {
-    return new RegisterFile(this);
+    return new RegisterFile(*this);
 }
 
 // Events

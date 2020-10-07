@@ -43,22 +43,22 @@
 #include "proto/packet.pb.h"
 #include "sim/system.hh"
 
-MemTraceProbe::MemTraceProbe(MemTraceProbeParams *p)
+MemTraceProbe::MemTraceProbe(const MemTraceProbeParams &p)
     : BaseMemProbe(p),
       traceStream(nullptr),
-      system(p->system),
-      withPC(p->with_pc)
+      system(p.system),
+      withPC(p.with_pc)
 {
     std::string filename;
-    if (p->trace_file != "") {
+    if (p.trace_file != "") {
         // If the trace file is not specified as an absolute path,
         // append the current simulation output directory
-        filename = simout.resolve(p->trace_file);
+        filename = simout.resolve(p.trace_file);
 
         const std::string suffix = ".gz";
         // If trace_compress has been set, check the suffix. Append
         // accordingly.
-        if (p->trace_compress &&
+        if (p.trace_compress &&
             filename.compare(filename.size() - suffix.size(), suffix.size(),
                              suffix) != 0)
             filename = filename + suffix;
@@ -66,7 +66,7 @@ MemTraceProbe::MemTraceProbe(MemTraceProbeParams *p)
         // Generate a filename from the name of the SimObject. Append .trc
         // and .gz if we want compression enabled.
         filename = simout.resolve(name() + ".trc" +
-                                  (p->trace_compress ? ".gz" : ""));
+                                  (p.trace_compress ? ".gz" : ""));
     }
 
     traceStream = new ProtoOutputStream(filename);
@@ -121,7 +121,7 @@ MemTraceProbe::handleRequest(const ProbePoints::PacketInfo &pkt_info)
 
 
 MemTraceProbe *
-MemTraceProbeParams::create()
+MemTraceProbeParams::create() const
 {
-    return new MemTraceProbe(this);
+    return new MemTraceProbe(*this);
 }

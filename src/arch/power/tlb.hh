@@ -112,7 +112,7 @@ class TLB : public BaseTLB
 
   public:
     typedef PowerTLBParams Params;
-    TLB(const Params *p);
+    TLB(const Params &p);
     virtual ~TLB();
 
     void takeOverFrom(BaseTLB *otlb) override {}

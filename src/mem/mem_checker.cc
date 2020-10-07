@@ -345,7 +345,7 @@ MemChecker::reset(Addr addr, size_t size)
 }
 
 MemChecker*
-MemCheckerParams::create()
+MemCheckerParams::create() const
 {
-    return new MemChecker(this);
+    return new MemChecker(*this);
 }

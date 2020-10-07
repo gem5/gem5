@@ -93,9 +93,9 @@ class Terminal : public SerialDevice
 
   public:
     typedef TerminalParams Params;
-    Terminal(const Params *p);
+    Terminal(const Params &p);
     ~Terminal();
-    OutputStream * terminalDump(const TerminalParams* p);
+    OutputStream * terminalDump(const TerminalParams &p);
 
   protected:
     ListenSocket listener;

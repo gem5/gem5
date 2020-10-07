@@ -63,7 +63,7 @@ class TLB : public BaseTLB
 
   public:
     typedef MipsTLBParams Params;
-    TLB(const Params *p);
+    TLB(const Params &p);
 
     int probeEntry(Addr vpn,uint8_t) const;
     MipsISA::PTE *getEntry(unsigned) const;

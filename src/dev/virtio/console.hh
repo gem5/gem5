@@ -65,7 +65,7 @@ class VirtIOConsole : public VirtIODeviceBase
 {
   public:
     typedef VirtIOConsoleParams Params;
-    VirtIOConsole(Params *params);
+    VirtIOConsole(const Params &params);
     virtual ~VirtIOConsole();
 
     void readConfig(PacketPtr pkt, Addr cfgOffset);

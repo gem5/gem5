@@ -97,7 +97,7 @@ X86ISA::I8254::startup()
 }
 
 X86ISA::I8254 *
-I8254Params::create()
+I8254Params::create() const
 {
-    return new X86ISA::I8254(this);
+    return new X86ISA::I8254(*this);
 }

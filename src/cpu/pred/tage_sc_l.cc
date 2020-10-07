@@ -59,13 +59,13 @@ TAGE_SC_L_LoopPredictor::optionalAgeInc() const
 }
 
 TAGE_SC_L_LoopPredictor *
-TAGE_SC_L_LoopPredictorParams::create()
+TAGE_SC_L_LoopPredictorParams::create() const
 {
-    return new TAGE_SC_L_LoopPredictor(this);
+    return new TAGE_SC_L_LoopPredictor(*this);
 }
 
-TAGE_SC_L::TAGE_SC_L(const TAGE_SC_LParams *p)
-  : LTAGE(p), statisticalCorrector(p->statistical_corrector)
+TAGE_SC_L::TAGE_SC_L(const TAGE_SC_LParams &p)
+  : LTAGE(p), statisticalCorrector(p.statistical_corrector)
 {
 }
 

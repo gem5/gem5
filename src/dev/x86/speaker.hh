@@ -56,14 +56,14 @@ class Speaker : public BasicPioDevice
   public:
     typedef PcSpeakerParams Params;
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
-    Speaker(Params *p) : BasicPioDevice(p, 1),
-        latency(p->pio_latency), controlVal(0), timer(p->i8254)
+    Speaker(const Params &p) : BasicPioDevice(p, 1),
+        latency(p.pio_latency), controlVal(0), timer(p.i8254)
     {
     }
 

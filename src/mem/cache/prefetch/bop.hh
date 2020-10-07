@@ -147,7 +147,7 @@ class BOP : public Queued
 
     public:
 
-        BOP(const BOPPrefetcherParams *p);
+        BOP(const BOPPrefetcherParams &p);
         ~BOP() = default;
 
         void calculatePrefetch(const PrefetchInfo &pfi,

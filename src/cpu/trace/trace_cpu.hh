@@ -141,7 +141,7 @@ class TraceCPU : public BaseCPU
 {
 
   public:
-    TraceCPU(TraceCPUParams *params);
+    TraceCPU(const TraceCPUParams &params);
     ~TraceCPU();
 
     void init();
@@ -853,19 +853,19 @@ class TraceCPU : public BaseCPU
         /* Constructor */
         ElasticDataGen(TraceCPU& _owner, const std::string& _name,
                    RequestPort& _port, RequestorID requestor_id,
-                   const std::string& trace_file, TraceCPUParams *params)
+                   const std::string& trace_file, const TraceCPUParams &params)
             : owner(_owner),
               port(_port),
               requestorId(requestor_id),
-              trace(trace_file, 1.0 / params->freqMultiplier),
+              trace(trace_file, 1.0 / params.freqMultiplier),
               genName(owner.name() + ".elastic." + _name),
               retryPkt(nullptr),
               traceComplete(false),
               nextRead(false),
               execComplete(false),
               windowSize(trace.getWindowSize()),
-              hwResource(params->sizeROB, params->sizeStoreBuffer,
-                         params->sizeLoadBuffer), elasticStats(&_owner, _name)
+              hwResource(params.sizeROB, params.sizeStoreBuffer,
+                         params.sizeLoadBuffer), elasticStats(&_owner, _name)
         {
             DPRINTF(TraceCPUData, "Window size in the trace is %d.\n",
                     windowSize);

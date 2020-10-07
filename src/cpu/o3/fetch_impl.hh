@@ -54,7 +54,6 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
-//#include "cpu/checker/cpu.hh"
 #include "cpu/o3/cpu.hh"
 #include "cpu/o3/fetch.hh"
 #include "cpu/exetrace.hh"
@@ -75,24 +74,24 @@
 using namespace std;
 
 template<class Impl>
-DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
-    : fetchPolicy(params->smtFetchPolicy),
+DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, const DerivO3CPUParams &params)
+    : fetchPolicy(params.smtFetchPolicy),
       cpu(_cpu),
       branchPred(nullptr),
-      decodeToFetchDelay(params->decodeToFetchDelay),
-      renameToFetchDelay(params->renameToFetchDelay),
-      iewToFetchDelay(params->iewToFetchDelay),
-      commitToFetchDelay(params->commitToFetchDelay),
-      fetchWidth(params->fetchWidth),
-      decodeWidth(params->decodeWidth),
+      decodeToFetchDelay(params.decodeToFetchDelay),
+      renameToFetchDelay(params.renameToFetchDelay),
+      iewToFetchDelay(params.iewToFetchDelay),
+      commitToFetchDelay(params.commitToFetchDelay),
+      fetchWidth(params.fetchWidth),
+      decodeWidth(params.decodeWidth),
       retryPkt(NULL),
       retryTid(InvalidThreadID),
       cacheBlkSize(cpu->cacheLineSize()),
-      fetchBufferSize(params->fetchBufferSize),
+      fetchBufferSize(params.fetchBufferSize),
       fetchBufferMask(fetchBufferSize - 1),
-      fetchQueueSize(params->fetchQueueSize),
-      numThreads(params->numThreads),
-      numFetchingThreads(params->smtNumFetchingThreads),
+      fetchQueueSize(params.fetchQueueSize),
+      numThreads(params.numThreads),
+      numFetchingThreads(params.smtNumFetchingThreads),
       icachePort(this, _cpu),
       finishTranslationEvent(this), fetchStats(_cpu, this)
 {
@@ -130,11 +129,11 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
         issuePipelinedIfetch[i] = false;
     }
 
-    branchPred = params->branchPred;
+    branchPred = params.branchPred;
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         decoder[tid] = new TheISA::Decoder(
-                dynamic_cast<TheISA::ISA *>(params->isa[tid]));
+                dynamic_cast<TheISA::ISA *>(params.isa[tid]));
         // Create space to buffer the cache line data,
         // which may not hold the entire cache line.
         fetchBuffer[tid] = new uint8_t[fetchBufferSize];

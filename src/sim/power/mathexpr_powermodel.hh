@@ -57,7 +57,7 @@ class MathExprPowerModel : public PowerModelState
   public:
 
     typedef MathExprPowerModelParams Params;
-    MathExprPowerModel(const Params *p);
+    MathExprPowerModel(const Params &p);
 
     /**
      * Get the dynamic power consumption.

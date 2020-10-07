@@ -48,7 +48,7 @@ class SparcLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
+    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file) override
     {
         auto arch = obj_file->getArch();
         auto opsys = obj_file->getOpSys();
@@ -75,7 +75,7 @@ SparcLinuxObjectFileLoader loader;
 
 } // anonymous namespace
 
-Sparc32LinuxProcess::Sparc32LinuxProcess(ProcessParams * params,
+Sparc32LinuxProcess::Sparc32LinuxProcess(const ProcessParams &params,
                                          ::Loader::ObjectFile *objFile)
     : Sparc32Process(params, objFile)
 {}
@@ -99,7 +99,7 @@ Sparc32LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
     }
 }
 
-Sparc64LinuxProcess::Sparc64LinuxProcess(ProcessParams * params,
+Sparc64LinuxProcess::Sparc64LinuxProcess(const ProcessParams &params,
                                          ::Loader::ObjectFile *objFile)
     : Sparc64Process(params, objFile)
 {}

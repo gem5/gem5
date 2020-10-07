@@ -39,12 +39,12 @@
 
 #include "params/Display.hh"
 
-Display::Display(const DisplayParams *p)
+Display::Display(const DisplayParams &p)
   : SimObject(p)
 {}
 
 Display *
-DisplayParams::create()
+DisplayParams::create() const
 {
-    return new Display(this);
+    return new Display(*this);
 }

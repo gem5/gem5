@@ -143,16 +143,16 @@ class A9GlobalTimer : public BasicPioDevice
 
   public:
     typedef A9GlobalTimerParams Params;
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
     /**
       * The constructor for RealView just registers itself with the MMU.
       * @param p params structure
       */
-    A9GlobalTimer(Params *p);
+    A9GlobalTimer(const Params &p);
 
     /**
      * Handle a read to the device

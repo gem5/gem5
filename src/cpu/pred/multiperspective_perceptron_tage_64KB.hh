@@ -73,7 +73,7 @@ class MPP_StatisticalCorrector_64KB : public MPP_StatisticalCorrector {
             StatisticalCorrector::BranchInfo *bi, Addr corrTarget) override;
   public:
     MPP_StatisticalCorrector_64KB(
-            const MPP_StatisticalCorrector_64KBParams *p);
+            const MPP_StatisticalCorrector_64KBParams &p);
     size_t getSizeInBits() const override;
 };
 
@@ -82,7 +82,7 @@ class MultiperspectivePerceptronTAGE64KB :
     void createSpecs() override;
   public:
     MultiperspectivePerceptronTAGE64KB(
-            const MultiperspectivePerceptronTAGE64KBParams *p);
+            const MultiperspectivePerceptronTAGE64KBParams &p);
 };
 
 #endif // __CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_TAGE_64KB_HH__

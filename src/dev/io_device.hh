@@ -129,13 +129,13 @@ class PioDevice : public ClockedObject
 
   public:
     typedef PioDeviceParams Params;
-    PioDevice(const Params *p);
+    PioDevice(const Params &p);
     virtual ~PioDevice();
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     void init() override;
@@ -161,12 +161,12 @@ class BasicPioDevice : public PioDevice
 
   public:
     typedef BasicPioDeviceParams Params;
-    BasicPioDevice(const Params *p, Addr size);
+    BasicPioDevice(const Params &p, Addr size);
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     /**

@@ -49,13 +49,13 @@ class Interrupts : public BaseInterrupts
   public:
     typedef MipsInterruptsParams Params;
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
-    Interrupts(Params * p) : BaseInterrupts(p) {}
+    Interrupts(const Params &p) : BaseInterrupts(p) {}
 
     //  post(int int_num, int index) is responsible
     //  for posting an interrupt. It sets a bit

@@ -383,7 +383,7 @@ class ComputeUnit : public ClockedObject
     void insertInPipeMap(Wavefront *w);
     void deleteFromPipeMap(Wavefront *w);
 
-    ComputeUnit(const Params *p);
+    ComputeUnit(const Params &p);
     ~ComputeUnit();
 
     // Timing Functions

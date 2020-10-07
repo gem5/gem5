@@ -143,8 +143,8 @@ class IdeController : public PciDevice
 
   public:
     typedef IdeControllerParams Params;
-    const Params *params() const { return (const Params *)_params; }
-    IdeController(Params *p);
+    const Params &params() const { return (const Params &)_params; }
+    IdeController(const Params &p);
 
     /** See if a disk is selected based on its pointer */
     bool isDiskSelected(IdeDisk *diskPtr);

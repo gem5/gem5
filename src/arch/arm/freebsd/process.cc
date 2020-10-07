@@ -62,7 +62,7 @@ class ArmFreebsdObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
+    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file) override
     {
         auto arch = obj_file->getArch();
         auto opsys = obj_file->getOpSys();
@@ -150,12 +150,12 @@ static SyscallDescTable<ArmFreebsdProcess64::SyscallABI> syscallDescs64 = {
     {  477, "mmap", mmapFunc<ArmFreebsd64> }
 };
 
-ArmFreebsdProcess32::ArmFreebsdProcess32(ProcessParams * params,
+ArmFreebsdProcess32::ArmFreebsdProcess32(const ProcessParams &params,
         ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
     ArmProcess32(params, objFile, _arch)
 {}
 
-ArmFreebsdProcess64::ArmFreebsdProcess64(ProcessParams * params,
+ArmFreebsdProcess64::ArmFreebsdProcess64(const ProcessParams &params,
         ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
     ArmProcess64(params, objFile, _arch)
 {}

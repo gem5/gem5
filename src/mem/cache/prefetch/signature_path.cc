@@ -37,20 +37,20 @@
 
 namespace Prefetcher {
 
-SignaturePath::SignaturePath(const SignaturePathPrefetcherParams *p)
+SignaturePath::SignaturePath(const SignaturePathPrefetcherParams &p)
     : Queued(p),
-      stridesPerPatternEntry(p->strides_per_pattern_entry),
-      signatureShift(p->signature_shift),
-      signatureBits(p->signature_bits),
-      prefetchConfidenceThreshold(p->prefetch_confidence_threshold),
-      lookaheadConfidenceThreshold(p->lookahead_confidence_threshold),
-      signatureTable(p->signature_table_assoc, p->signature_table_entries,
-                     p->signature_table_indexing_policy,
-                     p->signature_table_replacement_policy),
-      patternTable(p->pattern_table_assoc, p->pattern_table_entries,
-                   p->pattern_table_indexing_policy,
-                   p->pattern_table_replacement_policy,
-                   PatternEntry(stridesPerPatternEntry, p->num_counter_bits))
+      stridesPerPatternEntry(p.strides_per_pattern_entry),
+      signatureShift(p.signature_shift),
+      signatureBits(p.signature_bits),
+      prefetchConfidenceThreshold(p.prefetch_confidence_threshold),
+      lookaheadConfidenceThreshold(p.lookahead_confidence_threshold),
+      signatureTable(p.signature_table_assoc, p.signature_table_entries,
+                     p.signature_table_indexing_policy,
+                     p.signature_table_replacement_policy),
+      patternTable(p.pattern_table_assoc, p.pattern_table_entries,
+                   p.pattern_table_indexing_policy,
+                   p.pattern_table_replacement_policy,
+                   PatternEntry(stridesPerPatternEntry, p.num_counter_bits))
 {
     fatal_if(prefetchConfidenceThreshold < 0,
         "The prefetch confidence threshold must be greater than 0\n");
@@ -319,7 +319,7 @@ SignaturePath::auxiliaryPrefetcher(Addr ppn, stride_t current_block,
 } // namespace Prefetcher
 
 Prefetcher::SignaturePath*
-SignaturePathPrefetcherParams::create()
+SignaturePathPrefetcherParams::create() const
 {
-    return new Prefetcher::SignaturePath(this);
+    return new Prefetcher::SignaturePath(*this);
 }

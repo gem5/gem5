@@ -152,7 +152,7 @@ class TreePLRU : public Base
 
   public:
     typedef TreePLRURPParams Params;
-    TreePLRU(const Params *p);
+    TreePLRU(const Params &p);
     ~TreePLRU() = default;
 
     /**

@@ -60,7 +60,7 @@ class X86LinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
+    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file) override
     {
         auto arch = obj_file->getArch();
         auto opsys = obj_file->getOpSys();

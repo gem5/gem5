@@ -55,7 +55,7 @@ class VIPERCoalescer : public GPUCoalescer
 {
   public:
     typedef VIPERCoalescerParams Params;
-    VIPERCoalescer(const Params *);
+    VIPERCoalescer(const Params &);
     ~VIPERCoalescer();
     void writeCompleteCallback(Addr address, uint64_t instSeqNum);
     void invTCPCallback(Addr address);

@@ -225,7 +225,7 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
 //  ExeTracer Simulation Object
 //
 Trace::ArmNativeTrace *
-ArmNativeTraceParams::create()
+ArmNativeTraceParams::create() const
 {
-    return new Trace::ArmNativeTrace(this);
+    return new Trace::ArmNativeTrace(*this);
 }

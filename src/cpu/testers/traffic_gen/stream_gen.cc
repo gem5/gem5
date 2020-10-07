@@ -40,9 +40,9 @@
 #include "base/random.hh"
 
 StreamGen*
-StreamGen::create(const BaseTrafficGenParams *p)
+StreamGen::create(const BaseTrafficGenParams &p)
 {
-    switch (p->stream_gen) {
+    switch (p.stream_gen) {
       case StreamGenType::fixed:
         return new FixedStreamGen(p);
       case StreamGenType::random:

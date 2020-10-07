@@ -88,7 +88,7 @@ class TimingExprEvalContext
 class TimingExpr : public SimObject
 {
   public:
-    TimingExpr(const TimingExprParams *params) :
+    TimingExpr(const TimingExprParams &params) :
         SimObject(params)
     { }
 
@@ -100,9 +100,9 @@ class TimingExprLiteral : public TimingExpr
   public:
     uint64_t value;
 
-    TimingExprLiteral(const TimingExprLiteralParams *params) :
+    TimingExprLiteral(const TimingExprLiteralParams &params) :
         TimingExpr(params),
-        value(params->value)
+        value(params.value)
     { }
 
     uint64_t eval(TimingExprEvalContext &context) { return value; }
@@ -113,9 +113,9 @@ class TimingExprSrcReg : public TimingExpr
   public:
     unsigned int index;
 
-    TimingExprSrcReg(const TimingExprSrcRegParams *params) :
+    TimingExprSrcReg(const TimingExprSrcRegParams &params) :
         TimingExpr(params),
-        index(params->index)
+        index(params.index)
     { }
 
     uint64_t eval(TimingExprEvalContext &context);
@@ -126,9 +126,9 @@ class TimingExprReadIntReg : public TimingExpr
   public:
     TimingExpr *reg;
 
-    TimingExprReadIntReg(const TimingExprReadIntRegParams *params) :
+    TimingExprReadIntReg(const TimingExprReadIntRegParams &params) :
         TimingExpr(params),
-        reg(params->reg)
+        reg(params.reg)
     { }
 
     uint64_t eval(TimingExprEvalContext &context);
@@ -140,10 +140,10 @@ class TimingExprLet : public TimingExpr
     std::vector<TimingExpr *> defns;
     TimingExpr *expr;
 
-    TimingExprLet(const TimingExprLetParams *params) :
+    TimingExprLet(const TimingExprLetParams &params) :
         TimingExpr(params),
-        defns(params->defns),
-        expr(params->expr)
+        defns(params.defns),
+        expr(params.expr)
     { }
 
     uint64_t eval(TimingExprEvalContext &context);
@@ -154,9 +154,9 @@ class TimingExprRef : public TimingExpr
   public:
     unsigned int index;
 
-    TimingExprRef(const TimingExprRefParams *params) :
+    TimingExprRef(const TimingExprRefParams &params) :
         TimingExpr(params),
-        index(params->index)
+        index(params.index)
     { }
 
     uint64_t eval(TimingExprEvalContext &context);
@@ -168,10 +168,10 @@ class TimingExprUn : public TimingExpr
     Enums::TimingExprOp op;
     TimingExpr *arg;
 
-    TimingExprUn(const TimingExprUnParams *params) :
+    TimingExprUn(const TimingExprUnParams &params) :
         TimingExpr(params),
-        op(params->op),
-        arg(params->arg)
+        op(params.op),
+        arg(params.arg)
     { }
 
     uint64_t eval(TimingExprEvalContext &context);
@@ -184,11 +184,11 @@ class TimingExprBin : public TimingExpr
     TimingExpr *left;
     TimingExpr *right;
 
-    TimingExprBin(const TimingExprBinParams *params) :
+    TimingExprBin(const TimingExprBinParams &params) :
         TimingExpr(params),
-        op(params->op),
-        left(params->left),
-        right(params->right)
+        op(params.op),
+        left(params.left),
+        right(params.right)
     { }
 
     uint64_t eval(TimingExprEvalContext &context);
@@ -201,11 +201,11 @@ class TimingExprIf : public TimingExpr
     TimingExpr *trueExpr;
     TimingExpr *falseExpr;
 
-    TimingExprIf(const TimingExprIfParams *params) :
+    TimingExprIf(const TimingExprIfParams &params) :
         TimingExpr(params),
-        cond(params->cond),
-        trueExpr(params->trueExpr),
-        falseExpr(params->falseExpr)
+        cond(params.cond),
+        trueExpr(params.trueExpr),
+        falseExpr(params.falseExpr)
     { }
 
     uint64_t eval(TimingExprEvalContext &context);

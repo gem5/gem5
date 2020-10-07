@@ -59,86 +59,86 @@
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
 
-PciDevice::PciDevice(const PciDeviceParams *p)
+PciDevice::PciDevice(const PciDeviceParams &p)
     : DmaDevice(p),
-      _busAddr(p->pci_bus, p->pci_dev, p->pci_func),
-      PMCAP_BASE(p->PMCAPBaseOffset),
-      PMCAP_ID_OFFSET(p->PMCAPBaseOffset+PMCAP_ID),
-      PMCAP_PC_OFFSET(p->PMCAPBaseOffset+PMCAP_PC),
-      PMCAP_PMCS_OFFSET(p->PMCAPBaseOffset+PMCAP_PMCS),
-      MSICAP_BASE(p->MSICAPBaseOffset),
-      MSIXCAP_BASE(p->MSIXCAPBaseOffset),
-      MSIXCAP_ID_OFFSET(p->MSIXCAPBaseOffset+MSIXCAP_ID),
-      MSIXCAP_MXC_OFFSET(p->MSIXCAPBaseOffset+MSIXCAP_MXC),
-      MSIXCAP_MTAB_OFFSET(p->MSIXCAPBaseOffset+MSIXCAP_MTAB),
-      MSIXCAP_MPBA_OFFSET(p->MSIXCAPBaseOffset+MSIXCAP_MPBA),
-      PXCAP_BASE(p->PXCAPBaseOffset),
+      _busAddr(p.pci_bus, p.pci_dev, p.pci_func),
+      PMCAP_BASE(p.PMCAPBaseOffset),
+      PMCAP_ID_OFFSET(p.PMCAPBaseOffset+PMCAP_ID),
+      PMCAP_PC_OFFSET(p.PMCAPBaseOffset+PMCAP_PC),
+      PMCAP_PMCS_OFFSET(p.PMCAPBaseOffset+PMCAP_PMCS),
+      MSICAP_BASE(p.MSICAPBaseOffset),
+      MSIXCAP_BASE(p.MSIXCAPBaseOffset),
+      MSIXCAP_ID_OFFSET(p.MSIXCAPBaseOffset+MSIXCAP_ID),
+      MSIXCAP_MXC_OFFSET(p.MSIXCAPBaseOffset+MSIXCAP_MXC),
+      MSIXCAP_MTAB_OFFSET(p.MSIXCAPBaseOffset+MSIXCAP_MTAB),
+      MSIXCAP_MPBA_OFFSET(p.MSIXCAPBaseOffset+MSIXCAP_MPBA),
+      PXCAP_BASE(p.PXCAPBaseOffset),
 
-      hostInterface(p->host->registerDevice(this, _busAddr,
-                                            (PciIntPin)p->InterruptPin)),
-      pioDelay(p->pio_latency),
-      configDelay(p->config_latency)
+      hostInterface(p.host->registerDevice(this, _busAddr,
+                                            (PciIntPin)p.InterruptPin)),
+      pioDelay(p.pio_latency),
+      configDelay(p.config_latency)
 {
-    fatal_if(p->InterruptPin >= 5,
-             "Invalid PCI interrupt '%i' specified.", p->InterruptPin);
+    fatal_if(p.InterruptPin >= 5,
+             "Invalid PCI interrupt '%i' specified.", p.InterruptPin);
 
-    config.vendor = htole(p->VendorID);
-    config.device = htole(p->DeviceID);
-    config.command = htole(p->Command);
-    config.status = htole(p->Status);
-    config.revision = htole(p->Revision);
-    config.progIF = htole(p->ProgIF);
-    config.subClassCode = htole(p->SubClassCode);
-    config.classCode = htole(p->ClassCode);
-    config.cacheLineSize = htole(p->CacheLineSize);
-    config.latencyTimer = htole(p->LatencyTimer);
-    config.headerType = htole(p->HeaderType);
-    config.bist = htole(p->BIST);
+    config.vendor = htole(p.VendorID);
+    config.device = htole(p.DeviceID);
+    config.command = htole(p.Command);
+    config.status = htole(p.Status);
+    config.revision = htole(p.Revision);
+    config.progIF = htole(p.ProgIF);
+    config.subClassCode = htole(p.SubClassCode);
+    config.classCode = htole(p.ClassCode);
+    config.cacheLineSize = htole(p.CacheLineSize);
+    config.latencyTimer = htole(p.LatencyTimer);
+    config.headerType = htole(p.HeaderType);
+    config.bist = htole(p.BIST);
 
-    config.baseAddr[0] = htole(p->BAR0);
-    config.baseAddr[1] = htole(p->BAR1);
-    config.baseAddr[2] = htole(p->BAR2);
-    config.baseAddr[3] = htole(p->BAR3);
-    config.baseAddr[4] = htole(p->BAR4);
-    config.baseAddr[5] = htole(p->BAR5);
-    config.cardbusCIS = htole(p->CardbusCIS);
-    config.subsystemVendorID = htole(p->SubsystemVendorID);
-    config.subsystemID = htole(p->SubsystemID);
-    config.expansionROM = htole(p->ExpansionROM);
-    config.capabilityPtr = htole(p->CapabilityPtr);
+    config.baseAddr[0] = htole(p.BAR0);
+    config.baseAddr[1] = htole(p.BAR1);
+    config.baseAddr[2] = htole(p.BAR2);
+    config.baseAddr[3] = htole(p.BAR3);
+    config.baseAddr[4] = htole(p.BAR4);
+    config.baseAddr[5] = htole(p.BAR5);
+    config.cardbusCIS = htole(p.CardbusCIS);
+    config.subsystemVendorID = htole(p.SubsystemVendorID);
+    config.subsystemID = htole(p.SubsystemID);
+    config.expansionROM = htole(p.ExpansionROM);
+    config.capabilityPtr = htole(p.CapabilityPtr);
     // Zero out the 7 bytes of reserved space in the PCI Config space register.
     bzero(config.reserved, 7*sizeof(uint8_t));
-    config.interruptLine = htole(p->InterruptLine);
-    config.interruptPin = htole(p->InterruptPin);
-    config.minimumGrant = htole(p->MinimumGrant);
-    config.maximumLatency = htole(p->MaximumLatency);
+    config.interruptLine = htole(p.InterruptLine);
+    config.interruptPin = htole(p.InterruptPin);
+    config.minimumGrant = htole(p.MinimumGrant);
+    config.maximumLatency = htole(p.MaximumLatency);
 
     // Initialize the capability lists
     // These structs are bitunions, meaning the data is stored in host
     // endianess and must be converted to Little Endian when accessed
     // by the guest
     // PMCAP
-    pmcap.pid = (uint16_t)p->PMCAPCapId; // pid.cid
-    pmcap.pid |= (uint16_t)p->PMCAPNextCapability << 8; //pid.next
-    pmcap.pc = p->PMCAPCapabilities;
-    pmcap.pmcs = p->PMCAPCtrlStatus;
+    pmcap.pid = (uint16_t)p.PMCAPCapId; // pid.cid
+    pmcap.pid |= (uint16_t)p.PMCAPNextCapability << 8; //pid.next
+    pmcap.pc = p.PMCAPCapabilities;
+    pmcap.pmcs = p.PMCAPCtrlStatus;
 
     // MSICAP
-    msicap.mid = (uint16_t)p->MSICAPCapId; //mid.cid
-    msicap.mid |= (uint16_t)p->MSICAPNextCapability << 8; //mid.next
-    msicap.mc = p->MSICAPMsgCtrl;
-    msicap.ma = p->MSICAPMsgAddr;
-    msicap.mua = p->MSICAPMsgUpperAddr;
-    msicap.md = p->MSICAPMsgData;
-    msicap.mmask = p->MSICAPMaskBits;
-    msicap.mpend = p->MSICAPPendingBits;
+    msicap.mid = (uint16_t)p.MSICAPCapId; //mid.cid
+    msicap.mid |= (uint16_t)p.MSICAPNextCapability << 8; //mid.next
+    msicap.mc = p.MSICAPMsgCtrl;
+    msicap.ma = p.MSICAPMsgAddr;
+    msicap.mua = p.MSICAPMsgUpperAddr;
+    msicap.md = p.MSICAPMsgData;
+    msicap.mmask = p.MSICAPMaskBits;
+    msicap.mpend = p.MSICAPPendingBits;
 
     // MSIXCAP
-    msixcap.mxid = (uint16_t)p->MSIXCAPCapId; //mxid.cid
-    msixcap.mxid |= (uint16_t)p->MSIXCAPNextCapability << 8; //mxid.next
-    msixcap.mxc = p->MSIXMsgCtrl;
-    msixcap.mtab = p->MSIXTableOffset;
-    msixcap.mpba = p->MSIXPbaOffset;
+    msixcap.mxid = (uint16_t)p.MSIXCAPCapId; //mxid.cid
+    msixcap.mxid |= (uint16_t)p.MSIXCAPNextCapability << 8; //mxid.next
+    msixcap.mxc = p.MSIXMsgCtrl;
+    msixcap.mtab = p.MSIXTableOffset;
+    msixcap.mpba = p.MSIXPbaOffset;
 
     // allocate MSIX structures if MSIXCAP_BASE
     // indicates the MSIXCAP is being used by having a
@@ -172,35 +172,35 @@ PciDevice::PciDevice(const PciDeviceParams *p)
     }
 
     // PXCAP
-    pxcap.pxid = (uint16_t)p->PXCAPCapId; //pxid.cid
-    pxcap.pxid |= (uint16_t)p->PXCAPNextCapability << 8; //pxid.next
-    pxcap.pxcap = p->PXCAPCapabilities;
-    pxcap.pxdcap = p->PXCAPDevCapabilities;
-    pxcap.pxdc = p->PXCAPDevCtrl;
-    pxcap.pxds = p->PXCAPDevStatus;
-    pxcap.pxlcap = p->PXCAPLinkCap;
-    pxcap.pxlc = p->PXCAPLinkCtrl;
-    pxcap.pxls = p->PXCAPLinkStatus;
-    pxcap.pxdcap2 = p->PXCAPDevCap2;
-    pxcap.pxdc2 = p->PXCAPDevCtrl2;
+    pxcap.pxid = (uint16_t)p.PXCAPCapId; //pxid.cid
+    pxcap.pxid |= (uint16_t)p.PXCAPNextCapability << 8; //pxid.next
+    pxcap.pxcap = p.PXCAPCapabilities;
+    pxcap.pxdcap = p.PXCAPDevCapabilities;
+    pxcap.pxdc = p.PXCAPDevCtrl;
+    pxcap.pxds = p.PXCAPDevStatus;
+    pxcap.pxlcap = p.PXCAPLinkCap;
+    pxcap.pxlc = p.PXCAPLinkCtrl;
+    pxcap.pxls = p.PXCAPLinkStatus;
+    pxcap.pxdcap2 = p.PXCAPDevCap2;
+    pxcap.pxdc2 = p.PXCAPDevCtrl2;
 
-    BARSize[0] = p->BAR0Size;
-    BARSize[1] = p->BAR1Size;
-    BARSize[2] = p->BAR2Size;
-    BARSize[3] = p->BAR3Size;
-    BARSize[4] = p->BAR4Size;
-    BARSize[5] = p->BAR5Size;
+    BARSize[0] = p.BAR0Size;
+    BARSize[1] = p.BAR1Size;
+    BARSize[2] = p.BAR2Size;
+    BARSize[3] = p.BAR3Size;
+    BARSize[4] = p.BAR4Size;
+    BARSize[5] = p.BAR5Size;
 
-    legacyIO[0] = p->BAR0LegacyIO;
-    legacyIO[1] = p->BAR1LegacyIO;
-    legacyIO[2] = p->BAR2LegacyIO;
-    legacyIO[3] = p->BAR3LegacyIO;
-    legacyIO[4] = p->BAR4LegacyIO;
-    legacyIO[5] = p->BAR5LegacyIO;
+    legacyIO[0] = p.BAR0LegacyIO;
+    legacyIO[1] = p.BAR1LegacyIO;
+    legacyIO[2] = p.BAR2LegacyIO;
+    legacyIO[3] = p.BAR3LegacyIO;
+    legacyIO[4] = p.BAR4LegacyIO;
+    legacyIO[5] = p.BAR5LegacyIO;
 
     for (int i = 0; i < 6; ++i) {
         if (legacyIO[i]) {
-            BARAddrs[i] = p->LegacyIOBase + letoh(config.baseAddr[i]);
+            BARAddrs[i] = p.LegacyIOBase + letoh(config.baseAddr[i]);
             config.baseAddr[i] = 0;
         } else {
             BARAddrs[i] = 0;

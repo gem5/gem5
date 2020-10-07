@@ -91,7 +91,7 @@ struct SerialNullDeviceParams;
 class SerialDevice : public SimObject
 {
   public:
-    SerialDevice(const SerialDeviceParams *p);
+    SerialDevice(const SerialDeviceParams &p);
     ~SerialDevice();
 
   public: // Serial device API (UART->Device)
@@ -146,7 +146,7 @@ class SerialDevice : public SimObject
 class SerialNullDevice : public SerialDevice
 {
   public:
-    SerialNullDevice(const SerialNullDeviceParams *p);
+    SerialNullDevice(const SerialNullDeviceParams &p);
 
   public:
     bool dataAvailable() const override { return false; }

@@ -39,8 +39,8 @@
 
 using namespace std;
 
-IntrControl::IntrControl(const Params *p)
-    : SimObject(p), sys(p->sys)
+IntrControl::IntrControl(const Params &p)
+    : SimObject(p), sys(p.sys)
 {}
 
 void
@@ -76,7 +76,7 @@ IntrControl::havePosted(int cpu_id) const
 }
 
 IntrControl *
-IntrControlParams::create()
+IntrControlParams::create() const
 {
-    return new IntrControl(this);
+    return new IntrControl(*this);
 }

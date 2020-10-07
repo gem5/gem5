@@ -97,7 +97,7 @@ class DefaultDecode
 
   public:
     /** DefaultDecode constructor. */
-    DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params);
+    DefaultDecode(O3CPU *_cpu, const DerivO3CPUParams &params);
 
     void startupStage();
 

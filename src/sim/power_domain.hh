@@ -56,7 +56,7 @@
 class PowerDomain : public PowerState
 {
   public:
-    PowerDomain(const PowerDomainParams* p);
+    PowerDomain(const PowerDomainParams &p);
     typedef PowerDomainParams Params;
     ~PowerDomain() override {};
 

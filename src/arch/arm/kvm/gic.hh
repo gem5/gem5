@@ -168,7 +168,7 @@ struct MuxingKvmGicParams;
 class MuxingKvmGic : public GicV2
 {
   public: // SimObject / Serializable / Drainable
-    MuxingKvmGic(const MuxingKvmGicParams *p);
+    MuxingKvmGic(const MuxingKvmGicParams &p);
     ~MuxingKvmGic();
 
     void startup() override;

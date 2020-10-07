@@ -44,7 +44,7 @@
 
 namespace py = pybind11;
 
-PyTrafficGen::PyTrafficGen(const PyTrafficGenParams *p)
+PyTrafficGen::PyTrafficGen(const PyTrafficGenParams &p)
     : BaseTrafficGen(p)
 {
 }
@@ -91,8 +91,8 @@ pybind_init_tracers(py::module &m_native)
 static EmbeddedPyBind _py_tracers("trace", pybind_init_tracers);
 
 PyTrafficGen*
-PyTrafficGenParams::create()
+PyTrafficGenParams::create() const
 {
-    return new PyTrafficGen(this);
+    return new PyTrafficGen(*this);
 }
 

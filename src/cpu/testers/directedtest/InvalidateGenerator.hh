@@ -44,7 +44,7 @@ class InvalidateGenerator : public DirectedGenerator
 {
   public:
     typedef InvalidateGeneratorParams Params;
-    InvalidateGenerator(const Params *p);
+    InvalidateGenerator(const Params &p);
 
     ~InvalidateGenerator();
 

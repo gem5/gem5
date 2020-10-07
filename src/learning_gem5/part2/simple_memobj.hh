@@ -231,7 +231,7 @@ class SimpleMemobj : public SimObject
 
     /** constructor
      */
-    SimpleMemobj(SimpleMemobjParams *params);
+    SimpleMemobj(const SimpleMemobjParams &params);
 
     /**
      * Get a port with a given name and index. This is used at

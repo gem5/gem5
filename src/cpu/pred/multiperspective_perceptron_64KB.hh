@@ -47,7 +47,7 @@ class MultiperspectivePerceptron64KB : public MultiperspectivePerceptron {
     void createSpecs() override;
     public:
     MultiperspectivePerceptron64KB(
-            const MultiperspectivePerceptron64KBParams *p);
+            const MultiperspectivePerceptron64KBParams &p);
 };
 
 #endif // __CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_64KB_HH__

@@ -54,7 +54,7 @@ class AbstractNVM : public SimObject
 {
 
   public:
-    AbstractNVM(const AbstractNVMParams* p): SimObject(p) {};
+    AbstractNVM(const AbstractNVMParams &p): SimObject(p) {};
     virtual ~AbstractNVM() {};
 
     /**

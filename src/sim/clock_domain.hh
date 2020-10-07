@@ -95,7 +95,7 @@ class ClockDomain : public SimObject
   public:
 
     typedef ClockDomainParams Params;
-    ClockDomain(const Params *p, VoltageDomain *voltage_domain);
+    ClockDomain(const Params &p, VoltageDomain *voltage_domain);
 
     /**
      * Get the clock period.
@@ -166,7 +166,7 @@ class SrcClockDomain : public ClockDomain
   public:
 
     typedef SrcClockDomainParams Params;
-    SrcClockDomain(const Params *p);
+    SrcClockDomain(const Params &p);
 
     /**
      * Set new clock value
@@ -275,7 +275,7 @@ class DerivedClockDomain: public ClockDomain
   public:
 
     typedef DerivedClockDomainParams Params;
-    DerivedClockDomain(const Params *p);
+    DerivedClockDomain(const Params &p);
 
     /**
      * Called by the parent clock domain to propagate changes. This

@@ -43,13 +43,13 @@
 #include "debug/CommMonitor.hh"
 #include "sim/stats.hh"
 
-CommMonitor::CommMonitor(Params* params)
+CommMonitor::CommMonitor(const Params &params)
     : SimObject(params),
       memSidePort(name() + "-mem_side_port", *this),
       cpuSidePort(name() + "-cpu_side_port", *this),
       samplePeriodicEvent([this]{ samplePeriodic(); }, name()),
-      samplePeriodTicks(params->sample_period),
-      samplePeriod(params->sample_period / SimClock::Float::s),
+      samplePeriodTicks(params.sample_period),
+      samplePeriod(params.sample_period / SimClock::Float::s),
       stats(this, params)
 {
     DPRINTF(CommMonitor,
@@ -58,9 +58,9 @@ CommMonitor::CommMonitor(Params* params)
 }
 
 CommMonitor*
-CommMonitorParams::create()
+CommMonitorParams::create() const
 {
-    return new CommMonitor(this);
+    return new CommMonitor(*this);
 }
 
 void
@@ -103,16 +103,16 @@ CommMonitor::recvFunctionalSnoop(PacketPtr pkt)
 }
 
 CommMonitor::MonitorStats::MonitorStats(Stats::Group *parent,
-                                        const CommMonitorParams *params)
+                                        const CommMonitorParams &params)
     : Stats::Group(parent),
 
-      disableBurstLengthHists(params->disable_burst_length_hists),
+      disableBurstLengthHists(params.disable_burst_length_hists),
       ADD_STAT(readBurstLengthHist,
                "Histogram of burst lengths of transmitted packets"),
       ADD_STAT(writeBurstLengthHist,
                "Histogram of burst lengths of transmitted packets"),
 
-      disableBandwidthHists(params->disable_bandwidth_hists),
+      disableBandwidthHists(params.disable_bandwidth_hists),
       readBytes(0),
       ADD_STAT(readBandwidthHist,
                "Histogram of read bandwidth per sample period (bytes/s)"),
@@ -126,23 +126,23 @@ CommMonitor::MonitorStats::MonitorStats(Stats::Group *parent,
       ADD_STAT(averageWriteBandwidth, "Average write bandwidth (bytes/s)",
                totalWrittenBytes / simSeconds),
 
-      disableLatencyHists(params->disable_latency_hists),
+      disableLatencyHists(params.disable_latency_hists),
       ADD_STAT(readLatencyHist, "Read request-response latency"),
       ADD_STAT(writeLatencyHist, "Write request-response latency"),
 
-      disableITTDists(params->disable_itt_dists),
+      disableITTDists(params.disable_itt_dists),
       ADD_STAT(ittReadRead, "Read-to-read inter transaction time"),
       ADD_STAT(ittWriteWrite , "Write-to-write inter transaction time"),
       ADD_STAT(ittReqReq, "Request-to-request inter transaction time"),
       timeOfLastRead(0), timeOfLastWrite(0), timeOfLastReq(0),
 
-      disableOutstandingHists(params->disable_outstanding_hists),
+      disableOutstandingHists(params.disable_outstanding_hists),
       ADD_STAT(outstandingReadsHist, "Outstanding read transactions"),
       outstandingReadReqs(0),
       ADD_STAT(outstandingWritesHist, "Outstanding write transactions"),
       outstandingWriteReqs(0),
 
-      disableTransactionHists(params->disable_transaction_hists),
+      disableTransactionHists(params.disable_transaction_hists),
       ADD_STAT(readTransHist,
                "Histogram of read transactions per sample period"),
       readTrans(0),
@@ -150,25 +150,25 @@ CommMonitor::MonitorStats::MonitorStats(Stats::Group *parent,
                "Histogram of write transactions per sample period"),
       writeTrans(0),
 
-      disableAddrDists(params->disable_addr_dists),
-      readAddrMask(params->read_addr_mask),
-      writeAddrMask(params->write_addr_mask),
+      disableAddrDists(params.disable_addr_dists),
+      readAddrMask(params.read_addr_mask),
+      writeAddrMask(params.write_addr_mask),
       ADD_STAT(readAddrDist, "Read address distribution"),
       ADD_STAT(writeAddrDist, "Write address distribution")
 {
     using namespace Stats;
 
     readBurstLengthHist
-        .init(params->burst_length_bins)
+        .init(params.burst_length_bins)
         .flags(disableBurstLengthHists ? nozero : pdf);
 
     writeBurstLengthHist
-        .init(params->burst_length_bins)
+        .init(params.burst_length_bins)
         .flags(disableBurstLengthHists ? nozero : pdf);
 
     // Stats based on received responses
     readBandwidthHist
-        .init(params->bandwidth_bins)
+        .init(params.bandwidth_bins)
         .flags(disableBandwidthHists ? nozero : pdf);
 
     averageReadBandwidth
@@ -179,7 +179,7 @@ CommMonitor::MonitorStats::MonitorStats(Stats::Group *parent,
 
     // Stats based on successfully sent requests
     writeBandwidthHist
-        .init(params->bandwidth_bins)
+        .init(params.bandwidth_bins)
         .flags(disableBandwidthHists ? (pdf | nozero) : pdf);
 
     averageWriteBandwidth
@@ -190,42 +190,42 @@ CommMonitor::MonitorStats::MonitorStats(Stats::Group *parent,
 
 
     readLatencyHist
-        .init(params->latency_bins)
+        .init(params.latency_bins)
         .flags(disableLatencyHists ? nozero : pdf);
 
     writeLatencyHist
-        .init(params->latency_bins)
+        .init(params.latency_bins)
         .flags(disableLatencyHists ? nozero : pdf);
 
     ittReadRead
-        .init(1, params->itt_max_bin, params->itt_max_bin /
-              params->itt_bins)
+        .init(1, params.itt_max_bin, params.itt_max_bin /
+              params.itt_bins)
         .flags(disableITTDists ? nozero : pdf);
 
     ittWriteWrite
-        .init(1, params->itt_max_bin, params->itt_max_bin /
-              params->itt_bins)
+        .init(1, params.itt_max_bin, params.itt_max_bin /
+              params.itt_bins)
         .flags(disableITTDists ? nozero : pdf);
 
     ittReqReq
-        .init(1, params->itt_max_bin, params->itt_max_bin /
-              params->itt_bins)
+        .init(1, params.itt_max_bin, params.itt_max_bin /
+              params.itt_bins)
         .flags(disableITTDists ? nozero : pdf);
 
     outstandingReadsHist
-        .init(params->outstanding_bins)
+        .init(params.outstanding_bins)
         .flags(disableOutstandingHists ? nozero : pdf);
 
     outstandingWritesHist
-        .init(params->outstanding_bins)
+        .init(params.outstanding_bins)
         .flags(disableOutstandingHists ? nozero : pdf);
 
     readTransHist
-        .init(params->transaction_bins)
+        .init(params.transaction_bins)
         .flags(disableTransactionHists ? nozero : pdf);
 
     writeTransHist
-        .init(params->transaction_bins)
+        .init(params.transaction_bins)
         .flags(disableTransactionHists ? nozero : pdf);
 
     readAddrDist

@@ -117,16 +117,16 @@ FuncUnit::isPipelined(OpClass capability)
 //  The operation-class description object
 //
 OpDesc *
-OpDescParams::create()
+OpDescParams::create() const
 {
-    return new OpDesc(this);
+    return new OpDesc(*this);
 }
 
 //
 //  The FuDesc object
 //
 FUDesc *
-FUDescParams::create()
+FUDescParams::create() const
 {
-    return new FUDesc(this);
+    return new FUDesc(*this);
 }

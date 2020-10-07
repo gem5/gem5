@@ -53,12 +53,12 @@
 
 using namespace ArmISA;
 
-TableWalker::TableWalker(const Params *p)
+TableWalker::TableWalker(const Params &p)
     : ClockedObject(p),
       stage2Mmu(NULL), port(NULL), requestorId(Request::invldRequestorId),
-      isStage2(p->is_stage2), tlb(NULL),
+      isStage2(p.is_stage2), tlb(NULL),
       currState(NULL), pending(false),
-      numSquashable(p->num_squash_per_cycle),
+      numSquashable(p.num_squash_per_cycle),
       stats(this),
       pendingReqs(0),
       pendingChangeTick(curTick()),
@@ -76,7 +76,7 @@ TableWalker::TableWalker(const Params *p)
 
     // Cache system-level properties
     if (FullSystem) {
-        ArmSystem *armSys = dynamic_cast<ArmSystem *>(p->sys);
+        ArmSystem *armSys = dynamic_cast<ArmSystem *>(p.sys);
         assert(armSys);
         haveSecurity = armSys->haveSecurity();
         _haveLPAE = armSys->haveLPAE();
@@ -178,7 +178,7 @@ TableWalker::drain()
 void
 TableWalker::drainResume()
 {
-    if (params()->sys->isTimingMode() && currState) {
+    if (params().sys->isTimingMode() && currState) {
         delete currState;
         currState = NULL;
         pendingChange();
@@ -2252,9 +2252,9 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool longDescriptor)
 }
 
 ArmISA::TableWalker *
-ArmTableWalkerParams::create()
+ArmTableWalkerParams::create() const
 {
-    return new ArmISA::TableWalker(this);
+    return new ArmISA::TableWalker(*this);
 }
 
 LookupLevel

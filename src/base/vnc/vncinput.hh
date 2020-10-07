@@ -152,7 +152,7 @@ class VncInput : public SimObject
     };
 
     typedef VncInputParams Params;
-    VncInput(const Params *p);
+    VncInput(const Params &p);
 
     /** Set the address of the frame buffer we are going to show.
      * To avoid copying, just have the display controller

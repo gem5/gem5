@@ -224,7 +224,7 @@ class ArmSemihosting : public SimObject
         SYS_GEM5_PSEUDO_OP = 0x100
     };
 
-    ArmSemihosting(const ArmSemihostingParams *p);
+    ArmSemihosting(const ArmSemihostingParams &p);
 
     /** Perform an Arm Semihosting call from aarch64 code. */
     bool call64(ThreadContext *tc, bool gem5_ops);

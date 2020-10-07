@@ -51,10 +51,10 @@ using namespace FreeBSD;
 namespace ArmISA
 {
 
-FsFreebsd::FsFreebsd(Params *p) : ArmISA::FsWorkload(p),
-    enableContextSwitchStatsDump(p->enable_context_switch_stats_dump)
+FsFreebsd::FsFreebsd(const Params &p) : ArmISA::FsWorkload(p),
+    enableContextSwitchStatsDump(p.enable_context_switch_stats_dump)
 {
-    if (p->panic_on_panic) {
+    if (p.panic_on_panic) {
         kernelPanic = addKernelFuncEventOrPanic<PanicPCEvent>(
             "panic", "Kernel panic in simulated kernel");
     } else {
@@ -63,7 +63,7 @@ FsFreebsd::FsFreebsd(Params *p) : ArmISA::FsWorkload(p),
 #endif
     }
 
-    if (p->panic_on_oops) {
+    if (p.panic_on_oops) {
         kernelOops = addKernelFuncEventOrPanic<PanicPCEvent>(
             "oops_exit", "Kernel oops in guest");
     }
@@ -80,7 +80,7 @@ FsFreebsd::initState()
     // Load symbols at physical address, we might not want
     // to do this permanently, for but early bootup work
     // it is helpful.
-    if (params()->early_kernel_symbols) {
+    if (params().early_kernel_symbols) {
         auto phys_globals = kernelObj->symtab().globals()->mask(_loadAddrMask);
         kernelSymtab.insert(*phys_globals);
         Loader::debugSymbolTable.insert(*phys_globals);
@@ -90,33 +90,33 @@ FsFreebsd::initState()
     // device trees.
     fatal_if(kernelSymtab.find("fdt_get_range") == kernelSymtab.end(),
              "Kernel must have fdt support.");
-    fatal_if(params()->dtb_filename == "", "dtb file is not specified.");
+    fatal_if(params().dtb_filename == "", "dtb file is not specified.");
 
     // Kernel supports flattened device tree and dtb file specified.
     // Using Device Tree Blob to describe system configuration.
-    inform("Loading DTB file: %s at address %#x\n", params()->dtb_filename,
-            params()->atags_addr + _loadAddrOffset);
+    inform("Loading DTB file: %s at address %#x\n", params().dtb_filename,
+            params().atags_addr + _loadAddrOffset);
 
-    auto *dtb_file = new ::Loader::DtbFile(params()->dtb_filename);
+    auto *dtb_file = new ::Loader::DtbFile(params().dtb_filename);
 
     warn_if(!dtb_file->addBootCmdLine(commandLine.c_str(), commandLine.size()),
             "Couldn't append bootargs to DTB file: %s",
-            params()->dtb_filename);
+            params().dtb_filename);
 
     Addr ra = dtb_file->findReleaseAddr();
     if (ra)
         bootReleaseAddr = ra & ~ULL(0x7F);
 
     dtb_file->buildImage().
-        offset(params()->atags_addr + _loadAddrOffset).
+        offset(params().atags_addr + _loadAddrOffset).
         write(system->physProxy);
     delete dtb_file;
 
     // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
     for (auto *tc: system->threads) {
         tc->setIntReg(0, 0);
-        tc->setIntReg(1, params()->machine_type);
-        tc->setIntReg(2, params()->atags_addr + _loadAddrOffset);
+        tc->setIntReg(1, params().machine_type);
+        tc->setIntReg(2, params().atags_addr + _loadAddrOffset);
     }
 }
 
@@ -128,7 +128,7 @@ FsFreebsd::~FsFreebsd()
 } // namespace ArmISA
 
 ArmISA::FsFreebsd *
-ArmFsFreebsdParams::create()
+ArmFsFreebsdParams::create() const
 {
-    return new ArmISA::FsFreebsd(this);
+    return new ArmISA::FsFreebsd(*this);
 }

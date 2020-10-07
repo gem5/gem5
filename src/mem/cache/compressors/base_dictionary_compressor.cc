@@ -36,8 +36,8 @@
 
 namespace Compressor {
 
-BaseDictionaryCompressor::BaseDictionaryCompressor(const Params *p)
-  : Base(p), dictionarySize(p->dictionary_size),
+BaseDictionaryCompressor::BaseDictionaryCompressor(const Params &p)
+  : Base(p), dictionarySize(p.dictionary_size),
     numEntries(0), dictionaryStats(stats, *this)
 {
 }

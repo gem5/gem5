@@ -90,7 +90,7 @@ class HDLcdPixelPump;
 class HDLcd: public AmbaDmaDevice
 {
   public:
-    HDLcd(const HDLcdParams *p);
+    HDLcd(const HDLcdParams &p);
     ~HDLcd();
 
     void regStats() override;

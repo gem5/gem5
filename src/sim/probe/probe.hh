@@ -102,7 +102,7 @@ class ProbeListenerObject : public SimObject
     std::vector<ProbeListener *> listeners;
 
   public:
-    ProbeListenerObject(const ProbeListenerObjectParams *params);
+    ProbeListenerObject(const ProbeListenerObjectParams &params);
     virtual ~ProbeListenerObject();
     ProbeManager* getProbeManager() { return manager; }
 };

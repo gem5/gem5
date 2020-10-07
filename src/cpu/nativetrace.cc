@@ -37,7 +37,7 @@ using namespace std;
 
 namespace Trace {
 
-NativeTrace::NativeTrace(const Params *p)
+NativeTrace::NativeTrace(const Params &p)
     : ExeTracer(p)
 {
     if (ListenSocket::allDisabled())

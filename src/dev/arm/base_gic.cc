@@ -44,11 +44,11 @@
 #include "params/ArmSPI.hh"
 #include "params/BaseGic.hh"
 
-BaseGic::BaseGic(const Params *p)
+BaseGic::BaseGic(const Params &p)
         : PioDevice(p),
-          platform(p->platform)
+          platform(p.platform)
 {
-    RealView *const rv(dynamic_cast<RealView*>(p->platform));
+    RealView *const rv = dynamic_cast<RealView*>(p.platform);
     // The platform keeps track of the GIC that is hooked up to the
     // system. Due to quirks in gem5's configuration system, the
     // platform can't take a GIC as parameter. Instead, we need to
@@ -69,19 +69,19 @@ BaseGic::init()
     getSystem()->setGIC(this);
 }
 
-const BaseGic::Params *
+const BaseGic::Params &
 BaseGic::params() const
 {
-    return dynamic_cast<const Params *>(_params);
+    return dynamic_cast<const Params &>(_params);
 }
 
-ArmInterruptPinGen::ArmInterruptPinGen(const ArmInterruptPinParams *p)
+ArmInterruptPinGen::ArmInterruptPinGen(const ArmInterruptPinParams &p)
   : SimObject(p)
 {
 }
 
-ArmSPIGen::ArmSPIGen(const ArmSPIParams *p)
-    : ArmInterruptPinGen(p), pin(new ArmSPI(p->platform, p->num))
+ArmSPIGen::ArmSPIGen(const ArmSPIParams &p)
+    : ArmInterruptPinGen(p), pin(new ArmSPI(p.platform, p.num))
 {
 }
 
@@ -91,7 +91,7 @@ ArmSPIGen::get(ThreadContext* tc)
     return pin;
 }
 
-ArmPPIGen::ArmPPIGen(const ArmPPIParams *p)
+ArmPPIGen::ArmPPIGen(const ArmPPIParams &p)
     : ArmInterruptPinGen(p)
 {
 }
@@ -109,8 +109,8 @@ ArmPPIGen::get(ThreadContext* tc)
         return pin_it->second;
     } else {
         // Generate PPI Pin
-        auto p = static_cast<const ArmPPIParams *>(_params);
-        ArmPPI *pin = new ArmPPI(p->platform, tc, p->num);
+        auto &p = static_cast<const ArmPPIParams &>(_params);
+        ArmPPI *pin = new ArmPPI(p.platform, tc, p.num);
 
         pins.insert({cid, pin});
 
@@ -196,13 +196,13 @@ ArmPPI::clear()
 }
 
 ArmSPIGen *
-ArmSPIParams::create()
+ArmSPIParams::create() const
 {
-    return new ArmSPIGen(this);
+    return new ArmSPIGen(*this);
 }
 
 ArmPPIGen *
-ArmPPIParams::create()
+ArmPPIParams::create() const
 {
-    return new ArmPPIGen(this);
+    return new ArmPPIGen(*this);
 }

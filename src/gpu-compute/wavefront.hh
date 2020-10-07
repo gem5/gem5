@@ -273,7 +273,7 @@ class Wavefront : public SimObject
     uint8_t *context;
 
     typedef WavefrontParams Params;
-    Wavefront(const Params *p);
+    Wavefront(const Params &p);
     ~Wavefront();
     virtual void init();
 

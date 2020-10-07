@@ -36,8 +36,8 @@
 
 namespace ReplacementPolicy {
 
-BIP::BIP(const Params *p)
-  : LRU(p), btp(p->btp)
+BIP::BIP(const Params &p)
+  : LRU(p), btp(p.btp)
 {
 }
 
@@ -59,7 +59,7 @@ BIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 } // namespace ReplacementPolicy
 
 ReplacementPolicy::BIP*
-BIPRPParams::create()
+BIPRPParams::create() const
 {
-    return new ReplacementPolicy::BIP(this);
+    return new ReplacementPolicy::BIP(*this);
 }

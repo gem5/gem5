@@ -52,13 +52,13 @@
 using namespace std;
 
 template <class Impl>
-ROB<Impl>::ROB(O3CPU *_cpu, DerivO3CPUParams *params)
-    : robPolicy(params->smtROBPolicy),
+ROB<Impl>::ROB(O3CPU *_cpu, const DerivO3CPUParams &params)
+    : robPolicy(params.smtROBPolicy),
       cpu(_cpu),
-      numEntries(params->numROBEntries),
-      squashWidth(params->squashWidth),
+      numEntries(params.numROBEntries),
+      squashWidth(params.squashWidth),
       numInstsInROB(0),
-      numThreads(params->numThreads),
+      numThreads(params.numThreads),
       stats(_cpu)
 {
     //Figure out rob policy
@@ -82,7 +82,7 @@ ROB<Impl>::ROB(O3CPU *_cpu, DerivO3CPUParams *params)
     } else if (robPolicy == SMTQueuePolicy::Threshold) {
         DPRINTF(Fetch, "ROB sharing policy set to Threshold\n");
 
-        int threshold =  params->smtROBThreshold;;
+        int threshold =  params.smtROBThreshold;;
 
         //Divide up by threshold amount
         for (ThreadID tid = 0; tid < numThreads; tid++) {

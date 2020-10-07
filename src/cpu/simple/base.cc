@@ -80,10 +80,10 @@
 using namespace std;
 using namespace TheISA;
 
-BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
+BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)
     : BaseCPU(p),
       curThread(0),
-      branchPred(p->branchPred),
+      branchPred(p.branchPred),
       traceData(NULL),
       inst(),
       _status(Idle)
@@ -92,24 +92,24 @@ BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
 
     for (unsigned i = 0; i < numThreads; i++) {
         if (FullSystem) {
-            thread = new SimpleThread(this, i, p->system,
-                                      p->itb, p->dtb, p->isa[i]);
+            thread = new SimpleThread(this, i, p.system,
+                                      p.itb, p.dtb, p.isa[i]);
         } else {
-            thread = new SimpleThread(this, i, p->system, p->workload[i],
-                                      p->itb, p->dtb, p->isa[i]);
+            thread = new SimpleThread(this, i, p.system, p.workload[i],
+                                      p.itb, p.dtb, p.isa[i]);
         }
         threadInfo.push_back(new SimpleExecContext(this, thread));
         ThreadContext *tc = thread->getTC();
         threadContexts.push_back(tc);
     }
 
-    if (p->checker) {
+    if (p.checker) {
         if (numThreads != 1)
             fatal("Checker currently does not support SMT");
 
-        BaseCPU *temp_checker = p->checker;
+        BaseCPU *temp_checker = p.checker;
         checker = dynamic_cast<CheckerCPU *>(temp_checker);
-        checker->setSystem(p->system);
+        checker->setSystem(p.system);
         // Manipulate thread context
         ThreadContext *cpu_tc = threadContexts[0];
         threadContexts[0] = new CheckerThreadContext<ThreadContext>(cpu_tc, this->checker);

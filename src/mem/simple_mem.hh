@@ -173,7 +173,7 @@ class SimpleMemory : public AbstractMemory
 
   public:
 
-    SimpleMemory(const SimpleMemoryParams *p);
+    SimpleMemory(const SimpleMemoryParams &p);
 
     DrainState drain() override;
 

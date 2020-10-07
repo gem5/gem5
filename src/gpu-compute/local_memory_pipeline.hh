@@ -55,7 +55,7 @@ class Wavefront;
 class LocalMemPipeline
 {
   public:
-    LocalMemPipeline(const ComputeUnitParams *p, ComputeUnit &cu);
+    LocalMemPipeline(const ComputeUnitParams &p, ComputeUnit &cu);
     void exec();
     std::queue<GPUDynInstPtr> &getLMRespFIFO() { return lmReturnedRequests; }
 

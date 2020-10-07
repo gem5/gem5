@@ -59,15 +59,15 @@
 #include "sim/process.hh"
 #include "sim/sim_exit.hh"
 
-ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p),
-    numVectorGlobalMemUnits(p->num_global_mem_pipes),
-    numVectorSharedMemUnits(p->num_shared_mem_pipes),
-    numScalarMemUnits(p->num_scalar_mem_pipes),
-    numVectorALUs(p->num_SIMDs),
-    numScalarALUs(p->num_scalar_cores),
-    vrfToCoalescerBusWidth(p->vrf_to_coalescer_bus_width),
-    coalescerToVrfBusWidth(p->coalescer_to_vrf_bus_width),
-    registerManager(p->register_manager),
+ComputeUnit::ComputeUnit(const Params &p) : ClockedObject(p),
+    numVectorGlobalMemUnits(p.num_global_mem_pipes),
+    numVectorSharedMemUnits(p.num_shared_mem_pipes),
+    numScalarMemUnits(p.num_scalar_mem_pipes),
+    numVectorALUs(p.num_SIMDs),
+    numScalarALUs(p.num_scalar_cores),
+    vrfToCoalescerBusWidth(p.vrf_to_coalescer_bus_width),
+    coalescerToVrfBusWidth(p.coalescer_to_vrf_bus_width),
+    registerManager(p.register_manager),
     fetchStage(p, *this),
     scoreboardCheckStage(p, *this, scoreboardCheckToSchedule),
     scheduleStage(p, *this, scoreboardCheckToSchedule, scheduleToExecute),
@@ -77,34 +77,34 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p),
     scalarMemoryPipe(p, *this),
     tickEvent([this]{ exec(); }, "Compute unit tick event",
           false, Event::CPU_Tick_Pri),
-    cu_id(p->cu_id),
-    vrf(p->vector_register_file), srf(p->scalar_register_file),
-    simdWidth(p->simd_width),
-    spBypassPipeLength(p->spbypass_pipe_length),
-    dpBypassPipeLength(p->dpbypass_pipe_length),
-    scalarPipeStages(p->scalar_pipe_length),
-    operandNetworkLength(p->operand_network_length),
-    issuePeriod(p->issue_period),
-    vrf_gm_bus_latency(p->vrf_gm_bus_latency),
-    srf_scm_bus_latency(p->srf_scm_bus_latency),
-    vrf_lm_bus_latency(p->vrf_lm_bus_latency),
-    perLaneTLB(p->perLaneTLB), prefetchDepth(p->prefetch_depth),
-    prefetchStride(p->prefetch_stride), prefetchType(p->prefetch_prev_type),
-    debugSegFault(p->debugSegFault),
-    functionalTLB(p->functionalTLB), localMemBarrier(p->localMemBarrier),
-    countPages(p->countPages),
-    req_tick_latency(p->mem_req_latency * p->clk_domain->clockPeriod()),
-    resp_tick_latency(p->mem_resp_latency * p->clk_domain->clockPeriod()),
-    _requestorId(p->system->getRequestorId(this, "ComputeUnit")),
-    lds(*p->localDataStore), gmTokenPort(name() + ".gmTokenPort", this),
+    cu_id(p.cu_id),
+    vrf(p.vector_register_file), srf(p.scalar_register_file),
+    simdWidth(p.simd_width),
+    spBypassPipeLength(p.spbypass_pipe_length),
+    dpBypassPipeLength(p.dpbypass_pipe_length),
+    scalarPipeStages(p.scalar_pipe_length),
+    operandNetworkLength(p.operand_network_length),
+    issuePeriod(p.issue_period),
+    vrf_gm_bus_latency(p.vrf_gm_bus_latency),
+    srf_scm_bus_latency(p.srf_scm_bus_latency),
+    vrf_lm_bus_latency(p.vrf_lm_bus_latency),
+    perLaneTLB(p.perLaneTLB), prefetchDepth(p.prefetch_depth),
+    prefetchStride(p.prefetch_stride), prefetchType(p.prefetch_prev_type),
+    debugSegFault(p.debugSegFault),
+    functionalTLB(p.functionalTLB), localMemBarrier(p.localMemBarrier),
+    countPages(p.countPages),
+    req_tick_latency(p.mem_req_latency * p.clk_domain->clockPeriod()),
+    resp_tick_latency(p.mem_resp_latency * p.clk_domain->clockPeriod()),
+    _requestorId(p.system->getRequestorId(this, "ComputeUnit")),
+    lds(*p.localDataStore), gmTokenPort(name() + ".gmTokenPort", this),
     ldsPort(csprintf("%s-port", name()), this),
     scalarDataPort(csprintf("%s-port", name()), this),
     scalarDTLBPort(csprintf("%s-port", name()), this),
     sqcPort(csprintf("%s-port", name()), this),
     sqcTLBPort(csprintf("%s-port", name()), this),
-    _cacheLineSize(p->system->cacheLineSize()),
-    _numBarrierSlots(p->num_barrier_slots),
-    globalSeqNum(0), wavefrontSize(p->wf_size),
+    _cacheLineSize(p.system->cacheLineSize()),
+    _numBarrierSlots(p.num_barrier_slots),
+    globalSeqNum(0), wavefrontSize(p.wf_size),
     scoreboardCheckToSchedule(p),
     scheduleToExecute(p)
 {
@@ -117,8 +117,8 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p),
      * to_long() or to_ullong() so we can have wavefrontSize greater than 64b,
      * however until that is done this assert is required.
      */
-    fatal_if(p->wf_size > std::numeric_limits<unsigned long long>::digits ||
-             p->wf_size <= 0,
+    fatal_if(p.wf_size > std::numeric_limits<unsigned long long>::digits ||
+             p.wf_size <= 0,
              "WF size is larger than the host can support");
     fatal_if(!isPowerOf2(wavefrontSize),
              "Wavefront size should be a power of 2");
@@ -132,23 +132,23 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p),
                                / coalescerToVrfBusWidth;
 
     // Initialization: all WF slots are assumed STOPPED
-    idleWfs = p->n_wf * numVectorALUs;
+    idleWfs = p.n_wf * numVectorALUs;
     lastVaddrWF.resize(numVectorALUs);
     wfList.resize(numVectorALUs);
 
-    wfBarrierSlots.resize(p->num_barrier_slots, WFBarrier());
+    wfBarrierSlots.resize(p.num_barrier_slots, WFBarrier());
 
-    for (int i = 0; i < p->num_barrier_slots; ++i) {
+    for (int i = 0; i < p.num_barrier_slots; ++i) {
         freeBarrierIds.insert(i);
     }
 
     for (int j = 0; j < numVectorALUs; ++j) {
-        lastVaddrWF[j].resize(p->n_wf);
+        lastVaddrWF[j].resize(p.n_wf);
 
-        for (int i = 0; i < p->n_wf; ++i) {
+        for (int i = 0; i < p.n_wf; ++i) {
             lastVaddrWF[j][i].resize(wfSize());
 
-            wfList[j].push_back(p->wavefronts[j * p->n_wf + i]);
+            wfList[j].push_back(p.wavefronts[j * p.n_wf + i]);
             wfList[j][i]->setParent(this);
 
             for (int k = 0; k < wfSize(); ++k) {
@@ -167,25 +167,25 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p),
 
     lds.setParent(this);
 
-    if (p->execPolicy == "OLDEST-FIRST") {
+    if (p.execPolicy == "OLDEST-FIRST") {
         exec_policy = EXEC_POLICY::OLDEST;
-    } else if (p->execPolicy == "ROUND-ROBIN") {
+    } else if (p.execPolicy == "ROUND-ROBIN") {
         exec_policy = EXEC_POLICY::RR;
     } else {
         fatal("Invalid WF execution policy (CU)\n");
     }
 
-    for (int i = 0; i < p->port_memory_port_connection_count; ++i) {
+    for (int i = 0; i < p.port_memory_port_connection_count; ++i) {
         memPort.emplace_back(csprintf("%s-port%d", name(), i), this, i);
     }
 
-    for (int i = 0; i < p->port_translation_port_connection_count; ++i) {
+    for (int i = 0; i < p.port_translation_port_connection_count; ++i) {
         tlbPort.emplace_back(csprintf("%s-port%d", name(), i), this, i);
     }
 
     // Setup tokens for response ports. The number of tokens in memPortTokens
     // is the total token count for the entire vector port (i.e., this CU).
-    memPortTokens = new TokenManager(p->max_cu_tokens);
+    memPortTokens = new TokenManager(p.max_cu_tokens);
 
     registerExitCallback([this]() { exitCallback(); });
 
@@ -1381,9 +1381,9 @@ ComputeUnit::DataPort::processMemRespEvent(PacketPtr pkt)
 }
 
 ComputeUnit*
-ComputeUnitParams::create()
+ComputeUnitParams::create() const
 {
-    return new ComputeUnit(this);
+    return new ComputeUnit(*this);
 }
 
 bool

@@ -145,7 +145,7 @@ class FPCD : public DictionaryCompressor<uint32_t>
 
   public:
     typedef FPCDParams Params;
-    FPCD(const Params *p);
+    FPCD(const Params &p);
     ~FPCD() = default;
 };
 

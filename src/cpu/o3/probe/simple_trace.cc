@@ -65,7 +65,7 @@ void SimpleTrace::regProbeListeners()
 }
 
 SimpleTrace*
-SimpleTraceParams::create()
+SimpleTraceParams::create() const
 {
-    return new SimpleTrace(this);
+    return new SimpleTrace(*this);
 }

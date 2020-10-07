@@ -123,20 +123,20 @@ CPUProgressEvent::description() const
     return "CPU Progress";
 }
 
-BaseCPU::BaseCPU(Params *p, bool is_checker)
-    : ClockedObject(p), instCnt(0), _cpuId(p->cpu_id), _socketId(p->socket_id),
-      _instRequestorId(p->system->getRequestorId(this, "inst")),
-      _dataRequestorId(p->system->getRequestorId(this, "data")),
+BaseCPU::BaseCPU(const Params &p, bool is_checker)
+    : ClockedObject(p), instCnt(0), _cpuId(p.cpu_id), _socketId(p.socket_id),
+      _instRequestorId(p.system->getRequestorId(this, "inst")),
+      _dataRequestorId(p.system->getRequestorId(this, "data")),
       _taskId(ContextSwitchTaskId::Unknown), _pid(invldPid),
-      _switchedOut(p->switched_out), _cacheLineSize(p->system->cacheLineSize()),
-      interrupts(p->interrupts), numThreads(p->numThreads), system(p->system),
+      _switchedOut(p.switched_out), _cacheLineSize(p.system->cacheLineSize()),
+      interrupts(p.interrupts), numThreads(p.numThreads), system(p.system),
       previousCycle(0), previousState(CPU_STATE_SLEEP),
       functionTraceStream(nullptr), currentFunctionStart(0),
       currentFunctionEnd(0), functionEntryTick(0),
-      addressMonitor(p->numThreads),
-      syscallRetryLatency(p->syscallRetryLatency),
-      pwrGatingLatency(p->pwr_gating_latency),
-      powerGatingOnIdle(p->power_gating_on_idle),
+      addressMonitor(p.numThreads),
+      syscallRetryLatency(p.syscallRetryLatency),
+      pwrGatingLatency(p.pwr_gating_latency),
+      powerGatingOnIdle(p.power_gating_on_idle),
       enterPwrGatingEvent([this]{ enterPwrGating(); }, name())
 {
     // if Python did not provide a valid ID, do it here
@@ -154,27 +154,27 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
         maxThreadsPerCPU = numThreads;
 
     functionTracingEnabled = false;
-    if (p->function_trace) {
+    if (p.function_trace) {
         const string fname = csprintf("ftrace.%s", name());
         functionTraceStream = simout.findOrCreate(fname)->stream();
 
         currentFunctionStart = currentFunctionEnd = 0;
-        functionEntryTick = p->function_trace_start;
+        functionEntryTick = p.function_trace_start;
 
-        if (p->function_trace_start == 0) {
+        if (p.function_trace_start == 0) {
             functionTracingEnabled = true;
         } else {
             Event *event = new EventFunctionWrapper(
                 [this]{ enableFunctionTrace(); }, name(), true);
-            schedule(event, p->function_trace_start);
+            schedule(event, p.function_trace_start);
         }
     }
 
-    tracer = params()->tracer;
+    tracer = params().tracer;
 
-    if (params()->isa.size() != numThreads) {
+    if (params().isa.size() != numThreads) {
         fatal("Number of ISAs (%i) assigned to the CPU does not equal number "
-              "of threads (%i).\n", params()->isa.size(), numThreads);
+              "of threads (%i).\n", params().isa.size(), numThreads);
     }
 }
 
@@ -271,23 +271,23 @@ BaseCPU::init()
 {
     // Set up instruction-count-based termination events, if any. This needs
     // to happen after threadContexts has been constructed.
-    if (params()->max_insts_any_thread != 0) {
+    if (params().max_insts_any_thread != 0) {
         const char *cause = "a thread reached the max instruction count";
         for (ThreadID tid = 0; tid < numThreads; ++tid)
-            scheduleInstStop(tid, params()->max_insts_any_thread, cause);
+            scheduleInstStop(tid, params().max_insts_any_thread, cause);
     }
 
     // Set up instruction-count-based termination events for SimPoints
     // Typically, there are more than one action points.
     // Simulation.py is responsible to take the necessary actions upon
     // exitting the simulation loop.
-    if (!params()->simpoint_start_insts.empty()) {
+    if (!params().simpoint_start_insts.empty()) {
         const char *cause = "simpoint starting point found";
-        for (size_t i = 0; i < params()->simpoint_start_insts.size(); ++i)
-            scheduleInstStop(0, params()->simpoint_start_insts[i], cause);
+        for (size_t i = 0; i < params().simpoint_start_insts.size(); ++i)
+            scheduleInstStop(0, params().simpoint_start_insts[i], cause);
     }
 
-    if (params()->max_insts_all_threads != 0) {
+    if (params().max_insts_all_threads != 0) {
         const char *cause = "all threads reached the max instruction count";
 
         // allocate & initialize shared downcounter: each event will
@@ -298,11 +298,11 @@ BaseCPU::init()
         for (ThreadID tid = 0; tid < numThreads; ++tid) {
             Event *event = new CountedExitEvent(cause, *counter);
             threadContexts[tid]->scheduleInstCountEvent(
-                    event, params()->max_insts_all_threads);
+                    event, params().max_insts_all_threads);
         }
     }
 
-    if (!params()->switched_out) {
+    if (!params().switched_out) {
         registerThreadContexts();
 
         verifyMemoryMode();
@@ -312,8 +312,8 @@ BaseCPU::init()
 void
 BaseCPU::startup()
 {
-    if (params()->progress_interval) {
-        new CPUProgressEvent(this, params()->progress_interval);
+    if (params().progress_interval) {
+        new CPUProgressEvent(this, params().progress_interval);
     }
 
     if (_switchedOut)
@@ -761,7 +761,7 @@ BaseCPU::traceFunctionsInternal(Addr pc)
 bool
 BaseCPU::waitForRemoteGDB() const
 {
-    return params()->wait_for_remote_gdb;
+    return params().wait_for_remote_gdb;
 }
 
 

@@ -41,18 +41,18 @@
 
 namespace QoS {
 
-MemCtrl::MemCtrl(const QoSMemCtrlParams * p)
+MemCtrl::MemCtrl(const QoSMemCtrlParams &p)
   : ClockedObject(p),
-    policy(p->qos_policy),
-    turnPolicy(p->qos_turnaround_policy),
+    policy(p.qos_policy),
+    turnPolicy(p.qos_turnaround_policy),
     queuePolicy(QueuePolicy::create(p)),
-    _numPriorities(p->qos_priorities),
-    qosPriorityEscalation(p->qos_priority_escalation),
-    qosSyncroScheduler(p->qos_syncro_scheduler),
+    _numPriorities(p.qos_priorities),
+    qosPriorityEscalation(p.qos_priority_escalation),
+    qosSyncroScheduler(p.qos_syncro_scheduler),
     totalReadQueueSize(0), totalWriteQueueSize(0),
     busState(READ), busStateNext(READ),
     stats(*this),
-    _system(p->system)
+    _system(p.system)
 {
     // Set the priority policy
     if (policy) {

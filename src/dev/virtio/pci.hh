@@ -48,7 +48,7 @@ class PciVirtIO : public PciDevice
 {
   public:
     typedef PciVirtIOParams Params;
-    PciVirtIO(const Params *params);
+    PciVirtIO(const Params &params);
     virtual ~PciVirtIO();
 
     Tick read(PacketPtr pkt);

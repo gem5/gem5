@@ -138,7 +138,7 @@ class DefaultCommit
 
   public:
     /** Construct a DefaultCommit with the given parameters. */
-    DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params);
+    DefaultCommit(O3CPU *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of the DefaultCommit. */
     std::string name() const;

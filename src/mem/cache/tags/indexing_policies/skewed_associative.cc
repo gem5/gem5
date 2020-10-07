@@ -38,7 +38,7 @@
 #include "base/logging.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 
-SkewedAssociative::SkewedAssociative(const Params *p)
+SkewedAssociative::SkewedAssociative(const Params &p)
     : BaseIndexingPolicy(p), msbShift(floorLog2(numSets) - 1)
 {
     if (assoc > NUM_SKEWING_FUNCTIONS) {
@@ -218,7 +218,7 @@ SkewedAssociative::getPossibleEntries(const Addr addr) const
 }
 
 SkewedAssociative *
-SkewedAssociativeParams::create()
+SkewedAssociativeParams::create() const
 {
-    return new SkewedAssociative(this);
+    return new SkewedAssociative(*this);
 }

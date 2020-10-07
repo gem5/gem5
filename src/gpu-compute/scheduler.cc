@@ -37,11 +37,11 @@
 #include "gpu-compute/rr_scheduling_policy.hh"
 #include "params/ComputeUnit.hh"
 
-Scheduler::Scheduler(const ComputeUnitParams *p)
+Scheduler::Scheduler(const ComputeUnitParams &p)
 {
-    if (p->execPolicy == "OLDEST-FIRST") {
+    if (p.execPolicy == "OLDEST-FIRST") {
         schedPolicy = new OFSchedulingPolicy();
-    } else if (p->execPolicy == "ROUND-ROBIN") {
+    } else if (p.execPolicy == "ROUND-ROBIN") {
         schedPolicy = new RRSchedulingPolicy();
     } else {
         fatal("Unimplemented scheduling policy.\n");

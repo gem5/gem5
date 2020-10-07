@@ -93,7 +93,7 @@ namespace ArmISA {
  */
 class PMU : public SimObject, public ArmISA::BaseISADevice {
   public:
-    PMU(const ArmPMUParams *p);
+    PMU(const ArmPMUParams &p);
     ~PMU();
 
     void addEventProbe(unsigned int id, SimObject *obj, const char *name);

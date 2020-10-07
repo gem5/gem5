@@ -90,7 +90,8 @@ Process::Loader::Loader()
 }
 
 Process *
-Process::tryLoaders(ProcessParams *params, ::Loader::ObjectFile *obj_file)
+Process::tryLoaders(const ProcessParams &params,
+                    ::Loader::ObjectFile *obj_file)
 {
     for (auto &loader: process_loaders()) {
         Process *p = loader->load(params, obj_file);
@@ -102,31 +103,31 @@ Process::tryLoaders(ProcessParams *params, ::Loader::ObjectFile *obj_file)
 }
 
 static std::string
-normalize(std::string& directory)
+normalize(const std::string& directory)
 {
     if (directory.back() != '/')
-        directory += '/';
+        return directory + '/';
     return directory;
 }
 
-Process::Process(ProcessParams *params, EmulationPageTable *pTable,
+Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
                  ::Loader::ObjectFile *obj_file)
-    : SimObject(params), system(params->system),
-      useArchPT(params->useArchPT),
-      kvmInSE(params->kvmInSE),
+    : SimObject(params), system(params.system),
+      useArchPT(params.useArchPT),
+      kvmInSE(params.kvmInSE),
       useForClone(false),
       pTable(pTable),
       objFile(obj_file),
-      argv(params->cmd), envp(params->env),
-      executable(params->executable),
-      tgtCwd(normalize(params->cwd)),
+      argv(params.cmd), envp(params.env),
+      executable(params.executable == "" ? params.cmd[0] : params.executable),
+      tgtCwd(normalize(params.cwd)),
       hostCwd(checkPathRedirect(tgtCwd)),
-      release(params->release),
-      _uid(params->uid), _euid(params->euid),
-      _gid(params->gid), _egid(params->egid),
-      _pid(params->pid), _ppid(params->ppid),
-      _pgid(params->pgid), drivers(params->drivers),
-      fds(make_shared<FDArray>(params->input, params->output, params->errout)),
+      release(params.release),
+      _uid(params.uid), _euid(params.euid),
+      _gid(params.gid), _egid(params.egid),
+      _pid(params.pid), _ppid(params.ppid),
+      _pgid(params.pgid), drivers(params.drivers),
+      fds(make_shared<FDArray>(params.input, params.output, params.errout)),
       childClearTID(0)
 {
     if (_pid >= System::maxPID)
@@ -148,7 +149,7 @@ Process::Process(ProcessParams *params, EmulationPageTable *pTable,
      * with a new, equivalent value. If CLONE_THREAD is specified, patch
      * the tgid value with the old process' value.
      */
-    _tgid = params->pid;
+    _tgid = params.pid;
 
     exitGroup = new bool();
     sigchld = new bool();
@@ -508,18 +509,16 @@ Process::absolutePath(const std::string &filename, bool host_filesystem)
 }
 
 Process *
-ProcessParams::create()
+ProcessParams::create() const
 {
     // If not specified, set the executable parameter equal to the
     // simulated system's zeroth command line parameter
-    if (executable == "") {
-        executable = cmd[0];
-    }
+    const std::string &exec = (executable == "") ? cmd[0] : executable;
 
-    auto *obj_file = Loader::createObjectFile(executable);
-    fatal_if(!obj_file, "Cannot load object file %s.", executable);
+    auto *obj_file = Loader::createObjectFile(exec);
+    fatal_if(!obj_file, "Cannot load object file %s.", exec);
 
-    Process *process = Process::tryLoaders(this, obj_file);
+    Process *process = Process::tryLoaders(*this, obj_file);
     fatal_if(!process, "Unknown error creating process object.");
 
     return process;

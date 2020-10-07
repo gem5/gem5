@@ -216,17 +216,17 @@ class TarmacParser : public InstTracer
   public:
     typedef TarmacParserParams Params;
 
-    TarmacParser(const Params *p) : InstTracer(p), startPc(p->start_pc),
-                                    exitOnDiff(p->exit_on_diff),
-                                    exitOnInsnDiff(p->exit_on_insn_diff),
-                                    memWrCheck(p->mem_wr_check),
-                                    ignoredAddrRange(p->ignore_mem_addr),
-                                    cpuId(p->cpu_id),
+    TarmacParser(const Params &p) : InstTracer(p), startPc(p.start_pc),
+                                    exitOnDiff(p.exit_on_diff),
+                                    exitOnInsnDiff(p.exit_on_insn_diff),
+                                    memWrCheck(p.mem_wr_check),
+                                    ignoredAddrRange(p.ignore_mem_addr),
+                                    cpuId(p.cpu_id),
                                     macroopInProgress(false)
     {
         assert(!(exitOnDiff && exitOnInsnDiff));
 
-        trace.open(p->path_to_trace.c_str());
+        trace.open(p.path_to_trace.c_str());
         if (startPc == 0x0) {
             started = true;
         } else {

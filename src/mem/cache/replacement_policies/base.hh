@@ -49,7 +49,7 @@ class Base : public SimObject
 {
   public:
     typedef BaseReplacementPolicyParams Params;
-    Base(const Params *p) : SimObject(p) {}
+    Base(const Params &p) : SimObject(p) {}
     virtual ~Base() = default;
 
     /**

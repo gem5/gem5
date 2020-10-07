@@ -151,7 +151,7 @@ class SBOOE : public Queued
         void notifyFill(const PacketPtr& pkt) override;
 
     public:
-        SBOOE(const SBOOEPrefetcherParams *p);
+        SBOOE(const SBOOEPrefetcherParams &p);
 
         void calculatePrefetch(const PrefetchInfo &pfi,
                                std::vector<AddrPriority> &addresses) override;

@@ -54,7 +54,7 @@ class NetworkBridge: public CreditLink
 {
   public:
     typedef NetworkBridgeParams Params;
-    NetworkBridge(const Params *p);
+    NetworkBridge(const Params &p);
     ~NetworkBridge();
 
     void initBridge(NetworkBridge *coBrid, bool cdc_en, bool serdes_en);

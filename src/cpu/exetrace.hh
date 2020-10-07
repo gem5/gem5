@@ -60,7 +60,7 @@ class ExeTracer : public InstTracer
 {
   public:
     typedef ExeTracerParams Params;
-    ExeTracer(const Params *params) : InstTracer(params)
+    ExeTracer(const Params &params) : InstTracer(params)
     {}
 
     InstRecord *

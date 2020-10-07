@@ -45,7 +45,7 @@ class ObjectFile;
 class PowerProcess : public Process
 {
   protected:
-    PowerProcess(ProcessParams * params, ::Loader::ObjectFile *objFile);
+    PowerProcess(const ProcessParams &params, ::Loader::ObjectFile *objFile);
 
     void initState() override;
 

@@ -46,7 +46,7 @@ class GarnetIntLink : public BasicIntLink
 {
   public:
     typedef GarnetIntLinkParams Params;
-    GarnetIntLink(const Params *p);
+    GarnetIntLink(const Params &p);
 
     void init();
 
@@ -86,7 +86,7 @@ class GarnetExtLink : public BasicExtLink
 {
   public:
     typedef GarnetExtLinkParams Params;
-    GarnetExtLink(const Params *p);
+    GarnetExtLink(const Params &p);
 
     void init();
 

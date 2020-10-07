@@ -42,9 +42,9 @@
 #include "base/trace.hh"
 #include "debug/PowerDomain.hh"
 
-PowerDomain::PowerDomain(const PowerDomainParams* p) :
+PowerDomain::PowerDomain(const PowerDomainParams &p) :
     PowerState(p),
-    leaders(p->leaders),
+    leaders(p.leaders),
     pwrStateUpdateEvent(*this),
     stats(*this)
 {
@@ -265,7 +265,7 @@ PowerDomain::PowerDomainStats::regStats()
 }
 
 PowerDomain*
-PowerDomainParams::create()
+PowerDomainParams::create() const
 {
-    return new PowerDomain(this);
+    return new PowerDomain(*this);
 }

@@ -73,7 +73,7 @@ Gicv3Redistributor::Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id)
       lpiConfigurationTablePtr(0),
       lpiIDBits(0),
       lpiPendingTablePtr(0),
-      addrRangeSize(gic->params()->gicv4 ? 0x40000 : 0x20000)
+      addrRangeSize(gic->params().gicv4 ? 0x40000 : 0x20000)
 {
 }
 

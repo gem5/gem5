@@ -48,6 +48,8 @@ class NonCachingSimpleCPU(AtomicSimpleCPU):
     type = 'NonCachingSimpleCPU'
     cxx_header = "cpu/simple/noncaching.hh"
 
+    numThreads = 1
+
     @classmethod
     def memory_mode(cls):
         return 'atomic_noncaching'
@@ -55,4 +57,3 @@ class NonCachingSimpleCPU(AtomicSimpleCPU):
     @classmethod
     def support_take_over(cls):
         return True
-

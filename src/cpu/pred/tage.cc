@@ -44,7 +44,7 @@
 #include "debug/Fetch.hh"
 #include "debug/Tage.hh"
 
-TAGE::TAGE(const TAGEParams *params) : BPredUnit(params), tage(params->tage)
+TAGE::TAGE(const TAGEParams &params) : BPredUnit(params), tage(params.tage)
 {
 }
 
@@ -127,7 +127,7 @@ TAGE::uncondBranch(ThreadID tid, Addr br_pc, void* &bp_history)
 }
 
 TAGE*
-TAGEParams::create()
+TAGEParams::create() const
 {
-    return new TAGE(this);
+    return new TAGE(*this);
 }

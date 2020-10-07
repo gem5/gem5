@@ -36,7 +36,7 @@
 
 namespace ReplacementPolicy {
 
-FIFO::FIFO(const Params *p)
+FIFO::FIFO(const Params &p)
   : Base(p)
 {
 }
@@ -94,7 +94,7 @@ FIFO::instantiateEntry()
 } // namespace ReplacementPolicy
 
 ReplacementPolicy::FIFO*
-FIFORPParams::create()
+FIFORPParams::create() const
 {
-    return new ReplacementPolicy::FIFO(this);
+    return new ReplacementPolicy::FIFO(*this);
 }

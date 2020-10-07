@@ -63,18 +63,18 @@
 namespace X86ISA
 {
 
-    GpuTLB::GpuTLB(const Params *p)
-        : ClockedObject(p), configAddress(0), size(p->size),
+    GpuTLB::GpuTLB(const Params &p)
+        : ClockedObject(p), configAddress(0), size(p.size),
           cleanupEvent([this]{ cleanup(); }, name(), false,
                        Event::Maximum_Pri),
           exitEvent([this]{ exitCallback(); }, name())
     {
-        assoc = p->assoc;
+        assoc = p.assoc;
         assert(assoc <= size);
         numSets = size/assoc;
-        allocationPolicy = p->allocationPolicy;
+        allocationPolicy = p.allocationPolicy;
         hasMemSidePort = false;
-        accessDistance = p->accessDistance;
+        accessDistance = p.accessDistance;
 
         tlb.assign(size, TlbEntry());
 
@@ -100,7 +100,7 @@ namespace X86ISA
          */
         setMask = numSets - 1;
 
-        maxCoalescedReqs = p->maxOutstandingReqs;
+        maxCoalescedReqs = p.maxOutstandingReqs;
 
         // Do not allow maxCoalescedReqs to be more than the TLB associativity
         if (maxCoalescedReqs > assoc) {
@@ -109,18 +109,18 @@ namespace X86ISA
         }
 
         outstandingReqs = 0;
-        hitLatency = p->hitLatency;
-        missLatency1 = p->missLatency1;
-        missLatency2 = p->missLatency2;
+        hitLatency = p.hitLatency;
+        missLatency1 = p.missLatency1;
+        missLatency2 = p.missLatency2;
 
         // create the response ports based on the number of connected ports
-        for (size_t i = 0; i < p->port_cpu_side_ports_connection_count; ++i) {
+        for (size_t i = 0; i < p.port_cpu_side_ports_connection_count; ++i) {
             cpuSidePort.push_back(new CpuSidePort(csprintf("%s-port%d",
                                   name(), i), this, i));
         }
 
         // create the request ports based on the number of connected ports
-        for (size_t i = 0; i < p->port_mem_side_ports_connection_count; ++i) {
+        for (size_t i = 0; i < p.port_mem_side_ports_connection_count; ++i) {
             memSidePort.push_back(new MemSidePort(csprintf("%s-port%d",
                                   name(), i), this, i));
         }
@@ -1516,8 +1516,8 @@ namespace X86ISA
 } // namespace X86ISA
 
 X86ISA::GpuTLB*
-X86GPUTLBParams::create()
+X86GPUTLBParams::create() const
 {
-    return new X86ISA::GpuTLB(this);
+    return new X86ISA::GpuTLB(*this);
 }
 

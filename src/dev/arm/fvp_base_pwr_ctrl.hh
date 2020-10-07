@@ -55,7 +55,7 @@ class ThreadContext;
 class FVPBasePwrCtrl : public BasicPioDevice
 {
   public:
-    FVPBasePwrCtrl(FVPBasePwrCtrlParams *const params);
+    FVPBasePwrCtrl(const FVPBasePwrCtrlParams &params);
 
     /**
      * Triggered by the ISA when a WFI instruction is executed and (1) there

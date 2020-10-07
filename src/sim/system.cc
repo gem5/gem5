@@ -205,32 +205,32 @@ System::Threads::quiesceTick(ContextID id, Tick when)
 
 int System::numSystemsRunning = 0;
 
-System::System(Params *p)
+System::System(const Params &p)
     : SimObject(p), _systemPort("system_port", this),
-      multiThread(p->multi_thread),
+      multiThread(p.multi_thread),
       pagePtr(0),
-      init_param(p->init_param),
-      physProxy(_systemPort, p->cache_line_size),
-      workload(p->workload),
+      init_param(p.init_param),
+      physProxy(_systemPort, p.cache_line_size),
+      workload(p.workload),
 #if USE_KVM
-      kvmVM(p->kvm_vm),
+      kvmVM(p.kvm_vm),
 #else
       kvmVM(nullptr),
 #endif
-      physmem(name() + ".physmem", p->memories, p->mmap_using_noreserve,
-              p->shared_backstore),
-      memoryMode(p->mem_mode),
-      _cacheLineSize(p->cache_line_size),
+      physmem(name() + ".physmem", p.memories, p.mmap_using_noreserve,
+              p.shared_backstore),
+      memoryMode(p.mem_mode),
+      _cacheLineSize(p.cache_line_size),
       workItemsBegin(0),
       workItemsEnd(0),
-      numWorkIds(p->num_work_ids),
-      thermalModel(p->thermal_model),
+      numWorkIds(p.num_work_ids),
+      thermalModel(p.thermal_model),
       _params(p),
-      _m5opRange(p->m5ops_base ?
-                 RangeSize(p->m5ops_base, 0x10000) :
+      _m5opRange(p.m5ops_base ?
+                 RangeSize(p.m5ops_base, 0x10000) :
                  AddrRange(1, 0)), // Create an empty range if disabled
       totalNumInsts(0),
-      redirectPaths(p->redirect_paths)
+      redirectPaths(p.redirect_paths)
 {
     if (workload)
         workload->system = this;
@@ -262,8 +262,8 @@ System::System(Params *p)
     numSystemsRunning++;
 
     // Set back pointers to the system in all memories
-    for (int x = 0; x < params()->memories.size(); x++)
-        params()->memories[x]->system(this);
+    for (int x = 0; x < params().memories.size(); x++)
+        params().memories[x]->system(this);
 }
 
 System::~System()
@@ -653,7 +653,7 @@ System::getRequestorName(RequestorID requestor_id)
 }
 
 System *
-SystemParams::create()
+SystemParams::create() const
 {
-    return new System(this);
+    return new System(*this);
 }

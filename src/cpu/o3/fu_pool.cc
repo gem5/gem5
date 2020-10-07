@@ -79,7 +79,7 @@ FUPool::~FUPool()
 
 
 // Constructor
-FUPool::FUPool(const Params *p)
+FUPool::FUPool(const Params &p)
     : SimObject(p)
 {
     numFU = 0;
@@ -92,7 +92,7 @@ FUPool::FUPool(const Params *p)
     //
     //  Iterate through the list of FUDescData structures
     //
-    const vector<FUDesc *> &paramList =  p->FUList;
+    const vector<FUDesc *> &paramList =  p.FUList;
     for (FUDDiterator i = paramList.begin(); i != paramList.end(); ++i) {
 
         //
@@ -262,7 +262,7 @@ FUPool::isDrained() const
 //  The FuPool object
 //
 FUPool *
-FUPoolParams::create()
+FUPoolParams::create() const
 {
-    return new FUPool(this);
+    return new FUPool(*this);
 }

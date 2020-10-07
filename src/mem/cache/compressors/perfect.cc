@@ -40,10 +40,10 @@
 
 namespace Compressor {
 
-Perfect::Perfect(const Params *p)
-  : Base(p), compressedSize(8 * blkSize / p->max_compression_ratio),
-    compressionLatency(p->compression_latency),
-    decompressionLatency(p->decompression_latency)
+Perfect::Perfect(const Params &p)
+  : Base(p), compressedSize(8 * blkSize / p.max_compression_ratio),
+    compressionLatency(p.compression_latency),
+    decompressionLatency(p.decompression_latency)
 {
 }
 
@@ -73,7 +73,7 @@ Perfect::decompress(const CompressionData* comp_data,
 } // namespace Compressor
 
 Compressor::Perfect*
-PerfectCompressorParams::create()
+PerfectCompressorParams::create() const
 {
-    return new Compressor::Perfect(this);
+    return new Compressor::Perfect(*this);
 }

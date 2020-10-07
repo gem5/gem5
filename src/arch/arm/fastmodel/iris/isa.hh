@@ -36,7 +36,7 @@ namespace Iris
 class ISA : public BaseISA
 {
   public:
-    ISA(const Params *p) : BaseISA(p) {}
+    ISA(const Params &p) : BaseISA(p) {}
 
     void serialize(CheckpointOut &cp) const;
 };

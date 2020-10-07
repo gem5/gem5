@@ -212,13 +212,13 @@ class DistEtherLink : public SimObject
 
   public:
     typedef DistEtherLinkParams Params;
-    DistEtherLink(const Params *p);
+    DistEtherLink(const Params &p);
     ~DistEtherLink();
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     Port &getPort(const std::string &if_name,

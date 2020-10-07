@@ -40,7 +40,7 @@
 #include "cpu/pred/multiperspective_perceptron_8KB.hh"
 
 MultiperspectivePerceptron8KB::MultiperspectivePerceptron8KB(
-        const MultiperspectivePerceptron8KBParams *p)
+        const MultiperspectivePerceptron8KBParams &p)
     : MultiperspectivePerceptron(p)
 {
 }
@@ -66,7 +66,7 @@ MultiperspectivePerceptron8KB::createSpecs() {
 }
 
     MultiperspectivePerceptron8KB*
-MultiperspectivePerceptron8KBParams::create()
+MultiperspectivePerceptron8KBParams::create() const
 {
-    return new MultiperspectivePerceptron8KB(this);
+    return new MultiperspectivePerceptron8KB(*this);
 }

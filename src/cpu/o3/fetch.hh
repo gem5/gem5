@@ -217,7 +217,7 @@ class DefaultFetch
 
   public:
     /** DefaultFetch constructor. */
-    DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params);
+    DefaultFetch(O3CPU *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of fetch. */
     std::string name() const;

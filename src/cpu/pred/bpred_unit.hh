@@ -66,7 +66,7 @@ class BPredUnit : public SimObject
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
-    BPredUnit(const Params *p);
+    BPredUnit(const Params &p);
 
     void regProbePoints() override;
 

@@ -97,8 +97,8 @@ TreePLRU::TreePLRUReplData::TreePLRUReplData(
 {
 }
 
-TreePLRU::TreePLRU(const Params *p)
-  : Base(p), numLeaves(p->num_leaves), count(0), treeInstance(nullptr)
+TreePLRU::TreePLRU(const Params &p)
+  : Base(p), numLeaves(p.num_leaves), count(0), treeInstance(nullptr)
 {
     fatal_if(!isPowerOf2(numLeaves),
              "Number of leaves must be non-zero and a power of 2");
@@ -214,7 +214,7 @@ TreePLRU::instantiateEntry()
 } // namespace ReplacementPolicy
 
 ReplacementPolicy::TreePLRU*
-TreePLRURPParams::create()
+TreePLRURPParams::create() const
 {
-    return new ReplacementPolicy::TreePLRU(this);
+    return new ReplacementPolicy::TreePLRU(*this);
 }

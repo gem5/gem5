@@ -46,9 +46,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-A9GlobalTimer::A9GlobalTimer(Params *p)
-    : BasicPioDevice(p, 0x1C), gic(p->gic),
-      global_timer(name() + ".globaltimer", this, p->int_num)
+A9GlobalTimer::A9GlobalTimer(const Params &p)
+    : BasicPioDevice(p, 0x1C), gic(p.gic),
+      global_timer(name() + ".globaltimer", this, p.int_num)
 {
 }
 
@@ -310,7 +310,7 @@ A9GlobalTimer::unserialize(CheckpointIn &cp)
 }
 
 A9GlobalTimer *
-A9GlobalTimerParams::create()
+A9GlobalTimerParams::create() const
 {
-    return new A9GlobalTimer(this);
+    return new A9GlobalTimer(*this);
 }

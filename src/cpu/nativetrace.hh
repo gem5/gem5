@@ -72,7 +72,7 @@ class NativeTrace : public ExeTracer
 
   public:
 
-    NativeTrace(const Params *p);
+    NativeTrace(const Params &p);
     virtual ~NativeTrace() {}
 
     NativeTraceRecord *

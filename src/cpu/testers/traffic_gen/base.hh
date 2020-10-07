@@ -238,7 +238,7 @@ class BaseTrafficGen : public ClockedObject
     } stats;
 
   public:
-    BaseTrafficGen(const BaseTrafficGenParams* p);
+    BaseTrafficGen(const BaseTrafficGenParams &p);
 
     ~BaseTrafficGen();
 

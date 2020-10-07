@@ -38,7 +38,7 @@
 #include "arch/arm/fastmodel/iris/mmu.hh"
 
 Iris::MMU *
-IrisMMUParams::create()
+IrisMMUParams::create() const
 {
-    return new Iris::MMU(this);
+    return new Iris::MMU(*this);
 }

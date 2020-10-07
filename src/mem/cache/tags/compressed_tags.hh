@@ -83,7 +83,7 @@ class CompressedTags : public SectorTags
     /**
      * Construct and initialize this tag store.
      */
-    CompressedTags(const Params *p);
+    CompressedTags(const Params &p);
 
     /**
      * Destructor.

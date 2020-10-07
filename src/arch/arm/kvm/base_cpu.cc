@@ -59,7 +59,7 @@ using namespace ArmISA;
     INTERRUPT_ID(KVM_ARM_IRQ_TYPE_CPU, vcpu, KVM_ARM_IRQ_CPU_FIQ)
 
 
-BaseArmKvmCPU::BaseArmKvmCPU(BaseArmKvmCPUParams *params)
+BaseArmKvmCPU::BaseArmKvmCPU(const BaseArmKvmCPUParams &params)
     : BaseKvmCPU(params),
       irqAsserted(false), fiqAsserted(false),
       virtTimerPin(nullptr), prevDeviceIRQLevel(0)
@@ -90,7 +90,7 @@ BaseArmKvmCPU::startup()
 
     if (!vm.hasKernelIRQChip())
         virtTimerPin = static_cast<ArmSystem *>(system)\
-            ->getGenericTimer()->params()->int_virt->get(tc);
+            ->getGenericTimer()->params().int_virt->get(tc);
 }
 
 Tick

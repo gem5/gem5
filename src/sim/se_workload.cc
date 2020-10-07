@@ -31,7 +31,7 @@
 #include "params/SEWorkload.hh"
 #include "sim/process.hh"
 
-SEWorkload::SEWorkload(const Params &p) : Workload(&p), _params(p)
+SEWorkload::SEWorkload(const Params &p) : Workload(p), _params(p)
 {}
 
 void
@@ -41,7 +41,7 @@ SEWorkload::syscall(ThreadContext *tc)
 }
 
 SEWorkload *
-SEWorkloadParams::create()
+SEWorkloadParams::create() const
 {
     return new SEWorkload(*this);
 }

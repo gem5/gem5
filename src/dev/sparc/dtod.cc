@@ -46,10 +46,10 @@
 
 using namespace std;
 
-DumbTOD::DumbTOD(const Params *p)
+DumbTOD::DumbTOD(const Params &p)
     : BasicPioDevice(p, 0x08)
 {
-    struct tm tm = p->time;
+    struct tm tm = p.time;
     todTime = mkutctime(&tm);
 
     DPRINTFN("Real-time clock set to %s\n", asctime(&tm));
@@ -88,7 +88,7 @@ DumbTOD::unserialize(CheckpointIn &cp)
 }
 
 DumbTOD *
-DumbTODParams::create()
+DumbTODParams::create() const
 {
-    return new DumbTOD(this);
+    return new DumbTOD(*this);
 }

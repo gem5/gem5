@@ -45,14 +45,14 @@
 #include "gpu-compute/vector_register_file.hh"
 
 Wavefront*
-WavefrontParams::create()
+WavefrontParams::create() const
 {
-    return new Wavefront(this);
+    return new Wavefront(*this);
 }
 
-Wavefront::Wavefront(const Params *p)
-  : SimObject(p), wfSlotId(p->wf_slot_id), simdId(p->simdId),
-    maxIbSize(p->max_ib_size), _gpuISA(*this),
+Wavefront::Wavefront(const Params &p)
+  : SimObject(p), wfSlotId(p.wf_slot_id), simdId(p.simdId),
+    maxIbSize(p.max_ib_size), _gpuISA(*this),
     vmWaitCnt(-1), expWaitCnt(-1), lgkmWaitCnt(-1),
     vmemInstsIssued(0), expInstsIssued(0), lgkmInstsIssued(0),
     barId(WFBarrier::InvalidID)
@@ -83,18 +83,18 @@ Wavefront::Wavefront(const Params *p)
     memTraceBusy = 0;
     oldVgprTcnt = 0xffffffffffffffffll;
     oldDgprTcnt = 0xffffffffffffffffll;
-    oldVgpr.resize(p->wf_size);
+    oldVgpr.resize(p.wf_size);
 
     pendingFetch = false;
     dropFetch = false;
     maxVgprs = 0;
     maxSgprs = 0;
 
-    lastAddr.resize(p->wf_size);
-    workItemFlatId.resize(p->wf_size);
-    oldDgpr.resize(p->wf_size);
+    lastAddr.resize(p.wf_size);
+    workItemFlatId.resize(p.wf_size);
+    oldDgpr.resize(p.wf_size);
     for (int i = 0; i < 3; ++i) {
-        workItemId[i].resize(p->wf_size);
+        workItemId[i].resize(p.wf_size);
     }
 
     _execMask.set();

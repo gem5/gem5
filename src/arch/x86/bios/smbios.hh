@@ -92,7 +92,7 @@ class SMBiosStructure : public SimObject
   protected:
     bool stringFields;
 
-    SMBiosStructure(Params * p, uint8_t _type);
+    SMBiosStructure(const Params &p, uint8_t _type);
 
     std::vector<std::string> strings;
 
@@ -102,9 +102,9 @@ class SMBiosStructure : public SimObject
 
   public:
 
-    int addString(std::string & newString);
+    int addString(const std::string &new_string);
     std::string readString(int n);
-    void setString(int n, std::string & newString);
+    void setString(int n, const std::string &new_string);
 };
 
 class BiosInformation : public SMBiosStructure
@@ -140,7 +140,7 @@ class BiosInformation : public SMBiosStructure
     // Offset 17h, 1 byte
     uint8_t embContFirmwareMinor;
 
-    BiosInformation(Params * p);
+    BiosInformation(const Params &p);
 
     uint8_t getLength() { return 0x18; }
     uint16_t writeOut(PortProxy& proxy, Addr addr);
@@ -209,7 +209,7 @@ class SMBiosTable : public SimObject
     std::vector<SMBiosStructure *> structures;
 
   public:
-    SMBiosTable(Params * p);
+    SMBiosTable(const Params &p);
 
     Addr getTableAddr()
     {

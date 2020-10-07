@@ -61,7 +61,7 @@ class Random : public Base
 
   public:
     typedef RandomRPParams Params;
-    Random(const Params *p);
+    Random(const Params &p);
     ~Random() = default;
 
     /**

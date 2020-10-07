@@ -59,7 +59,7 @@ class ThermalDomain : public SimObject, public ThermalEntity
   public:
 
     typedef ThermalDomainParams Params;
-    ThermalDomain(const Params *p);
+    ThermalDomain(const Params &p);
 
     /**
      * Get the startup temperature.

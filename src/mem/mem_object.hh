@@ -57,7 +57,7 @@ class MemObject : public ClockedObject
   public:
     [[deprecated(
         "MemObject is deprecated. Use ClockedObject or SimObject instead")]]
-        MemObject(const MemObjectParams *params) : ClockedObject(params)
+        MemObject(const MemObjectParams &params) : ClockedObject(params)
     {}
 };
 

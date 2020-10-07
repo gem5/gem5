@@ -131,25 +131,25 @@ template class ScxEvsCortexR52<ScxEvsCortexR52x4Types>;
 } // namespace FastModel
 
 FastModel::ScxEvsCortexR52x1 *
-FastModelScxEvsCortexR52x1Params::create()
+FastModelScxEvsCortexR52x1Params::create() const
 {
     return new FastModel::ScxEvsCortexR52x1(name.c_str(), *this);
 }
 
 FastModel::ScxEvsCortexR52x2 *
-FastModelScxEvsCortexR52x2Params::create()
+FastModelScxEvsCortexR52x2Params::create() const
 {
     return new FastModel::ScxEvsCortexR52x2(name.c_str(), *this);
 }
 
 FastModel::ScxEvsCortexR52x3 *
-FastModelScxEvsCortexR52x3Params::create()
+FastModelScxEvsCortexR52x3Params::create() const
 {
     return new FastModel::ScxEvsCortexR52x3(name.c_str(), *this);
 }
 
 FastModel::ScxEvsCortexR52x4 *
-FastModelScxEvsCortexR52x4Params::create()
+FastModelScxEvsCortexR52x4Params::create() const
 {
     return new FastModel::ScxEvsCortexR52x4(name.c_str(), *this);
 }

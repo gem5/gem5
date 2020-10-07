@@ -52,7 +52,7 @@ class FsLinux : public X86ISA::FsWorkload
 
   public:
     typedef X86FsLinuxParams Params;
-    FsLinux(Params *p);
+    FsLinux(const Params &p);
 
     void initState() override;
 };

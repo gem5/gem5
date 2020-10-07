@@ -46,7 +46,7 @@
 #include "dev/ps2/types.hh"
 #include "params/PS2Mouse.hh"
 
-PS2Mouse::PS2Mouse(const PS2MouseParams *p)
+PS2Mouse::PS2Mouse(const PS2MouseParams &p)
     : PS2Device(p),
       status(0), resolution(4), sampleRate(100)
 {
@@ -168,7 +168,7 @@ PS2Mouse::unserialize(CheckpointIn &cp)
 }
 
 PS2Mouse *
-PS2MouseParams::create()
+PS2MouseParams::create() const
 {
-    return new PS2Mouse(this);
+    return new PS2Mouse(*this);
 }

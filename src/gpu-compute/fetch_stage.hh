@@ -51,7 +51,7 @@ class Wavefront;
 class FetchStage
 {
   public:
-    FetchStage(const ComputeUnitParams* p, ComputeUnit &cu);
+    FetchStage(const ComputeUnitParams &p, ComputeUnit &cu);
     ~FetchStage();
     void init();
     void exec();

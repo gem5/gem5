@@ -194,10 +194,10 @@ class Interrupts : public BaseInterrupts
 
     void setThreadContext(ThreadContext *_tc) override;
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     /*
@@ -254,7 +254,7 @@ class Interrupts : public BaseInterrupts
      * Constructor.
      */
 
-    Interrupts(Params * p);
+    Interrupts(const Params &p);
 
     /*
      * Functions for retrieving interrupts for the CPU to handle.

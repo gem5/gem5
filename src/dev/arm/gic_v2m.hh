@@ -65,8 +65,8 @@ class Gicv2mFrame : public SimObject
     const unsigned int  spi_len;
 
     typedef Gicv2mFrameParams Params;
-    Gicv2mFrame(const Params *p) :
-        SimObject(p), addr(p->addr), spi_base(p->spi_base), spi_len(p->spi_len)
+    Gicv2mFrame(const Params &p) :
+        SimObject(p), addr(p.addr), spi_base(p.spi_base), spi_len(p.spi_len)
     {}
 };
 
@@ -93,7 +93,7 @@ class Gicv2m : public PioDevice
 
   public:
     typedef Gicv2mParams Params;
-    Gicv2m(const Params *p);
+    Gicv2m(const Params &p);
 
     /** @{ */
     /** Return the address ranges used by the Gicv2m

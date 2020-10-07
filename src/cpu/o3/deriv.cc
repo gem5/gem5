@@ -33,7 +33,7 @@
 #include "params/DerivO3CPU.hh"
 
 DerivO3CPU *
-DerivO3CPUParams::create()
+DerivO3CPUParams::create() const
 {
-    return new DerivO3CPU(this);
+    return new DerivO3CPU(*this);
 }

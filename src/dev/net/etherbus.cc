@@ -48,10 +48,10 @@
 
 using namespace std;
 
-EtherBus::EtherBus(const Params *p)
-    : SimObject(p), ticksPerByte(p->speed), loopback(p->loopback),
+EtherBus::EtherBus(const Params &p)
+    : SimObject(p), ticksPerByte(p.speed), loopback(p.loopback),
       event([this]{ txDone(); }, "ethernet bus completion"),
-      sender(0), dump(p->dump)
+      sender(0), dump(p.dump)
 {
 }
 
@@ -107,7 +107,7 @@ EtherBus::send(EtherInt *sndr, EthPacketPtr &pkt)
 }
 
 EtherBus *
-EtherBusParams::create()
+EtherBusParams::create() const
 {
-    return new EtherBus(this);
+    return new EtherBus(*this);
 }

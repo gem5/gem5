@@ -129,7 +129,7 @@ class FUPool : public SimObject
   public:
     typedef FUPoolParams Params;
     /** Constructs a FU pool. */
-    FUPool(const Params *p);
+    FUPool(const Params &p);
     ~FUPool();
 
     static constexpr auto NoCapableFU = -2;

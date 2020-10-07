@@ -53,7 +53,7 @@ class SimpleDisk : public SimObject
 
   public:
     typedef SimpleDiskParams Params;
-    SimpleDisk(const Params *p);
+    SimpleDisk(const Params &p);
     ~SimpleDisk();
 
     void read(Addr addr, baddr_t block, int count) const;

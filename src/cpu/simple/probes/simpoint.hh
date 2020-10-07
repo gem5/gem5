@@ -72,7 +72,7 @@ struct hash<BasicBlockRange>
 class SimPoint : public ProbeListenerObject
 {
   public:
-    SimPoint(const SimPointParams *params);
+    SimPoint(const SimPointParams &params);
     virtual ~SimPoint();
 
     virtual void init();

@@ -55,7 +55,7 @@ class VoltageDomain : public SimObject
   public:
 
     typedef VoltageDomainParams Params;
-    VoltageDomain(const Params *p);
+    VoltageDomain(const Params &p);
 
     typedef SrcClockDomain::PerfLevel PerfLevel;
 

@@ -51,20 +51,20 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "sim/sim_exit.hh"
 
-Shader::Shader(const Params *p) : ClockedObject(p),
+Shader::Shader(const Params &p) : ClockedObject(p),
     _activeCus(0), _lastInactiveTick(0), cpuThread(nullptr),
-    gpuTc(nullptr), cpuPointer(p->cpu_pointer),
+    gpuTc(nullptr), cpuPointer(p.cpu_pointer),
     tickEvent([this]{ execScheduledAdds(); }, "Shader scheduled adds event",
           false, Event::CPU_Tick_Pri),
-    timingSim(p->timing), hsail_mode(SIMT),
-    impl_kern_launch_acq(p->impl_kern_launch_acq),
-    impl_kern_end_rel(p->impl_kern_end_rel),
+    timingSim(p.timing), hsail_mode(SIMT),
+    impl_kern_launch_acq(p.impl_kern_launch_acq),
+    impl_kern_end_rel(p.impl_kern_end_rel),
     coissue_return(1),
-    trace_vgpr_all(1), n_cu((p->CUs).size()), n_wf(p->n_wf),
-    globalMemSize(p->globalmem),
-    nextSchedCu(0), sa_n(0), gpuCmdProc(*p->gpu_cmd_proc),
-    _dispatcher(*p->dispatcher),
-    max_valu_insts(p->max_valu_insts), total_valu_insts(0)
+    trace_vgpr_all(1), n_cu((p.CUs).size()), n_wf(p.n_wf),
+    globalMemSize(p.globalmem),
+    nextSchedCu(0), sa_n(0), gpuCmdProc(*p.gpu_cmd_proc),
+    _dispatcher(*p.dispatcher),
+    max_valu_insts(p.max_valu_insts), total_valu_insts(0)
 {
     gpuCmdProc.setShader(this);
     _dispatcher.setShader(this);
@@ -85,10 +85,10 @@ Shader::Shader(const Params *p) : ClockedObject(p),
     panic_if(n_wf <= 0, "Must have at least 1 WF Slot per SIMD");
 
     for (int i = 0; i < n_cu; ++i) {
-        cuList[i] = p->CUs[i];
+        cuList[i] = p.CUs[i];
         assert(i == cuList[i]->cu_id);
         cuList[i]->shader = this;
-        cuList[i]->idleCUTimeout = p->idlecu_timeout;
+        cuList[i]->idleCUTimeout = p.idlecu_timeout;
     }
 }
 
@@ -155,9 +155,9 @@ Shader::updateContext(int cid) {
 }
 
 Shader*
-ShaderParams::create()
+ShaderParams::create() const
 {
-    return new Shader(this);
+    return new Shader(*this);
 }
 
 void

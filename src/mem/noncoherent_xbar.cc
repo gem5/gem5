@@ -50,13 +50,13 @@
 #include "debug/NoncoherentXBar.hh"
 #include "debug/XBar.hh"
 
-NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams *p)
+NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams &p)
     : BaseXBar(p)
 {
     // create the ports based on the size of the memory-side port and
     // CPU-side port vector ports, and the presence of the default port,
     // the ports are enumerated starting from zero
-    for (int i = 0; i < p->port_mem_side_ports_connection_count; ++i) {
+    for (int i = 0; i < p.port_mem_side_ports_connection_count; ++i) {
         std::string portName = csprintf("%s.mem_side_port[%d]", name(), i);
         RequestPort* bp = new NoncoherentXBarRequestPort(portName, *this, i);
         memSidePorts.push_back(bp);
@@ -66,7 +66,7 @@ NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams *p)
 
     // see if we have a default CPU-side-port device connected and if so add
     // our corresponding memory-side port
-    if (p->port_default_connection_count) {
+    if (p.port_default_connection_count) {
         defaultPortID = memSidePorts.size();
         std::string portName = name() + ".default";
         RequestPort* bp = new NoncoherentXBarRequestPort(portName, *this,
@@ -77,7 +77,7 @@ NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams *p)
     }
 
     // create the CPU-side ports, once again starting at zero
-    for (int i = 0; i < p->port_cpu_side_ports_connection_count; ++i) {
+    for (int i = 0; i < p.port_cpu_side_ports_connection_count; ++i) {
         std::string portName = csprintf("%s.cpu_side_ports[%d]", name(), i);
         QueuedResponsePort* bp = new NoncoherentXBarResponsePort(portName,
                                                                 *this, i);
@@ -312,7 +312,7 @@ NoncoherentXBar::recvFunctional(PacketPtr pkt, PortID cpu_side_port_id)
 }
 
 NoncoherentXBar*
-NoncoherentXBarParams::create()
+NoncoherentXBarParams::create() const
 {
-    return new NoncoherentXBar(this);
+    return new NoncoherentXBar(*this);
 }

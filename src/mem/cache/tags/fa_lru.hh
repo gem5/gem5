@@ -153,7 +153,7 @@ class FALRU : public BaseTags
     /**
      * Construct and initialize this cache tagstore.
      */
-    FALRU(const Params *p);
+    FALRU(const Params &p);
     ~FALRU();
 
     /**

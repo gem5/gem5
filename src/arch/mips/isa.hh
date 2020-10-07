@@ -128,9 +128,9 @@ namespace MipsISA
         static std::string miscRegNames[NumMiscRegs];
 
       public:
-        const Params *params() const;
+        const Params &params() const;
 
-        ISA(Params *p);
+        ISA(const Params &p);
 
         RegId flattenRegId(const RegId& regId) const { return regId; }
 

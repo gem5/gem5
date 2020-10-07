@@ -56,7 +56,7 @@ class PS2Keyboard : public PS2Device, VncKeyboard
     bool enabled;
 
   public:
-    PS2Keyboard(const PS2KeyboardParams *p);
+    PS2Keyboard(const PS2KeyboardParams &p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

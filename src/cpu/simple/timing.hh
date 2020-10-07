@@ -50,7 +50,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 {
   public:
 
-    TimingSimpleCPU(TimingSimpleCPUParams * params);
+    TimingSimpleCPU(const TimingSimpleCPUParams &params);
     virtual ~TimingSimpleCPU();
 
     void init() override;

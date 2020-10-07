@@ -67,7 +67,7 @@ class GoodbyeObject : public SimObject
     int bufferUsed;
 
   public:
-    GoodbyeObject(GoodbyeObjectParams *p);
+    GoodbyeObject(const GoodbyeObjectParams &p);
     ~GoodbyeObject();
 
     /**

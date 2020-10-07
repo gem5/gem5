@@ -157,16 +157,16 @@ class CpuLocalTimer : public BasicPioDevice
 
   public:
     typedef CpuLocalTimerParams Params;
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
     /**
       * The constructor for RealView just registers itself with the MMU.
       * @param p params structure
       */
-    CpuLocalTimer(Params *p);
+    CpuLocalTimer(const Params &p);
 
     /** Inits the local timers */
     void init() override;

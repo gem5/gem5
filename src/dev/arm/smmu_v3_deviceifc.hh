@@ -118,7 +118,7 @@ class SMMUv3DeviceInterface : public ClockedObject
     Port& getPort(const std::string &name, PortID id) override;
 
   public:
-    SMMUv3DeviceInterface(const SMMUv3DeviceInterfaceParams *p);
+    SMMUv3DeviceInterface(const SMMUv3DeviceInterfaceParams &p);
 
     ~SMMUv3DeviceInterface()
     {
@@ -126,10 +126,10 @@ class SMMUv3DeviceInterface : public ClockedObject
         delete mainTLB;
     }
 
-    const SMMUv3DeviceInterfaceParams *
+    const SMMUv3DeviceInterfaceParams &
     params() const
     {
-        return static_cast<const SMMUv3DeviceInterfaceParams *>(_params);
+        return static_cast<const SMMUv3DeviceInterfaceParams &>(_params);
     }
 
     DrainState drain() override;

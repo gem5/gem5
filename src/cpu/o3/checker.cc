@@ -47,7 +47,7 @@ template
 class Checker<O3CPUImpl>;
 
 O3Checker *
-O3CheckerParams::create()
+O3CheckerParams::create() const
 {
     // The checker should check all instructions executed by the main
     // cpu and therefore any parameters for early exit don't make much
@@ -55,5 +55,5 @@ O3CheckerParams::create()
     fatal_if(max_insts_any_thread || max_insts_all_threads ||
              progress_interval, "Invalid checker parameters");
 
-    return new O3Checker(this);
+    return new O3Checker(*this);
 }

@@ -42,7 +42,8 @@ class RiscvLinuxProcess64 : public RiscvProcess64
 {
   public:
     /// Constructor.
-    RiscvLinuxProcess64(ProcessParams * params, ::Loader::ObjectFile *objFile);
+    RiscvLinuxProcess64(const ProcessParams &params,
+                        ::Loader::ObjectFile *objFile);
 
     /// The target system's hostname.
     static const char *hostname;
@@ -60,7 +61,8 @@ class RiscvLinuxProcess32 : public RiscvProcess32
 {
   public:
     /// Constructor.
-    RiscvLinuxProcess32(ProcessParams * params, ::Loader::ObjectFile *objFile);
+    RiscvLinuxProcess32(const ProcessParams &params,
+                        ::Loader::ObjectFile *objFile);
 
     /// The target system's hostname.
     static const char *hostname;

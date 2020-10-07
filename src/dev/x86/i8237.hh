@@ -39,22 +39,20 @@ class I8237 : public BasicPioDevice
 {
   protected:
     Tick latency;
-    uint8_t maskReg;
+    uint8_t maskReg = 0;
 
   public:
     typedef I8237Params Params;
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
-    I8237(Params *p) : BasicPioDevice(p, 16), latency(p->pio_latency), maskReg(0)
-    {
-    }
+    I8237(const Params &p) : BasicPioDevice(p, 16), latency(p.pio_latency) {}
+
     Tick read(PacketPtr pkt) override;
-
     Tick write(PacketPtr pkt) override;
 
     void serialize(CheckpointOut &cp) const override;

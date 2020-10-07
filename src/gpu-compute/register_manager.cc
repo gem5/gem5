@@ -44,11 +44,11 @@
 #include "gpu-compute/wavefront.hh"
 #include "params/RegisterManager.hh"
 
-RegisterManager::RegisterManager(const RegisterManagerParams *p)
-    : SimObject(p), srfPoolMgrs(p->srf_pool_managers),
-      vrfPoolMgrs(p->vrf_pool_managers)
+RegisterManager::RegisterManager(const RegisterManagerParams &p)
+    : SimObject(p), srfPoolMgrs(p.srf_pool_managers),
+      vrfPoolMgrs(p.vrf_pool_managers)
 {
-    if (p->policy == "static") {
+    if (p.policy == "static") {
         policy = new StaticRegisterManagerPolicy();
     } else {
         fatal("Unimplemented Register Manager Policy");
@@ -137,7 +137,7 @@ RegisterManager::regStats()
 }
 
 RegisterManager*
-RegisterManagerParams::create()
+RegisterManagerParams::create() const
 {
-    return new RegisterManager(this);
+    return new RegisterManager(*this);
 }

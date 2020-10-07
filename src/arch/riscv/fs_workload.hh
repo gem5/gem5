@@ -46,8 +46,8 @@ class FsWorkload : public Workload
     Addr _resetVect;
 
   public:
-    FsWorkload(RiscvFsWorkloadParams *p) : Workload(p),
-        _isBareMetal(p->bare_metal), _resetVect(p->reset_vect)
+    FsWorkload(const RiscvFsWorkloadParams &p) : Workload(p),
+        _isBareMetal(p.bare_metal), _resetVect(p.reset_vect)
     {}
 
     // return reset vector

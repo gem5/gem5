@@ -107,7 +107,7 @@ class SimObject : public EventManager, public Serializable, public Drainable,
      *
      * @ingroup api_simobject
      */
-    const SimObjectParams *_params;
+    const SimObjectParams &_params;
 
   public:
     typedef SimObjectParams Params;
@@ -116,12 +116,12 @@ class SimObject : public EventManager, public Serializable, public Drainable,
      *
      * @ingroup api_simobject
      */
-    const Params *params() const { return _params; }
+    const Params &params() const { return _params; }
 
     /**
      * @ingroup api_simobject
      */
-    SimObject(const Params *_params);
+    SimObject(const Params &_params);
 
     virtual ~SimObject();
 
@@ -130,7 +130,7 @@ class SimObject : public EventManager, public Serializable, public Drainable,
     /**
      * @ingroup api_simobject
      */
-    virtual const std::string name() const { return params()->name; }
+    virtual const std::string name() const { return params().name; }
 
     /**
      * init() is called after all C++ SimObjects have been created and

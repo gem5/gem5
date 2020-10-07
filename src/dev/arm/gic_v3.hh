@@ -111,10 +111,10 @@ class Gicv3 : public BaseGic
 
     void init() override;
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     Tick read(PacketPtr pkt) override;
@@ -128,7 +128,7 @@ class Gicv3 : public BaseGic
 
   public:
 
-    Gicv3(const Params * p);
+    Gicv3(const Params &p);
     void deassertInt(uint32_t cpu, ArmISA::InterruptTypes int_type);
     void deassertAll(uint32_t cpu);
     bool haveAsserted(uint32_t cpu) const;

@@ -56,14 +56,14 @@
 using namespace std;
 
 template <class Impl>
-DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params)
+DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, const DerivO3CPUParams &params)
     : cpu(_cpu),
-      iewToRenameDelay(params->iewToRenameDelay),
-      decodeToRenameDelay(params->decodeToRenameDelay),
-      commitToRenameDelay(params->commitToRenameDelay),
-      renameWidth(params->renameWidth),
-      commitWidth(params->commitWidth),
-      numThreads(params->numThreads),
+      iewToRenameDelay(params.iewToRenameDelay),
+      decodeToRenameDelay(params.decodeToRenameDelay),
+      commitToRenameDelay(params.commitToRenameDelay),
+      renameWidth(params.renameWidth),
+      commitWidth(params.commitWidth),
+      numThreads(params.numThreads),
       stats(_cpu)
 {
     if (renameWidth > Impl::MaxWidth)
@@ -72,7 +72,7 @@ DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params)
              renameWidth, static_cast<int>(Impl::MaxWidth));
 
     // @todo: Make into a parameter.
-    skidBufferMax = (decodeToRenameDelay + 1) * params->decodeWidth;
+    skidBufferMax = (decodeToRenameDelay + 1) * params.decodeWidth;
     for (uint32_t tid = 0; tid < Impl::MaxThreads; tid++) {
         renameStatus[tid] = Idle;
         renameMap[tid] = nullptr;

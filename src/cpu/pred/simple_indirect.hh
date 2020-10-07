@@ -39,7 +39,7 @@
 class SimpleIndirectPredictor : public IndirectPredictor
 {
   public:
-    SimpleIndirectPredictor(const SimpleIndirectPredictorParams * params);
+    SimpleIndirectPredictor(const SimpleIndirectPredictorParams &params);
 
     bool lookup(Addr br_addr, TheISA::PCState& br_target, ThreadID tid);
     void recordIndirect(Addr br_addr, Addr tgt_addr, InstSeqNum seq_num,

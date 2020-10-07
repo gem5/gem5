@@ -60,41 +60,41 @@ class DRAMPower
      * DRAMInterfaceParams to the memSpec of DRAMPower
      */
     static Data::MemArchitectureSpec getArchParams(
-                                     const DRAMInterfaceParams* p);
+                                     const DRAMInterfaceParams &p);
 
     /**
      * Transforms the timing parameters defined in DRAMInterfaceParams to
      * the memSpec of DRAMPower
      */
-    static Data::MemTimingSpec getTimingParams(const DRAMInterfaceParams* p);
+    static Data::MemTimingSpec getTimingParams(const DRAMInterfaceParams &p);
 
     /**
      * Transforms the power and current parameters defined in
      * DRAMInterfaceParams to the memSpec of DRAMPower
      */
-    static Data::MemPowerSpec getPowerParams(const DRAMInterfaceParams* p);
+    static Data::MemPowerSpec getPowerParams(const DRAMInterfaceParams &p);
 
     /**
      * Determine data rate, either one or two.
      */
-    static uint8_t getDataRate(const DRAMInterfaceParams* p);
+    static uint8_t getDataRate(const DRAMInterfaceParams &p);
 
     /**
      * Determine if DRAM has two voltage domains (or one)
      */
-    static bool hasTwoVDD(const DRAMInterfaceParams* p);
+    static bool hasTwoVDD(const DRAMInterfaceParams &p);
 
     /**
      * Return an instance of MemSpec based on the DRAMInterfaceParams
      */
-    static Data::MemorySpecification getMemSpec(const DRAMInterfaceParams* p);
+    static Data::MemorySpecification getMemSpec(const DRAMInterfaceParams &p);
 
  public:
 
     // Instance of DRAMPower Library
     libDRAMPower powerlib;
 
-    DRAMPower(const DRAMInterfaceParams* p, bool include_io);
+    DRAMPower(const DRAMInterfaceParams &p, bool include_io);
 
 };
 

@@ -59,7 +59,7 @@ class HelloObject : public SimObject
     int timesLeft;
 
   public:
-    HelloObject(HelloObjectParams *p);
+    HelloObject(const HelloObjectParams &p);
 
     /**
      * Part of a SimObject's initilaization. Startup is called after all

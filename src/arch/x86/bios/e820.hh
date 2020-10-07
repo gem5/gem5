@@ -58,8 +58,8 @@ namespace X86ISA
 
       public:
         typedef X86E820EntryParams Params;
-        E820Entry(Params *p) :
-            SimObject(p), addr(p->addr), size(p->size), type(p->range_type)
+        E820Entry(const Params &p) :
+            SimObject(p), addr(p.addr), size(p.size), type(p.range_type)
         {}
     };
 
@@ -70,7 +70,7 @@ namespace X86ISA
 
       public:
         typedef X86E820TableParams Params;
-        E820Table(Params *p) : SimObject(p), entries(p->entries)
+        E820Table(const Params &p) : SimObject(p), entries(p.entries)
         {}
 
         void writeTo(PortProxy& proxy, Addr countAddr, Addr addr);

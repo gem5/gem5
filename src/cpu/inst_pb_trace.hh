@@ -83,7 +83,7 @@ class InstPBTraceRecord : public InstRecord
 class InstPBTrace : public InstTracer
 {
  public:
-    InstPBTrace(const InstPBTraceParams *p);
+    InstPBTrace(const InstPBTraceParams &p);
     virtual ~InstPBTrace();
 
     InstPBTraceRecord* getInstRecord(Tick when, ThreadContext *tc, const

@@ -51,15 +51,15 @@ namespace ArmISA {
 
 const RegVal PMU::reg_pmcr_wr_mask = 0x39;
 
-PMU::PMU(const ArmPMUParams *p)
+PMU::PMU(const ArmPMUParams &p)
     : SimObject(p), BaseISADevice(),
       reg_pmcnten(0), reg_pmcr(0),
       reg_pmselr(0), reg_pminten(0), reg_pmovsr(0),
       reg_pmceid0(0),reg_pmceid1(0),
       clock_remainder(0),
-      maximumCounterCount(p->eventCounters),
+      maximumCounterCount(p.eventCounters),
       cycleCounter(*this, maximumCounterCount),
-      cycleCounterEventId(p->cycleEventId),
+      cycleCounterEventId(p.cycleEventId),
       swIncrementEvent(nullptr),
       reg_pmcr_conf(0),
       interrupt(nullptr)
@@ -71,13 +71,13 @@ PMU::PMU(const ArmPMUParams *p)
               maximumCounterCount);
     }
 
-    warn_if(!p->interrupt, "ARM PMU: No interrupt specified, interrupt " \
+    warn_if(!p.interrupt, "ARM PMU: No interrupt specified, interrupt " \
             "delivery disabled.\n");
 
     /* Setup the performance counter ID registers */
     reg_pmcr_conf.imp = 0x41;    // ARM Ltd.
     reg_pmcr_conf.idcode = 0x00;
-    reg_pmcr_conf.n = p->eventCounters;
+    reg_pmcr_conf.n = p.eventCounters;
 
     // Setup the hard-coded cycle counter, which is equivalent to
     // architected counter event type 0x11.
@@ -92,10 +92,10 @@ void
 PMU::setThreadContext(ThreadContext *tc)
 {
     DPRINTF(PMUVerbose, "Assigning PMU to ContextID %i.\n", tc->contextId());
-    auto pmu_params = static_cast<const ArmPMUParams *>(params());
+    const auto &pmu_params = static_cast<const ArmPMUParams &>(params());
 
-    if (pmu_params->interrupt)
-        interrupt = pmu_params->interrupt->get(tc);
+    if (pmu_params.interrupt)
+        interrupt = pmu_params.interrupt->get(tc);
 }
 
 void
@@ -809,7 +809,7 @@ PMU::SWIncrementEvent::write(uint64_t val)
 } // namespace ArmISA
 
 ArmISA::PMU *
-ArmPMUParams::create()
+ArmPMUParams::create() const
 {
-    return new ArmISA::PMU(this);
+    return new ArmISA::PMU(*this);
 }

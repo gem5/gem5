@@ -38,7 +38,7 @@
 #include "arch/arm/mmu.hh"
 
 ArmISA::MMU *
-ArmMMUParams::create()
+ArmMMUParams::create() const
 {
-    return new ArmISA::MMU(this);
+    return new ArmISA::MMU(*this);
 }

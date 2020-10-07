@@ -62,7 +62,7 @@ class GPUDispatcher : public SimObject
   public:
     typedef GPUDispatcherParams Params;
 
-    GPUDispatcher(const Params *p);
+    GPUDispatcher(const Params &p);
     ~GPUDispatcher();
 
     void serialize(CheckpointOut &cp) const override;

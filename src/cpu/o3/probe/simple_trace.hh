@@ -52,7 +52,7 @@
 class SimpleTrace : public ProbeListenerObject {
 
   public:
-    SimpleTrace(const SimpleTraceParams *params):
+    SimpleTrace(const SimpleTraceParams &params):
         ProbeListenerObject(params)
     {
     }

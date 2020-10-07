@@ -45,7 +45,7 @@ namespace BloomFilter {
 class Block : public Base
 {
   public:
-    Block(const BloomFilterBlockParams* p);
+    Block(const BloomFilterBlockParams &p);
     ~Block();
 
     void set(Addr addr) override;

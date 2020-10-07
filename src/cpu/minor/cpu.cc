@@ -45,22 +45,22 @@
 #include "debug/MinorCPU.hh"
 #include "debug/Quiesce.hh"
 
-MinorCPU::MinorCPU(MinorCPUParams *params) :
+MinorCPU::MinorCPU(const MinorCPUParams &params) :
     BaseCPU(params),
-    threadPolicy(params->threadPolicy)
+    threadPolicy(params.threadPolicy)
 {
     /* This is only written for one thread at the moment */
     Minor::MinorThread *thread;
 
     for (ThreadID i = 0; i < numThreads; i++) {
         if (FullSystem) {
-            thread = new Minor::MinorThread(this, i, params->system,
-                    params->itb, params->dtb, params->isa[i]);
+            thread = new Minor::MinorThread(this, i, params.system,
+                    params.itb, params.dtb, params.isa[i]);
             thread->setStatus(ThreadContext::Halted);
         } else {
-            thread = new Minor::MinorThread(this, i, params->system,
-                    params->workload[i], params->itb, params->dtb,
-                    params->isa[i]);
+            thread = new Minor::MinorThread(this, i, params.system,
+                    params.workload[i], params.itb, params.dtb,
+                    params.isa[i]);
         }
 
         threads.push_back(thread);
@@ -69,13 +69,13 @@ MinorCPU::MinorCPU(MinorCPUParams *params) :
     }
 
 
-    if (params->checker) {
+    if (params.checker) {
         fatal("The Minor model doesn't support checking (yet)\n");
     }
 
     Minor::MinorDynInst::init();
 
-    pipeline = new Minor::Pipeline(*this, *params);
+    pipeline = new Minor::Pipeline(*this, params);
     activityRecorder = pipeline->getActivityRecorder();
 }
 
@@ -93,7 +93,7 @@ MinorCPU::init()
 {
     BaseCPU::init();
 
-    if (!params()->switched_out &&
+    if (!params().switched_out &&
         system->getMemoryMode() != Enums::timing)
     {
         fatal("The Minor CPU requires the memory system to be in "
@@ -292,9 +292,9 @@ MinorCPU::wakeupOnEvent(unsigned int stage_id)
 }
 
 MinorCPU *
-MinorCPUParams::create()
+MinorCPUParams::create() const
 {
-    return new MinorCPU(this);
+    return new MinorCPU(*this);
 }
 
 Port &

@@ -48,7 +48,7 @@ struct StackDistProbeParams;
 class StackDistProbe : public BaseMemProbe
 {
   public:
-    StackDistProbe(StackDistProbeParams *params);
+    StackDistProbe(const StackDistProbeParams &params);
 
     void regStats() override;
 

@@ -60,7 +60,7 @@ class A9SCU : public BasicPioDevice
       * The constructor for RealView just registers itself with the MMU.
       * @param p params structure
       */
-    A9SCU(Params *p);
+    A9SCU(const Params &p);
 
     /**
      * Handle a read to the device

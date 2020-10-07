@@ -37,7 +37,9 @@
 
 #include "cpu/simple/noncaching.hh"
 
-NonCachingSimpleCPU::NonCachingSimpleCPU(NonCachingSimpleCPUParams *p)
+#include <cassert>
+
+NonCachingSimpleCPU::NonCachingSimpleCPU(const NonCachingSimpleCPUParams &p)
     : AtomicSimpleCPU(p)
 {
 }
@@ -63,10 +65,10 @@ NonCachingSimpleCPU::sendPacket(RequestPort &port, const PacketPtr &pkt)
 }
 
 NonCachingSimpleCPU *
-NonCachingSimpleCPUParams::create()
+NonCachingSimpleCPUParams::create() const
 {
-    numThreads = 1;
+    assert(numThreads == 1);
     if (!FullSystem && workload.size() != 1)
         fatal("only one workload allowed");
-    return new NonCachingSimpleCPU(this);
+    return new NonCachingSimpleCPU(*this);
 }

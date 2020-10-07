@@ -43,9 +43,9 @@
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
 
-MmDisk::MmDisk(const Params *p)
-    : BasicPioDevice(p, p->image->size() * SectorSize),
-      image(p->image), curSector((off_t)-1), dirty(false)
+MmDisk::MmDisk(const Params &p)
+    : BasicPioDevice(p, p.image->size() * SectorSize),
+      image(p.image), curSector((off_t)-1), dirty(false)
 {
     std::memset(&diskData, 0, SectorSize);
 }
@@ -184,7 +184,7 @@ MmDisk::serialize(CheckpointOut &cp) const
 }
 
 MmDisk *
-MmDiskParams::create()
+MmDiskParams::create() const
 {
-    return new MmDisk(this);
+    return new MmDisk(*this);
 }

@@ -166,7 +166,7 @@ class Base : public SimObject
 
   public:
     typedef BaseCacheCompressorParams Params;
-    Base(const Params *p);
+    Base(const Params &p);
     virtual ~Base() = default;
 
     /**

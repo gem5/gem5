@@ -91,10 +91,10 @@ class SnoopFilter : public SimObject {
 
     typedef std::vector<QueuedResponsePort*> SnoopList;
 
-    SnoopFilter (const SnoopFilterParams *p) :
+    SnoopFilter (const SnoopFilterParams &p) :
         SimObject(p), reqLookupResult(cachedLocations.end()),
-        linesize(p->system->cacheLineSize()), lookupLatency(p->lookup_latency),
-        maxEntryCount(p->max_capacity / p->system->cacheLineSize())
+        linesize(p.system->cacheLineSize()), lookupLatency(p.lookup_latency),
+        maxEntryCount(p.max_capacity / p.system->cacheLineSize())
     {
     }
 

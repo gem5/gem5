@@ -87,7 +87,7 @@ class BaseSimpleCPU : public BaseCPU
     void swapActiveThread();
 
   public:
-    BaseSimpleCPU(BaseSimpleCPUParams *params);
+    BaseSimpleCPU(const BaseSimpleCPUParams &params);
     virtual ~BaseSimpleCPU();
     void wakeup(ThreadID tid) override;
     void init() override;

@@ -60,7 +60,7 @@ class Switch : public BasicRouter
 {
   public:
     typedef SwitchParams Params;
-    Switch(const Params *p);
+    Switch(const Params &p);
     ~Switch() = default;
     void init();
 

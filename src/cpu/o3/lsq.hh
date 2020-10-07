@@ -847,7 +847,7 @@ class LSQ
     };
 
     /** Constructs an LSQ with the given parameters. */
-    LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params);
+    LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, const DerivO3CPUParams &params);
     ~LSQ() { }
 
     /** Returns the name of the LSQ. */

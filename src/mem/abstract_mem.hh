@@ -206,7 +206,7 @@ class AbstractMemory : public ClockedObject
 
     typedef AbstractMemoryParams Params;
 
-    AbstractMemory(const Params* p);
+    AbstractMemory(const Params &p);
     virtual ~AbstractMemory() {}
 
     void initState() override;
@@ -217,7 +217,7 @@ class AbstractMemory : public ClockedObject
      *
      * @return true if null
      */
-    bool isNull() const { return params()->null; }
+    bool isNull() const { return params().null; }
 
     /**
      * Set the host memory backing store to be used by this memory
@@ -251,10 +251,10 @@ class AbstractMemory : public ClockedObject
      */
     void system(System *sys) { _system = sys; }
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     /**

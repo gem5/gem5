@@ -29,7 +29,7 @@
 #include "arch/riscv/interrupts.hh"
 
 RiscvISA::Interrupts *
-RiscvInterruptsParams::create()
+RiscvInterruptsParams::create() const
 {
-    return new RiscvISA::Interrupts(this);
+    return new RiscvISA::Interrupts(*this);
 }

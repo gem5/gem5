@@ -44,7 +44,7 @@ class SeriesRequestGenerator : public DirectedGenerator
 {
   public:
     typedef SeriesRequestGeneratorParams Params;
-    SeriesRequestGenerator(const Params *p);
+    SeriesRequestGenerator(const Params &p);
 
     ~SeriesRequestGenerator();
 

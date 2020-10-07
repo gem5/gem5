@@ -289,7 +289,7 @@ Kvm::createVM()
 }
 
 
-KvmVM::KvmVM(KvmVMParams *params)
+KvmVM::KvmVM(const KvmVMParams &params)
     : SimObject(params),
       kvm(new Kvm()), system(nullptr),
       vmFD(kvm->createVM()),
@@ -302,8 +302,8 @@ KvmVM::KvmVM(KvmVMParams *params)
     if (!maxMemorySlot)
         maxMemorySlot = 32;
     /* Setup the coalesced MMIO regions */
-    for (int i = 0; i < params->coalescedMMIO.size(); ++i)
-        coalesceMMIO(params->coalescedMMIO[i]);
+    for (int i = 0; i < params.coalescedMMIO.size(); ++i)
+        coalesceMMIO(params.coalescedMMIO[i]);
 }
 
 KvmVM::~KvmVM()
@@ -582,7 +582,7 @@ KvmVM::ioctl(int request, long p1) const
 
 
 KvmVM *
-KvmVMParams::create()
+KvmVMParams::create() const
 {
     static bool created = false;
     if (created)
@@ -590,5 +590,5 @@ KvmVMParams::create()
 
     created = true;
 
-    return new KvmVM(this);
+    return new KvmVM(*this);
 }

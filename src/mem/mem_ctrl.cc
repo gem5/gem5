@@ -51,32 +51,32 @@
 
 using namespace std;
 
-MemCtrl::MemCtrl(const MemCtrlParams* p) :
+MemCtrl::MemCtrl(const MemCtrlParams &p) :
     QoS::MemCtrl(p),
     port(name() + ".port", *this), isTimingMode(false),
     retryRdReq(false), retryWrReq(false),
     nextReqEvent([this]{ processNextReqEvent(); }, name()),
     respondEvent([this]{ processRespondEvent(); }, name()),
-    dram(p->dram), nvm(p->nvm),
+    dram(p.dram), nvm(p.nvm),
     readBufferSize((dram ? dram->readBufferSize : 0) +
                    (nvm ? nvm->readBufferSize : 0)),
     writeBufferSize((dram ? dram->writeBufferSize : 0) +
                     (nvm ? nvm->writeBufferSize : 0)),
-    writeHighThreshold(writeBufferSize * p->write_high_thresh_perc / 100.0),
-    writeLowThreshold(writeBufferSize * p->write_low_thresh_perc / 100.0),
-    minWritesPerSwitch(p->min_writes_per_switch),
+    writeHighThreshold(writeBufferSize * p.write_high_thresh_perc / 100.0),
+    writeLowThreshold(writeBufferSize * p.write_low_thresh_perc / 100.0),
+    minWritesPerSwitch(p.min_writes_per_switch),
     writesThisTime(0), readsThisTime(0),
-    memSchedPolicy(p->mem_sched_policy),
-    frontendLatency(p->static_frontend_latency),
-    backendLatency(p->static_backend_latency),
-    commandWindow(p->command_window),
+    memSchedPolicy(p.mem_sched_policy),
+    frontendLatency(p.static_frontend_latency),
+    backendLatency(p.static_backend_latency),
+    commandWindow(p.command_window),
     nextBurstAt(0), prevArrival(0),
     nextReqTime(0),
     stats(*this)
 {
     DPRINTF(MemCtrl, "Setting up controller\n");
-    readQueue.resize(p->qos_priorities);
-    writeQueue.resize(p->qos_priorities);
+    readQueue.resize(p.qos_priorities);
+    writeQueue.resize(p.qos_priorities);
 
     // Hook up interfaces to the controller
     if (dram)
@@ -87,10 +87,10 @@ MemCtrl::MemCtrl(const MemCtrlParams* p) :
     fatal_if(!dram && !nvm, "Memory controller must have an interface");
 
     // perform a basic check of the write thresholds
-    if (p->write_low_thresh_perc >= p->write_high_thresh_perc)
+    if (p.write_low_thresh_perc >= p.write_high_thresh_perc)
         fatal("Write buffer low threshold %d must be smaller than the "
-              "high threshold %d\n", p->write_low_thresh_perc,
-              p->write_high_thresh_perc);
+              "high threshold %d\n", p.write_low_thresh_perc,
+              p.write_high_thresh_perc);
 }
 
 void
@@ -1469,7 +1469,7 @@ MemCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
 }
 
 MemCtrl*
-MemCtrlParams::create()
+MemCtrlParams::create() const
 {
-    return new MemCtrl(this);
+    return new MemCtrl(*this);
 }

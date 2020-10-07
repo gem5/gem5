@@ -181,7 +181,7 @@ class AccessMapPatternMatching : public ClockedObject
     EventFunctionWrapper epochEvent;
 
   public:
-    AccessMapPatternMatching(const AccessMapPatternMatchingParams* p);
+    AccessMapPatternMatching(const AccessMapPatternMatchingParams &p);
     ~AccessMapPatternMatching() = default;
 
     void startup() override;
@@ -193,7 +193,7 @@ class AMPM : public Queued
 {
     AccessMapPatternMatching &ampm;
   public:
-    AMPM(const AMPMPrefetcherParams* p);
+    AMPM(const AMPMPrefetcherParams &p);
     ~AMPM() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,

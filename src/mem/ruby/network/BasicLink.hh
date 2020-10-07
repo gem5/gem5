@@ -46,8 +46,8 @@ class BasicLink : public SimObject
 {
   public:
     typedef BasicLinkParams Params;
-    BasicLink(const Params *p);
-    const Params *params() const { return (const Params *)_params; }
+    BasicLink(const Params &p);
+    const Params &params() const { return (const Params &)_params; }
 
     void init();
 
@@ -71,8 +71,8 @@ class BasicExtLink : public BasicLink
 {
   public:
     typedef BasicExtLinkParams Params;
-    BasicExtLink(const Params *p);
-    const Params *params() const { return (const Params *)_params; }
+    BasicExtLink(const Params &p);
+    const Params &params() const { return (const Params &)_params; }
 
     friend class Topology;
 };
@@ -81,8 +81,8 @@ class BasicIntLink : public BasicLink
 {
   public:
     typedef BasicIntLinkParams Params;
-    BasicIntLink(const Params *p);
-    const Params *params() const { return (const Params *)_params; }
+    BasicIntLink(const Params &p);
+    const Params &params() const { return (const Params &)_params; }
 
     friend class Topology;
 };

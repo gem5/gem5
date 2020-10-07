@@ -46,7 +46,7 @@
 class DummyChecker : public CheckerCPU
 {
   public:
-    DummyChecker(Params *p)
+    DummyChecker(const Params &p)
           : CheckerCPU(p)
     { }
 };

@@ -51,7 +51,7 @@ class TurnaroundPolicy : public SimObject
     using Params = QoSTurnaroundPolicyParams;
 
   public:
-    TurnaroundPolicy(const Params* p) : SimObject(p) {};
+    TurnaroundPolicy(const Params &p) : SimObject(p) {};
 
     virtual ~TurnaroundPolicy() {};
 

@@ -49,10 +49,10 @@
 
 #include "base/intmath.hh"
 
-BaseSetAssoc::BaseSetAssoc(const Params *p)
-    :BaseTags(p), allocAssoc(p->assoc), blks(p->size / p->block_size),
-     sequentialAccess(p->sequential_access),
-     replacementPolicy(p->replacement_policy)
+BaseSetAssoc::BaseSetAssoc(const Params &p)
+    :BaseTags(p), allocAssoc(p.assoc), blks(p.size / p.block_size),
+     sequentialAccess(p.sequential_access),
+     replacementPolicy(p.replacement_policy)
 {
     // Check parameters
     if (blkSize < 4 || !isPowerOf2(blkSize)) {
@@ -92,10 +92,10 @@ BaseSetAssoc::invalidate(CacheBlk *blk)
 }
 
 BaseSetAssoc *
-BaseSetAssocParams::create()
+BaseSetAssocParams::create() const
 {
     // There must be a indexing policy
     fatal_if(!indexing_policy, "An indexing policy is required");
 
-    return new BaseSetAssoc(this);
+    return new BaseSetAssoc(*this);
 }

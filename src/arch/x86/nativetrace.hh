@@ -78,7 +78,7 @@ class X86NativeTrace : public NativeTrace
     bool checkXMM(int num, uint64_t mXmmBuf[], uint64_t nXmmBuf[]);
 
   public:
-    X86NativeTrace(const Params *p);
+    X86NativeTrace(const Params &p);
 
     void check(NativeTraceRecord *record);
 };

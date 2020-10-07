@@ -54,16 +54,16 @@ using std::vector;
 
 
 // initialize hdlcd registers
-HDLcd::HDLcd(const HDLcdParams *p)
+HDLcd::HDLcd(const HDLcdParams &p)
     : AmbaDmaDevice(p, 0xFFFF),
       // Parameters
-      vnc(p->vnc),
-      workaroundSwapRB(p->workaround_swap_rb),
-      workaroundDmaLineCount(p->workaround_dma_line_count),
+      vnc(p.vnc),
+      workaroundSwapRB(p.workaround_swap_rb),
+      workaroundDmaLineCount(p.workaround_dma_line_count),
       addrRanges{RangeSize(pioAddr, pioSize)},
-      enableCapture(p->enable_capture),
-      pixelBufferSize(p->pixel_buffer_size),
-      virtRefreshRate(p->virt_refresh_rate),
+      enableCapture(p.enable_capture),
+      pixelBufferSize(p.pixel_buffer_size),
+      virtRefreshRate(p.virt_refresh_rate),
 
       // Registers
       version(VERSION_RESETV),
@@ -83,8 +83,8 @@ HDLcd::HDLcd(const HDLcdParams *p)
 
       virtRefreshEvent([this]{ virtRefresh(); }, name()),
       // Other
-      imgFormat(p->frame_format), pic(NULL), conv(PixelConverter::rgba8888_le),
-      pixelPump(*this, *p->pxl_clk, p->pixel_chunk)
+      imgFormat(p.frame_format), pic(NULL), conv(PixelConverter::rgba8888_le),
+      pixelPump(*this, *p.pxl_clk, p.pixel_chunk)
 {
     if (vnc)
         vnc->setFrameBuffer(&pixelPump.fb);
@@ -692,7 +692,7 @@ HDLcd::PixelPump::dumpSettings()
 
 
 HDLcd *
-HDLcdParams::create()
+HDLcdParams::create() const
 {
-    return new HDLcd(this);
+    return new HDLcd(*this);
 }

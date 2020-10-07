@@ -47,7 +47,7 @@ namespace SparcISA {
 class MMU : public BaseMMU
 {
   public:
-    MMU(const SparcMMUParams *p)
+    MMU(const SparcMMUParams &p)
       : BaseMMU(p)
     {}
 };

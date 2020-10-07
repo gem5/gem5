@@ -360,13 +360,13 @@ GIC::supportsVersion(GicVersion version)
 } // namespace FastModel
 
 FastModel::SCGIC *
-SCFastModelGICParams::create()
+SCFastModelGICParams::create() const
 {
     return new FastModel::SCGIC(*this, name.c_str());
 }
 
 FastModel::GIC *
-FastModelGICParams::create()
+FastModelGICParams::create() const
 {
     return new FastModel::GIC(*this);
 }

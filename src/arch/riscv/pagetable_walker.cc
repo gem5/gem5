@@ -581,7 +581,7 @@ Walker::WalkerState::pageFault(bool present)
 } /* end namespace RiscvISA */
 
 RiscvISA::Walker *
-RiscvPagetableWalkerParams::create()
+RiscvPagetableWalkerParams::create() const
 {
-    return new RiscvISA::Walker(this);
+    return new RiscvISA::Walker(*this);
 }

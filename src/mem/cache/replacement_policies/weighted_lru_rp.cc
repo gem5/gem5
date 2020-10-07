@@ -40,7 +40,7 @@
 
 namespace ReplacementPolicy {
 
-WeightedLRU::WeightedLRU(const Params* p)
+WeightedLRU::WeightedLRU(const Params &p)
   : Base(p)
 {
 }
@@ -124,7 +124,7 @@ WeightedLRU::invalidate(const std::shared_ptr<ReplacementData>&
 } // namespace ReplacementPolicy
 
 ReplacementPolicy::WeightedLRU*
-WeightedLRURPParams::create()
+WeightedLRURPParams::create() const
 {
-    return new ReplacementPolicy::WeightedLRU(this);
+    return new ReplacementPolicy::WeightedLRU(*this);
 }

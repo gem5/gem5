@@ -50,13 +50,13 @@
 #include "params/Pl011.hh"
 #include "sim/sim_exit.hh"
 
-Pl011::Pl011(const Pl011Params *p)
+Pl011::Pl011(const Pl011Params &p)
     : Uart(p, 0x1000),
       intEvent([this]{ generateInterrupt(); }, name()),
       control(0x300), fbrd(0), ibrd(0), lcrh(0), ifls(0x12),
       imsc(0), rawInt(0),
-      endOnEOT(p->end_on_eot), interrupt(p->interrupt->get()),
-      intDelay(p->int_delay)
+      endOnEOT(p.end_on_eot), interrupt(p.interrupt->get()),
+      intDelay(p.int_delay)
 {
 }
 
@@ -327,7 +327,7 @@ Pl011::unserialize(CheckpointIn &cp)
 }
 
 Pl011 *
-Pl011Params::create()
+Pl011Params::create() const
 {
-    return new Pl011(this);
+    return new Pl011(*this);
 }

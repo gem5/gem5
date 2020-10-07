@@ -54,7 +54,7 @@ class SlimAMPM : public Queued
    /** DCPT prefetcher object */
    DeltaCorrelatingPredictionTables &dcpt;
  public:
-   SlimAMPM(const SlimAMPMPrefetcherParams *p);
+   SlimAMPM(const SlimAMPMPrefetcherParams &p);
    ~SlimAMPM() = default;
 
    void calculatePrefetch(const PrefetchInfo &pfi,

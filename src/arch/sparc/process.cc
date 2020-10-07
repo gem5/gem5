@@ -52,14 +52,14 @@ const std::vector<int> SparcProcess::SyscallABI::ArgumentRegs = {
     INTREG_O0, INTREG_O1, INTREG_O2, INTREG_O3, INTREG_O4, INTREG_O5
 };
 
-SparcProcess::SparcProcess(ProcessParams *params,
+SparcProcess::SparcProcess(const ProcessParams &params,
                            ::Loader::ObjectFile *objFile, Addr _StackBias)
     : Process(params,
-              new EmulationPageTable(params->name, params->pid, PageBytes),
+              new EmulationPageTable(params.name, params.pid, PageBytes),
               objFile),
       StackBias(_StackBias)
 {
-    fatal_if(params->useArchPT, "Arch page tables not implemented.");
+    fatal_if(params.useArchPT, "Arch page tables not implemented.");
     // Initialize these to 0s
     fillStart = 0;
     spillStart = 0;

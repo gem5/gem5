@@ -93,7 +93,7 @@ CortexR52::getPort(const std::string &if_name, PortID idx)
     }
 }
 
-CortexR52Cluster::CortexR52Cluster(Params &p) :
+CortexR52Cluster::CortexR52Cluster(const Params &p) :
     SimObject(&p), _params(p), cores(p.cores), evs(p.evs)
 {
     for (int i = 0; i < p.cores.size(); i++)
@@ -162,13 +162,13 @@ CortexR52Cluster::getPort(const std::string &if_name, PortID idx)
 } // namespace FastModel
 
 FastModel::CortexR52 *
-FastModelCortexR52Params::create()
+FastModelCortexR52Params::create() const
 {
     return new FastModel::CortexR52(*this);
 }
 
 FastModel::CortexR52Cluster *
-FastModelCortexR52ClusterParams::create()
+FastModelCortexR52ClusterParams::create() const
 {
     return new FastModel::CortexR52Cluster(*this);
 }

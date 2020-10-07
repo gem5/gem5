@@ -43,7 +43,7 @@ namespace BloomFilter {
 class H3 : public MultiBitSel
 {
   public:
-    H3(const BloomFilterH3Params* p);
+    H3(const BloomFilterH3Params &p);
     ~H3();
 
   protected:

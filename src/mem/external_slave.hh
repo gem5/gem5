@@ -123,7 +123,7 @@ class ExternalSlave : public SimObject
     static std::map<std::string, Handler *> portHandlers;
 
   public:
-    ExternalSlave(ExternalSlaveParams *params);
+    ExternalSlave(const ExternalSlaveParams &params);
 
     /** Port interface.  Responds only to port "port" */
     Port &getPort(const std::string &if_name,

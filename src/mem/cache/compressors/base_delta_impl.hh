@@ -40,7 +40,7 @@
 namespace Compressor {
 
 template <class BaseType, std::size_t DeltaSizeBits>
-BaseDelta<BaseType, DeltaSizeBits>::BaseDelta(const Params *p)
+BaseDelta<BaseType, DeltaSizeBits>::BaseDelta(const Params &p)
     : DictionaryCompressor<BaseType>(p)
 {
 }

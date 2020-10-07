@@ -51,31 +51,31 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
-RubyPort::RubyPort(const Params *p)
-    : ClockedObject(p), m_ruby_system(p->ruby_system), m_version(p->version),
+RubyPort::RubyPort(const Params &p)
+    : ClockedObject(p), m_ruby_system(p.ruby_system), m_version(p.version),
       m_controller(NULL), m_mandatory_q_ptr(NULL),
-      m_usingRubyTester(p->using_ruby_tester), system(p->system),
+      m_usingRubyTester(p.using_ruby_tester), system(p.system),
       pioRequestPort(csprintf("%s.pio-request-port", name()), this),
       pioResponsePort(csprintf("%s.pio-response-port", name()), this),
       memRequestPort(csprintf("%s.mem-request-port", name()), this),
       memResponsePort(csprintf("%s-mem-response-port", name()), this,
-                   p->ruby_system->getAccessBackingStore(), -1,
-                   p->no_retry_on_stall),
-      gotAddrRanges(p->port_interrupt_out_port_connection_count),
-      m_isCPUSequencer(p->is_cpu_sequencer)
+                   p.ruby_system->getAccessBackingStore(), -1,
+                   p.no_retry_on_stall),
+      gotAddrRanges(p.port_interrupt_out_port_connection_count),
+      m_isCPUSequencer(p.is_cpu_sequencer)
 {
     assert(m_version != -1);
 
     // create the response ports based on the number of connected ports
-    for (size_t i = 0; i < p->port_in_ports_connection_count; ++i) {
+    for (size_t i = 0; i < p.port_in_ports_connection_count; ++i) {
         response_ports.push_back(new MemResponsePort(csprintf
             ("%s.response_ports%d", name(), i), this,
-            p->ruby_system->getAccessBackingStore(),
-            i, p->no_retry_on_stall));
+            p.ruby_system->getAccessBackingStore(),
+            i, p.no_retry_on_stall));
     }
 
     // create the request ports based on the number of connected ports
-    for (size_t i = 0; i < p->port_interrupt_out_port_connection_count; ++i) {
+    for (size_t i = 0; i < p.port_interrupt_out_port_connection_count; ++i) {
         request_ports.push_back(new PioRequestPort(csprintf(
                     "%s.request_ports%d", name(), i), this));
     }

@@ -72,14 +72,14 @@
 /**
  * Constructor and destructor functions of UFSHCM device
  */
-UFSHostDevice::UFSSCSIDevice::UFSSCSIDevice(const UFSHostDeviceParams* p,
+UFSHostDevice::UFSSCSIDevice::UFSSCSIDevice(const UFSHostDeviceParams &p,
                              uint32_t lun_id, const Callback &transfer_cb,
                              const Callback &read_cb):
     SimObject(p),
-    flashDisk(p->image[lun_id]),
-    flashDevice(p->internalflash[lun_id]),
-    blkSize(p->img_blk_size),
-    lunAvail(p->image.size()),
+    flashDisk(p.image[lun_id]),
+    flashDevice(p.internalflash[lun_id]),
+    blkSize(p.img_blk_size),
+    lunAvail(p.image.size()),
     diskSize(flashDisk->size()),
     capacityLower((diskSize - 1) & 0xffffffff),
     capacityUpper((diskSize - SectorSize) >> 32),
@@ -712,15 +712,15 @@ UFSHostDevice::UFSSCSIDevice::writeFlash(uint8_t* writeaddr, uint64_t offset,
  * Constructor for the UFS Host device
  */
 
-UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams* p) :
+UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams &p) :
     DmaDevice(p),
-    pioAddr(p->pio_addr),
+    pioAddr(p.pio_addr),
     pioSize(0x0FFF),
-    pioDelay(p->pio_latency),
-    intNum(p->int_num),
-    gic(p->gic),
-    lunAvail(p->image.size()),
-    UFSSlots(p->ufs_slots - 1),
+    pioDelay(p.pio_latency),
+    intNum(p.int_num),
+    gic(p.gic),
+    lunAvail(p.image.size()),
+    UFSSlots(p.ufs_slots - 1),
     readPendingNum(0),
     writePendingNum(0),
     activeDoorbells(0),
@@ -757,9 +757,9 @@ UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams* p) :
  */
 
 UFSHostDevice*
-UFSHostDeviceParams::create()
+UFSHostDeviceParams::create() const
 {
-    return new UFSHostDevice(this);
+    return new UFSHostDevice(*this);
 }
 
 

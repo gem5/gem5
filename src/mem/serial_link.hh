@@ -319,7 +319,7 @@ class SerialLink : public ClockedObject
 
     typedef SerialLinkParams Params;
 
-    SerialLink(SerialLinkParams *p);
+    SerialLink(const SerialLinkParams &p);
 };
 
 #endif //__MEM_SERIAL_LINK_HH__

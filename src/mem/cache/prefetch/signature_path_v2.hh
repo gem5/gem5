@@ -90,7 +90,7 @@ class SignaturePathV2 : public SignaturePath
             override;
 
   public:
-    SignaturePathV2(const SignaturePathPrefetcherV2Params* p);
+    SignaturePathV2(const SignaturePathPrefetcherV2Params &p);
     ~SignaturePathV2() = default;
 };
 

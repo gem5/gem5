@@ -140,7 +140,7 @@ X86ISA::Cmos::unserialize(CheckpointIn &cp)
 }
 
 X86ISA::Cmos *
-CmosParams::create()
+CmosParams::create() const
 {
-    return new X86ISA::Cmos(this);
+    return new X86ISA::Cmos(*this);
 }

@@ -36,18 +36,18 @@
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet/CreditLink.hh"
 
-NetworkLink::NetworkLink(const Params *p)
-    : ClockedObject(p), Consumer(this), m_id(p->link_id),
+NetworkLink::NetworkLink(const Params &p)
+    : ClockedObject(p), Consumer(this), m_id(p.link_id),
       m_type(NUM_LINK_TYPES_),
-      m_latency(p->link_latency), m_link_utilized(0),
-      m_virt_nets(p->virt_nets), linkBuffer(),
+      m_latency(p.link_latency), m_link_utilized(0),
+      m_virt_nets(p.virt_nets), linkBuffer(),
       link_consumer(nullptr), link_srcQueue(nullptr)
 {
-    int num_vnets = (p->supported_vnets).size();
+    int num_vnets = (p.supported_vnets).size();
     mVnets.resize(num_vnets);
-    bitWidth = p->width;
+    bitWidth = p.width;
     for (int i = 0; i < num_vnets; i++) {
-        mVnets[i] = p->supported_vnets[i];
+        mVnets[i] = p.supported_vnets[i];
     }
 }
 
@@ -111,15 +111,15 @@ NetworkLink::resetStats()
 }
 
 NetworkLink *
-NetworkLinkParams::create()
+NetworkLinkParams::create() const
 {
-    return new NetworkLink(this);
+    return new NetworkLink(*this);
 }
 
 CreditLink *
-CreditLinkParams::create()
+CreditLinkParams::create() const
 {
-    return new CreditLink(this);
+    return new CreditLink(*this);
 }
 
 uint32_t

@@ -176,7 +176,7 @@ class DRAMsim3 : public AbstractMemory
   public:
 
     typedef DRAMsim3Params Params;
-    DRAMsim3(const Params *p);
+    DRAMsim3(const Params &p);
 
     /**
      * Read completion callback.

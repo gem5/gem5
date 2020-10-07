@@ -44,7 +44,7 @@ class ObjectFile;
 class MipsProcess : public Process
 {
   protected:
-    MipsProcess(ProcessParams * params, ::Loader::ObjectFile *objFile);
+    MipsProcess(const ProcessParams &params, ::Loader::ObjectFile *objFile);
 
     void initState();
 

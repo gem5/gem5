@@ -41,7 +41,7 @@
 #include "params/SerialDevice.hh"
 #include "params/SerialNullDevice.hh"
 
-SerialDevice::SerialDevice(const SerialDeviceParams *p) : SimObject(p)
+SerialDevice::SerialDevice(const SerialDeviceParams &p) : SimObject(p)
 {
 }
 
@@ -72,7 +72,7 @@ SerialDevice::notifyInterface()
 
 
 
-SerialNullDevice::SerialNullDevice(const SerialNullDeviceParams *p)
+SerialNullDevice::SerialNullDevice(const SerialNullDeviceParams &p)
     : SerialDevice(p)
 {
 }
@@ -86,7 +86,7 @@ SerialNullDevice::readData()
 
 
 SerialNullDevice *
-SerialNullDeviceParams::create()
+SerialNullDeviceParams::create() const
 {
-    return new SerialNullDevice(this);
+    return new SerialNullDevice(*this);
 }

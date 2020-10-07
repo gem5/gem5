@@ -108,7 +108,7 @@ class SectorTags : public BaseTags
     /**
      * Construct and initialize this tag store.
      */
-    SectorTags(const Params *p);
+    SectorTags(const Params &p);
 
     /**
      * Destructor.

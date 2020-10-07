@@ -55,31 +55,31 @@ using namespace std;
 using namespace Linux;
 using namespace ArmISA;
 
-ArmSystem::ArmSystem(Params *p)
+ArmSystem::ArmSystem(const Params &p)
     : System(p),
-      _haveSecurity(p->have_security),
-      _haveLPAE(p->have_lpae),
-      _haveVirtualization(p->have_virtualization),
-      _haveCrypto(p->have_crypto),
+      _haveSecurity(p.have_security),
+      _haveLPAE(p.have_lpae),
+      _haveVirtualization(p.have_virtualization),
+      _haveCrypto(p.have_crypto),
       _genericTimer(nullptr),
       _gic(nullptr),
       _pwrCtrl(nullptr),
-      _highestELIs64(p->highest_el_is_64),
-      _physAddrRange64(p->phys_addr_range_64),
-      _haveLargeAsid64(p->have_large_asid_64),
-      _haveTME(p->have_tme),
-      _haveSVE(p->have_sve),
-      _sveVL(p->sve_vl),
-      _haveLSE(p->have_lse),
-      _havePAN(p->have_pan),
-      _haveSecEL2(p->have_secel2),
-      semihosting(p->semihosting),
-      multiProc(p->multi_proc)
+      _highestELIs64(p.highest_el_is_64),
+      _physAddrRange64(p.phys_addr_range_64),
+      _haveLargeAsid64(p.have_large_asid_64),
+      _haveTME(p.have_tme),
+      _haveSVE(p.have_sve),
+      _sveVL(p.sve_vl),
+      _haveLSE(p.have_lse),
+      _havePAN(p.have_pan),
+      _haveSecEL2(p.have_secel2),
+      semihosting(p.semihosting),
+      multiProc(p.multi_proc)
 {
-    if (p->auto_reset_addr) {
+    if (p.auto_reset_addr) {
         _resetAddr = workload->getEntry();
     } else {
-        _resetAddr = p->reset_addr;
+        _resetAddr = p.reset_addr;
         warn_if(workload->getEntry() != _resetAddr,
                 "Workload entry point %#x and reset address %#x are different",
                 workload->getEntry(), _resetAddr);
@@ -236,7 +236,7 @@ ArmSystem::callClearWakeRequest(ThreadContext *tc)
 }
 
 ArmSystem *
-ArmSystemParams::create()
+ArmSystemParams::create() const
 {
-    return new ArmSystem(this);
+    return new ArmSystem(*this);
 }

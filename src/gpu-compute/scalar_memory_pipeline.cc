@@ -43,10 +43,10 @@
 #include "gpu-compute/shader.hh"
 #include "gpu-compute/wavefront.hh"
 
-ScalarMemPipeline::ScalarMemPipeline(const ComputeUnitParams* p,
+ScalarMemPipeline::ScalarMemPipeline(const ComputeUnitParams &p,
                                      ComputeUnit &cu)
     : computeUnit(cu), _name(cu.name() + ".ScalarMemPipeline"),
-      queueSize(p->scalar_mem_queue_size),
+      queueSize(p.scalar_mem_queue_size),
       inflightStores(0), inflightLoads(0)
 {
 }

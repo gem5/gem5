@@ -113,7 +113,7 @@ class EnergyCtrl : public BasicPioDevice
     };
 
     typedef EnergyCtrlParams Params;
-    EnergyCtrl(const Params *p);
+    EnergyCtrl(const Params &p);
 
     /**
      * Read command sent to the device

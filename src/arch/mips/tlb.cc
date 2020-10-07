@@ -54,8 +54,7 @@ using namespace MipsISA;
 //  MIPS TLB
 //
 
-TLB::TLB(const Params *p)
-    : BaseTLB(p), size(p->size), nlu(0)
+TLB::TLB(const Params &p) : BaseTLB(p), size(p.size), nlu(0)
 {
     table = new PTE[size];
     memset(table, 0, sizeof(PTE[size]));
@@ -259,7 +258,7 @@ TLB::index(bool advance)
 }
 
 MipsISA::TLB *
-MipsTLBParams::create()
+MipsTLBParams::create() const
 {
-    return new MipsISA::TLB(this);
+    return new MipsISA::TLB(*this);
 }

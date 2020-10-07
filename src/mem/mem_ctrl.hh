@@ -609,7 +609,7 @@ class MemCtrl : public QoS::MemCtrl
 
   public:
 
-    MemCtrl(const MemCtrlParams* p);
+    MemCtrl(const MemCtrlParams &p);
 
     /**
      * Ensure that all interfaced have drained commands

@@ -39,7 +39,7 @@
 class X86KvmCPU : public BaseKvmCPU
 {
   public:
-    X86KvmCPU(X86KvmCPUParams *params);
+    X86KvmCPU(const X86KvmCPUParams &params);
     virtual ~X86KvmCPU();
 
     void startup() override;

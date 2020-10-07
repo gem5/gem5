@@ -46,7 +46,7 @@
 #include "dev/ps2/types.hh"
 #include "params/PS2Device.hh"
 
-PS2Device::PS2Device(const PS2DeviceParams *p)
+PS2Device::PS2Device(const PS2DeviceParams &p)
     : SimObject(p)
 {
     inBuffer.reserve(16);

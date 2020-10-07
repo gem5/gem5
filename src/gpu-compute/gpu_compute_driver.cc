@@ -44,7 +44,7 @@
 #include "params/GPUComputeDriver.hh"
 #include "sim/syscall_emul_buf.hh"
 
-GPUComputeDriver::GPUComputeDriver(Params *p)
+GPUComputeDriver::GPUComputeDriver(const Params &p)
     : HSADriver(p)
 {
     DPRINTF(GPUDriver, "Constructing KFD: device\n");
@@ -412,7 +412,7 @@ GPUComputeDriver::ldsApeLimit(Addr apeBase) const
 }
 
 GPUComputeDriver*
-GPUComputeDriverParams::create()
+GPUComputeDriverParams::create() const
 {
-    return new GPUComputeDriver(this);
+    return new GPUComputeDriver(*this);
 }

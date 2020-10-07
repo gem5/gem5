@@ -381,7 +381,7 @@ class System : public SimObject, public PCEventScope
     ByteOrder
     getGuestByteOrder() const
     {
-        return _params->byte_order;
+        return _params.byte_order;
     }
 
      /**
@@ -558,7 +558,7 @@ class System : public SimObject, public PCEventScope
     typedef SystemParams Params;
 
   protected:
-    Params *_params;
+    const Params &_params;
 
     /**
      * Range for memory-mapped m5 pseudo ops. The range will be
@@ -567,10 +567,10 @@ class System : public SimObject, public PCEventScope
     const AddrRange _m5opRange;
 
   public:
-    System(Params *p);
+    System(const Params &p);
     ~System();
 
-    const Params *params() const { return (const Params *)_params; }
+    const Params &params() const { return (const Params &)_params; }
 
     /**
      * Range used by memory-mapped m5 pseudo-ops if enabled. Returns

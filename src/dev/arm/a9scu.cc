@@ -43,7 +43,7 @@
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
-A9SCU::A9SCU(Params *p)
+A9SCU::A9SCU(const Params &p)
     : BasicPioDevice(p, 0x60)
 {
 }
@@ -105,7 +105,7 @@ A9SCU::write(PacketPtr pkt)
 }
 
 A9SCU *
-A9SCUParams::create()
+A9SCUParams::create() const
 {
-    return new A9SCU(this);
+    return new A9SCU(*this);
 }

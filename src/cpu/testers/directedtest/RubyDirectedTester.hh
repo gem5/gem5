@@ -65,7 +65,7 @@ class RubyDirectedTester : public ClockedObject
     };
 
     typedef RubyDirectedTesterParams Params;
-    RubyDirectedTester(const Params *p);
+    RubyDirectedTester(const Params &p);
     ~RubyDirectedTester();
 
     Port &getPort(const std::string &if_name,

@@ -199,49 +199,49 @@ uint64_t TimingExprIf::eval(TimingExprEvalContext &context)
 }
 
 TimingExprLiteral *
-TimingExprLiteralParams::create()
+TimingExprLiteralParams::create() const
 {
-    return new TimingExprLiteral(this);
+    return new TimingExprLiteral(*this);
 }
 
 TimingExprSrcReg *
-TimingExprSrcRegParams::create()
+TimingExprSrcRegParams::create() const
 {
-    return new TimingExprSrcReg(this);
+    return new TimingExprSrcReg(*this);
 }
 
 TimingExprReadIntReg *
-TimingExprReadIntRegParams::create()
+TimingExprReadIntRegParams::create() const
 {
-    return new TimingExprReadIntReg(this);
+    return new TimingExprReadIntReg(*this);
 }
 
 TimingExprLet *
-TimingExprLetParams::create()
+TimingExprLetParams::create() const
 {
-    return new TimingExprLet(this);
+    return new TimingExprLet(*this);
 }
 
 TimingExprRef *
-TimingExprRefParams::create()
+TimingExprRefParams::create() const
 {
-    return new TimingExprRef(this);
+    return new TimingExprRef(*this);
 }
 
 TimingExprUn *
-TimingExprUnParams::create()
+TimingExprUnParams::create() const
 {
-    return new TimingExprUn(this);
+    return new TimingExprUn(*this);
 }
 
 TimingExprBin *
-TimingExprBinParams::create()
+TimingExprBinParams::create() const
 {
-    return new TimingExprBin(this);
+    return new TimingExprBin(*this);
 }
 
 TimingExprIf *
-TimingExprIfParams::create()
+TimingExprIfParams::create() const
 {
-    return new TimingExprIf(this);
+    return new TimingExprIf(*this);
 }

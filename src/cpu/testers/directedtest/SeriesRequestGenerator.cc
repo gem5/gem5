@@ -35,10 +35,10 @@
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
 #include "debug/DirectedTest.hh"
 
-SeriesRequestGenerator::SeriesRequestGenerator(const Params *p)
+SeriesRequestGenerator::SeriesRequestGenerator(const Params &p)
     : DirectedGenerator(p),
-      m_addr_increment_size(p->addr_increment_size),
-      m_percent_writes(p->percent_writes)
+      m_addr_increment_size(p.addr_increment_size),
+      m_percent_writes(p.percent_writes)
 {
     m_status = SeriesRequestGeneratorStatus_Thinking;
     m_active_node = 0;
@@ -110,7 +110,7 @@ SeriesRequestGenerator::performCallback(uint32_t proc, Addr address)
 }
 
 SeriesRequestGenerator *
-SeriesRequestGeneratorParams::create()
+SeriesRequestGeneratorParams::create() const
 {
-    return new SeriesRequestGenerator(this);
+    return new SeriesRequestGenerator(*this);
 }

@@ -47,7 +47,7 @@ class MultiperspectivePerceptron8KB : public MultiperspectivePerceptron {
     void createSpecs() override;
     public:
     MultiperspectivePerceptron8KB(
-            const MultiperspectivePerceptron8KBParams *p);
+            const MultiperspectivePerceptron8KBParams &p);
 };
 
 #endif // __CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_8KB_HH__

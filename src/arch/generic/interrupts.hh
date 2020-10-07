@@ -42,14 +42,14 @@ class BaseInterrupts : public SimObject
   public:
     typedef BaseInterruptsParams Params;
 
-    BaseInterrupts(Params *p) : SimObject(p) {}
+    BaseInterrupts(const Params &p) : SimObject(p) {}
 
     virtual void setThreadContext(ThreadContext *_tc) { tc = _tc; }
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     /*

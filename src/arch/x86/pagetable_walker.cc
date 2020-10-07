@@ -738,7 +738,7 @@ Walker::WalkerState::pageFault(bool present)
 /* end namespace X86ISA */ }
 
 X86ISA::Walker *
-X86PagetableWalkerParams::create()
+X86PagetableWalkerParams::create() const
 {
-    return new X86ISA::Walker(this);
+    return new X86ISA::Walker(*this);
 }

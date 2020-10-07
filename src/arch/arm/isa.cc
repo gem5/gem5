@@ -60,9 +60,9 @@
 namespace ArmISA
 {
 
-ISA::ISA(Params *p) : BaseISA(p), system(NULL),
-    _decoderFlavor(p->decoderFlavor), _vecRegRenameMode(Enums::Full),
-    pmu(p->pmu), impdefAsNop(p->impdef_nop),
+ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
+    _decoderFlavor(p.decoderFlavor), _vecRegRenameMode(Enums::Full),
+    pmu(p.pmu), impdefAsNop(p.impdef_nop),
     afterStartup(false)
 {
     miscRegs[MISCREG_SCTLR_RST] = 0;
@@ -76,7 +76,7 @@ ISA::ISA(Params *p) : BaseISA(p), system(NULL),
     // Give all ISA devices a pointer to this ISA
     pmu->setISA(this);
 
-    system = dynamic_cast<ArmSystem *>(p->system);
+    system = dynamic_cast<ArmSystem *>(p.system);
 
     // Cache system-level properties
     if (FullSystem && system) {
@@ -102,7 +102,7 @@ ISA::ISA(Params *p) : BaseISA(p), system(NULL),
         haveSVE = true;
         havePAN = false;
         haveSecEL2 = true;
-        sveVL = p->sve_vl_se;
+        sveVL = p.sve_vl_se;
         haveLSE = true;
         haveTME = true;
     }
@@ -120,16 +120,16 @@ ISA::ISA(Params *p) : BaseISA(p), system(NULL),
 
 std::vector<struct ISA::MiscRegLUTEntry> ISA::lookUpMiscReg(NUM_MISCREGS);
 
-const ArmISAParams *
+const ArmISAParams &
 ISA::params() const
 {
-    return dynamic_cast<const Params *>(_params);
+    return dynamic_cast<const Params &>(_params);
 }
 
 void
 ISA::clear()
 {
-    const Params *p(params());
+    const Params &p(params());
 
     // Invalidate cached copies of miscregs in the TLBs
     if (tc) {
@@ -220,7 +220,7 @@ ISA::clear()
 }
 
 void
-ISA::clear32(const ArmISAParams *p, const SCTLR &sctlr_rst)
+ISA::clear32(const ArmISAParams &p, const SCTLR &sctlr_rst)
 {
     CPSR cpsr = 0;
     cpsr.mode = MODE_USER;
@@ -249,7 +249,7 @@ ISA::clear32(const ArmISAParams *p, const SCTLR &sctlr_rst)
 
     miscRegs[MISCREG_CPACR] = 0;
 
-    miscRegs[MISCREG_FPSID] = p->fpsid;
+    miscRegs[MISCREG_FPSID] = p.fpsid;
 
     if (haveLPAE) {
         TTBCR ttbcr = miscRegs[MISCREG_TTBCR_NS];
@@ -272,7 +272,7 @@ ISA::clear32(const ArmISAParams *p, const SCTLR &sctlr_rst)
 }
 
 void
-ISA::clear64(const ArmISAParams *p)
+ISA::clear64(const ArmISAParams &p)
 {
     CPSR cpsr = 0;
     Addr rvbar = system->resetAddr();
@@ -321,13 +321,13 @@ ISA::clear64(const ArmISAParams *p)
 }
 
 void
-ISA::initID32(const ArmISAParams *p)
+ISA::initID32(const ArmISAParams &p)
 {
     // Initialize configurable default values
 
     uint32_t midr;
-    if (p->midr != 0x0)
-        midr = p->midr;
+    if (p.midr != 0x0)
+        midr = p.midr;
     else if (highestELIs64)
         // Cortex-A57 TRM r0p0 MIDR
         midr = 0x410fd070;
@@ -339,17 +339,17 @@ ISA::initID32(const ArmISAParams *p)
     miscRegs[MISCREG_MIDR_EL1] = midr;
     miscRegs[MISCREG_VPIDR] = midr;
 
-    miscRegs[MISCREG_ID_ISAR0] = p->id_isar0;
-    miscRegs[MISCREG_ID_ISAR1] = p->id_isar1;
-    miscRegs[MISCREG_ID_ISAR2] = p->id_isar2;
-    miscRegs[MISCREG_ID_ISAR3] = p->id_isar3;
-    miscRegs[MISCREG_ID_ISAR4] = p->id_isar4;
-    miscRegs[MISCREG_ID_ISAR5] = p->id_isar5;
+    miscRegs[MISCREG_ID_ISAR0] = p.id_isar0;
+    miscRegs[MISCREG_ID_ISAR1] = p.id_isar1;
+    miscRegs[MISCREG_ID_ISAR2] = p.id_isar2;
+    miscRegs[MISCREG_ID_ISAR3] = p.id_isar3;
+    miscRegs[MISCREG_ID_ISAR4] = p.id_isar4;
+    miscRegs[MISCREG_ID_ISAR5] = p.id_isar5;
 
-    miscRegs[MISCREG_ID_MMFR0] = p->id_mmfr0;
-    miscRegs[MISCREG_ID_MMFR1] = p->id_mmfr1;
-    miscRegs[MISCREG_ID_MMFR2] = p->id_mmfr2;
-    miscRegs[MISCREG_ID_MMFR3] = p->id_mmfr3;
+    miscRegs[MISCREG_ID_MMFR0] = p.id_mmfr0;
+    miscRegs[MISCREG_ID_MMFR1] = p.id_mmfr1;
+    miscRegs[MISCREG_ID_MMFR2] = p.id_mmfr2;
+    miscRegs[MISCREG_ID_MMFR3] = p.id_mmfr3;
 
     miscRegs[MISCREG_ID_ISAR5] = insertBits(
         miscRegs[MISCREG_ID_ISAR5], 19, 4,
@@ -357,24 +357,24 @@ ISA::initID32(const ArmISAParams *p)
 }
 
 void
-ISA::initID64(const ArmISAParams *p)
+ISA::initID64(const ArmISAParams &p)
 {
     // Initialize configurable id registers
-    miscRegs[MISCREG_ID_AA64AFR0_EL1] = p->id_aa64afr0_el1;
-    miscRegs[MISCREG_ID_AA64AFR1_EL1] = p->id_aa64afr1_el1;
+    miscRegs[MISCREG_ID_AA64AFR0_EL1] = p.id_aa64afr0_el1;
+    miscRegs[MISCREG_ID_AA64AFR1_EL1] = p.id_aa64afr1_el1;
     miscRegs[MISCREG_ID_AA64DFR0_EL1] =
-        (p->id_aa64dfr0_el1 & 0xfffffffffffff0ffULL) |
-        (p->pmu ?             0x0000000000000100ULL : 0); // Enable PMUv3
+        (p.id_aa64dfr0_el1 & 0xfffffffffffff0ffULL) |
+        (p.pmu ?             0x0000000000000100ULL : 0); // Enable PMUv3
 
-    miscRegs[MISCREG_ID_AA64DFR1_EL1] = p->id_aa64dfr1_el1;
-    miscRegs[MISCREG_ID_AA64ISAR0_EL1] = p->id_aa64isar0_el1;
-    miscRegs[MISCREG_ID_AA64ISAR1_EL1] = p->id_aa64isar1_el1;
-    miscRegs[MISCREG_ID_AA64MMFR0_EL1] = p->id_aa64mmfr0_el1;
-    miscRegs[MISCREG_ID_AA64MMFR1_EL1] = p->id_aa64mmfr1_el1;
-    miscRegs[MISCREG_ID_AA64MMFR2_EL1] = p->id_aa64mmfr2_el1;
+    miscRegs[MISCREG_ID_AA64DFR1_EL1] = p.id_aa64dfr1_el1;
+    miscRegs[MISCREG_ID_AA64ISAR0_EL1] = p.id_aa64isar0_el1;
+    miscRegs[MISCREG_ID_AA64ISAR1_EL1] = p.id_aa64isar1_el1;
+    miscRegs[MISCREG_ID_AA64MMFR0_EL1] = p.id_aa64mmfr0_el1;
+    miscRegs[MISCREG_ID_AA64MMFR1_EL1] = p.id_aa64mmfr1_el1;
+    miscRegs[MISCREG_ID_AA64MMFR2_EL1] = p.id_aa64mmfr2_el1;
 
     miscRegs[MISCREG_ID_DFR0_EL1] =
-        (p->pmu ? 0x03000000ULL : 0); // Enable PMUv3
+        (p.pmu ? 0x03000000ULL : 0); // Enable PMUv3
 
     miscRegs[MISCREG_ID_DFR0] = miscRegs[MISCREG_ID_DFR0_EL1];
 
@@ -2481,7 +2481,7 @@ ISA::MiscRegLUTEntryInitializer::highest(ArmSystem *const sys) const
 }  // namespace ArmISA
 
 ArmISA::ISA *
-ArmISAParams::create()
+ArmISAParams::create() const
 {
-    return new ArmISA::ISA(this);
+    return new ArmISA::ISA(*this);
 }

@@ -1012,7 +1012,7 @@ class MultiperspectivePerceptron : public BPredUnit
     };
 
     public:
-    MultiperspectivePerceptron(const MultiperspectivePerceptronParams *params);
+    MultiperspectivePerceptron(const MultiperspectivePerceptronParams &params);
 
     /**
      * Sets the starting number of storage bits to compute the number of

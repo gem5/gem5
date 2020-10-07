@@ -65,15 +65,15 @@ buildKey(Addr vpn, uint16_t asid)
     return (static_cast<Addr>(asid) << 48) | vpn;
 }
 
-TLB::TLB(const Params *p)
-    : BaseTLB(p), size(p->size), tlb(size), lruSeq(0), stats(this)
+TLB::TLB(const Params &p)
+    : BaseTLB(p), size(p.size), tlb(size), lruSeq(0), stats(this)
 {
     for (size_t x = 0; x < size; x++) {
         tlb[x].trieHandle = NULL;
         freeList.push_back(&tlb[x]);
     }
 
-    walker = p->walker;
+    walker = p.walker;
     walker->setTLB(this);
 }
 
@@ -513,7 +513,7 @@ TLB::TlbStats::TlbStats(Stats::Group *parent)
 }
 
 RiscvISA::TLB *
-RiscvTLBParams::create()
+RiscvTLBParams::create() const
 {
-    return new TLB(this);
+    return new TLB(*this);
 }

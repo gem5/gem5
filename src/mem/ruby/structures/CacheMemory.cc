@@ -63,25 +63,25 @@ operator<<(ostream& out, const CacheMemory& obj)
 }
 
 CacheMemory *
-RubyCacheParams::create()
+RubyCacheParams::create() const
 {
-    return new CacheMemory(this);
+    return new CacheMemory(*this);
 }
 
-CacheMemory::CacheMemory(const Params *p)
+CacheMemory::CacheMemory(const Params &p)
     : SimObject(p),
-    dataArray(p->dataArrayBanks, p->dataAccessLatency,
-              p->start_index_bit, p->ruby_system),
-    tagArray(p->tagArrayBanks, p->tagAccessLatency,
-             p->start_index_bit, p->ruby_system)
+    dataArray(p.dataArrayBanks, p.dataAccessLatency,
+              p.start_index_bit, p.ruby_system),
+    tagArray(p.tagArrayBanks, p.tagAccessLatency,
+             p.start_index_bit, p.ruby_system)
 {
-    m_cache_size = p->size;
-    m_cache_assoc = p->assoc;
-    m_replacementPolicy_ptr = p->replacement_policy;
-    m_start_index_bit = p->start_index_bit;
-    m_is_instruction_only_cache = p->is_icache;
-    m_resource_stalls = p->resourceStalls;
-    m_block_size = p->block_size;  // may be 0 at this point. Updated in init()
+    m_cache_size = p.size;
+    m_cache_assoc = p.assoc;
+    m_replacementPolicy_ptr = p.replacement_policy;
+    m_start_index_bit = p.start_index_bit;
+    m_is_instruction_only_cache = p.is_icache;
+    m_resource_stalls = p.resourceStalls;
+    m_block_size = p.block_size;  // may be 0 at this point. Updated in init()
     m_use_occupancy = dynamic_cast<ReplacementPolicy::WeightedLRU*>(
                                     m_replacementPolicy_ptr) ? true : false;
 }

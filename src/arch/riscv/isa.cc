@@ -176,16 +176,16 @@ M5_VAR_USED const std::array<const char *, NumMiscRegs> MiscRegNames = {{
     [MISCREG_FRM]           = "FRM",
 }};
 
-ISA::ISA(Params *p) : BaseISA(p)
+ISA::ISA(const Params &p) : BaseISA(p)
 {
     miscRegFile.resize(NumMiscRegs);
     clear();
 }
 
-const RiscvISAParams *
+const RiscvISAParams &
 ISA::params() const
 {
-    return dynamic_cast<const Params *>(_params);
+    return dynamic_cast<const Params &>(_params);
 }
 
 void ISA::clear()
@@ -413,7 +413,7 @@ ISA::unserialize(CheckpointIn &cp)
 }
 
 RiscvISA::ISA *
-RiscvISAParams::create()
+RiscvISAParams::create() const
 {
-    return new RiscvISA::ISA(this);
+    return new RiscvISA::ISA(*this);
 }

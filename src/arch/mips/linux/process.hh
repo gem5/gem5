@@ -39,7 +39,8 @@ class MipsLinuxProcess : public MipsProcess
 {
   public:
     /// Constructor.
-    MipsLinuxProcess(ProcessParams * params, ::Loader::ObjectFile *objFile);
+    MipsLinuxProcess(const ProcessParams &params,
+                     ::Loader::ObjectFile *objFile);
 
     /// The target system's hostname.
     static const char *hostname;

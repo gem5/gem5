@@ -257,7 +257,7 @@ class InstRecord
 class InstTracer : public SimObject
 {
   public:
-    InstTracer(const Params *p) : SimObject(p)
+    InstTracer(const Params &p) : SimObject(p)
     {}
 
     virtual ~InstTracer()

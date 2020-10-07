@@ -62,7 +62,7 @@ class ThreadContext;
 class HSADriver : public EmulatedDriver
 {
   public:
-    HSADriver(HSADriverParams *p);
+    HSADriver(const HSADriverParams &p);
 
     int open(ThreadContext *tc, int mode, int flags);
     Addr mmap(ThreadContext *tc, Addr start, uint64_t length,

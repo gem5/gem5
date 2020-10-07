@@ -74,7 +74,7 @@ class HMCController : public NoncoherentXBar
 {
 public:
 
-    HMCController(const HMCControllerParams *p);
+    HMCController(const HMCControllerParams &p);
 
 private:
 

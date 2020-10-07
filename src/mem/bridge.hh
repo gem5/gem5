@@ -322,7 +322,7 @@ class Bridge : public ClockedObject
 
     typedef BridgeParams Params;
 
-    Bridge(Params *p);
+    Bridge(const Params &p);
 };
 
 #endif //__MEM_BRIDGE_HH__

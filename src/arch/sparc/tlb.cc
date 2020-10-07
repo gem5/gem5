@@ -52,8 +52,8 @@
  * */
 namespace SparcISA {
 
-TLB::TLB(const Params *p)
-    : BaseTLB(p), size(p->size), usedEntries(0), lastReplaced(0),
+TLB::TLB(const Params &p)
+    : BaseTLB(p), size(p.size), usedEntries(0), lastReplaced(0),
       cacheState(0), cacheValid(false)
 {
     // To make this work you'll have to change the hypervisor and OS
@@ -1508,7 +1508,7 @@ TLB::unserialize(CheckpointIn &cp)
 } // namespace SparcISA
 
 SparcISA::TLB *
-SparcTLBParams::create()
+SparcTLBParams::create() const
 {
-    return new SparcISA::TLB(this);
+    return new SparcISA::TLB(*this);
 }

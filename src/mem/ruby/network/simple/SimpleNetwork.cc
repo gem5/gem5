@@ -54,20 +54,20 @@
 
 using namespace std;
 
-SimpleNetwork::SimpleNetwork(const Params *p)
-    : Network(p), m_buffer_size(p->buffer_size),
-      m_endpoint_bandwidth(p->endpoint_bandwidth),
-      m_adaptive_routing(p->adaptive_routing)
+SimpleNetwork::SimpleNetwork(const Params &p)
+    : Network(p), m_buffer_size(p.buffer_size),
+      m_endpoint_bandwidth(p.endpoint_bandwidth),
+      m_adaptive_routing(p.adaptive_routing)
 {
     // record the routers
-    for (vector<BasicRouter*>::const_iterator i = p->routers.begin();
-         i != p->routers.end(); ++i) {
+    for (vector<BasicRouter*>::const_iterator i = p.routers.begin();
+         i != p.routers.end(); ++i) {
         Switch* s = safe_cast<Switch*>(*i);
         m_switches.push_back(s);
         s->init_net_ptr(this);
     }
 
-    m_int_link_buffers = p->int_link_buffers;
+    m_int_link_buffers = p.int_link_buffers;
     m_num_connected_buffers = 0;
 }
 
@@ -180,9 +180,9 @@ SimpleNetwork::print(ostream& out) const
 }
 
 SimpleNetwork *
-SimpleNetworkParams::create()
+SimpleNetworkParams::create() const
 {
-    return new SimpleNetwork(this);
+    return new SimpleNetwork(*this);
 }
 
 /*

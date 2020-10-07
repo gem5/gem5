@@ -47,7 +47,7 @@ namespace X86ISA {
 class MMU : public BaseMMU
 {
   public:
-    MMU(const X86MMUParams *p)
+    MMU(const X86MMUParams &p)
       : BaseMMU(p)
     {}
 };

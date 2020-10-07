@@ -358,12 +358,12 @@ class Pl111: public AmbaDmaDevice
   public:
     typedef Pl111Params Params;
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
-    Pl111(const Params *p);
+    Pl111(const Params &p);
     ~Pl111();
 
     Tick read(PacketPtr pkt) override;

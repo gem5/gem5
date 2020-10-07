@@ -41,9 +41,9 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
-LocalMemPipeline::LocalMemPipeline(const ComputeUnitParams* p, ComputeUnit &cu)
+LocalMemPipeline::LocalMemPipeline(const ComputeUnitParams &p, ComputeUnit &cu)
     : computeUnit(cu), _name(cu.name() + ".LocalMemPipeline"),
-      lmQueueSize(p->local_mem_queue_size)
+      lmQueueSize(p.local_mem_queue_size)
 {
 }
 

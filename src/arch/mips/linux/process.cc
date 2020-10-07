@@ -52,7 +52,7 @@ class MipsLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
+    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file) override
     {
         if (obj_file->getArch() != ::Loader::Mips)
             return nullptr;
@@ -470,7 +470,7 @@ SyscallDescTable<MipsProcess::SyscallABI> MipsLinuxProcess::syscallDescs = {
     { 4319, "eventfd" }
 };
 
-MipsLinuxProcess::MipsLinuxProcess(ProcessParams * params,
+MipsLinuxProcess::MipsLinuxProcess(const ProcessParams &params,
                                    ::Loader::ObjectFile *objFile) :
     MipsProcess(params, objFile)
 {}

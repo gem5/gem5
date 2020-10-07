@@ -70,12 +70,12 @@ HSAPP_EVENT_DESCRIPTION_GENERATOR(CmdQueueCmdDmaEvent)
 HSAPP_EVENT_DESCRIPTION_GENERATOR(QueueProcessEvent)
 HSAPP_EVENT_DESCRIPTION_GENERATOR(DepSignalsReadDmaEvent)
 
-HSAPacketProcessor::HSAPacketProcessor(const Params *p)
-    : DmaDevice(p), numHWQueues(p->numHWQueues), pioAddr(p->pioAddr),
-      pioSize(PAGE_SIZE), pioDelay(10), pktProcessDelay(p->pktProcessDelay)
+HSAPacketProcessor::HSAPacketProcessor(const Params &p)
+    : DmaDevice(p), numHWQueues(p.numHWQueues), pioAddr(p.pioAddr),
+      pioSize(PAGE_SIZE), pioDelay(10), pktProcessDelay(p.pktProcessDelay)
 {
     DPRINTF(HSAPacketProcessor, "%s:\n", __FUNCTION__);
-    hwSchdlr = new HWScheduler(this, p->wakeupDelay);
+    hwSchdlr = new HWScheduler(this, p.wakeupDelay);
     regdQList.resize(numHWQueues);
     for (int i = 0; i < numHWQueues; i++) {
         regdQList[i] = new RQLEntry(this, i);
@@ -658,9 +658,9 @@ AQLRingBuffer::allocEntry(uint32_t nBufReq)
 }
 
 HSAPacketProcessor *
-HSAPacketProcessorParams::create()
+HSAPacketProcessorParams::create() const
 {
-    return new HSAPacketProcessor(this);
+    return new HSAPacketProcessor(*this);
 }
 
 void

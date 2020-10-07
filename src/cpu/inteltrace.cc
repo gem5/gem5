@@ -60,7 +60,7 @@ Trace::IntelTraceRecord::dump()
 //  ExeTracer Simulation Object
 //
 Trace::IntelTrace *
-IntelTraceParams::create()
+IntelTraceParams::create() const
 {
-    return new Trace::IntelTrace(this);
+    return new Trace::IntelTrace(*this);
 }

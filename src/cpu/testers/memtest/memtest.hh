@@ -70,7 +70,7 @@ class MemTest : public ClockedObject
   public:
 
     typedef MemTestParams Params;
-    MemTest(const Params *p);
+    MemTest(const Params &p);
 
 
     Port &getPort(const std::string &if_name,

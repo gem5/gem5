@@ -64,7 +64,7 @@ class ScoreboardCheckToSchedule : public PipeStageIFace
 {
   public:
     ScoreboardCheckToSchedule() = delete;
-    ScoreboardCheckToSchedule(const ComputeUnitParams *p);
+    ScoreboardCheckToSchedule(const ComputeUnitParams &p);
     void reset() override;
     /**
      * Mark the WF as ready for execution on a particular functional
@@ -100,7 +100,7 @@ class ScheduleToExecute : public PipeStageIFace
 {
   public:
     ScheduleToExecute() = delete;
-    ScheduleToExecute(const ComputeUnitParams *p);
+    ScheduleToExecute(const ComputeUnitParams &p);
     void reset() override;
     GPUDynInstPtr& readyInst(int func_unit_id);
     /**

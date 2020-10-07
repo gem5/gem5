@@ -45,8 +45,8 @@
 #include "params/VoltageDomain.hh"
 #include "sim/sim_object.hh"
 
-VoltageDomain::VoltageDomain(const Params *p)
-    : SimObject(p), voltageOpPoints(p->voltage), _perfLevel(0), stats(*this)
+VoltageDomain::VoltageDomain(const Params &p)
+    : SimObject(p), voltageOpPoints(p.voltage), _perfLevel(0), stats(*this)
 {
     fatal_if(voltageOpPoints.empty(), "DVFS: Empty set of voltages for "\
              "voltage domain %s\n", name());
@@ -125,9 +125,9 @@ VoltageDomain::startup() {
 }
 
 VoltageDomain *
-VoltageDomainParams::create()
+VoltageDomainParams::create() const
 {
-    return new VoltageDomain(this);
+    return new VoltageDomain(*this);
 }
 
 void

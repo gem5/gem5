@@ -37,7 +37,7 @@
 
 #include "mem/addr_mapper.hh"
 
-AddrMapper::AddrMapper(const AddrMapperParams* p)
+AddrMapper::AddrMapper(const AddrMapperParams &p)
     : SimObject(p),
       memSidePort(name() + "-mem_side_port", *this),
       cpuSidePort(name() + "-cpu_side_port", *this)
@@ -200,10 +200,10 @@ AddrMapper::recvRangeChange()
     cpuSidePort.sendRangeChange();
 }
 
-RangeAddrMapper::RangeAddrMapper(const RangeAddrMapperParams* p) :
+RangeAddrMapper::RangeAddrMapper(const RangeAddrMapperParams &p) :
     AddrMapper(p),
-    originalRanges(p->original_ranges),
-    remappedRanges(p->remapped_ranges)
+    originalRanges(p.original_ranges),
+    remappedRanges(p.remapped_ranges)
 {
     if (originalRanges.size() != remappedRanges.size())
         fatal("AddrMapper: original and shadowed range list must "
@@ -217,9 +217,9 @@ RangeAddrMapper::RangeAddrMapper(const RangeAddrMapperParams* p) :
 }
 
 RangeAddrMapper*
-RangeAddrMapperParams::create()
+RangeAddrMapperParams::create() const
 {
-    return new RangeAddrMapper(this);
+    return new RangeAddrMapper(*this);
 }
 
 Addr

@@ -169,7 +169,7 @@ class DmaDevice : public PioDevice
 
   public:
     typedef DmaDeviceParams Params;
-    DmaDevice(const Params *p);
+    DmaDevice(const Params &p);
     virtual ~DmaDevice() { }
 
     void dmaWrite(Addr addr, int size, Event *event, uint8_t *data,

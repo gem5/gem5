@@ -73,38 +73,38 @@ BaseCache::CacheResponsePort::CacheResponsePort(const std::string &_name,
 {
 }
 
-BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
+BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     : ClockedObject(p),
-      cpuSidePort (p->name + ".cpu_side_port", this, "CpuSidePort"),
-      memSidePort(p->name + ".mem_side_port", this, "MemSidePort"),
-      mshrQueue("MSHRs", p->mshrs, 0, p->demand_mshr_reserve), // see below
-      writeBuffer("write buffer", p->write_buffers, p->mshrs), // see below
-      tags(p->tags),
-      compressor(p->compressor),
-      prefetcher(p->prefetcher),
-      writeAllocator(p->write_allocator),
-      writebackClean(p->writeback_clean),
+      cpuSidePort (p.name + ".cpu_side_port", this, "CpuSidePort"),
+      memSidePort(p.name + ".mem_side_port", this, "MemSidePort"),
+      mshrQueue("MSHRs", p.mshrs, 0, p.demand_mshr_reserve), // see below
+      writeBuffer("write buffer", p.write_buffers, p.mshrs), // see below
+      tags(p.tags),
+      compressor(p.compressor),
+      prefetcher(p.prefetcher),
+      writeAllocator(p.write_allocator),
+      writebackClean(p.writeback_clean),
       tempBlockWriteback(nullptr),
       writebackTempBlockAtomicEvent([this]{ writebackTempBlockAtomic(); },
                                     name(), false,
                                     EventBase::Delayed_Writeback_Pri),
       blkSize(blk_size),
-      lookupLatency(p->tag_latency),
-      dataLatency(p->data_latency),
-      forwardLatency(p->tag_latency),
-      fillLatency(p->data_latency),
-      responseLatency(p->response_latency),
-      sequentialAccess(p->sequential_access),
-      numTarget(p->tgts_per_mshr),
+      lookupLatency(p.tag_latency),
+      dataLatency(p.data_latency),
+      forwardLatency(p.tag_latency),
+      fillLatency(p.data_latency),
+      responseLatency(p.response_latency),
+      sequentialAccess(p.sequential_access),
+      numTarget(p.tgts_per_mshr),
       forwardSnoops(true),
-      clusivity(p->clusivity),
-      isReadOnly(p->is_read_only),
+      clusivity(p.clusivity),
+      isReadOnly(p.is_read_only),
       blocked(0),
       order(0),
       noTargetMSHR(nullptr),
-      missCount(p->max_miss_count),
-      addrRanges(p->addr_ranges.begin(), p->addr_ranges.end()),
-      system(p->system),
+      missCount(p.max_miss_count),
+      addrRanges(p.addr_ranges.begin(), p.addr_ranges.end()),
+      system(p.system),
       stats(*this)
 {
     // the MSHR queue has no reserve entries as we check the MSHR
@@ -2500,7 +2500,7 @@ WriteAllocator::updateMode(Addr write_addr, unsigned write_size,
 }
 
 WriteAllocator*
-WriteAllocatorParams::create()
+WriteAllocatorParams::create() const
 {
-    return new WriteAllocator(this);
+    return new WriteAllocator(*this);
 }

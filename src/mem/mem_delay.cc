@@ -40,7 +40,7 @@
 #include "params/MemDelay.hh"
 #include "params/SimpleMemDelay.hh"
 
-MemDelay::MemDelay(const MemDelayParams *p)
+MemDelay::MemDelay(const MemDelayParams &p)
     : ClockedObject(p),
       requestPort(name() + "-mem_side_port", *this),
       responsePort(name() + "-cpu_side_port", *this),
@@ -177,12 +177,12 @@ MemDelay::ResponsePort::recvTimingSnoopResp(PacketPtr pkt)
 
 
 
-SimpleMemDelay::SimpleMemDelay(const SimpleMemDelayParams *p)
+SimpleMemDelay::SimpleMemDelay(const SimpleMemDelayParams &p)
     : MemDelay(p),
-      readReqDelay(p->read_req),
-      readRespDelay(p->read_resp),
-      writeReqDelay(p->write_req),
-      writeRespDelay(p->write_resp)
+      readReqDelay(p.read_req),
+      readRespDelay(p.read_resp),
+      writeReqDelay(p.write_req),
+      writeRespDelay(p.write_resp)
 {
 }
 
@@ -212,7 +212,7 @@ SimpleMemDelay::delayResp(PacketPtr pkt)
 
 
 SimpleMemDelay *
-SimpleMemDelayParams::create()
+SimpleMemDelayParams::create() const
 {
-    return new SimpleMemDelay(this);
+    return new SimpleMemDelay(*this);
 }

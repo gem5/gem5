@@ -182,7 +182,7 @@ UncoalescedTable::checkDeadlock(Tick threshold)
     }
 }
 
-GPUCoalescer::GPUCoalescer(const Params *p)
+GPUCoalescer::GPUCoalescer(const Params &p)
     : RubyPort(p),
       issueEvent([this]{ completeIssue(); }, "Issue coalesced request",
                  false, Event::Progress_Event_Pri),
@@ -197,23 +197,23 @@ GPUCoalescer::GPUCoalescer(const Params *p)
 
     m_outstanding_count = 0;
 
-    coalescingWindow = p->max_coalesces_per_cycle;
+    coalescingWindow = p.max_coalesces_per_cycle;
 
     m_max_outstanding_requests = 0;
     m_instCache_ptr = nullptr;
     m_dataCache_ptr = nullptr;
 
-    m_instCache_ptr = p->icache;
-    m_dataCache_ptr = p->dcache;
-    m_max_outstanding_requests = p->max_outstanding_requests;
-    m_deadlock_threshold = p->deadlock_threshold;
+    m_instCache_ptr = p.icache;
+    m_dataCache_ptr = p.dcache;
+    m_max_outstanding_requests = p.max_outstanding_requests;
+    m_deadlock_threshold = p.deadlock_threshold;
 
     assert(m_max_outstanding_requests > 0);
     assert(m_deadlock_threshold > 0);
     assert(m_instCache_ptr);
     assert(m_dataCache_ptr);
 
-    m_runningGarnetStandalone = p->garnet_standalone;
+    m_runningGarnetStandalone = p.garnet_standalone;
 }
 
 GPUCoalescer::~GPUCoalescer()

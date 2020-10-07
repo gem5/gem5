@@ -131,7 +131,7 @@ class DefaultIEW
 
   public:
     /** Constructs a DefaultIEW with the given parameters. */
-    DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params);
+    DefaultIEW(O3CPU *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of the DefaultIEW stage. */
     std::string name() const;

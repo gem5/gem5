@@ -122,12 +122,12 @@ class Iob : public PioDevice
 
   public:
     typedef IobParams Params;
-    Iob(const Params *p);
+    Iob(const Params &p);
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     Tick read(PacketPtr pkt) override;

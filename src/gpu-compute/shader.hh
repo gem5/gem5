@@ -260,7 +260,7 @@ class Shader : public ClockedObject
     int64_t max_valu_insts;
     int64_t total_valu_insts;
 
-    Shader(const Params *p);
+    Shader(const Params &p);
     ~Shader();
     virtual void init();
 

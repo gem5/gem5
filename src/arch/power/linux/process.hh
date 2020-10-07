@@ -38,7 +38,8 @@
 class PowerLinuxProcess : public PowerProcess
 {
   public:
-    PowerLinuxProcess(ProcessParams * params, ::Loader::ObjectFile *objFile);
+    PowerLinuxProcess(const ProcessParams &params,
+                      ::Loader::ObjectFile *objFile);
 
     void initState() override;
 

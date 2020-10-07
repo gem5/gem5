@@ -195,8 +195,8 @@ class TLB : public BaseTLB
     int rangeMRU; //On lookup, only move entries ahead when outside rangeMRU
 
   public:
-    TLB(const ArmTLBParams *p);
-    TLB(const Params *p, int _size, TableWalker *_walker);
+    TLB(const ArmTLBParams &p);
+    TLB(const Params &p, int _size, TableWalker *_walker);
 
     /** Lookup an entry in the TLB
      * @param vpn virtual address
@@ -439,10 +439,10 @@ protected:
                        ArmTranslationType tranType = NormalTran);
 
 public:
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
     inline void invalidateMiscReg() { miscRegValid = false; }
 

@@ -59,7 +59,7 @@ class BIP : public LRU
 
   public:
     typedef BIPRPParams Params;
-    BIP(const Params *p);
+    BIP(const Params &p);
     ~BIP() = default;
 
     /**

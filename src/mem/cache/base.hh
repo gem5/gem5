@@ -1074,7 +1074,7 @@ class BaseCache : public ClockedObject
     void regProbePoints() override;
 
   public:
-    BaseCache(const BaseCacheParams *p, unsigned blk_size);
+    BaseCache(const BaseCacheParams &p, unsigned blk_size);
     ~BaseCache();
 
     void init() override;
@@ -1301,11 +1301,11 @@ class BaseCache : public ClockedObject
  */
 class WriteAllocator : public SimObject {
   public:
-    WriteAllocator(const WriteAllocatorParams *p) :
+    WriteAllocator(const WriteAllocatorParams &p) :
         SimObject(p),
-        coalesceLimit(p->coalesce_limit * p->block_size),
-        noAllocateLimit(p->no_allocate_limit * p->block_size),
-        delayThreshold(p->delay_threshold)
+        coalesceLimit(p.coalesce_limit * p.block_size),
+        noAllocateLimit(p.no_allocate_limit * p.block_size),
+        delayThreshold(p.delay_threshold)
     {
         reset();
     }

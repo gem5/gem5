@@ -34,7 +34,7 @@
 
 namespace ReplacementPolicy {
 
-SecondChance::SecondChance(const Params *p)
+SecondChance::SecondChance(const Params &p)
   : FIFO(p)
 {
 }
@@ -136,7 +136,7 @@ SecondChance::instantiateEntry()
 } // namespace ReplacementPolicy
 
 ReplacementPolicy::SecondChance*
-SecondChanceRPParams::create()
+SecondChanceRPParams::create() const
 {
-    return new ReplacementPolicy::SecondChance(this);
+    return new ReplacementPolicy::SecondChance(*this);
 }

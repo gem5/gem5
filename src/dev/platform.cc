@@ -33,8 +33,8 @@
 
 using namespace std;
 
-Platform::Platform(const Params *p)
-    : SimObject(p), intrctrl(p->intrctrl)
+Platform::Platform(const Params &p)
+    : SimObject(p), intrctrl(p.intrctrl)
 {
 }
 

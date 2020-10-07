@@ -593,8 +593,8 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
 }
 
 
-X86ISA::Interrupts::Interrupts(Params *p)
-    : BaseInterrupts(p), sys(p->system), clockDomain(*p->clk_domain),
+X86ISA::Interrupts::Interrupts(const Params &p)
+    : BaseInterrupts(p), sys(p.system), clockDomain(*p.clk_domain),
       apicTimerEvent([this]{ processApicTimerEvent(); }, name()),
       pendingSmi(false), smiVector(0),
       pendingNmi(false), nmiVector(0),
@@ -604,8 +604,8 @@ X86ISA::Interrupts::Interrupts(Params *p)
       startedUp(false), pendingUnmaskableInt(false),
       pendingIPIs(0),
       intResponsePort(name() + ".int_responder", this, this),
-      intRequestPort(name() + ".int_requestor", this, this, p->int_latency),
-      pioPort(this), pioDelay(p->pio_latency)
+      intRequestPort(name() + ".int_requestor", this, this, p.int_latency),
+      pioPort(this), pioDelay(p.pio_latency)
 {
     memset(regs, 0, sizeof(regs));
     //Set the local apic DFR to the flat model.
@@ -774,13 +774,14 @@ X86ISA::Interrupts::unserialize(CheckpointIn &cp)
 }
 
 X86ISA::Interrupts *
-X86LocalApicParams::create()
+X86LocalApicParams::create() const
 {
-    return new X86ISA::Interrupts(this);
+    return new X86ISA::Interrupts(*this);
 }
 
 void
-X86ISA::Interrupts::processApicTimerEvent() {
+X86ISA::Interrupts::processApicTimerEvent()
+{
     if (triggerTimerInterrupt())
         setReg(APIC_INITIAL_COUNT, readReg(APIC_INITIAL_COUNT));
 }

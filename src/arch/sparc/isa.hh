@@ -217,9 +217,9 @@ class ISA : public BaseISA
 
 
     typedef SparcISAParams Params;
-    const Params *params() const;
+    const Params &params() const;
 
-    ISA(Params *p);
+    ISA(const Params &p);
 };
 }
 

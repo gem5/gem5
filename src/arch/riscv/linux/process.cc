@@ -55,7 +55,7 @@ class RiscvLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
+    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file) override
     {
         auto arch = obj_file->getArch();
         auto opsys = obj_file->getOpSys();
@@ -776,7 +776,7 @@ SyscallDescTable<RiscvProcess::SyscallABI>
     { 2011, "getmainvars" }
 };
 
-RiscvLinuxProcess64::RiscvLinuxProcess64(ProcessParams * params,
+RiscvLinuxProcess64::RiscvLinuxProcess64(const ProcessParams &params,
     ::Loader::ObjectFile *objFile) : RiscvProcess64(params, objFile)
 {}
 
@@ -787,7 +787,7 @@ RiscvLinuxProcess64::syscall(ThreadContext *tc)
     syscallDescs.get(tc->readIntReg(SyscallNumReg))->doSyscall(tc);
 }
 
-RiscvLinuxProcess32::RiscvLinuxProcess32(ProcessParams * params,
+RiscvLinuxProcess32::RiscvLinuxProcess32(const ProcessParams &params,
     ::Loader::ObjectFile *objFile) : RiscvProcess32(params, objFile)
 {}
 

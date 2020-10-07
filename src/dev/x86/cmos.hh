@@ -72,9 +72,9 @@ class Cmos : public BasicPioDevice
   public:
     typedef CmosParams Params;
 
-    Cmos(const Params *p) : BasicPioDevice(p, 2), latency(p->pio_latency),
-        rtc(this, name() + ".rtc", p->time, true, ULL(5000000000),
-                p->port_int_pin_connection_count)
+    Cmos(const Params &p) : BasicPioDevice(p, 2), latency(p.pio_latency),
+        rtc(this, name() + ".rtc", p.time, true, ULL(5000000000),
+                p.port_int_pin_connection_count)
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;

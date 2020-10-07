@@ -28,13 +28,13 @@
 
 #include "mem/ruby/network/BasicLink.hh"
 
-BasicLink::BasicLink(const Params *p)
+BasicLink::BasicLink(const Params &p)
     : SimObject(p)
 {
-    m_latency = p->latency;
-    m_bandwidth_factor = p->bandwidth_factor;
-    m_weight = p->weight;
-    mVnets = p->supported_vnets;
+    m_latency = p.latency;
+    m_bandwidth_factor = p.bandwidth_factor;
+    m_weight = p.weight;
+    mVnets = p.supported_vnets;
 }
 
 void
@@ -49,29 +49,29 @@ BasicLink::print(std::ostream& out) const
 }
 
 BasicLink *
-BasicLinkParams::create()
+BasicLinkParams::create() const
 {
-    return new BasicLink(this);
+    return new BasicLink(*this);
 }
 
-BasicExtLink::BasicExtLink(const Params *p)
+BasicExtLink::BasicExtLink(const Params &p)
     : BasicLink(p)
 {
 }
 
 BasicExtLink *
-BasicExtLinkParams::create()
+BasicExtLinkParams::create() const
 {
-    return new BasicExtLink(this);
+    return new BasicExtLink(*this);
 }
 
-BasicIntLink::BasicIntLink(const Params *p)
+BasicIntLink::BasicIntLink(const Params &p)
     : BasicLink(p)
 {
 }
 
 BasicIntLink *
-BasicIntLinkParams::create()
+BasicIntLinkParams::create() const
 {
-    return new BasicIntLink(this);
+    return new BasicIntLink(*this);
 }

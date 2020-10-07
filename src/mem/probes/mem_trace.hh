@@ -48,7 +48,7 @@ class System;
 class MemTraceProbe : public BaseMemProbe
 {
   public:
-    MemTraceProbe(MemTraceProbeParams *params);
+    MemTraceProbe(const MemTraceProbeParams &params);
 
   protected:
     void handleRequest(const ProbePoints::PacketInfo &pkt_info) override;

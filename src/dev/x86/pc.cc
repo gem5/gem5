@@ -45,8 +45,8 @@
 #include "dev/x86/south_bridge.hh"
 #include "sim/system.hh"
 
-Pc::Pc(const Params *p)
-    : Platform(p), system(p->system)
+Pc::Pc(const Params &p)
+    : Platform(p), system(p.system)
 {
     southBridge = NULL;
 }
@@ -136,7 +136,7 @@ Pc::clearPciInt(int line)
 }
 
 Pc *
-PcParams::create()
+PcParams::create() const
 {
-    return new Pc(this);
+    return new Pc(*this);
 }

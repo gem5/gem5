@@ -332,7 +332,7 @@ class Base : public ClockedObject
     BaseTLB * tlb;
 
   public:
-    Base(const BasePrefetcherParams *p);
+    Base(const BasePrefetcherParams &p);
     virtual ~Base() = default;
 
     virtual void setCache(BaseCache *_cache);

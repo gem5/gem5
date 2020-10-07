@@ -56,8 +56,8 @@
 #include "mem/cache/mshr.hh"
 #include "params/NoncoherentCache.hh"
 
-NoncoherentCache::NoncoherentCache(const NoncoherentCacheParams *p)
-    : BaseCache(p, p->system->cacheLineSize())
+NoncoherentCache::NoncoherentCache(const NoncoherentCacheParams &p)
+    : BaseCache(p, p.system->cacheLineSize())
 {
 }
 
@@ -349,10 +349,10 @@ NoncoherentCache::evictBlock(CacheBlk *blk)
 }
 
 NoncoherentCache*
-NoncoherentCacheParams::create()
+NoncoherentCacheParams::create() const
 {
     assert(tags);
     assert(replacement_policy);
 
-    return new NoncoherentCache(this);
+    return new NoncoherentCache(*this);
 }

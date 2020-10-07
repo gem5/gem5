@@ -137,7 +137,7 @@ X86ISA::I8237::unserialize(CheckpointIn &cp)
 }
 
 X86ISA::I8237 *
-I8237Params::create()
+I8237Params::create() const
 {
-    return new X86ISA::I8237(this);
+    return new X86ISA::I8237(*this);
 }

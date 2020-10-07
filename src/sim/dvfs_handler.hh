@@ -68,7 +68,7 @@ class DVFSHandler : public SimObject
 {
   public:
     typedef DVFSHandlerParams Params;
-    DVFSHandler(const Params *p);
+    DVFSHandler(const Params &p);
 
     typedef SrcClockDomain::DomainID DomainID;
     typedef SrcClockDomain::PerfLevel PerfLevel;

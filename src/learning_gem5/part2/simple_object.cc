@@ -30,14 +30,14 @@
 
 #include <iostream>
 
-SimpleObject::SimpleObject(SimpleObjectParams *params) :
+SimpleObject::SimpleObject(const SimpleObjectParams &params) :
     SimObject(params)
 {
     std::cout << "Hello World! From a SimObject!" << std::endl;
 }
 
 SimpleObject*
-SimpleObjectParams::create()
+SimpleObjectParams::create() const
 {
-    return new SimpleObject(this);
+    return new SimpleObject(*this);
 }

@@ -49,20 +49,20 @@
 #include "mem/ruby/system/RubySystem.hh"
 
 RubyPrefetcher*
-RubyPrefetcherParams::create()
+RubyPrefetcherParams::create() const
 {
-    return new RubyPrefetcher(this);
+    return new RubyPrefetcher(*this);
 }
 
-RubyPrefetcher::RubyPrefetcher(const Params *p)
-    : SimObject(p), m_num_streams(p->num_streams),
-    m_array(p->num_streams), m_train_misses(p->train_misses),
-    m_num_startup_pfs(p->num_startup_pfs),
-    unitFilter(p->unit_filter),
-    negativeFilter(p->unit_filter),
-    nonUnitFilter(p->nonunit_filter),
-    m_prefetch_cross_pages(p->cross_page),
-    m_page_shift(p->sys->getPageShift())
+RubyPrefetcher::RubyPrefetcher(const Params &p)
+    : SimObject(p), m_num_streams(p.num_streams),
+    m_array(p.num_streams), m_train_misses(p.train_misses),
+    m_num_startup_pfs(p.num_startup_pfs),
+    unitFilter(p.unit_filter),
+    negativeFilter(p.unit_filter),
+    nonUnitFilter(p.nonunit_filter),
+    m_prefetch_cross_pages(p.cross_page),
+    m_page_shift(p.sys->getPageShift())
 {
     assert(m_num_streams > 0);
     assert(m_num_startup_pfs <= MAX_PF_INFLIGHT);

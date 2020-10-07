@@ -44,15 +44,15 @@
  * Scoreboard/Schedule stage interface.
  */
 ScoreboardCheckToSchedule::ScoreboardCheckToSchedule(const ComputeUnitParams
-                                                     *p)
+                                                     &p)
 {
-    int num_func_units = p->num_SIMDs + p->num_scalar_cores
-        + p->num_global_mem_pipes + p->num_shared_mem_pipes
-        + p->num_scalar_mem_pipes;
+    int num_func_units = p.num_SIMDs + p.num_scalar_cores
+        + p.num_global_mem_pipes + p.num_shared_mem_pipes
+        + p.num_scalar_mem_pipes;
     _readyWFs.resize(num_func_units);
 
     for (auto &func_unit_wf_list : _readyWFs) {
-        func_unit_wf_list.reserve(p->n_wf);
+        func_unit_wf_list.reserve(p.n_wf);
     }
 }
 
@@ -103,11 +103,11 @@ ScoreboardCheckToSchedule::updateReadyList(int func_unit_id)
 /**
  * Schedule/Execute stage interface.
  */
-ScheduleToExecute::ScheduleToExecute(const ComputeUnitParams *p)
+ScheduleToExecute::ScheduleToExecute(const ComputeUnitParams &p)
 {
-    int num_func_units = p->num_SIMDs + p->num_scalar_cores
-        + p->num_global_mem_pipes + p->num_shared_mem_pipes
-        + p->num_scalar_mem_pipes;
+    int num_func_units = p.num_SIMDs + p.num_scalar_cores
+        + p.num_global_mem_pipes + p.num_shared_mem_pipes
+        + p.num_scalar_mem_pipes;
     _readyInsts.resize(num_func_units, nullptr);
     _dispatchStatus.resize(num_func_units, EMPTY);
 }

@@ -461,10 +461,10 @@ namespace ArmISA
         void clear();
 
       protected:
-        void clear32(const ArmISAParams *p, const SCTLR &sctlr_rst);
-        void clear64(const ArmISAParams *p);
-        void initID32(const ArmISAParams *p);
-        void initID64(const ArmISAParams *p);
+        void clear32(const ArmISAParams &p, const SCTLR &sctlr_rst);
+        void clear64(const ArmISAParams &p);
+        void initID32(const ArmISAParams &p);
+        void initID64(const ArmISAParams &p);
 
         void addressTranslation(TLB::ArmTranslationType tran_type,
             BaseTLB::Mode mode, Request::Flags flags, RegVal val);
@@ -853,9 +853,9 @@ namespace ArmISA
 
         typedef ArmISAParams Params;
 
-        const Params *params() const;
+        const Params &params() const;
 
-        ISA(Params *p);
+        ISA(const Params &p);
     };
 }
 

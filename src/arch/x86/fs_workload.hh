@@ -83,7 +83,7 @@ class FsWorkload : public KernelWorkload
 {
   public:
     typedef X86FsWorkloadParams Params;
-    FsWorkload(Params *p);
+    FsWorkload(const Params &p);
 
   public:
     void initState() override;
@@ -101,7 +101,7 @@ class FsWorkload : public KernelWorkload
     void writeOutMPTable(Addr fp,
             Addr &fpSize, Addr &tableSize, Addr table=0);
 
-    const Params *params() const { return (const Params *)&_params; }
+    const Params &params() const { return (const Params &)_params; }
 };
 
 } // namespace X86ISA

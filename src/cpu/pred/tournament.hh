@@ -62,7 +62,7 @@ class TournamentBP : public BPredUnit
     /**
      * Default branch predictor constructor.
      */
-    TournamentBP(const TournamentBPParams *params);
+    TournamentBP(const TournamentBPParams &params);
 
     /**
      * Looks up the given address in the branch predictor and returns

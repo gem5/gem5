@@ -38,7 +38,7 @@
 #include "arch/sparc/mmu.hh"
 
 SparcISA::MMU *
-SparcMMUParams::create()
+SparcMMUParams::create() const
 {
-    return new SparcISA::MMU(this);
+    return new SparcISA::MMU(*this);
 }

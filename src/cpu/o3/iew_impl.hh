@@ -63,21 +63,21 @@
 using namespace std;
 
 template<class Impl>
-DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params)
-    : issueToExecQueue(params->backComSize, params->forwardComSize),
+DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, const DerivO3CPUParams &params)
+    : issueToExecQueue(params.backComSize, params.forwardComSize),
       cpu(_cpu),
       instQueue(_cpu, this, params),
       ldstQueue(_cpu, this, params),
-      fuPool(params->fuPool),
-      commitToIEWDelay(params->commitToIEWDelay),
-      renameToIEWDelay(params->renameToIEWDelay),
-      issueToExecuteDelay(params->issueToExecuteDelay),
-      dispatchWidth(params->dispatchWidth),
-      issueWidth(params->issueWidth),
+      fuPool(params.fuPool),
+      commitToIEWDelay(params.commitToIEWDelay),
+      renameToIEWDelay(params.renameToIEWDelay),
+      issueToExecuteDelay(params.issueToExecuteDelay),
+      dispatchWidth(params.dispatchWidth),
+      issueWidth(params.issueWidth),
       wbNumInst(0),
       wbCycle(0),
-      wbWidth(params->wbWidth),
-      numThreads(params->numThreads)
+      wbWidth(params.wbWidth),
+      numThreads(params.numThreads)
 {
     if (dispatchWidth > Impl::MaxWidth)
         fatal("dispatchWidth (%d) is larger than compiled limit (%d),\n"
@@ -109,7 +109,7 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params)
 
     updateLSQNextCycle = false;
 
-    skidBufferMax = (renameToIEWDelay + 1) * params->renameWidth;
+    skidBufferMax = (renameToIEWDelay + 1) * params.renameWidth;
 }
 
 template <class Impl>

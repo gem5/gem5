@@ -89,8 +89,8 @@ class TapEvent : public PollEvent
     }
 };
 
-EtherTapBase::EtherTapBase(const Params *p)
-    : SimObject(p), buflen(p->bufsz), dump(p->dump), event(NULL),
+EtherTapBase::EtherTapBase(const Params &p)
+    : SimObject(p), buflen(p.bufsz), dump(p.dump), event(NULL),
       interface(NULL),
       txEvent([this]{ retransmit(); }, "EtherTapBase retransmit")
 {
@@ -283,12 +283,12 @@ TapListener::accept()
 }
 
 
-EtherTapStub::EtherTapStub(const Params *p) : EtherTapBase(p), socket(-1)
+EtherTapStub::EtherTapStub(const Params &p) : EtherTapBase(p), socket(-1)
 {
     if (ListenSocket::allDisabled())
         fatal("All listeners are disabled! EtherTapStub can't work!");
 
-    listener = new TapListener(this, p->port);
+    listener = new TapListener(this, p.port);
     listener->listen();
 }
 
@@ -399,16 +399,16 @@ EtherTapStub::sendReal(const void *data, size_t len)
 
 #if USE_TUNTAP
 
-EtherTap::EtherTap(const Params *p) : EtherTapBase(p)
+EtherTap::EtherTap(const Params &p) : EtherTapBase(p)
 {
-    int fd = open(p->tun_clone_device.c_str(), O_RDWR | O_NONBLOCK);
+    int fd = open(p.tun_clone_device.c_str(), O_RDWR | O_NONBLOCK);
     if (fd < 0)
-        panic("Couldn't open %s.\n", p->tun_clone_device);
+        panic("Couldn't open %s.\n", p.tun_clone_device);
 
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
     ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
-    strncpy(ifr.ifr_name, p->tap_device_name.c_str(), IFNAMSIZ - 1);
+    strncpy(ifr.ifr_name, p.tap_device_name.c_str(), IFNAMSIZ - 1);
 
     if (ioctl(fd, TUNSETIFF, (void *)&ifr) < 0)
         panic("Failed to access tap device %s.\n", ifr.ifr_name);
@@ -470,15 +470,15 @@ EtherTap::sendReal(const void *data, size_t len)
 }
 
 EtherTap *
-EtherTapParams::create()
+EtherTapParams::create() const
 {
-    return new EtherTap(this);
+    return new EtherTap(*this);
 }
 
 #endif
 
 EtherTapStub *
-EtherTapStubParams::create()
+EtherTapStubParams::create() const
 {
-    return new EtherTapStub(this);
+    return new EtherTapStub(*this);
 }

@@ -66,15 +66,15 @@
 
 using namespace std;
 
-BaseTrafficGen::BaseTrafficGen(const BaseTrafficGenParams* p)
+BaseTrafficGen::BaseTrafficGen(const BaseTrafficGenParams &p)
     : ClockedObject(p),
-      system(p->system),
-      elasticReq(p->elastic_req),
-      progressCheck(p->progress_check),
+      system(p.system),
+      elasticReq(p.elastic_req),
+      progressCheck(p.progress_check),
       noProgressEvent([this]{ noProgress(); }, name()),
       nextTransitionTick(0),
       nextPacketTick(0),
-      maxOutstandingReqs(p->max_outstanding_reqs),
+      maxOutstandingReqs(p.max_outstanding_reqs),
       port(name() + ".port", *this),
       retryPkt(NULL),
       retryPktTick(0), blockedWaitingResp(false),

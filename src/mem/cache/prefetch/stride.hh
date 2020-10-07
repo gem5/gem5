@@ -80,7 +80,7 @@ class StridePrefetcherHashedSetAssociative : public SetAssociative
 
   public:
     StridePrefetcherHashedSetAssociative(
-        const StridePrefetcherHashedSetAssociativeParams *p)
+        const StridePrefetcherHashedSetAssociativeParams &p)
       : SetAssociative(p)
     {
     }
@@ -153,7 +153,7 @@ class Stride : public Queued
     PCTable* allocateNewContext(int context);
 
   public:
-    Stride(const StridePrefetcherParams *p);
+    Stride(const StridePrefetcherParams &p);
 
     void calculatePrefetch(const PrefetchInfo &pfi,
                            std::vector<AddrPriority> &addresses) override;

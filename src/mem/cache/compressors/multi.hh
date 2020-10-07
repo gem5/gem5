@@ -98,7 +98,7 @@ class Multi : public Base
 
   public:
     typedef MultiCompressorParams Params;
-    Multi(const Params *p);
+    Multi(const Params &p);
     ~Multi();
 
     std::unique_ptr<Base::CompressionData> compress(

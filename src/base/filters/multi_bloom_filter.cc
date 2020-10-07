@@ -34,8 +34,8 @@
 
 namespace BloomFilter {
 
-Multi::Multi(const BloomFilterMultiParams* p)
-    : Base(p), filters(p->filters)
+Multi::Multi(const BloomFilterMultiParams &p)
+    : Base(p), filters(p.filters)
 {
 }
 
@@ -112,8 +112,8 @@ Multi::getTotalCount() const
 } // namespace BloomFilter
 
 BloomFilter::Multi*
-BloomFilterMultiParams::create()
+BloomFilterMultiParams::create() const
 {
-    return new BloomFilter::Multi(this);
+    return new BloomFilter::Multi(*this);
 }
 

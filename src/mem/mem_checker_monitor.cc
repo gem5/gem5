@@ -44,21 +44,21 @@
 #include "base/trace.hh"
 #include "debug/MemCheckerMonitor.hh"
 
-MemCheckerMonitor::MemCheckerMonitor(Params* params)
+MemCheckerMonitor::MemCheckerMonitor(const Params &params)
     : SimObject(params),
       memSidePort(name() + "-memSidePort", *this),
       cpuSidePort(name() + "-cpuSidePort", *this),
-      warnOnly(params->warn_only),
-      memchecker(params->memchecker)
+      warnOnly(params.warn_only),
+      memchecker(params.memchecker)
 {}
 
 MemCheckerMonitor::~MemCheckerMonitor()
 {}
 
 MemCheckerMonitor*
-MemCheckerMonitorParams::create()
+MemCheckerMonitorParams::create() const
 {
-    return new MemCheckerMonitor(this);
+    return new MemCheckerMonitor(*this);
 }
 
 void

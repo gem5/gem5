@@ -100,7 +100,7 @@ class Gicv3Its : public BasicPioDevice
     bool recvTimingResp(PacketPtr pkt);
     void recvReqRetry();
 
-    Gicv3Its(const Gicv3ItsParams *params);
+    Gicv3Its(const Gicv3ItsParams &params);
 
     void setGIC(Gicv3 *_gic);
 

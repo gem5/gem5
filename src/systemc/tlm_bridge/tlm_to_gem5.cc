@@ -477,14 +477,14 @@ TlmToGem5Bridge<BITWIDTH>::gem5_getPort(const std::string &if_name, int idx)
 
 template <unsigned int BITWIDTH>
 TlmToGem5Bridge<BITWIDTH>::TlmToGem5Bridge(
-        Params *params, const sc_core::sc_module_name &mn) :
+        const Params &params, const sc_core::sc_module_name &mn) :
     TlmToGem5BridgeBase(mn), peq(this, &TlmToGem5Bridge<BITWIDTH>::peq_cb),
     waitForRetry(false), pendingRequest(nullptr), pendingPacket(nullptr),
     needToSendRetry(false), responseInProgress(false),
     bmp(std::string(name()) + "master", *this), socket("tlm_socket"),
     wrapper(socket, std::string(name()) + ".tlm", InvalidPortID),
-    system(params->system),
-    _id(params->system->getGlobalRequestorId(
+    system(params.system),
+    _id(params.system->getGlobalRequestorId(
                 std::string("[systemc].") + name()))
 {
 }
@@ -524,15 +524,15 @@ TlmToGem5Bridge<BITWIDTH>::before_end_of_elaboration()
 } // namespace sc_gem5
 
 sc_gem5::TlmToGem5Bridge<32> *
-TlmToGem5Bridge32Params::create()
+TlmToGem5Bridge32Params::create() const
 {
     return new sc_gem5::TlmToGem5Bridge<32>(
-            this, sc_core::sc_module_name(name.c_str()));
+            *this, sc_core::sc_module_name(name.c_str()));
 }
 
 sc_gem5::TlmToGem5Bridge<64> *
-TlmToGem5Bridge64Params::create()
+TlmToGem5Bridge64Params::create() const
 {
     return new sc_gem5::TlmToGem5Bridge<64>(
-            this, sc_core::sc_module_name(name.c_str()));
+            *this, sc_core::sc_module_name(name.c_str()));
 }

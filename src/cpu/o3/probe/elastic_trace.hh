@@ -94,7 +94,7 @@ class ElasticTrace : public ProbeListenerObject
     typedef ProtoMessage::InstDepRecord Record;
 
     /** Constructor */
-    ElasticTrace(const ElasticTraceParams *params);
+    ElasticTrace(const ElasticTraceParams &params);
 
     /**
      * Register the probe listeners that is the methods called on a probe point

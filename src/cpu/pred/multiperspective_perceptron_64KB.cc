@@ -40,7 +40,7 @@
 #include "cpu/pred/multiperspective_perceptron_64KB.hh"
 
 MultiperspectivePerceptron64KB::MultiperspectivePerceptron64KB(
-        const MultiperspectivePerceptron64KBParams *p)
+        const MultiperspectivePerceptron64KBParams &p)
     : MultiperspectivePerceptron(p)
 {
 }
@@ -86,8 +86,8 @@ MultiperspectivePerceptron64KB::createSpecs() {
     addSpec(new SGHISTPATH(1, 5, 2, 1.3125, 972, 6, *this));
 }
 
-    MultiperspectivePerceptron64KB*
-MultiperspectivePerceptron64KBParams::create()
+MultiperspectivePerceptron64KB*
+MultiperspectivePerceptron64KBParams::create() const
 {
-    return new MultiperspectivePerceptron64KB(this);
+    return new MultiperspectivePerceptron64KB(*this);
 }

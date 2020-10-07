@@ -130,15 +130,15 @@ ISA::clear()
     regVal[MISCREG_APIC_BASE] = lApicBase;
 }
 
-ISA::ISA(Params *p) : BaseISA(p)
+ISA::ISA(const Params &p) : BaseISA(p)
 {
     clear();
 }
 
-const X86ISAParams *
+const X86ISAParams &
 ISA::params() const
 {
-    return dynamic_cast<const Params *>(_params);
+    return dynamic_cast<const Params &>(_params);
 }
 
 RegVal
@@ -440,7 +440,7 @@ ISA::setThreadContext(ThreadContext *_tc)
 }
 
 X86ISA::ISA *
-X86ISAParams::create()
+X86ISAParams::create() const
 {
-    return new X86ISA::ISA(this);
+    return new X86ISA::ISA(*this);
 }

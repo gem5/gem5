@@ -327,11 +327,13 @@ class NSGigE : public EtherDevBase
 
   public:
     typedef NSGigEParams Params;
-    const Params *params() const {
-        return dynamic_cast<const Params *>(_params);
+    const Params &
+    params() const
+    {
+        return dynamic_cast<const Params &>(_params);
     }
 
-    NSGigE(Params *params);
+    NSGigE(const Params &params);
     ~NSGigE();
 
     Port &getPort(const std::string &if_name,

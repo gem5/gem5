@@ -57,13 +57,13 @@ class EtherTapBase : public SimObject
 {
   public:
     typedef EtherTapBaseParams Params;
-    EtherTapBase(const Params *p);
+    EtherTapBase(const Params &p);
     virtual ~EtherTapBase();
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     void serialize(CheckpointOut &cp) const override;
@@ -137,13 +137,13 @@ class EtherTapStub : public EtherTapBase
 {
   public:
     typedef EtherTapStubParams Params;
-    EtherTapStub(const Params *p);
+    EtherTapStub(const Params &p);
     ~EtherTapStub();
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     void serialize(CheckpointOut &cp) const override;
@@ -172,13 +172,13 @@ class EtherTap : public EtherTapBase
 {
   public:
     typedef EtherTapParams Params;
-    EtherTap(const Params *p);
+    EtherTap(const Params &p);
     ~EtherTap();
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
 

@@ -47,10 +47,10 @@ class FsFreebsd : public ArmISA::FsWorkload
   public:
     /** Boilerplate params code */
     typedef ArmFsFreebsdParams Params;
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(&_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     /** When enabled, dump stats/task info on context switches for
@@ -67,7 +67,7 @@ class FsFreebsd : public ArmISA::FsWorkload
      * mappings between taskIds and OS process IDs */
     std::ostream* taskFile;
 
-    FsFreebsd(Params *p);
+    FsFreebsd(const Params &p);
     ~FsFreebsd();
 
     void initState() override;

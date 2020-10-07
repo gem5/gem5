@@ -36,9 +36,9 @@
 #include "base/logging.hh"
 
 SimplePoolManager *
-SimplePoolManagerParams::create()
+SimplePoolManagerParams::create() const
 {
-    return new SimplePoolManager(this);
+    return new SimplePoolManager(*this);
 }
 
 // return the min number of elements that the manager can reserve given

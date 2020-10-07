@@ -59,7 +59,7 @@ class Policy : public SimObject
 {
   public:
     using Params = QoSPolicyParams;
-    Policy(const Params* p);
+    Policy(const Params &p);
 
     virtual ~Policy();
 

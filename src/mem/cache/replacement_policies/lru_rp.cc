@@ -36,7 +36,7 @@
 
 namespace ReplacementPolicy {
 
-LRU::LRU(const Params *p)
+LRU::LRU(const Params &p)
   : Base(p)
 {
 }
@@ -96,7 +96,7 @@ LRU::instantiateEntry()
 } // namespace ReplacementPolicy
 
 ReplacementPolicy::LRU*
-LRURPParams::create()
+LRURPParams::create() const
 {
-    return new ReplacementPolicy::LRU(this);
+    return new ReplacementPolicy::LRU(*this);
 }

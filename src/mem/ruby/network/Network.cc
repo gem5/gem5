@@ -49,17 +49,17 @@ uint32_t Network::m_virtual_networks;
 uint32_t Network::m_control_msg_size;
 uint32_t Network::m_data_msg_size;
 
-Network::Network(const Params *p)
+Network::Network(const Params &p)
     : ClockedObject(p)
 {
-    m_virtual_networks = p->number_of_virtual_networks;
-    m_control_msg_size = p->control_msg_size;
+    m_virtual_networks = p.number_of_virtual_networks;
+    m_control_msg_size = p.control_msg_size;
 
-    fatal_if(p->data_msg_size > p->ruby_system->getBlockSizeBytes(),
+    fatal_if(p.data_msg_size > p.ruby_system->getBlockSizeBytes(),
              "%s: data message size > cache line size", name());
-    m_data_msg_size = p->data_msg_size + m_control_msg_size;
+    m_data_msg_size = p.data_msg_size + m_control_msg_size;
 
-    params()->ruby_system->registerNetwork(this);
+    params().ruby_system->registerNetwork(this);
 
     // Populate localNodeVersions with the version of each MachineType in
     // this network. This will be used to compute a global to local ID.
@@ -67,10 +67,10 @@ Network::Network(const Params *p)
     // ext_node per ext_link and it points to an AbstractController.
     // For RubySystems with one network global and local ID are the same.
     std::unordered_map<MachineType, std::vector<NodeID>> localNodeVersions;
-    for (auto &it : params()->ext_links) {
-        AbstractController *cntrl = it->params()->ext_node;
+    for (auto &it : params().ext_links) {
+        AbstractController *cntrl = it->params().ext_node;
         localNodeVersions[cntrl->getType()].push_back(cntrl->getVersion());
-        params()->ruby_system->registerMachineID(cntrl->getMachineID(), this);
+        params().ruby_system->registerMachineID(cntrl->getMachineID(), this);
     }
 
     // Compute a local ID for each MachineType using the same order as SLICC
@@ -94,9 +94,9 @@ Network::Network(const Params *p)
     assert(m_nodes != 0);
     assert(m_virtual_networks != 0);
 
-    m_topology_ptr = new Topology(m_nodes, p->routers.size(),
+    m_topology_ptr = new Topology(m_nodes, p.routers.size(),
                                   m_virtual_networks,
-                                  p->ext_links, p->int_links);
+                                  p.ext_links, p.int_links);
 
     // Allocate to and from queues
     // Queues that are getting messages from protocol
@@ -113,10 +113,10 @@ Network::Network(const Params *p)
     }
 
     // Initialize the controller's network pointers
-    for (std::vector<BasicExtLink*>::const_iterator i = p->ext_links.begin();
-         i != p->ext_links.end(); ++i) {
+    for (std::vector<BasicExtLink*>::const_iterator i = p.ext_links.begin();
+         i != p.ext_links.end(); ++i) {
         BasicExtLink *ext_link = (*i);
-        AbstractController *abs_cntrl = ext_link->params()->ext_node;
+        AbstractController *abs_cntrl = ext_link->params().ext_node;
         abs_cntrl->initNetworkPtr(this);
         const AddrRangeList &ranges = abs_cntrl->getAddrRanges();
         if (!ranges.empty()) {
@@ -132,8 +132,8 @@ Network::Network(const Params *p)
     // Register a callback function for combining the statistics
     Stats::registerDumpCallback([this]() { collateStats(); });
 
-    for (auto &it : dynamic_cast<Network *>(this)->params()->ext_links) {
-        it->params()->ext_node->initNetQueues();
+    for (auto &it : dynamic_cast<Network *>(this)->params().ext_links) {
+        it->params().ext_node->initNetQueues();
     }
 }
 

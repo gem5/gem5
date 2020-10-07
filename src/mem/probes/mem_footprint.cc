@@ -41,21 +41,21 @@
 #include "base/intmath.hh"
 #include "params/MemFootprintProbe.hh"
 
-MemFootprintProbe::MemFootprintProbe(MemFootprintProbeParams *p)
+MemFootprintProbe::MemFootprintProbe(const MemFootprintProbeParams &p)
     : BaseMemProbe(p),
-      cacheLineSizeLg2(floorLog2(p->system->cacheLineSize())),
-      pageSizeLg2(floorLog2(p->page_size)),
-      totalCacheLinesInMem(p->system->memSize() / p->system->cacheLineSize()),
-      totalPagesInMem(p->system->memSize() / p->page_size),
+      cacheLineSizeLg2(floorLog2(p.system->cacheLineSize())),
+      pageSizeLg2(floorLog2(p.page_size)),
+      totalCacheLinesInMem(p.system->memSize() / p.system->cacheLineSize()),
+      totalPagesInMem(p.system->memSize() / p.page_size),
       cacheLines(),
       cacheLinesAll(),
       pages(),
       pagesAll(),
-      system(p->system)
+      system(p.system)
 {
     fatal_if(!isPowerOf2(system->cacheLineSize()),
              "MemFootprintProbe expects cache line size is power of 2.");
-    fatal_if(!isPowerOf2(p->page_size),
+    fatal_if(!isPowerOf2(p.page_size),
              "MemFootprintProbe expects page size parameter is power of 2");
 }
 
@@ -122,7 +122,7 @@ MemFootprintProbe::statReset()
 }
 
 MemFootprintProbe *
-MemFootprintProbeParams::create()
+MemFootprintProbeParams::create() const
 {
-    return new MemFootprintProbe(this);
+    return new MemFootprintProbe(*this);
 }

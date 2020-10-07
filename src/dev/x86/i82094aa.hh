@@ -87,13 +87,13 @@ class I82094AA : public BasicPioDevice
   public:
     typedef I82094AAParams Params;
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
-    I82094AA(Params *p);
+    I82094AA(const Params &p);
 
     void init() override;
 

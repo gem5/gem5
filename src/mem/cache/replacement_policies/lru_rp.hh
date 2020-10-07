@@ -58,7 +58,7 @@ class LRU : public Base
 
   public:
     typedef LRURPParams Params;
-    LRU(const Params *p);
+    LRU(const Params &p);
     ~LRU() = default;
 
     /**

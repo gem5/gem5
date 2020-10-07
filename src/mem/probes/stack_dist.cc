@@ -40,14 +40,14 @@
 #include "params/StackDistProbe.hh"
 #include "sim/system.hh"
 
-StackDistProbe::StackDistProbe(StackDistProbeParams *p)
+StackDistProbe::StackDistProbe(const StackDistProbeParams &p)
     : BaseMemProbe(p),
-      lineSize(p->line_size),
-      disableLinearHists(p->disable_linear_hists),
-      disableLogHists(p->disable_log_hists),
-      calc(p->verify)
+      lineSize(p.line_size),
+      disableLinearHists(p.disable_linear_hists),
+      disableLogHists(p.disable_log_hists),
+      calc(p.verify)
 {
-    fatal_if(p->system->cacheLineSize() > p->line_size,
+    fatal_if(p.system->cacheLineSize() > p.line_size,
              "The stack distance probe must use a cache line size that is "
              "larger or equal to the system's cahce line size.");
 }
@@ -57,32 +57,31 @@ StackDistProbe::regStats()
 {
     BaseMemProbe::regStats();
 
-    const StackDistProbeParams *p(
-        dynamic_cast<const StackDistProbeParams *>(params()));
-    assert(p);
+    const StackDistProbeParams &p =
+        dynamic_cast<const StackDistProbeParams &>(params());
 
     using namespace Stats;
 
     readLinearHist
-        .init(p->linear_hist_bins)
+        .init(p.linear_hist_bins)
         .name(name() + ".readLinearHist")
         .desc("Reads linear distribution")
         .flags(disableLinearHists ? nozero : pdf);
 
     readLogHist
-        .init(p->log_hist_bins)
+        .init(p.log_hist_bins)
         .name(name() + ".readLogHist")
         .desc("Reads logarithmic distribution")
         .flags(disableLogHists ? nozero : pdf);
 
     writeLinearHist
-        .init(p->linear_hist_bins)
+        .init(p.linear_hist_bins)
         .name(name() + ".writeLinearHist")
         .desc("Writes linear distribution")
         .flags(disableLinearHists ? nozero : pdf);
 
     writeLogHist
-        .init(p->log_hist_bins)
+        .init(p.log_hist_bins)
         .name(name() + ".writeLogHist")
         .desc("Writes logarithmic distribution")
         .flags(disableLogHists ? nozero : pdf);
@@ -132,7 +131,7 @@ StackDistProbe::handleRequest(const ProbePoints::PacketInfo &pkt_info)
 
 
 StackDistProbe *
-StackDistProbeParams::create()
+StackDistProbeParams::create() const
 {
-    return new StackDistProbe(this);
+    return new StackDistProbe(*this);
 }

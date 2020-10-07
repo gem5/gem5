@@ -56,8 +56,8 @@ class I2CDevice : public SimObject
 
   public:
 
-    I2CDevice(const I2CDeviceParams* p)
-        : SimObject(p), _addr(p->i2c_addr)
+    I2CDevice(const I2CDeviceParams &p)
+        : SimObject(p), _addr(p.i2c_addr)
     { }
 
     virtual ~I2CDevice() { }

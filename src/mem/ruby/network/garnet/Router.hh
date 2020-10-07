@@ -57,7 +57,7 @@ class Router : public BasicRouter, public Consumer
 {
   public:
     typedef GarnetRouterParams Params;
-    Router(const Params *p);
+    Router(const Params &p);
 
     ~Router() = default;
 

@@ -119,7 +119,7 @@ class NoncoherentCache : public BaseCache
     M5_NODISCARD PacketPtr evictBlock(CacheBlk *blk) override;
 
   public:
-    NoncoherentCache(const NoncoherentCacheParams *p);
+    NoncoherentCache(const NoncoherentCacheParams &p);
 };
 
 #endif // __MEM_CACHE_NONCOHERENTCACHE_HH__

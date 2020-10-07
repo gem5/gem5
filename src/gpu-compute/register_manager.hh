@@ -58,7 +58,7 @@ struct RegisterManagerParams;
 class RegisterManager : public SimObject
 {
   public:
-    RegisterManager(const RegisterManagerParams* params);
+    RegisterManager(const RegisterManagerParams &params);
     ~RegisterManager();
     void setParent(ComputeUnit *cu);
     void exec();

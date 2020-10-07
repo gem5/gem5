@@ -127,7 +127,7 @@ class IrregularStreamBuffer : public Queued
      */
     AddressMapping& getPSMapping(Addr paddr, bool is_secure);
   public:
-    IrregularStreamBuffer(const IrregularStreamBufferPrefetcherParams *p);
+    IrregularStreamBuffer(const IrregularStreamBufferPrefetcherParams &p);
     ~IrregularStreamBuffer() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,

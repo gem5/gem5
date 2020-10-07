@@ -279,7 +279,7 @@ class SignaturePath : public Queued
     }
 
   public:
-    SignaturePath(const SignaturePathPrefetcherParams* p);
+    SignaturePath(const SignaturePathPrefetcherParams &p);
     ~SignaturePath() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,

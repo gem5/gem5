@@ -40,15 +40,15 @@
 #include "base/logging.hh"
 #include "sim/power/power_model.hh"
 
-ClockedObject::ClockedObject(const ClockedObjectParams *p) :
-    SimObject(p), Clocked(*p->clk_domain), powerState(p->power_state)
+ClockedObject::ClockedObject(const ClockedObjectParams &p) :
+    SimObject(p), Clocked(*p.clk_domain), powerState(p.power_state)
 {
     // Register the power_model with the object
     // Slightly counter-intuitively, power models need to to register with the
     // clocked object and not the power stated object because the power model
     // needs information from the clock domain, which is an attribute of the
     // clocked object.
-    for (auto & power_model: p->power_model)
+    for (auto & power_model: p.power_model)
         power_model->setClockedObject(this);
 }
 

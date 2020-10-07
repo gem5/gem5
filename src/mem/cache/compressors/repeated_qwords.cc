@@ -40,7 +40,7 @@
 
 namespace Compressor {
 
-RepeatedQwords::RepeatedQwords(const Params *p)
+RepeatedQwords::RepeatedQwords(const Params &p)
     : DictionaryCompressor<uint64_t>(p)
 {
 }
@@ -80,7 +80,7 @@ RepeatedQwords::compress(const std::vector<Chunk>& chunks,
 } // namespace Compressor
 
 Compressor::RepeatedQwords*
-RepeatedQwordsCompressorParams::create()
+RepeatedQwordsCompressorParams::create() const
 {
-    return new Compressor::RepeatedQwords(this);
+    return new Compressor::RepeatedQwords(*this);
 }

@@ -37,9 +37,9 @@
 
 namespace ReplacementPolicy {
 
-BRRIP::BRRIP(const Params *p)
-  : Base(p), numRRPVBits(p->num_bits), hitPriority(p->hit_priority),
-    btp(p->btp)
+BRRIP::BRRIP(const Params &p)
+  : Base(p), numRRPVBits(p.num_bits), hitPriority(p.hit_priority),
+    btp(p.btp)
 {
     fatal_if(numRRPVBits <= 0, "There should be at least one bit per RRPV.\n");
 }
@@ -147,7 +147,7 @@ BRRIP::instantiateEntry()
 } // namespace ReplacementPolicy
 
 ReplacementPolicy::BRRIP*
-BRRIPRPParams::create()
+BRRIPRPParams::create() const
 {
-    return new ReplacementPolicy::BRRIP(this);
+    return new ReplacementPolicy::BRRIP(*this);
 }

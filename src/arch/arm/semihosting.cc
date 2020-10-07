@@ -138,21 +138,21 @@ const std::map<const std::string, FILE *> ArmSemihosting::stdioMap{
     {"stderr", ::stderr},
 };
 
-ArmSemihosting::ArmSemihosting(const ArmSemihostingParams *p)
+ArmSemihosting::ArmSemihosting(const ArmSemihostingParams &p)
     : SimObject(p),
-      cmdLine(p->cmd_line),
-      memReserve(p->mem_reserve),
-      stackSize(p->stack_size),
-      timeBase([p]{ struct tm t = p->time; return mkutctime(&t); }()),
+      cmdLine(p.cmd_line),
+      memReserve(p.mem_reserve),
+      stackSize(p.stack_size),
+      timeBase([p]{ struct tm t = p.time; return mkutctime(&t); }()),
       tickShift(calcTickShift()),
       semiErrno(0),
-      filesRootDir(!p->files_root_dir.empty() &&
-                   p->files_root_dir.back() != '/' ?
-                   p->files_root_dir + '/' : p->files_root_dir),
-      stdin(getSTDIO("stdin", p->stdin, "r")),
-      stdout(getSTDIO("stdout", p->stdout, "w")),
-      stderr(p->stderr == p->stdout ?
-             stdout : getSTDIO("stderr", p->stderr, "w"))
+      filesRootDir(!p.files_root_dir.empty() &&
+                   p.files_root_dir.back() != '/' ?
+                   p.files_root_dir + '/' : p.files_root_dir),
+      stdin(getSTDIO("stdin", p.stdin, "r")),
+      stdout(getSTDIO("stdout", p.stdout, "w")),
+      stderr(p.stderr == p.stdout ?
+             stdout : getSTDIO("stderr", p.stderr, "w"))
 {
     // Create an empty place-holder file for position 0 as semi-hosting
     // calls typically expect non-zero file handles.
@@ -1046,7 +1046,7 @@ operator << (std::ostream &os, const ArmSemihosting::InPlaceArg &ipa)
 
 
 ArmSemihosting *
-ArmSemihostingParams::create()
+ArmSemihostingParams::create() const
 {
-    return new ArmSemihosting(this);
+    return new ArmSemihosting(*this);
 }

@@ -128,7 +128,7 @@ class DefaultRename
 
   public:
     /** DefaultRename constructor. */
-    DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params);
+    DefaultRename(O3CPU *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of rename. */
     std::string name() const;

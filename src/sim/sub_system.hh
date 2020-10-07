@@ -58,7 +58,7 @@ class SubSystem : public SimObject
 {
   public:
     typedef SubSystemParams Params;
-    SubSystem(const Params *p);
+    SubSystem(const Params &p);
 
     double getDynamicPower() const;
 

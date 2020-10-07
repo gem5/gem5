@@ -34,7 +34,7 @@
 namespace Iris
 {
 
-BaseCPU::BaseCPU(BaseCPUParams *params, sc_core::sc_module *_evs) :
+BaseCPU::BaseCPU(const BaseCPUParams &params, sc_core::sc_module *_evs) :
     ::BaseCPU::BaseCPU(params), evs(_evs),
     clockEvent(nullptr), periodAttribute(nullptr)
 {

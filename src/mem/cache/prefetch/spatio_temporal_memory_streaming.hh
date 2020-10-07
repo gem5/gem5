@@ -192,7 +192,7 @@ class STeMS : public Queued
         std::vector<AddrPriority> &addresses);
 
   public:
-    STeMS(const STeMSPrefetcherParams* p);
+    STeMS(const STeMSPrefetcherParams &p);
     ~STeMS() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,

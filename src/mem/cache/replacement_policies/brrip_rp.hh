@@ -109,7 +109,7 @@ class BRRIP : public Base
 
   public:
     typedef BRRIPRPParams Params;
-    BRRIP(const Params *p);
+    BRRIP(const Params &p);
     ~BRRIP() = default;
 
     /**

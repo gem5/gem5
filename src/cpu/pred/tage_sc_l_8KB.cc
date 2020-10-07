@@ -45,11 +45,11 @@
 #include "debug/TageSCL.hh"
 
 TAGE_SC_L_8KB_StatisticalCorrector::TAGE_SC_L_8KB_StatisticalCorrector(
-    TAGE_SC_L_8KB_StatisticalCorrectorParams *p)
+    const TAGE_SC_L_8KB_StatisticalCorrectorParams &p)
   : StatisticalCorrector(p),
-    gnb(p->gnb),
-    logGnb(p->logGnb),
-    gm(p->gm)
+    gnb(p.gnb),
+    logGnb(p.logGnb),
+    gm(p.gm)
 {
     initGEHLTable(gnb, gm, ggehl, logGnb, wg, 7);
 }
@@ -133,12 +133,12 @@ TAGE_SC_L_8KB_StatisticalCorrector::gUpdates(ThreadID tid, Addr pc, bool taken,
 }
 
 TAGE_SC_L_8KB_StatisticalCorrector*
-TAGE_SC_L_8KB_StatisticalCorrectorParams::create()
+TAGE_SC_L_8KB_StatisticalCorrectorParams::create() const
 {
-    return new TAGE_SC_L_8KB_StatisticalCorrector(this);
+    return new TAGE_SC_L_8KB_StatisticalCorrector(*this);
 }
 
-TAGE_SC_L_8KB::TAGE_SC_L_8KB(const TAGE_SC_L_8KBParams *params)
+TAGE_SC_L_8KB::TAGE_SC_L_8KB(const TAGE_SC_L_8KBParams &params)
   : TAGE_SC_L(params)
 {
 }
@@ -318,13 +318,13 @@ TAGE_SC_L_TAGE_8KB::handleTAGEUpdate(Addr branch_pc, bool taken,
 }
 
 TAGE_SC_L_TAGE_8KB*
-TAGE_SC_L_TAGE_8KBParams::create()
+TAGE_SC_L_TAGE_8KBParams::create() const
 {
-    return new TAGE_SC_L_TAGE_8KB(this);
+    return new TAGE_SC_L_TAGE_8KB(*this);
 }
 
 TAGE_SC_L_8KB*
-TAGE_SC_L_8KBParams::create()
+TAGE_SC_L_8KBParams::create() const
 {
-    return new TAGE_SC_L_8KB(this);
+    return new TAGE_SC_L_8KB(*this);
 }

@@ -289,7 +289,7 @@ class MemInterface : public AbstractMemory
     virtual void addRankToRankDelay(Tick cmd_at) = 0;
 
     typedef MemInterfaceParams Params;
-    MemInterface(const Params* _p);
+    MemInterface(const Params &_p);
 };
 
 /**
@@ -583,7 +583,7 @@ class DRAMInterface : public MemInterface
          */
         Tick lastBurstTick;
 
-        Rank(const DRAMInterfaceParams* _p, int _rank,
+        Rank(const DRAMInterfaceParams &_p, int _rank,
              DRAMInterface& _dram);
 
         const std::string name() const { return csprintf("%d", rank); }
@@ -1009,7 +1009,7 @@ class DRAMInterface : public MemInterface
      */
     void checkRefreshState(uint8_t rank);
 
-    DRAMInterface(const DRAMInterfaceParams* _p);
+    DRAMInterface(const DRAMInterfaceParams &_p);
 };
 
 /**
@@ -1039,7 +1039,7 @@ class NVMInterface : public MemInterface
          */
         std::vector<Bank> banks;
 
-        Rank(const NVMInterfaceParams* _p, int _rank,
+        Rank(const NVMInterfaceParams &_p, int _rank,
              NVMInterface& _nvm);
     };
 
@@ -1256,7 +1256,7 @@ class NVMInterface : public MemInterface
     std::pair<Tick, Tick>
     doBurstAccess(MemPacket* pkt, Tick next_burst_at);
 
-    NVMInterface(const NVMInterfaceParams* _p);
+    NVMInterface(const NVMInterfaceParams &_p);
 };
 
 #endif //__MEM_INTERFACE_HH__

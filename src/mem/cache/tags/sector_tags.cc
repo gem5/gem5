@@ -45,11 +45,11 @@
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
 
-SectorTags::SectorTags(const SectorTagsParams *p)
-    : BaseTags(p), allocAssoc(p->assoc),
-      sequentialAccess(p->sequential_access),
-      replacementPolicy(p->replacement_policy),
-      numBlocksPerSector(p->num_blocks_per_sector),
+SectorTags::SectorTags(const SectorTagsParams &p)
+    : BaseTags(p), allocAssoc(p.assoc),
+      sequentialAccess(p.sequential_access),
+      replacementPolicy(p.replacement_policy),
+      numBlocksPerSector(p.num_blocks_per_sector),
       numSectors(numBlocks / numBlocksPerSector),
       sectorShift(floorLog2(blkSize)), sectorMask(numBlocksPerSector - 1),
       sectorStats(stats, *this)
@@ -325,10 +325,10 @@ SectorTags::anyBlk(std::function<bool(CacheBlk &)> visitor)
 }
 
 SectorTags *
-SectorTagsParams::create()
+SectorTagsParams::create() const
 {
     // There must be a indexing policy
     fatal_if(!indexing_policy, "An indexing policy is required");
 
-    return new SectorTags(this);
+    return new SectorTags(*this);
 }

@@ -40,8 +40,8 @@
 #include "gpu-compute/dispatcher.hh"
 #include "params/GPUCommandProcessor.hh"
 
-GPUCommandProcessor::GPUCommandProcessor(const Params *p)
-    : HSADevice(p), dispatcher(*p->dispatcher)
+GPUCommandProcessor::GPUCommandProcessor(const Params &p)
+    : HSADevice(p), dispatcher(*p.dispatcher)
 {
     dispatcher.setCommandProcessor(this);
 }
@@ -223,7 +223,7 @@ GPUCommandProcessor::shader()
 }
 
 GPUCommandProcessor*
-GPUCommandProcessorParams::create()
+GPUCommandProcessorParams::create() const
 {
-    return new GPUCommandProcessor(this);
+    return new GPUCommandProcessor(*this);
 }

@@ -58,8 +58,8 @@
 #include "sim/core.hh"
 #include "sim/sim_object.hh"
 
-IdeDisk::IdeDisk(const Params *p)
-    : SimObject(p), ctrl(NULL), image(p->image), diskDelay(p->delay),
+IdeDisk::IdeDisk(const Params &p)
+    : SimObject(p), ctrl(NULL), image(p.image), diskDelay(p.delay),
       dmaTransferEvent([this]{ doDmaTransfer(); }, name()),
       dmaReadCG(NULL),
       dmaReadWaitEvent([this]{ doDmaRead(); }, name()),
@@ -70,7 +70,7 @@ IdeDisk::IdeDisk(const Params *p)
       dmaWriteEvent([this]{ dmaWriteDone(); }, name())
 {
     // Reset the device state
-    reset(p->driveID);
+    reset(p.driveID);
 
     // fill out the drive ID structure
     memset(&driveID, 0, sizeof(struct ataparams));
@@ -1199,7 +1199,7 @@ IdeDisk::unserialize(CheckpointIn &cp)
 }
 
 IdeDisk *
-IdeDiskParams::create()
+IdeDiskParams::create() const
 {
-    return new IdeDisk(this);
+    return new IdeDisk(*this);
 }

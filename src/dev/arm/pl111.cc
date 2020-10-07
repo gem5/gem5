@@ -53,16 +53,16 @@
 using std::vector;
 
 // initialize clcd registers
-Pl111::Pl111(const Params *p)
+Pl111::Pl111(const Params &p)
     : AmbaDmaDevice(p), lcdTiming0(0), lcdTiming1(0), lcdTiming2(0),
       lcdTiming3(0), lcdUpbase(0), lcdLpbase(0), lcdControl(0), lcdImsc(0),
       lcdRis(0), lcdMis(0),
       clcdCrsrCtrl(0), clcdCrsrConfig(0), clcdCrsrPalette0(0),
       clcdCrsrPalette1(0), clcdCrsrXY(0), clcdCrsrClip(0), clcdCrsrImsc(0),
       clcdCrsrIcr(0), clcdCrsrRis(0), clcdCrsrMis(0),
-      pixelClock(p->pixel_clock),
+      pixelClock(p.pixel_clock),
       converter(PixelConverter::rgba8888_le), fb(LcdMaxWidth, LcdMaxHeight),
-      vnc(p->vnc), bmp(&fb), pic(NULL),
+      vnc(p.vnc), bmp(&fb), pic(NULL),
       width(LcdMaxWidth), height(LcdMaxHeight),
       bytesPerPixel(4), startTime(0), startAddr(0), maxAddr(0), curAddr(0),
       waterMark(0), dmaPendingNum(0),
@@ -71,7 +71,7 @@ Pl111::Pl111(const Params *p)
       dmaDoneEventAll(maxOutstandingDma, this),
       dmaDoneEventFree(maxOutstandingDma),
       intEvent([this]{ generateInterrupt(); }, name()),
-      enableCapture(p->enable_capture)
+      enableCapture(p.enable_capture)
 {
     pioSize = 0xFFFF;
 
@@ -744,9 +744,9 @@ Pl111::getAddrRanges() const
 }
 
 Pl111 *
-Pl111Params::create()
+Pl111Params::create() const
 {
-    return new Pl111(this);
+    return new Pl111(*this);
 }
 
 

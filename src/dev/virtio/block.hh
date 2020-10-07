@@ -67,7 +67,7 @@ class VirtIOBlock : public VirtIODeviceBase
 {
   public:
     typedef VirtIOBlockParams Params;
-    VirtIOBlock(Params *params);
+    VirtIOBlock(const Params &params);
     virtual ~VirtIOBlock();
 
     void readConfig(PacketPtr pkt, Addr cfgOffset);

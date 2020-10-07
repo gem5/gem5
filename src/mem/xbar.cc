@@ -51,17 +51,17 @@
 #include "debug/Drain.hh"
 #include "debug/XBar.hh"
 
-BaseXBar::BaseXBar(const BaseXBarParams *p)
+BaseXBar::BaseXBar(const BaseXBarParams &p)
     : ClockedObject(p),
-      frontendLatency(p->frontend_latency),
-      forwardLatency(p->forward_latency),
-      responseLatency(p->response_latency),
-      headerLatency(p->header_latency),
-      width(p->width),
-      gotAddrRanges(p->port_default_connection_count +
-                          p->port_mem_side_ports_connection_count, false),
+      frontendLatency(p.frontend_latency),
+      forwardLatency(p.forward_latency),
+      responseLatency(p.response_latency),
+      headerLatency(p.header_latency),
+      width(p.width),
+      gotAddrRanges(p.port_default_connection_count +
+                          p.port_mem_side_ports_connection_count, false),
       gotAllAddrRanges(false), defaultPortID(InvalidPortID),
-      useDefaultRange(p->use_default_range),
+      useDefaultRange(p.use_default_range),
 
       transDist(this, "trans_dist", "Transaction distribution"),
       pktCount(this, "pkt_count",

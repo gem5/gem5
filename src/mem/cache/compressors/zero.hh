@@ -97,7 +97,7 @@ class Zero : public DictionaryCompressor<uint64_t>
 
   public:
     typedef ZeroCompressorParams Params;
-    Zero(const Params *p);
+    Zero(const Params &p);
     ~Zero() = default;
 };
 

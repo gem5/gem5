@@ -44,22 +44,22 @@
 /**
  * the default constructor that works with SWIG
  */
-LdsState::LdsState(const Params *params) :
+LdsState::LdsState(const Params &params) :
     ClockedObject(params),
     tickEvent(this),
     cuPort(name() + ".port", this),
-    maximumSize(params->size),
-    range(params->range),
-    bankConflictPenalty(params->bankConflictPenalty),
-    banks(params->banks)
+    maximumSize(params.size),
+    range(params.range),
+    bankConflictPenalty(params.bankConflictPenalty),
+    banks(params.banks)
 {
-    fatal_if(params->banks <= 0,
+    fatal_if(params.banks <= 0,
              "Number of LDS banks should be positive number");
-    fatal_if((params->banks & (params->banks - 1)) != 0,
+    fatal_if((params.banks & (params.banks - 1)) != 0,
              "Number of LDS banks should be a power of 2");
-    fatal_if(params->size <= 0,
+    fatal_if(params.size <= 0,
              "cannot allocate an LDS with a size less than 1");
-    fatal_if(params->size % 2,
+    fatal_if(params.size % 2,
           "the LDS should be an even number");
 }
 
@@ -67,9 +67,9 @@ LdsState::LdsState(const Params *params) :
  * Needed by the SWIG compiler
  */
 LdsState *
-LdsStateParams::create()
+LdsStateParams::create() const
 {
-    return new LdsState(this);
+    return new LdsState(*this);
 }
 
 /**

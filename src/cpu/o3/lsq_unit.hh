@@ -232,7 +232,7 @@ class LSQUnit
     }
 
     /** Initializes the LSQ unit with the specified number of entries. */
-    void init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
+    void init(O3CPU *cpu_ptr, IEW *iew_ptr, const DerivO3CPUParams &params,
             LSQ *lsq_ptr, unsigned id);
 
     /** Returns the name of the LSQ unit. */

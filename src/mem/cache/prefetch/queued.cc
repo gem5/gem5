@@ -92,14 +92,14 @@ Queued::DeferredPacket::finish(const Fault &fault,
     owner->translationComplete(this, failed);
 }
 
-Queued::Queued(const QueuedPrefetcherParams *p)
-    : Base(p), queueSize(p->queue_size),
+Queued::Queued(const QueuedPrefetcherParams &p)
+    : Base(p), queueSize(p.queue_size),
       missingTranslationQueueSize(
-        p->max_prefetch_requests_with_pending_translation),
-      latency(p->latency), queueSquash(p->queue_squash),
-      queueFilter(p->queue_filter), cacheSnoop(p->cache_snoop),
-      tagPrefetch(p->tag_prefetch),
-      throttleControlPct(p->throttle_control_percentage), statsQueued(this)
+        p.max_prefetch_requests_with_pending_translation),
+      latency(p.latency), queueSquash(p.queue_squash),
+      queueFilter(p.queue_filter), cacheSnoop(p.cache_snoop),
+      tagPrefetch(p.tag_prefetch),
+      throttleControlPct(p.throttle_control_percentage), statsQueued(this)
 {
 }
 

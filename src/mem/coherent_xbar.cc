@@ -51,13 +51,13 @@
 #include "debug/CoherentXBar.hh"
 #include "sim/system.hh"
 
-CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
-    : BaseXBar(p), system(p->system), snoopFilter(p->snoop_filter),
-      snoopResponseLatency(p->snoop_response_latency),
-      maxOutstandingSnoopCheck(p->max_outstanding_snoops),
-      maxRoutingTableSizeCheck(p->max_routing_table_size),
-      pointOfCoherency(p->point_of_coherency),
-      pointOfUnification(p->point_of_unification),
+CoherentXBar::CoherentXBar(const CoherentXBarParams &p)
+    : BaseXBar(p), system(p.system), snoopFilter(p.snoop_filter),
+      snoopResponseLatency(p.snoop_response_latency),
+      maxOutstandingSnoopCheck(p.max_outstanding_snoops),
+      maxRoutingTableSizeCheck(p.max_routing_table_size),
+      pointOfCoherency(p.point_of_coherency),
+      pointOfUnification(p.point_of_unification),
 
       snoops(this, "snoops", "Total snoops (count)"),
       snoopTraffic(this, "snoopTraffic", "Total snoop traffic (bytes)"),
@@ -66,7 +66,7 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
     // create the ports based on the size of the memory-side port and
     // CPU-side port vector ports, and the presence of the default port,
     // the ports are enumerated starting from zero
-    for (int i = 0; i < p->port_mem_side_ports_connection_count; ++i) {
+    for (int i = 0; i < p.port_mem_side_ports_connection_count; ++i) {
         std::string portName = csprintf("%s.mem_side_port[%d]", name(), i);
         RequestPort* bp = new CoherentXBarRequestPort(portName, *this, i);
         memSidePorts.push_back(bp);
@@ -78,7 +78,7 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
 
     // see if we have a default CPU-side-port device connected and if so add
     // our corresponding memory-side port
-    if (p->port_default_connection_count) {
+    if (p.port_default_connection_count) {
         defaultPortID = memSidePorts.size();
         std::string portName = name() + ".default";
         RequestPort* bp = new CoherentXBarRequestPort(portName, *this,
@@ -92,7 +92,7 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
     }
 
     // create the CPU-side ports, once again starting at zero
-    for (int i = 0; i < p->port_cpu_side_ports_connection_count; ++i) {
+    for (int i = 0; i < p.port_cpu_side_ports_connection_count; ++i) {
         std::string portName = csprintf("%s.cpu_side_port[%d]", name(), i);
         QueuedResponsePort* bp = new CoherentXBarResponsePort(portName,
                                                             *this, i);
@@ -1119,7 +1119,7 @@ CoherentXBar::regStats()
 }
 
 CoherentXBar *
-CoherentXBarParams::create()
+CoherentXBarParams::create() const
 {
-    return new CoherentXBar(this);
+    return new CoherentXBar(*this);
 }

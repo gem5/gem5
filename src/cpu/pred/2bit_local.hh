@@ -61,7 +61,7 @@ class LocalBP : public BPredUnit
     /**
      * Default branch predictor constructor.
      */
-    LocalBP(const LocalBPParams *params);
+    LocalBP(const LocalBPParams &params);
 
     virtual void uncondBranch(ThreadID tid, Addr pc, void * &bp_history);
 

@@ -45,12 +45,13 @@
 using namespace std;
 using namespace MipsISA;
 
-MipsProcess::MipsProcess(ProcessParams *params, ::Loader::ObjectFile *objFile)
+MipsProcess::MipsProcess(const ProcessParams &params,
+                         ::Loader::ObjectFile *objFile)
     : Process(params,
-              new EmulationPageTable(params->name, params->pid, PageBytes),
+              new EmulationPageTable(params.name, params.pid, PageBytes),
               objFile)
 {
-    fatal_if(params->useArchPT, "Arch page tables not implemented.");
+    fatal_if(params.useArchPT, "Arch page tables not implemented.");
     // Set up stack. On MIPS, stack starts at the top of kuseg
     // user address space. MIPS stack grows down from here
     Addr stack_base = 0x7FFFFFFF;

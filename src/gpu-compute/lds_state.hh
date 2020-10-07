@@ -261,7 +261,7 @@ class LdsState: public ClockedObject
   public:
     typedef LdsStateParams Params;
 
-    LdsState(const Params *params);
+    LdsState(const Params &params);
 
     // prevent copy construction
     LdsState(const LdsState&) = delete;
@@ -271,10 +271,10 @@ class LdsState: public ClockedObject
         parent = nullptr;
     }
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     bool

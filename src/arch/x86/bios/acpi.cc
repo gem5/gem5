@@ -49,40 +49,40 @@ using namespace std;
 
 const char X86ISA::ACPI::RSDP::signature[] = "RSD PTR ";
 
-X86ISA::ACPI::RSDP::RSDP(Params *p) : SimObject(p), oemID(p->oem_id),
-    revision(p->revision), rsdt(p->rsdt), xsdt(p->xsdt)
+X86ISA::ACPI::RSDP::RSDP(const Params &p) : SimObject(p), oemID(p.oem_id),
+    revision(p.revision), rsdt(p.rsdt), xsdt(p.xsdt)
 {}
 
-X86ISA::ACPI::SysDescTable::SysDescTable(Params *p,
+X86ISA::ACPI::SysDescTable::SysDescTable(const Params &p,
         const char * _signature, uint8_t _revision) : SimObject(p),
     signature(_signature), revision(_revision),
-    oemID(p->oem_id), oemTableID(p->oem_table_id),
-    oemRevision(p->oem_revision),
-    creatorID(p->creator_id), creatorRevision(p->creator_revision)
+    oemID(p.oem_id), oemTableID(p.oem_table_id),
+    oemRevision(p.oem_revision),
+    creatorID(p.creator_id), creatorRevision(p.creator_revision)
 {}
 
-X86ISA::ACPI::RSDT::RSDT(Params *p) :
-    SysDescTable(p, "RSDT", 1), entries(p->entries)
+X86ISA::ACPI::RSDT::RSDT(const Params &p) :
+    SysDescTable(p, "RSDT", 1), entries(p.entries)
 {}
 
-X86ISA::ACPI::XSDT::XSDT(Params *p) :
-    SysDescTable(p, "XSDT", 1), entries(p->entries)
+X86ISA::ACPI::XSDT::XSDT(const Params &p) :
+    SysDescTable(p, "XSDT", 1), entries(p.entries)
 {}
 
 X86ISA::ACPI::RSDP *
-X86ACPIRSDPParams::create()
+X86ACPIRSDPParams::create() const
 {
-    return new X86ISA::ACPI::RSDP(this);
+    return new X86ISA::ACPI::RSDP(*this);
 }
 
 X86ISA::ACPI::RSDT *
-X86ACPIRSDTParams::create()
+X86ACPIRSDTParams::create() const
 {
-    return new X86ISA::ACPI::RSDT(this);
+    return new X86ISA::ACPI::RSDT(*this);
 }
 
 X86ISA::ACPI::XSDT *
-X86ACPIXSDTParams::create()
+X86ACPIXSDTParams::create() const
 {
-    return new X86ISA::ACPI::XSDT(this);
+    return new X86ISA::ACPI::XSDT(*this);
 }

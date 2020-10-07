@@ -214,8 +214,8 @@ LSQUnit<Impl>::LSQUnit(uint32_t lqEntries, uint32_t sqEntries)
 
 template<class Impl>
 void
-LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
-        LSQ *lsq_ptr, unsigned id)
+LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr,
+        const DerivO3CPUParams &params, LSQ *lsq_ptr, unsigned id)
 {
     lsqID = id;
 
@@ -228,9 +228,9 @@ LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
 
     DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",lsqID);
 
-    depCheckShift = params->LSQDepCheckShift;
-    checkLoads = params->LSQCheckLoads;
-    needsTSO = params->needsTSO;
+    depCheckShift = params.LSQDepCheckShift;
+    checkLoads = params.LSQCheckLoads;
+    needsTSO = params.needsTSO;
 
     resetState();
 }

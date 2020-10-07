@@ -50,12 +50,13 @@ class EtherSwitch : public SimObject
   public:
     typedef EtherSwitchParams Params;
 
-    EtherSwitch(const Params *p);
+    EtherSwitch(const Params &p);
     ~EtherSwitch();
 
-    const Params * params() const
+    const Params &
+    params() const
     {
-        return dynamic_cast<const Params*>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     Port &getPort(const std::string &if_name,

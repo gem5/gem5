@@ -47,13 +47,13 @@
 std::map<std::string, ExternalMaster::Handler *>
     ExternalMaster::portHandlers;
 
-ExternalMaster::ExternalMaster(ExternalMasterParams *params) :
+ExternalMaster::ExternalMaster(const ExternalMasterParams &params) :
     SimObject(params),
     externalPort(NULL),
-    portName(params->name + ".port"),
-    portType(params->port_type),
-    portData(params->port_data),
-    id(params->system->getRequestorId(this))
+    portName(params.name + ".port"),
+    portType(params.port_type),
+    portData(params.port_data),
+    id(params.system->getRequestorId(this))
 {}
 
 Port &
@@ -94,9 +94,9 @@ ExternalMaster::init()
 }
 
 ExternalMaster *
-ExternalMasterParams::create()
+ExternalMasterParams::create() const
 {
-    return new ExternalMaster(this);
+    return new ExternalMaster(*this);
 }
 
 void

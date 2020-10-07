@@ -212,7 +212,7 @@ class PciDevice : public DmaDevice
      * config file object PCIConfigData and registers the device with
      * a PciHost object.
      */
-    PciDevice(const PciDeviceParams *params);
+    PciDevice(const PciDeviceParams &params);
 
     /**
      * Serialize this object to the given output stream.

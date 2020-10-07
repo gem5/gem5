@@ -71,7 +71,7 @@ namespace X86ISA
 
       public:
         typedef X86GPUTLBParams Params;
-        GpuTLB(const Params *p);
+        GpuTLB(const Params &p);
         ~GpuTLB();
 
         typedef enum BaseTLB::Mode Mode;

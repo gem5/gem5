@@ -44,8 +44,8 @@
 #include "debug/Fetch.hh"
 #include "debug/LTage.hh"
 
-LTAGE::LTAGE(const LTAGEParams *params)
-  : TAGE(params), loopPredictor(params->loop_predictor)
+LTAGE::LTAGE(const LTAGEParams &params)
+  : TAGE(params), loopPredictor(params.loop_predictor)
 {
 }
 
@@ -148,7 +148,7 @@ LTAGE::regStats()
 }
 
 LTAGE*
-LTAGEParams::create()
+LTAGEParams::create() const
 {
-    return new LTAGE(this);
+    return new LTAGE(*this);
 }

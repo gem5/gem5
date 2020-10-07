@@ -44,7 +44,7 @@
 #include "gpu-compute/wavefront.hh"
 #include "params/ComputeUnit.hh"
 
-ScoreboardCheckStage::ScoreboardCheckStage(const ComputeUnitParams *p,
+ScoreboardCheckStage::ScoreboardCheckStage(const ComputeUnitParams &p,
                                            ComputeUnit &cu,
                                            ScoreboardCheckToSchedule
                                            &to_schedule)

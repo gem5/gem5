@@ -34,23 +34,23 @@
 
 namespace Prefetcher {
 
-STeMS::STeMS(const STeMSPrefetcherParams *p)
-  : Queued(p), spatialRegionSize(p->spatial_region_size),
-    spatialRegionSizeBits(floorLog2(p->spatial_region_size)),
-    reconstructionEntries(p->reconstruction_entries),
-    activeGenerationTable(p->active_generation_table_assoc,
-                          p->active_generation_table_entries,
-                          p->active_generation_table_indexing_policy,
-                          p->active_generation_table_replacement_policy,
+STeMS::STeMS(const STeMSPrefetcherParams &p)
+  : Queued(p), spatialRegionSize(p.spatial_region_size),
+    spatialRegionSizeBits(floorLog2(p.spatial_region_size)),
+    reconstructionEntries(p.reconstruction_entries),
+    activeGenerationTable(p.active_generation_table_assoc,
+                          p.active_generation_table_entries,
+                          p.active_generation_table_indexing_policy,
+                          p.active_generation_table_replacement_policy,
                           ActiveGenerationTableEntry(
                               spatialRegionSize / blkSize)),
-    patternSequenceTable(p->pattern_sequence_table_assoc,
-                         p->pattern_sequence_table_entries,
-                         p->pattern_sequence_table_indexing_policy,
-                         p->pattern_sequence_table_replacement_policy,
+    patternSequenceTable(p.pattern_sequence_table_assoc,
+                         p.pattern_sequence_table_entries,
+                         p.pattern_sequence_table_indexing_policy,
+                         p.pattern_sequence_table_replacement_policy,
                          ActiveGenerationTableEntry(
                              spatialRegionSize / blkSize)),
-    rmob(p->region_miss_order_buffer_entries)
+    rmob(p.region_miss_order_buffer_entries)
 {
     fatal_if(!isPowerOf2(spatialRegionSize),
         "The spatial region size must be a power of 2.");
@@ -249,7 +249,7 @@ STeMS::reconstructSequence(
 } // namespace Prefetcher
 
 Prefetcher::STeMS*
-STeMSPrefetcherParams::create()
+STeMSPrefetcherParams::create() const
 {
-   return new Prefetcher::STeMS(this);
+   return new Prefetcher::STeMS(*this);
 }

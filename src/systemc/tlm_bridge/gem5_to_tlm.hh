@@ -189,7 +189,7 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
     ::Port &gem5_getPort(const std::string &if_name, int idx=-1) override;
 
     typedef Gem5ToTlmBridgeBaseParams Params;
-    Gem5ToTlmBridge(Params *p, const sc_core::sc_module_name &mn);
+    Gem5ToTlmBridge(const Params &p, const sc_core::sc_module_name &mn);
 
     tlm_utils::simple_initiator_socket<Gem5ToTlmBridge<BITWIDTH>, BITWIDTH> &
     getSocket()

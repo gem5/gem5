@@ -85,7 +85,7 @@ class ROB
      *  @param _cpu   The cpu object pointer.
      *  @param params The cpu params including several ROB-specific parameters.
      */
-    ROB(O3CPU *_cpu, DerivO3CPUParams *params);
+    ROB(O3CPU *_cpu, const DerivO3CPUParams &params);
 
     std::string name() const;
 

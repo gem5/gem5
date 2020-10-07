@@ -63,8 +63,8 @@ using namespace Linux;
 namespace ArmISA
 {
 
-FsLinux::FsLinux(Params *p) : ArmISA::FsWorkload(p),
-    enableContextSwitchStatsDump(p->enable_context_switch_stats_dump)
+FsLinux::FsLinux(const Params &p) : ArmISA::FsWorkload(p),
+    enableContextSwitchStatsDump(p.enable_context_switch_stats_dump)
 {}
 
 void
@@ -75,7 +75,7 @@ FsLinux::initState()
     // Load symbols at physical address, we might not want
     // to do this permanently, for but early bootup work
     // it is helpful.
-    if (params()->early_kernel_symbols) {
+    if (params().early_kernel_symbols) {
         auto phys_globals = kernelObj->symtab().globals()->mask(_loadAddrMask);
         kernelSymtab.insert(*phys_globals);
         Loader::debugSymbolTable.insert(*phys_globals);
@@ -86,24 +86,24 @@ FsLinux::initState()
     // device trees.
     bool kernel_has_fdt_support =
         kernelSymtab.find("unflatten_device_tree") != kernelSymtab.end();
-    bool dtb_file_specified = params()->dtb_filename != "";
+    bool dtb_file_specified = params().dtb_filename != "";
 
     if (kernel_has_fdt_support && dtb_file_specified) {
         // Kernel supports flattened device tree and dtb file specified.
         // Using Device Tree Blob to describe system configuration.
-        inform("Loading DTB file: %s at address %#x\n", params()->dtb_filename,
-                params()->atags_addr + _loadAddrOffset);
+        inform("Loading DTB file: %s at address %#x\n", params().dtb_filename,
+                params().atags_addr + _loadAddrOffset);
 
-        auto *dtb_file = new ::Loader::DtbFile(params()->dtb_filename);
+        auto *dtb_file = new ::Loader::DtbFile(params().dtb_filename);
 
         if (!dtb_file->addBootCmdLine(
                     commandLine.c_str(), commandLine.size())) {
             warn("couldn't append bootargs to DTB file: %s\n",
-                 params()->dtb_filename);
+                 params().dtb_filename);
         }
 
         dtb_file->buildImage().
-            offset(params()->atags_addr + _loadAddrOffset).
+            offset(params().atags_addr + _loadAddrOffset).
             write(system->physProxy);
         delete dtb_file;
     } else {
@@ -152,7 +152,7 @@ FsLinux::initState()
         DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
         DDUMP(Loader, boot_data, size << 2);
 
-        system->physProxy.writeBlob(params()->atags_addr + _loadAddrOffset,
+        system->physProxy.writeBlob(params().atags_addr + _loadAddrOffset,
                                     boot_data, size << 2);
 
         delete[] boot_data;
@@ -161,8 +161,8 @@ FsLinux::initState()
     // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
     for (auto *tc: system->threads) {
         tc->setIntReg(0, 0);
-        tc->setIntReg(1, params()->machine_type);
-        tc->setIntReg(2, params()->atags_addr + _loadAddrOffset);
+        tc->setIntReg(1, params().machine_type);
+        tc->setIntReg(2, params().atags_addr + _loadAddrOffset);
     }
 }
 
@@ -203,7 +203,7 @@ FsLinux::startup()
     }
 
     const std::string dmesg_output = name() + ".dmesg";
-    if (params()->panic_on_panic) {
+    if (params().panic_on_panic) {
         kernelPanic = addKernelFuncEventOrPanic<Linux::KernelPanic>(
             "panic", "Kernel panic in simulated kernel", dmesg_output);
     } else {
@@ -211,7 +211,7 @@ FsLinux::startup()
             "panic", "Kernel panic in simulated kernel", dmesg_output);
     }
 
-    if (params()->panic_on_oops) {
+    if (params().panic_on_oops) {
         kernelOops = addKernelFuncEventOrPanic<Linux::KernelPanic>(
             "oops_exit", "Kernel oops in guest", dmesg_output);
     } else {
@@ -360,7 +360,7 @@ DumpStats::process(ThreadContext *tc)
 } // namespace ArmISA
 
 ArmISA::FsLinux *
-ArmFsLinuxParams::create()
+ArmFsLinuxParams::create() const
 {
-    return new ArmISA::FsLinux(this);
+    return new ArmISA::FsLinux(*this);
 }

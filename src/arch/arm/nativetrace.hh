@@ -98,14 +98,14 @@ class ArmNativeTrace : public NativeTrace
   public:
     typedef ArmNativeTraceParams Params;
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
-    ArmNativeTrace(const Params *p) :
-        NativeTrace(p), stopOnPCError(p->stop_on_pc_error)
+    ArmNativeTrace(const Params &p) :
+        NativeTrace(p), stopOnPCError(p.stop_on_pc_error)
     {}
 
     void check(NativeTraceRecord *record);

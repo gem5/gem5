@@ -91,9 +91,9 @@ using namespace Net;
 //
 // NSGigE PCI Device
 //
-NSGigE::NSGigE(Params *p)
+NSGigE::NSGigE(const Params &p)
     : EtherDevBase(p), ioEnable(false),
-      txFifo(p->tx_fifo_size), rxFifo(p->rx_fifo_size),
+      txFifo(p.tx_fifo_size), rxFifo(p.rx_fifo_size),
       txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
       txXferLen(0), rxXferLen(0), rxDmaFree(false), txDmaFree(false),
       txState(txIdle), txEnable(false), CTDD(false), txHalt(false),
@@ -102,25 +102,25 @@ NSGigE::NSGigE(Params *p)
       rxFragPtr(0), rxDescCnt(0), rxDmaState(dmaIdle), extstsEnable(false),
       eepromState(eepromStart), eepromClk(false), eepromBitsToRx(0),
       eepromOpcode(0), eepromAddress(0), eepromData(0),
-      dmaReadDelay(p->dma_read_delay), dmaWriteDelay(p->dma_write_delay),
-      dmaReadFactor(p->dma_read_factor), dmaWriteFactor(p->dma_write_factor),
+      dmaReadDelay(p.dma_read_delay), dmaWriteDelay(p.dma_write_delay),
+      dmaReadFactor(p.dma_read_factor), dmaWriteFactor(p.dma_write_factor),
       rxDmaData(NULL), rxDmaAddr(0), rxDmaLen(0),
       txDmaData(NULL), txDmaAddr(0), txDmaLen(0),
       rxDmaReadEvent([this]{ rxDmaReadDone(); }, name()),
       rxDmaWriteEvent([this]{ rxDmaWriteDone(); }, name()),
       txDmaReadEvent([this]{ txDmaReadDone(); }, name()),
       txDmaWriteEvent([this]{ txDmaWriteDone(); }, name()),
-      dmaDescFree(p->dma_desc_free), dmaDataFree(p->dma_data_free),
-      txDelay(p->tx_delay), rxDelay(p->rx_delay),
+      dmaDescFree(p.dma_desc_free), dmaDataFree(p.dma_data_free),
+      txDelay(p.tx_delay), rxDelay(p.rx_delay),
       rxKickTick(0),
       rxKickEvent([this]{ rxKick(); }, name()),
       txKickTick(0),
       txKickEvent([this]{ txKick(); }, name()),
       txEvent([this]{ txEventTransmit(); }, name()),
-      rxFilterEnable(p->rx_filter),
+      rxFilterEnable(p.rx_filter),
       acceptBroadcast(false), acceptMulticast(false), acceptUnicast(false),
       acceptPerfect(false), acceptArp(false), multicastHashEnable(false),
-      intrDelay(p->intr_delay), intrTick(0), cpuPendingIntr(false),
+      intrDelay(p.intr_delay), intrTick(0), cpuPendingIntr(false),
       intrEvent(0), interface(0)
 {
 
@@ -128,7 +128,7 @@ NSGigE::NSGigE(Params *p)
     interface = new NSGigEInt(name() + ".int0", this);
 
     regsReset();
-    memcpy(&rom.perfectMatch, p->hardware_address.bytes(), ETH_ADDR_LEN);
+    memcpy(&rom.perfectMatch, p.hardware_address.bytes(), ETH_ADDR_LEN);
 
     memset(&rxDesc32, 0, sizeof(rxDesc32));
     memset(&txDesc32, 0, sizeof(txDesc32));
@@ -383,11 +383,11 @@ NSGigE::read(PacketPtr pkt)
 
           case M5REG:
             reg = 0;
-            if (params()->rx_thread)
+            if (params().rx_thread)
                 reg |= M5REG_RX_THREAD;
-            if (params()->tx_thread)
+            if (params().tx_thread)
                 reg |= M5REG_TX_THREAD;
-            if (params()->rss)
+            if (params().rss)
                 reg |= M5REG_RSS;
             break;
 
@@ -2367,7 +2367,7 @@ NSGigE::unserialize(CheckpointIn &cp)
 }
 
 NSGigE *
-NSGigEParams::create()
+NSGigEParams::create() const
 {
-    return new NSGigE(this);
+    return new NSGigE(*this);
 }

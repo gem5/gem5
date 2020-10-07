@@ -44,20 +44,20 @@
 #include "debug/ElasticTrace.hh"
 #include "mem/packet.hh"
 
-ElasticTrace::ElasticTrace(const ElasticTraceParams* params)
+ElasticTrace::ElasticTrace(const ElasticTraceParams &params)
     :  ProbeListenerObject(params),
        regEtraceListenersEvent([this]{ regEtraceListeners(); }, name()),
        firstWin(true),
        lastClearedSeqNum(0),
-       depWindowSize(params->depWindowSize),
+       depWindowSize(params.depWindowSize),
        dataTraceStream(nullptr),
        instTraceStream(nullptr),
-       startTraceInst(params->startTraceInst),
+       startTraceInst(params.startTraceInst),
        allProbesReg(false),
-       traceVirtAddr(params->traceVirtAddr),
+       traceVirtAddr(params.traceVirtAddr),
        stats(this)
 {
-    cpu = dynamic_cast<FullO3CPU<O3CPUImpl>*>(params->manager);
+    cpu = dynamic_cast<FullO3CPU<O3CPUImpl>*>(params.manager);
     fatal_if(!cpu, "Manager of %s is not of type O3CPU and thus does not "\
                 "support dependency tracing.\n", name());
 
@@ -67,14 +67,14 @@ ElasticTrace::ElasticTrace(const ElasticTraceParams* params)
     fatal_if(cpu->numThreads > 1, "numThreads = %i, %s supports tracing for"\
                 "single-threaded workload only", cpu->numThreads, name());
     // Initialize the protobuf output stream
-    fatal_if(params->instFetchTraceFile == "", "Assign instruction fetch "\
+    fatal_if(params.instFetchTraceFile == "", "Assign instruction fetch "\
                 "trace file path to instFetchTraceFile");
-    fatal_if(params->dataDepTraceFile == "", "Assign data dependency "\
+    fatal_if(params.dataDepTraceFile == "", "Assign data dependency "\
                 "trace file path to dataDepTraceFile");
     std::string filename = simout.resolve(name() + "." +
-                                            params->instFetchTraceFile);
+                                            params.instFetchTraceFile);
     instTraceStream = new ProtoOutputStream(filename);
-    filename = simout.resolve(name() + "." + params->dataDepTraceFile);
+    filename = simout.resolve(name() + "." + params.dataDepTraceFile);
     dataTraceStream = new ProtoOutputStream(filename);
     // Create a protobuf message for the header and write it to the stream
     ProtoMessage::PacketHeader inst_pkt_header;
@@ -921,7 +921,7 @@ ElasticTrace::flushTraces()
 }
 
 ElasticTrace*
-ElasticTraceParams::create()
+ElasticTraceParams::create() const
 {
-    return new ElasticTrace(this);
+    return new ElasticTrace(*this);
 }

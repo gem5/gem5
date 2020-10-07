@@ -142,7 +142,7 @@ class SkewedAssociative : public BaseIndexingPolicy
     /**
      * Construct and initialize this policy.
      */
-    SkewedAssociative(const Params *p);
+    SkewedAssociative(const Params &p);
 
     /**
      * Destructor.

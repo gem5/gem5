@@ -195,17 +195,17 @@ namespace X86ISA
 
         typedef X86PagetableWalkerParams Params;
 
-        const Params *
+        const Params &
         params() const
         {
-            return static_cast<const Params *>(_params);
+            return static_cast<const Params &>(_params);
         }
 
-        Walker(const Params *params) :
+        Walker(const Params &params) :
             ClockedObject(params), port(name() + ".port", this),
-            funcState(this, NULL, NULL, true), tlb(NULL), sys(params->system),
+            funcState(this, NULL, NULL, true), tlb(NULL), sys(params.system),
             requestorId(sys->getRequestorId(this)),
-            numSquashable(params->num_squash_per_cycle),
+            numSquashable(params.num_squash_per_cycle),
             startWalkWrapperEvent([this]{ startWalkWrapper(); }, name())
         {
         }

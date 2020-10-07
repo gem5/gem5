@@ -45,7 +45,7 @@
 class SimplePoolManager : public PoolManager
 {
   public:
-    SimplePoolManager(const PoolManagerParams *p)
+    SimplePoolManager(const PoolManagerParams &p)
         : PoolManager(p), _regionSize(0), _nxtFreeIdx(0),
           _reservedGroups(0)
     {

@@ -128,9 +128,9 @@ class ISA : public BaseISA
         return reg;
     }
 
-    const Params *params() const;
+    const Params &params() const;
 
-    ISA(Params *p);
+    ISA(const Params &p);
 };
 
 } // namespace PowerISA

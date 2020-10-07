@@ -66,7 +66,7 @@ namespace X86ISA
       public:
 
         typedef X86TLBParams Params;
-        TLB(const Params *p);
+        TLB(const Params &p);
 
         void takeOverFrom(BaseTLB *otlb) override {}
 

@@ -48,7 +48,7 @@ class GenericArmPciHost
     : public GenericPciHost
 {
   public:
-    GenericArmPciHost(const GenericArmPciHostParams *p);
+    GenericArmPciHost(const GenericArmPciHostParams &p);
     virtual ~GenericArmPciHost() {}
 
   protected:

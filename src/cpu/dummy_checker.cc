@@ -40,7 +40,7 @@
 #include "params/DummyChecker.hh"
 
 DummyChecker *
-DummyCheckerParams::create()
+DummyCheckerParams::create() const
 {
     // The checker should check all instructions executed by the main
     // cpu and therefore any parameters for early exit don't make much
@@ -48,5 +48,5 @@ DummyCheckerParams::create()
     fatal_if(max_insts_any_thread || max_insts_all_threads ||
              progress_interval, "Invalid checker parameters");
 
-    return new DummyChecker(this);
+    return new DummyChecker(*this);
 }

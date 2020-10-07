@@ -47,16 +47,16 @@
 #include "mem/ruby/system/Sequencer.hh"
 #include "sim/system.hh"
 
-AbstractController::AbstractController(const Params *p)
-    : ClockedObject(p), Consumer(this), m_version(p->version),
-      m_clusterID(p->cluster_id),
-      m_id(p->system->getRequestorId(this)), m_is_blocking(false),
-      m_number_of_TBEs(p->number_of_TBEs),
-      m_transitions_per_cycle(p->transitions_per_cycle),
-      m_buffer_size(p->buffer_size), m_recycle_latency(p->recycle_latency),
-      m_mandatory_queue_latency(p->mandatory_queue_latency),
+AbstractController::AbstractController(const Params &p)
+    : ClockedObject(p), Consumer(this), m_version(p.version),
+      m_clusterID(p.cluster_id),
+      m_id(p.system->getRequestorId(this)), m_is_blocking(false),
+      m_number_of_TBEs(p.number_of_TBEs),
+      m_transitions_per_cycle(p.transitions_per_cycle),
+      m_buffer_size(p.buffer_size), m_recycle_latency(p.recycle_latency),
+      m_mandatory_queue_latency(p.mandatory_queue_latency),
       memoryPort(csprintf("%s.memory", name()), this),
-      addrRanges(p->addr_ranges.begin(), p->addr_ranges.end())
+      addrRanges(p.addr_ranges.begin(), p.addr_ranges.end())
 {
     if (m_version == 0) {
         // Combine the statistics from all controllers
@@ -84,7 +84,7 @@ AbstractController::init()
     // different types. If this is the case, mapAddressToDownstreamMachine
     // needs to specify the machine type
     downstreamDestinations.resize();
-    for (auto abs_cntrl : params()->downstream_destinations) {
+    for (auto abs_cntrl : params().downstream_destinations) {
         MachineID mid = abs_cntrl->getMachineID();
         const AddrRangeList &ranges = abs_cntrl->getAddrRanges();
         for (const auto addr_range : ranges) {

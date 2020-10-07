@@ -47,7 +47,7 @@ namespace ArmISA {
 class MMU : public BaseMMU
 {
   public:
-    MMU(const ArmMMUParams *p)
+    MMU(const ArmMMUParams &p)
       : BaseMMU(p)
     {}
 };

@@ -56,7 +56,7 @@ class ComputeUnit;
 class GlobalMemPipeline
 {
   public:
-    GlobalMemPipeline(const ComputeUnitParams *p, ComputeUnit &cu);
+    GlobalMemPipeline(const ComputeUnitParams &p, ComputeUnit &cu);
     void init();
     void exec();
 

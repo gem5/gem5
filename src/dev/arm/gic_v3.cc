@@ -51,7 +51,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-Gicv3::Gicv3(const Params * p)
+Gicv3::Gicv3(const Params &p)
     : BaseGic(p)
 {
 }
@@ -59,25 +59,25 @@ Gicv3::Gicv3(const Params * p)
 void
 Gicv3::init()
 {
-    distributor = new Gicv3Distributor(this, params()->it_lines);
+    distributor = new Gicv3Distributor(this, params().it_lines);
     int threads = sys->threads.size();
     redistributors.resize(threads, nullptr);
     cpuInterfaces.resize(threads, nullptr);
 
-    panic_if(threads > params()->cpu_max,
+    panic_if(threads > params().cpu_max,
         "Exceeding maximum number of PEs supported by GICv3: "
-        "using %u while maximum is %u.", threads, params()->cpu_max);
+        "using %u while maximum is %u.", threads, params().cpu_max);
 
     for (int i = 0; i < threads; i++) {
         redistributors[i] = new Gicv3Redistributor(this, i);
         cpuInterfaces[i] = new Gicv3CPUInterface(this, i);
     }
 
-    distRange = RangeSize(params()->dist_addr,
+    distRange = RangeSize(params().dist_addr,
         Gicv3Distributor::ADDR_RANGE_SIZE - 1);
 
     redistSize = redistributors[0]->addrRangeSize;
-    redistRange = RangeSize(params()->redist_addr, redistSize * threads - 1);
+    redistRange = RangeSize(params().redist_addr, redistSize * threads - 1);
 
     addrRanges = {distRange, redistRange};
 
@@ -88,7 +88,7 @@ Gicv3::init()
         cpuInterfaces[i]->init();
     }
 
-    Gicv3Its *its = params()->its;
+    Gicv3Its *its = params().its;
     if (its)
         its->setGIC(this);
 
@@ -108,7 +108,7 @@ Gicv3::read(PacketPtr pkt)
         const Addr daddr = addr - distRange.start();
         panic_if(!distributor, "Distributor is null!");
         resp = distributor->read(daddr, size, is_secure_access);
-        delay = params()->dist_pio_delay;
+        delay = params().dist_pio_delay;
         DPRINTF(GIC, "Gicv3::read(): (distributor) context_id %d register %#x "
                 "size %d is_secure_access %d (value %#x)\n",
                 pkt->req->contextId(), daddr, size, is_secure_access, resp);
@@ -118,7 +118,7 @@ Gicv3::read(PacketPtr pkt)
         Gicv3Redistributor *redist = getRedistributorByAddr(addr);
         resp = redist->read(daddr, size, is_secure_access);
 
-        delay = params()->redist_pio_delay;
+        delay = params().redist_pio_delay;
         DPRINTF(GIC, "Gicv3::read(): (redistributor %d) context_id %d "
                 "register %#x size %d is_secure_access %d (value %#x)\n",
                 redist->processorNumber(), pkt->req->contextId(), daddr, size,
@@ -148,7 +148,7 @@ Gicv3::write(PacketPtr pkt)
                 "register %#x size %d is_secure_access %d value %#x\n",
                 pkt->req->contextId(), daddr, size, is_secure_access, data);
         distributor->write(daddr, data, size, is_secure_access);
-        delay = params()->dist_pio_delay;
+        delay = params().dist_pio_delay;
     } else if (redistRange.contains(addr)) {
         Addr daddr = (addr - redistRange.start()) % redistSize;
 
@@ -160,7 +160,7 @@ Gicv3::write(PacketPtr pkt)
 
         redist->write(daddr, data, size, is_secure_access);
 
-        delay = params()->redist_pio_delay;
+        delay = params().redist_pio_delay;
     } else {
         panic("Gicv3::write(): unknown address %#x\n", addr);
     }
@@ -212,7 +212,7 @@ bool
 Gicv3::supportsVersion(GicVersion version)
 {
     return (version == GicVersion::GIC_V3) ||
-           (version == GicVersion::GIC_V4 && params()->gicv4);
+           (version == GicVersion::GIC_V4 && params().gicv4);
 }
 
 void
@@ -296,7 +296,7 @@ Gicv3::unserialize(CheckpointIn & cp)
 }
 
 Gicv3 *
-Gicv3Params::create()
+Gicv3Params::create() const
 {
-    return new Gicv3(this);
+    return new Gicv3(*this);
 }

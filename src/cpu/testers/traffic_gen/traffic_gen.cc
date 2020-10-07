@@ -51,17 +51,17 @@
 
 using namespace std;
 
-TrafficGen::TrafficGen(const TrafficGenParams* p)
+TrafficGen::TrafficGen(const TrafficGenParams &p)
     : BaseTrafficGen(p),
-      configFile(p->config_file),
+      configFile(p.config_file),
       currState(0)
 {
 }
 
 TrafficGen*
-TrafficGenParams::create()
+TrafficGenParams::create() const
 {
-    return new TrafficGen(this);
+    return new TrafficGen(*this);
 }
 
 void

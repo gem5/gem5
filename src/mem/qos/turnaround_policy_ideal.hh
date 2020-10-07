@@ -53,7 +53,7 @@ namespace QoS {
 class TurnaroundPolicyIdeal: public TurnaroundPolicy
 {
   public:
-    TurnaroundPolicyIdeal(const Params*);
+    TurnaroundPolicyIdeal(const Params &);
 
     virtual ~TurnaroundPolicyIdeal();
 

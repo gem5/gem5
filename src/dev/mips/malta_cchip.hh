@@ -78,10 +78,10 @@ class MaltaCChip : public BasicPioDevice
   public:
     typedef MaltaCChipParams Params;
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     /**
@@ -89,7 +89,7 @@ class MaltaCChip : public BasicPioDevice
      * device register to 0.
      * @param p params struct
      */
-    MaltaCChip(Params *p);
+    MaltaCChip(const Params &p);
 
     Tick read(PacketPtr pkt) override;
 

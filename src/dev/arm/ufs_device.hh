@@ -170,7 +170,7 @@ class UFSHostDevice : public DmaDevice
 {
   public:
 
-    UFSHostDevice(const UFSHostDeviceParams* p);
+    UFSHostDevice(const UFSHostDeviceParams &p);
 
     DrainState drain() override;
     void checkDrain();
@@ -541,7 +541,7 @@ class UFSHostDevice : public DmaDevice
         /**
          * Constructor and destructor
          */
-        UFSSCSIDevice(const UFSHostDeviceParams* p, uint32_t lun_id,
+        UFSSCSIDevice(const UFSHostDeviceParams &p, uint32_t lun_id,
                       const Callback &transfer_cb, const Callback &read_cb);
         ~UFSSCSIDevice();
 

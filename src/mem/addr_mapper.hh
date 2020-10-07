@@ -57,7 +57,7 @@ class AddrMapper : public SimObject
 
   public:
 
-    AddrMapper(const AddrMapperParams* params);
+    AddrMapper(const AddrMapperParams &params);
 
     virtual ~AddrMapper() { }
 
@@ -241,7 +241,7 @@ class RangeAddrMapper : public AddrMapper
 
   public:
 
-    RangeAddrMapper(const RangeAddrMapperParams* p);
+    RangeAddrMapper(const RangeAddrMapperParams &p);
 
     ~RangeAddrMapper() { }
 

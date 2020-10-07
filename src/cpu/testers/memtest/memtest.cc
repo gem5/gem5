@@ -79,27 +79,27 @@ MemTest::sendPkt(PacketPtr pkt) {
     return true;
 }
 
-MemTest::MemTest(const Params *p)
+MemTest::MemTest(const Params &p)
     : ClockedObject(p),
       tickEvent([this]{ tick(); }, name()),
       noRequestEvent([this]{ noRequest(); }, name()),
       noResponseEvent([this]{ noResponse(); }, name()),
       port("port", *this),
       retryPkt(nullptr),
-      size(p->size),
-      interval(p->interval),
-      percentReads(p->percent_reads),
-      percentFunctional(p->percent_functional),
-      percentUncacheable(p->percent_uncacheable),
-      requestorId(p->system->getRequestorId(this)),
-      blockSize(p->system->cacheLineSize()),
+      size(p.size),
+      interval(p.interval),
+      percentReads(p.percent_reads),
+      percentFunctional(p.percent_functional),
+      percentUncacheable(p.percent_uncacheable),
+      requestorId(p.system->getRequestorId(this)),
+      blockSize(p.system->cacheLineSize()),
       blockAddrMask(blockSize - 1),
-      progressInterval(p->progress_interval),
-      progressCheck(p->progress_check),
-      nextProgressMessage(p->progress_interval),
-      maxLoads(p->max_loads),
-      atomic(p->system->isAtomicMode()),
-      suppressFuncErrors(p->suppress_func_errors), stats(this)
+      progressInterval(p.progress_interval),
+      progressCheck(p.progress_check),
+      nextProgressMessage(p.progress_interval),
+      maxLoads(p.max_loads),
+      atomic(p.system->isAtomicMode()),
+      suppressFuncErrors(p.suppress_func_errors), stats(this)
 {
     id = TESTER_ALLOCATOR++;
     fatal_if(id >= blockSize, "Too many testers, only %d allowed\n",
@@ -323,7 +323,7 @@ MemTest::recvRetry()
 }
 
 MemTest *
-MemTestParams::create()
+MemTestParams::create() const
 {
-    return new MemTest(this);
+    return new MemTest(*this);
 }

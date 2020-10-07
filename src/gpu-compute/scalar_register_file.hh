@@ -53,7 +53,7 @@ class ScalarRegisterFile : public RegisterFile
   public:
     using ScalarRegU32 = TheGpuISA::ScalarRegU32;
 
-    ScalarRegisterFile(const ScalarRegisterFileParams *p);
+    ScalarRegisterFile(const ScalarRegisterFileParams &p);
     ~ScalarRegisterFile() { }
 
     virtual bool operandsReady(Wavefront *w, GPUDynInstPtr ii) const override;

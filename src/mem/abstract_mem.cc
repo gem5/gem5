@@ -53,13 +53,13 @@
 
 using namespace std;
 
-AbstractMemory::AbstractMemory(const Params *p) :
-    ClockedObject(p), range(params()->range), pmemAddr(NULL),
-    backdoor(params()->range, nullptr,
+AbstractMemory::AbstractMemory(const Params &p) :
+    ClockedObject(p), range(p.range), pmemAddr(NULL),
+    backdoor(params().range, nullptr,
              (MemBackdoor::Flags)(MemBackdoor::Readable |
                                   MemBackdoor::Writeable)),
-    confTableReported(p->conf_table_reported), inAddrMap(p->in_addr_map),
-    kvmMap(p->kvm_map), _system(NULL),
+    confTableReported(p.conf_table_reported), inAddrMap(p.in_addr_map),
+    kvmMap(p.kvm_map), _system(NULL),
     stats(*this)
 {
     panic_if(!range.valid() || !range.size(),
@@ -72,7 +72,7 @@ AbstractMemory::initState()
 {
     ClockedObject::initState();
 
-    const auto &file = params()->image_file;
+    const auto &file = params().image_file;
     if (file == "")
         return;
 

@@ -60,10 +60,10 @@ FALRUBlk::print() const
     return csprintf("%s inCachesMask: %#x", CacheBlk::print(), inCachesMask);
 }
 
-FALRU::FALRU(const Params *p)
+FALRU::FALRU(const Params &p)
     : BaseTags(p),
 
-      cacheTracking(p->min_tracked_cache_size, size, blkSize)
+      cacheTracking(p.min_tracked_cache_size, size, blkSize)
 {
     if (!isPowerOf2(blkSize))
         fatal("cache block size (in bytes) `%d' must be a power of two",
@@ -280,9 +280,9 @@ FALRU::moveToTail(FALRUBlk *blk)
 }
 
 FALRU *
-FALRUParams::create()
+FALRUParams::create() const
 {
-    return new FALRU(this);
+    return new FALRU(*this);
 }
 
 void

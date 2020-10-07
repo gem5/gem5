@@ -57,12 +57,12 @@
 
 using namespace CopyEngineReg;
 
-CopyEngine::CopyEngine(const Params *p)
+CopyEngine::CopyEngine(const Params &p)
     : PciDevice(p)
 {
     // All Reg regs are initialized to 0 by default
-    regs.chanCount = p->ChanCnt;
-    regs.xferCap = findMsbSet(p->XferCap);
+    regs.chanCount = p.ChanCnt;
+    regs.xferCap = findMsbSet(p.XferCap);
     regs.attnStatus = 0;
 
     if (regs.chanCount > 64)
@@ -78,8 +78,8 @@ CopyEngine::CopyEngine(const Params *p)
 CopyEngine::CopyEngineChannel::CopyEngineChannel(CopyEngine *_ce, int cid)
     : cePort(_ce, _ce->sys),
       ce(_ce), channelId(cid), busy(false), underReset(false),
-      refreshNext(false), latBeforeBegin(ce->params()->latBeforeBegin),
-      latAfterCompletion(ce->params()->latAfterCompletion),
+      refreshNext(false), latBeforeBegin(ce->params().latBeforeBegin),
+      latAfterCompletion(ce->params().latAfterCompletion),
       completionDataReg(0), nextState(Idle),
       fetchCompleteEvent([this]{ fetchDescComplete(); }, name()),
       addrCompleteEvent([this]{ fetchAddrComplete(); }, name()),
@@ -94,7 +94,7 @@ CopyEngine::CopyEngineChannel::CopyEngineChannel(CopyEngine *_ce, int cid)
 
         curDmaDesc = new DmaDesc;
         memset(curDmaDesc, 0, sizeof(DmaDesc));
-        copyBuffer = new uint8_t[ce->params()->XferCap];
+        copyBuffer = new uint8_t[ce->params().XferCap];
 }
 
 CopyEngine::~CopyEngine()
@@ -675,7 +675,7 @@ CopyEngine::CopyEngineChannel::serialize(CheckpointOut &cp) const
     int nextState = this->nextState;
     SERIALIZE_SCALAR(nextState);
     arrayParamOut(cp, "curDmaDesc", (uint8_t*)curDmaDesc, sizeof(DmaDesc));
-    SERIALIZE_ARRAY(copyBuffer, ce->params()->XferCap);
+    SERIALIZE_ARRAY(copyBuffer, ce->params().XferCap);
     cr.serialize(cp);
 
 }
@@ -693,7 +693,7 @@ CopyEngine::CopyEngineChannel::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(nextState);
     this->nextState = (ChannelState)nextState;
     arrayParamIn(cp, "curDmaDesc", (uint8_t*)curDmaDesc, sizeof(DmaDesc));
-    UNSERIALIZE_ARRAY(copyBuffer, ce->params()->XferCap);
+    UNSERIALIZE_ARRAY(copyBuffer, ce->params().XferCap);
     cr.unserialize(cp);
 
 }
@@ -732,7 +732,7 @@ CopyEngine::CopyEngineChannel::drainResume()
 }
 
 CopyEngine *
-CopyEngineParams::create()
+CopyEngineParams::create() const
 {
-    return new CopyEngine(this);
+    return new CopyEngine(*this);
 }

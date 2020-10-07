@@ -86,7 +86,8 @@ X86ISA::SMBios::SMBiosStructure::writeOut(PortProxy& proxy, Addr addr)
     return length + getStringLength();
 }
 
-X86ISA::SMBios::SMBiosStructure::SMBiosStructure(Params * p, uint8_t _type) :
+X86ISA::SMBios::SMBiosStructure::SMBiosStructure(
+        const Params &p, uint8_t _type) :
     SimObject(p), type(_type), handle(0), stringFields(false)
 {}
 
@@ -127,14 +128,14 @@ X86ISA::SMBios::SMBiosStructure::getStringLength()
 }
 
 int
-X86ISA::SMBios::SMBiosStructure::addString(string & newString)
+X86ISA::SMBios::SMBiosStructure::addString(const string &new_string)
 {
     stringFields = true;
     // If a string is empty, treat it as not existing. The index for empty
     // strings is 0.
-    if (newString.length() == 0)
+    if (new_string.length() == 0)
         return 0;
-    strings.push_back(newString);
+    strings.push_back(new_string);
     return strings.size();
 }
 
@@ -146,27 +147,28 @@ X86ISA::SMBios::SMBiosStructure::readString(int n)
 }
 
 void
-X86ISA::SMBios::SMBiosStructure::setString(int n, std::string & newString)
+X86ISA::SMBios::SMBiosStructure::setString(
+        int n, const std::string &new_string)
 {
     assert(n > 0 && n <= strings.size());
-    strings[n - 1] = newString;
+    strings[n - 1] = new_string;
 }
 
-X86ISA::SMBios::BiosInformation::BiosInformation(Params * p) :
+X86ISA::SMBios::BiosInformation::BiosInformation(const Params &p) :
         SMBiosStructure(p, Type),
-        startingAddrSegment(p->starting_addr_segment),
-        romSize(p->rom_size),
-        majorVer(p->major), minorVer(p->minor),
-        embContFirmwareMajor(p->emb_cont_firmware_major),
-        embContFirmwareMinor(p->emb_cont_firmware_minor)
+        startingAddrSegment(p.starting_addr_segment),
+        romSize(p.rom_size),
+        majorVer(p.major), minorVer(p.minor),
+        embContFirmwareMajor(p.emb_cont_firmware_major),
+        embContFirmwareMinor(p.emb_cont_firmware_minor)
     {
-        vendor = addString(p->vendor);
-        version = addString(p->version);
-        releaseDate = addString(p->release_date);
+        vendor = addString(p.vendor);
+        version = addString(p.version);
+        releaseDate = addString(p.release_date);
 
-        characteristics = composeBitVector(p->characteristics);
+        characteristics = composeBitVector(p.characteristics);
         characteristicExtBytes =
-            composeBitVector(p->characteristic_ext_bytes);
+            composeBitVector(p.characteristic_ext_bytes);
     }
 
 uint16_t
@@ -200,15 +202,15 @@ X86ISA::SMBios::BiosInformation::writeOut(PortProxy& proxy, Addr addr)
     return size;
 }
 
-X86ISA::SMBios::SMBiosTable::SMBiosTable(Params * p) :
-    SimObject(p), structures(p->structures)
+X86ISA::SMBios::SMBiosTable::SMBiosTable(const Params &p) :
+    SimObject(p), structures(p.structures)
 {
-    smbiosHeader.majorVersion = p->major_version;
-    smbiosHeader.minorVersion = p->minor_version;
-    assert(p->major_version <= 9);
-    assert(p->minor_version <= 9);
+    smbiosHeader.majorVersion = p.major_version;
+    smbiosHeader.minorVersion = p.minor_version;
+    assert(p.major_version <= 9);
+    assert(p.minor_version <= 9);
     smbiosHeader.intermediateHeader.smbiosBCDRevision =
-        (p->major_version << 4) | p->minor_version;
+        (p.major_version << 4) | p.minor_version;
 }
 
 void
@@ -322,13 +324,13 @@ X86ISA::SMBios::SMBiosTable::writeOut(PortProxy& proxy, Addr addr,
 }
 
 X86ISA::SMBios::BiosInformation *
-X86SMBiosBiosInformationParams::create()
+X86SMBiosBiosInformationParams::create() const
 {
-    return new X86ISA::SMBios::BiosInformation(this);
+    return new X86ISA::SMBios::BiosInformation(*this);
 }
 
 X86ISA::SMBios::SMBiosTable *
-X86SMBiosSMBiosTableParams::create()
+X86SMBiosSMBiosTableParams::create() const
 {
-    return new X86ISA::SMBios::SMBiosTable(this);
+    return new X86ISA::SMBios::SMBiosTable(*this);
 }

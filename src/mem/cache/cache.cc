@@ -63,8 +63,8 @@
 #include "mem/request.hh"
 #include "params/Cache.hh"
 
-Cache::Cache(const CacheParams *p)
-    : BaseCache(p, p->system->cacheLineSize()),
+Cache::Cache(const CacheParams &p)
+    : BaseCache(p, p.system->cacheLineSize()),
       doFastWrites(true)
 {
 }
@@ -1431,10 +1431,10 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
 }
 
 Cache*
-CacheParams::create()
+CacheParams::create() const
 {
     assert(tags);
     assert(replacement_policy);
 
-    return new Cache(this);
+    return new Cache(*this);
 }

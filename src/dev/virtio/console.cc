@@ -41,11 +41,11 @@
 #include "params/VirtIOConsole.hh"
 #include "sim/system.hh"
 
-VirtIOConsole::VirtIOConsole(Params *params)
+VirtIOConsole::VirtIOConsole(const Params &params)
     : VirtIODeviceBase(params, ID_CONSOLE, sizeof(Config), F_SIZE),
-      qRecv(params->system->physProxy, byteOrder, params->qRecvSize, *this),
-      qTrans(params->system->physProxy, byteOrder, params->qTransSize, *this),
-      device(*params->device)
+      qRecv(params.system->physProxy, byteOrder, params.qRecvSize, *this),
+      qTrans(params.system->physProxy, byteOrder, params.qTransSize, *this),
+      device(*params.device)
 {
     registerQueue(qRecv);
     registerQueue(qTrans);
@@ -114,7 +114,7 @@ VirtIOConsole::TermTransQueue::onNotifyDescriptor(VirtDescriptor *desc)
 }
 
 VirtIOConsole *
-VirtIOConsoleParams::create()
+VirtIOConsoleParams::create() const
 {
-    return new VirtIOConsole(this);
+    return new VirtIOConsole(*this);
 }

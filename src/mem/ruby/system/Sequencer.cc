@@ -62,26 +62,26 @@
 using namespace std;
 
 Sequencer *
-RubySequencerParams::create()
+RubySequencerParams::create() const
 {
-    return new Sequencer(this);
+    return new Sequencer(*this);
 }
 
-Sequencer::Sequencer(const Params *p)
+Sequencer::Sequencer(const Params &p)
     : RubyPort(p), m_IncompleteTimes(MachineType_NUM),
       deadlockCheckEvent([this]{ wakeup(); }, "Sequencer deadlock check")
 {
     m_outstanding_count = 0;
 
-    m_dataCache_ptr = p->dcache;
-    m_max_outstanding_requests = p->max_outstanding_requests;
-    m_deadlock_threshold = p->deadlock_threshold;
+    m_dataCache_ptr = p.dcache;
+    m_max_outstanding_requests = p.max_outstanding_requests;
+    m_deadlock_threshold = p.deadlock_threshold;
 
-    m_coreId = p->coreid; // for tracking the two CorePair sequencers
+    m_coreId = p.coreid; // for tracking the two CorePair sequencers
     assert(m_max_outstanding_requests > 0);
     assert(m_deadlock_threshold > 0);
 
-    m_runningGarnetStandalone = p->garnet_standalone;
+    m_runningGarnetStandalone = p.garnet_standalone;
 }
 
 Sequencer::~Sequencer()

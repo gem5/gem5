@@ -85,10 +85,10 @@ class FsLinux : public ArmISA::FsWorkload
   public:
     /** Boilerplate params code */
     typedef ArmFsLinuxParams Params;
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(&_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     /** When enabled, dump stats/task info on context switches for
@@ -105,7 +105,7 @@ class FsLinux : public ArmISA::FsWorkload
      * mappings between taskIds and OS process IDs */
     OutputStream *taskFile = nullptr;
 
-    FsLinux(Params *p);
+    FsLinux(const Params &p);
     ~FsLinux();
 
     void initState() override;

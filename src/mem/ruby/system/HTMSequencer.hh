@@ -51,7 +51,7 @@
 class HTMSequencer : public Sequencer
 {
   public:
-    HTMSequencer(const RubyHTMSequencerParams *p);
+    HTMSequencer(const RubyHTMSequencerParams &p);
     ~HTMSequencer();
 
     // callback to acknowledge HTM requests and

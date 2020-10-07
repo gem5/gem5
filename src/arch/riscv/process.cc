@@ -57,16 +57,16 @@
 using namespace std;
 using namespace RiscvISA;
 
-RiscvProcess::RiscvProcess(ProcessParams *params,
+RiscvProcess::RiscvProcess(const ProcessParams &params,
         ::Loader::ObjectFile *objFile) :
         Process(params,
-                new EmulationPageTable(params->name, params->pid, PageBytes),
+                new EmulationPageTable(params.name, params.pid, PageBytes),
                 objFile)
 {
-    fatal_if(params->useArchPT, "Arch page tables not implemented.");
+    fatal_if(params.useArchPT, "Arch page tables not implemented.");
 }
 
-RiscvProcess64::RiscvProcess64(ProcessParams *params,
+RiscvProcess64::RiscvProcess64(const ProcessParams &params,
         ::Loader::ObjectFile *objFile) :
         RiscvProcess(params, objFile)
 {
@@ -79,7 +79,7 @@ RiscvProcess64::RiscvProcess64(ProcessParams *params,
             max_stack_size, next_thread_stack_base, mmap_end);
 }
 
-RiscvProcess32::RiscvProcess32(ProcessParams *params,
+RiscvProcess32::RiscvProcess32(const ProcessParams &params,
         ::Loader::ObjectFile *objFile) :
         RiscvProcess(params, objFile)
 {

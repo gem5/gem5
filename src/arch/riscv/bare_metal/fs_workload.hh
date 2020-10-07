@@ -43,7 +43,7 @@ class BareMetal : public RiscvISA::FsWorkload
 
   public:
     typedef RiscvBareMetalParams Params;
-    BareMetal(Params *p);
+    BareMetal(const Params &p);
     ~BareMetal();
 
     void initState() override;

@@ -43,7 +43,7 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
-ScheduleStage::ScheduleStage(const ComputeUnitParams *p, ComputeUnit &cu,
+ScheduleStage::ScheduleStage(const ComputeUnitParams &p, ComputeUnit &cu,
                              ScoreboardCheckToSchedule &from_scoreboard_check,
                              ScheduleToExecute &to_execute)
     : computeUnit(cu), fromScoreboardCheck(from_scoreboard_check),

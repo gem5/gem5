@@ -56,16 +56,16 @@ class IsaFake : public BasicPioDevice
 
   public:
     typedef IsaFakeParams Params;
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
     /**
       * The constructor for Isa Fake just registers itself with the MMU.
       * @param p params structure
       */
-    IsaFake(Params *p);
+    IsaFake(const Params &p);
 
     /**
      * This read always returns -1.

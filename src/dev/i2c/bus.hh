@@ -140,7 +140,7 @@ class I2CBus : public BasicPioDevice
 
   public:
 
-    I2CBus(const I2CBusParams* p);
+    I2CBus(const I2CBusParams &p);
 
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;

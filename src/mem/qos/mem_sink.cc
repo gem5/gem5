@@ -45,13 +45,13 @@
 
 namespace QoS {
 
-MemSinkCtrl::MemSinkCtrl(const QoSMemSinkCtrlParams* p)
-  : MemCtrl(p), requestLatency(p->request_latency),
-    responseLatency(p->response_latency),
-    memoryPacketSize(p->memory_packet_size),
-    readBufferSize(p->read_buffer_size),
-    writeBufferSize(p->write_buffer_size), port(name() + ".port", *this),
-    interface(p->interface),
+MemSinkCtrl::MemSinkCtrl(const QoSMemSinkCtrlParams &p)
+  : MemCtrl(p), requestLatency(p.request_latency),
+    responseLatency(p.response_latency),
+    memoryPacketSize(p.memory_packet_size),
+    readBufferSize(p.read_buffer_size),
+    writeBufferSize(p.write_buffer_size), port(name() + ".port", *this),
+    interface(p.interface),
     retryRdReq(false), retryWrReq(false), nextRequest(0), nextReqEvent(this)
 {
     // Resize read and write queue to allocate space
@@ -390,18 +390,18 @@ MemSinkCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
 } // namespace QoS
 
 QoS::MemSinkCtrl*
-QoSMemSinkCtrlParams::create()
+QoSMemSinkCtrlParams::create() const
 {
-    return new QoS::MemSinkCtrl(this);
+    return new QoS::MemSinkCtrl(*this);
 }
 
-QoSMemSinkInterface::QoSMemSinkInterface(const QoSMemSinkInterfaceParams* _p)
+QoSMemSinkInterface::QoSMemSinkInterface(const QoSMemSinkInterfaceParams &_p)
     : AbstractMemory(_p)
 {
 }
 
 QoSMemSinkInterface*
-QoSMemSinkInterfaceParams::create()
+QoSMemSinkInterfaceParams::create() const
 {
-    return new QoSMemSinkInterface(this);
+    return new QoSMemSinkInterface(*this);
 }

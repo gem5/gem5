@@ -53,7 +53,7 @@ class NetworkInterface : public ClockedObject, public Consumer
 {
   public:
     typedef GarnetNetworkInterfaceParams Params;
-    NetworkInterface(const Params *p);
+    NetworkInterface(const Params &p);
     ~NetworkInterface() = default;
 
     void addInPort(NetworkLink *in_link, CreditLink *credit_link);

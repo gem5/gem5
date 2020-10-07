@@ -42,7 +42,7 @@ Iris::ISA::serialize(CheckpointOut &cp) const
 }
 
 Iris::ISA *
-IrisISAParams::create()
+IrisISAParams::create() const
 {
-    return new Iris::ISA(this);
+    return new Iris::ISA(*this);
 }

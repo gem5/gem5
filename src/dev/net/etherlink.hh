@@ -140,13 +140,13 @@ class EtherLink : public SimObject
 
   public:
     typedef EtherLinkParams Params;
-    EtherLink(const Params *p);
+    EtherLink(const Params &p);
     virtual ~EtherLink();
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     Port &getPort(const std::string &if_name,

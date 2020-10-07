@@ -53,7 +53,7 @@ class GPUComputeDriver final : public HSADriver
 {
   public:
     typedef GPUComputeDriverParams Params;
-    GPUComputeDriver(Params *p);
+    GPUComputeDriver(const Params &p);
     int ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf) override;
 
   private:

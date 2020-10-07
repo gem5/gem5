@@ -65,11 +65,11 @@ class BaseGic :  public PioDevice
     typedef BaseGicParams Params;
     enum class GicVersion { GIC_V2, GIC_V3, GIC_V4 };
 
-    BaseGic(const Params *p);
+    BaseGic(const Params &p);
     virtual ~BaseGic();
     void init() override;
 
-    const Params * params() const;
+    const Params &params() const;
 
     /**
      * Post an interrupt from a device that is connected to the GIC.
@@ -135,7 +135,7 @@ class BaseGicRegisters
 class ArmInterruptPinGen : public SimObject
 {
   public:
-    ArmInterruptPinGen(const ArmInterruptPinParams *p);
+    ArmInterruptPinGen(const ArmInterruptPinParams &p);
 
     virtual ArmInterruptPin* get(ThreadContext *tc = nullptr) = 0;
 };
@@ -148,7 +148,7 @@ class ArmInterruptPinGen : public SimObject
 class ArmSPIGen : public ArmInterruptPinGen
 {
   public:
-    ArmSPIGen(const ArmSPIParams *p);
+    ArmSPIGen(const ArmSPIParams &p);
 
     ArmInterruptPin* get(ThreadContext *tc = nullptr) override;
   protected:
@@ -163,7 +163,7 @@ class ArmSPIGen : public ArmInterruptPinGen
 class ArmPPIGen : public ArmInterruptPinGen
 {
   public:
-    ArmPPIGen(const ArmPPIParams *p);
+    ArmPPIGen(const ArmPPIParams &p);
 
     ArmInterruptPin* get(ThreadContext* tc = nullptr) override;
   protected:

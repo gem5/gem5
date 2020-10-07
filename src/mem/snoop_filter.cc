@@ -422,7 +422,7 @@ SnoopFilter::regStats()
 }
 
 SnoopFilter *
-SnoopFilterParams::create()
+SnoopFilterParams::create() const
 {
-    return new SnoopFilter(this);
+    return new SnoopFilter(*this);
 }

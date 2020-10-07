@@ -44,16 +44,16 @@
 #include "params/EnergyCtrl.hh"
 #include "sim/dvfs_handler.hh"
 
-EnergyCtrl::EnergyCtrl(const Params *p)
+EnergyCtrl::EnergyCtrl(const Params &p)
     : BasicPioDevice(p, PIO_NUM_FIELDS * 4),        // each field is 32 bit
-      dvfsHandler(p->dvfs_handler),
+      dvfsHandler(p.dvfs_handler),
       domainID(0),
       domainIDIndexToRead(0),
       perfLevelAck(0),
       perfLevelToRead(0),
       updateAckEvent([this]{ updatePLAck(); }, name())
 {
-    fatal_if(!p->dvfs_handler, "EnergyCtrl: Needs a DVFSHandler for a "
+    fatal_if(!p.dvfs_handler, "EnergyCtrl: Needs a DVFSHandler for a "
              "functioning system.\n");
 }
 
@@ -241,9 +241,10 @@ EnergyCtrl::unserialize(CheckpointIn &cp)
     }
 }
 
-EnergyCtrl * EnergyCtrlParams::create()
+EnergyCtrl *
+EnergyCtrlParams::create() const
 {
-    return new EnergyCtrl(this);
+    return new EnergyCtrl(*this);
 }
 
 void

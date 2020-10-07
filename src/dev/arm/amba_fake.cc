@@ -45,7 +45,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-AmbaFake::AmbaFake(const Params *p)
+AmbaFake::AmbaFake(const Params &p)
     : AmbaPioDevice(p, 0x1000)
 {
 }
@@ -60,7 +60,7 @@ AmbaFake::read(PacketPtr pkt)
     DPRINTF(AMBA, " read register %#x\n", daddr);
 
     pkt->setLE<uint32_t>(0);
-    if (!readId(pkt, ambaId, pioAddr) && !params()->ignore_access)
+    if (!readId(pkt, ambaId, pioAddr) && !params().ignore_access)
         panic("Tried to read AmbaFake %s at offset %#x that doesn't exist\n",
               name(), daddr);
 
@@ -74,7 +74,7 @@ AmbaFake::write(PacketPtr pkt)
 
     Addr daddr = pkt->getAddr() - pioAddr;
 
-    if (!params()->ignore_access)
+    if (!params().ignore_access)
         panic("Tried to write AmbaFake %s at offset %#x that doesn't exist\n",
               name(), daddr);
 
@@ -84,7 +84,7 @@ AmbaFake::write(PacketPtr pkt)
 
 
 AmbaFake *
-AmbaFakeParams::create()
+AmbaFakeParams::create() const
 {
-    return new AmbaFake(this);
+    return new AmbaFake(*this);
 }

@@ -49,8 +49,8 @@
 class StreamGen
 {
   protected:
-    StreamGen(const BaseTrafficGenParams *p)
-      : streamIds(p->sids), substreamIds(p->ssids)
+    StreamGen(const BaseTrafficGenParams &p)
+      : streamIds(p.sids), substreamIds(p.ssids)
     {
         // A non empty vector of StreamIDs must be provided.
         // SubstreamIDs are not mandatory hence having an empty
@@ -75,7 +75,7 @@ class StreamGen
      *           the stream generator type is stored.
      * @return a pointer to the newly alocated StremGen
      */
-    static StreamGen* create(const BaseTrafficGenParams *p);
+    static StreamGen* create(const BaseTrafficGenParams &p);
 
     /**
      * Returns true if the substreamID generation is valid
@@ -102,7 +102,7 @@ class StreamGen
 class FixedStreamGen : public StreamGen
 {
   public:
-    FixedStreamGen(const BaseTrafficGenParams *p)
+    FixedStreamGen(const BaseTrafficGenParams &p)
       : StreamGen(p)
     {
         // For a fixed stream generator only one sid must be provided. The
@@ -121,7 +121,7 @@ class FixedStreamGen : public StreamGen
 class RandomStreamGen : public StreamGen
 {
   public:
-    RandomStreamGen(const BaseTrafficGenParams *p)
+    RandomStreamGen(const BaseTrafficGenParams &p)
       : StreamGen(p)
     {}
 

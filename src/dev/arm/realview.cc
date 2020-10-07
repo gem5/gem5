@@ -53,8 +53,8 @@
 #include "sim/system.hh"
 
 
-RealView::RealView(const Params *p)
-    : Platform(p), system(p->system), gic(nullptr)
+RealView::RealView(const Params &p)
+    : Platform(p), system(p.system), gic(nullptr)
 {}
 
 void
@@ -84,7 +84,7 @@ RealView::clearPciInt(int line)
 }
 
 RealView *
-RealViewParams::create()
+RealViewParams::create() const
 {
-    return new RealView(this);
+    return new RealView(*this);
 }

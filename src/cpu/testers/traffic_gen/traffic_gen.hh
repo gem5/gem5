@@ -120,7 +120,7 @@ class TrafficGen : public BaseTrafficGen
 
   public:
 
-    TrafficGen(const TrafficGenParams* p);
+    TrafficGen(const TrafficGenParams &p);
 
     ~TrafficGen() {}
 

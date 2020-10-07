@@ -81,7 +81,7 @@ class Sequencer : public RubyPort
 {
   public:
     typedef RubySequencerParams Params;
-    Sequencer(const Params *);
+    Sequencer(const Params &);
     ~Sequencer();
 
     /**

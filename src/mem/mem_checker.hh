@@ -369,7 +369,7 @@ class MemChecker : public SimObject
 
   public:
 
-    MemChecker(const MemCheckerParams *p)
+    MemChecker(const MemCheckerParams &p)
         : SimObject(p),
           nextSerial(SERIAL_INITIAL)
     {}

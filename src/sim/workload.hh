@@ -55,7 +55,7 @@ class Workload : public SimObject
     } stats;
 
   public:
-    Workload(const WorkloadParams *_params) : SimObject(_params), stats(this)
+    Workload(const WorkloadParams &_params) : SimObject(_params), stats(this)
     {}
 
     void recordQuiesce() { stats.quiesce++; }

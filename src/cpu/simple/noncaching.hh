@@ -48,7 +48,7 @@
 class NonCachingSimpleCPU : public AtomicSimpleCPU
 {
   public:
-    NonCachingSimpleCPU(NonCachingSimpleCPUParams *p);
+    NonCachingSimpleCPU(const NonCachingSimpleCPUParams &p);
 
     void verifyMemoryMode() const override;
 

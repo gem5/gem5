@@ -47,7 +47,7 @@
 #include "params/FVPBasePwrCtrl.hh"
 #include "sim/system.hh"
 
-FVPBasePwrCtrl::FVPBasePwrCtrl(FVPBasePwrCtrlParams *const params)
+FVPBasePwrCtrl::FVPBasePwrCtrl(const FVPBasePwrCtrlParams &params)
     : BasicPioDevice(params, 0x1000),
       regs(),
       system(*static_cast<ArmSystem *>(sys))
@@ -312,7 +312,7 @@ FVPBasePwrCtrl::startCoreUp(ThreadContext *const tc)
 }
 
 FVPBasePwrCtrl *
-FVPBasePwrCtrlParams::create()
+FVPBasePwrCtrlParams::create() const
 {
-    return new FVPBasePwrCtrl(this);
+    return new FVPBasePwrCtrl(*this);
 }

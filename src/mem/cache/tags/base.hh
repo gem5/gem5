@@ -156,7 +156,7 @@ class BaseTags : public ClockedObject
 
   public:
     typedef BaseTagsParams Params;
-    BaseTags(const Params *p);
+    BaseTags(const Params &p);
 
     /**
      * Destructor.

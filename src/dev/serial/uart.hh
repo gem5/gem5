@@ -52,12 +52,12 @@ class Uart : public BasicPioDevice
 
   public:
     typedef UartParams Params;
-    Uart(const Params *p, Addr pio_size);
+    Uart(const Params &p, Addr pio_size);
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     /**

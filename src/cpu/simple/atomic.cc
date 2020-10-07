@@ -73,13 +73,13 @@ AtomicSimpleCPU::init()
     data_amo_req->setContext(cid);
 }
 
-AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
+AtomicSimpleCPU::AtomicSimpleCPU(const AtomicSimpleCPUParams &p)
     : BaseSimpleCPU(p),
       tickEvent([this]{ tick(); }, "AtomicSimpleCPU tick",
                 false, Event::CPU_Tick_Pri),
-      width(p->width), locked(false),
-      simulate_data_stalls(p->simulate_data_stalls),
-      simulate_inst_stalls(p->simulate_inst_stalls),
+      width(p.width), locked(false),
+      simulate_data_stalls(p.simulate_data_stalls),
+      simulate_inst_stalls(p.simulate_inst_stalls),
       icachePort(name() + ".icache_port", this),
       dcachePort(name() + ".dcache_port", this),
       dcache_access(false), dcache_latency(0),
@@ -777,7 +777,7 @@ AtomicSimpleCPU::printAddr(Addr a)
 //  AtomicSimpleCPU Simulation Object
 //
 AtomicSimpleCPU *
-AtomicSimpleCPUParams::create()
+AtomicSimpleCPUParams::create() const
 {
-    return new AtomicSimpleCPU(this);
+    return new AtomicSimpleCPU(*this);
 }

@@ -50,21 +50,21 @@
 #include "config/the_isa.hh"
 #include "debug/Branch.hh"
 
-BPredUnit::BPredUnit(const Params *params)
+BPredUnit::BPredUnit(const Params &params)
     : SimObject(params),
-      numThreads(params->numThreads),
+      numThreads(params.numThreads),
       predHist(numThreads),
-      BTB(params->BTBEntries,
-          params->BTBTagSize,
-          params->instShiftAmt,
-          params->numThreads),
+      BTB(params.BTBEntries,
+          params.BTBTagSize,
+          params.instShiftAmt,
+          params.numThreads),
       RAS(numThreads),
-      iPred(params->indirectBranchPred),
+      iPred(params.indirectBranchPred),
       stats(this),
-      instShiftAmt(params->instShiftAmt)
+      instShiftAmt(params.instShiftAmt)
 {
     for (auto& r : RAS)
-        r.init(params->RASSize);
+        r.init(params.RASSize);
 }
 
 BPredUnit::BPredUnitStats::BPredUnitStats(Stats::Group *parent)

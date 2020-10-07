@@ -111,20 +111,20 @@ MultiperspectivePerceptron::ThreadData::ThreadData(int num_filters,
 }
 
 MultiperspectivePerceptron::MultiperspectivePerceptron(
-    const MultiperspectivePerceptronParams *p) : BPredUnit(p),
-    blockSize(p->block_size), pcshift(p->pcshift), threshold(p->threshold),
-    bias0(p->bias0), bias1(p->bias1), biasmostly0(p->biasmostly0),
-    biasmostly1(p->biasmostly1), nbest(p->nbest), tunebits(p->tunebits),
-    hshift(p->hshift), imli_mask1(p->imli_mask1), imli_mask4(p->imli_mask4),
-    recencypos_mask(p->recencypos_mask), fudge(p->fudge),
-    n_sign_bits(p->n_sign_bits), pcbit(p->pcbit), decay(p->decay),
-    record_mask(p->record_mask), hash_taken(p->hash_taken),
-    tuneonly(p->tuneonly), extra_rounds(p->extra_rounds), speed(p->speed),
-    budgetbits(p->budgetbits), speculative_update(p->speculative_update),
-    threadData(p->numThreads, nullptr), doing_local(false),
-    doing_recency(false), assoc(0), ghist_length(p->initial_ghist_length),
+    const MultiperspectivePerceptronParams &p) : BPredUnit(p),
+    blockSize(p.block_size), pcshift(p.pcshift), threshold(p.threshold),
+    bias0(p.bias0), bias1(p.bias1), biasmostly0(p.biasmostly0),
+    biasmostly1(p.biasmostly1), nbest(p.nbest), tunebits(p.tunebits),
+    hshift(p.hshift), imli_mask1(p.imli_mask1), imli_mask4(p.imli_mask4),
+    recencypos_mask(p.recencypos_mask), fudge(p.fudge),
+    n_sign_bits(p.n_sign_bits), pcbit(p.pcbit), decay(p.decay),
+    record_mask(p.record_mask), hash_taken(p.hash_taken),
+    tuneonly(p.tuneonly), extra_rounds(p.extra_rounds), speed(p.speed),
+    budgetbits(p.budgetbits), speculative_update(p.speculative_update),
+    threadData(p.numThreads, nullptr), doing_local(false),
+    doing_recency(false), assoc(0), ghist_length(p.initial_ghist_length),
     modghist_length(1), path_length(1), thresholdCounter(0),
-    theta(p->initial_theta), extrabits(0), imli_counter_bits(4),
+    theta(p.initial_theta), extrabits(0), imli_counter_bits(4),
     modhist_indices(), modhist_lengths(), modpath_indices(), modpath_lengths()
 {
     fatal_if(speculative_update, "Speculative update not implemented");
@@ -150,16 +150,16 @@ MultiperspectivePerceptron::init()
     for (auto &spec : specs) {
         spec->setBitRequirements();
     }
-    const MultiperspectivePerceptronParams *p =
-        static_cast<const MultiperspectivePerceptronParams *>(params());
+    const MultiperspectivePerceptronParams &p =
+        static_cast<const MultiperspectivePerceptronParams &>(params());
 
-    computeBits(p->num_filter_entries, p->num_local_histories,
-                p->local_history_length, p->ignore_path_size);
+    computeBits(p.num_filter_entries, p.num_local_histories,
+                p.local_history_length, p.ignore_path_size);
 
     for (int i = 0; i < threadData.size(); i += 1) {
-        threadData[i] = new ThreadData(p->num_filter_entries,
-                                       p->num_local_histories,
-                                       p->local_history_length, assoc,
+        threadData[i] = new ThreadData(p.num_filter_entries,
+                                       p.num_local_histories,
+                                       p.local_history_length, assoc,
                                        blurrypath_bits, path_length,
                                        ghist_length, blockSize, acyclic_bits,
                                        modhist_indices, modhist_lengths,

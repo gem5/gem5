@@ -94,7 +94,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     void init() override;
 
     typedef CheckerCPUParams Params;
-    CheckerCPU(Params *p);
+    CheckerCPU(const Params &p);
     virtual ~CheckerCPU();
 
     void setSystem(System *system);
@@ -653,7 +653,7 @@ class Checker : public CheckerCPU
     typedef typename Impl::DynInstPtr DynInstPtr;
 
   public:
-    Checker(Params *p)
+    Checker(const Params &p)
         : CheckerCPU(p), updateThisCycle(false), unverifiedInst(NULL)
     { }
 

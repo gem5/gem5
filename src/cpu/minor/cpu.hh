@@ -118,7 +118,7 @@ class MinorCPU : public BaseCPU
     Port &getInstPort() override;
 
   public:
-    MinorCPU(MinorCPUParams *params);
+    MinorCPU(const MinorCPUParams &params);
 
     ~MinorCPU();
 

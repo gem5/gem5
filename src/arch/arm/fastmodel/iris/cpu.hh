@@ -58,7 +58,7 @@ static const std::string SendFunctionalAttributeName = "gem5_send_functional";
 class BaseCPU : public ::BaseCPU
 {
   public:
-    BaseCPU(BaseCPUParams *params, sc_core::sc_module *_evs);
+    BaseCPU(const BaseCPUParams &params, sc_core::sc_module *_evs);
     virtual ~BaseCPU();
 
     Port &
@@ -128,18 +128,19 @@ template <class TC>
 class CPU : public Iris::BaseCPU
 {
   public:
-    CPU(IrisBaseCPUParams *params, iris::IrisConnectionInterface *iris_if) :
-        BaseCPU(params, params->evs)
+    CPU(const IrisBaseCPUParams &params,
+            iris::IrisConnectionInterface *iris_if) :
+        BaseCPU(params, params.evs)
     {
         const std::string parent_path = evs->name();
-        System *sys = params->system;
+        System *sys = params.system;
 
         int thread_id = 0;
-        for (const std::string &sub_path: params->thread_paths) {
+        for (const std::string &sub_path: params.thread_paths) {
             std::string path = parent_path + "." + sub_path;
             auto id = thread_id++;
-            auto *tc = new TC(this, id, sys, params->dtb, params->itb,
-                    params->isa[id], iris_if, path);
+            auto *tc = new TC(this, id, sys, params.dtb, params.itb,
+                    params.isa[id], iris_if, path);
             threadContexts.push_back(tc);
         }
     }

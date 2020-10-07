@@ -60,9 +60,9 @@
  */
 
 FlashDevice*
-FlashDeviceParams::create()
+FlashDeviceParams::create() const
 {
-    return new FlashDevice(this);
+    return new FlashDevice(*this);
 }
 
 
@@ -70,17 +70,17 @@ FlashDeviceParams::create()
  * Flash Device constructor and destructor
  */
 
-FlashDevice::FlashDevice(const FlashDeviceParams* p):
+FlashDevice::FlashDevice(const FlashDeviceParams &p):
     AbstractNVM(p),
     diskSize(0),
-    blockSize(p->blk_size),
-    pageSize(p->page_size),
-    GCActivePercentage(p->GC_active),
-    readLatency(p->read_lat),
-    writeLatency(p->write_lat),
-    eraseLatency(p->erase_lat),
-    dataDistribution(p->data_distribution),
-    numPlanes(p->num_planes),
+    blockSize(p.blk_size),
+    pageSize(p.page_size),
+    GCActivePercentage(p.GC_active),
+    readLatency(p.read_lat),
+    writeLatency(p.write_lat),
+    eraseLatency(p.erase_lat),
+    dataDistribution(p.data_distribution),
+    numPlanes(p.num_planes),
     pagesPerBlock(0),
     pagesPerDisk(0),
     blocksPerDisk(0),

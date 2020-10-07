@@ -936,7 +936,7 @@ module_init(py::module &m_internal)
         code("{")
         if not hasattr(cls, 'abstract') or not cls.abstract:
             if 'type' in cls.__dict__:
-                code("    ${{cls.cxx_type}} create();")
+                code("    ${{cls.cxx_type}} create() const;")
 
         code.indent()
         if cls == SimObject:

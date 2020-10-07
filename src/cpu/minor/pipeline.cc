@@ -51,7 +51,7 @@
 namespace Minor
 {
 
-Pipeline::Pipeline(MinorCPU &cpu_, MinorCPUParams &params) :
+Pipeline::Pipeline(MinorCPU &cpu_, const MinorCPUParams &params) :
     Ticked(cpu_, &(cpu_.BaseCPU::numCycles)),
     cpu(cpu_),
     allow_idling(params.enableIdling),

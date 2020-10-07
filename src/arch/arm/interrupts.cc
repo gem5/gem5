@@ -40,9 +40,9 @@
 #include "arch/arm/system.hh"
 
 ArmISA::Interrupts *
-ArmInterruptsParams::create()
+ArmInterruptsParams::create() const
 {
-    return new ArmISA::Interrupts(this);
+    return new ArmISA::Interrupts(*this);
 }
 
 bool

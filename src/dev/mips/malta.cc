@@ -45,8 +45,8 @@
 
 using namespace std;
 
-Malta::Malta(const Params *p)
-    : Platform(p), system(p->system)
+Malta::Malta(const Params &p)
+    : Platform(p), system(p.system)
 {
     for (int i = 0; i < Malta::Max_CPUs; i++)
         intr_sum_type[i] = 0;
@@ -97,7 +97,7 @@ Malta::unserialize(CheckpointIn &cp)
 }
 
 Malta *
-MaltaParams::create()
+MaltaParams::create() const
 {
-    return new Malta(this);
+    return new Malta(*this);
 }

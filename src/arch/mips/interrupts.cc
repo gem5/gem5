@@ -186,7 +186,7 @@ Interrupts::interruptsPending() const
 }
 
 MipsISA::Interrupts *
-MipsInterruptsParams::create()
+MipsInterruptsParams::create() const
 {
-    return new MipsISA::Interrupts(this);
+    return new MipsISA::Interrupts(*this);
 }

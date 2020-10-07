@@ -118,13 +118,13 @@ class I8042 : public BasicPioDevice
   public:
     typedef I8042Params Params;
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
-    I8042(Params *p);
+    I8042(const Params &p);
 
     Port &
     getPort(const std::string &if_name, PortID idx=InvalidPortID) override

@@ -37,13 +37,13 @@
 
 namespace BloomFilter {
 
-MultiBitSel::MultiBitSel(const BloomFilterMultiBitSelParams* p)
-    : Base(p), numHashes(p->num_hashes),
-      parFilterSize(p->size / numHashes),
-      isParallel(p->is_parallel), skipBits(p->skip_bits)
+MultiBitSel::MultiBitSel(const BloomFilterMultiBitSelParams &p)
+    : Base(p), numHashes(p.num_hashes),
+      parFilterSize(p.size / numHashes),
+      isParallel(p.is_parallel), skipBits(p.skip_bits)
 {
-    if (p->size % numHashes) {
-        fatal("Can't divide filter (%d) in %d equal portions", p->size,
+    if (p.size % numHashes) {
+        fatal("Can't divide filter (%d) in %d equal portions", p.size,
               numHashes);
     }
 }
@@ -96,8 +96,8 @@ MultiBitSel::hash(Addr addr, int hash_number) const
 } // namespace BloomFilter
 
 BloomFilter::MultiBitSel*
-BloomFilterMultiBitSelParams::create()
+BloomFilterMultiBitSelParams::create() const
 {
-    return new BloomFilter::MultiBitSel(this);
+    return new BloomFilter::MultiBitSel(*this);
 }
 

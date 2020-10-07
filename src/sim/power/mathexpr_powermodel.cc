@@ -45,8 +45,8 @@
 #include "sim/power/thermal_model.hh"
 #include "sim/sim_object.hh"
 
-MathExprPowerModel::MathExprPowerModel(const Params *p)
-    : PowerModelState(p), dyn_expr(p->dyn), st_expr(p->st)
+MathExprPowerModel::MathExprPowerModel(const Params &p)
+    : PowerModelState(p), dyn_expr(p.dyn), st_expr(p.st)
 {
 }
 
@@ -115,7 +115,7 @@ MathExprPowerModel::regStats()
 }
 
 MathExprPowerModel*
-MathExprPowerModelParams::create()
+MathExprPowerModelParams::create() const
 {
-    return new MathExprPowerModel(this);
+    return new MathExprPowerModel(*this);
 }

@@ -61,7 +61,7 @@ CheckerCPU::init()
     requestorId = systemPtr->getRequestorId(this);
 }
 
-CheckerCPU::CheckerCPU(Params *p)
+CheckerCPU::CheckerCPU(const Params &p)
     : BaseCPU(p, true), systemPtr(NULL), icachePort(NULL), dcachePort(NULL),
       tc(NULL), thread(NULL),
       unverifiedReq(nullptr),
@@ -78,11 +78,11 @@ CheckerCPU::CheckerCPU(Params *p)
 
     changedPC = willChangePC = false;
 
-    exitOnError = p->exitOnError;
-    warnOnlyOnLoadError = p->warnOnlyOnLoadError;
-    itb = p->itb;
-    dtb = p->dtb;
-    workload = p->workload;
+    exitOnError = p.exitOnError;
+    warnOnlyOnLoadError = p.warnOnlyOnLoadError;
+    itb = p.itb;
+    dtb = p.dtb;
+    workload = p.workload;
 
     updateOnError = true;
 }
@@ -94,16 +94,16 @@ CheckerCPU::~CheckerCPU()
 void
 CheckerCPU::setSystem(System *system)
 {
-    const Params *p(dynamic_cast<const Params *>(_params));
+    const Params &p = dynamic_cast<const Params &>(_params);
 
     systemPtr = system;
 
     if (FullSystem) {
-        thread = new SimpleThread(this, 0, systemPtr, itb, dtb, p->isa[0]);
+        thread = new SimpleThread(this, 0, systemPtr, itb, dtb, p.isa[0]);
     } else {
         thread = new SimpleThread(this, 0, systemPtr,
                                   workload.size() ? workload[0] : NULL,
-                                  itb, dtb, p->isa[0]);
+                                  itb, dtb, p.isa[0]);
     }
 
     tc = thread->getTC();

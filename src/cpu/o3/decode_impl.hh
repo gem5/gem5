@@ -57,14 +57,14 @@
 using std::list;
 
 template<class Impl>
-DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params)
+DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, const DerivO3CPUParams &params)
     : cpu(_cpu),
-      renameToDecodeDelay(params->renameToDecodeDelay),
-      iewToDecodeDelay(params->iewToDecodeDelay),
-      commitToDecodeDelay(params->commitToDecodeDelay),
-      fetchToDecodeDelay(params->fetchToDecodeDelay),
-      decodeWidth(params->decodeWidth),
-      numThreads(params->numThreads),
+      renameToDecodeDelay(params.renameToDecodeDelay),
+      iewToDecodeDelay(params.iewToDecodeDelay),
+      commitToDecodeDelay(params.commitToDecodeDelay),
+      fetchToDecodeDelay(params.fetchToDecodeDelay),
+      decodeWidth(params.decodeWidth),
+      numThreads(params.numThreads),
       stats(_cpu)
 {
     if (decodeWidth > Impl::MaxWidth)
@@ -73,7 +73,7 @@ DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params)
              decodeWidth, static_cast<int>(Impl::MaxWidth));
 
     // @todo: Make into a parameter
-    skidBufferMax = (fetchToDecodeDelay + 1) *  params->fetchWidth;
+    skidBufferMax = (fetchToDecodeDelay + 1) *  params.fetchWidth;
     for (int tid = 0; tid < Impl::MaxThreads; tid++) {
         stalls[tid] = {false};
         decodeStatus[tid] = Idle;

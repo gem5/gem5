@@ -79,7 +79,7 @@ class BaseO3CPU : public BaseCPU
 {
     //Stuff that's pretty ISA independent will go here.
   public:
-    BaseO3CPU(BaseCPUParams *params);
+    BaseO3CPU(const BaseCPUParams &params);
 
     void regStats();
 };
@@ -179,7 +179,7 @@ class FullO3CPU : public BaseO3CPU
 
   public:
     /** Constructs a CPU with the given parameters. */
-    FullO3CPU(DerivO3CPUParams *params);
+    FullO3CPU(const DerivO3CPUParams &params);
     /** Destructor. */
     ~FullO3CPU();
 

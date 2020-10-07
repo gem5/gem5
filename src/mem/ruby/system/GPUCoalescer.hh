@@ -230,7 +230,7 @@ class GPUCoalescer : public RubyPort
     };
 
     typedef RubyGPUCoalescerParams Params;
-    GPUCoalescer(const Params *);
+    GPUCoalescer(const Params &);
     ~GPUCoalescer();
 
     Port &getPort(const std::string &if_name,

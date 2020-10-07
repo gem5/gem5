@@ -76,12 +76,13 @@ typedef MultiLevelPageTable<LongModePTE<47, 39>,
                             LongModePTE<29, 21>,
                             LongModePTE<20, 12> > ArchPageTable;
 
-X86Process::X86Process(ProcessParams *params, ::Loader::ObjectFile *objFile) :
-    Process(params, params->useArchPT ?
+X86Process::X86Process(const ProcessParams &params,
+                       ::Loader::ObjectFile *objFile) :
+    Process(params, params.useArchPT ?
                     static_cast<EmulationPageTable *>(
-                            new ArchPageTable(params->name, params->pid,
-                                              params->system, PageBytes)) :
-                    new EmulationPageTable(params->name, params->pid,
+                            new ArchPageTable(params.name, params.pid,
+                                              params.system, PageBytes)) :
+                    new EmulationPageTable(params.name, params.pid,
                                            PageBytes),
             objFile)
 {
@@ -95,7 +96,7 @@ void X86Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
     *process = *this;
 }
 
-X86_64Process::X86_64Process(ProcessParams *params,
+X86_64Process::X86_64Process(const ProcessParams &params,
                              ::Loader::ObjectFile *objFile) :
     X86Process(params, objFile)
 {
@@ -116,7 +117,7 @@ X86_64Process::X86_64Process(ProcessParams *params,
 }
 
 
-I386Process::I386Process(ProcessParams *params,
+I386Process::I386Process(const ProcessParams &params,
                          ::Loader::ObjectFile *objFile) :
     X86Process(params, objFile)
 {

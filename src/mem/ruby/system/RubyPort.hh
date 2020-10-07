@@ -144,7 +144,7 @@ class RubyPort : public ClockedObject
      };
 
     typedef RubyPortParams Params;
-    RubyPort(const Params *p);
+    RubyPort(const Params &p);
     virtual ~RubyPort() {}
 
     void init() override;

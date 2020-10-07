@@ -56,12 +56,12 @@ class SouthBridge : public SimObject
 
   public:
     typedef SouthBridgeParams Params;
-    SouthBridge(const Params *p);
+    SouthBridge(const Params &p);
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 };
 

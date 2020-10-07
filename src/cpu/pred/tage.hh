@@ -77,7 +77,7 @@ class TAGE: public BPredUnit
 
   public:
 
-    TAGE(const TAGEParams *params);
+    TAGE(const TAGEParams &params);
 
     // Base class methods.
     void uncondBranch(ThreadID tid, Addr br_pc, void* &bp_history) override;

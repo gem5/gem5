@@ -53,7 +53,7 @@ class DiskImage : public SimObject
 
   public:
     typedef DiskImageParams Params;
-    DiskImage(const Params *p) : SimObject(p), initialized(false) {}
+    DiskImage(const Params &p) : SimObject(p), initialized(false) {}
     virtual ~DiskImage() {}
 
     virtual std::streampos size() const = 0;
@@ -77,7 +77,7 @@ class RawDiskImage : public DiskImage
 
   public:
     typedef RawDiskImageParams Params;
-    RawDiskImage(const Params *p);
+    RawDiskImage(const Params &p);
     ~RawDiskImage();
 
     void notifyFork() override;
@@ -120,7 +120,7 @@ class CowDiskImage : public DiskImage
 
   public:
     typedef CowDiskImageParams Params;
-    CowDiskImage(const Params *p);
+    CowDiskImage(const Params &p);
     ~CowDiskImage();
 
     void notifyFork() override;

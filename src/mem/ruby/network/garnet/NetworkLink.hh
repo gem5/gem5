@@ -48,7 +48,7 @@ class NetworkLink : public ClockedObject, public Consumer
 {
   public:
     typedef NetworkLinkParams Params;
-    NetworkLink(const Params *p);
+    NetworkLink(const Params &p);
     ~NetworkLink() = default;
 
     void setLinkConsumer(Consumer *consumer);

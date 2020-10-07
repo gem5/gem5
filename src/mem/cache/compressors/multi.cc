@@ -57,11 +57,11 @@ Multi::MultiCompData::getIndex() const
     return index;
 }
 
-Multi::Multi(const Params *p)
-  : Base(p), compressors(p->compressors),
-    numEncodingBits(p->encoding_in_tags ? 0 :
+Multi::Multi(const Params &p)
+  : Base(p), compressors(p.compressors),
+    numEncodingBits(p.encoding_in_tags ? 0 :
         std::log2(alignToPowerOfTwo(compressors.size()))),
-    extraDecompressionLatency(p->extra_decomp_lat),
+    extraDecompressionLatency(p.extra_decomp_lat),
     multiStats(stats, *this)
 {
     fatal_if(compressors.size() == 0, "There must be at least one compressor");
@@ -205,7 +205,7 @@ Multi::MultiStats::regStats()
 } // namespace Compressor
 
 Compressor::Multi*
-MultiCompressorParams::create()
+MultiCompressorParams::create() const
 {
-    return new Compressor::Multi(this);
+    return new Compressor::Multi(*this);
 }

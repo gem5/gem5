@@ -4,18 +4,18 @@
 #include "base/trace.hh"
 #include "debug/HMCController.hh"
 
-HMCController::HMCController(const HMCControllerParams* p) :
+HMCController::HMCController(const HMCControllerParams &p) :
     NoncoherentXBar(p),
-    numMemSidePorts(p->port_mem_side_ports_connection_count),
+    numMemSidePorts(p.port_mem_side_ports_connection_count),
     rr_counter(0)
 {
-    assert(p->port_cpu_side_ports_connection_count == 1);
+    assert(p.port_cpu_side_ports_connection_count == 1);
 }
 
 HMCController*
-HMCControllerParams::create()
+HMCControllerParams::create() const
 {
-    return new HMCController(this);
+    return new HMCController(*this);
 }
 
 // Since this module is a load distributor, all its request ports have the same

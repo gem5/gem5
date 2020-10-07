@@ -49,21 +49,21 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
-RubyTester::RubyTester(const Params *p)
+RubyTester::RubyTester(const Params &p)
   : ClockedObject(p),
     checkStartEvent([this]{ wakeup(); }, "RubyTester tick",
                     false, Event::CPU_Tick_Pri),
-    _requestorId(p->system->getRequestorId(this)),
+    _requestorId(p.system->getRequestorId(this)),
     m_checkTable_ptr(nullptr),
-    m_num_cpus(p->num_cpus),
-    m_checks_to_complete(p->checks_to_complete),
-    m_deadlock_threshold(p->deadlock_threshold),
+    m_num_cpus(p.num_cpus),
+    m_checks_to_complete(p.checks_to_complete),
+    m_deadlock_threshold(p.deadlock_threshold),
     m_num_writers(0),
     m_num_readers(0),
-    m_wakeup_frequency(p->wakeup_frequency),
-    m_check_flush(p->check_flush),
-    m_num_inst_only_ports(p->port_cpuInstPort_connection_count),
-    m_num_inst_data_ports(p->port_cpuInstDataPort_connection_count)
+    m_wakeup_frequency(p.wakeup_frequency),
+    m_check_flush(p.check_flush),
+    m_num_inst_only_ports(p.port_cpuInstPort_connection_count),
+    m_num_inst_data_ports(p.port_cpuInstDataPort_connection_count)
 {
     m_checks_completed = 0;
 
@@ -79,19 +79,19 @@ RubyTester::RubyTester(const Params *p)
     // then the data ports are added to the readPort vector
     //
     int idx = 0;
-    for (int i = 0; i < p->port_cpuInstPort_connection_count; ++i) {
+    for (int i = 0; i < p.port_cpuInstPort_connection_count; ++i) {
         readPorts.push_back(new CpuPort(csprintf("%s-instPort%d", name(), i),
                                         this, i, idx));
         idx++;
     }
-    for (int i = 0; i < p->port_cpuInstDataPort_connection_count; ++i) {
+    for (int i = 0; i < p.port_cpuInstDataPort_connection_count; ++i) {
         CpuPort *port = new CpuPort(csprintf("%s-instDataPort%d", name(), i),
                                     this, i, idx);
         readPorts.push_back(port);
         writePorts.push_back(port);
         idx++;
     }
-    for (int i = 0; i < p->port_cpuDataPort_connection_count; ++i) {
+    for (int i = 0; i < p.port_cpuDataPort_connection_count; ++i) {
         CpuPort *port = new CpuPort(csprintf("%s-dataPort%d", name(), i),
                                     this, i, idx);
         readPorts.push_back(port);
@@ -280,7 +280,7 @@ RubyTester::print(std::ostream& out) const
 }
 
 RubyTester *
-RubyTesterParams::create()
+RubyTesterParams::create() const
 {
-    return new RubyTester(this);
+    return new RubyTester(*this);
 }

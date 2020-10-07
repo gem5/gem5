@@ -154,7 +154,7 @@ class TLB : public BaseTLB
 
   public:
     typedef SparcTLBParams Params;
-    TLB(const Params *p);
+    TLB(const Params &p);
 
     void takeOverFrom(BaseTLB *otlb) override {}
 

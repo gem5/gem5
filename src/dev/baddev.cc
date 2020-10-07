@@ -40,8 +40,8 @@
 
 using namespace std;
 
-BadDevice::BadDevice(Params *p)
-    : BasicPioDevice(p, 0x10), devname(p->devicename)
+BadDevice::BadDevice(const Params &p)
+    : BasicPioDevice(p, 0x10), devname(p.devicename)
 {
 }
 
@@ -58,7 +58,7 @@ BadDevice::write(PacketPtr pkt)
 }
 
 BadDevice *
-BadDeviceParams::create()
+BadDeviceParams::create() const
 {
-    return new BadDevice(this);
+    return new BadDevice(*this);
 }

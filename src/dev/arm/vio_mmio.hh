@@ -47,7 +47,7 @@ struct MmioVirtIOParams;
 class MmioVirtIO : public BasicPioDevice
 {
   public:
-    MmioVirtIO(const MmioVirtIOParams *params);
+    MmioVirtIO(const MmioVirtIOParams &params);
     virtual ~MmioVirtIO();
 
   protected: // BasicPioDevice

@@ -261,7 +261,7 @@ class IdeDisk : public SimObject
 
   public:
     typedef IdeDiskParams Params;
-    IdeDisk(const Params *p);
+    IdeDisk(const Params &p);
 
     /**
      * Delete the data buffer.

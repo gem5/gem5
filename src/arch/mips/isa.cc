@@ -87,8 +87,8 @@ ISA::miscRegNames[NumMiscRegs] =
     "LLFlag"
 };
 
-ISA::ISA(Params *p) : BaseISA(p), numThreads(p->num_threads),
-    numVpes(p->num_vpes)
+ISA::ISA(const Params &p) : BaseISA(p), numThreads(p.num_threads),
+    numVpes(p.num_vpes)
 {
     miscRegFile.resize(NumMiscRegs);
     bankType.resize(NumMiscRegs);
@@ -140,10 +140,10 @@ ISA::ISA(Params *p) : BaseISA(p), numThreads(p->num_threads),
     clear();
 }
 
-const MipsISAParams *
+const MipsISAParams &
 ISA::params() const
 {
-    return dynamic_cast<const Params *>(_params);
+    return dynamic_cast<const Params &>(_params);
 }
 
 void
@@ -570,7 +570,7 @@ ISA::processCP0Event(BaseCPU *cpu, CP0EventType cp0EventType)
 }
 
 MipsISA::ISA *
-MipsISAParams::create()
+MipsISAParams::create() const
 {
-    return new MipsISA::ISA(this);
+    return new MipsISA::ISA(*this);
 }

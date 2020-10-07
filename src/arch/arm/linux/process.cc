@@ -64,7 +64,7 @@ class ArmLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
+    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file) override
     {
         auto arch = obj_file->getArch();
         auto opsys = obj_file->getOpSys();
@@ -845,12 +845,12 @@ static SyscallDescTable<ArmLinuxProcess64::SyscallABI> privSyscallDescs64 = {
     { 0x1005, "set_tls", setTLSFunc64 }
 };
 
-ArmLinuxProcess32::ArmLinuxProcess32(ProcessParams * params,
+ArmLinuxProcess32::ArmLinuxProcess32(const ProcessParams &params,
         ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
     ArmProcess32(params, objFile, _arch)
 {}
 
-ArmLinuxProcess64::ArmLinuxProcess64(ProcessParams * params,
+ArmLinuxProcess64::ArmLinuxProcess64(const ProcessParams &params,
         ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
     ArmProcess64(params, objFile, _arch)
 {}

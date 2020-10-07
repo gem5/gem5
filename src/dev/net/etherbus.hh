@@ -56,13 +56,13 @@ class EtherBus : public SimObject
 
   public:
     typedef EtherBusParams Params;
-    EtherBus(const Params *p);
+    EtherBus(const Params &p);
     virtual ~EtherBus() {}
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
     void txDone();

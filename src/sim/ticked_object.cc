@@ -106,7 +106,7 @@ Ticked::unserialize(CheckpointIn &cp)
     lastStopped = Cycles(lastStoppedUint);
 }
 
-TickedObject::TickedObject(const TickedObjectParams *params,
+TickedObject::TickedObject(const TickedObjectParams &params,
     Event::Priority priority) :
     ClockedObject(params),
     /* Make numCycles in Ticked */

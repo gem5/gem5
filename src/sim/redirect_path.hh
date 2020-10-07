@@ -43,7 +43,7 @@
 class RedirectPath : public SimObject
 {
   public:
-    RedirectPath(const RedirectPathParams *p);
+    RedirectPath(const RedirectPathParams &p);
 
     const std::string& appPath() { return _appPath; };
     const std::vector<std::string>& hostPaths() { return _hostPaths; };

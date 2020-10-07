@@ -60,7 +60,7 @@ DictionaryCompressor<T>::CompData::addEntry(std::unique_ptr<Pattern> pattern)
 }
 
 template <class T>
-DictionaryCompressor<T>::DictionaryCompressor(const Params *p)
+DictionaryCompressor<T>::DictionaryCompressor(const Params &p)
     : BaseDictionaryCompressor(p)
 {
     dictionary.resize(dictionarySize);

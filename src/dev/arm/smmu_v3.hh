@@ -165,7 +165,7 @@ class SMMUv3 : public ClockedObject
     const PageTableOps *getPageTableOps(uint8_t trans_granule);
 
   public:
-    SMMUv3(SMMUv3Params *p);
+    SMMUv3(const SMMUv3Params &p);
     virtual ~SMMUv3() {}
 
     virtual void init() override;

@@ -314,7 +314,7 @@ class Execute : public Named
   public:
     Execute(const std::string &name_,
         MinorCPU &cpu_,
-        MinorCPUParams &params,
+        const MinorCPUParams &params,
         Latch<ForwardInstData>::Output inp_,
         Latch<BranchData>::Input out_);
 

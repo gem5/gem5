@@ -47,8 +47,8 @@ class BaseMMU : public SimObject
   protected:
     typedef BaseMMUParams Params;
 
-    BaseMMU(const Params *p)
-      : SimObject(p), dtb(p->dtb), itb(p->itb)
+    BaseMMU(const Params &p)
+      : SimObject(p), dtb(p.dtb), itb(p.itb)
     {}
 
   public:

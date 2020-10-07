@@ -109,7 +109,7 @@ class CPack : public DictionaryCompressor<uint32_t>
     /**
      * Default constructor.
      */
-    CPack(const Params *p);
+    CPack(const Params &p);
 
     /**
      * Default destructor.

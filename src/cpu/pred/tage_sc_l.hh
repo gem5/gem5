@@ -76,15 +76,15 @@ class TAGE_SC_L_TAGE : public TAGEBase {
 
     virtual TAGEBase::BranchInfo *makeBranchInfo() override;
 
-    TAGE_SC_L_TAGE(const TAGE_SC_L_TAGEParams *p)
+    TAGE_SC_L_TAGE(const TAGE_SC_L_TAGEParams &p)
       : TAGEBase(p),
-        firstLongTagTable(p->firstLongTagTable),
-        longTagsSize(p->longTagsSize),
-        shortTagsSize(p->shortTagsSize),
-        logTagTableSize(p->logTagTableSize),
-        shortTagsTageFactor(p->shortTagsTageFactor),
-        longTagsTageFactor(p->longTagsTageFactor),
-        truncatePathHist(p->truncatePathHist)
+        firstLongTagTable(p.firstLongTagTable),
+        longTagsSize(p.longTagsSize),
+        shortTagsSize(p.shortTagsSize),
+        logTagTableSize(p.logTagTableSize),
+        shortTagsTageFactor(p.shortTagsTageFactor),
+        longTagsTageFactor(p.longTagsTageFactor),
+        truncatePathHist(p.truncatePathHist)
     {}
 
     void calculateParameters() override;
@@ -137,7 +137,7 @@ class TAGE_SC_L_TAGE : public TAGEBase {
 class TAGE_SC_L_LoopPredictor : public LoopPredictor
 {
   public:
-    TAGE_SC_L_LoopPredictor(TAGE_SC_L_LoopPredictorParams *p)
+    TAGE_SC_L_LoopPredictor(const TAGE_SC_L_LoopPredictorParams &p)
       : LoopPredictor(p)
     {}
 
@@ -149,7 +149,7 @@ class TAGE_SC_L: public LTAGE
 {
     StatisticalCorrector *statisticalCorrector;
   public:
-    TAGE_SC_L(const TAGE_SC_LParams *params);
+    TAGE_SC_L(const TAGE_SC_LParams &params);
 
     bool predict(
         ThreadID tid, Addr branch_pc, bool cond_branch, void* &b) override;

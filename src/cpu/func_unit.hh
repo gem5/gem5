@@ -53,9 +53,9 @@ class OpDesc : public SimObject
     Cycles opLat;
     bool pipelined;
 
-    OpDesc(const OpDescParams *p)
-        : SimObject(p), opClass(p->opClass), opLat(p->opLat),
-          pipelined(p->pipelined) {};
+    OpDesc(const OpDescParams &p)
+        : SimObject(p), opClass(p.opClass), opLat(p.opLat),
+          pipelined(p.pipelined) {};
 };
 
 class FUDesc : public SimObject
@@ -64,8 +64,8 @@ class FUDesc : public SimObject
     std::vector<OpDesc *> opDescList;
     unsigned         number;
 
-    FUDesc(const FUDescParams *p)
-        : SimObject(p), opDescList(p->opList), number(p->count) {};
+    FUDesc(const FUDescParams &p)
+        : SimObject(p), opDescList(p.opList), number(p.count) {};
 };
 
 typedef std::vector<OpDesc *>::const_iterator OPDDiterator;

@@ -45,7 +45,7 @@
 class PoolManager : public SimObject
 {
   public:
-    PoolManager(const PoolManagerParams *p);
+    PoolManager(const PoolManagerParams &p);
     virtual ~PoolManager() { _poolSize = 0; }
     uint32_t minAllocation() { return _minAllocation; }
     virtual std::string printRegion() = 0;

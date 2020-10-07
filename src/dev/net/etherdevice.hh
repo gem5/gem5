@@ -46,14 +46,14 @@ class EtherDevice : public PciDevice
 {
   public:
     typedef EtherDeviceParams Params;
-    EtherDevice(const Params *params)
+    EtherDevice(const Params &params)
         : PciDevice(params)
     {}
 
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
   public:
@@ -124,14 +124,14 @@ class EtherDevice : public PciDevice
 class EtherDevBase : public EtherDevice
 {
   public:
-    EtherDevBase(const EtherDevBaseParams *params)
+    EtherDevBase(const EtherDevBaseParams &params)
         : EtherDevice(params)
     {}
 
-    const EtherDevBaseParams *
+    const EtherDevBaseParams &
     params() const
     {
-        return dynamic_cast<const EtherDevBaseParams *>(_params);
+        return dynamic_cast<const EtherDevBaseParams &>(_params);
     }
 
 };

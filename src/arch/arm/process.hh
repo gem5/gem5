@@ -54,7 +54,7 @@ class ArmProcess : public Process
 {
   protected:
     ::Loader::Arch arch;
-    ArmProcess(ProcessParams * params, ::Loader::ObjectFile *objFile,
+    ArmProcess(const ProcessParams &params, ::Loader::ObjectFile *objFile,
                ::Loader::Arch _arch);
     template<class IntType>
     void argsInit(int pageSize, ArmISA::IntRegIndex spIndex);
@@ -74,7 +74,7 @@ class ArmProcess : public Process
 class ArmProcess32 : public ArmProcess
 {
   protected:
-    ArmProcess32(ProcessParams * params, ::Loader::ObjectFile *objFile,
+    ArmProcess32(const ProcessParams &params, ::Loader::ObjectFile *objFile,
                  ::Loader::Arch _arch);
 
     void initState() override;
@@ -117,7 +117,7 @@ struct Argument<ABI, Arg,
 class ArmProcess64 : public ArmProcess
 {
   protected:
-    ArmProcess64(ProcessParams * params, ::Loader::ObjectFile *objFile,
+    ArmProcess64(const ProcessParams &params, ::Loader::ObjectFile *objFile,
                  ::Loader::Arch _arch);
 
     void initState() override;

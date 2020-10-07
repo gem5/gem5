@@ -64,7 +64,7 @@ class AddressProfiler;
 class Profiler
 {
   public:
-    Profiler(const RubySystemParams *params, RubySystem *rs);
+    Profiler(const RubySystemParams &params, RubySystem *rs);
     ~Profiler();
 
     RubySystem *m_ruby_system;

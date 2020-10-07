@@ -43,7 +43,7 @@ namespace BloomFilter {
 class MultiBitSel : public Base
 {
   public:
-    MultiBitSel(const BloomFilterMultiBitSelParams* p);
+    MultiBitSel(const BloomFilterMultiBitSelParams &p);
     ~MultiBitSel();
 
     void set(Addr addr) override;

@@ -74,14 +74,14 @@ Stride::StrideEntry::invalidate()
     confidence.reset();
 }
 
-Stride::Stride(const StridePrefetcherParams *p)
+Stride::Stride(const StridePrefetcherParams &p)
   : Queued(p),
-    initConfidence(p->confidence_counter_bits, p->initial_confidence),
-    threshConf(p->confidence_threshold/100.0),
-    useRequestorId(p->use_requestor_id),
-    degree(p->degree),
-    pcTableInfo(p->table_assoc, p->table_entries, p->table_indexing_policy,
-        p->table_replacement_policy)
+    initConfidence(p.confidence_counter_bits, p.initial_confidence),
+    threshConf(p.confidence_threshold/100.0),
+    useRequestorId(p.use_requestor_id),
+    degree(p.degree),
+    pcTableInfo(p.table_assoc, p.table_entries, p.table_indexing_policy,
+        p.table_replacement_policy)
 {
 }
 
@@ -204,13 +204,13 @@ StridePrefetcherHashedSetAssociative::extractTag(const Addr addr) const
 } // namespace Prefetcher
 
 Prefetcher::StridePrefetcherHashedSetAssociative*
-StridePrefetcherHashedSetAssociativeParams::create()
+StridePrefetcherHashedSetAssociativeParams::create() const
 {
-    return new Prefetcher::StridePrefetcherHashedSetAssociative(this);
+    return new Prefetcher::StridePrefetcherHashedSetAssociative(*this);
 }
 
 Prefetcher::Stride*
-StridePrefetcherParams::create()
+StridePrefetcherParams::create() const
 {
-    return new Prefetcher::Stride(this);
+    return new Prefetcher::Stride(*this);
 }

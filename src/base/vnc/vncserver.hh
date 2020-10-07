@@ -177,7 +177,7 @@ class VncServer : public VncInput
 
   public:
     typedef VncServerParams Params;
-    VncServer(const Params *p);
+    VncServer(const Params &p);
     ~VncServer();
 
     // RFB

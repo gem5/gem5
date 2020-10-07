@@ -108,7 +108,7 @@ class VirtIO9PBase : public VirtIODeviceBase
 {
   public:
     typedef VirtIO9PBaseParams Params;
-    VirtIO9PBase(Params *params);
+    VirtIO9PBase(const Params &params);
     virtual ~VirtIO9PBase();
 
     void readConfig(PacketPtr pkt, Addr cfgOffset);
@@ -212,7 +212,7 @@ class VirtIO9PProxy : public VirtIO9PBase
 {
   public:
     typedef VirtIO9PProxyParams Params;
-    VirtIO9PProxy(Params *params);
+    VirtIO9PProxy(const Params &params);
     virtual ~VirtIO9PProxy();
 
     void serialize(CheckpointOut &cp) const override;
@@ -291,7 +291,7 @@ class VirtIO9PDiod : public VirtIO9PProxy
 {
   public:
     typedef VirtIO9PDiodParams Params;
-    VirtIO9PDiod(Params *params);
+    VirtIO9PDiod(const Params &params);
     virtual ~VirtIO9PDiod();
 
     void startup();
@@ -343,7 +343,7 @@ class VirtIO9PSocket : public VirtIO9PProxy
 {
   public:
     typedef VirtIO9PSocketParams Params;
-    VirtIO9PSocket(Params *params);
+    VirtIO9PSocket(const Params &params);
     virtual ~VirtIO9PSocket();
 
     void startup();

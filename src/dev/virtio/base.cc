@@ -322,11 +322,11 @@ VirtQueue::onNotify()
 }
 
 
-VirtIODeviceBase::VirtIODeviceBase(Params *params, DeviceId id,
+VirtIODeviceBase::VirtIODeviceBase(const Params &params, DeviceId id,
                                    size_t config_size, FeatureBits features)
     : SimObject(params),
       guestFeatures(0),
-      byteOrder(params->byte_order),
+      byteOrder(params.byte_order),
       deviceId(id), configSize(config_size), deviceFeatures(features),
       _deviceStatus(0), _queueSelect(0)
 {
@@ -480,13 +480,13 @@ VirtIODeviceBase::registerQueue(VirtQueue &queue)
 }
 
 
-VirtIODummyDevice::VirtIODummyDevice(VirtIODummyDeviceParams *params)
+VirtIODummyDevice::VirtIODummyDevice(const VirtIODummyDeviceParams &params)
     : VirtIODeviceBase(params, ID_INVALID, 0, 0)
 {
 }
 
 VirtIODummyDevice *
-VirtIODummyDeviceParams::create()
+VirtIODummyDeviceParams::create() const
 {
-    return new VirtIODummyDevice(this);
+    return new VirtIODummyDevice(*this);
 }

@@ -43,7 +43,7 @@ namespace BloomFilter {
 class Perfect : public Base
 {
   public:
-    Perfect(const BloomFilterPerfectParams* p);
+    Perfect(const BloomFilterPerfectParams &p);
     ~Perfect();
 
     void clear() override;

@@ -62,8 +62,8 @@ class CortexR52 : public Iris::CPU<CortexR52TC>
     const Params &params() { return _params; }
 
   public:
-    CortexR52(Params &p) : Base(&p, scx::scx_get_iris_connection_interface()),
-        _params(p)
+    CortexR52(const Params &p) :
+        Base(&p, scx::scx_get_iris_connection_interface()), _params(p)
     {}
 
     template <class T>
@@ -95,7 +95,7 @@ class CortexR52Cluster : public SimObject
     CortexR52 *getCore(int num) const { return cores.at(num); }
     sc_core::sc_module *getEvs() const { return evs; }
 
-    CortexR52Cluster(Params &p);
+    CortexR52Cluster(const Params &p);
     const Params &params() { return _params; }
 
     Port &getPort(const std::string &if_name,

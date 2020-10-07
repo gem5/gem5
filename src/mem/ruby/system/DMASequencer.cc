@@ -45,9 +45,9 @@ DMARequest::DMARequest(uint64_t start_paddr, int len, bool write,
 {
 }
 
-DMASequencer::DMASequencer(const Params *p)
+DMASequencer::DMASequencer(const Params &p)
     : RubyPort(p), m_outstanding_count(0),
-      m_max_outstanding_requests(p->max_outstanding_requests)
+      m_max_outstanding_requests(p.max_outstanding_requests)
 {
 }
 
@@ -201,7 +201,7 @@ DMASequencer::recordRequestType(DMASequencerRequestType requestType)
 }
 
 DMASequencer *
-DMASequencerParams::create()
+DMASequencerParams::create() const
 {
-    return new DMASequencer(this);
+    return new DMASequencer(*this);
 }

@@ -52,7 +52,7 @@
 
 class TAGE_SC_L_TAGE_64KB : public TAGE_SC_L_TAGE {
     public:
-    TAGE_SC_L_TAGE_64KB(const TAGE_SC_L_TAGE_64KBParams *p) : TAGE_SC_L_TAGE(p)
+    TAGE_SC_L_TAGE_64KB(const TAGE_SC_L_TAGE_64KBParams &p) : TAGE_SC_L_TAGE(p)
     {}
 
     int gindex_ext(int index, int bank) const override;
@@ -108,7 +108,7 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
 
   public:
     TAGE_SC_L_64KB_StatisticalCorrector(
-        TAGE_SC_L_64KB_StatisticalCorrectorParams *p);
+        const TAGE_SC_L_64KB_StatisticalCorrectorParams &p);
 
     unsigned getIndBiasBank(Addr branch_pc, BranchInfo* bi, int hitBank,
         int altBank) const override;
@@ -128,7 +128,7 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
 class TAGE_SC_L_64KB : public TAGE_SC_L
 {
   public:
-    TAGE_SC_L_64KB(const TAGE_SC_L_64KBParams *params);
+    TAGE_SC_L_64KB(const TAGE_SC_L_64KBParams &params);
 };
 
 #endif // __CPU_PRED_TAGE_SC_L_64KB

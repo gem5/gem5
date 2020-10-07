@@ -124,7 +124,7 @@ class MemSinkCtrl : public MemCtrl
      *
      * @param p QoS Memory Sink configuration parameters
      */
-    MemSinkCtrl(const QoSMemSinkCtrlParams*);
+    MemSinkCtrl(const QoSMemSinkCtrlParams &);
 
     virtual ~MemSinkCtrl();
 
@@ -262,7 +262,7 @@ class QoSMemSinkInterface : public AbstractMemory
     /** Pointer to the controller */
     QoS::MemSinkCtrl* ctrl;
 
-    QoSMemSinkInterface(const QoSMemSinkInterfaceParams* _p);
+    QoSMemSinkInterface(const QoSMemSinkInterfaceParams &_p);
 };
 
 

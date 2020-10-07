@@ -41,11 +41,11 @@
 #include "params/VirtIOBlock.hh"
 #include "sim/system.hh"
 
-VirtIOBlock::VirtIOBlock(Params *params)
+VirtIOBlock::VirtIOBlock(const Params &params)
     : VirtIODeviceBase(params, ID_BLOCK, sizeof(Config), 0),
-      qRequests(params->system->physProxy, byteOrder,
-                params->queueSize, *this),
-      image(*params->image)
+      qRequests(params.system->physProxy, byteOrder,
+                params.queueSize, *this),
+      image(*params.image)
 {
     registerQueue(qRequests);
 
@@ -166,7 +166,7 @@ VirtIOBlock::RequestQueue::onNotifyDescriptor(VirtDescriptor *desc)
 }
 
 VirtIOBlock *
-VirtIOBlockParams::create()
+VirtIOBlockParams::create() const
 {
-    return new VirtIOBlock(this);
+    return new VirtIOBlock(*this);
 }

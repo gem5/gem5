@@ -47,7 +47,7 @@ namespace MipsISA {
 class MMU : public BaseMMU
 {
   public:
-    MMU(const MipsMMUParams *p)
+    MMU(const MipsMMUParams &p)
       : BaseMMU(p)
     {}
 };

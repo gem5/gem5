@@ -44,12 +44,12 @@ const uint8_t RamSize = 32;
 const uint8_t NumOutputBits = 14;
 
 
-X86ISA::I8042::I8042(Params *p)
+X86ISA::I8042::I8042(const Params &p)
     : BasicPioDevice(p, 0), // pioSize arg is dummy value... not used
-      latency(p->pio_latency),
-      dataPort(p->data_port), commandPort(p->command_port),
+      latency(p.pio_latency),
+      dataPort(p.data_port), commandPort(p.command_port),
       statusReg(0), commandByte(0), dataReg(0), lastCommand(NoCommand),
-      mouse(p->mouse), keyboard(p->keyboard)
+      mouse(p.mouse), keyboard(p.keyboard)
 {
     fatal_if(!mouse, "The i8042 model requires a mouse instance");
     fatal_if(!keyboard, "The i8042 model requires a keyboard instance");
@@ -62,11 +62,11 @@ X86ISA::I8042::I8042(Params *p)
     commandByte.passedSelfTest = 1;
     commandByte.keyboardFullInt = 1;
 
-    for (int i = 0; i < p->port_keyboard_int_pin_connection_count; i++) {
+    for (int i = 0; i < p.port_keyboard_int_pin_connection_count; i++) {
         keyboardIntPin.push_back(new IntSourcePin<I8042>(
                     csprintf("%s.keyboard_int_pin[%d]", name(), i), i, this));
     }
-    for (int i = 0; i < p->port_mouse_int_pin_connection_count; i++) {
+    for (int i = 0; i < p.port_mouse_int_pin_connection_count; i++) {
         mouseIntPin.push_back(new IntSourcePin<I8042>(
                     csprintf("%s.mouse_int_pin[%d]", name(), i), i, this));
     }
@@ -307,7 +307,7 @@ X86ISA::I8042::unserialize(CheckpointIn &cp)
 }
 
 X86ISA::I8042 *
-I8042Params::create()
+I8042Params::create() const
 {
-    return new X86ISA::I8042(this);
+    return new X86ISA::I8042(*this);
 }

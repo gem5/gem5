@@ -51,7 +51,7 @@ struct PS2DeviceParams;
 class PS2Device : public SimObject
 {
   public:
-    PS2Device(const PS2DeviceParams *p);
+    PS2Device(const PS2DeviceParams &p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

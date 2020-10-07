@@ -42,7 +42,7 @@ class FsWorkload : public Workload
     Loader::SymbolTable defaultSymtab;
 
   public:
-    FsWorkload(SparcFsWorkloadParams *params) : Workload(params) {}
+    FsWorkload(const SparcFsWorkloadParams &params) : Workload(params) {}
     void initState() override;
 
     Addr

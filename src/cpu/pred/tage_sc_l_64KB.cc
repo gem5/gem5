@@ -42,22 +42,22 @@
 #include "cpu/pred/tage_sc_l_64KB.hh"
 
 TAGE_SC_L_64KB_StatisticalCorrector::TAGE_SC_L_64KB_StatisticalCorrector(
-    TAGE_SC_L_64KB_StatisticalCorrectorParams *p)
+    const TAGE_SC_L_64KB_StatisticalCorrectorParams &p)
   : StatisticalCorrector(p),
-    numEntriesSecondLocalHistories(p->numEntriesSecondLocalHistories),
-    numEntriesThirdLocalHistories(p->numEntriesThirdLocalHistories),
-    pnb(p->pnb),
-    logPnb(p->logPnb),
-    pm(p->pm),
-    snb(p->snb),
-    logSnb(p->logSnb),
-    sm(p->sm),
-    tnb(p->tnb),
-    logTnb(p->logTnb),
-    tm(p->tm),
-    imnb(p->imnb),
-    logImnb(p->logImnb),
-    imm(p->imm)
+    numEntriesSecondLocalHistories(p.numEntriesSecondLocalHistories),
+    numEntriesThirdLocalHistories(p.numEntriesThirdLocalHistories),
+    pnb(p.pnb),
+    logPnb(p.logPnb),
+    pm(p.pm),
+    snb(p.snb),
+    logSnb(p.logSnb),
+    sm(p.sm),
+    tnb(p.tnb),
+    logTnb(p.logTnb),
+    tm(p.tm),
+    imnb(p.imnb),
+    logImnb(p.logImnb),
+    imm(p.imm)
 {
     initGEHLTable(pnb, pm, pgehl, logPnb, wp, 7);
     initGEHLTable(snb, sm, sgehl, logSnb, ws, 7);
@@ -191,9 +191,9 @@ TAGE_SC_L_64KB_StatisticalCorrector::gUpdates(ThreadID tid, Addr pc,
 }
 
 TAGE_SC_L_64KB_StatisticalCorrector*
-TAGE_SC_L_64KB_StatisticalCorrectorParams::create()
+TAGE_SC_L_64KB_StatisticalCorrectorParams::create() const
 {
-    return new TAGE_SC_L_64KB_StatisticalCorrector(this);
+    return new TAGE_SC_L_64KB_StatisticalCorrector(*this);
 }
 
 int
@@ -310,18 +310,18 @@ TAGE_SC_L_TAGE_64KB::handleTAGEUpdate(Addr branch_pc, bool taken,
 }
 
 TAGE_SC_L_TAGE_64KB*
-TAGE_SC_L_TAGE_64KBParams::create()
+TAGE_SC_L_TAGE_64KBParams::create() const
 {
-    return new TAGE_SC_L_TAGE_64KB(this);
+    return new TAGE_SC_L_TAGE_64KB(*this);
 }
 
-TAGE_SC_L_64KB::TAGE_SC_L_64KB(const TAGE_SC_L_64KBParams *params)
+TAGE_SC_L_64KB::TAGE_SC_L_64KB(const TAGE_SC_L_64KBParams &params)
   : TAGE_SC_L(params)
 {
 }
 
 TAGE_SC_L_64KB*
-TAGE_SC_L_64KBParams::create()
+TAGE_SC_L_64KBParams::create() const
 {
-    return new TAGE_SC_L_64KB(this);
+    return new TAGE_SC_L_64KB(*this);
 }

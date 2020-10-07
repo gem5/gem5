@@ -41,9 +41,9 @@
 
 namespace Prefetcher {
 
-Multi::Multi(const MultiPrefetcherParams *p)
+Multi::Multi(const MultiPrefetcherParams &p)
   : Base(p),
-    prefetchers(p->prefetchers.begin(), p->prefetchers.end())
+    prefetchers(p.prefetchers.begin(), p.prefetchers.end())
 {
 }
 
@@ -82,7 +82,7 @@ Multi::getPacket()
 } // namespace Prefetcher
 
 Prefetcher::Multi*
-MultiPrefetcherParams::create()
+MultiPrefetcherParams::create() const
 {
-    return new Prefetcher::Multi(this);
+    return new Prefetcher::Multi(*this);
 }

@@ -54,7 +54,8 @@ class Sparc32LinuxProcess : public SparcLinuxProcess, public Sparc32Process
 {
   public:
     /// Constructor.
-    Sparc32LinuxProcess(ProcessParams * params, ::Loader::ObjectFile *objFile);
+    Sparc32LinuxProcess(const ProcessParams &params,
+                        ::Loader::ObjectFile *objFile);
 
     void syscall(ThreadContext *tc) override;
 
@@ -66,7 +67,8 @@ class Sparc64LinuxProcess : public SparcLinuxProcess, public Sparc64Process
 {
   public:
     /// Constructor.
-    Sparc64LinuxProcess(ProcessParams * params, ::Loader::ObjectFile *objFile);
+    Sparc64LinuxProcess(const ProcessParams &params,
+                        ::Loader::ObjectFile *objFile);
 
     void syscall(ThreadContext *tc) override;
 

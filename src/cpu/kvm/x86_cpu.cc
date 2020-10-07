@@ -520,9 +520,9 @@ checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
     // TODO: Check CS DB
 }
 
-X86KvmCPU::X86KvmCPU(X86KvmCPUParams *params)
+X86KvmCPU::X86KvmCPU(const X86KvmCPUParams &params)
     : BaseKvmCPU(params),
-      useXSave(params->useXSave)
+      useXSave(params.useXSave)
 {
     Kvm &kvm(*vm.kvm);
 
@@ -1623,7 +1623,7 @@ X86KvmCPU::setVCpuEvents(const struct kvm_vcpu_events &events)
 }
 
 X86KvmCPU *
-X86KvmCPUParams::create()
+X86KvmCPUParams::create() const
 {
-    return new X86KvmCPU(this);
+    return new X86KvmCPU(*this);
 }

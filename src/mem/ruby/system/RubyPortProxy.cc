@@ -37,8 +37,9 @@
 
 #include "mem/ruby/system/RubyPortProxy.hh"
 
-RubyPortProxy::RubyPortProxy(const RubyPortProxyParams* p) :
-    RubyPort(p) {
+RubyPortProxy::RubyPortProxy(const RubyPortProxyParams &p) :
+    RubyPort(p)
+{
 }
 
 RubyPortProxy::~RubyPortProxy()
@@ -62,7 +63,7 @@ RubyPortProxy::makeRequest(PacketPtr pkt)
 }
 
 RubyPortProxy*
-RubyPortProxyParams::create()
+RubyPortProxyParams::create() const
 {
-    return new RubyPortProxy(this);
+    return new RubyPortProxy(*this);
 }

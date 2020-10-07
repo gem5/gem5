@@ -74,7 +74,7 @@ class SecondChance : public FIFO
 
   public:
     typedef SecondChanceRPParams Params;
-    SecondChance(const Params *p);
+    SecondChance(const Params &p);
     ~SecondChance() = default;
 
     /**

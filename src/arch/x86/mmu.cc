@@ -38,7 +38,7 @@
 #include "arch/x86/mmu.hh"
 
 X86ISA::MMU *
-X86MMUParams::create()
+X86MMUParams::create() const
 {
-    return new X86ISA::MMU(this);
+    return new X86ISA::MMU(*this);
 }

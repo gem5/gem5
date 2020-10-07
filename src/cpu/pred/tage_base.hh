@@ -58,7 +58,7 @@
 class TAGEBase : public SimObject
 {
   public:
-    TAGEBase(const TAGEBaseParams *p);
+    TAGEBase(const TAGEBaseParams &p);
     void init() override;
 
   protected:

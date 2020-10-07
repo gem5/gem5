@@ -96,7 +96,7 @@ class SetAssociative : public BaseIndexingPolicy
     /**
      * Construct and initialize this policy.
      */
-    SetAssociative(const Params *p);
+    SetAssociative(const Params &p);
 
     /**
      * Destructor.

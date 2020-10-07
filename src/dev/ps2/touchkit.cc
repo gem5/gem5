@@ -46,9 +46,9 @@
 #include "dev/ps2/types.hh"
 #include "params/PS2TouchKit.hh"
 
-PS2TouchKit::PS2TouchKit(const PS2TouchKitParams *p)
+PS2TouchKit::PS2TouchKit(const PS2TouchKitParams &p)
     : PS2Device(p),
-      vnc(p->vnc),
+      vnc(p.vnc),
       enabled(false), touchKitEnabled(false)
 {
     if (vnc)
@@ -206,7 +206,7 @@ PS2TouchKit::mouseAt(uint16_t x, uint16_t y, uint8_t buttons)
 }
 
 PS2TouchKit *
-PS2TouchKitParams::create()
+PS2TouchKitParams::create() const
 {
-    return new PS2TouchKit(this);
+    return new PS2TouchKit(*this);
 }

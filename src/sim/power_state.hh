@@ -61,13 +61,14 @@ class PowerDomain;
 class PowerState : public SimObject
 {
   public:
-    PowerState(const PowerStateParams *p);
+    PowerState(const PowerStateParams &p);
 
     /** Parameters of PowerState object */
     typedef PowerStateParams Params;
-    const Params* params() const
+    const Params &
+    params() const
     {
-        return reinterpret_cast<const Params*>(_params);
+        return reinterpret_cast<const Params &>(_params);
     }
 
     virtual void addFollower(PowerState* pwr_obj) {};

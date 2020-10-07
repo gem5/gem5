@@ -48,7 +48,7 @@ namespace Iris
 class MMU : public BaseMMU
 {
   public:
-    MMU(const Params *p) : BaseMMU(p) {}
+    MMU(const Params &p) : BaseMMU(p) {}
 };
 
 } // namespace Iris

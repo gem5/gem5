@@ -59,7 +59,7 @@
 class ArmKvmCPU : public BaseKvmCPU
 {
   public:
-    ArmKvmCPU(ArmKvmCPUParams *params);
+    ArmKvmCPU(const ArmKvmCPUParams &params);
     virtual ~ArmKvmCPU();
 
     void startup();

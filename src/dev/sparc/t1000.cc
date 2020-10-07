@@ -41,8 +41,8 @@
 
 using namespace std;
 
-T1000::T1000(const Params *p)
-    : Platform(p), system(p->system)
+T1000::T1000(const Params &p)
+    : Platform(p), system(p.system)
 {}
 
 void
@@ -97,7 +97,7 @@ T1000::calcPciMemAddr(Addr addr)
 }
 
 T1000 *
-T1000Params::create()
+T1000Params::create() const
 {
-    return new T1000(this);
+    return new T1000(*this);
 }

@@ -179,7 +179,7 @@ class NoncoherentXBar : public BaseXBar
 
   public:
 
-    NoncoherentXBar(const NoncoherentXBarParams *p);
+    NoncoherentXBar(const NoncoherentXBarParams &p);
 
     virtual ~NoncoherentXBar();
 };

@@ -41,7 +41,7 @@
 
 namespace QoS {
 
-TurnaroundPolicyIdeal::TurnaroundPolicyIdeal(const Params* p)
+TurnaroundPolicyIdeal::TurnaroundPolicyIdeal(const Params &p)
   : TurnaroundPolicy(p)
 {}
 
@@ -98,7 +98,7 @@ TurnaroundPolicyIdeal::selectBusState()
 } // namespace QoS
 
 QoS::TurnaroundPolicyIdeal *
-QoSTurnaroundPolicyIdealParams::create()
+QoSTurnaroundPolicyIdealParams::create() const
 {
-    return new QoS::TurnaroundPolicyIdeal(this);
+    return new QoS::TurnaroundPolicyIdeal(*this);
 }

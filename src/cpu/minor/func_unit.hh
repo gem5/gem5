@@ -62,9 +62,9 @@ class MinorOpClass : public SimObject
     OpClass opClass;
 
   public:
-    MinorOpClass(const MinorOpClassParams *params) :
+    MinorOpClass(const MinorOpClassParams &params) :
         SimObject(params),
-        opClass(params->opClass)
+        opClass(params.opClass)
     { }
 };
 
@@ -79,7 +79,7 @@ class MinorOpClassSet : public SimObject
     std::vector<bool> capabilityList;
 
   public:
-    MinorOpClassSet(const MinorOpClassSetParams *params);
+    MinorOpClassSet(const MinorOpClassSetParams &params);
 
   public:
     /** Does this set support the given op class */
@@ -129,7 +129,7 @@ class MinorFUTiming: public SimObject
     MinorOpClassSet *opClasses;
 
   public:
-    MinorFUTiming(const MinorFUTimingParams *params);
+    MinorFUTiming(const MinorFUTimingParams &params);
 
   public:
     /** Does the extra decode in this object support the given op class */
@@ -165,13 +165,13 @@ class MinorFU : public SimObject
     std::vector<MinorFUTiming *> timings;
 
   public:
-    MinorFU(const MinorFUParams *params) :
+    MinorFU(const MinorFUParams &params) :
         SimObject(params),
-        opClasses(params->opClasses),
-        opLat(params->opLat),
-        issueLat(params->issueLat),
-        cantForwardFromFUIndices(params->cantForwardFromFUIndices),
-        timings(params->timings)
+        opClasses(params.opClasses),
+        opLat(params.opLat),
+        issueLat(params.issueLat),
+        cantForwardFromFUIndices(params.cantForwardFromFUIndices),
+        timings(params.timings)
     { }
 };
 
@@ -182,9 +182,9 @@ class MinorFUPool : public SimObject
     std::vector<MinorFU *> funcUnits;
 
   public:
-    MinorFUPool(const MinorFUPoolParams *params) :
+    MinorFUPool(const MinorFUPoolParams &params) :
         SimObject(params),
-        funcUnits(params->funcUnits)
+        funcUnits(params.funcUnits)
     { }
 };
 

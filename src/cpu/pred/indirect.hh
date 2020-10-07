@@ -41,7 +41,7 @@ class IndirectPredictor : public SimObject
 
     typedef IndirectPredictorParams Params;
 
-    IndirectPredictor(const Params *params)
+    IndirectPredictor(const Params &params)
         : SimObject(params)
     {
     }

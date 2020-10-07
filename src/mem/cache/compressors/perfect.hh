@@ -67,7 +67,7 @@ class Perfect : public Base
 
   public:
     typedef PerfectCompressorParams Params;
-    Perfect(const Params *p);
+    Perfect(const Params &p);
     ~Perfect() = default;
 };
 

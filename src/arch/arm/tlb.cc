@@ -72,16 +72,16 @@
 using namespace std;
 using namespace ArmISA;
 
-TLB::TLB(const ArmTLBParams *p)
-    : BaseTLB(p), table(new TlbEntry[p->size]), size(p->size),
-      isStage2(p->is_stage2), stage2Req(false), stage2DescReq(false), _attr(0),
-      directToStage2(false), tableWalker(p->walker), stage2Tlb(NULL),
+TLB::TLB(const ArmTLBParams &p)
+    : BaseTLB(p), table(new TlbEntry[p.size]), size(p.size),
+      isStage2(p.is_stage2), stage2Req(false), stage2DescReq(false), _attr(0),
+      directToStage2(false), tableWalker(p.walker), stage2Tlb(NULL),
       stage2Mmu(NULL), test(nullptr), stats(this),  rangeMRU(1),
       aarch64(false), aarch64EL(EL0), isPriv(false), isSecure(false),
       isHyp(false), asid(0), vmid(0), hcr(0), dacr(0),
       miscRegValid(false), miscRegContext(0), curTranType(NormalTran)
 {
-    const ArmSystem *sys = dynamic_cast<const ArmSystem *>(p->sys);
+    const ArmSystem *sys = dynamic_cast<const ArmSystem *>(p.sys);
 
     tableWalker->setTlb(this);
 
@@ -1641,7 +1641,7 @@ TLB::testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
 
 
 ArmISA::TLB *
-ArmTLBParams::create()
+ArmTLBParams::create() const
 {
-    return new ArmISA::TLB(this);
+    return new ArmISA::TLB(*this);
 }

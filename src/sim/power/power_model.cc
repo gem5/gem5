@@ -43,14 +43,14 @@
 #include "sim/clocked_object.hh"
 #include "sim/sub_system.hh"
 
-PowerModelState::PowerModelState(const Params *p)
+PowerModelState::PowerModelState(const Params &p)
     : SimObject(p), _temp(0), clocked_object(NULL)
 {
 }
 
-PowerModel::PowerModel(const Params *p)
-    : SimObject(p), states_pm(p->pm), subsystem(p->subsystem),
-      clocked_object(NULL), power_model_type(p->pm_type)
+PowerModel::PowerModel(const Params &p)
+    : SimObject(p), states_pm(p.pm), subsystem(p.subsystem),
+      clocked_object(NULL), power_model_type(p.pm_type)
 {
     panic_if(subsystem == NULL,
              "Subsystem is NULL! This is not acceptable for a PowerModel!\n");
@@ -58,7 +58,7 @@ PowerModel::PowerModel(const Params *p)
     // The temperature passed here will be overwritten, if there is
     // a thermal model present
     for (auto & pms: states_pm){
-        pms->setTemperature(p->ambient_temp);
+        pms->setTemperature(p.ambient_temp);
     }
 
 }
@@ -88,9 +88,9 @@ PowerModel::regProbePoints()
 }
 
 PowerModel*
-PowerModelParams::create()
+PowerModelParams::create() const
 {
-    return new PowerModel(this);
+    return new PowerModel(*this);
 }
 
 double

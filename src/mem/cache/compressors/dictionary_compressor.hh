@@ -98,7 +98,7 @@ class BaseDictionaryCompressor : public Base
 
   public:
     typedef BaseDictionaryCompressorParams Params;
-    BaseDictionaryCompressor(const Params *p);
+    BaseDictionaryCompressor(const Params &p);
     ~BaseDictionaryCompressor() = default;
 };
 
@@ -266,7 +266,7 @@ class DictionaryCompressor : public BaseDictionaryCompressor
 
   public:
     typedef BaseDictionaryCompressorParams Params;
-    DictionaryCompressor(const Params *p);
+    DictionaryCompressor(const Params &p);
     ~DictionaryCompressor() = default;
 };
 

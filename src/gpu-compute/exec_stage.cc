@@ -41,7 +41,7 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
-ExecStage::ExecStage(const ComputeUnitParams *p, ComputeUnit &cu,
+ExecStage::ExecStage(const ComputeUnitParams &p, ComputeUnit &cu,
                      ScheduleToExecute &from_schedule)
     : computeUnit(cu), fromSchedule(from_schedule),
       lastTimeInstExecuted(false),

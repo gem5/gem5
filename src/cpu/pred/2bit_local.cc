@@ -33,10 +33,10 @@
 #include "base/trace.hh"
 #include "debug/Fetch.hh"
 
-LocalBP::LocalBP(const LocalBPParams *params)
+LocalBP::LocalBP(const LocalBPParams &params)
     : BPredUnit(params),
-      localPredictorSize(params->localPredictorSize),
-      localCtrBits(params->localCtrBits),
+      localPredictorSize(params.localPredictorSize),
+      localCtrBits(params.localCtrBits),
       localPredictorSets(localPredictorSize / localCtrBits),
       localCtrs(localPredictorSets, SatCounter(localCtrBits)),
       indexMask(localPredictorSets - 1)
@@ -135,7 +135,7 @@ LocalBP::uncondBranch(ThreadID tid, Addr pc, void *&bp_history)
 }
 
 LocalBP*
-LocalBPParams::create()
+LocalBPParams::create() const
 {
-    return new LocalBP(this);
+    return new LocalBP(*this);
 }

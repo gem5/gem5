@@ -41,7 +41,7 @@
 #include "mem/packet.hh"
 #include "params/CompressedTags.hh"
 
-CompressedTags::CompressedTags(const Params *p)
+CompressedTags::CompressedTags(const Params &p)
     : SectorTags(p)
 {
 }
@@ -206,7 +206,7 @@ CompressedTags::anyBlk(std::function<bool(CacheBlk &)> visitor)
 }
 
 CompressedTags *
-CompressedTagsParams::create()
+CompressedTagsParams::create() const
 {
-    return new CompressedTags(this);
+    return new CompressedTags(*this);
 }

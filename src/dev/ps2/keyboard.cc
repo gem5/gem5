@@ -46,13 +46,13 @@
 #include "dev/ps2/types.hh"
 #include "params/PS2Keyboard.hh"
 
-PS2Keyboard::PS2Keyboard(const PS2KeyboardParams *p)
+PS2Keyboard::PS2Keyboard(const PS2KeyboardParams &p)
     : PS2Device(p),
       shiftDown(false),
       enabled(false)
 {
-    if (p->vnc)
-        p->vnc->setKeyboard(this);
+    if (p.vnc)
+        p.vnc->setKeyboard(this);
 }
 
 void
@@ -174,7 +174,7 @@ PS2Keyboard::keyPress(uint32_t key, bool down)
 
 
 PS2Keyboard *
-PS2KeyboardParams::create()
+PS2KeyboardParams::create() const
 {
-    return new PS2Keyboard(this);
+    return new PS2Keyboard(*this);
 }

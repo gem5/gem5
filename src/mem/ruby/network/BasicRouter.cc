@@ -28,11 +28,11 @@
 
 #include "mem/ruby/network/BasicRouter.hh"
 
-BasicRouter::BasicRouter(const Params *p)
+BasicRouter::BasicRouter(const Params &p)
     : ClockedObject(p)
 {
-    m_id = p->router_id;
-    m_latency = p->latency;
+    m_id = p.router_id;
+    m_latency = p.latency;
 }
 
 void
@@ -47,7 +47,7 @@ BasicRouter::print(std::ostream& out) const
 }
 
 BasicRouter *
-BasicRouterParams::create()
+BasicRouterParams::create() const
 {
-    return new BasicRouter(this);
+    return new BasicRouter(*this);
 }

@@ -77,8 +77,8 @@ class Base : public EtherDevBase
  */
   public:
     typedef SinicParams Params;
-    const Params *params() const { return (const Params *)_params; }
-    Base(const Params *p);
+    const Params &params() const { return (const Params &)_params; }
+    Base(const Params &p);
 };
 
 class Device : public Base
@@ -290,7 +290,7 @@ class Device : public Base
     void unserialize(CheckpointIn &cp) override;
 
   public:
-    Device(const Params *p);
+    Device(const Params &p);
     ~Device();
 };
 

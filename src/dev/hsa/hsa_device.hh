@@ -48,7 +48,7 @@ class HSADevice : public DmaDevice
   public:
     typedef HSADeviceParams Params;
 
-    HSADevice(const Params *p) : DmaDevice(p), hsaPP(p->hsapp)
+    HSADevice(const Params &p) : DmaDevice(p), hsaPP(p.hsapp)
     {
         assert(hsaPP);
         hsaPP->setDevice(this);

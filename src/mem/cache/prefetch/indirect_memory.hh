@@ -193,7 +193,7 @@ class IndirectMemory : public Queued
     void checkAccessMatchOnActiveEntries(Addr addr);
 
   public:
-    IndirectMemory(const IndirectMemoryPrefetcherParams *p);
+    IndirectMemory(const IndirectMemoryPrefetcherParams &p);
     ~IndirectMemory() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,

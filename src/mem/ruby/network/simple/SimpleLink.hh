@@ -41,8 +41,8 @@ class SimpleExtLink : public BasicExtLink
 {
   public:
     typedef SimpleExtLinkParams Params;
-    SimpleExtLink(const Params *p);
-    const Params *params() const { return (const Params *)_params; }
+    SimpleExtLink(const Params &p);
+    const Params &params() const { return (const Params &)_params; }
 
     friend class Topology;
     void print(std::ostream& out) const;
@@ -62,8 +62,8 @@ class SimpleIntLink : public BasicIntLink
 {
   public:
     typedef SimpleIntLinkParams Params;
-    SimpleIntLink(const Params *p);
-    const Params *params() const { return (const Params *)_params; }
+    SimpleIntLink(const Params &p);
+    const Params &params() const { return (const Params &)_params; }
 
     friend class Topology;
     void print(std::ostream& out) const;

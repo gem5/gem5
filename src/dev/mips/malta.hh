@@ -79,7 +79,7 @@ class Malta : public Platform
      * @param intctrl pointer to the interrupt controller
      */
     typedef MaltaParams Params;
-    Malta(const Params *p);
+    Malta(const Params &p);
 
     /**
      * Cause the cpu to post a serial interrupt to the CPU.

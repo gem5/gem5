@@ -173,7 +173,7 @@ class PIF : public Queued
 
 
     public:
-        PIF(const PIFPrefetcherParams *p);
+        PIF(const PIFPrefetcherParams &p);
         ~PIF() = default;
 
         void calculatePrefetch(const PrefetchInfo &pfi,

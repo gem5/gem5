@@ -45,38 +45,38 @@
 #include "enums/OpClass.hh"
 
 MinorOpClass *
-MinorOpClassParams::create()
+MinorOpClassParams::create() const
 {
-    return new MinorOpClass(this);
+    return new MinorOpClass(*this);
 }
 
 MinorOpClassSet *
-MinorOpClassSetParams::create()
+MinorOpClassSetParams::create() const
 {
-    return new MinorOpClassSet(this);
+    return new MinorOpClassSet(*this);
 }
 
 MinorFUTiming *
-MinorFUTimingParams::create()
+MinorFUTimingParams::create() const
 {
-    return new MinorFUTiming(this);
+    return new MinorFUTiming(*this);
 }
 
 MinorFU *
-MinorFUParams::create()
+MinorFUParams::create() const
 {
-    return new MinorFU(this);
+    return new MinorFU(*this);
 }
 
 MinorFUPool *
-MinorFUPoolParams::create()
+MinorFUPoolParams::create() const
 {
-    return new MinorFUPool(this);
+    return new MinorFUPool(*this);
 }
 
-MinorOpClassSet::MinorOpClassSet(const MinorOpClassSetParams *params) :
+MinorOpClassSet::MinorOpClassSet(const MinorOpClassSetParams &params) :
     SimObject(params),
-    opClasses(params->opClasses),
+    opClasses(params.opClasses),
     /* Initialise to true for an empty list so that 'fully capable' is
      *  the default */
     capabilityList(Num_OpClasses, (opClasses.empty() ? true : false))
@@ -86,17 +86,17 @@ MinorOpClassSet::MinorOpClassSet(const MinorOpClassSetParams *params) :
 }
 
 MinorFUTiming::MinorFUTiming(
-    const MinorFUTimingParams *params) :
+    const MinorFUTimingParams &params) :
     SimObject(params),
-    mask(params->mask),
-    match(params->match),
-    description(params->description),
-    suppress(params->suppress),
-    extraCommitLat(params->extraCommitLat),
-    extraCommitLatExpr(params->extraCommitLatExpr),
-    extraAssumedLat(params->extraAssumedLat),
-    srcRegsRelativeLats(params->srcRegsRelativeLats),
-    opClasses(params->opClasses)
+    mask(params.mask),
+    match(params.match),
+    description(params.description),
+    suppress(params.suppress),
+    extraCommitLat(params.extraCommitLat),
+    extraCommitLatExpr(params.extraCommitLatExpr),
+    extraAssumedLat(params.extraAssumedLat),
+    srcRegsRelativeLats(params.srcRegsRelativeLats),
+    opClasses(params.opClasses)
 { }
 
 namespace Minor

@@ -76,7 +76,7 @@ class RSDP : public SimObject
     XSDT * xsdt;
 
   public:
-    RSDP(Params *p);
+    RSDP(const Params &p);
 };
 
 class SysDescTable : public SimObject
@@ -95,7 +95,7 @@ class SysDescTable : public SimObject
     uint32_t creatorRevision;
 
   public:
-    SysDescTable(Params *p, const char * _signature, uint8_t _revision);
+    SysDescTable(const Params &p, const char * _signature, uint8_t _revision);
 };
 
 class RSDT : public SysDescTable
@@ -106,7 +106,7 @@ class RSDT : public SysDescTable
     std::vector<SysDescTable *> entries;
 
   public:
-    RSDT(Params *p);
+    RSDT(const Params &p);
 };
 
 class XSDT : public SysDescTable
@@ -117,7 +117,7 @@ class XSDT : public SysDescTable
     std::vector<SysDescTable *> entries;
 
   public:
-    XSDT(Params *p);
+    XSDT(const Params &p);
 };
 
 } // namespace ACPI

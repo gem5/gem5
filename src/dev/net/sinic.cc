@@ -71,27 +71,26 @@ const char *TxStateStrings[] =
 //
 // Sinic PCI Device
 //
-Base::Base(const Params *p)
+Base::Base(const Params &p)
     : EtherDevBase(p), rxEnable(false), txEnable(false),
-      intrDelay(p->intr_delay), intrTick(0), cpuIntrEnable(false),
+      intrDelay(p.intr_delay), intrTick(0), cpuIntrEnable(false),
       cpuPendingIntr(false), intrEvent(0), interface(NULL)
 {
 }
 
-Device::Device(const Params *p)
+Device::Device(const Params &p)
     : Base(p), rxUnique(0), txUnique(0),
-      virtualRegs(p->virtual_count < 1 ? 1 : p->virtual_count),
-      rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size),
+      virtualRegs(p.virtual_count < 1 ? 1 : p.virtual_count),
+      rxFifo(p.rx_fifo_size), txFifo(p.tx_fifo_size),
       rxKickTick(0), txKickTick(0),
       txEvent([this]{ txEventTransmit(); }, name()),
       rxDmaEvent([this]{ rxDmaDone(); }, name()),
       txDmaEvent([this]{ txDmaDone(); }, name()),
-      dmaReadDelay(p->dma_read_delay), dmaReadFactor(p->dma_read_factor),
-      dmaWriteDelay(p->dma_write_delay), dmaWriteFactor(p->dma_write_factor)
+      dmaReadDelay(p.dma_read_delay), dmaReadFactor(p.dma_read_factor),
+      dmaWriteDelay(p.dma_write_delay), dmaWriteFactor(p.dma_write_factor)
 {
     interface = new Interface(name() + ".int0", this);
     reset();
-
 }
 
 Device::~Device()
@@ -611,36 +610,36 @@ Device::reset()
     memset(&regs, 0, sizeof(regs));
 
     regs.Config = 0;
-    if (params()->rx_thread)
+    if (params().rx_thread)
         regs.Config |= Config_RxThread;
-    if (params()->tx_thread)
+    if (params().tx_thread)
         regs.Config |= Config_TxThread;
-    if (params()->rss)
+    if (params().rss)
         regs.Config |= Config_RSS;
-    if (params()->zero_copy)
+    if (params().zero_copy)
         regs.Config |= Config_ZeroCopy;
-    if (params()->delay_copy)
+    if (params().delay_copy)
         regs.Config |= Config_DelayCopy;
-    if (params()->virtual_addr)
+    if (params().virtual_addr)
         regs.Config |= Config_Vaddr;
 
-    if (params()->delay_copy && params()->zero_copy)
+    if (params().delay_copy && params().zero_copy)
         panic("Can't delay copy and zero copy");
 
     regs.IntrMask = Intr_Soft | Intr_RxHigh | Intr_RxPacket | Intr_TxLow;
-    regs.RxMaxCopy = params()->rx_max_copy;
-    regs.TxMaxCopy = params()->tx_max_copy;
-    regs.ZeroCopySize = params()->zero_copy_size;
-    regs.ZeroCopyMark = params()->zero_copy_threshold;
-    regs.VirtualCount = params()->virtual_count;
-    regs.RxMaxIntr = params()->rx_max_intr;
-    regs.RxFifoSize = params()->rx_fifo_size;
-    regs.TxFifoSize = params()->tx_fifo_size;
-    regs.RxFifoLow = params()->rx_fifo_low_mark;
-    regs.TxFifoLow = params()->tx_fifo_threshold;
-    regs.RxFifoHigh = params()->rx_fifo_threshold;
-    regs.TxFifoHigh = params()->tx_fifo_high_mark;
-    regs.HwAddr = params()->hardware_address;
+    regs.RxMaxCopy = params().rx_max_copy;
+    regs.TxMaxCopy = params().tx_max_copy;
+    regs.ZeroCopySize = params().zero_copy_size;
+    regs.ZeroCopyMark = params().zero_copy_threshold;
+    regs.VirtualCount = params().virtual_count;
+    regs.RxMaxIntr = params().rx_max_intr;
+    regs.RxFifoSize = params().rx_fifo_size;
+    regs.TxFifoSize = params().tx_fifo_size;
+    regs.RxFifoLow = params().rx_fifo_low_mark;
+    regs.TxFifoLow = params().tx_fifo_threshold;
+    regs.RxFifoHigh = params().rx_fifo_threshold;
+    regs.TxFifoHigh = params().tx_fifo_high_mark;
+    regs.HwAddr = params().hardware_address;
 
     if (regs.RxMaxCopy < regs.ZeroCopyMark)
         panic("Must be able to copy at least as many bytes as the threshold");
@@ -1500,7 +1499,7 @@ Device::unserialize(CheckpointIn &cp)
 } // namespace Sinic
 
 Sinic::Device *
-SinicParams::create()
+SinicParams::create() const
 {
-    return new Sinic::Device(this);
+    return new Sinic::Device(*this);
 }

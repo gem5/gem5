@@ -146,13 +146,13 @@ class ArmSystem : public System
     static constexpr Addr PageShift = ArmISA::PageShift;
 
     typedef ArmSystemParams Params;
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
 
-    ArmSystem(Params *p);
+    ArmSystem(const Params &p);
 
     /** true if this a multiprocessor system */
     bool multiProc;

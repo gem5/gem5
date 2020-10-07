@@ -205,7 +205,7 @@ Trace::ExeTracerRecord::dump()
 //  ExeTracer Simulation Object
 //
 Trace::ExeTracer *
-ExeTracerParams::create()
+ExeTracerParams::create() const
 {
-    return new Trace::ExeTracer(this);
+    return new Trace::ExeTracer(*this);
 }

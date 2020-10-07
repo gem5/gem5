@@ -42,9 +42,9 @@
 #include "mem/packet_access.hh"
 #include "params/PciVirtIO.hh"
 
-PciVirtIO::PciVirtIO(const Params *params)
+PciVirtIO::PciVirtIO(const Params &params)
     : PciDevice(params), queueNotify(0), interruptDeliveryPending(false),
-      vio(*params->vio)
+      vio(*params.vio)
 {
     // Override the subsystem ID with the device ID from VirtIO
     config.subsystemID = htole(vio.deviceId);
@@ -224,7 +224,7 @@ PciVirtIO::kick()
 }
 
 PciVirtIO *
-PciVirtIOParams::create()
+PciVirtIOParams::create() const
 {
-    return new PciVirtIO(this);
+    return new PciVirtIO(*this);
 }

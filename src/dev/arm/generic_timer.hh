@@ -100,7 +100,7 @@ class SystemCounter : public SimObject
     static constexpr size_t MAX_FREQ_ENTRIES = 1004;
 
   public:
-    SystemCounter(SystemCounterParams *const p);
+    SystemCounter(const SystemCounterParams &p);
 
     /// Validates a System Counter reference
     /// @param sys_cnt System counter reference to validate
@@ -276,9 +276,9 @@ class ArchTimerKvm : public ArchTimer
 class GenericTimer : public SimObject
 {
   public:
-    const GenericTimerParams * params() const;
+    const GenericTimerParams &params() const;
 
-    GenericTimer(GenericTimerParams *const p);
+    GenericTimer(const GenericTimerParams &p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -392,7 +392,7 @@ class GenericTimerISA : public ArmISA::BaseISADevice
 class GenericTimerFrame : public PioDevice
 {
   public:
-    GenericTimerFrame(GenericTimerFrameParams *const p);
+    GenericTimerFrame(const GenericTimerFrameParams &p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -496,7 +496,7 @@ class GenericTimerFrame : public PioDevice
 class GenericTimerMem : public PioDevice
 {
   public:
-    GenericTimerMem(GenericTimerMemParams *const p);
+    GenericTimerMem(const GenericTimerMemParams &p);
 
     /// Validates a Generic Timer register frame address range
     /// @param base_addr Range of the register frame

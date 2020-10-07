@@ -78,19 +78,19 @@ DefaultCommit<Impl>::processTrapEvent(ThreadID tid)
 }
 
 template <class Impl>
-DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
-    : commitPolicy(params->smtCommitPolicy),
+DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, const DerivO3CPUParams &params)
+    : commitPolicy(params.smtCommitPolicy),
       cpu(_cpu),
-      iewToCommitDelay(params->iewToCommitDelay),
-      commitToIEWDelay(params->commitToIEWDelay),
-      renameToROBDelay(params->renameToROBDelay),
-      fetchToCommitDelay(params->commitToFetchDelay),
-      renameWidth(params->renameWidth),
-      commitWidth(params->commitWidth),
-      numThreads(params->numThreads),
+      iewToCommitDelay(params.iewToCommitDelay),
+      commitToIEWDelay(params.commitToIEWDelay),
+      renameToROBDelay(params.renameToROBDelay),
+      fetchToCommitDelay(params.commitToFetchDelay),
+      renameWidth(params.renameWidth),
+      commitWidth(params.commitWidth),
+      numThreads(params.numThreads),
       drainPending(false),
       drainImminent(false),
-      trapLatency(params->trapLatency),
+      trapLatency(params.trapLatency),
       canHandleInterrupts(true),
       avoidQuiesceLiveLock(false),
       stats(_cpu, this)

@@ -57,7 +57,7 @@ class DMASequencer : public RubyPort
 {
   public:
     typedef DMASequencerParams Params;
-    DMASequencer(const Params *);
+    DMASequencer(const Params &);
     void init() override;
 
     /* external interface */

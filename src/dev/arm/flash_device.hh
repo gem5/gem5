@@ -56,7 +56,7 @@ class FlashDevice : public AbstractNVM
   public:
 
     /** Initialize functions*/
-    FlashDevice(const FlashDeviceParams*);
+    FlashDevice(const FlashDeviceParams &);
     ~FlashDevice();
 
     /** Checkpoint functions*/

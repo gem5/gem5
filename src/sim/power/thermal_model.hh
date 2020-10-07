@@ -60,7 +60,7 @@ class ThermalResistor : public SimObject, public ThermalEntity
 {
   public:
     typedef ThermalResistorParams Params;
-    ThermalResistor(const Params *p);
+    ThermalResistor(const Params &p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -89,7 +89,7 @@ class ThermalCapacitor : public SimObject, public ThermalEntity
 {
   public:
     typedef ThermalCapacitorParams Params;
-    ThermalCapacitor(const Params *p);
+    ThermalCapacitor(const Params &p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -117,9 +117,11 @@ class ThermalReference : public SimObject, public ThermalEntity
 {
   public:
     typedef ThermalReferenceParams Params;
-    ThermalReference(const Params *p);
+    ThermalReference(const Params &p);
 
-    void setNode(ThermalNode * n) {
+    void
+    setNode(ThermalNode *n)
+    {
         node = n;
     }
 
@@ -148,7 +150,7 @@ class ThermalModel : public ClockedObject
 {
   public:
     typedef ThermalModelParams Params;
-    ThermalModel(const Params *p);
+    ThermalModel(const Params &p);
 
     void addDomain(ThermalDomain * d);
     void addReference(ThermalReference * r);

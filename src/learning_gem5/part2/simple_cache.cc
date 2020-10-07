@@ -32,21 +32,20 @@
 #include "debug/SimpleCache.hh"
 #include "sim/system.hh"
 
-SimpleCache::SimpleCache(SimpleCacheParams *params) :
+SimpleCache::SimpleCache(const SimpleCacheParams &params) :
     ClockedObject(params),
-    latency(params->latency),
-    blockSize(params->system->cacheLineSize()),
-    capacity(params->size / blockSize),
-    memPort(params->name + ".mem_side", this),
+    latency(params.latency),
+    blockSize(params.system->cacheLineSize()),
+    capacity(params.size / blockSize),
+    memPort(params.name + ".mem_side", this),
     blocked(false), originalPacket(nullptr), waitingPortId(-1), stats(this)
 {
     // Since the CPU side ports are a vector of ports, create an instance of
     // the CPUSidePort for each connection. This member of params is
     // automatically created depending on the name of the vector port and
     // holds the number of connections to this port name
-    for (int i = 0; i < params->port_cpu_side_connection_count; ++i) {
-        cpuPorts.emplace_back(name() + csprintf(".cpu_side[%d]", i),
-                                                             i, this);
+    for (int i = 0; i < params.port_cpu_side_connection_count; ++i) {
+        cpuPorts.emplace_back(name() + csprintf(".cpu_side[%d]", i), i, this);
     }
 }
 
@@ -435,7 +434,7 @@ SimpleCache::SimpleCacheStats::SimpleCacheStats(Stats::Group *parent)
 
 
 SimpleCache*
-SimpleCacheParams::create()
+SimpleCacheParams::create() const
 {
-    return new SimpleCache(this);
+    return new SimpleCache(*this);
 }

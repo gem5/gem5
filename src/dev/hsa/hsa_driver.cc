@@ -45,8 +45,8 @@
 #include "sim/proxy_ptr.hh"
 #include "sim/syscall_emul_buf.hh"
 
-HSADriver::HSADriver(HSADriverParams *p)
-    : EmulatedDriver(p), device(p->device), queueId(0)
+HSADriver::HSADriver(const HSADriverParams &p)
+    : EmulatedDriver(p), device(p.device), queueId(0)
 {
 }
 

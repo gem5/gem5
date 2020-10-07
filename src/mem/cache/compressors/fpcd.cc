@@ -37,7 +37,7 @@
 
 namespace Compressor {
 
-FPCD::FPCD(const Params *p)
+FPCD::FPCD(const Params &p)
     : DictionaryCompressor<uint32_t>(p)
 {
 }
@@ -77,7 +77,7 @@ FPCD::compress(const std::vector<Chunk>& chunks,
 } // namespace Compressor
 
 Compressor::FPCD*
-FPCDParams::create()
+FPCDParams::create() const
 {
-    return new Compressor::FPCD(this);
+    return new Compressor::FPCD(*this);
 }

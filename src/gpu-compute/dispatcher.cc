@@ -44,7 +44,7 @@
 #include "sim/syscall_emul_buf.hh"
 #include "sim/system.hh"
 
-GPUDispatcher::GPUDispatcher(const Params *p)
+GPUDispatcher::GPUDispatcher(const Params &p)
     : SimObject(p), shader(nullptr), gpuCmdProc(nullptr),
       tickEvent([this]{ exec(); },
           "GPU Dispatcher tick", false, Event::CPU_Tick_Pri),
@@ -361,7 +361,8 @@ GPUDispatcher::scheduleDispatch()
     }
 }
 
-GPUDispatcher *GPUDispatcherParams::create()
+GPUDispatcher *
+GPUDispatcherParams::create() const
 {
-    return new GPUDispatcher(this);
+    return new GPUDispatcher(*this);
 }

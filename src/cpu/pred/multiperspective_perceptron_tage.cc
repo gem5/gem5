@@ -243,9 +243,9 @@ MPP_TAGE::isHighConfidence(TAGEBase::BranchInfo *bi) const
 }
 
 MPP_TAGE*
-MPP_TAGEParams::create()
+MPP_TAGEParams::create() const
 {
-    return new MPP_TAGE(this);
+    return new MPP_TAGE(*this);
 }
 
 bool
@@ -262,15 +262,15 @@ MPP_LoopPredictor::optionalAgeInc() const
 }
 
 MPP_LoopPredictor*
-MPP_LoopPredictorParams::create()
+MPP_LoopPredictorParams::create() const
 {
-    return new MPP_LoopPredictor(this);
+    return new MPP_LoopPredictor(*this);
 }
 
 MPP_StatisticalCorrector::MPP_StatisticalCorrector(
-        const MPP_StatisticalCorrectorParams *p) : StatisticalCorrector(p),
-    thirdH(0), pnb(p->pnb), logPnb(p->logPnb), pm(p->pm), gnb(p->gnb),
-    logGnb(p->logGnb), gm(p->gm)
+        const MPP_StatisticalCorrectorParams &p) : StatisticalCorrector(p),
+    thirdH(0), pnb(p.pnb), logPnb(p.logPnb), pm(p.pm), gnb(p.gnb),
+    logGnb(p.logGnb), gm(p.gm)
 {
     initGEHLTable(pnb, pm, pgehl, logPnb, wp, -1);
     initGEHLTable(gnb, gm, ggehl, logGnb, wg, -1);
@@ -385,10 +385,10 @@ MPP_StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc,
 }
 
 MultiperspectivePerceptronTAGE::MultiperspectivePerceptronTAGE(
-    const MultiperspectivePerceptronTAGEParams *p)
-  : MultiperspectivePerceptron(p), tage(p->tage),
-    loopPredictor(p->loop_predictor),
-    statisticalCorrector(p->statistical_corrector)
+    const MultiperspectivePerceptronTAGEParams &p)
+  : MultiperspectivePerceptron(p), tage(p.tage),
+    loopPredictor(p.loop_predictor),
+    statisticalCorrector(p.statistical_corrector)
 {
     fatal_if(tage->isSpeculativeUpdateEnabled(),
         "Speculative updates support is not implemented");

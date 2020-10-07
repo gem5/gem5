@@ -50,7 +50,7 @@ class ThreadContext;
 class BaseTLB : public SimObject
 {
   protected:
-    BaseTLB(const Params *p) : SimObject(p) {}
+    BaseTLB(const Params &p) : SimObject(p) {}
 
   public:
 

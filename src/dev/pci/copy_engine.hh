@@ -150,12 +150,12 @@ class CopyEngine : public PciDevice
 
   public:
     typedef CopyEngineParams Params;
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
-    CopyEngine(const Params *params);
+    CopyEngine(const Params &params);
     ~CopyEngine();
 
     void regStats() override;

@@ -58,7 +58,7 @@ class PS2TouchKit : public PS2Device, public VncMouse
     };
 
   public:
-    PS2TouchKit(const PS2TouchKitParams *p);
+    PS2TouchKit(const PS2TouchKitParams &p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

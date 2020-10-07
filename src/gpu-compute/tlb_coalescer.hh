@@ -66,7 +66,7 @@ class TLBCoalescer : public ClockedObject
 {
   public:
     typedef TLBCoalescerParams Params;
-    TLBCoalescer(const Params *p);
+    TLBCoalescer(const Params &p);
     ~TLBCoalescer() { }
 
     // Number of TLB probes per cycle. Parameterizable - default 2.

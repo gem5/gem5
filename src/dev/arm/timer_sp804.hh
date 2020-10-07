@@ -130,16 +130,16 @@ class Sp804 : public AmbaPioDevice
 
   public:
     typedef Sp804Params Params;
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
     /**
       * The constructor for RealView just registers itself with the MMU.
       * @param p params structure
       */
-    Sp804(Params *p);
+    Sp804(const Params &p);
 
     /**
      * Handle a read to the device

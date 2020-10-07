@@ -63,12 +63,12 @@ HTMSequencer::htmRetCodeConversion(
 }
 
 HTMSequencer *
-RubyHTMSequencerParams::create()
+RubyHTMSequencerParams::create() const
 {
-    return new HTMSequencer(this);
+    return new HTMSequencer(*this);
 }
 
-HTMSequencer::HTMSequencer(const RubyHTMSequencerParams *p)
+HTMSequencer::HTMSequencer(const RubyHTMSequencerParams &p)
     : Sequencer(p)
 {
     m_htmstart_tick = 0;

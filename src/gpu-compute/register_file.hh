@@ -58,7 +58,7 @@ struct RegisterFileParams;
 class RegisterFile : public SimObject
 {
   public:
-    RegisterFile(const RegisterFileParams *p);
+    RegisterFile(const RegisterFileParams &p);
     virtual ~RegisterFile();
     virtual void setParent(ComputeUnit *_computeUnit);
     int numRegs() const { return _numRegs; }

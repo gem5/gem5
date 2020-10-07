@@ -36,7 +36,7 @@ namespace Iris
 class TLB : public BaseTLB
 {
   public:
-    TLB(const Params *p) : BaseTLB(p) {}
+    TLB(const Params &p) : BaseTLB(p) {}
 
     void demapPage(Addr vaddr, uint64_t asn) override {}
     void flushAll() override {}

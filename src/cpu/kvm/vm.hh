@@ -291,7 +291,7 @@ class KvmVM : public SimObject
     friend class BaseKvmCPU;
 
   public:
-    KvmVM(KvmVMParams *params);
+    KvmVM(const KvmVMParams &params);
     virtual ~KvmVM();
 
     void notifyFork();

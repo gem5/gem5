@@ -71,7 +71,7 @@ class ScoreboardCheckStage
         NRDY_CONDITIONS
     };
 
-    ScoreboardCheckStage(const ComputeUnitParams* p, ComputeUnit &cu,
+    ScoreboardCheckStage(const ComputeUnitParams &p, ComputeUnit &cu,
                          ScoreboardCheckToSchedule &to_schedule);
     ~ScoreboardCheckStage();
     void exec();

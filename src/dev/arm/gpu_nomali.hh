@@ -50,7 +50,7 @@ class RealView;
 class NoMaliGpu : public PioDevice
 {
   public:
-    NoMaliGpu(const NoMaliGpuParams *p);
+    NoMaliGpu(const NoMaliGpuParams &p);
     virtual ~NoMaliGpu();
 
     void init() override;
@@ -188,7 +188,7 @@ class NoMaliGpu : public PioDevice
 class CustomNoMaliGpu : public NoMaliGpu
 {
   public:
-    CustomNoMaliGpu(const CustomNoMaliGpuParams *p);
+    CustomNoMaliGpu(const CustomNoMaliGpuParams &p);
     virtual ~CustomNoMaliGpu();
 
   protected:

@@ -80,17 +80,17 @@
 using namespace std;
 using m5::stl_helpers::operator<<;
 
-Profiler::Profiler(const RubySystemParams *p, RubySystem *rs)
-    : m_ruby_system(rs), m_hot_lines(p->hot_lines),
-      m_all_instructions(p->all_instructions),
-      m_num_vnets(p->number_of_virtual_networks)
+Profiler::Profiler(const RubySystemParams &p, RubySystem *rs)
+    : m_ruby_system(rs), m_hot_lines(p.hot_lines),
+      m_all_instructions(p.all_instructions),
+      m_num_vnets(p.number_of_virtual_networks)
 {
-    m_address_profiler_ptr = new AddressProfiler(p->num_of_sequencers, this);
+    m_address_profiler_ptr = new AddressProfiler(p.num_of_sequencers, this);
     m_address_profiler_ptr->setHotLines(m_hot_lines);
     m_address_profiler_ptr->setAllInstructions(m_all_instructions);
 
     if (m_all_instructions) {
-        m_inst_profiler_ptr = new AddressProfiler(p->num_of_sequencers, this);
+        m_inst_profiler_ptr = new AddressProfiler(p.num_of_sequencers, this);
         m_inst_profiler_ptr->setHotLines(m_hot_lines);
         m_inst_profiler_ptr->setAllInstructions(m_all_instructions);
     }

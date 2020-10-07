@@ -55,13 +55,13 @@
 class AmbaFake : public AmbaPioDevice
 {
   public:
-   typedef AmbaFakeParams Params;
-   const Params *
+    typedef AmbaFakeParams Params;
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
-    AmbaFake(const Params *p);
+    AmbaFake(const Params &p);
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);

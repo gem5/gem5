@@ -74,7 +74,7 @@ TimingSimpleCPU::TimingCPUPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
     cpu->schedule(this, t);
 }
 
-TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
+TimingSimpleCPU::TimingSimpleCPU(const TimingSimpleCPUParams &p)
     : BaseSimpleCPU(p), fetchTranslation(this), icachePort(this),
       dcachePort(this), ifetch_pkt(NULL), dcache_pkt(NULL), previousCycle(0),
       fetchEvent([this]{ fetch(); }, name())
@@ -1297,7 +1297,7 @@ TimingSimpleCPU::htmSendAbortSignal(HtmFailureFaultCause cause)
 //  TimingSimpleCPU Simulation Object
 //
 TimingSimpleCPU *
-TimingSimpleCPUParams::create()
+TimingSimpleCPUParams::create() const
 {
-    return new TimingSimpleCPU(this);
+    return new TimingSimpleCPU(*this);
 }

@@ -41,18 +41,18 @@
 #include "debug/RubyNetwork.hh"
 #include "params/GarnetIntLink.hh"
 
-NetworkBridge::NetworkBridge(const Params *p)
+NetworkBridge::NetworkBridge(const Params &p)
     :CreditLink(p)
 {
     enCdc = true;
     enSerDes = true;
-    mType = p->vtype;
+    mType = p.vtype;
 
-    cdcLatency = p->cdc_latency;
-    serDesLatency = p->serdes_latency;
+    cdcLatency = p.cdc_latency;
+    serDesLatency = p.serdes_latency;
     lastScheduledAt = 0;
 
-    nLink = p->link;
+    nLink = p.link;
     if (mType == Enums::LINK_OBJECT) {
         nLink->setLinkConsumer(this);
         setSourceQueue(nLink->getBuffer(), nLink);
@@ -265,7 +265,7 @@ NetworkBridge::wakeup()
 }
 
 NetworkBridge *
-NetworkBridgeParams::create()
+NetworkBridgeParams::create() const
 {
-    return new NetworkBridge(this);
+    return new NetworkBridge(*this);
 }

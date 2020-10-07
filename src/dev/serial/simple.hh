@@ -46,7 +46,7 @@ struct SimpleUartParams;
 class SimpleUart : public Uart
 {
   public:
-    SimpleUart(const SimpleUartParams *p);
+    SimpleUart(const SimpleUartParams &p);
 
   public: // PioDevice
     Tick read(PacketPtr pkt) override;

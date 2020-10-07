@@ -35,14 +35,14 @@
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 
-BiModeBP::BiModeBP(const BiModeBPParams *params)
+BiModeBP::BiModeBP(const BiModeBPParams &params)
     : BPredUnit(params),
-      globalHistoryReg(params->numThreads, 0),
-      globalHistoryBits(ceilLog2(params->globalPredictorSize)),
-      choicePredictorSize(params->choicePredictorSize),
-      choiceCtrBits(params->choiceCtrBits),
-      globalPredictorSize(params->globalPredictorSize),
-      globalCtrBits(params->globalCtrBits),
+      globalHistoryReg(params.numThreads, 0),
+      globalHistoryBits(ceilLog2(params.globalPredictorSize)),
+      choicePredictorSize(params.choicePredictorSize),
+      choiceCtrBits(params.choiceCtrBits),
+      globalPredictorSize(params.globalPredictorSize),
+      globalCtrBits(params.globalCtrBits),
       choiceCounters(choicePredictorSize, SatCounter(choiceCtrBits)),
       takenCounters(globalPredictorSize, SatCounter(globalCtrBits)),
       notTakenCounters(globalPredictorSize, SatCounter(globalCtrBits))
@@ -227,7 +227,7 @@ BiModeBP::updateGlobalHistReg(ThreadID tid, bool taken)
 }
 
 BiModeBP*
-BiModeBPParams::create()
+BiModeBPParams::create() const
 {
-    return new BiModeBP(this);
+    return new BiModeBP(*this);
 }

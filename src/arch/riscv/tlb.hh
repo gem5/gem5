@@ -83,7 +83,7 @@ class TLB : public BaseTLB
 
   public:
     typedef RiscvTLBParams Params;
-    TLB(const Params *p);
+    TLB(const Params &p);
 
     Walker *getWalker();
 

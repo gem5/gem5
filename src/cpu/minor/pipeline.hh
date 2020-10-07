@@ -105,7 +105,7 @@ class Pipeline : public Ticked
     bool needToSignalDrained;
 
   public:
-    Pipeline(MinorCPU &cpu_, MinorCPUParams &params);
+    Pipeline(MinorCPU &cpu_, const MinorCPUParams &params);
 
   public:
     /** Wake up the Fetch unit.  This is needed on thread activation esp.

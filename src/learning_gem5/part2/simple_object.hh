@@ -35,7 +35,7 @@
 class SimpleObject : public SimObject
 {
   public:
-    SimpleObject(SimpleObjectParams *p);
+    SimpleObject(const SimpleObjectParams &p);
 };
 
 #endif // __LEARNING_GEM5_SIMPLE_OBJECT_HH__

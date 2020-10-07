@@ -50,7 +50,7 @@ struct ThermalNodeParams;
 class ThermalNode : public SimObject
 {
   public:
-    ThermalNode(const ThermalNodeParams *p);
+    ThermalNode(const ThermalNodeParams &p);
 
     int id;
     bool isref;

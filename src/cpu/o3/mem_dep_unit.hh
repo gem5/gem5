@@ -90,7 +90,7 @@ class MemDepUnit
     MemDepUnit();
 
     /** Constructs a MemDepUnit with given parameters. */
-    MemDepUnit(DerivO3CPUParams *params);
+    MemDepUnit(const DerivO3CPUParams &params);
 
     /** Frees up any memory allocated. */
     ~MemDepUnit();
@@ -99,7 +99,7 @@ class MemDepUnit
     std::string name() const { return _name; }
 
     /** Initializes the unit with parameters and a thread id. */
-    void init(DerivO3CPUParams *params, ThreadID tid);
+    void init(const DerivO3CPUParams &params, ThreadID tid);
 
     /** Registers statistics. */
     void regStats();

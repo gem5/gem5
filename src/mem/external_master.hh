@@ -115,7 +115,7 @@ class ExternalMaster : public SimObject
     static std::map<std::string, Handler *> portHandlers;
 
   public:
-    ExternalMaster(ExternalMasterParams *params);
+    ExternalMaster(const ExternalMasterParams &params);
 
     /** Port interface.  Responds only to port "port" */
     Port &getPort(const std::string &if_name,

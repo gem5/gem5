@@ -46,9 +46,9 @@
 
 uint32_t FetchUnit::globalFetchUnitID;
 
-FetchUnit::FetchUnit(const ComputeUnitParams *p, ComputeUnit &cu)
+FetchUnit::FetchUnit(const ComputeUnitParams &p, ComputeUnit &cu)
     : timingSim(true), computeUnit(cu), fetchScheduler(p),
-      waveList(nullptr), fetchDepth(p->fetch_depth)
+      waveList(nullptr), fetchDepth(p.fetch_depth)
 {
 }
 

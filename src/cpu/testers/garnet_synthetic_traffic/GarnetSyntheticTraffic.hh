@@ -55,7 +55,7 @@ class GarnetSyntheticTraffic : public ClockedObject
 {
   public:
     typedef GarnetSyntheticTrafficParams Params;
-    GarnetSyntheticTraffic(const Params *p);
+    GarnetSyntheticTraffic(const Params &p);
 
     void init() override;
 

@@ -36,9 +36,7 @@
 class DerivO3CPU : public FullO3CPU<O3CPUImpl>
 {
   public:
-    DerivO3CPU(DerivO3CPUParams *p)
-        : FullO3CPU<O3CPUImpl>(p)
-    { }
+    DerivO3CPU(const DerivO3CPUParams &p) : FullO3CPU<O3CPUImpl>(p) {}
 };
 
 #endif // __CPU_O3_DERIV_HH__

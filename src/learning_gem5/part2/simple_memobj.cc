@@ -31,11 +31,11 @@
 #include "base/trace.hh"
 #include "debug/SimpleMemobj.hh"
 
-SimpleMemobj::SimpleMemobj(SimpleMemobjParams *params) :
+SimpleMemobj::SimpleMemobj(const SimpleMemobjParams &params) :
     SimObject(params),
-    instPort(params->name + ".inst_port", this),
-    dataPort(params->name + ".data_port", this),
-    memPort(params->name + ".mem_side", this),
+    instPort(params.name + ".inst_port", this),
+    dataPort(params.name + ".data_port", this),
+    memPort(params.name + ".mem_side", this),
     blocked(false)
 {
 }
@@ -232,7 +232,7 @@ SimpleMemobj::sendRangeChange()
 
 
 SimpleMemobj*
-SimpleMemobjParams::create()
+SimpleMemobjParams::create() const
 {
-    return new SimpleMemobj(this);
+    return new SimpleMemobj(*this);
 }

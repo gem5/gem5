@@ -96,7 +96,7 @@ class RubyPrefetcher : public SimObject
 {
     public:
         typedef RubyPrefetcherParams Params;
-        RubyPrefetcher(const Params *p);
+        RubyPrefetcher(const Params &p);
         ~RubyPrefetcher() = default;
 
         void issueNextPrefetch(Addr address, PrefetchEntry *stream);

@@ -47,7 +47,7 @@ class Tagged : public Queued
       const int degree;
 
   public:
-    Tagged(const TaggedPrefetcherParams *p);
+    Tagged(const TaggedPrefetcherParams &p);
     ~Tagged() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,

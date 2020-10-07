@@ -39,14 +39,14 @@
 
 using namespace std;
 
-EtherSwitch::EtherSwitch(const Params *p)
-    : SimObject(p), ttl(p->time_to_live)
+EtherSwitch::EtherSwitch(const Params &p)
+    : SimObject(p), ttl(p.time_to_live)
 {
-    for (int i = 0; i < p->port_interface_connection_count; ++i) {
+    for (int i = 0; i < p.port_interface_connection_count; ++i) {
         std::string interfaceName = csprintf("%s.interface%d", name(), i);
         Interface *interface = new Interface(interfaceName, this,
-                                        p->output_buffer_size, p->delay,
-                                        p->delay_var, p->fabric_speed, i);
+                                        p.output_buffer_size, p.delay,
+                                        p.delay_var, p.fabric_speed, i);
         interfaces.push_back(interface);
     }
 }
@@ -347,7 +347,7 @@ EtherSwitch::Interface::PortFifo::unserialize(CheckpointIn &cp)
 }
 
 EtherSwitch *
-EtherSwitchParams::create()
+EtherSwitchParams::create() const
 {
-    return new EtherSwitch(this);
+    return new EtherSwitch(*this);
 }

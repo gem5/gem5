@@ -52,13 +52,13 @@
 using namespace std;
 using m5::stl_helpers::operator<<;
 
-MessageBuffer::MessageBuffer(const Params *p)
+MessageBuffer::MessageBuffer(const Params &p)
     : SimObject(p), m_stall_map_size(0),
-    m_max_size(p->buffer_size), m_time_last_time_size_checked(0),
+    m_max_size(p.buffer_size), m_time_last_time_size_checked(0),
     m_time_last_time_enqueue(0), m_time_last_time_pop(0),
-    m_last_arrival_time(0), m_strict_fifo(p->ordered),
-    m_randomization(p->randomization),
-    m_allow_zero_latency(p->allow_zero_latency)
+    m_last_arrival_time(0), m_strict_fifo(p.ordered),
+    m_randomization(p.randomization),
+    m_allow_zero_latency(p.allow_zero_latency)
 {
     m_msg_counter = 0;
     m_consumer = NULL;
@@ -530,7 +530,7 @@ MessageBuffer::functionalAccess(Packet *pkt, bool is_read)
 }
 
 MessageBuffer *
-MessageBufferParams::create()
+MessageBufferParams::create() const
 {
-    return new MessageBuffer(this);
+    return new MessageBuffer(*this);
 }

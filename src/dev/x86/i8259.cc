@@ -35,19 +35,19 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-X86ISA::I8259::I8259(Params * p)
+X86ISA::I8259::I8259(const Params &p)
     : BasicPioDevice(p, 2),
-      latency(p->pio_latency),
-      mode(p->mode), slave(p->slave),
+      latency(p.pio_latency),
+      mode(p.mode), slave(p.slave),
       IRR(0), ISR(0), IMR(0),
       readIRR(true), initControlWord(0), autoEOI(false)
 {
-    for (int i = 0; i < p->port_output_connection_count; i++) {
+    for (int i = 0; i < p.port_output_connection_count; i++) {
         output.push_back(new IntSourcePin<I8259>(
                     csprintf("%s.output[%d]", name(), i), i, this));
     }
 
-    int in_count = p->port_inputs_connection_count;
+    int in_count = p.port_inputs_connection_count;
     panic_if(in_count >= NumLines,
             "I8259 only supports 8 inputs, but there are %d.", in_count);
     for (int i = 0; i < in_count; i++) {
@@ -366,7 +366,7 @@ X86ISA::I8259::unserialize(CheckpointIn &cp)
 }
 
 X86ISA::I8259 *
-I8259Params::create()
+I8259Params::create() const
 {
-    return new X86ISA::I8259(this);
+    return new X86ISA::I8259(*this);
 }

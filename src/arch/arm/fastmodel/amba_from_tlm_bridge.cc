@@ -54,7 +54,7 @@ AmbaFromTlmBridge64::gem5_getPort(const std::string &if_name, int idx)
 } // namespace FastModel
 
 FastModel::AmbaFromTlmBridge64 *
-AmbaFromTlmBridge64Params::create()
+AmbaFromTlmBridge64Params::create() const
 {
     return new FastModel::AmbaFromTlmBridge64(name.c_str());
 }

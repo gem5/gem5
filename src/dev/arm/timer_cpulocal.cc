@@ -46,7 +46,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-CpuLocalTimer::CpuLocalTimer(Params *p)
+CpuLocalTimer::CpuLocalTimer(const Params &p)
     : BasicPioDevice(p, 0x38)
 {
 }
@@ -54,7 +54,7 @@ CpuLocalTimer::CpuLocalTimer(Params *p)
 void
 CpuLocalTimer::init()
 {
-   auto p = params();
+   const auto &p = params();
    // Initialize the timer registers for each per cpu timer
    for (int i = 0; i < sys->threads.size(); i++) {
         ThreadContext* tc = sys->threads[i];
@@ -63,8 +63,8 @@ CpuLocalTimer::init()
 
         localTimer.emplace_back(
             new Timer(oss.str(), this,
-                      p->int_timer->get(tc),
-                      p->int_watchdog->get(tc)));
+                      p.int_timer->get(tc),
+                      p.int_watchdog->get(tc)));
     }
 
     BasicPioDevice::init();
@@ -441,7 +441,7 @@ CpuLocalTimer::unserialize(CheckpointIn &cp)
 }
 
 CpuLocalTimer *
-CpuLocalTimerParams::create()
+CpuLocalTimerParams::create() const
 {
-    return new CpuLocalTimer(this);
+    return new CpuLocalTimer(*this);
 }

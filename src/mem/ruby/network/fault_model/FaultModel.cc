@@ -50,7 +50,7 @@ using namespace std;
 #define MAX(a,b) ((a > b) ? (a) : (b))
 
 
-FaultModel::FaultModel(const Params *p) : SimObject(p)
+FaultModel::FaultModel(const Params &p) : SimObject(p)
 {
     // read configurations into "configurations" vector
     // format: <buff/vc> <vcs> <10 fault types>
@@ -58,17 +58,17 @@ FaultModel::FaultModel(const Params *p) : SimObject(p)
     for (int i = 0; more_records; i += (fields_per_conf_record)){
         system_conf configuration;
         configuration.buff_per_vc =
-            p->baseline_fault_vector_database[i + conf_record_buff_per_vc];
+            p.baseline_fault_vector_database[i + conf_record_buff_per_vc];
         configuration.vcs =
-            p->baseline_fault_vector_database[i + conf_record_vcs];
+            p.baseline_fault_vector_database[i + conf_record_vcs];
         for (int fault_index = 0; fault_index < number_of_fault_types;
             fault_index++){
             configuration.fault_type[fault_index] =
-                p->baseline_fault_vector_database[i +
+                p.baseline_fault_vector_database[i +
                    conf_record_first_fault_type + fault_index] / 100;
         }
         configurations.push_back(configuration);
-        if (p->baseline_fault_vector_database[i+fields_per_conf_record] < 0){
+        if (p.baseline_fault_vector_database[i+fields_per_conf_record] < 0){
             more_records = false;
         }
     }
@@ -78,9 +78,9 @@ FaultModel::FaultModel(const Params *p) : SimObject(p)
     more_records = true;
     for (int i = 0; more_records; i += (fields_per_temperature_record)){
         int record_temperature =
-               p->temperature_weights_database[i + temperature_record_temp];
+               p.temperature_weights_database[i + temperature_record_temp];
         int record_weight =
-               p->temperature_weights_database[i + temperature_record_weight];
+               p.temperature_weights_database[i + temperature_record_weight];
         static int first_record = true;
         if (first_record){
             for (int temperature = 0; temperature < record_temperature;
@@ -91,7 +91,7 @@ FaultModel::FaultModel(const Params *p) : SimObject(p)
         }
         assert(record_temperature == temperature_weights.size());
         temperature_weights.push_back(record_weight);
-        if (p->temperature_weights_database[i +
+        if (p.temperature_weights_database[i +
                fields_per_temperature_record] < 0){
             more_records = false;
         }
@@ -269,7 +269,7 @@ FaultModel::print(void)
 }
 
 FaultModel *
-FaultModelParams::create()
+FaultModelParams::create() const
 {
-    return new FaultModel(this);
+    return new FaultModel(*this);
 }

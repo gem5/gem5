@@ -59,7 +59,7 @@ struct ComputeUnitParams;
 class ScheduleStage
 {
   public:
-    ScheduleStage(const ComputeUnitParams *p, ComputeUnit &cu,
+    ScheduleStage(const ComputeUnitParams &p, ComputeUnit &cu,
                   ScoreboardCheckToSchedule &from_scoreboard_check,
                   ScheduleToExecute &to_execute);
     ~ScheduleStage();

@@ -48,7 +48,7 @@
 
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 
-SetAssociative::SetAssociative(const Params *p)
+SetAssociative::SetAssociative(const Params &p)
     : BaseIndexingPolicy(p)
 {
 }
@@ -73,7 +73,7 @@ SetAssociative::getPossibleEntries(const Addr addr) const
 }
 
 SetAssociative*
-SetAssociativeParams::create()
+SetAssociativeParams::create() const
 {
-    return new SetAssociative(this);
+    return new SetAssociative(*this);
 }

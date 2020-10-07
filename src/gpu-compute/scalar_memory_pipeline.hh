@@ -59,7 +59,7 @@ class ComputeUnit;
 class ScalarMemPipeline
 {
   public:
-    ScalarMemPipeline(const ComputeUnitParams *p, ComputeUnit &cu);
+    ScalarMemPipeline(const ComputeUnitParams &p, ComputeUnit &cu);
     void exec();
 
     std::queue<GPUDynInstPtr> &getGMReqFIFO() { return issuedRequests; }

@@ -50,8 +50,8 @@
 
 using namespace std;
 
-SimpleDisk::SimpleDisk(const Params *p)
-    : SimObject(p), system(p->system), image(p->disk)
+SimpleDisk::SimpleDisk(const Params &p)
+    : SimObject(p), system(p.system), image(p.disk)
 {}
 
 SimpleDisk::~SimpleDisk()
@@ -84,7 +84,7 @@ SimpleDisk::write(Addr addr, baddr_t block, int count)
 }
 
 SimpleDisk *
-SimpleDiskParams::create()
+SimpleDiskParams::create() const
 {
-    return new SimpleDisk(this);
+    return new SimpleDisk(*this);
 }

@@ -164,15 +164,15 @@ KvmKernelGicV2::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
 
 
 
-MuxingKvmGic::MuxingKvmGic(const MuxingKvmGicParams *p)
+MuxingKvmGic::MuxingKvmGic(const MuxingKvmGicParams &p)
     : GicV2(p),
-      system(*p->system),
+      system(*p.system),
       kernelGic(nullptr),
       usingKvm(false)
 {
     if (auto vm = system.getKvmVM()) {
-        kernelGic = new KvmKernelGicV2(*vm, p->cpu_addr, p->dist_addr,
-                                       p->it_lines);
+        kernelGic = new KvmKernelGicV2(*vm, p.cpu_addr, p.dist_addr,
+                                       p.it_lines);
     }
 }
 
@@ -427,7 +427,7 @@ MuxingKvmGic::fromKvmToGicV2()
 }
 
 MuxingKvmGic *
-MuxingKvmGicParams::create()
+MuxingKvmGicParams::create() const
 {
-    return new MuxingKvmGic(this);
+    return new MuxingKvmGic(*this);
 }

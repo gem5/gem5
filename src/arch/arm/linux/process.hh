@@ -77,8 +77,8 @@ struct Result<ABI, SyscallReturn,
 class ArmLinuxProcess32 : public ArmProcess32, public ArmLinuxProcessBits
 {
   public:
-    ArmLinuxProcess32(ProcessParams * params, ::Loader::ObjectFile *objFile,
-                      ::Loader::Arch _arch);
+    ArmLinuxProcess32(const ProcessParams &params,
+                      ::Loader::ObjectFile *objFile, ::Loader::Arch _arch);
 
     void initState() override;
 
@@ -96,8 +96,8 @@ class ArmLinuxProcess32 : public ArmProcess32, public ArmLinuxProcessBits
 class ArmLinuxProcess64 : public ArmProcess64, public ArmLinuxProcessBits
 {
   public:
-    ArmLinuxProcess64(ProcessParams * params, ::Loader::ObjectFile *objFile,
-                      ::Loader::Arch _arch);
+    ArmLinuxProcess64(const ProcessParams &params,
+                      ::Loader::ObjectFile *objFile, ::Loader::Arch _arch);
 
     void initState() override;
     void syscall(ThreadContext *tc) override;

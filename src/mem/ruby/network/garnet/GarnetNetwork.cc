@@ -53,19 +53,19 @@ using namespace std;
  * (see configs/network/Network.py)
  */
 
-GarnetNetwork::GarnetNetwork(const Params *p)
+GarnetNetwork::GarnetNetwork(const Params &p)
     : Network(p)
 {
-    m_num_rows = p->num_rows;
-    m_ni_flit_size = p->ni_flit_size;
+    m_num_rows = p.num_rows;
+    m_ni_flit_size = p.ni_flit_size;
     m_max_vcs_per_vnet = 0;
-    m_buffers_per_data_vc = p->buffers_per_data_vc;
-    m_buffers_per_ctrl_vc = p->buffers_per_ctrl_vc;
-    m_routing_algorithm = p->routing_algorithm;
+    m_buffers_per_data_vc = p.buffers_per_data_vc;
+    m_buffers_per_ctrl_vc = p.buffers_per_ctrl_vc;
+    m_routing_algorithm = p.routing_algorithm;
 
-    m_enable_fault_model = p->enable_fault_model;
+    m_enable_fault_model = p.enable_fault_model;
     if (m_enable_fault_model)
-        fault_model = p->fault_model;
+        fault_model = p.fault_model;
 
     m_vnet_type.resize(m_virtual_networks);
 
@@ -77,8 +77,8 @@ GarnetNetwork::GarnetNetwork(const Params *p)
     }
 
     // record the routers
-    for (vector<BasicRouter*>::const_iterator i =  p->routers.begin();
-         i != p->routers.end(); ++i) {
+    for (vector<BasicRouter*>::const_iterator i =  p.routers.begin();
+         i != p.routers.end(); ++i) {
         Router* router = safe_cast<Router*>(*i);
         m_routers.push_back(router);
 
@@ -87,8 +87,8 @@ GarnetNetwork::GarnetNetwork(const Params *p)
     }
 
     // record the network interfaces
-    for (vector<ClockedObject*>::const_iterator i = p->netifs.begin();
-         i != p->netifs.end(); ++i) {
+    for (vector<ClockedObject*>::const_iterator i = p.netifs.begin();
+         i != p.netifs.end(); ++i) {
         NetworkInterface *ni = safe_cast<NetworkInterface *>(*i);
         m_nis.push_back(ni);
         ni->init_net_ptr(this);
@@ -507,7 +507,7 @@ GarnetNetwork::regStats()
 void
 GarnetNetwork::collateStats()
 {
-    RubySystem *rs = params()->ruby_system;
+    RubySystem *rs = params().ruby_system;
     double time_delta = double(curCycle() - rs->getStartCycle());
 
     for (int i = 0; i < m_networklinks.size(); i++) {
@@ -557,9 +557,9 @@ GarnetNetwork::print(ostream& out) const
 }
 
 GarnetNetwork *
-GarnetNetworkParams::create()
+GarnetNetworkParams::create() const
 {
-    return new GarnetNetwork(this);
+    return new GarnetNetwork(*this);
 }
 
 uint32_t

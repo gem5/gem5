@@ -42,14 +42,14 @@
 // Declare and initialize the static counter for number of trace CPUs.
 int TraceCPU::numTraceCPUs = 0;
 
-TraceCPU::TraceCPU(TraceCPUParams *params)
+TraceCPU::TraceCPU(const TraceCPUParams &params)
     :   BaseCPU(params),
         icachePort(this),
         dcachePort(this),
-        instRequestorID(params->system->getRequestorId(this, "inst")),
-        dataRequestorID(params->system->getRequestorId(this, "data")),
-        instTraceFile(params->instTraceFile),
-        dataTraceFile(params->dataTraceFile),
+        instRequestorID(params.system->getRequestorId(this, "inst")),
+        dataRequestorID(params.system->getRequestorId(this, "data")),
+        instTraceFile(params.instTraceFile),
+        dataTraceFile(params.dataTraceFile),
         icacheGen(*this, ".iside", icachePort, instRequestorID, instTraceFile),
         dcacheGen(*this, ".dside", dcachePort, dataRequestorID, dataTraceFile,
                   params),
@@ -58,23 +58,23 @@ TraceCPU::TraceCPU(TraceCPUParams *params)
         oneTraceComplete(false),
         traceOffset(0),
         execCompleteEvent(nullptr),
-        enableEarlyExit(params->enableEarlyExit),
-        progressMsgInterval(params->progressMsgInterval),
-        progressMsgThreshold(params->progressMsgInterval), traceStats(this)
+        enableEarlyExit(params.enableEarlyExit),
+        progressMsgInterval(params.progressMsgInterval),
+        progressMsgThreshold(params.progressMsgInterval), traceStats(this)
 {
     // Increment static counter for number of Trace CPUs.
     ++TraceCPU::numTraceCPUs;
 
     // Check that the python parameters for sizes of ROB, store buffer and
     // load buffer do not overflow the corresponding C++ variables.
-    fatal_if(params->sizeROB > UINT16_MAX, "ROB size set to %d exceeds the "
-                "max. value of %d.\n", params->sizeROB, UINT16_MAX);
-    fatal_if(params->sizeStoreBuffer > UINT16_MAX, "ROB size set to %d "
-                "exceeds the max. value of %d.\n", params->sizeROB,
+    fatal_if(params.sizeROB > UINT16_MAX, "ROB size set to %d exceeds the "
+                "max. value of %d.\n", params.sizeROB, UINT16_MAX);
+    fatal_if(params.sizeStoreBuffer > UINT16_MAX, "ROB size set to %d "
+                "exceeds the max. value of %d.\n", params.sizeROB,
                 UINT16_MAX);
-    fatal_if(params->sizeLoadBuffer > UINT16_MAX, "Load buffer size set to"
+    fatal_if(params.sizeLoadBuffer > UINT16_MAX, "Load buffer size set to"
                 " %d exceeds the max. value of %d.\n",
-                params->sizeLoadBuffer, UINT16_MAX);
+                params.sizeLoadBuffer, UINT16_MAX);
 }
 
 TraceCPU::~TraceCPU()
@@ -83,9 +83,9 @@ TraceCPU::~TraceCPU()
 }
 
 TraceCPU*
-TraceCPUParams::create()
+TraceCPUParams::create() const
 {
-    return new TraceCPU(this);
+    return new TraceCPU(*this);
 }
 
 void

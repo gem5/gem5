@@ -77,7 +77,7 @@ struct BaseKvmCPUParams;
 class BaseKvmCPU : public BaseCPU
 {
   public:
-    BaseKvmCPU(BaseKvmCPUParams *params);
+    BaseKvmCPU(const BaseKvmCPUParams &params);
     virtual ~BaseKvmCPU();
 
     void init() override;

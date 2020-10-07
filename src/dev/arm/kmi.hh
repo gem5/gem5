@@ -126,7 +126,7 @@ class Pl050 : public AmbaIntDevice
     PS2Device *ps2;
 
   public:
-    Pl050(const Pl050Params *p);
+    Pl050(const Pl050Params &p);
 
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;

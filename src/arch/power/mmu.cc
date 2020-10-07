@@ -38,7 +38,7 @@
 #include "arch/power/mmu.hh"
 
 PowerISA::MMU *
-PowerMMUParams::create()
+PowerMMUParams::create() const
 {
-    return new PowerISA::MMU(this);
+    return new PowerISA::MMU(*this);
 }

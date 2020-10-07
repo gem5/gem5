@@ -35,9 +35,9 @@
 
 namespace BloomFilter {
 
-Block::Block(const BloomFilterBlockParams* p)
-    : Base(p), masksLSBs(p->masks_lsbs),
-      masksSizes(p->masks_sizes)
+Block::Block(const BloomFilterBlockParams &p)
+    : Base(p), masksLSBs(p.masks_lsbs),
+      masksSizes(p.masks_sizes)
 {
     fatal_if(masksLSBs.size() != masksSizes.size(),
         "Masks haven't been properly provided");
@@ -92,8 +92,8 @@ Block::hash(Addr addr) const
 } // namespace BloomFilter
 
 BloomFilter::Block*
-BloomFilterBlockParams::create()
+BloomFilterBlockParams::create() const
 {
-    return new BloomFilter::Block(this);
+    return new BloomFilter::Block(*this);
 }
 

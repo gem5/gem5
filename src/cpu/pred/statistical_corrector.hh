@@ -210,7 +210,7 @@ class StatisticalCorrector : public SimObject
         bool usedScPred;
     };
 
-    StatisticalCorrector(const StatisticalCorrectorParams *p);
+    StatisticalCorrector(const StatisticalCorrectorParams &p);
 
     virtual BranchInfo *makeBranchInfo();
     virtual SCThreadHistory *makeThreadHistory();

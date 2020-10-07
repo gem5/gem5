@@ -60,7 +60,7 @@ class LFU : public Base
 
   public:
     typedef LFURPParams Params;
-    LFU(const Params *p);
+    LFU(const Params &p);
     ~LFU() = default;
 
     /**

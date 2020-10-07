@@ -65,7 +65,7 @@ class CacheMemory : public SimObject
   public:
     typedef RubyCacheParams Params;
     typedef std::shared_ptr<ReplacementPolicy::ReplacementData> ReplData;
-    CacheMemory(const Params *p);
+    CacheMemory(const Params &p);
     ~CacheMemory();
 
     void init();

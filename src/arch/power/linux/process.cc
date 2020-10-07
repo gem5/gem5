@@ -51,7 +51,7 @@ class PowerLinuxObjectFileLoader : public Process::Loader
 {
   public:
     Process *
-    load(ProcessParams *params, ::Loader::ObjectFile *obj_file) override
+    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file) override
     {
         if (obj_file->getArch() != ::Loader::Power)
             return nullptr;
@@ -439,8 +439,8 @@ SyscallDescTable<PowerProcess::SyscallABI> PowerLinuxProcess::syscallDescs = {
     { 346, "epoll_pwait" },
 };
 
-PowerLinuxProcess::PowerLinuxProcess(ProcessParams * params,
-        ::Loader::ObjectFile *objFile) :
+PowerLinuxProcess::PowerLinuxProcess(const ProcessParams &params,
+                                     ::Loader::ObjectFile *objFile) :
     PowerProcess(params, objFile)
 {}
 

@@ -55,7 +55,7 @@ class DirectoryMemory : public SimObject
 {
   public:
     typedef RubyDirectoryMemoryParams Params;
-    DirectoryMemory(const Params *p);
+    DirectoryMemory(const Params &p);
     ~DirectoryMemory();
 
     void init();

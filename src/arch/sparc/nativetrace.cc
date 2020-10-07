@@ -93,7 +93,7 @@ Trace::SparcNativeTrace::check(NativeTraceRecord *record)
 //  ExeTracer Simulation Object
 //
 Trace::SparcNativeTrace *
-SparcNativeTraceParams::create()
+SparcNativeTraceParams::create() const
 {
-    return new Trace::SparcNativeTrace(this);
+    return new Trace::SparcNativeTrace(*this);
 };

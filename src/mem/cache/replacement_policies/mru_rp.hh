@@ -60,7 +60,7 @@ class MRU : public Base
 
   public:
     typedef MRURPParams Params;
-    MRU(const Params *p);
+    MRU(const Params &p);
     ~MRU() = default;
 
     /**

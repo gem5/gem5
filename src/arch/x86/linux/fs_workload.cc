@@ -49,7 +49,8 @@
 namespace X86ISA
 {
 
-FsLinux::FsLinux(Params *p) : X86ISA::FsWorkload(p), e820Table(p->e820_table)
+FsLinux::FsLinux(const Params &p) :
+    X86ISA::FsWorkload(p), e820Table(p.e820_table)
 {}
 
 void
@@ -129,7 +130,7 @@ FsLinux::initState()
 } // namespace X86ISA
 
 X86ISA::FsLinux *
-X86FsLinuxParams::create()
+X86FsLinuxParams::create() const
 {
-    return new X86ISA::FsLinux(this);
+    return new X86ISA::FsLinux(*this);
 }

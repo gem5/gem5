@@ -103,7 +103,7 @@ class DeltaCorrelatingPredictionTables : public SimObject
 
   public:
     DeltaCorrelatingPredictionTables(
-        DeltaCorrelatingPredictionTablesParams *p);
+        const DeltaCorrelatingPredictionTablesParams &p);
     ~DeltaCorrelatingPredictionTables() = default;
 
     /**
@@ -122,7 +122,7 @@ class DCPT : public Queued
     /** DCPT object */
     DeltaCorrelatingPredictionTables &dcpt;
   public:
-    DCPT(const DCPTPrefetcherParams *p);
+    DCPT(const DCPTPrefetcherParams &p);
     ~DCPT() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,

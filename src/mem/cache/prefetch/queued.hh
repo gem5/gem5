@@ -181,7 +181,7 @@ class Queued : public Base
   public:
     using AddrPriority = std::pair<Addr, int32_t>;
 
-    Queued(const QueuedPrefetcherParams *p);
+    Queued(const QueuedPrefetcherParams &p);
     virtual ~Queued();
 
     void notify(const PacketPtr &pkt, const PrefetchInfo &pfi) override;

@@ -51,13 +51,13 @@ using std::map;
  * 4KB - see e.g.
  * http://infocenter.arm.com/help/topic/com.arm.doc.dui0440b/Bbajihec.html
  */
-I2CBus::I2CBus(const I2CBusParams *p)
+I2CBus::I2CBus(const I2CBusParams &p)
     : BasicPioDevice(p, 0x1000), scl(1), sda(1), state(IDLE), currBit(7),
       i2cAddr(0x00), message(0x00)
 {
-    vector<I2CDevice*> devs = p->devices;
+    vector<I2CDevice*> devs = p.devices;
 
-    for (auto d : p->devices) {
+    for (auto d : p.devices) {
         devices[d->i2cAddr()] = d;
     }
 }
@@ -236,7 +236,7 @@ I2CBus::unserialize(CheckpointIn &cp)
 }
 
 I2CBus*
-I2CBusParams::create()
+I2CBusParams::create() const
 {
-    return new I2CBus(this);
+    return new I2CBus(*this);
 }

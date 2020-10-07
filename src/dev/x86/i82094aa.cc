@@ -39,17 +39,17 @@
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
-X86ISA::I82094AA::I82094AA(Params *p)
-    : BasicPioDevice(p, 20), extIntPic(p->external_int_pic),
+X86ISA::I82094AA::I82094AA(const Params &p)
+    : BasicPioDevice(p, 20), extIntPic(p.external_int_pic),
       lowestPriorityOffset(0),
-      intRequestPort(name() + ".int_request", this, this, p->int_latency)
+      intRequestPort(name() + ".int_request", this, this, p.int_latency)
 {
     // This assumes there's only one I/O APIC in the system and since the apic
     // id is stored in a 8-bit field with 0xff meaning broadcast, the id must
     // be less than 0xff
 
-    assert(p->apic_id < 0xff);
-    initialApicId = id = p->apic_id;
+    assert(p.apic_id < 0xff);
+    initialApicId = id = p.apic_id;
     arbId = id;
     regSel = 0;
     RedirTableEntry entry = 0;
@@ -59,7 +59,7 @@ X86ISA::I82094AA::I82094AA(Params *p)
         pinStates[i] = false;
     }
 
-    for (int i = 0; i < p->port_inputs_connection_count; i++)
+    for (int i = 0; i < p.port_inputs_connection_count; i++)
         inputs.push_back(new IntSinkPin<I82094AA>(
                     csprintf("%s.inputs[%d]", name(), i), i, this));
 }
@@ -293,7 +293,7 @@ X86ISA::I82094AA::unserialize(CheckpointIn &cp)
 }
 
 X86ISA::I82094AA *
-I82094AAParams::create()
+I82094AAParams::create() const
 {
-    return new X86ISA::I82094AA(this);
+    return new X86ISA::I82094AA(*this);
 }

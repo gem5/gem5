@@ -307,7 +307,7 @@ class $c_ident : public AbstractController
 {
   public:
     typedef ${c_ident}Params Params;
-    $c_ident(const Params *p);
+    $c_ident(const Params &p);
     static int getNumControllers();
     void init();
 
@@ -540,9 +540,9 @@ using namespace std;
 
         code('''
 $c_ident *
-${c_ident}Params::create()
+${c_ident}Params::create() const
 {
-    return new $c_ident(this);
+    return new $c_ident(*this);
 }
 
 int $c_ident::m_num_controllers = 0;
@@ -559,13 +559,13 @@ stringstream ${ident}_transitionComment;
 #endif
 
 /** \\brief constructor */
-$c_ident::$c_ident(const Params *p)
+$c_ident::$c_ident(const Params &p)
     : AbstractController(p)
 {
     m_machineID.type = MachineType_${ident};
     m_machineID.num = m_version;
     m_num_controllers++;
-    p->ruby_system->registerAbstractController(this);
+    p.ruby_system->registerAbstractController(this);
 
     m_in_ports = $num_in_ports;
 ''')
@@ -578,9 +578,9 @@ $c_ident::$c_ident(const Params *p)
         #
         for param in self.config_parameters:
             if param.pointer:
-                code('m_${{param.ident}}_ptr = p->${{param.ident}};')
+                code('m_${{param.ident}}_ptr = p.${{param.ident}};')
             else:
-                code('m_${{param.ident}} = p->${{param.ident}};')
+                code('m_${{param.ident}} = p.${{param.ident}};')
 
             if re.compile("sequencer").search(param.ident) or \
                    param.type_ast.type.c_ident == "GPUCoalescer" or \
@@ -826,7 +826,7 @@ $c_ident::regStats()
              event < ${ident}_Event_NUM; ++event) {
             Stats::Vector *t = new Stats::Vector();
             t->init(m_num_controllers);
-            t->name(params()->ruby_system->name() + ".${c_ident}." +
+            t->name(params().ruby_system->name() + ".${c_ident}." +
                 ${ident}_Event_to_string(event));
             t->flags(Stats::pdf | Stats::total | Stats::oneline |
                      Stats::nozero);
@@ -844,7 +844,7 @@ $c_ident::regStats()
 
                 Stats::Vector *t = new Stats::Vector();
                 t->init(m_num_controllers);
-                t->name(params()->ruby_system->name() + ".${c_ident}." +
+                t->name(params().ruby_system->name() + ".${c_ident}." +
                         ${ident}_State_to_string(state) +
                         "." + ${ident}_Event_to_string(event));
 
@@ -892,7 +892,7 @@ $c_ident::collateStats()
     for (${ident}_Event event = ${ident}_Event_FIRST;
          event < ${ident}_Event_NUM; ++event) {
         for (unsigned int i = 0; i < m_num_controllers; ++i) {
-            RubySystem *rs = params()->ruby_system;
+            RubySystem *rs = params().ruby_system;
             std::map<uint32_t, AbstractController *>::iterator it =
                      rs->m_abstract_controls[MachineType_${ident}].find(i);
             assert(it != rs->m_abstract_controls[MachineType_${ident}].end());
@@ -908,7 +908,7 @@ $c_ident::collateStats()
              event < ${ident}_Event_NUM; ++event) {
 
             for (unsigned int i = 0; i < m_num_controllers; ++i) {
-                RubySystem *rs = params()->ruby_system;
+                RubySystem *rs = params().ruby_system;
                 std::map<uint32_t, AbstractController *>::iterator it =
                          rs->m_abstract_controls[MachineType_${ident}].find(i);
                 assert(it != rs->m_abstract_controls[MachineType_${ident}].end());

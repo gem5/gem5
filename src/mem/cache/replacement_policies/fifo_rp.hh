@@ -60,7 +60,7 @@ class FIFO : public Base
 
   public:
     typedef FIFORPParams Params;
-    FIFO(const Params *p);
+    FIFO(const Params &p);
     ~FIFO() = default;
 
     /**

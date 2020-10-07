@@ -36,7 +36,7 @@
 
 namespace ReplacementPolicy {
 
-MRU::MRU(const Params *p)
+MRU::MRU(const Params &p)
   : Base(p)
 {
 }
@@ -101,7 +101,7 @@ MRU::instantiateEntry()
 } // namespace ReplacementPolicy
 
 ReplacementPolicy::MRU*
-MRURPParams::create()
+MRURPParams::create() const
 {
-    return new ReplacementPolicy::MRU(this);
+    return new ReplacementPolicy::MRU(*this);
 }

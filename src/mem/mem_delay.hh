@@ -63,7 +63,7 @@ class MemDelay : public ClockedObject
 {
 
   public:
-    MemDelay(const MemDelayParams *params);
+    MemDelay(const MemDelayParams &params);
 
     void init() override;
 
@@ -163,7 +163,7 @@ class MemDelay : public ClockedObject
 class SimpleMemDelay : public MemDelay
 {
   public:
-    SimpleMemDelay(const SimpleMemDelayParams *params);
+    SimpleMemDelay(const SimpleMemDelayParams &params);
 
   protected:
     Tick delayReq(PacketPtr pkt) override;

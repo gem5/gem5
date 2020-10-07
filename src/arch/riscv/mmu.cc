@@ -38,7 +38,7 @@
 #include "arch/riscv/mmu.hh"
 
 RiscvISA::MMU *
-RiscvMMUParams::create()
+RiscvMMUParams::create() const
 {
-    return new RiscvISA::MMU(this);
+    return new RiscvISA::MMU(*this);
 }

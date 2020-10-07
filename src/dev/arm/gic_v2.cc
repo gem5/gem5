@@ -59,18 +59,18 @@ const AddrRange GicV2::GICD_IPRIORITYR(0x400, 0x800);
 const AddrRange GicV2::GICD_ITARGETSR (0x800, 0xc00);
 const AddrRange GicV2::GICD_ICFGR     (0xc00, 0xd00);
 
-GicV2::GicV2(const Params *p)
+GicV2::GicV2(const Params &p)
     : BaseGic(p),
-      gicdPIDR(p->gicd_pidr),
-      gicdIIDR(p->gicd_iidr),
-      giccIIDR(p->gicc_iidr),
-      distRange(RangeSize(p->dist_addr, DIST_SIZE)),
-      cpuRange(RangeSize(p->cpu_addr, p->cpu_size)),
+      gicdPIDR(p.gicd_pidr),
+      gicdIIDR(p.gicd_iidr),
+      giccIIDR(p.gicc_iidr),
+      distRange(RangeSize(p.dist_addr, DIST_SIZE)),
+      cpuRange(RangeSize(p.cpu_addr, p.cpu_size)),
       addrRanges{distRange, cpuRange},
-      distPioDelay(p->dist_pio_delay),
-      cpuPioDelay(p->cpu_pio_delay), intLatency(p->int_latency),
-      enabled(false), haveGem5Extensions(p->gem5_extensions),
-      itLines(p->it_lines),
+      distPioDelay(p.dist_pio_delay),
+      cpuPioDelay(p.cpu_pio_delay), intLatency(p.int_latency),
+      enabled(false), haveGem5Extensions(p.gem5_extensions),
+      itLines(p.it_lines),
       intEnabled {}, pendingInt {}, activeInt {},
       intPriority {}, intConfig {}, cpuTarget {},
       cpuSgiPending {}, cpuSgiActive {},
@@ -1092,7 +1092,7 @@ GicV2::BankedRegs::unserialize(CheckpointIn &cp)
 }
 
 GicV2 *
-GicV2Params::create()
+GicV2Params::create() const
 {
-    return new GicV2(this);
+    return new GicV2(*this);
 }

@@ -154,16 +154,16 @@ class RealViewCtrl : public BasicPioDevice
 
   public:
     typedef RealViewCtrlParams Params;
-    const Params *
+    const Params &
     params() const
     {
-        return dynamic_cast<const Params *>(_params);
+        return dynamic_cast<const Params &>(_params);
     }
     /**
       * The constructor for RealView just registers itself with the MMU.
       * @param p params structure
       */
-    RealViewCtrl(Params *p);
+    RealViewCtrl(const Params &p);
 
     /**
      * Handle a read to the device
@@ -202,7 +202,7 @@ class RealViewOsc
     : public ClockDomain, RealViewCtrl::Device
 {
   public:
-    RealViewOsc(RealViewOscParams *p);
+    RealViewOsc(const RealViewOscParams &p);
     virtual ~RealViewOsc() {};
 
     void startup() override;
@@ -228,11 +228,11 @@ class RealViewTemperatureSensor
     : public SimObject, RealViewCtrl::Device
 {
   public:
-    RealViewTemperatureSensor(RealViewTemperatureSensorParams *p)
+    RealViewTemperatureSensor(const RealViewTemperatureSensorParams &p)
     : SimObject(p),
-      RealViewCtrl::Device(*p->parent, RealViewCtrl::FUNC_TEMP,
-                           p->site, p->position, p->dcc, p->device),
-      system(p->system)
+      RealViewCtrl::Device(*p.parent, RealViewCtrl::FUNC_TEMP,
+                           p.site, p.position, p.dcc, p.device),
+      system(p.system)
     {}
     virtual ~RealViewTemperatureSensor() {};
 

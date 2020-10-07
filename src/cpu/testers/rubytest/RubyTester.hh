@@ -92,7 +92,7 @@ class RubyTester : public ClockedObject
     };
 
     typedef RubyTesterParams Params;
-    RubyTester(const Params *p);
+    RubyTester(const Params &p);
     ~RubyTester();
 
     Port &getPort(const std::string &if_name,

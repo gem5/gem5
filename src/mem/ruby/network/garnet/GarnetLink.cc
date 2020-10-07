@@ -35,34 +35,33 @@
 #include "mem/ruby/network/garnet/NetworkBridge.hh"
 #include "mem/ruby/network/garnet/NetworkLink.hh"
 
-GarnetIntLink::GarnetIntLink(const Params *p)
+GarnetIntLink::GarnetIntLink(const Params &p)
     : BasicIntLink(p)
 {
     // Uni-directional
 
-    m_network_link = p->network_link;
-    m_credit_link = p->credit_link;
+    m_network_link = p.network_link;
+    m_credit_link = p.credit_link;
 
-    srcCdcEn = p->src_cdc;
-    dstCdcEn = p->dst_cdc;
+    srcCdcEn = p.src_cdc;
+    dstCdcEn = p.dst_cdc;
 
-    srcSerdesEn = p->src_serdes;
-    dstSerdesEn = p->dst_serdes;
+    srcSerdesEn = p.src_serdes;
+    dstSerdesEn = p.dst_serdes;
 
     srcBridgeEn = false;
     dstBridgeEn = false;
 
     if (srcCdcEn || srcSerdesEn) {
         srcBridgeEn = true;
-        srcNetBridge = p->src_net_bridge;
-        srcCredBridge = p->src_cred_bridge;
+        srcNetBridge = p.src_net_bridge;
+        srcCredBridge = p.src_cred_bridge;
     }
     if (dstCdcEn || dstSerdesEn) {
         dstBridgeEn = true;
-        dstNetBridge = p->dst_net_bridge;
-        dstCredBridge = p->dst_cred_bridge;
+        dstNetBridge = p.dst_net_bridge;
+        dstCredBridge = p.dst_cred_bridge;
     }
-
 }
 
 void
@@ -88,50 +87,49 @@ GarnetIntLink::print(std::ostream& out) const
 }
 
 GarnetIntLink *
-GarnetIntLinkParams::create()
+GarnetIntLinkParams::create() const
 {
-    return new GarnetIntLink(this);
+    return new GarnetIntLink(*this);
 }
 
-GarnetExtLink::GarnetExtLink(const Params *p)
+GarnetExtLink::GarnetExtLink(const Params &p)
     : BasicExtLink(p)
 {
     // Bi-directional
 
     // In
-    m_network_links[0] = p->network_links[0];
-    m_credit_links[0] = p->credit_links[0];
+    m_network_links[0] = p.network_links[0];
+    m_credit_links[0] = p.credit_links[0];
 
     // Out
-    m_network_links[1] = p->network_links[1];
-    m_credit_links[1] = p->credit_links[1];
+    m_network_links[1] = p.network_links[1];
+    m_credit_links[1] = p.credit_links[1];
 
 
-    extCdcEn = p->ext_cdc;
-    intCdcEn = p->int_cdc;
+    extCdcEn = p.ext_cdc;
+    intCdcEn = p.int_cdc;
 
-    extSerdesEn = p->ext_serdes;
-    intSerdesEn = p->int_serdes;
+    extSerdesEn = p.ext_serdes;
+    intSerdesEn = p.int_serdes;
 
     extBridgeEn = false;
     intBridgeEn = false;
 
     if (extCdcEn || extSerdesEn) {
         extBridgeEn = true;
-        extNetBridge[0] = p->ext_net_bridge[0];
-        extCredBridge[0] = p->ext_cred_bridge[0];
-        extNetBridge[1] = p->ext_net_bridge[1];
-        extCredBridge[1] = p->ext_cred_bridge[1];
+        extNetBridge[0] = p.ext_net_bridge[0];
+        extCredBridge[0] = p.ext_cred_bridge[0];
+        extNetBridge[1] = p.ext_net_bridge[1];
+        extCredBridge[1] = p.ext_cred_bridge[1];
     }
 
     if (intCdcEn || intSerdesEn) {
         intBridgeEn = true;
-        intNetBridge[0] = p->int_net_bridge[0];
-        intNetBridge[1] = p->int_net_bridge[1];
-        intCredBridge[0] = p->int_cred_bridge[0];
-        intCredBridge[1] = p->int_cred_bridge[1];
+        intNetBridge[0] = p.int_net_bridge[0];
+        intNetBridge[1] = p.int_net_bridge[1];
+        intCredBridge[0] = p.int_cred_bridge[0];
+        intCredBridge[1] = p.int_cred_bridge[1];
     }
-
 }
 
 void
@@ -163,7 +161,7 @@ GarnetExtLink::print(std::ostream& out) const
 }
 
 GarnetExtLink *
-GarnetExtLinkParams::create()
+GarnetExtLinkParams::create() const
 {
-    return new GarnetExtLink(this);
+    return new GarnetExtLink(*this);
 }

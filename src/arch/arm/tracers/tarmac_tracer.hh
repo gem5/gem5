@@ -87,7 +87,7 @@ class TarmacTracer : public InstTracer
   public:
     typedef TarmacTracerParams Params;
 
-    TarmacTracer(const Params *p);
+    TarmacTracer(const Params &p);
 
     /**
      * Generates a TarmacTracerRecord, depending on the Tarmac version.

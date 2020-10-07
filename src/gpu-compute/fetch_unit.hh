@@ -49,7 +49,7 @@ class Wavefront;
 class FetchUnit
 {
   public:
-    FetchUnit(const ComputeUnitParams* p, ComputeUnit &cu);
+    FetchUnit(const ComputeUnitParams &p, ComputeUnit &cu);
     ~FetchUnit();
     void init();
     void exec();

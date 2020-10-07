@@ -55,7 +55,7 @@ struct Pl011Params;
 class Pl011 : public Uart, public AmbaDevice
 {
   public:
-    Pl011(const Pl011Params *p);
+    Pl011(const Pl011Params &p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

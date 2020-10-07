@@ -74,12 +74,12 @@ Bridge::BridgeRequestPort::BridgeRequestPort(const std::string& _name,
 {
 }
 
-Bridge::Bridge(Params *p)
+Bridge::Bridge(const Params &p)
     : ClockedObject(p),
-      cpuSidePort(p->name + ".cpu_side_port", *this, memSidePort,
-                ticksToCycles(p->delay), p->resp_size, p->ranges),
-      memSidePort(p->name + ".mem_side_port", *this, cpuSidePort,
-                 ticksToCycles(p->delay), p->req_size)
+      cpuSidePort(p.name + ".cpu_side_port", *this, memSidePort,
+                ticksToCycles(p.delay), p.resp_size, p.ranges),
+      memSidePort(p.name + ".mem_side_port", *this, cpuSidePort,
+                 ticksToCycles(p.delay), p.req_size)
 {
 }
 
@@ -392,7 +392,7 @@ Bridge::BridgeResponsePort::getAddrRanges() const
 }
 
 Bridge *
-BridgeParams::create()
+BridgeParams::create() const
 {
-    return new Bridge(this);
+    return new Bridge(*this);
 }

@@ -88,7 +88,7 @@ IdeController::Channel::~Channel()
 {
 }
 
-IdeController::IdeController(Params *p)
+IdeController::IdeController(const Params &p)
     : PciDevice(p), primary(name() + ".primary", BARSize[0], BARSize[1]),
     secondary(name() + ".secondary", BARSize[2], BARSize[3]),
     bmiAddr(0), bmiSize(BARSize[4]),
@@ -96,32 +96,32 @@ IdeController::IdeController(Params *p)
     secondaryTiming(htole(timeRegWithDecodeEn)),
     deviceTiming(0), udmaControl(0), udmaTiming(0), ideConfig(0),
     ioEnabled(false), bmEnabled(false),
-    ioShift(p->io_shift), ctrlOffset(p->ctrl_offset)
+    ioShift(p.io_shift), ctrlOffset(p.ctrl_offset)
 {
 
     // Assign the disks to channels
-    for (int i = 0; i < params()->disks.size(); i++) {
-        if (!params()->disks[i])
+    for (int i = 0; i < params().disks.size(); i++) {
+        if (!params().disks[i])
             continue;
         switch (i) {
           case 0:
-            primary.device0 = params()->disks[0];
+            primary.device0 = params().disks[0];
             break;
           case 1:
-            primary.device1 = params()->disks[1];
+            primary.device1 = params().disks[1];
             break;
           case 2:
-            secondary.device0 = params()->disks[2];
+            secondary.device0 = params().disks[2];
             break;
           case 3:
-            secondary.device1 = params()->disks[3];
+            secondary.device1 = params().disks[3];
             break;
           default:
             panic("IDE controllers support a maximum "
                   "of 4 devices attached!\n");
         }
         // Arbitrarily set the chunk size to 4K.
-        params()->disks[i]->setController(this, 4 * 1024);
+        params().disks[i]->setController(this, 4 * 1024);
     }
 
     primary.select(false);
@@ -649,7 +649,7 @@ IdeController::Channel::unserialize(const std::string &base, CheckpointIn &cp)
 }
 
 IdeController *
-IdeControllerParams::create()
+IdeControllerParams::create() const
 {
-    return new IdeController(this);
+    return new IdeController(*this);
 }

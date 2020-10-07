@@ -123,7 +123,7 @@ const std::vector<ArmV8KvmCPU::MiscRegInfo> ArmV8KvmCPU::miscRegIdMap = {
     MiscRegInfo(SYS_MPIDR_EL1, MISCREG_MPIDR_EL1, "MPIDR(EL1)"),
 };
 
-ArmV8KvmCPU::ArmV8KvmCPU(ArmV8KvmCPUParams *params)
+ArmV8KvmCPU::ArmV8KvmCPU(const ArmV8KvmCPUParams &params)
     : BaseArmKvmCPU(params)
 {
 }
@@ -397,7 +397,7 @@ ArmV8KvmCPU::getSysRegMap() const
 }
 
 ArmV8KvmCPU *
-ArmV8KvmCPUParams::create()
+ArmV8KvmCPUParams::create() const
 {
-    return new ArmV8KvmCPU(this);
+    return new ArmV8KvmCPU(*this);
 }

@@ -114,8 +114,8 @@ DmaPort::recvTimingResp(PacketPtr pkt)
     return true;
 }
 
-DmaDevice::DmaDevice(const Params *p)
-    : PioDevice(p), dmaPort(this, sys, p->sid, p->ssid)
+DmaDevice::DmaDevice(const Params &p)
+    : PioDevice(p), dmaPort(this, sys, p.sid, p.ssid)
 { }
 
 void

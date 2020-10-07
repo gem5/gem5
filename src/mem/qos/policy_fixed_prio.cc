@@ -46,8 +46,8 @@
 
 namespace QoS {
 
-FixedPriorityPolicy::FixedPriorityPolicy(const Params* p)
-  : Policy(p), defaultPriority(p->qos_fixed_prio_default_prio)
+FixedPriorityPolicy::FixedPriorityPolicy(const Params &p)
+  : Policy(p), defaultPriority(p.qos_fixed_prio_default_prio)
 {}
 
 FixedPriorityPolicy::~FixedPriorityPolicy()
@@ -96,7 +96,7 @@ FixedPriorityPolicy::schedule(const RequestorID id, const uint64_t data)
 } // namespace QoS
 
 QoS::FixedPriorityPolicy *
-QoSFixedPriorityPolicyParams::create()
+QoSFixedPriorityPolicyParams::create() const
 {
-    return new QoS::FixedPriorityPolicy(this);
+    return new QoS::FixedPriorityPolicy(*this);
 }
