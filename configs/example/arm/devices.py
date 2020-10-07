@@ -187,7 +187,6 @@ class CpuCluster(SubSystem):
                     isa.pmu.addEvent(ev)
 
     def connectMemSide(self, bus):
-        bus.slave
         try:
             self.l2.mem_side = bus.slave
         except AttributeError:
