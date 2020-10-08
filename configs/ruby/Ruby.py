@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2017-2018 ARM Limited
+# Copyright (c) 2012, 2017-2018, 2021 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -131,13 +131,16 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
             dram_intf = MemConfig.create_mem_intf(mem_type, r, index,
                 options.num_dirs, int(math.log(options.num_dirs, 2)),
                 intlv_size, options.xor_low_bit)
-            mem_ctrl = m5.objects.MemCtrl(dram = dram_intf)
+            if issubclass(mem_type, DRAMInterface):
+                mem_ctrl = m5.objects.MemCtrl(dram = dram_intf)
+            else:
+                mem_ctrl = dram_intf
 
             if options.access_backing_store:
                 dram_intf.kvm_map=False
 
             mem_ctrls.append(mem_ctrl)
-            dir_ranges.append(mem_ctrl.dram.range)
+            dir_ranges.append(dram_intf.range)
 
             if crossbar != None:
                 mem_ctrl.port = crossbar.master
