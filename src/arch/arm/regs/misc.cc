@@ -5406,6 +5406,7 @@ ISA::initializeMiscRegMetadata()
         .reset([this](){
             AA64ZFR0 zfr0_el1 = 0;
             zfr0_el1.f32mm = release->has(ArmExtension::FEAT_F32MM) ? 1 : 0;
+            zfr0_el1.f64mm = release->has(ArmExtension::FEAT_F64MM) ? 1 : 0;
             return zfr0_el1;
         }())
         .faultRead(EL0, faultIdst)
