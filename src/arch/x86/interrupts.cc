@@ -317,7 +317,8 @@ X86ISA::Interrupts::setThreadContext(ThreadContext *_tc)
 
     BaseInterrupts::setThreadContext(_tc);
 
-    initialApicId = tc->cpuId();
+    // Update APIC ID to consider SMT threads
+    initialApicId = tc->contextId();
     regs[APIC_ID] = (initialApicId << 24);
     pioAddr = x86LocalAPICAddress(initialApicId, 0);
 }
