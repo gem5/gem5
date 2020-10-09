@@ -546,6 +546,7 @@ Walker::WalkerState::setupWalk(Addr vaddr)
 {
     VAddr addr = vaddr;
     CR3 cr3 = tc->readMiscRegNoEffect(misc_reg::Cr3);
+    CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
     // Check if we're in long mode or not
     Efer efer = tc->readMiscRegNoEffect(misc_reg::Efer);
     dataSize = 8;
@@ -557,7 +558,6 @@ Walker::WalkerState::setupWalk(Addr vaddr)
         enableNX = efer.nxe;
     } else {
         // We're in some flavor of legacy mode.
-        CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
         if (cr4.pae) {
             // Do legacy PAE.
             state = PAEPDP;
@@ -581,7 +581,10 @@ Walker::WalkerState::setupWalk(Addr vaddr)
     entry.vaddr = vaddr;
 
     Request::Flags flags = Request::PHYSICAL;
-    if (cr3.pcd)
+
+    // PCD can't be used if CR4.PCIDE=1 [sec 2.5
+    // of Intel's Software Developer's manual]
+    if (!cr4.pcide && cr3.pcd)
         flags.set(Request::UNCACHEABLE);
 
     RequestPtr request = std::make_shared<Request>(

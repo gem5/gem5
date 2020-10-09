@@ -593,6 +593,17 @@ X86_64Process::initState()
             tc->setMiscReg(misc_reg::Cr0, cr0);
 
             tc->setMiscReg(misc_reg::Mxcsr, 0x1f80);
+
+            // Setting CR3 to the process pid so that concatinated
+            // page addr with lower 12 bits of CR3 can be used in SE
+            // mode as well to avoid conflicts between tlb entries with
+            // same virtual addresses belonging to different processes
+            tc->setMiscReg(misc_reg::Cr3, pTable->pid());
+
+            // Setting pcide bit in CR4
+            CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
+            cr4.pcide = 1;
+            tc->setMiscReg(misc_reg::Cr4, cr4);
         }
     }
 }
