@@ -504,8 +504,22 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
     }
     if (doEndWalk) {
         if (doTLBInsert)
-            if (!functional)
-                walker->tlb->insert(entry.vaddr, entry);
+            if (!functional) {
+
+                // Check if PCIDE is set in CR4
+                CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
+                if (cr4.pcide){
+                    CR3 cr3 = tc->readMiscRegNoEffect(misc_reg::Cr3);
+                    walker->tlb->insert(entry.vaddr, entry, cr3.pcid);
+                }
+                else{
+                    // The current PCID is always 000H if PCIDE
+                    // is not set [sec 4.10.1 of Intel's Software
+                    // Developer Manual]
+                    walker->tlb->insert(entry.vaddr, entry, 0x000);
+                }
+            }
+
         endWalk();
     } else {
         PacketPtr oldRead = read;
