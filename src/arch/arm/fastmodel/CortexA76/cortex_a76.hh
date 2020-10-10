@@ -107,8 +107,8 @@ class CortexA76Cluster : public SimObject
         scx::scx_set_parameter(evs->name() + std::string(".") + n, val);
     }
 
-    CortexA76 *getCore(int num) { return cores.at(num); }
-    sc_core::sc_module *getEvs() { return evs; }
+    CortexA76 *getCore(int num) const { return cores.at(num); }
+    sc_core::sc_module *getEvs() const { return evs; }
 
     CortexA76Cluster(Params &p);
     const Params &params() { return _params; }
