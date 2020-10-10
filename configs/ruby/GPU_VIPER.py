@@ -656,7 +656,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
         # SQC also in GPU cluster
         gpuCluster.add(sqc_cntrl)
 
-    for i in xrange(options.num_scalar_cache):
+    for i in range(options.num_scalar_cache):
         scalar_cntrl = SQCCntrl(TCC_select_num_bits = TCC_bits)
         scalar_cntrl.create(options, ruby_system, system)
 
@@ -678,7 +678,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
 
         gpuCluster.add(scalar_cntrl)
 
-    for i in xrange(options.num_cp):
+    for i in range(options.num_cp):
 
         tcp_ID = options.num_compute_units + i
         sqc_ID = options.num_sqc + i
