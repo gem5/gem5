@@ -132,6 +132,10 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     fatal_if(FullSystem && params->numThreads > 1,
             "SMT is not supported in O3 in full system mode currently.");
 
+    fatal_if(!FullSystem && params->numThreads < params->workload.size(),
+            "More workload items (%d) than threads (%d) on CPU %s.",
+            params->workload.size(), params->numThreads, name());
+
     if (!params->switched_out) {
         _status = Running;
     } else {

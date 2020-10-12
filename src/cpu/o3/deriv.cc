@@ -35,19 +35,5 @@
 DerivO3CPU *
 DerivO3CPUParams::create()
 {
-    if (!FullSystem) {
-        if (workload.size() > numThreads) {
-            fatal("Workload Size (%i) > Max Supported Threads (%i) on This CPU",
-                  workload.size(), numThreads);
-        } else if (workload.size() == 0) {
-            fatal("Must specify at least one workload!");
-        }
-
-        // In non-full-system mode, we infer the number of threads from
-        // the workload if it's not explicitly specified.
-        numThreads =
-            (numThreads >= workload.size()) ? numThreads : workload.size();
-    }
-
     return new DerivO3CPU(this);
 }
