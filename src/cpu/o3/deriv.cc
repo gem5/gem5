@@ -55,8 +55,5 @@ DerivO3CPUParams::create()
 
     numThreads = actual_num_threads;
 
-    if (actual_num_threads > 1 && smtFetchPolicy == FetchPolicy::SingleThread)
-        smtFetchPolicy = FetchPolicy::RoundRobin;
-
     return new DerivO3CPU(this);
 }

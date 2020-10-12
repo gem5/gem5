@@ -111,10 +111,6 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
         fatal("cache block (%u bytes) is not a multiple of the "
               "fetch buffer (%u bytes)\n", cacheBlkSize, fetchBufferSize);
 
-    // Figure out fetch policy
-    panic_if(fetchPolicy == FetchPolicy::SingleThread && numThreads > 1,
-             "Invalid Fetch Policy for a SMT workload.");
-
     // Get the size of an instruction.
     instSize = sizeof(TheISA::MachInst);
 
@@ -1415,13 +1411,13 @@ DefaultFetch<Impl>::getFetchingThread()
 {
     if (numThreads > 1) {
         switch (fetchPolicy) {
-          case FetchPolicy::RoundRobin:
+          case SMTFetchPolicy::RoundRobin:
             return roundRobin();
-          case FetchPolicy::IQCount:
+          case SMTFetchPolicy::IQCount:
             return iqCount();
-          case FetchPolicy::LSQCount:
+          case SMTFetchPolicy::LSQCount:
             return lsqCount();
-          case FetchPolicy::Branch:
+          case SMTFetchPolicy::Branch:
             return branchCount();
           default:
             return InvalidThreadID;

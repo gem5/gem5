@@ -47,8 +47,8 @@ from m5.objects.FUPool import *
 from m5.objects.O3Checker import O3Checker
 from m5.objects.BranchPredictor import *
 
-class FetchPolicy(ScopedEnum):
-    vals = [ 'SingleThread', 'RoundRobin', 'Branch', 'IQCount', 'LSQCount' ]
+class SMTFetchPolicy(ScopedEnum):
+    vals = [ 'RoundRobin', 'Branch', 'IQCount', 'LSQCount' ]
 
 class SMTQueuePolicy(ScopedEnum):
     vals = [ 'Dynamic', 'Partitioned', 'Threshold' ]
@@ -159,7 +159,7 @@ class DerivO3CPU(BaseCPU):
     numROBEntries = Param.Unsigned(192, "Number of reorder buffer entries")
 
     smtNumFetchingThreads = Param.Unsigned(1, "SMT Number of Fetching Threads")
-    smtFetchPolicy = Param.FetchPolicy('SingleThread', "SMT Fetch policy")
+    smtFetchPolicy = Param.SMTFetchPolicy('RoundRobin', "SMT Fetch policy")
     smtLSQPolicy    = Param.SMTQueuePolicy('Partitioned',
                                            "SMT LSQ Sharing Policy")
     smtLSQThreshold = Param.Int(100, "SMT LSQ Threshold Sharing Parameter")
