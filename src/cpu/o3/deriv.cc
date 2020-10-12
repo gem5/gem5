@@ -35,11 +35,7 @@
 DerivO3CPU *
 DerivO3CPUParams::create()
 {
-    ThreadID actual_num_threads;
-    if (FullSystem) {
-        // Full-system only supports a single thread for the moment.
-        actual_num_threads = 1;
-    } else {
+    if (!FullSystem) {
         if (workload.size() > numThreads) {
             fatal("Workload Size (%i) > Max Supported Threads (%i) on This CPU",
                   workload.size(), numThreads);
@@ -49,11 +45,9 @@ DerivO3CPUParams::create()
 
         // In non-full-system mode, we infer the number of threads from
         // the workload if it's not explicitly specified.
-        actual_num_threads =
+        numThreads =
             (numThreads >= workload.size()) ? numThreads : workload.size();
     }
-
-    numThreads = actual_num_threads;
 
     return new DerivO3CPU(this);
 }
