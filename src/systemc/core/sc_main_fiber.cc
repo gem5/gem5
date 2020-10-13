@@ -38,7 +38,7 @@
 #include "systemc/utils/report.hh"
 
 // A weak symbol to detect if sc_main has been defined, and if so where it is.
-[[gnu::weak]] int sc_main(int argc, char *argv[]);
+M5_WEAK int sc_main(int argc, char *argv[]);
 
 namespace sc_gem5
 {
