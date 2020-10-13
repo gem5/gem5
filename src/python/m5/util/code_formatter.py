@@ -266,7 +266,7 @@ class code_formatter(object):
                 lineno = 1
             else:
                 lines = format[:i].splitlines(True)
-                colno = i - reduce(lambda x,y: x+y, (len(z) for z in lines))
+                colno = i - sum(len(z) for z in lines)
                 lineno = len(lines)
 
                 raise ValueError('Invalid format string: line %d, col %d' %
