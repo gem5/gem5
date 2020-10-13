@@ -97,6 +97,7 @@
 // Set the visibility of a symbol.
 #  define M5_PUBLIC [[gnu:visibility("default")]]
 #  define M5_LOCAL [[gnu::visibility("hidden")]]
+#  define M5_WEAK [[gnu::weak]]
 
 // Marker for what should be an unreachable point in the code.
 #  define M5_UNREACHABLE __builtin_unreachable()
