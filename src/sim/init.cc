@@ -51,6 +51,7 @@
 #include <string>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/cprintf.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
@@ -245,7 +246,7 @@ registerNativeModules()
  * Make the commands array weak so that they can be overridden (used
  * by unit tests to specify a different python main function.
  */
-const char * __attribute__((weak)) m5MainCommands[] = {
+M5_WEAK const char *m5MainCommands[] = {
     "import m5",
     "m5.main()",
     0 // sentinel is required

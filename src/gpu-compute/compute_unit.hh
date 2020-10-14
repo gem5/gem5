@@ -40,6 +40,7 @@
 #include <vector>
 
 #include "base/callback.hh"
+#include "base/compiler.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "config/the_gpu_isa.hh"
@@ -620,8 +621,7 @@ class ComputeUnit : public ClockedObject
     int32_t
     getRefCounter(const uint32_t dispatchId, const uint32_t wgId) const;
 
-    bool
-    sendToLds(GPUDynInstPtr gpuDynInst) __attribute__((warn_unused_result));
+    M5_NODISCARD bool sendToLds(GPUDynInstPtr gpuDynInst);
 
     typedef std::unordered_map<Addr, std::pair<int, int>> pageDataStruct;
     pageDataStruct pageAccesses;

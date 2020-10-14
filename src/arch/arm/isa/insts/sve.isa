@@ -2007,8 +2007,7 @@ let {{
         destPred.reset();
         for (unsigned i = 0; i < eCount; i++) {
             const Element& srcElem1 = AA64FpOp1_x[i];
-            %(src_elem_2_ty)s srcElem2 __attribute__((unused)) =
-                                                            %(src_elem_2)s;
+            M5_VAR_USED %(src_elem_2_ty)s srcElem2 = %(src_elem_2)s;
             bool destElem = false;
             if (tmpPred[i]) {
                 %(op)s

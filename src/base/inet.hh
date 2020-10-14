@@ -563,13 +563,13 @@ struct ip6_opt_routing_type2 {
 };
 
 #define HOME_ADDRESS_OPTION 0xC9
-struct ip6_opt_dstopts {
+struct M5_ATTR_PACKED ip6_opt_dstopts {
     uint8_t type;
     uint8_t length;
     ip6_addr_t addr;
-} __attribute__((packed));
+};
 
-struct ip6_opt_hdr
+struct M5_ATTR_PACKED ip6_opt_hdr
 {
     uint8_t ext_nxt;
     uint8_t ext_len;
@@ -578,7 +578,7 @@ struct ip6_opt_hdr
         struct ip6_opt_routing_type2 rtType2;
         struct ip6_opt_dstopts dstOpts;
     } ext_data;
-} __attribute__((packed));
+};
 
 struct Ip6Opt : public ip6_opt_hdr
 {
