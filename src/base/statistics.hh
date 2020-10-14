@@ -657,7 +657,7 @@ class ScalarBase : public DataWrap<Derived, ScalarInfoProxy>
 
   protected:
     /** The storage of this stat. */
-    char storage[sizeof(Storage)] __attribute__ ((aligned (8)));
+    M5_ALIGNED(8) char storage[sizeof(Storage)];
 
   protected:
     /**
@@ -1878,7 +1878,7 @@ class DistBase : public DataWrap<Derived, DistInfoProxy>
 
   protected:
     /** The storage for this stat. */
-    char storage[sizeof(Storage)] __attribute__ ((aligned (8)));
+    M5_ALIGNED(8) char storage[sizeof(Storage)];
 
   protected:
     /**

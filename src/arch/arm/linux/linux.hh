@@ -43,6 +43,7 @@
 #define __ARCH_ARM_LINUX_LINUX_HH__
 
 #include "arch/arm/utility.hh"
+#include "base/compiler.hh"
 #include "kern/linux/linux.hh"
 
 class ArmLinux : public Linux
@@ -219,9 +220,9 @@ class ArmLinux32 : public ArmLinux
         uint32_t  st_gid;
         uint64_t  st_rdev;
         uint8_t   __pad3[4];
-        int64_t   __attribute__ ((aligned (8))) st_size;
+        M5_ALIGNED(8) int64_t st_size;
         uint32_t  st_blksize;
-        uint64_t  __attribute__ ((aligned (8))) st_blocks;
+        M5_ALIGNED(8) uint64_t st_blocks;
         uint32_t  st_atimeX;
         uint32_t  st_atime_nsec;
         uint32_t  st_mtimeX;

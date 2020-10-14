@@ -99,6 +99,9 @@
 #  define M5_LOCAL [[gnu::visibility("hidden")]]
 #  define M5_WEAK [[gnu::weak]]
 
+// Force an alignment for a variable.
+#  define M5_ALIGNED(alignment) [[gnu::aligned(alignment)]]
+
 // Marker for what should be an unreachable point in the code.
 #  define M5_UNREACHABLE __builtin_unreachable()
 
