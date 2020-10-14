@@ -204,37 +204,26 @@ template <typename T>
 inline void
 _format_string(std::ostream &out, const T &data, Format &fmt)
 {
-    using namespace std;
-
-#if defined(__GNUC__) && (__GNUC__ < 3) || 1
     if (fmt.width > 0) {
         std::stringstream foo;
         foo << data;
         int flen = foo.str().size();
 
         if (fmt.width > flen) {
-            char *spaces = new char[fmt.width - flen + 1];
-            memset(spaces, ' ', fmt.width - flen);
+            char spaces[fmt.width - flen + 1];
+            std::memset(spaces, ' ', fmt.width - flen);
             spaces[fmt.width - flen] = 0;
 
             if (fmt.flush_left)
                 out << foo.str() << spaces;
             else
                 out << spaces << foo.str();
-
-            delete [] spaces;
-        } else
+        } else {
             out << data;
-    } else
+        }
+    } else {
         out << data;
-#else
-    if (fmt.width > 0)
-        out.width(fmt.width);
-    if (fmt.flush_left)
-        out.setf(std::ios::left);
-
-    out << data;
-#endif
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
