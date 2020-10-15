@@ -130,8 +130,10 @@ ISA::clear()
     regVal[MISCREG_APIC_BASE] = lApicBase;
 }
 
-ISA::ISA(const Params &p) : BaseISA(p)
+ISA::ISA(const X86ISAParams &p) : BaseISA(p), vendorString(p.vendor_string)
 {
+    fatal_if(vendorString.size() != 12,
+             "CPUID vendor string must be 12 characters\n");
     clear();
 }
 
@@ -432,6 +434,12 @@ ISA::setThreadContext(ThreadContext *_tc)
 {
     BaseISA::setThreadContext(_tc);
     tc->getDecoderPtr()->setM5Reg(regVal[MISCREG_M5_REG]);
+}
+
+std::string
+ISA::getVendorString() const
+{
+    return vendorString;
 }
 
 }

@@ -108,6 +108,11 @@ namespace X86ISA
         void unserialize(CheckpointIn &cp) override;
 
         void setThreadContext(ThreadContext *_tc) override;
+
+        std::string getVendorString() const;
+
+      private:
+        std::string vendorString;
     };
 }
 
