@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2018 ARM Limited
+ * Copyright (c) 2015, 2018, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -50,7 +50,9 @@
 #include <iostream>
 #include <iterator>
 #include <stack>
+#include <set>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include "base/logging.hh"
@@ -515,6 +517,47 @@ debug_serialize(const std::string &cpt_dir);
 void
 objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param);
 
+/**
+ * Serialize a mapping represented as two arrays: one containing names
+ * and the other containing values.
+ *
+ * @param names array of keys
+ * @param param array of values
+ * @param size size of the names and param arrays
+ */
+template <class T>
+void
+mappingParamOut(CheckpointOut &os, const char* sectionName,
+    const char* const names[], const T *param, unsigned size)
+{
+    Serializable::ScopedCheckpointSection sec(os, sectionName);
+    for (unsigned i = 0; i < size; ++i) {
+        paramOut(os, names[i], param[i]);
+    }
+}
+
+/**
+ * Restore mappingParamOut. Keys missing from the checkpoint are ignored.
+ */
+template <class T>
+void
+mappingParamIn(CheckpointIn &cp, const char* sectionName,
+    const char* const names[], T *param, unsigned size)
+{
+    Serializable::ScopedCheckpointSection sec(cp, sectionName);
+    std::unordered_map<std::string, size_t> name_to_index;
+    for (size_t i = 0; i < size; i++) {
+        name_to_index[names[i]] = i;
+    }
+    for (size_t i = 0; i < size; i++) {
+        auto& key = names[i];
+        T value;
+        if (optParamIn(cp, key, value)) {
+            param[name_to_index[key]] = value;
+        }
+    }
+}
+
 //
 // These macros are streamlined to use in serialize/unserialize
 // functions.  It's assumed that serialize() has a parameter 'os' for
@@ -645,5 +688,17 @@ objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param);
         objParamIn(cp, #objptr, sptr);                  \
         objptr = dynamic_cast<decltype(objptr)>(sptr);  \
     } while (0)
+
+/**
+ * \def SERIALIZE_MAPPING(member, names, size)
+ */
+#define SERIALIZE_MAPPING(member, names, size) \
+        mappingParamOut(cp, #member, names, member, size)
+
+/**
+ * \def UNSERIALIZE_MAPPING(member, names, size)
+ */
+#define UNSERIALIZE_MAPPING(member, names, size) \
+        mappingParamIn(cp, #member, names, member, size)
 
 #endif // __SERIALIZE_HH__
