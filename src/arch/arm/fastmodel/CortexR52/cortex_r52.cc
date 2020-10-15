@@ -94,7 +94,7 @@ CortexR52::getPort(const std::string &if_name, PortID idx)
 }
 
 CortexR52Cluster::CortexR52Cluster(const Params &p) :
-    SimObject(&p), _params(p), cores(p.cores), evs(p.evs)
+    SimObject(p), _params(p), cores(p.cores), evs(p.evs)
 {
     for (int i = 0; i < p.cores.size(); i++)
         p.cores[i]->setCluster(this, i);

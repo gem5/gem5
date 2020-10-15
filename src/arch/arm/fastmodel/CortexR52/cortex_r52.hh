@@ -63,7 +63,7 @@ class CortexR52 : public Iris::CPU<CortexR52TC>
 
   public:
     CortexR52(const Params &p) :
-        Base(&p, scx::scx_get_iris_connection_interface()), _params(p)
+        Base(p, scx::scx_get_iris_connection_interface()), _params(p)
     {}
 
     template <class T>

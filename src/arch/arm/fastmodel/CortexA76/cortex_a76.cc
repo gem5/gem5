@@ -98,8 +98,8 @@ CortexA76::getPort(const std::string &if_name, PortID idx)
         return Base::getPort(if_name, idx);
 }
 
-CortexA76Cluster::CortexA76Cluster(Params &p) :
-    SimObject(&p), _params(p), cores(p.cores), evs(p.evs)
+CortexA76Cluster::CortexA76Cluster(const Params &p) :
+    SimObject(p), _params(p), cores(p.cores), evs(p.evs)
 {
     for (int i = 0; i < p.cores.size(); i++)
         p.cores[i]->setCluster(this, i);

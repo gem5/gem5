@@ -62,8 +62,8 @@ class CortexA76 : public Iris::CPU<CortexA76TC>
     const Params &params() { return _params; }
 
   public:
-    CortexA76(Params &p) : Base(&p, scx::scx_get_iris_connection_interface()),
-        _params(p)
+    CortexA76(const Params &p) :
+        Base(p, scx::scx_get_iris_connection_interface()), _params(p)
     {}
 
     void
@@ -110,7 +110,7 @@ class CortexA76Cluster : public SimObject
     CortexA76 *getCore(int num) const { return cores.at(num); }
     sc_core::sc_module *getEvs() const { return evs; }
 
-    CortexA76Cluster(Params &p);
+    CortexA76Cluster(const Params &p);
     const Params &params() { return _params; }
 
     Port &getPort(const std::string &if_name,
