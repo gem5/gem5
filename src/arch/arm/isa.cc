@@ -2351,6 +2351,22 @@ ISA::zeroSveVecRegUpperPart(VecRegContainer &vc, unsigned eCount)
 }
 
 void
+ISA::serialize(CheckpointOut &cp) const
+{
+    DPRINTF(Checkpoint, "Serializing Arm Misc Registers\n");
+    SERIALIZE_ARRAY(miscRegs, NUM_PHYS_MISCREGS);
+}
+
+void
+ISA::unserialize(CheckpointIn &cp)
+{
+    DPRINTF(Checkpoint, "Unserializing Arm Misc Registers\n");
+    UNSERIALIZE_ARRAY(miscRegs, NUM_PHYS_MISCREGS);
+    CPSR tmp_cpsr = miscRegs[MISCREG_CPSR];
+    updateRegMap(tmp_cpsr);
+}
+
+void
 ISA::addressTranslation64(TLB::ArmTranslationType tran_type,
     BaseTLB::Mode mode, Request::Flags flags, RegVal val)
 {

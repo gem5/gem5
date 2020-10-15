@@ -810,21 +810,8 @@ namespace ArmISA
         static void zeroSveVecRegUpperPart(VecRegContainer &vc,
                                            unsigned eCount);
 
-        void
-        serialize(CheckpointOut &cp) const override
-        {
-            DPRINTF(Checkpoint, "Serializing Arm Misc Registers\n");
-            SERIALIZE_ARRAY(miscRegs, NUM_PHYS_MISCREGS);
-        }
-
-        void
-        unserialize(CheckpointIn &cp) override
-        {
-            DPRINTF(Checkpoint, "Unserializing Arm Misc Registers\n");
-            UNSERIALIZE_ARRAY(miscRegs, NUM_PHYS_MISCREGS);
-            CPSR tmp_cpsr = miscRegs[MISCREG_CPSR];
-            updateRegMap(tmp_cpsr);
-        }
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
 
         void startup() override;
 
