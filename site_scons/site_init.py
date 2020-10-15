@@ -51,14 +51,37 @@ For more details, see:
 """)
     raise
 
-# pybind11 requires python 2.7
+
+# Check for the python version. Python 2 is no longer supported.
 try:
-    EnsurePythonVersion(2, 7)
+    EnsurePythonVersion(3, 0)
 except SystemExit as e:
-    print ("""
-You can use a non-default installation of the Python interpreter by
-rearranging your PATH so that scons finds the non-default 'python' and
-'python-config' first.
+    print("""\033[93m
+Python 3 is now required.
+
+The following are steps to compile gem5 in Python 3 environment,
+
+*Step 1*: ensure Python 3 is installed. On Ubuntu like systems, you can try \
+this command:
+
+    sudo apt-get install python3 python3-six python-is-python3 python3-pydot
+
+To run Python 3 from a container, you can try the Docker files in \
+util/dockerfiles folder.
+
+*Step 2*: ensure that scons is run in the Python 3 environment. If scons \
+isn't run automatically with Python 3, you can force it by replacing `scons` \
+by the following phrase,
+
+    /usr/bin/env python3 $(which scons)
+
+For example, the following command will let scons compile gem5/X86 in the \
+Python 3 environment,
+
+   /usr/bin/env python3 $(which scons) build/X86/gem5.opt
+
+(Optional) For convenience reasons, you can set up an alias for the Python3 \
+scons phrase in your environment. \033[0m
 """)
     raise
 
