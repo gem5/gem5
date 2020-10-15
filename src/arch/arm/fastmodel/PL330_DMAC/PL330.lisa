@@ -1,0 +1,88 @@
+/*
+ * Copyright 2020 Google Inc.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+component PL330
+{
+    composition
+    {
+        pl330 : PL330_DMAC();
+
+        // Clocks.
+        clock1Hz : MasterClock();
+        clockDiv : ClockDivider();
+
+        // Bridges.
+
+        // For DMA accesses.
+        dma_out : PVBus2AMBAPV();
+
+        // For register accesses.
+        pio_s_in : AMBAPV2PVBus();
+        pio_s_ns_in : AMBAPV2PVBus();
+    }
+
+    connection
+    {
+        // Outgoing DMA accesses.
+        pl330.pvbus_m => dma_out.pvbus_s;
+        dma_out.amba_pv_m => self.amba_m;
+
+        // Incoming register accesses.
+        self.amba_s => pio_s_in.amba_pv_s;
+        pio_s_in.pvbus_m => pl330.pvbus_s;
+        self.amba_s_ns => pio_s_ns_in.amba_pv_s;
+        pio_s_ns_in.pvbus_m => pl330.pvbus_s_ns;
+
+        // Clocks.
+        clock1Hz.clk_out => clockDiv.clk_in;
+        clockDiv.clk_out => pl330.clk_in;
+
+        // Interrupts.
+        pl330.irq_master_port => self.irq;
+        pl330.irq_abort_master_port => self.irq_abort;
+    }
+
+    properties
+    {
+        component_type = "System";
+    }
+
+    slave port<ExportedClockRateControl> clock_rate_s
+    {
+        behavior set_mul_div(uint64_t mul, uint64_t div)
+        {
+            clockDiv.rate.set64(mul, div);
+        }
+    }
+
+    master port<AMBAPV> amba_m;
+    slave port<AMBAPV> amba_s;
+    slave port<AMBAPV> amba_s_ns;
+
+    master port<Signal> irq[32];
+    master port<Signal> irq_abort;
+}
