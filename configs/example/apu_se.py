@@ -299,8 +299,8 @@ for i in range(n_cu):
     vrf_pool_mgrs = []
     srfs = []
     srf_pool_mgrs = []
-    for j in xrange(options.simds_per_cu):
-        for k in xrange(shader.n_wf):
+    for j in range(options.simds_per_cu):
+        for k in range(shader.n_wf):
             wavefronts.append(Wavefront(simdId = j, wf_slot_id = k,
                                         wf_size = options.wf_size))
         vrf_pool_mgrs.append(SimplePoolManager(pool_size = \
@@ -593,7 +593,7 @@ for i in range(n_cu):
             system.ruby._cpu_ports[gpu_port_idx].slave
 gpu_port_idx = gpu_port_idx + 1
 
-for i in xrange(n_cu):
+for i in range(n_cu):
     if i > 0 and not i % options.cu_per_scalar_cache:
         print("incrementing idx on ", i)
         gpu_port_idx += 1
