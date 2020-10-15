@@ -97,9 +97,9 @@ def parse_options():
         choices=listener_modes, default="auto",
         help="Port (e.g., gdb) listener mode (auto: Enable if running " \
         "interactively) [Default: %default]")
-    option("--listener-loopback-only", action="store_true", default=False,
-        help="Port listeners will only accept connections over the " \
-        "loopback device")
+    option("--allow-remote-connections", action="store_true", default=False,
+        help="Port listeners will accept connections from anywhere (0.0.0.0). "
+        "Default is only localhost.")
     option('-i', "--interactive", action="store_true", default=False,
         help="Invoke the interactive interpreter after running the script")
     option("--pdb", action="store_true", default=False,
@@ -379,7 +379,7 @@ def main(*args):
     else:
         panic("Unhandled listener mode: %s" % options.listener_mode)
 
-    if options.listener_loopback_only:
+    if not options.allow_remote_connections:
         m5.listenersLoopbackOnly()
 
     # set debugging options
