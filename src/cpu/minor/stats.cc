@@ -40,51 +40,32 @@
 namespace Minor
 {
 
-MinorStats::MinorStats()
-{ }
-
-void
-MinorStats::regStats(const std::string &name, BaseCPU &baseCpu)
+MinorStats::MinorStats(BaseCPU *base_cpu)
+    : Stats::Group(base_cpu),
+    ADD_STAT(numInsts, "Number of instructions committed"),
+    ADD_STAT(numOps, "Number of ops (including micro ops) committed"),
+    ADD_STAT(numDiscardedOps,
+             "Number of ops (including micro ops) which were discarded before "
+             "commit"),
+    ADD_STAT(numFetchSuspends,
+             "Number of times Execute suspended instruction fetching"),
+    ADD_STAT(quiesceCycles,
+             "Total number of cycles that CPU has spent quiesced or waiting "
+             "for an interrupt"),
+    ADD_STAT(cpi, "CPI: cycles per instruction"),
+    ADD_STAT(ipc, "IPC: instructions per cycle"),
+    ADD_STAT(committedInstType, "Class of committed instruction")
 {
-    numInsts
-        .name(name + ".committedInsts")
-        .desc("Number of instructions committed");
+    quiesceCycles.prereq(quiesceCycles);
 
-    numOps
-        .name(name + ".committedOps")
-        .desc("Number of ops (including micro ops) committed");
+    cpi.precision(6);
+    cpi = base_cpu->numCycles / numInsts;
 
-    numDiscardedOps
-        .name(name + ".discardedOps")
-        .desc("Number of ops (including micro ops) which were discarded "
-            "before commit");
-
-    numFetchSuspends
-        .name(name + ".numFetchSuspends")
-        .desc("Number of times Execute suspended instruction fetching");
-
-    quiesceCycles
-        .name(name + ".quiesceCycles")
-        .desc("Total number of cycles that CPU has spent quiesced or waiting "
-              "for an interrupt")
-        .prereq(quiesceCycles);
-
-    cpi
-        .name(name + ".cpi")
-        .desc("CPI: cycles per instruction")
-        .precision(6);
-    cpi = baseCpu.numCycles / numInsts;
-
-    ipc
-        .name(name + ".ipc")
-        .desc("IPC: instructions per cycle")
-        .precision(6);
-    ipc = numInsts / baseCpu.numCycles;
+    ipc.precision(6);
+    ipc = numInsts / base_cpu->numCycles;
 
     committedInstType
-        .init(baseCpu.numThreads, Enums::Num_OpClass)
-        .name(name + ".op_class")
-        .desc("Class of committed instruction")
+        .init(base_cpu->numThreads, Enums::Num_OpClass)
         .flags(Stats::total | Stats::pdf | Stats::dist);
     committedInstType.ysubnames(Enums::OpClassStrings);
 }

@@ -52,9 +52,10 @@ namespace Minor
 {
 
 /** Currently unused stats class. */
-class MinorStats
+struct MinorStats : public Stats::Group
 {
-  public:
+    MinorStats(BaseCPU *parent);
+
     /** Number of simulated instructions */
     Stats::Scalar numInsts;
 
@@ -77,11 +78,6 @@ class MinorStats
     /** Number of instructions by type (OpClass) */
     Stats::Vector2d committedInstType;
 
-  public:
-    MinorStats();
-
-  public:
-    void regStats(const std::string &name, BaseCPU &baseCpu);
 };
 
 }

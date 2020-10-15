@@ -47,7 +47,8 @@
 
 MinorCPU::MinorCPU(const MinorCPUParams &params) :
     BaseCPU(params),
-    threadPolicy(params.threadPolicy)
+    threadPolicy(params.threadPolicy),
+    stats(this)
 {
     /* This is only written for one thread at the moment */
     Minor::MinorThread *thread;
@@ -118,7 +119,6 @@ void
 MinorCPU::regStats()
 {
     BaseCPU::regStats();
-    stats.regStats(name(), *this);
     pipeline->regStats();
 }
 
