@@ -19,11 +19,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     protobuf-compiler \
     libprotoc-dev \
     libgoogle-perftools-dev \
-    python-dev \
-    python \
     python-yaml \
-    python-six \
-    python-pip \
+    python3-dev \
+    python3 \
+    python3-yaml \
+    python3-six \
+    python3-pip \
     wget \
     libpci3 \
     libelf1 \
@@ -36,8 +37,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libboost-dev \
     libpng12-dev
 
-RUN python -m pip install -U pip && \
-    python -m pip install -U setuptools scons
+RUN python3 -m pip install -U pip && \
+    python3 -m pip install -U setuptools scons==3.1.2
 
 ARG gem5_dist=http://dist.gem5.org/dist/develop
 
@@ -150,4 +151,5 @@ RUN cp gfx803_64.cd.pdb.txt gfx801_4.cd.pdb.txt && \
 WORKDIR /ROCm-Profiler
 RUN dpkg -i package/rocm-profiler_4.0.6036_amd64.deb
 
+RUN ln -sf /usr/bin/python3 /usr/bin/python
 WORKDIR /
