@@ -60,7 +60,7 @@ class BaseGic(PioDevice):
     gicv_iidr = Param.UInt32(0,
         "VM CPU Interface Identification Register")
 
-    def interruptCells(self, int_type, int_num, int_flag):
+    def interruptCells(self, int_type, int_num, int_trigger, partition=None):
         """
         Interupt cells generation helper:
         Following specifications described in
@@ -68,7 +68,16 @@ class BaseGic(PioDevice):
         Documentation/devicetree/bindings/interrupt-controller/arm,gic.txt
         """
         assert self._state.interrupt_cells == 3
-        return [ int_type, int_num, int_flag ]
+
+        # Check for affinity in case of PPI. If there is no PPI
+        # partitioning, set the affinity to target all CPUs
+        # (affinity = 0xf00)
+        if partition is None and int_type == ArmPPI._LINUX_ID:
+            affinity = 0xf00
+        else:
+            affinity = 0
+
+        return [ int_type, int_num, affinity | int_trigger ]
 
 class ArmInterruptType(ScopedEnum):
     """
@@ -99,10 +108,14 @@ class ArmSPI(ArmInterruptPin):
     cxx_header = "dev/arm/base_gic.hh"
     cxx_class = "ArmSPIGen"
 
+    _LINUX_ID = 0
+
 class ArmPPI(ArmInterruptPin):
     type = 'ArmPPI'
     cxx_header = "dev/arm/base_gic.hh"
     cxx_class = "ArmPPIGen"
+
+    _LINUX_ID = 1
 
 class GicV2(BaseGic):
     type = 'GicV2'
@@ -237,7 +250,7 @@ class Gicv3(BaseGic):
 
     gicv4 = Param.Bool(True, "GICv4 extension available")
 
-    def interruptCells(self, int_type, int_num, int_flag):
+    def interruptCells(self, int_type, int_num, int_trigger, partition=None):
         """
         Interupt cells generation helper:
         Following specifications described in
@@ -248,7 +261,7 @@ class Gicv3(BaseGic):
         assert len(prop) >= 3
         prop[0] = int_type
         prop[1] = int_num
-        prop[2] = int_flag
+        prop[2] = int_trigger
         return prop
 
     def generateDeviceTree(self, state):
@@ -272,7 +285,7 @@ class Gicv3(BaseGic):
 
         node.append(FdtPropertyWords("reg", regs))
         node.append(FdtPropertyWords("interrupts",
-            self.interruptCells(1, int(self.maint_int.num)-16, 0xf04)))
+            self.interruptCells(1, int(self.maint_int.num)-16, 0x4)))
 
         node.appendPhandle(self)
 

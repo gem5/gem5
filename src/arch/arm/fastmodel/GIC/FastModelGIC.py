@@ -514,7 +514,7 @@ class FastModelGIC(BaseGic):
 
         return ranges
 
-    def interruptCells(self, int_type, int_num, int_flag):
+    def interruptCells(self, int_type, int_num, int_trigger, int_affinity=0):
         """
         Interupt cells generation helper:
         Following specifications described in
@@ -525,7 +525,7 @@ class FastModelGIC(BaseGic):
         assert len(prop) >= 3
         prop[0] = int_type
         prop[1] = int_num
-        prop[2] = int_flag
+        prop[2] = int_trigger
         return prop
 
     def generateDeviceTree(self, state):
@@ -552,7 +552,7 @@ class FastModelGIC(BaseGic):
         node.append(FdtPropertyWords("reg", regs))
         # Maintenance interrupt (PPI 25).
         node.append(FdtPropertyWords("interrupts",
-            self.interruptCells(1, 9, 0xf04)))
+            self.interruptCells(1, 9, 0x4)))
 
         node.appendPhandle(self)
 
