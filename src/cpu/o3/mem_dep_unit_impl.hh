@@ -42,6 +42,7 @@
 #define __CPU_O3_MEM_DEP_UNIT_IMPL_HH__
 
 #include <map>
+#include <memory>
 #include <vector>
 
 #include "base/debug.hh"
@@ -52,7 +53,8 @@
 
 template <class MemDepPred, class Impl>
 MemDepUnit<MemDepPred, Impl>::MemDepUnit()
-    : iqPtr(NULL)
+    : iqPtr(NULL),
+      stats(nullptr)
 {
 }
 
@@ -61,7 +63,8 @@ MemDepUnit<MemDepPred, Impl>::MemDepUnit(const DerivO3CPUParams &params)
     : _name(params.name + ".memdepunit"),
       depPred(params.store_set_clear_period, params.SSITSize,
               params.LFSTSize),
-      iqPtr(NULL)
+      iqPtr(NULL),
+      stats(nullptr)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit object.\n");
 }
@@ -94,7 +97,7 @@ MemDepUnit<MemDepPred, Impl>::~MemDepUnit()
 template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::init(
-        const DerivO3CPUParams &params, ThreadID tid)
+        const DerivO3CPUParams &params, ThreadID tid, O3CPU *cpu)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit %i object.\n",tid);
 
@@ -103,27 +106,22 @@ MemDepUnit<MemDepPred, Impl>::init(
 
     depPred.init(params.store_set_clear_period, params.SSITSize,
             params.LFSTSize);
+
+    std::string stats_group_name = csprintf("MemDepUnit__%i", tid);
+    cpu->addStatGroup(stats_group_name.c_str(), &stats);
 }
 
 template <class MemDepPred, class Impl>
-void
-MemDepUnit<MemDepPred, Impl>::regStats()
+MemDepUnit<MemDepPred, Impl>::
+MemDepUnitStats::MemDepUnitStats(Stats::Group *parent)
+    : Stats::Group(parent),
+      ADD_STAT(insertedLoads,
+               "Number of loads inserted to the mem dependence unit."),
+      ADD_STAT(insertedStores,
+               "Number of stores inserted to the mem dependence unit."),
+      ADD_STAT(conflictingLoads, "Number of conflicting loads."),
+      ADD_STAT(conflictingStores, "Number of conflicting stores.")
 {
-    insertedLoads
-        .name(name() + ".insertedLoads")
-        .desc("Number of loads inserted to the mem dependence unit.");
-
-    insertedStores
-        .name(name() + ".insertedStores")
-        .desc("Number of stores inserted to the mem dependence unit.");
-
-    conflictingLoads
-        .name(name() + ".conflictingLoads")
-        .desc("Number of conflicting loads.");
-
-    conflictingStores
-        .name(name() + ".conflictingStores")
-        .desc("Number of conflicting stores.");
 }
 
 template <class MemDepPred, class Impl>
@@ -289,9 +287,9 @@ MemDepUnit<MemDepPred, Impl>::insert(const DynInstPtr &inst)
         inst_entry->memDeps = store_entries.size();
 
         if (inst->isLoad()) {
-            ++conflictingLoads;
+            ++stats.conflictingLoads;
         } else {
-            ++conflictingStores;
+            ++stats.conflictingStores;
         }
     }
 
@@ -304,9 +302,9 @@ MemDepUnit<MemDepPred, Impl>::insert(const DynInstPtr &inst)
 
         depPred.insertStore(inst->instAddr(), inst->seqNum, inst->threadNumber);
 
-        ++insertedStores;
+        ++stats.insertedStores;
     } else if (inst->isLoad()) {
-        ++insertedLoads;
+        ++stats.insertedLoads;
     } else {
         panic("Unknown type! (most likely a barrier).");
     }
@@ -326,9 +324,9 @@ MemDepUnit<MemDepPred, Impl>::insertNonSpec(const DynInstPtr &inst)
 
         depPred.insertStore(inst->instAddr(), inst->seqNum, inst->threadNumber);
 
-        ++insertedStores;
+        ++stats.insertedStores;
     } else if (inst->isLoad()) {
-        ++insertedLoads;
+        ++stats.insertedLoads;
     } else {
         panic("Unknown type! (most likely a barrier).");
     }

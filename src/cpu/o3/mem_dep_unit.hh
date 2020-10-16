@@ -85,6 +85,7 @@ class MemDepUnit
   public:
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::DynInstConstPtr DynInstConstPtr;
+    typedef typename Impl::O3CPU O3CPU;
 
     /** Empty constructor. Must call init() prior to using in this case. */
     MemDepUnit();
@@ -99,10 +100,7 @@ class MemDepUnit
     std::string name() const { return _name; }
 
     /** Initializes the unit with parameters and a thread id. */
-    void init(const DerivO3CPUParams &params, ThreadID tid);
-
-    /** Registers statistics. */
-    void regStats();
+    void init(const DerivO3CPUParams &params, ThreadID tid, O3CPU *cpu);
 
     /** Determine if we are drained. */
     bool isDrained() const;
@@ -279,15 +277,20 @@ class MemDepUnit
 
     /** The thread id of this memory dependence unit. */
     int id;
-
-    /** Stat for number of inserted loads. */
-    Stats::Scalar insertedLoads;
-    /** Stat for number of inserted stores. */
-    Stats::Scalar insertedStores;
-    /** Stat for number of conflicting loads that had to wait for a store. */
-    Stats::Scalar conflictingLoads;
-    /** Stat for number of conflicting stores that had to wait for a store. */
-    Stats::Scalar conflictingStores;
+    struct MemDepUnitStats : public Stats::Group
+    {
+        MemDepUnitStats(Stats::Group *parent);
+        /** Stat for number of inserted loads. */
+        Stats::Scalar insertedLoads;
+        /** Stat for number of inserted stores. */
+        Stats::Scalar insertedStores;
+        /** Stat for number of conflicting loads that had to wait for a
+         *  store. */
+        Stats::Scalar conflictingLoads;
+        /** Stat for number of conflicting stores that had to wait for a
+         *  store. */
+        Stats::Scalar conflictingStores;
+    } stats;
 };
 
 #endif // __CPU_O3_MEM_DEP_UNIT_HH__
