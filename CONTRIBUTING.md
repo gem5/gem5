@@ -97,7 +97,7 @@ git checkout --track origin/develop
 
 Changes should be made to this develop branch. Changes to the stable branch
 will be blocked. Once a change on the develop branch is properly incorporated
-into the gem5 repo it will be merged into the stable Branch upon the next
+into the gem5 repo it will be merged into the stable branch upon the next
 release of gem5. New releases of gem5 occur three times a year. Ergo, changes
 made to the develop branch should appear on the stable branch within three to
 four months as part of a stable release.
@@ -109,7 +109,11 @@ There are a few repositories other than the main gem5 development repository.
 
  * public/m5threads: The code for a pthreads implementation that works with
    gem5's syscall emulation mode.
-
+ * public/gem5-resources: Resources to enable computer architecture research
+   with gem5. See the README.md file in the gem5-resources repository for more
+   information.
+ * public/gem5-website: The gem5.org website source. See the README.md file in
+   the gem5-website repository for more information.
 
 Making changes to gem5
 ======================
@@ -122,6 +126,15 @@ Unlike our previous flow with Mercurial and patch queues, when using git, you
 will be committing changes to your local branch. By using separate branches in
 git, you will be able to pull in and merge changes from mainline and simply
 keep up with upstream changes.
+
+We use a rebase-always model for contributions to the develop branch of gem5.
+In this model, the changes are rebased on top of the tip of develop instead of
+merged. This means that to contribute, you will have to frequently rebase any
+feature branches on top of develop. If you see a "merge conflict" in gerrit, it
+can often be solved with a simple rebase. To find out more information about
+rebasing and git, see the [git book].
+
+[git book]: https://git-scm.com/book/en/v2/Git-Branching-Rebasing
 
 Requirements for change descriptions
 ------------------------------------
@@ -165,10 +178,14 @@ We currently use the following tags:
    automatically with a commit hook by git.
  * Tested-by: Used to acknowledge people who tested a patch. Sometimes added
    automatically by review systems that integrate with CI systems.
+ * Issue-On: Used to link a commit to an issue in gem5's [issue tracker]. The
+   format should be https://gem5.atlassian.net/browse/GEM5-<NUMBER>
 
-Other than the "Signed-off-by", "Reported-by", and "Tested-by" tags, you
-generally don't need to add these manually as they are added automatically by
-Gerrit.
+[issue tracker]: https://gem5.atlassian.net/
+
+Other than the "Signed-off-by", "Issue-On", "Reported-by", and "Tested-by"
+tags, you generally don't need to add these manually as they are added
+automatically by Gerrit.
 
 It is encouraged for the author of the patch and the submitter to add a
 Signed-off-by tag to the commit message. By adding this line, the contributor
