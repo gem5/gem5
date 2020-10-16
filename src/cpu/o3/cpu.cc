@@ -447,8 +447,6 @@ FullO3CPU<Impl>::regStats()
         .precision(6);
     totalIpc =  sum(committedInsts) / numCycles;
 
-    this->iew.regStats();
-
     intRegfileReads
         .name(name() + ".int_regfile_reads")
         .desc("number of integer regfile reads")

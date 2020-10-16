@@ -130,9 +130,6 @@ class InstructionQueue
     /** Returns the name of the IQ. */
     std::string name() const;
 
-    /** Registers statistics. */
-    void regStats();
-
     /** Resets all instruction queue state. */
     void resetState();
 
@@ -472,75 +469,87 @@ class InstructionQueue
      */
     void dumpInsts();
 
-    /** Stat for number of instructions added. */
-    Stats::Scalar iqInstsAdded;
-    /** Stat for number of non-speculative instructions added. */
-    Stats::Scalar iqNonSpecInstsAdded;
+    struct IQStats : public Stats::Group
+    {
+        IQStats(O3CPU *cpu, const unsigned &total_width);
+        /** Stat for number of instructions added. */
+        Stats::Scalar instsAdded;
+        /** Stat for number of non-speculative instructions added. */
+        Stats::Scalar nonSpecInstsAdded;
 
-    Stats::Scalar iqInstsIssued;
-    /** Stat for number of integer instructions issued. */
-    Stats::Scalar iqIntInstsIssued;
-    /** Stat for number of floating point instructions issued. */
-    Stats::Scalar iqFloatInstsIssued;
-    /** Stat for number of branch instructions issued. */
-    Stats::Scalar iqBranchInstsIssued;
-    /** Stat for number of memory instructions issued. */
-    Stats::Scalar iqMemInstsIssued;
-    /** Stat for number of miscellaneous instructions issued. */
-    Stats::Scalar iqMiscInstsIssued;
-    /** Stat for number of squashed instructions that were ready to issue. */
-    Stats::Scalar iqSquashedInstsIssued;
-    /** Stat for number of squashed instructions examined when squashing. */
-    Stats::Scalar iqSquashedInstsExamined;
-    /** Stat for number of squashed instruction operands examined when
-     * squashing.
-     */
-    Stats::Scalar iqSquashedOperandsExamined;
-    /** Stat for number of non-speculative instructions removed due to a squash.
-     */
-    Stats::Scalar iqSquashedNonSpecRemoved;
-    // Also include number of instructions rescheduled and replayed.
+        Stats::Scalar instsIssued;
+        /** Stat for number of integer instructions issued. */
+        Stats::Scalar intInstsIssued;
+        /** Stat for number of floating point instructions issued. */
+        Stats::Scalar floatInstsIssued;
+        /** Stat for number of branch instructions issued. */
+        Stats::Scalar branchInstsIssued;
+        /** Stat for number of memory instructions issued. */
+        Stats::Scalar memInstsIssued;
+        /** Stat for number of miscellaneous instructions issued. */
+        Stats::Scalar miscInstsIssued;
+        /** Stat for number of squashed instructions that were ready to
+         *  issue. */
+        Stats::Scalar squashedInstsIssued;
+        /** Stat for number of squashed instructions examined when
+         *  squashing. */
+        Stats::Scalar squashedInstsExamined;
+        /** Stat for number of squashed instruction operands examined when
+         * squashing.
+         */
+        Stats::Scalar squashedOperandsExamined;
+        /** Stat for number of non-speculative instructions removed due to
+         *  a squash.
+         */
+        Stats::Scalar squashedNonSpecRemoved;
+        // Also include number of instructions rescheduled and replayed.
 
-    /** Distribution of number of instructions in the queue.
-     * @todo: Need to create struct to track the entry time for each
-     * instruction. */
-//    Stats::VectorDistribution queueResDist;
-    /** Distribution of the number of instructions issued. */
-    Stats::Distribution numIssuedDist;
-    /** Distribution of the cycles it takes to issue an instruction.
-     * @todo: Need to create struct to track the ready time for each
-     * instruction. */
-//    Stats::VectorDistribution issueDelayDist;
+        /** Distribution of number of instructions in the queue.
+         * @todo: Need to create struct to track the entry time for each
+         * instruction. */
+        // Stats::VectorDistribution queueResDist;
+        /** Distribution of the number of instructions issued. */
+        Stats::Distribution numIssuedDist;
+        /** Distribution of the cycles it takes to issue an instruction.
+         * @todo: Need to create struct to track the ready time for each
+         * instruction. */
+        // Stats::VectorDistribution issueDelayDist;
 
-    /** Number of times an instruction could not be issued because a
-     * FU was busy.
-     */
-    Stats::Vector statFuBusy;
-//    Stats::Vector dist_unissued;
-    /** Stat for total number issued for each instruction type. */
-    Stats::Vector2d statIssuedInstType;
+        /** Number of times an instruction could not be issued because a
+         * FU was busy.
+         */
+        Stats::Vector statFuBusy;
+        // Stats::Vector dist_unissued;
+        /** Stat for total number issued for each instruction type. */
+        Stats::Vector2d statIssuedInstType;
 
-    /** Number of instructions issued per cycle. */
-    Stats::Formula issueRate;
+        /** Number of instructions issued per cycle. */
+        Stats::Formula issueRate;
 
-    /** Number of times the FU was busy. */
-    Stats::Vector fuBusy;
-    /** Number of times the FU was busy per instruction issued. */
-    Stats::Formula fuBusyRate;
+        /** Number of times the FU was busy. */
+        Stats::Vector fuBusy;
+        /** Number of times the FU was busy per instruction issued. */
+        Stats::Formula fuBusyRate;
+    } iqStats;
+
    public:
-    Stats::Scalar intInstQueueReads;
-    Stats::Scalar intInstQueueWrites;
-    Stats::Scalar intInstQueueWakeupAccesses;
-    Stats::Scalar fpInstQueueReads;
-    Stats::Scalar fpInstQueueWrites;
-    Stats::Scalar fpInstQueueWakeupAccesses;
-    Stats::Scalar vecInstQueueReads;
-    Stats::Scalar vecInstQueueWrites;
-    Stats::Scalar vecInstQueueWakeupAccesses;
+    struct IQIOStats : public Stats::Group
+    {
+        IQIOStats(Stats::Group *parent);
+        Stats::Scalar intInstQueueReads;
+        Stats::Scalar intInstQueueWrites;
+        Stats::Scalar intInstQueueWakeupAccesses;
+        Stats::Scalar fpInstQueueReads;
+        Stats::Scalar fpInstQueueWrites;
+        Stats::Scalar fpInstQueueWakeupAccesses;
+        Stats::Scalar vecInstQueueReads;
+        Stats::Scalar vecInstQueueWrites;
+        Stats::Scalar vecInstQueueWakeupAccesses;
 
-    Stats::Scalar intAluAccesses;
-    Stats::Scalar fpAluAccesses;
-    Stats::Scalar vecAluAccesses;
+        Stats::Scalar intAluAccesses;
+        Stats::Scalar fpAluAccesses;
+        Stats::Scalar vecAluAccesses;
+    } iqIOStats;
 };
 
 #endif //__CPU_O3_INST_QUEUE_HH__

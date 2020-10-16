@@ -136,9 +136,6 @@ class DefaultIEW
     /** Returns the name of the DefaultIEW stage. */
     std::string name() const;
 
-    /** Registers statistics. */
-    void regStats();
-
     /** Registers probes. */
     void regProbePoints();
 
