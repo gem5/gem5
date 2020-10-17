@@ -138,7 +138,6 @@ class BaseSimpleCPU : public BaseCPU
     void haltContext(ThreadID thread_num) override;
 
     // statistics
-    void regStats() override;
     void resetStats() override;
 
     virtual Fault readMem(Addr addr, uint8_t* data, unsigned size,
