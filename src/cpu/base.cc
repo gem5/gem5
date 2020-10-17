@@ -133,6 +133,7 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
       previousCycle(0), previousState(CPU_STATE_SLEEP),
       functionTraceStream(nullptr), currentFunctionStart(0),
       currentFunctionEnd(0), functionEntryTick(0),
+      baseStats(this),
       addressMonitor(p.numThreads),
       syscallRetryLatency(p.syscallRetryLatency),
       pwrGatingLatency(p.pwr_gating_latency),
@@ -368,6 +369,16 @@ BaseCPU::probeInstCommit(const StaticInstPtr &inst, Addr pc)
         ppRetiredBranches->notify(1);
 }
 
+BaseCPU::
+BaseCPUStats::BaseCPUStats(Stats::Group *parent)
+    : Stats::Group(parent),
+      ADD_STAT(numCycles, "Number of cpu cycles simulated"),
+      ADD_STAT(numWorkItemsStarted, "Number of work items this cpu started"),
+      ADD_STAT(numWorkItemsCompleted,
+               "Number of work items this cpu completed")
+{
+}
+
 void
 BaseCPU::regStats()
 {
@@ -380,21 +391,6 @@ BaseCPU::regStats()
     }
 
     using namespace Stats;
-
-    numCycles
-        .name(name() + ".numCycles")
-        .desc("number of cpu cycles simulated")
-        ;
-
-    numWorkItemsStarted
-        .name(name() + ".numWorkItemsStarted")
-        .desc("number of work items this cpu started")
-        ;
-
-    numWorkItemsCompleted
-        .name(name() + ".numWorkItemsCompleted")
-        .desc("number of work items this cpu completed")
-        ;
 
     int size = threadContexts.size();
     if (size > 1) {

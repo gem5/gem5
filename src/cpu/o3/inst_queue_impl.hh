@@ -199,7 +199,8 @@ IQStats::IQStats(O3CPU *cpu, const unsigned &total_width)
     ADD_STAT(numIssuedDist, "Number of insts issued each cycle"),
     ADD_STAT(statFuBusy, "attempts to use FU when none available"),
     ADD_STAT(statIssuedInstType, "Type of FU issued"),
-    ADD_STAT(issueRate, "Inst issue rate", instsIssued / cpu->numCycles),
+    ADD_STAT(issueRate, "Inst issue rate",
+             instsIssued / cpu->baseStats.numCycles),
     ADD_STAT(fuBusy, "FU busy when requested"),
     ADD_STAT(fuBusyRate, "FU busy rate (busy events/executed inst)")
 {

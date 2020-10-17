@@ -196,7 +196,7 @@ Checker<Impl>::verify(const DynInstPtr &completed_inst)
         while (!result.empty()) {
             result.pop();
         }
-        numCycles++;
+        baseStats.numCycles++;
 
         Fault fault = NoFault;
 

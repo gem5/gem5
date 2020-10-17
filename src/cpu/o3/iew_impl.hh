@@ -193,7 +193,7 @@ IEWStats::IEWStats(O3CPU *cpu)
 
     wbRate
         .flags(Stats::total);
-    wbRate = writebackCount / cpu->numCycles;
+    wbRate = writebackCount / cpu->baseStats.numCycles;
 
     wbFanout
         .flags(Stats::total);
@@ -213,7 +213,8 @@ ExecutedInstStats::ExecutedInstStats(O3CPU *cpu)
     ADD_STAT(numRefs, "Number of memory reference insts executed"),
     ADD_STAT(numBranches, "Number of branches executed"),
     ADD_STAT(numStoreInsts, "Number of stores executed"),
-    ADD_STAT(numRate, "Inst execution rate", numInsts / cpu->numCycles)
+    ADD_STAT(numRate, "Inst execution rate",
+             numInsts / cpu->baseStats.numCycles)
 {
     numLoadInsts
         .init(cpu->numThreads)

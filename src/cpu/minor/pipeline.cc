@@ -52,7 +52,7 @@ namespace Minor
 {
 
 Pipeline::Pipeline(MinorCPU &cpu_, const MinorCPUParams &params) :
-    Ticked(cpu_, &(cpu_.BaseCPU::numCycles)),
+    Ticked(cpu_, &(cpu_.BaseCPU::baseStats.numCycles)),
     cpu(cpu_),
     allow_idling(params.enableIdling),
     f1ToF2(cpu.name() + ".f1ToF2", "lines",

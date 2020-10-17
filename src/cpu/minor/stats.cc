@@ -59,10 +59,10 @@ MinorStats::MinorStats(BaseCPU *base_cpu)
     quiesceCycles.prereq(quiesceCycles);
 
     cpi.precision(6);
-    cpi = base_cpu->numCycles / numInsts;
+    cpi = base_cpu->baseStats.numCycles / numInsts;
 
     ipc.precision(6);
-    ipc = numInsts / base_cpu->numCycles;
+    ipc = numInsts / base_cpu->baseStats.numCycles;
 
     committedInstType
         .init(base_cpu->numThreads, Enums::Num_OpClass)

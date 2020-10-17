@@ -228,7 +228,7 @@ AtomicSimpleCPU::activateContext(ThreadID thread_num)
     threadInfo[thread_num]->execContextStats.notIdleFraction = 1;
     Cycles delta = ticksToCycles(threadInfo[thread_num]->thread->lastActivate -
                                  threadInfo[thread_num]->thread->lastSuspend);
-    numCycles += delta;
+    baseStats.numCycles += delta;
 
     if (!tickEvent.scheduled()) {
         //Make sure ticks are still on multiples of cycles
@@ -633,7 +633,7 @@ AtomicSimpleCPU::tick()
     Tick latency = 0;
 
     for (int i = 0; i < width || locked; ++i) {
-        numCycles++;
+        baseStats.numCycles++;
         updateCycleCounters(BaseCPU::CPU_STATE_ON);
 
         if (!curStaticInst || !curStaticInst->isDelayedCommit()) {

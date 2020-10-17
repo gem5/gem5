@@ -157,8 +157,8 @@ class SimpleExecContext : public ExecContext {
             }
 
             idleFraction = Stats::constant(1.0) - notIdleFraction;
-            numIdleCycles = idleFraction * cpu->numCycles;
-            numBusyCycles = notIdleFraction * cpu->numCycles;
+            numIdleCycles = idleFraction * cpu->baseStats.numCycles;
+            numBusyCycles = notIdleFraction * cpu->baseStats.numCycles;
 
             numBranches
                 .prereq(numBranches);

@@ -175,7 +175,7 @@ TraceCPU::schedDcacheNext()
     DPRINTF(TraceCPUData, "DcacheGen event.\n");
 
     // Update stat for numCycles
-    numCycles = clockEdge() / clockPeriod();
+    baseStats.numCycles = clockEdge() / clockPeriod();
 
     dcacheGen.execute();
     if (dcacheGen.isExecComplete()) {
@@ -211,7 +211,7 @@ TraceCPU::checkAndSchedExitEvent()
      "Number of events scheduled to trigger instruction request generator"),
     ADD_STAT(numOps, "Number of micro-ops simulated by the Trace CPU"),
     ADD_STAT(cpi, "Cycles per micro-op used as a proxy for CPI",
-     trace->numCycles / numOps)
+     trace->baseStats.numCycles / numOps)
 {
         cpi.precision(6);
 }

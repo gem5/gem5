@@ -433,19 +433,19 @@ FullO3CPUStats::FullO3CPUStats(FullO3CPU *cpu)
 
     cpi
         .precision(6);
-    cpi = cpu->numCycles / committedInsts;
+    cpi = cpu->baseStats.numCycles / committedInsts;
 
     totalCpi
         .precision(6);
-    totalCpi = cpu->numCycles / sum(committedInsts);
+    totalCpi = cpu->baseStats.numCycles / sum(committedInsts);
 
     ipc
         .precision(6);
-    ipc =  committedInsts / cpu->numCycles;
+    ipc = committedInsts / cpu->baseStats.numCycles;
 
     totalIpc
         .precision(6);
-    totalIpc =  sum(committedInsts) / cpu->numCycles;
+    totalIpc = sum(committedInsts) / cpu->baseStats.numCycles;
 
     intRegfileReads
         .prereq(intRegfileReads);
@@ -492,7 +492,7 @@ FullO3CPU<Impl>::tick()
     assert(!switchedOut());
     assert(drainState() != DrainState::Drained);
 
-    ++numCycles;
+    ++baseStats.numCycles;
     updateCycleCounters(BaseCPU::CPU_STATE_ON);
 
 //    activity = false;
@@ -1665,7 +1665,7 @@ FullO3CPU<Impl>::wakeCPU()
     if (cycles > 1) {
         --cycles;
         cpuStats.idleCycles += cycles;
-        numCycles += cycles;
+        baseStats.numCycles += cycles;
     }
 
     schedule(tickEvent, clockEdge());
