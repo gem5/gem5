@@ -111,7 +111,7 @@ struct ThreadState : public Serializable {
     // Defining the stat group
     struct ThreadStateStats : public Stats::Group
     {
-        ThreadStateStats(BaseCPU *cpu, ThreadState *thread);
+        ThreadStateStats(BaseCPU *cpu, const ThreadID& thread);
         /** Stat for number instructions committed. */
         Stats::Scalar numInsts;
         /** Stat for number ops (including micro ops) committed. */
