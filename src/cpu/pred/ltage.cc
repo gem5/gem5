@@ -141,8 +141,3 @@ LTAGE::squash(ThreadID tid, void *bp_history)
     TAGE::squash(tid, bp_history);
 }
 
-void
-LTAGE::regStats()
-{
-    TAGE::regStats();
-}

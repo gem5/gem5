@@ -69,7 +69,6 @@ class LTAGE : public TAGE
                 Addr corrTarget) override;
 
     void init() override;
-    virtual void regStats() override;
 
   protected:
     /** The loop predictor object */
