@@ -97,12 +97,12 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const ResponsePort&
     // updateRequest.
     reqLookupResult.retryItem = sf_item;
 
-    totRequests++;
+    stats.totRequests++;
     if (is_hit) {
         if (interested.count() == 1)
-            hitSingleRequests++;
+            stats.hitSingleRequests++;
         else
-            hitMultiRequests++;
+            stats.hitMultiRequests++;
     }
 
     DPRINTF(SnoopFilter, "%s:   SF value %x.%x\n",
@@ -207,12 +207,12 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
 
     SnoopMask interested = (sf_item.holder | sf_item.requested);
 
-    totSnoops++;
+    stats.totSnoops++;
 
     if (interested.count() == 1)
-        hitSingleSnoops++;
+        stats.hitSingleSnoops++;
     else
-        hitMultiSnoops++;
+        stats.hitMultiSnoops++;
 
     // ReadEx and Writes require both invalidation and exlusivity, while reads
     // require neither. Writebacks on the other hand require exclusivity but
@@ -387,36 +387,26 @@ SnoopFilter::updateResponse(const Packet* cpkt, const ResponsePort&
             __func__, sf_item.requested, sf_item.holder);
 }
 
+SnoopFilter::SnoopFilterStats::SnoopFilterStats(Stats::Group *parent):
+Stats::Group(parent),
+ADD_STAT(totRequests,"Total number of requests made to the snoop filter."),
+ADD_STAT(hitSingleRequests,
+              "Number of requests hitting in the snoop filter with a single "\
+              "holder of the requested data."),
+ADD_STAT(hitMultiRequests,
+              "Number of requests hitting in the snoop filter with multiple "\
+              "(>1) holders of the requested data."),
+ADD_STAT(totSnoops,"Total number of snoops made to the snoop filter."),
+ADD_STAT(hitSingleSnoops,
+              "Number of snoops hitting in the snoop filter with a single "\
+              "holder of the requested data."),
+ADD_STAT(hitMultiSnoops,
+              "Number of snoops hitting in the snoop filter with multiple "\
+              "(>1) holders of the requested data.")
+{}
+
 void
 SnoopFilter::regStats()
 {
     SimObject::regStats();
-
-    totRequests
-        .name(name() + ".tot_requests")
-        .desc("Total number of requests made to the snoop filter.");
-
-    hitSingleRequests
-        .name(name() + ".hit_single_requests")
-        .desc("Number of requests hitting in the snoop filter with a single "\
-              "holder of the requested data.");
-
-    hitMultiRequests
-        .name(name() + ".hit_multi_requests")
-        .desc("Number of requests hitting in the snoop filter with multiple "\
-              "(>1) holders of the requested data.");
-
-    totSnoops
-        .name(name() + ".tot_snoops")
-        .desc("Total number of snoops made to the snoop filter.");
-
-    hitSingleSnoops
-        .name(name() + ".hit_single_snoops")
-        .desc("Number of snoops hitting in the snoop filter with a single "\
-              "holder of the requested data.");
-
-    hitMultiSnoops
-        .name(name() + ".hit_multi_snoops")
-        .desc("Number of snoops hitting in the snoop filter with multiple "\
-              "(>1) holders of the requested data.");
 }
