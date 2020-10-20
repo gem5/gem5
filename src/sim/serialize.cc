@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -335,6 +335,13 @@ bool
 CheckpointIn::sectionExists(const string &section)
 {
     return db->sectionExists(section);
+}
+
+void
+CheckpointIn::visitSection(const std::string &section,
+    IniFile::VisitSectionCallback cb)
+{
+    db->visitSection(section, cb);
 }
 
 void

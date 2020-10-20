@@ -345,3 +345,25 @@ IniFile::dump()
         i->second->dump(i->first);
     }
 }
+
+IniFile::Section::EntryTable::const_iterator
+IniFile::Section::begin() const
+{
+    return table.begin();
+}
+
+IniFile::Section::EntryTable::const_iterator
+IniFile::Section::end() const
+{
+    return table.end();
+}
+
+void
+IniFile::visitSection(const std::string &sectionName,
+    IniFile::VisitSectionCallback cb)
+{
+    const auto& section = *table.at(sectionName);
+    for (const auto& pair : section) {
+        cb(pair.first, pair.second->getValue());
+    }
+}

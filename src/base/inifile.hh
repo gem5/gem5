@@ -30,6 +30,7 @@
 #define __INIFILE_HH__
 
 #include <fstream>
+#include <functional>
 #include <list>
 #include <string>
 #include <unordered_map>
@@ -132,6 +133,9 @@ class IniFile
 
         /// Print the contents of this section to cout (for debugging).
         void dump(const std::string &sectionName);
+
+        EntryTable::const_iterator begin() const;
+        EntryTable::const_iterator end() const;
     };
 
     /// SectionTable type.  Map of strings to Section object pointers.
@@ -203,6 +207,13 @@ class IniFile
 
     /// Dump contents to cout.  For debugging.
     void dump();
+
+    /// Visitor callback that receives key/value pairs.
+    using VisitSectionCallback = std::function<void(
+        const std::string&, const std::string&)>;
+
+    /// Iterate over key/value pairs of the given section.
+    void visitSection(const std::string &sectionName, VisitSectionCallback cb);
 };
 
 #endif // __INIFILE_HH__

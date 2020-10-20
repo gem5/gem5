@@ -55,6 +55,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "base/inifile.hh"
 #include "base/logging.hh"
 #include "sim/serialize_handlers.hh"
 
@@ -94,6 +95,8 @@ class CheckpointIn
 
     bool entryExists(const std::string &section, const std::string &entry);
     bool sectionExists(const std::string &section);
+    void visitSection(const std::string &section,
+        IniFile::VisitSectionCallback cb);
     /** @}*/ //end of api_checkout group
 
     // The following static functions have to do with checkpoint
@@ -555,6 +558,16 @@ mappingParamIn(CheckpointIn &cp, const char* sectionName,
             param[name_to_index[key]] = value;
         }
     }
+    cp.visitSection(
+        Serializable::currentSection(),
+        [name_to_index](const std::string& key, const std::string& val)
+        {
+            if (!name_to_index.count(key)) {
+                warn("unknown entry found in checkpoint: %s %s %s\n",
+                    Serializable::currentSection(), key, val);
+            }
+        }
+    );
 }
 
 //
