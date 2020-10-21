@@ -1047,8 +1047,8 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
         pkt->senderState = new DTLBPort::SenderState(gpuDynInst, index);
 
         // This is the senderState needed by the TLB hierarchy to function
-        TheISA::GpuTLB::TranslationState *translation_state =
-          new TheISA::GpuTLB::TranslationState(TLB_mode, shader->gpuTc, false,
+        X86ISA::GpuTLB::TranslationState *translation_state =
+          new X86ISA::GpuTLB::TranslationState(TLB_mode, shader->gpuTc, false,
                                                pkt->senderState);
 
         pkt->senderState = translation_state;
@@ -1140,7 +1140,7 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
         delete pkt->senderState;
 
         // Because it's atomic operation, only need TLB translation state
-        pkt->senderState = new TheISA::GpuTLB::TranslationState(TLB_mode,
+        pkt->senderState = new X86ISA::GpuTLB::TranslationState(TLB_mode,
                                                                 shader->gpuTc);
 
         tlbPort[tlbPort_index].sendFunctional(pkt);
@@ -1161,8 +1161,8 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
                 new_pkt->req->getPaddr());
 
         // safe_cast the senderState
-        TheISA::GpuTLB::TranslationState *sender_state =
-             safe_cast<TheISA::GpuTLB::TranslationState*>(pkt->senderState);
+        X86ISA::GpuTLB::TranslationState *sender_state =
+             safe_cast<X86ISA::GpuTLB::TranslationState*>(pkt->senderState);
 
         delete sender_state->tlbEntry;
         delete new_pkt;
@@ -1182,7 +1182,7 @@ ComputeUnit::sendScalarRequest(GPUDynInstPtr gpuDynInst, PacketPtr pkt)
         new ComputeUnit::ScalarDTLBPort::SenderState(gpuDynInst);
 
     pkt->senderState =
-        new TheISA::GpuTLB::TranslationState(tlb_mode, shader->gpuTc, false,
+        new X86ISA::GpuTLB::TranslationState(tlb_mode, shader->gpuTc, false,
                                              pkt->senderState);
 
     if (scalarDTLBPort.isStalled()) {
@@ -1373,8 +1373,8 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
     computeUnit->tlbCycles += curTick();
 
     // pop off the TLB translation state
-    TheISA::GpuTLB::TranslationState *translation_state =
-               safe_cast<TheISA::GpuTLB::TranslationState*>(pkt->senderState);
+    X86ISA::GpuTLB::TranslationState *translation_state =
+               safe_cast<X86ISA::GpuTLB::TranslationState*>(pkt->senderState);
 
     // no PageFaults are permitted for data accesses
     if (!translation_state->tlbEntry) {
@@ -1446,8 +1446,8 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
         DPRINTF(GPUPrefetch, "CU[%d][%d][%d][%d]: %#x was last\n",
                 computeUnit->cu_id, simdId, wfSlotId, mp_index, last);
 
-        int stride = last ? (roundDown(vaddr, TheISA::PageBytes) -
-                     roundDown(last, TheISA::PageBytes)) >> TheISA::PageShift
+        int stride = last ? (roundDown(vaddr, X86ISA::PageBytes) -
+                     roundDown(last, X86ISA::PageBytes)) >> X86ISA::PageShift
                      : 0;
 
         DPRINTF(GPUPrefetch, "Stride is %d\n", stride);
@@ -1467,13 +1467,13 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
         // Prefetch Next few pages atomically
         for (int pf = 1; pf <= computeUnit->prefetchDepth; ++pf) {
             DPRINTF(GPUPrefetch, "%d * %d: %#x\n", pf, stride,
-                    vaddr+stride*pf*TheISA::PageBytes);
+                    vaddr + stride * pf * X86ISA::PageBytes);
 
             if (!stride)
                 break;
 
             RequestPtr prefetch_req = std::make_shared<Request>(
-                vaddr + stride * pf * TheISA::PageBytes,
+                vaddr + stride * pf * X86ISA::PageBytes,
                 sizeof(uint8_t), 0,
                 computeUnit->requestorId(),
                 0, 0, nullptr);
@@ -1484,15 +1484,15 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
 
             // Because it's atomic operation, only need TLB translation state
             prefetch_pkt->senderState =
-                new TheISA::GpuTLB::TranslationState(TLB_mode,
+                new X86ISA::GpuTLB::TranslationState(TLB_mode,
                     computeUnit->shader->gpuTc, true);
 
             // Currently prefetches are zero-latency, hence the sendFunctional
             sendFunctional(prefetch_pkt);
 
             /* safe_cast the senderState */
-            TheISA::GpuTLB::TranslationState *tlb_state =
-                 safe_cast<TheISA::GpuTLB::TranslationState*>(
+            X86ISA::GpuTLB::TranslationState *tlb_state =
+                 safe_cast<X86ISA::GpuTLB::TranslationState*>(
                          prefetch_pkt->senderState);
 
 
@@ -1639,8 +1639,8 @@ ComputeUnit::ScalarDTLBPort::recvTimingResp(PacketPtr pkt)
 {
     assert(pkt->senderState);
 
-    TheISA::GpuTLB::TranslationState *translation_state =
-        safe_cast<TheISA::GpuTLB::TranslationState*>(pkt->senderState);
+    X86ISA::GpuTLB::TranslationState *translation_state =
+        safe_cast<X86ISA::GpuTLB::TranslationState*>(pkt->senderState);
 
     // Page faults are not allowed
     fatal_if(!translation_state->tlbEntry,
@@ -1704,8 +1704,8 @@ ComputeUnit::ITLBPort::recvTimingResp(PacketPtr pkt)
     assert(pkt->senderState);
 
     // pop off the TLB translation state
-    TheISA::GpuTLB::TranslationState *translation_state
-        = safe_cast<TheISA::GpuTLB::TranslationState*>(pkt->senderState);
+    X86ISA::GpuTLB::TranslationState *translation_state
+        = safe_cast<X86ISA::GpuTLB::TranslationState*>(pkt->senderState);
 
     bool success = translation_state->tlbEntry != nullptr;
     delete translation_state->tlbEntry;
@@ -2429,7 +2429,7 @@ ComputeUnit::updateInstStats(GPUDynInstPtr gpuDynInst)
 void
 ComputeUnit::updatePageDivergenceDist(Addr addr)
 {
-    Addr virt_page_addr = roundDown(addr, TheISA::PageBytes);
+    Addr virt_page_addr = roundDown(addr, X86ISA::PageBytes);
 
     if (!pagesTouched.count(virt_page_addr))
         pagesTouched[virt_page_addr] = 1;

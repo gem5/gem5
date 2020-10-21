@@ -94,7 +94,7 @@ namespace X86ISA
          * @warning: the set-associative version assumes you have a
          * fixed page size of 4KB.
          * If the page size is greather than 4KB (as defined in the
-         * TheISA::PageBytes), then there are various issues w/ the current
+         * X86ISA::PageBytes), then there are various issues w/ the current
          * implementation (you'd have the same 8KB page being replicated in
          * different sets etc)
          */
@@ -754,7 +754,7 @@ namespace X86ISA
         assert(pkt->senderState);
 
         Addr virt_page_addr = roundDown(pkt->req->getVaddr(),
-                                        TheISA::PageBytes);
+                                        X86ISA::PageBytes);
 
         TranslationState *sender_state =
                 safe_cast<TranslationState*>(pkt->senderState);
@@ -1159,7 +1159,7 @@ namespace X86ISA
             local_entry = new_entry;
 
             if (allocationPolicy) {
-                Addr virt_page_addr = roundDown(vaddr, TheISA::PageBytes);
+                Addr virt_page_addr = roundDown(vaddr, X86ISA::PageBytes);
 
                 DPRINTF(GPUTLB, "allocating entry w/ addr %#x\n",
                         virt_page_addr);
@@ -1210,7 +1210,7 @@ namespace X86ISA
         bool update_stats = !sender_state->prefetch;
 
         Addr virt_page_addr = roundDown(pkt->req->getVaddr(),
-                                        TheISA::PageBytes);
+                                        X86ISA::PageBytes);
 
         if (update_stats)
             tlb->updatePageFootprint(virt_page_addr);
@@ -1339,7 +1339,7 @@ namespace X86ISA
     GpuTLB::MemSidePort::recvTimingResp(PacketPtr pkt)
     {
         Addr virt_page_addr = roundDown(pkt->req->getVaddr(),
-                                        TheISA::PageBytes);
+                                        X86ISA::PageBytes);
 
         DPRINTF(GPUTLB, "MemSidePort recvTiming for virt_page_addr %#x\n",
                 virt_page_addr);

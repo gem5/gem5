@@ -105,7 +105,7 @@ Shader::mmap(int length)
     Addr start;
 
     // round up length to the next page
-    length = roundUp(length, TheISA::PageBytes);
+    length = roundUp(length, X86ISA::PageBytes);
 
     Process *proc = gpuTc->getProcessPtr();
     auto mem_state = proc->memState;
