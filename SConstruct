@@ -575,6 +575,27 @@ int main(){
     context.Result(ret)
     return ret
 
+def CheckPythonLib(context):
+    context.Message('Checking Python version... ')
+    ret = context.TryRun(r"""
+#include <pybind11/embed.h>
+
+int
+main(int argc, char **argv) {
+    pybind11::scoped_interpreter guard{};
+    pybind11::exec(
+        "import sys\n"
+        "vi = sys.version_info\n"
+        "sys.stdout.write('%i.%i.%i' % (vi.major, vi.minor, vi.micro));\n");
+    return 0;
+}
+    """, extension=".cc")
+    context.Result(ret[1] if ret[0] == 1 else 0)
+    if ret[0] == 0:
+        return None
+    else:
+        return tuple(map(int, ret[1].split(".")))
+
 # Platform-specific configuration.  Note again that we assume that all
 # builds under a given build root run on the same host platform.
 conf = Configure(main,
@@ -582,6 +603,7 @@ conf = Configure(main,
                  log_file = joinpath(build_root, 'scons_config.log'),
                  custom_tests = {
         'CheckMember' : CheckMember,
+        'CheckPythonLib' : CheckPythonLib,
         })
 
 # Check if we should compile a 64 bit binary on Mac OS X/Darwin
@@ -637,9 +659,6 @@ if main['USE_PYTHON']:
               main['PYTHON_CONFIG'])
 
     print("Info: Using Python config: %s" % (python_config, ))
-    if python_config != 'python3-config':
-        warning('python3-config could not be found.\n'
-                'Future releases of gem5 will drop support for python2.')
 
     py_includes = readCommand([python_config, '--includes'],
                               exception='').split()
@@ -697,6 +716,17 @@ main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
 marshal_env = main.Clone()
 marshal_env.Append(CCFLAGS='$MARSHAL_CCFLAGS_EXTRA')
 marshal_env.Append(LINKFLAGS='$MARSHAL_LDFLAGS_EXTRA')
+py_version = conf.CheckPythonLib()
+if not py_version:
+    error("Can't find a working Python installation")
+
+# Found a working Python installation. Check if it meets minimum
+# requirements.
+if py_version[0] < 3 or \
+   (py_version[0] == 3 and py_version[1] < 6):
+    error('Python version too old. Version 3.6 or newer is required.')
+elif py_version[0] > 3:
+    warning('Python version too new. Python 3 expected.')
 
 # On Solaris you need to use libsocket for socket ops
 if not conf.CheckLibWithHeader(None, 'sys/socket.h', 'C++', 'accept(0,0,0);'):
