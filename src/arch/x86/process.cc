@@ -474,8 +474,8 @@ X86_64Process::initState()
 
         /* System call handler */
         uint8_t syscallBlob[] = {
-            // mov    %rax, (0xffffc90000005600)
-            0x48, 0xa3, 0x00, 0x60, 0x00,
+            // mov    %rax, (0xffffc90000007000)
+            0x48, 0xa3, 0x00, 0x70, 0x00,
             0x00, 0x00, 0xc9, 0xff, 0xff,
             // sysret
             0x48, 0x0f, 0x07
