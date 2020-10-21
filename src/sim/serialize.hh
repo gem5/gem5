@@ -53,9 +53,8 @@
 #include <type_traits>
 #include <vector>
 
-#include "base/bitunion.hh"
 #include "base/logging.hh"
-#include "base/str.hh"
+#include "sim/serialize_handlers.hh"
 
 class IniFile;
 class SimObject;
@@ -317,134 +316,6 @@ class Serializable
   private:
     static std::stack<std::string> path;
 };
-
-/**
- * @ingroup api_serialize
- * @{
- */
-
-// To add support for a new type of field that can be serialized, define
-// template specializations of the two classes below, ParseParam and ShowParam,
-// as described above each. The way ParseParam is specialized for std::string
-// or ShowParam is specialied for bool can be used as examples.
-
-/*
- * A structure which should be specialized to contain a static method with the
- * signature:
- *
- * bool parse(const std::string &s, T &value)
- *
- * which fills in value using the contents of s, and returns if that was
- * successful.
- */
-template <class T, class Enable=void>
-struct ParseParam;
-
-// Specialization for anything to_number can accept.
-template <class T>
-struct ParseParam<T, decltype(to_number("", std::declval<T&>()), void())>
-{
-    static bool
-    parse(const std::string &s, T &value)
-    {
-        return to_number(s, value);
-    }
-};
-
-template <>
-struct ParseParam<bool>
-{
-    static bool
-    parse(const std::string &s, bool &value)
-    {
-        return to_bool(s, value);
-    }
-};
-
-template <>
-struct ParseParam<std::string>
-{
-    static bool
-    parse(const std::string &s, std::string &value)
-    {
-        // String requires no processing to speak of
-        value = s;
-        return true;
-    }
-};
-
-// Specialization for BitUnion types.
-template <class T>
-struct ParseParam<BitUnionType<T>>
-{
-    static bool
-    parse(const std::string &s, BitUnionType<T> &value)
-    {
-        // Zero initialize storage to avoid leaking an uninitialized value
-        BitUnionBaseType<T> storage = BitUnionBaseType<T>();
-        auto res = to_number(s, storage);
-        value = storage;
-        return res;
-    }
-};
-
-/*
- * A structure which should be specialized to contain a static method with the
- * signature:
- *
- * void show(std::ostream &os, const T &value)
- *
- * which outputs value to the stream os.
- *
- * This default implementation falls back to the << operator which should work
- * for many types.
- */
-template <class T, class Enabled=void>
-struct ShowParam
-{
-    static void show(std::ostream &os, const T &value) { os << value; }
-};
-
-// Handle characters specially so that we print their value, not the character
-// they encode.
-template <class T>
-struct ShowParam<T, std::enable_if_t<std::is_same<char, T>::value ||
-                                     std::is_same<unsigned char, T>::value ||
-                                     std::is_same<signed char, T>::value>>
-{
-    static void
-    show(std::ostream &os, const T &value)
-    {
-        if (std::is_signed<T>::value)
-            os << (int)value;
-        else
-            os << (unsigned int)value;
-    }
-};
-
-template <>
-struct ShowParam<bool>
-{
-    static void
-    show(std::ostream &os, const bool &value)
-    {
-        // Display bools as strings
-        os << (value ? "true" : "false");
-    }
-};
-
-template <class T>
-struct ShowParam<BitUnionType<T>>
-{
-    static void
-    show(std::ostream &os, const BitUnionType<T> &value)
-    {
-        ShowParam<BitUnionBaseType<T>>::show(
-                os, static_cast<const BitUnionBaseType<T> &>(value));
-    }
-};
-
-/** @} */
 
 /**
  * This function is used for writing parameters to a checkpoint.
