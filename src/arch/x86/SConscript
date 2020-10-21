@@ -56,6 +56,7 @@ if env['TARGET_ISA'] == 'x86':
     Source('insts/static_inst.cc')
     Source('interrupts.cc')
     Source('isa.cc')
+    Source('linux/se_workload.cc')
     Source('linux/fs_workload.cc')
     Source('linux/linux.cc')
     Source('linux/process.cc')
@@ -70,6 +71,7 @@ if env['TARGET_ISA'] == 'x86':
     Source('types.cc')
     Source('utility.cc')
 
+    SimObject('X86SeWorkload.py')
     SimObject('X86FsWorkload.py')
     SimObject('X86ISA.py')
     SimObject('X86LocalApic.py')
