@@ -16,7 +16,7 @@ PMC Members (general maintainers):
   Andreas Sandberg <andreas.sandberg@arm.com>
   Brad Beckmann <brad.beckmann@amd.com>
   David Wood <david@cs.wisc.edu>
-  Gabe Black <gabeblack@google.com>
+  Gabe Black <gabe.black@gmail.com>
   Giacomo Travaglini <giacomo.travaglini@arm.com>
   Jason Lowe-Power <jason@lowepower.com> (chair)
   Matt Sinclair <sinclair@cs.wisc.edu>
@@ -24,7 +24,7 @@ PMC Members (general maintainers):
   Steve Reinhardt <stever@gmail.com>
 
 arch: General architecture-specific components
-  Gabe Black <gabeblack@google.com>
+  Gabe Black <gabe.black@gmail.com>
 arch-arm:
   Andreas Sandberg <andreas.sandberg@arm.com>
   Giacomo Travaglini <giacomo.travaglini@arm.com>
@@ -35,9 +35,9 @@ arch-power:
 arch-riscv:
   Alec Roelke <ar4jc@virginia.edu>
 arch-sparc:
-  Gabe Black <gabeblack@google.com>
+  Gabe Black <gabe.black@gmail.com>
 arch-x86:
-  Gabe Black <gabeblack@google.com>
+  Gabe Black <gabe.black@gmail.com>
 
 base:
 
@@ -64,7 +64,7 @@ dev-arm:
 ext: Components external to gem5
 
 fastmodel: Changes relating to ARM Fast Models
-  Gabe Black <gabeblack@google.com>
+  Gabe Black <gabe.black@gmail.com>
 
 gpu-compute:
   Tony Gutierrez <anthony.gutierrez@amd.com>
@@ -90,7 +90,7 @@ python: Python SimObject wrapping and infrastructure
   Andreas Sandberg <andreas.sandberg@arm.com>
 
 scons: Build system
-  Gabe Black <gabeblack@google.com>
+  Gabe Black <gabe.black@gmail.com>
 
 sim: General simulation components
   Jason Lowe-Power <jason@lowepower.com>
@@ -107,10 +107,10 @@ system-arm:
   Giacomo Travaglini <giacomo.travaglini@arm.com>
 
 systemc: Code for the gem5 SystemC implementation and interface
-  Gabe Black <gabeblack@google.com>
+  Gabe Black <gabe.black@gmail.com>
 
 tests: testing changes (not stats updates for tests. See stats:)
   Bobby Bruce <bbruce@ucdavis.edu>
 
 util:
-  Gabe Black <gabeblack@google.com>
+  Gabe Black <gabe.black@gmail.com>
