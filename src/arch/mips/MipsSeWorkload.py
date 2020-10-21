@@ -1,8 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2004-2006 The Regents of The University of Michigan
-# Copyright (c) 2020 LabWare
-# All rights reserved.
+# Copyright 2020 Google Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -27,33 +23,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.params import *
 
-if env['TARGET_ISA'] == 'mips':
-    Source('decoder.cc')
-    Source('dsp.cc')
-    Source('faults.cc')
-    Source('idle_event.cc')
-    Source('interrupts.cc')
-    Source('isa.cc')
-    Source('linux/linux.cc')
-    Source('linux/se_workload.cc')
-    Source('mmu.cc')
-    Source('pagetable.cc')
-    Source('process.cc')
-    Source('remote_gdb.cc')
-    Source('se_workload.cc')
-    Source('tlb.cc')
-    Source('utility.cc')
+from m5.objects.Workload import SEWorkload
 
-    SimObject('MipsInterrupts.py')
-    SimObject('MipsISA.py')
-    SimObject('MipsMMU.py')
-    SimObject('MipsSeWorkload.py')
-    SimObject('MipsTLB.py')
+class MipsSEWorkload(SEWorkload):
+    type = 'MipsSEWorkload'
+    cxx_header = "arch/mips/se_workload.hh"
+    cxx_class = 'MipsISA::SEWorkload'
+    abstract = True
 
-    DebugFlag('MipsPRA')
+class MipsEmuLinux(MipsSEWorkload):
+    type = 'MipsEmuLinux'
+    cxx_header = "arch/mips/linux/se_workload.hh"
+    cxx_class = 'MipsISA::EmuLinux'
 
-    ISADesc('isa/main.isa')
-
-    GdbXml('mips.xml', 'gdb_xml_mips')
+    @classmethod
+    def _is_compatible_with(cls, obj):
+        return obj.get_arch() == 'mips' and \
+                obj.get_op_sys() in ('linux', 'unknown')

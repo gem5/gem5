@@ -202,7 +202,3 @@ MipsProcess::argsInit(int pageSize)
 
     tc->pcState(getStartPC());
 }
-
-const std::vector<int> MipsProcess::SyscallABI::ArgumentRegs = {
-    4, 5, 6, 7, 8, 9
-};

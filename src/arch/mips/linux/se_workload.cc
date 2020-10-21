@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
- * Copyright (c) 2007 MIPS Technologies, Inc.
- * All rights reserved.
+ * Copyright 2005 The Regents of The University of Michigan
+ * Copyright 2007 MIPS Technologies, Inc.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -27,37 +27,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/mips/linux/process.hh"
+#include "arch/mips/linux/se_workload.hh"
 
-#include "arch/mips/isa_traits.hh"
-#include "arch/mips/linux/linux.hh"
+#include <sys/syscall.h>
+
+#include "arch/mips/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "debug/SyscallVerbose.hh"
-#include "kern/linux/linux.hh"
-#include "sim/eventq.hh"
-#include "sim/process.hh"
-#include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
-#include "sim/system.hh"
-
-using namespace std;
-using namespace MipsISA;
 
 namespace
 {
 
-class MipsLinuxObjectFileLoader : public Process::Loader
+class LinuxLoader : public Process::Loader
 {
   public:
     Process *
-    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file) override
+    load(const ProcessParams &params, ::Loader::ObjectFile *obj) override
     {
-        if (obj_file->getArch() != ::Loader::Mips)
+        if (obj->getArch() != ::Loader::Mips)
             return nullptr;
 
-        auto opsys = obj_file->getOpSys();
+        auto opsys = obj->getOpSys();
 
         if (opsys == ::Loader::UnknownOpSys) {
             warn("Unknown operating system; assuming Linux.");
@@ -67,13 +59,27 @@ class MipsLinuxObjectFileLoader : public Process::Loader
         if (opsys != ::Loader::Linux)
             return nullptr;
 
-        return new MipsLinuxProcess(params, obj_file);
+        return new MipsProcess(params, obj);
     }
 };
 
-MipsLinuxObjectFileLoader loader;
+LinuxLoader loader;
 
 } // anonymous namespace
+
+namespace MipsISA
+{
+
+void
+EmuLinux::syscall(ThreadContext *tc)
+{
+    Process *process = tc->getProcessPtr();
+    // Call the syscall function in the base Process class to update stats.
+    // This will move into the base SEWorkload function at some point.
+    process->Process::syscall(tc);
+
+    syscallDescs.get(tc->readIntReg(2))->doSyscall(tc);
+}
 
 /// Target uname() handler.
 static SyscallReturn
@@ -107,7 +113,7 @@ sys_getsysinfoFunc(SyscallDesc *desc, ThreadContext *tc, unsigned op,
             return 0;
         }
       default:
-        cerr << "sys_getsysinfo: unknown op " << op << endl;
+        std::cerr << "sys_getsysinfo: unknown op " << op << std::endl;
         abort();
         break;
     }
@@ -132,7 +138,7 @@ sys_setsysinfoFunc(SyscallDesc *desc, ThreadContext *tc, unsigned op,
             return 0;
         }
       default:
-        cerr << "sys_setsysinfo: unknown op " << op << endl;
+        std::cerr << "sys_setsysinfo: unknown op " << op << std::endl;
         abort();
         break;
     }
@@ -147,7 +153,7 @@ setThreadAreaFunc(SyscallDesc *desc, ThreadContext *tc, Addr addr)
     return 0;
 }
 
-SyscallDescTable<MipsProcess::SyscallABI> MipsLinuxProcess::syscallDescs = {
+SyscallDescTable<MipsISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
     { 4000, "syscall" },
     { 4001, "exit", exitFunc },
     { 4002, "fork" },
@@ -470,14 +476,10 @@ SyscallDescTable<MipsProcess::SyscallABI> MipsLinuxProcess::syscallDescs = {
     { 4319, "eventfd" }
 };
 
-MipsLinuxProcess::MipsLinuxProcess(const ProcessParams &params,
-                                   ::Loader::ObjectFile *objFile) :
-    MipsProcess(params, objFile)
-{}
+} // namespace MipsISA
 
-void
-MipsLinuxProcess::syscall(ThreadContext *tc)
+MipsISA::EmuLinux *
+MipsEmuLinuxParams::create() const
 {
-    MipsProcess::syscall(tc);
-    syscallDescs.get(tc->readIntReg(2))->doSyscall(tc);
+    return new MipsISA::EmuLinux(*this);
 }

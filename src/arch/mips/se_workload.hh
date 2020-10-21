@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,32 +25,67 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MIPS_LINUX_PROCESS_HH__
-#define __MIPS_LINUX_PROCESS_HH__
+#ifndef __ARCH_MIPS_SE_WORKLOAD_HH__
+#define __ARCH_MIPS_SE_WORKLOAD_HH__
 
-#include "arch/mips/linux/linux.hh"
-#include "arch/mips/process.hh"
-#include "sim/eventq.hh"
+#include "arch/mips/registers.hh"
+#include "params/MipsSEWorkload.hh"
+#include "sim/se_workload.hh"
+#include "sim/syscall_abi.hh"
 #include "sim/syscall_desc.hh"
 
-/// A process with emulated Mips/Linux syscalls.
-class MipsLinuxProcess : public MipsProcess
+namespace MipsISA
+{
+
+class SEWorkload : public ::SEWorkload
 {
   public:
-    /// Constructor.
-    MipsLinuxProcess(const ProcessParams &params,
-                     ::Loader::ObjectFile *objFile);
+    using Params = MipsSEWorkloadParams;
 
-    /// The target system's hostname.
-    static const char *hostname;
+  protected:
+    const Params &_params;
 
-    /// ID of the thread group leader for the process
-    uint64_t __tgid;
+  public:
+    const Params &params() const { return _params; }
 
-    void syscall(ThreadContext *tc) override;
+    SEWorkload(const Params &p) : ::SEWorkload(p), _params(p) {}
 
-    /// Syscall descriptors, indexed by call number.
-    static SyscallDescTable<SyscallABI> syscallDescs;
+    ::Loader::Arch getArch() const override { return ::Loader::Mips; }
+
+    struct SyscallABI : public GenericSyscallABI64
+    {
+        static const std::vector<int> ArgumentRegs;
+    };
 };
 
-#endif // __MIPS_LINUX_PROCESS_HH__
+} // namespace MipsISA
+
+namespace GuestABI
+{
+
+template <>
+struct Result<MipsISA::SEWorkload::SyscallABI, SyscallReturn>
+{
+    static void
+    store(ThreadContext *tc, const SyscallReturn &ret)
+    {
+        if (ret.suppressed() || ret.needsRetry())
+            return;
+
+        if (ret.successful()) {
+            // no error
+            tc->setIntReg(MipsISA::SyscallSuccessReg, 0);
+            tc->setIntReg(MipsISA::ReturnValueReg, ret.returnValue());
+        } else {
+            // got an error, return details
+            tc->setIntReg(MipsISA::SyscallSuccessReg, (uint32_t)(-1));
+            tc->setIntReg(MipsISA::ReturnValueReg, ret.errnoValue());
+        }
+        if (ret.count() > 1)
+            tc->setIntReg(MipsISA::SyscallPseudoReturnReg, ret.value2());
+    }
+};
+
+} // namespace GuestABI
+
+#endif // __ARCH_MIPS_SE_WORKLOAD_HH__

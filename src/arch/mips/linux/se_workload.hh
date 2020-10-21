@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright 2004 The Regents of The University of Michigan
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,26 +26,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MIPS_PROCESS_HH__
-#define __MIPS_PROCESS_HH__
+#ifndef __ARCH_MIPS_LINUX_SE_WORKLOAD_HH__
+#define __ARCH_MIPS_LINUX_SE_WORKLOAD_HH__
 
-#include "sim/process.hh"
+#include "arch/mips/linux/linux.hh"
+#include "arch/mips/se_workload.hh"
+#include "params/MipsEmuLinux.hh"
+#include "sim/syscall_desc.hh"
 
-namespace Loader
+namespace MipsISA
 {
-class ObjectFile;
-} // namespace Loader
 
-class MipsProcess : public Process
+class EmuLinux : public SEWorkload
 {
   public:
-    MipsProcess(const ProcessParams &params, ::Loader::ObjectFile *objFile);
+    using Params = MipsEmuLinuxParams;
 
   protected:
-    void initState();
+    const Params &_params;
 
-    template<class IntType>
-    void argsInit(int pageSize);
+    /// Syscall descriptors, indexed by call number.
+    static SyscallDescTable<SyscallABI> syscallDescs;
+
+  public:
+    const Params &params() const { return _params; }
+
+    EmuLinux(const Params &p) : SEWorkload(p), _params(p) {}
+
+    void syscall(ThreadContext *tc) override;
 };
 
-#endif // __MIPS_PROCESS_HH__
+} // namespace MipsISA
+
+#endif // __ARCH_MIPS_LINUX_SE_WORKLOAD_HH__

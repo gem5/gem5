@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,26 +25,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MIPS_PROCESS_HH__
-#define __MIPS_PROCESS_HH__
+#include "arch/mips/se_workload.hh"
 
-#include "sim/process.hh"
-
-namespace Loader
+namespace MipsISA
 {
-class ObjectFile;
-} // namespace Loader
 
-class MipsProcess : public Process
-{
-  public:
-    MipsProcess(const ProcessParams &params, ::Loader::ObjectFile *objFile);
-
-  protected:
-    void initState();
-
-    template<class IntType>
-    void argsInit(int pageSize);
+const std::vector<int> SEWorkload::SyscallABI::ArgumentRegs = {
+    4, 5, 6, 7, 8, 9
 };
 
-#endif // __MIPS_PROCESS_HH__
+} // namespace MipsISA
