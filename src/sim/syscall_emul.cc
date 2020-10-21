@@ -241,7 +241,7 @@ exitGroupFunc(SyscallDesc *desc, ThreadContext *tc, int status)
 SyscallReturn
 getpagesizeFunc(SyscallDesc *desc, ThreadContext *tc)
 {
-    return (int)tc->getSystemPtr()->getPageBytes();
+    return (int)tc->getProcessPtr()->pTable->pageSize();
 }
 
 
@@ -336,11 +336,10 @@ munmapFunc(SyscallDesc *desc, ThreadContext *tc, Addr start, size_t length)
     // access them again.
     auto p = tc->getProcessPtr();
 
-    if (start & (tc->getSystemPtr()->getPageBytes() - 1) || !length) {
+    if (p->pTable->pageOffset(start))
         return -EINVAL;
-    }
 
-    length = roundUp(length, tc->getSystemPtr()->getPageBytes());
+    length = roundUp(length, p->pTable->pageSize());
 
     p->memState->unmapRegion(start, length);
 

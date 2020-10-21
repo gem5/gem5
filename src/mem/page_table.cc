@@ -62,9 +62,9 @@ EmulationPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
             pTable.emplace(vaddr, Entry(paddr, flags));
         }
 
-        size -= pageSize;
-        vaddr += pageSize;
-        paddr += pageSize;
+        size -= _pageSize;
+        vaddr += _pageSize;
+        paddr += _pageSize;
     }
 }
 
@@ -84,9 +84,9 @@ EmulationPageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
 
         pTable.emplace(new_vaddr, old_it->second);
         pTable.erase(old_it);
-        size -= pageSize;
-        vaddr += pageSize;
-        new_vaddr += pageSize;
+        size -= _pageSize;
+        vaddr += _pageSize;
+        new_vaddr += _pageSize;
     }
 }
 
@@ -108,8 +108,8 @@ EmulationPageTable::unmap(Addr vaddr, int64_t size)
         auto it = pTable.find(vaddr);
         assert(it != pTable.end());
         pTable.erase(it);
-        size -= pageSize;
-        vaddr += pageSize;
+        size -= _pageSize;
+        vaddr += _pageSize;
     }
 }
 
@@ -119,7 +119,7 @@ EmulationPageTable::isUnmapped(Addr vaddr, int64_t size)
     // starting address must be page aligned
     assert(pageOffset(vaddr) == 0);
 
-    for (int64_t offset = 0; offset < size; offset += pageSize)
+    for (int64_t offset = 0; offset < size; offset += _pageSize)
         if (pTable.find(vaddr + offset) != pTable.end())
             return false;
 
@@ -158,7 +158,7 @@ EmulationPageTable::translate(const RequestPtr &req)
     if (!translate(req->getVaddr(), paddr))
         return Fault(new GenericPageTableFault(req->getVaddr()));
     req->setPaddr(paddr);
-    if ((paddr & (pageSize - 1)) + req->getSize() > pageSize) {
+    if ((paddr & (_pageSize - 1)) + req->getSize() > _pageSize) {
         panic("Request spans page boundaries!\n");
         return NoFault;
     }
