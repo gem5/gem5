@@ -44,6 +44,7 @@
 #include "sim/process.hh"
 #include "sim/se_workload.hh"
 #include "sim/syscall_abi.hh"
+#include "sim/syscall_desc.hh"
 
 namespace X86ISA
 {
@@ -76,6 +77,10 @@ class EmuLinux : public SEWorkload
     {
         static const std::vector<IntRegIndex> ArgumentRegs;
     };
+
+  private:
+    static SyscallDescTable<SyscallABI64> syscallDescs64;
+    static SyscallDescTable<SyscallABI32> syscallDescs32;
 };
 
 } // namespace X86ISA
