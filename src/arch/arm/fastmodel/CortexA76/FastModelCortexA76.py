@@ -34,6 +34,7 @@ from m5.objects.FastModelGIC import Gicv3CommsTargetSocket
 from m5.objects.Gic import ArmPPI
 from m5.objects.Iris import IrisBaseCPU
 from m5.objects.SystemC import SystemC_ScModule
+from m5.util.fdthelper import FdtNode, FdtPropertyWords
 
 class FastModelCortexA76(IrisBaseCPU):
     type = 'FastModelCortexA76'
@@ -347,6 +348,21 @@ class FastModelCortexA76Cluster(SimObject):
             "required")
     walk_cache_latency = Param.UInt64(0, "Walk cache latency for TA (Timing "\
             "Annotation), expressed in simulation ticks")
+
+    def generateDeviceTree(self, state):
+        node = FdtNode("timer")
+
+        node.appendCompatible(["arm,cortex-a15-timer",
+                               "arm,armv7-timer",
+                               "arm,armv8-timer"])
+        node.append(FdtPropertyWords("interrupts", [
+            1, int(self.cntpsirq.num), 0xf08,
+            1, int(self.cntpnsirq.num), 0xf08,
+            1, int(self.cntvirq.num), 0xf08,
+            1, int(self.cnthpirq.num), 0xf08,
+        ]))
+
+        yield node
 
 class FastModelScxEvsCortexA76x1(SystemC_ScModule):
     type = 'FastModelScxEvsCortexA76x1'
