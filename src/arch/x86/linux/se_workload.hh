@@ -30,6 +30,7 @@
 
 #include "arch/x86/linux/linux.hh"
 #include "params/X86EmuLinux.hh"
+#include "sim/process.hh"
 #include "sim/se_workload.hh"
 #include "sim/syscall_abi.hh"
 
@@ -49,7 +50,7 @@ class EmuLinux : public SEWorkload
 
     EmuLinux(const Params &p);
 
-    Loader::Arch getArch() const override { return Loader::X86_64; }
+    ::Loader::Arch getArch() const override { return ::Loader::X86_64; }
 
     void syscall(ThreadContext *tc) override;
 

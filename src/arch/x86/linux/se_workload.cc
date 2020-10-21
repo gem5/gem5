@@ -31,7 +31,7 @@
 
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/linux/linux.hh"
-#include "arch/x86/linux/process.hh"
+#include "arch/x86/process.hh"
 #include "arch/x86/registers.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
@@ -39,6 +39,40 @@
 #include "sim/process.hh"
 #include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
+
+namespace
+{
+
+class LinuxLoader : public Process::Loader
+{
+  public:
+    Process *
+    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file)
+    {
+        auto arch = obj_file->getArch();
+        auto opsys = obj_file->getOpSys();
+
+        if (arch != ::Loader::X86_64 && arch != ::Loader::I386)
+            return nullptr;
+
+        if (opsys == ::Loader::UnknownOpSys) {
+            warn("Unknown operating system; assuming Linux.");
+            opsys = ::Loader::Linux;
+        }
+
+        if (opsys != ::Loader::Linux)
+            return nullptr;
+
+        if (arch == ::Loader::X86_64)
+            return new X86ISA::X86_64Process(params, obj_file);
+        else
+            return new X86ISA::I386Process(params, obj_file);
+    }
+};
+
+LinuxLoader loader;
+
+} // anonymous namespace
 
 namespace X86ISA
 {
