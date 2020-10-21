@@ -242,10 +242,6 @@ pseudoInstWork(ThreadContext *tc, uint8_t func, uint64_t &result)
         return false;
 
       /* SE mode functions */
-      case M5OP_SE_SYSCALL:
-        invokeSimcall<ABI>(tc, m5Syscall);
-        return true;
-
       case M5OP_SE_PAGE_FAULT:
         invokeSimcall<ABI>(tc, TheISA::m5PageFault);
         return true;
