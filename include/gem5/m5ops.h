@@ -68,6 +68,14 @@ void m5_work_end(uint64_t workid, uint64_t threadid);
 void m5_se_syscall();
 void m5_se_page_fault();
 
+/*
+ * Send a very generic poke to the workload so it can do something. It's up to
+ * the workload to know what information to look for to interpret an event,
+ * such as what PC it came from, what register values are, or the context of
+ * the workload itself (is this SE mode? which OS is running?).
+ */
+void m5_workload();
+
 #ifdef __cplusplus
 }
 #endif

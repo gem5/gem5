@@ -75,6 +75,12 @@ class Workload : public SimObject
         panic("syscall() not implemented.");
     }
 
+    virtual void
+    event(ThreadContext *tc)
+    {
+        warn("Unhandled workload event.");
+    }
+
     /** @{ */
     /**
      * Add a function-based event to the given function, to be looked

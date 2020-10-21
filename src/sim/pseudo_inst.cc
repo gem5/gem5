@@ -489,6 +489,13 @@ togglesync(ThreadContext *tc)
     DistIface::toggleSync(tc);
 }
 
+void
+triggerWorkloadEvent(ThreadContext *tc)
+{
+    DPRINTF(PseudoInst, "PseudoInst::triggerWorkloadEvent()\n");
+    tc->getSystemPtr()->workload->event(tc);
+}
+
 //
 // This function is executed when annotated work items begin.  Depending on
 // what the user specified at the command line, the simulation may exit and/or

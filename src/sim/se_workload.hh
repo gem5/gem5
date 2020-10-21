@@ -78,6 +78,9 @@ class SEWorkload : public Workload
     }
 
     void syscall(ThreadContext *tc) override;
+
+    // For now, assume the only type of events are system calls.
+    void event(ThreadContext *tc) override { syscall(tc); }
 };
 
 #endif // __SIM_SE_WORKLOAD_HH__
