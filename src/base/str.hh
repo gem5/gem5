@@ -156,15 +156,18 @@ __to_number(const std::string &value)
 /** @} */
 
 /**
- * Turn a string representation of a number, either integral or
- * floating point, into an actual number.
+ * Turn a string representation of a number, either integral, floating point,
+ * or enum into an actual number. Use to_bool for booleans.
  *
  * @param value The string representing the number
  * @param retval The resulting value
  * @return True if the parsing was successful
  */
 template <class T>
-inline bool
+inline std::enable_if_t<(std::is_integral<T>::value ||
+                         std::is_floating_point<T>::value ||
+                         std::is_enum<T>::value) &&
+                        !std::is_same<bool, T>::value, bool>
 to_number(const std::string &value, T &retval)
 {
     try {
