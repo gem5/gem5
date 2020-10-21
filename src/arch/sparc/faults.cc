@@ -30,8 +30,8 @@
 
 #include <algorithm>
 
-#include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/process.hh"
+#include "arch/sparc/se_workload.hh"
 #include "arch/sparc/tlb.hh"
 #include "arch/sparc/types.hh"
 #include "base/bitfield.hh"
@@ -815,7 +815,8 @@ TrapInstruction::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     SparcProcess *sp = dynamic_cast<SparcProcess *>(p);
     assert(sp);
 
-    sp->handleTrap(_n, tc);
+    auto *workload = dynamic_cast<SEWorkload *>(tc->getSystemPtr()->workload);
+    workload->handleTrap(tc, _n);
 
     // We need to explicitly advance the pc, since that's not done for us
     // on a faulting instruction

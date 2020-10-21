@@ -26,14 +26,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/sparc/linux/process.hh"
+#include "arch/sparc/linux/se_workload.hh"
 #include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
 
 class Process;
 class ThreadContext;
 
-namespace SparcISA {
+namespace SparcISA
+{
 
 /// Target uname() handler.
 static SyscallReturn
@@ -51,7 +52,7 @@ unameFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name)
 }
 
 
-SyscallReturn
+static SyscallReturn
 getresuidFunc(SyscallDesc *desc, ThreadContext *tc,
               Addr ruid, Addr euid, Addr suid)
 {
@@ -78,8 +79,7 @@ getresuidFunc(SyscallDesc *desc, ThreadContext *tc,
     return 0;
 }
 
-SyscallDescTable<Sparc32Process::SyscallABI>
-    SparcLinuxProcess::syscall32Descs = {
+SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscall32Descs = {
     {   0, "restart_syscall" },
     {   1, "exit", exitFunc }, // 32 bit
     {   2, "fork" },
@@ -382,8 +382,7 @@ SyscallDescTable<Sparc32Process::SyscallABI>
     { 299, "unshare" }
 };
 
-SyscallDescTable<Sparc64Process::SyscallABI>
-    SparcLinuxProcess::syscallDescs = {
+SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs = {
     {  0, "restart_syscall" },
     {  1, "exit", exitFunc },
     {  2, "fork" },

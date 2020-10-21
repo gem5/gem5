@@ -1,7 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2004-2005 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2020 Google Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -26,39 +23,32 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.params import *
 
-if env['TARGET_ISA'] == 'sparc':
-    Source('asi.cc')
-    Source('decoder.cc')
-    Source('faults.cc')
-    Source('fs_workload.cc')
-    Source('interrupts.cc')
-    Source('isa.cc')
-    Source('linux/linux.cc')
-    Source('linux/se_workload.cc')
-    Source('linux/syscalls.cc')
-    Source('mmu.cc')
-    Source('nativetrace.cc')
-    Source('pagetable.cc')
-    Source('process.cc')
-    Source('remote_gdb.cc')
-    Source('se_workload.cc')
-    Source('solaris/se_workload.cc')
-    Source('solaris/solaris.cc')
-    Source('tlb.cc')
-    Source('ua2005.cc')
-    Source('utility.cc')
+from m5.objects.Workload import SEWorkload
 
-    SimObject('SparcFsWorkload.py')
-    SimObject('SparcInterrupts.py')
-    SimObject('SparcISA.py')
-    SimObject('SparcMMU.py')
-    SimObject('SparcNativeTrace.py')
-    SimObject('SparcSeWorkload.py')
-    SimObject('SparcTLB.py')
+class SparcSEWorkload(SEWorkload):
+    type = 'SparcSEWorkload'
+    cxx_header = "arch/sparc/se_workload.hh"
+    cxx_class = 'SparcISA::SEWorkload'
+    abstract = True
 
-    DebugFlag('Sparc', "Generic SPARC ISA stuff")
-    DebugFlag('RegisterWindows', "Register window manipulation")
+class SparcEmuLinux(SparcSEWorkload):
+    type = 'SparcEmuLinux'
+    cxx_header = "arch/sparc/linux/se_workload.hh"
+    cxx_class = 'SparcISA::EmuLinux'
 
-    ISADesc('isa/main.isa')
+    @classmethod
+    def _is_compatible_with(cls, obj):
+        return obj.get_arch() in ('sparc64', 'sparc32') and \
+                obj.get_op_sys() in ('linux', 'unknown')
+
+class SparcEmuSolaris(SparcSEWorkload):
+    type = 'SparcEmuSolaris'
+    cxx_header = "arch/sparc/solaris/se_workload.hh"
+    cxx_class = 'SparcISA::EmuSolaris'
+
+    @classmethod
+    def _is_compatible_with(cls, obj):
+        return obj.get_arch() in ('sparc64', 'sparc32') and \
+                obj.get_op_sys() == 'solaris'

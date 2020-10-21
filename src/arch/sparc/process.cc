@@ -48,10 +48,6 @@
 using namespace std;
 using namespace SparcISA;
 
-const std::vector<int> SparcProcess::SyscallABI::ArgumentRegs = {
-    INTREG_O0, INTREG_O1, INTREG_O2, INTREG_O3, INTREG_O4, INTREG_O5
-};
-
 SparcProcess::SparcProcess(const ProcessParams &params,
                            ::Loader::ObjectFile *objFile, Addr _StackBias)
     : Process(params,
@@ -63,47 +59,6 @@ SparcProcess::SparcProcess(const ProcessParams &params,
     // Initialize these to 0s
     fillStart = 0;
     spillStart = 0;
-}
-
-void
-SparcProcess::handleTrap(int trapNum, ThreadContext *tc)
-{
-    PCState pc = tc->pcState();
-    switch (trapNum) {
-      case 0x01: // Software breakpoint
-        warn("Software breakpoint encountered at pc %#x.\n", pc.pc());
-        break;
-      case 0x02: // Division by zero
-        warn("Software signaled a division by zero at pc %#x.\n", pc.pc());
-        break;
-      case 0x03: // Flush window trap
-        flushWindows(tc);
-        break;
-      case 0x04: // Clean windows
-        warn("Ignoring process request for clean register "
-                "windows at pc %#x.\n", pc.pc());
-        break;
-      case 0x05: // Range check
-        warn("Software signaled a range check at pc %#x.\n", pc.pc());
-        break;
-      case 0x06: // Fix alignment
-        warn("Ignoring process request for os assisted unaligned accesses "
-                "at pc %#x.\n", pc.pc());
-        break;
-      case 0x07: // Integer overflow
-        warn("Software signaled an integer overflow at pc %#x.\n", pc.pc());
-        break;
-      case 0x32: // Get integer condition codes
-        warn("Ignoring process request to get the integer condition codes "
-                "at pc %#x.\n", pc.pc());
-        break;
-      case 0x33: // Set integer condition codes
-        warn("Ignoring process request to set the integer condition codes "
-                "at pc %#x.\n", pc.pc());
-        break;
-      default:
-        panic("Unimplemented trap to operating system: trap number %#x.\n", trapNum);
-    }
 }
 
 void
@@ -432,73 +387,4 @@ Sparc32Process::argsInit(int intSize, int pageSize)
             fillHandler32, sizeof(MachInst) * numFillInsts);
     initVirtMem->writeBlob(spillStart,
             spillHandler32, sizeof(MachInst) *  numSpillInsts);
-}
-
-void Sparc32Process::flushWindows(ThreadContext *tc)
-{
-    RegVal Cansave = tc->readIntReg(INTREG_CANSAVE);
-    RegVal Canrestore = tc->readIntReg(INTREG_CANRESTORE);
-    RegVal Otherwin = tc->readIntReg(INTREG_OTHERWIN);
-    RegVal CWP = tc->readMiscReg(MISCREG_CWP);
-    RegVal origCWP = CWP;
-    CWP = (CWP + Cansave + 2) % NWindows;
-    while (NWindows - 2 - Cansave != 0) {
-        if (Otherwin) {
-            panic("Otherwin non-zero.\n");
-        } else {
-            tc->setMiscReg(MISCREG_CWP, CWP);
-            // Do the stores
-            RegVal sp = tc->readIntReg(StackPointerReg);
-            for (int index = 16; index < 32; index++) {
-                uint32_t regVal = tc->readIntReg(index);
-                regVal = htobe(regVal);
-                if (!tc->getVirtProxy().tryWriteBlob(
-                        sp + (index - 16) * 4, (uint8_t *)&regVal, 4)) {
-                    warn("Failed to save register to the stack when "
-                            "flushing windows.\n");
-                }
-            }
-            Canrestore--;
-            Cansave++;
-            CWP = (CWP + 1) % NWindows;
-        }
-    }
-    tc->setIntReg(INTREG_CANSAVE, Cansave);
-    tc->setIntReg(INTREG_CANRESTORE, Canrestore);
-    tc->setMiscReg(MISCREG_CWP, origCWP);
-}
-
-void
-Sparc64Process::flushWindows(ThreadContext *tc)
-{
-    RegVal Cansave = tc->readIntReg(INTREG_CANSAVE);
-    RegVal Canrestore = tc->readIntReg(INTREG_CANRESTORE);
-    RegVal Otherwin = tc->readIntReg(INTREG_OTHERWIN);
-    RegVal CWP = tc->readMiscReg(MISCREG_CWP);
-    RegVal origCWP = CWP;
-    CWP = (CWP + Cansave + 2) % NWindows;
-    while (NWindows - 2 - Cansave != 0) {
-        if (Otherwin) {
-            panic("Otherwin non-zero.\n");
-        } else {
-            tc->setMiscReg(MISCREG_CWP, CWP);
-            // Do the stores
-            RegVal sp = tc->readIntReg(StackPointerReg);
-            for (int index = 16; index < 32; index++) {
-                RegVal regVal = tc->readIntReg(index);
-                regVal = htobe(regVal);
-                if (!tc->getVirtProxy().tryWriteBlob(
-                        sp + 2047 + (index - 16) * 8, (uint8_t *)&regVal, 8)) {
-                    warn("Failed to save register to the stack when "
-                            "flushing windows.\n");
-                }
-            }
-            Canrestore--;
-            Cansave++;
-            CWP = (CWP + 1) % NWindows;
-        }
-    }
-    tc->setIntReg(INTREG_CANSAVE, Cansave);
-    tc->setIntReg(INTREG_CANRESTORE, Canrestore);
-    tc->setMiscReg(MISCREG_CWP, origCWP);
 }

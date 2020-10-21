@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2003-2004 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,33 +25,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SPARC_SOLARIS_PROCESS_HH__
-#define __SPARC_SOLARIS_PROCESS_HH__
+#ifndef __ARCH_SPARC_SOLARIS_SE_WORKLOAD_HH__
+#define __ARCH_SPARC_SOLARIS_SE_WORKLOAD_HH__
 
+#include "arch/sparc/se_workload.hh"
 #include "arch/sparc/solaris/solaris.hh"
-#include "arch/sparc/process.hh"
-#include "sim/process.hh"
+#include "params/SparcEmuSolaris.hh"
 #include "sim/syscall_desc.hh"
 
-namespace SparcISA {
+namespace SparcISA
+{
 
-/// A process with emulated SPARC/Solaris syscalls.
-class SparcSolarisProcess : public Sparc64Process
+class EmuSolaris : public SEWorkload
 {
   public:
-    /// Constructor.
-    SparcSolarisProcess(const ProcessParams &params,
-                        ::Loader::ObjectFile *objFile);
+    using Params = SparcEmuSolarisParams;
 
-    /// The target system's hostname.
-    static const char *hostname;
+  protected:
+    const Params &_params;
+
+    /// Array of syscall descriptors, indexed by call number.
+    static SyscallDescTable<SEWorkload::SyscallABI64> syscallDescs;
+
+  public:
+    const Params &params() const { return _params; }
+
+    EmuSolaris(const Params &p);
+
+    ::Loader::Arch getArch() const override { return ::Loader::SPARC64; }
 
     void syscall(ThreadContext *tc) override;
-
-     /// Array of syscall descriptors, indexed by call number.
-    static SyscallDescTable<Sparc64Process::SyscallABI> syscallDescs;
 };
 
-
 } // namespace SparcISA
-#endif // __SPARC_SOLARIS_PROCESS_HH__
+
+#endif // __ARCH_SPARC_SOLARIS_SE_WORKLOAD_HH__

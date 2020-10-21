@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,47 +25,60 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/sparc/solaris/process.hh"
+#include "arch/sparc/solaris/se_workload.hh"
 
-#include "arch/sparc/isa_traits.hh"
-#include "arch/sparc/registers.hh"
+#include <sys/syscall.h>
+
+#include "arch/sparc/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "kern/solaris/solaris.hh"
-#include "sim/process.hh"
+#include "sim/proxy_ptr.hh"
 #include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
-
-using namespace std;
-using namespace SparcISA;
 
 namespace
 {
 
-class SparcSolarisObjectFileLoader : public Process::Loader
+class SolarisLoader : public Process::Loader
 {
   public:
     Process *
-    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file) override
+    load(const ProcessParams &params, ::Loader::ObjectFile *obj) override
     {
-        auto arch = obj_file->getArch();
-        auto opsys = obj_file->getOpSys();
+        auto arch = obj->getArch();
+        auto opsys = obj->getOpSys();
 
-        if (arch != ::Loader::SPARC64 && arch != ::Loader::SPARC32)
+        if (arch != ::Loader::SPARC64)
             return nullptr;
 
         if (opsys != ::Loader::Solaris)
             return nullptr;
 
-        return new SparcSolarisProcess(params, obj_file);
+        return new Sparc64Process(params, obj);
     }
 };
 
-SparcSolarisObjectFileLoader loader;
+SolarisLoader loader;
 
 } // anonymous namespace
 
+namespace SparcISA
+{
+
+EmuSolaris::EmuSolaris(const Params &p) : SEWorkload(p), _params(p)
+{}
+
+void
+EmuSolaris::syscall(ThreadContext *tc)
+{
+    Process *process = tc->getProcessPtr();
+    // Call the syscall function in the base Process class to update stats.
+    // This will move into the base SEWorkload function at some point.
+    process->Process::syscall(tc);
+
+    syscallDescs.get(tc->readIntReg(1))->doSyscall(tc);
+}
 
 /// Target uname() handler.
 static SyscallReturn
@@ -84,8 +96,7 @@ unameFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<Solaris::utsname> name)
 }
 
 
-SyscallDescTable<Sparc64Process::SyscallABI>
-    SparcSolarisProcess::syscallDescs = {
+SyscallDescTable<SEWorkload::SyscallABI64> EmuSolaris::syscallDescs = {
     { 0, "syscall" },
     { 1, "exit", exitFunc },
     { 2, "fork" },
@@ -344,14 +355,10 @@ SyscallDescTable<Sparc64Process::SyscallABI>
     { 255, "umount2" }
 };
 
-SparcSolarisProcess::SparcSolarisProcess(const ProcessParams &params,
-                                         ::Loader::ObjectFile *objFile) :
-    Sparc64Process(params, objFile)
-{}
+} // namespace SparcISA
 
-void
-SparcSolarisProcess::syscall(ThreadContext *tc)
+SparcISA::EmuSolaris *
+SparcEmuSolarisParams::create() const
 {
-    Sparc64Process::syscall(tc);
-    syscallDescs.get(tc->readIntReg(1))->doSyscall(tc);
+    return new SparcISA::EmuSolaris(*this);
 }
