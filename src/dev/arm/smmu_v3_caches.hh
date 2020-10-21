@@ -65,26 +65,30 @@ class SMMUv3BaseCache
     Random random;
     uint32_t useStamp;
 
-    Stats::Formula averageLookups;
-    Stats::Scalar totalLookups;
+    struct SMMUv3BaseCacheStats : public Stats::Group
+    {
+        SMMUv3BaseCacheStats(Stats::Group *parent);
 
-    Stats::Formula averageMisses;
-    Stats::Scalar totalMisses;
+        Stats::Formula averageLookups;
+        Stats::Scalar totalLookups;
 
-    Stats::Formula averageUpdates;
-    Stats::Scalar totalUpdates;
+        Stats::Formula averageMisses;
+        Stats::Scalar totalMisses;
 
-    Stats::Formula averageHitRate;
+        Stats::Formula averageUpdates;
+        Stats::Scalar totalUpdates;
 
-    Stats::Scalar insertions;
+        Stats::Formula averageHitRate;
+
+        Stats::Scalar insertions;
+    } baseCacheStats;
 
     static int decodePolicyName(const std::string &policy_name);
 
   public:
-    SMMUv3BaseCache(const std::string &policy_name, uint32_t seed);
+    SMMUv3BaseCache(const std::string &policy_name, uint32_t seed,
+                    Stats::Group *parent);
     virtual ~SMMUv3BaseCache() {}
-
-    virtual void regStats(const std::string &name);
 };
 
 class SMMUTLB : public SMMUv3BaseCache
@@ -118,7 +122,7 @@ class SMMUTLB : public SMMUv3BaseCache
     };
 
     SMMUTLB(unsigned numEntries, unsigned _associativity,
-            const std::string &policy);
+            const std::string &policy, Stats::Group *parent);
     SMMUTLB(const SMMUTLB& tlb) = delete;
     virtual ~SMMUTLB() {}
 
@@ -167,7 +171,7 @@ class ARMArchTLB : public SMMUv3BaseCache
     };
 
     ARMArchTLB(unsigned numEntries, unsigned _associativity,
-               const std::string &policy);
+               const std::string &policy, Stats::Group *parent);
     virtual ~ARMArchTLB() {}
 
     const Entry *lookup(Addr va, uint16_t asid, uint16_t vmid,
@@ -210,7 +214,7 @@ class IPACache : public SMMUv3BaseCache
     };
 
     IPACache(unsigned numEntries, unsigned _associativity,
-             const std::string &policy);
+             const std::string &policy, Stats::Group *parent);
     virtual ~IPACache() {}
 
     const Entry *lookup(Addr ipa, uint16_t vmid, bool updStats=true);
@@ -258,7 +262,7 @@ class ConfigCache : public SMMUv3BaseCache
     };
 
     ConfigCache(unsigned numEntries, unsigned _associativity,
-                const std::string &policy);
+                const std::string &policy, Stats::Group *parent);
     virtual ~ConfigCache() {}
 
     const Entry *lookup(uint32_t sid, uint32_t ssid, bool updStats=true);
@@ -301,7 +305,8 @@ class WalkCache : public SMMUv3BaseCache
     };
 
     WalkCache(const std::array<unsigned, 2*WALK_CACHE_LEVELS> &_sizes,
-              unsigned _associativity, const std::string &policy);
+              unsigned _associativity, const std::string &policy,
+              Stats::Group *parent);
     virtual ~WalkCache() {}
 
     const Entry *lookup(Addr va, Addr vaMask, uint16_t asid, uint16_t vmid,
@@ -315,25 +320,27 @@ class WalkCache : public SMMUv3BaseCache
     void invalidateVMID(uint16_t vmid);
     void invalidateAll();
 
-    void regStats(const std::string &name) override;
-
   protected:
-    unsigned int lookupsByStageLevel[2][WALK_CACHE_LEVELS];
-    Stats::Formula averageLookupsByStageLevel[2][WALK_CACHE_LEVELS];
-    Stats::Scalar totalLookupsByStageLevel[2][WALK_CACHE_LEVELS];
+    struct WalkCacheStats : public Stats::Group
+    {
+        WalkCacheStats(Stats::Group *parent);
 
-    unsigned int missesByStageLevel[2][WALK_CACHE_LEVELS];
-    Stats::Formula averageMissesByStageLevel[2][WALK_CACHE_LEVELS];
-    Stats::Scalar totalMissesByStageLevel[2][WALK_CACHE_LEVELS];
+        unsigned int lookupsByStageLevel[2][WALK_CACHE_LEVELS];
+        Stats::Formula averageLookupsByStageLevel[2][WALK_CACHE_LEVELS];
+        Stats::Scalar totalLookupsByStageLevel[2][WALK_CACHE_LEVELS];
 
-    unsigned int updatesByStageLevel[2][WALK_CACHE_LEVELS];
-    Stats::Formula averageUpdatesByStageLevel[2][WALK_CACHE_LEVELS];
-    Stats::Scalar totalUpdatesByStageLevel[2][WALK_CACHE_LEVELS];
+        unsigned int missesByStageLevel[2][WALK_CACHE_LEVELS];
+        Stats::Formula averageMissesByStageLevel[2][WALK_CACHE_LEVELS];
+        Stats::Scalar totalMissesByStageLevel[2][WALK_CACHE_LEVELS];
 
-    Stats::Formula averageHitRateByStageLevel[2][WALK_CACHE_LEVELS];
+        unsigned int updatesByStageLevel[2][WALK_CACHE_LEVELS];
+        Stats::Formula averageUpdatesByStageLevel[2][WALK_CACHE_LEVELS];
+        Stats::Scalar totalUpdatesByStageLevel[2][WALK_CACHE_LEVELS];
 
-    Stats::Scalar insertionsByStageLevel[2][WALK_CACHE_LEVELS];
+        Stats::Formula averageHitRateByStageLevel[2][WALK_CACHE_LEVELS];
 
+        Stats::Scalar insertionsByStageLevel[2][WALK_CACHE_LEVELS];
+    } walkCacheStats;
   private:
     typedef std::vector<Entry> Set;
     std::vector<Set> sets;

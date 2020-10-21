@@ -58,11 +58,13 @@
  * TODO: move more code into this base class to reduce duplication.
  */
 
-SMMUv3BaseCache::SMMUv3BaseCache(const std::string &policy_name, uint32_t seed) :
+SMMUv3BaseCache::SMMUv3BaseCache(const std::string &policy_name, uint32_t seed,
+                                 Stats::Group *parent) :
     replacementPolicy(decodePolicyName(policy_name)),
     nextToReplace(0),
     random(seed),
-    useStamp(0)
+    useStamp(0),
+    baseCacheStats(parent)
 {}
 
 int
@@ -79,74 +81,65 @@ SMMUv3BaseCache::decodePolicyName(const std::string &policy_name)
     }
 }
 
-void
-SMMUv3BaseCache::regStats(const std::string &name)
+SMMUv3BaseCache::
+SMMUv3BaseCacheStats::SMMUv3BaseCacheStats(Stats::Group *parent)
+    : Stats::Group(parent),
+      ADD_STAT(averageLookups, "Average number lookups per second"),
+      ADD_STAT(totalLookups, "Total number of lookups"),
+      ADD_STAT(averageMisses, "Average number misses per second"),
+      ADD_STAT(totalMisses, "Total number of misses"),
+      ADD_STAT(averageUpdates, "Average number updates per second"),
+      ADD_STAT(totalUpdates, "Total number of updates"),
+      ADD_STAT(averageHitRate, "Average hit rate"),
+      ADD_STAT(insertions, "Number of insertions (not replacements)")
 {
     using namespace Stats;
 
 
     averageLookups
-        .name(name + ".averageLookups")
-        .desc("Average number lookups per second")
         .flags(pdf);
 
     totalLookups
-        .name(name + ".totalLookups")
-        .desc("Total number of lookups")
         .flags(pdf);
 
     averageLookups = totalLookups / simSeconds;
 
 
     averageMisses
-        .name(name + ".averageMisses")
-        .desc("Average number misses per second")
         .flags(pdf);
 
     totalMisses
-        .name(name + ".totalMisses")
-        .desc("Total number of misses")
         .flags(pdf);
 
     averageMisses = totalMisses / simSeconds;
 
 
     averageUpdates
-        .name(name + ".averageUpdates")
-        .desc("Average number updates per second")
         .flags(pdf);
 
     totalUpdates
-        .name(name + ".totalUpdates")
-        .desc("Total number of updates")
         .flags(pdf);
 
     averageUpdates = totalUpdates / simSeconds;
 
 
     averageHitRate
-        .name(name + ".averageHitRate")
-        .desc("Average hit rate")
         .flags(pdf);
 
     averageHitRate = (totalLookups - totalMisses) / totalLookups;
 
     insertions
-        .name(name + ".insertions")
-        .desc("Number of insertions (not replacements)")
         .flags(pdf);
 }
-
-
 
 /*
  * SMMUTLB
  */
 
 SMMUTLB::SMMUTLB(unsigned numEntries, unsigned _associativity,
-                 const std::string &policy)
+                 const std::string &policy, Stats::Group *parent)
 :
-    SMMUv3BaseCache(policy, SMMUTLB_SEED),
+    SMMUv3BaseCache(policy, SMMUTLB_SEED, parent),
     associativity(_associativity)
 {
     if (associativity == 0)
@@ -198,9 +191,9 @@ SMMUTLB::lookup(uint32_t sid, uint32_t ssid,
         if (result)
             result->lastUsed = useStamp++;
 
-        totalLookups++;
+        baseCacheStats.totalLookups++;
         if (result == NULL)
-            totalMisses++;
+            baseCacheStats.totalMisses++;
     }
 
     return result;
@@ -225,9 +218,9 @@ SMMUTLB::lookupAnyVA(uint32_t sid, uint32_t ssid, bool updStats)
     }
 
     if (updStats) {
-        totalLookups++;
+        baseCacheStats.totalLookups++;
         if (result == NULL)
-            totalMisses++;
+            baseCacheStats.totalMisses++;
     }
 
     return result;
@@ -251,7 +244,7 @@ SMMUTLB::store(const Entry &incoming, AllocPolicy alloc)
         set[pickEntryIdxToReplace(set, alloc)] = incoming;
     }
 
-    totalUpdates++;
+    baseCacheStats.totalUpdates++;
 }
 
 void
@@ -378,7 +371,7 @@ SMMUTLB::pickEntryIdxToReplace(const Set &set, AllocPolicy alloc)
 
     for (size_t i = 0; i < max_idx; i++) {
         if (!set[i].valid) {
-            insertions++;
+            baseCacheStats.insertions++;
             return i;
         }
 
@@ -424,9 +417,9 @@ SMMUTLB::pickEntryIdxToReplace(const Set &set, AllocPolicy alloc)
  */
 
 ARMArchTLB::ARMArchTLB(unsigned numEntries, unsigned _associativity,
-                       const std::string &policy)
+                       const std::string &policy, Stats::Group *parent)
 :
-    SMMUv3BaseCache(policy, ARMARCHTLB_SEED),
+    SMMUv3BaseCache(policy, ARMARCHTLB_SEED, parent),
     associativity(_associativity)
 {
     if (associativity == 0)
@@ -477,9 +470,9 @@ ARMArchTLB::lookup(Addr va, uint16_t asid, uint16_t vmid, bool updStats)
         if (result)
             result->lastUsed = useStamp++;
 
-        totalLookups++;
+        baseCacheStats.totalLookups++;
         if (result == NULL)
-            totalMisses++;
+            baseCacheStats.totalMisses++;
     }
 
     return result;
@@ -503,7 +496,7 @@ ARMArchTLB::store(const Entry &incoming)
         set[pickEntryIdxToReplace(set)] = incoming;
     }
 
-    totalUpdates++;
+    baseCacheStats.totalUpdates++;
 }
 
 void
@@ -592,7 +585,7 @@ ARMArchTLB::pickEntryIdxToReplace(const Set &set)
 
     for (size_t i = 0; i < set.size(); i++) {
         if (!set[i].valid) {
-            insertions++;
+            baseCacheStats.insertions++;
             return i;
         }
 
@@ -623,9 +616,9 @@ ARMArchTLB::pickEntryIdxToReplace(const Set &set)
  */
 
 IPACache::IPACache(unsigned numEntries, unsigned _associativity,
-                   const std::string &policy)
+                   const std::string &policy, Stats::Group *parent)
 :
-    SMMUv3BaseCache(policy, IPACACHE_SEED),
+    SMMUv3BaseCache(policy, IPACACHE_SEED, parent),
     associativity(_associativity)
 {
     if (associativity == 0)
@@ -676,9 +669,9 @@ IPACache::lookup(Addr ipa, uint16_t vmid, bool updStats)
         if (result)
             result->lastUsed = useStamp++;
 
-        totalLookups++;
+        baseCacheStats.totalLookups++;
         if (result == NULL)
-            totalMisses++;
+            baseCacheStats.totalMisses++;
     }
 
     return result;
@@ -701,7 +694,7 @@ IPACache::store(const Entry &incoming)
         set[pickEntryIdxToReplace(set)] = incoming;
     }
 
-    totalUpdates++;
+    baseCacheStats.totalUpdates++;
 }
 
 void
@@ -772,7 +765,7 @@ IPACache::pickEntryIdxToReplace(const Set &set)
 
     for (size_t i = 0; i < set.size(); i++) {
         if (!set[i].valid) {
-            insertions++;
+            baseCacheStats.insertions++;
             return i;
         }
 
@@ -803,9 +796,9 @@ IPACache::pickEntryIdxToReplace(const Set &set)
  */
 
 ConfigCache::ConfigCache(unsigned numEntries, unsigned _associativity,
-                         const std::string &policy)
+                         const std::string &policy, Stats::Group *parent)
 :
-    SMMUv3BaseCache(policy, CONFIGCACHE_SEED),
+    SMMUv3BaseCache(policy, CONFIGCACHE_SEED, parent),
     associativity(_associativity)
 {
     if (associativity == 0)
@@ -855,9 +848,9 @@ ConfigCache::lookup(uint32_t sid, uint32_t ssid, bool updStats)
         if (result)
             result->lastUsed = useStamp++;
 
-        totalLookups++;
+        baseCacheStats.totalLookups++;
         if (result == NULL)
-            totalMisses++;
+            baseCacheStats.totalMisses++;
     }
 
     return result;
@@ -880,7 +873,7 @@ ConfigCache::store(const Entry &incoming)
         set[pickEntryIdxToReplace(set)] = incoming;
     }
 
-    totalUpdates++;
+    baseCacheStats.totalUpdates++;
 }
 
 void
@@ -936,7 +929,7 @@ ConfigCache::pickEntryIdxToReplace(const Set &set)
 
     for (size_t i = 0; i < set.size(); i++) {
         if (!set[i].valid) {
-            insertions++;
+            baseCacheStats.insertions++;
             return i;
         }
 
@@ -967,8 +960,10 @@ ConfigCache::pickEntryIdxToReplace(const Set &set)
  */
 
 WalkCache::WalkCache(const std::array<unsigned, 2*WALK_CACHE_LEVELS> &_sizes,
-                     unsigned _associativity, const std::string &policy) :
-    SMMUv3BaseCache(policy, WALKCACHE_SEED),
+                     unsigned _associativity, const std::string &policy,
+                     Stats::Group *parent) :
+    SMMUv3BaseCache(policy, WALKCACHE_SEED, parent),
+    walkCacheStats(&(SMMUv3BaseCache::baseCacheStats)),
     associativity(_associativity),
     sizes()
 {
@@ -1035,15 +1030,15 @@ WalkCache::lookup(Addr va, Addr vaMask,
         if (result)
             result->lastUsed = useStamp++;
 
-        totalLookups++;
+        baseCacheStats.totalLookups++;
         if (result == NULL)
-            totalMisses++;
+            baseCacheStats.totalMisses++;
 
-        lookupsByStageLevel[stage-1][level]++;
-        totalLookupsByStageLevel[stage-1][level]++;
+        walkCacheStats.lookupsByStageLevel[stage-1][level]++;
+        walkCacheStats.totalLookupsByStageLevel[stage-1][level]++;
         if (result == NULL) {
-            missesByStageLevel[stage-1][level]++;
-            totalMissesByStageLevel[stage-1][level]++;
+            walkCacheStats.missesByStageLevel[stage-1][level]++;
+            walkCacheStats.totalMissesByStageLevel[stage-1][level]++;
         }
     }
 
@@ -1074,9 +1069,10 @@ WalkCache::store(const Entry &incoming)
             incoming;
     }
 
-    totalUpdates++;
-    updatesByStageLevel[incoming.stage-1][incoming.level]++;
-    totalUpdatesByStageLevel[incoming.stage-1][incoming.level]++;
+    baseCacheStats.totalUpdates++;
+    walkCacheStats.updatesByStageLevel[incoming.stage-1][incoming.level]++;
+    walkCacheStats
+             .totalUpdatesByStageLevel[incoming.stage-1][incoming.level]++;
 }
 
 void
@@ -1194,8 +1190,8 @@ WalkCache::pickEntryIdxToReplace(const Set &set,
 
     for (size_t i = 0; i < set.size(); i++) {
         if (!set[i].valid) {
-            insertions++;
-            insertionsByStageLevel[stage-1][level]++;
+            baseCacheStats.insertions++;
+            walkCacheStats.insertionsByStageLevel[stage-1][level]++;
             return i;
         }
 
@@ -1221,22 +1217,21 @@ WalkCache::pickEntryIdxToReplace(const Set &set,
 
 }
 
-void
-WalkCache::regStats(const std::string &name)
+WalkCache::
+WalkCacheStats::WalkCacheStats(Stats::Group *parent)
+    : Stats::Group(parent, "WalkCache")
 {
     using namespace Stats;
-
-    SMMUv3BaseCache::regStats(name);
 
     for (int s = 0; s < 2; s++) {
         for (int l = 0; l < WALK_CACHE_LEVELS; l++) {
             averageLookupsByStageLevel[s][l]
-                .name(csprintf("%s.averageLookupsS%dL%d", name, s+1, l))
+                .name(csprintf("averageLookupsS%dL%d", s+1, l))
                 .desc("Average number lookups per second")
                 .flags(pdf);
 
             totalLookupsByStageLevel[s][l]
-                .name(csprintf("%s.totalLookupsS%dL%d", name, s+1, l))
+                .name(csprintf("totalLookupsS%dL%d", s+1, l))
                 .desc("Total number of lookups")
                 .flags(pdf);
 
@@ -1245,12 +1240,12 @@ WalkCache::regStats(const std::string &name)
 
 
             averageMissesByStageLevel[s][l]
-                .name(csprintf("%s.averageMissesS%dL%d", name, s+1, l))
+                .name(csprintf("averageMissesS%dL%d", s+1, l))
                 .desc("Average number misses per second")
                 .flags(pdf);
 
             totalMissesByStageLevel[s][l]
-                .name(csprintf("%s.totalMissesS%dL%d", name, s+1, l))
+                .name(csprintf("totalMissesS%dL%d", s+1, l))
                 .desc("Total number of misses")
                 .flags(pdf);
 
@@ -1259,12 +1254,12 @@ WalkCache::regStats(const std::string &name)
 
 
             averageUpdatesByStageLevel[s][l]
-                .name(csprintf("%s.averageUpdatesS%dL%d", name, s+1, l))
+                .name(csprintf("averageUpdatesS%dL%d", s+1, l))
                 .desc("Average number updates per second")
                 .flags(pdf);
 
             totalUpdatesByStageLevel[s][l]
-                .name(csprintf("%s.totalUpdatesS%dL%d", name, s+1, l))
+                .name(csprintf("totalUpdatesS%dL%d", s+1, l))
                 .desc("Total number of updates")
                 .flags(pdf);
 
@@ -1273,7 +1268,7 @@ WalkCache::regStats(const std::string &name)
 
 
             averageHitRateByStageLevel[s][l]
-                .name(csprintf("%s.averageHitRateS%dL%d", name, s+1, l))
+                .name(csprintf("averageHitRateS%dL%d", s+1, l))
                 .desc("Average hit rate")
                 .flags(pdf);
 
@@ -1283,7 +1278,7 @@ WalkCache::regStats(const std::string &name)
                 / totalLookupsByStageLevel[s][l];
 
             insertionsByStageLevel[s][l]
-                .name(csprintf("%s.insertionsS%dL%d", name, s+1, l))
+                .name(csprintf("insertionsS%dL%d", s+1, l))
                 .desc("Number of insertions (not replacements)")
                 .flags(pdf);
         }

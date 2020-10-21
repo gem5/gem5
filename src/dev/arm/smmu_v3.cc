@@ -58,14 +58,14 @@ SMMUv3::SMMUv3(const SMMUv3Params &params) :
     requestPort(name() + ".request", *this),
     tableWalkPort(name() + ".walker", *this),
     controlPort(name() + ".control", *this, params.reg_map),
-    tlb(params.tlb_entries, params.tlb_assoc, params.tlb_policy),
-    configCache(params.cfg_entries, params.cfg_assoc, params.cfg_policy),
-    ipaCache(params.ipa_entries, params.ipa_assoc, params.ipa_policy),
+    tlb(params.tlb_entries, params.tlb_assoc, params.tlb_policy, this),
+    configCache(params.cfg_entries, params.cfg_assoc, params.cfg_policy, this),
+    ipaCache(params.ipa_entries, params.ipa_assoc, params.ipa_policy, this),
     walkCache({ { params.walk_S1L0, params.walk_S1L1,
                   params.walk_S1L2, params.walk_S1L3,
                   params.walk_S2L0, params.walk_S2L1,
                   params.walk_S2L2, params.walk_S2L3 } },
-              params.walk_assoc, params.walk_policy),
+              params.walk_assoc, params.walk_policy, this),
     tlbEnable(params.tlb_enable),
     configCacheEnable(params.cfg_enable),
     ipaCacheEnable(params.ipa_enable),
@@ -91,6 +91,7 @@ SMMUv3::SMMUv3(const SMMUv3Params &params) :
     configLat(params.cfg_lat),
     ipaLat(params.ipa_lat),
     walkLat(params.walk_lat),
+    stats(this),
     deviceInterfaces(params.device_interfaces),
     commandExecutor(name() + ".cmd_exec", *this),
     regsMap(params.reg_map),
@@ -735,55 +736,35 @@ SMMUv3::init()
         controlPort.sendRangeChange();
 }
 
-void
-SMMUv3::regStats()
+SMMUv3::SMMUv3Stats::SMMUv3Stats(Stats::Group *parent)
+    : Stats::Group(parent),
+      ADD_STAT(steL1Fetches, "STE L1 fetches"),
+      ADD_STAT(steFetches, "STE fetches"),
+      ADD_STAT(cdL1Fetches, "CD L1 fetches"),
+      ADD_STAT(cdFetches, "CD fetches"),
+      ADD_STAT(translationTimeDist, "Time to translate address"),
+      ADD_STAT(ptwTimeDist, "Time to walk page tables")
 {
-    ClockedObject::regStats();
-
     using namespace Stats;
 
-    for (size_t i = 0; i < deviceInterfaces.size(); i++) {
-        deviceInterfaces[i]->microTLB->regStats(
-            csprintf("%s.utlb%d", name(), i));
-        deviceInterfaces[i]->mainTLB->regStats(
-            csprintf("%s.maintlb%d", name(), i));
-    }
-
-    tlb.regStats(name() + ".tlb");
-    configCache.regStats(name() + ".cfg");
-    ipaCache.regStats(name() + ".ipa");
-    walkCache.regStats(name() + ".walk");
-
     steL1Fetches
-        .name(name() + ".steL1Fetches")
-        .desc("STE L1 fetches")
         .flags(pdf);
 
     steFetches
-        .name(name() + ".steFetches")
-        .desc("STE fetches")
         .flags(pdf);
 
     cdL1Fetches
-        .name(name() + ".cdL1Fetches")
-        .desc("CD L1 fetches")
         .flags(pdf);
 
     cdFetches
-        .name(name() + ".cdFetches")
-        .desc("CD fetches")
         .flags(pdf);
 
     translationTimeDist
         .init(0, 2000000, 2000)
-        .name(name() + ".translationTimeDist")
-        .desc("Time to translate address")
         .flags(pdf);
 
     ptwTimeDist
         .init(0, 2000000, 2000)
-        .name(name() + ".ptwTimeDist")
-        .desc("Time to walk page tables")
         .flags(pdf);
 }
 

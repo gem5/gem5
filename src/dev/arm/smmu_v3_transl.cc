@@ -286,7 +286,7 @@ SMMUTranslationProcess::smmuTranslation(Yield &yield)
         }
 
         if (context.stage1Enable || context.stage2Enable)
-            smmu.ptwTimeDist.sample(curTick() - ptwStartTick);
+            smmu.stats.ptwTimeDist.sample(curTick() - ptwStartTick);
 
         // Free PTW slot
         doSemaphoreUp(smmu.ptwSem);
@@ -1236,7 +1236,7 @@ SMMUTranslationProcess::completeTransaction(Yield &yield,
     doSemaphoreUp(smmu.requestPortSem);
 
 
-    smmu.translationTimeDist.sample(curTick() - recvTick);
+    smmu.stats.translationTimeDist.sample(curTick() - recvTick);
     ifc.xlateSlotsRemaining++;
     if (!request.isAtsRequest && request.isWrite)
         ifc.wrBufSlotsRemaining +=
@@ -1365,8 +1365,9 @@ SMMUTranslationProcess::doReadSTE(Yield &yield,
 
         ste_addr = (l2_ptr & ST_L2_ADDR_MASK) + index * sizeof(ste);
 
-        smmu.steL1Fetches++;
-    } else if ((smmu.regs.strtab_base_cfg & ST_CFG_FMT_MASK) == ST_CFG_FMT_LINEAR) {
+        smmu.stats.steL1Fetches++;
+    } else if ((smmu.regs.strtab_base_cfg & ST_CFG_FMT_MASK)
+                                                      == ST_CFG_FMT_LINEAR) {
         ste_addr =
             (smmu.regs.strtab_base & VMT_BASE_ADDR_MASK) + sid * sizeof(ste);
     } else {
@@ -1389,7 +1390,7 @@ SMMUTranslationProcess::doReadSTE(Yield &yield,
     if (!ste.dw0.valid)
         panic("STE @ %#x not valid\n", ste_addr);
 
-    smmu.steFetches++;
+    smmu.stats.steFetches++;
 }
 
 void
@@ -1427,7 +1428,7 @@ SMMUTranslationProcess::doReadCD(Yield &yield,
 
             cd_addr = l2_ptr + bits(ssid, split-1, 0) * sizeof(cd);
 
-            smmu.cdL1Fetches++;
+            smmu.stats.cdL1Fetches++;
         } else if (ste.dw0.s1fmt == STAGE1_CFG_1L) {
             cd_addr = (ste.dw0.s1ctxptr << ST_CD_ADDR_SHIFT) + ssid*sizeof(cd);
         }
@@ -1453,7 +1454,7 @@ SMMUTranslationProcess::doReadCD(Yield &yield,
     if (!cd.dw0.valid)
         panic("CD @ %#x not valid\n", cd_addr);
 
-    smmu.cdFetches++;
+    smmu.stats.cdFetches++;
 }
 
 void

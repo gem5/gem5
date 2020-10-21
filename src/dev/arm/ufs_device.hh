@@ -495,7 +495,10 @@ class UFSHostDevice : public DmaDevice
     /**
      * Statistics
      */
-    struct UFSHostDeviceStats {
+    struct UFSHostDeviceStats : public Stats::Group
+    {
+        UFSHostDeviceStats(UFSHostDevice *parent);
+
         /** Queue lengths */
         Stats::Scalar currentSCSIQueue;
         Stats::Scalar currentReadSSDQueue;
@@ -991,9 +994,6 @@ class UFSHostDevice : public DmaDevice
      * read from disk action to handle this.
      */
     void readGarbage();
-
-    /**register statistics*/
-    void regStats() override;
 
     /**
      * Host controller information

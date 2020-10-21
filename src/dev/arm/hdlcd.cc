@@ -84,7 +84,8 @@ HDLcd::HDLcd(const HDLcdParams &p)
       virtRefreshEvent([this]{ virtRefresh(); }, name()),
       // Other
       imgFormat(p.frame_format), pic(NULL), conv(PixelConverter::rgba8888_le),
-      pixelPump(*this, *p.pxl_clk, p.pixel_chunk)
+      pixelPump(*this, *p.pxl_clk, p.pixel_chunk),
+      stats(this)
 {
     if (vnc)
         vnc->setFrameBuffer(&pixelPump.fb);
@@ -96,18 +97,14 @@ HDLcd::~HDLcd()
 {
 }
 
-void
-HDLcd::regStats()
+HDLcd::
+HDLcdStats::HDLcdStats(Stats::Group *parent)
+    : Stats::Group(parent, "HDLcd"),
+      ADD_STAT(underruns, "Number of buffer underruns")
 {
-    AmbaDmaDevice::regStats();
-
     using namespace Stats;
 
-    stats.underruns
-        .name(name() + ".underruns")
-        .desc("number of buffer underruns")
-        .flags(nozero)
-        ;
+    underruns.flags(nozero);
 }
 
 void

@@ -90,7 +90,10 @@ class FlashDevice : public AbstractNVM
         std::function<void()> function;
     };
 
-    struct FlashDeviceStats {
+    struct FlashDeviceStats : public Stats::Group
+    {
+        FlashDeviceStats(Stats::Group *parent);
+
         /** Amount of GC activations*/
         Stats::Scalar totalGCActivations;
 
@@ -146,9 +149,6 @@ class FlashDevice : public AbstractNVM
 
     /** Function to test if a page is known*/
     bool getUnknownPages(uint32_t index);
-
-    /**Stats register function*/
-    void regStats() override;
 
     /** Disk sizes in bytes */
     uint64_t diskSize;
