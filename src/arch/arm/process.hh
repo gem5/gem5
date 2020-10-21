@@ -60,7 +60,8 @@ class ArmProcess : public Process
     void argsInit(int pageSize, ArmISA::IntRegIndex spIndex);
 
     template<class IntType>
-    IntType armHwcap() const
+    IntType
+    armHwcap() const
     {
         return static_cast<IntType>(armHwcapImpl());
     }
@@ -73,63 +74,28 @@ class ArmProcess : public Process
 
 class ArmProcess32 : public ArmProcess
 {
-  protected:
+  public:
     ArmProcess32(const ProcessParams &params, ::Loader::ObjectFile *objFile,
                  ::Loader::Arch _arch);
 
+  protected:
     void initState() override;
 
     /** AArch32 AT_HWCAP */
     uint32_t armHwcapImpl() const override;
-
-  public:
-    struct SyscallABI : public GenericSyscallABI32
-    {
-        static const std::vector<int> ArgumentRegs;
-    };
 };
-
-namespace GuestABI
-{
-
-template <typename ABI, typename Arg>
-struct Argument<ABI, Arg,
-    typename std::enable_if_t<
-        std::is_base_of<ArmProcess32::SyscallABI, ABI>::value &&
-        ABI::template IsWide<Arg>::value>>
-{
-    static Arg
-    get(ThreadContext *tc, typename ABI::State &state)
-    {
-        // 64 bit arguments are passed starting in an even register.
-        if (state % 2)
-            state++;
-        panic_if(state + 1 >= ABI::ArgumentRegs.size(),
-                "Ran out of syscall argument registers.");
-        auto low = ABI::ArgumentRegs[state++];
-        auto high = ABI::ArgumentRegs[state++];
-        return (Arg)ABI::mergeRegs(tc, low, high);
-    }
-};
-
-} // namespace GuestABI
 
 class ArmProcess64 : public ArmProcess
 {
-  protected:
+  public:
     ArmProcess64(const ProcessParams &params, ::Loader::ObjectFile *objFile,
                  ::Loader::Arch _arch);
 
+  protected:
     void initState() override;
 
     /** AArch64 AT_HWCAP */
     uint32_t armHwcapImpl() const override;
-
-  public:
-    struct SyscallABI : public GenericSyscallABI64
-    {
-        static const std::vector<int> ArgumentRegs;
-    };
 };
 
 #endif // __ARM_PROCESS_HH__

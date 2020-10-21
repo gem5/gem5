@@ -45,66 +45,31 @@
 
 #include "arch/arm/process.hh"
 
-class ArmLinuxProcessBits
-{
-  public:
-    struct SyscallABI {};
-};
-
-namespace GuestABI
-{
-
-template <typename ABI>
-struct Result<ABI, SyscallReturn,
-    typename std::enable_if_t<std::is_base_of<
-        ArmLinuxProcessBits::SyscallABI, ABI>::value>>
-{
-    static void
-    store(ThreadContext *tc, const SyscallReturn &ret)
-    {
-        if (ret.suppressed() || ret.needsRetry())
-            return;
-
-        tc->setIntReg(ArmISA::ReturnValueReg, ret.encodedValue());
-        if (ret.count() > 1)
-            tc->setIntReg(ArmISA::SyscallPseudoReturnReg, ret.value2());
-    }
-};
-
-} // namespace GuestABI
-
 /// A process with emulated Arm/Linux syscalls.
-class ArmLinuxProcess32 : public ArmProcess32, public ArmLinuxProcessBits
+class ArmLinuxProcess32 : public ArmProcess32
 {
   public:
     ArmLinuxProcess32(const ProcessParams &params,
-                      ::Loader::ObjectFile *objFile, ::Loader::Arch _arch);
+                      ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
+        ArmProcess32(params, objFile, _arch)
+    {}
 
     void initState() override;
-
-    void syscall(ThreadContext *tc) override;
 
     /// A page to hold "kernel" provided functions. The name might be wrong.
     static const Addr commPage;
-
-    struct SyscallABI : public ArmProcess32::SyscallABI,
-                        public ArmLinuxProcessBits::SyscallABI
-    {};
 };
 
 /// A process with emulated Arm/Linux syscalls.
-class ArmLinuxProcess64 : public ArmProcess64, public ArmLinuxProcessBits
+class ArmLinuxProcess64 : public ArmProcess64
 {
   public:
     ArmLinuxProcess64(const ProcessParams &params,
-                      ::Loader::ObjectFile *objFile, ::Loader::Arch _arch);
+                      ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
+        ArmProcess64(params, objFile, _arch)
+    {}
 
     void initState() override;
-    void syscall(ThreadContext *tc) override;
-
-    struct SyscallABI : public ArmProcess64::SyscallABI,
-                        public ArmLinuxProcessBits::SyscallABI
-    {};
 };
 
 #endif // __ARM_LINUX_PROCESS_HH__

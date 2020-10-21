@@ -472,11 +472,3 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
     //Align the "stackMin" to a page boundary.
     memState->setStackMin(roundDown(memState->getStackMin(), pageSize));
 }
-
-const std::vector<int> ArmProcess32::SyscallABI::ArgumentRegs = {
-    0, 1, 2, 3, 4, 5, 6
-};
-
-const std::vector<int> ArmProcess64::SyscallABI::ArgumentRegs = {
-    0, 1, 2, 3, 4, 5, 6
-};

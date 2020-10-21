@@ -1,10 +1,5 @@
 /*
- * Copyright (c) 2015 Ruslan Bukin <br@bsdpad.com>
- * All rights reserved.
- *
- * This software was developed by the University of Cambridge Computer
- * Laboratory as part of the CTSRD Project, with support from the UK Higher
- * Education Innovation Fund (HEIF).
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,18 +25,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_ARM_FREEBSD_PROCESS_HH__
-#define __ARCH_ARM_FREEBSD_PROCESS_HH__
+#ifndef __ARCH_ARM_LINUX_SE_WORKLOAD_HH__
+#define __ARCH_ARM_LINUX_SE_WORKLOAD_HH__
 
-#include <vector>
+#include "arch/arm/linux/linux.hh"
+#include "arch/arm/registers.hh"
+#include "arch/arm/se_workload.hh"
+#include "params/ArmEmuLinux.hh"
+#include "sim/syscall_desc.hh"
 
-#include "arch/arm/process.hh"
+namespace ArmISA
+{
 
-class ArmFreebsdProcessBits
+class EmuLinux : public SEWorkload
 {
   public:
-    struct SyscallABI {};
+    using Params = ArmEmuLinuxParams;
+
+  protected:
+    const Params &_params;
+
+  public:
+    const Params &params() const { return _params; }
+
+    EmuLinux(const Params &p) : SEWorkload(p), _params(p) {}
+
+    struct BaseSyscallABI {};
+    struct SyscallABI32 : public SEWorkload::SyscallABI32,
+                          public BaseSyscallABI
+    {};
+    struct SyscallABI64 : public SEWorkload::SyscallABI64,
+                          public BaseSyscallABI
+    {};
+
+    void syscall(ThreadContext *tc) override;
 };
+
+} // namespace ArmISA
 
 namespace GuestABI
 {
@@ -49,7 +69,7 @@ namespace GuestABI
 template <typename ABI>
 struct Result<ABI, SyscallReturn,
     typename std::enable_if_t<std::is_base_of<
-        ArmFreebsdProcessBits::SyscallABI, ABI>::value>>
+        ArmISA::EmuLinux::BaseSyscallABI, ABI>::value>>
 {
     static void
     store(ThreadContext *tc, const SyscallReturn &ret)
@@ -57,15 +77,7 @@ struct Result<ABI, SyscallReturn,
         if (ret.suppressed() || ret.needsRetry())
             return;
 
-        RegVal val;
-        if (ret.successful()) {
-            tc->setCCReg(ArmISA::CCREG_C, 0);
-            val = ret.returnValue();
-        } else {
-            tc->setCCReg(ArmISA::CCREG_C, 1);
-            val = ret.encodedValue();
-        }
-        tc->setIntReg(ArmISA::ReturnValueReg, val);
+        tc->setIntReg(ArmISA::ReturnValueReg, ret.encodedValue());
         if (ret.count() > 1)
             tc->setIntReg(ArmISA::SyscallPseudoReturnReg, ret.value2());
     }
@@ -73,38 +85,4 @@ struct Result<ABI, SyscallReturn,
 
 } // namespace GuestABI
 
-/// A process with emulated Arm/Freebsd syscalls.
-class ArmFreebsdProcess32 : public ArmProcess32, public ArmFreebsdProcessBits
-{
-  public:
-    ArmFreebsdProcess32(const ProcessParams &params,
-                        ::Loader::ObjectFile *objFile, ::Loader::Arch _arch);
-
-    void initState() override;
-
-    void syscall(ThreadContext *tc) override;
-
-    /// A page to hold "kernel" provided functions. The name might be wrong.
-    static const Addr commPage;
-
-    struct SyscallABI : public ArmProcess32::SyscallABI,
-                        public ArmFreebsdProcessBits::SyscallABI
-    {};
-};
-
-/// A process with emulated Arm/Freebsd syscalls.
-class ArmFreebsdProcess64 : public ArmProcess64, public ArmFreebsdProcessBits
-{
-  public:
-    ArmFreebsdProcess64(const ProcessParams &params,
-                        ::Loader::ObjectFile *objFile, ::Loader::Arch _arch);
-
-    void initState() override;
-    void syscall(ThreadContext *tc) override;
-
-    struct SyscallABI : public ArmProcess64::SyscallABI,
-                        public ArmFreebsdProcessBits::SyscallABI
-    {};
-};
-
-#endif // __ARCH_ARM_FREEBSD_PROCESS_HH__
+#endif // __ARCH_ARM_LINUX_SE_WORKLOAD_HH__

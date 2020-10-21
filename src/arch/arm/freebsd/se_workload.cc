@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2015 Ruslan Bukin <br@bsdpad.com>
- * All rights reserved.
+ * Copyright 2015 Ruslan Bukin <br@bsdpad.com>
  *
  * This software was developed by the University of Cambridge Computer
  * Laboratory as part of the CTSRD Project, with support from the UK Higher
  * Education Innovation Fund (HEIF).
+ *
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,42 +31,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/arm/freebsd/process.hh"
+#include "arch/arm/freebsd/se_workload.hh"
 
-#include <sys/mman.h>
-#include <sys/param.h>
 #include <sys/syscall.h>
-#if !defined ( __GNU_LIBRARY__ )
-#include <sys/sysctl.h>
-#endif
-#include <sys/types.h>
-#include <utime.h>
 
-#include "arch/arm/freebsd/freebsd.hh"
-#include "arch/arm/isa_traits.hh"
+#include "arch/arm/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "kern/freebsd/freebsd.hh"
-#include "sim/process.hh"
-#include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
-#include "sim/system.hh"
-
-using namespace std;
-using namespace ArmISA;
 
 namespace
 {
 
-class ArmFreebsdObjectFileLoader : public Process::Loader
+class FreebsdLoader : public Process::Loader
 {
   public:
     Process *
-    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file) override
+    load(const ProcessParams &params, ::Loader::ObjectFile *obj) override
     {
-        auto arch = obj_file->getArch();
-        auto opsys = obj_file->getOpSys();
+        auto arch = obj->getArch();
+        auto opsys = obj->getOpSys();
 
         if (arch != ::Loader::Arm && arch != ::Loader::Thumb &&
                 arch != ::Loader::Arm64) {
@@ -76,15 +62,18 @@ class ArmFreebsdObjectFileLoader : public Process::Loader
             return nullptr;
 
         if (arch == ::Loader::Arm64)
-            return new ArmFreebsdProcess64(params, obj_file, arch);
+            return new ArmProcess64(params, obj, arch);
         else
-            return new ArmFreebsdProcess32(params, obj_file, arch);
+            return new ArmProcess32(params, obj, arch);
     }
 };
 
-ArmFreebsdObjectFileLoader loader;
+FreebsdLoader loader;
 
 } // anonymous namespace
+
+namespace ArmISA
+{
 
 static SyscallReturn
 issetugidFunc(SyscallDesc *desc, ThreadContext *tc)
@@ -130,9 +119,9 @@ sysctlFunc(SyscallDesc *desc, ThreadContext *tc, Addr namep, size_t nameLen,
 }
 #endif
 
-static SyscallDescTable<ArmFreebsdProcess32::SyscallABI> syscallDescs32({});
+static SyscallDescTable<EmuFreebsd::SyscallABI32> syscallDescs32({});
 
-static SyscallDescTable<ArmFreebsdProcess64::SyscallABI> syscallDescs64 = {
+static SyscallDescTable<EmuFreebsd::SyscallABI64> syscallDescs64 = {
     {    1, "exit", exitFunc },
     {    3, "read", readFunc<ArmFreebsd64> },
     {    4, "write", writeFunc<ArmFreebsd64> },
@@ -150,40 +139,24 @@ static SyscallDescTable<ArmFreebsdProcess64::SyscallABI> syscallDescs64 = {
     {  477, "mmap", mmapFunc<ArmFreebsd64> }
 };
 
-ArmFreebsdProcess32::ArmFreebsdProcess32(const ProcessParams &params,
-        ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
-    ArmProcess32(params, objFile, _arch)
-{}
-
-ArmFreebsdProcess64::ArmFreebsdProcess64(const ProcessParams &params,
-        ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
-    ArmProcess64(params, objFile, _arch)
-{}
-
 void
-ArmFreebsdProcess32::initState()
+EmuFreebsd::syscall(ThreadContext *tc)
 {
-    ArmProcess32::initState();
-    // The 32 bit equivalent of the comm page would be set up here.
+    Process *process = tc->getProcessPtr();
+    // Call the syscall function in the base Process class to update stats.
+    // This will move into the base SEWorkload function at some point.
+    process->Process::syscall(tc);
+
+    if (dynamic_cast<ArmProcess64 *>(process))
+        syscallDescs64.get(tc->readIntReg(INTREG_X8))->doSyscall(tc);
+    else
+        syscallDescs32.get(tc->readIntReg(INTREG_R7))->doSyscall(tc);
 }
 
-void
-ArmFreebsdProcess64::initState()
-{
-    ArmProcess64::initState();
-    // The 64 bit equivalent of the comm page would be set up here.
-}
+} // namespace ArmISA
 
-void
-ArmFreebsdProcess32::syscall(ThreadContext *tc)
+ArmISA::EmuFreebsd *
+ArmEmuFreebsdParams::create() const
 {
-    ArmProcess32::syscall(tc);
-    syscallDescs32.get(tc->readIntReg(INTREG_R7))->doSyscall(tc);
-}
-
-void
-ArmFreebsdProcess64::syscall(ThreadContext *tc)
-{
-    ArmProcess64::syscall(tc);
-    syscallDescs64.get(tc->readIntReg(INTREG_X8))->doSyscall(tc);
+    return new ArmISA::EmuFreebsd(*this);
 }
