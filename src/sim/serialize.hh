@@ -482,13 +482,12 @@ paramInImpl(CheckpointIn &cp, const std::string &name, T &param)
 /**
  * This function is used for restoring optional parameters from the
  * checkpoint.
- * @param cp The checkpoint to be written to.
- * @param name Name of the parameter to be written.
- * @param param Value of the parameter to be written.
- * @param do_warn If the do_warn is set to true then the function prints the
+ * @param cp The checkpoint to be read from.
+ * @param name Name of the parameter to be read.
+ * @param param Value of the parameter to be read.
+ * @param do_warn If the warn is set to true then the function prints the
  * warning message.
- * @return If the parameter we are searching for does not exist
- * the function returns false else it returns true.
+ * @return Returns if the parameter existed in the checkpoint.
  *
  * @ingroup api_serialize
  */
