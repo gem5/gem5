@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2007-2008 The Florida State University
- * Copyright (c) 2009 The University of Edinburgh
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -27,26 +25,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __POWER_PROCESS_HH__
-#define __POWER_PROCESS_HH__
+#ifndef __ARCH_POWER_LINUX_SE_WORKLOAD_HH__
+#define __ARCH_POWER_LINUX_SE_WORKLOAD_HH__
 
-#include "sim/process.hh"
+#include "arch/power/linux/linux.hh"
+#include "arch/power/se_workload.hh"
+#include "params/PowerEmuLinux.hh"
+#include "sim/syscall_desc.hh"
 
-namespace Loader
+namespace PowerISA
 {
-class ObjectFile;
-} // namespace Loader;
 
-class PowerProcess : public Process
+class EmuLinux : public SEWorkload
 {
+  public:
+    using Params = PowerEmuLinuxParams;
+
   protected:
-    void initState() override;
+    const Params &_params;
+
+    /// Syscall descriptors, indexed by call number.
+    static SyscallDescTable<SEWorkload::SyscallABI> syscallDescs;
 
   public:
-    PowerProcess(const ProcessParams &params, ::Loader::ObjectFile *objFile);
+    const Params &params() const { return _params; }
 
-    void argsInit(int intSize, int pageSize);
+    EmuLinux(const Params &p) : SEWorkload(p), _params(p) {}
+
+    void syscall(ThreadContext *tc) override;
 };
 
-#endif // __POWER_PROCESS_HH__
+} // namespace PowerISA
 
+#endif // __ARCH_POWER_LINUX_SE_WORKLOAD_HH__

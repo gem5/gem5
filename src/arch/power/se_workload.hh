@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2007-2008 The Florida State University
- * Copyright (c) 2009 The University of Edinburgh
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -27,26 +25,64 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __POWER_PROCESS_HH__
-#define __POWER_PROCESS_HH__
+#ifndef __ARCH_POWER_SE_WORKLOAD_HH__
+#define __ARCH_POWER_SE_WORKLOAD_HH__
 
-#include "sim/process.hh"
+#include "arch/power/registers.hh"
+#include "params/PowerSEWorkload.hh"
+#include "sim/se_workload.hh"
+#include "sim/syscall_abi.hh"
+#include "sim/syscall_desc.hh"
 
-namespace Loader
+namespace PowerISA
 {
-class ObjectFile;
-} // namespace Loader;
 
-class PowerProcess : public Process
+class SEWorkload : public ::SEWorkload
 {
+  public:
+    using Params = PowerSEWorkloadParams;
+
   protected:
-    void initState() override;
+    const Params &_params;
 
   public:
-    PowerProcess(const ProcessParams &params, ::Loader::ObjectFile *objFile);
+    const Params &params() const { return _params; }
 
-    void argsInit(int intSize, int pageSize);
+    SEWorkload(const Params &p) : ::SEWorkload(p), _params(p) {}
+
+    ::Loader::Arch getArch() const override { return ::Loader::Power; }
+
+    struct SyscallABI : public GenericSyscallABI64
+    {
+        static const std::vector<int> ArgumentRegs;
+    };
 };
 
-#endif // __POWER_PROCESS_HH__
+} // namespace PowerISA
 
+namespace GuestABI
+{
+
+template <>
+struct Result<PowerISA::SEWorkload::SyscallABI, SyscallReturn>
+{
+    static void
+    store(ThreadContext *tc, const SyscallReturn &ret)
+    {
+        if (ret.suppressed() || ret.needsRetry())
+            return;
+
+        PowerISA::Cr cr = tc->readIntReg(PowerISA::INTREG_CR);
+        if (ret.successful()) {
+            cr.cr0.so = 0;
+        } else {
+            cr.cr0.so = 1;
+        }
+        tc->setIntReg(PowerISA::INTREG_CR, cr);
+        tc->setIntReg(PowerISA::ReturnValueReg, ret.encodedValue());
+    }
+};
+
+} // namespace GuestABI
+
+#endif // __ARCH_POWER_SE_WORKLOAD_HH__

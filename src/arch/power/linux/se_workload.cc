@@ -1,8 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
- * Copyright (c) 2007-2008 The Florida State University
- * Copyright (c) 2009 The University of Edinburgh
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -28,35 +25,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/power/linux/process.hh"
+#include "arch/power/linux/se_workload.hh"
 
-#include "arch/power/isa_traits.hh"
-#include "arch/power/linux/linux.hh"
+#include <sys/syscall.h>
+
+#include "arch/power/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "kern/linux/linux.hh"
-#include "sim/process.hh"
-#include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
-#include "sim/system.hh"
-
-using namespace std;
-using namespace PowerISA;
 
 namespace
 {
 
-class PowerLinuxObjectFileLoader : public Process::Loader
+class LinuxLoader : public Process::Loader
 {
   public:
     Process *
-    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file) override
+    load(const ProcessParams &params, ::Loader::ObjectFile *obj) override
     {
-        if (obj_file->getArch() != ::Loader::Power)
+        if (obj->getArch() != ::Loader::Power)
             return nullptr;
 
-        auto opsys = obj_file->getOpSys();
+        auto opsys = obj->getOpSys();
 
         if (opsys == ::Loader::UnknownOpSys) {
             warn("Unknown operating system; assuming Linux.");
@@ -66,13 +57,27 @@ class PowerLinuxObjectFileLoader : public Process::Loader
         if (opsys != ::Loader::Linux)
             return nullptr;
 
-        return new PowerLinuxProcess(params, obj_file);
+        return new PowerProcess(params, obj);
     }
 };
 
-PowerLinuxObjectFileLoader loader;
+LinuxLoader loader;
 
 } // anonymous namespace
+
+namespace PowerISA
+{
+
+void
+EmuLinux::syscall(ThreadContext *tc)
+{
+    Process *process = tc->getProcessPtr();
+    // Call the syscall function in the base Process class to update stats.
+    // This will move into the base SEWorkload function at some point.
+    process->Process::syscall(tc);
+
+    syscallDescs.get(tc->readIntReg(0))->doSyscall(tc);
+}
 
 /// Target uname() handler.
 static SyscallReturn
@@ -89,7 +94,7 @@ unameFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name)
     return 0;
 }
 
-SyscallDescTable<PowerProcess::SyscallABI> PowerLinuxProcess::syscallDescs = {
+SyscallDescTable<PowerISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
     {  0, "syscall" },
     {  1, "exit", exitFunc },
     {  2, "fork" },
@@ -439,20 +444,10 @@ SyscallDescTable<PowerProcess::SyscallABI> PowerLinuxProcess::syscallDescs = {
     { 346, "epoll_pwait" },
 };
 
-PowerLinuxProcess::PowerLinuxProcess(const ProcessParams &params,
-                                     ::Loader::ObjectFile *objFile) :
-    PowerProcess(params, objFile)
-{}
+} // namespace PowerISA
 
-void
-PowerLinuxProcess::initState()
+PowerISA::EmuLinux *
+PowerEmuLinuxParams::create() const
 {
-    PowerProcess::initState();
-}
-
-void
-PowerLinuxProcess::syscall(ThreadContext *tc)
-{
-    PowerProcess::syscall(tc);
-    syscallDescs.get(tc->readIntReg(0))->doSyscall(tc);
+    return new PowerISA::EmuLinux(*this);
 }

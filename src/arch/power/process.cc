@@ -277,7 +277,3 @@ PowerProcess::argsInit(int intSize, int pageSize)
     //Align the "stack_min" to a page boundary.
     memState->setStackMin(roundDown(stack_min, pageSize));
 }
-
-const std::vector<int> PowerProcess::SyscallABI::ArgumentRegs = {
-    3, 4, 5, 6, 7, 8
-};

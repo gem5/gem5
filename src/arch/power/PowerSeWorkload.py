@@ -1,8 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2009 The University of Edinburgh
-# Copyright (c) 2020 LabWare
-# All rights reserved.
+# Copyright 2020 Google Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -27,39 +23,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.params import *
 
-if env['TARGET_ISA'] == 'power':
-# Workaround for bug in SCons version > 0.97d20071212
-# Scons bug id: 2006 M5 Bug id: 308
-    Dir('isa/formats')
-    Source('decoder.cc')
-    Source('insts/branch.cc')
-    Source('insts/mem.cc')
-    Source('insts/integer.cc')
-    Source('insts/floating.cc')
-    Source('insts/condition.cc')
-    Source('insts/static_inst.cc')
-    Source('interrupts.cc')
-    Source('linux/linux.cc')
-    Source('linux/se_workload.cc')
-    Source('mmu.cc')
-    Source('isa.cc')
-    Source('pagetable.cc')
-    Source('process.cc')
-    Source('remote_gdb.cc')
-    Source('se_workload.cc')
-    Source('tlb.cc')
-    Source('utility.cc')
+from m5.objects.Workload import SEWorkload
 
-    SimObject('PowerInterrupts.py')
-    SimObject('PowerISA.py')
-    SimObject('PowerMMU.py')
-    SimObject('PowerSeWorkload.py')
-    SimObject('PowerTLB.py')
+class PowerSEWorkload(SEWorkload):
+    type = 'PowerSEWorkload'
+    cxx_header = "arch/power/se_workload.hh"
+    cxx_class = 'PowerISA::SEWorkload'
+    abstract = True
 
-    DebugFlag('Power')
+class PowerEmuLinux(PowerSEWorkload):
+    type = 'PowerEmuLinux'
+    cxx_header = "arch/power/linux/se_workload.hh"
+    cxx_class = 'PowerISA::EmuLinux'
 
-    ISADesc('isa/main.isa')
-
-    GdbXml('power.xml', 'gdb_xml_power')
+    @classmethod
+    def _is_compatible_with(cls, obj):
+        return obj.get_arch() == 'power' and \
+                obj.get_op_sys() in ('linux', 'unknown')

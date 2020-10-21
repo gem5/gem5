@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2007-2008 The Florida State University
- * Copyright (c) 2009 The University of Edinburgh
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -27,26 +25,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __POWER_LINUX_PROCESS_HH__
-#define __POWER_LINUX_PROCESS_HH__
+#include "arch/power/se_workload.hh"
 
-#include "arch/power/process.hh"
-
-#include "sim/syscall_desc.hh"
-
-/// A process with emulated PPC/Linux syscalls.
-class PowerLinuxProcess : public PowerProcess
+namespace PowerISA
 {
-  public:
-    PowerLinuxProcess(const ProcessParams &params,
-                      ::Loader::ObjectFile *objFile);
 
-    void initState() override;
-
-    void syscall(ThreadContext *tc) override;
-
-    /// Syscall descriptors, indexed by call number.
-    static SyscallDescTable<SyscallABI> syscallDescs;
+const std::vector<int> SEWorkload::SyscallABI::ArgumentRegs = {
+    3, 4, 5, 6, 7, 8
 };
 
-#endif // __POWER_LINUX_PROCESS_HH__
+} // namespace PowerISA
