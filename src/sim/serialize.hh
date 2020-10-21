@@ -471,6 +471,41 @@ paramOut(CheckpointOut &os, const std::string &name, const T &param)
     os << "\n";
 }
 
+template <class T>
+bool
+paramInImpl(CheckpointIn &cp, const std::string &name, T &param)
+{
+    const std::string &section(Serializable::currentSection());
+    std::string str;
+    return cp.find(section, name, str) && parseParam(str, param);
+}
+
+/**
+ * This function is used for restoring optional parameters from the
+ * checkpoint.
+ * @param cp The checkpoint to be written to.
+ * @param name Name of the parameter to be written.
+ * @param param Value of the parameter to be written.
+ * @param do_warn If the do_warn is set to true then the function prints the
+ * warning message.
+ * @return If the parameter we are searching for does not exist
+ * the function returns false else it returns true.
+ *
+ * @ingroup api_serialize
+ */
+template <class T>
+bool
+optParamIn(CheckpointIn &cp, const std::string &name, T &param,
+           bool do_warn=true)
+{
+    if (paramInImpl(cp, name, param))
+        return true;
+
+    warn_if(do_warn, "optional parameter %s:%s not present",
+            Serializable::currentSection(), name);
+    return false;
+}
+
 /**
  * This function is used for restoring parameters from a checkpoint.
  * @param os The checkpoint to be restored from.
@@ -482,40 +517,8 @@ template <class T>
 void
 paramIn(CheckpointIn &cp, const std::string &name, T &param)
 {
-    const std::string &section(Serializable::currentSection());
-    std::string str;
-    if (!cp.find(section, name, str) || !parseParam(str, param)) {
-        fatal("Can't unserialize '%s:%s'\n", section, name);
-    }
-}
-
-/**
- * This function is used for restoring optional parameters from the
- * checkpoint.
- * @param cp The checkpoint to be written to.
- * @param name Name of the parameter to be written.
- * @param param Value of the parameter to be written.
- * @param warn If the warn is set to true then the function prints the warning
- * message.
- * @return If the parameter we are searching for does not exist
- * the function returns false else it returns true.
- *
- * @ingroup api_serialize
- */
-template <class T>
-bool
-optParamIn(CheckpointIn &cp, const std::string &name,
-           T &param, bool warn = true)
-{
-    const std::string &section(Serializable::currentSection());
-    std::string str;
-    if (!cp.find(section, name, str) || !parseParam(str, param)) {
-        if (warn)
-            warn("optional parameter %s:%s not present\n", section, name);
-        return false;
-    } else {
-        return true;
-    }
+    fatal_if(!paramInImpl(cp, name, param),
+        "Can't unserialize '%s:%s'", Serializable::currentSection(), name);
 }
 
 /**
