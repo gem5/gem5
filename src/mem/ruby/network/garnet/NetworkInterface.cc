@@ -435,7 +435,7 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
                 net_msg_ptr->getMessageSize()),
                 oPort->bitWidth(), curTick());
 
-            fl->set_src_delay(curTick() - ticksToCycles(msg_ptr->getTime()));
+            fl->set_src_delay(curTick() - msg_ptr->getTime());
             niOutVcs[vc].insert(fl);
         }
 
