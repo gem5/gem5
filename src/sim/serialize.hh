@@ -320,139 +320,131 @@ class Serializable
 
 /**
  * @ingroup api_serialize
+ * @{
  */
+
+// To add support for a new type of field that can be serialized, define
+// template specializations of the two classes below, ParseParam and ShowParam,
+// as described above each. The way ParseParam is specialized for std::string
+// or ShowParam is specialied for bool can be used as examples.
+
+/*
+ * A structure which should be specialized to contain a static method with the
+ * signature:
+ *
+ * bool parse(const std::string &s, T &value)
+ *
+ * which fills in value using the contents of s, and returns if that was
+ * successful.
+ */
+template <class T, class Enable=void>
+struct ParseParam;
+
+// Specialization for anything to_number can accept.
 template <class T>
-bool
-parseParam(const std::string &s, T &value)
+struct ParseParam<T, decltype(to_number("", std::declval<T&>()), void())>
 {
-    // The base implementations use to_number for parsing and '<<' for
-    // displaying, suitable for integer types.
-    return to_number(s, value);
-}
+    static bool
+    parse(const std::string &s, T &value)
+    {
+        return to_number(s, value);
+    }
+};
 
-/**
- * @ingroup api_serialize
- */
+template <>
+struct ParseParam<bool>
+{
+    static bool
+    parse(const std::string &s, bool &value)
+    {
+        return to_bool(s, value);
+    }
+};
+
+template <>
+struct ParseParam<std::string>
+{
+    static bool
+    parse(const std::string &s, std::string &value)
+    {
+        // String requires no processing to speak of
+        value = s;
+        return true;
+    }
+};
+
+// Specialization for BitUnion types.
 template <class T>
-void
-showParam(CheckpointOut &os, const T &value)
+struct ParseParam<BitUnionType<T>>
 {
-    os << value;
-}
+    static bool
+    parse(const std::string &s, BitUnionType<T> &value)
+    {
+        // Zero initialize storage to avoid leaking an uninitialized value
+        BitUnionBaseType<T> storage = BitUnionBaseType<T>();
+        auto res = to_number(s, storage);
+        value = storage;
+        return res;
+    }
+};
 
-/**
- * @ingroup api_serialize
+/*
+ * A structure which should be specialized to contain a static method with the
+ * signature:
+ *
+ * void show(std::ostream &os, const T &value)
+ *
+ * which outputs value to the stream os.
+ *
+ * This default implementation falls back to the << operator which should work
+ * for many types.
  */
+template <class T, class Enabled=void>
+struct ShowParam
+{
+    static void show(std::ostream &os, const T &value) { os << value; }
+};
+
+// Handle characters specially so that we print their value, not the character
+// they encode.
 template <class T>
-bool
-parseParam(const std::string &s, BitUnionType<T> &value)
+struct ShowParam<T, std::enable_if_t<std::is_same<char, T>::value ||
+                                     std::is_same<unsigned char, T>::value ||
+                                     std::is_same<signed char, T>::value>>
 {
-    // Zero initialize storage to avoid leaking an uninitialized value
-    BitUnionBaseType<T> storage = BitUnionBaseType<T>();
-    auto res = to_number(s, storage);
-    value = storage;
-    return res;
-}
+    static void
+    show(std::ostream &os, const T &value)
+    {
+        if (std::is_signed<T>::value)
+            os << (int)value;
+        else
+            os << (unsigned int)value;
+    }
+};
 
-/**
- * @ingroup api_serialize
- */
+template <>
+struct ShowParam<bool>
+{
+    static void
+    show(std::ostream &os, const bool &value)
+    {
+        // Display bools as strings
+        os << (value ? "true" : "false");
+    }
+};
+
 template <class T>
-void
-showParam(CheckpointOut &os, const BitUnionType<T> &value)
+struct ShowParam<BitUnionType<T>>
 {
-    auto storage = static_cast<BitUnionBaseType<T>>(value);
+    static void
+    show(std::ostream &os, const BitUnionType<T> &value)
+    {
+        ShowParam<BitUnionBaseType<T>>::show(
+                os, static_cast<const BitUnionBaseType<T> &>(value));
+    }
+};
 
-    // For a BitUnion8, the storage type is an unsigned char.
-    // Since we want to serialize a number we need to cast to
-    // unsigned int
-    os << ((sizeof(storage) == 1) ?
-        static_cast<unsigned int>(storage) : storage);
-}
-
-/**
- * @ingroup api_serialize
- */
-template <>
-inline void
-showParam(CheckpointOut &os, const char &value)
-{
-    // Treat 8-bit ints (chars) as ints on output, not as chars
-    os << (int)value;
-}
-
-/**
- * @ingroup api_serialize
- */
-template <>
-inline void
-showParam(CheckpointOut &os, const signed char &value)
-{
-    os << (int)value;
-}
-
-/**
- * @ingroup api_serialize
- */
-template <>
-inline void
-showParam(CheckpointOut &os, const unsigned char &value)
-{
-    os << (unsigned int)value;
-}
-
-/**
- * @ingroup api_serialize
- */
-template <>
-inline bool
-parseParam(const std::string &s, float &value)
-{
-    return to_number(s, value);
-}
-
-/**
- * @ingroup api_serialize
- */
-template <>
-inline bool
-parseParam(const std::string &s, double &value)
-{
-    return to_number(s, value);
-}
-
-/**
- * @ingroup api_serialize
- */
-template <>
-inline bool
-parseParam(const std::string &s, bool &value)
-{
-    return to_bool(s, value);
-}
-
-/**
- * @ingroup api_serialize
- */
-template <>
-inline void
-showParam(CheckpointOut &os, const bool &value)
-{
-    // Display bools as strings
-    os << (value ? "true" : "false");
-}
-
-/**
- * @ingroup api_serialize
- */
-template <>
-inline bool
-parseParam(const std::string &s, std::string &value)
-{
-    // String requires no processing to speak of
-    value = s;
-    return true;
-}
+/** @} */
 
 /**
  * This function is used for writing parameters to a checkpoint.
@@ -466,7 +458,7 @@ void
 paramOut(CheckpointOut &os, const std::string &name, const T &param)
 {
     os << name << "=";
-    showParam(os, param);
+    ShowParam<T>::show(os, param);
     os << "\n";
 }
 
@@ -476,7 +468,7 @@ paramInImpl(CheckpointIn &cp, const std::string &name, T &param)
 {
     const std::string &section(Serializable::currentSection());
     std::string str;
-    return cp.find(section, name, str) && parseParam(str, param);
+    return cp.find(section, name, str) && ParseParam<T>::parse(str, param);
 }
 
 /**
@@ -529,11 +521,12 @@ arrayParamOut(CheckpointOut &os, const std::string &name,
 {
     os << name << "=";
     auto it = start;
+    using Elem = std::remove_cv_t<std::remove_reference_t<decltype(*it)>>;
     if (it != end)
-        showParam(os, *it++);
+        ShowParam<Elem>::show(os, *it++);
     while (it != end) {
         os << " ";
-        showParam(os, *it++);
+        ShowParam<Elem>::show(os, *it++);
     }
     os << "\n";
 }
@@ -593,7 +586,8 @@ arrayParamIn(CheckpointIn &cp, const std::string &name,
 
     for (const auto &token: tokens) {
         T value;
-        fatal_if(!parseParam(token, value), "Could not parse \"%s\".", str);
+        fatal_if(!ParseParam<T>::parse(token, value),
+                 "Could not parse \"%s\".", str);
         *inserter = value;
     }
 }
