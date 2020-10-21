@@ -40,271 +40,279 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'x86':
-    Source('cpuid.cc')
-    Source('decoder.cc')
-    Source('decoder_tables.cc')
-    Source('emulenv.cc')
-    Source('faults.cc')
-    Source('fs_workload.cc')
-    Source('insts/badmicroop.cc')
-    Source('insts/microfpop.cc')
-    Source('insts/microldstop.cc')
-    Source('insts/micromediaop.cc')
-    Source('insts/microop.cc')
-    Source('insts/microregop.cc')
-    Source('insts/static_inst.cc')
-    Source('interrupts.cc')
-    Source('isa.cc')
-    Source('mmu.cc')
-    Source('nativetrace.cc')
-    Source('pagetable.cc')
-    Source('pagetable_walker.cc')
-    Source('process.cc')
-    Source('pseudo_inst.cc')
-    Source('remote_gdb.cc')
-    Source('tlb.cc')
-    Source('types.cc')
-    Source('utility.cc')
+if env['TARGET_ISA'] != 'x86':
+    Return()
 
-    SimObject('X86SeWorkload.py')
-    SimObject('X86FsWorkload.py')
-    SimObject('X86ISA.py')
-    SimObject('X86LocalApic.py')
-    SimObject('X86MMU.py')
-    SimObject('X86NativeTrace.py')
-    SimObject('X86TLB.py')
+Source('cpuid.cc')
+Source('decoder.cc')
+Source('decoder_tables.cc')
+Source('emulenv.cc')
+Source('faults.cc')
+Source('fs_workload.cc')
+Source('insts/badmicroop.cc')
+Source('insts/microfpop.cc')
+Source('insts/microldstop.cc')
+Source('insts/micromediaop.cc')
+Source('insts/microop.cc')
+Source('insts/microregop.cc')
+Source('insts/static_inst.cc')
+Source('interrupts.cc')
+Source('isa.cc')
+Source('mmu.cc')
+Source('nativetrace.cc')
+Source('pagetable.cc')
+Source('pagetable_walker.cc')
+Source('process.cc')
+Source('pseudo_inst.cc')
+Source('remote_gdb.cc')
+Source('tlb.cc')
+Source('types.cc')
+Source('utility.cc')
 
-    DebugFlag('Faults', "Trace all faults/exceptions/traps")
-    DebugFlag('LocalApic', "Local APIC debugging")
-    DebugFlag('PageTableWalker', \
-              "Page table walker state machine debugging")
-    DebugFlag('Decoder', "Decoder debug output")
-    DebugFlag('X86', "Generic X86 ISA debugging")
+SimObject('X86SeWorkload.py')
+SimObject('X86FsWorkload.py')
+SimObject('X86ISA.py')
+SimObject('X86LocalApic.py')
+SimObject('X86MMU.py')
+SimObject('X86NativeTrace.py')
+SimObject('X86TLB.py')
 
-    python_files = (
-        '__init__.py',
-        'general_purpose/__init__.py',
-        'general_purpose/arithmetic/__init__.py',
-        'general_purpose/arithmetic/add_and_subtract.py',
-        'general_purpose/arithmetic/increment_and_decrement.py',
-        'general_purpose/arithmetic/multiply_and_divide.py',
-        'general_purpose/cache_and_memory_management.py',
-        'general_purpose/compare_and_test/__init__.py',
-        'general_purpose/compare_and_test/bit_scan.py',
-        'general_purpose/compare_and_test/bit_test.py',
-        'general_purpose/compare_and_test/bounds.py',
-        'general_purpose/compare_and_test/compare.py',
-        'general_purpose/compare_and_test/set_byte_on_condition.py',
-        'general_purpose/compare_and_test/test.py',
-        'general_purpose/control_transfer/__init__.py',
-        'general_purpose/control_transfer/call.py',
-        'general_purpose/control_transfer/conditional_jump.py',
-        'general_purpose/control_transfer/interrupts_and_exceptions.py',
-        'general_purpose/control_transfer/jump.py',
-        'general_purpose/control_transfer/loop.py',
-        'general_purpose/control_transfer/xreturn.py',
-        'general_purpose/data_conversion/__init__.py',
-        'general_purpose/data_conversion/ascii_adjust.py',
-        'general_purpose/data_conversion/bcd_adjust.py',
-        'general_purpose/data_conversion/endian_conversion.py',
-        'general_purpose/data_conversion/extract_sign_mask.py',
-        'general_purpose/data_conversion/sign_extension.py',
-        'general_purpose/data_conversion/translate.py',
-        'general_purpose/data_transfer/__init__.py',
-        'general_purpose/data_transfer/conditional_move.py',
-        'general_purpose/data_transfer/move.py',
-        'general_purpose/data_transfer/stack_operations.py',
-        'general_purpose/data_transfer/xchg.py',
-        'general_purpose/flags/__init__.py',
-        'general_purpose/flags/load_and_store.py',
-        'general_purpose/flags/push_and_pop.py',
-        'general_purpose/flags/set_and_clear.py',
-        'general_purpose/input_output/__init__.py',
-        'general_purpose/input_output/general_io.py',
-        'general_purpose/input_output/string_io.py',
-        'general_purpose/load_effective_address.py',
-        'general_purpose/load_segment_registers.py',
-        'general_purpose/logical.py',
-        'general_purpose/no_operation.py',
-        'general_purpose/rotate_and_shift/__init__.py',
-        'general_purpose/rotate_and_shift/rotate.py',
-        'general_purpose/rotate_and_shift/shift.py',
-        'general_purpose/semaphores.py',
-        'general_purpose/string/__init__.py',
-        'general_purpose/string/compare_strings.py',
-        'general_purpose/string/load_string.py',
-        'general_purpose/string/move_string.py',
-        'general_purpose/string/scan_string.py',
-        'general_purpose/string/store_string.py',
-        'general_purpose/system_calls.py',
-        'romutil.py',
-        'system/__init__.py',
-        'system/control_registers.py',
-        'system/halt.py',
-        'system/invlpg.py',
-        'system/undefined_operation.py',
-        'system/msrs.py',
-        'system/segmentation.py',
-        'simd128/__init__.py',
-        'simd128/integer/__init__.py',
-        'simd128/integer/data_transfer/__init__.py',
-        'simd128/integer/data_transfer/move.py',
-        'simd128/integer/data_transfer/move_non_temporal.py',
-        'simd128/integer/data_transfer/move_mask.py',
-        'simd128/integer/data_conversion/__init__.py',
-        'simd128/integer/data_conversion/convert_mmx_integer_to_floating_point.py',
-        'simd128/integer/data_conversion/convert_integer_to_floating_point.py',
-        'simd128/integer/data_conversion/convert_gpr_integer_to_floating_point.py',
-        'simd128/integer/data_reordering/__init__.py',
-        'simd128/integer/data_reordering/unpack_and_interleave.py',
-        'simd128/integer/data_reordering/pack_with_saturation.py',
-        'simd128/integer/data_reordering/extract_and_insert.py',
-        'simd128/integer/data_reordering/shuffle.py',
-        'simd128/integer/arithmetic/__init__.py',
-        'simd128/integer/arithmetic/subtraction.py',
-        'simd128/integer/arithmetic/addition.py',
-        'simd128/integer/arithmetic/multiplication.py',
-        'simd128/integer/arithmetic/multiply_add.py',
-        'simd128/integer/arithmetic/average.py',
-        'simd128/integer/arithmetic/sum_of_absolute_differences.py',
-        'simd128/integer/shift/__init__.py',
-        'simd128/integer/shift/right_arithmetic_shift.py',
-        'simd128/integer/shift/left_logical_shift.py',
-        'simd128/integer/shift/right_logical_shift.py',
-        'simd128/integer/compare/__init__.py',
-        'simd128/integer/compare/compare_and_write_mask.py',
-        'simd128/integer/compare/compare_and_write_minimum_or_maximum.py',
-        'simd128/integer/logical/__init__.py',
-        'simd128/integer/logical/pand.py',
-        'simd128/integer/logical/por.py',
-        'simd128/integer/logical/exclusive_or.py',
-        'simd128/integer/save_and_restore_state/__init__.py',
-        'simd128/integer/save_and_restore_state/save_and_restore_state.py',
-        'simd128/integer/save_and_restore_state/save_and_restore_control_and_status.py',
-        'simd128/floating_point/__init__.py',
-        'simd128/floating_point/data_transfer/__init__.py',
-        'simd128/floating_point/data_transfer/move_mask.py',
-        'simd128/floating_point/data_transfer/move.py',
-        'simd128/floating_point/data_transfer/move_with_duplication.py',
-        'simd128/floating_point/data_transfer/move_non_temporal.py',
-        'simd128/floating_point/data_conversion/__init__.py',
-        'simd128/floating_point/data_conversion/convert_floating_point_to_floating_point.py',
-        'simd128/floating_point/data_conversion/convert_floating_point_to_xmm_integer.py',
-        'simd128/floating_point/data_conversion/convert_floating_point_to_mmx_integer.py',
-        'simd128/floating_point/data_conversion/convert_floating_point_to_gpr_integer.py',
-        'simd128/floating_point/data_reordering/__init__.py',
-        'simd128/floating_point/data_reordering/unpack_and_interleave.py',
-        'simd128/floating_point/data_reordering/shuffle.py',
-        'simd128/floating_point/arithmetic/__init__.py',
-        'simd128/floating_point/arithmetic/subtraction.py',
-        'simd128/floating_point/arithmetic/addition.py',
-        'simd128/floating_point/arithmetic/horizontal_subtraction.py',
-        'simd128/floating_point/arithmetic/horizontal_addition.py',
-        'simd128/floating_point/arithmetic/square_root.py',
-        'simd128/floating_point/arithmetic/simultaneous_addition_and_subtraction.py',
-        'simd128/floating_point/arithmetic/multiplication.py',
-        'simd128/floating_point/arithmetic/division.py',
-        'simd128/floating_point/arithmetic/reciprocal_square_root.py',
-        'simd128/floating_point/arithmetic/reciprocal_estimation.py',
-        'simd128/floating_point/compare/__init__.py',
-        'simd128/floating_point/compare/compare_and_write_mask.py',
-        'simd128/floating_point/compare/compare_and_write_rflags.py',
-        'simd128/floating_point/compare/compare_and_write_minimum_or_maximum.py',
-        'simd128/floating_point/logical/__init__.py',
-        'simd128/floating_point/logical/andp.py',
-        'simd128/floating_point/logical/orp.py',
-        'simd128/floating_point/logical/exclusive_or.py',
-        'simd64/__init__.py',
-        'simd64/integer/__init__.py',
-        'simd64/integer/data_transfer/__init__.py',
-        'simd64/integer/data_transfer/move_mask.py',
-        'simd64/integer/data_transfer/move.py',
-        'simd64/integer/data_transfer/move_non_temporal.py',
-        'simd64/integer/exit_media_state.py',
-        'simd64/integer/data_reordering/__init__.py',
-        'simd64/integer/data_reordering/unpack_and_interleave.py',
-        'simd64/integer/data_reordering/pack_with_saturation.py',
-        'simd64/integer/data_reordering/extract_and_insert.py',
-        'simd64/integer/data_reordering/shuffle_and_swap.py',
-        'simd64/integer/data_conversion.py',
-        'simd64/integer/arithmetic/__init__.py',
-        'simd64/integer/arithmetic/subtraction.py',
-        'simd64/integer/arithmetic/addition.py',
-        'simd64/integer/arithmetic/multiplication.py',
-        'simd64/integer/arithmetic/multiply_add.py',
-        'simd64/integer/arithmetic/average.py',
-        'simd64/integer/arithmetic/sum_of_absolute_differences.py',
-        'simd64/integer/shift/__init__.py',
-        'simd64/integer/shift/right_arithmetic_shift.py',
-        'simd64/integer/shift/left_logical_shift.py',
-        'simd64/integer/shift/right_logical_shift.py',
-        'simd64/integer/compare/__init__.py',
-        'simd64/integer/compare/compare_and_write_mask.py',
-        'simd64/integer/compare/compare_and_write_minimum_or_maximum.py',
-        'simd64/integer/logical/__init__.py',
-        'simd64/integer/logical/pand.py',
-        'simd64/integer/logical/por.py',
-        'simd64/integer/logical/exclusive_or.py',
-        'simd64/integer/save_and_restore_state.py',
-        'simd64/floating_point/__init__.py',
-        'simd64/floating_point/arithmetic/__init__.py',
-        'simd64/floating_point/arithmetic/subtraction.py',
-        'simd64/floating_point/arithmetic/addition.py',
-        'simd64/floating_point/arithmetic/reciprocal_estimation.py',
-        'simd64/floating_point/arithmetic/multiplication.py',
-        'simd64/floating_point/arithmetic/accumulation.py',
-        'simd64/floating_point/arithmetic/reciprocal_square_root.py',
-        'simd64/floating_point/data_conversion.py',
-        'simd64/floating_point/compare/__init__.py',
-        'simd64/floating_point/compare/compare_and_write_mask.py',
-        'simd64/floating_point/compare/compare_and_write_minimum_or_maximum.py',
-        'x87/__init__.py',
-        'x87/data_transfer_and_conversion/__init__.py',
-        'x87/data_transfer_and_conversion/convert_and_load_or_store_integer.py',
-        'x87/data_transfer_and_conversion/load_or_store_floating_point.py',
-        'x87/data_transfer_and_conversion/exchange.py',
-        'x87/data_transfer_and_conversion/convert_and_load_or_store_bcd.py',
-        'x87/data_transfer_and_conversion/conditional_move.py',
-        'x87/data_transfer_and_conversion/extract.py',
-        'x87/load_constants/__init__.py',
-        'x87/load_constants/load_0_1_or_pi.py',
-        'x87/load_constants/load_logarithm.py',
-        'x87/arithmetic/__init__.py',
-        'x87/arithmetic/subtraction.py',
-        'x87/arithmetic/addition.py',
-        'x87/arithmetic/partial_remainder.py',
-        'x87/arithmetic/multiplication.py',
-        'x87/arithmetic/division.py',
-        'x87/arithmetic/change_sign.py',
-        'x87/arithmetic/round.py',
-        'x87/arithmetic/square_root.py',
-        'x87/transcendental_functions/__init__.py',
-        'x87/transcendental_functions/trigonometric_functions.py',
-        'x87/transcendental_functions/logarithmic_functions.py',
-        'x87/compare_and_test/__init__.py',
-        'x87/compare_and_test/classify.py',
-        'x87/compare_and_test/test.py',
-        'x87/compare_and_test/floating_point_ordered_compare.py',
-        'x87/compare_and_test/floating_point_unordered_compare.py',
-        'x87/compare_and_test/integer_compare.py',
-        'x87/stack_management/__init__.py',
-        'x87/stack_management/stack_control.py',
-        'x87/stack_management/clear_state.py',
-        'x87/control/__init__.py',
-        'x87/control/clear_exceptions.py',
-        'x87/control/initialize.py',
-        'x87/control/wait_for_exceptions.py',
-        'x87/control/save_x87_status_word.py',
-        'x87/control/save_and_restore_x87_control_word.py',
-        'x87/control/save_and_restore_x87_environment.py',
-        'x87/no_operation.py'
-        )
+DebugFlag('Faults', "Trace all faults/exceptions/traps")
+DebugFlag('LocalApic', "Local APIC debugging")
+DebugFlag('PageTableWalker', \
+          "Page table walker state machine debugging")
+DebugFlag('Decoder', "Decoder debug output")
+DebugFlag('X86', "Generic X86 ISA debugging")
+
+python_files = (
+    '__init__.py',
+    'general_purpose/__init__.py',
+    'general_purpose/arithmetic/__init__.py',
+    'general_purpose/arithmetic/add_and_subtract.py',
+    'general_purpose/arithmetic/increment_and_decrement.py',
+    'general_purpose/arithmetic/multiply_and_divide.py',
+    'general_purpose/cache_and_memory_management.py',
+    'general_purpose/compare_and_test/__init__.py',
+    'general_purpose/compare_and_test/bit_scan.py',
+    'general_purpose/compare_and_test/bit_test.py',
+    'general_purpose/compare_and_test/bounds.py',
+    'general_purpose/compare_and_test/compare.py',
+    'general_purpose/compare_and_test/set_byte_on_condition.py',
+    'general_purpose/compare_and_test/test.py',
+    'general_purpose/control_transfer/__init__.py',
+    'general_purpose/control_transfer/call.py',
+    'general_purpose/control_transfer/conditional_jump.py',
+    'general_purpose/control_transfer/interrupts_and_exceptions.py',
+    'general_purpose/control_transfer/jump.py',
+    'general_purpose/control_transfer/loop.py',
+    'general_purpose/control_transfer/xreturn.py',
+    'general_purpose/data_conversion/__init__.py',
+    'general_purpose/data_conversion/ascii_adjust.py',
+    'general_purpose/data_conversion/bcd_adjust.py',
+    'general_purpose/data_conversion/endian_conversion.py',
+    'general_purpose/data_conversion/extract_sign_mask.py',
+    'general_purpose/data_conversion/sign_extension.py',
+    'general_purpose/data_conversion/translate.py',
+    'general_purpose/data_transfer/__init__.py',
+    'general_purpose/data_transfer/conditional_move.py',
+    'general_purpose/data_transfer/move.py',
+    'general_purpose/data_transfer/stack_operations.py',
+    'general_purpose/data_transfer/xchg.py',
+    'general_purpose/flags/__init__.py',
+    'general_purpose/flags/load_and_store.py',
+    'general_purpose/flags/push_and_pop.py',
+    'general_purpose/flags/set_and_clear.py',
+    'general_purpose/input_output/__init__.py',
+    'general_purpose/input_output/general_io.py',
+    'general_purpose/input_output/string_io.py',
+    'general_purpose/load_effective_address.py',
+    'general_purpose/load_segment_registers.py',
+    'general_purpose/logical.py',
+    'general_purpose/no_operation.py',
+    'general_purpose/rotate_and_shift/__init__.py',
+    'general_purpose/rotate_and_shift/rotate.py',
+    'general_purpose/rotate_and_shift/shift.py',
+    'general_purpose/semaphores.py',
+    'general_purpose/string/__init__.py',
+    'general_purpose/string/compare_strings.py',
+    'general_purpose/string/load_string.py',
+    'general_purpose/string/move_string.py',
+    'general_purpose/string/scan_string.py',
+    'general_purpose/string/store_string.py',
+    'general_purpose/system_calls.py',
+    'romutil.py',
+    'system/__init__.py',
+    'system/control_registers.py',
+    'system/halt.py',
+    'system/invlpg.py',
+    'system/undefined_operation.py',
+    'system/msrs.py',
+    'system/segmentation.py',
+    'simd128/__init__.py',
+    'simd128/integer/__init__.py',
+    'simd128/integer/data_transfer/__init__.py',
+    'simd128/integer/data_transfer/move.py',
+    'simd128/integer/data_transfer/move_non_temporal.py',
+    'simd128/integer/data_transfer/move_mask.py',
+    'simd128/integer/data_conversion/__init__.py',
+    'simd128/integer/data_conversion/convert_mmx_integer_to_floating_point.py',
+    'simd128/integer/data_conversion/convert_integer_to_floating_point.py',
+    'simd128/integer/data_conversion/convert_gpr_integer_to_floating_point.py',
+    'simd128/integer/data_reordering/__init__.py',
+    'simd128/integer/data_reordering/unpack_and_interleave.py',
+    'simd128/integer/data_reordering/pack_with_saturation.py',
+    'simd128/integer/data_reordering/extract_and_insert.py',
+    'simd128/integer/data_reordering/shuffle.py',
+    'simd128/integer/arithmetic/__init__.py',
+    'simd128/integer/arithmetic/subtraction.py',
+    'simd128/integer/arithmetic/addition.py',
+    'simd128/integer/arithmetic/multiplication.py',
+    'simd128/integer/arithmetic/multiply_add.py',
+    'simd128/integer/arithmetic/average.py',
+    'simd128/integer/arithmetic/sum_of_absolute_differences.py',
+    'simd128/integer/shift/__init__.py',
+    'simd128/integer/shift/right_arithmetic_shift.py',
+    'simd128/integer/shift/left_logical_shift.py',
+    'simd128/integer/shift/right_logical_shift.py',
+    'simd128/integer/compare/__init__.py',
+    'simd128/integer/compare/compare_and_write_mask.py',
+    'simd128/integer/compare/compare_and_write_minimum_or_maximum.py',
+    'simd128/integer/logical/__init__.py',
+    'simd128/integer/logical/pand.py',
+    'simd128/integer/logical/por.py',
+    'simd128/integer/logical/exclusive_or.py',
+    'simd128/integer/save_and_restore_state/__init__.py',
+    'simd128/integer/save_and_restore_state/save_and_restore_state.py',
+    'simd128/integer/save_and_restore_state/'
+        'save_and_restore_control_and_status.py',
+    'simd128/floating_point/__init__.py',
+    'simd128/floating_point/data_transfer/__init__.py',
+    'simd128/floating_point/data_transfer/move_mask.py',
+    'simd128/floating_point/data_transfer/move.py',
+    'simd128/floating_point/data_transfer/move_with_duplication.py',
+    'simd128/floating_point/data_transfer/move_non_temporal.py',
+    'simd128/floating_point/data_conversion/__init__.py',
+    'simd128/floating_point/data_conversion/'
+        'convert_floating_point_to_floating_point.py',
+    'simd128/floating_point/data_conversion/'
+        'convert_floating_point_to_xmm_integer.py',
+    'simd128/floating_point/data_conversion/'
+        'convert_floating_point_to_mmx_integer.py',
+    'simd128/floating_point/data_conversion/'
+        'convert_floating_point_to_gpr_integer.py',
+    'simd128/floating_point/data_reordering/__init__.py',
+    'simd128/floating_point/data_reordering/unpack_and_interleave.py',
+    'simd128/floating_point/data_reordering/shuffle.py',
+    'simd128/floating_point/arithmetic/__init__.py',
+    'simd128/floating_point/arithmetic/subtraction.py',
+    'simd128/floating_point/arithmetic/addition.py',
+    'simd128/floating_point/arithmetic/horizontal_subtraction.py',
+    'simd128/floating_point/arithmetic/horizontal_addition.py',
+    'simd128/floating_point/arithmetic/square_root.py',
+    'simd128/floating_point/arithmetic/'
+        'simultaneous_addition_and_subtraction.py',
+    'simd128/floating_point/arithmetic/multiplication.py',
+    'simd128/floating_point/arithmetic/division.py',
+    'simd128/floating_point/arithmetic/reciprocal_square_root.py',
+    'simd128/floating_point/arithmetic/reciprocal_estimation.py',
+    'simd128/floating_point/compare/__init__.py',
+    'simd128/floating_point/compare/compare_and_write_mask.py',
+    'simd128/floating_point/compare/compare_and_write_rflags.py',
+    'simd128/floating_point/compare/compare_and_write_minimum_or_maximum.py',
+    'simd128/floating_point/logical/__init__.py',
+    'simd128/floating_point/logical/andp.py',
+    'simd128/floating_point/logical/orp.py',
+    'simd128/floating_point/logical/exclusive_or.py',
+    'simd64/__init__.py',
+    'simd64/integer/__init__.py',
+    'simd64/integer/data_transfer/__init__.py',
+    'simd64/integer/data_transfer/move_mask.py',
+    'simd64/integer/data_transfer/move.py',
+    'simd64/integer/data_transfer/move_non_temporal.py',
+    'simd64/integer/exit_media_state.py',
+    'simd64/integer/data_reordering/__init__.py',
+    'simd64/integer/data_reordering/unpack_and_interleave.py',
+    'simd64/integer/data_reordering/pack_with_saturation.py',
+    'simd64/integer/data_reordering/extract_and_insert.py',
+    'simd64/integer/data_reordering/shuffle_and_swap.py',
+    'simd64/integer/data_conversion.py',
+    'simd64/integer/arithmetic/__init__.py',
+    'simd64/integer/arithmetic/subtraction.py',
+    'simd64/integer/arithmetic/addition.py',
+    'simd64/integer/arithmetic/multiplication.py',
+    'simd64/integer/arithmetic/multiply_add.py',
+    'simd64/integer/arithmetic/average.py',
+    'simd64/integer/arithmetic/sum_of_absolute_differences.py',
+    'simd64/integer/shift/__init__.py',
+    'simd64/integer/shift/right_arithmetic_shift.py',
+    'simd64/integer/shift/left_logical_shift.py',
+    'simd64/integer/shift/right_logical_shift.py',
+    'simd64/integer/compare/__init__.py',
+    'simd64/integer/compare/compare_and_write_mask.py',
+    'simd64/integer/compare/compare_and_write_minimum_or_maximum.py',
+    'simd64/integer/logical/__init__.py',
+    'simd64/integer/logical/pand.py',
+    'simd64/integer/logical/por.py',
+    'simd64/integer/logical/exclusive_or.py',
+    'simd64/integer/save_and_restore_state.py',
+    'simd64/floating_point/__init__.py',
+    'simd64/floating_point/arithmetic/__init__.py',
+    'simd64/floating_point/arithmetic/subtraction.py',
+    'simd64/floating_point/arithmetic/addition.py',
+    'simd64/floating_point/arithmetic/reciprocal_estimation.py',
+    'simd64/floating_point/arithmetic/multiplication.py',
+    'simd64/floating_point/arithmetic/accumulation.py',
+    'simd64/floating_point/arithmetic/reciprocal_square_root.py',
+    'simd64/floating_point/data_conversion.py',
+    'simd64/floating_point/compare/__init__.py',
+    'simd64/floating_point/compare/compare_and_write_mask.py',
+    'simd64/floating_point/compare/compare_and_write_minimum_or_maximum.py',
+    'x87/__init__.py',
+    'x87/data_transfer_and_conversion/__init__.py',
+    'x87/data_transfer_and_conversion/convert_and_load_or_store_integer.py',
+    'x87/data_transfer_and_conversion/load_or_store_floating_point.py',
+    'x87/data_transfer_and_conversion/exchange.py',
+    'x87/data_transfer_and_conversion/convert_and_load_or_store_bcd.py',
+    'x87/data_transfer_and_conversion/conditional_move.py',
+    'x87/data_transfer_and_conversion/extract.py',
+    'x87/load_constants/__init__.py',
+    'x87/load_constants/load_0_1_or_pi.py',
+    'x87/load_constants/load_logarithm.py',
+    'x87/arithmetic/__init__.py',
+    'x87/arithmetic/subtraction.py',
+    'x87/arithmetic/addition.py',
+    'x87/arithmetic/partial_remainder.py',
+    'x87/arithmetic/multiplication.py',
+    'x87/arithmetic/division.py',
+    'x87/arithmetic/change_sign.py',
+    'x87/arithmetic/round.py',
+    'x87/arithmetic/square_root.py',
+    'x87/transcendental_functions/__init__.py',
+    'x87/transcendental_functions/trigonometric_functions.py',
+    'x87/transcendental_functions/logarithmic_functions.py',
+    'x87/compare_and_test/__init__.py',
+    'x87/compare_and_test/classify.py',
+    'x87/compare_and_test/test.py',
+    'x87/compare_and_test/floating_point_ordered_compare.py',
+    'x87/compare_and_test/floating_point_unordered_compare.py',
+    'x87/compare_and_test/integer_compare.py',
+    'x87/stack_management/__init__.py',
+    'x87/stack_management/stack_control.py',
+    'x87/stack_management/clear_state.py',
+    'x87/control/__init__.py',
+    'x87/control/clear_exceptions.py',
+    'x87/control/initialize.py',
+    'x87/control/wait_for_exceptions.py',
+    'x87/control/save_x87_status_word.py',
+    'x87/control/save_and_restore_x87_control_word.py',
+    'x87/control/save_and_restore_x87_environment.py',
+    'x87/no_operation.py'
+    )
 
 
-    # Add in files generated by the ISA description.
-    isa_desc_files = ISADesc('isa/main.isa')
-    for f in isa_desc_files:
-        # Add in python file dependencies that won't be caught otherwise
-        for pyfile in python_files:
-            env.Depends(f, "isa/insts/%s" % pyfile)
+# Add in files generated by the ISA description.
+isa_desc_files = ISADesc('isa/main.isa')
+for f in isa_desc_files:
+    # Add in python file dependencies that won't be caught otherwise
+    for pyfile in python_files:
+        env.Depends(f, "isa/insts/%s" % pyfile)
