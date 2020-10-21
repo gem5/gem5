@@ -159,6 +159,8 @@ namespace X86ISA
         I386Process(const ProcessParams &params,
                     ::Loader::ObjectFile *objFile);
 
+        const VSyscallPage &getVSyscallPage() { return vsyscallPage; }
+
         void argsInit(int pageSize);
         void initState() override;
 

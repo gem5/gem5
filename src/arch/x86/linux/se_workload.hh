@@ -28,8 +28,10 @@
 #ifndef __ARCH_X86_LINUX_SE_WORKLOAD_HH__
 #define __ARCH_X86_LINUX_SE_WORKLOAD_HH__
 
+#include "arch/x86/linux/linux.hh"
 #include "params/X86EmuLinux.hh"
 #include "sim/se_workload.hh"
+#include "sim/syscall_abi.hh"
 
 namespace X86ISA
 {
@@ -50,8 +52,43 @@ class EmuLinux : public SEWorkload
     Loader::Arch getArch() const override { return Loader::X86_64; }
 
     void syscall(ThreadContext *tc) override;
+
+    struct SyscallABI64 :
+        public GenericSyscallABI64, public X86Linux::SyscallABI
+    {
+        static const std::vector<IntRegIndex> ArgumentRegs;
+    };
+
+    struct SyscallABI32 :
+        public GenericSyscallABI32, public X86Linux::SyscallABI
+    {
+        static const std::vector<IntRegIndex> ArgumentRegs;
+    };
 };
 
 } // namespace X86ISA
+
+namespace GuestABI
+{
+
+template <typename Arg>
+struct Argument<X86ISA::EmuLinux::SyscallABI32, Arg,
+    typename std::enable_if<
+        X86ISA::EmuLinux::SyscallABI32::IsWide<Arg>::value>::type>
+{
+    using ABI = X86ISA::EmuLinux::SyscallABI32;
+
+    static Arg
+    get(ThreadContext *tc, typename ABI::State &state)
+    {
+        panic_if(state + 1 >= ABI::ArgumentRegs.size(),
+                "Ran out of syscall argument registers.");
+        auto low = ABI::ArgumentRegs[state++];
+        auto high = ABI::ArgumentRegs[state++];
+        return (Arg)ABI::mergeRegs(tc, low, high);
+    }
+};
+
+} // namespace GuestABI
 
 #endif // __ARCH_X86_LINUX_SE_WORKLOAD_HH__
