@@ -38,6 +38,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "base/bitfield.hh"
 #include "base/intmath.hh"
 #include "base/types.hh"
 #include "mem/request.hh"

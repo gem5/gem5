@@ -39,6 +39,7 @@
 #ifndef __DEV_ARM_GLOBAL_TIMER_HH__
 #define __DEV_ARM_GLOBAL_TIMER_HH__
 
+#include "base/bitunion.hh"
 #include "dev/io_device.hh"
 #include "params/A9GlobalTimer.hh"
 

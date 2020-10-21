@@ -31,6 +31,7 @@
 
 #include <deque>
 
+#include "base/bitunion.hh"
 #include "dev/intpin.hh"
 #include "dev/io_device.hh"
 #include "dev/ps2/device.hh"

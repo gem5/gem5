@@ -51,6 +51,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "base/bitfield.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "mem/cache/compressors/base.hh"

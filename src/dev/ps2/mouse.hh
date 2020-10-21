@@ -41,6 +41,7 @@
 #ifndef __DEV_PS2_MOUSE_HH__
 #define __DEV_PS2_MOUSE_HH__
 
+#include "base/bitunion.hh"
 #include "dev/ps2/device.hh"
 
 struct PS2MouseParams;

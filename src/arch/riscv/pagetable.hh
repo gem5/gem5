@@ -31,6 +31,7 @@
 #ifndef __ARCH_RISCV_PAGETABLE_H__
 #define __ARCH_RISCV_PAGETABLE_H__
 
+#include "base/bitunion.hh"
 #include "base/logging.hh"
 #include "base/trie.hh"
 #include "base/types.hh"

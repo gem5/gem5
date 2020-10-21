@@ -47,6 +47,7 @@ class ThreadContext;
 
 #include "arch/pseudo_inst.hh"
 #include "arch/utility.hh"
+#include "base/bitfield.hh"
 #include "base/types.hh" // For Tick and Addr data types.
 #include "debug/PseudoInst.hh"
 #include "sim/guest_abi.hh"
