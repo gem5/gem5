@@ -246,7 +246,3 @@ RiscvProcess::argsInit(int pageSize)
 
     memState->setStackMin(roundDown(memState->getStackMin(), pageSize));
 }
-
-const std::vector<int> RiscvProcess::SyscallABI::ArgumentRegs = {
-    10, 11, 12, 13, 14, 15, 16
-};

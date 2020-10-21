@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2004 The Regents of The University of Michigan
- * Copyright (c) 2016 The University of Virginia
- * All rights reserved.
+ * Copyright 2004 The Regents of The University of Michigan
+ * Copyright 2016 The University of Virginia
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -27,53 +27,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RISCV_LINUX_PROCESS_HH__
-#define __RISCV_LINUX_PROCESS_HH__
-
-#include <map>
+#ifndef __ARCH_RISCV_LINUX_SE_WORKLOAD_HH__
+#define __ARCH_RISCV_LINUX_SE_WORKLOAD_HH__
 
 #include "arch/riscv/linux/linux.hh"
-#include "arch/riscv/process.hh"
-#include "sim/eventq.hh"
+#include "arch/riscv/se_workload.hh"
+#include "params/RiscvEmuLinux.hh"
 #include "sim/syscall_desc.hh"
 
-/// A process with emulated Riscv/Linux syscalls.
-class RiscvLinuxProcess64 : public RiscvProcess64
+namespace RiscvISA
+{
+
+class EmuLinux : public SEWorkload
 {
   public:
-    /// Constructor.
-    RiscvLinuxProcess64(const ProcessParams &params,
-                        ::Loader::ObjectFile *objFile);
+    using Params = RiscvEmuLinuxParams;
 
-    /// The target system's hostname.
-    static const char *hostname;
+  protected:
+    const Params &_params;
 
-    /// ID of the thread group leader for the process
-    uint64_t __tgid;
+    /// 64 bit syscall descriptors, indexed by call number.
+    static SyscallDescTable<SEWorkload::SyscallABI> syscallDescs64;
 
-    void syscall(ThreadContext *tc) override;
+    /// 32 bit syscall descriptors, indexed by call number.
+    static SyscallDescTable<SEWorkload::SyscallABI> syscallDescs32;
 
-    /// Syscall descriptors, indexed by call number.
-    static SyscallDescTable<SyscallABI> syscallDescs;
-};
-
-class RiscvLinuxProcess32 : public RiscvProcess32
-{
   public:
-    /// Constructor.
-    RiscvLinuxProcess32(const ProcessParams &params,
-                        ::Loader::ObjectFile *objFile);
+    const Params &params() const { return _params; }
 
-    /// The target system's hostname.
-    static const char *hostname;
-
-    /// ID of the thread group leader for the process
-    uint64_t __tgid;
+    EmuLinux(const Params &p) : SEWorkload(p), _params(p) {}
 
     void syscall(ThreadContext *tc) override;
-
-    /// Array of syscall descriptors, indexed by call number.
-    static SyscallDescTable<SyscallABI> syscallDescs;
 };
 
-#endif // __RISCV_LINUX_PROCESS_HH__
+} // namespace RiscvISA
+
+#endif // __ARCH_RISCV_LINUX_SE_WORKLOAD_HH__

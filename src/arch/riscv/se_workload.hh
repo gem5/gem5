@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
- * Copyright (c) 2017 The University of Virginia
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -27,50 +25,64 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RISCV_PROCESS_HH__
-#define __RISCV_PROCESS_HH__
+#ifndef __ARCH_RISCV_SE_WORKLOAD_HH__
+#define __ARCH_RISCV_SE_WORKLOAD_HH__
 
-#include <string>
-#include <vector>
-
-#include "mem/page_table.hh"
-#include "sim/process.hh"
+#include "arch/riscv/registers.hh"
+#include "params/RiscvSEWorkload.hh"
+#include "sim/se_workload.hh"
 #include "sim/syscall_abi.hh"
+#include "sim/syscall_desc.hh"
 
-namespace Loader
+namespace RiscvISA
 {
-class ObjectFile;
-} // namespace Loader
 
-class System;
-
-class RiscvProcess : public Process
-{
-  protected:
-    RiscvProcess(const ProcessParams &params, ::Loader::ObjectFile *objFile);
-    template<class IntType>
-    void argsInit(int pageSize);
-
-  public:
-    virtual bool mmapGrowsDown() const override { return false; }
-};
-
-class RiscvProcess64 : public RiscvProcess
+class SEWorkload : public ::SEWorkload
 {
   public:
-    RiscvProcess64(const ProcessParams &params, ::Loader::ObjectFile *objFile);
+    using Params = RiscvSEWorkloadParams;
 
   protected:
-    void initState() override;
-};
+    const Params &_params;
 
-class RiscvProcess32 : public RiscvProcess
-{
   public:
-    RiscvProcess32(const ProcessParams &params, ::Loader::ObjectFile *objFile);
+    const Params &params() const { return _params; }
 
-  protected:
-    void initState() override;
+    SEWorkload(const Params &p) : ::SEWorkload(p), _params(p) {}
+
+    ::Loader::Arch getArch() const override { return ::Loader::Riscv64; }
+
+    //FIXME RISCV needs to handle 64 bit arguments in its 32 bit ISA.
+    struct SyscallABI : public GenericSyscallABI64
+    {
+        static const std::vector<int> ArgumentRegs;
+    };
 };
 
-#endif // __RISCV_PROCESS_HH__
+} // namespace RiscvISA
+
+namespace GuestABI
+{
+
+template <>
+struct Result<RiscvISA::SEWorkload::SyscallABI, SyscallReturn>
+{
+    static void
+    store(ThreadContext *tc, const SyscallReturn &ret)
+    {
+        if (ret.suppressed() || ret.needsRetry())
+            return;
+
+        if (ret.successful()) {
+            // no error
+            tc->setIntReg(RiscvISA::ReturnValueReg, ret.returnValue());
+        } else {
+            // got an error, return details
+            tc->setIntReg(RiscvISA::ReturnValueReg, ret.encodedValue());
+        }
+    }
+};
+
+} // namespace GuestABI
+
+#endif // __ARCH_RISCV_SE_WORKLOAD_HH__

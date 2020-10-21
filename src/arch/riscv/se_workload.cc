@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
- * Copyright (c) 2017 The University of Virginia
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -27,50 +25,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RISCV_PROCESS_HH__
-#define __RISCV_PROCESS_HH__
+#include "arch/riscv/se_workload.hh"
 
-#include <string>
-#include <vector>
-
-#include "mem/page_table.hh"
-#include "sim/process.hh"
-#include "sim/syscall_abi.hh"
-
-namespace Loader
+namespace RiscvISA
 {
-class ObjectFile;
-} // namespace Loader
 
-class System;
-
-class RiscvProcess : public Process
-{
-  protected:
-    RiscvProcess(const ProcessParams &params, ::Loader::ObjectFile *objFile);
-    template<class IntType>
-    void argsInit(int pageSize);
-
-  public:
-    virtual bool mmapGrowsDown() const override { return false; }
+const std::vector<int> SEWorkload::SyscallABI::ArgumentRegs = {
+    10, 11, 12, 13, 14, 15, 16
 };
 
-class RiscvProcess64 : public RiscvProcess
-{
-  public:
-    RiscvProcess64(const ProcessParams &params, ::Loader::ObjectFile *objFile);
-
-  protected:
-    void initState() override;
-};
-
-class RiscvProcess32 : public RiscvProcess
-{
-  public:
-    RiscvProcess32(const ProcessParams &params, ::Loader::ObjectFile *objFile);
-
-  protected:
-    void initState() override;
-};
-
-#endif // __RISCV_PROCESS_HH__
+} // namespace RiscvISA

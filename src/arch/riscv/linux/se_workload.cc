@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
- * Copyright (c) 2007 MIPS Technologies, Inc.
- * Copyright (c) 2016 The University of Virginia
- * All rights reserved.
+ * Copyright 2005 The Regents of The University of Michigan
+ * Copyright 2007 MIPS Technologies, Inc.
+ * Copyright 2016 The University of Virginia
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -28,37 +28,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/riscv/linux/process.hh"
+#include "arch/riscv/linux/se_workload.hh"
 
-#include <map>
+#include <sys/syscall.h>
 
-#include "arch/riscv/isa_traits.hh"
-#include "arch/riscv/linux/linux.hh"
+#include "arch/riscv/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "debug/SyscallVerbose.hh"
-#include "kern/linux/linux.hh"
-#include "sim/eventq.hh"
-#include "sim/process.hh"
-#include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
-#include "sim/system.hh"
-
-using namespace std;
-using namespace RiscvISA;
 
 namespace
 {
 
-class RiscvLinuxObjectFileLoader : public Process::Loader
+class LinuxLoader : public Process::Loader
 {
   public:
     Process *
-    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file) override
+    load(const ProcessParams &params, ::Loader::ObjectFile *obj) override
     {
-        auto arch = obj_file->getArch();
-        auto opsys = obj_file->getOpSys();
+        auto arch = obj->getArch();
+        auto opsys = obj->getOpSys();
 
         if (arch != ::Loader::Riscv64 && arch != ::Loader::Riscv32)
             return nullptr;
@@ -72,15 +62,33 @@ class RiscvLinuxObjectFileLoader : public Process::Loader
             return nullptr;
 
         if (arch == ::Loader::Riscv64)
-            return new RiscvLinuxProcess64(params, obj_file);
+            return new RiscvProcess64(params, obj);
         else
-            return new RiscvLinuxProcess32(params, obj_file);
+            return new RiscvProcess32(params, obj);
     }
 };
 
-RiscvLinuxObjectFileLoader loader;
+LinuxLoader loader;
 
 } // anonymous namespace
+
+namespace RiscvISA
+{
+
+void
+EmuLinux::syscall(ThreadContext *tc)
+{
+    Process *process = tc->getProcessPtr();
+    // Call the syscall function in the base Process class to update stats.
+    // This will move into the base SEWorkload function at some point.
+    process->Process::syscall(tc);
+
+    RegVal num = tc->readIntReg(RiscvISA::SyscallNumReg);
+    if (dynamic_cast<RiscvProcess64 *>(process))
+        syscallDescs64.get(num)->doSyscall(tc);
+    else
+        syscallDescs32.get(num)->doSyscall(tc);
+}
 
 /// Target uname() handler.
 static SyscallReturn
@@ -112,8 +120,7 @@ unameFunc32(SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name)
     return 0;
 }
 
-SyscallDescTable<RiscvProcess::SyscallABI>
-    RiscvLinuxProcess64::syscallDescs = {
+SyscallDescTable<SEWorkload::SyscallABI> EmuLinux::syscallDescs64 = {
     { 0,    "io_setup" },
     { 1,    "io_destroy" },
     { 2,    "io_submit" },
@@ -444,8 +451,7 @@ SyscallDescTable<RiscvProcess::SyscallABI>
     { 2011, "getmainvars" }
 };
 
-SyscallDescTable<RiscvProcess::SyscallABI>
-        RiscvLinuxProcess32::syscallDescs = {
+SyscallDescTable<SEWorkload::SyscallABI> EmuLinux::syscallDescs32 = {
     { 0,    "io_setup" },
     { 1,    "io_destroy" },
     { 2,    "io_submit" },
@@ -776,24 +782,10 @@ SyscallDescTable<RiscvProcess::SyscallABI>
     { 2011, "getmainvars" }
 };
 
-RiscvLinuxProcess64::RiscvLinuxProcess64(const ProcessParams &params,
-    ::Loader::ObjectFile *objFile) : RiscvProcess64(params, objFile)
-{}
+} // namespace RiscvISA
 
-void
-RiscvLinuxProcess64::syscall(ThreadContext *tc)
+RiscvISA::EmuLinux *
+RiscvEmuLinuxParams::create() const
 {
-    RiscvProcess64::syscall(tc);
-    syscallDescs.get(tc->readIntReg(SyscallNumReg))->doSyscall(tc);
-}
-
-RiscvLinuxProcess32::RiscvLinuxProcess32(const ProcessParams &params,
-    ::Loader::ObjectFile *objFile) : RiscvProcess32(params, objFile)
-{}
-
-void
-RiscvLinuxProcess32::syscall(ThreadContext *tc)
-{
-    RiscvProcess32::syscall(tc);
-    syscallDescs.get(tc->readIntReg(SyscallNumReg))->doSyscall(tc);
+    return new RiscvISA::EmuLinux(*this);
 }
