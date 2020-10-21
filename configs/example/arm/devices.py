@@ -258,6 +258,8 @@ class FastmodelCluster(SubSystem):
             core.semihosting_enable = False
             core.RVBARADDR = 0x10
             core.redistributor = gic.redistributor
+            core.createThreads()
+            core.createInterruptController()
         self.cpus = [ cpu ]
 
         a2t = AmbaToTlmBridge64(amba=cpu.amba)
