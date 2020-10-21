@@ -44,6 +44,7 @@
 #include "arch/x86/linux/linux.hh"
 #include "arch/x86/process.hh"
 #include "arch/x86/registers.hh"
+#include "arch/x86/se_workload.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
@@ -122,6 +123,49 @@ EmuLinux::syscall(ThreadContext *tc)
     } else {
         panic("Unrecognized process type.");
     }
+}
+
+void
+EmuLinux::event(ThreadContext *tc)
+{
+    Process *process = tc->getProcessPtr();
+    auto pcState = tc->pcState();
+
+    if (process->kvmInSE) {
+        Addr pc_page = mbits(pcState.pc(), 63, 12);
+        if (pc_page == syscallCodeVirtAddr) {
+            syscall(tc);
+            return;
+        } else if (pc_page == PFHandlerVirtAddr) {
+            pageFault(tc);
+            return;
+        }
+    }
+    warn("Unexpected workload event at pc %#x.", pcState.pc());
+}
+
+void
+EmuLinux::pageFault(ThreadContext *tc)
+{
+    Process *p = tc->getProcessPtr();
+    if (!p->fixupFault(tc->readMiscReg(MISCREG_CR2))) {
+        PortProxy &proxy = tc->getVirtProxy();
+        // at this point we should have 6 values on the interrupt stack
+        int size = 6;
+        uint64_t is[size];
+        // reading the interrupt handler stack
+        proxy.readBlob(ISTVirtAddr + PageBytes - size * sizeof(uint64_t),
+                       &is, sizeof(is));
+        panic("Page fault at addr %#x\n\tInterrupt handler stack:\n"
+                "\tss: %#x\n"
+                "\trsp: %#x\n"
+                "\trflags: %#x\n"
+                "\tcs: %#x\n"
+                "\trip: %#x\n"
+                "\terr_code: %#x\n",
+                tc->readMiscReg(MISCREG_CR2),
+                is[5], is[4], is[3], is[2], is[1], is[0]);
+   }
 }
 
 } // namespace X86ISA

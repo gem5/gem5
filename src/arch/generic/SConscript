@@ -46,7 +46,6 @@ if env['TARGET_ISA'] == 'null':
 Source('decode_cache.cc')
 Source('decoder.cc')
 Source('mmu.cc')
-Source('pseudo_inst.cc')
 
 SimObject('BaseInterrupts.py')
 SimObject('BaseISA.py')

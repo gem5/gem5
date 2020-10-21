@@ -45,7 +45,6 @@
 
 class ThreadContext;
 
-#include "arch/pseudo_inst.hh"
 #include "arch/utility.hh"
 #include "base/bitfield.hh"
 #include "base/types.hh" // For Tick and Addr data types.
@@ -240,11 +239,6 @@ pseudoInstWork(ThreadContext *tc, uint8_t func, uint64_t &result)
       case M5OP_RESERVED5:
         warn("Unimplemented m5 op (%#x)\n", func);
         return false;
-
-      /* SE mode functions */
-      case M5OP_SE_PAGE_FAULT:
-        invokeSimcall<ABI>(tc, TheISA::m5PageFault);
-        return true;
 
       /* dist-gem5 functions */
       case M5OP_DIST_TOGGLE_SYNC:

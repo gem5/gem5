@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2014 Advanced Micro Devices, Inc.
- * All rights reserved.
+ * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,17 +25,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_SPARC_PSEUDO_INST_HH__
-#define __ARCH_SPARC_PSEUDO_INST_HH__
+#ifndef __ARCH_X86_SE_WORKLOAD_HH__
+#define __ARCH_X86_SE_WORKLOAD_HH__
 
-#include "arch/generic/pseudo_inst.hh"
+#include "base/types.hh"
 
-namespace SparcISA
+namespace X86ISA
 {
 
-using GenericISA::m5PageFault;
+/* memory mappings for KVMCpu in SE mode */
+const Addr syscallCodeVirtAddr = 0xffff800000000000;
+const Addr GDTVirtAddr = 0xffff800000001000;
+const Addr IDTVirtAddr = 0xffff800000002000;
+const Addr TSSVirtAddr = 0xffff800000003000;
+const Addr TSSPhysAddr = 0x63000;
+const Addr ISTVirtAddr = 0xffff800000004000;
+const Addr PFHandlerVirtAddr = 0xffff800000005000;
+const Addr MMIORegionVirtAddr = 0xffffc90000000000;
+const Addr MMIORegionPhysAddr = 0xffff0000;
 
-} // namespace SparcISA
+} // namespace X86ISA
 
-#endif // __ARCH_SPARC_PSEUDO_INST_HH__
-
+#endif // __ARCH_X86_SE_WORKLOAD_HH__

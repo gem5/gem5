@@ -48,6 +48,7 @@
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/regs/segment.hh"
+#include "arch/x86/se_workload.hh"
 #include "arch/x86/types.hh"
 #include "base/loader/elf_object.hh"
 #include "base/loader/object_file.hh"
@@ -486,8 +487,8 @@ X86_64Process::initState()
 
         /** Page fault handler */
         uint8_t faultBlob[] = {
-            // mov    %rax, (0xffffc90000005700)
-            0x48, 0xa3, 0x00, 0x61, 0x00,
+            // mov    %rax, (0xffffc90000007000)
+            0x48, 0xa3, 0x00, 0x70, 0x00,
             0x00, 0x00, 0xc9, 0xff, 0xff,
             // add    $0x8, %rsp # skip error
             0x48, 0x83, 0xc4, 0x08,

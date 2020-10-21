@@ -65,17 +65,6 @@ class ConfigTable;
 
 } // namespace IntelMP
 
-/* memory mappings for KVMCpu in SE mode */
-const Addr syscallCodeVirtAddr = 0xffff800000000000;
-const Addr GDTVirtAddr = 0xffff800000001000;
-const Addr IDTVirtAddr = 0xffff800000002000;
-const Addr TSSVirtAddr = 0xffff800000003000;
-const Addr TSSPhysAddr = 0x63000;
-const Addr ISTVirtAddr = 0xffff800000004000;
-const Addr PFHandlerVirtAddr = 0xffff800000005000;
-const Addr MMIORegionVirtAddr = 0xffffc90000000000;
-const Addr MMIORegionPhysAddr = 0xffff0000;
-
 void installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
                     SegDescriptor desc, bool longmode);
 

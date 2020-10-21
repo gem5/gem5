@@ -65,6 +65,9 @@ class EmuLinux : public SEWorkload
     ::Loader::Arch getArch() const override { return ::Loader::X86_64; }
 
     void syscall(ThreadContext *tc) override;
+    void event(ThreadContext *tc) override;
+
+    void pageFault(ThreadContext *tc);
 
     struct SyscallABI64 :
         public GenericSyscallABI64, public X86Linux::SyscallABI
