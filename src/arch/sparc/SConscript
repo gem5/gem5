@@ -44,7 +44,6 @@ if env['TARGET_ISA'] == 'sparc':
     Source('process.cc')
     Source('remote_gdb.cc')
     Source('se_workload.cc')
-    Source('solaris/se_workload.cc')
     Source('solaris/solaris.cc')
     Source('tlb.cc')
     Source('ua2005.cc')

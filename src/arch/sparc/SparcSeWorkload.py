@@ -42,13 +42,3 @@ class SparcEmuLinux(SparcSEWorkload):
     def _is_compatible_with(cls, obj):
         return obj.get_arch() in ('sparc64', 'sparc32') and \
                 obj.get_op_sys() in ('linux', 'unknown')
-
-class SparcEmuSolaris(SparcSEWorkload):
-    type = 'SparcEmuSolaris'
-    cxx_header = "arch/sparc/solaris/se_workload.hh"
-    cxx_class = 'SparcISA::EmuSolaris'
-
-    @classmethod
-    def _is_compatible_with(cls, obj):
-        return obj.get_arch() in ('sparc64', 'sparc32') and \
-                obj.get_op_sys() == 'solaris'
