@@ -79,7 +79,7 @@ class MemBus(SystemXBar):
 def attach_9p(parent, bus):
     viopci = PciVirtIO()
     viopci.vio = VirtIO9PDiod()
-    viodir = os.path.join(m5.options.outdir, '9p')
+    viodir = os.path.realpath(os.path.join(m5.options.outdir, '9p'))
     viopci.vio.root = os.path.join(viodir, 'share')
     viopci.vio.socketPath = os.path.join(viodir, 'socket')
     if not os.path.exists(viopci.vio.root):
