@@ -101,59 +101,42 @@ class OperandList(object):
                 self.append(op_desc)
 
         self.sort()
+
         # enumerate source & dest register operands... used in building
         # constructor later
-        self.numSrcRegs = 0
-        self.numDestRegs = 0
-        self.numFPDestRegs = 0
-        self.numIntDestRegs = 0
-        self.numVecDestRegs = 0
-        self.numVecPredDestRegs = 0
-        self.numCCDestRegs = 0
-        self.numMiscDestRegs = 0
-        self.memOperand = None
+        regs = list(filter(lambda i: i.isReg(), self.items))
+        mem = list(filter(lambda i: i.isMem(), self.items))
+        srcs = list(filter(lambda r: r.is_src, regs))
+        dests = list(filter(lambda r: r.is_dest, regs))
+
+        for idx, reg in enumerate(srcs):
+            reg.src_reg_idx = idx
+        for idx, reg in enumerate(dests):
+            reg.dest_reg_idx = idx
+
+        self.numSrcRegs = len(srcs)
+        self.numDestRegs = len(dests)
+        self.numFPDestRegs = sum(r.isFloatReg() for r in dests)
+        self.numIntDestRegs = sum(r.isIntReg() for r in dests)
+        self.numVecDestRegs = sum(r.isVecReg() for r in dests)
+        self.numVecPredDestRegs = sum(r.isVecPredReg() for r in dests)
+        self.numCCDestRegs = sum(r.isCCReg() for r in dests)
+        self.numMiscDestRegs = sum(r.isControlReg() for r in dests)
+
+        if len(mem) > 1:
+            error("Code block has more than one memory operand")
+
+        self.memOperand = mem[0] if mem else None
 
         # Flags to keep track if one or more operands are to be read/written
         # conditionally.
-        self.predRead = False
-        self.predWrite = False
+        self.predRead = any(i.hasReadPred() for i in self.items)
+        self.predWrite = any(i.hasWritePred() for i in self.items)
 
-        for op_desc in self.items:
-            if op_desc.isReg():
-                if op_desc.is_src:
-                    op_desc.src_reg_idx = self.numSrcRegs
-                    self.numSrcRegs += 1
-                if op_desc.is_dest:
-                    op_desc.dest_reg_idx = self.numDestRegs
-                    self.numDestRegs += 1
-                    if op_desc.isFloatReg():
-                        self.numFPDestRegs += 1
-                    elif op_desc.isIntReg():
-                        self.numIntDestRegs += 1
-                    elif op_desc.isVecReg():
-                        self.numVecDestRegs += 1
-                    elif op_desc.isVecPredReg():
-                        self.numVecPredDestRegs += 1
-                    elif op_desc.isCCReg():
-                        self.numCCDestRegs += 1
-                    elif op_desc.isControlReg():
-                        self.numMiscDestRegs += 1
-            elif op_desc.isMem():
-                if self.memOperand:
-                    error("Code block has more than one memory operand.")
-                self.memOperand = op_desc
-
-            # Check if this operand has read/write predication. If true, then
-            # the microop will dynamically index source/dest registers.
-            self.predRead = self.predRead or op_desc.hasReadPred()
-            self.predWrite = self.predWrite or op_desc.hasWritePred()
-
-        if parser.maxInstSrcRegs < self.numSrcRegs:
-            parser.maxInstSrcRegs = self.numSrcRegs
-        if parser.maxInstDestRegs < self.numDestRegs:
-            parser.maxInstDestRegs = self.numDestRegs
-        if parser.maxMiscDestRegs < self.numMiscDestRegs:
-            parser.maxMiscDestRegs = self.numMiscDestRegs
+        parser.maxInstSrcRegs = max(parser.maxInstSrcRegs, self.numSrcRegs)
+        parser.maxInstDestRegs = max(parser.maxInstDestRegs, self.numDestRegs)
+        parser.maxMiscDestRegs = max(parser.maxInstDestRegs,
+                                     self.numMiscDestRegs)
 
         # now make a final pass to finalize op_desc fields that may depend
         # on the register enumeration
@@ -238,40 +221,33 @@ class SubOperandList(OperandList):
                     self.append(requestor_list.bases[op_base])
 
         self.sort()
-        self.memOperand = None
+
+        pcs = list(filter(lambda i: i.isPCState(), self.items))
+        mem = list(filter(lambda i: i.isMem(), self.items))
+
+        if len(mem) > 1:
+            error("Code block has more than one memory operand")
+
+        part = any(p.isPCPart() for p in pcs)
+        whole = any(not p.isPCPart() for p in pcs)
+
+        if part and whole:
+            error("Mixed whole and partial PC state operands")
+
+        self.memOperand = mem[0] if mem else None
+
         # Whether the whole PC needs to be read so parts of it can be accessed
-        self.readPC = False
+        self.readPC = any(i.isPCPart() for i in self.items)
         # Whether the whole PC needs to be written after parts of it were
         # changed
-        self.setPC = False
+        self.setPC = any(i.isPCPart() and i.is_dest for i in self.items)
         # Whether this instruction manipulates the whole PC or parts of it.
         # Mixing the two is a bad idea and flagged as an error.
         self.pcPart = None
+        if part: self.pcPart = True
+        if whole: self.pcPart = False
 
         # Flags to keep track if one or more operands are to be read/written
         # conditionally.
-        self.predRead = False
-        self.predWrite = False
-
-        for op_desc in self.items:
-            if op_desc.isPCPart():
-                self.readPC = True
-                if op_desc.is_dest:
-                    self.setPC = True
-
-            if op_desc.isPCState():
-                if self.pcPart is not None:
-                    if self.pcPart and not op_desc.isPCPart() or \
-                            not self.pcPart and op_desc.isPCPart():
-                        error("Mixed whole and partial PC state operands.")
-                self.pcPart = op_desc.isPCPart()
-
-            if op_desc.isMem():
-                if self.memOperand:
-                    error("Code block has more than one memory operand.")
-                self.memOperand = op_desc
-
-            # Check if this operand has read/write predication. If true, then
-            # the microop will dynamically index source/dest registers.
-            self.predRead = self.predRead or op_desc.hasReadPred()
-            self.predWrite = self.predWrite or op_desc.hasWritePred()
+        self.predRead = any(i.hasReadPred() for i in self.items)
+        self.predWrite = any(i.hasWritePred() for i in self.items)
