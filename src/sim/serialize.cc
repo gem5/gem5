@@ -49,6 +49,7 @@
 #include <cerrno>
 #include <fstream>
 #include <list>
+#include <set>
 #include <string>
 #include <vector>
 

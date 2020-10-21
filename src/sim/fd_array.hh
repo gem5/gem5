@@ -35,6 +35,7 @@
 #define __FD_ARRAY_HH__
 
 #include <array>
+#include <map>
 #include <memory>
 #include <string>
 

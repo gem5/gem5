@@ -42,6 +42,7 @@
 #ifndef __SYSTEM_HH__
 #define __SYSTEM_HH__
 
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <utility>

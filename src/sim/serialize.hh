@@ -48,10 +48,9 @@
 
 #include <algorithm>
 #include <iostream>
-#include <list>
-#include <map>
+#include <iterator>
 #include <stack>
-#include <set>
+#include <type_traits>
 #include <vector>
 
 #include "base/bitunion.hh"
@@ -524,18 +523,18 @@ paramIn(CheckpointIn &cp, const std::string &name, T &param)
 /**
  * @ingroup api_serialize
  */
-template <class T>
+template <class InputIterator>
 void
 arrayParamOut(CheckpointOut &os, const std::string &name,
-              const std::vector<T> &param)
+              InputIterator start, InputIterator end)
 {
-    typename std::vector<T>::size_type size = param.size();
     os << name << "=";
-    if (size > 0)
-        showParam(os, param[0]);
-    for (typename std::vector<T>::size_type i = 1; i < size; ++i) {
+    auto it = start;
+    if (it != end)
+        showParam(os, *it++);
+    while (it != end) {
         os << " ";
-        showParam(os, param[i]);
+        showParam(os, *it++);
     }
     os << "\n";
 }
@@ -544,45 +543,14 @@ arrayParamOut(CheckpointOut &os, const std::string &name,
  * @ingroup api_serialize
  */
 template <class T>
-void
+decltype(std::begin(std::declval<const T&>()),
+         std::end(std::declval<const T&>()), void())
 arrayParamOut(CheckpointOut &os, const std::string &name,
-              const std::list<T> &param)
+              const T &param)
 {
-    typename std::list<T>::const_iterator it = param.begin();
-
-    os << name << "=";
-    if (param.size() > 0)
-        showParam(os, *it);
-    it++;
-    while (it != param.end()) {
-        os << " ";
-        showParam(os, *it);
-        it++;
-    }
-    os << "\n";
+    arrayParamOut(os, name, std::begin(param), std::end(param));
 }
 
-/**
- * @ingroup api_serialize
- */
-template <class T>
-void
-arrayParamOut(CheckpointOut &os, const std::string &name,
-              const std::set<T> &param)
-{
-    typename std::set<T>::const_iterator it = param.begin();
-
-    os << name << "=";
-    if (param.size() > 0)
-        showParam(os, *it);
-    it++;
-    while (it != param.end()) {
-        os << " ";
-        showParam(os, *it);
-        it++;
-    }
-    os << "\n";
-}
 
 /**
  * @ingroup api_serialize
@@ -592,14 +560,7 @@ void
 arrayParamOut(CheckpointOut &os, const std::string &name,
               const T *param, unsigned size)
 {
-    os << name << "=";
-    if (size > 0)
-        showParam(os, param[0]);
-    for (unsigned i = 1; i < size; ++i) {
-        os << " ";
-        showParam(os, param[i]);
-    }
-    os << "\n";
+    arrayParamOut(os, name, param, param + size);
 }
 
 /**
@@ -613,160 +574,71 @@ arrayParamOut(CheckpointOut &os, const std::string &name,
  *
  * @ingroup api_serialize
  */
+
+template <class T, class InsertIterator>
+void
+arrayParamIn(CheckpointIn &cp, const std::string &name,
+             InsertIterator inserter, ssize_t fixed_size=-1)
+{
+    const std::string &section = Serializable::currentSection();
+    std::string str;
+    fatal_if(!cp.find(section, name, str),
+        "Can't unserialize '%s:%s'.", section, name);
+
+    std::vector<std::string> tokens;
+    tokenize(tokens, str, ' ');
+
+    fatal_if(fixed_size >= 0 && tokens.size() != fixed_size,
+             "Array size mismatch on %s:%s (Got %u, expected %u)'\n",
+             section, name, tokens.size(), fixed_size);
+
+    for (const auto &token: tokens) {
+        T value;
+        fatal_if(!parseParam(token, value), "Could not parse \"%s\".", str);
+        *inserter = value;
+    }
+}
+
+/**
+ * @ingroup api_serialize
+ */
+template <class T>
+decltype(std::declval<T>().insert(std::declval<typename T::value_type>()),
+         void())
+arrayParamIn(CheckpointIn &cp, const std::string &name, T &param)
+{
+    param.clear();
+    arrayParamIn<typename T::value_type>(
+            cp, name, std::inserter(param, param.begin()));
+}
+
+/**
+ * @ingroup api_serialize
+ */
+template <class T>
+decltype(std::declval<T>().push_back(std::declval<typename T::value_type>()),
+         void())
+arrayParamIn(CheckpointIn &cp, const std::string &name, T &param)
+{
+    param.clear();
+    arrayParamIn<typename T::value_type>(cp, name, std::back_inserter(param));
+}
+
+/**
+ * @ingroup api_serialize
+ */
 template <class T>
 void
 arrayParamIn(CheckpointIn &cp, const std::string &name,
              T *param, unsigned size)
 {
-    const std::string &section(Serializable::currentSection());
-    std::string str;
-    if (!cp.find(section, name, str)) {
-        fatal("Can't unserialize '%s:%s'\n", section, name);
-    }
+    struct ArrayInserter
+    {
+        T *data;
+        T &operator *() { return *data++; }
+    } insert_it{param};
 
-    // code below stolen from VectorParam<T>::parse().
-    // it would be nice to unify these somehow...
-
-    std::vector<std::string> tokens;
-
-    tokenize(tokens, str, ' ');
-
-    // Need this if we were doing a vector
-    // value.resize(tokens.size());
-
-    fatal_if(tokens.size() != size,
-             "Array size mismatch on %s:%s (Got %u, expected %u)'\n",
-             section, name, tokens.size(), size);
-
-    for (std::vector<std::string>::size_type i = 0; i < tokens.size(); i++) {
-        // need to parse into local variable to handle vector<bool>,
-        // for which operator[] returns a special reference class
-        // that's not the same as 'bool&', (since it's a packed
-        // vector)
-        T scalar_value;
-        if (!parseParam(tokens[i], scalar_value)) {
-            std::string err("could not parse \"");
-
-            err += str;
-            err += "\"";
-
-            fatal(err);
-        }
-
-        // assign parsed value to vector
-        param[i] = scalar_value;
-    }
-}
-
-/**
- * @ingroup api_serialize
- */
-template <class T>
-void
-arrayParamIn(CheckpointIn &cp, const std::string &name, std::vector<T> &param)
-{
-    const std::string &section(Serializable::currentSection());
-    std::string str;
-    if (!cp.find(section, name, str)) {
-        fatal("Can't unserialize '%s:%s'\n", section, name);
-    }
-
-    // code below stolen from VectorParam<T>::parse().
-    // it would be nice to unify these somehow...
-
-    std::vector<std::string> tokens;
-
-    tokenize(tokens, str, ' ');
-
-    // Need this if we were doing a vector
-    // value.resize(tokens.size());
-
-    param.resize(tokens.size());
-
-    for (std::vector<std::string>::size_type i = 0; i < tokens.size(); i++) {
-        // need to parse into local variable to handle vector<bool>,
-        // for which operator[] returns a special reference class
-        // that's not the same as 'bool&', (since it's a packed
-        // vector)
-        T scalar_value;
-        if (!parseParam(tokens[i], scalar_value)) {
-            std::string err("could not parse \"");
-
-            err += str;
-            err += "\"";
-
-            fatal(err);
-        }
-
-        // assign parsed value to vector
-        param[i] = scalar_value;
-    }
-}
-
-/**
- * @ingroup api_serialize
- */
-template <class T>
-void
-arrayParamIn(CheckpointIn &cp, const std::string &name, std::list<T> &param)
-{
-    const std::string &section(Serializable::currentSection());
-    std::string str;
-    if (!cp.find(section, name, str)) {
-        fatal("Can't unserialize '%s:%s'\n", section, name);
-    }
-    param.clear();
-
-    std::vector<std::string> tokens;
-    tokenize(tokens, str, ' ');
-
-    for (std::vector<std::string>::size_type i = 0; i < tokens.size(); i++) {
-        T scalar_value;
-        if (!parseParam(tokens[i], scalar_value)) {
-            std::string err("could not parse \"");
-
-            err += str;
-            err += "\"";
-
-            fatal(err);
-        }
-
-        // assign parsed value to vector
-        param.push_back(scalar_value);
-    }
-}
-
-/**
- * @ingroup api_serialize
- */
-template <class T>
-void
-arrayParamIn(CheckpointIn &cp, const std::string &name, std::set<T> &param)
-{
-    const std::string &section(Serializable::currentSection());
-    std::string str;
-    if (!cp.find(section, name, str)) {
-        fatal("Can't unserialize '%s:%s'\n", section, name);
-    }
-    param.clear();
-
-    std::vector<std::string> tokens;
-    tokenize(tokens, str, ' ');
-
-    for (std::vector<std::string>::size_type i = 0; i < tokens.size(); i++) {
-        T scalar_value;
-        if (!parseParam(tokens[i], scalar_value)) {
-            std::string err("could not parse \"");
-
-            err += str;
-            err += "\"";
-
-            fatal(err);
-        }
-
-        // assign parsed value to vector
-        param.insert(scalar_value);
-    }
+    arrayParamIn<T>(cp, name, insert_it, size);
 }
 
 void
