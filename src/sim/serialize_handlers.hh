@@ -50,7 +50,6 @@
 #include <iterator>
 #include <type_traits>
 
-#include "base/bitunion.hh"
 #include "base/str.hh"
 
 /**
@@ -108,21 +107,6 @@ struct ParseParam<std::string>
     }
 };
 
-// Specialization for BitUnion types.
-template <class T>
-struct ParseParam<BitUnionType<T>>
-{
-    static bool
-    parse(const std::string &s, BitUnionType<T> &value)
-    {
-        // Zero initialize storage to avoid leaking an uninitialized value
-        BitUnionBaseType<T> storage = BitUnionBaseType<T>();
-        auto res = to_number(s, storage);
-        value = storage;
-        return res;
-    }
-};
-
 /*
  * A structure which should be specialized to contain a static method with the
  * signature:
@@ -165,17 +149,6 @@ struct ShowParam<bool>
     {
         // Display bools as strings
         os << (value ? "true" : "false");
-    }
-};
-
-template <class T>
-struct ShowParam<BitUnionType<T>>
-{
-    static void
-    show(std::ostream &os, const BitUnionType<T> &value)
-    {
-        ShowParam<BitUnionBaseType<T>>::show(
-                os, static_cast<const BitUnionBaseType<T> &>(value));
     }
 };
 
